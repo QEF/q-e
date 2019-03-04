@@ -63,7 +63,7 @@ module funct
   PUBLIC  :: init_dft_exxrpa, enforce_dft_exxrpa
 
   ! driver subroutines computing XC
-  PUBLIC  :: init_lda_xc
+  PUBLIC  :: init_lda_xc                !^^^
   PUBLIC  :: gcxc, gcx_spin, gcc_spin, gcc_spin_more
   PUBLIC  :: tau_xc , tau_xc_spin, dmxc, dmxc_spin, dmxc_nc
   PUBLIC  :: tau_xc_array, tau_xc_array_spin
@@ -377,7 +377,6 @@ CONTAINS
     logical :: dft_defined = .false.
     character (len=1), external :: capital
     integer ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, save_inlc
-    logical :: force_meta_gga = .false.
     !
     ! Exit if set to discard further input dft
     !
@@ -405,11 +404,6 @@ CONTAINS
     ! Note: comparison is done via exact matching
     ! ----------------------------------------------
     !
-    ! special case : activate null meta-GGA to permit non-SCF calculations with meta-GGAs
-    if (index(trim(dftout),'+META') .ne. 0) then
-        force_meta_gga = .true.
-        dftout = dftout(1:index(dftout,'+META')-1)
-    endif
     ! special cases : PZ  (LDA is equivalent to PZ)
     IF (('PZ' .EQ. TRIM(dftout) ).OR.('LDA' .EQ. TRIM(dftout) )) THEN
        dft_defined = set_dft_values(1,1,0,0,0,0)
@@ -606,44 +600,50 @@ CONTAINS
     else IF ('TB09'.EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,3)
 
-    ! special case : SCAN Meta GGA
+   ! special case : SCAN Meta GGA
     else if ( 'SCAN' .EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,5)
 
-    ! special case : SCAN0
-    else IF ('SCAN0'.EQ. TRIM(dftout ) ) THEN
-       dft_defined = set_dft_values(0,0,0,0,0,6)
+     ! special case : SCAN0
+      else IF ('SCAN0'.EQ. TRIM(dftout ) ) THEN
+        dft_defined = set_dft_values(0,0,0,0,0,6)
 
-    else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
+    ! special case : PZ/LDA + null meta-GGA
+    else IF (('PZ+META'.EQ. TRIM(dftout)) .or. ('LDA+META'.EQ. TRIM(dftout)) ) THEN
+       dft_defined = set_dft_values(1,1,0,0,0,4)
+
+    ! special case : PBE + null meta-GGA
+    else IF ('PBE+META'.EQ. TRIM(dftout) ) THEN
+       dft_defined = set_dft_values(1,4,3,4,0,4)
+
+      else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
         call errore('set_dft_from_name','obsolete XC label, use VDW-DF2-B86R',1)
 
-    else if ('VDW-DF3' .EQ. TRIM(dftout) ) then
+     else if ('VDW-DF3' .EQ. TRIM(dftout) ) then
         call errore('set_dft_from_name','obsolete XC label, use VDW-DF-OBK8',1)
 
-    else if ('VDW-DF4'.EQ.TRIM(dftout) .OR. 'OPTB86B-VDW'.EQ.TRIM(dftout) ) then
+     else if ('VDW-DF4'.EQ.TRIM(dftout) .OR. 'OPTB86B-VDW'.EQ.TRIM(dftout) ) then
         call errore('set_dft_from_name','obsolete XC label, use VDW-DF-OB86',1)
 
-    else if ('VDW-DF-X' .EQ. TRIM(dftout) ) then
+     else if ('VDW-DF-X' .EQ. TRIM(dftout) ) then
      ! Special case vdW-DF-X
         call errore('set_dft_from_name','functional not yet implemented',1)
 
-    else if ('VDW-DF-Y' .EQ. TRIM(dftout) ) then
+     else if ('VDW-DF-Y' .EQ. TRIM(dftout) ) then
      ! Special case vdW-DF-Y
         call errore('set_dft_from_name','functional not yet implemented',1)
 
-    else if ('VDW-DF-Z' .EQ. TRIM(dftout) ) then
+     else if ('VDW-DF-Z' .EQ. TRIM(dftout) ) then
      ! Special case vdW-DF-Z
         call errore('set_dft_from_name','functional not yet implemented',1)
 
-    ELSE IF ( 'INDEX:' ==  dftout(1:6)) THEN
+     ELSE IF ( 'INDEX:' ==  dftout(1:6)) THEN
      ! Special case for old RRKJ format, containing indices instead of label
         READ( dftout(7:18), '(6i2)') iexch, icorr, igcx, igcc, inlc, imeta
         dft_defined = set_dft_values(iexch, icorr, igcx, igcc, inlc, imeta)
         dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
              &//gradc (igcc) //'-'// nonlocc(inlc)
     END IF
-    
-    if (force_meta_gga) imeta = 4  ! null meta-GGA
 
     !
     ! ----------------------------------------------------------------
@@ -1036,8 +1036,8 @@ CONTAINS
   end subroutine set_finite_size_volume
   !-----------------------------------------------------------------------
   !
-  subroutine get_finite_size_cell_volume( is_present, volume )
-     logical,  intent(out) :: is_present
+  subroutine get_finite_size_cell_volume(is_present, volume)    !^^^
+     logical, intent(out) :: is_present
      real(dp), intent(out) :: volume
      is_present = finite_size_cell_volume_set
      volume = -1.d0
@@ -1223,41 +1223,8 @@ subroutine write_dft_name
         &  " (",I2,3I3,2I2,")")') TRIM( dft ), iexch,icorr,igcx,igcc,inlc,imeta
    IF ( get_exx_fraction() > 0.0_dp ) WRITE( stdout, &
         '(5X,"EXX-fraction              =",F12.2)') get_exx_fraction()
-#ifdef __LIBXC
-   call get_libxc_version
-   write( stdout, '(5X,"Using LIBXC version       = ",3I4)') libxc_major, libxc_minor, libxc_micro
-#endif
    return
 end subroutine write_dft_name
-!
-!
-SUBROUTINE init_lda_xc()
-   !
-   !  passes the functional indexes (and the exx and size_cell parameters)
-   !  to the module xc_lda_lsda.
-   !
-   USE kinds,               ONLY: DP
-   USE xc_lda_lsda,         ONLY: iexch_l, icorr_l, &
-                                  exx_started_l, is_there_finite_size_corr, &
-                                  exx_fraction_l, finite_size_cell_volume_l
-   !
-   IMPLICIT NONE
-   !
-   ! exchange-correlation indexes
-   iexch_l = get_iexch()
-   icorr_l = get_icorr()
-   !
-   ! hybrid exchange vars
-   exx_started_l  = exx_is_active()
-   exx_fraction_l = 0._DP
-   IF ( exx_started ) exx_fraction_l = get_exx_fraction()
-   !
-   ! finite size correction vars
-   CALL get_finite_size_cell_volume( is_there_finite_size_corr, finite_size_cell_volume_l )
-   !
-   RETURN
-   !
-END SUBROUTINE
 !
 !
 !-----------------------------------------------------------------------
@@ -2629,14 +2596,6 @@ subroutine tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
      call  tb09cxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   elseif (imeta == 4) then
      ! do nothing
-     ex = 0.d0
-     ec = 0.d0
-     v1x = 0.d0
-     v2x = 0.d0
-     v3x = 0.d0
-     v1c = 0.d0
-     v2c = 0.d0
-     v3c = 0.d0
   elseif (imeta == 5) then
      call  SCANcxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   else
@@ -2868,362 +2827,117 @@ end subroutine tau_xc_array_spin
 !------- DRIVERS FOR DERIVATIVES OF XC POTENTIAL -----------------------
 !-----------------------------------------------------------------------
 !
-      !-----------------------------------------------------------------------
-      function dmxc( rho )
-        !-----------------------------------------------------------------------
-        !
-        !  derivative of the xc potential with respect to the local density
-        !
-        use xc_lda_lsda,  only: xc
-        !
-        implicit none
-        !
-        real(DP), intent(in) :: rho
-        ! input: the charge density ( positive )
-        !
-        real(DP) :: dmxc
-        ! output: the derivative of the xc potential
-        !
-        ! local variables
-        !
-        integer, parameter :: length=1                 !^^^ PROVISIONAL 
-        real(DP), dimension(length) :: rho_v, rs, ex, vx, ec, vc
-        real(DP), dimension(length) :: vxp, vcp, vxm, vcm
-        real(DP) :: dr
-        real(DP), external :: dpz
-        integer :: iflg
-        !
-        real(DP), parameter :: small = 1.E-30_DP, e2 = 2.0_DP, &
-             pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP /3.0_DP
-        !
-        call init_lda_xc()
-        !
-        dmxc = 0.0_DP
-        if (rho < small) then
-           return
-        endif
-        !
-        !    first case: analytical derivatives available
-        !
-        if (get_iexch() == 1 .and. get_icorr() == 1) then
-           rs = (pi34 / rho)**third
-           !
-           !..exchange
-           call slater(length, rs, ex, vx)
-           dmxc = vx(1) / (3.0_DP * rho)
-           !
-           !..correlation
-           iflg = 2
-           if (rs(1) < 1.0_DP) iflg = 1
-           dmxc = dmxc + dpz(rs, iflg)
-        else
-           !
-           !     second case: numerical derivatives
-           !
-           dr = min(1.E-6_DP, 1.E-4_DP * rho)
-           !
-           rho_v=rho+dr
-           call xc(length, rho_v, ex, ec, vxp, vcp)
-           !
-           rho_v=rho-dr
-           call xc(length, rho_v, ex, ec, vxm, vcm)
-           !
-           dmxc = (vxp(1) + vcp(1) - vxm(1) - vcm(1)) / (2.0_DP * dr)
-        endif
-        !
-        ! bring to rydberg units
-        !
-        dmxc = e2 * dmxc
-        return
-        !
-      end function dmxc
+SUBROUTINE init_lda_xc()
+   !
+   USE kinds,               ONLY: DP
+   USE xc_lda_lsda,         ONLY: iexch_l, icorr_l, &
+                                  exx_started_l, is_there_finite_size_corr, &
+                                  exx_fraction_l, finite_size_cell_volume_l
+   !
+   IMPLICIT NONE
+   !
+   ! exchange-correlation indexes
+   iexch_l = get_iexch()
+   icorr_l = get_icorr()
+   !
+   ! hybrid exchange vars
+   exx_started_l  = exx_is_active()
+   exx_fraction_l = 0._DP
+   IF ( exx_started ) exx_fraction_l = get_exx_fraction()
+   !
+   ! finite size correction vars
+   CALL get_finite_size_cell_volume( is_there_finite_size_corr, finite_size_cell_volume_l )
+   !
+   RETURN
+   !
+END SUBROUTINE
+      !
       !
       !-----------------------------------------------------------------------
-      subroutine dmxc_spin( rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
-           dmuxc_dd )
-      !-----------------------------------------------------------------------
-        !  derivative of the xc potential with respect to the local density
-        !  spin-polarized case
+      SUBROUTINE dmxc( length, rho, dmuxc )
+        !-----------------------------------------------------------------------
         !
-        USE xc_lda_lsda,    only : xc_spin
+        !!  Derivative of the xc potential with respect to the local density.
         !
-        implicit none
+        USE xc_lda_lsda,  ONLY: xc
         !
-        real(DP), intent(in) :: rhoup, rhodw
-        ! input: spin-up and spin-down charge density
+        IMPLICIT NONE
         !
-        real(DP), intent(out) :: dmuxc_uu, dmuxc_ud, dmuxc_du, dmuxc_dd
-        ! output: up-up, up-down, down-up, down-down derivatives of the
-        ! XC functional
+        INTEGER,  INTENT(IN) :: length
         !
-        ! local variables
+        REAL(DP), INTENT(IN),  DIMENSION(length) :: rho
+        !! input: the charge density ( positive )
         !
-        integer, parameter :: length=1                  !^^^ PROVISIONAL
-        real(DP), dimension(length) :: zeta_v, rho_v, rs, ex, vx, ec, vc
-        real(DP), dimension(length) :: ecu, vcu, ecp, vcp
-        real(DP), dimension(length,2) :: vxm_s, vcm_s, vxp_s, vcp_s
-        !
-        real(DP) :: rho, zeta, rhotot, fz, fz1, fz2, &
-             dmcu, dmcp, aa, bb, cc, dr, dz, zeta_eff 
-        !
-        real(DP), external :: dpz, dpz_polarized
-        integer :: iflg
-        !
-        real(DP), parameter :: small = 1.E-30_DP, e2 = 2.0_DP, &
-             pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP/3.0_DP, &
-             p43 = 4.0_DP / 3.0_DP, p49 = 4.0_DP / 9.0_DP, m23 = -2.0_DP / 3.0_DP
-        !
-        dmuxc_uu = 0.0_DP
-        dmuxc_du = 0.0_DP
-        dmuxc_ud = 0.0_DP
-        dmuxc_dd = 0.0_DP
-        !
-        call init_lda_xc()
-        !
-        rhotot = rhoup + rhodw
-        if (rhotot <= small) return
-        zeta = (rhoup - rhodw) / rhotot
-
-        if (abs (zeta) > 1.0_DP) return
-        if (get_iexch() == 1 .and. get_icorr() == 1) then
-           !
-           !    first case: analytical derivative available
-           !
-           !..exchange
-           rs(1) = (pi34 / (2.0_DP * rhoup) )**third
-           call slater( length, rs, ex, vx )
-           !
-           dmuxc_uu = vx(1) / (3.0_DP * rhoup)
-           rs(1) = (pi34 / (2.0_DP * rhodw))**third
-           call slater( length, rs, ex, vx )
-           !
-           dmuxc_dd = vx(1) / (3.0_DP * rhodw)
-           !..correlation
-           rs(1) = (pi34 / rhotot)**third
-           iflg = 2
-           if (rs(1) < 1.0_DP) iflg = 1
-           !
-           dmcu = dpz( rs(1), iflg )
-           dmcp = dpz_polarized( rs(1), iflg )
-           !
-           call pz( length, rs, 1, ecu, vcu )
-           call pz_polarized( length, rs, ecp, vcp )
-           !
-           fz  = ( (1.0_DP + zeta) **p43 + (1.0_DP - zeta) **p43 - 2.0_DP) &
-                / (2.0_DP**p43 - 2.0_DP)
-           fz1 = p43 * ( (1.0_DP + zeta) **third- (1.0_DP - zeta) **third) &
-                / (2.0_DP**p43 - 2.0_DP)
-           fz2 = p49 * ( (1.0_DP + zeta) **m23 + (1.0_DP - zeta) **m23) &
-                / (2.0_DP**p43 - 2.0_DP)
-           !
-           aa = dmcu + fz * (dmcp - dmcu)
-           bb = 2.0_DP * fz1 * (vcp(1) - vcu(1) - (ecp(1) - ecu(1)) ) / rhotot
-           cc = fz2 * (ecp(1) - ecu(1)) / rhotot
-           !
-           dmuxc_uu = dmuxc_uu + aa + (1.0_DP - zeta) * bb + (1.0_DP - zeta)**2 * cc
-           dmuxc_du = dmuxc_du + aa + ( - zeta) * bb + (zeta**2 - 1.0_DP) * cc
-           dmuxc_ud = dmuxc_du
-           dmuxc_dd = dmuxc_dd+aa - (1.0_DP + zeta) * bb + (1.0_DP + zeta)**2 * cc
-
-        else
-
-           rho= rhoup+rhodw
-           dr = min (1.E-6_DP, 1.E-4_DP * rho)
-           !
-           rho_v(1) = rho-dr
-           zeta_v(1)= zeta
-           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
-           !
-           rho_v(1) = rho+dr
-           zeta_v(1)= zeta
-           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
-           !
-           dmuxc_uu = (vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) / (2.0_DP * dr)
-           dmuxc_ud = dmuxc_uu
-           dmuxc_dd = (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)) / (2.0_DP * dr)
-           dmuxc_du = dmuxc_dd
-           ! dz = min (1.d-6, 1.d-4 * abs (zeta) )
-           dz = 1.E-6_DP
-!
-!          If zeta is too close to +-1, the derivative is computed at a slightly
-!          smaller zeta
-!
-           zeta_eff = SIGN( MIN( ABS( zeta ), ( 1.0_DP - 2.0_DP*dz ) ) , zeta )
-           !
-           rho_v(1) = rho
-           zeta_v(1)= zeta_eff-dz
-           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
-           !
-           rho_v(1) = rho
-           zeta_v(1)= zeta_eff+dz
-           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
-           !
-           dmuxc_uu = dmuxc_uu + (vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) * &
-                (1.0_DP - zeta) / rho / (2.0_DP * dz)
-           dmuxc_ud = dmuxc_ud - (vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) * &
-                (1.0_DP + zeta) / rho / (2.0_DP * dz)
-           dmuxc_du = dmuxc_du + (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)) * &
-                (1.0_DP - zeta) / rho / (2.0_DP * dz)
-           dmuxc_dd = dmuxc_dd - (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)) * &
-                (1.0_DP + zeta) / rho / (2.0_DP * dz)
-        endif
-        !
-        ! bring to rydberg units
-        !
-        dmuxc_uu = e2 * dmuxc_uu
-        dmuxc_du = e2 * dmuxc_du
-        dmuxc_ud = e2 * dmuxc_ud
-        dmuxc_dd = e2 * dmuxc_dd
-        !
-        return
-
-      end subroutine dmxc_spin
-
-      !-----------------------------------------------------------------------
-      subroutine dmxc_nc( rho, mx, my, mz, dmuxc )
-      !-----------------------------------------------------------------------
-        !  derivative of the xc potential with respect to the local density
-        !  and magnetization
-        !  non colinear case
-        !
-        use xc_lda_lsda, only : xc_spin
-        !
-        implicit none
-        !
-        real(DP), intent(in) :: rho, mx, my, mz
-        ! input: charge density and magnetization
-        real(DP), intent(out) :: dmuxc(4,4)
-        ! output: derivative of XC functional
+        REAL(DP), INTENT(OUT), DIMENSION(length) :: dmuxc
+        !! output: the derivative of the xc potential
         !
         ! local variables
+        REAL(DP), DIMENSION(length) :: ex, vx
+        REAL(DP), ALLOCATABLE, DIMENSION(:) :: rs, dr
+        REAL(DP), ALLOCATABLE, DIMENSION(:) :: ec, vc
         !
-        integer, parameter :: length = 1  !^^^ PROVISIONAL
+        REAL(DP), EXTERNAL :: dpz
+        INTEGER :: iflg, ir
         !
-        real(DP), dimension(length) :: zeta_v, rho_v, rs, ex, vx, ec, vc
-        real(DP), dimension(length) :: ecu, vcu, ecp, vcp
-        real(DP), dimension(length,2) :: vx_s, vc_s, vxm_s, vcm_s, vxp_s, vcp_s
+        REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
+             pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP /3.0_DP
         !
-        REAL(DP) :: zeta, dr, dz
-        !
-        REAL(DP) :: amag, vs, dvxc_rho, dvxc_mx, dvxc_my, dvxc_mz,  &
-                    dbx_rho, dbx_mx, dbx_my, dbx_mz, dby_rho, dby_mx, &
-                    dby_my, dby_mz, dbz_rho, dbz_mx, dbz_my, dbz_mz, zeta_eff
-        !
-        REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP
-        !
+        CALL init_lda_xc()
         !
         dmuxc = 0.0_DP
         !
-        call init_lda_xc()
+        !    first case: analytical derivatives available
         !
-        !
-        IF (rho <= small) RETURN
-        !
-        amag = sqrt(mx**2 + my**2 + mz**2)
-        zeta = amag / rho
-        !
-        IF (abs(zeta) > 1.0_DP) RETURN
-        !
-        rho_v(1) = rho
-        zeta_v(1)= zeta
-        CALL xc_spin( length, rho_v, zeta_v, ex, ec, vx_s, vc_s )
-        !
-        vs = 0.5_DP*( vx_s(1,1)+vc_s(1,1)-vx_s(1,2)-vc_s(1,2) )
-        !
-        dr = min (1.E-6_DP, 1.E-4_DP * rho)
-        !
-        rho_v(1) = rho-dr
-        zeta_v(1)= zeta
-        CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
-        !
-        rho_v(1) = rho+dr
-        zeta_v(1)= zeta
-        CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
-        !
-        dvxc_rho = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))+     &
-                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2))) / (4.0_DP * dr)
-        !
-        IF (amag > 1.E-10_DP) THEN
-           dbx_rho  = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
-                       (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))* mx / (4.0_DP*dr*amag)
-           dby_rho  = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
-                       (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))* my / (4.0_DP*dr*amag)
-           dbz_rho  = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
-                       (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))* mz / (4.0_DP*dr*amag)
-!           dz = min (1.d-6, 1.d-4 * abs (zeta) )
-           dz = 1.0E-6_DP
-!
-!          If zeta is too close to +-1, the derivative is computed at a slightly
-!          smaller zeta
-!
-           zeta_eff = SIGN( MIN( ABS( zeta ), ( 1.0_DP - 2.0_DP*dz ) ) , zeta )
+        IF (get_iexch() == 1 .AND. get_icorr() == 1) THEN
            !
-           rho_v(1) = rho
-           zeta_v(1)= zeta_eff-dz
-           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
+           ALLOCATE( rs(length) )
            !
-           rho_v(1) = rho
-           zeta_v(1)= zeta_eff+dz
-           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
+           rs = 1.0_DP
+           WHERE ( rho > small ) rs = pi34 / rho**third
            !
-!  The variables are rho and m, so zeta depends on rho
-!
-           dvxc_rho=dvxc_rho- ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))+     &
-                         (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*zeta/rho/(4.0_DP * dz)
-           dbx_rho  = dbx_rho-((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
-                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx*zeta/rho/(4.0_DP*dz*amag)
-           dby_rho  = dby_rho-((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
-                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my*zeta/rho/(4.0_DP*dz*amag)
-           dbz_rho  = dbz_rho-((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
-                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mz*zeta/rho/(4.0_DP*dz*amag)
-!
-! here the derivatives with respect to m
-!
-           dvxc_mx = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) + &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx/rho/(4.0_DP*dz*amag)
-           dvxc_my = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) + &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my/rho/(4.0_DP*dz*amag)
-           dvxc_mz = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) + &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mz/rho/(4.0_DP*dz*amag)
-           dbx_mx  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx**2*amag/rho/       &
-                      (4.0_DP*dz) + vs*(my**2+mz**2))/amag**3
-           dbx_my  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx*my*amag/rho/       &
-                      (4.0_DP*dz) - vs*(mx*my))/amag**3
-           dbx_mz  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx*mz*amag/rho/       &
-                      (4.0_DP*dz) - vs*(mx*mz))/amag**3
-           dby_mx  = dbx_my
-           dby_my  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my**2*amag/rho/       &
-                      (4.0_DP*dz) + vs*(mx**2+mz**2))/amag**3
-           dby_mz  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my*mz*amag/rho/  &
-                      (4.0_DP*dz) - vs*(my*mz))/amag**3
-           dbz_mx  = dbx_mz
-           dbz_my  = dby_mz
-           dbz_mz  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
-                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mz**2*amag/rho/       &
-                      (4.0_DP*dz) + vs*(mx**2+my**2))/amag**3
-           dmuxc(1,1)=dvxc_rho
-           dmuxc(1,2)=dvxc_mx
-           dmuxc(1,3)=dvxc_my
-           dmuxc(1,4)=dvxc_mz
-           dmuxc(2,1)=dbx_rho
-           dmuxc(2,2)=dbx_mx
-           dmuxc(2,3)=dbx_my
-           dmuxc(2,4)=dbx_mz
-           dmuxc(3,1)=dby_rho
-           dmuxc(3,2)=dby_mx
-           dmuxc(3,3)=dby_my
-           dmuxc(3,4)=dby_mz
-           dmuxc(4,1)=dbz_rho
-           dmuxc(4,2)=dbz_mx
-           dmuxc(4,3)=dbz_my
-           dmuxc(4,4)=dbz_mz
+           !..exchange
+           CALL slater( length, rs, ex, vx )
+           dmuxc = vx / (3.0_DP * rho)
+           !
+           !..correlation
+           DO ir = 1, length
+              iflg = 2
+              if (rs(ir) < 1.0_DP) iflg = 1
+              dmuxc(ir) = dmuxc(ir) + dpz(rs(ir), iflg)
+           ENDDO
+           !
+           WHERE ( rho < small ) dmuxc = 0._dp
+           !
+           DEALLOCATE( rs )
+           !
         ELSE
-           dmuxc(1,1)=dvxc_rho
+           !
+           !     second case: numerical derivatives
+           !
+           ALLOCATE( ec(length), vc(length) )
+           ALLOCATE( dr(length) )
+           !
+           DO ir = 1, length
+              !if (rho(ir) > small) then  !... cut already inside xc()
+                 dr(ir) = MIN( 1.E-6_DP, 1.E-4_DP * rho(ir) )
+              !else
+              !   dr(ir) = -0.5_dp 
+              !endif
+           ENDDO
+           !
+           CALL xc( length, rho+dr, ex, ec, vx, vc )
+           !
+           dmuxc = vx + vc
+           !
+           CALL xc( length, rho-dr, ex, ec, vx, vc )
+           !
+           dmuxc = (dmuxc - vx - vc) / (2.0_DP * dr)
+           !
+           DEALLOCATE( ec, vc )
+           DEALLOCATE( dr )
+           !
+           !where (rho<small) dmuxc=0._dp
+           !
         ENDIF
         !
         ! bring to rydberg units
@@ -3231,9 +2945,373 @@ end subroutine tau_xc_array_spin
         dmuxc = e2 * dmuxc
         !
         RETURN
-
-      end subroutine dmxc_nc
+        !
+      END SUBROUTINE dmxc
       !
+      !
+      !-----------------------------------------------------------------------
+      SUBROUTINE dmxc_spin( length, rho, dmuxc )
+      !-----------------------------------------------------------------------
+        !
+        !!  Derivative of the xc potential with respect to the local density
+        !!  spin-polarized case.
+        !
+        USE xc_lda_lsda,    ONLY : xc_spin
+        !
+        IMPLICIT NONE
+        !
+        INTEGER,  INTENT(IN) :: length
+        !! input: length of the input/output arrays
+        REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho
+        !! input: spin-up and spin-down charge density
+        !
+        REAL(DP), INTENT(OUT), DIMENSION(length,2,2) :: dmuxc
+        !! output: u-u, u-d, d-u, d-d derivatives of the XC functional
+        !
+        ! ... local variables
+        !
+        REAL(DP), DIMENSION(length) :: zeta, rhotot
+        REAL(DP), DIMENSION(length) :: aux1, null_v
+        !
+        REAL(DP), ALLOCATABLE, DIMENSION(:)   :: rs, zeta_eff, ds
+        REAL(DP), ALLOCATABLE, DIMENSION(:)   :: ecu, ecp, aux2
+        REAL(DP), ALLOCATABLE, DIMENSION(:)   :: vcu, vcp
+        REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: vx, vc
+        !
+        REAL(DP) :: fz, fz1, fz2, dmcu, dmcp, aa, bb, cc
+        !
+        REAL(DP), EXTERNAL :: dpz, dpz_polarized
+        !
+        INTEGER :: ir, is, iflg
+        !
+        REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
+             pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP/3.0_DP, &
+             p43 = 4.0_DP / 3.0_DP, p49 = 4.0_DP / 9.0_DP, m23 = -2.0_DP / 3.0_DP
+        !
+        dmuxc  = 0.0_DP
+        null_v = 1.0_DP
+        zeta   = 0.5_DP
+        rhotot(:) = rho(:,1) + rho(:,2)
+        !
+        CALL init_lda_xc()  !^^^
+        !
+        WHERE (rhotot <= small) !however the cut is already inside xc_spin()
+           rhotot = 0.5_DP
+           null_v = 0.0_DP
+        ELSEWHERE
+           zeta(:) = (rho(:,1) - rho(:,2)) / rhotot(:)
+        END WHERE
+        !
+        WHERE (ABS(zeta) > 1.0_DP)
+           zeta   = 0.5_DP
+           null_v = 0.0_DP
+        END WHERE
+        !
+        IF (get_iexch() == 1 .AND. get_icorr() == 1) THEN
+           !
+           !    first case: analytical derivative available
+           !
+           ALLOCATE( rs(length) )
+           ALLOCATE( vcu(length), vcp(length), vx(length,1) )
+           ALLOCATE( ecu(length), ecp(length) )
+           !
+           !..exchange
+           !
+           rs(:) = ( pi34 / (2.0_DP * rho(:,1)) )**third
+           CALL slater( length, rs, aux1, vx(:,1) )
+           !
+           dmuxc(:,1,1) = vx(:,1) / (3.0_DP * rho(:,1))
+           !
+           rs(:) = ( pi34 / (2.0_DP * rho(:,2)) )**third
+           CALL slater( length, rs, aux1, vx(:,1) )
+           !
+           dmuxc(:,2,2) = vx(:,1) / (3.0_DP * rho(:,2))
+           !
+           !..correlation
+           !
+           rs(:) = (pi34 / rhotot(:))**third
+           !
+           CALL pz( length, rs, 1, ecu, vcu )
+           CALL pz_polarized( length, rs, ecp, vcp )
+           !
+           DO ir = 1, length
+              fz  = ( (1.0_DP + zeta(ir))**p43 + (1.0_DP - zeta(ir))**p43 - 2.0_DP ) &
+                    / (2.0_DP**p43 - 2.0_DP)
+              fz1 = p43 * ( (1.0_DP + zeta(ir))**third - (1.0_DP - zeta(ir))**third) &
+                    / (2.0_DP**p43 - 2.0_DP)
+              fz2 = p49 * ( (1.0_DP + zeta(ir))**m23   + (1.0_DP - zeta(ir))**m23  ) &
+                    / (2.0_DP**p43 - 2.0_DP)
+              !
+              iflg = 2
+              IF (rs(ir) < 1.0_DP) iflg = 1
+              !
+              dmcu = dpz( rs(ir), iflg )
+              dmcp = dpz_polarized( rs(ir), iflg )
+              !
+              aa = dmcu + fz * (dmcp - dmcu)
+              bb = 2.0_DP * fz1 * (vcp(ir) - vcu(ir) - (ecp(ir) - ecu(ir)) ) / rhotot(ir)
+              cc = fz2 * (ecp(ir) - ecu(ir)) / rhotot(ir)
+              !
+              dmuxc(ir,1,1) = dmuxc(ir,1,1) + aa + (1.0_DP - zeta(ir)) * bb + &
+                                                             (1.0_DP - zeta(ir))**2 * cc
+              dmuxc(ir,2,1) = dmuxc(ir,2,1) + aa + (-zeta(ir)) * bb +         &
+                                                             (zeta(ir)**2 - 1.0_DP) * cc
+              dmuxc(ir,1,2) = dmuxc(ir,2,1)
+              dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta(ir)) * bb + &
+                                                             (1.0_DP + zeta(ir))**2 * cc
+           ENDDO
+           !
+           DEALLOCATE( rs )
+           DEALLOCATE( vcu, vcp, vx )
+           DEALLOCATE( ecu, ecp )
+           !
+        ELSE
+           !
+           ALLOCATE( vx(length,2), vc(length,2) )
+           ALLOCATE( aux2(length) )
+           ALLOCATE( zeta_eff(length), ds(length) )
+           !
+           ds(:) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(:) ) !here ds is drho
+           !
+           CALL xc_spin( length, rhotot+ds, zeta, aux1, aux2, vx, vc )
+           !
+           dmuxc(:,1,1) = vx(:,1) + vc(:,1)
+           dmuxc(:,2,2) = vx(:,2) + vc(:,2)
+           !
+           CALL xc_spin( length, rhotot-ds, zeta, aux1, aux2, vx, vc )
+           !
+           dmuxc(:,1,1) = (dmuxc(:,1,1) - vx(:,1) - vc(:,1)) / (2.0_DP * ds(:))
+           dmuxc(:,1,2) = dmuxc(:,1,1)
+           dmuxc(:,2,2) = (dmuxc(:,2,2) - vx(:,2) - vc(:,2)) / (2.0_DP * ds(:))
+           dmuxc(:,2,1) = dmuxc(:,2,2)
+           !
+           ! ds() = min (1.d-6, 1.d-4 * abs(zeta(:)) )
+           ds(:) = 1.E-6_DP  ! now ds is dzeta
+           !
+           ! If zeta is too close to +-1, the derivative is computed at a slightly
+           ! smaller zeta
+           !
+           DO ir = 1, length
+             zeta_eff(ir) = SIGN( MIN( ABS(zeta(ir)), (1.0_DP-2.0_DP*ds(ir)) ), zeta(ir) )
+           ENDDO
+           !
+           CALL xc_spin( length, rhotot, zeta_eff+ds, aux1, aux2, vx, vc )
+           !
+           aux1 = (1.0_DP-zeta) / rhotot / (2.0_DP*ds)
+           DO is = 1, 2
+              vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)  ! vx as workspace here
+              dmuxc(:,is,1) = dmuxc(:,is,1) + vx(:,is)
+              dmuxc(:,is,2) = dmuxc(:,is,2) - vx(:,is)
+           ENDDO
+           !
+           CALL xc_spin( length, rhotot, zeta_eff-ds, aux1, aux2, vx, vc )
+           !
+           aux1 = (1.0_DP-zeta) / rhotot / (2.0_DP*ds)
+           DO is = 1, 2
+              vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)
+              dmuxc(:,is,1) = dmuxc(:,is,1) - vx(:,is)
+              dmuxc(:,is,2) = dmuxc(:,is,2) + vx(:,is)
+           ENDDO
+           !
+           DEALLOCATE( vx, vc )
+           DEALLOCATE( aux2 )
+           DEALLOCATE( zeta_eff, ds )
+           !
+        ENDIF
+        !
+        ! bring to rydberg units
+        !
+        dmuxc(:,1,1) = e2 * dmuxc(:,1,1) * null_v  !up-up
+        dmuxc(:,2,1) = e2 * dmuxc(:,2,1) * null_v  !down-up
+        dmuxc(:,1,2) = e2 * dmuxc(:,1,2) * null_v  !up-down
+        dmuxc(:,2,2) = e2 * dmuxc(:,2,2) * null_v  !down-down
+        !
+        RETURN
+        !
+      END SUBROUTINE dmxc_spin
+
+      !-----------------------------------------------------------------------
+      SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
+      !-----------------------------------------------------------------------
+        !
+        !!  Derivative of the xc potential with respect to the local density
+        !!  and magnetization - non collinear case.
+        !
+        USE xc_lda_lsda,  ONLY : xc_spin
+        !
+        IMPLICIT NONE
+        !
+        INTEGER,  INTENT(IN) :: length
+        !! input: length of the input/output arrays
+        REAL(DP), INTENT(IN), DIMENSION(length) :: rho_in
+        !! input: total charge density
+        REAL(DP), INTENT(IN), DIMENSION(length,3) :: m
+        !! input: magnetization vector
+        !
+        REAL(DP), INTENT(OUT), DIMENSION(length,4,4) :: dmuxc
+        !! output: derivative of XC functional
+        !
+        ! local variables
+        !
+        REAL(DP), DIMENSION(length)   :: rho, amag, zeta
+        REAL(DP), DIMENSION(length)   :: zeta_eff, ds, null_v
+        REAL(DP), DIMENSION(length)   :: vs, aux1, aux2
+        REAL(DP), DIMENSION(length,2) :: vx, vxm, vxp
+        REAL(DP), DIMENSION(length,2) :: vc, vcm, vcp
+        REAL(DP), DIMENSION(length)   :: dvxc_rho, dbx_rho, dby_rho, dbz_rho
+        !
+        REAL(DP) :: dvxc_mx, dvxc_my, dvxc_mz, &
+                    dbx_mx, dbx_my, dbx_mz,    &
+                    dby_mx, dby_my, dby_mz,    &
+                    dbz_mx, dbz_my, dbz_mz
+        REAL(DP) :: rnull
+        !
+        INTEGER :: i
+        !
+        REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP
+        !
+        dmuxc = 0.0_DP
+        !
+        rho    = rho_in
+        zeta   = 0.5_DP
+        amag   = 0.025_DP
+        null_v = 1.0_DP
+        !
+        CALL init_lda_xc()
+        !
+        WHERE (rho_in <= small)
+           rho = 0.5_DP
+           null_v = 0.0_DP
+        ELSEWHERE
+           amag = SQRT( m(:,1)**2 + m(:,2)**2 + m(:,3)**2 )
+           zeta = amag / rho
+        END WHERE
+        !
+        WHERE (ABS(zeta) > 1.0_DP)
+           zeta   = 0.5_DP
+           null_v = 0.0_DP
+        END WHERE
+        !
+        CALL xc_spin( length, rho, zeta, aux1, aux2, vx, vc )
+        !
+        vs = 0.5_DP*( vx(:,1)+vc(:,1)-vx(:,2)-vc(:,2) )
+        !
+        ! Here ds is drho
+        ds = MIN( 1.E-6_DP, 1.E-4_DP * rho )
+        !
+        CALL xc_spin( length, rho-ds, zeta, aux1, aux2, vxm, vcm )
+        !
+        CALL xc_spin( length, rho+ds, zeta, aux1, aux2, vxp, vcp )
+        !
+        dvxc_rho = ((vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1)) + &
+                    (vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2))) / (4.0_DP*ds)
+        !
+        WHERE (amag < 1.E-10_DP)
+           rho  = 0.5_DP
+           zeta = 0.5_DP
+           amag = 0.025
+        END WHERE
+        !
+        !
+        aux2(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) - &
+                 ( vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2) )
+        !
+        dbx_rho(:) = aux2 * m(:,1) / (4.0_DP*ds*amag)
+        dby_rho(:) = aux2 * m(:,2) / (4.0_DP*ds*amag)
+        dbz_rho(:) = aux2 * m(:,3) / (4.0_DP*ds*amag)
+        !
+        ! Now ds is dzeta
+        ! ds = min (1.d-6, 1.d-4 * abs (zeta) )
+        ds = 1.0E-6_DP
+        !
+        ! If zeta is too close to +-1, the derivative is computed at a slightly
+        ! smaller zeta
+        !
+        DO i = 1, length
+           zeta_eff(i) = SIGN( MIN( ABS( zeta(i) ), ( 1.0_DP - 2.0_DP*ds(i) ) ) , zeta(i) )
+        ENDDO
+        !
+        CALL xc_spin( length, rho, zeta_eff-ds, aux1, aux2, vxm, vcm )
+        !
+        CALL xc_spin( length, rho, zeta_eff+ds, aux1, aux2, vxp, vcp )
+        !
+        !  The variables are rho and m, so zeta depends on rho
+        !
+        aux1(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) + &
+                   vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2)
+        aux2(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) - &
+                 ( vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2) )
+        !
+        dvxc_rho(:) = dvxc_rho - aux1 * zeta/rho / (4.0_DP*ds)
+        dbx_rho(:)  = dbx_rho  - aux2 * m(:,1) * zeta/rho / (4.0_DP*ds*amag)
+        dby_rho(:)  = dby_rho  - aux2 * m(:,2) * zeta/rho / (4.0_DP*ds*amag)
+        dbz_rho(:)  = dbz_rho  - aux2 * m(:,3) * zeta/rho / (4.0_DP*ds*amag)
+        !
+        dmuxc(:,1,1) = dvxc_rho * null_v
+        dmuxc(:,2,1) = dbx_rho  * null_v
+        dmuxc(:,3,1) = dby_rho  * null_v
+        dmuxc(:,4,1) = dbz_rho  * null_v
+        !
+        ! Here the derivatives with respect to m
+        !
+        DO i = 1, length
+           !
+           rnull=null_v(i)
+           !
+           dvxc_mx = aux1(i) * m(i,1) / rho(i) / (4.0_DP*ds(i)*amag(i))
+           dvxc_my = aux1(i) * m(i,2) / rho(i) / (4.0_DP*ds(i)*amag(i))
+           dvxc_mz = aux1(i) * m(i,3) / rho(i) / (4.0_DP*ds(i)*amag(i))
+           !
+           dbx_mx  = (aux2(i) * m(i,1) * m(i,1) * amag(i)/rho(i) / (4.0_DP*ds(i)) + &
+                      vs(i) * (m(i,2)**2+m(i,3)**2)) / amag(i)**3
+           dbx_my  = (aux2(i) * m(i,1) * m(i,2) * amag(i)/rho(i) / (4.0_DP*ds(i)) - &
+                      vs(i) * m(i,1) * m(i,2) ) / amag(i)**3
+           dbx_mz  = (aux2(i) * m(i,1) * m(i,3) * amag(i)/rho(i) / (4.0_DP*ds(i)) - &
+                      vs(i) * m(i,1) * m(i,3) ) / amag(i)**3
+           !
+           dby_mx  = dbx_my
+           dby_my  = (aux2(i) * m(i,2) * m(i,2) * amag(i)/rho(i) / (4.0_DP*ds(i)) + &
+                      vs(i) * (m(i,1)**2 + m(i,3)**2)) / amag(i)**3
+           dby_mz  = (aux2(i) * m(i,2) * m(i,3) * amag(i)/rho(i) / (4.0_DP*ds(i)) - &
+                      vs(i) * m(i,2) * m(i,3)) / amag(i)**3
+           !
+           dbz_mx  = dbx_mz
+           dbz_my  = dby_mz
+           dbz_mz  = (aux2(i) * m(i,3) * m(i,3) * amag(i)/rho(i) / (4.0_DP*ds(i)) + &
+                      vs(i)*(m(i,1)**2 + m(i,2)**2)) / amag(i)**3
+           !
+           dmuxc(i,1,2) = dvxc_mx * rnull
+           dmuxc(i,1,3) = dvxc_my * rnull 
+           dmuxc(i,1,4) = dvxc_mz * rnull
+           !
+           dmuxc(i,2,2) = dbx_mx * rnull
+           dmuxc(i,2,3) = dbx_my * rnull
+           dmuxc(i,2,4) = dbx_mz * rnull
+           !
+           dmuxc(i,3,2) = dby_mx * rnull
+           dmuxc(i,3,3) = dby_my * rnull
+           dmuxc(i,3,4) = dby_mz * rnull
+           !
+           dmuxc(i,4,2) = dbz_mx * rnull
+           dmuxc(i,4,3) = dbz_my * rnull
+           dmuxc(i,4,4) = dbz_mz * rnull
+           !
+        ENDDO
+        !
+        !
+        WHERE ( amag < 1.E-10_DP )
+           !
+           dmuxc(:,1,1) = dvxc_rho * null_v
+           !
+        END WHERE
+        !
+        ! bring to rydberg units
+        !
+        dmuxc = e2 * dmuxc
+        !
+        RETURN
+        !
+      END SUBROUTINE dmxc_nc
       !
       !-----------------------------------------------------------------------
       subroutine dgcxc (r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc)
@@ -3484,8 +3562,7 @@ end subroutine tau_xc_array_spin
     return
     !
   end subroutine d3gcxc
-  !
-  !
+!
 #if defined(__LIBXC)
   subroutine get_libxc_version
      implicit none

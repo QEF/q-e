@@ -408,8 +408,8 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient, init_lda_xc
-    USE xc_lda_lsda,            ONLY : xc, xc_spin
+    USE funct,                  ONLY : dft_is_gradient, init_lda_xc !^^^
+    USE xc_lda_lsda,            ONLY : xc, xc_spin                  !^^^
     USE constants,              ONLY : fpi ! REMOVE
 
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -430,14 +430,17 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     INTEGER               :: ix,k               ! counters on directions and radial grid
     INTEGER               :: lsd                ! switch for local spin density
-    REAL(DP)              :: vs
+    REAL(DP)              :: vs   !, zeta, amag, vx(2), vc(2), ex, ec  !^^^
     INTEGER               :: kpol 
     INTEGER               :: mytid, ntids
     !
+    !^^^******************************************   !^^^
     REAL(DP), ALLOCATABLE :: arho(:), zeta(:), amag(:)
     REAL(DP), ALLOCATABLE :: ex(:), ec(:)
     REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
     REAL(DP), PARAMETER   :: eps = 1.e-30_dp
+    !
+    !^^^*************************************
     !
 #if defined(_OPENMP)
     INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
@@ -453,7 +456,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
        g_rad = 0.0_DP
     ENDIF
     !
-    CALL init_lda_xc()
+    CALL init_lda_xc()   !^^^
     !
 !$omp parallel default(private), &
 !$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd,nspin_mag,with_small_so,g_rad)
@@ -470,7 +473,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
     !
-    ALLOCATE( arho(i%m) )
+    ALLOCATE( arho(i%m) ) !^^^
     ALLOCATE( zeta(i%m) )
     ALLOCATE( amag(i%m) )
     ALLOCATE( ex(i%m) )
@@ -547,7 +550,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
            !
            IF (lsd==0) THEN
              !
-             arho = ABS( rho_loc(:,1)+rho_core )
+             arho = ABS( rho_loc(:,1)+rho_core )                          !^^^ def arhox, eps, e2,
              !
              CALL xc( i%m, arho, ex, ec, vx(:,1), vc(:,1) )
              !
@@ -567,10 +570,12 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
              !
              CALL xc_spin( i%m, arho, zeta, ex, ec, vx, vc )
              !
-             v_rad(:,ix,:) = e2*( vx(:,:) + vc(:,:) )
+             v_rad(:,ix,:) = e2*( vx(:,:) + vc(:,:) )    !^^^**
              if (present(energy)) e_rad(:) = e2*( ex(:) + ec(:) )
              !
            ENDIF
+           !
+           !CALL evxc_t_vec(rho_loc, rho_core, lsd, i%m, v_rad(:,ix,:), e_rad)  !^^^
            !
            IF (present(energy)) THEN
               IF ( nspin_mag < 2 ) THEN
@@ -595,7 +600,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     DEALLOCATE( rho_rad ) 
     DEALLOCATE( rho_loc ) 
     !
-    DEALLOCATE( arho )
+    DEALLOCATE( arho ) !^^^
     DEALLOCATE( zeta )
     DEALLOCATE( amag )
     DEALLOCATE( ex )
@@ -1601,19 +1606,19 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
 
 END SUBROUTINE PAW_dpotential
 
-SUBROUTINE PAW_dxc_potential(i, drho_lm, rho_lm, rho_core, v_lm)
-!
-!  This routine computes the change of the exchange and correlation 
-!  potential in the spherical basis. It receives as input the charge
-!  density and its variation.
-!
+SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )  !^^^
+    !
+    !!  This routine computes the change of the exchange and correlation 
+    !!  potential in the spherical basis. It receives as input the charge
+    !!  density and its variation.
+    !
     USE spin_orb,               ONLY : domag
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE funct,                  ONLY : dmxc, dmxc_spin, dmxc_nc, &
                                        dft_is_gradient
-
+    !
     TYPE(paw_info), INTENT(IN) :: i                   ! atom's minimal info
     REAL(DP), INTENT(IN)  :: rho_lm(i%m,i%l**2,nspin_mag) ! charge density as 
                                                       ! lm components
@@ -1623,95 +1628,107 @@ SUBROUTINE PAW_dxc_potential(i, drho_lm, rho_lm, rho_core, v_lm)
                                                       ! and spherical
     REAL(DP), INTENT(OUT) :: v_lm(i%m,i%l**2,nspin_mag)   ! potential density 
                                                       ! as lm components
-    REAL(DP), ALLOCATABLE  :: dmuxc(:,:,:)            ! fxc in the lsda case
-    REAL(DP), ALLOCATABLE  :: v_rad(:,:,:)            ! radial potential 
+    REAL(DP), ALLOCATABLE :: v_rad(:,:,:)             ! radial potential 
                                                       ! (to be integrated)
-    REAL(DP), ALLOCATABLE  :: rho_rad(:,:)            ! workspace (only one 
+    REAL(DP), ALLOCATABLE :: rho_rad(:,:)             ! workspace (only one 
                                                       ! radial slice of rho)
-    REAL(DP)              :: rho_loc(nspin_mag)           ! workspace 
-    
-    REAL(DP) :: rhotot, rhoup, rhodw                  ! auxiliary
-    REAL(DP) :: auxdmuxc(nspin_mag,nspin_mag)         ! auxiliary space       
-    
-    INTEGER               :: is,js,ix,k               ! counters on directions 
+    REAL(DP), ALLOCATABLE :: dmuxc(:,:,:)             ! fxc in the lsda case
+    !
+    INTEGER :: sign_r(i%m)                            ! array with sign of rho
+    !
+    INTEGER :: is, js, ix, k                          ! counters on directions 
                                                       ! and radial grid
-
+    !
     CALL start_clock ('PAW_dxc_pot')
-    ALLOCATE(dmuxc(i%m,nspin_mag,nspin_mag))
-    ALLOCATE(v_rad(i%m,rad(i%t)%nx,nspin_mag))
+    !
     ALLOCATE(rho_rad(i%m,nspin_mag))
+    ALLOCATE(v_rad(i%m,rad(i%t)%nx,nspin_mag))
+    ALLOCATE(dmuxc(i%m,nspin_mag,nspin_mag))
+    !
     !
     DO ix = ix_s, ix_e
-!
-! *** LDA (and LSDA) part (no gradient correction) ***
-! convert _lm density to real density along ix
-!
-       CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin_mag)
-!
-!      Compute the fxc function on the radial mesh along ix
-!
-       DO k = 1,i%m
-          rho_loc(1:nspin_mag) = rho_rad(k,1:nspin_mag)*g(i%t)%rm2(k)
-          IF (nspin_mag==4) THEN
-             rhotot = rho_loc(1) + rho_core (k)
-             CALL dmxc_nc (rhotot, rho_loc(2), rho_loc(3), rho_loc(4), auxdmuxc)
-             DO is=1,nspin_mag
-                DO js=1,nspin_mag
-                   dmuxc(k,is,js)=auxdmuxc(is,js)
-                END DO
-             END DO
-          ELSEIF (nspin_mag==2) THEN
-             rhoup = rho_loc(1)  + 0.5_DP * rho_core (k)
-             rhodw = rho_loc(2)  + 0.5_DP * rho_core (k)
-             CALL dmxc_spin (rhoup, rhodw, dmuxc(k,1,1), dmuxc(k,2,1),  &
-                                           dmuxc(k,1,2), dmuxc(k,2,2) )
-          ELSE
-             rhotot = rho_loc(1) + rho_core (k)
-             IF (rhotot.GT.1.d-30) v_rad (k,ix,1) = dmxc (rhotot)
-             IF (rhotot.LT. - 1.d-30) v_rad(k, ix, 1) = - dmxc ( - rhotot)
-             IF (rhotot.LT.1.d-30.AND.rhotot.GT.-1.d-30) v_rad(k,ix,1)=0.0_DP
-          ENDIF
+       !
+       ! *** LDA (and LSDA) part (no gradient correction) ***
+       ! convert _lm density to real density along ix
+       !
+       CALL PAW_lm2rad( i, ix, rho_lm, rho_rad, nspin_mag )
+       !
+       ! Compute the fxc function on the radial mesh along ix
+       !
+       DO k = 1, i%m
+          rho_rad(k,1:nspin_mag)=rho_rad(k,1:nspin_mag)*g(i%t)%rm2(k)
        ENDDO
-!
-!   Compute the change of the charge on the radial mesh along ix
-!
-       CALL PAW_lm2rad(i, ix, drho_lm, rho_rad, nspin_mag)
-!
-!   fxc * dn
-!
-       IF (nspin_mag==1) THEN
-          DO k = 1,i%m
-             v_rad(k,ix,1)=v_rad(k,ix,1)*rho_rad(k,1)*g(i%t)%rm2(k) 
+       !
+       SELECT CASE( nspin_mag )
+       CASE( 4 )
+          !
+          rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
+          CALL dmxc_nc( i%m, rho_rad(:,1),rho_rad(:,2:4), dmuxc )
+          !
+       CASE( 2 )
+          !
+          rho_rad(:,1) = rho_rad(:,1) + 0.5_DP*rho_core(:)
+          rho_rad(:,2) = rho_rad(:,2) + 0.5_DP*rho_core(:)
+          CALL dmxc_spin( i%m, rho_rad, dmuxc )
+          !
+       CASE DEFAULT
+          !
+          rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
+          !
+          sign_r = 1.0_DP
+          DO k = 1, i%m
+             IF ( rho_rad(k,1) < -1.d-30 ) THEN
+                sign_r(k) = -1.0_DP
+                rho_rad(k,1) = -rho_rad(k,1)
+             ELSEIF ( rho_rad(k,1)<1.d-30 .AND. rho_rad(k,1)>-1.d-30 ) THEN
+                sign_r(k) = 0.0_DP
+                rho_rad(k,1) = 0.5_DP
+             ENDIF
           ENDDO
+          !
+          CALL dmxc( i%m, rho_rad(:,1), dmuxc(:,1,1) )
+          !
+          v_rad(:,ix,1) = dmuxc(:,1,1)*sign_r(:)
+          !
+       END SELECT
+       !
+       !   Compute the change of the charge on the radial mesh along ix
+       !
+       CALL PAW_lm2rad( i, ix, drho_lm, rho_rad, nspin_mag )
+       !
+       !   fxc * dn
+       !
+       IF (nspin_mag==1) THEN
+          v_rad(:,ix,1)=v_rad(:,ix,1)*rho_rad(:,1)*g(i%t)%rm2(:) 
        ELSE
-          DO k = 1,i%m
-             DO is=1,nspin_mag
-                v_rad(k,ix,is)=0.0_DP
-                DO js=1,nspin_mag
-                   v_rad(k,ix,is)= v_rad(k,ix,is) + &
-                                 dmuxc(k,is,js)*rho_rad(k,js)*g(i%t)%rm2(k) 
-                ENDDO
+          DO is=1,nspin_mag
+             v_rad(:,ix,is)=0.0_DP
+             DO js=1,nspin_mag
+                v_rad(:,ix,is)= v_rad(:,ix,is) + &
+                                dmuxc(:,is,js)*rho_rad(:,js)*g(i%t)%rm2(:) 
              ENDDO
           ENDDO
        ENDIF
+       !
     ENDDO
-!
-! Recompose the sph. harm. expansion
-!
+    !
+    ! Recompose the sph. harm. expansion
+    !
     CALL PAW_rad2lm(i, v_rad, v_lm, i%l, nspin_mag)
-!
-! Add gradient correction, if necessary
-!
+    !
+    ! Add gradient correction, if necessary
+    !
     IF( dft_is_gradient() ) &
        CALL PAW_dgcxc_potential(i,rho_lm,rho_core,drho_lm,v_lm)
-
+    !
     DEALLOCATE(rho_rad)
     DEALLOCATE(v_rad)
     DEALLOCATE(dmuxc)
-
-    CALL stop_clock ('PAW_dxc_pot')
-
+    !
+    CALL stop_clock('PAW_dxc_pot')
+    !
     RETURN
+    !
 END SUBROUTINE PAW_dxc_potential
 !
 ! add gradient correction to dvxc. Both unpolarized and
