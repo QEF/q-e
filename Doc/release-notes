@@ -1,13 +1,10 @@
 New in version 6.4:
-  * Experimental and specific for gamma_only case: specifing nscdm the SCDM localization is performed 
-    only for iterations multiples of nscdm, in the intermediate iterations the  localized orbitals are 
-    derived with parallel transport from the last SCDM localization.  
-  * Added experimental version of SCDM localization with many K_POINTS. The calculation using SCDM 
-    is set as in the gamma-only case just specifing localization_thr to any value greater than 0 in 
-    the system namelist. 
-  * It is now possible to limit the number of xml step elements printed out for relaxation or 
-    molecular dynamics simulation setting  the envinroment variable MAX_XML_STEPS, useful in case
-    of very long trajectories to avoid issues due to too large file size.  
+  * Experimental version of SCDM localization with k-points, activated like for
+    k=0 by specifying in &system namelist a value > 0 for "localization_thr".
+  * It is now possible to limit the number of xml step elements printed out
+    for relaxation or molecular dynamics simulation, by setting the environment
+    variable MAX_XML_STEPS. Useful in case of very long trajectories to avoid 
+    issues due to too large file size.  
   * EPW works with ultrasoft pseudopotentials (F. Giustino, S. Poncé, R. Margine)
   * New code hp.x to compute Hubbard parameters using density-functional
     perturbation theory (experimental stage) (I. Timrov, N. Marzari, and M. Cococcioni, 
@@ -19,7 +16,7 @@ New in version 6.4:
     and M. Cococcioni, in preparation)
   * XDM now works also for USPP and norm-conserving PP
 
-Problems fixed in development version (+ = in qe-6.3-backports as well) :
+Problems fixed in version 6.4 (+ = in qe-6.3-backports as well) :
   + index not correctly initialized in LSDA phonon with core corrections 
   + GTH pseudopotentials in analytical form wrongly computed in some cases
   + projwfc.x not working with new xml format in noncolinear/spinorbit case 
@@ -40,7 +37,7 @@ Problems fixed in development version (+ = in qe-6.3-backports as well) :
     pseudopotentials was not working.
   + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
-Incompatible changes in development version:
+Incompatible changes in version 6.4 version:
   * Charge density in the LSDA case is stored as (up+down, up-down) and no longer 
     as (up,down). Output data format is unchanged to (up+down, up-down)
   * Non-symmorphic operations are always allowed and the FFT grid is made
@@ -56,7 +53,7 @@ Incompatible changes in development version:
     variables of turbo_lanczos.x and turbo_davidson.x. Instead, they are read 
     from the XML file produced by pw.x. The variable real_space_debug was removed.
 
-Known problems in development version:
+Known problems in version 6.4:
   * Frequent "dexx is negative" errors with hybrid functionals
 
 New in 6.3 version:

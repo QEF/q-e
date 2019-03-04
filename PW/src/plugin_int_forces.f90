@@ -40,17 +40,15 @@ SUBROUTINE external_wg_corr_force( rhor, force )
   USE kinds,             ONLY : DP
   USE cell_base,         ONLY : omega
   USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau, zv
-  use lsda_mod,         only : nspin
   USE gvect,             ONLY : ngm, g
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft
-  !
   USE martyna_tuckerman, ONLY : wg_corr_force
   USE vlocal,            ONLY : strf
   !
   IMPLICIT NONE
   !
-  REAL( DP ), INTENT(IN) ::  rhor ( dfftp%nnr, nspin )
+  REAL( DP ), INTENT(IN) ::  rhor ( dfftp%nnr )
   REAL( DP ), INTENT(OUT) :: force (3, nat)
   !
   ! ... Local variables
@@ -58,8 +56,7 @@ SUBROUTINE external_wg_corr_force( rhor, force )
   COMPLEX (DP), ALLOCATABLE :: auxg( : ), auxr( : )
   !
   allocate(auxr(dfftp%nnr))
-  auxr = cmplx(rhor(:,1),0.0_dp)
-  if ( nspin .eq. 2 ) auxr = auxr + cmplx(rhor(:,2),0.0_dp)
+  auxr = cmplx(rhor,0.0_dp)
   call fwfft ("Rho", auxr, dfftp)
   !
   allocate(auxg(ngm))
@@ -87,20 +84,19 @@ SUBROUTINE external_force_lc( rhor, force )
   USE ions_base,     ONLY : nat, ityp, tau
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm, gstart, ngl, igtongl, g
-  use lsda_mod,         only : nspin
   USE control_flags, ONLY : gamma_only
   !
   USE vlocal,        ONLY : vloc
   !
   IMPLICIT NONE
   !
-  REAL( DP ), INTENT(IN) ::  rhor ( dfftp%nnr, nspin )
+  REAL( DP ), INTENT(IN) ::  rhor ( dfftp%nnr )
   REAL( DP ), INTENT(OUT) :: force ( 3, nat )
   !
   ! ... Local variables
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-       g, rhor(:,1), dfftp%nl, gstart, gamma_only, vloc, force )
+       g, rhor, dfftp%nl, gstart, gamma_only, vloc, force )
   !
   RETURN
   !

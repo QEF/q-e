@@ -539,6 +539,7 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 		    {'martyna-tuckerman' 'm-t' 'mt'}
 		}
 		vdw_corr {
+		    {'grimme-d3' 'Grimme-D3' 'DFT-D3' 'dft-d3'}
 		    {'grimme-d2' 'Grimme-D2' 'DFT-D' 'dft-d'}
 		    {'ts-vdw' 'TS', 'ts', ''ts-vdW', 'tkatchenko-scheffler'}
 		    {'xdm''XDM'}
