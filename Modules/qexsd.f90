@@ -43,7 +43,7 @@ MODULE qexsd_module
   ! definitions for the fmt
   !
   CHARACTER(5), PARAMETER :: fmt_name = "QEXSD"
-  CHARACTER(5), PARAMETER :: fmt_version = "19.02.07"
+  CHARACTER(5), PARAMETER :: fmt_version = "19.03.04"
   !
   ! some default for kinds
   !
@@ -161,7 +161,7 @@ CONTAINS
       CALL xml_NewElement (XF=qexsd_xf, NAME = "qes:espresso")
       CALL xml_addAttribute(XF=qexsd_xf, NAME = "xsi:schemaLocation", &
                             VALUE = "http://www.quantum-espresso.org/ns/qes/qes-1.0 "//&
-                                    "http://www.quantum-espresso.org/ns/qes/qes_190207.xsd" )
+                                    "http://www.quantum-espresso.org/ns/qes/qes_190304.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
               COMMENT = "If not explicitely indicated, all quantities are expressed in Hartree atomic units" ) 
@@ -1317,7 +1317,7 @@ CONTAINS
     step_counter = step_counter+1
     !
     step_obj%tagname="step"
-    step_obj%n_step = step_counter
+    step_obj%n_step = i_step 
     !
     CALL qes_init( scf_conv_obj,"scf_conv", scf_has_converged, n_scf_steps, scf_error )
     !

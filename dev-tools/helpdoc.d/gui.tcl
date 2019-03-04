@@ -306,7 +306,7 @@ proc ::helpdoc::def_registerItems {tree node action} {
     set name [arr name]
 
     switch -- $tag {
-	var - keyword - dimension - namelist - table {
+	var - keyword - dimension - multidimension - namelist - table {
 	    def_registerItem_ $tag $name $attr
 	}
 	list {

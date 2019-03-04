@@ -24,22 +24,34 @@ module Dos\#auto -title "PWSCF GUI: module Dos.x" -script {
 	    
 	    separator -label "--- DOS ploting options ---"
 
-	    var ngauss {
-		-label   "Type of gaussian broadening (ngauss):"
-		-widget  radiobox
-		-value   {0 1 -1 99}
-		-textvalue {
-		    "Simple Gaussian (default)"
-		    "Methfessel-Paxton of order 1"
-		    "Marzari-Vanderbilt \"cold smearing\""
-		    "Fermi-Dirac function"
-		}
-	    }
+            var bz_sum {                
+                -label "Method for BZ summation (bz_sum):"
+                -widget radiobox
+                -value {                    
+                    'smearing' 
+                    'tetrahedra' 
+                    'tetrahedra_lin' 
+                    'tetrahedra_opt'
+                }
+                -validate string
+            }
 
-	    var degauss {
-		-label     "Gaussian broadening \[in Ry\] (degauss):"
-		-validate  fortranreal
-	    }
+            var ngauss {
+                -label   "Type of gaussian broadening (ngauss):"
+                -widget  radiobox
+                -value   {0 1 -1 99}
+                -textvalue {
+                    "Simple Gaussian (default)"
+                    "Methfessel-Paxton of order 1"
+                    "Marzari-Vanderbilt \"cold smearing\""
+                    "Fermi-Dirac function"
+                }
+            }
+            
+            var degauss {
+                -label     "Gaussian broadening \[in Ry\] (degauss):"
+                -validate  fortranreal
+            }        
 
 	    var DeltaE {
 		-label    "Resolution of PDOS plots \[in eV\] (DeltaE):"
@@ -58,6 +70,11 @@ module Dos\#auto -title "PWSCF GUI: module Dos.x" -script {
 	    }	    
 	}
     }
+
+    # ----------------------------------------------------------------------
+    # take care of specialties
+    # ----------------------------------------------------------------------
+    source dos-event.tcl
 
     # ------------------------------------------------------------------------
     # source the HELP file
