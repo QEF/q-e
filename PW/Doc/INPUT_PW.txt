@@ -1376,9 +1376,9 @@ NAMELIST: &SYSTEM
    
    Type:           LOGICAL
    Description:    When starting a non collinear calculation using an existing density
-                                         file from a collinear lsda calculation assumes previous density points in
-                                         z direction and rotates is in the direction described by "angle1" and
-                                         "angle2" variables for atomic type 1
+                   file from a collinear lsda calculation assumes previous density points in
+                   z direction and rotates it in the direction described by "angle1" and
+                   "angle2" variables for atomic type 1
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1547,27 +1547,28 @@ NAMELIST: &SYSTEM
     
                    '2D' :
                         Truncation of the Coulomb interaction in the z direction
-                                for structures periodic in the x-y plane. Total energy,
-                                forces and stresses are computed in a two-dimensional framework.
-                                Linear-response calculations () done on top of a self-consistent
-                                calculation with this flag will automatically be performed in
-                                the 2D framework as well. Please refer to:
-                                Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional
-                                perturbation theory for gated two-dimensional heterostructures:
-                                Theoretical developments and application to flexural phonons in graphene.
-                                Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
-                        NB:
-                                   - The length of the unit-cell along the z direction should
-                                     be larger than twice the thickness of the 2D material
-                                     (including electrons). A reasonable estimate for a
-                                     layer's thickness could be the interlayer distance in the
-                                     corresponding layered bulk material. Otherwise,
-                                     the atomic thickness + 10 bohr should be a safe estimate.
-                                     There is also a lower limit of 20 bohr imposed by the cutoff
-                                     radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
+                        for structures periodic in the x-y plane. Total energy,
+                        forces and stresses are computed in a two-dimensional framework.
+                        Linear-response calculations () done on top of a self-consistent
+                        calculation with this flag will automatically be performed in
+                        the 2D framework as well. Please refer to:
+                        Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional
+                        perturbation theory for gated two-dimensional heterostructures:
+                        Theoretical developments and application to flexural phonons in graphene.
+                        Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
                         
-                                   - As for ESM above, only in-plane stresses make sense and one
-                                     should use cell_dofree='2Dxy' in a vc-relax calculation.
+                        NB:
+                           - The length of the unit-cell along the z direction should
+                             be larger than twice the thickness of the 2D material
+                             (including electrons). A reasonable estimate for a
+                             layer's thickness could be the interlayer distance in the
+                             corresponding layered bulk material. Otherwise,
+                             the atomic thickness + 10 bohr should be a safe estimate.
+                             There is also a lower limit of 20 bohr imposed by the cutoff
+                             radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
+                        
+                           - As for ESM above, only in-plane stresses make sense and one
+                             should use cell_dofree='2Dxy' in a vc-relax calculation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1658,7 +1659,7 @@ NAMELIST: &SYSTEM
                    'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3'  :
                         Semiempirical Grimme's DFT-D3. Optional variables:
                         "dftd3_version", "dftd3_threebody"
-                        S. Grimme et al, J. Chem. Phys 132, 154104 (2010)
+                        S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1002/jcc.20495
     
                    'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' :
                         Tkatchenko-Scheffler dispersion corrections with first-principle derived
@@ -1726,12 +1727,24 @@ NAMELIST: &SYSTEM
    
    Type:           integer
    Default:        3
-   Description:    Version of Grimme implementation of Grimme-D3:
-                      Version=2 is the original Grimme-D2 parametrization
-                      Version=3 is Grimme-D3 (zero damping)
-                      Version=4 is Grimme-D3 (BJ damping)
-                      Version=5 is Grimme-D3M (zero damping)
-                      Version=6 is Grimme-D3M (BJ damping)
+   Description:   
+                   Version of Grimme implementation of Grimme-D3:
+    
+                   dftd3_version = 2 :
+                        Original Grimme-D2 parametrization
+    
+                   dftd3_version = 3 :
+                        Grimme-D3 (zero damping)
+    
+                   dftd3_version = 4 :
+                        Grimme-D3 (BJ damping)
+    
+                   dftd3_version = 5 :
+                        Grimme-D3M (zero damping)
+    
+                   dftd3_version = 6 :
+                        Grimme-D3M (BJ damping)
+    
                    NOTE: not all functionals are parametrized.
    +--------------------------------------------------------------------
    
@@ -3323,4 +3336,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Wed Feb 27 11:34:54 CET 2019
+This file has been created by helpdoc utility on Fri Mar 01 18:05:30 CET 2019

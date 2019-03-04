@@ -1,4 +1,4 @@
-VERSION = svn
+VERSION = git
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
@@ -9,7 +9,7 @@ LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
-all:  pdf html defs
+all:  defs pdf html
 pdf:  $(PDFS)
 html: pseudo-gen
 
@@ -25,7 +25,7 @@ clean:
 	- rm -rf ../../Doc/input_xx.xsl
 
 pseudo-gen: pseudo-gen.pdf
-	 rm -rf pseudo-gen/
+	 - rm -rf pseudo-gen/
 	 latex2html \
                 -t "User's Guide for LD1" \
                 -html_version 3.2,math \
