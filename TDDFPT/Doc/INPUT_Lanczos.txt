@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_lanczos.x / turboTDDFPT / Quantum Espresso (version: git)
+Program: turbo_lanczos.x / turboTDDFPT / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -301,4 +301,4 @@ NAMELIST: &lr_post
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Sep 07 12:19:41 CEST 2018
+This file has been created by helpdoc utility on Fri Mar 01 17:57:32 CET 2019

@@ -1,4 +1,4 @@
-VERSION = svn
+VERSION = git
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
@@ -23,7 +23,7 @@ XMLS = $(HTMLS:.html=.xml)
 TXTS = $(HTMLS:.html=.txt)
 
 doc: all
-all: pdf defs html
+all: defs pdf html
 pdf: $(PDFS)
 html: user_guide
 
@@ -77,7 +77,7 @@ link_on_main_doc:
 	ln -fs ../PP/Doc/INPUT_molecularpdos.txt .)
 
 user_guide: user_guide.pdf
-	rm -rf user_guide/
+	- rm -rf user_guide/
 	latex2html \
 		-t "User's Guide for the PP package" \
                 -html_version 3.2,math \

@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pwcond.x / PWscf / Quantum Espresso (version: svn)
+Program: pwcond.x / PWscf / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -384,4 +384,4 @@ CARD:
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:54 CEST 2018
+This file has been created by helpdoc utility on Fri Mar 01 17:57:31 CET 2019

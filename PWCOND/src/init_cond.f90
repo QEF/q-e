@@ -43,6 +43,10 @@ subroutine init_cond (nregion, flag)
   nry = dffts%nr2
   nrztot = dffts%nr3
 !  if(nrztot/2*2.eq.nrztot) nrztot = nrztot+1
+! check for the 1st Layer to be at Z=0   
+  dz1 = MINVAL( abs(tau(3,1:nat)) ) * alat
+  IF (dz1 > 1.d-4) CALL errore ('init_cond ','for numerical reasons &
+          & the 1st Layer of a cell should be aligned with Z=0 plane',1)
   zlen = at(3,3)
   dz1 = zlen/nrztot
   sarea = abs(at(1,1)*at(2,2)-at(2,1)*at(1,2))*alat**2
@@ -292,4 +296,3 @@ subroutine potz_split(vppottot,ztot,vppot,z,nrztot,nrz,nrxy,npol,iz0)
 
   return
 end subroutine potz_split
-

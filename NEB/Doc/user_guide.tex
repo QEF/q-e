@@ -96,7 +96,7 @@ just typing \texttt{make neb}, from the main \qe\ directory.
 the following codes in \texttt{NEB/src}:
 \begin{itemize}
 \item \nebx: calculates reaction barriers and pathways using NEB.
-\item \texttt{path\_int.x}: generates a reaction path (a set of points
+\item \texttt{path\_interpolation.x}: generates a reaction path (a set of points
 in the configuration space of the atomic system, called ``images''), by
  interpolating the supplied path. The new path can have a 
  different number of images than the old one and the initial and final 
@@ -163,7 +163,7 @@ architectures the precise numbers could be slightly different, in
 particular if different FFT dimensions are automatically selected. For
 this reason, a plain diff of your results against the reference data
 doesn't work, or at least, it requires human inspection of the
-results. 
+results.
 
 \section{Parallelism}
 \label{Sec:para}

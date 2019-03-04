@@ -39,7 +39,7 @@ SUBROUTINE check_initial_status(auxdyn)
   ! nsymq_iq : the order of the small group of q for each q
   !
   ! The following variables are set by this routine on the basis of
-  ! start_irr, last_irr, start_iq, last_iq, OR of modenum, OR of ifat and 
+  ! start_irr, last_irr, start_q, last_q, OR of modenum, OR of ifat and 
   ! atomo:
   !
   ! comp_iq : =.TRUE. if the q point is calculated in this run

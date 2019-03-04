@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: cp.x / CP / Quantum Espresso (version: svn)
+Program: cp.x / CP / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -311,7 +311,8 @@ NAMELIST: &CONTROL
    
    Type:           CHARACTER
    Default:        'default'
-   Description:    'small': memory-saving tricks are implemented. Currently:
+   Description:    'small': NO LONGER IMPLEMENTED SINCE v.6.3
+                            memory-saving tricks are implemented. Currently:
                             - the G-vectors are sorted only locally, not globally
                             - they are not collected and written to file
                             For large systems, the memory and time gain is sizable
@@ -2490,4 +2491,4 @@ CARD: AUTOPILOT
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Tue Oct 23 15:42:16 CEST 2018
+This file has been created by helpdoc utility on Fri Mar 01 17:56:47 CET 2019

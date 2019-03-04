@@ -946,38 +946,6 @@ SUBROUTINE read_nnkp
      ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) ) 
   endif
 
-  ! automatic projections
-  IF (ionode) THEN
-     CALL scan_file_to('auto_projections',found)
-     IF (found) THEN
-        IF (scdm_proj) THEN
-           IF (n_proj > 0) THEN
-              WRITE(stdout,'(//, " ****** begin Error message ******",/)')
-              WRITE(stdout,'(/," Found a projection block, an auto_projections block",/)')
-              WRITE(stdout,'(/," and scdm_proj = T in the input file. These three options are inconsistent.",/)') 
-              WRITE(stdout,'(/," Please refer to the Wannier90 User guide for correct use of these flags.",/)')
-              WRITE(stdout,'(/, " ****** end Error message ******",//)')
-              CALL errore( 'pw2wannier90', 'Inconsistent options for projections.', 1 )
-           ELSE
-              READ (iun_nnkp, *) n_wannier
-              READ (iun_nnkp, *) tmp_auto
-              IF (tmp_auto /= 0) CALL errore( 'pw2wannier90', 'Second entry in auto_projections block is not 0. ' // &
-              'See Wannier90 User Guide in the auto_projections section for clarifications.', 1 )
-           ENDIF
-        ELSE
-           ! Fire an error whether or not a projections block is found
-           CALL errore( 'pw2wannier90', 'scdm_proj = F but found an auto_projections block in '&
-                &//trim(seedname)//'.nnkp', 1 )
-        ENDIF
-     ELSE
-        IF (scdm_proj) THEN
-           ! Fire an error whether or not a projections block is found
-           CALL errore( 'pw2wannier90', 'scdm_proj = T but cannot find an auto_projections block in '& 
-                &//trim(seedname)//'.nnkp', 1 )
-        ENDIF
-     ENDIF
-  ENDIF
-
   IF (ionode) THEN   ! read from ionode only
      DO iw=1,n_proj
         READ(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
@@ -1004,6 +972,39 @@ SUBROUTINE read_nnkp
            spin_qaxis(:,iw)=spin_qaxis(:,iw)/xnorm
         endif
      ENDDO
+  ENDIF
+
+  ! automatic projections
+  IF (ionode) THEN
+     CALL scan_file_to('auto_projections',found)
+     IF (found) THEN
+        READ (iun_nnkp, *) n_wannier
+        READ (iun_nnkp, *) tmp_auto
+
+        IF (scdm_proj) THEN
+           IF (n_proj > 0) THEN
+              WRITE(stdout,'(//, " ****** begin Error message ******",/)')
+              WRITE(stdout,'(/," Found a projection block, an auto_projections block",/)')
+              WRITE(stdout,'(/," and scdm_proj = T in the input file. These three options are inconsistent.",/)') 
+              WRITE(stdout,'(/," Please refer to the Wannier90 User guide for correct use of these flags.",/)')
+              WRITE(stdout,'(/, " ****** end Error message ******",//)')
+              CALL errore( 'pw2wannier90', 'Inconsistent options for projections.', 1 )
+           ELSE
+              IF (tmp_auto /= 0) CALL errore( 'pw2wannier90', 'Second entry in auto_projections block is not 0. ' // &
+              'See Wannier90 User Guide in the auto_projections section for clarifications.', 1 )
+           ENDIF
+        ELSE
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = F but found an auto_projections block in '&
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ELSE
+        IF (scdm_proj) THEN
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = T but cannot find an auto_projections block in '& 
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ENDIF
   ENDIF
 
   ! Broadcast
@@ -4952,5 +4953,3 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
-
-
