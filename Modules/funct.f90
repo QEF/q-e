@@ -2911,7 +2911,7 @@ END SUBROUTINE
            ALLOCATE( rs(length) )
            !
            rs = 1.0_DP
-           WHERE ( rho > small ) rs = pi34 / rho**third
+           WHERE ( rho > small ) rs = (pi34 / rho)**third
            !
            !..exchange
            CALL slater( length, rs, ex, vx )
