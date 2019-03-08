@@ -3085,7 +3085,7 @@ END SUBROUTINE
            !
         ELSE
            !
-           ALLOCATE( vx(length,2), vc(length,2) )
+           ALLOCATE( vx(length,2), vc(length,2) ) !^^^
            ALLOCATE( aux2(length) )
            ALLOCATE( zeta_eff(length), ds(length) )
            !
@@ -3099,9 +3099,9 @@ END SUBROUTINE
            CALL xc_spin( length, rhotot-ds, zeta, aux1, aux2, vx, vc )
            !
            dmuxc(:,1,1) = (dmuxc(:,1,1) - vx(:,1) - vc(:,1)) / (2.0_DP * ds(:))
-           dmuxc(:,1,2) = dmuxc(:,1,1)
+           dmuxc(:,2,1) = dmuxc(:,1,1)
            dmuxc(:,2,2) = (dmuxc(:,2,2) - vx(:,2) - vc(:,2)) / (2.0_DP * ds(:))
-           dmuxc(:,2,1) = dmuxc(:,2,2)
+           dmuxc(:,1,2) = dmuxc(:,2,2)
            !
            ! ds() = min (1.d-6, 1.d-4 * abs(zeta(:)) )
            ds(:) = 1.E-6_DP  ! now ds is dzeta
@@ -3109,27 +3109,29 @@ END SUBROUTINE
            ! If zeta is too close to +-1, the derivative is computed at a slightly
            ! smaller zeta
            !
-           DO ir = 1, length
-             zeta_eff(ir) = SIGN( MIN( ABS(zeta(ir)), (1.0_DP-2.0_DP*ds(ir)) ), zeta(ir) )
-           ENDDO
+           zeta_eff(:) = SIGN( MIN( ABS(zeta(:)), (1.0_DP-2.0_DP*ds(:)) ), zeta(:) )
            !
            CALL xc_spin( length, rhotot, zeta_eff+ds, aux1, aux2, vx, vc )
            !
-           aux1 = (1.0_DP-zeta) / rhotot / (2.0_DP*ds)
+           aux1 = 1.0_DP / rhotot / (2.0_DP*ds)
            DO is = 1, 2
               vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)  ! vx as workspace here
-              dmuxc(:,is,1) = dmuxc(:,is,1) + vx(:,is)
-              dmuxc(:,is,2) = dmuxc(:,is,2) - vx(:,is)
            ENDDO
+           dmuxc(:,1,1) = dmuxc(:,1,1) + vx(:,1) * (1.0_DP-zeta(:))
+           dmuxc(:,1,2) = dmuxc(:,1,2) + vx(:,2) * (1.0_DP-zeta(:))
+           dmuxc(:,2,1) = dmuxc(:,2,1) - vx(:,1) * (1.0_DP+zeta(:))
+           dmuxc(:,2,2) = dmuxc(:,2,2) - vx(:,2) * (1.0_DP+zeta(:))
            !
            CALL xc_spin( length, rhotot, zeta_eff-ds, aux1, aux2, vx, vc )
            !
-           aux1 = (1.0_DP-zeta) / rhotot / (2.0_DP*ds)
-           DO is = 1, 2
+           aux1 = 1.0_DP / rhotot / (2.0_DP*ds)
+           DO is=1,2
               vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)
-              dmuxc(:,is,1) = dmuxc(:,is,1) - vx(:,is)
-              dmuxc(:,is,2) = dmuxc(:,is,2) + vx(:,is)
            ENDDO
+           dmuxc(:,1,1) = dmuxc(:,1,1) - vx(:,1) * (1.0_DP-zeta(:))
+           dmuxc(:,1,2) = dmuxc(:,1,2) - vx(:,2) * (1.0_DP-zeta(:))
+           dmuxc(:,2,1) = dmuxc(:,2,1) + vx(:,1) * (1.0_DP+zeta(:))
+           dmuxc(:,2,2) = dmuxc(:,2,2) + vx(:,2) * (1.0_DP+zeta(:))
            !
            DEALLOCATE( vx, vc )
            DEALLOCATE( aux2 )
@@ -3172,7 +3174,7 @@ END SUBROUTINE
         ! local variables
         !
         REAL(DP), DIMENSION(length)   :: rho, amag, zeta
-        REAL(DP), DIMENSION(length)   :: zeta_eff, ds, null_v
+        REAL(DP), DIMENSION(length)   :: zeta_eff, ds, null_v, null_m
         REAL(DP), DIMENSION(length)   :: vs, aux1, aux2
         REAL(DP), DIMENSION(length,2) :: vx, vxm, vxp
         REAL(DP), DIMENSION(length,2) :: vc, vcm, vcp
@@ -3194,6 +3196,7 @@ END SUBROUTINE
         zeta   = 0.5_DP
         amag   = 0.025_DP
         null_v = 1.0_DP
+        null_m = 1.0_DP
         !
         CALL init_lda_xc()
         !
@@ -3227,7 +3230,8 @@ END SUBROUTINE
         WHERE (amag < 1.E-10_DP)
            rho  = 0.5_DP
            zeta = 0.5_DP
-           amag = 0.025
+           amag = 0.025_DP
+           null_m = 0.0_DP
         END WHERE
         !
         !
@@ -3260,7 +3264,7 @@ END SUBROUTINE
         aux2(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) - &
                  ( vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2) )
         !
-        dvxc_rho(:) = dvxc_rho - aux1 * zeta/rho / (4.0_DP*ds)
+        dvxc_rho(:) = dvxc_rho - aux1 * zeta/rho / (4.0_DP*ds) * null_m
         dbx_rho(:)  = dbx_rho  - aux2 * m(:,1) * zeta/rho / (4.0_DP*ds*amag)
         dby_rho(:)  = dby_rho  - aux2 * m(:,2) * zeta/rho / (4.0_DP*ds*amag)
         dbz_rho(:)  = dbz_rho  - aux2 * m(:,3) * zeta/rho / (4.0_DP*ds*amag)
@@ -3315,13 +3319,6 @@ END SUBROUTINE
            dmuxc(i,4,4) = dbz_mz * rnull
            !
         ENDDO
-        !
-        !
-        WHERE ( amag < 1.E-10_DP )
-           !
-           dmuxc(:,1,1) = dvxc_rho * null_v
-           !
-        END WHERE
         !
         ! bring to rydberg units
         !
