@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dmxc( length, rho, dmuxc )
+SUBROUTINE dmxc( length, rho_in, dmuxc )
   !---------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density.
@@ -19,7 +19,7 @@ SUBROUTINE dmxc( length, rho, dmuxc )
   !
   INTEGER,  INTENT(IN) :: length
   !! length of the input/output arrays
-  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
   !! the charge density ( positive )
   REAL(DP), INTENT(OUT), DIMENSION(length) :: dmuxc
   !! the derivative of the xc potential
@@ -27,57 +27,55 @@ SUBROUTINE dmxc( length, rho, dmuxc )
   ! ... local variables
   !
   REAL(DP), DIMENSION(length) :: ex, vx
-  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rs, dr
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rs, rho, dr
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: ec, vc
   !
   REAL(DP), EXTERNAL :: dpz
   INTEGER :: iflg, ir
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
-       pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP /3.0_DP
+       pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP /3.0_DP, &
+       rho_trash = 0.5_DP, rs_trash = 1.0_DP
   !
   CALL init_lda_xc()
   !
   dmuxc = 0.0_DP
   !
-  !    first case: analytical derivatives available
+  ! ... first case: analytical derivatives available
   !
   IF (iexch_l == 1 .AND. icorr_l == 1) THEN
      !
      ALLOCATE( rs(length) )
      !
-     rs = 1.0_DP
-     WHERE ( rho > small ) rs = (pi34 / rho)**third
+     rs = rs_trash
+     WHERE ( rho_in > small ) rs = (pi34 / rho_in)**third
      !
-     !..exchange
+     ! ... exchange
      CALL slater( length, rs, ex, vx )
-     dmuxc = vx / (3.0_DP * rho)
+     dmuxc = vx / (3.0_DP * rho_in)
      !
-     !..correlation
+     ! ... correlation
      DO ir = 1, length
         iflg = 2
         if (rs(ir) < 1.0_DP) iflg = 1
         dmuxc(ir) = dmuxc(ir) + dpz(rs(ir), iflg)
      ENDDO
      !
-     WHERE ( rho < small ) dmuxc = 0._DP
+     WHERE ( rho_in < small ) dmuxc = 0.0_DP
      !
      DEALLOCATE( rs )
      !
   ELSE
      !
-     !     second case: numerical derivatives
+     ! ... second case: numerical derivatives
      !
-     ALLOCATE( ec(length), vc(length) )
-     ALLOCATE( dr(length) )
+     ALLOCATE( ec(length), vc(length)  )
+     ALLOCATE( dr(length), rho(length) )
      !
-     DO ir = 1, length
-        !if (rho(ir) > small) then  !... cut already inside xc()
-           dr(ir) = MIN( 1.E-6_DP, 1.E-4_DP * rho(ir) )
-        !else
-        !   dr(ir) = -0.5_dp 
-        !endif
-     ENDDO
+     rho = rho_in
+     WHERE ( rho_in < small ) rho = rho_trash
+     !
+     dr(:) = MIN( 1.E-6_DP, 1.E-4_DP * rho(:) )
      !
      CALL xc( length, rho+dr, ex, ec, vx, vc )
      !
@@ -87,10 +85,11 @@ SUBROUTINE dmxc( length, rho, dmuxc )
      !
      dmuxc = (dmuxc - vx - vc) / (2.0_DP * dr)
      !
-     DEALLOCATE( ec, vc )
-     DEALLOCATE( dr )
+     DEALLOCATE( ec, vc  )
+     DEALLOCATE( dr, rho )
      !
-     ! where (rho<small) dmuxc=0._dp
+     WHERE ( rho_in < small ) dmuxc = 0.0_DP
+     ! however a higher threshold is already present in xc()
      !
   ENDIF
   !
@@ -109,9 +108,9 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
-  USE xc_lda_lsda,    ONLY: xc_spin, iexch_l, icorr_l
   USE funct,          ONLY: init_lda_xc
   USE kinds,          ONLY: DP
+  USE xc_lda_lsda,    ONLY: xc_spin, iexch_l, icorr_l
   !
   IMPLICIT NONE
   !
@@ -140,24 +139,25 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
        pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP/3.0_DP, &
-       p43 = 4.0_DP / 3.0_DP, p49 = 4.0_DP / 9.0_DP, m23 = -2.0_DP / 3.0_DP
+       p43 = 4.0_DP / 3.0_DP, p49 = 4.0_DP / 9.0_DP, m23 = -2.0_DP / 3.0_DP, &
+       rho_trash = 0.5_DP, zeta_trash = 0.5_DP
   !
   dmuxc  = 0.0_DP
   null_v = 1.0_DP
-  zeta   = 0.5_DP
+  zeta   = zeta_trash
   rhotot(:) = rho(:,1) + rho(:,2)
   !
-  CALL init_lda_xc()  !^^^
+  CALL init_lda_xc()
   !
-  WHERE (rhotot <= small) !however the cut is already inside xc_spin()
-     rhotot = 0.5_DP
+  WHERE (rhotot <= small) 
+     rhotot = rho_trash
      null_v = 0.0_DP
   ELSEWHERE
      zeta(:) = (rho(:,1) - rho(:,2)) / rhotot(:)
   END WHERE
   !
   WHERE (ABS(zeta) > 1.0_DP)
-     zeta   = 0.5_DP
+     zeta   = zeta_trash
      null_v = 0.0_DP
   END WHERE
   !
@@ -165,9 +165,9 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
      !
      !    first case: analytical derivative available
      !
-     ALLOCATE( rs(length) )
+     ALLOCATE( rs(length)                             )
      ALLOCATE( vcu(length), vcp(length), vx(length,1) )
-     ALLOCATE( ecu(length), ecp(length) )
+     ALLOCATE( ecu(length), ecp(length)               )
      !
      ! ... exchange
      !
@@ -183,7 +183,7 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
      !
      ! ... correlation
      !
-     rs(:) = (pi34 / rhotot(:))**third
+     rs = (pi34 / rhotot)**third
      !
      CALL pz( length, rs, 1, ecu, vcu )
      CALL pz_polarized( length, rs, ecp, vcp )
@@ -215,17 +215,18 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
                                                        (1.0_DP + zeta(ir))**2 * cc
      ENDDO
      !
-     DEALLOCATE( rs )
+     DEALLOCATE( rs           )
      DEALLOCATE( vcu, vcp, vx )
-     DEALLOCATE( ecu, ecp )
+     DEALLOCATE( ecu, ecp     )
      !
   ELSE
      !
-     ALLOCATE( vx(length,2), vc(length,2) )
-     ALLOCATE( aux2(length) )
+     ALLOCATE( vx(length,2), vc(length,2)   )
+     ALLOCATE( aux2(length)                 )
      ALLOCATE( zeta_eff(length), ds(length) )
      !
-     ds(:) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(:) ) !here ds is drho
+     ! ... here ds=drho
+     ds(:) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(:) )
      !
      CALL xc_spin( length, rhotot+ds, zeta, aux1, aux2, vx, vc )
      !
@@ -239,10 +240,11 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
      dmuxc(:,2,2) = (dmuxc(:,2,2) - vx(:,2) - vc(:,2)) / (2.0_DP * ds(:))
      dmuxc(:,1,2) = dmuxc(:,2,2)
      !
+     ! ... now ds=dzeta
+     ds(:) = 1.E-6_DP
      ! ds() = min (1.d-6, 1.d-4 * abs(zeta(:)) )
-     ds(:) = 1.E-6_DP  ! now ds is dzeta
      !
-     ! If zeta is too close to +-1, the derivative is computed at a slightly
+     ! ... If zeta is too close to +-1, the derivative is computed at a slightly
      ! smaller zeta
      !
      zeta_eff(:) = SIGN( MIN( ABS(zeta(:)), (1.0_DP-2.0_DP*ds(:)) ), zeta(:) )
@@ -251,7 +253,7 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
      !
      aux1 = 1.0_DP / rhotot / (2.0_DP*ds)
      DO is = 1, 2
-        vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)  ! vx as workspace here
+        vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)  ! vx as workspace here..
      ENDDO
      dmuxc(:,1,1) = dmuxc(:,1,1) + vx(:,1) * (1.0_DP-zeta(:))
      dmuxc(:,1,2) = dmuxc(:,1,2) + vx(:,2) * (1.0_DP-zeta(:))
@@ -262,7 +264,7 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
      !
      aux1 = 1.0_DP / rhotot / (2.0_DP*ds)
      DO is=1,2
-        vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)
+        vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)  ! ..and here
      ENDDO
      dmuxc(:,1,1) = dmuxc(:,1,1) - vx(:,1) * (1.0_DP-zeta(:))
      dmuxc(:,1,2) = dmuxc(:,1,2) - vx(:,2) * (1.0_DP-zeta(:))
@@ -275,7 +277,7 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
      !
   ENDIF
   !
-  ! bring to rydberg units
+  ! ... bring to rydberg units and set to zero trash points
   !
   dmuxc(:,1,1) = e2 * dmuxc(:,1,1) * null_v  !up-up
   dmuxc(:,2,1) = e2 * dmuxc(:,2,1) * null_v  !down-up
@@ -324,20 +326,22 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   INTEGER :: i
   !
-  REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP
+  REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
+                         rho_trash = 0.5_DP, zeta_trash = 0.5_DP, &
+                         amag_trash= 0.025_DP
   !
   dmuxc = 0.0_DP
   !
   rho    = rho_in
-  zeta   = 0.5_DP
-  amag   = 0.025_DP
+  zeta   = zeta_trash
+  amag   = amag_trash
   null_v = 1.0_DP
   null_m = 1.0_DP
   !
   CALL init_lda_xc()
   !
   WHERE (rho_in <= small)
-     rho = 0.5_DP
+     rho = rho_trash
      null_v = 0.0_DP
   ELSEWHERE
      amag = SQRT( m(:,1)**2 + m(:,2)**2 + m(:,3)**2 )
@@ -345,7 +349,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   END WHERE
   !
   WHERE (ABS(zeta) > 1.0_DP)
-     zeta   = 0.5_DP
+     zeta   = zeta_trash
      null_v = 0.0_DP
   END WHERE
   !
@@ -353,7 +357,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   vs = 0.5_DP*( vx(:,1)+vc(:,1)-vx(:,2)-vc(:,2) )
   !
-  ! Here ds is drho
+  ! ... here ds=drho
   ds = MIN( 1.E-6_DP, 1.E-4_DP * rho )
   !
   CALL xc_spin( length, rho-ds, zeta, aux1, aux2, vxm, vcm )
@@ -378,11 +382,11 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   dby_rho(:) = aux2 * m(:,2) / (4.0_DP*ds*amag)
   dbz_rho(:) = aux2 * m(:,3) / (4.0_DP*ds*amag)
   !
-  ! Now ds is dzeta
-  ! ds = min (1.d-6, 1.d-4 * abs (zeta) )
+  ! ... now ds=dzeta
   ds = 1.0E-6_DP
+  ! ds = min (1.d-6, 1.d-4 * abs (zeta) )
   !
-  ! If zeta is too close to +-1, the derivative is computed at a slightly
+  ! ... If zeta is too close to +-1, the derivative is computed at a slightly
   ! smaller zeta
   !
   DO i = 1, length
@@ -393,14 +397,14 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   CALL xc_spin( length, rho, zeta_eff+ds, aux1, aux2, vxp, vcp )
   !
-  !  The variables are rho and m, so zeta depends on rho
+  ! ... The variables are rho and m, so zeta depends on rho
   !
   aux1(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) + &
              vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2)
   aux2(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) - &
            ( vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2) )
   !
-  dvxc_rho(:) = dvxc_rho - aux1 * zeta/rho / (4.0_DP*ds) * null_m
+  dvxc_rho    = dvxc_rho - aux1 * zeta/rho / (4.0_DP*ds) * null_m
   dbx_rho(:)  = dbx_rho  - aux2 * m(:,1) * zeta/rho / (4.0_DP*ds*amag)
   dby_rho(:)  = dby_rho  - aux2 * m(:,2) * zeta/rho / (4.0_DP*ds*amag)
   dbz_rho(:)  = dbz_rho  - aux2 * m(:,3) * zeta/rho / (4.0_DP*ds*amag)
@@ -410,11 +414,11 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   dmuxc(:,3,1) = dby_rho  * null_v
   dmuxc(:,4,1) = dbz_rho  * null_v
   !
-  ! Here the derivatives with respect to m
+  ! ... Here the derivatives with respect to m
   !
   DO i = 1, length
      !
-     rnull=null_v(i)
+     rnull = null_v(i)
      !
      dvxc_mx = aux1(i) * m(i,1) / rho(i) / (4.0_DP*ds(i)*amag(i))
      dvxc_my = aux1(i) * m(i,2) / rho(i) / (4.0_DP*ds(i)*amag(i))
@@ -438,6 +442,8 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
      dbz_mz  = (aux2(i) * m(i,3) * m(i,3) * amag(i)/rho(i) / (4.0_DP*ds(i)) + &
                 vs(i)*(m(i,1)**2 + m(i,2)**2)) / amag(i)**3
      !
+     ! ... assigns values to dmuxc and sets to zero trash points
+     !
      dmuxc(i,1,2) = dvxc_mx * rnull
      dmuxc(i,1,3) = dvxc_my * rnull 
      dmuxc(i,1,4) = dvxc_mz * rnull
@@ -456,7 +462,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
      !
   ENDDO
   !
-  ! bring to rydberg units
+  ! ... brings to rydberg units
   !
   dmuxc = e2 * dmuxc
   !
