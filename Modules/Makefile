@@ -26,6 +26,7 @@ control_flags.o \
 correlation_lda_lsda.o \
 coulomb_vcut.o \
 dist.o \
+dmxc_drivers.o \
 electrons_base.o \
 environment.o \
 exchange_lda_lsda.o \

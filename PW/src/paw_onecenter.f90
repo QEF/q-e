@@ -1616,8 +1616,7 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )  !^^^
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dmxc, dmxc_spin, dmxc_nc, &
-                                       dft_is_gradient
+    USE funct,                  ONLY : dft_is_gradient
     !
     TYPE(paw_info), INTENT(IN) :: i                   ! atom's minimal info
     REAL(DP), INTENT(IN)  :: rho_lm(i%m,i%l**2,nspin_mag) ! charge density as 

@@ -420,7 +420,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! compute the derivative of xc-potential w.r.t local density.
    ! some routine in PH and flibs will be called
    !
-   use funct,  only : dft_is_gradient, dmxc
+   use funct,  only : dft_is_gradient
    !
    implicit none
    !

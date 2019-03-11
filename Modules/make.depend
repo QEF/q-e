@@ -61,6 +61,9 @@ dist.o : constants.o
 dist.o : io_global.o
 dist.o : ions_base.o
 dist.o : kind.o
+dmxc_drivers.o : kind.o
+dmxc_drivers.o : funct.o
+dmxc_drivers.o : xc_lda_lsda_drivers.o
 dylmr2.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o

@@ -421,7 +421,6 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE funct,     ONLY : dmxc
   USE cgcom
   !
   IMPLICIT NONE

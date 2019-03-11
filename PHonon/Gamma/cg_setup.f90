@@ -18,7 +18,7 @@ SUBROUTINE cg_setup
   USE uspp_param, ONLY: upf
   USE wavefunctions,  ONLY: evc
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
-  USE funct,      ONLY: dft_is_gradient, dmxc
+  USE funct,      ONLY: dft_is_gradient
   USE dfunct,     ONLY: newd
   USE fft_base,   ONLY: dfftp
   USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
