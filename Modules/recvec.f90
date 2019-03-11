@@ -81,6 +81,7 @@
        ! Set local and global dimensions, allocate arrays
        !
        USE mp, ONLY: mp_max, mp_sum
+       USE control_flags, ONLY : use_gpu
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngm_
        INTEGER, INTENT(IN) :: comm  ! communicator of the group on which g-vecs are distributed
@@ -104,12 +105,15 @@
        ALLOCATE( mill(3, ngm) )
        ALLOCATE( ig_l2g(ngm) )
        ALLOCATE( igtongl(ngm) )
+       IF (use_gpu) ALLOCATE( igtongl_d(ngm) )
+       IF (use_gpu) ALLOCATE( gl_d(ngm) )
        !
        RETURN 
        !
      END SUBROUTINE gvect_init
 
      SUBROUTINE deallocate_gvect(vc)
+       USE control_flags, ONLY : use_gpu
        IMPLICIT NONE
        !
        LOGICAL, OPTIONAL, INTENT(IN) :: vc
@@ -130,6 +134,10 @@
        IF( ALLOCATED( eigts1 ) ) DEALLOCATE( eigts1 )
        IF( ALLOCATED( eigts2 ) ) DEALLOCATE( eigts2 )
        IF( ALLOCATED( eigts3 ) ) DEALLOCATE( eigts3 )
+       IF (use_gpu) THEN
+          IF (ALLOCATED( igtongl_d ) ) DEALLOCATE( igtongl_d )
+          IF (ALLOCATED( gl_d ) ) DEALLOCATE( gl_d )
+       END IF
      END SUBROUTINE deallocate_gvect
 
      SUBROUTINE deallocate_gvect_exx()
