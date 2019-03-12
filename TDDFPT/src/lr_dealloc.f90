@@ -25,7 +25,7 @@ SUBROUTINE lr_dealloc()
   USE lr_exx_kernel,  ONLY : lr_exx_dealloc
   USE becmod,         ONLY : bec_type, becp, deallocate_bec_type
   USE lrus,           ONLY : int3, int3_nc, becp1, &
-                           & bbg, bbk, bbnc
+                           & bbg, bbk, bbnc_sm1, bbnc
   USE qpoint,         ONLY : ikks, ikqs, eigqts
   USE eqv,            ONLY : dmuxc, evq, dpsi, dvpsi
   USE control_lr,     ONLY : nbnd_occ
@@ -53,6 +53,7 @@ SUBROUTINE lr_dealloc()
   IF (allocated(bbg))       DEALLOCATE(bbg)
   IF (allocated(bbk))       DEALLOCATE(bbk)
   IF (allocated(bbnc))      DEALLOCATE(bbnc)
+  IF (allocated(bbnc_sm1))  DEALLOCATE(bbnc_sm1)
   !
   IF (project) THEN
      DEALLOCATE(F)
