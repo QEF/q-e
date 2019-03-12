@@ -58,7 +58,6 @@ add_qexsd_step.o : ../../Modules/cell_base.o
 add_qexsd_step.o : ../../Modules/constants.o
 add_qexsd_step.o : ../../Modules/control_flags.o
 add_qexsd_step.o : ../../Modules/fcp_variables.o
-add_qexsd_step.o : ../../Modules/input_parameters.o
 add_qexsd_step.o : ../../Modules/ions_base.o
 add_qexsd_step.o : ../../Modules/kind.o
 add_qexsd_step.o : ../../Modules/qexsd.o
