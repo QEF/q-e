@@ -10,7 +10,8 @@ PROGRAM benchmark_libxc
   !
   !**--------------------------------------------------------------------------------**
   !** REMEMBER to comment the libxc blocks in 'Modules/correlation_lda_lsda.f90' and **
-  !** 'Modules/exchange_lda_lsda.f90' in order to run consistent tests.              ** 
+  !** 'Modules/exchange_lda_lsda.f90' in order to run consistent tests (they should  ** 
+  !** be commented already however).                                                 **
   !**--------------------------------------------------------------------------------**
   !
 #if defined(__LIBXC)
@@ -25,20 +26,16 @@ PROGRAM benchmark_libxc
   INTEGER, PARAMETER     :: DP = selected_real_kind(14,200)
   TYPE(xc_f90_pointer_t) :: xc_func
   TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
-  REAL(DP), ALLOCATABLE  :: ex_lda(:) , vx_lda(:), ec_lda(:) , vc_lda(:)
+  !
+  ! The dimension of the arrays
+  INTEGER, PARAMETER :: nnr=10
+  !
+  REAL(DP), DIMENSION(nnr)  :: ex_lda, vx_lda, ec_lda, vc_lda
   !-----------------------------
-  REAL(DP), ALLOCATABLE  :: rho(:), ex(:), vx(:), ec(:), vc(:)
+  REAL(DP), DIMENSION(nnr) :: rho, ex, vx, ec, vc
   CHARACTER(LEN=120) :: name1, name2
   INTEGER :: ii,nnr
   INTEGER :: iexch_qe, icorr_qe, iexch_xc, icorr_xc
-  !
-  !
-  nnr=10
-  ALLOCATE( rho(1:nnr) )
-  ALLOCATE( vx(1:nnr), ex(1:nnr) )
-  ALLOCATE( vc(1:nnr), ec(1:nnr) )
-  ALLOCATE( vx_lda(1:nnr), ex_lda(1:nnr) )
-  ALLOCATE( vc_lda(1:nnr), ec_lda(1:nnr) )
   !
   DO ii = 1, nnr
      rho(ii)=DBLE(ii)/DBLE(nnr)
@@ -110,16 +107,6 @@ PROGRAM benchmark_libxc
      PRINT *, "--- ---"
   ENDDO
   !
-  !
-  DEALLOCATE(rho)
-  DEALLOCATE(ex)
-  DEALLOCATE(ec)
-  DEALLOCATE(vx)
-  DEALLOCATE(vc)
-  DEALLOCATE(ex_lda)
-  DEALLOCATE(vx_lda)
-  DEALLOCATE(ec_lda)
-  DEALLOCATE(vc_lda)
   !
 #else
   !
