@@ -125,7 +125,6 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE qes_libs_module,      ONLY :  qes_reset 
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
-  USE read_pseudo_mod,      ONLY : readpp
   USE uspp,                 ONLY : becsum
   USE uspp_param,           ONLY : upf
   USE paw_variables,        ONLY : okpaw, ddd_PAW
