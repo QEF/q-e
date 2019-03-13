@@ -3,6 +3,9 @@ Known bugs in qe-6.3-backports:
     to missing re-initialization (it also crashed during the final scf step)
 
 Bugs fixed in qe-6.3-backports:
+  + Codes reading scf data recomputed celldm parameters also if ibrav=0
+    This produced confusing output and had the potential to break some codes
+  + index not correctly initialized in LSDA phonon with core corrections
   + Some GTH pseudopotentials in analytical form were wrong due to a missing factor
   + projwfc.x was crashing in spin-orbit case with the new xml file format
   + Starting with .EXIT file present ("dry run") crashed with new file format
