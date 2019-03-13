@@ -18,9 +18,6 @@
   !!  Compact formalism       Dec 2006
   !!  Phonon irreducible zone Mar 2007
   !!
-  !!  No ultrasoft now
-  !!  No spin polarization
-  !!
   !!  RM - add noncolin case
   !-----------------------------------------------------------------------
   !

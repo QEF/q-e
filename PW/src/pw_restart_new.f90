@@ -132,8 +132,11 @@ MODULE pw_restart_new
               qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
-      USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3
+      USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
       USE input_parameters,     ONLY :  ts_vdw_econv_thr, ts_vdw_isolated
+      USE Coul_cut_2D,          ONLY : do_cutoff_2D 
+      USE esm,                  ONLY : do_comp_esm 
+      USE martyna_tuckerman,    ONLY : do_comp_mt 
       !
       IMPLICIT NONE
       !
@@ -176,7 +179,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=3),ALLOCATABLE :: species_(:)
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
       INTEGER,TARGET             :: dftd3_version_
-      CHARACTER(LEN=20),TARGET   :: vdw_corr_
+      CHARACTER(LEN=20),TARGET   :: vdw_corr_, pbc_label 
       CHARACTER(LEN=20),POINTER  :: non_local_term_pt =>NULL(), vdw_corr_pt=>NULL()
       REAL(DP),TARGET            :: temp(20), lond_rcut_, lond_s6_, ts_vdw_econv_thr_, xdm_a1_, xdm_a2_, ectuvcut_,&
                                     scr_par_, loc_thr_  
@@ -455,10 +458,21 @@ MODULE pw_restart_new
 ! ... PERIODIC BOUNDARY CONDITIONS 
 !-------------------------------------------------------------------------------
          !
-         IF (TRIM( assume_isolated ) .EQ. "2D" ) THEN
+         IF (ANY([do_makov_payne, do_comp_mt, do_comp_esm, do_cutoff_2D]))  THEN
             output%boundary_conditions_ispresent=.TRUE.
-            CALL  qexsd_init_outputPBC(output%boundary_conditions, assume_isolated)
-          ENDIF
+            IF (do_makov_payne) THEN 
+               pbc_label = 'makov_payne' 
+            ELSE IF ( do_comp_mt) THEN 
+               pbc_label = 'martyna_tuckerman' 
+            ELSE IF ( do_comp_esm) THEN 
+               pbc_label = 'esm' 
+            ELSE IF ( do_cutoff_2D) THEN 
+               pbc_label = '2D'
+            ELSE 
+               CALL errore ('pw_restart_new.f90: ', 'internal error line 470', 1) 
+            END IF 
+            CALL qexsd_init_outputPBC(output%boundary_conditions, TRIM(pbc_label) )  
+         ENDIF
          !
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION
