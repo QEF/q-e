@@ -166,7 +166,8 @@ SUBROUTINE iosys()
                             ts_vdw_           => ts_vdw, &
                             lecrpa_           => lecrpa, &
                             scf_must_converge_=> scf_must_converge, & 
-                            treinit_gvecs_    => treinit_gvecs 
+                            treinit_gvecs_    => treinit_gvecs, &  
+                            max_xml_steps_    => max_xml_steps 
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -220,7 +221,7 @@ SUBROUTINE iosys()
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
                                nberrycyc, efield_cart, lecrpa,                 &
                                vdw_table_name, memory, max_seconds, tqmmm,     &
-                               efield_phase, gate
+                               efield_phase, gate, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1164,6 +1165,7 @@ SUBROUTINE iosys()
   pseudo_dir_ = trimcheck( pseudo_dir )
   nstep_      = nstep
   iprint_     = iprint
+  max_xml_steps_ = max_xml_steps
   lecrpa_     = lecrpa
   scf_must_converge_ = scf_must_converge
   !
