@@ -18,7 +18,7 @@ subroutine force_cc_gpu (forcecc)
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl, igtongl
+  USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl, igtongl, igtongl_d
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core

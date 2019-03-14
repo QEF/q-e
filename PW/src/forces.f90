@@ -33,7 +33,7 @@ SUBROUTINE forces()
   USE cell_base,     ONLY : at, bg, alat, omega  
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, atm
   USE fft_base,      ONLY : dfftp
-  USE gvect,         ONLY : ngm, gstart, ngl, igtongl, g, gg, gcutm
+  USE gvect,         ONLY : ngm, gstart, ngl, igtongl, igtongl_d, g, gg, gcutm
   USE gvect_gpum,    ONLY : g_d
   USE lsda_mod,      ONLY : nspin
   USE symme,         ONLY : symvector
@@ -93,10 +93,9 @@ SUBROUTINE forces()
   !
   ! TODO: get rid of this !!!! Use standard method for duplicated global data
   REAL(DP), POINTER :: vloc_d (:, :)
-  INTEGER, POINTER  :: igtongl_d(:)
   INTEGER :: ierr
 #if defined(__CUDA)
-  attributes(DEVICE) :: vloc_d, igtongl_d
+  attributes(DEVICE) :: vloc_d
 #endif
   !
   !
@@ -122,13 +121,11 @@ SUBROUTINE forces()
                  forcelc )
   IF (      use_gpu) THEN ! On the GPU
     ! move these data to the GPU
-    CALL dev_buf%lock_buffer(igtongl_d, ngm, ierr)
     CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
-    igtongl_d = igtongl; vloc_d = vloc
+    vloc_d = vloc
     CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
                   g_d, rho%of_r(:,1), dfftp%nl_d, gstart, gamma_only, vloc_d, &
                   forcelc )
-    CALL dev_buf%release_buffer(igtongl_d, ierr)
     CALL dev_buf%release_buffer(vloc_d, ierr)
   END IF
   !
