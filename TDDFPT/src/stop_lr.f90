@@ -139,6 +139,7 @@ SUBROUTINE stop_lr( full_run  )
      CALL environment_end(code1) 
   ENDIF
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL mp_global_end( )
   !
   ! EELS: Close the file where it read the wavefunctions at k and k+q.

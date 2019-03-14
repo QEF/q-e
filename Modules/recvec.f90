@@ -41,8 +41,14 @@
      !     gl(i) = i-th shell of G^2 (in units of tpiba2)
      !     igtongl(n) = shell index for n-th G-vector
      !
-     REAL(DP), POINTER :: gl(:) 
-     INTEGER, ALLOCATABLE, TARGET :: igtongl(:) 
+     REAL(DP), POINTER, PROTECTED            :: gl(:)
+     INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl(:)
+     ! Duplicate of the above variables (new style duplication).
+     REAL(DP), ALLOCATABLE                   :: gl_d(:)
+     INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:)
+#if defined(__CUDA)
+     attributes(DEVICE) :: gl_d, igtongl_d
+#endif
      !
      !     G-vectors cartesian components ( in units tpiba =(2pi/a)  )
      !
@@ -75,6 +81,7 @@
        ! Set local and global dimensions, allocate arrays
        !
        USE mp, ONLY: mp_max, mp_sum
+       USE control_flags, ONLY : use_gpu
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngm_
        INTEGER, INTENT(IN) :: comm  ! communicator of the group on which g-vecs are distributed
@@ -98,12 +105,26 @@
        ALLOCATE( mill(3, ngm) )
        ALLOCATE( ig_l2g(ngm) )
        ALLOCATE( igtongl(ngm) )
+       IF (use_gpu) ALLOCATE( igtongl_d(ngm) )
+       IF (use_gpu) ALLOCATE( gl_d(ngm) )
        !
        RETURN 
        !
      END SUBROUTINE gvect_init
 
-     SUBROUTINE deallocate_gvect()
+     SUBROUTINE deallocate_gvect(vc)
+       USE control_flags, ONLY : use_gpu
+       IMPLICIT NONE
+       !
+       LOGICAL, OPTIONAL, INTENT(IN) :: vc
+       LOGICAL :: vc_
+       !
+       vc_ = .false.
+       IF (PRESENT(vc)) vc_ = vc
+       IF ( .NOT. vc_ ) THEN
+          IF ( ASSOCIATED( gl ) ) DEALLOCATE ( gl )
+       END IF
+       !
        IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
        IF( ALLOCATED( g ) )  DEALLOCATE( g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
@@ -113,6 +134,10 @@
        IF( ALLOCATED( eigts1 ) ) DEALLOCATE( eigts1 )
        IF( ALLOCATED( eigts2 ) ) DEALLOCATE( eigts2 )
        IF( ALLOCATED( eigts3 ) ) DEALLOCATE( eigts3 )
+       IF (use_gpu) THEN
+          IF (ALLOCATED( igtongl_d ) ) DEALLOCATE( igtongl_d )
+          IF (ALLOCATED( gl_d ) ) DEALLOCATE( gl_d )
+       END IF
      END SUBROUTINE deallocate_gvect
 
      SUBROUTINE deallocate_gvect_exx()
@@ -122,6 +147,62 @@
        IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
      END SUBROUTINE deallocate_gvect_exx
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE gshells ( vc )
+        !----------------------------------------------------------------------
+        !
+        ! calculate number of G shells: ngl, and the index ng = igtongl(ig)
+        ! that gives the shell index ng for (local) G-vector of index ig
+        !
+        USE kinds,              ONLY : DP
+        USE constants,          ONLY : eps8
+        USE control_flags,      ONLY : use_gpu
+        !
+        IMPLICIT NONE
+        !
+        LOGICAL, INTENT(IN) :: vc
+        !
+        INTEGER :: ng, igl
+        !
+        IF ( vc ) THEN
+           !
+           ! in case of a variable cell run each G vector has its shell
+           !
+           ngl = ngm
+           gl => gg
+           DO ng = 1, ngm
+              igtongl (ng) = ng
+           ENDDO
+        ELSE
+           !
+           ! G vectors are grouped in shells with the same norm
+           !
+           ngl = 1
+           igtongl (1) = 1
+           DO ng = 2, ngm
+              IF (gg (ng) > gg (ng - 1) + eps8) THEN
+                 ngl = ngl + 1
+              ENDIF
+              igtongl (ng) = ngl
+           ENDDO
+
+           ALLOCATE (gl( ngl))
+           gl (1) = gg (1)
+           igl = 1
+           DO ng = 2, ngm
+              IF (gg (ng) > gg (ng - 1) + eps8) THEN
+                 igl = igl + 1
+                 gl (igl) = gg (ng)
+              ENDIF
+           ENDDO
+
+           IF (igl /= ngl) CALL errore ('gshells', 'igl <> ngl', ngl)
+
+        ENDIF
+        IF (use_gpu)      gl_d = gl
+        IF (use_gpu) igtongl_d = igtongl
+     END SUBROUTINE gshells
 !=----------------------------------------------------------------------------=!
    END MODULE gvect
 !=----------------------------------------------------------------------------=!

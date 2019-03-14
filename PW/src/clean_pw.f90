@@ -24,12 +24,10 @@ SUBROUTINE clean_pw( lflag )
   USE basis,                ONLY : swfcatom
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
-  USE gvect,                ONLY : g, gg, gl, igtongl, mill, &
-                                   eigts1, eigts2, eigts3
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : deallocate_tetra
   USE klist,                ONLY : deallocate_igk
-  USE gvect,                ONLY : ig_l2g
+  USE gvect,                ONLY : deallocate_gvect
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : g2kin, et, wg, btype
   USE force_mod,            ONLY : force
@@ -116,26 +114,15 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( f_inp ) .and. lflag )      DEALLOCATE( f_inp )
   !
-  ! ... arrays allocated in ggen.f90
+  ! ... arrays in gvect module
   !
-  IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
-  IF ( .NOT. lmovecell ) THEN
-     IF ( ASSOCIATED( gl ) )     DEALLOCATE ( gl )
-  END IF
+  CALL deallocate_gvect(lmovecell)
+  CALL deallocate_gvect_gpu()
   !
   CALL sym_rho_deallocate ( )
   !
   ! ... arrays allocated in allocate_fft.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( g ) )          DEALLOCATE( g )
-  IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
-  !
-  CALL deallocate_gvect_gpu()
-  !CALL using_g(2); CALL using_gg(2)       ! Trick to deallocate
-  !CALL using_g_d(2); CALL using_gg_d(2)
-  !
-  IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
-  IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
   call destroy_scf_type(rho)
   call destroy_scf_type(v)
   call destroy_scf_type(vnew)
@@ -158,9 +145,6 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( cutoff_2D ) )  DEALLOCATE( cutoff_2D )
   IF ( ALLOCATED( lr_Vloc ) )    DEALLOCATE( lr_Vloc )
   IF ( ALLOCATED( strf ) )       DEALLOCATE( strf )
-  IF ( ALLOCATED( eigts1 ) )     DEALLOCATE( eigts1 )
-  IF ( ALLOCATED( eigts2 ) )     DEALLOCATE( eigts2 )
-  IF ( ALLOCATED( eigts3 ) )     DEALLOCATE( eigts3 )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !

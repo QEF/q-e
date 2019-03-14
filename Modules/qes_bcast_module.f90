@@ -689,6 +689,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%ecutvcut_ispresent, ionode_id, comm)
     IF (obj%ecutvcut_ispresent) &
       CALL mp_bcast(obj%ecutvcut, ionode_id, comm)
+    CALL mp_bcast(obj%localization_threshold_ispresent, ionode_id, comm)
+    IF (obj%localization_threshold_ispresent) &
+      CALL mp_bcast(obj%localization_threshold, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_hybrid
   !
@@ -2080,6 +2083,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%highestOccupiedLevel_ispresent, ionode_id, comm)
     IF (obj%highestOccupiedLevel_ispresent) &
       CALL mp_bcast(obj%highestOccupiedLevel, ionode_id, comm)
+    CALL mp_bcast(obj%lowestUnoccupiedLevel_ispresent, ionode_id, comm)
+    IF (obj%lowestUnoccupiedLevel_ispresent) &
+      CALL mp_bcast(obj%lowestUnoccupiedLevel, ionode_id, comm)
     CALL mp_bcast(obj%two_fermi_energies_ispresent, ionode_id, comm)
     IF (obj%two_fermi_energies_ispresent) &
       CALL mp_bcast(obj%two_fermi_energies, ionode_id, comm)

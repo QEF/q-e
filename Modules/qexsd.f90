@@ -43,7 +43,7 @@ MODULE qexsd_module
   ! definitions for the fmt
   !
   CHARACTER(5), PARAMETER :: fmt_name = "QEXSD"
-  CHARACTER(5), PARAMETER :: fmt_version = "0.1.0"
+  CHARACTER(5), PARAMETER :: fmt_version = "19.02.07"
   !
   ! some default for kinds
   !
@@ -161,7 +161,7 @@ CONTAINS
       CALL xml_NewElement (XF=qexsd_xf, NAME = "qes:espresso")
       CALL xml_addAttribute(XF=qexsd_xf, NAME = "xsi:schemaLocation", &
                             VALUE = "http://www.quantum-espresso.org/ns/qes/qes-1.0 "//&
-                                    "http://www.quantum-espresso.org/ns/qes/qes-1.0.xsd" )
+                                    "http://www.quantum-espresso.org/ns/qes/qes_190207.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
               COMMENT = "If not explicitely indicated, all quantities are expressed in Hartree atomic units" ) 
@@ -654,12 +654,13 @@ CONTAINS
 
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_hybrid ( obj, dft_is_hybrid, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter,&
-                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut ) 
+                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr ) 
          IMPLICIT NONE 
          TYPE (hybrid_type),INTENT(INOUT)        :: obj 
          LOGICAL,INTENT(IN)                      :: dft_is_hybrid 
          INTEGER,OPTIONAL, INTENT(IN)            :: nq1, nq2, nq3 
-         REAL(DP),OPTIONAL,INTENT(IN)            :: ecutfock, exx_fraction, screening_parameter, ecutvcut 
+         REAL(DP),OPTIONAL,INTENT(IN)            :: ecutfock, exx_fraction, screening_parameter, ecutvcut,&
+                                                    local_thr
          CHARACTER(LEN=*), INTENT(IN)            :: exxdiv_treatment 
          LOGICAL,OPTIONAL,INTENT(IN)             :: x_gamma_extrapolation 
          ! 
@@ -673,7 +674,8 @@ CONTAINS
          END IF 
          !
          CALL qes_init ( obj, "hybrid", qpoint_grid_opt, ecutfock, exx_fraction, &
-                        screening_parameter, exxdiv_treatment, x_gamma_extrapolation, ecutvcut)
+                        screening_parameter, exxdiv_treatment, x_gamma_extrapolation, ecutvcut,&
+                        local_thr )
          !
          IF (ASSOCIATED (qpoint_grid_opt)) CALL qes_reset (qpoint_grid_opt)
          !
@@ -1107,7 +1109,7 @@ CONTAINS
                    NKS = ndim_ks_energies, OCCUPATIONS_KIND = occupations_kind, KS_ENERGIES = ks_objs,      &
                    NBND_UP = nbnd_up_opt, NBND_DW = nbnd_dw_opt, NUM_OF_ATOMIC_WFC = n_wfc_at,              &
                    FERMI_ENERGY = fermi_energy, HIGHESTOCCUPIEDLEVEL = homo,  TWO_FERMI_ENERGIES = ef_updw, & 
-                   SMEARING = smearing)
+                   SMEARING = smearing, LOWESTUNOCCUPIEDLEVEL = lumo)
     DO ik=1,ndim_ks_energies
        CALL qes_reset(ks_objs(ik))
     END DO
@@ -1405,7 +1407,8 @@ CONTAINS
     CHARACTER(10)                                     :: mod_string
     LOGICAL                                           :: spin_is = .FALSE. 
     !
-    ALLOCATE (ion_pol_obj(nat), str_pol_obj(nat)) 
+    ALLOCATE (ion_pol_obj(nat))
+    ALLOCATE (str_pol_obj(nstring))
     DO iat =1, nat 
        WRITE(mod_string,'("(mod" ,I1,")")') mod_ion(iat) 
        CALL qes_init (ion_phase,"phase", modulus = TRIM(mod_string), phase = pdl_ion(iat) )

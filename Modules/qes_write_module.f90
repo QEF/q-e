@@ -729,6 +729,11 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%ecutvcut, fmt='s16')
         CALL xml_EndElement(xp, "ecutvcut")
      END IF
+     IF (obj%localization_threshold_ispresent) THEN
+        CALL xml_NewElement(xp, "localization_threshold")
+           CALL xml_addCharacters(xp, obj%localization_threshold, fmt='s16')
+        CALL xml_EndElement(xp, "localization_threshold")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_hybrid
 
@@ -2336,6 +2341,11 @@ MODULE qes_write_module
         CALL xml_NewElement(xp, "highestOccupiedLevel")
            CALL xml_addCharacters(xp, obj%highestOccupiedLevel, fmt='s16')
         CALL xml_EndElement(xp, "highestOccupiedLevel")
+     END IF
+     IF (obj%lowestUnoccupiedLevel_ispresent) THEN
+        CALL xml_NewElement(xp, "lowestUnoccupiedLevel")
+           CALL xml_addCharacters(xp, obj%lowestUnoccupiedLevel, fmt='s16')
+        CALL xml_EndElement(xp, "lowestUnoccupiedLevel")
      END IF
      IF (obj%two_fermi_energies_ispresent) THEN
         CALL xml_NewElement(xp, "two_fermi_energies")

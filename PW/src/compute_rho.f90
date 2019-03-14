@@ -8,7 +8,7 @@
    SUBROUTINE compute_rho(rho,rhoout,segni,nrxx)
 !
 !   This subroutine diagonalizes the spin density matrix and gives as output
-!   the spin up and spin down compotents of the charge
+!   the spin up and spin down components of the charge
 !   If lsign is true up and dw are with respect to the fixed quantization
 !   axis ux, otherwise rho+|m| is always rhoup and rho-|m| is always
 !   rhodw

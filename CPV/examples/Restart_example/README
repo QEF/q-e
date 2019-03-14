@@ -1,3 +1,7 @@
 This example shows how to use cp.x together with pw.x 
 to perform an electronic minimization at Gamma for SiO2.
-Note that "prefix" for pw.x = "prefix"_"ndr" or "prefix_ndw" for cp.x
+Note that
+- it works only for Gamma point, of course
+- it is no longer needed to set "wf_collect" to .t.
+- the number of bands should be the same for CP and PW
+- "prefix" for pw.x = "prefix"_"ndr" or "prefix_ndw" for cp.x

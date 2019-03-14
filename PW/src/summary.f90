@@ -649,7 +649,7 @@ SUBROUTINE print_cuda_info
   !-----------------------------------------------------------------------
   !
   USE io_global,       ONLY : stdout
-  USE control_flags,   ONLY : use_gpu
+  USE control_flags,   ONLY : use_gpu, iverbosity
   USE mp_world,        ONLY : nnode, world_comm
   USE mp,              ONLY : mp_sum, mp_max
 #if defined(__CUDA)
@@ -659,6 +659,7 @@ SUBROUTINE print_cuda_info
   !
   INTEGER :: idev, ndev, ierr
   INTEGER, ALLOCATABLE :: dev_association(:)
+  TYPE (cudaDeviceProp) :: prop
   !
   IF (use_gpu) THEN
      WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.",/)' )
@@ -691,6 +692,24 @@ SUBROUTINE print_cuda_info
       'High GPU oversubscription detected. Are you sure this is what you want?')
   !
   DEALLOCATE(dev_association)
+  !
+  ! Verbose information for advanced users
+  IF (iverbosity > 0) THEN
+     WRITE( stdout, '(/,5X,"GPU used by master process:",/)' )
+     ! Device info taken from
+     ! https://devblogs.nvidia.com/how-query-device-properties-and-handle-errors-cuda-fortran/
+     ierr = cudaGetDeviceProperties(prop, idev)
+     WRITE(stdout,"(5X,'   Device Number: ',i0)") idev
+     WRITE(stdout,"(5X,'   Device name: ',a)") trim(prop%name)
+     WRITE(stdout,"(5X,'   Compute capability : ',i0, i0)") prop%major, prop%minor
+     WRITE(stdout,"(5X,'   Ratio of single to double precision performance  : ',i0)") prop%singleToDoublePrecisionPerfRatio
+     WRITE(stdout,"(5X,'   Memory Clock Rate (KHz): ', i0)") &
+       prop%memoryClockRate
+     WRITE(stdout,"(5X,'   Memory Bus Width (bits): ', i0)") &
+       prop%memoryBusWidth
+     WRITE(stdout,"(5X,'   Peak Memory Bandwidth (GB/s): ', f6.2)") &
+       2.0*prop%memoryClockRate*(prop%memoryBusWidth/8)/10.0**6
+  END IF
   !
 #endif
   !

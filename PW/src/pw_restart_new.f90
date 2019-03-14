@@ -114,7 +114,7 @@ MODULE pw_restart_new
                                        get_screening_parameter, exx_is_active
       USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
-      USE exx,                  ONLY : ecutfock
+      USE exx,                  ONLY : ecutfock, local_thr 
       USE london_module,        ONLY : scal6, lon_rcut, c6_i
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
@@ -182,10 +182,11 @@ MODULE pw_restart_new
       CHARACTER(LEN=20),TARGET   :: vdw_corr_
       CHARACTER(LEN=20),POINTER  :: non_local_term_pt =>NULL(), vdw_corr_pt=>NULL()
       REAL(DP),TARGET            :: temp(20), lond_rcut_, lond_s6_, ts_vdw_econv_thr_, xdm_a1_, xdm_a2_, ectuvcut_,&
-                                    scr_par_ 
+                                    scr_par_, loc_thr_  
       REAL(DP),POINTER           :: vdw_term_pt =>NULL(), ts_thr_pt=>NULL(), london_s6_pt=>NULL(),&
                                     london_rcut_pt=>NULL(), xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), &
-                                    ts_vdw_econv_thr_pt=>NULL(), ectuvcut_opt=>NULL(), scr_par_opt=>NULL()
+                                    ts_vdw_econv_thr_pt=>NULL(), ectuvcut_opt=>NULL(), scr_par_opt=>NULL(), &
+                                    loc_thr_p => NULL() 
       LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_
       LOGICAL,POINTER            :: ts_isol_pt=>NULL(), dftd3_threebody_pt=>NULL(), ts_vdw_isolated_pt =>NULL()
       INTEGER,POINTER            :: dftd3_version_pt => NULL() 
@@ -364,10 +365,14 @@ MODULE pw_restart_new
                ectuvcut_ = ecutvcut/e2 
                ectuvcut_opt => ectuvcut_
             END IF 
+            IF ( local_thr > 0._DP) THEN 
+               loc_thr_ = local_thr 
+               loc_thr_p => loc_thr_ 
+            END IF 
             CALL qexsd_init_hybrid(hybrid_obj, DFT_IS_HYBRID = .TRUE., NQ1 = nq1 , NQ2 = nq2, NQ3 =nq3, ECUTFOCK = ecutfock/e2, &
                                    EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = scr_par_opt, &
                                    EXXDIV_TREATMENT = exxdiv_treatment, X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation,&
-                                   ECUTVCUT = ectuvcut_opt )
+                                   ECUTVCUT = ectuvcut_opt, LOCAL_THR = loc_thr_p )
          END IF 
 
          empirical_vdw = (llondon .OR. ldftd3 .OR. lxdm .OR. ts_vdw )
@@ -481,7 +486,9 @@ MODULE pw_restart_new
          IF (TRIM(input_parameters_occupations) == 'fixed') THEN 
             occupations_are_fixed = .TRUE.
             CALL get_homo_lumo( h_energy, lumo_tmp)
+            h_energy = h_energy/e2
             IF ( lumo_tmp .LT. 1.d+6 ) THEN
+                lumo_tmp = lumo_tmp/e2
                 lumo_energy => lumo_tmp
             END IF
          ELSE 
@@ -501,6 +508,19 @@ MODULE pw_restart_new
             CALL qexsd_init_occupations ( qexsd_occ_obj, input_parameters_occupations, nspin)
          END IF 
          qexsd_occ_obj%tagname = 'occupations_kind' 
+         IF ( two_fermi_energies ) THEN
+            ALLOCATE ( ef_updw (2) )
+               IF (TRIM(input_parameters_occupations) == 'fixed') THEN  
+                  ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
+                  ef_updw (2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
+               ELSE 
+                  ef_updw = [ef_up/e2, ef_dw/e2]
+               END IF
+         ELSE
+                ef_targ = ef/e2
+                ef_point => ef_targ
+         END IF
+
 
          IF (TRIM(input_parameters_occupations) == 'smearing' ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
@@ -509,23 +529,17 @@ MODULE pw_restart_new
                CALL qexsd_init_smearing(qexsd_smear_obj, smearing, degauss)
             END IF  
             !  
-            IF ( two_fermi_energies ) THEN
-                ALLOCATE ( ef_updw (2) )
-                ef_updw = [ef_up/e2, ef_dw/e2]
-            ELSE
-                ef_targ = ef/e2
-                ef_point => ef_targ
-            END IF
             CALL qexsd_init_band_structure(  output%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
                                  et, wg, nkstot, xk, ngk_g, wk, SMEARING = qexsd_smear_obj,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
-                                 WF_COLLECTED = .TRUE., NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw )
+                                 WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw )
             CALL qes_reset (qexsd_smear_obj)
          ELSE     
             CALL  qexsd_init_band_structure(output%band_structure,lsda, noncolin,lspinorb, nelec, natomwfc, &
                                 et, wg, nkstot, xk, ngk_g, wk, &
                                 STARTING_KPOINTS =  qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj,&
-                                WF_COLLECTED = .TRUE. , NBND = nbnd, HOMO = h_energy, LUMO = lumo_energy )
+                                WF_COLLECTED = wf_collect , NBND = nbnd, HOMO = h_energy, LUMO = lumo_energy , &
+                                EF_UPDW = ef_updw )
          END IF 
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)
@@ -972,7 +986,7 @@ MODULE pw_restart_new
          END IF
          IF (ierr /= 0 ) THEN
              CALL infomsg ('pw_readschema_file',& 
-                            'failed retrieving input info from xml file, check it !!!')
+                            'failed retrieving input info from xml file, please check it')
              IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
              ierr = 0 
          END IF
@@ -2297,7 +2311,7 @@ MODULE pw_restart_new
                                       set_gau_parameter, enforce_input_dft, start_exx
       USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
-      USE exx,                  ONLY : ecutfock
+      USE exx,                  ONLY : ecutfock, local_thr
       ! 
       USE  qes_types_module,   ONLY : hybrid_type 
       IMPLICIT NONE
@@ -2313,6 +2327,11 @@ MODULE pw_restart_new
       exxdiv_treatment = hybrid_obj%exxdiv_treatment 
       ecutvcut = hybrid_obj%ecutvcut*e2
       ecutfock = hybrid_obj%ecutfock*e2
+      IF (hybrid_obj%localization_threshold_ispresent) THEN
+         local_thr = hybrid_obj%localization_threshold  
+      ELSE 
+         local_thr = 0._DP 
+      END IF 
       CALL start_exx() 
     END SUBROUTINE  readschema_exx 
     !-----------------------------------------------------------------------------------  

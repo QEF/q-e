@@ -415,9 +415,9 @@ and libraries are also required.
 
 As a rule, \qe\ tries to keep compatibility with older compilers,
 avoiding nonstandard extensions and newer features that
-are not widespread or stabilized. No warranty, however, if
-your compiler is older than $\sim 5$ years or so. The same applies to
-mathematical and MPI libraries.
+are not widespread or stabilized. If however your compiler is older 
+than $\sim 5$ years or so, it is unlikely to work. The same applies
+to mathematical and MPI libraries.
 
 Big machines with
 specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
@@ -1111,7 +1111,7 @@ add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
 
 The Intel compiler ifort \texttt{http://software.intel.com/}
 produces fast executables, at least on Intel CPUs, but not all versions
-work as expected (see below). In case of trouble, update your version
+work as expected. In case of trouble, update your version
 with the most recent patches. Since each major release of ifort
 differs a lot from the previous one, compiled objects from different
 releases may be incompatible and should not be mixed.
@@ -1132,23 +1132,7 @@ The warning: {\em feupdateenv is not implemented and will always fail},
 can be safely ignored. Warnings on ``bad preprocessing option'' when compiling
 iotk and complains about ``recommended formats'' may also be ignored.
 
-The following compiler releases are known to give segmentation faults
-in at least some cases of compilation of \qe\ v.6.0:
-\begin{quote}
-12.0.0.084 Build 20101006\\
-12.0.1.107 Build 20101116\\
-12.0.2.137 Build 20110112\\
-12.0.4.191 Build 20110427\\
-12.0.5.220 Build 20110719\\
-16.0.1.150 Build 20151021
-\end{quote}
-(Filippo Spiga, Aug. 2016)
-
-{\bf ifort v.12}: release 12.0.0 miscompiles iotk, leading to
-mysterious errors when reading data files. Workaround: increase
-the parameter BLOCKSIZE to e.g. 131072*1024 when opening files in
-\texttt{iotk/src/iotk\_files.f90} (info by Lorenzo Paulatto,
-Nov. 2010). 
+Versions v.12 and earlier of ifort are no longer supported by QE v.\version.
 
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries
@@ -1239,14 +1223,14 @@ Another option is Cygwin, a UNIX environment which runs under Windows: see\\
 Finally, Windows-10 users may enable the Windows Subsystem for Linux
 (see here:\\
 \texttt{https://docs.microsoft.com/en-us/windows/wsl/install-win10}),
-install a Linux distribution, compile \qe\ as on Linux.
+install a Linux distribution, compile \qe\ as on Linux. It works very well.
 
 \subsubsection{Mac OS}
 
-Mac OS-X machines (10.4 and later) with Intel CPUs are supported
-by \configure, both with gfortran and with the Intel compiler ifort
-and MKL libraries.
-Parallel compilation with OpenMPI also works.
+Mac OS-X machines with gfortran or with the Intel compiler ifort
+and MKL libraries should work, but "your mileage may vary", depending
+upon the specific software stack you are using. Parallel compilation 
+with OpenMPI should also work. 
 
 Gfortran information and binaries for Mac OS-X here:
 \texttt{http://hpc.sourceforge.net/} and

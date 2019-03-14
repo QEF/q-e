@@ -55,7 +55,10 @@ subroutine deriv_drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg)
   !
   ! G <> 0 term
   !
-  allocate (aux( mesh))    
+!$omp parallel private(aux, gx, rhocg1)
+  !
+  allocate (aux( mesh))
+!$omp do
   do igl = igl0, ngl
      gx = sqrt (gl (igl) * tpiba2)
      do ir = 1, mesh
@@ -65,7 +68,9 @@ subroutine deriv_drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg)
      call simpson (mesh, aux, rab, rhocg1)
      drhocg (igl) = fpi / omega * rhocg1
   enddo
+!$omp end do nowait
   deallocate (aux)
+!$omp end parallel
 
   return
 end subroutine deriv_drhoc

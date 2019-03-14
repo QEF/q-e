@@ -59,7 +59,7 @@ SUBROUTINE setup()
                                  find_sym, inverse_s, no_t_rev, fft_fact,  &
                                  allfrac
   USE wvfct,              ONLY : nbnd, nbndx
-  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
+  USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
                                  lbands, use_para_diag, gamma_only, &
                                  restart, use_gpu
@@ -131,10 +131,11 @@ SUBROUTINE setup()
                          'hybrid XC not allowed in non-scf calculations', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
-     !IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
      IF (okvan) THEN
         IF (ecutfock /= 4*ecutwfc) CALL infomsg &
            ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
+        IF ( lmd .OR. lbfgs ) CALL errore &
+           ('setup','forces for hybrid functionals + US/PAW not implemented')
         IF ( noncolin ) CALL errore &
            ('setup','Noncolinear hybrid XC for USPP not implemented',1)
      END IF

@@ -251,7 +251,9 @@ lr_dvpsi_eels.o : ../../Modules/uspp.o
 lr_dvpsi_eels.o : ../../Modules/wavefunctions.o
 lr_dvpsi_eels.o : ../../PW/src/buffers.o
 lr_dvpsi_eels.o : ../../PW/src/pwcom.o
+lr_eels_main.o : ../../LAXlib/mp_diag.o
 lr_eels_main.o : ../../Modules/check_stop.o
+lr_eels_main.o : ../../Modules/command_line_options.o
 lr_eels_main.o : ../../Modules/environment.o
 lr_eels_main.o : ../../Modules/fft_base.o
 lr_eels_main.o : ../../Modules/io_files.o
@@ -260,6 +262,8 @@ lr_eels_main.o : ../../Modules/ions_base.o
 lr_eels_main.o : ../../Modules/kind.o
 lr_eels_main.o : ../../Modules/mp_bands.o
 lr_eels_main.o : ../../Modules/mp_global.o
+lr_eels_main.o : ../../Modules/mp_pools.o
+lr_eels_main.o : ../../Modules/mp_world.o
 lr_eels_main.o : ../../Modules/uspp.o
 lr_eels_main.o : ../../Modules/version.o
 lr_eels_main.o : ../../Modules/wavefunctions.o

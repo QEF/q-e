@@ -189,9 +189,9 @@ PROGRAM do_dos
      IF ( fildos == ' ' ) fildos = trim(prefix)//'.dos'
      OPEN (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
      IF ( two_fermi_energies ) THEN
-        WRITE(fermi_str,'(" EFermi = ",2f7.3," eV")') ef_up*rytoev, ef_dw*rytoev
+        WRITE(fermi_str,'(" EFermi = ",2f8.3," eV")') ef_up*rytoev, ef_dw*rytoev
      ELSE
-        WRITE(fermi_str,'(" EFermi = ",f7.3," eV")') ef*rytoev
+        WRITE(fermi_str,'(" EFermi = ",f8.3," eV")') ef*rytoev
      ENDIF
 
      IF (nspin==1.or.nspin==4) THEN

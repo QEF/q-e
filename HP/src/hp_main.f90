@@ -15,6 +15,11 @@ PROGRAM hp_main
   USE io_global,         ONLY : stdout, ionode
   USE check_stop,        ONLY : check_stop_init
   USE mp_global,         ONLY : mp_startup, mp_global_end
+  USE mp_world,          ONLY : world_comm
+  USE mp_pools,          ONLY : intra_pool_comm
+  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_diag,           ONLY : mp_start_diag
+  USE command_line_options,  ONLY : input_file_, ndiag_
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
@@ -29,9 +34,11 @@ PROGRAM hp_main
   !
   ! Initialize MPI, clocks, print initial messages
   !
-#if defined (__MPI)
   CALL mp_startup()
-#endif
+  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+       do_distr_diag_inside_bgrp_ = .true. )
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
+       inter_bgrp_comm )
   !
   CALL environment_start(code)
   !
@@ -219,9 +226,8 @@ PROGRAM hp_main
   !
   CALL environment_end(code)
   !
-#if defined (__MPI)
+  CALL unset_mpi_comm_4_solvers() 
   CALL mp_global_end()
-#endif
   !
 3336 FORMAT('     ',69('='))
   !

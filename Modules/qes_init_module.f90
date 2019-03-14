@@ -687,8 +687,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_atomic_species 
   !
   !
-  SUBROUTINE qes_init_species(obj, tagname, name, pseudo_file, mass, starting_magnetization, spin_teta,&
-                             spin_phi)
+  SUBROUTINE qes_init_species(obj, tagname, name, pseudo_file, mass, starting_magnetization, spin_teta, spin_phi)
     !
     IMPLICIT NONE
     !
@@ -930,7 +929,8 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_hybrid(obj, tagname, qpoint_grid, ecutfock, exx_fraction, screening_parameter,&
-                            exxdiv_treatment, x_gamma_extrapolation, ecutvcut)
+                            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, localization_threshold &
+                            )
     !
     IMPLICIT NONE
     !
@@ -943,6 +943,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*),OPTIONAL,INTENT(IN) :: exxdiv_treatment
     LOGICAL,OPTIONAL,INTENT(IN) :: x_gamma_extrapolation
     REAL(DP),OPTIONAL,INTENT(IN) :: ecutvcut
+    REAL(DP),OPTIONAL,INTENT(IN) :: localization_threshold
     !
     obj%tagname = TRIM(tagname) 
     obj%lwrite = .TRUE.
@@ -989,6 +990,12 @@ MODULE qes_init_module
       obj%ecutvcut = ecutvcut
     ELSE 
       obj%ecutvcut_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(localization_threshold)) THEN 
+      obj%localization_threshold_ispresent = .TRUE. 
+      obj%localization_threshold = localization_threshold
+    ELSE 
+      obj%localization_threshold_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_hybrid 
@@ -1182,8 +1189,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_starting_ns 
   !
   !
-  SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, order,&
-                                Hubbard_ns)
+  SUBROUTINE qes_init_Hubbard_ns(obj, tagname, specie, label, spin, index, order, Hubbard_ns)
     !
     IMPLICIT NONE
     !
@@ -1211,8 +1217,9 @@ MODULE qes_init_module
     obj%order = order 
     
     length = 1
+    obj%rank = SIZE(shape(Hubbard_ns))
+    ALLOCATE ( obj%dims(obj%rank))
     obj%dims = shape(Hubbard_ns)
-    obj%rank = SIZE(obj%dims)
     DO i = 1, obj%rank
       length = length * obj%dims(i)
     END DO
@@ -1353,8 +1360,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_spin 
   !
   !
-  SUBROUTINE qes_init_bands(obj, tagname, occupations, nbnd, smearing, tot_charge, tot_magnetization,&
-                           inputOccupations)
+  SUBROUTINE qes_init_bands(obj, tagname, occupations, nbnd, smearing, tot_charge, tot_magnetization, inputOccupations)
     !
     IMPLICIT NONE
     !
@@ -1451,8 +1457,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_occupations 
   !
   !
-  SUBROUTINE qes_init_basis(obj, tagname, ecutwfc, gamma_only, ecutrho, fft_grid, fft_smooth,&
-                           fft_box)
+  SUBROUTINE qes_init_basis(obj, tagname, ecutwfc, gamma_only, ecutrho, fft_grid, fft_smooth, fft_box)
     !
     IMPLICIT NONE
     !
@@ -1955,8 +1960,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_cell_control 
   !
   !
-  SUBROUTINE qes_init_symmetry_flags(obj, tagname, nosym, nosym_evc, noinv, no_t_rev, force_symmorphic,&
-                                    use_all_frac)
+  SUBROUTINE qes_init_symmetry_flags(obj, tagname, nosym, nosym_evc, noinv, no_t_rev, force_symmorphic, use_all_frac)
     !
     IMPLICIT NONE
     !
@@ -2093,8 +2097,8 @@ MODULE qes_init_module
   !
   SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, dipole_correction, gate_settings,&
                                     electric_field_direction, potential_max_position, potential_decrease_width,&
-                                    electric_field_amplitude, electric_field_vector, nk_per_string,&
-                                    n_berry_cycles)
+                                    electric_field_amplitude, electric_field_vector, nk_per_string, n_berry_cycles &
+                                    )
     !
     IMPLICIT NONE
     !
@@ -2174,8 +2178,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_electric_field 
   !
   !
-  SUBROUTINE qes_init_gate_settings(obj, tagname, use_gate, zgate, relaxz, block, block_1, block_2,&
-                                   block_height)
+  SUBROUTINE qes_init_gate_settings(obj, tagname, use_gate, zgate, relaxz, block, block_1, block_2, block_height)
     !
     IMPLICIT NONE
     !
@@ -2301,8 +2304,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_inputOccupations 
   !
   !
-  SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase, finiteElectricFieldInfo, dipoleInfo,&
-                                         gateInfo)
+  SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase, finiteElectricFieldInfo, dipoleInfo, gateInfo)
     !
     IMPLICIT NONE
     !
@@ -2345,8 +2347,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_outputElectricField 
   !
   !
-  SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, totalPolarization, totalPhase, ionicPolarization,&
-                                      electronicPolarization)
+  SUBROUTINE qes_init_BerryPhaseOutput(obj, tagname, totalPolarization, totalPhase, ionicPolarization, electronicPolarization)
     !
     IMPLICIT NONE
     !
@@ -2779,8 +2780,7 @@ MODULE qes_init_module
   END SUBROUTINE qes_init_outputPBC 
   !
   !
-  SUBROUTINE qes_init_magnetization(obj, tagname, lsda, noncolin, spinorbit, total, absolute,&
-                                   do_magnetization)
+  SUBROUTINE qes_init_magnetization(obj, tagname, lsda, noncolin, spinorbit, total, absolute, do_magnetization)
     !
     IMPLICIT NONE
     !
@@ -2898,7 +2898,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, wf_collected,&
                                     starting_k_points, nks, occupations_kind, ks_energies, nbnd,&
                                     nbnd_up, nbnd_dw, num_of_atomic_wfc, fermi_energy, highestOccupiedLevel,&
-                                    two_fermi_energies, smearing)
+                                    lowestUnoccupiedLevel, two_fermi_energies, smearing)
     !
     IMPLICIT NONE
     !
@@ -2915,6 +2915,7 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: wf_collected
     REAL(DP),OPTIONAL,INTENT(IN) :: fermi_energy
     REAL(DP),OPTIONAL,INTENT(IN) :: highestOccupiedLevel
+    REAL(DP),OPTIONAL,INTENT(IN) :: lowestUnoccupiedLevel
     REAL(DP), DIMENSION(2),OPTIONAL,INTENT(IN) :: two_fermi_energies
     TYPE(k_points_IBZ_type),INTENT(IN) :: starting_k_points
     INTEGER,INTENT(IN) :: nks
@@ -2966,6 +2967,12 @@ MODULE qes_init_module
       obj%highestOccupiedLevel = highestOccupiedLevel
     ELSE 
       obj%highestOccupiedLevel_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(lowestUnoccupiedLevel)) THEN 
+      obj%lowestUnoccupiedLevel_ispresent = .TRUE. 
+      obj%lowestUnoccupiedLevel = lowestUnoccupiedLevel
+    ELSE 
+      obj%lowestUnoccupiedLevel_ispresent = .FALSE.
     END IF
     IF ( PRESENT(two_fermi_energies)) THEN 
       obj%two_fermi_energies_ispresent = .TRUE. 
