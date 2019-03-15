@@ -783,7 +783,6 @@ vasp_xml_module.o : ../../Modules/noncol.o
 vasp_xml_module.o : ../../Modules/paw_variables.o
 vasp_xml_module.o : ../../Modules/qes_libs_module.o
 vasp_xml_module.o : ../../Modules/qes_types_module.o
-vasp_xml_module.o : ../../Modules/read_pseudo.o
 vasp_xml_module.o : ../../Modules/recvec.o
 vasp_xml_module.o : ../../Modules/recvec_subs.o
 vasp_xml_module.o : ../../Modules/uspp.o

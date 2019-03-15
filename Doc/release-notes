@@ -1,3 +1,6 @@
+Problems fixed in develop branch :
+   * Restart of ph.x with 2D boundary conditions has been fixed, see issue#102 on gitlab 
+
 New in version 6.4:
   * Experimental version of SCDM localization with k-points, activated like for
     k=0 by specifying in &system namelist a value > 0 for "localization_thr".
@@ -17,6 +20,8 @@ New in version 6.4:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in version 6.4 (+ = in qe-6.3-backports as well) :
+  + Codes reading scf data recomputed celldm parameters also if ibrav=0
+    This produced confusing output and had the potential to break some codes
   + index not correctly initialized in LSDA phonon with core corrections 
   + GTH pseudopotentials in analytical form wrongly computed in some cases
   + projwfc.x not working with new xml format in noncolinear/spinorbit case 
@@ -55,6 +60,7 @@ Incompatible changes in version 6.4 version:
 
 Known problems in version 6.4:
   * Frequent "dexx is negative" errors with hybrid functionals
+  * restart of ph.x when using 2D boundary conditions fails see issue#102 on gitLab 
 
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Seitz 

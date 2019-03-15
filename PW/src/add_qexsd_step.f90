@@ -27,7 +27,7 @@ USE force_mod,    ONLY: force, sigma
 USE control_flags,ONLY: nstep, n_scf_steps, scf_error, conv_elec
 USE fcp_variables,ONLY: fcp_mu, lfcpopt, lfcpdyn 
 USE extfield,     ONLY: gate, etotgatefield, tefield, etotefield   
-USE input_parameters, ONLY: max_xml_steps 
+USE control_flags, ONLY: max_xml_steps 
 !-----------------------------------------------------------------------------
 !   END_GLOBAL_VARIABLES
 !----------------------------------------------------------------------------- 
@@ -58,13 +58,12 @@ INTEGER                     :: stride = 1, max_xml_steps_
 
 IF ( max_xml_steps > 0 ) THEN 
    stride = nstep/max_xml_steps 
+   IF (nstep/stride > max_xml_steps) stride = stride+1 
    max_xml_steps_ = max_xml_steps+2
 ELSE 
    max_xml_steps_ = nstep 
 END IF 
-
-IF (.NOT. ( i_step == 1 .OR. MOD(i_step-1, stride) == 0 .OR. i_step == nstep)) RETURN 
-
+IF (.NOT. ( i_step == 1 .OR. MOD(i_step-1, stride) == 0 .OR. i_step == nstep)) RETURN  
 NULLIFY(potstat_contr_ptr, fcp_force_ptr, fcp_tot_charge_ptr, demet_ptr, degauss_ptr, &
         gatefield_en_ptr, efield_corr_ptr)
 !
