@@ -62,6 +62,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         if (not automatic)
            nks
            xk_x, xk_y, xk_z,  wk
+        if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
 
         [ @b CELL_PARAMETERS { alat | bohr | angstrom }
            v1(1) v1(2) v1(3)
@@ -2819,7 +2820,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val tpiba_b {
                     Used for band-structure plots.
-                    k-points are in units of  2 pi/a. 
+                    See Doc/brillouin_zones.pdf for usage of BZ labels;
+                    otherwise, k-points are in units of  2 pi/a. 
                     nks points specify nks-1 lines in reciprocal space.
                     Every couple of points identifies the initial and
                     final point of a line. pw.x generates N intermediate
@@ -2828,6 +2830,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val crystal_b {
                     As tpiba_b, but k-points are in crystal coordinates.
+                    See Doc/brillouin_zones.pdf for usage of BZ labels.
                 }
 
                 opt -val tpiba_c {
