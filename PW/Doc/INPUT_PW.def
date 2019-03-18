@@ -480,8 +480,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 see below for the other parameters.
                 For ibrav=0 specify the lattice vectors in @ref CELL_PARAMETERS,
                 optionally the lattice parameter alat = celldm(1) (in a.u.) 
-                or = A (in Angstrom), or else it is taken from @ref CELL_PARAMETERS 
+                or = A (in Angstrom). If not specified, the lattice parameter is
+                taken from @ref CELL_PARAMETERS 
+                IMPORTANT NOTICE 1: 
                 ibrav=0 should not be used for symmetric crystals or for phonon calculations 
+                IMPORTANT NOTICE 2: 
+                do not use celldm(1) or A as a.u. to Ang conversion factor, 
+                use the true lattice parameters or nothing, 
+                specify units in @ref CELL_PARAMETERS and @ref ATOMIC_POSITIONS
  
               ibrav      structure                   celldm(2)-celldm(6)
                                                    or: b,c,cosbc,cosac,cosab 
