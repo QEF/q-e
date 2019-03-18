@@ -61,6 +61,7 @@ Incompatible changes in version 6.4 version:
 Known problems in version 6.4:
   * Frequent "dexx is negative" errors with hybrid functionals
   * restart of ph.x when using 2D boundary conditions fails see issue#102 on gitLab 
+  * the band_structure element is printed incompletely if tetrahedra are used for sums in the IBZ, see issue #103.  
 
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Seitz 
