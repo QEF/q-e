@@ -29,7 +29,7 @@ MODULE pw_restart_new
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField,                              &
-                          qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj,             &
+                          qexsd_input_obj, qexsd_occ_obj,                               &
                           qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid,&
                           qexsd_init_dftU, qexsd_init_vdw
   USE io_global, ONLY : ionode, ionode_id
@@ -74,7 +74,7 @@ MODULE pw_restart_new
       USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
-                                       two_fermi_energies, nelup, neldw, tot_charge
+                                       two_fermi_energies, nelup, neldw, tot_charge, ltetra 
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        nks_start, xk_start, wk_start
       USE gvect,                ONLY : ngm, ngm_g, g, mill
@@ -132,8 +132,11 @@ MODULE pw_restart_new
               qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
-      USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3
+      USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
       USE input_parameters,     ONLY :  ts_vdw_econv_thr, ts_vdw_isolated
+      USE Coul_cut_2D,          ONLY : do_cutoff_2D 
+      USE esm,                  ONLY : do_comp_esm 
+      USE martyna_tuckerman,    ONLY : do_comp_mt 
       !
       IMPLICIT NONE
       !
@@ -150,7 +153,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent, dft_is_vdw, empirical_vdw
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
-      REAL(DP)                 :: h_energy
+      REAL(DP),TARGET                 :: h_energy
       TYPE(gateInfo_type),TARGET      :: gate_info_temp
       TYPE(gateInfo_type),POINTER     :: gate_info_ptr => NULL()
       TYPE(dipoleOutput_type),TARGET  :: dipol_obj 
@@ -176,17 +179,19 @@ MODULE pw_restart_new
       CHARACTER(LEN=3),ALLOCATABLE :: species_(:)
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
       INTEGER,TARGET             :: dftd3_version_
-      CHARACTER(LEN=20),TARGET   :: vdw_corr_
+      CHARACTER(LEN=20),TARGET   :: vdw_corr_, pbc_label 
       CHARACTER(LEN=20),POINTER  :: non_local_term_pt =>NULL(), vdw_corr_pt=>NULL()
       REAL(DP),TARGET            :: temp(20), lond_rcut_, lond_s6_, ts_vdw_econv_thr_, xdm_a1_, xdm_a2_, ectuvcut_,&
                                     scr_par_, loc_thr_  
       REAL(DP),POINTER           :: vdw_term_pt =>NULL(), ts_thr_pt=>NULL(), london_s6_pt=>NULL(),&
                                     london_rcut_pt=>NULL(), xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), &
                                     ts_vdw_econv_thr_pt=>NULL(), ectuvcut_opt=>NULL(), scr_par_opt=>NULL(), &
-                                    loc_thr_p => NULL() 
+                                    loc_thr_p => NULL(), h_energy_ptr => NULL()  
       LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_
       LOGICAL,POINTER            :: ts_isol_pt=>NULL(), dftd3_threebody_pt=>NULL(), ts_vdw_isolated_pt =>NULL()
       INTEGER,POINTER            :: dftd3_version_pt => NULL() 
+      TYPE(smearing_type),TARGET :: smear_obj 
+      TYPE(smearing_type),POINTER:: smear_obj_ptr => NULL() 
 
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr )
 
@@ -455,10 +460,21 @@ MODULE pw_restart_new
 ! ... PERIODIC BOUNDARY CONDITIONS 
 !-------------------------------------------------------------------------------
          !
-         IF (TRIM( assume_isolated ) .EQ. "2D" ) THEN
+         IF (ANY([do_makov_payne, do_comp_mt, do_comp_esm, do_cutoff_2D]))  THEN
             output%boundary_conditions_ispresent=.TRUE.
-            CALL  qexsd_init_outputPBC(output%boundary_conditions, assume_isolated)
-          ENDIF
+            IF (do_makov_payne) THEN 
+               pbc_label = 'makov_payne' 
+            ELSE IF ( do_comp_mt) THEN 
+               pbc_label = 'martyna_tuckerman' 
+            ELSE IF ( do_comp_esm) THEN 
+               pbc_label = 'esm' 
+            ELSE IF ( do_cutoff_2D) THEN 
+               pbc_label = '2D'
+            ELSE 
+               CALL errore ('pw_restart_new.f90: ', 'internal error line 470', 1) 
+            END IF 
+            CALL qexsd_init_outputPBC(output%boundary_conditions, TRIM(pbc_label) )  
+         ENDIF
          !
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION
@@ -476,10 +492,11 @@ MODULE pw_restart_new
          !
          IF ( TRIM(what) == "init-config" ) GO TO 10
          !
-         IF (TRIM(input_parameters_occupations) == 'fixed') THEN 
+         IF ( .NOT. ( lgauss .OR. ltetra )) THEN 
             occupations_are_fixed = .TRUE.
             CALL get_homo_lumo( h_energy, lumo_tmp)
             h_energy = h_energy/e2
+            h_energy_ptr => h_energy 
             IF ( lumo_tmp .LT. 1.d+6 ) THEN
                 lumo_tmp = lumo_tmp/e2
                 lumo_energy => lumo_tmp
@@ -509,31 +526,29 @@ MODULE pw_restart_new
                ELSE 
                   ef_updw = [ef_up/e2, ef_dw/e2]
                END IF
-         ELSE
+         ELSE IF (ltetra .OR. lgauss) THEN  
                 ef_targ = ef/e2
                 ef_point => ef_targ
          END IF
 
 
-         IF (TRIM(input_parameters_occupations) == 'smearing' ) THEN
+         IF ( lgauss ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
-               qexsd_smear_obj = qexsd_input_obj%bands%smearing
+               smear_obj = qexsd_input_obj%bands%smearing
             ELSE 
-               CALL qexsd_init_smearing(qexsd_smear_obj, smearing, degauss)
+               CALL qexsd_init_smearing(smear_obj, smearing, degauss)
             END IF  
-            !  
-            CALL qexsd_init_band_structure(  output%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
-                                 et, wg, nkstot, xk, ngk_g, wk, SMEARING = qexsd_smear_obj,  &
-                                 STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
-                                 WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw )
-            CALL qes_reset (qexsd_smear_obj)
-         ELSE     
-            CALL  qexsd_init_band_structure(output%band_structure,lsda, noncolin,lspinorb, nelec, natomwfc, &
-                                et, wg, nkstot, xk, ngk_g, wk, &
-                                STARTING_KPOINTS =  qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj,&
-                                WF_COLLECTED = wf_collect , NBND = nbnd, HOMO = h_energy, LUMO = lumo_energy , &
-                                EF_UPDW = ef_updw )
+            smear_obj_ptr => smear_obj  
          END IF 
+         !  
+            
+         CALL qexsd_init_band_structure(  output%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
+                                 et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj_ptr,  &
+                                 STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
+                                 WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw,& 
+                                 HOMO = h_energy_ptr, LUMO = lumo_energy )
+         ! 
+         IF (lgauss)  CALL qes_reset (smear_obj)
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)
          !

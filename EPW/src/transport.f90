@@ -1,6 +1,6 @@
   !
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! Copyright (C) 2016-2018 Samuel Ponce'
+  ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! 
   ! This file is distributed under the terms of the GNU General Public         
   ! License. See the file `LICENSE' in the root directory of the               
