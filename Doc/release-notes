@@ -1,5 +1,8 @@
 Problems fixed in develop branch :
-   * Restart of ph.x with 2D boundary conditions has been fixed, see issue#102 on gitlab 
+  * Two bugfixes in HP: 1) the code was not working correctly when fractional
+    translations are present, 2) there was a bug in the case when either there is only
+    one k point, or when k pools are used and some of the pools have only one k point.
+  * Restart of ph.x with 2D boundary conditions has been fixed, see issue#102 on gitlab 
 
 New in version 6.4:
   * Experimental version of SCDM localization with k-points, activated like for
