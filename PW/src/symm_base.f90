@@ -26,9 +26,13 @@ MODULE symm_base
   !
   ! ... Exported variables
   !
-  PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, nsym_ns, nsym_na, t_rev, &
+  PUBLIC :: s, sr, sname, ft, nrot, nsym, nsym_ns, nsym_na, t_rev, &
             no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
             allfrac, nofrac, nosym, nosym_evc, fft_fact, spacegroup
+  PUBLIC :: ftau
+  ! ... IMPORTANT NOTE: fractional translations are computed and stored in ft;
+  ! ... ftau is for compatibility only and is not computed here, but only in
+  ! ... remove_symm (used by EPW) or when symmetries are read from xml file
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
@@ -647,8 +651,10 @@ SUBROUTINE sgam_at_mag ( nat, m_loc, sym )
               t_rev(irot) = 1
            ENDIF
         ENDIF
-        IF ((.NOT. sym(irot)) .AND. (ftau(1,irot) /= 0 .OR. ftau(2,irot) /=0 &
-                     .OR. ftau(3,irot) /=0)) nsym_ns=nsym_ns-1
+        IF ( (.NOT. sym(irot) ) .AND. &
+             ( abs (ft(1,irot)) > eps2 .OR. &
+               abs (ft(2,irot)) > eps2 .OR. &
+               abs (ft(3,irot)) > eps2 ) ) nsym_ns = nsym_ns - 1
         !
      ENDIF
      !
@@ -667,7 +673,7 @@ SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc)
   ! is noncollinear magnetism and the initial magnetic moments;
   ! it sets the symmetry elements of this module.
   ! Note that at and bg are those in cell_base. It sets nrot, nsym, s,
-  ! sname, sr, invs, ftau, irt, t_rev,  time_reversal, and invsym
+  ! sname, sr, invs, ft, irt, t_rev,  time_reversal, and invsym
   !
   !-----------------------------------------------------------------------
   !
@@ -1105,8 +1111,8 @@ END SUBROUTINE sgam_at_ifc
 !-----------------------------------------------------------------------
 SUBROUTINE remove_sym ( nr1, nr2, nr3 )
   !
-  ! ... ensure that ftau used for symmetrization in real space (phonon, exx)
-  ! ... are commensurated with the FFT grid
+  ! ... compute ftau used for symmetrization in real space (phonon, exx)
+  ! ... ensure that they are commensurated with the FFT grid
   !
   IMPLICIT NONE
   !
