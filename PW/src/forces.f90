@@ -131,7 +131,8 @@ SUBROUTINE forces()
   !
   ! ... The NLCC contribution
   !
-  CALL force_cc( forcecc )
+  IF (.not. use_gpu) CALL force_cc( forcecc )
+  IF (      use_gpu) CALL force_cc_gpu( forcecc )
   !
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
