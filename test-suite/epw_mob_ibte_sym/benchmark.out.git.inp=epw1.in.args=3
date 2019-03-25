@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 16Oct2018 at 16: 4:52 
+     Program EPW v.5.1.0 starts on 25Mar2019 at 11:28:13 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -65,9 +65,6 @@
      number of atomic types    =            1
      kinetic-energy cut-off    =      10.0000  Ry
      charge density cut-off    =      40.0000  Ry
-     convergence threshold     =      0.0E+00
-     beta                      =       0.0000
-     number of iterations used =            0
      Exchange-correlation      = PBE ( 1  4  3  4 0 0)
 
 
@@ -90,8 +87,8 @@
    Cartesian axes
 
      site n.  atom      mass           positions (a_0 units)
-        1        Si  28.0879   tau( 1) = (    0.00000    0.00000    0.00000  )
-        2        Si  28.0879   tau( 2) = (    0.25000    0.25000    0.25000  )
+        1        Si  28.0855   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2        Si  28.0855   tau( 2) = (    0.25000    0.25000    0.25000  )
 
      49 Sym.Ops. (with q -> -q+G )
 
@@ -317,7 +314,7 @@
         k(  216) = (  -0.8333333   0.8333333   0.8333333), wk =   0.0092593
 
      PseudoPot. # 1 for Si read from file:
-     ./Si_r.upf
+     ../../pseudo/Si_r.upf
      MD5 check sum: c84abb4b0aac9c93a8e9f74896432a0a
      Pseudo is Norm-conserving + core correction, Zval =  4.0
      Generated using ONCVPSP code by D. R. Hamann
@@ -328,9 +325,9 @@
                 l(4) =   1
                 l(5) =   2
                 l(6) =   2
-     EPW          :      0.23s CPU      0.24s WALL
+     EPW          :      0.24s CPU      0.25s WALL
 
-     EPW          :      0.30s CPU      0.32s WALL
+     EPW          :      0.31s CPU      0.32s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -808,38 +805,38 @@
 
      Wannier Function centers (cartesian, alat) and spreads (ang):
 
-     (   0.04064   0.04064   0.04064) :   2.52565
-     (   0.04064  -0.04064  -0.04064) :   2.52565
-     (  -0.04064   0.04064  -0.04064) :   2.52565
-     (  -0.04064  -0.04064   0.04064) :   2.52565
-     (   0.33426   0.33426   0.33426) :   2.12920
-     (   0.33426   0.16574   0.16574) :   2.12920
-     (   0.16574   0.33426   0.16574) :   2.12920
-     (   0.16574   0.16574   0.33426) :   2.12920
+     (   0.04064   0.04064   0.04064) :   2.52567
+     (   0.04064  -0.04064  -0.04064) :   2.52567
+     (  -0.04064   0.04064  -0.04064) :   2.52567
+     (  -0.04064  -0.04064   0.04064) :   2.52567
+     (   0.33426   0.33426   0.33426) :   2.12918
+     (   0.33426   0.16574   0.16574) :   2.12918
+     (   0.16574   0.33426   0.16574) :   2.12918
+     (   0.16574   0.16574   0.33426) :   2.12918
 
      -------------------------------------------------------------------
-     WANNIER      :      9.62s CPU      9.65s WALL (       1 calls)
+     WANNIER      :     11.12s CPU     11.18s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
 
 
-     Calculating kmap and kgmap
-     Progress  kmap: ########################################
+     Calculating kgmap
+
      Progress kgmap: ########################################
      kmaps        :      0.05s CPU      0.05s WALL (       1 calls)
 
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026126
+     IFC last   -0.0026119
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
 
      Finished reading ifcs
 
-     Symmetries of bravais lattice:  48
+     Symmetries of Bravais lattice:  48
      Symmetries of crystal:          48
 
 
@@ -922,7 +919,7 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026126
+     IFC last   -0.0026119
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
@@ -933,13 +930,13 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        57Mb
-                   VmPeak =       325Mb
+     Memory usage:  VmHWM =        64Mb
+                   VmPeak =       332Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
      Size of q point mesh for interpolation:        100
-      Using k-mesh file: ./LGX.txt
+     Using k-mesh file: ./LGX.txt
      Size of k point mesh for interpolation:        200
      Max number of k points per pool:              200
 
@@ -956,40 +953,41 @@
 
 
      Number of ep-matrix elements per pool :         2400 ~=   18.75 Kb (@ 8 bytes/ DP)
+     Number selected, total     100     100
      We only need to compute      100 q-points
       
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        57Mb
-                   VmPeak =       325Mb
+     Memory usage:  VmHWM =        64Mb
+                   VmPeak =       332Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     15.49s CPU     15.93s WALL (       1 calls)
+     elphon_wrap  :     14.24s CPU     14.66s WALL (       1 calls)
 
      INITIALIZATION: 
 
      set_drhoc    :      0.17s CPU      0.17s WALL (       9 calls)
-     init_vloc    :      0.01s CPU      0.01s WALL (      10 calls)
-     init_us_1    :      0.08s CPU      0.08s WALL (      10 calls)
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
+     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
 
 
      Electron-Phonon interpolation
-     ephwann      :      2.59s CPU      3.05s WALL (       1 calls)
-     ep-interp    :      1.50s CPU      1.90s WALL (     100 calls)
+     ephwann      :      2.46s CPU      2.89s WALL (       1 calls)
+     ep-interp    :      1.42s CPU      1.79s WALL (     100 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.03s CPU      0.03s WALL (       1 calls)
      ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
-     ep: step 2   :      0.46s CPU      0.46s WALL (      48 calls)
+     ep: step 2   :      0.46s CPU      0.47s WALL (      48 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      0.45s CPU      0.47s WALL (   21866 calls)
-     ephW2Bp      :      0.22s CPU      0.55s WALL (     100 calls)
+     HamW2B       :      0.42s CPU      0.44s WALL (   20791 calls)
+     ephW2Bp      :      0.20s CPU      0.52s WALL (     100 calls)
 
 
      Total program execution
-     EPW          :     28.01s CPU     28.96s WALL
+     EPW          :     28.14s CPU     29.04s WALL
 
                                                                                           
  Please consider citing:                                                                  
