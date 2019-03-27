@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  4Feb2019 at 17:23:44 
+     Program EPW v.5.1.0 starts on 25Mar2019 at 11:28:42 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -116,7 +116,7 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026114
+     IFC last   -0.0026119
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
@@ -164,19 +164,19 @@
 
      Temperature  400.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660801 eV
      Mobility VB Fermi level   6.861901 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030496 eV
+     Conduction band minimum =   7.660801 eV
+     Mobility CB Fermi level   7.030497 eV
 
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660801 eV
      Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872903 eV
+     Conduction band minimum =   7.660801 eV
+     Mobility CB Fermi level   6.872904 eV
 
      ===================================================================
      Scattering rate for IBTE
@@ -200,7 +200,7 @@
       
      epmatkqread automatically changed to .true. as all scattering have been computed.
       
-     Number of elements per core       1841
+     Number of elements per core       1842
      Symmetry mapping finished
      Average over degenerate eigenstates is performed
 
@@ -209,16 +209,16 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14   0.13281E-13    0.503291E+02    x-axis
-                                                      0.503291E+02    y-axis
-                                                      0.503291E+02    z-axis
-                                                      0.503291E+02       avg
-                                                      0.270985E+01  off-diag
-      500.000   6.8729   0.10000E+14  -0.19960E-13    0.341852E+02    x-axis
-                                                      0.341852E+02    y-axis
-                                                      0.341852E+02    z-axis
-                                                      0.341852E+02       avg
-                                                      0.183953E+01  off-diag
+      400.000   7.0305   0.10000E+14   0.22404E-27    0.503288E+02    x-axis
+                                                      0.503288E+02    y-axis
+                                                      0.503288E+02    z-axis
+                                                      0.503288E+02       avg
+                                                      0.270987E+01  off-diag
+      500.000   6.8729   0.10000E+14  -0.21175E-21    0.341850E+02    x-axis
+                                                      0.341850E+02    y-axis
+                                                      0.341850E+02    z-axis
+                                                      0.341850E+02       avg
+                                                      0.183954E+01  off-diag
       
      ===================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -233,18 +233,18 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14  -0.17764E-14    0.425063E+02    x-axis
-                                                      0.425063E+02    y-axis
-                                                      0.425064E+02    z-axis
-                                                      0.425063E+02       avg
+      400.000   7.0305   0.10000E+14  -0.10588E-21    0.425064E+02    x-axis
+                                                      0.425064E+02    y-axis
+                                                      0.425065E+02    z-axis
+                                                      0.425064E+02       avg
                                                       0.197415E+01  off-diag
-      500.000   6.8729   0.10000E+14   0.53291E-14    0.289431E+02    x-axis
+      500.000   6.8729   0.10000E+14  -0.13235E-21    0.289431E+02    x-axis
                                                       0.289431E+02    y-axis
-                                                      0.289431E+02    z-axis
+                                                      0.289432E+02    z-axis
                                                       0.289431E+02       avg
                                                       0.133852E+01  off-diag
 
-                                                   0.425063E+02     Err
+                                                   0.425064E+02     Err
 
      Iteration number:         2 
 
@@ -254,18 +254,18 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14   0.10658E-13    0.437672E+02    x-axis
+      400.000   7.0305   0.10000E+14  -0.21176E-21    0.437673E+02    x-axis
                                                       0.437673E+02    y-axis
                                                       0.437673E+02    z-axis
                                                       0.437673E+02       avg
-                                                      0.212747E+01  off-diag
-      500.000   6.8729   0.10000E+14  -0.24869E-13    0.297792E+02    x-axis
+                                                      0.212746E+01  off-diag
+      500.000   6.8729   0.10000E+14  -0.26470E-22    0.297793E+02    x-axis
                                                       0.297793E+02    y-axis
                                                       0.297793E+02    z-axis
                                                       0.297793E+02       avg
-                                                      0.144186E+01  off-diag
+                                                      0.144185E+01  off-diag
 
-                                                   0.126093E+01     Err
+                                                   0.126088E+01     Err
 
      Iteration number:         3 
 
@@ -275,18 +275,18 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14   0.17764E-14    0.435590E+02    x-axis
-                                                      0.435590E+02    y-axis
+      400.000   7.0305   0.10000E+14  -0.18529E-21    0.435590E+02    x-axis
+                                                      0.435591E+02    y-axis
                                                       0.435591E+02    z-axis
-                                                      0.435590E+02       avg
-                                                      0.209845E+01  off-diag
-      500.000   6.8729   0.10000E+14  -0.88818E-15    0.296424E+02    x-axis
-                                                      0.296424E+02    y-axis
+                                                      0.435591E+02       avg
+                                                      0.209844E+01  off-diag
+      500.000   6.8729   0.10000E+14  -0.26470E-22    0.296424E+02    x-axis
+                                                      0.296425E+02    y-axis
                                                       0.296425E+02    z-axis
-                                                      0.296424E+02       avg
-                                                      0.142254E+01  off-diag
+                                                      0.296425E+02       avg
+                                                      0.142253E+01  off-diag
 
-                                                   0.208215E+00     Err
+                                                   0.208206E+00     Err
 
      Iteration number:         4 
 
@@ -303,16 +303,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      2.49s CPU      3.65s WALL (       1 calls)
-     ep-interp    :      2.31s CPU      3.46s WALL (     343 calls)
+     ephwann      :      2.42s CPU      3.56s WALL (       1 calls)
+     ep-interp    :      2.24s CPU      3.37s WALL (     343 calls)
 
      DynW2B       :      0.01s CPU      0.01s WALL (     343 calls)
      HamW2B       :      0.26s CPU      0.32s WALL (   13780 calls)
-     ephW2Bp      :      0.92s CPU      1.87s WALL (     343 calls)
+     ephW2Bp      :      0.89s CPU      1.81s WALL (     343 calls)
 
 
      Total program execution
-     EPW          :      2.49s CPU      3.65s WALL
+     EPW          :      2.42s CPU      3.56s WALL
 
                                                                                           
  Please consider citing:                                                                  

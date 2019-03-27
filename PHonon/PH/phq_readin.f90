@@ -725,7 +725,7 @@ SUBROUTINE phq_readin()
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
 
-  IF (reduce_io) io_level=0
+  IF (reduce_io) io_level=1
 
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
        'el-ph with wannier requires fildvscf',1)
