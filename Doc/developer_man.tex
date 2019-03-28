@@ -1227,7 +1227,8 @@ if the section is not contiguous in memory (or if the compiler
 decides it is the right thing to do), increasing the memory footprint.
 \item Do not pass unallocated arrays or pointers as non-optional arguments, 
 even in those cases where they are not actually used inside the subroutine: 
-some compilers don't like it. Also note that if passed as optional argument,
+some compilers don't like it. Also note that if passed as optional argument 
+--provided the argument has not the pointer or allocatable attribute-- 
 unallocated arrays or pointers are interpreted as non present (this is a
 F2008 feature, already used since v.6.4).
 \item Do not use any construct that is susceptible to be flagged as
