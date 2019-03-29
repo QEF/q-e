@@ -47,7 +47,6 @@ PROGRAM average
   !      awin         the size of the window for macroscopic average (a.u.)
   !
   USE kinds,                ONLY : DP
-  USE klist,                ONLY : nks
   USE parameters,           ONLY : ntypx
   USE constants,            ONLY : pi, eps8
   USE run_info,             ONLY : title
@@ -58,15 +57,14 @@ PROGRAM average
   USE gvecs,                ONLY : doublegrid, gcutms, dual
   USE gvecw,                ONLY : ecutwfc
   USE fft_base,             ONLY : dfftp
-  USE fft_types,            ONLY : fft_type_allocate
-  USE fft_base,             ONLY : dffts
+  USE fft_scalar,           ONLY : cft_1z
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
   USE wavefunctions, ONLY : psic
   USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
   USE mp_global,            ONLY : mp_startup
-  USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
+  USE mp_world,             ONLY : nproc
   USE environment,          ONLY : environment_start, environment_end
   USE control_flags,        ONLY : gamma_only
   !
@@ -96,6 +94,7 @@ PROGRAM average
   ! the function to average in thick mesh (real part)
   ! the function to average in thick mesh (im. part)
   ! the macroscopic average
+  COMPLEX(DP), ALLOCATABLE :: func(:), funco(:)
   REAL(DP), ALLOCATABLE :: funcr (:), funci (:)
   ! the function to average (real part)
   ! the function to average (im. part)
@@ -113,18 +112,19 @@ PROGRAM average
   !
   ! initialise environment
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
   CALL environment_start ( 'AVERAGE' )
   !
-  ! Works for parallel machines but only for one processor !!!
+  ! Works for parallel machines but only for one processor 
+  !
+  IF ( nproc > 1 ) CALL errore ('average ', 'run on a single processor', 1)
   !
   IF ( ionode ) THEN
      !
      inunit = 5
+     CALL input_from_file ( )
      READ (inunit, *, err = 1100, iostat = ios) nfile
-     IF ( nfile <=0 ) CALL errore ('average ', 'nfile is wrong ', 1)
+     IF ( nfile <=0 ) CALL errore ('average ', 'nfile is wrong, or bad input redirection ', 1)
      ALLOCATE ( filename (nfile) )
      ALLOCATE ( weight (nfile) )
      DO ifile = 1, nfile
@@ -179,26 +179,18 @@ PROGRAM average
      ELSE
         gcutms = gcutm
      ENDIF
-     ! not sure whether this is the correct thing to do in presence
-     ! of a double grid, but the info on nrXs is not read from file!
-     dffts%nr1 = dfftp%nr1 ; dffts%nr2 = dfftp%nr2 ; dffts%nr3 = dfftp%nr3
-     ! as above: this can be used in allocate_fft
-     nks = 0
-
-     CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
-
-     CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
-     CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
-     CALL data_structure ( gamma_only )
-     CALL allocate_fft ( )
      !
-     rho%of_r = 0.d0
+     CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
+     !
+     dfftp%nnr = dfftp%nr1x*dfftp%nr2x*dfftp%nr3x
+     ALLOCATE (rho%of_r(dfftp%nnr,1), psic(dfftp%nnr) )
+     rho%of_r = 0.0_dp
      !
      ! Read first file
      !
-     CALL plot_io (filename (1), title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, &
-          dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-          plot_num, atm, ityp, zv, tau, rho%of_r, -1)
+     CALL plot_io (filename (1), title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+          dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, &
+          gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, rho%of_r, -1)
      !
      DO ir = 1, dfftp%nnr
         psic (ir) = weight (1) * cmplx(rho%of_r(ir, 1),0.d0,kind=DP)
@@ -298,9 +290,12 @@ PROGRAM average
         !
         !     add more points to compute the macroscopic average
         !
-        CALL cft (funcr, funci, nfft, nfft, nfft, - 1)
-        CALL dscal (nfft, 1.d0 / nfft, funcr, 1)
-        CALL dscal (nfft, 1.d0 / nfft, funci, 1)
+        ALLOCATE ( func(nfft), funco(nfft) )
+        func(:) = CMPLX ( funcr, funci, KIND=dp )
+        CALL cft_1z( func,1,nfft,nfft,-1,funco)
+	funcr(:) = REAL ( funco(:), KIND=dp )
+        funci(:) =AIMAG ( funco(:) )
+	DEALLOCATE ( func, funco )
         !
         DO k = 1, npt
            IF (k<=nfft / 2) THEN
@@ -324,7 +319,12 @@ PROGRAM average
            gim (nfft / 2 + 1) = funci (nfft / 2 + 1)
         ENDIF
         !
-        CALL cft (gre, gim, npt, npt, npt, 1)
+        ALLOCATE ( func(npt), funco(npt) )
+        func(:) = CMPLX ( gre(:), gim(:), KIND=dp )
+        CALL cft_1z( func,1,npt,npt,1,funco)
+        gre(:) = REAL ( funco(:), KIND=dp )
+        gim(:) =AIMAG ( funco(:) )
+        DEALLOCATE ( func, funco ) 
         !
      END IF
      !
