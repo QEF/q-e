@@ -30,7 +30,6 @@ generate_dynamical_matrix.o \
 generate_effective_charges.o \
 h_h.o \
 macro.o \
-phcg.o \
 rhod2vkb.o \
 solve_e.o \
 solve_ph.o \
@@ -44,9 +43,9 @@ TLDEPS= pwlibs
 
 all : tldeps phcg.x
 
-phcg.x : libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o phcg.x \
-		libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+phcg.x : phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

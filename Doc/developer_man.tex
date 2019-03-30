@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.4}
+\def\version{6.4.1}
 \def\QE{{\sc Quantum ESPRESSO}}
 \def\qe{QE}
 \textwidth = 17cm
@@ -1194,8 +1194,9 @@ may save hours of searching into the code for a piece of missing information.
   complain if the latter \& is missing, others do.
 % Another example: empty strings are nonstandard,
 % use \texttt{empty='~'}, not \texttt{empty=''}.
-\item do not (yet) use F2008 syntax. Stick to F2003 at most (for now).
-  \qe\ must work even if you do not have the latest and the greatest compiler.
+\item try to stick to F2003 standard: \qe\ must work even if you do not have 
+      the latest and the greatest compiler. Use F2008 syntax only if really
+      useful, and after verifying that it doesn't break too many compilers.
 \item use "dp" (defined in module ''kinds'') to define the type of real and
   complex variables
 \item all constants should be defined to be of kind "dp".  Preferred syntax:
@@ -1210,7 +1211,7 @@ double precision complex number).
 \item Do not use automatic arrays (e.g. \texttt{REAL(dp) :: A(N)} with
 \texttt{N} defined at run time) unless you are sure that the array is
 small in all cases: large arrays may easily exceed the stack size,
-or the memory size,
+or the memory size.
 \item Do not use pointers unless you have a good reason to:
 pointers may hinder optimization. Allocatable arrays should be used instead.
 \item If you use pointers, nullify them before performing tests on their
@@ -1224,9 +1225,12 @@ array sections. Passing an array section to a routine may look elegant
 but it may turn out to be inefficient: a copy will be silently done
 if the section is not contiguous in memory (or if the compiler
 decides it is the right thing to do), increasing the memory footprint.
-\item Do not pass unallocated arrays as arguments, even in those cases where
-they are not actually used inside the subroutine: some compilers don't
-like it.
+\item Do not pass unallocated arrays or pointers as non-optional arguments, 
+even in those cases where they are not actually used inside the subroutine: 
+some compilers don't like it. Also note that if passed as optional argument 
+--provided the argument has not the pointer or allocatable attribute-- 
+unallocated arrays or pointers are interpreted as non present (this is a
+F2008 feature, already used since v.6.4).
 \item Do not use any construct that is susceptible to be flagged as
 out-of-bounds error, even if no actual out-of-bound error takes place.
 \item Always use IMPLICIT NONE and declare all local variables.

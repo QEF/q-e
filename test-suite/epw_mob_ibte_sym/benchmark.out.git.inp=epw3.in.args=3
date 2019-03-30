@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  4Feb2019 at 17:23:48 
+     Program EPW v.5.1.0 starts on 25Mar2019 at 11:28:46 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -116,7 +116,7 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026114
+     IFC last   -0.0026119
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
@@ -160,16 +160,16 @@
         [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   6.8619   0.10000E+14  -0.37838E-05    0.478644E-02    x-axis
-                                                      0.115236E-01    y-axis
-                                                      0.478645E-02    z-axis
-                                                      0.703217E-02       avg
-                                                      0.157115E-04  off-diag
-      500.000   7.0136   0.10000E+14  -0.32700E-05    0.274751E-01    x-axis
-                                                      0.637035E-01    y-axis
-                                                      0.274751E-01    z-axis
-                                                      0.395512E-01       avg
-                                                      0.100271E-03  off-diag
+      400.000   6.8619   0.10000E+14   0.15630E-12    0.478648E-02    x-axis
+                                                      0.115237E-01    y-axis
+                                                      0.478647E-02    z-axis
+                                                      0.703222E-02       avg
+                                                      0.157112E-04  off-diag
+      500.000   7.0136   0.10000E+14   0.10792E-12    0.274752E-01    x-axis
+                                                      0.637040E-01    y-axis
+                                                      0.274752E-01    z-axis
+                                                      0.395515E-01       avg
+                                                      0.100270E-03  off-diag
       
      ===================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -184,18 +184,18 @@
         [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   6.8619   0.10000E+14  -0.75702E-05    0.613183E-02    x-axis
-                                                      0.101815E-01    y-axis
-                                                      0.613185E-02    z-axis
-                                                      0.748171E-02       avg
-                                                      0.462857E-04  off-diag
-      500.000   7.0136   0.10000E+14  -0.65421E-05    0.352955E-01    x-axis
-                                                      0.566236E-01    y-axis
-                                                      0.352956E-01    z-axis
-                                                      0.424049E-01       avg
-                                                      0.290986E-03  off-diag
+      400.000   6.8619   0.10000E+14   0.31258E-12    0.576100E-02    x-axis
+                                                      0.123360E-01    y-axis
+                                                      0.576100E-02    z-axis
+                                                      0.795266E-02       avg
+                                                      0.101429E-03  off-diag
+      500.000   7.0136   0.10000E+14   0.21583E-12    0.332670E-01    x-axis
+                                                      0.681491E-01    y-axis
+                                                      0.332670E-01    z-axis
+                                                      0.448944E-01       avg
+                                                      0.562277E-03  off-diag
 
-                                                   0.424049E-01     Err
+                                                   0.448944E-01     Err
 
      Iteration number:         2 
 
@@ -205,18 +205,18 @@
         [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   6.8619   0.10000E+14  -0.11357E-04    0.661586E-02    x-axis
-                                                      0.103562E-01    y-axis
-                                                      0.661588E-02    z-axis
-                                                      0.786265E-02       avg
-                                                      0.478162E-04  off-diag
-      500.000   7.0136   0.10000E+14  -0.98144E-05    0.381083E-01    x-axis
-                                                      0.576816E-01    y-axis
-                                                      0.381084E-01    z-axis
-                                                      0.446328E-01       avg
-                                                      0.301483E-03  off-diag
+      400.000   6.8619   0.10000E+14   0.46885E-12    0.626663E-02    x-axis
+                                                      0.125619E-01    y-axis
+                                                      0.626663E-02    z-axis
+                                                      0.836505E-02       avg
+                                                      0.134995E-03  off-diag
+      500.000   7.0136   0.10000E+14   0.32372E-12    0.362413E-01    x-axis
+                                                      0.695057E-01    y-axis
+                                                      0.362413E-01    z-axis
+                                                      0.473294E-01       avg
+                                                      0.752440E-03  off-diag
 
-                                                   0.222789E-02     Err
+                                                   0.243506E-02     Err
 
      Iteration number:         3 
 
@@ -226,18 +226,18 @@
         [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   6.8619   0.10000E+14  -0.15144E-04    0.677192E-02    x-axis
-                                                      0.103508E-01    y-axis
-                                                      0.677194E-02    z-axis
-                                                      0.796489E-02       avg
-                                                      0.484122E-04  off-diag
-      500.000   7.0136   0.10000E+14  -0.13086E-04    0.390317E-01    x-axis
-                                                      0.576726E-01    y-axis
-                                                      0.390318E-01    z-axis
-                                                      0.452454E-01       avg
-                                                      0.304995E-03  off-diag
+      400.000   6.8619   0.10000E+14   0.62511E-12    0.641233E-02    x-axis
+                                                      0.126295E-01    y-axis
+                                                      0.641234E-02    z-axis
+                                                      0.848472E-02       avg
+                                                      0.142126E-03  off-diag
+      500.000   7.0136   0.10000E+14   0.43160E-12    0.371175E-01    x-axis
+                                                      0.698792E-01    y-axis
+                                                      0.371175E-01    z-axis
+                                                      0.480381E-01       avg
+                                                      0.791766E-03  off-diag
 
-                                                   0.612607E-03     Err
+                                                   0.708655E-03     Err
 
      Iteration number:         4 
 
@@ -247,18 +247,18 @@
         [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   6.8619   0.10000E+14  -0.18930E-04    0.682645E-02    x-axis
-                                                      0.103546E-01    y-axis
-                                                      0.682647E-02    z-axis
-                                                      0.800252E-02       avg
-                                                      0.483707E-04  off-diag
-      500.000   7.0136   0.10000E+14  -0.16358E-04    0.393568E-01    x-axis
-                                                      0.577063E-01    y-axis
-                                                      0.393569E-01    z-axis
-                                                      0.454733E-01       avg
-                                                      0.304725E-03  off-diag
+      400.000   6.8619   0.10000E+14   0.78135E-12    0.647268E-02    x-axis
+                                                      0.126416E-01    y-axis
+                                                      0.647268E-02    z-axis
+                                                      0.852898E-02       avg
+                                                      0.143785E-03  off-diag
+      500.000   7.0136   0.10000E+14   0.53947E-12    0.374808E-01    x-axis
+                                                      0.699583E-01    y-axis
+                                                      0.374809E-01    z-axis
+                                                      0.483067E-01       avg
+                                                      0.801456E-03  off-diag
 
-                                                   0.227943E-03     Err
+                                                   0.268599E-03     Err
 
      Iteration number:         5 
 
@@ -275,13 +275,13 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.19s CPU      0.19s WALL (       1 calls)
+     ephwann      :      0.18s CPU      0.18s WALL (       1 calls)
 
      HamW2B       :      0.00s CPU      0.00s WALL (      40 calls)
 
 
      Total program execution
-     EPW          :      0.19s CPU      0.19s WALL
+     EPW          :      0.18s CPU      0.19s WALL
 
                                                                                           
  Please consider citing:                                                                  
