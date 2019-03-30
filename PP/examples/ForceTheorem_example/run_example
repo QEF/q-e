@@ -137,7 +137,6 @@ cat > par.in << EOF
     outdir = '$TMP_DIR/',
     prefix='par'
     verbosity = 'high'
-    wf_collect = .true.
  /
  &system
     ibrav = 4,
@@ -189,7 +188,6 @@ cat > per.in << EOF
     outdir = '$TMP_DIR/',
     prefix='per'
     verbosity = 'high'
-    wf_collect = .true.
  /
  &system
     ibrav = 4,

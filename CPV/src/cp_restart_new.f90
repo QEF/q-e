@@ -19,9 +19,8 @@ MODULE cp_restart_new
   !
   USE kinds,     ONLY : DP
   !
-  USE qes_types_module
-  USE qes_libs_module
-  USE qexsd_input, ONLY: qexsd_init_k_points_ibz
+  USE qes_types_module 
+  USE qes_libs_module  
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
                           qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
@@ -29,7 +28,7 @@ MODULE cp_restart_new
                           qexsd_init_magnetization,qexsd_init_band_structure,          &
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
-                          qexsd_init_outputElectricField, input_obj => qexsd_input_obj
+                          qexsd_init_outputElectricField 
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix, &
        qexsd_fmt, qexsd_version, create_directory
   USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
@@ -55,9 +54,8 @@ MODULE cp_restart_new
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
-                                           tksw, twfcollect, do_makov_payne, &
-                                           smallmem, llondon, lxdm, ts_vdw,  &
-                                           tfor, tpre
+                                           tksw, do_makov_payne, smallmem,   &
+                                           llondon, lxdm, ts_vdw, tfor, tpre
       USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf, lwf ! Lingzhu Kong
       USE constants,                ONLY : e2
       USE parameters,               ONLY : ntypx
@@ -95,6 +93,9 @@ MODULE cp_restart_new
       USE wrappers,                 ONLY : f_copy
       USE uspp,                     ONLY : okvan
       USE input_parameters,         ONLY : vdw_corr, london, starting_ns_eigenvalue
+      USE qexsd_module,             ONLY: qexsd_init_vdw, qexsd_init_hybrid, qexsd_init_dftU 
+      USE qexsd_input, ONLY: qexsd_init_k_points_ibz
+
       !
       IMPLICIT NONE
       !
@@ -139,7 +140,7 @@ MODULE cp_restart_new
       COMPLEX(DP),           INTENT(IN) :: cm2(:,:)     ! 
       COMPLEX(DP),           INTENT(IN) :: ctot(:,:)    ! 
       INTEGER,               INTENT(IN) :: iupdwn(:)    ! 
-      INTEGER,               INTENT(IN) :: nupdwn(:)    ! 
+      INTEGER,TARGET,        INTENT(IN) :: nupdwn(:)    ! 
       INTEGER,               INTENT(IN) :: iupdwn_tot(:)! 
       INTEGER,               INTENT(IN) :: nupdwn_tot(:)! 
       REAL(DP),              INTENT(IN) :: wfc(:,:)     ! BS 
@@ -169,12 +170,26 @@ MODULE cp_restart_new
       LOGICAL               :: exst
       INTEGER               :: inlc
       TYPE(output_type) :: output_obj
-      LOGICAL :: is_hubbard(ntypx)
-      REAL(dp):: hubbard_dum(3,ntypx)
-      CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      LOGICAL :: is_hubbard(ntypx), empirical_vdw  
+      TYPE(occupations_type)       :: bands_occu 
+      TYPE(k_points_IBZ_type)      :: k_points_IBZ 
+      CHARACTER(LEN=6), EXTERNAL   :: int_to_char
+      TYPE (vdW_type),POINTER      :: vdW_ =>NULL() 
+      TYPE (dftU_type),POINTER     :: dftU_ => NULL() 
+      TYPE (hybrid_type),POINTER   :: hybrid_ => NULL() 
+      REAL(DP),ALLOCATABLE         :: london_c6_(:) 
+      CHARACTER(LEN=3),ALLOCATABLE :: species_(:) 
+      REAL(DP),TARGET              :: lond_rcut_, lond_s6_, ts_vdw_econv_thr_      
+      REAL(DP),POINTER             :: london_s6_pt, lonrcut_opt, ts_thr_opt 
+      INTEGER,POINTER              :: nbnd_pt, nbnd_up_pt, nbnd_dw_pt 
+      CHARACTER(LEN=20),TARGET     :: non_locc_, vdw_corr_ 
+      CHARACTER(LEN=20),POINTER    :: non_locc_opt=>NULL(), vdw_corr_opt=>NULL()
+      LOGICAL,POINTER              :: ts_isol_opt => NULL() 
+      LOGICAL,TARGET               :: ts_vdW_isolated_ 
       !
       ! ... subroutine body
       !
+      NULLIFY( london_s6_pt, lonrcut_opt, ts_thr_opt, nbnd_pt, nbnd_up_pt, nbnd_dw_pt) 
       CALL start_clock('restart')
       !
       IF( force_pairing ) &
@@ -271,7 +286,7 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED   
 !-------------------------------------------------------------------------------
-!! @note set lwrite to false for the element P. Delugas 
+!! @note set lwrite to false for this  element P. Delugas 
          CALL qexsd_init_convergence_info(output_obj%convergence_info, &
               scf_has_converged = .FALSE., n_scf_steps=0, scf_error=0.0_dp, &
               n_opt_steps=0, grad_norm=0.0_dp )
@@ -308,19 +323,69 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
 ! ... XC FUNCTIONAL
 !-------------------------------------------------------------------------------
-         dft_name = get_dft_name()
-         is_hubbard(:) = (Hubbard_U(:) > 0.0_dp)
-         hubbard_dum(:,:)= 0.0_dp
-         CALL qexsd_init_dft(output_obj%dft, dft_name, .true., dft_is_hybrid(), &
-              0, 0, 0, ecutwfc, get_exx_fraction(), get_screening_parameter(),&
-              'none', .false., 0.0_dp, &
-              dft_is_nonlocc(), TRIM(vdw_corr), &
-              TRIM ( get_nonlocc_name()), scal6, in_c6, lon_rcut, 0.0_dp, &
-              0.0_dp, vdw_econv_thr, vdw_isolated, &
-              lda_plus_u, 0, 2*Hubbard_lmax+1, .false.,&
-              nspin, nsp, nat, atm, ityp, Hubbard_U,&
-              Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:),Hubbard_dum,&
-              starting_ns_eigenvalue, 'atomic', is_hubbard, upf(1:nsp)%psd, ns )
+        dft_name = get_dft_name()
+        IF ( lda_plus_U) THEN
+           ALLOCATE (dftU_) 
+           is_hubbard(:) = (Hubbard_U(:) > 0.0_dp)
+           CALL qexsd_init_dftU(OBJ = dftU_, NSP = nsp, PSD = upf(1:nsp)%psd, SPECIES = atm(1:nsp), &
+                                ITYP = ityp, IS_HUBBARD  = is_hubbard, LDA_PLUS_U_KIND = 0,         &
+                                U_PROJECTION_TYPE = 'atomic', U = Hubbard_U, STARTING_NS = starting_ns_eigenvalue) 
+        END IF
+        !
+        IF (dft_is_hybrid())  THEN 
+           ALLOCATE (hybrid_) 
+           CALL qexsd_init_hybrid(OBJ = hybrid_, DFT_IS_HYBRID = .TRUE. , ECUTFOCK = ecutwfc, &
+                                 EXX_FRACTION = get_exx_fraction(), SCREENING_PARAMETER = get_screening_parameter(),&
+                                 EXXDIV_TREATMENT = 'none',  X_GAMMA_EXTRAPOLATION = .FALSE.) 
+        END IF 
+        empirical_vdW = ( TRIM(vdw_corr) /= 'none' )  
+        IF ( empirical_vdW .OR. dft_is_nonlocc() ) THEN 
+           ALLOCATE (vdw_)
+           IF (empirical_vdw) THEN 
+              vdw_corr_ = TRIM (vdw_corr) 
+              vdw_corr_opt => vdw_corr_ 
+              SELECT CASE(TRIM (vdw_corr_)) 
+                CASE ( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d') 
+                    lond_s6_ = scal6
+                    london_s6_pt => lond_s6_
+                    lond_rcut_ = lon_rcut
+                    lonrcut_opt => lond_rcut_
+                    IF (ANY( in_c6(1:nsp) .NE. -1._DP )) THEN
+                       ALLOCATE (london_c6_(nsp), species_(nsp))
+                       london_c6_(1:nsp) = in_c6(1:nsp)
+                       species_(1:nsp)  = atm(1:nsp)
+                   END IF
+                CASE ( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler') 
+                    ts_vdw_isolated_ = vdw_isolated
+                    ts_isol_opt => ts_vdw_isolated_
+                    ts_vdw_econv_thr_ = vdw_econv_thr
+                    ts_thr_opt => ts_vdw_econv_thr_
+              END SELECT 
+           END IF 
+           IF ( dft_is_nonlocc() ) THEN 
+              non_locc_ = TRIM ( get_nonlocc_name()) 
+              non_locc_opt => non_locc_ 
+           END IF 
+           CALL qexsd_init_vdw(vdW_, NON_LOCAL_TERM = non_locc_opt, VDW_CORR = vdw_corr_opt, &
+                                  TS_THR = ts_thr_opt, TS_ISOL = ts_isol_opt,& 
+                                  LONDON_S6 = london_s6_pt, LONDON_C6 = london_c6_, LONDON_RCUT = lonrcut_opt,& 
+                                  SPECIES = species_ )
+        END IF    
+
+        CALL qexsd_init_dft(output_obj%dft, dft_name, hybrid_, vdW_, dftU_)
+        IF (ASSOCIATED(dftU_)) THEN
+           CALL qes_reset(dftU_) 
+           DEALLOCATE(dftU_) 
+        END IF 
+        IF (ASSOCIATED(vdW_) ) THEN 
+           CALL qes_reset(vdW_) 
+           DEALLOCATE(vdW_) 
+        END IF 
+        IF ( ASSOCIATED(hybrid_)) THEN 
+           CALL qes_reset(hybrid_) 
+           DEALLOCATE(hybrid_) 
+        END IF 
+
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
@@ -329,7 +394,7 @@ MODULE cp_restart_new
               .false., 0.0_dp, [0.0_dp,0.0_dp, 0.0_dp], 0.0_dp, .false.)
          !
 !-------------------------------------------------------------------------------
-! ... BAND STRUCTURE
+! ... TOTAL ENERGY
 !-------------------------------------------------------------------------------
          CALL  qexsd_init_total_energy(output_obj%total_energy, ETOT = enthal , &
                               EHART = eht, VTXC = vave, ETXC = exc )
@@ -342,22 +407,26 @@ MODULE cp_restart_new
          ELSE
             wk_ = 2.0_dp
          END IF
-         CALL qexsd_init_k_points_ibz( input_obj%k_points_ibz, 'Gamma', &
+         CALL qexsd_init_k_points_ibz( k_points_ibz, 'Gamma', &
               'CP',1,1,1,0,0,0,1,xk,wk_,alat,a1,.false.) 
-         input_obj%bands%occupations%tagname="occupations"
-         input_obj%bands%occupations%lread=.false.
-         input_obj%bands%occupations%lwrite=.true.
-         input_obj%bands%occupations%spin_ispresent=lsda
-         input_obj%bands%occupations%occupations="fixed"
+         bands_occu%tagname="occupations_kind"
+         bands_occu%lread=.false.
+         bands_occu%lwrite=.true.
+         bands_occu%spin_ispresent=lsda
+         bands_occu%occupations="fixed"
          ! TEMP
-         CALL  qexsd_init_band_structure(output_obj%band_structure,lsda, .false., &
-              .false., nupdwn(1), nupdwn(2), nelec, natomwfc, .true., 0.0_dp, &
-              .false., [0.0_dp,0.0_dp], et, ftmp, nspin, xk, [ngw_g], wk_,&
-              STARTING_KPOINTS = input_obj%k_points_IBZ, &
-              OCCUPATION_KIND = input_obj%bands%occupations, &
-              WF_COLLECTED = twfcollect)
-         CALL qes_reset_bands(input_obj%bands)
-         CALL qes_reset_k_points_IBZ(input_obj%k_points_IBZ)
+         IF (lsda) THEN
+            nbnd_up_pt => nupdwn(1) 
+            nbnd_dw_pt => nupdwn(2)
+         ELSE 
+            nbnd_pt => nupdwn(1) 
+         END IF 
+         CALL qexsd_init_band_structure( OBJ = output_obj%band_structure, LSDA = lsda, NONCOLIN = .FALSE., &
+                    LSPINORB=.FALSE., NELEC = nelec, N_WFC_AT = natomwfc,  ET=et, WG = ftmp , NKS = nspin ,&
+                    XK = xk , NGK=[ngw_g], WK=wk_, STARTING_KPOINTS= k_points_IBZ, OCCUPATIONS_KIND= bands_occu,& 
+                    WF_COLLECTED = .TRUE., NBND = nbnd_pt, NBND_UP = nbnd_up_pt, NBND_DW = nbnd_dw_pt )
+         CALL qes_reset (bands_occu)
+         CALL qes_reset (k_points_IBZ)
 !-------------------------------------------------------------------------------
 ! ... FORCES
 !-------------------------------------------------------------------------------
@@ -381,8 +450,8 @@ MODULE cp_restart_new
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
          !
-         CALL qes_write_output(qexsd_xf, output_obj)
-         CALL qes_reset_output(output_obj)
+         CALL qes_write (qexsd_xf, output_obj)
+         CALL qes_reset (output_obj)
          !
 !-------------------------------------------------------------------------------
 ! ... CLOSING
@@ -460,10 +529,21 @@ MODULE cp_restart_new
         CALL rho_r2g (dfftp,rho, rhog)
         filename = TRIM(dirname) // 'charge-density' 
         ! Only the first band group collects and writes
-        IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
+        
+        IF ( my_bgrp_id == root_bgrp_id ) THEN
+           !
+           !^^ ... TEMPORARY FIX (newlsda) ...
+           IF ( lsda ) THEN
+              rhog(:,1) = rhog(:,1) + rhog(:,2) 
+              rhog(:,2) = rhog(:,1) - rhog(:,2)*2._dp
+           ENDIF
+           !^^.......................
+           !      
+           CALL write_rhog &
                 ( filename, root_bgrp, intra_bgrp_comm, &
                 tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
                 mill, ig_l2g, rhog, ecutrho )
+        ENDIF
         !
         DEALLOCATE ( rhog )
      END IF
@@ -495,7 +575,7 @@ MODULE cp_restart_new
       USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
-                                           ts_vdw, lxdm, iverbosity, twfcollect, lwf
+                                           ts_vdw, lxdm, iverbosity, lwf
       USE io_files,                 ONLY : iunwfc, nwordwfc, diropn
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
@@ -1924,7 +2004,7 @@ MODULE cp_restart_new
        CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp_, &
             atm_, nat_, tau_, ityp_, alat_, a1_, a2_, a3_, ibrav_ )
        IF ( nat_ /= nat ) CALL errore ('cp_readfile', 'wrong nat read', 1)
-       CALL qes_reset_output(output_obj)
+       CALL qes_reset (output_obj)
        !
        ht(1,:) = a1_
        ht(2,:) = a2_

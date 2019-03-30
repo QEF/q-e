@@ -31,8 +31,6 @@ MODULE paw_exx
     USE paw_variables,  ONLY : okpaw
     USE uspp,           ONLY : indv_ijkb0
     USE io_global,      ONLY : ionode, ionode_id
-    USE mp,             ONLY : mp_bcast
-    USE mp_global,      ONLY : intra_image_comm
     !
     USE uspp_gpum,           ONLY : using_indv_ijkb0
     !
@@ -89,7 +87,6 @@ MODULE paw_exx
       ENDDO
       !  the 1/2 factor comes from eq. 32 Ref 1
     ENDIF
-!     CALL mp_bcast(deexx, ionode_id, intra_image_comm )
     !
     CALL stop_clock( 'PAW_newdxx' )
     !
@@ -107,7 +104,6 @@ MODULE paw_exx
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE uspp_param,         ONLY : nh, upf
     USE uspp,               ONLY : nkb, indv_ijkb0
-    USE mp_images,          ONLY : me_image
     USE io_global,          ONLY : ionode
     !
     USE uspp_gpum,           ONLY : using_indv_ijkb0

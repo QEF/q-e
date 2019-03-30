@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE addusdens_gpu(rho)
   !----------------------------------------------------------------------
@@ -19,7 +18,6 @@ SUBROUTINE addusdens_gpu(rho)
   USE kinds,                ONLY : DP
   !
   IMPLICIT NONE
-  !
   !
   COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
   !
@@ -116,7 +114,6 @@ SUBROUTINE addusdens_g_gpu(rho)
   CALL dev_buf%lock_buffer(ylmk0_d, (/ ngm_l, lmaxq * lmaxq /), ierr )
   CALL dev_buf%lock_buffer(qmod_d, ngm_l, ierr )
   CALL dev_buf%lock_buffer(qgm_d, ngm_l, ierr )
-  CALL dev_buf%dump_status()
 
   CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
   

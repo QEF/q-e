@@ -13,7 +13,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvect_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -76,7 +77,7 @@
                 ! IF (intento_ > 0)    gg_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied gg D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied gg D->H"
                 gg = gg_d
              END IF
              gg_ood = .false.
@@ -111,7 +112,7 @@
              IF ( allocated(gg_d) .and. (SIZE(gg_d)/=SIZE(gg))) deallocate(gg_d)
              IF (.not. allocated(gg_d)) ALLOCATE(gg_d(DIMS1D(gg)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied gg H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied gg H->D"
                 gg_d = gg
              END IF
              gg_d_ood = .false.
@@ -152,7 +153,7 @@
                 ! IF (intento_ > 0)    g_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied g D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied g D->H"
                 g = g_d
              END IF
              g_ood = .false.
@@ -187,7 +188,7 @@
              IF ( allocated(g_d) .and. (SIZE(g_d)/=SIZE(g))) deallocate(g_d)
              IF (.not. allocated(g_d)) ALLOCATE(g_d(DIMS2D(g)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied g H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied g H->D"
                 g_d = g
              END IF
              g_d_ood = .false.
@@ -228,7 +229,7 @@
                 ! IF (intento_ > 0)    mill_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied mill D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied mill D->H"
                 mill = mill_d
              END IF
              mill_ood = .false.
@@ -263,7 +264,7 @@
              IF ( allocated(mill_d) .and. (SIZE(mill_d)/=SIZE(mill))) deallocate(mill_d)
              IF (.not. allocated(mill_d)) ALLOCATE(mill_d(DIMS2D(mill)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied mill H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied mill H->D"
                 mill_d = mill
              END IF
              mill_d_ood = .false.
@@ -304,7 +305,7 @@
                 ! IF (intento_ > 0)    eigts1_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied eigts1 D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied eigts1 D->H"
                 eigts1 = eigts1_d
              END IF
              eigts1_ood = .false.
@@ -339,7 +340,7 @@
              IF ( allocated(eigts1_d) .and. (SIZE(eigts1_d)/=SIZE(eigts1))) deallocate(eigts1_d)
              IF (.not. allocated(eigts1_d)) ALLOCATE(eigts1_d(DIMS2D(eigts1)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied eigts1 H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied eigts1 H->D"
                 eigts1_d = eigts1
              END IF
              eigts1_d_ood = .false.
@@ -380,7 +381,7 @@
                 ! IF (intento_ > 0)    eigts2_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied eigts2 D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied eigts2 D->H"
                 eigts2 = eigts2_d
              END IF
              eigts2_ood = .false.
@@ -415,7 +416,7 @@
              IF ( allocated(eigts2_d) .and. (SIZE(eigts2_d)/=SIZE(eigts2))) deallocate(eigts2_d)
              IF (.not. allocated(eigts2_d)) ALLOCATE(eigts2_d(DIMS2D(eigts2)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied eigts2 H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied eigts2 H->D"
                 eigts2_d = eigts2
              END IF
              eigts2_d_ood = .false.
@@ -456,7 +457,7 @@
                 ! IF (intento_ > 0)    eigts3_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied eigts3 D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied eigts3 D->H"
                 eigts3 = eigts3_d
              END IF
              eigts3_ood = .false.
@@ -491,7 +492,7 @@
              IF ( allocated(eigts3_d) .and. (SIZE(eigts3_d)/=SIZE(eigts3))) deallocate(eigts3_d)
              IF (.not. allocated(eigts3_d)) ALLOCATE(eigts3_d(DIMS2D(eigts3)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied eigts3 H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied eigts3 H->D"
                 eigts3_d = eigts3
              END IF
              eigts3_d_ood = .false.

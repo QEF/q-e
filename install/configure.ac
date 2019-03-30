@@ -76,6 +76,9 @@ X_AC_QE_LAPACK()
 # Checking for FFT...
 X_AC_QE_FFT()
 
+# Setting libxc...
+ACX_LIBXC()
+
 # Checking for IBM MASS library...
 X_AC_QE_MASS()
 

@@ -611,29 +611,19 @@ FUNCTION ns_ddot( rho1, rho2 )
      IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
         m1 = 2 * Hubbard_l(nt) + 1
         m2 = 2 * Hubbard_l(nt) + 1
-        !
-        IF ( nspin == 1 ) THEN
-           !
-           ns_ddot = ns_ddot + Hubbard_U(nt) * &
-                  SUM( rho1%ns(:m1,:m2,:nspin,na)*rho2%ns(:m1,:m2,:nspin,na) )
-           !       
-        ELSEIF ( nspin == 2 ) THEN
-           !
-           ns_ddot= ns_ddot + 0.125D0 * Hubbard_U(nt) * SUM( &
-                      ( rho1%ns(:m1,:m2,1,na)+rho1%ns(:m1,:m2,2,na) )*  &
-                      ( rho2%ns(:m1,:m2,1,na)+rho2%ns(:m1,:m2,2,na) ) + &
-                      ( rho1%ns(:m1,:m2,1,na)-rho1%ns(:m1,:m2,2,na) )*  &
-                      ( rho2%ns(:m1,:m2,1,na)-rho2%ns(:m1,:m2,2,na) ) )
-           !
-        ELSEIF ( nspin == 4 ) THEN
-           !
-           ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+
+        if (nspin.eq.4) then
+          ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
                   SUM( CONJG(rho1%ns_nc(:m1,:m2,:nspin,na))*rho2%ns_nc(:m1,:m2,:nspin,na) )
-           !
-        ENDIF
-        !
+        else
+          ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+                  SUM( rho1%ns(:m1,:m2,:nspin,na)*rho2%ns(:m1,:m2,:nspin,na) )
+        endif
+
      END IF
   END DO
+  !
+  IF ( nspin == 1 ) ns_ddot = 2.D0*ns_ddot
   !
   RETURN
   !
@@ -708,9 +698,8 @@ END FUNCTION ns_ddot
   !
   SUBROUTINE rhoz_or_updw( rho, sp, dir )
   !--------------------------------------------------------------------------
-  ! ... Converts rho_up/dw into rho_tot and m_z if dir='updw_rhoz' and 
-  ! ... vice versa if dir='rhoz_updw'.
-  ! ... (When conversion will be full, it should become almost useless) 
+  ! ... Converts rho(up,dw) into rho(up+dw,up-dw) if dir='->rhoz' and
+  ! ... vice versa if dir='->updw'.
   !
   USE gvect,  ONLY : ngm
   !
@@ -724,11 +713,11 @@ END FUNCTION ns_ddot
   IF ( nspin /= 2 ) RETURN
   !
   vi = 0._dp
-  IF (dir == 'rhoz_updw')  vi = 0.5_dp
-  IF (dir == 'updw_rhoz')  vi = 1.0_dp
+  IF (dir == '->updw')  vi = 0.5_dp
+  IF (dir == '->rhoz')  vi = 1.0_dp
   IF (vi  == 0._dp)  CALL errore( 'rhoz_or_updw', 'wrong input', 1 )
   !
-  IF ( sp=='only_r' .or. sp=='r_and_g' ) THEN
+  IF ( sp /= 'only_g' ) THEN
 !   !$omp parallel do
      DO ir = 1, dfftp%nnr  
         rho%of_r(ir,1) = ( rho%of_r(ir,1) + rho%of_r(ir,nspin) ) * vi
@@ -736,17 +725,13 @@ END FUNCTION ns_ddot
      ENDDO
 !   !$omp end parallel do
   ENDIF
-  IF ( sp=='only_g' .or. sp=='r_and_g' ) THEN
-!   !$omp parallel do    
+  IF ( sp /= 'only_r' ) THEN
+!   !$omp parallel do
      DO ir = 1, ngm
         rho%of_g(ir,1) = ( rho%of_g(ir,1) + rho%of_g(ir,nspin) ) * vi
         rho%of_g(ir,nspin) = rho%of_g(ir,1) - rho%of_g(ir,nspin) * vi * 2._dp
      ENDDO
 !   !$omp end parallel do  
-  ENDIF
-  IF ( sp=='hub_ns' ) THEN
-     rho%ns(:,:,1,:) = ( rho%ns(:,:,1,:) + rho%ns(:,:,2,:) ) * vi
-     rho%ns(:,:,2,:) = rho%ns(:,:,1,:) - rho%ns(:,:,2,:) * vi * 2._dp
   ENDIF
   !
   RETURN

@@ -56,7 +56,7 @@ subroutine phq_setup
   USE io_files,      ONLY : tmp_dir
   USE klist,         ONLY : xk, nks, nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
-  USE scf,           ONLY : v, vrs, vltot, kedtau, rho, rhoz_or_updw
+  USE scf,           ONLY : v, vrs, vltot, kedtau, rho
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
   USE gvecs,         ONLY : doublegrid
@@ -174,13 +174,8 @@ subroutine phq_setup
   call setup_dmuxc()
   !
   ! Setup all gradient correction stuff
-  !^
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   call setup_dgc()
-  !
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   !
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
   !

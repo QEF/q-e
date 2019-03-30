@@ -136,17 +136,17 @@
   USE cell_base, ONLY : at, bg, alat
   USE gvect,     ONLY : g, gg
   USE ions_base, ONLY : nat, tau, ityp, atm
-  USE mp,        ONLY : mp_bcast
+  USE mp,        ONLY : mp_bcast, mp_sum
   USE wvfct,     ONLY : nbnd, npwx
   USE wannierEPW, ONLY : num_nnmax, mp_grid, atcart, atsym, kpb, g_kpb, &
                          center_w, alpha_w, l_w, mr_w, r_w, zaxis,      &
                          xaxis, excluded_band, rlatt, glatt, gf,        &
                          csph, ig_, iknum, seedname2, kpt_latt, nnb,    &
                          num_bands, n_wannier, nexband, nnbx, n_proj,   &
-                         spin_eig, spin_qaxis
+                         spin_eig, spin_qaxis, zerophase
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : bohr
-  USE mp_global,        ONLY : intra_pool_comm, mp_sum
+  USE mp_pools,         ONLY : intra_pool_comm
   USE epwcom,           ONLY : nbndskip
   USE w90_io,           ONLY : post_proc_flag
   ! 
@@ -452,6 +452,8 @@
   nnbx = 0
   nnbx = max( nnbx, nnb )
   ALLOCATE( ig_(iknum,nnbx), ig_check(iknum,nnbx) )
+  ALLOCATE( zerophase(iknum,nnb) )
+  zerophase = .false.
   !
   ! Read data about neighbours
   WRITE(stdout,*)
@@ -471,6 +473,9 @@
   ! 
   DO ik =1, iknum
     DO ib = 1, nnb
+      IF ( (g_kpb(1,ik,ib).eq.0) .AND.  &
+           (g_kpb(2,ik,ib).eq.0) .AND.  &
+           (g_kpb(3,ik,ib).eq.0) ) zerophase(ik,ib) = .true.
       g_(:) = REAL( g_kpb(:,ik,ib) )
       CALL cryst_to_cart (1, g_, bg, 1)
       gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
@@ -1020,7 +1025,7 @@
   USE noncollin_module,ONLY : noncolin, npol
   USE spin_orb,        ONLY : lspinorb
   USE wannierEPW,      ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
-                              excluded_band, write_mmn
+                              excluded_band, write_mmn, zerophase
   USE constants_epw,   ONLY : czero, cone, twopi, zero
   USE io_epw,          ONLY : iummn
 #if defined(__NAG)
@@ -1028,11 +1033,10 @@
 #endif
   USE mp,              ONLY : mp_sum
   USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
+  USE mp_world,        ONLY : mpime
   ! 
   IMPLICIT NONE
   !
-  INTEGER :: mmn_tot 
-  !! mmn_tot=iknum*nnb*nbnd*nbnd
   INTEGER :: ik
   !! Counter on k-points
   INTEGER :: ikp
@@ -1075,8 +1079,6 @@
   !!
   INTEGER ::  ik_g
   !! Temporary index of k-point, ik_g = nkq_abs
-  INTEGER :: ikp_g
-  !! Temporary index of k+b, ikp_g = ikp
   INTEGER :: ind0 
   !! Starting index for k-point nearest neighbours in each pool
   INTEGER, ALLOCATABLE  :: igkq(:)
@@ -1149,8 +1151,9 @@
   WRITE(stdout,'(5x,a)') 'MMN'
   !
   ! Get all the k-vector coords to each pool via xktot
+  !
   xktot = zero
-  IF (meta_ionode) then
+  IF (meta_ionode) THEN
     DO ik = 1, nkstot
       xktot(:,ik) = xk(:,ik)
     ENDDO
@@ -1159,8 +1162,6 @@
   !
   zero_vect = zero
   m_mat = czero
-  !
-  mmn_tot = iknum * nnb * nbnd * nbnd
   !
   !   USPP
   !
@@ -1172,34 +1173,29 @@
     ELSE
       ALLOCATE( becp2(nkb,nbnd) )
     ENDIF
-  ENDIF
-  !
-  !     qb is  FT of Q(r)
-  !
-  nbt = nnb * iknum
-  !
-  ALLOCATE( qg(nbt) )
-  ALLOCATE( dxk(3,nbt) )
-  !
-  ind = 0
-  DO ik = 1, iknum ! loop over k-points
-    DO ib = 1, nnb ! loop over nearest neighbours for each k-point
-      ind = ind + 1
-      ikp = kpb(ik,ib) 
-      !
-      g_(:) = REAL( g_kpb(:,ik,ib) )
-      ! bring g_ to cartesian
-      CALL cryst_to_cart( 1, g_, bg, 1 )
-      dxk(:,ind) = xktot(:,ikp) + g_(:) - xktot(:,ik) 
-      qg(ind) = dxk(1,ind) * dxk(1,ind) + & 
-                dxk(2,ind) * dxk(2,ind) + & 
-                dxk(3,ind) * dxk(3,ind)
+    !
+    !     qb is  FT of Q(r)
+    !
+    nbt = nnb * iknum
+    !
+    ALLOCATE( qg(nbt) )
+    ALLOCATE( dxk(3,nbt) )
+    !
+    ind = 0
+    DO ik = 1, iknum ! loop over k-points
+      DO ib = 1, nnb ! loop over nearest neighbours for each k-point
+        ind = ind + 1
+        ikp = kpb(ik,ib) 
+        !
+        g_(:) = REAL( g_kpb(:,ik,ib) )
+        ! bring g_ to cartesian
+        CALL cryst_to_cart( 1, g_, bg, 1 )
+        dxk(:,ind) = xktot(:,ikp) + g_(:) - xktot(:,ik) 
+        qg(ind) = dxk(1,ind) * dxk(1,ind) + & 
+                  dxk(2,ind) * dxk(2,ind) + & 
+                  dxk(3,ind) * dxk(3,ind)
+      ENDDO
     ENDDO
-  ENDDO
-  !
-  !  USPP
-  !
-  IF (any_uspp) THEN
     !
     ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
     ALLOCATE( qb(nkb, nkb, ntyp, nbt) )
@@ -1228,14 +1224,16 @@
 #if defined(__MPI)
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
+  !
   ! returns in-pool index nkq and absolute index nkq_abs of first k-point in this pool 
-  CALL ktokpmq( xk(:, 1), zero_vect, +1, ipool, nkq, nkq_abs )
-  ind0 = (nkq_abs-1) * nnb
+  CALL ktokpmq( xk(:,1), zero_vect, +1, ipool, nkq, nkq_abs )
+  ind0 = (nkq_abs - 1) * nnb
   !
   ind = ind0
   DO ik = 1, nks 
+    !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq( xk(:, ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
     !
     WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
@@ -1260,24 +1258,25 @@
       ind = ind + 1
       !
       ikp = kpb(ik_g,ib)
-      ikp_g = ikp 
       !
-      CALL ktokpmq( xk(:, ik), xktot(:,ikp_g)-xk(:,ik), +1, ipool, nkq, nkq_abs )
+      CALL ktokpmq( xktot(:,ikp), zero_vect, +1, ipool, nkq, nkq_abs )
       !
       ! read wfc at k+b
       CALL readwfc( ipool, nkq, evcq )
       !
-      CALL gk_sort( xktot(1,ikp_g), ngm, g, gcutw, npwq, igkq, g2kin )
+      CALL gk_sort( xktot(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin )
       !
       ! compute the phase
-      phase(:) = czero
-      IF ( ig_(ik_g,ib)>0 ) phase( dffts%nl(ig_(ik_g,ib)) ) = cone
-      CALL invfft('Wave', phase, dffts)
+      IF (.not.zerophase(ik_g,ib)) THEN
+        phase(:) = czero
+        IF ( ig_(ik_g,ib)>0 ) phase( dffts%nl(ig_(ik_g,ib)) ) = cone
+        CALL invfft('Wave', phase, dffts)
+      ENDIF
       !
       !  USPP
       !
       IF (any_uspp) THEN
-        CALL init_us_2( npwq, igkq, xk(1,ikp), vkb )
+        CALL init_us_2( npwq, igkq, xktot(1,ikp), vkb )
         ! below we compute the product of beta functions with |psi>
         IF (noncolin) THEN
           CALL calbec( npwq, vkb, evcq, becp2_nc )
@@ -1357,18 +1356,22 @@
             istart = (ipol - 1) * npwx + 1
             iend = istart + npw - 1
             psic_nc( dffts%nl(igk_k(1:npw,ik)), ipol ) = evc(istart:iend,m)
-            CALL invfft('Wave', psic_nc(:,ipol), dffts)
-            psic_nc( 1:dffts%nnr, ipol) = psic_nc( 1:dffts%nnr, ipol ) * &
-                                        phase(1:dffts%nnr)
-            CALL fwfft('Wave', psic_nc(:,ipol), dffts)
+            IF (.not.zerophase(ik_g,ib)) THEN
+              CALL invfft('Wave', psic_nc(:,ipol), dffts)
+              psic_nc( 1:dffts%nnr, ipol) = psic_nc( 1:dffts%nnr, ipol ) * &
+                                            phase(1:dffts%nnr)
+              CALL fwfft('Wave', psic_nc(:,ipol), dffts)
+            ENDIF
             aux_nc(1:npwq,ipol) = psic_nc( dffts%nl(igkq(1:npwq)), ipol )
           ENDDO
         ELSE
           psic(:) = czero
           psic( dffts%nl(igk_k(1:npw,ik)) ) = evc(1:npw,m)
-          CALL invfft('Wave', psic, dffts)
-          psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
-          CALL fwfft('Wave', psic, dffts)
+          IF (.not.zerophase(ik_g,ib)) THEN
+            CALL invfft('Wave', psic, dffts)
+            psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
+            CALL fwfft('Wave', psic, dffts)
+          ENDIF
           aux(1:npwq) = psic( dffts%nl(igkq(1:npwq)) )
         ENDIF
         !  aa = 0.d0
@@ -1458,13 +1461,15 @@
     ENDIF
   ENDIF
   !
-  DEALLOCATE( Mkb, dxk, phase, evcq, igkq )
+  DEALLOCATE( Mkb, phase, evcq, igkq )
   IF (noncolin) THEN
     DEALLOCATE(aux_nc)
   ELSE
     DEALLOCATE(aux)
   ENDIF
+  !
   IF (any_uspp) THEN
+    DEALLOCATE(dxk)
     DEALLOCATE(qb)
     DEALLOCATE(qq_so)
     CALL deallocate_bec_type( becp )
@@ -1813,8 +1818,6 @@
   INTEGER :: iw
   !! Counter on number of projections
   !
-  REAL(DP) :: xktot(3,nkstot)
-  !! Coordinates of k-points
   REAL(DP) :: zero_vect(3)
   !! Temporary zero vector
   !
@@ -1823,14 +1826,6 @@
   COMPLEX(kind=DP), ALLOCATABLE :: m_mn_tmp1(:,:), m_mn_tmp2(:,:), & 
                                    m_mn_tmp3(:,:,:,:), m_mat_tmp(:,:,:,:)
   !! Temporary m_mat matrices
-  !
-  xktot = zero
-  IF (meta_ionode) then
-    DO ik = 1, nkstot
-      xktot(:,ik) = xk(:,ik)
-    ENDDO
-  ENDIF
-  CALL mp_sum(xktot, inter_pool_comm)
   !
   ! RM: Band-dimension of a_mat and m_mat is num_bands while that of
   !     umat and umat_all is nbnd. This causes a problem if exclude_bands 
@@ -1884,6 +1879,7 @@
   ENDDO
   !
   DO ik = 1, nks
+    !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
     CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
@@ -2019,20 +2015,21 @@
       l = int (sqrt( lm-1.d0))
       lphase = (0.d0,-1.d0)**l
       !
-      DO ig=1,npw
+      DO ig = 1, npw
         gf(ig,iw) = gf(ig,iw) + csph(lm,iw) * ylm(ig,lm) * radial(ig,l) * lphase
       ENDDO !ig
     ENDDO ! lm
     !
     DO ig = 1, npw
       iig = igk_k(ig,ik)
-      arg = ( gk(1,ig)*center_w(1,iw) + gk(2,ig)*center_w(2,iw) + &
+      arg = ( gk(1,ig)*center_w(1,iw) + & 
+              gk(2,ig)*center_w(2,iw) + &
               gk(3,ig)*center_w(3,iw) ) * tpi
       ! center_w are cartesian coordinates in units of alat 
       sk(ig) = cmplx(cos(arg), -sin(arg), DP)
       gf(ig,iw) = gf(ig,iw) * sk(ig) 
     ENDDO
-    anorm = REAL( ZDOTC(npw,gf(1,iw),1,gf(1,iw),1) )
+    anorm = REAL( ZDOTC( npw, gf(1,iw), 1, gf(1,iw), 1 ) )
     CALL mp_sum(anorm, intra_pool_comm)
     gf(:,iw) = gf(:,iw) / dsqrt(anorm)
   ENDDO
@@ -2048,7 +2045,6 @@
   SUBROUTINE write_band
   !-----------------------------------------------------------------------
   USE wvfct,         ONLY : nbnd, et
-  USE constants_epw, ONLY : ryd2ev
   USE constants,     ONLY : rytoev
   USE wannierEPW,    ONLY : ikstart, ikstop, iknum, num_bands, eigval, &
                             excluded_band
@@ -2073,8 +2069,8 @@
       IF (excluded_band(ibnd)) CYCLE
       ibnd1 = ibnd1 + 1
 ! RM - same value for rytoev as in wannier90
-!      eigval(ibnd1,ikevc) = et(ibnd,ik)*ryd2ev
-      eigval(ibnd1,ikevc) = et(ibnd,ik)*rytoev
+!      eigval(ibnd1,ikevc) = et(ibnd,ik) * ryd2ev
+      eigval(ibnd1,ikevc) = et(ibnd,ik) * rytoev
     ENDDO
   ENDDO
   !
@@ -2170,6 +2166,7 @@
   ENDIF
   !
   DO ik = 1, nks
+    !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
     CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
@@ -2226,7 +2223,7 @@
         CALL gather_grid( dffts, psic, psic_all )
       ELSE
         DO ipol = 1, npol
-          CALL gather_grid (dffts, psic_nc(:,ipol), psic_nc_all(:,ipol))
+          CALL gather_grid( dffts, psic_nc(:,ipol), psic_nc_all(:,ipol) )
         ENDDO
       ENDIF
       !

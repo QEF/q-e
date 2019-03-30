@@ -10,6 +10,7 @@ build:pw:
 intel mpi:
   tags: [intel]
   script:
+    - module purge
     - module load intel/pe-xe-2018--binary intelmpi/2018--binary mkl/2018--binary
     - ./configure --enable-openmp
     - make -j pw
@@ -25,6 +26,7 @@ intel mpi:
 pgi cuda mpi:
   tags: [k80]
   script:
+    - module purge
     - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
     - ./configure --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
     - make -j pw
@@ -45,6 +47,7 @@ pgi cuda mpi:
 pgi cuda mpi 185:
   tags: [k80]
   script:
+    - module purge
     - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 openmpi/3.1.3--pgi--18.5
     - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
@@ -69,6 +72,7 @@ pgi cuda mpi 185:
 pgi cuda mpi v100:
   tags: [v100]
   script:
+    - module purge
     - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 openmpi/3.1.3--pgi--18.5
     - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME --with-scalapack=no
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
@@ -87,6 +91,7 @@ pgi cuda mpi v100:
 pgi cuda serial:
   tags: [k80]
   script:
+    - module purge
     - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
     - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
     - make -j pw
@@ -104,6 +109,7 @@ pgi cuda serial:
 pgi cuda serial 185:
   tags: [k80]
   script:
+    - module purge
     - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0
     - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
@@ -123,6 +129,7 @@ pgi cuda serial 185:
 pgi cuda9 v100 :
   tags: [v100]
   script:
+    - module purge
     - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0
     - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
@@ -137,6 +144,7 @@ pgi cuda9 v100 :
 pgi cuda9.2 p100 nollvm:
   tags: [p100]
   script:
+    - module purge
     - module load profile/global pgi/18.10_cmm cuda/9.2.88
     - ./configure --enable-openmp --with-cuda-runtime=9.2 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
     - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.
@@ -151,6 +159,7 @@ pgi cuda9.2 p100 nollvm:
 pgi cuda9.2 p100:
   tags: [p100]
   script:
+    - module purge
     - module load profile/global pgi/18.10_cmm cuda/9.2.88
     - ./configure --enable-openmp --with-cuda-runtime=9.2 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
     - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.

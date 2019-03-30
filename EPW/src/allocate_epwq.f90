@@ -25,10 +25,10 @@
   USE gvect,        ONLY : ngm
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE spin_orb,     ONLY : lspinorb
-  USE phcom,        ONLY : evq, dpsi, vlocq, dmuxc
+  USE phcom,        ONLY : evq, vlocq, dmuxc
   USE phus,         ONLY : int1, int1_nc, int2, int2_so, &
-                           int4, int4_nc, int5, int5_so, becsum_nc, &
-                           alphasum, alphasum_nc, alphap
+                           int4, int4_nc, int5, int5_so, & 
+                           alphap
   USE lr_symm_base, ONLY : rtau               
   USE qpoint,       ONLY : eigqts
   USE lrus,         ONLY : becp1
@@ -52,7 +52,6 @@
   !  ALLOCATE space for the quantities needed in EPW
   !
   ALLOCATE (evq(npwx*npol, nbnd))
-  ALLOCATE (dpsi ( npwx*npol, nbnd))
   ALLOCATE (transp_temp(nstemp))
   !
   ALLOCATE (vlocq(ngm, ntyp))   
@@ -82,14 +81,11 @@
     IF (noncolin) THEN
       ALLOCATE (int1_nc(nhm, nhm, 3, nat, nspin))
       ALLOCATE (int4_nc(nhm, nhm, 3, 3, nat, nspin))
-      ALLOCATE (becsum_nc(nhm*(nhm+1)/2, nat, npol, npol))
-      ALLOCATE (alphasum_nc(nhm*(nhm+1)/2, 3, nat, npol, npol))
       IF (lspinorb) THEN
         ALLOCATE (int2_so(nhm, nhm, 3, nat, nat, nspin))
         ALLOCATE (int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
       ENDIF
     ENDIF ! noncolin
-    ALLOCATE (alphasum(nhm * (nhm + 1)/2, 3, nat, nspin_mag))    
   ENDIF
   !
   ALLOCATE (becp1(nks))

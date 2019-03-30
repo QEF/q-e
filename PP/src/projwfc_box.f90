@@ -40,7 +40,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE fft_base,             ONLY : dfftp
   USE scatter_mod,          ONLY : scatter_grid
   USE fft_interfaces,       ONLY : invfft
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_pools,             ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
 !
   !
@@ -449,7 +449,7 @@ SUBROUTINE partialdos_boxes(Emin, Emax, DeltaE, kresolveddos, filpdos, n_proj_bo
            WRITE (4,'(i5," ")', advance="NO") ik
         ENDIF
         etev = Emin + ie * DeltaE
-        WRITE (4,'(f7.3,4(2e11.3),999(2e11.3))') etev*rytoev,  &
+        WRITE (4,'(f8.3,4(2e11.3),999(2e11.3))') etev*rytoev,  &
              dostot(ie,1:nspin0,ik), dosboxtot(ie,1:nspin0,ik), &
              ( dosbox(ie,ibox,1:nspin0,ik), ibox = 1, n_proj_boxes )
      ENDDO

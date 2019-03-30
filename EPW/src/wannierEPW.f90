@@ -85,5 +85,5 @@ MODULE  wannierEPW
    REAL(DP), ALLOCATABLE    :: wann_spreads(:)   ! spread of WFs in Angstrom^2. wann_spreads(n_wannier)
    REAL(DP)                 :: spreads(3)        ! values of \Omega, \Omega_I, and \tilde{\Omega}
    REAL(DP), ALLOCATABLE    :: eigval(:,:)       ! eigenvalues \epsilon_nk corresponding to the \psi_nk eigenstates
-                                                 ! eigval(num_bands,iknum)
+   LOGICAL,  ALLOCATABLE    :: zerophase(:,:)                                                 ! eigval(num_bands,iknum)
 END MODULE  wannierEPW

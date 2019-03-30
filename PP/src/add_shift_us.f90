@@ -56,8 +56,8 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        ! ... calculation at gamma
        !
-       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
-       USE mp,                   ONLY: mp_sum
+       USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                  ONLY: mp_sum
 
        IMPLICIT NONE
        !
@@ -146,8 +146,8 @@ SUBROUTINE add_shift_us( shift_nl )
      SUBROUTINE add_shift_us_k()
        !-----------------------------------------------------------------------
        !
-       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
-       USE mp,                   ONLY: mp_sum
+       USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                  ONLY: mp_sum
 
        IMPLICIT NONE
        !

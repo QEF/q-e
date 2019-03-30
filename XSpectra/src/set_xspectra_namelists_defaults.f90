@@ -52,7 +52,6 @@ subroutine set_xspectra_namelists_defaults()
   !</DC>
   xcoordcrys=.true.
   show_status=.false.
-  wf_collect=.false.
   U_projection_type='atomic'
   restart_mode='from_scratch'
   time_limit=1.d8

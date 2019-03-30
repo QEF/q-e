@@ -25,16 +25,13 @@ SUBROUTINE hp_ns_trace
   IMPLICIT NONE
   INTEGER :: is, na, na1, na2, nt, nt1, nt2, m1, m2, ldim, viz
   REAL(DP), ALLOCATABLE :: nsaux(:,:) ! auxiliary array for occupations
-  REAL(DP) :: sfact
   !
   ALLOCATE(ns(nat)) 
   ALLOCATE(nsaux(nat,nspin))
   ns(:)      = 0.0d0
   nsaux(:,:) = 0.0d0
   !
-  sfact=2.d0
   IF (nspin==2) THEN
-     sfact=1.d0
      ALLOCATE(magn(nat))
      magn(:) = 0.0d0
   ENDIF
@@ -56,8 +53,12 @@ SUBROUTINE hp_ns_trace
               ENDDO
            ENDDO
            !
-           ns(na) = nsaux(na,1) * sfact
-           IF (nspin /= 1) magn(na) = nsaux(na,2)
+           IF (nspin==1) THEN
+              ns(na) = 2.0d0 * nsaux(na,1) 
+           ELSE
+              ns(na)   = nsaux(na,1) + nsaux(na,2)
+              magn(na) = nsaux(na,1) - nsaux(na,2)
+           ENDIF
            !
         ENDIF
         !

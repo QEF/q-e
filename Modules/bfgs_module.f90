@@ -259,6 +259,8 @@ CONTAINS
       !
       ! ... converged (or useless to go on): quick return
       !
+      IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
+              'history already reset at previous step: stopping' )
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
       IF ( conv_bfgs ) GOTO 1000
       !

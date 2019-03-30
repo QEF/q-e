@@ -8,13 +8,7 @@
 !
 MODULE la_param
 
-#if defined(__MPI)
-#if defined(__MPI_MODULE)
-  USE mpi
-#else
-  INCLUDE 'mpif.h'
-#endif
-#endif
+  use parallel_include
   
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
 

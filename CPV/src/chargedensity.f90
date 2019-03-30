@@ -186,6 +186,14 @@
                  TRIM(tmp_dir), TRIM(prefix), ndr,postfix
             CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
                  ig_l2g, nspin, rhog )
+            !
+            !^^ ... TEMPORARY FIX  (newlsda) ...
+            IF ( nspin==2 ) THEN
+               rhog(:,1) = ( rhog(:,1) + rhog(:,2) )*0.5d0
+               rhog(:,2) = rhog(:,1) - rhog(:,2)
+            ENDIF
+            !^^.......................
+            !
             CALL rho_g2r ( dfftp, rhog, rhor )
             rhopr = rhor
             first = .FALSE.

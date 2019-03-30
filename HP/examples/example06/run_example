@@ -11,14 +11,14 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x and hp.x to calculate"
-$ECHO "the Hubbard U parameters for Co and O in LiCoO2."
+$ECHO "the Hubbard U parameters for Ni and Mn in Ni2MnGa."
 
 # set the needed environment variables
 . ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x hp.x"
-PSEUDO_LIST="Co.pbesol-spn-rrkjus_psl.0.3.1.UPF O.pbesol-n-rrkjus_psl.0.1.UPF Li.pbesol-s-rrkjus_psl.0.2.1.UPF"
+PSEUDO_LIST="Ni.pbesol-n-rrkjus_psl.0.1.UPF Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF Ga.pbesol-dn-rrkjus_psl.0.2.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -83,7 +83,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-PREFIX='LiCoO2'
+PREFIX='Ni2MnGa'
 
 # 1. The PWscf self-consistent calculation
 cat > $PREFIX.scf.in << EOF
@@ -96,13 +96,19 @@ cat > $PREFIX.scf.in << EOF
     verbosity='high'
  /
  &system
-    ibrav = 5,
-    celldm(1) = 9.3705,
-    celldm(4) = 0.83874,
+    ibrav = 7,
+    celldm(1) = 7.80,
+    celldm(3) = 1.4142136,
     nat = 4, 
     ntyp = 3,
     ecutwfc = 50.0
     ecutrho = 400.0
+    occupations ='smearing',
+    smearing ='mv'
+    degauss = 0.01,
+    nspin = 2,
+    starting_magnetization(1) = 0.5
+    starting_magnetization(2) = 0.5
     lda_plus_u = .true.,
     lda_plus_u_kind = 0,
     U_projection_type = 'ortho-atomic',
@@ -114,24 +120,24 @@ cat > $PREFIX.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF 
-O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF 
-Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF 
 ATOMIC_POSITIONS {crystal}
- Co  0.0000000000   0.0000000000   0.0000000000
- O   0.2604885000   0.2604885000   0.2604885000
- O   0.7395115000   0.7395115000   0.7395115000
- Li  0.5000000000   0.5000000000   0.5000000000
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
 K_POINTS {automatic}
- 2 2 2 0 0 0
+ 4 4 4 0 0 0
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
 $PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
 $ECHO " done"
 
 
-# 2. Perform the linear-response calculation: perturb Co
-cat > $PREFIX.hp.Co.in << EOF
+# 2. Perform the linear-response calculation: perturb Mn
+cat > $PREFIX.hp.Mn.in << EOF
  &inputhp
    prefix = '$PREFIX',
    outdir = '$TMP_DIR/',
@@ -142,12 +148,12 @@ cat > $PREFIX.hp.Co.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.Co.in > $PREFIX.hp.Co.out
+$HP_COMMAND < $PREFIX.hp.Mn.in > $PREFIX.hp.Mn.out
 $ECHO " done"
 
 
-# 3. Perform the linear-response calculation: perturb O
-cat > $PREFIX.hp.O.in << EOF
+# 3. Perform the linear-response calculation: perturb Ni
+cat > $PREFIX.hp.Ni.in << EOF
  &inputhp
    prefix = '$PREFIX',
    outdir = '$TMP_DIR/',
@@ -158,7 +164,7 @@ cat > $PREFIX.hp.O.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.O.in > $PREFIX.hp.O.out
+$HP_COMMAND < $PREFIX.hp.Ni.in > $PREFIX.hp.Ni.out
 $ECHO " done"
 
 
@@ -168,7 +174,6 @@ cat > $PREFIX.hp.final.in << EOF
    prefix = '$PREFIX',
    outdir = '$TMP_DIR/',
    nq1 = 2, nq2 = 2, nq3 = 2,
-   conv_thr_chi = 1.0d-8,
    compute_hp = .true.
    iverbosity = 2
  /

@@ -46,7 +46,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   real(DP), intent(out) :: forcelc (3, nat)
   ! the local-potential contribution to forces on atoms
 
-  integer :: ipol, ig, na
+  integer :: ig, na
   ! counter on polarizations
   ! counter on G vectors
   ! counter on atoms
@@ -71,24 +71,22 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   else
      fact = 1.d0
   end if
+!$omp parallel do private(arg)
   do na = 1, nat
-     do ipol = 1, 3
-        forcelc (ipol, na) = 0.d0
-     enddo
+     !
+     forcelc (1:3, na) = 0.d0
      ! contribution from G=0 is zero
      do ig = gstart, ngm
         arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) + &
                g (3, ig) * tau (3, na) ) * tpi
-        do ipol = 1, 3
-           forcelc (ipol, na) = forcelc (ipol, na) + &
-                g (ipol, ig) * vloc (igtongl (ig), ityp (na) ) * &
+        forcelc (1:3, na) = forcelc (1:3, na) + &
+                g (1:3, ig) * vloc (igtongl (ig), ityp (na) ) * &
                 (sin(arg)*DBLE(aux(nl(ig))) + cos(arg)*AIMAG(aux(nl(ig))) )
-        enddo
      enddo
-     do ipol = 1, 3
-        forcelc (ipol, na) = fact * forcelc (ipol, na) * omega * tpi / alat
-     enddo
+     !
+     forcelc (1:3, na) = fact * forcelc (1:3, na) * omega * tpi / alat
   enddo
+!$omp end parallel do
   IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
      !
      ! ... Perform corrections for ESM method (add long-range part)

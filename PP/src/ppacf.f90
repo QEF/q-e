@@ -3,6 +3,7 @@
 ! Program written by Yang Jiao,  Oct 2016, GPL, No warranties.
 !
 !    Oct 2018, adapted to QE6.3
+!    Jan 2019, adapted to change in rho from (up,down) to (tot,magn)
 !
 !-----------------------------------------------------------------------
 PROGRAM do_ppacf
@@ -38,7 +39,7 @@ PROGRAM do_ppacf
   USE mp_global,            ONLY : mp_startup
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE exx,                  ONLY : exxinit, exxenergy2, fock2, ecutfock, & 
-                                   use_ace, aceinit
+                                   use_ace, aceinit, local_thr
   USE exx_base,             ONLY : exx_grid_init, exx_mp_init, exx_div_check,exxdiv_treatment
   USE exx_base,             ONLY : nq1, nq2, nq3
   USE fft_base,             ONLY : dfftp
@@ -46,7 +47,7 @@ PROGRAM do_ppacf
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : scf_type,create_scf_type,destroy_scf_type
   USE scf,                  ONLY : scf_type_COPY
-  USE scf,                  ONLY : rho, rho_core, rhog_core, vltot, rhoz_or_updw
+  USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
   USE funct,                ONLY : xc,xc_spin,gcxc,gcx_spin,gcc_spin,dft_is_nonlocc,nlc
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction,set_auxiliary_flags,enforce_input_dft
@@ -187,6 +188,7 @@ PROGRAM do_ppacf
      READ (5, ppacf, iostat = ios) 
      !
   ENDIF
+  IF (nspin == 4) CALL errore ('ppacf','noncollinear spin not implemented',1)
 !!!!!!!!!!!!!!!!!! READ IN DATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 
   ! Broadcast variables
@@ -246,20 +248,13 @@ PROGRAM do_ppacf
      etxcccnl=0._DP
      vtxcccnl=0._DP
      vofrcc=0._DP
-     !^
-     IF ( nspin==2 ) CALL rhoz_or_updw( rho, 'only_r', 'rhoz_updw' )
      !
      CALL nlc( rho%of_r, rho_core, nspin, etxcccnl, vtxcccnl, vofrcc )
      !
-     IF ( nspin==2 ) CALL rhoz_or_updw( rho, 'only_r', 'updw_rhoz' )
-     !^
      CALL mp_sum(  etxcccnl , intra_bgrp_comm )
   END IF
   !
-  ! ... add gradiend corrections (if any)
-  !
-  if (nspin==4) CALL errore ('ppacf', 'Noncollinear not implemented', 1)
-  fac = 1.D0 / DBLE( nspin )
+  ! ... add gradient corrections (if any)
   !
   ALLOCATE( grho( 3, dfftp%nnr, nspin) )
   ALLOCATE( rhoout( dfftp%nnr, nspin) )
@@ -267,12 +262,13 @@ PROGRAM do_ppacf
   ALLOCATE( rhogsum( ngm, nspin ) )
   !
   ! ... calculate the gradient of rho + rho_core in real space
+  ! ... note: input rho is (tot,magn), output rhoout, grho are (up,down)
   !
-  !
+  fac = 1.D0 / DBLE( nspin )
   !
   DO is = 1, nspin
      !
-     indx = DBLE( nspin/2 * (1-2*(is/2)) )
+     indx = DBLE( nspin/2 * (1-2*(is/2)) ) ! +1 if is=1, -1 if is=2
      rhoout(:,is)  = fac * ( rho_core(:)  + rho%of_r(:,1) + indx * rho%of_r(:,2) )
      rhogsum(:,is) = fac * ( rhog_core(:) + rho%of_g(:,1) + indx * rho%of_g(:,2) )
      !
@@ -284,10 +280,8 @@ PROGRAM do_ppacf
   !
   IF (nspin == 1) THEN
      tot_rho(:)=rhoout(:,1)
-  ELSEIF(nspin==2) THEN          !^ rhoout is up/dw (for now)
+  ELSEIF(nspin==2) THEN
      tot_rho(:)=rhoout(:,1)+rhoout(:,2)
-  ELSE
-     CALL errore ('ppacf','vdW-DF not available for noncollinear spin case',1)
   END IF
   !
   CALL create_scf_type(exlda)
@@ -698,7 +692,7 @@ PROGRAM do_ppacf
   CALL exxinit(.FALSE.)
   
   IF ( use_ace) THEN
-     CALL aceinit ( ) 
+     CALL aceinit (DOLOC = (local_thr > 0._DP)) 
      fock2 = exxenergyace()
   ELSE
      fock2 = exxenergy2()

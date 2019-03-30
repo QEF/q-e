@@ -100,7 +100,7 @@ ATOMIC_SPECIES
   Pb   207.2      Pb.pz-d-van.UPF
   Ti    47.867    Ti.pz-sp-van_ak.UPF
   O     15.9994   O.pz-van_ak.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
   Pb    0.000    0.000    0.010
   Ti    0.500    0.500    0.500
   O     0.000    0.500    0.500
@@ -142,7 +142,7 @@ ATOMIC_SPECIES
   Pb   207.2      Pb.pz-d-van.UPF
   Ti    47.867    Ti.pz-sp-van_ak.UPF
   O     15.9994   O.pz-van_ak.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
   Pb    0.000    0.000    0.010
   Ti    0.500    0.500    0.500
   O     0.000    0.500    0.500

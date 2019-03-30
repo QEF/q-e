@@ -12,7 +12,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE {{module_name}}_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -74,7 +75,7 @@
                 END IF
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied {{type.var}}%{{var.name}} D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied {{type.var}}%{{var.name}} D->H"
                 {{type.var}}%{{var.name}} = {{type.var}}_d%{{var.name}}_d
              END IF
              ! ALWAYS update auxiliary variables
@@ -117,7 +118,7 @@
              IF ( allocated({{type.var}}_d%{{var.name}}_d) .and. (SIZE({{type.var}}_d%{{var.name}}_d)/=SIZE({{type.var}}%{{var.name}}))) deallocate({{type.var}}_d%{{var.name}}_d)
              IF (.not. allocated({{type.var}}_d%{{var.name}}_d)) ALLOCATE({{type.var}}_d%{{var.name}}_d(DIMS{{var.dim}}D({{type.var}}%{{var.name}})))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied {{type.var}}%{{var.name}} H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied {{type.var}}%{{var.name}} H->D"
                 {{type.var}}_d%{{var.name}}_d = {{type.var}}%{{var.name}}
              END IF
              ! ALWAYS update auxiliary variables

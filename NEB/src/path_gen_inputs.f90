@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
   !
-  USE mp_global, ONLY : mp_rank
+  USE mp, ONLY : mp_rank
   !
   IMPLICIT NONE
   !

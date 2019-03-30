@@ -33,7 +33,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   USE lsda_mod, ONLY : current_spin
   USE gvect,    ONLY : gstart
   USE io_global, ONLY :stdout
-  USE scf,       ONLY : rho, vltot, vrs, rho_core,rhog_core, scf_type, rhoz_or_updw
+  USE scf,       ONLY : rho, vltot, vrs, rho_core,rhog_core, scf_type
   USE constants,  ONLY :rytoev
   USE io_files, ONLY : diropn
   USE mp, ONLY : mp_sum, mp_barrier
@@ -111,8 +111,6 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        ! ... the local potential V_Loc psi. First the psi in real space
 !set exchange and correlation potential
           if(.not.allocated(psic)) write(stdout,*) 'psic not allocated'
-      !^
-      IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'rhoz_updw' )
       !
        if (dft_is_meta()) then
 !         call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
@@ -120,9 +118,6 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
          CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
       endif
       !
-      IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
-      !^  
-
        do is=1,nspin
           vrs(:,is)=vr(:,is)
           if(doublegrid) call fft_interpolate(dfftp, vrs(:,is),dffts,vrs(:,is)) ! interpolate from dense to smooth
@@ -362,8 +357,6 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        if(.not.allocated(vr)) write(stdout,*) 'vr not allocated'
        allocate(rho_fake_core(dfftp%nnr))
        rho_fake_core(:)=0.d0
-       !^
-       IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'rhoz_updw' )
        !
        if (dft_is_meta()) then
       !    call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
@@ -371,9 +364,6 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
           CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
        endif
        !
-       IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
-       !^
-
      deallocate(rho_fake_core)
 
 

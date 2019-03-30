@@ -17,7 +17,7 @@ SUBROUTINE ipoolscatter( nsize, nkstot, f_in, nks, f_out )
   ! ... Not a smart implementation!
   !
   USE kinds,     ONLY : DP
-  USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, &
+  USE mp_pools,  ONLY : intra_pool_comm, inter_pool_comm, &
                         my_pool_id, npool, me_pool, root_pool, kunit
   USE mp,        ONLY : mp_bcast
   !

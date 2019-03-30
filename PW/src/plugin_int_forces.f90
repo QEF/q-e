@@ -60,7 +60,7 @@ SUBROUTINE external_wg_corr_force( rhor, force )
   allocate(auxr(dfftp%nnr))
   auxr = cmplx(rhor(:,1),0.0_dp)
   if ( nspin .eq. 2 ) auxr = auxr + cmplx(rhor(:,2),0.0_dp)
-  call fwfft ("Dense", auxr, dfftp)
+  call fwfft ("Rho", auxr, dfftp)
   !
   allocate(auxg(ngm))
   auxg = cmplx(0.0_dp,0.0_dp)
@@ -100,7 +100,7 @@ SUBROUTINE external_force_lc( rhor, force )
   ! ... Local variables
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-       g, rhor, dfftp%nl, nspin, gstart, gamma_only, vloc, force )
+       g, rhor(:,1), dfftp%nl, gstart, gamma_only, vloc, force )
   !
   RETURN
   !

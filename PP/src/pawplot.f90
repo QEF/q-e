@@ -34,7 +34,6 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
    USE uspp_param,        ONLY : nh, nhm, upf
    USE scf,               ONLY : scf_type
    USE fft_base,          ONLY : dfftp
-   USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
    USE cell_base,         ONLY : at, bg, alat
    !
@@ -351,9 +350,9 @@ SUBROUTINE plot_1d_ (nx, x0, e, rhog, rhoplot, flag, filplot )
   USE kinds, ONLY : DP
   USE constants, ONLY:  pi
   USE io_global, ONLY : stdout, ionode
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
-  USE gvect,      ONLY : g, gstart, ngm
+  USE mp_pools,  ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
+  USE gvect,     ONLY : g, gstart, ngm
   USE control_flags, ONLY : gamma_only
 
   IMPLICIT NONE

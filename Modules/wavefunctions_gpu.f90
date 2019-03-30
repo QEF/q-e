@@ -13,7 +13,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE wavefunctions_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -67,7 +68,7 @@
                 ! IF (intento_ > 0)    evc_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied evc D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied evc D->H"
                 evc = evc_d
              END IF
              evc_ood = .false.
@@ -102,7 +103,7 @@
              IF ( allocated(evc_d) .and. (SIZE(evc_d)/=SIZE(evc))) deallocate(evc_d)
              IF (.not. allocated(evc_d)) ALLOCATE(evc_d(DIMS2D(evc)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied evc H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied evc H->D"
                 evc_d = evc
              END IF
              evc_d_ood = .false.
@@ -143,7 +144,7 @@
                 ! IF (intento_ > 0)    psic_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied psic D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied psic D->H"
                 psic = psic_d
              END IF
              psic_ood = .false.
@@ -178,7 +179,7 @@
              IF ( allocated(psic_d) .and. (SIZE(psic_d)/=SIZE(psic))) deallocate(psic_d)
              IF (.not. allocated(psic_d)) ALLOCATE(psic_d(DIMS1D(psic)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied psic H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied psic H->D"
                 psic_d = psic
              END IF
              psic_d_ood = .false.
@@ -219,7 +220,7 @@
                 ! IF (intento_ > 0)    psic_nc_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied psic_nc D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied psic_nc D->H"
                 psic_nc = psic_nc_d
              END IF
              psic_nc_ood = .false.
@@ -254,7 +255,7 @@
              IF ( allocated(psic_nc_d) .and. (SIZE(psic_nc_d)/=SIZE(psic_nc))) deallocate(psic_nc_d)
              IF (.not. allocated(psic_nc_d)) ALLOCATE(psic_nc_d(DIMS2D(psic_nc)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied psic_nc H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied psic_nc H->D"
                 psic_nc_d = psic_nc
              END IF
              psic_nc_d_ood = .false.

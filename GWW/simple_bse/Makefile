@@ -30,11 +30,7 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 	../../KS_Solvers/libks_solvers.a \
         ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 
-#<<<<<<< HEAD
-#TLDEPS=bindir mods libs libiotk
-#=======
-TLDEPS=bindir mods libs gwwlib
-#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
+TLDEPS=bindir libs mods gwwlib
 
 all : tldeps simple_bse.x  libsimple_exc.a
 

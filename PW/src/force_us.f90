@@ -83,13 +83,13 @@ SUBROUTINE force_us( forcenl )
      CALL calbec ( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3
+!$omp parallel do collapse(2) private(ig)
         DO jkb = 1, nkb
-!$omp parallel do default(shared) private(ig)
            do ig = 1, npw
               vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk_k(ig,ik))
            END DO
-!$omp end parallel do
         END DO
+!$omp end parallel do
         !
         CALL calbec ( npw, vkb1, evc, dbecp )
         !

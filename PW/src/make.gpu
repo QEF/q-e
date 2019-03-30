@@ -96,8 +96,6 @@ print_ks_energies.o : pwcom_gpu.o
 pw2casino_write.o : pwcom_gpu.o
 pw_restart_new.o : pwcom_gpu.o
 pwcom_gpu.o : pwcom.o
-pwcom_gpu.o : pwcom.o
-pwcom_gpu.o : pwcom.o
 qvan2.o : pwcom_gpu.o
 qvan2_gpu.o : pwcom.o
 qvan2_gpu.o : pwcom_gpu.o
@@ -115,11 +113,6 @@ sum_band_gpu.o : buffers.o
 sum_band_gpu.o : ldaU.o
 sum_band_gpu.o : paw_symmetry.o
 sum_band_gpu.o : pwcom.o
-sum_band_gpu.o : pwcom.o
-sum_band_gpu.o : pwcom.o
-sum_band_gpu.o : pwcom.o
-sum_band_gpu.o : pwcom.o
-sum_band_gpu.o : pwcom.o
 sum_band_gpu.o : pwcom_gpu.o
 sum_band_gpu.o : pwcom_gpu.o
 sum_band_gpu.o : realus.o
@@ -128,12 +121,6 @@ sum_band_gpu.o : symme.o
 sum_band_gpu.o : us_exx.o
 tetra.o : pwcom_gpu.o
 usnldiag_gpu.o : pwcom.o
-usnldiag_gpu.o : pwcom.o
-usnldiag_gpu.o : pwcom.o
-utils_gpu.o : pwcom_gpu.o
-vloc_psi_gpu.o : pwcom.o
-vloc_psi_gpu.o : pwcom.o
-vloc_psi_gpu.o : pwcom.o
 vloc_psi_gpu.o : pwcom.o
 wannier_enrg.o : pwcom_gpu.o
 wannier_proj.o : pwcom_gpu.o
@@ -144,8 +131,5 @@ wfcinit_gpu.o : bp_mod.o
 wfcinit_gpu.o : buffers.o
 wfcinit_gpu.o : ldaU.o
 wfcinit_gpu.o : pw_restart_new.o
-wfcinit_gpu.o : pwcom.o
-wfcinit_gpu.o : pwcom.o
-wfcinit_gpu.o : pwcom.o
 wfcinit_gpu.o : pwcom.o
 wfcinit_gpu.o : pwcom_gpu.o

@@ -15,7 +15,7 @@ SUBROUTINE dielec(do_zstar)
   USE constants, ONLY : fpi
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, zv, ityp
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools,  ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   USE io_files,  ONLY : seqopn
   USE klist,     ONLY : wk, ngk

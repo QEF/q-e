@@ -8,27 +8,26 @@
 !
 MODULE qes_read_module
   !
-  ! Auto-generated code: don't edit or at least don't commit changes
+  ! Auto-generated code: don't edit this file
   !
-  ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0 
+  ! Quantum Espresso XSD namespace: http://www.quantum-espresso.org/ns/qes/qes-1.0
   !
   USE FoX_dom
   USE qes_types_module
   !
-  USE kinds, only: DP
-  !
   IMPLICIT NONE
   !
-  PRIVATE
-  !
-  PUBLIC :: qes_read
+  PUBLIC qes_read
   !
   INTERFACE qes_read
+    MODULE PROCEDURE qes_read_espresso
     MODULE PROCEDURE qes_read_general_info
     MODULE PROCEDURE qes_read_parallel_info
     MODULE PROCEDURE qes_read_input
     MODULE PROCEDURE qes_read_step
     MODULE PROCEDURE qes_read_output
+    MODULE PROCEDURE qes_read_timing
+    MODULE PROCEDURE qes_read_clock
     MODULE PROCEDURE qes_read_control_variables
     MODULE PROCEDURE qes_read_xml_format
     MODULE PROCEDURE qes_read_creator
@@ -108,21 +107,244 @@ MODULE qes_read_module
   CONTAINS
   !
   !
-  SUBROUTINE qes_read_general_info(xml_node, obj, ierr )
+  SUBROUTINE qes_read_espresso(xml_node, obj, ierr )
     !
     IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
-    TYPE(general_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    TYPE(espresso_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
+    IF (hasAttribute(xml_node, "Units")) THEN
+      CALL extractDataAttribute(xml_node, "Units", obj%Units)
+      obj%Units_ispresent = .TRUE.
+    ELSE
+      obj%Units_ispresent = .FALSE.
+    END IF
     !
+
+
+
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "general_info")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","general_info: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","general_info: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%general_info_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_general_info(tmp_node, obj%general_info, ierr )
+    ELSE
+       obj%general_info_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "parallel_info")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","parallel_info: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","parallel_info: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%parallel_info_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_parallel_info(tmp_node, obj%parallel_info, ierr )
+    ELSE
+       obj%parallel_info_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "input")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","input: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","input: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_input(tmp_node, obj%input, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "step")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%step_ispresent = .TRUE.
+    ELSE
+      obj%step_ispresent = .FALSE.
+    END IF
+    obj%ndim_step = tmp_node_list_size
+    ALLOCATE(obj%step(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_step(tmp_node, obj%step(index), ierr )
+    END DO
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "output")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","output: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","output: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%output_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_output(tmp_node, obj%output, ierr )
+    ELSE
+       obj%output_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "status")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","status: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","status: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%status_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%status , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:espressoType","error reading status")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:espressoType","error reading status",10)
+         END IF
+      END IF
+    ELSE
+       obj%status_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "cputime")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","cputime: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","cputime: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%cputime_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%cputime , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:espressoType","error reading cputime")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:espressoType","error reading cputime",10)
+         END IF
+      END IF
+    ELSE
+       obj%cputime_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "timing_info")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","timing_info: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","timing_info: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%timing_info_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_timing(tmp_node, obj%timing_info, ierr )
+    ELSE
+       obj%timing_info_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "closed")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:espressoType","closed: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:espressoType","closed: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%closed_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_closed(tmp_node, obj%closed, ierr )
+    ELSE
+       obj%closed_ispresent = .FALSE.
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_espresso
+  !
+  !
+  SUBROUTINE qes_read_general_info(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(general_info_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "xml_format")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -208,15 +430,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(parallel_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "nprocs")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -374,15 +599,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(input_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "control_variables")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -752,29 +980,31 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(step_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "n_step")) THEN
       CALL extractDataAttribute(xml_node, "n_step", obj%n_step)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: stepType",&
                         "required attribute n_step not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: stepType",&
-                      "required attribute n_step not found", 10 ) 
+                      "required attribute n_step not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "scf_conv")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -928,15 +1158,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(output_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "convergence_info")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1248,21 +1481,174 @@ MODULE qes_read_module
   END SUBROUTINE qes_read_output
   !
   !
-  SUBROUTINE qes_read_control_variables(xml_node, obj, ierr )
+  SUBROUTINE qes_read_timing(xml_node, obj, ierr )
     !
     IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
-    TYPE(control_variables_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    TYPE(timing_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
+
+
+
     !
+    tmp_node_list => getElementsByTagname(xml_node, "total")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:timingType","total: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:timingType","total: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL qes_read_clock(tmp_node, obj%total, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "partial")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%partial_ispresent = .TRUE.
+    ELSE
+      obj%partial_ispresent = .FALSE.
+    END IF
+    obj%ndim_partial = tmp_node_list_size
+    ALLOCATE(obj%partial(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_clock(tmp_node, obj%partial(index), ierr )
+    END DO
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_timing
+  !
+  !
+  SUBROUTINE qes_read_clock(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(clock_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+
+    IF (hasAttribute(xml_node, "label")) THEN
+      CALL extractDataAttribute(xml_node, "label", obj%label)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: clockType",&
+                        "required attribute label not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: clockType",&
+                      "required attribute label not found", 10 )
+      END IF
+    END IF
+    !
+    IF (hasAttribute(xml_node, "calls")) THEN
+      CALL extractDataAttribute(xml_node, "calls", obj%calls)
+      obj%calls_ispresent = .TRUE.
+    ELSE
+      obj%calls_ispresent = .FALSE.
+    END IF
+    !
+
+
+
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "cpu")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:clockType","cpu: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:clockType","cpu: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%cpu, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN 
+          CALL infomsg("qes_read:clockType","error reading cpu")
+          ierr = ierr + 1
+       ELSE 
+          CALL errore ("qes_read:clockType","error reading cpu",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "wall")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:clockType","wall: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:clockType","wall: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%wall, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN 
+          CALL infomsg("qes_read:clockType","error reading wall")
+          ierr = ierr + 1
+       ELSE 
+          CALL errore ("qes_read:clockType","error reading wall",10)
+       END IF
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_clock
+  !
+  !
+  SUBROUTINE qes_read_control_variables(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(control_variables_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "title")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1688,42 +2074,44 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(xml_format_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "NAME")) THEN
       CALL extractDataAttribute(xml_node, "NAME", obj%NAME)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: xml_formatType",&
                         "required attribute NAME not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: xml_formatType",&
-                      "required attribute NAME not found", 10 ) 
+                      "required attribute NAME not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "VERSION")) THEN
       CALL extractDataAttribute(xml_node, "VERSION", obj%VERSION)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: xml_formatType",&
                         "required attribute VERSION not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: xml_formatType",&
-                      "required attribute VERSION not found", 10 ) 
+                      "required attribute VERSION not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%xml_format )
@@ -1739,42 +2127,44 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(creator_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "NAME")) THEN
       CALL extractDataAttribute(xml_node, "NAME", obj%NAME)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: creatorType",&
                         "required attribute NAME not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: creatorType",&
-                      "required attribute NAME not found", 10 ) 
+                      "required attribute NAME not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "VERSION")) THEN
       CALL extractDataAttribute(xml_node, "VERSION", obj%VERSION)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: creatorType",&
                         "required attribute VERSION not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: creatorType",&
-                      "required attribute VERSION not found", 10 ) 
+                      "required attribute VERSION not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%creator )
@@ -1790,42 +2180,44 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(created_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "DATE")) THEN
       CALL extractDataAttribute(xml_node, "DATE", obj%DATE)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: createdType",&
                         "required attribute DATE not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: createdType",&
-                      "required attribute DATE not found", 10 ) 
+                      "required attribute DATE not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "TIME")) THEN
       CALL extractDataAttribute(xml_node, "TIME", obj%TIME)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: createdType",&
                         "required attribute TIME not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: createdType",&
-                      "required attribute TIME not found", 10 ) 
+                      "required attribute TIME not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%created )
@@ -1841,24 +2233,25 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_species_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "ntyp")) THEN
       CALL extractDataAttribute(xml_node, "ntyp", obj%ntyp)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: atomic_speciesType",&
                         "required attribute ntyp not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: atomic_speciesType",&
-                      "required attribute ntyp not found", 10 ) 
+                      "required attribute ntyp not found", 10 )
       END IF
     END IF
     !
@@ -1869,8 +2262,9 @@ MODULE qes_read_module
       obj%pseudo_dir_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "species")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1903,29 +2297,31 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(species_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "name")) THEN
       CALL extractDataAttribute(xml_node, "name", obj%name)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: speciesType",&
                         "required attribute name not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: speciesType",&
-                      "required attribute name not found", 10 ) 
+                      "required attribute name not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "mass")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2075,24 +2471,25 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_structure_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "nat")) THEN
       CALL extractDataAttribute(xml_node, "nat", obj%nat)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: atomic_structureType",&
                         "required attribute nat not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: atomic_structureType",&
-                      "required attribute nat not found", 10 ) 
+                      "required attribute nat not found", 10 )
       END IF
     END IF
     !
@@ -2110,8 +2507,9 @@ MODULE qes_read_module
       obj%bravais_index_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "atomic_positions")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2201,15 +2599,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_positions_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "atom")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2242,24 +2643,25 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atom_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "name")) THEN
       CALL extractDataAttribute(xml_node, "name", obj%name)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: atomType",&
                         "required attribute name not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: atomType",&
-                      "required attribute name not found", 10 ) 
+                      "required attribute name not found", 10 )
       END IF
     END IF
     !
@@ -2277,8 +2679,9 @@ MODULE qes_read_module
       obj%index_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%atom )
@@ -2294,24 +2697,25 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(wyckoff_positions_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "space_group")) THEN
       CALL extractDataAttribute(xml_node, "space_group", obj%space_group)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: wyckoff_positionsType",&
                         "required attribute space_group not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: wyckoff_positionsType",&
-                      "required attribute space_group not found", 10 ) 
+                      "required attribute space_group not found", 10 )
       END IF
     END IF
     !
@@ -2322,8 +2726,9 @@ MODULE qes_read_module
       obj%more_options_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "atom")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2356,15 +2761,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(cell_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "a1")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2450,15 +2858,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(dft_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "functional")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2556,174 +2967,233 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(hybrid_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "qpoint_grid")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:hybridType","qpoint_grid: wrong number of occurrences")
+           CALL infomsg("qes_read:hybridType","qpoint_grid: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:hybridType","qpoint_grid: wrong number of occurrences",10)
+           CALL errore("qes_read:hybridType","qpoint_grid: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL qes_read_qpoint_grid(tmp_node, obj%qpoint_grid, ierr )
+    IF (tmp_node_list_size>0) THEN
+      obj%qpoint_grid_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_qpoint_grid(tmp_node, obj%qpoint_grid, ierr )
+    ELSE
+       obj%qpoint_grid_ispresent = .FALSE.
+    END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "ecutfock")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:hybridType","ecutfock: wrong number of occurrences")
+           CALL infomsg("qes_read:hybridType","ecutfock: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:hybridType","ecutfock: wrong number of occurrences",10)
+           CALL errore("qes_read:hybridType","ecutfock: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%ecutfock, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:hybridType","error reading ecutfock")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:hybridType","error reading ecutfock",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%ecutfock_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%ecutfock , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading ecutfock")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading ecutfock",10)
+         END IF
+      END IF
+    ELSE
+       obj%ecutfock_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "exx_fraction")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:hybridType","exx_fraction: wrong number of occurrences")
+           CALL infomsg("qes_read:hybridType","exx_fraction: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:hybridType","exx_fraction: wrong number of occurrences",10)
+           CALL errore("qes_read:hybridType","exx_fraction: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%exx_fraction, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:hybridType","error reading exx_fraction")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:hybridType","error reading exx_fraction",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%exx_fraction_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%exx_fraction , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading exx_fraction")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading exx_fraction",10)
+         END IF
+      END IF
+    ELSE
+       obj%exx_fraction_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "screening_parameter")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:hybridType","screening_parameter: wrong number of occurrences")
+           CALL infomsg("qes_read:hybridType","screening_parameter: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:hybridType","screening_parameter: wrong number of occurrences",10)
+           CALL errore("qes_read:hybridType","screening_parameter: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%screening_parameter, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:hybridType","error reading screening_parameter")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:hybridType","error reading screening_parameter",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%screening_parameter_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%screening_parameter , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading screening_parameter")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading screening_parameter",10)
+         END IF
+      END IF
+    ELSE
+       obj%screening_parameter_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "exxdiv_treatment")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:hybridType","exxdiv_treatment: wrong number of occurrences")
+           CALL infomsg("qes_read:hybridType","exxdiv_treatment: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:hybridType","exxdiv_treatment: wrong number of occurrences",10)
+           CALL errore("qes_read:hybridType","exxdiv_treatment: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%exxdiv_treatment, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:hybridType","error reading exxdiv_treatment")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:hybridType","error reading exxdiv_treatment",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%exxdiv_treatment_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%exxdiv_treatment , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading exxdiv_treatment")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading exxdiv_treatment",10)
+         END IF
+      END IF
+    ELSE
+       obj%exxdiv_treatment_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "x_gamma_extrapolation")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:hybridType","x_gamma_extrapolation: wrong number of occurrences")
+           CALL infomsg("qes_read:hybridType","x_gamma_extrapolation: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:hybridType","x_gamma_extrapolation: wrong number of occurrences",10)
+           CALL errore("qes_read:hybridType","x_gamma_extrapolation: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%x_gamma_extrapolation, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:hybridType","error reading x_gamma_extrapolation")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:hybridType","error reading x_gamma_extrapolation",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%x_gamma_extrapolation_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%x_gamma_extrapolation , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading x_gamma_extrapolation")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading x_gamma_extrapolation",10)
+         END IF
+      END IF
+    ELSE
+       obj%x_gamma_extrapolation_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "ecutvcut")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:hybridType","ecutvcut: wrong number of occurrences")
+           CALL infomsg("qes_read:hybridType","ecutvcut: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:hybridType","ecutvcut: wrong number of occurrences",10)
+           CALL errore("qes_read:hybridType","ecutvcut: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%ecutvcut, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:hybridType","error reading ecutvcut")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:hybridType","error reading ecutvcut",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%ecutvcut_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%ecutvcut , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading ecutvcut")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading ecutvcut",10)
+         END IF
+      END IF
+    ELSE
+       obj%ecutvcut_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "localization_threshold")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:hybridType","localization_threshold: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:hybridType","localization_threshold: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%localization_threshold_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%localization_threshold , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading localization_threshold")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading localization_threshold",10)
+         END IF
+      END IF
+    ELSE
+       obj%localization_threshold_ispresent = .FALSE.
     END IF
     !
     !
@@ -2738,55 +3208,57 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(qpoint_grid_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "nqx1")) THEN
       CALL extractDataAttribute(xml_node, "nqx1", obj%nqx1)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: qpoint_gridType",&
                         "required attribute nqx1 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: qpoint_gridType",&
-                      "required attribute nqx1 not found", 10 ) 
+                      "required attribute nqx1 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "nqx2")) THEN
       CALL extractDataAttribute(xml_node, "nqx2", obj%nqx2)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: qpoint_gridType",&
                         "required attribute nqx2 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: qpoint_gridType",&
-                      "required attribute nqx2 not found", 10 ) 
+                      "required attribute nqx2 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "nqx3")) THEN
       CALL extractDataAttribute(xml_node, "nqx3", obj%nqx3)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: qpoint_gridType",&
                         "required attribute nqx3 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: qpoint_gridType",&
-                      "required attribute nqx3 not found", 10 ) 
+                      "required attribute nqx3 not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%qpoint_grid )
@@ -2802,15 +3274,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(dftU_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "lda_plus_u_kind")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -2992,42 +3467,38 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(HubbardCommon_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: HubbardCommonType",&
                         "required attribute specie not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: HubbardCommonType",&
-                      "required attribute specie not found", 10 ) 
+                      "required attribute specie not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
+      obj%label_ispresent = .TRUE.
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
-         CALL infomsg ( "qes_read: HubbardCommonType",&
-                        "required attribute label not found" )
-         ierr = ierr + 1 
-      ELSE 
-         CALL errore ("qes_read: HubbardCommonType",&
-                      "required attribute label not found", 10 ) 
-      END IF
+      obj%label_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%HubbardCommon )
@@ -3043,42 +3514,44 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(HubbardJ_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: HubbardJType",&
                         "required attribute specie not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: HubbardJType",&
-                      "required attribute specie not found", 10 ) 
+                      "required attribute specie not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: HubbardJType",&
                         "required attribute label not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: HubbardJType",&
-                      "required attribute label not found", 10 ) 
+                      "required attribute label not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%HubbardJ )
@@ -3094,54 +3567,55 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(starting_ns_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: starting_nsType",&
                         "required attribute specie not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: starting_nsType",&
-                      "required attribute specie not found", 10 ) 
+                      "required attribute specie not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: starting_nsType",&
                         "required attribute label not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: starting_nsType",&
-                      "required attribute label not found", 10 ) 
+                      "required attribute label not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "spin")) THEN
       CALL extractDataAttribute(xml_node, "spin", obj%spin)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: starting_nsType",&
                         "required attribute spin not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: starting_nsType",&
-                      "required attribute spin not found", 10 ) 
+                      "required attribute spin not found", 10 )
       END IF
     END IF
     !
-    !
+
     IF (hasAttribute(xml_node, "size"))  THEN
         CALL extractDataAttribute(xml_node, "size", obj%size)
     ELSE
@@ -3149,6 +3623,7 @@ MODULE qes_read_module
                      "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
     END IF
     !
+
     !
     !
     ALLOCATE (obj%starting_ns(obj%size))
@@ -3165,8 +3640,8 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(Hubbard_ns_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
@@ -3174,71 +3649,72 @@ MODULE qes_read_module
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "specie")) THEN
       CALL extractDataAttribute(xml_node, "specie", obj%specie)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: Hubbard_nsType",&
                         "required attribute specie not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute specie not found", 10 ) 
+                      "required attribute specie not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "label")) THEN
       CALL extractDataAttribute(xml_node, "label", obj%label)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: Hubbard_nsType",&
                         "required attribute label not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute label not found", 10 ) 
+                      "required attribute label not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "spin")) THEN
       CALL extractDataAttribute(xml_node, "spin", obj%spin)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: Hubbard_nsType",&
                         "required attribute spin not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute spin not found", 10 ) 
+                      "required attribute spin not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "index")) THEN
       CALL extractDataAttribute(xml_node, "index", obj%index)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: Hubbard_nsType",&
                         "required attribute index not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute index not found", 10 ) 
+                      "required attribute index not found", 10 )
       END IF
     END IF
     !
-    !
+
     IF (hasAttribute(xml_node, "rank"))  THEN
         CALL extractDataAttribute(xml_node, "rank", obj%rank)
     ELSE
         CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute rank not found, can't read further, stopping", 10 ) 
+                      "required attribute rank not found, can't read further, stopping", 10 )
     END IF
     ALLOCATE (obj%dims(obj%rank))
     IF (hasAttribute(xml_node, "dims")) THEN
         CALL extractDataAttribute(xml_node, "dims", obj%dims)
     ELSE
         CALL errore ("qes_read: Hubbard_nsType",&
-                      "required attribute dims not found, can't read further, stopping", 10 ) 
+                      "required attribute dims not found, can't read further, stopping", 10 )
     END IF
     IF (hasAttribute(xml_node,"order")) THEN
         CALL extractDataAttribute(xml_node, "order", obj%order)
@@ -3246,6 +3722,7 @@ MODULE qes_read_module
         obj%order = "F"
     END IF
     !
+
     !
     !
     length = 1
@@ -3266,38 +3743,101 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(vdW_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "vdw_corr")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:vdWType","vdw_corr: wrong number of occurrences")
+           CALL infomsg("qes_read:vdWType","vdw_corr: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:vdWType","vdw_corr: wrong number of occurrences",10)
+           CALL errore("qes_read:vdWType","vdw_corr: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%vdw_corr, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:vdWType","error reading vdw_corr")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:vdWType","error reading vdw_corr",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%vdw_corr_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%vdw_corr , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:vdWType","error reading vdw_corr")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:vdWType","error reading vdw_corr",10)
+         END IF
+      END IF
+    ELSE
+       obj%vdw_corr_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "dftd3_version")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:vdWType","dftd3_version: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:vdWType","dftd3_version: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%dftd3_version_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%dftd3_version , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:vdWType","error reading dftd3_version")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:vdWType","error reading dftd3_version",10)
+         END IF
+      END IF
+    ELSE
+       obj%dftd3_version_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "dftd3_threebody")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:vdWType","dftd3_threebody: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:vdWType","dftd3_threebody: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%dftd3_threebody_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%dftd3_threebody , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:vdWType","error reading dftd3_threebody")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:vdWType","error reading dftd3_threebody",10)
+         END IF
+      END IF
+    ELSE
+       obj%dftd3_threebody_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "non_local_term")
@@ -3326,6 +3866,62 @@ MODULE qes_read_module
       END IF
     ELSE
        obj%non_local_term_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "functional")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:vdWType","functional: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:vdWType","functional: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%functional_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%functional , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:vdWType","error reading functional")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:vdWType","error reading functional",10)
+         END IF
+      END IF
+    ELSE
+       obj%functional_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "total_energy_term")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:vdWType","total_energy_term: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:vdWType","total_energy_term: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%total_energy_term_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%total_energy_term , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:vdWType","error reading total_energy_term")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:vdWType","error reading total_energy_term",10)
+         END IF
+      END IF
+    ELSE
+       obj%total_energy_term_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "london_s6")
@@ -3524,15 +4120,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(spin_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "lsda")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -3618,15 +4217,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(bands_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "nbnd")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -3784,29 +4386,31 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(smearing_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "degauss")) THEN
       CALL extractDataAttribute(xml_node, "degauss", obj%degauss)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: smearingType",&
                         "required attribute degauss not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: smearingType",&
-                      "required attribute degauss not found", 10 ) 
+                      "required attribute degauss not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%smearing )
@@ -3822,14 +4426,15 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(occupations_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "spin")) THEN
       CALL extractDataAttribute(xml_node, "spin", obj%spin)
       obj%spin_ispresent = .TRUE.
@@ -3837,8 +4442,9 @@ MODULE qes_read_module
       obj%spin_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%occupations )
@@ -3854,15 +4460,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(basis_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "gamma_only")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -4016,15 +4625,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(basis_set_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "gamma_only")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -4266,55 +4878,57 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(basisSetItem_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "nr1")) THEN
       CALL extractDataAttribute(xml_node, "nr1", obj%nr1)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: basisSetItemType",&
                         "required attribute nr1 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: basisSetItemType",&
-                      "required attribute nr1 not found", 10 ) 
+                      "required attribute nr1 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "nr2")) THEN
       CALL extractDataAttribute(xml_node, "nr2", obj%nr2)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: basisSetItemType",&
                         "required attribute nr2 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: basisSetItemType",&
-                      "required attribute nr2 not found", 10 ) 
+                      "required attribute nr2 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "nr3")) THEN
       CALL extractDataAttribute(xml_node, "nr3", obj%nr3)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: basisSetItemType",&
                         "required attribute nr3 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: basisSetItemType",&
-                      "required attribute nr3 not found", 10 ) 
+                      "required attribute nr3 not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%basisSetItem )
@@ -4330,15 +4944,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(reciprocal_lattice_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "b1")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -4424,15 +5041,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(electron_control_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "diagonalization")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -4826,15 +5446,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(k_points_IBZ_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "monkhorst_pack")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -4912,94 +5535,96 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(monkhorst_pack_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "nk1")) THEN
       CALL extractDataAttribute(xml_node, "nk1", obj%nk1)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: monkhorst_packType",&
                         "required attribute nk1 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute nk1 not found", 10 ) 
+                      "required attribute nk1 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "nk2")) THEN
       CALL extractDataAttribute(xml_node, "nk2", obj%nk2)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: monkhorst_packType",&
                         "required attribute nk2 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute nk2 not found", 10 ) 
+                      "required attribute nk2 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "nk3")) THEN
       CALL extractDataAttribute(xml_node, "nk3", obj%nk3)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: monkhorst_packType",&
                         "required attribute nk3 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute nk3 not found", 10 ) 
+                      "required attribute nk3 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "k1")) THEN
       CALL extractDataAttribute(xml_node, "k1", obj%k1)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: monkhorst_packType",&
                         "required attribute k1 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute k1 not found", 10 ) 
+                      "required attribute k1 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "k2")) THEN
       CALL extractDataAttribute(xml_node, "k2", obj%k2)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: monkhorst_packType",&
                         "required attribute k2 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute k2 not found", 10 ) 
+                      "required attribute k2 not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "k3")) THEN
       CALL extractDataAttribute(xml_node, "k3", obj%k3)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: monkhorst_packType",&
                         "required attribute k3 not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: monkhorst_packType",&
-                      "required attribute k3 not found", 10 ) 
+                      "required attribute k3 not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%monkhorst_pack )
@@ -5015,14 +5640,15 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(k_point_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "weight")) THEN
       CALL extractDataAttribute(xml_node, "weight", obj%weight)
       obj%weight_ispresent = .TRUE.
@@ -5037,8 +5663,9 @@ MODULE qes_read_module
       obj%label_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%k_point )
@@ -5054,15 +5681,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ion_control_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "ion_dynamics")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -5224,15 +5854,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(bfgs_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "ndim")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -5390,15 +6023,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(md_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "pot_extrapolation")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -5604,15 +6240,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(cell_control_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "cell_dynamics")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -5834,15 +6473,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(symmetry_flags_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "nosym")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6000,15 +6642,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(boundary_conditions_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "assume_isolated")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6122,15 +6767,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(esm_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "bc")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6240,15 +6888,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ekin_functional_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "ecfixed")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6334,15 +6985,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(spin_constraints_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "spin_constraints")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6432,15 +7086,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(electric_field_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "electric_potential")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6722,15 +7379,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(gate_settings_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "use_gate")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -6936,15 +7596,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_constraints_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "num_of_constraints")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7025,15 +7688,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_constraint_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "constr_parms")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7119,41 +7785,42 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(inputOccupations_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "ispin")) THEN
       CALL extractDataAttribute(xml_node, "ispin", obj%ispin)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: inputOccupationsType",&
                         "required attribute ispin not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: inputOccupationsType",&
-                      "required attribute ispin not found", 10 ) 
+                      "required attribute ispin not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "spin_factor")) THEN
       CALL extractDataAttribute(xml_node, "spin_factor", obj%spin_factor)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: inputOccupationsType",&
                         "required attribute spin_factor not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: inputOccupationsType",&
-                      "required attribute spin_factor not found", 10 ) 
+                      "required attribute spin_factor not found", 10 )
       END IF
     END IF
     !
-    !
+
     IF (hasAttribute(xml_node, "size"))  THEN
         CALL extractDataAttribute(xml_node, "size", obj%size)
     ELSE
@@ -7161,6 +7828,7 @@ MODULE qes_read_module
                      "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
     END IF
     !
+
     !
     !
     ALLOCATE (obj%inputOccupations(obj%size))
@@ -7177,15 +7845,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(outputElectricField_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "BerryPhase")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7279,15 +7950,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(BerryPhaseOutput_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "totalPolarization")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7371,15 +8045,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(dipoleOutput_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "idir")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7513,15 +8190,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(finiteFieldOut_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "electronicDipole")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7583,15 +8263,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(polarization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "polarization")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7669,15 +8352,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ionicPolarization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "ion")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7747,15 +8433,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(electronicPolarization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "firstKeyPoint")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7829,14 +8518,15 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(phase_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "ionic")) THEN
       CALL extractDataAttribute(xml_node, "ionic", obj%ionic)
       obj%ionic_ispresent = .TRUE.
@@ -7858,8 +8548,9 @@ MODULE qes_read_module
       obj%modulus_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%phase )
@@ -7875,15 +8566,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(gateInfo_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "pot_prefactor")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -7993,15 +8687,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(convergence_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "scf_conv")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8051,15 +8748,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(scf_conv_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "convergence_achieved")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8145,15 +8845,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(opt_conv_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "convergence_achieved")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8239,15 +8942,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(algorithmic_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "real_space_q")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8276,25 +8982,29 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "real_space_beta")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:algorithmic_infoType","real_space_beta: wrong number of occurrences")
+           CALL infomsg("qes_read:algorithmic_infoType","real_space_beta: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:algorithmic_infoType","real_space_beta: wrong number of occurrences",10)
+           CALL errore("qes_read:algorithmic_infoType","real_space_beta: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%real_space_beta, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:algorithmic_infoType","error reading real_space_beta")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:algorithmic_infoType","error reading real_space_beta",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%real_space_beta_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%real_space_beta , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:algorithmic_infoType","error reading real_space_beta")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:algorithmic_infoType","error reading real_space_beta",10)
+         END IF
+      END IF
+    ELSE
+       obj%real_space_beta_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "uspp")
@@ -8357,15 +9067,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(symmetries_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "nsym")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8478,15 +9191,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(symmetry_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "info")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8580,28 +9296,29 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(equivalent_atoms_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "nat")) THEN
       CALL extractDataAttribute(xml_node, "nat", obj%nat)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: equivalent_atomsType",&
                         "required attribute nat not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: equivalent_atomsType",&
-                      "required attribute nat not found", 10 ) 
+                      "required attribute nat not found", 10 )
       END IF
     END IF
     !
-    !
+
     IF (hasAttribute(xml_node, "size"))  THEN
         CALL extractDataAttribute(xml_node, "size", obj%size)
     ELSE
@@ -8609,6 +9326,7 @@ MODULE qes_read_module
                      "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
     END IF
     !
+
     !
     !
     ALLOCATE (obj%equivalent_atoms(obj%size))
@@ -8625,14 +9343,15 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "name")) THEN
       CALL extractDataAttribute(xml_node, "name", obj%name)
       obj%name_ispresent = .TRUE.
@@ -8654,8 +9373,9 @@ MODULE qes_read_module
       obj%time_reversal_ispresent = .FALSE.
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%info )
@@ -8671,15 +9391,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(outputPBC_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "assume_isolated")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8717,15 +9440,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(magnetization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "lsda")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8883,15 +9609,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(total_energy_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "etot")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -9169,6 +9898,34 @@ MODULE qes_read_module
        obj%gatefield_contr_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "vdW_term")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:total_energyType","vdW_term: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:total_energyType","vdW_term: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%vdW_term_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%vdW_term , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:total_energyType","error reading vdW_term")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:total_energyType","error reading vdW_term",10)
+         END IF
+      END IF
+    ELSE
+       obj%vdW_term_ispresent = .FALSE.
+    END IF
+    !
     !
     obj%lwrite = .TRUE.
     !
@@ -9181,15 +9938,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(band_structure_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "lsda")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -9266,25 +10026,29 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "nbnd")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:band_structureType","nbnd: wrong number of occurrences")
+           CALL infomsg("qes_read:band_structureType","nbnd: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:band_structureType","nbnd: wrong number of occurrences",10)
+           CALL errore("qes_read:band_structureType","nbnd: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%nbnd, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:band_structureType","error reading nbnd")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:band_structureType","error reading nbnd",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%nbnd_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%nbnd , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:band_structureType","error reading nbnd")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:band_structureType","error reading nbnd",10)
+         END IF
+      END IF
+    ELSE
+       obj%nbnd_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "nbnd_up")
@@ -9475,6 +10239,34 @@ MODULE qes_read_module
        obj%highestOccupiedLevel_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "lowestUnoccupiedLevel")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:band_structureType","lowestUnoccupiedLevel: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:band_structureType","lowestUnoccupiedLevel: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%lowestUnoccupiedLevel_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%lowestUnoccupiedLevel , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:band_structureType","error reading lowestUnoccupiedLevel")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:band_structureType","error reading lowestUnoccupiedLevel",10)
+         END IF
+      END IF
+    ELSE
+       obj%lowestUnoccupiedLevel_ispresent = .FALSE.
+    END IF
+    !
     tmp_node_list => getElementsByTagname(xml_node, "two_fermi_energies")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -9610,15 +10402,18 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ks_energies_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
-    !
+
+
+
+
     !
     tmp_node_list => getElementsByTagname(xml_node, "k_point")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -9704,42 +10499,44 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(closed_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "DATE")) THEN
       CALL extractDataAttribute(xml_node, "DATE", obj%DATE)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: closedType",&
                         "required attribute DATE not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: closedType",&
-                      "required attribute DATE not found", 10 ) 
+                      "required attribute DATE not found", 10 )
       END IF
     END IF
     !
     IF (hasAttribute(xml_node, "TIME")) THEN
       CALL extractDataAttribute(xml_node, "TIME", obj%TIME)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: closedType",&
                         "required attribute TIME not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: closedType",&
-                      "required attribute TIME not found", 10 ) 
+                      "required attribute TIME not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%closed )
@@ -9755,8 +10552,8 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(vector_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
@@ -9770,7 +10567,9 @@ MODULE qes_read_module
                      "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
     END IF
     !
-    !
+
+
+
     !
     !
     ALLOCATE (obj%vector(obj%size))
@@ -9787,8 +10586,8 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(integerVector_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
@@ -9802,7 +10601,9 @@ MODULE qes_read_module
                      "mandatory size attribute not found in "//TRIM(obj%tagname), 12)
     END IF
     !
-    !
+
+
+
     !
     !
     ALLOCATE (obj%integerVector(obj%size))
@@ -9819,8 +10620,8 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(matrix_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
@@ -9832,14 +10633,14 @@ MODULE qes_read_module
         CALL extractDataAttribute(xml_node, "rank", obj%rank)
     ELSE
         CALL errore ("qes_read: matrixType",&
-                      "required attribute rank not found, can't read further, stopping", 10 ) 
+                      "required attribute rank not found, can't read further, stopping", 10 )
     END IF
     ALLOCATE (obj%dims(obj%rank))
     IF (hasAttribute(xml_node, "dims")) THEN
         CALL extractDataAttribute(xml_node, "dims", obj%dims)
     ELSE
         CALL errore ("qes_read: matrixType",&
-                      "required attribute dims not found, can't read further, stopping", 10 ) 
+                      "required attribute dims not found, can't read further, stopping", 10 )
     END IF
     IF (hasAttribute(xml_node,"order")) THEN
         CALL extractDataAttribute(xml_node, "order", obj%order)
@@ -9847,6 +10648,9 @@ MODULE qes_read_module
         obj%order = "F"
     END IF
     !
+
+
+
     !
     !
     length = 1
@@ -9867,8 +10671,8 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(integerMatrix_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
@@ -9880,14 +10684,14 @@ MODULE qes_read_module
         CALL extractDataAttribute(xml_node, "rank", obj%rank)
     ELSE
         CALL errore ("qes_read: integerMatrixType",&
-                      "required attribute rank not found, can't read further, stopping", 10 ) 
+                      "required attribute rank not found, can't read further, stopping", 10 )
     END IF
     ALLOCATE (obj%dims(obj%rank))
     IF (hasAttribute(xml_node, "dims")) THEN
         CALL extractDataAttribute(xml_node, "dims", obj%dims)
     ELSE
         CALL errore ("qes_read: integerMatrixType",&
-                      "required attribute dims not found, can't read further, stopping", 10 ) 
+                      "required attribute dims not found, can't read further, stopping", 10 )
     END IF
     IF (hasAttribute(xml_node,"order")) THEN
         CALL extractDataAttribute(xml_node, "order", obj%order)
@@ -9895,6 +10699,9 @@ MODULE qes_read_module
         obj%order = "F"
     END IF
     !
+
+
+
     !
     !
     length = 1
@@ -9915,29 +10722,31 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(scalarQuantity_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
-    ! 
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
     obj%tagname = getTagName(xml_node)
     !
+
     IF (hasAttribute(xml_node, "Units")) THEN
       CALL extractDataAttribute(xml_node, "Units", obj%Units)
     ELSE
-      IF ( PRESENT(ierr) ) THEN 
+      IF ( PRESENT(ierr) ) THEN
          CALL infomsg ( "qes_read: scalarQuantityType",&
                         "required attribute Units not found" )
-         ierr = ierr + 1 
-      ELSE 
+         ierr = ierr + 1
+      ELSE
          CALL errore ("qes_read: scalarQuantityType",&
-                      "required attribute Units not found", 10 ) 
+                      "required attribute Units not found", 10 )
       END IF
     END IF
     !
-    !
-    !
+
+
+
     !
     !
     CALL extractDataContent(xml_node, obj%scalarQuantity )

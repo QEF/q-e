@@ -727,6 +727,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
   CALL mp_max( npw_g, intra_pool_comm )
+  CALL mp_max( npw_g, inter_pool_comm )
 
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
@@ -809,6 +810,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       ENDDO
     ENDIF
     CALL mp_sum( itmp, intra_bgrp_comm )
+    !XXX
+    CALL mp_sum( itmp, inter_pool_comm )
+    !XXX
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
@@ -1347,7 +1351,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
     CALL calc_rhog ( rhog_nvmin, rhog_nvmax )
     !
     IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-    !^
+    !
   ALLOCATE ( g_g ( nd, ng_g ) )
   ALLOCATE ( rhog_g ( ng_g, ns ) )
 
@@ -1508,7 +1512,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
-  USE scf, ONLY : rho, rho_core, rhog_core, rhoz_or_updw
+  USE scf, ONLY : rho, rho_core, rhog_core
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions, ONLY : psic
   USE matrix_inversion
@@ -1656,13 +1660,9 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
-  !^
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
   !
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   DO is = 1, ns
     DO ir = 1, nr
       psic ( ir ) = CMPLX ( vxcr_g ( ir, is ), 0.0D0, KIND=dp )
@@ -1726,7 +1726,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
-  USE scf, ONLY : rho, rho_core, rhog_core, rhoz_or_updw
+  USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions, ONLY : psic
 
   IMPLICIT NONE
@@ -1759,13 +1759,9 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
-  !^
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
   !
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   DO is = 1, ns
     DO ir = 1, nr
       psic ( ir ) = CMPLX ( vxcr_g ( ir, is ), 0.0D0, KIND=dp )
@@ -1826,7 +1822,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE mp, ONLY : mp_sum
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
-  USE scf, ONLY : rho, rho_core, rhog_core, rhoz_or_updw
+  USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : nbnd
 
@@ -1892,13 +1888,9 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
-  !^
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
   !
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   DO ik = iks, ike
     npw = ngk ( ik - iks + 1 )
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
@@ -2018,7 +2010,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE mp, ONLY : mp_sum
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
-  USE scf, ONLY : rho, rho_core, rhog_core, rhoz_or_updw
+  USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : npwx, nbnd
 
@@ -2085,13 +2077,9 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
-  !^
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
   !
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   DO ik = iks, ike
     ikk = ik - iks + 1
     npw = ngk ( ik - iks + 1 )

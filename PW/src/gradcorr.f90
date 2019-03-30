@@ -34,12 +34,12 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   INTEGER :: k, ipol, is, nspin0, ir, jpol
   !
   REAL(DP),    ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
-  REAL(DP),    ALLOCATABLE :: rhoout(:,:), segni(:), vgg(:,:), vsave(:,:)
+  REAL(DP),    ALLOCATABLE :: rhoaux(:,:), segni(:), vgg(:,:), vsave(:,:)
   REAL(DP),    ALLOCATABLE :: gmag(:,:,:)
 
-  COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhogaux(:,:)
   !
-  REAL(DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
+  REAL(DP) :: grho2(2), sgn(2), sx, sc, v1x, v2x, v1c, v2c, &
               v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
               etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
   REAL(DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
@@ -57,10 +57,11 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   if (nspin==4) nspin0=1
   if (nspin==4.and.domag) nspin0=2
   fac = 1.D0 / DBLE( nspin0 )
+  sgn(1) = 1.D0 ;  sgn(2) = -1.D0
   !
   ALLOCATE(    h( 3, dfftp%nnr, nspin0) )
   ALLOCATE( grho( 3, dfftp%nnr, nspin0) )
-  ALLOCATE( rhoout( dfftp%nnr, nspin0) )
+  ALLOCATE( rhoaux( dfftp%nnr, nspin0) )
   IF (nspin==4.AND.domag) THEN
      ALLOCATE( vgg( dfftp%nnr, nspin0 ) )
      ALLOCATE( vsave( dfftp%nnr, nspin ) )
@@ -69,41 +70,45 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      v=0.d0
   ENDIF
   !
-  ALLOCATE( rhogsum( ngm, nspin0 ) )
+  ALLOCATE( rhogaux( ngm, nspin0 ) )
   !
   ! ... calculate the gradient of rho + rho_core in real space
   !
   IF ( nspin == 4 .AND. domag ) THEN
      !
-     CALL compute_rho(rho,rhoout,segni,dfftp%nnr)
+     CALL compute_rho(rho,rhoaux,segni,dfftp%nnr)
      !
-     ! ... bring starting rhoout to G-space
+     ! ... bring starting rhoaux to G-space
      !
      DO is = 1, nspin0
         !
-        psic(:) = rhoout(:,is)
+        psic(:) = rhoaux(:,is)
         !
         CALL fwfft ('Rho', psic, dfftp)
         !
-        rhogsum(:,is) = psic(dfftp%nl(:))
+        rhogaux(:,is) = psic(dfftp%nl(:))
         !
      END DO
   ELSE
      !
-     rhoout(:,1:nspin0)  = rho(:,1:nspin0)
-     rhogsum(:,1:nspin0) = rhog(:,1:nspin0)
+     ! ... for convenience rhoaux and rhogaux are in (up,down) format, if LSDA
+     !
+     DO is = 1, nspin0
+       rhoaux(:,is)  = (  rho(:,1) + sgn(is) *  rho(:,nspin0) ) * 0.5D0
+       rhogaux(:,is) = ( rhog(:,1) + sgn(is) * rhog(:,nspin0) ) * 0.5D0
+     ENDDO
      !
   ENDIF
   DO is = 1, nspin0
      !
-     rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
-     rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
+     rhoaux(:,is)  = fac *  rho_core(:) +  rhoaux(:,is)
+     rhogaux(:,is) = fac * rhog_core(:) + rhogaux(:,is)
      !
-     CALL fft_gradient_g2r( dfftp, rhogsum(1,is), g, grho(1,1,is) )
+     CALL fft_gradient_g2r( dfftp, rhogaux(1,is), g, grho(1,1,is) )
      !
   END DO
   !
-  DEALLOCATE( rhogsum )
+  DEALLOCATE( rhogaux )
   !
   IF ( nspin0 == 1 ) THEN
      !
@@ -113,7 +118,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
 !$omp             reduction(+:etxcgc,vtxcgc)
      DO k = 1, dfftp%nnr
         !
-        arho = ABS( rhoout(k,1) )
+        arho = ABS( rhoaux(k,1) )
         !
         IF ( arho > epsr ) THEN
            !
@@ -121,7 +126,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
            !
            IF ( grho2(1) > epsg ) THEN
               !
-              segno = SIGN( 1.D0, rhoout(k,1) )
+              segno = SIGN( 1.D0, rhoaux(k,1) )
               !
               CALL gcxc( arho, grho2(1), sx, sc, v1x, v2x, v1c, v2c )
               !
@@ -135,7 +140,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
               !
               h(:,k,1) = e2 * ( v2x + v2c ) * grho(:,k,1)
               !
-              vtxcgc = vtxcgc+e2*( v1x + v1c ) * ( rhoout(k,1) - rho_core(k) )
+              vtxcgc = vtxcgc+e2*( v1x + v1c ) * ( rhoaux(k,1) - rho_core(k) )
               etxcgc = etxcgc+e2*( sx + sc ) * segno
               !
            ELSE
@@ -161,19 +166,19 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
 !$omp             reduction(+:etxcgc,vtxcgc)
      DO k = 1, dfftp%nnr
         !
-        rh = rhoout(k,1) + rhoout(k,2)
+        rh = rhoaux(k,1) + rhoaux(k,2)
         !
         grho2(:) = grho(1,k,:)**2 + grho(2,k,:)**2 + grho(3,k,:)**2
         !
-        CALL gcx_spin( rhoout(k,1), rhoout(k,2), grho2(1), &
+        CALL gcx_spin( rhoaux(k,1), rhoaux(k,2), grho2(1), &
                        grho2(2), sx, v1xup, v1xdw, v2xup, v2xdw )
         !
         IF ( rh > epsr ) THEN
            !
            IF ( igcc_is_lyp() ) THEN
               !
-              rup = rhoout(k,1)
-              rdw = rhoout(k,2)
+              rup = rhoaux(k,1)
+              rdw = rhoaux(k,2)
               !
               grhoup = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
               grhodw = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
@@ -187,7 +192,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
               !
            ELSE
               !
-              zeta = ( rhoout(k,1) - rhoout(k,2) ) / rh
+              zeta = ( rhoaux(k,1) - rhoaux(k,2) ) / rh
               if (nspin.eq.4.and.domag) zeta=abs(zeta)*segni(k)
               !
               grh2 = ( grho(1,k,1) + grho(1,k,2) )**2 + &
@@ -231,9 +236,9 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         END DO
         !
         vtxcgc = vtxcgc + &
-                 e2 * ( v1xup + v1cup ) * ( rhoout(k,1) - rho_core(k) * fac )
+                 e2 * ( v1xup + v1cup ) * ( rhoaux(k,1) - rho_core(k) * fac )
         vtxcgc = vtxcgc + &
-                 e2 * ( v1xdw + v1cdw ) * ( rhoout(k,2) - rho_core(k) * fac )
+                 e2 * ( v1xdw + v1cdw ) * ( rhoaux(k,2) - rho_core(k) * fac )
         etxcgc = etxcgc + e2 * ( sx + sc )
         !
      END DO
@@ -243,7 +248,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DO is = 1, nspin0
      !
-     rhoout(:,is) = rhoout(:,is) - fac * rho_core(:)
+     rhoaux(:,is) = rhoaux(:,is) - fac * rho_core(:)
      !
   END DO
   !
@@ -260,7 +265,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      v(:,is) = v(:,is) - dh(:)
      !
-     vtxcgc = vtxcgc - SUM( dh(:) * rhoout(:,is) )
+     vtxcgc = vtxcgc - SUM( dh(:) * rhoaux(:,is) )
      !
   END DO
   !
@@ -285,7 +290,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DEALLOCATE( dh )
   DEALLOCATE( h )
-  DEALLOCATE( rhoout )
+  DEALLOCATE( rhoaux )
   IF (nspin==4.and.domag) THEN
      DEALLOCATE( vgg )
      DEALLOCATE( vsave )

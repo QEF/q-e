@@ -31,7 +31,7 @@ subroutine hp_dvpsi_pert (ik)
   USE klist,                ONLY : ngk
   USE buffers,              ONLY : save_buffer, get_buffer
   USE wvfct,                ONLY : npwx, nbnd
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_pools,             ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
   USE eqv,                  ONLY : dvpsi
   USE qpoint,               ONLY : nksq, ikks, ikqs

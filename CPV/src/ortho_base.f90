@@ -42,8 +42,8 @@ CONTAINS
 
    SUBROUTINE mesure_diag_perf( n )
       !
-      USE mp_global,   ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
-      USE mp_global,   ONLY: nproc_ortho, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id
+      USE mp_bands,    ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
+      USE mp_diag,     ONLY: nproc_ortho, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
@@ -282,7 +282,7 @@ CONTAINS
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE control_flags,     ONLY: ortho_eps, ortho_max
-      USE mp_global,         ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
+      USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
       USE descriptors,       ONLY: la_descriptor
 
@@ -434,7 +434,7 @@ CONTAINS
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE control_flags,     ONLY: ortho_eps, ortho_max
-      USE mp_global,         ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
+      USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
       USE descriptors,       ONLY: la_descriptor
 
@@ -601,7 +601,8 @@ CONTAINS
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_diag,            ONLY: leg_ortho
       USE descriptors,        ONLY: la_descriptor, descla_init
       USE parallel_toolkit,   ONLY: dsqmsym
 !
@@ -740,8 +741,8 @@ CONTAINS
       USE uspp_param,         ONLY: nvb
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_sum
-      USE mp_global,          ONLY: intra_bgrp_comm, me_bgrp, leg_ortho
-      USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_bands,           ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_diag,            ONLY: leg_ortho
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: la_descriptor, descla_init
@@ -881,8 +882,8 @@ CONTAINS
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho
-      USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_diag,            ONLY: leg_ortho
+      USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
       USE descriptors,        ONLY: la_descriptor, descla_init
       USE parallel_toolkit,   ONLY: dsqmsym
 !
@@ -1029,7 +1030,8 @@ CONTAINS
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
-      USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
+      USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
+      USE mp_diag,           ONLY: leg_ortho
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
       USE descriptors,       ONLY: descla_init, la_descriptor
 !
@@ -1237,7 +1239,7 @@ CONTAINS
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nsp
       USE io_global,      ONLY: stdout
-      USE mp_global,      ONLY: intra_bgrp_comm, inter_bgrp_comm
+      USE mp_bands,       ONLY: intra_bgrp_comm, inter_bgrp_comm
       USE uspp_param,     ONLY: nh, ish, nvb
       USE uspp,           ONLY: nkbus, qq_nt
       USE gvecw,          ONLY: ngw
@@ -1368,7 +1370,8 @@ CONTAINS
       USE kinds,             ONLY: DP
       USE uspp,              ONLY: nkb, nkbus
       USE mp,                ONLY: mp_sum
-      USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
+      USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
+      USE mp_diag,           ONLY: leg_ortho
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
       USE descriptors,       ONLY: la_descriptor
       !

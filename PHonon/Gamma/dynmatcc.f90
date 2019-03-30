@@ -15,16 +15,15 @@ SUBROUTINE dynmatcc(dyncc)
   USE atom,       ONLY : rgrid
   USE constants,  ONLY : tpi
   USE cell_base,  ONLY : omega, tpiba2
-  USE lsda_mod,   ONLY : nspin
   USE ener,       ONLY : etxc, vtxc
   USE uspp_param, ONLY : upf
   USE fft_base,   ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
   USE gvect,      ONLY : ngm, igtongl, ngl, g, gg, gl
-  USE scf,        ONLY : rho, rho_core, rhog_core, rhoz_or_updw
+  USE scf,        ONLY : rho, rho_core, rhog_core
   USE wavefunctions,  ONLY: psic
   USE cgcom
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
   IMPLICIT NONE
@@ -49,13 +48,9 @@ SUBROUTINE dynmatcc(dyncc)
   ALLOCATE  ( dyncc1( 3,nat,3,nat))
   ALLOCATE  ( gc    ( dfftp%nnr, 3))
   ALLOCATE  ( rhocg( ngl))
-  !^
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL v_xc  (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   CALL fwfft ( 'Rho', vxc, dfftp )
   !
   dyncc1(:,:,:,:) = 0.d0

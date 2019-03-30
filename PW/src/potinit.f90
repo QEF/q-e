@@ -186,6 +186,7 @@ SUBROUTINE potinit()
   IF  ( dft_is_meta() ) THEN
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
+        ! ... to be verified for LSDA: rho is (tot,magn), rho_kin is (up,down)
         fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
         DO is = 1, nspin
            rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin

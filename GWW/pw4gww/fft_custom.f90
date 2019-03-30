@@ -173,10 +173,9 @@ CONTAINS
 !                         ngm, ngm_l, ngm_g, gcutm, ecutwfc
 !  USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
 !                         ngms, ngms_l, ngms_g, gcutms
-  USE mp,         ONLY : mp_sum, mp_max,mp_barrier
-  USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
+  USE mp,         ONLY : mp_sum, mp_max
+  USE mp_pools,   ONLY : intra_pool_comm, nproc_pool, me_pool, &
                          inter_pool_comm,root_pool
-  USE mp_world,   ONLY : world_comm, nproc
   USE stick_base
   USE fft_support, ONLY : good_fft_dimension
   USE fft_types,  ONLY :  fft_type_init
@@ -314,14 +313,13 @@ CONTAINS
 
 
 !  IF( use_task_groups ) THEN
-  IF(.false.) THEN !ATTENZIONE
     !
     !  Initialize task groups.
     !  Note that this call modify dffts adding task group data.
     !
-    CALL task_groups_init( fc%dfftt )
+!    CALL task_groups_init( fc%dfftt ) FIXME: nonexistent
     !
-  ENDIF
+!  ENDIF
 
 
 CONTAINS
@@ -371,8 +369,6 @@ SUBROUTINE initialize_fft_custom(fc)
   USE cell_base,          ONLY : at, bg,tpiba2,tpiba,omega,alat
   USE io_global,          ONLY : stdout
   use control_flags, ONLY : gamma_only
-  USE mp, ONLY : mp_barrier
-  USE mp_world, ONLY : world_comm
 
   implicit none
 
@@ -415,8 +411,6 @@ SUBROUTINE initialize_fft_custom_cell(fc)
   USE cell_base,          ONLY : at, bg,tpiba2,tpiba,omega,alat
   USE io_global,          ONLY : stdout
   use control_flags, ONLY : gamma_only
-  USE mp, ONLY : mp_barrier
-  USE mp_world, ONLY : world_comm
 
   implicit none
 

@@ -54,23 +54,30 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
   ! allocate work space 
   !
   ndm = MAXVAL ( msh(1:ntyp) )
-  ALLOCATE (aux(ndm))    
-  ALLOCATE (rhocgnt( ngl))    
-  rhocg(:,:) = (0.0_dp,0.0_dp)
-
+  ALLOCATE (rhocgnt( ngl))
+  !
+!$omp parallel private(aux, gx, rhoscale, angular)
+  !
+  call threaded_nowait_memset(rhocg, 0.0_dp, ngm*nspina*2)
+  !
+  ALLOCATE (aux(ndm))
+  !
   DO nt = 1, ntyp
      !
      ! Here we compute the G=0 term
      !
+!$omp master
      IF (gstart == 2) then
         DO ir = 1, msh (nt)
            aux (ir) = upf(nt)%rho_at (ir)
         ENDDO
         call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (1) )
      ENDIF
+!$omp end master
      !
      ! Here we compute the G<>0 term
      !
+!$omp do
      DO igl = gstart, ngl
         gx = sqrt (gl (igl) ) * tpiba
         DO ir = 1, msh (nt)
@@ -83,6 +90,7 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
         ENDDO
         CALL simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (igl) )
      ENDDO
+!$omp end do
      !
      ! we compute the 3D atomic charge in reciprocal space
      !
@@ -92,9 +100,13 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
         rhoscale = 1.0_dp
      ENDIF
      !
-     !^
-     rhocg(:,1) = rhocg(:,1) + &
-                strf(:,nt) * rhoscale * rhocgnt(igtongl(:)) / omega
+     !
+!$omp do
+     DO ig = 1, ngm
+        rhocg(ig,1) = rhocg(ig,1) + &
+                strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
+     ENDDO
+!$omp end do nowait
      !
      IF ( nspina >= 2 ) THEN
         !
@@ -106,17 +118,26 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
         ENDIF
         !
         DO is = 2, nspina
-           rhocg(:,is) =  rhocg(:,is) + &
+!$omp do
+           DO ig = 1, ngm
+              rhocg(ig,is) = rhocg(ig,is) + &
                             starting_magnetization(nt) * angular(is-1) * &
-                            strf(:,nt) * rhoscale * rhocgnt(igtongl(:)) / omega
+                            strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
+           ENDDO
+!$omp end do nowait
         ENDDO
         !
      ENDIF
+     ! must complete the computation of rhocg before updating rhocgnt
+     ! for the next type
+!$omp barrier
   ENDDO
 
-  DEALLOCATE (rhocgnt)
   DEALLOCATE (aux)
-  
+!$omp end parallel
+
+  DEALLOCATE (rhocgnt)
+
 END SUBROUTINE atomic_rho_g
 !
 !-----------------------------------------------------------------------

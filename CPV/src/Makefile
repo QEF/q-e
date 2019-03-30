@@ -119,7 +119,7 @@ QEFFT=../../FFTXlib/libqefft.a
 QELA=../../LAXlib/libqela.a
 UTIL=../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs
+TLDEPS= bindir libs mods
 
 all : tldeps libcp.a manycp.x cp.x wfdd.x #cppp.x
 

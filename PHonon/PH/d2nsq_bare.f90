@@ -24,7 +24,7 @@ SUBROUTINE doubleprojqq (na, vec1, vec2, vec3, vec4, npw1, npw2, dpqq)
    USE ions_base,   ONLY : ityp
    USE uspp,        ONLY : qq_nt
    USE wvfct,       ONLY : npwx, nbnd
-   USE mp_global,   ONLY : intra_pool_comm
+   USE mp_pools,    ONLY : intra_pool_comm
    USE mp,          ONLY : mp_sum
    USE control_lr,  ONLY : ofsbeta
    !
@@ -114,7 +114,7 @@ SUBROUTINE doubleprojqq2 (na, proj, vec3, vec4, npw2, dpqq)
    USE ions_base,  ONLY : ityp
    USE uspp,       ONLY : qq_nt
    USE wvfct,      ONLY : npwx, nbnd
-   USE mp_global,  ONLY : intra_pool_comm
+   USE mp_pools,   ONLY : intra_pool_comm
    USE mp,         ONLY : mp_sum
    USE control_lr, ONLY : ofsbeta
    !
@@ -184,7 +184,7 @@ END MODULE doubleprojqq_module
 !--------------------------------------------------------
 MODULE term_one_1_module
 !--------------------------------------------------------  
-  USE mp_global,  ONLY : intra_pool_comm       
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY:  mp_sum  
 !  
 CONTAINS
@@ -687,7 +687,7 @@ END MODULE term_one_module
 !-------------------------------------------------------------------------
 MODULE term_three_module
 !-------------------------------------------------------------------------
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum 
 !
 CONTAINS

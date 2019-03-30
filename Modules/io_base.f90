@@ -620,7 +620,7 @@ MODULE io_base
       CHARACTER(LEN=*), INTENT(IN) :: filename
       !! name of file read (to which a suffix is added)
       INTEGER,          INTENT(IN) :: root_in_group
-      !! root processor that reads and sirtibutes
+      !! root processor that reads and distributes
       INTEGER,          INTENT(IN) :: intra_group_comm
       !! rho(G) is distributed over this group of processors
       INTEGER,          INTENT(IN) :: ig_l2g(:)

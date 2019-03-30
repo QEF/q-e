@@ -28,6 +28,7 @@ SUBROUTINE stop_run()
   !
   CALL plugin_clean()
   !
+  CALL unset_mpi_comm_4_solvers ()
   CALL mp_global_end()
   !
 END SUBROUTINE stop_run

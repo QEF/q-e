@@ -14,9 +14,9 @@ PROGRAM do_bands
   ! 
   !
   USE io_files,  ONLY : prefix, tmp_dir
-  USE mp_global, ONLY : npool, nproc_pool, nproc_file, &
-                        nproc_pool_file, mp_startup
-  USE control_flags, ONLY : twfcollect, gamma_only
+  USE mp_global, ONLY : mp_startup
+  USE mp_pools,  ONLY : npool
+  USE control_flags, ONLY : gamma_only
   USE environment,   ONLY : environment_start, environment_end
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot, two_fermi_energies
@@ -24,7 +24,7 @@ PROGRAM do_bands
   USE lsda_mod,  ONLY : nspin
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE mp_images, ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -75,23 +75,23 @@ PROGRAM do_bands
   ENDIF
   !
   !
-  CALL mp_bcast( ios, ionode_id, world_comm )
+  CALL mp_bcast( ios, ionode_id, intra_image_comm )
   IF (ios /= 0) CALL errore ('bands', 'reading bands namelist', abs(ios) )
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast( filband, ionode_id, world_comm )
-  CALL mp_bcast( filp, ionode_id, world_comm )
-  CALL mp_bcast( spin_component, ionode_id, world_comm )
-  CALL mp_bcast( firstk, ionode_id, world_comm )
-  CALL mp_bcast( lastk, ionode_id, world_comm )
-  CALL mp_bcast( lp, ionode_id, world_comm )
-  CALL mp_bcast( lsym, ionode_id, world_comm )
-  CALL mp_bcast( lsigma, ionode_id, world_comm )
-  CALL mp_bcast( no_overlap, ionode_id, world_comm )
-  CALL mp_bcast( plot_2d, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( filband, ionode_id, intra_image_comm )
+  CALL mp_bcast( filp, ionode_id, intra_image_comm )
+  CALL mp_bcast( spin_component, ionode_id, intra_image_comm )
+  CALL mp_bcast( firstk, ionode_id, intra_image_comm )
+  CALL mp_bcast( lastk, ionode_id, intra_image_comm )
+  CALL mp_bcast( lp, ionode_id, intra_image_comm )
+  CALL mp_bcast( lsym, ionode_id, intra_image_comm )
+  CALL mp_bcast( lsigma, ionode_id, intra_image_comm )
+  CALL mp_bcast( no_overlap, ionode_id, intra_image_comm )
+  CALL mp_bcast( plot_2d, ionode_id, intra_image_comm )
 
   IF (plot_2d) THEN
      lsym=.false.
@@ -110,9 +110,6 @@ PROGRAM do_bands
   CALL read_file()
   !
   IF (gamma_only) CALL errore('bands','gamma_only case not implemented',1)
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('bands',&
-     'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('bands',&
      'The bands code with constrained magnetization has not been tested',1)
@@ -161,7 +158,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE wavefunctions, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
-  USE mp_world,             ONLY : world_comm
+  USE mp_images,            ONLY : intra_image_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, becp
 
@@ -206,7 +203,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id, world_comm )
+  CALL mp_bcast( ios, ionode_id, intra_image_comm )
   IF ( ios(0) /= 0 ) &
      CALL errore ('punch_band', 'Opening filband file', abs(ios(0)) )
   DO ipol=1,4
@@ -431,7 +428,7 @@ SUBROUTINE punch_band_2d(filband,spin_component)
    USE io_files, ONLY : iuntmp
    USE io_global, ONLY : ionode, ionode_id
    USE mp, ONLY : mp_bcast
-   USE mp_world, ONLY : world_comm
+   USE mp_images, ONLY : intra_image_comm
 
    IMPLICIT NONE
    CHARACTER(LEN=256),INTENT(IN) :: filband
@@ -495,7 +492,7 @@ loop_k:  DO j=start_k+2, nkstot
      filename=TRIM(filband) // '.' // TRIM(int_to_char(ibnd))
      IF (ionode) &
      open(unit=iuntmp,file=filename,status='unknown', err=100, iostat=ios)
-     CALL mp_bcast(ios,ionode_id, world_comm)
+     CALL mp_bcast(ios,ionode_id, intra_image_comm)
 100  CALL errore('punch_band_2d','Problem opening outputfile',ios)
      ijk=0
      DO i1=1,n1

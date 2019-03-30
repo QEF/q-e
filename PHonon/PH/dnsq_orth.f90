@@ -44,12 +44,11 @@ SUBROUTINE dnsq_orth()
   USE eqv,           ONLY : evq
   USE uspp,          ONLY : okvan, nkb, vkb
   USE control_flags, ONLY : iverbosity
-  USE mp_global,     ONLY : intra_pool_comm, inter_pool_comm
   USE mp,            ONLY : mp_sum, mp_bcast 
+  USE mp_pools,      ONLY : intra_pool_comm, inter_pool_comm
+  USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : seqopn 
   USE buffers,       ONLY : get_buffer
-  USE mp_world,      ONLY : world_comm
-  USE mp_images,     ONLY : intra_image_comm
   USE doubleprojqq_module
   !
   IMPLICIT NONE
@@ -117,10 +116,6 @@ SUBROUTINE dnsq_orth()
      CALL mp_bcast(ios,  ionode_id, world_comm)    
      IF (exst.and.ios==0) CALL mp_bcast(dnsorth_cart, ionode_id, world_comm)    
      !
-     ! IT: Is it needed to broadcast for intra_image_comm?
-     CALL mp_bcast(ios,  ionode_id, intra_image_comm)
-     IF (exst .AND. ios==0) CALL mp_bcast(dnsorth_cart, ionode_id, intra_image_comm)
-     ! 
   ENDIF
   ! 
   ! Compute dnsorth_cart (if it was not already done)

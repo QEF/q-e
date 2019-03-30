@@ -55,7 +55,7 @@ mode_group.o \
 mix_pot.o \
 lrcom.o
 
-TLDEPS=libfft mods
+TLDEPS=mods pwlibs
 
 all : liblrmod.a
 

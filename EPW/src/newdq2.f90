@@ -11,7 +11,7 @@
   ! Adapted from LR_Modules/newdq.f90 (QE)
   !
   !----------------------------------------------------------------------
-  SUBROUTINE newdq2( dvscf, npe )
+  SUBROUTINE newdq2( dvscf, npe, xq0, timerev )
   !----------------------------------------------------------------------
   !!
   !! This routine computes the contribution of the selfconsistent
@@ -32,15 +32,19 @@
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
   USE lrus,                 ONLY : int3
-  USE qpoint,               ONLY : xq, eigqts
+  USE qpoint,               ONLY : eigqts
   USE constants_epw,        ONLY : czero
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: npe
   !! Number of perturbations for this irr representation
-  COMPLEX(DP), INTENT(in) :: dvscf(dfftp%nnr, nspin_mag, npe)
+  REAL(kind=DP), INTENT(in) :: xq0(3)
+  !! The first q-point in the star (cartesian coords.)
+  COMPLEX(kind=DP), INTENT(in) :: dvscf(dfftp%nnr, nspin_mag, npe)
   !! Change of the selfconsistent potential
+  LOGICAL, INTENT(in) :: timerev
+  !!  true if we are using time reversal
   !
   !   Local variables
   !
@@ -61,16 +65,20 @@
   INTEGER :: jh
   !! Counter on beta functions
   !
-  REAL(DP), ALLOCATABLE :: qmod(:)
+  REAL(kind=DP), ALLOCATABLE :: qmod(:)
   !! the modulus of q+G
-  REAL(DP), ALLOCATABLE :: qg(:,:)
+  REAL(kind=DP), ALLOCATABLE :: qg(:,:)
   !! the values of q+G
-  REAL(DP), ALLOCATABLE :: ylmk0(:,:)
-  !! the spherical harmonics
+  REAL(kind=DP), ALLOCATABLE :: ylmk0(:,:)
+  !! the spherical harmonics at q+G
   !
-  COMPLEX(DP), EXTERNAL :: zdotc
+  COMPLEX(kind=DP), EXTERNAL :: zdotc
   !! the scalar product function
-  COMPLEX(DP), ALLOCATABLE :: aux1(:), aux2(:,:), veff(:), qgm(:)
+  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:), aux2(:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: qgm(:)
+  !! the augmentation function at G
+  COMPLEX(kind=DP), ALLOCATABLE :: veff(:)
+  !! effective potential
   !
   IF (.not.okvan) RETURN
   !
@@ -88,7 +96,7 @@
   !
   !    first compute the spherical harmonics
   !
-  CALL setqmod( ngm, xq, g, qmod, qg )
+  CALL setqmod( ngm, xq0, g, qmod, qg )
   CALL ylmr2( lmaxq * lmaxq, ngm, qg, qmod, ylmk0 )
   DO ig = 1, ngm
     qmod(ig) = sqrt( qmod(ig) )
@@ -102,19 +110,25 @@
     !
     DO is = 1, nspin_mag
       DO ir = 1, dfftp%nnr
-         veff(ir) = dvscf(ir,is,ipert)
+        IF (timerev) THEN
+          veff(ir) = conjg(dvscf(ir,is,ipert))
+        ELSE
+          veff(ir) = dvscf(ir,is,ipert)
+        ENDIF
       ENDDO
       CALL fwfft('Rho', veff, dfftp)
       DO ig = 1, ngm
-         aux2(ig,is) = veff( dfftp%nl(ig) )
+        aux2(ig,is) = veff( dfftp%nl(ig) )
       ENDDO
     ENDDO
     !
     DO nt = 1, ntyp
       IF (upf(nt)%tvanp ) THEN
+        !
         DO ih = 1, nh(nt)
           DO jh = ih, nh(nt)
             CALL qvan2( ngm, ih, jh, nt, qmod, qgm, ylmk0 )
+            !
             DO na = 1, nat
               IF (ityp(na) == nt) THEN
                 DO ig = 1, ngm
@@ -125,12 +139,14 @@
                 ENDDO
                 DO is = 1, nspin_mag
                   int3(ih,jh,na,is,ipert) = omega * &
-                                     zdotc(ngm,aux1,1,aux2(1,is),1)
+                                  zdotc(ngm,aux1,1,aux2(1,is),1)
                 ENDDO
               ENDIF
             ENDDO
-          ENDDO
-        ENDDO
+            !
+          ENDDO ! jh
+        ENDDO ! ih
+        ! 
         DO na = 1, nat
           IF (ityp(na) == nt) THEN
             !
@@ -143,23 +159,31 @@
                 ENDDO
               ENDDO
             ENDDO
-          ENDIF
-        ENDDO
-      ENDIF
-    ENDDO
-  ENDDO
+            !
+          ENDIF ! ityp
+        ENDDO ! na
+        !
+      ENDIF ! upf
+    ENDDO ! nt
+    !
+  ENDDO ! ipert
   !
   CALL mp_sum(int3, intra_pool_comm)
   !
   IF (noncolin) CALL set_int3_nc( npe )
   !
-  DEALLOCATE (aux1)
-  DEALLOCATE (aux2)
-  DEALLOCATE (veff)
-  DEALLOCATE (ylmk0)
-  DEALLOCATE (qgm)
-  DEALLOCATE (qmod)
-  DEALLOCATE (qg)
+!DMRM
+  !write(*,'(a,e20.12)') 'int3 = ', &
+  !SUM((REAL(REAL(int3(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int3(:,:,:,:,:))))**2)
+!END
+  !
+  DEALLOCATE(aux1)
+  DEALLOCATE(aux2)
+  DEALLOCATE(veff)
+  DEALLOCATE(ylmk0)
+  DEALLOCATE(qgm)
+  DEALLOCATE(qmod)
+  DEALLOCATE(qg)
   !
   CALL stop_clock('newdq2')
   !

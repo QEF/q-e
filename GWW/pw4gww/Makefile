@@ -52,7 +52,7 @@ PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS= pwlibs
+TLDEPS= phlibs
 
 all : tldeps pw4gww.x
 

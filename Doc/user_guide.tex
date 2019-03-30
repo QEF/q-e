@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.3}
+\def\version{6.4}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -25,6 +25,7 @@
 \def\PostProc{\texttt{PostProc}}
 \def\NEB{\texttt{PWneb}}
 \def\make{\texttt{make}}
+\def\libxc{\texttt{libxc}}
 
 \begin{document}
 \author{}
@@ -49,7 +50,8 @@ of \qe\ (opEn-Source Package for Research in Electronic Structure, Simulation,
 and Optimization), version \version.
 
 {\em Important notice: due to the lack of time and of manpower, this
-manual does not cover many important aspects, may contain outdated information.}
+  manual does not cover many important aspects and may contain outdated
+  information.}
 
 The \qe\ distribution contains the core packages \PWscf\ (Plane-Wave
 Self-Consistent Field) and \CP\ (Car-Parrinello) for the calculation
@@ -61,8 +63,9 @@ more specialized calculations:
   \item \NEB:
         energy barriers and reaction pathways through the Nudged Elastic Band
         (NEB) method.
-  \item \PHonon:
-        vibrational properties  with Density-Functional Perturbation Theory.
+      \item \PHonon:
+        vibrational properties  with Density-Functional Perturbation Theory
+        (DFPT).
   \item \PostProc:
         codes and utilities for data postprocessing.
   \item \texttt{PWcond}:
@@ -75,7 +78,8 @@ more specialized calculations:
   \item \texttt{GWL}: electronic excitations within the GW approximation
         and with the Bethe-Salpeter Equation      
   \item \texttt{EPW}: calculation of the electron-phonon coefficients
-        and related quantities.
+        and related quantities;
+  \item \texttt{HP}: calculation of Hubbard $U$ parameters using DFPT.
 \end{itemize}
 The following auxiliary packages are included as well:
 \begin{itemize}
@@ -156,19 +160,18 @@ All trademarks mentioned in this guide belong to their respective owners.
 
 The maintenance and further development of the \qe\ distribution
 is promoted by the \qe\ Foundation under the coordination of
-Paolo Giannozzi (Univ.Udine, Italy) with the strong support
+Paolo Giannozzi (Univ.Udine and IOM-CNR, Italy) and Pietro Delugas
+(SISSA Trieste) with the strong support
 of the CINECA National Supercomputing Center in Bologna under
 the responsibility of Carlo Cavazzoni.
 
 Contributors to \qe, beyond the authors of the papers
-mentioned in Sect.\ref{SubSec:Terms}, include:
+mentioned in Sec.\ref{SubSec:Terms}, include:
 \begin{itemize}
   \item Ye Luo (Argonne) for improved FFT threading and miscellaneous
-  contributions and optimization;
-  \item Pietro Bonf\`a (CINECA) for multiple contributions to optimization
-  and maintenance;
-  \item Hsin-Yu Ho and Marcos Calegari Andrade (U.Princeton) for SCAN
-  and other meta-GGA functionals with \texttt{libxc};
+  contributions and optimizations;
+  \item Pietro Bonf\`a (CINECA) for multiple contributions to optimization,
+  GPU version, and maintenance;
   \item Fabio Affinito (CINECA) for ELPA support, for contributions
   to the FFT library, and for various parallelization improvements;
   \item Sebastiano Caravati for direct support of GTH pseudopotentials
@@ -177,7 +180,7 @@ mentioned in Sect.\ref{SubSec:Terms}, include:
   \item Axel Kohlmeyer for libraries and utilities to call \qe\
   from external codes (see the \texttt{COUPLE} sub-directory), made the
   parallelization more modular and usable by external codes;
-  \item \`Eric Germaneau for TB09 meta-GGA functional, using \texttt{libxc};
+  \item \`Eric Germaneau for TB09 meta-GGA functional, using \libxc;
   \item Guido Roma (CEA Saclay) for  vdw-df-obk8  e vdw-df-ob86 functionals; 
   \item Yves Ferro (Univ. Provence) for SOGGA and M06L functionals; 
   \item Ikutaro Hamada (NIMS, Japan) for OPTB86B-vdW, REV-vdW-DF2
@@ -185,7 +188,7 @@ mentioned in Sect.\ref{SubSec:Terms}, include:
   \item Daniel Forrer (Padua Univ.) and Michele Pavone
   (Naples Univ. Federico II) for dispersions interaction in the
   framework of DFT-D;
-\item Filippo Spiga (University of Cambridge, UK) for mixed MPI-OpenMP
+  \item Filippo Spiga (University of Cambridge, UK) for mixed MPI-OpenMP
   parallelization and for the GPU-enabled version;
   \item Costas Bekas and Alessandro Curioni (IBM Zurich) for the initial
   BlueGene porting.
@@ -228,14 +231,18 @@ and usage of \qe, and to report problems, is the
 mailing list \texttt{users@lists.quantum-espresso.org}.
 Here you can obtain help from the developers and from
 knowledgeable users. You have to be subscribed (see the ``Contacts''
-section of the web site) in order to post to the  users'
-list. Please read the guidelines for posting, section \ref{SubSec:Guidelines}!
-NOTA BENE: only messages that appear to come from the
+section of the web site) in order to post to the  users' list.
+Please check your spam folder if you do not get a confirmation
+message when subscribing.
+
+Please read the guidelines for posting, section \ref{SubSec:Guidelines}!
+PLEASE NOTE: only messages that appear to come from the
 registered user's e-mail address, in its {\em exact form}, will be
-accepted. Messages "waiting for moderator approval" are
-automatically deleted with no further processing (sorry, too
-much spam). In case of trouble, carefully check that your return
+accepted. In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
+Please also note that since some time the correct functioning of mailing
+list is frequently disrupted by policy changes at large commercial
+providers. There is not much we can do about that.
 
 If you need to contact the developers for {\em specific} questions
 about coding, proposals, offers of help, etc., you may either post
@@ -265,9 +272,8 @@ complies with the following guidelines:
   because this is what came out of your 128-processor run. No need to
   send the entire compilation log for a single error appearing at the end.
 \item Do not post large attachments: point a linker to a place where the
-  attachment(s) can be downloaded from, such as e.g. DropBox, Google Docs, 
-  or one of the various web temporary storage spaces (e.g.: 
-  ExpireBox, File.Town, Uguu.se).
+  attachment(s) can be downloaded from, such as e.g. DropBox, GoogleDocs, 
+  or one of the various web temporary storage spaces.
 \item Avoid excessive or irrelevant quoting of previous messages. Your
   message must be immediately visible and easily readable, not hidden
   into a sea of quoted text.
@@ -304,7 +310,8 @@ Stable and development releases of the \qe\ source package
 packages, can be downloaded from the links listed in the
 ``Download'' section of \texttt{www.quantum-espresso.org}.
 
-Uncompress and unpack the base distribution using the command:
+Uncompress and unpack compressed archives in the typical .tar.gz
+format using the command:
 \begin{verbatim}
      tar zxvf qe-X.Y.Z.tar.gz
 \end{verbatim}
@@ -377,7 +384,8 @@ while others are specific to a single package:
 \texttt{PWCOND/}  & \texttt{PWcond}\ package\\
 \texttt{CPV/}     & \CP\ package\\
 \texttt{atomic/}  & \texttt{atomic} package\\
-\texttt{GUI/}     & \texttt{PWGui} package\
+\texttt{GUI/}     & \texttt{PWGui} package\\
+\texttt{HP/}      & \texttt{HP} package
 \end{tabular}
 
 Finally, directory \texttt{COUPLE/} contains code and documentation
@@ -407,9 +415,9 @@ and libraries are also required.
 
 As a rule, \qe\ tries to keep compatibility with older compilers,
 avoiding nonstandard extensions and newer features that
-are not widespread or stabilized. No warranty, however, if
-your compiler is older than $\sim 5$ years or so. The same applies to
-mathematical and MPI libraries.
+are not widespread or stabilized. If however your compiler is older 
+than $\sim 5$ years or so, it is unlikely to work. The same applies
+to mathematical and MPI libraries.
 
 Big machines with
 specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
@@ -464,14 +472,18 @@ Additional instructions for special machines:
 \texttt{install/config.log} & detailed log of the configuration run (useful for debugging)\\
 \texttt{include/c\_defs.h} &    a few definitions used by C files\\
 \texttt{include/configure.h} &  info on compilation flags (not used: in Modules/environment.f90\\
-&  uncomment \verb|#define __HAVE_CONFIG_INFO| to enable its usage)\\
-\end{tabular}\\
-NOTA BENE: \configure\ no longer updates dependencies. If you modify the
-sources, run \texttt{./install/makedeps.sh} or type \texttt{make depend}
-to update files \texttt{make.depend} in the various subdirectories.\\
+&  uncomment \verb|#define __HAVE_CONFIG_INFO| to enable its usage)\\ \end{tabular}\\
+NOTA BENE: \configure\ no longer updates files \texttt{make.depend},
+containing dependencies upon modules, in the various subdirectories.
+If you modify the sources, run \texttt{./install/makedeps.sh} or type
+\texttt{make depend} to update files \texttt{make.depend}.\\
 NOTA BENE 2: \texttt{make.inc} used to be called \texttt{make.sys}
 until v.6.0. The change of name is due to frequent problems with mailers
 assuming that whatever ends in \texttt{.sys} is a suspect virus.
+NOTA BENE 3: if you interrupt \make, it may fail when you start it again 
+later (this will happen for instance if \make\ is interrupted while unpacking
+and compiling the FoX library). If so, run \texttt{make clean} before
+running \make\ again.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
@@ -513,10 +525,10 @@ instructs \configure\ to use \texttt{mpif90} as Fortran compiler
 with flags \texttt{-O2 -assume byterecl}, \texttt{gcc} as C compiler with
 flags \texttt{-O3}, and to link with flag \texttt{-static}.
 Note that the value of \texttt{FFLAGS} must be quoted, because it contains
-spaces. NOTA BENE: do not pass compiler names with the leading path
-included. \texttt{F90=f90xyz} is ok, \texttt{F90=/path/to/f90xyz} is not.
-Do not use
-environment variables with \configure\ unless they are needed! try
+spaces. NOTA BENE: passing the complete path to compilers (e.g.,
+\texttt{F90=/path/to/f90xyz}) may lead to obscure errors during
+compilation. As a rule: do not define environment variables for
+\configure\ unless you need it. Always try
 \configure\ with no options as a first step.
 
 If your machine type is unknown to \configure, you may use the
@@ -524,8 +536,8 @@ If your machine type is unknown to \configure, you may use the
 variable to suggest an architecture among supported ones. Some large
 parallel machines using a front-end (e.g. Cray XT) will actually
 need it, or else \configure\ will correctly recognize the front-end
-but not the specialized compilation environment of those
-machines. In some cases, cross-compilation requires to specify the target machine with the
+but not the specialized compilation environment of those machines.
+In some cases, cross-compilation requires to specify the target machine with the
 \texttt{--host} option. This feature has not been extensively
 tested, but we had at least one successful report (compilation
 for NEC SX6 on a PC). Currently supported architectures are:
@@ -565,15 +577,19 @@ and the following optional packages:\\
 \begin{tabular}{ll}
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
-	\texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\&Set to \texttt{intel} to use Intel MPI and blacs (default: use OpenMPI)\\
-        \texttt{--with-elpa-include}&   Specify full path of ELPA include and modules headers 
-	                                (default: no)\\
-	\texttt{--with-elpa-lib}& Specify full path of the ELPA library
+\texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\
+      &Set to \texttt{intel} to use Intel MPI and blacs (default: use OpenMPI)\\
+\texttt{--with-elpa-include}&   Specify full path of ELPA include and modules
+  headers (default: no)\\
+\texttt{--with-elpa-lib}& Specify full path of the ELPA library
 	                          (default: no)\\
-	\texttt{--with-elpa-version}& Specify ELPA version, only year (2015 or 2016,
+\texttt{--with-elpa-version}& Specify ELPA version, only year (2015 or 2016,
 	                          default: 2016)\\
-	                          \texttt{--with-hdf5}&  (no $|$ \texttt{<path>}) Write portable binary files using HDF5.\\
-                                  & A valid \texttt{<path>} for HDF5 library must be specified (default: no)\\
+\texttt{--with-hdf5}&  (no $|$ \texttt{<path>}) Write portable binary files using HDF5.\\
+   & A valid \texttt{<path>} for HDF5 library must be specified (default: no)\\
+\texttt{--with-libxc}        & Link the \libxc\ library (default:no) \\
+\texttt{--with-libxc-prefix} & directory where \libxc\ is installed \\
+\texttt{--with-libxc-include}& directory where \libxc\ Fortran headers reside\\
 \end{tabular}\\
 \\
 The following options are available for the CUDA Fortran accelerated version
@@ -630,17 +646,18 @@ you use option \texttt{--save}.
 \subsection{Libraries}
 \label{Sec:Libraries}
 
-\qe\ makes use of the following external libraries:
+\qe\ contains a copy of some needed external libraries:
 \begin{itemize}
-\item BLAS (\texttt{http://www.netlib.org/blas/}) and
-\item LAPACK (\texttt{http://www.netlib.org/lapack/}) for linear algebra
-\item FFTW (\texttt{http://www.fftw.org/}) for Fast Fourier Transforms
+ \item iotk and FoX for reading and writing xml files;
+ \item BLAS (\texttt{http://www.netlib.org/blas/}) and LAPACK
+  (\texttt{http://www.netlib.org/lapack/}) for linear algebra;
+\item FFTW (\texttt{http://www.fftw.org/}) for Fast Fourier Transforms.
 \end{itemize}
-A copy of the needed routines is provided with the distribution. However,
-when available, optimized vendor-specific libraries should be used: this
-often yields huge performance gains.
+Optimized vendor-specific libraries often yield huge performance gains
+with respect to compiled libraries and should be used whenever
+possible. \configure\ always try to locate the best mathematical
+libraries.
 \\
-
 
 \paragraph{BLAS and LAPACK}
 \qe\ can use any architecture-optimized BLAS and LAPACK replacements,
@@ -722,12 +739,18 @@ It is possible to use a library with disabled parallelism,
 but one has to add manually the flag \texttt{-D\_\_HDF5\_SERIAL}
 to the \texttt{MANUAL\_DFLAGS} in the \texttt{make.inc} file. 
 
-
-
 The HDF5 packages provided by many LINUX distributions may also work,
 but the configure script fails if includes and libraries are not placed
 under the same root directory. In this case the user should manually set
 the correct paths in the \texttt{make.inc} file.
+
+\paragraph{LIBXC}
+\qe\ can use the \libxc\ library. You need to install \libxc\ first, then:
+\verb|configure --with-libxc --with-libxc-prefix=... --with-libxc-include=...|.
+You may look for "libxc" in \texttt{make.inc}  in case of trouble. Note that
+currently only a (small) subset of functionals implemented in \libxc\ can be
+used and that the \libxc-enabled version cannot use functionals from \qe.
+This will change in the future.
 
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
@@ -774,7 +797,8 @@ These values should work for the vast majority of cases. In case you need
 more atomic types or more k-points, edit this file and recompile.
 
 At your choice, you may compile the complete \qe\ suite of programs
-(with \texttt{make all}), or only some specific programs. \texttt{make} with no arguments yields a list of valid compilation targets:
+(with \texttt{make all}), or only some specific programs.
+\texttt{make} with no arguments yields a list of valid compilation targets:
 \begin{itemize}
 \item \texttt{make pw}  compiles the self-consistent-field package \PWscf
 \item \texttt{make cp}  compiles the Car-Parrinello package \CP
@@ -1072,8 +1096,8 @@ or read the man page of gfortran under the flag \texttt{-ff2c}.
 
 If your code crashes during a call to \texttt{zdotc},
 try to recompile \qe\ using the internal BLAS and LAPACK
-routines (using the \texttt{--with-internal-blas} and
-\texttt{--with-internal-lapack} parameters of the configure script)
+routines (using i\configure\ options \texttt{--with-internal-blas} and
+\texttt{--with-internal-lapack})
 to see if the problem disappears; or, add the \texttt{-ff2c} flag"
 (info by Giovanni Pizzi, Jan. 2013).
 
@@ -1087,7 +1111,7 @@ add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
 
 The Intel compiler ifort \texttt{http://software.intel.com/}
 produces fast executables, at least on Intel CPUs, but not all versions
-work as expected (see below). In case of trouble, update your version
+work as expected. In case of trouble, update your version
 with the most recent patches. Since each major release of ifort
 differs a lot from the previous one, compiled objects from different
 releases may be incompatible and should not be mixed.
@@ -1108,23 +1132,7 @@ The warning: {\em feupdateenv is not implemented and will always fail},
 can be safely ignored. Warnings on ``bad preprocessing option'' when compiling
 iotk and complains about ``recommended formats'' may also be ignored.
 
-The following compiler releases are known to give segmentation faults
-in at least some cases of compilation of \qe\ v.6.0:
-\begin{quote}
-12.0.0.084 Build 20101006\\
-12.0.1.107 Build 20101116\\
-12.0.2.137 Build 20110112\\
-12.0.4.191 Build 20110427\\
-12.0.5.220 Build 20110719\\
-16.0.1.150 Build 20151021
-\end{quote}
-(Filippo Spiga, Aug. 2016)
-
-{\bf ifort v.12}: release 12.0.0 miscompiles iotk, leading to
-mysterious errors when reading data files. Workaround: increase
-the parameter BLOCKSIZE to e.g. 131072*1024 when opening files in
-\texttt{iotk/src/iotk\_files.f90} (info by Lorenzo Paulatto,
-Nov. 2010). 
+Versions v.12 and earlier of ifort are no longer supported by QE v.\version.
 
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries
@@ -1215,14 +1223,14 @@ Another option is Cygwin, a UNIX environment which runs under Windows: see\\
 Finally, Windows-10 users may enable the Windows Subsystem for Linux
 (see here:\\
 \texttt{https://docs.microsoft.com/en-us/windows/wsl/install-win10}),
-install a Linux distribution, compile \qe\ as on Linux.
+install a Linux distribution, compile \qe\ as on Linux. It works very well.
 
 \subsubsection{Mac OS}
 
-Mac OS-X machines (10.4 and later) with Intel CPUs are supported
-by \configure, both with gfortran and with the Intel compiler ifort
-and MKL libraries.
-Parallel compilation with OpenMPI also works.
+Mac OS-X machines with gfortran or with the Intel compiler ifort
+and MKL libraries should work, but "your mileage may vary", depending
+upon the specific software stack you are using. Parallel compilation 
+with OpenMPI should also work. 
 
 Gfortran information and binaries for Mac OS-X here:
 \texttt{http://hpc.sourceforge.net/} and
@@ -1423,6 +1431,15 @@ that writes them to disk, in a single file,
 using a format that doesn't depend upon
 the number of processors or their distribution.
 This is the default since v.6.2 for final data.
+\item ``portable'': as above, but data can be 
+copied to and read from a different machines
+(this is not guaranteed with Fortran binary files).
+Requires compilation with \verb|-D__HDF5|
+preprocessing option and HDF% libraries.
+\end{itemize}
+There is a third format, no longer used for final
+data but used for scratch and restart files:
+\begin{itemize}
 \item ``distributed'': each processor
 writes its own slice to disk in its internal
 format to a different file.
@@ -1436,10 +1453,7 @@ processors (i.e., you cannot use local scratch
 directories: there is presently no way to ensure
 that the distribution of processes across
 processors will follow the same pattern
-for different jobs). The distributed format for
-final data requires compilation with \verb|-D__OLDXML|
-preprocessing option and will be removed
-in the next releases.
+for different jobs).
 \end{itemize}
 
 The directory for data is specified in input variables
@@ -1461,7 +1475,7 @@ and writes to it) but you may run into trouble anyway if you
 need to access your files that are scattered in an unpredictable
 way across disks residing on different nodes.
 
-You can use input variable \texttt{disk\_io} to reduce the the
+You can use input variable \texttt{disk\_io} to vary the
 amount of I/O done by \pwx. Since v.5.1, the dafault value is
 \texttt{disk\_io='low'}, so the code will store wavefunctions
 into RAM and not on disk during the calculation. Specify
@@ -1469,9 +1483,9 @@ into RAM and not on disk during the calculation. Specify
 and you run into trouble with memory; choose \texttt{disk\_io='none'}
 if you do not need to keep final data files.
 
-For very large \cpx\ runs, you may consider using
-\texttt{wf\_collect=.false.}, \texttt{memory='small'} and
-\texttt{saverho=.false.} to reduce I/O to the strict minimum.
+% For very large \cpx\ runs, you may consider using
+% \texttt{wf\_collect=.false.}, \texttt{memory='small'} and
+% \texttt{saverho=.false.} to reduce I/O to the strict minimum.
 
 \subsection{Tricks and problems}
 \label{SubSec:badpara}

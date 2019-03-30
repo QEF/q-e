@@ -33,7 +33,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE lsda_mod,         ONLY : nspin, lsda
   USE ener,             ONLY : ehart
   USE io_global,        ONLY : stdout, ionode
-  USE scf,              ONLY : rho, vltot, v, rhoz_or_updw
+  USE scf,              ONLY : rho, vltot, v
   USE wvfct,            ONLY : nbnd, wg
   USE gvecw,            ONLY : ecutwfc
   USE noncollin_module, ONLY : noncolin
@@ -232,13 +232,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
      ! code partially duplicate from plot_num=0, should be unified
      CALL init_us_1()
-     !^
-       IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
-     !^
+     !
      CALL PAW_make_ae_charge(rho,(plot_num==21))
-     !^
-       IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-     !^
      !
      raux(:) = rho%of_r(:, 1)
      IF ( lsda ) THEN
