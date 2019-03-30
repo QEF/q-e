@@ -121,6 +121,7 @@ sum_band_gpu.o : symme.o
 sum_band_gpu.o : us_exx.o
 tetra.o : pwcom_gpu.o
 usnldiag_gpu.o : pwcom.o
+utils_gpu.o : pwcom_gpu.o
 vloc_psi_gpu.o : pwcom.o
 wannier_enrg.o : pwcom_gpu.o
 wannier_proj.o : pwcom_gpu.o
