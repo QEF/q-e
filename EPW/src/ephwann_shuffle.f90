@@ -1472,6 +1472,13 @@
           !
       ENDDO
       CLOSE(lambda_phself)
+      ! 
+      ! SP - 03/2019 
+      ! \Gamma = 1/\tau = phonon lifetime 
+      ! \Gamma = - 2 * Im \Pi^R where \Pi^R is the retarted phonon self-energy. 
+      ! Im \Pi^R = pi*k-point weight*[f(E_k+q) - f(E_k)]*delta[E_k+q - E_k - w_q]
+      ! Since gamma_all = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q] we have
+      ! \Gamma = 2 * gamma_all
       OPEN(unit=linewidth_phself,file='linewidth.phself')
       WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
       WRITE(linewidth_phself,'(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
@@ -1479,7 +1486,7 @@
         !
         DO imode=1, nmodes
           WRITE(linewidth_phself,'(i9,i6,E20.8,E22.10)') iqq,imode,&
-                                 ryd2mev*wf(imode,iqq),ryd2mev*REAL(gamma_all(imode,iqq,1))
+                                 ryd2mev*wf(imode,iqq), 2.0d0 * ryd2mev * REAL(gamma_all(imode,iqq,1))
         ENDDO
         !
       ENDDO
