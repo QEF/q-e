@@ -14,7 +14,6 @@ add_shift_lc.o \
 add_shift_us.o \
 atomic_wfc_nc_proj.o \
 benchmark_libxc.o \
-cft.o \
 chdens_module.o \
 chdens_bspline.o \
 compute_ppsi.o \
