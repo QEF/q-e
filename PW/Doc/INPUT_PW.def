@@ -62,6 +62,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         if (not automatic)
            nks
            xk_x, xk_y, xk_z,  wk
+        if (tpipa_b or crystal_b in a 'bands' calculation) see Doc/brillouin_zones.pdf
 
         [ @b CELL_PARAMETERS { alat | bohr | angstrom }
            v1(1) v1(2) v1(3)
@@ -389,10 +390,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 If finite electric field is applied (@ref lelfield==.true.) only Kubo terms are computed 
                 [for details see New J. Phys. 12, 053032 (2010), doi:10.1088/1367-2630/12/5/053032].
 
-		The type of calculation is @b 'nscf' and should be performed on an automatically
-		generated uniform grid of k points.
+                The type of calculation is @b 'nscf' and should be performed on an automatically
+                generated uniform grid of k points.
 
-		Works ONLY with norm-conserving pseudopotentials.
+                Works ONLY with norm-conserving pseudopotentials.
             }
         }
 
@@ -479,7 +480,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 see below for the other parameters.
                 For ibrav=0 specify the lattice vectors in @ref CELL_PARAMETERS,
                 optionally the lattice parameter alat = celldm(1) (in a.u.) 
-                or = A (in Angstrom), or else it is taken from @ref CELL_PARAMETERS 
+                or = A (in Angstrom). If not specified, the lattice parameter is
+                taken from @ref CELL_PARAMETERS 
+                IMPORTANT NOTICE 1: 
+                ibrav=0 should not be used for symmetric crystals or for phonon calculations 
+                IMPORTANT NOTICE 2: 
+                do not use celldm(1) or A as a.u. to Ang conversion factor, 
+                use the true lattice parameters or nothing, 
+                specify units in @ref CELL_PARAMETERS and @ref ATOMIC_POSITIONS
  
               ibrav      structure                   celldm(2)-celldm(6)
                                                    or: b,c,cosbc,cosac,cosab 
@@ -884,13 +892,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Well suited for calculation of DOS, 
                     less so (because not variational) for
                     force/optimization/dynamics calculations.
-		}
-		opt -val 'tetrahedra_lin' {
+                }
+                opt -val 'tetrahedra_lin' {
                     Original linear tetrahedron method.
                     To be used only as a reference;
                     the optimized tetrahedron method is more efficient.
                 }
-		opt -val 'tetrahedra_opt' {
+                opt -val 'tetrahedra_opt' {
                     Optimized tetrahedron method:
                     see M. Kawamura, PRB 89, 094515 (2014).
                     Can be used for phonon calculations as well.
@@ -1032,7 +1040,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 is greater than "ecfixed". In the kinetic energy, G^2 is
                 replaced by G^2 + qcutz * (1 + erf ( (G^2 - ecfixed)/q2sigma) )
                 See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995),
-		doi:10.1016/0022-3697(94)00228-2
+                doi:10.1016/0022-3697(94)00228-2
             }
         }
         
@@ -1060,7 +1068,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 screening_parameter for HSE like hybrid functionals. 
                 For more information, see:
-		J. Chem. Phys. 118, 8207 (2003), doi:10.1063/1.1564060
+                J. Chem. Phys. 118, 8207 (2003), doi:10.1063/1.1564060
                 J. Chem. Phys. 124, 219906 (2006), doi:10.1063/1.2204597
             }
         }
@@ -1101,7 +1109,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 divergencies at small q vectors.
             }
         }
-	
+        
         vargroup -type INTEGER {
             var nqx1
             var nqx2
@@ -1115,6 +1123,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 In QE =< 5.0.2 it defaulted to nqx1=nqx2=nqx3=1.
             }
         }
+
+        var localization_thr -type REAL {
+                default {0.0 } 
+                info {  
+                       Overlap threshold over which the exchange integral over a pair of localized orbitals 
+                       is included in the evaluation of EXX operator. Any value greater than 0.0 triggers 
+                       the SCDM localization and the evaluation on EXX using the localized orbitals.
+                       Very small value of the threshold should yield the same result as the default EXX 
+                       evaluation } 
+        } 
 
         var lda_plus_u -type LOGICAL { 
             default { .FALSE. }
@@ -1292,7 +1310,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
     
-	dimension angle1 -start 1 -end ntyp -type REAL {
+        dimension angle1 -start 1 -end ntyp -type REAL {
             info {
                 The angle expressed in degrees between the initial
                 magnetization and the z-axis. For noncollinear calculations
@@ -1309,11 +1327,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         var lforcet -type LOGICAL {
-		info { When starting a non collinear calculation using an existing density
-		       file from a collinear lsda calculation assumes previous density points in 
-		       z direction and rotates is in the direction described by @ref angle1 and 
-		       @ref angle2 variables for atomic type 1} 
-	} 
+            info {
+                When starting a non collinear calculation using an existing density
+                file from a collinear lsda calculation assumes previous density points in 
+                @i z direction and rotates it in the direction described by @ref angle1 and 
+                @ref angle2 variables for atomic type 1
+            } 
+        } 
 
         var constrained_magnetization -type CHARACTER { 
             see { lambda, fixed_magnetization }
@@ -1439,7 +1459,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     "A reciprocal space based method for treating long
                     range interactions in ab-initio and force-field-based
                     calculation in clusters", J. Chem. Phys. 110, 2810 (1999),
-		    doi:10.1063/1.477923.
+                    doi:10.1063/1.477923.
                 }
 
                 opt -val 'esm' {
@@ -1456,7 +1476,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     of charged surfaces and interfaces: A plane-wave 
                     nonrepeated slab approach", PRB 73, 115407 (2006).
 
-		    NB:
+                    NB:
                        - Two dimensional (xy plane) average charge density
                          and electrostatic potentials are printed out to
                          'prefix.esm1'.                  
@@ -1491,7 +1511,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     perturbation theory for gated two-dimensional heterostructures:
                     Theoretical developments and application to flexural phonons in graphene.
                     Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
-            NB:
+                    
+                    NB:
                        - The length of the unit-cell along the z direction should
                          be larger than twice the thickness of the 2D material 
                          (including electrons). A reasonable estimate for a 
@@ -1590,7 +1611,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                  opt -val {'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3' } {
                      Semiempirical Grimme's DFT-D3. Optional variables:
                      @ref dftd3_version, @ref dftd3_threebody
-                     S. Grimme et al, J. Chem. Phys 132, 154104 (2010)
+                     S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1002/jcc.20495
                  }
 
                  opt -val {'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler'} {
@@ -1604,7 +1625,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                      Exchange-hole dipole-moment model. Optional variables: @ref xdm_a1, @ref xdm_a2
                      A. D. Becke et al., J. Chem. Phys. 127, 154108 (2007), doi:10.1063/1.2795701
                      A. Otero de la Roza et al., J. Chem. Phys. 136, 174109 (2012),
-		     doi:10.1063/1.4705760
+                     doi:10.1063/1.4705760
                  }
                  info { Note that non-local functionals (eg vdw-DF) are NOT specified here but in @ref input_dft }
              }
@@ -1629,7 +1650,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                atomic C6 coefficient of each atom type
 
                ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006),
-		 doi:10.1002/jcc.20495 are used; see file Modules/mm_dispersion.f90 )
+                 doi:10.1002/jcc.20495 are used; see file Modules/mm_dispersion.f90 )
            }
          }
          dimension london_rvdw -type REAL -start 1 -end ntyp {
@@ -1638,7 +1659,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                atomic vdw radii of each atom type
 
                ( if not specified default values from S. Grimme, J. Comp. Chem. 27, 1787 (2006),
-		 doi:10.1002/jcc.20495 are used; see file Modules/mm_dispersion.f90 )
+                 doi:10.1002/jcc.20495 are used; see file Modules/mm_dispersion.f90 )
            }
          }
          var london_rcut -type REAL {
@@ -1648,16 +1669,31 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            }
          }
          var dftd3_version -type integer {
-           default { 3 }
-           info {
-               Version of Grimme implementation of Grimme-D3:
-                  Version=2 is the original Grimme-D2 parametrization
-                  Version=3 is Grimme-D3 (zero damping) 
-                  Version=4 is Grimme-D3 (BJ damping) 
-                  Version=5 is Grimme-D3M (zero damping) 
-                  Version=6 is Grimme-D3M (BJ damping)
-               NOTE: not all functionals are parametrized.
-           }
+             default { 3 }
+             options {
+                 info {
+                     Version of Grimme implementation of Grimme-D3:
+                 }
+                 opt -val {dftd3_version = 2} {
+                     Original Grimme-D2 parametrization
+                 }
+                 opt -val {dftd3_version = 3} {
+                     Grimme-D3 (zero damping)
+                 }
+                 opt -val {dftd3_version = 4} {
+                     Grimme-D3 (BJ damping)
+                 }
+                 opt -val {dftd3_version = 5} {
+                     Grimme-D3M (zero damping)
+                 }
+                 opt -val {dftd3_version = 6} {
+                     Grimme-D3M (BJ damping)
+                 }
+                 
+                 info {
+                     NOTE: not all functionals are parametrized.
+                 }
+             }
          }
          var dftd3_threebody -type LOGICAL {
            default { TRUE }
@@ -1694,22 +1730,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            default { 0.6836 }
            info {
                Damping function parameter a1 (adimensional). It is NOT necessary to give
-	       a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
+               a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
                in this list, the coefficients are given in:
                   http://schooner.chem.dal.ca/wiki/XDM
-	          A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
-	          doi:10.1063/1.4705760
+                  A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
+                  doi:10.1063/1.4705760
            }
          }
          var xdm_a2 -type REAL {
            default { 1.5045 }
            info {
                Damping function parameter a2 (angstrom). It is NOT necessary to give
-	       a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
+               a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
                in this list, the coefficients are given in:
                   http://schooner.chem.dal.ca/wiki/XDM
-	          A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
-	          doi:10.1063/1.4705760
+                  A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
+                  doi:10.1063/1.4705760
            }
          }
 
@@ -1760,72 +1796,72 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          }
     
         group {
-	    label { variables used only if @ref gate = .TRUE. }
+            label { variables used only if @ref gate = .TRUE. }
 
-	    var zgate -type REAL {
-		default { 0.5 }
-		info {
-		    used only if @ref gate = .TRUE.
-		    Specifies the position of the charged plate which represents
-		    the counter charge in doped systems (@ref tot_charge .ne. 0).
-		    In units of the unit cell length in @i z direction, @ref zgate in ]0,1[
+            var zgate -type REAL {
+                default { 0.5 }
+                info {
+                    used only if @ref gate = .TRUE.
+                    Specifies the position of the charged plate which represents
+                    the counter charge in doped systems (@ref tot_charge .ne. 0).
+                    In units of the unit cell length in @i z direction, @ref zgate in ]0,1[
                     Details of the gate potential can be found in
                     T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
-		}
-	    }
-
-	    var relaxz -type LOGICAL {
-		default { .FALSE. }
-		info {
-		    used only if @ref gate = .TRUE.
-		    Allows the relaxation of the system towards the charged plate.
-		    Use carefully and utilize either a layer of fixed atoms or a
-		    potential barrier (@ref block=.TRUE.) to avoid the atoms moving to
-		    the position of the plate or the dipole of the dipole
-		    correction (@ref dipfield=.TRUE.).
-		}
-	    }
-
-	    var block -type LOGICAL {
-		default { .FALSE. }
-		info {
-		    used only if @ref gate = .TRUE.
-		    Adds a potential barrier to the total potential seen by the
-		    electrons to mimic a dielectric in field effect configuration
-		    and/or to avoid electrons spilling into the vacuum region for
-		    electron doping. Potential barrier is from @ref block_1 to @ref block_2 and
-		    has a height of block_height.
-		    If @ref dipfield = .TRUE. then @ref eopreg is used for a smooth increase and
-		    decrease of the potential barrier.
-		}
-	    }
-
-	    var block_1 -type REAL {
-		default { 0.45 }
-		info {
-		    used only if @ref gate = .TRUE. and @ref block = .TRUE.
-		    lower beginning of the potential barrier, in units of the
-		    unit cell size along @i z, @ref block_1 in ]0,1[
-		}
-	    }
-
-	    var block_2 -type REAL {
-		default { 0.55 }
-		info {
-		    used only if @ref gate = .TRUE. and @ref block = .TRUE.
-		    upper beginning of the potential barrier, in units of the
-		    unit cell size along @i z, @ref block_2 in ]0,1[
                 }
-	    }
+            }
 
-	    var block_height -type REAL {
-		default { 0.1 }
-		info {
-		    used only if @ref gate = .TRUE. and @ref block = .TRUE.
-		    Height of the potential barrier in Rydberg.
-		}
-	    }
-	}
+            var relaxz -type LOGICAL {
+                default { .FALSE. }
+                info {
+                    used only if @ref gate = .TRUE.
+                    Allows the relaxation of the system towards the charged plate.
+                    Use carefully and utilize either a layer of fixed atoms or a
+                    potential barrier (@ref block=.TRUE.) to avoid the atoms moving to
+                    the position of the plate or the dipole of the dipole
+                    correction (@ref dipfield=.TRUE.).
+                }
+            }
+
+            var block -type LOGICAL {
+                default { .FALSE. }
+                info {
+                    used only if @ref gate = .TRUE.
+                    Adds a potential barrier to the total potential seen by the
+                    electrons to mimic a dielectric in field effect configuration
+                    and/or to avoid electrons spilling into the vacuum region for
+                    electron doping. Potential barrier is from @ref block_1 to @ref block_2 and
+                    has a height of block_height.
+                    If @ref dipfield = .TRUE. then @ref eopreg is used for a smooth increase and
+                    decrease of the potential barrier.
+                }
+            }
+
+            var block_1 -type REAL {
+                default { 0.45 }
+                info {
+                    used only if @ref gate = .TRUE. and @ref block = .TRUE.
+                    lower beginning of the potential barrier, in units of the
+                    unit cell size along @i z, @ref block_1 in ]0,1[
+                }
+            }
+
+            var block_2 -type REAL {
+                default { 0.55 }
+                info {
+                    used only if @ref gate = .TRUE. and @ref block = .TRUE.
+                    upper beginning of the potential barrier, in units of the
+                    unit cell size along @i z, @ref block_2 in ]0,1[
+                }
+            }
+
+            var block_height -type REAL {
+                default { 0.1 }
+                info {
+                    used only if @ref gate = .TRUE. and @ref block = .TRUE.
+                    Height of the potential barrier in Rydberg.
+                }
+            }
+        }
 
     }
 
@@ -2101,7 +2137,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 If .true., use a real-space algorithm for augmentation
                 charges of ultrasoft pseudopotentials and PAWsets.
                 Faster but numerically less accurate than the default
-		G-space algorithm. Use with care and after testing!
+                G-space algorithm. Use with care and after testing!
             }
         }
 
@@ -2109,10 +2145,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             default { .FALSE. }
             info {
                 If .true., exploit real-space localization to compute
-		matrix elements for nonlocal projectors. Faster and in
-		principle better scaling than the default G-space algorithm,
+                matrix elements for nonlocal projectors. Faster and in
+                principle better scaling than the default G-space algorithm,
                 but numerically less accurate, may lead to some loss of
-		translational invariance. Use with care and after testing!
+                translational invariance. Use with care and after testing!
             }
         }
     }
@@ -2128,67 +2164,67 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
     
         var ion_dynamics -type CHARACTER {
-	    options {
-		info {
-		    Specify the type of ionic dynamics.
-		    
-		    For different type of calculation different possibilities are
-		    allowed and different default values apply:
-		    
-		    @b CASE ( @ref calculation == 'relax' )
-		}
-		opt -val 'bfgs' {
-		    @b (default)  use BFGS quasi-newton algorithm,
-		    based on the trust radius procedure,
-		    for structural relaxation
-		}
-		opt -val 'damp' {
-		    use damped (quick-min Verlet)
-		    dynamics for structural relaxation
-		    Can be used for constrained 
-		    optimisation: see @ref CONSTRAINTS card
-		}		
-		info {
-		    @b CASE ( @ref calculation == 'md' )
-		}
-		opt -val 'verlet' {
-		    @b (default)  use Verlet algorithm to integrate
-		    Newton's equation. For constrained 
-		    dynamics, see @ref CONSTRAINTS card
-		}
-		opt -val 'langevin' {
-		    ion dynamics is over-damped Langevin
+            options {
+                info {
+                    Specify the type of ionic dynamics.
+                    
+                    For different type of calculation different possibilities are
+                    allowed and different default values apply:
+                    
+                    @b CASE ( @ref calculation == 'relax' )
+                }
+                opt -val 'bfgs' {
+                    @b (default)  use BFGS quasi-newton algorithm,
+                    based on the trust radius procedure,
+                    for structural relaxation
+                }
+                opt -val 'damp' {
+                    use damped (quick-min Verlet)
+                    dynamics for structural relaxation
+                    Can be used for constrained 
+                    optimisation: see @ref CONSTRAINTS card
+                }               
+                info {
+                    @b CASE ( @ref calculation == 'md' )
+                }
+                opt -val 'verlet' {
+                    @b (default)  use Verlet algorithm to integrate
+                    Newton's equation. For constrained 
+                    dynamics, see @ref CONSTRAINTS card
+                }
+                opt -val 'langevin' {
+                    ion dynamics is over-damped Langevin
                 }
                 opt -val 'langevin-smc' {
                     over-damped Langevin with Smart Monte Carlo:
                     see R.J. Rossky, JCP, 69, 4628 (1978), doi:10.1063/1.436415
-		}
-		info {
-		    @b CASE ( @ref calculation == 'vc-relax' )
-		}
-		opt -val 'bfgs' {
-		    @b (default)  use BFGS quasi-newton algorithm;
-		    cell_dynamics must be 'bfgs' too
-		}
-		opt -val 'damp' {
-		    use damped (Beeman) dynamics for
-		    structural relaxation
-		}
+                }
                 info {
-		    @b CASE ( @ref calculation == 'vc-md' )
-		}
-		opt -val 'beeman' {
-		    @b (default)  use Beeman algorithm to integrate
-		    Newton's equation
-		}
+                    @b CASE ( @ref calculation == 'vc-relax' )
+                }
+                opt -val 'bfgs' {
+                    @b (default)  use BFGS quasi-newton algorithm;
+                    cell_dynamics must be 'bfgs' too
+                }
+                opt -val 'damp' {
+                    use damped (Beeman) dynamics for
+                    structural relaxation
+                }
+                info {
+                    @b CASE ( @ref calculation == 'vc-md' )
+                }
+                opt -val 'beeman' {
+                    @b (default)  use Beeman algorithm to integrate
+                    Newton's equation
+                }
             }
         }
 
         var ion_positions -type CHARACTER {
             default { 'default' }
             options {
-		info { Available options are: }
-		
+                info { Available options are: }
+                
                 opt -val 'default' {
                     if restarting, use atomic positions read from the
                     restart file; in all other cases, use atomic
@@ -2277,8 +2313,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             var ion_temperature -type CHARACTER {
                 default { 'not_controlled' }
                 options {
-		    info { Available options are: }
-		    
+                    info { Available options are: }
+                    
                     opt -val 'rescaling' {
                         control ionic temperature via velocity rescaling
                         (first method) see parameters @ref tempw, @ref tolp, and
@@ -2462,36 +2498,36 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
 
         var cell_dynamics -type CHARACTER {
-	    options {
-		info {
-		    Specify the type of dynamics for the cell.
-		    For different type of calculation different possibilities
-		    are allowed and different default values apply:
+            options {
+                info {
+                    Specify the type of dynamics for the cell.
+                    For different type of calculation different possibilities
+                    are allowed and different default values apply:
 
-		    @b CASE ( @ref calculation == 'vc-relax' )
-		}
-		opt -val 'none' { no dynamics }
-		opt -val 'sd'   { steepest descent ( not implemented ) }
-		opt -val 'damp-pr' {
-		    damped (Beeman) dynamics of the Parrinello-Rahman extended lagrangian
-		}
-		opt -val 'damp-w' {
-		    damped (Beeman) dynamics of the new Wentzcovitch extended lagrangian
-		}
-		opt -val 'bfgs' {
-		    BFGS quasi-newton algorithm @b (default)
-		    @ref ion_dynamics must be @b 'bfgs' too
-		}
-		info {
-		    @b CASE ( @ref calculation == 'vc-md' )
-		}
-		opt -val 'none' { no dynamics }
-		opt -val 'pr' {
-		    (Beeman) molecular dynamics of the Parrinello-Rahman extended lagrangian
-		}
-		opt -val 'w' {
-		    (Beeman) molecular dynamics of the new Wentzcovitch extended lagrangian
-		}
+                    @b CASE ( @ref calculation == 'vc-relax' )
+                }
+                opt -val 'none' { no dynamics }
+                opt -val 'sd'   { steepest descent ( not implemented ) }
+                opt -val 'damp-pr' {
+                    damped (Beeman) dynamics of the Parrinello-Rahman extended lagrangian
+                }
+                opt -val 'damp-w' {
+                    damped (Beeman) dynamics of the new Wentzcovitch extended lagrangian
+                }
+                opt -val 'bfgs' {
+                    BFGS quasi-newton algorithm @b (default)
+                    @ref ion_dynamics must be @b 'bfgs' too
+                }
+                info {
+                    @b CASE ( @ref calculation == 'vc-md' )
+                }
+                opt -val 'none' { no dynamics }
+                opt -val 'pr' {
+                    (Beeman) molecular dynamics of the Parrinello-Rahman extended lagrangian
+                }
+                opt -val 'w' {
+                    (Beeman) molecular dynamics of the new Wentzcovitch extended lagrangian
+                }
             }
         }       
 
@@ -2533,10 +2569,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         
         var cell_dofree -type CHARACTER { 
             default { 'all' }
-	    options {
-		info {
-		    Select which of the cell parameters should be moved:
-		}                
+            options {
+                info {
+                    Select which of the cell parameters should be moved:
+                }                
                 opt -val 'all'          { all axis and angles are moved }
                 opt -val 'ibrav'        { all axis and angles are moved, but the lattice but be representable with the initial ibrav choice }
                 opt -val 'x'            { only the x component of axis 1 (v1_x) is moved }
@@ -2553,11 +2589,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 opt -val 'epitaxial_ab' {fix axis 1 and 2 while allowing axis 3 to move }
                 opt -val 'epitaxial_ac' {fix axis 1 and 3 while allowing axis 2 to move }
                 opt -val 'epitaxial_bc' {fix axis 2 and 3 while allowing axis 1 to move }
-		info {
-		    BEWARE: if axis are not orthogonal, some of these options do not
-		            work (symmetry is broken). If you are not happy with them, 
-		            edit subroutine init_dofree in file Modules/cell_base.f90
-		}
+                info {
+                    BEWARE: if axis are not orthogonal, some of these options do not
+                            work (symmetry is broken). If you are not happy with them, 
+                            edit subroutine init_dofree in file Modules/cell_base.f90
+                }
             }
         }
     }
@@ -2791,7 +2827,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val tpiba_b {
                     Used for band-structure plots.
-                    k-points are in units of  2 pi/a. 
+                    See Doc/brillouin_zones.pdf for usage of BZ labels;
+                    otherwise, k-points are in units of  2 pi/a. 
                     nks points specify nks-1 lines in reciprocal space.
                     Every couple of points identifies the initial and
                     final point of a line. pw.x generates N intermediate
@@ -2800,6 +2837,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val crystal_b {
                     As tpiba_b, but k-points are in crystal coordinates.
+                    See Doc/brillouin_zones.pdf for usage of BZ labels.
                 }
 
                 opt -val tpiba_c {
@@ -2904,7 +2942,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 @b 'alat' / nothing specified:
                                      lattice vectors in units of the lattice parameter (either
                                      @ref celldm(1) or @ref A). Not specifying units is DEPRECATED
-		                     and will not be allowed in the future.
+                                     and will not be allowed in the future.
 
                 If neither unit nor lattice parameter are specified,
                 'bohr' is assumed - DEPRECATED, will no longer be allowed
@@ -2964,43 +3002,43 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             table constraints_table {
                 rows -start 1 -end nconstr {
                     col constr_type -type CHARACTER {
-			options {
+                        options {
                             info {
                                 Type of constraint :
                             }
                             opt -val 'type_coord' {
-				constraint on global coordination-number, i.e. the
-				average number of atoms of type B surrounding the
-				atoms of type A. The coordination is defined by
-				using a Fermi-Dirac.
-				(four indexes must be specified).
-			    }
+                                constraint on global coordination-number, i.e. the
+                                average number of atoms of type B surrounding the
+                                atoms of type A. The coordination is defined by
+                                using a Fermi-Dirac.
+                                (four indexes must be specified).
+                            }
                             opt -val 'atom_coord' {
-				constraint on local coordination-number, i.e. the
-				average number of atoms of type A surrounding a
-				specific atom. The coordination is defined by
-				using a Fermi-Dirac.
-				(four indexes must be specified).
-			    }
+                                constraint on local coordination-number, i.e. the
+                                average number of atoms of type A surrounding a
+                                specific atom. The coordination is defined by
+                                using a Fermi-Dirac.
+                                (four indexes must be specified).
+                            }
                             opt -val 'distance' {
-				constraint on interatomic distance 
-				(two atom indexes must be specified).
-			    }
+                                constraint on interatomic distance 
+                                (two atom indexes must be specified).
+                            }
                             opt -val 'planar_angle' {
-				constraint on planar angle 
-				(three atom indexes must be specified).
-			    }
+                                constraint on planar angle 
+                                (three atom indexes must be specified).
+                            }
                             opt -val 'torsional_angle' {
-				constraint on torsional angle 
-				(four atom indexes must be specified).
-			    }
+                                constraint on torsional angle 
+                                (four atom indexes must be specified).
+                            }
                             opt -val 'bennett_proj' {
-				constraint on the projection onto a given direction
-				of the vector defined by the position of one atom
-				minus the center of mass of the others.
-				G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010),
-				doi:10.1016/j.jnucmat.2010.06.001
-			    }
+                                constraint on the projection onto a given direction
+                                of the vector defined by the position of one atom
+                                minus the center of mass of the others.
+                                G. Roma, J.P. Crocombette: J. Nucl. Mater. 403, 32 (2010),
+                                doi:10.1016/j.jnucmat.2010.06.001
+                            }
                         }                       
                     }
                     colgroup {
@@ -3014,27 +3052,27 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                             These variables have different meanings for different constraint types:
 
                             @b 'type_coord' :
-			                   @i constr(1) is the first index of the atomic type involved
+                                           @i constr(1) is the first index of the atomic type involved
                                            @i constr(2) is the second index of the atomic type involved
                                            @i constr(3) is the cut-off radius for estimating the coordination
                                            @i constr(4) is a smoothing parameter
 
                             @b 'atom_coord' :
-			                   @i constr(1) is the atom index of the atom with constrained coordination
+                                           @i constr(1) is the atom index of the atom with constrained coordination
                                            @i constr(2) is the index of the atomic type involved in the coordination
                                            @i constr(3) is the cut-off radius for estimating the coordination
                                            @i constr(4) is a smoothing parameter
 
                             @b 'distance' :
-			                   atoms indices object of the constraint, as they appear in
+                                           atoms indices object of the constraint, as they appear in
                                            the @ref ATOMIC_POSITIONS card
 
                             @b 'planar_angle', @b 'torsional_angle' :
-			                   atoms indices object of the constraint, as they appear in the
-			                   @ref ATOMIC_POSITIONS card (beware the order)
+                                           atoms indices object of the constraint, as they appear in the
+                                           @ref ATOMIC_POSITIONS card (beware the order)
 
                             @b 'bennett_proj' :
-			                   @i constr(1) is the index of the atom whose position is constrained.
+                                           @i constr(1) is the index of the atom whose position is constrained.
                                            @i constr(2:4) are the three coordinates of the vector that specifies
                                            the constraint direction.
                         }

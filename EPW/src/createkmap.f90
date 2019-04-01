@@ -645,8 +645,6 @@
   !   every processor has just a chunk of the array, I may need some
   !   communication)
   !
-  !   No ultrasoft now
-  !
   !   I use the rule : if not found then gmap = 0 
   !   Note that the map will be used only up to npwx (small sphere), 
   !   while the G-vectors lost in the process are on the surface of 

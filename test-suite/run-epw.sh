@@ -58,6 +58,17 @@ then
   fi
   echo "Gather results in save" 
   python ../../EPW/bin/pp.py < pp.in
+elif [[ "$1" == "5" ]]
+then
+  echo "Removing restart files ..."
+  echo "Running EPW ..."
+  rm *.Fin_restart1 *.Fin_restartcb1 restart_ibte.fmt
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
 fi
 
 #rm -f input_tmp.in

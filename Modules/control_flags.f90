@@ -39,7 +39,7 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint, trescalee 
+            tfirst, tlast, tprint, trescalee, max_xml_steps  
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -97,6 +97,7 @@ MODULE control_flags
   INTEGER :: ndr    = 0 !
   INTEGER :: nomore = 0 !
   INTEGER :: iprint =10 ! print output every iprint step
+  INTEGER  :: max_xml_steps =0 ! max number of dynamics included in xml file if 0 all steps are included. 
   INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
   !
   ! ... .TRUE. if only gamma point is used

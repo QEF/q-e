@@ -14,6 +14,8 @@
 ! please send bugs and comments to 
 ! Jonathan Yates and Arash Mostofi
 ! Takashi Koretsune and Florian Thoele -- noncollinear and USPPs
+! Valerio Vitale - Selected columns of density matrix (SCDM)
+!
 !
 ! NOTE: old_spinor_proj is still available for compatibility with old
 !       nnkp files but should be removed soon.
@@ -50,7 +52,7 @@ module wannier
    ! end change Lopez, Thonhauser, Souza
    ! vv: Begin SCDM keywords
                             scdm_proj
-   integer               :: scdm_entanglement
+   character(LEN=15)     :: scdm_entanglement
    real(DP)              :: scdm_mu, scdm_sigma
    ! vv: End SCDM keywords
    ! run check for regular mesh
@@ -122,7 +124,10 @@ PROGRAM pw2wannier90
        write_dmn, read_sym, & !YN:
        write_uIu, spn_formatted, uHu_formatted, uIu_formatted,& !ivo
    ! end change Lopez, Thonhauser, Souza
-       regular_mesh !gresch
+       regular_mesh,& !gresch
+   ! begin change Vitale
+       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
+   ! end change Vitale
   !
   ! initialise environment
   !
@@ -168,6 +173,10 @@ PROGRAM pw2wannier90
      write_unkg= .false.
      write_dmn = .false. !YN:
      read_sym  = .false. !YN:
+     scdm_proj = .false.
+     scdm_entanglement = 'isolated'
+     scdm_mu = 0.0_dp
+     scdm_sigma = 1.0_dp
      !
      !     reading the namelist inputpp
      !
@@ -204,6 +213,10 @@ PROGRAM pw2wannier90
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
   CALL mp_bcast(write_dmn,ionode_id, world_comm)
   CALL mp_bcast(read_sym,ionode_id, world_comm)
+  CALL mp_bcast(scdm_proj,ionode_id, world_comm)
+  CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
+  CALL mp_bcast(scdm_mu,ionode_id, world_comm)
+  CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -219,6 +232,21 @@ PROGRAM pw2wannier90
   !
   IF (noncolin.and.gamma_only) CALL errore('pw2wannier90',&
        'Non-collinear and gamma_only not implemented',1)
+  IF (noncolin.and.scdm_proj) CALL errore('pw2wannier90',&
+       'Non-collinear and SCDM not implemented',1)
+  IF (gamma_only.and.scdm_proj) CALL errore('pw2wannier90',&
+       'Gamma_only and SCDM not implemented',1)
+  IF (scdm_proj) then
+    IF ((trim(scdm_entanglement) /= 'isolated') .AND. &
+        (trim(scdm_entanglement) /= 'erfc') .AND. &
+        (trim(scdm_entanglement) /= 'gaussian')) then
+        call errore('pw2wannier90', &
+             'Can not recognize the choice for scdm_entanglement. ' &
+                    //'Valid options are: isolated, erfc and gaussian')
+    ENDIF
+  ENDIF
+  IF (scdm_sigma <= 0._dp) &
+    call errore('pw2wannier90','Sigma in the SCDM method must be positive.')
   !
   SELECT CASE ( trim( spin_component ) )
   CASE ( 'up' )
@@ -762,8 +790,7 @@ SUBROUTINE read_nnkp
   INTEGER, ALLOCATABLE :: ig_check(:,:)
   real(DP) :: xx(3), xnorm, znorm, coseno
   LOGICAL :: have_nnkp,found
-  ! vv: tmp integer for reading in SCDM info 
-  INTEGER :: scdm_proj_tmp 
+  INTEGER :: tmp_auto ! vv: Needed for the selection of projections with SCDM
 
   IF (ionode) THEN  ! Read nnkp file on ionode only
 
@@ -895,7 +922,7 @@ SUBROUTINE read_nnkp
 
   IF(old_spinor_proj)THEN
   WRITE(stdout,'(//," ****** begin WARNING ****** ",/)') 
-  WRITE(stdout,'(" The pw.x calculation wa done with non-collinear spin ")') 
+  WRITE(stdout,'(" The pw.x calculation was done with non-collinear spin ")') 
   WRITE(stdout,'(" but spinor = T was not specified in the wannier90 .win file!")') 
   WRITE(stdout,'(" Please set spinor = T and rerun wannier90.x -pp  ")') 
 !  WRITE(stdout,'(/," If you are trying to reuse an old nnkp file, you can remove  ")') 
@@ -912,16 +939,12 @@ SUBROUTINE read_nnkp
      n_wannier=n_proj
   ENDIF
 
-
-
   ALLOCATE( center_w(3,n_proj), alpha_w(n_proj), gf(npwx,n_proj), &
        l_w(n_proj), mr_w(n_proj), r_w(n_proj), &
        zaxis(3,n_proj), xaxis(3,n_proj), csph(16,n_proj) )
   if(noncolin.and..not.old_spinor_proj) then
      ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) ) 
   endif
-
-  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
 
   IF (ionode) THEN   ! read from ionode only
      DO iw=1,n_proj
@@ -951,9 +974,41 @@ SUBROUTINE read_nnkp
      ENDDO
   ENDIF
 
-  WRITE(stdout,*) ' - All guiding functions are given '
+  ! automatic projections
+  IF (ionode) THEN
+     CALL scan_file_to('auto_projections',found)
+     IF (found) THEN
+        READ (iun_nnkp, *) n_wannier
+        READ (iun_nnkp, *) tmp_auto
+
+        IF (scdm_proj) THEN
+           IF (n_proj > 0) THEN
+              WRITE(stdout,'(//, " ****** begin Error message ******",/)')
+              WRITE(stdout,'(/," Found a projection block, an auto_projections block",/)')
+              WRITE(stdout,'(/," and scdm_proj = T in the input file. These three options are inconsistent.",/)') 
+              WRITE(stdout,'(/," Please refer to the Wannier90 User guide for correct use of these flags.",/)')
+              WRITE(stdout,'(/, " ****** end Error message ******",//)')
+              CALL errore( 'pw2wannier90', 'Inconsistent options for projections.', 1 )
+           ELSE
+              IF (tmp_auto /= 0) CALL errore( 'pw2wannier90', 'Second entry in auto_projections block is not 0. ' // &
+              'See Wannier90 User Guide in the auto_projections section for clarifications.', 1 )
+           ENDIF
+        ELSE
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = F but found an auto_projections block in '&
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ELSE
+        IF (scdm_proj) THEN
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = T but cannot find an auto_projections block in '& 
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ENDIF
+  ENDIF
 
   ! Broadcast
+  CALL mp_bcast(n_wannier,ionode_id, world_comm)
   CALL mp_bcast(center_w,ionode_id, world_comm)
   CALL mp_bcast(l_w,ionode_id, world_comm)
   CALL mp_bcast(mr_w,ionode_id, world_comm)
@@ -965,6 +1020,10 @@ SUBROUTINE read_nnkp
      CALL mp_bcast(spin_eig,ionode_id, world_comm)
      CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
   end if
+
+  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
+
+  IF (.not. scdm_proj) WRITE(stdout,*) ' - All guiding functions are given '
   !
   WRITE(stdout,*)
   WRITE(stdout,*) 'Projections:'
@@ -972,40 +1031,6 @@ SUBROUTINE read_nnkp
      WRITE(stdout,'(3f12.6,3i3,f12.6)') &
           center_w(1:3,iw),l_w(iw),mr_w(iw),r_w(iw),alpha_w(iw)
   ENDDO
-
-  ! vv: Read SCDM block
-  scdm_proj_tmp = 0
-  scdm_proj = .false.
-  scdm_entanglement = 0
-  scdm_mu = 0.0_DP
-  scdm_sigma = 1.0_DP
-  IF (ionode) THEN
-     CALL scan_file_to('scdm_info',found)
-     !IF(.NOT. found) THEN
-     !   CALL errore( 'pw2wannier90', 'Could not find scdm info block in'&
-     !        &//trim(seedname)//'.nnkp',1)
-     !ENDIF
-     IF (found) THEN
-        READ (iun_nnkp,*) scdm_proj_tmp
-        IF(scdm_proj_tmp==1) THEN
-           scdm_proj = .true. 
-           READ (iun_nnkp,*) n_wannier
-           READ (iun_nnkp,*) scdm_entanglement
-           READ (iun_nnkp,*) scdm_mu, scdm_sigma
-        ENDIF
-     ENDIF
-  ENDIF
-
-  ! vv: Broadcast
-  CALL mp_bcast(n_wannier,ionode_id, world_comm)
-  CALL mp_bcast(scdm_proj,ionode_id, world_comm)
-  CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
-  CALL mp_bcast(scdm_mu,ionode_id, world_comm)
-  CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
-
-  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
-
-  WRITE(stdout,*) ' - All guiding functions are given '
 
   IF (ionode) THEN   ! read from ionode only
      CALL scan_file_to('nnkpts',found)
@@ -3280,6 +3305,15 @@ SUBROUTINE compute_amn_with_scdm
    ALLOCATE(psic_all(nxxs) )
 #endif
 
+   ! vv: Write info about SCDM in output
+   IF (TRIM(scdm_entanglement) == 'isolated') THEN
+      WRITE(stdout,'(1x,a,a/)') 'Case  : ',trim(scdm_entanglement)
+   ELSEIF (TRIM(scdm_entanglement) == 'erfc' .OR. &
+        TRIM(scdm_entanglement) == 'gaussian') THEN
+      WRITE(stdout,'(1x,a,a)') 'Case  : ',trim(scdm_entanglement)
+      WRITE(stdout,'(1x,a,f10.3,a/,1x,a,f10.3,a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
+   ENDIF
+
    CALL start_clock( 'compute_amn' )
 
    any_uspp =any (upf(1:ntyp)%tvanp)
@@ -3302,7 +3336,7 @@ SUBROUTINE compute_amn_with_scdm
    !     1)For the QR decomposition 
    !     2)For the unk's on the real grid
    !     3)For the SVD 
-   IF(scdm_entanglement==0) THEN
+   IF(TRIM(scdm_entanglement) == 'isolated') THEN
       numbands=n_wannier
       nbtot=n_wannier + nexband
    ELSE 
@@ -3346,10 +3380,10 @@ SUBROUTINE compute_amn_with_scdm
    !
    IF (wan_mode=='standalone') THEN
       CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime
+      header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
          WRITE (iun_amn,*) header
-         WRITE (iun_amn,*) numbands,  iknum, n_wannier
+         WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
       ENDIF
    ENDIF
 
@@ -3378,11 +3412,11 @@ SUBROUTINE compute_amn_with_scdm
       locibnd = locibnd + 1
       ! check locibnd <= numbands
       IF (locibnd > numbands) call errore('compute_amn','Something wrong with the number of bands. Check exclude_bands.')
-      IF(scdm_entanglement == 0) THEN
+      IF(TRIM(scdm_entanglement) == 'isolated') THEN
          f_gamma = 1.0_DP
-      ELSEIF (scdm_entanglement == 1) THEN
+      ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
          f_gamma = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
-      ELSEIF (scdm_entanglement == 2) THEN
+      ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
          f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
       ELSE
          call errore('compute_amn','scdm_entanglement value not recognized.',1)
@@ -3477,11 +3511,11 @@ SUBROUTINE compute_amn_with_scdm
          IF (excluded_band(ibnd)) CYCLE
          locibnd = locibnd + 1
          ! vv: Define the occupation numbers matrix according to scdm_entanglement
-         IF(scdm_entanglement == 0) THEN
+         IF(TRIM(scdm_entanglement) == 'isolated') THEN
             focc(locibnd) = 1.0_DP
-         ELSEIF (scdm_entanglement == 1) THEN
+         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
             focc(locibnd) = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
-         ELSEIF (scdm_entanglement == 2) THEN
+         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
             focc(locibnd) = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
          ELSE
             call errore('compute_amn','scdm_entanglement value not recognized.',1)
@@ -4440,7 +4474,9 @@ SUBROUTINE wan2sic
   USE klist, ONLY : nkstot, xk, wk, ngk
   USE wannier
 
-  INTEGER :: npw, i, j, nn, ik, ibnd, iw, ikevc
+  IMPLICIT NONE
+
+  INTEGER :: i, j, nn, ik, ibnd, iw, ikevc, npw
   COMPLEX(DP), ALLOCATABLE :: orbital(:,:), u_matrix(:,:,:)
   INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
 
@@ -4917,5 +4953,3 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
-
-

@@ -1,4 +1,24 @@
-New in development version:
+New in 6.4.1 branch :
+  * A warning is issued if the lattice parameter seems to be a conversion factor instead
+    of a true lattice parameter. Conversion should be achieved with the appropriate options,
+    not with dirty tricks. In the future this will no longer be allowed
+  * A warning is issued if ibrav=0 is used for systems having symmetry. Symmetry information
+    should be used in input if available. In the future symmetries will be disabled for ibrav=0
+
+Problems fixed in 6.4.1 branch :
+  * Two bugs fixed in HP: 1) the code was not working correctly when fractional
+    translations were present, 2) there was a bug in the case when either there is only
+    one k point, or when k pools are used and some of the pools have only one k point.
+  * Restart of ph.x with 2D boundary conditions has been fixed (see gitlab issue #102)
+  * XML file correctly written if tetrahedra are used (see gitlab issue #103)
+
+New in version 6.4:
+  * Experimental version of SCDM localization with k-points, activated like for
+    k=0 by specifying in &system namelist a value > 0 for "localization_thr".
+  * It is now possible to limit the number of xml step elements printed out
+    for relaxation or molecular dynamics simulation, by setting the environment
+    variable MAX_XML_STEPS. Useful in case of very long trajectories to avoid 
+    issues due to too large file size.  
   * EPW works with ultrasoft pseudopotentials (F. Giustino, S. Poncé, R. Margine)
   * New code hp.x to compute Hubbard parameters using density-functional
     perturbation theory (experimental stage) (I. Timrov, N. Marzari, and M. Cococcioni, 
@@ -10,7 +30,9 @@ New in development version:
     and M. Cococcioni, in preparation)
   * XDM now works also for USPP and norm-conserving PP
 
-Problems fixed in development version (+ = in qe-6.3-backports as well) :
+Problems fixed in version 6.4 (+ = in qe-6.3-backports as well) :
+  + Codes reading scf data recomputed celldm parameters also if ibrav=0
+    This produced confusing output and had the potential to break some codes
   + index not correctly initialized in LSDA phonon with core corrections 
   + GTH pseudopotentials in analytical form wrongly computed in some cases
   + projwfc.x not working with new xml format in noncolinear/spinorbit case 
@@ -31,7 +53,7 @@ Problems fixed in development version (+ = in qe-6.3-backports as well) :
     pseudopotentials was not working.
   + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
-Incompatible changes in development version:
+Incompatible changes in version 6.4 version:
   * Charge density in the LSDA case is stored as (up+down, up-down) and no longer 
     as (up,down). Output data format is unchanged to (up+down, up-down)
   * Non-symmorphic operations are always allowed and the FFT grid is made
@@ -47,8 +69,10 @@ Incompatible changes in development version:
     variables of turbo_lanczos.x and turbo_davidson.x. Instead, they are read 
     from the XML file produced by pw.x. The variable real_space_debug was removed.
 
-Known problems in development version:
+Known problems in version 6.4:
   * Frequent "dexx is negative" errors with hybrid functionals
+  * restart of ph.x when using 2D boundary conditions fails see issue#102 on gitLab 
+  * the band_structure element is printed incompletely if tetrahedra are used for sums in the IBZ, see issue #103.  
 
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Seitz 

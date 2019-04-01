@@ -24,7 +24,7 @@ MODULE loc_scdm_k
   IMPLICIT NONE
   SAVE
   REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Three=2.0d0
-  integer :: n_scdm
+  integer :: n_scdm = 1
 
  CONTAINS
   !
