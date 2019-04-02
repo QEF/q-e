@@ -2074,8 +2074,8 @@
     USE io_epw,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : fsthick
-    USE eliashbergcom, ONLY : estemp, Agap, nkfs, nbndfs, ef0, ekfs
-    USE constants_epw, ONLY : kelvin2eV, zero
+    USE eliashbergcom, ONLY : estemp, Agap, nkfs, nbndfs, ef0, ekfs, w0g
+    USE constants_epw, ONLY : kelvin2eV, zero, eps5
     !
     IMPLICIT NONE
     !
@@ -2099,8 +2099,6 @@
     !! Step size in nbin
     REAL(DP) :: delta_max
     !! Max value of superconducting gap
-    REAL(DP) :: sigma
-    !! Variable for smearing
     REAL(DP) :: weight
     !! Variable for weight
     REAL(DP), ALLOCATABLE :: delta_k_bin(:)
@@ -2110,8 +2108,8 @@
     !
     temp = estemp(itemp) / kelvin2eV
     !
-    delta_max = 1.25d0 * maxval(Agap(:,:,itemp))
-    nbin = int(delta_max/(0.005d0/1000.d0))
+    delta_max = 1.1d0 * maxval(Agap(:,:,itemp))
+    nbin = NINT(delta_max / eps5) + 1
     dbin = delta_max / dble(nbin)
     IF ( .not. ALLOCATED(delta_k_bin) ) ALLOCATE( delta_k_bin(nbin) )
     delta_k_bin(:) = zero
@@ -2119,11 +2117,9 @@
     DO ik = 1, nkfs
        DO ibnd = 1, nbndfs
           IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
-             DO ibin = 1, nbin
-                sigma = 1.d0 * dbin
-                weight = w0gauss( ( Agap(ibnd,ik,itemp) - dble(ibin) * dbin) / sigma, 0 ) / sigma
-                delta_k_bin(ibin) = delta_k_bin(ibin) + weight
-             ENDDO
+            ibin = nint( Agap(ibnd,ik,itemp) / dbin ) + 1
+            weight = w0g(ibnd,ik)
+            delta_k_bin(ibin) = delta_k_bin(ibin) + weight
           ENDIF
        ENDDO
     ENDDO
