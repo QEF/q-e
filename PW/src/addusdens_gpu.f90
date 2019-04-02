@@ -76,7 +76,8 @@ SUBROUTINE addusdens_g_gpu(rho)
   ! \sum_kv <\psi_kv|\beta_l><beta_m|\psi_kv> for each species of atoms
   REAL(DP), POINTER :: qmod_d (:), ylmk0_d (:,:)
   ! modulus of G, spherical harmonics
-  COMPLEX(DP), POINTER :: skk_d(:,:), aux2_d(:,:)
+  COMPLEX(DP), POINTER :: skk_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux2_d(:,:)
   ! structure factors, US contribution to rho
   COMPLEX(DP), POINTER ::  aux_d (:,:), qgm_d(:)
   COMPLEX(DP), POINTER ::  aux_h (:,:)
@@ -139,7 +140,7 @@ SUBROUTINE addusdens_g_gpu(rho)
         !ALLOCATE ( skk_d(ngm_l,nab), tbecsum_d(nij,nab,nspin_mag), aux2_d(ngm_l,nij) )
         CALL dev_buf%lock_buffer(skk_d, (/ ngm_l,nab /), ierr)
         CALL dev_buf%lock_buffer(tbecsum_d, (/ nij,nab,nspin_mag /), ierr )
-        CALL dev_buf%lock_buffer(aux2_d, (/ ngm_l,nij /), ierr )
+        ALLOCATE( aux2_d(ngm_l,nij) )  ! CALL dev_buf%lock_buffer(aux2_d, (/ ngm_l,nij /), ierr )
         !
         nb = 0
         DO na = 1, nat
@@ -183,7 +184,7 @@ SUBROUTINE addusdens_g_gpu(rho)
         !DEALLOCATE (aux2_d, tbecsum_d, skk_d )
         CALL dev_buf%release_buffer(skk_d, ierr)
         CALL dev_buf%release_buffer(tbecsum_d, ierr)
-        CALL dev_buf%release_buffer(aux2_d, ierr)
+        DEALLOCATE (aux2_d) !CALL dev_buf%release_buffer(aux2_d, ierr)
      ENDIF
   ENDDO
   !
