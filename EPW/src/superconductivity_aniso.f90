@@ -1423,7 +1423,7 @@
                               degaussw, nkf1, nkf2, nkf3
     USE eliashbergcom, ONLY : nkfs, nbndfs, g2, ixkqf, ixqfs, nqfs, w0g, ekfs, ef0, dosef, wsph, &
                               wkfs, dwsph, a2f_iso, ixkff
-    USE constants_epw, ONLY : ryd2ev
+    USE constants_epw, ONLY : ryd2ev, eps2, zero, eps16
     USE io_global,     ONLY : ionode_id
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
     USE mp_world,      ONLY : mpime
@@ -1599,23 +1599,25 @@
     IF ( ALLOCATED(a2f) )            DEALLOCATE( a2f )
     IF ( ALLOCATED(a2f_modeproj) )   DEALLOCATE( a2f_modeproj )
     !
-    nbink = int( 1.25d0 * maxval(lambda_k(:,:)) / 0.005d0 )
-    dbink = 1.25d0 * maxval(lambda_k(:,:)) / dble(nbink)
+    nbink = NINT( 1.1d0 * MAXVAL(lambda_k(:,:)) / eps2 ) + 1 
+    dbink = 1.1d0 * MAXVAL(lambda_k(:,:)) / DBLE(nbink) 
+    !
     IF ( .not. ALLOCATED(lambda_k_bin) ) ALLOCATE ( lambda_k_bin(nbink) )
-    lambda_k_bin(:) = 0.d0
+    lambda_k_bin(:) = zero
     !
     !SP : Should be initialized
     nbin = 0
-    dbin = 0.0_DP
+    dbin = zero
     !
     IF ( iverbosity == 2 ) THEN
-       nbin = int( 1.25d0 * maxval(lambda_max(:)) / 0.005d0 )
-       dbin = 1.25d0 * maxval(lambda_max(:)) / dble(nbin)
-       IF ( .not. ALLOCATED(lambda_pairs) ) ALLOCATE ( lambda_pairs(nbin) )
-       lambda_pairs(:) = 0.d0
+      nbin = nint( 1.1d0 * MAXVAL(lambda_max(:)) / eps2 ) + 1
+      dbin = 1.1d0 * MAXVAL(lambda_max(:)) / dble(nbin)
+      IF ( .not. ALLOCATED(lambda_pairs) ) ALLOCATE ( lambda_pairs(nbin) )
+      lambda_pairs(:) = zero
     ENDIF
     ! 
-    WRITE(stdout,'(5x,a13,f21.7,a18,f21.7)') 'lambda_max = ', maxval(lambda_max(:)), '   lambda_k_max = ', maxval(lambda_k(:,:))
+    WRITE(stdout,'(5x,a13,f21.7,a18,f21.7)') 'lambda_max = ', maxval(lambda_max(:)), & 
+                                        '   lambda_k_max = ', maxval(lambda_k(:,:))
     WRITE(stdout,'(a)') ' '
     !
     lambda_k(:,:) = 0.d0
@@ -1631,20 +1633,16 @@
                       CALL lambdar_aniso_ver1( ik, iq, ibnd, jbnd, 0.d0, lambda_eph )
                       lambda_k(ik,ibnd) = lambda_k(ik,ibnd) +  weight * lambda_eph
                       IF ( iverbosity == 2 ) THEN
-                         DO ibin = 1, nbin
-                            sigma = 1.d0 * dbin
-                            weight = w0gauss( ( lambda_eph - dble(ibin) * dbin ) / sigma, 0 ) / sigma
-                            lambda_pairs(ibin) = lambda_pairs(ibin) + weight
-                         ENDDO
+                        ibin = NINT( lambda_eph / dbin ) + 1
+                        weight =  w0g(ibnd,ik) * w0g(jbnd,ixkqf(ik,iq0))
+                        lambda_pairs(ibin) = lambda_pairs(ibin) + weight
                       ENDIF
                    ENDIF
                 ENDDO ! jbnd
              ENDDO ! iq
-             DO ibin = 1, nbink
-                sigma = 1.d0 * dbink
-                weight = w0gauss( ( lambda_k(ik,ibnd) - dble(ibin) * dbink ) / sigma, 0 ) / sigma
-                lambda_k_bin(ibin) = lambda_k_bin(ibin) + weight
-             ENDDO
+             ibin = NINT( lambda_k(ik,ibnd) / dbink ) + 1
+             weight = w0g(ibnd,ik)
+             lambda_k_bin(ibin) = lambda_k_bin(ibin) + weight
           ENDIF
        ENDDO ! ibnd
     ENDDO ! ik
@@ -1676,7 +1674,7 @@
       OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_k_pairs", form = 'formatted')
       WRITE(iufillambda,'(a12,a30)') '# lambda_nk','  \rho(lambda_nk) scaled to 1'
       DO ibin = 1, nbink
-        WRITE(iufillambda,'(2f21.7)') dbink*dble(ibin), lambda_k_bin(ibin)/maxval(lambda_k_bin(:))
+        WRITE(iufillambda,'(2f21.7)') dbink*dble(ibin), lambda_k_bin(ibin)/MAXVAL(lambda_k_bin(:))
       ENDDO
       CLOSE(iufillambda)
       !
@@ -1761,9 +1759,4 @@
     !
     END SUBROUTINE evaluate_a2f_lambda
     ! 
-
-
-
-
-    !
   END MODULE superconductivity_aniso
