@@ -3587,7 +3587,7 @@ end subroutine tau_xc_array_spin
 
         if (rup.gt.eps.and.sup.gt.eps) then
            drup = min (1.d-4, 1.d-2 * rup)
-           dsup = min (1.d-4, 1.d-2 * sdw)
+           dsup = min (1.d-4, 1.d-2 * sup)
            !
            !    derivatives of exchange: up part
            !
