@@ -35,6 +35,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   ! ... Modified Broyden's method for charge density mixing
   ! ...         D.D. Johnson PRB 38, 12807 (1988)
+  ! ... Thomas-Fermi preconditioning described in
+  ! ...         Raczkowski, Canning, Wang, PRB 64,121101 (2001)
   ! ... Extended to mix also quantities needed for PAW, meta-GGA, DFT+U,
   ! ... electric field (all these are included into mix_type)
   ! ... On output: the mixed density is in rhoin
