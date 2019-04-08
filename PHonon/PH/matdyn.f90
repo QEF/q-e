@@ -2553,7 +2553,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
   IF (.NOT.time_reversal) minus_q=.FALSE.
 
   sym(1:nsym)=.true.
-  call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_q)
+  call smallg_q (xq, 0, at, bg, nsym, s, sym, minus_q)
   nsymq=copy_sym(nsym,sym )
   call s_axis_to_cart ()
   CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)

@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE gmap_sym( nsym, s, ftau, gmapsym, eigv, invs )
+  SUBROUTINE gmap_sym( nsym, s, ft, gmapsym, eigv, invs )
   !-----------------------------------------------------------------------
   !!
   !!   For every G vector, find S(G) for all the symmetry operations
@@ -23,7 +23,6 @@
   !----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : twopi, ci, cone
-  USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : mill, ngm
   ! 
   IMPLICIT NONE
@@ -32,8 +31,8 @@
   !! the number of symmetries of the crystal
   INTEGER, INTENT(in) :: s(3,3,48)
   !! the symmetry matrices
-  INTEGER, INTENT(in) :: ftau(3,48)
-  !! the fractional traslations
+  REAL(dp), INTENT(in) :: ft(3,48)
+  !! the fractional traslations in crystal axis
   INTEGER, INTENT(in) :: invs(48)
   !! inverse symmetry matrix 
   INTEGER, INTENT(out) :: gmapsym(ngm,48)
@@ -99,14 +98,11 @@
       !
       ! now the phase factors e^{iGv}
       !
-      IF ( ftau(1,isym) .ne. 0 .OR. ftau(2,isym) .ne. 0 .OR. ftau(3,isym) .ne. 0 ) THEN
+      IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN
         !
-        ! fractional traslation in crystal coord is ftau/nr*
-        ! for cart/crys transform of the G-vecctors have a look at the bottom
-        !
-        rdotk = dble( mill(1,ig) * ftau(1,isym) ) / dble(dfftp%nr1) &
-              + dble( mill(2,ig) * ftau(2,isym) ) / dble(dfftp%nr2) &
-              + dble( mill(3,ig) * ftau(3,isym) ) / dble(dfftp%nr3)
+        rdotk = dble( mill(1,ig) ) * ft(1,isym) &
+              + dble( mill(2,ig) ) * ft(2,isym) &
+              + dble( mill(3,ig) ) * ft(3,isym)
         !
         ! the actual translation is -v (have a look at ruota_ijk.f90)
         ! 

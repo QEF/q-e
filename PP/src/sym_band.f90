@@ -20,7 +20,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE wvfct,                ONLY : et, nbnd, npwx
   USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k
   USE io_files,             ONLY : nwordwfc, iunwfc
-  USE symm_base,            ONLY : s, ftau, nsym, t_rev, invs, sname
+  USE symm_base,            ONLY : s, nsym, ft, t_rev, invs, sname
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
        char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
@@ -42,7 +42,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   INTEGER :: npw, spin_component, nks1, nks2, firstk, lastk
   INTEGER :: nks1tot, nks2tot
   INTEGER :: iunout, igroup, irap, dim_rap, ios
-  INTEGER :: sk(3,3,48), ftauk(3,48), gk(3,48), sk_is(3,3,48), &
+  INTEGER :: sk(3,3,48), ftau(3,48), ftauk(3,48), gk(3,48), sk_is(3,3,48), &
        gk_is(3,48), invs_is(48), t_revk(48), invsk(48), nsymk, isym, ipol, jpol
   LOGICAL :: is_complex, is_complex_so, is_symmorphic, search_sym
   LOGICAL, ALLOCATABLE :: high_symmetry(:)
@@ -95,6 +95,10 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
      !
      ! Find the small group of k
+     ! TEMP: ftau are no longer global variables
+     ftau(1,:) = nint(ft(1,:)*dfftp%nr1)
+     ftau(2,:) = nint(ft(2,:)*dfftp%nr2)
+     ftau(3,:) = nint(ft(3,:)*dfftp%nr3)
      !
      CALL smallgk (xk(1,ik), at, bg, s, ftau, t_rev, sname, nsym, sk, &
           ftauk, gk, t_revk, invsk, snamek, nsymk)
