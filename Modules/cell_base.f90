@@ -226,6 +226,8 @@
      at(:,:) = at(:,:) / alat
      !
   END IF
+  IF ( alat < 1.9_dp ) CALL infomsg ('cell_base_init', &
+     'DEPRECATED: use true lattice parameter, not A to a.u. conversion factor') 
   !
   ! ... Generate the reciprocal lattice vectors
   !

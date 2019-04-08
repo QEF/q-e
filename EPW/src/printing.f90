@@ -354,9 +354,17 @@
     !! The derivative of wgauss:  an approximation to the delta function 
     REAL(KIND=DP) :: Fi_check(3, nstemp)
     !! Sum rule on population
-    inv_cell = 1.0d0/omega
+    REAL(KIND=DP) :: sfac
+    !! Spin factor
     ! 
+    IF (noncolin) THEN
+      sfac = 1.0
+    ELSE
+      sfac = 2.0
+    ENDIF
+    inv_cell = 1.0d0/omega
     Fi_check(:,:) = zero
+    ! 
     ! Hole
     IF (ncarrier < -1E5) THEN
       Sigma(:,:)    = zero
@@ -398,36 +406,30 @@
                       ij = ij + 1
                       ! The factor two in the weight at the end is to
                       ! account for spin
-                      IF (noncolin) THEN
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                        !tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * v_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                      ELSE
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                        !tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * v_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                      ENDIF
+                      tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * sfac / (nkf1*nkf2*nkf3)
                     ENDDO
                   ENDDO
                   !
-                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:)
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) * sfac / (nkf1*nkf2*nkf3)
                 ENDIF ! BZ 
               ENDDO ! ikb
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik ) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik ) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
+              !Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
         ENDDO ! ik
       ENDDO ! itemp      
       ! 
-      !CALL mp_sum( Sigma(:,:), world_comm )
       ! 
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
@@ -447,7 +449,6 @@
           !IF (my_pool_id == 0 ) write(990,*)ik, etf_all(1,ik + lower_bnd - 1), carrier_density
           !IF (my_pool_id == 1 ) write(991,*)ik, etf_all(1,ik + lower_bnd - 1), carrier_density
         ENDDO
-        !CALL mp_sum( carrier_density, world_comm )
         ! 
         sigma_up(:,:) = zero
         sigma_up(1,1) = Sigma(1,itemp)
@@ -518,29 +519,24 @@
                       ij = ij + 1
                       ! The factor two in the weight at the end is to
                       ! account for spin
-                      IF (noncolin) THEN
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                        !tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * v_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                      ELSE
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                        !tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * v_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                      ENDIF
+                      tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * sfac / (nkf1*nkf2*nkf3)
                     ENDDO
                   ENDDO
                   !
-                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:)
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) * sfac / (nkf1*nkf2*nkf3)
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
+              !Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
@@ -683,10 +679,16 @@
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND=DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
-
+    REAL(KIND=DP) :: sfac
+    !! Spin factor
     !
     inv_cell = 1.0d0/omega
     Fi_check(:,:) = zero
+    IF (noncolin) THEN
+      sfac = 1.0
+    ELSE
+      sfac = 2.0
+    ENDIF
     ! 
     ! Hole
     IF (ncarrier < -1E5) THEN
@@ -710,17 +712,17 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_SERTA(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp)
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3)
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik ) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik ) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
@@ -801,17 +803,17 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_SERTA(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp)
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3)
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
@@ -983,9 +985,15 @@
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND=DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
-
+    REAL(KIND=DP) :: sfac
+    !! Spin factor
+    ! 
+    IF (noncolin) THEN
+      sfac = 1.0
+    ELSE
+      sfac = 2.0
+    ENDIF
     Fi_check(:,:) = zero
-    !
     inv_cell = 1.0d0/omega
     ! 
     IF (ncarrier < -1E5) THEN ! If true print hole
@@ -1028,33 +1036,29 @@
                       ij = ij + 1
                       ! The factor two in the weight at the end is to
                       ! account for spin
-                      IF (noncolin) THEN
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                      ELSE
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                      ENDIF
+                      tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * sfac / (nkf1*nkf2*nkf3)
                     ENDDO
                   ENDDO
                   !
-                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) 
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) * sfac / (nkf1*nkf2*nkf3) 
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
         ENDDO ! ik
       ENDDO ! itemp      
-      !CALL mp_sum( Sigma(:,:), world_comm )
+      ! 
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         carrier_density = 0.0
@@ -1144,27 +1148,23 @@
                       ij = ij + 1
                       ! The factor two in the weight at the end is to
                       ! account for spin
-                      IF (noncolin) THEN
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                      ELSE
-                        tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                      ENDIF
+                      tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * sfac / (nkf1*nkf2*nkf3)  
                     ENDDO
                   ENDDO 
                   !
-                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) 
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) * sfac / (nkf1*nkf2*nkf3) 
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
@@ -1312,9 +1312,16 @@
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND=DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
-
-    Fi_check(:,:) = zero
+    REAL(KIND=DP) :: sfac
+    !! Spin factor    
+    ! 
+    IF (noncolin) THEN
+      sfac = 1.0
+    ELSE
+      sfac = 2.0
+    ENDIF
     !
+    Fi_check(:,:) = zero
     inv_cell = 1.0d0/omega
     ! 
     IF (ncarrier < -1E5) THEN ! If true print hole
@@ -1337,17 +1344,18 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_out(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp)
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3)
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              !Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
@@ -1425,17 +1433,17 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_out(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp) 
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3) 
               ! 
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !ekk = etf_all (ibnd, ik) - ef0(itemp)
               !  
               ! derivative Fermi distribution
               ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
               !
               ! electrical conductivity
-              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
             ENDIF ! if below Fermi level
           ENDDO ! ibnd

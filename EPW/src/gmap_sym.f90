@@ -20,8 +20,6 @@
   !!   every processor has just a chunk of the array, I may need some
   !!   communication)
   !!
-  !!   No ultrasoft now
-  !!
   !----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : twopi, ci, cone

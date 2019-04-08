@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.1.0 starts on 27Feb2019 at 17:58:10 
+     Program EPW v.5.1.0 starts on 25Mar2019 at 11:29:18 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -198,12 +198,12 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14   0.53291E-14    0.291052E+00    x-axis
+      400.000   7.0305   0.10000E+14   0.16156E-26    0.291052E+00    x-axis
                                                       0.291048E+00    y-axis
                                                       0.291043E+00    z-axis
                                                       0.291048E+00       avg
                                                      -0.881377E-01  off-diag
-      500.000   6.8729   0.10000E+14  -0.36415E-13    0.226888E+00    x-axis
+      500.000   6.8729   0.10000E+14   0.16156E-26    0.226888E+00    x-axis
                                                       0.226885E+00    y-axis
                                                       0.226882E+00    z-axis
                                                       0.226885E+00       avg
@@ -222,18 +222,18 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14  -0.35527E-14    0.247099E+00    x-axis
-                                                      0.247095E+00    y-axis
-                                                      0.247091E+00    z-axis
-                                                      0.247095E+00       avg
-                                                     -0.749662E-01  off-diag
-      500.000   6.8729   0.10000E+14  -0.26645E-14    0.194968E+00    x-axis
-                                                      0.194965E+00    y-axis
-                                                      0.194962E+00    z-axis
-                                                      0.194965E+00       avg
-                                                     -0.497501E-01  off-diag
+      400.000   7.0305   0.10000E+14  -0.29346E-27    0.247133E+00    x-axis
+                                                      0.247129E+00    y-axis
+                                                      0.247125E+00    z-axis
+                                                      0.247129E+00       avg
+                                                     -0.749845E-01  off-diag
+      500.000   6.8729   0.10000E+14   0.40390E-26    0.195015E+00    x-axis
+                                                      0.195012E+00    y-axis
+                                                      0.195009E+00    z-axis
+                                                      0.195012E+00       avg
+                                                     -0.498150E-01  off-diag
 
-                                                   0.247095E+00     Err
+                                                   0.247129E+00     Err
 
      Iteration number:         2 
 
@@ -243,18 +243,18 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14  -0.39968E-14    0.253805E+00    x-axis
-                                                      0.253801E+00    y-axis
-                                                      0.253796E+00    z-axis
-                                                      0.253801E+00       avg
-                                                     -0.769328E-01  off-diag
-      500.000   6.8729   0.10000E+14   0.12434E-13    0.199728E+00    x-axis
-                                                      0.199725E+00    y-axis
-                                                      0.199722E+00    z-axis
-                                                      0.199725E+00       avg
-                                                     -0.510597E-01  off-diag
+      400.000   7.0305   0.10000E+14   0.68158E-27    0.253832E+00    x-axis
+                                                      0.253828E+00    y-axis
+                                                      0.253824E+00    z-axis
+                                                      0.253828E+00       avg
+                                                     -0.769494E-01  off-diag
+      500.000   6.8729   0.10000E+14   0.16156E-26    0.199774E+00    x-axis
+                                                      0.199771E+00    y-axis
+                                                      0.199768E+00    z-axis
+                                                      0.199771E+00       avg
+                                                     -0.511206E-01  off-diag
 
-                                                   0.670537E-02     Err
+                                                   0.669890E-02     Err
 
      Iteration number:         3 
 
@@ -264,18 +264,18 @@
         [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
      =======================================================================
 
-      400.000   7.0305   0.10000E+14   0.35527E-14    0.252777E+00    x-axis
-                                                      0.252773E+00    y-axis
-                                                      0.252769E+00    z-axis
-                                                      0.252773E+00       avg
-                                                     -0.766400E-01  off-diag
-      500.000   6.8729   0.10000E+14   0.21760E-13    0.199014E+00    x-axis
-                                                      0.199011E+00    y-axis
-                                                      0.199008E+00    z-axis
-                                                      0.199011E+00       avg
-                                                     -0.508637E-01  off-diag
+      400.000   7.0305   0.10000E+14   0.13127E-26    0.252806E+00    x-axis
+                                                      0.252801E+00    y-axis
+                                                      0.252797E+00    z-axis
+                                                      0.252801E+00       avg
+                                                     -0.766570E-01  off-diag
+      500.000   6.8729   0.10000E+14   0.20195E-26    0.199060E+00    x-axis
+                                                      0.199057E+00    y-axis
+                                                      0.199054E+00    z-axis
+                                                      0.199057E+00       avg
+                                                     -0.509252E-01  off-diag
 
-                                                   0.102780E-02     Err
+                                                   0.102669E-02     Err
 
      Iteration number:         4 
 
@@ -292,16 +292,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      3.63s CPU      4.97s WALL (       1 calls)
-     ep-interp    :      3.44s CPU      4.78s WALL (     343 calls)
+     ephwann      :      3.68s CPU      4.81s WALL (       1 calls)
+     ep-interp    :      3.49s CPU      4.62s WALL (     343 calls)
 
      DynW2B       :      0.01s CPU      0.01s WALL (     343 calls)
-     HamW2B       :      0.28s CPU      0.32s WALL (   13780 calls)
-     ephW2Bp      :      0.81s CPU      1.91s WALL (     343 calls)
+     HamW2B       :      0.29s CPU      0.31s WALL (   13780 calls)
+     ephW2Bp      :      0.85s CPU      1.81s WALL (     343 calls)
 
 
      Total program execution
-     EPW          :      3.63s CPU      4.97s WALL
+     EPW          :      3.68s CPU      4.81s WALL
 
                                                                                           
  Please consider citing:                                                                  

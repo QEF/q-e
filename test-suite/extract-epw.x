@@ -45,6 +45,8 @@ dos1=`grep "DOS =" $fname | awk '{print $3}'`
 e2=`grep " E(" $fname | awk '{print $4}'`
 rsig=`grep "Re\[Sigma\]=" $fname | awk '{print $7}'` 
 isig=`grep "Im\[Sigma\]=" $fname | awk '{print $10}'` 
+rpi=`grep "Re\[Pi\]=" $fname | awk '{print $7}'`
+ipi=`grep "Im\[Pi\]=" $fname | awk '{print $10}'`
 z1=`grep " Z=" $fname | awk '{print $13}'`
 lam=`grep "lam= " $fname | awk '{print $15}'`
 lambda=`grep "     lambda___(" $fname | awk '{print $4}'`
@@ -164,6 +166,16 @@ fi
 if test "$isig" != ""; then
         echo isig
         for x in $isig; do echo $x; done
+fi
+
+if test "$rpi" != ""; then
+        echo rpi
+        for x in $rpi; do echo $x; done
+fi
+
+if test "$ipi" != ""; then
+        echo ipi
+        for x in $ipi; do echo $x; done
 fi
 
 if test "$z1" != ""; then

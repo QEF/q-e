@@ -1,3 +1,21 @@
+New in 6.4.1 branch :
+  * A warning is issued if the lattice parameter seems to be a conversion
+    factor instead of a true lattice parameter. Conversion should be achieved
+    with the appropriate options, not with dirty tricks. In the future this
+    will no longer be allowed
+  * A warning is issued if ibrav=0 is used for systems having symmetry. If not
+    properly done this may lead to strange problems with symmetry detection
+    and symmetrization. Lattice information should be used if available.
+
+Problems fixed in 6.4.1 branch :
+  * Two bugs fixed in HP: 1) the code was not working correctly when fractional
+    translations were present, 2) there was a bug in the case when either there
+    is only one k point, or when k pools are used and some of the pools have
+    only one k point.
+  * Restart of ph.x with 2D boundary conditions has been fixed (see gitlab
+    issue #102)
+  * XML file correctly written if tetrahedra are used (see gitlab issue #103)
+
 New in version 6.4:
   * Experimental version of SCDM localization with k-points, activated like for
     k=0 by specifying in &system namelist a value > 0 for "localization_thr".
@@ -17,6 +35,8 @@ New in version 6.4:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in version 6.4 (+ = in qe-6.3-backports as well) :
+  + Codes reading scf data recomputed celldm parameters also if ibrav=0
+    This produced confusing output and had the potential to break some codes
   + index not correctly initialized in LSDA phonon with core corrections 
   + GTH pseudopotentials in analytical form wrongly computed in some cases
   + projwfc.x not working with new xml format in noncolinear/spinorbit case 
@@ -55,6 +75,8 @@ Incompatible changes in version 6.4 version:
 
 Known problems in version 6.4:
   * Frequent "dexx is negative" errors with hybrid functionals
+  * restart of ph.x when using 2D boundary conditions fails see issue#102 on gitLab 
+  * the band_structure element is printed incompletely if tetrahedra are used for sums in the IBZ, see issue #103.  
 
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Seitz 
