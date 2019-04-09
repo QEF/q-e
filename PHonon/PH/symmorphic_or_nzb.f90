@@ -30,7 +30,7 @@ LOGICAL FUNCTION symmorphic_or_nzb()
   ELSE
      result_sym=.TRUE.
      ft_(:,1:nsymq) = ft(:,1:nsymq)
-     CALL cryst_to_cart(nsymq, ft, at, 1)
+     CALL cryst_to_cart(nsymq, ft_, at, 1)
 
      DO isym=1,nsymq
         DO jsym=1,nsymq
