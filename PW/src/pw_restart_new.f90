@@ -915,7 +915,7 @@ MODULE pw_restart_new
       USE qes_read_module,      ONLY : qes_read
       IMPLICIT NONE 
       ! 
-      INTEGER                                            :: ierr, io_err  
+      INTEGER                                            :: ierr
       TYPE( output_type ),OPTIONAL,        INTENT(OUT)   :: restart_output
       TYPE(parallel_info_type),OPTIONAL,   INTENT(OUT)   :: restart_parallel_info
       TYPE(general_info_type ),OPTIONAL,   INTENT(OUT)   :: restart_general_info
@@ -929,19 +929,19 @@ MODULE pw_restart_new
       INTEGER,EXTERNAL        :: find_free_unit
       !  
       ! 
-      ierr = 0 
-      io_err = 0 
+      ierr = 1
       ! 
       iunpun = find_free_unit()
-      IF (iunpun .LT. 0 ) &
-            CALL errore ("pw_readschema_file", "could not find a free unit to open data-file-schema.xml", 1)
+      IF (iunpun < 0 ) THEN
+         errmsg='internal error: no free unit to open data-file-schema.xml'
+         GOTO 100
+      END IF
       CALL qexsd_init_schema( iunpun )
       !
-      filename = TRIM( tmp_dir ) // TRIM( prefix ) // postfix // TRIM( xmlpun_schema )
+      filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // TRIM(xmlpun_schema)
       INQUIRE ( file=filename, exist=found )
-      IF (.NOT. found ) ierr = ierr + 1
-      IF ( ierr /=0 ) THEN
-         errmsg='xml data file not found'
+      IF (.NOT. found ) THEN
+         errmsg='xml data file ' // TRIM(filename) // ' not found'
          GOTO 100
       END IF
       !
@@ -951,7 +951,7 @@ MODULE pw_restart_new
          nodePointer => item ( getElementsByTagname(root, "general_info"),0)
          CALL qes_read( nodePointer, restart_general_info, ierr)
          IF ( ierr /=0 ) THEN
-            errmsg='error header of xml data file'
+            errmsg='error reading header of xml data file'
             GOTO 100
          END IF
          ! CALL qes_write_general_info( 82, restart_general_info) 
@@ -986,15 +986,15 @@ MODULE pw_restart_new
          ELSE 
             ierr = 5
          END IF
-         IF (ierr /= 0 ) THEN
+         IF ( ierr /= 0 ) THEN
              CALL infomsg ('pw_readschema_file',& 
                             'failed retrieving input info from xml file, please check it')
              IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
-             ierr = 0 
          END IF
       END IF
       ! 
       CALL destroy(root)       
+      ierr = 0
 
  100  CALL errore('pw_readschemafile',TRIM(errmsg),ierr)
       !
