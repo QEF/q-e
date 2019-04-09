@@ -4142,7 +4142,7 @@ SUBROUTINE write_parity
        ! 0-th Order
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! 1
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! 1
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
@@ -4150,21 +4150,21 @@ SUBROUTINE write_parity
        ! 1st Order
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! y
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! z
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
@@ -4172,63 +4172,63 @@ SUBROUTINE write_parity
        ! 2nd Order
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! xz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! xz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! y^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! yz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! yz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! yz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! yz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 2.d0 <= eps6) ) THEN ! z^2
+            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! z^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
@@ -4236,133 +4236,133 @@ SUBROUTINE write_parity
        ! 3rd Order
        IF ( (abs(g_abc(1,igv) - 3.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^3
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^2y
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^2y
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! x^2z
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! x^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! x^2z
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! x^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 2.d0 <= eps6) ) THEN ! xz^2
+            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! xz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 2.d0 <= eps6) ) THEN ! xz^2
+            (abs(g_abc(3,igv) + 2.d0) <= eps6) ) THEN ! xz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 3.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! y^3
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! y^2z
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! y^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! y^2z
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! y^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 2.d0 <= eps6) ) THEN ! yz^2
+            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! yz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and.&
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 2.d0 <= eps6) ) THEN ! yz^2
+            (abs(g_abc(3,igv) + 2.d0) <= eps6) ) THEN ! yz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 3.d0 <= eps6) ) THEN ! z^3
+            (abs(g_abc(3,igv) - 3.d0) <= eps6) ) THEN ! z^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
