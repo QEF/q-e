@@ -37,7 +37,7 @@
   USE io_epw,        ONLY : iuepb, iuqpeig
   USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot
   USE cell_base,     ONLY : at, bg
-  USE symm_base,     ONLY : irt, s, nsym, ftau, sname, invs, s_axis_to_cart, &
+  USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart, &
                             sr, nrot, copy_sym, set_sym_bl, find_sym, & 
                             inverse_s, remove_sym, allfrac
   USE start_k,       ONLY : nk1, nk2, nk3
@@ -398,7 +398,7 @@
       minus_q = .true.
       sym = .false.
       sym(1:nsym) = .true.
-      CALL smallg_q(xq, 0, at, bg, nsym, s, ftau, sym, minus_q) ! s is intent(in)
+      CALL smallg_q(xq, 0, at, bg, nsym, s, sym, minus_q) ! s is intent(in)
       !
       ! SP: Notice that the function copy_sym reshuffles the s matrix for each irr_q.  
       !     This is why we then need to call gmap_sym for each irr_q [see below]. 
@@ -429,7 +429,7 @@
       !      reshuffles the s matrix for each irr_q [putting the sym of the small group of q first].
       !
       !  [I checked that gmapsym(gmapsym(ig,isym),invs(isym)) = ig]
-      CALL gmap_sym(nsym, s, ftau, gmapsym, eigv, invs)
+      CALL gmap_sym(nsym, s, ft, gmapsym, eigv, invs)
       !
       !  Re-set the variables needed for the pattern representation
       !  and the symmetries of the small group of irr-q
@@ -485,20 +485,17 @@
           CALL s_axis_to_cart() ! give sr(:,:, isym)
           DO isym = 1, nsym
             WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
-            IF (ftau(1,isym).ne.0 .OR. ftau(2,isym).ne.0 .OR. ftau(3,isym).ne.0) THEN
-                ft1 = at(1,1)*ftau(1,isym)/dfftp%nr1 + at(1,2)*ftau(2,isym)/dfftp%nr2 + &
-                      at(1,3)*ftau(3,isym)/dfftp%nr3
-                ft2 = at(2,1)*ftau(1,isym)/dfftp%nr1 + at(2,2)*ftau(2,isym)/dfftp%nr2 + &
-                      at(2,3)*ftau(3,isym)/dfftp%nr3
-                ft3 = at(3,1)*ftau(1,isym)/dfftp%nr1 + at(3,2)*ftau(2,isym)/dfftp%nr2 + &
-                      at(3,3)*ftau(3,isym)/dfftp%nr3
+            IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN
+                ft1 = at(1,1)*ft(1,isym) + at(1,2)*ft(2,isym) + at(1,3)*ft(3,isym)
+                ft2 = at(2,1)*ft(1,isym) + at(2,2)*ft(2,isym) + at(2,3)*ft(3,isym)
+                ft3 = at(3,1)*ft(1,isym) + at(3,2)*ft(2,isym) + at(3,3)*ft(3,isym)
                 WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                       &        " )    f =( ",f10.7," )")') &
-                      isym, (s(1,ipol,isym),ipol=1,3), dble(ftau(1,isym))/dble(dfftp%nr1)
+                      isym, (s(1,ipol,isym),ipol=1,3), ft(1,isym)
                 WRITE(stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                            (s(2,ipol,isym),ipol=1,3), dble(ftau(2,isym))/dble(dfftp%nr2)
+                            (s(2,ipol,isym),ipol=1,3), ft(2,isym)
                 WRITE(stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                            (s(3,ipol,isym),ipol=1,3), dble(ftau(3,isym))/dble(dfftp%nr3)
+                            (s(3,ipol,isym),ipol=1,3), ft(3,isym)
                 WRITE(stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                       &        " )    f =( ",f10.7," )")') &
                       isym, (sr(1,ipol,isym),ipol=1,3), ft1
@@ -563,7 +560,7 @@
             !
             !  check whether the symmetry belongs to a symmorphic group
             !
-            symmo = (ftau(1,isym).eq.0 .AND. ftau(2,isym).eq.0 .AND. ftau(3,isym).eq.0)
+            symmo = ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 )
             !
             WRITE(stdout,'(3i5,L3,L3)') iq, i, isym, nog, symmo
             !

@@ -29,7 +29,7 @@ PROGRAM Q2QSTAR
   USE io_global,          ONLY : ionode_id, ionode, stdout
   USE environment,        ONLY : environment_start, environment_end
   ! symmetry
-  USE symm_base,          ONLY : s, invs, nsym, find_sym, set_sym_bl, irt, ftau, copy_sym, nrot, inverse_s
+  USE symm_base,          ONLY : s, invs, nsym, find_sym, set_sym_bl, irt, copy_sym, nrot, inverse_s
   ! for reading the dyn.mat.
   USE cell_base,          ONLY : at, bg, celldm, ibrav, omega
   USE ions_base,          ONLY : nat, ityp, ntyp => nsp, atm, tau, amass
@@ -157,7 +157,7 @@ PROGRAM Q2QSTAR
   minus_q = .true.
   sym = .false.
   sym(1:nsym) = .true.
-  CALL smallg_q(xq, 0, at, bg, nsym, s, ftau, sym, minus_q)
+  CALL smallg_q(xq, 0, at, bg, nsym, s, sym, minus_q)
   nsymq = copy_sym(nsym, sym)
   ! recompute the inverses as the order of sym.ops. has changed
   CALL inverse_s ( ) 
