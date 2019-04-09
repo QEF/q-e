@@ -44,7 +44,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   INTEGER :: iunout, igroup, irap, dim_rap, ios
   INTEGER :: sk(3,3,48), gk(3,48), sk_is(3,3,48), &
        gk_is(3,48), invs_is(48), t_revk(48), invsk(48), nsymk, isym, ipol, jpol
-  REAL(dp) :: ftk(3,48), ft_is(3,48)
+  REAL(dp) :: ftk(3,48)
   LOGICAL :: is_complex, is_complex_so, is_symmorphic, search_sym
   LOGICAL, ALLOCATABLE :: high_symmetry(:)
   REAL(DP), PARAMETER :: accuracy=1.d-4
