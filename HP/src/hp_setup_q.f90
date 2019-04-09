@@ -142,7 +142,7 @@ SUBROUTINE hp_setup_q()
   ! Check if there are fractional translations
   ! Note: Try to use PH/symmorphic_or_nzb ?
   !
-  is_symmorphic = .NOT.( ANY( ABS( ft(:,1:nsymq) > 1.d-8 ) ) )
+  is_symmorphic = .NOT.( ANY( ABS(ft(:,1:nsymq)) > 1.d-8 ) )
   !
   IF (skip_equivalence_q) THEN
      search_sym = .FALSE.
