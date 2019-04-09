@@ -60,7 +60,7 @@ subroutine phq_setup
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
   USE gvecs,         ONLY : doublegrid
-  USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
+  USE symm_base,     ONLY : nrot, nsym, s, irt, t_rev, time_reversal, &
                             sr, invs, inverse_s, d1, d2, d3
   USE uspp_param,    ONLY : upf
   USE uspp,          ONLY : nlcc_any

@@ -16,7 +16,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   USE constants, ONLY: tpi
   USE fft_base,  ONLY: dfftp
   USE cell_base, ONLY : at
-  USE symm_base, ONLY : s, ftau
+  USE symm_base, ONLY : s, ft
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE modes,   ONLY : t, tmq
 
@@ -27,6 +27,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   integer :: nper, irr
   ! the number of perturbations
   ! the representation under conside
+  integer :: ftau(3,48)
 
   complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
   ! the potential to be symmetrized
@@ -53,6 +54,9 @@ subroutine symdvscf (nper, irr, dvtosym)
   n(1) = tpi / DBLE (dfftp%nr1)
   n(2) = tpi / DBLE (dfftp%nr2)
   n(3) = tpi / DBLE (dfftp%nr3)
+  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 ) 
+  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 ) 
+  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 ) 
   if (minus_q) then
      gf(:) =  gimq (1) * at (1, :) * n(:) + &
               gimq (2) * at (2, :) * n(:) + &

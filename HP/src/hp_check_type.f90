@@ -25,7 +25,7 @@ subroutine hp_check_type(na)
   ! 
   USE ions_base,          ONLY : ityp, nat, ntyp => nsp, tau
   USE io_global,          ONLY : stdout
-  USE symm_base,          ONLY : nsym, set_sym, ft, ftau
+  USE symm_base,          ONLY : nsym, set_sym, ft
   USE noncollin_module,   ONLY : nspin_mag, m_loc
   USE fft_base,           ONLY : dfftp
   USE ldaU_hp,            ONLY : recalc_sym
@@ -90,15 +90,6 @@ subroutine hp_check_type(na)
      CALL set_sym (nat, tau, ityp, nspin_mag, m_loc)
      !
      DEALLOCATE(m_loc)
-     !
-     ! Since symmetries were recomputed, we need to reinitialize vectors
-     ! of fractional translations
-     !
-     DO isym = 1, nsym
-        ftau(1,isym) = NINT( ft(1,isym) * DBLE(dfftp%nr1) )
-        ftau(2,isym) = NINT( ft(2,isym) * DBLE(dfftp%nr2) )
-        ftau(3,isym) = NINT( ft(3,isym) * DBLE(dfftp%nr3) )
-     ENDDO
      !
      IF ( nsym == nsym_old ) THEN
         WRITE( stdout, '(5x,"The number of symmetries is the same as in PWscf :")')

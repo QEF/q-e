@@ -947,6 +947,7 @@ the last written output file to understand why.
 \begin{itemize}
 \item
 Working Fortran and C compilers, compliant with F2003 and C89 standards
+(see Sec.\ref{Sec:Installation})
 respectively, are needed in order to compile \qe. Most recent Fortran
 compilers will do the job.
 
@@ -1111,6 +1112,10 @@ add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
 
 \paragraph{Linux PCs with Intel compiler (ifort)}
 
+IMPORTANT NOTE: ifort versions earlier than v.15 miscompile the new
+XML code in QE v.6.4 and later. Please install this patch:\\
+\texttt{https://gitlab.com/QEF/q-e/wikis/Support/Patch-for-old-Intel-compilers}.
+
 The Intel compiler ifort \texttt{http://software.intel.com/}
 produces fast executables, at least on Intel CPUs, but not all versions
 work as expected. In case of trouble, update your version
@@ -1133,8 +1138,6 @@ initialization files. Consult the documentation provided by Intel.
 The warning: {\em feupdateenv is not implemented and will always fail},
 can be safely ignored. Warnings on ``bad preprocessing option'' when compiling
 iotk and complains about ``recommended formats'' may also be ignored.
-
-Versions v.12 and earlier of ifort are no longer supported by QE v.\version.
 
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries

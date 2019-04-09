@@ -329,13 +329,13 @@
                 wgkq = wgauss( -ekq*inv_eptemp0, -99)
                 !
                 ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q + id]
-                ! This is the imaginary part of the phonon self-energy, sans
+                ! This is the imaginary part of minus the phonon self-energy, sans
                 ! the matrix elements
                 !
                 !weight = wkf (ikk) * (wgkk - wgkq) * &
                 !     aimag ( cone / ( ekq - ekk - wq - ci * degaussw0 ) )
                 !
-                ! SP: The expression below (phonon self-energy) corresponds to
+                ! SP: The expression below (minus phonon self-energy) corresponds to
                 !  = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q]
                 weight = pi * wkf (ikk) * (wgkk - wgkq)* &
                      w0gauss ( (ekq - ekk - wq) / degaussw0, 0) / degaussw0

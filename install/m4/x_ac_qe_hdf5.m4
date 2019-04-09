@@ -91,9 +91,9 @@ if test "$use_parallel" -ne 0; then
 
       if test "$have_hdf5" -eq 1 ; then
          if test -e $with_hdf5_path/bin/h5pfc; then
-             hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{@S|@1="";@S|@2="-L"@S|@2; print @S|@0}'`
+             hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
          elif test -e $with_hdf5_path/bin/h5fc; then 
-             hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{@S|@1="";@S|@2="-L"@S|@2; print @S|@0}'`
+             hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{@S|@1=""; for (i=2; i<=NF;i++) @S|@i="-L"@S|@i; print @S|@0}'`
              try_dflags="$try_dflags -D__HDF5_SERIAL"
          else
           hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
