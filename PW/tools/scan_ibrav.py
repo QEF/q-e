@@ -29,8 +29,14 @@ def main() :
   units.add_argument('-B', default=True, action="store_false", dest="angst", help="cell is entered in Bohr units (default)")
   units.add_argument('--alat', type=float, dest="alat", help="cell is entered in units of alat (in bohr)", metavar="ALAT")
 
-  parser.add_argument('--celldm', type=float, default=[1, 1, 1, 0.5, 0.5, 0.5], nargs=6, dest="celldm",
-                      metavar=("1","2","3","4","5","6"), help="initial values of celldm(1..6), you have to specify all 6 or none (default: 1 1 1 .5 .5 .5)")
+  parser.add_argument('--celldm', type=float, 
+                      default=[1, 1, 1, 0.5, 0.5, 0.5], nargs=6,
+                      dest="celldm",                    metavar=("1","2","3","4","5","6"),
+                      help="initial values of celldm(1..6), you have to specify all 6 or none (default: 1 1 1 .5 .5 .5)")
+  parser.add_argument('--angle', type=float, 
+                      default=[0, 0, 0], nargs=3,
+                      dest="angle",                    metavar=("1","2","3"),
+                      help="initial rotation of the cell (degrees) around x,y,z")
   parser.add_argument('-t', type=float, default=1.e-3,  dest="mthr", help="match threshold", metavar="THR")
   parser.add_argument('-k', type=float, default=1.e-15, dest="kthr", help="convergence threshold", metavar="THR")
   parser.add_argument('-x', type=str, dest="ibrav2cell_x", help="full path to the ibrav2cell.x tool from PW/tools/ \
@@ -38,7 +44,7 @@ def main() :
 
   args = parser.parse_args()
 
-  ibrav_list = [1,2,3,4,5,-5,6,7,8,9,-9,10,11,12,-12,13,14]
+  ibrav_list = [1,2,3,-3,4,5,-5,6,7,8,9,-9,91,10,11,12,-12,13,-13,14]
   if args.ibrav_list == []:
     args.ibrav_list = ibrav_list
 
@@ -70,24 +76,35 @@ def main() :
   elif args.alat:
     cell = array(cell)*args.alat
 
-  bnds = ((0,None), (0,None), (0,None), (-1,1), (-1,1), (-1,1))
+  bnds = ((0,None), (0,None), (0,None), (-1,1), (-1,1), (-1,1), 
+          (0,360), (0,360), (0,360))
+  #bnds = ((0,None), (0,0), (0,None), (0,0), (0,0), (0,0), 
+  #        (0,360), (0,360), (0,360))
   
   print "Scanning..."
   for ibrav in args.ibrav_list:
-      p=args.celldm 
-      options = { "ibrav" : ibrav,
-                  "cell"  : cell
+      p=args.celldm
+      p.extend(args.angle)
+      args0 = { "ibrav" : ibrav,
+                "cell"  : cell
+                  }
+      options={"maxiter" : 100000,
+               "maxfev"  : 100000, 
+               "rhobeg" : .001,
                 }
       #from scipy.optimize import basinhopping
-      #r = basinhopping(recompute, p, minimizer_kwargs={"method":"L-BFGS-B", "bounds":bnds, "args":tuple([options])}, niter=10)
+      #r = basinhopping(recompute, p, minimizer_kwargs={"method":"L-BFGS-B", "bounds":bnds, "args":tuple([args0])}, niter=10)
       from scipy.optimize import minimize
-      r = minimize(recompute, p, args=tuple([options]), method="L-BFGS-B", tol=args.kthr, bounds=bnds)
-      if r["fun"] < args.mthr:
-        print "match found: ibrav =", ibrav 
-        check_zero(r["x"], ibrav)
-      elif r["fun"] < 100*args.mthr:
-        print "possible noisy match found: ibrav =", ibrav 
-        check_zero(r["x"], ibrav)
+      #r = minimize(recompute, p, args=tuple([options]), method="L-BFGS-B", tol=args.kthr, bounds=bnds)
+      r = minimize(recompute, p, args=tuple([args0]), method="COBYLA", tol=args.kthr, bounds=bnds, options=options)
+      #print r
+      #!if r["fun"] < args.mthr:
+      print "Final values:"
+      print "  ibrav =", ibrav 
+      check_zero(r["x"], ibrav)
+      #elif r["fun"] < 100*args.mthr:
+      #  print "possible noisy match found: ibrav =", ibrav 
+      #  check_zero(r["x"], ibrav)
 
 def check_ibrav2cell():
   from numpy import array
@@ -97,7 +114,7 @@ def check_ibrav2cell():
     print " Specify the position of ibrav2cell.x with the '-x' command line option." 
     print " Use '-h' for more help."
     exit(100)
-  namelist = make_namelist(1,[1,0,0,0,0,0])
+  namelist = make_namelist(1,[1,0,0,0,0,0,0,0,0])
   at = compute_cell(namelist)
   if not at or len(at)!=9 or any(at != array([1,0,0,0,1,0,0,0,1])):
     print " File '"+ibrav2cell_x+"' not working as expected."
@@ -126,7 +143,10 @@ def make_namelist(ibrav,p):
                    "celldm3" : p[2],
                    "celldm4" : p[3],
                    "celldm5" : p[4],
-                   "celldm6" : p[5]
+                   "celldm6" : p[5],
+                   "angle1"  : p[6],
+                   "angle2"  : p[7],
+                   "angle3"  : p[8]
                    }
   systemnl = """
   &system
@@ -136,10 +156,13 @@ def make_namelist(ibrav,p):
     celldm(3) ={celldm3},
     celldm(4) ={celldm4},
     celldm(5) ={celldm5},
-    celldm(6) ={celldm6}
+    celldm(6) ={celldm6},
+    angle(1)  ={angle1},
+    angle(2)  ={angle2},
+    angle(3)  ={angle3}
   /
   """
-#  print systemnl.format(**replacements)
+  #print systemnl.format(**replacements)
   return systemnl.format(**replacements)
 
 def constraint(p):
@@ -168,7 +191,8 @@ def compute_cell(namelist):
   from numpy import isnan
   output,error = run_command(ibrav2cell_x,namelist)
   output_lines = output.splitlines()
-  output_cell = output_lines[-3]+output_lines[-2]+output_lines[-1]
+  #output_cell = output_lines[-3]+output_lines[-2]+output_lines[-1]
+  output_cell = output_lines[-7]+output_lines[-6]+output_lines[-5]
 #  print output_cell
   try:
     at = map(float, output_cell.split())
@@ -176,6 +200,7 @@ def compute_cell(namelist):
     at = [0,0,0, 0,0,0, 0,0,0]
   if any(isnan(at)):
     at = [0,0,0, 0,0,0, 0,0,0]
+  #print at
   return at
 
 def check_zero(p, ibrav):
@@ -192,7 +217,10 @@ def check_zero(p, ibrav):
     if norm(at0-at1)==0:
       p_out[i] = 0
     else:
-      print "    celldm({:d}) = {:.6f}".format(i+1, p[i])
+      if i < 6:
+        print "    celldm({:d}) = {:.6f}".format(i+1, p[i])
+      else :
+        print "    angle({:d})  = {:.6f}".format(i-5, p[i])
   return array(p_out)
 
 def recompute(p, options):
