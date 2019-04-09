@@ -1430,7 +1430,7 @@ MODULE pw_restart_new
     SUBROUTINE readschema_symmetry ( symms_obj, basis_obj, flags_obj  ) 
     !------------------------------------------------------------------------
       ! 
-      USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
+      USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                                  sname, sr, invs, inverse_s, s_axis_to_cart, &
                                  time_reversal, no_t_rev, nosym
       USE control_flags,   ONLY : noinv  
@@ -1462,9 +1462,6 @@ MODULE pw_restart_new
         IF ( (TRIM(sname(isym)) == "inversion") .AND. (isym .LE. nsym) ) invsym = .TRUE.
         IF ( symms_obj%symmetry(isym)%fractional_translation_ispresent .AND. (isym .LE. nsym) ) THEN
            ft(1:3,isym)  =  symms_obj%symmetry(isym)%fractional_translation(1:3) 
-           ftau(1,isym) = NINT( ft(1,isym)*DBLE( basis_obj%fft_grid%nr1 ) )
-           ftau(2,isym) = NINT( ft(2,isym)*DBLE( basis_obj%fft_grid%nr2 ) )
-           ftau(3,isym) = NINT( ft(3,isym)*DBLE( basis_obj%fft_grid%nr3 ) )
         END IF
         IF ( symms_obj%symmetry(isym)%info%time_reversal_ispresent ) THEN  
            IF (symms_obj%symmetry(isym)%info%time_reversal) THEN 
