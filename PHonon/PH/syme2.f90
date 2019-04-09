@@ -18,7 +18,7 @@ subroutine syme2 (dvsym)
   !
   use kinds,  only : DP
   USE fft_base, ONLY: dfftp
-  USE symm_base,  ONLY: nsym, s, ftau
+  USE symm_base,  ONLY: nsym, s, ft
   USE ramanm, ONLY: jab
   implicit none
 
@@ -26,7 +26,7 @@ subroutine syme2 (dvsym)
   complex(DP), allocatable :: aux (:,:,:,:)
   ! the function to symmetrize
   ! auxiliary space
-
+  integer :: ftau(3,48)
   integer :: ix, jx, kx, ri, rj, rk, irot, ip, jp, lp, mp
   ! define a real-space point on the grid
   ! the rotated points
@@ -44,6 +44,9 @@ subroutine syme2 (dvsym)
   !
   !  symmmetrize
   !
+  ftau(1,1:nsym) = NINT ( ft(1,1:nsym)*dfftp%nr1 ) 
+  ftau(2,1:nsym) = NINT ( ft(2,1:nsym)*dfftp%nr2 ) 
+  ftau(3,1:nsym) = NINT ( ft(3,1:nsym)*dfftp%nr3 ) 
   do kx = 1, dfftp%nr3
   do jx = 1, dfftp%nr2
   do ix = 1, dfftp%nr1

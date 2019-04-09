@@ -20,7 +20,7 @@ SUBROUTINE lr_sym_eels (dvtosym)
   USE constants,        ONLY : tpi
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at
-  USE symm_base,        ONLY : s, ftau
+  USE symm_base,        ONLY : s, ft
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
 
   USE lr_symm_base, ONLY : minus_q, nsymq, irotmq, gi, gimq
@@ -29,6 +29,7 @@ SUBROUTINE lr_sym_eels (dvtosym)
   !
   COMPLEX(DP) :: dvtosym(dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
   ! the charge density response to be symmetrized
+  INTEGER :: ftau(3,48)
   INTEGER :: is, ri, rj, rk, i, j, k, ipol, isym, irot
   ! counters
   REAL(DP) :: gf(3), n(3)
@@ -50,6 +51,10 @@ SUBROUTINE lr_sym_eels (dvtosym)
   n(1) = tpi / DBLE (dfftp%nr1)
   n(2) = tpi / DBLE (dfftp%nr2)
   n(3) = tpi / DBLE (dfftp%nr3)
+  !
+  ftau(1,1:nsymq) = NINT (ft(1,1:nsymq)*dfftp%nr1)
+  ftau(2,1:nsymq) = NINT (ft(2,1:nsymq)*dfftp%nr2)
+  ftau(3,1:nsymq) = NINT (ft(3,1:nsymq)*dfftp%nr3)
   !
   !------------------------------------------------------------------------!
   !  If necessary, symmetrize with respect to the sym.op.  S*q = -q + G    !

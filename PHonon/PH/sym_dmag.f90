@@ -16,7 +16,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   USE constants, ONLY: tpi
   USE fft_base, ONLY: dfftp
   USE cell_base, ONLY : at, bg
-  USE symm_base, ONLY : s, ftau, t_rev, sname, invs
+  USE symm_base, ONLY : s, ft, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
   USE modes,   ONLY : t, tmq
 
@@ -31,6 +31,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   complex(DP) :: dmagtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
   ! the magnetization to symmetrize (only 2:4 components)
 
+  integer :: ftau(3,48)
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
        irot, kpol
   !  counter on spin polarizations
@@ -69,6 +70,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   in2 = tpi / DBLE (dfftp%nr2)
   in3 = tpi / DBLE (dfftp%nr3)
 
+  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 ) 
+  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 ) 
+  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 ) 
   if (minus_q) then
      g1 (1) = 0.d0
      g2 (1) = 0.d0

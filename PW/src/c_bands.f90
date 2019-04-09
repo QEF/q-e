@@ -848,7 +848,11 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... calculate starting  wavefunctions
      !
-     IF ( iverbosity > 0 ) WRITE( stdout, 9001 ) ik
+     IF ( iverbosity > 0 .AND. npool == 1 ) THEN
+        WRITE( stdout, 9001 ) ik, nks
+     ELSE IF ( iverbosity > 0 .AND. npool > 1 ) THEN
+        WRITE( stdout, 9002 ) ik, nks
+     END IF
      !
      IF ( TRIM(starting_wfc) == 'file' ) THEN
         !
@@ -908,7 +912,8 @@ SUBROUTINE c_bands_nscf( )
   !
   ! formats
   !
-9001 FORMAT(/'     Computing kpt #: ',I5 )
+9002 FORMAT(/'     Computing kpt #: ',I5, '  of ',I5,' on this pool' )
+9001 FORMAT(/'     Computing kpt #: ',I5, '  of ',I5 )
 9000 FORMAT( '     total cpu time spent up to now is ',F10.1,' secs' )
   !
 END SUBROUTINE c_bands_nscf

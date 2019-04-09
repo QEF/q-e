@@ -426,7 +426,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE mp_world, ONLY : mpime, nproc, world_comm
   USE mp_bands, ONLY : intra_bgrp_comm, nbgrp
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
-  USE symm_base, ONLY : s, ftau, nsym
+  USE symm_base, ONLY : s, ft, nsym
   USE wavefunctions, ONLY : evc
   USE wvfct, ONLY : npwx, nbnd, et, wg
   USE gvecw, ONLY : ecutwfc
@@ -602,9 +602,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       ENDDO
     ENDDO
     CALL invmat ( 3, r1, r2 )
-    t1 ( 1 ) = dble ( ftau ( 1, i ) ) / dble ( dfftp%nr1 )
-    t1 ( 2 ) = dble ( ftau ( 2, i ) ) / dble ( dfftp%nr2 )
-    t1 ( 3 ) = dble ( ftau ( 3, i ) ) / dble ( dfftp%nr3 )
+    t1 ( 1 ) = ft ( 1, i )
+    t1 ( 2 ) = ft ( 2, i )
+    t1 ( 3 ) = ft ( 3, i )
     DO j = 1, nd
       t2 ( j ) = 0.0D0
       DO k = 1, nd
@@ -1227,7 +1227,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rhoz_or_updw
-  USE symm_base, ONLY : s, ftau, nsym
+  USE symm_base, ONLY : s, ft, nsym
   USE matrix_inversion
 
   IMPLICIT NONE
@@ -1296,9 +1296,9 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
       ENDDO
     ENDDO
     CALL invmat ( 3, r1, r2 )
-    t1 ( 1 ) = dble ( ftau ( 1, i ) ) / dble ( dfftp%nr1 )
-    t1 ( 2 ) = dble ( ftau ( 2, i ) ) / dble ( dfftp%nr2 )
-    t1 ( 3 ) = dble ( ftau ( 3, i ) ) / dble ( dfftp%nr3 )
+    t1 ( 1 ) = ft ( 1, i )
+    t1 ( 2 ) = ft ( 2, i )
+    t1 ( 3 ) = ft ( 3, i )
     DO j = 1, nd
       t2 ( j ) = 0.0D0
       DO k = 1, nd
@@ -1513,7 +1513,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
-  USE symm_base, ONLY : s, ftau, nsym
+  USE symm_base, ONLY : s, ft, nsym
   USE wavefunctions, ONLY : psic
   USE matrix_inversion
 
@@ -1584,9 +1584,9 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
       ENDDO
     ENDDO
     CALL invmat ( 3, r1, r2 )
-    t1 ( 1 ) = dble ( ftau ( 1, i ) ) / dble ( dfftp%nr1 )
-    t1 ( 2 ) = dble ( ftau ( 2, i ) ) / dble ( dfftp%nr2 )
-    t1 ( 3 ) = dble ( ftau ( 3, i ) ) / dble ( dfftp%nr3 )
+    t1 ( 1 ) = ft ( 1, i )
+    t1 ( 2 ) = ft ( 2, i )
+    t1 ( 3 ) = ft ( 3, i )
     DO j = 1, nd
       t2 ( j ) = 0.0D0
       DO k = 1, nd
@@ -2218,7 +2218,7 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : vltot, v
-  USE symm_base, ONLY : s, ftau, nsym
+  USE symm_base, ONLY : s, ft, nsym
   USE wavefunctions, ONLY : psic
   USE matrix_inversion
 
@@ -2290,9 +2290,9 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
       ENDDO
     ENDDO
     CALL invmat ( 3, r1, r2 )
-    t1 ( 1 ) = dble ( ftau ( 1, i ) ) / dble ( dfftp%nr1 )
-    t1 ( 2 ) = dble ( ftau ( 2, i ) ) / dble ( dfftp%nr2 )
-    t1 ( 3 ) = dble ( ftau ( 3, i ) ) / dble ( dfftp%nr3 )
+    t1 ( 1 ) = ft ( 1, i )
+    t1 ( 2 ) = ft ( 2, i )
+    t1 ( 3 ) = ft ( 3, i )
     DO j = 1, nd
       t2 ( j ) = 0.0D0
       DO k = 1, nd
@@ -2432,7 +2432,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
     intra_pool_comm, inter_pool_comm
   USE mp_wave, ONLY : mergewf
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
-  USE symm_base, ONLY : s, ftau, nsym
+  USE symm_base, ONLY : s, ft, nsym
   USE uspp, ONLY : nkb, vkb, deeq
   USE uspp_param, ONLY : nhm, nh
   USE wvfct, ONLY : npwx
@@ -2516,9 +2516,9 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
       ENDDO
     ENDDO
     CALL invmat ( 3, r1, r2 )
-    t1 ( 1 ) = dble ( ftau ( 1, i ) ) / dble ( dfftp%nr1 )
-    t1 ( 2 ) = dble ( ftau ( 2, i ) ) / dble ( dfftp%nr2 )
-    t1 ( 3 ) = dble ( ftau ( 3, i ) ) / dble ( dfftp%nr3 )
+    t1 ( 1 ) = ft ( 1, i )
+    t1 ( 2 ) = ft ( 2, i )
+    t1 ( 3 ) = ft ( 3, i )
     DO j = 1, nd
       t2 ( j ) = 0.0D0
       DO k = 1, nd

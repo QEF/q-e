@@ -18,7 +18,7 @@ subroutine syme (dvsym)
   !
 
   USE fft_base,  only : dfftp
-  USE symm_base, only : nsym, s, ftau
+  USE symm_base, only : nsym, s, ft
   USE noncollin_module, only : nspin_lsda, nspin_mag
   USE kinds, only : DP
   implicit none
@@ -28,6 +28,7 @@ subroutine syme (dvsym)
   ! the potential to symmetrize
   ! auxiliary quantity
 
+  integer :: ftau(3,48)
   integer :: is, ri, rj, rk, i, j, k, irot, ipol, jpol
   ! counter on spin polarization
   ! the rotated points
@@ -50,6 +51,9 @@ subroutine syme (dvsym)
      !
      !  symmmetrize
      !
+     ftau(1,1:nsym) = NINT ( ft(1,1:nsym)*dfftp%nr1 ) 
+     ftau(2,1:nsym) = NINT ( ft(2,1:nsym)*dfftp%nr2 ) 
+     ftau(3,1:nsym) = NINT ( ft(3,1:nsym)*dfftp%nr3 )
      do k = 1, dfftp%nr3
         do j = 1, dfftp%nr2
            do i = 1, dfftp%nr1

@@ -363,7 +363,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   USE global_version, ONLY : version_number
   USE becmod,         ONLY : bec_type, becp, calbec, &
                              allocate_bec_type, deallocate_bec_type
-  USE symm_base,      ONLY : nsym, s, invsym, sname, irt, ftau
+  USE symm_base,      ONLY : nsym, s, invsym, sname, irt, ft
   USE  uspp,          ONLY : nkb, vkb
   USE wavefunctions,  ONLY : evc
   USE io_files,       ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
@@ -387,7 +387,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   LOGICAL, INTENT(in) :: uspp_spsi, ascii, single_file, raw
 
   INTEGER :: npw, i, j, k, ig, ik, ibnd, na, ngg,ig_, ierr
-  real(DP) :: xyz(3), tmp(3)
+  real(DP) :: xyz(3)
   INTEGER :: ike, iks, npw_g, npwx_g, ispin, local_pw
   INTEGER, EXTERNAL :: global_kpoint_index
   INTEGER, ALLOCATABLE :: ngk_g( : )
@@ -594,15 +594,11 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        CALL iotk_write_attr ( attr,"name", trim(sname(i)), FIRST=.true. )
        CALL iotk_write_empty(50,"info"//trim(iotk_index(i)), ATTR=attr )
        !
-       tmp(1) = ftau(1,i) / dble( dfftp%nr1 )
-       tmp(2) = ftau(2,i) / dble( dfftp%nr2 )
-       tmp(3) = ftau(3,i) / dble( dfftp%nr3 )
-       !
        CALL iotk_write_attr(attr,"units","crystal",first=.true.)
        !
        CALL iotk_write_dat (50,"sym"//trim(iotk_index(i)), &
                                 s(1:3,1:3,i), ATTR=attr, COLUMNS=3)
-       CALL iotk_write_dat (50,"trasl"//trim(iotk_index(i)), tmp(:), ATTR=attr )
+       CALL iotk_write_dat (50,"trasl"//trim(iotk_index(i)), ft(:,i), ATTR=attr )
        !
     ENDDO
     !

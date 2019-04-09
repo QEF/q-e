@@ -17,7 +17,7 @@ subroutine sym_dmage (dvsym)
   USE kinds, only : DP
   USE cell_base,only : at, bg
   USE fft_base, only : dfftp
-  USE symm_base,only : nsym, sname, s, ftau, t_rev, invs
+  USE symm_base,only : nsym, sname, s, ft, t_rev, invs
   USE lsda_mod, only : nspin
   implicit none
 
@@ -26,7 +26,7 @@ subroutine sym_dmage (dvsym)
   complex(DP) ::  dmags(3,3), mag(3), magrot(3)
   ! the potential to symmetrize
   ! auxiliary quantity
-
+  integer :: ftau(3,48)
   integer :: is, ri, rj, rk, i, j, k, irot, ipol, jpol, kpol
   ! counter on spin polarization
   ! the rotated points
@@ -51,6 +51,9 @@ subroutine sym_dmage (dvsym)
   !
   !  symmmetrize
   !
+  ftau(1,1:nsym) = NINT ( ft(1,1:nsym)*dfftp%nr1 ) 
+  ftau(2,1:nsym) = NINT ( ft(2,1:nsym)*dfftp%nr2 ) 
+  ftau(3,1:nsym) = NINT ( ft(3,1:nsym)*dfftp%nr3 ) 
   do k = 1, dfftp%nr3
      do j = 1, dfftp%nr2
         do i = 1, dfftp%nr1
