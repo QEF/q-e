@@ -1162,7 +1162,7 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    !
    ! Uses nkqs and index_sym from module pw2wan, computes rir
    !
-   USE symm_base,       ONLY : s, ftau, allfrac
+   USE symm_base,       ONLY : s, ft, allfrac
    USE fft_base,        ONLY : dffts
    USE cell_base,       ONLY : at, bg
    USE wannier,         ONLY : rir, read_sym
@@ -1174,8 +1174,8 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    INTEGER  , intent(in) :: nsym
    REAL(DP) , intent(in) :: sr(3,3,nsym), tvec(3,nsym)
    REAL(DP) :: st(3,3), v(3)
-   INTEGER, allocatable :: s_in(:,:,:), ftau_in(:,:)
-   !REAL(DP), allocatable:: ftau_in(:,:)
+   INTEGER, allocatable :: s_in(:,:,:)
+   REAL(DP), allocatable:: ft_in(:,:)
    INTEGER :: nxxs, nr1,nr2,nr3, nr1x,nr2x,nr3x
    INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir
    LOGICAL :: ispresent(nsym)
@@ -1189,7 +1189,7 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    nxxs = nr1x*nr2x*nr3x
    !
    !  sr -> s
-   ALLOCATE(s_in(3,3,nsym), ftau_in(3,nsym))
+   ALLOCATE(s_in(3,3,nsym), ft_in(3,nsym))
    IF(read_sym ) THEN
       IF(allfrac) THEN
          call errore("pw2wan_set_symm", "use_all_frac = .true. + read_sym = .true. not supported", 1)
@@ -1199,17 +1199,17 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
          st = transpose( matmul(transpose(bg), transpose(sr(:,:,isym))) )
          s_in(:,:,isym) = nint( matmul(transpose(at), st) )
          v = matmul(transpose(bg), tvec(:,isym))
-         ftau_in(1,isym) = nint(v(1)*nr1)
-         ftau_in(2,isym) = nint(v(2)*nr2)
-         ftau_in(3,isym) = nint(v(3)*nr3)
+         ft_in(1,isym) = v(1)
+         ft_in(2,isym) = v(2)
+         ft_in(3,isym) = v(3)
       END DO
-      IF( any(s(:,:,1:nsym) /= s_in(:,:,1:nsym)) .or. any(ftau_in(:,1:nsym) /= ftau(:,1:nsym)) ) THEN
+      IF( any(s(:,:,1:nsym) /= s_in(:,:,1:nsym)) .or. any(ft_in(:,1:nsym) /= ft(:,1:nsym)) ) THEN
          write(stdout,*) " Input symmetry is different from crystal symmetry"
          write(stdout,*)
       END IF
    ELSE
       s_in = s(:,:,1:nsym)
-      ftau_in = ftau(:,1:nsym)
+      ft_in = ft(:,1:nsym)
    END IF
    !
    IF(.not. allocated(rir)) ALLOCATE(rir(nxxs,nsym))
@@ -1240,7 +1240,7 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
             ENDDO
          ENDDO
    ENDDO
-   DEALLOCATE(s_in, ftau_in)
+   DEALLOCATE(s_in, ft_in)
 END SUBROUTINE pw2wan_set_symm
 
 !-----------------------------------------------------------------------

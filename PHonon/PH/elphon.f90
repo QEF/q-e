@@ -1296,7 +1296,7 @@ SUBROUTINE elphfil_epa(iq)
   USE mp_pools, ONLY : npool, intra_pool_comm
   USE qpoint, ONLY : nksq, nksqtot, ikks, ikqs, eigqts
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
-  USE symm_base, ONLY : s, invs, ftau, nrot, nsym, nsym_ns, &
+  USE symm_base, ONLY : s, invs, ft, nrot, nsym, nsym_ns, &
        nsym_na, ft, sr, sname, t_rev, irt, time_reversal, &
        invsym, nofrac, allfrac, nosym, nosym_evc, no_t_rev
   USE wvfct, ONLY : nbnd, et, wg
@@ -1317,7 +1317,7 @@ SUBROUTINE elphfil_epa(iq)
   INTEGER, ALLOCATABLE :: ngk_collect(:)
   INTEGER, ALLOCATABLE :: ikks_collect(:), ikqs_collect(:)
   COMPLEX(DP), ALLOCATABLE :: el_ph_mat_collect(:,:,:,:)
-
+  INTEGER :: ftau(3,48)
   INTEGER, EXTERNAL :: find_free_unit, atomic_number
 
   filelph = TRIM(prefix) // '.epa.k'
@@ -1422,7 +1422,12 @@ SUBROUTINE elphfil_epa(iq)
      WRITE(iuelph) (num_rap_mode(ii), ii = 1, nmodes)
      WRITE(iuelph) (((s(ii, jj, kk), ii = 1, 3), jj = 1, 3), kk = 1, 48)
      WRITE(iuelph) (invs(ii), ii = 1, 48)
+     ! FIXME: should disappear
+     ftau(1,1:48) = NINT(ft(1,1:48)*dfftp%nr1)
+     ftau(2,1:48) = NINT(ft(2,1:48)*dfftp%nr2)
+     ftau(3,1:48) = NINT(ft(3,1:48)*dfftp%nr3)
      WRITE(iuelph) ((ftau(ii, jj), ii = 1, 3), jj = 1, 48)
+     ! end FIXME
      WRITE(iuelph) ((ft(ii, jj), ii = 1, 3), jj = 1, 48)
      WRITE(iuelph) (((sr(ii, jj, kk), ii = 1, 3), jj = 1, 3), kk = 1, 48)
      WRITE(iuelph) (sname(ii), ii = 1, 48)
