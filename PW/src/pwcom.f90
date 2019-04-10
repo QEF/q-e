@@ -160,11 +160,11 @@ MODULE rap_point_group_is
    USE kinds,      ONLY : DP
    !
    INTEGER :: &
-          ftau_is(3,48), & ! The fractional transl. of the invariant subgroup
           nsym_is,       & ! The number of operations of the invariant subgroup
           code_group_is    ! The code of the point invariant subgroup
 
    REAL(DP) :: &
+          ft_is(3,48),   & ! The fractional transl. of the invariant subgroup
           sr_is(3,3,48)    ! The matrices of the invariant subgroup
 
    COMPLEX(DP) :: &
