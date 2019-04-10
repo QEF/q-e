@@ -929,10 +929,11 @@ MODULE pw_restart_new
       INTEGER,EXTERNAL        :: find_free_unit
       !  
       ! 
-      ierr = 1
+      ierr = 0
       ! 
       iunpun = find_free_unit()
       IF (iunpun < 0 ) THEN
+         ierr = 1
          errmsg='internal error: no free unit to open data-file-schema.xml'
          GOTO 100
       END IF
@@ -941,6 +942,7 @@ MODULE pw_restart_new
       filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // TRIM(xmlpun_schema)
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) THEN
+         ierr = 1
          errmsg='xml data file ' // TRIM(filename) // ' not found'
          GOTO 100
       END IF
@@ -990,11 +992,11 @@ MODULE pw_restart_new
              CALL infomsg ('pw_readschema_file',& 
                             'failed retrieving input info from xml file, please check it')
              IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
+             ierr = 0
          END IF
       END IF
       ! 
       CALL destroy(root)       
-      ierr = 0
 
  100  CALL errore('pw_readschemafile',TRIM(errmsg),ierr)
       !
