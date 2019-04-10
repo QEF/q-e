@@ -35,9 +35,9 @@ PROGRAM ibrav2cell
   !   at=at/celldm(1)
   !   CALL recips(at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3))
   WRITE(*,'(a)') "Unit cell (bohr):"
-  WRITE(*,'(3f15.8)') at(:,1)
-  WRITE(*,'(3f15.8)') at(:,2)
-  WRITE(*,'(3f15.8)') at(:,3)
+  WRITE(*,'(3f25.15)') at(:,1)
+  WRITE(*,'(3f25.15)') at(:,2)
+  WRITE(*,'(3f25.15)') at(:,3)
   at=at/celldm(1)
   WRITE(*,'(a,f12.6,a)') "Unit cell in units of alat (=", celldm(1)," bohr):"
   WRITE(*,'(3f15.8)') at(:,1)
