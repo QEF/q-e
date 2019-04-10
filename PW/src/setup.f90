@@ -137,7 +137,7 @@ SUBROUTINE setup()
         IF (ecutfock /= 4*ecutwfc) CALL infomsg &
            ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
         IF ( lmd .OR. lbfgs ) CALL errore &
-           ('setup','forces for hybrid functionals + US/PAW not implemented')
+           ('setup','forces for hybrid functionals + US/PAW not implemented',1)
         IF ( noncolin ) CALL errore &
            ('setup','Noncolinear hybrid XC for USPP not implemented',1)
      END IF
