@@ -8,6 +8,7 @@
 #
 # Written by Lorenzo Paulatto 2017
 #
+from __future__ import print_function
 from os.path import realpath, basename
 from sys import argv
 myname = basename(argv[0])
@@ -64,7 +65,7 @@ def main() :
 #           7.979999999999999E+00,   1.474991525399383E+00,   2.168870673876157E+00]
 
   if args.alat and args.angst:
-    print "You cannot specifiy both '-A' and '--alat'"
+    print("You cannot specifiy both '-A' and '--alat'")
     exit(254)
 
   cell = args.at
@@ -76,32 +77,45 @@ def main() :
   elif args.alat:
     cell = array(cell)*args.alat
 
-  bnds = ((0,None), (0,None), (0,None), (-1,1), (-1,1), (-1,1), 
-          (0,360), (0,360), (0,360))
+  #bnds = ((0,None), (0,None), (0,None), (-1,1), (-1,1), (-1,1), 
+  #        (0,360), (0,360), (0,360))
   #bnds = ((0,None), (0,0), (0,None), (0,0), (0,0), (0,0), 
   #        (0,360), (0,360), (0,360))
   
-  print "Scanning..."
+  print("Scanning...")
   for ibrav in args.ibrav_list:
-      p=args.celldm
+      p=[]
+      p.extend(args.celldm)
       p.extend(args.angle)
+      #print p
       args0 = { "ibrav" : ibrav,
                 "cell"  : cell
                   }
       options={"maxiter" : 100000,
-               "maxfev"  : 100000, 
-               "rhobeg" : .001,
+               "maxls"   : 10000,
+               "maxcor"  : 10000,
+               "eps"     : 1.e-6,
+               "ftol"    : 1.e-24,
+               "gtol"    : 1.e-24,
+               "disp"    : False
                 }
+
+      bnds = guess_bounds(p,ibrav)
+      #print bnds
       #from scipy.optimize import basinhopping
       #r = basinhopping(recompute, p, minimizer_kwargs={"method":"L-BFGS-B", "bounds":bnds, "args":tuple([args0])}, niter=10)
       from scipy.optimize import minimize
-      #r = minimize(recompute, p, args=tuple([options]), method="L-BFGS-B", tol=args.kthr, bounds=bnds)
-      r = minimize(recompute, p, args=tuple([args0]), method="COBYLA", tol=args.kthr, bounds=bnds, options=options)
+      r = minimize(recompute, p, args=tuple([args0]), method="L-BFGS-B",
+                   tol=args.kthr, bounds=bnds, options=options)
+      #r = minimize(recompute, p, args=tuple([args0]), method="Powell",                   tol=args.kthr, bounds=bnds, options=options)
       #print r
       #!if r["fun"] < args.mthr:
-      print "Final values:"
-      print "  ibrav =", ibrav 
-      check_zero(r["x"], ibrav)
+      if r["success"] and r["fun"]<.1:
+      #if True:
+        print()
+        print("  ibrav =", ibrav )
+        print("Final discrepancy: {:.1e}".format(r["fun"]))
+        check_zero(r["x"], ibrav)
       #elif r["fun"] < 100*args.mthr:
       #  print "possible noisy match found: ibrav =", ibrav 
       #  check_zero(r["x"], ibrav)
@@ -110,16 +124,16 @@ def check_ibrav2cell():
   from numpy import array
   from sys import argv
   if not is_exe(ibrav2cell_x):
-    print " File '"+ibrav2cell_x+"' not found or not executable."
-    print " Specify the position of ibrav2cell.x with the '-x' command line option." 
-    print " Use '-h' for more help."
+    print(" File '"+ibrav2cell_x+"' not found or not executable.")
+    print(" Specify the position of ibrav2cell.x with the '-x' command line option.")
+    print(" Use '-h' for more help.")
     exit(100)
   namelist = make_namelist(1,[1,0,0,0,0,0,0,0,0])
   at = compute_cell(namelist)
   if not at or len(at)!=9 or any(at != array([1,0,0,0,1,0,0,0,1])):
-    print " File '"+ibrav2cell_x+"' not working as expected."
-    print " Please verify that it comes from the same distribution as '"+argv[0]+"'"
-    print " and that it is running correctly."
+    print(" File '"+ibrav2cell_x+"' not working as expected.")
+    print(" Please verify that it comes from the same distribution as '"+argv[0]+"'")
+    print(" and that it is running correctly.")
     exit(101)
 
 def is_exe(fpath):
@@ -131,8 +145,9 @@ def run_command(executable_file, input_data):
     proc = subprocess.Popen(executable_file,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
+                            stderr=subprocess.STDOUT
                             )
+                            #text=True
     output, error = proc.communicate(input_data)
     return (output, error)
 
@@ -176,15 +191,15 @@ def constraint(p):
 def cell_stdin():
   #import fileinput
   from sys import argv, stdin
-  print "Type '{} -h' for help".format(argv[0])
-  print
-  print "Please enter cell parameters: "
+  print("Type '{} -h' for help".format(argv[0]))
+  print()
+  print("Please enter cell parameters: ")
   at = []
   while len(at)<9:
     line = stdin.readline()
     for w in line.split():
       at.append(float(w))
-  print " ------------------------ ok"
+  print(" ok ")
   return at
 
 def compute_cell(namelist):
@@ -195,7 +210,7 @@ def compute_cell(namelist):
   output_cell = output_lines[-7]+output_lines[-6]+output_lines[-5]
 #  print output_cell
   try:
-    at = map(float, output_cell.split())
+    at = list(map(float, output_cell.split()))
   except ValueError:
     at = [0,0,0, 0,0,0, 0,0,0]
   if any(isnan(at)):
@@ -218,10 +233,31 @@ def check_zero(p, ibrav):
       p_out[i] = 0
     else:
       if i < 6:
-        print "    celldm({:d}) = {:.6f}".format(i+1, p[i])
+        print("    celldm({:d}) = {:.6f}".format(i+1, p[i]))
       else :
-        print "    angle({:d})  = {:.6f}".format(i-5, p[i])
+        print("    angle({:d})  = {:.6f}".format(i-5, p[i]))
   return array(p_out)
+
+def guess_bounds(p, ibrav):
+  from numpy import array
+  from numpy.linalg import norm
+  namelist = make_namelist(ibrav,p)
+  at0 = array(compute_cell(namelist))
+  bnds = [(0,None), (0,None), (0,None), (-1,1), (-1,1), (-1,1), 
+          (-180,180), (-180,180), (-180,180)]
+  
+  for i in range(len(p)):
+    q = list(p)
+    q[i] = 0
+    namelist = make_namelist(ibrav,q)
+    at1 = array(compute_cell(namelist))
+    q[i] = 1
+    namelist = make_namelist(ibrav,q)
+    at2 = array(compute_cell(namelist))
+    if norm(at0-at1)==0 and norm(at0-at2)==0:
+      #print i
+      bnds[i] = (0,0)
+  return array(tuple(bnds))
 
 def recompute(p, options):
   from numpy import array
@@ -230,7 +266,33 @@ def recompute(p, options):
   at = compute_cell(namelist)
   at1 = array(at)
   at0 = array(options["cell"])
-  return norm(at1-at0)
+  pat = permutations(at0)
+  diff =1000000
+  for i in range(6):
+    #print(at1)
+    #print(pat[0])
+    diff = min( norm(at1-pat[i]), diff )
+  #print(diff)
+  return diff
+
+def permutations(c):
+  #w, h = 9, 6;
+  from numpy import array
+  p = [[]]
+  p.append([])
+  p[0].append(c)
+  p.append([])
+  p[1].append(array([c[0], c[1], c[2], c[6], c[7], c[8], c[3], c[4], c[5]]))
+  p.append([])
+  p[2].append(array([c[3], c[4], c[5], c[0], c[1], c[2], c[6], c[7], c[8]]))
+  p.append([])
+  p[3].append(array([c[3], c[4], c[5], c[6], c[7], c[8], c[0], c[1], c[2]]))
+  p.append([])
+  p[4].append(array([c[6], c[7], c[8], c[0], c[1], c[2], c[3], c[4], c[5]]))
+  p.append([])
+  p[5].append(array([c[6], c[7], c[8], c[3], c[4], c[5], c[0], c[1], c[2]]))
+  #print(p)
+  return (p)
 
 main()
 
