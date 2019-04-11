@@ -114,8 +114,9 @@ def main() :
       #if True:
         print()
         print("  ibrav =", ibrav )
-        print("Final discrepancy: {:.1e}".format(r["fun"]))
         check_zero(r["x"], ibrav)
+        print("Final discrepancy: {:.1e}".format(r["fun"]))
+        print()
       #elif r["fun"] < 100*args.mthr:
       #  print "possible noisy match found: ibrav =", ibrav 
       #  check_zero(r["x"], ibrav)
