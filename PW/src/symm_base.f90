@@ -29,14 +29,9 @@ MODULE symm_base
   PUBLIC :: s, sr, sname, ft, nrot, nsym, nsym_ns, nsym_na, t_rev, &
             no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
             allfrac, nofrac, nosym, nosym_evc, fft_fact, spacegroup
-  PUBLIC :: ftau
-  ! ... IMPORTANT NOTE: fractional translations are computed and stored in ft;
-  ! ... ftau is for compatibility only and is not computed here, but only in
-  ! ... remove_symm (used by EPW) or when symmetries are read from xml file
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
-       ftau(3,48),           &! fractional translations, in FFT coordinates
        fft_fact(3),          &! FFT dimensions must be multiple of fft_fact
        nrot,                 &! number of bravais lattice symmetries
        spacegroup = 0,       &! space group index, as read from input
@@ -498,7 +493,6 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
      !
      !      first attempt: no fractional translation
      !
-     ftau (:, irot) = 0
      ft (:, irot) = 0
      ft_(:) = 0.d0
      !
@@ -718,9 +712,6 @@ INTEGER FUNCTION copy_sym ( nrot_, sym )
            stemp = s(:,:,jrot)
            s (:,:, jrot) = s (:,:, irot)
            s (:,:, irot) = stemp
-           ftemp(:) = ftau(:,jrot)
-           ftau (:, jrot) = ftau (:, irot)
-           ftau (:, irot) = ftemp(:)
            ft_(:) = ft(:,jrot)
            ft (:, jrot) = ft (:, irot)
            ft (:, irot) = ft_(:)
@@ -1073,7 +1064,6 @@ SUBROUTINE sgam_at_ifc ( nat, tau, ityp, sym )
      !
      !      first attempt: no fractional translation
      !
-     ftau (:, irot) = 0
      ft (:, irot) = 0
      ft_(:) = 0.d0
      !
@@ -1166,7 +1156,6 @@ SUBROUTINE remove_sym ( nr1, nr2, nr3 )
         nsym_na = nsym_na + 1
         nsym_ns = nsym_ns - 1
      ENDIF
-     ftau (:, isym) = nint (ftaux(:))
      !
   ENDDO
   !

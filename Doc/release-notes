@@ -1,3 +1,11 @@
+Problems fixed in development branch :
+  * option "write_unkg" of pw2wannier90.f90 wasn't working as expected
+
+Incompatible changes in development branch :
+  * fractional translations "ftau" in FFT grid units no longer existing as
+    global variables: replaced by "ft", in crystal axis, computed locally
+    where needed (in real-space symmetrization only)
+
 New in 6.4.1 branch :
   * A warning is issued if the lattice parameter seems to be a conversion
     factor instead of a true lattice parameter. Conversion should be achieved

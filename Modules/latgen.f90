@@ -479,7 +479,7 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   !
 END SUBROUTINE at2celldm
 !
-INTEGER FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
+FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   !
   !     Returns ibrav from lattice vectors if recognized, 0 otherwise
   !
@@ -488,6 +488,7 @@ INTEGER FUNCTION at2ibrav (a1, a2, a3) RESULT (ibrav)
   REAL(dp), INTENT (in) :: a1(3), a2(3), a3(3)
   REAL(dp) :: v1, v2, v3, cosab, cosac, cosbc
   !
+  INTEGER :: ibrav
   ibrav =0
   !
   v1 = sqrt( dot_product( a1,a1 ) )

@@ -915,7 +915,7 @@ MODULE pw_restart_new
       USE qes_read_module,      ONLY : qes_read
       IMPLICIT NONE 
       ! 
-      INTEGER                                            :: ierr, io_err  
+      INTEGER                                            :: ierr
       TYPE( output_type ),OPTIONAL,        INTENT(OUT)   :: restart_output
       TYPE(parallel_info_type),OPTIONAL,   INTENT(OUT)   :: restart_parallel_info
       TYPE(general_info_type ),OPTIONAL,   INTENT(OUT)   :: restart_general_info
@@ -929,19 +929,21 @@ MODULE pw_restart_new
       INTEGER,EXTERNAL        :: find_free_unit
       !  
       ! 
-      ierr = 0 
-      io_err = 0 
+      ierr = 0
       ! 
       iunpun = find_free_unit()
-      IF (iunpun .LT. 0 ) &
-            CALL errore ("pw_readschema_file", "could not find a free unit to open data-file-schema.xml", 1)
+      IF (iunpun < 0 ) THEN
+         ierr = 1
+         errmsg='internal error: no free unit to open data-file-schema.xml'
+         GOTO 100
+      END IF
       CALL qexsd_init_schema( iunpun )
       !
-      filename = TRIM( tmp_dir ) // TRIM( prefix ) // postfix // TRIM( xmlpun_schema )
+      filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // TRIM(xmlpun_schema)
       INQUIRE ( file=filename, exist=found )
-      IF (.NOT. found ) ierr = ierr + 1
-      IF ( ierr /=0 ) THEN
-         errmsg='xml data file not found'
+      IF (.NOT. found ) THEN
+         ierr = 1
+         errmsg='xml data file ' // TRIM(filename) // ' not found'
          GOTO 100
       END IF
       !
@@ -951,7 +953,7 @@ MODULE pw_restart_new
          nodePointer => item ( getElementsByTagname(root, "general_info"),0)
          CALL qes_read( nodePointer, restart_general_info, ierr)
          IF ( ierr /=0 ) THEN
-            errmsg='error header of xml data file'
+            errmsg='error reading header of xml data file'
             GOTO 100
          END IF
          ! CALL qes_write_general_info( 82, restart_general_info) 
@@ -986,11 +988,11 @@ MODULE pw_restart_new
          ELSE 
             ierr = 5
          END IF
-         IF (ierr /= 0 ) THEN
+         IF ( ierr /= 0 ) THEN
              CALL infomsg ('pw_readschema_file',& 
                             'failed retrieving input info from xml file, please check it')
              IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
-             ierr = 0 
+             ierr = 0
          END IF
       END IF
       ! 
@@ -1430,7 +1432,7 @@ MODULE pw_restart_new
     SUBROUTINE readschema_symmetry ( symms_obj, basis_obj, flags_obj  ) 
     !------------------------------------------------------------------------
       ! 
-      USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
+      USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                                  sname, sr, invs, inverse_s, s_axis_to_cart, &
                                  time_reversal, no_t_rev, nosym
       USE control_flags,   ONLY : noinv  
@@ -1462,9 +1464,6 @@ MODULE pw_restart_new
         IF ( (TRIM(sname(isym)) == "inversion") .AND. (isym .LE. nsym) ) invsym = .TRUE.
         IF ( symms_obj%symmetry(isym)%fractional_translation_ispresent .AND. (isym .LE. nsym) ) THEN
            ft(1:3,isym)  =  symms_obj%symmetry(isym)%fractional_translation(1:3) 
-           ftau(1,isym) = NINT( ft(1,isym)*DBLE( basis_obj%fft_grid%nr1 ) )
-           ftau(2,isym) = NINT( ft(2,isym)*DBLE( basis_obj%fft_grid%nr2 ) )
-           ftau(3,isym) = NINT( ft(3,isym)*DBLE( basis_obj%fft_grid%nr3 ) )
         END IF
         IF ( symms_obj%symmetry(isym)%info%time_reversal_ispresent ) THEN  
            IF (symms_obj%symmetry(isym)%info%time_reversal) THEN 
