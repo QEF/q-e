@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------
-  subroutine ktokpmq ( xk, xq, sign, ipool, nkq, nkq_abs)
+  subroutine ktokpmq(xk, xq, sign, ipool, nkq, nkq_abs)
   !--------------------------------------------------------
   !!
   !!   For a given k point in cart coord, find the index 
@@ -23,7 +23,7 @@
   use pwcom,          ONLY : nkstot
   USE cell_base,      ONLY : at
   USE start_k,        ONLY : nk1, nk2, nk3
-  use epwcom,         ONLY : xk_cryst
+  use klist_epw,      ONLY : xk_cryst
   USE mp_global,      ONLY : nproc_pool, npool
   USE mp_images,      ONLY : nproc_image
   USE mp,             ONLY : mp_barrier, mp_bcast
@@ -107,9 +107,9 @@
   n = 0
   found = .false.
   DO ik = 1, nkstot
-     xx_c = xk_cryst(1,ik) * nk1
-     yy_c = xk_cryst(2,ik) * nk2
-     zz_c = xk_cryst(3,ik) * nk3
+     xx_c = xk_cryst(1, ik) * nk1
+     yy_c = xk_cryst(2, ik) * nk2
+     zz_c = xk_cryst(3, ik) * nk3
      !
      ! check that the k-mesh was defined in the positive region of 1st BZ
      !
@@ -129,7 +129,7 @@
   !  since coarse k- and q- meshes are commensurate, one can easily find n
   !  n = nint(xx) * nk2 * nk3 + nint(yy) * nk3 + nint(zz) + 1
   !
-  IF (n .eq. 0) call errore('ktokpmq','problem indexing k+q',1)
+  IF (n == 0) call errore('ktokpmq','problem indexing k+q',1)
   !
   !  Now n represents the index of k+sign*q in the original k grid.
   !  In the parallel case we have to find the corresponding pool 

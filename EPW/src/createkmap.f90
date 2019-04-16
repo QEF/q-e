@@ -364,7 +364,7 @@
   USE cell_base,     ONLY : at, bg
   USE start_k,       ONLY : nk1, nk2, nk3
   USE pwcom,         ONLY : nkstot
-  USE epwcom,        ONLY : xk_cryst
+  USE klist_epw,     ONLY : xk_cryst
   USE io_global,     ONLY : stdout, meta_ionode
   USE io_files,      ONLY : prefix
   USE io_epw,        ONLY : iukgmap

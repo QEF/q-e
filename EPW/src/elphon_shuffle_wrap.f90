@@ -35,7 +35,7 @@
   USE ions_base,     ONLY : nat, nsp, tau, ityp
   USE control_flags, ONLY : iverbosity
   USE io_epw,        ONLY : iuepb, iuqpeig
-  USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot
+  USE pwcom,         ONLY : et, nks, nbnd, nkstot
   USE cell_base,     ONLY : at, bg
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart, &
                             sr, nrot, copy_sym, set_sym_bl, find_sym, & 
@@ -47,9 +47,10 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
-  USE elph2,         ONLY : epmatq, dynq, sumr, et_all, xk_all, et_mb, et_ks, &
+  USE elph2,         ONLY : epmatq, dynq, sumr, et_all, et_mb, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all, exband
+  USE klist_epw,     ONLY : xk_all
   USE constants_epw, ONLY : ryd2ev, zero, czero
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
@@ -266,22 +267,20 @@
   ENDIF
   !
   ! Do not recompute dipole matrix elements
-  IF ( epwread .and. .not. epbread ) THEN 
+  IF ( epwread .AND. .NOT. epbread ) THEN 
     CONTINUE
   ELSE
     ! compute coarse grid dipole matrix elements.  Very fast 
-    IF (.not. vme) CALL compute_pmn_para
+    IF (.NOT. vme) CALL compute_pmn_para
   ENDIF
   !
   !  gather electronic eigenvalues for subsequent shuffle
   !  
-  ALLOCATE( xk_all(3,nkstot), et_all(nbnd,nkstot) )
-  xk_all(:,:) = zero
+  ALLOCATE (et_all(nbnd, nkstot))
   et_all(:,:) = zero
-  CALL poolgather(   3, nkstot, nks, xk(:,1:nks),      xk_all)
   CALL poolgather(nbnd, nkstot, nks, et(1:nbnd,1:nks), et_all)
   !
-  IF (.not.kmaps) THEN
+  IF (.NOT. kmaps) THEN
     CALL start_clock('kmaps')
     CALL createkmap_pw2
     CALL stop_clock('kmaps')
