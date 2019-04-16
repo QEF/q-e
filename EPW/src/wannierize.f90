@@ -22,7 +22,7 @@
   USE ions_base,      ONLY : nat
   USE start_k,        ONLY : nk1, nk2, nk3
   USE pwcom,          ONLY : nkstot 
-  USE epwcom,         ONLY : xk_cryst           
+  USE klist_epw,      ONLY : xk_cryst           
   USE wannierEPW,     ONLY : mp_grid, n_wannier, kpt_latt
   USE mp,             ONLY : mp_bcast
   USE mp_world,       ONLY : world_comm

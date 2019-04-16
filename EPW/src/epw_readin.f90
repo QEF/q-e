@@ -20,9 +20,10 @@
   !!     SP: Image parallelization added
   !!
   USE ions_base,     ONLY : nat, ntyp => nsp
+  USE cell_base,     ONLY : at
   USE mp,            ONLY : mp_bcast 
   USE wvfct,         ONLY : nbnd
-  USE klist,         ONLY : nks 
+  USE klist,         ONLY : nks, xk, nkstot 
   USE lsda_mod,      ONLY : lsda
   USE fixed_occ,     ONLY : tfixed_occ
   USE qpoint,        ONLY : xq
@@ -58,6 +59,7 @@
                             restart_filq, prtgkk, nel, meff, epsiHEG, lphase, &
                             omegamin, omegamax, omegastep, n_r, lindabs, &
                             mob_maxiter, use_ws, epmatkqread, selecqread
+  USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero
@@ -68,7 +70,7 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id
   USE io_epw,        ONLY : iunkf, iunqf
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
@@ -89,6 +91,8 @@
   !! auxilary variable for saving the modenum
   INTEGER :: i
   !! Counter for loops
+  INTEGER :: ik
+  !! Counter on k-points
   INTEGER :: nk1tmp
   !! temp vars for saving kgrid info
   INTEGER :: nk2tmp
@@ -185,13 +189,13 @@
   !
   ! added by @ RM
   !
-  ! ephwrite : if true write el-phonon matrix elements on the fine mesh to file
+  ! ephwrite    : if true write el-phonon matrix elements on the fine mesh to file
   ! eps_acustic : min phonon frequency for e-p and a2f calculations (units of cm-1)
-  ! band_plot : if true write files to plot band structure and phonon dispersion
-  ! degaussq : smearing for sum over q in e-ph coupling (units of meV)
-  ! delta_qsmear : change in energy for each additional smearing in the a2f (units of meV)
-  ! nqsmear : number of smearings used to calculate a2f
-  ! nqstep : number of bins for frequency used to calculate a2f
+  ! band_plot   : if true write files to plot band structure and phonon dispersion
+  ! degaussq    : smearing for sum over q in e-ph coupling (units of meV)
+  ! delta_qsmear: change in energy for each additional smearing in the a2f (units of meV)
+  ! nqsmear     : number of smearings used to calculate a2f
+  ! nqstep   : number of bins for frequency used to calculate a2f
   ! nswfc    : nr. of grid points between (0,wsfc) in Eliashberg equations 
   ! nswc     : nr. of grid points between (wsfc,wscut)
   ! pwc      : power used to define nswc for non-uniform grid real-axis calculations
@@ -292,6 +296,7 @@
   ! omegastep : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
   ! n_r       :  constant refractive index
   ! lindabs   : do phonon-assisted absorption
+  ! 
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
@@ -307,13 +312,13 @@
   !
   ENDIF
   ! 
-  CALL mp_bcast(ios, meta_ionode_id, world_comm )
-  CALL errore( 'epw_readin', 'reading title ', ABS( ios ) )
-  CALL mp_bcast(title, meta_ionode_id, world_comm  )
+  CALL mp_bcast(ios, meta_ionode_id, world_comm)
+  CALL errore('epw_readin', 'reading title ', ABS( ios ))
+  CALL mp_bcast(title, meta_ionode_id, world_comm)
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
   !
-  IF( imatches("&inputepw", title) ) THEN
+  IF(imatches("&inputepw", title)) THEN
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
     IF (meta_ionode) REWIND(5, iostat=ios)
@@ -611,8 +616,8 @@
   !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd
-  fsthick = fsthick / ryd2ev 
-  degaussw = degaussw / ryd2ev 
+  fsthick     = fsthick / ryd2ev 
+  degaussw    = degaussw / ryd2ev 
   delta_smear = delta_smear / ryd2ev 
   !
   ! smearing of phonon in a2f
@@ -686,18 +691,41 @@
   !
   modenum_aux = modenum
   !
-  ! SP: This initialized nspin and nspin_mag
-  IF ( epwread .and. .not. epbread ) THEN
+  ! SP: This initialized xk, nspin and nspin_mag
+  IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
-    CALL read_file
+    CALL read_file()
+    ! 
+    ! We define the global list of coarse grid k-points (cart and cryst)
+    ALLOCATE (xk_all(3, nkstot))
+    ALLOCATE (xk_cryst(3, nkstot))
+    xk_all(:,:)   = zero
+    xk_cryst(:,:) = zero
+    DO ik=1, nkstot
+      xk_all(:, ik)   = xk(:, ik)
+      xk_cryst(:, ik) = xk(:, ik)
+    ENDDO
+    !  bring k-points from cartesian to crystal coordinates
+    CALL cryst_to_cart(nkstot, xk_cryst, at, -1)
+    ! Only master has the correct full list of kpt. Therefore bcast to all cores
+    CALL mp_bcast(xk_all, ionode_id, world_comm)
+    CALL mp_bcast(xk_cryst, ionode_id, world_comm)
+    ! 
+    ! We define the local list of kpt
+    ALLOCATE (xk_loc(3, nks))
+    xk_loc(:,:) = zero
+    DO ik=1, nks
+      xk_loc(:, ik) = xk(:, ik)
+    ENDDO 
+    ! 
   ENDIF
   !
   ! nbnd comes out of readfile
-  IF (nbndsub.eq.0) nbndsub = nbnd
+  IF (nbndsub == 0) nbndsub = nbnd
   !
 #if defined(__MPI)
-  IF (.not.(me_pool /=0 .or. my_pool_id /=0)) THEN
+  IF (.NOT. (me_pool /=0 .OR. my_pool_id /=0)) THEN
      nk1 = nk1tmp
      nk2 = nk2tmp
      nk3 = nk3tmp
@@ -711,10 +739,10 @@
   IF (gamma_only) CALL errore('epw_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
   !
-  IF (modenum_aux .ne. -1) THEN
+  IF (modenum_aux /= -1) THEN
      modenum = modenum_aux
      iswitch = -4
-  ELSEIF (modenum .eq. 0) THEN
+  ELSEIF (modenum == 0) THEN
      iswitch = -2
   ELSE
      iswitch = -4

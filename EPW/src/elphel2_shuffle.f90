@@ -64,7 +64,8 @@
   USE wavefunctions, ONLY : evc
   USE io_files,      ONLY : diropn, seqopn
   USE wvfct,         ONLY : npwx
-  USE pwcom,         ONLY : current_spin, isk, lsda, nbnd, xk, nks
+  USE pwcom,         ONLY : current_spin, isk, lsda, nbnd, nks
+  USE klist_epw,     ONLY : xk_loc, xk_all
   USE cell_base,     ONLY : tpiba
   USE gvect,         ONLY : ngm, g
   USE uspp,          ONLY : vkb
@@ -77,7 +78,7 @@
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : calbec 
   USE elph2,         ONLY : shift, gmap, el_ph_mat, umat, umatq, igk_k_all, &
-                            umat_all, xk_all, et_all, xkq, etq, igkq, igk, &
+                            umat_all, et_all, xkq, etq, igkq, igk, &
                             ngk_all, lower_band, upper_band
   USE fft_base,      ONLY : dffts
   USE constants_epw, ONLY : czero, cone, ci, zero
@@ -233,7 +234,7 @@
      ! (we need to make sure that xk(:,ikq) is really k+q for the KB projectors
      ! below and also that the eigenvalues are taken correctly in ephwann)
      !
-     CALL ktokpmq( xk(:,ik), xq, +1, ipool, nkq, nkq_abs )
+     CALL ktokpmq( xk_loc(:,ik), xq, +1, ipool, nkq, nkq_abs )
      !
      !   we define xkq(:,ik) and etq(:,ik) for the current xq
      !
@@ -277,8 +278,8 @@
      ! With this option, different compilers and different machines
      ! should always give the same wavefunctions.
      !
-     CALL ktokpmq( xk(:,ik),  zero_vect, +1, ipool, nkk, nkk_abs )
-     CALL ktokpmq( xkq(:,ik), zero_vect, +1, ipool, nkk, nkq_abs )
+     CALL ktokpmq(xk_loc(:,ik),  zero_vect, +1, ipool, nkk, nkk_abs)
+     CALL ktokpmq(xkq(:,ik), zero_vect, +1, ipool, nkk, nkq_abs)
      !
      IF ( .not. ALLOCATED(umat) )  ALLOCATE( umat(nbnd,nbnd,nks) )
      IF ( .not. ALLOCATED(umatq) ) ALLOCATE( umatq(nbnd,nbnd,nks) )
@@ -341,7 +342,7 @@
      ! Since in QE a normal rotation s is defined as S^-1 we have here
      ! sxk = S(k).  
      !
-     CALL rotate_cart( xk(:,ik), s(:,:,isym), sxk )
+     CALL rotate_cart( xk_loc(:,ik), s(:,:,isym), sxk )
      !
      ! here we generate vkb on the igk() set and for k ...
      CALL init_us_2( npw, igk, sxk, vkb )
