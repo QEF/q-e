@@ -22,7 +22,7 @@
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout, ionode, ionode_id
   USE io_files,      ONLY : tmp_dir
-  USE klist,         ONLY : xk, nks, nkstot
+  USE klist,         ONLY : nks, nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, rho, kedtau
   USE gvect,         ONLY : ngm
@@ -44,8 +44,9 @@
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE mp_pools,      ONLY : inter_pool_comm
-  USE epwcom,        ONLY : xk_cryst, scattering, nstemp, tempsmin, tempsmax, &
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, &
                             temps
+  USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
   USE start_k,       ONLY : nk1, nk2, nk3
@@ -69,15 +70,6 @@
   !!
   !
   CALL start_clock('epw_setup')
-  !
-  ! 0) Set up list of kpoints in crystal coordinates
-  !
-  DO jk = 1, nkstot
-    xk_cryst(:,jk) = xk(:,jk)
-  ENDDO
-  !  bring k-points from cartesian to crystal coordinates
-  CALL cryst_to_cart(nkstot, xk_cryst, at, -1)
-  CALL mp_bcast(xk_cryst,ionode_id,world_comm)
   !
   !  loosy tolerance: not important 
   DO jk = 1, nkstot

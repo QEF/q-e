@@ -413,11 +413,11 @@
     IF (mpime.eq.ionode_id) THEN
       ! Write to file
       OPEN(unit=linewidth_elself,file='linewidth.elself')
-      WRITE(linewidth_elself, '(a)') '# Electron lifetime (meV)'
+      WRITE(linewidth_elself, '(a)') '# Electron linewidth = 2*Im(Sigma) (meV)'
       IF ( iverbosity == 3 ) THEN
-        WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      imode          Im(Sgima)(meV)'
+        WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      imode          Im(Sigma)(meV)'
       ELSE
-        WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sgima)(meV)'
+        WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sigma)(meV)'
       ENDIF
       ! 
       DO ik = 1, nksqtotf

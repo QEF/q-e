@@ -25,7 +25,8 @@
   USE lrus,                 ONLY : becp1
   USE uspp,                 ONLY : vkb
   USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin, &
-                                   isk, xk
+                                   isk
+  USE klist_epw,            ONLY : xk_loc
   USE constants,            ONLY : tpi
   USE constants_epw,        ONLY : zero, czero, cone
   USE cell_base,            ONLY : tpiba2, tpiba, bg, omega
@@ -113,7 +114,7 @@
     !
     ! ... d) The functions vkb(k+G)
     !
-    CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+    CALL init_us_2( ngk(ik), igk_k(1,ik), xk_loc(1,ik), vkb )
     !
     ! ... read the wavefunctions at k
     !
@@ -132,12 +133,12 @@
       DO ibnd = 1, nbnd
         DO ig = 1, ngk(ik)
           aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * cone * & 
-                          ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+                          ( xk_loc(ipol,ik) + g(ipol,igk_k(ig,ik)) )
         ENDDO
         IF (noncolin) THEN
           DO ig = 1, ngk(ik)
             aux1(ig+npwx,ibnd) = evc(ig+npwx,ibnd) * tpiba *cone *& 
-                      ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+                      ( xk_loc(ipol,ik) + g(ipol,igk_k(ig,ik)) )
           ENDDO
         ENDIF
       ENDDO

@@ -327,8 +327,14 @@ MODULE klist_epw
   !
   SAVE
   !
-  INTEGER :: kmap(npk)  ! map of k+q grid into k grid 
-  REAL(DP) :: xk_cryst(3,npk) ! List of all kpoints in crystal coordinates
+  INTEGER :: kmap(npk)  
+  !! map of k+q grid into k grid 
+  REAL(kind=DP), ALLOCATABLE :: xk_loc(:, :) 
+  !! List of local (each cores) kpoints in cartesian coordinates
+  REAL(kind=DP), ALLOCATABLE :: xk_all(:, :) 
+  !! List of all kpoints in cartesian coordinates
+  REAL(kind=DP), ALLOCATABLE :: xk_cryst(:, :) 
+  !! List of all kpoints in crystal coordinates
   ! 
 END MODULE klist_epw
 !

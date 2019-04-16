@@ -679,7 +679,8 @@
   !!
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout 
-  USE klist,           ONLY : xk, nks, igk_k
+  USE klist,           ONLY : nks, igk_k
+  USE klist_epw,       ONLY : xk_loc
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE wavefunctions,   ONLY : evc
   USE gvect,           ONLY : g, ngm
@@ -775,19 +776,19 @@
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
   ! 
-  DO ik = 1, nks
+  DO ik=1, nks
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq(xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs)
     ik_g = nkq_abs
     !
     WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
-    CALL flush(stdout)
+    CALL FLUSH(stdout)
     ! SP: Replaced by our wrapper to deal with parallel
     CALL readwfc( my_pool_id+1, ik, evc ) 
     !
     ! sorts k+G vectors in order of increasing magnitude, up to ecut
-    CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
+    CALL gk_sort( xk_loc(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
     !
     CALL generate_guiding_functions( ik )   ! they are called gf(npw,n_proj)
  
@@ -801,7 +802,7 @@
     !  USPP
     !
     IF (any_uspp) THEN
-      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+      CALL init_us_2( npw, igk_k(1,ik), xk_loc(1,ik), vkb )
       ! below we compute the product of beta functions with trial func.
       IF (noncolin) THEN
         CALL calbec( npw, vkb, gf_spinor, becp, n_proj )
@@ -1013,7 +1014,8 @@
   USE units_lr,        ONLY : lrwfc, iuwfc
   USE fft_base,        ONLY : dffts
   USE fft_interfaces,  ONLY : fwfft, invfft
-  USE klist,           ONLY : nkstot, xk, nks, igk_k
+  USE klist,           ONLY : nkstot, nks, igk_k
+  USE klist_epw,       ONLY : xk_all, xk_loc
   USE gvect,           ONLY : g, ngm, gstart
   USE gvecw,           ONLY : gcutw
   USE cell_base,       ONLY : omega, tpiba, bg
@@ -1090,8 +1092,6 @@
   !!  Square of dxk
   REAL(DP), ALLOCATABLE :: ylm(:,:)
   !!
-  REAL(DP) :: xktot(3,nkstot)
-  !! Coordinates of k-points
   REAL(DP) :: zero_vect(3)
   !! Temporary zero vector
   REAL(DP) :: arg
@@ -1150,16 +1150,6 @@
   WRITE(stdout,*)
   WRITE(stdout,'(5x,a)') 'MMN'
   !
-  ! Get all the k-vector coords to each pool via xktot
-  !
-  xktot = zero
-  IF (meta_ionode) THEN
-    DO ik = 1, nkstot
-      xktot(:,ik) = xk(:,ik)
-    ENDDO
-  ENDIF
-  CALL mp_sum(xktot, inter_pool_comm)
-  !
   zero_vect = zero
   m_mat = czero
   !
@@ -1190,7 +1180,7 @@
         g_(:) = REAL( g_kpb(:,ik,ib) )
         ! bring g_ to cartesian
         CALL cryst_to_cart( 1, g_, bg, 1 )
-        dxk(:,ind) = xktot(:,ikp) + g_(:) - xktot(:,ik) 
+        dxk(:,ind) = xk_all(:,ikp) + g_(:) - xk_all(:,ik) 
         qg(ind) = dxk(1,ind) * dxk(1,ind) + & 
                   dxk(2,ind) * dxk(2,ind) + & 
                   dxk(3,ind) * dxk(3,ind)
@@ -1226,14 +1216,14 @@
 #endif
   !
   ! returns in-pool index nkq and absolute index nkq_abs of first k-point in this pool 
-  CALL ktokpmq( xk(:,1), zero_vect, +1, ipool, nkq, nkq_abs )
+  CALL ktokpmq( xk_loc(:,1), zero_vect, +1, ipool, nkq, nkq_abs )
   ind0 = (nkq_abs - 1) * nnb
   !
   ind = ind0
   DO ik = 1, nks 
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq( xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
     !
     WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
@@ -1243,12 +1233,12 @@
     CALL readwfc( my_pool_id+1, ik, evc )
     !
     ! sorts k+G vectors in order of increasing magnitude, up to ecut
-    CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
+    CALL gk_sort( xk_loc(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
     !
     !  USPP
     !
     IF (any_uspp) THEN
-      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+      CALL init_us_2( npw, igk_k(1,ik), xk_loc(1,ik), vkb )
       ! below we compute the product of beta functions with |psi>
       CALL calbec( npw, vkb, evc, becp ) 
     ENDIF
@@ -1259,12 +1249,12 @@
       !
       ikp = kpb(ik_g,ib)
       !
-      CALL ktokpmq( xktot(:,ikp), zero_vect, +1, ipool, nkq, nkq_abs )
+      CALL ktokpmq( xk_all(:,ikp), zero_vect, +1, ipool, nkq, nkq_abs )
       !
       ! read wfc at k+b
       CALL readwfc( ipool, nkq, evcq )
       !
-      CALL gk_sort( xktot(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin )
+      CALL gk_sort( xk_all(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin )
       !
       ! compute the phase
       IF (.not.zerophase(ik_g,ib)) THEN
@@ -1276,7 +1266,7 @@
       !  USPP
       !
       IF (any_uspp) THEN
-        CALL init_us_2( npwq, igkq, xktot(1,ikp), vkb )
+        CALL init_us_2( npwq, igkq, xk_all(1,ikp), vkb )
         ! below we compute the product of beta functions with |psi>
         IF (noncolin) THEN
           CALL calbec( npwq, vkb, evcq, becp2_nc )
@@ -1507,7 +1497,8 @@
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE mp,              ONLY : mp_sum
-  USE klist,           ONLY : xk, nks, igk_k
+  USE klist,           ONLY : nks, igk_k
+  USE klist_epw,       ONLY : xk_loc
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : gcutw
   USE wavefunctions,   ONLY : evc
@@ -1569,7 +1560,7 @@
     CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
     !
     ! setup k+G grids for each kpt
-    CALL gk_sort( xk(:,ik), ngm, g, gcutw, npw, igk_k(:,ik), g2kin )
+    CALL gk_sort( xk_loc(:,ik), ngm, g, gcutw, npw, igk_k(:,ik), g2kin )
     !
     dipole_aux = czero
     DO jbnd = 1, nbnd
@@ -1611,7 +1602,7 @@
         ENDIF
         !
         dipole_aux(:,ibnd,ibnd) = dipole_aux(:,ibnd,ibnd) + &
-                                ( g(:,igk_k(ig,ik)) + xk(:,ik) ) * caux
+                                ( g(:,igk_k(ig,ik)) + xk_loc(:,ik) ) * caux
         !
       ENDDO
     ENDDO
@@ -1784,7 +1775,8 @@
   USE mp,              ONLY : mp_sum
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : meta_ionode
-  USE klist,           ONLY : nkstot, xk, nks
+  USE klist,           ONLY : nkstot, nks
+  USE klist_epw,       ONLY : xk_loc
   USE wvfct,           ONLY : nbnd
   USE wannierEPW,      ONLY : a_mat, m_mat, num_bands, n_wannier, n_proj, & 
                               nnb, kpb, iknum, excluded_band
@@ -1881,7 +1873,7 @@
   DO ik = 1, nks
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq( xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
     !
     !  GF_n are the guiding functions which are our initial guesses 
@@ -1976,7 +1968,8 @@
   USE gvect,          ONLY : g
   USE cell_base,      ONLY : tpiba
   USE wannierEPW,     ONLY : n_proj, gf, center_w, csph, alpha_w, r_w
-  USE klist,          ONLY : xk, igk_k 
+  USE klist,          ONLY : igk_k 
+  USE klist_epw,      ONLY : xk_loc
   USE constants_epw,  ONLY : czero
 
   IMPLICIT NONE
@@ -1992,9 +1985,9 @@
   ALLOCATE( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax) )
   !
   DO ig = 1, npw
-    gk(1,ig) = xk(1,ik) + g(1,igk_k(ig,ik) )
-    gk(2,ig) = xk(2,ik) + g(2,igk_k(ig,ik) )
-    gk(3,ig) = xk(3,ik) + g(3,igk_k(ig,ik) )
+    gk(1,ig) = xk_loc(1,ik) + g(1,igk_k(ig,ik) )
+    gk(2,ig) = xk_loc(2,ik) + g(2,igk_k(ig,ik) )
+    gk(3,ig) = xk_loc(3,ik) + g(3,igk_k(ig,ik) )
     qg(ig) = gk(1,ig)**2 +  gk(2,ig)**2 + gk(3,ig)**2
   ENDDO
   !
@@ -2095,7 +2088,8 @@
   USE wavefunctions,   ONLY : evc, psic, psic_nc
   USE wannierEPW,      ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
                               excluded_band 
-  USE klist,           ONLY : xk, nks, igk_k
+  USE klist,           ONLY : nks, igk_k
+  USE klist_epw,       ONLY : xk_loc
   USE gvect,           ONLY : g, ngm 
   USE fft_base,        ONLY : dffts
   USE fft_interfaces,  ONLY : invfft
@@ -2168,7 +2162,7 @@
   DO ik = 1, nks
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq ( xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
     !
     spin = ispinw
@@ -2200,7 +2194,7 @@
     ENDIF
     !
     CALL readwfc( my_pool_id+1, ik, evc )
-    CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
+    CALL gk_sort( xk_loc(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
     !
     ibnd1 = 0
     DO ibnd = 1, nbnd
