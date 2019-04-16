@@ -45,45 +45,85 @@ module tb_dev
                         lock_buffer_iv, &           !< Releases a integer vector buffer
                         lock_buffer_im, &           !< Releases a integer matrix buffer
                         lock_buffer_it, &           !< Releases a integer tensor buffer
+                        lock_buffer_if, &           !< Releases a integer four_dimensional buffer
                         lock_buffer_rv, &           !< Releases a real(DP) vector buffer
                         lock_buffer_rm, &           !< Releases a real(DP) matrix buffer
                         lock_buffer_rt, &           !< Releases a real(DP) tensor buffer
+                        lock_buffer_rf, &           !< Releases a real(DP) four_dimensional buffer
                         lock_buffer_cv, &           !< Releases a complex(DP) vector buffer
                         lock_buffer_cm, &           !< Releases a complex(DP) matrix buffer
-                        lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_ct, &           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: lock_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: lock_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: lock_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: lock_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: lock_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: lock_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: lock_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: lock_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: lock_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      generic, public :: release_buffer => &
                         release_buffer_iv, &        !< Releases a integer vector buffer
                         release_buffer_im, &        !< Releases a integer matrix buffer
                         release_buffer_it, &        !< Releases a integer tensor buffer
+                        release_buffer_if, &        !< Releases a integer four_dimensional buffer
                         release_buffer_rv, &        !< Releases a real(DP) vector buffer
                         release_buffer_rm, &        !< Releases a real(DP) matrix buffer
                         release_buffer_rt, &        !< Releases a real(DP) tensor buffer
+                        release_buffer_rf, &        !< Releases a real(DP) four_dimensional buffer
                         release_buffer_cv, &        !< Releases a complex(DP) vector buffer
                         release_buffer_cm, &        !< Releases a complex(DP) matrix buffer
-                        release_buffer_ct        !< Releases a complex(DP) tensor buffer
+                        release_buffer_ct, &        !< Releases a complex(DP) tensor buffer
+                        release_buffer_cf        !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: release_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: release_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: release_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: release_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: release_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: release_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: release_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: release_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: release_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: release_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: release_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: release_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
+     !
+     generic, public :: prepare_buffer => &
+                        prepare_buffer_iv, &        !< Releases a integer vector buffer
+                        prepare_buffer_im, &        !< Releases a integer matrix buffer
+                        prepare_buffer_it, &        !< Releases a integer tensor buffer
+                        prepare_buffer_if, &        !< Releases a integer four_dimensional buffer
+                        prepare_buffer_rv, &        !< Releases a real(DP) vector buffer
+                        prepare_buffer_rm, &        !< Releases a real(DP) matrix buffer
+                        prepare_buffer_rt, &        !< Releases a real(DP) tensor buffer
+                        prepare_buffer_rf, &        !< Releases a real(DP) four_dimensional buffer
+                        prepare_buffer_cv, &        !< Releases a complex(DP) vector buffer
+                        prepare_buffer_cm, &        !< Releases a complex(DP) matrix buffer
+                        prepare_buffer_ct, &        !< Releases a complex(DP) tensor buffer
+                        prepare_buffer_cf        !< Releases a complex(DP) four_dimensional buffer
+     !
+     procedure, private :: prepare_buffer_iv           !< Releases a integer vector buffer
+     procedure, private :: prepare_buffer_im           !< Releases a integer matrix buffer
+     procedure, private :: prepare_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: prepare_buffer_if           !< Releases a integer four_dimensional buffer
+     procedure, private :: prepare_buffer_rv           !< Releases a real(DP) vector buffer
+     procedure, private :: prepare_buffer_rm           !< Releases a real(DP) matrix buffer
+     procedure, private :: prepare_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: prepare_buffer_rf           !< Releases a real(DP) four_dimensional buffer
+     procedure, private :: prepare_buffer_cv           !< Releases a complex(DP) vector buffer
+     procedure, private :: prepare_buffer_cm           !< Releases a complex(DP) matrix buffer
+     procedure, private :: prepare_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: prepare_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_space
+     procedure, private :: prepare_space
      procedure, private :: release_space
      procedure, public  :: dump_status
      procedure, public  :: print_report
@@ -170,7 +210,7 @@ contains
     write (*, *) "Buffer status ================="
     write (*, *) "          n        size Locked"
     DO WHILE (ASSOCIATED(temp))
-        write (*,'(I12, I12, L7)') i, SIZE(TemP%space), TemP%locked
+        write (*,'(I12, I12, L7)') i, SIZE(TemP%space, kind=LLI), TemP%locked
         TemP => TemP%Next
         i = i + 1
     END DO
@@ -189,7 +229,7 @@ contains
     tsz = 0
     temp => Head
     DO WHILE (ASSOCIATED(temp))
-        tsz = tsz + SIZE(temp%space)
+        tsz = tsz + SIZE(temp%space, kind=LLI)
         if (temp%locked) l = l + 1
         temp => temp%Next
         i = i + 1
@@ -226,12 +266,12 @@ contains
     temp => Head
     NULLIFY(good)
     DO WHILE (ASSOCIATED(temp))
-        sz = SIZE(TemP%space)
+        sz = SIZE(TemP%space, kind=LLI)
         IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
             IF ( good_one_idx >= 1 ) THEN
                 IF ( sz - d < r) THEN
                     good => temp
-                    r = SIZE(TemP%space) - d
+                    r = SIZE(TemP%space, kind=LLI) - d
                     good_one_idx = i
                 END IF
             ELSE
@@ -275,6 +315,63 @@ contains
 #endif
     !
   end subroutine lock_space
+  !
+  subroutine prepare_space(this, d, info)
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)     :: this     !< The class.
+    integer(kind=LLI), intent(in)          :: d
+    integer, intent(out)                   :: info
+    !
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#endif
+    integer(kind=LLI) :: r, tsz, sz
+    TYPE(Node), POINTER  :: temp, good
+    INTEGER :: i, good_one_idx
+    !
+    r   = 0
+    tsz = 0
+    i   = 1
+    !
+    ! Find the smallest usable buffer
+    good_one_idx = 0
+    temp => Head
+    NULLIFY(good)
+    DO WHILE (ASSOCIATED(temp))
+        sz = SIZE(TemP%space, kind=LLI)
+        IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
+            good_one_idx = i
+            info = 0
+        END IF
+        !
+        tsz = tsz + sz
+        i = i + 1
+        !
+        TemP => TemP%Next
+    END DO
+    !
+    ! Allocate a new buffer if needed
+    IF ( good_one_idx == 0 ) THEN
+        ALLOCATE (good)
+#if defined(__CUDA)
+        ALLOCATE (good%space(d), stat=info)
+#else
+        ALLOCATE (good%space(d), stat=info)
+#endif
+        good%locked = .false.
+        good%Next   => Head
+        Head        => good
+        tsz         = tsz + d
+        if (this%verbose) write (*, '("[tb_dev] Created new buffer")')
+    ELSE
+        if (this%verbose) write (*, '("[tb_dev] Good buffer found: ", I4)') good_one_idx
+    END IF
+    !
+    if (this%verbose) &
+         write (*, '("[tb_dev] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
+    !
+  end subroutine prepare_space
   !
   subroutine release_space(this, cloc, info)
 #if defined(__CUDA)
@@ -347,7 +444,8 @@ contains
     integer :: vsize(1)
     vsize(1) = vsize_
     !
-    d = PRODUCT(vsize)*SIZEOF(dummy)
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, vsize )
@@ -380,7 +478,8 @@ contains
     !
     integer :: dummy
     !
-    d = PRODUCT(msize)*SIZEOF(dummy)
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, msize )
@@ -413,12 +512,47 @@ contains
     !
     integer :: dummy
     !
-    d = PRODUCT(tsize)*SIZEOF(dummy)
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_it
+
+  !> Get or allocate a buffer for an integer four_dimensional.
+  subroutine lock_buffer_if(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_if
 
   !> Get or allocate a buffer for an real(DP) vector.
   subroutine lock_buffer_rv(this, p, vsize_, info)
@@ -448,7 +582,8 @@ contains
     integer :: vsize(1)
     vsize(1) = vsize_
     !
-    d = PRODUCT(vsize)*SIZEOF(dummy)
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, vsize )
@@ -481,7 +616,8 @@ contains
     !
     real(DP) :: dummy
     !
-    d = PRODUCT(msize)*SIZEOF(dummy)
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, msize )
@@ -514,12 +650,47 @@ contains
     !
     real(DP) :: dummy
     !
-    d = PRODUCT(tsize)*SIZEOF(dummy)
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_rt
+
+  !> Get or allocate a buffer for an real(DP) four_dimensional.
+  subroutine lock_buffer_rf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_rf
 
   !> Get or allocate a buffer for an complex(DP) vector.
   subroutine lock_buffer_cv(this, p, vsize_, info)
@@ -549,7 +720,8 @@ contains
     integer :: vsize(1)
     vsize(1) = vsize_
     !
-    d = PRODUCT(vsize)*SIZEOF(dummy)
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, vsize )
@@ -582,7 +754,8 @@ contains
     !
     complex(DP) :: dummy
     !
-    d = PRODUCT(msize)*SIZEOF(dummy)
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, msize )
@@ -615,12 +788,47 @@ contains
     !
     complex(DP) :: dummy
     !
-    d = PRODUCT(tsize)*SIZEOF(dummy)
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_ct
+
+  !> Get or allocate a buffer for an complex(DP) four_dimensional.
+  subroutine lock_buffer_cf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_cf
 
   !
 
@@ -694,6 +902,29 @@ contains
   end subroutine release_buffer_it
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_if(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_devloc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_if
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_rv(this, p, info)
 #if defined(__CUDA)
     use cudafor
@@ -761,6 +992,29 @@ contains
     CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_rt
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_rf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_devloc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_rf
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_cv(this, p, info)
@@ -831,6 +1085,432 @@ contains
 #endif
   end subroutine release_buffer_ct
 
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_cf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_devloc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_cf
+
+  !
+
+  !> 
+  subroutine prepare_buffer_iv(this, p, vsize_, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: vsize_   !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    integer :: vsize(1)
+    vsize(1) = vsize_
+    !
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_iv
+
+  !> 
+  subroutine prepare_buffer_im(this, p, msize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: msize(2)   !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_im
+
+  !> 
+  subroutine prepare_buffer_it(this, p, tsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: tsize(3)   !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_it
+
+  !> 
+  subroutine prepare_buffer_if(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_if
+
+  !> 
+  subroutine prepare_buffer_rv(this, p, vsize_, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: vsize_   !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    integer :: vsize(1)
+    vsize(1) = vsize_
+    !
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rv
+
+  !> 
+  subroutine prepare_buffer_rm(this, p, msize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: msize(2)   !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rm
+
+  !> 
+  subroutine prepare_buffer_rt(this, p, tsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: tsize(3)   !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rt
+
+  !> 
+  subroutine prepare_buffer_rf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rf
+
+  !> 
+  subroutine prepare_buffer_cv(this, p, vsize_, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: vsize_   !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    integer :: vsize(1)
+    vsize(1) = vsize_
+    !
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_cv
+
+  !> 
+  subroutine prepare_buffer_cm(this, p, msize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: msize(2)   !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_cm
+
+  !> 
+  subroutine prepare_buffer_ct(this, p, tsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: tsize(3)   !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_ct
+
+  !> 
+  subroutine prepare_buffer_cf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_cf
 
 
 end module tb_dev! This file is part of FBUF - Fortran BUFfers For Accelerators
@@ -880,45 +1560,85 @@ module tb_pin
                         lock_buffer_iv, &           !< Releases a integer vector buffer
                         lock_buffer_im, &           !< Releases a integer matrix buffer
                         lock_buffer_it, &           !< Releases a integer tensor buffer
+                        lock_buffer_if, &           !< Releases a integer four_dimensional buffer
                         lock_buffer_rv, &           !< Releases a real(DP) vector buffer
                         lock_buffer_rm, &           !< Releases a real(DP) matrix buffer
                         lock_buffer_rt, &           !< Releases a real(DP) tensor buffer
+                        lock_buffer_rf, &           !< Releases a real(DP) four_dimensional buffer
                         lock_buffer_cv, &           !< Releases a complex(DP) vector buffer
                         lock_buffer_cm, &           !< Releases a complex(DP) matrix buffer
-                        lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_ct, &           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: lock_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: lock_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: lock_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: lock_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: lock_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: lock_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: lock_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: lock_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: lock_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      generic, public :: release_buffer => &
                         release_buffer_iv, &        !< Releases a integer vector buffer
                         release_buffer_im, &        !< Releases a integer matrix buffer
                         release_buffer_it, &        !< Releases a integer tensor buffer
+                        release_buffer_if, &        !< Releases a integer four_dimensional buffer
                         release_buffer_rv, &        !< Releases a real(DP) vector buffer
                         release_buffer_rm, &        !< Releases a real(DP) matrix buffer
                         release_buffer_rt, &        !< Releases a real(DP) tensor buffer
+                        release_buffer_rf, &        !< Releases a real(DP) four_dimensional buffer
                         release_buffer_cv, &        !< Releases a complex(DP) vector buffer
                         release_buffer_cm, &        !< Releases a complex(DP) matrix buffer
-                        release_buffer_ct        !< Releases a complex(DP) tensor buffer
+                        release_buffer_ct, &        !< Releases a complex(DP) tensor buffer
+                        release_buffer_cf        !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: release_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: release_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: release_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: release_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: release_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: release_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: release_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: release_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: release_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: release_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: release_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: release_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
+     !
+     generic, public :: prepare_buffer => &
+                        prepare_buffer_iv, &        !< Releases a integer vector buffer
+                        prepare_buffer_im, &        !< Releases a integer matrix buffer
+                        prepare_buffer_it, &        !< Releases a integer tensor buffer
+                        prepare_buffer_if, &        !< Releases a integer four_dimensional buffer
+                        prepare_buffer_rv, &        !< Releases a real(DP) vector buffer
+                        prepare_buffer_rm, &        !< Releases a real(DP) matrix buffer
+                        prepare_buffer_rt, &        !< Releases a real(DP) tensor buffer
+                        prepare_buffer_rf, &        !< Releases a real(DP) four_dimensional buffer
+                        prepare_buffer_cv, &        !< Releases a complex(DP) vector buffer
+                        prepare_buffer_cm, &        !< Releases a complex(DP) matrix buffer
+                        prepare_buffer_ct, &        !< Releases a complex(DP) tensor buffer
+                        prepare_buffer_cf        !< Releases a complex(DP) four_dimensional buffer
+     !
+     procedure, private :: prepare_buffer_iv           !< Releases a integer vector buffer
+     procedure, private :: prepare_buffer_im           !< Releases a integer matrix buffer
+     procedure, private :: prepare_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: prepare_buffer_if           !< Releases a integer four_dimensional buffer
+     procedure, private :: prepare_buffer_rv           !< Releases a real(DP) vector buffer
+     procedure, private :: prepare_buffer_rm           !< Releases a real(DP) matrix buffer
+     procedure, private :: prepare_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: prepare_buffer_rf           !< Releases a real(DP) four_dimensional buffer
+     procedure, private :: prepare_buffer_cv           !< Releases a complex(DP) vector buffer
+     procedure, private :: prepare_buffer_cm           !< Releases a complex(DP) matrix buffer
+     procedure, private :: prepare_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: prepare_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_space
+     procedure, private :: prepare_space
      procedure, private :: release_space
      procedure, public  :: dump_status
      procedure, public  :: print_report
@@ -1005,7 +1725,7 @@ contains
     write (*, *) "Buffer status ================="
     write (*, *) "          n        size Locked"
     DO WHILE (ASSOCIATED(temp))
-        write (*,'(I12, I12, L7)') i, SIZE(TemP%space), TemP%locked
+        write (*,'(I12, I12, L7)') i, SIZE(TemP%space, kind=LLI), TemP%locked
         TemP => TemP%Next
         i = i + 1
     END DO
@@ -1024,7 +1744,7 @@ contains
     tsz = 0
     temp => Head
     DO WHILE (ASSOCIATED(temp))
-        tsz = tsz + SIZE(temp%space)
+        tsz = tsz + SIZE(temp%space, kind=LLI)
         if (temp%locked) l = l + 1
         temp => temp%Next
         i = i + 1
@@ -1061,12 +1781,12 @@ contains
     temp => Head
     NULLIFY(good)
     DO WHILE (ASSOCIATED(temp))
-        sz = SIZE(TemP%space)
+        sz = SIZE(TemP%space, kind=LLI)
         IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
             IF ( good_one_idx >= 1 ) THEN
                 IF ( sz - d < r) THEN
                     good => temp
-                    r = SIZE(TemP%space) - d
+                    r = SIZE(TemP%space, kind=LLI) - d
                     good_one_idx = i
                 END IF
             ELSE
@@ -1112,6 +1832,64 @@ contains
 #endif
     !
   end subroutine lock_space
+  !
+  subroutine prepare_space(this, d, info)
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)     :: this     !< The class.
+    integer(kind=LLI), intent(in)          :: d
+    integer, intent(out)                   :: info
+    !
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#endif
+    integer(kind=LLI) :: r, tsz, sz
+    TYPE(Node), POINTER  :: temp, good
+    INTEGER :: i, good_one_idx
+    !
+    r   = 0
+    tsz = 0
+    i   = 1
+    !
+    ! Find the smallest usable buffer
+    good_one_idx = 0
+    temp => Head
+    NULLIFY(good)
+    DO WHILE (ASSOCIATED(temp))
+        sz = SIZE(TemP%space, kind=LLI)
+        IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
+            good_one_idx = i
+            info = 0
+        END IF
+        !
+        tsz = tsz + sz
+        i = i + 1
+        !
+        TemP => TemP%Next
+    END DO
+    !
+    ! Allocate a new buffer if needed
+    IF ( good_one_idx == 0 ) THEN
+        ALLOCATE (good)
+#if defined(__CUDA)
+        info = cudaMallocHost(cloc, int(d))
+        CALL c_f_pointer( cloc, good%space, [ d ] )
+#else
+        ALLOCATE (good%space(d), stat=info)
+#endif
+        good%locked = .false.
+        good%Next   => Head
+        Head        => good
+        tsz         = tsz + d
+        if (this%verbose) write (*, '("[tb_pin] Created new buffer")')
+    ELSE
+        if (this%verbose) write (*, '("[tb_pin] Good buffer found: ", I4)') good_one_idx
+    END IF
+    !
+    if (this%verbose) &
+         write (*, '("[tb_pin] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
+    !
+  end subroutine prepare_space
   !
   subroutine release_space(this, cloc, info)
 #if defined(__CUDA)
@@ -1184,7 +1962,8 @@ contains
     integer :: vsize(1)
     vsize(1) = vsize_
     !
-    d = PRODUCT(vsize)*SIZEOF(dummy)
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, vsize )
@@ -1216,7 +1995,8 @@ contains
     !
     integer :: dummy
     !
-    d = PRODUCT(msize)*SIZEOF(dummy)
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, msize )
@@ -1248,12 +2028,46 @@ contains
     !
     integer :: dummy
     !
-    d = PRODUCT(tsize)*SIZEOF(dummy)
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_it
+
+  !> Get or allocate a buffer for an integer four_dimensional.
+  subroutine lock_buffer_if(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_if
 
   !> Get or allocate a buffer for an real(DP) vector.
   subroutine lock_buffer_rv(this, p, vsize_, info)
@@ -1282,7 +2096,8 @@ contains
     integer :: vsize(1)
     vsize(1) = vsize_
     !
-    d = PRODUCT(vsize)*SIZEOF(dummy)
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, vsize )
@@ -1314,7 +2129,8 @@ contains
     !
     real(DP) :: dummy
     !
-    d = PRODUCT(msize)*SIZEOF(dummy)
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, msize )
@@ -1346,12 +2162,46 @@ contains
     !
     real(DP) :: dummy
     !
-    d = PRODUCT(tsize)*SIZEOF(dummy)
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_rt
+
+  !> Get or allocate a buffer for an real(DP) four_dimensional.
+  subroutine lock_buffer_rf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_rf
 
   !> Get or allocate a buffer for an complex(DP) vector.
   subroutine lock_buffer_cv(this, p, vsize_, info)
@@ -1380,7 +2230,8 @@ contains
     integer :: vsize(1)
     vsize(1) = vsize_
     !
-    d = PRODUCT(vsize)*SIZEOF(dummy)
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, vsize )
@@ -1412,7 +2263,8 @@ contains
     !
     complex(DP) :: dummy
     !
-    d = PRODUCT(msize)*SIZEOF(dummy)
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, msize )
@@ -1444,12 +2296,46 @@ contains
     !
     complex(DP) :: dummy
     !
-    d = PRODUCT(tsize)*SIZEOF(dummy)
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
     !
     CALL this%lock_space(d, cloc, info)
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_ct
+
+  !> Get or allocate a buffer for an complex(DP) four_dimensional.
+  subroutine lock_buffer_cf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_cf
 
   !
 
@@ -1520,6 +2406,28 @@ contains
   end subroutine release_buffer_it
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_if(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_loc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_if
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_rv(this, p, info)
 #if defined(__CUDA)
     use cudafor
@@ -1584,6 +2492,28 @@ contains
     CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_rt
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_rf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_loc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_rf
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_cv(this, p, info)
@@ -1651,6 +2581,986 @@ contains
 #endif
   end subroutine release_buffer_ct
 
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_cf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_loc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_cf
+
+  !
+
+  !> 
+  subroutine prepare_buffer_iv(this, p, vsize_, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: vsize_   !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    integer :: vsize(1)
+    vsize(1) = vsize_
+    !
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_iv
+
+  !> 
+  subroutine prepare_buffer_im(this, p, msize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: msize(2)   !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_im
+
+  !> 
+  subroutine prepare_buffer_it(this, p, tsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: tsize(3)   !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_it
+
+  !> 
+  subroutine prepare_buffer_if(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_if
+
+  !> 
+  subroutine prepare_buffer_rv(this, p, vsize_, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: vsize_   !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    integer :: vsize(1)
+    vsize(1) = vsize_
+    !
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rv
+
+  !> 
+  subroutine prepare_buffer_rm(this, p, msize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: msize(2)   !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rm
+
+  !> 
+  subroutine prepare_buffer_rt(this, p, tsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: tsize(3)   !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rt
+
+  !> 
+  subroutine prepare_buffer_rf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_rf
+
+  !> 
+  subroutine prepare_buffer_cv(this, p, vsize_, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: vsize_   !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    integer :: vsize(1)
+    vsize(1) = vsize_
+    !
+    d = PRODUCT(vsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_cv
+
+  !> 
+  subroutine prepare_buffer_cm(this, p, msize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: msize(2)   !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(msize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_cm
+
+  !> 
+  subroutine prepare_buffer_ct(this, p, tsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: tsize(3)   !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(tsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_ct
+
+  !> 
+  subroutine prepare_buffer_cf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer (only used for assesing type)
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(fsize)
+    d = d*SIZEOF(dummy)
+    !
+    CALL this%prepare_space(d, info)
+    !
+  end subroutine prepare_buffer_cf
 
 
 end module tb_pin
+
+!!!!! -=== Source code of template rendering ===-
+!!!!!
+!!!!!
+!!!!!     import os, glob, jinja2
+!!!!!     
+!!!!!     
+!!!!!     def render(tpl_path, context):
+!!!!!         path, filename = os.path.split(tpl_path)
+!!!!!         return jinja2.Environment(undefined=jinja2.StrictUndefined,
+!!!!!             loader=jinja2.FileSystemLoader(path or './')
+!!!!!         ).get_template(filename).render(context)
+!!!!!     
+!!!!!     
+!!!!!     rankmap = {1:'vector', 2:'matrix', 3:'tensor', 4:'four_dimensional'}
+!!!!!     
+!!!!!     def gen_interface_list(types):
+!!!!!         intrfc_list = []
+!!!!!         for t in types:
+!!!!!             for rank in (1,2,3,4):
+!!!!!                 intrfc_list.append({
+!!!!!                           'vtype'     : t,
+!!!!!                           'rank'      : rank,
+!!!!!                           'vrankname' : rankmap[rank],
+!!!!!                           'subname'   : t[0]+rankmap[rank][0],
+!!!!!                           'vsize'     : rankmap[rank][0]+'size',
+!!!!!                           'vsizedims' : "({})".format(rank),
+!!!!!                           'ranks'     : ",".join([':']*rank)
+!!!!!                           })
+!!!!!         return intrfc_list
+!!!!!     
+!!!!!     
+!!!!!     def gen_module(context):
+!!!!!         fname = 'fbufl.jf90'
+!!!!!         bname, _ = os.path.splitext(fname)
+!!!!!         with open(bname + '.f90','a') as f:
+!!!!!             f.write(render(fname, context))
+!!!!!     
+!!!!!     
+!!!!!     if __name__ == "__main__":
+!!!!!         # clean up
+!!!!!         open('fbufl.f90','w').close()
+!!!!!         
+!!!!!         # Types used in the interface
+!!!!!         interfaces = gen_interface_list(['integer', 'real(DP)', 'complex(DP)'])
+!!!!!         context = {'interfaces'  : interfaces, 
+!!!!!                    'cudamod'     : 'use cudafor', 
+!!!!!                    'nvar'        : 10, 
+!!!!!                    'attributes'  : 'device',
+!!!!!                    'pointer_type': 'c_devptr',
+!!!!!                    'modulename'  : 'tb_dev',
+!!!!!                    'typename'    : 'tb_dev_t'}
+!!!!!         gen_module(context)
+!!!!!         
+!!!!!         context = {'interfaces'  : interfaces, 
+!!!!!                    'cudamod'     : 'use cudafor', 
+!!!!!                    'nvar'        : 10, 
+!!!!!                    'attributes'  : '',
+!!!!!                    'pointer_type': 'c_ptr',
+!!!!!                    'modulename'  : 'tb_pin',
+!!!!!                    'typename'    : 'tb_pin_t'}
+!!!!!         gen_module(context)
+!!!!!
+!!!!!     -=== Source code of template ===-
+!!!!!
+!!!!!     ! This file is part of FBUF - Fortran BUFfers For Accelerators
+!!!!!     ! Copyright 2018 Pietro Bonfa'
+!!!!!     ! License: GPLv2
+!!!!!     
+!!!!!     !!!!! DO NOT EDIT THIS FILE, IT'S AUTOGENERATED !!!!!
+!!!!!     
+!!!!!     !> The **FBUF** module.
+!!!!!     
+!!!!!     module {{modulename}}
+!!!!!     #if defined(__CUDA)
+!!!!!       {{cudamod}}
+!!!!!     #endif
+!!!!!       implicit none
+!!!!!       integer, parameter :: DP = selected_real_kind(14,200)
+!!!!!       integer, parameter :: LLI = selected_int_kind(15)
+!!!!!     
+!!!!!       TYPE :: Node
+!!!!!     #if defined(__CUDA)
+!!!!!          BYTE, POINTER {% if (attributes) %}, {{attributes}} {% endif %} :: space(:)
+!!!!!     #else
+!!!!!          BYTE, POINTER                 :: space(:)
+!!!!!     #endif
+!!!!!          LOGICAL             :: locked
+!!!!!          TYPE(Node), POINTER :: Next
+!!!!!       END TYPE Node
+!!!!!       !
+!!!!!       private
+!!!!!       !
+!!!!!       TYPE(Node), POINTER  :: Head => null()
+!!!!!       !
+!!!!!       public :: {{typename}}
+!!!!!       !
+!!!!!     
+!!!!!     !> The main **fbuf** class.
+!!!!!       type :: {{typename}}
+!!!!!          integer :: nbufs = {{nvar}}
+!!!!!          logical :: verbose = .false.
+!!!!!          !
+!!!!!        contains
+!!!!!          procedure :: init                     !< Initialize the class selecting buffers dimension and number per type.\
+!!!!!          final :: clean
+!!!!!     
+!!!!!          procedure :: reinit
+!!!!!          generic, public :: lock_buffer => &
+!!!!!     {%- for item in interfaces %}
+!!!!!                             lock_buffer_{{item.subname}}{% if not loop.last %}, &{% endif %}           !< Releases a {{item.vtype}} {{item.vrankname}} buffer
+!!!!!     {%- endfor%}
+!!!!!          !
+!!!!!     {%- for item in interfaces %}
+!!!!!          procedure, private :: lock_buffer_{{item.subname}}           !< Releases a {{item.vtype}} {{item.vrankname}} buffer
+!!!!!     {%- endfor %}
+!!!!!          !
+!!!!!          generic, public :: release_buffer => &
+!!!!!     {%- for item in interfaces %}
+!!!!!                             release_buffer_{{item.subname}}{% if not loop.last %}, &{% endif %}        !< Releases a {{item.vtype}} {{item.vrankname}} buffer
+!!!!!     {%- endfor %}
+!!!!!          !
+!!!!!     {%- for item in interfaces %}
+!!!!!          procedure, private :: release_buffer_{{item.subname}}           !< Releases a {{item.vtype}} {{item.vrankname}} buffer
+!!!!!     {%- endfor %}
+!!!!!          !
+!!!!!          generic, public :: prepare_buffer => &
+!!!!!     {%- for item in interfaces %}
+!!!!!                             prepare_buffer_{{item.subname}}{% if not loop.last %}, &{% endif %}        !< Releases a {{item.vtype}} {{item.vrankname}} buffer
+!!!!!     {%- endfor %}
+!!!!!          !
+!!!!!     {%- for item in interfaces %}
+!!!!!          procedure, private :: prepare_buffer_{{item.subname}}           !< Releases a {{item.vtype}} {{item.vrankname}} buffer
+!!!!!     {%- endfor %}
+!!!!!          !
+!!!!!          procedure, private :: lock_space
+!!!!!          procedure, private :: prepare_space
+!!!!!          procedure, private :: release_space
+!!!!!          procedure, public  :: dump_status
+!!!!!          procedure, public  :: print_report
+!!!!!       end type
+!!!!!     
+!!!!!       
+!!!!!       
+!!!!!     contains
+!!!!!       !> Initialize the class selecting the device type.
+!!!!!       subroutine init(this, n, info, verbose)
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}),  intent(inout) :: this     !< The class.
+!!!!!         integer,       intent(in)  :: n       !< Wether device can be the host itself
+!!!!!         integer,       intent(out) :: info    !< Error reporting.
+!!!!!                                               !<  0: ok
+!!!!!                                               !< -1: generic error
+!!!!!         logical, optional, intent(in) :: verbose
+!!!!!         !
+!!!!!         this%nbufs = n
+!!!!!         this%verbose = .false.
+!!!!!         if (present(verbose)) this%verbose = verbose
+!!!!!     
+!!!!!         if (this%verbose) write (*, *) "[{{modulename}}] Initializing buffers"
+!!!!!         NULLIFY (Head)
+!!!!!         info = 0
+!!!!!         !
+!!!!!       end subroutine init
+!!!!!       !
+!!!!!       subroutine clean(this)
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         type({{typename}}) :: this     !< The class.
+!!!!!         integer :: i, info
+!!!!!         TYPE(Node), POINTER  :: temp
+!!!!!         i = 0
+!!!!!         DO WHILE (ASSOCIATED(head))
+!!!!!     #if defined (__CUDA)
+!!!!!     {% if attributes == 'device' %}
+!!!!!             IF ( ASSOCIATED(head%space) ) DEALLOCATE(head%space)
+!!!!!     {% else %}
+!!!!!             IF ( ASSOCIATED(head%space) ) info = cudaFreeHost(c_loc(head%space))
+!!!!!     {% endif %}
+!!!!!     #else
+!!!!!             IF ( ASSOCIATED(head%space) ) DEALLOCATE(head%space)
+!!!!!     #endif
+!!!!!             temp => head
+!!!!!             head => head%next
+!!!!!             DEALLOCATE(temp)
+!!!!!             i = i + 1
+!!!!!         END DO
+!!!!!         NULLIFY (Head)
+!!!!!         if (this%verbose) write (*, '("[{{modulename}}] Cleaned ", I2, " buffers")') i
+!!!!!       end subroutine clean
+!!!!!       !
+!!!!!       subroutine reinit(this)
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}), intent(inout)  :: this     !< The class.
+!!!!!         integer :: i, info
+!!!!!         TYPE(Node), POINTER  :: temp
+!!!!!         i = 0
+!!!!!         DO WHILE (ASSOCIATED(head))
+!!!!!     #if defined (__CUDA)
+!!!!!     {% if attributes == 'device' %}
+!!!!!             IF ( ASSOCIATED(head%space) ) DEALLOCATE(head%space)
+!!!!!     {% else %}
+!!!!!             IF ( ASSOCIATED(head%space) ) info = cudaFreeHost(c_loc(head%space))
+!!!!!     {% endif %}
+!!!!!     #else
+!!!!!             IF ( ASSOCIATED(head%space) ) DEALLOCATE(head%space)
+!!!!!     #endif
+!!!!!             temp => head
+!!!!!             head => head%next
+!!!!!             DEALLOCATE(temp)
+!!!!!             i = i + 1
+!!!!!         END DO
+!!!!!         NULLIFY (Head)
+!!!!!         if (this%verbose) write (*, '("[{{modulename}}] Cleaned ", I2, " buffers")') i
+!!!!!       end subroutine reinit
+!!!!!       !
+!!!!!       subroutine dump_status(this)
+!!!!!         class({{typename}}), intent(inout)     :: this     !< The class.
+!!!!!         TYPE(Node), POINTER  :: temp
+!!!!!         integer :: i
+!!!!!         i = 1
+!!!!!         temp => Head
+!!!!!         write (*, *) "Buffer status ================="
+!!!!!         write (*, *) "          n        size Locked"
+!!!!!         DO WHILE (ASSOCIATED(temp))
+!!!!!             write (*,'(I12, I12, L7)') i, SIZE(TemP%space, kind=LLI), TemP%locked
+!!!!!             TemP => TemP%Next
+!!!!!             i = i + 1
+!!!!!         END DO
+!!!!!         write (*, *) "-------------------------------"
+!!!!!       end subroutine dump_status
+!!!!!       !
+!!!!!       subroutine print_report(this, unit)
+!!!!!         class({{typename}}), intent(inout)     :: this     !< The class.
+!!!!!         INTEGER, OPTIONAL, intent(in)          :: unit
+!!!!!         !
+!!!!!         TYPE(Node), POINTER  :: temp
+!!!!!         integer(kind=LLI) :: tsz
+!!!!!         integer :: i, l
+!!!!!         i = 0
+!!!!!         l = 0
+!!!!!         tsz = 0
+!!!!!         temp => Head
+!!!!!         DO WHILE (ASSOCIATED(temp))
+!!!!!             tsz = tsz + SIZE(temp%space, kind=LLI)
+!!!!!             if (temp%locked) l = l + 1
+!!!!!             temp => temp%Next
+!!!!!             i = i + 1
+!!!!!         END DO
+!!!!!         if ( present (unit) ) then
+!!!!!             write (unit, '("[{{modulename}}] Currently allocated ", (es12.2), " Mbytes, locked: ", (I4), " /", (I4) )') REAL(tsz)/1048576, l, i
+!!!!!         else
+!!!!!             write (*   , '("[{{modulename}}] Currently allocated ", (es12.2), " Mbytes, locked: ", (I4), " /", (I4) )') REAL(tsz)/1048576, l, i
+!!!!!         end if
+!!!!!       end subroutine print_report
+!!!!!       !
+!!!!!       subroutine lock_space(this, d, cloc, info)
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}), intent(inout)     :: this     !< The class.
+!!!!!         integer(kind=LLI), intent(in)          :: d
+!!!!!     #if defined(__CUDA)
+!!!!!         type({{pointer_type}}), intent(inout)  :: cloc
+!!!!!     #else
+!!!!!         type(c_ptr), intent(inout)             :: cloc
+!!!!!     #endif
+!!!!!         integer, intent(out)                   :: info
+!!!!!         !
+!!!!!         integer(kind=LLI) :: r, tsz, sz
+!!!!!         TYPE(Node), POINTER  :: temp, good
+!!!!!         INTEGER :: i, good_one_idx
+!!!!!         !
+!!!!!         r   = 0
+!!!!!         tsz = 0
+!!!!!         i   = 1
+!!!!!         !
+!!!!!         ! Find the smallest usable buffer
+!!!!!         good_one_idx = 0
+!!!!!         temp => Head
+!!!!!         NULLIFY(good)
+!!!!!         DO WHILE (ASSOCIATED(temp))
+!!!!!             sz = SIZE(TemP%space, kind=LLI)
+!!!!!             IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
+!!!!!                 IF ( good_one_idx >= 1 ) THEN
+!!!!!                     IF ( sz - d < r) THEN
+!!!!!                         good => temp
+!!!!!                         r = SIZE(TemP%space, kind=LLI) - d
+!!!!!                         good_one_idx = i
+!!!!!                     END IF
+!!!!!                 ELSE
+!!!!!                     good_one_idx = i
+!!!!!                     good => temp
+!!!!!                     r = sz - d
+!!!!!                 END IF
+!!!!!                 info = 0
+!!!!!             END IF
+!!!!!             !
+!!!!!             tsz = tsz + sz
+!!!!!             i = i + 1
+!!!!!             !
+!!!!!             TemP => TemP%Next
+!!!!!         END DO
+!!!!!         !
+!!!!!         ! Allocate a new buffer
+!!!!!         IF ( good_one_idx == 0 ) THEN
+!!!!!             ALLOCATE (good)
+!!!!!     #if defined(__CUDA)
+!!!!!     {%- if attributes == 'device' %}
+!!!!!             ALLOCATE (good%space(d), stat=info)
+!!!!!     {%- else %}
+!!!!!             info = cudaMallocHost(cloc, int(d))
+!!!!!             CALL c_f_pointer( cloc, good%space, [ d ] )
+!!!!!             !ALLOCATE (good%space(d), stat=info)
+!!!!!     {%- endif %}
+!!!!!     #else
+!!!!!             ALLOCATE (good%space(d), stat=info)
+!!!!!     #endif
+!!!!!             good%Next   => Head
+!!!!!             Head        => good
+!!!!!             tsz         = tsz + d
+!!!!!             if (this%verbose) write (*, '("[{{modulename}}] Created new buffer")')
+!!!!!         ELSE
+!!!!!             if (this%verbose) write (*, '("[{{modulename}}] Locked buffer", I4)') good_one_idx
+!!!!!         END IF
+!!!!!         !
+!!!!!         if (this%verbose) &
+!!!!!              write (*, '("[{{modulename}}] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
+!!!!!         !
+!!!!!         good%locked = .true.
+!!!!!     #if defined(__CUDA)
+!!!!!     {%- if attributes == 'device' %}
+!!!!!         cloc = c_devloc(good%space)
+!!!!!     {%- else %}
+!!!!!         cloc = c_loc(good%space)
+!!!!!     {%- endif %}
+!!!!!     #else
+!!!!!         cloc = c_loc(good%space(1))
+!!!!!     #endif
+!!!!!         !
+!!!!!       end subroutine lock_space
+!!!!!       !
+!!!!!       subroutine prepare_space(this, d, info)
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}), intent(inout)     :: this     !< The class.
+!!!!!         integer(kind=LLI), intent(in)          :: d
+!!!!!         integer, intent(out)                   :: info
+!!!!!         !
+!!!!!     #if defined(__CUDA)
+!!!!!         type({{pointer_type}}) :: cloc
+!!!!!     #endif
+!!!!!         integer(kind=LLI) :: r, tsz, sz
+!!!!!         TYPE(Node), POINTER  :: temp, good
+!!!!!         INTEGER :: i, good_one_idx
+!!!!!         !
+!!!!!         r   = 0
+!!!!!         tsz = 0
+!!!!!         i   = 1
+!!!!!         !
+!!!!!         ! Find the smallest usable buffer
+!!!!!         good_one_idx = 0
+!!!!!         temp => Head
+!!!!!         NULLIFY(good)
+!!!!!         DO WHILE (ASSOCIATED(temp))
+!!!!!             sz = SIZE(TemP%space, kind=LLI)
+!!!!!             IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
+!!!!!                 good_one_idx = i
+!!!!!                 info = 0
+!!!!!             END IF
+!!!!!             !
+!!!!!             tsz = tsz + sz
+!!!!!             i = i + 1
+!!!!!             !
+!!!!!             TemP => TemP%Next
+!!!!!         END DO
+!!!!!         !
+!!!!!         ! Allocate a new buffer if needed
+!!!!!         IF ( good_one_idx == 0 ) THEN
+!!!!!             ALLOCATE (good)
+!!!!!     #if defined(__CUDA)
+!!!!!     {%- if attributes == 'device' %}
+!!!!!             ALLOCATE (good%space(d), stat=info)
+!!!!!     {%- else %}
+!!!!!             info = cudaMallocHost(cloc, int(d))
+!!!!!             CALL c_f_pointer( cloc, good%space, [ d ] )
+!!!!!     {%- endif %}
+!!!!!     #else
+!!!!!             ALLOCATE (good%space(d), stat=info)
+!!!!!     #endif
+!!!!!             good%locked = .false.
+!!!!!             good%Next   => Head
+!!!!!             Head        => good
+!!!!!             tsz         = tsz + d
+!!!!!             if (this%verbose) write (*, '("[{{modulename}}] Created new buffer")')
+!!!!!         ELSE
+!!!!!             if (this%verbose) write (*, '("[{{modulename}}] Good buffer found: ", I4)') good_one_idx
+!!!!!         END IF
+!!!!!         !
+!!!!!         if (this%verbose) &
+!!!!!              write (*, '("[{{modulename}}] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
+!!!!!         !
+!!!!!       end subroutine prepare_space
+!!!!!       !
+!!!!!       subroutine release_space(this, cloc, info)
+!!!!!     #if defined(__CUDA)
+!!!!!         {{cudamod}}
+!!!!!     #endif
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}), intent(inout)  :: this     !< The class.
+!!!!!     #if defined(__CUDA)
+!!!!!         type({{pointer_type}}), intent(in) :: cloc
+!!!!!     #else
+!!!!!         type(c_ptr), intent(in) :: cloc
+!!!!!     #endif
+!!!!!         integer, intent(out)            :: info    
+!!!!!         !
+!!!!!         TYPE(Node), POINTER  :: temp
+!!!!!     #if defined(__CUDA)
+!!!!!         type({{pointer_type}}) :: clocint
+!!!!!     #else
+!!!!!         type(c_ptr)            :: clocint
+!!!!!     #endif
+!!!!!         !
+!!!!!         integer :: i
+!!!!!         info = -1
+!!!!!         i = 1
+!!!!!         temp => head
+!!!!!         DO WHILE (ASSOCIATED(temp))
+!!!!!     #if defined(__CUDA)
+!!!!!     {%- if attributes == 'device' %}
+!!!!!             IF ( cloc == c_devloc(TemP%space) ) THEN
+!!!!!     {%- else %}
+!!!!!             clocint = c_loc(TemP%space(1))
+!!!!!             IF ( C_ASSOCIATED(cloc, clocint) ) THEN
+!!!!!     {%- endif %}
+!!!!!     #else
+!!!!!             clocint = c_loc(TemP%space(1))
+!!!!!             IF ( C_ASSOCIATED(cloc, clocint) ) THEN
+!!!!!     #endif
+!!!!!                 TemP%locked=.false.
+!!!!!                 info = 0
+!!!!!                 EXIT
+!!!!!             END IF
+!!!!!             i = i + 1
+!!!!!             TemP => TemP%Next
+!!!!!         END DO
+!!!!!         if (this%verbose) write (*, '("[{{modulename}}] Released buffer ", I4)') i
+!!!!!       end subroutine release_space
+!!!!!       !
+!!!!!     {% for item in interfaces %}
+!!!!!       !> Get or allocate a buffer for an {{ item.vtype }} {{ item.vrankname }}.
+!!!!!       subroutine lock_buffer_{{ item.subname }}(this, p, {{ item.vsize }}{% if item.rank == 1%}_{% endif %}, info)
+!!!!!     #if defined(__CUDA)
+!!!!!         {{cudamod}}
+!!!!!     #endif
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}), intent(inout)  :: this     !< The class.
+!!!!!         {{ item.vtype }}, pointer, intent(out) :: p({{ item.ranks }})   !< Pointer possibly set to access buffer
+!!!!!         integer,       intent(in) :: {{ item.vsize }}{% if item.rank > 1%}{{ item.vsizedims }}{% else %}_{% endif %}   !< {{ item.vrankname }} dimension
+!!!!!         integer,       intent(out) :: info    !<  0: ok
+!!!!!                                               !< -1: no buffers left, allocating space
+!!!!!                                               !< -2: unexpected error, no memory left
+!!!!!                                               !< other values come form allocate stat
+!!!!!     #if defined(__CUDA)
+!!!!!     {%- if (attributes) %}
+!!!!!         attributes({{attributes}}) :: p
+!!!!!     {%- endif %}
+!!!!!     #endif
+!!!!!         integer(kind=LLI) :: d
+!!!!!     #if defined(__CUDA)
+!!!!!         type({{pointer_type}}) :: cloc
+!!!!!     #else
+!!!!!         type(c_ptr) :: cloc
+!!!!!     #endif
+!!!!!         !
+!!!!!         {{ item.vtype }} :: dummy
+!!!!!         {%- if item.rank == 1%}
+!!!!!         integer :: {{ item.vsize }}(1)
+!!!!!         {{ item.vsize }}(1) = {{ item.vsize }}_
+!!!!!         {%- endif %}
+!!!!!         !
+!!!!!         d = PRODUCT({{ item.vsize }})
+!!!!!         d = d*SIZEOF(dummy)
+!!!!!         !
+!!!!!         CALL this%lock_space(d, cloc, info)
+!!!!!         CALL c_f_pointer( cloc, p, {{ item.vsize }} )
+!!!!!     
+!!!!!       end subroutine lock_buffer_{{ item.subname }}
+!!!!!     {% endfor %}
+!!!!!       !
+!!!!!     {% for item in interfaces %}
+!!!!!       !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+!!!!!       subroutine release_buffer_{{ item.subname }}(this, p, info)
+!!!!!     #if defined(__CUDA)
+!!!!!         {{cudamod}}
+!!!!!     #endif
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}), intent(inout)  :: this     !< The class.
+!!!!!         {{ item.vtype }}, pointer, intent(inout) :: p({{ item.ranks }})   !< Pointer possibly pointing to buffer space
+!!!!!         integer, intent(out)            :: info
+!!!!!     #if defined(__CUDA)
+!!!!!     {%- if (attributes) %}
+!!!!!         attributes({{attributes}}) :: p
+!!!!!     {%- endif %}
+!!!!!     #endif
+!!!!!     
+!!!!!     #if defined(__CUDA)
+!!!!!     {% if attributes == 'device' %}
+!!!!!         CALL this%release_space(c_devloc(p), info)
+!!!!!     {% else %}
+!!!!!         CALL this%release_space(c_loc(p), info)
+!!!!!     {% endif %}
+!!!!!     #else
+!!!!!         CALL this%release_space(c_loc(p({% for i in range(item.rank) %} lbound(p, {{ i+1 }}){% if not loop.last %}, {% endif %}{% endfor %})), info)
+!!!!!     #endif
+!!!!!       end subroutine release_buffer_{{ item.subname }}
+!!!!!     {% endfor %}
+!!!!!       !
+!!!!!     {% for item in interfaces %}
+!!!!!       !> 
+!!!!!       subroutine prepare_buffer_{{ item.subname }}(this, p, {{ item.vsize }}{% if item.rank == 1%}_{% endif %}, info)
+!!!!!     #if defined(__CUDA)
+!!!!!         {{cudamod}}
+!!!!!     #endif
+!!!!!         use iso_c_binding
+!!!!!         implicit none
+!!!!!         class({{typename}}), intent(inout)  :: this     !< The class.
+!!!!!         {{ item.vtype }}, pointer, intent(out) :: p({{ item.ranks }})   !< Pointer (only used for assesing type)
+!!!!!         integer,       intent(in) :: {{ item.vsize }}{% if item.rank > 1%}{{ item.vsizedims }}{% else %}_{% endif %}   !< {{ item.vrankname }} dimension
+!!!!!         integer,       intent(out) :: info    !<  0: ok
+!!!!!                                               !< -1: no buffers left, allocating space
+!!!!!                                               !< -2: unexpected error, no memory left
+!!!!!                                               !< other values come form allocate stat
+!!!!!     #if defined(__CUDA)
+!!!!!     {%- if (attributes) %}
+!!!!!         attributes({{attributes}}) :: p
+!!!!!     {%- endif %}
+!!!!!     #endif
+!!!!!         integer(kind=LLI) :: d
+!!!!!     #if defined(__CUDA)
+!!!!!         type({{pointer_type}}) :: cloc
+!!!!!     #else
+!!!!!         type(c_ptr) :: cloc
+!!!!!     #endif
+!!!!!         !
+!!!!!         {{ item.vtype }} :: dummy
+!!!!!         {%- if item.rank == 1%}
+!!!!!         integer :: {{ item.vsize }}(1)
+!!!!!         {{ item.vsize }}(1) = {{ item.vsize }}_
+!!!!!         {%- endif %}
+!!!!!         !
+!!!!!         d = PRODUCT({{ item.vsize }})
+!!!!!         d = d*SIZEOF(dummy)
+!!!!!         !
+!!!!!         CALL this%prepare_space(d, info)
+!!!!!         !
+!!!!!       end subroutine prepare_buffer_{{ item.subname }}
+!!!!!     {% endfor %}
+!!!!!     
+!!!!!     end module {{modulename}}
+
+    
