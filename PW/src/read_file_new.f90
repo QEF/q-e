@@ -175,8 +175,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
 #endif
   wfc_is_collected = output_obj%band_structure%wf_collected
-  ! ... first we get the version of the qexml file
-  !     if not already read
   !
   ! ... here we read the variables that dimension the system
   !
@@ -239,6 +237,19 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   CALL init_vars_from_schema ( 'nowave', ierr, output_obj, parinfo_obj, geninfo_obj, input_obj )
   !
+  ! ... pseudopotential info
+  !
+  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, parinfo_obj, geninfo_obj ) 
+  IF (do_comp_esm) CALL init_vars_from_schema &
+       ( 'esm', ierr, output_obj, parinfo_obj, geninfo_obj )
+  !
+  ! ... xml data no longer needed, can be discarded
+  !
+  CALL qes_reset  ( output_obj )
+  CALL qes_reset  ( geninfo_obj )
+  CALL qes_reset  ( parinfo_obj )
+  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
+  !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
   ! ... of k-points in the current pool
@@ -268,8 +279,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ENDIF
   !
   ! ... read pseudopotentials
-  !
-  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, parinfo_obj, geninfo_obj ) 
   !
   dft_name = get_dft_name () ! already set, should not be set again
   CALL readpp ( dft_name )
@@ -348,12 +357,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  !
-  CALL qes_reset  ( output_obj )
-  CALL qes_reset  ( geninfo_obj )
-  CALL qes_reset  ( parinfo_obj )
-  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
-  ! 
   RETURN
   !
   CONTAINS
