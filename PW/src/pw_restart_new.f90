@@ -17,7 +17,6 @@ MODULE pw_restart_new
   !
   USE KINDS,        ONLY: DP
   USE qes_types_module
-  !USE qes_libs_module, ONLY: qes_write, qes_reset, qes_init
   USE qes_write_module, ONLY: qes_write
   USE qes_reset_module, ONLY: qes_reset 
   USE qes_init_module, ONLY: qes_init
@@ -1065,13 +1064,8 @@ MODULE pw_restart_new
       lalgo   = .FALSE. 
       lsymflags =.FALSE. 
       !
-     
-         
+      !
       SELECT CASE( what )
-      CASE( 'header' )
-         !
-         lheader = .TRUE.
-         !
       CASE( 'dim' )
          !
          ldim =       .TRUE.
@@ -1084,15 +1078,6 @@ MODULE pw_restart_new
          !
          lcell = .TRUE.
          lions = .TRUE.
-         !
-      CASE( 'rho' )
-         !
-         lrho  = .TRUE.
-         !
-      CASE( 'wave' )
-         !
-         lpw   = .TRUE.
-         lwfc  = .TRUE.
          !
       CASE( 'nowave' )
          !
@@ -1111,33 +1096,9 @@ MODULE pw_restart_new
          lalgo   = .TRUE.
          lsymflags = .TRUE.
          !
-      CASE( 'all' )
-         !
-         lcell   = .TRUE.
-         lpw     = .TRUE.
-         lions   = .TRUE.
-         lspin   = .TRUE.
-         linit_mag  = .TRUE.
-         lxc     = .TRUE.
-         lexx    =.TRUE.
-         locc    = .TRUE.
-         lbz     = .TRUE.
-         lbs     = .TRUE.
-         lwfc    = .TRUE.
-         lsymm   = .TRUE.
-         lefield = .TRUE.
-         lrho    = .TRUE.
-         lpbc    = .TRUE.
-         lalgo   = .TRUE. 
-         lsymflags = .TRUE. 
-         !
       CASE( 'ef' )
          !
          lef        = .TRUE.
-         !
-      CASE( 'exx' )
-         !
-         lexx       = .TRUE.
          !
       CASE( 'esm' )
          !
@@ -1146,6 +1107,12 @@ MODULE pw_restart_new
       CASE( 'boundary_conditions' )  
          !
          lpbc       = .TRUE.
+         !
+      CASE DEFAULT
+         !
+         CALL errore('init_vars_from_schema','unknown what="' &
+              & // TRIM(what) // '" option', 1)
+         !
       END SELECT
       !
       !
@@ -1157,7 +1124,6 @@ MODULE pw_restart_new
          CALL readschema_dim(par_info, output_obj%atomic_species, &
               output_obj%atomic_structure, output_obj%symmetries, &
               output_obj%basis_set, output_obj%band_structure ) 
-         CALL readschema_kdim(output_obj%symmetries, output_obj%band_structure )
          !
       ENDIF
       !
@@ -1220,10 +1186,17 @@ MODULE pw_restart_new
          CALL readschema_outputPBC ( output_obj%boundary_conditions)
       END IF
       !
-      IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field ) 
+      IF ( lefield .AND. lvalid_input ) THEN
+         CALL readschema_efield ( input_obj%electric_field )
+      END IF
       !
-      IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
-      IF ( lalgo ) CALL readschema_algo(output_obj%algorithmic_info ) 
+      IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) THEN
+         CALL readschema_exx ( output_obj%dft%hybrid )
+      END IF
+      !
+      IF ( lalgo ) THEN
+         CALL readschema_algo(output_obj%algorithmic_info )
+      END IF
       !
       RETURN
       !
@@ -1251,7 +1224,7 @@ MODULE pw_restart_new
       !
     USE constants,        ONLY : e2
     USE ions_base,        ONLY : nat, nsp
-    USE symm_base,        ONLY : nsym
+    USE symm_base,        ONLY : nsym, nrot
     USE gvect,            ONLY : ngm_g, ecutrho
     USE fft_base,         ONLY : dfftp
     USE gvecs,            ONLY : ngms_g, dual
@@ -1296,6 +1269,7 @@ MODULE pw_restart_new
     nat = atomic_structure%nat 
     !                                         SIMMETRIES 
     nsym = symmetries%nsym
+    nrot = symmetries%nrot
     !-----------------------------------------------------------------------------
     !                                          BASIS SET 
     !-----------------------------------------------------------------------------
@@ -1331,7 +1305,8 @@ MODULE pw_restart_new
        nkstot = nkstot * 2 
        nbnd   = nbnd / 2
     END IF
-    END SUBROUTINE readschema_dim
+
+  END SUBROUTINE readschema_dim
     !
     !-----------------------------------------------------------------------
     SUBROUTINE readschema_cell(atomic_structure )
@@ -1854,28 +1829,6 @@ MODULE pw_restart_new
       !         
     END SUBROUTINE readschema_xc
     !  
-    !-----------------------------------------------------------------------------------------------------
-    SUBROUTINE readschema_kdim( symmetries_obj, band_struct_obj )
-    !-----------------------------------------------------------------------------------------------------
-       !
-       USE lsda_mod,         ONLY : lsda
-       USE klist,            ONLY : nkstot
-       USE symm_base,        ONLY : nrot 
-       USE qes_types_module, ONLY : symmetries_type, band_structure_type
-       !
-       IMPLICIT NONE
-       !
-       TYPE ( symmetries_type )    ,INTENT(IN)    :: symmetries_obj 
-       TYPE ( band_structure_type ),INTENT(IN)    :: band_struct_obj 
-       INTEGER                                    :: nks_
-       ! 
-       nks_ = band_struct_obj%nks
-       nkstot = nks_
-       IF ( band_struct_obj%lsda ) nkstot = nkstot * 2  
-       !
-       nrot = symmetries_obj%nrot
-       !
-    END SUBROUTINE readschema_kdim    
     !
     ! --------- For 2D cutoff: to read the fact that 2D cutoff was used in scf from new xml----------------
     !-----------------------------------------------------------------------------------------------------

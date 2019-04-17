@@ -40,7 +40,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   ! maxlm= number of l,m spherical harmonics for l <= maxl
   ! maxmj = number of mj components
   !
-  REAL(DP), PARAMETER :: eps = 1.0d-9
+  REAL(DP), PARAMETER :: eps = 1.0d-8
   !
   !   and the local variables
   !

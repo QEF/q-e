@@ -351,7 +351,6 @@ fermiwindow.o : ../../PW/src/pwcom.o
 fermiwindow.o : ../../UtilXlib/mp.o
 fermiwindow.o : elph2.o
 fermiwindow.o : epwcom.o
-gmap_sym.o : ../../Modules/fft_base.o
 gmap_sym.o : ../../Modules/kind.o
 gmap_sym.o : ../../Modules/recvec.o
 gmap_sym.o : constants_epw.o
