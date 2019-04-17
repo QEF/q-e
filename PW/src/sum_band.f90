@@ -235,7 +235,8 @@ SUBROUTINE sum_band()
        USE becmod,        ONLY : becp
        USE mp_bands,      ONLY : me_bgrp
        USE mp,            ONLY : mp_sum, mp_get_comm_null
-       USE fft_helper_subroutines
+       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
+                          tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
        !
        IMPLICIT NONE
        !
@@ -473,7 +474,8 @@ SUBROUTINE sum_band()
        !
        USE mp_bands,     ONLY : me_bgrp
        USE mp,           ONLY : mp_sum, mp_get_comm_null
-       USE fft_helper_subroutines
+       USE fft_helper_subroutines, ONLY : fftx_ntgrp, fftx_tgpe, &
+                          tg_reduce_rho, tg_get_nnr, tg_get_group_nr3
        !
        IMPLICIT NONE
        !
