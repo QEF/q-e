@@ -120,12 +120,12 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE gvecs,                ONLY : ngms, gcutms 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
-  USE wavefunctions, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart_new,       ONLY : pw_readschema_file, init_vars_from_schema 
-  USE qes_types_module,     ONLY : output_type, parallel_info_type, general_info_type, input_type
+  USE qes_types_module,     ONLY : output_type, parallel_info_type, &
+       general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
@@ -316,11 +316,12 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   CALL allocate_wfc()
   !
-  ! ... read the charge density
+  ! ... read the charge density in G-space
   !
   CALL read_scf( rho, nspin, gamma_only )
-  ! FIXME: for compatibility. rho was previously read and written in real space
-  ! FIXME: now it is in G space - to be removed together with old format
+  !
+  ! ... bring the charge density to real space
+  !
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
   !
   ! ... re-calculate the local part of the pseudopotential vltot
@@ -335,16 +336,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   CALL setlocal()
   CALL set_rhoc()
-  !
-  ! ... bring rho to G-space
-  !
-  DO is = 1, nspin
-     !
-     psic(:) = rho%of_r(:,is)
-     CALL fwfft ('Rho', psic, dfftp)
-     rho%of_g(:,is) = psic(dfftp%nl(:))
-     !
-  END DO
   !
   ! ... recalculate the potential
   !
