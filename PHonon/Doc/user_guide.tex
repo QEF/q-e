@@ -454,9 +454,6 @@ in \texttt{examples/GRID\_example}. Reference:\\
 \paragraph{ph.x stops with {\em error reading file}}
 The data file produced by \pwx\ is bad or incomplete or produced
 by an incompatible version of the code.
-In parallel execution: if you did not set \texttt{wf\_collect=.true.}, the number
-of processors and pools for the phonon run should be the same as for the
-self-consistent run; all files must be visible to all processors.
 
 \paragraph{ph.x mumbles something like {\em cannot recover} or {\em error
   reading recover file}} 
@@ -529,9 +526,18 @@ sign flags eigenvalues of the dynamical matrix for which $\omega^2 <
 Verify the {\bf q}-vector for which you are calculating phonons. In order to
 check whether a symmetry operation belongs to the small group of ${\bf q}$,
 the code compares ${\bf q}$ and the rotated ${\bf q}$, with an acceptance tolerance of  
-$10^{-5}$ (set in routine \texttt{PW/eqvect.f90}). You may run into trouble if
+$10^{-5}$ (set in routine \texttt{PW/src/eqvect.f90}). You may run into trouble if
 your {\bf q}-vector differs from a high-symmetry point by an amount in that
 order of magnitude.
+
+\paragraph{Mysterious symmetry-related errors} 
+Symmetry-related errors like {\em symmetry operation is non orthogonal}, 
+or {\em Wrong representation}, or {\em Wrong degeneracy}, are almost 
+invariably a consequence of atomic positions that are close to, 
+but not sufficiently close to, symmetry positions. If such errors occur,
+set the Bravais lattice using the correct \texttt{ibrav} value (i.e. do
+not use \texttt{ibrav=0}), use Wyckoff positions if known. This must be
+done in the self-consistent calculation.
 
 \appendix
 \section{Appendix: Electron-phonon coefficients}

@@ -13,8 +13,8 @@ subroutine d_matrix (dy1, dy2, dy3)
   USE symm_base, ONLY:  nsym, sr
   USE random_numbers, ONLY : randy
   USE matrix_inversion
-  implicit none
-  real(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
+  IMPLICIT NONE
+  REAL(DP), INTENT(OUT) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   !
   integer, parameter :: maxl = 3, maxm = 2*maxl+1, &
        maxlm = (maxl+1)*(maxl+1)
@@ -25,7 +25,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   real(DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), yl3(7,7), &
        yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), delta(7,7), capel
-  real(DP), parameter :: eps = 1.0d-9
+  real(DP), parameter :: eps = 1.0d-8
   real(DP), external :: ddot
   !
   !  randomly distributed points on a sphere

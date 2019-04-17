@@ -2012,7 +2012,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 
@@ -2128,7 +2128,7 @@ MODULE realus
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
     USE mp_bands,      ONLY : me_bgrp
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 
@@ -2236,7 +2236,7 @@ MODULE realus
     USE gvecs,                    ONLY : doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 
@@ -2324,7 +2324,7 @@ MODULE realus
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : fwfft
     USE mp_bands,                 ONLY : me_bgrp
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 

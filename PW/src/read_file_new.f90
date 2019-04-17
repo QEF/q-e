@@ -120,12 +120,12 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE gvecs,                ONLY : ngms, gcutms 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
-  USE wavefunctions, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart_new,       ONLY : pw_readschema_file, init_vars_from_schema 
-  USE qes_types_module,     ONLY : output_type, parallel_info_type, general_info_type, input_type
+  USE qes_types_module,     ONLY : output_type, parallel_info_type, &
+       general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
@@ -175,8 +175,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
 #endif
   wfc_is_collected = output_obj%band_structure%wf_collected
-  ! ... first we get the version of the qexml file
-  !     if not already read
   !
   ! ... here we read the variables that dimension the system
   !
@@ -239,6 +237,19 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   CALL init_vars_from_schema ( 'nowave', ierr, output_obj, parinfo_obj, geninfo_obj, input_obj )
   !
+  ! ... pseudopotential info
+  !
+  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, parinfo_obj, geninfo_obj ) 
+  IF (do_comp_esm) CALL init_vars_from_schema &
+       ( 'esm', ierr, output_obj, parinfo_obj, geninfo_obj )
+  !
+  ! ... xml data no longer needed, can be discarded
+  !
+  CALL qes_reset  ( output_obj )
+  CALL qes_reset  ( geninfo_obj )
+  CALL qes_reset  ( parinfo_obj )
+  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
+  !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
   ! ... of k-points in the current pool
@@ -268,8 +279,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ENDIF
   !
   ! ... read pseudopotentials
-  !
-  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, parinfo_obj, geninfo_obj ) 
   !
   dft_name = get_dft_name () ! already set, should not be set again
   CALL readpp ( dft_name )
@@ -316,11 +325,12 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   CALL allocate_wfc()
   !
-  ! ... read the charge density
+  ! ... read the charge density in G-space
   !
   CALL read_scf( rho, nspin, gamma_only )
-  ! FIXME: for compatibility. rho was previously read and written in real space
-  ! FIXME: now it is in G space - to be removed together with old format
+  !
+  ! ... bring the charge density to real space
+  !
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
   !
   ! ... re-calculate the local part of the pseudopotential vltot
@@ -336,16 +346,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL setlocal()
   CALL set_rhoc()
   !
-  ! ... bring rho to G-space
-  !
-  DO is = 1, nspin
-     !
-     psic(:) = rho%of_r(:,is)
-     CALL fwfft ('Rho', psic, dfftp)
-     rho%of_g(:,is) = psic(dfftp%nl(:))
-     !
-  END DO
-  !
   ! ... recalculate the potential
   !
   IF ( ts_vdw) THEN
@@ -357,12 +357,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  !
-  CALL qes_reset  ( output_obj )
-  CALL qes_reset  ( geninfo_obj )
-  CALL qes_reset  ( parinfo_obj )
-  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
-  ! 
   RETURN
   !
   CONTAINS
