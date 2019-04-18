@@ -575,7 +575,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... xk, wk, isk, et, wg are distributed across pools;
         ! ... the first node has a complete copy of xk, wk, isk,
         ! ... while eigenvalues et and weights wg must be
-        ! ... explicitely collected to the first node
+        ! ... explicitly collected to the first node
         ! ... this is done here for et, in sum_band for wg
         !
         CALL poolrecover( et, nbnd, nkstot, nks )
