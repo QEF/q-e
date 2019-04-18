@@ -182,9 +182,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL errore( 'read_xml_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
-  CALL init_vars_from_schema( 'boundary_conditions',   ierr , output_obj, parinfo_obj, geninfo_obj )
-  CALL errore( 'read_xml_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   ! ... allocate space for atomic positions, symmetries, forces
   !
   IF ( nat < 0 ) CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
@@ -235,13 +232,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! ... here we read all the variables defining the system
   !
-  CALL init_vars_from_schema ( 'nowave', ierr, output_obj, parinfo_obj, geninfo_obj, input_obj )
-  !
-  ! ... pseudopotential info
-  !
-  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, parinfo_obj, geninfo_obj ) 
-  IF (do_comp_esm) CALL init_vars_from_schema &
-       ( 'esm', ierr, output_obj, parinfo_obj, geninfo_obj )
+  CALL init_vars_from_schema ( 'all', ierr, output_obj, parinfo_obj, &
+          geninfo_obj, input_obj )
   !
   ! ... xml data no longer needed, can be discarded
   !
@@ -303,7 +295,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        g, gg, mill, ig_l2g, gstart ) 
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
   IF (do_comp_esm) THEN
-     CALL init_vars_from_schema ( 'esm', ierr, output_obj, parinfo_obj, geninfo_obj ) 
      CALL esm_init()
   END IF
   CALL gshells ( lmovecell ) 
