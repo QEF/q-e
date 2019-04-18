@@ -500,7 +500,7 @@ subroutine ld1_readin(input_file)
   if (iswitch == 3 .and. ios /= 0 ) then
      !
      ! use for testing the same configuration as for PP generation
-     ! (unless a different one is explicitely specified in namelist &test)
+     ! (unless a different one is explicitly specified in namelist &test)
      !
      ns1 = 0
      do ns=1,nwfs

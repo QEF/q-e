@@ -519,7 +519,10 @@ SUBROUTINE setup()
   !
   ! ... nosym: do not use any point-group symmetry (s(:,:,1) is the identity)
   !
-  IF ( nosym ) nsym = 1
+  IF ( nosym ) THEN
+     nsym = 1
+     invsym = .FALSE.
+  END IF
   !
   IF ( nsym > 1 .AND. ibrav == 0 ) CALL infomsg('setup', &
        'DEPRECATED: symmetry with ibrav=0, use correct ibrav instead')
