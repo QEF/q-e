@@ -37,7 +37,6 @@
     eps_rpa(:)               !  screening
   REAL(KIND=DP), ALLOCATABLE ::&
     a_all(:,:),             &!  electronic spectral function du to electron-phonon interaction
-    et_all(:,:),            &!  full eigenvalue list, coarse (nbnd, nkstot)
     et_ks(:,:),             &!  lda eigenvalues
     et_mb(:,:),             &!  gw eigenvalues
     xkq(:,:),               &!  local k+q grid, coarse (3, nks)

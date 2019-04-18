@@ -22,9 +22,9 @@
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE cell_base,     ONLY : at
   USE mp,            ONLY : mp_bcast 
-  USE wvfct,         ONLY : nbnd
+  USE wvfct,         ONLY : nbnd, et
   USE klist,         ONLY : nks, xk, nkstot 
-  USE lsda_mod,      ONLY : lsda
+  USE lsda_mod,      ONLY : lsda, isk
   USE fixed_occ,     ONLY : tfixed_occ
   USE qpoint,        ONLY : xq
   USE disp,          ONLY : nq1, nq2, nq3
@@ -59,7 +59,7 @@
                             restart_filq, prtgkk, nel, meff, epsiHEG, lphase, &
                             omegamin, omegamax, omegastep, n_r, lindabs, &
                             mob_maxiter, use_ws, epmatkqread, selecqread
-  USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst
+  USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero
@@ -699,24 +699,38 @@
     ! 
     ! We define the global list of coarse grid k-points (cart and cryst)
     ALLOCATE (xk_all(3, nkstot))
+    ALLOCATE (et_all(nbnd, nkstot))
+    ALLOCATE (isk_all(nkstot))
     ALLOCATE (xk_cryst(3, nkstot))
     xk_all(:,:)   = zero
+    et_all(:,:)   = zero
+    isk_all(:)    = 0
     xk_cryst(:,:) = zero
     DO ik=1, nkstot
       xk_all(:, ik)   = xk(:, ik)
+      isk_all(ik)     = isk(ik)
+      et_all(:, ik)   = et(:, ik)
       xk_cryst(:, ik) = xk(:, ik)
     ENDDO
     !  bring k-points from cartesian to crystal coordinates
     CALL cryst_to_cart(nkstot, xk_cryst, at, -1)
     ! Only master has the correct full list of kpt. Therefore bcast to all cores
     CALL mp_bcast(xk_all, ionode_id, world_comm)
+    CALL mp_bcast(et_all, ionode_id, world_comm)
+    CALL mp_bcast(isk_all, ionode_id, world_comm)
     CALL mp_bcast(xk_cryst, ionode_id, world_comm)
     ! 
     ! We define the local list of kpt
     ALLOCATE (xk_loc(3, nks))
+    ALLOCATE (et_loc(nbnd, nks))
+    ALLOCATE (isk_loc(nks))
     xk_loc(:,:) = zero
+    et_loc(:,:) = zero
+    isk_loc(:) = 0
     DO ik=1, nks
       xk_loc(:, ik) = xk(:, ik)
+      et_loc(:, ik) = et(:, ik)
+      isk_loc(ik)   = isk(ik)
     ENDDO 
     ! 
   ENDIF

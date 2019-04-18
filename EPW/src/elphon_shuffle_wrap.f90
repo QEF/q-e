@@ -35,7 +35,7 @@
   USE ions_base,     ONLY : nat, nsp, tau, ityp
   USE control_flags, ONLY : iverbosity
   USE io_epw,        ONLY : iuepb, iuqpeig
-  USE pwcom,         ONLY : et, nks, nbnd, nkstot
+  USE pwcom,         ONLY : nks, nbnd, nkstot
   USE cell_base,     ONLY : at, bg
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart, &
                             sr, nrot, copy_sym, set_sym_bl, find_sym, & 
@@ -47,10 +47,10 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
-  USE elph2,         ONLY : epmatq, dynq, sumr, et_all, et_mb, et_ks, &
+  USE elph2,         ONLY : epmatq, dynq, sumr, et_mb, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all, exband
-  USE klist_epw,     ONLY : xk_all
+  USE klist_epw,     ONLY : xk_all, et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, czero
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
@@ -137,7 +137,7 @@
   !! The corresponding weigths
   REAL(kind=DP) :: sxq(3, 48)
   !! List of vectors in the star of q  
-  REAL(kind=DP) :: et_tmp(nbnd,nkstot)
+  REAL(kind=DP) :: et_tmp(nbnd, nkstot)
   !! Temporary array containing the eigenvalues (KS or GW) when read from files
   REAL(kind=DP) :: xq0(3) 
   !! Current coarse q-point coords.
@@ -261,9 +261,9 @@
     CALL mp_bcast(et_tmp, meta_ionode_id, world_comm)
     !
     CALL fkbounds(nkstot, ik_start, ik_stop)
-    et_ks(:,:)  = et(:,1:nks)
-    et(:,1:nks) = et_tmp(:,ik_start:ik_stop)
-    et_mb(:,:)  = et(:,1:nks)
+    et_ks(:,:)  = et_loc(:,:)
+    et_loc(:,:) = et_tmp(:,ik_start:ik_stop)
+    et_mb(:,:)  = et_loc(:,:)
   ENDIF
   !
   ! Do not recompute dipole matrix elements
@@ -276,9 +276,10 @@
   !
   !  gather electronic eigenvalues for subsequent shuffle
   !  
-  ALLOCATE (et_all(nbnd, nkstot))
-  et_all(:,:) = zero
-  CALL poolgather(nbnd, nkstot, nks, et(1:nbnd,1:nks), et_all)
+  IF (eig_read) THEN
+    et_all(:,:) = zero
+    CALL poolgather(nbnd, nkstot, nks, et_loc(1:nbnd,1:nks), et_all)
+  ENDIF
   !
   IF (.NOT. kmaps) THEN
     CALL start_clock('kmaps')
@@ -694,7 +695,7 @@
          IF (.not. exst) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
          OPEN(iuepb, file = tempfile, form = 'unformatted')
          WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
-         READ(iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
+         READ(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
          CLOSE(iuepb)
          WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
       ENDIF
@@ -702,7 +703,7 @@
       IF (epbwrite) THEN
          OPEN(iuepb, file = tempfile, form = 'unformatted')
          WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
-         WRITE(iuepb) nqc, xqc, et, dynq, epmatq, zstar, epsi
+         WRITE(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
          CLOSE(iuepb)
          WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
       ENDIF

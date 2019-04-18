@@ -64,8 +64,8 @@
   USE wavefunctions, ONLY : evc
   USE io_files,      ONLY : diropn, seqopn
   USE wvfct,         ONLY : npwx
-  USE pwcom,         ONLY : current_spin, isk, lsda, nbnd, nks
-  USE klist_epw,     ONLY : xk_loc, xk_all
+  USE pwcom,         ONLY : current_spin, lsda, nbnd, nks
+  USE klist_epw,     ONLY : xk_loc, xk_all, isk_loc, et_all
   USE cell_base,     ONLY : tpiba
   USE gvect,         ONLY : ngm, g
   USE uspp,          ONLY : vkb
@@ -78,7 +78,7 @@
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : calbec 
   USE elph2,         ONLY : shift, gmap, el_ph_mat, umat, umatq, igk_k_all, &
-                            umat_all, et_all, xkq, etq, igkq, igk, &
+                            umat_all, xkq, etq, igkq, igk, &
                             ngk_all, lower_band, upper_band
   USE fft_base,      ONLY : dffts
   USE constants_epw, ONLY : czero, cone, ci, zero
@@ -219,7 +219,7 @@
   !
   DO ik = 1, nks
      !
-     IF (lsda) current_spin = isk(ik)
+     IF (lsda) current_spin = isk_loc(ik)
      elphmat(:,:,:) = czero
 !DBSP
 !     b = zero

@@ -30,7 +30,8 @@
                             wmax_specfun, nw_specfun, &
                             efermi_read, fermi_energy,&
                             nel, meff, epsiHEG 
-  USE pwcom,         ONLY : nelec, ef, isk
+  USE pwcom,         ONLY : nelec, ef
+  USE klist_epw,     ONLY : isk_loc
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
                             wkf, nkf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all,&
@@ -92,7 +93,7 @@
     !
   ELSE
     !
-    ef0 = efermig(etf,nbndsub,nkqf,nelec,wkf,degaussw,ngaussw,0,isk)
+    ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
     ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
     ! in ephwann_shuffle
     !

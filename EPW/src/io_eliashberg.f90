@@ -1481,7 +1481,8 @@
     USE io_global, ONLY : stdout
     USE epwcom,    ONLY : nbndsub, fsthick, ngaussw, degaussw, & 
                           efermi_read, fermi_energy, mp_mesh_k
-    USE pwcom,     ONLY : nelec, ef, isk
+    USE pwcom,     ONLY : nelec, ef
+    USE klist_epw, ONLY : isk_loc
     USE elph2,     ONLY : etf, nkqf, wkf, nkf, nkqtotf
     USE constants_epw, ONLY : two
     USE mp,        ONLY : mp_barrier, mp_sum
@@ -1512,16 +1513,16 @@
     !
     REAL(DP), EXTERNAL :: efermig, dos_ef
     ! 
-    IF (iq.eq.1) THEN
+    IF (iq == 1) THEN
        ! 
        ! Fermi level and corresponding DOS
        !  
        ! since wkf(:,ikq) = 0 these bands do not bring any contribution to ef0 or dosef
        !
-       IF ( efermi_read ) THEN
+       IF (efermi_read) THEN
           ef0 = fermi_energy 
        ELSE
-          ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
+          ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
        ENDIF  
        !     
        dosef = dos_ef(ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)
@@ -1531,7 +1532,7 @@
        ! fermicount = nr of k-points within the Fermi shell per pool
        !
        fermicount = 0
-       DO ik = 1, nkf
+       DO ik=1, nkf
           !
           ikk = 2 * ik - 1
           ikq = ikk + 1

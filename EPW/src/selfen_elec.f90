@@ -37,7 +37,7 @@
                             fsthick, eptemp, ngaussw, degaussw, &
                             eps_acustic, efermi_read, fermi_energy,&
                             restart, restart_freq
-  USE pwcom,         ONLY : ef !, nelec, isk
+  USE pwcom,         ONLY : ef
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew

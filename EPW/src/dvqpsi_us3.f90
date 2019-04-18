@@ -33,7 +33,7 @@
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : eigts1, eigts2, eigts3, mill, g, ngm
   USE gvecs,                 ONLY : ngms, doublegrid
-  USE lsda_mod,              ONLY : lsda, isk
+  USE lsda_mod,              ONLY : lsda
   USE scf,                   ONLY : rho, rho_core
   USE noncollin_module,      ONLY : nspin_lsda, nspin_gga, npol
   use uspp_param,            ONLY : upf
@@ -44,6 +44,7 @@
   USE eqv,                   ONLY : dvpsi, dmuxc, vlocq
   USE qpoint,                ONLY : eigqts, npwq 
   USE klist,                 ONLY : ngk
+  USE klist_epw,             ONLY : isk_loc
   USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE funct,                 ONLY : dft_is_gradient, dft_is_nonlocc
   USE elph2,                 ONLY : igkq, igk, lower_band, upper_band
@@ -175,13 +176,13 @@
         aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
       ENDDO
     ELSE
-      is = isk(ik)
-      DO ir = 1, dfftp%nnr
-        aux(ir) = drhoc(ir) * 0.5d0 * ( dmuxc(ir,is,1) + dmuxc(ir,is,2) )
+      is = isk_loc(ik)
+      DO ir=1, dfftp%nnr
+        aux(ir) = drhoc(ir) * 0.5d0 * (dmuxc(ir, is, 1) + dmuxc(ir, is, 2))
       ENDDO
     ENDIF
     !
-    fac = 1.d0 / dble(nspin_lsda)
+    fac = 1.d0 / DBLE(nspin_lsda)
     DO is = 1, nspin_lsda
       rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
     ENDDO

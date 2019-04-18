@@ -109,7 +109,6 @@
   ELSE
     !
     ef0 = efnew ! Fermi energy is recalculated on the fine mesh!! 
-    !ef0 = efermig(etf,nbndsub,nkqf,nelec,wkf,degaussw,ngaussw,0,isk)
     ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
     ! in ephwann_shuffle
     !
