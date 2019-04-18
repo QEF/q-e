@@ -147,7 +147,7 @@ MODULE pw_restart_new
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
+      LOGICAL               :: occupations_are_fixed
       INTEGER                  :: iclass, isym, ielem
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent, dft_is_vdw, empirical_vdw
@@ -1005,9 +1005,6 @@ MODULE pw_restart_new
     SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
       !------------------------------------------------------------------------
       !
-      USE io_rho_xml,           ONLY : read_scf
-      USE scf,                  ONLY : rho
-      USE lsda_mod,             ONLY : nspin
       USE qes_types_module,     ONLY : input_type, output_type, &
                                        general_info_type, parallel_info_type    
       !
@@ -1022,12 +1019,11 @@ MODULE pw_restart_new
       !
       CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
-                            lxc, locc, lbz, lbs, lwfc, lheader,          &
-                            lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm, lpbc, lvalid_input, lalgo, lsymflags 
+                            lxc, locc, lbz, lbs, lheader,        &
+                            lsymm, lefield, ldim, lvalid_input,  &
+                            lef, lexx, lesm, lpbc, lalgo
       !
-      LOGICAL            :: found, electric_field_ispresent
-      INTEGER            :: tmp
+      LOGICAL            :: found
       
       !    
       !
@@ -1052,9 +1048,7 @@ MODULE pw_restart_new
       locc    = .FALSE.
       lbz     = .FALSE.
       lbs     = .FALSE.
-      lwfc    = .FALSE.
       lsymm   = .FALSE.
-      lrho    = .FALSE.
       lefield = .FALSE.
       lef     = .FALSE.
       lexx    = .FALSE.
@@ -1062,7 +1056,6 @@ MODULE pw_restart_new
       lheader = .FALSE.
       lpbc    = .FALSE.  
       lalgo   = .FALSE. 
-      lsymflags =.FALSE. 
       !
       !
       SELECT CASE( what )
@@ -1070,22 +1063,17 @@ MODULE pw_restart_new
          !
          ldim =       .TRUE.
          !
-      CASE( 'pseudo' )
-         !
-         lions = .TRUE.
-         !
       CASE( 'config' )
          !
          lcell = .TRUE.
          lions = .TRUE.
          !
-      CASE( 'nowave' )
+      CASE( 'all' )
          !
          lcell   = .TRUE.
          lpw     = .TRUE.
          lions   = .TRUE.
          lspin   = .TRUE.
-         linit_mag   = .TRUE.
          lxc     = .TRUE.
          lexx    = .TRUE.
          locc    = .TRUE.
@@ -1094,19 +1082,13 @@ MODULE pw_restart_new
          lsymm   = .TRUE.
          lefield = .TRUE.
          lalgo   = .TRUE.
-         lsymflags = .TRUE.
+         lpbc    = .TRUE.
+         lesm    = .TRUE.
+         linit_mag = .TRUE.
          !
       CASE( 'ef' )
          !
          lef        = .TRUE.
-         !
-      CASE( 'esm' )
-         !
-         lesm       = .TRUE.
-         !
-      CASE( 'boundary_conditions' )  
-         !
-         lpbc       = .TRUE.
          !
       CASE DEFAULT
          !
@@ -1157,33 +1139,20 @@ MODULE pw_restart_new
       IF ( lbs ) THEN
          CALL readschema_band_structure( output_obj%band_structure )
       END IF
-      IF ( lwfc ) THEN
-         !
-         IF (output_obj%band_structure%wf_collected)  CALL read_collected_to_evc(dirname ) 
-      END IF
       IF ( lsymm ) THEN
-         IF ( lvalid_input .and. lsymflags ) THEN 
+         IF ( lvalid_input ) THEN 
             CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
          ELSE 
             CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
          ENDIF
       ENDIF
-      !
-      IF ( lrho ) THEN
-         !
-         ! ... to read the charge-density we use the routine from io_rho_xml 
-         ! ... it also reads ns for ldaU and becsum for PAW
-         !
-         CALL read_scf( rho, nspin )
-         !
-      END IF
-      IF ( lef ) THEN
-               CALL readschema_ef ( output_obj%band_structure) 
-         !
-      END IF
       ! 
       IF ( lpbc ) THEN
          CALL readschema_outputPBC ( output_obj%boundary_conditions)
+      END IF
+      !
+      IF ( lef ) THEN
+         CALL readschema_ef ( output_obj%band_structure) 
       END IF
       !
       IF ( lefield .AND. lvalid_input ) THEN
