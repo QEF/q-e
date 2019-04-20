@@ -25,7 +25,7 @@
   USE cell_base,  ONLY : tpiba
   USE gvect,      ONLY : g
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
+  USE lsda_mod,   ONLY : lsda, current_spin, nspin
   USE spin_orb,   ONLY : lspinorb
   USE wvfct,      ONLY : npwx, et
   USE uspp,       ONLY : okvan, nkb, vkb
@@ -37,6 +37,7 @@
   USE elph2,      ONLY : igkq, lower_band, upper_band
   USE noncollin_module, ONLY : noncolin, npol
   USE constants_epw,    ONLY : czero, cone, eps12
+  USE klist_epw,  ONLY : isk_loc
   !
   IMPLICIT NONE
   !
@@ -102,7 +103,7 @@
     ALLOCATE( deff(nhm, nhm, nat) )
   ENDIF
   ALLOCATE( aux(npwx) )
-  IF (lsda) current_spin = isk(ik)
+  IF (lsda) current_spin = isk_loc(ik)
   !
   !   we first compute the coefficients of the vectors
   !

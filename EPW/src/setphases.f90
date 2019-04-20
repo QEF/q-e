@@ -47,6 +47,7 @@
   USE wvfct,                ONLY : nbnd   
   USE gvecs,                ONLY : nls
   USE fft_interfaces,       ONLY : fwfft, invfft
+  USE klist_epw,            ONLY : et_loc
 
 !$$
   use cell_base,            ONLY : omega, pi
@@ -172,7 +173,7 @@
   ! count subsets and their degeneracy
   !
   DO ibnd = 2, nbnd
-    tdegen = abs( et (ibnd, ik0) - et (ibnd-1, ik0)  ) .lt. eps 
+    tdegen = abs(et_loc(ibnd, ik0) - et_loc(ibnd-1, ik0)  ) .lt. eps 
     IF (tdegen) then
       ndeg (nset) = ndeg(nset) + 1
     ELSE

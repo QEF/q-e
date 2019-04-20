@@ -25,7 +25,8 @@
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : vkb, okvan
-  USE lsda_mod,   ONLY : lsda, current_spin, isk
+  USE lsda_mod,   ONLY : lsda, current_spin
+  USE klist_epw,  ONLY : isk_loc
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp
   USE wvfct,      ONLY : npwx
   USE lrus,       ONLY : int3, int3_nc, becp1
@@ -76,7 +77,7 @@
   !
   CALL start_clock('adddvscf2')
   !
-  IF (lsda) current_spin = isk(ik)
+  IF (lsda) current_spin = isk_loc(ik)
   !
   ijkb0 = 0
   DO nt = 1, ntyp

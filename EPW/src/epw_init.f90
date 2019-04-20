@@ -24,9 +24,8 @@
   USE phus,                 ONLY : alphap
   USE lrus,                 ONLY : becp1
   USE uspp,                 ONLY : vkb
-  USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin, &
-                                   isk
-  USE klist_epw,            ONLY : xk_loc
+  USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin
+  USE klist_epw,            ONLY : xk_loc, isk_loc
   USE constants,            ONLY : tpi
   USE constants_epw,        ONLY : zero, czero, cone
   USE cell_base,            ONLY : tpiba2, tpiba, bg, omega
@@ -107,10 +106,10 @@
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )
   !
-  DO ik = 1, nks
+  DO ik=1, nks
     !
     !
-    IF ( lsda ) current_spin = isk( ik )
+    IF (lsda) current_spin = isk_loc(ik)
     !
     ! ... d) The functions vkb(k+G)
     !

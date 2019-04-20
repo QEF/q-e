@@ -322,19 +322,27 @@ MODULE klist_epw
   !!        
   !! The variable for the k-points 
   !! 
-  USE kinds, ONLY: DP
-  USE parameters, ONLY :npk
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npk
   !
   SAVE
   !
   INTEGER :: kmap(npk)  
   !! map of k+q grid into k grid 
+  INTEGER, ALLOCATABLE :: isk_all(:)  
+  !! Spin index of each k-point (used in LSDA calculations only)
+  INTEGER, ALLOCATABLE :: isk_loc(:)  
+  !! Spin index of local k-point (used in LSDA calculations only)
   REAL(kind=DP), ALLOCATABLE :: xk_loc(:, :) 
   !! List of local (each cores) kpoints in cartesian coordinates
   REAL(kind=DP), ALLOCATABLE :: xk_all(:, :) 
   !! List of all kpoints in cartesian coordinates
   REAL(kind=DP), ALLOCATABLE :: xk_cryst(:, :) 
   !! List of all kpoints in crystal coordinates
+  REAL(kind=DP), ALLOCATABLE :: et_all(:, :) 
+  !! Eigenenergies on the full coarse k-grid 
+  REAL(kind=DP), ALLOCATABLE :: et_loc(:, :) 
+  !! Eigenenergies on the local (each core) coarse k-grid 
   ! 
 END MODULE klist_epw
 !

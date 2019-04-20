@@ -37,35 +37,64 @@
   ! 
   REAL (kind=DP), INTENT (in) :: q(3)
   !! q-vector from the full coarse or fine grid.
-  REAL (kind=DP), INTENT (in) :: epsil(3,3)
+  REAL (kind=DP), INTENT (in) :: epsil(3, 3)
   !! dielectric constant tensor
-  REAL (kind=DP), INTENT (in) :: zeu(3,3,nat)
+  REAL (kind=DP), INTENT (in) :: zeu(3, 3, nat)
   !! effective charges tensor
   REAL (kind=DP), INTENT (in) :: signe
   !! signe=+/-1.0 ==> add/subtract rigid-ion term
-  REAL (kind=DP), INTENT (in) :: tau(3,nat)
+  REAL (kind=DP), INTENT (in) :: tau(3, nat)
   !! Atomic positions
   ! 
-  COMPLEX (kind=DP), INTENT (inout) :: dyn(3*nat,3*nat)
+  COMPLEX (kind=DP), INTENT (inout) :: dyn(3 * nat, 3 * nat)
   !! Dynamical matrix
   !
   ! Local variables
   !
-  INTEGER :: na, nb, i, j, m1, m2, m3
-  INTEGER :: nrx1, nrx2, nrx3
+  INTEGER :: na
+  !! Atom index 1 
+  INTEGER :: nb
+  !! Atom index 2
+  INTEGER :: i
+  !! Cartesian direction 1
+  INTEGER :: j
+  !! Cartesian direction 1
+  INTEGER :: m1, m2, m3
+  !! Loop over q-points
+  !INTEGER :: nrx1, nrx2, nrx3
   !
   REAL(DP):: geg                    
   !! <q+G| epsil | q+G>
-  REAL(DP) :: alph, fac,g1,g2,g3, facgd, arg, gmax
-  REAL(DP) :: zag(3),zbg(3),zcg(3), fnat(3)
-  !
-  COMPLEX(DP) :: facg
+  REAL(kind=DP) :: alph
+  !! Ewald parameter
+  REAL(kind=DP) :: fac
+  !! Missing definition
+  REAL(kind=DP) :: g1, g2, g3
+  !! Missing definition
+  REAL(kind=DP) :: facgd
+  !! fac * EXP(-geg / (alph * 4.0d0)) / geg
+  REAL(kind=DP) :: arg
+  !! Missing definition
+  REAL(kind=DP) :: gmax
+  !! Maximum G
+  REAL(kind=DP) :: zag(3)
+  !! Z * G
+  REAL(kind=DP) :: zbg(3)
+  !! Z * G
+  REAL(kind=DP) :: zcg(3)
+  !! Z * G
+  REAL(kind=DP) :: fnat(3)
+  !! Missing definition
+  COMPLEX(kind=DP) :: facg
+  !! Missing definition
   !
   ! alph is the Ewald parameter, geg is an estimate of G^2
   ! such that the G-space sum is convergent for that alph
   ! very rough estimate: geg/4/alph > gmax = 14 
   ! (exp (-14) = 10^-6)
   !
+  IF ( abs(abs(signe) - 1.0) > eps6 ) &
+       CALL errore('rgd_blk',' wrong value for signe ',1)
   gmax = 14.d0
   alph = 1.0d0
   geg = gmax * alph * 4.0d0
@@ -75,104 +104,106 @@
   ! and nr2=1, then the G-vectors run along nr3 only.
   ! (useful if system is in vacuum, e.g. 1D or 2D)
   !
-  IF (nq1 == 1) THEN 
-    nrx1=0
-  ELSE
-    nrx1 = int( sqrt (geg) / &
-                sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
-  ENDIF
-  IF (nq2 == 1) THEN 
-    nrx2=0
-  ELSE
-    nrx2 = int( sqrt (geg) / &
-                sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
-  ENDIF
-  IF (nq3 == 1) THEN 
-    nrx3=0
-  ELSE
-    nrx3 = int( sqrt (geg) / &
-                sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
-  ENDIF
+  ! SP - Apr 2019 - Should be overkill 
+  !IF (nq1 == 1) THEN 
+  !  nrx1=0
+  !ELSE
+  !  nrx1 = int( sqrt (geg) / &
+  !              sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
+  !ENDIF
+  !IF (nq2 == 1) THEN 
+  !  nrx2=0
+  !ELSE
+  !  nrx2 = int( sqrt (geg) / &
+  !              sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
+  !ENDIF
+  !IF (nq3 == 1) THEN 
+  !  nrx3=0
+  !ELSE
+  !  nrx3 = int( sqrt (geg) / &
+  !              sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
+  !ENDIF
   !
-  IF ( abs(abs(signe) - 1.0) > eps6 ) &
-       CALL errore('rgd_blk',' wrong value for signe ',1)
   !
-  fac = signe*e2*fpi/omega
-  DO m1 = -nrx1, nrx1
-    DO m2 = -nrx2, nrx2
-      DO m3 = -nrx3, nrx3
+  fac = signe * e2 * fpi / omega
+!  DO m1 = -nrx1, nrx1
+!    DO m2 = -nrx2, nrx2
+!      DO m3 = -nrx3, nrx3
+  DO m1=-nq1, nq1
+    DO m2=-nq2, nq2
+      DO m3=-nq3, nq3
         !
-        g1 = m1*bg(1,1) + m2*bg(1,2) + m3*bg(1,3)
-        g2 = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3)
-        g3 = m1*bg(3,1) + m2*bg(3,2) + m3*bg(3,3)
+        g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1,3)
+        g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2,3)
+        g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3,3)
         !
-        geg = ( g1 * ( epsil(1,1)*g1 + epsil(1,2)*g2 + epsil(1,3)*g3 ) + &
-                g2 * ( epsil(2,1)*g1 + epsil(2,2)*g2 + epsil(2,3)*g3 ) + &
-                g3 * ( epsil(3,1)*g1 + epsil(3,2)*g2 + epsil(3,3)*g3 ) )
+        geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+               g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+               g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
         !
-        IF ( geg > 0.0d0 .AND. geg/alph/4.0d0 < gmax ) THEN
+        IF ( geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax ) THEN
           !
-          facgd = fac * exp(-geg/alph/4.0d0) / geg
+          facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
           !
-          DO na = 1, nat
-            zag(:) = g1*zeu(1,:,na) + g2*zeu(2,:,na) + g3*zeu(3,:,na)
+          DO na=1, nat
+            zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
             fnat(:) = 0.d0
-            DO nb = 1,nat
-              arg = 2.d0*pi* ( g1 * ( tau(1,na) - tau(1,nb) ) + &
-                               g2 * ( tau(2,na) - tau(2,nb) ) + &
-                               g3 * ( tau(3,na) - tau(3,nb) ) )
-              zcg(:) = g1*zeu(1,:,nb) + g2*zeu(2,:,nb) + g3*zeu(3,:,nb)
-              fnat(:) = fnat(:) + zcg(:)*cos(arg)
+            DO nb=1, nat
+              arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1, nb)) + &
+                                 g2 * (tau(2, na) - tau(2, nb)) + &
+                                 g3 * (tau(3, na) - tau(3, nb)))
+              zcg(:)  = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
+              fnat(:) = fnat(:) + zcg(:) * COS(arg)
             ENDDO
-            DO j = 1, 3 
-              DO i = 1, 3 
-                dyn( (na-1)*3+i,(na-1)*3+j ) = dyn((na-1)*3+i,(na-1)*3+j) & 
+            DO j=1, 3 
+              DO i=1, 3 
+                dyn((na - 1) * 3 + i, (na - 1) * 3 + j) = dyn((na - 1) * 3 + i,(na - 1) * 3 + j) & 
                                              - facgd * zag(i) * fnat(j) 
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDIF
+              ENDDO ! i
+            ENDDO ! j
+          ENDDO ! nat
+        ENDIF ! geg
         !
         g1 = g1 + q(1)
         g2 = g2 + q(2)
         g3 = g3 + q(3)
         !
-        geg = ( g1 * ( epsil(1,1)*g1 + epsil(1,2)*g2 + epsil(1,3)*g3 ) + &
-                g2 * ( epsil(2,1)*g1 + epsil(2,2)*g2 + epsil(2,3)*g3 ) + &
-                g3 * ( epsil(3,1)*g1 + epsil(3,2)*g2 + epsil(3,3)*g3 ) )
+        geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+               g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+               g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
         !
-        IF ( geg > 0.0d0 .AND. geg/alph/4.0d0 < gmax ) THEN
+        IF ( geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax ) THEN
           !
-          facgd = fac * exp(-geg/alph/4.0d0) / geg
+          facgd = fac * exp(- geg / (alph * 4.0d0)) / geg
           !
-          DO nb = 1,nat
-            zbg(:) = g1*zeu(1,:,nb) + g2*zeu(2,:,nb) + g3*zeu(3,:,nb)
-            DO na = 1, nat
-              zag(:) = g1*zeu(1,:,na) + g2*zeu(2,:,na) + g3*zeu(3,:,na)
-              arg = 2.d0*pi* ( g1 * ( tau(1,na) - tau(1,nb) ) + &
-                               g2 * ( tau(2,na) - tau(2,nb) ) + &
-                               g3 * ( tau(3,na) - tau(3,nb) ) )
+          DO nb=1, nat
+            zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
+            DO na=1, nat
+              zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
+              arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1 ,nb)) + &
+                              g2 * (tau(2, na) - tau(2, nb)) + &
+                              g3 * (tau(3, na) - tau(3, nb)) )
               !
-              facg = facgd * CMPLX(cos(arg),sin(arg),DP)
-              DO j = 1, 3 
-                DO i = 1, 3 
-                  dyn( (na-1)*3+i,(nb-1)*3+j ) = dyn((na-1)*3+i,(nb-1)*3+j) & 
+              facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
+              DO j=1, 3 
+                DO i=1, 3 
+                  dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) & 
                                                + facg * zag(i) * zbg(j)
-                ENDDO
-              ENDDO
-            ENDDO
-          ENDDO
+                ENDDO ! i
+              ENDDO ! j
+            ENDDO ! na
+          ENDDO ! nb
         ENDIF
-      !
-      ENDDO
-    ENDDO
-  ENDDO
-  !
-  END SUBROUTINE rgd_blk
-  !
+      ENDDO ! m3
+    ENDDO ! m2 
+  ENDDO ! m1 
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw( nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe )
+  END SUBROUTINE rgd_blk
+  !-------------------------------------------------------------------------------
+  !
+  !-------------------------------------------------------------------------------
+  SUBROUTINE rgd_blk_epw(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -215,9 +246,9 @@
   ! 
   REAL (kind=DP), INTENT (in) :: q(3)
   !! q-vector from the full coarse or fine grid.
-  REAL (kind=DP), INTENT (in) :: epsil(3,3)
+  REAL (kind=DP), INTENT (in) :: epsil(3, 3)
   !! dielectric constant tensor
-  REAL (kind=DP), INTENT (in) :: zeu(3,3,nat)
+  REAL (kind=DP), INTENT (in) :: zeu(3, 3, nat)
   !! effective charges tensor
   REAL (kind=DP), INTENT (in) :: signe
   !! signe=+/-1.0 ==> add/subtract long range term
@@ -231,18 +262,43 @@
   !
   ! work variables
   !
-  INTEGER :: na, ipol, m1, m2, m3 !, nrx1, nrx2, nrx3
-
-  REAL(DP) :: qeq
+  INTEGER :: na
+  !! Atom index 1 
+  INTEGER :: nb
+  !! Atom index 2
+  INTEGER :: ipol
+  !! Polarison
+  INTEGER :: m1, m2, m3
+  !! Loop over q-points
+  ! 
+  REAL(kind=DP) :: qeq
   !! <q+G| epsil | q+G>
-  REAL(DP) :: arg, zaq, g1, g2, g3, gmax, alph, geg
+  REAL(kind=DP) :: arg
+  !!
+  REAL(kind=DP) :: zaq
+  !!
+  REAL(kind=DP) :: g1, g2, g3
+  !!
+  REAL(kind=DP) :: gmax
+  !!
+  REAL(kind=DP) :: alph
+  !!
+  REAL(kind=DP) :: geg
+  !!
   !
-  COMPLEX(DP) :: fac, facqd, facq, epmatl(nmodes)
+  COMPLEX(kind=DP) :: fac
+  !!
+  COMPLEX(kind=DP) :: facqd
+  !!
+  COMPLEX(kind=DP) :: facq
+  !!
+  COMPLEX(kind=DP) :: epmatl(nmodes)
+  !! Long-range part of the el-ph matrix elements
   !
-  IF( abs ( abs(signe) - 1.0 ) > eps12 ) &
-       CALL errore('rgd_blk',' wrong value for signe ',1)
+  IF(ABS(ABS(signe) - 1.0) > eps12) &
+       CALL errore('rgd_blk_epw','Erong value for signe ',1)
   !
-  gmax =  14.d0
+  gmax = 14.d0
   alph = 1.0d0
   geg = gmax * alph * 4.0d0
   fac = signe * e2 * fpi / omega * ci
@@ -267,42 +323,41 @@
  ! ENDIF
   !
   epmatl(:) = czero   
-  !
   !DO m1 = -nrx1, nrx1
   ! TO be test
-  DO m1 = -nq1, nq1
-    DO m2 = -nq2, nq2
-      DO m3 = -nq3, nq3
+  DO m1=-nq1, nq1
+    DO m2=-nq2, nq2
+      DO m3=-nq3, nq3
       !
-      g1 = m1*bg(1,1) + m2*bg(1,2) + m3*bg(1,3) + q(1)
-      g2 = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3) + q(2)
-      g3 = m1*bg(3,1) + m2*bg(3,2) + m3*bg(3,3) + q(3)
+      g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
+      g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
+      g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
       !
-      qeq = ( g1 * ( epsil(1,1)*g1 + epsil(1,2)*g2 + epsil(1,3)*g3 ) + &
-              g2 * ( epsil(2,1)*g1 + epsil(2,2)*g2 + epsil(2,3)*g3 ) + &
-              g3 * ( epsil(3,1)*g1 + epsil(3,2)*g2 + epsil(3,3)*g3 ) ) !*twopi/alat
+      qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+             g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+             g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
       !
-      IF ( qeq > 0.0d0 .AND. qeq/alph/4.0d0 < gmax ) THEN
+      IF ( qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax ) THEN
         !
         qeq = qeq * twopi / alat
-        facqd = fac * exp(-qeq/alph/4.0d0 ) /qeq !/(two*wq)
+        facqd = fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
         !
-        DO na = 1, nat
-          arg = -twopi * ( g1*tau(1,na) + g2*tau(2,na) + g3*tau(3,na) )
-          facq = facqd * CMPLX(cos(arg),sin(arg),DP)
-          DO ipol = 1, 3
-            zaq = g1*zeu(1,ipol,na) + g2*zeu(2,ipol,na) + g3*zeu(3,ipol,na)
+        DO na=1, nat
+          arg = - twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
+          facq = facqd * CMPLX(COS(arg), SIN(arg), DP)
+          DO ipol=1, 3
+            zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
             !
-            epmat = epmat + facq * zaq * uq(3*(na-1)+ipol,:) * bmat
-            epmatl = epmatl + facq * zaq * uq(3*(na-1)+ipol,:) * bmat
+            epmat = epmat + facq * zaq * uq(3 * (na - 1) + ipol, :) * bmat
+            epmatl = epmatl + facq * zaq * uq(3 * (na - 1) + ipol, :) * bmat
             !
           ENDDO !ipol
         ENDDO !nat
       ENDIF
       !
-      ENDDO
-    ENDDO
-  ENDDO
+      ENDDO ! m3 
+    ENDDO ! m2 
+  ENDDO ! m1 
   !
   ! In case we want only the short-range we do
   ! g_s = sqrt(g*g - g_l*g_l)
@@ -313,15 +368,15 @@
   ! In any case, when g_s will be squared both will become real numbers. 
   IF (shortrange) THEN
     !epmat = ZSQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
-    epmat = SQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
+    epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
   ENDIF        
   !
-  !
+  !-------------------------------------------------------------------------------
   END SUBROUTINE rgd_blk_epw
-  !
+  !-------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw_fine( nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe )
+  SUBROUTINE rgd_blk_epw_fine(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -354,44 +409,70 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: nq1
+  INTEGER, INTENT(in) :: nq1
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq2
+  INTEGER, INTENT(in) :: nq2
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq3
+  INTEGER, INTENT(in) :: nq3
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nmodes
+  INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
   ! 
-  REAL (kind=DP), INTENT (in) :: q(3)
+  REAL (kind=DP), INTENT(in) :: q(3)
   !! q-vector from the full coarse or fine grid.
-  REAL (kind=DP), INTENT (in) :: epsil(3,3)
+  REAL (kind=DP), INTENT(in) :: epsil(3, 3)
   !! dielectric constant tensor
-  REAL (kind=DP), INTENT (in) :: zeu(3,3,nat)
+  REAL (kind=DP), INTENT(in) :: zeu(3, 3, nat)
   !! effective charges tensor
-  REAL (kind=DP), INTENT (in) :: signe
+  REAL (kind=DP), INTENT(in) :: signe
   !! signe=+/-1.0 ==> add/subtract long range term
   ! 
-  COMPLEX (kind=DP), INTENT (in) :: uq(nmodes, nmodes)
+  COMPLEX (kind=DP), INTENT(in) :: uq(nmodes, nmodes)
   !! phonon eigenvec associated with q
-  COMPLEX (kind=DP), INTENT (inout) :: epmat(nbndsub,nbndsub,nmodes)
+  COMPLEX (kind=DP), INTENT(inout) :: epmat(nbndsub, nbndsub, nmodes)
   !! e-ph matrix elements 
-  COMPLEX (kind=DP), INTENT (in) :: bmat(nbndsub,nbndsub) 
+  COMPLEX (kind=DP), INTENT(in) :: bmat(nbndsub, nbndsub) 
   !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
   !
   ! work variables
   !
-  INTEGER :: na, ipol, m1,m2,m3, imode
+  INTEGER :: na
+  !! Atom index 1 
+  INTEGER :: nb
+  !! Atom index 2
+  INTEGER :: ipol
+  !! Polarison
+  INTEGER :: m1, m2, m3
+  !! Loop over q-points
+  INTEGER :: imode
+  !! Mode index
   !
-  REAL(DP) :: qeq
-  !!&! <q+G| epsil | q+G>
-  REAL(DP) :: arg, zaq, g1, g2, g3, gmax, alph, geg
+  REAL(kind=DP) :: qeq
+  !! <q+G| epsil | q+G>
+  REAL(kind=DP) :: arg
+  !!
+  REAL(kind=DP) :: zaq
+  !!
+  REAL(kind=DP) :: g1, g2, g3
+  !!
+  REAL(kind=DP) :: gmax
+  !!
+  REAL(kind=DP) :: alph
+  !!
+  REAL(kind=DP) :: geg
+  !!
   !
-  COMPLEX(DP) :: fac, facqd, facq
-  COMPLEX(DP) :: epmatl(nbndsub,nbndsub,nmodes)
+  COMPLEX(kind=DP) :: fac
+  !!
+  COMPLEX(kind=DP) :: facqd
+  !!
+  COMPLEX(kind=DP) :: facq
+  !!
+  COMPLEX(kind=DP) :: epmatl(nbndsub, nbndsub, nmodes)
+  !! Long-range part of the matrix element
   !
-  IF ( abs( abs(signe) - 1.0 ) > eps12 ) &
-       CALL errore ('rgd_blk',' wrong value for signe ',1)
+  IF (ABS(ABS(signe) - 1.0) > eps12) &
+       CALL errore ('rgd_blk_epw_fine','Wrong value for signe ',1)
   !
   gmax = 14.d0
   alph = 1.0d0
@@ -400,41 +481,41 @@
   !
   epmatl(:,:,:) = czero   
   !
-  DO m1 = -nq1, nq1
-    DO m2 = -nq2, nq2
-      DO m3 = -nq3, nq3
+  DO m1=-nq1, nq1
+    DO m2=-nq2, nq2
+      DO m3=-nq3, nq3
       !
-      g1 = m1*bg(1,1) + m2*bg(1,2) + m3*bg(1,3) + q(1)
-      g2 = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3) + q(2)
-      g3 = m1*bg(3,1) + m2*bg(3,2) + m3*bg(3,3) + q(3)
+      g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
+      g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
+      g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
       !
-      qeq = ( g1 * (epsil(1,1)*g1 + epsil(1,2)*g2 + epsil(1,3)*g3 ) + &
-              g2 * (epsil(2,1)*g1 + epsil(2,2)*g2 + epsil(2,3)*g3 ) + &
-              g3 * (epsil(3,1)*g1 + epsil(3,2)*g2 + epsil(3,3)*g3 ) ) !*twopi/alat
+      qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+             g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+             g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
       !
-      IF (qeq > 0.0d0 .AND. qeq/alph/4.0d0 < gmax ) THEN
+      IF (qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax ) THEN
         !
         qeq = qeq * twopi / alat
-        facqd = fac * exp(-qeq/alph/4.0d0) / qeq !/(two*wq)
+        facqd = fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
         !
-        DO na = 1, nat
-          arg = -twopi* ( g1*tau(1,na)+ g2*tau(2,na)+ g3*tau(3,na) )
-          facq = facqd * CMPLX(cos(arg),sin(arg),DP)
-          DO ipol = 1, 3
-            zaq = g1*zeu(1,ipol,na) + g2*zeu(2,ipol,na) + g3*zeu(3,ipol,na)
+        DO na=1, nat
+          arg = -twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
+          facq = facqd * CMPLX(COS(arg), SIN(arg), DP)
+          DO ipol=1, 3
+            zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
             !
             DO imode=1, nmodes
-              CALL zaxpy(nbndsub**2, facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:), 1, epmat(:,:,imode), 1)
-              CALL zaxpy(nbndsub**2, facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:), 1, epmatl(:,:,imode), 1)
+              CALL zaxpy(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmat(:, :, imode), 1)
+              CALL zaxpy(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmatl(:, :, imode), 1)
             ENDDO
             !
           ENDDO !ipol
         ENDDO !nat
       ENDIF
       !
-      ENDDO
-    ENDDO
-  ENDDO
+      ENDDO ! m3
+    ENDDO ! m2 
+  ENDDO ! m1
   !
   ! In case we want only the short-range we do
   ! g_s = sqrt(g*g - g_l*g_l)
@@ -445,11 +526,12 @@
   ! In any case, when g_s will be squared both will become real numbers. 
   IF (shortrange) THEN
     !epmat = ZSQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
-    epmat = SQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
+    epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
   ENDIF        
   !
-  !
+  !-----------------------------------------------------------------------------
   END SUBROUTINE rgd_blk_epw_fine
+  !-----------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------------
   SUBROUTINE rpa_epsilon( q, w, nmodes, epsil, eps_rpa )
@@ -522,10 +604,10 @@
   n = nel / omega
   EF = fermi_diff / ha2ev
   kF = (3.d0 * pi**2 * n)**(1.d0/3.d0)
-  eps_ave = ( epsil(1,1) + epsil(2,2) + epsil(3,3) ) / 3.d0
-  rs  = ( 3.d0 / ( 4.d0 * pi * n ) )**(1.d0/3.d0) * meff /eps_ave
+  eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
+  rs  = (3.d0 / ( 4.d0 * pi * n ) )**(1.d0/3.d0) * meff / eps_ave
   w = w * 0.5d0 / EF / 4.d0 !Ha&internal units for Hedin's formula
-  pref = ( 4.d0 / 9.d0 / pi )**(1.d0/3.0) * ( rs / 8.d0 / pi )
+  pref = (4.d0 / 9.d0 / pi )**(1.d0 / 3.0) * (rs / 8.d0 / pi)
   eta = smear_rpa / ha2ev / EF / 4.d0
   !
   IF (first_call) THEN
@@ -535,18 +617,18 @@
     !WRITE(stdout,'(a,f12.8,a,f12.8)') ' omega(nmodes) (eV) ', w(nmodes)*ha2ev*EF*4.d0,' eta ',eta*EF*4.d0*ha2ev
     WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'Nel = ', nel, ', n = ', n, ' au^-3, meff = ', meff
     WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'EF = ', EF*ha2ev, ' eV, kF = ', kF, ' au^-1, rs = ', rs
-    IF (eps_ave .lt. eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
+    IF (eps_ave < eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
   ENDIF
-  IF (eps_ave .lt. eps5) eps_ave = 1.d0
+  IF (eps_ave < eps5) eps_ave = 1.d0
   !
   CALL cryst_to_cart(1, q, bg, 1)
   q2 = q(1)**2 + q(2)**2 + q(3)**2
   qm = sqrt(q2) * ( twopi / alat ) / kF / 2.d0 ! internal units for Hedin's formula
   !
-  IF ( abs(qm) .gt. eps10 ) THEN
-    DO im = 1, nmodes
-      u = w(im) + sign(eta,w(im)) * ci
-      eps_rpa(im) = 1.d0 + pref * ( H_eps(qm+u/qm) + H_eps(qm-u/qm) ) / qm**3
+  IF (ABS(qm) > eps10 ) THEN
+    DO im=1, nmodes
+      u = w(im) + SIGN(eta, w(im)) * ci
+      eps_rpa(im) = 1.d0 + pref * ( H_eps(qm + u / qm) + H_eps( qm - u / qm) ) / qm**3
       !WRITE(stdout,'(a)') " ! epsilon(q,w) "
       !WRITE(stdout,'(f12.8,i4,3f12.8)') qm*2*kF/(2.d0*pi/alat), im,
       !real(eps_rpa(im)), aimag(eps_rpa(im)), abs(eps_rpa(im))
@@ -558,35 +640,44 @@
   w = w / ( 0.5d0 / EF / 4.d0 )
   CALL cryst_to_cart(1, q, at, -1)
   !
+  !--------------------------------------------------------------------------
   END SUBROUTINE rpa_epsilon
+  !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
   COMPLEX(DP) FUNCTION H_eps(z)
   !--------------------------------------------------------------------------
-  ! Function used in the Lindhard function. See Eq.(56) of Hedin (1965)
-  USE kinds,    ONLY : DP
+  !!  
+  !! Function used in the Lindhard function. See Eq.(56) of Hedin (1965)
+  !! 
+  !--------------------------------------------------------------------------
+  USE kinds,         ONLY : DP
+  USE constants_epw, ONLY : eps10
   !
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT (in) :: z
   !! Argument of the Lindhard function
   !
-  IF ( abs(z-1.d0) .gt. 1.d-10 ) THEN
-    IF (  abs( (z+1.d0) / (z-1.d0) ) .gt. 1.d-10 ) THEN
-      H_eps = 2.d0 * z + ( 1.d0 - z**2 ) * log( (z+1.d0) / (z-1.d0) )
+  IF (ABS(z - 1.d0) > eps10) THEN
+    IF (ABS( (z + 1.d0) / (z - 1.d0) ) > eps10) THEN
+      H_eps = 2.d0 * z + ( 1.d0 - z**2 ) * LOG( (z + 1.d0) / (z - 1.d0))
     ENDIF
   ENDIF
   !
   RETURN
   !
+  !--------------------------------------------------------------------------
   END FUNCTION H_eps
+  !--------------------------------------------------------------------------
   ! 
   !--------------------------------------------------------------------------
-  SUBROUTINE tf_epsilon( q, nmodes, epsil, eps_tf )
+  SUBROUTINE tf_epsilon(q, nmodes, epsil, eps_tf)
   !--------------------------------------------------------------------------
-  !
-  !  Compute the Thomas-Fermi dielectric screening
-  !
+  !!
+  !!  Compute the Thomas-Fermi dielectric screening
+  !!
+  !--------------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : at, bg, omega, alat
   USE constants_epw, ONLY : pi, twopi, ha2ev, cone, eps5, eps10
@@ -628,9 +719,9 @@
   !
   n = nel / omega
   EF = fermi_diff / ha2ev
-  eps_ave = ( epsil(1,1) + epsil(2,2) + epsil(3,3) ) / 3.d0
-  qtf = ( 6.d0 * pi * n / EF / eps_ave )**(1.d0/2.d0)
-  qtfc = qtf / ( twopi / alat )
+  eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
+  qtf = (6.d0 * pi * n / EF / eps_ave )**(1.d0 / 2.d0)
+  qtfc = qtf / (twopi / alat)
   !
   IF (first_call) THEN
     first_call = .false.
@@ -644,8 +735,8 @@
   !
   CALL cryst_to_cart(1, q, bg, 1)
   q2 = q(1)**2 + q(2)**2 + q(3)**2
-  qm = sqrt(q2) ! in tpiba
-  IF ( abs(qm) .gt. eps10 ) THEN
+  qm = SQRT(q2) ! in tpiba
+  IF (ABS(qm) > eps10) THEN
     eps_tf = 1.d0 + qtfc**2 / q2
     !WRITE(stdout,'(a)') " ! epsilon_tf "
     !WRITE(stdout,'(2f12.8)') qm, real(eps_tf)
@@ -655,10 +746,12 @@
   !
   CALL cryst_to_cart (1, q, at, -1)
   !
+  !--------------------------------------------------------------------------
   END SUBROUTINE tf_epsilon
+  !--------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE compute_umn_f( nbnd, cufkk, cufkq, bmatf )
+  SUBROUTINE compute_umn_f(nbnd, cufkk, cufkq, bmatf)
   !-----------------------------------------------------------------------
   !!
   !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i{q+G}r}|\Psi_{nk}> $$ 
@@ -696,7 +789,7 @@
   END SUBROUTINE compute_umn_f
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE compute_umn_c( nbnd, nbndsub, nks, cuk, cukq, bmat )
+  SUBROUTINE compute_umn_c(nbnd, nbndsub, nks, cuk, cukq, bmat)
   !-----------------------------------------------------------------------
   !!
   !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i(q+G)r}|\Psi_{nk}> $$ 
@@ -714,9 +807,9 @@
   INTEGER, INTENT(in) :: nbndsub
   !! Number of band on the subspace of Wannier
   ! 
-  COMPLEX(kind=DP), INTENT(in) :: cuk(nbnd,nbndsub,nks)
+  COMPLEX(kind=DP), INTENT(in) :: cuk(nbnd, nbndsub, nks)
   !! rotation matrix U(k), coarse mesh
-  COMPLEX(kind=DP), INTENT(in) :: cukq(nbnd,nbndsub,nks)
+  COMPLEX(kind=DP), INTENT(in) :: cukq(nbnd, nbndsub, nks)
   !! rotation matrix U(k+q), coarse mesh
   COMPLEX(kind=DP), INTENT(out) :: bmat(nbnd, nbnd, nks)
   !! overlap wfcs in Bloch representation, fine grid

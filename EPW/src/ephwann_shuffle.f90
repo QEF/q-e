@@ -22,7 +22,8 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP, i4b
-  USE pwcom,         ONLY : nbnd, nks, nkstot, isk, et, xk, ef,  nelec
+  USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
+  USE klist_epw,     ONLY : isk_loc, et_loc, xk_loc
   USE cell_base,     ONLY : at, bg, omega, alat
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
@@ -309,6 +310,7 @@
     IF(ALLOCATED(tau))  DEALLOCATE( tau )
     IF(ALLOCATED(ityp)) DEALLOCATE( ityp )
     IF(ALLOCATED(w2))   DEALLOCATE( w2 )
+    ALLOCATE (isk_loc(nks))
     ! 
     ! We need some crystal info
     IF (mpime.eq.ionode_id) THEN
@@ -326,7 +328,7 @@
       READ (crystal,*) amass
       ALLOCATE( ityp( nat ) )
       READ (crystal,*) ityp
-      READ (crystal,*) isk
+      READ (crystal,*) isk_loc
       READ (crystal,*) noncolin
       READ (crystal,*) w_centers
       ! 
@@ -353,8 +355,8 @@
     CALL mp_bcast (amass   , root_pool, intra_pool_comm)  
     CALL mp_bcast (ityp    , ionode_id, inter_pool_comm)
     CALL mp_bcast (ityp    , root_pool, intra_pool_comm)  
-    CALL mp_bcast (isk     , ionode_id, inter_pool_comm)
-    CALL mp_bcast (isk     , root_pool, intra_pool_comm)  
+    CALL mp_bcast (isk_loc , ionode_id, inter_pool_comm)
+    CALL mp_bcast (isk_loc , root_pool, intra_pool_comm)  
     CALL mp_bcast (noncolin, ionode_id, inter_pool_comm)
     CALL mp_bcast (noncolin, root_pool, intra_pool_comm)  
     CALL mp_bcast (w_centers, ionode_id, inter_pool_comm)
@@ -484,25 +486,25 @@
      ! Hamiltonian
      !
      CALL hambloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw )
+          ( nbnd, nbndsub, nks, nkstot, et_loc, xk_loc, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw )
      !
      ! Kohn-Sham eigenvalues
      !
      IF (eig_read) THEN
        WRITE (stdout,'(5x,a)') "Interpolating MB and KS eigenvalues"
        CALL hambloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw_ks )
+            ( nbnd, nbndsub, nks, nkstot, et_ks, xk_loc, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw_ks )
      ENDIF
      !
      IF (vme) THEN 
        ! Transform of position matrix elements
        ! PRB 74 195118  (2006)
        CALL vmebloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec_k, wslen_k, lwin, exband )
+            ( nbnd, nbndsub, nks, nkstot, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband )
      ELSE
        ! Dipole
        CALL dmebloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec_k, wslen_k, lwin, exband )
+            ( nbnd, nbndsub, nks, nkstot, dmec, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband )
      ENDIF
      !
      ! Dynamical Matrix
@@ -525,11 +527,11 @@
          !
          IF (etf_mem == 0) THEN 
            CALL ephbloch2wane &
-             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
+             ( nbnd, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
              epmatq(:,:,:,imode,iq), nrr_k, irvec_k, wslen_k, epmatwe(:,:,:,imode,iq) )
          ELSE
            CALL ephbloch2wane &
-             ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
+             ( nbnd, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
              epmatq(:,:,:,imode,iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:,:,:,imode) )
            !
          ENDIF
@@ -754,7 +756,7 @@
      !  
      ! since wkf(:,ikq) = 0 these bands do not bring any contribution to Fermi level
      !  
-     efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
+     efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
      !
      WRITE(stdout, '(/5x,a,f10.6,a)') &
          'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
@@ -1657,7 +1659,8 @@
   !
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
-  USE pwcom,     ONLY : ef, nelec, isk
+  USE pwcom,     ONLY : ef, nelec
+  USE klist_epw, ONLY : isk_loc
   USE elph2,     ONLY : chw, rdw, cdmew, cvmew, chw_ks, &
                         zstar, epsi, epmatwp
   USE ions_base, ONLY : amass, ityp, nat, tau
@@ -1719,7 +1722,7 @@
     WRITE (crystal,*) tau
     WRITE (crystal,*) amass
     WRITE (crystal,*) ityp
-    WRITE (crystal,*) isk
+    WRITE (crystal,*) isk_loc
     WRITE (crystal,*) noncolin
     WRITE (crystal,*) w_centers
     !
@@ -2021,7 +2024,7 @@
   !---------------------------------
   ! 
   !--------------------------------------------------------------------
-  FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
+  FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk_loc)
   !--------------------------------------------------------------------
   !!
   !!     Finds the Fermi energy - Gaussian Broadening
@@ -2041,7 +2044,7 @@
   !! 
   INTEGER, INTENT (in) :: is
   !! 
-  INTEGER, INTENT (in) :: isk(nks)
+  INTEGER, INTENT (in) :: isk_loc(nks)
   !! 
   ! 
   REAL (kind=DP), INTENT (in) :: wk (nks)
@@ -2075,13 +2078,13 @@
   !
   !  Bisection method
   !
-  sumkup = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
-  sumklw = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
+  sumkup = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk_loc)
+  sumklw = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk_loc)
   if ( (sumkup - nelec) < -eps10 .or. (sumklw - nelec) > eps10 )  &
        call errore ('efermig_seq', 'internal error, cannot bracket Ef', 1)
   DO i = 1, maxiter
     Ef = (Eup + Elw) / 2.d0
-    sumkmid = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
+    sumkmid = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk_loc)
     if (abs (sumkmid-nelec) < eps10) then
        efermig_seq = Ef
        return
@@ -2102,7 +2105,7 @@
   end FUNCTION efermig_seq
   !
   !-----------------------------------------------------------------------
-  function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
+  function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk_loc)
   !-----------------------------------------------------------------------
   !!
   !!  This function computes the number of states under a given energy e
@@ -2120,7 +2123,7 @@
   !! the type of smearing
   INTEGER, INTENT (in) :: is
   !!
-  INTEGER, INTENT (in) :: isk(nks)
+  INTEGER, INTENT (in) :: isk_loc(nks)
   !!
   !
   REAL(kind=DP), INTENT (in) :: wk (nks)
@@ -2145,14 +2148,14 @@
   ! counter on the band energy
   !
   sumkg_seq = 0.d0
-  DO ik = 1, nks
+  DO ik=1, nks
     sum1 = 0.d0
-    if (is /= 0) then
-       if (isk(ik).ne.is) cycle
-    end if
-    do ibnd = 1, nbnd
-       sum1 = sum1 + wgauss ( (e-et (ibnd, ik) ) / degauss, ngauss)
-    enddo
+    IF (is /= 0) THEN
+       IF (isk_loc(ik) /= is) CYCLE
+    ENDIF
+    DO ibnd=1, nbnd
+       sum1 = sum1 + wgauss((e - et (ibnd, ik)) / degauss, ngauss)
+    ENDDO
     sumkg_seq = sumkg_seq + wk (ik) * sum1
   ENDDO
   RETURN

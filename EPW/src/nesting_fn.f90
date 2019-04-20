@@ -24,7 +24,8 @@
   USE epwcom,    ONLY : nbndsub, fsthick, &
                         eptemp, ngaussw, degaussw,     &
                         nsmear, delta_smear, efermi_read, fermi_energy
-  USE pwcom,     ONLY : nelec, ef, isk
+  USE pwcom,     ONLY : nelec, ef
+  USE klist_epw, ONLY : isk_loc
   USE elph2,     ONLY : ibndmax, ibndmin, etf, &
                         wkf, xqf, wqf, nkqf, &
                         nkf, nkqtotf, xqf
@@ -100,7 +101,7 @@
     IF ( efermi_read ) THEN
       ef0 = fermi_energy 
     ELSE
-      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk)
+      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_loc)
     ENDIF
     !
     dosef = dos_ef (ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
