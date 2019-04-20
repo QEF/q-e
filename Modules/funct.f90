@@ -2587,7 +2587,7 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
 
-    case(29) ! 'cx0 for vdw-df-cx0'
+    case(29,31) ! 'cx0 for vdw-df-cx0' or 'cx0p for vdW-DF-cx0p'
       do i=1,length
          if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
             call cx13 (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
