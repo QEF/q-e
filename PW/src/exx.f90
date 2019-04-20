@@ -507,9 +507,10 @@ MODULE exx
          ENDDO
       ENDDO
     ELSE
-      IF (use_gpu) THEN
-         CALL cuf_memset(exxbuff_d, (0.0_DP,0.0_DP), (/1,nrxxs*npol/), (/ibnd_buff_start,ibnd_buff_end/), (/1,SIZE(exxbuff,3)/))
-      ELSE
+      !this one is broken, we need to figure out why. for now, we should not do it
+      !IF (use_gpu) THEN
+      !   CALL cuf_memset(exxbuff_d, (0.0_DP,0.0_DP), (/1,nrxxs*npol/), (/ibnd_buff_start,ibnd_buff_end/), (/1,SIZE(exxbuff_d,3)/))
+      !ELSE
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
          DO ikq=1,SIZE(exxbuff,3) 
             DO ibnd=ibnd_buff_start,ibnd_buff_end
@@ -520,9 +521,9 @@ MODULE exx
          ENDDO
          ! the above loops will replaced with the following line soon
          !CALL threaded_memset(exxbuff, 0.0_DP, nrxxs*npol*SIZE(exxbuff,2)*nkqs*2)
-      END IF
+         !END IF
     END IF
-    IF (use_gpu) exxbuff = exxbuff_d
+    IF (use_gpu) exxbuff_d = exxbuff
     !
     !   This is parallelized over pools. Each pool computes only its k-points
     !
@@ -1739,11 +1740,6 @@ MODULE exx
 #if defined(__CUDA)
     attributes(DEVICE) :: temppsic_d, temppsic_nc_d, result_d, result_nc_d
 #endif
-#if defined(__USE_INTEL_HBM_DIRECTIVES)
-!DIR$ ATTRIBUTES FASTMEM :: result
-#elif defined(__USE_CRAY_HBM_DIRECTIVES)
-!DIR$ memory(bandwidth) result
-#endif
     INTEGER          :: request_send, request_recv
     !
     COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
@@ -1752,11 +1748,6 @@ MODULE exx
     COMPLEX(DP),POINTER :: prhoc_d(:), pvc_d(:)
 #if defined(__CUDA)
     attributes(DEVICE) :: rhoc_d, vc_d, prhoc_d, pvc_d
-#endif
-#if defined(__USE_INTEL_HBM_DIRECTIVES)
-!DIR$ ATTRIBUTES FASTMEM :: rhoc, vc
-#elif defined(__USE_CRAY_HBM_DIRECTIVES)
-!DIR$ memory(bandwidth) rhoc, vc
 #endif
     REAL(DP), ALLOCATABLE :: fac(:), facb(:)
     REAL(DP), ALLOCATABLE :: facb_d(:)
@@ -1832,11 +1823,9 @@ MODULE exx
     !allocate arrays for rhoc and vc
     ALLOCATE(rhoc_d(nrxxs,jblock), vc_d(nrxxs,jblock))
     ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
-#if defined(__USE_MANY_FFT)
-    prhoc(1:nrxxs*jblock) => rhoc(:,:)
-    pvc(1:nrxxs*jblock) => vc(:,:)
-#endif
+    
     !
+    
     DO ii=1, nibands(my_egrp_id+1)
        !
        ibnd = ibands(ii,my_egrp_id+1)
