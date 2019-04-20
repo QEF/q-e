@@ -58,6 +58,7 @@ PROGRAM do_ppacf
   USE vdW_DF_scale,         ONLY : xc_vdW_DF_ncc, xc_vdW_DF_spin_ncc, &
                                    get_q0cc_on_grid, get_q0cc_on_grid_spin
   USE vasp_xml,             ONLY : readxmlfile_vasp
+  USE symm_base,            ONLY : fft_fact
 
   ! 
   IMPLICIT NONE
@@ -685,6 +686,7 @@ PROGRAM do_ppacf
   DEALLOCATE ( igk_buf, gk )
   !
 !  CALL setup()
+  fft_fact(:)=1
   CALL exx_grid_init()
   CALL exx_mp_init()
   CALL exx_div_check()
