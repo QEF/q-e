@@ -63,7 +63,7 @@ SUBROUTINE electrons()
   !
   REAL(DP) :: &
       charge,       &! the total charge
-      ee, exxen      ! used to compute exchange energy
+      exxen          ! used to compute exchange energy
   REAL(dp), EXTERNAL :: exxenergyace
   INTEGER :: &
       idum,         &! dummy counter on iterations

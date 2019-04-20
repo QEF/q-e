@@ -83,6 +83,15 @@ SUBROUTINE hp_init_q()
         !
      ENDIF
      !
+     ! Read the wavefunctions evc (at k) and evq (at k+q).
+     ! Note: this is important because if nksq=1 then evc and evq are read only
+     ! once (here) and then used throughout the code. This may happen e.g.
+     ! when the ratio of the total number of k points (without k+q) and k pools
+     ! is not an integer number (as a consequence some k pools will have nksq=1).
+     !
+     CALL get_buffer (evc, lrwfc, iuwfc, ikk)
+     IF (.NOT.lgamma .AND. nksq.EQ.1) CALL get_buffer (evq, lrwfc, iuwfc, ikq)
+     !
      ! 2) USPP: Compute the becp terms which are used in the rest of the code
      !
      IF (okvan) THEN
@@ -90,10 +99,6 @@ SUBROUTINE hp_init_q()
         ! Compute the beta function vkb(k+G)
         ! 
         CALL init_us_2 (npw, igk_k(1,ikk), xk(1,ikk), vkb)
-        !
-        ! Read the wavefunctions evc at k
-        !
-        CALL get_buffer (evc, lrwfc, iuwfc, ikk)
         !
         ! becp1 = <vkb|evc>
         !

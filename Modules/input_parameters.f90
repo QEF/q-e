@@ -121,7 +121,9 @@ MODULE input_parameters
         INTEGER :: iprint = 10
           ! number of steps/scf iterations between successive writings
           ! of relevant physical quantities to standard output
-
+        INTEGER :: max_xml_steps = 0 
+          ! max number of steps between successive appending of an xml step 
+          ! in the xml data file, default 0 means all steps are printed. 
         INTEGER :: isave = 100
           ! number of steps between successive savings of
           ! information needed to restart the run (see "ndr", "ndw")

@@ -25,7 +25,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
   USE kinds, only : DP
   USE ions_base, ONLY : nat, tau, ntyp => nsp, ityp, amass
   USE cell_base, ONLY : at, bg
-  USE symm_base, ONLY : s, sr, ftau, invs, nsym, irt, t_rev
+  USE symm_base, ONLY : s, sr, invs, nsym, irt, t_rev
   USE modes,     ONLY : num_rap_mode, name_rap_mode
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,  ONLY : domag

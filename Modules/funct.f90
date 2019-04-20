@@ -194,10 +194,18 @@ module funct
   !              "cx13"   consistent exchange            igcx =27
   !              "x3lp"   X3LYP (Becke88*0.542 +
   !                              Perdew-Wang91*0.167)    igcx =28
-  !              "cx0"    vdW-DF-cx+HF/4 (cx13-0)        igcx =29 reserved PH
-  !              "r860"   rPW86+HF/4 (rw86-0)            igcx =30 reserved PH
-  !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 reserved PH
-  !              "c090"   vdW-DF-c09+HF/4 (c09-0)        igcx =40 reserved PH
+  !              "cx0"    vdW-DF-cx+HF/4 (cx13-0)        igcx =29 
+  !              "r860"   rPW86+HF/4 (rw86-0)            igcx =30 (for DF0)
+  !              "cx0p"   vdW-DF-cx+HF/5 (cx13-0p)       igcx =31 
+  !              "ahcx"   vdW-DF-cx based not yet in use igcx =32 reserved PH
+  !              "ahf2"   vdW-DF2 based not yet in use   igcx =33 reserved PH
+  !              "ahpb"   PBE based not yet in use       igcx =34 reserved PH
+  !              "ahps"   PBE-sol based not in use       igcx =35 reserved PH
+  !              "cx14"   Exporations                    igcx =36 reserved PH
+  !              "cx15"   Exporations                    igcx =37 reserved PH
+  !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 
+  !              "cx16"   Exporations                    igcx =39 reserved PH
+  !              "c090"   vdW-DF-c09+HF/4 (c09-0)        igcx =40 
   !              "b86x"   B86b exchange * 0.75           igcx =41
   !              "b88x"   B88 exchange * 0.50            igcx =42
   !
@@ -277,6 +285,8 @@ module funct
   !              vdW-DF-cx    K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)
   !              vdW-DF-cx0   K. Berland, Y. Jiao, J.-H. Lee, T. Rangel, J. B. Neaton and P. Hyldgaard,
   !                           J. Chem. Phys. 146, 234106 (2017)
+  !              vdW-DF-cx0p  Y. Jiao, E. Schröder and P. Hyldgaard, 
+  !                           J. Chem. Phys. 148, 194115 (2018)
   !              vdW-DF-obk8  Klimes et al, J. Phys. Cond. Matter, 22, 022201 (2010)
   !              vdW-DF-ob86  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
@@ -345,8 +355,8 @@ module funct
                'xxxx', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
                'xxxx', 'C09X', 'SOX', 'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
                'OBK8', 'OB86', 'EVX', 'B86R', 'CX13', 'X3LP', &
-               'CX0', 'R860', 'xxxx', 'xxxx', 'xxxx', &
-               'xxxx', 'xxxx', 'xxxx', 'xxxx', 'BR0', 'xxxx', 'C090', &
+               'CX0', 'R860', 'CX0P', 'AHCX', 'AHF2', &
+               'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0', 'CX16', 'C090', &
                'B86X', 'B88X'/
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
@@ -563,6 +573,10 @@ CONTAINS
       ! Special case vdW-DF-CX0
          dft_defined = set_dft_values(6,4,29,0,1,0)
 
+    else if ('VDW-DF-CX0P' .EQ. TRIM(dftout) ) then
+    ! Special case vdW-DF-CX0P
+       dft_defined = set_dft_values(6,4,31,0,1,0)
+
       else if ('VDW-DF2-0' .EQ. TRIM(dftout) ) then
       ! Special case vdW-DF2-0
          dft_defined = set_dft_values(6,4,30,0,2,0)
@@ -760,6 +774,8 @@ CONTAINS
     islda     = (iexch> 0) .and. (icorr > 0) .and. .not. isgradient
     ! PBE0/DF0
     IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
+    ! CX0P
+    IF ( iexch==6 .AND. igcx ==31 ) exx_fraction = 0.20_DP
     ! B86BPBEX
     IF ( iexch==6 .and. igcx ==41 ) exx_fraction = 0.25_DP
     ! BHANDHLYP
@@ -1161,6 +1177,8 @@ CONTAINS
         shortname = 'VDW-DF-CX'
      else if (iexch==6.and.icorr==4.and.igcx==29.and.igcc==0) then
         shortname = 'VDW-DF-CX0'
+     else if (iexch==6.and.icorr==4.and.igcx==31.and.igcc==0) then
+        shortname = 'VDW-DF-CX0P'
      else if (iexch==1.and.icorr==4.and.igcx==16.and.igcc==0) then
         shortname = 'VDW-DF-C09'
      else if (iexch==1.and.icorr==4.and.igcx==24.and.igcc==0) then
@@ -1693,7 +1711,7 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
         v1x = v1x + real(0.235*0.709) * v1x__
         v2x = v2x + real(0.235*0.709) * v2x__
      end if
-    elseif (igcx == 29) then ! 'cx0'
+  elseif (igcx == 29 .or. igcx == 31) then ! 'cx0'or `cx0p'
       call cx13 (rho, grho, sx, v1x, v2x)
       if (exx_started) then
          sx  = (1.0_DP - exx_fraction) * sx
@@ -2113,7 +2131,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
         v2xdw = 0.709_DP * v2xdw
      end if
 
-  elseif (igcx == 29) then ! 'cx0 for vdw-df-cx0' etc
+  elseif (igcx == 29 .or. igcx == 31) then ! 'cx0 for vdw-df-cx0' or `cx0p for vdW-DF-cx0p'
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call cx13 (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
      else
@@ -3569,7 +3587,7 @@ end subroutine tau_xc_array_spin
 
         if (rup.gt.eps.and.sup.gt.eps) then
            drup = min (1.d-4, 1.d-2 * rup)
-           dsup = min (1.d-4, 1.d-2 * sdw)
+           dsup = min (1.d-4, 1.d-2 * sup)
            !
            !    derivatives of exchange: up part
            !

@@ -741,9 +741,7 @@ up calculations at q=0 (phonon wavevector) if the sum over
 the Brillouin Zone includes k=0 only. The gamma_gamma
 trick exploits symmetry and acoustic sum rule to reduce
 the number of linear response calculations to the strict
-minimum, as it is done in code phcg.x. This option MUST
-BE USED if a run with ph.x is to be followed by a run
-with d3.x for third-order terms calculation.
+minimum, as it is done in code phcg.x.
          </pre></blockquote>
 </ul>      
       
@@ -874,6 +872,32 @@ with offset determined by k1,k2,k3.
          </pre></blockquote>
 </ul>
     
+}
+
+
+# ------------------------------------------------------------------------
+help read_dns_bare -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>read_dns_bare</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. the PH code tries to read three files in the DFPT+U
+calculation: dns_orth, dns_bare, d2ns_bare.
+dns_orth and dns_bare are the first-order variations of
+the occupation matrix, while d2ns_bare is the second-order
+variation of the occupation matrix. These matrices are
+computed only once during the DFPT+U calculation. However,
+their calculation (especially of d2ns_bare) is computationally
+expensive, this is why they are written to file and then can be
+read (e.g. for restart) in order to save time.
+         </pre></blockquote>
+</ul>      
+      
 }
 
 

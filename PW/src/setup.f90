@@ -37,7 +37,7 @@ SUBROUTINE setup()
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : tmp_dir, prefix
-  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
+  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm, ecutrho
@@ -125,6 +125,8 @@ SUBROUTINE setup()
   END IF
 
   IF ( dft_is_hybrid() ) THEN
+     IF ( lberry ) CALL errore( 'setup ', &
+                         'hybrid XC not allowed in Berry-phase calculations',1 )
      IF ( allfrac ) CALL errore( 'setup ', &
                          'option use_all_frac incompatible with hybrid XC', 1 )
      IF (.NOT. lscf) CALL errore( 'setup ', &
@@ -519,6 +521,9 @@ SUBROUTINE setup()
   ! ... nosym: do not use any point-group symmetry (s(:,:,1) is the identity)
   !
   IF ( nosym ) nsym = 1
+  !
+  IF ( nsym > 1 .AND. ibrav == 0 ) CALL infomsg('setup', &
+       'DEPRECATED: symmetry with ibrav=0, use correct ibrav instead')
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.

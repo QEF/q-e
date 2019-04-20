@@ -357,21 +357,18 @@ tracevar xdm w {
 }
 
 tracevar vdw_corr w {
-    groupwidget dftdG disable
-    groupwidget xdmG  disable 
-    groupwidget tsG   disable
+    groupwidget dftdG  disable
+    groupwidget dftd3G disable
+    groupwidget xdmG   disable 
+    groupwidget tsG    disable
     
     if { [varvalue vdw_corr] == "'grimme-d2'" } {
 	groupwidget dftdG enable 
-	groupwidget xdmG  disable 
-	groupwidget tsG   disable 
+    } elseif { [varvalue vdw_corr] == "'grimme-d3'" } {
+	groupwidget dftd3G enable 
     } elseif { [varvalue vdw_corr] == "'xdm'" } {
-	groupwidget dftdG disable 
 	groupwidget xdmG  enable
-	groupwidget tsG   disable 
     } elseif { [varvalue vdw_corr] == "'ts-vdw'" } {
-	groupwidget dftdG disable 
-	groupwidget xdmG  disable
 	groupwidget tsG   enable
     }
 }

@@ -130,7 +130,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE wvfct,      ONLY : nbnd, npwx, et
   USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
-  USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, ftau, irt, s, sname, d1, d2, d3, ft, sr  
+  USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, irt, s, sname, d1, d2, d3, ft, sr  
   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, kunit, npool
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
@@ -403,7 +403,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      WRITE(iun_pp,'("# nrot,nsym,nsym_ns,nsym_na",4I4)') nrot, nsym, nsym_ns, nsym_na
      DO i = 1,nsym
         WRITE(iun_pp,'("#symm",I3," : ",A)') i, trim(sname(i))
-        WRITE(iun_pp,'(3I3,I7,5x,3F7.2,F9.2)') ( s(j,:,i), ftau(j,i), sr(j,:,i), ft(j,i), j=1,3 )
+        WRITE(iun_pp,'(3I3,5x,3F7.2,F9.2)') ( s(j,:,i), sr(j,:,i), ft(j,i), j=1,3 )
         WRITE(iun_pp,'(99I3)') irt(i,1:nat)
      ENDDO
      CLOSE(iun_pp)

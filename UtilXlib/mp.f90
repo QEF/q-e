@@ -52,7 +52,7 @@
       END INTERFACE
 
       INTERFACE mp_sum
-        MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, &
+        MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, mp_sum_i4, mp_sum_i5, &
           mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
           mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d, &
@@ -1390,6 +1390,33 @@
         CALL reduce_base_integer( msglen, msg, gid, -1 )
 #endif
       END SUBROUTINE mp_sum_it
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_i4(msg,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg(:,:,:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_i4
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_i5(msg,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg(:,:,:,:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_i5
+
 
 !------------------------------------------------------------------------------!
 

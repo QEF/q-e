@@ -1,4 +1,4 @@
-VERSION = svn
+VERSION = git
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 
 doc:  all

@@ -165,7 +165,8 @@ NAMELIST: &CONTROL
                            The resulting format is portable to a different number
                            of processor, or different kind of parallelization
                    
-                   .FALSE. do not collect wavefunctions, leave them in temporary
+                   .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
+                           do not collect wavefunctions, leave them in temporary
                            local files (one per processor). The resulting format
                            is readable only on the same number of processors and
                            with the same kind of parallelization used to write it.
@@ -868,13 +869,16 @@ NAMELIST: &SYSTEM
    
    Type:           LOGICAL
    Default:        .FALSE.
-   Description:    if (.TRUE.) do not discard symmetry operations with an
-                   associated fractionary translation that does not send the
-                   real-space FFT grid into itself. These operations are
-                   incompatible with real-space symmetrization but not with the
-                   new G-space symmetrization. BEWARE: do not use for phonons
-                   and for hybrid functionals! Both still use symmetrization
-                   in real space.
+   Description:    if (.FALSE.) force real-space FFT grids to be commensurate with
+                   fractionary translations of non-symmorphic symmetry operations,
+                   if present (e.g.: if a fractional translation (0,0,c/4) exists,
+                   the FFT dimension along the c axis must be multiple of 4).
+                   if (.TRUE.) do not impose any constraints to FFT grids, even in
+                   the presence of non-symmorphic symmetry operations.
+                   BEWARE: use_all_frac=.TRUE. may lead to wrong results for
+                   hybrid functionals and phonon calculations. Both cases use
+                   symmetrization in real space that works for non-symmorphic
+                   operations only if the real-space FFT grids are commensurate.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1148,6 +1152,18 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       localization_thr
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Overlap threshold over which the exchange integral over a pair of localized orbitals
+                   is included in the evaluation of EXX operator. Any value greater than 0.0 triggers
+                   the SCDM localization and the evaluation on EXX using the localized orbitals.
+                   Very small value of the threshold should yield the same result as the default EXX
+                   evaluation
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       lda_plus_u
    
    Type:           LOGICAL
@@ -1360,9 +1376,9 @@ NAMELIST: &SYSTEM
    
    Type:           LOGICAL
    Description:    When starting a non collinear calculation using an existing density
-                                         file from a collinear lsda calculation assumes previous density points in
-                                         z direction and rotates is in the direction described by "angle1" and
-                                         "angle2" variables for atomic type 1
+                   file from a collinear lsda calculation assumes previous density points in
+                   z direction and rotates it in the direction described by "angle1" and
+                   "angle2" variables for atomic type 1
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1531,27 +1547,28 @@ NAMELIST: &SYSTEM
     
                    '2D' :
                         Truncation of the Coulomb interaction in the z direction
-                                for structures periodic in the x-y plane. Total energy,
-                                forces and stresses are computed in a two-dimensional framework.
-                                Linear-response calculations () done on top of a self-consistent
-                                calculation with this flag will automatically be performed in
-                                the 2D framework as well. Please refer to:
-                                Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional
-                                perturbation theory for gated two-dimensional heterostructures:
-                                Theoretical developments and application to flexural phonons in graphene.
-                                Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
-                        NB:
-                                   - The length of the unit-cell along the z direction should
-                                     be larger than twice the thickness of the 2D material
-                                     (including electrons). A reasonable estimate for a
-                                     layer's thickness could be the interlayer distance in the
-                                     corresponding layered bulk material. Otherwise,
-                                     the atomic thickness + 10 bohr should be a safe estimate.
-                                     There is also a lower limit of 20 bohr imposed by the cutoff
-                                     radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
+                        for structures periodic in the x-y plane. Total energy,
+                        forces and stresses are computed in a two-dimensional framework.
+                        Linear-response calculations () done on top of a self-consistent
+                        calculation with this flag will automatically be performed in
+                        the 2D framework as well. Please refer to:
+                        Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional
+                        perturbation theory for gated two-dimensional heterostructures:
+                        Theoretical developments and application to flexural phonons in graphene.
+                        Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
                         
-                                   - As for ESM above, only in-plane stresses make sense and one
-                                     should use cell_dofree='2Dxy' in a vc-relax calculation.
+                        NB:
+                           - The length of the unit-cell along the z direction should
+                             be larger than twice the thickness of the 2D material
+                             (including electrons). A reasonable estimate for a
+                             layer's thickness could be the interlayer distance in the
+                             corresponding layered bulk material. Otherwise,
+                             the atomic thickness + 10 bohr should be a safe estimate.
+                             There is also a lower limit of 20 bohr imposed by the cutoff
+                             radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
+                        
+                           - As for ESM above, only in-plane stresses make sense and one
+                             should use cell_dofree='2Dxy' in a vc-relax calculation.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1642,7 +1659,7 @@ NAMELIST: &SYSTEM
                    'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3'  :
                         Semiempirical Grimme's DFT-D3. Optional variables:
                         "dftd3_version", "dftd3_threebody"
-                        S. Grimme et al, J. Chem. Phys 132, 154104 (2010)
+                        S. Grimme et al, J. Chem. Phys 132, 154104 (2010), doi:10.1002/jcc.20495
     
                    'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' :
                         Tkatchenko-Scheffler dispersion corrections with first-principle derived
@@ -1710,9 +1727,25 @@ NAMELIST: &SYSTEM
    
    Type:           integer
    Default:        3
-   Description:    Version of Grimme implementation of Grimme-D3. Version=3 is Grimme-D3. Version=2
-                   is the original Grimme-D2 parametrization. NOTE: not all functionals are
-                   parametrized.
+   Description:   
+                   Version of Grimme implementation of Grimme-D3:
+    
+                   dftd3_version = 2 :
+                        Original Grimme-D2 parametrization
+    
+                   dftd3_version = 3 :
+                        Grimme-D3 (zero damping)
+    
+                   dftd3_version = 4 :
+                        Grimme-D3 (BJ damping)
+    
+                   dftd3_version = 5 :
+                        Grimme-D3M (zero damping)
+    
+                   dftd3_version = 6 :
+                        Grimme-D3M (BJ damping)
+    
+                   NOTE: not all functionals are parametrized.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2652,6 +2685,9 @@ NAMELIST: &CELL
                    'all' :
                         all axis and angles are moved
     
+                   'ibrav' :
+                        all axis and angles are moved, but the lattice but be representable with the initial ibrav choice
+    
                    'x' :
                         only the x component of axis 1 (v1_x) is moved
     
@@ -3300,4 +3336,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Tue Aug 21 17:08:53 CEST 2018
+This file has been created by helpdoc utility on Fri Mar 01 18:05:30 CET 2019

@@ -76,7 +76,8 @@ SUBROUTINE addusdens_g_gpu(rho)
   ! \sum_kv <\psi_kv|\beta_l><beta_m|\psi_kv> for each species of atoms
   REAL(DP), POINTER :: qmod_d (:), ylmk0_d (:,:)
   ! modulus of G, spherical harmonics
-  COMPLEX(DP), POINTER :: skk_d(:,:), aux2_d(:,:)
+  COMPLEX(DP), POINTER :: skk_d(:,:)
+  COMPLEX(DP), POINTER :: aux2_d(:,:)
   ! structure factors, US contribution to rho
   COMPLEX(DP), POINTER ::  aux_d (:,:), qgm_d(:)
   COMPLEX(DP), POINTER ::  aux_h (:,:)
@@ -121,6 +122,10 @@ SUBROUTINE addusdens_g_gpu(rho)
   DO ig = 1, ngm_l
      qmod_d (ig) = sqrt (gg_d (ngm_s+ig-1) )
   ENDDO
+  !
+  ! Use largest size for buffer
+  nij = nhm*(nhm+1)/2
+  CALL dev_buf%prepare_buffer(aux2_d, (/ ngm_l,nij /), ierr )
   !
   DO nt = 1, ntyp
      IF ( upf(nt)%tvanp ) THEN

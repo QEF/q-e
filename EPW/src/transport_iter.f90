@@ -163,12 +163,17 @@
     !! Used for the averaging
     REAL(kind=DP) :: ekk2
     !! Use for averaging
-  
-    !
     REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
     !! Temporary k-point coordinate (dummy variable)
     REAL(kind=DP) :: wkf_tmp(nkqtotf)
     !! Temporary k-weights (dummy variable)
+    REAL(kind=DP) :: dfnk
+    !! df/de
+    REAL(kind=DP) :: etemp
+    !! Temperature
+    REAL(KIND=DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss:  an approximation to the delta function
+    ! Gather all the k-point coordinate from all the pools
     ! 
     ! Gather all the k-point coordinate from all the pools
     xkf_all(:,:) = zero
@@ -236,7 +241,6 @@
         CALL kpmq_map( xkf_all(:, 2*ik-1 ), xqf (:, iq), +1, nkq_abs )
         s_BZtoIBZ_full(:,:,ind) = s_BZtoIBZ(:,:,nkq_abs)
         ixkqf_tr(ind) = BZtoIBZ(nkq_abs)
-        !print*,'ind iq ik ixkqf_tr ',ind, iq, ik, ixkqf_tr(ind), s_BZtoIBZ_full(1,1,ind)
       ENDDO
       ! 
     ENDIF
@@ -244,7 +248,6 @@
     ! First computes the SERTA solution as the first step of the IBTE
     F_SERTA(:,:,:,:) = zero
     tmp(:,:,:) = zero
-    !tmp2(:,:,:,:,:) = zero
     ! 
     DO ind=1, nind
       iq    = sparse_q( ind )
@@ -254,15 +257,7 @@
       itemp = sparse_t( ind )
       ! 
       tmp(ibnd, ik, itemp) = tmp(ibnd, ik, itemp)  + trans_prob(ind)
-      !tmp2(jbnd, ibnd, itemp, ik, iq)  = trans_prob(ind)
-  
-      !IF (ik==2 .and. ibnd ==2 .and. itemp ==2) print*,'ind tmp ', ind, tmp(ibnd, ik, itemp)
-  
-      !IF (ik==2) print*,ind, trans_prob(ind)
-      !print*,'ind iq ik ibnd jbnd itemp ',ind, iq, ik, ibnd, jbnd, itemp
-      !print*,'tmp ',tmp(ibnd, ik, itemp)
     ENDDO
-    !print*,'ind=10, iq==1, ik==2, ibnd=2, jbnd=2, itemp==1 ', trans_prob(10)
     ! 
     CALL mp_sum(tmp, world_comm)
     ! 
@@ -274,11 +269,11 @@
       DO ik = 1, nkqtotf/2
         ! 
         DO ibnd = 1, ibndmax-ibndmin+1
-          ekk = etf_all (ibndmin-1+ibnd, ik)
+          ekk = etf_all (ibnd, ik)
           n = 0
           tmp2 = 0.0_DP
           DO jbnd = 1, ibndmax-ibndmin+1
-            ekk2 = etf_all (ibndmin-1+jbnd, ik)
+            ekk2 = etf_all (jbnd, ik)
             IF ( ABS(ekk2-ekk) < eps6 ) THEN
               n = n + 1
               tmp2 =  tmp2 + tmp(ibnd,ik,itemp)
@@ -293,12 +288,15 @@
       ENDDO ! nkqtotf  
     ENDDO ! itemp
     ! 
-    !
-    DO itemp=1, nstemp 
+    DO itemp=1, nstemp
+      etemp = transp_temp(itemp)
       DO ik=1, nkqtotf/2
         DO ibnd=1, ibndmax-ibndmin+1
           IF ( ABS(tmp(ibnd, ik, itemp)) > eps160 ) THEN
-            F_SERTA(:, ibnd, ik, itemp) = vkk_all(:,ibnd,ik) / ( two * tmp(ibnd,ik,itemp) )  
+            ekk = etf_all (ibnd, ik) - ef0(itemp)
+            dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+            F_SERTA(:, ibnd, ik, itemp) = dfnk * vkk_all(:,ibnd,ik) / ( two * tmp(ibnd,ik,itemp) )
+            !F_SERTA(:, ibnd, ik, itemp) =  vkk_all(:,ibnd,ik) / ( two * tmp(ibnd,ik,itemp) )
           ENDIF
         ENDDO
         !IF (itemp==2) print*,'ik ',ik, SUM(F_SERTA(:,:,ik,2)), SUM(vkk_all(:,:,ik))

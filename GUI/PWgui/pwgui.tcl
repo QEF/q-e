@@ -4,10 +4,9 @@
 # ----------------------------------------------------------------------
 #  Anton Kokalj
 #  Jozef Stefan Institute, Ljubljana, Slovenia
-#  INFM DEMOCRITOS National Simulation Center, Trieste, Italy
 #  Email: Tone.Kokalj@ijs.si
 # ======================================================================
-#  Copyright (c) 2003--2004 Anton Kokalj
+#  Copyright (c) 2003--2019 Anton Kokalj
 # ======================================================================
 #
 #
@@ -34,11 +33,10 @@ if { [info exists env(PWGUI)] } {
 	# we arrive here, if we are using SVN version of code
 	if { [file isdirectory [file join $env(PWGUI) .. Guib]] } {
 	    puts "   "
-	    puts "   It seems you are using SVN version of PWgui/Quantum-Espresso."
+	    puts "   It seems you are using a repository QE version of PWgui."
 	    puts "   "
-	    puts "   For the SVN version you need to do the following:"
-	    puts "      * cd into GUI/PWgui directory, and"
-	    puts "      * execute: make svninit"
+	    puts "   You need to initialize PWgui first."
+	    puts "   Use \"make gui\" from the QE root directory."
 	    puts "   "
 	    exit
 	}

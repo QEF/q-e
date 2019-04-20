@@ -189,13 +189,11 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "XCRYSDEN's XSF format (2D or 3D)" 
 		    "XCRYSDEN's XSF format (whole unit cell) (3D)"
 		    "format suitable for gnuplot (1D)"
-		    "format suitable for contour.x (2D)"
 		    "format suitable for plotrho (2D)"
-		    "format suitable for gOpenMol (3D)"
 		    "Gaussian cube-file format (3D)"
 		    "format suitable for gnuplot (2D)"
 		}
-		-value     { 3 5 0 1 2 4 6 7 }
+		-value     { 3 5 0 2 6 7 }
 		-widget    optionmenu
 	    }
 	    var interpolation { 
