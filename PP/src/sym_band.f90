@@ -694,7 +694,6 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
   USE gvect,              ONLY : ngm
   USE wvfct,              ONLY : nbnd, npwx
   USE klist,              ONLY : ngk
-  USE spin_orb,           ONLY : domag
   USE uspp,               ONLY : vkb, nkb, okvan
   USE noncollin_module,   ONLY : npol
   USE becmod,             ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type

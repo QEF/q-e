@@ -1549,7 +1549,6 @@ SUBROUTINE PAW_dxc_potential(i, drho_lm, rho_lm, rho_core, v_lm)
 !  potential in the spherical basis. It receives as input the charge
 !  density and its variation.
 !
-    USE spin_orb,               ONLY : domag
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid

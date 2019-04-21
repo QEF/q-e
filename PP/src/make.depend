@@ -481,6 +481,7 @@ ppacf.o : ../../PW/src/exx.o
 ppacf.o : ../../PW/src/exx_base.o
 ppacf.o : ../../PW/src/pwcom.o
 ppacf.o : ../../PW/src/scf_mod.o
+ppacf.o : ../../PW/src/symm_base.o
 ppacf.o : ../../UtilXlib/mp.o
 ppacf.o : vasp_xml_module.o
 ppacf.o : xc_vdW_scale_mod.o

@@ -1,4 +1,6 @@
 Problems fixed in development branch :
+  * PPACF wasn't working any longer in v.6.4 and 6.4.1 for nspin=2 and
+    for hybrid functionals (fixed by Yang Jiao, Chalmers)
   * option "write_unkg" of pw2wannier90.f90 wasn't working as expected
 
 Incompatible changes in development branch :

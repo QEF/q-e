@@ -435,7 +435,6 @@ CONTAINS
   USE constants,     ONLY : e2, tpi, fpi
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
-  USE spin_orb,      ONLY : domag
   USE control_flags, ONLY : gamma_only
   USE paw_onecenter, ONLY : paw_ddot
   USE mp_bands,      ONLY : intra_bgrp_comm
