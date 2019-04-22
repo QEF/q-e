@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE spectral_func_ph ( iqq, iq, totq )
+  SUBROUTINE spectral_func_ph (iqq, iq, totq)
   !-----------------------------------------------------------------------
   !
   !  Compute the imaginary part of the phonon self energy due to electron-
@@ -32,7 +32,7 @@
                         efermi_read, fermi_energy, wmin_specfun,&
                         wmax_specfun, nw_specfun
   USE pwcom,     ONLY : nelec, ef
-  USE klist_epw, ONLY : isk_loc
+  USE klist_epw, ONLY : isk_dummy
   USE elph2,     ONLY : epf17, ibndmax, ibndmin, etf, &
                         wkf, xqf, nkqf, nkf, wf, a_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, cone, ci, eps8
@@ -150,7 +150,7 @@
     !
   ELSE IF (nsmear > 1) THEN
     !
-    ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
+    ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
     ! if some bands are skipped (nbndskip.neq.0), nelec has already been
     ! recalculated in ephwann_shuffle
     !

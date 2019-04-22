@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  subroutine nesting_fn_q ( iqq, iq )
+  subroutine nesting_fn_q(iqq, iq)
   !-----------------------------------------------------------------------
   !!
   !!  compute the imaginary part of the phonon self energy due to electron-
@@ -25,7 +25,7 @@
                         eptemp, ngaussw, degaussw,     &
                         nsmear, delta_smear, efermi_read, fermi_energy
   USE pwcom,     ONLY : nelec, ef
-  USE klist_epw, ONLY : isk_loc
+  USE klist_epw, ONLY : isk_dummy
   USE elph2,     ONLY : ibndmax, ibndmin, etf, &
                         wkf, xqf, wqf, nkqf, &
                         nkf, nkqtotf, xqf
@@ -101,7 +101,7 @@
     IF ( efermi_read ) THEN
       ef0 = fermi_energy 
     ELSE
-      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_loc)
+      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_dummy)
     ENDIF
     !
     dosef = dos_ef (ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)

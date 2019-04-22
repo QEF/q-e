@@ -732,6 +732,11 @@
       et_loc(:, ik) = et(:, ik)
       isk_loc(ik)   = isk(ik)
     ENDDO 
+    !
+    ! 04-2019 - SP
+    ! isk_loc and isk_all are spin index (LSDA only) on the local or all k-points. 
+    ! Those variable are introduced here for potential use but are not currently used further in EPW 
+    ! One would need to interpolate isk on the fine grids in ephwann_shuffle. 
     ! 
   ENDIF
   !
