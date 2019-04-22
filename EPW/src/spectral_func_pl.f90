@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE spectral_func_pl_q ( iqq, iq, totq )
+  SUBROUTINE spectral_func_pl_q(iqq, iq, totq)
   !-----------------------------------------------------------------------
   !
   !  Compute the electron spectral function including the  electron-
@@ -31,7 +31,7 @@
                             efermi_read, fermi_energy,&
                             nel, meff, epsiHEG 
   USE pwcom,         ONLY : nelec, ef
-  USE klist_epw,     ONLY : isk_loc
+  USE klist_epw,     ONLY : isk_dummy
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
                             wkf, nkf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all,&
@@ -93,7 +93,7 @@
     !
   ELSE
     !
-    ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
+    ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
     ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
     ! in ephwann_shuffle
     !

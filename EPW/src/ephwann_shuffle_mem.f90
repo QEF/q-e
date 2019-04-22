@@ -25,7 +25,7 @@
   !
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
-  USE klist_epw,     ONLY : isk_loc, et_loc, xk_loc, et_all
+  USE klist_epw,     ONLY : isk_dummy, et_loc, xk_loc, et_all
   USE cell_base,     ONLY : at, bg, omega, alat
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
@@ -307,10 +307,9 @@
     IF(ALLOCATED(tau))  DEALLOCATE( tau )
     IF(ALLOCATED(ityp)) DEALLOCATE( ityp )
     IF(ALLOCATED(w2))   DEALLOCATE( w2 )
-    ALLOCATE(isk_loc(nks))
     ! 
     ! We need some crystal info
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
       OPEN(unit=crystal,file='crystal.fmt',status='old',iostat=ios)
       READ (crystal,*) nat
@@ -325,40 +324,25 @@
       READ (crystal,*) amass
       ALLOCATE( ityp( nat ) )
       READ (crystal,*) ityp
-      READ (crystal,*) isk_loc
       READ (crystal,*) noncolin
       READ (crystal,*) w_centers
       ! 
     ENDIF
-    CALL mp_bcast (nat     , ionode_id, inter_pool_comm)
-    CALL mp_bcast (nat     , root_pool, intra_pool_comm)  
+    CALL mp_bcast (nat      , ionode_id, world_comm)
     IF (mpime /= ionode_id) ALLOCATE( ityp( nat ) )
-    CALL mp_bcast (nmodes  , ionode_id, inter_pool_comm)
-    CALL mp_bcast (nmodes  , root_pool, intra_pool_comm)  
-    CALL mp_bcast (nelec   , ionode_id, inter_pool_comm)
-    CALL mp_bcast (nelec   , root_pool, intra_pool_comm)  
-    CALL mp_bcast (at      , ionode_id, inter_pool_comm)
-    CALL mp_bcast (at      , root_pool, intra_pool_comm)  
-    CALL mp_bcast (bg      , ionode_id, inter_pool_comm)
-    CALL mp_bcast (bg      , root_pool, intra_pool_comm)  
-    CALL mp_bcast (omega   , ionode_id, inter_pool_comm)
-    CALL mp_bcast (omega   , root_pool, intra_pool_comm)  
-    CALL mp_bcast (alat    , ionode_id, inter_pool_comm)
-    CALL mp_bcast (alat    , root_pool, intra_pool_comm)  
+    CALL mp_bcast (nmodes   , ionode_id, world_comm)
+    CALL mp_bcast (nelec    , ionode_id, world_comm)
+    CALL mp_bcast (at       , ionode_id, world_comm)
+    CALL mp_bcast (bg       , ionode_id, world_comm)
+    CALL mp_bcast (omega    , ionode_id, world_comm)
+    CALL mp_bcast (alat     , ionode_id, world_comm)
     IF (mpime /= ionode_id) ALLOCATE( tau( 3, nat ) )
-    CALL mp_bcast (tau     , ionode_id, inter_pool_comm)
-    CALL mp_bcast (tau     , root_pool, intra_pool_comm)  
-    CALL mp_bcast (amass   , ionode_id, inter_pool_comm)
-    CALL mp_bcast (amass   , root_pool, intra_pool_comm)  
-    CALL mp_bcast (ityp    , ionode_id, inter_pool_comm)
-    CALL mp_bcast (ityp    , root_pool, intra_pool_comm)  
-    CALL mp_bcast (isk_loc , ionode_id, inter_pool_comm)
-    CALL mp_bcast (isk_loc , root_pool, intra_pool_comm)  
-    CALL mp_bcast (noncolin, ionode_id, inter_pool_comm)
-    CALL mp_bcast (noncolin, root_pool, intra_pool_comm)  
-    CALL mp_bcast (w_centers, ionode_id, inter_pool_comm)
-    CALL mp_bcast (w_centers, root_pool, intra_pool_comm)
-    IF (mpime.eq.ionode_id) THEN
+    CALL mp_bcast (tau      , ionode_id, world_comm)
+    CALL mp_bcast (amass    , ionode_id, world_comm)
+    CALL mp_bcast (ityp     , ionode_id, world_comm)
+    CALL mp_bcast (noncolin , ionode_id, world_comm)
+    CALL mp_bcast (w_centers, ionode_id, world_comm)
+    IF (mpime == ionode_id) THEN
       CLOSE(crystal)
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -569,20 +553,22 @@
   CALL loadqmesh_serial
   CALL loadkmesh_para
   !
-  ALLOCATE ( epmatwef( nbndsub, nbndsub, nrr_k),         &
-             wf( nmodes,  nqf ),                         &
-             etf( nbndsub, nkqf),                        &
-             etf_ks( nbndsub, nkqf),                     &
-             epmatf( nbndsub, nbndsub),                  &
-             cufkk( nbndsub, nbndsub),                   &
-             cufkq( nbndsub, nbndsub),                   & 
-             uf( nmodes, nmodes),                        &
-             bmatf( nbndsub, nbndsub),                   & 
-             eps_rpa( nmodes) )
+  ALLOCATE (epmatwef(nbndsub, nbndsub, nrr_k))
+  ALLOCATE (wf(nmodes, nqf))
+  ALLOCATE (etf(nbndsub, nkqf))
+  ALLOCATE (etf_ks(nbndsub, nkqf))
+  ALLOCATE (epmatf(nbndsub, nbndsub))
+  ALLOCATE (cufkk(nbndsub, nbndsub))
+  ALLOCATE (cufkq(nbndsub, nbndsub))
+  ALLOCATE (uf(nmodes, nmodes))
+  ALLOCATE (bmatf(nbndsub, nbndsub))
+  ALLOCATE (eps_rpa(nmodes))
+  ALLOCATE (isk_dummy(nkqf))
   !
   ! Need to be initialized
-  etf_ks(:,:) = zero
-  epmatf(:,:) = czero
+  etf_ks(:,:)  = zero
+  epmatf(:,:)  = czero
+  isk_dummy(:) = 0  ! Isk dummy variable 
   ! allocate velocity and dipole matrix elements after getting grid size
   !
   IF (vme) THEN 
@@ -696,7 +682,7 @@
      !  
      ! since wkf(:,ikq) = 0 these bands do not bring any contribution to Fermi level
      !  
-     efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
+     efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
      !
      WRITE(stdout, '(/5x,a,f10.6,a)') &
          'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'

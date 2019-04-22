@@ -23,7 +23,7 @@
   !
   USE kinds,         ONLY : DP, i4b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
-  USE klist_epw,     ONLY : isk_loc, et_loc, xk_loc
+  USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg, omega, alat
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
@@ -310,12 +310,11 @@
     IF(ALLOCATED(tau))  DEALLOCATE( tau )
     IF(ALLOCATED(ityp)) DEALLOCATE( ityp )
     IF(ALLOCATED(w2))   DEALLOCATE( w2 )
-    ALLOCATE (isk_loc(nks))
     ! 
     ! We need some crystal info
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
-      OPEN(unit=crystal,file='crystal.fmt',status='old',iostat=ios)
+      OPEN (UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
       READ (crystal,*) nat
       READ (crystal,*) nmodes
       READ (crystal,*) nelec
@@ -323,54 +322,39 @@
       READ (crystal,*) bg
       READ (crystal,*) omega
       READ (crystal,*) alat
-      ALLOCATE( tau( 3, nat ) )
+      ALLOCATE (tau(3, nat))
       READ (crystal,*) tau
       READ (crystal,*) amass
-      ALLOCATE( ityp( nat ) )
+      ALLOCATE (ityp(nat))
       READ (crystal,*) ityp
-      READ (crystal,*) isk_loc
       READ (crystal,*) noncolin
       READ (crystal,*) w_centers
       ! 
     ENDIF
-    CALL mp_bcast (nat     , ionode_id, inter_pool_comm)
-    CALL mp_bcast (nat     , root_pool, intra_pool_comm)  
+    CALL mp_bcast (nat      , ionode_id, world_comm)
     IF (mpime /= ionode_id) ALLOCATE( ityp( nat ) )
-    CALL mp_bcast (nmodes  , ionode_id, inter_pool_comm)
-    CALL mp_bcast (nmodes  , root_pool, intra_pool_comm)  
-    CALL mp_bcast (nelec   , ionode_id, inter_pool_comm)
-    CALL mp_bcast (nelec   , root_pool, intra_pool_comm)  
-    CALL mp_bcast (at      , ionode_id, inter_pool_comm)
-    CALL mp_bcast (at      , root_pool, intra_pool_comm)  
-    CALL mp_bcast (bg      , ionode_id, inter_pool_comm)
-    CALL mp_bcast (bg      , root_pool, intra_pool_comm)  
-    CALL mp_bcast (omega   , ionode_id, inter_pool_comm)
-    CALL mp_bcast (omega   , root_pool, intra_pool_comm)  
-    CALL mp_bcast (alat    , ionode_id, inter_pool_comm)
-    CALL mp_bcast (alat    , root_pool, intra_pool_comm)  
+    CALL mp_bcast (nmodes   , ionode_id, world_comm)
+    CALL mp_bcast (nelec    , ionode_id, world_comm)
+    CALL mp_bcast (at       , ionode_id, world_comm)
+    CALL mp_bcast (bg       , ionode_id, world_comm)
+    CALL mp_bcast (omega    , ionode_id, world_comm)
+    CALL mp_bcast (alat     , ionode_id, world_comm)
     IF (mpime /= ionode_id) ALLOCATE( tau( 3, nat ) )
-    CALL mp_bcast (tau     , ionode_id, inter_pool_comm)
-    CALL mp_bcast (tau     , root_pool, intra_pool_comm)  
-    CALL mp_bcast (amass   , ionode_id, inter_pool_comm)
-    CALL mp_bcast (amass   , root_pool, intra_pool_comm)  
-    CALL mp_bcast (ityp    , ionode_id, inter_pool_comm)
-    CALL mp_bcast (ityp    , root_pool, intra_pool_comm)  
-    CALL mp_bcast (isk_loc , ionode_id, inter_pool_comm)
-    CALL mp_bcast (isk_loc , root_pool, intra_pool_comm)  
-    CALL mp_bcast (noncolin, ionode_id, inter_pool_comm)
-    CALL mp_bcast (noncolin, root_pool, intra_pool_comm)  
-    CALL mp_bcast (w_centers, ionode_id, inter_pool_comm)
-    CALL mp_bcast (w_centers, root_pool, intra_pool_comm)
-    IF (mpime.eq.ionode_id) THEN
+    CALL mp_bcast (tau      , ionode_id, world_comm)
+    CALL mp_bcast (amass    , ionode_id, world_comm)
+    CALL mp_bcast (ityp     , ionode_id, world_comm)
+    CALL mp_bcast (noncolin , ionode_id, world_comm)
+    CALL mp_bcast (w_centers, ionode_id, world_comm)
+    IF (mpime == ionode_id) THEN
       CLOSE(crystal)
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     ! 
   ELSE
-    continue
+    CONTINUE
   ENDIF
   !
-  ALLOCATE( w2( 3*nat) )
+  ALLOCATE (w2(3 * nat))
   ! 
   IF (lpolar) THEN
     WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic long-range interaction for polar materials [lpolar]'
@@ -382,7 +366,7 @@
   ! 
   ! For this we need the Wannier centers
   ! w_centers is allocated inside loadumat
-  IF (.not. epwread) THEN
+  IF (.NOT. epwread) THEN
     xxq = 0.d0
     CALL loadumat( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers )
   ENDIF
@@ -476,10 +460,10 @@
      ! 
      ! SP : Let the user chose. If false use files on disk
      IF (etf_mem == 0) THEN
-       ALLOCATE(epmatwe ( nbndsub, nbndsub, nrr_k, nmodes, nqc))
+       ALLOCATE (epmatwe ( nbndsub, nbndsub, nrr_k, nmodes, nqc))
        ALLOCATE (epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_g))
      ELSE
-       ALLOCATE(epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
+       ALLOCATE (epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
        epmatwe_mem(:,:,:,:) = czero
      ENDIF
      !
@@ -604,20 +588,22 @@
   CALL loadqmesh_serial
   CALL loadkmesh_para
   !
-  ALLOCATE ( epmatwef( nbndsub, nbndsub, nrr_k, nmodes), &
-             wf( nmodes,  nqf ),                         &
-             etf( nbndsub, nkqf),                        &
-             etf_ks( nbndsub, nkqf),                     &
-             epmatf( nbndsub, nbndsub, nmodes),          &
-             cufkk( nbndsub, nbndsub),                   &
-             cufkq( nbndsub, nbndsub),                   & 
-             uf( nmodes, nmodes),                        &
-             bmatf( nbndsub, nbndsub),                   & 
-             eps_rpa( nmodes) )
+  ALLOCATE (epmatwef(nbndsub, nbndsub, nrr_k, nmodes))
+  ALLOCATE (wf(nmodes, nqf))
+  ALLOCATE (etf(nbndsub, nkqf))
+  ALLOCATE (etf_ks(nbndsub, nkqf)) 
+  ALLOCATE (epmatf(nbndsub, nbndsub, nmodes))
+  ALLOCATE (cufkk(nbndsub, nbndsub))
+  ALLOCATE (cufkq(nbndsub, nbndsub))
+  ALLOCATE (uf(nmodes, nmodes))
+  ALLOCATE (bmatf(nbndsub, nbndsub))
+  ALLOCATE (eps_rpa(nmodes))
+  ALLOCATE (isk_dummy(nkqf))
   !
   ! Need to be initialized
-  etf_ks(:,:) = zero
+  etf_ks(:,:)   = zero
   epmatf(:,:,:) = czero
+  isk_dummy(:)  = 0  ! Isk dummy variable 
   !
   ! allocate velocity and dipole matrix elements after getting grid size
   !
@@ -756,7 +742,7 @@
      !  
      ! since wkf(:,ikq) = 0 these bands do not bring any contribution to Fermi level
      !  
-     efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
+     efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
      !
      WRITE(stdout, '(/5x,a,f10.6,a)') &
          'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
@@ -1660,7 +1646,6 @@
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
   USE pwcom,     ONLY : ef, nelec
-  USE klist_epw, ONLY : isk_loc
   USE elph2,     ONLY : chw, rdw, cdmew, cvmew, chw_ks, &
                         zstar, epsi, epmatwp
   USE ions_base, ONLY : amass, ityp, nat, tau
@@ -1722,7 +1707,6 @@
     WRITE (crystal,*) tau
     WRITE (crystal,*) amass
     WRITE (crystal,*) ityp
-    WRITE (crystal,*) isk_loc
     WRITE (crystal,*) noncolin
     WRITE (crystal,*) w_centers
     !
@@ -2024,7 +2008,7 @@
   !---------------------------------
   ! 
   !--------------------------------------------------------------------
-  FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk_loc)
+  FUNCTION efermig_seq (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !--------------------------------------------------------------------
   !!
   !!     Finds the Fermi energy - Gaussian Broadening
@@ -2044,7 +2028,7 @@
   !! 
   INTEGER, INTENT (in) :: is
   !! 
-  INTEGER, INTENT (in) :: isk_loc(nks)
+  INTEGER, INTENT (in) :: isk(nks)
   !! 
   ! 
   REAL (kind=DP), INTENT (in) :: wk (nks)
@@ -2078,13 +2062,13 @@
   !
   !  Bisection method
   !
-  sumkup = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk_loc)
-  sumklw = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk_loc)
+  sumkup = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
+  sumklw = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
   if ( (sumkup - nelec) < -eps10 .or. (sumklw - nelec) > eps10 )  &
        call errore ('efermig_seq', 'internal error, cannot bracket Ef', 1)
   DO i = 1, maxiter
     Ef = (Eup + Elw) / 2.d0
-    sumkmid = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk_loc)
+    sumkmid = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
     if (abs (sumkmid-nelec) < eps10) then
        efermig_seq = Ef
        return
@@ -2105,7 +2089,7 @@
   end FUNCTION efermig_seq
   !
   !-----------------------------------------------------------------------
-  function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk_loc)
+  function sumkg_seq (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   !-----------------------------------------------------------------------
   !!
   !!  This function computes the number of states under a given energy e
@@ -2123,7 +2107,7 @@
   !! the type of smearing
   INTEGER, INTENT (in) :: is
   !!
-  INTEGER, INTENT (in) :: isk_loc(nks)
+  INTEGER, INTENT (in) :: isk(nks)
   !!
   !
   REAL(kind=DP), INTENT (in) :: wk (nks)
@@ -2151,7 +2135,7 @@
   DO ik=1, nks
     sum1 = 0.d0
     IF (is /= 0) THEN
-       IF (isk_loc(ik) /= is) CYCLE
+       IF (isk(ik) /= is) CYCLE
     ENDIF
     DO ibnd=1, nbnd
        sum1 = sum1 + wgauss((e - et (ibnd, ik)) / degauss, ngauss)
