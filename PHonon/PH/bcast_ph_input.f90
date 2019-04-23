@@ -42,6 +42,7 @@ subroutine bcast_ph_input ( )
   USE YAMBO,      ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
   USE elph_tetra_mod, ONLY : lshift_q
+  USE ldaU_ph,        ONLY : read_dns_bare, d2ns_type
 
   implicit none
   !
@@ -67,6 +68,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (only_wfc, meta_ionode_id, world_comm )
   call mp_bcast (only_init, meta_ionode_id, world_comm )
   call mp_bcast (search_sym, meta_ionode_id, world_comm)
+  call mp_bcast (read_dns_bare, meta_ionode_id, world_comm)
   ! YAMBO >
   call mp_bcast (elph_yambo, meta_ionode_id, world_comm)
   call mp_bcast (dvscf_yambo, meta_ionode_id, world_comm)
@@ -119,6 +121,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (tmp_dir, meta_ionode_id, world_comm )
   call mp_bcast (prefix, meta_ionode_id, world_comm )
   call mp_bcast (electron_phonon, meta_ionode_id, world_comm )
+  call mp_bcast (d2ns_type, meta_ionode_id, world_comm )
   !
   ! derived type (one bit at a time)
   !

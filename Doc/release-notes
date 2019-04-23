@@ -1,5 +1,8 @@
 Problems fixed in development branch :
   * option "write_unkg" of pw2wannier90.f90 wasn't working as expected
+  * The input parameters (for restarting DFPT+U calculations) read_dns_bare 
+    and d2ns_type were missing in the PH input namelist, and moreover they 
+    were not broadcasted.
 
 Incompatible changes in development branch :
   * fractional translations "ftau" in FFT grid units no longer existing as
