@@ -131,9 +131,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
-  USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact
   USE vasp_read_chgcar,     ONLY : vaspread_rho
   !
   IMPLICIT NONE

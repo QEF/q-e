@@ -53,6 +53,8 @@ SUBROUTINE read_file()
   ! ... have been written to tmp_dir, not to a different directory!
   ! ... io_level = 1 so that a real file is opened
   !
+  CALL allocate_wfc()
+  !
   wfc_dir = tmp_dir
   nwordwfc = nbnd*npwx*npol
   io_level = 1
@@ -220,6 +222,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL qes_reset  ( parinfo_obj )
   IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
   !
+  ! END OF READING VARIABLES FROM XML DATA FILE
+  !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
   ! ... of k-points in the current pool
@@ -279,8 +283,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
      CALL init_at_1()
   ENDIF
-  !
-  CALL allocate_wfc() ! FIXME: why is this here?
   !
   ! ... read the charge density in G-space
   !
