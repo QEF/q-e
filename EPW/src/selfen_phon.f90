@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE selfen_phon_q ( iqq, iq, totq )
+  SUBROUTINE selfen_phon_q(iqq, iq, totq)
   !-----------------------------------------------------------------------
   !!
   !!  compute the imaginary part of the phonon self energy due to electron-
@@ -34,7 +34,7 @@
                          nsmear, delta_smear, eps_acustic, specfun_ph, &
                          delta_approx, vme
   use pwcom,      ONLY : nelec, ef
-  USE klist_epw,  ONLY : isk_loc
+  USE klist_epw,  ONLY : isk_dummy
   use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf, &
                          nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,   &
                          dmef, vmef, gamma_all,gamma_v_all, efnew
@@ -195,7 +195,7 @@
       !
     ELSE IF (nsmear > 1) THEN
       !
-      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_loc)
+      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_dummy)
       ! if some bands are skipped (nbndskip.neq.0), nelec has already been
       ! recalculated 
       ! in ephwann_shuffle

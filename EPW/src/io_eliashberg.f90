@@ -1482,7 +1482,7 @@
     USE epwcom,    ONLY : nbndsub, fsthick, ngaussw, degaussw, & 
                           efermi_read, fermi_energy, mp_mesh_k
     USE pwcom,     ONLY : nelec, ef
-    USE klist_epw, ONLY : isk_loc
+    USE klist_epw, ONLY : isk_dummy
     USE elph2,     ONLY : etf, nkqf, wkf, nkf, nkqtotf
     USE constants_epw, ONLY : two
     USE mp,        ONLY : mp_barrier, mp_sum
@@ -1522,7 +1522,7 @@
        IF (efermi_read) THEN
           ef0 = fermi_energy 
        ELSE
-          ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_loc)
+          ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
        ENDIF  
        !     
        dosef = dos_ef(ngaussw, degaussw, ef0, etf, wkf, nkqf, nbndsub)

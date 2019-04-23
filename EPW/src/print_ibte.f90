@@ -186,8 +186,6 @@
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(KIND=DP), EXTERNAL :: DDOT
   !! Dot product function
-  REAL(KIND=DP), EXTERNAL :: efermig
-  !! Function that returns the Fermi energy
   REAL(KIND=DP), EXTERNAL :: wgauss
   !! Compute the approximate theta function. Here computes Fermi-Dirac 
   REAL(KIND=DP), EXTERNAL :: w0gauss

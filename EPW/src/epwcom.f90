@@ -333,6 +333,8 @@ MODULE klist_epw
   !! Spin index of each k-point (used in LSDA calculations only)
   INTEGER, ALLOCATABLE :: isk_loc(:)  
   !! Spin index of local k-point (used in LSDA calculations only)
+  INTEGER, ALLOCATABLE :: isk_dummy(:)  
+  !! Spin index on the fine grid - dummy at the moment
   REAL(kind=DP), ALLOCATABLE :: xk_loc(:, :) 
   !! List of local (each cores) kpoints in cartesian coordinates
   REAL(kind=DP), ALLOCATABLE :: xk_all(:, :) 
