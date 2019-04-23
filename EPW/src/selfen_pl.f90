@@ -103,7 +103,7 @@
   ! Fermi level and corresponding DOS
   !
   IF ( efermi_read ) THEN
-    !
+   !
     ef0 = fermi_energy
     !
   ELSE
@@ -125,16 +125,6 @@
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
-  !
-  IF ( iq .eq. 1 ) THEN 
-    IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nksqtotf) )
-    IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nksqtotf) )
-    IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nksqtotf) )
-    sigmar_all(:,:) = zero
-    sigmai_all(:,:) = zero
-    zi_all(:,:) = zero
-  ENDIF
-  !
   !
   !nel      =  0.01    ! this should be read from input - # of doping electrons 
   !epsiHEG  =  12.d0   ! this should be read from input - # dielectric constant at zero doping  
@@ -346,8 +336,8 @@
   !
   IF ( iqq == totq ) THEN
      !
-     ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
-                etf_all      ( nbndsub, nkqtotf ) )
+     ALLOCATE (xkf_all(3, nkqtotf))
+     ALLOCATE (etf_all(nbndsub, nkqtotf))
      xkf_all(:,:) = zero
      etf_all(:,:) = zero
      !
@@ -467,12 +457,8 @@
      !
      CLOSE(linewidth_elself)
      !
-     IF ( ALLOCATED(xkf_all) )      DEALLOCATE( xkf_all )
-     IF ( ALLOCATED(etf_all) )      DEALLOCATE( etf_all )
-     IF ( ALLOCATED(sigmar_all) )   DEALLOCATE( sigmar_all )
-     IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
-     IF ( ALLOCATED(zi_all) )       DEALLOCATE( zi_all )
-     IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
+     DEALLOCATE (xkf_all)
+     DEALLOCATE (etf_all)
      !
   ENDIF 
   !

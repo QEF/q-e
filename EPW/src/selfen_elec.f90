@@ -126,8 +126,6 @@
   !! If the phonon frequency is too small discart g
   REAL(kind=DP) :: inv_degaussw
   !! Inverse of the smearing for efficiency reasons
-  !REAL(kind=DP), external :: efermig
-  !! Function to compute the Fermi energy 
   REAL(kind=DP), external :: dos_ef
   !! Function to compute the Density of States at the Fermi level
   REAL(kind=DP), external :: wgauss
@@ -146,13 +144,13 @@
   inv_eptemp0 = 1.0/eptemp
   inv_degaussw = 1.0/degaussw
   !
-  IF ( iqq == 1 ) THEN
+  IF (iqq == 1) THEN
     !
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Electron (Imaginary) Self-Energy in the Migdal Approximation")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick .lt. 1.d3 ) &
+    IF (fsthick < 1.d3) &
        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -161,7 +159,7 @@
   !
   ! Fermi level and corresponding DOS
   !
-  IF ( efermi_read ) THEN
+  IF (efermi_read) THEN
     !
     ef0 = fermi_energy
     !
@@ -171,7 +169,7 @@
     !
   ENDIF
   !
-  IF ( iqq == 1 ) THEN 
+  IF (iqq == 1) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
      WRITE (stdout,'(a)') ' '
   ENDIF
@@ -191,19 +189,6 @@
     ! 
   ENDIF
   !
-  IF ( iq .eq. 1 ) THEN 
-     IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nksqtotf) )
-     IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nksqtotf) )
-     IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nksqtotf) )
-     IF ( iverbosity == 3 ) THEN
-       IF ( .not. ALLOCATED (sigmai_mode) ) ALLOCATE( sigmai_mode(ibndmax-ibndmin+1, nmodes, nksqtotf) )
-       sigmai_mode(:,:,:) = zero
-     ENDIF
-     sigmar_all(:,:) = zero
-     sigmai_all(:,:) = zero
-     zi_all(:,:) = zero
-  ENDIF
-  !
   ! In the case of a restart do not add the first step
   IF (first_cycle) THEN
     first_cycle = .FALSE.
@@ -220,20 +205,20 @@
        ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
        ! (but in this case they are the same)
        !
-       IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-            ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+       IF (( MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
+           ( MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
           !
           fermicount = fermicount + 1
-          DO imode = 1, nmodes
+          DO imode=1, nmodes
              !
              ! the phonon frequency and Bose occupation
              wq = wf (imode, iq)
              !
              ! SP: Avoid if statement in inner loops
-             IF (wq .gt. eps_acustic) THEN
+             IF (wq > eps_acustic) THEN
                ! SP: Define the inverse for efficiency
                inv_wq = 1.0/( two * wq )
-               wgq    = wgauss( -wq*inv_eptemp0, -99)
+               wgq    = wgauss( -wq * inv_eptemp0, -99)
                wgq    = wgq / ( one - two * wgq )
                g2_tmp = 1.0
              ELSE
@@ -242,12 +227,12 @@
                g2_tmp = 0.0
              ENDIF
              !
-             DO ibnd = 1, ibndmax-ibndmin+1
+             DO ibnd=1, ibndmax-ibndmin+1
                 !
                 !  the energy of the electron at k (relative to Ef)
                 ekk = etf (ibndmin-1+ibnd, ikk) - ef0
                 !
-                DO jbnd = 1, ibndmax-ibndmin+1
+                DO jbnd=1, ibndmax-ibndmin+1
                    !
                    !  the fermi occupation for k+q
                    ekq = etf (ibndmin-1+jbnd, ikq) - ef0
@@ -274,7 +259,6 @@
                            ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
                              ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) )
 !                     ecutse needs to be defined if it's used 
-!@                    if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
                    !
                    sigmar_all(ibnd,ik+lower_bnd-1) = sigmar_all(ibnd,ik+lower_bnd-1) + g2 * weight
                    !
@@ -282,7 +266,6 @@
 !                   weight = wqf(iq) * aimag (                                                  &
 !                           ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
 !                             ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
-!@                   if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
                    !
                    ! Delta implementation 
                    w0g1=w0gauss( (ekk-ekq+wq)/degaussw, 0) /degaussw
@@ -304,11 +287,10 @@
                    ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
                    !
                    weight = wqf(iq) * &
-                           ( (       wgkq + wgq ) * ( (ekk - ( ekq - wq ))**two - degaussw**two ) /       &
-                                                    ( (ekk - ( ekq - wq ))**two + degaussw**two )**two +  &
-                             ( one - wgkq + wgq ) * ( (ekk - ( ekq + wq ))**two - degaussw**two ) /       &
-                                                    ( (ekk - ( ekq + wq ))**two + degaussw**two )**two )  
-!@                   if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+                           ((      wgkq + wgq ) * ( (ekk - ( ekq - wq ))**two - degaussw**two ) /      &
+                                                  ( (ekk - ( ekq - wq ))**two + degaussw**two )**two + &
+                            (one - wgkq + wgq ) * ( (ekk - ( ekq + wq ))**two - degaussw**two ) /      &
+                                                  ( (ekk - ( ekq + wq ))**two + degaussw**two )**two)  
                    !
                    zi_all(ibnd,ik+lower_bnd-1) = zi_all(ibnd,ik+lower_bnd-1) + g2 * weight
                    ! 
@@ -341,10 +323,10 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iqq == totq ) THEN
+  IF (iqq == totq) THEN
     !
-    ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
-               etf_all      ( nbndsub, nkqtotf ) )
+    ALLOCATE (xkf_all(3,       nkqtotf))
+    ALLOCATE (etf_all(nbndsub, nkqtotf))
     xkf_all(:,:) = zero
     etf_all(:,:) = zero
     !
@@ -371,19 +353,19 @@
     ! Average over degenerate eigenstates:
     WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')
     ! 
-    DO ik = 1, nksqtotf
+    DO ik=1, nksqtotf
       ikk = 2 * ik - 1
       ikq = ikk + 1
       ! 
-      DO ibnd = 1, ibndmax-ibndmin+1
-        ekk = etf_all (ibndmin-1+ibnd, ikk)
+      DO ibnd=1, ibndmax - ibndmin + 1
+        ekk = etf_all(ibndmin - 1 + ibnd, ikk)
         n = 0
         tmp = 0.0_DP
         tmp2 = 0.0_DP
         tmp3 = 0.0_DP
-        DO jbnd = 1, ibndmax-ibndmin+1
-          ekk2 = etf_all (ibndmin-1+jbnd, ikk) 
-          IF ( ABS(ekk2-ekk) < eps6 ) THEN
+        DO jbnd=1, ibndmax - ibndmin + 1
+          ekk2 = etf_all(ibndmin - 1 + jbnd, ikk) 
+          IF (ABS(ekk2 - ekk) < eps6) THEN
             n = n + 1
             tmp =  tmp + sigmar_all (jbnd,ik)
             tmp2 =  tmp2 + sigmai_all (jbnd,ik)
@@ -391,14 +373,14 @@
           ENDIF
           !
         ENDDO ! jbnd
-        sigmar_tmp(ibnd) = tmp / float(n)
+        sigmar_tmp(ibnd) = tmp  / float(n)
         sigmai_tmp(ibnd) = tmp2 / float(n)
-        zi_tmp(ibnd) = tmp3 / float(n)
+        zi_tmp(ibnd)     = tmp3 / float(n)
         !
       ENDDO ! ibnd
-      sigmar_all (:,ik) = sigmar_tmp(:) 
-      sigmai_all (:,ik) = sigmai_tmp(:)
-      zi_all (:,ik)  = zi_tmp(:)
+      sigmar_all(:, ik) = sigmar_tmp(:) 
+      sigmai_all(:, ik) = sigmai_tmp(:)
+      zi_all(:, ik)     = zi_tmp(:)
       ! 
     ENDDO ! nksqtotf
     !  
@@ -407,87 +389,83 @@
     !
     WRITE(stdout,'(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
     !
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       ! Write to file
-      OPEN(unit=linewidth_elself,file='linewidth.elself')
+      OPEN(UNIT=linewidth_elself, FILE='linewidth.elself')
       WRITE(linewidth_elself, '(a)') '# Electron linewidth = 2*Im(Sigma) (meV)'
-      IF ( iverbosity == 3 ) THEN
+      IF (iverbosity == 3) THEN
         WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      imode          Im(Sigma)(meV)'
       ELSE
         WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sigma)(meV)'
       ENDIF
       ! 
-      DO ik = 1, nksqtotf
-         !
-         ikk = 2 * ik - 1
-         ikq = ikk + 1
-         !
-         WRITE(stdout,'(/5x,"ik = ",i7," coord.: ", 3f12.7)') ik, xkf_all(:,ikk)
-         WRITE(stdout,'(5x,a)') repeat('-',67)
-         !
-         DO ibnd = 1, ibndmax-ibndmin+1
-           !
-           ! note that ekk does not depend on q 
-           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
-           !
-           ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
-           zi_all (ibnd,ik) = one / ( one + zi_all (ibnd,ik) )
-           !
-           WRITE(stdout, 102) ibndmin-1+ibnd, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
-                              ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik), one/zi_all(ibnd,ik)-one
-!           WRITE(stdout, 103) ik, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
-!                              ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik)
-           IF ( iverbosity == 3 ) THEN
-             DO imode=1, nmodes
-               WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
-               WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
-               WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
-               WRITE(linewidth_elself,'(i9,2x)',advance='no') imode
-               WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_mode(ibnd,imode,ik)
-             ENDDO
-           ELSE
-             WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
-             WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
-             WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
-             WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_all(ibnd,ik)
-           ENDIF
-           !
-         ENDDO
-         WRITE(stdout,'(5x,a/)') repeat('-',67)
-         !
-      ENDDO
-    ENDIF
-    !
-    DO ibnd = 1, ibndmax-ibndmin+1
-       !
-       DO ik = 1, nksqtotf
-          !
-          ikk = 2 * ik - 1
-          ikq = ikk + 1
+      DO ik=1, nksqtotf
+        !
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
+        !
+        WRITE(stdout,'(/5x,"ik = ",i7," coord.: ", 3f12.7)') ik, xkf_all(:,ikk)
+        WRITE(stdout,'(5x,a)') repeat('-',67)
+        !
+        DO ibnd=1, ibndmax - ibndmin + 1
           !
           ! note that ekk does not depend on q 
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
           !
           ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
-          !zi_all (ibnd,ik) = one / ( one + zi_all (ibnd,ik) )
+          zi_all (ibnd,ik) = one / ( one + zi_all (ibnd,ik) )
           !
-          WRITE(stdout,'(2i9,5f12.4)') ik, ibndmin-1+ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd,ik), &
-                                       ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik),  one/zi_all(ibnd,ik)-one
-          ! 
-       ENDDO
-       !
-       WRITE(stdout,'(a)') '  '
-       !
+          WRITE(stdout, 102) ibndmin-1+ibnd, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
+                             ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik), one/zi_all(ibnd,ik)-one
+!          WRITE(stdout, 103) ik, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
+!                             ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik)
+          IF ( iverbosity == 3 ) THEN
+            DO imode=1, nmodes
+              WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
+              WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
+              WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
+              WRITE(linewidth_elself,'(i9,2x)',advance='no') imode
+              WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_mode(ibnd,imode,ik)
+            ENDDO
+          ELSE
+            WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
+            WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
+            WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
+            WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_all(ibnd,ik)
+          ENDIF
+          !
+        ENDDO
+        WRITE(stdout,'(5x,a/)') repeat('-',67)
+        !
+      ENDDO
+    ENDIF
+    !
+    DO ibnd=1, ibndmax - ibndmin + 1
+      !
+      DO ik=1, nksqtotf
+        !
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
+        !
+        ! note that ekk does not depend on q 
+        ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
+        !
+        ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
+        !zi_all (ibnd,ik) = one / ( one + zi_all (ibnd,ik) )
+        !
+        WRITE(stdout,'(2i9,5f12.4)') ik, ibndmin-1+ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd,ik), &
+                                     ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik),  one/zi_all(ibnd,ik)-one
+        ! 
+      ENDDO
+      !
+      WRITE(stdout,'(a)') '  '
+      !
     ENDDO
     !
     CLOSE(linewidth_elself)
     !
-    IF ( ALLOCATED(xkf_all) )      DEALLOCATE( xkf_all )
-    IF ( ALLOCATED(etf_all) )      DEALLOCATE( etf_all )
-    IF ( ALLOCATED(sigmar_all) )   DEALLOCATE( sigmar_all )
-    IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
-    IF ( ALLOCATED(zi_all) )       DEALLOCATE( zi_all )
-    IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
+    DEALLOCATE (xkf_all)
+    DEALLOCATE (etf_all)
     !
   ENDIF 
   !

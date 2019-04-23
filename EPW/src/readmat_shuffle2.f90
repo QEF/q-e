@@ -433,17 +433,17 @@
   ! We still call the above just to make the checks. The content of dynq 
   ! will be re-written just below and NOT read from the dyn from the /save folder
   IF (lifc) THEN
-     !
-     ! build the WS cell corresponding to the force constant grid
-     atws(:,1) = at(:,1)*DBLE(nq1)
-     atws(:,2) = at(:,2)*DBLE(nq2)
-     atws(:,3) = at(:,3)*DBLE(nq3)
-     ! initialize WS r-vectors
-     CALL wsinit(rws,nrwsx,nrws,atws)
-     CALL dynifc2blochc (nmodes, rws, nrws, q(:,1), dynq_tmp)
-     dynq(:,:,iq_first)=dynq_tmp
-     WRITE (stdout,'(5x,a)') "Dyn mat calculated from ifcs"
-     !
+    !
+    ! build the WS cell corresponding to the force constant grid
+    atws(:, 1) = at(:, 1) * DBLE(nq1)
+    atws(:, 2) = at(:, 2) * DBLE(nq2)
+    atws(:, 3) = at(:, 3) * DBLE(nq3)
+    ! initialize WS r-vectors
+    CALL wsinit(rws,nrwsx,nrws,atws)
+    CALL dynifc2blochc (nmodes, rws, nrws, q(:,1), dynq_tmp)
+    dynq(:,:,iq_first)=dynq_tmp
+    WRITE (stdout,'(5x,a)') "Dyn mat calculated from ifcs"
+    !
   ENDIF
   !
   ! Now construct the other dyn matrix for the q in the star using sym. 

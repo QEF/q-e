@@ -34,7 +34,7 @@
   USE pwcom,     ONLY : nelec, ef
   USE klist_epw, ONLY : isk_dummy
   USE elph2,     ONLY : epf17, ibndmax, ibndmin, etf, &
-                        wkf, xqf, nkqf, nkf, wf, a_all, efnew
+                        wkf, xqf, nkqf, nkf, wf, a_all_ph, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, cone, ci, eps8
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_sum
@@ -124,7 +124,7 @@
   !qsquared = (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2) * tpiba2
   !epsTF =  (qTF**2 + qsquared) / (qTF**2/eps0 * sin (sqrt(qsquared)*RTF)/(sqrt(qsquared)*RTF)+qsquared)
   !
-  IF ( iqq == 1 ) THEN 
+  IF (iqq == 1) THEN 
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")') 
     WRITE(stdout,'(5x,a/)') repeat('=',67)
@@ -282,11 +282,9 @@
 #endif
   !
   WRITE(stdout,'(5x,a)')
-  IF (.not. ALLOCATED (a_all)) ALLOCATE ( a_all(nw_specfun, totq) )
-  a_all(:,iqq) = zero
   !
-  IF (iqq == 1 ) THEN
-    IF (mpime.eq.ionode_id) THEN
+  IF (iqq == 1) THEN
+    IF (mpime == ionode_id) THEN
       OPEN(unit=iospectral,file='specfun.phon')
       OPEN(unit=iospectral_sup,file='specfun_sup.phon')
       WRITE(iospectral, '(/2x,a)') '#Phonon spectral function (meV)'
@@ -320,11 +318,11 @@
       !      ( ( ww - wq - gammar_all (imode,iq,iw) + gamma0 (imode))**two + (gammai_all(imode,iq,iw) )**two )
       ! SP: From Eq. 16 of PRB 9, 4733 (1974)
       !    Also in Eq.2 of PRL 119, 017001 (2017). 
-      a_all(iw,iqq) = a_all(iw,iqq) + (1.0d0/pi) * ((2*wq)**2) * ABS( gammai_all(iw, imode) ) / &
-            ( ( ww**2 - wq**2 - 2 * wq * ( gammar_all (iw, imode) - gamma0 (imode) ) )**two +&
+      a_all_ph(iw, iqq) = a_all_ph(iw, iqq) + (1.0d0 / pi) * ((2 * wq)**2) * ABS(gammai_all(iw, imode)) / &
+            ( ( ww**2 - wq**2 - 2 * wq * (gammar_all(iw, imode) - gamma0(imode)))**two + &
               (2 * wq * gammai_all(iw, imode) )**two )
       !
-      IF (mpime.eq.ionode_id) THEN
+      IF (mpime == ionode_id) THEN
         WRITE(iospectral_sup,'(2i9,2x,f12.5,2x,f12.5,2x,E22.14,2x,E22.14,2x,E22.14)') iq,&
              imode, ryd2ev * wq, ryd2ev * ww, ryd2mev * gammar_all(iw, imode), ryd2mev * gamma0(imode),&
              ryd2mev * gammai_all(iw, imode)
@@ -332,8 +330,8 @@
       !
     ENDDO 
     !
-    IF (mpime.eq.ionode_id) THEN 
-      WRITE(iospectral,'(2x,i7,2x,f12.5,2x,E22.14)') iq, ryd2ev * ww, a_all(iw,iqq) / ryd2mev ! print to file 
+    IF (mpime == ionode_id) THEN 
+      WRITE(iospectral,'(2x,i7,2x,f12.5,2x,E22.14)') iq, ryd2ev * ww, a_all_ph(iw, iqq) / ryd2mev ! print to file 
     ENDIF
     !
   ENDDO

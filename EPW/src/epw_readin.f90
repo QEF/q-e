@@ -516,6 +516,8 @@
 !       &' tphases requires fildvscf0', 1)
   IF (epbread .and. epbwrite) CALL errore ('epw_readin', &
        &' epbread cannot be used with epbwrite', 1)
+  IF (epbread .and. epwread) CALL errore ('epw_readin', &
+       &' epbread cannot be used with epwread', 1)
   IF (degaussw*4.d0 > fsthick) CALL errore ('epw_readin', &
        &' degaussw too close to fsthick', 1)
   IF ( nbndskip .lt. 0) CALL errore('epw_readin', &

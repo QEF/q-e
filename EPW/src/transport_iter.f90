@@ -17,8 +17,8 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE ibte( nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, &
-                     sparse_q, sparse_k, sparse_i, sparse_j, sparse_t ) 
+    SUBROUTINE ibte (nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, &
+                     sparse_q, sparse_k, sparse_i, sparse_j, sparse_t) 
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine computes the scattering rate with the iterative BTE
@@ -191,8 +191,8 @@
    ! print*,'allocated s_BZtoIBZ_full',ALLOCATED(s_BZtoIBZ_full)
     ! Deal with symmetries
     IF (mp_mesh_k) THEN
-      ALLOCATE(ixkqf_tr(nind), STAT=ierr)
-      ALLOCATE(s_BZtoIBZ_full(3,3,nind), STAT=ierr)
+      ALLOCATE (ixkqf_tr(nind), STAT=ierr)
+      ALLOCATE (s_BZtoIBZ_full(3, 3, nind), STAT=ierr)
       ! For a given k-point in the IBZ gives the k-point index
       ! of all the k-point in the full BZ that are connected to the current 
       ! one by symmetry. nrot is the max number of symmetry 
@@ -204,7 +204,7 @@
       BZtoIBZ_mat(:,:) = 0 
       nsym(:) = 0
       ! 
-      IF ( mpime .eq. ionode_id ) THEN
+      IF ( mpime == ionode_id ) THEN
         ! 
         CALL set_sym_bl( )
         !
@@ -243,7 +243,7 @@
         ixkqf_tr(ind) = BZtoIBZ(nkq_abs)
       ENDDO
       ! 
-    ENDIF
+    ENDIF ! mp_mesh_k
     !
     ! First computes the SERTA solution as the first step of the IBTE
     F_SERTA(:,:,:,:) = zero
@@ -444,6 +444,12 @@
       ! 
       ! 
     ENDDO ! end of while loop
+    ! 
+    IF ((mp_mesh_k)) THEN
+      DEALLOCATE (ixkqf_tr)
+      DEALLOCATE (s_BZtoIBZ_full)
+    ENDIF
+
     ! 
     RETURN
     !

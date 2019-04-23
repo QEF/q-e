@@ -1393,7 +1393,7 @@
     COMPLEX(KIND=DP), ALLOCATABLE :: epmatwp_mem(:,:,:,:)
     !!  e-p matrix in Wannier basis
     !
-    ALLOCATE (epmatwp_mem( nbnd, nbnd, nrr_k, nmodes))
+    ALLOCATE (epmatwp_mem(nbnd, nbnd, nrr_k, nmodes))
     ! 
     !----------------------------------------------------------
     !  Fourier transform to go into Wannier basis
@@ -1458,7 +1458,7 @@
     !
     CALL cryst_to_cart (nq, xk, bg, 1)
     !
-    IF ( ALLOCATED (epmatwp_mem) ) DEALLOCATE (epmatwp_mem)
+    DEALLOCATE (epmatwp_mem)
     !
     END SUBROUTINE ephbloch2wanp_mem
     ! 

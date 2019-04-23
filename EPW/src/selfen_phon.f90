@@ -166,15 +166,6 @@
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
     !
-    IF ( .not. ALLOCATED (lambda_all) )   ALLOCATE( lambda_all  (nmodes, totq, nsmear) )
-    IF ( .not. ALLOCATED (lambda_v_all) ) ALLOCATE( lambda_v_all(nmodes, totq, nsmear) )
-    lambda_all(:,:,:)   = zero
-    lambda_v_all(:,:,:) = zero
-    IF ( .not. ALLOCATED (gamma_all) )    ALLOCATE( gamma_all  (nmodes, totq, nsmear) )
-    IF ( .not. ALLOCATED (gamma_v_all) )  ALLOCATE( gamma_v_all(nmodes, totq, nsmear) )
-    gamma_all(:,:,:)   = zero
-    gamma_v_all(:,:,:) = zero
-    !
   ENDIF
   !
   DO ismear = 1, nsmear
@@ -271,51 +262,51 @@
       !ENDIF         
       !
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+      IF ((MINVAL(ABS(etf (:, ikk) - ef) ) < fsthick) .AND. &
+          (MINVAL(ABS(etf (:, ikq) - ef) ) < fsthick)) THEN
         !
         fermicount = fermicount + 1
-        DO imode = 1, nmodes
+        DO imode=1, nmodes
           !
           ! the phonon frequency
-          wq = wf (imode, iq)
+          wq = wf(imode, iq)
           !
           ! SP : We should avoid branching statements (if statements) in
           !      innerloops. Therefore we do it here.
           inv_wq =  1.0/(two * wq)
           ! the coupling from Gamma acoustic phonons is negligible
-          IF ( wq .gt. eps_acustic ) THEN
+          IF (wq > eps_acustic) THEN
             g2_tmp = 1.0
           ELSE
             g2_tmp = 0.0
           ENDIF   
           !
-          DO ibnd = 1, ibndmax-ibndmin+1
+          DO ibnd=1, ibndmax-ibndmin+1
             !
             !  the fermi occupation for k
-            ekk = etf (ibndmin-1+ibnd, ikk) - ef0
+            ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
             IF (delta_approx) THEN
-              w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
+              w0g1 = w0gauss( ekk / degaussw0, 0) / degaussw0
             ELSE
-              wgkk = wgauss( -ekk*inv_eptemp0, -99)
+              wgkk = wgauss(-ekk*inv_eptemp0, -99)
             ENDIF
             !
-            DO jbnd = 1, ibndmax-ibndmin+1
+            DO jbnd=1, ibndmax-ibndmin+1
               !
               !  the fermi occupation for k+q
-              ekq = etf (ibndmin-1+jbnd, ikq) - ef0
+              ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
               !
               ! here we take into account the zero-point sqrt(hbar/2M\omega)
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
-              IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-                 .OR. abs(xqf (3, iq))> eps8 )) THEN              
+              IF (shortrange .AND. (ABS(xqf(1, iq)) > eps8 .OR. ABS(xqf(2, iq)) > eps8 &
+                 .OR. ABS(xqf(3, iq)) > eps8)) THEN              
                 ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
                 g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) 
               ELSE
-                g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
+                g2 = (ABS(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
               ENDIF
               !
               IF (delta_approx) THEN 

@@ -23,8 +23,8 @@
                             restart, restart_freq, restart_filq, vme, ncarrier
   USE pwcom,         ONLY : ef
   USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
-                            epf17, nkqtotf, inv_tau_all, inv_tau_allcb, &
-                            xqf, zi_allvb, zi_allcb, xkf, wkf, dmef, vmef, nqf
+                            epf17, nkqtotf, &
+                            xqf, xkf, wkf, dmef, vmef, nqf
   USE transportcom,  ONLY : transp_temp, lower_bnd
   USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
                             eps6, eps10, bohr2ang, ang2cm, eps4, eps8
@@ -173,8 +173,6 @@
   !! Temporary array to store the scattering rates
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the zi
-  REAL(KIND=DP), ALLOCATABLE :: inv_tau_all_new (:,:,:)
-  !! New scattering rates to be merged
   REAL(KIND=DP) :: xkf_all(3,nkqtotf/2)
   !! k-points coordinate from all cores 
   REAL(KIND=DP) :: wkf_all(nkqtotf/2)

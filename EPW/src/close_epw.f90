@@ -45,13 +45,6 @@
     INTEGER :: ierr
     !! Error status    
     ! 
-    DEALLOCATE (inv_tau_all)
-    DEALLOCATE (zi_allvb)
-    IF (mp_mesh_k .AND. iterative_bte .AND. epmatkqread) DEALLOCATE (s_BZtoIBZ_full)
-    IF (mp_mesh_k .AND. iterative_bte .AND. epmatkqread) DEALLOCATE (ixkqf_tr)
-    IF (int_mob .AND. carrier) DEALLOCATE (inv_tau_allcb)
-    IF (int_mob .AND. carrier) DEALLOCATE (zi_allcb)
-    ! 
 #if defined(__MPI)
     IF (etf_mem == 1) then
       CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
@@ -113,7 +106,7 @@
     USE control_lr,        ONLY : nbnd_occ
     USE becmod,            ONLY : becp, deallocate_bec_type
     USE elph2,             ONLY : el_ph_mat, epf17, epsi, etf,&
-                                  etq, wf, wkf, wqf, &
+                                  etq, wkf, wqf, &
                                   xkq, zstar, xkf, xqf, epmatwp, eps_rpa
     USE klist_epw,         ONLY : xk_all, xk_loc, xk_cryst, et_all, et_loc, & 
                                   isk_loc, isk_all
@@ -133,18 +126,14 @@
       !  EPW variables ONLY
       !
       IF(ALLOCATED(el_ph_mat)) DEALLOCATE (el_ph_mat)
-      IF(ALLOCATED(epmatwp))   DEALLOCATE (epmatwp)
-      IF(ALLOCATED(epf17))     DEALLOCATE (epf17)
       IF(ALLOCATED(etq))       DEALLOCATE (etq)
       IF(ALLOCATED(etf))       DEALLOCATE (etf)
-      IF(ALLOCATED(wf))        DEALLOCATE (wf)
       IF(ALLOCATED(xkq))       DEALLOCATE (xkq)
       IF(ALLOCATED(xkf))       DEALLOCATE (xkf)
       IF(ALLOCATED(wkf))       DEALLOCATE (wkf)
       IF(ALLOCATED(xqf))       DEALLOCATE (xqf)
       IF(ALLOCATED(wqf))       DEALLOCATE (wqf)
       IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
-      IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa)
       ! 
     ELSE
       !   
@@ -202,11 +191,8 @@
       !  EPW variables
       !
       IF(ALLOCATED(el_ph_mat)) DEALLOCATE (el_ph_mat)    
-      IF(ALLOCATED(epmatwp))   DEALLOCATE (epmatwp)
-      IF(ALLOCATED(epf17))     DEALLOCATE (epf17)    
       IF(ALLOCATED(etq))       DEALLOCATE (etq)    
       IF(ALLOCATED(etf))       DEALLOCATE (etf)    
-      IF(ALLOCATED(wf))        DEALLOCATE (wf)    
       IF(ALLOCATED(xkq))       DEALLOCATE (xkq)    
       IF(ALLOCATED(xkf))       DEALLOCATE (xkf)    
       IF(ALLOCATED(wkf))       DEALLOCATE (wkf)    
@@ -219,7 +205,6 @@
       IF(ALLOCATED(et_loc))    DEALLOCATE (et_loc)    
       IF(ALLOCATED(isk_loc))   DEALLOCATE (isk_loc)    
       IF(ALLOCATED(isk_all))   DEALLOCATE (isk_all)    
-      IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa)
     ENDIF ! epwread .and. .not. epbread 
     !
     END SUBROUTINE deallocate_epw

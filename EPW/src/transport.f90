@@ -144,7 +144,7 @@
       IF (mpime == ionode_id) THEN
         OPEN(unit=iunselecq, file='selecq.fmt', status='old', iostat=ios)
         READ (iunselecq,*) totq
-        ALLOCATE(selecq(totq))
+        ALLOCATE (selecq(totq))
         selecq(:) = 0
         READ (iunselecq,*) nqtot
         READ (iunselecq,*) selecq(:)
@@ -160,7 +160,7 @@
       ENDIF
       !  
     ELSE
-      ALLOCATE(selecq(nqf))
+      ALLOCATE (selecq(nqf))
       selecq(:) = 0 
       etf_loc(:,:)  = zero
       etf_locq(:,:) = zero
@@ -859,13 +859,14 @@
         ! In case we read another q-file, merge the scattering here
         IF (restart_filq .ne. '') THEN
           ! 
-          ALLOCATE( inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
+          ALLOCATE (inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
           inv_tau_all_new(:,:,:) = zero
           ! 
           CALL merge_read( nkqtotf/2, nqtotf_new, inv_tau_all_new ) 
           ! 
           inv_tau_all(:,:,:) = ( inv_tau_all(:,:,:) * totq &
                               + inv_tau_all_new(:,:,:) * nqtotf_new ) / (totq+nqtotf_new)
+          DEALLOCATE (inv_tau_all_new)
           !
           WRITE(stdout, '(a)' ) '     '
           WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ',totq+nqtotf_new,' q-points'
@@ -945,7 +946,7 @@
         !
       ENDDO !nstemp 
       !
-      IF ( ALLOCATED(etf_all) )     DEALLOCATE( etf_all )
+      DEALLOCATE (etf_all)
       ! 
       ! Creation of a restart point at the end
       IF (restart) THEN
@@ -976,7 +977,7 @@
     !-----------------------------------------------------------------------
     !       
     !-----------------------------------------------------------------------
-    SUBROUTINE transport_coeffs (ef0,efcb)
+    SUBROUTINE transport_coeffs (ef0, efcb)
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine computes the transport coefficients
@@ -1144,37 +1145,42 @@
     ! We can read the scattering rate from files. 
     IF ( scatread ) THEN
       conv_factor1 = electron_SI / ( hbar * bohr2ang * Ang2m )
+      Sigma_m(:,:,:) = zero
       !
       ! Compute the Fermi level 
-      DO itemp = 1, nstemp
+      DO itemp=1, nstemp
         ! 
         etemp = transp_temp(itemp)
         ! 
         ! Lets gather the velocities from all pools
 #ifdef __MPI
-        IF ( vme ) THEN 
-          IF ( .not. ALLOCATED(vmef_all) )  ALLOCATE( vmef_all(3,nbndsub,nbndsub,nkqtotf) )
-          vmef_all(:,:,:,:) = czero
-          CALL poolgatherc4 ( 3, nbndsub, nbndsub, nkqtotf, 2*nkf, vmef, vmef_all )
+        IF (vme) THEN 
+          ALLOCATE (vmef_all(3, nbndsub, nbndsub, nkqtotf))
+          vmef_all(:, :, :, :) = czero
+          CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, vmef, vmef_all)
         ELSE
-          IF ( .not. ALLOCATED(dmef_all) )  ALLOCATE( dmef_all(3,nbndsub,nbndsub,nkqtotf) )
-          dmef_all(:,:,:,:) = czero
-          CALL poolgatherc4 ( 3, nbndsub, nbndsub, nkqtotf, 2*nkf, dmef, dmef_all )
+          ALLOCATE (dmef_all(3, nbndsub, nbndsub, nkqtotf))
+          dmef_all(:, :, :, :) = czero
+          CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, dmef, dmef_all)
         ENDIF
-        IF ( .not. ALLOCATED(wkf_all) )  ALLOCATE( wkf_all(nkqtotf) )
+        ALLOCATE (wkf_all(nkqtotf))
         wkf_all(:) = zero
-        CALL poolgather2 ( 1, nkqtotf, 2*nkf, wkf, wkf_all  )
+        CALL poolgather2(1, nkqtotf, 2 * nkf, wkf, wkf_all)
 #else
-        IF ( vme ) THEN
+        IF (vme) THEN
+          ALLOCATE (vmef_all(3, nbndsub, nbndsub, nkqtotf))
           vmef_all = vmef
         ELSE
+          ALLOCATE (dmef_all(3, nbndsub, nbndsub, nkqtotf))
           dmef_all = dmef
         ENDIF
 #endif     
+        ALLOCATE (tdf_sigma_m(3, 3, ibndmax-ibndmin+1, nkqtotf))
+        tdf_sigma_m(:,:,:,:) = zero 
         ! 
         ! In this case, the sum over q has already been done. It should therefore be ok 
         ! to do the mobility in sequential. Each cpu does the same thing below
-        ALLOCATE ( etf_all ( nbndsub, nkqtotf/2 ) )
+        ALLOCATE (etf_all(nbndsub, nkqtotf/2))
         !
         CALL scattering_read(etemp, ef0(itemp), etf_all, inv_tau_all)
         ! 
@@ -1186,14 +1192,8 @@
             WRITE(stdout,'(5x,a/)') repeat('=',67)
           ENDIF
           !      
-          IF ( itemp .eq. 1 ) THEN        
-            IF ( .not. ALLOCATED(tdf_sigma_m) )  ALLOCATE( tdf_sigma_m(3,3,ibndmax-ibndmin+1,nkqtotf) )
-            tdf_sigma_m(:,:,:,:) = zero
-            Sigma_m(:,:,:)   = zero
-          ENDIF
-          !
-          DO ik = 1, nkqtotf/2 
-            ikk = 2 * ik - 1
+          DO ik=1, nkqtotf/2 
+            ikk=2 * ik - 1
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
             IF ( minval ( abs(etf_all (:, ik) - ef ) ) < fsthick ) THEN
               DO ibnd = 1, ibndmax-ibndmin+1
@@ -1265,11 +1265,7 @@
             WRITE(stdout,'(5x,a/)') repeat('=',67)
           ENDIF
           !      
-          IF ( itemp .eq. 1 ) THEN
-            IF ( .not. ALLOCATED(tdf_sigma_m) )  ALLOCATE( tdf_sigma_m(3,3,ibndmax-ibndmin+1,nkqtotf) )
-            tdf_sigma_m(:,:,:,:) = zero
-            Sigma_m(:,:,:)   = zero
-          ENDIF
+          tdf_sigma_m(:,:,:,:) = zero
           !
           DO ik = 1, nkqtotf/2
             ikk = 2 * ik - 1
@@ -1336,6 +1332,13 @@
           !
         ENDIF ! int_mob .OR. (ncarrier > 1E5)
         ! 
+        IF (vme) THEN
+          DEALLOCATE (vmef_all)
+        ELSE
+          DEALLOCATE (dmef_all)
+        ENDIF
+        DEALLOCATE (tdf_sigma_m)
+        DEALLOCATE (etf_all)
       ENDDO ! itemp
       !
     ELSE ! Case without reading the scattering rates from files.
@@ -1516,7 +1519,6 @@
           CALL mp_sum( SigmaZ(:,itemp), world_comm )
           !DBSP
           !write(stdout,*) 'ef0(itemp) ',ef0(itemp)    
-          !write(stdout,*) 'Sigma ',SUM(Sigma(:,itemp))    
           !
         ENDDO ! nstemp
         !
@@ -1830,7 +1832,7 @@
           CALL mp_sum( SigmaZ(:,itemp), world_comm )
           ! 
         ENDDO ! nstemp
-        IF (mpime .eq. meta_ionode_id) THEN
+        IF (mpime == meta_ionode_id) THEN
           filsigma = TRIM(prefix) // '_elcond_e'
           OPEN(iufilsigma, file = filsigma, form = 'formatted')
           WRITE(iufilsigma,'(a)') "# Electrical conductivity in 1/(Ohm * m)"

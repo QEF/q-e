@@ -49,7 +49,7 @@
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
   USE elph2,         ONLY : epmatq, dynq, sumr, et_mb, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
-                            ngk_all, exband
+                            ngk_all, exband, wscache
   USE klist_epw,     ONLY : xk_all, et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, czero
   USE fft_base,      ONLY : dfftp
@@ -299,18 +299,22 @@
   CALL mp_barrier(inter_image_comm)
   !
   ! Do not do symmetry stuff 
-  IF ( epwread .AND. .not. epbread ) THEN
+  IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
     !
     !  allocate dynamical matrix and ep matrix for all q's
     !
-    ALLOCATE( dynq(nmodes, nmodes, nq1*nq2*nq3), &
-              epmatq(nbnd, nbnd, nks, nmodes, nq1*nq2*nq3), &
-              epsi(3,3), zstar(3,3,nat), & 
-              bmat(nbnd, nbnd, nks, nq1*nq2*nq3), &
-              cu(nbnd, nbndsub, nks), cuq(nbnd, nbndsub, nks), & 
-              lwin(nbnd, nks), lwinq(nbnd, nks), exband(nbnd) )
+    ALLOCATE (dynq(nmodes, nmodes, nq1 * nq2 * nq3))
+    ALLOCATE (epmatq(nbnd, nbnd, nks, nmodes, nq1 * nq2 * nq3))
+    ALLOCATE (epsi(3, 3))
+    ALLOCATE (zstar(3, 3, nat))
+    ALLOCATE (bmat(nbnd, nbnd, nks, nq1 * nq2 * nq3))
+    ALLOCATE (cu(nbnd, nbndsub, nks))
+    ALLOCATE (cuq(nbnd, nbndsub, nks)) 
+    ALLOCATE (lwin(nbnd, nks))
+    ALLOCATE (lwinq(nbnd, nks))
+    ALLOCATE (exband(nbnd))
     !
     dynq(:,:,:) = czero
     epmatq(:,:,:,:,:) = czero
@@ -353,7 +357,11 @@
   ! 
   ! CV: if we read the .fmt files we don't need to read the .epb anymore
   !
-  IF (.not. epbread .AND. .not. epwread) THEN
+  IF (.NOT. epbread .AND. .NOT. epwread) THEN
+    IF (lifc) THEN
+      ALLOCATE (wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat, nat))
+      wscache(:,:,:,:,:) = zero      
+    ENDIF
     ! 
     ! In the loop over irr q-point, we need to read the pattern that
     ! corresponds to the dvscf file computed with QE 5.
@@ -678,6 +686,7 @@
        CALL errore('elphon_shuffle_wrap','nqc .ne. nq1*nq2*nq3',nqc)
     wqlist = dble(1) / dble(nqc)
     !
+    IF (lifc) DEALLOCATE (wscache)
   ENDIF
   !
   IF (my_image_id == 0 ) THEN

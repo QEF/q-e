@@ -37,6 +37,7 @@
     eps_rpa(:)               !  screening
   REAL(KIND=DP), ALLOCATABLE ::&
     a_all(:,:),             &!  electronic spectral function du to electron-phonon interaction
+    a_all_ph(:,:),          &!  phononic spectral function du to electron-phonon interaction
     et_ks(:,:),             &!  lda eigenvalues
     et_mb(:,:),             &!  gw eigenvalues
     xkq(:,:),               &!  local k+q grid, coarse (3, nks)
@@ -75,6 +76,7 @@
     ifc(:,:,:,:,:,:,:),     &!  Interatomic force constant in real space
     omegap(:),              &!  Photon energy for phonon-assisted absorption
     epsilon2_abs(:,:,:),    &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening 
+    wscache(:,:,:,:,:),     &!  Use as cache when doing IFC when lifc = .true.
     epsilon2_abs_lorenz(:,:,:) ! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
   REAL(KIND=DP) ::          &!
     efnew,                  &!  Fermi level on the fine grid. Added globaly for efficiency reason 
