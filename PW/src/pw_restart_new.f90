@@ -1019,7 +1019,7 @@ MODULE pw_restart_new
       !
       CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
-                            lxc, locc, lbz, lbs, lheader,        &
+                            lxc, locc, lbz, lbs,                 &
                             lsymm, lefield, ldim, lvalid_input,  &
                             lef, lexx, lesm, lpbc, lalgo
       !
@@ -1053,7 +1053,6 @@ MODULE pw_restart_new
       lef     = .FALSE.
       lexx    = .FALSE.
       lesm    = .FALSE.
-      lheader = .FALSE.
       lpbc    = .FALSE.  
       lalgo   = .FALSE. 
       !
@@ -1097,10 +1096,6 @@ MODULE pw_restart_new
          !
       END SELECT
       !
-      !
-      IF ( lheader ) THEN 
-         CALL readschema_header( gen_info )
-      END IF 
       IF ( ldim ) THEN
          ! 
          CALL readschema_dim(par_info, output_obj%atomic_species, &
@@ -1220,6 +1215,8 @@ MODULE pw_restart_new
     TYPE ( band_structure_type ),INTENT(IN)    :: band_structure 
     ! 
     INTEGER                                    :: npwx_
+    !
+    !
     CALL readschema_cell ( atomic_structure ) 
     ! 
     !---------------------------------------------------------------------
