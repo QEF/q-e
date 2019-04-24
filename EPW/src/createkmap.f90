@@ -457,7 +457,8 @@
     ENDDO
     ig0 = nint( dble(ng0vec) / 2 )
     !
-    IF (.not. ALLOCATED(shift)) ALLOCATE( shift(nkstot) )
+    !IF (.not. ALLOCATED(shift)) ALLOCATE( shift(nkstot) )
+    ALLOCATE (shift(nkstot))
     ! 
     DO ik = 1, nkstot       
       !
@@ -473,7 +474,8 @@
       WRITE(iukgmap,'(3i6)') ik, shift(ik)
       !
     ENDDO
-    IF (ALLOCATED(shift)) DEALLOCATE(shift)
+    !IF (ALLOCATED(shift)) DEALLOCATE(shift)
+    DEALLOCATE (shift)
     !
     g0vec_all_r = dble(g0vec_all)
     ! bring G_0 vectors from crystal to cartesian coordinates
@@ -502,16 +504,16 @@
   !
   !    and computes all the g vectors inside a sphere
   !
-  ALLOCATE( mill_unsorted(3,ngm_save) )
-  ALLOCATE( igsrt(ngm_max) )
-  ALLOCATE( g2l(ngm_max) )
-  ALLOCATE( g2sort_g(ngm_max) )
-  ALLOCATE( ig_l2g(ngm_max) )
-  ALLOCATE( mill(3,ngm_max) )
-  ALLOCATE( jtoi(ngm_max) )
-  ALLOCATE( itoj(ngm_max) )
-  ALLOCATE( g(3,ngm_max) )
-  ALLOCATE( gg(ngm_max) )
+  ALLOCATE (mill_unsorted(3, ngm_save))
+  ALLOCATE (igsrt(ngm_max))
+  ALLOCATE (g2l(ngm_max))
+  ALLOCATE (g2sort_g(ngm_max))
+  ALLOCATE (ig_l2g(ngm_max))
+  ALLOCATE (mill(3, ngm_max))
+  ALLOCATE (jtoi(ngm_max))
+  ALLOCATE (itoj(ngm_max))
+  ALLOCATE (g(3, ngm_max))
+  ALLOCATE (gg(ngm_max))
   !
   !    Set the total number of FFT mesh points and and initial value of gg.
   !    The choice of gcutm is due to the fact that we have to order the
@@ -523,7 +525,7 @@
   !
   ! allocate temporal array
   !
-  ALLOCATE( tt(dfftp%nr3) )
+  ALLOCATE (tt(dfftp%nr3))
   !
   ! max miller indices (same convention as in module stick_set)
   !
@@ -612,12 +614,12 @@
   !
   CALL fft_set_nl( dfftp, at, g, mill )
   !
-  DO i = 1, ngm_g
-     jtoi(i) = igsrt(i)
+  DO i=1, ngm_g
+    jtoi(i) = igsrt(i)
   ENDDO !
   !
-  DO i = 1, ngm_g
-     itoj(jtoi(i)) = i
+  DO i=1, ngm_g
+    itoj(jtoi(i)) = i
   ENDDO
   !
   CALL refold( ngm_g, mill, itoj, jtoi )
@@ -625,7 +627,14 @@
   CALL mp_barrier(inter_pool_comm)
   CALL mp_barrier(inter_image_comm)
   !
-  DEALLOCATE( ig_l2g, mill, mill_unsorted, igsrt, jtoi, itoj, g, gg )
+  DEALLOCATE (ig_l2g)
+  DEALLOCATE (mill)
+  DEALLOCATE (mill_unsorted)
+  DEALLOCATE (igsrt)
+  DEALLOCATE (jtoi)
+  DEALLOCATE (itoj)
+  DEALLOCATE (g)
+  DEALLOCATE (gg)
   !
   RETURN
   !
@@ -633,7 +642,7 @@
   !-------------------------------------------------------------------------
   ! 
   !-----------------------------------------------------------------------
-  SUBROUTINE refold( ngm_g, mill_g, itoj, jtoi )
+  SUBROUTINE refold (ngm_g, mill_g, itoj, jtoi)
   !----------------------------------------------------------------------
   !
   !   Map the indices of G+G_0 into those of G 
@@ -682,8 +691,8 @@
   !
   LOGICAL :: tfound
   !
-  ALLOCATE( gmap(ngm_g,ng0vec) )
-  gmap(:,:) = 0
+  ALLOCATE (gmap(ngm_g, ng0vec))
+  gmap(:, :) = 0
   guess_skip = 0
   !
   !  Loop on the inequivalent G_0 vectors
@@ -746,10 +755,10 @@
       ENDDO
       !
       IF (tfound) THEN
-        gmap(ig1_use,ig0) = ig2_use
+        gmap(ig1_use, ig0) = ig2_use
         guess_skip = jtoi(ig2_use) - jtoi(ig1_use)
       ELSE
-        gmap(ig1_use,ig0) = 0
+        gmap(ig1_use, ig0) = 0
         notfound = notfound + 1
       ENDIF
       !

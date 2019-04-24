@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------------
-  SUBROUTINE readgmap( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd ) 
+  SUBROUTINE readgmap (nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd) 
   !--------------------------------------------------------------
   !!
   !!  read map of G vectors G -> G-G_0 for a given q point
@@ -56,8 +56,6 @@
   !! Integer variable for I/O control
   !
   REAL(DP) :: tmp
-  !
-  ALLOCATE( shift(nkstot) )
   !
   !  OBSOLETE: now we read directly the igkq to get the proper ngxx
   !
@@ -124,7 +122,7 @@
   !
   CALL mp_bcast( ng0vec, meta_ionode_id, world_comm )
   !
-  ALLOCATE( gmap(ngxx * ng0vec) )
+  ALLOCATE (gmap(ngxx * ng0vec))
   !
   IF (meta_ionode) THEN
      !
@@ -144,8 +142,8 @@
   !
   ! first node broadcasts everything to all nodes
   !
-  CALL mp_bcast( g0vec_all_r, meta_ionode_id, world_comm )
-  CALL mp_bcast( shift, meta_ionode_id, world_comm )
-  CALL mp_bcast( gmap, meta_ionode_id, world_comm )
+  CALL mp_bcast(g0vec_all_r, meta_ionode_id, world_comm)
+  CALL mp_bcast(shift, meta_ionode_id, world_comm)
+  CALL mp_bcast(gmap, meta_ionode_id, world_comm)
   !
   END SUBROUTINE readgmap

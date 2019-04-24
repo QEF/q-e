@@ -99,16 +99,37 @@
   !-----------------------------------------------------------------------
   !! Routine to de-allocate Wannier related matrices. 
   !
-  USE wannierEPW
+  USE wannierEPW, ONLY : atcart, atsym, kpb, g_kpb, center_w, alpha_w, &
+                         l_w, mr_w, r_w, zaxis, xaxis, excluded_band,  &
+                         m_mat, u_mat, u_mat_opt, a_mat, eigval,       &
+                         lwindow, gf, ig_, zerophase, wann_centers,    &
+                         wann_spreads
   !
   IMPLICIT NONE
   ! 
-  IF (ALLOCATED(m_mat) )     DEALLOCATE(m_mat)
-  IF (ALLOCATED(u_mat) )     DEALLOCATE(u_mat)
-  IF (ALLOCATED(u_mat_opt) ) DEALLOCATE(u_mat_opt)
-  IF (ALLOCATED(a_mat) )     DEALLOCATE(a_mat)
-  IF (ALLOCATED(eigval) )    DEALLOCATE(eigval)
-  IF (ALLOCATED(lwindow) )   DEALLOCATE(lwindow)
+  DEALLOCATE (atcart)
+  DEALLOCATE (atsym)
+  DEALLOCATE (kpb)
+  DEALLOCATE (g_kpb)
+  DEALLOCATE (center_w)
+  DEALLOCATE (alpha_w)
+  DEALLOCATE (l_w)
+  DEALLOCATE (mr_w)
+  DEALLOCATE (r_w)
+  DEALLOCATE (zaxis)
+  DEALLOCATE (xaxis)
+  DEALLOCATE (excluded_band)
+  DEALLOCATE (m_mat)
+  DEALLOCATE (u_mat)
+  DEALLOCATE (u_mat_opt)
+  DEALLOCATE (a_mat)
+  DEALLOCATE (eigval)
+  DEALLOCATE (lwindow)
+  DEALLOCATE (gf) 
+  DEALLOCATE (ig_)
+  DEALLOCATE (zerophase)
+  DEALLOCATE (wann_centers)
+  DEALLOCATE (wann_spreads)
   !
   END SUBROUTINE lib_dealloc
   !
@@ -176,7 +197,7 @@
   !! Counter on polarizations
   INTEGER  :: idum
   !! Dummy index for reading nnkp file
-  INTEGER, ALLOCATABLE :: ig_check(:,:)
+  INTEGER, ALLOCATABLE :: ig_check(:, :)
   !! Temporary index on G_k+b vectors
   REAL(DP) :: xnorm
   !! Norm of xaxis
@@ -266,21 +287,28 @@
   !    exclude_bands       exclude_bands
   !    atcart              atoms_cart
   !    atsym               atom_symbols
-
-  ALLOCATE( atcart(3,nat), atsym(nat) )
-  ALLOCATE( kpb(iknum,num_nnmax), g_kpb(3,iknum,num_nnmax) )
-  ALLOCATE( center_w(3,nbnd), alpha_w(nbnd), l_w(nbnd), &
-            mr_w(nbnd), r_w(nbnd), zaxis(3,nbnd), xaxis(3,nbnd) )
-  ALLOCATE( excluded_band(nbnd) )
-
+  ! 
+  ALLOCATE (atcart(3, nat))
+  ALLOCATE (atsym(nat))
+  ALLOCATE (kpb(iknum, num_nnmax))
+  ALLOCATE (g_kpb(3, iknum, num_nnmax))
+  ALLOCATE (center_w(3, nbnd))
+  ALLOCATE (alpha_w(nbnd))
+  ALLOCATE (l_w(nbnd))
+  ALLOCATE (mr_w(nbnd))
+  ALLOCATE (r_w(nbnd))
+  ALLOCATE (zaxis(3, nbnd))
+  ALLOCATE (xaxis(3, nbnd))
+  ALLOCATE (excluded_band(nbnd))
+  ! 
   ! real lattice (Cartesians, Angstrom)
-  rlatt(:,:) = transpose(at(:,:)) * alat * bohr
+  rlatt(:, :) = TRANSPOSE(at(:, :)) * alat * bohr
   ! reciprocal lattice (Cartesians, Angstrom)
-  glatt(:,:) = transpose(bg(:,:)) * tpi / ( alat * bohr )
+  glatt(:, :) = TRANSPOSE(bg(:, :)) * tpi / ( alat * bohr )
   ! atom coordinates in Cartesian coords and Angstrom units
-  atcart(:,:) = tau(:,:) * bohr * alat
+  atcart(:, :) = tau(:, :) * bohr * alat
   ! atom symbols
-  DO ia = 1, nat
+  DO ia=1, nat
      type = ityp(ia)
      atsym(ia) = atm(type)
   ENDDO
@@ -389,11 +417,13 @@
   ENDIF
   CALL mp_bcast(n_proj, meta_ionode_id, world_comm)
   ! 
-  ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
-  IF (noncolin) ALLOCATE( spin_eig(n_proj), spin_qaxis(3,n_proj) )
+  ALLOCATE (gf(npwx, n_proj))
+  ALLOCATE (csph(16, n_proj))
+  IF (noncolin) ALLOCATE (spin_eig(n_proj))
+  IF (noncolin) ALLOCATE (spin_qaxis(3, n_proj))
   ! 
   IF (meta_ionode) THEN   ! read from ionode only
-    DO iw = 1, n_proj
+    DO iw=1, n_proj
       READ(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
       READ(iun_nnkp,*) (zaxis(i,iw), i=1,3), (xaxis(i,iw), i=1,3), alpha_w(iw)
       xnorm = sqrt( xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + &
@@ -451,8 +481,9 @@
   !
   nnbx = 0
   nnbx = max( nnbx, nnb )
-  ALLOCATE( ig_(iknum,nnbx), ig_check(iknum,nnbx) )
-  ALLOCATE( zerophase(iknum,nnb) )
+  ALLOCATE (ig_(iknum, nnbx))
+  ALLOCATE (ig_check(iknum, nnbx))
+  ALLOCATE (zerophase(iknum, nnb))
   zerophase = .false.
   !
   ! Read data about neighbours
@@ -499,7 +530,7 @@
                     ' g_kpb vector is not in the list of Gs', 100*ik+ib )
     ENDDO
   ENDDO
-  DEALLOCATE(ig_check)
+  DEALLOCATE (ig_check)
   !
   WRITE(stdout,*) '     - All neighbours are found '
   WRITE(stdout,*)
@@ -601,11 +632,11 @@
   CHARACTER (len=80) :: line
   !! Temporary character
   !
-  ALLOCATE(u_mat(n_wannier,n_wannier,iknum))
-  ALLOCATE(u_mat_opt(num_bands,n_wannier,iknum))
-  ALLOCATE(lwindow(num_bands,iknum))
-  ALLOCATE(wann_centers(3,n_wannier))
-  ALLOCATE(wann_spreads(n_wannier))
+  ALLOCATE (u_mat(n_wannier, n_wannier, iknum))
+  ALLOCATE (u_mat_opt(num_bands, n_wannier, iknum))
+  ALLOCATE (lwindow(num_bands, iknum))
+  ALLOCATE (wann_centers(3, n_wannier))
+  ALLOCATE (wann_spreads(n_wannier))
   !
   u_mat = czero
   u_mat_opt = czero
@@ -913,10 +944,10 @@
     ENDIF
   ENDDO  ! k-points
   !
-  DEALLOCATE(sgf)
-  DEALLOCATE(csph)
-  DEALLOCATE(gf_spinor) 
-  DEALLOCATE(sgf_spinor)
+  DEALLOCATE (sgf)
+  DEALLOCATE (csph)
+  DEALLOCATE (gf_spinor) 
+  DEALLOCATE (sgf_spinor)
   !
   IF (any_uspp) CALL deallocate_bec_type( becp )
   !
@@ -1257,7 +1288,7 @@
       CALL gk_sort( xk_all(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin )
       !
       ! compute the phase
-      IF (.not.zerophase(ik_g,ib)) THEN
+      IF (.NOT. zerophase(ik_g,ib)) THEN
         phase(:) = czero
         IF ( ig_(ik_g,ib)>0 ) phase( dffts%nl(ig_(ik_g,ib)) ) = cone
         CALL invfft('Wave', phase, dffts)
@@ -1346,7 +1377,7 @@
             istart = (ipol - 1) * npwx + 1
             iend = istart + npw - 1
             psic_nc( dffts%nl(igk_k(1:npw,ik)), ipol ) = evc(istart:iend,m)
-            IF (.not.zerophase(ik_g,ib)) THEN
+            IF (.NOT. zerophase(ik_g,ib)) THEN
               CALL invfft('Wave', psic_nc(:,ipol), dffts)
               psic_nc( 1:dffts%nnr, ipol) = psic_nc( 1:dffts%nnr, ipol ) * &
                                             phase(1:dffts%nnr)
@@ -1538,7 +1569,7 @@
   IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
              'noncolin calculation not implimented with USP',1)
   !
-  ALLOCATE( dmec(3,nbnd,nbnd,nks) )
+  ALLOCATE (dmec(3, nbnd, nbnd, nks))
   !
   ! initialize
   dmec = czero
@@ -1607,7 +1638,7 @@
       ENDDO
     ENDDO
     ! need to divide by 2pi/a to fix the units
-    dmec(:,:,:,ik) = dipole_aux(:,:,:) * tpiba
+    dmec(:, :, :, ik) = dipole_aux(:, :, :) * tpiba
     !
   ENDDO  ! k-points
   !

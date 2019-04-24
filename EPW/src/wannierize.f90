@@ -47,7 +47,7 @@
   IF ( nbnd .lt. n_wannier ) &
     CALL  errore('wannierize','Must have as many or more bands than Wannier functions',1) 
   !
-  ALLOCATE( kpt_latt(3,num_kpts) )
+  ALLOCATE (kpt_latt(3, num_kpts) )
   !
   WRITE(stdout, '(5x,a)') repeat("-",67)
   WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nk1, " x ", nk2, " x ", nk3 , " electronic grid"
@@ -67,6 +67,7 @@
   ! project the Wannier functions onto energy space
   !
 !  CALL proj_w90
+  DEALLOCATE (kpt_latt)
   !
   WRITE(stdout, '(5x,a)') repeat("-",67)
   CALL print_clock( 'WANNIER' )

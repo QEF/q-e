@@ -334,14 +334,14 @@
       ! 
     ENDIF
     CALL mp_bcast (nat      , ionode_id, world_comm)
-    IF (mpime /= ionode_id) ALLOCATE( ityp( nat ) )
+    IF (mpime /= ionode_id) ALLOCATE (ityp(nat))
     CALL mp_bcast (nmodes   , ionode_id, world_comm)
     CALL mp_bcast (nelec    , ionode_id, world_comm)
     CALL mp_bcast (at       , ionode_id, world_comm)
     CALL mp_bcast (bg       , ionode_id, world_comm)
     CALL mp_bcast (omega    , ionode_id, world_comm)
     CALL mp_bcast (alat     , ionode_id, world_comm)
-    IF (mpime /= ionode_id) ALLOCATE( tau( 3, nat ) )
+    IF (mpime /= ionode_id) ALLOCATE (tau(3,nat) )
     CALL mp_bcast (tau      , ionode_id, world_comm)
     CALL mp_bcast (amass    , ionode_id, world_comm)
     CALL mp_bcast (ityp     , ionode_id, world_comm)
@@ -554,6 +554,7 @@
     !
     DEALLOCATE (epmatq)
     DEALLOCATE (dynq)
+    DEALLOCATE (dmec)
     IF (etf_mem == 0) THEN
       DEALLOCATE (epmatwe)
     ELSE
@@ -566,6 +567,7 @@
   DEALLOCATE (lwin)
   DEALLOCATE (lwinq)
   DEALLOCATE (exband)
+  DEALLOCATE (tau)
   ! 
   IF (etf_mem == 1) THEN
     CLOSE(iunepmatwe, status = 'delete')
@@ -1170,7 +1172,7 @@
            !
            IF (eig_read) THEN
              ! Use for indirect absorption - Kyle and Emmanouil Kioupakis --------------------------------
-             DO icounter= 1, 6
+             DO icounter=1, 6
                CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
                CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
                IF (use_ws) THEN
@@ -1205,37 +1207,37 @@
                   (nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), etf(:, ikq), etf_ks(:, ikq), chw_ks, cfacq, dims)
              ! 
              ! To Satisfy Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
-             DO ibnd = 1, nbnd
-               DO jbnd = 1, nbnd
+             DO ibnd=1, nbnd
+               DO jbnd=1, nbnd
                  IF (abs(etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2)) > eps6) THEN
-                    vmef(1,ibnd,jbnd,ikk) = vmef(1,ibnd,jbnd,ikk) * &
-                         ( etfd(ibnd,ikk,1)    - etfd(jbnd,ikk,2) )/ &
-                         ( etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2))
+                   vmef(1,ibnd,jbnd,ikk) = vmef(1,ibnd,jbnd,ikk) * &
+                        ( etfd(ibnd,ikk,1)    - etfd(jbnd,ikk,2) )/ &
+                        ( etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2))
                  ENDIF
                  IF (abs(etfd_ks(ibnd,ikk,3) - etfd_ks(jbnd,ikk,4)) > eps6) THEN
-                    vmef(2,ibnd,jbnd,ikk) = vmef(2,ibnd,jbnd,ikk) * &
-                         ( etfd(ibnd,ikk,3)    - etfd(jbnd,ikk,4) )/ &
-                         ( etfd_ks(ibnd,ikk,3) - etfd_ks(jbnd,ikk,4))
+                   vmef(2,ibnd,jbnd,ikk) = vmef(2,ibnd,jbnd,ikk) * &
+                        ( etfd(ibnd,ikk,3)    - etfd(jbnd,ikk,4) )/ &
+                        ( etfd_ks(ibnd,ikk,3) - etfd_ks(jbnd,ikk,4))
                  ENDIF
                  IF (abs(etfd_ks(ibnd,ikk,5) - etfd_ks(jbnd,ikk,6)) > eps6) THEN
-                    vmef(3,ibnd,jbnd,ikk) = vmef(3,ibnd,jbnd,ikk) * &
-                         ( etfd(ibnd,ikk,5)    - etfd(jbnd,ikk,6) )/ &
-                         ( etfd_ks(ibnd,ikk,5) - etfd_ks(jbnd,ikk,6))
+                   vmef(3,ibnd,jbnd,ikk) = vmef(3,ibnd,jbnd,ikk) * &
+                        ( etfd(ibnd,ikk,5)    - etfd(jbnd,ikk,6) )/ &
+                        ( etfd_ks(ibnd,ikk,5) - etfd_ks(jbnd,ikk,6))
                  ENDIF
                  IF (abs(etfd_ks(ibnd,ikq,1) - etfd_ks(jbnd,ikq,2)) > eps6) THEN
-                    vmef(1,ibnd,jbnd,ikq) = vmef(1,ibnd,jbnd,ikq) * &
-                         ( etfd(ibnd,ikq,1)    - etfd(jbnd,ikq,2) )/ &
-                         ( etfd_ks(ibnd,ikq,1) - etfd_ks(jbnd,ikq,2))
+                   vmef(1,ibnd,jbnd,ikq) = vmef(1,ibnd,jbnd,ikq) * &
+                        ( etfd(ibnd,ikq,1)    - etfd(jbnd,ikq,2) )/ &
+                        ( etfd_ks(ibnd,ikq,1) - etfd_ks(jbnd,ikq,2))
                  ENDIF
-                 IF (abs(etfd_ks(ibnd,ikq,3) - etfd_ks(jbnd,ikq,4)) > eps6) THEN
-                    vmef(2,ibnd,jbnd,ikq) = vmef(2,ibnd,jbnd,ikq) * &
-                         ( etfd(ibnd,ikq,3)    - etfd(jbnd,ikq,4) )/ &
-                         ( etfd_ks(ibnd,ikq,3) - etfd_ks(jbnd,ikq,4))
+                 IF (ABS(etfd_ks(ibnd,ikq,3) - etfd_ks(jbnd,ikq,4)) > eps6) THEN
+                   vmef(2,ibnd,jbnd,ikq) = vmef(2,ibnd,jbnd,ikq) * &
+                        ( etfd(ibnd,ikq,3)    - etfd(jbnd,ikq,4) )/ &
+                        ( etfd_ks(ibnd,ikq,3) - etfd_ks(jbnd,ikq,4))
                  ENDIF
-                 IF (abs(etfd_ks(ibnd,ikq,5) - etfd_ks(jbnd,ikq,6)) > eps6) THEN
-                    vmef(3,ibnd,jbnd,ikq) = vmef(3,ibnd,jbnd,ikq) * &
-                         ( etfd(ibnd,ikq,5)    - etfd(jbnd,ikq,6) )/ &
-                         ( etfd_ks(ibnd,ikq,5) - etfd_ks(jbnd,ikq,6))
+                 IF (ABS(etfd_ks(ibnd, ikq, 5) - etfd_ks(jbnd, ikq, 6)) > eps6) THEN
+                   vmef(3, ibnd, jbnd, ikq) = vmef(3, ibnd, jbnd, ikq) * &
+                        (etfd(ibnd, ikq, 5)    - etfd(jbnd, ikq, 6) )/ &
+                        (etfd_ks(ibnd, ikq, 5) - etfd_ks(jbnd, ikq, 6))
                  ENDIF
                ENDDO
              ENDDO
@@ -1543,6 +1545,7 @@
     ! 
     ! Now deallocate 
     DEALLOCATE (epf17)
+    DEALLOCATE (selecq)
     IF (scattering .AND. .NOT. iterative_bte) THEN
       DEALLOCATE (inv_tau_all)
       DEALLOCATE (zi_allvb)
@@ -1606,6 +1609,7 @@
     DEALLOCATE (dmef)
   ENDIF
   ! 
+  DEALLOCATE (ityp)
   DEALLOCATE (epmatwp)
   DEALLOCATE (chw)
   DEALLOCATE (chw_ks)
@@ -1640,6 +1644,7 @@
   DEALLOCATE (wslen_g)
   DEALLOCATE (etf_all)
   DEALLOCATE (transp_temp)
+  DEALLOCATE (et_ks)
   !
   CALL stop_clock ( 'ephwann' )
   !

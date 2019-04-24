@@ -47,9 +47,9 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
-  USE elph2,         ONLY : epmatq, dynq, sumr, et_mb, et_ks, &
+  USE elph2,         ONLY : epmatq, dynq, sumr, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
-                            ngk_all, exband, wscache
+                            ngk_all, exband, wscache, umat, umat_all
   USE klist_epw,     ONLY : xk_all, et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, czero
   USE fft_base,      ONLY : dfftp
@@ -197,11 +197,12 @@
   !
   IF (meta_ionode) READ(5,*) nqc_irr
   CALL mp_bcast(nqc_irr, meta_ionode_id, world_comm)
-  ALLOCATE( xqc_irr(3,nqc_irr) )
-  ALLOCATE( xqc(3,nq1*nq2*nq3), wqlist(nq1*nq2*nq3) )
-  xqc_irr(:,:) = zero
-  xqc(:,:) = zero
-  wqlist(:) = zero
+  ALLOCATE (xqc_irr(3, nqc_irr))
+  ALLOCATE (xqc(3, nq1 * nq2 * nq3))
+  ALLOCATE (wqlist(nq1 * nq2 * nq3))
+  xqc_irr(:, :) = zero
+  xqc(:, :)     = zero
+  wqlist(:)     = zero
   !  
   IF (meta_ionode) THEN
     DO iq_irr = 1, nqc_irr
@@ -216,30 +217,28 @@
   !
   maxvalue = nqxq
   DO iq_irr = 1, nqc_irr
-    qnorm_tmp = sqrt( xqc_irr(1,iq_irr)**2 + xqc_irr(2,iq_irr)**2 + &
-                      xqc_irr(3,iq_irr)**2)
-    nqxq_tmp = INT( ( (sqrt(gcutm) + qnorm_tmp) / dq + 4) * cell_factor )
-    IF (nqxq_tmp .gt. maxvalue)  maxvalue = nqxq_tmp
+    qnorm_tmp = SQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + &
+                     xqc_irr(3, iq_irr)**2)
+    nqxq_tmp = INT(((SQRT(gcutm) + qnorm_tmp) / dq + 4) * cell_factor)
+    IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
   ENDDO
-  IF (maxvalue .gt. nqxq) THEN
+  IF (maxvalue > nqxq) THEN
     IF (ALLOCATED(qrad)) DEALLOCATE(qrad)
-    ALLOCATE( qrad(maxvalue, nbetam*(nbetam+1)/2, lmaxq, nsp) )
+    ALLOCATE (qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp))
   ENDIF
   ! 
   ! do not perform the check if restart
-  IF ( epwread .and. .not. epbread ) THEN
+  IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
-    IF (nkstot .ne. nk1*nk2*nk3 ) &
+    IF (nkstot /= nk1 * nk2 * nk3) &
        CALL errore('elphon_shuffle_wrap','nscf run inconsistent with epw input',1)  
   ENDIF
   !
   ! Read in external electronic eigenvalues. e.g. GW 
   !
-  IF ( .not. ALLOCATED(et_ks) ) ALLOCATE(et_ks(nbnd,nks))
-  IF ( .not. ALLOCATED(et_mb) ) ALLOCATE(et_mb(nbnd,nks))
-  et_ks(:,:) = zero
-  et_mb(:,:) = zero
+  ALLOCATE (et_ks(nbnd, nks))
+  et_ks(:, :) = zero
   IF (eig_read) THEN
     IF (meta_ionode) THEN
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
@@ -248,7 +247,7 @@
       OPEN(iuqpeig, file=tempfile, form='formatted', action='read', iostat=ios)
       IF (ios /= 0) CALL errore('elphon_shuffle_wrap','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
-      DO ik = 1, nkstot
+      DO ik=1, nkstot
         ! We do not save the k-point for the moment ==> should be read and
         ! tested against the current one  
         READ(iuqpeig,'(a)') line
@@ -263,7 +262,6 @@
     CALL fkbounds(nkstot, ik_start, ik_stop)
     et_ks(:,:)  = et_loc(:,:)
     et_loc(:,:) = et_tmp(:,ik_start:ik_stop)
-    et_mb(:,:)  = et_loc(:,:)
   ENDIF
   !
   ! Do not recompute dipole matrix elements
@@ -343,8 +341,8 @@
     !   
     ! The following loop is required to propertly set up the symmetry matrix s. 
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
-    DO iq_irr = 1, nqc_irr
-      xq = xqc_irr(:,iq_irr)
+    DO iq_irr=1, nqc_irr
+      xq = xqc_irr(:, iq_irr)
       ! search for the small group of q
       CALL set_small_group_of_q(nsymq, invsymq, minus_q)
       ! calculate rtau with the new symmetry order
@@ -687,7 +685,7 @@
     wqlist = dble(1) / dble(nqc)
     !
     IF (lifc) DEALLOCATE (wscache)
-  ENDIF
+  ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
   IF (my_image_id == 0 ) THEN
     IF ( epbread .OR. epbwrite ) THEN
@@ -743,7 +741,16 @@
   !
   ! free up some memory
   !
-  IF ( ASSOCIATED (evq)  )      NULLIFY    (evq)
+  DEALLOCATE (umat_all)
+  DEALLOCATE (umat)
+  DEALLOCATE (xqc_irr)
+  DEALLOCATE (wqlist)
+  DEALLOCATE (evq)
+  ! 
+  IF (maxvalue > nqxq) THEN
+    DEALLOCATE (qrad)
+  ENDIF
+  !
   IF ( ALLOCATED  (evc)  )      DEALLOCATE (evc)
   IF ( ASSOCIATED (igkq) )      NULLIFY    (igkq)
   IF ( ALLOCATED  (dvpsi))      DEALLOCATE (dvpsi)
@@ -781,6 +788,7 @@
     CALL ephwann_shuffle( nqc, xqc )
 #endif
   ENDIF        
+  DEALLOCATE (xqc)
   !
 5 FORMAT (8x,"q(",i5," ) = (",3f12.7," )") 
   !

@@ -96,19 +96,20 @@
   !  2) If necessary calculate the local magnetization. This information is
   !      needed in sgama 
   !
-  IF (.not.ALLOCATED(m_loc)) ALLOCATE(m_loc(3, nat))
   IF (noncolin .AND. domag) THEN
-    DO na = 1, nat
+    ALLOCATE (m_loc(3, nat))
+    DO na=1, nat
       !
-      m_loc(1,na) = starting_magnetization(ityp(na)) * &
-                    SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
-      m_loc(2,na) = starting_magnetization(ityp(na)) * &
-                    SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
-      m_loc(3,na) = starting_magnetization(ityp(na)) * &
-                    COS( angle1(ityp(na)) )
+      m_loc(1, na) = starting_magnetization(ityp(na)) * &
+                    SIN(angle1(ityp(na))) * COS(angle2(ityp(na)))
+      m_loc(2, na) = starting_magnetization(ityp(na)) * &
+                    SIN(angle1(ityp(na))) * SIN(angle2(ityp(na)))
+      m_loc(3, na) = starting_magnetization(ityp(na)) * &
+                    COS(angle1(ityp(na)))
     ENDDO
     ux = zero
     IF (dft_is_gradient()) CALL compute_ux(m_loc,ux,nat)
+    DEALLOCATE (m_loc)
   ENDIF
   !
   ! 3) Computes the derivative of the xc potential

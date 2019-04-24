@@ -72,13 +72,14 @@
   USE symm_base,     ONLY : s
   USE modes,         ONLY : u  
   USE qpoint,        ONLY : xq, npwq
-  USE eqv,           ONLY : dvpsi, evq
+  USE eqv,           ONLY : dvpsi
+  USE phcom,         ONLY : evq
   USE units_lr,      ONLY : lrwfc, iuwfc
   USE phus,          ONLY : alphap
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : calbec 
-  USE elph2,         ONLY : shift, gmap, el_ph_mat, umat, umatq, igk_k_all, &
-                            umat_all, xkq, etq, igkq, igk, &
+  USE elph2,         ONLY : shift, gmap, el_ph_mat, igk_k_all, &
+                            umat_all, xkq, etq, &
                             ngk_all, lower_band, upper_band
   USE fft_base,      ONLY : dffts
   USE constants_epw, ONLY : czero, cone, ci, zero
@@ -153,6 +154,10 @@
   !! Index of k+q-point in the pool
   INTEGER :: nkq_abs
   !! Absolute index of k+q-point
+  INTEGER, ALLOCATABLE :: igk(:)
+  !! Index for k+G
+  INTEGER, ALLOCATABLE :: igkq(:)
+  !! Index for k+q+G
   !
   ! Local variables for rotating the wavefunctions (in order to use q in the irr wedge)
   REAL(kind=DP) :: xkqtmp(3)
@@ -164,8 +169,19 @@
   REAL(kind=DP) :: zero_vect(3)
   !! Temporary zero vector 
   ! 
-  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:,:), aux2(:,:), aux3(:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: eptmp(:,:), elphmat(:,:,:)
+  COMPLEX(kind=DP) :: umat(nbnd, nbnd, nks)
+  !! the rotation matrix for the unique setting of the wfs gauge -- on the local pool
+  COMPLEX(kind=DP) :: umatq(nbnd, nbnd, nks)
+  !! the rotation matrix for the unique setting of the wfs gauge -- on the local pool
+  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:, :)
+  !! Auxillary wavefunction 
+  COMPLEX(kind=DP), ALLOCATABLE :: aux2(:, :)
+  !! Auxillary wavefunction
+  COMPLEX(kind=DP), ALLOCATABLE :: aux3(:, :)
+  !! Auxillary wavefunction
+  COMPLEX(kind=DP), ALLOCATABLE :: eptmp(:, :)
+  !! Temporary array
+  COMPLEX(kind=DP), ALLOCATABLE :: elphmat(:, :, :)
   !! arrays for e-ph matrix elements 
   !
 !DBSP - NAG complains ...
@@ -174,10 +190,10 @@
 !  REAL(kind=DP) :: b, c, d
 !END
   !
-  IF ( .not. ALLOCATED(elphmat) ) ALLOCATE( elphmat(nbnd, nbnd, npe) ) 
-  IF ( .not. ALLOCATED(eptmp) )   ALLOCATE( eptmp(nbnd, nbnd) ) 
-  IF ( .not. ALLOCATED(aux1) )    ALLOCATE( aux1(dffts%nnr, npol) )
-  IF ( .not. ALLOCATED(aux2) )    ALLOCATE( aux2(npwx*npol, nbnd) )
+  ALLOCATE (elphmat(nbnd, nbnd, npe)) 
+  ALLOCATE (eptmp(nbnd, nbnd)) 
+  ALLOCATE (aux1(dffts%nnr, npol))
+  ALLOCATE (aux2(npwx * npol, nbnd))
   elphmat(:,:,:) = czero
   eptmp(:,:) = czero
   aux1(:,:) = czero
@@ -197,15 +213,19 @@
   ! SP: Bound for band parallelism
   CALL fkbounds_bnd( nbnd, lower_band, upper_band )
   !
-  IF ( .not. ALLOCATED(aux3) )  ALLOCATE( aux3(npwx*npol, lower_band:upper_band) )
-  IF ( .not. ALLOCATED(dvpsi) ) ALLOCATE( dvpsi(npwx*npol, lower_band:upper_band) )
+  ALLOCATE (aux3(npwx * npol, lower_band:upper_band))
+  ALLOCATE (dvpsi(npwx * npol, lower_band:upper_band))
   aux3(:,:) = czero
   dvpsi(:,:) = czero
   !
   ! setup for k+q folding
   !
-  CALL kpointdivision( ik0 )
-  CALL readgmap( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd )
+  CALL kpointdivision(ik0)
+  !  
+  ALLOCATE (shift(nkstot))
+  shift(:) = 0
+  ! gmap gets allocated inside readgmap
+  CALL readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
   !
   IF (imode0.eq.0 .AND. iverbosity.eq.1) WRITE(stdout,5) ngxx
 5 FORMAT (5x,'Estimated size of gmap: ngxx =',i5)
@@ -238,8 +258,8 @@
      !
      !   we define xkq(:,ik) and etq(:,ik) for the current xq
      !
-     IF (ALLOCATED(etq)) DEALLOCATE(etq)
-     IF (.not. ALLOCATED(etq) ) ALLOCATE( etq(nbnd,nks) )
+     IF (ALLOCATED(etq)) DEALLOCATE (etq)
+     IF (.NOT. ALLOCATED(etq)) ALLOCATE (etq(nbnd, nks))
      etq(:,:) = zero
      !
      xkq(:,ik) = xk_all(:,nkq_abs)
@@ -257,18 +277,16 @@
      !
      ! Now we define the igk and igkq from the global igk_k_all
      ! 
-     npw  = ngk_all(ik+lower_bnd-1)
+     npw  = ngk_all(ik + lower_bnd - 1)
      npwq = ngk_all(nkq_abs)
      ! 
-     IF (ALLOCATED(igk)) DEALLOCATE(igk)
-     IF (ALLOCATED(igkq)) DEALLOCATE(igkq)
-     ALLOCATE( igk(npw)  )
-     ALLOCATE( igkq(npwq) )
+     ALLOCATE (igk(npw))
+     ALLOCATE (igkq(npwq))
      ! 
-     igk = igk_k_all(1:npw,ik+lower_bnd-1)
-     igkq = igk_k_all(1:npwq,nkq_abs)
+     igk = igk_k_all(1:npw, ik + lower_bnd - 1)
+     igkq = igk_k_all(1:npwq, nkq_abs)
      !
-     IF ( nks.gt.1 .AND. maxval(igkq(1:npwq)).gt.ngxx ) &
+     IF ( nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx ) &
        CALL errore('elphel2_shuffle', 'ngxx too small', 1 )
      !
      ! ----------------------------------------------------------------
@@ -281,10 +299,8 @@
      CALL ktokpmq(xk_loc(:,ik),  zero_vect, +1, ipool, nkk, nkk_abs)
      CALL ktokpmq(xkq(:,ik), zero_vect, +1, ipool, nkk, nkq_abs)
      !
-     IF ( .not. ALLOCATED(umat) )  ALLOCATE( umat(nbnd,nbnd,nks) )
-     IF ( .not. ALLOCATED(umatq) ) ALLOCATE( umatq(nbnd,nbnd,nks) )
-     umat(:,:,ik)  = umat_all(:,:,nkk_abs)
-     umatq(:,:,ik) = umat_all(:,:,nkq_abs)
+     umat(:, :, ik)  = umat_all(:, :, nkk_abs)
+     umatq(:, :, ik) = umat_all(:, :, nkq_abs)
      !
      ! the k-vector needed for the KB projectors
      xkqtmp = xkq(:,ik)
@@ -482,13 +498,16 @@
   ! never remove this barrier - > insures that wfcs are restored to each pool before moving on
   CALL mp_barrier(world_comm)
   !
-  DEALLOCATE(elphmat)
-  DEALLOCATE(eptmp)
-  DEALLOCATE(aux1) 
-  DEALLOCATE(aux2)
-  DEALLOCATE(aux3)
-  DEALLOCATE(gmap)
-  DEALLOCATE(shift)
+  DEALLOCATE (elphmat)
+  DEALLOCATE (eptmp)
+  DEALLOCATE (aux1) 
+  DEALLOCATE (aux2)
+  DEALLOCATE (aux3)
+  DEALLOCATE (dvpsi)
+  DEALLOCATE (gmap)
+  DEALLOCATE (shift)
+  DEALLOCATE (igk)
+  DEALLOCATE (igkq)
   !
   END SUBROUTINE elphel2_shuffle
   !

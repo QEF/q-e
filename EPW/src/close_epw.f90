@@ -97,7 +97,7 @@
     !!  Imported the noncolinear case implemented by xlzhang
     !!
     !----------------------------------------------------------------------
-    USE phcom,             ONLY : alphap, dmuxc, drc, dyn, evq, dvpsi, &
+    USE phcom,             ONLY : alphap, dmuxc, drc, dyn, dvpsi, &
                                   int5, vlocq, int2_so, int5_so
     USE lrus,              ONLY : becp1, int3, int3_nc
     USE phus,              ONLY : int1, int1_nc, int2, int4, int4_nc
@@ -134,27 +134,46 @@
       IF(ALLOCATED(xqf))       DEALLOCATE (xqf)
       IF(ALLOCATED(wqf))       DEALLOCATE (wqf)
       IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
+      DEALLOCATE (vlocq)
+      DEALLOCATE (dmuxc)
+      DEALLOCATE (eigqts)
+      DEALLOCATE (rtau)
+      DEALLOCATE (u)
+      DEALLOCATE (name_rap_mode)
+      DEALLOCATE (num_rap_mode)
+      DEALLOCATE (npert)
+      IF (ALLOCATED(alphap)) THEN
+        DO ik=1, nks
+          DO ipol=1, 3
+            CALL deallocate_bec_type(alphap(ipol, ik))
+          ENDDO
+        ENDDO
+        DEALLOCATE (alphap)
+      ENDIF
+      IF (ALLOCATED(becp1)) THEN
+        DO ik=1, size(becp1)
+          CALL deallocate_bec_type(becp1(ik))
+        ENDDO
+        DEALLOCATE(becp1)
+      ENDIF
+      CALL deallocate_bec_type(becp)
       ! 
     ELSE
       !   
-      IF(ASSOCIATED(evq)) DEALLOCATE(evq)
       IF(ASSOCIATED(igkq)) DEALLOCATE(igkq)
       !
-      IF(ALLOCATED(dvpsi)) DEALLOCATE (dvpsi)    
-      !
-      IF(ALLOCATED(vlocq)) DEALLOCATE (vlocq)
-      IF(ALLOCATED(dmuxc)) DEALLOCATE (dmuxc)
-      !
-      IF(ALLOCATED(eigqts)) DEALLOCATE (eigqts)
-      IF(ALLOCATED(rtau)) DEALLOCATE (rtau)
-      IF(ASSOCIATED(u)) DEALLOCATE (u)
-      if(allocated(name_rap_mode)) deallocate (name_rap_mode)
-      if(allocated(num_rap_mode)) deallocate (num_rap_mode)
+      DEALLOCATE (vlocq)
+      DEALLOCATE (dmuxc)
+      DEALLOCATE (eigqts)
+      DEALLOCATE (rtau)
+      DEALLOCATE (u)
+      DEALLOCATE (name_rap_mode)
+      DEALLOCATE (num_rap_mode)
       IF(ALLOCATED(dyn)) DEALLOCATE (dyn)
       IF(ALLOCATED(epsi)) DEALLOCATE (epsi)
       IF(ALLOCATED(zstar)) DEALLOCATE (zstar)
       !
-      IF(ALLOCATED(npert)) DEALLOCATE (npert)    
+      DEALLOCATE (npert)    
       !
       IF(ALLOCATED(int1)) DEALLOCATE (int1)    
       IF(ALLOCATED(int2)) DEALLOCATE (int2)

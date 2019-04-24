@@ -42,8 +42,8 @@
   IF (nproc_pool>1) call errore &
        ('setphases_wrap', 'only one proc per pool', 1)
   !
-  allocate (umat_all (nbnd, nbnd, nkstot))
-  allocate (umat(nbnd,nbnd,nks))
+  ALLOCATE (umat_all (nbnd, nbnd, nkstot))
+  ALLOCATE (umat(nbnd, nbnd, nks))
   umat_all = (0.d0, 0.d0)
   zero_vect = 0.d0
   !
