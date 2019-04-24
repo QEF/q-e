@@ -627,11 +627,11 @@
         !
         CALL rotate_epmat( cz1, cz2, xq, nqc, lwin, lwinq, exband )
   !DBSP
-  !      write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
-  !      write(*,*)'epmatq(:,:,2,:,nqc)**2',SUM((REAL(REAL(epmatq(:,:,2,:,nqc))))**2)+&
-  !        SUM((REAL(AIMAG(epmatq(:,:,2,:,nqc))))**2)
-  !      print*,'dynq ', SUM(dynq(:,:,nqc))
-  !      print*,'et ', et(:,2)
+        !write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
+        !write(*,*)'epmatq(:,:,2,:,nqc)**2',SUM((REAL(REAL(epmatq(:,:,2,:,nqc))))**2)+&
+        !  SUM((REAL(AIMAG(epmatq(:,:,2,:,nqc))))**2)
+        !print*,'dynq ', SUM(dynq(:,:,nqc))
+        !print*,'et ', et_loc(:,2)
   !END
         ! SP: Now we treat separately the case imq == 0
         IF (imq .eq. 0) THEN
@@ -685,6 +685,7 @@
     wqlist = dble(1) / dble(nqc)
     !
     IF (lifc) DEALLOCATE (wscache)
+    DEALLOCATE (evc)
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
   IF (my_image_id == 0 ) THEN
@@ -751,7 +752,6 @@
     DEALLOCATE (qrad)
   ENDIF
   !
-  IF ( ALLOCATED  (evc)  )      DEALLOCATE (evc)
   IF ( ASSOCIATED (igkq) )      NULLIFY    (igkq)
   IF ( ALLOCATED  (dvpsi))      DEALLOCATE (dvpsi)
   IF ( ALLOCATED  (dpsi) )      DEALLOCATE (dpsi)

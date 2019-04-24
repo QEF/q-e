@@ -226,9 +226,9 @@
       ! we may implement the approximation to the angle between k and k+q
       ! vectors also listed in Grimvall
       !
-      IF (vme ) THEN 
-        DO ibnd = 1, ibndmax-ibndmin+1
-          DO jbnd = 1, ibndmax-ibndmin+1
+      IF (vme) THEN 
+        DO ibnd=1, ibndmax-ibndmin+1
+          DO jbnd=1, ibndmax-ibndmin+1
             !
             ! vmef is in units of Ryd * bohr
             !
@@ -240,8 +240,8 @@
           ENDDO
         ENDDO
       ELSE
-        DO ibnd = 1, ibndmax-ibndmin+1
-          DO jbnd = 1, ibndmax-ibndmin+1
+        DO ibnd=1, ibndmax-ibndmin+1
+          DO jbnd=1, ibndmax-ibndmin+1
             !
             ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
             ! 1/m  = 2 in Rydberg atomic units

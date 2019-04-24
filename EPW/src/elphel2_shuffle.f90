@@ -237,225 +237,225 @@
   ! never remove this barrier
   CALL mp_barrier(inter_pool_comm)
   !
-  DO ik = 1, nks
-     !
-     IF (lsda) current_spin = isk_loc(ik)
-     elphmat(:,:,:) = czero
+  DO ik=1, nks
+    !
+    IF (lsda) current_spin = isk_loc(ik)
+    elphmat(:,:,:) = czero
 !DBSP
-!     b = zero
-!     c = zero
-!     d = zero
+!    b = zero
+!    c = zero
+!    d = zero
 !END
-     !
-     ! find index, and possibly pool, of k+q 
-     ! the index nkq (nkq_abs) takes into account the even/odd ordering 
-     ! of the nscf calc
-     ! we also redefine the ikq points and the corresponding energies
-     ! (we need to make sure that xk(:,ikq) is really k+q for the KB projectors
-     ! below and also that the eigenvalues are taken correctly in ephwann)
-     !
-     CALL ktokpmq( xk_loc(:,ik), xq, +1, ipool, nkq, nkq_abs )
-     !
-     !   we define xkq(:,ik) and etq(:,ik) for the current xq
-     !
-     IF (ALLOCATED(etq)) DEALLOCATE (etq)
-     IF (.NOT. ALLOCATED(etq)) ALLOCATE (etq(nbnd, nks))
-     etq(:,:) = zero
-     !
-     xkq(:,ik) = xk_all(:,nkq_abs)
-     etq(:,ik) = et_all(:,nkq_abs) 
-     !
-     ipooltmp = my_pool_id + 1
-     !
-     ! in serial execution ipool is not used in the called subroutines, 
-     ! in parallel ipooltmp is for k and ipool is for k+q
-     !
-     ! read unperturbed wavefunctions psi(k) and psi(k+q)
-     !
-     CALL readwfc( ipooltmp, ik, evc )
-     CALL readwfc( ipool, nkq, evq )
-     !
-     ! Now we define the igk and igkq from the global igk_k_all
-     ! 
-     npw  = ngk_all(ik + lower_bnd - 1)
-     npwq = ngk_all(nkq_abs)
-     ! 
-     ALLOCATE (igk(npw))
-     ALLOCATE (igkq(npwq))
-     ! 
-     igk = igk_k_all(1:npw, ik + lower_bnd - 1)
-     igkq = igk_k_all(1:npwq, nkq_abs)
-     !
-     IF ( nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx ) &
-       CALL errore('elphel2_shuffle', 'ngxx too small', 1 )
-     !
-     ! ----------------------------------------------------------------
-     ! Set the gauge for the eigenstates: unitary transform and phases
-     ! ----------------------------------------------------------------
-     !
-     ! With this option, different compilers and different machines
-     ! should always give the same wavefunctions.
-     !
-     CALL ktokpmq(xk_loc(:,ik),  zero_vect, +1, ipool, nkk, nkk_abs)
-     CALL ktokpmq(xkq(:,ik), zero_vect, +1, ipool, nkk, nkq_abs)
-     !
-     umat(:, :, ik)  = umat_all(:, :, nkk_abs)
-     umatq(:, :, ik) = umat_all(:, :, nkq_abs)
-     !
-     ! the k-vector needed for the KB projectors
-     xkqtmp = xkq(:,ik)
-     !
-     ! --------------------------------------------------
-     !   Fourier translation of the G-sphere igkq
-     ! --------------------------------------------------
-     !
-     !  Translate by G_0 the G-sphere where evq is defined, 
-     !  none of the G-points are lost.
-     !
-     DO ig = 1, npwq
-        imap = ng0vec * ( igkq(ig) - 1 ) + shift(ik+ik0)
-        igkq_tmp(ig) = gmap(imap)
-        !  the old matrix version... 
-        !  igkq_tmp(ig) = gmap( igkq(ig), shift(ik+ik0) )
-     ENDDO
-     igkq = igkq_tmp
-     !
-     !  find k+q from k+q+G_0
-     !  (this is needed in the calculation of the KB terms
-     !  for nonlocal pseudos)
-     !
-     xkqtmp = xkq(:,ik) - g0vec_all_r(:,shift(ik+ik0))
-     !
-     ! ---------------------------------------------------------------------
-     ! phase factor arising from fractional traslations
-     ! ---------------------------------------------------------------------
-     !
-     !  u_{k+q+G_0} carries an additional factor e^{i G_0 v}
-     !
-     CALL fractrasl( npw,  igk,  evc, eigv(:,isym), cone )
-     CALL fractrasl( npwq, igkq, evq, eigv(:,isym), cone )
-     !
-     ! ---------------------------------------------------------------------
-     ! wave function rotation to generate matrix elements for the star of q
-     ! ---------------------------------------------------------------------
-     !
-     ! ps. don't use npwx instead of npw, npwq since the unused elements
-     ! may be large and blow up gmapsym (personal experience)
-     !
-     igk (1:npw ) = gmapsym( igk (1:npw ), isym )
-     igkq(1:npwq) = gmapsym( igkq(1:npwq), isym )
-     !
-     ! In dvqpsi_us_only3 we need becp1 and alphap for the rotated wfs. 
-     ! The other quantities (deeq and qq) do not depend on the wfs, in
-     ! particular in the KB case (not ultrasoft), the deeq's are the
-     ! unscreened coefficients, and the qq's are zero.
-     !
-     ! For the KB part, remember dV_NL[q_0] ~ |S^-1(k)+q_0> <S^-1(k)|
-     ! the total momentum transfer must be q_0 and the rotation 
-     ! tranforms k+Sq_0 into S^-1(k)+q_0, k into S^-1(k)
-     ! [see Eqs. (A9),(A14) Baroni et al. RMP]
-     ! 
-     ! Since in QE a normal rotation s is defined as S^-1 we have here
-     ! sxk = S(k).  
-     !
-     CALL rotate_cart( xk_loc(:,ik), s(:,:,isym), sxk )
-     !
-     ! here we generate vkb on the igk() set and for k ...
-     CALL init_us_2( npw, igk, sxk, vkb )
-     !
-     ! ... and we recompute the becp terms with the wfs (rotated through igk)
-     !
-     CALL calbec( npw, vkb, evc, becp1(ik) )
-     !
-     ! we also recompute the derivative of the becp terms with the (rotated) wfs
-     !
-     DO ipol = 1, 3
-        aux2 = czero
-        DO ibnd = 1, nbnd
-           DO ig = 1, npw
-              aux2(ig,ibnd) = evc(ig,ibnd) * tpiba * ci * & 
-                             ( sxk(ipol) + g(ipol,igk(ig)) )
-           END DO
-           IF (noncolin) THEN
-              DO ig = 1, npw
-                 aux2(ig+npwx,ibnd) = evc(ig+npwx,ibnd) * tpiba * ci * &
-                             ( sxk(ipol) + g(ipol,igk(ig)) )
-              ENDDO
-           ENDIF
-        ENDDO
-        CALL calbec( npw, vkb, aux2, alphap(ipol,ik) )
-     ENDDO
-     !
-     ! now we generate vkb on the igkq() set because dvpsi is needed on that set
-     ! we need S(k)+q_0 in the KB projector: total momentum transfer must be q_0
-     !
-     xkqtmp = sxk + xq0
-     CALL init_us_2( npwq, igkq, xkqtmp, vkb )
-     !
-     ! --------------------------------------------------
-     !   Calculation of the matrix element
-     ! --------------------------------------------------
-     !
-     DO ipert = 1, npe
-        !
-        !  recalculate dvbare_q*psi_k 
-        !  the call to dvqpsi_us3 differs from the old one to dvqpsi_us 
-        !  only the xkqtmp passed. 
-        !
-        !  we have to use the first q in the star in the dvqpsi_us3 call below (xq0)
-        !  
-        mode = imode0 + ipert
-        IF (timerev) THEN
-          CALL dvqpsi_us3( ik, conjg(u(:,mode)), .false., xkqtmp, xq0 )
-        ELSE
-          CALL dvqpsi_us3( ik, u(:,mode), .false., xkqtmp, xq0 )
+    !
+    ! find index, and possibly pool, of k+q 
+    ! the index nkq (nkq_abs) takes into account the even/odd ordering 
+    ! of the nscf calc
+    ! we also redefine the ikq points and the corresponding energies
+    ! (we need to make sure that xk(:,ikq) is really k+q for the KB projectors
+    ! below and also that the eigenvalues are taken correctly in ephwann)
+    !
+    CALL ktokpmq( xk_loc(:,ik), xq, +1, ipool, nkq, nkq_abs )
+    !
+    !   we define xkq(:,ik) and etq(:,ik) for the current xq
+    !
+    IF (ALLOCATED(etq)) DEALLOCATE (etq)
+    IF (.NOT. ALLOCATED(etq)) ALLOCATE (etq(nbnd, nks))
+    etq(:,:) = zero
+    !
+    xkq(:,ik) = xk_all(:,nkq_abs)
+    etq(:,ik) = et_all(:,nkq_abs) 
+    !
+    ipooltmp = my_pool_id + 1
+    !
+    ! in serial execution ipool is not used in the called subroutines, 
+    ! in parallel ipooltmp is for k and ipool is for k+q
+    !
+    ! read unperturbed wavefunctions psi(k) and psi(k+q)
+    !
+    CALL readwfc( ipooltmp, ik, evc )
+    CALL readwfc( ipool, nkq, evq )
+    !
+    ! Now we define the igk and igkq from the global igk_k_all
+    ! 
+    npw  = ngk_all(ik + lower_bnd - 1)
+    npwq = ngk_all(nkq_abs)
+    ! 
+    ALLOCATE (igk(npw))
+    ALLOCATE (igkq(npwq))
+    ! 
+    igk = igk_k_all(1:npw, ik + lower_bnd - 1)
+    igkq = igk_k_all(1:npwq, nkq_abs)
+    !
+    IF ( nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx ) &
+      CALL errore('elphel2_shuffle', 'ngxx too small', 1 )
+    !
+    ! ----------------------------------------------------------------
+    ! Set the gauge for the eigenstates: unitary transform and phases
+    ! ----------------------------------------------------------------
+    !
+    ! With this option, different compilers and different machines
+    ! should always give the same wavefunctions.
+    !
+    CALL ktokpmq(xk_loc(:,ik),  zero_vect, +1, ipool, nkk, nkk_abs)
+    CALL ktokpmq(xkq(:,ik), zero_vect, +1, ipool, nkk, nkq_abs)
+    !
+    umat(:, :, ik)  = umat_all(:, :, nkk_abs)
+    umatq(:, :, ik) = umat_all(:, :, nkq_abs)
+    !
+    ! the k-vector needed for the KB projectors
+    xkqtmp = xkq(:,ik)
+    !
+    ! --------------------------------------------------
+    !   Fourier translation of the G-sphere igkq
+    ! --------------------------------------------------
+    !
+    !  Translate by G_0 the G-sphere where evq is defined, 
+    !  none of the G-points are lost.
+    !
+    DO ig = 1, npwq
+       imap = ng0vec * ( igkq(ig) - 1 ) + shift(ik+ik0)
+       igkq_tmp(ig) = gmap(imap)
+       !  the old matrix version... 
+       !  igkq_tmp(ig) = gmap( igkq(ig), shift(ik+ik0) )
+    ENDDO
+    igkq = igkq_tmp
+    !
+    !  find k+q from k+q+G_0
+    !  (this is needed in the calculation of the KB terms
+    !  for nonlocal pseudos)
+    !
+    xkqtmp = xkq(:,ik) - g0vec_all_r(:,shift(ik+ik0))
+    !
+    ! ---------------------------------------------------------------------
+    ! phase factor arising from fractional traslations
+    ! ---------------------------------------------------------------------
+    !
+    !  u_{k+q+G_0} carries an additional factor e^{i G_0 v}
+    !
+    CALL fractrasl( npw,  igk,  evc, eigv(:,isym), cone )
+    CALL fractrasl( npwq, igkq, evq, eigv(:,isym), cone )
+    !
+    ! ---------------------------------------------------------------------
+    ! wave function rotation to generate matrix elements for the star of q
+    ! ---------------------------------------------------------------------
+    !
+    ! ps. don't use npwx instead of npw, npwq since the unused elements
+    ! may be large and blow up gmapsym (personal experience)
+    !
+    igk(1:npw ) = gmapsym( igk (1:npw ), isym )
+    igkq(1:npwq) = gmapsym( igkq(1:npwq), isym )
+    !
+    ! In dvqpsi_us_only3 we need becp1 and alphap for the rotated wfs. 
+    ! The other quantities (deeq and qq) do not depend on the wfs, in
+    ! particular in the KB case (not ultrasoft), the deeq's are the
+    ! unscreened coefficients, and the qq's are zero.
+    !
+    ! For the KB part, remember dV_NL[q_0] ~ |S^-1(k)+q_0> <S^-1(k)|
+    ! the total momentum transfer must be q_0 and the rotation 
+    ! tranforms k+Sq_0 into S^-1(k)+q_0, k into S^-1(k)
+    ! [see Eqs. (A9),(A14) Baroni et al. RMP]
+    ! 
+    ! Since in QE a normal rotation s is defined as S^-1 we have here
+    ! sxk = S(k).  
+    !
+    CALL rotate_cart( xk_loc(:,ik), s(:,:,isym), sxk )
+    !
+    ! here we generate vkb on the igk() set and for k ...
+    CALL init_us_2( npw, igk, sxk, vkb )
+    !
+    ! ... and we recompute the becp terms with the wfs (rotated through igk)
+    !
+    CALL calbec( npw, vkb, evc, becp1(ik) )
+    !
+    ! we also recompute the derivative of the becp terms with the (rotated) wfs
+    !
+    DO ipol=1, 3
+      aux2 = czero
+      DO ibnd=1, nbnd
+        DO ig=1, npw
+          aux2(ig,ibnd) = evc(ig,ibnd) * tpiba * ci * & 
+                         ( sxk(ipol) + g(ipol,igk(ig)) )
+        END DO
+        IF (noncolin) THEN
+          DO ig=1, npw
+             aux2(ig+npwx,ibnd) = evc(ig+npwx,ibnd) * tpiba * ci * &
+                         ( sxk(ipol) + g(ipol,igk(ig)) )
+          ENDDO
         ENDIF
+      ENDDO
+      CALL calbec( npw, vkb, aux2, alphap(ipol,ik) )
+    ENDDO
+    !
+    ! now we generate vkb on the igkq() set because dvpsi is needed on that set
+    ! we need S(k)+q_0 in the KB projector: total momentum transfer must be q_0
+    !
+    xkqtmp = sxk + xq0
+    CALL init_us_2( npwq, igkq, xkqtmp, vkb )
+    !
+    ! --------------------------------------------------
+    !   Calculation of the matrix element
+    ! --------------------------------------------------
+    !
+    DO ipert=1, npe
+      !
+      !  recalculate dvbare_q*psi_k 
+      !  the call to dvqpsi_us3 differs from the old one to dvqpsi_us 
+      !  only the xkqtmp passed. 
+      !
+      !  we have to use the first q in the star in the dvqpsi_us3 call below (xq0)
+      !  
+      mode = imode0 + ipert
+      IF (timerev) THEN
+        CALL dvqpsi_us3(ik, CONJG(u(:, mode)), .false., xkqtmp, xq0, igk, igkq, npw, npwq)
+      ELSE
+        CALL dvqpsi_us3(ik, u(:, mode), .false., xkqtmp, xq0, igk, igkq, npw, npwq)
+      ENDIF
 !DBSP 
-!        b = b+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!      b = b+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
 !END
-        !
-        !  calculate dvscf_q*psi_k
-        !
-        CALL start_clock('dvscf_q*psi_k')
-        ! 
-        aux3 = czero
-        DO ibnd = lower_band, upper_band
-          CALL invfft_wave(npw, igk, evc(:,ibnd), aux1)
-          IF (timerev) THEN
-            CALL apply_dpot(dffts%nnr, aux1, conjg(dvscfins(:,:,ipert)), current_spin)
-          ELSE
-            CALL apply_dpot(dffts%nnr, aux1, dvscfins(:,:,ipert), current_spin)
-          ENDIF
-          CALL fwfft_wave(npwq, igkq, aux3(:,ibnd), aux1)
-        ENDDO
-        dvpsi = dvpsi + aux3
-        !
+      !
+      !  calculate dvscf_q*psi_k
+      !
+      CALL start_clock('dvscf_q*psi_k')
+      ! 
+      aux3 = czero
+      DO ibnd = lower_band, upper_band
+        CALL invfft_wave(npw, igk, evc(:,ibnd), aux1)
+        IF (timerev) THEN
+          CALL apply_dpot(dffts%nnr, aux1, conjg(dvscfins(:,:,ipert)), current_spin)
+        ELSE
+          CALL apply_dpot(dffts%nnr, aux1, dvscfins(:,:,ipert), current_spin)
+        ENDIF
+        CALL fwfft_wave(npwq, igkq, aux3(:,ibnd), aux1)
+      ENDDO
+      dvpsi = dvpsi + aux3
+      !
 !DBSP
-!        c = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!      c = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
 !END
-        !
-        CALL adddvscf2( ipert, ik )
+      !
+      CALL adddvscf2( ipert, ik )
 !DBRM
-!        d = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!      d = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
 !END
-        !
-        ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
-        !
-        ! 
-        DO ibnd =lower_band, upper_band
-           DO jbnd = 1, nbnd
-              elphmat(jbnd,ibnd,ipert) = &
-                    zdotc( npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1 )
-              IF (noncolin) &
-                 elphmat(jbnd,ibnd,ipert) = elphmat(jbnd,ibnd,ipert) + &
-                    zdotc( npwq, evq(npwx+1,jbnd), 1, dvpsi(npwx+1,ibnd), 1 )
-           ENDDO
+      !
+      ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
+      !
+      ! 
+      DO ibnd =lower_band, upper_band
+        DO jbnd = 1, nbnd
+          elphmat(jbnd,ibnd,ipert) = &
+               zdotc( npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1 )
+          IF (noncolin) &
+            elphmat(jbnd,ibnd,ipert) = elphmat(jbnd,ibnd,ipert) + &
+               zdotc( npwq, evq(npwx+1,jbnd), 1, dvpsi(npwx+1,ibnd), 1 )
         ENDDO
-     ENDDO
-     !
-     CALL mp_sum(elphmat, intra_pool_comm)
-     CALL mp_sum(elphmat, inter_image_comm)
-     !
+      ENDDO
+    ENDDO
+    !
+    CALL mp_sum(elphmat, intra_pool_comm)
+    CALL mp_sum(elphmat, inter_image_comm)
+    !
 !DBSP
 !     IF (ik==2) THEN
 !       write(*,*)'SUM dvpsi b ', b
@@ -464,33 +464,36 @@
 !       write(*,*)'elphmat(:,:,:)**2', SUM((REAL(REAL(elphmat(:,:,:))))**2)+SUM((REAL(AIMAG(elphmat(:,:,:))))**2)
 !     ENDIF
 !END
-     !
-     !  Rotate elphmat with the gauge matrices (this should be equivalent 
-     !  to calculate elphmat with the truely rotated eigenstates)
-     ! 
-     DO ipert = 1, npe
-        !
-        ! the two zgemm call perform the following ops:
-        !  elphmat = umat(k+q)^\dagger * [ elphmat * umat(k) ]
-        !
-        CALL zgemm( 'n', 'n', nbnd, nbnd, nbnd, cone, elphmat(:,:,ipert), & 
-                    nbnd, umat(:,:,ik), nbnd, czero, eptmp, nbnd )
-        CALL zgemm( 'c', 'n', nbnd, nbnd, nbnd, cone, umatq(:,:,ik), & 
-                    nbnd, eptmp, nbnd, czero, elphmat(:,:,ipert), nbnd )
-        !
-     ENDDO
-     !
-     !  save eph matrix elements into el_ph_mat
-     !
-     DO ipert = 1, npe
-        DO jbnd = 1, nbnd
-           DO ibnd = 1, nbnd
-              el_ph_mat(ibnd,jbnd,ik,ipert+imode0) = elphmat(ibnd,jbnd,ipert)
-           ENDDO
+    !
+    !  Rotate elphmat with the gauge matrices (this should be equivalent 
+    !  to calculate elphmat with the truely rotated eigenstates)
+    ! 
+    DO ipert=1, npe
+      !
+      ! the two zgemm call perform the following ops:
+      !  elphmat = umat(k+q)^\dagger * [ elphmat * umat(k) ]
+      !
+      CALL zgemm( 'n', 'n', nbnd, nbnd, nbnd, cone, elphmat(:,:,ipert), & 
+                  nbnd, umat(:,:,ik), nbnd, czero, eptmp, nbnd )
+      CALL zgemm( 'c', 'n', nbnd, nbnd, nbnd, cone, umatq(:,:,ik), & 
+                  nbnd, eptmp, nbnd, czero, elphmat(:,:,ipert), nbnd )
+      !
+    ENDDO
+    !
+    !  save eph matrix elements into el_ph_mat
+    !
+    DO ipert=1, npe
+      DO jbnd=1, nbnd
+        DO ibnd=1, nbnd
+          el_ph_mat(ibnd,jbnd,ik,ipert+imode0) = elphmat(ibnd,jbnd,ipert)
         ENDDO
-     ENDDO
-     !
-  ENDDO
+      ENDDO
+    ENDDO
+    ! 
+    DEALLOCATE (igk)
+    DEALLOCATE (igkq)
+    !
+  ENDDO ! ik
   !
   !  restore original configuration of files
   !
@@ -506,8 +509,6 @@
   DEALLOCATE (dvpsi)
   DEALLOCATE (gmap)
   DEALLOCATE (shift)
-  DEALLOCATE (igk)
-  DEALLOCATE (igkq)
   !
   END SUBROUTINE elphel2_shuffle
   !
@@ -522,7 +523,8 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: npw, igk(npwx)
+  INTEGER, INTENT(in) :: npw
+  INTEGER, INTENT(in) :: igk(npw)
   COMPLEX(kind=DP), INTENT(inout) :: evc(npwx*npol, nbnd)
   COMPLEX(kind=DP), INTENT(in) :: eigv1(ngm), eig0v
   !

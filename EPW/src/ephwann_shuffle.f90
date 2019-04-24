@@ -310,8 +310,8 @@
   IF (epwread) THEN
     !
     ! Might have been pre-allocate depending of the restart configuration 
-    IF (ALLOCATED(tau))  DEALLOCATE( tau )
-    IF (ALLOCATED(ityp)) DEALLOCATE( ityp )
+    !IF (ALLOCATED(tau))  DEALLOCATE( tau )
+    !IF (ALLOCATED(ityp)) DEALLOCATE( ityp )
     ! 
     ! We need some crystal info
     IF (mpime == ionode_id) THEN
@@ -341,7 +341,7 @@
     CALL mp_bcast (bg       , ionode_id, world_comm)
     CALL mp_bcast (omega    , ionode_id, world_comm)
     CALL mp_bcast (alat     , ionode_id, world_comm)
-    IF (mpime /= ionode_id) ALLOCATE (tau(3,nat) )
+    IF (mpime /= ionode_id) ALLOCATE (tau(3, nat) )
     CALL mp_bcast (tau      , ionode_id, world_comm)
     CALL mp_bcast (amass    , ionode_id, world_comm)
     CALL mp_bcast (ityp     , ionode_id, world_comm)
@@ -544,8 +544,7 @@
           ( nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe_mem )
       ENDIF
     ENDIF
-    !
-    CALL mp_barrier(inter_pool_comm)
+    IF (etf_mem == 0) CALL mp_bcast(epmatwp, ionode_id, world_comm)
     !
     IF (epwwrite) THEN
        CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers) 
@@ -567,7 +566,7 @@
   DEALLOCATE (lwin)
   DEALLOCATE (lwinq)
   DEALLOCATE (exband)
-  DEALLOCATE (tau)
+  !DEALLOCATE (tau)
   ! 
   IF (etf_mem == 1) THEN
     CLOSE(iunepmatwe, status = 'delete')
@@ -1071,6 +1070,8 @@
         CALL dynwan2bloch(nmodes, nrr_q, irvec_q, ndegen_q, xxq, uf, w2)
       ELSE
         CALL dynifc2blochf(nmodes, rws, nrws, xxq, uf, w2)
+        !write(*,*)'w2 ',w2
+        !write(*,*)'uf ',uf
       ENDIF
       !
       ! ...then take into account the mass factors and square-root the frequencies...
@@ -1285,6 +1286,8 @@
               !
               epmatf(:, :, :) = czero
               CALL ephwan2bloch(nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, nmodes, cfac, dims)
+              !write(*,*)'epmatwef ',SUM(epmatwef)
+              !write(*,*)'epmatf ',SUM(epmatf)
               !
             ENDIF
             !
@@ -1546,6 +1549,7 @@
     ! Now deallocate 
     DEALLOCATE (epf17)
     DEALLOCATE (selecq)
+    DEALLOCATE (tau)
     IF (scattering .AND. .NOT. iterative_bte) THEN
       DEALLOCATE (inv_tau_all)
       DEALLOCATE (zi_allvb)
@@ -1608,9 +1612,9 @@
     DEALLOCATE (cdmew)
     DEALLOCATE (dmef)
   ENDIF
+  IF (etf_mem == 0) DEALLOCATE (epmatwp)
   ! 
   DEALLOCATE (ityp)
-  DEALLOCATE (epmatwp)
   DEALLOCATE (chw)
   DEALLOCATE (chw_ks)
   DEALLOCATE (rdw)
@@ -1926,7 +1930,21 @@
   ! This is important in restart mode as zstar etc has not been allocated
   ALLOCATE (zstar(3, 3, nat))
   ALLOCATE (epsi(3, 3))
-
+  !IF (mpime == 1 ) THEN
+  !  write(999,*)'Before'
+  !  write(999,*) 'ef ',ef 
+  !  write(999,*) 'nbndsub ',nbndsub 
+  !  write(999,*) 'nrr_k ',nrr_k 
+  !  write(999,*) 'nmodes ',nmodes 
+  !  write(999,*) 'nrr_q ',nrr_q
+  !  write(999,*) 'nrr_g ',nrr_g
+  !  write(999,*) 'zstar ',zstar
+  !  write(999,*) 'epsi ',epsi
+  !  write(999,*) 'chw ',SUM(chw)
+  !  write(999,*) 'cdmew ',SUM(cdmew)
+  !  write(999,*) 'epmatwp ',SUM(epmatwp)
+  !ENDIF
+  ! 
   IF (mpime == ionode_id) THEN
     !
     OPEN(unit=epwdata,file='epwdata.fmt',status='old',iostat=ios)

@@ -66,12 +66,15 @@
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
   USE ions_base,     ONLY : amass
-  USE mp_world,      ONLY : world_comm
+  USE mp_world,      ONLY : world_comm, mpime
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY
   USE mp_global,     ONLY : my_pool_id, me_pool
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id
   USE io_epw,        ONLY : iunkf, iunqf
+  USE noncollin_module, ONLY : npol
+  USE wavefunctions, ONLY : evc
+  USE wvfct,         ONLY : npwx
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -697,7 +700,13 @@
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
+    ! In read_file, the call to allocate_wfc allocate evc with dimension ALLOCATE (evc(npwx*npol, nbnd))
     CALL read_file()
+    ! 
+    !IF (mpime /= ionode_id) THEN
+    !  ALLOCATE (evc(npwx*npol, nbnd))
+    !ENDIF
+    !CALL mp_bcast(evc, ionode_id, world_comm) 
     ! 
     ! We define the global list of coarse grid k-points (cart and cryst)
     ALLOCATE (xk_all(3, nkstot))
