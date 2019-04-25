@@ -502,17 +502,17 @@
                 ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
                 !
                 m1 = MOD(n1 + 1, nq1)
-                IF (m1 < 0) m1 = m1 + nq1
+                IF (m1 <= 0) m1 = m1 + nq1
                 m2 = MOD(n2 + 1, nq2)
-                IF (m2 < 0) m2 = m2 + nq2
+                IF (m2 <= 0) m2 = m2 + nq2
                 m3 = MOD(n3 + 1, nq3)
-                IF (m3 < 0) m3 = m3 + nq3
+                IF (m3 <= 0) m3 = m3 + nq3
                 !
                 arg = twopi * (xq(1) * r(1) + xq(2) * r(2) + xq(3) * r(3))
                 DO ipol=1, 3
                   DO jpol=1, 3
-                    dyn(ipol, jpol, na, nb) =                 &
-                      dyn(ipol, jpol, na, nb) +            &
+                    dyn(ipol, jpol, na, nb) =     &
+                      dyn(ipol, jpol, na, nb) +   &
                       ifc(m1, m2, m3, ipol, jpol, na, nb) * CMPLX(COS(arg), -SIN(arg), kind=DP) * weight
                   ENDDO
                 ENDDO

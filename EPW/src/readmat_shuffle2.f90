@@ -644,7 +644,7 @@
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
-  USE mp_world,  ONLY : mpime
+  USE mp_world,  ONLY : mpime, world_comm
 #if defined(__NAG)
   USE f90_unix_io,    ONLY : flush
 #endif
@@ -677,15 +677,17 @@
       !
       tempfile = trim(dvscf_dir) // 'ifc.q2r'
       CALL read_dyn_mat_param(tempfile,ntyp_,nat_)
-      ALLOCATE (m_loc(3,nat_))
+      ALLOCATE (m_loc(3, nat_))
       ALLOCATE (atm(ntyp_))
       CALL read_dyn_mat_header(ntyp_, nat_, ibrav, nspin_mag, &
                celldm, at, bg, omega, atm, amass2, &
                tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar )
 !      alat=celldm(1)
-      call volume(alat,at(1,1),at(1,2),at(1,3),omega)
-      CALL read_ifc_param(nq1,nq2,nq3)
-      CALL read_ifc_xml(nq1,nq2,nq3,nat_,ifc)
+      call volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
+      CALL read_ifc_param(nq1, nq2, nq3)
+      CALL read_ifc_xml(nq1, nq2, nq3, nat_, ifc)
+      DEALLOCATE (m_loc)
+      DEALLOCATE (atm)
       ! 
     ELSE
       !
@@ -697,70 +699,65 @@
       !
       READ(iunifc,'(3i4)') ntyp_ , nat_ , ibrav_
       IF (ibrav_ .eq. 0) then
-         DO i = 1,3
-            read (iunifc, * ) line
-         ENDDO
+        DO i = 1,3
+          read (iunifc, * ) line
+        ENDDO
       ENDIF
       DO i=1,ntyp_
-         READ(iunifc,'(a)') line
+        READ(iunifc,'(a)') line
       ENDDO
       DO na=1,nat
-         READ(iunifc,*) idum, idum, (tau_(j,na),j=1,3)
-              ENDDO
+        READ(iunifc,*) idum, idum, (tau_(j,na),j=1,3)
+      ENDDO
       READ(iunifc,*) lpolar_
       !
       IF (lpolar_) THEN
-         READ (iunifc,*) ((epsi(i,j), j=1,3), i=1,3)
-         DO na = 1, nat
-            READ (iunifc,*) idum
-            READ (iunifc,*) ((zstar(i,j,na), j=1,3), i=1,3)
-         ENDDO
-         WRITE (stdout,'(5x,a)') "Read Z* and epsilon"
+        READ (iunifc,*) ((epsi(i,j), j=1,3), i=1,3)
+        DO na=1, nat
+           READ (iunifc,*) idum
+           READ (iunifc,*) ((zstar(i,j,na), j=1,3), i=1,3)
+        ENDDO
+        WRITE (stdout,'(5x,a)') "Read Z* and epsilon"
       ENDIF
       !
       READ (iunifc,*) idum
       !
       ifc = 0.d0
-      DO i=1,3
-         DO j=1,3
-            DO na=1,nat
-               DO nb=1,nat
-                  READ (iunifc,*) ibid, jbid, nabid, nbbid
-                  IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
-                     na.NE.nabid .OR. nb.NE.nbbid)                      &
-                     CALL errore  ('read_epw','error in reading ifc',1)
-                  READ (iunifc,*) (((m1bid, m2bid, m3bid,        &
-                              ifc(m1,m2,m3,i,j,na,nb),                  &
-                               m1=1,nq1),m2=1,nq2),m3=1,nq3)
-               ENDDO
+      DO i=1, 3
+        DO j=1, 3
+          DO na=1, nat
+            DO nb=1, nat
+              READ (iunifc,*) ibid, jbid, nabid, nbbid
+              IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
+                na.NE.nabid .OR. nb.NE.nbbid)                      &
+                CALL errore  ('read_epw','error in reading ifc',1)
+              READ (iunifc,*) (((m1bid, m2bid, m3bid,        &
+                         ifc(m1,m2,m3,i,j,na,nb),                  &
+                         m1=1,nq1),m2=1,nq2),m3=1,nq3)
             ENDDO
-         ENDDO
+          ENDDO
+        ENDDO
       ENDDO
       !
     ENDIF ! noncol
   ENDIF
   !
   ! It has to be casted like this because mpi cannot cast 7 indices
-  DO i=1,3
-     DO j=1,3
-        DO na=1,nat
-           DO nb=1,nat
-              CALL mp_bcast (ifc(:,:,:,i,j,na,nb), ionode_id, inter_pool_comm)
-              CALL mp_bcast (ifc(:,:,:,i,j,na,nb), root_pool, intra_pool_comm)
-           ENDDO
+  DO i=1, 3
+    DO j=1, 3
+      DO na=1, nat
+        DO nb=1, nat
+          CALL mp_bcast (ifc(:,:,:,i,j,na,nb), ionode_id, inter_pool_comm)
+          CALL mp_bcast (ifc(:,:,:,i,j,na,nb), root_pool, intra_pool_comm)
         ENDDO
-     ENDDO
+      ENDDO
+    ENDDO
   ENDDO
   !
-  CALL mp_bcast (zstar, ionode_id, inter_pool_comm)
-  CALL mp_bcast (zstar, root_pool, intra_pool_comm)
-  CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
-  CALL mp_bcast (epsi, root_pool, intra_pool_comm)
-  CALL mp_bcast (tau_, ionode_id, inter_pool_comm)
-  CALL mp_bcast (tau_, root_pool, intra_pool_comm)
-  CALL mp_bcast (ibrav_, ionode_id, inter_pool_comm)
-  CALL mp_bcast (ibrav_, root_pool, intra_pool_comm)
-
+  CALL mp_bcast (zstar, ionode_id, world_comm)
+  CALL mp_bcast (epsi, ionode_id, world_comm)
+  CALL mp_bcast (tau_, ionode_id, world_comm)
+  CALL mp_bcast (ibrav_, ionode_id, world_comm)
   !
   WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nq1,nq2,nq3,3,3,nat,nat)
   !
