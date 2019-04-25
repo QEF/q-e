@@ -731,9 +731,9 @@
     WRITE(stdout,'(5x,"Warning: current implementation for doubly degenerate band, one valley")')
     WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'Nel = ', nel, ', n = ', n, ' au^-3, EF (eV) = ', EF*ha2ev
     WRITE(stdout,'(5x,a,f12.8,a,f12.8)') 'q_tf (au-1) = ', qtf, ', q_tf (tpiba) = ', qtfc
-    IF (eps_ave .lt. eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
+    IF (eps_ave < eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
   ENDIF
-  IF (eps_ave .lt. eps5) eps_ave = 1.d0
+  IF (eps_ave < eps5) eps_ave = 1.d0
   !
   CALL cryst_to_cart(1, q, bg, 1)
   q2 = q(1)**2 + q(2)**2 + q(3)**2

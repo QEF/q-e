@@ -97,15 +97,15 @@
   ! 
   CALL start_clock('dvqpsi_us_on')
   IF (noncolin) THEN
-    ALLOCATE( ps1_nc(nkb, npol, lower_band:upper_band) )
-    ALLOCATE( ps2_nc(nkb, npol, lower_band:upper_band, 3) )
-    ALLOCATE( deff_nc(nhm, nhm, nat, nspin) )
+    ALLOCATE ( ps1_nc(nkb, npol, lower_band:upper_band) )
+    ALLOCATE ( ps2_nc(nkb, npol, lower_band:upper_band, 3) )
+    ALLOCATE ( deff_nc(nhm, nhm, nat, nspin) )
   ELSE
-    ALLOCATE( ps1(nkb, lower_band:upper_band) )
-    ALLOCATE( ps2(nkb, lower_band:upper_band, 3) )
-    ALLOCATE( deff(nhm, nhm, nat) )
+    ALLOCATE ( ps1(nkb, lower_band:upper_band) )
+    ALLOCATE ( ps2(nkb, lower_band:upper_band, 3) )
+    ALLOCATE ( deff(nhm, nhm, nat) )
   ENDIF
-  ALLOCATE( aux(npwx) )
+  ALLOCATE ( aux(npwx) )
   IF (lsda) current_spin = isk_loc(ik)
   !
   !   we first compute the coefficients of the vectors
@@ -128,7 +128,7 @@
     ijkb0 = 0
     DO nt = 1, ntyp
       DO na = 1, nat
-        IF (ityp(na) .eq. nt) THEN
+        IF (ityp(na) == nt) THEN
           mu = 3 * (na - 1)
           DO ih = 1, nh(nt)
             ikb = ijkb0 + ih
@@ -257,15 +257,15 @@
     ENDDO
   ENDDO
   !
-  DEALLOCATE(aux)
+  DEALLOCATE (aux)
   IF (noncolin) THEN
-    DEALLOCATE(ps2_nc)
-    DEALLOCATE(ps1_nc)
-    DEALLOCATE(deff_nc)
+    DEALLOCATE (ps2_nc)
+    DEALLOCATE (ps1_nc)
+    DEALLOCATE (deff_nc)
   ELSE
-    DEALLOCATE(ps2)
-    DEALLOCATE(ps1)
-    DEALLOCATE(deff)
+    DEALLOCATE (ps2)
+    DEALLOCATE (ps1)
+    DEALLOCATE (deff)
   ENDIF
   !
   CALL stop_clock('dvqpsi_us_on')

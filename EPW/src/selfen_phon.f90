@@ -160,7 +160,7 @@
     WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick.lt.1.d3 ) &
+    IF ( fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -369,7 +369,7 @@
         wq_tmp = wf (jmode, iq)
         IF ( ABS(wq - wq_tmp) < eps6 ) THEN
           n = n + 1
-          IF ( wq_tmp .gt. eps_acustic ) THEN 
+          IF ( wq_tmp > eps_acustic ) THEN 
             tmp  =  tmp  + gamma  ( jmode ) / pi / wq**two / dosef
             tmp2 =  tmp2 + gamma_v( jmode ) / pi / wq**two / dosef
           ENDIF

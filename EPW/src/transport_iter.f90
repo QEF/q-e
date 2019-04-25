@@ -590,9 +590,9 @@
     ! SP - The implementation only works with MPI so far
 #ifdef __MPI
     ! Read velocities
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
-      OPEN(unit=iufilibtev_sup,file='IBTEvel_sup.fmt',status='old',iostat=ios)
+      OPEN(UNIT=iufilibtev_sup,FILE='IBTEvel_sup.fmt',status='old',iostat=ios)
       READ(iufilibtev_sup,'(a)')
       READ(iufilibtev_sup,*) ind_tot, ind_totcb
       READ(iufilibtev_sup,'(a)')
@@ -709,12 +709,12 @@
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
       CALL MPI_FILE_CLOSE(iunsparset,ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
-      DEALLOCATE(trans_prob)
-      DEALLOCATE(sparse_q)
-      DEALLOCATE(sparse_k)
-      DEALLOCATE(sparse_i)
-      DEALLOCATE(sparse_j)
-      DEALLOCATE(sparse_t) 
+      DEALLOCATE (trans_prob)
+      DEALLOCATE (sparse_q)
+      DEALLOCATE (sparse_k)
+      DEALLOCATE (sparse_i)
+      DEALLOCATE (sparse_j)
+      DEALLOCATE (sparse_t) 
       ! 
     ENDIF
     ! Electrons
@@ -804,12 +804,12 @@
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
       CALL MPI_FILE_CLOSE(iunsparsetcb,ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
-      DEALLOCATE(trans_probcb)
-      DEALLOCATE(sparsecb_q)
-      DEALLOCATE(sparsecb_k)
-      DEALLOCATE(sparsecb_i)
-      DEALLOCATE(sparsecb_j)
-      DEALLOCATE(sparsecb_t)
+      DEALLOCATE (trans_probcb)
+      DEALLOCATE (sparsecb_q)
+      DEALLOCATE (sparsecb_k)
+      DEALLOCATE (sparsecb_i)
+      DEALLOCATE (sparsecb_j)
+      DEALLOCATE (sparsecb_t)
       ! 
     ENDIF
 #endif  

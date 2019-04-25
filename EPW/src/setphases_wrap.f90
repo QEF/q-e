@@ -62,7 +62,7 @@
   !   !
   !   DO ik=1,nks
   !      !
-  !      IF (nks.gt.1) then
+  !      IF (nks > 1) then
   !         CALL davcio (evc, lrwfc, iuwfc, ik, - 1)
   !      ENDIF
   !      !
@@ -81,7 +81,7 @@
         DO ik = 1, nkstot
            DO ibnd = 1, nbnd
               DO jbnd = 1, nbnd
-                 IF (ibnd .eq. jbnd) then
+                 IF (ibnd == jbnd) then
                     umat_all(ibnd,jbnd,ik) = (1.d0, 0.d0)
                  ELSE
                     umat_all(ibnd,jbnd,ik) = (0.d0,0.d0)
@@ -93,7 +93,7 @@
      DO ik = 1, nks
         DO ibnd = 1, nbnd
            DO jbnd = 1, nbnd
-              IF (ibnd .eq. jbnd) then
+              IF (ibnd == jbnd) then
                  umat(ibnd,jbnd,ik) = (1.d0, 0.d0)
               ELSE
                  umat(ibnd,jbnd,ik) = (0.d0,0.d0)
@@ -107,7 +107,7 @@
   !
   CALL mp_sum(umat_all, inter_pool_comm)
   !
-  !IF (iverbosity .eq. 1) then
+  !IF (iverbosity == 1) then
   !   WRITE (stdout,* ) "Phase setting matrices:"
   !   DO ik = 1, nkstot
   !      DO ibnd = 1, nbnd

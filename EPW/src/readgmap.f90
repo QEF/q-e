@@ -89,7 +89,7 @@
   !
   IF (meta_ionode) THEN
     !
-    OPEN(iukgmap, file=trim(prefix)//'.kgmap', form='formatted', status='old', iostat=ios)
+    OPEN(iukgmap, FILE=trim(prefix)//'.kgmap', FORM='formatted', status='old', iostat=ios)
     IF (ios /=0) CALL errore('readgmap', 'error opening kgmap file', iukgmap)
     !
     DO ik = 1, nkstot
@@ -109,7 +109,7 @@
     !  'fake' reading is because the gmap appears *after* the
     !  wrong kmap.
     !
-    OPEN(iukmap, file=trim(prefix)//'.kmap', form='formatted', status='old', iostat=ios)
+    OPEN(iukmap, FILE=trim(prefix)//'.kmap', FORM='formatted', status='old', iostat=ios)
     IF (ios /= 0) CALL errore ('readgmap', 'error opening kmap file', iukmap)
     DO ik = 1, nkstot
       READ(iukmap,*) ik1, itmp, shift(ik1)

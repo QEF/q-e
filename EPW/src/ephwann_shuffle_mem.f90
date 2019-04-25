@@ -304,14 +304,14 @@
   IF ( epwread ) THEN
     !
     ! Might have been pre-allocate depending of the restart configuration 
-    IF(ALLOCATED(tau))  DEALLOCATE( tau )
-    IF(ALLOCATED(ityp)) DEALLOCATE( ityp )
-    IF(ALLOCATED(w2))   DEALLOCATE( w2 )
+    IF(ALLOCATED(tau))  DEALLOCATE ( tau )
+    IF(ALLOCATED(ityp)) DEALLOCATE ( ityp )
+    IF(ALLOCATED(w2))   DEALLOCATE ( w2 )
     ! 
     ! We need some crystal info
     IF (mpime == ionode_id) THEN
       !
-      OPEN(unit=crystal,file='crystal.fmt',status='old',iostat=ios)
+      OPEN(UNIT=crystal,FILE='crystal.fmt',status='old',iostat=ios)
       READ (crystal,*) nat
       READ (crystal,*) nmodes
       READ (crystal,*) nelec
@@ -319,24 +319,24 @@
       READ (crystal,*) bg
       READ (crystal,*) omega
       READ (crystal,*) alat
-      ALLOCATE( tau( 3, nat ) )
+      ALLOCATE ( tau( 3, nat ) )
       READ (crystal,*) tau
       READ (crystal,*) amass
-      ALLOCATE( ityp( nat ) )
+      ALLOCATE ( ityp( nat ) )
       READ (crystal,*) ityp
       READ (crystal,*) noncolin
       READ (crystal,*) w_centers
       ! 
     ENDIF
     CALL mp_bcast (nat      , ionode_id, world_comm)
-    IF (mpime /= ionode_id) ALLOCATE( ityp( nat ) )
+    IF (mpime /= ionode_id) ALLOCATE ( ityp( nat ) )
     CALL mp_bcast (nmodes   , ionode_id, world_comm)
     CALL mp_bcast (nelec    , ionode_id, world_comm)
     CALL mp_bcast (at       , ionode_id, world_comm)
     CALL mp_bcast (bg       , ionode_id, world_comm)
     CALL mp_bcast (omega    , ionode_id, world_comm)
     CALL mp_bcast (alat     , ionode_id, world_comm)
-    IF (mpime /= ionode_id) ALLOCATE( tau( 3, nat ) )
+    IF (mpime /= ionode_id) ALLOCATE ( tau( 3, nat ) )
     CALL mp_bcast (tau      , ionode_id, world_comm)
     CALL mp_bcast (amass    , ionode_id, world_comm)
     CALL mp_bcast (ityp     , ionode_id, world_comm)
@@ -351,12 +351,12 @@
     continue
   ENDIF
   !
-  ALLOCATE( w2( 3*nat) )
+  ALLOCATE ( w2( 3*nat) )
   !
   ! Determine Wigner-Seitz points
   ! For this we need the Wannier centers
   ! w_centers is allocated inside loadumat
-  IF (.not. epwread) THEN
+  IF ( .NOT.  epwread) THEN
     xxq = 0.d0
     CALL loadumat( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers )
   ENDIF
@@ -438,18 +438,18 @@
      !   Bloch to Wannier transform
      ! ------------------------------------------------------
      !
-     ALLOCATE( chw    ( nbndsub, nbndsub, nrr_k ),        &
+     ALLOCATE ( chw    ( nbndsub, nbndsub, nrr_k ),        &
                chw_ks ( nbndsub, nbndsub, nrr_k ),        &
                rdw    ( nmodes,  nmodes,  nrr_q ) )
 
      IF (vme) THEN
-       ALLOCATE( cvmew ( 3, nbndsub, nbndsub, nrr_k ) )
+       ALLOCATE ( cvmew ( 3, nbndsub, nbndsub, nrr_k ) )
      ELSE
-       ALLOCATE( cdmew ( 3, nbndsub, nbndsub, nrr_k ) )
+       ALLOCATE ( cdmew ( 3, nbndsub, nbndsub, nrr_k ) )
      ENDIF
      ! 
      ! SP : Let the user chose. If false use files on disk
-     ALLOCATE(epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
+     ALLOCATE (epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
      epmatwe_mem(:,:,:,:) = czero
      !
      ! Hamiltonian
@@ -478,7 +478,7 @@
      !
      ! Dynamical Matrix 
      !
-     IF (.not. lifc) CALL dynbloch2wan(nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q)
+     IF ( .NOT.  lifc) CALL dynbloch2wan(nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q)
      !
      !
      ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
@@ -577,12 +577,12 @@
      ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
   ENDIF
   !
-  ALLOCATE(cfac(nrr_k,dims,dims))
-  ALLOCATE(cfacq(nrr_k,dims,dims))
-  ALLOCATE(rdotk(nrr_k))
-  ALLOCATE(rdotk2(nrr_k))
+  ALLOCATE (cfac(nrr_k,dims,dims))
+  ALLOCATE (cfacq(nrr_k,dims,dims))
+  ALLOCATE (rdotk(nrr_k))
+  ALLOCATE (rdotk2(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
-  ALLOCATE(irvec_r(3,nrr_k))
+  ALLOCATE (irvec_r(3,nrr_k))
   irvec_r = REAL(irvec_k,KIND=dp)
   ! 
   ! ------------------------------------------------------
@@ -600,7 +600,7 @@
      !
      xxk = xkf (:, ik)
      !
-     IF ( 2*(ik/2).eq.ik ) THEN
+     IF ( 2*(ik/2) == ik ) THEN
         !
         !  this is a k+q point : redefine as xkf (:, ik-1) + xxq
         !
@@ -641,8 +641,8 @@
      !
      ! SP: even when reading from input the number of electron needs to be correct
      already_skipped = .false.
-     IF ( nbndskip .gt. 0 ) THEN
-        IF ( .not. already_skipped ) THEN
+     IF ( nbndskip > 0 ) THEN
+        IF ( .NOT. already_skipped ) THEN
            IF ( noncolin ) THEN
               nelec = nelec - one * nbndskip
            ELSE
@@ -665,8 +665,8 @@
      ! (spin-unpolarized)
      ! RM - add the noncolin case
      already_skipped = .false.
-     IF ( nbndskip .gt. 0 ) THEN
-        IF ( .not. already_skipped ) THEN
+     IF ( nbndskip > 0 ) THEN
+        IF ( .NOT. already_skipped ) THEN
            IF ( noncolin ) THEN 
               nelec = nelec - one * nbndskip
            ELSE
@@ -689,7 +689,7 @@
      !
      ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
      ! with the wannier functions, or 'coarse' Fermi level is inaccurate
-     IF (abs(efnew - ef) * ryd2eV .gt. 0.250d0 .and. (.not.eig_read) ) &
+     IF (abs(efnew - ef) * ryd2eV > 0.250d0 .and. ( .NOT. eig_read) ) &
         WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      !
@@ -785,14 +785,14 @@
 998 continue ! Continue after all scattering rates have been computed in print_ibte
     IF (epmatkqread) THEN
       ! 
-      ALLOCATE( vkk_all( 3, ibndmax-ibndmin+1, nkqtotf/2 ) )
-      ALLOCATE( wkf_all( nkqtotf/2 ) )
+      ALLOCATE ( vkk_all( 3, ibndmax-ibndmin+1, nkqtotf/2 ) )
+      ALLOCATE ( wkf_all( nkqtotf/2 ) )
       ! 
       CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
       ! 
-      DEALLOCATE(vkk_all)
-      DEALLOCATE(wkf_all)
-      DEALLOCATE(etf_all)
+      DEALLOCATE (vkk_all)
+      DEALLOCATE (wkf_all)
+      DEALLOCATE (etf_all)
       GOTO 999
       ! 
     ELSE ! epmatkqread
@@ -858,9 +858,9 @@
   ! Restart in SERTA case or self-energy case
   IF (restart) THEN
     IF ( elecselfen ) THEN
-      ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nkqtotf/2) )
-      ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nkqtotf/2) )
-      ALLOCATE( zi_all(ibndmax-ibndmin+1, nkqtotf/2) )
+      ALLOCATE ( sigmar_all(ibndmax-ibndmin+1, nkqtotf/2) )
+      ALLOCATE ( sigmai_all(ibndmax-ibndmin+1, nkqtotf/2) )
+      ALLOCATE ( zi_all(ibndmax-ibndmin+1, nkqtotf/2) )
       sigmar_all(:,:) = zero
       sigmai_all(:,:) = zero
       zi_all(:,:)     = zero
@@ -894,8 +894,8 @@
     CALL mp_bcast(exst, ionode_id, world_comm)
     ! 
     IF (exst) THEN
-      IF (mpime.eq.ionode_id) THEN
-        OPEN(unit=iunrestart,file='restart_ibte.fmt',status='old',iostat=ios)
+      IF (mpime == ionode_id) THEN
+        OPEN(UNIT=iunrestart,FILE='restart_ibte.fmt',status='old',iostat=ios)
         READ (iunrestart,*) iq_restart
         READ (iunrestart,*) ind_tot
         READ (iunrestart,*) ind_totcb
@@ -942,7 +942,7 @@
     ! In case of big calculation, show progression of iq (especially usefull when
     ! elecselfen = true as nothing happen during the calculation otherwise. 
     !
-    IF ( .not. phonselfen) THEN 
+    IF ( .NOT. phonselfen) THEN 
       IF (MOD(iqq,100) == 0) THEN
         WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iqq,'/',totq
       ENDIF
@@ -954,7 +954,7 @@
     ! dynamical matrix : Wannier -> Bloch
     ! ------------------------------------------------------
     !
-    IF (.not. lifc) THEN
+    IF ( .NOT.  lifc) THEN
       CALL dynwan2bloch &
           ( nmodes, nrr_q, irvec_q, ndegen_q, xxq, uf, w2 )
     ELSE
@@ -968,7 +968,7 @@
       ! wf are the interpolated eigenfrequencies
       ! (omega on fine grid)
       !
-      IF ( w2 (nu) .gt. 0.d0 ) THEN
+      IF ( w2 (nu) > 0.d0 ) THEN
         wf(nu,iq) =  sqrt(abs( w2 (nu) ))
       ELSE
         wf(nu,iq) = -sqrt(abs( w2 (nu) ))
@@ -1179,11 +1179,11 @@
     IF (prtgkk     ) CALL print_gkk( iq )
     IF (phonselfen ) CALL selfen_phon_q( iqq, iq, totq )
     IF (elecselfen ) CALL selfen_elec_q( iqq, iq, totq, first_cycle )
-    IF (plselfen .and. .not. vme ) CALL selfen_pl_q( iqq, iq, totq )
+    IF (plselfen .and. .NOT. vme ) CALL selfen_pl_q( iqq, iq, totq )
     IF (nest_fn    ) CALL nesting_fn_q( iqq, iq )
     IF (specfun_el ) CALL spectral_func_q( iqq, iq, totq )
     IF (specfun_ph ) CALL spectral_func_ph( iqq, iq, totq )
-    IF (specfun_pl .and. .not. vme ) CALL spectral_func_pl_q( iqq, iq, totq )
+    IF (specfun_pl .and. .NOT. vme ) CALL spectral_func_pl_q( iqq, iq, totq )
     IF (ephwrite) THEN
       IF ( iq == 1 ) THEN 
         CALL kmesh_fine
@@ -1309,10 +1309,10 @@
   ! SP: Added lambda and phonon lifetime writing to file.
   ! 
   CALL mp_barrier(inter_pool_comm)
-  IF (mpime.eq.ionode_id) THEN
+  IF (mpime == ionode_id) THEN
     !
     IF (phonselfen) THEN
-      OPEN(unit=lambda_phself,file='lambda.phself')
+      OPEN(UNIT=lambda_phself,FILE='lambda.phself')
       WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
       WRITE(lambda_phself, *) '#Modes     ',(imode, imode=1,nmodes)
       DO iqq = 1, totq
@@ -1324,7 +1324,7 @@
           !
       ENDDO
       CLOSE(lambda_phself)
-      OPEN(unit=linewidth_phself,file='linewidth.phself')
+      OPEN(UNIT=linewidth_phself,FILE='linewidth.phself')
       WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
       WRITE(linewidth_phself,'(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
       DO iqq = 1, totq
@@ -1372,11 +1372,11 @@
     ENDDO ! itemp
   ENDIF ! if scattering 
   ! 
-  IF ( ALLOCATED(lambda_all) )   DEALLOCATE( lambda_all )
-  IF ( ALLOCATED(gamma_all) )    DEALLOCATE( gamma_all )
-  IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
-  IF ( ALLOCATED(sigmai_mode) )  DEALLOCATE( sigmai_mode )
-  IF ( ALLOCATED(w2) )           DEALLOCATE( w2 )
+  IF ( ALLOCATED(lambda_all) )   DEALLOCATE ( lambda_all )
+  IF ( ALLOCATED(gamma_all) )    DEALLOCATE ( gamma_all )
+  IF ( ALLOCATED(sigmai_all) )   DEALLOCATE ( sigmai_all )
+  IF ( ALLOCATED(sigmai_mode) )  DEALLOCATE ( sigmai_mode )
+  IF ( ALLOCATED(w2) )           DEALLOCATE ( w2 )
   DEALLOCATE (cfac)
   DEALLOCATE (cfacq)
   DEALLOCATE (rdotk)

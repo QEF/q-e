@@ -850,7 +850,7 @@
     IF (eig_read) THEN
        DO ibnd = 1, nbnd
          DO jbnd = 1, nbnd
-           IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) .gt. eps4) THEN
+           IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) > eps4) THEN
               dmef(:,ibnd,jbnd) = dmef(:,ibnd,jbnd) * &
                      ( etf(ibnd)    - etf(jbnd) )/ &
                      ( etf_ks(ibnd) - etf_ks(jbnd) )
@@ -987,7 +987,7 @@
         ! convert irvec from reduce to cartesian coordinates
         ! multiply by alat since the crystal axis 'at' are in 
         ! cart. coords. in units of a_0
-        irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
+        irvec_tmp(:) = alat * MATMUL( at, dble(irvec(:,ir)) )
         DO ipol = 1, 3
           chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
                 ci * irvec_tmp(ipol) * cfac(ir,:,:) * chw(:,:,ir)
@@ -996,7 +996,7 @@
       ENDDO
     ELSE
       DO ir = 1, nrr
-        irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
+        irvec_tmp(:) = alat * MATMUL( at, dble(irvec(:,ir)) )
         DO ipol = 1, 3
           chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
                 ci * irvec_tmp(ipol) * cfac(ir,1,1) * chw(:,:,ir)
@@ -1015,8 +1015,8 @@
     !
     DO ipol = 1, 3
       !
-      ! cvmef_tmp(:,:) = matmul( cvmef(ipol,:,:), conjg(transpose(cuf(:,:))) )
-      ! vmef(ipol,:,:) = matmul( cuf(:,:), cvmef_tmp(:,:) )
+      ! cvmef_tmp(:,:) = MATMUL( cvmef(ipol,:,:), conjg(transpose(cuf(:,:))) )
+      ! vmef(ipol,:,:) = MATMUL( cuf(:,:), cvmef_tmp(:,:) )
       !
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, cvmef(ipol,:,:), &
                  nbnd, cuf(:,:), nbnd, czero, cvmef_tmp(:,:), nbnd)
@@ -1033,8 +1033,8 @@
     !
     DO ipol = 1, 3
       !
-      ! chf_a_tmp(:,:) = matmul( chf_a(ipol,:,:), conjg(transpose(cuf(:,:))) )
-      ! chf_a(ipol,:,:) = matmul(cuf(:,:), chf_a_tmp(:,:) )
+      ! chf_a_tmp(:,:) = MATMUL( chf_a(ipol,:,:), conjg(transpose(cuf(:,:))) )
+      ! chf_a(ipol,:,:) = MATMUL(cuf(:,:), chf_a_tmp(:,:) )
       !
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, chf_a(ipol,:,:), &
                  nbnd, cuf(:,:), nbnd, czero, chf_a_tmp(:,:), nbnd)
@@ -1703,7 +1703,7 @@
       ENDDO
     ENDIF
     ! 
-    ALLOCATE(epmatw( nbnd, nbnd, nrr_k))
+    ALLOCATE (epmatw( nbnd, nbnd, nrr_k))
     epmatw(:,:,:) = czero
     !
 #if defined(__MPI)  
@@ -1756,7 +1756,7 @@
       !IF (mpime==1) write(999,*),'cpu2 ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), sum(epmatf)
       ! 
     ENDDO
-    DEALLOCATE(epmatw)
+    DEALLOCATE (epmatw)
     !
     CALL mp_sum(epmatf, world_comm)
     ! 

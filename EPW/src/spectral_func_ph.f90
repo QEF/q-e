@@ -129,7 +129,7 @@
     WRITE(stdout,'(5x,"Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")') 
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick.lt.1.d3 ) &
+    IF ( fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -162,7 +162,7 @@
   !   N(Ef) in the equation for lambda is the DOS per spin
   dosef = dosef / two
   !
-  IF ( iqq .eq. 1 ) THEN 
+  IF ( iqq == 1 ) THEN 
     WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
     WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
   ENDIF
@@ -177,8 +177,8 @@
     ikq = ikk + 1
     ! 
     ! Here we must have ef, not ef0, to be consistent with ephwann_shuffle
-    IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-         ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+    IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+         ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
       !
       fermicount = fermicount + 1
       !
@@ -191,7 +191,7 @@
         !      innerloops. Therefore we do it here.
         inv_wq =  1.0/(two * wq)
         ! the coupling from Gamma acoustic phonons is negligible
-        IF ( wq .gt. eps_acustic ) THEN
+        IF ( wq > eps_acustic ) THEN
           g2_tmp = 1.0
         ELSE
           g2_tmp = 0.0
@@ -285,8 +285,8 @@
   !
   IF (iqq == 1) THEN
     IF (mpime == ionode_id) THEN
-      OPEN(unit=iospectral,file='specfun.phon')
-      OPEN(unit=iospectral_sup,file='specfun_sup.phon')
+      OPEN(UNIT=iospectral,FILE='specfun.phon')
+      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.phon')
       WRITE(iospectral, '(/2x,a)') '#Phonon spectral function (meV)'
       WRITE(iospectral_sup, '(2x,a)') '#Phonon eigenenergies + real and im part of phonon self-energy (meV)'
       WRITE(iospectral, '(/2x,a)') '#Q-point    Energy[eV]     A(q,w)[meV^-1]'

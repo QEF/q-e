@@ -310,8 +310,8 @@
   IF (epwread) THEN
     !
     ! Might have been pre-allocate depending of the restart configuration 
-    !IF (ALLOCATED(tau))  DEALLOCATE( tau )
-    !IF (ALLOCATED(ityp)) DEALLOCATE( ityp )
+    !IF (ALLOCATED(tau))  DEALLOCATE ( tau )
+    !IF (ALLOCATED(ityp)) DEALLOCATE ( ityp )
     ! 
     ! We need some crystal info
     IF (mpime == ionode_id) THEN
@@ -495,7 +495,7 @@
     !
     ! Dynamical Matrix
     !
-    IF (.not. lifc) CALL dynbloch2wan &
+    IF ( .NOT.  lifc) CALL dynbloch2wan &
                          ( nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q )
     !
     !
@@ -637,7 +637,7 @@
   ALLOCATE (rdotk(nrr_k))
   ALLOCATE (rdotk2(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
-  ALLOCATE(irvec_r(3,nrr_k))
+  ALLOCATE (irvec_r(3,nrr_k))
   irvec_r = REAL(irvec_k,KIND=dp)
   ! 
   ! Zeroing everything - initialization is important !
@@ -662,7 +662,7 @@
     !
     xxk = xkf (:, ik)
     !
-    IF ( 2*(ik/2).eq.ik ) THEN
+    IF ( 2*(ik/2) == ik ) THEN
       !
       !  this is a k+q point : redefine as xkf (:, ik-1) + xxq
       !
@@ -711,8 +711,8 @@
      !
      ! SP: even when reading from input the number of electron needs to be correct
      already_skipped = .false.
-     IF ( nbndskip .gt. 0 ) THEN
-        IF ( .not. already_skipped ) THEN
+     IF ( nbndskip > 0 ) THEN
+        IF ( .NOT. already_skipped ) THEN
            IF ( noncolin ) THEN
               nelec = nelec - one * nbndskip
            ELSE
@@ -735,8 +735,8 @@
      ! (spin-unpolarized)
      ! RM - add the noncolin case
      already_skipped = .false.
-     IF ( nbndskip .gt. 0 ) THEN
-        IF ( .not. already_skipped ) THEN
+     IF ( nbndskip > 0 ) THEN
+        IF ( .NOT. already_skipped ) THEN
            IF ( noncolin ) THEN 
               nelec = nelec - one * nbndskip
            ELSE
@@ -759,7 +759,7 @@
      !
      ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
      ! with the wannier functions, or 'coarse' Fermi level is inaccurate
-     IF (abs(efnew - ef) * ryd2eV .gt. 0.250d0 .and. (.not.eig_read) ) &
+     IF (abs(efnew - ef) * ryd2eV > 0.250d0 .and. ( .NOT. eig_read) ) &
         WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      !
@@ -1478,7 +1478,7 @@
     IF (mpime == ionode_id) THEN
       !
       IF (phonselfen) THEN
-        OPEN(unit=lambda_phself,file='lambda.phself')
+        OPEN(UNIT=lambda_phself,FILE='lambda.phself')
         WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
         WRITE(lambda_phself, *) '#Modes     ',(imode, imode=1,nmodes)
         DO iqq = 1, nqtotf
@@ -1947,15 +1947,15 @@
   ! 
   IF (mpime == ionode_id) THEN
     !
-    OPEN(unit=epwdata,file='epwdata.fmt',status='old',iostat=ios)
+    OPEN(UNIT=epwdata,FILE='epwdata.fmt',status='old',iostat=ios)
     IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening epwdata.fmt',epwdata)
-    IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt',status='old',iostat=ios)
+    IF (eig_read) OPEN(UNIT=iunksdata,FILE='ksdata.fmt',status='old',iostat=ios)
     IF (eig_read .AND. ios /= 0) call errore ('ephwann_shuffle', 'error opening ksdata.fmt',iunksdata)
     IF (vme) THEN 
-      OPEN(unit=iunvmedata,file='vmedata.fmt',status='old',iostat=ios)
+      OPEN(UNIT=iunvmedata,FILE='vmedata.fmt',status='old',iostat=ios)
       IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening vmedata.fmt',iunvmedata)
     ELSE
-      OPEN(unit=iundmedata,file='dmedata.fmt',status='old',iostat=ios)
+      OPEN(UNIT=iundmedata,FILE='dmedata.fmt',status='old',iostat=ios)
       IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening dmedata.fmt',iundmedata)
     ENDIF
     READ (epwdata,*) ef
@@ -2091,9 +2091,9 @@
   !
   imelt = (ibndmax-ibndmin+1)**2 * nmodes * nkf
   rmelt = imelt * 8 / 1048576.d0 ! 8 bytes per number, value in Mb
-  IF (rmelt .lt. 1000.0 ) THEN
+  IF (rmelt < 1000.0 ) THEN
      chunit =  ' Mb '
-     IF (rmelt .lt. 1.0 ) THEN
+     IF (rmelt < 1.0 ) THEN
         chunit = ' Kb '
         rmelt  = rmelt * 1024.d0
      ENDIF
@@ -2282,7 +2282,7 @@
   !
   lrec = 2 * nbnd * nbnd * np * nmodes
   !
-  IF ( iop .eq. -1 ) then
+  IF ( iop == -1 ) then
     !
     !  read matrix
     !
@@ -2301,7 +2301,7 @@
      ENDDO
     ENDDO
     !
-  ELSEif ( iop .eq. 1 ) then 
+  ELSEif ( iop == 1 ) then 
     !
     !  write matrix
     !
@@ -2459,7 +2459,7 @@
       ! Therefore we rescale everything to the VBM
       arg = (etf (ibnd, ikk) - evbm )/ temp 
       !
-      IF (arg .lt. - maxarg) THEN
+      IF (arg < - maxarg) THEN
         ks_exp(ibnd,ik) = 0.0
       ELSE
         ks_exp(ibnd,ik) = exp (arg)

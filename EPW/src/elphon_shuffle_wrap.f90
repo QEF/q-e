@@ -223,7 +223,7 @@
     IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
   ENDDO
   IF (maxvalue > nqxq) THEN
-    IF (ALLOCATED(qrad)) DEALLOCATE(qrad)
+    IF (ALLOCATED(qrad)) DEALLOCATE (qrad)
     ALLOCATE (qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp))
   ENDIF
   ! 
@@ -244,7 +244,7 @@
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
            nbnd, ",", nkstot,")"
       tempfile = trim(prefix)//'.eig'
-      OPEN(iuqpeig, file=tempfile, form='formatted', action='read', iostat=ios)
+      OPEN(iuqpeig, FILE=tempfile, FORM='formatted', action='read', iostat=ios)
       IF (ios /= 0) CALL errore('elphon_shuffle_wrap','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
       DO ik=1, nkstot
@@ -336,7 +336,7 @@
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
     CALL find_sym(nat, tau, ityp, .false., m_loc)
-    IF ( .not. allfrac ) CALL remove_sym( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+    IF ( .NOT. allfrac ) CALL remove_sym( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
     WRITE(stdout,'(5x,a,i3)') "Symmetries of crystal:         ", nsym
     !   
     ! The following loop is required to propertly set up the symmetry matrix s. 
@@ -351,7 +351,7 @@
       ! if minus_q is true calculate also irotmq and the G associated to Sq=-g+G
       CALL set_giq(xq, s, nsymq, nsym, irotmq, minus_q, gi, gimq)
     ENDDO
-  ENDIF ! epwread .and. .not. epbread
+  ENDIF ! epwread .and. .NOT. epbread
   ! 
   ! CV: if we read the .fmt files we don't need to read the .epb anymore
   !
@@ -380,7 +380,7 @@
          filename = TRIM(dirname) // '/patterns.' // &
                     TRIM(int_to_char(iq_irr)) // '.xml'
          INQUIRE(FILE=TRIM(filename), EXIST=exst )
-         IF (.not.exst) CALL errore('elphon_shuffle_wrap', &
+         IF ( .NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
          CALL iotk_open_read(iunpun, file = TRIM(filename), &
                                      binary = .FALSE., ierr = ierr)
@@ -447,7 +447,7 @@
       !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
-      IF ( .not. ALLOCATED(sumr) ) ALLOCATE( sumr(2,3,nat,3) )
+      IF ( .NOT. ALLOCATED(sumr) ) ALLOCATE ( sumr(2,3,nat,3) )
       IF (meta_ionode) THEN
         CALL readmat_shuffle2(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
                               invs, s, irt, rtau)
@@ -459,7 +459,7 @@
       !
       ! now dynq is the cartesian dyn mat (not divided by the masses)
       !
-      minus_q = (iswitch .gt. -3)  
+      minus_q = (iswitch > -3)  
       !
       !  loop over the q points of the star
       !
@@ -476,14 +476,14 @@
         nqc = nqc + 1
         xqc(:,nqc) = xq
         !
-        IF (iq .eq. 1) WRITE(stdout,*)
+        IF (iq == 1) WRITE(stdout,*)
         WRITE(stdout,5) nqc, xq
         !
         !  prepare the gmap for the refolding
         !
         CALL createkmap( xq )                      
         !
-        IF (iverbosity.eq.1) THEN
+        IF (iverbosity == 1) THEN
           !
           !   description of symmetries
           !
@@ -536,14 +536,14 @@
         nsq = 0 ! nsq is the degeneracy of the small group for this iq in the star
         !
         DO jsym = 1, nsym
-          IF ( isq(jsym) .eq. iq ) THEN
+          IF ( isq(jsym) == iq ) THEN
              nsq = nsq + 1
              sym_sgq(nsq) = jsym
           ENDIF
         ENDDO
         IF ( nsq*nq .ne. nsym ) CALL errore('elphon_shuffle_wrap', 'wrong degeneracy', iq)
         ! 
-        IF (iverbosity.eq.1) THEN
+        IF (iverbosity == 1) THEN
           !
           WRITE(stdout,*) 'iq, i, isym, nog, symmo'
           DO i = 1, nsq
@@ -634,7 +634,7 @@
         !print*,'et ', et_loc(:,2)
   !END
         ! SP: Now we treat separately the case imq == 0
-        IF (imq .eq. 0) THEN
+        IF (imq == 0) THEN
           !
           ! SP: First the vlocq need to be initialized propertly with the first
           !     q in the star
@@ -648,7 +648,7 @@
           nqc = nqc + 1
           xqc(:,nqc) = xq
           !
-          IF (iq .eq. 1) write(stdout,*)
+          IF (iq == 1) write(stdout,*)
           WRITE(stdout,5) nqc, xq
           !
           !  prepare the gmap for the refolding
@@ -676,7 +676,7 @@
       ENDDO
       !
       iq_first = iq_first + nq
-      if (imq .eq. 0) iq_first = iq_first + nq
+      if (imq == 0) iq_first = iq_first + nq
       !
     ENDDO ! irr-q loop
     ! 
@@ -700,7 +700,7 @@
       !
       IF (epbread) THEN
          inquire(file = tempfile, exist=exst)
-         IF (.not. exst) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
+         IF ( .NOT.  exst) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
          OPEN(iuepb, file = tempfile, form = 'unformatted')
          WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
          READ(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
@@ -726,7 +726,7 @@
     CALL stop_epw
   ENDIF
   !
-  IF ( .not.epbread .AND. epwread ) THEN
+  IF (  .NOT. epbread .AND. epwread ) THEN
   !  CV: need dummy nqc, xqc for the ephwann_shuffle call
      nqc = 1
      xqc = zero
@@ -842,9 +842,9 @@
   !! acceptance parameter
   PARAMETER (accep = 1.0d-5)
   !
-  eqvect_strict = abs( x(1)-y(1) ) .lt. accep .AND. &
-                  abs( x(2)-y(2) ) .lt. accep .AND. &
-                  abs( x(3)-y(3) ) .lt. accep
+  eqvect_strict = abs( x(1)-y(1) ) < accep .AND. &
+                  abs( x(2)-y(2) ) < accep .AND. &
+                  abs( x(3)-y(3) ) < accep
   !
   END FUNCTION eqvect_strict
   !---------------------------------------------------------------------------

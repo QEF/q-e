@@ -128,7 +128,7 @@
     WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick .lt. 1.d3 ) &
+    IF ( fsthick < 1.d3 ) &
        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -194,7 +194,7 @@
         wgq = wgq / ( one - two * wgq )
         !
         ! SP: Avoid if statement in inner loops
-        IF (wq .gt. eps_acustic) THEN
+        IF (wq > eps_acustic) THEN
           g2_tmp = 1.0
         ELSE
           g2_tmp = 0.0
@@ -294,8 +294,8 @@
     ! and constant matrix elements for dipole transitions)
     !
     IF (me_pool == 0) then
-      OPEN(unit=iospectral,file='specfun.elself') 
-      OPEN(unit=iospectral_sup,file='specfun_sup.elself') 
+      OPEN(UNIT=iospectral,FILE='specfun.elself') 
+      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.elself') 
     ENDIF
     IF (me_pool == 0) then
       WRITE(iospectral, '(/2x,a/)') '#Electronic spectral function (meV)'

@@ -78,7 +78,7 @@
      WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
      WRITE(stdout,'(5x,a/)') repeat('=',67)
      !
-     IF ( fsthick .lt. 1.d3 ) &
+     IF ( fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
            'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -173,8 +173,8 @@
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       ! (but in this case they are the same)
       !
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+          ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
         !
         fermicount = fermicount + 1
         !
@@ -196,7 +196,7 @@
             !
             !computation of the dipole
             if (ibnd==jbnd) then
-              if(sqrt(qsquared) .gt. 1d-6)then
+              if(sqrt(qsquared) > 1d-6)then
                 dipole = 1./(qsquared * tpiba_new * tpiba_new)
               else 
                 dipole = 0.d0 
@@ -283,8 +283,8 @@
     ! and constant matrix elements for dipole transitions)
     !
     IF (me_pool == 0) then
-      OPEN(unit=iospectral,file='specfun.plself') 
-      OPEN(unit=iospectral_sup,file='specfun_sup.plself') 
+      OPEN(UNIT=iospectral,FILE='specfun.plself') 
+      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.plself') 
     ENDIF
     IF (me_pool == 0) then
       WRITE(iospectral, '(/2x,a/)') '#Electron-plasmon spectral function (meV)'

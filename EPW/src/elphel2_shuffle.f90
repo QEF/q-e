@@ -200,8 +200,8 @@
   aux2(:,:) = czero
   zero_vect = zero
   !
-  IF (ALLOCATED(xkq) ) DEALLOCATE(xkq)                  
-  IF (.not. ALLOCATED(xkq) ) ALLOCATE( xkq(3,nkstot) ) 
+  IF (ALLOCATED(xkq) ) DEALLOCATE (xkq)                  
+  IF ( .NOT.  ALLOCATED(xkq) ) ALLOCATE ( xkq(3,nkstot) ) 
   xkq(:,:) = zero
   !
   IF ( nproc_pool>1 ) CALL errore &
@@ -227,7 +227,7 @@
   ! gmap gets allocated inside readgmap
   CALL readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
   !
-  IF (imode0.eq.0 .AND. iverbosity.eq.1) WRITE(stdout,5) ngxx
+  IF (imode0 == 0 .AND. iverbosity == 1) WRITE(stdout,5) ngxx
 5 FORMAT (5x,'Estimated size of gmap: ngxx =',i5)
   !
   ! close all sequential files in order to re-open them as direct access

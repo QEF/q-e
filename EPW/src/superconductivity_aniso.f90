@@ -70,7 +70,7 @@
        WRITE(stdout,'(a)') '  '
        WRITE(stdout,'(5x,a,i3,a,f8.4,a,a,i3,a)') 'temp(', itemp, ') = ', estemp(itemp)/kelvin2eV, ' K '
        WRITE(stdout,'(a)') '  '
-       IF ( limag .AND. .not. imag_read ) THEN 
+       IF ( limag .AND. .NOT. imag_read ) THEN 
           WRITE(stdout,'(5x,a)') 'Solve anisotropic Eliashberg equations on imaginary-axis ' 
        ELSEIF ( limag .AND. imag_read ) THEN
           WRITE(stdout,'(5x,a)') 'Read from file Delta and Znorm on imaginary-axis '
@@ -82,15 +82,15 @@
        CALL start_clock( 'iaxis_imag' )
        CALL gen_freqgrid_iaxis( itemp )
        !
-       IF ( ( limag .AND. .not. imag_read ) .OR. ( limag .AND. imag_read .AND. itemp .ne. 1 ) ) THEN
+       IF ( ( limag .AND. .NOT. imag_read ) .OR. ( limag .AND. imag_read .AND. itemp .ne. 1 ) ) THEN
           iter = 1
           conv = .false.
-          DO WHILE ( .not. conv .AND. iter .le. nsiter ) 
+          DO WHILE ( .NOT. conv .AND. iter <= nsiter ) 
              CALL sum_eliashberg_aniso_iaxis( itemp, iter, conv )
-             IF (mpime .eq. ionode_id) THEN
+             IF (mpime == ionode_id) THEN
                 DO ik = 1, nkfs
                    DO ibnd = 1, nbndfs
-                      IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                      IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                          CALL mix_broyden_aniso( ik, ibnd, nsiw(itemp), & 
                               ADeltai(ibnd,ik,:), ADeltaip(ibnd,ik,:), broyden_beta, iter, broyden_ndim, conv )
                       ENDIF
@@ -104,12 +104,12 @@
           ENDDO ! iter
           !
           IF ( conv ) THEN
-             IF ( ALLOCATED(ADeltaip) ) DEALLOCATE(ADeltaip)
+             IF ( ALLOCATED(ADeltaip) ) DEALLOCATE (ADeltaip)
              !
              ! SP : Only print the Free energy if the user want it
              !
-             IF ( iverbosity .eq. 2 ) THEN
-                IF (mpime .eq. ionode_id) THEN
+             IF ( iverbosity == 2 ) THEN
+                IF (mpime == ionode_id) THEN
                    CALL free_energy( itemp )
                 ENDIF
                 CALL mp_barrier(inter_pool_comm)
@@ -118,7 +118,7 @@
              WRITE(stdout,'(a)') '  '
              CALL stop_clock( 'iaxis_imag' )
              CALL print_clock( 'iaxis_imag' )
-          ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
+          ELSEIF ( .NOT. conv .AND. (iter-1) == nsiter ) THEN
              CALL deallocate_eliashberg
              WRITE(stdout,'(a)') 'not converged  '
              CALL stop_clock( 'iaxis_imag' )
@@ -126,7 +126,7 @@
              CALL errore('sum_eliashberg_aniso_iaxis','convergence was not reached',1)
              RETURN
           ENDIF
-       ELSEIF ( limag .AND. imag_read .AND. itemp .eq. 1 ) THEN
+       ELSEIF ( limag .AND. imag_read .AND. itemp == 1 ) THEN
           CALL eliashberg_read_aniso_iaxis( itemp )
        ENDIF
        !
@@ -142,14 +142,14 @@
           CALL pade_cont_aniso_iaxis_to_raxis( itemp, N, conv )
           !
           IF ( conv ) THEN
-             IF (mpime .eq. ionode_id) THEN
+             IF (mpime == ionode_id) THEN
                 CALL dos_quasiparticle( itemp )
              ENDIF
              CALL mp_barrier(inter_pool_comm)
              CALL stop_clock( 'raxis_pade' )
              CALL print_clock( 'raxis_pade' )
              WRITE(stdout,'(a)') '  '
-          ELSEIF ( .not. conv  .AND. (iter-1) .eq. nsiter ) THEN
+          ELSEIF ( .NOT. conv  .AND. (iter-1) == nsiter ) THEN
              CALL deallocate_eliashberg
              WRITE(stdout,'(a)') '  '
              CALL stop_clock( 'raxis_pade' )
@@ -170,12 +170,12 @@
           !
           iter = 1
           conv = .false.
-          DO WHILE ( .not. conv .AND. iter .le. nsiter )
+          DO WHILE ( .NOT. conv .AND. iter <= nsiter )
             CALL analytic_cont_aniso_iaxis_to_raxis( itemp, iter, conv )
-            IF (mpime .eq. ionode_id) THEN
+            IF (mpime == ionode_id) THEN
               DO ik = 1, nkfs
                 DO ibnd = 1, nbndfs
-                  IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                  IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                     rdeltain(:)  = real(ADeltap(ibnd,ik,:))
                     cdeltain(:)  = aimag(ADeltap(ibnd,ik,:))
                     rdeltaout(:) = real(ADelta(ibnd,ik,:))
@@ -194,14 +194,14 @@
           ENDDO ! iter
           !
           IF ( conv ) THEN 
-            IF (mpime .eq. ionode_id) THEN
+            IF (mpime == ionode_id) THEN
                CALL dos_quasiparticle( itemp )
             ENDIF
             CALL mp_barrier(inter_pool_comm)
             WRITE(stdout,'(a)') '  '
             CALL stop_clock( 'raxis_acon' )
             CALL print_clock( 'raxis_acon' )
-          ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
+          ELSEIF ( .NOT. conv .AND. (iter-1) == nsiter ) THEN
             CALL deallocate_eliashberg
             WRITE(stdout,'(a)') '  '
             CALL stop_clock( 'raxis_acon' )
@@ -303,14 +303,14 @@
     REAL(DP), ALLOCATABLE, SAVE :: Deltaold(:)
     !! gap
     !
-    IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nbndfs,nkfs,nsiw(itemp)) )
-    IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nbndfs,nkfs,nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(wesqrt) ) ALLOCATE ( wesqrt(nbndfs,nkfs,nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(desqrt) ) ALLOCATE ( desqrt(nbndfs,nkfs,nsiw(itemp)) )
     wesqrt(:,:,:) = zero
     desqrt(:,:,:) = zero
     !
-    IF ( iter .eq. 1 ) THEN
+    IF ( iter == 1 ) THEN
        !
-       IF ( itemp .eq. 1 ) THEN 
+       IF ( itemp == 1 ) THEN 
           ! get the size of required memory for  gap, Agap
           imelt = ( 1 + nbndfs * nkfs ) * nstemp 
           CALL mem_size_eliashberg( imelt )
@@ -321,24 +321,24 @@
        imelt = ( 4 + 6 * nbndfs * nkfs ) * nsiw(itemp)
        CALL mem_size_eliashberg( imelt )
        !
-       IF ( .not. ALLOCATED(gap) )       ALLOCATE( gap(nstemp) )
-       IF ( .not. ALLOCATED(Agap) )      ALLOCATE( Agap(nbndfs,nkfs,nstemp) )
-       IF ( .not. ALLOCATED(Deltai) )    ALLOCATE( Deltai(nsiw(itemp)) )
-       IF ( .not. ALLOCATED(Znormi) )    ALLOCATE( Znormi(nsiw(itemp)) )
-       IF ( .not. ALLOCATED(NZnormi) )   ALLOCATE( NZnormi(nsiw(itemp)) )
-       IF ( .not. ALLOCATED(ADeltai) )   ALLOCATE( ADeltai(nbndfs,nkfs,nsiw(itemp)) )
-       IF ( .not. ALLOCATED(ADeltaip) )  ALLOCATE( ADeltaip(nbndfs,nkfs,nsiw(itemp)) )
-       IF ( .not. ALLOCATED(AZnormi) )   ALLOCATE( AZnormi(nbndfs,nkfs,nsiw(itemp)) )
-       IF ( .not. ALLOCATED(NAZnormi) )  ALLOCATE( NAZnormi(nbndfs,nkfs,nsiw(itemp)) )
+       IF ( .NOT. ALLOCATED(gap) )       ALLOCATE ( gap(nstemp) )
+       IF ( .NOT. ALLOCATED(Agap) )      ALLOCATE ( Agap(nbndfs,nkfs,nstemp) )
+       IF ( .NOT. ALLOCATED(Deltai) )    ALLOCATE ( Deltai(nsiw(itemp)) )
+       IF ( .NOT. ALLOCATED(Znormi) )    ALLOCATE ( Znormi(nsiw(itemp)) )
+       IF ( .NOT. ALLOCATED(NZnormi) )   ALLOCATE ( NZnormi(nsiw(itemp)) )
+       IF ( .NOT. ALLOCATED(ADeltai) )   ALLOCATE ( ADeltai(nbndfs,nkfs,nsiw(itemp)) )
+       IF ( .NOT. ALLOCATED(ADeltaip) )  ALLOCATE ( ADeltaip(nbndfs,nkfs,nsiw(itemp)) )
+       IF ( .NOT. ALLOCATED(AZnormi) )   ALLOCATE ( AZnormi(nbndfs,nkfs,nsiw(itemp)) )
+       IF ( .NOT. ALLOCATED(NAZnormi) )  ALLOCATE ( NAZnormi(nbndfs,nkfs,nsiw(itemp)) )
        gap(itemp) = zero
        Agap(:,:,itemp) = zero
        ADeltaip(:,:,:) = zero
        !
        DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
-             IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+             IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                 DO iw = 1, nsiw(itemp)
-                   IF ( wsi(iw) .lt. 2.d0*wsphmax ) THEN
+                   IF ( wsi(iw) < 2.d0*wsphmax ) THEN
                       ADeltaip(ibnd,ik,iw) = gap0
                    ELSE
                       ADeltaip(ibnd,ik,iw) = zero
@@ -349,7 +349,7 @@
        ENDDO ! ik
        !
        CALL eliashberg_memlt_aniso_iaxis( itemp )
-       IF ( .not. limag_fly ) CALL kernel_aniso_iaxis( itemp )
+       IF ( .NOT. limag_fly ) CALL kernel_aniso_iaxis( itemp )
        !
     ENDIF 
     Deltai(:) = zero
@@ -363,18 +363,18 @@
     !
     DO ik = lower_bnd, upper_bnd
        DO ibnd = 1, nbndfs
-          IF ( ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) ) THEN
+          IF ( ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) ) THEN
              DO iq = 1, nqfs(ik)
                 ! iq0 - index of q-point on the full q-mesh
                 iq0 = ixqfs(ik,iq)
                 DO jbnd = 1, nbndfs
-                   IF ( ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) .lt. fsthick ) ) THEN
+                   IF ( ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) < fsthick ) ) THEN
                       weight = wqf(iq) * w0g(jbnd,ixkqf(ik,iq0)) / dosef
                       DO iw = 1, nsiw(itemp) ! loop over omega
                          DO iwp = 1, nsiw(itemp) ! loop over omega_prime
                             !
                             ! this step is performed at each iter step only for iw=1 
-                            IF ( iw .eq. 1 ) THEN
+                            IF ( iw == 1 ) THEN
                                esqrt = 1.d0 / sqrt( wsi(iwp)**2.d0 + ADeltaip(jbnd,ixkqf(ik,iq0),iwp)**2.d0 )
                                wesqrt(jbnd,ixkqf(ik,iq0),iwp) = wsi(iwp) * esqrt 
                                desqrt(jbnd,ixkqf(ik,iq0),iwp) = ADeltaip(jbnd,ixkqf(ik,iq0),iwp) * esqrt 
@@ -402,8 +402,8 @@
        ENDDO ! ibnd
     ENDDO ! ik
     !
-    IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)
-    IF( ALLOCATED(desqrt) ) DEALLOCATE(desqrt)
+    IF( ALLOCATED(wesqrt) ) DEALLOCATE (wesqrt)
+    IF( ALLOCATED(desqrt) ) DEALLOCATE (desqrt)
     !
     ! collect contributions from all pools 
     CALL mp_sum( AZnormi, inter_pool_comm )
@@ -411,9 +411,9 @@
     CALL mp_sum( ADeltai, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF (mpime .eq. ionode_id) THEN
-      IF ( iter .eq. 1 ) THEN
-         IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsiw(itemp)) )
+    IF (mpime == ionode_id) THEN
+      IF ( iter == 1 ) THEN
+         IF ( .NOT. ALLOCATED(Deltaold) ) ALLOCATE ( Deltaold(nsiw(itemp)) )
          Deltaold(:) = gap0
       ENDIF
       absdelta = zero
@@ -421,7 +421,7 @@
       DO iw = 1, nsiw(itemp) ! loop over omega
          DO ik = 1, nkfs
             DO ibnd = 1, nbndfs
-               IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+               IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                   weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
                   Znormi(iw) = Znormi(iw) + weight * AZnormi(ibnd,ik,iw)
                   Deltai(iw) = Deltai(iw) + weight * ADeltai(ibnd,ik,iw)
@@ -444,8 +444,8 @@
                    '   relerr = ', errdelta, '   abserr = ', reldelta / dble(nsiw(itemp)), &
                    '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
       !
-      IF ( errdelta .lt. conv_thr_iaxis) conv = .true.
-      IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
+      IF ( errdelta < conv_thr_iaxis) conv = .true.
+      IF ( errdelta < conv_thr_iaxis .OR. iter == nsiter ) THEN
          gap(itemp) = Deltai(1)
          gap0 = gap(itemp)
          !
@@ -453,11 +453,11 @@
          !
       ENDIF
       !
-      IF ( conv .OR. iter .eq. nsiter ) THEN
-         IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
+      IF ( conv .OR. iter == nsiter ) THEN
+         IF( ALLOCATED(Deltaold) ) DEALLOCATE (Deltaold)
          WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
       ENDIF
-      IF ( .not. conv .AND. iter .eq. nsiter ) THEN
+      IF ( .NOT. conv .AND. iter == nsiter ) THEN
          WRITE(stdout,'(a)') ' '
          WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
          CALL errore('sum_eliashberg_aniso_iaxis','increase nsiter or reduce conv_thr_iaxis',1)
@@ -474,15 +474,15 @@
     CALL mp_bcast( conv, ionode_id, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( conv .OR. iter .eq. nsiter ) THEN 
+    IF ( conv .OR. iter == nsiter ) THEN 
        !
        ! remove memory allocated for wesqrt, desqrt, ADeltaip, Deltaold
        imelt = ( 1 + 3 * nbndfs * nkfs ) * nsiw(itemp)
        CALL mem_size_eliashberg( -imelt )
        !
-       IF ( .not. limag_fly ) THEN
+       IF ( .NOT. limag_fly ) THEN
           !
-          IF ( ALLOCATED(AKeri) ) DEALLOCATE(AKeri)
+          IF ( ALLOCATED(AKeri) ) DEALLOCATE (AKeri)
           !
           ! remove memory allocated for AKeri 
           imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
@@ -576,7 +576,7 @@
     ! SP: Need initialization
     a2f_ = zero
     !
-    IF ( iter .eq. 1 ) THEN
+    IF ( iter == 1 ) THEN
        !
        ! get the size of required allocated memory for 
        ! Delta, Znorm, Deltaold, ADelta, ADeltap, AZnorm, AZnormp, Gp, Gm 
@@ -587,13 +587,13 @@
        ENDIF
        CALL mem_size_eliashberg( imelt )
        !
-       IF ( .not. ALLOCATED(Delta) )    ALLOCATE( Delta(nsw) )
-       IF ( .not. ALLOCATED(Znorm) )    ALLOCATE( Znorm(nsw) )
-       IF ( .not. ALLOCATED(ADelta) )   ALLOCATE( ADelta(nbndfs,nkfs,nsw) )
-       IF ( .not. ALLOCATED(ADeltap) )  ALLOCATE( ADeltap(nbndfs,nkfs,nsw) )
-       IF ( .not. ALLOCATED(AZnorm) )   ALLOCATE( AZnorm(nbndfs,nkfs,nsw) )
-       IF ( .not. ALLOCATED(AZnormp) )  ALLOCATE( AZnormp(nbndfs,nkfs,nsw) )
-       IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsw) )
+       IF ( .NOT. ALLOCATED(Delta) )    ALLOCATE ( Delta(nsw) )
+       IF ( .NOT. ALLOCATED(Znorm) )    ALLOCATE ( Znorm(nsw) )
+       IF ( .NOT. ALLOCATED(ADelta) )   ALLOCATE ( ADelta(nbndfs,nkfs,nsw) )
+       IF ( .NOT. ALLOCATED(ADeltap) )  ALLOCATE ( ADeltap(nbndfs,nkfs,nsw) )
+       IF ( .NOT. ALLOCATED(AZnorm) )   ALLOCATE ( AZnorm(nbndfs,nkfs,nsw) )
+       IF ( .NOT. ALLOCATED(AZnormp) )  ALLOCATE ( AZnormp(nbndfs,nkfs,nsw) )
+       IF ( .NOT. ALLOCATED(Deltaold) ) ALLOCATE ( Deltaold(nsw) )
        ADeltap(:,:,:) = czero
        AZnormp(:,:,:) = cone
        Deltaold(:) = czero
@@ -603,7 +603,7 @@
        ELSE
           DO ik = 1, nkfs
              DO ibnd = 1, nbndfs
-                IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                    ADeltap(ibnd,ik,:) = Agap(ibnd,ik,itemp) 
                 ENDIF
              ENDDO ! ibnd
@@ -611,8 +611,8 @@
           Deltaold(:) = gap(itemp)
        ENDIF
        !
-       IF ( .not. ALLOCATED(Gp) ) ALLOCATE( Gp(nsw,nqstep) )
-       IF ( .not. ALLOCATED(Gm) ) ALLOCATE( Gm(nsw,nqstep) )
+       IF ( .NOT. ALLOCATED(Gp) ) ALLOCATE ( Gp(nsw,nqstep) )
+       IF ( .NOT. ALLOCATED(Gm) ) ALLOCATE ( Gm(nsw,nqstep) )
        DO iw = 1, nsw ! loop over omega
           DO iwp = 1, nqstep ! loop over omega_prime
              CALL gamma_acont( ws(iw), ws(iwp), estemp(itemp), rgammap, rgammam )
@@ -622,7 +622,7 @@
        ENDDO
        CALL kernel_aniso_iaxis_analytic_cont( itemp )
        CALL eliashberg_memlt_aniso_acon
-       IF ( .not. lacon_fly ) CALL evaluate_a2fij
+       IF ( .NOT. lacon_fly ) CALL evaluate_a2fij
     ENDIF
     Delta(:) = czero
     Znorm(:) = czero
@@ -633,16 +633,16 @@
     !
     DO ik = lower_bnd, upper_bnd
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+          IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
              DO iq = 1, nqfs(ik)
                 ! iq0 - index of q-point on the full q-mesh
                 iq0 = ixqfs(ik,iq)
                 DO jbnd = 1, nbndfs
-                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) .lt. fsthick ) THEN
+                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) < fsthick ) THEN
                       !
                       IF ( lacon_fly ) THEN ! evaluate a2fij on the fly
                          DO imode = 1, nmodes
-                            IF ( wf(imode,iq0) .gt. eps_acustic ) THEN
+                            IF ( wf(imode,iq0) > eps_acustic ) THEN
                                DO iwph = 1, nqstep
                                   weight  = w0gauss( ( wsph(iwph) - wf(imode,iq0) ) / degaussq, 0 ) / degaussq
                                   a2f_ = weight * dosef * g2(ik,iq,ibnd,jbnd,imode)
@@ -656,10 +656,10 @@
                          DO iwp = 1, nqstep ! loop over omega_prime
                             !
                             i = iw + iwp - 1
-                            IF ( i .le. nsw ) THEN
+                            IF ( i <= nsw ) THEN
                                root = sqrt(   AZnormp(jbnd,ixkqf(ik,iq0),i)**2.d0 & 
                                             * ( ws(i)**2.d0 - ADeltap(jbnd,ixkqf(ik,iq0),i)**2.d0 ) )
-                               IF ( aimag(root) .lt. zero ) THEN 
+                               IF ( aimag(root) < zero ) THEN 
                                   esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / conjg(root)
                                ELSE  
                                   esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / root
@@ -676,13 +676,13 @@
                             i = abs(iw - iwp) + 1
                             root = sqrt(   AZnormp(jbnd,ixkqf(ik,iq0),i)**2.d0 & 
                                          * ( ws(i)**2.d0 - ADeltap(jbnd,ixkqf(ik,iq0),i)**2.d0 ) )
-                            IF ( aimag(root) .lt. zero ) THEN 
+                            IF ( aimag(root) < zero ) THEN 
                                esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / conjg(root)
                             ELSE  
                                esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / root
                             ENDIF
                             esqrt = esqrt * weight * Gm(iw,iwp) * a2fij(ik,iq,ibnd,jbnd,iwp)
-                            IF ( iw .lt. iwp ) THEN 
+                            IF ( iw < iwp ) THEN 
                                AZnorm(ibnd,ik,iw) = AZnorm(ibnd,ik,iw) - ws(i) * esqrt 
                             ELSE
                                AZnorm(ibnd,ik,iw) = AZnorm(ibnd,ik,iw) + ws(i) * esqrt 
@@ -706,13 +706,13 @@
     CALL mp_sum( ADelta, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF (mpime .eq. ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       absdelta = zero
       reldelta = zero
       DO iw = 1, nsw ! loop over omega
          DO ik = 1, nkfs
             DO ibnd = 1, nbndfs
-               IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+               IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                   weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
                   Znorm(iw) = Znorm(iw) + weight * AZnorm(ibnd,ik,iw)
                   Delta(iw) = Delta(iw) + weight * ADelta(ibnd,ik,iw)
@@ -733,16 +733,16 @@
                    '   error = ', errdelta, '   Re[Znorm(1)] = ', real(Znorm(1)), & 
                    '   Re[Delta(1)] = ', real(Delta(1))
       !
-      IF ( errdelta .lt. conv_thr_racon ) conv = .true.
-      IF ( errdelta .lt. conv_thr_racon .OR. iter .eq. nsiter ) THEN
+      IF ( errdelta < conv_thr_racon ) conv = .true.
+      IF ( errdelta < conv_thr_racon .OR. iter == nsiter ) THEN
          cname = 'acon'
          CALL eliashberg_write_raxis( itemp, cname )
       ENDIF
       !
-      IF ( conv .OR. iter .eq. nsiter ) THEN
+      IF ( conv .OR. iter == nsiter ) THEN
          WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
       ENDIF
-      IF ( .not. conv .AND. iter .eq. nsiter ) THEN
+      IF ( .NOT. conv .AND. iter == nsiter ) THEN
          WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
          CALL errore('analytic_cont_aniso_iaxis_to_raxis','increase nsiter or reduce conv_thr_racon',1)
       ENDIF
@@ -755,21 +755,21 @@
     CALL mp_bcast( conv, ionode_id, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( conv .OR. iter .eq. nsiter ) THEN
+    IF ( conv .OR. iter == nsiter ) THEN
        !
-       IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
-       IF( ALLOCATED(Gp) )       DEALLOCATE(Gp)
-       IF( ALLOCATED(Gm) )       DEALLOCATE(Gm)
-       IF( ALLOCATED(ADsumi) )   DEALLOCATE(ADsumi)
-       IF( ALLOCATED(AZsumi) )   DEALLOCATE(AZsumi)
+       IF( ALLOCATED(Deltaold) ) DEALLOCATE (Deltaold)
+       IF( ALLOCATED(Gp) )       DEALLOCATE (Gp)
+       IF( ALLOCATED(Gm) )       DEALLOCATE (Gm)
+       IF( ALLOCATED(ADsumi) )   DEALLOCATE (ADsumi)
+       IF( ALLOCATED(AZsumi) )   DEALLOCATE (AZsumi)
        !
        ! remove memory allocated for Deltaold, Gp, Gm, ADsumi, AZsumi
        imelt = 2 * nsw + 2 * nqstep * nsw + 2 * ( upper_bnd - lower_bnd + 1 ) * nbndfs * nsw
        CALL mem_size_eliashberg( -imelt )
        !
-       IF ( .not. lacon_fly ) THEN
+       IF ( .NOT. lacon_fly ) THEN
           !
-          IF ( ALLOCATED(a2fij) ) DEALLOCATE(a2fij)
+          IF ( ALLOCATED(a2fij) ) DEALLOCATE (a2fij)
           !
           ! remove memory allocated for a2fij
           imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * nqstep
@@ -858,16 +858,16 @@
     imelt = 2 * 5 * N + 2 * ( 3 + 2 * nbndfs * nkfs ) * nsw
     CALL mem_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(Delta) )    ALLOCATE( Delta(nsw) )
-    IF ( .not. ALLOCATED(Znorm) )    ALLOCATE( Znorm(nsw) )
-    IF ( .not. ALLOCATED(ADelta) )   ALLOCATE( ADelta(nbndfs,nkfs,nsw) )
-    IF ( .not. ALLOCATED(AZnorm) )   ALLOCATE( AZnorm(nbndfs,nkfs,nsw) )
-    IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsw) )
-    IF ( .not. ALLOCATED(a) )        ALLOCATE( a(N) )
-    IF ( .not. ALLOCATED(b) )        ALLOCATE( b(N) )
-    IF ( .not. ALLOCATED(z) )        ALLOCATE( z(N) )
-    IF ( .not. ALLOCATED(u) )        ALLOCATE( u(N) )
-    IF ( .not. ALLOCATED(v) )        ALLOCATE( v(N) )
+    IF ( .NOT. ALLOCATED(Delta) )    ALLOCATE ( Delta(nsw) )
+    IF ( .NOT. ALLOCATED(Znorm) )    ALLOCATE ( Znorm(nsw) )
+    IF ( .NOT. ALLOCATED(ADelta) )   ALLOCATE ( ADelta(nbndfs,nkfs,nsw) )
+    IF ( .NOT. ALLOCATED(AZnorm) )   ALLOCATE ( AZnorm(nbndfs,nkfs,nsw) )
+    IF ( .NOT. ALLOCATED(Deltaold) ) ALLOCATE ( Deltaold(nsw) )
+    IF ( .NOT. ALLOCATED(a) )        ALLOCATE ( a(N) )
+    IF ( .NOT. ALLOCATED(b) )        ALLOCATE ( b(N) )
+    IF ( .NOT. ALLOCATED(z) )        ALLOCATE ( z(N) )
+    IF ( .NOT. ALLOCATED(u) )        ALLOCATE ( u(N) )
+    IF ( .NOT. ALLOCATED(v) )        ALLOCATE ( v(N) )
     Delta(:) = czero
     Znorm(:) = czero
     ADelta(:,:,:) = czero
@@ -885,7 +885,7 @@
     !
     DO ik = lower_bnd, upper_bnd
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+          IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
              DO iw = 1, N
                 z(iw) = ci * wsi(iw)
                 u(iw) = cone * ADeltai(ibnd,ik,iw) 
@@ -909,11 +909,11 @@
     CALL mp_sum( ADelta, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF (mpime .eq. ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       DO iw = 1, nsw ! loop over omega
          DO ik = 1, nkfs
             DO ibnd = 1, nbndfs
-               IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+               IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                   weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
                   Znorm(iw) = Znorm(iw) + weight * AZnorm(ibnd,ik,iw)
                   Delta(iw) = Delta(iw) + weight * ADelta(ibnd,ik,iw)
@@ -925,7 +925,7 @@
       ENDDO ! iw
       errdelta = reldelta / absdelta
       !
-      IF ( errdelta .gt. zero ) THEN
+      IF ( errdelta > zero ) THEN
          conv = .true.
          WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'pade = ', N, & 
                 '   error = ', errdelta, '   Re[Znorm(1)] = ', real(Znorm(1)), & 
@@ -941,12 +941,12 @@
     CALL mp_bcast( conv, ionode_id, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
-    IF( ALLOCATED(a) )        DEALLOCATE(a)
-    IF( ALLOCATED(b) )        DEALLOCATE(b)
-    IF( ALLOCATED(z) )        DEALLOCATE(z)
-    IF( ALLOCATED(u) )        DEALLOCATE(u)
-    IF( ALLOCATED(v) )        DEALLOCATE(v)
+    IF( ALLOCATED(Deltaold) ) DEALLOCATE (Deltaold)
+    IF( ALLOCATED(a) )        DEALLOCATE (a)
+    IF( ALLOCATED(b) )        DEALLOCATE (b)
+    IF( ALLOCATED(z) )        DEALLOCATE (z)
+    IF( ALLOCATED(u) )        DEALLOCATE (u)
+    IF( ALLOCATED(v) )        DEALLOCATE (v)
     !
     ! remove memory allocated for Deltaold, a, b, z, u, v
     imelt = 2 * ( nsw + 5 * N )
@@ -998,19 +998,19 @@
     !! electron-phonon coupling
     !
     CALL fkbounds( nkfs, lower_bnd, upper_bnd )
-    IF ( .not. ALLOCATED(AKeri) ) ALLOCATE( AKeri(lower_bnd:upper_bnd,maxval(nqfs(:)),nbndfs,nbndfs,2*nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(AKeri) ) ALLOCATE ( AKeri(lower_bnd:upper_bnd,maxval(nqfs(:)),nbndfs,nbndfs,2*nsiw(itemp)) )
     AKeri(:,:,:,:,:) = zero
     !
     ! RM - if lambdar_aniso_ver2 is used then one needs to CALL evaluate_a2fij
     !
     DO ik = lower_bnd, upper_bnd
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+          IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
              DO iq = 1, nqfs(ik)
                 ! iq0 - index of q-point on the full q-mesh
                 iq0 = ixqfs(ik,iq)
                 DO jbnd = 1, nbndfs
-                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) .lt. fsthick ) THEN
+                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) < fsthick ) THEN
                       DO iw = 1, 2*nsiw(itemp)
                          n = iw - 1
                          omega = dble(2*n) * pi * estemp(itemp)
@@ -1069,7 +1069,7 @@
     iq0 = ixqfs(ik,iq)
     lambda_eph = zero
     DO imode = 1, nmodes  ! loop over frequency modes
-       IF ( wf(imode,iq0) .gt. eps_acustic ) THEN 
+       IF ( wf(imode,iq0) > eps_acustic ) THEN 
           lambda_eph = lambda_eph + g2(ik,iq,ibnd,jbnd,imode) * wf(imode,iq0) & 
                      / ( wf(imode,iq0)**2.d0 + omega**2.d0 )
        ENDIF
@@ -1179,12 +1179,12 @@
     imelt = 2 * nbndfs * nkfs * nsiw(itemp) + 2 * ( upper_bnd - lower_bnd + 1 ) * nbndfs * nsw 
     CALL mem_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nbndfs,nkfs,nsiw(itemp)) )
-    IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nbndfs,nkfs,nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(wesqrt) ) ALLOCATE ( wesqrt(nbndfs,nkfs,nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(desqrt) ) ALLOCATE ( desqrt(nbndfs,nkfs,nsiw(itemp)) )
     !
     DO ik = lower_bnd, upper_bnd
-       IF ( .not. ALLOCATED(ADsumi) ) ALLOCATE( ADsumi(nbndfs,lower_bnd:upper_bnd,nsw) )
-       IF ( .not. ALLOCATED(AZsumi) ) ALLOCATE( AZsumi(nbndfs,lower_bnd:upper_bnd,nsw) )
+       IF ( .NOT. ALLOCATED(ADsumi) ) ALLOCATE ( ADsumi(nbndfs,lower_bnd:upper_bnd,nsw) )
+       IF ( .NOT. ALLOCATED(AZsumi) ) ALLOCATE ( AZsumi(nbndfs,lower_bnd:upper_bnd,nsw) )
     ENDDO
     ADsumi(:,:,:) = zero
     AZsumi(:,:,:) = zero
@@ -1193,12 +1193,12 @@
     !
     DO ik = lower_bnd, upper_bnd
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+          IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
              DO iq = 1, nqfs(ik)
                 ! iq0 - index of q-point on the full q-mesh
                 iq0 = ixqfs(ik,iq)
                 DO jbnd = 1, nbndfs
-                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) .lt. fsthick ) THEN
+                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) < fsthick ) THEN
                       weight = wqf(iq) * w0g(jbnd,ixkqf(ik,iq0)) / dosef
                       DO iw = 1, nsw ! loop over omega 
                          DO iwp = 1, nsiw(itemp) ! loop over iw_n
@@ -1206,7 +1206,7 @@
                             !CALL lambdai_aniso_ver2( ik, iq, ibnd, jbnd, ws(iw), wsi(iwp), lambda_eph )
                             kernelp = 2.d0 * real(lambda_eph)
                             kernelm = 2.d0 * aimag(lambda_eph)
-                            IF ( iw .eq. 1 ) THEN
+                            IF ( iw == 1 ) THEN
                                esqrt = 1.d0 / sqrt( wsi(iwp)**2.d0 + ADeltai(jbnd,ixkqf(ik,iq0),iwp)**2.d0 )
                                wesqrt(jbnd,ixkqf(ik,iq0),iwp) =  wsi(iwp) * esqrt
                                desqrt(jbnd,ixkqf(ik,iq0),iwp) =  ADeltai(jbnd,ixkqf(ik,iq0),iwp) * esqrt
@@ -1224,8 +1224,8 @@
        ENDDO ! ibnd
     ENDDO ! ik
     !
-    IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)
-    IF( ALLOCATED(desqrt) ) DEALLOCATE(desqrt)
+    IF( ALLOCATED(wesqrt) ) DEALLOCATE (wesqrt)
+    IF( ALLOCATED(desqrt) ) DEALLOCATE (desqrt)
     !  
     ! remove memory allocated for wesqrt, desqrt
     imelt = 2 * nbndfs * nkfs * nsiw(itemp) 
@@ -1276,7 +1276,7 @@
     iq0 = ixqfs(ik,iq)
     lambda_eph = czero
     DO imode = 1, nmodes  ! loop over frequency modes
-       IF ( wf(imode,iq0) .gt. eps_acustic ) THEN 
+       IF ( wf(imode,iq0) > eps_acustic ) THEN 
           lambda_eph = lambda_eph +  g2(ik,iq,ibnd,jbnd,imode) * wf(imode,iq0) & 
                      / ( wf(imode,iq0)**2.d0 - (omega - ci*omegap)**2.d0 )
        ENDIF
@@ -1373,19 +1373,19 @@
     REAL(DP), EXTERNAL :: w0gauss
     !
     CALL fkbounds( nkfs, lower_bnd, upper_bnd )
-    IF ( .not. ALLOCATED(a2fij) ) ALLOCATE(a2fij(lower_bnd:upper_bnd,maxval(nqfs(:)),nbndfs,nbndfs,nqstep))
+    IF ( .NOT. ALLOCATED(a2fij) ) ALLOCATE (a2fij(lower_bnd:upper_bnd,maxval(nqfs(:)),nbndfs,nbndfs,nqstep))
     a2fij(:,:,:,:,:) = zero
     !
     DO ik = lower_bnd, upper_bnd 
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+          IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
              DO iq = 1, nqfs(ik)
                 ! iq0 - index of q-point on the full q-mesh
                 iq0 = ixqfs(ik,iq)
                 DO jbnd = 1, nbndfs
-                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) .lt. fsthick ) THEN
+                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) < fsthick ) THEN
                       DO imode = 1, nmodes
-                         IF ( wf(imode,iq0) .gt. eps_acustic ) THEN 
+                         IF ( wf(imode,iq0) > eps_acustic ) THEN 
                             DO iwph = 1, nqstep
                                weight  = w0gauss( ( wsph(iwph) - wf(imode,iq0) ) / degaussq, 0 ) / degaussq
                                a2fij(ik,iq,ibnd,jbnd,iwph) = a2fij(ik,iq,ibnd,jbnd,iwph) &
@@ -1454,16 +1454,16 @@
     !
     CALL fkbounds( nkfs, lower_bnd, upper_bnd )
     !
-    IF ( .not. ALLOCATED(a2f_iso) ) ALLOCATE( a2f_iso(nqstep) )
-    IF ( .not. ALLOCATED(a2f) )     ALLOCATE( a2f(nqstep,nqsmear) )
-    IF ( .not. ALLOCATED(a2f_modeproj) ) ALLOCATE( a2f_modeproj(nmodes,nqstep) )
+    IF ( .NOT. ALLOCATED(a2f_iso) ) ALLOCATE ( a2f_iso(nqstep) )
+    IF ( .NOT. ALLOCATED(a2f) )     ALLOCATE ( a2f(nqstep,nqsmear) )
+    IF ( .NOT. ALLOCATED(a2f_modeproj) ) ALLOCATE ( a2f_modeproj(nmodes,nqstep) )
     a2f_iso(:) = 0.d0
     a2f(:,:) = 0.d0
     a2f_modeproj(:,:) = 0.d0
     !
     ! RM - the 0 index in k is required when printing out values of lambda_k 
     ! When the k-point is outside the Fermi shell, ixkff(ik)=0
-    IF ( .not. ALLOCATED(lambda_k) ) ALLOCATE(lambda_k(0:nkfs,nbndfs))
+    IF ( .NOT. ALLOCATED(lambda_k) ) ALLOCATE (lambda_k(0:nkfs,nbndfs))
     lambda_k(:,:) = 0.d0
     !
     l_sum = 0.d0
@@ -1472,34 +1472,34 @@
        sigma = degaussq + (ismear-1) * delta_qsmear
        DO ik = lower_bnd, upper_bnd
           DO ibnd = 1, nbndfs
-             IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN 
+             IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN 
                 DO iq = 1, nqfs(ik)
                    ! iq0 - index of q-point on the full q-mesh
                    iq0 = ixqfs(ik,iq)
                    DO jbnd = 1, nbndfs
-                      IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) .lt. fsthick ) THEN
+                      IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) < fsthick ) THEN
                          weight = wkfs(ik) * wqf(iq) * w0g(ibnd,ik) * w0g(jbnd,ixkqf(ik,iq0))
                          lambda_eph = 0.d0
                          DO imode = 1, nmodes
-                            IF ( wf(imode,iq0) .gt. eps_acustic ) THEN
-                               IF ( ismear .eq. 1 ) THEN 
+                            IF ( wf(imode,iq0) > eps_acustic ) THEN
+                               IF ( ismear == 1 ) THEN 
                                   lambda_eph = lambda_eph + g2(ik,iq,ibnd,jbnd,imode) / wf(imode,iq0)
                                ENDIF
                                DO iwph = 1, nqstep
                                   weightq  = w0gauss( ( wsph(iwph) - wf(imode,iq0) ) / sigma, 0 ) / sigma
                                   a2f(iwph,ismear) = a2f(iwph,ismear) + weight * weightq * g2(ik,iq,ibnd,jbnd,imode)
-                                  IF ( ismear .eq. 1 ) THEN
+                                  IF ( ismear == 1 ) THEN
                                      a2f_modeproj(imode,iwph) = a2f_modeproj(imode,iwph) +&
                                          weight * weightq * g2(ik,iq,ibnd,jbnd,imode)
                                   ENDIF
                                ENDDO ! iwph
                             ENDIF ! wf
                          ENDDO ! imode
-                         IF ( ismear .eq. 1 .AND. lambda_eph .gt. 0.d0 ) THEN
+                         IF ( ismear == 1 .AND. lambda_eph > 0.d0 ) THEN
                             l_sum = l_sum + weight * lambda_eph
                             weight = wqf(iq) * w0g(jbnd,ixkqf(ik,iq0)) 
                             lambda_k(ik,ibnd) = lambda_k(ik,ibnd) + weight * lambda_eph
-                            IF ( lambda_eph .gt. lambda_max(my_pool_id+1) ) THEN
+                            IF ( lambda_eph > lambda_max(my_pool_id+1) ) THEN
                                lambda_max(my_pool_id+1) = lambda_eph
                             ENDIF
                          ENDIF
@@ -1525,13 +1525,13 @@
     CALL mp_sum( lambda_k, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       !
       OPEN( unit = iua2ffil, file = TRIM(prefix)//".a2f", form = 'formatted')
       OPEN( unit = iudosfil, file = TRIM(prefix)//".phdos", form = 'formatted')
       !
-      IF ( .not. ALLOCATED(phdos) )     ALLOCATE( phdos(nqstep,nqsmear) )
-      IF ( .not. ALLOCATED(phdos_modeproj) ) ALLOCATE( phdos_modeproj(nmodes,nqstep) )
+      IF ( .NOT. ALLOCATED(phdos) )     ALLOCATE ( phdos(nqstep,nqsmear) )
+      IF ( .NOT. ALLOCATED(phdos_modeproj) ) ALLOCATE ( phdos_modeproj(nmodes,nqstep) )
       phdos(:,:) = 0.d0
       phdos_modeproj(:,:) = 0.d0
       !
@@ -1539,11 +1539,11 @@
          sigma = degaussq + (ismear-1) * delta_qsmear
          DO iq = 1, nqtotf
             DO imode = 1, nmodes
-               IF ( wf(imode,iq) .gt. eps_acustic ) THEN
+               IF ( wf(imode,iq) > eps_acustic ) THEN
                   DO iwph = 1, nqstep
                      weightq  = w0gauss( ( wsph(iwph) - wf(imode,iq)) / sigma, 0 ) / sigma
                      phdos(iwph,ismear) = phdos(iwph,ismear) + wqf(iq) * weightq
-                     IF ( ismear .eq. 1 ) THEN
+                     IF ( ismear == 1 ) THEN
                         phdos_modeproj(imode,iwph) = phdos_modeproj(imode,iwph) + wqf(iq) * weightq
                      ENDIF
                   ENDDO ! iwph
@@ -1552,15 +1552,15 @@
          ENDDO ! iq
       ENDDO ! ismear
       !
-      IF ( .not. ALLOCATED(l_a2f) )   ALLOCATE( l_a2f(nqsmear) )
+      IF ( .NOT. ALLOCATED(l_a2f) )   ALLOCATE ( l_a2f(nqsmear) )
       l_a2f(:) = 0.d0
       !
       DO ismear = 1, nqsmear
          DO iwph = 1, nqstep
             l_a2f(ismear) = l_a2f(ismear) + a2f(iwph,ismear) / wsph(iwph)
             ! wsph in meV (from eV) and phdos in states/meV (from states/eV)
-            IF (ismear .eq. nqsmear) WRITE (iua2ffil,'(f12.7,15f12.7)') wsph(iwph)*1000.d0, a2f(iwph,:)
-            IF (ismear .eq. nqsmear) WRITE (iudosfil,'(f12.7,15f15.7)') wsph(iwph)*1000.d0, phdos(iwph,:)/1000.d0
+            IF (ismear == nqsmear) WRITE (iua2ffil,'(f12.7,15f12.7)') wsph(iwph)*1000.d0, a2f(iwph,:)
+            IF (ismear == nqsmear) WRITE (iudosfil,'(f12.7,15f15.7)') wsph(iwph)*1000.d0, phdos(iwph,:)/1000.d0
          ENDDO
          l_a2f(ismear) = 2.d0 * l_a2f(ismear) * dwsph
       ENDDO
@@ -1587,22 +1587,22 @@
       CLOSE(iua2ffil)
       CLOSE(iudosfil)
       !
-      IF ( ALLOCATED(phdos) )          DEALLOCATE( phdos )
-      IF ( ALLOCATED(phdos_modeproj) ) DEALLOCATE( phdos_modeproj )
-      IF ( ALLOCATED(l_a2f) )          DEALLOCATE( l_a2f )
+      IF ( ALLOCATED(phdos) )          DEALLOCATE ( phdos )
+      IF ( ALLOCATED(phdos_modeproj) ) DEALLOCATE ( phdos_modeproj )
+      IF ( ALLOCATED(l_a2f) )          DEALLOCATE ( l_a2f )
       !
     ENDIF
     !
     CALL mp_bcast( a2f_iso, ionode_id, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( ALLOCATED(a2f) )            DEALLOCATE( a2f )
-    IF ( ALLOCATED(a2f_modeproj) )   DEALLOCATE( a2f_modeproj )
+    IF ( ALLOCATED(a2f) )            DEALLOCATE ( a2f )
+    IF ( ALLOCATED(a2f_modeproj) )   DEALLOCATE ( a2f_modeproj )
     !
     nbink = NINT( 1.1d0 * MAXVAL(lambda_k(:,:)) / eps2 ) + 1 
     dbink = 1.1d0 * MAXVAL(lambda_k(:,:)) / DBLE(nbink) 
     !
-    IF ( .not. ALLOCATED(lambda_k_bin) ) ALLOCATE ( lambda_k_bin(nbink) )
+    IF ( .NOT. ALLOCATED(lambda_k_bin) ) ALLOCATE ( lambda_k_bin(nbink) )
     lambda_k_bin(:) = zero
     !
     !SP : Should be initialized
@@ -1612,7 +1612,7 @@
     IF ( iverbosity == 2 ) THEN
       nbin = nint( 1.1d0 * MAXVAL(lambda_max(:)) / eps2 ) + 1
       dbin = 1.1d0 * MAXVAL(lambda_max(:)) / dble(nbin)
-      IF ( .not. ALLOCATED(lambda_pairs) ) ALLOCATE ( lambda_pairs(nbin) )
+      IF ( .NOT. ALLOCATED(lambda_pairs) ) ALLOCATE ( lambda_pairs(nbin) )
       lambda_pairs(:) = zero
     ENDIF
     ! 
@@ -1623,12 +1623,12 @@
     lambda_k(:,:) = 0.d0
     DO ik = lower_bnd, upper_bnd
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+          IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
              DO iq = 1, nqfs(ik)
                 ! iq0 - index of q-point on the full q-mesh
                 iq0 = ixqfs(ik,iq)
                 DO jbnd = 1, nbndfs
-                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) .lt. fsthick ) THEN
+                   IF ( abs( ekfs(jbnd,ixkqf(ik,iq0)) - ef0 ) < fsthick ) THEN
                       weight = wqf(iq) * w0g(jbnd,ixkqf(ik,iq0)) / dosef
                       CALL lambdar_aniso_ver1( ik, iq, ibnd, jbnd, 0.d0, lambda_eph )
                       lambda_k(ik,ibnd) = lambda_k(ik,ibnd) +  weight * lambda_eph
@@ -1649,21 +1649,21 @@
     !
     ! collect contributions from all pools 
     CALL mp_sum( lambda_k, inter_pool_comm )
-    IF ( iverbosity .eq. 2 ) THEN  
+    IF ( iverbosity == 2 ) THEN  
       CALL mp_sum( lambda_pairs, inter_pool_comm )
     ENDIF
     CALL mp_sum( lambda_k_bin, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       !
       ! SP: Produced if user really wants it 
-      IF ( iverbosity .eq. 2 ) THEN
+      IF ( iverbosity == 2 ) THEN
         OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_aniso", form = 'formatted')
         WRITE(iufillambda,'(2a12,2a7)') '# enk-e0[eV]','  lambda_nk','# kpt','# band'
         DO ik = 1, nkfs
            DO ibnd = 1, nbndfs
-              IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+              IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                  WRITE(iufillambda,'(2f12.7,2i7)') ekfs(ibnd,ik) - ef0, lambda_k(ik,ibnd), ik, ibnd
               ENDIF
            ENDDO
@@ -1693,7 +1693,7 @@
       ! RM - If the k-point is outside the Fermi shell,
       ! ixkff(ik)=0 and lambda_k(0,ibnd) = 0.0
       !
-      IF ( iverbosity .eq. 2 ) THEN
+      IF ( iverbosity == 2 ) THEN
         !
         DO ibnd = 1, nbndfs
           !
@@ -1707,7 +1707,7 @@
             CALL errore( 'eliashberg_setup', 'Too many bands ',1)  
           ENDIF  
           !  
-          OPEN(iufillambdaFS, file=name1, form='formatted')
+          OPEN(iufillambdaFS, FILE=name1, FORM='formatted')
           WRITE(iufillambdaFS,*) 'Cubfile created from EPW calculation'
           WRITE(iufillambdaFS,*) 'lambda'
           WRITE(iufillambdaFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
@@ -1725,17 +1725,17 @@
       ! Cartesian coordinate, band index, energy distance from Fermi level
       ! and lambda value.
       !
-      OPEN(unit = iufillambdaFS, file = TRIM(prefix)//".lambda_FS", form='formatted')
+      OPEN(unit = iufillambdaFS, file = TRIM(prefix)//".lambda_FS", FORM='formatted')
       WRITE(iufillambdaFS,'(a75)') '#               k-point                  Band Enk-Ef [eV]            lambda'
       DO i = 1, nkf1
          DO j = 1, nkf2
             DO k = 1, nkf3
                ik = k + (j-1)*nkf3 + (i-1)*nkf2*nkf3
-               IF ( ixkff(ik) .gt. 0 ) THEN
+               IF ( ixkff(ik) > 0 ) THEN
                   DO ibnd = 1, nbndfs
                      ! SP: Here take a 0.2 eV interval around the FS.
-                     IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
-                     !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
+                     IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) < fsthick ) THEN
+                     !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) < 0.2 ) THEN
                         x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
                         x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
                         x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
@@ -1751,9 +1751,9 @@
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( ALLOCATED(lambda_k) )     DEALLOCATE(lambda_k)
-    IF ( ALLOCATED(lambda_pairs) ) DEALLOCATE(lambda_pairs)
-    IF ( ALLOCATED(lambda_k_bin) ) DEALLOCATE(lambda_k_bin)
+    IF ( ALLOCATED(lambda_k) )     DEALLOCATE (lambda_k)
+    IF ( ALLOCATED(lambda_pairs) ) DEALLOCATE (lambda_pairs)
+    IF ( ALLOCATED(lambda_k_bin) ) DEALLOCATE (lambda_k_bin)
     !
     RETURN
     !

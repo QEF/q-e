@@ -54,32 +54,32 @@
   !
   !
   CALL start_clock('a2F')
-  IF (mpime .eq. ionode_id) THEN
+  IF (mpime == ionode_id) THEN
   !
   DO isig = 1, nsmear
     !
-    IF ( isig .lt. 10 ) THEN
+    IF ( isig < 10 ) THEN
        WRITE(fila2f_suffix,'(a,a6,i1)') TRIM(prefix),'.a2f.0', isig
     ELSE 
        WRITE(fila2f_suffix,'(a,a5,i2)') TRIM(prefix),'.a2f.', isig
     ENDIF
     OPEN (unit = iua2ffil, file = fila2f_suffix, form = 'formatted')
     !
-    IF ( isig .lt. 10 ) THEN
+    IF ( isig < 10 ) THEN
        WRITE(fila2ftr,'(a,a9,i1)') TRIM(prefix),'.a2f_tr.0', isig
     ELSE
        WRITE(fila2ftr,'(a,a8,i2)') TRIM(prefix),'.a2f_tr.', isig
     ENDIF
     OPEN (unit = iua2ftrfil, file = fila2ftr, form = 'formatted')
     !
-    IF ( isig .lt. 10 ) THEN
+    IF ( isig < 10 ) THEN
        WRITE(filres,'(a,a6,i1)') TRIM(prefix),'.res.0', isig
     ELSE
        WRITE(filres,'(a,a5,i2)') TRIM(prefix),'.res.', isig
     ENDIF
     OPEN (unit = iures, file = filres, form = 'formatted')
     !
-    IF ( isig .lt. 10 ) THEN
+    IF ( isig < 10 ) THEN
        WRITE(fildos,'(a,a8,i1)') TRIM(prefix),'.phdos.0', isig
     ELSE
        WRITE(fildos,'(a,a7,i2)') TRIM(prefix),'.phdos.', isig
@@ -90,16 +90,16 @@
     WRITE(stdout,'(5x,"Eliashberg Spectral Function in the Migdal Approximation")') 
     WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     !
-    IF ( .not. ALLOCATED(a2F) )    ALLOCATE( a2F(nqstep, nqsmear) )
-    IF ( .not. ALLOCATED(a2F_tr) ) ALLOCATE( a2F_tr(nqstep, nqsmear) )
-    IF ( .not. ALLOCATED(dosph) )  ALLOCATE( dosph(nqstep, nqsmear) )
-    IF ( .not. ALLOCATED(l_a2F) )  ALLOCATE( l_a2F(nqsmear) )
-    IF ( .not. ALLOCATED(l_a2F_tr) )  ALLOCATE( l_a2F_tr(nqsmear) )
-    IF ( .not. ALLOCATED(logavg) ) ALLOCATE( logavg(nqsmear) )
+    IF ( .NOT. ALLOCATED(a2F) )    ALLOCATE ( a2F(nqstep, nqsmear) )
+    IF ( .NOT. ALLOCATED(a2F_tr) ) ALLOCATE ( a2F_tr(nqstep, nqsmear) )
+    IF ( .NOT. ALLOCATED(dosph) )  ALLOCATE ( dosph(nqstep, nqsmear) )
+    IF ( .NOT. ALLOCATED(l_a2F) )  ALLOCATE ( l_a2F(nqsmear) )
+    IF ( .NOT. ALLOCATED(l_a2F_tr) )  ALLOCATE ( l_a2F_tr(nqsmear) )
+    IF ( .NOT. ALLOCATED(logavg) ) ALLOCATE ( logavg(nqsmear) )
     ! 
     ! The resitivity is computed for temperature between 0K-1000K by step of 10
     ! This is hardcoded and needs to be changed here if one wants to modify it
-    IF ( .not. ALLOCATED(rho) ) ALLOCATE( rho(100, nqsmear) )
+    IF ( .NOT. ALLOCATED(rho) ) ALLOCATE ( rho(100, nqsmear) )
     !
     !om_max = ( MAXVAL( wf(:,:) ) - MINVAL( wf(:,:) ) ) + 5.d0/ryd2mev
     !om_max = MAXVAL( wf(:,:) ) + 1.d0 / ryd2mev
@@ -131,10 +131,10 @@
                 !
                 w0 = wf(imode,iq)
                 !
-                IF ( w0 .gt. eps_acustic ) THEN 
+                IF ( w0 > eps_acustic ) THEN 
                    !
                    l  = lambda_all(imode,iq,isig)
-                   IF (lambda_all(imode,iq,isig) .lt. 0.d0)  l = 0.d0 ! sanity check
+                   IF (lambda_all(imode,iq,isig) < 0.d0)  l = 0.d0 ! sanity check
                    ! 
                    a2F_tmp    = wqf(iq) * w0 * l / two
                    !
@@ -143,7 +143,7 @@
                    dosph(iw,ismear)  = dosph(iw,ismear) + wqf(iq) * weight
                    !
                    l_tr = lambda_v_all(imode,iq,isig)
-                   IF (lambda_v_all(imode,iq,isig) .lt. 0.d0)  l_tr = 0.d0 !sanity check
+                   IF (lambda_v_all(imode,iq,isig) < 0.d0)  l_tr = 0.d0 !sanity check
                    ! 
                    a2F_tr_tmp = wqf(iq) * w0 * l_tr / two
                    !
@@ -157,13 +157,13 @@
           !
           !  output a2F
           !
-          IF (ismear .eq. nqsmear) WRITE (iua2ffil,   '(f12.7, 15f12.7)') iomega*ryd2mev, a2F(iw,:)
-          IF (ismear .eq. nqsmear) WRITE (iua2ftrfil, '(f12.7, 15f12.7)') iomega*ryd2mev, a2F_tr(iw,:)
-          IF (ismear .eq. nqsmear) WRITE (iudosfil,   '(f12.7, 15f12.7)') iomega*ryd2mev, dosph(iw,:)/ryd2mev
+          IF (ismear == nqsmear) WRITE (iua2ffil,   '(f12.7, 15f12.7)') iomega*ryd2mev, a2F(iw,:)
+          IF (ismear == nqsmear) WRITE (iua2ftrfil, '(f12.7, 15f12.7)') iomega*ryd2mev, a2F_tr(iw,:)
+          IF (ismear == nqsmear) WRITE (iudosfil,   '(f12.7, 15f12.7)') iomega*ryd2mev, dosph(iw,:)/ryd2mev
           !
           ! do the integral 2 int (a2F(w)/w dw)
           !
-          !IF (iomega .gt. eps_acustic) & 
+          !IF (iomega > eps_acustic) & 
           l_a2F(ismear) = l_a2F(ismear) + two * a2F(iw,ismear) / iomega * dw
           l_a2F_tr(ismear) = l_a2F_tr(ismear) + two * a2F_tr(iw,ismear) / iomega * dw
           logavg(ismear) = logavg(ismear) + two *  a2F(iw,ismear) * log(iomega) / iomega * dw
@@ -176,9 +176,9 @@
     !
     DO iq = 1, nqtotf ! loop over q-points 
        DO imode = 1, nmodes ! loop over modes
-          IF (lambda_all(imode,iq,isig) .gt. 0.d0 .and. wf(imode,iq) .gt. eps_acustic ) & 
+          IF (lambda_all(imode,iq,isig) > 0.d0 .and. wf(imode,iq) > eps_acustic ) & 
              lambda_tot = lambda_tot + wqf(iq) * lambda_all(imode,iq,isig)
-          IF (lambda_v_all(imode,iq,isig) .gt. 0.d0 .and. wf(imode,iq) .gt. eps_acustic ) &
+          IF (lambda_v_all(imode,iq,isig) > 0.d0 .and. wf(imode,iq) > eps_acustic ) &
              lambda_tr_tot = lambda_tr_tot + wqf(iq) * lambda_v_all(imode,iq,isig)
        ENDDO
     ENDDO
@@ -236,7 +236,7 @@
         ! Conductivity 1 a.u. = 2.2999241E6 S/m
         ! Now to go from Ohm*m to micro Ohm cm we need to multiply by 1E8 
         rho(itemp,ismear) = rho(itemp,ismear) * 1E8 / 2.2999241E6
-        IF (ismear .eq. nqsmear) WRITE (iures, '(i8, 15f12.7)') itemp * 10, rho(itemp,:)
+        IF (ismear == nqsmear) WRITE (iures, '(i8, 15f12.7)') itemp * 10, rho(itemp,:)
       ENDDO
     ENDDO 
     CLOSE(iures)
@@ -261,13 +261,13 @@
     !
     CLOSE(iudosfil)
     !
-    IF ( ALLOCATED(l_a2F) )     DEALLOCATE(l_a2F)
-    IF ( ALLOCATED(l_a2F_tr) )  DEALLOCATE(l_a2F_tr)
-    IF ( ALLOCATED(a2F) )       DEALLOCATE(a2F)
-    IF ( ALLOCATED(a2F_tr) )    DEALLOCATE(a2F_tr)
-    IF ( ALLOCATED(rho) )    DEALLOCATE(rho)
-    IF ( ALLOCATED(dosph) )     DEALLOCATE(dosph)
-    IF ( ALLOCATED(logavg) )    DEALLOCATE(logavg)
+    IF ( ALLOCATED(l_a2F) )     DEALLOCATE (l_a2F)
+    IF ( ALLOCATED(l_a2F_tr) )  DEALLOCATE (l_a2F_tr)
+    IF ( ALLOCATED(a2F) )       DEALLOCATE (a2F)
+    IF ( ALLOCATED(a2F_tr) )    DEALLOCATE (a2F_tr)
+    IF ( ALLOCATED(rho) )    DEALLOCATE (rho)
+    IF ( ALLOCATED(dosph) )     DEALLOCATE (dosph)
+    IF ( ALLOCATED(logavg) )    DEALLOCATE (logavg)
     !
   ENDDO ! isig
   !

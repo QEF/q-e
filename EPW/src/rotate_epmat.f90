@@ -114,7 +114,7 @@
   !
   epmatq_opt = czero
   epmatq_tmp = czero
-  IF (nexband_tmp .gt. 0) THEN
+  IF (nexband_tmp > 0) THEN
     DO ik = 1, nks
       jbnd = 0
       DO j = 1, nbnd

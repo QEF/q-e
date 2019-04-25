@@ -53,7 +53,7 @@ SUBROUTINE loadkmesh_para
   REAL(kind=DP), ALLOCATABLE :: wkf_(:), wkf_tmp(:)
   !! weights k-points
   !
-  IF (mpime .eq. ionode_id) THEN
+  IF (mpime == ionode_id) THEN
     IF (filkf .ne. '') THEN ! load from file (crystal coordinates)
       !
       WRITE(stdout, *) '    Using k-mesh file: ', trim(filkf)
@@ -120,7 +120,7 @@ SUBROUTINE loadkmesh_para
           wkf_(ikk)   = 2.d0 * wkf_tmp(ik)
           wkf_(ikq)   = 0.d0
         ENDDO
-        DEALLOCATE(xkf_tmp, wkf_tmp)
+        DEALLOCATE (xkf_tmp, wkf_tmp)
         !       
         ! bring the k point to crystal coordinates       
         CALL cryst_to_cart(2*nkqtotf, xkfval, at, -1)
@@ -141,7 +141,7 @@ SUBROUTINE loadkmesh_para
         !
         nkqtotf = 2 * nkqtotf 
         ! 
-        DEALLOCATE(xkfval)
+        DEALLOCATE (xkfval)
         !
       ELSE ! mp_mesh_k
         !
@@ -224,8 +224,8 @@ SUBROUTINE loadkmesh_para
   ENDIF
   !
   nkf = nkqf / 2 
-  IF (.not.ALLOCATED(xkf_)) ALLOCATE (xkf_(3,nkqtotf))
-  IF (.not.ALLOCATED(wkf_)) ALLOCATE (wkf_(  nkqtotf))
+  IF ( .NOT. ALLOCATED(xkf_)) ALLOCATE (xkf_(3,nkqtotf))
+  IF ( .NOT. ALLOCATED(wkf_)) ALLOCATE (wkf_(  nkqtotf))
   CALL mp_bcast(xkf_, ionode_id, inter_pool_comm)
   CALL mp_bcast(wkf_, ionode_id, inter_pool_comm)
   !
@@ -242,13 +242,13 @@ SUBROUTINE loadkmesh_para
   !
   !  Assign the weights and vectors to the correct bounds
   !
-  ALLOCATE(xkf(3,nkqf))
-  ALLOCATE(wkf(  nkqf))
+  ALLOCATE (xkf(3,nkqf))
+  ALLOCATE (wkf(  nkqf))
   xkf(:,:) = xkf_ (:, lower_bnd:upper_bnd)
   ! 
   ! KMB: set coordinates of displaced vectors for indabs
   IF (vme .AND. eig_read) THEN
-     ALLOCATE( xkfd(3,nkqf,6)) 
+     ALLOCATE ( xkfd(3,nkqf,6)) 
      deltaq = 0.001d0
      DO ik = 1, nkqf
         !--bring the k point to cartesian coordinates                                                                                                                           
@@ -272,14 +272,14 @@ SUBROUTINE loadkmesh_para
      wkf(  :) = wkf_ ( lower_bnd:upper_bnd)
   ENDIF  
   !
-  IF (abs(sum (wkf_ (:)) - 2.d0) .gt. 1.d-4 ) &
+  IF (abs(sum (wkf_ (:)) - 2.d0) > 1.d-4 ) &
     WRITE(stdout,'(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_para]")')
   !
   WRITE( stdout, '(5x,"Size of k point mesh for interpolation: ",i10)' ) nkqtotf 
   WRITE( stdout, '(5x,"Max number of k points per pool:",7x,i10)' ) nkqf 
   !
-  IF (ALLOCATED(xkf_)) DEALLOCATE(xkf_)
-  IF (ALLOCATED(wkf_)) DEALLOCATE(wkf_)
+  IF (ALLOCATED(xkf_)) DEALLOCATE (xkf_)
+  IF (ALLOCATED(wkf_)) DEALLOCATE (wkf_)
   !
 END SUBROUTINE loadkmesh_para
 !-----------------------------------------------------------------------
@@ -321,7 +321,7 @@ SUBROUTINE loadkmesh_serial
   REAL(kind=DP), ALLOCATABLE :: wkf_tmp(:)
   !! weights k-points
   !
-  IF (mpime .eq. ionode_id) THEN
+  IF (mpime == ionode_id) THEN
     IF (filkf .ne. '') THEN ! load from file (crystal coordinates)
       !
       ! Each pool gets its own copy from the action=read statement
@@ -467,14 +467,14 @@ SUBROUTINE loadkmesh_serial
   CALL mp_bcast (nkf, ionode_id, inter_pool_comm)
   CALL mp_bcast (nkqf, ionode_id, inter_pool_comm)
   CALL mp_bcast (nkqtotf, ionode_id, inter_pool_comm)
-  IF (.not.ALLOCATED(xkf)) ALLOCATE (xkf(3,nkqtotf))
-  IF (.not.ALLOCATED(wkf)) ALLOCATE (wkf(  nkqtotf))
+  IF ( .NOT. ALLOCATED(xkf)) ALLOCATE (xkf(3,nkqtotf))
+  IF ( .NOT. ALLOCATED(wkf)) ALLOCATE (wkf(  nkqtotf))
   CALL mp_bcast(xkf, ionode_id, inter_pool_comm)
   CALL mp_bcast(wkf, ionode_id, inter_pool_comm)
   !
   ! KMB: set coordinates of displaced vectors - indabs
   IF (vme .AND. eig_read) THEN
-    ALLOCATE( xkfd(3,nkqf,6)) 
+    ALLOCATE ( xkfd(3,nkqf,6)) 
     deltaq = 0.001d0
     DO ik = 1, nkqf
       ! Bring the k point to cartesian coordinates                                                                                                                           
@@ -492,7 +492,7 @@ SUBROUTINE loadkmesh_serial
       END DO
     ENDDO
   ENDIF
-  IF (abs(sum (wkf) - 2.d0) .gt. 1.d-4 ) &
+  IF (abs(sum (wkf) - 2.d0) > 1.d-4 ) &
     WRITE(stdout,'(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_serial]")') 
   !
   WRITE( stdout, '(5x,"Size of k point mesh for interpolation: ",i10)' ) nkqtotf
@@ -507,14 +507,14 @@ SUBROUTINE init_random_seed()
   INTEGER, DIMENSION(:), ALLOCATABLE :: seed
   !     
   CALL RANDOM_SEED(size = n)
-  ALLOCATE(seed(n))
+  ALLOCATE (seed(n))
   !      
   CALL SYSTEM_CLOCK(COUNT=clock)
   !        
   seed = clock + 37 * (/ (i - 1, i = 1, n) /)
   CALL RANDOM_SEED(PUT = seed)
   !        
-  DEALLOCATE(seed)
+  DEALLOCATE (seed)
   !
 END SUBROUTINE init_random_seed
 !-----------------------------------------------------------------------

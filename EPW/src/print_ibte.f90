@@ -260,8 +260,8 @@
         !
         ! We are not consistent with ef from ephwann_shuffle but it should not 
         ! matter if fstick is large enough.
-        IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-             ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+        IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+             ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
           
           xkf_all(:, ik+lower_bnd - 1 ) = xkf(:,ikk)
           wkf_all(ik+lower_bnd - 1 ) = wkf(ikk)
@@ -290,7 +290,7 @@
                 !
                 ! SP : Avoid if statement in inner loops
                 ! the coupling from Gamma acoustic phonons is negligible
-                IF ( wq .gt. eps_acustic ) THEN
+                IF ( wq > eps_acustic ) THEN
                   g2_tmp = 1.0
                   wgq = wgauss( -wq*inv_etemp, -99)
                   wgq = wgq / ( one - two * wgq )
@@ -391,7 +391,7 @@
                   !
                   ! SP : Avoid if statement in inner loops
                   ! the coupling from Gamma acoustic phonons is negligible
-                  IF ( wq .gt. eps_acustic ) THEN
+                  IF ( wq > eps_acustic ) THEN
                     g2_tmp = 1.0
                     wgq = wgauss( -wq*inv_etemp, -99)
                     wgq = wgq / ( one - two * wgq )
@@ -574,7 +574,7 @@
     ! 
     ! Save to file restart information in formatted way for possible restart
     IF (my_pool_id == 0) THEN
-      OPEN(unit=iunrestart,file='restart_ibte.fmt')
+      OPEN(UNIT=iunrestart,FILE='restart_ibte.fmt')
       WRITE (iunrestart,*) iqq
       WRITE (iunrestart,*) ind_tot
       WRITE (iunrestart,*) ind_totcb
@@ -613,7 +613,7 @@
 
       ! Now write total number of q-point inside and k-velocity
       !
-      OPEN(iufilibtev_sup,file='IBTEvel_sup.fmt', form='formatted')
+      OPEN(iufilibtev_sup,FILE='IBTEvel_sup.fmt', FORM='formatted')
       WRITE(iufilibtev_sup,'(a)') '# Number of elements in hole and electrons  '
       WRITE(iufilibtev_sup,'(2i16)') ind_tot, ind_totcb
       WRITE(iufilibtev_sup,'(a)') '# itemp    ef0    efcb'

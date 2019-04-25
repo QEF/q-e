@@ -43,7 +43,7 @@
      ENDIF
      ! 
      CALL estimate_tc_gap
-     IF ( gap_edge .gt. 0.d0 ) THEN
+     IF ( gap_edge > 0.d0 ) THEN
         gap0 = gap_edge
      ENDIF
      IF ( lreal ) CALL eliashberg_iso_raxis
@@ -62,13 +62,13 @@
      CALL eliashberg_init
      CALL evaluate_a2f_lambda
      CALL estimate_tc_gap
-     IF ( gap_edge .gt. 0.d0 ) THEN 
+     IF ( gap_edge > 0.d0 ) THEN 
         gap0 = gap_edge
      ENDIF
      IF ( limag ) CALL eliashberg_aniso_iaxis
   ENDIF
   !
-  IF ( .not. liso .AND. .not. laniso ) THEN 
+  IF ( .NOT. liso .AND. .NOT. laniso ) THEN 
      WRITE(stdout,'(/5x,a)') REPEAT('=',67)
      WRITE(stdout,'(5x,"Calculate Eliashberg spectral function")')
      WRITE(stdout,'(5x,a/)') REPEAT('=',67)

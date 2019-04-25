@@ -76,8 +76,8 @@
   IF(ios /= 0) CALL errore('readdvscf','error opening ' // tempfile, iudvscf)
   !
   ! check that the binary file is long enough
-  INQUIRE(file=tempfile, size=file_size)
-  IF (mult_unit .gt. file_size) CALL errore('readdvscf', &
+  INQUIRE(FILE=tempfile, size=file_size)
+  IF (mult_unit > file_size) CALL errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)
   !
   READ(iudvscf, rec = recn) dvscf

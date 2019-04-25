@@ -67,14 +67,14 @@
   !
   LOGICAL :: in_the_list, found
   !
-  IF (.not. ALLOCATED(xkq) ) ALLOCATE( xkq(3,nkstot) )
+  IF ( .NOT.  ALLOCATED(xkq) ) ALLOCATE ( xkq(3,nkstot) )
   xkq(:,:) = zero
   !
   IF (meta_ionode) THEN
     !
     !  the first proc keeps a copy of all kpoints !
     !
-    IF ( .not. ALLOCATED(shift) ) ALLOCATE( shift(nkstot) )
+    IF ( .NOT. ALLOCATED(shift) ) ALLOCATE ( shift(nkstot) )
     shift(:) = 0
     !
     !  Now fold k+q back into the k-grid for wannier interpolation.
@@ -89,10 +89,10 @@
     xx = xq(1) * nk1 
     yy = xq(2) * nk2 
     zz = xq(3) * nk3 
-    in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
-                  abs(yy-nint(yy)) .le. eps5 .AND. &
-                  abs(zz-nint(zz)) .le. eps5
-    IF (.not.in_the_list) CALL errore('createkmap','q-vec not commensurate',1)
+    in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
+                  abs(yy-nint(yy)) <= eps5 .AND. &
+                  abs(zz-nint(zz)) <= eps5
+    IF ( .NOT. in_the_list) CALL errore('createkmap','q-vec not commensurate',1)
     !
     ng0vec = 0
     DO ig1 = -2, 2
@@ -117,12 +117,12 @@
       xx_c(ik) = xk(1,ik) * nk1
       yy_c(ik) = xk(2,ik) * nk2
       zz_c(ik) = xk(3,ik) * nk3
-      in_the_list = abs(xx_c(ik)-nint(xx_c(ik))) .le. eps5 .AND. &
-                    abs(yy_c(ik)-nint(yy_c(ik))) .le. eps5 .AND. &
-                    abs(zz_c(ik)-nint(zz_c(ik))) .le. eps5
-      IF (.not.in_the_list) CALL errore('createkmap','is this a uniform k-mesh?',1)
+      in_the_list = abs(xx_c(ik)-nint(xx_c(ik))) <= eps5 .AND. &
+                    abs(yy_c(ik)-nint(yy_c(ik))) <= eps5 .AND. &
+                    abs(zz_c(ik)-nint(zz_c(ik))) <= eps5
+      IF ( .NOT. in_the_list) CALL errore('createkmap','is this a uniform k-mesh?',1)
       !
-      IF ( (xx_c(ik) .lt. -eps5) .OR. (yy_c(ik) .lt. -eps5) .OR. (zz_c(ik) .lt. -eps5) ) &
+      IF ( (xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5) ) &
         CALL errore('createkmap','coarse k-mesh needs to be strictly positive in 1st BZ',1)
     ENDDO
     !
@@ -135,10 +135,10 @@
       xx = xk_q(1) * nk1
       yy = xk_q(2) * nk2
       zz = xk_q(3) * nk3
-      in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
-                    abs(yy-nint(yy)) .le. eps5 .AND. &
-                    abs(zz-nint(zz)) .le. eps5
-      IF (.not.in_the_list) CALL errore('createkmap','k+q does not fall on k-grid',1)
+      in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
+                    abs(yy-nint(yy)) <= eps5 .AND. &
+                    abs(zz-nint(zz)) <= eps5
+      IF ( .NOT. in_the_list) CALL errore('createkmap','k+q does not fall on k-grid',1)
       !
       !  find the index of this k+q in the k-grid
       !
@@ -158,9 +158,9 @@
       found = .false.
       DO jk = 1, nkstot
          !
-         found = nint(xx_c(jk)) .eq. nint(xx_n) .AND. &
-                 nint(yy_c(jk)) .eq. nint(yy_n) .AND. &
-                 nint(zz_c(jk)) .eq. nint(zz_n)
+         found = nint(xx_c(jk)) == nint(xx_n) .AND. &
+                 nint(yy_c(jk)) == nint(yy_n) .AND. &
+                 nint(zz_c(jk)) == nint(zz_n)
          IF (found) THEN
             n = jk
             EXIT
@@ -172,7 +172,7 @@
       !  n = nint(xx_n) * nk2 * nk3 + nint(yy_n) * nk3 + nint(zz_n) + 1
       !  n represents the index of k+q on the coarse k-grid.
       !
-      IF (n .eq. 0) CALL errore('createkmap','problem indexing k+q',1)
+      IF (n == 0) CALL errore('createkmap','problem indexing k+q',1)
       !
       kmap(ik) = n
       !
@@ -186,15 +186,15 @@
       !
       in_the_list = .false.
       ig0 = 0
-      DO WHILE ( (ig0.le.ng0vec) .AND. (.not.in_the_list) )
+      DO WHILE ( (ig0 <= ng0vec) .AND. ( .NOT. in_the_list) )
         ig0 = ig0 + 1
-        in_the_list = ( (abs(g0vec(1) - g0vec_all(1,ig0)) .le. eps5) .AND. &
-                        (abs(g0vec(2) - g0vec_all(2,ig0)) .le. eps5) .AND. &
-                        (abs(g0vec(3) - g0vec_all(3,ig0)) .le. eps5))
+        in_the_list = ( (abs(g0vec(1) - g0vec_all(1,ig0)) <= eps5) .AND. &
+                        (abs(g0vec(2) - g0vec_all(2,ig0)) <= eps5) .AND. &
+                        (abs(g0vec(3) - g0vec_all(3,ig0)) <= eps5))
       ENDDO
       shift(ik) = ig0
       !
-      IF (.not.in_the_list) CALL errore &
+      IF ( .NOT. in_the_list) CALL errore &
          ('createkmap','cannot find the folding vector in the list',1)
       !
       !  obsolete:
@@ -279,11 +279,11 @@
   xx = xxq(1) * nk1 
   yy = xxq(2) * nk2 
   zz = xxq(3) * nk3 
-  in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
-                abs(yy-nint(yy)) .le. eps5 .AND. &
-                abs(zz-nint(zz)) .le. eps5
-  IF (.not.in_the_list) CALL errore('createkmap2','q-vec not commensurate',1)
-  IF (.not. ALLOCATED(xkq) ) ALLOCATE( xkq(3,nkstot) )
+  in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
+                abs(yy-nint(yy)) <= eps5 .AND. &
+                abs(zz-nint(zz)) <= eps5
+  IF ( .NOT. in_the_list) CALL errore('createkmap2','q-vec not commensurate',1)
+  IF ( .NOT.  ALLOCATED(xkq) ) ALLOCATE ( xkq(3,nkstot) )
   xkq(:,:) = zero
   !
   !  bring all the k-points from cartesian to crystal coordinates 
@@ -297,12 +297,12 @@
     xx_c(ik) = xk(1,ik) * nk1
     yy_c(ik) = xk(2,ik) * nk2
     zz_c(ik) = xk(3,ik) * nk3
-    in_the_list = abs(xx_c(ik)-nint(xx_c(ik))) .le. eps5 .AND. &
-                  abs(yy_c(ik)-nint(yy_c(ik))) .le. eps5 .AND. &
-                  abs(zz_c(ik)-nint(zz_c(ik))) .le. eps5
-    IF (.not.in_the_list) CALL errore('createkmap2','is this a uniform k-mesh?',1)
+    in_the_list = abs(xx_c(ik)-nint(xx_c(ik))) <= eps5 .AND. &
+                  abs(yy_c(ik)-nint(yy_c(ik))) <= eps5 .AND. &
+                  abs(zz_c(ik)-nint(zz_c(ik))) <= eps5
+    IF ( .NOT. in_the_list) CALL errore('createkmap2','is this a uniform k-mesh?',1)
     !
-    IF ( (xx_c(ik) .lt. -eps5) .OR. (yy_c(ik) .lt. -eps5) .OR. (zz_c(ik) .lt. -eps5) ) &
+    IF ( (xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5) ) &
       CALL errore('createkmap2','coarse k-mesh needs to be strictly positive in 1st BZ',1)
   ENDDO
   !
@@ -315,10 +315,10 @@
     xx = xkq(1,ik) * nk1
     yy = xkq(2,ik) * nk2
     zz = xkq(3,ik) * nk3
-    in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
-                  abs(yy-nint(yy)) .le. eps5 .AND. &
-                  abs(zz-nint(zz)) .le. eps5
-    IF (.not.in_the_list) CALL errore('createkmap2','k+q does not fall on k-grid',1)
+    in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
+                  abs(yy-nint(yy)) <= eps5 .AND. &
+                  abs(zz-nint(zz)) <= eps5
+    IF ( .NOT. in_the_list) CALL errore('createkmap2','k+q does not fall on k-grid',1)
     !
     !  find the index of this k+q in the k-grid
     !
@@ -330,16 +330,16 @@
     found = .false.
     DO jk = 1, nkstot
        !
-       found = nint(xx_c(jk)) .eq. nint(xx) .and. &
-               nint(yy_c(jk)) .eq. nint(yy) .and. &
-               nint(zz_c(jk)) .eq. nint(zz)
+       found = nint(xx_c(jk)) == nint(xx) .and. &
+               nint(yy_c(jk)) == nint(yy) .and. &
+               nint(zz_c(jk)) == nint(zz)
        IF (found) THEN
           n = jk
           EXIT
        ENDIF
     ENDDO
     !
-    IF (n .eq. 0) CALL errore('createkmap2','problem indexing k+q',1)
+    IF (n == 0) CALL errore('createkmap2','problem indexing k+q',1)
     !
     kmap(ik) = n
     !
@@ -441,7 +441,7 @@
     WRITE(stdout, '(/5x,a)') 'Calculating kgmap'
     CALL flush(stdout)
     !
-    OPEN(iukgmap,file = TRIM(prefix)//'.kgmap',form='formatted')
+    OPEN(iukgmap,file = TRIM(prefix)//'.kgmap',FORM='formatted')
     ! 
     ! the 5^3 possible G_0 translations
     ng0vec = 0
@@ -457,7 +457,7 @@
     ENDDO
     ig0 = nint( dble(ng0vec) / 2 )
     !
-    !IF (.not. ALLOCATED(shift)) ALLOCATE( shift(nkstot) )
+    !IF ( .NOT.  ALLOCATED(shift)) ALLOCATE ( shift(nkstot) )
     ALLOCATE (shift(nkstot))
     ! 
     DO ik = 1, nkstot       
@@ -467,14 +467,14 @@
       zz = xk_cryst(3,ik) * nk3
       ! check that the k-mesh was defined in the positive region of 1st BZ
       !
-      IF ( (xx .lt. -eps5) .OR. (yy .lt. -eps5) .OR. (zz .lt. -eps5) ) &
+      IF ( (xx < -eps5) .OR. (yy < -eps5) .OR. (zz < -eps5) ) &
          CALL errore('createkmap_pw2','coarse k-mesh needs to be strictly positive in 1st BZ',1)
       ! 
       shift(ik) = ig0
       WRITE(iukgmap,'(3i6)') ik, shift(ik)
       !
     ENDDO
-    !IF (ALLOCATED(shift)) DEALLOCATE(shift)
+    !IF (ALLOCATED(shift)) DEALLOCATE (shift)
     DEALLOCATE (shift)
     !
     g0vec_all_r = dble(g0vec_all)
@@ -587,7 +587,7 @@
   !
   igsrt(1) = 0
   CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
-  DEALLOCATE( g2sort_g, tt )
+  DEALLOCATE ( g2sort_g, tt )
   !  
   ngm = 0
   !
@@ -607,7 +607,7 @@
         gg(ngm) = sum(g(1:3,ngm)**2)
      ENDIF
   ENDDO !ngloop
-  DEALLOCATE( g2l )
+  DEALLOCATE ( g2l )
   !
   IF (ngm /= ngm_save) &
      CALL errore('createkmap_pw2', 'g-vectors (ngm) missing !', abs(ngm - ngm_save))
@@ -699,7 +699,7 @@
   !
   DO ig0 = 1, ng0vec
     !
-    IF (ig0 .eq. 1) THEN
+    IF (ig0 == 1) THEN
       WRITE(stdout,'(/5x,"Progress kgmap: ")',advance='no')
       indold = 0
     ENDIF
@@ -731,11 +731,11 @@
       !
       ig2_guess = jtoi(ig1_use) + guess_skip
       !
-      IF ((ig2_guess .gt. 0) .AND. (ig2_guess .lt. ngm_g+1)) THEN
+      IF ((ig2_guess > 0) .AND. (ig2_guess < ngm_g+1)) THEN
         !
         ig2_guess = itoj(ig2_guess)
         !
-        IF ((i .eq. mill_g(1,ig2_guess)) .AND. (j .eq. mill_g(2,ig2_guess)) .AND. (k .eq. mill_g(3,ig2_guess))) THEN
+        IF ((i == mill_g(1,ig2_guess)) .AND. (j == mill_g(2,ig2_guess)) .AND. (k == mill_g(3,ig2_guess))) THEN
           !
           ig2_use = ig2_guess
           tfound = .true.
@@ -744,13 +744,13 @@
         !
       ENDIF
       !
-      DO WHILE ((.not. tfound) .AND. (ig2 .lt. ngm_g))
+      DO WHILE (( .NOT.  tfound) .AND. (ig2 < ngm_g))
         !
         ig2 = ig2 + 1
         ig2_use = itoj(ig2)
-        tfound = (i .eq. mill_g(1,ig2_use)) .AND. & 
-                 (j .eq. mill_g(2,ig2_use)) .AND. & 
-                 (k .eq. mill_g(3,ig2_use))
+        tfound = (i == mill_g(1,ig2_use)) .AND. & 
+                 (j == mill_g(2,ig2_use)) .AND. & 
+                 (k == mill_g(3,ig2_use))
         !
       ENDDO
       !

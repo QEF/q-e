@@ -88,16 +88,16 @@
   imode0 = 0
   DO irr = 1, nirr
      npe = npert(irr)
-     ALLOCATE( dvscfin(dfftp%nnr, nspin_mag, npe) )
+     ALLOCATE ( dvscfin(dfftp%nnr, nspin_mag, npe) )
      IF (okvan) THEN
-        ALLOCATE( int3(nhm, nhm, nat, nspin_mag, npe) )
-        IF (noncolin) ALLOCATE( int3_nc(nhm, nhm, nat, nspin, npe) )
+        ALLOCATE ( int3(nhm, nhm, nat, nspin_mag, npe) )
+        IF (noncolin) ALLOCATE ( int3_nc(nhm, nhm, nat, nspin, npe) )
      ENDIF
      !
      !   read the <prefix>.dvscf_q[iq] files
      !
      dvscfin = czero
-     IF ( my_pool_id.eq.0 ) THEN
+     IF ( my_pool_id == 0 ) THEN
         DO ipert = 1, npe
            CALL readdvscf( dvscfin(1,1,ipert), imode0 + ipert, iq_irr, nqc_irr )
         ENDDO
@@ -105,7 +105,7 @@
      CALL mp_sum(dvscfin,inter_pool_comm)
      !
      IF (doublegrid) THEN
-       ALLOCATE( dvscfins(dffts%nnr, nspin_mag, npe) )
+       ALLOCATE ( dvscfins(dffts%nnr, nspin_mag, npe) )
        DO is = 1, nspin_mag
          DO ipert = 1, npe
            CALL fft_interpolate(dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
@@ -119,11 +119,11 @@
      CALL elphel2_shuffle( npe, imode0, dvscfins, gmapsym, eigv, isym, xq0, timerev )
      !
      imode0 = imode0 + npe
-     IF (doublegrid) DEALLOCATE(dvscfins)
-     DEALLOCATE(dvscfin)
+     IF (doublegrid) DEALLOCATE (dvscfins)
+     DEALLOCATE (dvscfin)
      IF (okvan) THEN
-        DEALLOCATE(int3)
-        IF (noncolin) DEALLOCATE(int3_nc)
+        DEALLOCATE (int3)
+        IF (noncolin) DEALLOCATE (int3_nc)
      ENDIF
   ENDDO
   !
