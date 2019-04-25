@@ -155,11 +155,11 @@
               w_2 = etf (ibndmin-1+pbnd, ikk)
               IF ( abs(w_2-w_1) < eps8 ) THEN
                 n = n + 1
-                g2 = g2 + epc(pbnd,jbnd,nu,ik+lower_bnd-1)*epc(pbnd,jbnd,nu,ik+lower_bnd-1)
+                g2 = g2 + epc(jbnd,pbnd,nu,ik+lower_bnd-1)*epc(jbnd,pbnd,nu,ik+lower_bnd-1)
               ENDIF
             ENDDO
             g2 = g2 / float(n)
-            epc_sym (ibnd, jbnd, nu) = sqrt (g2)
+            epc_sym (jbnd, ibnd, nu) = sqrt (g2)
           ENDDO
         ENDDO
       ENDDO
@@ -176,11 +176,11 @@
               w_2 = etf(ibndmin-1+pbnd, ikq)
               IF ( abs(w_2-w_1) < eps8 ) then
                 n = n + 1
-                g2 = g2 + epc(ibnd,pbnd,nu,ik+lower_bnd-1)*epc(ibnd,pbnd,nu,ik+lower_bnd-1)
+                g2 = g2 + epc(pbnd,ibnd,nu,ik+lower_bnd-1)*epc(pbnd,ibnd,nu,ik+lower_bnd-1)
               ENDIF
             ENDDO
             g2 = g2 / float(n)
-            epc_sym (ibnd, jbnd, nu) = sqrt (g2)
+            epc_sym (jbnd, ibnd, nu) = sqrt (g2)
           ENDDO
         ENDDO
       ENDDO

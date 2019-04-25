@@ -19,6 +19,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE Fin_write(iter, F_in, av_mob_old, elec)
     !----------------------------------------------------------------------------
+    !!
+    !! Writes the F without magnetic field for restart
+    !! 
     USE kinds,         ONLY : DP
     USE io_epw,        ONLY : iufilFi_all
     USE io_files,      ONLY : diropn
@@ -35,10 +38,8 @@
     INTEGER, INTENT(IN) :: iter
     !! Iteration number
     REAL(kind=DP), INTENT(IN) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
-    !REAL(kind=DP), INTENT(IN) :: F_in(:,:,:,:)
     !! In solution for iteration i  
     REAL(kind=DP), INTENT(IN) :: av_mob_old(nstemp)
-    !REAL(kind=DP), INTENT(IN) :: av_mob_old(:)
     !! Error in the hole mobility
     LOGICAL, INTENT(IN) :: elec
     !! IF true we do electron mobility, if false the hole one. 
@@ -117,8 +118,7 @@
     USE constants_epw, ONLY : zero
     USE io_files,  ONLY : prefix, tmp_dir, diropn
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     USE elph2,        ONLY : ibndmax, ibndmin, nkqtotf
     USE transportcom, ONLY : lower_bnd, upper_bnd
@@ -133,7 +133,6 @@
     !! Error in the hole mobility
     LOGICAL, INTENT(IN) :: elec
     !! IF true we do electron mobility, if false the hole one. 
-
     !
     ! Local variable
     LOGICAL :: exst
@@ -215,14 +214,14 @@
           ! First element is the iteration number
           iter = INT( aux(1) )
           !
-          i = 2
+          i = 1
           DO itemp=1, nstemp
             i = i + 1
             ! Last value of hole mobility 
             av_mob_old(itemp) = aux(i)
           ENDDO
           ! 
-          i = 2 + nstemp
+          i = 1 + nstemp
           DO itemp=1, nstemp
             DO ik=1, nkqtotf/2
               DO ibnd=1, (ibndmax-ibndmin+1)
@@ -238,16 +237,12 @@
       ENDIF
     ENDIF ! mpime
     ! 
-    CALL mp_bcast (exst, ionode_id, inter_pool_comm)
-    CALL mp_bcast (exst, root_pool, intra_pool_comm)
+    CALL mp_bcast (exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (iter, ionode_id, inter_pool_comm)
-      CALL mp_bcast (iter, root_pool, intra_pool_comm)
-      CALL mp_bcast (F_in, ionode_id, inter_pool_comm)
-      CALL mp_bcast (F_in, root_pool, intra_pool_comm)
-      CALL mp_bcast (av_mob_old, ionode_id, inter_pool_comm)
-      CALL mp_bcast (av_mob_old, root_pool, intra_pool_comm)
+      CALL mp_bcast (iter,       ionode_id, world_comm)
+      CALL mp_bcast (F_in,       ionode_id, world_comm)
+      CALL mp_bcast (av_mob_old, ionode_id, world_comm)
       ! 
       WRITE(stdout, '(a,i10)' ) '     Restart from iter: ',iter
     ENDIF ! exists
@@ -462,8 +457,7 @@
     USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
                               meV2invps, eps4
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, root_pool, intra_pool_comm
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
@@ -542,13 +536,8 @@
       CLOSE(iufilscatt_rate)
       ! 
     ENDIF
-    CALL mp_bcast (etf_all, ionode_id, inter_pool_comm)
-    CALL mp_bcast (etf_all, root_pool, intra_pool_comm)
-
-    CALL mp_bcast (inv_tau_all, ionode_id, inter_pool_comm)
-    CALL mp_bcast (inv_tau_all, root_pool, intra_pool_comm)
-
-    CALL mp_barrier(inter_pool_comm)
+    CALL mp_bcast (etf_all, ionode_id, world_comm)
+    CALL mp_bcast (inv_tau_all, ionode_id, world_comm)
     ! 
     WRITE(stdout,'(/5x,"Scattering rate read from file"/)')
     ! 
@@ -661,8 +650,7 @@
     USE constants_epw, ONLY :  zero
     USE transportcom,  ONLY : lower_bnd, upper_bnd
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
@@ -747,18 +735,13 @@
       ENDIF
     ENDIF
     ! 
-    CALL mp_bcast (exst, ionode_id, inter_pool_comm)
-    CALL mp_bcast (exst, root_pool, intra_pool_comm)  
+    CALL mp_bcast (exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (iqq, ionode_id, inter_pool_comm)
-      CALL mp_bcast (iqq, root_pool, intra_pool_comm)
-      CALL mp_bcast (sigmar_all, ionode_id, inter_pool_comm)
-      CALL mp_bcast (sigmar_all, root_pool, intra_pool_comm)
-      CALL mp_bcast (sigmai_all, ionode_id, inter_pool_comm)
-      CALL mp_bcast (sigmai_all, root_pool, intra_pool_comm)
-      CALL mp_bcast (zi_all, ionode_id, inter_pool_comm)
-      CALL mp_bcast (zi_all, root_pool, intra_pool_comm)
+      CALL mp_bcast (iqq, ionode_id, world_comm)
+      CALL mp_bcast (sigmar_all, ionode_id, world_comm)
+      CALL mp_bcast (sigmai_all, ionode_id, world_comm)
+      CALL mp_bcast (zi_all, ionode_id, world_comm)
       ! 
       ! Make everythin 0 except the range of k-points we are working on
       IF (lower_bnd > 1 ) THEN
@@ -1087,8 +1070,7 @@
     USE io_files,  ONLY : tmp_dir, diropn
     USE epwcom,    ONLY : nstemp, restart_filq
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
@@ -1156,14 +1138,11 @@
       ENDIF
     ENDIF
     ! 
-    CALL mp_bcast (exst, ionode_id, inter_pool_comm)
-    CALL mp_bcast (exst, root_pool, intra_pool_comm)
+    CALL mp_bcast (exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (nqtotf_new, ionode_id, inter_pool_comm)
-      CALL mp_bcast (nqtotf_new, root_pool, intra_pool_comm)
-      CALL mp_bcast (inv_tau_all_new, ionode_id, inter_pool_comm)
-      CALL mp_bcast (inv_tau_all_new, root_pool, intra_pool_comm)
+      CALL mp_bcast (nqtotf_new, ionode_id, world_comm)
+      CALL mp_bcast (inv_tau_all_new, ionode_id, world_comm)
       ! 
       WRITE(stdout, '(a,a)' ) '     Correctly read file ',restart_filq
     ENDIF
