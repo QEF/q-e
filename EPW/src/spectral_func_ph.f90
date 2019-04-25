@@ -151,7 +151,7 @@
   ELSE IF (nsmear > 1) THEN
     !
     ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
-    ! if some bands are skipped (nbndskip.neq.0), nelec has already been
+    ! if some bands are skipped (nbndskip /= 0), nelec has already been
     ! recalculated in ephwann_shuffle
     !
   ELSE !SP: This is added for efficiency reason because the efermig routine is slow

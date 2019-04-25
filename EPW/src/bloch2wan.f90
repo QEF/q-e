@@ -730,7 +730,7 @@
     REAL(kind=DP) :: zero_vect(3)
     !! temporary zero vector
     REAL(kind=DP) :: delta
-    !! \delta_nm = 1 if n == m and 0 if n .neq. m
+    !! \delta_nm = 1 if n == m and 0 if n /= m
     !
     COMPLEX(kind=DP) :: Apos(3,nbndsub,nbndsub,nks)
     !! A^W_{mn,\alpha}(k)

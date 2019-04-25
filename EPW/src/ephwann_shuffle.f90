@@ -921,6 +921,18 @@
     iq_restart = 1
     first_cycle = .FALSE.
     first_time = .TRUE.
+    IF (scattering .AND. .NOT. iterative_bte) THEN
+      ALLOCATE (inv_tau_all(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
+      ALLOCATE (zi_allvb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
+      inv_tau_all(:,:,:) = zero
+      zi_allvb(:,:,:)    = zero
+    ENDIF
+    IF (int_mob .AND. carrier) THEN
+      ALLOCATE (inv_tau_allcb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
+      ALLOCATE (zi_allcb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
+      inv_tau_allcb(:,:,:) = zero
+      zi_allcb(:,:,:)      = zero
+    ENDIF
     ! 
     ! Restart in SERTA case or self-energy case
     IF (restart) THEN
@@ -996,18 +1008,6 @@
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ALLOCATE (epf17(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf))
     epf17(:,:,:,:) = czero
-    IF (scattering .AND. .NOT. iterative_bte) THEN
-      ALLOCATE (inv_tau_all(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
-      ALLOCATE (zi_allvb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
-      inv_tau_all(:,:,:) = zero
-      zi_allvb(:,:,:)    = zero
-    ENDIF
-    IF (int_mob .AND. carrier) THEN
-      ALLOCATE (inv_tau_allcb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
-      ALLOCATE (zi_allcb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
-      inv_tau_allcb(:,:,:) = zero
-      zi_allcb(:,:,:)      = zero
-    ENDIF
     IF (elecselfen .OR. plselfen) THEN
       ALLOCATE (sigmar_all(ibndmax-ibndmin+1, nkqtotf/2))
       ALLOCATE (sigmai_all(ibndmax-ibndmin+1, nkqtotf/2))

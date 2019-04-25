@@ -1307,7 +1307,7 @@
     ELSE
       ef0 = efnew 
       !ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
-      ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
+      ! if some bands are skipped (nbndskip /= 0), nelec has already been recalculated 
       ! in ephwann_shuffle
     ENDIF
     !     

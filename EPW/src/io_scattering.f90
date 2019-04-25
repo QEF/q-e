@@ -900,7 +900,7 @@
     END SUBROUTINE tau_write
     !----------------------------------------------------------------------------
     !----------------------------------------------------------------------------
-    SUBROUTINE tau_read(iqq,totq,nktotf,second)
+    SUBROUTINE tau_read (iqq, totq, nktotf, second)
     !----------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
@@ -942,7 +942,7 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
-    REAL(KIND=DP) :: aux ( 2 * nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND=DP) :: aux(2 * nstemp * (ibndmax - ibndmin + 1) * nktotf + 2)
     !! Vector to store the array
     ! 
     CHARACTER (len=256) :: name1

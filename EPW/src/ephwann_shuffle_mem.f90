@@ -290,18 +290,18 @@
   COMPLEX(kind=DP), ALLOCATABLE :: epmatlrT(:,:,:,:)
   !! Long-range temp. save
   ! 
-  IF (nbndsub.ne.nbnd) &
+  IF (nbndsub /= nbnd) &
        WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used:  nbndsub = ', nbndsub
   !
-  ALLOCATE ( cu ( nbnd, nbndsub, nks), & 
-             cuq ( nbnd, nbndsub, nks), & 
-             lwin ( nbnd, nks ), &
-             lwinq ( nbnd, nks ), &
-             exband ( nbnd ) )
+  ALLOCATE (cu(nbnd, nbndsub, nks))
+  ALLOCATE (cuq(nbnd, nbndsub, nks))
+  ALLOCATE (lwin(nbnd, nks))
+  ALLOCATE (lwinq(nbnd, nks))
+  ALLOCATE (exband(nbnd)) 
   !
   CALL start_clock ( 'ephwann' )
   !
-  IF ( epwread ) THEN
+  IF (epwread) THEN
     !
     ! Might have been pre-allocate depending of the restart configuration 
     IF(ALLOCATED(tau))  DEALLOCATE ( tau )
@@ -311,7 +311,7 @@
     ! We need some crystal info
     IF (mpime == ionode_id) THEN
       !
-      OPEN(UNIT=crystal,FILE='crystal.fmt',status='old',iostat=ios)
+      OPEN (UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
       READ (crystal,*) nat
       READ (crystal,*) nmodes
       READ (crystal,*) nelec

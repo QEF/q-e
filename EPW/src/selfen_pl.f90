@@ -109,7 +109,7 @@
   ELSE
     !
     ef0 = efnew ! Fermi energy is recalculated on the fine mesh!! 
-    ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
+    ! if some bands are skipped (nbndskip /= 0), nelec has already been recalculated 
     ! in ephwann_shuffle
     !
   ENDIF
