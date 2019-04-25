@@ -495,8 +495,7 @@
     !
     ! Dynamical Matrix
     !
-    IF ( .NOT.  lifc) CALL dynbloch2wan &
-                         ( nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q )
+    IF ( .NOT. lifc) CALL dynbloch2wan(nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q)
     !
     !
     ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
@@ -507,7 +506,7 @@
       !
       ! we need the cu again for the k+q points, we generate the map here
       !
-      CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers )
+      CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
       !
       DO imode = 1, nmodes
         !
@@ -553,7 +552,7 @@
     !
     DEALLOCATE (epmatq)
     DEALLOCATE (dynq)
-    DEALLOCATE (dmec)
+    IF (.NOT. vme) DEALLOCATE (dmec)
     IF (etf_mem == 0) THEN
       DEALLOCATE (epmatwe)
     ELSE
@@ -921,6 +920,31 @@
     iq_restart = 1
     first_cycle = .FALSE.
     first_time = .TRUE.
+    ! 
+    ! Fine mesh set of g-matrices.  It is large for memory storage
+    ALLOCATE (epf17(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf))
+    IF (phonselfen) THEN
+      ALLOCATE (lambda_all(nmodes, totq, nsmear))
+      ALLOCATE (lambda_v_all(nmodes, totq, nsmear))
+      ALLOCATE (gamma_all  (nmodes, totq, nsmear))
+      ALLOCATE (gamma_v_all(nmodes, totq, nsmear))
+      lambda_all(:,:,:)  = zero
+      lambda_v_all(:,:,:)= zero
+      gamma_all(:,:,:)   = zero
+      gamma_v_all(:,:,:) = zero
+    ENDIF
+    IF (specfun_el .OR. specfun_pl) THEN
+      ALLOCATE (esigmar_all(ibndmax-ibndmin+1, nkqtotf/2, nw_specfun))
+      ALLOCATE (esigmai_all(ibndmax-ibndmin+1, nkqtotf/2, nw_specfun))
+      ALLOCATE (a_all(nw_specfun, nkqtotf/2))
+      esigmar_all(:,:,:) = zero
+      esigmai_all(:,:,:) = zero
+      a_all(:,:) = zero
+    ENDIF
+    IF (specfun_ph) THEN
+      ALLOCATE (a_all_ph(nw_specfun, totq))
+      a_all_ph(:,:) = zero
+    ENDIF
     IF (scattering .AND. .NOT. iterative_bte) THEN
       ALLOCATE (inv_tau_all(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
       ALLOCATE (zi_allvb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
@@ -933,6 +957,18 @@
       inv_tau_allcb(:,:,:) = zero
       zi_allcb(:,:,:)      = zero
     ENDIF
+    IF (elecselfen .OR. plselfen) THEN
+      ALLOCATE (sigmar_all(ibndmax-ibndmin+1, nkqtotf/2))
+      ALLOCATE (sigmai_all(ibndmax-ibndmin+1, nkqtotf/2))
+      ALLOCATE (zi_all(ibndmax-ibndmin+1, nkqtotf/2))
+      sigmar_all(:,:) = zero
+      sigmai_all(:,:) = zero
+      zi_all(:,:)     = zero
+      IF (iverbosity == 3) THEN
+        ALLOCATE (sigmai_mode(ibndmax-ibndmin+1, nmodes, nkqtotf/2))
+        sigmai_mode(:,:,:) = zero
+      ENDIF
+    ENDIF ! elecselfen
     ! 
     ! Restart in SERTA case or self-energy case
     IF (restart) THEN
@@ -1005,43 +1041,6 @@
       ENDIF ! exst
     ENDIF
     ! -----------------------------------------------------------------------------
-    ! Fine mesh set of g-matrices.  It is large for memory storage
-    ALLOCATE (epf17(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf))
-    epf17(:,:,:,:) = czero
-    IF (elecselfen .OR. plselfen) THEN
-      ALLOCATE (sigmar_all(ibndmax-ibndmin+1, nkqtotf/2))
-      ALLOCATE (sigmai_all(ibndmax-ibndmin+1, nkqtotf/2))
-      ALLOCATE (zi_all(ibndmax-ibndmin+1, nkqtotf/2))
-      sigmar_all(:,:) = zero
-      sigmai_all(:,:) = zero
-      zi_all(:,:)     = zero
-      IF (iverbosity == 3) THEN
-        ALLOCATE (sigmai_mode(ibndmax-ibndmin+1, nmodes, nkqtotf/2))
-        sigmai_mode(:,:,:) = zero
-      ENDIF
-    ENDIF ! elecselfen
-    IF (phonselfen) THEN
-      ALLOCATE (lambda_all(nmodes, totq, nsmear))
-      ALLOCATE (lambda_v_all(nmodes, totq, nsmear))
-      ALLOCATE (gamma_all  (nmodes, totq, nsmear))
-      ALLOCATE (gamma_v_all(nmodes, totq, nsmear))
-      lambda_all(:,:,:)  = zero
-      lambda_v_all(:,:,:)= zero
-      gamma_all(:,:,:)   = zero
-      gamma_v_all(:,:,:) = zero
-    ENDIF
-    IF (specfun_el .OR. specfun_pl) THEN
-      ALLOCATE (esigmar_all(ibndmax-ibndmin+1, nkqtotf/2, nw_specfun))
-      ALLOCATE (esigmai_all(ibndmax-ibndmin+1, nkqtotf/2, nw_specfun))
-      ALLOCATE (a_all(nw_specfun, nkqtotf/2))
-      esigmar_all(:,:,:) = zero
-      esigmai_all(:,:,:) = zero
-      a_all(:,:) = zero
-    ENDIF
-    IF (specfun_ph) THEN
-      ALLOCATE (a_all_ph(nw_specfun, totq))
-      a_all_ph(:,:) = zero
-    ENDIF
     ! 
     DO iqq=iq_restart, totq
       ! This needs to be uncommented. 
