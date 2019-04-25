@@ -19,6 +19,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE Fin_write(iter, F_in, av_mob_old, elec)
     !----------------------------------------------------------------------------
+    !!
+    !! Writes the F without magnetic field for restart
+    !! 
     USE kinds,         ONLY : DP
     USE io_epw,        ONLY : iufilFi_all
     USE io_files,      ONLY : diropn
@@ -35,10 +38,8 @@
     INTEGER, INTENT(IN) :: iter
     !! Iteration number
     REAL(kind=DP), INTENT(IN) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
-    !REAL(kind=DP), INTENT(IN) :: F_in(:,:,:,:)
     !! In solution for iteration i  
     REAL(kind=DP), INTENT(IN) :: av_mob_old(nstemp)
-    !REAL(kind=DP), INTENT(IN) :: av_mob_old(:)
     !! Error in the hole mobility
     LOGICAL, INTENT(IN) :: elec
     !! IF true we do electron mobility, if false the hole one. 
@@ -117,8 +118,7 @@
     USE constants_epw, ONLY : zero
     USE io_files,  ONLY : prefix, tmp_dir, diropn
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     USE elph2,        ONLY : ibndmax, ibndmin, nkqtotf
     USE transportcom, ONLY : lower_bnd, upper_bnd
@@ -133,7 +133,6 @@
     !! Error in the hole mobility
     LOGICAL, INTENT(IN) :: elec
     !! IF true we do electron mobility, if false the hole one. 
-
     !
     ! Local variable
     LOGICAL :: exst
@@ -158,7 +157,7 @@
     REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
     !! Vector to store the array
     !
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       ! 
       ! First inquire if the file exists
       IF (elec) THEN
@@ -215,14 +214,14 @@
           ! First element is the iteration number
           iter = INT( aux(1) )
           !
-          i = 2
+          i = 1
           DO itemp=1, nstemp
             i = i + 1
             ! Last value of hole mobility 
             av_mob_old(itemp) = aux(i)
           ENDDO
           ! 
-          i = 2 + nstemp
+          i = 1 + nstemp
           DO itemp=1, nstemp
             DO ik=1, nkqtotf/2
               DO ibnd=1, (ibndmax-ibndmin+1)
@@ -238,16 +237,12 @@
       ENDIF
     ENDIF ! mpime
     ! 
-    CALL mp_bcast (exst, ionode_id, inter_pool_comm)
-    CALL mp_bcast (exst, root_pool, intra_pool_comm)
+    CALL mp_bcast (exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (iter, ionode_id, inter_pool_comm)
-      CALL mp_bcast (iter, root_pool, intra_pool_comm)
-      CALL mp_bcast (F_in, ionode_id, inter_pool_comm)
-      CALL mp_bcast (F_in, root_pool, intra_pool_comm)
-      CALL mp_bcast (av_mob_old, ionode_id, inter_pool_comm)
-      CALL mp_bcast (av_mob_old, root_pool, intra_pool_comm)
+      CALL mp_bcast (iter,       ionode_id, world_comm)
+      CALL mp_bcast (F_in,       ionode_id, world_comm)
+      CALL mp_bcast (av_mob_old, ionode_id, world_comm)
       ! 
       WRITE(stdout, '(a,i10)' ) '     Restart from iter: ',iter
     ENDIF ! exists
@@ -408,18 +403,18 @@
     !
     WRITE(stdout,'(/5x,"Writing scattering rate to file"/)')
     !
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
       ! Write to file
       temp = etemp * ryd2ev / kelvin2eV
-      IF ( temp .lt. 10.d0 - eps4 ) THEN
+      IF ( temp < 10.d0 - eps4 ) THEN
         WRITE(name1,'(a18,f4.2)') 'scattering_rate_00', temp
-      ELSEIF ( temp .ge. 10.d0 - eps4 .AND. temp .lt. 100.d0 -eps4 ) THEN
+      ELSEIF ( temp >= 10.d0 - eps4 .AND. temp < 100.d0 -eps4 ) THEN
         WRITE(name1,'(a17,f5.2)') 'scattering_rate_0', temp
-      ELSEIF ( temp .ge. 100.d0 -eps4 ) THEN
+      ELSEIF ( temp >= 100.d0 -eps4 ) THEN
         WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
       ENDIF
-      OPEN(iufilscatt_rate,file=name1, form='formatted')
+      OPEN(iufilscatt_rate,FILE=name1, FORM='formatted')
       WRITE(iufilscatt_rate,'(a)') '# Inverse scattering time (ps)'
       WRITE(iufilscatt_rate,'(a)') '#      ik       ibnd                 E(ibnd)    scattering rate(1/ps)'
       !
@@ -462,8 +457,7 @@
     USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
                               meV2invps, eps4
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, root_pool, intra_pool_comm
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
@@ -498,17 +492,17 @@
     ! 
     WRITE(stdout,'(/5x,"Reading scattering rate from file"/)')
     !
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       ! Write to file
       temp = etemp * ryd2ev / kelvin2eV
-      IF ( temp .lt. 10.d0 - eps4 ) THEN
+      IF ( temp < 10.d0 - eps4 ) THEN
         WRITE(name1,'(a18,f4.2)') 'scattering_rate_00', temp
-      ELSEIF ( temp .ge. 10.d0 - eps4 .AND. temp .lt. 100.d0 -eps4 ) THEN
+      ELSEIF ( temp >= 10.d0 - eps4 .AND. temp < 100.d0 -eps4 ) THEN
         WRITE(name1,'(a17,f5.2)') 'scattering_rate_0', temp
-      ELSEIF ( temp .ge. 100.d0 -eps4 ) THEN
+      ELSEIF ( temp >= 100.d0 -eps4 ) THEN
         WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
       ENDIF
-      OPEN(iufilscatt_rate,file=name1, status='old',iostat=ios)
+      OPEN(iufilscatt_rate,FILE=name1, status='old',iostat=ios)
       WRITE(stdout,'(a16,a22)') '     Open file: ',name1   
       ! There are two comment line at the beginning of the file
       READ(iufilscatt_rate,*) dummy1
@@ -542,13 +536,8 @@
       CLOSE(iufilscatt_rate)
       ! 
     ENDIF
-    CALL mp_bcast (etf_all, ionode_id, inter_pool_comm)
-    CALL mp_bcast (etf_all, root_pool, intra_pool_comm)
-
-    CALL mp_bcast (inv_tau_all, ionode_id, inter_pool_comm)
-    CALL mp_bcast (inv_tau_all, root_pool, intra_pool_comm)
-
-    CALL mp_barrier(inter_pool_comm)
+    CALL mp_bcast (etf_all, ionode_id, world_comm)
+    CALL mp_bcast (inv_tau_all, ionode_id, world_comm)
     ! 
     WRITE(stdout,'(/5x,"Scattering rate read from file"/)')
     ! 
@@ -600,7 +589,7 @@
     REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 2 )
     !! Vector to store the array
     !
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
       lsigma_all = 3 * (ibndmax-ibndmin+1) * nktotf +2
       ! First element is the current q-point
@@ -661,8 +650,7 @@
     USE constants_epw, ONLY :  zero
     USE transportcom,  ONLY : lower_bnd, upper_bnd
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
@@ -699,7 +687,7 @@
     ! 
     CHARACTER (len=256) :: name1
     !
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
       ! First inquire if the file exists
 #if defined(__MPI)
@@ -747,18 +735,13 @@
       ENDIF
     ENDIF
     ! 
-    CALL mp_bcast (exst, ionode_id, inter_pool_comm)
-    CALL mp_bcast (exst, root_pool, intra_pool_comm)  
+    CALL mp_bcast (exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (iqq, ionode_id, inter_pool_comm)
-      CALL mp_bcast (iqq, root_pool, intra_pool_comm)
-      CALL mp_bcast (sigmar_all, ionode_id, inter_pool_comm)
-      CALL mp_bcast (sigmar_all, root_pool, intra_pool_comm)
-      CALL mp_bcast (sigmai_all, ionode_id, inter_pool_comm)
-      CALL mp_bcast (sigmai_all, root_pool, intra_pool_comm)
-      CALL mp_bcast (zi_all, ionode_id, inter_pool_comm)
-      CALL mp_bcast (zi_all, root_pool, intra_pool_comm)
+      CALL mp_bcast (iqq, ionode_id, world_comm)
+      CALL mp_bcast (sigmar_all, ionode_id, world_comm)
+      CALL mp_bcast (sigmai_all, ionode_id, world_comm)
+      CALL mp_bcast (zi_all, ionode_id, world_comm)
       ! 
       ! Make everythin 0 except the range of k-points we are working on
       IF (lower_bnd > 1 ) THEN
@@ -821,7 +804,7 @@
     REAL(KIND=DP) :: aux ( 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2 )
     !! Vector to store the array inv_tau_all and zi_all
     !
-    IF (mpime .eq. meta_ionode_id) THEN
+    IF (mpime == meta_ionode_id) THEN
       !
       ltau_all = 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2
       ! First element is the iteration number
@@ -900,7 +883,7 @@
     END SUBROUTINE tau_write
     !----------------------------------------------------------------------------
     !----------------------------------------------------------------------------
-    SUBROUTINE tau_read(iqq,totq,nktotf,second)
+    SUBROUTINE tau_read (iqq, totq, nktotf, second)
     !----------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
@@ -942,12 +925,12 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
-    REAL(KIND=DP) :: aux ( 2 * nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND=DP) :: aux(2 * nstemp * (ibndmax - ibndmin + 1) * nktotf + 2)
     !! Vector to store the array
     ! 
     CHARACTER (len=256) :: name1
     !
-    IF (mpime .eq. meta_ionode_id) THEN
+    IF (mpime == meta_ionode_id) THEN
       !
       ! First inquire if the file exists
 #if defined(__MPI)
@@ -1087,8 +1070,7 @@
     USE io_files,  ONLY : tmp_dir, diropn
     USE epwcom,    ONLY : nstemp, restart_filq
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
@@ -1121,7 +1103,7 @@
     CHARACTER (len=256) :: name1 
     ! 
     !
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
       ! First inquire if the file exists
       name1 = trim(tmp_dir) // trim(restart_filq)
@@ -1156,14 +1138,11 @@
       ENDIF
     ENDIF
     ! 
-    CALL mp_bcast (exst, ionode_id, inter_pool_comm)
-    CALL mp_bcast (exst, root_pool, intra_pool_comm)
+    CALL mp_bcast (exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (nqtotf_new, ionode_id, inter_pool_comm)
-      CALL mp_bcast (nqtotf_new, root_pool, intra_pool_comm)
-      CALL mp_bcast (inv_tau_all_new, ionode_id, inter_pool_comm)
-      CALL mp_bcast (inv_tau_all_new, root_pool, intra_pool_comm)
+      CALL mp_bcast (nqtotf_new, ionode_id, world_comm)
+      CALL mp_bcast (inv_tau_all_new, ionode_id, world_comm)
       ! 
       WRITE(stdout, '(a,a)' ) '     Correctly read file ',restart_filq
     ENDIF

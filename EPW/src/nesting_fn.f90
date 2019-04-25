@@ -79,7 +79,7 @@
     WRITE(stdout,'(5x,"Nesting Function in the double delta approx")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick.lt.1.d3 ) &
+    IF ( fsthick < 1.d3 ) &
       WRITE(stdout, '(/5x,a,f10.6,a)' ) &
       'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -124,8 +124,8 @@
       ikq = ikk + 1
       ! 
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) then
+      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
+          ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) then
         !
         fermicount = fermicount + 1
         !

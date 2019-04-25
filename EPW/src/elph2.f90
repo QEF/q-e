@@ -37,8 +37,8 @@
     eps_rpa(:)               !  screening
   REAL(KIND=DP), ALLOCATABLE ::&
     a_all(:,:),             &!  electronic spectral function du to electron-phonon interaction
+    a_all_ph(:,:),          &!  phononic spectral function du to electron-phonon interaction
     et_ks(:,:),             &!  lda eigenvalues
-    et_mb(:,:),             &!  gw eigenvalues
     xkq(:,:),               &!  local k+q grid, coarse (3, nks)
     etq(:,:),               &!  eigenvalues of k+q wavefunctions
     xkf(:,:),               &!  fine k point grid (3, nkqf)
@@ -75,6 +75,7 @@
     ifc(:,:,:,:,:,:,:),     &!  Interatomic force constant in real space
     omegap(:),              &!  Photon energy for phonon-assisted absorption
     epsilon2_abs(:,:,:),    &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening 
+    wscache(:,:,:,:,:),     &!  Use as cache when doing IFC when lifc = .true.
     epsilon2_abs_lorenz(:,:,:) ! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
   REAL(KIND=DP) ::          &!
     efnew,                  &!  Fermi level on the fine grid. Added globaly for efficiency reason 
@@ -97,7 +98,7 @@
     ngk_all(:),             &!  Global number of plane wave for each global k-point
     map_rebal(:),           &!  Map between the k-point and their load rebalanced one
     map_rebal_inv(:)         !  Map between the k-point and their load rebalanced one
-  INTEGER, allocatable ::   &!
+  INTEGER, ALLOCATABLE ::   &!
     shift (:),              &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
     gmap(:)                  !  the map G -> G-G_0 in the large (density) G vectors set, for every G_0
   LOGICAL, allocatable ::   &!

@@ -10,7 +10,7 @@
   ! adapted from PH/dvqpsi_us_only (QE)
   !
   !----------------------------------------------------------------------
-  subroutine dvqpsi_us_only3( ik, uact, xxkq )
+  subroutine dvqpsi_us_only3 (ik, uact, xxkq, igkq, npwq)
   !----------------------------------------------------------------------
   !!
   !! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -30,11 +30,10 @@
   USE wvfct,      ONLY : npwx, et
   USE uspp,       ONLY : okvan, nkb, vkb
   USE uspp_param, ONLY : nh, nhm
-  USE qpoint,     ONLY : npwq
   USE phus,       ONLY : int1, int1_nc, int2, int2_so, alphap
   USE lrus,       ONLY : becp1
   USE eqv,        ONLY : dvpsi
-  USE elph2,      ONLY : igkq, lower_band, upper_band
+  USE elph2,      ONLY : lower_band, upper_band
   USE noncollin_module, ONLY : noncolin, npol
   USE constants_epw,    ONLY : czero, cone, eps12
   USE klist_epw,  ONLY : isk_loc
@@ -43,6 +42,10 @@
   !
   INTEGER, INTENT(in) :: ik
   !! the k point
+  INTEGER, INTENT(in) :: npwq
+  !! Number of k+G-vectors inside 'ecut sphere'
+  INTEGER, INTENT(in) :: igkq(npwq)
+  !! k+G+q mapping
   REAL(kind=DP), INTENT(in) :: xxkq(3) 
   !! the k+q point (cartesian coordinates)
   COMPLEX(kind=DP), INTENT(in) :: uact(3 * nat)
@@ -94,15 +97,15 @@
   ! 
   CALL start_clock('dvqpsi_us_on')
   IF (noncolin) THEN
-    ALLOCATE( ps1_nc(nkb, npol, lower_band:upper_band) )
-    ALLOCATE( ps2_nc(nkb, npol, lower_band:upper_band, 3) )
-    ALLOCATE( deff_nc(nhm, nhm, nat, nspin) )
+    ALLOCATE ( ps1_nc(nkb, npol, lower_band:upper_band) )
+    ALLOCATE ( ps2_nc(nkb, npol, lower_band:upper_band, 3) )
+    ALLOCATE ( deff_nc(nhm, nhm, nat, nspin) )
   ELSE
-    ALLOCATE( ps1(nkb, lower_band:upper_band) )
-    ALLOCATE( ps2(nkb, lower_band:upper_band, 3) )
-    ALLOCATE( deff(nhm, nhm, nat) )
+    ALLOCATE ( ps1(nkb, lower_band:upper_band) )
+    ALLOCATE ( ps2(nkb, lower_band:upper_band, 3) )
+    ALLOCATE ( deff(nhm, nhm, nat) )
   ENDIF
-  ALLOCATE( aux(npwx) )
+  ALLOCATE ( aux(npwx) )
   IF (lsda) current_spin = isk_loc(ik)
   !
   !   we first compute the coefficients of the vectors
@@ -125,7 +128,7 @@
     ijkb0 = 0
     DO nt = 1, ntyp
       DO na = 1, nat
-        IF (ityp(na) .eq. nt) THEN
+        IF (ityp(na) == nt) THEN
           mu = 3 * (na - 1)
           DO ih = 1, nh(nt)
             ikb = ijkb0 + ih
@@ -211,29 +214,29 @@
   !
   !      This term is proportional to beta(k+q+G)
   !
-  IF (nkb.gt.0) THEN
+  IF (nkb > 0) THEN
     IF (noncolin) THEN
-      CALL zgemm( 'n', 'n', npwq, (upper_band-lower_band+1)*npol, nkb, &
-                  cone, vkb, npwx, ps1_nc, nkb, cone, dvpsi, npwx )
+      CALL zgemm('n', 'n', npwq, (upper_band-lower_band+1)*npol, nkb, &
+                 cone, vkb, npwx, ps1_nc, nkb, cone, dvpsi, npwx)
     ELSE
-      CALL zgemm( 'n', 'n', npwq, (upper_band-lower_band+1), nkb, &
-                  cone, vkb, npwx, ps1, nkb, cone, dvpsi, npwx )
+      CALL zgemm('n', 'n', npwq, (upper_band-lower_band+1), nkb, &
+                 cone, vkb, npwx, ps1, nkb, cone, dvpsi, npwx)
     ENDIF
   ENDIF
   !
   !      This term is proportional to (k+q+G)_\alpha*beta(k+q+G)
   !
-  DO ikb = 1, nkb
-    DO ipol = 1, 3
+  DO ikb=1, nkb
+    DO ipol=1, 3
       ok = .false.
       IF (noncolin) THEN
         DO ibnd = lower_band, upper_band
-           ok = ok .OR. ( abs( ps2_nc(ikb,1,ibnd,ipol) ) .gt. eps12 ) .OR. &
-                        ( abs( ps2_nc(ikb,2,ibnd,ipol) ) .gt. eps12 )
+           ok = ok .OR. (ABS(ps2_nc(ikb,1,ibnd,ipol) ) > eps12 ) .OR. &
+                        (ABS(ps2_nc(ikb,2,ibnd,ipol) ) > eps12 )
         ENDDO
       ELSE
-        DO ibnd = lower_band, upper_band
-           ok = ok .OR. ( abs( ps2(ikb,ibnd,ipol) ) .gt. eps12 )
+        DO ibnd=lower_band, upper_band
+           ok = ok .OR. (ABS(ps2(ikb,ibnd,ipol) ) > eps12)
         ENDDO
       ENDIF
       IF (ok) THEN
@@ -254,15 +257,15 @@
     ENDDO
   ENDDO
   !
-  DEALLOCATE(aux)
+  DEALLOCATE (aux)
   IF (noncolin) THEN
-    DEALLOCATE(ps2_nc)
-    DEALLOCATE(ps1_nc)
-    DEALLOCATE(deff_nc)
+    DEALLOCATE (ps2_nc)
+    DEALLOCATE (ps1_nc)
+    DEALLOCATE (deff_nc)
   ELSE
-    DEALLOCATE(ps2)
-    DEALLOCATE(ps1)
-    DEALLOCATE(deff)
+    DEALLOCATE (ps2)
+    DEALLOCATE (ps1)
+    DEALLOCATE (deff)
   ENDIF
   !
   CALL stop_clock('dvqpsi_us_on')

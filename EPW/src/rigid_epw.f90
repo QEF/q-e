@@ -19,6 +19,8 @@
   !! implemented: the Ewald parameter alpha must be large enough to 
   !! have negligible r-space contribution
   !!
+  !! This implements Eq. 98 of Rev. Mod. Phys., 73, 515 (2001)
+  !!
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : pi, fpi, e2
   USE cell_base,     ONLY : bg, omega
@@ -203,7 +205,7 @@
   !-------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
+  SUBROUTINE rgd_blk_epw (nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -376,7 +378,7 @@
   !-------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw_fine(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
+  SUBROUTINE rgd_blk_epw_fine (nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -534,7 +536,7 @@
   !-----------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------------
-  SUBROUTINE rpa_epsilon( q, w, nmodes, epsil, eps_rpa )
+  SUBROUTINE rpa_epsilon (q, w, nmodes, epsil, eps_rpa)
   !-----------------------------------------------------------------------------
   !
   !  Compute the Lindhard dielectric function for the homogeneous electron gas
@@ -645,7 +647,7 @@
   !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
-  COMPLEX(DP) FUNCTION H_eps(z)
+  COMPLEX(DP) FUNCTION H_eps (z)
   !--------------------------------------------------------------------------
   !!  
   !! Function used in the Lindhard function. See Eq.(56) of Hedin (1965)
@@ -672,7 +674,7 @@
   !--------------------------------------------------------------------------
   ! 
   !--------------------------------------------------------------------------
-  SUBROUTINE tf_epsilon(q, nmodes, epsil, eps_tf)
+  SUBROUTINE tf_epsilon (q, nmodes, epsil, eps_tf)
   !--------------------------------------------------------------------------
   !!
   !!  Compute the Thomas-Fermi dielectric screening
@@ -729,9 +731,9 @@
     WRITE(stdout,'(5x,"Warning: current implementation for doubly degenerate band, one valley")')
     WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'Nel = ', nel, ', n = ', n, ' au^-3, EF (eV) = ', EF*ha2ev
     WRITE(stdout,'(5x,a,f12.8,a,f12.8)') 'q_tf (au-1) = ', qtf, ', q_tf (tpiba) = ', qtfc
-    IF (eps_ave .lt. eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
+    IF (eps_ave < eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
   ENDIF
-  IF (eps_ave .lt. eps5) eps_ave = 1.d0
+  IF (eps_ave < eps5) eps_ave = 1.d0
   !
   CALL cryst_to_cart(1, q, bg, 1)
   q2 = q(1)**2 + q(2)**2 + q(3)**2
@@ -751,7 +753,7 @@
   !--------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE compute_umn_f(nbnd, cufkk, cufkq, bmatf)
+  SUBROUTINE compute_umn_f (nbnd, cufkk, cufkq, bmatf)
   !-----------------------------------------------------------------------
   !!
   !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i{q+G}r}|\Psi_{nk}> $$ 
@@ -789,7 +791,7 @@
   END SUBROUTINE compute_umn_f
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE compute_umn_c(nbnd, nbndsub, nks, cuk, cukq, bmat)
+  SUBROUTINE compute_umn_c (nbnd, nbndsub, nks, cuk, cukq, bmat)
   !-----------------------------------------------------------------------
   !!
   !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i(q+G)r}|\Psi_{nk}> $$ 

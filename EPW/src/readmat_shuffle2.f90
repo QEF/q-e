@@ -153,7 +153,7 @@
     !
     ! If time-reversal is not included in the star of q, then double the nq to
     ! search from.
-    IF (imq.eq.0) then
+    IF (imq == 0) then
       mq = 2*nq
     ELSE
       mq = nq
@@ -179,17 +179,17 @@
       ! Impose the acoustic sum rule (q=0 needs to be the first q point in the coarse grid)
       ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
       !
-      IF ( abs(q(1,iq)).lt.eps .and. abs(q(2,iq)).lt.eps .and. abs(q(3,iq)).lt.eps ) THEN
+      IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) THEN
         WRITE(stdout,'(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
-        IF (lpolar .and. .not. lrigid) CALL errore('readmat_shuffle2', &
+        IF (lpolar .and. .NOT. lrigid) CALL errore('readmat_shuffle2', &
           &'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
       ENDIF
       DO na = 1,nat
        DO ipol = 1,3
         DO jpol = ipol,3
          !
-          IF ( abs(q(1,iq)).lt.eps .and. abs(q(2,iq)).lt.eps .and. abs(q(3,iq)).lt.eps ) then
-             IF ( .not. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
+          IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) then
+             IF ( .NOT. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
              sumr(1,ipol,na,jpol) = sum ( dynr (1,ipol,na,jpol,:) )
              sumr(2,ipol,na,jpol) = sum ( dynr (2,ipol,na,jpol,:) )
           ENDIF
@@ -245,21 +245,21 @@
     ! 
     ! We stop testing celldm as it can be different between scf and nscf
     !IF (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav.or.abs ( &
-    !   celldm_ (1) - celldm (1) ) .gt.1.0d-5) call errore ('readmat_shuffle2', &
+    !   celldm_ (1) - celldm (1) )  > 1.0d-5) call errore ('readmat_shuffle2', &
     !   'inconsistent data', 1)
     IF (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav ) call errore ('readmat_shuffle2', &
        'inconsistent data', 1)
     ! 
     !  skip reading of cell parameters here
     ! 
-    IF (ibrav_ .eq. 0) then
+    IF (ibrav_ == 0) then
        DO i = 1,4
           read (iudyn, * ) line
        ENDDO
     ENDIF
     DO nt = 1, ntyp
        read (iudyn, * ) i, atm, amass_
-       IF (nt.ne.i.or.abs (amass_ - amass (nt) ) .gt.1.0d-2) then
+       IF (nt.ne.i.or.abs (amass_ - amass (nt) )  > 1.0d-2) then
        write (stdout,*) amass_, amass(nt)
        call errore ('readmat_shuffle2', 'inconsistent data', 1)
     endif
@@ -275,7 +275,7 @@
     ! 
     ! If time-reversal is not included in the star of q, then double the nq to
     ! search from.
-    IF (imq.eq.0) then
+    IF (imq == 0) then
       mq = 2*nq
     ELSE
       mq = nq
@@ -306,15 +306,15 @@
       ! impose the acoustic sum rule (q=0 needs to be the first q point in the coarse grid)
       ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
       !
-      IF ( abs(q(1,iq)).lt.eps .and. abs(q(2,iq)).lt.eps .and. abs(q(3,iq)).lt.eps ) then
+      IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) then
         WRITE(stdout,'(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
       ENDIF
       DO na = 1,nat
        DO ipol = 1,3
         DO jpol = ipol,3
           !
-          IF ( abs(q(1,iq)).lt.eps .and. abs(q(2,iq)).lt.eps .and. abs(q(3,iq)).lt.eps ) then
-             IF ( .not. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
+          IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) then
+             IF ( .NOT. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
              sumr(1,ipol,na,jpol) = sum ( dynr (1,ipol,na,jpol,:) )
              sumr(2,ipol,na,jpol) = sum ( dynr (2,ipol,na,jpol,:) )
           ENDIF
@@ -348,7 +348,7 @@
       !
     ENDDO
     !
-    IF ( abs(q(1,1)).lt.eps .and. abs(q(2,1)).lt.eps .and. abs(q(3,1)).lt.eps ) THEN
+    IF ( abs(q(1,1)) < eps .and. abs(q(2,1)) < eps .and. abs(q(3,1)) < eps ) THEN
       !  read dielectric tensor and effective charges if present
       !  SP: Warning zstar is not properly bcast at the moment
       read (iudyn,'(a)') line
@@ -408,9 +408,9 @@
       DO m1=-2,2
         DO m2=-2,2
           DO m3=-2,2
-            IF ((abs(q(1,jq)-(sxq(1,iq)+m1)).lt.eps .and. &
-                 abs(q(2,jq)-(sxq(2,iq)+m2)).lt.eps .and. &
-                 abs(q(3,jq)-(sxq(3,iq)+m3)).lt.eps )) THEN
+            IF ((abs(q(1,jq)-(sxq(1,iq)+m1)) < eps .and. &
+                 abs(q(2,jq)-(sxq(2,iq)+m2)) < eps .and. &
+                 abs(q(3,jq)-(sxq(3,iq)+m3)) < eps )) THEN
                  found = .true.
                  exit ! exit loop
             ENDIF
@@ -433,17 +433,17 @@
   ! We still call the above just to make the checks. The content of dynq 
   ! will be re-written just below and NOT read from the dyn from the /save folder
   IF (lifc) THEN
-     !
-     ! build the WS cell corresponding to the force constant grid
-     atws(:,1) = at(:,1)*DBLE(nq1)
-     atws(:,2) = at(:,2)*DBLE(nq2)
-     atws(:,3) = at(:,3)*DBLE(nq3)
-     ! initialize WS r-vectors
-     CALL wsinit(rws,nrwsx,nrws,atws)
-     CALL dynifc2blochc (nmodes, rws, nrws, q(:,1), dynq_tmp)
-     dynq(:,:,iq_first)=dynq_tmp
-     WRITE (stdout,'(5x,a)') "Dyn mat calculated from ifcs"
-     !
+    !
+    ! build the WS cell corresponding to the force constant grid
+    atws(:, 1) = at(:, 1) * DBLE(nq1)
+    atws(:, 2) = at(:, 2) * DBLE(nq2)
+    atws(:, 3) = at(:, 3) * DBLE(nq3)
+    ! initialize WS r-vectors
+    CALL wsinit(rws,nrwsx,nrws,atws)
+    CALL dynifc2blochc (nmodes, rws, nrws, q(:,1), dynq_tmp)
+    dynq(:,:,iq_first)=dynq_tmp
+    WRITE (stdout,'(5x,a)') "Dyn mat calculated from ifcs"
+    !
   ENDIF
   !
   ! Now construct the other dyn matrix for the q in the star using sym. 
@@ -459,7 +459,7 @@
     !
     sym_sgq(:) = 0
     DO jsym = 1, nsym
-      IF ( isq(jsym) .eq. iq ) then
+      IF ( isq(jsym) == iq ) then
         nsq = nsq + 1
         sym_sgq(nsq) = jsym
       ENDIF
@@ -536,7 +536,7 @@
     !
     DO nu = 1, nmodes
       DO mu = 1, nmodes
-      IF ( mu.ne.nu .and. abs(dynq(mu,nu,current_iq)).gt.eps ) call errore &
+      IF ( mu.ne.nu .and. abs(dynq(mu,nu,current_iq)) > eps ) call errore &
         ('rotate_eigenm','problem with rotated eigenmodes',0)
       ENDDO
     ENDDO
@@ -544,7 +544,7 @@
     ! DBSP-----------------------------------------------
     !  a simple check on the frequencies
     !
-    IF (iverbosity.eq.1) THEN
+    IF (iverbosity == 1) THEN
       DO na = 1, nat
        DO nb = 1, nat
          massfac = 1.d0 / sqrt ( amass(ityp(na)) * amass(ityp(nb)) )
@@ -566,7 +566,7 @@
 
 
       DO nu = 1, nmodes
-        IF ( w1 (nu) .gt. 0.d0 ) then
+        IF ( w1 (nu) > 0.d0 ) then
            wtmp(nu) =  sqrt(abs( w1 (nu) ))
         ELSE
            wtmp(nu) = -sqrt(abs( w1 (nu) ))
@@ -579,7 +579,7 @@
     current_iq = current_iq + 1
     ! 
     ! SP Repeat the same but for minus_q one
-    IF (imq.eq.0) then
+    IF (imq == 0) then
       !       
       xq = -sxq(:,iq)
       !saq = xq
@@ -610,7 +610,7 @@
       !
       DO nu = 1, nmodes
         DO mu = 1, nmodes
-        IF ( mu.ne.nu .and. abs(dynq(mu,nu,current_iq)).gt.eps ) call errore &
+        IF ( mu.ne.nu .and. abs(dynq(mu,nu,current_iq)) > eps ) call errore &
           ('rotate_eigenm','problem with rotated eigenmodes',0)
         ENDDO
       ENDDO
@@ -644,7 +644,7 @@
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
-  USE mp_world,  ONLY : mpime
+  USE mp_world,  ONLY : mpime, world_comm
 #if defined(__NAG)
   USE f90_unix_io,    ONLY : flush
 #endif
@@ -666,101 +666,98 @@
   CALL flush(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
-  IF (.NOT. ALLOCATED (zstar) ) ALLOCATE( zstar(3,3,nat) )
-  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE( epsi(3,3) )
-  IF (.not. ALLOCATED (ifc)) ALLOCATE ( ifc ( nq1, nq2, nq3, 3, 3, nat, nat ) )
+  IF (.NOT. ALLOCATED (zstar) ) ALLOCATE ( zstar(3,3,nat) )
+  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE ( epsi(3,3) )
+  IF ( .NOT.  ALLOCATED (ifc)) ALLOCATE ( ifc ( nq1, nq2, nq3, 3, 3, nat, nat ) )
   zstar=0.d0
   epsi=0.d0
 
-  IF (mpime.eq.ionode_id) THEN
+  IF (mpime == ionode_id) THEN
     IF (noncolin) THEN
       !
       tempfile = trim(dvscf_dir) // 'ifc.q2r'
       CALL read_dyn_mat_param(tempfile,ntyp_,nat_)
-      ALLOCATE (m_loc(3,nat_))
+      ALLOCATE (m_loc(3, nat_))
       ALLOCATE (atm(ntyp_))
       CALL read_dyn_mat_header(ntyp_, nat_, ibrav, nspin_mag, &
                celldm, at, bg, omega, atm, amass2, &
                tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar )
 !      alat=celldm(1)
-      call volume(alat,at(1,1),at(1,2),at(1,3),omega)
-      CALL read_ifc_param(nq1,nq2,nq3)
-      CALL read_ifc_xml(nq1,nq2,nq3,nat_,ifc)
+      call volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
+      CALL read_ifc_param(nq1, nq2, nq3)
+      CALL read_ifc_xml(nq1, nq2, nq3, nat_, ifc)
+      DEALLOCATE (m_loc)
+      DEALLOCATE (atm)
       ! 
     ELSE
       !
       tempfile = trim(dvscf_dir) // 'ifc.q2r' 
-      OPEN(unit=iunifc,file=tempfile,status='old',iostat=ios)
+      OPEN(UNIT=iunifc,FILE=tempfile,status='old',iostat=ios)
       IF (ios /= 0) call errore ('read_ifc', 'error opening ifc.q2r',iunifc)
       !
       !  read real-space interatomic force constants
       !
       READ(iunifc,'(3i4)') ntyp_ , nat_ , ibrav_
-      IF (ibrav_ .eq. 0) then
-         DO i = 1,3
-            read (iunifc, * ) line
-         ENDDO
+      IF (ibrav_ == 0) then
+        DO i = 1,3
+          read (iunifc, * ) line
+        ENDDO
       ENDIF
       DO i=1,ntyp_
-         READ(iunifc,'(a)') line
+        READ(iunifc,'(a)') line
       ENDDO
       DO na=1,nat
-         READ(iunifc,*) idum, idum, (tau_(j,na),j=1,3)
-              ENDDO
+        READ(iunifc,*) idum, idum, (tau_(j,na),j=1,3)
+      ENDDO
       READ(iunifc,*) lpolar_
       !
       IF (lpolar_) THEN
-         READ (iunifc,*) ((epsi(i,j), j=1,3), i=1,3)
-         DO na = 1, nat
-            READ (iunifc,*) idum
-            READ (iunifc,*) ((zstar(i,j,na), j=1,3), i=1,3)
-         ENDDO
-         WRITE (stdout,'(5x,a)') "Read Z* and epsilon"
+        READ (iunifc,*) ((epsi(i,j), j=1,3), i=1,3)
+        DO na=1, nat
+           READ (iunifc,*) idum
+           READ (iunifc,*) ((zstar(i,j,na), j=1,3), i=1,3)
+        ENDDO
+        WRITE (stdout,'(5x,a)') "Read Z* and epsilon"
       ENDIF
       !
       READ (iunifc,*) idum
       !
       ifc = 0.d0
-      DO i=1,3
-         DO j=1,3
-            DO na=1,nat
-               DO nb=1,nat
-                  READ (iunifc,*) ibid, jbid, nabid, nbbid
-                  IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
-                     na.NE.nabid .OR. nb.NE.nbbid)                      &
-                     CALL errore  ('read_epw','error in reading ifc',1)
-                  READ (iunifc,*) (((m1bid, m2bid, m3bid,        &
-                              ifc(m1,m2,m3,i,j,na,nb),                  &
-                               m1=1,nq1),m2=1,nq2),m3=1,nq3)
-               ENDDO
+      DO i=1, 3
+        DO j=1, 3
+          DO na=1, nat
+            DO nb=1, nat
+              READ (iunifc,*) ibid, jbid, nabid, nbbid
+              IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
+                na.NE.nabid .OR. nb.NE.nbbid)                      &
+                CALL errore  ('read_epw','error in reading ifc',1)
+              READ (iunifc,*) (((m1bid, m2bid, m3bid,        &
+                         ifc(m1,m2,m3,i,j,na,nb),                  &
+                         m1=1,nq1),m2=1,nq2),m3=1,nq3)
             ENDDO
-         ENDDO
+          ENDDO
+        ENDDO
       ENDDO
       !
     ENDIF ! noncol
   ENDIF
   !
   ! It has to be casted like this because mpi cannot cast 7 indices
-  DO i=1,3
-     DO j=1,3
-        DO na=1,nat
-           DO nb=1,nat
-              CALL mp_bcast (ifc(:,:,:,i,j,na,nb), ionode_id, inter_pool_comm)
-              CALL mp_bcast (ifc(:,:,:,i,j,na,nb), root_pool, intra_pool_comm)
-           ENDDO
+  DO i=1, 3
+    DO j=1, 3
+      DO na=1, nat
+        DO nb=1, nat
+          CALL mp_bcast (ifc(:,:,:,i,j,na,nb), ionode_id, inter_pool_comm)
+          CALL mp_bcast (ifc(:,:,:,i,j,na,nb), root_pool, intra_pool_comm)
         ENDDO
-     ENDDO
+      ENDDO
+    ENDDO
   ENDDO
   !
-  CALL mp_bcast (zstar, ionode_id, inter_pool_comm)
-  CALL mp_bcast (zstar, root_pool, intra_pool_comm)
-  CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
-  CALL mp_bcast (epsi, root_pool, intra_pool_comm)
-  CALL mp_bcast (tau_, ionode_id, inter_pool_comm)
-  CALL mp_bcast (tau_, root_pool, intra_pool_comm)
-  CALL mp_bcast (ibrav_, ionode_id, inter_pool_comm)
-  CALL mp_bcast (ibrav_, root_pool, intra_pool_comm)
-
+  CALL mp_bcast (zstar, ionode_id, world_comm)
+  CALL mp_bcast (epsi, ionode_id, world_comm)
+  CALL mp_bcast (tau_, ionode_id, world_comm)
+  CALL mp_bcast (ibrav_, ionode_id, world_comm)
   !
   WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nq1,nq2,nq3,3,3,nat,nat)
   !
@@ -768,7 +765,7 @@
              nat, ibrav_, tau_)
   !
   CALL mp_barrier(inter_pool_comm)
-  IF (mpime.eq.ionode_id) THEN
+  IF (mpime == ionode_id) THEN
     CLOSE(iunifc)
   ENDIF
   !
@@ -842,7 +839,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      call errore('set_asr','invalid Acoustic Sum Rule:' // asr, 1)
   endif
   !
-  if(asr.eq.'simple') then
+  if(asr == 'simple') then
      !
      ! Simple Acoustic Sum Rule on effective charges
      !
@@ -884,16 +881,16 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
       !
    end if
 
-  if(asr.eq.'crystal') n=3
-  if(asr.eq.'one-dim') then
+  if(asr == 'crystal') n=3
+  if(asr == 'one-dim') then
      ! the direction of periodicity is the rotation axis
      ! It will work only if the crystal axis considered is one of
      ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
      ! z-direction)
-     if (nr1*nr2*nr3.eq.1) axis=3
-     if ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis=1
-     if ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis=2
-     if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
+     if (nr1*nr2*nr3 == 1) axis=3
+     if ((nr1.ne.1).and.(nr2*nr3 == 1)) axis=1
+     if ((nr2.ne.1).and.(nr1*nr3 == 1)) axis=2
+     if ((nr3.ne.1).and.(nr1*nr2 == 1)) axis=3
      if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
           (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
         call errore('set_asr','too many directions of &
@@ -906,7 +903,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      write(stdout,'("asr rotation axis in 1D system= ",I4)') axis
      n=4
   endif
-  if(asr.eq.'zero-dim') n=6
+  if(asr == 'zero-dim') n=6
   !
   ! Acoustic Sum Rule on effective charges
   !
@@ -933,7 +930,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      enddo
   enddo
   !
-  if (n.eq.4) then
+  if (n == 4) then
      do i=1,3
         ! These are the 3 vectors associated with the
         ! single rotational sum rule (1D system)
@@ -946,7 +943,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      enddo
   endif
   !
-  if (n.eq.6) then
+  if (n == 6) then
      do i=1,3
         do j=1,3
            ! These are the 3*3 vectors associated with the
@@ -970,7 +967,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      do q=1,k-1
         r=1
         do izeu_less=1,nzeu_less
-           if (zeu_less(izeu_less).eq.q) r=0
+           if (zeu_less(izeu_less) == q) r=0
         enddo
         if (r.ne.0) then
            call sp_zeu(zeu_x,zeu_u(q,:,:,:),nat,scal)
@@ -978,7 +975,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
         endif
      enddo
      call sp_zeu(zeu_w,zeu_w,nat,norm2)
-     if (norm2.gt.1.0d-16) then
+     if (norm2 > 1.0d-16) then
         zeu_u(k,:,:,:) = zeu_w(:,:,:) / DSQRT(norm2)
      else
         nzeu_less=nzeu_less+1
@@ -993,7 +990,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   do k=1,p
      r=1
      do izeu_less=1,nzeu_less
-        if (zeu_less(izeu_less).eq.k) r=0
+        if (zeu_less(izeu_less) == k) r=0
      enddo
      if (r.ne.0) then
         zeu_x(:,:,:)=zeu_u(k,:,:,:)
@@ -1015,7 +1012,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !do k=1,p
   !  zeu_x(:,:,:)=zeu_u(k,:,:,:)
   !  call sp_zeu(zeu_x,zeu_new,nat,scal)
-  !  if (DABS(scal).gt.1d-10) write(6,'("k= ",I8," zeu_new|zeu_u(k)= ",F15.10)')
+  !  if (DABS(scal) > 1d-10) write(6,'("k= ",I8," zeu_new|zeu_u(k)= ",F15.10)')
   !  k,scal
   !enddo
   !
@@ -1067,7 +1064,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      enddo
   enddo
   !
-  if (n.eq.4) then
+  if (n == 4) then
      do i=1,3
         do na=1,nat
            ! These are the 3*nat vectors associated with the
@@ -1082,7 +1079,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      enddo
   endif
   !
-  if (n.eq.6) then
+  if (n == 6) then
      do i=1,3
         do j=1,3
            do na=1,nat
@@ -1112,19 +1109,19 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
                        ! constraints
                        q=1
                        l=1
-                       do while((l.le.m).and.(q.ne.0))
-                          if ((ind_v(l,1,1).eq.n1).and.(ind_v(l,1,2).eq.n2).and. &
-                               (ind_v(l,1,3).eq.n3).and.(ind_v(l,1,4).eq.i).and. &
-                               (ind_v(l,1,5).eq.j).and.(ind_v(l,1,6).eq.na).and. &
-                               (ind_v(l,1,7).eq.nb)) q=0
-                          if ((ind_v(l,2,1).eq.n1).and.(ind_v(l,2,2).eq.n2).and. &
-                               (ind_v(l,2,3).eq.n3).and.(ind_v(l,2,4).eq.i).and. &
-                               (ind_v(l,2,5).eq.j).and.(ind_v(l,2,6).eq.na).and. &
-                               (ind_v(l,2,7).eq.nb)) q=0
+                       do while((l <= m).and.(q.ne.0))
+                          if ((ind_v(l,1,1) == n1).and.(ind_v(l,1,2) == n2).and. &
+                               (ind_v(l,1,3) == n3).and.(ind_v(l,1,4) == i).and. &
+                               (ind_v(l,1,5) == j).and.(ind_v(l,1,6) == na).and. &
+                               (ind_v(l,1,7) == nb)) q=0
+                          if ((ind_v(l,2,1) == n1).and.(ind_v(l,2,2) == n2).and. &
+                               (ind_v(l,2,3) == n3).and.(ind_v(l,2,4) == i).and. &
+                               (ind_v(l,2,5) == j).and.(ind_v(l,2,6) == na).and. &
+                               (ind_v(l,2,7) == nb)) q=0
                           l=l+1
                        enddo
-                       if ((n1.eq.MOD(nr1+1-n1,nr1)+1).and.(n2.eq.MOD(nr2+1-n2,nr2)+1) &
-                            .and.(n3.eq.MOD(nr3+1-n3,nr3)+1).and.(i.eq.j).and.(na.eq.nb)) q=0
+                       if ((n1 == MOD(nr1+1-n1,nr1)+1).and.(n2 == MOD(nr2+1-n2,nr2)+1) &
+                            .and.(n3 == MOD(nr3+1-n3,nr3)+1).and.(i == j).and.(na == nb)) q=0
                        if (q.ne.0) then
                           m=m+1
                           ind_v(m,1,1)=n1
@@ -1175,20 +1172,20 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
            w(n1,n2,n3,i,j,na,nb)=w(n1,n2,n3,i,j,na,nb)-scal*v(l,r)
         enddo
      enddo
-     if (k.le.(9*nat)) then
+     if (k <= (9*nat)) then
         na1=MOD(k,nat)
-        if (na1.eq.0) na1=nat
+        if (na1 == 0) na1=nat
         j1=MOD((k-na1)/nat,3)+1
         i1=MOD((((k-na1)/nat)-j1+1)/3,3)+1
      else
         q=k-9*nat
-        if (n.eq.4) then
+        if (n == 4) then
            na1=MOD(q,nat)
-           if (na1.eq.0) na1=nat
+           if (na1 == 0) na1=nat
            i1=MOD((q-na1)/nat,3)+1
         else
            na1=MOD(q,nat)
-           if (na1.eq.0) na1=nat
+           if (na1 == 0) na1=nat
            j1=MOD((q-na1)/nat,3)+1
            i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
         endif
@@ -1196,7 +1193,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      do q=1,k-1
         r=1
         do i_less=1,n_less
-           if (u_less(i_less).eq.q) r=0
+           if (u_less(i_less) == q) r=0
         enddo
         if (r.ne.0) then
            call sp3(x,u(q) % vec (:,:,:,:,:,:,:), i1,na1,nr1,nr2,nr3,nat,scal)
@@ -1204,7 +1201,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
         endif
      enddo
      call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-     if (norm2.gt.1.0d-16) then
+     if (norm2 > 1.0d-16) then
         u(k) % vec (:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) / DSQRT(norm2)
      else
         n_less=n_less+1
@@ -1232,7 +1229,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   do k=1,p
      r=1
      do i_less=1,n_less
-        if (u_less(i_less).eq.k) r=0
+        if (u_less(i_less) == k) r=0
      enddo
      if (r.ne.0) then
         x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
@@ -1254,13 +1251,13 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !write(6,'("Check projection IFC")')
   !do l=1,m
   !  call sp2(frc_new,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
-  !  if (DABS(scal).gt.1d-10) write(6,'("l= ",I8," frc_new|v(l)= ",F15.10)')
+  !  if (DABS(scal) > 1d-10) write(6,'("l= ",I8," frc_new|v(l)= ",F15.10)')
   !  l,scal
   !enddo
   !do k=1,p
   !  x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
   !  call sp1(x,frc_new,nr1,nr2,nr3,nat,scal)
-  !  if (DABS(scal).gt.1d-10) write(6,'("k= ",I8," frc_new|u(k)= ",F15.10)')
+  !  if (DABS(scal) > 1d-10) write(6,'("k= ",I8," frc_new|u(k)= ",F15.10)')
   !  k,scal
   !  deallocate(u(k) % vec)
   !enddo

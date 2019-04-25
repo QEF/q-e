@@ -72,14 +72,14 @@
     imelt = ( 1 + nbndfs * nkfs ) * nstemp + ( 3 + 3 * nbndfs * nkfs ) * nsiw(itemp)
     CALL mem_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(gap) )      ALLOCATE( gap(nstemp) )
-    IF ( .not. ALLOCATED(Agap) )     ALLOCATE( Agap(nbndfs,nkfs,nstemp) )
-    IF ( .not. ALLOCATED(Deltai) )   ALLOCATE( Deltai(nsiw(itemp)) )
-    IF ( .not. ALLOCATED(Znormi) )   ALLOCATE( Znormi(nsiw(itemp)) )
-    IF ( .not. ALLOCATED(NZnormi) )  ALLOCATE( NZnormi(nsiw(itemp)) )
-    IF ( .not. ALLOCATED(ADeltai) )  ALLOCATE( ADeltai(nbndfs,nkfs,nsiw(itemp)) )
-    IF ( .not. ALLOCATED(AZnormi) )  ALLOCATE( AZnormi(nbndfs,nkfs,nsiw(itemp)) )
-    IF ( .not. ALLOCATED(NAZnormi) ) ALLOCATE( NAZnormi(nbndfs,nkfs,nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(gap) )      ALLOCATE ( gap(nstemp) )
+    IF ( .NOT. ALLOCATED(Agap) )     ALLOCATE ( Agap(nbndfs,nkfs,nstemp) )
+    IF ( .NOT. ALLOCATED(Deltai) )   ALLOCATE ( Deltai(nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(Znormi) )   ALLOCATE ( Znormi(nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(NZnormi) )  ALLOCATE ( NZnormi(nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(ADeltai) )  ALLOCATE ( ADeltai(nbndfs,nkfs,nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(AZnormi) )  ALLOCATE ( AZnormi(nbndfs,nkfs,nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(NAZnormi) ) ALLOCATE ( NAZnormi(nbndfs,nkfs,nsiw(itemp)) )
     gap(:) = zero
     Agap(:,:,:) = zero
     Deltai(:) = zero
@@ -89,32 +89,32 @@
     AZnormi(:,:,:) = zero
     NAZnormi(:,:,:) = zero
     !
-    IF (mpime .eq. ionode_id) THEN     
+    IF (mpime == ionode_id) THEN     
       !   
       temp = estemp(itemp) / kelvin2eV
       ! anisotropic case
-      IF ( temp .lt. 10.d0 ) THEN
+      IF ( temp < 10.d0 ) THEN
          WRITE(name1,'(a,a14,f4.2)') TRIM(prefix),'.imag_aniso_00', temp
-      ELSEIF ( temp .ge. 10.d0 ) THEN
+      ELSEIF ( temp >= 10.d0 ) THEN
          WRITE(name1,'(a,a13,f5.2)') TRIM(prefix),'.imag_aniso_0', temp
-      ELSEIF ( temp .ge. 100.d0 ) THEN
+      ELSEIF ( temp >= 100.d0 ) THEN
          WRITE(name1,'(a,a12,f6.2)') TRIM(prefix),'.imag_aniso_', temp
       ENDIF 
       ! 
-      OPEN(iufilgap, file=name1, form='formatted', err=100, iostat=ios)
+      OPEN(iufilgap, FILE=name1, FORM='formatted', err=100, iostat=ios)
 100 CALL errore('eliashberg_read_aniso_iaxis','opening file '//name1,abs(ios))
       READ(iufilgap,'(a)') word
       DO iw = 1, nsiw(itemp) ! loop over omega
          DO ik = 1, nkfs
             DO ibnd = 1, nbndfs
-               IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+               IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                   READ(iufilgap,'(5ES20.10)') omega, eband, AZnormi(ibnd,ik,iw), ADeltai(ibnd,ik,iw), NAZnormi(ibnd,ik,iw)
-                  IF ( iw .eq. 1 ) & 
+                  IF ( iw == 1 ) & 
                      Agap(ibnd,ik,itemp) = ADeltai(ibnd,ik,1)
                ENDIF
             ENDDO ! ibnd
          ENDDO ! ik             
-         IF ( abs(wsi(iw)-omega) .gt. eps6 ) &
+         IF ( abs(wsi(iw)-omega) > eps6 ) &
             CALL errore('eliashberg_read_aniso_iaxis','temperature not the same with the input',1)
       ENDDO ! iw
       CLOSE(iufilgap)
@@ -122,7 +122,7 @@
       DO iw = 1, nsiw(itemp) ! loop over omega
         DO ik = 1, nkfs
            DO ibnd = 1, nbndfs
-              IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+              IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                  weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik) / dosef
                  Znormi(iw) = Znormi(iw) + weight * AZnormi(ibnd,ik,iw)
                  Deltai(iw) = Deltai(iw) + weight * ADeltai(ibnd,ik,iw)
@@ -136,7 +136,7 @@
       !
       CALL gap_FS( itemp )
       !
-      IF ( iverbosity .eq. 2 ) &
+      IF ( iverbosity == 2 ) &
          CALL free_energy( itemp )
       !
     ENDIF
@@ -195,22 +195,22 @@
     !
     IF ( laniso ) THEN 
        !
-       IF ( temp .lt. 10.d0 ) THEN
+       IF ( temp < 10.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a9,f4.2)') TRIM(prefix), '.', cname, '_aniso_00', temp
-       ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0 ) THEN
+       ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a8,f5.2)') TRIM(prefix), '.', cname, '_aniso_0', temp
-       ELSEIF ( temp .ge. 100.d0 ) THEN
+       ELSEIF ( temp >= 100.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_',temp
        ENDIF     
-       OPEN(iufilgap, file=name1, form='formatted')
+       OPEN(iufilgap, FILE=name1, FORM='formatted')
        WRITE(iufilgap,'(5a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Znorm(w)', 'Delta(w) [eV]', 'NZnorm(w)'
        DO iw = 1, nsiw(itemp) ! loop over omega
           DO ik = 1, nkfs
              DO ibnd = 1, nbndfs
-                IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                    WRITE(iufilgap,'(5ES20.10)') wsi(iw), ekfs(ibnd,ik)-ef0,&
                          AZnormi(ibnd,ik,iw), ADeltai(ibnd,ik,iw), NAZnormi(ibnd,ik,iw)
-                   IF ( iw .eq. 1 ) Agap(ibnd,ik,itemp) = ADeltai(ibnd,ik,iw)
+                   IF ( iw == 1 ) Agap(ibnd,ik,itemp) = ADeltai(ibnd,ik,iw)
                 ENDIF
              ENDDO ! ibnd                   
           ENDDO ! ik
@@ -225,15 +225,15 @@
     !
     ! isotropic case
     ! SP: Only write isotropic for laniso if user really wants that
-    IF ( ( laniso .AND. iverbosity .eq. 2 ) .OR. liso ) THEN
-       IF ( temp .lt. 10.d0 ) THEN
+    IF ( ( laniso .AND. iverbosity == 2 ) .OR. liso ) THEN
+       IF ( temp < 10.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a7,f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
-       ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+       ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0  ) THEN
           WRITE(name1,'(a,a1,a4,a6,f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
-       ELSEIF ( temp .ge. 100.d0 ) THEN
+       ELSEIF ( temp >= 100.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
        ENDIF
-       OPEN(iufilgap, file=name1, form='formatted')
+       OPEN(iufilgap, FILE=name1, FORM='formatted')
        WRITE(iufilgap,'(4a20)') 'w [eV]', 'Znorm(w)', 'Delta(w) [eV]', 'NZnorm(w)'
        DO iw = 1, nsiw(itemp) ! loop over omega
           WRITE(iufilgap,'(4ES20.10)') wsi(iw), Znormi(iw), Deltai(iw), NZnormi(iw)
@@ -286,34 +286,34 @@
     temp = estemp(itemp) / kelvin2eV
     !
     IF ( laniso ) THEN 
-       IF ( iverbosity .eq. 2 ) THEN
-          IF ( temp .lt. 10.d0 ) THEN
+       IF ( iverbosity == 2 ) THEN
+          IF ( temp < 10.d0 ) THEN
              WRITE(name1,'(a,a1,a4,a9,f4.2)') TRIM(prefix), '.', cname, '_aniso_00', temp
-          ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+          ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0  ) THEN
              WRITE(name1,'(a,a1,a4,a8,f5.2)') TRIM(prefix), '.', cname, '_aniso_0', temp
-          ELSEIF ( temp .ge. 100.d0 ) THEN
+          ELSEIF ( temp >= 100.d0 ) THEN
              WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
           ENDIF
-          OPEN(iufilgap, file=name1, form='formatted')
+          OPEN(iufilgap, FILE=name1, FORM='formatted')
           WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]',&
                                                             'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        ENDIF
        !
        DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
-             IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+             IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                 lgap = .true.
                 ! DO iw = 1, nsw
                 DO iw = 1, nsw-1   ! FG: this change is to prevent segfault in ws(iw+1) and ADelta(*,*,iw+1)
-                   IF ( lgap .AND. iw .lt. nqstep .AND. real(ADelta(ibnd,ik,iw)) .gt. 0.d0 &
-                        .AND. real(ADelta(ibnd,ik,iw+1)) .gt. 0.d0 &
-                        .AND. ( ws(iw) - real(ADelta(ibnd,ik,iw)) )*( ws(iw+1) - real(ADelta(ibnd,ik,iw+1)) ) .lt. 0.d0 ) THEN
+                   IF ( lgap .AND. iw < nqstep .AND. real(ADelta(ibnd,ik,iw)) > 0.d0 &
+                        .AND. real(ADelta(ibnd,ik,iw+1)) > 0.d0 &
+                        .AND. ( ws(iw) - real(ADelta(ibnd,ik,iw)) )*( ws(iw+1) - real(ADelta(ibnd,ik,iw+1)) ) < 0.d0 ) THEN
                       Agap(ibnd,ik,itemp) = (   ( real(ADelta(ibnd,ik,iw))   - ws(iw)   ) * ws(iw+1) &
                                               - ( real(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) * ws(iw) ) &
                                           / ( ( real(ADelta(ibnd,ik,iw)) - ws(iw) ) - ( real(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) )
                       lgap = .false.
                    ENDIF
-                   IF ( iverbosity .eq. 2 ) THEN
+                   IF ( iverbosity == 2 ) THEN
                       WRITE(iufilgap,'(6ES20.10)') ws(iw), ekfs(ibnd,ik)-ef0, &
                                      real(AZnorm(ibnd,ik,iw)), aimag(AZnorm(ibnd,ik,iw)), &
                                      real(ADelta(ibnd,ik,iw)), aimag(ADelta(ibnd,ik,iw))
@@ -324,7 +324,7 @@
              ENDIF
           ENDDO ! ibnd
        ENDDO ! ik
-       IF ( iverbosity .eq. 2 ) CLOSE(iufilgap)
+       IF ( iverbosity == 2 ) CLOSE(iufilgap)
        !
        CALL gap_distribution_FS ( itemp, cname )
        !
@@ -332,21 +332,21 @@
     !
     ! isotropic case
     ! SP: Only write isotropic for laniso if user really wants that
-    IF ( ( laniso .AND. iverbosity .eq. 2 ) .OR. liso ) THEN
-       IF ( temp .lt. 10.d0 ) THEN
+    IF ( ( laniso .AND. iverbosity == 2 ) .OR. liso ) THEN
+       IF ( temp < 10.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a7,f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
-       ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+       ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0  ) THEN
           WRITE(name1,'(a,a1,a4,a6,f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
-       ELSEIF ( temp .ge. 100.d0 ) THEN
+       ELSEIF ( temp >= 100.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
        ENDIF
-       OPEN(iufilgap, file=name1, form='formatted')
+       OPEN(iufilgap, FILE=name1, FORM='formatted')
        WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        lgap = .true.
        ! DO iw = 1, nsw
        DO iw = 1, nsw-1   ! this change is to prevent segfault in Delta(iw+1) and ws(iw+1)
-          IF ( lgap .AND. iw .lt. nqstep .AND. real(Delta(iw)) .gt. 0.d0 .AND. real(Delta(iw+1)) .gt. 0.d0 .AND. &
-               ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) .lt. 0.d0 ) THEN
+          IF ( lgap .AND. iw < nqstep .AND. real(Delta(iw)) > 0.d0 .AND. real(Delta(iw+1)) > 0.d0 .AND. &
+               ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) < 0.d0 ) THEN
              gap(itemp) = ( ( real(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( real(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
                         / ( ( real(Delta(iw)) - ws(iw) ) - ( real(Delta(iw+1)) - ws(iw+1) ) )
              lgap = .false.
@@ -391,34 +391,34 @@
     temp = estemp(itemp) / kelvin2eV
     !
     IF ( laniso ) THEN
-       IF ( iverbosity .eq. 2 ) THEN
-          IF ( temp .lt. 10.d0 ) THEN
+       IF ( iverbosity == 2 ) THEN
+          IF ( temp < 10.d0 ) THEN
              WRITE(name1,'(a,a1,a4,a9,f4.2)') TRIM(prefix), '.', cname, '_aniso_00', temp
-          ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+          ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0  ) THEN
              WRITE(name1,'(a,a1,a4,a8,f5.2)') TRIM(prefix), '.', cname, '_aniso_0', temp
-          ELSEIF ( temp .ge. 100.d0 ) THEN
+          ELSEIF ( temp >= 100.d0 ) THEN
              WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
           ENDIF
-          OPEN(iufilgap, file=name1, form='formatted')
+          OPEN(iufilgap, FILE=name1, FORM='formatted')
           WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]',&
                                                             'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        ENDIF
        !
        DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
-             IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+             IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
                 lgap = .true.
                 ! DO iw = 1, nsw
                 DO iw = 1, nsw-1   ! FG: this change is to prevent segfault in ws(iw+1) and ADelta(*,*,iw+1)
-                   IF ( lgap .AND. iw .lt. nqstep .AND. real(ADelta(ibnd,ik,iw)) .gt. 0.d0 &
-                        .AND. real(ADelta(ibnd,ik,iw+1)) .gt. 0.d0 &
-                        .AND. ( ws(iw) - real(ADelta(ibnd,ik,iw)) )*( ws(iw+1) - real(ADelta(ibnd,ik,iw+1)) ) .lt. 0.d0 ) THEN
+                   IF ( lgap .AND. iw < nqstep .AND. real(ADelta(ibnd,ik,iw)) > 0.d0 &
+                        .AND. real(ADelta(ibnd,ik,iw+1)) > 0.d0 &
+                        .AND. ( ws(iw) - real(ADelta(ibnd,ik,iw)) )*( ws(iw+1) - real(ADelta(ibnd,ik,iw+1)) ) < 0.d0 ) THEN
                       Agap(ibnd,ik,itemp) = (   ( real(ADelta(ibnd,ik,iw))   - ws(iw)   ) * ws(iw+1) &
                                               - ( real(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) * ws(iw) ) &
                                           / ( ( real(ADelta(ibnd,ik,iw)) - ws(iw) ) - ( real(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) )
                       lgap = .false.
                    ENDIF
-                   IF ( iverbosity .eq. 2 ) THEN
+                   IF ( iverbosity == 2 ) THEN
                       WRITE(iufilgap,'(6ES20.10)') ws(iw), ekfs(ibnd,ik)-ef0, &
                                      real(AZnorm(ibnd,ik,iw)), aimag(AZnorm(ibnd,ik,iw)), &
                                      real(ADelta(ibnd,ik,iw)), aimag(ADelta(ibnd,ik,iw))
@@ -429,7 +429,7 @@
              ENDIF
           ENDDO ! ibnd
        ENDDO ! ik
-       IF ( iverbosity .eq. 2 ) CLOSE(iufilgap)
+       IF ( iverbosity == 2 ) CLOSE(iufilgap)
        !
        CALL gap_distribution_FS ( itemp, cname )
        !
@@ -437,21 +437,21 @@
     !
     ! isotropic case
     ! SP: Only write isotropic for laniso if user really wants that
-    IF ( ( laniso .AND. iverbosity .eq. 2 ) .OR. liso ) THEN
-       IF ( temp .lt. 10.d0 ) THEN
+    IF ( ( laniso .AND. iverbosity == 2 ) .OR. liso ) THEN
+       IF ( temp < 10.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a7,f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
-       ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+       ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0  ) THEN
           WRITE(name1,'(a,a1,a4,a6,f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
-       ELSEIF ( temp .ge. 100.d0 ) THEN
+       ELSEIF ( temp >= 100.d0 ) THEN
           WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
        ENDIF
-       OPEN(iufilgap, file=name1, form='formatted')
+       OPEN(iufilgap, FILE=name1, FORM='formatted')
        WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        lgap = .true.
        ! DO iw = 1, nsw
        DO iw = 1, nsw-1   ! this change is to prevent segfault in Delta(iw+1) and ws(iw+1)
-          IF ( lgap .AND. iw .lt. nqstep .AND. real(Delta(iw)) .gt. 0.d0 .AND. real(Delta(iw+1)) .gt. 0.d0 .AND. &
-               ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) .lt. 0.d0 ) THEN
+          IF ( lgap .AND. iw < nqstep .AND. real(Delta(iw)) > 0.d0 .AND. real(Delta(iw+1)) > 0.d0 .AND. &
+               ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) < 0.d0 ) THEN
              gap(itemp) = ( ( real(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( real(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
                         / ( ( real(Delta(iw)) - ws(iw) ) - ( real(Delta(iw+1)) - ws(iw+1) ) )
              lgap = .false.
@@ -491,13 +491,13 @@
     INTEGER :: ios
     !! Status when opening a2F file
     !
-    IF ( .not. ALLOCATED(a2f_iso) ) ALLOCATE(a2f_iso(nqstep))
-    IF ( .not. ALLOCATED(wsph) ) ALLOCATE(wsph(nqstep)) 
+    IF ( .NOT. ALLOCATED(a2f_iso) ) ALLOCATE (a2f_iso(nqstep))
+    IF ( .NOT. ALLOCATED(wsph) ) ALLOCATE (wsph(nqstep)) 
     a2f_iso(:) = zero
     wsph(:) = zero
     !
-    IF ( mpime .eq. ionode_id ) THEN
-      OPEN(iua2ffil, file=fila2f, status='unknown', err=100, iostat=ios)
+    IF ( mpime == ionode_id ) THEN
+      OPEN(iua2ffil, FILE=fila2f, status='unknown', err=100, iostat=ios)
 100   CALL errore('read_a2f','opening file'//fila2f,abs(ios))
     !
       DO iwph = 1, nqstep
@@ -515,7 +515,7 @@
     !
     WRITE(stdout,'(/5x,a/)') 'Finish reading a2f file '
     !
-    IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
+    IF ( .NOT. ALLOCATED(memlt_pool) ) ALLOCATE (memlt_pool(npool))
     memlt_pool(:) = 0.d0
     !
     RETURN
@@ -550,10 +550,10 @@
     CHARACTER (len=256) :: filfreq
     !
     ! read frequencies from file
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       filfreq = trim(tmp_dir) // trim(prefix) // '.freq'
-      !OPEN(iufilfreq, file=filfreq, status='unknown', form='formatted', err=100, iostat=ios)
-      OPEN(iufilfreq, file=filfreq, status='unknown', form='unformatted', err=100, iostat=ios)
+      !OPEN(iufilfreq, FILE=filfreq, status='unknown', FORM='formatted', err=100, iostat=ios)
+      OPEN(iufilfreq, FILE=filfreq, status='unknown', FORM='unformatted', err=100, iostat=ios)
 100   CALL errore('read_frequencies','opening file '//filfreq,abs(ios))
       !READ(iufilfreq,'(2i7)') nqtotf, nmodes
       READ(iufilfreq) nqtotf, nmodes
@@ -561,14 +561,14 @@
     CALL mp_bcast( nqtotf, ionode_id, inter_pool_comm )
     CALL mp_bcast( nmodes, ionode_id, inter_pool_comm )
     !
-    IF ( .not. ALLOCATED(wf) )  ALLOCATE(wf(nmodes,nqtotf))
-    IF ( .not. ALLOCATED(wqf) ) ALLOCATE(wqf(nqtotf))
-    IF ( .not. ALLOCATED(xqf) ) ALLOCATE(xqf(3,nqtotf))
+    IF ( .NOT. ALLOCATED(wf) )  ALLOCATE (wf(nmodes,nqtotf))
+    IF ( .NOT. ALLOCATED(wqf) ) ALLOCATE (wqf(nqtotf))
+    IF ( .NOT. ALLOCATED(xqf) ) ALLOCATE (xqf(3,nqtotf))
     wf(:,:) = zero
     wqf(:) = 1.d0 / dble(nqtotf)
     xqf(:,:) = zero
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       DO iq = 1, nqtotf ! loop over q-points
          !READ(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
          READ(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
@@ -631,7 +631,7 @@
     CHARACTER (len=256) :: filegnv
     REAL(DP), EXTERNAL :: w0gauss
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       !
       ! SP: Needs to be initialized
       nbnd_ = 0 
@@ -640,8 +640,8 @@
       ! read eigenvalues on the irreducible fine k-mesh
       !  
       filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
-      !OPEN(iufilegnv, file=filegnv, status='unknown', form='formatted', err=100, iostat=ios)
-      OPEN(iufilegnv, file=filegnv, status='unknown', form='unformatted', err=100, iostat=ios)
+      !OPEN(iufilegnv, FILE=filegnv, status='unknown', FORM='formatted', err=100, iostat=ios)
+      OPEN(iufilegnv, FILE=filegnv, status='unknown', FORM='unformatted', err=100, iostat=ios)
 100   CALL errore('read_eigenvalues','opening file '//filegnv,abs(ios))
       !
       !READ(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nkfs 
@@ -674,16 +674,16 @@
     CALL mp_bcast( fsthick, ionode_id, inter_pool_comm )
     CALL mp_bcast( ef, ionode_id, inter_pool_comm )
     !
-    IF ( .not. ALLOCATED(wkfs) ) ALLOCATE(wkfs(nkfs))
-    IF ( .not. ALLOCATED(xkfs) ) ALLOCATE(xkfs(3,nkfs))
+    IF ( .NOT. ALLOCATED(wkfs) ) ALLOCATE (wkfs(nkfs))
+    IF ( .NOT. ALLOCATED(xkfs) ) ALLOCATE (xkfs(3,nkfs))
     wkfs(:) = zero
     xkfs(:,:) = zero
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       !
       ! at each k-point keep only the bands within the Fermi shell
       !
-      ALLOCATE(ekf_(nbnd_,nkfs))
+      ALLOCATE (ekf_(nbnd_,nkfs))
       ekf_(:,:) = zero
       !
       ! nbndfs - nr of bands within the Fermi shell
@@ -700,9 +700,9 @@
          DO ibnd = 1, nbnd_
             ! go from Ryd to eV
             ekf_(ibnd,ik) = ekf_(ibnd,ik) * ryd2ev
-            IF ( abs( ekf_(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+            IF ( abs( ekf_(ibnd,ik) - ef0 ) < fsthick ) THEN
                n = n + 1
-               IF ( nbndfs .lt. n ) nbndfs = n
+               IF ( nbndfs < n ) nbndfs = n
             ENDIF
          ENDDO
       ENDDO
@@ -716,23 +716,23 @@
     CALL mp_bcast( xkfs, ionode_id, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( .not. ALLOCATED(ekfs) ) ALLOCATE(ekfs(nbndfs,nkfs))
-    IF ( .not. ALLOCATED(w0g) )  ALLOCATE(w0g(nbndfs,nkfs))
+    IF ( .NOT. ALLOCATED(ekfs) ) ALLOCATE (ekfs(nbndfs,nkfs))
+    IF ( .NOT. ALLOCATED(w0g) )  ALLOCATE (w0g(nbndfs,nkfs))
     ! sanity choice
     ekfs(:,:) = ef0 - 10.d0 * fsthick
     w0g(:,:) = zero
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       DO ik = 1, nkfs ! loop over k-points
          n = 0
          DO ibnd = 1, nbnd_
-            IF ( abs( ekf_(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+            IF ( abs( ekf_(ibnd,ik) - ef0 ) < fsthick ) THEN
                n = n + 1
                ekfs(n,ik) = ekf_(ibnd,ik)
                w0g(n,ik) = w0gauss( ( ekfs(n,ik) - ef0 ) / degaussw, 0 ) / degaussw
             ENDIF
          ENDDO
       ENDDO
-      IF ( ALLOCATED(ekf_) ) DEALLOCATE(ekf_)
+      IF ( ALLOCATED(ekf_) ) DEALLOCATE (ekf_)
     ENDIF
     ! first node broadcasts everything to all nodes
     CALL mp_bcast( ekfs, ionode_id, inter_pool_comm )
@@ -811,7 +811,7 @@
     CHARACTER (len=256) :: filikmap
     !! Name of the file
     !
-    IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
+    IF ( .NOT. ALLOCATED(memlt_pool) ) ALLOCATE (memlt_pool(npool))
     memlt_pool(:) = zero
     !
     ! get the size of arrays for frequency and eigenvalue variables allocated in 
@@ -825,21 +825,21 @@
     imelt = nkftot
     CALL mem_integer_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(ixkff) ) ALLOCATE(ixkff(nkftot))
+    IF ( .NOT. ALLOCATED(ixkff) ) ALLOCATE (ixkff(nkftot))
     ixkff(:) = 0
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       !
       filikmap = trim(tmp_dir) // trim(prefix) // '.ikmap'
-      !OPEN(iufilikmap, file=filikmap, status='old', form='formatted', err=100, iostat=ios)
-      OPEN(iufilikmap, file=filikmap, status='old', form='unformatted', err=100, iostat=ios)
+      !OPEN(iufilikmap, FILE=filikmap, status='old', FORM='formatted', err=100, iostat=ios)
+      OPEN(iufilikmap, FILE=filikmap, status='old', FORM='unformatted', err=100, iostat=ios)
 100   CALL errore('read_kqmap','opening file '//filikmap,abs(ios))
       !
       ! nkf_mesh - Total number of k points
       !          - These are irreducible k-points if mp_mesh_k = .true.
       READ(iufilikmap) nkf_mesh
       !
-      IF ( .not. ALLOCATED(ixkf) ) ALLOCATE(ixkf(nkf_mesh))
+      IF ( .NOT. ALLOCATED(ixkf) ) ALLOCATE (ixkf(nkf_mesh))
       ixkf(:) = 0
       !
       DO ik = 1, nkf_mesh
@@ -848,7 +848,7 @@
       ENDDO
       CLOSE(iufilikmap)
       !
-      IF ( .not. ALLOCATED(xkff) )  ALLOCATE(xkff(3,nkftot))
+      IF ( .NOT. ALLOCATED(xkff) )  ALLOCATE (xkff(3,nkftot))
       xkff(:,:) = zero
       !
       DO i = 1, nkf1
@@ -862,7 +862,7 @@
          ENDDO
       ENDDO
       !
-      IF ( .not. ALLOCATED(equiv_) )  ALLOCATE(equiv_(nkftot))
+      IF ( .NOT. ALLOCATED(equiv_) )  ALLOCATE (equiv_(nkftot))
       !  equiv_(nk) =nk : k-point nk is not equivalent to any previous k-point
       !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
       !
@@ -874,7 +874,7 @@
          CALL set_sym_bl( ) 
          DO nk = 1, nkftot
             !  check if this k-point has already been found equivalent to another
-            IF ( equiv_(nk) .eq. nk ) THEN
+            IF ( equiv_(nk) == nk ) THEN
                !  check if there are equivalent k-point to this in the list
                !  (excepted those previously found to be equivalent to another)
                !  check both k and -k
@@ -885,22 +885,22 @@
                             + s(i,3,ns) * xkff(3,nk)
                      xkr(i) = xkr(i) - nint( xkr(i) )
                   ENDDO
-                  IF ( t_rev(ns) .eq. 1 ) xkr = -xkr
+                  IF ( t_rev(ns) == 1 ) xkr = -xkr
                   xx = xkr(1)*nkf1
                   yy = xkr(2)*nkf2
                   zz = xkr(3)*nkf3
-                  in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
-                                abs( yy-nint(yy) ) .le. eps5 .AND. &
-                                abs( zz-nint(zz) ) .le. eps5
+                  in_the_list = abs( xx-nint(xx) ) <= eps5 .AND. &
+                                abs( yy-nint(yy) ) <= eps5 .AND. &
+                                abs( zz-nint(zz) ) <= eps5
                   IF ( in_the_list ) THEN
                      i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                      j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
                      k = mod( nint( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                      n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                     IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                     IF ( n > nk .AND. equiv_(n) == n ) THEN
                         equiv_(n) = nk
                      ELSE
-                        IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                        IF ( equiv_(n) .ne. nk .OR. n < nk ) CALL errore('kmesh_fine', &
                            'something wrong in the checking algorithm',1)
                      ENDIF
                   ENDIF
@@ -908,18 +908,18 @@
                      xx = -xkr(1)*nkf1
                      yy = -xkr(2)*nkf2
                      zz = -xkr(3)*nkf3
-                     in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
-                                   abs( yy-nint(yy) ) .le. eps5 .AND. &
-                                   abs( zz-nint(zz) ) .le. eps5
+                     in_the_list = abs( xx-nint(xx) ) <= eps5 .AND. &
+                                   abs( yy-nint(yy) ) <= eps5 .AND. &
+                                   abs( zz-nint(zz) ) <= eps5
                      IF ( in_the_list ) THEN
                         i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                         j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
                         k = mod( nint( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                         n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                        IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                        IF ( n > nk .AND. equiv_(n) == n ) THEN
                            equiv_(n) = nk
                         ELSE
-                           IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                           IF ( equiv_(n) .ne. nk .OR. n < nk ) CALL errore('kmesh_fine', &
                               'something wrong in the checking algorithm',2)
                         ENDIF
                      ENDIF
@@ -934,7 +934,7 @@
       !
       nks = 0
       DO nk = 1, nkftot
-         IF ( equiv_(nk) .eq. nk ) THEN
+         IF ( equiv_(nk) == nk ) THEN
             nks = nks + 1
             ixkff(nk) = ixkf(nks)
          ELSE
@@ -943,8 +943,8 @@
       ENDDO
       IF ( nks .ne. nkf_mesh) CALL errore('read_kmap_mp', 'something wrong with the mesh',1)
       !
-      IF ( ALLOCATED(equiv_) ) DEALLOCATE(equiv_)
-      IF ( ALLOCATED(ixkf) )   DEALLOCATE(ixkf)
+      IF ( ALLOCATED(equiv_) ) DEALLOCATE (equiv_)
+      IF ( ALLOCATED(ixkf) )   DEALLOCATE (ixkf)
       !
     ENDIF
     CALL mp_bcast( ixkff, ionode_id, inter_pool_comm )
@@ -956,9 +956,9 @@
     imelt = ( nqtotf + 1 ) * nkfs + ( upper_bnd - lower_bnd + 1 ) * nqtotf
     CALL mem_integer_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(ixkqf) ) ALLOCATE(ixkqf(nkfs,nqtotf))
-    IF ( .not. ALLOCATED(nqfs) )  ALLOCATE(nqfs(nkfs))
-    IF ( .not. ALLOCATED(index_) ) ALLOCATE(index_(lower_bnd:upper_bnd,nqtotf))
+    IF ( .NOT. ALLOCATED(ixkqf) ) ALLOCATE (ixkqf(nkfs,nqtotf))
+    IF ( .NOT. ALLOCATED(nqfs) )  ALLOCATE (nqfs(nkfs))
+    IF ( .NOT. ALLOCATED(index_) ) ALLOCATE (index_(lower_bnd:upper_bnd,nqtotf))
     ixkqf(:,:) = 0
     nqfs(:) = 0
     index_(:,:) = 0
@@ -985,7 +985,7 @@
           ! nqfs(ik) - nr of q-points at each k-point for which k+sign*q is within the Fermi shell 
           ! index_   - index q-point on the full q-mesh for which k+sign*q is within the Fermi shell
           !
-          IF ( ixkqf(ik,iq) .gt. 0 ) THEN
+          IF ( ixkqf(ik,iq) > 0 ) THEN
              nqfs(ik) = nqfs(ik) + 1
              index_(ik,nqfs(ik)) = iq
           ENDIF
@@ -1001,7 +1001,7 @@
     imelt = nkfs * maxval(nqfs(:))
     CALL mem_integer_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(ixqfs) ) ALLOCATE(ixqfs(nkfs,maxval(nqfs(:))))
+    IF ( .NOT. ALLOCATED(ixqfs) ) ALLOCATE (ixqfs(nkfs,maxval(nqfs(:))))
     ixqfs(:,:) = 0
     !
     DO ik = lower_bnd, upper_bnd
@@ -1017,8 +1017,8 @@
     CALL mp_sum( ixqfs, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( ALLOCATED(index_) ) DEALLOCATE(index_)
-    IF ( ALLOCATED(xqf) )    DEALLOCATE(xqf)
+    IF ( ALLOCATED(index_) ) DEALLOCATE (index_)
+    IF ( ALLOCATED(xqf) )    DEALLOCATE (xqf)
     !
     ! remove memory allocated for index_
     imelt = nqtotf * ( upper_bnd - lower_bnd + 1 ) 
@@ -1104,7 +1104,7 @@
     imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * nmodes
     CALL mem_size_eliashberg( imelt ) 
     !
-    IF ( .not. ALLOCATED(g2) ) ALLOCATE(g2(lower_bnd:upper_bnd,maxval(nqfs(:)),nbndfs,nbndfs,nmodes))
+    IF ( .NOT. ALLOCATED(g2) ) ALLOCATE (g2(lower_bnd:upper_bnd,maxval(nqfs(:)),nbndfs,nbndfs,nmodes))
     g2(:,:,:,:,:) = zero
     !
     ! go from Ryd to eV
@@ -1120,14 +1120,14 @@
 #else
        filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
 #endif
-       !OPEN(iufileph, file=filephmat, status='old', form='formatted', err=100, iostat=ios)
-       OPEN(iufileph, file=filephmat, status='old', form='unformatted', err=100, iostat=ios)
+       !OPEN(iufileph, FILE=filephmat, status='old', FORM='formatted', err=100, iostat=ios)
+       OPEN(iufileph, FILE=filephmat, status='old', FORM='unformatted', err=100, iostat=ios)
 100 CALL errore('read_ephmat','opening file '//filephmat,abs(ios))
        !READ(iufileph,'(2i7)') tmp_pool_id, nkpool(ipool)
        READ(iufileph) tmp_pool_id, nkpool(ipool)
        IF ( ipool .ne. tmp_pool_id )  CALL errore('read_ephmat', &
            'npool should be equal to the number of .ephmat files',1)
-       IF ( ipool .gt. 1 ) & 
+       IF ( ipool > 1 ) & 
           nkpool(ipool) = nkpool(ipool) + nkpool(ipool-1)
        !WRITE(stdout,'(2i7)') tmp_pool_id, nkpool(ipool)
        CLOSE(iufileph)
@@ -1139,10 +1139,10 @@
     nmin = npool
     nmax = npool
     DO ipool = npool, 1, -1
-       IF ( lower_bnd .le. nkpool(ipool) ) THEN
+       IF ( lower_bnd <= nkpool(ipool) ) THEN
           nmin = ipool
        ENDIF
-       IF ( upper_bnd .le. nkpool(ipool) ) THEN
+       IF ( upper_bnd <= nkpool(ipool) ) THEN
           nmax = ipool
        ENDIF
     ENDDO
@@ -1156,23 +1156,23 @@
 #else
        filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
 #endif     
-       OPEN(iufileph, file=filephmat, status='old', form='unformatted')
+       OPEN(iufileph, FILE=filephmat, status='old', FORM='unformatted')
        READ(iufileph) tmp_pool_id, nks
-       IF ( ipool .ge. nmin .AND. ipool .le. nmax ) THEN
+       IF ( ipool >= nmin .AND. ipool <= nmax ) THEN
           DO iq = 1, nqtotf ! loop over q-points 
              DO ik = 1, nks ! loop over k-points in the pool
-                IF ( ixkqf(ik+nnk,iq) .gt. 0 ) THEN 
+                IF ( ixkqf(ik+nnk,iq) > 0 ) THEN 
                    nnq(ik+nnk) = nnq(ik+nnk) + 1
                    DO imode = 1, nmodes ! loop over phonon modes
                       DO ibnd = 1, nbndfs ! loop over iband's 
-                         IF ( abs( ekfs(ibnd,ik+nnk) - ef0 ) .lt. fsthick ) THEN
+                         IF ( abs( ekfs(ibnd,ik+nnk) - ef0 ) < fsthick ) THEN
                             DO jbnd = 1, nbndfs ! loop over jband's 
-                               IF ( abs( ekfs(jbnd,ixkqf(ik+nnk,iq)) - ef0 ) .lt. fsthick ) THEN
+                               IF ( abs( ekfs(jbnd,ixkqf(ik+nnk,iq)) - ef0 ) < fsthick ) THEN
                                   !READ(iufileph,'(ES20.10)') gmat
                                   READ(iufileph) gmat
-                                  IF ( ik+nnk .ge. lower_bnd .AND. ik+nnk .le. upper_bnd ) THEN
+                                  IF ( ik+nnk >= lower_bnd .AND. ik+nnk <= upper_bnd ) THEN
                                      ! go from Ryd to eV
-                                     IF ( wf(imode,iq) .gt. eps_acustic ) THEN
+                                     IF ( wf(imode,iq) > eps_acustic ) THEN
                                         g2(ik+nnk,nnq(ik+nnk),ibnd,jbnd,imode) = gmat * ryd2ev * ryd2ev
                                      ELSE
                                         g2(ik+nnk,nnq(ik+nnk),ibnd,jbnd,imode) = zero
@@ -1189,7 +1189,7 @@
           CLOSE(iufileph)
        ENDIF ! ipool
        nnk = nnk + nks
-       IF ( ipool .eq. npool .AND. nnk .ne. nkfs )  CALL errore('read_ephmat', &
+       IF ( ipool == npool .AND. nnk .ne. nkfs )  CALL errore('read_ephmat', &
            'nnk should be equal to nkfs',1)
     ENDDO ! ipool
     !
@@ -1280,7 +1280,7 @@
     ! write phonon frequencies to file
     IF ( my_pool_id == 0 ) THEN
       filfreq = trim(tmp_dir) // trim(prefix) // '.freq'
-      IF ( iq .eq. 1 ) THEN
+      IF ( iq == 1 ) THEN
         !OPEN(iufilfreq, file = filfreq, form = 'formatted')
         !WRITE(iufilfreq,'(2i7)') nqtotf, nmodes
         OPEN(iufilfreq, file = filfreq, form = 'unformatted')
@@ -1307,7 +1307,7 @@
     ELSE
       ef0 = efnew 
       !ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
-      ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
+      ! if some bands are skipped (nbndskip /= 0), nelec has already been recalculated 
       ! in ephwann_shuffle
     ENDIF
     !     
@@ -1319,7 +1319,7 @@
     nkftot = nkqtotf / 2 
     CALL fkbounds( nkftot, lower_bnd, upper_bnd )
     !
-    IF (iq.eq.1) THEN
+    IF (iq == 1) THEN
       !
       ! find fermicount - nr of k-points within the Fermi shell per pool
       ! for mp_mesh_k=true. femicount is the nr of irreducible k-points within the Fermi shell per pool
@@ -1330,7 +1330,7 @@
         ikk = 2 * ik - 1
         ikq = ikk + 1
         !
-        IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) THEN
+        IF ( minval( abs( etf(:,ikk) - ef  ) ) < fsthick ) THEN
           fermicount = fermicount + 1
         ENDIF
         !
@@ -1376,7 +1376,7 @@
 #else
     filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
 #endif
-    IF ( iq .eq. 1 ) THEN 
+    IF ( iq == 1 ) THEN 
        !OPEN(iufileph, file = filephmat, form = 'formatted')
        OPEN(iufileph, file = filephmat, form = 'unformatted')
     ELSE
@@ -1384,8 +1384,8 @@
        OPEN(iufileph, file = filephmat, position='append', form = 'unformatted')
     ENDIF
     !
-    !IF ( iq .eq. 1 ) WRITE(iufileph,'(2i7)') my_pool_id+1, fermicount
-    IF ( iq .eq. 1 ) WRITE(iufileph) my_pool_id+1, fermicount
+    !IF ( iq == 1 ) WRITE(iufileph,'(2i7)') my_pool_id+1, fermicount
+    IF ( iq == 1 ) WRITE(iufileph) my_pool_id+1, fermicount
     !
     ! nkf - nr of k-points in the pool (fine mesh)
     ! for mp_mesh_k = true nkf is nr of irreducible k-points in the pool 
@@ -1400,7 +1400,7 @@
       !
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       !
-      !   IF ( ixkf(lower_bnd+ik-1) .gt. 0 .AND. ixkqf(ixkf(lower_bnd+ik-1),iq) .gt. 0 ) THEN
+      !   IF ( ixkf(lower_bnd+ik-1) > 0 .AND. ixkqf(ixkf(lower_bnd+ik-1),iq) > 0 ) THEN
       ! FG: here it can happen that ixkf is 0 and this leads to ixqf(0,iq) after .and.
       !     modified to prevent crash
       IF ( ixkf(lower_bnd+ik-1) > 0 ) THEN
@@ -1442,12 +1442,12 @@
     ENDDO ! ik's
     CLOSE(iufileph)
     !
-    IF ( iq .eq. nqtotf ) THEN 
-       IF ( ALLOCATED(ekfs) )   DEALLOCATE(ekfs)
-       IF ( ALLOCATED(wkfs) )   DEALLOCATE(wkfs)
-       IF ( ALLOCATED(xkfs) )   DEALLOCATE(xkfs)
-       IF ( ALLOCATED(ixkqf) )  DEALLOCATE(ixkqf)
-       IF ( ALLOCATED(ixkf) )   DEALLOCATE(ixkf)
+    IF ( iq == nqtotf ) THEN 
+       IF ( ALLOCATED(ekfs) )   DEALLOCATE (ekfs)
+       IF ( ALLOCATED(wkfs) )   DEALLOCATE (wkfs)
+       IF ( ALLOCATED(xkfs) )   DEALLOCATE (xkfs)
+       IF ( ALLOCATED(ixkqf) )  DEALLOCATE (ixkqf)
+       IF ( ALLOCATED(ixkf) )   DEALLOCATE (ixkf)
        !
        ! remove memory allocated for ekfs, wkfs, xkfs 
        imelt = ( nbndfs + 4 ) * nkfs
@@ -1537,7 +1537,7 @@
           ikk = 2 * ik - 1
           ikq = ikk + 1
           !
-          IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) &
+          IF ( minval( abs( etf(:,ikk) - ef  ) ) < fsthick ) &
              fermicount = fermicount + 1 
           !
        ENDDO
@@ -1614,10 +1614,10 @@
     nbndfs = ibndmax - ibndmin + 1
     !
 #if defined(__MPI)
-    IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
+    IF ( .NOT. ALLOCATED(memlt_pool) ) ALLOCATE (memlt_pool(npool))
     memlt_pool(:) = zero
 #else
-    IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(1))
+    IF ( .NOT. ALLOCATED(memlt_pool) ) ALLOCATE (memlt_pool(1))
     memlt_pool(1) = zero
 #endif
     !
@@ -1629,10 +1629,10 @@
     imelt = nkf_mesh
     CALL mem_integer_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(ekf_) )   ALLOCATE(ekf_(nbndfs,nkf_mesh))
-    IF ( .not. ALLOCATED(wkf_) )   ALLOCATE(wkf_(nkf_mesh))
-    IF ( .not. ALLOCATED(xkf_) )   ALLOCATE(xkf_(3,nkf_mesh))
-    IF ( .not. ALLOCATED(ixkf) )   ALLOCATE(ixkf(nkf_mesh))
+    IF ( .NOT. ALLOCATED(ekf_) )   ALLOCATE (ekf_(nbndfs,nkf_mesh))
+    IF ( .NOT. ALLOCATED(wkf_) )   ALLOCATE (wkf_(nkf_mesh))
+    IF ( .NOT. ALLOCATED(xkf_) )   ALLOCATE (xkf_(3,nkf_mesh))
+    IF ( .NOT. ALLOCATED(ixkf) )   ALLOCATE (ixkf(nkf_mesh))
     xkf_(:,:) = zero
     ekf_(:,:) = zero
     wkf_(:) = zero
@@ -1655,7 +1655,7 @@
        CALL mp_sum( wkf_, inter_pool_comm )
        CALL mp_barrier(inter_pool_comm)
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       !
       IF ( mp_mesh_k) THEN
          WRITE(stdout,'(/5x,a,i9/)') 'Nr. of irreducible k-points on the uniform grid: ', nkf_mesh
@@ -1677,7 +1677,7 @@
       !
       nkfs = 0  
       DO nk = 1, nkf_mesh
-         IF ( minval( abs( ekf_(:,nk) - ef  ) ) .lt. fsthick ) THEN
+         IF ( minval( abs( ekf_(:,nk) - ef  ) ) < fsthick ) THEN
             nkfs = nkfs + 1
             ixkf(nk) = nkfs
          ELSE
@@ -1703,19 +1703,19 @@
     imelt = ( nbndfs + 4 ) * nkfs
     CALL mem_size_eliashberg( imelt )
     ! 
-    IF ( .not. ALLOCATED(ekfs) ) ALLOCATE(ekfs(nbndfs,nkfs))
-    IF ( .not. ALLOCATED(wkfs) ) ALLOCATE(wkfs(nkfs))
-    IF ( .not. ALLOCATED(xkfs) ) ALLOCATE(xkfs(3,nkfs))
+    IF ( .NOT. ALLOCATED(ekfs) ) ALLOCATE (ekfs(nbndfs,nkfs))
+    IF ( .NOT. ALLOCATED(wkfs) ) ALLOCATE (wkfs(nkfs))
+    IF ( .NOT. ALLOCATED(xkfs) ) ALLOCATE (xkfs(3,nkfs))
     xkfs(:,:) = zero
     wkfs(:) = zero
     ekfs(:,:) = zero
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       nks = 0
       DO nk = 1, nkf_mesh
-         IF ( minval( abs( ekf_(:,nk) - ef  ) ) .lt. fsthick ) THEN
+         IF ( minval( abs( ekf_(:,nk) - ef  ) ) < fsthick ) THEN
             nks = nks + 1
-            IF ( nks .gt. nkf_mesh ) CALL errore('kmesh_fine','too many k-points',1)
+            IF ( nks > nkf_mesh ) CALL errore('kmesh_fine','too many k-points',1)
             wkfs(nks)   = wkf_(nk)
             xkfs(:,nks) = xkf_(:,nk)
             ekfs(:,nks) = ekf_(:,nk)
@@ -1730,9 +1730,9 @@
     CALL mp_bcast( ekfs, ionode_id, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( ALLOCATED(ekf_) ) DEALLOCATE(ekf_)
-    IF ( ALLOCATED(xkf_) ) DEALLOCATE(xkf_)
-    IF ( ALLOCATED(wkf_) ) DEALLOCATE(wkf_)
+    IF ( ALLOCATED(ekf_) ) DEALLOCATE (ekf_)
+    IF ( ALLOCATED(xkf_) ) DEALLOCATE (xkf_)
+    IF ( ALLOCATED(wkf_) ) DEALLOCATE (wkf_)
     !
     ! remove memory allocated for ekf_, xkf_, wkf_
     imelt = ( nbndfs + 4 ) * nkf_mesh
@@ -1810,15 +1810,15 @@
     imelt = 2 * nkftot
     CALL mem_integer_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(xkff) )  ALLOCATE(xkff(3,nkftot))
-    IF ( .not. ALLOCATED(ixkff) ) ALLOCATE(ixkff(nkftot))
+    IF ( .NOT. ALLOCATED(xkff) )  ALLOCATE (xkff(3,nkftot))
+    IF ( .NOT. ALLOCATED(ixkff) ) ALLOCATE (ixkff(nkftot))
     xkff(:,:) = zero
     ixkff(:) = 0
     !
     ! to map k+q onto k we need to define the index of k on the full mesh (ixkff) 
     ! using index of the k-point within the Fermi shell (ixkf)
     !
-    IF ( mpime .eq. ionode_id ) THEN
+    IF ( mpime == ionode_id ) THEN
       !
       DO i = 1, nkf1
          DO j = 1, nkf2
@@ -1831,7 +1831,7 @@
          ENDDO
       ENDDO
       !
-      IF ( .not. ALLOCATED(equiv_) ) ALLOCATE(equiv_(nkftot))
+      IF ( .NOT. ALLOCATED(equiv_) ) ALLOCATE (equiv_(nkftot))
       !  equiv_(nk) =nk : k-point nk is not equivalent to any previous k-point
       !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
       !
@@ -1843,7 +1843,7 @@
         CALL set_sym_bl( )
         DO nk = 1, nkftot
           !  check if this k-point has already been found equivalent to another
-          IF ( equiv_(nk) .eq. nk ) THEN
+          IF ( equiv_(nk) == nk ) THEN
             !  check if there are equivalent k-point to this in the list
             !  (excepted those previously found to be equivalent to another)
             !  check both k and -k
@@ -1854,22 +1854,22 @@
                        + s(i,3,ns) * xkff(3,nk)
                 xkr(i) = xkr(i) - nint( xkr(i) )
               ENDDO
-              IF ( t_rev(ns) .eq. 1 ) xkr = -xkr
+              IF ( t_rev(ns) == 1 ) xkr = -xkr
               xx = xkr(1)*nkf1
               yy = xkr(2)*nkf2
               zz = xkr(3)*nkf3
-              in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
-                            abs( yy-nint(yy) ) .le. eps5 .AND. &
-                            abs( zz-nint(zz) ) .le. eps5
+              in_the_list = abs( xx-nint(xx) ) <= eps5 .AND. &
+                            abs( yy-nint(yy) ) <= eps5 .AND. &
+                            abs( zz-nint(zz) ) <= eps5
               IF ( in_the_list ) THEN
                 i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                 j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
                 k = mod( nint( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                 n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                IF ( n > nk .AND. equiv_(n) == n ) THEN
                    equiv_(n) = nk
                 ELSE
-                   IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                   IF ( equiv_(n) .ne. nk .OR. n < nk ) CALL errore('kmesh_fine', &
                       'something wrong in the checking algorithm',1)
                 ENDIF
               ENDIF
@@ -1877,18 +1877,18 @@
                 xx = -xkr(1)*nkf1
                 yy = -xkr(2)*nkf2
                 zz = -xkr(3)*nkf3
-                in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
-                              abs( yy-nint(yy) ) .le. eps5 .AND. &
-                              abs( zz-nint(zz) ) .le. eps5
+                in_the_list = abs( xx-nint(xx) ) <= eps5 .AND. &
+                              abs( yy-nint(yy) ) <= eps5 .AND. &
+                              abs( zz-nint(zz) ) <= eps5
                 IF ( in_the_list ) THEN
                   i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                   j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
                   k = mod( nint( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                   n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
-                  IF ( n .gt. nk .AND. equiv_(n) .eq. n ) THEN
+                  IF ( n > nk .AND. equiv_(n) == n ) THEN
                     equiv_(n) = nk
                   ELSE
-                    IF ( equiv_(n) .ne. nk .OR. n .lt. nk ) CALL errore('kmesh_fine', &
+                    IF ( equiv_(n) .ne. nk .OR. n < nk ) CALL errore('kmesh_fine', &
                        'something wrong in the checking algorithm',2)
                   ENDIF
                 ENDIF
@@ -1902,7 +1902,7 @@
       ! 
       nks = 0
       DO nk = 1, nkftot
-        IF ( equiv_(nk) .eq. nk ) THEN
+        IF ( equiv_(nk) == nk ) THEN
           nks = nks + 1
           ixkff(nk) = ixkf(nks)
         ELSE
@@ -1910,14 +1910,14 @@
         ENDIF
       ENDDO
       !
-      IF ( ALLOCATED(equiv_) ) DEALLOCATE(equiv_)
+      IF ( ALLOCATED(equiv_) ) DEALLOCATE (equiv_)
       !
     ENDIF
     CALL mp_bcast( xkff, ionode_id, inter_pool_comm )
     CALL mp_bcast( ixkff, ionode_id, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( ALLOCATED(xkff) ) DEALLOCATE(xkff)
+    IF ( ALLOCATED(xkff) ) DEALLOCATE (xkff)
     !
     ! remove memory allocated for xkff
     imelt = 3 * nkftot
@@ -1933,9 +1933,9 @@
     imelt = ( nqtotf + 1 ) * nkfs + ( upper_bnd - lower_bnd + 1 ) * nqtotf
     CALL mem_integer_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(ixkqf) )  ALLOCATE(ixkqf(nkfs,nqtotf))
-    IF ( .not. ALLOCATED(nqfs) )   ALLOCATE(nqfs(nkfs))
-    IF ( .not. ALLOCATED(index_) ) ALLOCATE(index_(lower_bnd:upper_bnd,nqtotf))
+    IF ( .NOT. ALLOCATED(ixkqf) )  ALLOCATE (ixkqf(nkfs,nqtotf))
+    IF ( .NOT. ALLOCATED(nqfs) )   ALLOCATE (nqfs(nkfs))
+    IF ( .NOT. ALLOCATED(index_) ) ALLOCATE (index_(lower_bnd:upper_bnd,nqtotf))
     ixkqf(:,:) = 0
     nqfs(:) = 0
     index_(:,:) = 0
@@ -1961,7 +1961,7 @@
         ! nqfs(ik) - nr of q-points at each k-point for which k+sign*q is within the Fermi shell 
         ! index_   - index of q-point on the full q-mesh for which k+sign*q is within the Fermi shell
         !
-        IF ( ixkqf(ik,iq) .gt. 0 ) THEN
+        IF ( ixkqf(ik,iq) > 0 ) THEN
           nqfs(ik) = nqfs(ik) + 1
           index_(ik,nqfs(ik)) = iq
         ENDIF
@@ -1977,7 +1977,7 @@
     imelt = nkfs * maxval(nqfs(:))
     CALL mem_integer_size_eliashberg( imelt )
     !
-    IF ( .not. ALLOCATED(ixqfs) ) ALLOCATE(ixqfs(nkfs,maxval(nqfs(:))))
+    IF ( .NOT. ALLOCATED(ixqfs) ) ALLOCATE (ixqfs(nkfs,maxval(nqfs(:))))
     ixqfs(:,:) = 0
     !
     DO ik = lower_bnd, upper_bnd
@@ -1997,10 +1997,10 @@
     imelt = nkftot + nkfs * maxval(nqfs(:)) + nqtotf * ( upper_bnd - lower_bnd + 1 ) + nkfs
     CALL mem_integer_size_eliashberg( -imelt )
     !
-    IF ( ALLOCATED(ixkff) )  DEALLOCATE(ixkff)
-    IF ( ALLOCATED(ixqfs) )  DEALLOCATE(ixqfs)
-    IF ( ALLOCATED(index_) ) DEALLOCATE(index_)
-    IF ( ALLOCATED(nqfs) )   DEALLOCATE(nqfs)
+    IF ( ALLOCATED(ixkff) )  DEALLOCATE (ixkff)
+    IF ( ALLOCATED(ixqfs) )  DEALLOCATE (ixqfs)
+    IF ( ALLOCATED(index_) ) DEALLOCATE (index_)
+    IF ( ALLOCATED(nqfs) )   DEALLOCATE (nqfs)
     !
     IF ( mp_mesh_k) THEN 
       WRITE(stdout,'(/5x,a/)') 'Finished mapping k+sign*q onto the fine irreducibe k-mesh'
@@ -2044,10 +2044,10 @@
     xx = xxk(1) * nkf1
     yy = xxk(2) * nkf2
     zz = xxk(3) * nkf3
-    in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
-                  abs(yy-nint(yy)) .le. eps5 .AND. &
-                  abs(zz-nint(zz)) .le. eps5
-    IF ( .not. in_the_list ) CALL errore('kpmq_map','k+q does not fall on k-grid',1)
+    in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
+                  abs(yy-nint(yy)) <= eps5 .AND. &
+                  abs(zz-nint(zz)) <= eps5
+    IF ( .NOT. in_the_list ) CALL errore('kpmq_map','k+q does not fall on k-grid',1)
     !
     !  find the index of this k+q or k-q in the k-grid
     !  make sure xx, yy, zz are in the 1st BZ
@@ -2112,12 +2112,12 @@
     delta_max = 1.1d0 * maxval(Agap(:,:,itemp))
     nbin = NINT(delta_max / eps5) + 1
     dbin = delta_max / dble(nbin)
-    IF ( .not. ALLOCATED(delta_k_bin) ) ALLOCATE( delta_k_bin(nbin) )
+    IF ( .NOT. ALLOCATED(delta_k_bin) ) ALLOCATE ( delta_k_bin(nbin) )
     delta_k_bin(:) = zero
     !
     DO ik = 1, nkfs
        DO ibnd = 1, nbndfs
-          IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+          IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
             ibin = nint( Agap(ibnd,ik,itemp) / dbin ) + 1
             weight = w0g(ibnd,ik)
             delta_k_bin(ibin) = delta_k_bin(ibin) + weight
@@ -2125,21 +2125,21 @@
        ENDDO
     ENDDO
     !
-    IF ( temp .lt. 10.d0 ) THEN
+    IF ( temp < 10.d0 ) THEN
        WRITE(name1,'(a,a1,a4,a14,f4.2)') TRIM(prefix), '.', cname, '_aniso_gap0_00', temp
-    ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+    ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0  ) THEN
        WRITE(name1,'(a,a1,a4,a13,f5.2)') TRIM(prefix), '.', cname, '_aniso_gap0_0', temp
-    ELSEIF ( temp .ge. 100.d0 ) THEN
+    ELSEIF ( temp >= 100.d0 ) THEN
        WRITE(name1,'(a,a1,a4,a12,f6.2)') TRIM(prefix), '.', cname, '_aniso_gap0_', temp
     ENDIF
     !
-    OPEN(iufilgap, file=name1, form='formatted')
+    OPEN(iufilgap, FILE=name1, FORM='formatted')
     DO ibin = 1, nbin
        WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin)/maxval(delta_k_bin(:)), dbin*dble(ibin)
     ENDDO
     CLOSE(iufilgap)
     !
-    IF ( ALLOCATED(delta_k_bin) ) DEALLOCATE(delta_k_bin)
+    IF ( ALLOCATED(delta_k_bin) ) DEALLOCATE (delta_k_bin)
     !
     RETURN
     !
@@ -2196,13 +2196,13 @@
     ! RM - If the k-point is outside the Fermi shell,
     ! ixkff(ik)=0 and Agap_tmp(:,0) = 0.0
     !
-    IF ( .not. ALLOCATED(Agap_tmp) ) ALLOCATE(Agap_tmp(nbndfs,0:nkfs))
+    IF ( .NOT. ALLOCATED(Agap_tmp) ) ALLOCATE (Agap_tmp(nbndfs,0:nkfs))
     Agap_tmp(:,1:nkfs) = Agap(:,1:nkfs,itemp)
     Agap_tmp(:,0) = zero
     !
     ! SP & RM: .cube file for VESTA plotting (only if iverbosity = 2)
     !
-    IF ( iverbosity .eq. 2 ) THEN
+    IF ( iverbosity == 2 ) THEN
       !
       DO ibnd = 1, nbndfs
         !
@@ -2236,7 +2236,7 @@
           CALL errore( 'eliashberg_write', ' Too many bands ',1)
         ENDIF
         !
-        OPEN(iufilgapFS, file=name1, form='formatted')
+        OPEN(iufilgapFS, FILE=name1, FORM='formatted')
         WRITE(iufilgapFS,*) 'Cubfile created from EPW calculation'
         WRITE(iufilgapFS,*) 'gap'
         WRITE(iufilgapFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
@@ -2255,25 +2255,25 @@
     !     Cartesian coordinate, band index, energy distance from Fermi level and
     !     gap value.
     !
-    IF ( temp .lt. 10.d0 ) THEN
+    IF ( temp < 10.d0 ) THEN
        WRITE(name1,'(a,a1,a4,a16,f4.2)') TRIM(prefix), '.', cname, '_aniso_gap_FS_00', temp
-    ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0) THEN
+    ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0) THEN
        WRITE(name1,'(a,a1,a4,a15,f5.2)') TRIM(prefix), '.', cname, '_aniso_gap_FS_0', temp
-    ELSEIF ( temp .ge. 100.d0 ) THEN
+    ELSEIF ( temp >= 100.d0 ) THEN
        WRITE(name1,'(a,a1,a4,a14,f6.2)') TRIM(prefix), '.', cname, '_aniso_gap_FS_', temp
     ENDIF
-    OPEN(iufilgapFS, file=name1, form='formatted')
+    OPEN(iufilgapFS, FILE=name1, FORM='formatted')
     WRITE(iufilgapFS,'(a78)') '#               k-point                  Band Enk-Ef [eV]        Delta(0) [eV]'
     DO i = 1, nkf1
       DO j = 1, nkf2
         DO k = 1, nkf3
           ik = k + (j-1)*nkf3 + (i-1)*nkf2*nkf3
-          !IF ( ixkff(ik) .gt. 0 ) THEN
+          !IF ( ixkff(ik) > 0 ) THEN
             DO ibnd = 1, nbndfs
               ! RM: Everything is in eV here.
               ! SP: Here take a 0.2 eV interval around the FS.
-              IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. fsthick ) THEN
-              !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) .lt. 0.2 ) THEN
+              IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) < fsthick ) THEN
+              !IF ( abs( ekfs(ibnd,ixkff(ik)) - ef0 ) < 0.2 ) THEN
                  x1 = bg(1,1)*(i-1)/nkf1+bg(1,2)*(j-1)/nkf2+bg(1,3)*(k-1)/nkf3
                  x2 = bg(2,1)*(i-1)/nkf1+bg(2,2)*(j-1)/nkf2+bg(2,3)*(k-1)/nkf3
                  x3 = bg(3,1)*(i-1)/nkf1+bg(3,2)*(j-1)/nkf2+bg(3,3)*(k-1)/nkf3
@@ -2287,7 +2287,7 @@
     ENDDO ! i
     CLOSE(iufilgapFS)
     !
-    IF ( ALLOCATED(Agap_tmp) ) DEALLOCATE(Agap_tmp)
+    IF ( ALLOCATED(Agap_tmp) ) DEALLOCATE (Agap_tmp)
     !
     RETURN
     !

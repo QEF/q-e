@@ -24,7 +24,7 @@
   ! by requiring some c(G) be real.
   !
   ! It should be :  |psi^\prime_i>  =  \sum_j U_{ji} * |psi_j>
-  ! and A^\prime = U^\dagger * A * U = matmul(conjg(transpose(U)),matmul(A,U)) 
+  ! and A^\prime = U^\dagger * A * U = MATMUL(conjg(transpose(U)),MATMUL(A,U)) 
   ! with U = unimat
   !
   ! Only for 1 proc/pool (This limitation can be removed)
@@ -127,7 +127,7 @@
   !
   ! if we are working with a k (k+q) point, evtmp points to evc (evq)
   ! 
-  IF ( (kunit.eq.1) .or. ((kunit.eq.2).and.(ik0-2*(ik0/2).eq.1)) ) then
+  IF ( (kunit == 1) .or. ((kunit == 2).and.(ik0-2*(ik0/2) == 1)) ) then
     evtmp  => evc
     igktmp => igk
   ELSE
@@ -173,14 +173,14 @@
   ! count subsets and their degeneracy
   !
   DO ibnd = 2, nbnd
-    tdegen = abs(et_loc(ibnd, ik0) - et_loc(ibnd-1, ik0)  ) .lt. eps 
+    tdegen = abs(et_loc(ibnd, ik0) - et_loc(ibnd-1, ik0)  ) < eps 
     IF (tdegen) then
       ndeg (nset) = ndeg(nset) + 1
     ELSE
       nset = nset + 1
     ENDIF
   ENDDO
-  IF (iverbosity.eq.1) write (stdout, *) & 
+  IF (iverbosity == 1) write (stdout, *) & 
      ik0, nset, (ndeg (iset) ,iset=1,nset)
   !
   ! -----------------------------------------------------------
@@ -202,7 +202,7 @@
     ! unimat is initialized to the identity matrix,
     ! so when the subset has dimension 1, just do nothing
     !
-    IF (nsmall.gt.1) then
+    IF (nsmall > 1) then
       !
       ! form the matrix elements of the "perturbation"
       !
@@ -285,7 +285,7 @@
          ! 
          DO ibnd = 1, nsmall
             DO jbnd = 1, nsmall
-               IF ( abs( conjg (u (jbnd, ibnd)) - u (ibnd, jbnd) ) .gt. eps ) then
+               IF ( abs( conjg (u (jbnd, ibnd)) - u (ibnd, jbnd) ) > eps ) then
                   DO mbnd = 1,nsmall
                      WRITE(stdout,'(10f15.10)') (u (pbnd, mbnd), pbnd=1,nsmall)
                   ENDDO
@@ -311,7 +311,7 @@
          CALL zhpevx ('V', 'A', 'U', nsmall, up , 0.0, 0.0, &
               0, 0,-1.0, neig, w, cz, nsmall, cwork, &
               rwork, iwork, ifail, info)
-         IF (iverbosity.eq.1) then
+         IF (iverbosity == 1) then
 !$$         if (.true.) then
             !
             WRITE(stdout, '(5x, "Eigenvalues of fake perturbation: ", 10f9.5)') &
@@ -337,7 +337,7 @@
          !
          tdegen = .false.
          DO ibnd = 2, nsmall  
-            tdegen = tdegen .or. ( abs( w(ibnd) - w(ibnd-1) ) .lt. eps )  
+            tdegen = tdegen .or. ( abs( w(ibnd) - w(ibnd-1) ) < eps )  
          ENDDO
          IF(tdegen) write(stdout,*) 'eigenvalues of pert matrix degenerate'
 
@@ -352,7 +352,7 @@
          ! ...that they are nonvanishing... 
          !
 !$$         do ibnd = 1, nsmall  
-!$$            tdegen = tdegen .or. ( abs( w(ibnd) ) .lt. eps )  
+!$$            tdegen = tdegen .or. ( abs( w(ibnd) ) < eps )  
 !$$         enddo
 !$$      if (tdegen) call errore ('setphases', &
 !$$         'eigenvalues of pert matrix too small',1)
@@ -360,7 +360,7 @@
          ! ...and that they are not too close to 1 (orthonormality...)
          !
 !$$         do ibnd = 1, nsmall  
-!$$            tdegen = tdegen .or. ( abs( w(ibnd) - 1.d0 ) .lt. eps )  
+!$$            tdegen = tdegen .or. ( abs( w(ibnd) - 1.d0 ) < eps )  
 !$$         enddo
 !$$      if (tdegen) call errore ('setphases', &
 !$$         'eigenvalues of pert matrix too close to 1',1) 
@@ -391,7 +391,7 @@
     n0 = n0 + ndeg(iset)
   ENDDO
   !
-  IF (iverbosity.eq.1) then
+  IF (iverbosity == 1) then
 !$$  if (.true.) then
      WRITE(stdout, *) '--- rotations for unitary gauge ----'
      WRITE(stdout,'(i4)') ik0
@@ -429,7 +429,7 @@
       ctmp = cnew (ig, ibnd)
       tmp = REAL(conjg ( ctmp ) * ctmp)
       itmp = nint (10.d0**dble(ndig) * tmp)
-      IF (itmp.gt.imaxnorm) then
+      IF (itmp > imaxnorm) then
         imaxnorm = itmp
         igmax = ig
       ENDIF
@@ -440,7 +440,7 @@
     !
     ! ...and the corresponding phase
     !
-    IF ( abs(tmp) .gt. epsc ) then
+    IF ( abs(tmp) > epsc ) then
       ! note that if x + i * y = rho * cos(theta) + i * rho * sin(theta),
       ! then theta = atan2 ( y, x) (reversed order of x and y!)
       theta = atan2 ( aimag( ctmp ), real ( ctmp ) )
@@ -448,7 +448,7 @@
       CALL errore ('setphases','cnew = 0 for some bands: increase nnglen',1)
     ENDIF
     !  
-    IF (iverbosity.eq.1) then
+    IF (iverbosity == 1) then
 !$$    if (.true.) then
       WRITE(stdout, '(3i4,2x,f15.10,2(3x,2f9.5))') ik0, ibnd, igmax, theta/pi*180.d0, &
          ctmp, ctmp * exp ( -ci * theta), exp ( -ci * theta)
@@ -460,7 +460,7 @@
     !
   ENDDO
   !
-  IF (iverbosity.eq.1) then
+  IF (iverbosity == 1) then
 !$$  if (.true.) then
      WRITE(stdout, *) '--- rotations including phases  ----'
      DO ibnd = 1, nbnd
@@ -475,8 +475,8 @@
   unitcheck = matmul ( conjg( transpose (unimat)), unimat)
   DO ibnd = 1, nbnd
     DO jbnd = 1, nbnd
-      IF ( (ibnd.ne.jbnd) .and. ( abs(unitcheck (ibnd, jbnd)) .gt. eps )                  &
-     .or.  (ibnd.eq.jbnd) .and. ( abs ( abs(unitcheck (ibnd, jbnd)) - 1.d0 ) .gt. eps ) )&
+      IF ( (ibnd.ne.jbnd) .and. ( abs(unitcheck (ibnd, jbnd)) > eps )                  &
+     .or.  (ibnd == jbnd) .and. ( abs ( abs(unitcheck (ibnd, jbnd)) - 1.d0 ) > eps ) )&
         CALL errore ('setphases','final transform not unitary',1)
     ENDDO
   ENDDO

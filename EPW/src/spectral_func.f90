@@ -122,36 +122,36 @@
   !
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
   !
-  IF ( iqq == 1 ) THEN
-     !
-     WRITE(stdout,'(/5x,a)') repeat('=',67)
-     WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
-     WRITE(stdout,'(5x,a/)') repeat('=',67)
-     !
-     IF ( fsthick .lt. 1.d3 ) &
-        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
-     !
+  IF (iqq == 1) THEN
+    !
+    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
+    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    !
+    IF ( fsthick < 1.d3 ) &
+       WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
+    !
   ENDIF
   !
   ! Fermi level and corresponding DOS
   !
-  IF ( efermi_read ) THEN
-     !
-     ef0 = fermi_energy
-     !
+  IF (efermi_read) THEN
+    !
+    ef0 = fermi_energy
+    !
   ELSE
-     !
-     ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
-     ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
-     ! in ephwann_shuffle
-     !
+    !
+    ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
+    ! if some bands are skipped (nbndskip /= 0), nelec has already been recalculated 
+    ! in ephwann_shuffle
+    !
   ENDIF
   !
-  IF ( iq == 1 ) THEN 
-     WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
-     WRITE (stdout,'(a)') ' '
+  IF (iq == 1) THEN 
+    WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
+    WRITE (stdout,'(a)') ' '
   ENDIF
   !
   ! The total number of k points
@@ -161,15 +161,8 @@
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
   !
-  IF ( iq == 1 ) THEN 
-     IF ( .not. ALLOCATED(esigmar_all) ) ALLOCATE( esigmar_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
-     IF ( .not. ALLOCATED(esigmai_all) ) ALLOCATE( esigmai_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
-     esigmar_all(:,:,:) = zero
-     esigmai_all(:,:,:) = zero
-  ENDIF 
-  !
   ! SP: Sum rule added to conserve the number of electron. 
-  IF ( iq == 1 ) THEN
+  IF (iq == 1) THEN
     WRITE (stdout,'(5x,a)') 'The sum rule to conserve the number of electron is enforced.'
     WRITE (stdout,'(5x,a)') 'The self energy is rescaled so that its real part is zero at the Fermi level.'
     WRITE (stdout,'(5x,a)') 'The sum rule replace the explicit calculation of the Debye-Waller term.'
@@ -179,7 +172,7 @@
   ! loop over all k points of the fine mesh
   !
   fermicount = 0 
-  DO ik = 1, nkf
+  DO ik=1, nkf
     !
     ikk = 2 * ik - 1
     ikq = ikk + 1
@@ -187,11 +180,11 @@
     ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
     ! (but in this case they are the same)
     !
-    IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-         ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+    IF ((MINVAL(ABS(etf (:, ikk) - ef) ) < fsthick) .AND. &
+        (MINVAL(ABS(etf (:, ikq) - ef) ) < fsthick)) THEN
       !
       fermicount = fermicount + 1
-      DO imode = 1, nmodes
+      DO imode=1, nmodes
         !
         ! the phonon frequency and Bose occupation
         wq = wf (imode, iq)
@@ -201,7 +194,7 @@
         wgq = wgq / ( one - two * wgq )
         !
         ! SP: Avoid if statement in inner loops
-        IF (wq .gt. eps_acustic) THEN
+        IF (wq > eps_acustic) THEN
           g2_tmp = 1.0
         ELSE
           g2_tmp = 0.0
@@ -267,10 +260,10 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iqq == totq ) THEN
+  IF (iqq == totq) THEN
     !
-    ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
-               etf_all      ( nbndsub, nkqtotf ) )
+    ALLOCATE (xkf_all(3,       nkqtotf))
+    ALLOCATE (etf_all(nbndsub, nkqtotf))
     xkf_all(:,:) = zero
     etf_all(:,:) = zero
     !
@@ -300,12 +293,9 @@
     ! construct the trace of the spectral function (assume diagonal selfenergy
     ! and constant matrix elements for dipole transitions)
     !
-    IF (.not. ALLOCATED (a_all)) ALLOCATE ( a_all(nw_specfun, nksqtotf) )
-    a_all(:,:) = zero
-    !
     IF (me_pool == 0) then
-      OPEN(unit=iospectral,file='specfun.elself') 
-      OPEN(unit=iospectral_sup,file='specfun_sup.elself') 
+      OPEN(UNIT=iospectral,FILE='specfun.elself') 
+      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.elself') 
     ENDIF
     IF (me_pool == 0) then
       WRITE(iospectral, '(/2x,a/)') '#Electronic spectral function (meV)'
@@ -317,7 +307,7 @@
 &         Real Sigma[meV]  Im Sigma[meV]'
     ENDIF
     !
-    DO ik = 1, nksqtotf
+    DO ik=1, nksqtotf
       !
       ikk = 2 * ik - 1
       ikq = ikk + 1
@@ -325,11 +315,11 @@
       WRITE(stdout,'(/5x,"ik = ",i5," coord.: ", 3f12.7)') ik, xkf_all (:,ikk)
       WRITE(stdout,'(5x,a)') repeat('-',67)
       !
-      DO iw = 1, nw_specfun
+      DO iw=1, nw_specfun
         !
         ww = wmin_specfun + dble (iw-1) * dw
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd=1, ibndmax-ibndmin+1
           !
           !  the energy of the electron at k
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
@@ -347,12 +337,12 @@
       !
     ENDDO
     !
-    DO ik = 1, nksqtotf
+    DO ik=1, nksqtotf
       !
       ! The spectral function should integrate to 1 for each k-point
       specfun_sum = 0.0
       ! 
-      DO iw = 1, nw_specfun
+      DO iw=1, nw_specfun
         !
         ww = wmin_specfun + dble (iw-1) * dw
         fermi(iw) = wgauss(-ww/eptemp, -99) 
@@ -374,9 +364,9 @@
     !
     IF (me_pool == 0)  CLOSE(iospectral)
     !
-    DO ibnd = 1, ibndmax-ibndmin+1
+    DO ibnd=1, ibndmax-ibndmin+1
       !
-      DO ik = 1, nksqtotf
+      DO ik=1, nksqtotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
@@ -406,11 +396,8 @@
     !
     IF (me_pool == 0)  CLOSE(iospectral_sup)
     !
-    IF ( ALLOCATED(xkf_all) )      DEALLOCATE( xkf_all )
-    IF ( ALLOCATED(etf_all) )      DEALLOCATE( etf_all )
-    IF ( ALLOCATED(esigmar_all) )  DEALLOCATE( esigmar_all )
-    IF ( ALLOCATED(esigmai_all) )  DEALLOCATE( esigmai_all )
-    IF ( ALLOCATED(a_all) )        DEALLOCATE( a_all )
+    DEALLOCATE (xkf_all)
+    DEALLOCATE (etf_all)
     !
   ENDIF
   !

@@ -93,7 +93,7 @@
      WRITE(stdout,'(5x,"Electron-plasmon Self-Energy in the Migdal Approximation")')
      WRITE(stdout,'(5x,a/)') repeat('=',67)
      !
-     IF ( fsthick .lt. 1.d3 ) &
+     IF ( fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
            'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -103,13 +103,13 @@
   ! Fermi level and corresponding DOS
   !
   IF ( efermi_read ) THEN
-    !
+   !
     ef0 = fermi_energy
     !
   ELSE
     !
     ef0 = efnew ! Fermi energy is recalculated on the fine mesh!! 
-    ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
+    ! if some bands are skipped (nbndskip /= 0), nelec has already been recalculated 
     ! in ephwann_shuffle
     !
   ENDIF
@@ -125,16 +125,6 @@
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
-  !
-  IF ( iq .eq. 1 ) THEN 
-    IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nksqtotf) )
-    IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nksqtotf) )
-    IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nksqtotf) )
-    sigmar_all(:,:) = zero
-    sigmai_all(:,:) = zero
-    zi_all(:,:) = zero
-  ENDIF
-  !
   !
   !nel      =  0.01    ! this should be read from input - # of doping electrons 
   !epsiHEG  =  12.d0   ! this should be read from input - # dielectric constant at zero doping  
@@ -190,8 +180,8 @@
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       ! (but in this case they are the same)
       !
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-       ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
+       ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
         !
         fermicount = fermicount + 1
         wgq = wgauss( -wq*inv_eptemp0, -99)
@@ -225,7 +215,7 @@
               
             !computation of the dipole
             IF ( ibnd==jbnd ) THEN
-              IF (sqrt(qsquared) .gt. 1d-8) THEN
+              IF (sqrt(qsquared) > 1d-8) THEN
                 dipole = 1./(qsquared * tpiba_new * tpiba_new)
               ELSE
                 dipole = 0.d0 
@@ -241,21 +231,21 @@
             !
             ! this approximates the dipoles as delta_ij
             !if (.false.) then
-            !  if (ibnd==jbnd .and. sqrt(qsquared) .gt. 1d-8 ) then
+            !  if (ibnd==jbnd .and. sqrt(qsquared) > 1d-8 ) then
             !    dipole = 1./(qsquared * tpiba_new * tpiba_new)
             !  else 
             !    dipole = 0.d0
             !  endif
             !endif
             !if (.true.) then
-            IF ( abs(dipole * (qsquared * tpiba_new * tpiba_new)) .gt.1 ) THEN
+            IF ( abs(dipole * (qsquared * tpiba_new * tpiba_new))  > 1 ) THEN
               dipole = 1./(qsquared*tpiba_new*tpiba_new)
             ENDIF
             !endif
             !
-            !if (ik .eq. 1) WRITE(stdout,'(/12x," dipole    =", f12.7)') dipole
+            !if (ik == 1) WRITE(stdout,'(/12x," dipole    =", f12.7)') dipole
             g2 = dipole*4.d0*pi * (wq*deltaeps/2.d0)/omega * 2.d0 ! The q^-2 is cancelled by the q->0 limit of the dipole. See e.g., pg. 258 of Grosso Parravicini. 
-            !if (ik .eq.10) WRITE(stdout,'(/5x," g2 =", f12.7)') g2
+            !if (ik  == 10) WRITE(stdout,'(/5x," g2 =", f12.7)') g2
               !g2 = dipole * 4.d0*pi / (qsquared*tpiba_new*tpiba_new) * ( wq * deltaeps / 2.d0 ) / omega * 2.d0 ! The last is the spin! 
 !            else
             ! g2 = (dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)**2 +  &
@@ -285,8 +275,8 @@
                     ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
                       ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) )
             !
-!            if (sqrt(qsquared) .lt. 1d-6) then
-!            !if (iq.eq.1) then
+!            if (sqrt(qsquared) < 1d-6) then
+!            !if (iq == 1) then
 !              !
 !              weight = ( 3.d0 * wqf(iq) / 4.d0 / pi / omega )**(1.d0/3.d0)/pi  *          &
 !               real ( ( (     wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
@@ -295,7 +285,7 @@
 !            endif
             !
 !              ecutse needs to be defined if it's used 
-!@             if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+!@             if ( abs(ekq-ekk) > ecutse ) weight = 0.d0
             !
             sigmar_all(ibnd,ik+lower_bnd-1) = sigmar_all(ibnd,ik+lower_bnd-1) + g2 * weight
             !
@@ -303,14 +293,14 @@
 !            weight = wqf(iq) * aimag (                                                  &
 !                    ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
 !                      ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
-!@            if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+!@            if ( abs(ekq-ekk) > ecutse ) weight = 0.d0
             !
             ! Delta implementation 
             w0g1=w0gauss( (ekk-ekq+wq)/degaussw, 0) /degaussw
             w0g2=w0gauss( (ekk-ekq-wq)/degaussw, 0) /degaussw
             weight = pi * wqf(iq) * ( (wgkq+wgq)*w0g1 + (one-wgkq+wgq)*w0g2 )
             !
-!            if (sqrt(qsquared) .lt. 1d-6) then
+!            if (sqrt(qsquared) < 1d-6) then
 !              !
 !              !weight = ( 3.d0 * wqf(iq) / 4.d0 / pi / omega )**(1.d0/3.d0)/pi * &
 !              ! aimag ( ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
@@ -329,7 +319,7 @@
                                              ( (ekk - ( ekq - wq ))**two + degaussw**two )**two +  &
                       ( one - wgkq + wgq ) * ( (ekk - ( ekq + wq ))**two - degaussw**two ) /       &
                                              ( (ekk - ( ekq + wq ))**two + degaussw**two )**two )  
-!@            if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+!@            if ( abs(ekq-ekk) > ecutse ) weight = 0.d0
             !
             zi_all(ibnd,ik+lower_bnd-1) = zi_all(ibnd,ik+lower_bnd-1) + g2 * weight
             !
@@ -346,8 +336,8 @@
   !
   IF ( iqq == totq ) THEN
      !
-     ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
-                etf_all      ( nbndsub, nkqtotf ) )
+     ALLOCATE (xkf_all(3, nkqtotf))
+     ALLOCATE (etf_all(nbndsub, nkqtotf))
      xkf_all(:,:) = zero
      etf_all(:,:) = zero
      !
@@ -411,7 +401,7 @@
      WRITE(stdout,'(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
      !
      ! Write to file
-     OPEN(unit=linewidth_elself,file='linewidth.plself')
+     OPEN(UNIT=linewidth_elself,FILE='linewidth.plself')
      WRITE(linewidth_elself, '(a)') '# Electron lifetime (meV)'
      WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sgima)(meV)'
      ! 
@@ -467,12 +457,8 @@
      !
      CLOSE(linewidth_elself)
      !
-     IF ( ALLOCATED(xkf_all) )      DEALLOCATE( xkf_all )
-     IF ( ALLOCATED(etf_all) )      DEALLOCATE( etf_all )
-     IF ( ALLOCATED(sigmar_all) )   DEALLOCATE( sigmar_all )
-     IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
-     IF ( ALLOCATED(zi_all) )       DEALLOCATE( zi_all )
-     IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
+     DEALLOCATE (xkf_all)
+     DEALLOCATE (etf_all)
      !
   ENDIF 
   !
@@ -506,7 +492,7 @@
   eta   = 1.d-6
   alpha = (4.d0/9.d0/pi)**(1.d0/3.d0)
   ! 
-  if ( abs(q).gt. 1.d-10) then
+  if ( abs(q) >  1.d-10) then
     x    = q / 2.d0 / kF 
     eps0 = 1.d0 + (1.d0-x**2)/(2.d0*x)*log (abs((1.d0+x)/(1.d0-x))) 
     eps0 = 1.d0 + alpha * rs / 2.d0 /pi / x**2 * eps0
@@ -516,7 +502,7 @@
     eps0 = 1.d0 + alpha * rs / 2.d0 /pi / x**2 * eps0
   endif
 
-!  if ( abs(q).gt. 1.d-10) then
+!  if ( abs(q) >  1.d-10) then
 !    x    = q / 2.d0 / kF 
 !    eps0 = 1.d0 + (1.d0-x**2)/(2.d0*x)*log (abs((1.d0+x)/(1.d0-x))) 
 !    eps0 = 1.d0 + qTF**2/(2.d0*q**2) * eps0

@@ -78,7 +78,7 @@
      WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
      WRITE(stdout,'(5x,a/)') repeat('=',67)
      !
-     IF ( fsthick .lt. 1.d3 ) &
+     IF ( fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
            'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -94,7 +94,7 @@
   ELSE
     !
     ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
-    ! if some bands are skipped (nbndskip.neq.0), nelec has already been recalculated 
+    ! if some bands are skipped (nbndskip /= 0), nelec has already been recalculated 
     ! in ephwann_shuffle
     !
   ENDIF
@@ -111,15 +111,8 @@
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
   !
-  IF ( iqq == 1 ) THEN 
-    IF ( .not. ALLOCATED(esigmar_all) ) ALLOCATE( esigmar_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
-    IF ( .not. ALLOCATED(esigmai_all) ) ALLOCATE( esigmai_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
-    esigmar_all(:,:,:) = zero
-    esigmai_all(:,:,:) = zero
-  ENDIF 
-  !
   ! SP: Sum rule added to conserve the number of electron. 
-  IF ( iqq == 1 ) THEN
+  IF (iqq == 1) THEN
     WRITE (stdout,'(5x,a)') 'The sum rule to conserve the number of electron is enforced.'
     WRITE (stdout,'(5x,a)') 'The self energy is rescaled so that its real part is zero at the Fermi level.'
     WRITE (stdout,'(5x,a)') 'The sum rule replace the explicit calculation of the Debye-Waller term.'
@@ -180,8 +173,8 @@
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       ! (but in this case they are the same)
       !
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+          ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
         !
         fermicount = fermicount + 1
         !
@@ -203,7 +196,7 @@
             !
             !computation of the dipole
             if (ibnd==jbnd) then
-              if(sqrt(qsquared) .gt. 1d-6)then
+              if(sqrt(qsquared) > 1d-6)then
                 dipole = 1./(qsquared * tpiba_new * tpiba_new)
               else 
                 dipole = 0.d0 
@@ -256,12 +249,12 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iqq == totq ) THEN
+  IF (iqq == totq) THEN
     !
-    ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
-               etf_all      ( nbndsub, nkqtotf ) )
-    xkf_all(:,:) = zero
-    etf_all(:,:) = zero
+    ALLOCATE (xkf_all(3,       nkqtotf))
+    ALLOCATE (etf_all(nbndsub, nkqtotf))
+    xkf_all(:, :) = zero
+    etf_all(:, :) = zero
     !
 #if defined(__MPI)
     !
@@ -289,12 +282,9 @@
     ! construct the trace of the spectral function (assume diagonal selfenergy
     ! and constant matrix elements for dipole transitions)
     !
-    IF (.not. ALLOCATED (a_all)) ALLOCATE ( a_all(nw_specfun, nksqtotf) )
-    a_all(:,:) = zero
-    !
     IF (me_pool == 0) then
-      OPEN(unit=iospectral,file='specfun.plself') 
-      OPEN(unit=iospectral_sup,file='specfun_sup.plself') 
+      OPEN(UNIT=iospectral,FILE='specfun.plself') 
+      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.plself') 
     ENDIF
     IF (me_pool == 0) then
       WRITE(iospectral, '(/2x,a/)') '#Electron-plasmon spectral function (meV)'
@@ -336,12 +326,12 @@
       !
     ENDDO
     !
-    DO ik = 1, nksqtotf
+    DO ik=1, nksqtotf
       !
       ! The spectral function should integrate to 1 for each k-point
       specfun_sum = 0.0
       ! 
-      DO iw = 1, nw_specfun
+      DO iw=1, nw_specfun
          !
          ww = wmin_specfun + dble (iw-1) * dw
          fermi(iw) = wgauss(-ww/eptemp, -99) 
@@ -363,9 +353,9 @@
     !
     IF (me_pool == 0) CLOSE(iospectral)
     !
-    DO ibnd = 1, ibndmax-ibndmin+1
+    DO ibnd=1, ibndmax-ibndmin+1
       !
-      DO ik = 1, nksqtotf
+      DO ik=1, nksqtotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
@@ -373,7 +363,7 @@
         !  the energy of the electron at k
         ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
         !
-        DO iw = 1, nw_specfun
+        DO iw=1, nw_specfun
           !
           ww = wmin_specfun + dble (iw-1) * dw
           WRITE(stdout,'(2i9,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4)') ik,&
@@ -395,12 +385,8 @@
     !
     IF (me_pool == 0) CLOSE(iospectral_sup)
     !
-    IF ( ALLOCATED(xkf_all) )      DEALLOCATE( xkf_all )
-    IF ( ALLOCATED(etf_all) )      DEALLOCATE( etf_all )
-    IF ( ALLOCATED(esigmar_all) )  DEALLOCATE( esigmar_all )
-    IF ( ALLOCATED(esigmai_all) )  DEALLOCATE( esigmai_all )
-    IF ( ALLOCATED(a_all) )        DEALLOCATE( a_all )
-    !
+    DEALLOCATE (xkf_all)
+    DEALLOCATE (etf_all)
   ENDIF
   !
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)

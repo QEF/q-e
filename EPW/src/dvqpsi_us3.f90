@@ -10,7 +10,7 @@
   ! adapted from PH/dvqpsi_us (QE)
   !
   !----------------------------------------------------------------------
-  SUBROUTINE dvqpsi_us3( ik, uact, addnlcc, xxkq, xq0 )
+  SUBROUTINE dvqpsi_us3( ik, uact, addnlcc, xxkq, xq0, igk, igkq, npw, npwq )
   !----------------------------------------------------------------------
   !!
   !! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -42,12 +42,12 @@
   USE nlcc_ph,               ONLY : drc
   USE uspp,                  ONLY : nlcc_any
   USE eqv,                   ONLY : dvpsi, dmuxc, vlocq
-  USE qpoint,                ONLY : eigqts, npwq 
+  USE qpoint,                ONLY : eigqts
   USE klist,                 ONLY : ngk
   USE klist_epw,             ONLY : isk_loc
   USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE funct,                 ONLY : dft_is_gradient, dft_is_nonlocc
-  USE elph2,                 ONLY : igkq, igk, lower_band, upper_band
+  USE elph2,                 ONLY : lower_band, upper_band
   USE constants_epw,         ONLY : czero, eps12
   !
   IMPLICIT NONE
@@ -57,6 +57,14 @@
   !
   INTEGER, INTENT(in) :: ik
   !! Counter on k-point
+  INTEGER, INTENT(in) :: npw
+  !! Number of k+G-vectors inside 'ecut sphere'
+  INTEGER, INTENT(in) :: npwq
+  !! Number of k+G-vectors inside 'ecut sphere'
+  INTEGER, INTENT(in) :: igk(npw)
+  !! k+G mapping
+  INTEGER, INTENT(in) :: igkq(npwq)
+  !! k+G+q mapping
   ! 
   REAL(kind=DP), INTENT (in) :: xq0(3)
   !! Current coarse q-point coordinate
@@ -84,8 +92,6 @@
   !! counter on spin
   INTEGER :: ip
   !! counter on polarizations
-  INTEGER :: npw
-  !! Number of k+G-vectors inside 'ecut sphere'
   !
   REAL(kind=DP) :: fac
   !! spin degeneracy factor
@@ -108,15 +114,13 @@
   !
   CALL start_clock('dvqpsi_us3')
   !
-  npw = ngk(ik)
-  !
   IF (nlcc_any .AND. addnlcc) THEN
-     ALLOCATE( drhoc(dfftp%nnr) )
-     ALLOCATE( aux (dfftp%nnr) )
-     ALLOCATE( auxs(dffts%nnr) )
+     ALLOCATE (drhoc(dfftp%nnr))
+     ALLOCATE (aux(dfftp%nnr))
+     ALLOCATE (auxs(dffts%nnr))
   ENDIF
-  ALLOCATE( aux1(dffts%nnr) )
-  ALLOCATE( aux2(dffts%nnr) )
+  ALLOCATE (aux1(dffts%nnr))
+  ALLOCATE (aux2(dffts%nnr))
   !
   !    We start by computing the contribution of the local potential.
   !    The computation of the derivative of the local potential is done in
@@ -131,7 +135,7 @@
     u1 = uact(mu+1)
     u2 = uact(mu+2)
     u3 = uact(mu+3)
-    IF (abs(u1) + abs(u2) + abs(u3) .gt. eps12) THEN
+    IF (abs(u1) + abs(u2) + abs(u3) > eps12) THEN
       nt = ityp(na)
       gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
       DO ig = 1, ngms
@@ -154,7 +158,7 @@
       u1 = uact(mu+1)
       u2 = uact(mu+2)
       u3 = uact(mu+3)
-      IF (abs(u1) + abs(u2) + abs(u3) .gt. eps12) THEN
+      IF (abs(u1) + abs(u2) + abs(u3) > eps12) THEN
         nt = ityp(na)
         gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
         IF (upf(nt)%nlcc) THEN
@@ -171,7 +175,7 @@
     !
     CALL invfft('Rho', drhoc, dfftp)
     !
-    IF (.not.lsda) THEN
+    IF ( .NOT. lsda) THEN
       DO ir = 1, dfftp%nnr
         aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
       ENDDO
@@ -250,18 +254,18 @@
   ENDDO
   ! 
   IF (nlcc_any .AND. addnlcc) THEN
-    DEALLOCATE(drhoc)
-    DEALLOCATE(aux)
-    DEALLOCATE(auxs)
+    DEALLOCATE (drhoc)
+    DEALLOCATE (aux)
+    DEALLOCATE (auxs)
   ENDIF
-  DEALLOCATE(aux1)
-  DEALLOCATE(aux2)
+  DEALLOCATE (aux1)
+  DEALLOCATE (aux2)
   !
   !   We add the contribution of the nonlocal potential in the US form
   !   First a term similar to the KB case.
   !   Then a term due to the change of the D coefficients in the perturbat
   !
-  CALL dvqpsi_us_only3( ik, uact, xxkq )
+  CALL dvqpsi_us_only3(ik, uact, xxkq, igkq, npwq)
   !
   CALL stop_clock('dvqpsi_us3')
   !

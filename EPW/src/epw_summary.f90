@@ -123,7 +123,7 @@
   !   description of symmetries
   !
   WRITE(stdout, * )
-  IF (nsymq.le.1 .and. .not.minus_q) THEN
+  IF (nsymq <= 1 .and.  .NOT. minus_q) THEN
     WRITE(stdout, '(5x,"No symmetry!")')
   ELSE
     IF (minus_q) THEN
@@ -134,7 +134,7 @@
     ENDIF
   ENDIF
 
-  IF (iverbosity.eq.1) THEN
+  IF (iverbosity == 1) THEN
     WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
     IF (minus_q) THEN
       nsymtot = nsymq + 1
@@ -142,7 +142,7 @@
       nsymtot = nsymq
     ENDIF
     DO isymq = 1, nsymtot
-      IF (isymq.gt.nsymq) THEN
+      IF (isymq > nsymq) THEN
         isym = irotmq
         WRITE(stdout, '(/,5x,"This transformation sends q -> -q+G")')
       ELSE
@@ -210,7 +210,7 @@
              (xk_all(ipol,ik) , ipol = 1, 3), wk(ik)
      ENDDO
   ENDIF
-  IF (iverbosity.eq.1) THEN
+  IF (iverbosity == 1) THEN
      WRITE(stdout, '(/23x,"cryst. coord.")')
      DO ik = 1, nkstot
         DO ipol = 1, 3

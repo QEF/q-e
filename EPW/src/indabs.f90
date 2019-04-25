@@ -178,14 +178,14 @@
     WRITE(stdout,'(5x,"Phonon-assisted absorption")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick .lt. 1.d3 ) &
+    IF ( fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Temperature T = ',eptemp * ryd2ev, ' eV'
     ! 
-    IF ( .not. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
-    IF ( .not. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3,nomega,neta))
-    IF ( .not. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3,nomega,neta))
+    IF ( .NOT. ALLOCATED (omegap) )    ALLOCATE (omegap(nomega))
+    IF ( .NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE (epsilon2_abs(3,nomega,neta))
+    IF ( .NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE (epsilon2_abs_lorenz(3,nomega,neta))
     ! 
     epsilon2_abs = 0.d0
     epsilon2_abs_lorenz = 0.d0
@@ -217,7 +217,7 @@
       wq(imode) = wf (imode, iq)
       ! 
       epf(:,:,imode) = epf17(:, :, imode,ik)
-      IF ( wq(imode) .gt. eps_acustic ) THEN
+      IF ( wq(imode) > eps_acustic ) THEN
         nqv(imode) = wgauss( -wq(imode)/(eptemp), -99)
         nqv(imode) = nqv(imode) / ( one - two * nqv(imode) )
       ENDIF
@@ -246,7 +246,7 @@
       !  the energy of the electron at k (relative to Ef)
       ekk = etf (ibndmin-1+ibnd, ikk) - ef0
       !
-      IF ( abs(ekk) .lt. fsthick ) THEN
+      IF ( abs(ekk) < fsthick ) THEN
         !
         wgkk = wgauss( -ekk*inv_eptemp0, -99)  
         ! 
@@ -337,7 +337,7 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iq .eq. nqtotf ) THEN
+  IF ( iq == nqtotf ) THEN
     !
 #if defined(__MPI)
     !
@@ -374,7 +374,7 @@
     WRITE(c,"(i0)") neta+1
     format_string = "("//TRIM(c) // "E22.14)"
 
-    OPEN(unit=iuindabs,file=nameF)
+    OPEN(UNIT=iuindabs,FILE=nameF)
     WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
     WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
@@ -382,7 +382,7 @@
     ENDDO
     CLOSE(iuindabs)
     ! 
-    OPEN(unit=iuindabs,file='epsilon2_indabs_lorenz.dat')
+    OPEN(UNIT=iuindabs,FILE='epsilon2_indabs_lorenz.dat')
     WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
     WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega

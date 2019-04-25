@@ -36,7 +36,7 @@ SUBROUTINE loadqmesh_para
   !
   integer :: rest
   !
-  IF (mpime .eq. ionode_id) THEN
+  IF (mpime == ionode_id) THEN
     IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
        !
        WRITE(stdout, *) '    Using q-mesh file: ', trim(filqf)
@@ -143,8 +143,8 @@ SUBROUTINE loadqmesh_para
     upper_bnd = lower_bnd + nqf - 1
  ENDIF
  !
- IF (.not.ALLOCATED(xqf_)) ALLOCATE (xqf_(3,nqtotf))
- IF (.not.ALLOCATED(wqf_)) ALLOCATE (wqf_(  nqtotf))
+ IF ( .NOT. ALLOCATED(xqf_)) ALLOCATE (xqf_(3,nqtotf))
+ IF ( .NOT. ALLOCATED(wqf_)) ALLOCATE (wqf_(  nqtotf))
  CALL mp_bcast(xqf_, ionode_id, inter_pool_comm)
  CALL mp_bcast(wqf_, ionode_id, inter_pool_comm)
  !
@@ -160,8 +160,8 @@ SUBROUTINE loadqmesh_para
  !
  !  Assign the weights and vectors to the correct bounds
  !
- ALLOCATE(xqf(3,nqf))
- ALLOCATE(wqf(  nqf))
+ ALLOCATE (xqf(3,nqf))
+ ALLOCATE (wqf(  nqf))
  xqf(:,:) = xqf_ (:, lower_bnd:upper_bnd)
  IF (noncolin) THEN 
     wqf(  :) = wqf_ ( lower_bnd:upper_bnd)/2.d0
@@ -169,14 +169,14 @@ SUBROUTINE loadqmesh_para
     wqf(  :) = wqf_ ( lower_bnd:upper_bnd)
  ENDIF  
  !
- IF (abs(sum (wqf_ (:)) - 1.d0) .gt. 1.d-4 ) &
+ IF (abs(sum (wqf_ (:)) - 1.d0) > 1.d-4 ) &
     WRITE(stdout,'(5x,"WARNING: q-point weigths do not add up to 1 [loadqmesh_para]")')
  !
  WRITE( stdout, '(5x,"Size of q point mesh for interpolation: ",i10)' ) nqtotf 
  WRITE( stdout, '(5x,"Max number of q points per pool:",7x,i10)' ) nqf 
  !
- IF (ALLOCATED(xqf_)) DEALLOCATE(xqf_)
- IF (ALLOCATED(wqf_)) DEALLOCATE(wqf_)
+ IF (ALLOCATED(xqf_)) DEALLOCATE (xqf_)
+ IF (ALLOCATED(wqf_)) DEALLOCATE (wqf_)
  !
 END SUBROUTINE loadqmesh_para
 !-----------------------------------------------------------------------
@@ -205,7 +205,7 @@ SUBROUTINE loadqmesh_serial
   !
   integer :: iq, i, j, k, ios
   !
-  IF (mpime .eq. ionode_id) THEN
+  IF (mpime == ionode_id) THEN
     IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
        !
        ! Each pool gets its own copy from the action=read statement
@@ -311,12 +311,12 @@ SUBROUTINE loadqmesh_serial
   !
   CALL mp_bcast (nqf, ionode_id, inter_pool_comm)
   CALL mp_bcast (nqtotf, ionode_id, inter_pool_comm)
-  IF (.not.ALLOCATED(xqf)) ALLOCATE (xqf(3,nqtotf))
-  IF (.not.ALLOCATED(wqf)) ALLOCATE (wqf(  nqtotf))
+  IF ( .NOT. ALLOCATED(xqf)) ALLOCATE (xqf(3,nqtotf))
+  IF ( .NOT. ALLOCATED(wqf)) ALLOCATE (wqf(  nqtotf))
   CALL mp_bcast(xqf, ionode_id, inter_pool_comm)
   CALL mp_bcast(wqf, ionode_id, inter_pool_comm)
   !
-  IF (abs(sum (wqf) - 1.d0) .gt. 1.d-4 ) &
+  IF (abs(sum (wqf) - 1.d0) > 1.d-4 ) &
     WRITE(stdout,'(5x,"WARNING: q-point weigths do not add up to 1 [loadqmesh_serial]")') 
   !
   WRITE( stdout, '(5x,"Size of q point mesh for interpolation: ",i10)' ) nqtotf

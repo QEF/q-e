@@ -104,8 +104,9 @@
     !
   END DO
   !
-  ALLOCATE( aux1( npwx*npol, nbnd ) )
-  !
+  ALLOCATE (aux1(npwx*npol, nbnd))
+  !ALLOCATE (evc(npwx*npol, nbnd))
+  ! 
   DO ik=1, nks
     !
     !
@@ -147,10 +148,10 @@
     !
   ENDDO
   !
-  DEALLOCATE( aux1 )
+  DEALLOCATE (aux1)
   !
-  IF(.not. ALLOCATED(igk_k_all)) ALLOCATE(igk_k_all(npwx,nkstot))
-  IF(.not. ALLOCATED(ngk_all))   ALLOCATE(ngk_all(nkstot))
+  IF( .NOT.  ALLOCATED(igk_k_all)) ALLOCATE (igk_k_all(npwx,nkstot))
+  IF( .NOT.  ALLOCATED(ngk_all))   ALLOCATE (ngk_all(nkstot))
   !
 #if defined(__MPI)
   !
@@ -165,7 +166,7 @@
   !
 #endif
   !
-  IF (.not.first_run) CALL dvanqq2()
+  IF ( .NOT. first_run) CALL dvanqq2()
   !
   CALL stop_clock( 'epw_init' )
   !
