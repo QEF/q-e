@@ -218,9 +218,7 @@ PROGRAM do_ppacf
   IF (code_num == 1) THEN
      !
      tmp_dir=TRIM(outdir) 
-!     CALL read_xml_file_internal(.TRUE.)
      CALL  read_file()
-
 !     Check exchange correlation functional
      iexch = get_iexch()
      icorr = get_icorr()
