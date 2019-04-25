@@ -13,22 +13,20 @@ SUBROUTINE read_file()
   ! Wrapper routine for backwards compatibility
   !
   USE io_files,             ONLY : nwordwfc, iunwfc, prefix, tmp_dir, wfc_dir
-  USE io_global,            ONLY : stdout, ionode
+  USE io_global,            ONLY : stdout
   USE buffers,              ONLY : open_buffer, close_buffer
-  USE wvfct,                ONLY : nbnd, npwx
+  USE wvfct,                ONLY : nbnd, npwx, et, wg
   USE noncollin_module,     ONLY : npol
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_onecenter,        ONLY : paw_potential
   USE uspp,                 ONLY : becsum
   USE scf,                  ONLY : rho
-  USE realus,               ONLY : betapointlist, &
-                                   init_realspace_vars,real_space
   USE dfunct,               ONLY : newd
-  USE ldaU,                 ONLY : lda_plus_u, U_projection
+  USE lsda_mod,             ONLY : isk
   USE pw_restart_new,       ONLY : read_collected_to_evc
   USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
-  USE klist,                ONLY : init_igk
+  USE klist,                ONLY : nkstot, nks, xk, wk, init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
   USE qes_types_module,     ONLY : output_type
@@ -44,16 +42,19 @@ SUBROUTINE read_file()
   ! ... Read the contents of the xml data file
   !
   dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-  IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
+  WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
   CALL read_xml_file ( wfc_is_collected )
   !
+  ! ... FIXME: allocating/reading/re-writing KS orbitals should not be done
+  ! ... FIXME: in this routine but in calling code if and how and when needed
+  !
+  CALL allocate_wfc()
+  !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
   ! ... io_level = 1 so that a real file is opened
-  !
-  CALL allocate_wfc()
   !
   wfc_dir = tmp_dir
   nwordwfc = nbnd*npwx*npol
@@ -65,27 +66,17 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  ! ... FIXME: this should be taken out from here
+  ! ... FIXME: should not be done here (or not at all)
   !
   IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
   !
-  ! ... Assorted initialization: pseudopotentials, PAW
+  ! ... More PAW and pseudopotential initialization
   ! ... Not sure which ones (if any) should be done here
-  !
-  CALL init_us_1()
-  !
-  IF (lda_plus_u .AND. (U_projection == 'pseudo')) CALL init_q_aeps()
   !
   IF (okpaw) THEN
      becsum = rho%bec
      CALL PAW_potential(rho%bec, ddd_PAW)
   ENDIF 
-  !
-  IF ( real_space ) THEN
-    CALL betapointlist()
-    CALL init_realspace_vars()
-    IF( ionode ) WRITE(stdout,'(5x,"Real space initialisation completed")')
-  ENDIF
   CALL newd()
   !
   CALL close_buffer  ( iunwfc, 'KEEP' )
@@ -102,6 +93,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... starting from scratch should be initialized here when restarting
   !
   USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout, ionode, ionode_id
   USE ions_base,            ONLY : nat, nsp, ityp, tau, extfor
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav, &
                                    set_h_ainv
@@ -136,16 +128,18 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE uspp_param,           ONLY : upf
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
-  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u
-  USE control_flags,        ONLY : gamma_only, ts_vdw
+  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
+  USE control_flags,        ONLY : gamma_only, ts_vdw, tqr, &
+       tq_smoothing, tbeta_smoothing
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
   USE tsvdw_module,         ONLY : tsvdw_initialize
+  USE realus,               ONLY : betapointlist, generate_qpointlist, &
+                                   init_realspace_vars,real_space
 #if defined(__BEOWULF)
-  USE io_global,             ONLY : ionode, ionode_id
   USE qes_bcast_module       ONLY : qes_bcast
   USE mp_images,             ONLY : intra_image_comm
 #endif
@@ -197,17 +191,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( gate ) ALLOCATE( forcegate( 3, nat ) )
   ALLOCATE( irt( 48, nat ) )
   !
-  ! ... FFT-related arrays (FIXME: is this needed here?)
-  !
-  CALL set_gcut()
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
-  !
-  if (cell_factor == 0.d0) cell_factor = 1.D0   ! FIXME: is this needed here?
-  !
   ! ... eigenvalues, weights
   !
-  nbndx = nbnd
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
   !
   ! ... here we read all the variables defining the system
@@ -224,23 +209,19 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! END OF READING VARIABLES FROM XML DATA FILE
   !
-  ! ... distribute across pools k-points and related variables.
-  ! ... nks is defined by the following routine as the number 
-  ! ... of k-points in the current pool
-  !
-  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-  CALL poolscatter( nbnd, nkstot, et, nks, et )
-  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-  !
-  ! ... check on symmetry
+  ! ... check on symmetry (FIXME: is this needed?)
   !
   IF (nat > 0) CALL checkallsym( nat, tau, ityp)
   !
-  ! ... set various spin-related variables
+  ! ... set spin variables, G cutoffs, cell factor (FIXME: from setup.f90?)
   !
+  CALL set_gcut()
+  if (cell_factor == 0.d0) cell_factor = 1.D0
   CALL set_spin_vars ( )
+  nbndx = nbnd
   !
-  ! ... read pseudopotentials (does not set dft from PP files)
+  ! ... read pseudopotentials
+  ! ... the following call prevents readpp from setting dft from PP files
   !
   dft_name = get_dft_name ()
   CALL readpp ( dft_name )
@@ -248,15 +229,15 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... read the vdw kernel table if needed
   !
   inlc = get_inlc()
-  if (inlc > 0 ) then
-      call initialize_kernel_table(inlc)
-  endif
+  IF (inlc > 0 ) CALL initialize_kernel_table(inlc)
+  !
+  ! ... misc PP initialization (from setup.f90)
   !
   okpaw = ANY ( upf(1:nsp)%tpawp )
-  !
+  IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !
-  ! ... allocate memory for G- and R-space fft arrays
+  ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
   !
   CALL pre_init()
   CALL data_structure ( gamma_only )
@@ -264,24 +245,29 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart ) 
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
-  IF (do_comp_esm) THEN
-     CALL esm_init()
-  END IF
   CALL gshells ( lmovecell ) 
+  !
+  IF (do_comp_esm) CALL esm_init()
+  IF (do_cutoff_2D) CALL cutoff_fact()
   !
   ! ... allocate the potential and wavefunctions
   !
   CALL allocate_locpot()
+  !
+  ! ... distribute across pools k-points and related variables.
+  ! ... nks is defined by the following routine as the number 
+  ! ... of k-points in the current pool
+  ! FIXME: sone here otherwise allocate_nlpot fails
+  !
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+  CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+  ! FIXME: allocate_nlpot uses k-points to compute npwx and allocate vkb
   CALL allocate_nlpot()
   IF (okpaw) THEN
      CALL allocate_paw_internals()
      CALL paw_init_onecenter()
      CALL d_matrix(d1,d2,d3)
-  ENDIF
-  !
-  IF ( lda_plus_u ) THEN
-     CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
-     CALL init_at_1()
   ENDIF
   !
   ! ... read the charge density in G-space
@@ -293,18 +279,30 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
   !
   ! ... re-compute the local part of the pseudopotential vltot and
-  ! ... the core correction charge (if any). For 2D calculations
-  ! ... re-initialize cutoff_fact before calculating potentials
-  !
-  IF (do_cutoff_2D) CALL cutoff_fact()
+  ! ... the core correction charge (if any) - from hinit0.f90
   !
   CALL init_vloc()
+  if (tbeta_smoothing) CALL init_us_b0()
+  if (tq_smoothing) CALL init_us_0()
+  CALL init_us_1()
+  IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
+  CALL init_at_1()
+  !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   CALL setlocal()
   CALL set_rhoc()
   !
-  ! ... recalculate the potential
+  ! ... for real-space PP's
+  !
+  IF ( tqr ) CALL generate_qpointlist()
+  IF (real_space ) THEN
+     CALL betapointlist()
+     CALL init_realspace_vars()
+     WRITE (stdout,'(5X,"Real space initialisation completed")')    
+  ENDIF
+  !
+  ! ... recalculate the potential - FIXME: couldn't make ts-vdw work
   !
   IF ( ts_vdw) THEN
      ! CALL tsvdw_initialize()

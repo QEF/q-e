@@ -143,13 +143,10 @@ end function allowed
      INTEGER, OPTIONAL, INTENT(IN) :: np
      INTEGER :: new
 
-     IF (PRESENT(np)) THEN
-        IF (np <= 0) &
-           CALL fftx_error__( ' good_fft_order ', ' invalid np ', new )
-     ENDIF
-
      new = nr
      IF( PRESENT( np ) ) THEN
+       IF (np <= 0 .OR. np > nr) &
+           CALL fftx_error__( ' good_fft_order ', ' invalid np ', 1 )
        DO WHILE( ( ( .NOT. allowed( new ) ) .OR. ( MOD( new, np ) /= 0 ) ) .AND. ( new <= nfftx ) )
          new = new + 1
        END DO

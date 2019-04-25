@@ -509,11 +509,14 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
               !
               !    ft_ is in crystal axis and is a valid fractional translation
               !    only if ft_(i)=0 or ft_(i)=1/n, with n=2,3,4,6
-              !    The check below is less strict: n must be integer
               !
               DO i=1,3
                  IF ( ABS (ft_(i)) > eps2 ) THEN
-                    ftaux(i) = ABS (1.0_dp/ft_(i) - NINT(1.0_dp/ft_(i)) ) 
+                    nfrac = NINT(1.0_dp/ft_(i))
+                    ftaux(i) = ABS (1.0_dp/ft_(i) - nfrac ) 
+                    IF ( ftaux(i) < eps2 .AND. nfrac /= 2 .AND. &
+                         nfrac /= 3 .AND. nfrac /= 4 .AND. nfrac /= 6 ) &
+                         ftaux(i) = 2*eps2
                  ELSE
                     ftaux(i) = 0.0_dp
                  END IF
