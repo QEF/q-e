@@ -512,8 +512,8 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
               !
               DO i=1,3
                  IF ( ABS (ft_(i)) > eps2 ) THEN
-                    nfrac = NINT(1.0_dp/ft_(i))
-                    ftaux(i) = ABS (1.0_dp/ft_(i) - nfrac ) 
+                    ftaux(i) = ABS (1.0_dp/ft_(i) - NINT(1.0_dp/ft_(i)) )
+                    nfrac = NINT(1.0_dp/ABS(ft_(i)))
                     IF ( ftaux(i) < eps2 .AND. nfrac /= 2 .AND. &
                          nfrac /= 3 .AND. nfrac /= 4 .AND. nfrac /= 6 ) &
                          ftaux(i) = 2*eps2
@@ -524,6 +524,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
               IF ( ANY ( ftaux(:) > eps2 ) ) CYCLE
               !
               sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
+              if(sym(irot)) print '("Found:",i4,3f12.6)',irot,ft_
               !
               IF (sym (irot) ) THEN
                  nsym_ns = nsym_ns + 1
