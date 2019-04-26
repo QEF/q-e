@@ -885,9 +885,15 @@ CONTAINS
          !
          CALL grid_set( dfft, bg, gcutm, dfft%nr1, dfft%nr2, dfft%nr3 )
          !
-         dfft%nr1 = good_fft_order( dfft%nr1, fft_fact(1) )
-         dfft%nr2 = good_fft_order( dfft%nr2, fft_fact(2) )
-         dfft%nr3 = good_fft_order( dfft%nr3, fft_fact(3) )
+         IF ( PRESENT(fft_fact) ) THEN
+            dfft%nr1 = good_fft_order( dfft%nr1, fft_fact(1) )
+            dfft%nr2 = good_fft_order( dfft%nr2, fft_fact(2) )
+            dfft%nr3 = good_fft_order( dfft%nr3, fft_fact(3) )
+         ELSE
+            dfft%nr1 = good_fft_order( dfft%nr1 )
+            dfft%nr2 = good_fft_order( dfft%nr2 )
+            dfft%nr3 = good_fft_order( dfft%nr3 )
+         ENDIF
 #if defined (__DEBUG)
        ELSE
           WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
