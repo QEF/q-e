@@ -524,7 +524,6 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
               IF ( ANY ( ftaux(:) > eps2 ) ) CYCLE
               !
               sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
-              if(sym(irot)) print '("Found:",i4,3f12.6)',irot,ft_
               !
               IF (sym (irot) ) THEN
                  nsym_ns = nsym_ns + 1
