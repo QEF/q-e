@@ -32,7 +32,7 @@ MODULE symm_base
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
-       fft_fact(3),          &! FFT dimensions must be multiple of fft_fact
+       fft_fact(3) = 1,      &! FFT dimensions must be multiple of fft_fact
        nrot,                 &! number of bravais lattice symmetries
        spacegroup = 0,       &! space group index, as read from input
        nsym = 1,             &! total number of crystal symmetries
