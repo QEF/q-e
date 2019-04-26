@@ -48,6 +48,8 @@ class dyn(object):
         self._bg=np.zeros((3,3),float)
         try: self._volm,self._at,self._bg = get_geom_info()
         except: print 'warning: lattice info not found'
+        for i in range(0, 4):
+            f.readline()
         self._species=[];
         self._mass=[]
         for i in range(self._ntype):
