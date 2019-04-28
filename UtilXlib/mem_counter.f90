@@ -1,5 +1,5 @@
 !
-SUBROUTINE mem_counter(valore, sumsign, label)
+SUBROUTINE mem_counter(valore, sumsign, label, sub)
     ! Poor-man memory counter - to be called after each allocation/deallocation
     ! if sumsign = +/-1, add/remove "valore" from allocated memory counter
     !    "label" should be the name of the allocated/deallocated variable
@@ -9,6 +9,7 @@ SUBROUTINE mem_counter(valore, sumsign, label)
     INTEGER, INTENT(IN) :: valore
     INTEGER, INTENT(IN) :: sumsign
     CHARACTER (LEN=*), INTENT(IN) :: label
+    CHARACTER (LEN=*), INTENT(IN) :: sub
     !
     INTEGER, SAVE :: current_memory = 0
     INTEGER, SAVE :: last_print_val = 0
@@ -18,11 +19,11 @@ SUBROUTINE mem_counter(valore, sumsign, label)
 #if defined (__DEBUG)
     ! verbose output
     if ( sumsign == 1) then
-       WRITE(*, '("  allocating ", I6, " kB, variable: ",a)') &
-       valore/1024, trim(label)
+       WRITE(*, '("  allocating ", I6, " kB, variable: ",a, " ",a)') &
+       valore/1024, trim(label), trim(sub)
     else if ( sumsign == -1) then
-       WRITE(*, '("deallocating ", I6, " kB, variable: ",a)') &
-       valore/1024, trim(label)
+       WRITE(*, '("deallocating ", I6, " kB, variable: ",a, " ",a)') &
+       valore/1024, trim(label), trim(sub)
     end if
 #endif
     IF ( sumsign == 0 ) THEN
