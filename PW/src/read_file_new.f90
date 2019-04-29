@@ -238,7 +238,15 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
-  ! ... FIXME: data_structure needs k-point to compute gkcut
+  ! ... distribute across pools k-points and related variables.
+  ! ... nks is defined by the following routine as the number 
+  ! ... of k-points in the current pool
+  ! ... FIXME: done here because both allocate_nlpot and data_structure
+  ! ...        need k-point to compute gcutw and gkcut respectively
+  !
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+  CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   nks = nkstot
   !
   CALL pre_init()
@@ -256,14 +264,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   CALL allocate_locpot()
   !
-  ! ... distribute across pools k-points and related variables.
-  ! ... nks is defined by the following routine as the number 
-  ! ... of k-points in the current pool
-  ! FIXME: done here otherwise allocate_nlpot fails
-  !
-  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-  CALL poolscatter( nbnd, nkstot, et, nks, et )
-  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   ! FIXME: allocate_nlpot uses k-points to compute npwx and allocate vkb
   CALL allocate_nlpot()
   IF (okpaw) THEN
