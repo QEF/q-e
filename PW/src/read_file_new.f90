@@ -238,6 +238,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
+  ! ... FIXME: data_structure needs k-point to compute gkcut
+  nks = nkstot
   !
   CALL pre_init()
   CALL data_structure ( gamma_only )
@@ -257,7 +259,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
   ! ... of k-points in the current pool
-  ! FIXME: sone here otherwise allocate_nlpot fails
+  ! FIXME: done here otherwise allocate_nlpot fails
   !
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
   CALL poolscatter( nbnd, nkstot, et, nks, et )
