@@ -1,4 +1,6 @@
 Problems fixed in development branch :
+  * Bug in spin-polarized meta-GGA (noticed by Shoaib Muhammad, 
+    Sungkyunkwan U.)
   * Unphysical fractional translations (tau/n with n/=2,3,4,6) were not 
     explicitly discarded, thus leading in unfortunate cases to strange
     values for FFT factors and grids. Also: if "nosym" is true, inversion

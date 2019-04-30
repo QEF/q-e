@@ -220,7 +220,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
         !    spin-polarised case
         !
         rhoup = ( rho%of_r(k, 1) + rho%of_r(k, 2) )*0.5d0
-        rhodw = ( rho%of_r(k, 2) - rho%of_r(k, 2) )*0.5d0
+        rhodw = ( rho%of_r(k, 1) - rho%of_r(k, 2) )*0.5d0
         
         rh   = rhoup + rhodw 
         
