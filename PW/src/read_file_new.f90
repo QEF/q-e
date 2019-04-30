@@ -26,7 +26,7 @@ SUBROUTINE read_file()
   USE pw_restart_new,       ONLY : read_collected_to_evc
   USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
-  USE klist,                ONLY : nkstot, nks, xk, wk, init_igk
+  USE klist,                ONLY : nks, xk, wk, init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
   USE qes_types_module,     ONLY : output_type
@@ -247,7 +247,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-  nks = nkstot
   !
   CALL pre_init()
   CALL data_structure ( gamma_only )
