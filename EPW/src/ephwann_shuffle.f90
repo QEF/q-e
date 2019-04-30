@@ -771,12 +771,12 @@
   !
   ! ------------------------------------------------------------
   ! Apply a possible shift to eigenenergies (applied later)
-  icbm = 0
+  icbm = 1
   IF (ABS(scissor) > eps6) THEN
     IF ( noncolin ) THEN
-      icbm = FLOOR(nelec/1.0d0) +1
+      icbm = FLOOR(nelec / 1.0d0) + 1
     ELSE
-      icbm = FLOOR(nelec/2.0d0) +1
+      icbm = FLOOR(nelec / 2.0d0) + 1
     ENDIF
     etf(icbm:nbndsub, :) = etf(icbm:nbndsub, :) + scissor
     !    

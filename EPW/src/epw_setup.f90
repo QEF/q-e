@@ -28,10 +28,11 @@
   USE gvect,         ONLY : ngm
   USE symm_base,     ONLY : nsym, s, irt, t_rev, time_reversal, invs, sr, &
                             inverse_s
+  USE eqv,           ONLY : dmuxc
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants_epw, ONLY : zero, eps5
-  USE noncollin_module,     ONLY : noncolin, m_loc, angle1, angle2, ux
+  USE noncollin_module,     ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   USE nlcc_ph,       ONLY : drc
   USE uspp,          ONLY : nlcc_any
   USE control_ph,    ONLY : search_sym, u_from_file
@@ -114,6 +115,7 @@
   !
   ! 3) Computes the derivative of the xc potential
   !
+  ALLOCATE (dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
   CALL setup_dmuxc()
   !
   ! 3.1) Setup all gradient correction stuff

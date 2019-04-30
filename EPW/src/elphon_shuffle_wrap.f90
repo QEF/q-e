@@ -21,7 +21,7 @@
   !
   USE kinds,         ONLY : DP
   USE mp_global,     ONLY : my_pool_id, inter_pool_comm, &
-                            npool, inter_image_comm, world_comm
+                            npool, inter_image_comm, world_comm  
   USE mp_images,     ONLY : my_image_id, nimage
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast
@@ -32,6 +32,8 @@
   USE uspp_param,    ONLY : lmaxq, nbetam
   USE io_files,      ONLY : prefix, tmp_dir
   USE wavefunctions, ONLY : evc
+  USE wvfct,         ONLY : npwx
+  USE eqv,           ONLY : vlocq, dmuxc
   USE ions_base,     ONLY : nat, nsp, tau, ityp
   USE control_flags, ONLY : iverbosity
   USE io_epw,        ONLY : iuepb, iuqpeig
@@ -54,7 +56,7 @@
   USE constants_epw, ONLY : ryd2ev, zero, czero
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
-  USE noncollin_module, ONLY : m_loc
+  USE noncollin_module, ONLY : m_loc, npol
   USE iotk_module,   ONLY : iotk_open_read, iotk_scan_dat, iotk_free_unit, &
                             iotk_close_read
   USE division,      ONLY : fkbounds
@@ -356,6 +358,8 @@
   ! CV: if we read the .fmt files we don't need to read the .epb anymore
   !
   IF (.NOT. epbread .AND. .NOT. epwread) THEN
+    ! 
+    ALLOCATE (evq(npwx * npol, nbnd))
     IF (lifc) THEN
       ALLOCATE (wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat, nat))
       wscache(:,:,:,:,:) = zero      
@@ -686,6 +690,9 @@
     !
     IF (lifc) DEALLOCATE (wscache)
     DEALLOCATE (evc)
+    DEALLOCATE (evq)
+    DEALLOCATE (vlocq)
+    DEALLOCATE (dmuxc)
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
   IF (my_image_id == 0 ) THEN
@@ -746,7 +753,6 @@
   DEALLOCATE (umat)
   DEALLOCATE (xqc_irr)
   DEALLOCATE (wqlist)
-  DEALLOCATE (evq)
   ! 
   IF (maxvalue > nqxq) THEN
     DEALLOCATE (qrad)

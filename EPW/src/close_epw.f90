@@ -97,8 +97,8 @@
     !!  Imported the noncolinear case implemented by xlzhang
     !!
     !----------------------------------------------------------------------
-    USE phcom,             ONLY : alphap, dmuxc, drc, dyn, dvpsi, &
-                                  int5, vlocq, int2_so, int5_so
+    USE phcom,             ONLY : alphap, drc, dyn, dvpsi, &
+                                  int5, int2_so, int5_so
     USE lrus,              ONLY : becp1, int3, int3_nc
     USE phus,              ONLY : int1, int1_nc, int2, int4, int4_nc
     USE lr_symm_base,      ONLY : rtau
@@ -134,8 +134,6 @@
       IF(ALLOCATED(xqf))       DEALLOCATE (xqf)
       IF(ALLOCATED(wqf))       DEALLOCATE (wqf)
       IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
-      DEALLOCATE (vlocq)
-      DEALLOCATE (dmuxc)
       DEALLOCATE (eigqts)
       DEALLOCATE (rtau)
       DEALLOCATE (u)
@@ -162,8 +160,6 @@
       !   
       IF(ASSOCIATED(igkq)) DEALLOCATE (igkq)
       !
-      DEALLOCATE (vlocq)
-      DEALLOCATE (dmuxc)
       DEALLOCATE (eigqts)
       DEALLOCATE (rtau)
       DEALLOCATE (u)
