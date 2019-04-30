@@ -583,19 +583,13 @@
        CALL errore('epw_readin', 'define either (tempsmin and tempsmax) or temps(:)',1)
   IF ( scattering .AND. tempsmax < tempsmin ) &
        CALL errore('epw_readin', 'tempsmax should be greater than tempsmin',1)
-!  IF ( int_mob .AND. efermi_read)  CALL errore('epw_init', &
-!       'Fermi level can not be set (efermi_read) when computing intrinsic mobilities',1)
-!  IF ( int_mob .AND. (ABS(ncarrier) > 1E+5) )  CALL errore('epw_init', &
-!       'You cannot compute intrinsic mobilities and doped mobilities at the same time',1)
   IF ( (ABS(ncarrier) > 1E+5) .AND. .NOT. carrier ) CALL errore('epw_readin', &
        'carrier must be .true. if you specify ncarrier.',1)
   IF ( carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_readin', &
        'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3',1)
-!  IF ( (iterative_bte .AND. scattering_serta) .OR. (iterative_bte .AND.scattering_0rta)  ) CALL errore('epw_init', &
-!       'You should first do a run in the SRTA to get the initial scattering_rate files.',1)
   IF ( (longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_readin',&
        &'Error: longrange or shortrange can only be true if lpolar is true as well.',1)
-  IF ( longrange .AND. shortrange) CALL errore('epw_init',&
+  IF ( longrange .AND. shortrange) CALL errore('epw_readin',&
        &'Error: longrange and shortrange cannot be both true.',1)
   IF ( epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_readin',&
        &'Error: kmaps has to be true for a restart run. ',1)
@@ -614,10 +608,6 @@
 101 CALL errore('epw_readin','opening file '//filqf,abs(ios))
     CLOSE(iunqf)
   ENDIF  
-
-!#ifndef __MPI
-!  IF ( etf_mem == 2 ) CALL errore('epw_init','Error: etf_mem == 2 only works with MPI.',1)
-!#endif
   !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd
