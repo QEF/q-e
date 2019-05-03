@@ -8,13 +8,26 @@ bcast_lr_input.o : ../../UtilXlib/mp.o
 bcast_lr_input.o : lr_charg_resp.o
 bcast_lr_input.o : lr_dav_variables.o
 bcast_lr_input.o : lr_variables.o
+compute_intq.o : ../../LR_Modules/lrcom.o
+compute_intq.o : ../../Modules/cell_base.o
+compute_intq.o : ../../Modules/ions_base.o
+compute_intq.o : ../../Modules/kind.o
+compute_intq.o : ../../Modules/noncol.o
+compute_intq.o : ../../Modules/uspp.o
+compute_intq.o : lr_variables.o
+dveqpsi_us_only.o : ../../LR_Modules/lrcom.o
+dveqpsi_us_only.o : ../../Modules/ions_base.o
+dveqpsi_us_only.o : ../../Modules/kind.o
+dveqpsi_us_only.o : ../../Modules/noncol.o
+dveqpsi_us_only.o : ../../Modules/uspp.o
+dveqpsi_us_only.o : ../../PW/src/pwcom.o
 lr_addus_dvpsi.o : ../../LR_Modules/lrcom.o
-lr_addus_dvpsi.o : ../../Modules/cell_base.o
 lr_addus_dvpsi.o : ../../Modules/ions_base.o
 lr_addus_dvpsi.o : ../../Modules/kind.o
 lr_addus_dvpsi.o : ../../Modules/noncol.o
-lr_addus_dvpsi.o : ../../Modules/paw_variables.o
 lr_addus_dvpsi.o : ../../Modules/uspp.o
+lr_addus_dvpsi.o : ../../PW/src/pwcom.o
+lr_addus_dvpsi.o : lr_variables.o
 lr_alloc_init.o : ../../LR_Modules/lrcom.o
 lr_alloc_init.o : ../../Modules/becmod.o
 lr_alloc_init.o : ../../Modules/control_flags.o
@@ -407,7 +420,6 @@ lr_readin.o : ../../Modules/io_global.o
 lr_readin.o : ../../Modules/kind.o
 lr_readin.o : ../../Modules/mp_bands.o
 lr_readin.o : ../../Modules/mp_global.o
-lr_readin.o : ../../Modules/noncol.o
 lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
@@ -558,6 +570,9 @@ sd0psi.o : ../../Modules/uspp.o
 sd0psi.o : ../../PW/src/pwcom.o
 sd0psi.o : ../../PW/src/realus.o
 sd0psi.o : lr_variables.o
+set_intq_nc.o : ../../Modules/ions_base.o
+set_intq_nc.o : ../../Modules/uspp.o
+set_intq_nc.o : lr_variables.o
 stop_lr.o : ../../Modules/cell_base.o
 stop_lr.o : ../../Modules/environment.o
 stop_lr.o : ../../Modules/io_files.o
@@ -569,16 +584,6 @@ stop_lr.o : ../../Modules/noncol.o
 stop_lr.o : ../../PW/src/buffers.o
 stop_lr.o : ../../PW/src/pwcom.o
 stop_lr.o : lr_variables.o
-compute_intq.o : ../../LR_Modules/lrcom.o
-compute_intq.o : ../../Modules/cell_base.o
-compute_intq.o : ../../Modules/ions_base.o
-compute_intq.o : ../../Modules/kind.o
-compute_intq.o : ../../Modules/noncol.o
-compute_intq.o : ../../Modules/uspp.o
-compute_intq.o : lr_variables.o
-set_intq_nc.o : ../../Modules/ions_base.o
-set_intq_nc.o : ../../Modules/uspp.o
-set intq_nc.o : lr_variables.o
 transform_intq_nc.o : ../../Modules/ions_base.o
 transform_intq_nc.o : ../../Modules/kind.o
 transform_intq_nc.o : ../../Modules/uspp.o
@@ -589,4 +594,3 @@ transform_intq_so.o : ../../Modules/noncol.o
 transform_intq_so.o : ../../Modules/uspp.o
 transform_intq_so.o : ../../PW/src/pwcom.o
 transform_intq_so.o : lr_variables.o
-

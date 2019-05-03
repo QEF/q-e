@@ -15,7 +15,7 @@ SUBROUTINE lr_alloc_init()
   USE kinds,                ONLY : dp
   USE ions_base,            ONLY : nat
   USE uspp,                 ONLY : nkb, okvan
-  USE lrus,                 ONLY : bbk, bbnc_sm1
+  USE lrus,                 ONLY : bbk, bbg, bbnc_sm1
   USE uspp_param,           ONLY : nhm
   USE fft_base,             ONLY : dfftp, dffts
   USE klist,                ONLY : nks

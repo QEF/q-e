@@ -23,7 +23,7 @@ SUBROUTINE dveqpsi_us_only (npwq, ik)
   USE noncollin_module, ONLY : noncolin, npol
 ! modules from phcom
   USE qpoint,     ONLY : ikks
-  USE optical,    ONLY : intq, intq_nc
+!  USE optical,    ONLY : intq, intq_nc
   USE lrus,       ONLY : becp1
   USE eqv,        ONLY : dvpsi
   IMPLICIT NONE
