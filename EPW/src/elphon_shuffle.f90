@@ -85,6 +85,8 @@
   !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
+  ALLOCATE (el_ph_mat(nbnd, nbnd, nks, 3 * nat))
+  ! 
   imode0 = 0
   DO irr = 1, nirr
      npe = npert(irr)
@@ -153,6 +155,7 @@
       ENDDO
     ENDDO
   ENDDO
+  DEALLOCATE (el_ph_mat)
   !DBSP
   !write(*,*)'epmatq(:,:,215,:,iq)**2',SUM((REAL(REAL(epmatq(:,:,215,:,iq))))**2)+&
   !        SUM((REAL(AIMAG(epmatq(:,:,215,:,iq))))**2)

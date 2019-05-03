@@ -19,7 +19,6 @@
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout, ionode_id
   USE wvfct,          ONLY : nbnd
-  USE ions_base,      ONLY : nat
   USE start_k,        ONLY : nk1, nk2, nk3
   USE pwcom,          ONLY : nkstot 
   USE klist_epw,      ONLY : xk_cryst           

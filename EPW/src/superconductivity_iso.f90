@@ -749,7 +749,6 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
     USE eliashbergcom, ONLY : nsw, Delta, Deltap, gap, estemp
     USE constants_epw, ONLY : kelvin2eV, ci

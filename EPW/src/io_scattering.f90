@@ -1,4 +1,4 @@
-  !                                                                            
+  !iufilibtev_sup                                                                            
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !                                                                            
   ! This file is distributed under the terms of the GNU General Public         
@@ -30,7 +30,6 @@
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE elph2,         ONLY : ibndmax, ibndmin, nkqtotf
-    USE transportcom,  ONLY : lower_bnd, upper_bnd
     USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
@@ -121,7 +120,6 @@
     USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
     USE elph2,        ONLY : ibndmax, ibndmin, nkqtotf
-    USE transportcom, ONLY : lower_bnd, upper_bnd
     !
     IMPLICIT NONE
     !
@@ -147,8 +145,6 @@
     !! band index
     INTEGER :: idir
     !! Direction index
-    INTEGER :: nqtotf_read
-    !! Total number of q-point read
     INTEGER :: itemp
     !! Temperature index
     ! 
@@ -259,9 +255,9 @@
     ! 
     USE kinds,            ONLY : DP
     USE io_files,         ONLY : tmp_dir, prefix
-    USE io_epw,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
+    USE io_epw,           ONLY : iunepmat, iunsparseq, iunsparsek, &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
-                                 iunsparsekcb, iunrestart, iunsparseicb, iunsparsejcb,&
+                                 iunsparsekcb, iunsparseicb, iunsparsejcb,&
                                  iunsparsetcb, iunepmatcb 
     USE mp_world,         ONLY : world_comm
 #if defined(__MPI)

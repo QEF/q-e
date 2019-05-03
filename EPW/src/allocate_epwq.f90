@@ -28,17 +28,13 @@
   USE phus,         ONLY : int1, int1_nc, int2, int2_so, &
                            int4, int4_nc, int5, int5_so, & 
                            alphap
-  USE lr_symm_base, ONLY : rtau               
-  USE qpoint,       ONLY : eigqts
   USE lrus,         ONLY : becp1
   USE elph2,        ONLY : elph, el_ph_mat
   USE becmod,       ONLY : becp, allocate_bec_type
   USE uspp_param,   ONLY : nhm
   USE uspp,         ONLY : okvan, nkb
-  USE modes,        ONLY : u, npert, name_rap_mode, num_rap_mode
   USE klist,        ONLY : nks
   USE fft_base,     ONLY : dfftp
-  USE transportcom, ONLY : transp_temp
   USE epwcom,       ONLY : nstemp  
   ! 
   IMPLICIT NONE
@@ -50,7 +46,6 @@
   !
   !  ALLOCATE space for the quantities needed in EPW
   !
-  ALLOCATE (transp_temp(nstemp))
   ! SP: nrxx is not used in QE 5 ==> tg_nnr is the maximum among nnr
   !     This should have the same dim as nrxx had.
   !     ALLOCATE (dmuxc ( nrxx, nspin, nspin))  
@@ -62,39 +57,6 @@
   !           --> tg = task group    
   !     ALLOCATE (dmuxc ( dffts%nnr, nspin, nspin))    
   !
-  ALLOCATE (eigqts(nat))    
-  ALLOCATE (rtau(3, 48, nat))    
-  ALLOCATE (u(3 * nat, 3 * nat))    
-  ALLOCATE (name_rap_mode(3 * nat))
-  ALLOCATE (num_rap_mode(3 * nat ))
-  ALLOCATE (npert(3 * nat))    
-  IF (okvan) THEN
-    ALLOCATE (int1(nhm, nhm, 3, nat, nspin_mag))    
-    ALLOCATE (int2(nhm, nhm, 3, nat, nat))    
-    ALLOCATE (int4(nhm * (nhm + 1)/2, 3, 3, nat, nspin_mag))    
-    ALLOCATE (int5(nhm * (nhm + 1)/2, 3, 3, nat , nat))    
-    IF (noncolin) THEN
-      ALLOCATE (int1_nc(nhm, nhm, 3, nat, nspin))
-      ALLOCATE (int4_nc(nhm, nhm, 3, 3, nat, nspin))
-      IF (lspinorb) THEN
-        ALLOCATE (int2_so(nhm, nhm, 3, nat, nat, nspin))
-        ALLOCATE (int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
-      ENDIF
-    ENDIF ! noncolin
-  ENDIF
-  !
-  ALLOCATE (becp1(nks))
-  ALLOCATE (alphap(3,nks))
-  ! 
-  DO ik = 1, nks
-    CALL allocate_bec_type(nkb, nbnd, becp1(ik))
-    DO ipol = 1, 3
-      CALL allocate_bec_type(nkb, nbnd, alphap(ipol,ik))
-    ENDDO
-  ENDDO
-  CALL allocate_bec_type(nkb, nbnd, becp)
-  ! 
-  IF (elph) ALLOCATE (el_ph_mat(nbnd, nbnd, nks, 3*nat))    
   ! 
   RETURN
   ! 

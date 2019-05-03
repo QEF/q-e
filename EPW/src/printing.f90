@@ -323,8 +323,6 @@
     !! Symmetry matrix in cartesian coordinate 
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -648,8 +646,6 @@
     !! Electrical conductivity
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -804,13 +800,6 @@
               ENDDO
               Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3)
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
@@ -956,8 +945,6 @@
     !! Symmetry matrix in cartesian coordinate 
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -1043,13 +1030,6 @@
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
@@ -1155,13 +1135,6 @@
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
@@ -1233,11 +1206,11 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : at, omega, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
+    USE cell_base,     ONLY : omega 
+    USE epwcom,        ONLY : ncarrier, nstemp, &
                               nkf1, nkf2, nkf3
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf 
-    USE transportcom,  ONLY : lower_bnd, transp_temp
+    USE transportcom,  ONLY : transp_temp
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                                electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
@@ -1281,8 +1254,6 @@
     !! Electrical conductivity
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -1345,13 +1316,6 @@
               ENDDO
               Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3)
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               !Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
