@@ -69,8 +69,8 @@
   etf_all = etf
 #endif 
   ! 
-  ALLOCATE(map_rebal(nkqtotf/2))
-  ALLOCATE(map_rebal_inv(nkqtotf/2))
+  ALLOCATE (map_rebal(nkqtotf/2))
+  ALLOCATE (map_rebal_inv(nkqtotf/2))
   ! 
   kpt_in(:) = 0 
   kpt_out(:) = 0 

@@ -853,6 +853,7 @@ CONTAINS
      SUBROUTINE realspace_grid_init( dfft, at, bg, gcutm, fft_fact )
        !
        ! ... Sets optimal values for dfft%nr[123] and dfft%nr[123]x
+       ! ... If input dfft%nr[123] are non-zero, leaves them unchanged
        ! ... If fft_fact is present, force nr[123] to be multiple of fft_fac([123])
        !
        USE fft_support, only: good_fft_dimension, good_fft_order
@@ -876,28 +877,29 @@ CONTAINS
          dfft%nr2 = int ( sqrt (gcutm) * sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
          dfft%nr3 = int ( sqrt (gcutm) * sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
 
-         !write (6,*) sqrt(gcutm)*sqrt(at(1,1)**2 + at(2,1)**2 + at(3,1)**2) , dfft%nr1
-         !write (6,*) sqrt(gcutm)*sqrt(at(1,2)**2 + at(2,2)**2 + at(3,2)**2) , dfft%nr2
-         !write (6,*) sqrt(gcutm)*sqrt(at(1,3)**2 + at(2,3)**2 + at(3,3)**2) , dfft%nr3
+#if defined (__DEBUG)
+         write (6,*) sqrt(gcutm)*sqrt(at(1,1)**2 + at(2,1)**2 + at(3,1)**2) , dfft%nr1
+         write (6,*) sqrt(gcutm)*sqrt(at(1,2)**2 + at(2,2)**2 + at(3,2)**2) , dfft%nr2
+         write (6,*) sqrt(gcutm)*sqrt(at(1,3)**2 + at(2,3)**2 + at(3,3)**2) , dfft%nr3
+#endif
          !
          CALL grid_set( dfft, bg, gcutm, dfft%nr1, dfft%nr2, dfft%nr3 )
          !
+         IF ( PRESENT(fft_fact) ) THEN
+            dfft%nr1 = good_fft_order( dfft%nr1, fft_fact(1) )
+            dfft%nr2 = good_fft_order( dfft%nr2, fft_fact(2) )
+            dfft%nr3 = good_fft_order( dfft%nr3, fft_fact(3) )
+         ELSE
+            dfft%nr1 = good_fft_order( dfft%nr1 )
+            dfft%nr2 = good_fft_order( dfft%nr2 )
+            dfft%nr3 = good_fft_order( dfft%nr3 )
+         ENDIF
 #if defined (__DEBUG)
        ELSE
           WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
 #endif
        END IF
-
-       IF (PRESENT(fft_fact)) THEN
-          dfft%nr1 = good_fft_order( dfft%nr1, fft_fact(1) )
-          dfft%nr2 = good_fft_order( dfft%nr2, fft_fact(2) )
-          dfft%nr3 = good_fft_order( dfft%nr3, fft_fact(3) )
-       ELSE
-          dfft%nr1 = good_fft_order( dfft%nr1 )
-          dfft%nr2 = good_fft_order( dfft%nr2 )
-          dfft%nr3 = good_fft_order( dfft%nr3 )
-       END IF
-
+       !
        dfft%nr1x  = good_fft_dimension( dfft%nr1 )
        dfft%nr2x  = dfft%nr2
        dfft%nr3x  = good_fft_dimension( dfft%nr3 )

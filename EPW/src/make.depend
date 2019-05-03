@@ -17,6 +17,7 @@ adddvscf2.o : ../../Modules/uspp.o
 adddvscf2.o : ../../PW/src/pwcom.o
 adddvscf2.o : constants_epw.o
 adddvscf2.o : elph2.o
+adddvscf2.o : epwcom.o
 allocate_epwq.o : ../../LR_Modules/lrcom.o
 allocate_epwq.o : ../../Modules/becmod.o
 allocate_epwq.o : ../../Modules/fft_base.o
@@ -124,6 +125,7 @@ dvqpsi_us3.o : ../../PW/src/pwcom.o
 dvqpsi_us3.o : ../../PW/src/scf_mod.o
 dvqpsi_us3.o : constants_epw.o
 dvqpsi_us3.o : elph2.o
+dvqpsi_us3.o : epwcom.o
 dvqpsi_us_only3.o : ../../LR_Modules/lrcom.o
 dvqpsi_us_only3.o : ../../Modules/cell_base.o
 dvqpsi_us_only3.o : ../../Modules/ions_base.o
@@ -135,6 +137,7 @@ dvqpsi_us_only3.o : ../../PHonon/PH/phcom.o
 dvqpsi_us_only3.o : ../../PW/src/pwcom.o
 dvqpsi_us_only3.o : constants_epw.o
 dvqpsi_us_only3.o : elph2.o
+dvqpsi_us_only3.o : epwcom.o
 eliashberg.o : ../../Modules/io_global.o
 eliashberg.o : eliashbergcom.o
 eliashberg.o : epwcom.o
@@ -164,6 +167,7 @@ elphel2_shuffle.o : ../../UtilXlib/mp.o
 elphel2_shuffle.o : constants_epw.o
 elphel2_shuffle.o : division.o
 elphel2_shuffle.o : elph2.o
+elphel2_shuffle.o : epwcom.o
 elphon_shuffle.o : ../../FFTXlib/fft_interfaces.o
 elphon_shuffle.o : ../../LR_Modules/lrcom.o
 elphon_shuffle.o : ../../Modules/fft_base.o
@@ -288,7 +292,9 @@ epw_init.o : ../../PW/src/pwcom.o
 epw_init.o : ../../UtilXlib/mp.o
 epw_init.o : constants_epw.o
 epw_init.o : elph2.o
+epw_init.o : epwcom.o
 epw_readin.o : ../../LR_Modules/lrcom.o
+epw_readin.o : ../../Modules/cell_base.o
 epw_readin.o : ../../Modules/constants.o
 epw_readin.o : ../../Modules/control_flags.o
 epw_readin.o : ../../Modules/io_files.o
@@ -659,6 +665,7 @@ setphases.o : ../../PHonon/PH/phcom.o
 setphases.o : ../../PW/src/pwcom.o
 setphases.o : ../../UtilXlib/mp.o
 setphases.o : constants_epw.o
+setphases.o : epwcom.o
 setphases_wrap.o : ../../Modules/io_global.o
 setphases_wrap.o : ../../Modules/kind.o
 setphases_wrap.o : ../../Modules/mp_global.o

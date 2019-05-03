@@ -40,13 +40,13 @@
   real(DP) :: rra  
 !
   ! initialize index array
-  IF (ind (1) .eq.0) then  
+  IF (ind (1)  == 0) then  
      DO i = 1, n  
         ind (i) = i  
      ENDDO
   ENDIF
   ! nothing to order
-  IF (n.lt.2) return  
+  IF (n < 2) return  
   ! initialize indices for hiring and retirement-promotion phase
   l = n / 2 + 1  
 
@@ -55,7 +55,7 @@
   sorting: do 
   
     ! still in hiring phase
-    IF ( l .gt. 1 ) then  
+    IF ( l > 1 ) then  
        l    = l - 1  
        rra  = ra (l)  
        iind = ind (l)  
@@ -72,7 +72,7 @@
        ! decrease the size of the corporation
        ir = ir - 1  
        ! done with the last promotion
-       IF ( ir .eq. 1 ) then  
+       IF ( ir == 1 ) then  
           ! the least competent worker at all !
           ra (1)  = rra  
           !
@@ -85,14 +85,14 @@
     ! set up to place rra in its proper level
     j = l + l  
     !
-    DO while ( j .le. ir )  
-       IF ( j .lt. ir ) then  
+    DO while ( j <= ir )  
+       IF ( j < ir ) then  
           ! compare to better underling
           IF ( hslt( ra (j),  ra (j + 1) ) ) then  
              j = j + 1  
-          !else if ( .not. hslt( ra (j+1),  ra (j) ) ) then
+          !else if ( .NOT. hslt( ra (j+1),  ra (j) ) ) then
              ! this means ra(j) == ra(j+1) within tolerance
-           !  if (ind (j) .lt.ind (j + 1) ) j = j + 1
+           !  if (ind (j)  < ind (j + 1) ) j = j + 1
           ENDIF
        ENDIF
        ! demote rra
@@ -101,10 +101,10 @@
           ind (i) = ind (j)  
           i = j  
           j = j + j  
-       !else if ( .not. hslt ( ra(j) , rra ) ) then
+       !else if ( .NOT. hslt ( ra(j) , rra ) ) then
           !this means rra == ra(j) within tolerance
           ! demote rra
-         ! if (iind.lt.ind (j) ) then
+         ! if (iind < ind (j) ) then
          !    ra (i) = ra (j)
          !    ind (i) = ind (j)
          !    i = j

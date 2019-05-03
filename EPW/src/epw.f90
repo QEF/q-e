@@ -110,7 +110,7 @@
       CALL openfilepw
     ENDIF
     !
-    CALL print_clock('EPW')
+    CALL print_clock('EPW' )
     !
     IF (epwread .AND. .NOT. epbread) THEN
       CONTINUE      

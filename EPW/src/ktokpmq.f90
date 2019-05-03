@@ -78,12 +78,12 @@
   xx = xxk(1) * nk1
   yy = xxk(2) * nk2
   zz = xxk(3) * nk3
-  in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
-                abs(yy-nint(yy)) .le. eps5 .AND. &
-                abs(zz-nint(zz)) .le. eps5
-  IF (.not.in_the_list) CALL errore('ktokpmq','is this a uniform k-mesh?',1)
+  in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
+                abs(yy-nint(yy)) <= eps5 .AND. &
+                abs(zz-nint(zz)) <= eps5
+  IF ( .NOT. in_the_list) CALL errore('ktokpmq','is this a uniform k-mesh?',1)
   !
-  IF ( xx .lt. -eps5 .or. yy .lt. -eps5 .or. zz .lt. -eps5 ) &
+  IF ( xx < -eps5 .or. yy < -eps5 .or. zz < -eps5 ) &
      CALL errore('ktokpmq','coarse k-mesh needs to be strictly positive in 1st BZ',1)
   !
   !  now add the phonon wavevector and check that k+q falls again on the k grid
@@ -93,10 +93,10 @@
   xx = xxk(1) * nk1
   yy = xxk(2) * nk2
   zz = xxk(3) * nk3
-  in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
-                abs(yy-nint(yy)) .le. eps5 .AND. &
-                abs(zz-nint(zz)) .le. eps5
-  IF (.not.in_the_list) CALL errore('ktokpmq','k+q does not fall on k-grid',1)
+  in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
+                abs(yy-nint(yy)) <= eps5 .AND. &
+                abs(zz-nint(zz)) <= eps5
+  IF ( .NOT. in_the_list) CALL errore('ktokpmq','k+q does not fall on k-grid',1)
   !
   !  find the index of this k+q in the k-grid
   !
@@ -113,12 +113,12 @@
      !
      ! check that the k-mesh was defined in the positive region of 1st BZ
      !
-     IF ( xx_c .lt. -eps5 .or. yy_c .lt. -eps5 .or. zz_c .lt. -eps5 ) &
+     IF ( xx_c < -eps5 .or. yy_c < -eps5 .or. zz_c < -eps5 ) &
         CALL errore('ktokpmq','coarse k-mesh needs to be strictly positive in 1st BZ',1)
      !
-     found = nint(xx_c) .eq. nint(xx) .AND. &
-             nint(yy_c) .eq. nint(yy) .AND. &
-             nint(zz_c) .eq. nint(zz)
+     found = nint(xx_c) == nint(xx) .AND. &
+             nint(yy_c) == nint(yy) .AND. &
+             nint(zz_c) == nint(zz)
      IF (found) THEN  
         n = ik
         EXIT
@@ -154,7 +154,7 @@
     iks = nkl * jpool + 1
     IF ( jpool >= nkr ) iks = iks + nkr * kunit
     !
-    IF (n .ge. iks) THEN
+    IF (n >= iks) THEN
       ipool = jpool + 1
       nkq = n - iks + 1
     ENDIF
@@ -198,8 +198,8 @@
   !  
   INTEGER :: rest, nrst
   !
-  IF (total .le. npool) THEN
-     IF (my_pool_id .lt. total) THEN
+  IF (total <= npool) THEN
+     IF (my_pool_id < total) THEN
         lower = my_pool_id + 1
         upper = lower
      ELSE
@@ -247,14 +247,14 @@
   ! is far from cubic
   !
   DO ib = -2,0
-    IF (nint(xx) .lt. ib*n1) xx = xx + (-ib+1)*n1
-    IF (nint(yy) .lt. ib*n2) yy = yy + (-ib+1)*n2
-    IF (nint(zz) .lt. ib*n3) zz = zz + (-ib+1)*n3
+    IF (nint(xx) < ib*n1) xx = xx + (-ib+1)*n1
+    IF (nint(yy) < ib*n2) yy = yy + (-ib+1)*n2
+    IF (nint(zz) < ib*n3) zz = zz + (-ib+1)*n3
   ENDDO
   DO ib = 2,1,-1
-    IF (nint(xx) .ge. ib*n1) xx = xx - ib*n1
-    IF (nint(yy) .ge. ib*n2) yy = yy - ib*n2
-    IF (nint(zz) .ge. ib*n3) zz = zz - ib*n3
+    IF (nint(xx) >= ib*n1) xx = xx - ib*n1
+    IF (nint(yy) >= ib*n2) yy = yy - ib*n2
+    IF (nint(zz) >= ib*n3) zz = zz - ib*n3
   ENDDO
   !
   !-------------------------------------------

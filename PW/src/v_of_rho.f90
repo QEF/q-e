@@ -116,8 +116,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE gvect,            ONLY : g, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
-  USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : tau_xc, tau_xc_spin, get_meta, dft_is_nonlocc, nlc
+  USE funct,            ONLY : xc, xc_spin, tau_xc, tau_xc_spin, get_meta, dft_is_nonlocc, nlc
   USE scf,              ONLY : scf_type
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
@@ -152,8 +151,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   REAL(DP), DIMENSION(3)   ::    grhoup, grhodw, v2cup, v2cdw
   !
   REAL(DP),    ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
-  REAL(DP),    ALLOCATABLE :: rhoout(:,:)
-  COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
+  REAL(DP),    ALLOCATABLE :: rhoout(:)
+  COMPLEX(DP), ALLOCATABLE :: rhogsum(:)
   REAL(DP), PARAMETER      :: eps12 = 1.0d-12, zero=0._dp
   !
   !----------------------------------------------------------------------------
@@ -169,22 +168,21 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   sgn(1) = 1._dp  ;   sgn(2) = -1._dp
   fac = 1.D0 / DBLE( nspin ) 
   !
-  ALLOCATE( grho(3,dfftp%nnr,nspin) )
-  ALLOCATE( h(3,dfftp%nnr,nspin)    )
-  ALLOCATE( rhoout(dfftp%nnr,nspin) )
-  ALLOCATE( rhogsum(ngm,nspin)      )
+  ALLOCATE (grho(3,dfftp%nnr,nspin))
+  ALLOCATE (h(3,dfftp%nnr,nspin))
+  ALLOCATE (rhogsum(ngm))
   !
   ! ... calculate the gradient of rho + rho_core in real space
-  ! ... in LSDA case rhoout and rhogsum are defined in (up,down) format
+  ! ... in LSDA case rhogsum is in (up,down) format
   !
   DO is = 1, nspin
      !
-     rhoout(:,is) =fac*rho_core(:)  + ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin) )*0.5D0
-     rhogsum(:,is)=fac*rhog_core(:) + ( rho%of_g(:,1) + sgn(is)*rho%of_g(:,nspin) )*0.5D0
+     rhogsum(:)=fac*rhog_core(:) + ( rho%of_g(:,1) + sgn(is)*rho%of_g(:,nspin) )*0.5D0
      !
-     CALL fft_gradient_g2r( dfftp, rhogsum(1,is), g, grho(1,1,is) )
+     CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(1,1,is) )
      !
   END DO
+  DEALLOCATE(rhogsum)
   !
   DO k = 1, dfftp%nnr
      !
@@ -227,14 +225,14 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
         !    spin-polarised case
         !
         rhoup = ( rho%of_r(k, 1) + rho%of_r(k, 2) )*0.5d0
-        rhodw = ( rho%of_r(k, 2) - rho%of_r(k, 2) )*0.5d0
+        rhodw = ( rho%of_r(k, 1) - rho%of_r(k, 2) )*0.5d0
         !
-        rh = rhoup + rhodw 
+        rh   = rhoup + rhodw 
         !
-        DO ipol = 1, 3
-            grhoup(ipol) = grho(ipol,k,1)
-            grhodw(ipol) = grho(ipol,k,2)
-        ENDDO
+        do ipol=1,3
+            grhoup(ipol)=grho(ipol,k,1)
+            grhodw(ipol)=grho(ipol,k,2)
+        end do
         !
         ggrho2  = ( grho2 (1) + grho2 (2) ) * 4._dp
         !
@@ -295,16 +293,20 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
+  ALLOCATE (rhoout(dfftp%nnr))
   DO is = 1, nspin
      !
      CALL fft_graddot( dfftp, h(1,1,is), g, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
-     rhoout(:,is)=rhoout(:,is)-fac*rho_core(:)
-     vtxc = vtxc - SUM( dh(:) * rhoout(:,is) )
+     ! ... rhoout is in (up,down) format 
+     !
+     rhoout(:) = ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin) )*0.5D0
+     vtxc = vtxc - SUM( dh(:) * rhoout(:) )
      !
   END DO
+  DEALLOCATE(rhoout)
   DEALLOCATE(dh)
   !
   CALL mp_sum( rhoneg, intra_bgrp_comm )
@@ -325,8 +327,6 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   DEALLOCATE(grho)
   DEALLOCATE(h)
-  DEALLOCATE(rhoout)
-  DEALLOCATE(rhogsum)
   !
   CALL stop_clock( 'v_xc_meta' )
   !

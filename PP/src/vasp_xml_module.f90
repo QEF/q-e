@@ -113,7 +113,6 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
                                    eigts1, eigts2, eigts3, gstart, gshells
   USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, gcutms
-  USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions,        ONLY : psic
   USE vlocal,               ONLY : strf
@@ -132,9 +131,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
-  USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact
   USE vasp_read_chgcar,     ONLY : vaspread_rho
   !
   IMPLICIT NONE

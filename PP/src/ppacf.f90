@@ -59,6 +59,7 @@ PROGRAM do_ppacf
   USE vdW_DF_scale,         ONLY : xc_vdW_DF_ncc, xc_vdW_DF_spin_ncc, &
                                    get_q0cc_on_grid, get_q0cc_on_grid_spin
   USE vasp_xml,             ONLY : readxmlfile_vasp
+  USE symm_base,            ONLY : fft_fact
 
   ! 
   IMPLICIT NONE
@@ -218,9 +219,7 @@ PROGRAM do_ppacf
   IF (code_num == 1) THEN
      !
      tmp_dir=TRIM(outdir) 
-!     CALL read_xml_file_internal(.TRUE.)
      CALL  read_file()
-
 !     Check exchange correlation functional
      iexch = get_iexch()
      icorr = get_icorr()
@@ -697,6 +696,7 @@ PROGRAM do_ppacf
   DEALLOCATE ( igk_buf, gk )
   !
 !  CALL setup()
+  fft_fact(:)=1
   CALL exx_grid_init()
   CALL exx_mp_init()
   CALL exx_div_check()

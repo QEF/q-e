@@ -24,9 +24,8 @@
   USE phus,                 ONLY : alphap
   USE lrus,                 ONLY : becp1
   USE uspp,                 ONLY : vkb
-  USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin, &
-                                   isk
-  USE klist_epw,            ONLY : xk_loc
+  USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin
+  USE klist_epw,            ONLY : xk_loc, isk_loc
   USE constants,            ONLY : tpi
   USE constants_epw,        ONLY : zero, czero, cone
   USE cell_base,            ONLY : tpiba2, tpiba, bg, omega
@@ -73,6 +72,8 @@
   !
   !
   CALL start_clock( 'epw_init' )
+  ! 
+  IF (first_run) ALLOCATE (vlocq(ngm, ntyp))
   !
   DO na = 1, nat
     !
@@ -105,12 +106,13 @@
     !
   END DO
   !
-  ALLOCATE( aux1( npwx*npol, nbnd ) )
-  !
-  DO ik = 1, nks
+  ALLOCATE (aux1(npwx*npol, nbnd))
+  !ALLOCATE (evc(npwx*npol, nbnd))
+  ! 
+  DO ik=1, nks
     !
     !
-    IF ( lsda ) current_spin = isk( ik )
+    IF (lsda) current_spin = isk_loc(ik)
     !
     ! ... d) The functions vkb(k+G)
     !
@@ -148,10 +150,10 @@
     !
   ENDDO
   !
-  DEALLOCATE( aux1 )
+  DEALLOCATE (aux1)
   !
-  IF(.not. ALLOCATED(igk_k_all)) ALLOCATE(igk_k_all(npwx,nkstot))
-  IF(.not. ALLOCATED(ngk_all))   ALLOCATE(ngk_all(nkstot))
+  IF( .NOT.  ALLOCATED(igk_k_all)) ALLOCATE (igk_k_all(npwx,nkstot))
+  IF( .NOT.  ALLOCATED(ngk_all))   ALLOCATE (ngk_all(nkstot))
   !
 #if defined(__MPI)
   !
@@ -166,7 +168,7 @@
   !
 #endif
   !
-  IF (.not.first_run) CALL dvanqq2()
+  IF ( .NOT. first_run) CALL dvanqq2()
   !
   CALL stop_clock( 'epw_init' )
   !

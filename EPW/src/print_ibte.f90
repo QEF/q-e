@@ -23,8 +23,8 @@
                             restart, restart_freq, restart_filq, vme, ncarrier
   USE pwcom,         ONLY : ef
   USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
-                            epf17, nkqtotf, inv_tau_all, inv_tau_allcb, &
-                            xqf, zi_allvb, zi_allcb, xkf, wkf, dmef, vmef, nqf
+                            epf17, nkqtotf, &
+                            xqf, xkf, wkf, dmef, vmef, nqf
   USE transportcom,  ONLY : transp_temp, lower_bnd
   USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
                             eps6, eps10, bohr2ang, ang2cm, eps4, eps8
@@ -173,8 +173,6 @@
   !! Temporary array to store the scattering rates
   REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the zi
-  REAL(KIND=DP), ALLOCATABLE :: inv_tau_all_new (:,:,:)
-  !! New scattering rates to be merged
   REAL(KIND=DP) :: xkf_all(3,nkqtotf/2)
   !! k-points coordinate from all cores 
   REAL(KIND=DP) :: wkf_all(nkqtotf/2)
@@ -186,8 +184,6 @@
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(KIND=DP), EXTERNAL :: DDOT
   !! Dot product function
-  REAL(KIND=DP), EXTERNAL :: efermig
-  !! Function that returns the Fermi energy
   REAL(KIND=DP), EXTERNAL :: wgauss
   !! Compute the approximate theta function. Here computes Fermi-Dirac 
   REAL(KIND=DP), EXTERNAL :: w0gauss
@@ -264,8 +260,8 @@
         !
         ! We are not consistent with ef from ephwann_shuffle but it should not 
         ! matter if fstick is large enough.
-        IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-             ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+        IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+             ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
           
           xkf_all(:, ik+lower_bnd - 1 ) = xkf(:,ikk)
           wkf_all(ik+lower_bnd - 1 ) = wkf(ikk)
@@ -294,7 +290,7 @@
                 !
                 ! SP : Avoid if statement in inner loops
                 ! the coupling from Gamma acoustic phonons is negligible
-                IF ( wq .gt. eps_acustic ) THEN
+                IF ( wq > eps_acustic ) THEN
                   g2_tmp = 1.0
                   wgq = wgauss( -wq*inv_etemp, -99)
                   wgq = wgq / ( one - two * wgq )
@@ -395,7 +391,7 @@
                   !
                   ! SP : Avoid if statement in inner loops
                   ! the coupling from Gamma acoustic phonons is negligible
-                  IF ( wq .gt. eps_acustic ) THEN
+                  IF ( wq > eps_acustic ) THEN
                     g2_tmp = 1.0
                     wgq = wgauss( -wq*inv_etemp, -99)
                     wgq = wgq / ( one - two * wgq )
@@ -578,7 +574,7 @@
     ! 
     ! Save to file restart information in formatted way for possible restart
     IF (my_pool_id == 0) THEN
-      OPEN(unit=iunrestart,file='restart_ibte.fmt')
+      OPEN(UNIT=iunrestart,FILE='restart_ibte.fmt')
       WRITE (iunrestart,*) iqq
       WRITE (iunrestart,*) ind_tot
       WRITE (iunrestart,*) ind_totcb
@@ -617,7 +613,7 @@
 
       ! Now write total number of q-point inside and k-velocity
       !
-      OPEN(iufilibtev_sup,file='IBTEvel_sup.fmt', form='formatted')
+      OPEN(iufilibtev_sup,FILE='IBTEvel_sup.fmt', FORM='formatted')
       WRITE(iufilibtev_sup,'(a)') '# Number of elements in hole and electrons  '
       WRITE(iufilibtev_sup,'(2i16)') ind_tot, ind_totcb
       WRITE(iufilibtev_sup,'(a)') '# itemp    ef0    efcb'

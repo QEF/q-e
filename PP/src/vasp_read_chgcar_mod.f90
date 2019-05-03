@@ -64,7 +64,6 @@ MODULE vasp_read_chgcar
       INTEGER                  :: ngxf, ngyf, ngzf, nalloc
       INTEGER                  :: ispin, iat, iz, ixy, nread
       REAL(DP), ALLOCATABLE    :: rho_r_(:,:), atomom(:)
-      REAL(DP), ALLOCATABLE    :: rho_r_up(:), rho_r_dn(:)
       CHARACTER(LEN=80)        :: errmsg
       !
       ierr = 0
@@ -102,15 +101,6 @@ MODULE vasp_read_chgcar
          END DO
 
          CLOSE(iunchg)
-         IF(nspin==2) THEN 
-            ALLOCATE(rho_r_up(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-            ALLOCATE(rho_r_dn(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-            rho_r_up=0.5_DP*(rho_r_(:,1)+rho_r_(:,2))
-            rho_r_dn=0.5_DP*(rho_r_(:,1)-rho_r_(:,2))
-            rho_r_(:,1)=rho_r_up
-            rho_r_(:,2)=rho_r_dn
-            DEALLOCATE(rho_r_up, rho_r_dn)
-         END IF
       END IF 
 !      CALL mp_bcast( atm,             ionode_id, intra_image_comm )
       DO ispin = 1, nspin

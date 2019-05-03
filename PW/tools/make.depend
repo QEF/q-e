@@ -6,6 +6,7 @@ ev.o : ../../Modules/mp_global.o
 ev.o : ../../Modules/mp_world.o
 ev.o : ../../Modules/random_numbers.o
 ev.o : ../../UtilXlib/mp.o
+ibrav2cell.o : ../../Modules/constants.o
 ibrav2cell.o : ../../Modules/kind.o
 kpoints.o : ../../Modules/cell_base.o
 kpoints.o : ../../Modules/kind.o

@@ -80,19 +80,19 @@
   COMPLEX(kind=DP), ALLOCATABLE :: veff(:)
   !! effective potential
   !
-  IF (.not.okvan) RETURN
+  IF ( .NOT. okvan) RETURN
   !
   CALL start_clock('newdq2')
   !
   int3(:,:,:,:,:) = czero
   !
-  ALLOCATE( aux1(ngm) )
-  ALLOCATE( aux2(ngm,nspin_mag) )
-  ALLOCATE( veff(dfftp%nnr) )
-  ALLOCATE( ylmk0(ngm, lmaxq * lmaxq) )
-  ALLOCATE( qgm(ngm) )
-  ALLOCATE( qmod(ngm) )
-  ALLOCATE( qg(3,ngm) )
+  ALLOCATE ( aux1(ngm) )
+  ALLOCATE ( aux2(ngm,nspin_mag) )
+  ALLOCATE ( veff(dfftp%nnr) )
+  ALLOCATE ( ylmk0(ngm, lmaxq * lmaxq) )
+  ALLOCATE ( qgm(ngm) )
+  ALLOCATE ( qmod(ngm) )
+  ALLOCATE ( qg(3,ngm) )
   !
   !    first compute the spherical harmonics
   !
@@ -177,13 +177,13 @@
   !SUM((REAL(REAL(int3(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int3(:,:,:,:,:))))**2)
 !END
   !
-  DEALLOCATE(aux1)
-  DEALLOCATE(aux2)
-  DEALLOCATE(veff)
-  DEALLOCATE(ylmk0)
-  DEALLOCATE(qgm)
-  DEALLOCATE(qmod)
-  DEALLOCATE(qg)
+  DEALLOCATE (aux1)
+  DEALLOCATE (aux2)
+  DEALLOCATE (veff)
+  DEALLOCATE (ylmk0)
+  DEALLOCATE (qgm)
+  DEALLOCATE (qmod)
+  DEALLOCATE (qg)
   !
   CALL stop_clock('newdq2')
   !

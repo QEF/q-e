@@ -39,7 +39,7 @@
   !
   !   Here the local variables
   !
-  ! max number of iterations used in mixing: n_iter must be .le. maxter
+  ! max number of iterations used in mixing: n_iter must be <= maxter
   INTEGER, PARAMETER :: maxter = 8
   !
   INTEGER ::  n, i, j, iwork(maxter), info, iter_used, ipos, inext 
@@ -54,20 +54,20 @@
   REAL(DP) wg(maxter), wg0
   DATA wg0 / 0.01d0 /, wg / maxter * 1.d0 /
   !
-  IF ( iter .lt. 1 ) CALL errore('mix_broyden','n_iter is smaller than 1',1)
-  IF ( n_iter .gt. maxter ) CALL errore('mix_broyden','n_iter is too big',1)
-  IF ( ndim .le. 0 ) CALL errore('mix_broyden','ndim .le. 0',1)
+  IF ( iter < 1 ) CALL errore('mix_broyden','n_iter is smaller than 1',1)
+  IF ( n_iter > maxter ) CALL errore('mix_broyden','n_iter is too big',1)
+  IF ( ndim <= 0 ) CALL errore('mix_broyden','ndim <= 0',1)
   !
-  IF ( iter .eq. 1 ) THEN
-     IF ( .not. ALLOCATED(df) ) ALLOCATE( df(ndim,n_iter) )    
-     IF ( .not. ALLOCATED(dv) ) ALLOCATE( dv(ndim,n_iter) )    
+  IF ( iter == 1 ) THEN
+     IF ( .NOT. ALLOCATED(df) ) ALLOCATE ( df(ndim,n_iter) )    
+     IF ( .NOT. ALLOCATED(dv) ) ALLOCATE ( dv(ndim,n_iter) )    
   ENDIF
-  IF ( conv .OR. iter .eq. nsiter ) THEN
-     IF ( ALLOCATED(df) ) DEALLOCATE(df)
-     IF ( ALLOCATED(dv) ) DEALLOCATE(dv)
+  IF ( conv .OR. iter == nsiter ) THEN
+     IF ( ALLOCATED(df) ) DEALLOCATE (df)
+     IF ( ALLOCATED(dv) ) DEALLOCATE (dv)
      RETURN
   ENDIF
-  IF ( .not. ALLOCATED(deltainsave) ) ALLOCATE( deltainsave(ndim) )    
+  IF ( .NOT. ALLOCATED(deltainsave) ) ALLOCATE ( deltainsave(ndim) )    
   deltainsave(:) = deltain(:)
   !
   ! iter_used = iter-1  IF iter <= n_iter
@@ -84,7 +84,7 @@
      deltaout(n) = deltaout(n) - deltain(n)
   ENDDO
   !
-  IF ( iter .gt. 1 ) THEN
+  IF ( iter > 1 ) THEN
      DO n = 1, ndim
         df(n,ipos) = deltaout(n) - df(n,ipos)
         dv(n,ipos) = deltain(n)  - dv(n,ipos)
@@ -141,7 +141,7 @@
   df(:,inext) = deltaout(:)
   dv(:,inext) = deltainsave(:)
   !
-  IF ( ALLOCATED(deltainsave) ) DEALLOCATE(deltainsave)
+  IF ( ALLOCATED(deltainsave) ) DEALLOCATE (deltainsave)
   !
   RETURN
   !
@@ -179,7 +179,7 @@
   !
   !   Here the local variables
   !
-  ! max number of iterations used in mixing: n_iter must be .le. maxter
+  ! max number of iterations used in mixing: n_iter must be <= maxter
   INTEGER, PARAMETER :: maxter = 8
   !
   INTEGER ::  n, i, j, iwork(maxter), info, iter_used, ipos, inext 
@@ -194,20 +194,20 @@
   REAL(DP) wg(maxter), wg0
   DATA wg0 / 0.01d0 /, wg / maxter * 1.d0 /
   !
-  IF ( iter .lt. 1 ) CALL errore('mix_broyden2','n_iter is smaller than 1',1)
-  IF ( n_iter .gt. maxter ) CALL errore('mix_broyden2','n_iter is too big',1)
-  IF ( ndim .le. 0 ) CALL errore('mix_broyden2','ndim .le. 0',1)
+  IF ( iter < 1 ) CALL errore('mix_broyden2','n_iter is smaller than 1',1)
+  IF ( n_iter > maxter ) CALL errore('mix_broyden2','n_iter is too big',1)
+  IF ( ndim <= 0 ) CALL errore('mix_broyden2','ndim <= 0',1)
   !
-  IF ( iter .eq. 1 ) THEN
-     IF ( .not. ALLOCATED(df2) ) ALLOCATE( df2(ndim,n_iter) )    
-     IF ( .not. ALLOCATED(dv2) ) ALLOCATE( dv2(ndim,n_iter) )    
+  IF ( iter == 1 ) THEN
+     IF ( .NOT. ALLOCATED(df2) ) ALLOCATE ( df2(ndim,n_iter) )    
+     IF ( .NOT. ALLOCATED(dv2) ) ALLOCATE ( dv2(ndim,n_iter) )    
   ENDIF
-  IF ( conv .OR. iter .eq. nsiter ) THEN
-     IF ( ALLOCATED(df2) ) DEALLOCATE(df2)
-     IF ( ALLOCATED(dv2) ) DEALLOCATE(dv2)
+  IF ( conv .OR. iter == nsiter ) THEN
+     IF ( ALLOCATED(df2) ) DEALLOCATE (df2)
+     IF ( ALLOCATED(dv2) ) DEALLOCATE (dv2)
      RETURN
   ENDIF
-  IF ( .not. ALLOCATED(deltainsave) ) ALLOCATE( deltainsave(ndim) )    
+  IF ( .NOT. ALLOCATED(deltainsave) ) ALLOCATE ( deltainsave(ndim) )    
   deltainsave(:) = deltain(:)
   !
   ! iter_used = iter-1  IF iter <= n_iter
@@ -224,7 +224,7 @@
      deltaout(n) = deltaout(n) - deltain(n)
   ENDDO
   !
-  IF ( iter .gt. 1 ) THEN
+  IF ( iter > 1 ) THEN
      DO n = 1, ndim
         df2(n,ipos) = deltaout(n) - df2(n,ipos)
         dv2(n,ipos) = deltain(n)  - dv2(n,ipos)
@@ -281,7 +281,7 @@
   df2(:,inext) = deltaout(:)
   dv2(:,inext) = deltainsave(:)
   !
-  IF ( ALLOCATED(deltainsave) ) DEALLOCATE(deltainsave)
+  IF ( ALLOCATED(deltainsave) ) DEALLOCATE (deltainsave)
   !
   RETURN
   !
@@ -324,7 +324,7 @@
   ! 
   !   Here the local variables
   !
-  ! max number of iterations used in mixing: n_iter must be .le. maxter
+  ! max number of iterations used in mixing: n_iter must be <= maxter
   INTEGER, PARAMETER :: maxter = 8
   !
   INTEGER ::  n, i, j, iwork(maxter), info, iter_used, ipos, inext 
@@ -340,20 +340,20 @@
   DATA wg0 / 0.01d0 /, wg / maxter * 1.d0 /
   REAL(DP) :: df_(ndim,n_iter), dv_(ndim,n_iter)
   !
-  IF ( iter .lt. 1 ) CALL errore('mix_broyden','n_iter is smaller than 1',1)
-  IF ( n_iter .gt. maxter ) CALL errore('mix_broyden','n_iter is too big',1)
-  IF ( ndim .le. 0 ) CALL errore('mix_broyden','ndim .le. 0',1)
+  IF ( iter < 1 ) CALL errore('mix_broyden','n_iter is smaller than 1',1)
+  IF ( n_iter > maxter ) CALL errore('mix_broyden','n_iter is too big',1)
+  IF ( ndim <= 0 ) CALL errore('mix_broyden','ndim <= 0',1)
   !
-  IF ( iter .eq. 1 ) THEN
-     IF ( .not. ALLOCATED(df) ) ALLOCATE( df(nbndfs,nkfs,ndim,n_iter) )    
-     IF ( .not. ALLOCATED(dv) ) ALLOCATE( dv(nbndfs,nkfs,ndim,n_iter) )    
+  IF ( iter == 1 ) THEN
+     IF ( .NOT. ALLOCATED(df) ) ALLOCATE ( df(nbndfs,nkfs,ndim,n_iter) )    
+     IF ( .NOT. ALLOCATED(dv) ) ALLOCATE ( dv(nbndfs,nkfs,ndim,n_iter) )    
   ENDIF
-  IF ( conv .OR. iter .eq. nsiter ) THEN
-     IF (ALLOCATED(df)) DEALLOCATE(df)
-     IF (ALLOCATED(dv)) DEALLOCATE(dv)
+  IF ( conv .OR. iter == nsiter ) THEN
+     IF (ALLOCATED(df)) DEALLOCATE (df)
+     IF (ALLOCATED(dv)) DEALLOCATE (dv)
      RETURN
   ENDIF
-  IF ( .not. ALLOCATED(deltainsave) ) ALLOCATE( deltainsave(ndim) )    
+  IF ( .NOT. ALLOCATED(deltainsave) ) ALLOCATE ( deltainsave(ndim) )    
   deltainsave(:) = deltain(:)
   !
   ! iter_used = iter-1  IF iter <= n_iter
@@ -370,7 +370,7 @@
      deltaout(n) = deltaout(n) - deltain(n)
   ENDDO
   !
-  IF ( iter .gt. 1 ) THEN
+  IF ( iter > 1 ) THEN
      DO n = 1, ndim
         df(ibnd,ik,n,ipos) = deltaout(n) - df(ibnd,ik,n,ipos)
         dv(ibnd,ik,n,ipos) = deltain(n)  - dv(ibnd,ik,n,ipos)
@@ -429,7 +429,7 @@
   df(ibnd,ik,:,inext) = deltaout(:)
   dv(ibnd,ik,:,inext) = deltainsave(:)
   !
-  IF ( ALLOCATED(deltainsave) ) DEALLOCATE(deltainsave)
+  IF ( ALLOCATED(deltainsave) ) DEALLOCATE (deltainsave)
   !
   RETURN
   !
@@ -471,7 +471,7 @@
   !
   !   Here the local variables
   !
-  ! max number of iterations used in mixing: n_iter must be .le. maxter
+  ! max number of iterations used in mixing: n_iter must be <= maxter
   INTEGER, PARAMETER :: maxter = 8
   !
   INTEGER ::  n, i, j, iwork(maxter), info, iter_used, ipos, inext 
@@ -487,20 +487,20 @@
   DATA wg0 / 0.01d0 /, wg / maxter * 1.d0 /
   REAL(DP) :: df_(ndim,n_iter), dv_(ndim,n_iter)
   !
-  IF ( iter .lt. 1 ) CALL errore('mix_broyden','n_iter is smaller than 1',1)
-  IF ( n_iter .gt. maxter ) CALL errore('mix_broyden','n_iter is too big',1)
-  IF ( ndim .le. 0 ) CALL errore('mix_broyden','ndim .le. 0',1)
+  IF ( iter < 1 ) CALL errore('mix_broyden','n_iter is smaller than 1',1)
+  IF ( n_iter > maxter ) CALL errore('mix_broyden','n_iter is too big',1)
+  IF ( ndim <= 0 ) CALL errore('mix_broyden','ndim <= 0',1)
   !
-  IF ( iter .eq. 1 ) THEN
-     IF ( .not. ALLOCATED(df2) ) ALLOCATE( df2(nbndfs,nkfs,ndim,n_iter) )
-     IF ( .not. ALLOCATED(dv2) ) ALLOCATE( dv2(nbndfs,nkfs,ndim,n_iter) )
+  IF ( iter == 1 ) THEN
+     IF ( .NOT. ALLOCATED(df2) ) ALLOCATE ( df2(nbndfs,nkfs,ndim,n_iter) )
+     IF ( .NOT. ALLOCATED(dv2) ) ALLOCATE ( dv2(nbndfs,nkfs,ndim,n_iter) )
   ENDIF
-  IF ( conv .OR. iter .eq. nsiter ) THEN
-     IF (ALLOCATED(df2)) DEALLOCATE(df2)
-     IF (ALLOCATED(dv2)) DEALLOCATE(dv2)
+  IF ( conv .OR. iter == nsiter ) THEN
+     IF (ALLOCATED(df2)) DEALLOCATE (df2)
+     IF (ALLOCATED(dv2)) DEALLOCATE (dv2)
      RETURN
   ENDIF
-  IF ( .not. ALLOCATED(deltainsave) ) ALLOCATE( deltainsave(ndim) )
+  IF ( .NOT. ALLOCATED(deltainsave) ) ALLOCATE ( deltainsave(ndim) )
   deltainsave(:) = deltain(:)
   !
   ! iter_used = iter-1  IF iter <= n_iter
@@ -517,7 +517,7 @@
      deltaout(n) = deltaout(n) - deltain(n)
   ENDDO
   !
-  IF ( iter .gt. 1 ) THEN
+  IF ( iter > 1 ) THEN
      DO n = 1, ndim
         df2(ibnd,ik,n,ipos) = deltaout(n) - df2(ibnd,ik,n,ipos)
         dv2(ibnd,ik,n,ipos) = deltain(n)  - dv2(ibnd,ik,n,ipos)
@@ -576,7 +576,7 @@
   df2(ibnd,ik,:,inext) = deltaout(:)
   dv2(ibnd,ik,:,inext) = deltainsave(:)
   !
-  IF ( ALLOCATED(deltainsave) ) DEALLOCATE(deltainsave)
+  IF ( ALLOCATED(deltainsave) ) DEALLOCATE (deltainsave)
   !
   RETURN
   !

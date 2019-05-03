@@ -32,7 +32,7 @@ MODULE symm_base
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
-       fft_fact(3),          &! FFT dimensions must be multiple of fft_fact
+       fft_fact(3) = 1,      &! FFT dimensions must be multiple of fft_fact
        nrot,                 &! number of bravais lattice symmetries
        spacegroup = 0,       &! space group index, as read from input
        nsym = 1,             &! total number of crystal symmetries
@@ -509,11 +509,14 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
               !
               !    ft_ is in crystal axis and is a valid fractional translation
               !    only if ft_(i)=0 or ft_(i)=1/n, with n=2,3,4,6
-              !    The check below is less strict: n must be integer
               !
               DO i=1,3
                  IF ( ABS (ft_(i)) > eps2 ) THEN
-                    ftaux(i) = ABS (1.0_dp/ft_(i) - NINT(1.0_dp/ft_(i)) ) 
+                    ftaux(i) = ABS (1.0_dp/ft_(i) - NINT(1.0_dp/ft_(i)) )
+                    nfrac = NINT(1.0_dp/ABS(ft_(i)))
+                    IF ( ftaux(i) < eps2 .AND. nfrac /= 2 .AND. &
+                         nfrac /= 3 .AND. nfrac /= 4 .AND. nfrac /= 6 ) &
+                         ftaux(i) = 2*eps2
                  ELSE
                     ftaux(i) = 0.0_dp
                  END IF

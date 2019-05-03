@@ -522,6 +522,7 @@ SUBROUTINE setup()
   IF ( nosym ) THEN
      nsym = 1
      invsym = .FALSE.
+     fft_fact(:) = 1
   END IF
   !
   IF ( nsym > 1 .AND. ibrav == 0 ) CALL infomsg('setup', &

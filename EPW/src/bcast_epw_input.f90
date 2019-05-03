@@ -240,7 +240,7 @@ SUBROUTINE bcast_epw_input1
   ! integers
   !
   CALL mp_bcast (nat_todo, meta_ionode_id, world_comm)
-  IF (nat_todo.gt.0) THEN
+  IF (nat_todo > 0) THEN
      CALL mp_bcast (atomo, meta_ionode_id, world_comm)
   ENDIF
 #endif

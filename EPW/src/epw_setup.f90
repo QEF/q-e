@@ -28,10 +28,11 @@
   USE gvect,         ONLY : ngm
   USE symm_base,     ONLY : nsym, s, irt, t_rev, time_reversal, invs, sr, &
                             inverse_s
+  USE eqv,           ONLY : dmuxc
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants_epw, ONLY : zero, eps5
-  USE noncollin_module,     ONLY : noncolin, m_loc, angle1, angle2, ux
+  USE noncollin_module,     ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   USE nlcc_ph,       ONLY : drc
   USE uspp,          ONLY : nlcc_any
   USE control_ph,    ONLY : search_sym, u_from_file
@@ -79,7 +80,7 @@
     !
     ! check that the k-mesh was defined in the positive region of 1st BZ
     !
-    IF ( xx_c .lt. -eps5 .or. yy_c .lt. -eps5 .or. zz_c .lt. -eps5 ) &
+    IF ( xx_c < -eps5 .or. yy_c < -eps5 .or. zz_c < -eps5 ) &
       CALL errore('epw_setup','coarse k-mesh needs to be strictly positive in 1st BZ',1)
     !
   ENDDO
@@ -91,28 +92,30 @@
   ! Set non linear core correction stuff
   !
   nlcc_any = ANY( upf(1:ntyp)%nlcc )
-  IF (nlcc_any) ALLOCATE(drc(ngm, ntyp))    
+  IF (nlcc_any) ALLOCATE (drc(ngm, ntyp))    
   !
   !  2) If necessary calculate the local magnetization. This information is
   !      needed in sgama 
   !
-  IF (.not.ALLOCATED(m_loc)) ALLOCATE(m_loc(3, nat))
   IF (noncolin .AND. domag) THEN
-    DO na = 1, nat
+    ALLOCATE (m_loc(3, nat))
+    DO na=1, nat
       !
-      m_loc(1,na) = starting_magnetization(ityp(na)) * &
-                    SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
-      m_loc(2,na) = starting_magnetization(ityp(na)) * &
-                    SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
-      m_loc(3,na) = starting_magnetization(ityp(na)) * &
-                    COS( angle1(ityp(na)) )
+      m_loc(1, na) = starting_magnetization(ityp(na)) * &
+                    SIN(angle1(ityp(na))) * COS(angle2(ityp(na)))
+      m_loc(2, na) = starting_magnetization(ityp(na)) * &
+                    SIN(angle1(ityp(na))) * SIN(angle2(ityp(na)))
+      m_loc(3, na) = starting_magnetization(ityp(na)) * &
+                    COS(angle1(ityp(na)))
     ENDDO
     ux = zero
     IF (dft_is_gradient()) CALL compute_ux(m_loc,ux,nat)
+    DEALLOCATE (m_loc)
   ENDIF
   !
   ! 3) Computes the derivative of the xc potential
   !
+  ALLOCATE (dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
   CALL setup_dmuxc()
   !
   ! 3.1) Setup all gradient correction stuff
@@ -178,7 +181,7 @@
     npertx = max(npertx, npert(irr))
   ENDDO
   !
-  IF (.NOT. ALLOCATED(transp_temp)) ALLOCATE( transp_temp(nstemp) )
+  IF (.NOT. ALLOCATED(transp_temp)) ALLOCATE ( transp_temp(nstemp) )
   ! 
   transp_temp(:) = zero
   ! In case of scattering calculation
@@ -187,7 +190,7 @@
     IF ( maxval(temps(:)) > zero ) THEN
       transp_temp(:) = temps(:)
     ELSE
-      IF ( nstemp .eq. 1 ) THEN
+      IF ( nstemp == 1 ) THEN
         transp_temp(1) = tempsmin
       ELSE
         DO itemp = 1, nstemp
@@ -227,7 +230,7 @@
   ! 
   CALL start_clock ('epw_setup')
   !
-  IF (.NOT. ALLOCATED(transp_temp)) ALLOCATE( transp_temp(nstemp) )
+  IF (.NOT. ALLOCATED(transp_temp)) ALLOCATE ( transp_temp(nstemp) )
   !
   transp_temp(:) = zero
   ! In case of scattering calculation
@@ -236,7 +239,7 @@
     IF ( maxval(temps(:)) > zero ) THEN
       transp_temp(:) = temps(:)
     ELSE
-      IF ( nstemp .eq. 1 ) THEN
+      IF ( nstemp == 1 ) THEN
         transp_temp(1) = tempsmin
       ELSE
         DO itemp = 1, nstemp
