@@ -296,8 +296,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   !
   DO ik = 1, nks
      !
-     CALL lr_sm1_psi (.FALSE., ik, npwx, ngk(ik), nbnd, &
+     CALL lr_sm1_psi_tpw ( ik, npwx, ngk(ik), nbnd, &
                        & sevc1_new(1,1,ik), evc1_new(1,1,ik))
+!     CALL lr_sm1_psi (.FALSE., ik, npwx, ngk(ik), nbnd, &
+!                       & sevc1_new(1,1,ik), evc1_new(1,1,ik))
      ! 
   ENDDO
   !

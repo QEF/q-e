@@ -21,11 +21,10 @@
   !! RM - Jan 2019 - Updated based on QE 6.3
   !!
   USE ions_base,    ONLY : nat, ntyp => nsp
-  USE pwcom,        ONLY : npwx, nbnd, nspin
+  USE pwcom,        ONLY : nbnd, nspin
   USE gvect,        ONLY : ngm
-  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,     ONLY : lspinorb
-  USE phcom,        ONLY : evq, vlocq, dmuxc
   USE phus,         ONLY : int1, int1_nc, int2, int2_so, &
                            int4, int4_nc, int5, int5_so, & 
                            alphap
@@ -51,10 +50,7 @@
   !
   !  ALLOCATE space for the quantities needed in EPW
   !
-  ALLOCATE (evq(npwx*npol, nbnd))
   ALLOCATE (transp_temp(nstemp))
-  !
-  ALLOCATE (vlocq(ngm, ntyp))   
   ! SP: nrxx is not used in QE 5 ==> tg_nnr is the maximum among nnr
   !     This should have the same dim as nrxx had.
   !     ALLOCATE (dmuxc ( nrxx, nspin, nspin))  
@@ -66,7 +62,6 @@
   !           --> tg = task group    
   !     ALLOCATE (dmuxc ( dffts%nnr, nspin, nspin))    
   !
-  ALLOCATE (dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
   ALLOCATE (eigqts(nat))    
   ALLOCATE (rtau(3, 48, nat))    
   ALLOCATE (u(3 * nat, 3 * nat))    

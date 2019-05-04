@@ -291,7 +291,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      !    evc1_new = S^{-1} * sevc1_new
      !    If not ultrasoft: evc1_new = sevc1_new
      !
-     CALL lr_sm1_psiq (.FALSE., ik, npwx, npwq, nbnd_occ(ikk), &
+     CALL lr_sm1_psi_tpw ( ik, npwx, npwq, nbnd_occ(ikk), &
                                & sevc1_new(1,1,ik), evc1_new(1,1,ik))
      !
   ENDDO ! loop on ik

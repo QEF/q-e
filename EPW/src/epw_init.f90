@@ -72,6 +72,8 @@
   !
   !
   CALL start_clock( 'epw_init' )
+  ! 
+  IF (first_run) ALLOCATE (vlocq(ngm, ntyp))
   !
   DO na = 1, nat
     !

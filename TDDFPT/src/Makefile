@@ -29,6 +29,10 @@ lr_normalise.o \
 lr_lanczos.o \
 lr_apply_liouvillian.o \
 lr_dv_setup.o \
+compute_intq.o \
+set_intq_nc.o \
+transform_intq_nc.o \
+transform_intq_so.o  \
 lr_solve_e.o \
 lr_dvpsi_e.o \
 stop_lr.o \
