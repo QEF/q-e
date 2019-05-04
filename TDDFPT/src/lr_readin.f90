@@ -48,7 +48,6 @@ SUBROUTINE lr_readin
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
   USE io_rho_xml,          ONLY : write_scf
-  USE noncollin_module,    ONLY : noncolin
   USE mp_bands,            ONLY : ntask_groups
   USE constants,           ONLY : eps4
   USE control_lr,          ONLY : lrpa
@@ -534,7 +533,6 @@ CONTAINS
     !
     IF (eels) THEN
        !
-       IF (okvan .AND. noncolin) CALL errore( 'lr_readin', 'Ultrasoft PP + noncolin is not fully implemented', 1 )
        IF (gamma_only)  CALL errore( 'lr_readin', 'gamma_only is not supported', 1 )
        !
        ! Tamm-Dancoff approximation is not recommended to be used with EELS, and
