@@ -51,7 +51,7 @@ PROGRAM do_ppacf
   USE funct,                ONLY : xc,xc_spin,gcxc,gcx_spin,gcc_spin,dft_is_nonlocc,nlc
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction,set_auxiliary_flags,enforce_input_dft
-  USE wvfct,                ONLY : npw, npwx
+  USE wvfct,                ONLY : npwx
   USE environment,          ONLY : environment_start, environment_end
   USE kernel_table,         ONLY : Nqs, vdw_table_name, kernel_file_name
   USE vdW_DF,               ONLY : get_potential, vdW_energy
@@ -110,6 +110,7 @@ PROGRAM do_ppacf
   REAL(DP), ALLOCATABLE :: tot_grad_rho(:,:),grad_rho(:,:,:)
   REAL(DP), ALLOCATABLE :: tot_rho(:)
 
+  INTEGER :: npw                ! number of plane waves
   INTEGER :: ik                 ! counter on k points
   INTEGER, ALLOCATABLE  :: igk_buf(:)
   REAL(dp), ALLOCATABLE :: gk(:) ! work space
