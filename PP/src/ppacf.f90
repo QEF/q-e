@@ -336,7 +336,7 @@ PROGRAM do_ppacf
         IF (arhox(1) > vanishing_charge) THEN
            IF(iexch==1) THEN
               rs = pi34 /arhox**third
-              CALL slater(1, rs, ex, vx(:,1))     ! \epsilon_x,\lambda[n]=\epsilon_x[n]
+              CALL slater( rs, ex(1), vx(1,1))     ! \epsilon_x,\lambda[n]=\epsilon_x[n]
            ELSE
               CALL xc_lda( 1, arhox, ex, ec, vx(:,1), vc(:,1) )
            ENDIF
@@ -416,7 +416,7 @@ PROGRAM do_ppacf
            IF( ABS( zeta(1) ) > 1.D0 ) zeta(1) = SIGN(1.D0, zeta(1))
            IF(iexch==1) THEN
               !
-              CALL slater_spin(1, arhox, zeta, ex, vx)
+              CALL slater_spin(arhox(1), zeta(1), ex(1), vx(1,:))
               !
            ELSE
               CALL xc_lsda( 1, arhox, zeta, ex, ec, vx, vc )

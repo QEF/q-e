@@ -315,9 +315,6 @@ module funct
   !
   integer, parameter:: notset = -1
   !
-  ! switches to decide between qe (1) and libxc (2) routines
-  integer :: qe_or_libxc(2)
-  !
   ! internal indices for exchange-correlation
   !    iexch: type of exchange
   !    icorr: type of correlation
@@ -331,6 +328,15 @@ module funct
   integer :: igcc  = notset
   integer :: imeta = notset
   integer :: inlc  = notset
+  !
+  ! Switches to decide between qe (1) and libxc (2) routines for each single xc term
+  ! (only LDA at present)
+  ! PROVISIONAL: probably it should be put as an environment variable or something
+#if defined(__LIBXC)
+  integer :: qe_or_libxc(1:2) = 1
+#else
+  integer :: qe_or_libxc(1:2) = 0
+#endif
   !
   real(DP):: exx_fraction = 0.0_DP
   real(DP):: screening_parameter = 0.0_DP
@@ -411,14 +417,6 @@ CONTAINS
     do l = 1, len
        dftout (l:l) = capital (dft_(l:l) )
     enddo
-    !
-    !
-    ! PROVISIONAL: it should be put as an environment variable or something
-    qe_or_libxc(:)=0
-#if defined(__LIBXC)
-    qe_or_libxc(1)=1
-    qe_or_libxc(2)=1
-#endif
     !
     ! ----------------------------------------------
     ! FIRST WE CHECK ALL THE SHORT NAMES
@@ -2915,8 +2913,9 @@ return
 
 end subroutine tau_xc_array_spin
 !
-!
+!-----------------------------------------------------------------------
 SUBROUTINE init_lda_xc()
+   !-------------------------------------------------------------------
    !! Gets from inside parameters needed to initialize lda xc-drivers.
    !
    USE kinds,          ONLY: DP
@@ -2934,6 +2933,9 @@ SUBROUTINE init_lda_xc()
    IF (libxc_switches(1)==1) iexch_l = qe_to_libxc_index( iexch, 'exch_LDA' )
    icorr_l = get_icorr()
    IF (libxc_switches(2)==1) icorr_l = qe_to_libxc_index( icorr, 'corr_LDA' )
+   !
+   IF (iexch_l==-1 .OR. icorr_l==-1) CALL errore( 'init_lda_xc', 'Functional &
+                                             & indexes not well defined', 1 )
    !
    ! hybrid exchange vars
    exx_started_l  = exx_is_active()

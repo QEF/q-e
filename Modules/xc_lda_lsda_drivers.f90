@@ -73,9 +73,9 @@ SUBROUTINE select_lda_functionals( iexch, icorr, exx_fraction, finite_size_cell_
 END SUBROUTINE select_lda_functionals
 !
 !
-!---------------------------------------------------------------------
+!---------------------------------------------------------------------------
 SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
-  !---------------------------------------------------------------------
+  !-------------------------------------------------------------------------
   !! Wrapper routine. Calls xc-driver routines from internal libraries
   !! of q-e or from the external libxc, depending on the input choice.
   !
