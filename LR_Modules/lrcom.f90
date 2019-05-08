@@ -154,6 +154,7 @@ MODULE lrus
   COMPLEX (DP), ALLOCATABLE :: bbk(:,:,:)    ! nkb, nkb, nks)
   ! for k points
   COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:,:) ! nkb, nkb, nspin_mag, nks)
+  COMPLEX (DP), ALLOCATABLE :: bbnc_sm1(:,:,:) ! nkb, nkb, nspin_mag, nks)
   ! for the noncollinear case
   ! bbg = < beta^N_i | beta^P_j > 
   ! bbg/bbk/bbnc are the scalar products of beta functions 

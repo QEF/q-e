@@ -75,7 +75,12 @@ MODULE lr_variables
   COMPLEX(kind=dp), ALLOCATABLE :: R(:,:,:) ! The oscillator strength from valence state (first index)
                                             ! to conduction  state (second index), for each polarization
                                             ! direction (third index).
-  !
+
+
+
+  COMPLEX (DP), ALLOCATABLE ::      &
+                  intq(:,:,:),      &! nhm, nhm, nat),    integral of e^iqr Q 
+                  intq_nc(:,:,:,:)   ! nhm, nhm, nat, nspin), integral of 
   ! Lanczos Matrix
   !
   !

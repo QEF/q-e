@@ -27,9 +27,9 @@ SUBROUTINE lr_solve_e
   USE klist,                ONLY : nks, xk, ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
-                                   & d0psi_rs, eels, lr_exx
-  USE lsda_mod,             ONLY : lsda, isk, current_spin
-  USE uspp,                 ONLY : vkb
+                                   & d0psi_rs, eels, lr_exx,intq, intq_nc
+  USE lsda_mod,             ONLY : lsda, isk, current_spin,nspin
+  USE uspp,                 ONLY : vkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions, ONLY : evc
@@ -37,7 +37,10 @@ SUBROUTINE lr_solve_e
   USE mp,                   ONLY : mp_max, mp_min, mp_barrier
   USE control_lr,           ONLY : alpha_pv
   USE qpoint,               ONLY : nksq
-  USE noncollin_module,     ONLY : npol
+  USE noncollin_module,     ONLY : npol,noncolin
+  USE uspp_param,      ONLY : nhm
+  USE ions_base,       ONLY : nat
+
   !
   IMPLICIT NONE
   INTEGER :: ibnd, ik, is, ip
@@ -55,6 +58,14 @@ SUBROUTINE lr_solve_e
   IF (eels) THEN
      !
      ! EELS case
+
+    IF (okvan) THEN
+      ALLOCATE (intq (nhm, nhm, nat) )
+      IF (noncolin) THEN
+        ALLOCATE(intq_nc( nhm, nhm, nat, nspin))
+      ENDIF
+    CALL compute_intq()
+  ENDIF
      !
      DO ik = 1, nksq
         CALL lr_dvpsi_eels(ik, d0psi(:,:,ik,1), d0psi2(:,:,ik,1))
