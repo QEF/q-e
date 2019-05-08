@@ -75,6 +75,7 @@ module funct
   ! PRIVATE variables defining the DFT functional
   !
   PRIVATE :: dft, iexch, icorr, igcx, igcc, imeta, inlc
+  PRIVATE :: qe_or_libxc
   PRIVATE :: discard_input_dft
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
@@ -314,6 +315,9 @@ module funct
   !
   integer, parameter:: notset = -1
   !
+  ! switches to decide between qe (1) and libxc (2) routines
+  integer :: qe_or_libxc(2)
+  !
   ! internal indices for exchange-correlation
   !    iexch: type of exchange
   !    icorr: type of correlation
@@ -408,6 +412,14 @@ CONTAINS
        dftout (l:l) = capital (dft_(l:l) )
     enddo
     !
+    !
+    ! PROVISIONAL: it should be put as an environment variable or something
+    qe_or_libxc(:)=0
+#if defined(__LIBXC)
+    qe_or_libxc(1)=1
+    qe_or_libxc(2)=1
+#endif
+    !
     ! ----------------------------------------------
     ! FIRST WE CHECK ALL THE SHORT NAMES
     ! Note: comparison is done via exact matching
@@ -416,6 +428,7 @@ CONTAINS
     ! special cases : PZ  (LDA is equivalent to PZ)
     IF (('PZ' .EQ. TRIM(dftout) ).OR.('LDA' .EQ. TRIM(dftout) )) THEN
        dft_defined = set_dft_values(1,1,0,0,0,0)
+
     ! speciale cases : PW ( LDA with PW correlation )
     ELSE IF ( 'PW' .EQ. TRIM(dftout)) THEN
     dft_defined = set_dft_values(1,4,0,0,0,0)
@@ -671,9 +684,9 @@ CONTAINS
       igcc  = matching (dftout, ngcc,gradc)
       imeta = matching (dftout,nmeta, meta)
       inlc  = matching (dftout, ncnl, nonlocc)
-
+      
     endif
-
+     
     ! ----------------------------------------------------------------
     ! Last check
     ! No more defaults, the code exits if the dft is not defined
@@ -805,24 +818,86 @@ CONTAINS
   end subroutine set_auxiliary_flags
   !
   !-----------------------------------------------------------------------
-  logical function set_dft_values (i1,i2,i3,i4,i5,i6)
+  logical function set_dft_values(i1,i2,i3,i4,i5,i6)
     !-----------------------------------------------------------------------
     !
     implicit none
     integer :: i1,i2,i3,i4,i5,i6
-
+    !
     iexch=i1
     icorr=i2
     igcx =i3
     igcc =i4
     inlc =i5
     imeta=i6
+    !
     set_dft_values = .true.
-
+    !
     return
-
+    !
   end function set_dft_values
-
+  !
+  !
+  !--------------------------------------------------------------------------
+  FUNCTION qe_to_libxc_index( index_qe, term )
+    !-----------------------------------------------------------------------
+    !! PROVISIONAL: converts q-e indexes of functionals into libxc ones,
+    !! when possible.
+    !! In the next commit this will be done directly in 'funct.f90' and
+    !! including all the cases available.
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: index_qe
+    !! index of q-e functional term
+    CHARACTER(LEN=*), INTENT(IN) :: term
+    !! which term to consider
+    INTEGER :: qe_to_libxc_index
+    !! index converted in libxc notation
+    !
+    ! ... exchange term
+    IF (term .EQ. 'exch_LDA') THEN
+      !
+      qe_or_libxc(1) = 1
+      !
+      SELECT CASE( index_qe )
+      CASE( 1 )
+        qe_to_libxc_index = 1
+      CASE DEFAULT
+        qe_to_libxc_index = -1
+        qe_or_libxc(1) = 0
+      END SELECT
+      !
+      ! ... correlation term
+    ELSEIF (term .EQ. 'corr_LDA') THEN
+      !
+      qe_or_libxc(2) = 1
+      !
+      SELECT CASE( index_qe )
+      CASE( 1 ) !pz
+         qe_to_libxc_index = 9
+      CASE( 5 ) !wigner
+         qe_to_libxc_index = 2
+      CASE( 2 ) !vwn
+         qe_to_libxc_index = 7
+      CASE( 4 ) !pw
+         qe_to_libxc_index = 12
+      CASE DEFAULT
+         qe_to_libxc_index = -1
+         qe_or_libxc(2) = 0
+      END SELECT      
+      !
+    ELSE
+      !
+      CALL errore( 'qe_to_libxc_index', 'ERROR: option not available', 3 )
+      !
+    ENDIF
+    !
+    RETURN
+    !
+  END FUNCTION qe_to_libxc_index
+  !
+  !
   !-----------------------------------------------------------------------
   subroutine enforce_input_dft (dft_, nomsg)
     !
@@ -2844,16 +2919,21 @@ end subroutine tau_xc_array_spin
 SUBROUTINE init_lda_xc()
    !! Gets from inside parameters needed to initialize lda xc-drivers.
    !
-   USE kinds,               ONLY: DP
-   USE xc_lda_lsda,         ONLY: iexch_l, icorr_l, &
-                                  exx_started_l, is_there_finite_size_corr, &
-                                  exx_fraction_l, finite_size_cell_volume_l
+   USE kinds,          ONLY: DP
+   USE xc_lda_lsda,    ONLY: libxc_switches, iexch_l, icorr_l, &
+                             exx_started_l, is_there_finite_size_corr, &
+                             exx_fraction_l, finite_size_cell_volume_l
    !
    IMPLICIT NONE
    !
+   ! use qe or libxc for the different terms (0: qe, 1: libxc)
+   libxc_switches(:) = qe_or_libxc(:)
+   !
    ! exchange-correlation indexes
    iexch_l = get_iexch()
+   IF (libxc_switches(1)==1) iexch_l = qe_to_libxc_index( iexch, 'exch_LDA' )
    icorr_l = get_icorr()
+   IF (libxc_switches(2)==1) icorr_l = qe_to_libxc_index( icorr, 'corr_LDA' )
    !
    ! hybrid exchange vars
    exx_started_l  = exx_is_active()
@@ -2861,7 +2941,8 @@ SUBROUTINE init_lda_xc()
    IF ( exx_started ) exx_fraction_l = get_exx_fraction()
    !
    ! finite size correction vars
-   CALL get_finite_size_cell_volume( is_there_finite_size_corr, finite_size_cell_volume_l )
+   CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
+                                     finite_size_cell_volume_l )
    !
    RETURN
    !

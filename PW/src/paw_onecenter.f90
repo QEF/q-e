@@ -408,8 +408,8 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient, init_lda_xc !^^^
-    USE xc_lda_lsda,            ONLY : xc, xc_spin                  !^^^
+    USE funct,                  ONLY : dft_is_gradient, init_lda_xc
+    USE xc_lda_lsda,            ONLY : xc
     USE constants,              ONLY : fpi ! REMOVE
 
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -435,7 +435,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     INTEGER               :: mytid, ntids
     !
     !^^^******************************************   !^^^
-    REAL(DP), ALLOCATABLE :: arho(:), zeta(:), amag(:)
+    REAL(DP), ALLOCATABLE :: arho(:,:), zeta(:), amag(:)
     REAL(DP), ALLOCATABLE :: ex(:), ec(:)
     REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
     REAL(DP), PARAMETER   :: eps = 1.e-30_dp
@@ -473,7 +473,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
     !
-    ALLOCATE( arho(i%m) ) !^^^
+    ALLOCATE( arho(i%m,2) ) !^^^
     ALLOCATE( zeta(i%m) )
     ALLOCATE( amag(i%m) )
     ALLOCATE( ex(i%m) )
@@ -505,18 +505,12 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         IF ( nspin_mag ==4 ) THEN
            IF (with_small_so.AND.i%ae==1) CALL add_small_mag(i,ix,rho_rad)
            !
-           !
            DO k=1,i%m
               rho_loc(k,1:nspin) = rho_rad(k,1:nspin)*g(i%t)%rm2(k)
-              amag(k) = SQRT(rho_loc(k,2)**2+rho_loc(k,3)**2+rho_loc(k,4)**2)
-              arho(k) = ABS( rho_loc(k,1)+rho_core(k) )
-              IF ( arho(k) > eps12 ) THEN
-                 zeta(k) = amag(k) / arho(k)
-                 IF ( ABS( zeta(k) ) > 1.D0 ) zeta(k) = SIGN( 1.D0, zeta(k) )
-              ENDIF
+              rho_loc(k,1) = rho_loc(k,1) + rho_core(k)
            ENDDO
            !
-           CALL xc_spin( i%m, arho, zeta, ex, ec, vx, vc )
+           CALL xc( i%m, 4, 2, rho_loc, ex, ec, vx, vc )
            !
            DO k=1,i%m
               IF (present(energy)) &
@@ -550,32 +544,24 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
            !
            IF (lsd==0) THEN
              !
-             arho = ABS( rho_loc(:,1)+rho_core )                          !^^^ def arhox, eps, e2,
+             arho(:,1) = rho_loc(:,1) + rho_core
              !
-             CALL xc( i%m, arho, ex, ec, vx(:,1), vc(:,1) )
+             CALL xc( i%m, 1, 1, arho(:,1), ex, ec, vx(:,1), vc(:,1) )
              !
              v_rad(:,ix,1) = e2*( vx(:,1) + vc(:,1) )
-             if (present(energy)) e_rad = e2*( ex + ec )
+             if (present(energy)) e_rad = e2*( ex(:) + ec(:) )
              !
            ELSE
              !
-             zeta=0.0_DP
-             DO k = 1, i%m
-                arho(k) = ABS( rho_loc(k,1)+rho_loc(k,2)+rho_core(k) )
-                IF ( arho(k) > eps ) THEN
-                  zeta(k) = (rho_loc(k,1)-rho_loc(k,2)) / arho(k)
-                  IF ( ABS(zeta(k)) > 1.D0 ) zeta(k) = SIGN( 1.D0, zeta(k) )
-                ENDIF
-             ENDDO
+             arho(:,1) = rho_loc(:,1) + rho_loc(:,2) + rho_core(:)
+             arho(:,2) = rho_loc(:,1) - rho_loc(:,2)
              !
-             CALL xc_spin( i%m, arho, zeta, ex, ec, vx, vc )
+             CALL xc( i%m, 2, 2, arho, ex, ec, vx, vc )
              !
-             v_rad(:,ix,:) = e2*( vx(:,:) + vc(:,:) )    !^^^**
+             v_rad(:,ix,:) = e2*( vx(:,:) + vc(:,:) )
              if (present(energy)) e_rad(:) = e2*( ex(:) + ec(:) )
              !
            ENDIF
-           !
-           !CALL evxc_t_vec(rho_loc, rho_core, lsd, i%m, v_rad(:,ix,:), e_rad)  !^^^
            !
            IF (present(energy)) THEN
               IF ( nspin_mag < 2 ) THEN
@@ -1605,18 +1591,19 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
    CALL stop_clock('PAW_dpot')
 
 END SUBROUTINE PAW_dpotential
-
-
+!
+!
 SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
     !
     !!  This routine computes the change of the exchange and correlation 
     !!  potential in the spherical basis. It receives as input the charge
     !!  density and its variation.
     !
+    USE spin_orb,               ONLY : domag
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient
+    USE funct,                  ONLY : dft_is_gradient, init_lda_xc
     !
     TYPE(paw_info), INTENT(IN) :: i                   ! atom's minimal info
     REAL(DP), INTENT(IN)  :: rho_lm(i%m,i%l**2,nspin_mag) ! charge density as 
@@ -1644,6 +1631,7 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
     ALLOCATE(v_rad(i%m,rad(i%t)%nx,nspin_mag))
     ALLOCATE(dmuxc(i%m,nspin_mag,nspin_mag))
     !
+    CALL init_lda_xc()
     !
     DO ix = ix_s, ix_e
        !
@@ -1662,13 +1650,14 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
        CASE( 4 )
           !
           rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
-          CALL dmxc_nc( i%m, rho_rad(:,1),rho_rad(:,2:4), dmuxc )
+          CALL dmxc( i%m, 4, rho_rad, dmuxc )
           !
        CASE( 2 )
           !
           rho_rad(:,1) = rho_rad(:,1) + 0.5_DP*rho_core(:)
           rho_rad(:,2) = rho_rad(:,2) + 0.5_DP*rho_core(:)
-          CALL dmxc_spin( i%m, rho_rad, dmuxc )
+          !
+          CALL dmxc( i%m, 2, rho_rad, dmuxc )
           !
        CASE DEFAULT
           !
@@ -1685,7 +1674,7 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
              ENDIF
           ENDDO
           !
-          CALL dmxc( i%m, rho_rad(:,1), dmuxc(:,1,1) )
+          CALL dmxc( i%m, 1, rho_rad(:,1), dmuxc )
           !
           v_rad(:,ix,1) = dmuxc(:,1,1)*sign_r(:)
           !
@@ -1729,6 +1718,7 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
     RETURN
     !
 END SUBROUTINE PAW_dxc_potential
+!
 !
 ! add gradient correction to dvxc. Both unpolarized and
 ! spin polarized cases are supported. 

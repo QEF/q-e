@@ -5,13 +5,170 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+!---------------------------------------------------------------------
+SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
+  !---------------------------------------------------------------------
+  !! Wrapper routine. Calls dmxc-driver routines from internal libraries
+  !! or from the external one 'libxc', depending on the input choice.
+  !
+  ! Only two possibilities in the present version (LDA only):
+  ! 1) iexch libxc + icorr libxc
+  ! 2) iexch qe    + icorr qe
+  !
+  USE kinds,        ONLY: DP
+#if defined(__LIBXC)
+  USE xc_f90_types_m
+  USE xc_f90_lib_m
+  USE xc_lda_lsda
+#endif
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: length
+  !! length of the I/O arrays
+  INTEGER,  INTENT(IN) :: sr_d
+  !! number of spin components
+  REAL(DP), INTENT(IN) :: rho_in(length,sr_d)
+  !! charge density
+  REAL(DP), INTENT(OUT) :: dmuxc(length,sr_d,sr_d)
+  !! the derivative of the xc potential
+  !
+  ! ... local variables
+  !
+#if defined(__LIBXC)
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  INTEGER :: pol_unpol
+  REAL(DP), ALLOCATABLE :: rho_lxc(:)
+  REAL(DP), ALLOCATABLE :: dmxc_lxc(:), dmex_lxc(:), dmcr_lxc(:)
+  LOGICAL :: exch_lxc_avail, corr_lxc_avail
+#endif
+  !
+  INTEGER :: ir, length_lxc, length_dlxc
+  REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
+  !
+  !
+#if defined(__LIBXC)
+  !
+  IF (libxc_switches(1)==1 .AND. libxc_switches(2)==1) THEN
+    !
+    length_lxc = length*sr_d
+    !
+    ! ... set libxc input
+    SELECT CASE( sr_d )
+    CASE( 1 )
+      !
+      ALLOCATE( rho_lxc(length_lxc) )
+      pol_unpol = 1
+      rho_lxc = rho_in(:,1) 
+      !
+    CASE( 2 )
+      !
+      ALLOCATE( rho_lxc(length_lxc) )
+      pol_unpol = 2
+      DO ir = 1, length
+        rho_lxc(2*ir-1) = rho_in(ir,1)
+        rho_lxc(2*ir)   = rho_in(ir,2)
+      ENDDO
+      !
+    CASE( 4 )
+      !
+      ! ... libxc version not available for non-collinear case with domag...
+      !
+      ! 
+      CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )  !da sistemare riconversione indici in qe da libxc
+      !
+      RETURN
+      !
+    CASE DEFAULT
+      !
+      CALL errore( 'dmxc', 'Wrong number of spin dimensions', 1 )
+      !
+    END SELECT
+    !
+    length_dlxc = length
+    IF (pol_unpol == 2) length_dlxc = length*3
+    !
+    !
+    ALLOCATE( dmex_lxc(length_dlxc), dmcr_lxc(length_dlxc), &
+              dmxc_lxc(length_dlxc) )
+    !
+    ! ... DERIVATIVE FOR EXCHANGE
+    CALL xc_f90_func_init( xc_func, xc_info1, iexch_l, pol_unpol )
+     CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
+    CALL xc_f90_func_end( xc_func )
+    !
+    ! ... DERIVATIVE FOR CORRELATION
+    CALL xc_f90_func_init( xc_func, xc_info2, icorr_l, pol_unpol )
+     CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
+    CALL xc_f90_func_end( xc_func )
+    !
+    dmxc_lxc = (dmex_lxc + dmcr_lxc)*2.0_DP
+    !
+    IF (sr_d == 1) THEN
+      dmuxc(:,1,1) = dmxc_lxc(:)
+    ELSEIF (sr_d == 2) THEN
+      DO ir = 1, length
+        dmuxc(ir,1,1) = dmxc_lxc(3*ir-2)
+        dmuxc(ir,1,2) = dmxc_lxc(3*ir-1)
+        dmuxc(ir,2,1) = dmxc_lxc(3*ir-1)
+        dmuxc(ir,2,2) = dmxc_lxc(3*ir)
+      ENDDO
+    ENDIF
+    !
+    DEALLOCATE( dmex_lxc, dmcr_lxc, dmxc_lxc )
+    DEALLOCATE( rho_lxc )
+    !
+  ELSEIF (libxc_switches(1)==0 .AND. libxc_switches(2)==0 ) THEN
+    !
+    IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
+    IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
+    !
+  ELSE
+    !
+    CALL errore( 'dmxc', 'Derivative of exchange and correlation terms &
+                        & must be both qe or both libxc.', 3 )
+    !
+  ENDIF
+  !
+#else
+  !
+  SELECT CASE( sr_d )
+  CASE( 1 )
+     !
+     CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
+     !
+  CASE( 2 )
+     !
+     CALL dmxc_lsda( length, rho_in, dmuxc )
+     ! 
+  CASE( 4 )
+     !
+     CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'xc_LDA', 'Wrong ns input', 2 )
+     !
+  END SELECT
+  !
+#endif
+  !
+  !
+  RETURN
+  !
+END SUBROUTINE
+!
+!
+!
 !-----------------------------------------------------------------------
-SUBROUTINE dmxc( length, rho_in, dmuxc )
+SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !---------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density.
   !
-  USE xc_lda_lsda,  ONLY: xc, iexch_l, icorr_l
+  USE xc_lda_lsda,  ONLY: xc_lda, iexch_l, icorr_l
   USE funct,        ONLY: init_lda_xc
   USE kinds,        ONLY: DP
   !
@@ -26,70 +183,77 @@ SUBROUTINE dmxc( length, rho_in, dmuxc )
   !
   ! ... local variables
   !
-  REAL(DP), DIMENSION(length) :: ex, vx
-  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rs, rho, dr
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: ex, vx
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, dr
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: ec, vc
   !
-  REAL(DP), EXTERNAL :: dpz
-  INTEGER :: iflg, ir
+  REAL(DP) :: rs, ex_s, vx_s
+  REAL(DP) :: dpz
+  INTEGER :: iflg, ir, i1, i2, f1, f2
   !
-  REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
-       pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP /3.0_DP, &
-       rho_trash = 0.5_DP, rs_trash = 1.0_DP
-  !
-  CALL init_lda_xc()
+  REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,        &
+                         pi34 = 0.75_DP/3.141592653589793_DP,   &
+                         third=1.0_DP/3.0_DP, rho_trash=0.5_DP, &
+                         rs_trash = 1.0_DP
   !
   dmuxc = 0.0_DP
   !
   ! ... first case: analytical derivatives available
   !
   IF (iexch_l == 1 .AND. icorr_l == 1) THEN
-     !
-     ALLOCATE( rs(length) )
-     !
-     rs = rs_trash
-     WHERE ( rho_in > small ) rs = (pi34 / rho_in)**third
-     !
-     ! ... exchange
-     CALL slater( length, rs, ex, vx )
-     dmuxc = vx / (3.0_DP * rho_in)
-     !
-     ! ... correlation
+  !
+!$omp parallel do private( rs, ex_s, vx_s)
      DO ir = 1, length
+        !
+        IF ( rho_in(ir) > small ) THEN
+           rs = (pi34 / rho_in(ir))**third
+        ELSE
+           dmuxc(ir) = 0.0_DP
+           CYCLE
+        ENDIF
+        !
+        CALL slater( rs, ex_s, vx_s )
+        dmuxc(ir) = vx_s / (3.0_DP * rho_in(ir))
+        !
         iflg = 2
-        if (rs(ir) < 1.0_DP) iflg = 1
-        dmuxc(ir) = dmuxc(ir) + dpz(rs(ir), iflg)
+        if (rs < 1.0_DP) iflg = 1
+        dmuxc(ir) = dmuxc(ir) + dpz( rs, iflg )
+        !
      ENDDO
-     !
-     WHERE ( rho_in < small ) dmuxc = 0.0_DP
-     !
-     DEALLOCATE( rs )
+!$omp end parallel do
      !
   ELSE
      !
      ! ... second case: numerical derivatives
      !
-     ALLOCATE( ec(length), vc(length)  )
-     ALLOCATE( dr(length), rho(length) )
+     ALLOCATE( ex(2*length), vx(2*length)  )
+     ALLOCATE( ec(2*length), vc(2*length)  )
+     ALLOCATE( dr(length), rhoaux(2*length) )
      !
-     rho = rho_in
-     WHERE ( rho_in < small ) rho = rho_trash
+     ! 
+     i1 = 1         ;  f1 = length             !two blocks:  [ rho+dr ]
+     i2 = length+1  ;  f2 = 2*length           !             [ rho-dr ]              
      !
-     dr(:) = MIN( 1.E-6_DP, 1.E-4_DP * rho(:) )
+     !WHERE ( rho_in < small ) rho = rho_trash
      !
-     CALL xc( length, rho+dr, ex, ec, vx, vc )
+     dr = 0.0_DP
+     WHERE ( rho_in > small ) dr = MIN( 1.E-6_DP, 1.E-4_DP * rho_in )
      !
-     dmuxc = vx + vc
+     rhoaux(i1:f1) = rho_in+dr
+     rhoaux(i2:f2) = rho_in-dr
      !
-     CALL xc( length, rho-dr, ex, ec, vx, vc )
+     CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
      !
-     dmuxc = (dmuxc - vx - vc) / (2.0_DP * dr)
+     dmuxc(:) = (vx(i1:f1) + vc(i1:f1) - vx(i2:f2) - vc(i2:f2)) / &
+                (2.0_DP * dr(:))
      !
+     !
+     DEALLOCATE( ex, vx  )
      DEALLOCATE( ec, vc  )
-     DEALLOCATE( dr, rho )
+     DEALLOCATE( dr, rhoaux )
      !
      WHERE ( rho_in < small ) dmuxc = 0.0_DP
-     ! however a higher threshold is already present in xc()
+     ! however a higher threshold is already present in xc_lda()
      !
   ENDIF
   !
@@ -99,181 +263,174 @@ SUBROUTINE dmxc( length, rho_in, dmuxc )
   !
   RETURN
   !
-END SUBROUTINE dmxc
+END SUBROUTINE dmxc_lda
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dmxc_spin( length, rho, dmuxc )
+SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
 !-----------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
   USE funct,          ONLY: init_lda_xc
   USE kinds,          ONLY: DP
-  USE xc_lda_lsda,    ONLY: xc_spin, iexch_l, icorr_l
+  USE xc_lda_lsda,    ONLY: xc_lsda, iexch_l, icorr_l
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
   !! length of the input/output arrays
-  REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho
+  REAL(DP), INTENT(IN), DIMENSION(length,2) :: rho_in
   !! spin-up and spin-down charge density
   REAL(DP), INTENT(OUT), DIMENSION(length,2,2) :: dmuxc
   !! u-u, u-d, d-u, d-d derivatives of the XC functional
   !
   ! ... local variables
   !
-  REAL(DP), DIMENSION(length) :: zeta, rhotot
-  REAL(DP), DIMENSION(length) :: aux1, null_v
+  REAL(DP), DIMENSION(length) :: rhotot, zeta, zeta_eff
+  REAL(DP), DIMENSION(length) :: null_v
   !
-  REAL(DP), ALLOCATABLE, DIMENSION(:)   :: rs, zeta_eff, ds
-  REAL(DP), ALLOCATABLE, DIMENSION(:)   :: ecu, ecp, aux2
-  REAL(DP), ALLOCATABLE, DIMENSION(:)   :: vcu, vcp
-  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: vx, vc
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux1, aux2, dr, dz
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, zetaux
+  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: vx, vc, vxc
+  REAL(DP) :: ecu, ecp, ex_s
+  REAL(DP) :: vcu, vcp, vx_s
   !
   REAL(DP) :: fz, fz1, fz2, dmcu, dmcp, aa, bb, cc
+  REAL(DP) :: rs, zeta_s
   !
-  REAL(DP), EXTERNAL :: dpz, dpz_polarized
+  REAL(DP) :: dpz, dpz_polarized
   !
   INTEGER :: ir, is, iflg
+  INTEGER :: i1, i2, i3, i4
+  INTEGER :: f1, f2, f3, f4
   !
-  REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
-       pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP/3.0_DP, &
-       p43 = 4.0_DP / 3.0_DP, p49 = 4.0_DP / 9.0_DP, m23 = -2.0_DP / 3.0_DP, &
-       rho_trash = 0.5_DP, zeta_trash = 0.5_DP
+  REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,      &
+                         pi34 = 0.75_DP/3.141592653589793_DP, &
+                         third = 1.0_DP/3.0_DP, p43 = 4.0_DP/3.0_DP, &
+                         p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP,  &
+                         rho_trash = 0.5_DP, zeta_trash = 0.5_DP
   !
   dmuxc  = 0.0_DP
   null_v = 1.0_DP
-  zeta   = zeta_trash
-  rhotot(:) = rho(:,1) + rho(:,2)
-  !
-  CALL init_lda_xc()
-  !
-  WHERE (rhotot <= small) 
-     rhotot = rho_trash
-     null_v = 0.0_DP
-  ELSEWHERE
-     zeta(:) = (rho(:,1) - rho(:,2)) / rhotot(:)
-  END WHERE
-  !
-  WHERE (ABS(zeta) > 1.0_DP)
-     zeta   = zeta_trash
-     null_v = 0.0_DP
-  END WHERE
+  rhotot(:) = rho_in(:,1) + rho_in(:,2)
   !
   IF (iexch_l == 1 .AND. icorr_l == 1) THEN
      !
-     !    first case: analytical derivative available
+     ! ... first case: analytical derivative available
      !
-     ALLOCATE( rs(length)                             )
-     ALLOCATE( vcu(length), vcp(length), vx(length,1) )
-     ALLOCATE( ecu(length), ecp(length)               )
-     !
-     ! ... exchange
-     !
-     rs(:) = ( pi34 / (2.0_DP * rho(:,1)) )**third
-     CALL slater( length, rs, aux1, vx(:,1) )
-     !
-     dmuxc(:,1,1) = vx(:,1) / (3.0_DP * rho(:,1))
-     !
-     rs(:) = ( pi34 / (2.0_DP * rho(:,2)) )**third
-     CALL slater( length, rs, aux1, vx(:,1) )
-     !
-     dmuxc(:,2,2) = vx(:,1) / (3.0_DP * rho(:,2))
-     !
-     ! ... correlation
-     !
-     rs = (pi34 / rhotot)**third
-     !
-     CALL pz( length, rs, 1, ecu, vcu )
-     CALL pz_polarized( length, rs, ecp, vcp )
-     !
+!$omp parallel do private( rs, ex_s, vx_s, ecu, vcu, ecp, vcp, dmcu, dmcp, aa, bb, cc )
      DO ir = 1, length
-        fz  = ( (1.0_DP + zeta(ir))**p43 + (1.0_DP - zeta(ir))**p43 - 2.0_DP ) &
-              / (2.0_DP**p43 - 2.0_DP)
-        fz1 = p43 * ( (1.0_DP + zeta(ir))**third - (1.0_DP - zeta(ir))**third) &
-              / (2.0_DP**p43 - 2.0_DP)
-        fz2 = p49 * ( (1.0_DP + zeta(ir))**m23   + (1.0_DP - zeta(ir))**m23  ) &
-              / (2.0_DP**p43 - 2.0_DP)
+        !
+        IF (rhotot(ir) < small) CYCLE
+        zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
+        IF (ABS(zeta_s) > 1.0_DP) CYCLE
+        !
+        ! ... exchange
+        !
+        rs = ( pi34 / (2.0_DP * rho_in(ir,1)) )**third
+        CALL slater( rs, ex_s, vx_s )
+        !
+        dmuxc(ir,1,1) = vx_s / (3.0_DP * rho_in(ir,1))
+        !
+        rs = ( pi34 / (2.0_DP * rho_in(ir,2)) )**third
+        CALL slater( rs, ex_s, vx_s )
+        !
+        dmuxc(ir,2,2) = vx_s / (3.0_DP * rho_in(ir,2))
+        !
+        ! ... correlation
+        !
+        rs = (pi34 / rhotot(ir))**third
+        !
+        CALL pz( rs, 1, ecu, vcu )
+        CALL pz_polarized( rs, ecp, vcp )
+        !
+        fz  = ( (1.0_DP + zeta_s)**p43 + (1.0_DP - zeta_s)**p43 - 2.0_DP ) &
+                  / (2.0_DP**p43 - 2.0_DP)
+        fz1 = p43 * ( (1.0_DP + zeta_s)**third - (1.0_DP - zeta_s)**third) &
+                  / (2.0_DP**p43 - 2.0_DP)
+        fz2 = p49 * ( (1.0_DP + zeta_s)**m23   + (1.0_DP - zeta_s)**m23)   &
+                  / (2.0_DP**p43 - 2.0_DP)
         !
         iflg = 2
-        IF (rs(ir) < 1.0_DP) iflg = 1
+        IF (rs < 1.0_DP) iflg = 1
         !
-        dmcu = dpz( rs(ir), iflg )
-        dmcp = dpz_polarized( rs(ir), iflg )
+        dmcu = dpz( rs, iflg )
+        dmcp = dpz_polarized( rs, iflg )
         !
         aa = dmcu + fz * (dmcp - dmcu)
-        bb = 2.0_DP * fz1 * (vcp(ir) - vcu(ir) - (ecp(ir) - ecu(ir)) ) / rhotot(ir)
-        cc = fz2 * (ecp(ir) - ecu(ir)) / rhotot(ir)
+        bb = 2.0_DP * fz1 * (vcp - vcu - (ecp - ecu) ) / rhotot(ir)
+        cc = fz2 * (ecp - ecu) / rhotot(ir)
         !
-        dmuxc(ir,1,1) = dmuxc(ir,1,1) + aa + (1.0_DP - zeta(ir)) * bb + &
-                                                       (1.0_DP - zeta(ir))**2 * cc
-        dmuxc(ir,2,1) = dmuxc(ir,2,1) + aa + (-zeta(ir)) * bb +         &
-                                                       (zeta(ir)**2 - 1.0_DP) * cc
+        dmuxc(ir,1,1) = dmuxc(ir,1,1) + aa + (1.0_DP - zeta_s) * bb +  &
+                                             (1.0_DP - zeta_s)**2 * cc
+        dmuxc(ir,2,1) = dmuxc(ir,2,1) + aa + (-zeta_s) * bb +          &
+                                             (zeta_s**2 - 1.0_DP) * cc
         dmuxc(ir,1,2) = dmuxc(ir,2,1)
-        dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta(ir)) * bb + &
-                                                       (1.0_DP + zeta(ir))**2 * cc
+        dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
+                                             (1.0_DP + zeta_s)**2 * cc
      ENDDO
-     !
-     DEALLOCATE( rs           )
-     DEALLOCATE( vcu, vcp, vx )
-     DEALLOCATE( ecu, ecp     )
+!$omp end parallel do
      !
   ELSE
      !
-     ALLOCATE( vx(length,2), vc(length,2)   )
-     ALLOCATE( aux2(length)                 )
-     ALLOCATE( zeta_eff(length), ds(length) )
      !
-     ! ... here ds=drho
-     ds(:) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(:) )
+     ALLOCATE( vx(4*length,2) , vc(4*length,2), vxc(2*length,2) )
+     ALLOCATE( rhoaux(4*length), zetaux(4*length) )
+     ALLOCATE( aux1(4*length) , aux2(4*length) )
+     ALLOCATE( dr(length), dz(length) )
      !
-     CALL xc_spin( length, rhotot+ds, zeta, aux1, aux2, vx, vc )
+     i1 = 1     ;   f1 = length          !  four blocks:  [ rho+dr , zeta    ]
+     i2 = f1+1  ;   f2 = 2*length        !                [ rho-dr , zeta    ]
+     i3 = f2+1  ;   f3 = 3*length        !                [ rho    , zeta+dz ]
+     i4 = f3+1  ;   f4 = 4*length        !                [ rho    , zeta-dz ]
      !
-     dmuxc(:,1,1) = vx(:,1) + vc(:,1)
-     dmuxc(:,2,2) = vx(:,2) + vc(:,2)
      !
-     CALL xc_spin( length, rhotot-ds, zeta, aux1, aux2, vx, vc )
+     dz(:) = 1.E-6_DP  ! dz(:) = MIN( 1.d-6, 1.d-4*ABS(zeta(:)) )
      !
-     dmuxc(:,1,1) = (dmuxc(:,1,1) - vx(:,1) - vc(:,1)) / (2.0_DP * ds(:))
-     dmuxc(:,2,1) = dmuxc(:,1,1)
-     dmuxc(:,2,2) = (dmuxc(:,2,2) - vx(:,2) - vc(:,2)) / (2.0_DP * ds(:))
-     dmuxc(:,1,2) = dmuxc(:,2,2)
+     ! ... THRESHOLD STUFF
+     DO ir = 1, length
+        zeta_s=zeta_trash
+        IF (rhotot(ir) <= small) THEN
+           rhotot(ir)=rho_trash ; null_v(ir) = 0.0_DP
+        ENDIF
+        IF (rhotot(ir) > small) zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
+        zeta(ir) = zeta_s
+        ! ... If zeta is too close to +-1, the derivative is computed at a slightly
+        ! smaller zeta
+        zeta_eff(ir) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(ir)) ), zeta_s )
+        IF (ABS(zeta_s) > 1.0_DP) null_v(ir) = 0.0_DP
+     ENDDO
      !
-     ! ... now ds=dzeta
-     ds(:) = 1.E-6_DP
-     ! ds() = min (1.d-6, 1.d-4 * abs(zeta(:)) )
+     dr(:) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(:) )
      !
-     ! ... If zeta is too close to +-1, the derivative is computed at a slightly
-     ! smaller zeta
+     rhoaux(i1:f1) = rhotot + dr    ;   zetaux(i1:f1) = zeta
+     rhoaux(i2:f2) = rhotot - dr    ;   zetaux(i2:f2) = zeta
+     rhoaux(i3:f3) = rhotot         ;   zetaux(i3:f3) = zeta_eff + dz
+     rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff - dz
      !
-     zeta_eff(:) = SIGN( MIN( ABS(zeta(:)), (1.0_DP-2.0_DP*ds(:)) ), zeta(:) )
      !
-     CALL xc_spin( length, rhotot, zeta_eff+ds, aux1, aux2, vx, vc )
+     CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
      !
-     aux1 = 1.0_DP / rhotot / (2.0_DP*ds)
+     !
+     dmuxc(:,1,1) = ( vx(i1:f1,1) + vc(i1:f1,1) - vx(i2:f2,1) - vc(i2:f2,1) ) / (2.0_DP*dr)
+     dmuxc(:,2,2) = ( vx(i1:f1,2) + vc(i1:f1,2) - vx(i2:f2,2) - vc(i2:f2,2) ) / (2.0_DP*dr)
+     !
+     aux1(i1:f1) = 1.0_DP / rhotot(:) / (2.0_DP*dz(:))
+     aux1(i2:f2) = aux1(i1:f1)
      DO is = 1, 2
-        vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)  ! vx as workspace here..
+        vxc(i1:f2,is) = ( vx(i3:f4,is) + vc(i3:f4,is) ) * aux1(i1:f2)
      ENDDO
-     dmuxc(:,1,1) = dmuxc(:,1,1) + vx(:,1) * (1.0_DP-zeta(:))
-     dmuxc(:,1,2) = dmuxc(:,1,2) + vx(:,2) * (1.0_DP-zeta(:))
-     dmuxc(:,2,1) = dmuxc(:,2,1) - vx(:,1) * (1.0_DP+zeta(:))
-     dmuxc(:,2,2) = dmuxc(:,2,2) - vx(:,2) * (1.0_DP+zeta(:))
      !
-     CALL xc_spin( length, rhotot, zeta_eff-ds, aux1, aux2, vx, vc )
+     dmuxc(:,2,1) = dmuxc(:,1,1) - (vxc(i1:f1,1) - vxc(i2:f2,1)) * (1.0_DP+zeta)
+     dmuxc(:,1,2) = dmuxc(:,2,2) + (vxc(i1:f1,2) - vxc(i2:f2,2)) * (1.0_DP-zeta)
+     dmuxc(:,1,1) = dmuxc(:,1,1) + (vxc(i1:f1,1) - vxc(i2:f2,1)) * (1.0_DP-zeta)
+     dmuxc(:,2,2) = dmuxc(:,2,2) - (vxc(i1:f1,2) - vxc(i2:f2,2)) * (1.0_DP+zeta)
      !
-     aux1 = 1.0_DP / rhotot / (2.0_DP*ds)
-     DO is=1,2
-        vx(:,is) = (vx(:,is) + vc(:,is)) * aux1(:)  ! ..and here
-     ENDDO
-     dmuxc(:,1,1) = dmuxc(:,1,1) - vx(:,1) * (1.0_DP-zeta(:))
-     dmuxc(:,1,2) = dmuxc(:,1,2) - vx(:,2) * (1.0_DP-zeta(:))
-     dmuxc(:,2,1) = dmuxc(:,2,1) + vx(:,1) * (1.0_DP+zeta(:))
-     dmuxc(:,2,2) = dmuxc(:,2,2) + vx(:,2) * (1.0_DP+zeta(:))
-     !
-     DEALLOCATE( vx, vc )
-     DEALLOCATE( aux2 )
-     DEALLOCATE( zeta_eff, ds )
+     DEALLOCATE( vx, vc, vxc )
+     DEALLOCATE( rhoaux, zetaux )
+     DEALLOCATE( aux1, aux2 )
+     DEALLOCATE( dr, dz )
      !
   ENDIF
   !
@@ -286,15 +443,16 @@ SUBROUTINE dmxc_spin( length, rho, dmuxc )
   !
   RETURN
   !
-END SUBROUTINE dmxc_spin
-
+END SUBROUTINE dmxc_lsda
+!
+!
 !-----------------------------------------------------------------------
 SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
 !-----------------------------------------------------------------------
   !! Computes the derivative of the xc potential with respect to the 
   !! local density and magnetization in the non-collinear case.
   !
-  USE xc_lda_lsda,  ONLY: xc_spin
+  USE xc_lda_lsda,  ONLY: xc_lsda
   USE funct,        ONLY: init_lda_xc
   USE kinds,        ONLY: DP
   !
@@ -311,20 +469,22 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   ! ... local variables
   !
-  REAL(DP), DIMENSION(length)   :: rho, amag, zeta
-  REAL(DP), DIMENSION(length)   :: zeta_eff, ds, null_v, null_m
-  REAL(DP), DIMENSION(length)   :: vs, aux1, aux2
-  REAL(DP), DIMENSION(length,2) :: vx, vxm, vxp
-  REAL(DP), DIMENSION(length,2) :: vc, vcm, vcp
-  REAL(DP), DIMENSION(length)   :: dvxc_rho, dbx_rho, dby_rho, dbz_rho
+  REAL(DP), DIMENSION(length)     :: rhotot, amag, zeta, zeta_eff, dr, dz
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, zetaux
+  REAL(DP), DIMENSION(length) :: vs
+  INTEGER, DIMENSION(length) :: null_v
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux1, aux2
+  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: vx, vc
+  REAL(DP), DIMENSION(length) :: dvxc_rho, dbx_rho, dby_rho, dbz_rho
   !
   REAL(DP) :: dvxc_mx, dvxc_my, dvxc_mz, &
               dbx_mx, dbx_my, dbx_mz,    &
               dby_mx, dby_my, dby_mz,    &
               dbz_mx, dbz_my, dbz_mz
-  REAL(DP) :: rnull
+  REAL(DP) :: rnull, zeta_s
   !
-  INTEGER :: i
+  INTEGER :: i1, i2, i3, i4, i5, i
+  INTEGER :: f1, f2, f3, f4, f5
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP, &
                          rho_trash = 0.5_DP, zeta_trash = 0.5_DP, &
@@ -332,133 +492,129 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   dmuxc = 0.0_DP
   !
-  rho    = rho_in
+  ALLOCATE( rhoaux(length*5), zetaux(length*5) )
+  ALLOCATE( aux1(length*5), aux2(length*5) )
+  ALLOCATE( vx(length*5,2), vc(length*5,2) )
+  !
+  rhotot = rho_in
   zeta   = zeta_trash
   amag   = amag_trash
-  null_v = 1.0_DP
-  null_m = 1.0_DP
+  null_v = 1
   !
-  CALL init_lda_xc()
+  i1 = 1     ;   f1 = length    !           five blocks:  [ rho    , zeta    ]   
+  i2 = f1+1  ;   f2 = 2*length  !                         [ rho+dr , zeta    ]   
+  i3 = f2+1  ;   f3 = 3*length  !                         [ rho-dr , zeta    ]   
+  i4 = f3+1  ;   f4 = 4*length  !                         [ rho    , zeta+dz ]   
+  i5 = f4+1  ;   f5 = 5*length  !                         [ rho    , zeta-dz ]   
   !
-  WHERE (rho_in <= small)
-     rho = rho_trash
-     null_v = 0.0_DP
-  ELSEWHERE
-     amag = SQRT( m(:,1)**2 + m(:,2)**2 + m(:,3)**2 )
-     zeta = amag / rho
-  END WHERE
-  !
-  WHERE (ABS(zeta) > 1.0_DP)
-     zeta   = zeta_trash
-     null_v = 0.0_DP
-  END WHERE
-  !
-  CALL xc_spin( length, rho, zeta, aux1, aux2, vx, vc )
-  !
-  vs = 0.5_DP*( vx(:,1)+vc(:,1)-vx(:,2)-vc(:,2) )
-  !
-  ! ... here ds=drho
-  ds = MIN( 1.E-6_DP, 1.E-4_DP * rho )
-  !
-  CALL xc_spin( length, rho-ds, zeta, aux1, aux2, vxm, vcm )
-  !
-  CALL xc_spin( length, rho+ds, zeta, aux1, aux2, vxp, vcp )
-  !
-  dvxc_rho = ((vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1)) + &
-              (vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2))) / (4.0_DP*ds)
-  !
-  WHERE (amag < 1.E-10_DP)
-     rho  = 0.5_DP
-     zeta = 0.5_DP
-     amag = 0.025_DP
-     null_m = 0.0_DP
-  END WHERE
-  !
-  !
-  aux2(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) - &
-           ( vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2) )
-  !
-  dbx_rho(:) = aux2 * m(:,1) / (4.0_DP*ds*amag)
-  dby_rho(:) = aux2 * m(:,2) / (4.0_DP*ds*amag)
-  dbz_rho(:) = aux2 * m(:,3) / (4.0_DP*ds*amag)
-  !
-  ! ... now ds=dzeta
-  ds = 1.0E-6_DP
-  ! ds = min (1.d-6, 1.d-4 * abs (zeta) )
-  !
-  ! ... If zeta is too close to +-1, the derivative is computed at a slightly
-  ! smaller zeta
+  dz = 1.0E-6_DP     !dz = MIN( 1.d-6, 1.d-4*ABS(zeta) ) 
   !
   DO i = 1, length
-     zeta_eff(i) = SIGN( MIN( ABS( zeta(i) ), ( 1.0_DP - 2.0_DP*ds(i) ) ) , zeta(i) )
+     zeta_s = zeta_trash
+     IF (rhotot(i) <= small) THEN
+        rhotot(i) = rho_trash ; null_v(i) = 0.0_DP
+     ENDIF
+     amag(i) = SQRT( m(i,1)**2 + m(i,2)**2 + m(i,3)**2 )
+     IF (rhotot(i) > small) zeta_s = amag(i) / rhotot(i)
+     zeta(i) = zeta_s
+     zeta_eff(i) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(i)) ), zeta_s )
+     IF (ABS(zeta_s) > 1.0_DP) null_v(i) = 0
   ENDDO
   !
-  CALL xc_spin( length, rho, zeta_eff-ds, aux1, aux2, vxm, vcm )
+  dr = MIN( 1.E-6_DP, 1.E-4_DP * rhotot )
+  !   
+  rhoaux(i1:f1) = rhotot         ;   zetaux(i1:f1) = zeta
+  rhoaux(i2:f2) = rhotot + dr    ;   zetaux(i2:f2) = zeta
+  rhoaux(i3:f3) = rhotot - dr    ;   zetaux(i3:f3) = zeta
+  rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff + dz
+  rhoaux(i5:f5) = rhotot         ;   zetaux(i5:f5) = zeta_eff - dz
   !
-  CALL xc_spin( length, rho, zeta_eff+ds, aux1, aux2, vxp, vcp )
   !
-  ! ... The variables are rho and m, so zeta depends on rho
+  CALL xc_lsda( length*5, rhoaux, zetaux, aux1, aux2, vx, vc )
   !
-  aux1(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) + &
-             vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2)
-  aux2(:) =  vxp(:,1) + vcp(:,1) - vxm(:,1) - vcm(:,1) - &
-           ( vxp(:,2) + vcp(:,2) - vxm(:,2) - vcm(:,2) )
   !
-  dvxc_rho    = dvxc_rho - aux1 * zeta/rho / (4.0_DP*ds) * null_m
-  dbx_rho(:)  = dbx_rho  - aux2 * m(:,1) * zeta/rho / (4.0_DP*ds*amag)
-  dby_rho(:)  = dby_rho  - aux2 * m(:,2) * zeta/rho / (4.0_DP*ds*amag)
-  dbz_rho(:)  = dbz_rho  - aux2 * m(:,3) * zeta/rho / (4.0_DP*ds*amag)
+  vs(:) = 0.5_DP*( vx(i1:f1,1)+vc(i1:f1,1)-vx(i1:f1,2)-vc(i1:f1,2) )
   !
-  dmuxc(:,1,1) = dvxc_rho * null_v
-  dmuxc(:,2,1) = dbx_rho  * null_v
-  dmuxc(:,3,1) = dby_rho  * null_v
-  dmuxc(:,4,1) = dbz_rho  * null_v
+  dvxc_rho(:) = ((vx(i2:f2,1) + vc(i2:f2,1) - vx(i3:f3,1) - vc(i3:f3,1)) + &
+                (vx(i2:f2,2) + vc(i2:f2,2) - vx(i3:f3,2) - vc(i3:f3,2))) / (4.0_DP*dr)
+  !   
+  aux2(1:length) =  vx(i2:f2,1) + vc(i2:f2,1) - vx(i3:f3,1) - vc(i3:f3,1) - &
+                  ( vx(i2:f2,2) + vc(i2:f2,2) - vx(i3:f3,2) - vc(i3:f3,2) )
   !
-  ! ... Here the derivatives with respect to m
+  dbx_rho(:) = aux2(1:length) * m(:,1) / (4.0_DP*dr*amag)
+  dby_rho(:) = aux2(1:length) * m(:,2) / (4.0_DP*dr*amag)
+  dbz_rho(:) = aux2(1:length) * m(:,3) / (4.0_DP*dr*amag)
+  !
+  aux1(1:length) =  vx(i4:f4,1) + vc(i4:f4,1) - vx(i5:f5,1) - vc(i5:f5,1) + &
+                    vx(i4:f4,2) + vc(i4:f4,2) - vx(i5:f5,2) - vc(i5:f5,2)
+  aux2(1:length) =  vx(i4:f4,1) + vc(i4:f4,1) - vx(i5:f5,1) - vc(i5:f5,1) - &
+                  ( vx(i4:f4,2) + vc(i4:f4,2) - vx(i5:f5,2) - vc(i5:f5,2) )
   !
   DO i = 1, length
+     !
+     IF ( null_v(i) == 0 ) THEN
+        dmuxc(i,:,:) = 0.0_DP
+        CYCLE
+     ENDIF
+     !
+     IF (amag(i) <= 1.E-10_DP) THEN
+        dmuxc(i,1,1) = dvxc_rho(i)
+        CYCLE
+     ENDIF
+     !
+     dvxc_rho(i) = dvxc_rho(i) - aux1(i) * zeta(i)/rhotot(i) / (4.0_DP*dz(i))
+     dbx_rho(i)  = dbx_rho(i)  - aux2(i) * m(i,1) * zeta(i)/rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dby_rho(i)  = dby_rho(i)  - aux2(i) * m(i,2) * zeta(i)/rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dbz_rho(i)  = dbz_rho(i)  - aux2(i) * m(i,3) * zeta(i)/rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     !
+     dmuxc(i,1,1) = dvxc_rho(i)
+     dmuxc(i,2,1) = dbx_rho(i)
+     dmuxc(i,3,1) = dby_rho(i)
+     dmuxc(i,4,1) = dbz_rho(i)
+     !
+     ! ... Here the derivatives with respect to m
      !
      rnull = null_v(i)
      !
-     dvxc_mx = aux1(i) * m(i,1) / rho(i) / (4.0_DP*ds(i)*amag(i))
-     dvxc_my = aux1(i) * m(i,2) / rho(i) / (4.0_DP*ds(i)*amag(i))
-     dvxc_mz = aux1(i) * m(i,3) / rho(i) / (4.0_DP*ds(i)*amag(i))
+     dvxc_mx = aux1(i) * m(i,1) / rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dvxc_my = aux1(i) * m(i,2) / rhotot(i) / (4.0_DP*dz(i)*amag(i))
+     dvxc_mz = aux1(i) * m(i,3) / rhotot(i) / (4.0_DP*dz(i)*amag(i))
      !
-     dbx_mx  = (aux2(i) * m(i,1) * m(i,1) * amag(i)/rho(i) / (4.0_DP*ds(i)) + &
+     dbx_mx  = (aux2(i) * m(i,1) * m(i,1) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) + &
                 vs(i) * (m(i,2)**2+m(i,3)**2)) / amag(i)**3
-     dbx_my  = (aux2(i) * m(i,1) * m(i,2) * amag(i)/rho(i) / (4.0_DP*ds(i)) - &
+     dbx_my  = (aux2(i) * m(i,1) * m(i,2) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) - &
                 vs(i) * m(i,1) * m(i,2) ) / amag(i)**3
-     dbx_mz  = (aux2(i) * m(i,1) * m(i,3) * amag(i)/rho(i) / (4.0_DP*ds(i)) - &
+     dbx_mz  = (aux2(i) * m(i,1) * m(i,3) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) - &
                 vs(i) * m(i,1) * m(i,3) ) / amag(i)**3
      !
      dby_mx  = dbx_my
-     dby_my  = (aux2(i) * m(i,2) * m(i,2) * amag(i)/rho(i) / (4.0_DP*ds(i)) + &
+     dby_my  = (aux2(i) * m(i,2) * m(i,2) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) + &
                 vs(i) * (m(i,1)**2 + m(i,3)**2)) / amag(i)**3
-     dby_mz  = (aux2(i) * m(i,2) * m(i,3) * amag(i)/rho(i) / (4.0_DP*ds(i)) - &
+     dby_mz  = (aux2(i) * m(i,2) * m(i,3) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) - &
                 vs(i) * m(i,2) * m(i,3)) / amag(i)**3
      !
      dbz_mx  = dbx_mz
      dbz_my  = dby_mz
-     dbz_mz  = (aux2(i) * m(i,3) * m(i,3) * amag(i)/rho(i) / (4.0_DP*ds(i)) + &
+     dbz_mz  = (aux2(i) * m(i,3) * m(i,3) * amag(i)/rhotot(i) / (4.0_DP*dz(i)) + &
                 vs(i)*(m(i,1)**2 + m(i,2)**2)) / amag(i)**3
      !
      ! ... assigns values to dmuxc and sets to zero trash points
      !
-     dmuxc(i,1,2) = dvxc_mx * rnull
-     dmuxc(i,1,3) = dvxc_my * rnull 
-     dmuxc(i,1,4) = dvxc_mz * rnull
+     dmuxc(i,1,2) = dvxc_mx 
+     dmuxc(i,1,3) = dvxc_my  
+     dmuxc(i,1,4) = dvxc_mz 
      !
-     dmuxc(i,2,2) = dbx_mx * rnull
-     dmuxc(i,2,3) = dbx_my * rnull
-     dmuxc(i,2,4) = dbx_mz * rnull
+     dmuxc(i,2,2) = dbx_mx 
+     dmuxc(i,2,3) = dbx_my 
+     dmuxc(i,2,4) = dbx_mz 
      !
-     dmuxc(i,3,2) = dby_mx * rnull
-     dmuxc(i,3,3) = dby_my * rnull
-     dmuxc(i,3,4) = dby_mz * rnull
+     dmuxc(i,3,2) = dby_mx 
+     dmuxc(i,3,3) = dby_my 
+     dmuxc(i,3,4) = dby_mz 
      !
-     dmuxc(i,4,2) = dbz_mx * rnull
-     dmuxc(i,4,3) = dbz_my * rnull
-     dmuxc(i,4,4) = dbz_mz * rnull
+     dmuxc(i,4,2) = dbz_mx 
+     dmuxc(i,4,3) = dbz_my 
+     dmuxc(i,4,4) = dbz_mz 
      !
   ENDDO
   !
@@ -466,6 +622,96 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   dmuxc = e2 * dmuxc
   !
+  DEALLOCATE( rhoaux, zetaux)
+  DEALLOCATE( aux1, aux2 )
+  DEALLOCATE( vx, vc )
+  !
   RETURN
   !
 END SUBROUTINE dmxc_nc
+!
+!
+!-----------------------------------------------------------------------
+FUNCTION dpz( rs, iflg )
+  !-----------------------------------------------------------------------
+  !!  Derivative of the correlation potential with respect to local density
+  !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.
+  !
+  USE kinds,     ONLY: DP
+  USE constants, ONLY: pi, fpi
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rs
+  INTEGER,  INTENT(IN) :: iflg
+  REAL(DP) :: dpz
+  !
+  !  ... local variables
+  !  a,b,c,d,gc,b1,b2 are the parameters defining the functional
+  !
+  REAL(DP), PARAMETER :: a = 0.0311d0, b = -0.048d0, c = 0.0020d0, &
+       d = -0.0116d0, gc = -0.1423d0, b1 = 1.0529d0, b2 = 0.3334d0,&
+       a1 = 7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0
+  REAL(DP) :: x, den, dmx, dmrs
+  !
+  IF (iflg == 1) THEN
+     dmrs = a / rs + 2.d0 / 3.d0 * c * (LOG(rs) + 1.d0) + &
+          (2.d0 * d-c) / 3.d0
+  ELSE
+     x = SQRT(rs)
+     den = 1.d0 + x * (b1 + x * b2)
+     dmx = gc * ( (a1 + 2.d0 * a2 * x) * den - 2.d0 * (b1 + 2.d0 * &
+           b2 * x) * (1.d0 + x * (a1 + x * a2) ) ) / den**3
+     dmrs = 0.5d0 * dmx / x
+  ENDIF
+  !
+  dpz = - fpi * rs**4.d0 / 9.d0 * dmrs
+  !
+  RETURN
+  !
+END FUNCTION dpz
+!
+!
+!-----------------------------------------------------------------------
+FUNCTION dpz_polarized( rs, iflg )
+  !-----------------------------------------------------------------------
+  !!  Derivative of the correlation potential with respect to local density
+  !!  Perdew and Zunger parameterization of the Ceperley-Alder functional.  |
+  !!  Spin-polarized case.
+  !
+  USE kinds,     ONLY: DP
+  USE constants, ONLY: pi, fpi
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rs
+  INTEGER,  INTENT(IN) :: iflg
+  REAL(DP) :: dpz_polarized
+  !
+  ! ... local variables
+  !
+  !  a,b,c,d,gc,b1,b2 are the parameters defining the functional
+  !
+  REAL(DP), PARAMETER :: a=0.01555_DP, b=-0.0269_DP, c=0.0007_DP,  &
+                         d=-0.0048_DP, gc=-0.0843_DP, b1=1.3981_DP,&
+                         b2=0.2611_DP, a1=7.0_DP*b1/6._DP, a2=4._DP*b2/3._DP
+  REAL(DP) :: x, den, dmx, dmrs
+  !
+  !
+  IF (iflg == 1) THEN
+     dmrs = a/rs + 2._DP/3._DP * c * (LOG(rs) + 1._DP) + &
+            (2._DP*d - c)/3._DP
+  ELSE
+     x = SQRT(rs)
+     den = 1._DP + x * (b1 + x*b2)
+     dmx = gc * ( (a1 + 2._DP * a2 * x) * den - 2._DP * (b1 + 2._DP * &
+           b2 * x) * (1._DP + x * (a1 + x*a2) ) ) / den**3
+     dmrs = 0.5d0 * dmx/x
+  ENDIF
+  !
+  dpz_polarized = - fpi * rs**4._DP / 9._DP * dmrs
+  !
+  !
+  RETURN
+  !
+END FUNCTION dpz_polarized

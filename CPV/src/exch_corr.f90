@@ -372,23 +372,22 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   use kinds, only: DP
   use funct, only: dft_is_gradient, get_igcc, &
                    gcxc, gcx_spin, gcc_spin, gcc_spin_more, init_lda_xc
-  use xc_lda_lsda, only : xc, xc_spin
+  use xc_lda_lsda, only : xc
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
-  real(DP), intent(in) :: grhor( 3, nnr, nspin )
-  real(DP) :: h( nnr, nspin, nspin )
-  real(DP), intent(in) :: rhor( nnr, nspin )
-  real(DP) :: v( nnr, nspin )
+  real(DP), intent(in) :: grhor(3,nnr,nspin)
+  real(DP) :: h(nnr,nspin,nspin)
+  real(DP), intent(in) :: rhor(nnr,nspin)
+  real(DP) :: v(nnr,nspin)
   real(DP) :: etxc
   integer :: ir, is, k
-  real(DP) :: rup, rdw, ex, ec
-  real(DP), dimension(nnr) :: rhox_v,arhox_v,zeta_v
-  real(DP), dimension(nnr) :: ex_v, ec_v
-  real(DP), dimension(nnr,nspin) :: vx_v, vc_v
-  real(DP) :: rh, grh2, zeta 
+  real(DP) :: rup, rdw
+  real(DP), dimension(nnr) :: ex, ec
+  real(DP), dimension(nnr,nspin) :: rhox, vx, vc
+  real(DP) :: rh, grh2, zeta, zetas
   real(DP) :: sx, sc, v1x, v2x, v1c, v2c
-  real(DP) :: rhox, arhox, e2
+  real(DP) :: e2
   real(DP) :: grho2(2), arho, segno
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw
   real(DP) :: v1cup, v1cdw
@@ -404,20 +403,18 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   e2  = 1.0d0
   etxc = 0.0d0
   !
-  call init_lda_xc()
+  CALL init_lda_xc()
   !
-  if( nspin == 1 ) then
+  IF ( nspin == 1 ) THEN
      !
      ! spin-unpolarized case
      !
-     arhox_v(:) = abs(rhor(:,nspin))
+     CALL xc( nnr, 1, 1, rhor, ex, ec, vx, vc )
      !
-     CALL xc( nnr, arhox_v, ex_v, ec_v, vx_v, vc_v )
+     v(:,1) = e2 * (vx(:,1) + vc(:,1) )
+     etxc = e2 * SUM( (ex + ec)*rhor(:,1) )
      !
-     v(:,nspin) = e2 * (vx_v(:,1) + vc_v(:,1) )
-     etxc = e2 * SUM( (ex_v + ec_v)*rhor(:,nspin) )
-     !
-  else
+  ELSE
      !
      ! spin-polarized case
      !
@@ -425,30 +422,26 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
      neg(2) = 0
      neg(3) = 0
      !
-     do ir = 1, nnr
-        rhox_v(ir)  = rhor(ir,1) + rhor(ir,2)
-        arhox_v(ir) = abs(rhox_v(ir))
-        if ( arhox_v(ir) > 1.D-30 ) then
-            zeta_v(ir) = ( rhor(ir,1) - rhor(ir,2) ) / arhox_v(ir)
-            if (abs(zeta_v(ir)) > 1.d0) then
-               neg(3) = neg(3) + 1
-               zeta_v(ir) = sign(1.d0,zeta_v(ir))
-            endif
-            if (rhor(ir,1) < 0.d0) neg(1) = neg(1) + 1
-            if (rhor(ir,2) < 0.d0) neg(2) = neg(2) + 1
-        endif
-     enddo
+     rhox(:,1) = rhor(:,1) + rhor(:,2)
+     rhox(:,2) = rhor(:,1) - rhor(:,2)
      !
-     call xc_spin( nnr, arhox_v, zeta_v, ex_v, ec_v, vx_v, vc_v )
+     CALL xc( nnr, 2, 2, rhox, ex, ec, vx, vc )
      !
-     do ir = 1, nnr
-        do is = 1, nspin
-           v(ir,is) = e2 * (vx_v(ir,is) + vc_v(ir,is) )
-        enddo
-        etxc = etxc + e2 * (ex_v(ir) + ec_v(ir)) * rhox_v(ir)
-     enddo
+     DO ir = 1, nnr
+        !
+        DO is = 1, nspin
+           v(ir,is) = e2 * (vx(ir,is) + vc(ir,is))
+        ENDDO
+        etxc = etxc + e2 * (ex(ir) + ec(ir)) * rhox(ir,1)
+        !
+        zetas =  rhox(ir,2) / rhox(ir,1)
+        IF (rhor(ir,1) < 0.d0) neg(1) = neg(1) + 1
+        IF (rhor(ir,2) < 0.d0) neg(2) = neg(2) + 1
+        IF (ABS(zetas) > 1.d0) neg(3) = neg(3) + 1
+        !
+     ENDDO
      !
-  endif
+  ENDIF
 
   if( debug_xc ) then
     open(unit=17,form='unformatted')

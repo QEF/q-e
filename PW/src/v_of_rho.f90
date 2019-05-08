@@ -347,7 +347,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : nlc, dft_is_nonlocc, init_lda_xc
-  USE xc_lda_lsda,      ONLY : xc, xc_spin
+  USE xc_lda_lsda,      ONLY : xc
   USE scf,              ONLY : scf_type
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
@@ -371,7 +371,9 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   REAL(DP) :: rhoneg(2), vs
   !
-  REAL(DP), ALLOCATABLE :: arhox(:), amag(:), zeta(:)
+  !REAL(DP), ALLOCATABLE :: arhox(:), amag(:), zeta(:)
+  REAL(DP) :: arho, amag
+  REAL(DP) :: rhoup2, rhodw2
   REAL(DP), ALLOCATABLE :: ex(:), ec(:)
   REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
   ! In order:
@@ -392,123 +394,87 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL start_clock( 'v_xc' )
   !
-  ALLOCATE(ex(dfftp%nnr))
-  ALLOCATE(ec(dfftp%nnr))
-  ALLOCATE(vx(dfftp%nnr,nspin))
-  ALLOCATE(vc(dfftp%nnr,nspin))
+  ALLOCATE( ex(dfftp%nnr) )
+  ALLOCATE( ec(dfftp%nnr) )
+  ALLOCATE( vx(dfftp%nnr,nspin) )
+  ALLOCATE( vc(dfftp%nnr,nspin) )
   !
   CALL init_lda_xc()
+  !
   !
   etxc   = 0.D0
   vtxc   = 0.D0
   v(:,:) = 0.D0
   rhoneg = 0.D0
   !
+  !
+  rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
+  !
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
-     !
      ! ... spin-unpolarized case
      !
-     rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
+     CALL xc( dfftp%nnr, 1, 1, rho%of_r(:,1), ex, ec, vx(:,1), vc(:,1) )
      !
-     CALL xc( dfftp%nnr, ABS(rho%of_r), ex, ec, vx(:,1), vc(:,1) )
-     !
-     v(:,1) = e2*( vx(:,1) + vc(:,1) )
-     etxc = SUM( e2*((ex(:) + ec(:))*rho%of_r(:,1)) )
-     rho%of_r(:,1)=rho%of_r(:,1)-rho_core(:)
-     vtxc = SUM( v(:,1)*rho%of_r(:,1) )
-     DO ir=1, dfftp%nnr
-       IF ( rho%of_r(ir,1) < 0.D0 ) rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
+     DO ir = 1, dfftp%nnr
+        v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )
+        etxc = etxc + e2*( ex(ir) + ec(ir) )*rho%of_r(ir,1)
+        rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
+        vtxc = vtxc + v(ir,1)*rho%of_r(ir,1)
+        IF (rho%of_r(ir,1) < 0.D0) rhoneg(1) = rhoneg(1)-rho%of_r(ir,1)
      ENDDO
      !
      !
-  ELSE IF ( nspin == 2 ) THEN
-     !
+  ELSEIF ( nspin == 2 ) THEN
      ! ... spin-polarized case
      !
-     ALLOCATE(arhox(dfftp%nnr))
-     ALLOCATE(zeta(dfftp%nnr))
-     zeta=0.D0
+     CALL xc( dfftp%nnr, 2, 2, rho%of_r, ex, ec, vx, vc )
      !
-     DO ir = 1, dfftp%nnr
-        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
-        rho%of_r(ir,1) = rho%of_r(ir,1) + rho_core(ir)
-        arhox(ir) = ABS(rho%of_r(ir,1))
-        IF ( arhox(ir) > vanishing_charge ) THEN
-           zeta(ir) = rho%of_r(ir,2) / arhox(ir)
-           IF ( ABS(zeta(ir)) > 1.D0 ) THEN
-              rhoneg(2) = rhoneg(2) + 1.D0 / omega
-              zeta(ir) = SIGN( 1.D0, zeta(ir) )
-           END IF
-        ENDIF
-     ENDDO
-     !
-     CALL xc_spin( dfftp%nnr, arhox, zeta, ex, ec, vx, vc )
-     !
-     DO ir = 1, dfftp%nnr
+     DO ir = 1, dfftp%nnr   !OMP ?
         v(ir,:) = e2*( vx(ir,:) + vc(ir,:) )
         etxc = etxc + e2*( (ex(ir) + ec(ir))*rho%of_r(ir,1) )
         rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
         vtxc = vtxc + ( ( v(ir,1) + v(ir,2) )*rho%of_r(ir,1) + &
                         ( v(ir,1) - v(ir,2) )*rho%of_r(ir,2) )
+        !
+        rhoup2 = rho%of_r(ir,1)+rho%of_r(ir,2)
+        rhodw2 = rho%of_r(ir,1)-rho%of_r(ir,2)
+        IF (rhoup2 < 0.d0) rhoneg(1) = rhoneg(1) + rhoup2
+        IF (rhodw2 < 0.d0) rhoneg(2) = rhoneg(2) + rhodw2
      ENDDO
-     vtxc = 0.5d0 * vtxc
      !
-     DEALLOCATE(arhox)
-     DEALLOCATE(zeta)
-     !
+     vtxc   = 0.5d0 * vtxc
+     rhoneg = 0.5d0 * rhoneg
      !
      !
   ELSE IF ( nspin == 4 ) THEN
-     !
      ! ... noncolinear case
      !
-     ALLOCATE(arhox(dfftp%nnr))
-     ALLOCATE(amag(dfftp%nnr))
-     ALLOCATE(zeta(dfftp%nnr))
-     zeta=0.D0
+     CALL xc( dfftp%nnr, 4, 2, rho%of_r, ex, ec, vx, vc )
      !
-     DO ir = 1, dfftp%nnr
-        amag(ir) = SQRT( rho%of_r(ir,2)**2 + rho%of_r(ir,3)**2 + rho%of_r(ir,4)**2 )
-        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
-        rho%of_r(ir,1) = rho%of_r(ir,1) + rho_core(ir)
-        arhox(ir) = ABS( rho%of_r(ir,1) )
-        IF ( arhox(ir) > vanishing_charge ) THEN
-           zeta(ir) = amag(ir) / arhox(ir)
-           IF ( ABS( zeta(ir) ) > 1.D0 ) THEN
-              rhoneg(2) = rhoneg(2) + 1.D0 / omega
-              zeta(ir) = SIGN( 1.D0, zeta(ir) )
-           END IF
+     DO ir = 1, dfftp%nnr  !OMP ?
+        arho = ABS( rho%of_r(ir,1) )
+        IF ( arho < vanishing_charge ) CYCLE
+        vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
+        v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
+        !
+        amag = SQRT( SUM( rho%of_r(ir,2:4)**2 ) )
+        IF ( amag > vanishing_mag ) THEN
+           v(ir,2:4) = e2 * vs * rho%of_r(ir,2:4) / amag
+           vtxc = vtxc + SUM( v(ir,2:4) * rho%of_r(ir,2:4) )
         ENDIF
+        etxc = etxc + e2*( ex(ir) + ec(ir) ) * arho
+        !
+        rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
+        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
+        IF ( amag / arho > 1.D0 )  rhoneg(2) = rhoneg(2) + 1.D0/omega
+        vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
      ENDDO
      !
-     CALL xc_spin( dfftp%nnr, arhox, zeta, ex, ec, vx, vc )
      !
-     DO ir = 1, dfftp%nnr
-        IF ( arhox(ir) > vanishing_charge ) THEN
-           vs = 0.5D0*( vx(ir,1) + vc(ir,1) - vx(ir,2) - vc(ir,2) )
-           v(ir,1) = e2*( 0.5D0*( vx(ir,1) + vc(ir,1) + vx(ir,2) + vc(ir,2) ) )
-           IF ( amag(ir) > vanishing_mag ) THEN
-              DO ipol = 2, 4
-                 v(ir,ipol) = e2 * vs * rho%of_r(ir,ipol) / amag(ir)
-                 vtxc = vtxc + v(ir,ipol) * rho%of_r(ir,ipol)
-              ENDDO
-           END IF
-           etxc = etxc + e2*( ex(ir) + ec(ir) ) * rho%of_r(ir,1)
-           rho%of_r(ir,1) = rho%of_r(ir,1) - rho_core(ir)
-           vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
-        ENDIF
-     ENDDO     
-     !
-     DEALLOCATE(arhox)
-     DEALLOCATE(amag)
-     DEALLOCATE(zeta)
-     !
-  END IF
+  ENDIF
   !
-  DEALLOCATE(ex)
-  DEALLOCATE(ec)
-  DEALLOCATE(vx)
-  DEALLOCATE(vc)
+  DEALLOCATE( ex, ec )
+  DEALLOCATE( vx, vc )
   !
   CALL mp_sum(  rhoneg , intra_bgrp_comm )
   !

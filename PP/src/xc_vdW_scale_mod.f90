@@ -319,8 +319,6 @@ CONTAINS
 
   real(dp)                  :: dqc_drho
   integer                   :: i_grid, idx                         ! Indexing variables.
-  !
-  real(dp)                  :: rs_v(1), ec_v(1), dqcdr_v(1)       !^^^ PROVISIONAL (xc-lib)
 
 
 
@@ -359,10 +357,7 @@ CONTAINS
      ! This is the q value defined in equations 11 and 12 of DION.
      ! Use pw() from flib/functionals.f90 to get qc = kf/eps_x * eps_c.
 
-     rs_v(1)=cc*r_s
-     call pw(1, rs_v, 1, ec_v, dqcdr_v)
-     ec=ec_v(1)
-     dqc_drho=dqcdr_v(1)
+     call pw( cc*r_s, 1, ec, dqc_drho)
      !
      q = -4.0D0*pi/3.0D0 * ec + kF(rho) * Fs(s)/cc
      if(lecnl_qx) then
@@ -452,7 +447,7 @@ CONTAINS
   integer                    :: i_grid, idx                              ! Indexing variables
   logical                    :: calc_qx_up, calc_qx_down
   !
-  real(dp) :: rs_v(1), zeta_v(1), ec_v(1), vc_v(1,2)
+  real(dp) :: vc_v(2)                                                    ! auxiliary array for pw_spin call
 
 
 
@@ -525,10 +520,8 @@ CONTAINS
      zeta = (up - down) / rho
      IF (ABS(zeta) > 1.0D0 ) zeta = SIGN(1.0D0, zeta)
      !
-     rs_v(1)=cc*r_s ; zeta_v(1)=zeta
-     call pw_spin( 1, rs_v, zeta_v, ec_v, vc_v )
-     ec=ec_v(1)
-     dqc_drho_up=vc_v(1,1) ;  dqc_drho_down=vc_v(1,2)
+     call pw_spin( cc*r_s, zeta, ec, vc_v )
+     dqc_drho_up=vc_v(1) ;  dqc_drho_down=vc_v(2)
      !
      qx = ( up * q0x_up + down * q0x_down ) / rho / cc
      qc = -4.0D0*pi/3.0D0 * ec

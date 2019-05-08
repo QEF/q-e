@@ -101,9 +101,8 @@ subroutine ggac_spin(rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   implicit none
   real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
   !
-  integer,  parameter :: length=1                !^^^ PROVISIONAL
-  real(dp), dimension(length)   :: rs , zeta_v, ec
-  real(dp), dimension(length,2) :: vc
+  real(dp) :: rs, ec
+  real(dp) :: vc(2)
   !
   real(DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
   parameter (al = 0.09d0, pa = 0.023266d0, pb = 7.389d-6, pc = &
@@ -121,16 +120,14 @@ subroutine ggac_spin(rho, zeta, grho, sc, v1cup, v1cdw, v2c)
        ddh1, fz, fz2, fz3, fz4, dfz, bfup, bfdw, dh0up, dh0dw, dh0zup, &
        dh0zdw, dh1zup, dh1zdw
   !
-  rs(1) = pi34 / rho**third
-  rs2 = rs(1) * rs(1)
-  rs3 = rs(1) * rs2
+  rs = pi34 / rho**third
+  rs2 = rs * rs
+  rs3 = rs * rs2
   !
-  zeta_v(1) = zeta
+  call pw_spin( rs, zeta, ec, vc )
   !
-  call pw_spin( length, rs, zeta_v, ec, vc )
-  !
-  kf = xkf / rs(1)
-  ks = xks * sqrt (kf)
+  kf = xkf / rs
+  ks = xks * sqrt(kf)
   fz = 0.5d0 * ( (1.d0 + zeta) ** (2.d0 / 3.d0) + (1.d0 - zeta) ** ( &
        2.d0 / 3.d0) )
   fz2 = fz * fz
@@ -138,35 +135,35 @@ subroutine ggac_spin(rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   fz4 = fz3 * fz
   dfz = ( (1.d0 + zeta) ** ( - 1.d0 / 3.d0) - (1.d0 - zeta) ** ( - &
        1.d0 / 3.d0) ) / 3.d0
-  t = sqrt (grho) / (2.d0 * fz * ks * rho)
-  expe = exp ( - 2.d0 * al * ec(1) / (fz3 * be * be) )
+  t = sqrt(grho) / (2.d0 * fz * ks * rho)
+  expe = exp( - 2.d0 * al * ec / (fz3 * be * be) )
   af = 2.d0 * al / be * (1.d0 / (expe-1.d0) )
-  bfup = expe * (vc(1,1) - ec(1)) / fz3
-  bfdw = expe * (vc(1,2) - ec(1)) / fz3
+  bfup = expe * (vc(1) - ec) / fz3
+  bfdw = expe * (vc(2) - ec) / fz3
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
-  qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
+  qy = y * y * (2.d0 + y) / (1.d0 + y + y * y)**2
   s1 = 1.d0 + 2.d0 * al / be * t * t * xy
-  h0 = fz3 * be * be / (2.d0 * al) * log (s1)
+  h0 = fz3 * be * be / (2.d0 * al) * log(s1)
   dh0up = be * t * t * fz3 / s1 * ( - 7.d0 / 3.d0 * xy - qy * &
        (af * bfup / be-7.d0 / 3.d0) )
   dh0dw = be * t * t * fz3 / s1 * ( - 7.d0 / 3.d0 * xy - qy * &
        (af * bfdw / be-7.d0 / 3.d0) )
   dh0zup = (3.d0 * h0 / fz - be * t * t * fz2 / s1 * (2.d0 * xy - &
-       qy * (3.d0 * af * expe * ec(1) / fz3 / be+2.d0) ) ) * dfz * (1.d0 - &
+       qy * (3.d0 * af * expe * ec / fz3 / be+2.d0) ) ) * dfz * (1.d0 - &
        zeta)
   dh0zdw = - (3.d0 * h0 / fz - be * t * t * fz3 / s1 * (2.d0 * xy - &
-       qy * (3.d0 * af * expe * ec(1) / fz3 / be+2.d0) ) ) * dfz * (1.d0 + &
+       qy * (3.d0 * af * expe * ec / fz3 / be+2.d0) ) ) * dfz * (1.d0 + &
        zeta)
   ddh0 = be * fz / (2.d0 * ks * ks * rho) * (xy - qy) / s1
   ee = - 100.d0 * fz4 * (ks / kf * t) **2
-  cna = cxc0 + pa * rs(1) + pb * rs2
-  dcna = pa * rs(1) + 2.d0 * pb * rs2
-  cnb = 1.d0 + pc * rs(1) + pd * rs2 + 1.d4 * pb * rs3
-  dcnb = pc * rs(1) + 2.d0 * pd * rs2 + 3.d4 * pb * rs3
+  cna = cxc0 + pa * rs + pb * rs2
+  dcna = pa * rs + 2.d0 * pb * rs2
+  cnb = 1.d0 + pc * rs + pd * rs2 + 1.d4 * pb * rs3
+  dcnb = pc * rs + 2.d0 * pd * rs2 + 3.d4 * pb * rs3
   cn = cna / cnb - cx
   dcn = dcna / cnb - cna * dcnb / (cnb * cnb)
-  h1 = nu * (cn - cc0 - 3.d0 / 7.d0 * cx) * fz3 * t * t * exp (ee)
+  h1 = nu * (cn - cc0 - 3.d0 / 7.d0 * cx) * fz3 * t * t * exp(ee)
   dh1 = - third * (h1 * (7.d0 + 8.d0 * ee) + fz3 * nu * t * t * exp &
        (ee) * dcn)
   ddh1 = 2.d0 * h1 * (1.d0 + ee) * rho / grho
@@ -192,9 +189,8 @@ subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   integer, intent(in) :: iflag
   real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
   !
-  integer, parameter :: length=1                   !^^^PROVISIONAL
-  real(dp), dimension(length)   :: rs , zeta_v, ec
-  real(dp), dimension(length,2) :: vc
+  real(dp) :: rs, ec
+  real(dp) :: vc(2)
   !
   real(DP) :: ga, be(2)
   parameter (ga = 0.031091d0)
@@ -208,12 +204,11 @@ subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   real(DP) :: fz, fz2, fz3, fz4, dfz, bfup, bfdw, dh0up, dh0dw, &
        dh0zup, dh0zdw
   !
-  rs(1) = pi34 / rho**third
-  zeta_v(1) = zeta
+  rs = pi34 / rho**third
   !
-  call pw_spin( length, rs, zeta_v, ec, vc )
+  call pw_spin( rs, zeta, ec, vc )
   !
-  kf = xkf / rs(1)
+  kf = xkf / rs
   ks = xks * sqrt(kf)
   fz = 0.5d0 * ( (1.d0 + zeta) ** (2.d0 / 3.d0) + (1.d0 - zeta) ** ( &
        2.d0 / 3.d0) )
@@ -223,10 +218,10 @@ subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   dfz = ( (1.d0 + zeta) ** ( - 1.d0 / 3.d0) - (1.d0 - zeta) ** ( - &
        1.d0 / 3.d0) ) / 3.d0
   t = sqrt(grho) / (2.d0 * fz * ks * rho)
-  expe = exp( - ec(1) / (fz3 * ga) )
+  expe = exp( - ec / (fz3 * ga) )
   af = be(iflag) / ga * (1.d0 / (expe-1.d0) )
-  bfup = expe * (vc(1,1) - ec(1)) / fz3
-  bfdw = expe * (vc(1,2) - ec(1)) / fz3
+  bfup = expe * (vc(1) - ec) / fz3
+  bfdw = expe * (vc(2) - ec) / fz3
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
   qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
@@ -237,10 +232,10 @@ subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   dh0dw = be(iflag) * t * t * fz3 / s1 * ( - 7.d0 / 3.d0 * xy - qy * &
        (af * bfdw / be(iflag)-7.d0 / 3.d0) )
   dh0zup = (3.d0 * h0 / fz - be(iflag) * t * t * fz2 / s1 * (2.d0 * xy - &
-  qy * (3.d0 * af * expe * ec(1) / fz3 / be(iflag)+2.d0) ) ) * dfz * (1.d0 - zeta)
+  qy * (3.d0 * af * expe * ec / fz3 / be(iflag)+2.d0) ) ) * dfz * (1.d0 - zeta)
   dh0zdw = - (3.d0 * h0 / fz - be(iflag) * t * t * fz2 / s1 * (2.d0 * xy - &
-  qy * (3.d0 * af * expe * ec(1) / fz3 / be(iflag)+2.d0) ) ) * dfz * (1.d0 + zeta)
-
+  qy * (3.d0 * af * expe * ec / fz3 / be(iflag)+2.d0) ) ) * dfz * (1.d0 + zeta)
+  !
   ddh0 = be(iflag) * fz / (2.d0 * ks * ks * rho) * (xy - qy) / s1
   sc = rho * h0
   v1cup = h0 + dh0up + dh0zup
@@ -249,44 +244,3 @@ subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   return
 end subroutine pbec_spin
 !
-
-!-----------------------------------------------------------------------
-function dpz_polarized (rs, iflg)
-  !-----------------------------------------------------------------------
-  !  derivative of the correlation potential with respect to local density
-  !  Perdew and Zunger parameterization of the Ceperley-Alder functional
-  !  spin-polarized case
-  !
-  USE kinds, only : DP
-  USE constants, ONLY : pi, fpi
-  !
-  implicit none
-  !
-  real(DP), intent (in) :: rs
-  integer, intent(in) :: iflg
-  real(DP) :: dpz_polarized
-  !
-  !  local variables
-  !  a,b,c,d,gc,b1,b2 are the parameters defining the functional
-  !
-  real(DP), parameter :: a = 0.01555d0, b = -0.0269d0, c = 0.0007d0, &
-       d = -0.0048d0, gc = -0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0,&
-       a1 = 7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0
-  real(DP) :: x, den, dmx, dmrs
-  !
-  !
-  if (iflg == 1) then
-     dmrs = a / rs + 2.d0 / 3.d0 * c * (log (rs) + 1.d0) + &
-          (2.d0 * d-c) / 3.d0
-  else
-     x = sqrt (rs)
-     den = 1.d0 + x * (b1 + x * b2)
-     dmx = gc * ( (a1 + 2.d0 * a2 * x) * den - 2.d0 * (b1 + 2.d0 * &
-          b2 * x) * (1.d0 + x * (a1 + x * a2) ) ) / den**3
-     dmrs = 0.5d0 * dmx / x
-  endif
-  !
-  dpz_polarized = - fpi * rs**4.d0 / 9.d0 * dmrs
-  return
-  !
-end function dpz_polarized

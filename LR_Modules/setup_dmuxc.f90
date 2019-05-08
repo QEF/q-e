@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE setup_dmuxc
   !-----------------------------------------------------------------------
-  !! This subroutine computes dmuxc (derivative of the XC potential)
+  !! This subroutine computes dmuxc (derivative of the XC potential).
   !
   USE kinds,            ONLY : DP
   USE eqv,              ONLY : dmuxc
@@ -17,6 +17,7 @@ SUBROUTINE setup_dmuxc
   USE scf,              ONLY : rho, rho_core
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,         ONLY : domag
+  USE funct,            ONLY : init_lda_xc
   !
   IMPLICIT NONE
   !
@@ -30,48 +31,54 @@ SUBROUTINE setup_dmuxc
   !
   ns = 1
   IF ( lsda ) ns = 2
-  ALLOCATE(rho_aux(dfftp%nnr,ns))
+  IF ( (.NOT. lsda) .AND. noncolin .AND. domag ) ns = 4
+  !
+  ALLOCATE( rho_aux(dfftp%nnr,ns) )
   !
   dmuxc(:,:,:) = 0.d0
   !
+  CALL init_lda_xc()
+  !
   IF ( lsda ) THEN
-      !
-      rho_aux(:,1) = ( rho%of_r(:,1) + rho%of_r(:,2) + rho_core(:) ) * 0.5d0
-      rho_aux(:,2) = ( rho%of_r(:,1) - rho%of_r(:,2) + rho_core(:) ) * 0.5d0
-      CALL dmxc_spin(dfftp%nnr, rho_aux, dmuxc )
-      !
+     !
+     rho_aux(:,1) = ( rho%of_r(:,1) + rho%of_r(:,2) + rho_core(:) )*0.5_DP
+     rho_aux(:,2) = ( rho%of_r(:,1) - rho%of_r(:,2) + rho_core(:) )*0.5_DP
+     !
+     CALL dmxc( dfftp%nnr, 2, rho_aux, dmuxc )
+     !
   ELSE
-      !
-      IF ( noncolin .AND. domag ) THEN
-         !
-         rho_aux(:,1) = rho%of_r (:,1) + rho_core(:)
-         CALL dmxc_nc( dfftp%nnr, rho_aux(:,1), rho%of_r(:,2:4), dmuxc )
-         !
-      ELSE
-         !
-         ALLOCATE(sign_r(dfftp%nnr))
-         rho_aux(:,1) = rho%of_r(:,1) + rho_core(:)
-         sign_r = 1.0_DP
-         DO ir = 1, dfftp%nnr
-            IF ( rho_aux(ir,1) < -1.d-30 ) THEN
-               sign_r(ir) = -1.0_DP
-               rho_aux(ir,1) = -rho_aux(ir,1)
-            ELSEIF ( rho_aux(ir,1) < 1.d-30 .AND.rho_aux(ir,1) > -1.d-30 ) THEN
-               sign_r(ir) = 0.0_DP
-               rho_aux(ir,1) = 0.5_DP
-            ENDIF
-         ENDDO
-         !
-         CALL dmxc( dfftp%nnr, rho_aux(:,1), dmuxc(:,1,1) )
-         dmuxc(:,1,1) = dmuxc(:,1,1)*sign_r(:)
-         !
-         DEALLOCATE(sign_r)
-         !
-      ENDIF
-      !
+     !
+     IF ( noncolin .AND. domag ) THEN
+        !
+        rho_aux(:,1) = rho%of_r(:,1) + rho_core(:)
+        rho_aux(:,2:4) = rho%of_r(:,2:4)
+        CALL dmxc( dfftp%nnr, 4, rho_aux, dmuxc )
+        !
+     ELSE
+        !
+        ALLOCATE(sign_r(dfftp%nnr))
+        rho_aux(:,1) = rho%of_r(:,1) + rho_core(:)
+        sign_r = 1.0_DP
+        DO ir = 1, dfftp%nnr
+           IF ( rho_aux(ir,1) < -1.d-30 ) THEN
+              sign_r(ir) = -1.0_DP
+              rho_aux(ir,1) = -rho_aux(ir,1)
+           ELSEIF ( rho_aux(ir,1) < 1.d-30 .AND.rho_aux(ir,1) > -1.d-30 ) THEN
+              sign_r(ir) = 0.0_DP
+              rho_aux(ir,1) = 0.5_DP
+           ENDIF
+        ENDDO
+        !
+        CALL dmxc( dfftp%nnr, 1, rho_aux, dmuxc )
+        dmuxc(:,1,1) = dmuxc(:,1,1)*sign_r(:)
+        !
+        DEALLOCATE(sign_r)
+        !
+     ENDIF
+     !
   ENDIF
   !
-  DEALLOCATE(rho_aux)
+  DEALLOCATE( rho_aux )
   !
   CALL stop_clock ('setup_dmuxc')
   !

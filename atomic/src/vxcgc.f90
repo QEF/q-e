@@ -15,15 +15,15 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !
   use kinds, only : DP
   use funct, only : init_lda_xc
-  use xc_lda_lsda, only: xc, xc_spin
+  use xc_lda_lsda, only: xc
   implicit none
   integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
   real(DP), intent(in) :: rho(2), rhoc ! the system density
-  real(DP), intent(out):: exc, vxc(2)
+  real(DP), intent(out):: exc(1), vxc(2)    !^^^
   !
-  integer,  parameter :: length=1                 !^^^ PROVISIONAL (xc-lib)
-  real(DP), dimension(length) :: arho, zeta, ex, ec
-  REAL(DP), dimension(length,2) :: vx, vc
+  integer,  parameter :: length=1   !^^^ PROVISIONAL (xc-lib)
+  real(DP), dimension(length) :: ex, ec , arho
+  REAL(DP), dimension(length,2) :: rhoaux, vx, vc
   !
   real(DP), parameter :: e2=2.0_dp, eps=1.e-30_dp
   !
@@ -36,10 +36,10 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
      !
      !     LDA case
      !
-     arho(1) = abs(rho(1) + rhoc)
-     if (arho(1) > eps) then
+     rhoaux(1,1) = abs(rho(1) + rhoc)
+     if (rhoaux(1,1) > eps) then
         !
-        call xc( length, arho ,ex, ec, vx(:,1), vc(:,1) )
+        CALL xc( length, 1, 1, rhoaux, ex, ec, vx(:,1), vc(:,1) )
         !
         vxc(1) = e2 * ( vx(1,1) + vc(1,1) )
         exc    = e2 * ( ex(1)   + ec(1)   )
@@ -49,23 +49,22 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
      !     LSDA case
      !
      vxc(2)=0.0_dp
-     arho(1) = abs(rho(1)+rho(2)+rhoc)
-     if (arho(1) > eps) then      
-        zeta(1) = (rho(1)-rho(2)) / arho(1)
-        ! zeta has to stay between -1 and 1, but can get a little
-        ! out the bound during the first iterations.
-        if (abs(zeta(1)) > 1.0_dp) zeta(1) = sign(1._dp, zeta(1))
-        !
-        CALL xc_spin( length, arho, zeta, ex, ec, vx, vc )
-        !
-        vxc(1) = e2 * ( vx(1,1) + vc(1,1) )
-        vxc(2) = e2 * ( vx(1,2) + vc(1,2) )
-        exc    = e2 * ( ex(1)   + ec(1)   )
-     endif
+     !
+     rhoaux(1,1) = rho(1) + rho(2) + rhoc
+     rhoaux(1,2) = rho(1) - rho(2)
+     !
+     CALL xc( length, 2, 2, rhoaux, ex, ec, vx, vc )
+     !
+     vxc(1) = e2 * ( vx(1,1) + vc(1,1) )
+     vxc(2) = e2 * ( vx(1,2) + vc(1,2) )
+     exc    = e2 * ( ex(1)   + ec(1)   )
+     !
   endif
-
+  !
   return
+  !
 end subroutine vxc_t
+!
 !
 !---------------------------------------------------------------
 subroutine vxcgc ( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &

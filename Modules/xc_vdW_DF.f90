@@ -594,14 +594,12 @@ CONTAINS
 
   integer,   parameter      :: m_cut = 12                          ! How many terms to include in the sum
                                                                    ! of SOLER equation 5.
-                                                                   
-  integer, parameter :: length = 1                            !^^^ PROVISIONAL (xc-lib)
   
   real(dp)                  :: rho                                 ! Local variable for the density.
-  real(dp)                  :: r_s(length)                         ! Wigner–Seitz radius.
+  real(dp)                  :: r_s                                 ! Wigner–Seitz radius.
   real(dp)                  :: s                                   ! Reduced gradient.
   real(dp)                  :: q
-  real(dp)                  :: ec(length), dq0dr_v(length)    !^^^ PROVISIONAL
+  real(dp)                  :: ec 
   real(dp)                  :: dq0_dq                              ! The derivative of the saturated
                                                                    ! q0 with respect to q.
 
@@ -634,20 +632,19 @@ CONTAINS
      ! -----------------------------------------------------------------
      ! Calculate some intermediate values needed to find q.
 
-     r_s(1) = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
+     r_s = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
 
-     s   = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 ) &
-         / (2.0D0 * kF(rho) * rho )
+     s   = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 ) / &
+           (2.0D0 * kF(rho) * rho )
 
 
      ! -----------------------------------------------------------------
      ! This is the q value defined in equations 11 and 12 of DION.
      ! Use pw() from flib/functionals.f90 to get qc = kf/eps_x * eps_c.
      !
-     call pw(length, r_s, 1, ec, dq0dr_v)   
-     dq0_drho(i_grid) = dq0dr_v(1)
+     call pw(r_s, 1, ec, dq0_drho(i_grid))
      !
-     q = -4.0D0*pi/3.0D0 * ec(1) + kF(rho) * Fs(s)
+     q = -4.0D0*pi/3.0D0 * ec + kF(rho) * Fs(s)
 
 
      ! -----------------------------------------------------------------
@@ -674,7 +671,7 @@ CONTAINS
      ! dP_dq0 term will be interpolated later.
 
      dq0_drho(i_grid)     = dq0_dq * rho * ( -4.0D0*pi/3.0D0 * &
-                            (dq0_drho(i_grid) - ec(1))/rho + dqx_drho(rho, s) )
+                            (dq0_drho(i_grid) - ec)/rho + dqx_drho(rho, s) )
      dq0_dgradrho(i_grid) = dq0_dq * rho * kF(rho) * dFs_ds(s) * ds_dgradrho(rho)
 
   end do
@@ -737,14 +734,13 @@ CONTAINS
   real(dp),  intent(OUT)     :: dq0_dgradrho_up(:), dq0_dgradrho_down(:) ! Output variables.
   complex(dp), intent(inout) :: thetas(:,:)                              ! The thetas from SOLER.
   
-  integer, parameter         :: length=1                              !^^^ PROVISIONAL (xc-lib)
   real(dp)                   :: rho, up, down                            ! Local copy of densities.
-  real(dp)                   :: zeta(length)                             ! Spin polarization.
-  real(dp)                   :: r_s(length)                              ! Wigner-Seitz radius.
+  real(dp)                   :: zeta                                     ! Spin polarization.
+  real(dp)                   :: r_s                                      ! Wigner-Seitz radius.
   real(dp)                   :: q, qc, qx, qx_up, qx_down                ! q for exchange and correlation.
   real(dp)                   :: q0x_up, q0x_down                         ! Saturated q values.
   real(dp)                   :: fac
-  real(dp)                   :: ec(length), vc_v(length,2)            !^^^ PROVISIONAL
+  real(dp)                   :: ec, vc(2)
   real(dp)                   :: dq0_dq, dq0x_up_dq, dq0x_down_dq         ! Derivative of q0 w.r.t q.
   real(dp)                   :: dqc_drho_up, dqc_drho_down               ! Intermediate values.
   real(dp)                   :: dqx_drho_up, dqx_drho_down               ! Intermediate values.
@@ -821,14 +817,14 @@ CONTAINS
      ! This is the q value defined in equations 11 and 12 of DION and
      ! equation 8 of THONHAUSER (also see text above that equation).
 
-     r_s(1)  = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
-     zeta(1) = (up - down) / rho
-     IF ( ABS(zeta(1)) > 1.0D0 ) zeta(1) = SIGN(1.0D0, zeta(1))
-     call pw_spin( length, r_s, zeta, ec, vc_v )
-     dqc_drho_up = vc_v(1,1)  ;   dqc_drho_down = vc_v(1,2)
+     r_s  = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
+     zeta = (up - down) / rho
+     IF ( ABS(zeta) > 1.0D0 ) zeta = SIGN(1.0D0, zeta)
+     call pw_spin( r_s, zeta, ec, vc )
+     dqc_drho_up = vc(1)  ;   dqc_drho_down = vc(2)
      !
      qx = ( up * q0x_up + down * q0x_down ) / rho
-     qc = -4.0D0*pi/3.0D0 * ec(1)
+     qc = -4.0D0*pi/3.0D0 * ec
      q  = qx + qc
 
 
@@ -870,8 +866,8 @@ CONTAINS
      if (calc_qx_down) dqx_drho_up   = dqx_drho_up   - q0x_down*down/rho
      if (calc_qx_up)   dqx_drho_down = dqx_drho_down - q0x_up  *up  /rho
 
-     dqc_drho_up   = -4.0D0*pi/3.0D0 * (dqc_drho_up   - ec(1))
-     dqc_drho_down = -4.0D0*pi/3.0D0 * (dqc_drho_down - ec(1))
+     dqc_drho_up   = -4.0D0*pi/3.0D0 * (dqc_drho_up   - ec)
+     dqc_drho_down = -4.0D0*pi/3.0D0 * (dqc_drho_down - ec)
 
      dq0_drho_up  (i_grid) = dq0_dq * (dqc_drho_up   + dqx_drho_up  )
      dq0_drho_down(i_grid) = dq0_dq * (dqc_drho_down + dqx_drho_down)

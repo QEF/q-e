@@ -421,6 +421,7 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
+  USE funct,     ONLY : init_lda_xc
   USE cgcom
   !
   IMPLICIT NONE
@@ -432,6 +433,8 @@ SUBROUTINE cg_neweps
   CALL newscf
   !
   !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
+  !
+  CALL init_lda_xc()
   !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
   !
@@ -446,7 +449,7 @@ SUBROUTINE cg_neweps
      ENDIF
   ENDDO
   !
-  CALL dmxc( dfftp%nnr, rhotot, dmuxc )
+  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
   !
   dmuxc = dmuxc * sign_r
   !

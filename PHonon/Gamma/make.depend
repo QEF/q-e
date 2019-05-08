@@ -138,6 +138,7 @@ phcg.o : ../../Modules/constants.o
 phcg.o : ../../Modules/control_flags.o
 phcg.o : ../../Modules/environment.o
 phcg.o : ../../Modules/fft_base.o
+phcg.o : ../../Modules/funct.o
 phcg.o : ../../Modules/io_files.o
 phcg.o : ../../Modules/io_global.o
 phcg.o : ../../Modules/ions_base.o

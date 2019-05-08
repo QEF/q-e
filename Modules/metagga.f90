@@ -119,8 +119,7 @@ subroutine metax(rho,grho2,tau,ex,v1x,v2x,v3x)
   !  OUTPUT
   real(DP) :: ex,v1x,v2x,v3x
   !  LOCAL
-  integer,  parameter :: length=1              !^^^ PROVISIONAL
-  real(DP), dimension(length) :: rs, vx_unif, ex_unif
+  real(DP) :: rs, vx_unif, ex_unif
   !  ex_unif:   lda \epsilon_x(rho)
   !  ec_unif:   lda \epsilon_c(rho)
   real(DP) :: small, pi34, third
@@ -139,11 +138,11 @@ subroutine metax(rho,grho2,tau,ex,v1x,v2x,v3x)
     v3x=0.0_DP
     return
   endif
-  rs(1) = pi34/rho**third
-  call slater( length, rs, ex_unif, vx_unif )
+  rs = pi34/rho**third
+  call slater( rs, ex_unif, vx_unif )
   call metaFX(rho,grho2,tau,fx,f1x,f2x,f3x)
-  ex =rho*ex_unif(1)
-  v1x=vx_unif(1)*fx + ex*f1x
+  ex =rho*ex_unif
+  v1x=vx_unif*fx + ex*f1x
   v2x=ex*f2x
   v3x=ex*f3x
   ex =ex*fx
@@ -172,10 +171,9 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
   real(DP) :: v1c_pbe, v2c_pbe, ec_pbe
   real(DP) :: v1c_sum, v2c_sum, ec_sum
   !
-  integer,  parameter :: length=1         !^^^ PROVISIONAL
-  real(DP), dimension(length) :: rs, zeta
-  real(DP), dimension(length) :: ec_unif, vc_unif
-  real(DP), dimension(length,2) :: vc_unif_s
+  real(DP) :: rs, zeta
+  real(DP) :: ec_unif, vc_unif
+  real(DP) :: vc_unif_s(2)
   !
   real(DP) :: dd,cab,cabone
   real(DP) :: rhoup,grhoup,dummy
@@ -197,10 +195,9 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
   grhoup=0.5_DP*SQRT(grho2)
   if(rhoup.gt.small) then
      !
-     rs(1)=(pi34/rhoup)**third
-     zeta(1)=1.0_DP
-     call pw_spin( length, rs, zeta, ec_unif, vc_unif_s )
-     dummy = vc_unif_s(1,2)
+     rs=(pi34/rhoup)**third
+     call pw_spin( rs, 1.0_DP, ec_unif, vc_unif_s )
+     dummy = vc_unif_s(2)
      !
      if(abs(grhoup).gt.small) then
 !1.0_DP-small to avoid pow_e of 0 in pbec_spin
@@ -211,8 +208,8 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
         v1c_sum=0.0_DP
         v2c_sum=0.0_DP
      endif
-     ec_sum = ec_sum/rhoup + ec_unif(1)
-     v1c_sum = (v1c_sum + vc_unif_s(1,1)-ec_sum)/rho !rho, not rhoup
+     ec_sum = ec_sum/rhoup + ec_unif
+     v1c_sum = (v1c_sum + vc_unif_s(1)-ec_sum)/rho !rho, not rhoup
      v2c_sum = v2c_sum/(2.0_DP*rho)
   else
      ec_sum=0.0_DP
@@ -220,16 +217,16 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
      v2c_sum=0.0_DP
   endif
   !
-  rs(1) = (pi34/rho)**third
-  call pw( length, rs, 1, ec_unif, vc_unif )
+  rs = (pi34/rho)**third
+  call pw( rs, 1, ec_unif, vc_unif )
   !
   !  PBE correlation energy and potential
   !  ec_pbe=rho*H,  not rho*(epsion_c_uinf + H)
   !  v1c_pbe=D (rho*H) /D rho
   !  v2c_pbe= for rho, 2 for 
   call pbec(rho,grho2,1,ec_pbe,v1c_pbe,v2c_pbe)
-  ec_pbe=ec_pbe/rho+ec_unif(1)
-  v1c_pbe=(v1c_pbe+vc_unif(1)-ec_pbe)/rho
+  ec_pbe=ec_pbe/rho+ec_unif
+  v1c_pbe=(v1c_pbe+vc_unif-ec_pbe)/rho
   v2c_pbe=v2c_pbe/rho
   !
   if(ec_sum .lt. ec_pbe) then
@@ -499,9 +496,8 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   real(DP) :: rhoup, rhodw,tauw,grhovec(3),grho2,grho,&
        grhoup2,grhodw2
   !
-  integer,  parameter :: length=1            !^^^ PROVISIONAL
-  real(DP), dimension(length) :: rs, zeta_v, ec_u
-  real(DP), dimension(length,2) :: vc_u
+  real(DP) :: rs, zeta_v, ec_u
+  real(DP) :: vc_u(2)
   !     
   !grhovec   vector gradient of rho
   !grho    mod of gradient of rho
@@ -545,9 +541,8 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   if(rho > small) then
      v2_tmp=0.0_DP
      !
-     rs(1) = (pi34/rho)**third
-     zeta_v(1) = zeta
-     call pw_spin( length, rs, zeta_v, ec_u, vc_u )
+     rs = (pi34/rho)**third
+     call pw_spin( rs, zeta, ec_u, vc_u )
      !
      if((abs(grho) > small) .and. (zeta <= 1.0_DP)) then
         call pbec_spin(rho,zeta,grho2,1,&
@@ -558,10 +553,10 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
         v1dw_pbe=0.0_DP
         v2up_pbe=0.0_DP
      endif
-     ec_pbe = ec_pbe/rho+ec_u(1)
+     ec_pbe = ec_pbe/rho+ec_u
 !     v1xx_pbe = D_epsilon_c/ D_rho_xx   :xx= up, dw
-     v1up_pbe = (v1up_pbe+vc_u(1,1)-ec_pbe)/rho
-     v1dw_pbe = (v1dw_pbe+vc_u(1,2)-ec_pbe)/rho
+     v1up_pbe = (v1up_pbe+vc_u(1)-ec_pbe)/rho
+     v1dw_pbe = (v1dw_pbe+vc_u(2)-ec_pbe)/rho
 !     v2xx_pbe = (D_Ec / D grho)/rho = (D_Ec/ D |grho| /|grho|)*grho/rho
      v2up_pbe = v2_tmp/rho*grhovec
 !    v2dw === v2up for PBE
@@ -578,8 +573,7 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
      v2_tmp=0.0_DP
      !
      rs = (pi34/rhoup)**third
-     zeta_v(1) = 1.0_DP
-     call pw_spin( length, rs, zeta_v, ec_u, vc_u )
+     call pw_spin( rs, 1.0_DP, ec_u, vc_u )
      !
      if(sqrt(grhoup2) > small) then
         call pbec_spin(rhoup,1.0_DP-small,grhoup2,1,&
@@ -589,8 +583,8 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
         v1up_0=0.0_DP
         v2up_0=0.0_DP
      endif
-     ecup_0 = ecup_0/rhoup + ec_u(1)
-     v1up_0 = (v1up_0 + vc_u(1,1)-ecup_0)/rhoup
+     ecup_0 = ecup_0/rhoup + ec_u
+     v1up_0 = (v1up_0 + vc_u(1)-ecup_0)/rhoup
      v2up_0 = v2_tmp/rhoup*grhoup
   else
      ecup_0 = 0.0_DP
@@ -616,9 +610,8 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   if(rhodw > small) then
      v2_tmp=0.0_DP
      !
-     rs(1) = (pi34/rhodw)**third
-     zeta_v(1) = -1.0_DP
-     call pw_spin( length, rs, zeta_v, ec_u, vc_u )
+     rs = (pi34/rhodw)**third
+     call pw_spin( rs, -1.0_DP, ec_u, vc_u )
      !
      if(sqrt(grhodw2) > small) then
         call pbec_spin(rhodw,-1.0_DP+small,grhodw2,1,&
@@ -628,8 +621,8 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
         v1dw_0=0.0_DP
         v2dw_0=0.0_DP
      endif
-     ecdw_0 = ecdw_0/rhodw + ec_u(1)
-     v1dw_0 = (v1dw_0 + vc_u(1,2)-ecdw_0)/rhodw
+     ecdw_0 = ecdw_0/rhodw + ec_u
+     v1dw_0 = (v1dw_0 + vc_u(2)-ecdw_0)/rhodw
      v2dw_0 = v2_tmp/rhodw*grhodw
   else
      ecdw_0 = 0.0_DP
@@ -1110,12 +1103,11 @@ subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c
   implicit none
 !-------------------------------------------------------------------------
   
-  real(dp), intent(in)    :: rhoa, rhob, grho2a, grho2b, taua, taub
-  real(dp), intent(out)   :: ec, v1c_up, v2c_up, v3c_up, v1c_dw, v2c_dw, v3c_dw
+  real(dp), intent(in)  :: rhoa, rhob, grho2a, grho2b, taua, taub
+  real(dp), intent(out) :: ec, v1c_up, v2c_up, v3c_up, v1c_dw, v2c_dw, v3c_dw
   !
-  integer, parameter :: length=1            !^^^ PROVISIONAL (xc-lib)
-  real(DP), dimension(length) :: rs, zeta
-  real(DP), dimension(length,2) :: vc_v
+  real(DP) :: rs, zeta
+  real(DP) :: vc_v(2)
   !
   !
   real(dp), parameter     :: zero = 0._dp, one = 1.0_dp, two=2.0_dp, three = 3.0_dp,    &
@@ -1136,7 +1128,7 @@ subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c
   !
   ! functions and variables
   !
-  real(dp),dimension(length) :: ec_pw_a, ec_pw_b, ec_pw_ab
+  real(dp)                   :: ec_pw_a, ec_pw_b, ec_pw_ab
   !
   real(dp)                   :: vv, vc_pw_a, vc_pw_b, vc_pw_ab, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
   &                             Ec_UEG_ab, Ec_UEG_aa, Ec_UEG_bb, decab_drhoa, decab_drhob,  &
@@ -1224,16 +1216,16 @@ subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c
     ec_pw_a = zero
     vc_pw_a = zero
     !
-    rs(1)   = rsa
-    zeta(1) = one
-    call pw_spin( length, rs, zeta, ec_pw_a, vc_v )
-    vc_pw_a = vc_v(1,1)
-    vv      = vc_v(1,2)
+    rs   = rsa
+    zeta = one
+    call pw_spin( rs, zeta, ec_pw_a, vc_v )
+    vc_pw_a = vc_v(1)
+    vv      = vc_v(2)
     !
     call gvt4  (xs2a, zsa, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hga, dhga_dxs2a, dhga_dzsa)
     call gfunc (cs, gama_s, xs2a, gsa, dgsa_dxs2a)
     !
-    Ec_UEG_aa  = rhoa*ec_pw_a(1)
+    Ec_UEG_aa  = rhoa*ec_pw_a
     num        = (dgsa_dxs2a + dhga_dxs2a)*Dsa + (gsa + hga)*dDsa_dxs2a 
     !
     !
@@ -1276,16 +1268,16 @@ subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c
     dDsb_dxs2b = - one/(four * (zsb + CF))
     dDsb_dzsb  =  xs2b/(four * (zsb + CF)**2)
     !
-    rs(1)   = rsb
-    zeta(1) = one
-    call pw_spin( length, rs, zeta, ec_pw_b, vc_v )
-    vc_pw_b = vc_v(1,1)
-    vv      = vc_v(1,2)
+    zeta  = one
+    rs    = rsb
+    call pw_spin( rs, zeta, ec_pw_b, vc_v )
+    vc_pw_b = vc_v(1)
+    vv      = vc_v(2)
     !
     call gvt4  (xs2b, zsb, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hgb, dhgb_dxs2b, dhgb_dzsb)
     call gfunc (cs, gama_s, xs2b, gsb, dgsb_dxs2b)
   
-    Ec_UEG_bb  = rhob*ec_pw_b(1)
+    Ec_UEG_bb  = rhob*ec_pw_b
     num        = (dgsb_dxs2b + dhgb_dxs2b)*Dsb + (gsb + hgb)*dDsb_dxs2b
     !
     !  
@@ -1318,20 +1310,20 @@ subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c
     xs2ab = xs2a + xs2b
     zsab  = zsa + zsb
     rho   = rhoa + rhob
-    zeta(1)  = (rhoa - rhob)/rho
-    rs(1)    = (pi34/rho)**f13
+    zeta  = (rhoa - rhob)/rho
+    rs    = (pi34/rho)**f13
   
     call gvt4(xs2ab, zsab, dab0, dab1, dab2, dab3, dab4, dab5, alpha_ab, hgab, dhgab_dxs2ab, dhgab_dzsab)
     !
-    call pw_spin( length, rs, zeta, ec_pw_ab, vc_v )
-    vc_pw_up = vc_v(1,1) ; vc_pw_dw=vc_v(1,2)
+    call pw_spin( rs, zeta, ec_pw_ab, vc_v )
+    vc_pw_up = vc_v(1) ; vc_pw_dw=vc_v(2)
     !
     call gfunc(cab, gama_ab, xs2ab, gsab, dgsab_dxs2ab)
     !
     decab_drhoa  =  vc_pw_up - vc_pw_a
     decab_drhob  =  vc_pw_dw - vc_pw_b
   
-    Ec_UEG_ab    = ec_pw_ab(1)*rho - ec_pw_a(1)*rhoa - ec_pw_b(1)*rhob
+    Ec_UEG_ab    = ec_pw_ab*rho - ec_pw_a*rhoa - ec_pw_b*rhob
     !
     !
     Ecab         = Ec_UEG_ab * (gsab + hgab)

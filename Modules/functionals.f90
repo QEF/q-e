@@ -447,8 +447,7 @@ subroutine ggac( rho, grho, sc, v1c, v2c )
   !
   USE kinds, ONLY : DP
   implicit none
-  integer,  parameter :: length=1           !^^^ PROVISIONAL (xc-lib)
-  real(DP), dimension(length) :: rs, ec, vc
+  real(DP) :: rs, ec, vc
   real(DP) :: rho, grho, sc, v1c, v2c
   real(DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
   parameter (al = 0.09d0, pa = 0.023266d0, pb = 7.389d-6, pc = &
@@ -465,36 +464,36 @@ subroutine ggac( rho, grho, sc, v1c, v2c )
   real(DP) :: h0, dh0, ddh0, ee, cn, dcn, cna, dcna, cnb, dcnb, h1, &
        dh1, ddh1
   !
-  rs(1) = pi34 / rho**third
-  rs2 = rs(1) * rs(1)
-  rs3 = rs(1) * rs2
+  rs  = pi34 / rho**third
+  rs2 = rs * rs
+  rs3 = rs * rs2
   !
-  call pw( length, rs, 1, ec, vc )
+  call pw( rs, 1, ec, vc )
   !
-  kf = xkf / rs(1)
+  kf = xkf / rs
   ks = xks * sqrt(kf)
   t = sqrt(grho) / (2.d0 * ks * rho)
-  expe = exp( - 2.d0 * al * ec(1) / (be * be) )
+  expe = exp( - 2.d0 * al * ec / (be * be) )
   af = 2.d0 * al / be * (1.d0 / (expe-1.d0) )
-  bf = expe * (vc(1) - ec(1))
+  bf = expe * (vc - ec)
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
   qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
   s1 = 1.d0 + 2.d0 * al / be * t * t * xy
   h0 = be * be / (2.d0 * al) * log(s1)
   dh0 = be * t * t / s1 * ( - 7.d0 / 3.d0 * xy - qy * (af * bf / &
-       be-7.d0 / 3.d0) )
+        be-7.d0 / 3.d0) )
   ddh0 = be / (2.d0 * ks * ks * rho) * (xy - qy) / s1
   ee = - 100.d0 * (ks / kf * t) **2
-  cna = cxc0 + pa * rs(1) + pb * rs2
-  dcna = pa * rs(1) + 2.d0 * pb * rs2
-  cnb = 1.d0 + pc * rs(1) + pd * rs2 + 1.d4 * pb * rs3
-  dcnb = pc * rs(1) + 2.d0 * pd * rs2 + 3.d4 * pb * rs3
+  cna = cxc0 + pa * rs + pb * rs2
+  dcna = pa * rs + 2.d0 * pb * rs2
+  cnb = 1.d0 + pc * rs + pd * rs2 + 1.d4 * pb * rs3
+  dcnb = pc * rs + 2.d0 * pd * rs2 + 3.d4 * pb * rs3
   cn = cna / cnb - cx
   dcn = dcna / cnb - cna * dcnb / (cnb * cnb)
   h1 = nu * (cn - cc0 - 3.d0 / 7.d0 * cx) * t * t * exp(ee)
   dh1 = - third * (h1 * (7.d0 + 8.d0 * ee) + nu * t * t * exp(ee) &
-       * dcn)
+        * dcn)
   ddh1 = 2.d0 * h1 * (1.d0 + ee) * rho / grho
   sc = rho * (h0 + h1)
   v1c = h0 + h1 + dh0 + dh1
@@ -774,29 +773,28 @@ subroutine pbec(rho, grho, iflag, sc, v1c, v2c)
   real(DP), parameter :: third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0
   real(DP), parameter :: xkf = 1.919158292677513d0, xks = 1.128379167095513d0
   ! pi34=(3/4pi)^(1/3), xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
-  integer, parameter :: length=1                !^^^ PROVISIONAL
-  real(DP), dimension(length) :: rs, ec, vc
+  real(DP) :: rs, ec, vc
   !
   real(DP) :: kf, ks, t, expe, af, bf, y, xy, qy
   real(DP) :: s1, h0, dh0, ddh0, sc2D, v1c2D, v2c2D
   !
-  rs(1) = pi34 / rho**third
+  rs = pi34 / rho**third
   !
-  call pw( length, rs, 1, ec, vc )
+  call pw( rs, 1, ec, vc )
   !
-  kf = xkf / rs(1)
-  ks = xks * sqrt (kf)
-  t = sqrt (grho) / (2.d0 * ks * rho)
-  expe = exp ( - ec(1) / ga)
+  kf = xkf / rs
+  ks = xks * sqrt(kf)
+  t = sqrt(grho) / (2.d0 * ks * rho)
+  expe = exp( - ec / ga)
   af = be(iflag) / ga * (1.d0 / (expe-1.d0) )
-  bf = expe * (vc(1) - ec(1))
+  bf = expe * (vc - ec)
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
   qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
   s1 = 1.d0 + be(iflag) / ga * t * t * xy
-  h0 = ga * log (s1)
+  h0 = ga * log(s1)
   dh0 = be(iflag) * t * t / s1 * ( - 7.d0 / 3.d0 * xy - qy * (af * bf / &
-       be(iflag)-7.d0 / 3.d0) )
+        be(iflag)-7.d0 / 3.d0) )
   ddh0 = be(iflag) / (2.d0 * ks * ks * rho) * (xy - qy) / s1
   sc = rho * h0
   v1c = h0 + dh0
@@ -1352,46 +1350,6 @@ subroutine wcx (rho, grho, sx, v1x, v2x)
   return
 end subroutine wcx
 !
-!-----------------------------------------------------------------------
-function dpz(rs, iflg)
-  !-----------------------------------------------------------------------
-  !  derivative of the correlation potential with respect to local density
-  !  Perdew and Zunger parameterization of the Ceperley-Alder functional
-  !
-  use kinds, only: DP
-  USE constants, ONLY: pi, fpi
-  !
-  implicit none
-  !
-  real(DP), intent(in) :: rs
-  integer, intent(in) :: iflg
-  real(DP) :: dpz
-  !
-  !  local variables
-  !  a,b,c,d,gc,b1,b2 are the parameters defining the functional
-  !
-  real(DP), parameter :: a = 0.0311d0, b = -0.048d0, c = 0.0020d0, &
-       d = -0.0116d0, gc = -0.1423d0, b1 = 1.0529d0, b2 = 0.3334d0,&
-       a1 = 7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0
-  real(DP) :: x, den, dmx, dmrs
-  !
-  !
-  if (iflg == 1) then
-     dmrs = a / rs + 2.d0 / 3.d0 * c * (log (rs) + 1.d0) + &
-          (2.d0 * d-c) / 3.d0
-  else
-     x = sqrt (rs)
-     den = 1.d0 + x * (b1 + x * b2)
-     dmx = gc * ( (a1 + 2.d0 * a2 * x) * den - 2.d0 * (b1 + 2.d0 * &
-          b2 * x) * (1.d0 + x * (a1 + x * a2) ) ) / den**3
-     dmrs = 0.5d0 * dmx / x
-  endif
-  !
-  dpz = - fpi * rs**4.d0 / 9.d0 * dmrs
-  return
-  !
-end function dpz
-!----------------------------------------------------------------------
 !
 ! HSE (wPBE) stabbing starts HERE
 !

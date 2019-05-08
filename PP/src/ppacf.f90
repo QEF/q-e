@@ -51,7 +51,7 @@ PROGRAM do_ppacf
   USE funct,                ONLY : gcxc,gcx_spin,gcc_spin,dft_is_nonlocc,nlc
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction,set_auxiliary_flags,enforce_input_dft, init_lda_xc
-  USE xc_lda_lsda,          ONLY : xc, xc_spin
+  USE xc_lda_lsda,          ONLY : xc_lda, xc_lsda
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
   USE kernel_table,         ONLY : Nqs, vdw_table_name, kernel_file_name
@@ -337,7 +337,7 @@ PROGRAM do_ppacf
               rs = pi34 /arhox**third
               CALL slater(1, rs, ex, vx(:,1))     ! \epsilon_x,\lambda[n]=\epsilon_x[n]
            ELSE
-              CALL xc( 1, arhox, ex, ec, vx(:,1), vc(:,1) )
+              CALL xc_lda( 1, arhox, ex, ec, vx(:,1), vc(:,1) )
            ENDIF
            etx=etx+e2*ex(1)*rhox
            etxlda=etxlda+e2*ex(1)*rhox
@@ -356,15 +356,15 @@ PROGRAM do_ppacf
               IF(icorr==4) THEN
                  CALL pwcc(rs(1),cc,ec(1),vc(1,1),ec_l)
               ELSE
-                 CALL xc(1,arhox/ccp3,expp,ecpp,vx(:,1),vc(:,1))
-                 CALL xc(1,arhox/ccm3,exm,ecm,vx(:,1),vc(:,1))
+                 CALL xc_lda(1,arhox/ccp3,expp,ecpp,vx(:,1),vc(:,1))
+                 CALL xc_lda(1,arhox/ccm3,exm,ecm,vx(:,1),vc(:,1))
                  !
                  ec_l=(ccp2*ecpp(1)-ccm2*ecm(1))/dcc*0.5_DP
               ENDIF
               etcldalambda=etcldalambda+e2*ec_l*rhox
               IF(icc == ncc) THEN
                  IF(icorr.NE.4) THEN
-                   CALL xc(1,arhox,ex,ec,vx(:,1),vc(:,1))
+                   CALL xc_lda(1,arhox,ex,ec,vx(:,1),vc(:,1))
                  ENDIF
                  tclda%of_r(ir,1)=e2*(ec(1)-ec_l)*rhox
                  ttclda=ttclda+e2*(ec(1)-ec_l)*rhox
@@ -377,7 +377,7 @@ PROGRAM do_ppacf
                  etcgclambda=etcgclambda+e2*ecgc_l*segno
               ENDIF
            ENDIF
-           CALL xc(1,arhox,ex,ec,vx(:,1),vc(:,1))
+           CALL xc_lda(1,arhox,ex,ec,vx(:,1),vc(:,1))
            !
            etclda=etclda+e2*ec(1)*rhox
            etc=etc+e2*ec(1)*rhox
@@ -418,7 +418,7 @@ PROGRAM do_ppacf
               CALL slater_spin(1, arhox, zeta, ex, vx)
               !
            ELSE
-              CALL xc_spin( 1, arhox, zeta, ex, ec, vx, vc )
+              CALL xc_lsda( 1, arhox, zeta, ex, ec, vx, vc )
               !
            ENDIF
            etx=etx+e2*ex(1)*rhox
@@ -440,9 +440,9 @@ PROGRAM do_ppacf
               IF(icorr==4) THEN
                  CALL pwcc_spin (rs(1),cc, zeta(1), ec(1), vc(1,1), vc(1,2), ec_l)
               ELSE
-                 CALL xc_spin( 1, arhox/ccp3, zeta, expp, ecpp, vx, vc )
+                 CALL xc_lsda( 1, arhox/ccp3, zeta, expp, ecpp, vx, vc )
                  !
-                 CALL xc_spin( 1, arhox/ccm3, zeta, exm, ecm, vx, vc )
+                 CALL xc_lsda( 1, arhox/ccm3, zeta, exm, ecm, vx, vc )
                  !
                  ec_l=(ccp2*ecpp(1)-ccm2*ecm(1))/dcc*0.5_DP
               ENDIF
@@ -458,7 +458,7 @@ PROGRAM do_ppacf
                  etcgclambda=etcgclambda+e2*ecgc_l
               ENDIF
            ENDIF
-           CALL xc_spin( 1, arhox, zeta, ex, ec, vx, vc )
+           CALL xc_lsda( 1, arhox, zeta, ex, ec, vx, vc )
            !
            etclda=etclda+e2*ec(1)*rhox
            etc=etc+e2*ec(1)*rhox

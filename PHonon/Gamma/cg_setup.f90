@@ -18,7 +18,7 @@ SUBROUTINE cg_setup
   USE uspp_param, ONLY: upf
   USE wavefunctions,  ONLY: evc
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
-  USE funct,      ONLY: dft_is_gradient
+  USE funct,      ONLY: dft_is_gradient, init_lda_xc
   USE dfunct,     ONLY: newd
   USE fft_base,   ONLY: dfftp
   USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
@@ -85,6 +85,8 @@ SUBROUTINE cg_setup
   !
   !  derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
+  CALL init_lda_xc()
+  !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
   !
   sign_r = 1.0_DP
@@ -98,7 +100,7 @@ SUBROUTINE cg_setup
      ENDIF
   ENDDO
   !
-  CALL dmxc( dfftp%nnr, rhotot, dmuxc )
+  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
   !
   dmuxc = dmuxc * sign_r
   !
