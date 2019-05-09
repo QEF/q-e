@@ -43,11 +43,12 @@ MODULE pw_restart_new
   !
   CONTAINS
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_schema( what, wf_collect )
+    SUBROUTINE pw_write_schema( only_init, wf_collect )
       !------------------------------------------------------------------------
       !
-      ! what = 'init-config': write only variables that are known after the 
-      !                       initial steps of initialization (e.g. structure)
+      ! only_init  = T  write only variables that are known after the 
+      !                 initial steps of initialization (e.g. structure)
+      !            = F  write the complete xml file
       ! wf_collect = T  if final wavefunctions in portable format are written,
       !              F  if wavefunctions are either not written or are written
       !                 in binary non-portable form (for checkpointing)
@@ -139,8 +140,7 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: what
-      LOGICAL, INTENT(IN) :: wf_collect
+      LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
@@ -489,7 +489,7 @@ MODULE pw_restart_new
          !
          ! skip if not yet computed
          !
-         IF ( TRIM(what) == "init-config" ) GO TO 10
+         IF ( only_init ) GO TO 10
          !
          IF ( .NOT. ( lgauss .OR. ltetra )) THEN 
             occupations_are_fixed = .TRUE.

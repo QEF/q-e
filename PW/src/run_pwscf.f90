@@ -109,7 +109,7 @@ SUBROUTINE run_pwscf ( exit_status )
      CALL summary()
      CALL memory_report()
      CALL qexsd_set_status(255)
-     CALL punch( 'init-config' )
+     CALL punch( 'config-init' )
      exit_status = 255
      RETURN
   ENDIF
@@ -186,7 +186,7 @@ SUBROUTINE run_pwscf ( exit_status )
         !
         IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN 
             CALL qexsd_set_status(255)
-            CALL punch( 'config' )
+            CALL punch( 'config-nowf' )
         END IF
         !
         IF (dft_is_hybrid() )  CALL stop_exx()
