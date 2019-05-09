@@ -4,7 +4,7 @@ New in development branch:
 Problems fixed in development branch :
   * pp.x with plot_num=17 in spin-polarized case was issuing a bogus 
     error (noticed by Shoaib Muhammad, Sungkyunkwan U.)
-  * vc-relaz with cell_dofree='z' wasn't working exactly as expected
+  * vc-relax with cell_dofree='z' wasn't working exactly as expected
     (noticed by Daniel Marchand, fixed by Lorenzo Paulatto)
   * Incorrect link to wannier90 package (thanks to Nikolas Garofil)
   * Bug in spin-polarized meta-GGA (noticed by Shoaib Muhammad, 
