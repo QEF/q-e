@@ -862,7 +862,7 @@ CONTAINS
       CASE( 1 )
         qe_to_libxc_index = 1
       CASE DEFAULT
-        qe_to_libxc_index = -1
+        qe_to_libxc_index = index_qe
         qe_or_libxc(1) = 0
       END SELECT
       !
@@ -881,7 +881,7 @@ CONTAINS
       CASE( 4 ) !pw
          qe_to_libxc_index = 12
       CASE DEFAULT
-         qe_to_libxc_index = -1
+         qe_to_libxc_index = index_qe
          qe_or_libxc(2) = 0
       END SELECT      
       !
