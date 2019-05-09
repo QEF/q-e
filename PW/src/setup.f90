@@ -526,7 +526,7 @@ SUBROUTINE setup()
   END IF
   !
   IF ( nsym > 1 .AND. ibrav == 0 ) CALL infomsg('setup', &
-       'DEPRECATED: symmetry with ibrav=0, use correct ibrav instead')
+       'using ibrav=0 with symmetry is DISCOURAGED, use correct ibrav instead')
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.

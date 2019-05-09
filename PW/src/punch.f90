@@ -76,36 +76,35 @@ SUBROUTINE punch( what )
   !
   IF (TRIM(what) == 'all') THEN 
      !
-     ! ... make a copy of xml file one level up (FIXME: why?)
+     ! ... copy xml file one level up (FIXME: why?),
+     ! ... copy pseudopotential files and the kernel table
+     ! ... (if needed) into the .save directory
      !
      IF (ionode) THEN
+        !
         cp_source = TRIM(tmp_dir)//TRIM(prefix)//postfix//xmlpun_schema
         cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//'.xml'
         cp_status = f_copy(cp_source, cp_dest)
+        !
+        DO nt = 1, nsp
+           cp_source = TRIM(pseudo_dir)//psfile(nt)
+           cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//postfix//psfile(nt)
+           IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
+                cp_status = f_copy(cp_source, cp_dest)
+        END DO
+        !
+        inlc = get_inlc()
+        IF ( inlc > 0 ) THEN 
+           cp_source = TRIM(kernel_file_name)
+           cp_dest = TRIM(tmp_dir)//TRIM(prefix)//postfix//TRIM(vdw_table_name)
+           IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
+              cp_status = f_copy(cp_source, cp_dest)
+        END IF  
      END IF
      !
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
      CALL pw_write_binaries( )
-     !
-     ! ... copy pseudopotential files into the .save directory
-     !
-     DO nt = 1, nsp
-        cp_source = TRIM(pseudo_dir)//psfile(nt)
-        cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//postfix//psfile(nt)
-        IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
-             cp_status = f_copy(cp_source, cp_dest)
-     END DO
-     !
-     ! ... copy kernal table for vdW functionals if needed
-     !
-     inlc = get_inlc()
-     IF ( inlc > 0 ) THEN 
-        cp_source = TRIM(kernel_file_name)
-        cp_dest = TRIM(tmp_dir)//TRIM(prefix)//postfix//TRIM(vdw_table_name)
-        IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
-           cp_status = f_copy(cp_source, cp_dest)
-     END IF  
      !
      ! ... if allocated, deallocate variables containing info on ionic steps 
      ! 
