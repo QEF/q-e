@@ -7,17 +7,15 @@
 !
 ! ... written by T. Brumme with add_efield.f90 as template
 !
-!
 !--------------------------------------------------------------------------
-SUBROUTINE add_gatefield(vpoten,etotgatefield,linear,quadratic)
+SUBROUTINE add_gatefield( vpoten,etotgatefield,linear,quadratic )
   !--------------------------------------------------------------------------
-  !
-  ! This routine adds an electric field of a charged-plate to the local potential.
-  ! (in the system setup - setlocal.f90)
-  ! Furthermore, a harmonic potential is added as background charge.
-  ! USE ONLY WITH ELECTRIC FIELD IF DIPOLE CORRECTION IS ACITVE
-  !
-  ! see PRB 89, 245406 (2014)
+  !! This routine adds an electric field of a charged-plate to the local potential.
+  !! (in the system setup - setlocal.f90)
+  !! Furthermore, a harmonic potential is added as background charge.
+  !! USE ONLY WITH ELECTRIC FIELD IF DIPOLE CORRECTION IS ACTIVE
+  !!
+  !! see PRB 89, 245406 (2014)
   !
   ! compare also with add_efield as this file here is more or less a copy of it
   !
@@ -40,14 +38,18 @@ SUBROUTINE add_gatefield(vpoten,etotgatefield,linear,quadratic)
   
   IMPLICIT NONE
   !
-  ! I/O variables
+  ! ... I/O variables
   !
-  REAL(DP),INTENT(INOUT) :: vpoten(dfftp%nnr)! field is added to this potential
-  REAL(DP),INTENT(INOUT) :: etotgatefield    ! contribution to etot due to field
-  LOGICAL,INTENT(IN)     :: linear    ! set to true to calculate the linear part
-  LOGICAL,INTENT(IN)     :: quadratic ! set to true to calculate the quadratic part
+  REAL(DP),INTENT(INOUT) :: vpoten(dfftp%nnr)
+  !! field is added to this potential
+  REAL(DP),INTENT(INOUT) :: etotgatefield
+  !! contribution to etot due to field
+  LOGICAL,INTENT(IN)     :: linear    
+  !! set to true to calculate the linear part
+  LOGICAL,INTENT(IN)     :: quadratic 
+  !! set to true to calculate the quadratic part
   !
-  ! local variables
+  ! ... local variables
   !
   INTEGER :: idx,  i, j, k, j0, k0
   INTEGER :: ir, na, ipol
