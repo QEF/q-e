@@ -1073,7 +1073,7 @@ MODULE cp_restart_new
                         Hubbard_l(isp ) = 3
                      CASE  default 
                         IF (Hubbard_U(isp)/=0) &
-                             CALL errore ("pw_readschema:", "unrecognized label for Hubbard "//label, 1 ) 
+                             CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard "//label, 1 ) 
                      END SELECT
                      EXIT loop_on_speciesU
                   END IF 

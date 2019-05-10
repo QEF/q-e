@@ -117,7 +117,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
-  USE pw_restart_new,       ONLY : pw_readschema_file, init_vars_from_schema 
+  USE pw_restart_new,       ONLY : pw_read_schema, init_vars_from_schema 
   USE qes_types_module,     ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
@@ -159,7 +159,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
 #if defined(__BEOWULF)
    IF (ionode) THEN
-      CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
+      CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
       IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
    END IF
    CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
@@ -167,7 +167,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
    CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
    CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
 #else
-  CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
+  CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
 #endif
   wfc_is_collected = output_obj%band_structure%wf_collected

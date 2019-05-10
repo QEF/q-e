@@ -77,7 +77,7 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-  USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
+  USE pw_restart_new,     ONLY : pw_read_schema, init_vars_from_schema 
   USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
   USE exx,                ONLY : ecutfock, nbndproj
@@ -162,12 +162,19 @@ SUBROUTINE setup()
   nelec = ionic_charge - tot_charge
   !
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
-     CALL pw_readschema_file( ierr , output_obj, parinfo_obj, geninfo_obj )
-  END IF
-  !
-  ! 
+     !
+     ! ... in these cases, we need to read the Fermi energy
+     !
+     CALL pw_read_schema( ierr , output_obj, parinfo_obj, geninfo_obj )
+     CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
+     CALL errore( 'setup ', 'problem reading ef from file ' // &
+             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
+     CALL qes_reset  ( output_obj )
+     CALL qes_reset  ( parinfo_obj )
+     CALL qes_reset  ( geninfo_obj )
+     !
+  END IF 
   IF ( (lfcpopt .OR. lfcpdyn) .AND. restart ) THEN  
-     CALL init_vars_from_schema( 'ef', ierr,  output_obj, parinfo_obj, geninfo_obj)
      tot_charge = ionic_charge - nelec
   END IF 
   !
@@ -548,15 +555,7 @@ SUBROUTINE setup()
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
        CALL infomsg( 'setup', 'Dynamics, you should have no symmetries' )
   !
-  IF ( lbands ) THEN
-     !
-     ! ... if calculating bands, we read the Fermi energy
-     !
-     CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
-     CALL errore( 'setup ', 'problem reading ef from file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-     !
-  ELSE IF ( ltetra ) THEN
+  IF ( ltetra ) THEN
      !
      ! ... Calculate quantities used in tetrahedra method
      !
@@ -571,12 +570,6 @@ SUBROUTINE setup()
      END IF
      !
   END IF
-  IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
-     CALL qes_reset  ( output_obj )
-     CALL qes_reset  ( parinfo_obj )
-     CALL qes_reset  ( geninfo_obj )
-  END IF 
-  !
   !
   IF ( lsda ) THEN
      !
