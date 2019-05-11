@@ -39,15 +39,16 @@ MODULE pw_restart_new
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, &
-       pw_readschema_file, init_vars_from_schema, read_collected_to_evc
+       pw_read_schema, init_vars_from_schema, read_collected_to_evc
   !
   CONTAINS
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_schema( what, wf_collect )
+    SUBROUTINE pw_write_schema( only_init, wf_collect )
       !------------------------------------------------------------------------
       !
-      ! what = 'init-config': write only variables that are known after the 
-      !                       initial steps of initialization (e.g. structure)
+      ! only_init  = T  write only variables that are known after the 
+      !                 initial steps of initialization (e.g. structure)
+      !            = F  write the complete xml file
       ! wf_collect = T  if final wavefunctions in portable format are written,
       !              F  if wavefunctions are either not written or are written
       !                 in binary non-portable form (for checkpointing)
@@ -139,8 +140,7 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: what
-      LOGICAL, INTENT(IN) :: wf_collect
+      LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
@@ -489,7 +489,7 @@ MODULE pw_restart_new
          !
          ! skip if not yet computed
          !
-         IF ( TRIM(what) == "init-config" ) GO TO 10
+         IF ( only_init ) GO TO 10
          !
          IF ( .NOT. ( lgauss .OR. ltetra )) THEN 
             occupations_are_fixed = .TRUE.
@@ -904,7 +904,7 @@ MODULE pw_restart_new
     END SUBROUTINE gk_l2gmap_kdip
 
     !------------------------------------------------------------------------
-    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_parallel_info, restart_general_info, &
+    SUBROUTINE pw_read_schema(ierr, restart_output, restart_parallel_info, restart_general_info, &
                                   prev_input)
       !------------------------------------------------------------------------
       USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
@@ -988,7 +988,7 @@ MODULE pw_restart_new
             ierr = 5
          END IF
          IF ( ierr /= 0 ) THEN
-             CALL infomsg ('pw_readschema_file',& 
+             CALL infomsg ('pw_read_schema',& 
                             'failed retrieving input info from xml file, please check it')
              IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
              ierr = 0
@@ -997,9 +997,9 @@ MODULE pw_restart_new
       ! 
       CALL destroy(root)       
 
- 100  CALL errore('pw_readschemafile',TRIM(errmsg),ierr)
+ 100  CALL errore('pw_read_schema',TRIM(errmsg),ierr)
       !
-    END SUBROUTINE pw_readschema_file
+    END SUBROUTINE pw_read_schema
     !  
     !------------------------------------------------------------------------
     SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
@@ -1657,7 +1657,7 @@ MODULE pw_restart_new
                             Hubbard_l(isp ) = 3
                         CASE  default 
                             IF (Hubbard_U(isp)/=0) &
-                              CALL errore ("pw_readschema:", "unrecognized label for Hubbard "//label, 1 ) 
+                              CALL errore ("readschema_xc:", "unrecognized label for Hubbard "//label, 1 ) 
                      END SELECT   
                      EXIT loop_on_speciesU
                   END IF 
@@ -1871,13 +1871,13 @@ MODULE pw_restart_new
                     END IF 
                  END DO
               ELSE
-                 CALL infomsg ( "pw_readschema: ", &
+                 CALL infomsg ( "readschema_bz: ", &
                                 "actual number of start kpoint not equal to nks_start, set nks_start=0")  
                  nks_start = 0 
               END IF
            END IF
        ELSE 
-           CALL errore ("pw_readschema: ", &
+           CALL errore ("readschema_bz: ", &
                         " no information found for initializing brillouin zone information", 1)
        END IF  
        ! 
