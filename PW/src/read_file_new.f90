@@ -116,9 +116,14 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE spin_orb,             ONLY : lspinorb
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE vlocal,               ONLY : strf
-  USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
+  USE io_files,             ONLY : tmp_dir, prefix, postfix, &
+                                   iunpun, nwordwfc, iunwfc
   USE pw_restart_new,       ONLY : pw_read_schema, readschema_dim, &
-       readschema_cell, init_vars_from_schema 
+       readschema_cell, readschema_ions, readschema_planewaves, &
+       readschema_spin, readschema_magnetization, readschema_xc, &
+       readschema_occupations, readschema_brillouin_zone, &
+       readschema_band_structure, readschema_symmetry, readschema_efield, &
+       readschema_outputPBC, readschema_exx, readschema_algo
   USE qes_types_module,     ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
@@ -152,6 +157,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   CHARACTER(LEN=20) dft_name
+  CHARACTER(LEN=256) :: dirname
+  LOGICAL            :: lvalid_input
   TYPE ( output_type)                   :: output_obj 
   TYPE (parallel_info_type)             :: parinfo_obj
   TYPE (general_info_type )             :: geninfo_obj
@@ -199,8 +206,29 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! ... here we read all the variables defining the system
   !
-  CALL init_vars_from_schema ( output_obj, parinfo_obj, &
-          geninfo_obj, input_obj )
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix ! FIXME
+  lvalid_input = (TRIM(input_obj%tagname) == "input")
+  !
+  CALL readschema_ions( output_obj%atomic_structure, output_obj%atomic_species, dirname)
+  CALL readschema_planewaves( output_obj%basis_set) 
+  CALL readschema_spin( output_obj%magnetization )
+  CALL readschema_magnetization (  output_obj%band_structure,  &
+       output_obj%atomic_species, output_obj%magnetization )
+  CALL readschema_xc (  output_obj%atomic_species, output_obj%dft )
+  CALL readschema_occupations( output_obj%band_structure )
+  CALL readschema_brillouin_zone( output_obj%symmetries,  output_obj%band_structure )
+  CALL readschema_band_structure( output_obj%band_structure )
+  IF ( lvalid_input ) THEN 
+     CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
+     CALL readschema_efield ( input_obj%electric_field )
+  ELSE 
+     CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
+  ENDIF
+  CALL readschema_outputPBC ( output_obj%boundary_conditions)
+  IF ( output_obj%dft%hybrid_ispresent  ) THEN
+     CALL readschema_exx ( output_obj%dft%hybrid )
+  END IF
+  CALL readschema_algo(output_obj%algorithmic_info )  
   !
   ! ... xml data no longer needed, can be discarded
   !
