@@ -38,9 +38,13 @@ MODULE pw_restart_new
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
-  PUBLIC :: pw_write_schema, pw_write_binaries, &
-       pw_read_schema, init_vars_from_schema, read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_cell, readschema_ions, readschema_dim
+  PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
+       read_collected_to_evc
+  PUBLIC :: readschema_ef, readschema_cell, readschema_ions, readschema_dim, &
+       readschema_planewaves, readschema_spin, readschema_magnetization, &
+       readschema_xc, readschema_occupations, readschema_brillouin_zone, &
+       readschema_band_structure, readschema_symmetry, readschema_efield, &
+       readschema_outputPBC, readschema_exx, readschema_algo
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1002,60 +1006,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !------------------------------------------------------------------------
-    SUBROUTINE init_vars_from_schema( output_obj, par_info, gen_info, input_obj )
-      !------------------------------------------------------------------------
-      !
-      USE qes_types_module,     ONLY : input_type, output_type, &
-                                       general_info_type, parallel_info_type    
-      !
-      IMPLICIT NONE
-      !
-      TYPE ( output_type), INTENT(IN)        :: output_obj
-      TYPE ( parallel_info_type), INTENT(IN) :: par_info
-      TYPE ( general_info_type ), INTENT(IN) :: gen_info
-      TYPE ( input_type), OPTIONAL, INTENT(IN)         :: input_obj
-      !
-      CHARACTER(LEN=256) :: dirname
-      LOGICAL            :: lvalid_input
-      !    
-      !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-      !
-      IF ( PRESENT (input_obj) ) THEN 
-         lvalid_input = (TRIM(input_obj%tagname) == "input")
-      ELSE
-         lvalid_input = .FALSE. 
-      ENDIF
-      !
-      CALL readschema_cell( output_obj%atomic_structure )
-      CALL readschema_ions( output_obj%atomic_structure, output_obj%atomic_species, dirname)
-      CALL readschema_planewaves( output_obj%basis_set) 
-      CALL readschema_spin( output_obj%magnetization )
-      CALL readschema_magnetization (  output_obj%band_structure,  &
-           output_obj%atomic_species, output_obj%magnetization )
-      CALL readschema_xc (  output_obj%atomic_species, output_obj%dft )
-      CALL readschema_occupations( output_obj%band_structure )
-      CALL readschema_brillouin_zone( output_obj%symmetries,  output_obj%band_structure )
-      CALL readschema_band_structure( output_obj%band_structure )
-      IF ( lvalid_input ) THEN 
-         CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
-         CALL readschema_efield ( input_obj%electric_field )
-      ELSE 
-         CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
-      ENDIF
-      !
-      CALL readschema_outputPBC ( output_obj%boundary_conditions)
-      !
-      IF ( output_obj%dft%hybrid_ispresent  ) THEN
-         CALL readschema_exx ( output_obj%dft%hybrid )
-      END IF
-      !
-      CALL readschema_algo(output_obj%algorithmic_info )
-      !
-      RETURN
-      !
-    END SUBROUTINE init_vars_from_schema
     !-------------------------------------------------------------------------------
     SUBROUTINE readschema_header (gen_info_obj) 
     !-------------------------------------------------------------------------------
