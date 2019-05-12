@@ -117,7 +117,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
-  USE pw_restart_new,       ONLY : pw_read_schema, init_vars_from_schema 
+  USE pw_restart_new,       ONLY : pw_read_schema, readschema_dim, &
+       readschema_cell, init_vars_from_schema 
   USE qes_types_module,     ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
@@ -174,9 +175,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! ... here we read the variables that dimension the system
   !
-  CALL init_vars_from_schema( 'dim', ierr, output_obj, parinfo_obj, geninfo_obj )
-  CALL errore( 'read_xml_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
+  CALL readschema_cell( output_obj%atomic_structure ) 
+  CALL readschema_dim ( parinfo_obj, output_obj%atomic_species, &
+       output_obj%atomic_structure, output_obj%symmetries, &
+       output_obj%basis_set, output_obj%band_structure ) 
   !
   ! ... allocate space for arrays to be read in init_vars_from_schema
   !
@@ -197,7 +199,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! ... here we read all the variables defining the system
   !
-  CALL init_vars_from_schema ( 'all', ierr, output_obj, parinfo_obj, &
+  CALL init_vars_from_schema ( output_obj, parinfo_obj, &
           geninfo_obj, input_obj )
   !
   ! ... xml data no longer needed, can be discarded

@@ -345,6 +345,7 @@ setup_dgc.o : ../PW/src/pwcom.o
 setup_dgc.o : ../PW/src/scf_mod.o
 setup_dgc.o : lrcom.o
 setup_dmuxc.o : ../Modules/fft_base.o
+setup_dmuxc.o : ../Modules/funct.o
 setup_dmuxc.o : ../Modules/kind.o
 setup_dmuxc.o : ../Modules/noncol.o
 setup_dmuxc.o : ../PW/src/pwcom.o
