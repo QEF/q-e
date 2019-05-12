@@ -40,6 +40,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, &
        pw_read_schema, init_vars_from_schema, read_collected_to_evc
+  PUBLIC :: readschema_ef, readschema_cell, readschema_ions, readschema_dim
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1002,7 +1003,7 @@ MODULE pw_restart_new
     END SUBROUTINE pw_read_schema
     !  
     !------------------------------------------------------------------------
-    SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
+    SUBROUTINE init_vars_from_schema( output_obj, par_info, gen_info, input_obj )
       !------------------------------------------------------------------------
       !
       USE qes_types_module,     ONLY : input_type, output_type, &
@@ -1010,26 +1011,16 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)           :: what
       TYPE ( output_type), INTENT(IN)        :: output_obj
       TYPE ( parallel_info_type), INTENT(IN) :: par_info
       TYPE ( general_info_type ), INTENT(IN) :: gen_info
       TYPE ( input_type), OPTIONAL, INTENT(IN)         :: input_obj
-      INTEGER,INTENT (OUT)                   :: ierr 
       !
       CHARACTER(LEN=256) :: dirname
-      LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
-                            lxc, locc, lbz, lbs,                 &
-                            lsymm, lefield, ldim, lvalid_input,  &
-                            lef, lexx, lesm, lpbc, lalgo
-      !
-      LOGICAL            :: found
-      
+      LOGICAL            :: lvalid_input
       !    
       !
-      ierr = 0 
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-      !
       !
       IF ( PRESENT (input_obj) ) THEN 
          lvalid_input = (TRIM(input_obj%tagname) == "input")
@@ -1037,130 +1028,30 @@ MODULE pw_restart_new
          lvalid_input = .FALSE. 
       ENDIF
       !
-      !
-      ldim    = .FALSE.
-      lcell   = .FALSE.
-      lpw     = .FALSE.
-      lions   = .FALSE.
-      lspin   = .FALSE.
-      linit_mag = .FALSE.
-      lxc     = .FALSE.
-      locc    = .FALSE.
-      lbz     = .FALSE.
-      lbs     = .FALSE.
-      lsymm   = .FALSE.
-      lefield = .FALSE.
-      lef     = .FALSE.
-      lexx    = .FALSE.
-      lesm    = .FALSE.
-      lpbc    = .FALSE.  
-      lalgo   = .FALSE. 
-      !
-      !
-      SELECT CASE( what )
-      CASE( 'dim' )
-         !
-         ldim =       .TRUE.
-         !
-      CASE( 'config' )
-         !
-         lcell = .TRUE.
-         lions = .TRUE.
-         !
-      CASE( 'all' )
-         !
-         lcell   = .TRUE.
-         lpw     = .TRUE.
-         lions   = .TRUE.
-         lspin   = .TRUE.
-         lxc     = .TRUE.
-         lexx    = .TRUE.
-         locc    = .TRUE.
-         lbz     = .TRUE.
-         lbs     = .TRUE.
-         lsymm   = .TRUE.
-         lefield = .TRUE.
-         lalgo   = .TRUE.
-         lpbc    = .TRUE.
-         lesm    = .TRUE.
-         linit_mag = .TRUE.
-         !
-      CASE( 'ef' )
-         !
-         lef        = .TRUE.
-         !
-      CASE DEFAULT
-         !
-         CALL errore('init_vars_from_schema','unknown what="' &
-              & // TRIM(what) // '" option', 1)
-         !
-      END SELECT
-      !
-      IF ( ldim ) THEN
-         ! 
-         CALL readschema_dim(par_info, output_obj%atomic_species, &
-              output_obj%atomic_structure, output_obj%symmetries, &
-              output_obj%basis_set, output_obj%band_structure ) 
-         !
-      ENDIF
-      !
-      IF ( lcell ) THEN
-         CALL readschema_cell( output_obj%atomic_structure )
-      END IF
-      !
-      IF ( lpw ) THEN
-         CALL readschema_planewaves( output_obj%basis_set) 
-      END IF
-      IF ( lions ) THEN
-         CALL readschema_ions( output_obj%atomic_structure, output_obj%atomic_species, dirname)
-      END IF
-      IF ( lspin ) THEN
-
-         CALL readschema_spin( output_obj%magnetization )
-      END IF
-      IF (linit_mag) THEN
-         CALL readschema_magnetization (  output_obj%band_structure,  output_obj%atomic_species,&
-                                          output_obj%magnetization )
-      END IF
-      IF ( lxc ) THEN
-         CALL readschema_xc (  output_obj%atomic_species, output_obj%dft )
-      END IF
-      IF ( locc ) THEN
-         CALL readschema_occupations( output_obj%band_structure )
-      END IF
-      IF ( lbz ) THEN
-         CALL readschema_brillouin_zone( output_obj%symmetries,  output_obj%band_structure )
-      END IF
-      IF ( lbs ) THEN
-         CALL readschema_band_structure( output_obj%band_structure )
-      END IF
-      IF ( lsymm ) THEN
-         IF ( lvalid_input ) THEN 
-            CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
-         ELSE 
-            CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
-         ENDIF
-      ENDIF
-      ! 
-      IF ( lpbc ) THEN
-         CALL readschema_outputPBC ( output_obj%boundary_conditions)
-      END IF
-      !
-      IF ( lef ) THEN
-         CALL readschema_ef ( output_obj%band_structure) 
-      END IF
-      !
-      IF ( lefield .AND. lvalid_input ) THEN
+      CALL readschema_cell( output_obj%atomic_structure )
+      CALL readschema_ions( output_obj%atomic_structure, output_obj%atomic_species, dirname)
+      CALL readschema_planewaves( output_obj%basis_set) 
+      CALL readschema_spin( output_obj%magnetization )
+      CALL readschema_magnetization (  output_obj%band_structure,  &
+           output_obj%atomic_species, output_obj%magnetization )
+      CALL readschema_xc (  output_obj%atomic_species, output_obj%dft )
+      CALL readschema_occupations( output_obj%band_structure )
+      CALL readschema_brillouin_zone( output_obj%symmetries,  output_obj%band_structure )
+      CALL readschema_band_structure( output_obj%band_structure )
+      IF ( lvalid_input ) THEN 
+         CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
          CALL readschema_efield ( input_obj%electric_field )
-      END IF
+      ELSE 
+         CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
+      ENDIF
       !
-      IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) THEN
+      CALL readschema_outputPBC ( output_obj%boundary_conditions)
+      !
+      IF ( output_obj%dft%hybrid_ispresent  ) THEN
          CALL readschema_exx ( output_obj%dft%hybrid )
       END IF
       !
-      IF ( lalgo ) THEN
-         CALL readschema_algo(output_obj%algorithmic_info )
-      END IF
+      CALL readschema_algo(output_obj%algorithmic_info )
       !
       RETURN
       !
@@ -1216,8 +1107,6 @@ MODULE pw_restart_new
     ! 
     INTEGER                                    :: npwx_
     !
-    !
-    CALL readschema_cell ( atomic_structure ) 
     ! 
     !---------------------------------------------------------------------
     !                                       PARALLEL  DIM 

@@ -77,7 +77,7 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-  USE pw_restart_new,     ONLY : pw_read_schema, init_vars_from_schema 
+  USE pw_restart_new,     ONLY : pw_read_schema, readschema_ef
   USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
   USE exx,                ONLY : ecutfock, nbndproj
@@ -166,9 +166,9 @@ SUBROUTINE setup()
      ! ... in these cases, we need to read the Fermi energy
      !
      CALL pw_read_schema( ierr , output_obj, parinfo_obj, geninfo_obj )
-     CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
+     CALL readschema_ef ( output_obj%band_structure) 
      CALL qes_reset  ( output_obj )
      CALL qes_reset  ( parinfo_obj )
      CALL qes_reset  ( geninfo_obj )
