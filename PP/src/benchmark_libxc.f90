@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2014 Quantum ESPRESSO group
+! Copyright (C) 2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,7 @@
 PROGRAM benchmark_libxc
   !
   !------------------------------------------------------------------------------------!
-  !  REMEMBER to comment eventual libxc blocks in the functional routines in 'Modules' !
+  !  REMEMBER to comment out libxc blocks in the functional routines of Modules/       !
   !  folder in order to run consistent tests (in the present version they should be    !
   !  already absent, however).                                                         !
   !------------------------------------------------------------------------------------!
