@@ -18,32 +18,39 @@
   !!     Roxana Margine - Dec 2018: Updated based on QE 6.3
   !!
   !
-  USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-  USE becmod,               ONLY : calbec
-  USE phus,                 ONLY : alphap
-  USE lrus,                 ONLY : becp1
-  USE uspp,                 ONLY : vkb
-  USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin
-  USE klist_epw,            ONLY : xk_loc, isk_loc
-  USE constants,            ONLY : tpi
-  USE constants_epw,        ONLY : zero, czero, cone
-  USE cell_base,            ONLY : tpiba2, tpiba, bg, omega
-  USE klist,                ONLY : ngk, igk_k, nkstot
-  USE gvect,                ONLY : g, ngm
-  USE atom,                 ONLY : msh, rgrid
-  USE wavefunctions,        ONLY : evc
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE uspp_param,           ONLY : upf
-  USE m_gth,                ONLY : setlocq_gth
-  USE units_lr,             ONLY : lrwfc, iuwfc
-  USE phcom,                ONLY : vlocq
-  USE qpoint,               ONLY : xq, eigqts
-  USE nlcc_ph,              ONLY : drc                           
-  USE uspp,                 ONLY : nlcc_any
-  USE elph2,                ONLY : igk_k_all, ngk_all
-  USE mp,                   ONLY : mp_barrier
-  USE mp_global,            ONLY : inter_pool_comm
+  USE kinds,            ONLY : DP
+  USE ions_base,        ONLY : nat, ntyp => nsp, tau
+  USE becmod,           ONLY : calbec
+  USE lrus,             ONLY : becp1
+  USE uspp,             ONLY : vkb
+  USE pwcom,            ONLY : npwx, nbnd, nks
+  USE klist_epw,        ONLY : xk_loc, isk_loc
+  USE constants,        ONLY : tpi
+  USE constants_epw,    ONLY : zero, czero, cone
+  USE cell_base,        ONLY : tpiba2, tpiba, omega
+  USE klist,            ONLY : ngk, igk_k, nkstot
+  USE gvect,            ONLY : g, ngm
+  USE atom,             ONLY : msh, rgrid
+  USE wavefunctions,    ONLY : evc
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE uspp_param,       ONLY : upf
+  USE m_gth,            ONLY : setlocq_gth
+  USE units_lr,         ONLY : lrwfc, iuwfc
+  USE phcom,            ONLY : vlocq
+  USE qpoint,           ONLY : xq, eigqts
+  USE nlcc_ph,          ONLY : drc                           
+  USE uspp,             ONLY : nlcc_any
+  USE elph2,            ONLY : igk_k_all, ngk_all
+  USE mp,               ONLY : mp_barrier
+  USE mp_global,        ONLY : inter_pool_comm
+  USE spin_orb,         ONLY : lspinorb
+  USE uspp_param,       ONLY : nhm
+  USE uspp,             ONLY : okvan, nkb
+  USE lsda_mod,         ONLY : nspin, lsda, current_spin
+  USE becmod,           ONLY : becp, allocate_bec_type
+  USE phus,             ONLY : int1, int1_nc, int2, int2_so, &
+                               int4, int4_nc, int5, int5_so, &
+                               alphap
   !
   IMPLICIT NONE
   !
@@ -73,14 +80,42 @@
   !
   CALL start_clock( 'epw_init' )
   ! 
-  IF (first_run) ALLOCATE (vlocq(ngm, ntyp))
-  !
-  DO na = 1, nat
+  IF (first_run) THEN
+    ALLOCATE (vlocq(ngm, ntyp))
+    ALLOCATE (eigqts(nat))
+    IF (okvan) THEN
+      ALLOCATE (int1(nhm, nhm, 3, nat, nspin_mag))
+      ALLOCATE (int2(nhm, nhm, 3, nat, nat))
+      ALLOCATE (int4(nhm * (nhm + 1)/2, 3, 3, nat, nspin_mag))
+      ALLOCATE (int5(nhm * (nhm + 1)/2, 3, 3, nat , nat))
+      IF (noncolin) THEN
+        ALLOCATE (int1_nc(nhm, nhm, 3, nat, nspin))
+        ALLOCATE (int4_nc(nhm, nhm, 3, 3, nat, nspin))
+        IF (lspinorb) THEN
+          ALLOCATE (int2_so(nhm, nhm, 3, nat, nat, nspin))
+          ALLOCATE (int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
+        ENDIF
+      ENDIF ! noncolin
+    ENDIF ! okvan
+    !  
+    ALLOCATE (becp1(nks))
+    ALLOCATE (alphap(3, nks))
+    ! 
+    DO ik = 1, nks
+      CALL allocate_bec_type(nkb, nbnd, becp1(ik))
+      DO ipol = 1, 3
+        CALL allocate_bec_type(nkb, nbnd, alphap(ipol,ik))
+      ENDDO
+    ENDDO
+    CALL allocate_bec_type(nkb, nbnd, becp)
+  ENDIF
+  ! 
+  DO na=1, nat
     !
     ! xq here is the first q of the star
-    arg = ( xq(1) * tau(1,na) + &
-            xq(2) * tau(2,na) + &
-            xq(3) * tau(3,na) ) * tpi
+    arg = (xq(1) * tau(1, na) + &
+           xq(2) * tau(2, na) + &
+           xq(3) * tau(3, na)) * tpi
     !        
     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ), kind=DP )
     !

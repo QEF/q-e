@@ -97,22 +97,16 @@
     !!  Imported the noncolinear case implemented by xlzhang
     !!
     !----------------------------------------------------------------------
-    USE phcom,             ONLY : alphap, drc, dyn, dvpsi, &
-                                  int5, int2_so, int5_so
-    USE lrus,              ONLY : becp1, int3, int3_nc
-    USE phus,              ONLY : int1, int1_nc, int2, int4, int4_nc
-    USE lr_symm_base,      ONLY : rtau
+    USE phcom,             ONLY : drc, dyn, dvpsi
     USE noncollin_module,  ONLY : m_loc
     USE control_lr,        ONLY : nbnd_occ
-    USE becmod,            ONLY : becp, deallocate_bec_type
-    USE elph2,             ONLY : el_ph_mat, epf17, epsi, etf,&
+    USE elph2,             ONLY : epf17, epsi, etf,&
                                   etq, wkf, wqf, &
                                   xkq, zstar, xkf, xqf, epmatwp, eps_rpa
     USE klist_epw,         ONLY : xk_all, xk_loc, xk_cryst, et_all, et_loc, & 
                                   isk_loc, isk_all
     USE epwcom,            ONLY : epbread, epwread
-    USE modes,             ONLY : npert, u, name_rap_mode, num_rap_mode
-    USE qpoint,            ONLY : eigqts, igkq 
+    USE qpoint,            ONLY : igkq 
     USE klist,             ONLY : nks
     !
     IMPLICIT NONE
@@ -125,7 +119,6 @@
     IF ( epwread .and. .NOT. epbread ) THEN
       !  EPW variables ONLY
       !
-      IF(ALLOCATED(el_ph_mat)) DEALLOCATE (el_ph_mat)
       IF(ALLOCATED(etq))       DEALLOCATE (etq)
       IF(ALLOCATED(etf))       DEALLOCATE (etf)
       IF(ALLOCATED(xkq))       DEALLOCATE (xkq)
@@ -134,78 +127,19 @@
       IF(ALLOCATED(xqf))       DEALLOCATE (xqf)
       IF(ALLOCATED(wqf))       DEALLOCATE (wqf)
       IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
-      DEALLOCATE (eigqts)
-      DEALLOCATE (rtau)
-      DEALLOCATE (u)
-      DEALLOCATE (name_rap_mode)
-      DEALLOCATE (num_rap_mode)
-      DEALLOCATE (npert)
-      IF (ALLOCATED(alphap)) THEN
-        DO ik=1, nks
-          DO ipol=1, 3
-            CALL deallocate_bec_type(alphap(ipol, ik))
-          ENDDO
-        ENDDO
-        DEALLOCATE (alphap)
-      ENDIF
-      IF (ALLOCATED(becp1)) THEN
-        DO ik=1, size(becp1)
-          CALL deallocate_bec_type(becp1(ik))
-        ENDDO
-        DEALLOCATE (becp1)
-      ENDIF
-      CALL deallocate_bec_type(becp)
       ! 
     ELSE
       !   
-      IF(ASSOCIATED(igkq)) DEALLOCATE (igkq)
-      !
-      DEALLOCATE (eigqts)
-      DEALLOCATE (rtau)
-      DEALLOCATE (u)
-      DEALLOCATE (name_rap_mode)
-      DEALLOCATE (num_rap_mode)
-      IF(ALLOCATED(dyn)) DEALLOCATE (dyn)
-      IF(ALLOCATED(epsi)) DEALLOCATE (epsi)
-      IF(ALLOCATED(zstar)) DEALLOCATE (zstar)
-      !
-      DEALLOCATE (npert)    
-      !
-      IF(ALLOCATED(int1)) DEALLOCATE (int1)    
-      IF(ALLOCATED(int2)) DEALLOCATE (int2)
-      IF(ALLOCATED(int3)) DEALLOCATE (int3)
-      IF(ALLOCATED(int4)) DEALLOCATE (int4)
-      IF(ALLOCATED(int5)) DEALLOCATE (int5)
-      IF(ALLOCATED(int1_nc)) DEALLOCATE (int1_nc)
-      IF(ALLOCATED(int3_nc)) DEALLOCATE (int3_nc)
-      IF(ALLOCATED(int4_nc)) DEALLOCATE (int4_nc)
-      IF(ALLOCATED(int2_so)) DEALLOCATE (int2_so)
-      IF(ALLOCATED(int5_so)) DEALLOCATE (int5_so)
-      ! 
-      IF (allocated(alphap)) THEN
-        DO ik = 1, nks
-          DO ipol = 1, 3
-            CALL deallocate_bec_type( alphap(ipol,ik) )
-          ENDDO
-        ENDDO
-        DEALLOCATE (alphap)
-      ENDIF
-      IF (allocated(becp1)) THEN
-        DO ik = 1, size(becp1)
-          CALL deallocate_bec_type( becp1(ik) )
-        ENDDO
-        DEALLOCATE (becp1)
-      ENDIF
-      CALL deallocate_bec_type ( becp )
-      !
-      IF(ALLOCATED(nbnd_occ))  DEALLOCATE (nbnd_occ)
-      IF(ALLOCATED(m_loc))     DEALLOCATE (m_loc)
-      !
-      IF(ALLOCATED(drc)) DEALLOCATE (drc)
+      IF(ASSOCIATED(igkq))    DEALLOCATE (igkq)
+      IF(ALLOCATED(dyn))      DEALLOCATE (dyn)
+      IF(ALLOCATED(epsi))     DEALLOCATE (epsi)
+      IF(ALLOCATED(zstar))    DEALLOCATE (zstar)
+      IF(ALLOCATED(nbnd_occ)) DEALLOCATE (nbnd_occ)
+      IF(ALLOCATED(m_loc))    DEALLOCATE (m_loc)
+      IF(ALLOCATED(drc))      DEALLOCATE (drc)
       !
       !  EPW variables
       !
-      IF(ALLOCATED(el_ph_mat)) DEALLOCATE (el_ph_mat)    
       IF(ALLOCATED(etq))       DEALLOCATE (etq)    
       IF(ALLOCATED(etf))       DEALLOCATE (etf)    
       IF(ALLOCATED(xkq))       DEALLOCATE (xkq)    
