@@ -90,7 +90,7 @@ neb : pwlibs
 	if test -d NEB; then \
 	( cd NEB; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-tddfpt : phlibs
+tddfpt : lrmods
 	if test -d TDDFPT; then \
 	( cd TDDFPT; $(MAKE) TLDEPS= all || exit 1) ; fi
 

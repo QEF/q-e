@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -199,7 +199,7 @@ SUBROUTINE sm1_psi_nc()
     ! Noncollinear case
     !
     USE uspp,       ONLY : qq_so
-    USE lrus,       ONLY : bbnc_sm1
+    USE lrus,       ONLY : bbnc
     USE spin_orb,   ONLY : lspinorb
     !
     IMPLICIT NONE
@@ -250,7 +250,7 @@ SUBROUTINE sm1_psi_nc()
     ! Step 1 : calculate the product 
     ! ps = lambda * <beta|psi>  
     !
-    CALL ZGEMM( 'N', 'N', nkb*npol, m, nkb*npol, (1.D0, 0.D0), bbnc_sm1(1,1,ik), &
+    CALL ZGEMM( 'N', 'N', nkb*npol, m, nkb*npol, (1.D0, 0.D0), bbnc(1,1,ik), &
                   nkb*npol, becp%nc, nkb*npol, (1.D0, 0.D0), ps, nkb*npol )
     !
     ! Step 2 : |spsi> = S^{-1} * |psi> = |psi> + ps * |beta> 
@@ -273,7 +273,7 @@ SUBROUTINE lr_sm1_initialize()
 !
 USE kinds,            ONLY : DP
 USE control_flags,    ONLY : gamma_only
-USE lrus,             ONLY : bbg,bbk, bbnc_sm1
+USE lrus,             ONLY : bbg, bbk, bbnc
 USE klist,            ONLY : xk, ngk, igk_k
 USE qpoint,           ONLY : nksq, ikks, ikqs
 USE wvfct,            ONLY : npwx
@@ -291,7 +291,13 @@ IMPLICIT NONE
 INTEGER :: ik1, ikk, ikq, npw, npwq, na, nt, ikb, jkb, ijkb0, ih, jh, ii, &
            ipol, jpol, kpol, ijs, iis, ikbs, jkbs, iks, kjs
 REAL(DP),    ALLOCATABLE :: psr(:,:)
-COMPLEX(DP), ALLOCATABLE :: ps(:,:), bbnc_nc(:,:)
+COMPLEX(DP), ALLOCATABLE :: ps(:,:), &
+                            bbnc_aux(:,:) ! auxiliary array
+
+CALL start_clock( 'lr_sm1_initialize' )
+
+! Use the arrays bbg and bbk temporarily as a work space 
+! in order to save the memory.
 
 IF (gamma_only) THEN
    bbg = 0.0d0
@@ -299,8 +305,8 @@ IF (gamma_only) THEN
    psr(:,:) = (0.d0,0.d0)
 ELSE
    IF (noncolin) THEN
-      ALLOCATE(bbnc_nc(nkb,nkb))
-      bbnc_nc = (0.0d0,0.0d0)
+      ALLOCATE(bbnc_aux(nkb,nkb))
+      bbnc_aux = (0.0d0,0.0d0)
    ELSE   
       bbk = (0.0d0,0.0d0)
    ENDIF
@@ -326,8 +332,8 @@ DO ik1 = 1, nksq
       CALL calbec (npw, vkb, vkb, bbg, nkb)
    ELSEIF (noncolin) THEN
       CALL zgemm('C','N',nkb,nkb,npwq,(1.d0,0.d0),vkb, &
-               npwx,vkb,npwx,(0.d0,0.d0),bbnc_nc,nkb)
-      CALL mp_sum(bbnc_nc, intra_bgrp_comm)
+               npwx,vkb,npwx,(0.d0,0.d0),bbnc_aux,nkb)
+      CALL mp_sum(bbnc_aux, intra_bgrp_comm)
    ELSE
       CALL zgemm('C','N',nkb,nkb,npwq,(1.d0,0.d0),vkb, &
                npwx,vkb,npwx,(0.d0,0.d0),bbk(1,1,ik1),nkb)
@@ -362,7 +368,7 @@ DO ik1 = 1, nksq
                                  iis = ii + nkb * ( jpol - 1 )
                                  ijs = ijs + 1
                                  ps(ikbs,iis) = ps(ikbs,iis) + &
-                                       bbnc_nc(jkb,ii)*qq_so(ih,jh,ijs,nt)
+                                       bbnc_aux(jkb,ii)*qq_so(ih,jh,ijs,nt)
                               ENDDO
                            ENDDO
                         ELSE
@@ -404,12 +410,12 @@ DO ik1 = 1, nksq
       CALL invmat( nkb*npol, ps )
    ENDIF
    !
-   ! Use the array bbk as a work space in order to save the memory.
+   ! Nulify the arrays bbg/bbk/bbnc and put a final result inside.
    !
    IF (gamma_only) THEN
       bbg(:,:)=0.0_DP
    ELSEIF (noncolin) THEN
-      bbnc_sm1(:,:,ik1) = (0.d0,0.d0)
+      bbnc(:,:,ik1) = (0.d0,0.d0)
    ELSE
       bbk(:,:,ik1) = (0.d0,0.d0)
    ENDIF
@@ -443,8 +449,8 @@ DO ik1 = 1, nksq
                               DO jpol=1,npol
                                  jkbs=jkb + nkb * (jpol-1)
                                  kjs=kjs+1
-                                 bbnc_sm1(ii,jkbs,ik1) = &
-                                         bbnc_sm1(ii,jkbs,ik1) - &
+                                 bbnc(ii,jkbs,ik1) = &
+                                         bbnc(ii,jkbs,ik1) - &
                                          ps(ii,ikbs)*qq_so(ih,jh,kjs,nt)
                               ENDDO
                            ENDDO
@@ -471,9 +477,11 @@ ENDDO ! loop on k points
 IF (gamma_only) THEN
    DEALLOCATE(psr)
 ELSE
-   IF (noncolin) DEALLOCATE(bbnc_nc)
+   IF (noncolin) DEALLOCATE(bbnc_aux)
    DEALLOCATE(ps)
 ENDIF
+
+CALL stop_clock( 'lr_sm1_initialize' )
 
 RETURN
 END SUBROUTINE lr_sm1_initialize

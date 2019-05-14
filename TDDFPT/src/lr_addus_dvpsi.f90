@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE lr_addus_dvpsi (npwq, ik,psi,dvpsi)
+SUBROUTINE lr_addus_dvpsi (npwq, ik, psi, dvpsi)
   !----------------------------------------------------------------------
   !---------------------------------------------------------------------------
   !
@@ -14,25 +14,24 @@ SUBROUTINE lr_addus_dvpsi (npwq, ik,psi,dvpsi)
   ! ... and then sum up the input wavefunction and the ultrasoft term.
   !
   ! ... input:
-  !
-  ! ...    ik    given k point
-  ! ...    lda   leading dimension of the array psi
-  ! ...    n     true dimension of psi
-  ! ...    m     number of bands of psi
+  ! ...    ik     given k point
+  ! ...    npwq   true dimension of psi
+  ! ...    psi    input array
   !
   ! Written by Iurii Timrov (2015)
   ! Generalized to the relativistic case by Andrea Dal Corso (2018)
   !
-  USE kinds,      ONLY : DP
-  USE uspp_param, ONLY : upf, nh
-  USE uspp,       ONLY : vkb, okvan
-  USE lsda_mod,   ONLY : lsda, current_spin, isk
-  USE ions_base,  ONLY : ntyp => nsp, nat, ityp
-  USE wvfct,      ONLY : nbnd, npwx
+  USE kinds,            ONLY : DP
+  USE uspp_param,       ONLY : upf, nh
+  USE uspp,             ONLY : vkb, okvan
+  USE lsda_mod,         ONLY : lsda, current_spin, isk
+  USE ions_base,        ONLY : ntyp => nsp, nat, ityp
+  USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : noncolin, npol
-  USE qpoint,     ONLY : ikks
-  USE lr_variables,    ONLY : intq, intq_nc
-  USE lrus,       ONLY : becp1
+  USE qpoint,           ONLY : ikks
+  USE lr_variables,     ONLY : intq, intq_nc
+  USE lrus,             ONLY : becp1
+  
   IMPLICIT NONE
   !
   !   The dummy variables
