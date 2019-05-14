@@ -148,3 +148,10 @@ example16:
     LDA functional, and using pw.x, turbo_eels.x, and turbo_spectrum.x.
     The calculation is with a noncollinear spin polarization and including
     the spin-orbit coupling effect.
+
+example17:
+    This example shows how to calculate the electron energy loss spectrum
+    of bulk bismuth using an ultrasoft pseudopotential,
+    LDA functional, and using pw.x, turbo_eels.x, and turbo_spectrum.x.
+    The calculation is with a noncollinear spin polarization and including
+    the spin-orbit coupling effect.

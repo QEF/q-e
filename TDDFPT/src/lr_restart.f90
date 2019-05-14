@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,6 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE control_flags,        ONLY : gamma_only
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
-    USE uspp,             ONLY : okvan
   USE lr_variables,         ONLY : itermax, evc1, evc1_old, &
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F, &
                                    bgz_suffix, beta_store, gamma_store, zeta_store, norm0, &
@@ -28,7 +27,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot,rho_1_tot_im
   USE wvfct,                ONLY : nbnd, npwx
   USE becmod,               ONLY : bec_type, becp, calbec
-  USE uspp,                 ONLY : vkb 
+  USE uspp,                 ONLY : vkb, okvan 
   USE io_global,            ONLY : ionode
   USE mp,                   ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm
@@ -74,8 +73,11 @@ SUBROUTINE lr_restart(iter_restart,rflag)
      CALL init_us_2(ngk(1),igk_k(:,1),xk(:,1),vkb)
   ENDIF
   !
+  ! Initialize coefficients which are needed for S^-1 in the USPP case.
+  !
+  IF (okvan) CALL lr_sm1_initialize()
+  !
   ! Reading Lanczos coefficients
-    IF (okvan) CALL lr_sm1_initialize()
   !
   IF (eels) THEN
     filename = trim(prefix) // trim(bgz_suffix) // trim("dat")

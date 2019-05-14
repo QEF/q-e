@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,8 +20,7 @@ SUBROUTINE compute_intq
   USE cell_base,            ONLY : omega
   USE uspp,                 ONLY : okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-
-  USE lr_variables,              ONLY : intq
+  USE lr_variables,         ONLY : intq
   USE qpoint,               ONLY : xq, eigqts
 
   IMPLICIT NONE
@@ -33,7 +32,6 @@ SUBROUTINE compute_intq
   ! the modulus of q+G
   ! the values of q+G
   ! the spherical harmonics
-
 
   ! work space
   COMPLEX(DP) :: qgm(1), aux1
@@ -50,7 +48,7 @@ SUBROUTINE compute_intq
   zero=0.0_DP
   CALL setqmod (1, xq, zero, qmod, qg)
   CALL ylmr2 (lmaxq * lmaxq, 1, qg, qmod, ylmk0)
-  qmod(1) = SQRT (qmod(1)  )
+  qmod(1) = SQRT (qmod(1))
 
   DO nt = 1, ntyp
      IF (upf(nt)%tvanp ) THEN
