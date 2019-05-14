@@ -42,7 +42,7 @@
   USE uspp,             ONLY : nlcc_any
   USE elph2,            ONLY : igk_k_all, ngk_all
   USE mp,               ONLY : mp_barrier
-  USE mp_global,        ONLY : inter_pool_comm
+  USE mp_global,        ONLY : inter_pool_comm, my_pool_id
   USE spin_orb,         ONLY : lspinorb
   USE uspp_param,       ONLY : nhm
   USE uspp,             ONLY : okvan, nkb
@@ -155,7 +155,8 @@
     !
     ! ... read the wavefunctions at k
     !
-    CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
+    CALL readwfc(my_pool_id + 1, ik, evc)
+    !CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
     !
     ! ... e) we compute the becp terms which are used in the rest of
     ! ...    the code
