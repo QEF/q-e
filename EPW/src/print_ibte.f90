@@ -472,51 +472,47 @@
 !      WRITE(stdout,'(a,i9,E22.8)') '     Total number of element written ',ind_tot
       ! 
       ! Size of what we write
-      lsize =  INT( ind(my_pool_id+1), kind = MPI_OFFSET_KIND )
+      lsize = INT(ind(my_pool_id + 1), kind = MPI_OFFSET_KIND)
 
       ! Offset where we need to start writing (we increment for each q-points)
       lrepmatw = lrepmatw2 + &
-            INT( SUM( ind(1:my_pool_id+1)) - ind(my_pool_id+1), kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
+            INT(SUM(ind(1:my_pool_id + 1)) - ind(my_pool_id + 1), kind = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND
       lrepmatw3 = lrepmatw4 + &
-            INT( SUM( ind(1:my_pool_id+1)) - ind(my_pool_id+1), kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+            INT(SUM(ind(1:my_pool_id + 1)) - ind(my_pool_id + 1), kind = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       ! 
-      CALL MPI_FILE_SEEK(iunepmat, lrepmatw,MPI_SEEK_SET,ierr) 
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunepmat, trans_prob, lsize, MPI_DOUBLE_PRECISION,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      !CALL MPI_FILE_SEEK(iunepmat, lrepmatw,MPI_SEEK_SET,ierr) 
+      !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
+      !CALL MPI_FILE_WRITE(iunepmat, trans_prob, lsize, MPI_DOUBLE_PRECISION,MPI_STATUS_IGNORE,ierr)
+      !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      CALL MPI_FILE_WRITE_AT_ALL(iunepmat, lrepmatw, trans_prob, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr) 
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)      
       !  
-      CALL MPI_FILE_SEEK (iunsparseq, lrepmatw3,MPI_SEEK_SET,ierr) 
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparseq, sparse_q, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      !CALL MPI_FILE_SEEK (iunsparseq, lrepmatw3,MPI_SEEK_SET,ierr) 
+      !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
+      !CALL MPI_FILE_WRITE(iunsparseq, sparse_q, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
+      !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparseq, lrepmatw3, sparse_q, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
       !  
-      CALL MPI_FILE_SEEK (iunsparsek, lrepmatw3,MPI_SEEK_SET,ierr) 
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparsek, sparse_k, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparsek, lrepmatw3, sparse_k, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
       !  
-      CALL MPI_FILE_SEEK (iunsparsei, lrepmatw3,MPI_SEEK_SET,ierr) 
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparsei, sparse_i, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparsei, lrepmatw3, sparse_i, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
       !  
-      CALL MPI_FILE_SEEK (iunsparsej, lrepmatw3,MPI_SEEK_SET,ierr) 
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparsej, sparse_j, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparsej, lrepmatw3, sparse_j, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
       !  
-      CALL MPI_FILE_SEEK (iunsparset, lrepmatw3,MPI_SEEK_SET,ierr) 
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparset, sparse_t, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparset, lrepmatw3, sparse_t, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
       ! 
       ! Offset for the next q iteration
-      lrepmatw2 = lrepmatw2 + INT( SUM( ind(:) ), kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
-      lrepmatw4 = lrepmatw4 + INT( SUM( ind(:) ), kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+      lrepmatw2 = lrepmatw2 + INT(SUM(ind(:)), kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
+      lrepmatw4 = lrepmatw4 + INT(SUM(ind(:)), kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
       ! 
       ! now write in the support file
-      CALL mp_sum(xkf_all, world_comm)
-      CALL mp_sum(wkf_all, world_comm)
+      CALL MP_SUM(xkf_all, world_comm)
+      CALL MP_SUM(wkf_all, world_comm)
       ! 
     ENDIF 
     IF ( sum(indcb) > 0 ) THEN
@@ -527,47 +523,35 @@
 !      WRITE(stdout,'(a,i9,E22.8)') '     Total number of element written in electron ',ind_totcb
       ! 
       ! Size of what we write
-      lsize =  INT( indcb(my_pool_id+1), kind = MPI_OFFSET_KIND )
+      lsize =  INT(indcb(my_pool_id + 1), kind = MPI_OFFSET_KIND)
 
       ! Offset where we need to start writing (we increment for each q-points)
       lrepmatw = lrepmatw5 + &
-            INT( SUM( indcb(1:my_pool_id+1)) - indcb(my_pool_id+1), kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
+            INT(SUM(indcb(1:my_pool_id + 1)) - indcb(my_pool_id + 1), kind = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND
       lrepmatw3 = lrepmatw6 + &
-            INT( SUM( indcb(1:my_pool_id+1)) - indcb(my_pool_id+1), kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+            INT(SUM(indcb(1:my_pool_id + 1)) - indcb(my_pool_id + 1), kind = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       ! 
-      CALL MPI_FILE_SEEK(iunepmatcb, lrepmatw,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunepmatcb, trans_probcb, lsize, MPI_DOUBLE_PRECISION,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )
-      !  
-      CALL MPI_FILE_SEEK (iunsparseqcb, lrepmatw3,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparseqcb, sparsecb_q, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )
-      !  
-      CALL MPI_FILE_SEEK (iunsparsekcb, lrepmatw3,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparsekcb, sparsecb_k, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )
-      !  
-      CALL MPI_FILE_SEEK (iunsparseicb, lrepmatw3,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparseicb, sparsecb_i, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )
-      !  
-      CALL MPI_FILE_SEEK (iunsparsejcb, lrepmatw3,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparsejcb, sparsecb_j, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )
-      !  
-      CALL MPI_FILE_SEEK (iunsparsetcb, lrepmatw3,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_WRITE(iunsparsetcb, sparsecb_t, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )
+      CALL MPI_FILE_WRITE_AT_ALL(iunepmatcb, lrepmatw, trans_probcb, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
       ! 
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparseqcb, lrepmatw3, sparsecb_q, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      !  
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparsekcb, lrepmatw3, sparsecb_k, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      !  
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparseicb, lrepmatw3, sparsecb_i, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      !  
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparsejcb, lrepmatw3, sparsecb_j, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      !  
+      CALL MPI_FILE_WRITE_AT_ALL(iunsparsetcb, lrepmatw3, sparsecb_t, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      !  
       ! Offset for the next q iteration
-      lrepmatw5 = lrepmatw5 + INT( SUM( indcb(:) ), kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
-      lrepmatw6 = lrepmatw6 + INT( SUM( indcb(:) ), kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+      lrepmatw5 = lrepmatw5 + INT(SUM(indcb(:)), kind = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND
+      lrepmatw6 = lrepmatw6 + INT(SUM(indcb(:)), kind = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       ! 
     ENDIF ! indcb
 #endif
@@ -605,9 +589,9 @@
         etf_all(ibnd, ik+lower_bnd-1) = etf(ibndmin-1+ibnd, ikk)
       ENDDO
     ENDDO 
-    CALL mp_sum ( vkk_all, world_comm ) 
-    CALL mp_sum ( etf_all, world_comm ) 
-    CALL mp_sum ( wkf_all, world_comm )
+    CALL MP_SUM(vkk_all, world_comm) 
+    CALL MP_SUM(etf_all, world_comm) 
+    CALL MP_SUM(wkf_all, world_comm)
     ! 
     IF ( my_pool_id == 0 ) THEN
 
@@ -621,9 +605,9 @@
         WRITE(iufilibtev_sup,'(i8,2E22.12)') itemp, ef0(itemp), efcb(itemp)
       ENDDO
       WRITE(iufilibtev_sup,'(a)') '# ik  ibnd      velocity (x,y,z)              eig     weight '
-      DO ik = 1, nkqtotf/2
-        DO ibnd = 1, ibndmax-ibndmin+1
-          WRITE(iufilibtev_sup,'(i8,i6,5E22.12)') ik, ibnd, vkk_all(:,ibnd,ik), etf_all(ibnd, ik), wkf_all(ik)
+      DO ik=1, nkqtotf / 2
+        DO ibnd=1, ibndmax - ibndmin + 1
+          WRITE(iufilibtev_sup,'(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
         ENDDO
       ENDDO
       CLOSE(iufilibtev_sup)
@@ -636,36 +620,36 @@
       carrier_density = 0.0
       ! 
       IF ( ncarrier < 0.0 ) THEN ! VB
-        DO ik = 1, nkf
-          DO ibnd = 1, ibndmax-ibndmin+1
+        DO ik=1, nkf
+          DO ibnd=1, ibndmax - ibndmin + 1
             ! This selects only valence bands for hole conduction
-            IF (etf_all (ibnd, ik+lower_bnd-1 ) < ef0(itemp) ) THEN
+            IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
               !  energy at k (relative to Ef)
               ekk = etf_all (ibnd, ik+lower_bnd-1 ) - ef0(itemp)
               fnk = wgauss( -ekk / etemp, -99)
               ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik+lower_bnd-1 ) * (1.0d0 - fnk )
+              carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
             ENDIF
           ENDDO
         ENDDO
-        CALL mp_sum( carrier_density, world_comm )
+        CALL MP_SUM(carrier_density, world_comm)
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
         WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp *ryd2ev/kelvin2eV, &
                       ef0(itemp)*ryd2ev,  carrier_density
       ELSE ! CB
-        DO ik = 1, nkf
-          DO ibnd = 1, ibndmax-ibndmin+1
+        DO ik=1, nkf
+          DO ibnd=1, ibndmax - ibndmin + 1
             ! This selects only valence bands for hole conduction
             IF (etf_all (ibnd, ik+lower_bnd-1 ) > efcb(itemp) ) THEN
               !  energy at k (relative to Ef)
-              ekk = etf_all (ibnd, ik+lower_bnd-1 ) - efcb(itemp)
+              ekk = etf_all(ibnd, ik+lower_bnd-1) - efcb(itemp)
               fnk = wgauss( -ekk / etemp, -99)
               ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik+lower_bnd-1 ) *  fnk
+              carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
             ENDIF
           ENDDO
         ENDDO
-        CALL mp_sum( carrier_density, world_comm )
+        CALL MP_SUM(carrier_density, world_comm)
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
         WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp *ryd2ev/kelvin2eV, &
                       efcb(itemp)*ryd2ev,  carrier_density

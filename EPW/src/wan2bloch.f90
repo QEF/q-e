@@ -1271,10 +1271,12 @@
           !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
           !        Here we want non blocking because not all the process have the same nb of ir. 
           !
-          CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
-          CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
+          !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          CALL MPI_FILE_READ_AT_ALL(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT_ALL',1)
           !   
           DO iw2=1, dims
             DO iw=1, dims
@@ -1325,10 +1327,12 @@
           !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
           !        Here we want non blocking because not all the process have the same nb of ir. 
           !
-          CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
-          CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
+          !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          CALL MPI_FILE_READ_AT_ALL(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT_ALL',1)
           !   
           CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1,ir,1,1), epmatw(:,:,:,1), 1, &
                 eptmp(:,:,:,imode), 1)
@@ -1734,10 +1738,12 @@
       !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
       !        Here we want non blocking because not all the process have the same nb of ir. 
       !
-      CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+      !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
+      !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
+      !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+      !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+      CALL MPI_FILE_READ_AT_ALL(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_READ_AT_ALL',1)
 #endif    
       ! 
       !write(stdout,*)'ir  epmatw ',use_ws, ir, sum(epmatw)
