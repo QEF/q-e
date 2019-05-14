@@ -14,7 +14,7 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
   USE io_files,       ONLY : tmp_dir, prefix, postfix
-  USE pw_restart_new,    ONLY  : pw_readschema_file, init_vars_from_schema
+  USE pw_restart_new,    ONLY  : pw_read_schema, readschema_cell, readschema_ions
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
   USE qes_libs_module,      ONLY :  qes_reset
   !
@@ -25,21 +25,24 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
   REAL(DP),INTENT(inout) :: at(3,3), bg(3,3), omega
   REAL(DP),INTENT(inout) :: tau(3,nat)
+  CHARACTER(LEN=256) :: dirname
   INTEGER :: ierr
 !
   TYPE ( output_type)                   :: output_obj
   TYPE (parallel_info_type)             ::  parinfo_obj
   TYPE (general_info_type )             :: geninfo_obj 
   !
-  !
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
-                &  /,5X,A)') TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+                &  /,5X,A)') dirname
   !
   ! ... check if restart file is present, if yes read config parameters
   !
-  CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj)
+  CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj)
   IF (ierr == 0 ) THEN 
-     CALL init_vars_from_schema ( 'config', ierr, output_obj, parinfo_obj, geninfo_obj ) 
+     CALL readschema_cell( output_obj%atomic_structure )
+     CALL readschema_ions( output_obj%atomic_structure, &
+          output_obj%atomic_species, dirname )
      CALL qes_reset (output_obj)
      CALL qes_reset  (parinfo_obj)
      CALL qes_reset  (geninfo_obj)

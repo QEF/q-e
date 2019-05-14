@@ -1,4 +1,12 @@
+New in development branch:
+  * turbo_eels code of TDDFPT module now works with ultrasoft pseudopotentials and spin-orbit coupling together (Oleksandr Motornyi, Andrea Dal Corso, Nathalie Vast). lr_sm1_psi.f90 of LR_Modules is rewritten and simplified.
+
 Problems fixed in development branch :
+  * pp.x with plot_num=17 in spin-polarized case was issuing a bogus 
+    error (noticed by Shoaib Muhammad, Sungkyunkwan U.)
+  * vc-relax with cell_dofree='z' wasn't working exactly as expected
+    (noticed by Daniel Marchand, fixed by Lorenzo Paulatto)
+  * Incorrect link to wannier90 package (thanks to Nikolas Garofil)
   * Bug in spin-polarized meta-GGA (noticed by Shoaib Muhammad, 
     Sungkyunkwan U.)
   * Unphysical fractional translations (tau/n with n/=2,3,4,6) were not 

@@ -38,16 +38,22 @@ MODULE pw_restart_new
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
-  PUBLIC :: pw_write_schema, pw_write_binaries, &
-       pw_readschema_file, init_vars_from_schema, read_collected_to_evc
+  PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
+       read_collected_to_evc
+  PUBLIC :: readschema_ef, readschema_cell, readschema_ions, readschema_dim, &
+       readschema_planewaves, readschema_spin, readschema_magnetization, &
+       readschema_xc, readschema_occupations, readschema_brillouin_zone, &
+       readschema_band_structure, readschema_symmetry, readschema_efield, &
+       readschema_outputPBC, readschema_exx, readschema_algo
   !
   CONTAINS
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_schema( what, wf_collect )
+    SUBROUTINE pw_write_schema( only_init, wf_collect )
       !------------------------------------------------------------------------
       !
-      ! what = 'init-config': write only variables that are known after the 
-      !                       initial steps of initialization (e.g. structure)
+      ! only_init  = T  write only variables that are known after the 
+      !                 initial steps of initialization (e.g. structure)
+      !            = F  write the complete xml file
       ! wf_collect = T  if final wavefunctions in portable format are written,
       !              F  if wavefunctions are either not written or are written
       !                 in binary non-portable form (for checkpointing)
@@ -139,8 +145,7 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: what
-      LOGICAL, INTENT(IN) :: wf_collect
+      LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
@@ -489,7 +494,7 @@ MODULE pw_restart_new
          !
          ! skip if not yet computed
          !
-         IF ( TRIM(what) == "init-config" ) GO TO 10
+         IF ( only_init ) GO TO 10
          !
          IF ( .NOT. ( lgauss .OR. ltetra )) THEN 
             occupations_are_fixed = .TRUE.
@@ -904,7 +909,7 @@ MODULE pw_restart_new
     END SUBROUTINE gk_l2gmap_kdip
 
     !------------------------------------------------------------------------
-    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_parallel_info, restart_general_info, &
+    SUBROUTINE pw_read_schema(ierr, restart_output, restart_parallel_info, restart_general_info, &
                                   prev_input)
       !------------------------------------------------------------------------
       USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
@@ -988,7 +993,7 @@ MODULE pw_restart_new
             ierr = 5
          END IF
          IF ( ierr /= 0 ) THEN
-             CALL infomsg ('pw_readschema_file',& 
+             CALL infomsg ('pw_read_schema',& 
                             'failed retrieving input info from xml file, please check it')
              IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
              ierr = 0
@@ -997,174 +1002,10 @@ MODULE pw_restart_new
       ! 
       CALL destroy(root)       
 
- 100  CALL errore('pw_readschemafile',TRIM(errmsg),ierr)
+ 100  CALL errore('pw_read_schema',TRIM(errmsg),ierr)
       !
-    END SUBROUTINE pw_readschema_file
+    END SUBROUTINE pw_read_schema
     !  
-    !------------------------------------------------------------------------
-    SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
-      !------------------------------------------------------------------------
-      !
-      USE qes_types_module,     ONLY : input_type, output_type, &
-                                       general_info_type, parallel_info_type    
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN)           :: what
-      TYPE ( output_type), INTENT(IN)        :: output_obj
-      TYPE ( parallel_info_type), INTENT(IN) :: par_info
-      TYPE ( general_info_type ), INTENT(IN) :: gen_info
-      TYPE ( input_type), OPTIONAL, INTENT(IN)         :: input_obj
-      INTEGER,INTENT (OUT)                   :: ierr 
-      !
-      CHARACTER(LEN=256) :: dirname
-      LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
-                            lxc, locc, lbz, lbs,                 &
-                            lsymm, lefield, ldim, lvalid_input,  &
-                            lef, lexx, lesm, lpbc, lalgo
-      !
-      LOGICAL            :: found
-      
-      !    
-      !
-      ierr = 0 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-      !
-      !
-      IF ( PRESENT (input_obj) ) THEN 
-         lvalid_input = (TRIM(input_obj%tagname) == "input")
-      ELSE
-         lvalid_input = .FALSE. 
-      ENDIF
-      !
-      !
-      ldim    = .FALSE.
-      lcell   = .FALSE.
-      lpw     = .FALSE.
-      lions   = .FALSE.
-      lspin   = .FALSE.
-      linit_mag = .FALSE.
-      lxc     = .FALSE.
-      locc    = .FALSE.
-      lbz     = .FALSE.
-      lbs     = .FALSE.
-      lsymm   = .FALSE.
-      lefield = .FALSE.
-      lef     = .FALSE.
-      lexx    = .FALSE.
-      lesm    = .FALSE.
-      lpbc    = .FALSE.  
-      lalgo   = .FALSE. 
-      !
-      !
-      SELECT CASE( what )
-      CASE( 'dim' )
-         !
-         ldim =       .TRUE.
-         !
-      CASE( 'config' )
-         !
-         lcell = .TRUE.
-         lions = .TRUE.
-         !
-      CASE( 'all' )
-         !
-         lcell   = .TRUE.
-         lpw     = .TRUE.
-         lions   = .TRUE.
-         lspin   = .TRUE.
-         lxc     = .TRUE.
-         lexx    = .TRUE.
-         locc    = .TRUE.
-         lbz     = .TRUE.
-         lbs     = .TRUE.
-         lsymm   = .TRUE.
-         lefield = .TRUE.
-         lalgo   = .TRUE.
-         lpbc    = .TRUE.
-         lesm    = .TRUE.
-         linit_mag = .TRUE.
-         !
-      CASE( 'ef' )
-         !
-         lef        = .TRUE.
-         !
-      CASE DEFAULT
-         !
-         CALL errore('init_vars_from_schema','unknown what="' &
-              & // TRIM(what) // '" option', 1)
-         !
-      END SELECT
-      !
-      IF ( ldim ) THEN
-         ! 
-         CALL readschema_dim(par_info, output_obj%atomic_species, &
-              output_obj%atomic_structure, output_obj%symmetries, &
-              output_obj%basis_set, output_obj%band_structure ) 
-         !
-      ENDIF
-      !
-      IF ( lcell ) THEN
-         CALL readschema_cell( output_obj%atomic_structure )
-      END IF
-      !
-      IF ( lpw ) THEN
-         CALL readschema_planewaves( output_obj%basis_set) 
-      END IF
-      IF ( lions ) THEN
-         CALL readschema_ions( output_obj%atomic_structure, output_obj%atomic_species, dirname)
-      END IF
-      IF ( lspin ) THEN
-
-         CALL readschema_spin( output_obj%magnetization )
-      END IF
-      IF (linit_mag) THEN
-         CALL readschema_magnetization (  output_obj%band_structure,  output_obj%atomic_species,&
-                                          output_obj%magnetization )
-      END IF
-      IF ( lxc ) THEN
-         CALL readschema_xc (  output_obj%atomic_species, output_obj%dft )
-      END IF
-      IF ( locc ) THEN
-         CALL readschema_occupations( output_obj%band_structure )
-      END IF
-      IF ( lbz ) THEN
-         CALL readschema_brillouin_zone( output_obj%symmetries,  output_obj%band_structure )
-      END IF
-      IF ( lbs ) THEN
-         CALL readschema_band_structure( output_obj%band_structure )
-      END IF
-      IF ( lsymm ) THEN
-         IF ( lvalid_input ) THEN 
-            CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
-         ELSE 
-            CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
-         ENDIF
-      ENDIF
-      ! 
-      IF ( lpbc ) THEN
-         CALL readschema_outputPBC ( output_obj%boundary_conditions)
-      END IF
-      !
-      IF ( lef ) THEN
-         CALL readschema_ef ( output_obj%band_structure) 
-      END IF
-      !
-      IF ( lefield .AND. lvalid_input ) THEN
-         CALL readschema_efield ( input_obj%electric_field )
-      END IF
-      !
-      IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) THEN
-         CALL readschema_exx ( output_obj%dft%hybrid )
-      END IF
-      !
-      IF ( lalgo ) THEN
-         CALL readschema_algo(output_obj%algorithmic_info )
-      END IF
-      !
-      RETURN
-      !
-    END SUBROUTINE init_vars_from_schema
     !-------------------------------------------------------------------------------
     SUBROUTINE readschema_header (gen_info_obj) 
     !-------------------------------------------------------------------------------
@@ -1216,8 +1057,6 @@ MODULE pw_restart_new
     ! 
     INTEGER                                    :: npwx_
     !
-    !
-    CALL readschema_cell ( atomic_structure ) 
     ! 
     !---------------------------------------------------------------------
     !                                       PARALLEL  DIM 
@@ -1657,7 +1496,7 @@ MODULE pw_restart_new
                             Hubbard_l(isp ) = 3
                         CASE  default 
                             IF (Hubbard_U(isp)/=0) &
-                              CALL errore ("pw_readschema:", "unrecognized label for Hubbard "//label, 1 ) 
+                              CALL errore ("readschema_xc:", "unrecognized label for Hubbard "//label, 1 ) 
                      END SELECT   
                      EXIT loop_on_speciesU
                   END IF 
@@ -1871,13 +1710,13 @@ MODULE pw_restart_new
                     END IF 
                  END DO
               ELSE
-                 CALL infomsg ( "pw_readschema: ", &
+                 CALL infomsg ( "readschema_bz: ", &
                                 "actual number of start kpoint not equal to nks_start, set nks_start=0")  
                  nks_start = 0 
               END IF
            END IF
        ELSE 
-           CALL errore ("pw_readschema: ", &
+           CALL errore ("readschema_bz: ", &
                         " no information found for initializing brillouin zone information", 1)
        END IF  
        ! 

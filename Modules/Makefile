@@ -23,10 +23,13 @@ compute_dipole.o \
 constants.o \
 constraints_module.o \
 control_flags.o \
+correlation_lda_lsda.o \
 coulomb_vcut.o \
 dist.o \
+dmxc_drivers.o \
 electrons_base.o \
 environment.o \
+exchange_lda_lsda.o \
 fcp_variables.o \
 fd_gradient.o \
 fft_base.o \
@@ -101,6 +104,7 @@ write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
+xc_lda_lsda_drivers.o \
 io_base.o \
 qes_types_module.o \
 qes_libs_module.o  \

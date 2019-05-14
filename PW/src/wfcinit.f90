@@ -29,7 +29,7 @@ SUBROUTINE wfcinit()
   USE wavefunctions, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-  USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
+  USE pw_restart_new,       ONLY : pw_read_schema, read_collected_to_evc 
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   !
@@ -54,7 +54,7 @@ SUBROUTINE wfcinit()
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
-     CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
+     CALL pw_read_schema(IERR = ierr, RESTART_OUTPUT = output_obj )
      IF ( ierr == 0 ) THEN 
         twfcollect_file = output_obj%band_structure%wf_collected   
         dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix

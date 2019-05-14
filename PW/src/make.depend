@@ -1325,6 +1325,7 @@ paw_onecenter.o : ../../Modules/noncol.o
 paw_onecenter.o : ../../Modules/paw_variables.o
 paw_onecenter.o : ../../Modules/radial_grids.o
 paw_onecenter.o : ../../Modules/uspp.o
+paw_onecenter.o : ../../Modules/xc_lda_lsda_drivers.o
 paw_onecenter.o : ../../UtilXlib/mp.o
 paw_onecenter.o : pwcom.o
 paw_symmetry.o : ../../Modules/cell_base.o
@@ -2164,6 +2165,7 @@ v_of_rho.o : ../../Modules/mp_bands.o
 v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
 v_of_rho.o : ../../Modules/tsvdw.o
+v_of_rho.o : ../../Modules/xc_lda_lsda_drivers.o
 v_of_rho.o : ../../UtilXlib/mp.o
 v_of_rho.o : Coul_cut_2D.o
 v_of_rho.o : esm.o

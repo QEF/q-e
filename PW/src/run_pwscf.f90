@@ -8,7 +8,6 @@
 !----------------------------------------------------------------------------
 SUBROUTINE run_pwscf ( exit_status ) 
   !----------------------------------------------------------------------------
-  !
   !! author: Paolo Giannozzi
   !! license: GNU 
   !! summary: Run an instance of the Plane Wave Self-Consistent Field code
@@ -109,7 +108,7 @@ SUBROUTINE run_pwscf ( exit_status )
      CALL summary()
      CALL memory_report()
      CALL qexsd_set_status(255)
-     CALL punch( 'init-config' )
+     CALL punch( 'config-init' )
      exit_status = 255
      RETURN
   ENDIF
@@ -186,7 +185,7 @@ SUBROUTINE run_pwscf ( exit_status )
         !
         IF ( idone <= nstep .AND. .NOT. conv_ions ) THEN 
             CALL qexsd_set_status(255)
-            CALL punch( 'config' )
+            CALL punch( 'config-nowf' )
         END IF
         !
         IF (dft_is_hybrid() )  CALL stop_exx()
@@ -264,11 +263,11 @@ SUBROUTINE run_pwscf ( exit_status )
 END SUBROUTINE run_pwscf
 
 SUBROUTINE reset_gvectors ( )
-  !
-  ! ... Variable-cell optimization: once convergence is achieved, 
-  ! ... make a final calculation with G-vectors and plane waves
-  ! ... calculated for the final cell (may differ from the current
-  ! ... result, using G_vectors and PWs for the starting cell)
+!-------------------------------------------------------------
+  !! Variable-cell optimization: once convergence is achieved, 
+  !! make a final calculation with G-vectors and plane waves
+  !! calculated for the final cell (may differ from the current
+  !! result, using G_vectors and PWs for the starting cell)
   !
   USE io_global,  ONLY : stdout
   USE cellmd,     ONLY : lmovecell
@@ -333,11 +332,11 @@ SUBROUTINE reset_exx()
 END SUBROUTINE reset_exx
 
 SUBROUTINE reset_magn ( )
-  !
-  ! ... lsda optimization :  a final configuration with zero 
-  ! ... absolute magnetization has been found and we check 
-  ! ... if it is really the minimum energy structure by 
-  ! ... performing a new scf iteration without any "electronic" history
+!-------------------------------------------------------------
+  !! lsda optimization :  a final configuration with zero 
+  !! absolute magnetization has been found and we check 
+  !! if it is really the minimum energy structure by 
+  !! performing a new scf iteration without any "electronic" history
   !
   USE io_global,  ONLY : stdout
   USE dfunct,     ONLY : newd
@@ -361,10 +360,10 @@ SUBROUTINE reset_magn ( )
 END SUBROUTINE reset_magn
 !
 SUBROUTINE reset_starting_magnetization ( ) 
-  !
-  ! On input,  the scf charge density is needed
-  ! On output, new values for starting_magnetization, angle1, angle2
-  ! estimated from atomic magnetic moments - to be used in last step
+!-------------------------------------------------------------------
+  !! On input,  the scf charge density is needed
+  !! On output, new values for starting_magnetization, angle1, angle2
+  !! estimated from atomic magnetic moments - to be used in last step
   !
   USE kinds,     ONLY : dp
   USE constants, ONLY : pi
@@ -375,9 +374,24 @@ SUBROUTINE reset_starting_magnetization ( )
   USE noncollin_module, ONLY : noncolin, angle1, angle2
   !
   IMPLICIT NONE
-  INTEGER :: i, nt, iat
-  REAL(dp):: norm_tot, norm_xy, theta, phi
-  REAL (DP), ALLOCATABLE :: r_loc(:), m_loc(:,:)
+  INTEGER  :: i
+  !! loop counter on species
+  INTEGER  :: nt
+  !! number of atoms per species
+  INTEGER  :: iat
+  !! loop counter on atoms
+  REAL(DP) :: norm_tot
+  !! modulus of atomic magnetization
+  REAL(DP) :: norm_xy
+  !! xy-projection of atomic magnetization
+  REAL(DP) :: theta
+  !! angle between magnetization and z-axis
+  REAL(DP) :: phi
+  !! angle between xy-magnetization and x-axis
+  REAL(DP), ALLOCATABLE :: r_loc(:)
+  !! auxiliary array for density
+  REAL(DP), ALLOCATABLE :: m_loc(:,:)
+  !! auxiliary array for magnetization
   !
   IF ( (noncolin .AND. domag) .OR. nspin==2) THEN
      ALLOCATE ( r_loc(nat), m_loc(nspin-1,nat) )
@@ -426,5 +440,5 @@ SUBROUTINE reset_starting_magnetization ( )
      END IF
   END DO
   DEALLOCATE ( r_loc, m_loc )
-
+  !
 END SUBROUTINE reset_starting_magnetization

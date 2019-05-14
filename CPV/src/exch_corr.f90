@@ -371,20 +371,23 @@
 subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   use kinds, only: DP
   use funct, only: dft_is_gradient, get_igcc, &
-                   xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
+                   gcxc, gcx_spin, gcc_spin, gcc_spin_more, init_lda_xc
+  use xc_lda_lsda, only : xc
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
-  real(DP), intent(in) :: grhor( 3, nnr, nspin )
-  real(DP) :: h( nnr, nspin, nspin )
-  real(DP), intent(in) :: rhor( nnr, nspin )
-  real(DP) :: v( nnr, nspin )
+  real(DP), intent(in) :: grhor(3,nnr,nspin)
+  real(DP) :: h(nnr,nspin,nspin)
+  real(DP), intent(in) :: rhor(nnr,nspin)
+  real(DP) :: v(nnr,nspin)
   real(DP) :: etxc
   integer :: ir, is, k
-  real(DP) :: rup, rdw, ex, ec, vx(2), vc(2)
-  real(DP) :: rh, grh2, zeta 
+  real(DP) :: rup, rdw
+  real(DP), dimension(nnr) :: ex, ec
+  real(DP), dimension(nnr,nspin) :: rhox, vx, vc
+  real(DP) :: rh, grh2, zeta, zetas
   real(DP) :: sx, sc, v1x, v2x, v1c, v2c
-  real(DP) :: rhox, arhox, e2
+  real(DP) :: e2
   real(DP) :: grho2(2), arho, segno
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw
   real(DP) :: v1cup, v1cdw
@@ -399,55 +402,46 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   !
   e2  = 1.0d0
   etxc = 0.0d0
-  if( nspin == 1 ) then
+  !
+  CALL init_lda_xc()
+  !
+  IF ( nspin == 1 ) THEN
      !
      ! spin-unpolarized case
      !
-!$omp parallel do private( rhox, arhox, ex, ec, vx, vc ), reduction(+:etxc)
-     do ir = 1, nnr
-        rhox = rhor (ir, nspin)
-        arhox = abs (rhox)
-        if (arhox.gt.1.d-30) then
-           CALL xc( arhox, ex, ec, vx(1), vc(1) )
-           v(ir,nspin) = e2 * (vx(1) + vc(1) )
-           etxc = etxc + e2 * (ex + ec) * rhox
-        else
-           v(ir,nspin) = 0.0D0
-        endif
-     enddo
-!$omp end parallel do
+     CALL xc( nnr, 1, 1, rhor, ex, ec, vx, vc )
      !
-  else
+     v(:,1) = e2 * (vx(:,1) + vc(:,1) )
+     etxc = e2 * SUM( (ex + ec)*rhor(:,1) )
+     !
+  ELSE
      !
      ! spin-polarized case
      !
-     neg (1) = 0
-     neg (2) = 0
-     neg (3) = 0
-     do ir = 1, nnr
-        rhox = rhor(ir,1) + rhor(ir,2)
-        arhox = abs(rhox)
-        if (arhox.gt.1.d-30) then
-           zeta = ( rhor(ir,1) - rhor(ir,2) ) / arhox
-           if (abs(zeta) .gt.1.d0) then
-              neg(3) = neg(3) + 1
-              zeta = sign(1.d0,zeta)
-           endif
-           ! WRITE(6,*) rhox, zeta
-           if (rhor(ir,1) < 0.d0) neg(1) = neg(1) + 1
-           if (rhor(ir,2) < 0.d0) neg(2) = neg(2) + 1
-           call xc_spin (arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
-           do is = 1, nspin
-              v(ir,is) = e2 * (vx(is) + vc(is) )
-           enddo
-           etxc = etxc + e2 * (ex + ec) * rhox
-        else
-           do is = 1, nspin
-              v(ir,is) = 0.0D0
-           end do
-        endif
-     enddo
-  endif
+     neg(1) = 0
+     neg(2) = 0
+     neg(3) = 0
+     !
+     rhox(:,1) = rhor(:,1) + rhor(:,2)
+     rhox(:,2) = rhor(:,1) - rhor(:,2)
+     !
+     CALL xc( nnr, 2, 2, rhox, ex, ec, vx, vc )
+     !
+     DO ir = 1, nnr
+        !
+        DO is = 1, nspin
+           v(ir,is) = e2 * (vx(ir,is) + vc(ir,is))
+        ENDDO
+        etxc = etxc + e2 * (ex(ir) + ec(ir)) * rhox(ir,1)
+        !
+        zetas =  rhox(ir,2) / rhox(ir,1)
+        IF (rhor(ir,1) < 0.d0) neg(1) = neg(1) + 1
+        IF (rhor(ir,2) < 0.d0) neg(2) = neg(2) + 1
+        IF (ABS(zetas) > 1.d0) neg(3) = neg(3) + 1
+        !
+     ENDDO
+     !
+  ENDIF
 
   if( debug_xc ) then
     open(unit=17,form='unformatted')
@@ -479,15 +473,15 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
              !
              ! first term of the gradient correction : D(rho*Exc)/D(rho)
 
-             v (k, 1) = v (k, 1) + e2 * (v1x + v1c)
+             v(k, 1) = v(k, 1) + e2 * (v1x + v1c)
 
              ! HERE h contains D(rho*Exc)/D(|grad rho|) / |grad rho|
              !
-             h (k, 1, 1) = e2 * (v2x + v2c) 
+             h(k, 1, 1) = e2 * (v2x + v2c) 
              etxc = etxc + e2 * (sx + sc) * segno
 
           else
-             h (k, 1, 1) = 0.d0
+             h(k, 1, 1) = 0.d0
           endif
           !
        end do
@@ -499,13 +493,13 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
        !
        do k = 1, nnr
           do is = 1, nspin
-             grho2 (is) = grhor(1, k, is)**2 + grhor(2, k, is)**2 + grhor(3, k, is)**2
+             grho2(is) = grhor(1, k, is)**2 + grhor(2, k, is)**2 + grhor(3, k, is)**2
           enddo
           rup = rhor (k, 1)
           rdw = rhor (k, 2)
-          call gcx_spin ( rup, rdw, grho2 (1), grho2 (2), sx, v1xup, v1xdw, v2xup, v2xdw)
+          call gcx_spin( rup, rdw, grho2 (1), grho2 (2), sx, v1xup, v1xdw, v2xup, v2xdw)
           !
-          rh = rhor (k, 1) + rhor (k, 2)
+          rh = rhor(k, 1) + rhor (k, 2)
           !
           if (rh.gt.epsr) then
              if( igcc_is_lyp ) then

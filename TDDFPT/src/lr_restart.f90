@@ -19,6 +19,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE control_flags,        ONLY : gamma_only
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
+    USE uspp,             ONLY : okvan
   USE lr_variables,         ONLY : itermax, evc1, evc1_old, &
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F, &
                                    bgz_suffix, beta_store, gamma_store, zeta_store, norm0, &
@@ -74,6 +75,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   ENDIF
   !
   ! Reading Lanczos coefficients
+    IF (okvan) CALL lr_sm1_initialize()
   !
   IF (eels) THEN
     filename = trim(prefix) // trim(bgz_suffix) // trim("dat")
