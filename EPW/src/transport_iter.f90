@@ -122,7 +122,7 @@
     !! BZ to IBZ mapping
     INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
     !! symmetry matrix for each k-point from the full BZ
-    INTEGER :: BZtoIBZ_mat(nrot,nkqtotf/2)
+    INTEGER, ALLOCATABLE :: BZtoIBZ_mat(:, :)
     !! For a given k-point in the IBZ gives the k-point index
     !! of all the k-point in the full BZ that are connected to the current 
     !! one by symmetry. nrot is the max number of symmetry 
@@ -201,12 +201,15 @@
       ixkqf_tr(:) = 0
       !call move_alloc(test1, s_BZtoIBZ_full)
       s_BZtoIBZ_full(:,:,:) = 0
-      BZtoIBZ_mat(:,:) = 0 
       nsym(:) = 0
       ! 
       IF ( mpime == ionode_id ) THEN
-        ! 
+        !  
+        ! Computes nrot
         CALL set_sym_bl( )
+        !
+        ALLOCATE (BZtoIBZ_mat(nrot, nkqtotf/2))   
+        BZtoIBZ_mat(:, :) = 0 
         !
         ! What we get from this call is BZtoIBZ
         CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
@@ -227,8 +230,10 @@
         ! 
       ENDIF ! mpime
       ! 
+      CALL mp_bcast( nrot,        ionode_id, inter_pool_comm )
       CALL mp_bcast( s_BZtoIBZ,   ionode_id, inter_pool_comm )
       CALL mp_bcast( BZtoIBZ,     ionode_id, inter_pool_comm )
+      IF (mpime /= ionode_id) ALLOCATE (BZtoIBZ_mat(nrot, nkqtotf/2))
       CALL mp_bcast( BZtoIBZ_mat, ionode_id, inter_pool_comm )
       !
       WRITE(stdout,'(5x,"Symmetry mapping finished")')
@@ -629,7 +634,7 @@
       ! Allocate the local size 
       nind = upper_bnd - lower_bnd + 1
       WRITE(stdout,'(5x,a,i10)') 'Number of elements per core ',nind
-      ALLOCATE ( trans_prob ( nind ) )
+      ALLOCATE (trans_prob(nind))
       trans_prob(:) = 0.0d0
       ! 
       ! Open file containing trans_prob 
