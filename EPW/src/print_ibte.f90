@@ -484,27 +484,27 @@
       !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
       !CALL MPI_FILE_WRITE(iunepmat, trans_prob, lsize, MPI_DOUBLE_PRECISION,MPI_STATUS_IGNORE,ierr)
       !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
-      CALL MPI_FILE_WRITE_AT_ALL(iunepmat, lrepmatw, trans_prob, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr) 
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)      
+      CALL MPI_FILE_WRITE_AT(iunepmat, lrepmatw, trans_prob, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr) 
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)      
       !  
       !CALL MPI_FILE_SEEK (iunsparseq, lrepmatw3,MPI_SEEK_SET,ierr) 
       !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_SEEK',1 )
       !CALL MPI_FILE_WRITE(iunsparseq, sparse_q, lsize, MPI_INTEGER4,MPI_STATUS_IGNORE,ierr)
       !IF( ierr /= 0 ) CALL errore( 'print_ibte', 'error in MPI_FILE_WRITE',1 )      
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparseq, lrepmatw3, sparse_q, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparseq, lrepmatw3, sparse_q, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparsek, lrepmatw3, sparse_k, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparsek, lrepmatw3, sparse_k, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparsei, lrepmatw3, sparse_i, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparsei, lrepmatw3, sparse_i, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparsej, lrepmatw3, sparse_j, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparsej, lrepmatw3, sparse_j, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparset, lrepmatw3, sparse_t, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparset, lrepmatw3, sparse_t, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       ! 
       ! Offset for the next q iteration
       lrepmatw2 = lrepmatw2 + INT(SUM(ind(:)), kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
@@ -531,23 +531,25 @@
       lrepmatw3 = lrepmatw6 + &
             INT(SUM(indcb(1:my_pool_id + 1)) - indcb(my_pool_id + 1), kind = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       ! 
-      CALL MPI_FILE_WRITE_AT_ALL(iunepmatcb, lrepmatw, trans_probcb, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      ! SEEK+WRITE = AT + collective (ALL)
+      !CALL MPI_FILE_WRITE_AT_ALL(iunepmatcb, lrepmatw, trans_probcb, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      CALL MPI_FILE_WRITE_AT(iunepmatcb, lrepmatw, trans_probcb, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       ! 
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparseqcb, lrepmatw3, sparsecb_q, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparseqcb, lrepmatw3, sparsecb_q, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparsekcb, lrepmatw3, sparsecb_k, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparsekcb, lrepmatw3, sparsecb_k, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparseicb, lrepmatw3, sparsecb_i, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparseicb, lrepmatw3, sparsecb_i, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparsejcb, lrepmatw3, sparsecb_j, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparsejcb, lrepmatw3, sparsecb_j, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
-      CALL MPI_FILE_WRITE_AT_ALL(iunsparsetcb, lrepmatw3, sparsecb_t, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT_ALL',1)
+      CALL MPI_FILE_WRITE_AT(iunsparsetcb, lrepmatw3, sparsecb_t, lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('print_ibte', 'error in MPI_FILE_WRITE_AT',1)
       !  
       ! Offset for the next q iteration
       lrepmatw5 = lrepmatw5 + INT(SUM(indcb(:)), kind = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND
@@ -589,9 +591,9 @@
         etf_all(ibnd, ik+lower_bnd-1) = etf(ibndmin-1+ibnd, ikk)
       ENDDO
     ENDDO 
-    CALL MP_SUM(vkk_all, world_comm) 
-    CALL MP_SUM(etf_all, world_comm) 
-    CALL MP_SUM(wkf_all, world_comm)
+    CALL mp_sum(vkk_all, world_comm) 
+    CALL mp_sum(etf_all, world_comm) 
+    CALL mp_sum(wkf_all, world_comm)
     ! 
     IF ( my_pool_id == 0 ) THEN
 
