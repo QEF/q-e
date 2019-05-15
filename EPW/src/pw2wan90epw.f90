@@ -377,7 +377,7 @@
   WRITE(stdout,'("      - Number of wannier functions is (",i3,")")') n_wannier
   IF ((nexband > 0) .AND. (nbndskip .ne. nexband)) THEN
     WRITE(stdout,'(/5x,"Warning: check if nbndskip = ", i3 " makes sense since ", i3, &
-                  " bands are excluded from wannier projection")') nbndskip, nexband
+                  &" bands are excluded from wannier projection")') nbndskip, nexband
   ENDIF
   !
   IF ( (nbnd-nexband) .ne. num_bands ) &
@@ -1528,6 +1528,7 @@
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE mp,              ONLY : mp_sum
+  USE mp_global,       ONLY : my_pool_id
   USE klist,           ONLY : nks, igk_k
   USE klist_epw,       ONLY : xk_loc
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
@@ -1588,7 +1589,8 @@
   DO ik = 1, nks
     !
     ! read wfc for the given kpt
-    CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
+    CALL readwfc(my_pool_id + 1, ik, evc)
+    !CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
     !
     ! setup k+G grids for each kpt
     CALL gk_sort( xk_loc(:,ik), ngm, g, gcutw, npw, igk_k(:,ik), g2kin )
@@ -1667,7 +1669,7 @@
   ! 07/2010 Fixed the rotation for ndimwin when lower bands are not included
   !
   USE kinds,        ONLY : DP
-  USE io_epw,       ONLY : iuukk
+  USE io_epw,       ONLY : iunukk
   USE wvfct,        ONLY : nbnd
   USE wannierEPW,   ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow, &
                            excluded_band, num_bands, wann_centers
@@ -1723,17 +1725,17 @@
     ALLOCATE ( u_kc_tmp(num_bands, n_wannier, iknum) )
     u_kc_tmp(:,:,:) = czero
     !
-    DO ik = 1, iknum
+    DO ik=1, iknum
       !
       u_kc_tmp(1:ndimwin(ik),1:n_wannier,ik) = &
            MATMUL( u_mat_opt(1:ndimwin(ik),:,ik), u_mat(:,1:n_wannier,ik) )
       !
     ENDDO
     !
-    ALLOCATE ( u_kc(nbnd, n_wannier, iknum) )
-    u_kc(:,:,:) = czero
+    ALLOCATE(u_kc(nbnd, n_wannier, iknum))
+    u_kc(:, :, :) = czero
     !
-    OPEN(unit = iuukk, file = filukk, form = 'formatted')
+    OPEN(unit=iunukk, file=filukk, form='formatted')
     ! u_kc(1:num_bands,:,:) = u_kc_tmp(1:num_bands,:,:)
     ! u_kc(num_bands+1:nbnd,:,:) = czero
     DO ik = 1, iknum
@@ -1748,7 +1750,7 @@
       !
       DO ibnd = 1, nbnd
         DO iw = 1, n_wannier
-          WRITE(iuukk,*) u_kc(ibnd,iw,ik)
+          WRITE(iunukk,*) u_kc(ibnd,iw,ik)
         ENDDO
       ENDDO
     ENDDO
@@ -1766,22 +1768,22 @@
       ENDDO
       !
       DO ibnd = 1, nbnd
-        WRITE(iuukk,*) lwindow_tmp(ibnd,ik)
+        WRITE(iunukk,*) lwindow_tmp(ibnd,ik)
       ENDDO
     ENDDO
     !
     DO ibnd = 1, nbnd
-      WRITE(iuukk,*) excluded_band(ibnd)
+      WRITE(iunukk,*) excluded_band(ibnd)
     ENDDO
     ! 
     ! Now write the Wannier centers to files
     DO iw = 1, n_wannier
       ! SP : Need more precision other WS are not determined properly. 
       !WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/alat/bohr
-      WRITE (iuukk,'(3E22.12)') wann_centers(:,iw)/alat/bohr
+      WRITE (iunukk,'(3E22.12)') wann_centers(:,iw)/alat/bohr
     ENDDO
     !
-    CLOSE(iuukk)
+    CLOSE(iunukk)
     !
     DEALLOCATE (u_kc_tmp)
     DEALLOCATE (u_kc)

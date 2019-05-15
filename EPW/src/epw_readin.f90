@@ -34,7 +34,7 @@
                             num_iter, dis_froz_max, fsthick, dis_froz_min, &
                             vme, degaussw, epexst, eig_read, kmaps, &
                             epwwrite, epbread, phonselfen, elecselfen, &
-                            a2f, plselfen, specfun_pl, nest_fn, & 
+                            a2f, plselfen, specfun_pl, nest_fn, filukk, & 
                             rand_nk, rand_k, rand_nq, rand_q,  &
                             nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, &
                             eps_acustic, nw, wmax, wmin, &
@@ -51,7 +51,7 @@
                             cumulant, bnd_cum, proj, write_wfn, iswitch, ntempxx, &
                             liso, lacon, lpade, etf_mem, epbwrite, &
                             nsiter, conv_thr_racon, specfun_el, specfun_ph, &
-                            pwc, nswc, nswfc, nswi, filukq, filukk, &
+                            pwc, nswc, nswfc, nswi, &
                             nbndsub, nbndskip, system_2d, delta_approx, &
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, restart, restart_freq, &
@@ -107,7 +107,7 @@
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf,                            &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
-       filukk, filukq, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,   &
+       epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,                   &
        eig_read, wepexst, epexst, vme,                                         &
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
        dvscf_dir, ngaussw, epmatkqread, selecqread,                            &
@@ -149,7 +149,6 @@
   ! filqf    : file with fine q kmesh for interpolation
   ! filkf    : file with fine kmesh for interpolation
   ! filukk   : file with rotation matrix U(k) for interpolation
-  ! filukq   : file with rotation matrix U(k+q) for interpolation
   ! tphases  : if true set absolute unitary gauge for eigenvectors
   ! epstrict : if true use strict selection rule for phonon linewidht calculation
   ! fsthick  : the thickness of the Fermi shell for averaging the e-ph matrix elements (units of eV)
@@ -384,7 +383,6 @@
   filkf        = ' '
   fildrho      = ' '
   fildvscf     = ' '
-  filukk       = ' '
   rand_q       = .false.
   delta_approx = .false.
   rand_nq      = 1
@@ -510,7 +508,8 @@
   !
   !     Check all namelist variables
   !
-  IF (filukk == ' ') filukk=trim(prefix)//'.ukk'
+  ! file with rotation matrix U(k) for interpolation  
+  filukk=TRIM(prefix)//'.ukk'
   IF (nsmear < 1) CALL errore ('epw_readin', &
        & 'Wrong number of nsmears',1)
   IF (iverbosity.ne.0 .and. iverbosity.ne.1 .and. iverbosity.ne.2 .and. iverbosity.ne.3) & 

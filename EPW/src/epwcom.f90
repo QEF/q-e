@@ -361,8 +361,6 @@ MODULE output_epw
   !! input  file for the fine k mesh
   CHARACTER (LEN=80) :: filukk
   !! input  file for the rotation matrix U(k)
-  CHARACTER (LEN=80) :: filukq
-  !! input  file for the rotation matrix U(k+q)
   CHARACTER (LEN=80) :: fildvscf0
   !! output file for the deltavscf used as a fake perturbation to set phases
   CHARACTER (LEN=80) :: fila2f
