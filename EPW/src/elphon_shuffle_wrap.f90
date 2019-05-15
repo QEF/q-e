@@ -301,9 +301,6 @@
     WRITE(stdout,'(/5x,a)') 'Using kmap and kgmap from disk'
   ENDIF
   !
-  CALL mp_barrier(inter_pool_comm)
-  CALL mp_barrier(inter_image_comm)
-  !
   ! Do not do symmetry stuff 
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
