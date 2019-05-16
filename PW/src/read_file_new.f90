@@ -264,8 +264,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... misc PP initialization (from setup.f90)
   !
   okpaw = ANY ( upf(1:nsp)%tpawp )
-  IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
+  IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
   ! ... distribute across pools k-points and related variables.
