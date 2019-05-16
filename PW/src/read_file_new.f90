@@ -12,26 +12,19 @@ SUBROUTINE read_file()
   ! Read data produced by pw.x or cp.x - new xml file and binary files
   ! Wrapper routine for backwards compatibility
   !
-  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, tmp_dir, wfc_dir
   USE io_global,            ONLY : stdout
+  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, postfix, &
+       tmp_dir, wfc_dir
   USE buffers,              ONLY : open_buffer, close_buffer
-  USE wvfct,                ONLY : nbnd, npwx, et, wg
+  USE wvfct,                ONLY : nbnd, npwx
   USE noncollin_module,     ONLY : npol
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
-  USE paw_onecenter,        ONLY : paw_potential
-  USE uspp,                 ONLY : becsum
-  USE scf,                  ONLY : rho
-  USE dfunct,               ONLY : newd
-  USE lsda_mod,             ONLY : isk
   USE pw_restart_new,       ONLY : read_collected_to_evc
-  USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
-  USE klist,                ONLY : nks, xk, wk, init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-  USE qes_types_module,     ONLY : output_type
+  USE klist,                ONLY : init_igk
+  !
   IMPLICIT NONE 
-  TYPE ( output_type) :: output_obj 
   INTEGER :: ierr
   LOGICAL :: exst, wfc_is_collected
   CHARACTER( LEN=256 )  :: dirname
@@ -70,15 +63,6 @@ SUBROUTINE read_file()
   !
   IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
   !
-  ! ... More PAW and pseudopotential initialization
-  ! ... Not sure which ones (if any) should be done here
-  !
-  IF (okpaw) THEN
-     becsum = rho%bec
-     CALL PAW_potential(rho%bec, ddd_PAW)
-  ENDIF 
-  CALL newd()
-  !
   CALL close_buffer  ( iunwfc, 'KEEP' )
   !
 END SUBROUTINE read_file
@@ -92,32 +76,14 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... All quantities that are initialized in subroutine "setup" when
   ! ... starting from scratch should be initialized here when restarting
   !
-  USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE ions_base,            ONLY : nat, nsp, ityp, tau, extfor
-  USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav, &
-                                   set_h_ainv
+  USE ions_base,            ONLY : nat, ityp, tau, extfor
   USE force_mod,            ONLY : force
-  USE klist,                ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,             ONLY : nspin, isk
-  USE noncollin_module,     ONLY : noncolin
-  USE wvfct,                ONLY : nbnd, nbndx, et, wg
-  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
+  USE klist,                ONLY : nks, nkstot
+  USE wvfct,                ONLY : nbnd, et, wg
+  USE symm_base,            ONLY : irt
   USE extfield,             ONLY : forcefield, tefield, gate, forcegate
-  USE cellmd,               ONLY : cell_factor, lmovecell
-  USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
-  USE fft_types,            ONLY : fft_type_allocate
-  USE recvec_subs,          ONLY : ggen, ggens
-  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
-                                   eigts1, eigts2, eigts3, gstart, gshells
-  USE fft_base,             ONLY : dfftp, dffts
-  USE gvecs,                ONLY : ngms, gcutms 
-  USE spin_orb,             ONLY : lspinorb
-  USE scf,                  ONLY : rho, rho_core, rhog_core, v
-  USE vlocal,               ONLY : strf
-  USE io_files,             ONLY : tmp_dir, prefix, postfix, &
-                                   iunpun, nwordwfc, iunwfc
+  USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE pw_restart_new,       ONLY : pw_read_schema, readschema_dim, &
        readschema_cell, readschema_ions, readschema_planewaves, &
        readschema_spin, readschema_magnetization, readschema_xc, &
@@ -127,36 +93,16 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE qes_types_module,     ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
-  USE io_rho_xml,           ONLY : read_scf
-  USE fft_rho,              ONLY : rho_g2r
-  USE read_pseudo_mod,      ONLY : readpp
-  USE uspp,                 ONLY : becsum
-  USE uspp_param,           ONLY : upf
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
-  USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
-  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
-  USE control_flags,        ONLY : gamma_only, ts_vdw, tqr, &
-       tq_smoothing, tbeta_smoothing
-  USE funct,                ONLY : get_inlc, get_dft_name
-  USE kernel_table,         ONLY : initialize_kernel_table
-  USE esm,                  ONLY : do_comp_esm, esm_init
-  USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
-  USE tsvdw_module,         ONLY : tsvdw_initialize
-  USE realus,               ONLY : betapointlist, generate_qpointlist, &
-                                   init_realspace_vars,real_space
 #if defined(__BEOWULF)
-  USE qes_bcast_module       ONLY : qes_bcast
-  USE mp_images,             ONLY : intra_image_comm
+  USE qes_bcast_module,     ONLY : qes_bcast
+  USE mp_images,            ONLY : intra_image_comm
+  USE mp,                   ONLY : mp_bcast
 #endif
   !
   IMPLICIT NONE
   LOGICAL, INTENT(OUT) :: wfc_is_collected
 
-  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
-  REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
-  REAL(DP) :: sr(3,3,48)
-  CHARACTER(LEN=20) dft_name
+  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
   CHARACTER(LEN=256) :: dirname
   LOGICAL            :: lvalid_input
   TYPE ( output_type)                   :: output_obj 
@@ -168,15 +114,16 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
 #if defined(__BEOWULF)
    IF (ionode) THEN
       CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
-      IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
    END IF
+   CALL mp_bcast(ierr,intra_image_comm)
+   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', abs(ierr) ) 
    CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
    CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
    CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
    CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
 #else
   CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
-  IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
+  IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', abs(ierr) ) 
 #endif
   wfc_is_collected = output_obj%band_structure%wf_collected
   !
@@ -187,7 +134,12 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        output_obj%atomic_structure, output_obj%symmetries, &
        output_obj%basis_set, output_obj%band_structure ) 
   !
-  ! ... allocate space for arrays to be read in init_vars_from_schema
+  ! ... until pools are activated, the local number of k-points nks
+  ! ... should be equal to the global number nkstot - k-points are replicated
+  !
+  nks = nkstot
+  !
+  ! ... allocate space for arrays to be read in this routine
   !
   ! ... atomic positions, forces, symmetries
   !
@@ -206,9 +158,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! ... here we read all the variables defining the system
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix ! FIXME
   lvalid_input = (TRIM(input_obj%tagname) == "input")
   !
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix ! FIXME
   CALL readschema_ions( output_obj%atomic_structure, output_obj%atomic_species, dirname)
   CALL readschema_planewaves( output_obj%basis_set) 
   CALL readschema_spin( output_obj%magnetization )
@@ -239,6 +191,60 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! END OF READING VARIABLES FROM XML DATA FILE
   !
+  CALL post_xml_init ( )
+  !
+END SUBROUTINE read_xml_file
+!
+!----------------------------------------------------------------------------
+SUBROUTINE post_xml_init (  )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Various initializations needed to start a calculation:
+  ! ... pseudopotentials, G vectors, FFT arrays, rho, potential
+  !
+  USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
+  USE uspp_param,           ONLY : upf
+  USE read_pseudo_mod,      ONLY : readpp
+  USE uspp,                 ONLY : becsum
+  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
+  USE paw_onecenter,        ONLY : paw_potential
+  USE dfunct,               ONLY : newd
+  USE noncollin_module,     ONLY : noncolin
+  USE spin_orb,             ONLY : lspinorb
+  USE funct,                ONLY : get_inlc, get_dft_name
+  USE kernel_table,         ONLY : initialize_kernel_table
+  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
+  USE esm,                  ONLY : do_comp_esm, esm_init
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
+  USE ions_base,            ONLY : nat, nsp, tau, ityp
+  USE recvec_subs,          ONLY : ggen, ggens
+  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
+                                   eigts1, eigts2, eigts3, gstart, gshells
+  USE gvecs,                ONLY : ngms, gcutms 
+  USE fft_rho,              ONLY : rho_g2r
+  USE fft_base,             ONLY : dfftp, dffts
+  USE scf,                  ONLY : rho, rho_core, rhog_core, v
+  USE io_rho_xml,           ONLY : read_scf
+  USE vlocal,               ONLY : strf
+  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : ts_vdw, tqr, tq_smoothing, tbeta_smoothing
+  USE cellmd,               ONLY : cell_factor, lmovecell
+  USE wvfct,                ONLY : nbnd, nbndx, et, wg
+  USE klist,                ONLY : nkstot, nks, xk, wk
+  USE lsda_mod,             ONLY : nspin, isk
+  USE cell_base,            ONLY : at, bg, set_h_ainv
+  USE symm_base,            ONLY : d1, d2, d3, checkallsym
+  USE realus,               ONLY : betapointlist, generate_qpointlist, &
+                                   init_realspace_vars,real_space
+  !
+  IMPLICIT NONE
+  !
+  INTEGER  :: inlc
+  REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
+  CHARACTER(LEN=20) :: dft_name
+  !
   ! ... check on symmetry (FIXME: is this needed?)
   !
   IF (nat > 0) CALL checkallsym( nat, tau, ityp)
@@ -265,6 +271,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   okpaw = ANY ( upf(1:nsp)%tpawp )
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
+  !! average_pp must be called before init_lda_plus_u
   IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
@@ -343,7 +350,17 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   END IF
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
-                 ehart, etxc, vtxc, eth, etotefield, charge, v )
+       ehart, etxc, vtxc, eth, etotefield, charge, v )
+  !
+  ! ... More PAW and pseudopotential initialization
+  ! ... Not sure which ones (if any) should be done here
+  !
+  IF (okpaw) THEN
+     becsum = rho%bec
+     CALL PAW_potential(rho%bec, ddd_PAW)
+  ENDIF 
+  CALL newd()
+  !
   RETURN
   !
   CONTAINS
@@ -406,4 +423,4 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
       !
     END SUBROUTINE set_spin_vars
     !
-  END SUBROUTINE read_xml_file
+  END SUBROUTINE post_xml_init
