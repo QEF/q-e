@@ -40,8 +40,12 @@ SUBROUTINE read_file()
   !
   CALL read_xml_file ( wfc_is_collected )
   !
-  ! ... FIXME: allocating/reading/re-writing KS orbitals should not be done
-  ! ... FIXME: in this routine but in calling code if and how and when needed
+  ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
+  ! ... charge density / potential / ... , but not KS orbitals
+  !
+  CALL post_xml_init ( )
+  !
+  ! ... initialization of KS orbitals
   !
   CALL allocate_wfc()
   !
@@ -59,7 +63,8 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  ! ... FIXME: should not be done here (or not at all)
+  ! ... read wavefunctions in collected format, writes them to file
+  ! ... FIXME: likely not a great idea
   !
   IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
   !
@@ -190,8 +195,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
   !
   ! END OF READING VARIABLES FROM XML DATA FILE
-  !
-  CALL post_xml_init ( )
   !
 END SUBROUTINE read_xml_file
 !
@@ -352,8 +355,7 @@ SUBROUTINE post_xml_init (  )
   CALL v_of_rho( rho, rho_core, rhog_core, &
        ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
-  ! ... More PAW and pseudopotential initialization
-  ! ... Not sure which ones (if any) should be done here
+  ! ... More PAW and USPP initializations
   !
   IF (okpaw) THEN
      becsum = rho%bec
