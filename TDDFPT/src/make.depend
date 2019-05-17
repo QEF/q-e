@@ -15,12 +15,6 @@ compute_intq.o : ../../Modules/kind.o
 compute_intq.o : ../../Modules/noncol.o
 compute_intq.o : ../../Modules/uspp.o
 compute_intq.o : lr_variables.o
-dveqpsi_us_only.o : ../../LR_Modules/lrcom.o
-dveqpsi_us_only.o : ../../Modules/ions_base.o
-dveqpsi_us_only.o : ../../Modules/kind.o
-dveqpsi_us_only.o : ../../Modules/noncol.o
-dveqpsi_us_only.o : ../../Modules/uspp.o
-dveqpsi_us_only.o : ../../PW/src/pwcom.o
 lr_addus_dvpsi.o : ../../LR_Modules/lrcom.o
 lr_addus_dvpsi.o : ../../Modules/ions_base.o
 lr_addus_dvpsi.o : ../../Modules/kind.o

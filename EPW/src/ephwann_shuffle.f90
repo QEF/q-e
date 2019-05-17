@@ -138,16 +138,6 @@
   !! Number of states at the Fermi level
   INTEGER :: lrepmatw
   !! record length while reading file
-  INTEGER :: ikx
-  !! Counter on the coase k-grid
-  INTEGER :: ikfx 
-  !! Counter on the fine k-grid. 
-  INTEGER :: xkk1, xkq1
-  !! Integer of xkk when multiplied by nkf/nk
-  INTEGER :: xkk2, xkq2
-  !! Integer of xkk when multiplied by nkf/nk
-  INTEGER :: xkk3, xkq3
-  !! Integer of xkk when multiplied by nkf/nk
   INTEGER :: ir
   !! Counter for WS loop
   INTEGER :: nrws

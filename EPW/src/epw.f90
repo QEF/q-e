@@ -82,8 +82,6 @@
   !
   CALL epw_readin
   !
-  CALL allocate_epwq
-  !
   IF (epwread .AND. .NOT. epbread) THEN
     WRITE(stdout,'(a)') "                      "
     WRITE(stdout,'(a)') "     ------------------------------------------------------------------------ "

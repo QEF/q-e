@@ -62,7 +62,7 @@ lr_test_restart.o\
 lr_dav_debug.o\
 plugin_tddfpt_potential.o
 
-TLDEPS=phlibs
+TLDEPS=lrmods
 
 all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
 

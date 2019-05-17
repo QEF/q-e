@@ -39,7 +39,7 @@
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl, lindabs, mob_maxiter, use_ws, epbread,  &
+                            specfun_pl, lindabs, mob_maxiter, use_ws,           &
                             epmatkqread, selecqread, restart_freq, nsmear
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
@@ -51,7 +51,7 @@
                             iunepmatwp, crystal, iunepmatwp2, iunrestart
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, wscache,            &
-                            epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,           &
+                            epmatq, wf, etf, etf_ks, xqf, xkf,                  &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
@@ -60,8 +60,7 @@
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
                             a_all, a_all_ph
-  USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
-                            upper_bnd 
+  USE transportcom,  ONLY : transp_temp,  lower_bnd, upper_bnd 
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem  
@@ -140,16 +139,6 @@
   !! Number of states at the Fermi level
   INTEGER :: lrepmatw
   !! record length while reading file
-  INTEGER :: ikx
-  !! Counter on the coase k-grid
-  INTEGER :: ikfx 
-  !! Counter on the fine k-grid. 
-  INTEGER :: xkk1, xkq1
-  !! Integer of xkk when multiplied by nkf/nk
-  INTEGER :: xkk2, xkq2
-  !! Integer of xkk when multiplied by nkf/nk
-  INTEGER :: xkk3, xkq3
-  !! Integer of xkk when multiplied by nkf/nk
   INTEGER :: ir
   !! Counter for WS loop
   INTEGER :: nrws
@@ -172,8 +161,6 @@
   !! Counter on bands when use_ws == .true.
   INTEGER :: iw2
   !! Counter on bands when use_ws == .true.
-  INTEGER :: iter
-  !! Current iteration number
   INTEGER :: itemp
   !! Temperature index
   INTEGER :: icbm
@@ -209,8 +196,6 @@
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw5
   INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw6
   !! Offset to tell where to start reading the file
-  INTEGER (kind=MPI_OFFSET_KIND) :: lsize
-  !! Offset to tell where to start reading the file
 #else
   INTEGER :: ind_tot
   INTEGER :: ind_totcb
@@ -219,7 +204,6 @@
   INTEGER :: lrepmatw5
   INTEGER :: lrepmatw6
   !! Offset to tell where to start reading the file
-  INTEGER :: lsize
 #endif
   !  
   REAL(kind=DP) :: rdotk_scal

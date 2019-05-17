@@ -732,7 +732,7 @@
             ENDIF
          ENDDO
       ENDDO
-      IF ( ALLOCATED(ekf_) ) DEALLOCATE (ekf_)
+      DEALLOCATE (ekf_)
     ENDIF
     ! first node broadcasts everything to all nodes
     CALL mp_bcast( ekfs, ionode_id, inter_pool_comm )

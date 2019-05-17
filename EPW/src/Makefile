@@ -38,7 +38,6 @@ transport_iter.o \
 wigner.o \
 a2f.o \
 adddvscf2.o \
-allocate_epwq.o \
 bcast_epw_input.o \
 bloch2wan.o \
 broyden.o \

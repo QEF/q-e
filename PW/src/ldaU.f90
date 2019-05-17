@@ -56,6 +56,8 @@ CONTAINS
   !
   SUBROUTINE init_lda_plus_u ( psd, noncolin )
     !
+    !! NOTE: average_pp must be called before init_lda_plus_u
+    !
     IMPLICIT NONE
     CHARACTER (LEN=2), INTENT(IN) :: psd(:)
     LOGICAL, INTENT(IN) :: noncolin
