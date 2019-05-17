@@ -11,7 +11,7 @@ SUBROUTINE allocate_wfc()
   !----------------------------------------------------------------------------
   !
   ! ... dynamical allocation of arrays: wavefunctions
-  ! ... must be called after allocate_nlpot 
+  ! ... note: npwx must be either read from file, or computed in allocate_nlpot 
   !
   USE io_global, ONLY : stdout
   USE wvfct,     ONLY : npwx, nbnd
