@@ -22,7 +22,9 @@ SUBROUTINE read_file()
   USE control_flags,        ONLY : io_level
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-  USE klist,                ONLY : init_igk
+  USE klist,                ONLY : init_igk, nkstot, nks, xk, wk
+  USE lsda_mod,             ONLY : isk
+  USE wvfct,                ONLY : nbnd, et, wg
   !
   IMPLICIT NONE 
   INTEGER :: ierr
@@ -40,8 +42,20 @@ SUBROUTINE read_file()
   !
   CALL read_xml_file ( wfc_is_collected )
   !
-  ! ... FIXME: allocating/reading/re-writing KS orbitals should not be done
-  ! ... FIXME: in this routine but in calling code if and how and when needed
+  ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
+  ! ... charge density / potential / ... , but not KS orbitals
+  !
+  CALL post_xml_init ( )
+  !
+  ! ... initialization of KS orbitals
+  !
+  ! ... distribute across pools k-points and related variables.
+  ! ... nks is defined by the following routine as the number 
+  ! ... of k-points in the current pool
+  !
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+  CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
   CALL allocate_wfc()
   !
@@ -59,7 +73,8 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  ! ... FIXME: should not be done here (or not at all)
+  ! ... read wavefunctions in collected format, writes them to file
+  ! ... FIXME: likely not a great idea
   !
   IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
   !
@@ -191,8 +206,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! END OF READING VARIABLES FROM XML DATA FILE
   !
-  CALL post_xml_init ( )
-  !
 END SUBROUTINE read_xml_file
 !
 !----------------------------------------------------------------------------
@@ -232,8 +245,7 @@ SUBROUTINE post_xml_init (  )
   USE control_flags,        ONLY : ts_vdw, tqr, tq_smoothing, tbeta_smoothing
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
-  USE klist,                ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,             ONLY : nspin, isk
+  USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : at, bg, set_h_ainv
   USE symm_base,            ONLY : d1, d2, d3, checkallsym
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
@@ -275,17 +287,9 @@ SUBROUTINE post_xml_init (  )
   IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
   !
   ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
-  ! ... distribute across pools k-points and related variables.
-  ! ... nks is defined by the following routine as the number 
-  ! ... of k-points in the current pool
-  ! ... FIXME: done here because both allocate_nlpot and data_structure
-  ! ...        need k-point to compute gcutw and gkcut respectively
-  !
-  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-  CALL poolscatter( nbnd, nkstot, et, nks, et )
-  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
   CALL pre_init()
+  ! NB: data_structure uses k-points to compute gkcut
   CALL data_structure ( gamma_only )
   CALL allocate_fft()
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
@@ -299,8 +303,7 @@ SUBROUTINE post_xml_init (  )
   ! ... allocate the potential and wavefunctions
   !
   CALL allocate_locpot()
-  !
-  ! FIXME: allocate_nlpot uses k-points to compute npwx and allocate vkb
+  ! NB: allocate_nlpot uses k-points to compute npwx and to allocate vkb
   CALL allocate_nlpot()
   IF (okpaw) THEN
      CALL allocate_paw_internals()
@@ -352,8 +355,7 @@ SUBROUTINE post_xml_init (  )
   CALL v_of_rho( rho, rho_core, rhog_core, &
        ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
-  ! ... More PAW and pseudopotential initialization
-  ! ... Not sure which ones (if any) should be done here
+  ! ... More PAW and USPP initializations
   !
   IF (okpaw) THEN
      becsum = rho%bec
