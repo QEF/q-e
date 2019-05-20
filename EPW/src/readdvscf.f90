@@ -19,12 +19,6 @@
   !! Imported the noncolinear case implemented by xlzhang
   !!
   !-------------------------------------------------------------
-#if defined(__ALPHA)
-#  define DIRECT_IO_FACTOR 2
-#else
-#  define DIRECT_IO_FACTOR 8
-#endif
-  !
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : prefix
   USE units_ph,  ONLY : lrdrho
