@@ -68,8 +68,6 @@ SUBROUTINE memory_report()
   INTEGER :: indm, ijv, roughestimate
   REAL(DP):: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
   !
-  INTEGER, EXTERNAL :: n_plane_waves
-  !
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp

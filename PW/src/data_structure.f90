@@ -42,7 +42,7 @@ SUBROUTINE data_structure( gamma_only )
   !
   IF (nks == 0) THEN
      !
-     ! if k-points are automatically generated (which happens later)
+     ! k-point list not available:
      ! use max(bg)/2 as an estimate of the largest k-point
      !
      gkcut = 0.5d0 * max ( &

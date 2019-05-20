@@ -236,7 +236,7 @@ CONTAINS
   ! check the number of plane per process
   !
   IF ( fc%nr3t < nproc_pool ) &
-    CALL infomsg ('data_structure', 'some processors have no planes ')
+    CALL infomsg ('data_structure_custom', 'some processors have no planes ')
   !
   !  set the total number of G vectors
 
@@ -245,8 +245,8 @@ CONTAINS
      fc%ngmt = ( fc%ngmt + 1 ) / 2 
   ENDIF
 
-  IF ( fc%dfftt%nnp /= ncplane )    &
-     &    CALL errore('data_structure','inconsistent plane dimension on dense grid', abs(fc%dfftt%nnp-ncplane) )
+  IF ( fc%dfftt%nnp /= ncplane )  CALL errore('data_structure_custom', &
+     'inconsistent plane dimension on dense grid', abs(fc%dfftt%nnp-ncplane) )
   
   WRITE( stdout, '(/5x,"Planes per process (custom) : nr3t =", &
        &        i4," nr3p = ",i4," ncplane =",i6)') fc%nr3t, fc%dfftt%my_nr3p , ncplane
@@ -301,8 +301,8 @@ CONTAINS
 
 #endif
 
-  IF( nxx < fc%dfftt%nnr ) &
-     CALL errore( ' data_structure ', ' inconsistent value for nxx ', abs( nxx - fc%dfftt%nnr ) )
+  IF( nxx < fc%dfftt%nnr ) CALL errore( ' data_structure_custom ', &
+          ' inconsistent value for nxx ', abs( nxx - fc%dfftt%nnr ) )
 
   !
   !     compute the global number of g, i.e. the sum over all processors
