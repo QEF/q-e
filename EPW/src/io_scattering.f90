@@ -1094,7 +1094,7 @@
     !! Length of the vector
     INTEGER(kind=8) :: unf_recl
     !! 
-    REAL(KIND=DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND=DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 ), dummy
     !! Vector to store the array 
     CHARACTER (len=256) :: name1 
     ! 
@@ -1110,7 +1110,8 @@
         ltau_all = nstemp * (ibndmax-ibndmin+1) * nktotf +2
         !CALL diropn (iufiltau_all, 'tau_restart', ltau_all, exst)
         ! 
-        unf_recl = DIRECT_IO_FACTOR * int(ltau_all, kind=kind(unf_recl))
+        INQUIRE (IOLENGTH = unf_recl) dummy  
+        unf_recl = unf_recl * int(ltau_all, kind=kind(unf_recl))
         open (unit = iufiltau_all, file = restart_filq, iostat = ios, form ='unformatted', &
          status = 'unknown', access = 'direct', recl = unf_recl)
         !  

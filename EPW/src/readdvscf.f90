@@ -49,6 +49,7 @@
   ! Local variables
   !
   INTEGER :: unf_recl, ios
+  REAL(DP) :: dummy 
   CHARACTER(len=256) :: tempfile
   CHARACTER(len=3) :: filelab
   !! file number
@@ -61,7 +62,8 @@
   !   
   CALL set_ndnmbr(0, iq, 1, nqc, filelab)
   tempfile = trim(dvscf_dir) // trim(prefix) // '.dvscf_q' // filelab
-  unf_recl = DIRECT_IO_FACTOR * lrdrho
+  INQUIRE (IOLENGTH=unf_recl) dummy 
+  unf_recl = unf_recl  * lrdrho
   !unf_recl = iofactor * lrdrho
   !DBSP
   !print*,'iofactor ',iofactor

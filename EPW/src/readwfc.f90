@@ -16,11 +16,6 @@
   ! Imported the noncolinear case implemented by xlzhang
   !
   !-------------------------------------------------------------
-#if defined (__ALPHA)
-#  define DIRECT_IO_FACTOR 2
-# else
-#  define DIRECT_IO_FACTOR 8
-#endif
   !
   USE kinds,    ONLY : DP
   USE io_files, ONLY : prefix, tmp_dir
@@ -43,6 +38,7 @@
   ! Local variables
   !
   INTEGER :: unf_recl, ios
+  REAL(DP) :: dummy 
   CHARACTER(len=256) :: tempfile
   CHARACTER(len=3) :: nd_nmbr0
   ! file number for shuffle
@@ -56,7 +52,8 @@
 # else
   tempfile = trim(tmp_dir) // trim(prefix) // '.wfc'
 #endif
-  unf_recl = DIRECT_IO_FACTOR * lrwfc
+  INQUIRE (IOLENGTH = unf_recl) dummy 
+  unf_recl = unf_recl * lrwfc
   !
   OPEN(iuwfc, file = tempfile, form = 'unformatted', &
        access = 'direct', iostat = ios, recl = unf_recl)
