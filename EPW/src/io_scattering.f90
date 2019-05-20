@@ -1053,12 +1053,6 @@
     SUBROUTINE merge_read(nktotf, nqtotf_new, inv_tau_all_new)
     !----------------------------------------------------------------------------
     !
-#if defined(__SX6)
-#  define DIRECT_IO_FACTOR 1
-#else
-#  define DIRECT_IO_FACTOR 8 
-#endif
-    ! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : ibndmax, ibndmin

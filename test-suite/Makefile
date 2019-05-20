@@ -24,6 +24,7 @@ default :
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
+	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
 	@echo ' clean                       : clean stdout/sderr of all tests'
 	@echo ' '
 	@echo 'For additional advanced commands and settings please manually inspect'
