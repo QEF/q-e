@@ -14,7 +14,7 @@ export REFERENCE_VERSION=6.0
 
 ####################################################################################
 
-# Edit this line _ONLY_ iff you run test-code outside the QE main directory 
+# Edit this line _ONLY_ if you run test-code outside the QE main directory 
 export ESPRESSO_ROOT=${PWD}/../
 
 export ESPRESSO_PSEUDO=${ESPRESSO_ROOT}/pseudo
