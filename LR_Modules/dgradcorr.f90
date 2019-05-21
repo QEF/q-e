@@ -35,14 +35,13 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   COMPLEX(DP), INTENT(INOUT) :: dvxc (dfft%nnr, nspin)
 
   real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
-  real(DP) :: grho2, seg, seg0, amag, sgn(2)
+  real(DP) :: grho2, seg, seg0, amag
   complex(DP) :: s1, fact, term
   complex(DP) :: a (2, 2, 2), b (2, 2, 2, 2), c (2, 2, 2), &
                       ps (2, 2), ps1 (3, 2, 2), ps2 (3, 2, 2, 2)
   complex(DP), allocatable  :: gdrho (:,:,:), h (:,:,:), dh (:)
   complex(DP), allocatable  :: gdmag (:,:,:), dvxcsave(:,:), vgg(:,:)
   complex(DP), allocatable  :: drhoout(:,:)
-  real(DP), allocatable :: rhoout(:,:)
   integer :: k, ipol, jpol, is, js, ks, ls
 
   if (noncolin.and.domag) then
@@ -52,14 +51,11 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      dvxcsave=dvxc
      dvxc=(0.0_dp,0.0_dp)
   endif
-  allocate (rhoout( dfft%nnr, nspin0))
   allocate (drhoout( dfft%nnr, nspin0))
   allocate (gdrho( 3, dfft%nnr, nspin0))
   allocate (h( 3, dfft%nnr, nspin0))
   allocate (dh( dfft%nnr))
   
-  sgn(1)=1.d0  ;   sgn(2)=-1.d0
-
   h (:, :, :) = (0.d0, 0.d0)
   if (noncolin.and.domag) then
      do is = 1, nspin
@@ -68,7 +64,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      DO is=1,nspin0
         IF (is==1) seg0=0.5_dp
         IF (is==2) seg0=-0.5_dp
-        rhoout(:,is) = 0.5_dp*rho(:,1)
         drhoout(:,is) = 0.5_dp*drho(:,1)
         DO ipol=1,3
            gdrho(ipol,:,is) = 0.5_dp*gdmag(ipol,:,1)
@@ -77,7 +72,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
            seg=seg0*segni(k)
            amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
            IF (amag>1.d-12) THEN
-              rhoout(k,is) = rhoout(k,is)+seg*amag
               DO jpol=2,4
                  drhoout(k,is) = drhoout(k,is)+seg*rho(k,jpol)* &
                                                  drho(k,jpol)/amag
@@ -98,14 +92,12 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         END DO
      END DO
   ELSE
+     !
      DO is = 1, nspin0
         CALL fft_qgradient (dfft, drho(1,is), xq, g, gdrho (1, 1, is) )
-        !
-        !  rhoout, if LSDA, is in (up,down) format
-        !
-        rhoout(:,is)=( rho(:,1) + sgn(is)*rho(:,nspin0) )*0.5_dp
         drhoout(:,is)=drho(:,is)
      ENDDO
+     !
   ENDIF
 
   do k = 1, dfft%nnr
@@ -233,7 +225,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   deallocate (dh)
   deallocate (h)
   deallocate (gdrho)
-  deallocate (rhoout)
   deallocate (drhoout)
   if (noncolin.and.domag) then
      deallocate (gdmag)
