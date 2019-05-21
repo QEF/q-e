@@ -35,40 +35,42 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   COMPLEX(DP), INTENT(INOUT) :: dvxc (dfft%nnr, nspin)
 
   real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
-  real(DP) :: grho2, seg, seg0, amag, sgn(2)
+  real(DP) :: grho2, seg, seg0, amag
   complex(DP) :: s1, fact, term
   complex(DP) :: a (2, 2, 2), b (2, 2, 2, 2), c (2, 2, 2), &
                       ps (2, 2), ps1 (3, 2, 2), ps2 (3, 2, 2, 2)
   complex(DP), allocatable  :: gdrho (:,:,:), h (:,:,:), dh (:)
   complex(DP), allocatable  :: gdmag (:,:,:), dvxcsave(:,:), vgg(:,:)
   complex(DP), allocatable  :: drhoout(:,:)
-  real(DP), allocatable :: rhoout(:,:)
-  integer :: k, ipol, jpol, is, js, ks, ls
+  integer :: k, ipol, jpol, is, js, ks, ls, nspin1
 
+  ! Workaround to prevent out-of-bound errors when computing core-correction
+  ! terms in dvqpsi_us - FIXME: case to be clarified
+  IF ( nspin < nspin0 ) THEN
+     nspin1 = nspin
+  ELSE
+     nspin1 = nspin0
+  END IF
   if (noncolin.and.domag) then
      allocate (gdmag(3, dfft%nnr, nspin))
      allocate (dvxcsave(dfft%nnr, nspin))
-     allocate (vgg(dfft%nnr, nspin0))
+     allocate (vgg(dfft%nnr, nspin1))
      dvxcsave=dvxc
      dvxc=(0.0_dp,0.0_dp)
   endif
-  allocate (rhoout( dfft%nnr, nspin0))
-  allocate (drhoout( dfft%nnr, nspin0))
-  allocate (gdrho( 3, dfft%nnr, nspin0))
-  allocate (h( 3, dfft%nnr, nspin0))
+  allocate (drhoout( dfft%nnr, nspin1))
+  allocate (gdrho( 3, dfft%nnr, nspin1))
+  allocate (h( 3, dfft%nnr, nspin1))
   allocate (dh( dfft%nnr))
   
-  sgn(1)=1.d0  ;   sgn(2)=-1.d0
-
   h (:, :, :) = (0.d0, 0.d0)
   if (noncolin.and.domag) then
      do is = 1, nspin
         call fft_qgradient (dfft, drho(1,is), xq, g, gdmag (1, 1, is) )
      enddo
-     DO is=1,nspin0
+     DO is=1,nspin1
         IF (is==1) seg0=0.5_dp
         IF (is==2) seg0=-0.5_dp
-        rhoout(:,is) = 0.5_dp*rho(:,1)
         drhoout(:,is) = 0.5_dp*drho(:,1)
         DO ipol=1,3
            gdrho(ipol,:,is) = 0.5_dp*gdmag(ipol,:,1)
@@ -77,7 +79,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
            seg=seg0*segni(k)
            amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
            IF (amag>1.d-12) THEN
-              rhoout(k,is) = rhoout(k,is)+seg*amag
               DO jpol=2,4
                  drhoout(k,is) = drhoout(k,is)+seg*rho(k,jpol)* &
                                                  drho(k,jpol)/amag
@@ -98,14 +99,12 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         END DO
      END DO
   ELSE
-     DO is = 1, nspin0
+     !
+     DO is = 1, nspin1
         CALL fft_qgradient (dfft, drho(1,is), xq, g, gdrho (1, 1, is) )
-        !
-        !  rhoout, if LSDA, is in (up,down) format
-        !
-        rhoout(:,is)=( rho(:,1) + sgn(is)*rho(:,nspin0) )*0.5_dp
         drhoout(:,is)=drho(:,is)
      ENDDO
+     !
   ENDIF
 
   do k = 1, dfft%nnr
@@ -138,13 +137,13 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
         !    LSDA case
         !
         ps (:,:) = (0.d0, 0.d0)
-        do is = 1, nspin0
-           do js = 1, nspin0
+        do is = 1, nspin1
+           do js = 1, nspin1
               do ipol = 1, 3
                  ps1(ipol, is, js) = drhoout (k, is) * grho (ipol, k, js)
                  ps(is, js) = ps(is, js) + grho(ipol,k,is)*gdrho(ipol,k,js)
               enddo
-              do ks = 1, nspin0
+              do ks = 1, nspin1
                  if (is == js .and. js == ks) then
                     a (is, js, ks) = dvxc_sr (k, is, is)
                     c (is, js, ks) = dvxc_sr (k, is, is)
@@ -163,7 +162,7 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
                  do ipol = 1, 3
                     ps2 (ipol, is, js, ks) = ps (is, js) * grho (ipol, k, ks)
                  enddo
-                 do ls = 1, nspin0
+                 do ls = 1, nspin1
                     if (is == js .and. js == ks .and. ks == ls) then
                        b (is, js, ks, ls) = dvxc_ss (k, is, is)
                     else
@@ -177,20 +176,20 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
               enddo
            enddo
         enddo
-        do is = 1, nspin0
-           do js = 1, nspin0
+        do is = 1, nspin1
+           do js = 1, nspin1
               dvxc (k, is) = dvxc (k, is) + dvxc_rr (k,is,js)*drhoout(k, js)
               do ipol = 1, 3
                  h (ipol, k, is) = h (ipol, k, is) + &
                       dvxc_s (k, is, js) * gdrho(ipol, k, js)
               enddo
-              do ks = 1, nspin0
+              do ks = 1, nspin1
                  dvxc (k, is) = dvxc (k, is) + a (is, js, ks) * ps (js, ks)
                  do ipol = 1, 3
                     h (ipol, k, is) = h (ipol, k, is) + &
                          c (is, js, ks) * ps1 (ipol, js, ks)
                  enddo
-                 do ls = 1, nspin0
+                 do ls = 1, nspin1
                     do ipol = 1, 3
                        h (ipol, k, is) = h (ipol, k, is) + &
                             b (is, js, ks, ls) * ps2 (ipol, js, ks, ls)
@@ -202,14 +201,14 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      endif
   enddo
   ! linear variation of the second term
-  do is = 1, nspin0
+  do is = 1, nspin1
      call fft_qgraddot (dfft, h (1, 1, is), xq, g, dh)
      do k = 1, dfft%nnr
         dvxc (k, is) = dvxc (k, is) - dh (k)
      enddo
   enddo
   IF (noncolin.AND.domag) THEN
-     DO is=1,nspin0
+     DO is=1,nspin1
         vgg(:,is)=dvxc(:,is)
      ENDDO
      dvxc=dvxcsave
@@ -233,7 +232,6 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   deallocate (dh)
   deallocate (h)
   deallocate (gdrho)
-  deallocate (rhoout)
   deallocate (drhoout)
   if (noncolin.and.domag) then
      deallocate (gdmag)
