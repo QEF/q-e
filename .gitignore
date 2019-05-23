@@ -19,6 +19,8 @@ build/
 *.TMP
 *.out
 
+LAPACK
+lapack-3.6.1
 bin/*
 FoX
 iotk
