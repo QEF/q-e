@@ -12,8 +12,12 @@
 *.dvi
 *.toc
 *.aux
-*.x.dSYM
+*_tmp.f90
+*.TMP
+*.out
 
+LAPACK
+lapack-3.6.1
 bin/*
 FoX
 iotk
