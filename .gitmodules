@@ -1,0 +1,3 @@
+[submodule "external/lapack"]
+	path = external/lapack
+	url = https://github.com/Reference-LAPACK/lapack.git
