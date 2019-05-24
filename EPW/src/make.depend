@@ -18,18 +18,6 @@ adddvscf2.o : ../../PW/src/pwcom.o
 adddvscf2.o : constants_epw.o
 adddvscf2.o : elph2.o
 adddvscf2.o : epwcom.o
-allocate_epwq.o : ../../LR_Modules/lrcom.o
-allocate_epwq.o : ../../Modules/becmod.o
-allocate_epwq.o : ../../Modules/fft_base.o
-allocate_epwq.o : ../../Modules/ions_base.o
-allocate_epwq.o : ../../Modules/noncol.o
-allocate_epwq.o : ../../Modules/recvec.o
-allocate_epwq.o : ../../Modules/uspp.o
-allocate_epwq.o : ../../PHonon/PH/phcom.o
-allocate_epwq.o : ../../PW/src/pwcom.o
-allocate_epwq.o : elph2.o
-allocate_epwq.o : epwcom.o
-allocate_epwq.o : transportcom.o
 bcast_epw_input.o : ../../LR_Modules/lrcom.o
 bcast_epw_input.o : ../../Modules/control_flags.o
 bcast_epw_input.o : ../../Modules/io_files.o
@@ -58,7 +46,6 @@ broyden.o : ../../Modules/kind.o
 broyden.o : eliashbergcom.o
 broyden.o : epwcom.o
 close_epw.o : ../../LR_Modules/lrcom.o
-close_epw.o : ../../Modules/becmod.o
 close_epw.o : ../../Modules/io_files.o
 close_epw.o : ../../Modules/kind.o
 close_epw.o : ../../Modules/mp_global.o
@@ -183,6 +170,7 @@ elphon_shuffle.o : ../../UtilXlib/mp.o
 elphon_shuffle.o : constants_epw.o
 elphon_shuffle.o : elph2.o
 elphon_shuffle_wrap.o : ../../LR_Modules/lrcom.o
+elphon_shuffle_wrap.o : ../../Modules/becmod.o
 elphon_shuffle_wrap.o : ../../Modules/cell_base.o
 elphon_shuffle_wrap.o : ../../Modules/control_flags.o
 elphon_shuffle_wrap.o : ../../Modules/fft_base.o
@@ -319,12 +307,10 @@ epw_setup.o : ../../Modules/cell_base.o
 epw_setup.o : ../../Modules/control_flags.o
 epw_setup.o : ../../Modules/fft_base.o
 epw_setup.o : ../../Modules/funct.o
-epw_setup.o : ../../Modules/io_files.o
 epw_setup.o : ../../Modules/io_global.o
 epw_setup.o : ../../Modules/ions_base.o
 epw_setup.o : ../../Modules/kind.o
 epw_setup.o : ../../Modules/mp_global.o
-epw_setup.o : ../../Modules/mp_pools.o
 epw_setup.o : ../../Modules/noncol.o
 epw_setup.o : ../../Modules/recvec.o
 epw_setup.o : ../../Modules/uspp.o
@@ -811,7 +797,6 @@ wan2bloch.o : io_epw.o
 wannierEPW.o : ../../Modules/kind.o
 wannierize.o : ../../Modules/io_files.o
 wannierize.o : ../../Modules/io_global.o
-wannierize.o : ../../Modules/ions_base.o
 wannierize.o : ../../Modules/kind.o
 wannierize.o : ../../Modules/mp_global.o
 wannierize.o : ../../Modules/mp_world.o
