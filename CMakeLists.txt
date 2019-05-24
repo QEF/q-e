@@ -24,6 +24,12 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 ###########################################################
+# External dependencies
+###########################################################
+
+include(external/external.cmake)
+
+###########################################################
 # Build Options
 ###########################################################
 
@@ -97,15 +103,6 @@ if(QE_ENABLE_MPI)
         PROPERTY
             INTERFACE_COMPILE_DEFINITIONS ${mpi_definitions})
 endif(QE_ENABLE_MPI)
-
-###########################################################
-# Mandatory dependencies
-add_library(qe_lapack INTERFACE)
-add_library(QE::LAPACK ALIAS qe_lapack)
-###########################################################
-
-find_package(LAPACK REQUIRED)
-target_link_libraries(qe_lapack INTERFACE ${LAPACK_LIBRARIES})
 
 ###########################################################
 # Utility functions
