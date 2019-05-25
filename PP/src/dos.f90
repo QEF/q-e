@@ -129,8 +129,6 @@ PROGRAM do_dos
         !
         ! info on tetrahedra is no longer saved to file and must be rebuilt
         !
-        ! workaround for old xml file, to be removed
-        IF ( ALLOCATED ( tetra ) ) DEALLOCATE (tetra)
         ! in the lsda case, only the first half of the k points
         ! are needed in the input of "tetrahedra"
         !

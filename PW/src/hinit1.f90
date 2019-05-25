@@ -59,7 +59,7 @@ SUBROUTINE hinit1()
   ! ... define the total local potential (external+scf)
   !
   !
-  ! ... if tereinit_gvecs is true re-set FFT grids
+  ! ... if treinit_gvecs is true re-set FFT grids
   !
         IF (  treinit_gvecs  ) THEN  
 
