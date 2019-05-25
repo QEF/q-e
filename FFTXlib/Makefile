@@ -18,6 +18,9 @@ fft_parallel.o  \
 fft_interfaces.o  \
 fft_interpolate.o \
 stick_base.o  \
+fftw.o  \
+fftw_sp.o  \
+fftw_dp.o  \
 fft_smallbox.o  \
 fft_smallbox_type.o  \
 fft_support.o  \
@@ -38,7 +41,13 @@ libqefft.a: 	$(FFTX)
 fft_scalar.o : fft_scalar.f90  fft_scalar.FFTW3.f90  fft_scalar.FFTW.f90  fft_scalar.SX6.f90 fft_scalar.DFTI.f90  fft_scalar.ESSL.f90
 
 
-fft_stick.o : fft_stick.c fftw.c fftw.h konst.h
+fft_stick.o : fft_stick.c fftw_sp.h fftw_dp.h
+
+fftw.o : fftw.c fftw.h
+
+fftw_sp.o : fftw_sp.c fftw_sp.h fftw.h konst.h
+
+fftw_dp.o : fftw_dp.c fftw_dp.h fftw.h konst.h
 
 TEST : test.o libqefft.a
 	$(LD) $(LDFLAGS) -o fft_test.x test.o libqefft.a $(QELIBS)
