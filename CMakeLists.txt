@@ -29,6 +29,10 @@ endif()
 
 include(external/external.cmake)
 
+# Must use GNUInstallDirs to install libraries into correct
+# locations on all platforms.
+include(GNUInstallDirs)
+
 ###########################################################
 # Build Options
 ###########################################################
@@ -128,6 +132,21 @@ function(add_fortran_library LIB)
     # making LIB_DIR/mod available for libraries linking LIB 
     target_include_directories(${LIB} INTERFACE ${LIB_DIR}/mod)
 endfunction(add_fortran_library)
+
+function(qe_install_target TGT)
+    install(TARGETS ${TGT}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # Windows needs RUNTIME also for libraries
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
+    # If the target generates Fortran modules, make sure
+    # to install them as well to a proper location
+    get_target_property(tgt_mod_dir ${TGT} Fortran_MODULE_DIRECTORY)
+    if(tgt_mod_dir)
+        install(DIRECTORY ${tgt_mod_dir}/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
+    endif()
+endfunction(qe_install_target)
 
 ###########################################################
 # Components
