@@ -18,13 +18,13 @@ set(sources
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 
 add_fortran_library(qe_laxlib ${sources})
-add_library(QE::LAXLib ALIAS qe_laxlib)
+add_library(QE::LAXlib ALIAS qe_laxlib)
 target_link_libraries(qe_laxlib
     PUBLIC
         QE::Features
         QE::MPI_Fortran
         QE::LAPACK
-        QE::UtilXLib)
+        QE::UtilXlib)
 qe_install_target(qe_laxlib)
 
 ###########################################################
@@ -39,6 +39,6 @@ if(QE_ENABLE_TEST)
         PRIVATE
             QE::Features
             QE::MPI_Fortran
-            QE::LAXLib)
+            QE::LAXlib)
     add_test(NAME test-laxlib COMMAND qe_laxlib_test)
 endif(QE_ENABLE_TEST)

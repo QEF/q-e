@@ -154,5 +154,5 @@ endfunction(qe_install_target)
 # Components
 ###########################################################
 
-add_subdirectory(UtilXLib)
-add_subdirectory(LAXLib)
+add_subdirectory(UtilXlib)
+add_subdirectory(LAXlib)

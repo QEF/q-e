@@ -20,7 +20,7 @@ set(sources
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 
 add_fortran_library(qe_utilxlib ${sources})
-add_library(QE::UtilXLib ALIAS qe_utilxlib)
+add_library(QE::UtilXlib ALIAS qe_utilxlib)
 target_link_libraries(qe_utilxlib
     PUBLIC
         QE::Features
