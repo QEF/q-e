@@ -35,6 +35,8 @@ include(external/external.cmake)
 
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
+option(QE_ENABLE_TEST
+    "enable unit tests" ON)
 
 # Each one of the following options boils down to a simple
 # compile definition, no additional dependencies are needed
@@ -103,6 +105,16 @@ if(QE_ENABLE_MPI)
         PROPERTY
             INTERFACE_COMPILE_DEFINITIONS ${mpi_definitions})
 endif(QE_ENABLE_MPI)
+
+###########################################################
+# Tests
+# Any executable target marked as test runner via
+# 'add_test()' will be run by the 'test' make target
+###########################################################
+
+if(QE_ENABLE_TEST)
+    enable_testing()
+endif(QE_ENABLE_TEST)
 
 ###########################################################
 # Utility functions

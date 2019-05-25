@@ -26,12 +26,18 @@ target_link_libraries(qe_laxlib
         QE::LAPACK
         QE::UtilXLib)
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(test.f90 PROPERTIES COMPILE_FLAGS -cpp)
+###########################################################
+# Tests
 # TODO move all tests to a proper location
-add_executable(qe_laxlib_test test.f90)
-target_link_libraries(qe_laxlib_test
-    PRIVATE
-        QE::Features
-        QE::MPI_Fortran
-        QE::LAXLib)
+###########################################################
+if(QE_ENABLE_TEST)
+    # TODO rename all sources *.f90 -> *.F90
+    set_source_files_properties(test.f90 PROPERTIES COMPILE_FLAGS -cpp)
+    add_executable(qe_laxlib_test test.f90)
+    target_link_libraries(qe_laxlib_test
+        PRIVATE
+            QE::Features
+            QE::MPI_Fortran
+            QE::LAXLib)
+    add_test(NAME test-laxlib COMMAND qe_laxlib_test)
+endif(QE_ENABLE_TEST)
