@@ -57,43 +57,43 @@ static int fftw_plan_cnt = 0;
 #define NOTW_CODELET(x)  { x, x, float_fftw_no_twiddle_##x }
 #define NOTWI_CODELET(x)  { x, x, float_fftwi_no_twiddle_##x }
 
-float_notw_codelet float_fftw_no_twiddle_1;
-float_notw_codelet float_fftw_no_twiddle_2;
-float_notw_codelet float_fftw_no_twiddle_3;
-float_notw_codelet float_fftw_no_twiddle_4;
-float_notw_codelet float_fftw_no_twiddle_5;
-float_notw_codelet float_fftw_no_twiddle_6;
-float_notw_codelet float_fftw_no_twiddle_7;
-float_notw_codelet float_fftw_no_twiddle_8;
-float_notw_codelet float_fftw_no_twiddle_9;
-float_notw_codelet float_fftw_no_twiddle_10;
-float_notw_codelet float_fftw_no_twiddle_11;
-float_notw_codelet float_fftw_no_twiddle_12;
-float_notw_codelet float_fftw_no_twiddle_13;
-float_notw_codelet float_fftw_no_twiddle_14;
-float_notw_codelet float_fftw_no_twiddle_15;
-float_notw_codelet float_fftw_no_twiddle_16;
-float_notw_codelet float_fftw_no_twiddle_32;
-float_notw_codelet float_fftw_no_twiddle_64;
+static float_notw_codelet float_fftw_no_twiddle_1;
+static float_notw_codelet float_fftw_no_twiddle_2;
+static float_notw_codelet float_fftw_no_twiddle_3;
+static float_notw_codelet float_fftw_no_twiddle_4;
+static float_notw_codelet float_fftw_no_twiddle_5;
+static float_notw_codelet float_fftw_no_twiddle_6;
+static float_notw_codelet float_fftw_no_twiddle_7;
+static float_notw_codelet float_fftw_no_twiddle_8;
+static float_notw_codelet float_fftw_no_twiddle_9;
+static float_notw_codelet float_fftw_no_twiddle_10;
+static float_notw_codelet float_fftw_no_twiddle_11;
+static float_notw_codelet float_fftw_no_twiddle_12;
+static float_notw_codelet float_fftw_no_twiddle_13;
+static float_notw_codelet float_fftw_no_twiddle_14;
+static float_notw_codelet float_fftw_no_twiddle_15;
+static float_notw_codelet float_fftw_no_twiddle_16;
+static float_notw_codelet float_fftw_no_twiddle_32;
+static float_notw_codelet float_fftw_no_twiddle_64;
 
-float_notw_codelet float_fftwi_no_twiddle_1;
-float_notw_codelet float_fftwi_no_twiddle_2;
-float_notw_codelet float_fftwi_no_twiddle_3;
-float_notw_codelet float_fftwi_no_twiddle_4;
-float_notw_codelet float_fftwi_no_twiddle_5;
-float_notw_codelet float_fftwi_no_twiddle_6;
-float_notw_codelet float_fftwi_no_twiddle_7;
-float_notw_codelet float_fftwi_no_twiddle_8;
-float_notw_codelet float_fftwi_no_twiddle_9;
-float_notw_codelet float_fftwi_no_twiddle_10;
-float_notw_codelet float_fftwi_no_twiddle_11;
-float_notw_codelet float_fftwi_no_twiddle_12;
-float_notw_codelet float_fftwi_no_twiddle_13;
-float_notw_codelet float_fftwi_no_twiddle_14;
-float_notw_codelet float_fftwi_no_twiddle_15;
-float_notw_codelet float_fftwi_no_twiddle_16;
-float_notw_codelet float_fftwi_no_twiddle_32;
-float_notw_codelet float_fftwi_no_twiddle_64;
+static float_notw_codelet float_fftwi_no_twiddle_1;
+static float_notw_codelet float_fftwi_no_twiddle_2;
+static float_notw_codelet float_fftwi_no_twiddle_3;
+static float_notw_codelet float_fftwi_no_twiddle_4;
+static float_notw_codelet float_fftwi_no_twiddle_5;
+static float_notw_codelet float_fftwi_no_twiddle_6;
+static float_notw_codelet float_fftwi_no_twiddle_7;
+static float_notw_codelet float_fftwi_no_twiddle_8;
+static float_notw_codelet float_fftwi_no_twiddle_9;
+static float_notw_codelet float_fftwi_no_twiddle_10;
+static float_notw_codelet float_fftwi_no_twiddle_11;
+static float_notw_codelet float_fftwi_no_twiddle_12;
+static float_notw_codelet float_fftwi_no_twiddle_13;
+static float_notw_codelet float_fftwi_no_twiddle_14;
+static float_notw_codelet float_fftwi_no_twiddle_15;
+static float_notw_codelet float_fftwi_no_twiddle_16;
+static float_notw_codelet float_fftwi_no_twiddle_32;
+static float_notw_codelet float_fftwi_no_twiddle_64;
 
 static float_config_notw fftw_config_notw[] =
 {
@@ -145,31 +145,31 @@ static float_config_notw fftwi_config_notw[] =
 #define TWIDDLE_CODELET(x)  { x, x, float_fftw_twiddle_##x }
 #define TWIDDLEI_CODELET(x)  { x, x, float_fftwi_twiddle_##x }
 
-float_twiddle_codelet float_fftw_twiddle_2;
-float_twiddle_codelet float_fftw_twiddle_3;
-float_twiddle_codelet float_fftw_twiddle_4;
-float_twiddle_codelet float_fftw_twiddle_5;
-float_twiddle_codelet float_fftw_twiddle_6;
-float_twiddle_codelet float_fftw_twiddle_7;
-float_twiddle_codelet float_fftw_twiddle_8;
-float_twiddle_codelet float_fftw_twiddle_9;
-float_twiddle_codelet float_fftw_twiddle_10;
-float_twiddle_codelet float_fftw_twiddle_16;
-float_twiddle_codelet float_fftw_twiddle_32;
-float_twiddle_codelet float_fftw_twiddle_64;
+static float_twiddle_codelet float_fftw_twiddle_2;
+static float_twiddle_codelet float_fftw_twiddle_3;
+static float_twiddle_codelet float_fftw_twiddle_4;
+static float_twiddle_codelet float_fftw_twiddle_5;
+static float_twiddle_codelet float_fftw_twiddle_6;
+static float_twiddle_codelet float_fftw_twiddle_7;
+static float_twiddle_codelet float_fftw_twiddle_8;
+static float_twiddle_codelet float_fftw_twiddle_9;
+static float_twiddle_codelet float_fftw_twiddle_10;
+static float_twiddle_codelet float_fftw_twiddle_16;
+static float_twiddle_codelet float_fftw_twiddle_32;
+static float_twiddle_codelet float_fftw_twiddle_64;
 
-float_twiddle_codelet float_fftwi_twiddle_2;
-float_twiddle_codelet float_fftwi_twiddle_3;
-float_twiddle_codelet float_fftwi_twiddle_4;
-float_twiddle_codelet float_fftwi_twiddle_5;
-float_twiddle_codelet float_fftwi_twiddle_6;
-float_twiddle_codelet float_fftwi_twiddle_7;
-float_twiddle_codelet float_fftwi_twiddle_8;
-float_twiddle_codelet float_fftwi_twiddle_9;
-float_twiddle_codelet float_fftwi_twiddle_10;
-float_twiddle_codelet float_fftwi_twiddle_16;
-float_twiddle_codelet float_fftwi_twiddle_32;
-float_twiddle_codelet float_fftwi_twiddle_64;
+static float_twiddle_codelet float_fftwi_twiddle_2;
+static float_twiddle_codelet float_fftwi_twiddle_3;
+static float_twiddle_codelet float_fftwi_twiddle_4;
+static float_twiddle_codelet float_fftwi_twiddle_5;
+static float_twiddle_codelet float_fftwi_twiddle_6;
+static float_twiddle_codelet float_fftwi_twiddle_7;
+static float_twiddle_codelet float_fftwi_twiddle_8;
+static float_twiddle_codelet float_fftwi_twiddle_9;
+static float_twiddle_codelet float_fftwi_twiddle_10;
+static float_twiddle_codelet float_fftwi_twiddle_16;
+static float_twiddle_codelet float_fftwi_twiddle_32;
+static float_twiddle_codelet float_fftwi_twiddle_64;
 
 static float_config_twiddle fftw_config_twiddle[] =
 {

@@ -53,43 +53,43 @@ static int fftw_twiddle_size = 0;	/* total allocated size, for debugging */
 #define NOTW_CODELET(x)  { x, x, fftw_no_twiddle_##x }
 #define NOTWI_CODELET(x)  { x, x, fftwi_no_twiddle_##x }
 
-notw_codelet fftw_no_twiddle_1;
-notw_codelet fftw_no_twiddle_2;
-notw_codelet fftw_no_twiddle_3;
-notw_codelet fftw_no_twiddle_4;
-notw_codelet fftw_no_twiddle_5;
-notw_codelet fftw_no_twiddle_6;
-notw_codelet fftw_no_twiddle_7;
-notw_codelet fftw_no_twiddle_8;
-notw_codelet fftw_no_twiddle_9;
-notw_codelet fftw_no_twiddle_10;
-notw_codelet fftw_no_twiddle_11;
-notw_codelet fftw_no_twiddle_12;
-notw_codelet fftw_no_twiddle_13;
-notw_codelet fftw_no_twiddle_14;
-notw_codelet fftw_no_twiddle_15;
-notw_codelet fftw_no_twiddle_16;
-notw_codelet fftw_no_twiddle_32;
-notw_codelet fftw_no_twiddle_64;
+static notw_codelet fftw_no_twiddle_1;
+static notw_codelet fftw_no_twiddle_2;
+static notw_codelet fftw_no_twiddle_3;
+static notw_codelet fftw_no_twiddle_4;
+static notw_codelet fftw_no_twiddle_5;
+static notw_codelet fftw_no_twiddle_6;
+static notw_codelet fftw_no_twiddle_7;
+static notw_codelet fftw_no_twiddle_8;
+static notw_codelet fftw_no_twiddle_9;
+static notw_codelet fftw_no_twiddle_10;
+static notw_codelet fftw_no_twiddle_11;
+static notw_codelet fftw_no_twiddle_12;
+static notw_codelet fftw_no_twiddle_13;
+static notw_codelet fftw_no_twiddle_14;
+static notw_codelet fftw_no_twiddle_15;
+static notw_codelet fftw_no_twiddle_16;
+static notw_codelet fftw_no_twiddle_32;
+static notw_codelet fftw_no_twiddle_64;
 
-notw_codelet fftwi_no_twiddle_1;
-notw_codelet fftwi_no_twiddle_2;
-notw_codelet fftwi_no_twiddle_3;
-notw_codelet fftwi_no_twiddle_4;
-notw_codelet fftwi_no_twiddle_5;
-notw_codelet fftwi_no_twiddle_6;
-notw_codelet fftwi_no_twiddle_7;
-notw_codelet fftwi_no_twiddle_8;
-notw_codelet fftwi_no_twiddle_9;
-notw_codelet fftwi_no_twiddle_10;
-notw_codelet fftwi_no_twiddle_11;
-notw_codelet fftwi_no_twiddle_12;
-notw_codelet fftwi_no_twiddle_13;
-notw_codelet fftwi_no_twiddle_14;
-notw_codelet fftwi_no_twiddle_15;
-notw_codelet fftwi_no_twiddle_16;
-notw_codelet fftwi_no_twiddle_32;
-notw_codelet fftwi_no_twiddle_64;
+static notw_codelet fftwi_no_twiddle_1;
+static notw_codelet fftwi_no_twiddle_2;
+static notw_codelet fftwi_no_twiddle_3;
+static notw_codelet fftwi_no_twiddle_4;
+static notw_codelet fftwi_no_twiddle_5;
+static notw_codelet fftwi_no_twiddle_6;
+static notw_codelet fftwi_no_twiddle_7;
+static notw_codelet fftwi_no_twiddle_8;
+static notw_codelet fftwi_no_twiddle_9;
+static notw_codelet fftwi_no_twiddle_10;
+static notw_codelet fftwi_no_twiddle_11;
+static notw_codelet fftwi_no_twiddle_12;
+static notw_codelet fftwi_no_twiddle_13;
+static notw_codelet fftwi_no_twiddle_14;
+static notw_codelet fftwi_no_twiddle_15;
+static notw_codelet fftwi_no_twiddle_16;
+static notw_codelet fftwi_no_twiddle_32;
+static notw_codelet fftwi_no_twiddle_64;
 
 config_notw fftw_config_notw[] =
 {
@@ -141,31 +141,31 @@ config_notw fftwi_config_notw[] =
 #define TWIDDLE_CODELET(x)  { x, x, fftw_twiddle_##x }
 #define TWIDDLEI_CODELET(x)  { x, x, fftwi_twiddle_##x }
 
-twiddle_codelet fftw_twiddle_2;
-twiddle_codelet fftw_twiddle_3;
-twiddle_codelet fftw_twiddle_4;
-twiddle_codelet fftw_twiddle_5;
-twiddle_codelet fftw_twiddle_6;
-twiddle_codelet fftw_twiddle_7;
-twiddle_codelet fftw_twiddle_8;
-twiddle_codelet fftw_twiddle_9;
-twiddle_codelet fftw_twiddle_10;
-twiddle_codelet fftw_twiddle_16;
-twiddle_codelet fftw_twiddle_32;
-twiddle_codelet fftw_twiddle_64;
+static twiddle_codelet fftw_twiddle_2;
+static twiddle_codelet fftw_twiddle_3;
+static twiddle_codelet fftw_twiddle_4;
+static twiddle_codelet fftw_twiddle_5;
+static twiddle_codelet fftw_twiddle_6;
+static twiddle_codelet fftw_twiddle_7;
+static twiddle_codelet fftw_twiddle_8;
+static twiddle_codelet fftw_twiddle_9;
+static twiddle_codelet fftw_twiddle_10;
+static twiddle_codelet fftw_twiddle_16;
+static twiddle_codelet fftw_twiddle_32;
+static twiddle_codelet fftw_twiddle_64;
 
-twiddle_codelet fftwi_twiddle_2;
-twiddle_codelet fftwi_twiddle_3;
-twiddle_codelet fftwi_twiddle_4;
-twiddle_codelet fftwi_twiddle_5;
-twiddle_codelet fftwi_twiddle_6;
-twiddle_codelet fftwi_twiddle_7;
-twiddle_codelet fftwi_twiddle_8;
-twiddle_codelet fftwi_twiddle_9;
-twiddle_codelet fftwi_twiddle_10;
-twiddle_codelet fftwi_twiddle_16;
-twiddle_codelet fftwi_twiddle_32;
-twiddle_codelet fftwi_twiddle_64;
+static twiddle_codelet fftwi_twiddle_2;
+static twiddle_codelet fftwi_twiddle_3;
+static twiddle_codelet fftwi_twiddle_4;
+static twiddle_codelet fftwi_twiddle_5;
+static twiddle_codelet fftwi_twiddle_6;
+static twiddle_codelet fftwi_twiddle_7;
+static twiddle_codelet fftwi_twiddle_8;
+static twiddle_codelet fftwi_twiddle_9;
+static twiddle_codelet fftwi_twiddle_10;
+static twiddle_codelet fftwi_twiddle_16;
+static twiddle_codelet fftwi_twiddle_32;
+static twiddle_codelet fftwi_twiddle_64;
 
 config_twiddle fftw_config_twiddle[] =
 {
