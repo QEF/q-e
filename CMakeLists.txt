@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+# Policy CMP0048: The project() command manages VERSION variables
+set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
     VERSION 6.4.1
