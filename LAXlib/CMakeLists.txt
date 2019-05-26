@@ -21,7 +21,6 @@ add_fortran_library(qe_laxlib ${sources})
 add_library(QE::LAXlib ALIAS qe_laxlib)
 target_link_libraries(qe_laxlib
     PUBLIC
-        QE::Features
         QE::MPI_Fortran
         QE::LAPACK
         QE::UtilXlib)
@@ -37,7 +36,6 @@ if(QE_ENABLE_TEST)
     add_executable(qe_laxlib_test test.f90)
     target_link_libraries(qe_laxlib_test
         PRIVATE
-            QE::Features
             QE::MPI_Fortran
             QE::LAXlib)
     add_test(NAME test-laxlib COMMAND qe_laxlib_test)

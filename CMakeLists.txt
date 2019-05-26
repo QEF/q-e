@@ -44,10 +44,17 @@ option(QE_ENABLE_MPI
 option(QE_ENABLE_TEST
     "enable unit tests" ON)
 
+###########################################################
+# Build Features
 # Each one of the following options boils down to a simple
 # compile definition, no additional dependencies are needed
-#
-# TODO move all feature definitions to a proper config.h
+###########################################################
+# TODO change all ifdefs throughout code base to match
+# cmake options
+# TODO symbols beginning with '__' followed by a capital
+# character are reserved for standard library use (at
+# least in C, not sure about Fortran), change all feature
+# macros to avoid weird behaviors
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_MPI_INPLACE
@@ -55,28 +62,14 @@ option(QE_ENABLE_MPI_INPLACE
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
 
-###########################################################
-# Build Features
-# The following targets will be defined:
-add_library(qe_features INTERFACE)
-add_library(QE::Features ALIAS qe_features)
-###########################################################
-# TODO change all ifdefs throughout code base to match
-# cmake options
 if(QE_ENABLE_TRACE)
-    set_property(TARGET qe_features
-        PROPERTY
-            INTERFACE_COMPILE_DEFINITIONS __TRACE)
+    add_definitions(-D__TRACE)
 endif()
 if(QE_ENABLE_MPI_INPLACE)
-    set_property(TARGET qe_features
-        PROPERTY
-            INTERFACE_COMPILE_DEFINITIONS __USE_INPLACE_MPI)
+    add_definitions(-D__USE_INPLACE_MPI)
 endif()
 if(QE_ENABLE_BARRIER)
-    set_property(TARGET qe_features
-        PROPERTY
-            INTERFACE_COMPILE_DEFINITIONS __USE_BARRIER)
+    add_definitions(-D__USE_BARRIER)
 endif()
 
 ###########################################################

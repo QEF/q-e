@@ -23,6 +23,5 @@ add_fortran_library(qe_utilxlib ${sources})
 add_library(QE::UtilXlib ALIAS qe_utilxlib)
 target_link_libraries(qe_utilxlib
     PUBLIC
-        QE::Features
         QE::MPI_Fortran)
 qe_install_target(qe_utilxlib)
