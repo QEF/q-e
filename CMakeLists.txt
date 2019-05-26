@@ -36,15 +36,6 @@ include(external/external.cmake)
 include(GNUInstallDirs)
 
 ###########################################################
-# Build Options
-###########################################################
-
-option(QE_ENABLE_MPI
-    "enable distributed execution support via MPI" ON)
-option(QE_ENABLE_TEST
-    "enable unit tests" ON)
-
-###########################################################
 # Build Features
 # Each one of the following options boils down to a simple
 # compile definition, no additional dependencies are needed
@@ -59,6 +50,8 @@ option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_MPI_INPLACE
     "enable inplace MPI calls (ignored when QE_ENABLE_MPI=OFF)" OFF)
+option(QE_ENABLE_MPI_MODULE
+    "use MPI via Fortran module instead of mpif.h header inclusion" OFF)
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
 
@@ -68,9 +61,31 @@ endif()
 if(QE_ENABLE_MPI_INPLACE)
     add_definitions(-D__USE_INPLACE_MPI)
 endif()
+if(QE_ENABLE_MPI_MODULE)
+    add_definitions(-D__MPI_MODULE)
+endif()
 if(QE_ENABLE_BARRIER)
     add_definitions(-D__USE_BARRIER)
 endif()
+
+###########################################################
+# Build Options
+###########################################################
+
+option(QE_ENABLE_TEST
+    "enable unit tests" ON)
+option(QE_ENABLE_MPI
+    "enable distributed execution support via MPI" ON)
+
+###########################################################
+# Tests
+# Any executable target marked as test runner via
+# 'add_test()' will be run by the 'test' make target
+###########################################################
+
+if(QE_ENABLE_TEST)
+    enable_testing()
+endif(QE_ENABLE_TEST)
 
 ###########################################################
 # MPI
@@ -104,16 +119,6 @@ if(QE_ENABLE_MPI)
         PROPERTY
             INTERFACE_COMPILE_DEFINITIONS ${mpi_definitions})
 endif(QE_ENABLE_MPI)
-
-###########################################################
-# Tests
-# Any executable target marked as test runner via
-# 'add_test()' will be run by the 'test' make target
-###########################################################
-
-if(QE_ENABLE_TEST)
-    enable_testing()
-endif(QE_ENABLE_TEST)
 
 ###########################################################
 # Utility functions
