@@ -8,6 +8,9 @@ project(qe
     HOMEPAGE_URL "https://www.quantum-espresso.org/"
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization")
 
+# Add our own custom CMake modules
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
 ###########################################################
 # Build Type
 # Ensure that a specific, default build type is set when 
