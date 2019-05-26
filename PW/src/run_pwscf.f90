@@ -35,7 +35,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE cell_base,        ONLY : fix_volume, fix_area
-  USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf
+  USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE command_line_options, ONLY : command_line
   USE force_mod,        ONLY : lforce, lstres, sigma, force
@@ -179,7 +179,8 @@ SUBROUTINE run_pwscf ( exit_status )
         ! ... ionic step (for molecular dynamics or optimization)
         !
         CALL move_ions ( idone, ions_status )
-        conv_ions = ( ions_status == 0 )
+        conv_ions = ( ions_status == 0 ) .OR. &
+                    ( ions_status == 1 .AND. treinit_gvecs )
         !
         ! ... then we save restart information for the new configuration
         !
@@ -215,6 +216,8 @@ SUBROUTINE run_pwscf ( exit_status )
            !
            ! ... final scf calculation with G-vectors for final cell
            !
+           lbfgs=.FALSE.; lmd=.FALSE.
+           WRITE( UNIT = stdout, FMT=9020 ) 
            CALL reset_gvectors ( )
            !
         ELSE IF ( ions_status == 2 ) THEN
@@ -225,17 +228,28 @@ SUBROUTINE run_pwscf ( exit_status )
            !
         ELSE
            !
-           ! ... update the wavefunctions, charge density, potential
-           ! ... update_pot initializes structure factor array as well
-           !
-           CALL update_pot()
-           !
-           ! ... re-initialize atomic position-dependent quantities
-           !
-           CALL hinit1()
+           IF ( treinit_gvecs ) THEN
+              !
+              ! ... prepare for next step with freshly computed G vectors
+              ! ... FIXME: why is the call to update_pot necessary?
+              !
+              CALL update_pot()
+              CALL reset_gvectors ( )
+              !
+           ELSE
+              !
+              ! ... update the wavefunctions, charge density, potential
+              ! ... update_pot initializes structure factor array as well
+              !
+              CALL update_pot()
+              !
+              ! ... re-initialize atomic position-dependent quantities
+              !
+              CALL hinit1()
+              !
+           END IF
            !
         END IF
-        !
         !
      END IF
      ! ... Reset convergence threshold of iterative diagonalization for
@@ -259,6 +273,9 @@ SUBROUTINE run_pwscf ( exit_status )
            & /,5X,'Max number of different atomic species (ntypx) = ',I2,&
            & /,5X,'Max number of k-points (npk) = ',I6,&
            & /,5X,'Max angular momentum in pseudopotentials (lmaxx) = ',i2)
+9020 FORMAT( /,5X,'Final scf calculation at the relaxed structure.', &
+          &  /,5X,'The G-vectors are recalculated for the final unit cell', &
+          &  /,5X,'Results may differ from those at the preceding step.' )
   !
 END SUBROUTINE run_pwscf
 
@@ -270,18 +287,13 @@ SUBROUTINE reset_gvectors ( )
   !! result, using G_vectors and PWs for the starting cell)
   !
   USE io_global,  ONLY : stdout
-  USE cellmd,     ONLY : lmovecell
   USE basis,      ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  USE control_flags, ONLY : lbfgs, lmd
   USE funct,         ONLY : dft_is_hybrid
   USE exx_base,      ONLY : exx_grid_init, exx_mp_init, exx_div_check 
   USE exx,           ONLY : exx_fft_create
   IMPLICIT NONE
-  !
-  WRITE( UNIT = stdout, FMT = 9110 )
-  WRITE( UNIT = stdout, FMT = 9120 )
   !
   ! ... prepare for a new scf, restarted from scratch, not from previous
   ! ... data (dimensions and file lengths will be different in general)
@@ -292,9 +304,6 @@ SUBROUTINE reset_gvectors ( )
   !
   CALL clean_pw( .FALSE. )
   CALL close_files(.TRUE.)
-  lmovecell=.FALSE.
-  lbfgs=.FALSE.
-  lmd=.FALSE.
   if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
   starting_pot='atomic'
   !
@@ -306,10 +315,6 @@ SUBROUTINE reset_gvectors ( )
   CALL init_run()
   IF ( dft_is_hybrid() ) CALL reset_exx() 
 
-  !
-9110 FORMAT( /5X,'A final scf calculation at the relaxed structure.' )
-9120 FORMAT(  5X,'The G-vectors are recalculated for the final unit cell'/ &
-              5X,'Results may differ from those at the preceding step.' )
   !
 END SUBROUTINE reset_gvectors
 
