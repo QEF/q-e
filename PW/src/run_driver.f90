@@ -15,7 +15,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE check_stop,       ONLY : check_stop_init
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm
-  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd
+  USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
+       treinit_gvecs
   USE cellmd,           ONLY : lmovecell
   USE force_mod,        ONLY : lforce, lstres
   USE ions_base,        ONLY : tau
@@ -214,27 +215,31 @@ CONTAINS
     ! ... also extrapolation history must be reset
     ! ... If firststep, it will also be executed (omega_reset equals 0),
     ! ... to make sure we initialize G-vectors using positions from I-PI
-        IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) .AND. (gvec_omega_tol .GE. 0.d0) ) THEN
-           IF (ionode) THEN
-               IF (firststep) THEN
-                   WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
-               ELSE
-                   WRITE(*,*) " @ DRIVER MODE: reinitialize G-vectors "
-               END IF
-           END IF
-           CALL initialize_g_vectors()
-           CALL reset_history_for_extrapolation()
-           !
-        ELSE
-           !
-           ! ... Update only atomic position and potential from the history
-           ! ... if the cell did not change too much
-           !
-           IF (.NOT. firststep) THEN
-               CALL update_pot()
-               CALL hinit1()
-           END IF
-        END IF
+    IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) .AND. (gvec_omega_tol .GE. 0.d0) ) THEN
+       IF (ionode) THEN
+          IF (firststep) THEN
+             WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
+          ELSE
+             WRITE(*,*) " @ DRIVER MODE: reinitialize G-vectors "
+          END IF
+       END IF
+       CALL initialize_g_vectors()
+       CALL reset_history_for_extrapolation()
+       !
+    ELSE
+       !
+       ! ... Update only atomic position and potential from the history
+       ! ... if the cell did not change too much
+       !
+       IF (.NOT. firststep) THEN
+          CALL update_pot()
+          IF ( treinit_gvecs ) THEN
+             CALL reset_gvectors ( )
+          ELSE
+             CALL hinit1()
+          END IF
+       END IF
+    END IF
     firststep = .false.
     !
     ! ... Compute everything
