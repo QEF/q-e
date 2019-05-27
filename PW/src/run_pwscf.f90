@@ -37,6 +37,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE cell_base,        ONLY : fix_volume, fix_area
   USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf, treinit_gvecs
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
+  USE cellmd,           ONLY : lmovecell
   USE command_line_options, ONLY : command_line
   USE force_mod,        ONLY : lforce, lstres, sigma, force
   USE check_stop,       ONLY : check_stop_init, check_stop_now
@@ -231,9 +232,8 @@ SUBROUTINE run_pwscf ( exit_status )
            IF ( treinit_gvecs ) THEN
               !
               ! ... prepare for next step with freshly computed G vectors
-              ! ... FIXME: why is the call to update_pot necessary?
               !
-              CALL update_pot()
+              IF ( lmovecell) CALL scale_h()
               CALL reset_gvectors ( )
               !
            ELSE
@@ -279,63 +279,75 @@ SUBROUTINE run_pwscf ( exit_status )
   !
 END SUBROUTINE run_pwscf
 
+!-------------------------------------------------------------
 SUBROUTINE reset_gvectors ( )
 !-------------------------------------------------------------
-  !! Variable-cell optimization: once convergence is achieved, 
-  !! make a final calculation with G-vectors and plane waves
-  !! calculated for the final cell (may differ from the current
-  !! result, using G_vectors and PWs for the starting cell)
+  !
+  !! Prepare a new scf calculation with newly recomputed grids,
+  !! restarting from scratch, not from available data of previous
+  !! steps (dimensions and file lengths will be different in general)
+  !! Useful as a check of variable-cell optimization: 
+  !! once convergence is achieved, compare the final energy with the
+  !! energy computed with G-vectors and plane waves for the final cell
   !
   USE io_global,  ONLY : stdout
   USE basis,      ONLY : starting_wfc, starting_pot
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  USE funct,         ONLY : dft_is_hybrid
-  USE exx_base,      ONLY : exx_grid_init, exx_mp_init, exx_div_check 
-  USE exx,           ONLY : exx_fft_create
+  USE funct,      ONLY : dft_is_hybrid
+  ! 
   IMPLICIT NONE
-  !
-  ! ... prepare for a new scf, restarted from scratch, not from previous
-  ! ... data (dimensions and file lengths will be different in general)
   !
   ! ... get magnetic moments from previous run before charge is deleted
   !
   CALL reset_starting_magnetization ( )
+  !
+  ! ... clean everything (FIXME: clean only what has to be cleaned)
   !
   CALL clean_pw( .FALSE. )
   CALL close_files(.TRUE.)
   if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
   starting_pot='atomic'
   !
-  ! ... re-set FFT grids
+  ! ... re-set FFT grids and re-compute needed stuff (FIXME: which?)
   !
   dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
   dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-  !
   CALL init_run()
-  IF ( dft_is_hybrid() ) CALL reset_exx() 
-
+  !
+  ! ... re-set and re-initialize EXX-related stuff
+  !
+  IF ( dft_is_hybrid() ) CALL reset_exx ( )
   !
 END SUBROUTINE reset_gvectors
-
-SUBROUTINE reset_exx() 
-   USE exx_base,      ONLY : exx_grid_init, exx_mp_init, exx_div_check, coulomb_fac, coulomb_done 
-   USE exx,           ONLY : exx_fft_initialized, dfftt, exx_fft_create, deallocate_exx 
-   USE exx_band,      ONLY : igk_exx 
-   USE fft_types,     ONLY : fft_type_deallocate 
-   ! 
-   IF (ALLOCATED(coulomb_fac) ) DEALLOCATE (coulomb_fac, coulomb_done) 
-   CALL deallocate_exx
-   IF (ALLOCATED(igk_exx)) DEALLOCATE(igk_exx) 
-   dfftt%nr1=0; dfftt%nr2=0; dfftt%nr3=0 
-   CALL fft_type_deallocate(dfftt) 
-
-   CALL exx_grid_init(REINIT = .TRUE.)
-   CALL exx_mp_init()
-   CALL exx_fft_create()
-   CALL exx_div_check()
+!-------------------------------------------------------------
+SUBROUTINE reset_exx ( )
+!-------------------------------------------------------------
+  USE fft_types,  ONLY : fft_type_deallocate 
+  USE exx_base,   ONLY : exx_grid_init, exx_mp_init, exx_div_check, & 
+                         coulomb_fac, coulomb_done 
+  USE exx,        ONLY : dfftt, exx_fft_create, deallocate_exx 
+  USE exx_band,   ONLY : igk_exx 
+  ! 
+  IMPLICIT NONE
+  !
+  ! ... re-set EXX-related stuff...
+  !
+  IF (ALLOCATED(coulomb_fac) ) DEALLOCATE (coulomb_fac, coulomb_done) 
+  CALL deallocate_exx ( )
+  IF (ALLOCATED(igk_exx)) DEALLOCATE(igk_exx) 
+  dfftt%nr1=0; dfftt%nr2=0; dfftt%nr3=0 
+  CALL fft_type_deallocate(dfftt) ! FIXME: is this needed?
+  !
+  ! ... re-compute needed EXX-related stuff
+  !
+  CALL exx_grid_init(REINIT = .TRUE.)
+  CALL exx_mp_init()
+  CALL exx_fft_create()
+  CALL exx_div_check()
+  !
 END SUBROUTINE reset_exx
-
+     !
 SUBROUTINE reset_magn ( )
 !-------------------------------------------------------------
   !! lsda optimization :  a final configuration with zero 

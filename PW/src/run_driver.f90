@@ -17,11 +17,10 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE mp_images,        ONLY : intra_image_comm
   USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
        treinit_gvecs
-  USE cellmd,           ONLY : lmovecell
   USE force_mod,        ONLY : lforce, lstres
   USE ions_base,        ONLY : tau
   USE cell_base,        ONLY : alat, at, omega, bg
-  USE cellmd,           ONLY : omega_old, at_old, calc
+  USE cellmd,           ONLY : omega_old, at_old, calc, lmovecell
   USE force_mod,        ONLY : force
   USE ener,             ONLY : etot
   USE f90sockets,       ONLY : readbuffer, writebuffer
@@ -232,10 +231,11 @@ CONTAINS
        ! ... if the cell did not change too much
        !
        IF (.NOT. firststep) THEN
-          CALL update_pot()
           IF ( treinit_gvecs ) THEN
+             IF ( lmovecell ) CALL scale_h()
              CALL reset_gvectors ( )
           ELSE
+             CALL update_pot()
              CALL hinit1()
           END IF
        END IF
