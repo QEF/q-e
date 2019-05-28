@@ -1049,15 +1049,13 @@ SUBROUTINE opt_tetra_partialdos(nspin0, kresolveddos,ne,natomwfc,nkseff,&
   &                       dostot(0:ne,nspindos,nkseff)
   !
   INTEGER :: ns, nk, nt, ibnd, itetra(4), ii, ik, ie, nwfc, nspin1
-  REAL(dp) :: etetra(4), e0, e1, e2, e3, e4, wgt(4), G, spindeg, &
+  REAL(dp) :: etetra(4), e0, e1, e2, e3, e4, wgt(4), G, &
   &           f12, f13, f14, f21, f23, f24, f31, f32, f34, f41, f42
   !
   IF(nspin == 2) THEN
      nspin1 = nspin
-     spindeg= 1.0_dp
   ELSE
      nspin1 = 1
-     spindeg= 2.0_dp
   END IF
   !
   DO ns = 1, nspin1
@@ -1193,9 +1191,8 @@ SUBROUTINE opt_tetra_partialdos(nspin0, kresolveddos,ne,natomwfc,nkseff,&
   ENDDO
   !
   pdos(0:ne,1:natomwfc,1:nspin0,1:nkseff) = pdos(0:ne,1:natomwfc,1:nspin0,1:nkseff) &
-      * spindeg / (rytoev * REAL(ntetra,dp))
-  dostot(0:ne,1:nspindos,1:nkseff) = dostot(0:ne,1:nspindos,1:nkseff) &
-      * spindeg / (rytoev * REAL(ntetra,dp))
+  &                                       / (rytoev * REAL(ntetra,dp))
+  dostot(0:ne,1:nspindos,1:nkseff) = dostot(0:ne,1:nspindos,1:nkseff) / (rytoev * REAL(ntetra,dp))
   !
 END SUBROUTINE opt_tetra_partialdos
 !

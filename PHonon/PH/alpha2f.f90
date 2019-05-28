@@ -262,9 +262,8 @@ SUBROUTINE compute_a2F()
   CALL opt_tetra_partialdos(1, kresolveddos, nfreq, nat + 1, 1, &
   &                         0.0_dp, DeltaE, proj, pdos, dos, 1)
   !
-  ! for nspin=1 a factor 2 is added in opt_tetra_partialdos 
-  dos( 0:nfreq         ) = dos( 0:nfreq         ) * rytoev / 2.0_dp
-  pdos(0:nfreq, 1:nat+1) = pdos(0:nfreq, 1:nat+1) * rytoev / 2.0_dp
+  dos( 0:nfreq         ) = dos( 0:nfreq         ) * rytoev
+  pdos(0:nfreq, 1:nat+1) = pdos(0:nfreq, 1:nat+1) * rytoev
   !
   ! .. Write a2F, dos, pdos two a file
   !
