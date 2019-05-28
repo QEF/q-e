@@ -78,9 +78,10 @@ SUBROUTINE print_clock_lr()
     CALL print_clock( 'addusdbec_nc' )
     CALL print_clock( 'lr_addusddens' )
     CALL print_clock( 'lr_addus_dvpsi' )
+    CALL print_clock( 'lr_compute_intq' )
    ENDIF
    CALL print_clock( 'lr_sm1_initialize' )
-   CALL print_clock( 'lr_sm1_psi_tpw' )
+   CALL print_clock( 'lr_sm1_psi' )
    !
    IF (real_space) THEN
     WRITE( stdout, '(5X,"US routines, RS")' )
