@@ -62,7 +62,7 @@ SUBROUTINE lr_solve_e
      IF (okvan) THEN
         ALLOCATE (intq (nhm, nhm, nat))
         IF (noncolin) ALLOCATE(intq_nc( nhm, nhm, nat, nspin))
-        CALL compute_intq()
+        CALL lr_compute_intq()
      ENDIF
      !
      DO ik = 1, nksq

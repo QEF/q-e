@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE lr_sm1_psi_tpw (ik, lda, n, m, psi, spsi)
+SUBROUTINE lr_sm1_psi (ik, lda, n, m, psi, spsi)
   !----------------------------------------------------------------------------
   !
   ! This subroutine applies the S^{-1} matrix to m wavefunctions psi
@@ -43,7 +43,7 @@ SUBROUTINE lr_sm1_psi_tpw (ik, lda, n, m, psi, spsi)
   COMPLEX(DP), INTENT(in)  :: psi(lda*npol,m)
   COMPLEX(DP), INTENT(out) :: spsi(lda*npol,m)
   !
-  CALL start_clock( 'lr_sm1_psi_tpw' )
+  CALL start_clock( 'lr_sm1_psi' )
   !
   IF ( gamma_only ) THEN
      CALL sm1_psi_gamma()
@@ -53,7 +53,7 @@ SUBROUTINE lr_sm1_psi_tpw (ik, lda, n, m, psi, spsi)
      CALL sm1_psi_k()
   ENDIF
   !
-  CALL stop_clock( 'lr_sm1_psi_tpw' )
+  CALL stop_clock( 'lr_sm1_psi' )
   !
   RETURN
   !
@@ -264,7 +264,7 @@ SUBROUTINE sm1_psi_nc()
     !
 END SUBROUTINE sm1_psi_nc
 
-END SUBROUTINE lr_sm1_psi_tpw
+END SUBROUTINE lr_sm1_psi
 
 SUBROUTINE lr_sm1_initialize()
 !
@@ -302,7 +302,6 @@ CALL start_clock( 'lr_sm1_initialize' )
 IF (gamma_only) THEN
    bbg = 0.0d0
    ALLOCATE(psr(nkb,nkb))
-   psr(:,:) = (0.d0,0.d0)
 ELSE
    IF (noncolin) THEN
       ALLOCATE(bbnc_aux(nkb,nkb))
@@ -311,7 +310,6 @@ ELSE
       bbk = (0.0d0,0.0d0)
    ENDIF
    ALLOCATE(ps(nkb*npol,nkb*npol))
-   ps(:,:) = (0.d0,0.d0)
 ENDIF
 
 DO ik1 = 1, nksq
@@ -320,6 +318,17 @@ DO ik1 = 1, nksq
    ikq  = ikqs(ik1)
    npw  = ngk(ikk)
    npwq = ngk(ikq)
+   !
+   ! The array ps must be nullified inside the loop over k points.
+   ! The array psr can be nullified also outside the loop (since
+   ! there is only one k point), but let us keep it here for 
+   ! consistency.
+   !
+   IF (gamma_only) THEN 
+      psr(:,:) = (0.d0,0.d0)
+   ELSE
+      ps(:,:) = (0.d0,0.d0)
+   ENDIF
    !
    ! Calculate beta-functions vkb for a given k+q point.
    !

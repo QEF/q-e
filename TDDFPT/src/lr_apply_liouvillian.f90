@@ -295,7 +295,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ! interaction=.true.:  S^{-1} P_c^+(k) { (H(k)-E(k)*S) * evc1(k) + dV_HXC * revc0(k) } 
   !
   DO ik = 1, nks
-     CALL lr_sm1_psi_tpw (ik, npwx, ngk(ik), nbnd, &
+     CALL lr_sm1_psi(ik, npwx, ngk(ik), nbnd, &
                        & sevc1_new(1,1,ik), evc1_new(1,1,ik))
   ENDDO
   !

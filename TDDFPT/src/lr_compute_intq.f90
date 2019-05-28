@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE compute_intq
+SUBROUTINE lr_compute_intq
   !----------------------------------------------------------------------
   !
   !     This routine computes the contribution of the selfconsistent
@@ -38,7 +38,7 @@ SUBROUTINE compute_intq
   REAL(DP)    :: qmod(1), zero(3,1), qg(3,1)
 
   IF (.NOT.okvan) RETURN
-  CALL start_clock ('compute_intq')
+  CALL start_clock ('lr_compute_intq')
 
   intq (:,:,:) = (0.D0, 0.0D0)
   ALLOCATE (ylmk0(1 , lmaxq * lmaxq))
@@ -78,10 +78,10 @@ SUBROUTINE compute_intq
      ENDIF
   ENDDO
 
-  IF (noncolin) CALL set_intq_nc()
+  IF (noncolin) CALL lr_set_intq_nc()
 
   DEALLOCATE (ylmk0)
 
-  CALL stop_clock ('compute_intq')
+  CALL stop_clock ('lr_compute_intq')
   RETURN
-END SUBROUTINE compute_intq
+END SUBROUTINE lr_compute_intq

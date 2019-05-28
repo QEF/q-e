@@ -140,7 +140,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      dpsi(:,:) = (0.0d0, 0.0d0)
      !
      CALL lr_sm1_initialize()
-     CALL lr_sm1_psi_tpw (ik, npwx, npwq, nbnd_occ(ikk), dvpsi1, dpsi)
+     CALL lr_sm1_psi(ik, npwx, npwq, nbnd_occ(ikk), dvpsi1, dpsi)
      !
      dvpsi1 = dpsi
      !
