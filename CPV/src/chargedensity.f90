@@ -505,7 +505,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE uspp_param,               ONLY: nhm, nh, nvb
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,            ONLY: ngb
-      USE smallbox_subs,            ONLY: fft_oned2box
+      USE smallbox_subs,            ONLY: fft_oned2box, box2grid
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb, dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
@@ -671,8 +671,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                      !
                      !  add qv(r) to v(r), in real space on the dense grid
                      !
-                     CALL box2grid( irb(1,isa), 1, qv, v )
-                     IF (nfft.EQ.2) CALL box2grid(irb(1,isa+1),2,qv,v)
+                     CALL box2grid( irb(:,isa), 1, qv, v )
+                     IF (nfft.EQ.2) CALL box2grid(irb(:,isa+1),2,qv,v)
 
                      isa = isa + nfft
 !
@@ -751,7 +751,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                      !
                      !  add qv(r) to v(r), in real space on the dense grid
                      !
-                     CALL box2grid2(irb(1,isa),qv,v)
+                     CALL box2grid(irb(:,isa),qv,v)
                      !
   25                 isa = isa + 1
                      !
@@ -799,7 +799,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE uspp,                     ONLY: deeq
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,            ONLY: ngb
-      USE smallbox_subs,            ONLY: fft_oned2box
+      USE smallbox_subs,            ONLY: fft_oned2box, box2grid
       USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
       USE control_flags,            ONLY: iprint, iverbosity, tpre
@@ -958,8 +958,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                !
                !  add qv(r) to v(r), in real space on the dense grid
                !
-               CALL  box2grid(irb(1,isa),1,qv,v)
-               IF (nfft.EQ.2) CALL  box2grid(irb(1,isa+1),2,qv,v)
+               CALL  box2grid(irb(:,isa),1,qv,v)
+               IF (nfft.EQ.2) CALL  box2grid(irb(:,isa+1),2,qv,v)
 
                isa = isa + nfft
 !
@@ -1065,7 +1065,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !
 !  add qv(r) to v(r), in real space on the dense grid
 !
-               CALL box2grid2(irb(1,isa),qv,v)
+               CALL box2grid(irb(:,isa),qv,v)
   25           isa=isa+1
 !
             END DO
