@@ -435,9 +435,6 @@ exx_vofr.o : ../../Modules/kind.o
 exx_vofr.o : ../../Modules/mp_global.o
 exx_vofr.o : ../../UtilXlib/parallel_include.o
 exx_vofr.o : exx_module.o
-fft.o : ../../Modules/fft_base.o
-fft.o : ../../Modules/kind.o
-fft.o : ../../Modules/mp_global.o
 forces.o : ../../FFTXlib/fft_helper_subroutines.o
 forces.o : ../../FFTXlib/fft_interfaces.o
 forces.o : ../../Modules/cell_base.o
