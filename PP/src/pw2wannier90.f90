@@ -1669,7 +1669,6 @@ SUBROUTINE compute_dmn
    !
    !
    IF(any_uspp) THEN
-      CALL init_us_1
       CALL allocate_bec_type ( nkb, nbnd, becp )
       IF (gamma_only) THEN
          call errore("compute_dmn", "gamma-only mode not implemented", 1)
@@ -2014,7 +2013,6 @@ SUBROUTINE compute_mmn
    !
    !
    IF(any_uspp) THEN
-      CALL init_us_1
       CALL allocate_bec_type ( nkb, nbnd, becp )
       IF (gamma_only) THEN
          ALLOCATE ( rbecp2(nkb,nbnd))
@@ -2388,7 +2386,6 @@ SUBROUTINE compute_spin
    any_uspp = any(upf(1:ntyp)%tvanp)
 
    if (any_uspp) then
-      CALL init_us_1
       CALL allocate_bec_type ( nkb, nbnd, becp )
       ALLOCATE(be_n(nhm,2))
       ALLOCATE(be_m(nhm,2))
@@ -3059,7 +3056,6 @@ SUBROUTINE compute_amn
    !
    IF (any_uspp) THEN
       CALL allocate_bec_type ( nkb, n_wannier, becp)
-      CALL init_us_1
    ENDIF
    !
 
