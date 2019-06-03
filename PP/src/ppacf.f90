@@ -274,7 +274,7 @@ PROGRAM do_ppacf
      !
      rhoout (:,1) = (rho_core(:)  + rho%of_r(:,1) + rho%of_r(:,2) )/2.0_dp
      rhoout (:,2) = (rho_core(:)  + rho%of_r(:,1) - rho%of_r(:,2) )/2.0_dp
-     rhogsum(:,1) = (rhog_core(:) + rho%of_g(:,1) + rho%of_g(:,1) )/2.0_dp
+     rhogsum(:,1) = (rhog_core(:) + rho%of_g(:,1) + rho%of_g(:,2) )/2.0_dp
      rhogsum(:,2) = (rhog_core(:) + rho%of_g(:,1) - rho%of_g(:,2) )/2.0_dp
      !
   END IF
