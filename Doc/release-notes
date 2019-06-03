@@ -22,6 +22,10 @@ Problems fixed in development branch :
     they were not broadcasted.
 
 Incompatible changes in development branch :
+  * Initialization has been reorganized, so some initialization routines
+    do not perform exactly the same operations as before - should have no
+    consequences for codes calling "read_file" to start the calculation,
+    but codes separately calling initialization routines may be affected
   * fractional translations "ftau" in FFT grid units no longer existing as
     global variables: replaced by "ft", in crystal axis, computed locally
     where needed (in real-space symmetrization only)
