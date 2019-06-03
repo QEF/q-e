@@ -8,11 +8,11 @@
 !
 !---------------------------------------------------------------------
 
-PROGRAM upf2casino
+PROGRAM extract_core
   !---------------------------------------------------------------------
   !
-  !     Convert a pseudopotential written in UPF
-  !     format to CASINO tabulated format
+  ! extract core wavefunctions from GIPAW section of UPF file
+  ! and save them to text files
 
   USE emend_upf_module, ONLY: make_emended_upf_copy
   USE wrappers, ONLY: f_remove
@@ -55,12 +55,6 @@ PROGRAM upf2casino
       END IF
  
       IF(upf_in%has_gipaw) THEN 
-!     LOGICAL  :: paw_as_gipaw        !EMINE
-!     INTEGER  :: gipaw_data_format   ! The version of the format
-!     INTEGER  :: gipaw_ncore_orbitals
-!     REAL(DP), POINTER :: gipaw_core_orbital_n(:)
-!     REAL(DP), POINTER :: gipaw_core_orbital_l(:)
-!     CHARACTER(LEN=2), POINTER :: gipaw_core_orbital_el(:)
          DO j =1, upf_in%gipaw_ncore_orbitals
            OPEN(unit=999, file=TRIM(fileout)//TRIM(upf_in%gipaw_core_orbital_el(j))//".out")
            WRITE(stdout,"('writing: ',a)") TRIM(fileout)//TRIM(upf_in%gipaw_core_orbital_el(j))//".out"
@@ -77,4 +71,4 @@ PROGRAM upf2casino
       CALL deallocate_pseudo_upf(upf_in)
    END IF
 
-END PROGRAM upf2casino
+END PROGRAM extract_core
