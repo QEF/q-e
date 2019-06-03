@@ -354,7 +354,7 @@ CONTAINS
 
 !*apsi*    CALL test_symmetries ( s, nsym )
 
-    ! initialize pseudopotentials
+    ! initialize pseudopotentials - FIXME: called by read_file, is this needed?
     call init_us_1
 
     ! initialise data, also for the case that no GIPAW is present

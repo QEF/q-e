@@ -130,9 +130,6 @@ SUBROUTINE plot_wannier(nc,n0)
   ALLOCATE(psic_sum(nc(1)*dffts%nr1x,nc(2)*dffts%nr2x,nc(3)*dffts%nr3x,nspin))
   ALLOCATE(rho(nc(1)*dffts%nr1x,nc(2)*dffts%nr2x,nc(3)*dffts%nr3x,nspin))
 
-  CALL init_us_1
-  CALL init_at_1
-
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
        strf, eigts1, eigts2, eigts3)
 

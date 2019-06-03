@@ -174,7 +174,7 @@
       USE kinds,             ONLY: DP
       use electrons_base,    only: nspin
       use smallbox_gvec,     only: gxb, ngb
-      use smallbox_subs,     only: fft_oned2box
+      use smallbox_subs,     only: fft_oned2box, boxdotgrid
       use cell_base,         only: omega
       use ions_base,         only: nsp, na, nat
       use small_box,         only: tpibab
@@ -194,11 +194,10 @@
       real(dp), intent(inout):: fion1(3,nat)
 ! local
       integer :: iss, ix, ig, is, ia, nfft, isa
-      real(dp) :: fac, res, boxdotgrid
+      real(dp) :: fac, res
       complex(dp) ci, facg
       complex(dp), allocatable :: qv(:), fg1(:), fg2(:)
       real(dp), allocatable :: fcc(:,:)
-      external  boxdotgrid
 
 #if defined(_OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
@@ -282,10 +281,10 @@
                ! note that a factor 1/2 is hidden in fac if nspin=2
                !
                do iss=1,nspin
-                  res = boxdotgrid(irb(1,ia  +isa),1,qv,vxc(1,iss))
+                  res = boxdotgrid(irb(:,ia  +isa),1,qv,vxc(:,iss))
                   fcc(ix,ia+isa) = fcc(ix,ia+isa) + fac * res
                   if (nfft.eq.2) then
-                     res = boxdotgrid(irb(1,ia+1+isa),2,qv,vxc(1,iss))
+                     res = boxdotgrid(irb(:,ia+1+isa),2,qv,vxc(:,iss))
                      fcc(ix,ia+1+isa) = fcc(ix,ia+1+isa) + fac * res 
                   end if
                end do
@@ -328,7 +327,7 @@
       use ions_base,         only: nsp, na, nat
       use uspp_param,        only: upf
       use smallbox_gvec,     only: ngb
-      use smallbox_subs,     only: fft_oned2box
+      use smallbox_subs,     only: fft_oned2box, box2grid
       use control_flags,     only: iprint
       use core,              only: rhocb
       use fft_interfaces,    only: invfft
@@ -414,8 +413,8 @@
 !
             call invfft( qv, dfftb, isa+ia )
 !
-            call box2grid(irb(1,ia+isa),1,qv,wrk1)
-            if (nfft.eq.2) call box2grid(irb(1,ia+1+isa),2,qv,wrk1)
+            call box2grid(irb(:,ia+isa),1,qv,wrk1)
+            if (nfft.eq.2) call box2grid(irb(:,ia+1+isa),2,qv,wrk1)
 !
          end do
          isa = isa + na(is)
