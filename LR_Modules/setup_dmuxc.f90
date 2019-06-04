@@ -17,7 +17,7 @@ SUBROUTINE setup_dmuxc
   USE scf,              ONLY : rho, rho_core
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : init_lda_xc
+  USE funct,            ONLY : init_xc
   !
   IMPLICIT NONE
   !
@@ -37,7 +37,7 @@ SUBROUTINE setup_dmuxc
   !
   dmuxc(:,:,:) = 0.d0
   !
-  CALL init_lda_xc()
+  CALL init_xc( 'LDA' )
   !
   IF ( lsda ) THEN
      !

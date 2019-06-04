@@ -51,7 +51,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
 #if defined(__LIBXC)
   !
-  IF (libxc_switches(1)==1 .AND. libxc_switches(2)==1) THEN
+  IF (libxc_switches_lda(1)==1 .AND. libxc_switches_lda(2)==1) THEN
     !
     length_lxc = length*sr_d
     !
@@ -74,16 +74,12 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
       !
     CASE( 4 )
       !
-      ! ... libxc version not available for non-collinear case with domag...
-      !
-      ! 
-      CALL dmxc_nc( length, rho_in(:,1), rho_in(:,2:4), dmuxc )  !da sistemare riconversione indici in qe da libxc
-      !
-      RETURN
+      CALL errore( 'dmxc', 'The derivative of the xc potential with libxc &
+                           &is not available for noncollinear case', 1 )
       !
     CASE DEFAULT
       !
-      CALL errore( 'dmxc', 'Wrong number of spin dimensions', 1 )
+      CALL errore( 'dmxc', 'Wrong number of spin dimensions', 2 )
       !
     END SELECT
     !
@@ -120,15 +116,15 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     DEALLOCATE( dmex_lxc, dmcr_lxc, dmxc_lxc )
     DEALLOCATE( rho_lxc )
     !
-  ELSEIF (libxc_switches(1)==0 .AND. libxc_switches(2)==0 ) THEN
+  ELSEIF (libxc_switches_lda(1)==0 .AND. libxc_switches_lda(2)==0 ) THEN
     !
     IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
     !
   ELSE
     !
-    CALL errore( 'dmxc', 'Derivative of exchange and correlation terms &
-                        & must be both qe or both libxc.', 3 )
+    CALL errore( 'dmxc', 'Derivatives of exchange and correlation terms, &
+                        & at present, must be both qe or both libxc.', 3 )
     !
   ENDIF
   !
@@ -149,7 +145,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
      !
   CASE DEFAULT
      !
-     CALL errore( 'xc_LDA', 'Wrong ns input', 2 )
+     CALL errore( 'xc_LDA', 'Wrong ns input', 4 )
      !
   END SELECT
   !
@@ -161,7 +157,6 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
 END SUBROUTINE
 !
 !
-!
 !-----------------------------------------------------------------------
 SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !---------------------------------------------------------------------
@@ -169,7 +164,6 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !! local density.
   !
   USE xc_lda_lsda,  ONLY: xc_lda, iexch_l, icorr_l
-  USE funct,        ONLY: init_lda_xc
   USE kinds,        ONLY: DP
   !
   IMPLICIT NONE
@@ -272,7 +266,6 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density in the spin-polarized case.
   !
-  USE funct,          ONLY: init_lda_xc
   USE kinds,          ONLY: DP
   USE xc_lda_lsda,    ONLY: xc_lsda, iexch_l, icorr_l
   !
@@ -453,7 +446,6 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !! local density and magnetization in the non-collinear case.
   !
   USE xc_lda_lsda,  ONLY: xc_lsda
-  USE funct,        ONLY: init_lda_xc
   USE kinds,        ONLY: DP
   !
   IMPLICIT NONE
