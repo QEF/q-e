@@ -13,6 +13,14 @@ cpmd2upf.o : ../Modules/io_global.o
 cpmd2upf.o : ../Modules/mp_global.o
 cpmd2upf.o : ../Modules/pseudo_types.o
 cpmd2upf.o : ../Modules/write_upf.o
+extract_core.o : ../Modules/emend_upf.o
+extract_core.o : ../Modules/environment.o
+extract_core.o : ../Modules/io_global.o
+extract_core.o : ../Modules/mp_global.o
+extract_core.o : ../Modules/pseudo_types.o
+extract_core.o : ../Modules/radial_grids.o
+extract_core.o : ../Modules/upf.o
+extract_core.o : ../Modules/wrappers.o
 fhi2upf.o : ../Modules/constants.o
 fhi2upf.o : ../Modules/environment.o
 fhi2upf.o : ../Modules/io_global.o
