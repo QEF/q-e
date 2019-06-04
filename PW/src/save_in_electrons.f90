@@ -13,6 +13,7 @@ SUBROUTINE save_in_electrons (iter, dr2, ethr, et)
   USE io_files,      ONLY: iunres, seqopn
   USE klist,         ONLY: nks
   USE wvfct,         ONLY: nbnd
+  USE control_flags, ONLY: n_scf_steps, scf_error 
   !
   IMPLICIT NONE
   !
@@ -21,6 +22,8 @@ SUBROUTINE save_in_electrons (iter, dr2, ethr, et)
   !
   LOGICAL :: exst
   !
+  n_scf_steps = iter 
+  scf_error = dr2
   WRITE(stdout,'(5x,"Calculation stopped in scf loop at iteration #",i6)') iter
   CALL seqopn (iunres, 'restart_scf', 'formatted', exst)
   WRITE (iunres, *) iter, dr2, ethr

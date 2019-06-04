@@ -774,8 +774,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
-!  these values are assigned to global variables  because these information are needed for XML  printout 
-!  P.D. 
+ 
      IF ( conv_elec ) THEN 
            scf_error = dr2
            n_scf_steps = iter
@@ -897,6 +896,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
 #endif
      !
   END DO
+  n_scf_steps = iter
+  scf_error = dr2
   !
   WRITE( stdout, 9101 )
   WRITE( stdout, 9120 ) iter
