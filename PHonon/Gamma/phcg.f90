@@ -421,7 +421,7 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE funct,     ONLY : init_lda_xc
+  USE funct,     ONLY : init_xc
   USE cgcom
   !
   IMPLICIT NONE
@@ -434,7 +434,7 @@ SUBROUTINE cg_neweps
   !
   !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  CALL init_lda_xc()
+  CALL init_xc( 'LDA' )
   !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
   !

@@ -18,13 +18,13 @@ SAVE
 !  LDA and LSDA exchange-correlation drivers
 PUBLIC :: xc, xc_lda, xc_lsda, select_lda_functionals
 !
-PUBLIC :: libxc_switches
+PUBLIC :: libxc_switches_lda
 PUBLIC :: iexch_l, icorr_l
 PUBLIC :: exx_started_l, exx_fraction_l
 PUBLIC :: is_there_finite_size_corr, finite_size_cell_volume_l
 !
 !  use qe or libxc for the different terms (0: qe, 1: libxc)
-INTEGER :: libxc_switches(2)
+INTEGER :: libxc_switches_lda(2)
 !
 !  indexes defining xc functionals
 INTEGER  :: iexch_l, icorr_l
@@ -124,7 +124,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
 #if defined(__LIBXC)
   !
-  IF (SUM(libxc_switches) /= 0) THEN
+  IF (SUM(libxc_switches_lda) /= 0) THEN
     !
     ALLOCATE( rho_lxc(length*sv_d) )
     ALLOCATE( vx_lxc(length*sv_d), vc_lxc(length*sv_d) )
@@ -160,21 +160,21 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   !
   ! ... EXCHANGE
-  IF ( libxc_switches(1)==1 ) THEN
+  IF ( libxc_switches_lda(1)==1 ) THEN
      CALL xc_f90_func_init( xc_func, xc_info1, iexch_l, sv_d )
        CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ex_out(1), vx_lxc(1) )
      CALL xc_f90_func_end( xc_func )
   ENDIF
   !
   ! ... CORRELATION
-  IF ( libxc_switches(2)==1 ) THEN
+  IF ( libxc_switches_lda(2)==1 ) THEN
      CALL xc_f90_func_init( xc_func, xc_info2, icorr_l, sv_d )
       CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ec_out(1), vc_lxc(1) )
      CALL xc_f90_func_end( xc_func )
   ENDIF
   !
   !
-  IF ( (libxc_switches(1)==0) .OR. (libxc_switches(2)==0) ) THEN
+  IF ( (libxc_switches_lda(1)==0) .OR. (libxc_switches_lda(2)==0) ) THEN
      !
      SELECT CASE( sr_d )
      CASE( 1 )
@@ -209,16 +209,16 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !  ... fill output arrays
   !  
   IF (sv_d == 1) THEN
-     IF (libxc_switches(1)==1) vx_out(:,1) = vx_lxc(:)
-     IF (libxc_switches(2)==1) vc_out(:,1) = vc_lxc(:)
+     IF (libxc_switches_lda(1)==1) vx_out(:,1) = vx_lxc(:)
+     IF (libxc_switches_lda(2)==1) vc_out(:,1) = vc_lxc(:)
   ELSE
-     IF (libxc_switches(1)==1) THEN
+     IF (libxc_switches_lda(1)==1) THEN
         DO ir = 1, length
            vx_out(ir,1) = vx_lxc(2*ir-1)
            vx_out(ir,2) = vx_lxc(2*ir)
         ENDDO
      ENDIF
-     IF (libxc_switches(2)==1) THEN
+     IF (libxc_switches_lda(2)==1) THEN
         DO ir = 1, length
            vc_out(ir,1) = vc_lxc(2*ir-1)
            vc_out(ir,2) = vc_lxc(2*ir)
@@ -226,7 +226,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      ENDIF
   ENDIF
   !
-  IF (SUM(libxc_switches) /= 0) THEN
+  IF (SUM(libxc_switches_lda) /= 0) THEN
      DEALLOCATE( rho_lxc )
      DEALLOCATE( vx_lxc, vc_lxc )
   ENDIF
@@ -327,8 +327,15 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
                          pi34 = 0.6203504908994_DP, e2 = 2.0_DP
   !                      pi34 = (3/4pi)^(1/3)
   !
+#if defined(_OPENMP)
+  INTEGER :: ntids
+  INTEGER, EXTERNAL :: omp_get_num_threads
   !
-!$omp parallel do private( rho, rs, ex, ec, ec_, vx, vc, vc_ )
+  ntids = omp_get_num_threads()
+#endif
+  !
+!$omp parallel if(ntids==1)
+!$omp do private( rho, rs, ex, ec, ec_, vx, vc, vc_ )
   DO ir = 1, length
      !
      rho = ABS(rho_in(ir))
@@ -487,7 +494,8 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      vx_out(ir) = vx  ;  vc_out(ir) = vc
      !
   ENDDO
-!$omp end parallel do
+!$omp end do
+!$omp end parallel
   !
   !
   RETURN
@@ -534,8 +542,15 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
                          pi34 = 0.6203504908994_DP
   !                      pi34 = (3/4pi)^(1/3)
   !
+#if defined(_OPENMP)
+  INTEGER :: ntids
+  INTEGER, EXTERNAL :: omp_get_num_threads
   !
-!$omp parallel do private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_ )
+  ntids = omp_get_num_threads()
+#endif
+  !
+!$omp parallel if(ntids==1)
+!$omp do private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_ )
   DO ir = 1, length
      !
      zeta = zeta_in(ir)
@@ -664,7 +679,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        CALL errore( 'lsda_functional (xc_spin)', 'not implemented', icorr_l )
+        CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr_l )
         !
      END SELECT
      !
@@ -672,7 +687,8 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      ec_out(ir) = ec  ;  vc_out(ir,:) = vc(:)
      !
   ENDDO
-!$omp end parallel do
+!$omp end do
+!$omp end parallel
   !
   !
   RETURN

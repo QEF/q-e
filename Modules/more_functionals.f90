@@ -57,55 +57,6 @@
       END SUBROUTINE LSD_PADE
 
 
-
-!     ==================================================================
-      SUBROUTINE LSD_GLYP(RA,RB,GRHOAA,GRHOAB,GRHOBB,SC,  &
-                                            V1CA,V2CA,V1CB,V2CB,V2CAB)
-!     ==--------------------------------------------------------------==
-      USE kinds, ONLY: DP
-! LEE, YANG PARR: GRADIENT CORRECTION PART
-      IMPLICIT NONE ! REAL(DP) (A-H,O-Z), INTEGER (I-N)
-!     arguments
-      REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB,SC, &
-                  V1CA,V2CA,V1CB,V2CB,V2CAB
-!     locals
-      REAL(DP) :: RHO,RM3,DR,OR,DOR,DER,DDER
-      REAL(DP) :: DLAA,DLAB,DLBB,DLAAA,DLAAB,DLABA,DLABB,DLBBA,DLBBB
-      REAL(DP), PARAMETER :: A=0.04918D0,B=0.132D0,C=0.2533D0,D=0.349D0
-!     ==--------------------------------------------------------------==
-      RHO=RA+RB
-      RM3=RHO**(-1.D0/3.D0)
-      DR=(1.D0+D*RM3)
-      OR=EXP(-C*RM3)/DR*RM3**11.D0
-      DOR=-1.D0/3.D0*RM3**4*OR*(11.D0/RM3-C-D/DR)
-      DER=C*RM3+D*RM3/DR
-      DDER=1.d0/3.d0*(D*D*RM3**5/DR/DR-DER/RHO)
-      DLAA=-A*B*OR*(RA*RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RA/RHO)-RB*RB)
-      DLAB=-A*B*OR*(RA*RB/9.d0*(47.d0-7.d0*DER)-4.d0/3.d0*RHO*RHO)
-      DLBB=-A*B*OR*(RA*RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RB/RHO)-RA*RA)
-      DLAAA=DOR/OR*DLAA-A*B*OR*(RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RA/RHO)- &
-            RA*RB/9.d0*((3.d0+RA/RHO)*DDER+(DER-11.d0)*RB/RHO/RHO))
-      DLAAB=DOR/OR*DLAA-A*B*OR*(RA/9.d0*(1.d0-3.d0*DER-(DER-11.d0)*RA/RHO)- &
-            RA*RB/9.d0*((3.d0+RA/RHO)*DDER-(DER-11.d0)*RA/RHO/RHO)-2.d0*RB)
-      DLABA=DOR/OR*DLAB-A*B*OR*(RB/9.d0*(47.d0-7.d0*DER)-7.d0/9.d0*RA*RB*DDER- &
-            8.d0/3.d0*RHO)
-      DLABB=DOR/OR*DLAB-A*B*OR*(RA/9.d0*(47.d0-7.d0*DER)-7.d0/9.d0*RA*RB*DDER- &
-            8.d0/3.d0*RHO)
-      DLBBA=DOR/OR*DLBB-A*B*OR*(RB/9.d0*(1.d0-3.d0*DER-(DER-11.d0)*RB/RHO)- &
-            RA*RB/9.d0*((3.d0+RB/RHO)*DDER-(DER-11.d0)*RB/RHO/RHO)-2.d0*RA)
-      DLBBB=DOR/OR*DLBB-A*B*OR*(RA/9.d0*(1.d0-3*DER-(DER-11.d0)*RB/RHO)- &
-            RA*RB/9.d0*((3.d0+RB/RHO)*DDER+(DER-11.d0)*RA/RHO/RHO))
-      SC=DLAA*GRHOAA+DLAB*GRHOAB+DLBB*GRHOBB
-      V1CA=DLAAA*GRHOAA+DLABA*GRHOAB+DLBBA*GRHOBB
-      V1CB=DLAAB*GRHOAA+DLABB*GRHOAB+DLBBB*GRHOBB
-      V2CA=2.d0*DLAA
-      V2CB=2.d0*DLBB
-      V2CAB=DLAB
-!     ==--------------------------------------------------------------==
-      RETURN
-      END SUBROUTINE LSD_GLYP
-
-
 !______________________________________________________________________
       subroutine ggablyp4(nnr,nspin,gradr,rhor,exc)
 !     _________________________________________________________________

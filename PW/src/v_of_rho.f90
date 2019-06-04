@@ -346,7 +346,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : nlc, dft_is_nonlocc, init_lda_xc
+  USE funct,            ONLY : nlc, dft_is_nonlocc, init_xc
   USE xc_lda_lsda,      ONLY : xc
   USE scf,              ONLY : scf_type
   USE mp_bands,         ONLY : intra_bgrp_comm
@@ -399,8 +399,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   ALLOCATE( vx(dfftp%nnr,nspin) )
   ALLOCATE( vc(dfftp%nnr,nspin) )
   !
-  CALL init_lda_xc()
-  !
+  CALL init_xc( 'LDA' )
   !
   etxc   = 0.D0
   vtxc   = 0.D0
