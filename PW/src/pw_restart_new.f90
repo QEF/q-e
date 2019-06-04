@@ -262,13 +262,14 @@ MODULE pw_restart_new
                 n_scf_steps_ = 1
             CASE default
                 n_opt_steps        = 0 
+                scf_has_converged = conv_elec 
                 n_scf_steps_ = n_scf_steps
          END SELECT
          ! 
             call qexsd_init_convergence_info(output%convergence_info,   &
                         SCf_HAS_CONVERGED = scf_has_converged, &
                         OPTIMIZATION_HAS_CONVERGED = optimization_has_converged,& 
-                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error,&
+                        N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
             output%convergence_info_ispresent = .TRUE.
          !
