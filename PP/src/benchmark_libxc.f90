@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2014 Quantum ESPRESSO group
+! Copyright (C) 2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,9 +9,7 @@
 PROGRAM benchmark_libxc
   !
   !------------------------------------------------------------------------------------!
-  !  REMEMBER to comment eventual libxc blocks in the functional routines in 'Modules' !
-  !  folder in order to run consistent tests (in the present version they should be    !
-  !  already absent, however).                                                         !
+  !  To be run on a single processor
   !------------------------------------------------------------------------------------!
   !
 #if defined(__LIBXC)
@@ -107,7 +105,7 @@ PROGRAM benchmark_libxc
   IF ( TRIM(f_q) == 'y' ) DF_OK = .TRUE.
   IF ( TRIM(f_q) /= 'y' .AND. TRIM(f_q) /= 'n' ) THEN
      PRINT *, CHAR(10)//"ERROR: it is yes (y) or no (n)"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   !
   !
@@ -118,7 +116,7 @@ PROGRAM benchmark_libxc
     IF ( TRIM(e_q) == 'y' ) ENERGY_ONLY = .TRUE.
     IF ( TRIM(e_q) /= 'y' .AND. TRIM(e_q) /= 'n' ) THEN
        PRINT *, CHAR(10)//"ERROR: it is yes (y) or no (n)"//CHAR(10)
-       RETURN
+       GO TO 10
     ENDIF
   ENDIF
   !
@@ -126,14 +124,14 @@ PROGRAM benchmark_libxc
   READ(*,*) aprx
   IF ( TRIM(aprx) /= 'lda' .AND. TRIM(aprx) /= 'gga' ) THEN
      PRINT *, CHAR(10)//"ERROR: you can only choose lda or gga"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   WRITE (*,'(/,1x,a)', ADVANCE='no') "Polarization switch (1 unpolarized,  & 
                                                          & 2 polarized):  "
   READ(*,*) ns
   IF ( ns/=1 .AND. ns/=2 ) THEN
      PRINT *, CHAR(10)//"ERROR: you can only choose 1 or 2"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   WRITE (*,'(/,1x,a)') "-- Functional indexes "
   WRITE (*,'(/,1x,a)', ADVANCE='no') "iexch_libxc  icorr_libxc: "
@@ -144,7 +142,7 @@ PROGRAM benchmark_libxc
                     icorr_qe/=4 .AND. icorr_qe/=8 .AND. icorr_qe/=3 .AND. &
                     icorr_qe/=7 .AND. icorr_qe/=13) THEN
      PRINT *, CHAR(10)//" ERROR: icorr_qe not available at these conditions"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   !
   !
@@ -797,13 +795,11 @@ PROGRAM benchmark_libxc
   !
   PRINT *, " "
   !
-  RETURN
-  !
 #else
   !
   PRINT *, "ERROR: library libxc not included."
-  RETURN
   !
 #endif
+10 STOP
   !
 END PROGRAM benchmark_libxc

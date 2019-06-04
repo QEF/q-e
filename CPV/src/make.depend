@@ -1079,6 +1079,7 @@ smallbox_lib.o : smallbox_gvec.o
 smallbox_subs.o : ../../Modules/fft_base.o
 smallbox_subs.o : ../../Modules/io_global.o
 smallbox_subs.o : ../../Modules/kind.o
+smallbox_subs.o : ../../Modules/mp_global.o
 smallbox_subs.o : smallbox.o
 smallbox_subs.o : smallbox_gvec.o
 spinsq.o : ../../Modules/cell_base.o
