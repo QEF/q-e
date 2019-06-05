@@ -531,7 +531,7 @@ PROGRAM do_ppacf
      ! 
      grid_cell_volume = omega/DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
      etx = etx * grid_cell_volume
-     etc = etx * grid_cell_volume
+     etc = etc * grid_cell_volume
      etxlda = etxlda * grid_cell_volume
      etclda = etclda * grid_cell_volume
      etxgc = etxgc * grid_cell_volume
