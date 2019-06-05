@@ -135,11 +135,12 @@ allocate_nlpot.o : ../../Modules/ions_base.o
 allocate_nlpot.o : ../../Modules/noncol.o
 allocate_nlpot.o : ../../Modules/recvec.o
 allocate_nlpot.o : ../../Modules/uspp.o
-allocate_nlpot.o : ldaU.o
 allocate_nlpot.o : pwcom.o
-allocate_nlpot.o : scf_mod.o
+allocate_wfc.o : ../../Modules/gvecw.o
 allocate_wfc.o : ../../Modules/io_global.o
 allocate_wfc.o : ../../Modules/noncol.o
+allocate_wfc.o : ../../Modules/recvec.o
+allocate_wfc.o : ../../Modules/uspp.o
 allocate_wfc.o : ../../Modules/wannier_new.o
 allocate_wfc.o : ../../Modules/wavefunctions.o
 allocate_wfc.o : atomic_wfc_mod.o
@@ -1742,6 +1743,7 @@ save_in_cbands.o : ../../Modules/io_files.o
 save_in_cbands.o : ../../Modules/io_global.o
 save_in_cbands.o : ../../Modules/kind.o
 save_in_cbands.o : pwcom.o
+save_in_electrons.o : ../../Modules/control_flags.o
 save_in_electrons.o : ../../Modules/io_files.o
 save_in_electrons.o : ../../Modules/io_global.o
 save_in_electrons.o : ../../Modules/kind.o

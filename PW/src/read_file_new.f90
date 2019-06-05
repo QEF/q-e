@@ -57,7 +57,7 @@ SUBROUTINE read_file()
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
-  CALL allocate_wfc()
+  CALL allocate_pw()
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -300,10 +300,9 @@ SUBROUTINE post_xml_init (  )
   IF (do_comp_esm) CALL esm_init()
   IF (do_cutoff_2D) CALL cutoff_fact()
   !
-  ! ... allocate the potential and wavefunctions
+  ! ... allocate the potentials
   !
   CALL allocate_locpot()
-  ! NB: allocate_nlpot uses k-points to compute npwx and to allocate vkb
   CALL allocate_nlpot()
   IF (okpaw) THEN
      CALL allocate_paw_internals()
