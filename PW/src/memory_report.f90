@@ -158,7 +158,7 @@ SUBROUTINE memory_report()
   !=====================================================================
   ! Nonlocal pseudopotentials V_NL (beta functions), reciprocal space
   !=====================================================================
-  add = complex_size * nkb * npwx_l ! allocate_nlpot.f90:88 vkb
+  add = complex_size * nkb * npwx_l ! allocate_wfc.f90:62 vkb
   IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'nlocal pot', add/MB
   ram = ram + add
   ! other (possibly minor) data loads

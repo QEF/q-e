@@ -137,7 +137,6 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
@@ -152,6 +151,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
+  IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
