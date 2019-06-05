@@ -17,18 +17,7 @@ adddvscf2.o : ../../Modules/uspp.o
 adddvscf2.o : ../../PW/src/pwcom.o
 adddvscf2.o : constants_epw.o
 adddvscf2.o : elph2.o
-allocate_epwq.o : ../../LR_Modules/lrcom.o
-allocate_epwq.o : ../../Modules/becmod.o
-allocate_epwq.o : ../../Modules/fft_base.o
-allocate_epwq.o : ../../Modules/ions_base.o
-allocate_epwq.o : ../../Modules/noncol.o
-allocate_epwq.o : ../../Modules/recvec.o
-allocate_epwq.o : ../../Modules/uspp.o
-allocate_epwq.o : ../../PHonon/PH/phcom.o
-allocate_epwq.o : ../../PW/src/pwcom.o
-allocate_epwq.o : elph2.o
-allocate_epwq.o : epwcom.o
-allocate_epwq.o : transportcom.o
+adddvscf2.o : epwcom.o
 bcast_epw_input.o : ../../LR_Modules/lrcom.o
 bcast_epw_input.o : ../../Modules/control_flags.o
 bcast_epw_input.o : ../../Modules/io_files.o
@@ -57,7 +46,6 @@ broyden.o : ../../Modules/kind.o
 broyden.o : eliashbergcom.o
 broyden.o : epwcom.o
 close_epw.o : ../../LR_Modules/lrcom.o
-close_epw.o : ../../Modules/becmod.o
 close_epw.o : ../../Modules/io_files.o
 close_epw.o : ../../Modules/kind.o
 close_epw.o : ../../Modules/mp_global.o
@@ -124,6 +112,7 @@ dvqpsi_us3.o : ../../PW/src/pwcom.o
 dvqpsi_us3.o : ../../PW/src/scf_mod.o
 dvqpsi_us3.o : constants_epw.o
 dvqpsi_us3.o : elph2.o
+dvqpsi_us3.o : epwcom.o
 dvqpsi_us_only3.o : ../../LR_Modules/lrcom.o
 dvqpsi_us_only3.o : ../../Modules/cell_base.o
 dvqpsi_us_only3.o : ../../Modules/ions_base.o
@@ -135,6 +124,7 @@ dvqpsi_us_only3.o : ../../PHonon/PH/phcom.o
 dvqpsi_us_only3.o : ../../PW/src/pwcom.o
 dvqpsi_us_only3.o : constants_epw.o
 dvqpsi_us_only3.o : elph2.o
+dvqpsi_us_only3.o : epwcom.o
 eliashberg.o : ../../Modules/io_global.o
 eliashberg.o : eliashbergcom.o
 eliashberg.o : epwcom.o
@@ -164,6 +154,7 @@ elphel2_shuffle.o : ../../UtilXlib/mp.o
 elphel2_shuffle.o : constants_epw.o
 elphel2_shuffle.o : division.o
 elphel2_shuffle.o : elph2.o
+elphel2_shuffle.o : epwcom.o
 elphon_shuffle.o : ../../FFTXlib/fft_interfaces.o
 elphon_shuffle.o : ../../LR_Modules/lrcom.o
 elphon_shuffle.o : ../../Modules/fft_base.o
@@ -179,6 +170,7 @@ elphon_shuffle.o : ../../UtilXlib/mp.o
 elphon_shuffle.o : constants_epw.o
 elphon_shuffle.o : elph2.o
 elphon_shuffle_wrap.o : ../../LR_Modules/lrcom.o
+elphon_shuffle_wrap.o : ../../Modules/becmod.o
 elphon_shuffle_wrap.o : ../../Modules/cell_base.o
 elphon_shuffle_wrap.o : ../../Modules/control_flags.o
 elphon_shuffle_wrap.o : ../../Modules/fft_base.o
@@ -205,6 +197,7 @@ elphon_shuffle_wrap.o : elph2.o
 elphon_shuffle_wrap.o : epwcom.o
 elphon_shuffle_wrap.o : io_epw.o
 ephwann_shuffle.o : ../../Modules/cell_base.o
+ephwann_shuffle.o : ../../Modules/control_flags.o
 ephwann_shuffle.o : ../../Modules/io_files.o
 ephwann_shuffle.o : ../../Modules/io_global.o
 ephwann_shuffle.o : ../../Modules/ions_base.o
@@ -233,6 +226,7 @@ ephwann_shuffle.o : transportcom.o
 ephwann_shuffle.o : wan2bloch.o
 ephwann_shuffle.o : wigner.o
 ephwann_shuffle_mem.o : ../../Modules/cell_base.o
+ephwann_shuffle_mem.o : ../../Modules/control_flags.o
 ephwann_shuffle_mem.o : ../../Modules/io_files.o
 ephwann_shuffle_mem.o : ../../Modules/io_global.o
 ephwann_shuffle_mem.o : ../../Modules/ions_base.o
@@ -288,7 +282,9 @@ epw_init.o : ../../PW/src/pwcom.o
 epw_init.o : ../../UtilXlib/mp.o
 epw_init.o : constants_epw.o
 epw_init.o : elph2.o
+epw_init.o : epwcom.o
 epw_readin.o : ../../LR_Modules/lrcom.o
+epw_readin.o : ../../Modules/cell_base.o
 epw_readin.o : ../../Modules/constants.o
 epw_readin.o : ../../Modules/control_flags.o
 epw_readin.o : ../../Modules/io_files.o
@@ -296,6 +292,8 @@ epw_readin.o : ../../Modules/io_global.o
 epw_readin.o : ../../Modules/ions_base.o
 epw_readin.o : ../../Modules/mp_global.o
 epw_readin.o : ../../Modules/mp_world.o
+epw_readin.o : ../../Modules/noncol.o
+epw_readin.o : ../../Modules/wavefunctions.o
 epw_readin.o : ../../PHonon/PH/phcom.o
 epw_readin.o : ../../PW/src/pwcom.o
 epw_readin.o : ../../PW/src/start_k.o
@@ -309,12 +307,10 @@ epw_setup.o : ../../Modules/cell_base.o
 epw_setup.o : ../../Modules/control_flags.o
 epw_setup.o : ../../Modules/fft_base.o
 epw_setup.o : ../../Modules/funct.o
-epw_setup.o : ../../Modules/io_files.o
 epw_setup.o : ../../Modules/io_global.o
 epw_setup.o : ../../Modules/ions_base.o
 epw_setup.o : ../../Modules/kind.o
 epw_setup.o : ../../Modules/mp_global.o
-epw_setup.o : ../../Modules/mp_pools.o
 epw_setup.o : ../../Modules/noncol.o
 epw_setup.o : ../../Modules/recvec.o
 epw_setup.o : ../../Modules/uspp.o
@@ -351,7 +347,6 @@ fermiwindow.o : ../../PW/src/pwcom.o
 fermiwindow.o : ../../UtilXlib/mp.o
 fermiwindow.o : elph2.o
 fermiwindow.o : epwcom.o
-gmap_sym.o : ../../Modules/fft_base.o
 gmap_sym.o : ../../Modules/kind.o
 gmap_sym.o : ../../Modules/recvec.o
 gmap_sym.o : constants_epw.o
@@ -646,20 +641,6 @@ selfen_pl.o : division.o
 selfen_pl.o : elph2.o
 selfen_pl.o : epwcom.o
 selfen_pl.o : io_epw.o
-setphases.o : ../../FFTXlib/fft_interfaces.o
-setphases.o : ../../LR_Modules/lrcom.o
-setphases.o : ../../Modules/cell_base.o
-setphases.o : ../../Modules/control_flags.o
-setphases.o : ../../Modules/fft_base.o
-setphases.o : ../../Modules/io_global.o
-setphases.o : ../../Modules/kind.o
-setphases.o : ../../Modules/mp_global.o
-setphases.o : ../../Modules/recvec.o
-setphases.o : ../../Modules/wavefunctions.o
-setphases.o : ../../PHonon/PH/phcom.o
-setphases.o : ../../PW/src/pwcom.o
-setphases.o : ../../UtilXlib/mp.o
-setphases.o : constants_epw.o
 setphases_wrap.o : ../../Modules/io_global.o
 setphases_wrap.o : ../../Modules/kind.o
 setphases_wrap.o : ../../Modules/mp_global.o
@@ -816,7 +797,6 @@ wan2bloch.o : io_epw.o
 wannierEPW.o : ../../Modules/kind.o
 wannierize.o : ../../Modules/io_files.o
 wannierize.o : ../../Modules/io_global.o
-wannierize.o : ../../Modules/ions_base.o
 wannierize.o : ../../Modules/kind.o
 wannierize.o : ../../Modules/mp_global.o
 wannierize.o : ../../Modules/mp_world.o

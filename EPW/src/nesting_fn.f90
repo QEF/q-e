@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  subroutine nesting_fn_q ( iqq, iq )
+  subroutine nesting_fn_q(iqq, iq)
   !-----------------------------------------------------------------------
   !!
   !!  compute the imaginary part of the phonon self energy due to electron-
@@ -24,7 +24,8 @@
   USE epwcom,    ONLY : nbndsub, fsthick, &
                         eptemp, ngaussw, degaussw,     &
                         nsmear, delta_smear, efermi_read, fermi_energy
-  USE pwcom,     ONLY : nelec, ef, isk
+  USE pwcom,     ONLY : nelec, ef
+  USE klist_epw, ONLY : isk_dummy
   USE elph2,     ONLY : ibndmax, ibndmin, etf, &
                         wkf, xqf, wqf, nkqf, &
                         nkf, nkqtotf, xqf
@@ -78,7 +79,7 @@
     WRITE(stdout,'(5x,"Nesting Function in the double delta approx")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick.lt.1.d3 ) &
+    IF ( fsthick < 1.d3 ) &
       WRITE(stdout, '(/5x,a,f10.6,a)' ) &
       'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -100,7 +101,7 @@
     IF ( efermi_read ) THEN
       ef0 = fermi_energy 
     ELSE
-      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk)
+      ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_dummy)
     ENDIF
     !
     dosef = dos_ef (ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
@@ -123,8 +124,8 @@
       ikq = ikk + 1
       ! 
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) then
+      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
+          ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) then
         !
         fermicount = fermicount + 1
         !

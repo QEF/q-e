@@ -88,8 +88,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = (raux(:) + rho%of_r(:,nspin))/2.0_dp
         ELSE IF ( spin_component == 2 ) THEN
            raux(:) = (raux(:) - rho%of_r(:,nspin))/2.0_dp
-        !ELSE
-        !   CALL errore('punch_plot','spin_component not allowed',1)
         END IF
      ENDIF
      !
@@ -231,7 +229,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 17 .or. plot_num == 21) THEN
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
      ! code partially duplicate from plot_num=0, should be unified
-     CALL init_us_1()
      !
      CALL PAW_make_ae_charge(rho,(plot_num==21))
      !
@@ -241,8 +238,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = ( raux(:) + rho%of_r(:,nspin) )/2.0_dp
         ELSE IF ( spin_component==2 ) THEN
            raux(:) = ( raux(:) - rho%of_r(:,nspin) )/2.0_dp
-        ELSE
-           CALL errore('punch_plot','spin_component not allowed',3)
         ENDIF
      END IF
      !

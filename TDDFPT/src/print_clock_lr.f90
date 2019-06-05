@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -78,12 +78,10 @@ SUBROUTINE print_clock_lr()
     CALL print_clock( 'addusdbec_nc' )
     CALL print_clock( 'lr_addusddens' )
     CALL print_clock( 'lr_addus_dvpsi' )
+    CALL print_clock( 'lr_compute_intq' )
    ENDIF
-   IF (eels) THEN
-      CALL print_clock( 'lr_sm1_psiq' )
-   ELSE
-      CALL print_clock( 'lr_sm1_psi' )
-   ENDIF
+   CALL print_clock( 'lr_sm1_initialize' )
+   CALL print_clock( 'lr_sm1_psi' )
    !
    IF (real_space) THEN
     WRITE( stdout, '(5X,"US routines, RS")' )

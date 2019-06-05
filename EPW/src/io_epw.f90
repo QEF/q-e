@@ -29,7 +29,7 @@
             iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
-  PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil, iudecayH, iudecayP, &
+  PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
             iudecaydyn, iudecayv, iummn, iubvec
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
             iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs
@@ -130,7 +130,6 @@
                                     ! states <u_nmk|u_nk+b>
   INTEGER :: iun_plot        = 203  ! UNK file (needed by Wannier90 for plotting the 
                                     ! real space Wannier functions)
-  INTEGER :: iuukk           = 204  ! Final ukk rotation matrix (the big U!)
   INTEGER :: iuprojfil       = 205  ! Unit for projector [.projw90]  
   INTEGER :: iudecayH        = 206  ! Hamiltonian decay in real space
   INTEGER :: iudecayP        = 207  ! Dipole decay in real space

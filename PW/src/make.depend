@@ -792,7 +792,6 @@ h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : ldaU.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o
-h_psi.o : ../../FFTXlib/fft_helper_subroutines.o
 h_psi.o : ../../Modules/becmod.o
 h_psi.o : ../../Modules/control_flags.o
 h_psi.o : ../../Modules/fft_base.o
@@ -1326,6 +1325,7 @@ paw_onecenter.o : ../../Modules/noncol.o
 paw_onecenter.o : ../../Modules/paw_variables.o
 paw_onecenter.o : ../../Modules/radial_grids.o
 paw_onecenter.o : ../../Modules/uspp.o
+paw_onecenter.o : ../../Modules/xc_lda_lsda_drivers.o
 paw_onecenter.o : ../../UtilXlib/mp.o
 paw_onecenter.o : pwcom.o
 paw_symmetry.o : ../../Modules/cell_base.o
@@ -1562,7 +1562,6 @@ pw_restart_new.o : esm.o
 pw_restart_new.o : extfield.o
 pw_restart_new.o : exx.o
 pw_restart_new.o : exx_base.o
-pw_restart_new.o : io_rho_xml.o
 pw_restart_new.o : ldaU.o
 pw_restart_new.o : martyna_tuckerman.o
 pw_restart_new.o : pwcom.o
@@ -1595,8 +1594,6 @@ read_conf_from_file.o : ../../Modules/kind.o
 read_conf_from_file.o : ../../Modules/qes_libs_module.o
 read_conf_from_file.o : ../../Modules/qes_types_module.o
 read_conf_from_file.o : pw_restart_new.o
-read_file_new.o : ../../FFTXlib/fft_interfaces.o
-read_file_new.o : ../../FFTXlib/fft_types.o
 read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
 read_file_new.o : ../../Modules/control_flags.o
@@ -1609,7 +1606,6 @@ read_file_new.o : ../../Modules/io_global.o
 read_file_new.o : ../../Modules/ions_base.o
 read_file_new.o : ../../Modules/kernel_table.o
 read_file_new.o : ../../Modules/kind.o
-read_file_new.o : ../../Modules/mp_bands.o
 read_file_new.o : ../../Modules/mp_images.o
 read_file_new.o : ../../Modules/noncol.o
 read_file_new.o : ../../Modules/paw_variables.o
@@ -1619,9 +1615,8 @@ read_file_new.o : ../../Modules/qes_types_module.o
 read_file_new.o : ../../Modules/read_pseudo.o
 read_file_new.o : ../../Modules/recvec.o
 read_file_new.o : ../../Modules/recvec_subs.o
-read_file_new.o : ../../Modules/tsvdw.o
 read_file_new.o : ../../Modules/uspp.o
-read_file_new.o : ../../Modules/wavefunctions.o
+read_file_new.o : ../../UtilXlib/mp.o
 read_file_new.o : Coul_cut_2D.o
 read_file_new.o : buffers.o
 read_file_new.o : esm.o
@@ -2167,6 +2162,7 @@ v_of_rho.o : ../../Modules/mp_bands.o
 v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
 v_of_rho.o : ../../Modules/tsvdw.o
+v_of_rho.o : ../../Modules/xc_lda_lsda_drivers.o
 v_of_rho.o : ../../UtilXlib/mp.o
 v_of_rho.o : Coul_cut_2D.o
 v_of_rho.o : esm.o

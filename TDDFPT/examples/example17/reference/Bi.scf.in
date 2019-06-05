@@ -1,0 +1,31 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Bi'
+    pseudo_dir = '/scratch/timrov/QE_GitLab_Timrov/q-e/pseudo/'
+    outdir='/scratch/timrov/QE_GitLab_Timrov/q-e/tempdir/'
+ /
+ &system
+    ibrav = 5,
+    celldm(1) = 8.880,
+    celldm(4) = 0.530,
+    nat = 2,
+    ntyp = 1,
+    ecutwfc= 20,
+    ecutrho= 160,
+    occupations = 'smearing',
+    smearing = 'mv',
+    degauss = 0.02,
+    lspinorb = .true.
+    noncolin = .true.
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+Bi  208.98038  Bi.rel-pz-dn-rrkjus_psl.1.0.0.UPF
+ATOMIC_POSITIONS {alat}
+Bi   0.235588863   0.235588863   0.235588863
+Bi  -0.235588863  -0.235588863  -0.235588863
+K_POINTS {automatic}
+2 2 2 0 0 0

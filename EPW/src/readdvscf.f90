@@ -19,12 +19,6 @@
   !! Imported the noncolinear case implemented by xlzhang
   !!
   !-------------------------------------------------------------
-#if defined(__ALPHA)
-#  define DIRECT_IO_FACTOR 2
-#else
-#  define DIRECT_IO_FACTOR 8
-#endif
-  !
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : prefix
   USE units_ph,  ONLY : lrdrho
@@ -49,6 +43,7 @@
   ! Local variables
   !
   INTEGER :: unf_recl, ios
+  REAL(DP) :: dummy 
   CHARACTER(len=256) :: tempfile
   CHARACTER(len=3) :: filelab
   !! file number
@@ -61,7 +56,8 @@
   !   
   CALL set_ndnmbr(0, iq, 1, nqc, filelab)
   tempfile = trim(dvscf_dir) // trim(prefix) // '.dvscf_q' // filelab
-  unf_recl = DIRECT_IO_FACTOR * lrdrho
+  INQUIRE (IOLENGTH=unf_recl) dummy 
+  unf_recl = unf_recl  * lrdrho
   !unf_recl = iofactor * lrdrho
   !DBSP
   !print*,'iofactor ',iofactor
@@ -76,8 +72,8 @@
   IF(ios /= 0) CALL errore('readdvscf','error opening ' // tempfile, iudvscf)
   !
   ! check that the binary file is long enough
-  INQUIRE(file=tempfile, size=file_size)
-  IF (mult_unit .gt. file_size) CALL errore('readdvscf', &
+  INQUIRE(FILE=tempfile, size=file_size)
+  IF (mult_unit > file_size) CALL errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)
   !
   READ(iudvscf, rec = recn) dvscf

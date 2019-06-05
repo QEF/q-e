@@ -115,12 +115,12 @@
                0, 0,-1.0, neig, w1, cz1, nmodes, cwork, &
                rwork, iwork, ifail, info)
   !
-  IF (iverbosity.eq.1) then
+  IF (iverbosity == 1) then
     !
     !  check the frequencies
     !
     DO nu = 1, nmodes
-      IF ( w1 (nu) .gt. 0.d0 ) then
+      IF ( w1 (nu) > 0.d0 ) then
          wtmp(nu) =  sqrt(abs( w1 (nu) ))
       ELSE
          wtmp(nu) = -sqrt(abs( w1 (nu) ))
@@ -171,7 +171,7 @@
   !
   !  possibly run some consistency checks
   !
-  IF ( iverbosity .eq. 1 ) then
+  IF ( iverbosity == 1 ) then
     !
     !  D_{Sq} = gamma * D_q * gamma^\dagger (Maradudin & Vosko, RMP, eq. 3.5) 
     ! 
@@ -194,7 +194,7 @@
     !  check the frequencies
     !
     DO nu = 1, nmodes
-      IF ( w2 (nu) .gt. 0.d0 ) then
+      IF ( w2 (nu) > 0.d0 ) then
          wtmp(nu) =  sqrt(abs( w2 (nu) ))
       ELSE
          wtmp(nu) = -sqrt(abs( w2 (nu) ))
@@ -223,7 +223,7 @@
   END DO
   !
   ! the rotated matrix and the one read from file
-  IF (iverbosity.eq.1) write (6,'(2f15.10)') dyn2-dyn1 
+  IF (iverbosity == 1) write (6,'(2f15.10)') dyn2-dyn1 
   !
   ! here I have checked that the matrix rotated with gamma 
   ! is perfectly equal to the one read from file for this q in the star
@@ -236,17 +236,17 @@
   DO nu = 1, nmodes
     w2(nu) = abs(dyn2(nu,nu))
     DO mu = 1, nmodes
-    IF ( mu.ne.nu .and. abs(dyn2(mu,nu)).gt.eps ) call errore &
+    IF ( mu.ne.nu .and. abs(dyn2(mu,nu)) > eps ) call errore &
       ('rotate_eigenm','problem with rotated eigenmodes',0)
     ENDDO
   ENDDO
   !
-  IF (iverbosity.eq.1) then
+  IF (iverbosity == 1) then
     !
     !  a simple check on the frequencies
     !
     DO nu = 1, nmodes
-      IF ( w2 (nu) .gt. 0.d0 ) then
+      IF ( w2 (nu) > 0.d0 ) then
          wtmp(nu) =  sqrt(abs( w2 (nu) ))
       ELSE
          wtmp(nu) = -sqrt(abs( w2 (nu) ))

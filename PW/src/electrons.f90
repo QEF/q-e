@@ -13,9 +13,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
-  !
-  ! ... General self-consistency loop, also for hybrid functionals
-  ! ... For non-hybrid functionals it just calls "electron_scf"
+  !! General self-consistency loop, also for hybrid functionals
+  !! For non-hybrid functionals it just calls "electron_scf"
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -61,19 +60,22 @@ SUBROUTINE electrons()
   !
   ! ... a few local variables
   !
-  REAL(DP) :: &
-      charge,       &! the total charge
-      exxen          ! used to compute exchange energy
-  REAL(dp), EXTERNAL :: exxenergyace
-  INTEGER :: &
-      idum,         &! dummy counter on iterations
-      iter,         &! counter on iterations
-      printout,     &
-      ik, ios
-  REAL(DP) :: &
-      tr2_min,     &! estimated error on energy coming from diagonalization
-      tr2_final     ! final threshold for exx minimization 
-                    ! when using adaptive thresholds.
+  REAL(DP) :: charge
+  !! the total charge
+  REAL(DP) :: exxen
+  !! used to compute exchange energy
+  REAL(DP), EXTERNAL :: exxenergyace
+  INTEGER :: idum
+  !! dummy counter on iterations
+  INTEGER :: iter
+  !! counter on iterations
+  INTEGER :: printout, ik, ios
+  !
+  REAL(DP) :: tr2_min
+  !! estimated error on energy coming from diagonalization
+  REAL(DP) :: tr2_final
+  !! final threshold for exx minimization 
+  !! when using adaptive thresholds.
   LOGICAL :: first, exst
   REAL(DP) :: etot_cmp_paw(nat,2,2)
   LOGICAL :: DoLoc
@@ -354,14 +356,13 @@ END SUBROUTINE electrons
 !----------------------------------------------------------------------------
 SUBROUTINE electrons_scf ( printout, exxen )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine is a driver of the self-consistent cycle.
-  ! ... It uses the routine c_bands for computing the bands at fixed
-  ! ... Hamiltonian, the routine sum_band to compute the charge density,
-  ! ... the routine v_of_rho to compute the new potential and the routine
-  ! ... mix_rho to mix input and output charge densities.
-  ! ... If printout > 0, prints on output the total energy;
-  ! ... if printout > 1, also prints decomposition into energy contributions
+  !! This routine is a driver of the self-consistent cycle.
+  !! It uses the routine c_bands for computing the bands at fixed
+  !! Hamiltonian, the routine sum_band to compute the charge density,
+  !! the routine v_of_rho to compute the new potential and the routine
+  !! mix_rho to mix input and output charge densities.
+  !! If printout > 0, prints on output the total energy;
+  !! if printout > 1, also prints decomposition into energy contributions
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -436,42 +437,51 @@ SUBROUTINE electrons_scf ( printout, exxen )
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
-  REAL(DP),INTENT (IN) :: exxen    ! current estimate of the exchange energy
+  REAL(DP),INTENT (IN) :: exxen
+  !! current estimate of the exchange energy
   !
   ! ... a few local variables
   !
-  REAL(DP) :: &
-      dr2,          &! the norm of the diffence between potential
-      charge,       &! the total charge
-      deband_hwf,   &! deband for the Harris-Weinert-Foulkes functional
-      mag           ! local magnetization
-  INTEGER :: &
-      i,            &! counter on polarization
-      idum,         &! dummy counter on iterations
-      iter,         &! counter on iterations
-      ios, kilobytes
-  REAL(DP) :: &
-      tr2_min,     &! estimated error on energy coming from diagonalization
-      descf,       &! correction for variational energy
-      en_el=0.0_DP,&! electric field contribution to the total energy
-      eext=0.0_DP   ! external forces contribution to the total energy
-  LOGICAL :: &
-      first, exst
+  REAL(DP) :: dr2
+  !! the norm of the diffence between potential
+  REAL(DP) :: charge
+  !! the total charge
+  REAL(DP) :: deband_hwf
+  !! deband for the Harris-Weinert-Foulkes functional
+  REAL(DP) :: mag
+  !! local magnetization
+  INTEGER :: i
+  !! counter on polarization
+  INTEGER :: idum
+  !! dummy counter on iterations
+  INTEGER :: iter
+  !! counter on iterations
+  INTEGER :: ios, kilobytes
   !
-  ! ... auxiliary variables for calculating and storing temporary copies of
-  ! ... the charge density and of the HXC-potential
+  REAL(DP) :: tr2_min
+  !! estimated error on energy coming from diagonalization
+  REAL(DP) :: descf
+  !! correction for variational energy
+  REAL(DP) :: en_el=0.0_DP
+  !! electric field contribution to the total energy
+  REAL(DP) :: eext=0.0_DP
+  !! external forces contribution to the total energy
+  LOGICAL :: first, exst
+  !! auxiliary variables for calculating and storing temporary copies of
+  !! the charge density and of the HXC-potential
   !
-  type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
+  TYPE(scf_type) :: rhoin
+  !! used to store rho_in of current/next iteration
   !
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
   REAL(DP) :: etot_cmp_paw(nat,2,2)
-  !
-  ! auxiliary variables for grimme-d3
-  !
+  ! 
   REAL(DP) :: latvecs(3,3)
+  !! auxiliary variables for grimme-d3
   INTEGER:: atnum(1:nat), na
+  !! auxiliary variables for grimme-d3
   !
   iter = 0
   dr2  = 0.0_dp
@@ -598,7 +608,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... xk, wk, isk, et, wg are distributed across pools;
         ! ... the first node has a complete copy of xk, wk, isk,
         ! ... while eigenvalues et and weights wg must be
-        ! ... explicitely collected to the first node
+        ! ... explicitly collected to the first node
         ! ... this is done here for et, in sum_band for wg
         !
         CALL using_et(1)
@@ -1025,10 +1035,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !-----------------------------------------------------------------------
      FUNCTION delta_e()
        !-----------------------------------------------------------------------
-       ! ... delta_e = - \int rho%of_r(r)  v%of_r(r)
-       !               - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
-       !               - \sum rho%ns       v%ns       [for LDA+U]
-       !               - \sum becsum       D1_Hxc     [for PAW]
+       !! delta_e = - \int rho%of_r(r)  v%of_r(r)
+       !!               - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
+       !!               - \sum rho%ns       v%ns       [for LDA+U]
+       !!               - \sum becsum       D1_Hxc     [for PAW]
+       !
        USE funct,  ONLY : dft_is_meta
        IMPLICIT NONE
        REAL(DP) :: delta_e, delta_e_hub
@@ -1074,13 +1085,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !-----------------------------------------------------------------------
      FUNCTION delta_escf()
        !-----------------------------------------------------------------------
-       !
-       ! ... delta_escf = - \int \delta rho%of_r(r)  v%of_r(r)
-       !                  - \int \delta rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
-       !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
-       !                  - \sum \delta becsum       D1         [for PAW]
-       ! ... calculates the difference between the Hartree and XC energy
-       ! ... at first order in the charge density difference \delta rho(r)
+       !! delta_escf = - \int \delta rho%of_r(r)  v%of_r(r)
+       !!                  - \int \delta rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
+       !!                  - \sum \delta rho%ns       v%ns       [for LDA+U]
+       !!                  - \sum \delta becsum       D1         [for PAW]
+       !! calculates the difference between the Hartree and XC energy
+       !! at first order in the charge density difference \delta rho(r)
        !
        USE funct,  ONLY : dft_is_meta
        IMPLICIT NONE
@@ -1353,10 +1363,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
 END SUBROUTINE electrons_scf
 !
 !----------------------------------------------------------------------------
-FUNCTION exxenergyace ( )
+FUNCTION exxenergyace( )
   !--------------------------------------------------------------------------
-  !
-  ! ... Compute exchange energy using ACE
+  !! Compute exchange energy using ACE
   !
   USE kinds,    ONLY : DP
   USE buffers,  ONLY : get_buffer
@@ -1368,15 +1377,16 @@ FUNCTION exxenergyace ( )
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE mp,       ONLY : mp_sum
-  USE control_flags,        ONLY : gamma_only
-  USE wavefunctions,        ONLY : evc
+  USE control_flags, ONLY : gamma_only
+  USE wavefunctions, ONLY : evc
   USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
   !
-  REAL (dp) :: exxenergyace  ! computed energy
+  REAL(DP) :: exxenergyace
+  !! computed energy
   !
-  REAL (dp) :: ex
+  REAL(DP) :: ex
   INTEGER :: ik, npw
   !
   domat = .true.

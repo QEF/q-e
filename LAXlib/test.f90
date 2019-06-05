@@ -5,6 +5,8 @@ program lax_test
   IMPLICIT NONE
 #if defined(__MPI)
   INTEGER    STATUS(MPI_STATUS_SIZE)
+#else
+  INTEGER :: MPI_MAX_PROCESSOR_NAME=64
 #endif
   INTEGER :: mype, npes, comm, ntgs, root
   LOGICAL :: iope
@@ -359,24 +361,27 @@ program lax_test
 
   CALL set_a()
   !
+#if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   tempo(1) = MPI_WTIME()
+#endif
   !
   CALL diagonalize_parallel( n, a, d, s, desc )
   !
+#if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   tempo(2) = MPI_WTIME()
+#endif
   !
   CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nx, s, nx, 0.0d0, c, nr, desc)
   !
+#if defined(__MPI)
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
   tempo(3) = MPI_WTIME()
   !
   do i = 2, 10
      tempo_mio(i) = tempo(i)-tempo(i-1)
   end do
-  !
-#if defined(__MPI)
   CALL MPI_ALLREDUCE( tempo_mio, tempo_min, 100, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_max, 100, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( tempo_mio, tempo_avg, 100, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
@@ -617,6 +622,12 @@ contains
       RETURN
    END SUBROUTINE set_a
 
+#if !defined(__MPI)
 
+   real*8 function MPI_WTIME()
+     mpi_wtime = 0
+   endfunction
+
+#endif
 
 end program lax_test

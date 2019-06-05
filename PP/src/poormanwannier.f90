@@ -130,7 +130,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE wvfct,      ONLY : nbnd, npwx, et
   USE ldaU,       ONLY : is_Hubbard, Hubbard_lmax, Hubbard_l, &
                          oatwfc, offsetU, nwfcU, wfcU, copy_U_wfc
-  USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, irt, s, sname, d1, d2, d3, ft, sr  
+  USE symm_base,  ONLY : nrot, nsym, nsym_ns, nsym_na, irt, s, sname, sr, ft
   USE mp_pools,   ONLY : me_pool, root_pool, my_pool_id, kunit, npool
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
@@ -228,15 +228,6 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   CLOSE( UNIT=iunhub, STATUS='delete' )
   ! Create and open output files to store the projectors
   CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
-  !
-  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
-  !
-  CALL d_matrix (d1, d2, d3)
-  !
-  !    loop on k points
-  !
-  CALL init_us_1
-  CALL init_at_1
   !
   ! Allocate temporary arrays and workspace
   !

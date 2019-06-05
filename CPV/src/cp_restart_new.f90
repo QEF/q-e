@@ -503,19 +503,21 @@ MODULE cp_restart_new
      !
      ! ... copy pseudopotential files into the .save directory
      !
-     DO is = 1, nsp
-        sourcefile= TRIM(pseudo_dir)//psfile(is)
-        filename  = TRIM(dirname)//psfile(is)
-        IF ( TRIM(sourcefile) /= TRIM(filename) ) &
-             ierr = f_copy(sourcefile, filename)
-     END DO
-     inlc = get_inlc()
-     IF ( inlc > 0 ) THEN 
-        sourcefile= TRIM(kernel_file_name)
-        filename = TRIM(dirname)//TRIM(vdw_table_name)
-        IF ( TRIM(sourcefile) /= TRIM(filename) ) & 
-           ierr = f_copy(sourcefile, filename)
-     END IF  
+     IF ( ionode ) THEN
+        DO is = 1, nsp
+           sourcefile= TRIM(pseudo_dir)//psfile(is)
+           filename  = TRIM(dirname)//psfile(is)
+           IF ( TRIM(sourcefile) /= TRIM(filename) ) &
+                ierr = f_copy(sourcefile, filename)
+        END DO
+        inlc = get_inlc()
+        IF ( inlc > 0 ) THEN 
+           sourcefile= TRIM(kernel_file_name)
+           filename = TRIM(dirname)//TRIM(vdw_table_name)
+           IF ( TRIM(sourcefile) /= TRIM(filename) ) & 
+              ierr = f_copy(sourcefile, filename)
+        END IF  
+     END IF
      !
 !-------------------------------------------------------------------------------
 ! ... CHARGE DENSITY
@@ -1073,7 +1075,7 @@ MODULE cp_restart_new
                         Hubbard_l(isp ) = 3
                      CASE  default 
                         IF (Hubbard_U(isp)/=0) &
-                             CALL errore ("pw_readschema:", "unrecognized label for Hubbard "//label, 1 ) 
+                             CALL errore ("qexsd_copy_dft:", "unrecognized label for Hubbard "//label, 1 ) 
                      END SELECT
                      EXIT loop_on_speciesU
                   END IF 

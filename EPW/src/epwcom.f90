@@ -322,13 +322,29 @@ MODULE klist_epw
   !!        
   !! The variable for the k-points 
   !! 
-  USE kinds, ONLY: DP
-  USE parameters, ONLY :npk
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npk
   !
   SAVE
   !
-  INTEGER :: kmap(npk)  ! map of k+q grid into k grid 
-  REAL(DP) :: xk_cryst(3,npk) ! List of all kpoints in crystal coordinates
+  INTEGER :: kmap(npk)  
+  !! map of k+q grid into k grid 
+  INTEGER, ALLOCATABLE :: isk_all(:)  
+  !! Spin index of each k-point (used in LSDA calculations only)
+  INTEGER, ALLOCATABLE :: isk_loc(:)  
+  !! Spin index of local k-point (used in LSDA calculations only)
+  INTEGER, ALLOCATABLE :: isk_dummy(:)  
+  !! Spin index on the fine grid - dummy at the moment
+  REAL(kind=DP), ALLOCATABLE :: xk_loc(:, :) 
+  !! List of local (each cores) kpoints in cartesian coordinates
+  REAL(kind=DP), ALLOCATABLE :: xk_all(:, :) 
+  !! List of all kpoints in cartesian coordinates
+  REAL(kind=DP), ALLOCATABLE :: xk_cryst(:, :) 
+  !! List of all kpoints in crystal coordinates
+  REAL(kind=DP), ALLOCATABLE :: et_all(:, :) 
+  !! Eigenenergies on the full coarse k-grid 
+  REAL(kind=DP), ALLOCATABLE :: et_loc(:, :) 
+  !! Eigenenergies on the local (each core) coarse k-grid 
   ! 
 END MODULE klist_epw
 !
@@ -345,8 +361,6 @@ MODULE output_epw
   !! input  file for the fine k mesh
   CHARACTER (LEN=80) :: filukk
   !! input  file for the rotation matrix U(k)
-  CHARACTER (LEN=80) :: filukq
-  !! input  file for the rotation matrix U(k+q)
   CHARACTER (LEN=80) :: fildvscf0
   !! output file for the deltavscf used as a fake perturbation to set phases
   CHARACTER (LEN=80) :: fila2f

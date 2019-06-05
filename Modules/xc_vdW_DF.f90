@@ -594,19 +594,18 @@ CONTAINS
 
   integer,   parameter      :: m_cut = 12                          ! How many terms to include in the sum
                                                                    ! of SOLER equation 5.
-
+  
   real(dp)                  :: rho                                 ! Local variable for the density.
   real(dp)                  :: r_s                                 ! Wigner–Seitz radius.
   real(dp)                  :: s                                   ! Reduced gradient.
-  real(dp)                  :: q, ec
+  real(dp)                  :: q
+  real(dp)                  :: ec 
   real(dp)                  :: dq0_dq                              ! The derivative of the saturated
                                                                    ! q0 with respect to q.
 
   integer                   :: i_grid, idx                         ! Indexing variables.
 
-
-
-
+  !
   ! --------------------------------------------------------------------
   ! Initialize q0-related arrays.
 
@@ -635,15 +634,16 @@ CONTAINS
 
      r_s = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
 
-     s   = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 ) &
-         / (2.0D0 * kF(rho) * rho )
+     s   = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 ) / &
+           (2.0D0 * kF(rho) * rho )
 
 
      ! -----------------------------------------------------------------
      ! This is the q value defined in equations 11 and 12 of DION.
      ! Use pw() from flib/functionals.f90 to get qc = kf/eps_x * eps_c.
-
+     !
      call pw(r_s, 1, ec, dq0_drho(i_grid))
+     !
      q = -4.0D0*pi/3.0D0 * ec + kF(rho) * Fs(s)
 
 
@@ -733,21 +733,20 @@ CONTAINS
   real(dp),  intent(OUT)     :: q0(:), dq0_drho_up(:), dq0_drho_down(:)  ! Output variables.
   real(dp),  intent(OUT)     :: dq0_dgradrho_up(:), dq0_dgradrho_down(:) ! Output variables.
   complex(dp), intent(inout) :: thetas(:,:)                              ! The thetas from SOLER.
-
+  
   real(dp)                   :: rho, up, down                            ! Local copy of densities.
   real(dp)                   :: zeta                                     ! Spin polarization.
   real(dp)                   :: r_s                                      ! Wigner-Seitz radius.
   real(dp)                   :: q, qc, qx, qx_up, qx_down                ! q for exchange and correlation.
   real(dp)                   :: q0x_up, q0x_down                         ! Saturated q values.
-  real(dp)                   :: ec, fac
+  real(dp)                   :: fac
+  real(dp)                   :: ec, vc(2)
   real(dp)                   :: dq0_dq, dq0x_up_dq, dq0x_down_dq         ! Derivative of q0 w.r.t q.
   real(dp)                   :: dqc_drho_up, dqc_drho_down               ! Intermediate values.
   real(dp)                   :: dqx_drho_up, dqx_drho_down               ! Intermediate values.
   real(dp)                   :: s_up, s_down                             ! Reduced gradients.
   integer                    :: i_grid, idx                              ! Indexing variables
   logical                    :: calc_qx_up, calc_qx_down
-
-
 
 
   fac = 2.0D0**(-1.0D0/3.0D0)
@@ -821,8 +820,9 @@ CONTAINS
      r_s  = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
      zeta = (up - down) / rho
      IF ( ABS(zeta) > 1.0D0 ) zeta = SIGN(1.0D0, zeta)
-     call pw_spin(r_s, zeta, ec, dqc_drho_up, dqc_drho_down)
-
+     call pw_spin( r_s, zeta, ec, vc )
+     dqc_drho_up = vc(1)  ;   dqc_drho_down = vc(2)
+     !
      qx = ( up * q0x_up + down * q0x_down ) / rho
      qc = -4.0D0*pi/3.0D0 * ec
      q  = qx + qc

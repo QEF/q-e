@@ -99,16 +99,37 @@
   !-----------------------------------------------------------------------
   !! Routine to de-allocate Wannier related matrices. 
   !
-  USE wannierEPW
+  USE wannierEPW, ONLY : atcart, atsym, kpb, g_kpb, center_w, alpha_w, &
+                         l_w, mr_w, r_w, zaxis, xaxis, excluded_band,  &
+                         m_mat, u_mat, u_mat_opt, a_mat, eigval,       &
+                         lwindow, gf, ig_, zerophase, wann_centers,    &
+                         wann_spreads
   !
   IMPLICIT NONE
   ! 
-  IF (ALLOCATED(m_mat) )     DEALLOCATE(m_mat)
-  IF (ALLOCATED(u_mat) )     DEALLOCATE(u_mat)
-  IF (ALLOCATED(u_mat_opt) ) DEALLOCATE(u_mat_opt)
-  IF (ALLOCATED(a_mat) )     DEALLOCATE(a_mat)
-  IF (ALLOCATED(eigval) )    DEALLOCATE(eigval)
-  IF (ALLOCATED(lwindow) )   DEALLOCATE(lwindow)
+  DEALLOCATE (atcart)
+  DEALLOCATE (atsym)
+  DEALLOCATE (kpb)
+  DEALLOCATE (g_kpb)
+  DEALLOCATE (center_w)
+  DEALLOCATE (alpha_w)
+  DEALLOCATE (l_w)
+  DEALLOCATE (mr_w)
+  DEALLOCATE (r_w)
+  DEALLOCATE (zaxis)
+  DEALLOCATE (xaxis)
+  DEALLOCATE (excluded_band)
+  DEALLOCATE (m_mat)
+  DEALLOCATE (u_mat)
+  DEALLOCATE (u_mat_opt)
+  DEALLOCATE (a_mat)
+  DEALLOCATE (eigval)
+  DEALLOCATE (lwindow)
+  DEALLOCATE (gf) 
+  DEALLOCATE (ig_)
+  DEALLOCATE (zerophase)
+  DEALLOCATE (wann_centers)
+  DEALLOCATE (wann_spreads)
   !
   END SUBROUTINE lib_dealloc
   !
@@ -176,7 +197,7 @@
   !! Counter on polarizations
   INTEGER  :: idum
   !! Dummy index for reading nnkp file
-  INTEGER, ALLOCATABLE :: ig_check(:,:)
+  INTEGER, ALLOCATABLE :: ig_check(:, :)
   !! Temporary index on G_k+b vectors
   REAL(DP) :: xnorm
   !! Norm of xaxis
@@ -266,21 +287,28 @@
   !    exclude_bands       exclude_bands
   !    atcart              atoms_cart
   !    atsym               atom_symbols
-
-  ALLOCATE( atcart(3,nat), atsym(nat) )
-  ALLOCATE( kpb(iknum,num_nnmax), g_kpb(3,iknum,num_nnmax) )
-  ALLOCATE( center_w(3,nbnd), alpha_w(nbnd), l_w(nbnd), &
-            mr_w(nbnd), r_w(nbnd), zaxis(3,nbnd), xaxis(3,nbnd) )
-  ALLOCATE( excluded_band(nbnd) )
-
+  ! 
+  ALLOCATE (atcart(3, nat))
+  ALLOCATE (atsym(nat))
+  ALLOCATE (kpb(iknum, num_nnmax))
+  ALLOCATE (g_kpb(3, iknum, num_nnmax))
+  ALLOCATE (center_w(3, nbnd))
+  ALLOCATE (alpha_w(nbnd))
+  ALLOCATE (l_w(nbnd))
+  ALLOCATE (mr_w(nbnd))
+  ALLOCATE (r_w(nbnd))
+  ALLOCATE (zaxis(3, nbnd))
+  ALLOCATE (xaxis(3, nbnd))
+  ALLOCATE (excluded_band(nbnd))
+  ! 
   ! real lattice (Cartesians, Angstrom)
-  rlatt(:,:) = transpose(at(:,:)) * alat * bohr
+  rlatt(:, :) = TRANSPOSE(at(:, :)) * alat * bohr
   ! reciprocal lattice (Cartesians, Angstrom)
-  glatt(:,:) = transpose(bg(:,:)) * tpi / ( alat * bohr )
+  glatt(:, :) = TRANSPOSE(bg(:, :)) * tpi / ( alat * bohr )
   ! atom coordinates in Cartesian coords and Angstrom units
-  atcart(:,:) = tau(:,:) * bohr * alat
+  atcart(:, :) = tau(:, :) * bohr * alat
   ! atom symbols
-  DO ia = 1, nat
+  DO ia=1, nat
      type = ityp(ia)
      atsym(ia) = atm(type)
   ENDDO
@@ -335,7 +363,7 @@
      indexb = exclude_bands(ibnd)
      IF (indexb>nbnd .OR. indexb<0) THEN
         CALL errore('setup_nnkp',' wrong excluded band index ', 1)
-     ELSEIF (indexb.eq.0) THEN
+     ELSEIF (indexb == 0) THEN
         EXIT band_loop
      ELSE
         nexband = nexband + 1
@@ -347,9 +375,9 @@
   WRITE(stdout,'("      - Number of total bands is (",i3,")")') nbnd
   WRITE(stdout,'("      - Number of excluded bands is (",i3,")")') nexband
   WRITE(stdout,'("      - Number of wannier functions is (",i3,")")') n_wannier
-  IF ((nexband .gt. 0) .AND. (nbndskip .ne. nexband)) THEN
+  IF ((nexband > 0) .AND. (nbndskip .ne. nexband)) THEN
     WRITE(stdout,'(/5x,"Warning: check if nbndskip = ", i3 " makes sense since ", i3, &
-                  " bands are excluded from wannier projection")') nbndskip, nexband
+                  &" bands are excluded from wannier projection")') nbndskip, nexband
   ENDIF
   !
   IF ( (nbnd-nexband) .ne. num_bands ) &
@@ -358,29 +386,29 @@
   ! Now we read the .nnkp file 
   !
   IF (meta_ionode) THEN  ! Read nnkp file on ionode only
-    INQUIRE(file=trim(seedname2)//".nnkp",exist=have_nnkp)
-    IF (.not. have_nnkp) THEN
+    INQUIRE(FILE=trim(seedname2)//".nnkp",exist=have_nnkp)
+    IF ( .NOT.  have_nnkp) THEN
        CALL errore( 'pw2wannier90', 'Could not find the file '&
           &//trim(seedname2)//'.nnkp', 1 )
     ENDIF
     iun_nnkp = find_free_unit()
-    OPEN(unit=iun_nnkp, file=trim(seedname2)//".nnkp",form='formatted')
+    OPEN(UNIT=iun_nnkp, FILE=trim(seedname2)//".nnkp",FORM='formatted')
   ENDIF
   !
   IF (meta_ionode) THEN   ! read from ionode only
     IF (noncolin) THEN
        CALL scan_file_to(iun_nnkp,'spinor_projections',found)
-       IF (.not. found) THEN
+       IF ( .NOT.  found) THEN
          !try old style projections
          CALL scan_file_to(iun_nnkp,'projections',found)
-         IF (.not. found) THEN
+         IF ( .NOT.  found) THEN
            CALL errore( 'pw2wannier90', 'Could not find projections block in '&
               &//trim(seedname2)//'.nnkp', 1 )
          ENDIF
        ENDIF
     ELSE
       CALL scan_file_to(iun_nnkp,'projections',found)
-      IF (.not. found) THEN
+      IF ( .NOT.  found) THEN
         CALL errore( 'pw2wannier90', 'Could not find projections block in '&
            &//trim(seedname2)//'.nnkp', 1 )
       ENDIF
@@ -389,11 +417,13 @@
   ENDIF
   CALL mp_bcast(n_proj, meta_ionode_id, world_comm)
   ! 
-  ALLOCATE( gf(npwx,n_proj), csph(16,n_proj) )
-  IF (noncolin) ALLOCATE( spin_eig(n_proj), spin_qaxis(3,n_proj) )
+  ALLOCATE (gf(npwx, n_proj))
+  ALLOCATE (csph(16, n_proj))
+  IF (noncolin) ALLOCATE (spin_eig(n_proj))
+  IF (noncolin) ALLOCATE (spin_qaxis(3, n_proj))
   ! 
   IF (meta_ionode) THEN   ! read from ionode only
-    DO iw = 1, n_proj
+    DO iw=1, n_proj
       READ(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
       READ(iun_nnkp,*) (zaxis(i,iw), i=1,3), (xaxis(i,iw), i=1,3), alpha_w(iw)
       xnorm = sqrt( xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + &
@@ -438,7 +468,7 @@
   !
   IF (meta_ionode) THEN   ! read from ionode only
     CALL scan_file_to(iun_nnkp,'nnkpts',found)
-    IF (.not.found) THEN
+    IF ( .NOT. found) THEN
        CALL errore( 'pw2wannier90epw', 'Could not find nnkpts block in '&
           &//trim(seedname2)//'.nnkp', 1 )
     ENDIF
@@ -451,8 +481,9 @@
   !
   nnbx = 0
   nnbx = max( nnbx, nnb )
-  ALLOCATE( ig_(iknum,nnbx), ig_check(iknum,nnbx) )
-  ALLOCATE( zerophase(iknum,nnb) )
+  ALLOCATE (ig_(iknum, nnbx))
+  ALLOCATE (ig_check(iknum, nnbx))
+  ALLOCATE (zerophase(iknum, nnb))
   zerophase = .false.
   !
   ! Read data about neighbours
@@ -473,9 +504,9 @@
   ! 
   DO ik =1, iknum
     DO ib = 1, nnb
-      IF ( (g_kpb(1,ik,ib).eq.0) .AND.  &
-           (g_kpb(2,ik,ib).eq.0) .AND.  &
-           (g_kpb(3,ik,ib).eq.0) ) zerophase(ik,ib) = .true.
+      IF ( (g_kpb(1,ik,ib) == 0) .AND.  &
+           (g_kpb(2,ik,ib) == 0) .AND.  &
+           (g_kpb(3,ik,ib) == 0) ) zerophase(ik,ib) = .true.
       g_(:) = REAL( g_kpb(:,ik,ib) )
       CALL cryst_to_cart (1, g_, bg, 1)
       gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
@@ -499,14 +530,14 @@
                     ' g_kpb vector is not in the list of Gs', 100*ik+ib )
     ENDDO
   ENDDO
-  DEALLOCATE(ig_check)
+  DEALLOCATE (ig_check)
   !
   WRITE(stdout,*) '     - All neighbours are found '
   WRITE(stdout,*)
   !
   IF (meta_ionode) THEN 
     CALL scan_file_to(iun_nnkp,'exclude_bands',found)
-    IF (.not.found) THEN
+    IF ( .NOT. found) THEN
       CALL errore( 'pw2wannier90epw', 'Could not find exclude_bands block in '&
          &//trim(seedname2)//'.nnkp', 1 )
     ENDIF
@@ -601,11 +632,11 @@
   CHARACTER (len=80) :: line
   !! Temporary character
   !
-  ALLOCATE(u_mat(n_wannier,n_wannier,iknum))
-  ALLOCATE(u_mat_opt(num_bands,n_wannier,iknum))
-  ALLOCATE(lwindow(num_bands,iknum))
-  ALLOCATE(wann_centers(3,n_wannier))
-  ALLOCATE(wann_spreads(n_wannier))
+  ALLOCATE (u_mat(n_wannier, n_wannier, iknum))
+  ALLOCATE (u_mat_opt(num_bands, n_wannier, iknum))
+  ALLOCATE (lwindow(num_bands, iknum))
+  ALLOCATE (wann_centers(3, n_wannier))
+  ALLOCATE (wann_spreads(n_wannier))
   !
   u_mat = czero
   u_mat_opt = czero
@@ -615,8 +646,8 @@
     IF (eig_read) THEN
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
            nbnd, ",", nkstot,")"
-      tempfile=trim(prefix)//'.eig'
-      OPEN(iuqpeig, file=tempfile, form='formatted', action='read', iostat=ios)
+      tempFILE=trim(prefix)//'.eig'
+      OPEN(iuqpeig, FILE=tempfile, FORM='formatted', action='read', iostat=ios)
       IF (ios /= 0) CALL errore('run_wannier','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
       DO ik = 1, nkstot
@@ -629,8 +660,8 @@
     ENDIF
 
 ! SP : This file is not used for now. Only required to build the UNK file
-!      tempfile=trim(prefix)//'.mmn'
-!      OPEN(iummn, file=tempfile, iostat=ios, form='unformatted')
+!      tempFILE=trim(prefix)//'.mmn'
+!      OPEN(iummn, FILE=tempfile, iostat=ios, FORM='unformatted')
 !      WRITE(iummn) m_mat
 !      CLOSE(iummn)
 
@@ -679,7 +710,8 @@
   !!
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout 
-  USE klist,           ONLY : xk, nks, igk_k
+  USE klist,           ONLY : nks, igk_k
+  USE klist_epw,       ONLY : xk_loc
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE wavefunctions,   ONLY : evc
   USE gvect,           ONLY : g, ngm
@@ -752,10 +784,10 @@
 !  IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
 !      'noncolin calculation not implemented with USP',1)
   !
-  ALLOCATE( a_mat(num_bands,n_wannier,iknum) )
-  ALLOCATE( sgf(npwx,n_proj) )
-  ALLOCATE( gf_spinor(2*npwx,n_proj) )
-  ALLOCATE( sgf_spinor(2*npwx,n_proj) )
+  ALLOCATE ( a_mat(num_bands,n_wannier,iknum) )
+  ALLOCATE ( sgf(npwx,n_proj) )
+  ALLOCATE ( gf_spinor(2*npwx,n_proj) )
+  ALLOCATE ( sgf_spinor(2*npwx,n_proj) )
   !
   ! initialize
   a_mat = czero
@@ -775,19 +807,19 @@
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
   ! 
-  DO ik = 1, nks
+  DO ik=1, nks
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq(xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs)
     ik_g = nkq_abs
     !
     WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
-    CALL flush(stdout)
+    CALL FLUSH(stdout)
     ! SP: Replaced by our wrapper to deal with parallel
     CALL readwfc( my_pool_id+1, ik, evc ) 
     !
     ! sorts k+G vectors in order of increasing magnitude, up to ecut
-    CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
+    CALL gk_sort( xk_loc(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
     !
     CALL generate_guiding_functions( ik )   ! they are called gf(npw,n_proj)
  
@@ -801,7 +833,7 @@
     !  USPP
     !
     IF (any_uspp) THEN
-      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+      CALL init_us_2( npw, igk_k(1,ik), xk_loc(1,ik), vkb )
       ! below we compute the product of beta functions with trial func.
       IF (noncolin) THEN
         CALL calbec( npw, vkb, gf_spinor, becp, n_proj )
@@ -912,10 +944,10 @@
     ENDIF
   ENDDO  ! k-points
   !
-  DEALLOCATE(sgf)
-  DEALLOCATE(csph)
-  DEALLOCATE(gf_spinor) 
-  DEALLOCATE(sgf_spinor)
+  DEALLOCATE (sgf)
+  DEALLOCATE (csph)
+  DEALLOCATE (gf_spinor) 
+  DEALLOCATE (sgf_spinor)
   !
   IF (any_uspp) CALL deallocate_bec_type( becp )
   !
@@ -1013,7 +1045,8 @@
   USE units_lr,        ONLY : lrwfc, iuwfc
   USE fft_base,        ONLY : dffts
   USE fft_interfaces,  ONLY : fwfft, invfft
-  USE klist,           ONLY : nkstot, xk, nks, igk_k
+  USE klist,           ONLY : nkstot, nks, igk_k
+  USE klist_epw,       ONLY : xk_all, xk_loc
   USE gvect,           ONLY : g, ngm, gstart
   USE gvecw,           ONLY : gcutw
   USE cell_base,       ONLY : omega, tpiba, bg
@@ -1090,8 +1123,6 @@
   !!  Square of dxk
   REAL(DP), ALLOCATABLE :: ylm(:,:)
   !!
-  REAL(DP) :: xktot(3,nkstot)
-  !! Coordinates of k-points
   REAL(DP) :: zero_vect(3)
   !! Temporary zero vector
   REAL(DP) :: arg
@@ -1132,33 +1163,23 @@
 !  IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
 !      'noncolin calculation not implimented with USP',1)
   !
-  ALLOCATE( phase(dffts%nnr) ) 
-  ALLOCATE( igkq(npwx) )
-  ALLOCATE( evcq(npol*npwx,nbnd) )
+  ALLOCATE ( phase(dffts%nnr) ) 
+  ALLOCATE ( igkq(npwx) )
+  ALLOCATE ( evcq(npol*npwx,nbnd) )
   !
   IF (noncolin) THEN
-    ALLOCATE( aux_nc(npwx,npol) )
+    ALLOCATE ( aux_nc(npwx,npol) )
   ELSE
-    ALLOCATE( aux(npwx) )
+    ALLOCATE ( aux(npwx) )
   ENDIF
   !
-  ALLOCATE( m_mat(num_bands,num_bands,nnb,iknum) )
+  ALLOCATE ( m_mat(num_bands,num_bands,nnb,iknum) )
   !
   ! close all the wfc files to allow access for each pool to all wfs
   CLOSE(unit = iuwfc, status = 'keep')
   !
   WRITE(stdout,*)
   WRITE(stdout,'(5x,a)') 'MMN'
-  !
-  ! Get all the k-vector coords to each pool via xktot
-  !
-  xktot = zero
-  IF (meta_ionode) THEN
-    DO ik = 1, nkstot
-      xktot(:,ik) = xk(:,ik)
-    ENDDO
-  ENDIF
-  CALL mp_sum(xktot, inter_pool_comm)
   !
   zero_vect = zero
   m_mat = czero
@@ -1169,17 +1190,17 @@
     CALL init_us_1
     CALL allocate_bec_type( nkb, nbnd, becp )
     IF (noncolin) THEN
-      ALLOCATE( becp2_nc(nkb,2,nbnd) )
+      ALLOCATE ( becp2_nc(nkb,2,nbnd) )
     ELSE
-      ALLOCATE( becp2(nkb,nbnd) )
+      ALLOCATE ( becp2(nkb,nbnd) )
     ENDIF
     !
     !     qb is  FT of Q(r)
     !
     nbt = nnb * iknum
     !
-    ALLOCATE( qg(nbt) )
-    ALLOCATE( dxk(3,nbt) )
+    ALLOCATE ( qg(nbt) )
+    ALLOCATE ( dxk(3,nbt) )
     !
     ind = 0
     DO ik = 1, iknum ! loop over k-points
@@ -1190,16 +1211,16 @@
         g_(:) = REAL( g_kpb(:,ik,ib) )
         ! bring g_ to cartesian
         CALL cryst_to_cart( 1, g_, bg, 1 )
-        dxk(:,ind) = xktot(:,ikp) + g_(:) - xktot(:,ik) 
+        dxk(:,ind) = xk_all(:,ikp) + g_(:) - xk_all(:,ik) 
         qg(ind) = dxk(1,ind) * dxk(1,ind) + & 
                   dxk(2,ind) * dxk(2,ind) + & 
                   dxk(3,ind) * dxk(3,ind)
       ENDDO
     ENDDO
     !
-    ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-    ALLOCATE( qb(nkb, nkb, ntyp, nbt) )
-    ALLOCATE( qq_so(nhm, nhm, 4, ntyp) )
+    ALLOCATE ( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
+    ALLOCATE ( qb(nkb, nkb, ntyp, nbt) )
+    ALLOCATE ( qq_so(nhm, nhm, 4, ntyp) )
     !
     CALL ylmr2(lmaxq*lmaxq, nbt, dxk, qg, ylm)
     qg(:) = sqrt(qg(:)) * tpiba
@@ -1215,25 +1236,25 @@
       ENDIF
     ENDDO
     !
-    DEALLOCATE( qg, qgm, ylm )
+    DEALLOCATE ( qg, qgm, ylm )
     !
   ENDIF
   !
-  ALLOCATE( Mkb(nbnd,nbnd) )
+  ALLOCATE ( Mkb(nbnd,nbnd) )
   !
 #if defined(__MPI)
   WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
 #endif
   !
   ! returns in-pool index nkq and absolute index nkq_abs of first k-point in this pool 
-  CALL ktokpmq( xk(:,1), zero_vect, +1, ipool, nkq, nkq_abs )
+  CALL ktokpmq( xk_loc(:,1), zero_vect, +1, ipool, nkq, nkq_abs )
   ind0 = (nkq_abs - 1) * nnb
   !
   ind = ind0
   DO ik = 1, nks 
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq( xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
     !
     WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
@@ -1243,12 +1264,12 @@
     CALL readwfc( my_pool_id+1, ik, evc )
     !
     ! sorts k+G vectors in order of increasing magnitude, up to ecut
-    CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
+    CALL gk_sort( xk_loc(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
     !
     !  USPP
     !
     IF (any_uspp) THEN
-      CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+      CALL init_us_2( npw, igk_k(1,ik), xk_loc(1,ik), vkb )
       ! below we compute the product of beta functions with |psi>
       CALL calbec( npw, vkb, evc, becp ) 
     ENDIF
@@ -1259,15 +1280,15 @@
       !
       ikp = kpb(ik_g,ib)
       !
-      CALL ktokpmq( xktot(:,ikp), zero_vect, +1, ipool, nkq, nkq_abs )
+      CALL ktokpmq( xk_all(:,ikp), zero_vect, +1, ipool, nkq, nkq_abs )
       !
       ! read wfc at k+b
       CALL readwfc( ipool, nkq, evcq )
       !
-      CALL gk_sort( xktot(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin )
+      CALL gk_sort( xk_all(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin )
       !
       ! compute the phase
-      IF (.not.zerophase(ik_g,ib)) THEN
+      IF (.NOT. zerophase(ik_g,ib)) THEN
         phase(:) = czero
         IF ( ig_(ik_g,ib)>0 ) phase( dffts%nl(ig_(ik_g,ib)) ) = cone
         CALL invfft('Wave', phase, dffts)
@@ -1276,7 +1297,7 @@
       !  USPP
       !
       IF (any_uspp) THEN
-        CALL init_us_2( npwq, igkq, xktot(1,ikp), vkb )
+        CALL init_us_2( npwq, igkq, xk_all(1,ikp), vkb )
         ! below we compute the product of beta functions with |psi>
         IF (noncolin) THEN
           CALL calbec( npwq, vkb, evcq, becp2_nc )
@@ -1356,7 +1377,7 @@
             istart = (ipol - 1) * npwx + 1
             iend = istart + npw - 1
             psic_nc( dffts%nl(igk_k(1:npw,ik)), ipol ) = evc(istart:iend,m)
-            IF (.not.zerophase(ik_g,ib)) THEN
+            IF (.NOT. zerophase(ik_g,ib)) THEN
               CALL invfft('Wave', psic_nc(:,ipol), dffts)
               psic_nc( 1:dffts%nnr, ipol) = psic_nc( 1:dffts%nnr, ipol ) * &
                                             phase(1:dffts%nnr)
@@ -1367,7 +1388,7 @@
         ELSE
           psic(:) = czero
           psic( dffts%nl(igk_k(1:npw,ik)) ) = evc(1:npw,m)
-          IF (.not.zerophase(ik_g,ib)) THEN
+          IF ( .NOT. zerophase(ik_g,ib)) THEN
             CALL invfft('Wave', psic, dffts)
             psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
             CALL fwfft('Wave', psic, dffts)
@@ -1457,32 +1478,32 @@
       ENDDO
       !
       CLOSE(iummn)
-      DEALLOCATE( m_mat_tmp )
+      DEALLOCATE ( m_mat_tmp )
     ENDIF
   ENDIF
   !
-  DEALLOCATE( Mkb, phase, evcq, igkq )
+  DEALLOCATE ( Mkb, phase, evcq, igkq )
   IF (noncolin) THEN
-    DEALLOCATE(aux_nc)
+    DEALLOCATE (aux_nc)
   ELSE
-    DEALLOCATE(aux)
+    DEALLOCATE (aux)
   ENDIF
   !
   IF (any_uspp) THEN
-    DEALLOCATE(dxk)
-    DEALLOCATE(qb)
-    DEALLOCATE(qq_so)
+    DEALLOCATE (dxk)
+    DEALLOCATE (qb)
+    DEALLOCATE (qq_so)
     CALL deallocate_bec_type( becp )
     IF (noncolin) THEN
-      DEALLOCATE(becp2_nc)
+      DEALLOCATE (becp2_nc)
     ELSE
-      DEALLOCATE(becp2)
+      DEALLOCATE (becp2)
     ENDIF
   ENDIF
   !
   WRITE(stdout,'(5x,a)') 'MMN calculated'
   !
-  ! reopen wfc here, leaving unit=20 in the same state
+  ! reopen wfc here, leaving UNIT=20 in the same state
   iuwfc = 20
   CALL diropn(iuwfc,'wfc',lrwfc,exst)  
   !
@@ -1507,7 +1528,9 @@
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE mp,              ONLY : mp_sum
-  USE klist,           ONLY : xk, nks, igk_k
+  USE mp_global,       ONLY : my_pool_id
+  USE klist,           ONLY : nks, igk_k
+  USE klist_epw,       ONLY : xk_loc
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : gcutw
   USE wavefunctions,   ONLY : evc
@@ -1547,7 +1570,7 @@
   IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
              'noncolin calculation not implimented with USP',1)
   !
-  ALLOCATE( dmec(3,nbnd,nbnd,nks) )
+  ALLOCATE (dmec(3, nbnd, nbnd, nks))
   !
   ! initialize
   dmec = czero
@@ -1566,16 +1589,17 @@
   DO ik = 1, nks
     !
     ! read wfc for the given kpt
-    CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
+    CALL readwfc(my_pool_id + 1, ik, evc)
+    !CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
     !
     ! setup k+G grids for each kpt
-    CALL gk_sort( xk(:,ik), ngm, g, gcutw, npw, igk_k(:,ik), g2kin )
+    CALL gk_sort( xk_loc(:,ik), ngm, g, gcutw, npw, igk_k(:,ik), g2kin )
     !
     dipole_aux = czero
     DO jbnd = 1, nbnd
       DO ibnd = 1, nbnd
         !
-        IF ( ibnd .eq. jbnd ) CYCLE
+        IF ( ibnd == jbnd ) CYCLE
         !
         ! taken from PP/epsilon.f90 subroutine dipole_calc
         DO ig = 1, npw
@@ -1611,12 +1635,12 @@
         ENDIF
         !
         dipole_aux(:,ibnd,ibnd) = dipole_aux(:,ibnd,ibnd) + &
-                                ( g(:,igk_k(ig,ik)) + xk(:,ik) ) * caux
+                                ( g(:,igk_k(ig,ik)) + xk_loc(:,ik) ) * caux
         !
       ENDDO
     ENDDO
     ! need to divide by 2pi/a to fix the units
-    dmec(:,:,:,ik) = dipole_aux(:,:,:) * tpiba
+    dmec(:, :, :, ik) = dipole_aux(:, :, :) * tpiba
     !
   ENDDO  ! k-points
   !
@@ -1645,7 +1669,7 @@
   ! 07/2010 Fixed the rotation for ndimwin when lower bands are not included
   !
   USE kinds,        ONLY : DP
-  USE io_epw,       ONLY : iuukk
+  USE io_epw,       ONLY : iunukk
   USE wvfct,        ONLY : nbnd
   USE wannierEPW,   ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow, &
                            excluded_band, num_bands, wann_centers
@@ -1698,20 +1722,20 @@
     ! get the final rotation matrix, which is the product of the optimal
     ! subspace and the rotation among the n_wannier wavefunctions
     !
-    ALLOCATE( u_kc_tmp(num_bands, n_wannier, iknum) )
+    ALLOCATE ( u_kc_tmp(num_bands, n_wannier, iknum) )
     u_kc_tmp(:,:,:) = czero
     !
-    DO ik = 1, iknum
+    DO ik=1, iknum
       !
       u_kc_tmp(1:ndimwin(ik),1:n_wannier,ik) = &
-           matmul( u_mat_opt(1:ndimwin(ik),:,ik), u_mat(:,1:n_wannier,ik) )
+           MATMUL( u_mat_opt(1:ndimwin(ik),:,ik), u_mat(:,1:n_wannier,ik) )
       !
     ENDDO
     !
-    ALLOCATE( u_kc(nbnd, n_wannier, iknum) )
-    u_kc(:,:,:) = czero
+    ALLOCATE(u_kc(nbnd, n_wannier, iknum))
+    u_kc(:, :, :) = czero
     !
-    OPEN(unit = iuukk, file = filukk, form = 'formatted')
+    OPEN(unit=iunukk, file=filukk, form='formatted')
     ! u_kc(1:num_bands,:,:) = u_kc_tmp(1:num_bands,:,:)
     ! u_kc(num_bands+1:nbnd,:,:) = czero
     DO ik = 1, iknum
@@ -1726,13 +1750,13 @@
       !
       DO ibnd = 1, nbnd
         DO iw = 1, n_wannier
-          WRITE(iuukk,*) u_kc(ibnd,iw,ik)
+          WRITE(iunukk,*) u_kc(ibnd,iw,ik)
         ENDDO
       ENDDO
     ENDDO
     !
     ! needs also lwindow when disentanglement is used
-    ALLOCATE( lwindow_tmp(nbnd, iknum) )
+    ALLOCATE ( lwindow_tmp(nbnd, iknum) )
     lwindow_tmp(:,:) = .false.
     !
     DO ik = 1, iknum
@@ -1744,26 +1768,26 @@
       ENDDO
       !
       DO ibnd = 1, nbnd
-        WRITE(iuukk,*) lwindow_tmp(ibnd,ik)
+        WRITE(iunukk,*) lwindow_tmp(ibnd,ik)
       ENDDO
     ENDDO
     !
     DO ibnd = 1, nbnd
-      WRITE(iuukk,*) excluded_band(ibnd)
+      WRITE(iunukk,*) excluded_band(ibnd)
     ENDDO
     ! 
     ! Now write the Wannier centers to files
     DO iw = 1, n_wannier
       ! SP : Need more precision other WS are not determined properly. 
       !WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/alat/bohr
-      WRITE (iuukk,'(3E22.12)') wann_centers(:,iw)/alat/bohr
+      WRITE (iunukk,'(3E22.12)') wann_centers(:,iw)/alat/bohr
     ENDDO
     !
-    CLOSE(iuukk)
+    CLOSE(iunukk)
     !
-    DEALLOCATE(u_kc_tmp)
-    DEALLOCATE(u_kc)
-    DEALLOCATE(lwindow_tmp)
+    DEALLOCATE (u_kc_tmp)
+    DEALLOCATE (u_kc)
+    DEALLOCATE (lwindow_tmp)
     !
   ENDIF
   !
@@ -1784,7 +1808,8 @@
   USE mp,              ONLY : mp_sum
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : meta_ionode
-  USE klist,           ONLY : nkstot, xk, nks
+  USE klist,           ONLY : nkstot, nks
+  USE klist_epw,       ONLY : xk_loc
   USE wvfct,           ONLY : nbnd
   USE wannierEPW,      ONLY : a_mat, m_mat, num_bands, n_wannier, n_proj, & 
                               nnb, kpb, iknum, excluded_band
@@ -1834,12 +1859,12 @@
   !     m_mat(num_bands,n_wannier,nnb,nkstot) in compute_mmn_para
   !     umat(nbnd,nbnd,nks) and umat_mat(nbnd,nbnd,nkstot) in setphases_wrap
   !
-  ALLOCATE(a_mat_tmp(nbnd,n_wannier,iknum)) 
-  ALLOCATE(a_mat_tmp1(nbnd,n_wannier,iknum))
-  ALLOCATE(m_mat_tmp(nbnd,nbnd,nnb,iknum))
-  ALLOCATE(m_mn_tmp1(nbnd,nbnd))
-  ALLOCATE(m_mn_tmp2(nbnd,nbnd))
-  ALLOCATE(m_mn_tmp3(nbnd,nbnd,nnb,iknum))
+  ALLOCATE (a_mat_tmp(nbnd,n_wannier,iknum)) 
+  ALLOCATE (a_mat_tmp1(nbnd,n_wannier,iknum))
+  ALLOCATE (m_mat_tmp(nbnd,nbnd,nnb,iknum))
+  ALLOCATE (m_mn_tmp1(nbnd,nbnd))
+  ALLOCATE (m_mn_tmp2(nbnd,nbnd))
+  ALLOCATE (m_mn_tmp3(nbnd,nbnd,nnb,iknum))
   !
   ! zero all temporary/work quantities
   !
@@ -1881,7 +1906,7 @@
   DO ik = 1, nks
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq( xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
     !
     !  GF_n are the guiding functions which are our initial guesses 
@@ -1908,8 +1933,8 @@
       CALL zgemm( 'n', 'n', nbnd, nbnd, nbnd, cone, m_mn_tmp1(:,:), & 
            nbnd, umat_all(:,:,ikb), nbnd, czero, m_mn_tmp2(:,:), nbnd )
       ! 
-      ! m_mn_tmp1 = matmul( conjg( transpose (umat(:,:,ik) )), m_mat(:,:,ib,ik_g ) )
-      ! m_mn_tmp2 = matmul( m_mn_tmp1, umat_g(:,:,ikb) )
+      ! m_mn_tmp1 = MATMUL( conjg( transpose (umat(:,:,ik) )), m_mat(:,:,ib,ik_g ) )
+      ! m_mn_tmp2 = MATMUL( m_mn_tmp1, umat_g(:,:,ikb) )
       !
       m_mn_tmp3(:,:,ib,ik_g) = m_mn_tmp2(:,:)
     ENDDO
@@ -1947,12 +1972,12 @@
     ENDDO
   ENDDO
   !
-  DEALLOCATE(a_mat_tmp)
-  DEALLOCATE(a_mat_tmp1)
-  DEALLOCATE(m_mat_tmp)
-  DEALLOCATE(m_mn_tmp1)
-  DEALLOCATE(m_mn_tmp2)
-  DEALLOCATE(m_mn_tmp3)
+  DEALLOCATE (a_mat_tmp)
+  DEALLOCATE (a_mat_tmp1)
+  DEALLOCATE (m_mat_tmp)
+  DEALLOCATE (m_mn_tmp1)
+  DEALLOCATE (m_mn_tmp2)
+  DEALLOCATE (m_mn_tmp3)
   !
   RETURN
   !
@@ -1976,7 +2001,8 @@
   USE gvect,          ONLY : g
   USE cell_base,      ONLY : tpiba
   USE wannierEPW,     ONLY : n_proj, gf, center_w, csph, alpha_w, r_w
-  USE klist,          ONLY : xk, igk_k 
+  USE klist,          ONLY : igk_k 
+  USE klist_epw,      ONLY : xk_loc
   USE constants_epw,  ONLY : czero
 
   IMPLICIT NONE
@@ -1989,12 +2015,12 @@
   REAL(DP), ALLOCATABLE :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
   COMPLEX(DP), ALLOCATABLE :: sk(:) 
   !
-  ALLOCATE( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax) )
+  ALLOCATE ( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax) )
   !
   DO ig = 1, npw
-    gk(1,ig) = xk(1,ik) + g(1,igk_k(ig,ik) )
-    gk(2,ig) = xk(2,ik) + g(2,igk_k(ig,ik) )
-    gk(3,ig) = xk(3,ik) + g(3,igk_k(ig,ik) )
+    gk(1,ig) = xk_loc(1,ik) + g(1,igk_k(ig,ik) )
+    gk(2,ig) = xk_loc(2,ik) + g(2,igk_k(ig,ik) )
+    gk(3,ig) = xk_loc(3,ik) + g(3,igk_k(ig,ik) )
     qg(ig) = gk(1,ig)**2 +  gk(2,ig)**2 + gk(3,ig)**2
   ENDDO
   !
@@ -2034,7 +2060,7 @@
     gf(:,iw) = gf(:,iw) / dsqrt(anorm)
   ENDDO
   !
-  DEALLOCATE( gk, qg, ylm, sk, radial )
+  DEALLOCATE ( gk, qg, ylm, sk, radial )
   !
   RETURN
   !
@@ -2060,7 +2086,7 @@
   INTEGER :: ibnd1
   !! Band index
   !
-  ALLOCATE(eigval(num_bands,iknum))
+  ALLOCATE (eigval(num_bands,iknum))
   !
   DO ik = ikstart, ikstop
     ikevc = ik - ikstart + 1
@@ -2095,7 +2121,8 @@
   USE wavefunctions,   ONLY : evc, psic, psic_nc
   USE wannierEPW,      ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
                               excluded_band 
-  USE klist,           ONLY : xk, nks, igk_k
+  USE klist,           ONLY : nks, igk_k
+  USE klist_epw,       ONLY : xk_loc
   USE gvect,           ONLY : g, ngm 
   USE fft_base,        ONLY : dffts
   USE fft_interfaces,  ONLY : invfft
@@ -2138,10 +2165,10 @@
   INTEGER nxxs
   COMPLEX(DP), ALLOCATABLE :: psic_all(:), psic_nc_all(:,:)
   nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
-  IF (.not. noncolin) THEN
-     ALLOCATE( psic_all(nxxs) )
+  IF ( .NOT.  noncolin) THEN
+     ALLOCATE ( psic_all(nxxs) )
   ELSE
-     ALLOCATE( psic_nc_all(nxxs,npol) )
+     ALLOCATE ( psic_nc_all(nxxs,npol) )
   ENDIF
 #endif
   !
@@ -2156,11 +2183,11 @@
     n2by2 = (dffts%nr2 + 1) / 2
     n3by2 = (dffts%nr3 + 1) / 2
     WRITE(stdout,'(3(a,i5))') 'n1by2=',n1by2,'n2by2=',n2by2,'n3by2=',n3by2
-    IF (.not. noncolin) THEN                                                               
-      ALLOCATE( psic_small(n1by2*n2by2*n3by2) )                                            
+    IF ( .NOT.  noncolin) THEN                                                               
+      ALLOCATE ( psic_small(n1by2*n2by2*n3by2) )                                            
       psic_small = czero                                                      
     ELSE                                                                                  
-      ALLOCATE( psic_nc_small(n1by2*n2by2*n3by2,npol) )                                    
+      ALLOCATE ( psic_nc_small(n1by2*n2by2*n3by2,npol) )                                    
       psic_nc_small = czero                                                   
     ENDIF 
   ENDIF
@@ -2168,12 +2195,12 @@
   DO ik = 1, nks
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq ( xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
     ik_g = nkq_abs
     !
     spin = ispinw
-    IF (ispinw.eq.0) spin = 1
-    IF (.not. noncolin) THEN                                                               
+    IF (ispinw == 0) spin = 1
+    IF ( .NOT.  noncolin) THEN                                                               
       WRITE(wfnname,200) ik_g, spin                                                     
     ELSE                                                                                  
       WRITE(wfnname,201) ik_g                                                           
@@ -2183,14 +2210,14 @@
     !
     IF (meta_ionode) THEN 
       IF (wvfn_formatted) THEN 
-        OPEN(unit=iun_plot, file=wfnname,form='formatted')
+        OPEN(UNIT=iun_plot, FILE=wfnname,FORM='formatted')
          IF (reduce_unk) THEN
            WRITE(iun_plot,*)  n1by2, n2by2, n3by2, ik_g, nbnd-nexband
          ELSE
            WRITE(iun_plot,*)  dffts%nr1, dffts%nr2, dffts%nr3, ik_g, nbnd-nexband
          ENDIF
       ELSE
-         OPEN(unit=iun_plot, file=wfnname,form='unformatted')
+         OPEN(UNIT=iun_plot, FILE=wfnname,FORM='unformatted')
          IF (reduce_unk) THEN
            WRITE(iun_plot)  n1by2, n2by2, n3by2, ik_g, nbnd-nexband
          ELSE
@@ -2200,13 +2227,13 @@
     ENDIF
     !
     CALL readwfc( my_pool_id+1, ik, evc )
-    CALL gk_sort( xk(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
+    CALL gk_sort( xk_loc(1,ik), ngm, g, gcutw, npw, igk_k(1,ik), g2kin )
     !
     ibnd1 = 0
     DO ibnd = 1, nbnd
       IF (excluded_band(ibnd)) CYCLE
       ibnd1 = ibnd1 + 1
-      IF (.not. noncolin) THEN
+      IF ( .NOT.  noncolin) THEN
         psic(:) = czero
         psic( dffts%nl(igk_k(1:npw,ik)) ) = evc(1:npw,ibnd)
         CALL invfft('Wave', psic, dffts)
@@ -2219,7 +2246,7 @@
       ENDIF
       IF (reduce_unk) pos = 0
 #if defined(__MPI)
-      IF (.not. noncolin) THEN
+      IF ( .NOT.  noncolin) THEN
         CALL gather_grid( dffts, psic, psic_all )
       ELSE
         DO ipol = 1, npol
@@ -2233,7 +2260,7 @@
             DO i = 1, dffts%nr1, 2
               idx = (k-1) * dffts%nr3 * dffts%nr2 + (j-1) * dffts%nr2 + i
               pos = pos + 1
-              IF (.not. noncolin) THEN
+              IF ( .NOT.  noncolin) THEN
                 psic_small(pos) = psic_all(idx)
               ELSE
                 DO ipol = 1, npol
@@ -2248,7 +2275,7 @@
       IF (meta_ionode) THEN
         IF (wvfn_formatted) THEN
           IF (reduce_unk) THEN
-            IF (.not. noncolin) THEN
+            IF ( .NOT.  noncolin) THEN
               WRITE(iun_plot,'(2ES20.10)') (psic_small(j), j = 1, n1by2*n2by2*n3by2)
             ELSE
               DO ipol = 1, npol
@@ -2256,7 +2283,7 @@
               ENDDO
             ENDIF
           ELSE
-            IF (.not. noncolin) THEN
+            IF ( .NOT.  noncolin) THEN
               WRITE(iun_plot,'(2ES20.10)') (psic_all(j), j = 1, dffts%nr1*dffts%nr2*dffts%nr3)
             ELSE
               DO ipol = 1, npol
@@ -2266,7 +2293,7 @@
           ENDIF
         ELSE
           IF (reduce_unk) THEN
-            IF (.not. noncolin) THEN
+            IF ( .NOT.  noncolin) THEN
               WRITE(iun_plot) (psic_small(j), j = 1, n1by2*n2by2*n3by2)
             ELSE
               DO ipol = 1, npol
@@ -2274,7 +2301,7 @@
               ENDDO
             ENDIF
           ELSE
-            IF (.not. noncolin) THEN
+            IF ( .NOT.  noncolin) THEN
               WRITE(iun_plot) (psic_all(j), j = 1, dffts%nr1*dffts%nr2*dffts%nr3)
             ELSE
               DO ipol = 1, npol
@@ -2291,7 +2318,7 @@
             DO i = 1, dffts%nr1, 2
               idx = (k-1) * dffts%nr3 * dffts%nr2 + (j-1) * dffts%nr2 + i
               pos = pos + 1
-              IF (.not. noncolin) THEN
+              IF ( .NOT.  noncolin) THEN
                 psic_small(pos) = psic(idx)
               ELSE
                 DO ipol = 1, npol
@@ -2305,7 +2332,7 @@
       !
       IF (meta_ionode) THEN
         IF (wvfn_formatted) THEN
-          IF (.not. noncolin) THEN
+          IF ( .NOT.  noncolin) THEN
             IF (reduce_unk) THEN
               WRITE(iun_plot,'(2ES20.10)') (psic_small(j), j = 1, n1by2*n2by2*n3by2)
             ELSE
@@ -2321,7 +2348,7 @@
             ENDDO
           ENDIF
         ELSE
-          IF (.not. noncolin) THEN
+          IF ( .NOT.  noncolin) THEN
             IF (reduce_unk) THEN
               WRITE(iun_plot) (psic_small(j), j = 1, n1by2*n2by2*n3by2)
             ELSE
@@ -2346,18 +2373,18 @@
   ENDDO  !ik
   !
   IF (reduce_unk) THEN
-    IF (.not. noncolin) THEN
-      DEALLOCATE(psic_small)
+    IF ( .NOT.  noncolin) THEN
+      DEALLOCATE (psic_small)
     ELSE
-      DEALLOCATE(psic_nc_small)
+      DEALLOCATE (psic_nc_small)
     ENDIF
   ENDIF
   !
 #if defined(__MPI)
-  IF (.not. noncolin) THEN
-    DEALLOCATE(psic_all)
+  IF ( .NOT.  noncolin) THEN
+    DEALLOCATE (psic_all)
   ELSE
-    DEALLOCATE(psic_nc_all)
+    DEALLOCATE (psic_nc_all)
   ENDIF
 #endif
   !
@@ -2385,8 +2412,8 @@
   REAL(DP), ALLOCATABLE :: r(:,:), rr(:), rp(:,:), ylm_w(:), ylm(:,:), mly(:,:)
   REAL(DP) :: u(3,3)
   !
-  ALLOCATE( r(3,lmax2), rp(3,lmax2), rr(lmax2), ylm_w(lmax2) )
-  ALLOCATE( ylm(lmax2,lmax2), mly(lmax2,lmax2) )
+  ALLOCATE ( r(3,lmax2), rp(3,lmax2), rr(lmax2), ylm_w(lmax2) )
+  ALLOCATE ( ylm(lmax2,lmax2), mly(lmax2,lmax2) )
 
   ! generate a set of nr=lmax2 random vectors
   DO ir = 1, lmax2
@@ -2407,11 +2434,11 @@
     !- define the u matrix that rotate the reference frame
     CALL set_u_matrix( xaxis(:,iw), zaxis(:,iw), u )
     !- find rotated r-vectors 
-    rp(:,:) = matmul( u(:,:) , r(:,:) )
+    rp(:,:) = MATMUL( u(:,:) , r(:,:) )
     !- set ylm funtion according to wannier90 (l,mr) indexing in the rotaterd points
     CALL ylm_wannier( ylm_w, l_w(iw), mr_w(iw), rp, lmax2 ) 
     !
-    csph(:,iw) = matmul( mly(:,:), ylm_w(:) )
+    csph(:,iw) = MATMUL( mly(:,:), ylm_w(:) )
     !
 !    WRITE (stdout,*)
 !    WRITE (stdout,'(2i4,2(2x,3f6.3))') l_w(iw), mr_w(iw), xaxis(:,iw), zaxis(:,iw)
@@ -2419,7 +2446,7 @@
 !    WRITE (stdout,'(16f6.3)') (csph(lm,iw), lm=1,lmax2)
     !
   ENDDO
-  DEALLOCATE( r, rp, rr, ylm_w, ylm, mly )
+  DEALLOCATE ( r, rp, rr, ylm_w, ylm, mly )
   !
   RETURN
   !
@@ -2440,8 +2467,8 @@
   REAL(DP) :: capel
   INTEGER :: lm
   !
-  ALLOCATE( uno(lmax2,lmax2) )
-  uno = matmul(mly, ylm)
+  ALLOCATE ( uno(lmax2,lmax2) )
+  uno = MATMUL(mly, ylm)
   capel = 0.d0
   DO lm = 1, lmax2
     uno(lm,lm) = uno(lm,lm) - 1.d0

@@ -15,6 +15,7 @@ SUBROUTINE lr_alloc_init()
   USE kinds,                ONLY : dp
   USE ions_base,            ONLY : nat
   USE uspp,                 ONLY : nkb, okvan
+  USE lrus,                 ONLY : bbk, bbg, bbnc
   USE uspp_param,           ONLY : nhm
   USE fft_base,             ONLY : dfftp, dffts
   USE klist,                ONLY : nks
@@ -153,12 +154,13 @@ SUBROUTINE lr_alloc_init()
   ENDIF
   !
   ! Optical case: allocate the response charge-density
-  !
+  ! 
   IF (.NOT.eels) THEN
      ! 
      IF (gamma_only) THEN
         ALLOCATE(rho_1(dfftp%nnr,nspin_mag))
         rho_1(:,:)=0.0d0
+        ALLOCATE(bbg(nkb,nkb))
      ELSE
         ALLOCATE(rho_1c(dfftp%nnr,nspin_mag))
         rho_1c(:,:)=(0.0d0,0.0d0)
@@ -181,6 +183,9 @@ SUBROUTINE lr_alloc_init()
         IF (noncolin) THEN
            ALLOCATE (int3_nc(nhm,nhm,nat,nspin,1))
            int3_nc = (0.0d0, 0.0d0)
+           ALLOCATE(bbnc(nkb*npol, nkb*npol, nksq))
+        ELSE
+           ALLOCATE(bbk(nkb, nkb, nksq))
         ENDIF
         !
      ENDIF

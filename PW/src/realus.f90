@@ -8,22 +8,22 @@
 !----------------------------------------------------------------------------
 MODULE realus
   !----------------------------------------------------------------------------
+  !! module originally written by Antonio Suriano and Stefano de Gironcoli
+  !! modified by Carlo Sbraccia
+  !! modified by O. Baris Malcioglu (2008)
+  !! modified by P. Umari and G. Stenuit (2009)
+  !! Cleanup, GWW-specific stuff moved out by P. Giannozzi (2015)
+  !! Computation of dQ/dtau_i needed for forces added by P. Giannozzi (2015)
+  !! Some comments about the way some routines act added by S. de Gironcoli  (2015)
+  !! extended to generic k by S. de Gironcoli (2016)
+  !! addusstress_r added by S. de Gironcoli (2016)
+  !! task group reorganization by S. de Gironcoli (2016)
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   !
-  ! ... module originally written by Antonio Suriano and Stefano de Gironcoli
-  ! ... modified by Carlo Sbraccia
-  ! ... modified by O. Baris Malcioglu (2008)
-  ! ... modified by P. Umari and G. Stenuit (2009)
-  ! ... Cleanup, GWW-specific stuff moved out by P. Giannozzi (2015)
-  ! ... Computation of dQ/dtau_i needed for forces added by P. Giannozzi (2015)
-  ! ... Some comments about the way some routines act added by S. de Gironcoli  (2015)
-  ! ... extended to generic k by S. de Gironcoli (2016)
-  ! ... addusstress_r added by S. de Gironcoli (2016)
-  ! ... task group reorganization by S. de Gironcoli (2016)
-  !
   IMPLICIT NONE
+  !
   REAL(DP), ALLOCATABLE :: boxrad(:) ! radius of boxes, does not depend on the grid
   ! Beta function in real space
   INTEGER,  ALLOCATABLE :: box_beta(:,:), maxbox_beta(:)
@@ -2061,7 +2061,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 
@@ -2177,7 +2177,7 @@ MODULE realus
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
     USE mp_bands,      ONLY : me_bgrp
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 
@@ -2285,7 +2285,7 @@ MODULE realus
     USE gvecs,                    ONLY : doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 
@@ -2373,7 +2373,7 @@ MODULE realus
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : fwfft
     USE mp_bands,                 ONLY : me_bgrp
-    USE fft_helper_subroutines
+    USE fft_helper_subroutines,   ONLY : fftx_ntgrp, tg_get_recip_inc
 
     IMPLICIT NONE
 

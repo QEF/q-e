@@ -164,7 +164,7 @@ CONTAINS
                                     "http://www.quantum-espresso.org/ns/qes/qes_190304.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
-              COMMENT = "If not explicitely indicated, all quantities are expressed in Hartree atomic units" ) 
+              COMMENT = "All quantities are in Hartree atomic units unless otherwise specified" ) 
       !
       IF (ierr /= 0) call errore(subname, 'opening xml output file', ierr)
       ! the input file is mandatory to have a validating schema 

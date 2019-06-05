@@ -84,9 +84,9 @@
       !
       jg = 0
       tfound = .false.
-      DO WHILE ( (.not.tfound) .AND. (jg < ngm) )
+      DO WHILE ( ( .NOT. tfound) .AND. (jg < ngm) )
         jg = jg + 1
-        tfound = (i.eq.mill(1,jg)) .AND. (j.eq.mill(2,jg)) .AND. (k.eq.mill(3,jg))
+        tfound = (i == mill(1,jg)) .AND. (j == mill(2,jg)) .AND. (k == mill(3,jg))
       ENDDO
       !
       IF (tfound) THEN
@@ -114,7 +114,7 @@
       !
     ENDDO
     !
-    IF (notfound.gt.0) &
+    IF (notfound > 0) &
       CALL errore('gmap_sym','incomplete mapping of G vectors: notfound = ',notfound)
     !
   ENDDO

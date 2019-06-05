@@ -489,7 +489,7 @@ CONTAINS
 !   Outside the PAW spheres augfun should be exactly 0. On some machine
 !   it is equal to zero to machine precision and sometimes it is negative, 
 !   so as to confuse the check for negative charge. So we set it to zero
-!   explicitely.
+!   explicitly.
 !
     DO ns = 1, nbeta
        l1 = pawset_%l(ns)

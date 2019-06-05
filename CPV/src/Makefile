@@ -37,7 +37,6 @@ exx_module.o \
 exx_pair.o \
 exx_psi.o \
 exx_vofr.o \
-fft.o \
 forces.o \
 fromscra.o \
 gram.o \

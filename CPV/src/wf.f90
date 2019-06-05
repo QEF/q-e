@@ -28,7 +28,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
   USE smallbox_gvec,            ONLY : ngb
-  USE smallbox_subs,            ONLY : fft_oned2box
+  USE smallbox_subs,            ONLY : fft_oned2box, boxdotgrid
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart
   USE control_flags,            ONLY : iverbosity,conv_elec
@@ -90,8 +90,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   REAL(DP)    :: te(6)
   INTEGER     :: iunit
   
-  COMPLEX(DP), EXTERNAL :: boxdotgridcplx
-  !
 #if defined (__MPI)
   !
   INTEGER :: proc, ntot, ncol, mc, ngpwpp(nproc_bgrp)
@@ -331,7 +329,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               CALL invfft(qv,dfftb,isa)
               iqv=1
               qvt=(0.D0,0.D0)
-              qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
+              qvt=boxdotgrid(irb(:,isa),qv,expo(:,inw))
 
 #if defined(__MPI)
               CALL mp_sum( qvt, intra_bgrp_comm )
@@ -369,7 +367,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  CALL invfft(qv,dfftb,isa)
                  iqv=1
                  qvt=0.D0
-                 qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
+                 qvt=boxdotgrid(irb(:,isa),qv,expo(:,inw))
 #if defined(__MPI)
                  CALL mp_sum( qvt, intra_bgrp_comm )
 #endif
@@ -1957,66 +1955,6 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   RETURN
 END SUBROUTINE small_box_wf
 !
-!-----------------------------------------------------------------------
-FUNCTION boxdotgridcplx(irb,qv,vr)
-  !-----------------------------------------------------------------------
-  !
-  ! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
-  ! array qv(r) is defined on box grid, array vr(r)on dense grid
-  ! irb   : position of the box in the dense grid
-  ! Parallel execution: remember to sum the contributions from other nodes
-  !
-  !      use ion_parameters
-  !
-  USE kinds,           ONLY : DP
-  USE fft_base,        ONLY : dfftp, dfftb
-  USE mp_global,       ONLY : me_bgrp
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,           INTENT(IN):: irb(3)
-  COMPLEX(DP), INTENT(IN):: qv(dfftb%nnr), vr(dfftp%nnr)
-  COMPLEX(DP)            :: boxdotgridcplx
-  !
-  INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me
-  !
-  me = me_bgrp + 1
-  !
-  boxdotgridcplx = ZERO
-
-  DO ir3=1,dfftb%nr3
-     ibig3=irb(3)+ir3-1
-     ibig3=1+MOD(ibig3-1,dfftp%nr3)
-#if defined(__MPI)
-     ibig3 = ibig3 - dfftp%my_i0r3p
-     IF (ibig3.GT.0.AND.ibig3.LE.dfftp%my_nr3p) THEN
-#endif
-        DO ir2=1,dfftb%nr2
-           ibig2=irb(2)+ir2-1
-           ibig2=1+MOD(ibig2-1,dfftp%nr2)
-#if defined(__MPI)
-           ibig2 = ibig2 - dfftp%my_i0r2p
-           IF (ibig2.GT.0.AND.ibig2.LE.dfftp%my_nr2p) THEN
-#endif
-              DO ir1=1,dfftb%nr1
-                 ibig1=irb(1)+ir1-1
-                 ibig1=1+MOD(ibig1-1,dfftp%nr1)
-                 ibig=ibig1 + (ibig2-1)*dfftp%nr1x + (ibig3-1)*dfftp%nr1x*dfftp%my_nr2p
-                 ir  =ir1 + (ir2-1)*dfftb%nr1x + (ir3-1)*dfftb%nr1x*dfftb%nr2x
-                 boxdotgridcplx = boxdotgridcplx + qv(ir)*vr(ibig)
-              END DO
-#if defined(__MPI)
-           ENDIF
-#endif
-        END DO
-#if defined(__MPI)
-     ENDIF
-#endif
-  END DO
-  !
-  RETURN
-  !
-END FUNCTION boxdotgridcplx
 !
 !----------------------------------------------------------------------------
 SUBROUTINE write_rho_g( rhog )

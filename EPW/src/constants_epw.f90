@@ -34,6 +34,7 @@
   !
   REAL(DP), PARAMETER :: ang2cm   = 1.0d-8
   REAL(DP), PARAMETER :: ang2m    = 1.0d-10  
+  REAL(DP), PARAMETER :: cm2m     = 1.0d-2
   REAL(DP), PARAMETER :: bohr     = 0.52917721092d0
   REAL(DP), PARAMETER :: ryd2mev  = 13605.6981d0
   REAL(DP), PARAMETER :: ryd2ev   = 13.6056981d0
@@ -62,6 +63,7 @@
   REAL(DP), PARAMETER :: eps12 = 1.0E-12_DP
   REAL(DP), PARAMETER :: eps14 = 1.0E-14_DP
   REAL(DP), PARAMETER :: eps16 = 1.0E-16_DP
+  REAL(DP), PARAMETER :: eps20 = 1.0E-20_DP
   REAL(DP), PARAMETER :: eps24 = 1.0E-24_DP
   REAL(DP), PARAMETER :: eps32 = 1.0E-32_DP
   REAL(DP), PARAMETER :: eps80 = 1.0E-80_DP
