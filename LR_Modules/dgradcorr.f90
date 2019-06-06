@@ -11,7 +11,7 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !--------------------------------------------------------------------
   !
   !  Add gradient correction contribution to 
-  !  the responce exchange-correlation potential dvxc.
+  !  the response exchange-correlation potential dvxc.
   !  LSDA is allowed.         ADC (September 1999)
   !  Noncollinear is allowed. ADC (June 2007)
   !

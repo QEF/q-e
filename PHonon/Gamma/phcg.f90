@@ -456,7 +456,7 @@ SUBROUTINE cg_neweps
   !
   !  re-initialize data needed for gradient corrections
   !
-  CALL cg_setupdgc
+  CALL setup_dgc( )
   !
   !   calculate linear response to macroscopic fields
   !
