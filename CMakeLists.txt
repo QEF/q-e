@@ -4,9 +4,8 @@ set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
     VERSION 6.4.1
-    LANGUAGES Fortran C
-    HOMEPAGE_URL "https://www.quantum-espresso.org/"
-    DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization")
+    DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
+    LANGUAGES Fortran C)
 
 # Add our own custom CMake modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
