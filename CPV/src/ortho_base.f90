@@ -1244,6 +1244,8 @@ CONTAINS
             END DO
          ENDIF
          !
+         DEALLOCATE( xd )
+         !
       END DO
       !
       CALL stop_clock( 'updatc' )
