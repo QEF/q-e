@@ -128,11 +128,11 @@ endif(QE_ENABLE_MPI)
 
 function(add_fortran_library LIB)
     add_library(${LIB} ${ARGN})
-    # set module path to LIB_DIR/mod
-    get_target_property(LIB_DIR ${LIB} BINARY_DIR)
-    set_target_properties(${LIB} PROPERTIES Fortran_MODULE_DIRECTORY ${LIB_DIR}/mod)
-    # making LIB_DIR/mod available for libraries linking LIB 
-    target_include_directories(${LIB} INTERFACE ${LIB_DIR}/mod)
+    # set module path to tgt_binary_dir/mod
+    get_target_property(tgt_binary_dir ${LIB} BINARY_DIR)
+    set_target_properties(${LIB} PROPERTIES Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod)
+    # making tgt_binary_dir/mod available for libraries linking LIB 
+    target_include_directories(${LIB} INTERFACE ${tgt_binary_dir}/mod)
 endfunction(add_fortran_library)
 
 function(qe_install_target TGT)
@@ -143,9 +143,9 @@ function(qe_install_target TGT)
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
     # If the target generates Fortran modules, make sure
     # to install them as well to a proper location
-    get_target_property(tgt_mod_dir ${TGT} Fortran_MODULE_DIRECTORY)
-    if(tgt_mod_dir)
-        install(DIRECTORY ${tgt_mod_dir}/
+    get_target_property(tgt_module_dir ${TGT} Fortran_MODULE_DIRECTORY)
+    if(tgt_module_dir)
+        install(DIRECTORY ${tgt_module_dir}/
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
     endif()
 endfunction(qe_install_target)
