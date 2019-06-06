@@ -82,23 +82,19 @@ MODULE gc_lr
   SAVE
   !
   REAL (DP), ALLOCATABLE :: &
-       grho(:,:,:),              &! 3, nrxx, nspin)
-       gmag(:,:,:),              &! 3, nrxx, nspin)
-       vsgga(:),                 &! nrxx)
-       segni(:),                 &! nrxx)
-       dvxc_rr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_sr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_ss(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
+       grho(:,:,:),    &! gradient of the unperturbed density  (3,nrxx,nspin)
+       gmag(:,:,:),    &! 3, nrxx, nspin)
+       vsgga(:),       &! nrxx)
+       segni(:),       &! nrxx)
+       dvxc_rr(:,:,:), &! derivatives of the E_xc functional w.r.t. r and s  
+       dvxc_sr(:,:,:), &! r=rho and s=|grad(rho)|
+       dvxc_ss(:,:,:), &! dimensions: (nrxx, nspin, nspin)
+       dvxc_s(:,:,:)
   !
   ! in the noncollinear case gmag contains the gradient of the magnetization
   ! grho the gradient of rho+ and of rho-, the eigenvalues of the spin density
   ! vsgga= 0.5* (V_up-V_down) to be used in the calculation of the change
   ! of the exchange and correlation magnetic field.
-  ! gradient of the unpert. density
-  !
-  ! derivatives of the E_xc functiona
-  ! r=rho and s=|grad(rho)|
   !
 END MODULE gc_lr
 !
