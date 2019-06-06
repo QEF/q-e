@@ -1,4 +1,5 @@
 a_h.o : ../../FFTXlib/fft_interfaces.o
+a_h.o : ../../LR_Modules/lrcom.o
 a_h.o : ../../Modules/becmod.o
 a_h.o : ../../Modules/cell_base.o
 a_h.o : ../../Modules/constants.o
@@ -26,6 +27,7 @@ cg_readin.o : ../../PW/src/pwcom.o
 cg_readin.o : ../../PW/src/symm_base.o
 cg_readin.o : ../../UtilXlib/mp.o
 cg_readin.o : cgcom.o
+cg_setup.o : ../../LR_Modules/lrcom.o
 cg_setup.o : ../../Modules/cell_base.o
 cg_setup.o : ../../Modules/fft_base.o
 cg_setup.o : ../../Modules/funct.o

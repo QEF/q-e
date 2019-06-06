@@ -28,7 +28,8 @@ SUBROUTINE cg_setup
   USE vlocal,     ONLY: strf
   USE wvfct,      ONLY: nbnd, npwx
   USE gvecw,      ONLY: gcutw
-  USE cgcom
+  USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE cgcom, ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
   !
   IMPLICIT NONE
   !
@@ -106,7 +107,7 @@ SUBROUTINE cg_setup
   !
   !  initialize data needed for gradient corrections
   !
-  CALL cg_setupdgc
+  CALL setup_dgc( ) 
   !
   iunres=88
   !
