@@ -86,6 +86,7 @@ SUBROUTINE cg_setupdgc
   IF (nspin == 1) THEN
      !
      rh(:) = rho%of_r(:,1)
+     null_v(:) = 1.0_DP
      WHERE (ABS(rho%of_r(:,1))<=epsr .OR. grho2(:,1)<=epsg)
         rh = rho_trash
         grho2(:,1) = grho2_trash
@@ -122,6 +123,7 @@ SUBROUTINE cg_setupdgc
      grh2(:) = (grho(1,:,1)+grho(1,:,2))**2 + (grho(2,:,1) &   
                +grho(2,:,2))**2 + (grho(3,:,1)+grho(3,:,2))**2
      !
+     null_v(:) = 1.0_DP
      WHERE (rh > epsr)
         zeta = (rho%of_r(:,1)-rho%of_r(:,2)) / rh
      ELSEWHERE
