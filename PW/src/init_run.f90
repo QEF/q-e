@@ -107,7 +107,7 @@ SUBROUTINE init_run()
      CALL set_h_ainv()
   END IF
   !
-  CALL allocate_pw()
+  CALL allocate_wfc_k()
   CALL openfil()
   !
   CALL hinit0()

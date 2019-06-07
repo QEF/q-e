@@ -18,12 +18,9 @@ SUBROUTINE hinit0()
   USE basis,        ONLY : startingconfig
   USE cell_base,    ONLY : at, bg, omega, tpiba2
   USE cellmd,       ONLY : omega_old, at_old, lmovecell
-  USE klist,        ONLY : init_igk
-  USE wvfct,        ONLY : npwx
   USE fft_base,     ONLY : dfftp
   USE gvect,        ONLY : ngm, g, eigts1, eigts2, eigts3
   USE vlocal,       ONLY : strf
-  USE gvecw,        ONLY : gcutw
   USE realus,       ONLY : generate_qpointlist,betapointlist,init_realspace_vars,real_space
   use ldaU,         ONLY : lda_plus_U, U_projection
   USE control_flags,ONLY : tqr, tq_smoothing, tbeta_smoothing
@@ -47,8 +44,6 @@ SUBROUTINE hinit0()
   CALL init_us_1()
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
-  !
-  CALL init_igk ( npwx, ngm, g, gcutw )
   !
   IF ( lmovecell .AND. startingconfig == 'file' ) THEN
      !

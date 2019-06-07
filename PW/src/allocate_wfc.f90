@@ -36,17 +36,20 @@ SUBROUTINE allocate_wfc()
 END SUBROUTINE allocate_wfc
 !
 !----------------------------------------------------------------------------
-SUBROUTINE allocate_pw()
+SUBROUTINE allocate_wfc_k()
   !----------------------------------------------------------------------------
   !
-  ! ... dynamical allocation of arrays: wavefunctions, betas, kinetic energy
-  ! ... computes npwx, requires dimensions nbnd, npol, natomwfc, nwfcU
+  ! ... dynamical allocation of k-point-dependent arrays: wavefunctions, betas
+  ! ... kinetic energy, k+G indices. Computes max no. of plane waves npwx and
+  ! ... k+G indices igk_k (needs G-vectors and cutoff gcutw)
+  ! ... Requires dimensions nbnd, npol, natomwfc, nwfcU
+  ! ... Requires that k-points are set up and distributed (if parallelized)
   !
   USE wvfct,            ONLY : npwx, g2kin
   USE uspp,             ONLY : vkb, nkb
   USE gvecw,            ONLY : gcutw
   USE gvect,            ONLY : ngm, g
-  USE klist,            ONLY : xk, nks
+  USE klist,            ONLY : xk, nks, init_igk
   IMPLICIT NONE
   !
   INTEGER, EXTERNAL :: n_plane_waves
@@ -54,6 +57,11 @@ SUBROUTINE allocate_pw()
   !   calculate number of PWs for all kpoints
   !
   npwx = n_plane_waves (gcutw, nks, xk, g, ngm)
+  !
+  !   compute indices j=igk(i) such that (k+G)_i = k+G_j, for all k
+  !   compute number of plane waves ngk(ik) as well
+  !
+  CALL init_igk ( npwx, ngm, g, gcutw )
   !
   CALL allocate_wfc ( )
   !
@@ -67,4 +75,4 @@ SUBROUTINE allocate_pw()
   !
   RETURN
   !
-END SUBROUTINE allocate_pw
+END SUBROUTINE allocate_wfc_k

@@ -65,7 +65,7 @@ SUBROUTINE lr_run_nscf( )
   !
   ! The variables igk_k and ngk are re-set up here (because there 
   ! are not only poins k but also points k+q) through the path:
-  ! init_run -> hinit0 -> init_igk
+  ! init_run -> allocate_wfc_k -> init_igk
   ! 
   CALL init_run()
   !

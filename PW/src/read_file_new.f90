@@ -22,7 +22,7 @@ SUBROUTINE read_file()
   USE control_flags,        ONLY : io_level
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-  USE klist,                ONLY : init_igk, nkstot, nks, xk, wk
+  USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : isk
   USE wvfct,                ONLY : nbnd, et, wg
   !
@@ -57,7 +57,10 @@ SUBROUTINE read_file()
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
-  CALL allocate_pw()
+  ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
+  ! ... FIXME: the latter should be read from file, not recomputed
+  !
+  CALL allocate_wfc_k()
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -67,11 +70,6 @@ SUBROUTINE read_file()
   nwordwfc = nbnd*npwx*npol
   io_level = 1
   CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
-  !
-  ! ... Allocate and compute k+G indices and number of plane waves
-  ! ... FIXME: should be read from file, not re-computed
-  !
-  CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
   ! ... read wavefunctions in collected format, writes them to file
   ! ... FIXME: likely not a great idea
