@@ -325,7 +325,7 @@ SUBROUTINE lr_readin
   ! read_file -> init_igk.
   ! EELS: the variables igk_k and ngk will be re-set up later (because there
   ! will be not only poins k but also points k+q) through the path:
-  ! lr_run_nscf -> init_run -> hinit0 -> init_igk
+  ! lr_run_nscf -> init_run -> allocate_wfc_k -> init_igk
   !
   CALL read_file()
   !
