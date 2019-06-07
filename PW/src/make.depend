@@ -822,7 +822,6 @@ h_psi_meta.o : scf_mod.o
 hinit0.o : ../../Modules/cell_base.o
 hinit0.o : ../../Modules/control_flags.o
 hinit0.o : ../../Modules/fft_base.o
-hinit0.o : ../../Modules/gvecw.o
 hinit0.o : ../../Modules/io_global.o
 hinit0.o : ../../Modules/ions_base.o
 hinit0.o : ../../Modules/kind.o
@@ -831,18 +830,13 @@ hinit0.o : atomic_wfc_mod.o
 hinit0.o : ldaU.o
 hinit0.o : pwcom.o
 hinit0.o : realus.o
-hinit1.o : ../../FFTXlib/fft_types.o
 hinit1.o : ../../Modules/cell_base.o
 hinit1.o : ../../Modules/control_flags.o
 hinit1.o : ../../Modules/fft_base.o
-hinit1.o : ../../Modules/funct.o
 hinit1.o : ../../Modules/ions_base.o
 hinit1.o : ../../Modules/paw_variables.o
 hinit1.o : ../../Modules/recvec.o
 hinit1.o : ../../Modules/wannier_new.o
-hinit1.o : exx.o
-hinit1.o : exx_band.o
-hinit1.o : exx_base.o
 hinit1.o : ldaU.o
 hinit1.o : martyna_tuckerman.o
 hinit1.o : newd.o
@@ -967,6 +961,7 @@ input.o : ../../Modules/io_global.o
 input.o : ../../Modules/ions_base.o
 input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
+input.o : ../../Modules/libxc.o
 input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/mp_pools.o
 input.o : ../../Modules/noncol.o

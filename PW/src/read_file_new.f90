@@ -320,8 +320,8 @@ SUBROUTINE post_xml_init (  )
   ! ... the core correction charge (if any) - from hinit0.f90
   !
   CALL init_vloc()
-  if (tbeta_smoothing) CALL init_us_b0()
-  if (tq_smoothing) CALL init_us_0()
+  IF (tbeta_smoothing) CALL init_us_b0()
+  IF (tq_smoothing) CALL init_us_0()
   CALL init_us_1()
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
