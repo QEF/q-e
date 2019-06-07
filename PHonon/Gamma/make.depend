@@ -42,16 +42,6 @@ cg_setup.o : ../../PW/src/newd.o
 cg_setup.o : ../../PW/src/pwcom.o
 cg_setup.o : ../../PW/src/scf_mod.o
 cg_setup.o : cgcom.o
-cg_setupdgc.o : ../../Modules/constants.o
-cg_setupdgc.o : ../../Modules/fft_base.o
-cg_setupdgc.o : ../../Modules/funct.o
-cg_setupdgc.o : ../../Modules/kind.o
-cg_setupdgc.o : ../../Modules/recvec.o
-cg_setupdgc.o : ../../Modules/uspp.o
-cg_setupdgc.o : ../../Modules/xc_gga_drivers.o
-cg_setupdgc.o : ../../PW/src/pwcom.o
-cg_setupdgc.o : ../../PW/src/scf_mod.o
-cg_setupdgc.o : cgcom.o
 cgcom.o : ../../Modules/kind.o
 cgsolve.o : ../../Modules/becmod.o
 cgsolve.o : ../../Modules/io_global.o
