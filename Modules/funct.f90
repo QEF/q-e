@@ -801,8 +801,10 @@ CONTAINS
     CASE( 2 )
        IF (family==XC_FAMILY_LDA .AND. fkind==XC_CORRELATION) RETURN
     CASE( 3 )
-       IF (family==XC_FAMILY_GGA .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_GGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE) RETURN
+       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE) RETURN
+       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
     CASE( 4 )
        IF (family==XC_FAMILY_GGA .AND. fkind==XC_CORRELATION) RETURN
     END SELECT

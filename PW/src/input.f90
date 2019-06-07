@@ -316,7 +316,12 @@ SUBROUTINE iosys()
   USE qes_types_module,      ONLY: input_type
   !
   USE vlocal,        ONLY : starting_charge_ => starting_charge
-  ! 
+  !
+#if defined(__LIBXC)
+  USE xc_f90_types_m
+  USE xc_f90_lib_m
+#endif
+  !
   IMPLICIT NONE
   !
   INTERFACE  
@@ -335,6 +340,10 @@ SUBROUTINE iosys()
   INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
+#if defined(__LIBXC)
+  INTEGER :: igcx, family
+  TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+#endif
   !
   ! ... various initializations of control variables
   !
@@ -1625,7 +1634,15 @@ SUBROUTINE iosys()
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten
   !
+#if defined(__LIBXC)
+  igcx = get_igcx()
+  CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )  
+  family = xc_f90_info_family( xc_info )
+  IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_fraction )
+  CALL xc_f90_func_end( xc_func )
+#endif
   IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+  !
   IF (screening_parameter >= 0.0_DP) &
         & CALL set_screening_parameter (screening_parameter)
   !
