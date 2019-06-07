@@ -137,4 +137,9 @@ fermisurf_example:
 BGW_example:
     This example generates output files for BerkeleyGW using the pw2bgw.x
     utility
-   
+
+ACF_example:
+    This example tests the ppacf.x utility
+    Y. Jiao, E. Schr\"oder, and P. Hyldgaard, Phys. Rev. B 97, 085115 (2018);
+    Y. Jiao, E. Schr\"oder, P. Hyldgaard, J. Chem. Phys. 148, 194115 (2018).
+
