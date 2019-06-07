@@ -17,7 +17,7 @@ set(sources
 # TODO rename all sources *.f90 -> *.F90
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 
-add_fortran_library(qe_laxlib ${sources})
+qe_add_library(qe_laxlib ${sources})
 add_library(QE::LAXlib ALIAS qe_laxlib)
 target_link_libraries(qe_laxlib
     PUBLIC
