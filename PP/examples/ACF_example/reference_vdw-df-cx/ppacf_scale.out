@@ -1,0 +1,106 @@
+
+     Program ppacf v.6.4.1 starts on  7Jun2019 at  8:27:24 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     2 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+
+
+     entering subroutine acf ...
+
+
+
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     %                                                                      %
+     % You are using PPACF, please cite the following paper:                %
+     %                                                                      %
+     %   Y. Jiao, E. Schr\"oder, and P. Hyldgaard, PRB 97, 085115 (2018).   %
+     %                                                                      %
+     % If you are using this code for hybrid mixing value, please also cite:%
+     %                                                                      %
+     %   Y. Jiao, E. Schr\"oder, and P. Hyldgaard, JCP 148, 194115 (2018).  %
+     %                                                                      %
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+     Reading data from directory:
+     ./atomns.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = VDW-DF-CX ( 1  4 27  0 1 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         444     444    132                28742    28742    4770
+     Max         445     445    133                28751    28751    4775
+     Sum         889     889    265                57493    57493    9545
+ 
+
+
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     %                                                                      %
+     % You are using vdW-DF, which was implemented by the Thonhauser group. %
+     % Please cite the following two papers that made this development      %
+     % possible and the two reviews that describe the various versions:     %
+     %                                                                      %
+     %   T. Thonhauser et al., PRL 115, 136402 (2015).                      %
+     %   T. Thonhauser et al., PRB 76, 125112 (2007).                       %
+     %   K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).             %
+     %   D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009). %
+     %                                                                      %
+     %                                                                      %
+     % If you are calculating the stress with vdW-DF, please also cite:     %
+     %                                                                      %
+     %   R. Sabatini et al., J. Phys.: Condens. Matter 24, 424209 (2012).   %
+     %                                                                      %
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+     ACF coupling-constant  Exc_lambda (Ry)  E_c,lambda^LDA (Ry)  E_c,lambda^nl (Ry)
+
+       0.00000000     -12.42812297       0.00000000       0.00000000
+       0.20000000     -13.39297832      -1.04144953       0.07659418
+       0.40000000     -13.93333786      -1.63851794       0.13330305
+       0.60000000     -14.34687228      -2.09823607       0.17948675
+       0.80000000     -14.68727901      -2.47793314       0.21877710
+       1.00000000     -14.97792096      -2.80295714       0.25315915
+     Ec_nl(n_1/lambda): 
+       0.20000000       0.20401808
+       0.40000000       0.18357768
+       0.60000000       0.16885877
+       0.80000000       0.15736063
+       1.00000000       0.14797433
+                        Exchange     -12.42812297 Ry
+                    LDA Exchange     -12.15999739 Ry
+                     Correlation      -1.60767643 Ry
+                 LDA Correlation      -1.75565076 Ry
+                          E_c^nl       0.14797433 Ry
+          Exchange + Correlation     -14.03579940 Ry
+                         T_c^LDA       1.04730638 Ry
+                          T_c^nl      -0.10518483 Ry
+      Kinetic-correlation Energy       0.94212156 Ry
+ 
+     ppacf        :      2.50s CPU      2.93s WALL
+
+ 
+   This run was terminated on:   8:27:27   7Jun2019            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

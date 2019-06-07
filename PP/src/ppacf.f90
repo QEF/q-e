@@ -73,7 +73,7 @@ PROGRAM do_ppacf
   REAL(DP) :: etcldalambda, etcgclambda, etcnlclambda, etcnl_check, &
               ttcnl_check, tcnl_int
   REAL(DP), ALLOCATABLE :: Ec_nl_ngamma(:)
-  REAL(DP) :: etc, etclda, etcgc
+  REAL(DP) :: etc, etclda, etcgc,etcnl,etcnlncc
   REAL(DP), EXTERNAL :: exxenergyace
   !
   INTEGER :: is, ir, iq, ig, icar, nnrtot
@@ -124,7 +124,8 @@ PROGRAM do_ppacf
   CHARACTER(LEN=256) :: filplot
   INTEGER  :: plot_num
   !
-  REAL(DP) :: ttclda  ! the kinetic energy T_c^LDA=E_c,lambda=1^LDA-E_c^LDA
+  REAL(DP) :: ttclda        ! the LDA kinetic-correlation energy T_c^LDA=E_c,lambda=1^LDA-E_c^LDA
+  REAL(DP) :: ttcgc         ! the GGA-LDA kinetic-correlation energy T_c^gc=E_c,lambda=1^gc-E_c^gc
   REAL(DP) :: gtimesr
   REAL(DP) :: r_shift(3)
   REAL(DP), ALLOCATABLE :: dq0_drho(:,:)
@@ -153,8 +154,8 @@ PROGRAM do_ppacf
   REAL(DP), ALLOCATABLE    :: kin_r(:,:) ! the kinetic energy density in R-space
   !
   TYPE(scf_type) :: exlda, eclda
-  TYPE(scf_type) :: tclda  ! the kinetic energy per particle
-  TYPE(scf_type) :: ecnl   ! the non-local correlation energy per partical
+  TYPE(scf_type) :: tclda  ! the LDA kinetic-correlation energy per particle
+  TYPE(scf_type) :: ecnl   ! the ECNL kinetic.correlation energy per particle
   TYPE(scf_type) :: tcnl
   TYPE(scf_type) :: exgc, ecgc, tcgc
   !
@@ -317,6 +318,9 @@ PROGRAM do_ppacf
      tcgc%of_r(:,:) = 0._DP
   ENDIF
   ttclda = 0._DP
+  ttcgc = 0._DP
+  etcnl = 0._DP
+  etcnlncc = 0._DP
   !
   CALL init_xc( 'ALL' )
   !
@@ -345,8 +349,8 @@ PROGRAM do_ppacf
           rhox = rho%of_r(ir,1) + rho_core(ir)
           arhox(1,1) = ABS(rhox)
           IF (arhox(1,1) > vanishing_charge) THEN
+             rs = pi34 /arhox(1,1)**third
              IF (iexch == 1) THEN
-                rs = pi34 /arhox(1,1)**third
                 CALL slater( rs, ex(1), vx(1,1) ) ! \epsilon_x,\lambda[n]=\epsilon_x[n]
              ELSE
                 CALL xc( 1, nspin, nspin, arhox(:,1:1), ex, ec, vx(:,1:1), vc(:,1:1) )
@@ -421,7 +425,8 @@ PROGRAM do_ppacf
                    exgc%of_r(ir,1) = e2*sx(1)*segno
                    IF (igcc /= 0) THEN
                       ecgc%of_r(ir,1) = e2*sc(1)*segno
-                      tcgc%of_r(ir,1) = e2*(sc(1)-ecgc_l)*segno
+                      tcgc%of_r(ir,1) = e2*(sc(1)-ecgc_l)*segno 
+                      ttcgc=ttcgc+e2*(sc(1)-ecgc_l)*segno
                    ENDIF
                 ENDIF
              ENDIF
@@ -518,6 +523,7 @@ PROGRAM do_ppacf
                 IF(igcc.NE.0) THEN
                    ecgc%of_r(ir,1)=e2*sc(1)
                    tcgc%of_r(ir,1)=e2*(sc(1)-ecgc_l)
+                   ttcgc=ttcgc+e2*(sc(1)-ecgc_l)
                 ENDIF
              ENDIF
           ENDIF
@@ -539,6 +545,7 @@ PROGRAM do_ppacf
      etcldalambda = etcldalambda * grid_cell_volume
      etcgclambda = etcgclambda * grid_cell_volume
      ttclda = ttclda * grid_cell_volume
+     ttcgc = ttcgc * grid_cell_volume
      !
      CALL mp_sum( etx, intra_bgrp_comm )
      CALL mp_sum( etc, intra_bgrp_comm )
@@ -549,6 +556,7 @@ PROGRAM do_ppacf
      CALL mp_sum( etcldalambda, intra_bgrp_comm )
      CALL mp_sum( etcgclambda, intra_bgrp_comm )
      CALL mp_sum( ttclda, intra_bgrp_comm )
+     CALL mp_sum( ttcgc, intra_bgrp_comm )
      !
      ! Non-local correlation 
      etcnlclambda = 0._DP
@@ -583,7 +591,8 @@ PROGRAM do_ppacf
      ! 
      etxclambda = etx+etcldalambda+etcgclambda+etcnlclambda
      IF (dft_is_nonlocc()) THEN
-         WRITE(stdout,9091) cc, etxclambda, etcldalambda, etcnlclambda
+        WRITE(stdout,9091) cc, etxclambda, etcldalambda, etcnlclambda
+        IF ( icc == ncc) etcnlncc = etcnlclambda
      ELSE
          WRITE(stdout,9092) cc, etxclambda, etcldalambda, etcgclambda
      ENDIF
@@ -597,13 +606,30 @@ PROGRAM do_ppacf
     DO icc = 1, ncc
       cc = DBLE(icc)/DBLE(ncc)
       WRITE(stdout,9095) cc, Ec_nl_ngamma(icc)
+      IF (icc == ncc) etcnl = Ec_nl_ngamma(icc)
     ENDDO
   ENDIF
   !
   WRITE(stdout,'(a32,0PF17.8,a3)') 'Exchange', etx, 'Ry'      !,etxlda,etxgc
+  WRITE(stdout,'(a32,0PF17.8,a3)') 'LDA Exchange', etxlda, 'Ry'   !,etxlda
   WRITE(stdout,'(a32,0PF17.8,a3)') 'Correlation', etc, 'Ry'   !,etclda,etcgc
+  WRITE(stdout,'(a32,0PF17.8,a3)') 'LDA Correlation', etclda, 'Ry'   !,etclda
+  IF (igcc/=0) THEN
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'E_c^gc', etcgc, 'Ry'
+  END IF
+  IF (dft_is_nonlocc()) THEN
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'E_c^nl', etcnl , 'Ry'
+  END IF
   WRITE(stdout,'(a32,0PF17.8,a3)') 'Exchange + Correlation', etx+etc, 'Ry'
   WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^LDA', ttclda, 'Ry'
+  IF (igcc /= 0) THEN
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^gc', ttcgc, 'Ry'
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'Kinetic-correlation Energy', ttclda+ttcgc, 'Ry'
+  END IF
+  IF (dft_is_nonlocc()) THEN
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'T_c^nl', etcnl - etcnlncc, 'Ry'
+     WRITE(stdout,'(a32,0PF17.8,a3)') 'Kinetic-correlation Energy', ttclda+(etcnl-etcnlncc), 'Ry'
+  END IF
   !
   DEALLOCATE( vofrcc )
   !
