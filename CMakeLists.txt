@@ -11,6 +11,48 @@ project(qe
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 ###########################################################
+# Utility functions
+###########################################################
+
+function(add_fortran_library LIB)
+    add_library(${LIB} ${ARGN})
+    # set module path to tgt_binary_dir/mod
+    get_target_property(tgt_binary_dir ${LIB} BINARY_DIR)
+    set_target_properties(${LIB}
+        PROPERTIES
+            Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod)
+    # make module directory available for clients of LIB 
+    target_include_directories(${LIB}
+        PUBLIC
+            $<BUILD_INTERFACE:${tgt_binary_dir}/mod>
+        INTERFACE
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
+endfunction(add_fortran_library)
+
+function(qe_install_target TGT)
+    install(TARGETS ${TGT}
+        EXPORT qeTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # Windows needs RUNTIME also for libraries
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
+    # Retrieving non-whitelisted properties leads to an hard
+    # error, let's skip the following section for interface
+    # targets. See here for details:
+    # https://gitlab.kitware.com/cmake/cmake/issues/17640
+    get_target_property(tgt_type ${TGT} TYPE)
+    if(NOT ${tgt_type} STREQUAL "INTERFACE_LIBRARY")
+        # If the target generates Fortran modules, make sure
+        # to install them as well to a proper location
+        get_target_property(tgt_module_dir ${TGT} Fortran_MODULE_DIRECTORY)
+        if(tgt_module_dir)
+            install(DIRECTORY ${tgt_module_dir}/
+                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
+        endif()
+    endif()
+endfunction(qe_install_target)
+
+###########################################################
 # Build Type
 # Ensure that a specific, default build type is set when 
 # none has been explicitly set by the user
@@ -96,6 +138,10 @@ add_library(qe_mpi_fortran INTERFACE)
 add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
 add_library(qe_mpi_c INTERFACE)
 add_library(QE::MPI_C ALIAS qe_mpi_c)
+# Install all internal interface targets to allow
+# proper targets export
+qe_install_target(qe_mpi_fortran)
+qe_install_target(qe_mpi_c)
 ###########################################################
 
 if(QE_ENABLE_MPI)
@@ -123,36 +169,33 @@ if(QE_ENABLE_MPI)
 endif(QE_ENABLE_MPI)
 
 ###########################################################
-# Utility functions
-###########################################################
-
-function(add_fortran_library LIB)
-    add_library(${LIB} ${ARGN})
-    # set module path to tgt_binary_dir/mod
-    get_target_property(tgt_binary_dir ${LIB} BINARY_DIR)
-    set_target_properties(${LIB} PROPERTIES Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod)
-    # making tgt_binary_dir/mod available for libraries linking LIB 
-    target_include_directories(${LIB} INTERFACE ${tgt_binary_dir}/mod)
-endfunction(add_fortran_library)
-
-function(qe_install_target TGT)
-    install(TARGETS ${TGT}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # Windows needs RUNTIME also for libraries
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
-    # If the target generates Fortran modules, make sure
-    # to install them as well to a proper location
-    get_target_property(tgt_module_dir ${TGT} Fortran_MODULE_DIRECTORY)
-    if(tgt_module_dir)
-        install(DIRECTORY ${tgt_module_dir}/
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
-    endif()
-endfunction(qe_install_target)
-
-###########################################################
 # Components
 ###########################################################
 
 add_subdirectory(UtilXlib)
 add_subdirectory(LAXlib)
+
+###########################################################
+# Exports
+###########################################################
+
+install(EXPORT qeTargets
+        FILE qeTargets.cmake
+        NAMESPACE qe::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    qeConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY AnyNewerVersion)
+
+configure_file(
+    cmake/qeConfig.cmake.in 
+    ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake @ONLY)
+
+install(FILES 
+            ${CMAKE_CURRENT_BINARY_DIR}/qeConfigVersion.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
+        DESTINATION
+            ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
