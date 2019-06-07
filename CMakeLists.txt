@@ -11,23 +11,30 @@ project(qe
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 ###########################################################
-# Utility functions
+# QE build framework
+# Please use the following functions in place of the
+# corresponding CMake builtin
 ###########################################################
 
-function(add_fortran_library LIB)
+function(qe_add_library LIB)
     add_library(${LIB} ${ARGN})
-    # set module path to tgt_binary_dir/mod
-    get_target_property(tgt_binary_dir ${LIB} BINARY_DIR)
-    set_target_properties(${LIB}
-        PROPERTIES
-            Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod)
-    # make module directory available for clients of LIB 
-    target_include_directories(${LIB}
-        PUBLIC
-            $<BUILD_INTERFACE:${tgt_binary_dir}/mod>
-        INTERFACE
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
-endfunction(add_fortran_library)
+    # All of the following target modifications make
+    # sense on non-interfaces only
+    get_target_property(tgt_type ${LIB} TYPE)
+    if(NOT ${tgt_type} STREQUAL "INTERFACE_LIBRARY")
+        # set module path to tgt_binary_dir/mod
+        get_target_property(tgt_binary_dir ${LIB} BINARY_DIR)
+        set_target_properties(${LIB}
+            PROPERTIES
+                Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod)
+        # make module directory available for clients of LIB 
+        target_include_directories(${LIB}
+            PUBLIC
+                $<BUILD_INTERFACE:${tgt_binary_dir}/mod>
+            INTERFACE
+                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
+    endif()
+endfunction(qe_add_library)
 
 function(qe_install_target TGT)
     install(TARGETS ${TGT}
@@ -134,9 +141,9 @@ endif(QE_ENABLE_TEST)
 ###########################################################
 # MPI
 # The following targets will be defined:
-add_library(qe_mpi_fortran INTERFACE)
+qe_add_library(qe_mpi_fortran INTERFACE)
 add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
-add_library(qe_mpi_c INTERFACE)
+qe_add_library(qe_mpi_c INTERFACE)
 add_library(QE::MPI_C ALIAS qe_mpi_c)
 # Install all internal interface targets to allow
 # proper targets export

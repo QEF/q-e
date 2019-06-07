@@ -19,7 +19,7 @@ set(sources
 # TODO rename all sources *.f90 -> *.F90
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 
-add_fortran_library(qe_utilxlib ${sources})
+qe_add_library(qe_utilxlib ${sources})
 add_library(QE::UtilXlib ALIAS qe_utilxlib)
 target_link_libraries(qe_utilxlib
     PUBLIC
