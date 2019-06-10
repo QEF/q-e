@@ -1007,23 +1007,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !-------------------------------------------------------------------------------
-    SUBROUTINE readschema_header (gen_info_obj) 
-    !-------------------------------------------------------------------------------
-    ! 
-    USE io_files,            ONLY: qexsd_fmt, qexsd_version, qexsd_init
-    USE qes_types_module,    ONLY: general_info_type
-    IMPLICIT NONE 
-    !
-    TYPE (general_info_type ),INTENT(IN)  :: gen_info_obj   
-    ! 
-    IF ( qexsd_init ) RETURN 
-    qexsd_fmt = TRIM (gen_info_obj%xml_format%NAME)
-    qexsd_version = TRIM ( gen_info_obj%xml_format%VERSION)
-    qexsd_init = .TRUE. 
-    !
-    END SUBROUTINE readschema_header 
-    ! 
     !--------------------------------------------------------------------------
     SUBROUTINE readschema_dim(par_info_obj, atomic_species, atomic_structure, &
          symmetries, basis_set, band_structure ) 
