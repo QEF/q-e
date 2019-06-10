@@ -370,7 +370,7 @@
 
 subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
   use kinds,       only: DP
-  use funct,       only: dft_is_gradient, get_igcc, init_xc
+  use funct,       only: dft_is_gradient, get_igcc
   use xc_lda_lsda, only: xc
   use xc_gga,      only: xc_gcx, change_threshold_gga
   implicit none
@@ -405,8 +405,6 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
   !
   e2  = 1.0d0
   etxc = 0.0d0
-  !
-  call init_xc( 'LDA' )
   !
   IF ( nspin == 1 ) THEN
      !
@@ -458,8 +456,6 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
   ! now come the corrections
   !
   if ( dft_is_gradient() ) then
-    !
-    call init_xc( 'GGA' )
     !
     call change_threshold_gga( epsr )
     !

@@ -14,7 +14,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   USE kinds,                ONLY : DP
   USE gvect,                ONLY : ngm, g
   USE noncollin_module,     ONLY : noncolin, nspin_gga
-  USE funct,                ONLY : dft_is_gradient, get_igcc, init_xc
+  USE funct,                ONLY : dft_is_gradient, get_igcc
   USE xc_gga,               ONLY : xc_gcx
   USE spin_orb,             ONLY : domag
   USE fft_base,             ONLY : dfftp
@@ -42,8 +42,6 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   !
   !
   IF ( .NOT. dft_is_gradient() ) RETURN
-  
-  CALL init_xc( 'GGA' )
   
   IF ( .NOT. (noncolin.and.domag) ) &
      call errore('compute_vsgga','routine called in the wrong case',1)

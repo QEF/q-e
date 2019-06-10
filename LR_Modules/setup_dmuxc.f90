@@ -17,14 +17,11 @@ SUBROUTINE setup_dmuxc
   USE scf,              ONLY : rho, rho_core
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : init_xc
   !
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: rho_aux
-  !! auxiliary array for density
-  REAL(DP), ALLOCATABLE, DIMENSION(:) :: sign_r
-  !! auxiliary array to put the correct sign on dmuxc when not lsda
+  ! auxiliary array for density
   INTEGER  :: ir, is, js, ns
   !
   CALL start_clock ('setup_dmuxc')
@@ -36,8 +33,6 @@ SUBROUTINE setup_dmuxc
   ALLOCATE( rho_aux(dfftp%nnr,ns) )
   !
   dmuxc(:,:,:) = 0.d0
-  !
-  CALL init_xc( 'LDA' )
   !
   IF ( lsda ) THEN
      !
@@ -56,23 +51,8 @@ SUBROUTINE setup_dmuxc
         !
      ELSE
         !
-        ALLOCATE(sign_r(dfftp%nnr))
         rho_aux(:,1) = rho%of_r(:,1) + rho_core(:)
-        sign_r = 1.0_DP
-        DO ir = 1, dfftp%nnr
-           IF ( rho_aux(ir,1) < -1.d-30 ) THEN
-              sign_r(ir) = -1.0_DP
-              rho_aux(ir,1) = -rho_aux(ir,1)
-           ELSEIF ( rho_aux(ir,1) < 1.d-30 .AND.rho_aux(ir,1) > -1.d-30 ) THEN
-              sign_r(ir) = 0.0_DP
-              rho_aux(ir,1) = 0.5_DP
-           ENDIF
-        ENDDO
-        !
         CALL dmxc( dfftp%nnr, 1, rho_aux, dmuxc )
-        dmuxc(:,1,1) = dmuxc(:,1,1)*sign_r(:)
-        !
-        DEALLOCATE(sign_r)
         !
      ENDIF
      !

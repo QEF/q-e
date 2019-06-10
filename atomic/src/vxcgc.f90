@@ -14,7 +14,6 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !  LSDA approximation
   !
   use kinds, only : DP
-  use funct, only : init_xc
   use xc_lda_lsda, only: xc
   implicit none
   integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
@@ -29,8 +28,6 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !
   vxc(1) = 0.0_dp
   exc    = 0.0_dp
-  !
-  call init_xc( 'LDA' )
   !
   if (lsd == 0) then
      !
@@ -81,7 +78,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   !
   use kinds,     only : DP
   use constants, only : fpi, e2
-  use funct,     only : dft_is_meta, init_xc
+  use funct,     only : dft_is_meta
   use xc_gga,    only : xc_gcx
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
@@ -113,8 +110,6 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   allocate(grho(mesh,nspin),stat=ierr)
   allocate(h(mesh,2),stat=ierr)
   allocate(dh(mesh),stat=ierr)
-  
-  CALL init_xc( 'GGA' )
   
   egc=0.0_dp
   vgc=0.0_dp

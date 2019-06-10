@@ -408,7 +408,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient, init_xc
+    USE funct,                  ONLY : dft_is_gradient
     USE xc_lda_lsda,            ONLY : xc
     USE constants,              ONLY : fpi ! REMOVE
 
@@ -455,8 +455,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
        ALLOCATE(g_rad(i%m,rad(i%t)%nx,nspin))
        g_rad = 0.0_DP
     ENDIF
-    !
-    CALL init_xc( 'LDA' )   !^^^
     !
 !$omp parallel default(private), &
 !$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd,nspin_mag,with_small_so,g_rad)
@@ -631,7 +629,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE noncollin_module,       ONLY : noncolin, nspin_mag, nspin_gga
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2
-    USE funct,                  ONLY : init_xc, igcc_is_lyp
+    USE funct,                  ONLY : igcc_is_lyp
     USE xc_gga,                 ONLY : xc_gcx !  gcxc, gcx_spin, gcc_spin, gcc_spin_more
     USE mp,                     ONLY : mp_sum
     !
@@ -687,8 +685,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
 
     if(TIMING) CALL start_clock ('PAW_gcxc_v')
-  
-    CALL init_xc( 'GGA' )
   
     e_gcxc = 0._dp
 
@@ -1585,7 +1581,7 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
     USE noncollin_module,       ONLY : nspin_mag
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient, init_xc
+    USE funct,                  ONLY : dft_is_gradient
     !
     TYPE(paw_info), INTENT(IN) :: i                   ! atom's minimal info
     REAL(DP), INTENT(IN)  :: rho_lm(i%m,i%l**2,nspin_mag) ! charge density as 
@@ -1602,8 +1598,6 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
                                                       ! radial slice of rho)
     REAL(DP), ALLOCATABLE :: dmuxc(:,:,:)             ! fxc in the lsda case
     !
-    INTEGER :: sign_r(i%m)                            ! array with sign of rho
-    !
     INTEGER :: is, js, ix, k                          ! counters on directions 
                                                       ! and radial grid
     !
@@ -1612,8 +1606,6 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
     ALLOCATE(rho_rad(i%m,nspin_mag))
     ALLOCATE(v_rad(i%m,rad(i%t)%nx,nspin_mag))
     ALLOCATE(dmuxc(i%m,nspin_mag,nspin_mag))
-    !
-    CALL init_xc( 'LDA' )
     !
     DO ix = ix_s, ix_e
        !
@@ -1645,20 +1637,9 @@ SUBROUTINE PAW_dxc_potential( i, drho_lm, rho_lm, rho_core, v_lm )
           !
           rho_rad(:,1) = rho_rad(:,1) + rho_core(:)
           !
-          sign_r = 1.0_DP
-          DO k = 1, i%m
-             IF ( rho_rad(k,1) < -1.d-30 ) THEN
-                sign_r(k) = -1.0_DP
-                rho_rad(k,1) = -rho_rad(k,1)
-             ELSEIF ( rho_rad(k,1)<1.d-30 .AND. rho_rad(k,1)>-1.d-30 ) THEN
-                sign_r(k) = 0.0_DP
-                rho_rad(k,1) = 0.5_DP
-             ENDIF
-          ENDDO
-          !
           CALL dmxc( i%m, 1, rho_rad(:,1), dmuxc )
           !
-          v_rad(:,ix,1) = dmuxc(:,1,1)*sign_r(:)
+          v_rad(:,ix,1) = dmuxc(:,1,1)
           !
        END SELECT
        !
@@ -1711,7 +1692,6 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
-    USE funct,                  ONLY : init_xc
     USE xc_gga,                 ONLY : gcxc, gcx_spin, gcc_spin, libxc_switches_gga
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -1758,8 +1738,6 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     !
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
-    !
-    CALL init_xc( 'GGA' )
     !
     IF ( SUM(libxc_switches_gga(:)) /= 0 )  CALL errore( 'PAW_dgcxc_potential', 'libxc derivatives of &
                                                         &xc potentials for GGA not available yet', 1 )
