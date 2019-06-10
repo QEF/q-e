@@ -1820,12 +1820,17 @@ END SUBROUTINE print_lambda_x
                      IF( descla( iss )%active_node > 0 ) THEN
                         nc = descla( iss )%nc
                         CALL dgemm( 'N', 'N', nrr(iss), nc, nh(is), 1.0d0, tmpdr, nrrx, tmpbec, nhm, 0.0d0, temp, nrrx )
-                        fion_tmp(k,isa) = fion_tmp(k,isa) + ddot( nrr(iss) * nc, temp, 1, tmplam(1,1,iss), 1 ) 
+                        DO j = 1, nc
+                           DO i = 1, nrr(iss)
+                              fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * tmplam( i, j, iss )
+                           END DO
+                        END DO
+
                      END IF
                   ENDIF
                END DO
             END DO
-!$omp end do nowait
+!$omp end do
          END DO
       END DO
       !
@@ -1843,7 +1848,7 @@ END SUBROUTINE print_lambda_x
       CALL mp_sum( fion_tmp, inter_bgrp_comm )
       CALL mp_sum( fion_tmp, intra_bgrp_comm )
       !
-      fion = fion + 2.0d0 * fion_tmp
+      fion = fion + fion_tmp
       !
       DEALLOCATE( fion_tmp )
       !
