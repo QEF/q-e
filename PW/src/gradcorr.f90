@@ -15,8 +15,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE gvect,                ONLY : ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega
-  USE funct,                ONLY : igcc_is_lyp, dft_is_gradient, get_igcc, &
-                                   init_xc
+  USE funct,                ONLY : igcc_is_lyp, dft_is_gradient, get_igcc
   USE xc_gga,               ONLY : xc_gcx, gcx_spin, gcc_spin
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : ux
@@ -55,8 +54,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   !
   IF ( .NOT. dft_is_gradient() ) RETURN
-  !
-  CALL init_xc( 'GGA' )
   !
   etxcgc = 0.0_DP
   vtxcgc = 0.0_DP

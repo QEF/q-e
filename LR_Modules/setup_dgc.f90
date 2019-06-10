@@ -23,7 +23,7 @@ SUBROUTINE setup_dgc
   USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
-  USE funct,                ONLY : dft_is_gradient, init_xc
+  USE funct,                ONLY : dft_is_gradient
   USE xc_gga,               ONLY : gcxc, gcx_spin, gcc_spin, libxc_switches_gga
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
@@ -51,8 +51,6 @@ SUBROUTINE setup_dgc
   IF ( .NOT. dft_is_gradient() ) RETURN
   !
   CALL start_clock( 'setup_dgc' )
-  !
-  CALL init_xc( 'GGA' )
   ! 
   IF ( SUM(libxc_switches_gga(:)) /= 0 ) CALL errore( 'setup_dgc', 'libxc derivatives of &
                                                       &xc potentials for GGA not implemented yet', 1 )

@@ -178,17 +178,24 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   ! ... local variables
   !
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: ex, vx
-  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, dr
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: arho, rhoaux, dr
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: ec, vc
   !
-  REAL(DP) :: rs, ex_s, vx_s
+  REAL(DP) :: rho, rs, ex_s, vx_s
   REAL(DP) :: dpz
   INTEGER :: iflg, ir, i1, i2, f1, f2
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,        &
                          pi34 = 0.75_DP/3.141592653589793_DP,   &
-                         third=1.0_DP/3.0_DP, rho_trash=0.5_DP, &
+                         third = 1.0_DP/3.0_DP, rho_trash = 0.5_DP, &
                          rs_trash = 1.0_DP
+#if defined(_OPENMP)
+  INTEGER :: ntids
+  INTEGER, EXTERNAL :: omp_get_num_threads
+  !
+  !
+  ntids = omp_get_num_threads()
+#endif  
   !
   dmuxc = 0.0_DP
   !
@@ -196,25 +203,31 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   IF (iexch_l == 1 .AND. icorr_l == 1) THEN
   !
-!$omp parallel do private( rs, ex_s, vx_s)
+!$omp parallel if(ntids==1)
+!$omp do private( rs, rho, ex_s, vx_s )
      DO ir = 1, length
         !
-        IF ( rho_in(ir) > small ) THEN
-           rs = (pi34 / rho_in(ir))**third
+        rho = rho_in(ir)
+        IF ( rho < -small ) rho = -rho_in(ir)
+        !
+        IF ( rho > small ) THEN
+           rs = (pi34 / rho)**third
         ELSE
            dmuxc(ir) = 0.0_DP
            CYCLE
         ENDIF
         !
         CALL slater( rs, ex_s, vx_s )
-        dmuxc(ir) = vx_s / (3.0_DP * rho_in(ir))
+        dmuxc(ir) = vx_s / (3.0_DP * rho)
         !
         iflg = 2
-        if (rs < 1.0_DP) iflg = 1
+        IF (rs < 1.0_DP) iflg = 1
         dmuxc(ir) = dmuxc(ir) + dpz( rs, iflg )
+        dmuxc(ir) = dmuxc(ir) * SIGN(1.0_DP,rho_in(ir))
         !
      ENDDO
-!$omp end parallel do
+!$omp end do
+!$omp end parallel
      !
   ELSE
      !
@@ -222,32 +235,30 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      !
      ALLOCATE( ex(2*length), vx(2*length)  )
      ALLOCATE( ec(2*length), vc(2*length)  )
-     ALLOCATE( dr(length), rhoaux(2*length) )
+     ALLOCATE( arho(length), dr(length), rhoaux(2*length) )
      !
-     ! 
      i1 = 1         ;  f1 = length             !two blocks:  [ rho+dr ]
      i2 = length+1  ;  f2 = 2*length           !             [ rho-dr ]              
      !
-     !WHERE ( rho_in < small ) rho = rho_trash
-     !
+     arho = ABS(rho_in)
      dr = 0.0_DP
-     WHERE ( rho_in > small ) dr = MIN( 1.E-6_DP, 1.E-4_DP * rho_in )
+     WHERE ( arho > small ) dr = MIN( 1.E-6_DP, 1.E-4_DP * rho_in )
      !
-     rhoaux(i1:f1) = rho_in+dr
-     rhoaux(i2:f2) = rho_in-dr
+     rhoaux(i1:f1) = arho+dr
+     rhoaux(i2:f2) = arho-dr
      !
      CALL xc_lda( length*2, rhoaux, ex, ec, vx, vc )
      !
      dmuxc(:) = (vx(i1:f1) + vc(i1:f1) - vx(i2:f2) - vc(i2:f2)) / &
                 (2.0_DP * dr(:))
      !
-     !
      DEALLOCATE( ex, vx  )
      DEALLOCATE( ec, vc  )
-     DEALLOCATE( dr, rhoaux )
+     DEALLOCATE( arho, dr, rhoaux )
      !
-     WHERE ( rho_in < small ) dmuxc = 0.0_DP
+     WHERE ( arho < small ) dmuxc = 0.0_DP
      ! however a higher threshold is already present in xc_lda()
+     dmuxc(:) = dmuxc(:) * SIGN(1.0_DP,rho_in(:))
      !
   ENDIF
   !
