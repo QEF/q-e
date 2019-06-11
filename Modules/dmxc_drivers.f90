@@ -254,11 +254,13 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
      !
      DEALLOCATE( ex, vx  )
      DEALLOCATE( ec, vc  )
-     DEALLOCATE( arho, dr, rhoaux )
+     DEALLOCATE( dr, rhoaux )
      !
      WHERE ( arho < small ) dmuxc = 0.0_DP
      ! however a higher threshold is already present in xc_lda()
      dmuxc(:) = dmuxc(:) * SIGN(1.0_DP,rho_in(:))
+     !
+     DEALLOCATE( arho )
      !
   ENDIF
   !
