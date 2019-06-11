@@ -90,6 +90,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... starting from scratch should be initialized here when restarting
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
+  USE mp_global,            ONLY : nproc_file, nproc_pool_file, &
+                                   nproc_image_file, ntask_groups_file, &
+                                   nproc_bgrp_file, nproc_ortho_file
   USE ions_base,            ONLY : nat, ityp, tau, extfor
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nks, nkstot
@@ -106,6 +109,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE qes_types_module,     ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
+  USE qexsd_copy,           ONLY : qexsd_copy_parallel_info
 #if defined(__BEOWULF)
   USE qes_bcast_module,     ONLY : qes_bcast
   USE mp_images,            ONLY : intra_image_comm
@@ -142,8 +146,11 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! ... here we read the variables that dimension the system
   !
+  CALL qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
+       nproc_pool_file, nproc_image_file, ntask_groups_file, &
+       nproc_bgrp_file, nproc_ortho_file)
   CALL readschema_cell( output_obj%atomic_structure ) 
-  CALL readschema_dim ( parinfo_obj, output_obj%atomic_species, &
+  CALL readschema_dim ( output_obj%atomic_species, &
        output_obj%atomic_structure, output_obj%symmetries, &
        output_obj%basis_set, output_obj%band_structure ) 
   !
