@@ -1159,4 +1159,7 @@ SUBROUTINE parallel_max_real_gpu( dim, ps_d, comm, root )
   RETURN
   !
 END SUBROUTINE parallel_max_real_gpu
+#else
+MODULE isntused
+END module 
 #endif

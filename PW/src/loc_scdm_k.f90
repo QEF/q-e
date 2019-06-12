@@ -338,9 +338,9 @@ USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
 !  Get List from ThrDen and ThrGrd, and Pivot from the QRCP of small
 !
 IMPLICIT NONE
-  INTEGER, INTENT(OUT) :: list(nptot), pivot(nptot)
   INTEGER, INTENT(IN)  :: cpu_npt(0:nproc_bgrp-1), nptot
   INTEGER, INTENT(IN)  :: NGrid, NBands
+  INTEGER, INTENT(OUT) :: list(nptot), pivot(nptot)
   COMPLEX(DP), INTENT(IN) :: psi(NGrid,NBands) 
   REAL(DP), INTENT(IN) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
   REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
