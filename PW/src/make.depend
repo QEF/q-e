@@ -1604,12 +1604,14 @@ read_file_new.o : ../../Modules/io_global.o
 read_file_new.o : ../../Modules/ions_base.o
 read_file_new.o : ../../Modules/kernel_table.o
 read_file_new.o : ../../Modules/kind.o
+read_file_new.o : ../../Modules/mp_global.o
 read_file_new.o : ../../Modules/mp_images.o
 read_file_new.o : ../../Modules/noncol.o
 read_file_new.o : ../../Modules/paw_variables.o
 read_file_new.o : ../../Modules/qes_bcast_module.o
 read_file_new.o : ../../Modules/qes_libs_module.o
 read_file_new.o : ../../Modules/qes_types_module.o
+read_file_new.o : ../../Modules/qexsd_copy.o
 read_file_new.o : ../../Modules/read_pseudo.o
 read_file_new.o : ../../Modules/recvec.o
 read_file_new.o : ../../Modules/recvec_subs.o

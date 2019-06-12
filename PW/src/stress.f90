@@ -195,7 +195,7 @@ subroutine stress ( sigma )
 
   CALL symmatrix ( sigma )
   !
-  ! write results in Ryd/(a.u.)^3 and in kbar
+  ! write results in Ry/(a.u.)^3 and in kbar
   !
   IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
      write( stdout, 9000) (sigma(1,1) + sigma(2,2)) * ry_kbar/3d0, &

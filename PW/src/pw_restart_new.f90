@@ -1008,7 +1008,7 @@ MODULE pw_restart_new
     END SUBROUTINE pw_read_schema
     !  
     !--------------------------------------------------------------------------
-    SUBROUTINE readschema_dim(par_info_obj, atomic_species, atomic_structure, &
+    SUBROUTINE readschema_dim(atomic_species, atomic_structure, &
          symmetries, basis_set, band_structure ) 
       !
     USE constants,        ONLY : e2
@@ -1028,11 +1028,10 @@ MODULE pw_restart_new
                                  nproc_image_file, ntask_groups_file, &
                                  nproc_bgrp_file, nproc_ortho_file
     !
-    USE qes_types_module, ONLY : parallel_info_type, atomic_species_type, atomic_structure_type, &
+    USE qes_types_module, ONLY : atomic_species_type, atomic_structure_type, &
                                  symmetries_type, basis_set_type, band_structure_type, input_type  
     IMPLICIT NONE 
     !
-    TYPE ( parallel_info_type ),INTENT(IN)     :: par_info_obj
     TYPE ( atomic_species_type ),INTENT(IN)    :: atomic_species
     TYPE ( atomic_structure_type ),INTENT(IN)  :: atomic_structure
     TYPE ( symmetries_type ),INTENT(IN)        :: symmetries
@@ -1041,16 +1040,6 @@ MODULE pw_restart_new
     ! 
     INTEGER                                    :: npwx_
     !
-    ! 
-    !---------------------------------------------------------------------
-    !                                       PARALLEL  DIM 
-    !----------------------------------------------------------------------
-    nproc_file = par_info_obj%nprocs
-    nproc_pool_file = nproc_file/par_info_obj%npool
-    nproc_image_file = nproc_file 
-    ntask_groups_file = par_info_obj%ntasks
-    nproc_bgrp_file = nproc_image_file / par_info_obj%npool / par_info_obj%nbgrp 
-    nproc_ortho_file = par_info_obj%ndiag
     !---------------------------------------------------------------------------
     !                                      ATOMS AND SPECIES 
     !--------------------------------------------------------------------------

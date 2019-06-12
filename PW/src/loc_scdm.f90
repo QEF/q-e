@@ -74,7 +74,7 @@ SUBROUTINE localize_orbitals( )
   QRCP = iscdm.eq.0.or.(mod(iscdm,n_scdm).eq.0) ! if .false. localize with SVD
 
   write(stdout,'(A,I10,A)') 'QRCP every ',n_scdm, ' steps.'
-  write(stdout,'(A,I6,A,L)')  'localize_orbitals: iscdm=',iscdm,' QRCP=',QRCP
+  write(stdout,'(A,I6,A,L1)')  'localize_orbitals: iscdm=',iscdm,' QRCP=',QRCP
 
   NGrid = dfftt%nnr * npol
 
@@ -526,9 +526,9 @@ USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
 !  Get List from ThrDen and ThrGrd, and Pivot from the QRCP of small
 !
 IMPLICIT NONE
-  INTEGER, INTENT(OUT) :: list(nptot), pivot(nptot)
   INTEGER, INTENT(IN)  :: cpu_npt(0:nproc_bgrp-1), nptot
   INTEGER, INTENT(IN)  :: NGrid, NBands
+  INTEGER, INTENT(OUT) :: list(nptot), pivot(nptot)
   REAL(DP), INTENT(IN) :: psi(NGrid,NBands) 
   REAL(DP), INTENT(IN) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
   REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
