@@ -39,7 +39,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   COMPLEX(DP), ALLOCATABLE :: rhogaux(:,:)
   !
   REAL(DP), ALLOCATABLE :: grho2(:,:), grho_ud(:)
-  REAL(DP), ALLOCATABLE :: sign_v(:), arho(:)
   REAL(DP), ALLOCATABLE :: rh(:), zeta(:)  
   REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:)
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:), v2c_ud(:)
@@ -101,7 +100,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      ENDDO
   ELSE
      !
-     ! ... for convenience rhoaux and rhogaux are in (up,down) format, if LSDA
+     ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA
      !
      DO is = 1, nspin0
        rhoaux(:,is)  = (  rho(:,1) + sgn(is) *  rho(:,nspin0) ) * 0.5_DP
@@ -130,33 +129,22 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      DO k = 1, dfftp%nnr
         !
-        !vnull = ABS(sign_v(k))
-        !
         ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
         v(k,1) = v(k,1) + e2 * ( v1x(k,1) + v1c(k,1) ) ! * vnull
         !
         ! ... h contains:  D(rho*Exc) / D(|grad rho|) * (grad rho) / |grad rho|
-        h(:,k,1) = e2 * ( v2x(k,1) + v2c(k,1) ) * grho(:,k,1) ! * vnull
+        h(:,k,1) = e2 * ( v2x(k,1) + v2c(k,1) ) * grho(:,k,1)
         !
         vtxcgc = vtxcgc + e2 * ( v1x(k,1) + v1c(k,1) ) * &
-                               (rhoaux(k,1) - rho_core(k) ) ! * vnull
+                               (rhoaux(k,1) - rho_core(k) )
         !
-        etxcgc = etxcgc + e2 * ( sx(k) + sc(k) ) ! * sign_v(k)
+        etxcgc = etxcgc + e2 * ( sx(k) + sc(k) )
         !
      ENDDO
-     !
-     !DEALLOCATE( arho, sign_v )
-     !
      !
   ELSE
      !
      ! ... spin-polarised case
-     !
-!  !$omp parallel do private( rh, grho2, sx, v1xup, v1xdw, v2xup, v2xdw, rup, rdw, &
-!  !$omp             grhoup, grhodw, grhoud, sc, v1cup, v1cdw, v2cup, v2cdw, v2cud, &
-!  !$omp             zeta, grh2, v2c, grup, grdw  ), &
-!  !$omp             reduction(+:etxcgc,vtxcgc)
-     !
      !
      ALLOCATE( v2c_ud(dfftp%nnr) )
      !
@@ -254,7 +242,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      DO k=1,dfftp%nnr
         v(k,1)=v(k,1)+0.5d0*(vgg(k,1)+vgg(k,2))
         amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
-        IF (amag.GT.1.d-12) THEN
+        IF (amag>1.d-12) THEN
            v(k,2)=v(k,2)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,2)/amag
            v(k,3)=v(k,3)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,3)/amag
            v(k,4)=v(k,4)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,4)/amag

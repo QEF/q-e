@@ -8,7 +8,7 @@
 !
 MODULE xc_lda_lsda
 !
-USE kinds,     ONLY: DP 
+USE kinds,     ONLY: DP
 !
 IMPLICIT NONE
 !
@@ -17,6 +17,7 @@ SAVE
 !
 !  LDA and LSDA exchange-correlation drivers
 PUBLIC :: xc, xc_lda, xc_lsda, select_lda_functionals
+PUBLIC :: change_threshold_lda
 !
 PUBLIC :: libxc_switches_lda
 PUBLIC :: iexch_l, icorr_l
@@ -28,6 +29,9 @@ INTEGER :: libxc_switches_lda(2)
 !
 !  indexes defining xc functionals
 INTEGER  :: iexch_l, icorr_l
+!
+!  density threshold (set to default value)
+REAL(DP) :: rho_threshold = 1.E-10_DP
 !
 !  variables for hybrid exchange and finite_size_cell_volume correction
 LOGICAL  :: exx_started_l, is_there_finite_size_corr
@@ -73,6 +77,22 @@ SUBROUTINE select_lda_functionals( iexch, icorr, exx_fraction, finite_size_cell_
 END SUBROUTINE select_lda_functionals
 !
 !
+!-----------------------------------------------------------------------
+SUBROUTINE change_threshold_lda( rho_thr_in )
+  !--------------------------------------------------------------------
+  !! Change rho threshold.
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho_thr_in
+  !
+  rho_threshold = rho_thr_in
+  !
+  RETURN
+  !
+END SUBROUTINE
+!
+!
 !---------------------------------------------------------------------------
 SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !-------------------------------------------------------------------------
@@ -111,6 +131,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
 #if defined(__LIBXC)
   TYPE(xc_f90_pointer_t) :: xc_func
   TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2
+  INTEGER :: fkind_x
   REAL(DP) :: amag
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: vx_lxc(:), vc_lxc(:)
@@ -119,7 +140,6 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP), ALLOCATABLE :: arho(:), zeta(:)
   !
   INTEGER :: ir
-  REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
 #if defined(__LIBXC)
@@ -162,6 +182,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ! ... EXCHANGE
   IF ( libxc_switches_lda(1)==1 ) THEN
      CALL xc_f90_func_init( xc_func, xc_info1, iexch_l, sv_d )
+       fkind_x  = xc_f90_info_kind( xc_info1 )
        CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ex_out(1), vx_lxc(1) )
      CALL xc_f90_func_end( xc_func )
   ENDIF
@@ -173,8 +194,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      CALL xc_f90_func_end( xc_func )
   ENDIF
   !
-  !
-  IF ( (libxc_switches_lda(1)==0) .OR. (libxc_switches_lda(2)==0) ) THEN
+  IF ( ((libxc_switches_lda(1)==0) .OR. (libxc_switches_lda(2)==0)) &
+        .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
      !
      SELECT CASE( sr_d )
      CASE( 1 )
@@ -185,7 +206,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
         ALLOCATE( arho(length), zeta(length) )
         arho = ABS(rho_in(:,1))
-        WHERE (arho > small) zeta(:) = rho_in(:,2) / arho(:)
+        WHERE (arho > rho_threshold) zeta(:) = rho_in(:,2) / arho(:)
         CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
         DEALLOCATE( arho, zeta )
         !
@@ -193,7 +214,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
         ALLOCATE( arho(length), zeta(length) )
         arho = ABS( rho_in(:,1) )
-        WHERE (arho > small) zeta(:) = SQRT( rho_in(:,2)**2 + rho_in(:,3)**2 + &
+        WHERE (arho > rho_threshold) zeta(:) = SQRT( rho_in(:,2)**2 + rho_in(:,3)**2 + &
                                              rho_in(:,4)**2 ) / arho(:) ! amag/arho
         CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
         DEALLOCATE( arho, zeta )
@@ -243,7 +264,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      ALLOCATE( arho(length), zeta(length) )
      !
      arho = ABS(rho_in(:,1))
-     WHERE (arho > small) zeta(:) = rho_in(:,2) / arho(:)
+     WHERE (arho > rho_threshold) zeta(:) = rho_in(:,2) / arho(:)
      !
      CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
      !
@@ -254,7 +275,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      ALLOCATE( arho(length), zeta(length) )
      !
      arho = ABS( rho_in(:,1) )
-     WHERE (arho > small) zeta(:) = SQRT( rho_in(:,2)**2 + rho_in(:,3)**2 + &
+     WHERE (arho > rho_threshold) zeta(:) = SQRT( rho_in(:,2)**2 + rho_in(:,3)**2 + &
                                           rho_in(:,4)**2 ) / arho(:) ! amag/arho
      !
      CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
@@ -323,7 +344,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP) :: rho, rs
   REAL(DP) :: ex, ec, ec_
   REAL(DP) :: vx, vc, vc_
-  REAL(DP), PARAMETER :: small = 1.E-10_DP,  third = 1.0_DP/3.0_DP, &
+  REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP, e2 = 2.0_DP
   !                      pi34 = (3/4pi)^(1/3)
   !
@@ -342,7 +363,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      !
      ! ... RHO THRESHOLD
      !
-     IF ( rho > small ) THEN
+     IF ( rho > rho_threshold ) THEN
         rs = pi34 / rho**third
      ELSE
         ex_out(ir) = 0.0_DP  ;  ec_out(ir) = 0.0_DP
@@ -538,7 +559,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   REAL(DP) :: ex, ec, ec_
   REAL(DP) :: vx(2), vc(2), vc_(2)
   !
-  REAL(DP), PARAMETER :: small= 1.E-10_DP, third = 1.0_DP/3.0_DP, &
+  REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP
   !                      pi34 = (3/4pi)^(1/3)
   !
@@ -558,7 +579,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      !
      rho = ABS(rho_in(ir))
      !
-     IF ( rho > small ) THEN
+     IF ( rho > rho_threshold ) THEN
         rs = pi34 / rho**third
      ELSE
         ex_out(ir) = 0.0_DP  ;  vx_out(ir,:) = 0.0_DP
