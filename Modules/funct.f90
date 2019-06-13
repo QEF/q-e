@@ -10,7 +10,7 @@ MODULE funct
   !-------------------------------------------------------------------
   !! This module contains data defining the DFT functional in use
   !! and a number of functions and subroutines to manage them.  
-  !! Data are PRIVATE and are accessed and set only by FUNCTION calls.
+  !! Data are PRIVATE and are accessed and set only by function calls.
   !
   !   setting routines:  set_dft_from_name (previously which_dft)
   !                      set_dft_from_indices
@@ -378,6 +378,10 @@ CONTAINS
     !-----------------------------------------------------------------------
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
+#if defined(__LIBXC)
+    USE xc_f90_types_m
+    USE xc_f90_lib_m
+#endif
     !
     IMPLICIT NONE
     !
@@ -387,6 +391,10 @@ CONTAINS
     LOGICAL :: dft_defined = .FALSE.
     CHARACTER(LEN=1), EXTERNAL :: capital
     INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, save_inlc
+#if defined(__LIBXC)
+    INTEGER :: fkind
+    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+#endif
     !
     ! Exit if set to discard further input dft
     !
@@ -618,12 +626,42 @@ CONTAINS
     !----------------------------------------------------------------
     !
     IF (.NOT. dft_defined) THEN
+       !
        iexch = matching( 1, dftout, nxc,   exc,     is_libxc(1) )
        icorr = matching( 2, dftout, ncc,   corr,    is_libxc(2) )
        igcx  = matching( 3, dftout, ngcx,  gradx,   is_libxc(3) )
-       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )
+       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )       
        imeta = matching( 5, dftout, nmeta, meta,    is_libxc(5) )
-       inlc  = matching( 6, dftout, ncnl,  nonlocc, is_libxc(6) )
+       inlc  = matching( 6, dftout, ncnl,  nonlocc, is_libxc(6) )       
+       !
+#if defined(__LIBXC)
+       fkind = -100
+       IF (is_libxc(1)) THEN
+         CALL xc_f90_func_init( xc_func, xc_info, iexch, 1 )
+         fkind = xc_f90_info_kind( xc_info )
+         CALL xc_f90_func_end( xc_func )
+       ENDIF
+       !
+       IF (icorr/=notset .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
+                       &been found together with a correlation one', 2 )
+       !
+       fkind = -100
+       IF (is_libxc(3)) THEN
+         CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )
+         fkind = xc_f90_info_kind( xc_info )
+         CALL xc_f90_func_end( xc_func )
+       ENDIF
+       !
+       IF (icorr/=notset .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
+                       &been found together with a correlation one', 3 )
+       !
+       IF (ANY(is_libxc(1:2)) .AND. ANY(is_libxc(3:4))) &
+          CALL errore( 'set_dft_from_name', 'An LDA functional has been found, but &
+                       &libxc GGA functionals already include the LDA part)', 4 )
+#endif
+       !
     ENDIF
     !
     !----------------------------------------------------------------
