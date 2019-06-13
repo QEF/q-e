@@ -256,7 +256,7 @@ PRIVATE :: GetVdWParam
     ! Determine whether radial grid is logarithmic/exponential or equispaced/uniform...
     !
     drab=atgrdrab(NrgpA)-atgrdrab(1)
-    IF (DABS(drab).LT.(1.0E-6_DP)) uniform_grid=.TRUE.
+    uniform_grid = (DABS(drab).LT.(1.0E-6_DP))
     IF (uniform_grid) WRITE(stdout,'(5X,"Equispaced/Uniform radial atomic grid detected...")')
     !
     ! ----------------------------------------------------------------
