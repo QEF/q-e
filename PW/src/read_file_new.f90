@@ -100,7 +100,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE symm_base,            ONLY : irt
   USE extfield,             ONLY : forcefield, tefield, gate, forcegate
   USE io_files,             ONLY : tmp_dir, prefix, postfix
-  USE pw_restart_new,       ONLY : pw_read_schema, readschema_dim, &
+  USE pw_restart_new,       ONLY : pw_read_schema, &
        readschema_cell, readschema_ions, readschema_planewaves, &
        readschema_spin, readschema_magnetization, readschema_xc, &
        readschema_occupations, readschema_brillouin_zone, &
@@ -109,7 +109,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE qes_types_module,     ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
-  USE qexsd_copy,           ONLY : qexsd_copy_parallel_info
+  USE qexsd_copy,           ONLY : qexsd_copy_parallel_info, &
+       qexsd_copy_dim
 #if defined(__BEOWULF)
   USE qes_bcast_module,     ONLY : qes_bcast
   USE mp_images,            ONLY : intra_image_comm
@@ -149,10 +150,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
        nproc_pool_file, nproc_image_file, ntask_groups_file, &
        nproc_bgrp_file, nproc_ortho_file)
+  CALL qexsd_copy_dim ( output_obj%atomic_structure, &
+        output_obj%band_structure, nat, nkstot, nbnd ) 
   CALL readschema_cell( output_obj%atomic_structure ) 
-  CALL readschema_dim ( output_obj%atomic_species, &
-       output_obj%atomic_structure, output_obj%symmetries, &
-       output_obj%basis_set, output_obj%band_structure ) 
   !
   ! ... until pools are activated, the local number of k-points nks
   ! ... should be equal to the global number nkstot - k-points are replicated

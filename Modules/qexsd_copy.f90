@@ -19,7 +19,7 @@ MODULE qexsd_copy
   PRIVATE
   SAVE
   !
-  PUBLIC:: qexsd_copy_geninfo, qexsd_copy_parallel_info, &
+  PUBLIC:: qexsd_copy_geninfo, qexsd_copy_parallel_info, qexsd_copy_dim, &
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
   !
@@ -64,7 +64,39 @@ CONTAINS
     nproc_bgrp_file = nproc_image_file / parinfo_obj%npool / parinfo_obj%nbgrp 
     nproc_ortho_file = parinfo_obj%ndiag
     !
-  END SUBROUTINE qexsd_copy_parallel_info  
+  END SUBROUTINE qexsd_copy_parallel_info
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE qexsd_copy_dim (atomic_structure, band_structure, &
+         nat, nkstot, nbnd ) 
+      !
+    USE qes_types_module, ONLY : atomic_structure_type, band_structure_type
+    IMPLICIT NONE 
+    !
+    TYPE ( atomic_structure_type ),INTENT(IN)  :: atomic_structure
+    TYPE ( band_structure_type ),INTENT(IN)    :: band_structure 
+    INTEGER, INTENT(OUT) :: nat, nkstot, nbnd
+    !
+    LOGICAL :: lsda
+    !
+    nat = atomic_structure%nat 
+    nkstot =   band_structure%nks  
+    IF (band_structure%nbnd_ispresent) THEN
+       nbnd = band_structure%nbnd
+    ELSE IF ( band_structure%nbnd_up_ispresent .AND. band_structure%nbnd_dw_ispresent) THEN
+       nbnd = ( band_structure%nbnd_up + band_structure%nbnd_dw )
+    ELSE 
+       CALL errore('init_vars_from_schema: check xml file !!', &
+                   'nbnd or nbnd_up+nbnd_dw are missing in band_structure element', 1)
+    END IF     
+    lsda  =    band_structure%lsda
+    IF ( lsda ) THEN
+       nkstot = nkstot * 2 
+       nbnd   = nbnd / 2
+    END IF
+
+  END SUBROUTINE qexsd_copy_dim
+  !
   !--------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_atomic_species (atomic_species, nsp, atm, psfile, amass)
     !---------------------------------------------------------------------------    !
