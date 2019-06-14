@@ -40,7 +40,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_cell, readschema_ions, readschema_dim, &
+  PUBLIC :: readschema_ef, readschema_cell, readschema_ions, &
        readschema_planewaves, readschema_spin, readschema_magnetization, &
        readschema_xc, readschema_occupations, readschema_brillouin_zone, &
        readschema_band_structure, readschema_symmetry, readschema_efield, &
@@ -706,7 +706,7 @@ MODULE pw_restart_new
       USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
-      USE gvecs,                ONLY : ngms_g, dual
+      USE gvecs,                ONLY : ngms_g
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
@@ -1007,84 +1007,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !--------------------------------------------------------------------------
-    SUBROUTINE readschema_dim(atomic_species, atomic_structure, &
-         symmetries, basis_set, band_structure ) 
-      !
-    USE constants,        ONLY : e2
-    USE ions_base,        ONLY : nat, nsp
-    USE symm_base,        ONLY : nsym, nrot
-    USE gvect,            ONLY : ngm_g, ecutrho
-    USE fft_base,         ONLY : dfftp
-    USE gvecs,            ONLY : ngms_g, dual
-    USE fft_base,         ONLY : dffts
-    USE lsda_mod,         ONLY : lsda
-    USE noncollin_module, ONLY : noncolin
-    USE klist,            ONLY : nkstot, nelec
-    USE wvfct,            ONLY : nbnd, npwx
-    USE gvecw,            ONLY : ecutwfc
-    USE control_flags,    ONLY : gamma_only
-    USE mp_global,        ONLY : nproc_file, nproc_pool_file, &
-                                 nproc_image_file, ntask_groups_file, &
-                                 nproc_bgrp_file, nproc_ortho_file
-    !
-    USE qes_types_module, ONLY : atomic_species_type, atomic_structure_type, &
-                                 symmetries_type, basis_set_type, band_structure_type, input_type  
-    IMPLICIT NONE 
-    !
-    TYPE ( atomic_species_type ),INTENT(IN)    :: atomic_species
-    TYPE ( atomic_structure_type ),INTENT(IN)  :: atomic_structure
-    TYPE ( symmetries_type ),INTENT(IN)        :: symmetries
-    TYPE ( basis_set_type ),INTENT(IN)         :: basis_set
-    TYPE ( band_structure_type ),INTENT(IN)    :: band_structure 
-    ! 
-    INTEGER                                    :: npwx_
-    !
-    !---------------------------------------------------------------------------
-    !                                      ATOMS AND SPECIES 
-    !--------------------------------------------------------------------------
-    nsp = atomic_species%ntyp
-    nat = atomic_structure%nat 
-    !                                         SIMMETRIES 
-    nsym = symmetries%nsym
-    nrot = symmetries%nrot
-    !-----------------------------------------------------------------------------
-    !                                          BASIS SET 
-    !-----------------------------------------------------------------------------
-    ecutwfc = basis_set%ecutwfc*e2
-    ecutrho = basis_set%ecutrho*e2
-    dual = ecutrho/ecutwfc
-    npwx_ = basis_set%npwx
-    gamma_only= basis_set%gamma_only
-    dfftp%nr1 = basis_set%fft_grid%nr1
-    dfftp%nr2 = basis_set%fft_grid%nr2          
-    dfftp%nr3 = basis_set%fft_grid%nr3
-    dffts%nr1 = basis_set%fft_smooth%nr1
-    dffts%nr2 = basis_set%fft_smooth%nr2
-    dffts%nr3 = basis_set%fft_smooth%nr3
-    ngm_g     = basis_set%ngm
-    ngms_g    = basis_set%ngms
-    !-------------------------------------------------------------------------
-    !                                    BAND STRUCTURE  
-    !-------------------------------------------------------------------------
-    lsda  =    band_structure%lsda
-    noncolin = band_structure%noncolin
-    nelec =    band_structure%nelec
-    nkstot =   band_structure%nks  
-    IF (band_structure%nbnd_ispresent) THEN
-       nbnd = band_structure%nbnd
-    ELSE IF ( band_structure%nbnd_up_ispresent .AND. band_structure%nbnd_dw_ispresent) THEN
-       nbnd = ( band_structure%nbnd_up + band_structure%nbnd_dw )
-    ELSE 
-       CALL errore('init_vars_from_schema: check xml file !!', &
-                   'nbnd or nbnd_up+nbnd_dw are missing in band_structure element', 1)
-    END IF     
-    IF ( lsda ) THEN
-       nkstot = nkstot * 2 
-       nbnd   = nbnd / 2
-    END IF
-
-  END SUBROUTINE readschema_dim
     !
     !-----------------------------------------------------------------------
     SUBROUTINE readschema_cell(atomic_structure )
