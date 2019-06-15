@@ -681,7 +681,6 @@ MODULE cp_restart_new
       INTEGER,  ALLOCATABLE :: isrt_(:) 
       REAL(DP), ALLOCATABLE :: tau_(:,:) 
       REAL(DP), ALLOCATABLE :: occ_(:,:), et_(:,:)
-      CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
       REAL(DP), ALLOCATABLE :: mrepl(:,:) 
       LOGICAL               :: md_found, exist_wfc 
@@ -761,8 +760,8 @@ MODULE cp_restart_new
             nproc_pool_file, nproc_image_file, ntask_groups_file, &
             nproc_bgrp_file, nproc_ortho_file)
       !
-      CALL qexsd_copy_atomic_species (output_obj%atomic_species, nsp_, atm, &
-           psfile_, amass_)
+      CALL qexsd_copy_atomic_species (output_obj%atomic_species, nsp_, &
+              atm, amass_ )
       IF ( nsp_ /= nsp ) CALL errore ('cp_readfile', 'wrong nsp read', 1)
 
       ALLOCATE ( tau_(3,nat), ityp_(nat), isrt_(nat) )

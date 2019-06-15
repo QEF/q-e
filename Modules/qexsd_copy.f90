@@ -98,7 +98,8 @@ CONTAINS
   END SUBROUTINE qexsd_copy_dim
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE qexsd_copy_atomic_species (atomic_species, nsp, atm, psfile, amass)
+  SUBROUTINE qexsd_copy_atomic_species (atomic_species, nsp, atm, amass, &
+       psfile, pseudo_dir)
     !---------------------------------------------------------------------------    !
     USE qes_types_module, ONLY : atomic_species_type
     !
@@ -106,7 +107,8 @@ CONTAINS
     !
     TYPE ( atomic_species_type ),INTENT(IN)    :: atomic_species
     INTEGER, INTENT(out) :: nsp
-    CHARACTER(LEN=*), INTENT(out) :: atm(:), psfile(:)
+    CHARACTER(LEN=*), INTENT(out) :: atm(:)
+    CHARACTER(LEN=*), OPTIONAL, INTENT(out) :: psfile(:), pseudo_dir
     REAL(dp), INTENT(out) :: amass(:)
     !
     INTEGER :: isp
@@ -117,8 +119,20 @@ CONTAINS
        IF (atomic_species%species(isp)%mass_ispresent) &
             amass(isp) = atomic_species%species(isp)%mass
        atm(isp) = TRIM ( atomic_species%species(isp)%name )
-       psfile(isp) = TRIM ( atomic_species%species(isp)%pseudo_file) 
+       IF ( PRESENT (psfile) ) THEN
+          psfile(isp) = TRIM ( atomic_species%species(isp)%pseudo_file) 
+       END IF
     END DO
+    ! 
+    ! ... this is where PP files were originally found (if available)
+    !
+    IF ( PRESENT (pseudo_dir) ) THEN
+       IF ( atomic_species%pseudo_dir_ispresent) THEN 
+          pseudo_dir = TRIM(atomic_species%pseudo_dir)
+       ELSE 
+          pseudo_dir = ' '
+       END IF
+    END IF
     !
   END SUBROUTINE qexsd_copy_atomic_species
 

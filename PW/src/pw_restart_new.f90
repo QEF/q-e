@@ -40,7 +40,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_cell, readschema_ions, &
+  PUBLIC :: readschema_ef, &
        readschema_planewaves, readschema_spin, readschema_magnetization, &
        readschema_xc, readschema_occupations, readschema_brillouin_zone, &
        readschema_band_structure, readschema_symmetry, readschema_efield, &
@@ -1008,101 +1008,6 @@ MODULE pw_restart_new
     END SUBROUTINE pw_read_schema
     !  
     !
-    !-----------------------------------------------------------------------
-    SUBROUTINE readschema_cell(atomic_structure )
-    !-----------------------------------------------------------------------
-    !
-    USE constants,         ONLY : pi,tpi
-    USE cell_base,         ONLY : ibrav, alat, at, bg, celldm
-    USE cell_base,         ONLY : tpiba, tpiba2, omega
-    USE qes_types_module,  ONLY : atomic_structure_type
-    !
-    IMPLICIT NONE 
-    ! 
-    TYPE ( atomic_structure_type ),INTENT(IN) :: atomic_structure 
-    !
-    alat = atomic_structure%alat 
-    IF ( atomic_structure%bravais_index_ispresent ) THEN 
-       ibrav = atomic_structure%bravais_index 
-    ELSE 
-       ibrav = 0
-    END IF
-    at(:,1) =  atomic_structure%cell%a1
-    at(:,2) =  atomic_structure%cell%a2
-    at(:,3) =  atomic_structure%cell%a3
-    !! crystal axis are brought into "alat" units
-    at = at / alat
-    !
-    !! if ibrav is present, cell parameters were computed by subroutine
-    !! "latgen" using ibrav and celldm parameters: recalculate celldm
-    !
-    CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
-    !
-    tpiba = tpi/alat
-    tpiba2= tpiba**2
-    CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
-    CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-
-    END SUBROUTINE readschema_cell
-    ! 
-    !------------------------------------------------------------------------
-    SUBROUTINE readschema_ions( atomic_structure, atomic_species, dirname ) 
-    !------------------------------------------------------------------------
-    ! 
-    USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau
-    USE cell_base, ONLY : alat
-    USE io_files,  ONLY : psfile, pseudo_dir, pseudo_dir_cur
-    USE qes_types_module, ONLY: atomic_structure_type, atomic_species_type, input_type 
-    ! 
-    IMPLICIT NONE 
-    ! 
-    TYPE ( atomic_structure_type ),INTENT(IN) :: atomic_structure
-    TYPE ( atomic_species_type ),INTENT(IN)   :: atomic_species  
-    CHARACTER(LEN=*), INTENT(IN)              :: dirname
-    ! 
-    INTEGER                                   :: iat, isp, idx
-    CHARACTER(LEN = 3 ),ALLOCATABLE           :: symbols(:) 
-    ! 
-    nat = atomic_structure%nat
-    nsp = atomic_species%ntyp
-    ALLOCATE ( symbols(nat) ) 
-    DO isp = 1, nsp 
-       amass(isp) = 0.d0 
-       IF (atomic_species%species(isp)%mass_ispresent) amass(isp) = atomic_species%species(isp)%mass
-       atm(isp) = TRIM ( atomic_species%species(isp)%name )
-       psfile(isp) = TRIM ( atomic_species%species(isp)%pseudo_file) 
-    END DO 
-    !
-    loop_on_atoms:DO iat = 1, nat
-       idx = atomic_structure%atomic_positions%atom(iat)%index
-       tau(:,idx) = atomic_structure%atomic_positions%atom(iat)%atom 
-       symbols(idx)  = TRIM ( atomic_structure%atomic_positions%atom(idx)%name ) 
-       loop_on_species:DO isp = 1, nsp
-          IF ( TRIM(symbols(idx)) == TRIM (atm(isp))) THEN 
-             ityp(iat) = isp 
-             exit loop_on_species
-          END IF 
-       END  DO loop_on_species
-    END DO loop_on_atoms
-    
-    DEALLOCATE ( symbols ) 
-    IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
-    tau(:,1:nat) = tau(:,1:nat)/alat  
-    ! 
-    ! ... this is where PP files used in the calculation were stored
-    !
-    pseudo_dir_cur = TRIM(dirname)
-    ! 
-    ! ... this is where PP files were originally found (if available)
-    !
-    IF ( atomic_species%pseudo_dir_ispresent) THEN 
-       pseudo_dir = TRIM(atomic_species%pseudo_dir)
-    ELSE 
-       pseudo_dir = pseudo_dir_cur
-    END IF
-    ! 
-    END SUBROUTINE readschema_ions
-    !  
     !------------------------------------------------------------------------
     SUBROUTINE readschema_symmetry ( symms_obj, basis_obj, flags_obj  ) 
     !------------------------------------------------------------------------

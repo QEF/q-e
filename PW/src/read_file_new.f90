@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016 Quantum ESPRESSO group
+! Copyright (C) 2016-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -90,10 +90,12 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... starting from scratch should be initialized here when restarting
   !
   USE io_global,            ONLY : stdout, ionode, ionode_id
+  USE io_files,             ONLY : psfile, pseudo_dir, pseudo_dir_cur
   USE mp_global,            ONLY : nproc_file, nproc_pool_file, &
                                    nproc_image_file, ntask_groups_file, &
                                    nproc_bgrp_file, nproc_ortho_file
-  USE ions_base,            ONLY : nat, ityp, tau, extfor
+  USE ions_base,            ONLY : nat, nsp, ityp, amass, atm, tau, extfor
+  USE cell_base,            ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nks, nkstot
   USE wvfct,                ONLY : nbnd, et, wg
@@ -101,7 +103,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE extfield,             ONLY : forcefield, tefield, gate, forcegate
   USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE pw_restart_new,       ONLY : pw_read_schema, &
-       readschema_cell, readschema_ions, readschema_planewaves, &
+       readschema_planewaves, &
        readschema_spin, readschema_magnetization, readschema_xc, &
        readschema_occupations, readschema_brillouin_zone, &
        readschema_band_structure, readschema_symmetry, readschema_efield, &
@@ -110,7 +112,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        general_info_type, input_type
   USE qes_libs_module,      ONLY : qes_reset
   USE qexsd_copy,           ONLY : qexsd_copy_parallel_info, &
-       qexsd_copy_dim
+       qexsd_copy_dim, qexsd_copy_atomic_species, qexsd_copy_atomic_structure
 #if defined(__BEOWULF)
   USE qes_bcast_module,     ONLY : qes_bcast
   USE mp_images,            ONLY : intra_image_comm
@@ -121,7 +123,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   LOGICAL, INTENT(OUT) :: wfc_is_collected
 
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
-  CHARACTER(LEN=256) :: dirname
   LOGICAL            :: lvalid_input
   TYPE ( output_type)                   :: output_obj 
   TYPE (parallel_info_type)             :: parinfo_obj
@@ -152,7 +153,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        nproc_bgrp_file, nproc_ortho_file)
   CALL qexsd_copy_dim ( output_obj%atomic_structure, &
         output_obj%band_structure, nat, nkstot, nbnd ) 
-  CALL readschema_cell( output_obj%atomic_structure ) 
   !
   ! ... until pools are activated, the local number of k-points nks
   ! ... should be equal to the global number nkstot - k-points are replicated
@@ -180,8 +180,24 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   lvalid_input = (TRIM(input_obj%tagname) == "input")
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix ! FIXME
-  CALL readschema_ions( output_obj%atomic_structure, output_obj%atomic_species, dirname)
+  pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
+       nsp, atm, amass, psfile, pseudo_dir ) 
+  IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
+  !
+  CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
+       atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
+  !
+  !! More initializations needed for atomic structure:
+  !! bring atomic positions and crystal axis into "alat" units;
+  !! recalculate celldm; compute cell volume, reciprocal lattice vectors
+  !
+  at = at / alat
+  tau(:,1:nat) = tau(:,1:nat)/alat  
+  CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
+  CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
+  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  !
   CALL readschema_planewaves( output_obj%basis_set) 
   CALL readschema_spin( output_obj%magnetization )
   CALL readschema_magnetization (  output_obj%band_structure,  &
