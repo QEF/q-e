@@ -362,13 +362,11 @@
 
 !=----------------------------------------------------------------------------=!
 !
-!  This wrapper interface CP/FPMD to the PW xc and gga functionals
-!
-!  tested with PP/xctest.f90 code
+!  For CP we need a further small interface subroutine
 !
 !=----------------------------------------------------------------------------=!
 
-subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
+subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds,       only: DP
   use funct,       only: dft_is_gradient, get_igcc
   use xc_lda_lsda, only: xc
@@ -376,36 +374,39 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
-  real(DP), intent(in) :: grhor(3,nnr,nspin)
-  real(DP) :: h(nnr,nspin,nspin)
-  real(DP), intent(in) :: rhor(nnr,nspin)
-  real(DP) :: v(nnr,nspin)
-  real(DP) :: etxc, vtxc
-  integer :: ir, is, k
-  real(DP), dimension(nnr,nspin) :: rhox !^
-  real(DP), dimension(nnr) :: arhox , zeta
-  real(DP), dimension(nnr) :: ex, ec
-  real(DP), dimension(nnr,nspin) :: vx, vc
-  !
-  REAL(DP), dimension(nnr) :: sx, sc
-  REAL(DP), dimension(nnr,nspin) :: v1x, v2x, v1c, v2c
-  real(dp), dimension(nnr) :: v2c_ud
+  real(DP) :: grhor( 3, nnr, nspin )
+  real(DP) :: rhor( nnr, nspin )
+  real(DP) :: etxc
+
+  real(DP), parameter :: epsr = 1.0d-10
+  real(DP), parameter :: e2=1.0_dp
+  integer :: ir, is, k, ipol, neg(3)
+  real(DP) ::  grup, grdw
+  real(DP), allocatable :: v(:,:)
+  real(DP), allocatable :: h(:,:,:)
+  real(DP), allocatable :: rhox (:,:)!^
+  real(DP), allocatable :: ex(:), ec(:)
+  real(DP), allocatable :: vx(:,:), vc(:,:)
+  REAL(DP), allocatable :: sx(:), sc(:)
+  REAL(DP), allocatable :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:)
+  real(dp), allocatable :: v2c_ud(:)
   real(dp) :: zetas
   !
-  real(DP), dimension(nnr) :: rh, sign_v
-  real(DP) :: e2
-  real(DP) :: arho, segno, xnull
-  !
-  integer :: neg(3)
-  real(DP), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
   logical :: debug_xc = .false.
   logical :: igcc_is_lyp
-
+  !
+  allocate( v( nnr, nspin ) )
+  if( dft_is_gradient() ) then
+    allocate( h( nnr, nspin, nspin ) )
+  else
+    allocate( h( 1, 1, 1 ) )
+  endif
+  !
   igcc_is_lyp = (get_igcc() == 3)
   !
-  e2  = 1.0d0
   etxc = 0.0d0
   !
+  allocate ( ex(nnr), ec(nnr), vx(nnr,nspin), vc(nnr,nspin) )
   IF ( nspin == 1 ) THEN
      !
      ! spin-unpolarized case
@@ -423,6 +424,7 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
      neg(2) = 0
      neg(3) = 0
      !
+     allocate ( rhox(nnr,2) ) !^
      rhox(:,1) = rhor(:,1) + rhor(:,2)
      rhox(:,2) = rhor(:,1) - rhor(:,2)
      !
@@ -442,7 +444,10 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
         !
      ENDDO
      !
+     deallocate ( rhox ) !^
+     !
   ENDIF
+  deallocate ( vc, vx, ec, ex )
   !
   if( debug_xc ) then
     open(unit=17,form='unformatted')
@@ -453,18 +458,17 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
     debug_xc = .false.
   end if
   !
-  ! now come the corrections
+  ! gradient corrections
   !
   if ( dft_is_gradient() ) then
     !
     call change_threshold_gga( epsr )
     !
-    !
+    allocate ( sx(nnr), sc(nnr), v1x(nnr,nspin), v1c(nnr,nspin), &
+               v2x(nnr,nspin), v2c(nnr,nspin) )
     if (nspin == 1) then
        !
        ! ... This is the spin-unpolarised case
-       !
-       sign_v(:)  = SIGN( 1.d0, rhor(:,1) )
        !
        call xc_gcx( nnr, nspin, rhor, grhor, sx, sc, v1x, v2x, v1c, v2c )
        !
@@ -473,13 +477,14 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
           v(k,1) = v(k,1) + e2 * (v1x(k,1) + v1c(k,1))
           ! HERE h contains D(rho*Exc)/D(|grad rho|) / |grad rho|
           h(k, 1, 1) = e2 * (v2x(k,1) + v2c(k,1))
-          etxc = etxc + e2 * (sx(k) + sc(k)) * sign_v(k)
+          etxc = etxc + e2 * (sx(k) + sc(k)) * SIGN( 1.d0, rhor(k,1) )
        enddo
        !
     else
        !
        ! ... Spin-polarised case
        !
+       allocate (v2c_ud(nnr))
        call xc_gcx( nnr, 2, rhor, grhor, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
        !
        ! first term of the gradient correction : D(rho*Exc)/D(rho)
@@ -495,43 +500,11 @@ subroutine exch_corr_wrapper( nnr, nspin, grhor, rhor, etxc, v, h )
        !
        etxc = etxc + e2 * SUM( sx(:)+sc(:) )
        !
+       deallocate (v2c_ud)
     endif
     !
+    deallocate ( v2c, v2x, v1c, v1x, sc, sx )
   end if
-  !
-  return
-  !
-end subroutine exch_corr_wrapper
-
-
-!=----------------------------------------------------------------------------=!
-!
-!  For CP we need a further small interface subroutine
-!
-!=----------------------------------------------------------------------------=!
-
-subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
-  use kinds, only: DP
-  use funct, only: dft_is_gradient
-  implicit none
-  integer, intent(in) :: nnr
-  integer, intent(in) :: nspin
-  real(DP) :: grhor( 3, nnr, nspin )
-  real(DP) :: rhor( nnr, nspin )
-  real(DP) :: etxc
-  integer :: k, ipol
-  real(DP) ::  grup, grdw
-  real(DP), allocatable :: v(:,:)
-  real(DP), allocatable :: h(:,:,:)
-  !
-  allocate( v( nnr, nspin ) )
-  if( dft_is_gradient() ) then
-    allocate( h( nnr, nspin, nspin ) )
-  else
-    allocate( h( 1, 1, 1 ) )
-  endif
-  !
-  call exch_corr_wrapper(nnr,nspin,grhor,rhor,etxc,v,h)
 
   if( dft_is_gradient() ) then
      !
