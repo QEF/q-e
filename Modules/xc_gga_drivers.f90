@@ -798,7 +798,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
 #endif
   !
 !$omp parallel if(ntids==1)
-!$omp do private( rho, grho2, null_v, sx, sxsr, v1x, v1xsr, &
+!$omp do private( rho, grho2, sx, sxsr, v1x, v1xsr, &
 !$omp             v2x, v2xsr )
   DO ir = 1, length  
      !
