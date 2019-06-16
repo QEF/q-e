@@ -21,6 +21,7 @@ MODULE qexsd_copy
   !
   PUBLIC:: qexsd_copy_geninfo, qexsd_copy_parallel_info, qexsd_copy_dim, &
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
+       qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
   !
 CONTAINS
@@ -182,6 +183,66 @@ CONTAINS
     a3(:) = atomic_structure%cell%a3
 
   END SUBROUTINE qexsd_copy_atomic_structure
+  !
+  !------------------------------------------------------------------------
+  SUBROUTINE qexsd_copy_symmetry ( symms_obj, &
+       nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
+       noinv, nosym, no_t_rev, flags_obj )
+    !------------------------------------------------------------------------
+    ! 
+    USE qes_types_module,ONLY : symmetries_type, symmetry_flags_type
+    ! 
+    IMPLICIT NONE   
+    ! 
+    TYPE ( symmetries_type )             :: symms_obj 
+    TYPE (symmetry_flags_type), OPTIONAL :: flags_obj
+    INTEGER, INTENT(OUT) :: nrot
+    INTEGER, INTENT(OUT) :: nsym
+    INTEGER, INTENT(OUT) :: s(:,:,:)
+    LOGICAL, INTENT(OUT) :: invsym
+    REAL(dp), INTENT(OUT):: ft(:,:)
+    INTEGER, INTENT(OUT) :: irt(:,:)
+    INTEGER, INTENT(OUT) :: t_rev(:)
+    CHARACTER(len=45) ::  sname(:)
+    !
+    LOGICAL, INTENT(OUT) :: noinv, nosym, no_t_rev
+    !
+    INTEGER :: isym 
+    ! 
+    IF ( PRESENT(flags_obj) ) THEN 
+       noinv = flags_obj%noinv
+       nosym = flags_obj%nosym
+       no_t_rev = flags_obj%no_t_rev
+    ELSE
+       noinv = .FALSE.
+       nosym = .FALSE.
+       no_t_rev=.FALSE.
+    ENDIF
+    !
+    nrot = symms_obj%nrot 
+    nsym = symms_obj%nsym
+    !  
+    invsym = .FALSE. 
+    DO isym = 1, nrot
+       s(:,:,isym) = reshape(symms_obj%symmetry(isym)%rotation%matrix, [3,3]) 
+       sname(isym) = TRIM ( symms_obj%symmetry(isym)%info%name )  
+       IF ( (TRIM(sname(isym)) == "inversion") .AND. (isym .LE. nsym) ) invsym = .TRUE.
+       IF ( symms_obj%symmetry(isym)%fractional_translation_ispresent .AND. (isym .LE. nsym) ) THEN
+          ft(1:3,isym)  =  symms_obj%symmetry(isym)%fractional_translation(1:3) 
+       END IF
+       IF ( symms_obj%symmetry(isym)%info%time_reversal_ispresent ) THEN  
+          IF (symms_obj%symmetry(isym)%info%time_reversal) THEN 
+             t_rev( isym ) = 1
+          ELSE
+             t_rev( isym ) = 0 
+          END IF
+       END IF
+       IF ( symms_obj%symmetry(isym)%equivalent_atoms_ispresent .AND. (isym .LE. nsym) )   &
+            irt(isym,:) = symms_obj%symmetry(isym)%equivalent_atoms%equivalent_atoms(:)
+    END DO
+    !
+  END SUBROUTINE qexsd_copy_symmetry
+  !
 
   !--------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_basis_set ( basis_set, gamma_only, ecutwfc, ecutrho, &
