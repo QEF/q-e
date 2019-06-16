@@ -14,7 +14,8 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
-  USE io_files,        ONLY : tmp_dir, prefix, postfix
+  USE io_files,        ONLY : tmp_dir, prefix, postfix, &
+                              psfile, pseudo_dir, pseudo_dir_cur
   USE ions_base,       ONLY : nsp, ityp, amass, atm
   USE cell_base,       ONLY : alat, ibrav
   USE pw_restart_new,  ONLY : pw_read_schema
@@ -30,21 +31,21 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
   REAL(DP),INTENT(inout) :: at(3,3), bg(3,3), omega
   REAL(DP),INTENT(inout) :: tau(3,nat)
-  CHARACTER(LEN=256) :: dirname
   INTEGER :: ierr, nat_
 !
   TYPE ( output_type)                   :: output_obj
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
-                &  /,5X,A)') dirname
+                &  /,5X,A)') pseudo_dir_cur
   !
   ! ... check if restart file is present, if yes read config parameters
   !
   CALL pw_read_schema ( ierr, output_obj )
   IF (ierr == 0 ) THEN 
      CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-          nsp, atm, amass )
+          nsp, atm, amass, psfile, pseudo_dir )
+     IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
      CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
           atm, nat_, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
      CALL qes_reset (output_obj)

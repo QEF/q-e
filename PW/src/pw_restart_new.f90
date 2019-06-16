@@ -43,7 +43,7 @@ MODULE pw_restart_new
   PUBLIC :: readschema_ef, &
        readschema_planewaves, readschema_spin, readschema_magnetization, &
        readschema_xc, readschema_occupations, readschema_brillouin_zone, &
-       readschema_band_structure, readschema_symmetry, readschema_efield, &
+       readschema_band_structure, readschema_efield, &
        readschema_outputPBC, readschema_exx, readschema_algo
   !
   CONTAINS
@@ -1007,59 +1007,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE readschema_symmetry ( symms_obj, basis_obj, flags_obj  ) 
-    !------------------------------------------------------------------------
-      ! 
-      USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
-                                 sname, sr, invs, inverse_s, s_axis_to_cart, &
-                                 time_reversal, no_t_rev, nosym
-      USE control_flags,   ONLY : noinv  
-      USE fft_base,        ONLY : dfftp
-      USE qes_types_module,ONLY : symmetries_type, symmetry_type, basis_type
-      ! 
-      IMPLICIT NONE   
-      ! 
-      TYPE ( symmetries_type )               :: symms_obj 
-      TYPE ( basis_set_type )                :: basis_obj
-      TYPE ( symmetry_flags_type),OPTIONAL   :: flags_obj
-      INTEGER                                :: isym 
-      ! 
-      IF ( PRESENT(flags_obj) ) THEN 
-         noinv = flags_obj%noinv
-         nosym = flags_obj%nosym
-         no_t_rev = flags_obj%no_t_rev
-         time_reversal = time_reversal .AND. .NOT. noinv 
-      ENDIF
-      !
-      nrot = symms_obj%nrot 
-      nsym = symms_obj%nsym
-      ! 
-      !  
-      invsym = .FALSE. 
-      DO isym = 1, nrot
-        s(:,:,isym) = reshape(symms_obj%symmetry(isym)%rotation%matrix, [3,3]) 
-        sname(isym) = TRIM ( symms_obj%symmetry(isym)%info%name )  
-        IF ( (TRIM(sname(isym)) == "inversion") .AND. (isym .LE. nsym) ) invsym = .TRUE.
-        IF ( symms_obj%symmetry(isym)%fractional_translation_ispresent .AND. (isym .LE. nsym) ) THEN
-           ft(1:3,isym)  =  symms_obj%symmetry(isym)%fractional_translation(1:3) 
-        END IF
-        IF ( symms_obj%symmetry(isym)%info%time_reversal_ispresent ) THEN  
-           IF (symms_obj%symmetry(isym)%info%time_reversal) THEN 
-              t_rev( isym ) = 1
-           ELSE
-              t_rev( isym ) = 0 
-           END IF 
-        END IF
-        IF ( symms_obj%symmetry(isym)%equivalent_atoms_ispresent .AND. (isym .LE. nsym) )   &
-             irt(isym,:) = symms_obj%symmetry(isym)%equivalent_atoms%equivalent_atoms(:)
-      END DO
-      CALL inverse_s()
-      CALL s_axis_to_cart() 
-      !
-    END SUBROUTINE readschema_symmetry 
-    !
     !---------------------------------------------------------------------------
     SUBROUTINE readschema_efield( efield_obj  ) 
     !---------------------------------------------------------------------------

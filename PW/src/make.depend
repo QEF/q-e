@@ -1534,7 +1534,6 @@ pw_restart_new.o : ../../Modules/kernel_table.o
 pw_restart_new.o : ../../Modules/kind.o
 pw_restart_new.o : ../../Modules/mm_dispersion.o
 pw_restart_new.o : ../../Modules/mp_bands.o
-pw_restart_new.o : ../../Modules/mp_global.o
 pw_restart_new.o : ../../Modules/mp_pools.o
 pw_restart_new.o : ../../Modules/noncol.o
 pw_restart_new.o : ../../Modules/paw_variables.o
@@ -1586,11 +1585,14 @@ qvan2.o : pwcom.o
 rdiagh.o : ../../Modules/kind.o
 rdiagh.o : ../../Modules/mp_bands.o
 rdiagh.o : ../../UtilXlib/mp.o
+read_conf_from_file.o : ../../Modules/cell_base.o
 read_conf_from_file.o : ../../Modules/io_files.o
 read_conf_from_file.o : ../../Modules/io_global.o
+read_conf_from_file.o : ../../Modules/ions_base.o
 read_conf_from_file.o : ../../Modules/kind.o
 read_conf_from_file.o : ../../Modules/qes_libs_module.o
 read_conf_from_file.o : ../../Modules/qes_types_module.o
+read_conf_from_file.o : ../../Modules/qexsd_copy.o
 read_conf_from_file.o : pw_restart_new.o
 read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
