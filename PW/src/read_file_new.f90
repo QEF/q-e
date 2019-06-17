@@ -130,7 +130,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   LOGICAL, INTENT(OUT) :: wfc_is_collected
 
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
-  LOGICAL            :: lvalid_input
+  LOGICAL  :: magnetic_sym, lvalid_input
   TYPE ( output_type)                   :: output_obj 
   TYPE (parallel_info_type)             :: parinfo_obj
   TYPE (general_info_type )             :: geninfo_obj
@@ -225,7 +225,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
           noinv, nosym, no_t_rev )
   ENDIF
   !! More initialization needed for symmetry
-  time_reversal = noncolin .AND. domag .AND. (.NOT.noinv) 
+  magnetic_sym = noncolin .AND. domag
+  time_reversal = (.NOT.magnetic_sym) .AND. (.NOT.noinv) 
   CALL inverse_s()
   CALL s_axis_to_cart()
   !! symmetry check - FIXME: is this needed?
