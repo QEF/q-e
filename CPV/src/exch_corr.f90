@@ -477,7 +477,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
           v(k,1) = v(k,1) + e2 * (v1x(k,1) + v1c(k,1))
           ! HERE h contains D(rho*Exc)/D(|grad rho|) / |grad rho|
           h(k, 1, 1) = e2 * (v2x(k,1) + v2c(k,1))
-          etxc = etxc + e2 * (sx(k) + sc(k)) * SIGN( 1.d0, rhor(k,1) )
+          etxc = etxc + e2 * (sx(k) + sc(k))
        enddo
        !
     else
