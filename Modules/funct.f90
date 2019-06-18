@@ -765,10 +765,10 @@ CONTAINS
        !
        DO i = 1, length
           ii = ii+1
-          IF (ii == length) EXIT
+          IF (ii == length-1) EXIT
           !
           IF (dft(ii:ii+2) .EQ. 'XC_') THEN
-             DO j = 1, length-ii
+             DO j = 1, length-ii-2
                IF (dft(ii+2+j:ii+2+j) .EQ. ' ') EXIT
              ENDDO
              !
