@@ -40,11 +40,10 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, &
-       readschema_planewaves, readschema_spin, readschema_magnetization, &
+  PUBLIC :: readschema_ef, readschema_spin, readschema_magnetization, &
        readschema_xc, readschema_occupations, readschema_brillouin_zone, &
        readschema_band_structure, readschema_efield, &
-       readschema_outputPBC, readschema_exx, readschema_algo
+       readschema_outputPBC, readschema_exx
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1062,39 +1061,6 @@ MODULE pw_restart_new
       END IF 
       !
   END SUBROUTINE readschema_efield  
-    !-----------------------------------------------------------------------
-    SUBROUTINE readschema_planewaves ( basis_set_obj ) 
-    !-----------------------------------------------------------------------
-    ! 
-    USE constants,       ONLY : e2
-    USE gvect,           ONLY : ngm_g, ecutrho
-    USE gvecs,           ONLY : ngms_g, dual
-    USE gvecw,           ONLY : ecutwfc
-    USE fft_base,        ONLY : dfftp
-    USE fft_base,        ONLY : dffts
-    USE wvfct,           ONLY : npwx
-    USE control_flags,   ONLY : gamma_only
-    USE qes_types_module,ONLY : basis_set_type
-    ! 
-    IMPLICIT NONE 
-    ! 
-    TYPE ( basis_set_type )              :: basis_set_obj  
-    !
-    ecutwfc = basis_set_obj%ecutwfc*e2
-    ecutrho = basis_set_obj%ecutrho*e2
-    dual = ecutrho/ecutwfc
-    !npwx = basis_set_obj%npwx
-    gamma_only= basis_set_obj%gamma_only
-    dfftp%nr1 = basis_set_obj%fft_grid%nr1
-    dfftp%nr2 = basis_set_obj%fft_grid%nr2          
-    dfftp%nr3 = basis_set_obj%fft_grid%nr3
-    dffts%nr1 = basis_set_obj%fft_smooth%nr1
-    dffts%nr2 = basis_set_obj%fft_smooth%nr2
-    dffts%nr3 = basis_set_obj%fft_smooth%nr3
-    ngm_g     = basis_set_obj%ngm
-    ngms_g    = basis_set_obj%ngms
-    !
-    END SUBROUTINE readschema_planewaves 
     !--------------------------------------------------------------------------
     SUBROUTINE readschema_spin( magnetization_obj) 
     !--------------------------------------------------------------------------
@@ -1632,17 +1598,6 @@ MODULE pw_restart_new
       END DO 
     END SUBROUTINE readschema_band_structure 
     !
-    !--------------------------------------------------------------------------
-    SUBROUTINE readschema_algo(algo_obj) 
-       USE control_flags, ONLY: tqr 
-       USE realus,        ONLY: real_space 
-       IMPLICIT NONE 
-       TYPE(algorithmic_info_type),INTENT(IN)   :: algo_obj
-       tqr = algo_obj%real_space_q 
-       real_space = algo_obj%real_space_beta 
-    END SUBROUTINE readschema_algo 
-
-    ! 
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_to_evc( dirname )
       !------------------------------------------------------------------------
