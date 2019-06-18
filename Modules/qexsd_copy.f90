@@ -21,7 +21,7 @@ MODULE qexsd_copy
   !
   PUBLIC:: qexsd_copy_geninfo, qexsd_copy_parallel_info, qexsd_copy_dim, &
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
-       qexsd_copy_symmetry, &
+       qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
   !
 CONTAINS
@@ -564,4 +564,18 @@ CONTAINS
       END DO
     END SUBROUTINE qexsd_copy_band_structure
     !
+    SUBROUTINE qexsd_copy_algorithmic_info ( algo_obj, &
+         real_space, tqr, okvan, okpaw )
+      USE qes_types_module, ONLY: algorithmic_info_type
+      IMPLICIT NONE 
+      TYPE(algorithmic_info_type),INTENT(IN)   :: algo_obj
+      LOGICAL, INTENT(OUT) :: real_space, tqr, okvan, okpaw
+      !
+      tqr = algo_obj%real_space_q 
+      real_space = algo_obj%real_space_beta
+      okvan = algo_obj%uspp
+      real_space = algo_obj%paw
+      !
+    END SUBROUTINE qexsd_copy_algorithmic_info
+
   END MODULE qexsd_copy

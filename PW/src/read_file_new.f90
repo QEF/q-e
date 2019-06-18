@@ -89,6 +89,11 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... All quantities that are initialized in subroutine "setup" when
   ! ... starting from scratch should be initialized here when restarting
   !
+  USE constants,       ONLY : e2
+  USE gvect,           ONLY : ngm_g, ecutrho
+  USE gvecs,           ONLY : ngms_g, dual
+  USE gvecw,           ONLY : ecutwfc
+  USE fft_base,        ONLY : dfftp, dffts
   USE io_global,       ONLY : stdout, ionode, ionode_id
   USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur
   USE mp_global,       ONLY : nproc_file, nproc_pool_file, &
@@ -98,28 +103,32 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
   USE klist,           ONLY : nks, nkstot
-  USE wvfct,           ONLY : nbnd, et, wg
+  USE wvfct,           ONLY : npwx, nbnd, et, wg
   USE extfield,        ONLY : forcefield, tefield, gate, forcegate
   USE io_files,        ONLY : tmp_dir, prefix, postfix
   USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                               sname, inverse_s, s_axis_to_cart, &
                               time_reversal, no_t_rev, nosym, checkallsym
-  USE control_flags,   ONLY : noinv
+  USE control_flags,   ONLY : noinv, gamma_only, tqr
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag
+  USE realus,          ONLY : real_space
+  USE uspp,            ONLY : okvan
+  USE paw_variables,   ONLY : okpaw
   !
   USE pw_restart_new,  ONLY : pw_read_schema, &
-       readschema_planewaves, &
        readschema_spin, readschema_magnetization, readschema_xc, &
        readschema_occupations, readschema_brillouin_zone, &
        readschema_band_structure, readschema_efield, &
-       readschema_outputPBC, readschema_exx, readschema_algo
+       readschema_outputPBC, readschema_exx
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
   USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
        qexsd_copy_dim, qexsd_copy_atomic_species, &
-       qexsd_copy_atomic_structure, qexsd_copy_symmetry
+       qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
+       qexsd_copy_basis_set, qexsd_copy_algorithmic_info
+       
 #if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
   USE mp_images,       ONLY : intra_image_comm
@@ -129,7 +138,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IMPLICIT NONE
   LOGICAL, INTENT(OUT) :: wfc_is_collected
 
-  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
+  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, dum1,dum2,dum3
   LOGICAL  :: magnetic_sym, lvalid_input
   TYPE ( output_type)                   :: output_obj 
   TYPE (parallel_info_type)             :: parinfo_obj
@@ -203,9 +212,14 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   tau(:,1:nat) = tau(:,1:nat)/alat  
   CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
   CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
-  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !
-  CALL readschema_planewaves( output_obj%basis_set) 
+  CALL qexsd_copy_basis_set ( output_obj%basis_set, gamma_only, ecutwfc,&
+       ecutrho, dffts%nr1,dffts%nr2,dffts%nr3, dfftp%nr1,dfftp%nr2,dfftp%nr3, &
+       dum1,dum2,dum3, ngm_g, ngms_g, npwx, bg(:,1), bg(:,2), bg(:,3) )
+  ecutwfc = ecutwfc*e2
+  ecutrho = ecutrho*e2
+  dual = ecutrho/ecutwfc
+  !
   CALL readschema_spin( output_obj%magnetization )
   CALL readschema_magnetization (  output_obj%band_structure,  &
        output_obj%atomic_species, output_obj%magnetization )
@@ -236,7 +250,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( output_obj%dft%hybrid_ispresent  ) THEN
      CALL readschema_exx ( output_obj%dft%hybrid )
   END IF
-  CALL readschema_algo(output_obj%algorithmic_info )  
+  CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
+       real_space, tqr, okvan, okpaw )
   !
   ! ... xml data no longer needed, can be discarded
   !
