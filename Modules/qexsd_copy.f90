@@ -574,7 +574,7 @@ CONTAINS
       tqr = algo_obj%real_space_q 
       real_space = algo_obj%real_space_beta
       okvan = algo_obj%uspp
-      real_space = algo_obj%paw
+      okpaw = algo_obj%paw
       !
     END SUBROUTINE qexsd_copy_algorithmic_info
 
