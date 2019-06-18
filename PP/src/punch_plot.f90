@@ -193,15 +193,21 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 11) THEN
 
-     raux(:) = vltot(:)
-     CALL v_h (rho%of_g(:,1), ehart, charge, raux)
-     IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
+     ALLOCATE( raux2(dfftp%nnr,nspin) )
+     raux2(:,1) = vltot(:)
+     
+     CALL v_h( rho%of_g(:,1), ehart, charge, raux2 )
+
+     raux(:) = raux2(:,1)
+     IF (tefield.and.dipfield) CALL add_efield(raux, dummy, rho%of_r(:,1),.true.)
+     
+     DEALLOCATE( raux2 )
 
   ELSEIF (plot_num == 12) THEN
 
      raux=0.d0
      IF (tefield) THEN
-         CALL add_efield(raux,dummy,rho%of_r,.true.)
+         CALL add_efield(raux,dummy,rho%of_r(:,1),.true.)
      ELSE
          CALL infomsg ('punch_plot','e_field is not calculated')
      ENDIF
