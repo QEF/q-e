@@ -2,6 +2,8 @@ New in development branch:
   * turbo_eels code of TDDFPT module now works with ultrasoft pseudopotentials and spin-orbit coupling together (Oleksandr Motornyi, Andrea Dal Corso, Nathalie Vast). lr_sm1_psi.f90 of LR_Modules is rewritten and simplified.
 
 Problems fixed in development branch :
+  * pp.x with plot_num=11 in spin-polarized case was issuing a segmentation
+    fault error (nticed by Mauricio Chagas da Silva)
   * pp.x with plot_num=17 in spin-polarized case was issuing a bogus 
     error (noticed by Shoaib Muhammad, Sungkyunkwan U.)
   * vc-relax with cell_dofree='z' wasn't working exactly as expected
