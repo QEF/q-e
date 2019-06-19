@@ -1297,6 +1297,23 @@ read\_namelists.f90 )
 \end{verbatim}
 \end{enumerate}
 
+\subsection{Updating documentation}
+Input variable documentation for most codes is contained into a
+\texttt{*/Doc/INPUT\_*.def} file. Simple utilities may have instead
+the input documentation in the header of the code source.
+Files .def are processed to produce .xml, .txt, .html files.
+The latter is the most important, being the one that is available
+online in the web site.
+
+The documentation must be processed with command ``make doc'' before
+the release. Note that:
+\begin{itemize}
+\item in order to produce .xml, .txt, .html file,
+  "tcl", "tcllib", "xsltproc" are needed;
+\item in order to build .pdf files from LaTeX, "pdflatex" is needed;
+\item in order to build html files for user guide and developer manual,
+"latex2html" and "convert" (from Image-Magick) are needed.
+\end{itemize}
 
 \section{Using git}
 \label{Sec:git}
