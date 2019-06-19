@@ -395,7 +395,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE io_rho_xml,           ONLY : write_scf
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : intra_bgrp_comm
-  USE mp_pools,             ONLY : root_pool, my_pool_id, inter_pool_comm
+  USE mp_pools,             ONLY : root_pool, me_pool, my_pool_id, &
+                                   inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   USE london_module,        ONLY : energy_london
@@ -654,6 +655,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! IF ( my_pool_id == root_pool ) 
         CALL mix_rho ( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, &
                        iunmix, conv_elec )
+        !
+        IF ( lda_plus_u )  THEN
+           IF (noncolin) THEN
+              CALL mp_bcast( rhoin%ns_nc, my_pool_id, intra_pool_comm)
+           ELSE
+              CALL mp_bcast( rhoin%ns, my_pool_id, intra_pool_comm)
+           ENDIF
+        ENDIF
         CALL bcast_scf_type ( rhoin, root_pool, inter_pool_comm )
         CALL mp_bcast ( dr2, root_pool, inter_pool_comm )
         CALL mp_bcast ( conv_elec, root_pool, inter_pool_comm )
