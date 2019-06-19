@@ -60,7 +60,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
                     see M. Kawamura, PRB 89, 094515 (2014).
                 }
               }
-              default { 'smearing' if degauss in given in input 'smearing', 
+              default { 'smearing' if degauss is given in input; 
                          options read from the xml data file otherwise. }  
                }
 
