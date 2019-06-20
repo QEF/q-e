@@ -287,11 +287,10 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE qexsd_copy_dft ( dft_obj, nsp, atm, &
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
-       exxdiv_treatment, x_gamma_extrapolation, ecutvcut, &
+       exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
        Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-       vdw_corr,  llondon, ts_vdw, lxdm, inlc, vdw_table_name, scal6, &
-       lon_rcut, vdw_isolated)
+       llondon, ts_vdw, lxdm, vdw_table_name, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
     USE qes_types_module, ONLY : dft_type
@@ -306,7 +305,7 @@ CONTAINS
     ! so that they do not forget their default value (if any)
     CHARACTER(LEN=*), INTENT(inout) :: exxdiv_treatment
     REAL(dp), INTENT(inout) :: ecutfock, exx_fraction, screening_parameter, &
-         ecutvcut
+         ecutvcut, local_thr
     INTEGER, INTENT(inout) :: nq1, nq2, nq3
     LOGICAL, INTENT(inout) :: x_gamma_extrapolation
     !
@@ -317,10 +316,8 @@ CONTAINS
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_J0(:), Hubbard_J(:,:), &
          Hubbard_alpha(:), Hubbard_beta(:)
     !
-    CHARACTER(LEN=256), INTENT(out) :: vdw_corr
     CHARACTER(LEN=256), INTENT(inout) :: vdw_table_name
     LOGICAL, INTENT(out) :: llondon, ts_vdw, lxdm
-    INTEGER, INTENT(inout):: inlc
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
     LOGICAL, INTENT(inout) :: vdw_isolated
     !
@@ -339,6 +336,11 @@ CONTAINS
        exxdiv_treatment = dft_obj%hybrid%exxdiv_treatment
        x_gamma_extrapolation = dft_obj%hybrid%x_gamma_extrapolation
        ecutvcut = dft_obj%hybrid%ecutvcut
+       IF (dft_obj%hybrid%localization_threshold_ispresent) THEN
+          local_thr = dft_obj%hybrid%localization_threshold  
+       ELSE 
+          local_thr = 0._DP 
+      END IF 
     END IF
     !
     lda_plus_u = dft_obj%dftU_ispresent 
@@ -419,11 +421,6 @@ CONTAINS
          Hubbard_lmax = MAXVAL( Hubbard_l(1:nsp) )
       END IF
 
-      IF ( dft_obj%vdW_ispresent ) THEN 
-         vdw_corr = TRIM( dft_obj%vdW%vdw_corr ) 
-      ELSE
-         vdw_corr = ''
-      END IF
       SELECT CASE( TRIM( dft_obj%vdW%vdw_corr ) )
          !
       CASE( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' )
@@ -451,29 +448,17 @@ CONTAINS
          lxdm   = .FALSE.
          !
       END SELECT
+      ! the following lines set vdw_table_name, if not already set before
+      ! (the latter option, added by Yang Jiao, is useful for postprocessing)
       IF ( dft_obj%vdW_ispresent ) THEN 
-         SELECT CASE ( TRIM (dft_obj%vdW%non_local_term))
-         CASE ('vdw1')  
-            inlc = 1
-         CASE ('vdw2') 
-            inlc = 2
-         CASE ('vv10' ) 
-            inlc = 3 
-         CASE ( 'vdW-DF-x') 
-            inlc = 4
-         CASE ( 'vdW-DF-y')
-            inlc = 5
-         CASE ( 'vdW-DF-z')
-            inlc = 6
-         CASE default 
-            inlc = 0 
-         END SELECT
-         IF (inlc == 0 ) THEN 
-            vdw_table_name = ' '
-         ELSE IF ( inlc == 3 ) THEN 
-            vdw_table_name = 'rVV10_kernel_table'
-         ELSE
-            vdw_table_name = 'vdW_kernel_table'
+         IF ( vdw_table_name == ' ' ) THEN 
+            IF ( TRIM (dft_obj%vdW%non_local_term) == 'vv10') THEN
+               vdw_table_name = 'rVV10_kernel_table'
+            ELSE IF ( dft_obj%vdW%non_local_term(1:3) == 'vdw') THEN
+               vdw_table_name = 'vdW_kernel_table'
+            ELSE
+               vdw_table_name = ''
+            END IF
          END IF
          IF (dft_obj%vdW%london_s6_ispresent ) THEN 
             scal6 = dft_obj%vdW%london_s6
