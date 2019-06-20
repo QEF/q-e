@@ -110,15 +110,15 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                               sname, inverse_s, s_axis_to_cart, &
                               time_reversal, no_t_rev, nosym, checkallsym
-  USE funct,           ONLY : enforce_input_dft, dft_is_hybrid
-  USE kernel_table,    ONLY : vdw_table_name
   USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
                               Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha, &
                               Hubbard_J0, Hubbard_beta, U_projection
+  USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
+                              set_gau_parameter, enforce_input_dft,  &
+                              start_exx, dft_is_hybrid
   USE london_module,   ONLY : scal6, lon_rcut, in_C6
   USE tsvdw_module,    ONLY : vdw_isolated
-  USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
-                              set_gau_parameter, enforce_input_dft, start_exx
+  USE kernel_table,    ONLY : vdw_table_name
   USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                               exxdiv_treatment, yukawa, ecutvcut
   USE exx,             ONLY : ecutfock, local_thr
@@ -249,8 +249,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( dft_is_hybrid() ) THEN
      ecutvcut=ecutvcut*e2
      ecutfock=ecutfock*e2
-     CALL set_exx_fraction( exx_fraction) 
-     CALL set_screening_parameter ( screening_parameter)
+     CALL set_exx_fraction( exx_fraction ) 
+     CALL set_screening_parameter ( screening_parameter )
      CALL start_exx ()
   END IF
   !!
