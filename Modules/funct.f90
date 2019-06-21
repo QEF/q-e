@@ -35,6 +35,10 @@ MODULE funct
   !
   USE io_global,   ONLY: stdout
   USE kinds,       ONLY: DP
+#if defined(__LIBXC)
+  USE xc_f90_types_m
+  USE xc_f90_lib_m
+#endif
   !
   IMPLICIT NONE
   !
@@ -378,10 +382,6 @@ CONTAINS
     !-----------------------------------------------------------------------
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
-#if defined(__LIBXC)
-    USE xc_f90_types_m
-    USE xc_f90_lib_m
-#endif
     !
     IMPLICIT NONE
     !
@@ -734,11 +734,6 @@ CONTAINS
   FUNCTION matching( fslot, dft, n, name, its_libxc )
     !------------------------------------------------------------
     !
-#if defined(__LIBXC)
-    USE xc_f90_types_m
-    USE xc_f90_lib_m
-#endif
-    !
     IMPLICIT NONE
     !
     INTEGER :: matching
@@ -818,11 +813,6 @@ CONTAINS
   !----------------------------------------------------------------------------
   FUNCTION slot_match_libxc( fslot, family, fkind )
     !-------------------------------------------------------------------------
-    !
-#if defined(__LIBXC)
-    USE xc_f90_types_m
-    USE xc_f90_lib_m
-#endif
     !
     IMPLICIT NONE
     ! 
@@ -1107,7 +1097,18 @@ CONTAINS
   END FUNCTION dft_is_nonlocc
   !-----------------------------------------------------------------------
   FUNCTION get_exx_fraction()
-     REAL(DP):: get_exx_fraction
+     REAL(DP) :: get_exx_fraction
+#if defined(__LIBXC)
+     INTEGER :: family
+     TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+     !
+     IF ( is_libxc(3) ) THEN
+        CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )  
+        family = xc_f90_info_family( xc_info )
+        IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_fraction )
+        CALL xc_f90_func_end( xc_func )
+     ENDIF
+#endif
      get_exx_fraction = exx_fraction
      RETURN
   END FUNCTION get_exx_fraction
