@@ -1250,53 +1250,13 @@ SUBROUTINE iosys()
   !
   !  ... initialize variables for vdW (dispersions) corrections
   !
-  SELECT CASE( TRIM( vdw_corr ) )
-    !
-    CASE( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' )
-      !
-      llondon= .TRUE.
-      ldftd3 = .FALSE.
-      ts_vdw_= .FALSE.
-      lxdm   = .FALSE.
-      !
-    CASE( 'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3' )
-      !
-      ldftd3 = .TRUE.
-      llondon= .FALSE.
-      ts_vdw_= .FALSE.
-      lxdm   = .FALSE.
-      !
-
-    CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
-      !
-      llondon= .FALSE.
-      ldftd3 = .FALSE.
-      ts_vdw_= .TRUE.
-      lxdm   = .FALSE.
-      !
-    CASE( 'XDM', 'xdm' )
-       !
-      llondon= .FALSE.
-      ldftd3 = .FALSE.
-      ts_vdw_= .FALSE.
-      lxdm   = .TRUE.
-      !
-    CASE DEFAULT
-      !
-      llondon= .FALSE.
-      ldftd3 = .FALSE.
-      ts_vdw_= .FALSE.
-      lxdm   = .FALSE.
-      !
-  END SELECT
+  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
+  !
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
      vdw_corr='grimme-d2'
      llondon = .TRUE.
   END IF
-  IF ( ldftd3 ) THEN
-     vdw_corr='grimme-d3'
-  ENDIF
   IF ( xdm ) THEN
      CALL infomsg("iosys","xdm is obsolete, use ""vdw_corr='xdm'"" instead")
      vdw_corr='xdm'

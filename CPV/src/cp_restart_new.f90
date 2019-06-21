@@ -687,8 +687,9 @@ MODULE cp_restart_new
       TYPE (parallel_info_type) :: parinfo_obj
       TYPE (general_info_type ) :: geninfo_obj 
       TYPE (Node),POINTER       :: root, nodePointer
-      CHARACTER(LEN=20) :: dft_name
+      CHARACTER(LEN=20) :: dft_name, vdw_corr
       CHARACTER(LEN=32) :: exxdiv_treatment, U_projection
+      LOGICAL :: ldftd3
       INTEGER :: nq1, nq2, nq3, lda_plus_U_kind
       REAL(dp):: exx_fraction, screening_parameter, ecutfock, ecutvcut,local_thr
       LOGICAL :: x_gamma_extrapolation
@@ -795,7 +796,9 @@ MODULE cp_restart_new
            lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax,&
            Hubbard_U, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            Hubbard_dum, &
-           llondon, ts_vdw, lxdm, vdw_table_name, scal6, lon_rcut, vdw_isolated)
+           vdw_corr, vdw_table_name, scal6, lon_rcut, vdw_isolated)
+      CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+      IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !
       lsda_ = output_obj%magnetization%lsda
       IF ( lsda_ .AND. (nspin /= 2) ) CALL errore('cp_readfile','wrong spin',1)
