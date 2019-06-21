@@ -1178,19 +1178,17 @@ MODULE pw_restart_new
        !
     END SUBROUTINE readschema_outputPBC
     !-----------------------------------------------------------------------------------------------------
-    SUBROUTINE readschema_brillouin_zone( symmetries_obj, band_structure )
+    SUBROUTINE readschema_brillouin_zone( band_structure )
     !-----------------------------------------------------------------------------------------------------
        !
        USE lsda_mod, ONLY : lsda, isk
        USE klist,    ONLY : nkstot, xk, wk
        USE start_k,  ONLY : nks_start, xk_start, wk_start, &
                               nk1, nk2, nk3, k1, k2, k3 
-       USE symm_base,ONLY : nrot, s, sname
-       USE qes_types_module, ONLY : k_points_IBZ_type, occupations_type, symmetries_type, band_structure_type
+       USE qes_types_module, ONLY : band_structure_type
        !
        IMPLICIT NONE
        !
-       TYPE ( symmetries_type ),    INTENT(IN)    :: symmetries_obj 
        TYPE ( band_structure_type ),INTENT(IN)    :: band_structure
        INTEGER                                    :: ik, isym, nks_
        ! 
@@ -1246,12 +1244,6 @@ MODULE pw_restart_new
                         " no information found for initializing brillouin zone information", 1)
        END IF  
        ! 
-       nrot = symmetries_obj%nrot
-       DO isym =1, symmetries_obj%ndim_symmetry
-          s(:,:,isym)     = reshape(symmetries_obj%symmetry(isym)%rotation%matrix, [3,3])
-          sname(isym) = TRIM ( symmetries_obj%symmetry(isym)%info%name) 
-       END DO 
-       !
     END SUBROUTINE readschema_brillouin_zone     
     !--------------------------------------------------------------------------------------------------
     SUBROUTINE readschema_occupations( band_struct_obj ) 

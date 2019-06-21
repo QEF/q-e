@@ -258,7 +258,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL readschema_magnetization (  output_obj%band_structure,  &
        output_obj%atomic_species, output_obj%magnetization )
   CALL readschema_occupations( output_obj%band_structure )
-  CALL readschema_brillouin_zone( output_obj%symmetries,  output_obj%band_structure )
+  CALL readschema_brillouin_zone( output_obj%band_structure )
   CALL readschema_band_structure( output_obj%band_structure )
   !! Symmetry section
   IF ( lvalid_input ) THEN 
