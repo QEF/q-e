@@ -122,7 +122,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                               exxdiv_treatment, yukawa, ecutvcut
   USE exx,             ONLY : ecutfock, local_thr
-  USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, lxdm, ts_vdw
+  USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
+       lxdm, ts_vdw
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag
   USE realus,          ONLY : real_space
@@ -154,7 +155,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, dum1,dum2,dum3
   LOGICAL  :: magnetic_sym, lvalid_input
-  CHARACTER(LEN=20)         :: dft_name
+  CHARACTER(LEN=20) :: dft_name, vdw_corr
   REAL(dp) :: exx_fraction, screening_parameter
   TYPE (output_type)      :: output_obj 
   TYPE (parallel_info_type) :: parinfo_obj
@@ -243,8 +244,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
        Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-       llondon, ts_vdw, lxdm, vdw_table_name, scal6, lon_rcut, vdw_isolated )
+       vdw_corr, vdw_table_name, scal6, lon_rcut, vdw_isolated )
   !! More DFT initializations
+  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
   CALL enforce_input_dft ( dft_name, .TRUE. )
   IF ( dft_is_hybrid() ) THEN
      ecutvcut=ecutvcut*e2
@@ -258,7 +260,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL readschema_magnetization (  output_obj%band_structure,  &
        output_obj%atomic_species, output_obj%magnetization )
   CALL readschema_occupations( output_obj%band_structure )
-  CALL readschema_brillouin_zone( output_obj%symmetries,  output_obj%band_structure )
+  CALL readschema_brillouin_zone( output_obj%band_structure )
   CALL readschema_band_structure( output_obj%band_structure )
   !! Symmetry section
   IF ( lvalid_input ) THEN 

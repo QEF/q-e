@@ -290,7 +290,7 @@ CONTAINS
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
        Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-       llondon, ts_vdw, lxdm, vdw_table_name, scal6, lon_rcut, vdw_isolated )
+       vdw_corr, vdw_table_name, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
     USE qes_types_module, ONLY : dft_type
@@ -317,7 +317,7 @@ CONTAINS
          Hubbard_alpha(:), Hubbard_beta(:)
     !
     CHARACTER(LEN=256), INTENT(inout) :: vdw_table_name
-    LOGICAL, INTENT(out) :: llondon, ts_vdw, lxdm
+    CHARACTER(LEN=*), INTENT(out) :: vdw_corr
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
     LOGICAL, INTENT(inout) :: vdw_isolated
     !
@@ -421,33 +421,12 @@ CONTAINS
          Hubbard_lmax = MAXVAL( Hubbard_l(1:nsp) )
       END IF
 
-      SELECT CASE( TRIM( dft_obj%vdW%vdw_corr ) )
-         !
-      CASE( 'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' )
-         !
-         llondon= .TRUE.
-         ts_vdw= .FALSE.
-         lxdm   = .FALSE.
-         !
-      CASE( 'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' )
-         !
-         llondon= .FALSE.
-         ts_vdw= .TRUE.
-         lxdm   = .FALSE.
-         !
-      CASE( 'XDM', 'xdm' )
-         !
-         llondon= .FALSE.
-         ts_vdw= .FALSE.
-         lxdm   = .TRUE.
-         !
-      CASE DEFAULT
-         !
-         llondon= .FALSE.
-         ts_vdw = .FALSE.
-         lxdm   = .FALSE.
-         !
-      END SELECT
+      IF ( dft_obj%vdW_ispresent ) THEN 
+         vdw_corr = TRIM( dft_obj%vdW%vdw_corr ) 
+      ELSE
+         vdw_corr = ''
+      END IF
+      
       ! the following lines set vdw_table_name, if not already set before
       ! (the latter option, added by Yang Jiao, is useful for postprocessing)
       IF ( dft_obj%vdW_ispresent ) THEN 

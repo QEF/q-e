@@ -88,6 +88,7 @@ recvec_subs.o \
 run_info.o \
 space_group.o \
 set_signal.o \
+set_vdw_corr.o \
 setqf.o \
 splinelib.o \
 timestep.o\
