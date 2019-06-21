@@ -107,12 +107,12 @@ MODULE funct
   !              "tb09"  = "sla+pw+tb09+tb09"  = TB09 Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
   !              "b86bx" = "pb0x+pw+b86x+pbc"  = B86bPBE hybrid
-  !              "bhahlyp" = "pb0x+pw+b88x+blyp"  = Becke half-and-half LYP
+  !              "bhahlyp"="pb0x+pw+b88x+blyp" = Becke half-and-half LYP
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof (HSE 06, see note below)
-  !              "b3lyp" = "b3lp+b3lp+b3lp+b3lp"= B3LYP
-  !              "b3lypv1r"    = "b3lp+b3lpv1r+b3lp+b3lp"= B3LYP-VWN1-RPA
-  !              "x3lyp" = "x3lp+x3lp+x3lp+x3lp"= X3LYP
-  !              "vwn-rpa"     = "sla+vwn-rpa" = VWN LDA using vwn1-rpa parametriz
+  !              "b3lyp"                        = B3LYP
+  !              "b3lyp-v1r"                    = B3LYP-VWN1-RPA
+  !              "x3lyp"                        = X3LYP
+  !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
   !              "vdw-df"       ="sla+pw+rpb +vdw1"   = vdW-DF1
   !              "vdw-df2"      ="sla+pw+rw86+vdw2"   = vdW-DF2
