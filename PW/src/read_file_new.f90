@@ -147,7 +147,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        qexsd_copy_dim, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_algorithmic_info,&
-       qexsd_copy_dft
+       qexsd_copy_dft, qexsd_copy_efield
        
 #if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
