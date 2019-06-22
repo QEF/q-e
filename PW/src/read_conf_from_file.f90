@@ -44,7 +44,7 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   CALL pw_read_schema ( ierr, output_obj )
   IF (ierr == 0 ) THEN 
      CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-          nsp, atm, amass, psfile, pseudo_dir )
+          nsp, atm, amass, PSFILE=psfile, PSEUDO_DIR=pseudo_dir )
      IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
      CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
           atm, nat_, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
