@@ -22,7 +22,8 @@ MODULE qexsd_copy
   PUBLIC:: qexsd_copy_geninfo, qexsd_copy_parallel_info, qexsd_copy_dim, &
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
-       qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
+       qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
+       qexsd_copy_efield
   !
 CONTAINS
   !-------------------------------------------------------------------------------
@@ -528,6 +529,7 @@ CONTAINS
       END DO
     END SUBROUTINE qexsd_copy_band_structure
     !
+    !-----------------------------------------------------------------------
     SUBROUTINE qexsd_copy_algorithmic_info ( algo_obj, &
          real_space, tqr, okvan, okpaw )
       USE qes_types_module, ONLY: algorithmic_info_type
@@ -541,5 +543,70 @@ CONTAINS
       okpaw = algo_obj%paw
       !
     END SUBROUTINE qexsd_copy_algorithmic_info
-
+    !-----------------------------------------------------------------------
+    !
+    !---------------------------------------------------------------------------
+    SUBROUTINE qexsd_copy_efield ( efield_obj, tefield, dipfield, edir, &
+         emaxpos, eopreg, eamp, gate, zgate, &
+         block_, block_1, block_2, block_height, relaxz )
+      !---------------------------------------------------------------------------
+      USE qes_types_module,    ONLY: electric_field_type
+      IMPLICIT NONE 
+      ! 
+      TYPE ( electric_field_type),OPTIONAL, INTENT(IN)    :: efield_obj
+      LOGICAL, INTENT(OUT) :: tefield, dipfield
+      INTEGER, INTENT(INOUT) :: edir
+      REAL(dp), INTENT(INOUT) :: emaxpos, eopreg, eamp, gate, zgate, &
+           block_, block_1, block_2, block_height, relaxz 
+      !
+      !
+      tefield = .FALSE. 
+      dipfield = .FALSE. 
+      IF ( .NOT. PRESENT( efield_obj) ) RETURN 
+      IF (TRIM(efield_obj%electric_potential) == 'sawtooth_potential') THEN 
+         tefield = .TRUE. 
+         IF ( efield_obj%dipole_correction_ispresent ) THEN 
+            dipfield = efield_obj%dipole_correction
+         ELSE 
+            dipfield = .FALSE. 
+         END IF
+         IF ( efield_obj%electric_field_direction_ispresent ) THEN 
+            edir = efield_obj%electric_field_direction
+         ELSE 
+            edir = 3 
+         END IF
+         IF ( efield_obj%potential_max_position_ispresent ) THEN 
+            emaxpos = efield_obj%potential_max_position
+         ELSE 
+            emaxpos = 5d-1
+         END IF
+         IF ( efield_obj%potential_decrease_width_ispresent ) THEN 
+            eopreg = efield_obj%potential_decrease_width
+         ELSE 
+            eopreg = 1.d-1
+         END IF
+         IF ( efield_obj%electric_field_amplitude_ispresent ) THEN 
+            eamp = efield_obj%electric_field_amplitude
+         ELSE 
+            eamp = 1.d-3
+         END IF
+         IF (efield_obj%gate_settings_ispresent) THEN 
+            gate = efield_obj%gate_settings%use_gate
+            IF (efield_obj%gate_settings%zgate_ispresent) &
+                 zgate     = efield_obj%gate_settings%zgate
+            IF (efield_obj%gate_settings%relaxz_ispresent) &
+                 relaxz   = efield_obj%gate_settings%relaxz
+            IF (efield_obj%gate_settings%block_ispresent) &
+                 block_    = efield_obj%gate_settings%block
+            IF (efield_obj%gate_settings%block_1_ispresent) &
+                 block_1 = efield_obj%gate_settings%block_1
+            IF (efield_obj%gate_settings%block_2_ispresent) &
+                 block_2 = efield_obj%gate_settings%block_2
+            IF (efield_obj%gate_settings%block_height_ispresent) &
+                 block_height = efield_obj%gate_settings%block_height
+         END IF
+      END IF
+      !
+    END SUBROUTINE qexsd_copy_efield
+    !
   END MODULE qexsd_copy

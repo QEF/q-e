@@ -42,8 +42,7 @@ MODULE pw_restart_new
        read_collected_to_evc
   PUBLIC :: readschema_ef, readschema_spin, readschema_magnetization, &
        readschema_occupations, readschema_brillouin_zone, &
-       readschema_band_structure, readschema_efield, &
-       readschema_outputPBC
+       readschema_band_structure
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1006,61 +1005,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !---------------------------------------------------------------------------
-    SUBROUTINE readschema_efield( efield_obj  ) 
-    !---------------------------------------------------------------------------
-      !       
-      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp, gate, zgate, &
-                           block, block_1, block_2, block_height, relaxz
-      ! 
-      IMPLICIT NONE 
-      ! 
-      TYPE ( electric_field_type),OPTIONAL, INTENT(IN)    :: efield_obj
-      ! 
-      !
-      tefield = .FALSE. 
-      dipfield = .FALSE. 
-      IF ( .NOT. PRESENT( efield_obj) ) RETURN 
-      IF (TRIM(efield_obj%electric_potential) == 'sawtooth_potential') THEN 
-         tefield = .TRUE. 
-         IF ( efield_obj%dipole_correction_ispresent ) THEN 
-            dipfield = efield_obj%dipole_correction
-         ELSE 
-            dipfield = .FALSE. 
-         END IF 
-         IF ( efield_obj%electric_field_direction_ispresent ) THEN 
-            edir = efield_obj%electric_field_direction
-         ELSE 
-            edir = 3 
-         END IF
-         IF ( efield_obj%potential_max_position_ispresent ) THEN 
-            emaxpos = efield_obj%potential_max_position
-         ELSE 
-            emaxpos = 5d-1
-         END IF 
-         IF ( efield_obj%potential_decrease_width_ispresent ) THEN 
-            eopreg = efield_obj%potential_decrease_width
-         ELSE 
-            eopreg = 1.d-1
-         END IF 
-         IF ( efield_obj%electric_field_amplitude_ispresent ) THEN 
-            eamp = efield_obj%electric_field_amplitude
-         ELSE 
-            eamp = 1.d-3
-         END IF
-         IF (efield_obj%gate_settings_ispresent) THEN 
-            gate = efield_obj%gate_settings%use_gate
-            IF (efield_obj%gate_settings%zgate_ispresent) zgate     = efield_obj%gate_settings%zgate
-            IF (efield_obj%gate_settings%relaxz_ispresent) relaxz   = efield_obj%gate_settings%relaxz
-            IF (efield_obj%gate_settings%block_ispresent) block     = efield_obj%gate_settings%block
-            IF (efield_obj%gate_settings%block_1_ispresent) block_1 = efield_obj%gate_settings%block_1
-            IF (efield_obj%gate_settings%block_2_ispresent) block_2 = efield_obj%gate_settings%block_2
-            IF (efield_obj%gate_settings%block_height_ispresent) &
-                                                         block_height = efield_obj%gate_settings%block_height
-         END IF 
-      END IF 
-      !
-  END SUBROUTINE readschema_efield  
     !--------------------------------------------------------------------------
     SUBROUTINE readschema_spin( magnetization_obj) 
     !--------------------------------------------------------------------------
@@ -1161,25 +1105,9 @@ MODULE pw_restart_new
     END SUBROUTINE readschema_magnetization
     !-----------------------------------------------------------------------
     !
-    ! --------- For 2D cutoff: to read the fact that 2D cutoff was used in scf from new xml----------------
-    !-----------------------------------------------------------------------------------------------------
-    SUBROUTINE readschema_outputPBC( boundary_conditions_obj )
-    !-----------------------------------------------------------------------------------------------------
-       !
-       USE Coul_cut_2D,       ONLY : do_cutoff_2D
-       !
-       IMPLICIT NONE
-       !
-       TYPE ( outputPBC_type ),INTENT(IN)    :: boundary_conditions_obj 
-       ! 
-       IF ( TRIM(boundary_conditions_obj%assume_isolated) .EQ. "2D" ) THEN
-          do_cutoff_2D=.TRUE.  
-       ENDIF
-       !
-    END SUBROUTINE readschema_outputPBC
-    !-----------------------------------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     SUBROUTINE readschema_brillouin_zone( band_structure )
-    !-----------------------------------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
        !
        USE lsda_mod, ONLY : lsda, isk
        USE klist,    ONLY : nkstot, xk, wk

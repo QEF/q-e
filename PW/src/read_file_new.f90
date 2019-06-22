@@ -103,9 +103,12 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
-  USE klist,           ONLY : nks, nkstot
+  USE klist,           ONLY : nks, nkstot, nelec, wk
+  USE ener,            ONLY : ef, ef_up, ef_dw
   USE wvfct,           ONLY : npwx, nbnd, et, wg
-  USE extfield,        ONLY : forcefield, tefield, gate, forcegate
+  USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
+       edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
+       relaxz, block, block_1, block_2, block_height
   USE io_files,        ONLY : tmp_dir, prefix, postfix
   USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                               sname, inverse_s, s_axis_to_cart, &
@@ -124,17 +127,19 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE exx,             ONLY : ecutfock, local_thr
   USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
        lxdm, ts_vdw
+  USE Coul_cut_2D,     ONLY : do_cutoff_2D
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag
+  USE lsda_mod,        ONLY : isk, lsda
   USE realus,          ONLY : real_space
+  USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : okvan
   USE paw_variables,   ONLY : okpaw
   !
   USE pw_restart_new,  ONLY : pw_read_schema, &
        readschema_spin, readschema_magnetization, &
        readschema_occupations, readschema_brillouin_zone, &
-       readschema_band_structure, readschema_efield, &
-       readschema_outputPBC
+       readschema_band_structure
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
@@ -153,7 +158,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IMPLICIT NONE
   LOGICAL, INTENT(OUT) :: wfc_is_collected
   !
-  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, dum1,dum2,dum3
+  INTEGER  :: i, is, ik, nbnd_up, nbnd_dw, ierr, dum1,dum2,dum3
   LOGICAL  :: magnetic_sym, lvalid_input
   CHARACTER(LEN=20) :: dft_name, vdw_corr
   REAL(dp) :: exx_fraction, screening_parameter
@@ -255,6 +260,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      CALL set_screening_parameter ( screening_parameter )
      CALL start_exx ()
   END IF
+  !! Band structure section
+  !!CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
+  !!     nkstot, isk, natomwfc, nbnd_up, nbnd_dw, nelec, wk, wg, &
+  !!     ef, ef_up, ef_dw, et )
   !!
   CALL readschema_spin( output_obj%magnetization )
   CALL readschema_magnetization (  output_obj%band_structure,  &
@@ -267,7 +276,11 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      CALL qexsd_copy_symmetry ( output_obj%symmetries, &
           nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
           noinv, nosym, no_t_rev, input_obj%symmetry_flags )
-     CALL readschema_efield ( input_obj%electric_field )
+
+     CALL qexsd_copy_efield ( input_obj%electric_field, &
+          tefield, dipfield, edir, emaxpos, eopreg, eamp, &
+          gate, zgate, block, block_1, block_2, block_height, relaxz )
+
   ELSE 
      CALL qexsd_copy_symmetry ( output_obj%symmetries, &
           nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
@@ -281,7 +294,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !! symmetry check - FIXME: is this needed?
   IF (nat > 0) CALL checkallsym( nat, tau, ityp)
   !
-  CALL readschema_outputPBC ( output_obj%boundary_conditions)
+  do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
   CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
        real_space, tqr, okvan, okpaw )
   !
