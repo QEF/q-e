@@ -101,7 +101,7 @@ CONTAINS
   !
   !--------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_atomic_species (atomic_species, nsp, atm, amass, &
-       psfile, pseudo_dir)
+       starting_magnetization, angle1, angle2, psfile, pseudo_dir)
     !---------------------------------------------------------------------------    !
     USE qes_types_module, ONLY : atomic_species_type
     !
@@ -110,8 +110,10 @@ CONTAINS
     TYPE ( atomic_species_type ),INTENT(IN)    :: atomic_species
     INTEGER, INTENT(out) :: nsp
     CHARACTER(LEN=*), INTENT(out) :: atm(:)
-    CHARACTER(LEN=*), OPTIONAL, INTENT(out) :: psfile(:), pseudo_dir
     REAL(dp), INTENT(out) :: amass(:)
+    REAL(dp), OPTIONAL, INTENT(out) :: starting_magnetization(:), &
+         angle1(:), angle2(:)
+    CHARACTER(LEN=*), OPTIONAL, INTENT(out) :: psfile(:), pseudo_dir
     !
     INTEGER :: isp
     !
@@ -123,6 +125,21 @@ CONTAINS
        atm(isp) = TRIM ( atomic_species%species(isp)%name )
        IF ( PRESENT (psfile) ) THEN
           psfile(isp) = TRIM ( atomic_species%species(isp)%pseudo_file) 
+       END IF
+       IF ( PRESENT (starting_magnetization) ) THEN
+          IF ( atomic_species%species(isp)%starting_magnetization_ispresent) THEN
+             starting_magnetization(isp) = atomic_species%species(isp)%starting_magnetization
+          END IF
+       END IF
+       IF ( PRESENT (angle1) ) THEN
+          IF ( atomic_species%species(isp)%spin_teta_ispresent ) THEN 
+             angle1(isp) =  atomic_species%species(isp)%spin_teta 
+          END IF
+       END IF
+       IF ( PRESENT (angle2) ) THEN
+          IF ( atomic_species%species(isp)%spin_phi_ispresent ) THEN
+             angle2(isp) = atomic_species%species(isp)%spin_phi
+          END IF
        END IF
     END DO
     ! 
@@ -556,8 +573,9 @@ CONTAINS
       TYPE ( electric_field_type),OPTIONAL, INTENT(IN)    :: efield_obj
       LOGICAL, INTENT(OUT) :: tefield, dipfield
       INTEGER, INTENT(INOUT) :: edir
-      REAL(dp), INTENT(INOUT) :: emaxpos, eopreg, eamp, gate, zgate, &
-           block_, block_1, block_2, block_height, relaxz 
+      LOGICAL, INTENT(INOUT) :: gate, block_, relaxz 
+      REAL(dp), INTENT(INOUT) :: emaxpos, eopreg, eamp, &
+              zgate, block_1, block_2, block_height
       !
       !
       tefield = .FALSE. 

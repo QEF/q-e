@@ -128,9 +128,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
        lxdm, ts_vdw
   USE Coul_cut_2D,     ONLY : do_cutoff_2D
-  USE noncollin_module,ONLY : noncolin
+  USE noncollin_module,ONLY : noncolin, angle1, angle2
   USE spin_orb,        ONLY : domag
-  USE lsda_mod,        ONLY : isk, lsda
+  USE lsda_mod,        ONLY : isk, lsda, starting_magnetization
   USE realus,          ONLY : real_space
   USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : okvan
@@ -220,7 +220,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
   CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-       nsp, atm, amass, psfile, pseudo_dir ) 
+       nsp, atm, amass, angle1, angle2, starting_magnetization, &
+       psfile, pseudo_dir ) 
   IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
   !! Atomic structure section
   CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &

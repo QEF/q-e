@@ -1056,7 +1056,7 @@ MODULE pw_restart_new
       TYPE ( magnetization_type ) ,INTENT(IN)    :: magnetization_obj
       !  
       REAL(DP)                   :: tot_mag_, nelec_, theta, phi, fixed_magnetization(3) 
-      INTEGER                    :: nsp_, isp
+      INTEGER                    :: isp
       !
       bfield = 0.d0
       nelec_ = band_structure_obj%nelec
@@ -1069,38 +1069,25 @@ MODULE pw_restart_new
             CALL set_nelup_neldw(tot_magnetization, nelec_, nelup, neldw) 
          END IF 
       END IF 
-      nsp_ = atomic_specs_obj%ntyp
-      !
+      ! FIXME: doesn't belong here and doesn't work because i_cons is set to 0
       i_cons = 0
-      DO isp = 1, nsp_
-         IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent) THEN
-             starting_magnetization(isp) = atomic_specs_obj%species(isp)%starting_magnetization      
-         END IF                                                                                      
-         !                                                                                           
-         IF ( band_structure_obj%noncolin ) THEN                                                         
-            IF (    atomic_specs_obj%species(isp)%spin_teta_ispresent ) THEN 
-               theta = atomic_specs_obj%species(isp)%spin_teta 
-               angle1(isp) = theta 
-            END IF                                                                  
-            IF ( atomic_specs_obj%species(isp)%spin_phi_ispresent ) THEN                  
-               phi = atomic_specs_obj%species(isp)%spin_phi
-               angle2(isp) = phi
-            END IF                                                                     
-               !                                                                                     
+      DO isp = 1, atomic_specs_obj%ntyp
+         IF ( band_structure_obj%noncolin ) THEN
+            angle1(isp) = theta 
+            angle2(isp) = phi
             IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent .AND. &
-                                                                              i_cons == 1 ) THEN 
-                !            
-                mcons(1,isp) = starting_magnetization(isp) * sin( theta ) * cos( phi )
-                mcons(2,isp) = starting_magnetization(isp) * sin( theta ) * sin( phi )
-                mcons(3,isp) = starting_magnetization(isp) * cos( theta )
+                 i_cons == 1 ) THEN 
+               mcons(1,isp) = starting_magnetization(isp) * sin(angle1(isp)) * cos(angle2(isp))
+               mcons(2,isp) = starting_magnetization(isp) * sin(angle1(isp)) * sin(angle2(isp))
+               mcons(3,isp) = starting_magnetization(isp) * cos(angle1(isp))
             ELSE IF ( i_cons == 2) THEN  
-                mcons(3,isp) = cos(theta) 
+               mcons(3,isp) = cos(angle1(isp)) 
             END IF
          ELSE IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent .AND. &
-                                                                                  i_cons == 1 ) THEN 
-            mcons(1,isp) = starting_magnetization(isp)                                               
-         END IF                                                                                      
-      END DO   
+                   i_cons == 1 ) THEN 
+            mcons(1,isp) = starting_magnetization(isp)                    
+         END IF
+      END DO
       !
     END SUBROUTINE readschema_magnetization
     !-----------------------------------------------------------------------
