@@ -42,8 +42,7 @@ MODULE pw_restart_new
        read_collected_to_evc
   PUBLIC :: readschema_ef, readschema_spin, readschema_magnetization, &
        readschema_occupations, readschema_brillouin_zone, &
-       readschema_band_structure, readschema_efield, &
-       readschema_outputPBC
+       readschema_band_structure
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1006,61 +1005,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !---------------------------------------------------------------------------
-    SUBROUTINE readschema_efield( efield_obj  ) 
-    !---------------------------------------------------------------------------
-      !       
-      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp, gate, zgate, &
-                           block, block_1, block_2, block_height, relaxz
-      ! 
-      IMPLICIT NONE 
-      ! 
-      TYPE ( electric_field_type),OPTIONAL, INTENT(IN)    :: efield_obj
-      ! 
-      !
-      tefield = .FALSE. 
-      dipfield = .FALSE. 
-      IF ( .NOT. PRESENT( efield_obj) ) RETURN 
-      IF (TRIM(efield_obj%electric_potential) == 'sawtooth_potential') THEN 
-         tefield = .TRUE. 
-         IF ( efield_obj%dipole_correction_ispresent ) THEN 
-            dipfield = efield_obj%dipole_correction
-         ELSE 
-            dipfield = .FALSE. 
-         END IF 
-         IF ( efield_obj%electric_field_direction_ispresent ) THEN 
-            edir = efield_obj%electric_field_direction
-         ELSE 
-            edir = 3 
-         END IF
-         IF ( efield_obj%potential_max_position_ispresent ) THEN 
-            emaxpos = efield_obj%potential_max_position
-         ELSE 
-            emaxpos = 5d-1
-         END IF 
-         IF ( efield_obj%potential_decrease_width_ispresent ) THEN 
-            eopreg = efield_obj%potential_decrease_width
-         ELSE 
-            eopreg = 1.d-1
-         END IF 
-         IF ( efield_obj%electric_field_amplitude_ispresent ) THEN 
-            eamp = efield_obj%electric_field_amplitude
-         ELSE 
-            eamp = 1.d-3
-         END IF
-         IF (efield_obj%gate_settings_ispresent) THEN 
-            gate = efield_obj%gate_settings%use_gate
-            IF (efield_obj%gate_settings%zgate_ispresent) zgate     = efield_obj%gate_settings%zgate
-            IF (efield_obj%gate_settings%relaxz_ispresent) relaxz   = efield_obj%gate_settings%relaxz
-            IF (efield_obj%gate_settings%block_ispresent) block     = efield_obj%gate_settings%block
-            IF (efield_obj%gate_settings%block_1_ispresent) block_1 = efield_obj%gate_settings%block_1
-            IF (efield_obj%gate_settings%block_2_ispresent) block_2 = efield_obj%gate_settings%block_2
-            IF (efield_obj%gate_settings%block_height_ispresent) &
-                                                         block_height = efield_obj%gate_settings%block_height
-         END IF 
-      END IF 
-      !
-  END SUBROUTINE readschema_efield  
     !--------------------------------------------------------------------------
     SUBROUTINE readschema_spin( magnetization_obj) 
     !--------------------------------------------------------------------------
@@ -1112,7 +1056,7 @@ MODULE pw_restart_new
       TYPE ( magnetization_type ) ,INTENT(IN)    :: magnetization_obj
       !  
       REAL(DP)                   :: tot_mag_, nelec_, theta, phi, fixed_magnetization(3) 
-      INTEGER                    :: nsp_, isp
+      INTEGER                    :: isp
       !
       bfield = 0.d0
       nelec_ = band_structure_obj%nelec
@@ -1125,61 +1069,32 @@ MODULE pw_restart_new
             CALL set_nelup_neldw(tot_magnetization, nelec_, nelup, neldw) 
          END IF 
       END IF 
-      nsp_ = atomic_specs_obj%ntyp
-      !
+      ! FIXME: doesn't belong here and doesn't work because i_cons is set to 0
       i_cons = 0
-      DO isp = 1, nsp_
-         IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent) THEN
-             starting_magnetization(isp) = atomic_specs_obj%species(isp)%starting_magnetization      
-         END IF                                                                                      
-         !                                                                                           
-         IF ( band_structure_obj%noncolin ) THEN                                                         
-            IF (    atomic_specs_obj%species(isp)%spin_teta_ispresent ) THEN 
-               theta = atomic_specs_obj%species(isp)%spin_teta 
-               angle1(isp) = theta 
-            END IF                                                                  
-            IF ( atomic_specs_obj%species(isp)%spin_phi_ispresent ) THEN                  
-               phi = atomic_specs_obj%species(isp)%spin_phi
-               angle2(isp) = phi
-            END IF                                                                     
-               !                                                                                     
+      DO isp = 1, atomic_specs_obj%ntyp
+         IF ( band_structure_obj%noncolin ) THEN
+            angle1(isp) = theta 
+            angle2(isp) = phi
             IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent .AND. &
-                                                                              i_cons == 1 ) THEN 
-                !            
-                mcons(1,isp) = starting_magnetization(isp) * sin( theta ) * cos( phi )
-                mcons(2,isp) = starting_magnetization(isp) * sin( theta ) * sin( phi )
-                mcons(3,isp) = starting_magnetization(isp) * cos( theta )
+                 i_cons == 1 ) THEN 
+               mcons(1,isp) = starting_magnetization(isp) * sin(angle1(isp)) * cos(angle2(isp))
+               mcons(2,isp) = starting_magnetization(isp) * sin(angle1(isp)) * sin(angle2(isp))
+               mcons(3,isp) = starting_magnetization(isp) * cos(angle1(isp))
             ELSE IF ( i_cons == 2) THEN  
-                mcons(3,isp) = cos(theta) 
+               mcons(3,isp) = cos(angle1(isp)) 
             END IF
          ELSE IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent .AND. &
-                                                                                  i_cons == 1 ) THEN 
-            mcons(1,isp) = starting_magnetization(isp)                                               
-         END IF                                                                                      
-      END DO   
+                   i_cons == 1 ) THEN 
+            mcons(1,isp) = starting_magnetization(isp)                    
+         END IF
+      END DO
       !
     END SUBROUTINE readschema_magnetization
     !-----------------------------------------------------------------------
     !
-    ! --------- For 2D cutoff: to read the fact that 2D cutoff was used in scf from new xml----------------
-    !-----------------------------------------------------------------------------------------------------
-    SUBROUTINE readschema_outputPBC( boundary_conditions_obj )
-    !-----------------------------------------------------------------------------------------------------
-       !
-       USE Coul_cut_2D,       ONLY : do_cutoff_2D
-       !
-       IMPLICIT NONE
-       !
-       TYPE ( outputPBC_type ),INTENT(IN)    :: boundary_conditions_obj 
-       ! 
-       IF ( TRIM(boundary_conditions_obj%assume_isolated) .EQ. "2D" ) THEN
-          do_cutoff_2D=.TRUE.  
-       ENDIF
-       !
-    END SUBROUTINE readschema_outputPBC
-    !-----------------------------------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
     SUBROUTINE readschema_brillouin_zone( band_structure )
-    !-----------------------------------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
        !
        USE lsda_mod, ONLY : lsda, isk
        USE klist,    ONLY : nkstot, xk, wk
