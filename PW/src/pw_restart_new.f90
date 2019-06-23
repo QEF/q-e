@@ -40,7 +40,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_spin, readschema_magnetization, &
+  PUBLIC :: readschema_ef, readschema_magnetization, &
        readschema_occupations, readschema_brillouin_zone, &
        readschema_band_structure
   !
@@ -1005,25 +1005,29 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !--------------------------------------------------------------------------
-    SUBROUTINE readschema_spin( magnetization_obj) 
-    !--------------------------------------------------------------------------
+    !-----------------------------------------------------------------------------------------
+    SUBROUTINE readschema_magnetization( band_structure_obj, magnetization_obj ) 
+      !---------------------------------------------------------------------------------------
       ! 
+      USE klist,            ONLY : two_fermi_energies, nelup, neldw, tot_magnetization
+      USE ener,             ONLY : ef_up, ef_dw
+      USE lsda_mod,         ONLY : nspin, lsda, starting_magnetization
+      USE noncollin_module, ONLY : noncolin, npol, bfield
+      USE electrons_base,   ONLY : set_nelup_neldw
       USE spin_orb,         ONLY : lspinorb, domag
-      USE lsda_mod,         ONLY : nspin, lsda
-      USE noncollin_module, ONLY : noncolin, npol
-      USE qes_types_module, ONLY : magnetization_type
-      USE symm_base,        ONLY : time_reversal
-      ! 
+      USE qes_types_module, ONLY : band_structure_type, magnetization_type
+      !
       IMPLICIT NONE 
+      !
+      TYPE ( band_structure_type ),INTENT(IN)    :: band_structure_obj
+      TYPE ( magnetization_type ) ,INTENT(IN)    :: magnetization_obj
+      REAL(dp) :: nelec_
       ! 
-      TYPE ( magnetization_type ),INTENT(IN)         :: magnetization_obj
-      ! 
-      lspinorb = magnetization_obj%spinorbit 
-      domag =   magnetization_obj%do_magnetization 
       lsda  =   magnetization_obj%lsda
       noncolin = magnetization_obj%noncolin  
-      IF ( noncolin .AND. domag ) time_reversal = .FALSE.
+      lspinorb = magnetization_obj%spinorbit 
+      domag =   magnetization_obj%do_magnetization 
+      !
       IF ( lsda ) THEN  
         nspin = 2
         npol = 1
@@ -1034,29 +1038,6 @@ MODULE pw_restart_new
         nspin =1
         npol = 1 
       END IF
-      ! 
-    END SUBROUTINE readschema_spin 
-    !
-    !-----------------------------------------------------------------------------------------
-    SUBROUTINE readschema_magnetization( band_structure_obj, atomic_specs_obj, magnetization_obj ) 
-      !---------------------------------------------------------------------------------------
-      ! 
-      USE klist,            ONLY : two_fermi_energies, nelup, neldw, tot_magnetization
-      USE ener,             ONLY : ef_up, ef_dw
-      USE lsda_mod,         ONLY : starting_magnetization
-      USE noncollin_module, ONLY : angle1, angle2, i_cons, mcons, bfield, &
-                                   lambda
-      USE electrons_base,   ONLY : set_nelup_neldw
-      USE qes_types_module, ONLY : band_structure_type, atomic_species_type, input_type 
-      !
-      IMPLICIT NONE 
-      ! 
-      TYPE ( band_structure_type ),INTENT(IN)    :: band_structure_obj
-      TYPE ( atomic_species_type ),INTENT(IN)    :: atomic_specs_obj
-      TYPE ( magnetization_type ) ,INTENT(IN)    :: magnetization_obj
-      !  
-      REAL(DP)                   :: tot_mag_, nelec_, theta, phi, fixed_magnetization(3) 
-      INTEGER                    :: isp
       !
       bfield = 0.d0
       nelec_ = band_structure_obj%nelec
@@ -1069,25 +1050,6 @@ MODULE pw_restart_new
             CALL set_nelup_neldw(tot_magnetization, nelec_, nelup, neldw) 
          END IF 
       END IF 
-      ! FIXME: doesn't belong here and doesn't work because i_cons is set to 0
-      i_cons = 0
-      DO isp = 1, atomic_specs_obj%ntyp
-         IF ( band_structure_obj%noncolin ) THEN
-            angle1(isp) = theta 
-            angle2(isp) = phi
-            IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent .AND. &
-                 i_cons == 1 ) THEN 
-               mcons(1,isp) = starting_magnetization(isp) * sin(angle1(isp)) * cos(angle2(isp))
-               mcons(2,isp) = starting_magnetization(isp) * sin(angle1(isp)) * sin(angle2(isp))
-               mcons(3,isp) = starting_magnetization(isp) * cos(angle1(isp))
-            ELSE IF ( i_cons == 2) THEN  
-               mcons(3,isp) = cos(angle1(isp)) 
-            END IF
-         ELSE IF ( atomic_specs_obj%species(isp)%starting_magnetization_ispresent .AND. &
-                   i_cons == 1 ) THEN 
-            mcons(1,isp) = starting_magnetization(isp)                    
-         END IF
-      END DO
       !
     END SUBROUTINE readschema_magnetization
     !-----------------------------------------------------------------------
