@@ -137,7 +137,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE paw_variables,   ONLY : okpaw
   !
   USE pw_restart_new,  ONLY : pw_read_schema, &
-       readschema_spin, readschema_magnetization, &
+       readschema_magnetization, &
        readschema_occupations, readschema_brillouin_zone, &
        readschema_band_structure
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
@@ -266,9 +266,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !!     nkstot, isk, natomwfc, nbnd_up, nbnd_dw, nelec, wk, wg, &
   !!     ef, ef_up, ef_dw, et )
   !!
-  CALL readschema_spin( output_obj%magnetization )
   CALL readschema_magnetization (  output_obj%band_structure,  &
-       output_obj%atomic_species, output_obj%magnetization )
+       output_obj%magnetization )
   CALL readschema_occupations( output_obj%band_structure )
   CALL readschema_brillouin_zone( output_obj%band_structure )
   CALL readschema_band_structure( output_obj%band_structure )
