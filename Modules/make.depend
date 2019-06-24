@@ -113,6 +113,7 @@ funct.o : kind.o
 funct.o : libxc.o
 funct.o : xc_gga_drivers.o
 funct.o : xc_lda_lsda_drivers.o
+funct.o : xc_mgga_drivers.o
 funct.o : xc_rVV10.o
 funct.o : xc_vdW_DF.o
 generate_function.o : ../UtilXlib/mp.o
@@ -445,6 +446,8 @@ xc_gga_drivers.o : kind.o
 xc_gga_drivers.o : libxc.o
 xc_lda_lsda_drivers.o : kind.o
 xc_lda_lsda_drivers.o : libxc.o
+xc_mgga_drivers.o : kind.o
+xc_mgga_drivers.o : libxc.o
 xc_rVV10.o : ../FFTXlib/fft_interfaces.o
 xc_rVV10.o : ../UtilXlib/mp.o
 xc_rVV10.o : cell_base.o

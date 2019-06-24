@@ -104,6 +104,8 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   RETURN
   !
 END SUBROUTINE v_of_rho
+!
+!
 !----------------------------------------------------------------------------
 SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !----------------------------------------------------------------------------
@@ -116,14 +118,15 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE gvect,            ONLY : g, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
-  USE funct,            ONLY : tau_xc, tau_xc_spin, get_meta, dft_is_nonlocc, nlc
-  USE scf,              ONLY : scf_type
+  USE funct,            ONLY : get_meta, dft_is_nonlocc, nlc
+  USE xc_mgga,          ONLY : xc_metagcx
+  USE scf,              ONLY : scf_type, rhoz_or_updw
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
   !
   IMPLICIT NONE
   !
-  TYPE (scf_type), INTENT(IN) :: rho
+  TYPE (scf_type), INTENT(INOUT) :: rho
   !! the valence charge
   REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
   !! the core charge in real space
@@ -141,151 +144,121 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ! ... local variables
   !
   REAL(DP) :: zeta, rh, sgn(2)
-  INTEGER  :: k, ipol, is
-  REAL(DP) :: ex, ec, v1x, v2x, v3x,v1c, v2c, v3c,                     &
-  &           v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw,                &
-  &           v3xup, v3xdw,v3cup, v3cdw,                               &
-  &           arho, atau, fac, rhoup, rhodw, ggrho2, tauup,taudw          
+  INTEGER  :: k, ipol, is, np
+  !
+  REAL(DP), ALLOCATABLE :: ex(:), ec(:)
+  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:)
+  REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:)
+  !
+  REAL(DP) :: fac
        
-  REAL(DP), DIMENSION(2)   ::    grho2, rhoneg
-  REAL(DP), DIMENSION(3)   ::    grhoup, grhodw, v2cup, v2cdw
+  REAL(DP), DIMENSION(2) :: grho2, rhoneg
+  REAL(DP), DIMENSION(3) :: grhoup, grhodw
   !
-  REAL(DP),    ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
-  REAL(DP),    ALLOCATABLE :: rhoout(:)
+  REAL(DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
+  REAL(DP), ALLOCATABLE :: rhoout(:)
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:)
-  REAL(DP), PARAMETER      :: eps12 = 1.0d-12, zero=0._dp
-  !
-  !----------------------------------------------------------------------------
-  !
+  REAL(DP), PARAMETER :: eps12 = 1.0d-12, zero=0._dp
   !
   CALL start_clock( 'v_xc_meta' )
   !
-  !
-  etxc      = zero
-  vtxc      = zero
-  v(:,:)    = zero
+  etxc = zero
+  vtxc = zero
+  v(:,:) = zero
   rhoneg(:) = zero
   sgn(1) = 1._dp  ;   sgn(2) = -1._dp
-  fac = 1.D0 / DBLE( nspin ) 
+  fac = 1.D0 / DBLE( nspin )
+  np = 1
+  IF (nspin==2) np=3
   !
-  ALLOCATE (grho(3,dfftp%nnr,nspin))
-  ALLOCATE (h(3,dfftp%nnr,nspin))
-  ALLOCATE (rhogsum(ngm))
+  ALLOCATE( grho(3,dfftp%nnr,nspin) )
+  ALLOCATE( h(3,dfftp%nnr,nspin) )
+  ALLOCATE( rhogsum(ngm) )
+  !
+  ALLOCATE( ex(dfftp%nnr), ec(dfftp%nnr) )
+  ALLOCATE( v1x(dfftp%nnr,nspin), v2x(dfftp%nnr,nspin)   , v3x(dfftp%nnr,nspin) )
+  ALLOCATE( v1c(dfftp%nnr,nspin), v2c(np,dfftp%nnr,nspin), v3c(dfftp%nnr,nspin) )
   !
   ! ... calculate the gradient of rho + rho_core in real space
   ! ... in LSDA case rhogsum is in (up,down) format
   !
   DO is = 1, nspin
      !
-     rhogsum(:)=fac*rhog_core(:) + ( rho%of_g(:,1) + sgn(is)*rho%of_g(:,nspin) )*0.5D0
+     rhogsum(:) = fac*rhog_core(:) + ( rho%of_g(:,1) + sgn(is)*rho%of_g(:,nspin) )*0.5D0
      !
      CALL fft_gradient_g2r( dfftp, rhogsum, g, grho(1,1,is) )
      !
-  END DO
+  ENDDO
   DEALLOCATE(rhogsum)
   !
-  DO k = 1, dfftp%nnr
-     !
-     DO is = 1, nspin
-        grho2 (is) = grho(1,k, is)**2 + grho(2,k,is)**2 + grho(3,k, is)**2
-     ENDDO
-     !
-     IF (nspin == 1) THEN
-        !
-        !    This is the spin-unpolarised case
-        !
-        arho = ABS(rho%of_r(k, 1) )
-        !
-        atau = rho%kin_r(k,1) / e2  ! kinetic energy density in Hartree
-        !
-        IF ( (arho>eps8).AND.(grho2(1)>eps12).AND.(ABS(atau)>eps8) ) THEN
-           !
-           CALL tau_xc( arho, grho2(1),atau, ex, ec, v1x, v2x, &
-                                                   v3x,v1c, v2c,v3c )
-           !
-           v(k, 1) = (v1x + v1c) * e2 
-           !
-           ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-           h(:,k,1) = (v2x + v2c) * grho(:,k,1) * e2
-           !
-           kedtaur(k,1) = (v3x + v3c) * 0.5d0 * e2
-           !
-           etxc = etxc + (ex + ec) * e2 !* segno
-           vtxc = vtxc + (v1x+v1c) * e2 * arho
-           !  
-        ELSE  
-           h (:, k, 1) = zero  
-           kedtaur(k,1)= zero
-        ENDIF
-        !
-        IF ( rho%of_r(k, 1) < zero ) rhoneg(1) = rhoneg(1) - rho%of_r (k, 1)
-        !
-     ELSE
-        !
-        !    spin-polarised case
-        !
-        rhoup = ( rho%of_r(k, 1) + rho%of_r(k, 2) )*0.5d0
-        rhodw = ( rho%of_r(k, 1) - rho%of_r(k, 2) )*0.5d0
-        !
-        rh   = rhoup + rhodw 
-        !
-        do ipol=1,3
-            grhoup(ipol)=grho(ipol,k,1)
-            grhodw(ipol)=grho(ipol,k,2)
-        end do
-        !
-        ggrho2  = ( grho2 (1) + grho2 (2) ) * 4._dp
-        !
-        tauup = rho%kin_r(k,1) / e2
-        taudw = rho%kin_r(k,2) / e2
-        atau  = tauup + taudw
-        !
-        IF ( (rh > eps8).AND.(ggrho2 > eps12).AND.(ABS(atau) > eps8) ) THEN
-                
-        CALL tau_xc_spin( rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec, &
-                          v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup,    &
-                          v1cdw, v2cup, v2cdw, v3cup, v3cdw ) 
+  !
+  IF (nspin == 1) THEN
+    !
+    CALL xc_metagcx( dfftp%nnr, 1, np, rho%of_r, grho, rho%kin_r/e2, ex, ec, &
+                      v1x, v2x, v3x, v1c, v2c, v3c )
+    !
+    DO k = 1, dfftp%nnr
+       !
+       v(k,1) = (v1x(k,1)+v1c(k,1)) * e2
+       !
+       ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+       h(:,k,1) = (v2x(k,1)+v2c(1,k,1)) * grho(:,k,1) * e2 
+       !
+       kedtaur(k,1) = (v3x(k,1)+v3c(k,1)) * 0.5d0 * e2
+       !
+       etxc = etxc + (ex(k)+ec(k)) * e2
+       vtxc = vtxc + (v1x(k,1)+v1c(k,1)) * e2 * ABS(rho%of_r(k,1))
+       !
+       IF (rho%of_r(k,1) < zero) rhoneg(1) = rhoneg(1)-rho%of_r(k,1)
+       !
+    ENDDO
+    !
+  ELSE
+    !
+    CALL rhoz_or_updw( rho, 'only_r', '->updw' )
+    !
+    CALL xc_metagcx( dfftp%nnr, 2, np, rho%of_r, grho, rho%kin_r/e2, ex, ec, &
+                     v1x, v2x, v3x, v1c, v2c, v3c )
+    !
+    ! first term of the gradient correction : D(rho*Exc)/D(rho)
+    !
+    DO k = 1, dfftp%nnr
+       !
+       v(k,1) = (v1x(k,1) + v1c(k,1)) * e2
+       v(k,2) = (v1x(k,2) + v1c(k,2)) * e2
+       !
+       ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+       !
+       IF ( get_meta()==1 .OR. get_meta()==5 ) THEN  ! tpss, scan
           !
-          ! first term of the gradient correction : D(rho*Exc)/D(rho)
+          h(:,k,1) = (v2x(k,1) * grho(:,k,1) + v2c(:,k,1)) * e2
+          h(:,k,2) = (v2x(k,2) * grho(:,k,2) + v2c(:,k,2)) * e2
           !
-          v(k, 1) =  (v1xup + v1cup) * e2
-          v(k, 2) =  (v1xdw + v1cdw) * e2
+       ELSE
           !
-          ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+          h(:,k,1) = (v2x(k,1) + v2c(1,k,1)) * grho(:,k,1) * e2
+          h(:,k,2) = (v2x(k,2) + v2c(1,k,2)) * grho(:,k,2) * e2
           !
-          IF (get_meta()==1 .OR. get_meta()==5 ) THEN  ! tpss, scan
-            !
-            h(:,k,1) = (v2xup * grhoup(:) + v2cup(:)) * e2
-            h(:,k,2) = (v2xdw * grhodw(:) + v2cdw(:)) * e2
-            !
-          ELSE
-            !
-            h(:,k,1) = (v2xup + v2cup(1)) * grhoup(:) * e2
-            h(:,k,2) = (v2xdw + v2cdw(1)) * grhodw(:) * e2
-            !
-          ENDIF
-          !
-          kedtaur(k,1)=  (v3xup + v3cup) * 0.5d0 * e2
-          kedtaur(k,2)=  (v3xdw + v3cdw) * 0.5d0 * e2
-          !
-          etxc = etxc + (ex + ec) * e2
-          vtxc = vtxc + (v1xup+v1cup+v1xdw+v1cdw) * e2 * rh
-          !
-        ELSE
-          !
-          h(:,k,1) = zero
-          h(:,k,2) = zero
-          !
-          kedtaur(k,1) = zero
-          kedtaur(k,2) = zero
-          !
-        ENDIF
-        !
-        IF ( rhoup < zero ) rhoneg(1) = rhoneg(1) - rhoup
-        IF ( rhodw < zero ) rhoneg(2) = rhoneg(2) - rhodw
-        ! 
-     ENDIF
-  ENDDO
+       ENDIF
+       !
+       kedtaur(k,1) = (v3x(k,1) + v3c(k,1)) * 0.5d0 * e2
+       kedtaur(k,2) = (v3x(k,2) + v3c(k,2)) * 0.5d0 * e2
+       !
+       etxc = etxc + (ex(k)+ec(k)) * e2
+       vtxc = vtxc + (v1x(k,1)+v1c(k,1)+v1x(k,2)+v1c(k,2)) * e2 * (rho%of_r(k,1)+rho%of_r(k,2))
+       !
+       IF ( rho%of_r(k,1) < 0.d0 ) rhoneg(1) = rhoneg(1) - rho%of_r(k,1)
+       IF ( rho%of_r(k,2) < 0.d0 ) rhoneg(2) = rhoneg(2) - rho%of_r(k,2)
+       !
+    ENDDO
+    !
+    CALL rhoz_or_updw( rho, 'only_r', '->rhoz' )
+    !
+  ENDIF
+  !
+  DEALLOCATE( ex, ec )
+  DEALLOCATE( v1x, v2x, v3x )
+  DEALLOCATE( v1c, v2c, v3c )
   !
   !
   ALLOCATE( dh( dfftp%nnr ) )    
@@ -333,6 +306,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   RETURN
   !
 END SUBROUTINE v_xc_meta
+!
 !
 SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------

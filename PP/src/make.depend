@@ -91,6 +91,7 @@ bands.o : ../../UtilXlib/mp.o
 benchmark_libxc.o : ../../Modules/libxc.o
 benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
 benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
+benchmark_libxc.o : ../../Modules/xc_mgga_drivers.o
 chdens_bspline.o : ../../Modules/bspline.o
 chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o

@@ -50,7 +50,7 @@ MODULE funct
   PUBLIC  :: enforce_input_dft, write_dft_name
   PUBLIC  :: get_dft_name, get_dft_short, get_dft_long,&
              get_nonlocc_name
-  PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_inlc
+  PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_metac, get_inlc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
   PUBLIC  :: set_auxiliary_flags
   !
@@ -67,8 +67,6 @@ MODULE funct
   !
   ! driver subroutines computing XC
   PUBLIC  :: init_xc, is_libxc
-  PUBLIC  :: tau_xc , tau_xc_spin
-  PUBLIC  :: tau_xc_array, tau_xc_array_spin
   PUBLIC  :: nlc
   !
   ! PRIVATE variables defining the DFT functional
@@ -327,10 +325,11 @@ MODULE funct
   INTEGER :: igcx  = notset
   INTEGER :: igcc  = notset
   INTEGER :: imeta = notset
+  INTEGER :: imetac= notset
   INTEGER :: inlc  = notset
   !
   ! is_libxc(i)==.TRUE. if the the i-th term of xc is from libxc
-  LOGICAL :: is_libxc(6)
+  LOGICAL :: is_libxc(7)
   !
   REAL(DP):: exx_fraction = 0.0_DP
   REAL(DP):: screening_parameter = 0.0_DP
@@ -390,7 +389,8 @@ CONTAINS
     CHARACTER(len=50):: dftout
     LOGICAL :: dft_defined = .FALSE.
     CHARACTER(LEN=1), EXTERNAL :: capital
-    INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, save_inlc
+    INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
+                save_metac, save_inlc
 #if defined(__LIBXC)
     INTEGER :: fkind
     TYPE(xc_f90_pointer_t) :: xc_func, xc_info
@@ -407,6 +407,7 @@ CONTAINS
     save_igcx  = igcx
     save_igcc  = igcc
     save_meta  = imeta
+    save_metac = imetac
     save_inlc  = inlc
     !
     ! convert to uppercase
@@ -621,6 +622,26 @@ CONTAINS
     END SELECT
     !
     !
+    ! ... A temporary fix in order to keep the q-e input notation for SCAN-functionls
+    !     valid.
+    IF (imeta==5 .OR. imeta==6) THEN
+#if defined(__LIBXC)
+       imeta  = 263 
+       imetac = 267
+       is_libxc(5:6) = .TRUE.
+#else
+       CALL errore( 'set_dft_from_name', 'libxc needed for this functional', 2 )
+#endif
+    ELSEIF (imeta==3) THEN
+#if defined(__LIBXC)
+       imeta  = 208
+       imetac = 231
+       is_libxc(5:6) = .TRUE.
+#else
+       CALL errore( 'set_dft_from_name', 'libxc needed for this functional', 2 )
+#endif
+    ENDIF
+    !
     !----------------------------------------------------------------
     ! If the DFT was not yet defined, check every part of the string
     !----------------------------------------------------------------
@@ -632,7 +653,12 @@ CONTAINS
        igcx  = matching( 3, dftout, ngcx,  gradx,   is_libxc(3) )
        igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )       
        imeta = matching( 5, dftout, nmeta, meta,    is_libxc(5) )
-       inlc  = matching( 6, dftout, ncnl,  nonlocc, is_libxc(6) )       
+       IF ( is_libxc(5) ) THEN
+         imetac = matching( 6, dftout, nmeta, meta, is_libxc(6) )
+       ELSE
+         imetac = 0
+       ENDIF
+       inlc  = matching( 7, dftout, ncnl,  nonlocc, is_libxc(7) )       
        !
 #if defined(__LIBXC)
        fkind = -100
@@ -660,6 +686,10 @@ CONTAINS
        IF (ANY(is_libxc(1:2)) .AND. ANY(is_libxc(3:4))) &
           CALL errore( 'set_dft_from_name', 'An LDA functional has been found, but &
                        &libxc GGA functionals already include the LDA part)', 4 )
+       !
+       IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0) &
+          CALL errore( 'set_dft_from_name', 'Two conflicting metaGGA functionals &
+                       &have been found', 5 )
 #endif
        !
     ENDIF
@@ -717,6 +747,10 @@ CONTAINS
     IF (save_meta /= notset  .AND. save_meta /= imeta)  THEN
        WRITE (stdout,*) inlc, save_meta
        CALL errore( 'set_dft_from_name', ' conflicting values for imeta', 1 )
+    ENDIF
+    IF (save_metac /= notset  .AND. save_metac /= imetac)  THEN
+       WRITE (stdout,*) imetac, save_metac
+       CALL errore( 'set_dft_from_name', ' conflicting values for imetac', 1 )
     ENDIF
     IF (save_inlc /= notset  .AND. save_inlc /= inlc)   THEN
        WRITE (stdout,*) inlc, save_inlc
@@ -835,9 +869,16 @@ CONTAINS
        IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
     CASE( 4 )
        IF (family==XC_FAMILY_GGA .AND. fkind==XC_CORRELATION) RETURN
+    CASE( 5 )
+       IF (family==XC_FAMILY_MGGA .AND. fkind==XC_EXCHANGE) RETURN
+       IF (family==XC_FAMILY_MGGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_HYB_MGGA .AND. fkind==XC_EXCHANGE) RETURN
+       IF (family==XC_FAMILY_HYB_MGGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+    CASE( 6 )
+       IF (family==XC_FAMILY_MGGA .AND. fkind==XC_CORRELATION) RETURN
     END SELECT
-    !
 #endif
+    !
     slot_match_libxc=.FALSE.
     !
     RETURN
@@ -903,6 +944,7 @@ CONTAINS
     igcc  = i4
     inlc  = i5
     imeta = i6
+    imetac= 0
     !
     set_dft_values = .TRUE.
     !
@@ -1077,6 +1119,12 @@ CONTAINS
      get_meta = imeta
      RETURN
   END FUNCTION get_meta
+  !
+  FUNCTION get_metac()
+    INTEGER get_metac
+    get_metac = imetac
+    RETURN
+  END FUNCTION get_metac
   !-----------------------------------------------------------------------
   FUNCTION get_inlc()
      INTEGER get_inlc
@@ -1218,23 +1266,23 @@ CONTAINS
     !
     IF ( iexch==1 .AND. igcx==0 .AND. igcc==0) THEN
        shortname = TRIM(corr(icorr))
-    ELSEIF (iexch==4 .AND. icorr== 0 .AND. igcx==0 .AND. igcc== 0) THEN
+    ELSEIF (iexch==4 .AND. icorr==0  .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'OEP'
     ELSEIF (iexch==1 .AND. icorr==11 .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'VWN-RPA'
-    ELSEIF (iexch==1 .AND. icorr== 3 .AND. igcx==1 .AND. igcc== 3) THEN
+    ELSEIF (iexch==1 .AND. icorr==3  .AND. igcx==1 .AND. igcc== 3) THEN
        shortname = 'BLYP'
-    ELSEIF (iexch==1 .AND. icorr== 1 .AND. igcx==1 .AND. igcc== 0) THEN
+    ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1 .AND. igcc== 0) THEN
        shortname = 'B88'
-    ELSEIF (iexch==1 .AND. icorr== 1 .AND. igcx==1 .AND. igcc== 1) THEN
+    ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1 .AND. igcc== 1) THEN
        shortname = 'BP'
-    ELSEIF (iexch==1 .AND. icorr== 4 .AND. igcx==2 .AND. igcc== 2) THEN
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==2 .AND. igcc== 2) THEN
        shortname = 'PW91'
-    ELSEIF (iexch==1 .AND. icorr== 4 .AND. igcx==3 .AND. igcc== 4) THEN
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==3 .AND. igcc== 4) THEN
        shortname = 'PBE'
-    ELSEIF (iexch==6 .AND. icorr== 4 .AND. igcx==8 .AND. igcc== 4) THEN
+    ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==8 .AND. igcc== 4) THEN
        shortname = 'PBE0'
-    ELSEIF (iexch==6 .AND. icorr== 4 .AND. igcx==41.AND. igcc== 4) THEN
+    ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==41.AND. igcc== 4) THEN
        shortname = 'B86BPBEX'
     ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==42.AND. igcc== 3) THEN
        shortname = 'BHANDHLYP'
@@ -1371,9 +1419,11 @@ SUBROUTINE init_xc( family )
    USE xc_lda_lsda,    ONLY: libxc_switches_lda, iexch_l, icorr_l,     &
                              exx_started_l, is_there_finite_size_corr, &
                              exx_fraction_l, finite_size_cell_volume_l
-   USE xc_gga,         ONLY: libxc_switches_gga, igcx_l, igcc_l, &
-                             exx_started_g, exx_fraction_g,      &
+   USE xc_gga,         ONLY: libxc_switches_gga, igcx_l, igcc_l,       &
+                             exx_started_g, exx_fraction_g,            &
                              screening_parameter_l, gau_parameter_l
+   USE xc_mgga,        ONLY: libxc_switches_mgga, imeta_l, imetac_l,   &
+                             exx_started_mg, exx_fraction_mg
    !
    IMPLICIT NONE
    !
@@ -1387,8 +1437,8 @@ SUBROUTINE init_xc( family )
      iexch_l = get_iexch()
      icorr_l = get_icorr()
      !
-     IF (iexch_l==-1 .OR. icorr_l==-1) CALL errore( 'init_xc', 'LDA functional &
-                                                   & indexes not well defined', 1 )
+     IF (iexch_l==notset .OR. icorr_l==notset) CALL errore( 'init_xc', 'LDA functional &
+                                                   & indexes not defined', 1 )
      !
      ! hybrid exchange vars
      exx_started_l  = exx_started !is_active()
@@ -1408,8 +1458,8 @@ SUBROUTINE init_xc( family )
      igcx_l = get_igcx()
      igcc_l = get_igcc()
      !
-     IF (igcx_l==-1 .OR. igcc_l==-1)  CALL errore( 'init_xc', 'GGA functional &
-                                                  & indexes not well defined', 2 )     
+     IF (igcx_l==notset .OR. igcc_l==notset)  CALL errore( 'init_xc', 'GGA functional &
+                                                          & indexes not defined', 2 )     
      !
      ! hybrid exchange vars
      exx_started_g  = exx_started !is_active()
@@ -1420,8 +1470,26 @@ SUBROUTINE init_xc( family )
      gau_parameter_l = get_gau_parameter()
    ENDIF
    !
-   IF (family.NE.'LDA' .AND. family.NE.'GGA' .AND. family.NE.'ALL') &
-     CALL errore( 'init_xc', 'family not found', 3 )
+   IF (family.EQ.'MGGA' .OR. family.EQ.'ALL') THEN
+     ! =1 if libxc active, =0 otherwise
+     IF (is_libxc(5)) libxc_switches_mgga(1) = 1
+     IF (is_libxc(6)) libxc_switches_mgga(2) = 1
+     ! exchange-correlation indexes
+     imeta_l  = get_meta()
+     imetac_l = get_metac()
+     !
+     IF (imeta_l==notset .OR. imetac_l==notset)  CALL errore( 'init_xc', 'MGGA functional &
+                                                             & indexes not defined', 3 )     
+     !
+     ! hybrid exchange vars
+     exx_started_mg  = exx_started !is_active()
+     exx_fraction_mg = 0._DP
+     IF ( exx_started_mg ) exx_fraction_mg = get_exx_fraction()
+     !
+   ENDIF
+   !
+   IF ( family.NE.'LDA' .AND. family.NE.'GGA' .AND. family.NE.'MGGA' .AND. family.NE.'ALL') &
+     CALL errore( 'init_xc', 'family not found', 4 )
    !
    RETURN
    !
@@ -1479,269 +1547,6 @@ SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
   !
   RETURN
 END SUBROUTINE nlc
-
-!
-!-----------------------------------------------------------------------
-!------- META CORRECTIONS DRIVERS ----------------------------------
-!-----------------------------------------------------------------------
-!
-!-----------------------------------------------------------------------
-SUBROUTINE tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  !-----------------------------------------------------------------------
-  !     gradient corrections for exchange and correlation - Hartree a.u.
-  !     See comments at the beginning of module for implemented cases
-  !
-  !     input:  rho, grho=|\nabla rho|^2
-  !
-  !     definition:  E_x = \int e_x(rho,grho) dr
-  !
-  !     output: sx = e_x(rho,grho) = grad corr
-  !             v1x= D(E_x)/D(rho)
-  !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !             v3x= D(E_x)/D(tau)
-  !
-  !             sc, v1c, v2c as above for correlation
-  !
-  IMPLICIT NONE
-
-  REAL(DP) :: rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
-
-  !_________________________________________________________________________
-
-  if     (imeta == 1) then
-     CALL tpsscxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 2) then
-     CALL   m06lxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 3) then
-     CALL  tb09cxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 4) then
-     ! do nothing
-  elseif (imeta == 5) then
-     CALL  SCANcxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  else
-    CALL errore('tau_xc','wrong igcx and/or igcc',1)
-  end if
-
-  RETURN
-
-END SUBROUTINE tau_xc
-
-SUBROUTINE tau_xc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  ! HK/MCA : the xc_func_init is slow and is called too many times
-  ! HK/MCA : we modify this subroutine so that the overhead could be minimized
-  !-----------------------------------------------------------------------
-  !     gradient corrections for exchange and correlation - Hartree a.u.
-  !     See comments at the beginning of module for implemented cases
-  !
-  !     input:  rho, grho=|\nabla rho|^2
-  !
-  !     definition:  E_x = \int e_x(rho,grho) dr
-  !
-  !     output: sx = e_x(rho,grho) = grad corr
-  !             v1x= D(E_x)/D(rho)
-  !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !             v3x= D(E_x)/D(tau)
-  !
-  !             sc, v1c, v2c as above for correlation
-  !
-  IMPLICIT NONE
-
-  INTEGER, intent(in) :: nnr
-  REAL(DP) :: rho(nnr), grho(nnr), tau(nnr), ex(nnr), ec(nnr)
-  REAL(DP) :: v1x(nnr), v2x(nnr), v3x(nnr), v1c(nnr), v2c(nnr), v3c(nnr)
-  !_________________________________________________________________________
-
-  if (imeta == 5) then
-     CALL  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 6 ) then ! HK/MCA: SCAN0
-     CALL  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-     if (exx_started) then
-        ex  = (1.0_DP - exx_fraction) * ex
-        v1x = (1.0_DP - exx_fraction) * v1x
-        v2x = (1.0_DP - exx_fraction) * v2x
-        v3x = (1.0_DP - exx_fraction) * v3x
-     end if
-  else
-     CALL errore('v_xc_meta_array','(CP only) array mode only works for SCAN',1)
-  end if
-
-  RETURN
-
-END SUBROUTINE tau_xc_array
-!
-!
-!-----------------------------------------------------------------------
-SUBROUTINE tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
-           &            v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup, v1cdw,&
-           &            v2cup, v2cdw, v3cup, v3cdw)
-
-!-----------------------------------------------------------------------
-  !
-  !
-
-  IMPLICIT NONE
-
-  real(dp), intent(in)                :: rhoup, rhodw, tauup, taudw
-  real(dp), dimension (3), intent(in) :: grhoup, grhodw
-
-  real(dp), intent(out)               :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-                                      &  v1cup, v1cdw, v3cup, v3cdw
-  real(dp), dimension(3), intent(out) :: v2cup, v2cdw
-
-  !
-  !  Local variables
-  !
-  INTEGER                 :: ipol
-  real(dp)                :: rh, zeta, atau, grhoup2, grhodw2
-  real(dp), parameter     :: epsr=1.0d-08, zero=0._dp
-  !
-  !_____________________________
-
-  grhoup2 = zero
-  grhodw2 = zero
-
-  v2cup         = zero
-  v2cdw         = zero
-
-  ! FIXME: for SCAN, this will be calculated later
-  if (imeta /= 4) then
-
-      do ipol=1,3
-        grhoup2 = grhoup2 + grhoup(ipol)**2
-        grhodw2 = grhodw2 + grhodw(ipol)**2
-      end do
-
-  end if
-
-  if (imeta == 1) then
-
-     CALL tpsscx_spin(rhoup, rhodw, grhoup2, grhodw2, tauup,   &
-              &  taudw, ex, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw)
-
-     rh   =  rhoup + rhodw
-
-     zeta = (rhoup - rhodw) / rh
-     atau =  tauup + taudw    ! KE-density in Hartree
-
-     CALL tpsscc_spin(rh,zeta,grhoup,grhodw, atau,ec,              &
-     &                v1cup,v1cdw,v2cup,v2cdw,v3cup, v3cdw)
-
-
-  elseif (imeta == 2) then
-
-     CALL   m06lxc_spin (rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
-            &            ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-            &            v1cup, v1cdw, v2cup(1), v2cdw(1), v3cup, v3cdw)
-
-  elseif (imeta == 5) then
-
-            ! FIXME: not the most efficient use of libxc
-
-            CALL scanxc_spin(rhoup, rhodw, grhoup, grhodw, tauup, taudw,  &
-                     &  ex, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw,          &
-                     &  ec, v1cup,v1cdw,v2cup,v2cdw,v3cup,v3cdw )
-
-  else
-
-    CALL errore('tau_xc_spin','This case not implemented',imeta)
-
-  end if
-
-END SUBROUTINE tau_xc_spin
-
-SUBROUTINE tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
-  & v1c, v2c, v3c)
-! HK/MCA : the xc_func_init (LIBXC) is slow and is called too many times
-! HK/MCA : we modify this SUBROUTINE so that the overhead could be minimized
-!-----------------------------------------------------------------------
-!     gradient corrections for exchange and correlation - Hartree a.u.
-!     See comments at the beginning of module for implemented cases
-!
-!     input:  rho,rho, grho=\nabla rho
-!
-!     definition:  E_x = \int e_x(rho,grho) dr
-!
-!     output: sx = e_x(rho,grho) = grad corr
-!             v1x= D(E_x)/D(rho)
-!             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-!             v3x= D(E_x)/D(tau)
-!
-!             sc, v1cup, v2cup as above for correlation
-!
-IMPLICIT NONE
-
-INTEGER, intent(in) :: nnr
-REAL(DP) :: rho(nnr,2), grho(3,nnr,2), tau(nnr,2), ex(nnr), ec(nnr)
-REAL(DP) :: v1x(nnr,2), v2x(nnr,3), v3x(nnr,2), v1c(nnr,2), v2c(nnr,3), v3c(nnr,2)
-
-!Local variables
-
-INTEGER  :: ipol, k, is
-REAL(DP) :: grho2(3,nnr)
-!MCA: Libxc format
-REAL(DP) :: rho_(2,nnr), tau_(2,nnr)
-REAL(DP) :: v1x_(2,nnr), v2x_(3,nnr), v3x_(2,nnr), v1c_(2,nnr), v2c_(3,nnr), v3c_(2,nnr)
-
-!_________________________________________________________________________
-
-grho2 = 0.0
-
-!MCA/HK: contracted gradient of density, same format as in libxc
-do k=1,nnr
-
-do ipol=1,3
-grho2(1,k) = grho2(1,k) + grho(ipol,k,1)**2
-grho2(2,k) = grho2(2,k) + grho(ipol,k,1) * grho(ipol,k,2)
-grho2(3,k) = grho2(3,k) + grho(ipol,k,2)**2
-end do
-
-!MCA: transforming to libxc format (DIRTY HACK)
-do is=1,2
-rho_(is,k) = rho(k,is)
-tau_(is,k) = tau(k,is)
-enddo
-
-end do
-
-if (imeta == 5) then
-
-!MCA/HK: using the arrays in libxc format
-CALL  scancxc_array_spin (nnr, rho_, grho2, tau_, ex, ec, &
-&                   v1x_, v2x_, v3x_,  &
-&                   v1c_, v2c_, v3c_ )
-
-do k=1,nnr
-
-!MCA: from libxc to QE format (DIRTY HACK)
-do is=1,2
-v1x(k,is) = v1x_(is,k)
-v2x(k,is) = v2x_(is,k) !MCA/HK: v2x(:,2) contains the cross terms
-v3x(k,is) = v3x_(is,k)
-v1c(k,is) = v1c_(is,k)
-v2c(k,is) = v2c_(is,k) !MCA/HK: same as v2x
-v3c(k,is) = v3c_(is,k)
-enddo
-
-v2c(k,3) = v2c_(3,k)
-v2x(k,3) = v2x_(3,k)
-
-end do
-
-elseif (imeta == 6 ) then ! HK/MCA: SCAN0
-CALL  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-if (exx_started) then
-ex  = (1.0_DP - exx_fraction) * ex
-v1x = (1.0_DP - exx_fraction) * v1x
-v2x = (1.0_DP - exx_fraction) * v2x
-v3x = (1.0_DP - exx_fraction) * v3x
-end if
-else
-CALL errore('v_xc_meta_array','(CP only) array mode only works for SCAN',1)
-end if
-
-RETURN
-
-END SUBROUTINE tau_xc_array_spin
 !
 !
 #if defined(__LIBXC)
