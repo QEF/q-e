@@ -642,7 +642,7 @@ CONTAINS
          CALL xc_f90_func_end( xc_func )
        ENDIF
        !
-       IF (icorr/=notset .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
           CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
                        &been found together with a correlation one', 2 )
        !
@@ -653,7 +653,7 @@ CONTAINS
          CALL xc_f90_func_end( xc_func )
        ENDIF
        !
-       IF (icorr/=notset .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
           CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
                        &been found together with a correlation one', 3 )
        !
