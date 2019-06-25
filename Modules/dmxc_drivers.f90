@@ -16,11 +16,12 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   ! 1) iexch libxc + icorr libxc
   ! 2) iexch qe    + icorr qe
   !
-  USE kinds,        ONLY: DP
+  USE kinds,            ONLY: DP
+  USE funct,            ONLY: get_iexch, get_icorr, is_libxc
+  USE xc_lda_lsda,      ONLY: xc_lda, xc_lsda
 #if defined(__LIBXC)
   USE xc_f90_types_m
   USE xc_f90_lib_m
-  USE xc_lda_lsda
 #endif
   !
   IMPLICIT NONE
@@ -45,13 +46,16 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   LOGICAL :: exch_lxc_avail, corr_lxc_avail
 #endif
   !
+  INTEGER :: iexch, icorr
   INTEGER :: ir, length_lxc, length_dlxc
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   !
+  iexch = get_iexch()
+  icorr = get_icorr()
   !
 #if defined(__LIBXC)
   !
-  IF (libxc_switches_lda(1)==1 .AND. libxc_switches_lda(2)==1) THEN
+  IF (is_libxc(1) .AND. is_libxc(2)) THEN
     !
     length_lxc = length*sr_d
     !
@@ -91,12 +95,12 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
               dmxc_lxc(length_dlxc) )
     !
     ! ... DERIVATIVE FOR EXCHANGE
-    CALL xc_f90_func_init( xc_func, xc_info1, iexch_l, pol_unpol )
+    CALL xc_f90_func_init( xc_func, xc_info1, iexch, pol_unpol )
      CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
     CALL xc_f90_func_end( xc_func )
     !
     ! ... DERIVATIVE FOR CORRELATION
-    CALL xc_f90_func_init( xc_func, xc_info2, icorr_l, pol_unpol )
+    CALL xc_f90_func_init( xc_func, xc_info2, icorr, pol_unpol )
      CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
     CALL xc_f90_func_end( xc_func )
     !
@@ -116,7 +120,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     DEALLOCATE( dmex_lxc, dmcr_lxc, dmxc_lxc )
     DEALLOCATE( rho_lxc )
     !
-  ELSEIF (libxc_switches_lda(1)==0 .AND. libxc_switches_lda(2)==0 ) THEN
+  ELSEIF ((.NOT.is_libxc(1)) .AND. (.NOT.is_libxc(2)) ) THEN
     !
     IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
@@ -163,7 +167,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density.
   !
-  USE xc_lda_lsda,  ONLY: xc_lda, iexch_l, icorr_l
+  USE xc_lda_lsda,  ONLY: xc_lda
+  USE funct,        ONLY: get_iexch, get_icorr
   USE kinds,        ONLY: DP
   !
   IMPLICIT NONE
@@ -183,7 +188,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   REAL(DP) :: rho, rs, ex_s, vx_s
   REAL(DP) :: dpz
-  INTEGER :: iflg, ir, i1, i2, f1, f2
+  INTEGER  :: iexch, icorr
+  INTEGER  :: iflg, ir, i1, i2, f1, f2
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,        &
                          pi34 = 0.75_DP/3.141592653589793_DP,   &
@@ -197,11 +203,14 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   ntids = omp_get_num_threads()
 #endif  
   !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  !
   dmuxc = 0.0_DP
   !
   ! ... first case: analytical derivatives available
   !
-  IF (iexch_l == 1 .AND. icorr_l == 1) THEN
+  IF (iexch == 1 .AND. icorr == 1) THEN
   !
 !$omp parallel if(ntids==1)
 !$omp do private( rs, rho, ex_s, vx_s )
@@ -280,7 +289,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !! local density in the spin-polarized case.
   !
   USE kinds,          ONLY: DP
-  USE xc_lda_lsda,    ONLY: xc_lsda, iexch_l, icorr_l
+  USE funct,          ONLY: get_iexch, get_icorr
+  USE xc_lda_lsda,    ONLY: xc_lsda
   !
   IMPLICIT NONE
   !
@@ -307,6 +317,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   REAL(DP) :: dpz, dpz_polarized
   !
+  INTEGER :: iexch, icorr
   INTEGER :: ir, is, iflg
   INTEGER :: i1, i2, i3, i4
   INTEGER :: f1, f2, f3, f4
@@ -317,11 +328,14 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
                          p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP,  &
                          rho_trash = 0.5_DP, zeta_trash = 0.5_DP
   !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  !
   dmuxc  = 0.0_DP
   null_v = 1.0_DP
   rhotot(:) = rho_in(:,1) + rho_in(:,2)
   !
-  IF (iexch_l == 1 .AND. icorr_l == 1) THEN
+  IF (iexch == 1 .AND. icorr == 1) THEN
      !
      ! ... first case: analytical derivative available
      !

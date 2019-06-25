@@ -1,6 +1,7 @@
 MODULE xc_mgga
 !
-USE kinds,     ONLY: DP 
+USE kinds,     ONLY: DP
+USE funct,     ONLY: get_meta, get_metac, is_libxc
 !
 IMPLICIT NONE
 !
@@ -10,58 +11,16 @@ SAVE
 !  GGA exchange-correlation drivers
 PUBLIC :: xc_metagcx
 PUBLIC :: tau_xc, tau_xc_spin
-PUBLIC :: change_threshold_mgga, select_mgga_functionals
+PUBLIC :: change_threshold_mgga
 !
-PUBLIC :: libxc_switches_mgga
-PUBLIC :: imeta_l, imetac_l
-PUBLIC :: exx_started_mg, exx_fraction_mg
-!
-!  libxc on/off
-INTEGER  :: libxc_switches_mgga(2)
-!
-!  indexes defining xc functionals
-INTEGER :: imeta_l, imetac_l
 !
 !  input thresholds (default values)
 REAL(DP) :: rho_threshold   = 1.0E-8_DP
 REAL(DP) :: grho2_threshold = 1.0E-12_DP
 REAL(DP) :: tau_threshold   = 1.0E-8_DP
 !
-!  variables for hybrid exchange
-LOGICAL  :: exx_started_mg
-REAL(DP) :: exx_fraction_mg
 !
-!
- CONTAINS  
-! 
-!
-!----------------------------------------------------------------------------
-!----- Select functionals by the corresponding indexes ----------------------
-!----------------------------------------------------------------------------
-SUBROUTINE select_mgga_functionals( imeta, imetac, exx_fraction )
-   !-----------------------------------------------------------------------------
-   !
-   IMPLICIT NONE
-   !
-   INTEGER,  INTENT(IN) :: imeta, imetac
-   REAL(DP), INTENT(IN), OPTIONAL :: exx_fraction
-   !
-   ! exchange-correlation indexes
-   imeta_l = imeta
-   imetac_l = imetac
-   !
-   ! hybrid exchange vars
-   exx_started_mg  = .FALSE.
-   exx_fraction_mg = 0._DP
-   IF ( PRESENT(exx_fraction) ) THEN
-      exx_started_mg  = .TRUE.
-      exx_fraction_mg = exx_fraction
-   ENDIF
-   !
-   RETURN
-   !
-END SUBROUTINE select_mgga_functionals
-!
+ CONTAINS
 !
 !
 !-------------------------------------------------------------------------------------
@@ -80,7 +39,6 @@ SUBROUTINE change_threshold_mgga( rho_thr_in, grho2_thr_in, tau_thr_in )
   RETURN
   !
 END SUBROUTINE change_threshold_mgga
-!
 !
 !
 !----------------------------------------------------------------------------------------
@@ -127,7 +85,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   ! ... local variables
   !
-  INTEGER :: is
+  INTEGER :: is, imeta, imetac
   REAL(DP), ALLOCATABLE :: grho2(:,:)
   !
 #if defined(__LIBXC)
@@ -142,6 +100,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   INTEGER :: k, ipol, pol_unpol
   LOGICAL :: POLARIZED
+  !
+  imeta  = get_meta()
+  imetac = get_metac()
   !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN
@@ -185,7 +146,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
   ENDIF
   !
-  IF (SUM(libxc_switches_mgga(:)) /= 2)  THEN
+  IF ( ANY(.NOT.is_libxc(5:6)) )  THEN
     !
     ALLOCATE( grho2(length,ns) )
     !
@@ -207,8 +168,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   ! META EXCHANGE
   !
-  IF (libxc_switches_mgga(1) == 1) THEN
-    CALL xc_f90_func_init( xc_func, xc_info1, imeta_l, pol_unpol )
+  IF ( is_libxc(5) ) THEN
+    CALL xc_f90_func_init( xc_func, xc_info1, imeta, pol_unpol )
     CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                               ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
     CALL xc_f90_func_end( xc_func )
@@ -236,9 +197,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   ! META CORRELATION
   !
-  IF ( libxc_switches_mgga(2) == 1 ) THEN
+  IF ( is_libxc(6) ) THEN
     !
-    CALL xc_f90_func_init( xc_func, xc_info1, imetac_l, pol_unpol )
+    CALL xc_f90_func_init( xc_func, xc_info1, imetac, pol_unpol )
     CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                               ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
     CALL xc_f90_func_end( xc_func )
@@ -321,10 +282,12 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
   !
   INTEGER, INTENT(IN) :: length
   !
-  INTEGER :: k
+  INTEGER :: k, imeta
   REAL(DP) :: arho
   REAL(DP), DIMENSION(length) :: rho, grho2, tau, &
                                  ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
+  !
+  imeta = get_meta()
   !
   v1x=0.d0 ; v2x=0.d0 ; v3x=0.d0 ; ex=0.d0
   v1c=0.d0 ; v2c=0.d0 ; v3c=0.d0 ; ec=0.d0
@@ -335,7 +298,7 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
     !
     IF ( (arho<=rho_threshold).OR.(grho2(k)<=grho2_threshold).OR.(ABS(tau(k))<=rho_threshold) ) CYCLE
     !
-    SELECT CASE( imeta_l )
+    SELECT CASE( imeta )
     CASE( 1 )
        CALL tpsscxc( arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
     CASE( 2 )
@@ -369,8 +332,10 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   !
   !  ... local variables
   !
-  INTEGER :: k, ipol
+  INTEGER :: k, ipol, imeta
   REAL(DP) :: rh, zeta, atau, grho2(2), ggrho2
+  !
+  imeta = get_meta()
   !
   ex=0.0_DP ; v1x=0.0_DP ; v2x=0.0_DP ; v3x=0.0_DP
   ec=0.0_DP ; v1c=0.0_DP ; v2c=0.0_DP ; v3c=0.0_DP
@@ -387,7 +352,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
      !
      IF ((rh <= rho_threshold) .OR. (ggrho2 <= grho2_threshold) .OR. (ABS(atau) <= tau_threshold)) CYCLE
      !
-     SELECT CASE( imeta_l )
+     SELECT CASE( imeta )
      CASE( 1 )
         !
         CALL tpsscx_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), &
@@ -406,7 +371,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
         !
      CASE DEFAULT
         !
-        CALL errore( 'tau_xc_spin', 'This case not implemented', imeta_l )
+        CALL errore( 'tau_xc_spin', 'This case not implemented', imeta )
         !
      END SELECT
      !

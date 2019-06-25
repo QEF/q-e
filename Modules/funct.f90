@@ -62,17 +62,18 @@ MODULE funct
   !
   ! additional subroutines/functions for finite size corrections
   PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
+  PUBLIC  :: get_finite_size_cell_volume
   ! rpa specific
   PUBLIC  :: init_dft_exxrpa, enforce_dft_exxrpa
   !
   ! driver subroutines computing XC
-  PUBLIC  :: init_xc, is_libxc
+  PUBLIC  :: is_libxc
   PUBLIC  :: nlc
   !
   ! PRIVATE variables defining the DFT functional
   !
-  PRIVATE :: dft, iexch, icorr, igcx, igcc, imeta, inlc
-  PRIVATE :: discard_input_dft
+  PRIVATE :: iexch, icorr, igcx, igcc, imeta, imetac, inlc
+  PRIVATE :: dft, discard_input_dft
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
   PRIVATE :: has_finite_size_correction, &
@@ -757,7 +758,7 @@ CONTAINS
        CALL errore( 'set_dft_from_name', ' conflicting values for inlc',  1 )
     ENDIF
     !
-    CALL init_xc( 'ALL' )
+    !CALL init_xc()
     !
     RETURN
     !
@@ -1028,14 +1029,12 @@ CONTAINS
      IF (.NOT. ishybrid) &
         CALL errore( 'start_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .TRUE.
-     CALL init_xc( 'ALL' )
   END SUBROUTINE start_exx
   !-----------------------------------------------------------------------
   SUBROUTINE stop_exx
      IF (.NOT. ishybrid) &
         CALL errore( 'stop_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .FALSE.
-     CALL init_xc( 'ALL' )
   END SUBROUTINE stop_exx
   !-----------------------------------------------------------------------
   SUBROUTINE dft_force_hybrid( request )
@@ -1219,8 +1218,8 @@ CONTAINS
   END SUBROUTINE get_finite_size_cell_volume
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE set_dft_from_indices( iexch_, icorr_, igcx_, igcc_, inlc_ )
-     INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
+  SUBROUTINE set_dft_from_indices( iexch_, icorr_, igcx_, igcc_, imeta_, inlc_ )
+     INTEGER :: iexch_, icorr_, igcx_, igcc_, imeta_, inlc_
      IF ( discard_input_dft ) RETURN
      IF (iexch == notset) iexch = iexch_
      IF (iexch /= iexch_) THEN
@@ -1242,6 +1241,11 @@ CONTAINS
         write (stdout,*) igcc, igcc_
         CALL errore( 'set_dft', ' conflicting values for igcc', 1 )
      ENDIF
+     IF (imeta  == notset) imeta = imeta_
+     IF (imeta /= imeta_) THEN
+        write (stdout,*) imeta, imeta_
+        CALL errore( 'set_dft', ' conflicting values for imeta', 1 )
+     ENDIF     
      IF (inlc  == notset) inlc = inlc_
      IF (inlc /= inlc_) THEN
         write (stdout,*) inlc, inlc_
@@ -1408,92 +1412,6 @@ SUBROUTINE write_dft_name
         '(5X,"EXX-fraction              =",F12.2)') get_exx_fraction()
    RETURN
 END SUBROUTINE write_dft_name
-!
-!
-!-----------------------------------------------------------------------
-SUBROUTINE init_xc( family )
-   !-------------------------------------------------------------------
-   !! Gets from inside parameters needed to initialize lda xc-drivers.
-   !
-   USE kinds,          ONLY: DP
-   USE xc_lda_lsda,    ONLY: libxc_switches_lda, iexch_l, icorr_l,     &
-                             exx_started_l, is_there_finite_size_corr, &
-                             exx_fraction_l, finite_size_cell_volume_l
-   USE xc_gga,         ONLY: libxc_switches_gga, igcx_l, igcc_l,       &
-                             exx_started_g, exx_fraction_g,            &
-                             screening_parameter_l, gau_parameter_l
-   USE xc_mgga,        ONLY: libxc_switches_mgga, imeta_l, imetac_l,   &
-                             exx_started_mg, exx_fraction_mg
-   !
-   IMPLICIT NONE
-   !
-   CHARACTER(LEN=*), INTENT(IN) :: family
-   !
-   IF (family.EQ.'LDA' .OR. family.EQ.'ALL') THEN
-     ! =1 if libxc active, =0 otherwise
-     IF (is_libxc(1)) libxc_switches_lda(1) = 1
-     IF (is_libxc(2)) libxc_switches_lda(2) = 1
-     ! exchange-correlation indexes
-     iexch_l = get_iexch()
-     icorr_l = get_icorr()
-     !
-     IF (iexch_l==notset .OR. icorr_l==notset) CALL errore( 'init_xc', 'LDA functional &
-                                                   & indexes not defined', 1 )
-     !
-     ! hybrid exchange vars
-     exx_started_l  = exx_started !is_active()
-     exx_fraction_l = 0._DP
-     IF ( exx_started_l ) exx_fraction_l = get_exx_fraction()
-     !
-     ! finite size correction vars
-     CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
-                                       finite_size_cell_volume_l )
-   ENDIF
-   !
-   IF (family.EQ.'GGA' .OR. family.EQ.'ALL') THEN
-     ! =1 if libxc active, =0 otherwise
-     IF (is_libxc(3)) libxc_switches_gga(1) = 1
-     IF (is_libxc(4)) libxc_switches_gga(2) = 1
-     ! exchange-correlation indexes
-     igcx_l = get_igcx()
-     igcc_l = get_igcc()
-     !
-     IF (igcx_l==notset .OR. igcc_l==notset)  CALL errore( 'init_xc', 'GGA functional &
-                                                          & indexes not defined', 2 )     
-     !
-     ! hybrid exchange vars
-     exx_started_g  = exx_started !is_active()
-     exx_fraction_g = 0._DP
-     IF ( exx_started_g ) exx_fraction_g = get_exx_fraction()
-     !
-     screening_parameter_l = get_screening_parameter()
-     gau_parameter_l = get_gau_parameter()
-   ENDIF
-   !
-   IF (family.EQ.'MGGA' .OR. family.EQ.'ALL') THEN
-     ! =1 if libxc active, =0 otherwise
-     IF (is_libxc(5)) libxc_switches_mgga(1) = 1
-     IF (is_libxc(6)) libxc_switches_mgga(2) = 1
-     ! exchange-correlation indexes
-     imeta_l  = get_meta()
-     imetac_l = get_metac()
-     !
-     IF (imeta_l==notset .OR. imetac_l==notset)  CALL errore( 'init_xc', 'MGGA functional &
-                                                             & indexes not defined', 3 )     
-     !
-     ! hybrid exchange vars
-     exx_started_mg  = exx_started !is_active()
-     exx_fraction_mg = 0._DP
-     IF ( exx_started_mg ) exx_fraction_mg = get_exx_fraction()
-     !
-   ENDIF
-   !
-   IF ( family.NE.'LDA' .AND. family.NE.'GGA' .AND. family.NE.'MGGA' .AND. family.NE.'ALL') &
-     CALL errore( 'init_xc', 'family not found', 4 )
-   !
-   RETURN
-   !
-END SUBROUTINE init_xc
 !
 !
 !-----------------------------------------------------------------------

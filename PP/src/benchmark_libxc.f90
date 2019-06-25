@@ -11,11 +11,11 @@ PROGRAM benchmark_libxc
   !! This program compares the output results (energies and potentials) from the libxc 
   !! routines with the ones from q-e xc internal library.  
   !! Available options:  
-  !! * full LDA ;
+  !! * LDA ;
   !! * derivative of LDA pot. (dmxc) ;
-  !! * full GGA ;
+  !! * GGA ;
   !! * derivative of GGA pot. (dgcxc, the polarized case is not yet complete) ;
-  !! * full metaGGA .
+  !! * metaGGA.
   !
   !------------------------------------------------------------------------------------!
   !  To be run on a single processor
@@ -26,9 +26,10 @@ PROGRAM benchmark_libxc
   USE xc_f90_types_m
   USE xc_f90_lib_m
   !
-  USE xc_lda_lsda
-  USE xc_gga
-  USE xc_mgga
+  USE funct,          ONLY: set_dft_from_indices, set_exx_fraction
+  USE xc_lda_lsda,    ONLY: xc_lda, xc_lsda
+  USE xc_gga,         ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more
+  USE xc_mgga,        ONLY: tau_xc, tau_xc_spin
   !
   IMPLICIT NONE
   !
@@ -392,7 +393,14 @@ PROGRAM benchmark_libxc
      !
      !----- QE ----------
      !
-     CALL select_lda_functionals( iexch_qe, icorr_qe )   ! ... EXCHANGE and CORRELATION
+     CALL set_dft_from_indices( iexch_qe, icorr_qe, 0, 0, 0, 0 )    ! ... EXCHANGE and CORRELATION
+     !
+     ! get exx_fraction, if needed
+     CALL xc_f90_func_init( xc_func, xc_info1, iexch_qe, 1 )  
+     family = xc_f90_info_family( xc_info1 )
+     IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_frctn )
+     CALL xc_f90_func_end( xc_func )
+     CALL set_exx_fraction( exx_frctn )
      !
      IF ( DF_OK ) THEN
        IF ( .NOT.POLARIZED ) THEN
@@ -491,7 +499,10 @@ PROGRAM benchmark_libxc
      !
      !----- QE ----------
      !
-     CALL select_gga_functionals( iexch_qe, icorr_qe, exx_fraction=exx_frctn )
+     CALL set_dft_from_indices( 0, 0, iexch_qe, icorr_qe, 0, 0 )    ! ... EXCHANGE and CORRELATION
+     !
+     ! get exx_fraction, if needed
+     CALL set_exx_fraction( exx_frctn )
      !
      IF ( DF_OK ) THEN
         !
@@ -505,7 +516,7 @@ PROGRAM benchmark_libxc
         ENDIF
         !
      ELSE
-        ! 
+        !
         IF ( .NOT. POLARIZED ) THEN
           !
           CALL gcxc( nnr, rho_qe(:,1), grho2(:,1), ex_qe, ec_qe, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
@@ -581,7 +592,10 @@ PROGRAM benchmark_libxc
      !
      !----- QE ----------
      !
-     CALL select_mgga_functionals( iexch_qe, icorr_qe ) ! ... icorr_qe not used 
+     !CALL select_mgga_functionals( iexch_qe, icorr_qe ) ! ... icorr_qe not used 
+     !
+     !
+     CALL set_dft_from_indices( 0, 0, 0, 0, iexch_qe, 0 )    ! ... EXCHANGE and CORRELATION  
      !
      IF ( .NOT. POLARIZED ) THEN
         CALL tau_xc( nnr, rho_qe(:,1), grho2(:,1), tau_qe(:,1), ex_qe, ec_qe, v1x(:,1), &
