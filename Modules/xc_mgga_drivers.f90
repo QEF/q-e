@@ -1,7 +1,8 @@
 MODULE xc_mgga
 !
 USE kinds,     ONLY: DP
-USE funct,     ONLY: get_meta, get_metac, is_libxc
+USE funct,     ONLY: get_meta, get_metac, is_libxc, &
+                     exx_is_active, scan_exx, get_exx_fraction
 !
 IMPLICIT NONE
 !
@@ -98,6 +99,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:), vc_tau(:)
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in TPSS
   !
+  REAL(DP) :: exx_fraction
   INTEGER :: k, ipol, pol_unpol
   LOGICAL :: POLARIZED
   !
@@ -191,6 +193,17 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
         v3x(k,1) = vx_tau(2*k-1)
         v3x(k,2) = vx_tau(2*k)
       ENDDO
+    ENDIF
+    !
+    ! ... only for HK/MCA: SCAN0 (used in CPV)
+    IF ( scan_exx ) THEN
+       exx_fraction = get_exx_fraction()
+       IF (exx_is_active()) THEN
+         ex  = (1.0_DP - exx_fraction) * ex
+         v1x = (1.0_DP - exx_fraction) * v1x
+         v2x = (1.0_DP - exx_fraction) * v2x
+         v3x = (1.0_DP - exx_fraction) * v3x
+       ENDIF
     ENDIF
     !
   ENDIF

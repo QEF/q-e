@@ -55,7 +55,7 @@ MODULE funct
   PUBLIC  :: set_auxiliary_flags
   !
   ! additional subroutines/functions for hybrid functionals
-  PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
+  PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active, scan_exx
   PUBLIC  :: set_exx_fraction, dft_force_hybrid
   PUBLIC  :: set_screening_parameter, get_screening_parameter
   PUBLIC  :: set_gau_parameter, get_gau_parameter
@@ -341,6 +341,7 @@ MODULE funct
   LOGICAL :: ishybrid    = .FALSE.
   LOGICAL :: isnonlocc   = .FALSE.
   LOGICAL :: exx_started = .FALSE.
+  LOGICAL :: scan_exx    = .FALSE.
   LOGICAL :: has_finite_size_correction = .FALSE.
   LOGICAL :: finite_size_cell_volume_set = .FALSE.
   REAL(DP):: finite_size_cell_volume = notset
@@ -627,6 +628,7 @@ CONTAINS
     !     valid.
     IF (imeta==5 .OR. imeta==6) THEN
 #if defined(__LIBXC)
+       IF (imeta==6) scan_exx = .TRUE.
        imeta  = 263 
        imetac = 267
        is_libxc(5:6) = .TRUE.
@@ -757,8 +759,6 @@ CONTAINS
        WRITE (stdout,*) inlc, save_inlc
        CALL errore( 'set_dft_from_name', ' conflicting values for inlc',  1 )
     ENDIF
-    !
-    !CALL init_xc()
     !
     RETURN
     !
