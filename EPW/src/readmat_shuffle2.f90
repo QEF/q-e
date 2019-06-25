@@ -11,7 +11,7 @@
                                 invs, s, irt, rtau)
   !-----------------------------------------------------------------------
   !!
-  !! read dynamical matrix for the q points  
+  !! read dynamical matrix for the q points, either in plain text or xml.
   !! iq_first, iq_first+1, ... iq_first+nq-1
   !!
   !-----------------------------------------------------------------------
@@ -25,7 +25,7 @@
   USE modes,            ONLY : nmodes
   USE control_flags,    ONLY : iverbosity
   USE phcom,            ONLY : nq1, nq2, nq3
-  USE noncollin_module, ONLY : noncolin, nspin_mag
+  USE noncollin_module, ONLY : nspin_mag
   USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
                                read_dyn_mat
   USE io_global,        ONLY : ionode, stdout
@@ -89,7 +89,7 @@
   CHARACTER(len=3)    :: atm, filelab
   CHARACTER(len=80)   :: line
   CHARACTER(len=256)  :: tempfile
-  LOGICAL             :: found, lrigid, lraman, nog
+  LOGICAL             :: found, lrigid, lraman, nog, is_xml_file
   INTEGER             :: ntyp_, nat_, ibrav_, ityp_, ios, iq, jq,  &
                          nt, na, nb, naa, nbb, nu, mu, i, j, ipol,jpol
   INTEGER, parameter  :: ntypx = 10
@@ -117,9 +117,21 @@
   ! 
 !DBSP
   ! SP: If noncolin, the dynamical matrix are printed in xml format by QE
-  IF (noncolin) THEN
-    CALL set_ndnmbr ( 0, iq_irr, 1, nqc_irr, filelab)
-    tempfile = trim(dvscf_dir) // trim(prefix) // '.dyn_q' // filelab
+  ! FG: Not anymore (since v6.4?) xml files are produced only if user asks for
+  !     it. Thus one cannot assume anymore files are xml based on noncolin.
+
+  ! the call to set_ndnmbr is just a trick to get quickly
+  ! a file label by exploiting an existing subroutine
+  ! (if you look at the sub you will find that the original
+  ! purpose was for pools and nodes)
+  !
+  CALL set_ndnmbr ( 0, iq_irr, 1, nqc_irr, filelab)
+  tempfile = trim(dvscf_dir) // trim(prefix) // '.dyn_q' // trim(filelab)
+  ! the following function will check either or not the file is formatted in
+  ! xml. If no file is found, an error is raised
+  call check_is_xml_file(tempfile, is_xml_file)
+
+  IF (is_xml_file) THEN
     CALL read_dyn_mat_param(tempfile,ntyp,nat)
     ALLOCATE (m_loc(3,nat))
     ALLOCATE (dchi_dtau(3,3,3,nat) )
@@ -223,17 +235,8 @@
       !
     ENDDO !  iq = 1, mq
     !  
-  ELSE ! noncolin
+  ELSE ! not a xml file
 !END
-    !
-    !  the call to set_ndnmbr is just a trick to get quickly
-    !  a file label by exploiting an existing subroutine
-    !  (if you look at the sub you will find that the original
-    !  purpose was for pools and nodes)
-    !
-    CALL set_ndnmbr ( 0, iq_irr, 1, nqc_irr, filelab)
-    tempfile = trim(dvscf_dir) // trim(prefix) // '.dyn_q' // filelab
-    !
     open (unit = iudyn, file = tempfile, status = 'old', iostat = ios)
     IF (ios /=0)  call errore ('readmat_shuffle2', 'opening file'//tempfile, abs (ios) )
     !
@@ -638,7 +641,7 @@
   USE phcom,     ONLY : nq1, nq2, nq3
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iunifc
-  USE noncollin_module, ONLY : noncolin, nspin_mag
+  USE noncollin_module, ONLY : nspin_mag
   USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
                                read_dyn_mat, read_ifc_xml, read_ifc_param
   USE io_global, ONLY : ionode_id
@@ -651,7 +654,7 @@
   !
   implicit none
   !
-  LOGICAL             :: lpolar_, has_zstar
+  LOGICAL             :: lpolar_, has_zstar, is_plain_text_file, is_xml_file
   CHARACTER (len=80)  :: line
   CHARACTER(len=256)  :: tempfile
   INTEGER             :: ios, i, j, m1,m2,m3, na,nb, &
@@ -672,10 +675,16 @@
   zstar=0.d0
   epsi=0.d0
 
+  ! generic name for the ifc.q2r file. If it is xml, the file will be named
+  ! ifc.q2r.xml instead
+  tempfile = TRIM(dvscf_dir) // 'ifc.q2r'
+  ! The following function will check if the file exists in xml format
+  CALL check_is_xml_file(tempfile, is_xml_file)
+
   IF (mpime == ionode_id) THEN
-    IF (noncolin) THEN
-      !
-      tempfile = trim(dvscf_dir) // 'ifc.q2r'
+
+    IF (is_xml_file) THEN
+      ! pass the 'tempfile' as the '.xml' extension is added in the next routine
       CALL read_dyn_mat_param(tempfile,ntyp_,nat_)
       ALLOCATE (m_loc(3, nat_))
       ALLOCATE (atm(ntyp_))
@@ -691,7 +700,6 @@
       ! 
     ELSE
       !
-      tempfile = trim(dvscf_dir) // 'ifc.q2r' 
       OPEN(UNIT=iunifc,FILE=tempfile,status='old',iostat=ios)
       IF (ios /= 0) call errore ('read_ifc', 'error opening ifc.q2r',iunifc)
       !
@@ -1417,3 +1425,49 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
 end subroutine sp3
 !
 
+!-------------------------------------------------------------------------------
+SUBROUTINE check_is_xml_file(filename, is_xml_file)
+!-------------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !!
+  !! This subroutine checks if a file is formatted in XML. It does so by
+  !! checking if the file exists and if the file + '.xml' in its name exists.
+  !! If both of them or none of them exists, an error is raised. If only one of
+  !! them exists, it sets the 'is_xml_file' to .true. of .false. depending of
+  !! the file found.
+  !!
+  !-----------------------------------------------------------------------------
+  IMPLICIT NONE
+  !
+  !  input variables
+  !
+  CHARACTER(len=256), INTENT(IN)  :: filename
+  !! The name of the file to check if formatted in XML format
+  !! This string is assumed to be trimmed
+  LOGICAL, INTENT(OUT)            :: is_xml_file
+  !! Is .true. if the file is in xml format. .false. otherwise.
+  !
+  !  local variables
+  !
+  CHARACTER(len=256)  :: filename_xml, errmsg
+  LOGICAL             :: is_plain_text_file
+
+  filename_xml = TRIM(filename) // '.xml'
+  filename_xml = TRIM(filename_xml)
+  INQUIRE(FILE=filename, EXIST=is_plain_text_file)
+  INQUIRE(FILE=filename_xml, EXIST=is_xml_file)
+  ! Tell user if any inconsistencies
+  IF (is_xml_file .AND. is_plain_text_file) THEN
+    ! 2 different type of files exist => warn user
+    errmsg = "Detected both: '" // filename // "' and '" // filename_xml // &
+            &"' which one to choose?"
+    CALL errore('check_is_xml_file', errmsg, 1)
+  ELSE IF (.NOT. is_xml_file .AND. .NOT. is_plain_text_file) THEN
+    errmsg = "Expected a file named either '" // filename //"' or '"&
+            &// filename_xml // "' but none was found."
+    CALL errore('check_is_xml_file', errmsg, 1)
+  ENDIF
+  ! else one of the file in exists
+!------------------------------------------------------------------------------
+END SUBROUTINE check_is_xml_file
+!------------------------------------------------------------------------------
