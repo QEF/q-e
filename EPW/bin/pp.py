@@ -6,7 +6,13 @@
 # 14/03/2018 - Detect if SOC is included in the calculation - Samuel Ponce
 # 05/06/2019 - Removed SOC for xml detection instead - Felix Goudreault
 #
-import numpy as np
+from __future__ import print_function
+try:
+    from builtins import input
+except ImportError:
+    print('Install future. e.g. "pip install --user future"')
+# import numpy as np
+
 import os
 from xml.dom import minidom
 
@@ -53,6 +59,9 @@ def hasXML(prefix):
     # check if the other without .xml extension exists
     # if not raise an error
     fname_no_xml = fname.strip(".xml")
+
+    class FileNotFoundError(Exception):
+        pass
     if not os.path.isfile(fname_no_xml):
         raise FileNotFoundError(
                 "No dyn0 file found cannot tell if xml format was used.")
@@ -98,7 +107,7 @@ else:
 
 os.system('mkdir save 2>/dev/null')
 
-for iqpt in np.arange(1, nqpt+1):
+for iqpt in range(1, nqpt+1):
     label = str(iqpt)
 
     # Case calculation in seq.
