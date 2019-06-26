@@ -681,8 +681,7 @@ CONTAINS
          fkind = xc_f90_info_kind( xc_info )
          CALL xc_f90_func_end( xc_func )
        ENDIF
-       !
-       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+       IF (igcc/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
           CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
                        &been found together with a correlation one', 3 )
        !
@@ -693,6 +692,16 @@ CONTAINS
        IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0) &
           CALL errore( 'set_dft_from_name', 'Two conflicting metaGGA functionals &
                        &have been found', 5 )
+       !
+       fkind = -100
+       IF (is_libxc(5)) THEN
+         CALL xc_f90_func_init( xc_func, xc_info, imeta, 1 )
+         fkind = xc_f90_info_kind( xc_info )
+         CALL xc_f90_func_end( xc_func )
+       ENDIF
+       IF (imetac/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
+                       &been found together with a correlation one', 6 )
 #endif
        !
     ENDIF
