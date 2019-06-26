@@ -88,8 +88,8 @@ CONTAINS
     ELSE IF ( band_structure%nbnd_up_ispresent .AND. band_structure%nbnd_dw_ispresent) THEN
        nbnd = ( band_structure%nbnd_up + band_structure%nbnd_dw )
     ELSE 
-       CALL errore('init_vars_from_schema: check xml file !!', &
-                   'nbnd or nbnd_up+nbnd_dw are missing in band_structure element', 1)
+       CALL errore('qexsd_copy_band_structure', &
+                   'nbnd or nbnd_up+nbnd_dw missing in xml file', 1)
     END IF     
     lsda  =    band_structure%lsda
     IF ( lsda ) THEN
@@ -475,6 +475,8 @@ CONTAINS
          isk, natomwfc, nbnd_up, nbnd_dw, nelec, wk, wg, ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
       !
+      ! IMPORTANT NOTICE: IN LSDA CASE CONVERTS TO "PWSCF" LOGIC for k-points
+      !
       USE qes_types_module, ONLY : band_structure_type
       !
       IMPLICIT NONE
@@ -489,6 +491,14 @@ CONTAINS
       lsda = band_struct_obj%lsda
       nkstot = band_struct_obj%nks 
       IF ( lsda) THEN 
+         ! FIXME: make this consistent with qexsd_copy_dim
+         IF (band_struct_obj%nbnd_ispresent) THEN 
+            nbnd  = band_struct_obj%nbnd / 2
+         ELSE IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent ) THEN 
+            nbnd = (band_struct_obj%nbnd_up + band_struct_obj%nbnd_dw)/2 
+         ELSE 
+            CALL errore ('qexsd_copy_band_structure: ','both nbnd and nbnd_up+nbnd_dw missing', 1)  
+         END IF 
          nkstot = nkstot * 2 
          isk(1:nkstot/2) = 1
          isk(nkstot/2+1:nkstot) = 2 
@@ -497,7 +507,6 @@ CONTAINS
       END IF
       ! 
       nelec = band_struct_obj%nelec
-      nbnd  = band_struct_obj%nbnd 
       natomwfc = band_struct_obj%num_of_atomic_wfc
       IF ( band_struct_obj%fermi_energy_ispresent) THEN 
          ef = band_struct_obj%fermi_energy
@@ -512,21 +521,25 @@ CONTAINS
          ef_up = 0.d0
          ef_dw = 0.d0
       END IF
+      
+      IF ( band_struct_obj%lsda) THEN
+         IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent) THEN
+            nbnd_up = band_struct_obj%nbnd_up
+            nbnd_dw = band_struct_obj%nbnd_dw 
+         ELSE IF ( band_struct_obj%nbnd_up_ispresent ) THEN 
+            nbnd_up = band_struct_obj%nbnd_up
+            nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_up
+         ELSE IF ( band_struct_obj%nbnd_dw_ispresent ) THEN 
+            nbnd_dw = band_struct_obj%nbnd_dw
+            nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_dw
+         ELSE 
+            nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size/2  
+            nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size/2
+         END IF
+      END IF
+      !
       DO ik =1, band_struct_obj%ndim_ks_energies
          IF ( band_struct_obj%lsda) THEN
-            IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent) THEN
-               nbnd_up = band_struct_obj%nbnd_up
-               nbnd_dw = band_struct_obj%nbnd_dw 
-            ELSE IF ( band_struct_obj%nbnd_up_ispresent ) THEN 
-               nbnd_up = band_struct_obj%nbnd_up
-               nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_up
-            ELSE IF ( band_struct_obj%nbnd_dw_ispresent ) THEN 
-               nbnd_dw = band_struct_obj%nbnd_dw
-               nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_dw 
-            ELSE 
-               nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size/2  
-               nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size/2
-            END IF
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
             wk( ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
             et(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_up)
