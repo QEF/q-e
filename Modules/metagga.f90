@@ -716,11 +716,11 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
      !
      IF (SQRT(grhodw2) > small) THEN
         !
-        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup2, 1, &
-                        ecup_0, v1_pbe, v2_tmp )
+        CALL pbec_spin( rhodw, -1.0_DP+small, grhodw2, 1, &
+                        ecdw_0, v1_0v, v2_tmp )
         !
-        v1up_0 = v1_pbe(1)
-        v1dw_0 = v1_pbe(2)
+        v1up_0 = v1_0v(1)
+        v1dw_0 = v1_0v(2)
         !
      ELSE
         ecdw_0 = 0.0_DP

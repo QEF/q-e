@@ -15,7 +15,7 @@ PROGRAM benchmark_libxc
   !! * derivative of LDA pot. (dmxc) ;
   !! * GGA ;
   !! * derivative of GGA pot. (dgcxc, the polarized case is not yet complete) ;
-  !! * metaGGA.
+  !! * metaGGA (some discrepancies with the m06_L functional only for correlation potential).
   !
   !------------------------------------------------------------------------------------!
   !  To be run on a single processor
@@ -47,7 +47,8 @@ PROGRAM benchmark_libxc
   REAL(DP) :: rs(nnr), ec_qe2(nnr), vc_qe2(nnr,2)
   REAL(DP), ALLOCATABLE :: rho_qe(:,:)
   REAL(DP), ALLOCATABLE :: rho_tot(:), zeta(:)
-  REAL(DP), ALLOCATABLE :: grho(:,:,:), grho_ud(:), grho2(:,:), grh2(:)
+  REAL(DP), ALLOCATABLE :: grho(:,:,:), grhos(:,:,:), &
+                           grho_ud(:), grho2(:,:), grh2(:)
   REAL(DP), ALLOCATABLE :: tau_qe(:,:)
   REAL(DP), ALLOCATABLE :: ex_qe(:), ec_qe(:)
   REAL(DP), ALLOCATABLE :: vx_qe(:,:), vc_qe(:,:)
@@ -81,23 +82,27 @@ PROGRAM benchmark_libxc
   !
   ! *******************************************************************************
   ! *-----------------------------------------------------------------------------*
-  ! * libxc funct. indexes: http://bigdft.org/Wiki/index.php?title=XC_codes       *
-  ! *                       (or use function: 'xc_functional_get_number()' )      *
-  ! * qe      "       "   : see comments in Modules/funct.f90                     *
+  ! * To find libxc functional indexes: look for the names at:                    *
+  ! *                                                                             *
+  ! *        https://tddft.org/programs/libxc/functionals/                        *
+  ! *                                                                             *
+  ! * and then use the function: xc_functional_get_number( 'XC_name' ).           *
+  ! * NOTE: the prefix XC_ is necessary.                                          *
+  ! * For q-e indexes see the comments in Modules/funct.f90                       *
   ! *-----------------------------------------------------------------------------*
   ! *                                                                             *
-  ! *  ... some examples:                                                         *
+  ! *  ... a few examples:                                                        *
   ! *                                                                             *
-  ! *                         LDA                                 GGA             *       
-  ! *              |   q-e     |   libxc  |              |   q-e   |    libxc   | *
-  ! *              |___________|__________|              |_________|____________| *
-  ! *  slater (x)  |    1      |     1    |  Becke88 (x) |    1    |     106    | *
-  ! *  pz (c)      |    1      |     9    |  PW86(c)-POL |    1    |     132    | *
-  ! *              |           |          |  PW86(c)-UNP |   21    |      "     | *
-  ! *  wigner (c)  |    5      |     2    |  PBE (c)     |    4    |     130    | *
-  ! *  vwn (c)     |    2      |     7    |  LYP (c)     |    3    |     131    | *
-  ! *  pw (c)      |    4      |    12    |  PW91 (c)    |    2    |     134    | *
-  ! *  ...         |   ...     |    ...   |  ...         |   ...   |     ...    | *
+  ! *                LDA                    GGA                  mGGA             *
+  ! *             |qe |lxc|              |qe |lxc |           |qe |lxc |          *
+  ! *             |___|___|              |___|____|           |___|____|          *
+  ! *  Slater (x) | 1 | 1 |  Becke88 (x) | 1 |106 |  TPSS (x) | 1 |202 |          *
+  ! *  PZ (c)     | 1 | 9 |  PW86(c)-POL | 1 |132 |  TPSS (c) | 1 |231 |          *
+  ! *  Wigner (c) | 5 | 2 |  PW86(c)-UNP |21 | "  |  m06l (x) | 2 |203 |          *
+  ! *  VWN (c)    | 2 | 7 |  PBE (c)     | 4 |130 |  m06l (c) | 2 |233 |          *
+  ! *  PW (c)     | 4 |12 |  LYP (c)     | 3 |131 |           |   |    |          *
+  ! *             |   |   |  PW91 (c)    | 2 |134 |           |   |    |          *
+  ! *  ...        |...|...|  ...         |...|... |  ...      |...|... |          *
   ! *                                                                             *
   ! *******************************************************************************
   !
@@ -108,7 +113,6 @@ PROGRAM benchmark_libxc
   !  - lyp =>    qe:     ec = ec_lyp*rho + ec_glyp  / vc = vc_lyp + v1c_glyp
   !              libxc:  ec = ec_glyp (icorr=131)   / vc = vc_glyp (131)
   !                     ... same for polarized case
-  !
   !
   PRINT *, CHAR(10)//" --- BENCHMARK TEST BETWEEN QE AND LIBXC ---"//CHAR(10)//" "
   !
@@ -289,7 +293,7 @@ PROGRAM benchmark_libxc
   !
   rho_lxc = 0.0_DP
   IF ( GGA .OR. MGGA ) sigma = 0.0_DP
-  lapl_rho = 0.0_DP
+  IF (MGGA) lapl_rho = 0.0_DP
   !
   ! -------- Setting up an arbitrary input for both qe and libxc -----
   !
@@ -303,10 +307,11 @@ PROGRAM benchmark_libxc
         grho(ii,1,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )
         grho(ii,2,1) = ABS( 0.05_DP + 0.7_DP*SIN(DBLE(ii)) )
         grho(ii,3,1) = ABS( 0.05_DP + 0.6_DP*SIN(DBLE(ii)) )
+        !
+        grho2(ii,1) = grho(ii,1,1)**2 + grho(ii,2,1)**2 + grho(ii,3,1)**2
      ENDIF
-     grho2(ii,1) = grho(ii,1,1)**2 + grho(ii,2,1)**2 + grho(ii,3,1)**2
      !
-     IF ( MGGA ) tau_qe(ii,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.5d0
+     IF ( MGGA ) tau_qe(ii,1) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.5_DP
      !
      IF ( POLARIZED ) THEN
         !
@@ -332,7 +337,7 @@ PROGRAM benchmark_libxc
            !
         ENDIF
         !
-        IF ( MGGA ) tau_qe(ii,2) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.2d0
+        IF ( MGGA ) tau_qe(ii,2) = ABS( 0.05_DP + 0.8_DP*SIN(DBLE(ii)) )*0.2_DP
         !
      ENDIF
      !
@@ -592,17 +597,26 @@ PROGRAM benchmark_libxc
      !
      !----- QE ----------
      !
-     !CALL select_mgga_functionals( iexch_qe, icorr_qe ) ! ... icorr_qe not used 
-     !
-     !
      CALL set_dft_from_indices( 0, 0, 0, 0, iexch_qe, 0 )    ! ... EXCHANGE and CORRELATION  
      !
      IF ( .NOT. POLARIZED ) THEN
         CALL tau_xc( nnr, rho_qe(:,1), grho2(:,1), tau_qe(:,1), ex_qe, ec_qe, v1x(:,1), &
                      v2x(:,1), v3x(:,1), v1c(:,1), v2cm(1,:,1), v3c(:,1) )
      ELSE
-        CALL tau_xc_spin( nnr, rho_qe, grho2, tau_qe, ex_qe, ec_qe, v1x, v2x, v3x, v1c, &
+        ALLOCATE( grhos(3,nnr,2) )
+        DO ipol = 1, 3
+           DO ii = 1, nnr
+              grhos(ipol,ii,1) = grho(ii,ipol,1)
+              grhos(ipol,ii,2) = grho(ii,ipol,2)
+           ENDDO
+        ENDDO
+        CALL tau_xc_spin( nnr, rho_qe, grhos, tau_qe, ex_qe, ec_qe, v1x, v2x, v3x, v1c, &
                           v2cm, v3c )
+        DEALLOCATE( grhos )
+     ENDIF
+     IF (iexch_qe == 2) THEN
+        v3x = v3x * 2.0_DP
+        v3c = v3c * 2.0_DP
      ENDIF
      !
   ENDIF
@@ -621,7 +635,7 @@ PROGRAM benchmark_libxc
   !
   IF ( LDA ) THEN
      !
-     DO ii = 1, nnr, nnr-1
+     DO ii = 1, nnr !, nnr-1
         WRITE(*,909) ii, nnr
         IF ( .NOT. POLARIZED ) THEN
            WRITE (*, 401 ) rho_qe(ii,1)
@@ -706,7 +720,6 @@ PROGRAM benchmark_libxc
           WRITE (*,202) ex_lxc(ii), ec_lxc(ii)
           PRINT *, " --- "
           WRITE (*,302) ex_qe(ii)-ex_lxc(ii), ec_qe(ii)-ec_lxc(ii)
-          !WRITE (*,302) ex_qe(ii)/ex_lxc(ii), ec_qe(ii)/ec_lxc(ii)
           !
           IF (.NOT. ENERGY_ONLY) THEN
              !
@@ -859,7 +872,6 @@ PROGRAM benchmark_libxc
         WRITE (*,202) ex_lxc(ii), ec_lxc(ii)
         PRINT *, " --- "
         WRITE (*,302) ex_qe(ii)-ex_lxc(ii), ec_qe(ii)-ec_lxc(ii)
-        !WRITE (*,302) ex_qe(ii)/ex_lxc(ii), ec_qe(ii)/ec_lxc(ii)
         !
         IF (.NOT. ENERGY_ONLY) THEN
            !
@@ -930,6 +942,10 @@ PROGRAM benchmark_libxc
            ELSEIF ( POLARIZED ) THEN
               WRITE (*,102) v2cm(1,ii,1), v2cm(1,ii,2)
               WRITE (*,203) v2c_lxc(1,ii,1), v2c_lxc(1,ii,2)
+              !WRITE (*,102) v2cm(2,ii,1), v2cm(2,ii,2)
+              !WRITE (*,203) v2c_lxc(2,ii,1), v2c_lxc(2,ii,2)
+              !WRITE (*,102) v2cm(3,ii,1), v2cm(3,ii,2)
+              !WRITE (*,203) v2c_lxc(3,ii,1), v2c_lxc(3,ii,2)
               PRINT *, " --- "
               WRITE (*,303) v2cm(1,ii,1)-v2c_lxc(1,ii,1), v2cm(1,ii,2)-v2c_lxc(1,ii,2)
            ENDIF  
@@ -937,7 +953,7 @@ PROGRAM benchmark_libxc
            PRINT *, " "  
            PRINT *, "=== Correlation potential vtau ==="  
            IF ( .NOT. POLARIZED ) THEN  
-              WRITE (*,101) v3c(ii,1)  
+              WRITE (*,101) v3c(ii,1)
               WRITE (*,201) vc_tau(ii)  
               PRINT *, " --- "
               WRITE (*,301) v3c(ii,1)-vc_tau(ii)

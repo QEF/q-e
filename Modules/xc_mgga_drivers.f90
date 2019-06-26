@@ -160,7 +160,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
        CALL tau_xc( length, rho(:,1), grho2(:,1), tau(:,1), ex, ec, v1x(:,1), &
                     v2x(:,1), v3x(:,1), v1c(:,1), v2c(1,:,1), v3c(:,1) )
     ELSEIF (ns == 2) THEN
-       CALL tau_xc_spin( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, &
+       CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                          v2c, v3c )
     ENDIF
     !
@@ -260,7 +260,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
      !
   ELSEIF (ns == 2) THEN
      !
-     CALL tau_xc_spin( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, &
+     CALL tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, &
                        v2c, v3c )
      !
   ENDIF
@@ -361,7 +361,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
      atau = tau(k,1) + tau(k,2)             ! KE-density in Hartree
      grho2(1) = SUM( grho(:,k,1)**2 )
      grho2(2) = SUM( grho(:,k,2)**2 )
-     ggrho2 = grho2(1) + grho2(2)
+     ggrho2 = ( grho2(1) + grho2(2) ) * 4.0_DP
      !
      IF ((rh <= rho_threshold) .OR. (ggrho2 <= grho2_threshold) .OR. (ABS(atau) <= tau_threshold)) CYCLE
      !
@@ -378,7 +378,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
         !
      CASE( 2 )
         !
-        CALL m06lxc_spin( rho(k,1), rho(k,2), grho(:,k,1), grho(:,k,2), tau(k,1), tau(k,2), ex(k), ec(k), &
+        CALL m06lxc_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), tau(k,2), ex(k), ec(k), &
                           v1x(k,1), v1x(k,2), v2x(k,1),   v2x(k,2),   v3x(k,1), v3x(k,2), &
                           v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2), v3c(k,1), v3c(k,2)  )
         !
