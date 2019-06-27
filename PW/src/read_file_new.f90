@@ -105,6 +105,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE force_mod,       ONLY : force
   USE klist,           ONLY : nks, nkstot, nelec, wk
   USE ener,            ONLY : ef, ef_up, ef_dw
+  USE electrons_base,  ONLY : nupdwn 
   USE wvfct,           ONLY : npwx, nbnd, et, wg
   USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
        edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
@@ -138,8 +139,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   USE pw_restart_new,  ONLY : pw_read_schema, &
        readschema_magnetization, &
-       readschema_occupations, readschema_brillouin_zone, &
-       readschema_band_structure
+       readschema_occupations, readschema_brillouin_zone
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
@@ -147,7 +147,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        qexsd_copy_dim, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_algorithmic_info,&
-       qexsd_copy_dft, qexsd_copy_efield
+       qexsd_copy_dft, qexsd_copy_efield, qexsd_copy_band_structure
        
 #if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
@@ -158,7 +158,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IMPLICIT NONE
   LOGICAL, INTENT(OUT) :: wfc_is_collected
   !
-  INTEGER  :: i, is, ik, nbnd_up, nbnd_dw, ierr, dum1,dum2,dum3
+  INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
   LOGICAL  :: magnetic_sym, lvalid_input
   CHARACTER(LEN=20) :: dft_name, vdw_corr
   REAL(dp) :: exx_fraction, screening_parameter
@@ -262,15 +262,19 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      CALL start_exx ()
   END IF
   !! Band structure section
-  !!CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
-  !!     nkstot, isk, natomwfc, nbnd_up, nbnd_dw, nelec, wk, wg, &
-  !!     ef, ef_up, ef_dw, et )
+  CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
+       nkstot, isk, natomwfc, nupdwn(1), nupdwn(2), nelec, wk, wg, &
+       ef, ef_up, ef_dw, et )
+  ! convert to Ry
+  ef = ef*e2
+  ef_up = ef_up*e2
+  ef_dw = ef_dw*e2
+  et(:,:) = et(:,:)*e2
   !!
   CALL readschema_magnetization (  output_obj%band_structure,  &
        output_obj%magnetization )
   CALL readschema_occupations( output_obj%band_structure )
   CALL readschema_brillouin_zone( output_obj%band_structure )
-  CALL readschema_band_structure( output_obj%band_structure )
   !! Symmetry section
   IF ( lvalid_input ) THEN 
      CALL qexsd_copy_symmetry ( output_obj%symmetries, &
