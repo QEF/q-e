@@ -2533,7 +2533,9 @@ SUBROUTINE mp_circular_shift_left_start_i0( sendbuf, recvbuf, itag, gid, request
    IF (ierr/=0) CALL mp_stop( 8103 )
    !
 #else
-   ! do nothing
+
+   recvbuf = sendbuf
+
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_start_i0
@@ -2575,7 +2577,9 @@ SUBROUTINE mp_circular_shift_left_start_i1( sendbuf, recvbuf, itag, gid, request
    IF (ierr/=0) CALL mp_stop( 8103 )
    !
 #else
-   ! do nothing
+
+   recvbuf = sendbuf
+
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_start_i1
@@ -2617,7 +2621,9 @@ SUBROUTINE mp_circular_shift_left_start_i2( sendbuf, recvbuf, itag, gid, request
    IF (ierr/=0) CALL mp_stop( 8103 )
    !
 #else
-   ! do nothing
+
+   recvbuf = sendbuf
+
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_start_i2
@@ -2659,7 +2665,9 @@ SUBROUTINE mp_circular_shift_left_start_r2d( sendbuf, recvbuf, itag, gid, reques
    IF (ierr/=0) CALL mp_stop( 8103 )
    !
 #else
-   ! do nothing
+
+   recvbuf = sendbuf
+
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_start_r2d
@@ -2701,7 +2709,9 @@ SUBROUTINE mp_circular_shift_left_start_c2d( sendbuf, recvbuf, itag, gid, reques
    IF (ierr/=0) CALL mp_stop( 8103 )
    !
 #else
-   ! do nothing
+
+   recvbuf = sendbuf
+
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_start_c2d
