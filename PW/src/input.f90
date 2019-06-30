@@ -1447,13 +1447,12 @@ SUBROUTINE iosys()
   !
   ! ... Read atomic positions and unit cell from data file, if needed,
   ! ... overwriting what has just been read before from input
+  ! ... read_config_from_file returns 0 if structure successfully read
   !
   ierr = 1
   IF ( startingconfig == 'file' .AND. .NOT. lforcet ) &
-     ierr = read_config_from_file(nat, at_old, omega_old, lmovecell, &
-                                       at, bg, omega, tau)
+     ierr = read_config_from_file( lmovecell, at_old, omega_old)
   !
-  ! ... read_config_from_file returns 0 if structure successfully read
   ! ... Atomic positions (tau) must be converted to internal units
   ! ... only if they were read from input, not from file
   !
