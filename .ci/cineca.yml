@@ -1,6 +1,11 @@
-# UtilXlib UnitTesting 
+# ====================
+# UtilXlib UnitTesting
+# ====================
+
 build:cudampiomp:
   tags: [galileo]
+  only:
+    - /utilxlib/i
   script:
     - module load profile/advanced pgi/17.10 cuda/8.0.61
     - ./configure --enable-openmp
@@ -9,6 +14,8 @@ build:cudampiomp:
 
 build:intelmpiomp:
   tags: [galileo]
+  only:
+    - /utilxlib/i
   script:
     - module load profile/advanced intel intelmpi
     - ./configure --enable-openmp
@@ -17,6 +24,8 @@ build:intelmpiomp:
 
 build:cudampi:
   tags: [galileo]
+  only:
+    - /utilxlib/i
   script:
     - module load profile/advanced pgi/17.10 cuda/8.0.61
     - ./configure
@@ -25,6 +34,8 @@ build:cudampi:
 
 build:intelmpi:
   tags: [galileo]
+  only:
+    - /utilxlib/i
   script:
     - module load profile/advanced intel intelmpi
     - ./configure
@@ -103,10 +114,6 @@ build:cudafortran:
     - module purge
     - module load profile/global pgi/17.10 cuda/8.0.61
     - module list
-    #- git checkout develop
-    #- git merge -X ours --no-edit origin/configcuda
-    #- git merge -X theirs --no-edit origin/mpicuda
-    #- git merge -X theirs --no-edit origin/cudadiag
     - ./configure --enable-openmp --with-cuda=$CUDA_HOME
     - make pw cp
     - make clean
