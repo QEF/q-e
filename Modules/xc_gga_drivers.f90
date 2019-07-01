@@ -418,8 +418,8 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   IF (igcx == 20) gau_parameter = get_gau_parameter()
   !
 !$omp parallel if(ntids==1)
-!$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
-!$omp             v2x, v2x_, v2xsr, sc, v1c, v2c, exx_fraction )
+!$omp do private( rho, grho, sgn, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
+!$omp             v2x, v2x_, v2xsr, sc, v1c, v2c )
   DO ir = 1, length  
      !
      rho  = ABS(rho_in(ir))
@@ -760,8 +760,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   IF (igcx == 20 .AND. exx_started) gau_parameter = get_gau_parameter()
   !
 !$omp parallel if(ntids==1)
-!$omp do private( rho, grho2, sx, sxsr, v1x, v1xsr, &
-!$omp             v2x, v2xsr, exx_fraction )
+!$omp do private( rho, grho2, rnull, sx, sxsr, v1x, v1xsr, &
+!$omp             v2x, v2xsr )
   DO ir = 1, length  
      !
      rho(:) = rho_in(ir,:)

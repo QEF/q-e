@@ -19,7 +19,7 @@ MODULE qexsd_copy
   PRIVATE
   SAVE
   !
-  PUBLIC:: qexsd_copy_geninfo, qexsd_copy_parallel_info, qexsd_copy_dim, &
+  PUBLIC:: qexsd_copy_geninfo, qexsd_copy_parallel_info, &
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
@@ -67,37 +67,6 @@ CONTAINS
     nproc_ortho_file = parinfo_obj%ndiag
     !
   END SUBROUTINE qexsd_copy_parallel_info
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE qexsd_copy_dim (atomic_structure, band_structure, &
-         nat, nkstot, nbnd ) 
-      !
-    USE qes_types_module, ONLY : atomic_structure_type, band_structure_type
-    IMPLICIT NONE 
-    !
-    TYPE ( atomic_structure_type ),INTENT(IN)  :: atomic_structure
-    TYPE ( band_structure_type ),INTENT(IN)    :: band_structure 
-    INTEGER, INTENT(OUT) :: nat, nkstot, nbnd
-    !
-    LOGICAL :: lsda
-    !
-    nat = atomic_structure%nat 
-    nkstot =   band_structure%nks  
-    IF (band_structure%nbnd_ispresent) THEN
-       nbnd = band_structure%nbnd
-    ELSE IF ( band_structure%nbnd_up_ispresent .AND. band_structure%nbnd_dw_ispresent) THEN
-       nbnd = ( band_structure%nbnd_up + band_structure%nbnd_dw )
-    ELSE 
-       CALL errore('init_vars_from_schema: check xml file !!', &
-                   'nbnd or nbnd_up+nbnd_dw are missing in band_structure element', 1)
-    END IF     
-    lsda  =    band_structure%lsda
-    IF ( lsda ) THEN
-       nkstot = nkstot * 2 
-       nbnd   = nbnd / 2
-    END IF
-
-  END SUBROUTINE qexsd_copy_dim
   !
   !--------------------------------------------------------------------------
   SUBROUTINE qexsd_copy_atomic_species (atomic_species, nsp, atm, amass, &
@@ -169,8 +138,10 @@ CONTAINS
     INTEGER, INTENT(in) :: nsp 
     CHARACTER(LEN = 3), INTENT(in) :: atm(:)
     !
-    INTEGER, INTENT(out)  :: nat, ibrav, ityp(:)
-    REAL(dp), INTENT(out) :: alat, a1(:), a2(:), a3(:), tau(:,:)
+    INTEGER, INTENT(out)  :: nat, ibrav
+    REAL(dp), INTENT(out) :: alat, a1(:), a2(:), a3(:)
+    INTEGER, INTENT(inout),  ALLOCATABLE :: ityp(:)
+    REAL(dp), INTENT(inout), ALLOCATABLE :: tau(:,:)
     !
     CHARACTER(LEN=3), ALLOCATABLE :: symbols(:)
     INTEGER :: iat, idx, isp
@@ -182,6 +153,8 @@ CONTAINS
     ELSE 
        ibrav = 0
     END IF
+    IF ( .NOT. ALLOCATED(tau) ) ALLOCATE(tau(3,nat))
+    IF ( .NOT. ALLOCATED(ityp)) ALLOCATE(ityp(nat))
     ALLOCATE ( symbols(nat) )
     loop_on_atoms:DO iat = 1, nat
        idx = atomic_structure%atomic_positions%atom(iat)%index
@@ -472,33 +445,68 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_band_structure( band_struct_obj, lsda, nkstot, &
-         isk, natomwfc, nbnd_up, nbnd_dw, nelec, wk, wg, ef, ef_up, ef_dw, et )
+         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, wk, wg, &
+         ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
+      !
+      ! IMPORTANT NOTICE: IN LSDA CASE CONVERTS TO "PWSCF" LOGIC for k-points
       !
       USE qes_types_module, ONLY : band_structure_type
       !
       IMPLICIT NONE
       TYPE ( band_structure_type)         :: band_struct_obj
       LOGICAL, INTENT(out) :: lsda
-      INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd_up, nbnd_dw, isk(:)
-      REAL(dp), INTENT(out):: nelec, wk(:), wg(:,:)
-      REAL(dp), INTENT(out):: ef, ef_up, ef_dw, et(:,:)
+      INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd, nbnd_up, nbnd_dw, &
+              isk(:)
+      REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, wk(:)
+      REAL(dp), INTENT(inout), ALLOCATABLE ::  wg(:,:), et(:,:)
       !
-      INTEGER :: ik, nbnd
+      INTEGER :: ik
       ! 
       lsda = band_struct_obj%lsda
       nkstot = band_struct_obj%nks 
-      IF ( lsda) THEN 
+      nelec = band_struct_obj%nelec
+      natomwfc = band_struct_obj%num_of_atomic_wfc
+      !
+      IF ( lsda) THEN
+         !
+         IF (band_struct_obj%nbnd_ispresent) THEN 
+            nbnd  = band_struct_obj%nbnd / 2
+         ELSE IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent ) THEN 
+            nbnd = (band_struct_obj%nbnd_up + band_struct_obj%nbnd_dw)/2 
+         ELSE 
+            CALL errore ('qexsd_copy_band_structure: ','both nbnd and nbnd_up+nbnd_dw missing', 1)  
+         END IF
+         !
+         IF ( band_struct_obj%nbnd_up_ispresent .AND. &
+              band_struct_obj%nbnd_dw_ispresent ) THEN
+            nbnd_up = band_struct_obj%nbnd_up
+            nbnd_dw = band_struct_obj%nbnd_dw 
+         ELSE IF ( band_struct_obj%nbnd_up_ispresent ) THEN 
+            nbnd_up = band_struct_obj%nbnd_up
+            nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_up
+         ELSE IF ( band_struct_obj%nbnd_dw_ispresent ) THEN 
+            nbnd_dw = band_struct_obj%nbnd_dw
+            nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_dw
+         ELSE 
+            nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size/2  
+            nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size/2
+         END IF
+         !
          nkstot = nkstot * 2 
          isk(1:nkstot/2) = 1
-         isk(nkstot/2+1:nkstot) = 2 
-      ELSE 
+         isk(nkstot/2+1:nkstot) = 2
+      ELSE
+         IF (band_struct_obj%nbnd_ispresent) THEN 
+            nbnd  = band_struct_obj%nbnd
+         ELSE 
+            CALL errore ('qexsd_copy_band_structure: ','nbnd missing', 1)
+         END IF  
+         nbnd_up = nbnd
+         nbnd_dw = nbnd
          isk(1:nkstot)   = 1 
       END IF
       ! 
-      nelec = band_struct_obj%nelec
-      nbnd  = band_struct_obj%nbnd 
-      natomwfc = band_struct_obj%num_of_atomic_wfc
       IF ( band_struct_obj%fermi_energy_ispresent) THEN 
          ef = band_struct_obj%fermi_energy
          ef_up = 0.d0
@@ -511,39 +519,30 @@ CONTAINS
          ef = 0.d0
          ef_up = 0.d0
          ef_dw = 0.d0
-      END IF
+      END IF      
+      !
+      IF ( .NOT. ALLOCATED(et) ) ALLOCATE( et(nbnd,nkstot) )
+      IF ( .NOT. ALLOCATED(wg) ) ALLOCATE( wg(nbnd,nkstot) )
+      !
       DO ik =1, band_struct_obj%ndim_ks_energies
          IF ( band_struct_obj%lsda) THEN
-            IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent) THEN
-               nbnd_up = band_struct_obj%nbnd_up
-               nbnd_dw = band_struct_obj%nbnd_dw 
-            ELSE IF ( band_struct_obj%nbnd_up_ispresent ) THEN 
-               nbnd_up = band_struct_obj%nbnd_up
-               nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_up
-            ELSE IF ( band_struct_obj%nbnd_dw_ispresent ) THEN 
-               nbnd_dw = band_struct_obj%nbnd_dw
-               nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_dw 
-            ELSE 
-               nbnd_up = band_struct_obj%ks_energies(ik)%eigenvalues%size/2  
-               nbnd_dw = band_struct_obj%ks_energies(ik)%eigenvalues%size/2
-            END IF
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
-            wk( ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
+            wk(ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
             et(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_up)
             et(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
                  band_struct_obj%ks_energies(ik)%eigenvalues%vector(nbnd_up+1:nbnd_up+nbnd_dw)
-            wg(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd_up)*wk(ik)
+            wg(1:nbnd_up,ik) = &
+                 band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd_up)*wk(ik)
             wg(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
                  band_struct_obj%ks_energies(ik)%occupations%vector(nbnd_up+1:nbnd_up+nbnd_dw)*wk(ik)
          ELSE 
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
-            nbnd = band_struct_obj%ks_energies(ik)%eigenvalues%size
             et (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd)
             wg (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd)*wk(ik)
-            nbnd_up = nbnd
-            nbnd_dw = nbnd
          END IF
+         !
       END DO
+      !
     END SUBROUTINE qexsd_copy_band_structure
     !
     !-----------------------------------------------------------------------
