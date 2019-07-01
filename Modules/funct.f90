@@ -654,14 +654,14 @@ CONTAINS
        iexch = matching( 1, dftout, nxc,   exc,     is_libxc(1) )
        icorr = matching( 2, dftout, ncc,   corr,    is_libxc(2) )
        igcx  = matching( 3, dftout, ngcx,  gradx,   is_libxc(3) )
-       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )       
+       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )
        imeta = matching( 5, dftout, nmeta, meta,    is_libxc(5) )
        IF ( is_libxc(5) ) THEN
          imetac = matching( 6, dftout, nmeta, meta, is_libxc(6) )
        ELSE
          imetac = 0
        ENDIF
-       inlc  = matching( 7, dftout, ncnl,  nonlocc, is_libxc(7) )       
+       inlc  = matching( 7, dftout, ncnl,  nonlocc, is_libxc(7) )
        !
 #if defined(__LIBXC)
        fkind = -100
@@ -685,10 +685,13 @@ CONTAINS
           CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
                        &been found together with a correlation one', 3 )
        !
-       IF (ANY(is_libxc(1:2)) .AND. ANY(is_libxc(3:4))) &
+       IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) THEN
           CALL errore( 'set_dft_from_name', 'An LDA functional has been found, but &
                        &libxc GGA functionals already include the LDA part)', 4 )
+       ENDIF
        !
+       ! ... at the moment, for q-e functionals, imeta defines both exchange and 
+       !     correlation part.
        IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0) &
           CALL errore( 'set_dft_from_name', 'Two conflicting metaGGA functionals &
                        &have been found', 5 )
@@ -787,7 +790,7 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN):: name(0:n)
     CHARACTER(LEN=*), INTENT(IN):: dft
     LOGICAL, EXTERNAL :: matches
-    INTEGER :: i, ii, j, length
+    INTEGER :: i, k, ii, j, length
     INTEGER :: family, fkind
 #if defined(__LIBXC)
     TYPE(xc_f90_pointer_t) :: xc_func, xc_info
@@ -796,57 +799,62 @@ CONTAINS
     its_libxc = .FALSE.
     matching = notset
     !
-    IF (matching == notset) THEN
-       !
-       length = LEN( dft )
-       !
-       ii = 0
-       !
-       DO i = 1, length
-          ii = ii+1
-          IF (ii == length-1) EXIT
-          !
-          IF (dft(ii:ii+2) .EQ. 'XC_') THEN
-             DO j = 1, length-ii-2
-               IF (dft(ii+2+j:ii+2+j) .EQ. ' ') EXIT
-             ENDDO
-             !
-#if defined(__LIBXC)
-             matching = xc_f90_functional_get_number( dft(ii:ii+1+j) )
-             !
-             CALL xc_f90_func_init( xc_func, xc_info, matching, 1 )
-             family = xc_f90_info_family( xc_info )
-             fkind  = xc_f90_info_kind( xc_info )
-             CALL xc_f90_func_end( xc_func )
-             !
-             IF ( slot_match_libxc( fslot, family, fkind ) ) THEN
-               its_libxc = .TRUE.
-               RETURN
-             ENDIF
-#else
-             CALL errore( 'matching', 'A libxc functional has been found, &
-                                      &but libxc library is not active', 1 )
-#endif
-             ii = ii+2+j
-          ENDIF
-          !
-       ENDDO
-       !
-       matching = notset
-       !
-    ENDIF
+    length = LEN( dft )
     !
-    DO i = n, 0, -1
-       IF ( matches(name(i), TRIM(dft)) ) THEN
-          IF ( matching == notset ) THEN
-             ! write(*, '("matches",i2,2X,A,2X,A)') i, name(i), trim(dft)
-             matching = i
-          ELSE
-             WRITE(*, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
-                                     matching, TRIM(name(matching))
-             CALL errore( 'set_dft', 'two conflicting matching values', 2 )
-          ENDIF
+    ii = 0
+    !
+    DO i = 1, length
+       ii = ii+1
+       IF (ii == length-1) EXIT
+       !
+       IF ( ii==1 .OR. (ii>1 .AND. dft(ii-1:ii-1).EQ.' ') ) THEN
+         DO j = 1, length-ii
+            IF (dft(ii+j:ii+j) .EQ. ' ') EXIT
+         ENDDO
        ENDIF
+       !
+       IF (dft(ii:ii+2) .EQ. 'XC_') THEN
+          !
+#if defined(__LIBXC)
+          matching = xc_f90_functional_get_number( dft(ii:ii+j-1) )
+          IF (matching == -1) CALL errore( 'matching', 'Unrecognized libxc functional', 1 )
+          !
+          CALL xc_f90_func_init( xc_func, xc_info, matching, 1 )
+          family = xc_f90_info_family( xc_info )
+          fkind  = xc_f90_info_kind( xc_info )
+          CALL xc_f90_func_end( xc_func )
+          !
+          IF ( slot_match_libxc( fslot, family, fkind ) ) THEN
+             its_libxc = .TRUE.
+             RETURN
+          ELSE
+             matching = notset
+          ENDIF
+#else
+          CALL errore( 'matching', 'A libxc functional has been found, &
+                                   &but libxc library is not active', 2 )
+#endif
+          !
+       ELSE
+          !
+          DO k = n, 0, -1
+             IF ( matches(name(k), dft(ii:ii+j-1)) ) THEN
+                IF ( matching == notset ) THEN
+                   ! write(*, '("matches",i2,2X,A,2X,A)') k, name(k), trim(dft)
+                   matching = k
+                ELSE
+                   WRITE(*, '(2(2X,i2,2X,A))') k, TRIM(name(k)), &
+                                               matching, TRIM(name(matching))
+                   CALL errore( 'set_dft', 'two conflicting matching values', 3 )
+                ENDIF
+             ENDIF
+          ENDDO
+          IF (matching /= notset) RETURN
+          !
+       ENDIF
+       !
+       ii = ii+j
+       !
     ENDDO
     !
     IF (matching == notset) matching = 0
@@ -868,24 +876,24 @@ CONTAINS
     !
     SELECT CASE( fslot )
     CASE( 1 )
-       IF (family==XC_FAMILY_LDA .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_LDA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_LDA      .AND. fkind==XC_EXCHANGE)             RETURN
+       IF (family==XC_FAMILY_LDA      .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
     CASE( 2 )
-       IF (family==XC_FAMILY_LDA .AND. fkind==XC_CORRELATION) RETURN
+       IF (family==XC_FAMILY_LDA      .AND. fkind==XC_CORRELATION)          RETURN
     CASE( 3 )
-       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_GGA      .AND. fkind==XC_EXCHANGE)             RETURN
+       IF (family==XC_FAMILY_GGA      .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_HYB_GGA  .AND. fkind==XC_EXCHANGE)             RETURN
+       IF (family==XC_FAMILY_HYB_GGA  .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
     CASE( 4 )
-       IF (family==XC_FAMILY_GGA .AND. fkind==XC_CORRELATION) RETURN
+       IF (family==XC_FAMILY_GGA      .AND. fkind==XC_CORRELATION)          RETURN
     CASE( 5 )
-       IF (family==XC_FAMILY_MGGA .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_MGGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-       IF (family==XC_FAMILY_HYB_MGGA .AND. fkind==XC_EXCHANGE) RETURN
+       IF (family==XC_FAMILY_MGGA     .AND. fkind==XC_EXCHANGE)             RETURN
+       IF (family==XC_FAMILY_MGGA     .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_HYB_MGGA .AND. fkind==XC_EXCHANGE)             RETURN
        IF (family==XC_FAMILY_HYB_MGGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
     CASE( 6 )
-       IF (family==XC_FAMILY_MGGA .AND. fkind==XC_CORRELATION) RETURN
+       IF (family==XC_FAMILY_MGGA     .AND. fkind==XC_CORRELATION)          RETURN
     END SELECT
 #endif
     !
@@ -1415,8 +1423,8 @@ CONTAINS
 !-----------------------------------------------------------------------
 SUBROUTINE write_dft_name
 !-----------------------------------------------------------------------
-   WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
-        &  " (",I2,3I3,2I2,")")') TRIM( dft ), iexch,icorr,igcx,igcc,inlc,imeta
+   WRITE( stdout, '(5X,"Exchange-correlation= ",A)') TRIM( dft )
+   WRITE( stdout, '(27X,"(",I4,3I4,3I4,")")' ) iexch, icorr, igcx, igcc, inlc, imeta, imetac
    IF ( get_exx_fraction() > 0.0_dp ) WRITE( stdout, &
         '(5X,"EXX-fraction              =",F12.2)') get_exx_fraction()
    RETURN
