@@ -105,7 +105,6 @@ SUBROUTINE init_run()
      CALL paw_init_onecenter()
   ENDIF
   CALL allocate_locpot()
-  CALL allocate_wfc()
   CALL allocate_bp_efield()
   CALL bp_global_map()
   !
@@ -118,6 +117,10 @@ SUBROUTINE init_run()
   !
   wg(:,:) = 0.D0
   CALL using_wg(2)
+#if defined(__CUDA)
+  ! Sync here. Shouldn't be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
   !
   btype(:,:) = 1
   !
@@ -126,6 +129,7 @@ SUBROUTINE init_run()
      CALL set_h_ainv()
   END IF
   !
+  CALL allocate_wfc_k()
   CALL openfil()
   !
   CALL hinit0()

@@ -420,7 +420,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! compute the derivative of xc-potential w.r.t local density.
    ! some routine in PH and flibs will be called
    !
-   use funct,  only : dft_is_gradient, init_xc
+   use funct,  only : dft_is_gradient
    !
    implicit none
    !
@@ -439,8 +439,6 @@ subroutine dvxc_dn(mesh, rho, dvxc)
       call errore ('dvxc_dn', 'gradient correction to dvxc not yet implemented', 1)
    !
    ! LDA only
-   !
-   CALL init_xc( 'LDA' )
    !
    CALL dmxc_lda( mesh, rho, dvxc )   
    !

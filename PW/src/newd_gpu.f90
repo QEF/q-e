@@ -10,11 +10,11 @@ MODULE dfunct_gpum
 
 CONTAINS
 !---------------------------------------
-
+!
 SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   !
-  !   This routine computes the integral of the perturbed potential with
-  !   the Q function
+  !! This routine computes the integral of the perturbed potential with
+  !! the Q function
   !
 #if defined(__CUDA)
   USE cudafor

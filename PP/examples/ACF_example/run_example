@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# set the needed environment variables
+. ../../../environment_variables
+
+ PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x    $PARA_POSTFIX"
+ACF_COMMAND="$PARA_PREFIX $BIN_DIR/ppacf.x $PARA_POSTFIX"
+
+for dir in pbe vdw-df-cx; do
+    mkdir results_$dir
+    cd results_$dir
+    $PW_COMMAND  -i ../reference_$dir/atoms.in > atoms.out
+    $ACF_COMMAND -i ../reference_$dir/ppacf_scale.in > ppacf_scale.out
+    $ACF_COMMAND -i ../reference_$dir/ppacf_plot.in  > ppacf_plot.out
+    $ACF_COMMAND -i ../reference_$dir/ppacf_fock.in  > ppacf_fock.out
+    cd ..
+done

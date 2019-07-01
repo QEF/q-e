@@ -421,7 +421,6 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE funct,     ONLY : init_xc
   USE cgcom
   !
   IMPLICIT NONE
@@ -434,29 +433,14 @@ SUBROUTINE cg_neweps
   !
   !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  CALL init_xc( 'LDA' )
-  !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
   !
-  sign_r = 1.0_DP
-  DO i = 1, dfftp%nnr
-     IF ( rhotot(i) < -1.d-30 ) THEN
-        sign_r(i) = -1.0_DP
-        rhotot(i) = -rhotot(i)
-     ELSEIF ( rhotot(i)<1.d-30 .AND. rhotot(i)>-1.d-30 ) THEN
-        sign_r(i) = 0.0_DP
-        rhotot(i) = 0.5_DP
-     ENDIF
-  ENDDO
-  !
   CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
-  !
-  dmuxc = dmuxc * sign_r
   !
   !
   !  re-initialize data needed for gradient corrections
   !
-  CALL cg_setupdgc
+  CALL setup_dgc( )
   !
   !   calculate linear response to macroscopic fields
   !

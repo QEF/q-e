@@ -28,7 +28,6 @@ MODULE qexsd_module
   !
   USE constants,        ONLY : e2
   USE qes_types_module
-  !USE qes_libs_module
   USE qes_write_module, ONLY : qes_write
   USE qes_reset_module, ONLY:  qes_reset 
   USE qes_init_module, ONLY:  qes_init 

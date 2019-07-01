@@ -307,7 +307,7 @@ install :
 #########################################################
 # Run test-suite for numerical regression testing
 # NB: it is assumed that reference outputs have been 
-#     already computed once (usualy during release)
+#     already computed once (usually during release)
 #########################################################
 
 test-suite: pw cp 

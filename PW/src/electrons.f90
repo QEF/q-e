@@ -407,7 +407,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE io_rho_xml,           ONLY : write_scf
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : intra_bgrp_comm
-  USE mp_pools,             ONLY : root_pool, my_pool_id, inter_pool_comm
+  USE mp_pools,             ONLY : root_pool, me_pool, my_pool_id, &
+                                   inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   USE london_module,        ONLY : energy_london
@@ -669,16 +670,27 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         ! ... mix_rho mixes several quantities: rho in g-space, tauk (for
         ! ... meta-gga), ns and ns_nc (for lda+u) and becsum (for paw)
-        ! ... Results are broadcast from pool 0 to others to prevent trouble
-        ! ... on machines unable to yield the same results from the same 
-        ! ... calculation on same data, performed on different procs
-        ! ... The mixing should be done on pool 0 only as well, but inside
-        ! ... mix_rho there is a call to rho_ddot that in the PAW case 
-        ! ... contains a hidden parallelization level on the entire image
+        ! ... The mixing could in principle be done on pool 0 only, but
+        ! ... mix_rho contains a call to rho_ddot that in the PAW case
+        ! ... is parallelized on the entire image
         !
         ! IF ( my_pool_id == root_pool ) 
         CALL mix_rho ( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, &
                        iunmix, conv_elec )
+        !
+        ! ... Results are broadcast from pool 0 to others to prevent trouble
+        ! ... on machines unable to yield the same results for the same 
+        ! ... calculations on the same data, performed on different procs
+        !
+        IF ( lda_plus_u )  THEN
+           ! ... For LDA+U, ns and ns_nc are also broadcast inside each pool
+           ! ... to ensure consistency on all processors of all pools
+           IF (noncolin) THEN
+              CALL mp_bcast( rhoin%ns_nc, my_pool_id, intra_pool_comm)
+           ELSE
+              CALL mp_bcast( rhoin%ns, my_pool_id, intra_pool_comm)
+           ENDIF
+        ENDIF
         CALL bcast_scf_type ( rhoin, root_pool, inter_pool_comm )
         CALL mp_bcast ( dr2, root_pool, inter_pool_comm )
         CALL mp_bcast ( conv_elec, root_pool, inter_pool_comm )
@@ -688,8 +700,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
         ! ... (tr2_min), rhoin and rho are unchanged: rhoin contains the input
-        ! ...  density and rho contains the output density
-        ! ... In the other cases rhoin contains the mixed charge density 
+        ! ... density and rho contains the output density.
+        ! ... In all other cases, rhoin contains the mixed charge density 
         ! ... (the new input density) while rho is unchanged
         !
         IF ( first .and. nat > 0) THEN
@@ -802,8 +814,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
-!  these values are assigned to global variables  because these information are needed for XML  printout 
-!  P.D. 
+ 
      IF ( conv_elec ) THEN 
            scf_error = dr2
            n_scf_steps = iter
@@ -925,6 +936,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
 #endif
      !
   END DO
+  n_scf_steps = iter
+  scf_error = dr2
   !
   WRITE( stdout, 9101 )
   WRITE( stdout, 9120 ) iter

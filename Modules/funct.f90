@@ -8,9 +8,9 @@
 !-------------------------------------------------------------------
 MODULE funct
   !-------------------------------------------------------------------
-  !! This module contains data defining the DFT FUNCTIONal in use
-  !! and a number of FUNCTIONs and subroutines to manage them.  
-  !! Data are PRIVATE and are accessed and set only by FUNCTION calls.
+  !! This module contains data defining the DFT functional in use
+  !! and a number of functions and subroutines to manage them.  
+  !! Data are PRIVATE and are accessed and set only by function calls.
   !
   !   setting routines:  set_dft_from_name (previously which_dft)
   !                      set_dft_from_indices
@@ -18,14 +18,14 @@ MODULE funct
   !                      start_exx
   !                      stop_exx
   !                      set_finite_size_volume
-  !   retrieve FUNCTIONs: get_dft_name, get_dft_short, get_dft_long
+  !   retrieve functions: get_dft_name, get_dft_short, get_dft_long
   !                      get_iexch
   !                      get_icorr
   !                      get_igcx
   !                      get_igcc
   !                      get_exx_fraction
   !                      write_dft_name
-  !  logical FUNCTIONs:  dft_is_gradient
+  !  logical functions:  dft_is_gradient
   !                      dft_is_meta
   !                      dft_is_hybrid
   !                      dft_is_nonlocc
@@ -35,13 +35,17 @@ MODULE funct
   !
   USE io_global,   ONLY: stdout
   USE kinds,       ONLY: DP
+#if defined(__LIBXC)
+  USE xc_f90_types_m
+  USE xc_f90_lib_m
+#endif
   !
   IMPLICIT NONE
   !
   PRIVATE
   SAVE
   !
-  ! subroutines/FUNCTIONs managing dft name and indices
+  ! subroutines/functions managing dft name and indices
   PUBLIC  :: set_dft_from_indices, set_dft_from_name
   PUBLIC  :: enforce_input_dft, write_dft_name
   PUBLIC  :: get_dft_name, get_dft_short, get_dft_long,&
@@ -50,27 +54,26 @@ MODULE funct
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
   PUBLIC  :: set_auxiliary_flags
   !
-  ! additional subroutines/FUNCTIONs for hybrid FUNCTIONals
+  ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
   PUBLIC  :: set_exx_fraction, dft_force_hybrid
   PUBLIC  :: set_screening_parameter, get_screening_parameter
   PUBLIC  :: set_gau_parameter, get_gau_parameter
   !
-  ! additional subroutines/FUNCTIONs for finite size corrections
+  ! additional subroutines/functions for finite size corrections
   PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
   ! rpa specific
   PUBLIC  :: init_dft_exxrpa, enforce_dft_exxrpa
   !
   ! driver subroutines computing XC
-  PUBLIC  :: init_xc !init_lda_xc, init_gga_xc
+  PUBLIC  :: init_xc, is_libxc
   PUBLIC  :: tau_xc , tau_xc_spin
   PUBLIC  :: tau_xc_array, tau_xc_array_spin
   PUBLIC  :: nlc
   !
-  ! PRIVATE variables defining the DFT FUNCTIONal
+  ! PRIVATE variables defining the DFT functional
   !
   PRIVATE :: dft, iexch, icorr, igcx, igcc, imeta, inlc
-  PRIVATE :: is_libxc
   PRIVATE :: discard_input_dft
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
@@ -80,7 +83,7 @@ MODULE funct
   CHARACTER(LEN=25) :: dft = 'not set'
   !
   ! ------------------------------------------------------------------------
-  ! "dft" is the exchange-correlation FUNCTIONal label, as set by the user,
+  ! "dft" is the exchange-correlation functional label, as set by the user,
   ! using either set_dft_from_name or set_dft_from_indices. It can contain
   ! either the short names or a series of the keywords listed below.
   ! All operations on names are case-insensitive.
@@ -108,12 +111,12 @@ MODULE funct
   !              "tb09"  = "sla+pw+tb09+tb09"  = TB09 Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
   !              "b86bx" = "pb0x+pw+b86x+pbc"  = B86bPBE hybrid
-  !              "bhahlyp" = "pb0x+pw+b88x+blyp"  = Becke half-and-half LYP
+  !              "bhahlyp"="pb0x+pw+b88x+blyp" = Becke half-and-half LYP
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof (HSE 06, see note below)
-  !              "b3lyp" = "b3lp+b3lp+b3lp+b3lp"= B3LYP
-  !              "b3lypv1r"    = "b3lp+b3lpv1r+b3lp+b3lp"= B3LYP-VWN1-RPA
-  !              "x3lyp" = "x3lp+x3lp+x3lp+x3lp"= X3LYP
-  !              "vwn-rpa"     = "sla+vwn-rpa" = VWN LDA using vwn1-rpa parametriz
+  !              "b3lyp"                        = B3LYP
+  !              "b3lyp-v1r"                    = B3LYP-VWN1-RPA
+  !              "x3lyp"                        = X3LYP
+  !              "vwn-rpa" = VWN LDA using vwn1-rpa parametrization
   !              "gaupbe"= "sla+pw+gaup+pbc"   = Gau-PBE (also "gaup")
   !              "vdw-df"       ="sla+pw+rpb +vdw1"   = vdW-DF1
   !              "vdw-df2"      ="sla+pw+rw86+vdw2"   = vdW-DF2
@@ -170,7 +173,7 @@ MODULE funct
   !              "pbx"    Perdew-Burke-Ernzenhof exch    igcx =3
   !              "rpb"    revised PBE by Zhang-Yang      igcx =4
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
-  !              "optx"   Handy's exchange FUNCTIONal    igcx =6
+  !              "optx"   Handy's exchange functional    igcx =6
   !              "pb0x"   PBE0 (PBE exchange*0.75)       igcx =8
   !              "b3lp"   B3LYP (Becke88*0.72)           igcx =9
   !              "psx"    PBEsol exchange                igcx =10
@@ -219,7 +222,7 @@ MODULE funct
   !              "q2dc"   Q2D correlation grad corr      igcc =12
   !              "x3lp"   X3LYP (Lee-Yang-Parr*0.871)    igcc =13
   !
-  ! Meta-GGA FUNCTIONals
+  ! Meta-GGA functionals
   !              "tpss"   TPSS Meta-GGA                  imeta=1
   !              "m6lx"   M06L Meta-GGA                  imeta=2
   !              "tb09"   TB09 Meta-GGA                  imeta=3
@@ -227,7 +230,7 @@ MODULE funct
   !              "scan"   SCAN Meta-GGA                  imeta=5
   !              "sca0"   SCAN0  Meta-GGA                imeta=6
   !
-  ! Van der Waals FUNCTIONals (nonlocal term only)
+  ! Van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
   !              "vdw1"   vdW-DF1                        inlc =1
   !              "vdw2"   vdW-DF2                        inlc =2
@@ -299,7 +302,7 @@ MODULE funct
   !              ev93     Engel-Vosko, Phys. Rev. B 47, 13164 (1993)
   !
   ! NOTE ABOUT HSE: there are two slight deviations with respect to the HSE06
-  ! FUNCTIONal as it is in Gaussian code (that is considered as the reference
+  ! functional as it is in Gaussian code (that is considered as the reference
   ! in the chemistry community):
   ! - The range separation in Gaussian is precisely 0.11 bohr^-1,
   !   instead of 0.106 bohr^-1 in this implementation
@@ -388,6 +391,10 @@ CONTAINS
     LOGICAL :: dft_defined = .FALSE.
     CHARACTER(LEN=1), EXTERNAL :: capital
     INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, save_inlc
+#if defined(__LIBXC)
+    INTEGER :: fkind
+    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+#endif
     !
     ! Exit if set to discard further input dft
     !
@@ -596,13 +603,13 @@ CONTAINS
        CALL errore( 'set_dft_from_name', 'obsolete XC label, use VDW-DF-OB86', 1 )
     ! Special case vdW-DF-X
     CASE( 'VDW-DF-X' )
-       CALL errore( 'set_dft_from_name', 'FUNCTIONal not yet implemented', 1 )
+       CALL errore( 'set_dft_from_name', 'functional not yet implemented', 1 )
     ! Special case vdW-DF-Y
     CASE( 'VDW-DF-Y' )
-       CALL errore( 'set_dft_from_name', 'FUNCTIONal not yet implemented', 1 )
+       CALL errore( 'set_dft_from_name', 'functional not yet implemented', 1 )
     ! Special case vdW-DF-Z
     CASE( 'VDW-DF-Z' )
-       CALL errore( 'set_dft_from_name', 'FUNCTIONal not yet implemented', 1 )
+       CALL errore( 'set_dft_from_name', 'functional not yet implemented', 1 )
     ! Case for old RRKJ format, containing indices instead of label
     CASE DEFAULT
        IF ('INDEX:' ==  dftout(1:6)) THEN
@@ -619,14 +626,43 @@ CONTAINS
     !----------------------------------------------------------------
     !
     IF (.NOT. dft_defined) THEN
+       !
        iexch = matching( 1, dftout, nxc,   exc,     is_libxc(1) )
        icorr = matching( 2, dftout, ncc,   corr,    is_libxc(2) )
        igcx  = matching( 3, dftout, ngcx,  gradx,   is_libxc(3) )
-       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )
+       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )       
        imeta = matching( 5, dftout, nmeta, meta,    is_libxc(5) )
-       inlc  = matching( 6, dftout, ncnl,  nonlocc, is_libxc(6) )
+       inlc  = matching( 6, dftout, ncnl,  nonlocc, is_libxc(6) )       
+       !
+#if defined(__LIBXC)
+       fkind = -100
+       IF (is_libxc(1)) THEN
+         CALL xc_f90_func_init( xc_func, xc_info, iexch, 1 )
+         fkind = xc_f90_info_kind( xc_info )
+         CALL xc_f90_func_end( xc_func )
+       ENDIF
+       !
+       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
+                       &been found together with a correlation one', 2 )
+       !
+       fkind = -100
+       IF (is_libxc(3)) THEN
+         CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )
+         fkind = xc_f90_info_kind( xc_info )
+         CALL xc_f90_func_end( xc_func )
+       ENDIF
+       !
+       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
+          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
+                       &been found together with a correlation one', 3 )
+       !
+       IF (ANY(is_libxc(1:2)) .AND. ANY(is_libxc(3:4))) &
+          CALL errore( 'set_dft_from_name', 'An LDA functional has been found, but &
+                       &libxc GGA functionals already include the LDA part)', 4 )
+#endif
+       !
     ENDIF
-    !
     !
     !----------------------------------------------------------------
     ! Last check
@@ -670,22 +706,24 @@ CONTAINS
        WRITE(stdout,*) icorr, save_icorr
        CALL errore( 'set_dft_from_name', ' conflicting values for icorr', 1 )
     ENDIF
-    IF (save_igcx /= notset .AND. save_igcx /= igcx) THEN
+    IF (save_igcx /= notset  .AND. save_igcx /= igcx)   THEN
        WRITE(stdout,*) igcx, save_igcx
-       CALL errore( 'set_dft_from_name', ' conflicting values for igcx', 1 )
+       CALL errore( 'set_dft_from_name', ' conflicting values for igcx',  1 )
     ENDIF
-    IF (save_igcc /= notset .AND. save_igcc /= igcc) THEN
+    IF (save_igcc /= notset  .AND. save_igcc /= igcc)   THEN
        WRITE (stdout,*) igcc, save_igcc
-       CALL errore( 'set_dft_from_name', ' conflicting values for igcc', 1 )
+       CALL errore( 'set_dft_from_name', ' conflicting values for igcc',  1 )
     ENDIF
-    IF (save_meta /= notset .AND. save_meta /= imeta) THEN
+    IF (save_meta /= notset  .AND. save_meta /= imeta)  THEN
        WRITE (stdout,*) inlc, save_meta
        CALL errore( 'set_dft_from_name', ' conflicting values for imeta', 1 )
     ENDIF
-    IF (save_inlc /= notset .AND. save_inlc /= inlc) THEN
+    IF (save_inlc /= notset  .AND. save_inlc /= inlc)   THEN
        WRITE (stdout,*) inlc, save_inlc
-       CALL errore( 'set_dft_from_name', ' conflicting values for inlc', 1 )
+       CALL errore( 'set_dft_from_name', ' conflicting values for inlc',  1 )
     ENDIF
+    !
+    CALL init_xc( 'ALL' )
     !
     RETURN
     !
@@ -695,11 +733,6 @@ CONTAINS
   !-----------------------------------------------------------------
   FUNCTION matching( fslot, dft, n, name, its_libxc )
     !------------------------------------------------------------
-    !
-#if defined(__LIBXC)
-    USE xc_f90_types_m
-    USE xc_f90_lib_m
-#endif
     !
     IMPLICIT NONE
     !
@@ -727,15 +760,15 @@ CONTAINS
        !
        DO i = 1, length
           ii = ii+1
-          IF (ii == length) EXIT
+          IF (ii == length-1) EXIT
           !
           IF (dft(ii:ii+2) .EQ. 'XC_') THEN
-             DO j = 1, length-ii
+             DO j = 1, length-ii-2
                IF (dft(ii+2+j:ii+2+j) .EQ. ' ') EXIT
              ENDDO
              !
 #if defined(__LIBXC)
-             matching = xc_f90_FUNCTIONal_get_number( dft(ii:ii+1+j) )
+             matching = xc_f90_functional_get_number( dft(ii:ii+1+j) )
              !
              CALL xc_f90_func_init( xc_func, xc_info, matching, 1 )
              family = xc_f90_info_family( xc_info )
@@ -747,7 +780,7 @@ CONTAINS
                RETURN
              ENDIF
 #else
-             CALL errore( 'matching', 'A libxc FUNCTIONal has been found, &
+             CALL errore( 'matching', 'A libxc functional has been found, &
                                       &but libxc library is not active', 1 )
 #endif
              ii = ii+2+j
@@ -781,11 +814,6 @@ CONTAINS
   FUNCTION slot_match_libxc( fslot, family, fkind )
     !-------------------------------------------------------------------------
     !
-#if defined(__LIBXC)
-    USE xc_f90_types_m
-    USE xc_f90_lib_m
-#endif
-    !
     IMPLICIT NONE
     ! 
     LOGICAL :: slot_match_libxc
@@ -801,8 +829,10 @@ CONTAINS
     CASE( 2 )
        IF (family==XC_FAMILY_LDA .AND. fkind==XC_CORRELATION) RETURN
     CASE( 3 )
-       IF (family==XC_FAMILY_GGA .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_GGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE) RETURN
+       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
+       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE) RETURN
+       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
     CASE( 4 )
        IF (family==XC_FAMILY_GGA .AND. fkind==XC_CORRELATION) RETURN
     END SELECT
@@ -818,7 +848,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE set_auxiliary_flags
     !-----------------------------------------------------------------------
-    !! Set logical flags describing the complexity of the xc FUNCTIONal
+    !! Set logical flags describing the complexity of the xc functional
     !! define the fraction of exact exchange used by hybrid fuctionals.
     !
     isnonlocc = (inlc > 0)
@@ -885,8 +915,8 @@ CONTAINS
   SUBROUTINE enforce_input_dft( dft_, nomsg )
     !---------------------------------------------------------------------
     !! Translates a string containing the exchange-correlation name
-    !! into internal indices and force any subsequent CALL to set_dft_from_name
-    !! to RETURN without changing them.
+    !! into internal indices and force any subsequent call to 
+    !! \(\textrm{set_dft_from_name}\) to return without changing them.
     !
     IMPLICIT NONE
     !
@@ -899,7 +929,7 @@ CONTAINS
     !
     IF ( PRESENT(nomsg) ) RETURN
     !
-    WRITE(stdout,'(/,5x,a)') "IMPORTANT: XC FUNCTIONal enforced from input :"
+    WRITE(stdout,'(/,5x,a)') "IMPORTANT: XC functional enforced from input :"
     CALL write_dft_name
     WRITE(stdout,'(5x,a)') "Any further DFT definition will be discarded"
     WRITE(stdout,'(5x,a/)') "Please, verify this is what you really want"
@@ -922,7 +952,7 @@ CONTAINS
     exx_fraction = 1.0_DP
     ishybrid = ( exx_fraction /= 0.0_DP )
     !
-    WRITE(stdout,'(/,5x,a)') "XC FUNCTIONal enforced to be EXXRPA"
+    WRITE(stdout,'(/,5x,a)') "XC functional enforced to be EXXRPA"
     CALL write_dft_name
     WRITE(stdout,'(5x,a)') "!!! Any further DFT definition will be discarded"
     WRITE(stdout,'(5x,a/)') "!!! Please, verify this is what you really want !"
@@ -942,7 +972,7 @@ CONTAINS
     ishybrid = ( exx_fraction /= 0.0_DP )
     !
     WRITE(stdout,'(/,5x,a)') "Only exx_fraction is set to 1.d0"
-    WRITE(stdout,'(5x,a)') "XC FUNCTIONal still not changed"
+    WRITE(stdout,'(5x,a)') "XC functional still not changed"
     !
     CALL write_dft_name
     !
@@ -956,12 +986,14 @@ CONTAINS
      IF (.NOT. ishybrid) &
         CALL errore( 'start_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .TRUE.
+     CALL init_xc( 'ALL' )
   END SUBROUTINE start_exx
   !-----------------------------------------------------------------------
   SUBROUTINE stop_exx
      IF (.NOT. ishybrid) &
         CALL errore( 'stop_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .FALSE.
+     CALL init_xc( 'ALL' )
   END SUBROUTINE stop_exx
   !-----------------------------------------------------------------------
   SUBROUTINE dft_force_hybrid( request )
@@ -1065,7 +1097,18 @@ CONTAINS
   END FUNCTION dft_is_nonlocc
   !-----------------------------------------------------------------------
   FUNCTION get_exx_fraction()
-     REAL(DP):: get_exx_fraction
+     REAL(DP) :: get_exx_fraction
+#if defined(__LIBXC)
+     INTEGER :: family
+     TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+     !
+     IF ( is_libxc(3) ) THEN
+        CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )  
+        family = xc_f90_info_family( xc_info )
+        IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_fraction )
+        CALL xc_f90_func_end( xc_func )
+     ENDIF
+#endif
      get_exx_fraction = exx_fraction
      RETURN
   END FUNCTION get_exx_fraction
@@ -1344,13 +1387,13 @@ SUBROUTINE init_xc( family )
      iexch_l = get_iexch()
      icorr_l = get_icorr()
      !
-     IF (iexch_l==-1 .OR. icorr_l==-1) CALL errore( 'init_xc', 'LDA FUNCTIONal &
+     IF (iexch_l==-1 .OR. icorr_l==-1) CALL errore( 'init_xc', 'LDA functional &
                                                    & indexes not well defined', 1 )
      !
      ! hybrid exchange vars
-     exx_started_l  = exx_is_active()
+     exx_started_l  = exx_started !is_active()
      exx_fraction_l = 0._DP
-     IF ( exx_started ) exx_fraction_l = get_exx_fraction()
+     IF ( exx_started_l ) exx_fraction_l = get_exx_fraction()
      !
      ! finite size correction vars
      CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
@@ -1365,13 +1408,13 @@ SUBROUTINE init_xc( family )
      igcx_l = get_igcx()
      igcc_l = get_igcc()
      !
-     IF (igcx_l==-1 .OR. igcc_l==-1)  CALL errore( 'init_xc', 'GGA FUNCTIONal &
+     IF (igcx_l==-1 .OR. igcc_l==-1)  CALL errore( 'init_xc', 'GGA functional &
                                                   & indexes not well defined', 2 )     
      !
      ! hybrid exchange vars
-     exx_started_g  = exx_is_active()
+     exx_started_g  = exx_started !is_active()
      exx_fraction_g = 0._DP
-     IF ( exx_started ) exx_fraction_g = get_exx_fraction()
+     IF ( exx_started_g ) exx_fraction_g = get_exx_fraction()
      !
      screening_parameter_l = get_screening_parameter()
      gau_parameter_l = get_gau_parameter()
@@ -1485,7 +1528,7 @@ END SUBROUTINE tau_xc
 
 SUBROUTINE tau_xc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   ! HK/MCA : the xc_func_init is slow and is called too many times
-  ! HK/MCA : we modify this SUBROUTINE so that the overhead could be minimized
+  ! HK/MCA : we modify this subroutine so that the overhead could be minimized
   !-----------------------------------------------------------------------
   !     gradient corrections for exchange and correlation - Hartree a.u.
   !     See comments at the beginning of module for implemented cases

@@ -325,7 +325,7 @@ SUBROUTINE lr_readin
   ! read_file -> init_igk.
   ! EELS: the variables igk_k and ngk will be re-set up later (because there
   ! will be not only poins k but also points k+q) through the path:
-  ! lr_run_nscf -> init_run -> hinit0 -> init_igk
+  ! lr_run_nscf -> init_run -> allocate_wfc_k -> init_igk
   !
   CALL read_file()
   !
@@ -381,24 +381,6 @@ SUBROUTINE lr_readin
   ! Re-initialize all needed quantities from the scf run
   ! I. Timrov: this was already done in read_file.
   current_spin = 1
-  !
-  ! I. Timrov: The routine init_us_1 was already called in read_file above.
-  CALL init_us_1 ( )
-  !
-  ! I. Timrov: The routine newd was already called in read_file above.
-  !
-  CALL newd() !OBM: this is for the ground-state charge density
-  !
-  IF (tqr .AND. .NOT.eels) CALL generate_qpointlist()
-  !
-  IF ( real_space .AND. .NOT.eels) THEN
-     !
-     WRITE(stdout,'(/5x,"Real space implementation V.1 D190908",1x)')
-     ! OBM - correct parellism issues
-     CALL init_realspace_vars()
-     CALL betapointlist()
-     WRITE(stdout,'(5X,"Real space initialisation completed")')
-  ENDIF
   !
   ! Now put the potential calculated in read_file into the correct place
   ! and deallocate the redundant associated variables.

@@ -75,9 +75,9 @@ MODULE exx
   TYPE ( fft_type_descriptor ) :: dfftt 
   LOGICAL :: exx_fft_initialized = .FALSE.
   ! G^2 in custom grid
-  REAL(kind=DP), DIMENSION(:), POINTER :: ggt
+  REAL(kind=DP), DIMENSION(:), POINTER :: ggt => null()
   ! G-vectors in custom grid
-  REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
+  REAL(kind=DP), DIMENSION(:,:),POINTER :: gt => null()
   ! gstart_t=2 if ggt(1)=0, =1 otherwise
   INTEGER :: gstart_t
   ! number of plane waves in custom grid (Gamma-only)

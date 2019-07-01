@@ -70,7 +70,6 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
-  USE funct,              ONLY : set_dft_from_name
   USE mp_pools,           ONLY : kunit
   USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
   USE spin_orb,           ONLY : lspinorb, domag

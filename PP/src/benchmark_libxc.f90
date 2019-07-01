@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2014 Quantum ESPRESSO group
+! Copyright (C) 2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,9 +9,7 @@
 PROGRAM benchmark_libxc
   !
   !------------------------------------------------------------------------------------!
-  !  REMEMBER to comment eventual libxc blocks in the functional routines in 'Modules' !
-  !  folder in order to run consistent tests (in the present version they should be    !
-  !  already absent, however).                                                         !
+  !  To be run on a single processor
   !------------------------------------------------------------------------------------!
   !
 #if defined(__LIBXC)
@@ -28,7 +26,8 @@ PROGRAM benchmark_libxc
   INTEGER, PARAMETER :: DP = SELECTED_REAL_KIND(14,200)
   INTEGER, PARAMETER :: nnr = 6
   CHARACTER(LEN=120) :: aprx, e_q, f_q
-  INTEGER :: ii, ns, np, quit, i_sub
+  INTEGER :: ii, ns, np, quit, i_sub, family
+  REAL(DP) :: exx_frctn
   LOGICAL :: LDA, GGA, POLARIZED, ENERGY_ONLY, DF_OK
   REAL(DP), PARAMETER :: null = 0.0_DP, pi34 = 0.6203504908994_DP
   !
@@ -46,7 +45,6 @@ PROGRAM benchmark_libxc
   REAL(DP), ALLOCATABLE :: vrrx(:,:), vsrx(:,:), vssx(:,:)
   REAL(DP), ALLOCATABLE :: vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:)
   !
-  
   !--------- LIBXC vars -----------------------
   TYPE(xc_f90_pointer_t) :: xc_func
   TYPE(xc_f90_pointer_t) :: xc_info1, xc_info2, xc_info3, xc_info4
@@ -107,7 +105,7 @@ PROGRAM benchmark_libxc
   IF ( TRIM(f_q) == 'y' ) DF_OK = .TRUE.
   IF ( TRIM(f_q) /= 'y' .AND. TRIM(f_q) /= 'n' ) THEN
      PRINT *, CHAR(10)//"ERROR: it is yes (y) or no (n)"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   !
   !
@@ -118,7 +116,7 @@ PROGRAM benchmark_libxc
     IF ( TRIM(e_q) == 'y' ) ENERGY_ONLY = .TRUE.
     IF ( TRIM(e_q) /= 'y' .AND. TRIM(e_q) /= 'n' ) THEN
        PRINT *, CHAR(10)//"ERROR: it is yes (y) or no (n)"//CHAR(10)
-       RETURN
+       GO TO 10
     ENDIF
   ENDIF
   !
@@ -126,14 +124,14 @@ PROGRAM benchmark_libxc
   READ(*,*) aprx
   IF ( TRIM(aprx) /= 'lda' .AND. TRIM(aprx) /= 'gga' ) THEN
      PRINT *, CHAR(10)//"ERROR: you can only choose lda or gga"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   WRITE (*,'(/,1x,a)', ADVANCE='no') "Polarization switch (1 unpolarized,  & 
                                                          & 2 polarized):  "
   READ(*,*) ns
   IF ( ns/=1 .AND. ns/=2 ) THEN
      PRINT *, CHAR(10)//"ERROR: you can only choose 1 or 2"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   WRITE (*,'(/,1x,a)') "-- Functional indexes "
   WRITE (*,'(/,1x,a)', ADVANCE='no') "iexch_libxc  icorr_libxc: "
@@ -144,7 +142,7 @@ PROGRAM benchmark_libxc
                     icorr_qe/=4 .AND. icorr_qe/=8 .AND. icorr_qe/=3 .AND. &
                     icorr_qe/=7 .AND. icorr_qe/=13) THEN
      PRINT *, CHAR(10)//" ERROR: icorr_qe not available at these conditions"//CHAR(10)
-     RETURN
+     GO TO 10
   ENDIF
   !
   !
@@ -368,7 +366,12 @@ PROGRAM benchmark_libxc
      !
      !------ LIBXC ------
      !
+     exx_frctn = 0.0_DP
+     !
      CALL xc_f90_func_init( xc_func, xc_info1, iexch_lxc, pol_unpol )
+      family = xc_f90_info_family( xc_info1 )
+      IF (family == XC_FAMILY_HYB_GGA) CALL xc_f90_hyb_exx_coef( xc_func, exx_frctn )
+      !
       CALL xc_f90_gga_exc_vxc( xc_func, nnr, rho_lxc(1), sigma(1), ex_lxc(1), vx_rho(1), vx_sigma(1) )
       !
       IF ( DF_OK ) CALL xc_f90_gga_fxc( xc_func, nnr, rho_lxc(1), sigma(1), v2rho2_x(1), v2rhosigma_x(1), v2sigma2_x(1) )
@@ -442,7 +445,7 @@ PROGRAM benchmark_libxc
      !
      !----- QE ----------
      !
-     CALL select_gga_functionals( iexch_qe, icorr_qe )
+     CALL select_gga_functionals( iexch_qe, icorr_qe, exx_fraction=exx_frctn )
      !
      IF ( DF_OK ) THEN
         !
@@ -797,13 +800,11 @@ PROGRAM benchmark_libxc
   !
   PRINT *, " "
   !
-  RETURN
-  !
 #else
   !
   PRINT *, "ERROR: library libxc not included."
-  RETURN
   !
 #endif
+10 STOP
   !
 END PROGRAM benchmark_libxc

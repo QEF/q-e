@@ -13,7 +13,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   !
   USE kinds,            ONLY: DP
   USE funct,            ONLY: dft_is_gradient, dft_is_meta, get_igcc,  &
-                              tau_xc, tau_xc_spin, get_meta, init_xc
+                              tau_xc, tau_xc_spin, get_meta
   USE xc_gga,           ONLY: xc_gcx !gcxc, gcx_spin, gcc_spin, gcc_spin_more
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum
@@ -54,8 +54,6 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   !
   !
   IF ( .NOT. dft_is_gradient() .AND. .NOT. dft_is_meta() ) RETURN
-  !
-  CALL init_xc( 'GGA' )
   !
   nspin0 = nspin
   !if (nspin==4) nspin0 = 1

@@ -28,10 +28,10 @@
         mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
         mp_group_create, mp_comm_split, mp_set_displs, &
-        mp_circular_shift_left, &
+        mp_circular_shift_left, mp_circular_shift_left_start, &
         mp_get_comm_null, mp_get_comm_self, mp_count_nodes, &
         mp_type_create_column_section, mp_type_free, &
-        mp_allgather
+        mp_allgather, mp_waitall, mp_testall
 
 !
       INTERFACE mp_bcast
@@ -142,6 +142,14 @@
           mp_circular_shift_left_r2d_gpu, &
           mp_circular_shift_left_c2d_gpu
 #endif
+      END INTERFACE
+
+      INTERFACE mp_circular_shift_left_start
+        MODULE PROCEDURE mp_circular_shift_left_start_i0, &
+          mp_circular_shift_left_start_i1, &
+          mp_circular_shift_left_start_i2, &
+          mp_circular_shift_left_start_r2d, &
+          mp_circular_shift_left_start_c2d
       END INTERFACE
 
       INTERFACE mp_type_create_column_section
@@ -369,8 +377,48 @@
       END SUBROUTINE mp_comm_free
 
 !------------------------------------------------------------------------------!
-!..mp_bcast
+! non-blocking helpers
+! waits till all request are completed
+      SUBROUTINE mp_waitall(requests)
+! ...
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: requests(:)
+        INTEGER :: ierr
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE, size(requests))
+#endif
+        ierr = 0
+#if defined(__MPI)
+        call MPI_Waitall(size(requests), requests, istatus, ierr)
+        IF (ierr/=0) CALL mp_stop( 8004 )
+#endif
+        RETURN
+      END SUBROUTINE mp_waitall
 
+!tests all requests
+      SUBROUTINE mp_testall(requests, flag)
+      ! ...
+         IMPLICIT NONE
+          INTEGER, INTENT (INOUT) :: requests(:)
+          INTEGER :: ierr
+#if defined(__MPI)
+          INTEGER :: istatus(MPI_STATUS_SIZE, size(requests))
+#endif
+          LOGICAL, INTENT(OUT):: flag
+          !
+          ierr = 0
+          flag = .FALSE.
+#if defined(__MPI)
+          call MPI_Testall(size(requests), requests, flag, istatus, ierr)
+          IF (ierr/=0) CALL mp_stop( 8004 )
+#else
+          flag = .TRUE.
+#endif
+          RETURN
+       END SUBROUTINE mp_testall
+
+!------------------------------------------------------------------------------!
+!..mp_bcast
       SUBROUTINE mp_bcast_i1(msg,source,gid)
         IMPLICIT NONE
         INTEGER :: msg
@@ -2446,6 +2494,217 @@ SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_c2d
+
+
+!------------------------------------------------------------------------------!
+!..mp_circular_shift_left_start
+SUBROUTINE mp_circular_shift_left_start_i0( sendbuf, recvbuf, itag, gid, requests)
+   IMPLICIT NONE
+   INTEGER  :: sendbuf, recvbuf
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER, INTENT(INOUT) :: requests(2)
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+
+   !set null requests
+   requests = mpi_request_null
+
+   !communicator
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8100 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 8101 )
+   !
+   sour = modulo(mype + 1, npe)
+   dest = modulo(mype + npe - 1, npe)
+   !
+   CALL MPI_Irecv( recvbuf, 1, MPI_INTEGER, &
+        sour, itag, group, requests(1), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8102 )
+   !
+   CALL MPI_Isend( sendbuf, 1, MPI_INTEGER, &
+        dest, itag, group, requests(2), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8103 )
+   !
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_start_i0
+
+
+SUBROUTINE mp_circular_shift_left_start_i1( sendbuf, recvbuf, itag, gid, requests)
+   IMPLICIT NONE
+   INTEGER  :: sendbuf( : ), recvbuf( : )
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER, INTENT(INOUT) :: requests(2)
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+
+   !set null requests
+   requests = mpi_request_null
+
+   !communicator
+   group = gid
+   !
+   IF( size(sendbuf)/=size(recvbuf) ) CALL mp_stop(8099)
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8100 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 8101 )
+   !
+   sour = modulo(mype + 1, npe)
+   dest = modulo(mype + npe - 1, npe)
+   !
+   CALL MPI_Irecv( recvbuf, size(recvbuf), MPI_INTEGER, &
+        sour, itag, group, requests(1), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8102 )
+   !
+   CALL MPI_Isend( sendbuf, size(sendbuf), MPI_INTEGER, &
+        dest, itag, group, requests(2), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8103 )
+   !
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_start_i1
+
+
+SUBROUTINE mp_circular_shift_left_start_i2( sendbuf, recvbuf, itag, gid, requests)
+   IMPLICIT NONE
+   INTEGER  :: sendbuf( :, : ), recvbuf( :, : )
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER, INTENT(INOUT) :: requests(2)
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+
+   !set null requests
+   requests = mpi_request_null
+
+   !communicator
+   group = gid
+   !
+   IF( size(sendbuf)/=size(recvbuf) ) CALL mp_stop(8099)
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8100 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 8101 )
+   !
+   sour = modulo(mype + 1, npe)
+   dest = modulo(mype + npe - 1, npe)
+   !
+   CALL MPI_Irecv( recvbuf, size(recvbuf), MPI_INTEGER, &
+        sour, itag, group, requests(1), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8102 )
+   !
+   CALL MPI_Isend( sendbuf, size(sendbuf), MPI_INTEGER, &
+        dest, itag, group, requests(2), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8103 )
+   !
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_start_i2
+
+
+SUBROUTINE mp_circular_shift_left_start_r2d( sendbuf, recvbuf, itag, gid, requests)
+   IMPLICIT NONE
+   REAL(DP) :: sendbuf( :, : ), recvbuf( :, : )
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER, INTENT(INOUT) :: requests(2)
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+
+   !set null requests
+   requests = mpi_request_null
+
+   !communicator
+   group = gid
+   !
+   IF( size(sendbuf)/=size(recvbuf) ) CALL mp_stop(8099)
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8100 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 8101 )
+   !
+   sour = modulo(mype + 1, npe)
+   dest = modulo(mype + npe - 1, npe)
+   !
+   CALL MPI_Irecv( recvbuf, size(recvbuf), MPI_DOUBLE_PRECISION, &
+        sour, itag, group, requests(1), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8102 )
+   !
+   CALL MPI_Isend( sendbuf, size(sendbuf), MPI_DOUBLE_PRECISION, &
+        dest, itag, group, requests(2), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8103 )
+   !
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_start_r2d
+
+
+SUBROUTINE mp_circular_shift_left_start_c2d( sendbuf, recvbuf, itag, gid, requests)
+   IMPLICIT NONE
+   COMPLEX(DP) :: sendbuf( :, : ), recvbuf( :, : )
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER, INTENT(INOUT) :: requests(2)
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+
+   !set null requests
+   requests = mpi_request_null
+
+   !communicator
+   group = gid
+   !
+   IF( size(sendbuf)/=size(recvbuf) ) CALL mp_stop(8099)
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8100 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 8101 )
+   !
+   sour = modulo(mype + 1, npe)
+   dest = modulo(mype + npe - 1, npe)
+   !
+   CALL MPI_Irecv( recvbuf, size(recvbuf), MPI_DOUBLE_COMPLEX, &
+        sour, itag, group, requests(1), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8102 )
+   !
+   CALL MPI_Isend( sendbuf, size(sendbuf), MPI_DOUBLE_COMPLEX, &
+        dest, itag, group, requests(2), ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 8103 )
+   !
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_start_c2d
 !
 !
 !------------------------------------------------------------------------------!

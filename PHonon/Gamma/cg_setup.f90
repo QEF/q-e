@@ -18,7 +18,7 @@ SUBROUTINE cg_setup
   USE uspp_param, ONLY: upf
   USE wavefunctions,  ONLY: evc
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
-  USE funct,      ONLY: dft_is_gradient, init_xc
+  USE funct,      ONLY: dft_is_gradient
   USE dfunct,     ONLY: newd
   USE fft_base,   ONLY: dfftp
   USE gvect,      ONLY: g, ngm, eigts1, eigts2, eigts3
@@ -28,7 +28,8 @@ SUBROUTINE cg_setup
   USE vlocal,     ONLY: strf
   USE wvfct,      ONLY: nbnd, npwx
   USE gvecw,      ONLY: gcutw
-  USE cgcom
+  USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE cgcom, ONLY: dmuxc, dvpsi, dpsi, auxr, aux2, aux3, lrwfc
   !
   IMPLICIT NONE
   !
@@ -37,7 +38,7 @@ SUBROUTINE cg_setup
   CHARACTER (len=256) :: filint
   INTEGER  :: ndr, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
-  REAL(DP), DIMENSION(dfftp%nnr) :: rhotot, sign_r
+  REAL(DP), DIMENSION(dfftp%nnr) :: rhotot
   !
   CALL start_clock('cg_setup')
   !
@@ -85,28 +86,13 @@ SUBROUTINE cg_setup
   !
   !  derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  CALL init_xc( 'LDA' )
-  !
   rhotot(:) = rho%of_r(:,1) + rho_core(:)
-  !
-  sign_r = 1.0_DP
-  DO i = 1, dfftp%nnr
-     IF ( rhotot(i) < -1.d-30 ) THEN
-        sign_r(i) = -1.0_DP
-        rhotot(i) = -rhotot(i)
-     ELSEIF ( rhotot(i)<1.d-30 .AND. rhotot(i)>-1.d-30 ) THEN
-        sign_r(i) = 0.0_DP
-        rhotot(i) = 0.5_DP
-     ENDIF
-  ENDDO
   !
   CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
   !
-  dmuxc = dmuxc * sign_r
-  !
   !  initialize data needed for gradient corrections
   !
-  CALL cg_setupdgc
+  CALL setup_dgc( ) 
   !
   iunres=88
   !

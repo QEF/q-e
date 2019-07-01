@@ -14,7 +14,6 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !  LSDA approximation
   !
   use kinds, only : DP
-  use funct, only : init_xc
   use xc_lda_lsda, only: xc
   implicit none
   integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
@@ -29,8 +28,6 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !
   vxc(1) = 0.0_dp
   exc    = 0.0_dp
-  !
-  call init_xc( 'LDA' )
   !
   if (lsd == 0) then
      !
@@ -81,7 +78,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   !
   use kinds,     only : DP
   use constants, only : fpi, e2
-  use funct,     only : dft_is_meta, init_xc
+  use funct,     only : dft_is_meta
   use xc_gga,    only : xc_gcx
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
@@ -93,7 +90,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   integer :: i, is, ierr
   real(DP) :: sx, sc, v2c, v1x, v2x, v1c
   !
-  REAL(DP) :: grho_v(3,mesh,nspin), sign_v(mesh)
+  REAL(DP) :: grho_v(3,mesh,nspin)
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: sx_v, sc_v, v2c_ud
   REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: v1x_v, v2x_v, v1c_v, v2c_v
   !
@@ -113,8 +110,6 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   allocate(grho(mesh,nspin),stat=ierr)
   allocate(h(mesh,2),stat=ierr)
   allocate(dh(mesh),stat=ierr)
-  
-  CALL init_xc( 'GGA' )
   
   egc=0.0_dp
   vgc=0.0_dp
@@ -177,13 +172,11 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
         !
         !     GGA case
         !
-        sign_v = SIGN( 1.0_DP, rhoaux(:,1) )
-        !
         CALL xc_gcx( mesh, nspin, rhoaux, grho_v, sx_v, sc_v, v1x_v, v2x_v, v1c_v, v2c_v )
         !
-        egc      = ( sx_v  + sc_v  ) * sign_v
-        vgc(:,1) = ( v1x_v(:,1) + v1c_v(:,1) ) !* ABS(sign_v)
-        h(:,1)   = ( v2x_v(:,1) + v2c_v(:,1) ) * grho(:,1)*r2(:) !*ABS(sign_v(:))
+        egc(1:mesh) = sx_v + sc_v
+        vgc(:,1) = v1x_v(:,1) + v1c_v(:,1) 
+        h(:,1) = ( v2x_v(:,1) + v2c_v(:,1) ) * grho(:,1)*r2(:)
         !
      END IF
      !

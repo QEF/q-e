@@ -88,6 +88,7 @@ recvec_subs.o \
 run_info.o \
 space_group.o \
 set_signal.o \
+set_vdw_corr.o \
 setqf.o \
 splinelib.o \
 timestep.o\
@@ -120,6 +121,7 @@ qes_init_module.o \
 qes_read_module.o \
 qes_bcast_module.o \
 qexsd.o   \
+qexsd_copy.o   \
 qexsd_input.o \
 hdf5_qe.o\
 qeh5_module.o\
