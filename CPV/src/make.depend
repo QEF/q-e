@@ -717,6 +717,7 @@ manycp.o : ../../Modules/read_input.o
 manycp.o : input.o
 metaxc.o : ../../Modules/funct.o
 metaxc.o : ../../Modules/kind.o
+metaxc.o : ../../Modules/xc_mgga_drivers.o
 modules.o : ../../Modules/kind.o
 modules.o : ../../Modules/uspp.o
 move_electrons.o : ../../Modules/cell_base.o

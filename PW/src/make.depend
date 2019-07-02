@@ -1880,6 +1880,7 @@ stres_gradcorr.o : ../../Modules/funct.o
 stres_gradcorr.o : ../../Modules/kind.o
 stres_gradcorr.o : ../../Modules/mp_bands.o
 stres_gradcorr.o : ../../Modules/xc_gga_drivers.o
+stres_gradcorr.o : ../../Modules/xc_mgga_drivers.o
 stres_gradcorr.o : ../../UtilXlib/mp.o
 stres_har.o : ../../FFTXlib/fft_interfaces.o
 stres_har.o : ../../Modules/cell_base.o
@@ -2167,6 +2168,7 @@ v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
 v_of_rho.o : ../../Modules/tsvdw.o
 v_of_rho.o : ../../Modules/xc_lda_lsda_drivers.o
+v_of_rho.o : ../../Modules/xc_mgga_drivers.o
 v_of_rho.o : ../../UtilXlib/mp.o
 v_of_rho.o : Coul_cut_2D.o
 v_of_rho.o : esm.o
