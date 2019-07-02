@@ -324,7 +324,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   ENDIF
   !
 !$omp parallel if(ntids==1)
-!$omp do private( rho, rs, ex, ec, ec_, vx, vc, vc_, exx_fraction )
+!$omp do private( rho, rs, ex, ec, ec_, vx, vc, vc_ )
   DO ir = 1, length
      !
      rho = ABS(rho_in(ir))
@@ -542,7 +542,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   exx_fraction = get_exx_fraction()
   !
 !$omp parallel if(ntids==1)
-!$omp do private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_, exx_fraction )
+!$omp do private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_ )
   DO ir = 1, length
      !
      zeta = zeta_in(ir)
