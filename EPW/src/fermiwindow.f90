@@ -48,7 +48,7 @@
     DO ibnd = 1, nbndsub
       ebnd = etf (ibnd, ik)
       !
-      IF  ( abs(ebnd - ef) .lt. fsthick ) THEN
+      IF  ( abs(ebnd - ef) < fsthick ) THEN
         ibndmin = min(ibnd,ibndmin)
         ibndmax = max(ibnd,ibndmax)
         ebndmin = min(ebnd,ebndmin)

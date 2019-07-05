@@ -1,0 +1,94 @@
+
+     Program ppacf v.6.4.1 starts on  7Jun2019 at  7:37:41 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     2 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       2
+
+
+     entering subroutine acf ...
+
+
+
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     %                                                                      %
+     % You are using PPACF, please cite the following paper:                %
+     %                                                                      %
+     %   Y. Jiao, E. Schr\"oder, and P. Hyldgaard, PRB 97, 085115 (2018).   %
+     %                                                                      %
+     % If you are using this code for hybrid mixing value, please also cite:%
+     %                                                                      %
+     %   Y. Jiao, E. Schr\"oder, and P. Hyldgaard, JCP 148, 194115 (2018).  %
+     %                                                                      %
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+     Reading data from directory:
+     ./atomns.save/
+     Message from routine pw_read_schema:
+     failed retrieving input info from xml file, please check it
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         444     444    132                28742    28742    4770
+     Max         445     445    133                28751    28751    4775
+     Sum         889     889    265                57493    57493    9545
+ 
+
+
+     ACF coupling-constant  Exc_lambda (Ry)  E_c,lambda^LDA (Ry)  E_c,lambda^GC (Ry)
+
+       0.00000000     -12.71967254       0.00000000       0.00000000
+       1.00000000     -15.00129518      -2.80467101       0.52304837
+                        Exchange     -12.71967254 Ry
+                     Correlation      -1.33690247 Ry
+          Exchange + Correlation     -14.05657501 Ry
+                         T_c^LDA       1.04807623 Ry
+
+     Calling punch_plot, plot_num =   2
+     Writing data to file  atomns.exlda
+
+     Calling punch_plot, plot_num =   2
+     Writing data to file  atomns.eclda
+
+     Calling punch_plot, plot_num =   2
+     Writing data to file  atomns.tclda
+
+     Calling punch_plot, plot_num =   2
+     Writing data to file  atomns.exgc
+
+     Calling punch_plot, plot_num =   2
+     Writing data to file  atomns.ecgc
+
+     Calling punch_plot, plot_num =   2
+     Writing data to file  atomns.tcgc
+
+
+     exiting subroutine acf ...
+
+ 
+     ppacf        :      0.77s CPU      1.14s WALL
+
+ 
+   This run was terminated on:   7:37:42   7Jun2019            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

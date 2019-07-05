@@ -27,7 +27,7 @@ for file in *.bkp; do cp $file ${file%.bkp}; done
 import os, sys, re
 from shutil import copyfile
 
-fmt = """ CALL mem_counter ( SIZEOF({0}), {1}, "{0}" )
+fmt = """ CALL mem_counter ( SIZEOF({0}), {1}, "{0}", "{2}" )
 """
 
 if len(sys.argv) < 2:
@@ -83,13 +83,13 @@ def get_args_list(line):
   return [x.replace('!',',') for x in args.split(',')]
 
 
-def write_counters(fout, sign, args, tag=[], prepend=""):
+def write_counters(fout, sign, args, sub, tag=[], prepend=""):
   for a, arg in enumerate(args):
     if 'stat' in arg.lower():
       continue
     if (a == 0) and (tag != []):
       fout.write(tag[0] + ' ')
-    fout.write(prepend + fmt.format(*[arg, sign]))
+    fout.write(prepend + fmt.format(*[arg, sign, sub]))
 
 with open(fname,'r') as fin:
   with open(fname+".new",'w') as fout:
@@ -119,6 +119,13 @@ with open(fname,'r') as fin:
           buff += lines[i+j].split('!')[0]
           if buff[-1] != '\n':
             buff += '\n'
+ 
+        # find name of subroutine
+        str_subroutine = re.findall("subroutine", buff.lower()) 
+        if (len(str_subroutine) > 0): 
+          #print 'Treating subroutine ',str_subroutine
+          sub = buff.split()[1]
+
 
         # find (de)allocate in strings
         str_allocate = re.findall("[\"\'].*?(allocate).*?[\"\']", buff.lower())
@@ -147,7 +154,7 @@ with open(fname,'r') as fin:
           
           tag = re.findall(r'^\d+', buff.lower().strip())
           
-          write_counters(fout, -1, args, tag, ifcls[0] + ' ')
+          write_counters(fout, -1, args, sub, tag, ifcls[0] + ' ')
             
           #fout.write(ifcls[0] + ' ' + fmt.format(*[args[0], -1]))
           if tag:
@@ -168,7 +175,7 @@ with open(fname,'r') as fin:
           
           
           fout.write(ifcls[0] + ' THEN \n ALLOCATE ' + ifcls[1] + '\n ')
-          write_counters(fout, +1, args)
+          write_counters(fout, +1, args, sub)
           fout.write( '\n END IF \n')
           
         elif re.findall(r'\bdeallocate\b', buff.lower()):
@@ -181,7 +188,7 @@ with open(fname,'r') as fin:
             print("WARNING! deallocate with tag! Check (and change?) file " + fname + ".new (original line " + str(i) + ")")
           
           
-          write_counters(fout, -1, args, tag)
+          write_counters(fout, -1, args, sub, tag)
           #for a, arg in enumerate(args):
           #  if 'stat' in arg.lower():
           #    continue
@@ -203,7 +210,7 @@ with open(fname,'r') as fin:
           if tag:
             print("WARNING! allocate with tag! Check (and change!) file " + fname + ".new (original line " + str(i) + ")")
 
-          write_counters(fout, +1, args)
+          write_counters(fout, +1, args, sub)
           #for arg in args:
           #  if 'stat' in arg.lower():
           #    continue

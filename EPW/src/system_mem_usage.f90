@@ -45,21 +45,21 @@
 
   !--- read system file
 
-  inquire (file=filename,exist=ifxst)
-  if (.not.ifxst) then
+  inquire (FILE=filename,exist=ifxst)
+  if ( .NOT. ifxst) then
     write (stdout,'(a)') 'System file does not exist'
     return
   endif
 
-  open(unit=iunimem, file=filename, action='read')
+  open(UNIT=iunimem, FILE=filename, action='read')
   do
     read (iunimem,'(a)',end=120) line
     ! Peak virtual memory usage
-    if (line(1:7).eq.'VmPeak:') then
+    if (line(1:7) == 'VmPeak:') then
        read (line(8:),*) valueRSS(1)
     endif
     ! Peak resident set size
-    if (line(1:6).eq.'VmHWM:') then
+    if (line(1:6) == 'VmHWM:') then
        read (line(7:),*) valueRSS(2)
        CLOSE (unit = iunimem, status = 'keep')
        exit

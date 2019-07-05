@@ -29,6 +29,10 @@ lr_normalise.o \
 lr_lanczos.o \
 lr_apply_liouvillian.o \
 lr_dv_setup.o \
+lr_compute_intq.o \
+lr_set_intq_nc.o \
+lr_transform_intq_nc.o \
+lr_transform_intq_so.o  \
 lr_solve_e.o \
 lr_dvpsi_e.o \
 stop_lr.o \
@@ -58,7 +62,7 @@ lr_test_restart.o\
 lr_dav_debug.o\
 plugin_tddfpt_potential.o
 
-TLDEPS=phlibs
+TLDEPS=lrmods
 
 all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
 

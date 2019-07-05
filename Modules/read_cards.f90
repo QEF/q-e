@@ -1805,7 +1805,7 @@ CONTAINS
                IF ( nfield == 4 ) THEN
                   READ(input_line,*) text, iwan, b_from, b_to
                   ning = 1
-               ELSEIF ( nfield == 4 ) THEN
+               ELSEIF ( nfield == 5 ) THEN
                   READ(input_line,*) text, iwan, b_from, b_to, ning
                ELSE
                   CALL errore( 'read_cards', &

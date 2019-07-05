@@ -50,7 +50,6 @@
   degaussq    = 0.1 ! meV
 
   dvscf_dir   = './save'
-  filukk      = './SiC.ukk'
 
   nkf1        = 6
   nkf2        = 6

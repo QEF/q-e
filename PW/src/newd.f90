@@ -10,11 +10,11 @@ MODULE dfunct
 
 CONTAINS
 !---------------------------------------
-
-SUBROUTINE newq(vr,deeq,skip_vltot)
+!
+SUBROUTINE newq( vr,deeq,skip_vltot )
   !
-  !   This routine computes the integral of the perturbed potential with
-  !   the Q function
+  !! This routine computes the integral of the perturbed potential with
+  !! the Q function
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -27,8 +27,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions, ONLY : psic
-  USE spin_orb,             ONLY : lspinorb, domag
+  USE wavefunctions,        ONLY : psic
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
@@ -36,21 +35,24 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   !
   IMPLICIT NONE
   !
+  REAL(KIND=DP), INTENT(IN)  :: vr(dfftp%nnr,nspin)
+  !! Input: potential
+  REAL(KIND=DP), INTENT(OUT) :: deeq( nhm, nhm, nat, nspin )
+  !! Output: contribution to integral
+  LOGICAL, INTENT(IN) :: skip_vltot
+  !! If .false. vltot is added to vr when necessary
   !
-  ! Input: potential , output: contribution to integral
-  REAL(kind=dp), intent(in)  :: vr(dfftp%nnr,nspin)
-  REAL(kind=dp), intent(out) :: deeq( nhm, nhm, nat, nspin )
-  LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
-  ! INTERNAL
+  ! ... local variables
+  !
   INTEGER :: ngm_s, ngm_e, ngm_l
   ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
   COMPLEX(DP), ALLOCATABLE :: vaux(:,:), aux(:,:), qgm(:,:)
-    ! work space
+  ! work space
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux(:,:)
-    ! spherical harmonics, modulus of G
+  ! spherical harmonics, modulus of G
   REAL(DP) :: fact
   !
   IF ( gamma_only ) THEN
@@ -87,7 +89,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
 !$omp parallel do default(shared) private(ig)
         do ig=1,dfftp%nnr
            psic(ig) = vr(ig,is)
-        end do
+        enddo
 !$omp end parallel do
      ELSE
 !$omp parallel do default(shared) private(ig)
@@ -112,7 +114,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         ! nij = max number of (ih,jh) pairs per atom type nt
         !
         nij = nh(nt)*(nh(nt)+1)/2
-        ALLOCATE ( qgm(ngm_l,nij) )
+        ALLOCATE( qgm(ngm_l,nij) )
         !
         ! ... Compute and store Q(G) for this atomic species 
         ! ... (without structure factor)
@@ -121,7 +123,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         DO ih = 1, nh(nt)
            DO jh = ih, nh(nt)
               ijh = ijh + 1
-              CALL qvan2 ( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
+              CALL qvan2( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
            END DO
         END DO
         !
@@ -131,7 +133,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
         END DO
-        ALLOCATE ( aux (ngm_l, nab ), deeaux(nij, nab) )
+        ALLOCATE( aux (ngm_l, nab ), deeaux(nij, nab) )
         !
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !
@@ -175,7 +177,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
            !
         END DO
         !
-        DEALLOCATE ( deeaux, aux, qgm )
+        DEALLOCATE( deeaux, aux, qgm )
         !
      END IF
      !
@@ -188,12 +190,11 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
 END SUBROUTINE newq
   !
 !----------------------------------------------------------------------------
-SUBROUTINE newd( ) 
+SUBROUTINE newd( )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine computes the integral of the effective potential with
-  ! ... the Q function and adds it to the bare ionic D term which is used
-  ! ... to compute the non-local term in the US scheme.
+  !! This routine computes the integral of the effective potential with
+  !! the Q function and adds it to the bare ionic D term which is used
+  !! to compute the non-local term in the US scheme.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -204,9 +205,9 @@ SUBROUTINE newd( )
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE uspp,                 ONLY : nhtol, nhtolm
   USE scf,                  ONLY : v
-  USE realus,        ONLY : newq_r
-  USE control_flags, ONLY : tqr
-  USE ldaU,          ONLY : lda_plus_U, U_projection
+  USE realus,               ONLY : newq_r
+  USE control_flags,        ONLY : tqr
+  USE ldaU,                 ONLY : lda_plus_U, U_projection
   !
   USE uspp_gpum,     ONLY : using_deeq, using_deeq_nc
   !
@@ -448,7 +449,8 @@ SUBROUTINE newd( )
          !
       END DO
       !
-    RETURN
+      RETURN
+      !
     END SUBROUTINE newd_nc
     !
 END SUBROUTINE newd

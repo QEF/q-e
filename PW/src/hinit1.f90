@@ -9,20 +9,21 @@
 SUBROUTINE hinit1()
   !----------------------------------------------------------------------------
   !
-  ! ... Atomic configuration dependent hamiltonian initialization
-  ! ... Important note: does not recompute structure factors,
+  ! ... Atomic configuration dependent hamiltonian initialization,
+  ! ... potential, wavefunctions for Hubbard U
+  ! ... Important note: does not recompute structure factors and core charge,
   ! ... they must be computed before this routine is called
   !
   USE ions_base,     ONLY : nat, nsp, ityp, tau
   USE cell_base,     ONLY : at, bg, omega, tpiba2
   USE fft_base,      ONLY : dfftp
-  USE gvect,         ONLY : ngm, g
   USE gvecs,         ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : vrs, vltot, v, kedtau
-  USE control_flags, ONLY : tqr, treinit_gvecs 
-  USE realus,        ONLY : generate_qpointlist,betapointlist,init_realspace_vars,real_space
+  USE control_flags, ONLY : tqr
+  USE realus,        ONLY : generate_qpointlist, betapointlist, &
+       init_realspace_vars, real_space
   USE wannier_new,   ONLY : use_wannier
   USE martyna_tuckerman, ONLY : tag_wg_corr_as_obsolete
   USE scf,           ONLY : rho
@@ -30,23 +31,10 @@ SUBROUTINE hinit1()
   USE paw_onecenter, ONLY : paw_potential
   USE paw_symmetry,  ONLY : paw_symmetrize_ddd
   USE dfunct,        ONLY : newd
-  USE fft_base,   ONLY : dfftp
-  USE fft_base,   ONLY : dffts
-  USE fft_types,  ONLY : fft_type_deallocate
-  USE funct,         ONLY : dft_is_hybrid
-  USE exx_base,      ONLY : exx_grid_init, exx_mp_init, exx_div_check, coulomb_fac, coulomb_done 
-  USE exx,           ONLY : exx_fft_initialized, dfftt, exx_fft_create, deallocate_exx 
-  USE exx_band,     ONLY : igk_exx 
-
   !
   USE scf_gpum,      ONLY : using_vrs
   !
   IMPLICIT NONE
-  !
-  !
-  ! ... calculate the total local potential
-  !
-  CALL setlocal()
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
@@ -54,53 +42,28 @@ SUBROUTINE hinit1()
   CALL plugin_init_ions()
   CALL plugin_init_cell()
   !
+  ! ... calculate the total local potential
+  !
+  CALL setlocal()
+  !
+  IF ( tqr ) CALL generate_qpointlist()
+  !
+  IF (real_space ) THEN
+     CALL betapointlist()
+     CALL init_realspace_vars()
+  ENDIF
+  !
+  CALL tag_wg_corr_as_obsolete
+  !
   ! ... plugin contribution to local potential
   !
   CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
   !
   ! ... define the total local potential (external+scf)
   !
-  !
-  ! ... if tereinit_gvecs is true re-set FFT grids
-  !
-        IF (  treinit_gvecs  ) THEN  
-
-           CALL clean_pw( .FALSE. ) 
-           CALL close_files(.TRUE.)
-           dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
-           dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-           !
-           CALL init_run()
-           IF ( dft_is_hybrid() ) THEN
-              IF (ALLOCATED(coulomb_fac) .AND. dft_is_hybrid() ) & 
-                        DEALLOCATE (coulomb_fac, coulomb_done) 
-
-                CALL deallocate_exx
-                if (allocated(igk_exx))  &
-                        deallocate(igk_exx) 
-
-                dfftt%nr1=0; dfftt%nr2=0; dfftt%nr3=0 
-                CALL fft_type_deallocate(dfftt) 
-                CALL exx_grid_init(REINIT = .TRUE.)
-                CALL exx_mp_init()
-                exx_fft_initialized = .FALSE. 
-                CALL exx_div_check()
-           ENDIF
-        ELSE 
-                IF (ALLOCATED(coulomb_fac) .AND. dft_is_hybrid() ) & 
-                        DEALLOCATE (coulomb_fac, coulomb_done) 
-
-        END IF  
-
   CALL using_vrs(1)
-  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
-  !
-  IF ( tqr ) CALL generate_qpointlist()
-
-  IF (real_space ) then
-   call betapointlist()
-   call init_realspace_vars()
-  endif
+  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, &
+       doublegrid )
   !
   ! ... update the D matrix and the PAW coefficients
   !
@@ -117,8 +80,6 @@ SUBROUTINE hinit1()
   !
   IF ( lda_plus_u ) CALL orthoUwfc () 
   IF ( use_wannier ) CALL orthoatwfc( .true. )
-  !
-  call tag_wg_corr_as_obsolete
   !
   RETURN
   !

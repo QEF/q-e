@@ -117,6 +117,7 @@ compute_vsgga.o : ../Modules/funct.o
 compute_vsgga.o : ../Modules/kind.o
 compute_vsgga.o : ../Modules/noncol.o
 compute_vsgga.o : ../Modules/recvec.o
+compute_vsgga.o : ../Modules/xc_gga_drivers.o
 compute_vsgga.o : ../PW/src/pwcom.o
 dfpt_tetra_mod.o : ../Modules/cell_base.o
 dfpt_tetra_mod.o : ../Modules/io_global.o
@@ -261,7 +262,7 @@ lr_sm1_psi.o : ../Modules/control_flags.o
 lr_sm1_psi.o : ../Modules/invmat.o
 lr_sm1_psi.o : ../Modules/ions_base.o
 lr_sm1_psi.o : ../Modules/kind.o
-lr_sm1_psi.o : ../Modules/mp_bands.o
+lr_sm1_psi.o : ../Modules/mp_global.o
 lr_sm1_psi.o : ../Modules/noncol.o
 lr_sm1_psi.o : ../Modules/uspp.o
 lr_sm1_psi.o : ../PW/src/pwcom.o
@@ -341,11 +342,11 @@ setup_dgc.o : ../Modules/noncol.o
 setup_dgc.o : ../Modules/recvec.o
 setup_dgc.o : ../Modules/uspp.o
 setup_dgc.o : ../Modules/wavefunctions.o
+setup_dgc.o : ../Modules/xc_gga_drivers.o
 setup_dgc.o : ../PW/src/pwcom.o
 setup_dgc.o : ../PW/src/scf_mod.o
 setup_dgc.o : lrcom.o
 setup_dmuxc.o : ../Modules/fft_base.o
-setup_dmuxc.o : ../Modules/funct.o
 setup_dmuxc.o : ../Modules/kind.o
 setup_dmuxc.o : ../Modules/noncol.o
 setup_dmuxc.o : ../PW/src/pwcom.o

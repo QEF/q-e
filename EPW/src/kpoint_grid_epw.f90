@@ -184,7 +184,7 @@ DO nk=1,nks
    wk(nk) = wk(nk)/fact
 ENDDO
 
-DEALLOCATE(xkg,wkk)
+DEALLOCATE (xkg,wkk)
 
 RETURN
 END SUBROUTINE kpoint_grid_epw

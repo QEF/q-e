@@ -796,9 +796,6 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        WRITE(0,*) "Writing Eigenvectors_Spsi"
        IF( ionode ) CALL iotk_write_begin(50, "Eigenvectors_Spsi")
 
-       CALL init_us_1
-       CALL init_at_1
-
        CALL allocate_bec_type (nkb,nbnd, becp)
 
        DO ik = 1, nkstot

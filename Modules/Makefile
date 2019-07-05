@@ -23,10 +23,17 @@ compute_dipole.o \
 constants.o \
 constraints_module.o \
 control_flags.o \
+correlation_lda_lsda.o \
+correlation_gga.o \
 coulomb_vcut.o \
+dgcxc_drivers.o \
 dist.o \
+dmxc_drivers.o \
+dgcxc_drivers.o \
 electrons_base.o \
 environment.o \
+exchange_lda_lsda.o \
+exchange_gga.o \
 fcp_variables.o \
 fd_gradient.o \
 fft_base.o \
@@ -81,6 +88,7 @@ recvec_subs.o \
 run_info.o \
 space_group.o \
 set_signal.o \
+set_vdw_corr.o \
 setqf.o \
 splinelib.o \
 timestep.o\
@@ -101,6 +109,8 @@ write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
+xc_lda_lsda_drivers.o \
+xc_gga_drivers.o \
 io_base.o \
 qes_types_module.o \
 qes_libs_module.o  \
@@ -111,6 +121,7 @@ qes_init_module.o \
 qes_read_module.o \
 qes_bcast_module.o \
 qexsd.o   \
+qexsd_copy.o   \
 qexsd_input.o \
 hdf5_qe.o\
 qeh5_module.o\
@@ -126,12 +137,12 @@ zvscal.o
 OBJS = \
 atomic_number.o \
 capital.o \
+correlation_gga.o \
 cryst_to_car.o \
 erf.o \
+exchange_gga.o \
 expint.o \
-functionals.o \
 generate_k_along_lines.o \
-lsda_functionals.o \
 more_functionals.o \
 has_xml.o \
 inpfile.o \

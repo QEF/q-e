@@ -1,0 +1,5 @@
+This example tests the ppacf.x utility:
+    Y. Jiao, E. Schr\"oder, and P. Hyldgaard, Phys. Rev. B 97, 085115 (2018);
+    Y. Jiao, E. Schr\"oder, P. Hyldgaard, J. Chem. Phys. 148, 194115 (2018).   
+for two different funztionals, PBE and VDW-DF-CX.
+Requires the pseudopotential C_ONCV_PBE-1.0.upf in the default directory

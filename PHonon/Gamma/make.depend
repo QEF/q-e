@@ -1,4 +1,5 @@
 a_h.o : ../../FFTXlib/fft_interfaces.o
+a_h.o : ../../LR_Modules/lrcom.o
 a_h.o : ../../Modules/becmod.o
 a_h.o : ../../Modules/cell_base.o
 a_h.o : ../../Modules/constants.o
@@ -26,6 +27,7 @@ cg_readin.o : ../../PW/src/pwcom.o
 cg_readin.o : ../../PW/src/symm_base.o
 cg_readin.o : ../../UtilXlib/mp.o
 cg_readin.o : cgcom.o
+cg_setup.o : ../../LR_Modules/lrcom.o
 cg_setup.o : ../../Modules/cell_base.o
 cg_setup.o : ../../Modules/fft_base.o
 cg_setup.o : ../../Modules/funct.o
@@ -40,15 +42,6 @@ cg_setup.o : ../../PW/src/newd.o
 cg_setup.o : ../../PW/src/pwcom.o
 cg_setup.o : ../../PW/src/scf_mod.o
 cg_setup.o : cgcom.o
-cg_setupdgc.o : ../../Modules/constants.o
-cg_setupdgc.o : ../../Modules/fft_base.o
-cg_setupdgc.o : ../../Modules/funct.o
-cg_setupdgc.o : ../../Modules/kind.o
-cg_setupdgc.o : ../../Modules/recvec.o
-cg_setupdgc.o : ../../Modules/uspp.o
-cg_setupdgc.o : ../../PW/src/pwcom.o
-cg_setupdgc.o : ../../PW/src/scf_mod.o
-cg_setupdgc.o : cgcom.o
 cgcom.o : ../../Modules/kind.o
 cgsolve.o : ../../Modules/becmod.o
 cgsolve.o : ../../Modules/io_global.o
@@ -138,7 +131,6 @@ phcg.o : ../../Modules/constants.o
 phcg.o : ../../Modules/control_flags.o
 phcg.o : ../../Modules/environment.o
 phcg.o : ../../Modules/fft_base.o
-phcg.o : ../../Modules/funct.o
 phcg.o : ../../Modules/io_files.o
 phcg.o : ../../Modules/io_global.o
 phcg.o : ../../Modules/ions_base.o

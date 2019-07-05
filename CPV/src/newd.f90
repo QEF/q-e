@@ -22,7 +22,7 @@
       USE ions_base,        ONLY: nat, nsp, na
       USE constants,        ONLY: pi, fpi
       USE smallbox_gvec,    ONLY: ngb, gxb
-      USE smallbox_subs,    ONLY: fft_oned2box, fft_add_oned2box
+      USE smallbox_subs,    ONLY: fft_oned2box, fft_add_oned2box, boxdotgrid
       USE small_box,        ONLY: omegab, tpibab
       USE qgb_mod,          ONLY: qgb
       USE electrons_base,   ONLY: nspin
@@ -43,11 +43,10 @@
       REAL(DP)  fion(3,nat)
 ! local
       INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
-      REAL(DP)  fvan(3,nat,nvb), fac, fac1, fac2, boxdotgrid, res
+      REAL(DP)  fvan(3,nat,nvb), fac, fac1, fac2, res
       COMPLEX(DP) ci, facg1, facg2
       COMPLEX(DP), ALLOCATABLE :: qv(:), fg1(:), fg2(:)
       INTEGER :: na_bgrp, ia_bgrp
-      EXTERNAL boxdotgrid
 
 #if defined(_OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
@@ -128,12 +127,12 @@
                   CALL invfft( qv, dfftb, isa )
 !
                   DO iss=1,nspin
-                     res = boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
+                     res = boxdotgrid(irb(:,isa),1,qv,vr(:,iss))
                      deeq(iv,jv,isa,iss) = fac * res  
                      IF (iv.NE.jv)                                      &
      &                    deeq(jv,iv,isa,iss)=deeq(iv,jv,isa,iss)
                      IF (nfft.EQ.2) THEN
-                        res = boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
+                        res = boxdotgrid(irb(:,isa+1),2,qv,vr(:,iss))
                         deeq(iv,jv,isa+1,iss) = fac * res 
                         IF (iv.NE.jv)                                   &
      &                       deeq(jv,iv,isa+1,iss)=deeq(iv,jv,isa+1,iss)
@@ -243,11 +242,11 @@
 !
                   CALL invfft( qv, dfftb, isa)
 !
-                  res = boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
+                  res = boxdotgrid(irb(:,isa),1,qv,vr(:,iss))
                   fvan(ik,ia,is) = res
 !
                   IF (nfft.EQ.2) THEN
-                     res = boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
+                     res = boxdotgrid(irb(:,isa+1),2,qv,vr(:,iss))
                      fvan(ik,ia+1,is) = res
                   END IF
                END DO
@@ -304,8 +303,8 @@
                   CALL invfft( qv, dfftb, isa)
 !
                   fvan(ik,ia,is) =                                      &
-     &                    boxdotgrid(irb(1,isa),isup,qv,vr(1,isup)) + &
-     &                    boxdotgrid(irb(1,isa),isdw,qv,vr(1,isdw))
+     &                    boxdotgrid(irb(:,isa),isup,qv,vr(:,isup)) + &
+     &                    boxdotgrid(irb(:,isa),isdw,qv,vr(:,isdw))
                END DO
 25             isa = isa+1
             END DO

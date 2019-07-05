@@ -90,10 +90,10 @@
     !! Temporary g-vertex for each pool 
     ! 
     ! find the bounds of k-dependent arrays in the parallel case in each pool
-    CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
+    CALL fkbounds(nkqtotf/2, lower_bnd, upper_bnd)
     ! 
-    ALLOCATE ( epc (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkqtotf/2) )
-    ALLOCATE ( epc_sym (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes) )
+    ALLOCATE (epc(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkqtotf/2))
+    ALLOCATE (epc_sym(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes))
     ! 
     epc(:,:,:,:)   = zero
     epc_sym(:,:,:) = zero
@@ -155,11 +155,11 @@
               w_2 = etf (ibndmin-1+pbnd, ikk)
               IF ( abs(w_2-w_1) < eps8 ) THEN
                 n = n + 1
-                g2 = g2 + epc(pbnd,jbnd,nu,ik+lower_bnd-1)*epc(pbnd,jbnd,nu,ik+lower_bnd-1)
+                g2 = g2 + epc(jbnd,pbnd,nu,ik+lower_bnd-1)*epc(jbnd,pbnd,nu,ik+lower_bnd-1)
               ENDIF
             ENDDO
             g2 = g2 / float(n)
-            epc_sym (ibnd, jbnd, nu) = sqrt (g2)
+            epc_sym (jbnd, ibnd, nu) = sqrt (g2)
           ENDDO
         ENDDO
       ENDDO
@@ -176,11 +176,11 @@
               w_2 = etf(ibndmin-1+pbnd, ikq)
               IF ( abs(w_2-w_1) < eps8 ) then
                 n = n + 1
-                g2 = g2 + epc(ibnd,pbnd,nu,ik+lower_bnd-1)*epc(ibnd,pbnd,nu,ik+lower_bnd-1)
+                g2 = g2 + epc(pbnd,ibnd,nu,ik+lower_bnd-1)*epc(pbnd,ibnd,nu,ik+lower_bnd-1)
               ENDIF
             ENDDO
             g2 = g2 / float(n)
-            epc_sym (ibnd, jbnd, nu) = sqrt (g2)
+            epc_sym (jbnd, ibnd, nu) = sqrt (g2)
           ENDDO
         ENDDO
       ENDDO
@@ -209,12 +209,12 @@
 #endif
     !
     ! Only master writes
-    IF (mpime.eq.ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
       WRITE(stdout, '(5x,a)') ' Electron-phonon vertex |g| (meV)'
       !
       WRITE(stdout, '(/5x,"iq = ",i7," coord.: ", 3f12.7)') iq, xqf (:, iq)
-      DO ik = 1, nkqtotf/2
+      DO ik=1, nkqtotf/2
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
@@ -223,16 +223,15 @@
         WRITE(stdout, '(5x,a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
         WRITE(stdout,'(5x,a)') repeat('-',78)
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd=1, ibndmax-ibndmin+1
           ekk = etf_all (ibndmin-1+ibnd, ikk) 
-          DO jbnd = 1, ibndmax-ibndmin+1
+          DO jbnd=1, ibndmax-ibndmin+1
             ekq = etf_all (ibndmin-1+jbnd, ikq) 
-            DO nu = 1, nmodes
+            DO nu=1, nmodes
               WRITE(stdout,'(3i9,3f12.4,1e20.10)') ibndmin-1+ibnd, ibndmin-1+jbnd, nu, ryd2ev * ekk, ryd2ev * ekq, &
                                            ryd2mev * wf(nu,iq), ryd2mev * epc(ibnd,jbnd,nu,ik)
             ENDDO
           ENDDO  
-          !
           !
         ENDDO
         WRITE(stdout,'(5x,a/)') repeat('-',78)
@@ -240,8 +239,8 @@
       ENDDO
     ENDIF ! master node
     ! 
-    DEALLOCATE ( epc )
-    DEALLOCATE ( epc_sym )
+    DEALLOCATE (epc)
+    DEALLOCATE (epc_sym)
     !
     END SUBROUTINE print_gkk
     ! 
@@ -324,8 +323,6 @@
     !! Symmetry matrix in cartesian coordinate 
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -649,8 +646,6 @@
     !! Electrical conductivity
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -805,13 +800,6 @@
               ENDDO
               Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3)
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
@@ -957,8 +945,6 @@
     !! Symmetry matrix in cartesian coordinate 
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -1044,13 +1030,6 @@
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
@@ -1156,13 +1135,6 @@
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)
               !
@@ -1234,11 +1206,11 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : at, omega, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
+    USE cell_base,     ONLY : omega 
+    USE epwcom,        ONLY : ncarrier, nstemp, &
                               nkf1, nkf2, nkf3
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf 
-    USE transportcom,  ONLY : lower_bnd, transp_temp
+    USE transportcom,  ONLY : transp_temp
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                                electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
@@ -1282,8 +1254,6 @@
     !! Electrical conductivity
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
     REAL(KIND=DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
@@ -1346,13 +1316,6 @@
               ENDDO
               Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp) * sfac / (nkf1*nkf2*nkf3)
               ! 
-              !  energy at k (relative to Ef)
-              !ekk = etf_all (ibnd, ik) - ef0(itemp)
-              !  
-              ! derivative Fermi distribution
-              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-              !dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-              !
               ! electrical conductivity
               !Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
               Sigma(:,itemp) = Sigma(:,itemp) + tdf_sigma(:)

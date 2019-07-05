@@ -328,7 +328,7 @@
               found = .true.
             ENDIF
           ENDDO !nrr
-          IF(.not. found) THEN
+          IF( .NOT.  found) THEN
             nrr = nrr + 1
             irvec(:, nrr) = irvec_tmp(:, ir, iw, iw2)
           ENDIF
@@ -397,7 +397,7 @@
     !  if (ndegen(i,1,2)>0) print*, i,irvec(:,i), ndegen(i,1,2)
     !ENDDO
     ! 
-    DEALLOCATE(ind) 
+    DEALLOCATE (ind) 
     ! 
     !-----------------------------------------------------------------------------
     END SUBROUTINE wigner_seitzkq
@@ -582,7 +582,7 @@
               found = .true.
             ENDIF
           ENDDO !nrr
-          IF(.not. found) THEN
+          IF( .NOT.  found) THEN
             nrr = nrr + 1
             irvec(:, nrr) = irvec_tmp(:, ir, na, iw, iw2)
           ENDIF
@@ -662,7 +662,7 @@
     CALL cryst_to_cart(dims2,tau(:,:),at,1)
     CALL cryst_to_cart(dims,w_centers(:,:),at,1)
     !
-    DEALLOCATE(ind)
+    DEALLOCATE (ind)
     ! 
     ! -----------------------------------------------------------------------------------------
     END SUBROUTINE wigner_seitzg

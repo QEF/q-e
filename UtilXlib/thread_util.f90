@@ -16,9 +16,9 @@ SUBROUTINE threaded_memcpy(array, array_in, length)
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN) :: length
   REAL(DP), INTENT(OUT) :: array(length)
   REAL(DP), INTENT(IN) :: array_in(length)
-  INTEGER, INTENT(IN) :: length
   !
   INTEGER :: i
   !
@@ -38,9 +38,9 @@ SUBROUTINE threaded_barrier_memcpy(array, array_in, length)
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN) :: length
   REAL(DP), INTENT(OUT) :: array(length)
   REAL(DP), INTENT(IN) :: array_in(length)
-  INTEGER, INTENT(IN) :: length
   !
   INTEGER :: i
   !
@@ -60,9 +60,9 @@ SUBROUTINE threaded_nowait_memcpy(array, array_in, length)
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN) :: length
   REAL(DP), INTENT(OUT) :: array(length)
   REAL(DP), INTENT(IN) :: array_in(length)
-  INTEGER, INTENT(IN) :: length
   !
   INTEGER :: i
   !
@@ -82,9 +82,9 @@ SUBROUTINE threaded_memset(array, val, length)
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN) :: length
   REAL(DP), INTENT(OUT) :: array(length)
   REAL(DP), INTENT(IN) :: val
-  INTEGER, INTENT(IN) :: length
   !
   INTEGER :: i
   !
@@ -104,9 +104,9 @@ SUBROUTINE threaded_barrier_memset(array, val, length)
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN) :: length
   REAL(DP), INTENT(OUT) :: array(length)
   REAL(DP), INTENT(IN) :: val
-  INTEGER, INTENT(IN) :: length
   !
   INTEGER :: i
   !
@@ -126,9 +126,9 @@ SUBROUTINE threaded_nowait_memset(array, val, length)
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN) :: length
   REAL(DP), INTENT(OUT) :: array(length)
   REAL(DP), INTENT(IN) :: val
-  INTEGER, INTENT(IN) :: length
   !
   INTEGER :: i
   !

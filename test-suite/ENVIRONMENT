@@ -6,19 +6,16 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-# Edit this line 
-#export ESPRESSO_ROOT=
-
 # Edit this line every time a new reference is created
 export REFERENCE_VERSION=6.0
 
-####################################################################################
-
-# Edit this line _ONLY_ iff you run test-code outside the QE main directory 
+# Edit this line _ONLY_ if you run test-code outside the QE main directory 
 export ESPRESSO_ROOT=${PWD}/../
+
+# Edit this line to change the number of processors for parallel execution
+export TESTCODE_NPROCS=4
 
 export ESPRESSO_PSEUDO=${ESPRESSO_ROOT}/pseudo
 export NETWORK_PSEUDO=http://www.quantum-espresso.org/wp-content/uploads/upf_files/
 export TESTCODE_DIR=${ESPRESSO_ROOT}/test-suite/testcode
 
-export TESTCODE_NPROCS=4

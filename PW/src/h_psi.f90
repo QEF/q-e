@@ -108,7 +108,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE fft_base, ONLY : dffts
   USE exx,      ONLY : use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
-  USE fft_helper_subroutines
   !
   USE uspp_gpum,  ONLY : using_vkb
   USE wvfct_gpum, ONLY : using_g2kin

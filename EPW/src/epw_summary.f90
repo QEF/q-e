@@ -22,7 +22,8 @@
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
-  USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
+  USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, wk
+  USE klist_epw,     ONLY : xk_all
   USE gvect,         ONLY : gcutm, ngm
   USE gvecs,         ONLY : dual, doublegrid, gcutms, ngms
   USE gvecw,         ONLY : ecutwfc
@@ -122,7 +123,7 @@
   !   description of symmetries
   !
   WRITE(stdout, * )
-  IF (nsymq.le.1 .and. .not.minus_q) THEN
+  IF (nsymq <= 1 .and.  .NOT. minus_q) THEN
     WRITE(stdout, '(5x,"No symmetry!")')
   ELSE
     IF (minus_q) THEN
@@ -133,7 +134,7 @@
     ENDIF
   ENDIF
 
-  IF (iverbosity.eq.1) THEN
+  IF (iverbosity == 1) THEN
     WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
     IF (minus_q) THEN
       nsymtot = nsymq + 1
@@ -141,7 +142,7 @@
       nsymtot = nsymq
     ENDIF
     DO isymq = 1, nsymtot
-      IF (isymq.gt.nsymq) THEN
+      IF (isymq > nsymq) THEN
         isym = irotmq
         WRITE(stdout, '(/,5x,"This transformation sends q -> -q+G")')
       ELSE
@@ -206,15 +207,15 @@
      WRITE(stdout, '(23x,"cart. coord. in units 2pi/a_0")')
      DO ik = 1, nkstot
         WRITE(stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
-             (xk(ipol,ik) , ipol = 1, 3), wk(ik)
+             (xk_all(ipol,ik) , ipol = 1, 3), wk(ik)
      ENDDO
   ENDIF
-  IF (iverbosity.eq.1) THEN
+  IF (iverbosity == 1) THEN
      WRITE(stdout, '(/23x,"cryst. coord.")')
      DO ik = 1, nkstot
         DO ipol = 1, 3
-           xkg(ipol) = at(1,ipol) * xk(1,ik) + at(2,ipol) * xk(2,ik) &
-                     + at(3,ipol) * xk(3,ik)
+           xkg(ipol) = at(1,ipol) * xk_all(1,ik) + at(2,ipol) * xk_all(2,ik) &
+                     + at(3,ipol) * xk_all(3,ik)
            ! xkg are the components of xk in the reciprocal lattice basis
         ENDDO
         WRITE(stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') &

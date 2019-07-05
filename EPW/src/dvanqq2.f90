@@ -105,7 +105,7 @@
   COMPLEX(kind=DP), POINTER :: qgmq(:)
   !! the augmentation function at q+G
   ! 
-  IF (.not.okvan) RETURN
+  IF ( .NOT. okvan) RETURN
   !
   CALL start_clock('dvanqq2')
   ! 
@@ -113,17 +113,17 @@
   int2(:,:,:,:,:) = czero
   int4(:,:,:,:,:) = czero
   int5(:,:,:,:,:) = czero
-  ALLOCATE( sk(ngm) )    
-  ALLOCATE( aux1(ngm) )    
-  ALLOCATE( aux2(ngm) )    
-  ALLOCATE( aux3(ngm) )    
-  ALLOCATE( aux5(ngm) )    
-  ALLOCATE( qmodg(ngm) )    
-  ALLOCATE( qmod(ngm) )
-  ALLOCATE( qgmq(ngm) )
-  ALLOCATE( qgm(ngm))
-  ALLOCATE( ylmk0(ngm, lmaxq * lmaxq) )    
-  ALLOCATE( ylmkq(ngm, lmaxq * lmaxq) )    
+  ALLOCATE ( sk(ngm) )    
+  ALLOCATE ( aux1(ngm) )    
+  ALLOCATE ( aux2(ngm) )    
+  ALLOCATE ( aux3(ngm) )    
+  ALLOCATE ( aux5(ngm) )    
+  ALLOCATE ( qmodg(ngm) )    
+  ALLOCATE ( qmod(ngm) )
+  ALLOCATE ( qgmq(ngm) )
+  ALLOCATE ( qgm(ngm))
+  ALLOCATE ( ylmk0(ngm, lmaxq * lmaxq) )    
+  ALLOCATE ( ylmkq(ngm, lmaxq * lmaxq) )    
   !
   ! compute spherical harmonics
   !
@@ -132,10 +132,10 @@
     qmodg(ig) = sqrt( gg(ig) )
   ENDDO
   ! 
-  ALLOCATE( qpg(3, ngm) )    
+  ALLOCATE ( qpg(3, ngm) )    
   CALL setqmod( ngm, xq, g, qmod, qpg )
   CALL ylmr2(lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
-  DEALLOCATE(qpg)
+  DEALLOCATE (qpg)
   DO ig = 1, ngm
     qmod(ig) = sqrt( qmod(ig) )
   ENDDO
@@ -314,18 +314,18 @@
   !SUM((REAL(REAL(int5(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int5(:,:,:,:,:))))**2)
 !END
   !
-  DEALLOCATE(sk)
-  DEALLOCATE(aux1)
-  DEALLOCATE(aux2)
-  DEALLOCATE(aux3)
-  DEALLOCATE(aux5)
-  DEALLOCATE(qmodg)
-  DEALLOCATE(qmod)
-  DEALLOCATE(qgmq)
-  DEALLOCATE(qgm)
-  DEALLOCATE(ylmk0)
-  DEALLOCATE(ylmkq)
-  DEALLOCATE(veff)
+  DEALLOCATE (sk)
+  DEALLOCATE (aux1)
+  DEALLOCATE (aux2)
+  DEALLOCATE (aux3)
+  DEALLOCATE (aux5)
+  DEALLOCATE (qmodg)
+  DEALLOCATE (qmod)
+  DEALLOCATE (qgmq)
+  DEALLOCATE (qgm)
+  DEALLOCATE (ylmk0)
+  DEALLOCATE (ylmkq)
+  DEALLOCATE (veff)
   !
   CALL stop_clock ('dvanqq2')
   RETURN

@@ -88,8 +88,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = (raux(:) + rho%of_r(:,nspin))/2.0_dp
         ELSE IF ( spin_component == 2 ) THEN
            raux(:) = (raux(:) - rho%of_r(:,nspin))/2.0_dp
-        !ELSE
-        !   CALL errore('punch_plot','spin_component not allowed',1)
         END IF
      ENDIF
      !
@@ -195,15 +193,21 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 11) THEN
 
-     raux(:) = vltot(:)
-     CALL v_h (rho%of_g(:,1), ehart, charge, raux)
-     IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
+     ALLOCATE( raux2(dfftp%nnr,nspin) )
+     raux2(:,1) = vltot(:)
+     
+     CALL v_h( rho%of_g(:,1), ehart, charge, raux2 )
+
+     raux(:) = raux2(:,1)
+     IF (tefield.and.dipfield) CALL add_efield(raux, dummy, rho%of_r(:,1),.true.)
+     
+     DEALLOCATE( raux2 )
 
   ELSEIF (plot_num == 12) THEN
 
      raux=0.d0
      IF (tefield) THEN
-         CALL add_efield(raux,dummy,rho%of_r,.true.)
+         CALL add_efield(raux,dummy,rho%of_r(:,1),.true.)
      ELSE
          CALL infomsg ('punch_plot','e_field is not calculated')
      ENDIF
@@ -231,7 +235,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 17 .or. plot_num == 21) THEN
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
      ! code partially duplicate from plot_num=0, should be unified
-     CALL init_us_1()
      !
      CALL PAW_make_ae_charge(rho,(plot_num==21))
      !
@@ -241,8 +244,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = ( raux(:) + rho%of_r(:,nspin) )/2.0_dp
         ELSE IF ( spin_component==2 ) THEN
            raux(:) = ( raux(:) - rho%of_r(:,nspin) )/2.0_dp
-        ELSE
-           CALL errore('punch_plot','spin_component not allowed',3)
         ENDIF
      END IF
      !

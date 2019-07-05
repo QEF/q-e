@@ -10,54 +10,44 @@
 SUBROUTINE allocate_nlpot
   !-----------------------------------------------------------------------
   !
-  ! This routine computes the dimension of the Hamiltonian matrix and
-  ! allocates arrays containing the non-local part of the pseudopotential
+  ! This routine allocates arrays containing the non-local part of the
+  ! pseudopotential for each atom or atomic species
   !
-  ! It computes the following global quantities:
+  ! Requires in input:
+  !    dimensions      nhm, nsp, nat, lmaxkb, nbetam, nspin
+  !    pseudopot info  upf%nwfc
+  !    parameters      gcutm, qnorm, dq, ecutwfc, cell_factor
+  !    options         tqr, noncolin, lspinorb, spline_ps
   !
-  !     npwx          !  maximum number of plane waves
+  ! Computes the following global quantities:
+  !
   !     nqx           !  number of points of the interpolation table
   !     nqxq          !  as above, for q-function interpolation table
   !
-  !
-
-  USE control_flags, ONLY : tqr
-  USE ions_base,        ONLY : nat, nsp, ityp
+  USE control_flags,    ONLY : tqr
+  USE ions_base,        ONLY : nat, nsp
   USE cellmd,           ONLY : cell_factor
-  USE gvect,            ONLY : ngm, gcutm, g
-  USE klist,            ONLY : xk, wk, nks, qnorm
+  USE klist,            ONLY : qnorm
   USE lsda_mod,         ONLY : nspin
-  USE ldaU,             ONLY : Hubbard_lmax
-  USE scf,              ONLY : rho
   USE noncollin_module, ONLY : noncolin
-  USE wvfct,            ONLY : npwx, g2kin
-  USE gvecw,            ONLY : gcutw, ecutwfc
+  USE gvect,            ONLY : gcutm
+  USE gvecw,            ONLY : ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
-  USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq_at, qq_nt, dvan, deeq, &
-                               vkb, indv_ijkb0, okvan, nkb, nkbus, nhtoj, &
+  USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq_at, qq_nt, &
+                               dvan, deeq, indv_ijkb0, okvan, nhtoj, &
                                becsum, ebecsum, qq_so,dvan_so, deeq_nc
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
-  USE wvfct_gpum,       ONLY : using_g2kin
-  USE uspp_gpum,        ONLY : using_vkb, using_indv_ijkb0, using_indv_ijkb0_d, &
+  USE uspp_gpum,        ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
                                using_deeq, using_deeq_nc, using_deeq_nc_d, &
                                using_qq_at, using_qq_so, using_becsum, using_ebecsum
   USE us_gpum,          ONLY : using_tab, using_tab_at, using_tab_d2y, using_qrad
   !
   IMPLICIT NONE
   !
-  INTEGER, EXTERNAL :: n_plane_waves
   INTEGER :: nwfcm
-  !
-  !   calculate number of PWs for all kpoints
-  !
-  npwx = n_plane_waves (gcutw, nks, xk, g, ngm)
-  !
-  !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
-  !
-  ALLOCATE (g2kin ( npwx ) )
   !
   ! Note: computation of the number of beta functions for
   ! each atomic type and the maximum number of beta functions
@@ -94,7 +84,6 @@ SUBROUTINE allocate_nlpot
   lmaxq = 2*lmaxkb+1
   !
   IF (lmaxq > 0) ALLOCATE (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))
-  ALLOCATE (vkb( npwx,  nkb))
   ALLOCATE (becsum( nhm * (nhm + 1)/2, nat, nspin))
   if (tqr) ALLOCATE (ebecsum( nhm * (nhm + 1)/2, nat, nspin))
   CALL using_becsum(2); IF (tqr) CALL using_ebecsum(2)
@@ -112,8 +101,6 @@ SUBROUTINE allocate_nlpot
   nwfcm = maxval ( upf(1:nsp)%nwfc )
   ALLOCATE (tab_at( nqx , nwfcm , nsp))
 
-  CALL using_g2kin(2)
-  CALL using_vkb(2)
   CALL using_indv_ijkb0(2)
   CALL using_deeq(2)
   IF (noncolin) CALL using_deeq_nc(2)
@@ -127,4 +114,3 @@ SUBROUTINE allocate_nlpot
   !
   RETURN
 END SUBROUTINE allocate_nlpot
-

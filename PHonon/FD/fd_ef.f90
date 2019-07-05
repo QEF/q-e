@@ -14,13 +14,6 @@ program fd_raman
   USE symm_base,       ONLY : nsym, nsym_ns, nsym_na, invsym, s, sr, &
                               t_rev, ft, sname
   USE symme
-  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
-       which_irr, char_mat, name_rap, name_class, gname, ir_ram
-  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
-       which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
-       name_class_so1
-  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
-       gname_is, sname_is, code_group_is
   USE fft_base, ONLY : dfftp
 
   USE parser,    ONLY : field_count, read_line, get_field, parse_unit
@@ -132,7 +125,6 @@ program fd_raman
     write(6,*) 
      
      WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
-     nsym_is=0
      DO isym = 1, nsym
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
         IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN

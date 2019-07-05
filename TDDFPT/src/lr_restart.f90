@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   USE charg_resp,           ONLY : resonance_condition, rho_1_tot,rho_1_tot_im
   USE wvfct,                ONLY : nbnd, npwx
   USE becmod,               ONLY : bec_type, becp, calbec
-  USE uspp,                 ONLY : vkb 
+  USE uspp,                 ONLY : vkb, okvan 
   USE io_global,            ONLY : ionode
   USE mp,                   ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm
@@ -72,6 +72,10 @@ SUBROUTINE lr_restart(iter_restart,rflag)
      CALL g2_kin(1)
      CALL init_us_2(ngk(1),igk_k(:,1),xk(:,1),vkb)
   ENDIF
+  !
+  ! Initialize coefficients which are needed for S^-1 in the USPP case.
+  !
+  IF (okvan) CALL lr_sm1_initialize()
   !
   ! Reading Lanczos coefficients
   !

@@ -144,6 +144,7 @@ cp_restart_new.o : ../../Modules/qes_libs_module.o
 cp_restart_new.o : ../../Modules/qes_read_module.o
 cp_restart_new.o : ../../Modules/qes_types_module.o
 cp_restart_new.o : ../../Modules/qexsd.o
+cp_restart_new.o : ../../Modules/qexsd_copy.o
 cp_restart_new.o : ../../Modules/qexsd_input.o
 cp_restart_new.o : ../../Modules/recvec.o
 cp_restart_new.o : ../../Modules/run_info.o
@@ -347,6 +348,8 @@ exch_corr.o : ../../Modules/kind.o
 exch_corr.o : ../../Modules/mp_global.o
 exch_corr.o : ../../Modules/recvec.o
 exch_corr.o : ../../Modules/uspp.o
+exch_corr.o : ../../Modules/xc_gga_drivers.o
+exch_corr.o : ../../Modules/xc_lda_lsda_drivers.o
 exch_corr.o : ../../UtilXlib/mp.o
 exch_corr.o : cp_interfaces.o
 exch_corr.o : mainvar.o
@@ -434,9 +437,6 @@ exx_vofr.o : ../../Modules/kind.o
 exx_vofr.o : ../../Modules/mp_global.o
 exx_vofr.o : ../../UtilXlib/parallel_include.o
 exx_vofr.o : exx_module.o
-fft.o : ../../Modules/fft_base.o
-fft.o : ../../Modules/kind.o
-fft.o : ../../Modules/mp_global.o
 forces.o : ../../FFTXlib/fft_helper_subroutines.o
 forces.o : ../../FFTXlib/fft_interfaces.o
 forces.o : ../../Modules/cell_base.o
@@ -1080,6 +1080,7 @@ smallbox_lib.o : smallbox_gvec.o
 smallbox_subs.o : ../../Modules/fft_base.o
 smallbox_subs.o : ../../Modules/io_global.o
 smallbox_subs.o : ../../Modules/kind.o
+smallbox_subs.o : ../../Modules/mp_global.o
 smallbox_subs.o : smallbox.o
 smallbox_subs.o : smallbox_gvec.o
 spinsq.o : ../../Modules/cell_base.o

@@ -35,7 +35,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   ! maxm = number of m components for l=maxl
   ! maxlm= number of l,m spherical harmonics for l <= maxl
   !
-  REAL(DP), PARAMETER :: eps = 1.0d-9
+  REAL(DP), PARAMETER :: eps = 1.0d-8
   !
   !   and the local variables
   !
