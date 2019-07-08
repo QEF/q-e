@@ -195,7 +195,7 @@ subroutine stress ( sigma )
 
   CALL symmatrix ( sigma )
   !
-  ! write results in Ry/(a.u.)^3 and in kbar
+  ! write results in Ryd/(a.u.)^3 and in kbar
   !
   IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
      write( stdout, 9000) (sigma(1,1) + sigma(2,2)) * ry_kbar/3d0, &
@@ -238,8 +238,8 @@ subroutine stress ( sigma )
   call stop_clock ('stress')
 
   return
-9000 format (10x,'total   stress  (Ry/bohr**3) ',18x,'(kbar)', &
-             &5x,'P=',f8.2/3 (3f13.8,4x,3f10.2/))
+9000 format (10x,'total   stress  (Ryd/bohr**3) ',18x,'(kbar)', &
+             &5x,'P=',f12.2/3 (3f13.8,4x,3f12.2/))
 9005 format &
          &  (5x,'kinetic stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'local   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
