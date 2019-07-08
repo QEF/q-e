@@ -105,7 +105,7 @@ SUBROUTINE add_bfield (v,rho)
      end if
      deallocate (m2, m_loc, r_loc)
 
-     write (stdout,'(4x,a,F15.8)' ) " constraint energy (Ryd) = ", etcon
+     write (stdout,'(4x,a,F15.8)' ) " constraint energy (Ry) = ", etcon
   ELSE IF (i_cons==3.or.i_cons==6) THEN
      m1 = 0.d0
      DO ipol = 1, npol
