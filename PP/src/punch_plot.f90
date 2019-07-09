@@ -93,7 +93,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
   ELSEIF (plot_num == 1) THEN
      !
-     !       The total self-consistent potential V_H+V_xc on output
+     !       The total self-consistent potential V_loc+V_H+V_xc
      !
      IF ( lsda ) THEN
         IF ( spin_component == 0 ) THEN
@@ -109,7 +109,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !       The local pseudopotential on output
      !
-     CALL dcopy (dfftp%nnr, vltot, 1, raux, 1)
+     raux(:) = vltot(:)
      !
   ELSEIF (plot_num == 3) THEN
      !
@@ -278,18 +278,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !      plot of the kinetic energy density
      !
-     IF (noncolin) THEN
-        CALL dcopy (dfftp%nnr, rho%kin_r, 1, raux, 1)
-     ELSE
+     IF ( lsda ) THEN
         IF (spin_component == 0) THEN
-           CALL dcopy (dfftp%nnr, rho%kin_r (1, 1), 1, raux, 1)
-           DO is = 2, nspin
-              CALL daxpy (dfftp%nnr, 1.d0, rho%kin_r (1, is), 1, raux, 1)
-           ENDDO
+           raux(:) = rho%kin_r(:,1)+rho%kin_r(:,2)
         ELSE
-           CALL dcopy (dfftp%nnr, rho%kin_r (1, spin_component), 1, raux, 1)
-           CALL dscal (dfftp%nnr, 0.5d0 * nspin, raux, 1)
+           raux(:) = rho%kin_r(:, spin_component)
         ENDIF
+     ELSE
+        raux(:) = rho%kin_r(:,1)
      ENDIF
 
   ELSE

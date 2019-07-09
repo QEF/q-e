@@ -4,8 +4,8 @@ New in development branch:
     Nathalie Vast). lr_sm1_psi.f90 of LR_Modules is rewritten and simplified.
 
 Problems fixed in development branch :
-  * PP: plot_num=1 wasn't working any longer as expected
-    due to forgotten local potential term
+  * PP: plot_num=1 wasn't working any longer as expected due to forgotten 
+    local potential term (noticed by Manoar Hossain, NISER)
   * DOS calculation wasn't honoring "bz_sum='smearing'" if the nscf 
     calculation was performed with tetrahedra, contrary to what stated
     in the documentation (noticed by Mohammedreza Hosseini, Modares Univ.)
