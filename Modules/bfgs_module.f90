@@ -119,7 +119,7 @@ MODULE bfgs_module
       w_1,               &! 1st Wolfe condition: sufficient energy decrease
       w_2                 ! 2nd Wolfe condition: sufficient gradient decrease
 
-   REAL(DP) :: forceh(3,3)
+   REAL(DP) :: forceh(3,3), forceh9(9)
    !
 CONTAINS
    !
@@ -221,8 +221,11 @@ CONTAINS
         IF(isotropic)THEN
           !FORALL(i=1:3, j=1:3) forceh(i,j) = pos_in( n-9 + j+3*(i-1) )
           forceh = h / DSQRT(SUM(h**2))
+          forceh9 = RESHAPE(forceh,[9])
           !fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
-          fiso = SUM(fcell)/9._dp
+          !fiso = SUM(fcell)/9._dp
+          fiso = SUM(fcell*forceh)
+          !print*, fiso, forceh9
           fcell = fiso 
         ELSE
           forceh = DBLE(iforceh)
@@ -353,7 +356,8 @@ CONTAINS
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
             if (lmovecell) then
               IF(isotropic)THEN
-                fiso = SUM(step( n-9:n))/9._dp
+                !fiso = SUM(step( n-8:n))/9._dp
+                fiso = SUM(step( n-8:n)*forceh9)
                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) =  fiso*forceh(i,j)
               ELSE
                  FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
@@ -412,7 +416,8 @@ CONTAINS
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
             if (lmovecell) then
               IF(isotropic)THEN
-                fiso = SUM(step( n-9:n))/9._dp
+                !fiso = SUM(step( n-8:n))/9._dp
+                fiso = SUM(step( n-8:n)*forceh9)
                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) = fiso*forceh(i,j)
               ELSE
                  FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
@@ -430,7 +435,8 @@ CONTAINS
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
             if (lmovecell) then
               IF(isotropic)THEN
-                fiso = SUM(step( n-9:n))/9._dp
+                !fiso = SUM(step( n-8:n))/9._dp
+                fiso = SUM(step( n-8:n)*forceh9)
                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) = fiso*forceh(i,j)
               ELSE
                  FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
@@ -592,7 +598,8 @@ CONTAINS
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
             if (lmovecell) then
               IF(isotropic)THEN
-                fiso = SUM(step( n-9:n))/9._dp
+                !fiso = SUM(step( n-8:n))/9._dp
+                fiso = SUM(step( n-8:n)*forceh9)
                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) = fiso*forceh(i,j)
               ELSE
                  FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
