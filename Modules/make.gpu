@@ -12,6 +12,7 @@ MODULES += \
 MODFLAGS += \
          $(MOD_FLAG)../GScratch
 
+mp_exx.o : control_flags.o
 becmod_gpu.o : becmod.o
 becmod_gpu.o : control_flags.o
 becmod_gpu.o : kind.o

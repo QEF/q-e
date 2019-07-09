@@ -149,6 +149,7 @@ CONTAINS
   SUBROUTINE init_index_over_band(comm,nbnd,m)
     !
     USE io_global, ONLY : stdout
+    USE control_flags, ONLY : use_gpu
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: comm, nbnd
     INTEGER, INTENT(IN) :: m
@@ -165,9 +166,7 @@ CONTAINS
     IF (ALLOCATED(all_start)) THEN
        DEALLOCATE( all_start, all_end )
        DEALLOCATE( iexx_istart, iexx_iend )
-#if defined(__CUDA)
-       DEALLOCATE(iexx_istart_d)
-#endif
+       IF(use_gpu) DEALLOCATE(iexx_istart_d)
     END IF
     ALLOCATE( all_start(negrp) )
     ALLOCATE( all_end(negrp) )
@@ -228,11 +227,9 @@ CONTAINS
     END DO
     max_pairs = CEILING(REAL(nbnd*m)/REAL(negrp))
     n_underloaded = MODULO(max_pairs*negrp-nbnd*m,negrp)
-
-#if defined(__CUDA)
+    !
     !allocate and upload
-    ALLOCATE(iexx_istart_d, source=iexx_istart)
-#endif
+    IF(use_gpu) ALLOCATE(iexx_istart_d, source=iexx_istart)
     !
     ! allocate arrays
     !
