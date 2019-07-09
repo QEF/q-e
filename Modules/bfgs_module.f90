@@ -220,8 +220,9 @@ CONTAINS
       if (lmovecell) then
         IF(isotropic)THEN
           !FORALL(i=1:3, j=1:3) forceh(i,j) = pos_in( n-9 + j+3*(i-1) )
-          forceh = h / DSQRT(SUM(forceh**2))
-          fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
+          forceh = h / DSQRT(SUM(h**2))
+          !fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
+          fiso = SUM(fcell)/9._dp
           fcell = fiso 
         ELSE
           forceh = DBLE(iforceh)
