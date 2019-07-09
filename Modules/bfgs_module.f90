@@ -45,7 +45,7 @@ MODULE bfgs_module
    USE kinds,     ONLY : DP
    USE io_files,  ONLY : iunbfgs, prefix
    USE constants, ONLY : eps8, eps16
-   USE cell_base, ONLY : iforceh      ! FIXME: should be passed as argument
+   USE cell_base, ONLY : iforceh, isotropic      ! FIXME: should be passed as argument
    !
    USE basic_algebra_routines
    USE matrix_inversion
@@ -118,6 +118,8 @@ MODULE bfgs_module
    REAL(DP)  ::          &! parameters for Wolfe conditions
       w_1,               &! 1st Wolfe condition: sufficient energy decrease
       w_2                 ! 2nd Wolfe condition: sufficient gradient decrease
+
+   REAL(DP) :: forceh(3,3)
    !
 CONTAINS
    !
@@ -163,7 +165,7 @@ CONTAINS
       !
       INTEGER  :: n, i, j, k, nat
       LOGICAL  :: lwolfe
-      REAL(DP) :: dE0s, den
+      REAL(DP) :: dE0s, den, fiso
       ! ... for scaled coordinates
       REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3), omega
       !
@@ -215,7 +217,17 @@ CONTAINS
       if (lmovecell) FORALL( i=1:3, j=1:3)  pos( n-9 + j+3*(i-1) ) = h(i,j)
       grad = 0.0
       grad(1:n-9) = grad_in
-      if (lmovecell) FORALL( i=1:3, j=1:3) grad( n-9 + j+3*(i-1) ) = fcell(i,j)*iforceh(i,j)
+      if (lmovecell) then
+        IF(isotropic)THEN
+          !FORALL(i=1:3, j=1:3) forceh(i,j) = pos_in( n-9 + j+3*(i-1) )
+          forceh = h / DSQRT(SUM(forceh**2))
+          fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
+          fcell = fiso 
+        ELSE
+          forceh = DBLE(iforceh)
+        ENDIF
+        FORALL( i=1:3, j=1:3) grad( n-9 + j+3*(i-1) ) = fcell(i,j)*forceh(i,j)
+      endif
       !
       ! if the cell moves the quantity to be minimized is the enthalpy
       IF ( lmovecell ) fname="enthalpy"
@@ -338,7 +350,15 @@ CONTAINS
             CALL reset_bfgs( n )
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) then
+              IF(isotropic)THEN
+                fiso = SUM(step( n-9:n))/9._dp
+                FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) =  fiso*forceh(i,j)
+              ELSE
+                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
+              ENDIF
+            endif
+            ! 
             ! normalize step but remember its length
             nr_step_length = scnorm(step)
             step(:) = step(:) / nr_step_length
@@ -389,7 +409,15 @@ CONTAINS
             ! ... standard Newton-Raphson step
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) then
+              IF(isotropic)THEN
+                fiso = SUM(step( n-9:n))/9._dp
+                FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) = fiso*forceh(i,j)
+              ELSE
+                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
+              ENDIF
+            endif
+            !if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
             !
          END IF
          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
@@ -399,7 +427,15 @@ CONTAINS
             !
             CALL reset_bfgs( n )
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) then
+              IF(isotropic)THEN
+                fiso = SUM(step( n-9:n))/9._dp
+                FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) = fiso*forceh(i,j)
+              ELSE
+                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
+              ENDIF
+            endif
+            !if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
             !
          END IF
          !
@@ -553,7 +589,15 @@ CONTAINS
             ! ... last gradient and reset gdiis history
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
-            if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*iforceh(i,j)
+            if (lmovecell) then
+              IF(isotropic)THEN
+                fiso = SUM(step( n-9:n))/9._dp
+                FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1)) = fiso*forceh(i,j)
+              ELSE
+                 FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
+              ENDIF
+            endif
+            !if (lmovecell) FORALL( i=1:3, j=1:3) step( n-9 + j+3*(i-1) ) = step( n-9 + j+3*(i-1) )*forceh(i,j)
             !
             gdiis_iter = 0
             !
