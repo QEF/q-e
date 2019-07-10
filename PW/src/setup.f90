@@ -307,7 +307,7 @@ SUBROUTINE setup()
             .AND. .NOT. tfixed_occ .AND. .NOT. two_fermi_energies ) &
       CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
   !
-  ! ... setting nelup/neldw 
+  ! ... setting the number of up and down electrons
   !
   call set_nelup_neldw ( tot_magnetization, nelec, nelup, neldw )
   !
