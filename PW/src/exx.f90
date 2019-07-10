@@ -507,10 +507,11 @@ MODULE exx
          ENDDO
       ENDDO
     ELSE
-      !this one is broken, we need to figure out why. for now, we should not do it
-      !IF (use_gpu) THEN
-      !   CALL cuf_memset(exxbuff_d, (0.0_DP,0.0_DP), (/1,nrxxs*npol/), (/ibnd_buff_start,ibnd_buff_end/), (/1,SIZE(exxbuff_d,3)/))
-      !ELSE
+       IF (use_gpu) THEN
+         ! NB: the array bounds are not passed to the subroutine.
+         ! See https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/269311
+         CALL cuf_memset(exxbuff_d, (0.0_DP,0.0_DP), (/1,nrxxs*npol/), (/1, ibnd_buff_end-ibnd_buff_start+1/), (/1,SIZE(exxbuff_d,3)/))
+       ELSE
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
          DO ikq=1,SIZE(exxbuff,3) 
             DO ibnd=ibnd_buff_start,ibnd_buff_end
@@ -521,9 +522,8 @@ MODULE exx
          ENDDO
          ! the above loops will replaced with the following line soon
          !CALL threaded_memset(exxbuff, 0.0_DP, nrxxs*npol*SIZE(exxbuff,2)*nkqs*2)
-         !END IF
+       END IF
     END IF
-    IF (use_gpu) exxbuff_d = exxbuff
     !
     !   This is parallelized over pools. Each pool computes only its k-points
     !
