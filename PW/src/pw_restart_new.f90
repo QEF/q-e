@@ -40,8 +40,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_magnetization, &
-       readschema_occupations, readschema_brillouin_zone
+  PUBLIC :: readschema_ef, readschema_occupations, readschema_brillouin_zone
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1004,54 +1003,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !-----------------------------------------------------------------------------------------
-    SUBROUTINE readschema_magnetization( band_structure_obj, magnetization_obj ) 
-      !---------------------------------------------------------------------------------------
-      ! 
-      USE klist,            ONLY : two_fermi_energies, nelup, neldw, tot_magnetization
-      USE ener,             ONLY : ef_up, ef_dw
-      USE lsda_mod,         ONLY : nspin, lsda, starting_magnetization
-      USE noncollin_module, ONLY : noncolin, npol, bfield
-      USE electrons_base,   ONLY : set_nelup_neldw
-      USE spin_orb,         ONLY : lspinorb, domag
-      USE qes_types_module, ONLY : band_structure_type, magnetization_type
-      !
-      IMPLICIT NONE 
-      !
-      TYPE ( band_structure_type ),INTENT(IN)    :: band_structure_obj
-      TYPE ( magnetization_type ) ,INTENT(IN)    :: magnetization_obj
-      REAL(dp) :: nelec_
-      ! 
-      lsda  =   magnetization_obj%lsda
-      noncolin = magnetization_obj%noncolin  
-      lspinorb = magnetization_obj%spinorbit 
-      domag =   magnetization_obj%do_magnetization 
-      !
-      IF ( lsda ) THEN  
-        nspin = 2
-        npol = 1
-      ELSE IF (noncolin ) THEN 
-        nspin = 4
-        npol = 2
-      ELSE 
-        nspin =1
-        npol = 1 
-      END IF
-      !
-      bfield = 0.d0
-      nelec_ = band_structure_obj%nelec
-      two_fermi_energies = band_structure_obj%two_fermi_energies_ispresent
-      IF (two_fermi_energies) THEN 
-         ef_up = band_structure_obj%two_fermi_energies(1)
-         ef_dw = band_structure_obj%two_fermi_energies(2) 
-         IF (TRIM(band_structure_obj%occupations_kind%occupations) == 'fixed') THEN
-            tot_magnetization = magnetization_obj%total
-            CALL set_nelup_neldw(tot_magnetization, nelec_, nelup, neldw) 
-         END IF 
-      END IF 
-      !
-    END SUBROUTINE readschema_magnetization
-    !-----------------------------------------------------------------------
     !
     !---------------------------------------------------------------------------
     SUBROUTINE readschema_brillouin_zone( band_structure )

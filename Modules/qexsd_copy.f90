@@ -23,7 +23,7 @@ MODULE qexsd_copy
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
-       qexsd_copy_efield
+       qexsd_copy_efield, qexsd_copy_magnetization
   !
 CONTAINS
   !-------------------------------------------------------------------------------
@@ -626,4 +626,25 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_efield
     !
+    !--------------------------------------------------------------------------
+    SUBROUTINE qexsd_copy_magnetization ( magnetization_obj, &
+         lsda, noncolin, lspinorb, domag, tot_magnetization )
+      !------------------------------------------------------------------------
+      ! 
+      USE qes_types_module, ONLY : magnetization_type
+      !
+      IMPLICIT NONE 
+      !
+      TYPE ( magnetization_type ) ,INTENT(IN)    :: magnetization_obj
+      LOGICAL, INTENT(OUT)  :: lsda, noncolin, lspinorb, domag
+      REAL(dp), INTENT(OUT) :: tot_magnetization
+      ! 
+      lsda  =   magnetization_obj%lsda
+      noncolin = magnetization_obj%noncolin  
+      lspinorb = magnetization_obj%spinorbit 
+      domag =   magnetization_obj%do_magnetization 
+      tot_magnetization = magnetization_obj%total
+      !
+    END SUBROUTINE qexsd_copy_magnetization
+    !-----------------------------------------------------------------------
   END MODULE qexsd_copy
