@@ -103,9 +103,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
-  USE klist,           ONLY : nks, nkstot, nelec, wk
+  USE klist,           ONLY : nks, nkstot, nelec, wk, tot_magnetization, &
+       nelup, neldw
   USE ener,            ONLY : ef, ef_up, ef_dw
-  USE electrons_base,  ONLY : nupdwn 
+  USE electrons_base,  ONLY : nupdwn, set_nelup_neldw
   USE wvfct,           ONLY : npwx, nbnd, et, wg
   USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
        edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
@@ -129,25 +130,24 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
        lxdm, ts_vdw
   USE Coul_cut_2D,     ONLY : do_cutoff_2D
-  USE noncollin_module,ONLY : noncolin, angle1, angle2
-  USE spin_orb,        ONLY : domag
-  USE lsda_mod,        ONLY : isk, lsda, starting_magnetization
+  USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield
+  USE spin_orb,        ONLY : domag, lspinorb
+  USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization
   USE realus,          ONLY : real_space
   USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : okvan
   USE paw_variables,   ONLY : okpaw
   !
   USE pw_restart_new,  ONLY : pw_read_schema, &
-       readschema_magnetization, &
        readschema_occupations, readschema_brillouin_zone
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
   USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
-       qexsd_copy_atomic_species, &
+       qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
-       qexsd_copy_basis_set, qexsd_copy_algorithmic_info,&
-       qexsd_copy_dft, qexsd_copy_efield, qexsd_copy_band_structure
+       qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
+       qexsd_copy_band_structure, qexsd_copy_magnetization
        
 #if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
@@ -253,8 +253,23 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   nks = nkstot
   !!
-  CALL readschema_magnetization (  output_obj%band_structure,  &
-       output_obj%magnetization )
+  !! Magnetization section
+  CALL qexsd_copy_magnetization ( output_obj%magnetization, lsda, noncolin,&
+       lspinorb, domag, tot_magnetization )
+  !
+  bfield = 0.d0
+  IF ( lsda ) THEN  
+     nspin = 2
+     npol = 1
+  ELSE IF (noncolin ) THEN 
+     nspin = 4
+     npol = 2
+  ELSE 
+     nspin =1
+     npol = 1 
+  END IF
+  CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
+  !
   CALL readschema_occupations( output_obj%band_structure )
   CALL readschema_brillouin_zone( output_obj%band_structure )
   !! Symmetry section
