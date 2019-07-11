@@ -40,7 +40,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_occupations, readschema_brillouin_zone
+  PUBLIC :: readschema_ef, readschema_occupations
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1003,71 +1003,19 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !
-    !---------------------------------------------------------------------------
-    SUBROUTINE readschema_brillouin_zone( band_structure )
-    !---------------------------------------------------------------------------
-       !
-       USE start_k,  ONLY : nks_start, xk_start, wk_start, &
-                              nk1, nk2, nk3, k1, k2, k3 
-       USE qes_types_module, ONLY : band_structure_type
-       !
-       IMPLICIT NONE
-       !
-       TYPE ( band_structure_type ),INTENT(IN)    :: band_structure
-       INTEGER                                    :: ik
-       ! 
-       !   
-       IF ( band_structure%starting_k_points%monkhorst_pack_ispresent ) THEN 
-          nks_start = 0 
-          nk1 = band_structure%starting_k_points%monkhorst_pack%nk1 
-          nk2 = band_structure%starting_k_points%monkhorst_pack%nk2
-          nk3 = band_structure%starting_k_points%monkhorst_pack%nk3 
-           k1 = band_structure%starting_k_points%monkhorst_pack%k1
-           k2 = band_structure%starting_k_points%monkhorst_pack%k2
-           k3 = band_structure%starting_k_points%monkhorst_pack%k3
-       ELSE IF (band_structure%starting_k_points%nk_ispresent ) THEN 
-           nks_start = band_structure%starting_k_points%nk
-           IF ( nks_start > 0 ) THEN 
-              IF ( .NOT. ALLOCATED(xk_start) ) ALLOCATE (xk_start(3,nks_start))
-              IF ( .NOT. ALLOCATED(wk_start) ) ALLOCATE (wk_start(nks_start))
-              IF ( nks_start == size( band_structure%starting_k_points%k_point ) ) THEN 
-                 DO ik =1, nks_start
-                    xk_start(:,ik) = band_structure%starting_k_points%k_point(ik)%k_point(:) 
-                    IF ( band_structure%starting_k_points%k_point(ik)%weight_ispresent) THEN 
-                        wk_start(ik) = band_structure%starting_k_points%k_point(ik)%weight 
-                    ELSE 
-                        wk_start(ik) = 0.d0
-                    END IF 
-                 END DO
-              ELSE
-                 CALL infomsg ( "readschema_bz: ", &
-                                "actual number of start kpoint not equal to nks_start, set nks_start=0")  
-                 nks_start = 0 
-              END IF
-           END IF
-       ELSE 
-           CALL errore ("readschema_bz: ", &
-                        " no information found for initializing brillouin zone information", 1)
-       END IF  
-       ! 
-    END SUBROUTINE readschema_brillouin_zone     
     !--------------------------------------------------------------------------------------------------
     SUBROUTINE readschema_occupations( band_struct_obj ) 
       !------------------------------------------------------------------------------------------------
       ! 
-      USE lsda_mod,         ONLY : lsda, nspin
-      USE fixed_occ,        ONLY : tfixed_occ, f_inp
       USE ktetra,           ONLY : ntetra, tetra_type
       USE klist,            ONLY : ltetra, lgauss, ngauss, degauss, smearing
-      USE wvfct,            ONLY : nbnd
       USE input_parameters, ONLY : input_parameters_occupations => occupations
-      USE qes_types_module, ONLY : input_type, band_structure_type
+      USE qes_types_module, ONLY : band_structure_type
       ! 
       IMPLICIT NONE 
       ! 
       TYPE ( band_structure_type ),INTENT(IN)     :: band_struct_obj 
-      INTEGER                                     :: ispin, nk1, nk2, nk3, aux_dim1, aux_dim2 
+      INTEGER                                     :: nk1, nk2, nk3
       ! 
       lgauss = .FALSE. 
       ltetra = .FALSE. 

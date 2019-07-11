@@ -23,7 +23,7 @@ MODULE qexsd_copy
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
-       qexsd_copy_efield, qexsd_copy_magnetization
+       qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints
   !
 CONTAINS
   !-------------------------------------------------------------------------------
@@ -650,4 +650,56 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_magnetization
     !-----------------------------------------------------------------------
+    !
+    !---------------------------------------------------------------------------
+    SUBROUTINE qexsd_copy_kpoints ( band_struct_obj, nks_start, xk_start,&
+         wk_start, nk1, nk2, nk3, k1, k2, k3 )
+    !---------------------------------------------------------------------------
+       !
+       USE qes_types_module, ONLY : band_structure_type
+       !
+       IMPLICIT NONE
+       !
+       TYPE ( band_structure_type ),INTENT(IN)    :: band_struct_obj
+       INTEGER,  INTENT(out) :: nks_start, nk1, nk2, nk3, k1, k2, k3 
+       REAL(dp), ALLOCATABLE, INTENT(inout) :: xk_start(:,:), wk_start(:)
+       !
+       INTEGER :: ik
+       ! 
+       !   
+       IF ( band_struct_obj%starting_k_points%monkhorst_pack_ispresent ) THEN 
+          nks_start = 0 
+          nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1 
+          nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
+          nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3 
+           k1 = band_struct_obj%starting_k_points%monkhorst_pack%k1
+           k2 = band_struct_obj%starting_k_points%monkhorst_pack%k2
+           k3 = band_struct_obj%starting_k_points%monkhorst_pack%k3
+       ELSE IF (band_struct_obj%starting_k_points%nk_ispresent ) THEN 
+           nks_start = band_struct_obj%starting_k_points%nk
+           IF ( nks_start > 0 ) THEN 
+              IF ( .NOT. ALLOCATED(xk_start) ) ALLOCATE (xk_start(3,nks_start))
+              IF ( .NOT. ALLOCATED(wk_start) ) ALLOCATE (wk_start(nks_start))
+              IF ( nks_start == size( band_struct_obj%starting_k_points%k_point ) ) THEN 
+                 DO ik =1, nks_start
+                    xk_start(:,ik) = band_struct_obj%starting_k_points%k_point(ik)%k_point(:) 
+                    IF ( band_struct_obj%starting_k_points%k_point(ik)%weight_ispresent) THEN 
+                        wk_start(ik) = band_struct_obj%starting_k_points%k_point(ik)%weight 
+                    ELSE 
+                        wk_start(ik) = 0.d0
+                    END IF 
+                 END DO
+              ELSE
+                 CALL infomsg ( "qexsd_copy_kp: ", &
+                      "actual number of start kpoint not equal to nks_start, set nks_start=0")  
+                 nks_start = 0 
+              END IF
+           END IF
+       ELSE 
+          CALL errore ("qexsd_copy_kp: ", &
+               " no information found for initializing brillouin zone information", 1)
+       END IF  
+       ! 
+     END SUBROUTINE qexsd_copy_kpoints
+     !
   END MODULE qexsd_copy
