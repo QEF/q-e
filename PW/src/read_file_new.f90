@@ -103,8 +103,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
-  USE klist,           ONLY : nks, nkstot, nelec, wk, tot_magnetization, &
-       nelup, neldw
+  USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
+       nelec, nelup, neldw
   USE ener,            ONLY : ef, ef_up, ef_dw
   USE electrons_base,  ONLY : nupdwn, set_nelup_neldw
   USE wvfct,           ONLY : npwx, nbnd, et, wg
@@ -240,8 +240,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !! Band structure section
   !! et and wg are allocated inside qexsd_copy_band_structure
   CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
-       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, wk, wg, &
-       ef, ef_up, ef_dw, et )
+       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, xk, &
+       wk, wg, ef, ef_up, ef_dw, et )
   ! convert to Ry
   ef = ef*e2
   ef_up = ef_up*e2

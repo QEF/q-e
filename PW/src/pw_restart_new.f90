@@ -1008,8 +1008,6 @@ MODULE pw_restart_new
     SUBROUTINE readschema_brillouin_zone( band_structure )
     !---------------------------------------------------------------------------
        !
-       USE lsda_mod, ONLY : lsda, isk
-       USE klist,    ONLY : nkstot, xk, wk
        USE start_k,  ONLY : nks_start, xk_start, wk_start, &
                               nk1, nk2, nk3, k1, k2, k3 
        USE qes_types_module, ONLY : band_structure_type
@@ -1017,26 +1015,8 @@ MODULE pw_restart_new
        IMPLICIT NONE
        !
        TYPE ( band_structure_type ),INTENT(IN)    :: band_structure
-       INTEGER                                    :: ik, isym, nks_
+       INTEGER                                    :: ik
        ! 
-       nks_ = band_structure%nks
-       nkstot = nks_
-       IF ( band_structure%lsda ) nkstot = nkstot * 2  
-       ! 
-       ! 
-       DO ik = 1, nks_
-          xk(:,ik) = band_structure%ks_energies(ik)%k_point%k_point(:) 
-       END DO 
-       !!  during lsda computations pw uses, for each k-point in the mesh, a distinct 
-       !!  k_point variable for the two spin channels, while in 
-       !!  the xml file only one k_point is present
-       IF ( band_structure%lsda ) THEN
-          DO ik = 1, nks_
-             xk(:,nks_+ik) = band_structure%ks_energies(ik)%k_point%k_point(:) 
-             isk(ik) = 1
-             isk(ik+nks_) = 2
-          END DO
-       END IF   
        !   
        IF ( band_structure%starting_k_points%monkhorst_pack_ispresent ) THEN 
           nks_start = 0 

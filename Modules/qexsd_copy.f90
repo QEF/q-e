@@ -445,7 +445,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_band_structure( band_struct_obj, lsda, nkstot, &
-         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, wk, wg, &
+         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
          ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
       !
@@ -458,7 +458,7 @@ CONTAINS
       LOGICAL, INTENT(out) :: lsda
       INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd, nbnd_up, nbnd_dw, &
               isk(:)
-      REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, wk(:)
+      REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, xk(:,:), wk(:)
       REAL(dp), INTENT(inout), ALLOCATABLE ::  wg(:,:), et(:,:)
       !
       INTEGER :: ik
@@ -526,6 +526,8 @@ CONTAINS
       !
       DO ik =1, band_struct_obj%ndim_ks_energies
          IF ( band_struct_obj%lsda) THEN
+            xk(:,ik) = band_struct_obj%ks_energies(ik)%k_point%k_point(:) 
+            xk(:,ik + band_struct_obj%ndim_ks_energies) = xk(:,ik)
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
             wk(ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
             et(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_up)
@@ -536,6 +538,7 @@ CONTAINS
             wg(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
                  band_struct_obj%ks_energies(ik)%occupations%vector(nbnd_up+1:nbnd_up+nbnd_dw)*wk(ik)
          ELSE 
+            xk(:,ik) = band_struct_obj%ks_energies(ik)%k_point%k_point(:) 
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
             et (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd)
             wg (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd)*wk(ik)
