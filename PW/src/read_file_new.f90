@@ -261,6 +261,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( lsda ) THEN  
      nspin = 2
      npol = 1
+     ! FIXME: next line makes sense only for fixed occupations
+     ! FIXME: is this really needed? do we use nelup and neldw?
+     CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
   ELSE IF (noncolin ) THEN 
      nspin = 4
      npol = 2
@@ -268,7 +271,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      nspin =1
      npol = 1 
   END IF
-  CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
   !
   CALL readschema_occupations( output_obj%band_structure )
   CALL readschema_brillouin_zone( output_obj%band_structure )
