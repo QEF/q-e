@@ -219,6 +219,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ecutwfc = ecutwfc*e2
   ecutrho = ecutrho*e2
   dual = ecutrho/ecutwfc
+  ! FIXME: next line ensures exact consistency between reciprocal and
+  ! direct lattice vectors, preventing weird phonon symmetry errors
+  ! (due to lousy algorithms, extraordinarily sensitive to tiny errors)
+  CALL recips ( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !!
   !! DFT section
   CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
