@@ -180,7 +180,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
                                     vasp_atominfo_obj, vasp_structure_obj)
   CALL errore( 'read_xml_file ', 'problem reading file ' // TRIM( tmp_dir ) //'vasprun.xml', ierr )
   !
-  CALL set_dft_from_indices(iexch, icorr, igcx, igcc, inlc)
+  CALL set_dft_from_indices(iexch, icorr, igcx, igcc, 0, inlc)
   WRITE( stdout, '(5X,"Exchange-correlation      = ", &
         &  " (",I2,3I3,2I2,")")') iexch,icorr,igcx,igcc,inlc,imeta
   !

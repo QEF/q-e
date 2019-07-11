@@ -8,8 +8,8 @@ SUBROUTINE dgcxc( length, r_in, s2_in, vrrx, vsrx, vssx, vrrc, vsrc, vssc )
   !! This routine computes the derivative of the exchange and correlation
   !! potentials.
   !
-  USE xc_gga,       ONLY: gcxc, libxc_switches_gga
   USE kinds,        ONLY: DP
+  USE xc_gga,       ONLY: gcxc
   !
   IMPLICIT NONE
   !
@@ -71,7 +71,7 @@ SUBROUTINE dgcxc_spin( length, r_in, g_in, vrrx, vrsx, vssx, vrrc, vrsc, &
   !! This routine computes the derivative of the exchange and correlation
   !! potentials in the spin-polarized case.
   !
-  USE xc_gga,       ONLY: gcx_spin, gcc_spin, libxc_switches_gga
+  USE xc_gga,       ONLY: gcx_spin, gcc_spin
   USE kinds,        ONLY: DP
   !
   IMPLICIT NONE
