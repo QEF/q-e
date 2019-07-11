@@ -58,9 +58,10 @@ Active branches
 There are currently two active branches:
 
 * gpu_develop
-* gpu_develop_multifft
+* gpu_exx
+* gpu_forces
 
-Both tese branches are aligned with the develop branch of `QEF/q-e`.
+These branches are aligned with the develop branch of `QEF/q-e`.
 The difference between the two branches is only in the FFTXlib library.
 In the second case a 1D+2D algorithm is used for both the CPU and the GPU
 subroutines. This makes the code considerably faster, especially on the
