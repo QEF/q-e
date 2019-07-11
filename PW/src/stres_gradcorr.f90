@@ -135,29 +135,6 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
        ENDDO
      ENDDO
      !
-     !
-!      DO k = 1, nrxx
-!         IF ( dft_is_meta() .AND. get_meta() /= 4 .AND. null_v(k) /= 0 ) THEN
-!            IF ( ABS(rhoaux(k,1))>epsr .AND. grho2(k,1)>epsg ) THEN
-!               !
-!               kedtau(k,1) = kedtau(k,1) / e2
-!               CALL tau_xc( rhoaux(k,1), grho2(k,1), kedtau(k,1), sx(k), sc(k), &
-!                                  v1x(k,1), v2x(k,1), v3x, v1c(k,1), v2c(k,1), v3c )
-!               kedtau(k,1) = kedtau(k,1) * e2
-!               !
-!            ENDIF
-!         ENDIF
-!         !
-!         DO l = 1, 3
-!            DO m = 1, l
-!               sigma_gradcorr(l,m) = sigma_gradcorr(l,m) + grho(l,k,1)*grho(m,k,1)* &
-!                                     e2 * (v2x(k,1) + v2c(k,1))
-!            ENDDO
-!         ENDDO
-!         !
-!      ENDDO
-     !
-     !
   ELSEIF (nspin == 2) THEN
      !
      !    This is the LSDA case
