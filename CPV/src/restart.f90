@@ -53,7 +53,7 @@
 
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       INTEGER  :: nk = 1, ispin, i, ib, ierr
-      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
+      REAL(DP) :: xk(3,2)=0.0_dp, wk(2)=1.0_dp
       COMPLEX(DP), ALLOCATABLE :: ctot(:,:)
       REAL(DP),    ALLOCATABLE :: eitot(:,:)
       INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
@@ -152,7 +152,7 @@
       !
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib, ierr
-      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
+      REAL(DP) :: xk(3,2), wk(2)
       REAL(DP), ALLOCATABLE :: occ_ ( : )
       REAL(DP) :: b1(3) , b2(3), b3(3)
 
