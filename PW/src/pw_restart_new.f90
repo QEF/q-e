@@ -40,7 +40,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_occupations
+  PUBLIC :: readschema_occupations
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1198,27 +1198,5 @@ MODULE pw_restart_new
       !
     END SUBROUTINE read_collected_to_evc
     !
-    !----------------------------------------------------------------------------------------
-    SUBROUTINE readschema_ef ( band_struct_obj )
-    !----------------------------------------------------------------------------------------
-       !
-       USE constants, ONLY        : e2
-       USE ener,  ONLY            : ef, ef_up, ef_dw
-       USE klist, ONLY            : two_fermi_energies, nelec
-       USE qes_types_module, ONLY : band_structure_type 
-       ! 
-       IMPLICIT NONE 
-       ! 
-       TYPE ( band_structure_type ),INTENT(IN)      :: band_struct_obj 
-       ! 
-       two_fermi_energies = band_struct_obj%two_fermi_energies_ispresent 
-       nelec = band_struct_obj%nelec
-       IF ( two_fermi_energies) THEN 
-          ef_up = band_struct_obj%two_fermi_energies(1)*e2
-          ef_dw = band_struct_obj%two_fermi_energies(2)*e2
-       ELSE IF ( band_struct_obj%fermi_energy_ispresent ) THEN 
-          ef = band_struct_obj%fermi_energy*e2
-       END IF 
-    END SUBROUTINE readschema_ef 
     !------------------------------------------------------------------------
   END MODULE pw_restart_new

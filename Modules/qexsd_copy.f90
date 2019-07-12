@@ -23,7 +23,8 @@ MODULE qexsd_copy
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
-       qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints
+       qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, &
+       qexsd_copy_efermi
   !
 CONTAINS
   !-------------------------------------------------------------------------------
@@ -461,11 +462,11 @@ CONTAINS
       REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, xk(:,:), wk(:)
       REAL(dp), INTENT(inout), ALLOCATABLE ::  wg(:,:), et(:,:)
       !
+      LOGICAL :: two_fermi_energies
       INTEGER :: ik
       ! 
       lsda = band_struct_obj%lsda
       nkstot = band_struct_obj%nks 
-      nelec = band_struct_obj%nelec
       natomwfc = band_struct_obj%num_of_atomic_wfc
       !
       IF ( lsda) THEN
@@ -506,20 +507,9 @@ CONTAINS
          nbnd_dw = nbnd
          isk(1:nkstot)   = 1 
       END IF
-      ! 
-      IF ( band_struct_obj%fermi_energy_ispresent) THEN 
-         ef = band_struct_obj%fermi_energy
-         ef_up = 0.d0
-         ef_dw = 0.d0
-      ELSE IF ( band_struct_obj%two_fermi_energies_ispresent ) THEN 
-         ef = 0.d0 
-         ef_up = band_struct_obj%two_fermi_energies(1)
-         ef_dw = band_struct_obj%two_fermi_energies(2)
-      ELSE 
-         ef = 0.d0
-         ef_up = 0.d0
-         ef_dw = 0.d0
-      END IF      
+      !
+      CALL qexsd_copy_efermi ( band_struct_obj, &
+           nelec, ef, two_fermi_energies, ef_up, ef_dw )
       !
       IF ( .NOT. ALLOCATED(et) ) ALLOCATE( et(nbnd,nkstot) )
       IF ( .NOT. ALLOCATED(wg) ) ALLOCATE( wg(nbnd,nkstot) )
@@ -548,6 +538,34 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_band_structure
     !
+    SUBROUTINE qexsd_copy_efermi ( band_struct_obj, &
+         nelec, ef, two_fermi_energies, ef_up, ef_dw )
+      !------------------------------------------------------------------------
+      !
+      USE qes_types_module, ONLY : band_structure_type
+      !
+      IMPLICIT NONE
+      TYPE ( band_structure_type) :: band_struct_obj
+      LOGICAL, INTENT(out) :: two_fermi_energies
+      REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw
+      !
+      nelec = band_struct_obj%nelec
+      two_fermi_energies = band_struct_obj%two_fermi_energies_ispresent 
+      IF ( band_struct_obj%fermi_energy_ispresent) THEN 
+         ef = band_struct_obj%fermi_energy
+         ef_up = 0.d0
+         ef_dw = 0.d0
+      ELSE IF ( two_fermi_energies ) THEN 
+         ef = 0.d0 
+         ef_up = band_struct_obj%two_fermi_energies(1)
+         ef_dw = band_struct_obj%two_fermi_energies(2)
+      ELSE 
+         ef = 0.d0
+         ef_up = 0.d0
+         ef_dw = 0.d0
+      END IF      
+      !
+    END SUBROUTINE qexsd_copy_efermi
     !-----------------------------------------------------------------------
     SUBROUTINE qexsd_copy_algorithmic_info ( algo_obj, &
          real_space, tqr, okvan, okpaw )
@@ -702,4 +720,4 @@ CONTAINS
        ! 
      END SUBROUTINE qexsd_copy_kpoints
      !
-  END MODULE qexsd_copy
+   END MODULE qexsd_copy

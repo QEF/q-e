@@ -49,7 +49,7 @@ SUBROUTINE setup()
                                  tot_charge, tot_magnetization
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
-  USE ener,               ONLY : ef
+  USE ener,               ONLY : ef, ef_up, ef_dw
   USE electrons_base,     ONLY : set_nelup_neldw
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
@@ -76,7 +76,8 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-  USE pw_restart_new,     ONLY : pw_read_schema, readschema_ef
+  USE pw_restart_new,     ONLY : pw_read_schema
+  USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
   USE exx,                ONLY : ecutfock, nbndproj
@@ -95,8 +96,6 @@ SUBROUTINE setup()
   LOGICAL, EXTERNAL  :: check_para_diag
   !
   TYPE(output_type)                         :: output_obj 
-  TYPE(parallel_info_type)                  :: parinfo_obj
-  TYPE(general_info_type)                   :: geninfo_obj
   !  
 #if defined(__MPI)
   LOGICAL :: lpara = .true.
@@ -164,13 +163,12 @@ SUBROUTINE setup()
      !
      ! ... in these cases, we need to read the Fermi energy
      !
-     CALL pw_read_schema( ierr , output_obj, parinfo_obj, geninfo_obj )
+     CALL pw_read_schema( ierr , output_obj )
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-     CALL readschema_ef ( output_obj%band_structure) 
+     CALL qexsd_copy_efermi ( output_obj%band_structure, &
+          nelec, ef, two_fermi_energies, ef_up, ef_dw )
      CALL qes_reset  ( output_obj )
-     CALL qes_reset  ( parinfo_obj )
-     CALL qes_reset  ( geninfo_obj )
      !
   END IF 
   IF ( (lfcpopt .OR. lfcpdyn) .AND. restart ) THEN  
