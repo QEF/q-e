@@ -23,7 +23,8 @@ MODULE qexsd_copy
        qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
        qexsd_copy_symmetry, qexsd_copy_algorithmic_info, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure, &
-       qexsd_copy_efield, qexsd_copy_magnetization
+       qexsd_copy_efield, qexsd_copy_magnetization, qexsd_copy_kpoints, &
+       qexsd_copy_efermi
   !
 CONTAINS
   !-------------------------------------------------------------------------------
@@ -445,7 +446,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_band_structure( band_struct_obj, lsda, nkstot, &
-         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, wk, wg, &
+         isk, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec, xk, wk, wg, &
          ef, ef_up, ef_dw, et )
       !------------------------------------------------------------------------
       !
@@ -458,14 +459,14 @@ CONTAINS
       LOGICAL, INTENT(out) :: lsda
       INTEGER, INTENT(out) :: nkstot, natomwfc, nbnd, nbnd_up, nbnd_dw, &
               isk(:)
-      REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, wk(:)
+      REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw, xk(:,:), wk(:)
       REAL(dp), INTENT(inout), ALLOCATABLE ::  wg(:,:), et(:,:)
       !
+      LOGICAL :: two_fermi_energies
       INTEGER :: ik
       ! 
       lsda = band_struct_obj%lsda
       nkstot = band_struct_obj%nks 
-      nelec = band_struct_obj%nelec
       natomwfc = band_struct_obj%num_of_atomic_wfc
       !
       IF ( lsda) THEN
@@ -506,26 +507,17 @@ CONTAINS
          nbnd_dw = nbnd
          isk(1:nkstot)   = 1 
       END IF
-      ! 
-      IF ( band_struct_obj%fermi_energy_ispresent) THEN 
-         ef = band_struct_obj%fermi_energy
-         ef_up = 0.d0
-         ef_dw = 0.d0
-      ELSE IF ( band_struct_obj%two_fermi_energies_ispresent ) THEN 
-         ef = 0.d0 
-         ef_up = band_struct_obj%two_fermi_energies(1)
-         ef_dw = band_struct_obj%two_fermi_energies(2)
-      ELSE 
-         ef = 0.d0
-         ef_up = 0.d0
-         ef_dw = 0.d0
-      END IF      
+      !
+      CALL qexsd_copy_efermi ( band_struct_obj, &
+           nelec, ef, two_fermi_energies, ef_up, ef_dw )
       !
       IF ( .NOT. ALLOCATED(et) ) ALLOCATE( et(nbnd,nkstot) )
       IF ( .NOT. ALLOCATED(wg) ) ALLOCATE( wg(nbnd,nkstot) )
       !
       DO ik =1, band_struct_obj%ndim_ks_energies
          IF ( band_struct_obj%lsda) THEN
+            xk(:,ik) = band_struct_obj%ks_energies(ik)%k_point%k_point(:) 
+            xk(:,ik + band_struct_obj%ndim_ks_energies) = xk(:,ik)
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
             wk(ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
             et(1:nbnd_up,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_up)
@@ -536,6 +528,7 @@ CONTAINS
             wg(1:nbnd_dw,ik+band_struct_obj%ndim_ks_energies) =  &
                  band_struct_obj%ks_energies(ik)%occupations%vector(nbnd_up+1:nbnd_up+nbnd_dw)*wk(ik)
          ELSE 
+            xk(:,ik) = band_struct_obj%ks_energies(ik)%k_point%k_point(:) 
             wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
             et (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd)
             wg (1:nbnd,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd)*wk(ik)
@@ -545,6 +538,34 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_band_structure
     !
+    SUBROUTINE qexsd_copy_efermi ( band_struct_obj, &
+         nelec, ef, two_fermi_energies, ef_up, ef_dw )
+      !------------------------------------------------------------------------
+      !
+      USE qes_types_module, ONLY : band_structure_type
+      !
+      IMPLICIT NONE
+      TYPE ( band_structure_type) :: band_struct_obj
+      LOGICAL, INTENT(out) :: two_fermi_energies
+      REAL(dp), INTENT(out):: nelec, ef, ef_up, ef_dw
+      !
+      nelec = band_struct_obj%nelec
+      two_fermi_energies = band_struct_obj%two_fermi_energies_ispresent 
+      IF ( band_struct_obj%fermi_energy_ispresent) THEN 
+         ef = band_struct_obj%fermi_energy
+         ef_up = 0.d0
+         ef_dw = 0.d0
+      ELSE IF ( two_fermi_energies ) THEN 
+         ef = 0.d0 
+         ef_up = band_struct_obj%two_fermi_energies(1)
+         ef_dw = band_struct_obj%two_fermi_energies(2)
+      ELSE 
+         ef = 0.d0
+         ef_up = 0.d0
+         ef_dw = 0.d0
+      END IF      
+      !
+    END SUBROUTINE qexsd_copy_efermi
     !-----------------------------------------------------------------------
     SUBROUTINE qexsd_copy_algorithmic_info ( algo_obj, &
          real_space, tqr, okvan, okpaw )
@@ -647,4 +668,56 @@ CONTAINS
       !
     END SUBROUTINE qexsd_copy_magnetization
     !-----------------------------------------------------------------------
-  END MODULE qexsd_copy
+    !
+    !---------------------------------------------------------------------------
+    SUBROUTINE qexsd_copy_kpoints ( band_struct_obj, nks_start, xk_start,&
+         wk_start, nk1, nk2, nk3, k1, k2, k3 )
+    !---------------------------------------------------------------------------
+       !
+       USE qes_types_module, ONLY : band_structure_type
+       !
+       IMPLICIT NONE
+       !
+       TYPE ( band_structure_type ),INTENT(IN)    :: band_struct_obj
+       INTEGER,  INTENT(out) :: nks_start, nk1, nk2, nk3, k1, k2, k3 
+       REAL(dp), ALLOCATABLE, INTENT(inout) :: xk_start(:,:), wk_start(:)
+       !
+       INTEGER :: ik
+       ! 
+       !   
+       IF ( band_struct_obj%starting_k_points%monkhorst_pack_ispresent ) THEN 
+          nks_start = 0 
+          nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1 
+          nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
+          nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3 
+           k1 = band_struct_obj%starting_k_points%monkhorst_pack%k1
+           k2 = band_struct_obj%starting_k_points%monkhorst_pack%k2
+           k3 = band_struct_obj%starting_k_points%monkhorst_pack%k3
+       ELSE IF (band_struct_obj%starting_k_points%nk_ispresent ) THEN 
+           nks_start = band_struct_obj%starting_k_points%nk
+           IF ( nks_start > 0 ) THEN 
+              IF ( .NOT. ALLOCATED(xk_start) ) ALLOCATE (xk_start(3,nks_start))
+              IF ( .NOT. ALLOCATED(wk_start) ) ALLOCATE (wk_start(nks_start))
+              IF ( nks_start == size( band_struct_obj%starting_k_points%k_point ) ) THEN 
+                 DO ik =1, nks_start
+                    xk_start(:,ik) = band_struct_obj%starting_k_points%k_point(ik)%k_point(:) 
+                    IF ( band_struct_obj%starting_k_points%k_point(ik)%weight_ispresent) THEN 
+                        wk_start(ik) = band_struct_obj%starting_k_points%k_point(ik)%weight 
+                    ELSE 
+                        wk_start(ik) = 0.d0
+                    END IF 
+                 END DO
+              ELSE
+                 CALL infomsg ( "qexsd_copy_kp: ", &
+                      "actual number of start kpoint not equal to nks_start, set nks_start=0")  
+                 nks_start = 0 
+              END IF
+           END IF
+       ELSE 
+          CALL errore ("qexsd_copy_kp: ", &
+               " no information found for initializing brillouin zone information", 1)
+       END IF  
+       ! 
+     END SUBROUTINE qexsd_copy_kpoints
+     !
+   END MODULE qexsd_copy

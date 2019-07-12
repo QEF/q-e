@@ -103,8 +103,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
-  USE klist,           ONLY : nks, nkstot, nelec, wk, tot_magnetization, &
-       nelup, neldw
+  USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
+       nelec, nelup, neldw
+  USE start_k,         ONLY : nks_start, xk_start, wk_start, &
+       nk1, nk2, nk3, k1, k2, k3
   USE ener,            ONLY : ef, ef_up, ef_dw
   USE electrons_base,  ONLY : nupdwn, set_nelup_neldw
   USE wvfct,           ONLY : npwx, nbnd, et, wg
@@ -139,7 +141,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE paw_variables,   ONLY : okpaw
   !
   USE pw_restart_new,  ONLY : pw_read_schema, &
-       readschema_occupations, readschema_brillouin_zone
+       readschema_occupations
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
@@ -147,8 +149,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
-       qexsd_copy_band_structure, qexsd_copy_magnetization
-       
+       qexsd_copy_band_structure, qexsd_copy_magnetization, &
+       qexsd_copy_kpoints
 #if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
   USE mp_images,       ONLY : intra_image_comm
@@ -219,6 +221,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ecutwfc = ecutwfc*e2
   ecutrho = ecutrho*e2
   dual = ecutrho/ecutwfc
+  ! FIXME: next line ensures exact consistency between reciprocal and
+  ! direct lattice vectors, preventing weird phonon symmetry errors
+  ! (due to lousy algorithms, extraordinarily sensitive to tiny errors)
+  CALL recips ( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !!
   !! DFT section
   CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
@@ -240,8 +246,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !! Band structure section
   !! et and wg are allocated inside qexsd_copy_band_structure
   CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
-       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, wk, wg, &
-       ef, ef_up, ef_dw, et )
+       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, xk, &
+       wk, wg, ef, ef_up, ef_dw, et )
   ! convert to Ry
   ef = ef*e2
   ef_up = ef_up*e2
@@ -273,7 +279,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   END IF
   !
   CALL readschema_occupations( output_obj%band_structure )
-  CALL readschema_brillouin_zone( output_obj%band_structure )
+  !! Starting k-òoint information
+  CALL qexsd_copy_kpoints( output_obj%band_structure, nks_start, &
+       xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3 )
   !! Symmetry section
   ALLOCATE ( irt(48,nat) )
   IF ( lvalid_input ) THEN 

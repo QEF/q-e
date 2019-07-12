@@ -806,8 +806,8 @@ MODULE cp_restart_new
       nbnd_ = nupdwn(1)
       ALLOCATE( occ_(nbnd_, nspin), et_(nbnd_, nspin) )
       CALL qexsd_copy_band_structure( output_obj%band_structure, lsda_, &
-              nk_, isk_, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec_, wk_,  &
-              occ_, ef, ef_up, ef_dw, et_ )
+           nk_, isk_, natomwfc, nbnd, nbnd_up, nbnd_dw, nelec_, xk, &
+           wk_, occ_, ef, ef_up, ef_dw, et_ )
       ! FIXME: in the call, the same array is passed as both occ0 and occm!
       DO iss = 1, nspin
          ib = iupdwn(iss)
