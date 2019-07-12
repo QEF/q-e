@@ -1004,50 +1004,35 @@ MODULE pw_restart_new
     END SUBROUTINE pw_read_schema
     !  
     !--------------------------------------------------------------------------------------------------
-    SUBROUTINE readschema_occupations( band_struct_obj ) 
+    SUBROUTINE readschema_occupations( occupations, smearing, &
+         ltetra, tetra_type, lgauss, ngauss ) 
       !------------------------------------------------------------------------------------------------
       ! 
-      USE ktetra,           ONLY : ntetra, tetra_type
-      USE klist,            ONLY : ltetra, lgauss, ngauss, degauss, smearing
-      USE input_parameters, ONLY : input_parameters_occupations => occupations
-      USE qes_types_module, ONLY : band_structure_type
-      ! 
       IMPLICIT NONE 
-      ! 
-      TYPE ( band_structure_type ),INTENT(IN)     :: band_struct_obj 
-      INTEGER                                     :: nk1, nk2, nk3
+      !
+      CHARACTER(LEN=*), INTENT(IN)    :: occupations
+      CHARACTER(LEN=*), INTENT(INOUT) :: smearing
+      LOGICAL, INTENT(OUT)         :: lgauss, ltetra
+      INTEGER, INTENT(OUT)         :: tetra_type, ngauss
       ! 
       lgauss = .FALSE. 
       ltetra = .FALSE. 
       tetra_type = 0
       ngauss = 0
-      input_parameters_occupations = TRIM ( band_struct_obj%occupations_kind%occupations ) 
-      IF (TRIM(input_parameters_occupations) == 'tetrahedra' ) THEN 
+      IF (TRIM(occupations) == 'tetrahedra' ) THEN 
         ltetra = .TRUE. 
-        nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
-        nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
-        nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
-        ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_lin' .OR. &
-               TRIM(input_parameters_occupations) == 'tetrahedra-lin' ) THEN
+        tetra_type = 0
+      ELSE IF (TRIM(occupations) == 'tetrahedra_lin' .OR. &
+               TRIM(occupations) == 'tetrahedra-lin' ) THEN
         ltetra = .TRUE. 
-        nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
-        nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
-        nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
         tetra_type = 1
-        ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_opt' .OR. &
-               TRIM(input_parameters_occupations) == 'tetrahedra-opt' ) THEN 
+      ELSE IF (TRIM(occupations) == 'tetrahedra_opt' .OR. &
+               TRIM(occupations) == 'tetrahedra-opt' ) THEN 
         ltetra = .TRUE. 
-        nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
-        nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
-        nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
         tetra_type = 2
-        ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF ( TRIM (input_parameters_occupations) == 'smearing') THEN 
+      ELSE IF ( TRIM (occupations) == 'smearing') THEN 
         lgauss = .TRUE.  
-        degauss = band_struct_obj%smearing%degauss
-        SELECT CASE ( TRIM( band_struct_obj%smearing%smearing ) )
+        SELECT CASE ( TRIM( smearing ) )
            CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
              ngauss = 0
              smearing  = 'gaussian'

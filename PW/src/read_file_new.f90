@@ -104,7 +104,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
   USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
-       nelec, nelup, neldw
+       nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra
+  USE ktetra,          ONLY : ntetra, tetra_type
   USE start_k,         ONLY : nks_start, xk_start, wk_start, &
        nk1, nk2, nk3, k1, k2, k3
   USE ener,            ONLY : ef, ef_up, ef_dw
@@ -162,7 +163,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
   LOGICAL  :: magnetic_sym, lvalid_input
-  CHARACTER(LEN=20) :: dft_name, vdw_corr
+  CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
   REAL(dp) :: exx_fraction, screening_parameter
   TYPE (output_type)      :: output_obj 
   TYPE (parallel_info_type) :: parinfo_obj
@@ -277,11 +278,14 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      nspin =1
      npol = 1 
   END IF
+  !! Information for generating k-points and occupations
+  CALL qexsd_copy_kpoints( output_obj%band_structure, &
+       nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
+       occupations, smearing, degauss )
   !
-  CALL readschema_occupations( output_obj%band_structure )
-  !! Starting k-òoint information
-  CALL qexsd_copy_kpoints( output_obj%band_structure, nks_start, &
-       xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3 )
+  CALL readschema_occupations( occupations, smearing, &
+       ltetra, tetra_type, lgauss, ngauss )
+  IF ( ltetra) ntetra = 6* nk1 * nk2 * nk3 
   !! Symmetry section
   ALLOCATE ( irt(48,nat) )
   IF ( lvalid_input ) THEN 

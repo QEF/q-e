@@ -671,7 +671,7 @@ CONTAINS
     !
     !---------------------------------------------------------------------------
     SUBROUTINE qexsd_copy_kpoints ( band_struct_obj, nks_start, xk_start,&
-         wk_start, nk1, nk2, nk3, k1, k2, k3 )
+         wk_start, nk1, nk2, nk3, k1, k2, k3, occupations, smearing, degauss )
     !---------------------------------------------------------------------------
        !
        USE qes_types_module, ONLY : band_structure_type
@@ -681,9 +681,14 @@ CONTAINS
        TYPE ( band_structure_type ),INTENT(IN)    :: band_struct_obj
        INTEGER,  INTENT(out) :: nks_start, nk1, nk2, nk3, k1, k2, k3 
        REAL(dp), ALLOCATABLE, INTENT(inout) :: xk_start(:,:), wk_start(:)
+       REAL(dp), INTENT(out) :: degauss
+       CHARACTER(LEN=*), intent(out) :: smearing, occupations
        !
        INTEGER :: ik
-       ! 
+       !
+       occupations = TRIM ( band_struct_obj%occupations_kind%occupations ) 
+       smearing    = TRIM ( band_struct_obj%smearing%smearing ) 
+       degauss     = band_struct_obj%smearing%degauss
        !   
        IF ( band_struct_obj%starting_k_points%monkhorst_pack_ispresent ) THEN 
           nks_start = 0 
