@@ -141,8 +141,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE uspp,            ONLY : okvan
   USE paw_variables,   ONLY : okpaw
   !
-  USE pw_restart_new,  ONLY : pw_read_schema, &
-       readschema_occupations
+  USE pw_restart_new,  ONLY : pw_read_schema
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
@@ -162,7 +161,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   LOGICAL, INTENT(OUT) :: wfc_is_collected
   !
   INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
-  LOGICAL  :: magnetic_sym, lvalid_input
+  LOGICAL  :: magnetic_sym, lvalid_input, lfixed
   CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
   REAL(dp) :: exx_fraction, screening_parameter
   TYPE (output_type)      :: output_obj 
@@ -283,9 +282,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
        occupations, smearing, degauss )
   !
-  CALL readschema_occupations( occupations, smearing, &
-       ltetra, tetra_type, lgauss, ngauss )
-  IF ( ltetra) ntetra = 6* nk1 * nk2 * nk3 
+  CALL set_occupations( occupations, smearing, degauss, &
+       lfixed, ltetra, tetra_type, lgauss, ngauss )
+  IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
+  IF (lfixed) CALL errore('read_file','bad occupancies',1)
   !! Symmetry section
   ALLOCATE ( irt(48,nat) )
   IF ( lvalid_input ) THEN 
