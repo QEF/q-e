@@ -336,7 +336,6 @@ open_grid.o : ../../Modules/environment.o
 open_grid.o : ../../Modules/fft_base.o
 open_grid.o : ../../Modules/funct.o
 open_grid.o : ../../Modules/gvecw.o
-open_grid.o : ../../Modules/input_parameters.o
 open_grid.o : ../../Modules/io_files.o
 open_grid.o : ../../Modules/io_global.o
 open_grid.o : ../../Modules/ions_base.o
