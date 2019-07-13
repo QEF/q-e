@@ -176,7 +176,6 @@ mdiis.o : ../UtilXlib/mp.o
 mdiis.o : kind.o
 metagga.o : constants.o
 metagga.o : kind.o
-metagga.o : libxc.o
 mm_dispersion.o : ../UtilXlib/mp.o
 mm_dispersion.o : cell_base.o
 mm_dispersion.o : constants.o
@@ -368,6 +367,7 @@ remove_tot_torque.o : kind.o
 rgen.o : kind.o
 set_hubbard_l.o : io_global.o
 set_hubbard_n.o : io_global.o
+set_occupations.o : kind.o
 set_signal.o : ../UtilXlib/mp.o
 set_signal.o : io_global.o
 set_signal.o : mp_world.o

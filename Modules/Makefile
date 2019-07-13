@@ -89,6 +89,7 @@ run_info.o \
 space_group.o \
 set_signal.o \
 set_vdw_corr.o \
+set_occupations.o \
 setqf.o \
 splinelib.o \
 timestep.o\

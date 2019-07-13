@@ -40,7 +40,6 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_occupations
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -1003,52 +1002,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !--------------------------------------------------------------------------------------------------
-    SUBROUTINE readschema_occupations( occupations, smearing, &
-         ltetra, tetra_type, lgauss, ngauss ) 
-      !------------------------------------------------------------------------------------------------
-      ! 
-      IMPLICIT NONE 
-      !
-      CHARACTER(LEN=*), INTENT(IN)    :: occupations
-      CHARACTER(LEN=*), INTENT(INOUT) :: smearing
-      LOGICAL, INTENT(OUT)         :: lgauss, ltetra
-      INTEGER, INTENT(OUT)         :: tetra_type, ngauss
-      ! 
-      lgauss = .FALSE. 
-      ltetra = .FALSE. 
-      tetra_type = 0
-      ngauss = 0
-      IF (TRIM(occupations) == 'tetrahedra' ) THEN 
-        ltetra = .TRUE. 
-        tetra_type = 0
-      ELSE IF (TRIM(occupations) == 'tetrahedra_lin' .OR. &
-               TRIM(occupations) == 'tetrahedra-lin' ) THEN
-        ltetra = .TRUE. 
-        tetra_type = 1
-      ELSE IF (TRIM(occupations) == 'tetrahedra_opt' .OR. &
-               TRIM(occupations) == 'tetrahedra-opt' ) THEN 
-        ltetra = .TRUE. 
-        tetra_type = 2
-      ELSE IF ( TRIM (occupations) == 'smearing') THEN 
-        lgauss = .TRUE.  
-        SELECT CASE ( TRIM( smearing ) )
-           CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
-             ngauss = 0
-             smearing  = 'gaussian'
-           CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
-             ngauss = 1
-             smearing = 'mp'
-           CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
-             ngauss = -1
-             smearing  = 'mv'
-           CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
-             ngauss = -99
-             smearing = 'fd'
-        END SELECT
-      END IF       
-     !
-    END SUBROUTINE readschema_occupations
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_to_evc( dirname )
