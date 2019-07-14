@@ -23,6 +23,7 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
   lfixed = .FALSE.
   ltetra = .FALSE.
   tetra_type = 0
+  smearing_ = 'none'
   lgauss = .FALSE. 
   ngauss = 0
   
