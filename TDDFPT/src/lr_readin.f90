@@ -30,7 +30,7 @@ SUBROUTINE lr_readin
   USE io_global,           ONLY : ionode, ionode_id, stdout
   USE klist,               ONLY : nks, wk, nelec, lgauss, ltetra
   USE fixed_occ,           ONLY : tfixed_occ
-  USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir
+  USE symm_base,           ONLY : nosym
   USE check_stop,          ONLY : max_seconds
   USE realus,              ONLY : real_space, init_realspace_vars, generate_qpointlist, &
                                   betapointlist
@@ -54,6 +54,7 @@ SUBROUTINE lr_readin
 
   IMPLICIT NONE
   !
+  CHARACTER(LEN=256) :: wfcdir, outdir
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(LEN=256) :: beta_gamma_z_prefix
