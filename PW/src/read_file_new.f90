@@ -283,7 +283,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        occupations, smearing, degauss )
   !
   CALL set_occupations( occupations, smearing, degauss, &
-       lfixed, ltetra, tetra_type, lgauss, ngauss )
+       lfixed, ltetra, tetra_type, smearing, lgauss, ngauss )
   IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
   IF (lfixed) CALL errore('read_file','bad occupancies',1)
   !! Symmetry section
