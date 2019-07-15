@@ -47,7 +47,7 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
         smearing = 'gaussian'
      CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
         ngauss = 1
-        smearing = 'methfessel-Paxton'
+        smearing = 'methfessel-paxton'
      CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
         ngauss = -1
         smearing = 'Marzari-Vanderbilt'
