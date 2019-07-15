@@ -30,15 +30,13 @@ PROGRAM open_grid
   USE scf,                ONLY : rho
   USE lsda_mod,           ONLY : nspin, isk, lsda, starting_magnetization
   USE io_rho_xml,         ONLY : write_scf
-  USE input_parameters,   ONLY : nk1, nk2, nk3, k1, k2, k3, k_points, &
-                              occupations, calculation !, nkstot,
+  USE start_k,            ONLY : nk1, nk2, nk3, k1, k2, k3
   USE noncollin_module,   ONLY : nspin_mag, npol
   USE fft_interfaces,     ONLY : fwfft
   !
   USE qexsd_module,       ONLY : qexsd_input_obj
   USE qes_types_module,   ONLY : input_type
   USE fft_base,           ONLY : dffts
-  !USE qexsd_input,        ONLY : qexsd_init_k_points_ibz
   USE control_flags,      ONLY : gamma_only, io_level
   USE start_k, ONLY : init_start_k
   USE extfield,           ONLY : gate
@@ -216,9 +214,6 @@ PROGRAM open_grid
   nk1 = nq1
   nk2 = nq2
   nk3 = nq3
-  calculation = 'bands'
-  k_points = "automatic"
-  !CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_mag, xk, wk)
   CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_lsda, xk, wk)
   !
   ! Restore EXX variables

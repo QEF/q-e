@@ -103,8 +103,11 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
-  USE klist,           ONLY : nks, nkstot, nelec, wk, tot_magnetization, &
-       nelup, neldw
+  USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
+       nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra
+  USE ktetra,          ONLY : ntetra, tetra_type
+  USE start_k,         ONLY : nks_start, xk_start, wk_start, &
+       nk1, nk2, nk3, k1, k2, k3
   USE ener,            ONLY : ef, ef_up, ef_dw
   USE electrons_base,  ONLY : nupdwn, set_nelup_neldw
   USE wvfct,           ONLY : npwx, nbnd, et, wg
@@ -130,16 +133,17 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
        lxdm, ts_vdw
   USE Coul_cut_2D,     ONLY : do_cutoff_2D
-  USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield
+  USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
+       nspin_lsda, nspin_gga, nspin_mag
   USE spin_orb,        ONLY : domag, lspinorb
-  USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization
+  USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
+       current_spin
   USE realus,          ONLY : real_space
   USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : okvan
   USE paw_variables,   ONLY : okpaw
   !
-  USE pw_restart_new,  ONLY : pw_read_schema, &
-       readschema_occupations, readschema_brillouin_zone
+  USE pw_restart_new,  ONLY : pw_read_schema
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
@@ -147,8 +151,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
-       qexsd_copy_band_structure, qexsd_copy_magnetization
-       
+       qexsd_copy_band_structure, qexsd_copy_magnetization, &
+       qexsd_copy_kpoints
 #if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
   USE mp_images,       ONLY : intra_image_comm
@@ -159,8 +163,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   LOGICAL, INTENT(OUT) :: wfc_is_collected
   !
   INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
-  LOGICAL  :: magnetic_sym, lvalid_input
-  CHARACTER(LEN=20) :: dft_name, vdw_corr
+  LOGICAL  :: magnetic_sym, lvalid_input, lfixed
+  CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
   REAL(dp) :: exx_fraction, screening_parameter
   TYPE (output_type)      :: output_obj 
   TYPE (parallel_info_type) :: parinfo_obj
@@ -219,6 +223,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ecutwfc = ecutwfc*e2
   ecutrho = ecutrho*e2
   dual = ecutrho/ecutwfc
+  ! FIXME: next line ensures exact consistency between reciprocal and
+  ! direct lattice vectors, preventing weird phonon symmetry errors
+  ! (due to lousy algorithms, extraordinarily sensitive to tiny errors)
+  CALL recips ( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !!
   !! DFT section
   CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
@@ -240,8 +248,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !! Band structure section
   !! et and wg are allocated inside qexsd_copy_band_structure
   CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
-       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, wk, wg, &
-       ef, ef_up, ef_dw, et )
+       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, xk, &
+       wk, wg, ef, ef_up, ef_dw, et )
   ! convert to Ry
   ef = ef*e2
   ef_up = ef_up*e2
@@ -258,22 +266,20 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        lspinorb, domag, tot_magnetization )
   !
   bfield = 0.d0
-  IF ( lsda ) THEN  
-     nspin = 2
-     npol = 1
-     ! FIXME: next line makes sense only for fixed occupations
-     ! FIXME: is this really needed? do we use nelup and neldw?
-     CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
-  ELSE IF (noncolin ) THEN 
-     nspin = 4
-     npol = 2
-  ELSE 
-     nspin =1
-     npol = 1 
-  END IF
+  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+         npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  !! Information for generating k-points and occupations
+  CALL qexsd_copy_kpoints( output_obj%band_structure, &
+       nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
+       occupations, smearing, degauss )
   !
-  CALL readschema_occupations( output_obj%band_structure )
-  CALL readschema_brillouin_zone( output_obj%band_structure )
+  CALL set_occupations( occupations, smearing, degauss, &
+       lfixed, ltetra, tetra_type, lgauss, ngauss )
+  IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
+  IF (lfixed) CALL errore('read_file','bad occupancies',1)
+  ! FIXME: is this really needed? do we use nelup and neldw?
+  IF ( lfixed .AND. lsda ) &
+       CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
   !! Symmetry section
   ALLOCATE ( irt(48,nat) )
   IF ( lvalid_input ) THEN 
@@ -334,8 +340,6 @@ SUBROUTINE post_xml_init (  )
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
-  USE noncollin_module,     ONLY : noncolin
-  USE spin_orb,             ONLY : lspinorb
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
@@ -356,6 +360,8 @@ SUBROUTINE post_xml_init (  )
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : noncolin
+  USE spin_orb,             ONLY : lspinorb
   USE cell_base,            ONLY : at, bg, set_h_ainv
   USE symm_base,            ONLY : d1, d2, d3
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
@@ -367,11 +373,10 @@ SUBROUTINE post_xml_init (  )
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
   CHARACTER(LEN=20) :: dft_name
   !
-  ! ... set spin variables, G cutoffs, cell factor (FIXME: from setup.f90?)
+  ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
   CALL set_gcut()
   if (cell_factor == 0.d0) cell_factor = 1.D0
-  CALL set_spin_vars ( )
   nbndx = nbnd
   !
   ! ... read pseudopotentials
@@ -502,32 +507,5 @@ SUBROUTINE post_xml_init (  )
       END IF
       !
     END SUBROUTINE set_gcut
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE set_spin_vars( )
-      !------------------------------------------------------------------------
-      !
-      !  Set various spin-related variables
-      !
-      USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
-      USE spin_orb,  ONLY : domag
-      USE lsda_mod, ONLY : nspin, current_spin
-      !
-      IF (nspin /= 2) current_spin = 1
-      !
-      nspin_mag  = nspin
-      nspin_lsda = nspin
-      nspin_gga  = nspin
-      IF (nspin==4) THEN
-        nspin_lsda=1
-        IF (domag) THEN
-           nspin_gga=2
-        ELSE
-           nspin_gga=1
-           nspin_mag=1
-        ENDIF
-      ENDIF
-      !
-    END SUBROUTINE set_spin_vars
     !
   END SUBROUTINE post_xml_init

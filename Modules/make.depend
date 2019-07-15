@@ -176,7 +176,6 @@ mdiis.o : ../UtilXlib/mp.o
 mdiis.o : kind.o
 metagga.o : constants.o
 metagga.o : kind.o
-metagga.o : libxc.o
 mm_dispersion.o : ../UtilXlib/mp.o
 mm_dispersion.o : cell_base.o
 mm_dispersion.o : constants.o

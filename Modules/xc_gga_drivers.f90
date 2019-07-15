@@ -63,23 +63,23 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !! length of the I/O arrays
   INTEGER,  INTENT(IN) :: ns
   !! spin dimension for input
-  REAL(DP), INTENT(IN) :: rho(length,ns)
+  REAL(DP), INTENT(IN) :: rho(:,:)
   !! Charge density
-  REAL(DP), INTENT(IN) :: grho(3,length,ns)
+  REAL(DP), INTENT(IN) :: grho(:,:,:)
   !! gradient
-  REAL(DP), INTENT(OUT) :: ex(length)
+  REAL(DP), INTENT(OUT) :: ex(:)
   !! exchange energy
-  REAL(DP), INTENT(OUT) :: ec(length)
+  REAL(DP), INTENT(OUT) :: ec(:)
   !! correlation energy
-  REAL(DP), INTENT(OUT) :: v1x(length,ns)
+  REAL(DP), INTENT(OUT) :: v1x(:,:)
   !! exchange potential (density part)
-  REAL(DP), INTENT(OUT) :: v2x(length,ns)
+  REAL(DP), INTENT(OUT) :: v2x(:,:)
   !! exchange potential (gradient part)
-  REAL(DP), INTENT(OUT) :: v1c(length,ns)
+  REAL(DP), INTENT(OUT) :: v1c(:,:)
   !! correlation potential (density part)
-  REAL(DP), INTENT(OUT) :: v2c(length,ns)
+  REAL(DP), INTENT(OUT) :: v2c(:,:)
   !! correlation (gradient part)
-  REAL(DP), INTENT(OUT), OPTIONAL :: v2c_ud(length)
+  REAL(DP), INTENT(OUT), OPTIONAL :: v2c_ud(:)
   !! correlation
   !
   ! ... local variables
