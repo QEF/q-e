@@ -144,6 +144,8 @@ MODULE pw_restart_new
       !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
+      CHARACTER(LEN=8)      :: smearing_loc
+      CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -535,8 +537,9 @@ MODULE pw_restart_new
          IF ( lgauss ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
                smear_obj = qexsd_input_obj%bands%smearing
-            ELSE 
-               CALL qexsd_init_smearing(smear_obj, smearing, degauss)
+            ELSE
+               smearing_loc = schema_smearing( smearing )
+               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss)
             END IF  
             smear_obj_ptr => smear_obj  
          END IF 

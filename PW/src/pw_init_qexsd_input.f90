@@ -92,6 +92,8 @@
   INTEGER,EXTERNAL                         ::   set_hubbard_l
   INTEGER                                  ::   lung,l 
   CHARACTER,EXTERNAL                       ::   capital
+  CHARACTER(LEN=8),  EXTERNAL              ::   schema_smearing
+  CHARACTER(LEN=8)                         ::   smearing_loc
   CHARACTER(len=20)                        ::   dft_shortname
   CHARACTER(len=25)                        ::   dft_longname
   CHARACTER(LEN=80),TARGET                 ::  vdw_corr_, vdw_nonlocc_
@@ -343,20 +345,22 @@
      nbnd_tg = nbnd 
      nbnd_pt => nbnd_tg
   END IF 
+  smearing_loc = schema_smearing(smearing)
   IF (tf_inp) THEN
      SELECT CASE (ip_nspin) 
         CASE (2)  
-           CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing, degauss, ip_occupations, tot_charge, ip_nspin, &
-                                          input_occupations=f_inp(:,1),input_occupations_minority=f_inp(:,2))
+           CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss, &
+                ip_occupations, tot_charge, ip_nspin, &
+                input_occupations=f_inp(:,1),input_occupations_minority=f_inp(:,2))
         CASE default
-           CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing, degauss, ip_occupations, tot_charge, ip_nspin, &
-                                                                                input_occupations=f_inp(:,1) )
+           CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss, &
+                ip_occupations, tot_charge, ip_nspin, input_occupations=f_inp(:,1) )
      END SELECT    
   ELSE 
      IF ( tot_magnetization .LT. 0 ) THEN 
-        CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing, degauss, ip_occupations, tot_charge, ip_nspin)
+        CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss, ip_occupations, tot_charge, ip_nspin)
      ELSE
-        CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing, degauss, ip_occupations, tot_charge, ip_nspin, &
+        CALL qexsd_init_bands(obj%bands, nbnd_pt, smearing_loc, degauss, ip_occupations, tot_charge, ip_nspin, &
                               TOT_MAG  = tot_magnetization)
      END IF
   END IF 
