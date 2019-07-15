@@ -19,7 +19,7 @@ MODULE qexsd_module
   ! Modified by Simone Ziraldo (2013).
   !
   USE kinds,            ONLY : DP
-  USE input_parameters, ONLY : input_xml_schema_file, title
+  USE input_parameters, ONLY : input_xml_schema_file
   USE mp_world,         ONLY : nproc
   USE mp_images,         ONLY : nimage,nproc_image
   USE mp_pools,         ONLY : npool
@@ -141,13 +141,13 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_openschema( filename , prog)
+    SUBROUTINE qexsd_openschema(filename, prog, title)
       !------------------------------------------------------------------------
       !
       USE  FoX_wxml,  ONLY: xml_OpenFile, xml_DeclareNamespace, xml_NewElement, xml_addAttribute, xml_addComment                         
       IMPLICIT NONE
       !
-      CHARACTER(len=*), INTENT(IN) :: filename, prog
+      CHARACTER(len=*), INTENT(IN) :: filename, prog, title
       CHARACTER(len=16) :: subname = 'qexsd_openschema'
       INTEGER :: ierr, len_steps, i_step
       !
@@ -169,7 +169,7 @@ CONTAINS
       ! the input file is mandatory to have a validating schema 
       ! here an error should be issued, instead
       !
-      CALL qexsd_init_general_info(general_info, prog(1:2) )
+      CALL qexsd_init_general_info(general_info, prog(1:2), title )
       CALL qes_write (qexsd_xf,general_info)
       CALL qes_reset (general_info)
       !
@@ -197,12 +197,13 @@ CONTAINS
     !
     !
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_general_info(obj, prog )
+    SUBROUTINE qexsd_init_general_info(obj, prog, title )
     !---------------------------------------------------------------------------------------
       IMPLICIT NONE
       !
       TYPE( general_info_type )         ::  obj
       CHARACTER(LEN=*),INTENT(IN)       ::  prog
+      CHARACTER(LEN=*),INTENT(IN)       ::  title
       CHARACTER(LEN=*),PARAMETER        ::  TAGNAME="general_info"
       TYPE( creator_type )              ::  creator_obj
       TYPE( created_type )              ::  created_obj

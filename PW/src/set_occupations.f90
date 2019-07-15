@@ -7,9 +7,9 @@
 !
 !---------------------------------------------------------------------------
 SUBROUTINE set_occupations( occupations, smearing, degauss, &
-     lfixed, ltetra, tetra_type,  lgauss, ngauss ) 
+     lfixed, ltetra, tetra_type, lgauss, ngauss ) 
   !------------------------------------------------------------------------
-  ! Sets variables describind occupations
+  ! Set variables describing occupations
   !
   USE kinds, ONLY: dp
   ! 

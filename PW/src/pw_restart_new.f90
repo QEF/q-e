@@ -137,6 +137,7 @@ MODULE pw_restart_new
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
       USE martyna_tuckerman,    ONLY : do_comp_mt 
+      USE run_info,             ONLY : title
       !
       IMPLICIT NONE
       !
@@ -234,7 +235,8 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'PWSCF' )
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
+              'PWSCF', title )
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
