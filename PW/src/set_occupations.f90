@@ -7,15 +7,14 @@
 !
 !---------------------------------------------------------------------------
 SUBROUTINE set_occupations( occupations, smearing, degauss, &
-     lfixed, ltetra, tetra_type,  smearing_, lgauss, ngauss ) 
+     lfixed, ltetra, tetra_type,  lgauss, ngauss ) 
   !------------------------------------------------------------------------
   USE kinds, ONLY: dp
   ! 
   IMPLICIT NONE 
   !
   CHARACTER(LEN=*), INTENT(IN)    :: occupations
-  CHARACTER(LEN=*), INTENT(IN) :: smearing
-  CHARACTER(LEN=*), INTENT(OUT):: smearing_
+  CHARACTER(LEN=*), INTENT(INOUT) :: smearing
   REAL(dp), INTENT(INOUT) :: degauss
   LOGICAL, INTENT(OUT) :: lfixed, lgauss, ltetra
   INTEGER, INTENT(OUT) :: tetra_type, ngauss
@@ -23,7 +22,6 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
   lfixed = .FALSE.
   ltetra = .FALSE.
   tetra_type = 0
-  smearing_ = 'none'
   lgauss = .FALSE. 
   ngauss = 0
   
@@ -35,6 +33,7 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
              & ' fixed occupations, gauss. broadening ignored', -1 )
         degauss = 0.D0
      ENDIF
+     smearing = 'none'
      !
   CASE( 'smearing' )
      !
@@ -45,16 +44,16 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
      SELECT CASE ( trim( smearing ) )
      CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
         ngauss = 0
-        smearing_ = 'Gaussian'
+        smearing = 'gaussian'
      CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
         ngauss = 1
-        smearing_ = 'Methfessel-Paxton'
+        smearing = 'methfessel-paxton'
      CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
         ngauss = -1
-        smearing_ = 'Marzari-Vanderbilt'
+        smearing = 'Marzari-Vanderbilt'
      CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
         ngauss = -99
-        smearing_ = 'Fermi-Dirac'
+        smearing = 'Fermi-Dirac'
      CASE DEFAULT
         CALL errore( ' set_occupations ', &
              ' smearing '//trim(smearing)//' unknown', 1 )
@@ -64,21 +63,29 @@ SUBROUTINE set_occupations( occupations, smearing, degauss, &
      !
      ltetra = .true.
      tetra_type = 0
+     smearing = 'none'
+     !
      !
   CASE( 'tetrahedra_lin', 'tetrahedra-lin')
      !
      ltetra = .true.
      tetra_type = 1
+     smearing = 'none'
+     !
      !
   CASE('tetrahedra_opt', 'tetrahedra-opt')
      !
      ltetra = .true.
      tetra_type = 2
+     smearing = 'none'
+     !
      !
   CASE( 'from_input' )
      !
      ngauss = 0
      lfixed = .true.
+     smearing = 'none'
+     !
      !
   CASE DEFAULT
      !

@@ -47,8 +47,6 @@ SUBROUTINE setup()
                                  ltetra, lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &
                                  tot_charge, tot_magnetization
-  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
-                                 starting_magnetization
   USE ener,               ONLY : ef, ef_up, ef_dw
   USE electrons_base,     ONLY : set_nelup_neldw
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
@@ -72,6 +70,8 @@ SUBROUTINE setup()
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE mp_pools,           ONLY : kunit
   USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
+  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
+                                 starting_magnetization
   USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
@@ -177,32 +177,30 @@ SUBROUTINE setup()
   !
   ! ... magnetism-related quantities
   !
-  ALLOCATE( m_loc( 3, nat ) )
+  ! ... Set the domag variable to make a spin-orbit calculation with zero
+  ! ... magnetization
+  !
+  IF ( lspinorb ) THEN
+     domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
+  ELSE
+     domag = .TRUE.
+  END IF
+  !
+  !  Set the different spin indices
+  !
+  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+         npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
+  !
+  ALLOCATE( m_loc( 3, nat ) )
   IF ( noncolin ) THEN
      !
      ! gamma_only and noncollinear not allowed
      !
      if (gamma_only) call errore('setup', &
                                  'gamma_only and noncolin not allowed',1)
-     !
-     ! ... wavefunctions are spinors with 2 components
-     !
-     npol = 2
-     !
-     ! ... Set the domag variable to make a spin-orbit calculation with zero
-     ! ... magnetization
-     !
-     IF ( lspinorb ) THEN
-        !
-        domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
-        !
-     ELSE
-        !
-        domag = .TRUE.
-        !
-     END IF
      !
      DO na = 1, nat
         !
@@ -221,46 +219,30 @@ SUBROUTINE setup()
      !
   ELSE
      !
-     ! ... wavefunctions are scalars
-     !
      IF (lspinorb)  CALL errore( 'setup ',  &
          'spin orbit requires a non collinear calculation', 1 )
-     npol = 1
-     !
      !
      IF ( i_cons == 1) then
         do na=1,nat
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
      end if
-     IF ( i_cons /= 0 .AND. nspin ==1) &
+     IF ( i_cons /= 0 .AND. nspin==1 ) &
         CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )
      IF ( i_cons /= 0 .AND. i_cons /= 1 ) &
-        CALL errore( 'setup', 'this i_cons requires a non colinear run', 1 )
+          CALL errore( 'setup', 'this i_cons requires a non colinear run', 1 )
+     !
   END IF
-  !
-  !  Set the different spin indices
-  !
-  nspin_mag  = nspin
-  nspin_lsda = nspin
-  nspin_gga  = nspin
-  IF (nspin==4) THEN
-     nspin_lsda=1
-     IF (domag) THEN
-        nspin_gga=2
-     ELSE
-        nspin_gga=1
-        nspin_mag=1
-     ENDIF
-  ENDIF    
   !
   ! ... if this is not a spin-orbit calculation, all spin-orbit pseudopotentials
   ! ... are transformed into standard pseudopotentials
   !
-  IF ( lspinorb .AND. ALL ( .NOT. upf(:)%has_so ) ) &
-        CALL infomsg ('setup','At least one non s.o. pseudo')
-  !
-  IF ( .NOT. lspinorb ) CALL average_pp ( ntyp )
+  IF ( lspinorb ) THEN
+     IF ( ALL ( .NOT. upf(:)%has_so ) ) &
+          CALL infomsg ('setup','At least one non s.o. pseudo')
+  ELSE
+     CALL average_pp ( ntyp )
+  END IF
   !
   ! ... If the occupations are from input, check the consistency with the
   ! ... number of electrons
@@ -352,7 +334,9 @@ SUBROUTINE setup()
   ! ... for subsequent steps ethr is automatically updated in electrons
   !
   IF ( nat==0 ) THEN
+     !
      ethr=1.0D-8
+     !
   ELSE IF ( .NOT. lscf ) THEN
      !
      IF ( ethr == 0.D0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )

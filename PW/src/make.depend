@@ -1535,7 +1535,6 @@ pw_restart_new.o : ../../Modules/mp_pools.o
 pw_restart_new.o : ../../Modules/noncol.o
 pw_restart_new.o : ../../Modules/paw_variables.o
 pw_restart_new.o : ../../Modules/qes_init_module.o
-pw_restart_new.o : ../../Modules/qes_libs_module.o
 pw_restart_new.o : ../../Modules/qes_read_module.o
 pw_restart_new.o : ../../Modules/qes_reset_module.o
 pw_restart_new.o : ../../Modules/qes_types_module.o
@@ -1785,6 +1784,7 @@ scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 set_kplusq.o : ../../Modules/kind.o
 set_kup_and_kdw.o : ../../Modules/kind.o
+set_occupations.o : ../../Modules/kind.o
 set_rhoc.o : ../../Modules/atom.o
 set_rhoc.o : ../../Modules/cell_base.o
 set_rhoc.o : ../../Modules/fft_base.o
