@@ -270,7 +270,8 @@ MODULE cp_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'CPV' )
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'CPV',&
+              title)
          output_obj%tagname="output"
          output_obj%lwrite = .TRUE.
 !-------------------------------------------------------------------------------
