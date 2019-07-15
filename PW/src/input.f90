@@ -552,7 +552,8 @@ SUBROUTINE iosys()
   ! ... Set occupancies
   !
   CALL set_occupations( occupations, smearing, degauss, &
-       tfixed_occ, ltetra, tetra_type, smearing_, lgauss, ngauss ) 
+       tfixed_occ, ltetra, tetra_type, lgauss, ngauss ) 
+  smearing_ = smearing
   !
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &

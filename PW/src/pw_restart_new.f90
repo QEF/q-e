@@ -910,7 +910,6 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
       !
-      USE qes_libs_module,      ONLY : qes_write  
       USE FoX_dom,              ONLY : parseFile, item, getElementsByTagname, destroy, nodeList, Node
       USE qes_read_module,      ONLY : qes_read
       IMPLICIT NONE 
@@ -956,7 +955,6 @@ MODULE pw_restart_new
             errmsg='error reading header of xml data file'
             GOTO 100
          END IF
-         ! CALL qes_write_general_info( 82, restart_general_info) 
       END IF 
       ! 
       IF ( PRESENT ( restart_parallel_info ) ) THEN 
@@ -967,7 +965,6 @@ MODULE pw_restart_new
             errmsg='error parallel_info  of xsd data file' 
             GOTO 100
          END IF
-         ! CALL qes_write_parallel_info ( 82, restart_parallel_info )
       END IF  
       ! 
       IF ( PRESENT ( restart_output ) ) THEN
@@ -978,7 +975,6 @@ MODULE pw_restart_new
             GOTO 100 
          END IF 
          !
-         !CALL qes_write_output ( 82, restart_output ) 
       END IF 
       !
       IF (PRESENT (prev_input)) THEN

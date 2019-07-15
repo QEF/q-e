@@ -133,9 +133,11 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
        lxdm, ts_vdw
   USE Coul_cut_2D,     ONLY : do_cutoff_2D
-  USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield
+  USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
+       nspin_lsda, nspin_gga, nspin_mag
   USE spin_orb,        ONLY : domag, lspinorb
-  USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization
+  USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
+       current_spin
   USE realus,          ONLY : real_space
   USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : okvan
@@ -264,28 +266,20 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        lspinorb, domag, tot_magnetization )
   !
   bfield = 0.d0
-  IF ( lsda ) THEN  
-     nspin = 2
-     npol = 1
-     ! FIXME: next line makes sense only for fixed occupations
-     ! FIXME: is this really needed? do we use nelup and neldw?
-     CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
-  ELSE IF (noncolin ) THEN 
-     nspin = 4
-     npol = 2
-  ELSE 
-     nspin =1
-     npol = 1 
-  END IF
+  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+         npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
   !! Information for generating k-points and occupations
   CALL qexsd_copy_kpoints( output_obj%band_structure, &
        nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
        occupations, smearing, degauss )
   !
   CALL set_occupations( occupations, smearing, degauss, &
-       lfixed, ltetra, tetra_type, smearing, lgauss, ngauss )
+       lfixed, ltetra, tetra_type, lgauss, ngauss )
   IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
   IF (lfixed) CALL errore('read_file','bad occupancies',1)
+  ! FIXME: is this really needed? do we use nelup and neldw?
+  IF ( lfixed .AND. lsda ) &
+       CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
   !! Symmetry section
   ALLOCATE ( irt(48,nat) )
   IF ( lvalid_input ) THEN 
@@ -346,8 +340,6 @@ SUBROUTINE post_xml_init (  )
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
-  USE noncollin_module,     ONLY : noncolin
-  USE spin_orb,             ONLY : lspinorb
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
@@ -368,6 +360,8 @@ SUBROUTINE post_xml_init (  )
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : noncolin
+  USE spin_orb,             ONLY : lspinorb
   USE cell_base,            ONLY : at, bg, set_h_ainv
   USE symm_base,            ONLY : d1, d2, d3
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
@@ -379,11 +373,10 @@ SUBROUTINE post_xml_init (  )
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
   CHARACTER(LEN=20) :: dft_name
   !
-  ! ... set spin variables, G cutoffs, cell factor (FIXME: from setup.f90?)
+  ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
   CALL set_gcut()
   if (cell_factor == 0.d0) cell_factor = 1.D0
-  CALL set_spin_vars ( )
   nbndx = nbnd
   !
   ! ... read pseudopotentials
@@ -514,32 +507,5 @@ SUBROUTINE post_xml_init (  )
       END IF
       !
     END SUBROUTINE set_gcut
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE set_spin_vars( )
-      !------------------------------------------------------------------------
-      !
-      !  Set various spin-related variables
-      !
-      USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
-      USE spin_orb,  ONLY : domag
-      USE lsda_mod, ONLY : nspin, current_spin
-      !
-      IF (nspin /= 2) current_spin = 1
-      !
-      nspin_mag  = nspin
-      nspin_lsda = nspin
-      nspin_gga  = nspin
-      IF (nspin==4) THEN
-        nspin_lsda=1
-        IF (domag) THEN
-           nspin_gga=2
-        ELSE
-           nspin_gga=1
-           nspin_mag=1
-        ENDIF
-      ENDIF
-      !
-    END SUBROUTINE set_spin_vars
     !
   END SUBROUTINE post_xml_init
