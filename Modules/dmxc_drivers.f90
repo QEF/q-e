@@ -407,6 +407,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
      ! ... THRESHOLD STUFF AND dr(:)
      dr(:) = 0.0_DP
+     zeta(:) = 0.0_dp
+     zeta_eff(:) = 0.0_dp
      DO ir = 1, length
         IF (rhotot(ir) > small) THEN
            zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
