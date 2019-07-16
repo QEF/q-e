@@ -26,7 +26,7 @@ SUBROUTINE set_spin_vars( lsda, noncolin, lspinorb, domag, &
      nspin_lsda = 2
      nspin_gga  = 2
      current_spin = -1
-  ELSE IF (nspin==4) THEN
+  ELSE IF ( noncolin ) THEN
      !
      ! ... wavefunctions are spinors with 2 components
      !
