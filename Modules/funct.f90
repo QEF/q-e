@@ -799,15 +799,19 @@ CONTAINS
     its_libxc = .FALSE.
     matching = notset
     !
-    length = LEN( dft )
+    length = LEN_TRIM( dft )
     !
     ii = 0
     !
     DO i = 1, length
        ii = ii+1
-       IF (ii == length-1) EXIT
+       IF (ii >= length-1) EXIT
        !
-       IF ( ii==1 .OR. (ii>1 .AND. dft(ii-1:ii-1).EQ.' ') ) THEN
+       IF ( ii==1 ) THEN
+         DO j = 1, length-ii
+            IF (dft(ii+j:ii+j) .EQ. ' ') EXIT
+         ENDDO
+       ELSE IF ( dft(ii-1:ii-1).EQ.' ' ) THEN
          DO j = 1, length-ii
             IF (dft(ii+j:ii+j) .EQ. ' ') EXIT
          ENDDO
