@@ -41,7 +41,7 @@ SUBROUTINE openfilq()
   USE buffers,         ONLY : open_buffer, close_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
-  USE start_k,         ONLY : nk1, nk2, nk3
+  USE input_parameters,ONLY : nk1, nk2, nk3
   USE el_phon,         ONLY : elph, elph_mat, iunwfcwann, lrwfcr
   USE dfile_star,      ONLY : dvscf_star
   USE dfile_autoname,  ONLY : dfile_name

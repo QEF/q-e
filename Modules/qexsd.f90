@@ -1378,7 +1378,7 @@ CONTAINS
     !
     USE ions_base,            ONLY: nat, tau, atm, zv, ityp
     USE cell_base,            ONLY: omega
-    USE noncollin_module,     ONLY : noncolin, nspin_lsda
+    USE noncollin_module,     ONLY: nspin_lsda
     IMPLICIT NONE 
     ! 
     TYPE (berryPhaseOutput_type)                      :: obj

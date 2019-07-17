@@ -30,7 +30,6 @@ PROGRAM open_grid
   USE scf,                ONLY : rho
   USE lsda_mod,           ONLY : nspin, isk, lsda, starting_magnetization
   USE io_rho_xml,         ONLY : write_scf
-  USE start_k,            ONLY : nk1, nk2, nk3, k1, k2, k3
   USE noncollin_module,   ONLY : nspin_mag, npol
   USE fft_interfaces,     ONLY : fwfft
   !
@@ -56,7 +55,7 @@ PROGRAM open_grid
   INTEGER :: ios, ik, ibnd, ik_idx, ik_idx_kpt, ik_idx_exx, is, na
   CHARACTER(len=4) :: spin_component
   CHARACTER(len=256) :: outdir
-  !INTEGER :: nq(3)
+  INTEGER :: k1, k2, k3
   LOGICAL :: exst, opnd, exst_mem, magnetic_sym
   REAL(DP),ALLOCATABLE :: et0(:,:), wg0(:,:), yk(:,:), wk0(:)
   INTEGER, EXTERNAL  :: n_plane_waves
@@ -211,10 +210,10 @@ PROGRAM open_grid
   DEALLOCATE(psic, et0, wg0)
   !
   ! reconstruct input variables
-  nk1 = nq1
-  nk2 = nq2
-  nk3 = nq3
-  CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_lsda, xk, wk)
+  k1 = 0
+  k2 = 0
+  k3 = 0
+  CALL init_start_k(nq1,nq2,nq3, k1, k2, k3, "automatic",nks/nspin_lsda, xk, wk)
   !
   ! Restore EXX variables
   use_ace = use_ace_back

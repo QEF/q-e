@@ -131,7 +131,6 @@ CONTAINS
   !--------------------------------------------------------------------------
     
     USE qes_types_module, ONLY : atomic_structure_type
-    USE constants,        ONLY : pi
     !
     IMPLICIT NONE 
     !
