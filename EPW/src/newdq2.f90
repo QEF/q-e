@@ -33,7 +33,7 @@
   USE mp,                   ONLY : mp_sum
   USE lrus,                 ONLY : int3
   USE qpoint,               ONLY : eigqts
-  USE constants_epw,        ONLY : czero
+  USE constants_epw,        ONLY : czero, zero
   !
   IMPLICIT NONE
   !
@@ -72,15 +72,15 @@
   REAL(kind=DP), ALLOCATABLE :: ylmk0(:,:)
   !! the spherical harmonics at q+G
   !
-  COMPLEX(kind=DP), EXTERNAL :: zdotc
+  COMPLEX(kind=DP), EXTERNAL :: ZDOTC
   !! the scalar product function
   COMPLEX(kind=DP), ALLOCATABLE :: aux1(:), aux2(:,:)
   COMPLEX(kind=DP), ALLOCATABLE :: qgm(:)
-  !! the augmentation function at G
+  !! the augmentation function at q+G
   COMPLEX(kind=DP), ALLOCATABLE :: veff(:)
   !! effective potential
   !
-  IF ( .NOT. okvan) RETURN
+  IF (.NOT. okvan) RETURN
   !
   CALL start_clock('newdq2')
   !
@@ -93,11 +93,19 @@
   ALLOCATE ( qgm(ngm) )
   ALLOCATE ( qmod(ngm) )
   ALLOCATE ( qg(3,ngm) )
+  aux1(:) = czero
+  aux2(:,:) = czero
+  veff(:) = czero
+  ylmk0(:,:) = zero
+  qgm(:) = czero
+  qmod(:) = zero
+  qg(:,:) = zero
   !
   !    first compute the spherical harmonics
   !
   CALL setqmod( ngm, xq0, g, qmod, qg )
   CALL ylmr2( lmaxq * lmaxq, ngm, qg, qmod, ylmk0 )
+  !
   DO ig = 1, ngm
     qmod(ig) = sqrt( qmod(ig) )
   ENDDO
@@ -127,6 +135,7 @@
         !
         DO ih = 1, nh(nt)
           DO jh = ih, nh(nt)
+            !
             CALL qvan2( ngm, ih, jh, nt, qmod, qgm, ylmk0 )
             !
             DO na = 1, nat
@@ -139,7 +148,7 @@
                 ENDDO
                 DO is = 1, nspin_mag
                   int3(ih,jh,na,is,ipert) = omega * &
-                                  zdotc(ngm,aux1,1,aux2(1,is),1)
+                                  ZDOTC(ngm,aux1,1,aux2(1,is),1)
                 ENDDO
               ENDIF
             ENDDO
