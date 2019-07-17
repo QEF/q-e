@@ -95,7 +95,7 @@ MODULE cp_restart_new
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
       USE wrappers,                 ONLY : f_copy
       USE uspp,                     ONLY : okvan
-      USE input_parameters,         ONLY : vdw_corr, london, starting_ns_eigenvalue
+      USE input_parameters,         ONLY : vdw_corr, starting_ns_eigenvalue
       USE qexsd_module,             ONLY: qexsd_init_vdw, qexsd_init_hybrid, qexsd_init_dftU 
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
 

@@ -32,7 +32,7 @@ subroutine bcast_ph_input ( )
   USE control_flags, only: iverbosity, modenum
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE check_stop, ONLY: max_seconds
-  USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
+  USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE ions_base,     ONLY : amass
   USE io_global,   ONLY : meta_ionode_id
   USE run_info,   ONLY : title
