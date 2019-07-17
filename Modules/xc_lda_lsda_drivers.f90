@@ -95,6 +95,9 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   iexch = get_iexch()
   icorr = get_icorr()
   !
+  ex_out = 0.0_DP ; vx_out = 0.0_DP
+  ec_out = 0.0_DP ; vc_out = 0.0_DP
+  !
 #if defined(__LIBXC)
   !
   IF ( ANY(is_libxc(1:2)) ) THEN

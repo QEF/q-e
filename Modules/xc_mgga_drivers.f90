@@ -106,6 +106,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   imeta  = get_meta()
   imetac = get_metac()
   !
+  ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP ;  v3x = 0.0_DP
+  ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP ;  v3c = 0.0_DP
+  !
   POLARIZED = .FALSE.
   IF (ns == 2) THEN
      POLARIZED = .TRUE.
