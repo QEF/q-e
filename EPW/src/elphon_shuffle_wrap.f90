@@ -56,11 +56,12 @@
   USE constants_epw, ONLY : ryd2ev, zero, czero
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
-  USE noncollin_module, ONLY : m_loc, npol
+  USE noncollin_module, ONLY : m_loc, npol, noncolin
   USE iotk_module,   ONLY : iotk_open_read, iotk_scan_dat, iotk_free_unit, &
                             iotk_close_read
   USE division,      ONLY : fkbounds
   USE uspp,          ONLY : okvan
+  USE spin_orb,      ONLY : lspinorb 
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : becp, deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
@@ -85,7 +86,7 @@
   INTEGER :: maxvalue
   !! Temporary integer for max value
   INTEGER :: nqxq_tmp
-  !! Maximum G+q length ? 
+  !! Maximum G+q length  
   INTEGER :: ibnd
   !! Band index
   INTEGER :: ik
@@ -230,9 +231,13 @@
     nqxq_tmp = INT(((SQRT(gcutm) + qnorm_tmp) / dq + 4) * cell_factor)
     IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
   ENDDO
+  !
   IF (maxvalue > nqxq) THEN
     IF (ALLOCATED(qrad)) DEALLOCATE (qrad)
     ALLOCATE (qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp))
+    qrad(:,:,:,:) = zero
+    ! RM - need to call init_us_1 to re-calculate qrad 
+    CALL init_us_1
   ENDIF
   ! 
   ! do not perform the check if restart
@@ -321,11 +326,11 @@
     !
     dynq(:, :, :)         = czero
     epmatq(:, :, :, :, :) = czero
+    epsi(:, :)            = zero
+    zstar(:, :, :)        = zero
     bmat(:, :, :, :)      = czero
     cu(:, :, :)           = czero
     cuq(:, :, :)          = czero
-    epsi(:, :)            = zero
-    zstar(:, :, :)        = zero
     !
     ! read interatomic force constat matrix from q2r
     IF (lifc) CALL read_ifc
@@ -473,7 +478,7 @@
       DO iq = 1, nq
         ! SP: First the vlocq needs to be initialized properly with the first
         !     q in the star
-        xq = xq0        
+        xq = xq0      
         CALL epw_init(.false.)
         !
         ! retrieve the q in the star
@@ -705,18 +710,22 @@
       DEALLOCATE (int2)
       DEALLOCATE (int4)
       DEALLOCATE (int5)
-      DEALLOCATE (int1_nc)
-      DEALLOCATE (int4_nc)
-      DEALLOCATE (int2_so)
-      DEALLOCATE (int5_so)
+      IF (noncolin) THEN 
+        DEALLOCATE (int1_nc)
+        DEALLOCATE (int4_nc)
+        IF (lspinorb) THEN
+          DEALLOCATE (int2_so)
+          DEALLOCATE (int5_so)
+        ENDIF
+      ENDIF
     ENDIF
-    DO ik=1, nks
-      DO ipol=1, 3
+    DO ik = 1, nks
+      DO ipol = 1, 3
         CALL deallocate_bec_type( alphap(ipol,ik) )
       ENDDO
     ENDDO
     DEALLOCATE (alphap)
-    DO ik=1, size(becp1)
+    DO ik = 1, size(becp1)
       CALL deallocate_bec_type( becp1(ik) )
     ENDDO
     DEALLOCATE (becp1)

@@ -73,7 +73,7 @@
   COMPLEX(kind=DP) :: sum_nc(npol)
   !! auxiliary sum variable non-collinear case
   !
-  IF ( .NOT. okvan) RETURN
+  IF (.NOT. okvan) RETURN
   !
   CALL start_clock('adddvscf2')
   !

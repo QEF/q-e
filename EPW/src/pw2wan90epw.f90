@@ -1567,8 +1567,8 @@
   !
   any_uspp = ANY( upf(:)%tvanp )
   !
-  IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
-             'noncolin calculation not implimented with USP',1)
+  IF ( any_uspp ) CALL errore('pw2wan90epw',&
+    'dipole matrix calculation not implimented with USP - set vme=.true.',1)
   !
   ALLOCATE (dmec(3, nbnd, nbnd, nks))
   !
