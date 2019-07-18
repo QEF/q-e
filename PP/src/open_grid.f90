@@ -229,7 +229,7 @@ PROGRAM open_grid
   yk = xk
   CALL cryst_to_cart(nks, yk, at, -1)
   WRITE(stdout,'(5x,a)') "Grid of q-points"
-  WRITE(stdout,'(5x,a,3i4)') "Dimensions:", nk1, nk2, nk3
+  WRITE(stdout,'(5x,a,3i4)') "Dimensions:", nq1, nq2, nq3
   WRITE(stdout,'(5x,a,3i4)') "Shift:     ", k1,k2,k3
   WRITE(stdout,'(5x,a)') "List to be put in the .win file of wannier90: &
                           &(already in crystal/fractionary coordinates):"
