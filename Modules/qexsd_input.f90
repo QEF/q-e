@@ -103,7 +103,6 @@ MODULE qexsd_input
   REAL(DP),DIMENSION(:),OPTIONAL,INTENT(IN)    :: input_occupations, input_occupations_minority
   REAL(DP),OPTIONAL,INTENT(IN)                 :: tot_mag, tot_charge 
   !
-  CHARACTER(25)                                :: smearing_local
   INTEGER                                      :: spin_degeneracy, inpOcc_size = 0
   CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="bands"
   TYPE(smearing_type),POINTER                  :: smearing_obj => NULL()
@@ -114,17 +113,7 @@ MODULE qexsd_input
   ! 
   IF (TRIM(occupations) .EQ. "smearing")  THEN
      ALLOCATE(smearing_obj) 
-     SELECT CASE (TRIM  (smearing))
-       CASE ("gaussian", "gauss")
-           smearing_local="gaussian"
-       CASE ('methfessel-paxton', 'm-p', 'mp')
-           smearing_local="mp"
-       CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv','Marzari-Vanderbilt') 
-           smearing_local="mv"
-       CASE ('fermi-dirac', 'f-d', 'fd') 
-           smearing_local="fd"
-     END SELECT 
-     CALL qes_init (smearing_obj,"smearing",degauss=degauss,smearing=smearing_local)
+     CALL qes_init (smearing_obj,"smearing",degauss=degauss,smearing=smearing)
   END IF
   CALL  qes_init (occup_obj, "occupations", occupations = TRIM(occupations))
   !
@@ -661,21 +650,7 @@ MODULE qexsd_input
       CHARACTER(LEN = * ), INTENT(IN)      :: smearing
       REAL(DP),INTENT(IN)                  :: degauss 
       ! 
-      CHARACTER(LEN=256)                   :: smearing_local 
-
-      SELECT CASE (TRIM  (smearing))
-        CASE ("gaussian", "gauss")
-            smearing_local="gaussian"
-        CASE ('methfessel-paxton', 'm-p', 'mp')
-            smearing_local="mp"
-        CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt') 
-            smearing_local="mv"
-        CASE ('fermi-dirac', 'f-d', 'fd') 
-            smearing_local="fd"
-        CASE default
-            smearing_local='not set'
-      END SELECT 
-      CALL qes_init (obj,"smearing",degauss=degauss,smearing=smearing_local)
+      CALL qes_init (obj,"smearing",degauss=degauss,smearing=smearing)
       !
       END SUBROUTINE qexsd_init_smearing
       !--------------------------------------------------------------------------------------------

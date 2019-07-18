@@ -175,13 +175,14 @@
     !
     CALL invfft('Rho', drhoc, dfftp)
     !
-    IF ( .NOT. lsda) THEN
+    aux(:) = czero
+    IF (.NOT. lsda) THEN
       DO ir = 1, dfftp%nnr
         aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
       ENDDO
     ELSE
       is = isk_loc(ik)
-      DO ir=1, dfftp%nnr
+      DO ir = 1, dfftp%nnr
         aux(ir) = drhoc(ir) * 0.5d0 * (dmuxc(ir, is, 1) + dmuxc(ir, is, 2))
       ENDDO
     ENDIF

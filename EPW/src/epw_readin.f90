@@ -73,7 +73,6 @@
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id
   USE io_epw,        ONLY : iunkf, iunqf
   USE noncollin_module, ONLY : npol
-  USE wavefunctions, ONLY : evc
   USE wvfct,         ONLY : npwx
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg

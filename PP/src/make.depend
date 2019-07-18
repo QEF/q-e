@@ -88,9 +88,11 @@ bands.o : ../../Modules/uspp.o
 bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
 bands.o : ../../UtilXlib/mp.o
+benchmark_libxc.o : ../../Modules/funct.o
 benchmark_libxc.o : ../../Modules/libxc.o
 benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
 benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
+benchmark_libxc.o : ../../Modules/xc_mgga_drivers.o
 chdens_bspline.o : ../../Modules/bspline.o
 chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o
@@ -334,7 +336,6 @@ open_grid.o : ../../Modules/environment.o
 open_grid.o : ../../Modules/fft_base.o
 open_grid.o : ../../Modules/funct.o
 open_grid.o : ../../Modules/gvecw.o
-open_grid.o : ../../Modules/input_parameters.o
 open_grid.o : ../../Modules/io_files.o
 open_grid.o : ../../Modules/io_global.o
 open_grid.o : ../../Modules/ions_base.o

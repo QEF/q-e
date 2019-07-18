@@ -144,12 +144,12 @@ alpha2f.o : phcom.o
 bcast_ph_input.o : ../../LR_Modules/lrcom.o
 bcast_ph_input.o : ../../Modules/check_stop.o
 bcast_ph_input.o : ../../Modules/control_flags.o
-bcast_ph_input.o : ../../Modules/input_parameters.o
 bcast_ph_input.o : ../../Modules/io_files.o
 bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
 bcast_ph_input.o : ../../Modules/mp_world.o
 bcast_ph_input.o : ../../Modules/run_info.o
+bcast_ph_input.o : ../../PW/src/start_k.o
 bcast_ph_input.o : ../../UtilXlib/mp.o
 bcast_ph_input.o : dfile_star.o
 bcast_ph_input.o : elph.o
@@ -1024,7 +1024,6 @@ openfilq.o : ../../LR_Modules/lrcom.o
 openfilq.o : ../../Modules/cell_base.o
 openfilq.o : ../../Modules/control_flags.o
 openfilq.o : ../../Modules/fft_base.o
-openfilq.o : ../../Modules/input_parameters.o
 openfilq.o : ../../Modules/io_files.o
 openfilq.o : ../../Modules/io_global.o
 openfilq.o : ../../Modules/ions_base.o
@@ -1036,6 +1035,7 @@ openfilq.o : ../../Modules/uspp.o
 openfilq.o : ../../PW/src/buffers.o
 openfilq.o : ../../PW/src/ldaU.o
 openfilq.o : ../../PW/src/pwcom.o
+openfilq.o : ../../PW/src/start_k.o
 openfilq.o : acfdtest.o
 openfilq.o : dfile_autoname.o
 openfilq.o : dfile_star.o
@@ -1123,7 +1123,6 @@ phq_readin.o : ../../Modules/check_stop.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/fft_base.o
 phq_readin.o : ../../Modules/funct.o
-phq_readin.o : ../../Modules/input_parameters.o
 phq_readin.o : ../../Modules/io_files.o
 phq_readin.o : ../../Modules/io_global.o
 phq_readin.o : ../../Modules/ions_base.o

@@ -7,17 +7,17 @@
 !
 !
 !-----------------------------------------------------------------------
-FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
-     omega, tau) RESULT (ierr)
+FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !-----------------------------------------------------------------------
   ! FIXME: half of the variables are passed as arguments, half in modules
+  ! FIXME: this routines does two different things
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE io_files,        ONLY : tmp_dir, prefix, postfix, &
                               psfile, pseudo_dir, pseudo_dir_cur
-  USE ions_base,       ONLY : nsp, ityp, amass, atm
-  USE cell_base,       ONLY : alat, ibrav
+  USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau
+  USE cell_base,       ONLY : alat, ibrav, at, bg, omega
   USE pw_restart_new,  ONLY : pw_read_schema
   USE qexsd_copy,      ONLY : qexsd_copy_atomic_species, &
                               qexsd_copy_atomic_structure
@@ -27,10 +27,7 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   IMPLICIT NONE
   !
   LOGICAL,INTENT(in)     :: lmovecell
-  INTEGER,INTENT(in)     :: nat
   REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
-  REAL(DP),INTENT(inout) :: at(3,3), bg(3,3), omega
-  REAL(DP),INTENT(inout) :: tau(3,nat)
   INTEGER :: ierr, nat_
 !
   TYPE ( output_type)                   :: output_obj

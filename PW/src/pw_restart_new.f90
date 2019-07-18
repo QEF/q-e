@@ -40,9 +40,6 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
        read_collected_to_evc
-  PUBLIC :: readschema_ef, readschema_magnetization, &
-       readschema_occupations, readschema_brillouin_zone, &
-       readschema_band_structure
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -140,6 +137,7 @@ MODULE pw_restart_new
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
       USE martyna_tuckerman,    ONLY : do_comp_mt 
+      USE run_info,             ONLY : title
       !
       IMPLICIT NONE
       !
@@ -147,6 +145,8 @@ MODULE pw_restart_new
       !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
+      CHARACTER(LEN=8)      :: smearing_loc
+      CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -235,7 +235,8 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'PWSCF' )
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
+              'PWSCF', title )
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
@@ -538,8 +539,9 @@ MODULE pw_restart_new
          IF ( lgauss ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
                smear_obj = qexsd_input_obj%bands%smearing
-            ELSE 
-               CALL qexsd_init_smearing(smear_obj, smearing, degauss)
+            ELSE
+               smearing_loc = schema_smearing( smearing )
+               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss)
             END IF  
             smear_obj_ptr => smear_obj  
          END IF 
@@ -913,7 +915,6 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
       !
-      USE qes_libs_module,      ONLY : qes_write  
       USE FoX_dom,              ONLY : parseFile, item, getElementsByTagname, destroy, nodeList, Node
       USE qes_read_module,      ONLY : qes_read
       IMPLICIT NONE 
@@ -959,7 +960,6 @@ MODULE pw_restart_new
             errmsg='error reading header of xml data file'
             GOTO 100
          END IF
-         ! CALL qes_write_general_info( 82, restart_general_info) 
       END IF 
       ! 
       IF ( PRESENT ( restart_parallel_info ) ) THEN 
@@ -970,7 +970,6 @@ MODULE pw_restart_new
             errmsg='error parallel_info  of xsd data file' 
             GOTO 100
          END IF
-         ! CALL qes_write_parallel_info ( 82, restart_parallel_info )
       END IF  
       ! 
       IF ( PRESENT ( restart_output ) ) THEN
@@ -981,7 +980,6 @@ MODULE pw_restart_new
             GOTO 100 
          END IF 
          !
-         !CALL qes_write_output ( 82, restart_output ) 
       END IF 
       !
       IF (PRESENT (prev_input)) THEN
@@ -1005,280 +1003,6 @@ MODULE pw_restart_new
       !
     END SUBROUTINE pw_read_schema
     !  
-    !-----------------------------------------------------------------------------------------
-    SUBROUTINE readschema_magnetization( band_structure_obj, magnetization_obj ) 
-      !---------------------------------------------------------------------------------------
-      ! 
-      USE klist,            ONLY : two_fermi_energies, nelup, neldw, tot_magnetization
-      USE ener,             ONLY : ef_up, ef_dw
-      USE lsda_mod,         ONLY : nspin, lsda, starting_magnetization
-      USE noncollin_module, ONLY : noncolin, npol, bfield
-      USE electrons_base,   ONLY : set_nelup_neldw
-      USE spin_orb,         ONLY : lspinorb, domag
-      USE qes_types_module, ONLY : band_structure_type, magnetization_type
-      !
-      IMPLICIT NONE 
-      !
-      TYPE ( band_structure_type ),INTENT(IN)    :: band_structure_obj
-      TYPE ( magnetization_type ) ,INTENT(IN)    :: magnetization_obj
-      REAL(dp) :: nelec_
-      ! 
-      lsda  =   magnetization_obj%lsda
-      noncolin = magnetization_obj%noncolin  
-      lspinorb = magnetization_obj%spinorbit 
-      domag =   magnetization_obj%do_magnetization 
-      !
-      IF ( lsda ) THEN  
-        nspin = 2
-        npol = 1
-      ELSE IF (noncolin ) THEN 
-        nspin = 4
-        npol = 2
-      ELSE 
-        nspin =1
-        npol = 1 
-      END IF
-      !
-      bfield = 0.d0
-      nelec_ = band_structure_obj%nelec
-      two_fermi_energies = band_structure_obj%two_fermi_energies_ispresent
-      IF (two_fermi_energies) THEN 
-         ef_up = band_structure_obj%two_fermi_energies(1)
-         ef_dw = band_structure_obj%two_fermi_energies(2) 
-         IF (TRIM(band_structure_obj%occupations_kind%occupations) == 'fixed') THEN
-            tot_magnetization = magnetization_obj%total
-            CALL set_nelup_neldw(tot_magnetization, nelec_, nelup, neldw) 
-         END IF 
-      END IF 
-      !
-    END SUBROUTINE readschema_magnetization
-    !-----------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------
-    SUBROUTINE readschema_brillouin_zone( band_structure )
-    !---------------------------------------------------------------------------
-       !
-       USE lsda_mod, ONLY : lsda, isk
-       USE klist,    ONLY : nkstot, xk, wk
-       USE start_k,  ONLY : nks_start, xk_start, wk_start, &
-                              nk1, nk2, nk3, k1, k2, k3 
-       USE qes_types_module, ONLY : band_structure_type
-       !
-       IMPLICIT NONE
-       !
-       TYPE ( band_structure_type ),INTENT(IN)    :: band_structure
-       INTEGER                                    :: ik, isym, nks_
-       ! 
-       nks_ = band_structure%nks
-       nkstot = nks_
-       IF ( band_structure%lsda ) nkstot = nkstot * 2  
-       ! 
-       ! 
-       DO ik = 1, nks_
-          xk(:,ik) = band_structure%ks_energies(ik)%k_point%k_point(:) 
-       END DO 
-       !!  during lsda computations pw uses, for each k-point in the mesh, a distinct 
-       !!  k_point variable for the two spin channels, while in 
-       !!  the xml file only one k_point is present
-       IF ( band_structure%lsda ) THEN
-          DO ik = 1, nks_
-             xk(:,nks_+ik) = band_structure%ks_energies(ik)%k_point%k_point(:) 
-             isk(ik) = 1
-             isk(ik+nks_) = 2
-          END DO
-       END IF   
-       !   
-       IF ( band_structure%starting_k_points%monkhorst_pack_ispresent ) THEN 
-          nks_start = 0 
-          nk1 = band_structure%starting_k_points%monkhorst_pack%nk1 
-          nk2 = band_structure%starting_k_points%monkhorst_pack%nk2
-          nk3 = band_structure%starting_k_points%monkhorst_pack%nk3 
-           k1 = band_structure%starting_k_points%monkhorst_pack%k1
-           k2 = band_structure%starting_k_points%monkhorst_pack%k2
-           k3 = band_structure%starting_k_points%monkhorst_pack%k3
-       ELSE IF (band_structure%starting_k_points%nk_ispresent ) THEN 
-           nks_start = band_structure%starting_k_points%nk
-           IF ( nks_start > 0 ) THEN 
-              IF ( .NOT. ALLOCATED(xk_start) ) ALLOCATE (xk_start(3,nks_start))
-              IF ( .NOT. ALLOCATED(wk_start) ) ALLOCATE (wk_start(nks_start))
-              IF ( nks_start == size( band_structure%starting_k_points%k_point ) ) THEN 
-                 DO ik =1, nks_start
-                    xk_start(:,ik) = band_structure%starting_k_points%k_point(ik)%k_point(:) 
-                    IF ( band_structure%starting_k_points%k_point(ik)%weight_ispresent) THEN 
-                        wk_start(ik) = band_structure%starting_k_points%k_point(ik)%weight 
-                    ELSE 
-                        wk_start(ik) = 0.d0
-                    END IF 
-                 END DO
-              ELSE
-                 CALL infomsg ( "readschema_bz: ", &
-                                "actual number of start kpoint not equal to nks_start, set nks_start=0")  
-                 nks_start = 0 
-              END IF
-           END IF
-       ELSE 
-           CALL errore ("readschema_bz: ", &
-                        " no information found for initializing brillouin zone information", 1)
-       END IF  
-       ! 
-    END SUBROUTINE readschema_brillouin_zone     
-    !--------------------------------------------------------------------------------------------------
-    SUBROUTINE readschema_occupations( band_struct_obj ) 
-      !------------------------------------------------------------------------------------------------
-      ! 
-      USE lsda_mod,         ONLY : lsda, nspin
-      USE fixed_occ,        ONLY : tfixed_occ, f_inp
-      USE ktetra,           ONLY : ntetra, tetra_type
-      USE klist,            ONLY : ltetra, lgauss, ngauss, degauss, smearing
-      USE electrons_base,   ONLY : nupdwn 
-      USE wvfct,            ONLY : nbnd
-      USE input_parameters, ONLY : input_parameters_occupations => occupations
-      USE qes_types_module, ONLY : input_type, band_structure_type
-      ! 
-      IMPLICIT NONE 
-      ! 
-      TYPE ( band_structure_type ),INTENT(IN)     :: band_struct_obj 
-      INTEGER                                     :: ispin, nk1, nk2, nk3, aux_dim1, aux_dim2 
-      ! 
-      lsda= band_struct_obj%lsda
-      nbnd = band_struct_obj%nbnd
-      IF ( band_struct_obj%nbnd_up_ispresent ) nupdwn(1) = band_struct_obj%nbnd_up
-      IF ( band_struct_obj%nbnd_dw_ispresent ) nupdwn(2) = band_struct_obj%nbnd_dw 
-      IF ( lsda )  THEN 
-         nspin = 2
-         nbnd = nbnd / 2
-      ELSE IF ( band_struct_obj%noncolin) THEN 
-         nspin = 4 
-      ELSE 
-         nspin = 1 
-      END IF 
-      !
-      lgauss = .FALSE. 
-      ltetra = .FALSE. 
-      tetra_type = 0
-      ngauss = 0
-      input_parameters_occupations = TRIM ( band_struct_obj%occupations_kind%occupations ) 
-      IF (TRIM(input_parameters_occupations) == 'tetrahedra' ) THEN 
-        ltetra = .TRUE. 
-        nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
-        nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
-        nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
-        ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_lin' .OR. &
-               TRIM(input_parameters_occupations) == 'tetrahedra-lin' ) THEN
-        ltetra = .TRUE. 
-        nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
-        nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
-        nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
-        tetra_type = 1
-        ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF (TRIM(input_parameters_occupations) == 'tetrahedra_opt' .OR. &
-               TRIM(input_parameters_occupations) == 'tetrahedra-opt' ) THEN 
-        ltetra = .TRUE. 
-        nk1 = band_struct_obj%starting_k_points%monkhorst_pack%nk1
-        nk2 = band_struct_obj%starting_k_points%monkhorst_pack%nk2
-        nk3 = band_struct_obj%starting_k_points%monkhorst_pack%nk3
-        tetra_type = 2
-        ntetra = 6* nk1 * nk2 * nk3 
-      ELSE IF ( TRIM (input_parameters_occupations) == 'smearing') THEN 
-        lgauss = .TRUE.  
-        degauss = band_struct_obj%smearing%degauss
-        SELECT CASE ( TRIM( band_struct_obj%smearing%smearing ) )
-           CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
-             ngauss = 0
-             smearing  = 'gaussian'
-           CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
-             ngauss = 1
-             smearing = 'mp'
-           CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
-             ngauss = -1
-             smearing  = 'mv'
-           CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
-             ngauss = -99
-             smearing = 'fd'
-        END SELECT
-      END IF       
-     !
-    END SUBROUTINE readschema_occupations
- !
-    !------------------------------------------------------------------------
-    SUBROUTINE readschema_band_structure( band_struct_obj )
-      !------------------------------------------------------------------------
-      !
-      USE constants,     ONLY : e2
-      USE basis,    ONLY : natomwfc
-      USE lsda_mod, ONLY : lsda, isk
-      USE klist,    ONLY : nkstot, wk, nelec
-      USE wvfct,    ONLY : et, wg, nbnd
-      USE ener,     ONLY : ef, ef_up, ef_dw
-      USE qes_types_module, ONLY : band_structure_type
-      !
-      IMPLICIT NONE
-      TYPE ( band_structure_type)         :: band_struct_obj
-      INTEGER                             :: ik, nbnd_, nbnd_up_, nbnd_dw_
-      ! 
-      !! left here to write bw compatible xml
-      lsda = band_struct_obj%lsda
-      nkstot = band_struct_obj%nks 
-      IF ( lsda) THEN 
-         IF (band_struct_obj%nbnd_ispresent) THEN 
-            nbnd  = band_struct_obj%nbnd / 2
-         ELSE IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent ) THEN 
-            nbnd = (band_struct_obj%nbnd_up + band_struct_obj%nbnd_dw)/2 
-         ELSE 
-            CALL errore ('init_vars_from_schema: ','band_structure xml element nbnd and nbnd_up+nbnd_dw missing', 1)  
-         END IF 
-         nkstot = nkstot * 2 
-         isk(1:nkstot/2) = 1
-         isk(nkstot/2+1:nkstot) = 2 
-      ELSE 
-         isk(1:nkstot)   = 1 
-      END IF 
-      ! 
-      nelec = band_struct_obj%nelec
-      natomwfc = band_struct_obj%num_of_atomic_wfc
-      IF ( band_struct_obj%fermi_energy_ispresent) THEN 
-         ef = band_struct_obj%fermi_energy*e2 
-      ELSE IF ( band_struct_obj%two_fermi_energies_ispresent ) THEN 
-         ef = 0.d0 
-         ef_up = band_struct_obj%two_fermi_energies(1)*e2
-         ef_dw = band_struct_obj%two_fermi_energies(2)*e2
-      ELSE 
-         ef = 0.d0
-         ef_up = 0.d0
-         ef_dw = 0.d0
-      END IF 
-      DO ik =1, band_struct_obj%ndim_ks_energies
-         IF ( band_struct_obj%lsda) THEN
-            IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent) THEN
-               nbnd_up_ = band_struct_obj%nbnd_up
-               nbnd_dw_ = band_struct_obj%nbnd_dw 
-            ELSE IF ( band_struct_obj%nbnd_up_ispresent ) THEN 
-               nbnd_up_ = band_struct_obj%nbnd_up
-               nbnd_dw_ = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_up_
-            ELSE IF ( band_struct_obj%nbnd_dw_ispresent ) THEN 
-               nbnd_dw_ = band_struct_obj%nbnd_dw
-               nbnd_up_ = band_struct_obj%ks_energies(ik)%eigenvalues%size - nbnd_dw_ 
-            ELSE 
-               nbnd_up_ = band_struct_obj%ks_energies(ik)%eigenvalues%size/2  
-               nbnd_dw_ = band_struct_obj%ks_energies(ik)%eigenvalues%size/2
-            END IF
-            wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
-            wk( ik + band_struct_obj%ndim_ks_energies ) = wk(ik) 
-            et(1:nbnd_up_,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_up_)*e2
-            et(1:nbnd_dw_,ik+band_struct_obj%ndim_ks_energies) =  &
-                             band_struct_obj%ks_energies(ik)%eigenvalues%vector(nbnd_up_+1:nbnd_up_+nbnd_dw_)*e2
-            wg(1:nbnd_up_,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd_up_)*wk(ik)
-            wg(1:nbnd_dw_,ik+band_struct_obj%ndim_ks_energies) =  &
-                             band_struct_obj%ks_energies(ik)%occupations%vector(nbnd_up_+1:nbnd_up_+nbnd_dw_)*wk(ik)
-         ELSE 
-            wk(ik) = band_struct_obj%ks_energies(ik)%k_point%weight
-            nbnd_ = band_struct_obj%ks_energies(ik)%eigenvalues%size
-            et (1:nbnd_,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_)*e2
-            wg (1:nbnd_,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd_)*wk(ik)
-         END IF  
-      END DO 
-    END SUBROUTINE readschema_band_structure 
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_to_evc( dirname )
@@ -1413,27 +1137,5 @@ MODULE pw_restart_new
       !
     END SUBROUTINE read_collected_to_evc
     !
-    !----------------------------------------------------------------------------------------
-    SUBROUTINE readschema_ef ( band_struct_obj )
-    !----------------------------------------------------------------------------------------
-       !
-       USE constants, ONLY        : e2
-       USE ener,  ONLY            : ef, ef_up, ef_dw
-       USE klist, ONLY            : two_fermi_energies, nelec
-       USE qes_types_module, ONLY : band_structure_type 
-       ! 
-       IMPLICIT NONE 
-       ! 
-       TYPE ( band_structure_type ),INTENT(IN)      :: band_struct_obj 
-       ! 
-       two_fermi_energies = band_struct_obj%two_fermi_energies_ispresent 
-       nelec = band_struct_obj%nelec
-       IF ( two_fermi_energies) THEN 
-          ef_up = band_struct_obj%two_fermi_energies(1)*e2
-          ef_dw = band_struct_obj%two_fermi_energies(2)*e2
-       ELSE IF ( band_struct_obj%fermi_energy_ispresent ) THEN 
-          ef = band_struct_obj%fermi_energy*e2
-       END IF 
-    END SUBROUTINE readschema_ef 
     !------------------------------------------------------------------------
   END MODULE pw_restart_new

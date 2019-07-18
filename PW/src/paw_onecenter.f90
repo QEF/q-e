@@ -630,7 +630,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2
     USE funct,                  ONLY : igcc_is_lyp
-    USE xc_gga,                 ONLY : xc_gcx !  gcxc, gcx_spin, gcc_spin, gcc_spin_more
+    USE xc_gga,                 ONLY : xc_gcx
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -659,7 +659,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     !
     !
     !^^^
-    REAL(DP), ALLOCATABLE :: arho(:), grad2_v(:)
+    REAL(DP), ALLOCATABLE :: arho(:,:), grad2_v(:)
     REAL(DP), ALLOCATABLE :: r_vec(:,:) !, rh(:), zeta(:) !, grhor(:,:), grhoud(:), grh2(:)
     !
     REAL(DP), DIMENSION(i%m,nspin_gga) :: v1x, v2x, v1c, v2c  !workspace
@@ -740,7 +740,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         !
         !     GGA case
         !
-        ALLOCATE( arho(i%m), grad2_v(i%m) )
+        ALLOCATE( arho(i%m,1), grad2_v(i%m) )
         ALLOCATE( gradx(3,i%m,1))
         !
 !$omp do
@@ -751,8 +751,8 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
            CALL PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grad2, grad)
            !
            DO k = 1, i%m
-              arho(k) = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
-              arho(k) = ABS(arho(k))
+              arho(k,1) = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
+              arho(k,1) = ABS(arho(k,1))
               gradx(:,k,1) = grad(k,:,1)
            ENDDO
 !
@@ -1692,7 +1692,8 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
-    USE xc_gga,                 ONLY : gcxc, gcx_spin, gcc_spin, libxc_switches_gga
+    USE funct,                  ONLY : is_libxc
+    USE xc_gga,                 ONLY : gcxc, gcx_spin, gcc_spin
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     REAL(DP), INTENT(IN)    :: rho_lm(i%m,i%l**2,nspin_mag) ! charge density as lm components
@@ -1739,7 +1740,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
     !
-    IF ( SUM(libxc_switches_gga(:)) /= 0 )  CALL errore( 'PAW_dgcxc_potential', 'libxc derivatives of &
+    IF ( ANY(is_libxc(3:4)) )  CALL errore( 'PAW_dgcxc_potential', 'libxc derivatives of &
                                                         &xc potentials for GGA not available yet', 1 )
     !
     zero    = 0.0_DP

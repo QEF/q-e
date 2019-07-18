@@ -94,7 +94,7 @@
   !! e^{-i q * \tau} * conjg(e^{-i q * \tau}) 
   COMPLEX(kind=DP) :: fact1
   !! -i * omega
-  COMPLEX(kind=DP), EXTERNAL :: zdotc
+  COMPLEX(kind=DP), EXTERNAL :: ZDOTC
   !! the scalar product function
   COMPLEX(kind=DP), ALLOCATABLE :: aux1(:), aux2(:), &
        aux3(:), aux5(:), sk(:)
@@ -105,7 +105,7 @@
   COMPLEX(kind=DP), POINTER :: qgmq(:)
   !! the augmentation function at q+G
   ! 
-  IF ( .NOT. okvan) RETURN
+  IF (.NOT. okvan) RETURN
   !
   CALL start_clock('dvanqq2')
   ! 
@@ -113,6 +113,7 @@
   int2(:,:,:,:,:) = czero
   int4(:,:,:,:,:) = czero
   int5(:,:,:,:,:) = czero
+  !
   ALLOCATE ( sk(ngm) )    
   ALLOCATE ( aux1(ngm) )    
   ALLOCATE ( aux2(ngm) )    
@@ -124,17 +125,32 @@
   ALLOCATE ( qgm(ngm))
   ALLOCATE ( ylmk0(ngm, lmaxq * lmaxq) )    
   ALLOCATE ( ylmkq(ngm, lmaxq * lmaxq) )    
+  sk(:) = czero
+  aux1(:) = czero
+  aux2(:) = czero
+  aux3(:) = czero
+  aux5(:) = czero
+  qmodg(:) = zero
+  qmod(:) = zero
+  qgmq(:) = czero
+  qgm(:) = czero
+  ylmk0(:,:) = zero
+  ylmkq(:,:) = zero
   !
   ! compute spherical harmonics
   !
   CALL ylmr2( lmaxq * lmaxq, ngm, g, gg, ylmk0 )
+  !
   DO ig = 1, ngm
     qmodg(ig) = sqrt( gg(ig) )
   ENDDO
   ! 
   ALLOCATE ( qpg(3, ngm) )    
+  qpg(:,:) = zero
+  !
   CALL setqmod( ngm, xq, g, qmod, qpg )
   CALL ylmr2(lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
+  !
   DEALLOCATE (qpg)
   DO ig = 1, ngm
     qmod(ig) = sqrt( qmod(ig) )
@@ -143,8 +159,10 @@
   !   we start by computing the FT of the effective potential
   !
   ALLOCATE (veff(dfftp%nnr,nspin_mag))    
+  veff(:,:) = czero
+  !
   DO is = 1, nspin_mag
-    IF (nspin_mag.ne.4 .or. is==1) THEN
+    IF (nspin_mag /= 4 .OR. is == 1) THEN
       DO ir = 1, dfftp%nnr
         veff(ir,is) = CMPLX(vltot(ir) + v%of_r(ir,is), zero, kind=DP)
       ENDDO
@@ -200,7 +218,7 @@
                      aux5(ig) = sk(ig) * ( g(ipol,ig) + xq(ipol) )
                    ENDDO
                    int2(ih,jh,ipol,na,nb) = fact * fact1 * &
-                         zdotc(ngm, aux1, 1, aux5, 1)
+                         ZDOTC(ngm, aux1, 1, aux5, 1)
                    ! 
                    DO jpol = 1, 3
                       IF (jpol >= ipol) THEN
@@ -210,7 +228,7 @@
                          ENDDO
                          int5(ijh,ipol,jpol,na,nb) = &
                              conjg(fact) * tpiba2 * omega * &
-                             zdotc(ngm, aux3, 1, aux1, 1)
+                             ZDOTC(ngm, aux3, 1, aux1, 1)
                       ELSE
                          int5(ijh,ipol,jpol,na,nb) = &
                              int5(ijh,jpol,ipol,na,nb)
@@ -232,14 +250,14 @@
                     aux2(ig) = veff(dfftp%nl(ig),is) * g(ipol,ig)
                   ENDDO
                   int1(ih,jh,ipol,nb,is) = - fact1 * &
-                     zdotc(ngm, aux1, 1, aux2, 1)
+                     ZDOTC(ngm, aux1, 1, aux2, 1)
                   DO jpol = 1, 3
                     IF (jpol >= ipol) THEN
                       DO ig = 1, ngm
                          aux3(ig) = aux2(ig) * g(jpol,ig)
                       ENDDO
                       int4(ijh,ipol,jpol,nb,is) = - tpiba2 * &
-                          omega * zdotc(ngm, aux3, 1, aux1, 1)
+                          omega * ZDOTC(ngm, aux3, 1, aux1, 1)
                     ELSE
                       int4(ijh,ipol,jpol,nb,is) = &
                           int4(ijh,jpol,ipol,nb,is)
@@ -304,14 +322,14 @@
   ENDIF
   !
 !DBRM
-  !write(*,'(a,e20.12)') 'int1 = ', &
-  !SUM((REAL(REAL(int1(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int1(:,:,:,:,:))))**2)
-  !write(*,'(a,e20.12)') 'int2 = ', &
-  !SUM((REAL(REAL(int2(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int2(:,:,:,:,:))))**2)
-  !write(*,'(a,e20.12)') 'int4 = ', &
-  !SUM((REAL(REAL(int4(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int4(:,:,:,:,:))))**2)
-  !write(*,'(a,e20.12)') 'int5 = ', &
-  !SUM((REAL(REAL(int5(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int5(:,:,:,:,:))))**2)
+!  write(*,'(a,e20.12)') 'int1 = ', &
+!  SUM((REAL(REAL(int1(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int1(:,:,:,:,:))))**2)
+!  write(*,'(a,e20.12)') 'int2 = ', &
+!  SUM((REAL(REAL(int2(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int2(:,:,:,:,:))))**2)
+!  write(*,'(a,e20.12)') 'int4 = ', &
+!  SUM((REAL(REAL(int4(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int4(:,:,:,:,:))))**2)
+!  write(*,'(a,e20.12)') 'int5 = ', &
+!  SUM((REAL(REAL(int5(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int5(:,:,:,:,:))))**2)
 !END
   !
   DEALLOCATE (sk)

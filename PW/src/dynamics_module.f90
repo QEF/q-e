@@ -371,12 +371,12 @@ CONTAINS
       !
       ! ... infos are written on the standard output
       !
-      WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/,  &
-                     & 5X,"temperature           = ",F14.8," K ",/,  &
-                     & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
+      WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F20.8," Ry",/,  &
+                     & 5X,"temperature           = ",F20.8," K ",/,  &
+                     & 5X,"Ekin + Etot (const)   = ",F20.8," Ry")' ) &
           ekin, temp_new, ( ekin  + etot )
       IF (lstres) WRITE ( stdout, &
-      '(5X,"Ions kinetic stress = ",F10.2," (kbar)",/3(27X,3F10.2/)/)') &
+      '(5X,"Ions kinetic stress = ",F15.2," (kbar)",/3(27X,3F15.2/)/)') &
               ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
               (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
       !

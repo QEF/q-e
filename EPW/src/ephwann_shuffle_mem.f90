@@ -77,7 +77,7 @@
   USE division,      ONLY : fkbounds
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm, root_pool
+  USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime, world_comm
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &

@@ -122,13 +122,12 @@ SUBROUTINE add_bfield( v, rho )
            fact = 2.D0*lambda*factlist(ir)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
            v(ir,1) = v(ir,1) + fact*m2(1,pointlist(ir))
            v(ir,2) = v(ir,2) - fact*m2(1,pointlist(ir))
-        END DO      ! points
+        ENDDO      ! points
         !
      ENDIF
-     !
      DEALLOCATE( m2, m_loc, r_loc )
      !
-     WRITE( stdout,'(4x,a,F15.8)' ) " constraint energy (Ryd) = ", etcon
+     WRITE (stdout,'(4x,a,F15.8)' ) " constraint energy (Ry) = ", etcon
      !
   ELSEIF (i_cons==3 .OR. i_cons==6) THEN
      !

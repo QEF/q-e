@@ -239,7 +239,7 @@ subroutine stress ( sigma )
 
   return
 9000 format (10x,'total   stress  (Ry/bohr**3) ',18x,'(kbar)', &
-             &5x,'P=',f8.2/3 (3f13.8,4x,3f10.2/))
+             &5x,'P=',f12.2/3 (3f13.8,4x,3f12.2/))
 9005 format &
          &  (5x,'kinetic stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'local   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
