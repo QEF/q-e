@@ -509,8 +509,14 @@ MODULE exx
     ELSE
        IF (use_gpu) THEN
          ! NB: the array bounds are not passed to the subroutine.
+         !
          ! See https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/269311
-         CALL cuf_memset(exxbuff_d, (0.0_DP,0.0_DP), (/1,nrxxs*npol/), (/1, ibnd_buff_end-ibnd_buff_start+1/), (/1,SIZE(exxbuff_d,3)/))
+         !
+         ! NB: TO BE CORRECTED WITH THE NEW DeviceXlib LIBRARY that dues internal slicing right!
+         CALL cuf_memset(exxbuff_d, (0.0_DP,0.0_DP), &
+                                    (/1,nrxxs*npol/), &
+                                    (/1, ibnd_buff_end-ibnd_buff_start+1/), &
+                                    (/1,SIZE(exxbuff_d,3)/))
        ELSE
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
          DO ikq=1,SIZE(exxbuff,3) 
@@ -856,13 +862,13 @@ MODULE exx
     !
     IF(gamma_only) THEN
        IF(negrp.eq.1)THEN
-          CALL vexx_gamma(lda, n, m, psi, hpsi, becpsi)
+          IF (.not. use_gpu) CALL vexx_gamma(lda, n, m, psi, hpsi, becpsi)
           ! Gamma not implemented yet
-          !IF (      use_gpu) CALL vexx_gamma_gpu(lda, n, m, psi, hpsi, becpsi)
+          IF (      use_gpu) CALL vexx_gamma_gpu(lda, n, m, psi, hpsi, becpsi)
        ELSE
-          CALL vexx_gamma(lda, n, m, psi_exx, hpsi_exx, becpsi)
+          IF (.not. use_gpu) CALL vexx_gamma(lda, n, m, psi_exx, hpsi_exx, becpsi)
           ! Gamma not implemented yet
-          !IF (      use_gpu) CALL vexx_gamma_gpu(lda, n, m, psi_exx, hpsi_exx, becpsi)
+          IF (      use_gpu) CALL vexx_gamma_gpu(lda, n, m, psi_exx, hpsi_exx, becpsi)
        END IF
     ELSE
        IF(negrp.eq.1)THEN
@@ -1234,6 +1240,394 @@ MODULE exx
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE vexx_gamma
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE vexx_gamma_gpu(lda, n, m, psi, hpsi, becpsi)
+  !-----------------------------------------------------------------------
+    !
+    ! ... Gamma-specific version of vexx
+    !
+    USE constants,      ONLY : fpi, e2, pi
+    USE cell_base,      ONLY : omega
+    USE gvect,          ONLY : ngm, g
+    USE wvfct,          ONLY : npwx, current_k, nbnd
+    USE klist,          ONLY : xk, nks, nkstot, igk_k
+    USE fft_interfaces, ONLY : fwfft, invfft
+    USE becmod,         ONLY : bec_type
+    USE mp_exx,         ONLY : inter_egrp_comm, my_egrp_id, &
+                               intra_egrp_comm, me_egrp, &
+                               negrp, max_pairs, egrp_pairs, ibands, nibands, &
+                               iexx_istart, iexx_iend, &
+                               all_start, all_end, iexx_start, jblock
+    USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
+    USE uspp,           ONLY : nkb, okvan
+    USE paw_variables,  ONLY : okpaw
+    USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
+                               newdxx_g, newdxx_r, add_nlxx_pot, &
+                               qvan_init, qvan_clean
+    USE paw_exx,        ONLY : PAW_newdxx
+    USE exx_base,       ONLY : nqs, index_xkq, index_xk, xkq_collect, &
+         coulomb_fac, g2_convolution_all
+    USE exx_band,       ONLY : result_sum, igk_exx
+    USE cuda_util,      ONLY : cuf_memset
+    !
+    !
+    IMPLICIT NONE
+    !
+    INTEGER                  :: lda, n, m
+    COMPLEX(DP)              :: psi(lda*npol,m)
+    COMPLEX(DP)              :: hpsi(lda*npol,m)
+    TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
+    !
+    ! local variables
+    COMPLEX(DP), ALLOCATABLE :: psi_d(:,:)
+    COMPLEX(DP), ALLOCATABLE :: hpsi_d(:,:)
+#if defined(__CUDA)
+    attributes(DEVICE)       :: psi_d, hpsi_d
+#endif
+    COMPLEX(DP),ALLOCATABLE :: result(:,:)
+    REAL(DP),ALLOCATABLE :: temppsic_dble (:)
+    REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
+    REAL(DP),ALLOCATABLE :: temppsic_dble_d (:)
+    REAL(DP),ALLOCATABLE :: temppsic_aimag_d(:)
+#if defined(__CUDA)
+    attributes(DEVICE)   :: temppsic_dble_d, temppsic_aimag_d
+#endif
+    !
+    COMPLEX(DP),ALLOCATABLE :: vc(:,:), deexx(:,:)
+    REAL(DP),   ALLOCATABLE :: fac(:)
+    INTEGER          :: ibnd, ik, im , ikq, iq, ipol
+    INTEGER          :: ir, ig
+    INTEGER          :: current_ik
+    INTEGER          :: ibnd_loop_start
+    INTEGER          :: nrxxs
+    REAL(DP) :: x1, x2, xkp(3)
+    REAL(DP) :: xkq(3)
+    INTEGER, EXTERNAL :: global_kpoint_index
+    INTEGER :: ialloc
+    COMPLEX(DP), ALLOCATABLE :: big_result(:,:)
+    INTEGER :: iproc, nproc_egrp, ii, ipair
+    INTEGER :: jbnd, jstart, jend
+    ! scratch space for fft of psi and rho
+    COMPLEX(DP), ALLOCATABLE :: psi_rhoc_work(:)
+    COMPLEX(DP), ALLOCATABLE :: psi_rhoc_work_d(:)
+#if defined(__CUDA)
+    attributes(DEVICE) :: psi_rhoc_work_d
+#endif
+    INTEGER :: jblock_start, jblock_end
+    INTEGER :: iegrp, wegrp
+    INTEGER :: exxbuff_index
+    INTEGER :: ending_im
+    !hack around PGI bug
+    INTEGER, POINTER :: dfftt__nl(:)
+    INTEGER, POINTER :: dfftt__nlm(:)
+#if defined(__CUDA)
+    attributes(DEVICE) :: dfftt__nl
+    attributes(DEVICE) :: dfftt__nlm
+#endif
+    !
+    ! CUDA Sync
+    dfftt__nl=>dfftt%nl_d
+    dfftt__nlm=>dfftt%nlm_d
+    ALLOCATE(psi_d, source=psi)
+    ALLOCATE(hpsi_d, source=hpsi)
+    !initial copy of exxbuff
+    exxbuff_d = exxbuff
+    !
+    ialloc = nibands(my_egrp_id+1)
+    !
+    ALLOCATE( fac(dfftt%ngm) )
+    nrxxs= dfftt%nnr
+    !
+    !ALLOCATE( result(nrxxs), temppsic_dble(nrxxs), temppsic_aimag(nrxxs) )
+    ALLOCATE( result(nrxxs,ialloc), temppsic_dble(nrxxs) )
+    ALLOCATE( temppsic_dble_d(nrxxs) )
+    ALLOCATE( temppsic_aimag(nrxxs) )
+    ALLOCATE( temppsic_aimag_d(nrxxs) )
+    
+    ALLOCATE( psi_rhoc_work(nrxxs) )
+    ALLOCATE( psi_rhoc_work_d(nrxxs) )
+    !
+    ALLOCATE( vc(nrxxs,ialloc))
+    IF(okvan) ALLOCATE(deexx(nkb,ialloc))
+    !
+    current_ik = global_kpoint_index ( nkstot, current_k )
+    xkp = xk(:,current_k)
+    !
+    allocate(big_result(n,m))
+    big_result = 0.0_DP
+    result = 0.0_DP
+    !
+    DO ii=1, nibands(my_egrp_id+1)
+       IF(okvan) deexx(:,ii) = 0.0_DP
+    END DO
+    !
+    ! Here the loops start
+    !
+    INTERNAL_LOOP_ON_Q : &
+    DO iq=1,nqs
+       !
+       ikq  = index_xkq(current_ik,iq)
+       ik   = index_xk(ikq)
+       xkq  = xkq_collect(:,ikq)
+       !
+       ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
+       CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, current_k)
+       IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
+       !
+       DO iegrp=1, negrp
+          !
+          ! compute the id of group whose data is currently worked on
+          wegrp = MOD(iegrp+my_egrp_id-1, negrp)+1
+          !
+          jblock_start = all_start(wegrp)
+          jblock_end   = all_end(wegrp)
+          !
+          LOOP_ON_PSI_BANDS : &
+          DO ii = 1,  nibands(my_egrp_id+1)
+             !
+             ibnd = ibands(ii,my_egrp_id+1)
+             !
+             IF (ibnd.eq.0.or.ibnd.gt.m) CYCLE
+             !
+             IF ( mod(ii,2)==1 ) THEN
+                !
+                CALL cuf_memset(psi_rhoc_work_d, (0.0_DP,0.0_DP), (/ 1, nrxxs /) )
+                !
+                IF ( (ii+1)<=min(m,nibands(my_egrp_id+1)) ) THEN
+                   ! deal with double bands
+!$cuf kernel do
+                   DO ig = 1, npwt
+                      psi_rhoc_work_d( dfftt__nl(ig) )  =       psi_d(ig, ii) + (0._DP,1._DP) * psi_d(ig, ii+1)
+                      psi_rhoc_work_d( dfftt__nlm(ig) ) = conjg(psi_d(ig, ii) - (0._DP,1._DP) * psi_d(ig, ii+1))
+                   ENDDO
+
+                ENDIF
+                !
+                IF ( ii==min(m,nibands(my_egrp_id+1)) ) THEN
+                   ! deal with a single last band
+!$cuf kernel do
+                   DO ig = 1, npwt
+                      psi_rhoc_work_d( dfftt__nl(ig) )  =       psi_d(ig,ii)
+                      psi_rhoc_work_d( dfftt__nlm(ig) ) = conjg(psi_d(ig,ii))
+                   ENDDO
+                   !
+                ENDIF
+                !
+                CALL invfft ('Wave', psi_rhoc_work_d, dfftt)
+!$cuf kernel do
+                DO ir = 1, nrxxs
+                   temppsic_dble_d(ir)  = dble ( psi_rhoc_work_d(ir) )
+                   temppsic_aimag_d(ir) = aimag( psi_rhoc_work_d(ir) )
+                ENDDO
+                !
+             ENDIF
+             !
+             !
+             !determine which j-bands to calculate
+             jstart = 0
+             jend = 0
+             DO ipair=1, max_pairs
+                IF(egrp_pairs(1,ipair,my_egrp_id+1).eq.ibnd)THEN
+                   IF(jstart.eq.0)THEN
+                      jstart = egrp_pairs(2,ipair,my_egrp_id+1)
+                      jend = jstart
+                   ELSE
+                      jend = egrp_pairs(2,ipair,my_egrp_id+1)
+                   END IF
+                END IF
+             END DO
+             !
+             jstart = max(jstart,jblock_start)
+             jend = min(jend,jblock_end)
+             !
+             IF(mod(jstart,2)==0) THEN
+                ibnd_loop_start=jstart-1
+             ELSE
+                ibnd_loop_start=jstart
+             ENDIF
+             !
+             IBND_LOOP_GAM : &
+             DO jbnd=ibnd_loop_start,jend, 2 !for each band of psi
+                !
+                exxbuff_index = (jbnd+1)/2-(all_start(wegrp)+1)/2+(iexx_start+1)/2
+                !
+                IF( jbnd < jstart ) THEN
+                   x1 = 0.0_DP
+                ELSE
+                   x1 = x_occupation(jbnd,  ik)
+                ENDIF
+                IF( jbnd == jend) THEN
+                   x2 = 0.0_DP
+                ELSE
+                   x2 = x_occupation(jbnd+1,  ik)
+                ENDIF
+                IF ( abs(x1) < eps_occ .and. abs(x2) < eps_occ ) CYCLE
+                !
+                ! calculate rho in real space. Gamma tricks are used.
+                ! temppsic is real; tempphic contains one band in the real part,
+                ! another one in the imaginary part; the same applies to rhoc
+                !
+                IF( mod(ii,2) == 0 ) THEN
+!$cuf kernel do
+                   DO ir = 1, nrxxs
+                      psi_rhoc_work_d(ir) = exxbuff_d(ir,exxbuff_index,ikq) * temppsic_aimag_d(ir) / omega
+                   ENDDO
+
+                ELSE
+!$cuf kernel do
+                   DO ir = 1, nrxxs
+                      psi_rhoc_work_d(ir) = exxbuff_d(ir,exxbuff_index,ikq) * temppsic_dble_d(ir) / omega
+                   ENDDO
+
+                ENDIF
+                !
+                ! bring rho to G-space
+                !
+                !   >>>> add augmentation in REAL SPACE here
+                IF(okvan .and. tqr) THEN
+                   psi_rhoc_work = psi_rhoc_work_d
+                   IF(jbnd>=jstart) &
+                        CALL addusxx_r(psi_rhoc_work, &
+                       _CX(becxx(ikq)%r(:,jbnd)), _CX(becpsi%r(:,ibnd)))
+                   IF(jbnd<jend) &
+                        CALL addusxx_r(psi_rhoc_work, &
+                       _CY(becxx(ikq)%r(:,jbnd+1)),_CX(becpsi%r(:,ibnd)))
+                   psi_rhoc_work_d = psi_rhoc_work
+                ENDIF
+                !
+                CALL fwfft ('Rho', psi_rhoc_work_d, dfftt)
+                psi_rhoc_work = psi_rhoc_work_d
+                !   >>>> add augmentation in G SPACE here
+                IF(okvan .and. .not. tqr) THEN
+                   ! contribution from one band added to real (in real space) part of rhoc
+                   IF(jbnd>=jstart) &
+                        CALL addusxx_g(dfftt, psi_rhoc_work, xkq,  xkp, 'r', &
+                        becphi_r=becxx(ikq)%r(:,jbnd), becpsi_r=becpsi%r(:,ibnd) )
+                   ! contribution from following band added to imaginary (in real space) part of rhoc
+                   IF(jbnd<jend) &
+                        CALL addusxx_g(dfftt, psi_rhoc_work, xkq,  xkp, 'i', &
+                        becphi_r=becxx(ikq)%r(:,jbnd+1), becpsi_r=becpsi%r(:,ibnd) )
+                ENDIF
+                !   >>>> charge density done
+                !
+                vc(:,ii) = 0._DP
+                !
+!$omp parallel do default(shared), private(ig)
+                DO ig = 1, dfftt%ngm
+                   !
+                   vc(dfftt%nl(ig),ii)  = coulomb_fac(ig,iq,current_k) * psi_rhoc_work(dfftt%nl(ig))
+                   vc(dfftt%nlm(ig),ii) = coulomb_fac(ig,iq,current_k) * psi_rhoc_work(dfftt%nlm(ig))
+                   !
+                ENDDO
+!$omp end parallel do
+                !
+                !   >>>>  compute <psi|H_fock G SPACE here
+                IF(okvan .and. .not. tqr) THEN
+                   IF(jbnd>=jstart) &
+                        CALL newdxx_g(dfftt, vc(:,ii), xkq, xkp, 'r', deexx(:,ii), &
+                           becphi_r=x1*becxx(ikq)%r(:,jbnd))
+                   IF(jbnd<jend) &
+                        CALL newdxx_g(dfftt, vc(:,ii), xkq, xkp, 'i', deexx(:,ii), &
+                            becphi_r=x2*becxx(ikq)%r(:,jbnd+1))
+                ENDIF
+                !
+                !brings back v in real space
+                CALL invfft ('Rho', vc(:,ii), dfftt)
+                !
+                !   >>>>  compute <psi|H_fock REAL SPACE here
+                IF(okvan .and. tqr) THEN
+                   IF(jbnd>=jstart) &
+                        CALL newdxx_r(dfftt,vc(:,ii), _CX(x1*becxx(ikq)%r(:,jbnd)), deexx(:,ii))
+                   IF(jbnd<jend) &
+                        CALL newdxx_r(dfftt,vc(:,ii), _CY(x2*becxx(ikq)%r(:,jbnd+1)), deexx(:,ii))
+                ENDIF
+                !
+                IF(okpaw) THEN
+                   IF(jbnd>=jstart) &
+                        CALL PAW_newdxx(x1/nqs, _CX(becxx(ikq)%r(:,jbnd)),&
+                                                _CX(becpsi%r(:,ibnd)), deexx(:,ii))
+                   IF(jbnd<jend) &
+                        CALL PAW_newdxx(x2/nqs, _CX(becxx(ikq)%r(:,jbnd+1)),&
+                                                _CX(becpsi%r(:,ibnd)), deexx(:,ii))
+                ENDIF
+                !
+                ! accumulates over bands and k points
+                !
+!$omp parallel do default(shared), private(ir)
+                DO ir = 1, nrxxs
+                   result(ir,ii) = result(ir,ii) &
+                                 + x1* dble(vc(ir,ii))* dble(exxbuff(ir,exxbuff_index,ikq)) &
+                                 + x2*aimag(vc(ir,ii))*aimag(exxbuff(ir,exxbuff_index,ikq))
+                ENDDO
+!$omp end parallel do
+                !
+             ENDDO &
+             IBND_LOOP_GAM
+             !
+          ENDDO &
+          LOOP_ON_PSI_BANDS
+          !
+          ! get the next nbnd/negrp data
+          IF (negrp>1) call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          !
+       ENDDO ! iegrp
+       IF ( okvan .and..not.tqr ) CALL qvan_clean ()
+    ENDDO &
+    INTERNAL_LOOP_ON_Q
+    !
+    DO ii=1, nibands(my_egrp_id+1)
+       !
+       ibnd = ibands(ii,my_egrp_id+1)
+       !
+       IF (ibnd.eq.0.or.ibnd.gt.m) CYCLE
+       !
+       IF(okvan) THEN
+          CALL mp_sum(deexx(:,ii),intra_egrp_comm)
+       ENDIF
+       !
+       !
+       ! brings back result in G-space
+       !
+       CALL fwfft( 'Wave' , result(:,ii), dfftt )
+       !communicate result
+       DO ig = 1, n
+          big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(dfftt%nl(igk_exx(ig,current_k)),ii)
+       END DO
+       !
+       ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
+       IF(okvan) CALL add_nlxx_pot (lda, big_result(:,ibnd), xkp, n, &
+            igk_exx(1,current_k), deexx(:,ii), eps_occ, exxalfa)
+    END DO
+    !
+    CALL result_sum(n*npol, m, big_result)
+    IF (iexx_istart(my_egrp_id+1).gt.0) THEN
+       IF (negrp == 1) then
+          ending_im = m
+       ELSE
+          ending_im = iexx_iend(my_egrp_id+1) - iexx_istart(my_egrp_id+1) + 1
+       END IF
+       DO im=1, ending_im
+!$omp parallel do default(shared), private(ig) firstprivate(im,n)
+           DO ig = 1, n
+              hpsi(ig,im)=hpsi(ig,im) + big_result(ig,im+iexx_istart(my_egrp_id+1)-1)
+           ENDDO
+!$omp end parallel do
+       END DO
+    END IF
+    !
+    DEALLOCATE(big_result)
+    DEALLOCATE( result, temppsic_dble, temppsic_aimag)
+    DEALLOCATE( temppsic_dble_d, temppsic_aimag_d)
+    DEALLOCATE( psi_rhoc_work_d)
+    DEALLOCATE(psi_d, hpsi_d)
+
+    DEALLOCATE( vc, fac )
+    IF(okvan) DEALLOCATE( deexx )
+    !
+    !-----------------------------------------------------------------------
+  END SUBROUTINE vexx_gamma_gpu
   !-----------------------------------------------------------------------
   !
   !
