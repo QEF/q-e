@@ -116,6 +116,7 @@ cat > $PREFIX.scf.in << EOF
     outdir='$TMP_DIR/'
  /
  &system
+    nosym = .true.
     ibrav = 1,
     celldm(1) = 20,
     nat = 5,
