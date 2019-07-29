@@ -54,7 +54,7 @@ SUBROUTINE lr_readin
 
   IMPLICIT NONE
   !
-  CHARACTER(LEN=256) :: wfcdir, outdir
+  CHARACTER(LEN=256) :: wfcdir = 'undefined', outdir
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(LEN=256) :: beta_gamma_z_prefix
