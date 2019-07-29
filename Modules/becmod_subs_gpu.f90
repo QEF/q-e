@@ -358,7 +358,7 @@ CONTAINS
   SUBROUTINE allocate_bec_type_gpu ( nkb, nbnd, bec_d, comm )
     !-----------------------------------------------------------------------
     USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
-    USE cuda_util, ONLY :cuf_memset
+    USE device_util_m, ONLY : dev_memset
     IMPLICIT NONE
     TYPE (bec_type_d) :: bec_d
     INTEGER, INTENT (in) :: nkb, nbnd
@@ -392,7 +392,7 @@ CONTAINS
        IF( ierr /= 0 ) &
           CALL errore( ' allocate_bec_type ', ' cannot allocate bec_d%r ', ABS(ierr) )
        !
-       CALL cuf_memset(bec_d%r_d, 0.0D0, (/1,nkb/),(/1, nbnd_siz/))
+       CALL dev_memset(bec_d%r_d, 0.0D0, (/1,nkb/), 1, (/1, nbnd_siz/), 1)
        !
     ELSEIF ( noncolin) THEN
        !
@@ -400,7 +400,7 @@ CONTAINS
        IF( ierr /= 0 ) &
           CALL errore( ' allocate_bec_type ', ' cannot allocate bec_d%nc ', ABS(ierr) )
        !
-       CALL cuf_memset(bec_d%nc_d, (0.0D0,0.0D0), (/1, nkb/), (/1, npol/), (/1, nbnd_siz/))
+       CALL dev_memset(bec_d%nc_d, (0.0D0,0.0D0), (/1, nkb/), 1, (/1, npol/), 1, (/1, nbnd_siz/), 1)
        !
     ELSE
        !
@@ -408,7 +408,7 @@ CONTAINS
        IF( ierr /= 0 ) &
           CALL errore( ' allocate_bec_type ', ' cannot allocate bec_d%k ', ABS(ierr) )
        !
-       CALL cuf_memset(bec_d%k_d, (0.0D0,0.0D0), (/1, nkb/), (/1, npol/))
+       CALL dev_memset(bec_d%k_d, (0.0D0,0.0D0), (/1, nkb/), 1, (/1, npol/), 1)
        !
     ENDIF
     !
