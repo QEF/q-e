@@ -4098,9 +4098,6 @@ subroutine dp_d2h_memsync_r2d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
-      !CALL dev_memsync( pinned_buffer, sc_d, (/ nb1, notcnv /), 1, (/ n_start, n_end-n_start+1 /), 1 )
-      CALL dev_memsync( sc_d, pinned_buffer, (/ nb1, nb1 + notcnv /), 1, (/ n_start, n_end /), 1 )
-           cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, sc_d( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
