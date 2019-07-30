@@ -27,7 +27,6 @@ FUNCTION lr_dot(x,y)
   USE gvect,                ONLY : gstart, ngm, g
   USE mp,                   ONLY : mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
-  USE lr_variables,         ONLY : lr_verbosity, eels
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_lr,           ONLY : nbnd_occ
   USE qpoint,               ONLY : nksq
@@ -37,52 +36,39 @@ FUNCTION lr_dot(x,y)
   COMPLEX(kind=dp) :: x(npwx*npol,nbnd,nksq), &
                       y(npwx*npol,nbnd,nksq)
   COMPLEX(kind=dp) :: lr_dot
-  COMPLEX(kind=dp) :: temp_k
   REAL(kind=dp) :: temp_gamma, degspin
   INTEGER :: ibnd, ik
   REAL(kind=dp), EXTERNAL    :: DDOT
   COMPLEX(kind=dp), EXTERNAL :: ZDOTC
   !
-  IF (lr_verbosity > 5) THEN
-     WRITE(stdout,'("<lr_dot>")')
-  ENDIF
-  !
   CALL start_clock ('lr_dot')
   !
   lr_dot = (0.0d0,0.0d0)
   temp_gamma = 0.0d0
-  temp_k = (0.0d0,0.0d0)
   !
   IF (nspin==2) THEN
       degspin = 1.0d0
   ELSE
       degspin = 2.0d0
   ENDIF
-  IF (noncolin) degspin = 1.0d0
   !
-  IF (eels) THEN
+  IF (gamma_only) THEN
      !
-     CALL lr_dot_k_eels()
+     CALL lr_dot_gamma()
+     lr_dot = cmplx(temp_gamma,0.0d0,dp)
+     !
+  ELSEIF (noncolin) THEN
+     !
+     degspin = 1.0d0
+     CALL lr_dot_k_nc()
      !
   ELSE
      !
-     IF (gamma_only) THEN
-        !
-        CALL lr_dot_gamma()
-        lr_dot = cmplx(temp_gamma,0.0d0,dp)
-        !
-     ELSE
-        !
-        CALL lr_dot_k()
-        lr_dot = temp_k
-        !
-     ENDIF
+     CALL lr_dot_k()
      !
   ENDIF
   !
   lr_dot = lr_dot/degspin
-  !
-  IF (lr_verbosity > 5) WRITE(stdout,'("<end of lr_dot>")')
   !
   CALL stop_clock ('lr_dot')
   !
@@ -113,32 +99,9 @@ CONTAINS
     !
   END SUBROUTINE lr_dot_gamma
   !
-  SUBROUTINE lr_dot_k
+  SUBROUTINE lr_dot_k_nc
     !
-    ! Optical case: generalized k point case 
-    ! Noncollinear case is not implemented
-    !
-    DO ik=1,nks   
-       DO ibnd=1,nbnd
-          !
-          temp_k = temp_k + wg(ibnd,ik) * ZDOTC(ngk(ik),x(1,ibnd,ik),1,y(1,ibnd,ik),1)
-          !
-       ENDDO
-    ENDDO
-    !
-#if defined(__MPI)
-    CALL mp_sum(temp_k, inter_pool_comm)
-    CALL mp_sum(temp_k, intra_bgrp_comm)
-#endif
-    !
-    RETURN
-    !
-  END SUBROUTINE lr_dot_k
-  !
-  SUBROUTINE lr_dot_k_eels
-    !
-    ! EELS
-    ! Noncollinear case is implemented
+    ! Noncollinear case
     !
     USE qpoint,      ONLY : ikks, ikqs
     !
@@ -157,11 +120,7 @@ CONTAINS
        !
        DO ibnd = 1, nbnd_occ(ikk)
           !
-          IF (noncolin) THEN
-             lr_dot = lr_dot + wk(ikk) * ZDOTC(npwx*npol,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
-          ELSE
-             lr_dot = lr_dot + wk(ikk) * ZDOTC(npwq,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
-          ENDIF
+          lr_dot = lr_dot + wk(ikk) *ZDOTC(npwx*npol,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
           !
        ENDDO
        !
@@ -174,7 +133,43 @@ CONTAINS
     !
     RETURN
     !
-  END SUBROUTINE lr_dot_k_eels
+  END SUBROUTINE lr_dot_k_nc
+  !
+  SUBROUTINE lr_dot_k
+    !
+    ! collinear k point case
+    !
+    USE qpoint,      ONLY : ikks, ikqs
+    !
+    IMPLICIT NONE
+    INTEGER :: ios
+    INTEGER :: ik,  &
+               ikk, & ! index of the point k
+               ikq, & ! index of the point k+q
+               npwq   ! number of the plane-waves at point k+q
+    ! 
+    DO ik = 1, nksq
+       !
+       ikk  = ikks(ik)
+       ikq  = ikqs(ik)
+       npwq = ngk(ikq)
+       !
+       DO ibnd = 1, nbnd_occ(ikk)
+          !
+          lr_dot = lr_dot + wk(ikk) * ZDOTC(npwq,x(1,ibnd,ik),1,y(1,ibnd,ik),1)
+          !
+       ENDDO
+       !
+    ENDDO
+    !
+#if defined(__MPI)
+    CALL mp_sum(lr_dot, inter_pool_comm)
+    CALL mp_sum(lr_dot, intra_bgrp_comm)
+#endif
+    !
+    RETURN
+    !
+  END SUBROUTINE lr_dot_k
   !
 END FUNCTION lr_dot
 !-----------------------------------------------------------------------

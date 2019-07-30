@@ -21,7 +21,6 @@ bcast_lr_input.o \
 lr_readin.o \
 lr_alloc_init.o \
 lr_calc_dens.o \
-lr_dot.o \
 lr_dealloc.o \
 lr_ortho.o \
 lr_read_wf.o \
