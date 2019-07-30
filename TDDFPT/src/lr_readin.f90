@@ -438,6 +438,11 @@ CONTAINS
            & CALL errore ('lr_readin', &
            & 'projection is possible only in charge response mode 1', 1 )
        !
+       IF (gamma_only) THEN
+          nosym=.true.
+          WRITE(stdout,*) "Symmetries are disabled for the gamma_only case"
+       ENDIF
+       !
     ENDIF
     !
     !  Meta-DFT currently not supported by TDDFPT

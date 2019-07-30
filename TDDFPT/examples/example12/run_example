@@ -99,7 +99,6 @@ cat > $PREFIX.scf.in << EOF
     wf_collect = .true.
  /
  &system
-    nosym = .true.
     ibrav = 1,
     celldm(1) = 20,
     nat = 3,
