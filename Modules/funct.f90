@@ -799,7 +799,7 @@ CONTAINS
     its_libxc = .FALSE.
     matching = notset
     !
-    length = LEN_TRIM( dft )
+    length = LEN_TRIM( dft )+1
     !
     ii = 0
     !
