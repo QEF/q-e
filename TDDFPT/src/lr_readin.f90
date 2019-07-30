@@ -54,7 +54,7 @@ SUBROUTINE lr_readin
 
   IMPLICIT NONE
   !
-  CHARACTER(LEN=256) :: wfcdir, outdir
+  CHARACTER(LEN=256) :: wfcdir = 'undefined', outdir
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(LEN=256) :: beta_gamma_z_prefix
@@ -437,6 +437,11 @@ CONTAINS
        IF ( project .AND. charge_response /= 1) &
            & CALL errore ('lr_readin', &
            & 'projection is possible only in charge response mode 1', 1 )
+       !
+       IF (gamma_only) THEN
+          nosym=.true.
+          WRITE(stdout,*) "Symmetries are disabled for the gamma_only case"
+       ENDIF
        !
     ENDIF
     !
