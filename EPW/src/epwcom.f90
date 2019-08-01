@@ -148,6 +148,8 @@
   !! Value of the scissor shift in eV.
   REAL (KIND=DP) :: ncarrier
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
+  REAL (KIND=DP) :: nc
+  !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula 
   ! 
   ! Plasmon
   REAL (KIND=DP) :: nel
