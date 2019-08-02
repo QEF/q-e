@@ -53,7 +53,10 @@ lr_orthoUwfc.o \
 qdipol_cryst.o \
 mode_group.o \
 mix_pot.o \
-lrcom.o
+lrcom.o \
+lr_dot.o \
+ph_lanczos_iter.o \
+bo_lanczos_iter.o 
 
 TLDEPS=mods pwlibs
 

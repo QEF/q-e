@@ -197,6 +197,9 @@ SUBROUTINE lr_readin
      !
      ! Set-up all the dir and suffix variables.
      !
+write(stdout,*) 'prim trimcheck'
+
+
      outdir = trimcheck(outdir)
      tmp_dir = outdir
      !
@@ -338,6 +341,7 @@ SUBROUTINE lr_readin
   !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
   !   instead of tmp_dir, because of the logic used in the rest of TDDFPT
   !
+write(stdout,*) 'second trimcheck'
   wfc_dir = trimcheck ( wfcdir )
   !
   IF (eels) THEN
