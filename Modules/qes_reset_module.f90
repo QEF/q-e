@@ -446,6 +446,7 @@ MODULE qes_reset_module
     CALL qes_reset_cell(obj%cell)
     obj%alat_ispresent = .FALSE.
     obj%bravais_index_ispresent = .FALSE.
+    obj%alternative_axes_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_atomic_structure
   !
