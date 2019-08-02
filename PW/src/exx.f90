@@ -1157,6 +1157,7 @@ MODULE exx
     !
     DEALLOCATE(big_result)
     DEALLOCATE( result, temppsic_dble, temppsic_aimag)
+    DEALLOCATE( psi_rhoc_work )
     DEALLOCATE( vc, fac )
     IF(okvan) DEALLOCATE( deexx )
     !
