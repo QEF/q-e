@@ -531,6 +531,9 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%bravais_index_ispresent, ionode_id, comm)
     IF (obj%bravais_index_ispresent) &
       CALL mp_bcast(obj%bravais_index, ionode_id, comm)
+    CALL mp_bcast(obj%alternative_axes_ispresent, ionode_id, comm)
+    IF (obj%alternative_axes_ispresent) &
+      CALL mp_bcast(obj%alternative_axes, ionode_id, comm)
     CALL mp_bcast(obj%atomic_positions_ispresent, ionode_id, comm)
     IF (obj%atomic_positions_ispresent) &
       CALL qes_bcast_atomic_positions(obj%atomic_positions, ionode_id, comm)

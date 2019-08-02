@@ -150,6 +150,36 @@ CONTAINS
     alat = atomic_structure%alat 
     IF ( atomic_structure%bravais_index_ispresent ) THEN 
        ibrav = atomic_structure%bravais_index 
+       IF (atomic_structure%alternative_axes_ispresent ) THEN 
+         SELECT CASE(ibrav) 
+            CASE(3)
+               IF (TRIM(atomic_structure%alternative_axes)=="b:a-b+c:-c") THEN 
+                  ibrav = -ibrav
+               ELSE 
+                  CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1) 
+               END IF
+            CASE(5) 
+               IF (TRIM(atomic_structure%alternative_axes)=="3fold-111") THEN
+                    ibrav = -ibrav
+               ELSE
+                    CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1)
+               END IF
+            CASE(9)
+                IF (TRIM(atomic_structure%alternative_axes)=="-b:a:c") THEN
+                      ibrav = -ibrav
+                ELSE IF( TRIM(atomic_structure%alternative_axes)=="bcoA-type") THEN 
+                     ibrav = 91
+                ELSE
+                      CALL errore("qexsd_copy_atomic_structure:","alternative axes not recognised", 1)
+                END IF
+            CASE(13,14) 
+                IF (TRIM(atomic_structure%alternative_axes)=="unique-axis-b") THEN
+                      ibrav = -ibrav
+                 ELSE
+                      CALL errore("qexsd_copy_atomic_structure:","alternativ axes not recognised", 1)
+                 END IF
+            END SELECT
+       END IF 
     ELSE 
        ibrav = 0
     END IF

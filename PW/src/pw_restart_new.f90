@@ -157,22 +157,22 @@ MODULE pw_restart_new
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
       REAL(DP),TARGET                 :: h_energy
       TYPE(gateInfo_type),TARGET      :: gate_info_temp
-      TYPE(gateInfo_type),POINTER     :: gate_info_ptr => NULL()
+      TYPE(gateInfo_type),POINTER     :: gate_info_ptr
       TYPE(dipoleOutput_type),TARGET  :: dipol_obj 
-      TYPE(dipoleOutput_type),POINTER :: dipol_ptr  => NULL()
-      TYPE(BerryPhaseOutput_type),  POINTER :: bp_obj_ptr => NULL()
-      TYPE(hybrid_type), POINTER            :: hybrid_obj => NULL()
-      TYPE(vdW_type), POINTER               :: vdw_obj => NULL()
-      TYPE(dftU_type), POINTER              :: dftU_obj => NULL() 
+      TYPE(dipoleOutput_type),POINTER :: dipol_ptr 
+      TYPE(BerryPhaseOutput_type),  POINTER :: bp_obj_ptr
+      TYPE(hybrid_type), POINTER            :: hybrid_obj 
+      TYPE(vdW_type), POINTER               :: vdw_obj
+      TYPE(dftU_type), POINTER              :: dftU_obj 
       REAL(DP), TARGET                      :: lumo_tmp, ef_targ, dispersion_energy_term 
-      REAL(DP), POINTER                     :: lumo_energy => NULL(), ef_point => NULL()
+      REAL(DP), POINTER                     :: lumo_energy, ef_point 
       REAL(DP), ALLOCATABLE                 :: ef_updw(:)
       !
       !
       !
       TYPE(output_type) :: output
       REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr,  gatefield_corr  
-      LOGICAL, POINTER    :: optimization_has_converged => NULL() 
+      LOGICAL, POINTER    :: optimization_has_converged 
       LOGICAL, TARGET     :: conv_opt  
       LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
@@ -182,20 +182,23 @@ MODULE pw_restart_new
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
       INTEGER,TARGET             :: dftd3_version_
       CHARACTER(LEN=20),TARGET   :: vdw_corr_, pbc_label 
-      CHARACTER(LEN=20),POINTER  :: non_local_term_pt =>NULL(), vdw_corr_pt=>NULL()
+      CHARACTER(LEN=20),POINTER  :: non_local_term_pt, vdw_corr_pt 
       REAL(DP),TARGET            :: temp(20), lond_rcut_, lond_s6_, ts_vdw_econv_thr_, xdm_a1_, xdm_a2_, ectuvcut_,&
                                     scr_par_, loc_thr_  
-      REAL(DP),POINTER           :: vdw_term_pt =>NULL(), ts_thr_pt=>NULL(), london_s6_pt=>NULL(),&
-                                    london_rcut_pt=>NULL(), xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), &
-                                    ts_vdw_econv_thr_pt=>NULL(), ectuvcut_opt=>NULL(), scr_par_opt=>NULL(), &
-                                    loc_thr_p => NULL(), h_energy_ptr => NULL()  
+      REAL(DP),POINTER           :: vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, xdm_a1_pt, xdm_a2_pt, &
+                                    ts_vdw_econv_thr_pt, ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr
       LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_
-      LOGICAL,POINTER            :: ts_isol_pt=>NULL(), dftd3_threebody_pt=>NULL(), ts_vdw_isolated_pt =>NULL()
-      INTEGER,POINTER            :: dftd3_version_pt => NULL() 
+      LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt 
+      INTEGER,POINTER            :: dftd3_version_pt
       TYPE(smearing_type),TARGET :: smear_obj 
-      TYPE(smearing_type),POINTER:: smear_obj_ptr => NULL() 
+      TYPE(smearing_type),POINTER:: smear_obj_ptr 
 
-      NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr )
+      NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
+      NULLIFY( gate_info_ptr, dipol_ptr, bp_obj_ptr, hybrid_obj, vdw_obj, dftU_obj, lumo_energy, ef_point)  
+      NULLIFY ( optimization_has_converged, non_local_term_pt, vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt,  &
+                xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt,     & 
+                dftd3_version_pt )
+      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, smear_obj_ptr) 
 
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks

@@ -569,6 +569,7 @@ MODULE qes_write_module
      CALL xml_addAttribute(xp, 'nat', obj%nat )
      IF (obj%alat_ispresent) CALL xml_addAttribute(xp, 'alat', obj%alat )
      IF (obj%bravais_index_ispresent) CALL xml_addAttribute(xp, 'bravais_index', obj%bravais_index )
+     IF (obj%alternative_axes_ispresent) CALL xml_addAttribute(xp, 'alternative_axes', TRIM(obj%alternative_axes) )
      IF (obj%atomic_positions_ispresent) THEN
         CALL qes_write_atomic_positions (xp, obj%atomic_positions)
      END IF
