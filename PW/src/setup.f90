@@ -79,7 +79,7 @@ SUBROUTINE setup()
   USE pw_restart_new,     ONLY : pw_read_schema
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
-  USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
+  USE qes_types_module,   ONLY : output_type
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
