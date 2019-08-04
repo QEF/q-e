@@ -185,6 +185,7 @@ CONTAINS
     ! and stress_xdm.
     USE control_flags, ONLY: lbfgs, lmd
     USE scf, ONLY: rho, rhoz_or_updw
+    USE io_files, ONLY: seqopn, tmp_dir, prefix, postfix, create_directory
     USE io_global, ONLY: stdout, ionode
     USE fft_base, ONLY : dfftp
     USE cell_base, ONLY : at, alat, omega
@@ -202,7 +203,7 @@ CONTAINS
     ! energy cutoff for max. interaction distance
     REAL(DP), PARAMETER :: ecut = 1e-11_DP
 
-    INTEGER :: ialloc
+    INTEGER :: ialloc, iunxdm, ierr
     INTEGER :: i, iat, n, ix, iy, iz, j, jj, iy0, iz0
     REAL(DP), ALLOCATABLE :: gaux(:,:), ggaux(:,:,:), rhoat(:), rhocor(:), rhoae(:)
     REAL(DP), ALLOCATABLE :: lapr(:), gmod(:), avol(:), b(:)
@@ -211,7 +212,7 @@ CONTAINS
     REAL(DP) :: x(3), wei, weic, db, ri, atb(3,3), taub(3)
     REAL(DP) :: xij(3), ehadd(6:10), eat, ee
     INTEGER :: l1, l2, ll, m1, m2
-    LOGICAL :: docalc
+    LOGICAL :: docalc, lexist
     REAL(DP) :: a1, a2, rmax, rmax2, den, den2
     REAL(DP) :: dij2
     REAL(DP) :: rvdwx, dijx, dijxm2, fxx, cn0
@@ -219,8 +220,11 @@ CONTAINS
     REAL(DP) :: for(3,nat), sigma(3,3), sat(3,3)
     INTEGER :: resto, divid, first, last, it
     INTEGER :: idx, ispin
-    INTEGER, EXTERNAL :: atomic_number
     REAL(DP) :: iix, iiy, iiz
+    CHARACTER (LEN=256) :: dirname
+
+    INTEGER, EXTERNAL :: atomic_number
+    INTEGER, EXTERNAL :: find_free_unit
 
     CALL start_clock('energy_xdm')
 
@@ -578,6 +582,7 @@ CONTAINS
     ssave = sigma
 
     IF (ionode) THEN
+       ! write to output
        WRITE (stdout,'("  Evdw(total,Ry)   = ",1p,E20.12)') evdw
        WRITE (stdout,'("  Evdw(C6,Ry)      = ",1p,E20.12)') ehadd(6)
        WRITE (stdout,'("  Evdw(C8,Ry)      = ",1p,E20.12)') ehadd(8)
@@ -592,6 +597,25 @@ CONTAINS
        WRITE (stdout,'("                    ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(2,:)*au_gpa
        WRITE (stdout,'("                    ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(3,:)*au_gpa
        WRITE (stdout,*)
+
+       ! save to xdm.dat
+
+       ! dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
+       ! CALL create_directory(dirname)
+       iunxdm = find_free_unit ()
+       ! CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist)
+       ! CALL seqopn(iunxdm,'xdm','UNFORMATTED',lexist)
+       OPEN(unit=iunxdm,file=TRIM(prefix)//".xdm",form='unformatted')
+       WRITE (iunxdm,iostat=ierr) 1 ! version
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       ! WRITE (iunxdm,iostat=ierr) nenv, nvec, nat
+       WRITE (iunxdm,iostat=ierr) nvec, nat, rmax2
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       WRITE (iunxdm,iostat=ierr) lvec(1:3,1:nvec), 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
+       ! WRITE (iunxdm,iostat=ierr) ienv(1:nenv), xenv(1:3,1:nenv), lvec(1:3,1:nvec)
+       ! WRITE (iunxdm,iostat=ierr) 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       CLOSE (UNIT=iunxdm, STATUS='KEEP')
     END IF
 
     CALL stop_clock('energy_xdm')

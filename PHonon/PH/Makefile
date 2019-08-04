@@ -45,6 +45,7 @@ deallocate_part.o \
 deallocate_phq.o \
 d2ionq.o \
 d2ionq_mm.o \
+d2ionq_xdm.o \
 d2nsq_bare.o \
 dnsq_bare.o \
 dnsq_orth.o \
