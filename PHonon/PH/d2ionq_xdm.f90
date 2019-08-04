@@ -97,11 +97,11 @@ SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
   resto = MOD(nat,nproc_image)
   divid = nat/nproc_image
   IF (me_image+1 <= resto) THEN
-     first = (divid + 1) * me_image + 1
-     last = (divid + 1) * (me_image + 1)
+     first = (divid+1) * me_image + 1
+     last = (divid+1) * (me_image+1)
   ELSE
-     first = (divid + 1) * resto + divid * me_image-resto + 1
-     last  = (divid + 1) * resto + divid * (me_image-resto+1)
+     first = ((divid+1) * resto) + divid * (me_image-resto) + 1
+     last  = (divid+1) * resto + divid * (me_image-resto+1)
   ENDIF
 #else
   first = 1
@@ -115,7 +115,7 @@ SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
         dtau = tau(:,k) - tau(:,l)
 
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
-!$omp parallel do private(r,d2,dd,g,gp,h,hp,eiqr,auxr) default(shared), reduction(+:aux), reduction(+:aux2), reduction(-:ene)
+!$omp parallel do private(r,d2,dd,g,gp,h,hp,eiqr,auxr) default(shared), reduction(+:aux), reduction(+:aux2), reduction(+:ene)
 #endif
         DO nr = 1, nvec
            r = lvec(1,nr) * at(:,1) + lvec(2,nr) * at(:,2) + lvec(3,nr) * at(:,3) - dtau
@@ -158,8 +158,8 @@ SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
      ENDDO ! l
   ENDDO ! k
   
-  CALL mp_sum(ene ,intra_image_comm)
-  CALL mp_sum(der2xdm ,intra_image_comm)
+  CALL mp_sum(ene, intra_image_comm)
+  CALL mp_sum(der2xdm, intra_image_comm)
   
   IF (ionode) THEN
      WRITE (stdout,'(5X,"XDM energy = ",F17.8," Ry")') ene
