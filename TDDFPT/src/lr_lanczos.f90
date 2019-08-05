@@ -164,27 +164,27 @@ SUBROUTINE one_lanczos_step()
     !
     IF (pseudo_hermitian) THEN
        IF (eels) THEN
-          CALL ph_lanczos_iter(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
-                              &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
-                              &evc1_old(:,:,:,1), n_ipol, d0psi2, alpha, beta, &
-                              &gamma, zeta)
+          CALL lanczos_pseudohermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
+                                      &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
+                                      &evc1_old(:,:,:,1), n_ipol, d0psi2, alpha, beta, &
+                                      &gamma, zeta)
        ELSE
-          CALL ph_lanczos_iter(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
-                              &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
-                              &evc1_old(:,:,:,1), n_ipol, d0psi(:,:,:,:), alpha, beta, &
-                              &gamma, zeta)
+          CALL lanczos_pseudohermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
+                                      &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
+                                      &evc1_old(:,:,:,1), n_ipol, d0psi(:,:,:,:), alpha, beta, &
+                                      &gamma, zeta)
        ENDIF
     ELSE
        IF (eels) THEN
-          CALL bo_lanczos_iter(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
-                              &evc1(:,:,:,:), evc1_new(:,:,:,:), sevc1(:,:,:), &
-                              &evc1_old(:,:,:,1), n_ipol, d0psi2, alpha, beta, &
-                              &gamma, zeta)
+          CALL lanczos_nonhermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
+                                   &evc1(:,:,:,:), evc1_new(:,:,:,:), sevc1(:,:,:), &
+                                   &evc1_old(:,:,:,1), n_ipol, d0psi2, alpha, beta, &
+                                   &gamma, zeta)
        ELSE
-          CALL bo_lanczos_iter(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
-                              &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1(:,:,:), &
-                              &evc1_old(:,:,:,1), n_ipol, d0psi, alpha, beta, &
-                              &gamma, zeta)
+          CALL lanczos_nonhermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
+                                   &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1(:,:,:), &
+                                   &evc1_old(:,:,:,1), n_ipol, d0psi, alpha, beta, &
+                                   &gamma, zeta)
        ENDIF
     ENDIF    
     !
