@@ -14,12 +14,11 @@
 SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
   USE kinds, ONLY : DP
   USE io_global, ONLY: ionode, ionode_id, stdout
-  USE io_files, ONLY : seqopn, prefix, tmp_dir, postfix
+  USE io_files, ONLY : seqopn, postfix
   USE constants, ONLY : tpi, eps8
   USE mp_images, ONLY : me_image , nproc_image , intra_image_comm
-  USE mp, ONLY : mp_sum, mp_bcast, mp_barrier
-  USE control_ph, ONLY: tmp_dir_ph
-  USE save_ph,         ONLY : tmp_dir_save
+  USE mp, ONLY : mp_sum, mp_bcast
+  USE save_ph, ONLY: tmp_dir_save
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: nat ! number of atoms in the unit cell
@@ -63,7 +62,6 @@ SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
   ! write activity message to output
   IF (ionode) THEN
      WRITE (stdout,'(/,5X,"Calculating the XDM contribution to the dynamical matrix.")')
-     WRITE (stdout,'(5X,"XDM info from file: ",A)') TRIM(prefix)//".xdm"
   END IF
 
   ! read the XDM environment, coefficients, and Rvdw

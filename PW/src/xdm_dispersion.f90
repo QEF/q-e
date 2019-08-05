@@ -222,7 +222,6 @@ CONTAINS
     INTEGER :: resto, divid, first, last, it
     INTEGER :: idx, ispin
     REAL(DP) :: iix, iiy, iiz
-    CHARACTER (LEN=256) :: dirname
 
     INTEGER, EXTERNAL :: atomic_number
 
@@ -370,9 +369,7 @@ CONTAINS
 
              iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
              DO n = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
-                !
-                ! ... three dimensional indexes
-                !
+                ! three dimensional indexes
                 idx = n -1
                 iz  = idx / (dfftp%nr1x*dfftp%my_nr2p)
                 idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
@@ -566,10 +563,10 @@ CONTAINS
     DO nn = 6, 10
        CALL mp_sum(ehadd(nn),intra_image_comm)
     ENDDO
-    !
+
     IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
-    !
-    ! Convert to Ry
+
+    ! convert to Ry
     evdw = evdw * 2
     for = for * 2
     sigma = sigma * 2
