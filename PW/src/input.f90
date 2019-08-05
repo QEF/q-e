@@ -1281,12 +1281,14 @@ SUBROUTINE iosys()
       ts_vdw_= .FALSE.
       lxdm   = .TRUE.
       !
-    CASE DEFAULT
+    CASE('none','')
       !
       llondon= .FALSE.
       ldftd3 = .FALSE.
       ts_vdw_= .FALSE.
       lxdm   = .FALSE.
+   CASE DEFAULT
+      CALL errore("iosys","unknown vdw correction (vdw_corr): "//TRIM(vdw_corr), 1)
       !
   END SELECT
   IF ( london ) THEN
