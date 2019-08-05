@@ -14,10 +14,12 @@
 SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
   USE kinds, ONLY : DP
   USE io_global, ONLY: ionode, ionode_id, stdout
-  USE io_files, ONLY : prefix
+  USE io_files, ONLY : seqopn, prefix, tmp_dir, postfix
   USE constants, ONLY : tpi, eps8
   USE mp_images, ONLY : me_image , nproc_image , intra_image_comm
   USE mp, ONLY : mp_sum, mp_bcast, mp_barrier
+  USE control_ph, ONLY: tmp_dir_ph
+  USE save_ph,         ONLY : tmp_dir_save
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: nat ! number of atoms in the unit cell
@@ -57,6 +59,7 @@ SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
 
   INTEGER, EXTERNAL :: find_free_unit
 
+
   ! write activity message to output
   IF (ionode) THEN
      WRITE (stdout,'(/,5X,"Calculating the XDM contribution to the dynamical matrix.")')
@@ -66,10 +69,8 @@ SUBROUTINE d2ionq_xdm(alat,nat,at,tau,q,der2xdm)
   ! read the XDM environment, coefficients, and Rvdw
   IF (ionode) THEN
      iunxdm = find_free_unit ()
-     ! CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist)
-     ! CALL seqopn(iunxdm,'xdm','UNFORMATTED',lexist)
-     ! IF (.NOT.lexist) CALL errore('d2ionq_xdm','could not open xdm data file',1)
-     OPEN(unit=iunxdm,file=TRIM(prefix)//".xdm",form='unformatted')
+     CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist,tmp_dir_save)
+     IF (.NOT.lexist) CALL errore('d2ionq_xdm','could not open xdm data file',1)
      READ (iunxdm,iostat=ierr) iver
      IF (ierr /= 0) CALL errore('d2ionq_xdm','reading xdm.dat 1',1)
      READ (iunxdm,iostat=ierr) nvec, nat0, rmax2

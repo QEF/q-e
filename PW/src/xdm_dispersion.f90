@@ -14,12 +14,13 @@ module xdm_module
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: a1i, a2i    ! the damping function coefficients (real_dp)
-  PUBLIC :: init_xdm    ! initialize XDM: calculate atomic volumes, radial densities,...
-  PUBLIC :: energy_xdm  ! compute the XDM dispersion energy and derivatives 
-  PUBLIC :: force_xdm   ! fetch the forces calculated by energy_xdm
-  PUBLIC :: stress_xdm  ! fetch the stresses calculated by energy_xdm
-  PUBLIC :: cleanup_xdm ! deallocate arrays
+  PUBLIC :: a1i, a2i     ! the damping function coefficients (real_dp)
+  PUBLIC :: init_xdm     ! initialize XDM: calculate atomic volumes, radial densities,...
+  PUBLIC :: energy_xdm   ! compute the XDM dispersion energy and derivatives 
+  PUBLIC :: force_xdm    ! fetch the forces calculated by energy_xdm
+  PUBLIC :: stress_xdm   ! fetch the stresses calculated by energy_xdm
+  PUBLIC :: write_xdmdat ! write the xdm.dat file
+  PUBLIC :: cleanup_xdm  ! deallocate arrays
 
   ! is this a PAW calculation?
   LOGICAL :: ispaw
@@ -34,6 +35,7 @@ module xdm_module
   REAL(DP), ALLOCATABLE :: alpha(:), ml(:,:)
   REAL(DP), ALLOCATABLE :: cx(:,:,:), rvdw(:,:)
   REAL(DP) :: maxc6
+  REAL(DP) :: rmax2
 
   ! energies, forces and stresses
   REAL(DP) :: esave = 0._DP
@@ -185,7 +187,6 @@ CONTAINS
     ! and stress_xdm.
     USE control_flags, ONLY: lbfgs, lmd
     USE scf, ONLY: rho, rhoz_or_updw
-    USE io_files, ONLY: seqopn, tmp_dir, prefix, postfix, create_directory
     USE io_global, ONLY: stdout, ionode
     USE fft_base, ONLY : dfftp
     USE cell_base, ONLY : at, alat, omega
@@ -203,7 +204,7 @@ CONTAINS
     ! energy cutoff for max. interaction distance
     REAL(DP), PARAMETER :: ecut = 1e-11_DP
 
-    INTEGER :: ialloc, iunxdm, ierr
+    INTEGER :: ialloc
     INTEGER :: i, iat, n, ix, iy, iz, j, jj, iy0, iz0
     REAL(DP), ALLOCATABLE :: gaux(:,:), ggaux(:,:,:), rhoat(:), rhocor(:), rhoae(:)
     REAL(DP), ALLOCATABLE :: lapr(:), gmod(:), avol(:), b(:)
@@ -213,7 +214,7 @@ CONTAINS
     REAL(DP) :: xij(3), ehadd(6:10), eat, ee
     INTEGER :: l1, l2, ll, m1, m2
     LOGICAL :: docalc, lexist
-    REAL(DP) :: a1, a2, rmax, rmax2, den, den2
+    REAL(DP) :: a1, a2, rmax, den, den2
     REAL(DP) :: dij2
     REAL(DP) :: rvdwx, dijx, dijxm2, fxx, cn0
     INTEGER :: i3, nn
@@ -224,7 +225,6 @@ CONTAINS
     CHARACTER (LEN=256) :: dirname
 
     INTEGER, EXTERNAL :: atomic_number
-    INTEGER, EXTERNAL :: find_free_unit
 
     CALL start_clock('energy_xdm')
 
@@ -597,25 +597,6 @@ CONTAINS
        WRITE (stdout,'("                    ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(2,:)*au_gpa
        WRITE (stdout,'("                    ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(3,:)*au_gpa
        WRITE (stdout,*)
-
-       ! save to xdm.dat
-
-       ! dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
-       ! CALL create_directory(dirname)
-       iunxdm = find_free_unit ()
-       ! CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist)
-       ! CALL seqopn(iunxdm,'xdm','UNFORMATTED',lexist)
-       OPEN(unit=iunxdm,file=TRIM(prefix)//".xdm",form='unformatted')
-       WRITE (iunxdm,iostat=ierr) 1 ! version
-       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
-       ! WRITE (iunxdm,iostat=ierr) nenv, nvec, nat
-       WRITE (iunxdm,iostat=ierr) nvec, nat, rmax2
-       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
-       WRITE (iunxdm,iostat=ierr) lvec(1:3,1:nvec), 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
-       ! WRITE (iunxdm,iostat=ierr) ienv(1:nenv), xenv(1:3,1:nenv), lvec(1:3,1:nvec)
-       ! WRITE (iunxdm,iostat=ierr) 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
-       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
-       CLOSE (UNIT=iunxdm, STATUS='KEEP')
     END IF
 
     CALL stop_clock('energy_xdm')
@@ -638,6 +619,30 @@ CONTAINS
     svdw = ssave
 
   END FUNCTION stress_xdm
+  
+  SUBROUTINE write_xdmdat()
+    ! save the XDM coefficients and vdw radii to the xdm.dat file for ph.x
+    USE io_files, ONLY: seqopn, postfix
+    USE io_global, ONLY: ionode
+    USE ions_base, ONLY: nat
+    INTEGER :: iunxdm, ierr
+    LOGICAL :: lexist
+
+    INTEGER, EXTERNAL :: find_free_unit
+
+    IF (ionode) THEN
+       iunxdm = find_free_unit ()
+       CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist)
+       WRITE (iunxdm,iostat=ierr) 1 ! version
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       WRITE (iunxdm,iostat=ierr) nvec, nat, rmax2
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       WRITE (iunxdm,iostat=ierr) lvec(1:3,1:nvec), 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       CLOSE (UNIT=iunxdm, STATUS='KEEP')
+    ENDIF
+
+  END SUBROUTINE write_xdmdat
 
   ! --- private ---
   SUBROUTINE set_environ (rcut)
