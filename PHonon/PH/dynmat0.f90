@@ -53,18 +53,12 @@ subroutine dynmat0_new
   !
   call d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, xq, at, bg, g, &
        gg, ngm, gcutm, nmodes, u, dyn)
-  !
-  !   Here the Grimme D2 dispersion contribution (if present)
-  !
-  IF ( llondon ) THEN
-     CALL init_london ()
-     CALL d2ionq_mm (alat, nat, ityp, at, bg, tau, xq, dynwrk )
-     CALL rotate_pattern_add ( nat, u, dyn, dynwrk )
-     CALL dealloca_london ()
-  ELSE IF ( lxdm ) THEN
-     CALL d2ionq_xdm (alat, nat, at, tau, xq, dynwrk )
-     CALL rotate_pattern_add ( nat, u, dyn, dynwrk )
-  END IF
+
+  ! Contribution from the dispersion correction
+  IF (llondon .OR. lxdm) THEN
+     CALL d2ionq_disp(alat,nat,ityp,at,bg,tau,xq,dynwrk)
+     CALL rotate_pattern_add (nat,u,dyn,dynwrk)
+  ENDIF
   !
   !   Add non-linear core-correction (NLCC) contribution (if any)
   !
