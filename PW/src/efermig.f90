@@ -30,11 +30,13 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   real(DP), external::  sumkg
   integer :: i, kpoint, Ngauss_
   !
-  !      find bounds for the Fermi energy. Very safe choice!
+  !      find (very safe) bounds for the Fermi energy:
+  !      Elw = lowest, Eup = highest energy among all k-points
+  !      Works with distributed k-points, also if nks=0 on some processor
   !
-  Elw = et (1, 1)
-  Eup = et (nbnd, 1)
-  do kpoint = 2, nks
+  Elw = 1.0E+8
+  Eup =-1.0E+8
+  do kpoint = 1, nks
      Elw = min (Elw, et (1, kpoint) )
      Eup = max (Eup, et (nbnd, kpoint) )
   enddo

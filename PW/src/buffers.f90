@@ -14,6 +14,7 @@
 !
 ! <<^V^\\=========================================//-//-//========//O\\//
 MODULE buiol
+  !
   USE kinds, ONLY : DP
   !
   PUBLIC :: init_buiol          ! init the linked chain of i/o units
@@ -30,35 +31,39 @@ MODULE buiol
   PUBLIC :: buiol_read_record   ! (unit, recl, nrec, DATA) read DATA(recl) from record nrec of unit
   !
   PRIVATE
-  ! initial number of records in the buffer (each record will only be allocated on write!)
+  !
   INTEGER,PARAMETER :: nrec0 = 1024
-  ! when writing beyond the last available record increase the index by AT LEAST this factor..
+  !! initial number of records in the buffer (each record will only be allocated on write!)
+  
   REAL(DP),PARAMETER :: fact0 = 1.5_dp
-  ! .. furthermore, allocate up to AT LEAST this factor times the required overflowing nrec
+  !! when writing beyond the last available record increase the index by AT LEAST this factor..
+  
   REAL(DP),PARAMETER :: fact1 = 1.2_dp
+  !! .. furthermore, allocate up to AT LEAST this factor times the required overflowing nrec
+  !
   ! NOTE: the new buffer size will be determined with both methods, taking the MAX of the two
   !
-  ! Size of the single item of the record (for memory usage report only)
   INTEGER,PARAMETER :: size0 = DP ! 8 bytes
+  !! Size of the single item of the record (for memory usage report only)
   !
-  ! base element of the linked chain of buffers
   TYPE index_of_list
+    !! base element of the linked chain of buffers
     TYPE(data_in_the_list),POINTER :: index(:)
     INTEGER :: nrec, unit, recl
     CHARACTER(LEN=256) :: extension, save_dir
     TYPE(index_of_list),POINTER :: next => null()
   END TYPE
   !
-  ! sub-structure containing the data buffer
   TYPE data_in_the_list 
+    !! sub-structure containing the data buffer
     COMPLEX(DP), POINTER :: data(:) => null()
   END TYPE
   !
-  ! beginning of the linked chain, statically allocated (for implementation simplicity)
   TYPE(index_of_list),SAVE,POINTER :: ENTRY => null()
+  !! beginning of the linked chain, statically allocated (for implementation simplicity)
   !
-  ! set to true when the library has been initialized
   LOGICAL,SAVE :: is_init_buiol = .false.
+  !! set to true when the library has been initialized
   !
   CONTAINS
   ! <<^V^\\=========================================//-//-//========//O\\//
@@ -481,14 +486,15 @@ MODULE buiol
   ! \/o\________\\\_________________________________________/^>
 END MODULE buiol
 ! <<^V^\\=========================================//-//-//========//O\\//
-
-Module buffers
-
-  use kinds, only: dp
-  use buiol, only: init_buiol, buiol_open_unit, buiol_close_unit, &
+!
+MODULE buffers
+  !
+  USE kinds, ONLY: DP
+  USE buiol, ONLY: init_buiol, buiol_open_unit, buiol_close_unit, &
                    buiol_check_unit, buiol_get_ext, buiol_get_dir, &
                    buiol_read_record, buiol_write_record, is_init_buiol
-  implicit none
+  !
+  IMPLICIT NONE
   !
   ! QE interfaces to BUIOL module
   !
@@ -497,22 +503,21 @@ Module buffers
   PRIVATE
   INTEGER:: nunits = 0
   !
-contains
-
-  !----------------------------------------------------------------------------
-  SUBROUTINE open_buffer (unit, extension, nword, io_level, exst, exst_file, direc)
-    !---------------------------------------------------------------------------
+CONTAINS
+  !
+  !---------------------------------------------------------------------------------
+  SUBROUTINE open_buffer( unit, extension, nword, io_level, exst, exst_file, direc )
+    !-------------------------------------------------------------------------------
+    !! io_level>0: connect unit "unit" to file "wfc_dir"/"prefix"."extension"
+    !! (or "direc"/"prefix"."extension" if optional variable direc specified)
+    !! for direct I/O access, with record length = nword complex numbers;
+    !! on output, exst=T(F) if the file (does not) exists.
     !
-    !   io_level>0: connect unit "unit" to file "wfc_dir"/"prefix"."extension"
-    !   (or "direc"/"prefix"."extension" if optional variable direc specified)
-    !   for direct I/O access, with record length = nword complex numbers;
-    !   on output, exst=T(F) if the file (does not) exists
+    !! io_level=0: open a buffer for storing records of length nword complex
+    !! numbers; store in memory file-related variables for later usage.
+    !! on output, exst=T(F) if the buffer is already allocated.
     !
-    !   io_level=0: open a buffer for storing records of length nword complex
-    !   numbers; store in memory file-related variables for later usage.
-    !   on output, exst=T(F) if the buffer is already allocated
-    !
-    !   on output, optional variable exst_file=T(F) if file is present (absent)
+    !! On output, optional variable exst_file=T(F) if file is present (absent).
     !
     USE io_files,  ONLY : diropn, wfc_dir
     !
@@ -529,43 +534,44 @@ contains
     !
     !   not-so-elegant way to initialize the linked chain with units
     !
-    IF ( nunits == 0 ) CALL init_buiol( )
+    IF ( nunits == 0 ) CALL init_buiol()
     !
     IF (extension == ' ') &
-       CALL errore ('open_buffer','filename extension not given',1)
+       CALL errore( 'open_buffer', 'filename extension not given', 1 )
     !
-    IF (present(direc)) THEN
-       save_dir=TRIM(direc)
+    IF (PRESENT(direc)) THEN
+       save_dir = TRIM(direc)
     ELSE
-       save_dir=TRIM(wfc_dir)
+       save_dir = TRIM(wfc_dir)
     ENDIF
     !
     IF ( io_level <= 0 ) THEN
-       CALL diropn ( unit, extension, -1, exst, save_dir )      
-       IF (present(exst_file)) exst_file=exst
-       ierr = buiol_open_unit ( unit, nword, extension, save_dir )
-       IF ( ierr > 0 ) CALL errore ('open_buffer', ' cannot open unit', 2)
+       CALL diropn( unit, extension, -1, exst, save_dir )      
+       IF (PRESENT(exst_file)) exst_file=exst
+       ierr = buiol_open_unit( unit, nword, extension, save_dir )
+       IF ( ierr > 0 ) CALL errore( 'open_buffer', ' cannot open unit', 2 )
        exst = ( ierr == -1 )
        IF (exst) THEN
-          CALL infomsg ('open_buffer', 'unit already opened')
+          CALL infomsg( 'open_buffer', 'unit already opened' )
           nunits = nunits - 1
        END IF
     ELSE
-       CALL diropn ( unit, extension, 2*nword, exst, save_dir )      
-       IF (present(exst_file)) exst_file=exst
+       CALL diropn( unit, extension, 2*nword, exst, save_dir )      
+       IF (PRESENT(exst_file)) exst_file=exst
     ENDIF
     nunits = nunits + 1
     !
     RETURN
     !
   END SUBROUTINE open_buffer
+  !
+  !
   !----------------------------------------------------------------------------
   SUBROUTINE save_buffer( vect, nword, unit, nrec )
-    !---------------------------------------------------------------------------
-    !
-    ! ... copy vect(1:nword) into the "nrec"-th record of a previously
-    ! ... allocated buffer / opened direct-access file, depending upon
-    ! ... how "open_buffer" was called
+    !--------------------------------------------------------------------------
+    !! Copy vect(1:nword) into the "nrec"-th record of a previously
+    !! allocated buffer / opened direct-access file, depending upon
+    !! how "open_buffer" was called.
     !
     IMPLICIT NONE
     !
@@ -573,28 +579,27 @@ contains
     COMPLEX(DP), INTENT(INOUT) :: vect(nword)
     INTEGER :: ierr
     !
-    ierr = buiol_check_unit (unit)
+    ierr = buiol_check_unit( unit )
     IF( ierr > 0 ) THEN
-       ierr = buiol_write_record ( unit, nword, nrec, vect )
-       if ( ierr > 0 ) &
-           CALL errore ('save_buffer', 'cannot write record', unit)
+       ierr = buiol_write_record( unit, nword, nrec, vect )
+       IF ( ierr > 0 ) &
+           CALL errore( 'save_buffer', 'cannot write record', unit )
 #if defined(__DEBUG)
        print *, 'save_buffer: record', nrec, ' written to unit', unit
 #endif
     ELSE 
-       CALL davcio ( vect, 2*nword, unit, nrec, +1 )
-    END IF
+       CALL davcio( vect, 2*nword, unit, nrec, +1 )
+    ENDIF
     !
   END SUBROUTINE save_buffer
   !
   !----------------------------------------------------------------------------
   SUBROUTINE get_buffer( vect, nword, unit, nrec )
-    !---------------------------------------------------------------------------
-    !
-    ! ... copy vect(1:nword) from the "nrec"-th record of a previously
-    ! ... allocated buffer / opened direct-access file, depending upon
-    ! ... how "open_buffer" was called. If buffer access was chosen 
-    ! ... but buffer is not allocated, open the file, read from file
+    !!---------------------------------------------------------------------------
+    !! Copy vect(1:nword) from the "nrec"-th record of a previously
+    !! allocated buffer / opened direct-access file, depending upon
+    !! how "open_buffer" was called. If buffer access was chosen 
+    !! but buffer is not allocated, open the file, read from file.
     !
     USE io_files, ONLY : diropn
     !
@@ -606,44 +611,45 @@ contains
     INTEGER :: ierr
     LOGICAL :: opnd
     !
-    ierr = buiol_check_unit (unit)
+    ierr = buiol_check_unit( unit )
     IF( ierr > 0 ) THEN
-       ierr = buiol_read_record ( unit, nword, nrec, vect )
+       ierr = buiol_read_record( unit, nword, nrec, vect )
 #if defined(__DEBUG)
-       print *, 'get_buffer: record', nrec, ' read from unit', unit
+       PRINT *, 'get_buffer: record', nrec, ' read from unit', unit
 #endif
-       if ( ierr < 0 ) then
+       IF ( ierr < 0 ) THEN
           ! record not found: open file if not opened, read from it...
           INQUIRE( UNIT = unit, OPENED = opnd )
           IF ( .NOT. opnd ) THEN
-             extension = buiol_get_ext (unit)
-             save_dir  = buiol_get_dir (unit)
-             CALL diropn ( unit, extension, 2*nword, opnd, save_dir )      
+             extension = buiol_get_ext(unit)
+             save_dir  = buiol_get_dir(unit)
+             CALL diropn( unit, extension, 2*nword, opnd, save_dir )      
           END IF
-          CALL davcio ( vect, 2*nword, unit, nrec, -1 )
+          CALL davcio( vect, 2*nword, unit, nrec, -1 )
           ! ... and save to memory
-          ierr =  buiol_write_record ( unit, nword, nrec, vect )
-          if ( ierr /= 0 ) CALL errore ('get_buffer', &
-                                  'cannot store record in memory', unit)
+          ierr =  buiol_write_record( unit, nword, nrec, vect )
+          IF ( ierr /= 0 ) CALL errore( 'get_buffer', &
+                                  'cannot store record in memory', unit )
 #if defined(__DEBUG)
-          print *, 'get_buffer: record', nrec, ' read from file', unit
+          PRINT *, 'get_buffer: record', nrec, ' read from file', unit
 #endif
-       end if
+       ENDIF
 #if defined(__DEBUG)
-       print *, 'get_buffer: record', nrec, ' read from unit', unit
+       PRINT *, 'get_buffer: record', nrec, ' read from unit', unit
 #endif
     ELSE
-       CALL davcio ( vect, 2*nword, unit, nrec, -1 )
-    END IF
+       CALL davcio( vect, 2*nword, unit, nrec, -1 )
+    ENDIF
     !
   END SUBROUTINE get_buffer
-
-  SUBROUTINE close_buffer ( unit, status )
-    !
-    !     close unit with status "status" ('keep' or 'delete')
-    !     deallocate related buffer if any; if "status='keep'"
-    !     save it to file (opening it if not already opened).
-    !     Does not complain if closing an already closed unit
+  !
+  !------------------------------------------------------------
+  SUBROUTINE close_buffer( unit, status )
+    !----------------------------------------------------------
+    !! Close unit with status "status" ('keep' or 'delete')
+    !! deallocate related buffer if any; if "status='keep'"
+    !! save it to file (opening it if not already opened).  
+    !! Does not complain if closing an already closed unit.
     !
     USE io_files, ONLY : diropn
     !
@@ -658,41 +664,41 @@ contains
     LOGICAL :: opnd
     !
     IF ( .NOT. is_init_buiol ) RETURN
-    nword = buiol_check_unit (unit)
+    nword = buiol_check_unit( unit )
     !
     IF( nword > 0 ) THEN
        ! data is in memory buffer
-       IF ( status == 'keep' .or. status == 'KEEP' ) then
+       IF ( status == 'keep' .OR. status == 'KEEP' ) THEN
           ! open file if not previously opened
           INQUIRE( UNIT = unit, OPENED = opnd )
           IF ( .NOT. opnd ) THEN
              extension = buiol_get_ext (unit)
              save_dir  = buiol_get_dir (unit)
-             CALL diropn ( unit, extension, 2*nword, opnd, save_dir )      
-          END IF
-          allocate (vect(nword))
+             CALL diropn( unit, extension, 2*nword, opnd, save_dir )      
+          ENDIF
+          ALLOCATE( vect(nword) )
           n = 1
-  10      continue
-             ierr = buiol_read_record ( unit, nword, n, vect )
-             IF ( ierr /= 0 ) go to 20
-             CALL davcio ( vect, 2*nword, unit, n, +1 )
+  10      CONTINUE
+             ierr = buiol_read_record( unit, nword, n, vect )
+             IF ( ierr /= 0 ) GO TO 20
+             CALL davcio( vect, 2*nword, unit, n, +1 )
              n = n+1
-          go to 10
-  20      deallocate (vect)
-       end if
-       ierr = buiol_close_unit ( unit )
+          GO TO 10
+  20      DEALLOCATE( vect )
+       ENDIF
+       ierr = buiol_close_unit( unit )
        if ( ierr < 0 ) &
-            CALL errore ('close_buffer', 'error closing', ABS(unit))
+            CALL errore( 'close_buffer', 'error closing', ABS(unit) )
 #if defined(__DEBUG)
-       print *, 'close_buffer: unit ',unit, 'closed'
+       PRINT *, 'close_buffer: unit ',unit, 'closed'
 #endif
-    END IF
+    ENDIF
     INQUIRE( UNIT = unit, OPENED = opnd )
     IF ( opnd ) CLOSE( UNIT = unit, STATUS = status )
     nunits = nunits - 1
     !
   END SUBROUTINE close_buffer
-
+  !
   ! end interface for old "buffers" module
-
-end module buffers
+  !
+END MODULE buffers

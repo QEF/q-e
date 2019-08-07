@@ -24,6 +24,7 @@ default :
 	@echo ' run-custom-test testdir=DIR : run test in DIR only (serial)'
 	@echo ' run-custom-test-parallel testdir=DIR : run test in DIR only (parallel 4 MPI)'
 	@echo ' compare                     : compare last output with reference'
+	@echo ' pseudo                      : download needed PPs into ESPRESSO_PSEUDO'
 	@echo ' clean                       : clean stdout/sderr of all tests'
 	@echo ' '
 	@echo 'For additional advanced commands and settings please manually inspect'
@@ -130,7 +131,8 @@ clean:
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* epw_*/pwscf.*
 # cp data files
-	@rm -rf cp_si/si_*.* co_o2/o2_*.* cp_h2o/h2o_*.* cp_sio2/sio2_*.*
+	@rm -rf cp_si/si_*.* cp_o2/o2_*.* cp_h2o/h2o_*.* cp_sio2/sio2_*.*
+	@rm -rf cp_si/si.??? cp_o2/o2.??? cp_h2o/h2o.??? cp_sio2/sio2.???
 # Special case for 'pw_vc-relax' test-case
 	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 # Special case for 'noexe_langevin' test-case
@@ -141,6 +143,7 @@ clean:
 	@rm -rf ph_*/_ph0 ph_*/*.save ph_*/*.xml ph_*/a2F.* ph_*/*.dyn? ph_*/alpha2F.dat \
 		ph_*/dyna2F ph_*/elph.gamma* ph_*/gam.lines ph_*/lambda ph_*/lambda.dat \
 		ph_*/elph_dir ph_*/Al444.* ph_*/matdyn.modes ph_*/phonon.dos
+	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/silicon.*
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_25.00 epw_*/*.P epw_*/*.freq epw_*/*.wout \
@@ -164,11 +167,9 @@ clean:
                 epw_mob_ibte/save epw_mob/save
                 
 # Special cases for EPW
-	@rm -rf epw_base/save epw_super/save
+	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \
+             trev/save epw_trev_uspp/save
 
-# Special case EPW
-	@rm -rf epw_trev/save	
-	@rm -rf epw_trev_uspp/save	
 	@rm -f userconfig
 
 # Calling 'purge' means remove all reference outputs... be careful!

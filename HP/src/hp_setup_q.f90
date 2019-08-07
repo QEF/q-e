@@ -55,7 +55,7 @@ SUBROUTINE hp_setup_q()
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE gvecs,            ONLY : doublegrid
-  USE symm_base,        ONLY : nrot, nsym, s, ftau, irt, time_reversal, &
+  USE symm_base,        ONLY : nrot, nsym, s, ft, irt, time_reversal, &
                                inverse_s, d1, d2, d3
   USE uspp_param,       ONLY : upf
   USE uspp,             ONLY : nlcc_any
@@ -142,7 +142,7 @@ SUBROUTINE hp_setup_q()
   ! Check if there are fractional translations
   ! Note: Try to use PH/symmorphic_or_nzb ?
   !
-  is_symmorphic = .NOT.(ANY(ftau(:,1:nsymq) /= 0))
+  is_symmorphic = .NOT.( ANY( ABS(ft(:,1:nsymq)) > 1.d-8 ) )
   !
   IF (skip_equivalence_q) THEN
      search_sym = .FALSE.

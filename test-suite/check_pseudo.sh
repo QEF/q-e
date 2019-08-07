@@ -8,8 +8,6 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-source ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
-
 if test "`which curl`" = "" ; then
    if test "`which wget`" = "" ; then
       echo "### wget or curl not found: will not be able to download missing PP ###"

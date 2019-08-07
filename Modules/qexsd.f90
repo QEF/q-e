@@ -19,7 +19,7 @@ MODULE qexsd_module
   ! Modified by Simone Ziraldo (2013).
   !
   USE kinds,            ONLY : DP
-  USE input_parameters, ONLY : input_xml_schema_file, title
+  USE input_parameters, ONLY : input_xml_schema_file
   USE mp_world,         ONLY : nproc
   USE mp_images,         ONLY : nimage,nproc_image
   USE mp_pools,         ONLY : npool
@@ -28,7 +28,6 @@ MODULE qexsd_module
   !
   USE constants,        ONLY : e2
   USE qes_types_module
-  !USE qes_libs_module
   USE qes_write_module, ONLY : qes_write
   USE qes_reset_module, ONLY:  qes_reset 
   USE qes_init_module, ONLY:  qes_init 
@@ -142,13 +141,13 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_openschema( filename , prog)
+    SUBROUTINE qexsd_openschema(filename, prog, title)
       !------------------------------------------------------------------------
       !
       USE  FoX_wxml,  ONLY: xml_OpenFile, xml_DeclareNamespace, xml_NewElement, xml_addAttribute, xml_addComment                         
       IMPLICIT NONE
       !
-      CHARACTER(len=*), INTENT(IN) :: filename, prog
+      CHARACTER(len=*), INTENT(IN) :: filename, prog, title
       CHARACTER(len=16) :: subname = 'qexsd_openschema'
       INTEGER :: ierr, len_steps, i_step
       !
@@ -164,13 +163,13 @@ CONTAINS
                                     "http://www.quantum-espresso.org/ns/qes/qes_190304.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
-              COMMENT = "If not explicitely indicated, all quantities are expressed in Hartree atomic units" ) 
+              COMMENT = "All quantities are in Hartree atomic units unless otherwise specified" ) 
       !
       IF (ierr /= 0) call errore(subname, 'opening xml output file', ierr)
       ! the input file is mandatory to have a validating schema 
       ! here an error should be issued, instead
       !
-      CALL qexsd_init_general_info(general_info, prog(1:2) )
+      CALL qexsd_init_general_info(general_info, prog(1:2), title )
       CALL qes_write (qexsd_xf,general_info)
       CALL qes_reset (general_info)
       !
@@ -198,12 +197,13 @@ CONTAINS
     !
     !
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_general_info(obj, prog )
+    SUBROUTINE qexsd_init_general_info(obj, prog, title )
     !---------------------------------------------------------------------------------------
       IMPLICIT NONE
       !
       TYPE( general_info_type )         ::  obj
       CHARACTER(LEN=*),INTENT(IN)       ::  prog
+      CHARACTER(LEN=*),INTENT(IN)       ::  title
       CHARACTER(LEN=*),PARAMETER        ::  TAGNAME="general_info"
       TYPE( creator_type )              ::  creator_obj
       TYPE( created_type )              ::  created_obj
@@ -372,8 +372,9 @@ CONTAINS
       !
       CHARACTER(27)       :: subname="qexsd_init_convergence_info"
       TYPE(scf_conv_type) :: scf_conv
-      TYPE(opt_conv_type),POINTER :: opt_conv => NULL() 
+      TYPE(opt_conv_type),POINTER :: opt_conv  
       !
+      NULLIFY(opt_conv) 
       call qes_init (scf_conv, "scf_conv", scf_has_converged, n_scf_steps, scf_error)
       !
       IF ( PRESENT(optimization_has_converged ))  THEN
@@ -425,13 +426,14 @@ CONTAINS
       REAL(DP), OPTIONAL,TARGET, INTENT(IN) :: angle1(:),angle2(:)
       !
       TYPE(species_type), ALLOCATABLE :: species(:)
-      REAL(DP),POINTER  :: amass_     =>  NULL() 
-      REAL(DP),POINTER  :: start_mag_ =>  NULL()
-      REAL(DP),POINTER  :: spin_teta  =>  NULL()
-      REAL(DP),POINTER  :: spin_phi   =>  NULL() 
+      REAL(DP),POINTER  :: amass_    
+      REAL(DP),POINTER  :: start_mag_ 
+      REAL(DP),POINTER  :: spin_teta  
+      REAL(DP),POINTER  :: spin_phi   
       INTEGER   :: i
       
       ALLOCATE(species(nsp))
+      NULLIFY ( amass_, start_mag_, spin_teta, spin_phi) 
       !
       DO i = 1, nsp
           !
@@ -475,19 +477,42 @@ CONTAINS
       REAL(DP),         INTENT(IN) :: tau(3,*)! cartesian atomic positions, a.u.
       REAL(DP),         INTENT(IN) :: alat
       REAL(DP),         INTENT(IN) :: a1(:), a2(:), a3(:)
-      INTEGER,TARGET,   INTENT(IN) :: ibrav
+      INTEGER,          INTENT(IN) :: ibrav
       !
-      INTEGER         :: ia
+      INTEGER         :: ia 
       TYPE(atom_type), ALLOCATABLE :: atom(:)
       TYPE(cell_type) :: cell
       TYPE(atomic_positions_type)  :: atomic_pos
       TYPE(wyckoff_positions_type) :: wyckoff_pos
       REAL(DP)                     :: new_alat
-      INTEGER,POINTER             :: ibrav_ => NULL() 
+      INTEGER,TARGET              :: ibrav_tgt
+      INTEGER,POINTER             :: ibrav_ptr 
+      CHARACTER(LEN=256),POINTER  :: use_alt_axes_ 
+      CHARACTER(LEN=256),TARGET   :: use_alt_axes 
       !
       ! atomic positions
       !
-      IF ( ibrav .gt. 0 ) ibrav_  =>  ibrav 
+      NULLIFY(use_alt_axes_, ibrav_ptr) 
+      IF ( ibrav .ne. 0 ) THEN 
+         ibrav_tgt =  abs(ibrav) 
+         ibrav_ptr => ibrav_tgt
+         use_alt_axes_ => use_alt_axes 
+         SELECT CASE(abs(ibrav))
+            CASE(-3)
+               use_alt_axes="b:a-b+c:-c"
+            CASE(-5)
+               use_alt_axes="3fold-111"
+            CASE(-9)
+               use_alt_axes="-b:a:c"
+            CASE (91)
+               ibrav_tgt = 9 
+               use_alt_axes ="bcoA-type"
+            CASE(-12,-13)
+               use_alt_axes="unique-axis-b" 
+            CASE default 
+               NULLIFY (use_alt_axes_) 
+         END SELECT 
+      END IF 
       
       !
       ALLOCATE(atom(nat))
@@ -508,8 +533,9 @@ CONTAINS
       !
       ! global init
       !
-      CALL qes_init (obj, "atomic_structure", nat=nat, alat=alat, atomic_positions=atomic_pos, cell=cell , &
-                     bravais_index=ibrav_)
+      CALL qes_init (obj, "atomic_structure", NAT=nat, ALAT=alat, &
+              ATOMIC_POSITIONS=atomic_pos, CELL=cell , &
+              BRAVAIS_INDEX=ibrav_ptr, ALTERNATIVE_AXES = use_alt_axes_ )
       ! 
       ! cleanup 
       ! 
@@ -539,15 +565,16 @@ CONTAINS
       TYPE(equivalent_atoms_type)  :: equiv_atm
       TYPE(info_type)              :: info
       TYPE(matrix_type)            :: matrix
-      CHARACTER(LEN=15),POINTER    :: classname => NULL() 
+      CHARACTER(LEN=15),POINTER    :: classname 
       CHARACTER(LEN=256)           :: la_info
       LOGICAL                      :: class_ispresent = .FALSE., time_reversal_ispresent = .FALSE.
       INTEGER                      :: i
       REAL(DP)                     :: mat_(3,3)
       LOGICAL                      :: true_=.TRUE., false_ = .FALSE. 
-      LOGICAL,POINTER              :: trev =>NULL()                       
+      LOGICAL,POINTER              :: trev                       
       TARGET                       :: class_names, true_, false_  
       ALLOCATE(symm(nrot))
+      NULLIFY( classname, trev) 
       !
       IF ( TRIM(verbosity) .EQ. 'high' .OR. TRIM(verbosity) .EQ. 'medium')  class_ispresent= .TRUE.
       IF ( noncolin  ) time_reversal_ispresent = .TRUE.
@@ -665,8 +692,9 @@ CONTAINS
          LOGICAL,OPTIONAL,INTENT(IN)             :: x_gamma_extrapolation 
          ! 
          TYPE (qpoint_grid_type),TARGET          :: qpoint_grid 
-         TYPE (qpoint_grid_type),POINTER         :: qpoint_grid_opt => NULL()
+         TYPE (qpoint_grid_type),POINTER         :: qpoint_grid_opt 
          !
+         NULLIFY ( qpoint_grid_opt) 
          IF (.NOT. dft_is_hybrid) RETURN 
          IF (PRESENT(nq1) .AND. PRESENT(nq2) .AND. PRESENT(nq3) ) THEN
             qpoint_grid_opt => qpoint_grid           
@@ -1020,7 +1048,7 @@ CONTAINS
     LOGICAL                                 :: n_wfc_at_ispresent = .TRUE.  
     INTEGER                                 :: ndim_ks_energies, ik
     INTEGER,TARGET                          :: nbnd_, nbnd_up_, nbnd_dw_
-    INTEGER,POINTER                         :: nbnd_opt => NULL(), nbnd_up_opt => NULL(), nbnd_dw_opt => NULL() 
+    INTEGER,POINTER                         :: nbnd_opt, nbnd_up_opt, nbnd_dw_opt 
     TYPE(k_point_type)                      :: kp_obj
     TYPE(ks_energies_type),ALLOCATABLE      :: ks_objs(:)
     TYPE (k_points_IBZ_type)                :: starting_k_points_ 
@@ -1030,7 +1058,7 @@ CONTAINS
     !
     ndim_ks_energies=nks   
     !
-    
+    NULLIFY( nbnd_opt, nbnd_up_opt, nbnd_dw_opt)  
     IF ( lsda ) THEN 
        ndim_ks_energies=ndim_ks_energies/2
        nbnd_up_opt => nbnd_up_
@@ -1378,7 +1406,7 @@ CONTAINS
     !
     USE ions_base,            ONLY: nat, tau, atm, zv, ityp
     USE cell_base,            ONLY: omega
-    USE noncollin_module,     ONLY : noncolin, nspin_lsda
+    USE noncollin_module,     ONLY: nspin_lsda
     IMPLICIT NONE 
     ! 
     TYPE (berryPhaseOutput_type)                      :: obj
@@ -1402,13 +1430,14 @@ CONTAINS
     TYPE ( atom_type )                                :: atom_obj
     TYPE ( scalarQuantity_type )                      :: pol_val
     INTEGER                                           :: iat, istring, indstring
-    INTEGER,POINTER                                   :: ispin => NULL() 
+    INTEGER,POINTER                                   :: ispin  
     INTEGER, TARGET                                   :: spin_val 
     CHARACTER(10)                                     :: mod_string
     LOGICAL                                           :: spin_is = .FALSE. 
     !
     ALLOCATE (ion_pol_obj(nat))
     ALLOCATE (str_pol_obj(nstring))
+    NULLIFY(ispin) 
     DO iat =1, nat 
        WRITE(mod_string,'("(mod" ,I1,")")') mod_ion(iat) 
        CALL qes_init (ion_phase,"phase", modulus = TRIM(mod_string), phase = pdl_ion(iat) )

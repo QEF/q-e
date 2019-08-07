@@ -49,7 +49,7 @@ SUBROUTINE write_chi (chi_, name_)
   !  
   IMPLICIT NONE
   !
-  CHARACTER(len=4), INTENT(IN) :: name_
+  CHARACTER(len=*), INTENT(IN) :: name_
   REAL(DP),         INTENT(IN) :: chi_(nath_sc, nat)
   INTEGER :: na
   !

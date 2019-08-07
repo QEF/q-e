@@ -22,7 +22,7 @@ module m_gth
      integer,  pointer :: lll(:), ipr(:)
      real(dp), pointer :: rrl(:)
   end type gth_parameters
-  type (gth_parameters), pointer, dimension(:), private, save :: gth_p
+  type (gth_parameters), pointer, dimension(:), private, save :: gth_p => null()
   !
 contains
   !-----------------------------------------------------------------------

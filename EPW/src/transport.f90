@@ -142,16 +142,16 @@
     ! 
     IF (exst) THEN
       IF (mpime == ionode_id) THEN
-        OPEN(unit=iunselecq, file='selecq.fmt', status='old', iostat=ios)
+        OPEN(UNIT=iunselecq, FILE='selecq.fmt', status='old', iostat=ios)
         READ (iunselecq,*) totq
-        ALLOCATE(selecq(totq))
+        ALLOCATE (selecq(totq))
         selecq(:) = 0
         READ (iunselecq,*) nqtot
         READ (iunselecq,*) selecq(:)
         CLOSE(iunselecq)
       ENDIF
       CALL mp_bcast(totq  , ionode_id, world_comm )
-      IF (.NOT. ALLOCATED(selecq)) ALLOCATE(selecq(totq))
+      IF (.NOT. ALLOCATED(selecq)) ALLOCATE (selecq(totq))
       CALL mp_bcast(nqtot , ionode_id, world_comm )
       CALL mp_bcast(selecq, ionode_id, world_comm )
       IF (nqtot /= nqtotf) THEN
@@ -160,7 +160,7 @@
       ENDIF
       !  
     ELSE
-      ALLOCATE(selecq(nqf))
+      ALLOCATE (selecq(nqf))
       selecq(:) = 0 
       etf_loc(:,:)  = zero
       etf_locq(:,:) = zero
@@ -403,7 +403,7 @@
       ENDIF ! homogeneous
       !  
       IF (mpime == ionode_id) THEN
-        OPEN(unit=iunselecq, file='selecq.fmt', action='write')
+        OPEN(UNIT=iunselecq, FILE='selecq.fmt', action='write')
         WRITE (iunselecq,*) totq    ! Selected number of q-points
         WRITE (iunselecq,*) nqtotf  ! Total number of q-points 
         WRITE (iunselecq,*) selecq(1:totq)
@@ -545,14 +545,14 @@
       WRITE(stdout,'(5x,"Scattering rate")')
       WRITE(stdout,'(5x,a/)') repeat('=',67)
       !
-      IF ( fsthick .lt. 1.d3 ) &
+      IF ( fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
         WRITE(stdout, '(5x,a,f10.6,a)' ) 'This is computed with respect to the fine Fermi level ',ef * ryd2ev, ' eV'
         WRITE(stdout, '(5x,a,f10.6,a,f10.6,a)' ) 'Only states between ',(ef-fsthick) * ryd2ev, ' eV and ',&
                 (ef+fsthick) * ryd2ev, ' eV will be included'
         WRITE(stdout,'(5x,a/)')
       !
-      !IF ( .not. ALLOCATED (inv_tau_all) ) ALLOCATE( inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2) )
+      !IF ( .NOT. ALLOCATED (inv_tau_all) ) ALLOCATE ( inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2) )
       !inv_tau_all(:,:,:) = zero
       !
     ENDIF
@@ -618,10 +618,10 @@
           !
           ! We are not consistent with ef from ephwann_shuffle but it should not 
           ! matter if fstick is large enough.
-          !IF ( ( minval ( abs(etf (:, ikk) - ef0(itemp)) ) .lt. fsthick ) .AND. &
-          !     ( minval ( abs(etf (:, ikq) - ef0(itemp)) ) .lt. fsthick ) ) THEN
-          IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-               ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+          !IF ( ( minval ( abs(etf (:, ikk) - ef0(itemp)) ) < fsthick ) .AND. &
+          !     ( minval ( abs(etf (:, ikq) - ef0(itemp)) ) < fsthick ) ) THEN
+          IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+               ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
             !
             DO imode = 1, nmodes
               !
@@ -630,7 +630,7 @@
               !
               ! SP : Avoid if statement in inner loops
               ! the coupling from Gamma acoustic phonons is negligible
-              IF ( wq .gt. eps_acustic ) THEN
+              IF ( wq > eps_acustic ) THEN
                 g2_tmp = 1.0
                 wgq = wgauss( -wq*inv_etemp, -99)
                 wgq = wgq / ( one - two * wgq )
@@ -859,13 +859,14 @@
         ! In case we read another q-file, merge the scattering here
         IF (restart_filq .ne. '') THEN
           ! 
-          ALLOCATE( inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
+          ALLOCATE (inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
           inv_tau_all_new(:,:,:) = zero
           ! 
           CALL merge_read( nkqtotf/2, nqtotf_new, inv_tau_all_new ) 
           ! 
           inv_tau_all(:,:,:) = ( inv_tau_all(:,:,:) * totq &
                               + inv_tau_all_new(:,:,:) * nqtotf_new ) / (totq+nqtotf_new)
+          DEALLOCATE (inv_tau_all_new)
           !
           WRITE(stdout, '(a)' ) '     '
           WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ',totq+nqtotf_new,' q-points'
@@ -945,7 +946,7 @@
         !
       ENDDO !nstemp 
       !
-      IF ( ALLOCATED(etf_all) )     DEALLOCATE( etf_all )
+      DEALLOCATE (etf_all)
       ! 
       ! Creation of a restart point at the end
       IF (restart) THEN
@@ -976,7 +977,7 @@
     !-----------------------------------------------------------------------
     !       
     !-----------------------------------------------------------------------
-    SUBROUTINE transport_coeffs (ef0,efcb)
+    SUBROUTINE transport_coeffs (ef0, efcb)
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine computes the transport coefficients
@@ -1144,37 +1145,42 @@
     ! We can read the scattering rate from files. 
     IF ( scatread ) THEN
       conv_factor1 = electron_SI / ( hbar * bohr2ang * Ang2m )
+      Sigma_m(:,:,:) = zero
       !
       ! Compute the Fermi level 
-      DO itemp = 1, nstemp
+      DO itemp=1, nstemp
         ! 
         etemp = transp_temp(itemp)
         ! 
         ! Lets gather the velocities from all pools
 #ifdef __MPI
-        IF ( vme ) THEN 
-          IF ( .not. ALLOCATED(vmef_all) )  ALLOCATE( vmef_all(3,nbndsub,nbndsub,nkqtotf) )
-          vmef_all(:,:,:,:) = czero
-          CALL poolgatherc4 ( 3, nbndsub, nbndsub, nkqtotf, 2*nkf, vmef, vmef_all )
+        IF (vme) THEN 
+          ALLOCATE (vmef_all(3, nbndsub, nbndsub, nkqtotf))
+          vmef_all(:, :, :, :) = czero
+          CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, vmef, vmef_all)
         ELSE
-          IF ( .not. ALLOCATED(dmef_all) )  ALLOCATE( dmef_all(3,nbndsub,nbndsub,nkqtotf) )
-          dmef_all(:,:,:,:) = czero
-          CALL poolgatherc4 ( 3, nbndsub, nbndsub, nkqtotf, 2*nkf, dmef, dmef_all )
+          ALLOCATE (dmef_all(3, nbndsub, nbndsub, nkqtotf))
+          dmef_all(:, :, :, :) = czero
+          CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, dmef, dmef_all)
         ENDIF
-        IF ( .not. ALLOCATED(wkf_all) )  ALLOCATE( wkf_all(nkqtotf) )
+        ALLOCATE (wkf_all(nkqtotf))
         wkf_all(:) = zero
-        CALL poolgather2 ( 1, nkqtotf, 2*nkf, wkf, wkf_all  )
+        CALL poolgather2(1, nkqtotf, 2 * nkf, wkf, wkf_all)
 #else
-        IF ( vme ) THEN
+        IF (vme) THEN
+          ALLOCATE (vmef_all(3, nbndsub, nbndsub, nkqtotf))
           vmef_all = vmef
         ELSE
+          ALLOCATE (dmef_all(3, nbndsub, nbndsub, nkqtotf))
           dmef_all = dmef
         ENDIF
 #endif     
+        ALLOCATE (tdf_sigma_m(3, 3, ibndmax-ibndmin+1, nkqtotf))
+        tdf_sigma_m(:,:,:,:) = zero 
         ! 
         ! In this case, the sum over q has already been done. It should therefore be ok 
         ! to do the mobility in sequential. Each cpu does the same thing below
-        ALLOCATE ( etf_all ( nbndsub, nkqtotf/2 ) )
+        ALLOCATE (etf_all(nbndsub, nkqtotf/2))
         !
         CALL scattering_read(etemp, ef0(itemp), etf_all, inv_tau_all)
         ! 
@@ -1186,14 +1192,8 @@
             WRITE(stdout,'(5x,a/)') repeat('=',67)
           ENDIF
           !      
-          IF ( itemp .eq. 1 ) THEN        
-            IF ( .not. ALLOCATED(tdf_sigma_m) )  ALLOCATE( tdf_sigma_m(3,3,ibndmax-ibndmin+1,nkqtotf) )
-            tdf_sigma_m(:,:,:,:) = zero
-            Sigma_m(:,:,:)   = zero
-          ENDIF
-          !
-          DO ik = 1, nkqtotf/2 
-            ikk = 2 * ik - 1
+          DO ik=1, nkqtotf/2 
+            ikk=2 * ik - 1
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
             IF ( minval ( abs(etf_all (:, ik) - ef ) ) < fsthick ) THEN
               DO ibnd = 1, ibndmax-ibndmin+1
@@ -1265,11 +1265,7 @@
             WRITE(stdout,'(5x,a/)') repeat('=',67)
           ENDIF
           !      
-          IF ( itemp .eq. 1 ) THEN
-            IF ( .not. ALLOCATED(tdf_sigma_m) )  ALLOCATE( tdf_sigma_m(3,3,ibndmax-ibndmin+1,nkqtotf) )
-            tdf_sigma_m(:,:,:,:) = zero
-            Sigma_m(:,:,:)   = zero
-          ENDIF
+          tdf_sigma_m(:,:,:,:) = zero
           !
           DO ik = 1, nkqtotf/2
             ikk = 2 * ik - 1
@@ -1336,13 +1332,20 @@
           !
         ENDIF ! int_mob .OR. (ncarrier > 1E5)
         ! 
+        IF (vme) THEN
+          DEALLOCATE (vmef_all)
+        ELSE
+          DEALLOCATE (dmef_all)
+        ENDIF
+        DEALLOCATE (tdf_sigma_m)
+        DEALLOCATE (etf_all)
       ENDDO ! itemp
       !
     ELSE ! Case without reading the scattering rates from files.
       !
       !  SP - Uncomment to use symmetries on velocities
       IF (mp_mesh_k) THEN
-        IF ( mpime .eq. ionode_id ) THEN
+        IF ( mpime == ionode_id ) THEN
           ! 
           CALL set_sym_bl( )
           BZtoIBZ(:) = 0
@@ -1388,7 +1391,7 @@
           !write(stdout,*)'inv_tau_all ', SUM(inv_tau_all(itemp,:,:))
           !write(stdout,*)'inv_tau_all ', SUM(inv_tau_all(:,:,:))
           !
-          IF ( itemp .eq. 1 ) THEN 
+          IF ( itemp == 1 ) THEN 
             !
             ! tdf_sigma_ij(ibnd,ik) = v_i(ik,ibnd) * v_j(ik,ibnd) * tau(ik,ibnd)
             ! i,j - cartesian components and ij combined (i,j) index
@@ -1407,7 +1410,7 @@
             ikk = 2 * ik - 1
             !
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-            IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
+            IF ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) THEN
               !
               DO ibnd = 1, ibndmax-ibndmin+1
                 !
@@ -1516,11 +1519,10 @@
           CALL mp_sum( SigmaZ(:,itemp), world_comm )
           !DBSP
           !write(stdout,*) 'ef0(itemp) ',ef0(itemp)    
-          !write(stdout,*) 'Sigma ',SUM(Sigma(:,itemp))    
           !
         ENDDO ! nstemp
         !
-        IF (mpime .eq. meta_ionode_id) THEN
+        IF (mpime == meta_ionode_id) THEN
           filsigma = TRIM(prefix) // '_elcond_h'
           OPEN(iufilsigma, file = filsigma, form = 'formatted')
           WRITE(iufilsigma,'(a)') "# Electrical conductivity in 1/(Ohm * m)"
@@ -1538,7 +1540,7 @@
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)
           ! Sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
-          IF (mpime.eq. meta_ionode_id) THEN
+          IF (mpime ==  meta_ionode_id) THEN
             WRITE(iufilsigma,'(11E16.8)') ef0(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
                                          conv_factor1 * Sigma(:,itemp) * inv_cell
           ENDIF
@@ -1619,7 +1621,7 @@
           ! 
         ENDDO ! nstemp
         !
-        IF (mpime .eq. meta_ionode_id) CLOSE(iufilsigma)
+        IF (mpime == meta_ionode_id) CLOSE(iufilsigma)
         !
       ENDIF ! Hole mob
       ! 
@@ -1629,14 +1631,14 @@
         DO itemp = 1, nstemp
           !
           etemp = transp_temp(itemp)
-          IF ( itemp .eq. 1 ) THEN
+          IF ( itemp == 1 ) THEN
             tdf_sigma(:)  = zero
             Sigma(:,:)    = zero
             SigmaZ(:,:)   = zero
           ENDIF
           DO ik = 1, nkf
             ikk = 2 * ik - 1
-            IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
+            IF ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) THEN
               IF ( ABS(efcb(itemp)) < eps ) THEN  
                 DO ibnd = 1, ibndmax-ibndmin+1
                   ! This selects only cond bands for electron conduction
@@ -1830,7 +1832,7 @@
           CALL mp_sum( SigmaZ(:,itemp), world_comm )
           ! 
         ENDDO ! nstemp
-        IF (mpime .eq. meta_ionode_id) THEN
+        IF (mpime == meta_ionode_id) THEN
           filsigma = TRIM(prefix) // '_elcond_e'
           OPEN(iufilsigma, file = filsigma, form = 'formatted')
           WRITE(iufilsigma,'(a)') "# Electrical conductivity in 1/(Ohm * m)"
@@ -1845,7 +1847,7 @@
         WRITE(stdout,'(5x,a/)') repeat('=',67)
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)
-          IF (mpime .eq. meta_ionode_id) THEN
+          IF (mpime == meta_ionode_id) THEN
             ! Sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
             IF ( ABS(efcb(itemp)) < eps ) THEN 
               WRITE(iufilsigma,'(11E16.8)') ef0(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
@@ -1957,7 +1959,7 @@
         WRITE(stdout,'(5x,"                                         to the expected (x,y,z) axis.")')
         WRITE(stdout,'(5x)')
         !
-        IF (mpime .eq. meta_ionode_id) CLOSE(iufilsigma)
+        IF (mpime == meta_ionode_id) CLOSE(iufilsigma)
         ! 
       ENDIF ! Electron mobilities
     ENDIF ! scatread

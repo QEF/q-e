@@ -92,7 +92,7 @@
   WRITE(stdout,'(5x,a)') 'Warning: the routine is sequential but very fast.'
   WRITE(stdout,'(5x,a/)') repeat('=',75)
   !
-  OPEN (unit=iospectral_sup, file='specfun_sup.elself', status='old', iostat=ios)
+  OPEN (UNIT=iospectral_sup, FILE='specfun_sup.elself', status='old', iostat=ios)
   IF (ios /= 0) CALL errore ('spectral_cumulant', 'opening file specfun_sup.elself', abs(ios) )
   !
   ! determine number of k points, ibndmin, ibndmax
@@ -101,9 +101,9 @@
   ENDDO
   DO im=1,maxrecs
     READ (iospectral_sup,*,iostat=ios) i1, i2
-    IF (im.eq.1) ibndmin = i2
+    IF (im == 1) ibndmin = i2
     IF (ios /= 0) EXIT
-    IF (im.eq.maxrecs) CALL errore ('spectral_cumulant', 'increase maxrecs', 1)
+    IF (im == maxrecs) CALL errore ('spectral_cumulant', 'increase maxrecs', 1)
   ENDDO
   !
   REWIND (iospectral_sup)
@@ -142,14 +142,14 @@
   CLOSE (iospectral_sup)
   !
   ! open file for cumulant spectral function
-  IF (bnd_cum.lt.10) THEN
+  IF (bnd_cum < 10) THEN
     WRITE(filespec,'(a,i1,a)') 'specfun_cum',bnd_cum,'.elself'
-  ELSE IF (bnd_cum.gt.9 .and. bnd_cum.lt.100) THEN
+  ELSE IF (bnd_cum > 9 .and. bnd_cum < 100) THEN
     WRITE(filespec,'(a,i2,a)') 'specfun_cum',bnd_cum,'.elself'
   ELSE
     WRITE(filespec,'(a,i3,a)') 'specfun_cum',bnd_cum,'.elself'
   ENDIF
-  OPEN (unit=iospectral_cum,file=filespec)
+  OPEN (UNIT=iospectral_cum,FILE=filespec)
   !
   WRITE(iospectral_cum,'(a)') '#       k   Energy [eV]            A(k,w) [meV^-1]            Z-factor    '
   WRITE(iospectral_cum,'(a)') '#                       with convolutions  |    using FFT    '
@@ -158,7 +158,7 @@
   !
   ! define index corresponding to omega=0 (Fermi level)
   i0 = MINLOC( abs(ww(:)), dim=1 )
-  IF (abs(ww(i0)).gt.dw) CALL errore & 
+  IF (abs(ww(i0)) > dw) CALL errore & 
      ('spectral_cumulant', 'w=0 needs to be included in [wmin:wmax]', 1 )
   !WRITE(stdout,'(5x,a,i4)') "      Check: ind(0) = ", i0
   a_cw = zero
@@ -167,7 +167,7 @@
   ! 
   DO ik = 1, nk
     !
-    IF ( ek(ik) .lt. e_thresh ) THEN
+    IF ( ek(ik) < e_thresh ) THEN
       !
       ekk = ek(ik)
       !
@@ -182,7 +182,7 @@
       DO iw = 1, nw_specfun
         !
         ! map the indices of the FFT frequency grid onto the original one
-        IF ( iw.ge.i0) THEN
+        IF ( iw >= i0) THEN
           a_ct(iw) = a_tmp(iw-i0+1)
         ELSE
           a_ct(iw) = a_tmp(iw+nw_specfun-i0+1)
@@ -328,7 +328,7 @@
       DO iw2 = 1, nw_specfun
         !
         indw = i0+iw-iw2
-        IF ( indw.le.nw_specfun .and. indw.gt.0 ) THEN
+        IF ( indw <= nw_specfun .and. indw > 0 ) THEN
            a_cum(iw) = a_cum(iw) + abs( a_s(iw2) * conv(indw) ) * dw
         ENDIF
         !
@@ -336,9 +336,9 @@
       !
     ENDDO
     !
-    IF (isat.eq.1) a_s1 = a_cum
-    IF (isat.eq.2) a_s2 = a_cum / 2.d0
-    IF (isat.eq.3) a_s3 = a_cum / 6.d0
+    IF (isat == 1) a_s1 = a_cum
+    IF (isat == 2) a_s2 = a_cum / 2.d0
+    IF (isat == 3) a_s3 = a_cum / 6.d0
     conv = a_cum
     !
   ENDDO ! isat
@@ -429,7 +429,7 @@
   dt = 2.d0*pi / ( (wmax_specfun - wmin_specfun) * fact )
   nw_new = int( fact * (nw_specfun-1) + 1 ) ! to be consistent with dt above
   !
-  ALLOCATE( cumS(nw_new), cum(nw_new) )
+  ALLOCATE ( cumS(nw_new), cum(nw_new) )
   !
   i0 = MINLOC( abs(ww(:)), dim=1 )
   !
@@ -448,10 +448,10 @@
   DO iw = 1, nw_new
     !
     ! the w shift is needed because FFT uses positive w \in [0:Omega], Omega=wmax-wmin
-    IF ( iw.le.(nw_specfun-i0+1) ) THEN
+    IF ( iw <= (nw_specfun-i0+1) ) THEN
       ind1 = iw+i0-1
       cumS(iw) = dw * abs(sigmai(ind1))/pi * real(1.d0 / (ek-ww(ind1)-ci*smeart)**2.d0 )
-    ELSE IF ( iw.gt.(nw_new-i0+1) ) THEN
+    ELSE IF ( iw > (nw_new-i0+1) ) THEN
       ind2 = iw-nw_new+i0-1
       cumS(iw) = dw * abs(sigmai(ind2))/pi * real(1.d0 / (ek-ww(ind2)-ci*smeart)**2.d0 )
     ENDIF
@@ -475,7 +475,7 @@
   !
   ! extract the spectral function a_cum on the original w FFT grid (nw_specfun points)
   DO iw = 1, nw_specfun
-    IF ( iw.le.(nw_specfun-i0+1) ) THEN
+    IF ( iw <= (nw_specfun-i0+1) ) THEN
       a_cum(iw) = real(real(cum(iw)))
     ELSE 
       ind1 = iw+nw_new-nw_specfun
@@ -483,6 +483,6 @@
     ENDIF
   ENDDO
   !
-  DEALLOCATE( cumS, cum )
+  DEALLOCATE ( cumS, cum )
   !
   END SUBROUTINE cumulant_time

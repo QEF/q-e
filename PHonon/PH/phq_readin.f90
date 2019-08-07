@@ -120,7 +120,7 @@ SUBROUTINE phq_readin()
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss, &
                        el_ph_nsigma, el_ph_sigma,  electron_phonon, &
                        q_in_band_form, q2d, qplot, low_directory_check, &
-                       lshift_q, diagonalization
+                       lshift_q, read_dns_bare, d2ns_type, diagonalization
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses

@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE cdiagh( n, h, ldh, e, v )
   !----------------------------------------------------------------------------
-  !
-  ! ... calculates all the eigenvalues and eigenvectors of a complex
-  ! ... hermitean matrix H. On output, the matrix is unchanged
+  !! Calculates all the eigenvalues and eigenvectors of a complex
+  !! hermitean matrix H. On output, the matrix is unchanged.
   !
   USE kinds,            ONLY : DP
   USE mp_bands,         ONLY : nbgrp, me_bgrp, root_bgrp, intra_bgrp_comm
@@ -21,16 +20,19 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   !
   ! ... on INPUT
   !
-  INTEGER :: n, ldh
-    ! dimension of the matrix to be diagonalized
-    ! leading dimension of h, as declared in the calling pgm unit
+  INTEGER :: n
+  !! Dimension of the matrix to be diagonalized
+  INTEGER :: ldh
+  !! Leading dimension of h, as declared in the calling pgm unit
   COMPLEX(DP) :: h(ldh,n)
-    ! matrix to be diagonalized
+  !! Matrix to be diagonalized
   !
   ! ... on OUTPUT
   !
-  REAL(DP)    :: e(n)      ! eigenvalues
-  COMPLEX(DP) :: v(ldh,n)  ! eigenvectors (column-wise)
+  REAL(DP)    :: e(n)
+  !! eigenvalues
+  COMPLEX(DP) :: v(ldh,n)
+  !! eigenvectors (column-wise)
   !
   ! ... local variables for LAPACK 
   !

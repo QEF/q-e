@@ -111,8 +111,6 @@ program simple
   !
   CALL print_ks_energies()
   !
-  CALL hinit0()
-  !
   IF (lda_plus_u) THEN
     CALL init_ns()
   ENDIF

@@ -82,6 +82,8 @@ SUBROUTINE dynmat_hub_bare
   !
   CALL start_clock ( 'dynmat_hub_bare' )
   !
+  ios = 0
+  !
   ldim = 2*Hubbard_lmax + 1
   !
   ALLOCATE (dyn_hub_bare(3*nat,3*nat))  

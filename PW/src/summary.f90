@@ -506,7 +506,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
        which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
        name_class_so1, elem_name_so
-  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
+  USE rap_point_group_is, ONLY : nsym_is, sr_is, ft_is, d_spin_is, &
        gname_is, sname_is, code_group_is
   USE cell_base,       ONLY : at, ibrav
   USE fft_base, ONLY : dfftp
@@ -560,10 +560,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
                  nsym_is=nsym_is+1
                  sr_is(:,:,nsym_is) = sr(:,:,isym)
                  CALL find_u(sr_is(1,1,nsym_is), d_spin_is(1,1,nsym_is))
-                 ! ftau_is are fractional translations in FFT grid coordinates
-                 ftau_is(1,nsym_is)=NINT(ft(1,isym)*dfftp%nr1)
-                 ftau_is(2,nsym_is)=NINT(ft(2,isym)*dfftp%nr2)
-                 ftau_is(3,nsym_is)=NINT(ft(3,isym)*dfftp%nr3)
+                 ft_is(:,nsym_is)=ft(:,isym)
                  sname_is(nsym_is)=sname(isym)
               ENDIF
            ELSE

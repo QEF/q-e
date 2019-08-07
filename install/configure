@@ -4441,7 +4441,7 @@ mpif90=$FC
 # check which compiler does mpif90 wrap
 
 case "$arch" in
-        ia32 | ia64 | x86_64 | mac686 )
+        * )
         echo $ECHO_N "checking version of $mpif90... $ECHO_C"
         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
@@ -5356,19 +5356,6 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-ia32:pgf* | ia64:pgf* | x86_64:pgf* )
-	    try_fflags_nomain="-Mnomain"
-        try_fflags="-fast"
-        try_fflags_openmp="-mp"
-        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_openmp="-mp"
-        try_ldflags_static="-Bstatic"
-        try_dflags="$try_dflags -D__PGI"
-        have_cpp=1
-        ;;
 ia32:path* | ia64:path* | x86_64:path* )
         try_fflags="-march=auto -O2"
         try_f90flags="\$(FFLAGS)"
@@ -5376,21 +5363,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_ldflags=""
         try_ldflags_static="-static"
         have_cpp=0
-        ;;
-*:*gfortran )
-	try_fflags="-O3 -g"
-        if test "$use_debug" -eq 1; then
-            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
-        fi
-        if test "$use_pedantic" -eq 1; then
-            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
-        fi
-        try_fflags_openmp="-fopenmp"
-        try_f90flags="\$(FFLAGS) -x f95-cpp-input"
-        try_fflags_noopt="-O0 -g"
-        try_ldflags="-g"
-        try_ldflags_openmp="-pthread -fopenmp"
-        try_ldflags_static="-static"
         ;;
 crayxt*:cray* )
         try_fflags_nomain=""
@@ -5495,6 +5467,34 @@ ppc64-bgq:*xlf* )
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
+*:pgf* )
+	try_fflags_nomain="-Mnomain"
+        try_fflags="-fast"
+        try_fflags_openmp="-mp"
+        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_fflags_noopt="-O0"
+        try_ldflags=""
+        try_ldflags_openmp="-mp"
+        try_ldflags_static="-Bstatic"
+        try_dflags="$try_dflags -D__PGI"
+        have_cpp=1
+        ;;
+*:*gfortran )
+	try_fflags="-O3 -g"
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
+        fi
+        if test "$use_pedantic" -eq 1; then
+            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
+        fi
+        try_fflags_openmp="-fopenmp"
+        try_f90flags="\$(FFLAGS) -x f95-cpp-input"
+        try_fflags_noopt="-O0 -g"
+        try_ldflags="-g"
+        try_ldflags_openmp="-pthread -fopenmp"
+        try_ldflags_static="-static"
+        ;;
 
 * )
         # unknown, try these
@@ -5562,9 +5562,9 @@ echo setting CPP... $cpp
 echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
 # Note: option -C makes trouble with recent gcc versions and pgi
 case $cpp in
-        cpp)  try_cppflags="-P -traditional" ;;
-        fpp)  try_cppflags="-P "              ;;
-        *)    try_cppflags=""                ;;
+        cpp)  try_cppflags="-P -traditional -Uvector" ;;
+        fpp)  try_cppflags="-P "                      ;;
+        *)    try_cppflags=""                         ;;
 esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
 echo "${ECHO_T}$cppflags"
@@ -9639,13 +9639,7 @@ fi
       if test "$have_hdf5" -eq 1; then
         version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
         version_ok=`echo $version_num | awk -F '.' '{print (($2 >= 10) || ( ($2 == 8) && ($3 >= 16)))}'`
-	if test $version_ok -gt 0; then
-		if test $version_third_ok -eq 0; then
-			 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&5
-$as_echo "$as_me: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&2;};
-			 have_hdf5=0;
-                fi
-        else
+	if test $version_ok -le 0; then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
 $as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
                 have_hdf5=0;
@@ -9824,14 +9818,8 @@ fi
       fi
       if test "$have_hdf5" -eq 1; then
         version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
-        version_ok=`echo $version_num | awk -F '.' '{print (($2 => 10) || ( ($2 == 8) && ($3 >= 16)))}'`
-	if test $version_sec_ok -gt 0; then
-		if test $version_third_ok -eq 0; then
-			 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&5
-$as_echo "$as_me: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&2;};
-			 have_hdf5=0;
-                fi
-        else
+        version_ok=`echo $version_num | awk -F '.' '{print (($2 >= 10) || ( ($2 == 8) && ($3 >= 16)))}'`
+	if test $version_ok -le 0; then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
 $as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
                 have_hdf5=0;

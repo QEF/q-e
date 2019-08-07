@@ -120,7 +120,7 @@
     !
     et_tmp = zero
     et_opt = zero
-    IF (nexband_tmp .gt. 0) THEN 
+    IF (nexband_tmp > 0) THEN 
       DO ik = 1, nks
         ibnd = 0
         DO i = 1, nbnd
@@ -215,9 +215,9 @@
     ! [mind when comparing with wannier code (eV and angstrom units) with
     ! write_hr=.true.]
     !
-    IF (mpime .eq. ionode_id) THEN
+    IF (mpime == ionode_id) THEN
       !
-      OPEN(unit=iudecayH,file='decay.H')
+      OPEN(UNIT=iudecayH,FILE='decay.H')
       WRITE(iudecayH, '(/3x,a/)') '#Spatial decay of Hamiltonian in Wannier basis'
       DO ir = 1, nrr
         !
@@ -351,7 +351,7 @@
     !
     dmec_opt = czero
     dmec_tmp = czero
-    IF (nexband_tmp .gt. 0) THEN
+    IF (nexband_tmp > 0) THEN
       DO ik = 1,nks
         jbnd = 0
         DO j = 1, nbnd
@@ -414,8 +414,8 @@
     DO ik = 1, nks
       DO ipol = 1, 3
         !
-        ! dmec_utmp(:,:) = matmul( dmec_opt(ipol,:,:,ik), cu(:,:,ik) )
-        ! cps(ipol,:,:,ik) = matmul( conjg(transpose( cu(:,:,ik))), dmec_utmp(:,:) )
+        ! dmec_utmp(:,:) = MATMUL( dmec_opt(ipol,:,:,ik), cu(:,:,ik) )
+        ! cps(ipol,:,:,ik) = MATMUL( conjg(transpose( cu(:,:,ik))), dmec_utmp(:,:) )
         !
         CALL zgemm ('n', 'n', nbnd, nbndsub, nbnd, cone, dmec_opt(ipol,:,:,ik), &
                    nbnd, cu(:,:,ik), nbnd, czero, dmec_utmp(:,:), nbnd)
@@ -459,8 +459,8 @@
     ! Check spatial decay of Dipole in Wannier basis
     ! the unit in r-space is angstrom
     !
-    IF (mpime.eq.ionode_id) THEN
-      OPEN(unit=iudecayP,file='decay.P')
+    IF (mpime == ionode_id) THEN
+      OPEN(UNIT=iudecayP,FILE='decay.P')
       WRITE(iudecayP, '(/3x,a/)') '#Spatial decay of dipole in Wannier basis'
       DO ir = 1, nrr
         !
@@ -599,8 +599,8 @@
     !  the unit in r-space is angstrom, and I am plotting
     !  the matrix for the first mode only
     !
-    IF (mpime.eq.ionode_id) THEN
-      OPEN(unit=iudecaydyn,file='decay.dynmat')
+    IF (mpime == ionode_id) THEN
+      OPEN(UNIT=iudecaydyn,FILE='decay.dynmat')
       WRITE(iudecaydyn, '(/3x,a/)') '#Spatial decay of Dynamical matrix in Wannier basis'
       DO ir = 1, nrr
         !
@@ -730,7 +730,7 @@
     REAL(kind=DP) :: zero_vect(3)
     !! temporary zero vector
     REAL(kind=DP) :: delta
-    !! \delta_nm = 1 if n .eq. m and 0 if n .neq. m
+    !! \delta_nm = 1 if n == m and 0 if n /= m
     !
     COMPLEX(kind=DP) :: Apos(3,nbndsub,nbndsub,nks)
     !! A^W_{mn,\alpha}(k)
@@ -764,8 +764,8 @@
     ! RM - bvec can be writen on file by making a small change in
     ! W90/hamiltonian.F90/hamilotonian_write_rmn
     !
-    tempfile=trim(prefix)//'.bvec'
-    OPEN(iubvec, file=tempfile, action='read', iostat=ios)
+    tempFILE=trim(prefix)//'.bvec'
+    OPEN(iubvec, FILE=tempfile, action='read', iostat=ios)
     IF (ios /= 0) THEN
       !
       ! if it doesn't exist, then we just set the bvec and wb to zero
@@ -800,9 +800,9 @@
     ALLOCATE ( M_mn(nbnd, nbnd, nnb, nkstot) )
     M_mn = czero
     !
-    IF (mpime.eq.ionode_id) THEN
-      tempfile=trim(prefix)//'.mmn'
-      OPEN(iummn, file=tempfile, status = 'old', form = 'formatted', iostat=ios)
+    IF (mpime == ionode_id) THEN
+      tempFILE=trim(prefix)//'.mmn'
+      OPEN(iummn, FILE=tempfile, status = 'old', form = 'formatted', iostat=ios)
       !
       IF (ios /= 0) THEN
         ! if it doesn't exist, then we just set the mmn to zero
@@ -841,7 +841,7 @@
     m_mat_tmp(:,:,:,:) = czero
     zero_vect(:) = zero
     !
-    IF (nexband_tmp .gt. 0) THEN
+    IF (nexband_tmp > 0) THEN
       DO ik = 1, nks
         CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
         !
@@ -921,8 +921,8 @@
         b_tmp(:) = alat / (twopi) * bvec(:,ib,nkk_abs)
         CALL ktokpmq ( xk(:,ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
         !
-        ! M_mn_utmp(:,:) = matmul( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
-        ! cvs(:,:,ib,ik) = matmul( conjg(transpose(cu(:,:,ik))), M_mn_utmp(:,:) )
+        ! M_mn_utmp(:,:) = MATMUL( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
+        ! cvs(:,:,ib,ik) = MATMUL( conjg(transpose(cu(:,:,ik))), M_mn_utmp(:,:) )
         !
         CALL zgemm ('n', 'n', nbnd, nbndsub, nbnd, cone, m_mat_opt(:,:,ib,ik), &
                    nbnd, cu_big(:,:,nkb_abs), nbnd, czero, M_mn_utmp(:,:), nbnd)
@@ -1004,8 +1004,8 @@
     ! position matrix cvmew and spatial dimensions are in units of bohr
     ! [mind when comparing with wannier code (angstrom units) with write_rmn=.true.]
     !
-    IF (mpime.eq.ionode_id) then
-      OPEN(unit=iudecayv,file='decay.v')
+    IF (mpime == ionode_id) then
+      OPEN(UNIT=iudecayv,FILE='decay.v')
       WRITE(iudecayv, '(/3x,a/)') '#Spatial decay of Velocity matrix element in Wannier basis'
       DO ir = 1, nrr
         !
@@ -1171,8 +1171,8 @@
     !  the unit in r-space is angstrom, and I am plotting 
     !  the matrix for the first mode only
     !
-    IF (mpime.eq.ionode_id) THEN
-      OPEN(unit=iuwane,file='decay.epwane')
+    IF (mpime == ionode_id) THEN
+      OPEN(UNIT=iuwane,FILE='decay.epwane')
       WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in Wannier basis'
       DO ir = 1, nrr
         ! 
@@ -1291,9 +1291,9 @@
       !
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
-      IF (mpime.eq.ionode_id) THEN
-        IF (ir.eq.1) open(unit=iuwanep,file='decay.epmat_wanep',status='unknown')
-        IF (ir.eq.1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
+      IF (mpime == ionode_id) THEN
+        IF (ir == 1) open(UNIT=iuwanep,FILE='decay.epmat_wanep',status='unknown')
+        IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
         DO ire = 1, nrr_k
           !
           rvec1 = dble(irvec_k(1,ire))*at(:,1) + &
@@ -1312,7 +1312,7 @@
           WRITE(iuwanep, '(5f15.10)') len1 * alat * bohr2ang, &
                                   len2 * alat * bohr2ang, tmp
         ENDDO
-        IF (ir.eq.nrr_g) CLOSE(iuwanep)
+        IF (ir == nrr_g) CLOSE(iuwanep)
       ENDIF
       !
     ENDDO
@@ -1393,7 +1393,7 @@
     COMPLEX(KIND=DP), ALLOCATABLE :: epmatwp_mem(:,:,:,:)
     !!  e-p matrix in Wannier basis
     !
-    ALLOCATE (epmatwp_mem( nbnd, nbnd, nrr_k, nmodes))
+    ALLOCATE (epmatwp_mem(nbnd, nbnd, nrr_k, nmodes))
     ! 
     !----------------------------------------------------------
     !  Fourier transform to go into Wannier basis
@@ -1429,7 +1429,7 @@
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
       IF (mpime == ionode_id) THEN
-        IF (ir == 1) OPEN(unit=iuwanep, file='decay.epmat_wanep', status='unknown')
+        IF (ir == 1) OPEN(UNIT=iuwanep, FILE='decay.epmat_wanep', status='unknown')
         IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
         DO ire = 1, nrr_k
           !
@@ -1458,7 +1458,7 @@
     !
     CALL cryst_to_cart (nq, xk, bg, 1)
     !
-    IF ( ALLOCATED (epmatwp_mem) ) DEALLOCATE (epmatwp_mem)
+    DEALLOCATE (epmatwp_mem)
     !
     END SUBROUTINE ephbloch2wanp_mem
     ! 

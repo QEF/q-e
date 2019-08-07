@@ -19,10 +19,9 @@
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout, ionode_id
   USE wvfct,          ONLY : nbnd
-  USE ions_base,      ONLY : nat
   USE start_k,        ONLY : nk1, nk2, nk3
   USE pwcom,          ONLY : nkstot 
-  USE epwcom,         ONLY : xk_cryst           
+  USE klist_epw,      ONLY : xk_cryst           
   USE wannierEPW,     ONLY : mp_grid, n_wannier, kpt_latt
   USE mp,             ONLY : mp_bcast
   USE mp_world,       ONLY : world_comm
@@ -44,10 +43,10 @@
   !
   IF ( num_kpts .ne. nkstot ) & 
     CALL errore('wannierize','inconsistent nscf and elph k-grids',1) 
-  IF ( nbnd .lt. n_wannier ) &
+  IF ( nbnd < n_wannier ) &
     CALL  errore('wannierize','Must have as many or more bands than Wannier functions',1) 
   !
-  ALLOCATE( kpt_latt(3,num_kpts) )
+  ALLOCATE (kpt_latt(3, num_kpts) )
   !
   WRITE(stdout, '(5x,a)') repeat("-",67)
   WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nk1, " x ", nk2, " x ", nk3 , " electronic grid"
@@ -67,6 +66,7 @@
   ! project the Wannier functions onto energy space
   !
 !  CALL proj_w90
+  DEALLOCATE (kpt_latt)
   !
   WRITE(stdout, '(5x,a)') repeat("-",67)
   CALL print_clock( 'WANNIER' )
@@ -110,7 +110,7 @@
   !
   IF (meta_ionode) THEN
     !
-    IF (nbndsub .gt. nwanxx) call errore('write_winfil',"Too many wannier bands",nbndsub)
+    IF (nbndsub > nwanxx) call errore('write_winfil',"Too many wannier bands",nbndsub)
     !
     OPEN (unit = iuwinfil, file = trim(prefix)//".win", form = 'formatted')
     !    
@@ -137,10 +137,10 @@
     ! SP: This is not ok. Indeed you can have more bands in nscf.in than in 
     !     nbndskip+nbndsub. In which case the dis_win_max can be larger than 
     !     nbndskip+nbndsub. This is crucial for disantanglement. 
-    !IF ( dis_win_min .lt. minval(et_tmp) ) dis_win_min = minval(et_tmp)
-    !IF ( dis_win_max .gt. maxval(et_tmp) ) dis_win_max = maxval(et_tmp)
-    IF ( dis_froz_min .lt. minval(et_tmp) ) dis_froz_min = minval(et_tmp)
-    IF ( dis_froz_max .gt. maxval(et_tmp) ) dis_froz_max = maxval(et_tmp)
+    !IF ( dis_win_min < minval(et_tmp) ) dis_win_min = minval(et_tmp)
+    !IF ( dis_win_max > maxval(et_tmp) ) dis_win_max = maxval(et_tmp)
+    IF ( dis_froz_min < minval(et_tmp) ) dis_froz_min = minval(et_tmp)
+    IF ( dis_froz_max > maxval(et_tmp) ) dis_froz_max = maxval(et_tmp)
     !
     WRITE(iuwinfil, '("dis_win_min ", f18.12)')  dis_win_min
     WRITE(iuwinfil, '("dis_win_max ", f18.12)')  dis_win_max
@@ -201,13 +201,13 @@
   ! maxvalue = dis_win_max + 1
   ! minvalue = dis_win_min - 1
   ne = int( (dis_win_max - dis_win_min + 1) / dE )
-  IF (ne .lt. 1)  CALL errore('proj_wan','Problem with disentanglement window',1)
+  IF (ne < 1)  CALL errore('proj_wan','Problem with disentanglement window',1)
   !
   ALLOCATE (proj_wf(n_wannier, ne+1))
   proj_wf = 0.d0
   !
-  ALLOCATE(cu (nbnd, n_wannier, nks) )
-  ALLOCATE(cuq(nbnd, n_wannier, nks) )
+  ALLOCATE (cu (nbnd, n_wannier, nks) )
+  ALLOCATE (cuq(nbnd, n_wannier, nks) )
   !
   CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband) 
   ! FG: introduced after ifort checks
@@ -245,9 +245,9 @@
     CLOSE (iuprojfil)
   ENDIF
   !
-  IF ( ALLOCATED(proj_wf)) DEALLOCATE(proj_wf)
-  IF ( ALLOCATED(cu))      DEALLOCATE(cu)
-  IF ( ALLOCATED(cuq))     DEALLOCATE(cuq)
+  IF ( ALLOCATED(proj_wf)) DEALLOCATE (proj_wf)
+  IF ( ALLOCATED(cu))      DEALLOCATE (cu)
+  IF ( ALLOCATED(cuq))     DEALLOCATE (cuq)
   !
 !------------------------------------------------------------
   END  SUBROUTINE proj_w90

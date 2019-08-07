@@ -91,7 +91,7 @@
     !
     ! first proc read rotation matrix (coarse mesh) from file
     !
-    OPEN(iunukk, file=filukk, status='old', form='formatted', iostat=ios)
+    OPEN(iunukk, FILE=filukk, status='old', FORM='formatted', iostat=ios)
     IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
     !
     DO ik = 1, nkstot

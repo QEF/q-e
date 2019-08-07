@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------------
-  SUBROUTINE readgmap( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd ) 
+  SUBROUTINE readgmap (nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd) 
   !--------------------------------------------------------------
   !!
   !!  read map of G vectors G -> G-G_0 for a given q point
@@ -57,8 +57,6 @@
   !
   REAL(DP) :: tmp
   !
-  ALLOCATE( shift(nkstot) )
-  !
   !  OBSOLETE: now we read directly the igkq to get the proper ngxx
   !
   !  read only a piece of the map to save time 
@@ -91,7 +89,7 @@
   !
   IF (meta_ionode) THEN
     !
-    OPEN(iukgmap, file=trim(prefix)//'.kgmap', form='formatted', status='old', iostat=ios)
+    OPEN(iukgmap, FILE=trim(prefix)//'.kgmap', FORM='formatted', status='old', iostat=ios)
     IF (ios /=0) CALL errore('readgmap', 'error opening kgmap file', iukgmap)
     !
     DO ik = 1, nkstot
@@ -111,7 +109,7 @@
     !  'fake' reading is because the gmap appears *after* the
     !  wrong kmap.
     !
-    OPEN(iukmap, file=trim(prefix)//'.kmap', form='formatted', status='old', iostat=ios)
+    OPEN(iukmap, FILE=trim(prefix)//'.kmap', FORM='formatted', status='old', iostat=ios)
     IF (ios /= 0) CALL errore ('readgmap', 'error opening kmap file', iukmap)
     DO ik = 1, nkstot
       READ(iukmap,*) ik1, itmp, shift(ik1)
@@ -124,7 +122,7 @@
   !
   CALL mp_bcast( ng0vec, meta_ionode_id, world_comm )
   !
-  ALLOCATE( gmap(ngxx * ng0vec) )
+  ALLOCATE (gmap(ngxx * ng0vec))
   !
   IF (meta_ionode) THEN
      !
@@ -144,8 +142,8 @@
   !
   ! first node broadcasts everything to all nodes
   !
-  CALL mp_bcast( g0vec_all_r, meta_ionode_id, world_comm )
-  CALL mp_bcast( shift, meta_ionode_id, world_comm )
-  CALL mp_bcast( gmap, meta_ionode_id, world_comm )
+  CALL mp_bcast(g0vec_all_r, meta_ionode_id, world_comm)
+  CALL mp_bcast(shift, meta_ionode_id, world_comm)
+  CALL mp_bcast(gmap, meta_ionode_id, world_comm)
   !
   END SUBROUTINE readgmap

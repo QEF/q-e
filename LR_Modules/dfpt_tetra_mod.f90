@@ -197,7 +197,7 @@ SUBROUTINE dfpt_tetra_setup(et_col)
   USE symm_base,  ONLY : s, t_rev, time_reversal
   USE cell_base,  ONLY : at, bg
   USE control_lr, ONLY : lgamma
-  USE lr_symm_base,  ONLY : nsymq
+  USE lr_symm_base,  ONLY : nsymq, minus_q
   USE parameters,    ONLY : npk
   !
   IMPLICIT NONE
@@ -226,7 +226,7 @@ SUBROUTINE dfpt_tetra_setup(et_col)
         kunit = 2
      ENDIF
      IF(ALLOCATED(tetra)) DEALLOCATE(tetra)
-     CALL opt_tetra_init(nsymq, s, time_reversal, t_rev, at, bg, npk, &
+     CALL opt_tetra_init(nsymq, s, time_reversal .AND. minus_q, t_rev, at, bg, npk, &
                          k1, k2, k3, nk1, nk2, nk3, nktot, xk_col, kunit)
      !
      DEALLOCATE(xk_col)

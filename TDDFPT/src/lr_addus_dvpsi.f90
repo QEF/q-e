@@ -1,137 +1,121 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE lr_addus_dvpsi ( ik, lda, n, m, psi, dpsi )
+SUBROUTINE lr_addus_dvpsi (npwq, ik, psi, dvpsi)
+  !----------------------------------------------------------------------
   !---------------------------------------------------------------------------
   !
   ! ... Calculate the ultrasoft term of the perturbation exp(iq*r),
   ! ... and then sum up the input wavefunction and the ultrasoft term.
   !
   ! ... input:
-  !
-  ! ...    ik    given k point
-  ! ...    lda   leading dimension of the array psi
-  ! ...    n     true dimension of psi
-  ! ...    m     number of bands of psi
+  ! ...    ik     given k point
+  ! ...    npwq   true dimension of psi
+  ! ...    psi    input array
   !
   ! Written by Iurii Timrov (2015)
+  ! Generalized to the relativistic case by Andrea Dal Corso (2018)
   !
-  USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE uspp,                 ONLY : okvan
-  USE uspp_param,           ONLY : upf, lmaxq, nh
-  USE paw_variables,        ONLY : okpaw
-  USE noncollin_module,     ONLY : npol, noncolin
-  USE uspp,                 ONLY : vkb, nkb, indv_ijkb0
-  USE cell_base,            ONLY : omega
-  USE lrus,                 ONLY : becp1
-  USE qpoint,               ONLY : xq, eigqts
-  !
+  USE kinds,            ONLY : DP
+  USE uspp_param,       ONLY : upf, nh
+  USE uspp,             ONLY : vkb, okvan
+  USE lsda_mod,         ONLY : lsda, current_spin, isk
+  USE ions_base,        ONLY : ntyp => nsp, nat, ityp
+  USE wvfct,            ONLY : nbnd, npwx
+  USE noncollin_module, ONLY : noncolin, npol
+  USE qpoint,           ONLY : ikks
+  USE lr_variables,     ONLY : intq, intq_nc
+  USE lrus,             ONLY : becp1
+  
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: ik, lda, n, m
-  COMPLEX(DP), INTENT(in) :: psi(lda*npol,m)
+  !   The dummy variables
+  !
+  COMPLEX(DP), INTENT(in) :: psi(npwx*npol,nbnd)
   ! input: wavefunction u_n,k
-  COMPLEX(DP), INTENT(out) :: dpsi(lda*npol,m)
+  COMPLEX(DP), INTENT(out) :: dvpsi(npwx*npol,nbnd)
   ! output: sum of the input wavefunction and the USPP term
+  INTEGER :: ik, npwq
+  ! input: the k point
+  ! input: number of plane waves at the q point
+  
+  !   And the local variables
   !
-  ! the local variables
-  !
-  INTEGER :: na, nt, ih, jh
+  INTEGER :: na, nt, ibnd, ih, jh, ijkb0, ikk, ikb, jkb, is, js, ijs
   ! counter on atoms
-  ! counter on atomic type
+  ! counter on atomic types
+  ! counter on bands
   ! counter on beta functions
   ! counter on beta functions
-  !
-  REAL(DP) :: qmod                                         ! the modulus of q
-  REAL(DP), ALLOCATABLE :: ylmk0(:)                        ! the spherical harmonics
-  COMPLEX(DP) :: qgm(1)                                    ! FFT of Q(r)
-  COMPLEX(DP), ALLOCATABLE :: ps(:,:), qqc(:,:),qqc_d(:,:) ! auxiliary arrays
-  !
-  dpsi = psi
-  !
+  ! auxiliary variable for indexing
+  ! counter on the k points
+  ! counter on vkb
+  ! counter on vkb
+  COMPLEX(DP) :: sum0, sum_nc(npol)
+  ! auxiliary variable
+
   IF (.NOT.okvan) RETURN
-  !
   CALL start_clock ('lr_addus_dvpsi')
-  !
-  IF (noncolin) CALL errore( 'lr_addus_dvpsi', 'Noncollinear case is not supported', 1 )
-  IF (okpaw)    CALL errore( 'lr_addus_dvpsi', 'PAW is not supported', 1 )
-  !
-  ALLOCATE (ylmk0(lmaxq*lmaxq))
-  ALLOCATE (ps(nkb,m))
-  ps(:,:) = (0.d0, 0.d0)
-  !
-  qmod = xq(1)**2 + xq(2)**2 + xq(3)**2 
-  !
-  ! Calculate sphrecial harmonics
-  !
-  CALL ylmr2 (lmaxq*lmaxq, 1, xq, qmod, ylmk0)
-  !
-  qmod = sqrt(qmod)
-  !
+  dvpsi=psi
+  ikk = ikks(ik)
+  IF (lsda) current_spin = isk (ikk)
+  ijkb0 = 0
   DO nt = 1, ntyp
-    IF (upf(nt)%tvanp) THEN
-      !
-      ! Calculate the Fourier transform of the Q functions.
-      !
-      ALLOCATE (qqc(nh(nt),nh(nt)))
-      ALLOCATE (qqc_d(nh(nt),nh(nt)))
-      qqc(:,:) = (0.d0, 0.d0)
-      !
-      DO ih = 1, nh(nt)
-        DO jh = ih, nh(nt) 
-           !
-           CALL qvan2 (1, ih, jh, nt, qmod, qgm(1), ylmk0)
-           qqc(ih,jh) = omega * qgm(1)
-           qqc(jh,ih) = qqc(ih,jh)
-           !
+     IF (upf(nt)%tvanp  ) THEN
+        DO na = 1, nat
+           IF (ityp (na)==nt) THEN
+              !
+              !   we multiply the integral for the becp term and the beta_n
+              !
+              DO ibnd = 1, nbnd
+                 DO ih = 1, nh (nt)
+                    ikb = ijkb0 + ih
+                    IF (noncolin) THEN
+                       sum_nc = (0.d0, 0.d0)
+                    ELSE
+                       sum0 = (0.d0, 0.d0)
+                    END IF
+                    DO jh = 1, nh (nt)
+                       jkb = ijkb0 + jh
+                       IF (noncolin) THEN
+                          ijs=0
+                          DO is=1,npol
+                             DO js=1,npol
+                                ijs=ijs+1
+                                sum_nc(is)=sum_nc(is)+         &
+                                     intq_nc(ih,jh,na,ijs)*    &
+                                     becp1(ik)%nc(jkb, js, ibnd)
+                             ENDDO
+                          ENDDO
+                       ELSE
+                          sum0 = sum0 + intq (ih, jh, na)*     &
+                                   becp1(ik)%k(jkb, ibnd)
+                       ENDIF
+                    ENDDO
+                    IF (noncolin) THEN
+                       CALL zaxpy(npwq,sum_nc(1),vkb(1,ikb),1,dvpsi(1,ibnd),1)
+                       CALL zaxpy(npwq,sum_nc(2),vkb(1,ikb),1, &
+                                                 dvpsi(1+npwx,ibnd),1)
+                    ELSE
+                       CALL zaxpy(npwq,sum0,vkb(1,ikb),1,dvpsi(1,ibnd),1)
+                    ENDIF
+                 ENDDO
+              ENDDO
+              ijkb0 = ijkb0 + nh (nt)
+           ENDIF
         ENDDO
-      ENDDO
-      !
-      ! Calculate a product of Q^*(q) with <beta|evc>
-      !
-      DO na = 1, nat
-         IF (ityp (na).eq.nt) THEN
-           !
-           qqc_d = qqc * eigqts(na)
-           !
-           CALL ZGEMM('C','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                    & qqc_d, nh(nt), becp1(ik)%k(indv_ijkb0(na)+1,1), nkb, &
-                    & (0.0_dp,0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
-           !
-         ENDIF
-      ENDDO
-      !
-      DEALLOCATE (qqc)
-      DEALLOCATE (qqc_d)
-      !
-    ENDIF
+     ELSE
+        DO na = 1, nat
+           IF (ityp (na)==nt) ijkb0 = ijkb0 + nh (nt)
+        ENDDO
+     ENDIF
   ENDDO
-  !
-  ! Sum up the normal and ultrasoft terms.
-  !
-  IF ( m == 1 ) THEN
-     !
-     CALL ZGEMV( 'N', n, nkb, ( 1.D0, 0.D0 ), vkb, lda, &
-               & ps, 1, ( 1.D0, 0.D0 ), dpsi, 1 )
-     !
-  ELSE
-     !
-     CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ), vkb, lda, &
-              & ps, nkb, ( 1.D0, 0.D0 ), dpsi, lda )
-     !
-  ENDIF
-  !
-  DEALLOCATE (ylmk0)
-  DEALLOCATE (ps)
-  !
+
   CALL stop_clock ('lr_addus_dvpsi')
-  !
   RETURN
-  !
 END SUBROUTINE lr_addus_dvpsi

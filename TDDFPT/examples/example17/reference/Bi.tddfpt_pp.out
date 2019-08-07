@@ -1,0 +1,48 @@
+ Warning: Only a single CPU will be used!
+
+     Program TDDFPT_PP v.6.4.1 starts on 28May2019 at 10:57: 2 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+
+     Reading    500 Lanczos steps
+        500 steps will be considered
+
+     Lanczos coefficients:
+     Average =    10.41479060
+     Average oscillation amplitude =     0.04939080
+
+     Data ready, starting to calculate observables...
+
+     Broadening =      0.03500000 Ry
+
+     Output file name for the susceptibility: Bi.plot_chi.dat     
+
+     Output file name for the inverse and direct dielectric function: Bi.plot_eps.dat     
+
+     Functions are reported in \hbar.\omega  Energy unit is (eV)
+
+     The f-sum rule is given by Eq.(6) in Comput. Phys. Commun. 196, 460 (2015).
+     Integration in the range from   0.00 to  50.00 eV.
+     The number of valence (and semicore) electrons in the unit cell:  16.32
+     The exact number of electrons:  30.00
+     The violation of the f-sum rule:  45.60 %
+ 
+     TDDFPT_PP    :      0.34s CPU      0.34s WALL
+
+ 
+   This run was terminated on:  10:57: 3  28May2019            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

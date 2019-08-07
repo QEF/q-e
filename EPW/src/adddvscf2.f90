@@ -25,7 +25,8 @@
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : vkb, okvan
-  USE lsda_mod,   ONLY : lsda, current_spin, isk
+  USE lsda_mod,   ONLY : lsda, current_spin
+  USE klist_epw,  ONLY : isk_loc
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp
   USE wvfct,      ONLY : npwx
   USE lrus,       ONLY : int3, int3_nc, becp1
@@ -72,17 +73,17 @@
   COMPLEX(kind=DP) :: sum_nc(npol)
   !! auxiliary sum variable non-collinear case
   !
-  IF (.not.okvan) RETURN
+  IF (.NOT. okvan) RETURN
   !
   CALL start_clock('adddvscf2')
   !
-  IF (lsda) current_spin = isk(ik)
+  IF (lsda) current_spin = isk_loc(ik)
   !
   ijkb0 = 0
   DO nt = 1, ntyp
     IF ( upf(nt)%tvanp ) THEN
       DO na = 1, nat
-        IF (ityp(na) .eq. nt) THEN
+        IF (ityp(na) == nt) THEN
           !
           !   we multiply the integral for the becp term and the beta_n
           !
@@ -123,7 +124,7 @@
       ENDDO
     ELSE
        DO na = 1, nat
-          IF (ityp(na) .eq. nt) ijkb0 = ijkb0 + nh(nt)
+          IF (ityp(na) == nt) ijkb0 = ijkb0 + nh(nt)
        ENDDO
     ENDIF
   ENDDO

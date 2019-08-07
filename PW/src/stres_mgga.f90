@@ -23,7 +23,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE klist,                  ONLY : nks, xk, ngk
   USE buffers,                ONLY : get_buffer
   USE io_files,               ONLY : iunwfc, nwordwfc
-  USE wvfct,                  ONLY : nbnd, npwx, npw, wg 
+  USE wvfct,                  ONLY : nbnd, npwx, wg 
   USE lsda_mod,               ONLY : lsda, nspin, current_spin, isk
   USE fft_interfaces,         ONLY : fwfft, invfft
   USE fft_base,               ONLY : dfftp, dffts
@@ -37,7 +37,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   !
   ! Internal variables
   !
-  INTEGER                   :: ix, iy, ir, ipol, iss, incr, ibnd, ik
+  INTEGER                   :: ix, iy, ir, ipol, iss, incr, ibnd, ik, npw
   INTEGER                   :: ipol2xy(3,3) 
   REAL(DP), PARAMETER       :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0
   COMPLEX(DP), ALLOCATABLE  :: gradwfc (:,:), crosstaus(:,:,:)

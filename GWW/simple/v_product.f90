@@ -239,6 +239,7 @@ subroutine v_product
                         enddo
                      enddo
                   enddo
+                  fac(ig)=fac(ig)*e2*fpi/(8.d0*(dble(n_int))**3.d0)/tpiba
                   fac(ig)=fac(ig)*model
                else
                   fac(ig)=0.d0

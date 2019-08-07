@@ -1049,8 +1049,7 @@ CONTAINS
       INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic, nx0, ngwx, nkbx, iss, nrcx
       INTEGER :: ipr, ipc, root, i1, i2, nss, istart
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
-      REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
-      REAL(DP),    ALLOCATABLE :: xd(:,:) 
+      REAL(DP),    ALLOCATABLE :: xd(:,:)
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
       INTEGER :: np( 2 ), coor_ip( 2 )
       TYPE(la_descriptor) :: desc_ip
@@ -1090,12 +1089,9 @@ CONTAINS
             DO i = 1, nss
                ibgrp_i = ibgrp_g2l( i + istart - 1 )
                IF( ibgrp_i > 0 ) THEN
-                  DO inl = 1, nkbus
-                     bec_bgrp( inl, ibgrp_i ) = becp_bgrp( inl, ibgrp_i )
-                  END DO
+                  bec_bgrp( :, ibgrp_i ) = becp_bgrp( :, ibgrp_i )
                END IF
             END DO
-            ALLOCATE( wtemp( nrcx, nkb ) )
             ALLOCATE( bephi_tmp( nkbx, nrcx ) )
          END IF
    
@@ -1115,7 +1111,9 @@ CONTAINS
                !
                ! broadcast the block to all processors 
                ! 
-               IF( me_bgrp == root ) bephi_tmp = bephi(:,i1:i2)
+               IF( me_bgrp == root ) THEN
+                  bephi_tmp(:,:) = bephi(:, i1 : i1+nrcx-1 )
+               END IF
                CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
                !
             END IF
@@ -1168,25 +1166,21 @@ CONTAINS
                END IF
    
                IF( nvb > 0 )THEN
-   
-                  !     updating of the <beta|c(n,g)>
-                  !
-                  !     bec of vanderbilt species are updated 
-                  !
-                  CALL dgemm( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nrcx, bephi_tmp, nkbx, 0.0d0, wtemp, nrcx )
-                  !
-                  ! here nr and ir are still valid, since they are the same for all procs in the same row
-                  !
-!$omp parallel do default(none) private(ibgrp_i,inl) shared(nr,ibgrp_g2l,istart,ir,nkbus,bec_bgrp,wtemp)
+                  nbgrp_i = 0
                   DO i = 1, nr
                      ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
                      IF( ibgrp_i > 0 ) THEN
-                        DO inl = 1, nkbus
-                           bec_bgrp( inl, ibgrp_i ) = bec_bgrp( inl, ibgrp_i ) + wtemp( i, inl ) 
-                        END DO
+                        IF( nbgrp_i == 0 ) THEN
+                           ibgrp_i_first = ibgrp_i
+                           i_first = i
+                        END IF
+                        nbgrp_i = nbgrp_i + 1
                      END IF
                   END DO
-!$omp end parallel do
+                  IF( nbgrp_i > 0 ) THEN
+                     CALL dgemm( 'N', 'T', nkbus, nbgrp_i, nc, 1.0d0, &
+                            bephi_tmp, nkbx, xd(i_first,1), nrcx, 1.0d0, bec_bgrp( 1, ibgrp_i_first ), SIZE(bec_bgrp,1) )
+                  END IF
                   !
                END IF
    
@@ -1195,7 +1189,6 @@ CONTAINS
          END DO
    
          IF( nvb > 0 )THEN
-            DEALLOCATE( wtemp )
             DEALLOCATE( bephi_tmp )
          END IF
          !
@@ -1217,7 +1210,7 @@ CONTAINS
             END DO
          ENDIF
          !
-         DEALLOCATE( xd )
+         DEALLOCATE(xd)
          !
       END DO
       !

@@ -113,14 +113,12 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
                                    eigts1, eigts2, eigts3, gstart, gshells
   USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, gcutms
-  USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions,        ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE io_global,            ONLY : stdout
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
-  USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type, input_type
   USE qes_libs_module,      ONLY :  qes_reset 
   USE io_rho_xml,           ONLY : read_scf
@@ -132,9 +130,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
-  USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact
   USE vasp_read_chgcar,     ONLY : vaspread_rho
   !
   IMPLICIT NONE
@@ -184,7 +180,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
                                     vasp_atominfo_obj, vasp_structure_obj)
   CALL errore( 'read_xml_file ', 'problem reading file ' // TRIM( tmp_dir ) //'vasprun.xml', ierr )
   !
-  CALL set_dft_from_indices(iexch, icorr, igcx, igcc, inlc)
+  CALL set_dft_from_indices(iexch, icorr, igcx, igcc, 0, inlc)
   WRITE( stdout, '(5X,"Exchange-correlation      = ", &
         &  " (",I2,3I3,2I2,")")') iexch,icorr,igcx,igcc,inlc,imeta
   !

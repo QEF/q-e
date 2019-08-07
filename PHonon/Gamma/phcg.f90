@@ -413,36 +413,34 @@ END SUBROUTINE cg_eps0dyn
 SUBROUTINE cg_neweps
   !-----------------------------------------------------------------------
   !
+  !!  Recalculate self-consistent potential etc
+  !
   USE constants, ONLY : bohr_radius_angs, fpi
   USE io_global, ONLY : stdout
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE funct,     ONLY : dmxc
   USE cgcom
   !
   IMPLICIT NONE
-
-  INTEGER :: i, j
-  REAL(DP) :: rhotot, chi(3,3)
   !
-  !  recalculate self-consistent potential etc
+  INTEGER :: i, j
+  REAL(DP), DIMENSION(3,3) :: chi(3,3)
+  REAL(DP), DIMENSION(dfftp%nnr) ::  rhotot, sign_r
   !
   CALL newscf
   !
   !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  dmuxc(:) = 0.d0
-  DO i = 1,dfftp%nnr
-     rhotot = rho%of_r(i,1) + rho_core(i)
-     IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
-     IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
-  ENDDO
+  rhotot(:) = rho%of_r(:,1) + rho_core(:)
+  !
+  CALL dmxc_lda( dfftp%nnr, rhotot, dmuxc )
+  !
   !
   !  re-initialize data needed for gradient corrections
   !
-  CALL cg_setupdgc
+  CALL setup_dgc( )
   !
   !   calculate linear response to macroscopic fields
   !

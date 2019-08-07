@@ -94,7 +94,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at, bg
   USE ions_base,        ONLY : nat, tau, amass
-  USE symm_base,        ONLY : ftau, t_rev
+  USE symm_base,        ONLY : ft, t_rev
   USE lsda_mod,         ONLY : nspin
   USE modes,            ONLY : nirr, npert, npertx
   USE units_ph,         ONLY : lrdrho
@@ -152,7 +152,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
   CHARACTER(LEN=256) :: dfile_rot_name
   COMPLEX(DP) :: phase_xq
   INTEGER     :: ipol,iq,index0,nar
-  INTEGER     :: ichosen_sym(48)
+  INTEGER     :: ichosen_sym(48), ftau(3)
   COMPLEX(DP), ALLOCATABLE :: phase_sxq(:)
   ! fake vars for cartesian "patterns"
   TYPE(rotated_pattern_repr) :: rpat
@@ -279,6 +279,9 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
       phase_sxq(k)=1._dp/CMPLX(cos(sxq_tau),sin(sxq_tau))
     ENDDO
     !
+    ftau(1) = NINT ( ft(1,isym_inv)*dfftp%nr1 ) 
+    ftau(2) = NINT ( ft(2,isym_inv)*dfftp%nr2 ) 
+    ftau(3) = NINT ( ft(3,isym_inv)*dfftp%nr3 ) 
     DO is=1,nspin
       KLOOP : DO k = 1, dfftp%nr3
         JLOOP : DO j = 1, dfftp%nr2
@@ -286,7 +289,7 @@ SUBROUTINE write_dfile_star(descr, source, nsym, xq, u, nq, sxq, isq, s, &
             !
             ! Here I rotate r
             !
-            CALL ruotaijk(s(1,1,isym_inv), ftau(1,isym_inv), i, j, k, &
+            CALL ruotaijk(s(1,1,isym_inv), ftau, i, j, k, &
                           dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
             !
             n  = (i-1)  + (j-1)*dfftp%nr1  + (k-1)*dfftp%nr2*dfftp%nr1  + 1

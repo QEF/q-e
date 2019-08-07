@@ -692,8 +692,6 @@ end subroutine dennl_x
 !-----------------------------------------------------------------------
 
 
-
-
 !-----------------------------------------------------------------------
 subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !-----------------------------------------------------------------------
@@ -707,7 +705,8 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   use electrons_base, only : nbsp_bgrp, f_bgrp, nbspx_bgrp, ispin_bgrp
   use gvecw,          only : ngw
   use constants,      only : pi, fpi
-  use mp_global,      only : intra_bgrp_comm, nbgrp, inter_bgrp_comm
+  use mp_global,      only : intra_bgrp_comm, nbgrp, inter_bgrp_comm, world_comm
+  use mp_global,      only : me_bgrp, nproc_bgrp
   use mp,             only : mp_sum
   use cp_interfaces,  only : nlsm2_bgrp
   !
@@ -738,32 +737,38 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !
   fion_loc = 0.0d0
   !
-  DO k = 1, 3
-
 !$omp parallel default(none), &
-!$omp shared(becdr_bgrp,bec_bgrp,fion_loc,k,f_bgrp,deeq,dvan,nbsp_bgrp,ish,nh,na,nsp,nhm,nbspx_bgrp,ispin_bgrp), &
-!$omp private(tmpbec,tmpdr,isa,is,ia,iv,jv,inl,temp,i,mytid,ntids,sum_tmpdr)
+!$omp shared(becdr_bgrp,bec_bgrp,fion_loc,f_bgrp,deeq,dvan,nbsp_bgrp,ish,nh,na, &
+!$omp        nat,nsp,nhm,nbspx_bgrp,ispin_bgrp,nproc_bgrp,me_bgrp), &
+!$omp private(tmpbec,tmpdr,isa,is,ia,iv,jv,k,inl,temp,i,mytid,ntids,sum_tmpdr)
 
 #if defined(_OPENMP)
-     mytid = omp_get_thread_num()  ! take the thread ID
-     ntids = omp_get_num_threads() ! take the number of threads
+  mytid = omp_get_thread_num()  ! take the thread ID
+  ntids = omp_get_num_threads() ! take the number of threads
 #endif
 
-     allocate ( tmpbec( nhm, nbspx_bgrp ), tmpdr( nhm, nbspx_bgrp ) )
+  allocate ( tmpbec( nhm, nbspx_bgrp ), tmpdr( nhm, nbspx_bgrp ) )
 
-     isa = 0
-     !
+  DO k = 1, 3
      DO is=1,nsp
         DO ia=1,na(is)
 
-           isa=isa+1
+           isa = 0
+           DO i = 1, is - 1
+              isa = isa + na(i)
+           END DO
+           isa = isa + ia
+
+
+           ! better if we distribute to MPI tasks too!
+           !
+           IF( MOD( isa + (k-1)*nat, nproc_bgrp ) /= me_bgrp ) CYCLE
 
 #if defined(_OPENMP)
            ! distribute atoms round robin to threads
            !
-           IF( MOD( isa, ntids ) /= mytid ) CYCLE
+           IF( MOD( ( isa + (k-1)*nat ) / nproc_bgrp, ntids ) /= mytid ) CYCLE
 #endif  
-
                  tmpbec = 0.d0
                  tmpdr  = 0.d0
 
@@ -795,11 +800,12 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
 
         END DO
      END DO
-     deallocate ( tmpbec, tmpdr )
+  END DO
+  deallocate ( tmpbec, tmpdr )
 !$omp end parallel
 
-  END DO
   !
+  CALL mp_sum( fion_loc, intra_bgrp_comm )
   IF( nbgrp > 1 ) THEN
      CALL mp_sum( fion_loc, inter_bgrp_comm )
   END IF

@@ -123,7 +123,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      !
      ! ... each q /= gamma is saved on a different directory
      !
-     IF (.NOT.lgamma.AND.lqdir) &
+     IF ((.NOT. lgamma .OR. ( iq /= 1)) .AND. lqdir) &
          tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '.q_' &
                        & // TRIM(int_to_char(iq))//'/'
      !

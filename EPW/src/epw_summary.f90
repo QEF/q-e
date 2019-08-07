@@ -22,11 +22,12 @@
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
-  USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
+  USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, wk
+  USE klist_epw,     ONLY : xk_all
   USE gvect,         ONLY : gcutm, ngm
   USE gvecs,         ONLY : dual, doublegrid, gcutms, ngms
   USE gvecw,         ONLY : ecutwfc
-  USE symm_base,     ONLY : s, sname, ftau, s_axis_to_cart, sr, t_rev
+  USE symm_base,     ONLY : s, sname, ft, s_axis_to_cart, sr, t_rev
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,      ONLY : lspinorb, domag
   USE funct,         ONLY : write_dft_name
@@ -122,7 +123,7 @@
   !   description of symmetries
   !
   WRITE(stdout, * )
-  IF (nsymq.le.1 .and. .not.minus_q) THEN
+  IF (nsymq <= 1 .and.  .NOT. minus_q) THEN
     WRITE(stdout, '(5x,"No symmetry!")')
   ELSE
     IF (minus_q) THEN
@@ -133,7 +134,7 @@
     ENDIF
   ENDIF
 
-  IF (iverbosity.eq.1) THEN
+  IF (iverbosity == 1) THEN
     WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
     IF (minus_q) THEN
       nsymtot = nsymq + 1
@@ -141,7 +142,7 @@
       nsymtot = nsymq
     ENDIF
     DO isymq = 1, nsymtot
-      IF (isymq.gt.nsymq) THEN
+      IF (isymq > nsymq) THEN
         isym = irotmq
         WRITE(stdout, '(/,5x,"This transformation sends q -> -q+G")')
       ELSE
@@ -151,25 +152,19 @@
       IF (noncolin.and.domag) &
          WRITE(stdout,'(1x, "Time Reversal",i3)') t_rev(isym) 
       !  
-      IF (ftau(1,isym).ne.0 .OR. ftau(2,isym).ne.0 .OR. ftau(3,isym).ne.0) THEN
-        ft1 = at(1,1) * ftau(1,isym) / dfftp%nr1 & 
-            + at(1,2) * ftau(2,isym) / dfftp%nr2 & 
-            + at(1,3) * ftau(3,isym) / dfftp%nr3
-        ft2 = at(2,1) * ftau(1,isym) / dfftp%nr1 & 
-            + at(2,2) * ftau(2,isym) / dfftp%nr2 & 
-            + at(2,3) * ftau(3,isym) / dfftp%nr3
-        ft3 = at(3,1) * ftau(1,isym) / dfftp%nr1 & 
-            + at(3,2) * ftau(2,isym) / dfftp%nr2 & 
-            + at(3,3) * ftau(3,isym) / dfftp%nr3
+      IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN
+        ft1 = at(1,1)*ft(1,isym) + at(1,2)*ft(2,isym) + at(1,3)*ft(3,isym) 
+        ft2 = at(2,1)*ft(1,isym) + at(2,2)*ft(2,isym) + at(2,3)*ft(3,isym) 
+        ft3 = at(3,1)*ft(1,isym) + at(3,2)*ft(2,isym) + at(3,3)*ft(3,isym)
         WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3i6, &
              &                    " )    f =( ",f10.7," )")') isymq,  & 
-             & (s(1,ipol,isym), ipol = 1, 3), DBLE(ftau(1,isym))/DBLE(dfftp%nr1)
+             & (s(1,ipol,isym), ipol = 1, 3), ft(1,isym)
         WRITE(stdout, '(17x," (",3(i6,5x), &
              &                    " )       ( ",f10.7," )")')  & 
-             & (s(2,ipol,isym), ipol = 1, 3), DBLE(ftau(2,isym))/DBLE(dfftp%nr2)
+             & (s(2,ipol,isym), ipol = 1, 3), ft(2,isym)
         WRITE(stdout, '(17x," (",3(i6,5x), &
              &                    " )       ( ",f10.7," )"/)') & 
-             &  (s(3,ipol,isym), ipol = 1, 3), DBLE(ftau(3,isym))/DBLE(dfftp%nr3)
+             &  (s(3,ipol,isym), ipol = 1, 3), ft(3,isym)
         WRITE(stdout, '(1x,"cart.",3x,"s(",i2,") = (",3f11.7, &
              &                    " )    f =( ",f10.7," )")') isymq, & 
              & (sr(1,ipol,isym), ipol = 1, 3), ft1
@@ -212,15 +207,15 @@
      WRITE(stdout, '(23x,"cart. coord. in units 2pi/a_0")')
      DO ik = 1, nkstot
         WRITE(stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
-             (xk(ipol,ik) , ipol = 1, 3), wk(ik)
+             (xk_all(ipol,ik) , ipol = 1, 3), wk(ik)
      ENDDO
   ENDIF
-  IF (iverbosity.eq.1) THEN
+  IF (iverbosity == 1) THEN
      WRITE(stdout, '(/23x,"cryst. coord.")')
      DO ik = 1, nkstot
         DO ipol = 1, 3
-           xkg(ipol) = at(1,ipol) * xk(1,ik) + at(2,ipol) * xk(2,ik) &
-                     + at(3,ipol) * xk(3,ik)
+           xkg(ipol) = at(1,ipol) * xk_all(1,ik) + at(2,ipol) * xk_all(2,ik) &
+                     + at(3,ipol) * xk_all(3,ik)
            ! xkg are the components of xk in the reciprocal lattice basis
         ENDDO
         WRITE(stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') &
