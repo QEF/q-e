@@ -655,29 +655,9 @@ CONTAINS
 
     INTEGER :: nadd, ialloc
     REAL(DP) :: rmat(3,3), gtensor(3,3), alp, bet, gam, aa, bb, cc, xx(3)
-    INTEGER :: ii, jj, kk, m, nsize, lsize
-    INTEGER, ALLOCATABLE :: ienvaux(:), lvecaux(:,:)
-    REAL(DP), ALLOCATABLE :: xenvaux(:,:)
-    INTEGER, PARAMETER :: menv = 1000, lenv=100
+    INTEGER :: ii, jj, kk, m
 
     CALL start_clock('exdm:environ')
-
-    ! allocate the initial environment
-    nenv = 0
-    IF (ALLOCATED(ienv)) DEALLOCATE(ienv)
-    IF (ALLOCATED(xenv)) DEALLOCATE(xenv)
-    ALLOCATE(ienv(menv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("ienv")
-    ALLOCATE(xenv(3,menv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("xenv")
-    nsize = menv
-
-    ! allocate the array of lattice vectors
-    nvec = 0
-    IF (ALLOCATED(lvec)) DEALLOCATE(lvec)
-    ALLOCATE(lvec(3,lenv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("lenv")
-    lsize = lenv
 
     ! determine number of cells (adapted from gulp, by J. Gale)
     rmat = at * alat
@@ -701,59 +681,35 @@ CONTAINS
     jmax = NINT(rcut / bb) + nadd
     kmax = NINT(rcut / cc) + nadd
 
+    ! pre-allocate the environment arrays
+    nvec = (2*imax+1)*(2*jmax+1)*(2*kmax+1)
+    nenv = (2*imax+1)*(2*jmax+1)*(2*kmax+1) * nat
+    IF (ALLOCATED(xenv)) DEALLOCATE(xenv)
+    IF (ALLOCATED(ienv)) DEALLOCATE(ienv)
+    IF (ALLOCATED(lvec)) DEALLOCATE(lvec)
+    ALLOCATE(xenv(3,nenv),ienv(nenv),lvec(3,nvec))
+
     ! build the environment arrays
+    nenv = 0
+    nvec = 0
     DO ii = -imax, imax
        DO jj = -jmax, jmax
           DO kk = -kmax, kmax
 
              ! run over the ions in the (i,j,k) cell:
              DO m = 1, nat
-                xx = tau(:,m) + ii*at(:,1) + jj*at(:,2) + kk*at(:,3)
-
-                ! dynamically increase the array size
                 nenv = nenv + 1
-                IF (nenv > nsize) THEN
-                   ALLOCATE(ienvaux(NINT(1.5*nsize)),STAT=ialloc)
-                   IF (ialloc /= 0) CALL alloc_failed("ienvaux")
-                   ALLOCATE(xenvaux(3,NINT(1.5*nsize)),STAT=ialloc)
-                   IF (ialloc /= 0) CALL alloc_failed("xenvaux")
-                   ienvaux(1:nsize) = ienv
-                   xenvaux(:,1:nsize) = xenv
-                   CALL move_alloc(ienvaux,ienv)
-                   CALL move_alloc(xenvaux,xenv)
-                   nsize = NINT(1.5*nsize)
-                END IF
+                xx = tau(:,m) + ii*at(:,1) + jj*at(:,2) + kk*at(:,3)
                 xenv(:,nenv) = xx * alat
                 ienv(nenv) = m
              ENDDO  ! m
 
              ! one more lattice vector
              nvec = nvec + 1
-             IF (nvec > lsize) THEN
-                ALLOCATE(lvecaux(3,NINT(1.5*lsize)),STAT=ialloc)
-                IF (ialloc /= 0) CALL alloc_failed("lvecaux")
-                lvecaux(:,1:lsize) = lvec
-                CALL move_alloc(lvecaux,lvec)
-                lsize = NINT(1.5*lsize)
-             END IF
              lvec(:,nvec) = (/ii,jj,kk/)
           END DO ! kk
        END DO ! jj
     END DO ! ii
-
-    ! fit memory snugly
-    ALLOCATE(ienvaux(nsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("ienvaux")
-    ienvaux(1:nsize) = ienv
-    CALL move_alloc(ienvaux,ienv)
-    ALLOCATE(xenvaux(3,nsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("xenvaux")
-    xenvaux(:,1:nsize) = xenv
-    CALL move_alloc(xenvaux,xenv)
-    ALLOCATE(lvecaux(3,lsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("lvecaux")
-    lvecaux(:,1:lsize) = lvec
-    CALL move_alloc(lvecaux,lvec)
 
     CALL stop_clock('exdm:environ')
 
