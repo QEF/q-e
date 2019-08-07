@@ -93,6 +93,7 @@ dvpsi_kb.o : cgcom.o
 dyndiar.o : ../../Modules/constants.o
 dyndiar.o : ../../Modules/io_global.o
 dyndiar.o : ../../Modules/kind.o
+dyndiar.o : ../../Modules/mp_bands.o
 dynmat_init.o : ../../Modules/cell_base.o
 dynmat_init.o : ../../Modules/ions_base.o
 dynmat_init.o : ../../Modules/recvec.o

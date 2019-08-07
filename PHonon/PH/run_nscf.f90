@@ -13,7 +13,7 @@ SUBROUTINE run_nscf(do_band, iq)
   ! ... phonon code.
   !
   !
-  USE control_flags,   ONLY : conv_ions, isolve
+  USE control_flags,   ONLY : conv_ions
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
@@ -29,7 +29,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE disp,            ONLY : lgamma_iq
   USE control_ph,      ONLY : reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed, newgrid, qplot, &
-                              only_wfc, isolveph
+                              only_wfc
   USE io_global,       ONLY : stdout
   USE save_ph,         ONLY : tmp_dir_save
   !
@@ -98,7 +98,7 @@ SUBROUTINE run_nscf(do_band, iq)
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
-  CALL setup_nscf ( newgrid, xq, elph_mat, isolveph )
+  CALL setup_nscf ( newgrid, xq, elph_mat )
   !
   CALL init_run()
   !

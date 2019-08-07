@@ -1542,6 +1542,7 @@ pw_restart_new.o : ../../Modules/qes_write_module.o
 pw_restart_new.o : ../../Modules/qexsd.o
 pw_restart_new.o : ../../Modules/qexsd_input.o
 pw_restart_new.o : ../../Modules/recvec.o
+pw_restart_new.o : ../../Modules/run_info.o
 pw_restart_new.o : ../../Modules/tsvdw.o
 pw_restart_new.o : ../../Modules/uspp.o
 pw_restart_new.o : ../../Modules/version.o

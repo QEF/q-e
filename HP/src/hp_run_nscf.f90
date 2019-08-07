@@ -11,7 +11,7 @@ SUBROUTINE hp_run_nscf (do_band)
   !
   ! This is the main driver of the PWscf program called from the HP code.
   !
-  USE control_flags,   ONLY : conv_ions, restart, iverbosity
+  USE control_flags,   ONLY : conv_ions, restart, iverbosity, isolve
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
@@ -53,6 +53,7 @@ SUBROUTINE hp_run_nscf (do_band)
   starting_wfc   = 'atomic'
   restart        = .FALSE.
   conv_ions      = .TRUE.
+  isolve         = 0
   !
   ! iverbosity is used by the PWscf routines
   IF (iverbosity.LE.2) THEN
@@ -71,7 +72,7 @@ SUBROUTINE hp_run_nscf (do_band)
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
-  CALL setup_nscf ( .FALSE., xq, .FALSE., 0)
+  CALL setup_nscf ( .FALSE., xq, .FALSE. )
   !
   CALL init_run()
   !
