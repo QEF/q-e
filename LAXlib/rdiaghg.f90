@@ -217,14 +217,14 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   TYPE(la_descriptor), INTENT(IN) :: desc
   !
   INTEGER, PARAMETER    :: root = 0
-  INTEGER               :: nx
+  INTEGER               :: nx, info
     ! local block size
   REAL(DP), PARAMETER   :: one = 1_DP
   REAL(DP), PARAMETER   :: zero = 0_DP
   REAL(DP), ALLOCATABLE :: hh(:,:)
   REAL(DP), ALLOCATABLE :: ss(:,:)
 #if defined(__SCALAPACK)
-  INTEGER     :: desch( 16 ), info
+  INTEGER     :: desch( 16 )
 #endif
   INTEGER               :: i
   !
