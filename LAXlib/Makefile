@@ -6,6 +6,7 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG)../EIGENSOLV
 
 LAX = la_types.o \
 la_error.o \
+la_helper.o \
 cdiaghg.o \
 rdiaghg.o \
 dspev_drv.o \
@@ -14,8 +15,6 @@ transto.o \
 distools.o \
 zhpev_drv.o \
 mp_diag.o \
-set_mpi_comm_4_solvers.o \
-export_gstart_2_solvers.o \
 la_param.o
 
 

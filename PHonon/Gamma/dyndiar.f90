@@ -16,6 +16,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   USE kinds, ONLY : DP
   USE constants, ONLY : amu_ry, ry_to_thz, ry_to_cmm1
   USE io_global,  ONLY : stdout
+  USE mp_bands, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   IMPLICIT NONE
   INTEGER :: nmodes, nat3, nat,ityp(nat), iudyn
   real(DP):: dyn(nat3,nmodes), u(nat3,nmodes), amass(*)
@@ -76,7 +77,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !  Note that z are eigendisplacements in the base of input
   !  modes u and that they are normalized as <z|M|z>=I
   !
-  CALL rdiaghg (nat3, nmodes, dynout, m, nat3, w2, z)
+  CALL rdiaghg (nat3, nmodes, dynout, m, nat3, w2, z, me_bgrp, root_bgrp, intra_bgrp_comm)
   !
   !  write frequencies
   !

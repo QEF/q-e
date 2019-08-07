@@ -214,8 +214,9 @@ MODULE control_ph
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
-  INTEGER :: rec_code=-1000,    &! code for recover
-             rec_code_read=-1000 ! code for recover. Not changed during the run
+  INTEGER :: rec_code=-1000,    &  ! code for recover
+             rec_code_read=-1000,& ! code for recover. Not changed during the run
+             isolveph = 0 ! diagonalization method used in the nscf calcs
   LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
              convt,       &! if .TRUE. the phonon has converged
              epsil,       &! if .TRUE. computes dielec. const and eff. charges

@@ -223,7 +223,7 @@ PROGRAM lr_eels_main
   !
   CALL print_clock_lr()
   !
-  CALL unset_mpi_comm_4_solvers()
+  CALL laxlib_free_ortho_group()
   CALL stop_lr( .TRUE. )
   !
   IF (lr_verbosity > 5) THEN

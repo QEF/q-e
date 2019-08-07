@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
+SUBROUTINE setup_nscf ( newgrid, xq, elph_mat, isolveph )
   !----------------------------------------------------------------------------
   !
   ! ... This routine initializes variables for the non-scf calculations at k
@@ -53,6 +53,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   REAL (DP), INTENT(IN) :: xq(3)
   LOGICAL, INTENT (IN) :: newgrid
   LOGICAL, INTENT (IN) :: elph_mat  ! used to be passed through a module. 
+  INTEGER, INTENT (IN) :: isolveph ! if present, use this diagonalization method
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   LOGICAL  :: magnetic_sym, sym(48)
@@ -67,8 +68,14 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   ! ... variables for iterative diagonalization
   ! ... Davdson: isolve=0, david=4 ; CG: isolve=1, david=1
-  isolve = 0
-  david  = 4
+  isolve = isolveph
+  IF (isolveph == 0) THEN
+     david = 4
+  ELSE IF (isolveph == 1) THEN
+     david = 1
+  ELSE
+     call errore('setup_nscf','erroneous value for diagonalization method (isolveph). Should be 0 (david) or 1 (cg)',1)
+  END IF
   nbndx = david*nbnd
   max_cg_iter=20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )

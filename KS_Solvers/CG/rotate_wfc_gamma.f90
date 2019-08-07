@@ -17,7 +17,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   !
   USE cg_param,      ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
-          nbgrp, my_bgrp_id
+          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
   USE mp,            ONLY : mp_sum 
   !
@@ -113,7 +113,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('rotwfcg:diag'); !write(*,*) 'start rotwfcg:diag' ; FLUSH(6)
-  CALL rdiaghg( nstart, nbnd, hr, sr, nstart, en, vr )
+  CALL rdiaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
   call stop_clock('rotwfcg:diag'); !write(*,*) 'stop rotwfcg:diag' ; FLUSH(6)
   call start_clock('rotwfcg:evc'); !write(*,*) 'start rotwfcg:evc' ; FLUSH(6)
   !

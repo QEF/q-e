@@ -43,7 +43,7 @@ SUBROUTINE phq_readin()
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
                             rec_code_read, qplot, only_init, only_wfc, &
-                            low_directory_check
+                            low_directory_check, isolveph
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
@@ -105,6 +105,7 @@ SUBROUTINE phq_readin()
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: wqaux(:)
   INTEGER :: nqaux, iq
+  CHARACTER(len=80) :: diagonalization='david'
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, verbosity, iverbosity, outdir, epsil,  &
@@ -119,7 +120,7 @@ SUBROUTINE phq_readin()
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss, &
                        el_ph_nsigma, el_ph_sigma,  electron_phonon, &
                        q_in_band_form, q2d, qplot, low_directory_check, &
-                       lshift_q, read_dns_bare, d2ns_type
+                       lshift_q, read_dns_bare, d2ns_type, diagonalization
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -193,6 +194,7 @@ SUBROUTINE phq_readin()
   !                 d2ns_type='diag': if okvan=.true. the matrix is calculated retaining only
   !                                     for <\beta_J|\phi_I> products where for J==I.   
   !                 d2ns_type='dmmp': same as 'diag', but also assuming a m <=> m'.
+  ! diagonalization : diagonalization method used in the nscf calc
   ! 
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
@@ -338,6 +340,16 @@ SUBROUTINE phq_readin()
   ELSE IF ( ABS(ios) /= 0 ) THEN
      CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   END IF
+  ! diagonalization option
+  SELECT CASE(TRIM(diagonalization))
+  CASE ('david','davidson')
+     isolveph = 0
+  CASE ('cg')
+     isolveph = 1
+  CASE DEFAULT
+     CALL errore('phq_readin','diagonalization '//trim(diagonalization)//' not implemented',1)
+  END SELECT
+
   !
   ! ...  broadcast all input variables
   !

@@ -9,15 +9,13 @@
 SUBROUTINE set_mpi_comm_4_solvers(parent_comm, intra_bgrp_comm_, inter_bgrp_comm_ )
   !----------------------------------------------------------------------------
   !
-  USE la_param,     ONLY : DP
   USE mp_bands_util
-  USE mp,           ONLY : mp_size, mp_rank
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: parent_comm, intra_bgrp_comm_, inter_bgrp_comm_
   ! local variables
-  INTEGER :: parent_nproc, parent_mype, ortho_parent_comm_
+  INTEGER :: parent_nproc, parent_mype, ortho_parent_comm_, ierr
   !
   !write(*,*) ' enter set_mpi_comm_4_davidson'
   intra_bgrp_comm   = intra_bgrp_comm_
@@ -25,19 +23,22 @@ SUBROUTINE set_mpi_comm_4_solvers(parent_comm, intra_bgrp_comm_, inter_bgrp_comm
   !
 #if defined (__MPI)
     !
-    parent_nproc = mp_size( parent_comm )
-    parent_mype  = mp_rank( parent_comm )
+    CALL mpi_comm_size(parent_comm,parent_nproc,ierr)
+    IF (ierr/=0) CALL errore( ' set_mpi_comm_4_solvers ', ' problem getting MPI size ', 1 )
+    CALL mpi_comm_rank(parent_comm,parent_mype,ierr)
+    IF (ierr/=0) CALL errore( ' set_mpi_comm_4_solvers ', ' problem getting MPI rank ', 1 )
     !
     ! ... Set number of processors per band group
     !
-    nproc_bgrp = mp_size( intra_bgrp_comm )
+    CALL mpi_comm_size(intra_bgrp_comm,nproc_bgrp,ierr)
+    IF (ierr/=0) CALL errore( ' set_mpi_comm_4_solvers ', ' problem getting MPI size ', 1 )
     !
     nbgrp = parent_nproc / nproc_bgrp
 
-    IF ( nbgrp < 1 .OR. nbgrp > parent_nproc ) CALL errore( 'mp_start_bands',&
-                          'invalid number of band groups, out of range', 1 )
-    IF ( MOD( parent_nproc, nbgrp ) /= 0 ) CALL errore( 'mp_start_bands', &
-        'n. of band groups  must be divisor of parent_nproc', 1 )
+    IF ( nbgrp < 1 .OR. nbgrp > parent_nproc ) &
+       CALL errore( 'set_mpi_comm_4_solvers','invalid number of band groups, out of range', 1 )
+    IF ( MOD( parent_nproc, nbgrp ) /= 0 ) &
+       CALL errore( 'set_mpi_comm_4_solvers','n. of band groups  must be divisor of parent_nproc', 1 )
     !
     ! set logical flag so that band parallelization in H\psi is allowed
     ! (can be disabled before calling H\psi if not desired)
@@ -52,22 +53,20 @@ SUBROUTINE set_mpi_comm_4_solvers(parent_comm, intra_bgrp_comm_, inter_bgrp_comm
     !
     me_bgrp    = MOD( parent_mype, nproc_bgrp )
     !
-    CALL mp_barrier( parent_comm )
+    CALL mpi_barrier( parent_comm, ierr )
+    IF (ierr/=0) &
+       CALL errore( 'set_mpi_comm_4_solvers','n. of band groups  must be divisor of parent_nproc', 1 )
     !
+#else
+    parent_nproc = 1
+    parent_mype  = 0
+    nproc_bgrp   = 1
+    nbgrp        = 1 
+    use_bgrp_in_hpsi = .false.
+    my_bgrp_id   = 0
+    me_bgrp      = 0
 #endif
     !write(*,*) ' exit set_mpi_comm_4_davidson'
     RETURN
   !
 END SUBROUTINE set_mpi_comm_4_solvers
-!----------------------------------------------------------------------------
-SUBROUTINE unset_mpi_comm_4_solvers()
-  !----------------------------------------------------------------------------
-  !
-  use mp_diag
-  IMPLICIT NONE
-#if defined (__MPI)
-  CALL clean_ortho_group ( )
-#endif
-    RETURN
-  !
-END SUBROUTINE unset_mpi_comm_4_solvers
