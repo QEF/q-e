@@ -22,7 +22,8 @@ subroutine bcast_ph_input ( )
                          niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
                          ldisp, reduce_io, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
-                         qplot, only_init, only_wfc, low_directory_check
+                         qplot, only_init, only_wfc, low_directory_check, &
+                         isolveph
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo
@@ -96,6 +97,7 @@ subroutine bcast_ph_input ( )
   CALL mp_bcast( k2, meta_ionode_id, world_comm )
   CALL mp_bcast( k3, meta_ionode_id, world_comm )
   CALL mp_bcast( low_directory_check, meta_ionode_id, world_comm )
+  CALL mp_bcast( isolveph, meta_ionode_id, world_comm )
   CALL mp_bcast( elph_nbnd_min, meta_ionode_id, world_comm )
   CALL mp_bcast( elph_nbnd_max, meta_ionode_id, world_comm )
   CALL mp_bcast( el_ph_ngauss, meta_ionode_id, world_comm )
