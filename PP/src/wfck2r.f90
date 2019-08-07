@@ -135,7 +135,6 @@ PROGRAM wfck2r
 
   write(6,*) 'length of wfc in real space/per band', (last_k-first_k+1)*lrwfcr*8
   write(6,*) 'length of wfc in k space', 2*(last_band-first_band+1)*npwx*nks*8
-  CALL init_us_1
 
 !
 !define lrwfcr

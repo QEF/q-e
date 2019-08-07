@@ -118,7 +118,7 @@ mpif90=$FC
 # check which compiler does mpif90 wrap
 
 case "$arch" in
-        ia32 | ia64 | x86_64 | mac686 )
+        * )
         echo $ECHO_N "checking version of $mpif90... $ECHO_C"
         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`

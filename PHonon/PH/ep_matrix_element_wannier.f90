@@ -163,7 +163,7 @@ SUBROUTINE elphsum_wannier(q_index)
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
   USE cell_base, ONLY : at, bg, ibrav, celldm 
-  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs, ftau, copy_sym, inverse_s
+  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs, copy_sym, inverse_s
   USE klist, ONLY : xk, nelec
   USE wvfct, ONLY : nbnd, et
   USE el_phon
@@ -264,7 +264,7 @@ SUBROUTINE elphsum_wannier(q_index)
      sym = .false.
      sym(1:nsym) = .true.
      
-     call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_qloc)
+     call smallg_q (xq, 0, at, bg, nsym, s, sym, minus_qloc)
      nsymq = copy_sym(nsym, sym)
      ! recompute the inverses as the order of sym.ops. has changed
      CALL inverse_s ( )

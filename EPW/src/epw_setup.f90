@@ -20,36 +20,34 @@
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg  
-  USE io_global,     ONLY : stdout, ionode, ionode_id
-  USE io_files,      ONLY : tmp_dir
-  USE klist,         ONLY : xk, nks, nkstot
+  USE io_global,     ONLY : ionode_id
+  USE klist,         ONLY : nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
-  USE scf,           ONLY : v, vrs, vltot, rho, kedtau
+  USE scf,           ONLY : v, vrs, vltot, kedtau
   USE gvect,         ONLY : ngm
-  USE symm_base,     ONLY : nsym, s, irt, t_rev, time_reversal, invs, sr, &
+  USE symm_base,     ONLY : nsym, s, irt, t_rev, time_reversal, sr, &
                             inverse_s
+  USE eqv,           ONLY : dmuxc
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
-  USE constants_epw, ONLY : zero, eps5
-  USE noncollin_module,     ONLY : noncolin, m_loc, angle1, angle2, ux
+  USE constants_epw, ONLY : zero, eps5, czero
   USE nlcc_ph,       ONLY : drc
   USE uspp,          ONLY : nlcc_any
   USE control_ph,    ONLY : search_sym, u_from_file
-  USE control_lr,    ONLY : alpha_pv, nbnd_occ
-  USE modes,         ONLY : u, npertx, npert, nirr, nmodes, num_rap_mode
+  USE modes,         ONLY : npertx, npert, nirr, nmodes, num_rap_mode, u, name_rap_mode
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
   USE qpoint,        ONLY : xq
   USE control_flags, ONLY : modenum, noinv
   USE funct,         ONLY : dft_is_gradient
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-  USE mp_pools,      ONLY : inter_pool_comm
-  USE epwcom,        ONLY : xk_cryst, scattering, nstemp, tempsmin, tempsmax, &
-                            temps
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps
+  USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
   USE start_k,       ONLY : nk1, nk2, nk3
   USE transportcom,  ONLY : transp_temp
+  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   !
   IMPLICIT NONE
   ! 
@@ -70,15 +68,6 @@
   !
   CALL start_clock('epw_setup')
   !
-  ! 0) Set up list of kpoints in crystal coordinates
-  !
-  DO jk = 1, nkstot
-    xk_cryst(:,jk) = xk(:,jk)
-  ENDDO
-  !  bring k-points from cartesian to crystal coordinates
-  CALL cryst_to_cart(nkstot, xk_cryst, at, -1)
-  CALL mp_bcast(xk_cryst,ionode_id,world_comm)
-  !
   !  loosy tolerance: not important 
   DO jk = 1, nkstot
     xx_c = xk_cryst(1,jk) * nk1
@@ -87,7 +76,7 @@
     !
     ! check that the k-mesh was defined in the positive region of 1st BZ
     !
-    IF ( xx_c .lt. -eps5 .or. yy_c .lt. -eps5 .or. zz_c .lt. -eps5 ) &
+    IF ( xx_c < -eps5 .or. yy_c < -eps5 .or. zz_c < -eps5 ) &
       CALL errore('epw_setup','coarse k-mesh needs to be strictly positive in 1st BZ',1)
     !
   ENDDO
@@ -99,28 +88,30 @@
   ! Set non linear core correction stuff
   !
   nlcc_any = ANY( upf(1:ntyp)%nlcc )
-  IF (nlcc_any) ALLOCATE(drc(ngm, ntyp))    
+  IF (nlcc_any) ALLOCATE (drc(ngm, ntyp))    
   !
   !  2) If necessary calculate the local magnetization. This information is
   !      needed in sgama 
   !
-  IF (.not.ALLOCATED(m_loc)) ALLOCATE(m_loc(3, nat))
   IF (noncolin .AND. domag) THEN
-    DO na = 1, nat
+    ALLOCATE (m_loc(3, nat))
+    DO na=1, nat
       !
-      m_loc(1,na) = starting_magnetization(ityp(na)) * &
-                    SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
-      m_loc(2,na) = starting_magnetization(ityp(na)) * &
-                    SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
-      m_loc(3,na) = starting_magnetization(ityp(na)) * &
-                    COS( angle1(ityp(na)) )
+      m_loc(1, na) = starting_magnetization(ityp(na)) * &
+                    SIN(angle1(ityp(na))) * COS(angle2(ityp(na)))
+      m_loc(2, na) = starting_magnetization(ityp(na)) * &
+                    SIN(angle1(ityp(na))) * SIN(angle2(ityp(na)))
+      m_loc(3, na) = starting_magnetization(ityp(na)) * &
+                    COS(angle1(ityp(na)))
     ENDDO
     ux = zero
     IF (dft_is_gradient()) CALL compute_ux(m_loc,ux,nat)
+    DEALLOCATE (m_loc)
   ENDIF
   !
   ! 3) Computes the derivative of the xc potential
   !
+  ALLOCATE (dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
   CALL setup_dmuxc()
   !
   ! 3.1) Setup all gradient correction stuff
@@ -161,6 +152,8 @@
   ! allocate and calculate rtau, the Bravais lattice vector associated
   ! to a rotation
   !
+  ALLOCATE (rtau(3, 48, nat))
+  ALLOCATE (npert(3 * nat))
   CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
   !
   !    and calculate the vectors G associated to the symmetry Sq = q + G
@@ -170,35 +163,42 @@
   !
   search_sym = search_sym .AND. symmorphic_or_nzb()
   !
+  ALLOCATE (num_rap_mode(3 * nat))
   num_rap_mode = -1
   IF (search_sym) CALL prepare_sym_analysis(nsymq, sr, t_rev, magnetic_sym)
   !
+  ALLOCATE (name_rap_mode(3 * nat))
+  ALLOCATE (u(3 * nat, 3 * nat))
+  u(:, :) = czero
   IF (.NOT. u_from_file) THEN
   ! SP: These calls set the u
      CALL find_irrep()
   ENDIF
   CALL find_irrep_sym()
+  ! 
+  DEALLOCATE (num_rap_mode)
+  DEALLOCATE (name_rap_mode)
   !
   !  8) set max perturbation
   !   
   npertx = 0
-  DO irr = 1, nirr
-    npertx = max(npertx, npert(irr))
+  DO irr=1, nirr
+    npertx = MAX(npertx, npert(irr))
   ENDDO
   !
-  IF (.NOT. ALLOCATED(transp_temp)) ALLOCATE( transp_temp(nstemp) )
+  ALLOCATE (transp_temp(nstemp))
   ! 
   transp_temp(:) = zero
   ! In case of scattering calculation
-  IF ( scattering ) THEN
+  IF (scattering) THEN
     ! 
-    IF ( maxval(temps(:)) > zero ) THEN
+    IF (MAXVAL(temps(:)) > zero ) THEN
       transp_temp(:) = temps(:)
     ELSE
-      IF ( nstemp .eq. 1 ) THEN
+      IF (nstemp == 1) THEN
         transp_temp(1) = tempsmin
       ELSE
-        DO itemp = 1, nstemp
+        DO itemp=1, nstemp
           transp_temp(itemp) = tempsmin + dble(itemp-1) * &
                               ( tempsmax - tempsmin ) / dble(nstemp-1)
         ENDDO
@@ -235,21 +235,21 @@
   ! 
   CALL start_clock ('epw_setup')
   !
-  IF (.NOT. ALLOCATED(transp_temp)) ALLOCATE( transp_temp(nstemp) )
+  ALLOCATE (transp_temp(nstemp))
   !
   transp_temp(:) = zero
   ! In case of scattering calculation
-  IF ( scattering ) THEN
+  IF (scattering) THEN
     ! 
-    IF ( maxval(temps(:)) > zero ) THEN
+    IF (MAXVAL(temps(:)) > zero) THEN
       transp_temp(:) = temps(:)
     ELSE
-      IF ( nstemp .eq. 1 ) THEN
+      IF (nstemp == 1) THEN
         transp_temp(1) = tempsmin
       ELSE
-        DO itemp = 1, nstemp
-          transp_temp(itemp) = tempsmin + dble(itemp-1) * &
-                              ( tempsmax - tempsmin ) / dble(nstemp-1)
+        DO itemp=1, nstemp
+          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * &
+                              (tempsmax - tempsmin) / DBLE(nstemp - 1)
         ENDDO
       ENDIF
     ENDIF

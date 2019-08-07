@@ -12,6 +12,8 @@ SUBROUTINE data_structure( gamma_only )
   ! this routine sets the data structure for the fft arrays
   ! (both the smooth and the dense grid)
   ! In the parallel case, it distributes columns to processes, too
+  ! BEWARE: to compute gkcut, nks and the list of k-points, or nks=0
+  !         and primitive lattice vectors bg, are needed
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_max
@@ -40,7 +42,7 @@ SUBROUTINE data_structure( gamma_only )
   !
   IF (nks == 0) THEN
      !
-     ! if k-points are automatically generated (which happens later)
+     ! k-point list not available:
      ! use max(bg)/2 as an estimate of the largest k-point
      !
      gkcut = 0.5d0 * max ( &

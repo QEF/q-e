@@ -81,7 +81,7 @@ subroutine vloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
         enddo
         IF (r(msh) > lz) THEN 
            call errore('vloc_of_g','2D cutoff is smaller than pseudo cutoff radius: &
-                                             increase interlayer distance (or see Modules/read_pseudo.f90)',1)
+          & increase interlayer distance (or see Modules/read_pseudo.f90)',1)
         END IF
 ! ==============================================
      ELSE

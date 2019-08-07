@@ -113,7 +113,7 @@ PROGRAM do_dos
            ltetra = .TRUE. 
            tetra_type = 2 
         CASE default 
-           IF ( .NOT. ltetra) tetra_type = -5 
+           tetra_type = -5 
      END SELECT 
      IF ( ltetra .and. nk1*nk2*nk3 .eq. 0 ) &
         CALL errore ('dos:', 'tetrahedra integration selected on input can only be used with automatic ' //&
@@ -129,8 +129,6 @@ PROGRAM do_dos
         !
         ! info on tetrahedra is no longer saved to file and must be rebuilt
         !
-        ! workaround for old xml file, to be removed
-        IF ( ALLOCATED ( tetra ) ) DEALLOCATE (tetra)
         ! in the lsda case, only the first half of the k points
         ! are needed in the input of "tetrahedra"
         !

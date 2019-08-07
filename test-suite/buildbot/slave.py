@@ -1,21 +1,17 @@
-#
-# 2016-2018 : Samuel Ponce' and Martin Schlipf
-# 
-# Setup used by the different Buildbot slaves. 
-# 
-
 from buildbot.plugins import steps
 from buildbot.steps.shell import ShellCommand
 from buildbot.locks import SlaveLock
+from buildbot.process.properties import Interpolate
+
 
 class Steps:
 
   def __init__(self,Environ):
     # Max number of running builds
     build_lock = SlaveLock('build',
-         maxCount = 1,
+         maxCount = 2,
          maxCountForSlave = {
-             'farmer-slave1': 1,
+             'farmer-slave1': 2,
     })
     
     # All repo
@@ -24,12 +20,13 @@ class Steps:
             'repository': 'https://gitlab.com/QEF/q-e.git',
             'branch': 'develop',
         },
-        'sternheimer_gw': {
-            'repository': 'https://github.com/mmdg-oxford/SternheimerGW.git',
-            'branch': 'develop',
-        },
+#        'sternheimer_gw': {
+#            'repository': 'https://github.com/mmdg-oxford/SternheimerGW.git',
+#            'branch': 'develop',
+#        },
         'wannier90': {
             'repository': 'https://github.com/wannier-developers/wannier90.git',
+#            'repository': 'https://github.com/sponce24/wannier90.git',
             'branch': 'develop',
         },
     }
@@ -55,6 +52,15 @@ class Steps:
                    locks=[build_lock.access('counting')],
                    haltOnFailure = True,descriptionDone=["configure_qe"]
                )]
+
+    self.configure_qe_mp = [ShellCommand(
+                   name="configure_qe",
+                   command=["./configure","--enable-openmp","--enable-parallel"],
+                   env=Environ,
+                   workdir="build",
+                   locks=[build_lock.access('counting')],
+                   haltOnFailure = True,descriptionDone=["configure_qe_mp"]
+               )]
     
     self.dep_qe     = [ShellCommand(
                    name="dep_qe",
@@ -66,10 +72,31 @@ class Steps:
                    locks=[build_lock.access('counting')],
                    haltOnFailure = True,descriptionDone=["dep_qe"]
                )]
+
+    self.env_qe1     = [ShellCommand(
+                   name="env_qe1",
+                   command=Interpolate('sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=2/g" ENVIRONMENT'),
+                   env=Environ,
+                   workdir="build/test-suite/",
+                   locks=[build_lock.access('counting')],
+                   haltOnFailure = True,
+                   descriptionDone=["env_qe1"]
+               )]
+
+    self.env_qe2     = [ShellCommand(
+                   name="env_qe2",
+                   command=Interpolate('echo "export OMP_NUM_THREADS=2" >> ENVIRONMENT'),
+                   #command=["cat","'export OMP_NUM_THREADS=2'",">>", "ENVIRONMENT"], 
+                   env=Environ,
+                   workdir="build/test-suite/",
+                   locks=[build_lock.access('counting')],
+                   haltOnFailure = True,descriptionDone=["env_qe2"]
+               )]
+
     
     self.make_pw    = [ShellCommand(
                    name="make_pw",
-                   command=["make","pwall","cp","ld1","upf"], 
+                   command=["make","-j","4","pwall","cp","ld1","upf"], 
                    env=Environ,
                    workdir="build",
                    haltOnFailure=True, descriptionDone=["make_pw"],
@@ -212,61 +239,71 @@ class Steps:
 ############################################################################
 # SGW code
 ############################################################################
-    self.configure_qe2 = [ShellCommand(
-                   name="configure_qe",
-                   command=["./configure"],
-                   env=Environ,
-                   workdir="build",
-                   locks=[build_lock.access('counting')],
-                   haltOnFailure = True,descriptionDone=["configure_qe"]
-               )]
-
-    self.make_pw2   = [ShellCommand(
-                   name="make_pw",
-                   command=["make","pw","lrmods"], 
-                   env=Environ,
-                   workdir="build",
-                   haltOnFailure=True, descriptionDone=["make_pw"],
-                   locks=[build_lock.access('counting')]
-                )]
-    
-    self.checkout_sgw = [steps.Git(
-                   name="checkout_sgw",
-                   repourl=all_repos["sternheimer_gw"]["repository"],
-                   branch=all_repos["sternheimer_gw"]["branch"],
-                   workdir="build/SGW",
-                   haltOnFailure = True,
-                   alwaysUseLatest = True,
-                )]
-
-    self.make_sgw   = [ShellCommand(
-                  name="make_sgw",
-                  command=["make"],
-                  env=Environ,
-                  workdir="build/SGW",
-                  haltOnFailure = True,
-                  descriptionDone = ["make_sgw"],
-                  locks=[build_lock.access('counting')],
-                )]
-
-    self.test_sgw   = [ShellCommand(
-                  name="test_sgw",
-                  command=["make", "run-tests"],
-                  env=Environ,
-                  workdir="build/SGW/test-suite",
-                  haltOnFailure = True,
-                  descriptionDone = ["test_sgw"],
-                  locks=[build_lock.access('counting')],
-                )]
-
-    self.test_clean_sgw = [ShellCommand(
-                  name="test_clean",
-                  command=["make", "clean"],
-                  env=Environ,
-                  workdir="build/SGW/test-suite",
-                  descriptionDone = ["test_clean"],
-                  locks=[build_lock.access('counting')],
-                )]
+#    self.configure_qe2 = [ShellCommand(
+#                   name="configure_qe",
+#                   command=["./configure"],
+#                   env=Environ,
+#                   workdir="build",
+#                   locks=[build_lock.access('counting')],
+#                   haltOnFailure = True,descriptionDone=["configure_qe"]
+#               )]
+#
+#    self.make_pw2   = [ShellCommand(
+#                   name="make_pw",
+#                   command=["make","pw","lrmods"], 
+#                   env=Environ,
+#                   workdir="build",
+#                   haltOnFailure=True, descriptionDone=["make_pw"],
+#                   locks=[build_lock.access('counting')]
+#                )]
+#    
+#    self.checkout_sgw = [steps.Git(
+#                   name="checkout_sgw",
+#                   repourl=all_repos["sternheimer_gw"]["repository"],
+#                   branch=all_repos["sternheimer_gw"]["branch"],
+#                   workdir="build/SGW",
+#                   haltOnFailure = True,
+#                   alwaysUseLatest = True,
+#                )]
+#
+#    self.make_clean = [ShellCommand(
+#                  name="make_clean",
+#                  command=["make", "clean"],
+#                  env=Environ,
+#                  workdir="build/SGW",
+#                  haltOnFailure = True,
+#                  descriptionDone = ["make_clean"],
+#                  locks=[build_lock.access('counting')],
+#                )]
+#
+#    self.make_sgw   = [ShellCommand(
+#                  name="make_sgw",
+#                  command=["make"],
+#                  env=Environ,
+#                  workdir="build/SGW",
+#                  haltOnFailure = True,
+#                  descriptionDone = ["make_sgw"],
+#                  locks=[build_lock.access('counting')],
+#                )]
+#
+#    self.test_sgw   = [ShellCommand(
+#                  name="test_sgw",
+#                  command=["make", "run-tests"],
+#                  env=Environ,
+#                  workdir="build/SGW/test-suite",
+#                  haltOnFailure = True,
+#                  descriptionDone = ["test_sgw"],
+#                  locks=[build_lock.access('counting')],
+#                )]
+#
+#    self.test_clean_sgw = [ShellCommand(
+#                  name="test_clean",
+#                  command=["make", "clean"],
+#                  env=Environ,
+#                  workdir="build/SGW/test-suite",
+#                  descriptionDone = ["test_clean"],
+#                  locks=[build_lock.access('counting')],
+#                )]
 
     
 ############################################################################
@@ -285,7 +322,52 @@ class Steps:
     
     self.cpconfig    = [ShellCommand(
                    name="cp_config",
-                   command=["cp","test-suite/config/EPW_testfarm/farmer_gcc485.inc","make.inc"], 
+                   command=["cp","test-suite/config/TestFarm/farmer_gcc640_serial.inc","make.inc"], 
+                   env=Environ,
+                   workdir="build/WAN",
+                   haltOnFailure=True, descriptionDone=["cp_config"],
+                   locks=[build_lock.access('counting')]
+                )]
+
+    self.cpgcc730    = [ShellCommand(
+                   name="cp_config",
+                   command=["cp","test-suite/config/TestFarm/farmer_gcc730_openmpi1107.inc","make.inc"], 
+                   env=Environ,
+                   workdir="build/WAN",
+                   haltOnFailure=True, descriptionDone=["cp_config"],
+                   locks=[build_lock.access('counting')]
+                )]
+
+    self.cpintel17    = [ShellCommand(
+                   name="cp_config",
+                   command=["cp","test-suite/config/TestFarm/farmer_intel17_openmpi313.inc","make.inc"], 
+                   env=Environ,
+                   workdir="build/WAN",
+                   haltOnFailure=True, descriptionDone=["cp_config"],
+                   locks=[build_lock.access('counting')]
+                )]
+
+    self.cpintel17i    = [ShellCommand(
+                   name="cp_config",
+                   command=["cp","test-suite/config/TestFarm/farmer_intel17_impi.inc","make.inc"],
+                   env=Environ,
+                   workdir="build/WAN",
+                   haltOnFailure=True, descriptionDone=["cp_config"],
+                   locks=[build_lock.access('counting')]
+                )]
+
+    self.cpintel18    = [ShellCommand(
+                   name="cp_config",
+                   command=["cp","test-suite/config/TestFarm/farmer_intel18_openmpi313.inc","make.inc"],
+                   env=Environ,
+                   workdir="build/WAN",
+                   haltOnFailure=True, descriptionDone=["cp_config"],
+                   locks=[build_lock.access('counting')]
+                )]
+
+    self.cppgi18    = [ShellCommand(
+                   name="cp_config",
+                   command=["cp","test-suite/config/TestFarm/farmer_pgi18_mvapich23b.inc","make.inc"],
                    env=Environ,
                    workdir="build/WAN",
                    haltOnFailure=True, descriptionDone=["cp_config"],
@@ -294,11 +376,21 @@ class Steps:
     
     self.clean_wannier   = [ShellCommand(
                   name="clean_wannier",
+                  command=["make","clean"],
+                  env=Environ,
+                  workdir="build/WAN",
+                  haltOnFailure = True, 
+                  descriptionDone = ["clean_wannier"],
+                  locks=[build_lock.access('counting')],
+                )]
+
+    self.clean_tests   = [ShellCommand(
+                  name="clean_tests",
                   command=["python","clean_tests"],
                   env=Environ,
                   workdir="build/WAN/test-suite",
                   haltOnFailure = True, 
-                  descriptionDone = ["clean_wannier"],
+                  descriptionDone = ["clean_tests"],
                   locks=[build_lock.access('counting')],
                 )]
     

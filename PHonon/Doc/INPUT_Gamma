@@ -17,6 +17,7 @@ feature has not been tested since a long time, so it may not actually work.
 Note that:
 - the code reads a file produced by pw.x with Gamma point only and
   Gamma-point special tricks (half of the plane waves and so on)
+- Only nonmagnetic insulators, with nbnd=nelec/2, are implemented
 - Ultrasoft PP's are not implemented
 - the symmetry is used in a different way wrt all other PWscf codes:
   only inequivalent atoms are displaced. This has an historical reason: 

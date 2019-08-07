@@ -69,7 +69,7 @@
       IF ( limag ) THEN
         iter = 1
         conv = .false.
-        DO WHILE ( .not. conv .AND. iter .le. nsiter )
+        DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL sum_eliashberg_iso_iaxis( itemp, iter, conv )
           CALL mix_broyden( nsiw(itemp), Deltai, Deltaip, broyden_beta, iter, broyden_ndim, conv )
           iter = iter + 1
@@ -79,13 +79,13 @@
           !
           ! SP : Only print the Free energy if the user want it
           !
-          IF ( iverbosity .eq. 2 ) THEN
+          IF ( iverbosity == 2 ) THEN
             CALL free_energy( itemp )
           ENDIF
           WRITE(stdout,'(a)') '  '
           CALL stop_clock( 'iaxis_imag' )
           CALL print_clock( 'iaxis_imag' )
-        ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
+        ELSEIF ( .NOT. conv .AND. (iter-1) == nsiter ) THEN
           CALL deallocate_eliashberg
           WRITE(stdout,'(a)') 'not converged  '
           CALL stop_clock( 'iaxis_imag' )
@@ -105,7 +105,7 @@
         conv = .false.
         N = 80 * nsiw(itemp) / 100
         IF ( mod(N,2) .ne. 0 ) N = N + 1
-        DO WHILE ( .not. conv .AND. iter .le. nsiter )
+        DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL pade_cont_iso_iaxis_to_raxis( itemp, N, conv )
           N = N - 2
           iter = iter + 1
@@ -117,7 +117,7 @@
           CALL stop_clock( 'raxis_pade' )
           CALL print_clock( 'raxis_pade' )
           WRITE(stdout,'(a)') '  '
-        ELSEIF ( .not. conv  .AND. (iter-1) .eq. nsiter ) THEN
+        ELSEIF ( .NOT. conv  .AND. (iter-1) == nsiter ) THEN
           CALL deallocate_eliashberg
           WRITE(stdout,'(a)') '  '
           CALL stop_clock( 'raxis_pade' )
@@ -137,7 +137,7 @@
         !
         iter = 1
         conv = .false.
-        DO WHILE ( .not. conv .AND. iter .le. nsiter )
+        DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL analytic_cont_iso_iaxis_to_raxis( itemp, iter, conv )
           rdeltain(:)  = real(Deltap(:))
           cdeltain(:)  = aimag(Deltap(:))
@@ -155,7 +155,7 @@
           CALL stop_clock( 'raxis_acon' )
           CALL print_clock( 'raxis_acon' )
           WRITE(stdout,'(a)') ' '
-        ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
+        ELSEIF ( .NOT. conv .AND. (iter-1) == nsiter ) THEN
           CALL deallocate_eliashberg
           WRITE(stdout,'(a)') '  '
           CALL stop_clock( 'raxis_acon' )
@@ -217,15 +217,15 @@
     REAL(DP), ALLOCATABLE, SAVE :: Deltaold(:)
     !! gap
     !
-    IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nsiw(itemp)) )
-    IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(wesqrt) ) ALLOCATE ( wesqrt(nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(desqrt) ) ALLOCATE ( desqrt(nsiw(itemp)) )
     !
-    IF ( iter .eq. 1 ) THEN
-      IF ( .not. ALLOCATED(gap) )      ALLOCATE( gap(nstemp) )
-      IF ( .not. ALLOCATED(Deltai) )   ALLOCATE( Deltai(nsiw(itemp)) )
-      IF ( .not. ALLOCATED(Deltaip) )  ALLOCATE( Deltaip(nsiw(itemp)) )
-      IF ( .not. ALLOCATED(Znormi) )   ALLOCATE( Znormi(nsiw(itemp)) )
-      IF ( .not. ALLOCATED(NZnormi) )  ALLOCATE( NZnormi(nsiw(itemp)) )
+    IF ( iter == 1 ) THEN
+      IF ( .NOT. ALLOCATED(gap) )      ALLOCATE ( gap(nstemp) )
+      IF ( .NOT. ALLOCATED(Deltai) )   ALLOCATE ( Deltai(nsiw(itemp)) )
+      IF ( .NOT. ALLOCATED(Deltaip) )  ALLOCATE ( Deltaip(nsiw(itemp)) )
+      IF ( .NOT. ALLOCATED(Znormi) )   ALLOCATE ( Znormi(nsiw(itemp)) )
+      IF ( .NOT. ALLOCATED(NZnormi) )  ALLOCATE ( NZnormi(nsiw(itemp)) )
       gap(itemp) = zero
       Deltaip(:) = zero
       Deltaip(:) = gap0
@@ -236,8 +236,8 @@
     NZnormi(:) = zero
     Deltai(:) = zero
     !
-    IF ( iter .eq. 1 ) THEN
-      IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsiw(itemp)) )
+    IF ( iter == 1 ) THEN
+      IF ( .NOT. ALLOCATED(Deltaold) ) ALLOCATE ( Deltaold(nsiw(itemp)) )
       Deltaold(:) = gap0
     ENDIF
     absdelta = zero 
@@ -245,7 +245,7 @@
     DO iw = 1, nsiw(itemp) ! loop over omega
       DO iwp = 1, nsiw(itemp) ! loop over omega_prime
         ! this step is performed at each iter step only for iw=1 since it is independ of wsi(iw)
-        IF ( iw .eq. 1 ) THEN
+        IF ( iw == 1 ) THEN
           esqrt = 1.d0 / sqrt( wsi(iwp)**2.d0 + Deltaip(iwp)**2.d0 )
           wesqrt(iwp) =  wsi(iwp) * esqrt 
           desqrt(iwp) =  Deltaip(iwp) * esqrt 
@@ -270,21 +270,21 @@
     WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, '   error = ', errdelta, &
                                            '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
     !
-    IF ( errdelta .lt. conv_thr_iaxis ) conv = .true.
-    IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
+    IF ( errdelta < conv_thr_iaxis ) conv = .true.
+    IF ( errdelta < conv_thr_iaxis .OR. iter == nsiter ) THEN
       gap(itemp) = Deltai(1)
       gap0 = gap(itemp)
       CALL eliashberg_write_iaxis( itemp )
     ENDIF
     !
-    IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)
-    IF( ALLOCATED(desqrt) ) DEALLOCATE(desqrt)
+    IF( ALLOCATED(wesqrt) ) DEALLOCATE (wesqrt)
+    IF( ALLOCATED(desqrt) ) DEALLOCATE (desqrt)
     !
-    IF ( conv .OR. iter .eq. nsiter ) THEN
-      IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
+    IF ( conv .OR. iter == nsiter ) THEN
+      IF( ALLOCATED(Deltaold) ) DEALLOCATE (Deltaold)
       WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
     ENDIF
-    IF ( .not. conv .AND. iter .eq. nsiter ) THEN
+    IF ( .NOT. conv .AND. iter == nsiter ) THEN
       WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
       CALL errore('sum_eliashberg_iso_iaxis','increase nsiter or reduce conv_thr_iaxis',1)
       !CALL deallocate_eliashberg
@@ -336,12 +336,12 @@
     CHARACTER (len=256) :: cname
     !! character in file name
     !
-    IF ( iter .eq. 1 ) THEN
-      IF ( .not. ALLOCATED(Delta) )    ALLOCATE( Delta(nsw) )
-      IF ( .not. ALLOCATED(Deltap) )   ALLOCATE( Deltap(nsw) )
-      IF ( .not. ALLOCATED(Znorm) )    ALLOCATE( Znorm(nsw) )
-      IF ( .not. ALLOCATED(Znormp) )   ALLOCATE( Znormp(nsw) )
-      IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsw) )
+    IF ( iter == 1 ) THEN
+      IF ( .NOT. ALLOCATED(Delta) )    ALLOCATE ( Delta(nsw) )
+      IF ( .NOT. ALLOCATED(Deltap) )   ALLOCATE ( Deltap(nsw) )
+      IF ( .NOT. ALLOCATED(Znorm) )    ALLOCATE ( Znorm(nsw) )
+      IF ( .NOT. ALLOCATED(Znormp) )   ALLOCATE ( Znormp(nsw) )
+      IF ( .NOT. ALLOCATED(Deltaold) ) ALLOCATE ( Deltaold(nsw) )
       Deltap(:) = czero
       Deltaold(:) = czero
       IF ( lpade ) THEN
@@ -352,10 +352,10 @@
          Deltaold(:) = gap(itemp)
       ENDIF
       Znormp(:) = cone
-      IF ( .not. ALLOCATED(Gp) ) ALLOCATE( Gp(nsw,nqstep) )
-      IF ( .not. ALLOCATED(Gm) ) ALLOCATE( Gm(nsw,nqstep) )
-      IF ( .not. ALLOCATED(Dsumi) ) ALLOCATE( Dsumi(nsw) )
-      IF ( .not. ALLOCATED(Zsumi) ) ALLOCATE( Zsumi(nsw) )
+      IF ( .NOT. ALLOCATED(Gp) ) ALLOCATE ( Gp(nsw,nqstep) )
+      IF ( .NOT. ALLOCATED(Gm) ) ALLOCATE ( Gm(nsw,nqstep) )
+      IF ( .NOT. ALLOCATED(Dsumi) ) ALLOCATE ( Dsumi(nsw) )
+      IF ( .NOT. ALLOCATED(Zsumi) ) ALLOCATE ( Zsumi(nsw) )
       CALL kernel_iso_iaxis_analytic_cont( itemp )
     ENDIF
     Znorm(:) = czero
@@ -365,16 +365,16 @@
     reldelta = zero
     DO iw = 1, nsw ! loop over omega
       DO iwp = 1, nqstep ! loop over omega_prime
-        IF ( iter .eq. 1 ) THEN 
+        IF ( iter == 1 ) THEN 
           CALL gamma_acont( ws(iw), ws(iwp), estemp(itemp), rgammap, rgammam )
           Gp(iw,iwp) = rgammap
           Gm(iw,iwp) = rgammam
         ENDIF
         !
         i = iw + iwp - 1
-        IF ( i .le. nsw ) THEN
+        IF ( i <= nsw ) THEN
           root = sqrt( Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0 ) )
-          IF ( aimag(root) .lt. zero ) THEN 
+          IF ( aimag(root) < zero ) THEN 
              esqrt = Znormp(i) / conjg(root)
           ELSE  
              esqrt = Znormp(i) / root
@@ -386,13 +386,13 @@
         ! 
         i = abs(iw - iwp) + 1
         root = sqrt( Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0 ) )
-        IF ( aimag(root) .lt. zero ) THEN 
+        IF ( aimag(root) < zero ) THEN 
            esqrt = Znormp(i) / conjg(root)
         ELSE  
            esqrt = Znormp(i) / root
         ENDIF
         esqrt = esqrt * Gm(iw,iwp) * a2f_iso(iwp) 
-        IF ( iw .lt. iwp ) THEN 
+        IF ( iw < iwp ) THEN 
            Znorm(iw) = Znorm(iw) - ws(i) * esqrt 
         ELSE
            Znorm(iw) = Znorm(iw) + ws(i) * esqrt 
@@ -411,17 +411,17 @@
                  '   error = ', errdelta, '   Re[Znorm(1)] = ', real(Znorm(1)), & 
                  '   Re[Delta(1)] = ', real(Delta(1))
     !
-    IF ( errdelta .lt. conv_thr_racon ) conv = .true.
-    IF ( errdelta .lt. conv_thr_racon .OR. iter .eq. nsiter ) THEN
+    IF ( errdelta < conv_thr_racon ) conv = .true.
+    IF ( errdelta < conv_thr_racon .OR. iter == nsiter ) THEN
        cname = 'acon'
        CALL eliashberg_write_raxis( itemp, cname )
     ENDIF
     !
-    IF ( conv .OR. iter .eq. nsiter ) THEN
-       IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
+    IF ( conv .OR. iter == nsiter ) THEN
+       IF( ALLOCATED(Deltaold) ) DEALLOCATE (Deltaold)
        WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
     ENDIF
-    IF ( .not. conv .AND. iter .eq. nsiter ) THEN
+    IF ( .NOT. conv .AND. iter == nsiter ) THEN
        WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
        CALL errore('analytic_cont_iso_iaxis_to_raxis','increase nsiter or reduce conv_thr_racon',-1)
     ENDIF
@@ -482,8 +482,8 @@
     absdelta = zero
     reldelta = zero
     !
-    IF ( .not. ALLOCATED(Delta) )  ALLOCATE( Delta(nsw) )
-    IF ( .not. ALLOCATED(Znorm) )  ALLOCATE( Znorm(nsw) )
+    IF ( .NOT. ALLOCATED(Delta) )  ALLOCATE ( Delta(nsw) )
+    IF ( .NOT. ALLOCATED(Znorm) )  ALLOCATE ( Znorm(nsw) )
     Znorm(:) = czero
     Delta(:) = czero
     !
@@ -507,7 +507,7 @@
     ENDDO
     errdelta = reldelta / absdelta
     !
-    IF ( errdelta .gt. zero ) THEN 
+    IF ( errdelta > zero ) THEN 
        conv = .true.
        WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'pade = ', N, & 
               '   error = ', errdelta, '   Re[Znorm(1)] = ', real(Znorm(1)), & 
@@ -516,7 +516,7 @@
        CALL eliashberg_write_raxis( itemp, cname )
     ENDIF
     !
-  !  IF ( .not. conv ) THEN
+  !  IF ( .NOT. conv ) THEN
   !     WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached pade = ', N
   !     CALL errore('pade_cont_iso_iaxis_to_raxis','decrease number of Pade approximants',-1)
   !  ENDIF
@@ -550,7 +550,7 @@
     REAL(DP) :: lambda_eph
     !! electron-phonon coupling
     !
-    IF ( .not. ALLOCATED(Keri) ) ALLOCATE( Keri(2*nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(Keri) ) ALLOCATE ( Keri(2*nsiw(itemp)) )
     Keri(:) = zero
     !
     DO iw = 1, 2*nsiw(itemp)
@@ -629,10 +629,10 @@
     COMPLEX(DP) :: lambda_eph
     !! electron-phonon coupling lambda(w-iw_n)
     !
-    IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nsiw(itemp)) )
-    IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nsiw(itemp)) )
-    IF ( .not. ALLOCATED(Dsumi) )  ALLOCATE( Dsumi(nsw) )
-    IF ( .not. ALLOCATED(Zsumi) )  ALLOCATE( Zsumi(nsw) )
+    IF ( .NOT. ALLOCATED(wesqrt) ) ALLOCATE ( wesqrt(nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(desqrt) ) ALLOCATE ( desqrt(nsiw(itemp)) )
+    IF ( .NOT. ALLOCATED(Dsumi) )  ALLOCATE ( Dsumi(nsw) )
+    IF ( .NOT. ALLOCATED(Zsumi) )  ALLOCATE ( Zsumi(nsw) )
     Dsumi(:) = zero
     Zsumi(:) = zero
     !
@@ -641,7 +641,7 @@
           CALL lambdai_iso( ws(iw), wsi(iwp), lambda_eph )
           kernelp = 2.d0 * real(lambda_eph)
           kernelm = 2.d0 * aimag(lambda_eph) 
-          IF ( iw .eq. 1 ) THEN
+          IF ( iw == 1 ) THEN
              esqrt = 1.d0 / sqrt( wsi(iwp)**2.d0 + Deltai(iwp)**2.d0 )
              wesqrt(iwp) =  wsi(iwp) * esqrt
              desqrt(iwp) =  Deltai(iwp) * esqrt
@@ -723,7 +723,7 @@
     IF ( ABS(temp) < eps6 ) THEN
        rgammap = zero
        rgammam = one
-    ELSEIF ( omegap .gt. zero ) THEN
+    ELSEIF ( omegap > zero ) THEN
        rgammap = 0.5d0 * (   tanh( 0.5d0 * ( omega + omegap ) / temp ) &
                            - 1.d0 / tanh( 0.5d0 * omegap / temp ) )
        rgammam = 0.5d0 * (   tanh( 0.5d0 * ( omega - omegap ) / temp ) &
@@ -749,7 +749,6 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
     USE eliashbergcom, ONLY : nsw, Delta, Deltap, gap, estemp
     USE constants_epw, ONLY : kelvin2eV, ci
@@ -782,7 +781,7 @@
        WRITE(stdout,'(a)') '    '
        iter = 1
        conv = .false.
-       DO WHILE ( .not. conv .AND. iter .le. nsiter )
+       DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL integrate_eliashberg_iso_raxis( itemp, iter, conv )
           rdeltain(:) = real(Deltap(:))
           cdeltain(:) = aimag(Deltap(:))
@@ -805,7 +804,7 @@
           WRITE(stdout,'(a)') '    '
           CALL print_clock( 'iso_raxis' )
           WRITE(stdout,'(a)') '    '
-       ELSEIF ( .not. conv .AND. (iter-1) .eq. nsiter ) THEN
+       ELSEIF ( .NOT. conv .AND. (iter-1) == nsiter ) THEN
           CALL deallocate_eliashberg
           WRITE(stdout,'(a)') '  '
           CALL stop_clock( 'iso_raxis' )
@@ -870,44 +869,44 @@
     REAL(DP), EXTERNAL :: wgauss
     CHARACTER(len=256) :: name1, cname
     !
-    IF ( .not. ALLOCATED(wesqrt) ) ALLOCATE( wesqrt(nsw) )
-    IF ( .not. ALLOCATED(desqrt) ) ALLOCATE( desqrt(nsw) )
+    IF ( .NOT. ALLOCATED(wesqrt) ) ALLOCATE ( wesqrt(nsw) )
+    IF ( .NOT. ALLOCATED(desqrt) ) ALLOCATE ( desqrt(nsw) )
     !
-    IF ( iter .eq. 1 ) THEN 
-       IF ( .not. ALLOCATED(gap) )    ALLOCATE( gap(nstemp) )
-       IF ( .not. ALLOCATED(Delta) )  ALLOCATE( Delta(nsw) )
-       IF ( .not. ALLOCATED(Deltap) ) ALLOCATE( Deltap(nsw) )
-       IF ( .not. ALLOCATED(Znorm) )  ALLOCATE( Znorm(nsw) )
+    IF ( iter == 1 ) THEN 
+       IF ( .NOT. ALLOCATED(gap) )    ALLOCATE ( gap(nstemp) )
+       IF ( .NOT. ALLOCATED(Delta) )  ALLOCATE ( Delta(nsw) )
+       IF ( .NOT. ALLOCATED(Deltap) ) ALLOCATE ( Deltap(nsw) )
+       IF ( .NOT. ALLOCATED(Znorm) )  ALLOCATE ( Znorm(nsw) )
        gap(itemp) = zero
        Deltap(:)  = czero
        Deltap(:)  = gap0 
-       IF ( .not. ALLOCATED(fdwp) ) ALLOCATE( fdwp(nsw) )
-       IF ( .not. ALLOCATED(Kp) )   ALLOCATE( Kp(nsw,nsw) )
-       IF ( .not. ALLOCATED(Km) )   ALLOCATE( Km(nsw,nsw) )
+       IF ( .NOT. ALLOCATED(fdwp) ) ALLOCATE ( fdwp(nsw) )
+       IF ( .NOT. ALLOCATED(Kp) )   ALLOCATE ( Kp(nsw,nsw) )
+       IF ( .NOT. ALLOCATED(Km) )   ALLOCATE ( Km(nsw,nsw) )
     ENDIF
     Delta(:) = czero
     Znorm(:) = czero
     !
     temp = estemp(itemp) / kelvin2eV
-    IF ( temp .lt. 10.d0 ) THEN  
+    IF ( temp < 10.d0 ) THEN  
        WRITE(name1,'(a,a7,f4.2)') TRIM(prefix),'.ker_00', temp
-    ELSEIF ( temp .ge. 10.d0 ) THEN 
+    ELSEIF ( temp >= 10.d0 ) THEN 
        WRITE(name1,'(a,a6,f5.2)') TRIM(prefix),'.ker_0', temp
-    ELSEIF ( temp .ge. 100.d0 ) THEN 
+    ELSEIF ( temp >= 100.d0 ) THEN 
        WRITE(name1,'(a,a5,f6.2)') TRIM(prefix),'.ker_', temp
     ENDIF
-    OPEN(iufilker, file=name1, form='unformatted')
+    OPEN(iufilker, FILE=name1, FORM='unformatted')
     !
-    IF ( iter .eq. 1 ) THEN
-       IF ( .not. ALLOCATED(Deltaold) ) ALLOCATE( Deltaold(nsw) )
+    IF ( iter == 1 ) THEN
+       IF ( .NOT. ALLOCATED(Deltaold) ) ALLOCATE ( Deltaold(nsw) )
        Deltaold(:) = gap0
     ENDIF          
     absdelta = zero
     reldelta = zero
     DO iw = 1, nsw ! loop over omega
       DO iwp = 1, nsw ! loop over omega_prime
-        IF ( iter .eq. 1 ) THEN
-          IF ( iw .eq. 1 ) THEN
+        IF ( iter == 1 ) THEN
+          IF ( iw == 1 ) THEN
             IF ( ABS(estemp(itemp)) <  eps6 ) THEN
                fdwp(iwp) = zero
             ELSE
@@ -931,17 +930,17 @@
         ENDIF
         !
         ! this step is performed at each iter step only for iw=1 since it is independent of w(iw)
-        IF ( iw .eq. 1 ) THEN
+        IF ( iw == 1 ) THEN
            esqrt = 1.d0 / sqrt( ws(iwp)**2.d0 - Deltap(iwp)**2.d0 )
            wesqrt(iwp) =  real( ws(iwp) * esqrt )
            desqrt(iwp) =  real( Deltap(iwp) * esqrt )
         ENDIF
         !
         ! end points contribute only half ( trapezoidal integration rule )
-        IF ( (iwp .eq. 1) .OR. (iwp .eq. nsw) ) THEN
+        IF ( (iwp == 1) .OR. (iwp == nsw) ) THEN
            dstep = 0.5d0 * dws(iwp) 
         ! boundary points contribute half from left and half from right side
-        ELSEIF ( iwp .eq. nswfc ) THEN
+        ELSEIF ( iwp == nswfc ) THEN
            dstep = 0.5d0 * ( dws(iwp) + dws(iwp+1) )
         ELSE
            dstep = dws(iwp)
@@ -962,20 +961,20 @@
     WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, '   error = ', errdelta, & 
                                   '   Re[Znorm(1)] = ', real(Znorm(1)), '   Re[Delta(1)] = ', real(Delta(1)) 
     !
-    IF ( errdelta .lt. conv_thr_raxis) conv = .true.
-    IF ( errdelta .lt. conv_thr_raxis .OR. iter .eq. nsiter ) THEN
+    IF ( errdelta < conv_thr_raxis) conv = .true.
+    IF ( errdelta < conv_thr_raxis .OR. iter == nsiter ) THEN
       cname = 'real'
       CALL eliashberg_write_raxis( itemp, cname )
       gap0 = gap(itemp)
     ENDIF
     !
-    IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)
-    IF( ALLOCATED(desqrt) ) DEALLOCATE(desqrt)
+    IF( ALLOCATED(wesqrt) ) DEALLOCATE (wesqrt)
+    IF( ALLOCATED(desqrt) ) DEALLOCATE (desqrt)
     !
-    IF ( conv .OR. iter .eq. nsiter ) THEN
-       IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
+    IF ( conv .OR. iter == nsiter ) THEN
+       IF( ALLOCATED(Deltaold) ) DEALLOCATE (Deltaold)
     ENDIF
-    IF ( .not. conv .AND. iter .eq. nsiter ) THEN
+    IF ( .NOT. conv .AND. iter == nsiter ) THEN
        WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
        CALL errore('integrate_eliashberg_iso_raxis','increase nsiter or reduce conv_thr_raxis',-1)
     ENDIF
@@ -1031,10 +1030,10 @@
     e3 = czero
     e4 = czero
     !
-    IF ( .not. ALLOCATED(bewph) ) ALLOCATE( bewph(nqstep) )
+    IF ( .NOT. ALLOCATED(bewph) ) ALLOCATE ( bewph(nqstep) )
     ! Bose-Einstein distribution
     DO iwph = 1, nqstep  ! loop over Omega (integration variable)
-       IF ( iw .eq. 1 .AND. iwp .eq. 1 ) THEN
+       IF ( iw == 1 .AND. iwp == 1 ) THEN
           IF ( ABS(estemp(itemp)) <  eps6 ) THEN
              bewph(iwph)  = zero
           ELSE

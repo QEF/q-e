@@ -26,13 +26,6 @@ program fd_ifc
 
   USE symm_base
   USE symme
-  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
-       which_irr, char_mat, name_rap, name_class, gname, ir_ram
-  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
-       which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
-       name_class_so1
-  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
-       gname_is, sname_is, code_group_is
   USE fft_base, ONLY : dfftp
 
 implicit none

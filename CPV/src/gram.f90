@@ -12,6 +12,7 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
       USE uspp,           ONLY : nkb, nhsavb=> nkbus
+      USE uspp,           ONLY : qq_nt
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
@@ -116,13 +117,12 @@ CONTAINS
 !
       DO is=1,nvb
          DO iv=1,nh(is)
+            inl=ish(is)+(iv-1)*na(is)
             DO jv=1,nh(is)
+               jnl=ish(is)+(jv-1)*na(is)
                IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
                   DO ia=1,na(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     jnl=ish(is)+(jv-1)*na(is)+ia
-                     rsum = rsum +                                        &
-     &                    qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,i)
+                     rsum = rsum + qq_nt(iv,jv,is)*bec(inl+ia,i)*bec(jnl+ia,i)
                   END DO
                ENDIF
             END DO
@@ -147,7 +147,7 @@ CONTAINS
       USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum
-      USE mp_global,      ONLY: intra_bgrp_comm, inter_bgrp_comm
+      USE mp_global,      ONLY: intra_bgrp_comm, inter_bgrp_comm, me_bgrp, nproc_bgrp
       USE kinds,          ONLY: DP
       USE gvect, ONLY: gstart
 !
@@ -165,6 +165,9 @@ CONTAINS
       COMPLEX(DP), ALLOCATABLE :: cp_tmp(:) 
       REAL(DP), ALLOCATABLE :: bec_tmp(:) 
       REAL(DP), ALLOCATABLE :: csc2( : )
+#if defined(_OPENMP)
+      INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads
+#endif
       !
       !     calculate csc(k)=<cp(i)|cp(k)>,  k<i
       !
@@ -173,6 +176,7 @@ CONTAINS
       ALLOCATE( cp_tmp( ngwx ) )
       ALLOCATE( bec_tmp( nkbx ) )
       ALLOCATE( csc2( SIZE( csc ) ) )
+
 
       cp_tmp = 0.0d0
       csc    = 0.0d0
@@ -192,7 +196,6 @@ CONTAINS
             ibgrp_k = ibgrp_g2l( k )
             IF( ibgrp_k > 0 ) THEN
                DO ig = 1, ngw
-                  !temp(ig) = cp_bgrp(1,ig,ibgrp_k) * cp_tmp(1,ig) + cp_bgrp(2,ig,ibgrp_k) * cp_tmp(2,ig)
                   temp(ig) = DBLE( cp_bgrp(ig,ibgrp_k) * CONJG(cp_tmp(ig)) )
                END DO
                csc(k) = 2.0d0 * SUM(temp)
@@ -212,8 +215,6 @@ CONTAINS
          DO inl=1,nhsavb
             DO ig=1,ngw
                temp(ig) = DBLE( cp_bgrp(ig,ibgrp_i) * CONJG(betae(ig,inl)) )
-!               temp(ig)=cp_bgrp(1,ig,ibgrp_i)* DBLE(betae(ig,inl))+             &
-!     &                  cp_bgrp(2,ig,ibgrp_i)*AIMAG(betae(ig,inl))
             END DO
             bec_bgrp(inl,ibgrp_i)=2.d0*SUM(temp)
             IF (gstart == 2) bec_bgrp(inl,ibgrp_i)= bec_bgrp(inl,ibgrp_i)-temp(1)
@@ -238,20 +239,33 @@ CONTAINS
 !     calculate csc(k)=<cp(i)|S|cp(k)>,  k<i
 !
       csc2    = 0.0d0
-!$omp parallel do default(shared), private( k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k )
+
+!$omp parallel default(none), &
+!$omp shared(iupdwn,iss,kmax,nproc_bgrp,me_bgrp,ispin,i,ibgrp_g2l,nh,ish,qq_nt,na,bec_tmp,bec_bgrp,csc2,nvb), &
+!$omp private( k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k, ntids, mytid )
+#if defined(_OPENMP)
+      mytid = omp_get_thread_num()  ! take the thread ID
+      ntids = omp_get_num_threads() ! take the number of threads
+#endif
+
       DO k=iupdwn(iss), kmax
+         IF ( MOD( k, nproc_bgrp ) /= me_bgrp ) CYCLE
+#if defined(_OPENMP)
+         ! distribute bands round robin to threads
+         IF( MOD( k / nproc_bgrp, ntids ) /= mytid ) CYCLE
+#endif
          IF (ispin(i).EQ.ispin(k)) THEN
             rsum=0.d0
             ibgrp_k = ibgrp_g2l( k )
             IF( ibgrp_k > 0 ) THEN
             DO is=1,nvb
                DO iv=1,nh(is)
+                  inl=ish(is)+(iv-1)*na(is)
                   DO jv=1,nh(is)
+                     jnl=ish(is)+(jv-1)*na(is)
                      IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
                         DO ia=1,na(is)
-                           inl=ish(is)+(iv-1)*na(is)+ia
-                           jnl=ish(is)+(jv-1)*na(is)+ia
-                           rsum = rsum + qq_nt(iv,jv,is)*bec_tmp(inl)*bec_bgrp(jnl,ibgrp_k)
+                           rsum = rsum + qq_nt(iv,jv,is)*bec_tmp(inl+ia)*bec_bgrp(jnl+ia,ibgrp_k)
                         END DO
                      ENDIF
                   END DO
@@ -261,24 +275,30 @@ CONTAINS
             csc2(k)=csc2(k)+rsum
          ENDIF
       END DO
-!$omp end parallel do
+!$omp end parallel
 !
 !     orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
 !
 !     corresponing bec:  bec(i)=<cp(i)|beta>-csc(k)<cp(k)|beta>
 !
+      CALL mp_sum( csc2, intra_bgrp_comm )
       CALL mp_sum( csc2, inter_bgrp_comm )
       csc = csc + csc2
 
       bec_tmp = 0.0d0
+      DO k = iupdwn(iss), kmax
+         ibgrp_k = ibgrp_g2l( k )
+         IF( ibgrp_k > 0 ) THEN
+            DO inl=1,nkbx
+               bec_tmp(inl)=bec_tmp(inl)-csc(k)*bec_bgrp(inl,ibgrp_k)
+            END DO
+         END IF
+      END DO
       nk = 0
       DO k = iupdwn(iss), kmax
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
             nk = nk + 1 
-            DO inl=1,nkbx
-               bec_tmp(inl)=bec_tmp(inl)-csc(k)*bec_bgrp(inl,ibgrp_k)
-            END DO
             csc( nk ) = csc( k )
          END IF
       END DO

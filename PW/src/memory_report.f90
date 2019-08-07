@@ -68,8 +68,6 @@ SUBROUTINE memory_report()
   INTEGER :: indm, ijv, roughestimate
   REAL(DP):: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
   !
-  INTEGER, EXTERNAL :: n_plane_waves
-  !
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
@@ -160,7 +158,7 @@ SUBROUTINE memory_report()
   !=====================================================================
   ! Nonlocal pseudopotentials V_NL (beta functions), reciprocal space
   !=====================================================================
-  add = complex_size * nkb * npwx_l ! allocate_nlpot.f90:88 vkb
+  add = complex_size * nkb * npwx_l ! allocate_wfc.f90:62 vkb
   IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'nlocal pot', add/MB
   ram = ram + add
   ! other (possibly minor) data loads

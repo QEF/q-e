@@ -154,7 +154,7 @@ MODULE io_rho_xml
       CALL read_rhog( TRIM(dirname) // "charge-density", &
            root_bgrp, intra_bgrp_comm, &
            ig_l2g, nspin_, rho%of_g, gamma_only )
-      IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
+      IF ( nspin > nspin_) rho%of_g(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
       ! read kinetic energy density
       IF ( dft_is_meta() ) THEN

@@ -34,10 +34,10 @@ SUBROUTINE run_manypw ( )
   !
   IMPLICIT NONE
   !
-  INTEGER :: i, first_image, ios
+  INTEGER :: i, first_image, ios, width
   LOGICAL :: opnd
   CHARACTER(LEN=256) :: filin, filout
-  CHARACTER(LEN=7) :: image_label, var_first_index
+  CHARACTER(LEN=7) :: image_label, var_first_index, var_width
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
@@ -45,10 +45,22 @@ SUBROUTINE run_manypw ( )
   READ(var_first_index, *, iostat=ios) first_image
   IF(ios/= 0) first_image = 0
   CALL mp_bcast( first_image   , root, world_comm )
+
+  CALL get_environment_variable( 'IMAGE_INDEX_WIDTH', var_width )
+  READ(var_width, *, iostat=ios) width
+  IF(ios/= 0) width = 0
+  CALL mp_bcast( width   , root, world_comm )
+  
+  
   !
   ! ... Image-specific input files
   !
-  image_label = '_' // int_to_char(my_image_id+first_image)
+  image_label = int_to_char(my_image_id+first_image)
+  DO WHILE(len(TRIM(image_label))<width)
+    image_label= "0"//image_label
+  ENDDO
+  image_label="_"//image_label
+  !
   IF ( TRIM (input_file_) == ' ') THEN
      filin = 'pw' // TRIM(image_label)  // '.in'
   ELSE

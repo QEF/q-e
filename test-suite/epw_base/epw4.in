@@ -37,7 +37,6 @@
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
 
   filkf       = 'path.dat'
   filqf       = 'path.dat'

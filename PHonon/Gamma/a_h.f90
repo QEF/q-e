@@ -21,7 +21,8 @@ SUBROUTINE A_h(npw,e,h,ah)
   USE gvect,    ONLY : gstart, g, gg
   USE constants,  ONLY: degspin, e2, fpi
   USE becmod, ONLY: bec_type, becp, calbec
-  USE cgcom
+  USE gc_lr, ONLY:  grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  USE cgcom, ONLY: auxr, aux2, aux3, dmuxc
   USE funct, ONLY: dft_is_gradient
   !
   IMPLICIT NONE

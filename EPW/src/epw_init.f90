@@ -18,32 +18,35 @@
   !!     Roxana Margine - Dec 2018: Updated based on QE 6.3
   !!
   !
-  USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-  USE becmod,               ONLY : calbec
-  USE phus,                 ONLY : alphap
-  USE lrus,                 ONLY : becp1
-  USE uspp,                 ONLY : vkb
-  USE pwcom,                ONLY : npwx, nbnd, nks, lsda, current_spin, &
-                                   isk, xk
-  USE constants,            ONLY : tpi
-  USE constants_epw,        ONLY : zero, czero, cone
-  USE cell_base,            ONLY : tpiba2, tpiba, bg, omega
-  USE klist,                ONLY : ngk, igk_k, nkstot
-  USE gvect,                ONLY : g, ngm
-  USE atom,                 ONLY : msh, rgrid
-  USE wavefunctions,        ONLY : evc
-  USE noncollin_module,     ONLY : noncolin, npol
-  USE uspp_param,           ONLY : upf
-  USE m_gth,                ONLY : setlocq_gth
-  USE units_lr,             ONLY : lrwfc, iuwfc
-  USE phcom,                ONLY : vlocq
-  USE qpoint,               ONLY : xq, eigqts
-  USE nlcc_ph,              ONLY : drc                           
-  USE uspp,                 ONLY : nlcc_any
-  USE elph2,                ONLY : igk_k_all, ngk_all
-  USE mp,                   ONLY : mp_barrier
-  USE mp_global,            ONLY : inter_pool_comm
+  USE kinds,            ONLY : DP
+  USE ions_base,        ONLY : nat, ntyp => nsp, tau
+  USE becmod,           ONLY : calbec, becp, allocate_bec_type
+  USE lrus,             ONLY : becp1
+  USE uspp,             ONLY : vkb, nlcc_any, okvan, nkb
+  USE pwcom,            ONLY : npwx, nbnd, nks
+  USE klist_epw,        ONLY : xk_loc, isk_loc
+  USE constants,        ONLY : tpi
+  USE constants_epw,    ONLY : zero, czero, cone
+  USE cell_base,        ONLY : tpiba2, tpiba, omega
+  USE klist,            ONLY : ngk, igk_k, nkstot
+  USE gvect,            ONLY : g, ngm
+  USE atom,             ONLY : msh, rgrid
+  USE wavefunctions,    ONLY : evc
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE uspp_param,       ONLY : upf, nhm
+  USE m_gth,            ONLY : setlocq_gth
+  USE units_lr,         ONLY : lrwfc, iuwfc
+  USE phcom,            ONLY : vlocq
+  USE qpoint,           ONLY : xq, eigqts
+  USE nlcc_ph,          ONLY : drc                           
+  USE elph2,            ONLY : igk_k_all, ngk_all
+  USE mp,               ONLY : mp_barrier
+  USE mp_global,        ONLY : inter_pool_comm, my_pool_id
+  USE spin_orb,         ONLY : lspinorb
+  USE lsda_mod,         ONLY : nspin, lsda, current_spin
+  USE phus,             ONLY : int1, int1_nc, int2, int2_so, &
+                               int4, int4_nc, int5, int5_so, &
+                               alphap
   !
   IMPLICIT NONE
   !
@@ -72,13 +75,43 @@
   !
   !
   CALL start_clock( 'epw_init' )
-  !
+  ! 
+  IF (first_run) THEN
+    ALLOCATE (vlocq(ngm, ntyp))
+    ALLOCATE (eigqts(nat))
+    IF (okvan) THEN
+      ALLOCATE (int1(nhm, nhm, 3, nat, nspin_mag))
+      ALLOCATE (int2(nhm, nhm, 3, nat, nat))
+      ALLOCATE (int4(nhm * (nhm + 1)/2, 3, 3, nat, nspin_mag))
+      ALLOCATE (int5(nhm * (nhm + 1)/2, 3, 3, nat , nat))
+      IF (noncolin) THEN
+        ALLOCATE (int1_nc(nhm, nhm, 3, nat, nspin))
+        ALLOCATE (int4_nc(nhm, nhm, 3, 3, nat, nspin))
+        IF (lspinorb) THEN
+          ALLOCATE (int2_so(nhm, nhm, 3, nat, nat, nspin))
+          ALLOCATE (int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
+        ENDIF
+      ENDIF ! noncolin
+    ENDIF ! okvan
+    !  
+    ALLOCATE (becp1(nks))
+    ALLOCATE (alphap(3, nks))
+    ! 
+    DO ik = 1, nks
+      CALL allocate_bec_type(nkb, nbnd, becp1(ik))
+      DO ipol = 1, 3
+        CALL allocate_bec_type(nkb, nbnd, alphap(ipol,ik))
+      ENDDO
+    ENDDO
+    CALL allocate_bec_type(nkb, nbnd, becp)
+  ENDIF
+  ! 
   DO na = 1, nat
     !
     ! xq here is the first q of the star
-    arg = ( xq(1) * tau(1,na) + &
-            xq(2) * tau(2,na) + &
-            xq(3) * tau(3,na) ) * tpi
+    arg = (xq(1) * tau(1, na) + &
+           xq(2) * tau(2, na) + &
+           xq(3) * tau(3, na)) * tpi
     !        
     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ), kind=DP )
     !
@@ -104,20 +137,22 @@
     !
   END DO
   !
-  ALLOCATE( aux1( npwx*npol, nbnd ) )
-  !
+  ALLOCATE (aux1(npwx*npol, nbnd))
+  !ALLOCATE (evc(npwx*npol, nbnd))
+  ! 
   DO ik = 1, nks
     !
     !
-    IF ( lsda ) current_spin = isk( ik )
+    IF (lsda) current_spin = isk_loc(ik)
     !
     ! ... d) The functions vkb(k+G)
     !
-    CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+    CALL init_us_2( ngk(ik), igk_k(1,ik), xk_loc(1,ik), vkb )
     !
     ! ... read the wavefunctions at k
     !
-    CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
+    CALL readwfc(my_pool_id + 1, ik, evc)
+    !CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
     !
     ! ... e) we compute the becp terms which are used in the rest of
     ! ...    the code
@@ -132,25 +167,24 @@
       DO ibnd = 1, nbnd
         DO ig = 1, ngk(ik)
           aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * cone * & 
-                          ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+                          ( xk_loc(ipol,ik) + g(ipol,igk_k(ig,ik)) )
         ENDDO
         IF (noncolin) THEN
           DO ig = 1, ngk(ik)
             aux1(ig+npwx,ibnd) = evc(ig+npwx,ibnd) * tpiba *cone *& 
-                      ( xk(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+                      ( xk_loc(ipol,ik) + g(ipol,igk_k(ig,ik)) )
           ENDDO
         ENDIF
       ENDDO
-      CALL calbec( ngk(ik), vkb, aux1, alphap(ipol,ik) )
+      CALL calbec( ngk(ik), vkb, aux1, alphap(ipol,ik) )      
     ENDDO
-    !
     !
   ENDDO
   !
-  DEALLOCATE( aux1 )
+  DEALLOCATE (aux1)
   !
-  IF(.not. ALLOCATED(igk_k_all)) ALLOCATE(igk_k_all(npwx,nkstot))
-  IF(.not. ALLOCATED(ngk_all))   ALLOCATE(ngk_all(nkstot))
+  IF( .NOT. ALLOCATED(igk_k_all) ) ALLOCATE (igk_k_all(npwx,nkstot))
+  IF( .NOT. ALLOCATED(ngk_all) )   ALLOCATE (ngk_all(nkstot))
   !
 #if defined(__MPI)
   !
@@ -165,7 +199,7 @@
   !
 #endif
   !
-  IF (.not.first_run) CALL dvanqq2()
+  IF ( .NOT. first_run ) CALL dvanqq2()
   !
   CALL stop_clock( 'epw_init' )
   !

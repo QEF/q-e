@@ -196,6 +196,11 @@ SUBROUTINE move_ions ( idone, ions_status )
               END IF
            END IF
            !
+        ELSE IF ( idone == nstep ) THEN
+           !
+           CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
+                                 stdout, tmp_dir )
+           !
         ELSE
            !
            ! ... if a new bfgs step is done, new threshold is computed

@@ -17,7 +17,7 @@
   CONTAINS
     ! 
     !--------------------------------------------------------------------------
-    SUBROUTINE hamwan2bloch ( nbnd, nrr, cuf, eig, chw, cfac, dims)
+    SUBROUTINE hamwan2bloch (nbnd, nrr, cuf, eig, chw, cfac, dims)
     !--------------------------------------------------------------------------
     !
     !  From the Hamiltonian in Wannier representation, find the corresponding
@@ -52,19 +52,19 @@
     INTEGER, INTENT (in) :: dims
     !! dims = nbndsub if use_ws or 1 otherwise
     ! 
-    REAL(kind=DP), INTENT (out) :: eig (nbnd)
+    REAL(kind=DP), INTENT (out) :: eig(nbnd)
     !! interpolated hamiltonian eigenvalues for this kpoint 
     ! 
     COMPLEX(kind=DP), INTENT (in) :: cfac(nrr, dims, dims)
     !! Exponential factor
-    COMPLEX(kind=DP), INTENT (in) :: chw( nbnd, nbnd, nrr)
+    COMPLEX(kind=DP), INTENT (in) :: chw(nbnd, nbnd, nrr)
     !! Hamiltonian in Wannier basis
     COMPLEX(kind=DP), INTENT (out) :: cuf(nbnd, nbnd)
     !! Rotation matrix U^\dagger, fine mesh
     !
     ! variables for lapack ZHPEVX 
     !
-    INTEGER :: neig, info, ifail( nbnd ), iwork( 5*nbnd )
+    INTEGER :: neig, info, ifail(nbnd), iwork( 5*nbnd )
     REAL(kind=DP) :: w( nbnd )
     REAL(kind=DP) :: rwork( 7*nbnd )
     COMPLEX(kind=DP) :: champ( nbnd*(nbnd+1)/2 )
@@ -154,8 +154,8 @@
     !  
     ! DS - Impose phase 
     IF (lphase) THEN
-      DO jbnd = 1, nbnd
-        INNER : DO ibnd = 1, nbnd
+      DO jbnd=1, nbnd
+        INNER : DO ibnd=1, nbnd
           IF ( ABS(cz(ibnd, jbnd)) > eps12 ) THEN
             cz(:, jbnd) = cz(:, jbnd) * conjg( cz(ibnd,jbnd) )
             cz(:, jbnd) = cz(:, jbnd)/sqrt(zdotu(nbnd,conjg(cz(:,jbnd)),1,cz(:, jbnd),1) )
@@ -170,7 +170,7 @@
     ! 
     ! U^\dagger is cuf(nbnd,nbnd)
     !
-    cuf = conjg( transpose ( cz ) )
+    cuf = CONJG(TRANSPOSE(cz))
     eig = w 
     !
     CALL stop_clock('HamW2B')
@@ -380,7 +380,7 @@
     USE cell_base, ONLY : at, bg
     USE phcom,     ONLY : nq1, nq2, nq3
     USE ions_base, ONLY : amass, tau, nat, ityp
-    USE elph2,     ONLY : ifc, epsi, zstar
+    USE elph2,     ONLY : ifc, epsi, zstar, wscache
     USE epwcom,    ONLY : lpolar
     USE constants_epw, ONLY : twopi, czero, zero, one
     USE io_global, ONLY : stdout
@@ -435,7 +435,6 @@
     !! inverse square root of masses
     !
     REAL(kind=DP), EXTERNAL :: wsweight
-    REAL(kind=DP), SAVE, ALLOCATABLE :: wscache(:,:,:,:,:)
     REAL(kind=DP) total_weight, weight, arg, r(3), r_ws(3)
     !
     COMPLEX(kind=DP) :: chf(nmodes, nmodes)
@@ -443,33 +442,33 @@
     COMPLEX(kind=DP) :: dyn(3,3,nat,nat)
     !! Dynamical matrix
     !
+    CALL start_clock ( 'DynW2B' )
+    ! 
     xq = xxq
     ! bring xq in cart. coordinates
-    CALL cryst_to_cart (1, xq, bg, 1)
+    CALL cryst_to_cart(1, xq, bg, 1)
     !
-    FIRST_TIME : IF (first) THEN
-      first=.false.
-      ALLOCATE( wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat,nat) )
+    IF (first) THEN
+      first = .false.
       DO na=1, nat
-         DO nb=1, nat
-            total_weight = zero
-            !
-            DO n1=-2*nq1,2*nq1
-               DO n2=-2*nq2,2*nq2
-                  DO n3=-2*nq3,2*nq3
-                     DO i=1, 3
-                        r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                        r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
-                     END DO
-                     wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
-                  ENDDO
-               ENDDO
+        DO nb=1, nat
+          total_weight = zero
+          !
+          DO n1=-2 * nq1, 2 * nq1
+            DO n2=-2 * nq2, 2 * nq2
+              DO n3=-2 * nq3, 2 * nq3
+                DO i=1, 3
+                  r(i) = n1 * at(i, 1) + n2 * at(i, 2) + n3 * at(i, 3)
+                  r_ws(i) = r(i) + tau(i, na) - tau(i, nb)
+                END DO
+                wscache(n3, n2, n1, nb, na) = wsweight(r_ws, rws, nrws)
+              ENDDO
             ENDDO
+          ENDDO
         ENDDO
       ENDDO
-    ENDIF FIRST_TIME
+    ENDIF 
     !
-    CALL start_clock ( 'DynW2B' )
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
     !----------------------------------------------------------
@@ -485,59 +484,59 @@
     dyn = czero
     !
     DO na=1, nat
-       DO nb=1, nat
-          total_weight=zero
-          DO n1=-2*nq1,2*nq1
-             DO n2=-2*nq2,2*nq2
-                DO n3=-2*nq3,2*nq3
-                   !
-                   ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
-                   !
-                   DO i=1, 3
-                      r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                   END DO
-                   !
-                   weight = wscache(n3,n2,n1,nb,na)
-                   IF (weight .GT. 0.0d0) THEN
-                      !
-                      ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
-                      !
-                      m1 = MOD(n1+1,nq1)
-                      IF(m1.LE.0) m1=m1+nq1
-                      m2 = MOD(n2+1,nq2)
-                      IF(m2.LE.0) m2=m2+nq2
-                      m3 = MOD(n3+1,nq3)
-                      IF(m3.LE.0) m3=m3+nq3
-                      !
-                      arg = twopi*(xq(1)*r(1) + xq(2)*r(2) + xq(3)*r(3))
-                      DO ipol=1, 3
-                         DO jpol=1, 3
-                            dyn(ipol,jpol,na,nb) =                 &
-                                 dyn(ipol,jpol,na,nb) +            &
-                                 ifc(m1,m2,m3,ipol,jpol,na,nb)*CMPLX(COS(arg),-SIN(arg),kind=DP)*weight
-                         END DO
-                      END DO
-                   END IF
-                   total_weight=total_weight + weight
-                END DO
-             END DO
-          END DO
-          IF (ABS(total_weight-nq1*nq2*nq3).GT.1.0d-8) THEN
-             WRITE(stdout,*) total_weight
-             CALL errore ('dynifc2bloch','wrong total_weight',1)
-          END IF
-       END DO
+      DO nb=1, nat
+        total_weight = zero
+        DO n1=-2*nq1, 2*nq1
+          DO n2=-2*nq2, 2*nq2
+            DO n3=-2*nq3, 2*nq3
+              !
+              ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
+              !
+              DO i=1, 3
+                 r(i) = n1 * at(i, 1) + n2 * at(i, 2) + n3 * at(i, 3)
+              ENDDO
+              !
+              weight = wscache(n3, n2, n1, nb, na)
+              IF (weight > zero) THEN
+                !
+                ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
+                !
+                m1 = MOD(n1 + 1, nq1)
+                IF (m1 <= 0) m1 = m1 + nq1
+                m2 = MOD(n2 + 1, nq2)
+                IF (m2 <= 0) m2 = m2 + nq2
+                m3 = MOD(n3 + 1, nq3)
+                IF (m3 <= 0) m3 = m3 + nq3
+                !
+                arg = twopi * (xq(1) * r(1) + xq(2) * r(2) + xq(3) * r(3))
+                DO ipol=1, 3
+                  DO jpol=1, 3
+                    dyn(ipol, jpol, na, nb) =     &
+                      dyn(ipol, jpol, na, nb) +   &
+                      ifc(m1, m2, m3, ipol, jpol, na, nb) * CMPLX(COS(arg), -SIN(arg), kind=DP) * weight
+                  ENDDO
+                ENDDO
+              ENDIF
+              total_weight = total_weight + weight
+            ENDDO
+          ENDDO
+        ENDDO
+        IF (ABS(total_weight - nq1 * nq2 * nq3) > 1.0d-8) THEN
+           WRITE(stdout,*) total_weight
+           CALL errore ('dynifc2bloch','wrong total_weight',1)
+        END IF
+      END DO
     END DO
     !
-    do na = 1,nat
-       do nb = 1,nat
-          do ipol = 1,3
-             do jpol = 1,3
-                chf((na-1)*3+ipol, (nb-1)*3+jpol) = dyn(ipol,jpol,na,nb)
-             end do
-          end do
-       end do
-    end do
+    DO na=1, nat
+      DO nb=1, nat
+        DO ipol=1, 3
+          DO jpol=1, 3
+            chf((na - 1) * 3 + ipol, (nb - 1) * 3 + jpol) = dyn(ipol, jpol, na, nb)
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
     !
     IF (lpolar) THEN
       ! xq has to be in 2pi/a     
@@ -547,12 +546,12 @@
     !
     !  divide by the square root of masses 
     !
-    DO na = 1, nat
-      DO nb = 1, nat
-        massfac = 1.d0 / sqrt ( amass(ityp(na)) * amass(ityp(nb)) )
+    DO na=1, nat
+      DO nb=1, nat
+        massfac = 1.d0 / SQRT ( amass(ityp(na)) * amass(ityp(nb)) )
         !
-        chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) = &
-           chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) * massfac
+        chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
+           chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac
         ! 
       ENDDO
     ENDDO
@@ -565,8 +564,8 @@
     ! champ: complex hamiltonian packed (upper triangular part for zhpevx)
     ! after hermitian-ization
     !
-    DO jmode = 1, nmodes
-     DO imode = 1, jmode
+    DO jmode=1, nmodes
+     DO imode=1, jmode
         champ (imode + (jmode - 1) * jmode/2 ) = &
         ( chf ( imode, jmode) + conjg ( chf ( jmode, imode) ) ) * 0.5d0
      ENDDO
@@ -599,7 +598,7 @@
     USE cell_base, ONLY : at 
     USE phcom,     ONLY : nq1, nq2, nq3
     USE ions_base, ONLY : tau, nat
-    USE elph2,     ONLY : ifc, epsi, zstar
+    USE elph2,     ONLY : ifc, epsi, zstar, wscache
     USE epwcom,    ONLY : lpolar
     USE constants_epw, ONLY : twopi, czero, zero
     USE io_global, ONLY : stdout
@@ -636,7 +635,6 @@
     !! Counter on polarizations
     !
     REAL(kind=DP), EXTERNAL :: wsweight
-    REAL(kind=DP), SAVE, ALLOCATABLE :: wscache(:,:,:,:,:)
     REAL(kind=DP) total_weight, weight, arg, r(3), r_ws(3)  
     !
     COMPLEX(kind=DP) :: dyn(3,3,nat,nat)
@@ -645,27 +643,26 @@
     ! bring xq in cart. coordinates
     !CALL cryst_to_cart (1, xq, bg, 1)
     !
-    FIRST_TIME : IF (first) THEN
-      first=.false.
-      ALLOCATE( wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat,nat) )
+    IF (first) THEN
+      first = .false.
       DO na=1, nat
-         DO nb=1, nat
-            total_weight = zero
-            !
-            DO n1=-2*nq1,2*nq1
-               DO n2=-2*nq2,2*nq2
-                  DO n3=-2*nq3,2*nq3
-                     DO i=1, 3
-                        r(i) = n1*at(i,1)+n2*at(i,2)+n3*at(i,3)
-                        r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
-                     END DO
-                     wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
-                  ENDDO
-               ENDDO
+        DO nb=1, nat
+          total_weight = zero
+          !
+          DO n1=-2 * nq1, 2 * nq1
+            DO n2=-2 * nq2, 2 * nq2
+              DO n3=-2 * nq3, 2 * nq3
+                DO i=1, 3
+                  r(i) = n1 * at(i, 1) + n2 * at(i, 2) + n3 * at(i, 3)
+                  r_ws(i) = r(i) + tau(i, na)-tau(i, nb)
+                END DO
+                wscache(n3,n2,n1,nb,na) = wsweight(r_ws,rws,nrws)
+              ENDDO
             ENDDO
-        ENDDO
+          ENDDO
+       ENDDO
       ENDDO
-    ENDIF FIRST_TIME
+    ENDIF
     !
     chf = czero
     dyn = czero
@@ -853,7 +850,7 @@
     IF (eig_read) THEN
        DO ibnd = 1, nbnd
          DO jbnd = 1, nbnd
-           IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) .gt. eps4) THEN
+           IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) > eps4) THEN
               dmef(:,ibnd,jbnd) = dmef(:,ibnd,jbnd) * &
                      ( etf(ibnd)    - etf(jbnd) )/ &
                      ( etf_ks(ibnd) - etf_ks(jbnd) )
@@ -990,7 +987,7 @@
         ! convert irvec from reduce to cartesian coordinates
         ! multiply by alat since the crystal axis 'at' are in 
         ! cart. coords. in units of a_0
-        irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
+        irvec_tmp(:) = alat * MATMUL( at, dble(irvec(:,ir)) )
         DO ipol = 1, 3
           chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
                 ci * irvec_tmp(ipol) * cfac(ir,:,:) * chw(:,:,ir)
@@ -999,7 +996,7 @@
       ENDDO
     ELSE
       DO ir = 1, nrr
-        irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
+        irvec_tmp(:) = alat * MATMUL( at, dble(irvec(:,ir)) )
         DO ipol = 1, 3
           chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
                 ci * irvec_tmp(ipol) * cfac(ir,1,1) * chw(:,:,ir)
@@ -1018,8 +1015,8 @@
     !
     DO ipol = 1, 3
       !
-      ! cvmef_tmp(:,:) = matmul( cvmef(ipol,:,:), conjg(transpose(cuf(:,:))) )
-      ! vmef(ipol,:,:) = matmul( cuf(:,:), cvmef_tmp(:,:) )
+      ! cvmef_tmp(:,:) = MATMUL( cvmef(ipol,:,:), conjg(transpose(cuf(:,:))) )
+      ! vmef(ipol,:,:) = MATMUL( cuf(:,:), cvmef_tmp(:,:) )
       !
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, cvmef(ipol,:,:), &
                  nbnd, cuf(:,:), nbnd, czero, cvmef_tmp(:,:), nbnd)
@@ -1036,8 +1033,8 @@
     !
     DO ipol = 1, 3
       !
-      ! chf_a_tmp(:,:) = matmul( chf_a(ipol,:,:), conjg(transpose(cuf(:,:))) )
-      ! chf_a(ipol,:,:) = matmul(cuf(:,:), chf_a_tmp(:,:) )
+      ! chf_a_tmp(:,:) = MATMUL( chf_a(ipol,:,:), conjg(transpose(cuf(:,:))) )
+      ! chf_a(ipol,:,:) = MATMUL(cuf(:,:), chf_a_tmp(:,:) )
       !
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, chf_a(ipol,:,:), &
                  nbnd, cuf(:,:), nbnd, czero, chf_a_tmp(:,:), nbnd)
@@ -1240,18 +1237,18 @@
       IF (use_ws) THEN
         !
 #if defined(__MPI)
-        ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, 3))
+        ALLOCATE (epmatw(nbnd, nbnd, nrr_k, 3))
         ! Although this should almost never be problematic (see explaination below)
         lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                       INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                       INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
                                       3_MPI_OFFSET_KIND
 #else
-        ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
+        ALLOCATE (epmatw(nbnd, nbnd, nrr_k, nmodes))
         lrepmatw2 = INT( 2 * nbnd * nbnd * nrr_k * 3, kind = 8)
 #endif
         ! 
-        DO irn = ir_start, ir_stop
+        DO irn=ir_start, ir_stop
           ir = (irn-1)/nat + 1
           na = MOD(irn-1,nat) + 1      
 #if defined(__MPI)
@@ -1274,10 +1271,12 @@
           !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
           !        Here we want non blocking because not all the process have the same nb of ir. 
           !
-          CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
-          CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
+          !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT',1)
           !   
           DO iw2=1, dims
             DO iw=1, dims
@@ -1299,17 +1298,17 @@
         ! --------------------------------
       ELSE ! use_ws 
 #if defined(__MPI)
-        ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, 1))
+        ALLOCATE (epmatw(nbnd, nbnd, nrr_k, 1))
         ! Although this should almost never be problematic (see explaination below)
         lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd , kind = MPI_OFFSET_KIND ) * &
                                         INT( nbnd , kind = MPI_OFFSET_KIND ) * &
                                         INT( nrr_k, kind = MPI_OFFSET_KIND ) 
 #else
-        ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
-        lrepmatw2 = INT( 2 * nbnd * nbnd * nrr_k, kind = 8)
+        ALLOCATE (epmatw(nbnd, nbnd, nrr_k, nmodes))
+        lrepmatw2 = INT(2 * nbnd * nbnd * nrr_k, kind = 8)
 #endif
         ! 
-        DO irn = ir_start, ir_stop
+        DO irn=ir_start, ir_stop
           ir = (irn-1)/nmodes + 1
           imode = MOD(irn-1,nmodes) + 1
 #if defined(__MPI)
@@ -1320,7 +1319,7 @@
                                        INT( nbnd , kind=MPI_OFFSET_KIND ) * &
                                        INT( nrr_k, kind=MPI_OFFSET_KIND ) * &
                                      ( INT( imode - 1_MPI_OFFSET_KIND, kind=MPI_OFFSET_KIND ) + &
-          INT( nmodes, kind=MPI_OFFSET_KIND ) * ( INT( ir, kind=MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND ) )
+          INT(nmodes, kind=MPI_OFFSET_KIND ) * ( INT( ir, kind=MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND ) )
           !  
           ! SP: mpi seek is used to set the position at which we should start
           ! reading the file. It is given in bits. 
@@ -1328,10 +1327,12 @@
           !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
           !        Here we want non blocking because not all the process have the same nb of ir. 
           !
-          CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
-          CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
-          IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
+          !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+          CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT',1)
           !   
           CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1,ir,1,1), epmatw(:,:,:,1), 1, &
                 eptmp(:,:,:,imode), 1)
@@ -1345,7 +1346,7 @@
 #endif
         ENDDO ! irn 
       ENDIF ! use_ws 
-      DEALLOCATE(epmatw)
+      DEALLOCATE (epmatw)
     ENDIF ! etf_mem
     !
 #if defined(__MPI)
@@ -1359,8 +1360,8 @@
     ! [Eqn. 22 of PRB 76, 165108 (2007)]
     ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
     !
-    Call zgemm( 'n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, & 
-                nbnd * nbnd * nrr_k, cuf, nmodes, czero, epmatf, nbnd * nbnd * nrr_k )
+    Call zgemm('n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, & 
+                nbnd * nbnd * nrr_k, cuf, nmodes, czero, epmatf, nbnd * nbnd * nrr_k)
 
     !
     CALL stop_clock('ephW2Bp')
@@ -1439,17 +1440,17 @@
     !   !
     !ENDDO
     !
-    DO imode = 1, nmodes
+    DO imode=1, nmodes
       IF (use_ws) THEN
         DO iw2=1, dims
           DO iw=1, dims
             DO ir=1, nrr
-              epmatf(iw,iw2,imode) = epmatf(iw,iw2,imode) +  epmatw(iw,iw2,ir,imode) * cfac(ir,iw,iw2)
+              epmatf(iw, iw2, imode) = epmatf(iw, iw2, imode) +  epmatw(iw, iw2, ir, imode) * cfac(ir, iw, iw2)
             ENDDO
           ENDDO
         ENDDO
       ELSE 
-        CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:,:,:,imode), nbnd**2, cfac(:,1,1), 1, cone, epmatf(:,:,imode), 1 )
+        CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :, imode), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :, imode), 1 )
       ENDIF
     ENDDO
     !
@@ -1466,12 +1467,12 @@
     !  the two zgemm calls perform the following ops:
     !  epmatf  = [ cufkq * epmatf ] * cufkk^\dagger
     !
-    DO imode = 1, nmodes
+    DO imode=1, nmodes
       !
       CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
-           nbnd, epmatf (:,:,imode), nbnd, czero, eptmp, nbnd)
+           nbnd, epmatf (:, :, imode), nbnd, czero, eptmp, nbnd)
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
-           nbnd, cufkk, nbnd, czero, epmatf(:,:,imode), nbnd)
+           nbnd, cufkk, nbnd, czero, epmatf(:, :, imode), nbnd)
       !
     ENDDO
     !
@@ -1706,7 +1707,7 @@
       ENDDO
     ENDIF
     ! 
-    ALLOCATE(epmatw( nbnd, nbnd, nrr_k))
+    ALLOCATE (epmatw( nbnd, nbnd, nrr_k))
     epmatw(:,:,:) = czero
     !
 #if defined(__MPI)  
@@ -1737,10 +1738,12 @@
       !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
       !        Here we want non blocking because not all the process have the same nb of ir. 
       !
-      CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
-      CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
-      IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+      !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
+      !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
+      !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
+      !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+      CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_READ_AT',1)
 #endif    
       ! 
       !write(stdout,*)'ir  epmatw ',use_ws, ir, sum(epmatw)
@@ -1759,7 +1762,7 @@
       !IF (mpime==1) write(999,*),'cpu2 ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), sum(epmatf)
       ! 
     ENDDO
-    DEALLOCATE(epmatw)
+    DEALLOCATE (epmatw)
     !
     CALL mp_sum(epmatf, world_comm)
     ! 

@@ -10,7 +10,7 @@
   ! adapted from PH/dvqpsi_us_only (QE)
   !
   !----------------------------------------------------------------------
-  subroutine dvqpsi_us_only3( ik, uact, xxkq )
+  SUBROUTINE dvqpsi_us_only3 (ik, uact, xxkq, igkq, npwq)
   !----------------------------------------------------------------------
   !!
   !! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -25,23 +25,27 @@
   USE cell_base,  ONLY : tpiba
   USE gvect,      ONLY : g
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
+  USE lsda_mod,   ONLY : lsda, current_spin, nspin
   USE spin_orb,   ONLY : lspinorb
   USE wvfct,      ONLY : npwx, et
   USE uspp,       ONLY : okvan, nkb, vkb
   USE uspp_param, ONLY : nh, nhm
-  USE qpoint,     ONLY : npwq
   USE phus,       ONLY : int1, int1_nc, int2, int2_so, alphap
   USE lrus,       ONLY : becp1
   USE eqv,        ONLY : dvpsi
-  USE elph2,      ONLY : igkq, lower_band, upper_band
+  USE elph2,      ONLY : lower_band, upper_band
   USE noncollin_module, ONLY : noncolin, npol
-  USE constants_epw,    ONLY : czero, cone, eps12
+  USE constants_epw,    ONLY : czero, zero, cone, eps12
+  USE klist_epw,  ONLY : isk_loc
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: ik
   !! the k point
+  INTEGER, INTENT(in) :: npwq
+  !! Number of k+G-vectors inside 'ecut sphere'
+  INTEGER, INTENT(in) :: igkq(npwq)
+  !! k+G+q mapping
   REAL(kind=DP), INTENT(in) :: xxkq(3) 
   !! the k+q point (cartesian coordinates)
   COMPLEX(kind=DP), INTENT(in) :: uact(3 * nat)
@@ -93,26 +97,26 @@
   ! 
   CALL start_clock('dvqpsi_us_on')
   IF (noncolin) THEN
-    ALLOCATE( ps1_nc(nkb, npol, lower_band:upper_band) )
-    ALLOCATE( ps2_nc(nkb, npol, lower_band:upper_band, 3) )
-    ALLOCATE( deff_nc(nhm, nhm, nat, nspin) )
-  ELSE
-    ALLOCATE( ps1(nkb, lower_band:upper_band) )
-    ALLOCATE( ps2(nkb, lower_band:upper_band, 3) )
-    ALLOCATE( deff(nhm, nhm, nat) )
-  ENDIF
-  ALLOCATE( aux(npwx) )
-  IF (lsda) current_spin = isk(ik)
-  !
-  !   we first compute the coefficients of the vectors
-  !
-  IF (noncolin) THEN
+    ALLOCATE ( ps1_nc(nkb, npol, lower_band:upper_band) )
+    ALLOCATE ( ps2_nc(nkb, npol, lower_band:upper_band, 3) )
+    ALLOCATE ( deff_nc(nhm, nhm, nat, nspin) )
     ps1_nc(:,:,:)   = czero
     ps2_nc(:,:,:,:) = czero
+    deff_nc(:,:,:,:) = czero
   ELSE
+    ALLOCATE ( ps1(nkb, lower_band:upper_band) )
+    ALLOCATE ( ps2(nkb, lower_band:upper_band, 3) )
+    ALLOCATE ( deff(nhm, nhm, nat) )
     ps1(:,:)   = czero
     ps2(:,:,:) = czero
+    deff(:,:,:) = zero
   ENDIF
+  ALLOCATE ( aux(npwx) )
+  aux(:) = czero
+  !
+  IF (lsda) current_spin = isk_loc(ik)
+  !
+  !   we first compute the coefficients of the vectors
   !
   DO ibnd = lower_band, upper_band
     IF (noncolin) THEN
@@ -124,7 +128,7 @@
     ijkb0 = 0
     DO nt = 1, ntyp
       DO na = 1, nat
-        IF (ityp(na) .eq. nt) THEN
+        IF (ityp(na) == nt) THEN
           mu = 3 * (na - 1)
           DO ih = 1, nh(nt)
             ikb = ijkb0 + ih
@@ -138,7 +142,7 @@
                       DO js = 1, npol
                         ijs = ijs + 1
                         ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                               deff_nc(ih,jh,na,ijs) *           &
+                               deff_nc(ih,jh,na,ijs) * &
                                alphap(ipol,ik)%nc(jkb,js,ibnd) * uact(mu+ipol)
                         ps2_nc(ikb,is,ibnd,ipol) = ps2_nc(ikb,is,ibnd,ipol) + &
                                deff_nc(ih,jh,na,ijs) * becp1(ik)%nc(jkb,js,ibnd) * &
@@ -153,52 +157,52 @@
                         deff(ih,jh,na) * becp1(ik)%k(jkb,ibnd) * &
                         (0.d0,-1.d0) * uact(mu+ipol) * tpiba
                   ENDIF
-!                  IF (okvan) THEN
-!                    IF (noncolin) THEN
-!                      ijs = 0
-!                      DO is = 1, npol
-!                        DO js = 1, npol
-!                          ijs = ijs + 1
-!                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-!                             int1_nc(ih,jh,ipol,na,ijs) * &
-!                             becp1(ik)%nc(jkb,js,ibnd) * uact(mu+ipol)
-!                        ENDDO
-!                      ENDDO
-!                    ELSE
-!                      ps1(ikb,ibnd) = ps1(ikb, ibnd) + &
-!                          int1(ih,jh,ipol,na,current_spin) * &
-!                          becp1(ik)%k(jkb,ibnd) * uact(mu+ipol)
-!                    ENDIF
-!                  ENDIF ! okvan
+                  IF (okvan) THEN
+                    IF (noncolin) THEN
+                      ijs = 0
+                      DO is = 1, npol
+                        DO js = 1, npol
+                          ijs = ijs + 1
+                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
+                             int1_nc(ih,jh,ipol,na,ijs) * &
+                             becp1(ik)%nc(jkb,js,ibnd) * uact(mu+ipol)
+                        ENDDO
+                      ENDDO
+                    ELSE
+                      ps1(ikb,ibnd) = ps1(ikb, ibnd) + &
+                          int1(ih,jh,ipol,na,current_spin) * &
+                          becp1(ik)%k(jkb,ibnd) * uact(mu+ipol)
+                    ENDIF
+                  ENDIF ! okvan
                 ENDIF  ! uact>0
-!                IF (okvan) THEN
-!                  DO nb = 1, nat
-!                    nu = 3 * (nb - 1)
-!                    IF (noncolin) THEN
-!                      IF (lspinorb) THEN
-!                        ijs = 0
-!                        DO is = 1, npol
-!                          DO js = 1, npol
-!                            ijs = ijs + 1
-!                            ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-!                               int2_so(ih,jh,ipol,nb,na,ijs) * &
-!                               becp1(ik)%nc(jkb,js,ibnd) * uact(nu+ipol)
-!                          ENDDO
-!                        ENDDO
-!                      ELSE
-!                        DO is = 1, npol
-!                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-!                             int2(ih,jh,ipol,nb,na) * &
-!                             becp1(ik)%nc(jkb,is,ibnd) * uact(nu+ipol)
-!                        ENDDO
-!                      ENDIF
-!                    ELSE
-!                      ps1(ikb,ibnd) = ps1(ikb,ibnd) + &
-!                          int2(ih,jh,ipol,nb,na) * &
-!                          becp1(ik)%k(jkb,ibnd) * uact(nu+ipol)
-!                    ENDIF
-!                  ENDDO
-!                ENDIF  ! okvan
+                IF (okvan) THEN
+                  DO nb = 1, nat
+                    nu = 3 * (nb - 1)
+                    IF (noncolin) THEN
+                      IF (lspinorb) THEN
+                        ijs = 0
+                        DO is = 1, npol
+                          DO js = 1, npol
+                            ijs = ijs + 1
+                            ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
+                               int2_so(ih,jh,ipol,nb,na,ijs) * &
+                               becp1(ik)%nc(jkb,js,ibnd) * uact(nu+ipol)
+                          ENDDO
+                        ENDDO
+                      ELSE
+                        DO is = 1, npol
+                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
+                             int2(ih,jh,ipol,nb,na) * &
+                             becp1(ik)%nc(jkb,is,ibnd) * uact(nu+ipol)
+                        ENDDO
+                      ENDIF
+                    ELSE
+                      ps1(ikb,ibnd) = ps1(ikb,ibnd) + &
+                          int2(ih,jh,ipol,nb,na) * &
+                          becp1(ik)%k(jkb,ibnd) * uact(nu+ipol)
+                    ENDIF
+                  ENDDO
+                ENDIF  ! okvan
               ENDDO ! ipol
             ENDDO ! jh
           ENDDO ! ih
@@ -210,12 +214,12 @@
   !
   !      This term is proportional to beta(k+q+G)
   !
-  IF (nkb.gt.0) THEN
+  IF (nkb > 0) THEN
     IF (noncolin) THEN
-      CALL zgemm( 'n', 'n', npwq, (upper_band-lower_band+1)*npol, nkb, &
+      CALL ZGEMM( 'n', 'n', npwq, (upper_band-lower_band+1)*npol, nkb, &
                   cone, vkb, npwx, ps1_nc, nkb, cone, dvpsi, npwx )
     ELSE
-      CALL zgemm( 'n', 'n', npwq, (upper_band-lower_band+1), nkb, &
+      CALL ZGEMM( 'n', 'n', npwq, (upper_band-lower_band+1), nkb, &
                   cone, vkb, npwx, ps1, nkb, cone, dvpsi, npwx )
     ENDIF
   ENDIF
@@ -224,15 +228,15 @@
   !
   DO ikb = 1, nkb
     DO ipol = 1, 3
-      ok = .false.
+      ok = .FALSE.
       IF (noncolin) THEN
         DO ibnd = lower_band, upper_band
-           ok = ok .OR. ( abs( ps2_nc(ikb,1,ibnd,ipol) ) .gt. eps12 ) .OR. &
-                        ( abs( ps2_nc(ikb,2,ibnd,ipol) ) .gt. eps12 )
+           ok = ok .OR. ( ABS(ps2_nc(ikb,1,ibnd,ipol) ) > eps12 ) .OR. &
+                        ( ABS(ps2_nc(ikb,2,ibnd,ipol) ) > eps12 )
         ENDDO
       ELSE
         DO ibnd = lower_band, upper_band
-           ok = ok .OR. ( abs( ps2(ikb,ibnd,ipol) ) .gt. eps12 )
+           ok = ok .OR. ( ABS(ps2(ikb,ibnd,ipol) ) > eps12)
         ENDDO
       ENDIF
       IF (ok) THEN
@@ -243,25 +247,25 @@
         ENDDO
         DO ibnd = lower_band, upper_band
           IF (noncolin) THEN
-             CALL zaxpy( npwq, ps2_nc(ikb,1,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1 )
-             CALL zaxpy( npwq, ps2_nc(ikb,2,ibnd,ipol), aux, 1, dvpsi(1+npwx,ibnd), 1 )
+            CALL ZAXPY( npwq, ps2_nc(ikb,1,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1 )
+            CALL ZAXPY( npwq, ps2_nc(ikb,2,ibnd,ipol), aux, 1, dvpsi(1+npwx,ibnd), 1 )
           ELSE
-             CALL zaxpy( npwq, ps2(ikb,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1 )
+            CALL ZAXPY( npwq, ps2(ikb,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1 )
           ENDIF
         ENDDO
       ENDIF
     ENDDO
   ENDDO
   !
-  DEALLOCATE(aux)
+  DEALLOCATE (aux)
   IF (noncolin) THEN
-    DEALLOCATE(ps2_nc)
-    DEALLOCATE(ps1_nc)
-    DEALLOCATE(deff_nc)
+    DEALLOCATE (ps1_nc)
+    DEALLOCATE (ps2_nc)
+    DEALLOCATE (deff_nc)
   ELSE
-    DEALLOCATE(ps2)
-    DEALLOCATE(ps1)
-    DEALLOCATE(deff)
+    DEALLOCATE (ps1)
+    DEALLOCATE (ps2)
+    DEALLOCATE (deff)
   ENDIF
   !
   CALL stop_clock('dvqpsi_us_on')

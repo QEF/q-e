@@ -100,27 +100,13 @@ MODULE AA
 END MODULE AA
 !
 !
-MODULE dmu
-  USE kinds, ONLY :  DP
-  !
-  SAVE
-  !
-  REAL(DP), ALLOCATABLE:: &
-       dmuxc(:),        &!  d V_xc / d rho
-       grho(:,:,:),     &!  gradient of the unperturbed density
-       dvxc_rr(:,:,:),  &!
-       dvxc_sr(:,:,:),  &!  derivatives of the E_xc functional w.r.t.
-       dvxc_ss(:,:,:),  &!  r=rho and s=|grad(rho)|
-       dvxc_s (:,:,:)
-  !
-END MODULE dmu
-!
-!
 MODULE phon
   USE kinds, ONLY :  DP
   !
   SAVE
   !
+  REAL(DP), ALLOCATABLE:: &
+       dmuxc(:) !  d V_xc / d rho
   COMPLEX(DP), ALLOCATABLE:: &
        dvpsi(:,:),      &!
        dpsi(:,:)         !
@@ -167,7 +153,6 @@ MODULE cgcom
   USE AA
   USE phon
   USE diffs
-  USE dmu
   USE symmetry
   USE dielectric
 END MODULE cgcom

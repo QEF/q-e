@@ -46,6 +46,14 @@ PROGRAM average
   !                   to direction "idir", as defined for the crystal cell
   !      awin         the size of the window for macroscopic average (a.u.)
   !
+  ! Format of output file avg.dat:
+  !    x   p(x)   m(x)
+  ! where
+  !    x = coordinate (a.u) along direction idir
+  !        x runs from 0 to the length of primitive vector idir
+  !  p(x)= planar average, as defined above
+  !  m(x)= macroscopic average, as defined above 
+  !
   USE kinds,                ONLY : DP
   USE parameters,           ONLY : ntypx
   USE constants,            ONLY : pi, eps8

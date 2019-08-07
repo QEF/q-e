@@ -10,9 +10,12 @@ QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a  ../UtilXlib/libutil.a
 
 TLDEPS = libs mods
 
-all : tldeps casino2upf.x cpmd2upf.x fhi2upf.x fpmd2upf.x \
+all : tldeps extract_core.x casino2upf.x cpmd2upf.x fhi2upf.x fpmd2upf.x \
      ncpp2upf.x oldcp2upf.x read_upf_tofile.x rrkj2upf.x upf2casino.x \
      uspp2upf.x vdb2upf.x virtual_v2.x interpolate.x fix_upf.x
+
+extract_core.x : extract_core.o  $(OBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ extract_core.o $(OBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 
 casino2upf.x : casino2upf.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ casino2upf.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)

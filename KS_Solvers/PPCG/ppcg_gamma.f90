@@ -1654,9 +1654,9 @@ nguard = 0 ! 24 ! 50
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN)      :: kdimx, nact
   COMPLEX(DP), INTENT(OUT) :: array_out( kdimx, nact )
   COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, * )
-  INTEGER, INTENT(IN)      :: kdimx, nact
   INTEGER, INTENT(IN), OPTIONAL :: idx( * )
   LOGICAL, INTENT(IN), OPTIONAL :: bgrp_root_only
   !
@@ -1707,10 +1707,10 @@ nguard = 0 ! 24 ! 50
   !
   IMPLICIT NONE
   !
+  INTEGER, INTENT(IN)      :: kdimx, nact
   COMPLEX(DP), INTENT(INOUT) :: array_out( kdimx, * ) ! we don't want to mess with un referenced columns
   COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, nact )
   COMPLEX(DP), INTENT(IN), OPTIONAL  :: a2_in ( kdimx, * )
-  INTEGER, INTENT(IN)      :: kdimx, nact
   INTEGER, INTENT(IN)      :: idx( * )
   !
   INTEGER, PARAMETER :: blocksz = 256

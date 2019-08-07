@@ -27,7 +27,7 @@
                             conv_thr_racon, conv_thr_iaxis, broyden_ndim, &
                             broyden_beta, band_plot, a2f, lacon, &
                             kmaps, kerwrite, kerread, imag_read, &
-                            gap_edge, fsthick, filukq, filukk, filqf, filkf, &
+                            gap_edge, fsthick, filqf, filkf, &
                             fileig, fila2f, fermi_energy, &
                             etf_mem, epwwrite, epwread, eptemp, &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep, &
@@ -215,8 +215,6 @@
   CALL mp_bcast (prefix      , meta_ionode_id, world_comm)
   CALL mp_bcast (filkf       , meta_ionode_id, world_comm)     
   CALL mp_bcast (filqf       , meta_ionode_id, world_comm)     
-  CALL mp_bcast (filukk      , meta_ionode_id, world_comm)    
-  CALL mp_bcast (filukq      , meta_ionode_id, world_comm)    
   CALL mp_bcast (fileig      , meta_ionode_id, world_comm)    
   CALL mp_bcast (dvscf_dir   , meta_ionode_id, world_comm)
   CALL mp_bcast (fila2f      , meta_ionode_id, world_comm)     
@@ -240,7 +238,7 @@ SUBROUTINE bcast_epw_input1
   ! integers
   !
   CALL mp_bcast (nat_todo, meta_ionode_id, world_comm)
-  IF (nat_todo.gt.0) THEN
+  IF (nat_todo > 0) THEN
      CALL mp_bcast (atomo, meta_ionode_id, world_comm)
   ENDIF
 #endif

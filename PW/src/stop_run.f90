@@ -8,12 +8,11 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stop_run( exit_status )
   !----------------------------------------------------------------------------
-  !
-  ! ... Close all files and synchronize processes before stopping.
-  ! ... If exit_status = 0, successfull execution, remove temporary files
-  ! ... If exit_status =-1, code stopped by user request, or
-  !        exit_status = 1, convergence not achieved :
-  ! ... do not remove temporary files needed for restart. 
+  !! Close all files and synchronize processes before stopping.
+  !! If exit_status = 0, successfull execution, remove temporary files
+  !! If exit_status =-1, code stopped by user request, or
+  !!    exit_status = 1, convergence not achieved :
+  !!    do not remove temporary files needed for restart. 
   !
   USE io_global,          ONLY : ionode
   USE mp_global,          ONLY : mp_global_end

@@ -9,38 +9,37 @@
 !----------------------------------------------------------------------------
 SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !----------------------------------------------------------------------------
+  !! This routine applies the Ultra-Soft Hamiltonian to a
+  !! vector psi and puts the result in hpsi. 
+  !! It requires the products of psi with all beta functions
+  !! in array becp(nkb,m) (calculated by calbec).
   !
-  !    This routine applies the Ultra-Soft Hamiltonian to a
-  !    vector psi and puts the result in hpsi.
-  !    Requires the products of psi with all beta functions
-  !    in array becp(nkb,m) (calculated by calbec)
-  ! input:
-  !     lda   leading dimension of arrays psi, spsi
-  !     n     true dimension of psi, spsi
-  !     m     number of states psi
-  ! output:
-  !     hpsi  V_US|psi> is added to hpsi
-  !
-  USE kinds,         ONLY: DP
-  USE ions_base,     ONLY: nat, ntyp => nsp, ityp
-  USE lsda_mod,      ONLY: current_spin
-  USE control_flags, ONLY: gamma_only
+  USE kinds,           ONLY: DP
+  USE ions_base,       ONLY: nat, ntyp => nsp, ityp
+  USE lsda_mod,        ONLY: current_spin
+  USE control_flags,   ONLY: gamma_only
   USE noncollin_module
-  USE uspp,          ONLY: vkb, nkb, deeq, deeq_nc, indv_ijkb0
-  USE uspp_param,    ONLY: nh, nhm
-  USE becmod,        ONLY: bec_type, becp
+  USE uspp,            ONLY: vkb, nkb, deeq, deeq_nc, indv_ijkb0
+  USE uspp_param,      ONLY: nh, nhm
+  USE becmod,          ONLY: bec_type, becp
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER, INTENT(IN)  :: lda, n, m
-  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda*npol,m)  
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, spsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, spsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(lda*npol,m)
+  !! V_US|psi> is added to hpsi
   !
   ! ... here the local variables
   !
   INTEGER :: jkb, ikb, ih, jh, na, nt, ibnd
-    ! counters
+  ! counters
   !
   !
   CALL start_clock( 'add_vuspsi' )  
@@ -51,13 +50,13 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
      !
   ELSE IF ( noncolin) THEN
      !
-     CALL add_vuspsi_nc ()
+     CALL add_vuspsi_nc()
      !
   ELSE
      !
      CALL add_vuspsi_k()
      !
-  END IF
+  ENDIF
   !
   CALL stop_clock( 'add_vuspsi' )  
   !
@@ -68,10 +67,12 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_gamma()
        !-----------------------------------------------------------------------
+       !! See comments inside
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
        !
        IMPLICIT NONE
+       !
        INTEGER, EXTERNAL :: ldim_block, gind_block
        REAL(DP), ALLOCATABLE :: ps (:,:)
        INTEGER :: ierr
@@ -79,7 +80,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
-       IF( becp%comm == mp_get_comm_null() ) THEN
+       IF ( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
           mype    = 0
           m_loc   = m
@@ -96,10 +97,10 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
           m_begin = becp%ibnd_begin
           m_max   = SIZE( becp%r, 2 )
           IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
-       END IF
+       ENDIF
        !
-       ALLOCATE (ps (nkb,m_max), STAT=ierr )
-       IF( ierr /= 0 ) &
+       ALLOCATE( ps (nkb,m_max), STAT=ierr )
+       IF ( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps ', ABS(ierr) )
        !
        ps(:,:) = 0.D0
@@ -122,13 +123,13 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                            deeq(1,1,na,current_spin), nhm, &
                            becp%r(indv_ijkb0(na)+1,1), nkb, 0.0_dp, &
                                ps(indv_ijkb0(na)+1,1), nkb )
-                END IF
+                ENDIF
                 !
-             END IF
+             ENDIF
              !
-          END DO
+          ENDDO
           !
-       END DO
+       ENDDO
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           !
@@ -144,28 +145,28 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
           icur_blk = mype
           !
           DO icyc = 0, nproc - 1
-
+             !
              m_loc   = ldim_block( becp%nbnd , nproc, icur_blk )
              m_begin = gind_block( 1,  becp%nbnd, nproc, icur_blk )
-
+             !
              IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
-
+             !
              IF( m_loc > 0 ) THEN
                 CALL DGEMM( 'N', 'N', ( 2 * n ), m_loc, nkb, 1.D0, vkb, &
                    ( 2 * lda ), ps, nkb, 1.D0, hpsi( 1, m_begin ), ( 2 * lda ) )
-             END IF
-
+             ENDIF
+             !
              ! block rotation
              !
              CALL mp_circular_shift_left( ps, icyc, becp%comm )
-
+             !
              icur_blk = icur_blk + 1
              IF( icur_blk == nproc ) icur_blk = 0
-
-          END DO
-       END IF
+             !
+          ENDDO
+       ENDIF
        !
-       DEALLOCATE (ps)
+       DEALLOCATE( ps )
        !
        RETURN
        !
@@ -174,23 +175,23 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_k()
        !-----------------------------------------------------------------------
-       !
-       ! see add_vuspsi_gamma for comments
+       !! See add_vuspsi_gamma for comments
        !
        IMPLICIT NONE
-       COMPLEX(DP), ALLOCATABLE :: ps (:,:), deeaux (:,:)
+       !
+       COMPLEX(DP), ALLOCATABLE :: ps(:,:), deeaux(:,:)
        INTEGER :: ierr
        !
        IF ( nkb == 0 ) RETURN
        !
-       ALLOCATE (ps (nkb,m), STAT=ierr )
+       ALLOCATE( ps(nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
        !
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
-          ALLOCATE ( deeaux(nh(nt),nh(nt)) )
+          ALLOCATE( deeaux(nh(nt),nh(nt)) )
           DO na = 1, nat
              !
              IF ( ityp(na) == nt ) THEN
@@ -204,17 +205,17 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                            deeaux, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
                           (0.0_dp, 0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
                 !
-             END IF
+             ENDIF
              !
-          END DO
-          DEALLOCATE (deeaux)
+          ENDDO
+          DEALLOCATE( deeaux )
           !
-       END DO
+       ENDDO
        !
        CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
        !
-       DEALLOCATE (ps)
+       DEALLOCATE( ps )
        !
        RETURN
        !
@@ -223,19 +224,20 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_nc()
        !-----------------------------------------------------------------------
-       ! see add_vuspsi_k for comments
+       !! See add_vuspsi_k for comments
        !
        IMPLICIT NONE
-       COMPLEX(DP), ALLOCATABLE :: ps (:,:,:)
+       !
+       COMPLEX(DP), ALLOCATABLE :: ps(:,:,:)
        INTEGER :: ierr, ijkb0
        !
        IF ( nkb == 0 ) RETURN
        !
-       ALLOCATE (ps(  nkb,npol, m), STAT=ierr )    
+       ALLOCATE( ps(  nkb,npol, m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_nc ', ' error allocating ps ', ABS( ierr ) )
        !
-       ps (:,:,:) = (0.d0, 0.d0)
+       ps(:,:,:) = (0.d0, 0.d0)
        !
        DO nt = 1, ntyp
           !
@@ -261,22 +263,22 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
                               deeq_nc(ih,jh,na,3)*becp%nc(jkb,1,ibnd)+&
                               deeq_nc(ih,jh,na,4)*becp%nc(jkb,2,ibnd) 
                          !
-                      END DO
+                      ENDDO
                       !
-                   END DO
+                   ENDDO
                    !
-                END DO
+                ENDDO
                 !
-             END IF
+             ENDIF
              !
-          END DO
+          ENDDO
           !
-       END DO
+       ENDDO
        !
-       call ZGEMM ('N', 'N', n, m*npol, nkb, ( 1.D0, 0.D0 ) , vkb, &
+       CALL ZGEMM('N', 'N', n, m*npol, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
        !
-       DEALLOCATE (ps)
+       DEALLOCATE( ps )
        !
        RETURN
        !
