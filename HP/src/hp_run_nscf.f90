@@ -71,7 +71,7 @@ SUBROUTINE hp_run_nscf (do_band)
   CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   !
-  CALL setup_nscf ( .FALSE., xq, .FALSE. )
+  CALL setup_nscf ( .FALSE., xq, .FALSE., 0)
   !
   CALL init_run()
   !
