@@ -30,6 +30,7 @@ module xdm_module
   REAL(DP), ALLOCATABLE :: xenv(:,:)
   INTEGER, ALLOCATABLE :: ienv(:), lvec(:,:)
   INTEGER :: nvec
+  INTEGER :: lmax(3)
 
   ! moments, polarizabilities, radii, dispersion coefficients
   REAL(DP), ALLOCATABLE :: alpha(:), ml(:,:)
@@ -262,7 +263,7 @@ CONTAINS
 
        ! set up the atomic environment for densities
        rmax = SQRT(MAXVAL(rmaxg2))
-       CALL set_environ(rmax)
+       CALL set_environ(rmax,lmax(1),lmax(2),lmax(3))
 
        ! total and core promolecular density
        ALLOCATE(rhoat(dfftp%nnr),rhocor(dfftp%nnr),STAT=ialloc)
@@ -490,7 +491,7 @@ CONTAINS
     ! in the international tables for crystallography.
     rmax = (maxc6/ecut)**(1._DP/6._DP)
     rmax2 = rmax*rmax
-    CALL set_environ(rmax)
+    CALL set_environ(rmax,lmax(1),lmax(2),lmax(3))
 
     ! parallelize over atoms
 #if defined __MPI
@@ -632,9 +633,9 @@ CONTAINS
        CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist)
        WRITE (iunxdm,iostat=ierr) 1 ! version
        IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
-       WRITE (iunxdm,iostat=ierr) nvec, nat, rmax2
+       WRITE (iunxdm,iostat=ierr) lmax, rmax2
        IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
-       WRITE (iunxdm,iostat=ierr) lvec(1:3,1:nvec), 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
+       WRITE (iunxdm,iostat=ierr) 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
        IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
        CLOSE (UNIT=iunxdm, STATUS='KEEP')
     ENDIF
@@ -642,7 +643,7 @@ CONTAINS
   END SUBROUTINE write_xdmdat
 
   ! --- private ---
-  SUBROUTINE set_environ (rcut)
+  SUBROUTINE set_environ(rcut,imax,jmax,kmax)
     ! Calculate an atomic environemnt of the entire unit cell up to a distance rcut. 
     ! This environment is saved in the host module arrays ienv, xenv and lvec.
     USE cell_base, ONLY: at, bg, alat, omega, tpiba2
@@ -650,8 +651,9 @@ CONTAINS
     USE io_global, ONLY: stdout, ionode
 
     REAL(DP), INTENT(IN) :: rcut
+    INTEGER, INTENT(OUT) :: imax, jmax, kmax
 
-    INTEGER :: nadd, imax, jmax, kmax, ialloc
+    INTEGER :: nadd, ialloc
     REAL(DP) :: rmat(3,3), gtensor(3,3), alp, bet, gam, aa, bb, cc, xx(3)
     INTEGER :: ii, jj, kk, m, nsize, lsize
     INTEGER, ALLOCATABLE :: ienvaux(:), lvecaux(:,:)

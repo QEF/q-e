@@ -19,7 +19,7 @@ SUBROUTINE d2ionq_disp(alat,nat,ityp,at,bg,tau,q,der2disp)
   USE control_flags, ONLY: llondon, lxdm
   USE constants, ONLY: tpi, eps8
   USE mp_images, ONLY: me_image , nproc_image , intra_image_comm
-  USE mp, ONLY: mp_sum, mp_bcast, mp_barrier
+  USE mp, ONLY: mp_sum, mp_bcast
   USE save_ph, ONLY: tmp_dir_save
   IMPLICIT NONE
 
@@ -32,6 +32,7 @@ SUBROUTINE d2ionq_disp(alat,nat,ityp,at,bg,tau,q,der2disp)
   REAL(DP), INTENT(IN) :: q(3) ! wavevector in 2pi/alat units
   COMPLEX(DP), INTENT(OUT) :: der2disp(3,nat,3,nat) ! dispersion contribution to the (massless) dynamical matrix
 
+  INTEGER :: ii, jj, kk ! some indices
   INTEGER :: k, l ! cell atom indices (1 -> nat)
   INTEGER :: aa, bb ! coordinate indices (1 -> 3)
   INTEGER :: nr ! lattice vector index (1 -> nvec)
@@ -53,7 +54,7 @@ SUBROUTINE d2ionq_disp(alat,nat,ityp,at,bg,tau,q,der2disp)
   LOGICAL :: lexist
   ! environment info from the XDM module (via .xdm file)
   INTEGER :: nvec ! number of lattice vectors in the environment
-  INTEGER :: nat0 ! number of atoms (equal to nat)
+  INTEGER :: lmax(3) ! max. lattice vector in the environment for each crystallographic axis
   INTEGER, ALLOCATABLE :: lvec(:,:) ! lvec(:,i) is the ith environment lattice vector (cryst. coords.)
   REAL(DP), ALLOCATABLE :: cx(:,:,:) ! cx(i,j,2:4) is nth dispersion coefficient between cell atoms i and j (2=c6,3=c8,4=c10)
   REAL(DP), ALLOCATABLE :: rvdw(:,:) ! rvdw(i,j) is the sum of vdw radii of cell atoms i and j
@@ -66,35 +67,43 @@ SUBROUTINE d2ionq_disp(alat,nat,ityp,at,bg,tau,q,der2disp)
 
   ! initialization
   IF (llondon) THEN
-     CALL init_london ()
+     ! D2 does not require any saved info; just init the module
+     CALL init_london()
      namestr = "D2"
 
   ELSE IF (lxdm) THEN
      ! read the XDM environment, coefficients, and Rvdw
+     ALLOCATE(cx(nat,nat,2:4),rvdw(nat,nat))
      IF (ionode) THEN
         iunxdm = find_free_unit ()
         CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist,tmp_dir_save)
         IF (.NOT.lexist) CALL errore('d2ionq_disp','could not open xdm data file',1)
         READ (iunxdm,iostat=ierr) iver
         IF (ierr /= 0) CALL errore('d2ionq_disp','reading xdm.dat 1',1)
-        READ (iunxdm,iostat=ierr) nvec, nat0, rmax2
+        READ (iunxdm,iostat=ierr) lmax, rmax2
         IF (ierr /= 0) CALL errore('d2ionq_disp','reading xdm.dat 2',1)
-     END IF
-     CALL mp_bcast(nvec, ionode_id, intra_image_comm)
-     CALL mp_bcast(nat0, ionode_id, intra_image_comm)
-     CALL mp_bcast(rmax2, ionode_id, intra_image_comm)
-     IF (nat /= nat0) CALL errore('d2ionq_disp','inconsistent number of atoms in .xdm file, nat /= nat0',1)
-
-     ALLOCATE(lvec(3,nvec),cx(nat0,nat0,2:4),rvdw(nat0,nat0))
-     IF (ionode) THEN
-        READ (iunxdm,iostat=ierr) lvec, cx, rvdw
+        READ (iunxdm,iostat=ierr) cx, rvdw
         IF (ierr /= 0) CALL errore('d2ionq_disp','reading xdm.dat 3',1)
         CLOSE (UNIT=iunxdm, STATUS='KEEP')
-     ENDIF
-     CALL mp_bcast(lvec, ionode_id, intra_image_comm)
+     END IF
+     CALL mp_bcast(iver, ionode_id, intra_image_comm)
+     CALL mp_bcast(lmax, ionode_id, intra_image_comm)
+     CALL mp_bcast(rmax2, ionode_id, intra_image_comm)
      CALL mp_bcast(cx, ionode_id, intra_image_comm)
      CALL mp_bcast(rvdw, ionode_id, intra_image_comm)
      namestr = "XDM"
+
+     ! pre-calculate the list of lattice vectors
+     ALLOCATE(lvec(3,PRODUCT(2*lmax + 1)))
+     nvec = 0
+     DO ii = -lmax(1), lmax(1)
+        DO jj = -lmax(2), lmax(2)
+           DO kk = -lmax(3), lmax(3)
+              nvec = nvec + 1
+              lvec(:,nvec) = (/ii,jj,kk/)
+           END DO
+        END DO
+     END DO
   ELSE
      CALL errore('d2ionq_disp','Dispersion correction not one of D2 or XDM',1)
   ENDIF
