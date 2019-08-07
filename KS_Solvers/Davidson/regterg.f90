@@ -25,7 +25,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   
   USE david_param,   ONLY : DP, stdout
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
-          nbgrp, my_bgrp_id
+          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart
   USE mp,            ONLY : mp_sum, mp_bcast
   !
@@ -205,7 +205,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
@@ -366,7 +366,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
@@ -779,7 +779,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
-     ! ... (cdiaghg) ew is used as work array :
+     ! ... (rdiaghg) ew is used as work array :
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !

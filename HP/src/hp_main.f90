@@ -226,7 +226,7 @@ PROGRAM hp_main
   !
   CALL environment_end(code)
   !
-  CALL unset_mpi_comm_4_solvers() 
+  CALL laxlib_free_ortho_group() 
   CALL mp_global_end()
   !
 3336 FORMAT('     ',69('='))
