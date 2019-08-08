@@ -50,12 +50,14 @@ dft_exchange.o : ../../UtilXlib/mp.o
 diago_cg.o : ../../Modules/constants.o
 diago_cg.o : ../../Modules/io_global.o
 diago_cg.o : ../../Modules/kind.o
+diago_cg.o : ../../Modules/mp_bands.o
 diago_cg.o : ../../Modules/mp_world.o
 diago_cg.o : ../../Modules/random_numbers.o
 diago_cg.o : ../../UtilXlib/mp.o
 diago_cg_g.o : ../../Modules/constants.o
 diago_cg_g.o : ../../Modules/io_global.o
 diago_cg_g.o : ../../Modules/kind.o
+diago_cg_g.o : ../../Modules/mp_bands.o
 diago_cg_g.o : ../../Modules/mp_world.o
 diago_cg_g.o : ../../Modules/random_numbers.o
 diago_cg_g.o : ../../UtilXlib/mp.o
@@ -202,6 +204,7 @@ o_bands.o : ../../UtilXlib/mp.o
 o_rinitcgg.o : ../../Modules/fft_base.o
 o_rinitcgg.o : ../../Modules/io_global.o
 o_rinitcgg.o : ../../Modules/kind.o
+o_rinitcgg.o : ../../Modules/mp_bands.o
 o_rinitcgg.o : ../../Modules/mp_world.o
 o_rinitcgg.o : ../../Modules/recvec.o
 o_rinitcgg.o : ../../UtilXlib/mp.o

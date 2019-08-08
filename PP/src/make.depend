@@ -862,10 +862,10 @@ work_function.o : ../../PW/src/scf_mod.o
 work_function.o : ../../UtilXlib/mp.o
 write_hamiltonians.o : ../../Modules/cell_base.o
 write_hamiltonians.o : ../../Modules/constants.o
-write_hamiltonians.o : ../../Modules/input_parameters.o
 write_hamiltonians.o : ../../Modules/io_global.o
 write_hamiltonians.o : ../../Modules/ions_base.o
 write_hamiltonians.o : ../../Modules/kind.o
+write_hamiltonians.o : ../../Modules/run_info.o
 write_hamiltonians.o : ../../Modules/version.o
 write_hamiltonians.o : ../../Modules/wannier_new.o
 write_hamiltonians.o : ../../PW/src/pwcom.o

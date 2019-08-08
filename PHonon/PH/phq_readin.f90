@@ -26,7 +26,7 @@ SUBROUTINE phq_readin()
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, io_level, &
-                            ts_vdw, ldftd3, lxdm
+                            ts_vdw, ldftd3, lxdm, isolve
   USE funct,         ONLY : dft_is_meta, dft_is_hybrid
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -43,7 +43,7 @@ SUBROUTINE phq_readin()
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
                             rec_code_read, qplot, only_init, only_wfc, &
-                            low_directory_check, isolveph
+                            low_directory_check
 
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
@@ -343,9 +343,9 @@ SUBROUTINE phq_readin()
   ! diagonalization option
   SELECT CASE(TRIM(diagonalization))
   CASE ('david','davidson')
-     isolveph = 0
+     isolve = 0
   CASE ('cg')
-     isolveph = 1
+     isolve = 1
   CASE DEFAULT
      CALL errore('phq_readin','diagonalization '//trim(diagonalization)//' not implemented',1)
   END SELECT

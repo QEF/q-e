@@ -266,7 +266,6 @@ qexsd.o : qes_reset_module.o
 qexsd.o : qes_types_module.o
 qexsd.o : qes_write_module.o
 qexsd.o : version.o
-qexsd_copy.o : constants.o
 qexsd_copy.o : io_files.o
 qexsd_copy.o : kind.o
 qexsd_copy.o : qes_types_module.o
