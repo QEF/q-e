@@ -255,8 +255,10 @@ MODULE control_ph
              lqdir=.FALSE.,        & ! if true each q writes in its directory
              qplot=.FALSE.,        & ! if true the q are read from input
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
-             all_done, &      ! if .TRUE. all representations have been done
-             newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
+             all_done      ! if .TRUE. all representations have been done
+  !
+  LOGICAL :: newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
+  INTEGER :: nk1,nk2,nk3, k1,k2,k3  ! new Monkhorst-Pack k-point grid
   !
 END MODULE control_ph
 !

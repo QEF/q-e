@@ -23,7 +23,7 @@ SUBROUTINE openfilq()
   USE io_files,        ONLY : tmp_dir, diropn, seqopn, nwordwfcU
   USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
-                              all_done
+                              all_done, newgrid
   USE save_ph,         ONLY : tmp_dir_save
   USE ions_base,       ONLY : nat
   USE cell_base,       ONLY : at
@@ -41,7 +41,6 @@ SUBROUTINE openfilq()
   USE buffers,         ONLY : open_buffer, close_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
-  USE input_parameters,ONLY : nk1, nk2, nk3
   USE el_phon,         ONLY : elph, elph_mat, iunwfcwann, lrwfcr
   USE dfile_star,      ONLY : dvscf_star
   USE dfile_autoname,  ONLY : dfile_name
@@ -82,7 +81,7 @@ SUBROUTINE openfilq()
      ENDIF
   ELSE  
      ! this is the standard treatment
-     IF (lgamma.AND.modenum==0.AND.nk1.eq.0.AND.nk2.eq.0.AND.nk3.eq.0 ) tmp_dir=tmp_dir_save
+     IF (lgamma.AND.modenum==0.AND..NOT.newgrid ) tmp_dir=tmp_dir_save
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20

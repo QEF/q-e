@@ -22,7 +22,8 @@ subroutine bcast_ph_input ( )
                          niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
                          ldisp, reduce_io, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
-                         qplot, only_init, only_wfc, low_directory_check
+                         qplot, only_init, only_wfc, low_directory_check,&
+                         nk1, nk2, nk3, k1, k2, k3
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo
@@ -32,7 +33,6 @@ subroutine bcast_ph_input ( )
   USE control_flags, only: iverbosity, modenum, isolve
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE check_stop, ONLY: max_seconds
-  USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE ions_base,     ONLY : amass
   USE io_global,   ONLY : meta_ionode_id
   USE run_info,   ONLY : title
