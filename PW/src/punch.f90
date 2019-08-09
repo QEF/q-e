@@ -24,7 +24,7 @@ SUBROUTINE punch( what )
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
        tmp_dir, prefix, postfix, create_directory
-  USE control_flags,        ONLY : io_level, lscf
+  USE control_flags,        ONLY : io_level, lscf, lxdm
   USE klist,                ONLY : nks
   USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
@@ -39,6 +39,7 @@ SUBROUTINE punch( what )
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions, ONLY : evc
+  USE xdm_module,           ONLY : write_xdmdat
   !
   IMPLICIT NONE
   !
@@ -102,12 +103,17 @@ SUBROUTINE punch( what )
            IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
               cp_status = f_copy(cp_source, cp_dest)
         END IF  
+
+        ! write XDM dispersion data (coefficients and vdw radii) to xdm.dat
+        IF (lxdm) THEN
+           CALL write_xdmdat()
+        ENDIF
      END IF
      !
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
      CALL pw_write_binaries( )
-     !
+
      ! ... if allocated, deallocate variables containing info on ionic steps 
      ! 
      CALL qexsd_reset_steps()
