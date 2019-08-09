@@ -710,9 +710,6 @@ SUBROUTINE phq_readin()
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
   
-  IF (lxdm) CALL errore('phq_readin',&
-     'The phonon code with XDM is not yet available',1)
-  
   IF (ldftd3) CALL errore('phq_readin',&
      'The phonon code with Grimme''s DFT-D3 is not yet available',1)
 
