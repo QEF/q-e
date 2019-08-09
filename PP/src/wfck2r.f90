@@ -9,7 +9,7 @@
 ! This program reads wavefunctions in G-space written by QE,
 ! re-writes then in real space
 ! Warning: The wfc is written out in real space on the smooth
-! grid, as such it occupies much more disk space then that in G-space.
+! grid, as such it occupies much more disk space than in G-space.
 !
 ! input: a namelist like 
 ! &inputpp

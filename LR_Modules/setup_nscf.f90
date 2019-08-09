@@ -66,9 +66,9 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   ethr = ethr_nscf
   !
   ! ... variables for iterative diagonalization
-  ! ... Davidson: isolve=0, david=2 ; CG: isolve=1, david=1
+  ! ... Davidson: isolve=0, david=4 ; CG: isolve=1, david=1
   IF (isolve == 0) THEN
-     david = 2
+     david = 4
   ELSE IF (isolve == 1) THEN
      david = 1
   ELSE
