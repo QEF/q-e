@@ -15,7 +15,7 @@ MODULE read_upf_schema_module
    USE pseudo_types, ONLY: pseudo_upf
    USE radial_grids, ONLY: radial_grid_type
    USE parser,       ONLY: version_compare
-   USE FoX_Dom
+   USE FoX_dom
    !
    PRIVATE
    PUBLIC :: read_upf_schema
@@ -36,7 +36,6 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
    !
    USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
    USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
-   !USE FoX_dom  
    IMPLICIT NONE
    TYPE(Node), POINTER, INTENT(IN)   :: pseudo   
    !! pointer to root node

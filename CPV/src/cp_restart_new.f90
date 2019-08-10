@@ -21,8 +21,8 @@ MODULE cp_restart_new
   !
   USE qes_types_module 
   USE qes_libs_module  
-  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
-                          qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
+  USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema
+  USE qexsd_module, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
                           qexsd_init_magnetization,qexsd_init_band_structure,          &
@@ -261,8 +261,6 @@ MODULE cp_restart_new
       !
       CALL create_directory( TRIM(dirname) )
       !
-      CALL qexsd_init_schema( iunpun )
-      !
       IF ( ionode ) THEN
          !
          ! ... here we init the variables and finally write them to file
@@ -271,21 +269,8 @@ MODULE cp_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'CPV',&
-              title)
          output_obj%tagname="output"
          output_obj%lwrite = .TRUE.
-!-------------------------------------------------------------------------------
-! ... CP-SPECIFIC CELL variables
-!-------------------------------------------------------------------------------
-         !
-         CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
-              epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
-              force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
-              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
-         ! Wannier function centers
-         IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
-         !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED   
 !-------------------------------------------------------------------------------
@@ -453,14 +438,25 @@ MODULE cp_restart_new
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
          !
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
+                 iunpun, 'CPV', title)
          CALL qes_write (qexsd_xf, output_obj)
          CALL qes_reset (output_obj)
          !
-!-------------------------------------------------------------------------------
-! ... CLOSING
-!-------------------------------------------------------------------------------
+         ! CP-SPECIFIC CELL variables
+         !
+         CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
+              epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
+              force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
+              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
+         !
+         ! Wannier function centers
+         !
+         IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
          !
          CALL qexsd_closeschema()
+         !
+!-------------------------------------------------------------------------------
          !
       END IF
       !
@@ -697,15 +693,7 @@ MODULE cp_restart_new
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      INTEGER, EXTERNAL :: find_free_unit
       !
-      ! ... look for an empty unit
-      !
-      iunpun = find_free_unit( )
-      IF ( iunpun < 0 ) CALL errore( 'cp_readfile', &
-                   'no free units to read wavefunctions', 1 )
-      !
-      CALL qexsd_init_schema( iunpun )
       !
       WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
       filename = TRIM( dirname ) // TRIM( xmlpun_schema )
@@ -713,7 +701,11 @@ MODULE cp_restart_new
       IF (.NOT. found ) &
          CALL errore ('cp_readfile', 'xml data file not found', 1)
       !
+      ! read XML file into "root" object
+      !
       root => parseFile (TRIM(filename))
+      !
+      ! copy from "root" object into geninfo, parinfo, output objs
       !
       nodePointer => item (getElementsByTagname (root, "general_info"),0)
       ierr = 0 
@@ -738,6 +730,7 @@ MODULE cp_restart_new
       END IF
       IF ( ierr > 100) CALL errore ('cp_readfile', 'missing data in file', ierr)
       !
+      ! copy CP-specific MD information directly into variables
       !
       CALL cp_readcp ( root, nat, nfi, simtime, acc, stau0, svel0, taui,  &
            cdmi, force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
@@ -748,12 +741,16 @@ MODULE cp_restart_new
       !
       ierr = 0
       !
-      ! Wannier function centers
+      ! copy Wannier function centers information directly into variables
+      !
       IF ( lwf ) CALL cp_readcenters ( root, wfc)
       !
       ierr = 0
       !   
       CALL destroy (root) 
+      !
+      ! objects filled, not get variables from objects
+      !
       CALL qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version) 
       !
       CALL  qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
@@ -1488,14 +1485,7 @@ MODULE cp_restart_new
     CHARACTER(LEN=3) :: atm_(ntypx)
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
-    INTEGER, EXTERNAL :: find_free_unit
     !
-    ! ... look for an empty unit
-    !
-    iunpun = find_free_unit( )
-    IF ( iunpun < 0 ) CALL errore( 'cp_read_cell', 'no free units ', 1 )
-    !
-    CALL qexsd_init_schema( iunpun )
     !
     WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
     filename = TRIM( dirname ) // TRIM( xmlpun_schema )
