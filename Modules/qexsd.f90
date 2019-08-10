@@ -51,7 +51,6 @@ MODULE qexsd_module
   ! internal data to be set
   !
   CHARACTER(256)   :: datadir_in, datadir_out
-  INTEGER          :: iunit, ounit
   TYPE(xmlf_t)     :: qexsd_xf
   !
   ! vars to manage back compatibility
@@ -83,7 +82,7 @@ MODULE qexsd_module
   !
   PUBLIC :: qexsd_input_obj, qexsd_start_k_obj, qexsd_occ_obj, qexsd_smear_obj
   ! 
-  PUBLIC :: qexsd_init_schema,  qexsd_openschema, qexsd_closeschema
+  PUBLIC :: qexsd_openschema, qexsd_closeschema
   !
   PUBLIC :: qexsd_init_convergence_info, qexsd_init_algorithmic_info, &
             qexsd_init_atomic_species, qexsd_init_atomic_structure, &
@@ -91,8 +90,8 @@ MODULE qexsd_module
             qexsd_init_magnetization, qexsd_init_band_structure, & 
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
-            qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, qexsd_init_dftU,&
-            qexsd_init_vdw, qexsd_init_clocks 
+            qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid, &
+            qexsd_init_dftU, qexsd_init_vdw, qexsd_init_clocks 
   !
   PUBLIC :: qexsd_step_addstep, qexsd_set_status, qexsd_reset_steps    
   ! 
@@ -103,23 +102,6 @@ CONTAINS
 ! ... basic (public) subroutines
 !-------------------------------------------
 !
-    !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_schema( unit_in, unit_out )
-      !------------------------------------------------------------------------
-      !
-      ! just init module data
-      !
-      IMPLICIT NONE
-      INTEGER,                INTENT(in) :: unit_in
-      INTEGER,      OPTIONAL, INTENT(in) :: unit_out
-      !
-      iunit       = unit_in
-      ounit       = unit_in
-      IF ( present( unit_out ) ) ounit  = unit_out
-      !
-      !
-    END SUBROUTINE qexsd_init_schema
-    !
     !
     !------------------------------------------------------------------------
     FUNCTION check_file_exst( filename )
@@ -141,19 +123,21 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_openschema(filename, prog, title)
+    SUBROUTINE qexsd_openschema(filename, ounit, prog, title)
       !------------------------------------------------------------------------
       !
       USE  FoX_wxml,  ONLY: xml_OpenFile, xml_DeclareNamespace, xml_NewElement, xml_addAttribute, xml_addComment                         
       IMPLICIT NONE
       !
       CHARACTER(len=*), INTENT(IN) :: filename, prog, title
+      INTEGER, INTENT(IN) :: ounit
       CHARACTER(len=16) :: subname = 'qexsd_openschema'
       INTEGER :: ierr, len_steps, i_step
       !
       ! we need a qes-version number here
-      CALL xml_OpenFile(FILENAME = TRIM(filename), XF = qexsd_xf, UNIT = ounit, PRETTY_PRINT = .TRUE., &
-                        REPLACE  = .TRUE., NAMESPACE = .TRUE., IOSTAT = ierr ) 
+      CALL xml_OpenFile(FILENAME = TRIM(filename), XF = qexsd_xf, UNIT = ounit,&
+              PRETTY_PRINT = .TRUE., REPLACE  = .TRUE., NAMESPACE = .TRUE., &
+              IOSTAT = ierr ) 
       !
       CALL xml_DeclareNamespace (XF=qexsd_xf, PREFIX = "xsi", nsURI ="http://www.w3.org/2001/XMLSchema-instance")
       CALL xml_DeclareNamespace (XF=qexsd_xf, PREFIX = "qes", nsURI ="http://www.quantum-espresso.org/ns/qes/qes-1.0")
@@ -177,8 +161,7 @@ CONTAINS
       CALL qes_write (qexsd_xf,parallel_info)
       CALL qes_reset (parallel_info) 
       IF ( check_file_exst(input_xml_schema_file) )  THEN
-         CALL xml_addComment( XF = qexsd_xf, &
-                              COMMENT= "")
+         CALL xml_addComment( XF = qexsd_xf, COMMENT= "")
          CALL qexsd_cp_line_by_line(ounit ,input_xml_schema_file, spec_tag="input")
       ELSE IF ( TRIM(qexsd_input_obj%tagname) == "input") THEN 
          CALL qes_write (qexsd_xf, qexsd_input_obj)

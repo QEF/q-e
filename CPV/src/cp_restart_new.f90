@@ -21,8 +21,8 @@ MODULE cp_restart_new
   !
   USE qes_types_module 
   USE qes_libs_module  
-  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
-                          qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
+  USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema
+  USE qexsd_module, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
                           qexsd_init_magnetization,qexsd_init_band_structure,          &
@@ -261,8 +261,6 @@ MODULE cp_restart_new
       !
       CALL create_directory( TRIM(dirname) )
       !
-      CALL qexsd_init_schema( iunpun )
-      !
       IF ( ionode ) THEN
          !
          ! ... here we init the variables and finally write them to file
@@ -271,8 +269,8 @@ MODULE cp_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'CPV',&
-              title)
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
+                 iunpun, 'CPV', title)
          output_obj%tagname="output"
          output_obj%lwrite = .TRUE.
 !-------------------------------------------------------------------------------
@@ -697,15 +695,7 @@ MODULE cp_restart_new
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      INTEGER, EXTERNAL :: find_free_unit
       !
-      ! ... look for an empty unit
-      !
-      iunpun = find_free_unit( )
-      IF ( iunpun < 0 ) CALL errore( 'cp_readfile', &
-                   'no free units to read wavefunctions', 1 )
-      !
-      CALL qexsd_init_schema( iunpun )
       !
       WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
       filename = TRIM( dirname ) // TRIM( xmlpun_schema )
@@ -1488,14 +1478,7 @@ MODULE cp_restart_new
     CHARACTER(LEN=3) :: atm_(ntypx)
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
-    INTEGER, EXTERNAL :: find_free_unit
     !
-    ! ... look for an empty unit
-    !
-    iunpun = find_free_unit( )
-    IF ( iunpun < 0 ) CALL errore( 'cp_read_cell', 'no free units ', 1 )
-    !
-    CALL qexsd_init_schema( iunpun )
     !
     WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
     filename = TRIM( dirname ) // TRIM( xmlpun_schema )
