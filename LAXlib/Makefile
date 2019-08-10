@@ -31,7 +31,7 @@ la_test.x : test.o libqela.a
 
 TEST : la_test.x
 
-la_interface_mod.o : laxlib.fh
+la_interface_mod.o : laxlib.fh la_types.o
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
