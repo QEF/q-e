@@ -238,10 +238,12 @@
       USE kinds,             ONLY: DP
       USE electrons_base,    ONLY: nupdwn, nspin, iupdwn, nudx
       USE electrons_module,  ONLY: ei
-      USE cp_interfaces,     ONLY: crot, collect_lambda
+      USE cp_interfaces,     ONLY: crot
       USE descriptors,       ONLY: la_descriptor
       !
       IMPLICIT NONE
+      !
+      include 'laxlib.fh'
       !
       COMPLEX(DP), INTENT(IN)  :: c0(:,:)
       COMPLEX(DP), INTENT(OUT) :: ctot(:,:)

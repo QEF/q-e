@@ -15,13 +15,13 @@
       use kinds,             only : DP
       use io_global,         only : stdout
       use constants,         only : autoev
-      use dspev_module,      only : dspev_drv, pdspev_drv
       USE sic_module,        only : self_interaction
       USE descriptors,       ONLY : la_descriptor
       USE mp,                only : mp_sum, mp_bcast
       USE mp_global,         only : intra_bgrp_comm, root_bgrp, me_bgrp
 
       implicit none
+      include 'laxlib.fh'
 ! input
       logical, intent(in) :: tprint, lf
       integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin), nlam
@@ -30,7 +30,7 @@
       real(DP), intent(out) :: ei( nudx, nspin )
 ! local variables
       real(DP), allocatable :: ap(:), wr(:)
-      real(DP) zr(1)
+      real(DP) zr(1,1)
       integer :: iss, j, i, ierr, k, n, ndim, nspin_eig, npaired
       INTEGER :: ir, ic, nr, nc, nrl, nrlx, comm, np, me
       logical :: tsic

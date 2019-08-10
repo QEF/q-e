@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
@@ -180,10 +180,10 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !
   RETURN
   !
-END SUBROUTINE rdiaghg
+END SUBROUTINE laxlib_rdiaghg
 !
 !----------------------------------------------------------------------------
-SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
+SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, desc )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -350,4 +350,4 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   RETURN
   !
-END SUBROUTINE prdiaghg
+END SUBROUTINE laxlib_prdiaghg

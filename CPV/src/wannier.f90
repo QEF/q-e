@@ -385,7 +385,7 @@ MODULE wannier_subroutines
        !
        CALL write_rho_g( rhog )
        !
-       CALL stop_run( .TRUE. )
+       CALL stop_cp_run()
        !
     END IF
     !
@@ -436,7 +436,7 @@ MODULE wannier_subroutines
           CALL rhoofr (nfi,cm, irb, eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6,.false.,j)
        END DO
        !
-       CALL stop_run( .TRUE. )
+       CALL stop_cp_run()
        !
     END IF
     !
@@ -448,7 +448,7 @@ MODULE wannier_subroutines
        !
        CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,what1,wfc,jwf,ibrav)
        !
-       CALL stop_run( .TRUE. )
+       CALL stop_cp_run( )
        !
     END IF
     !
@@ -457,7 +457,7 @@ MODULE wannier_subroutines
        jwf=iplot(1)
        CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,what1,wfc,jwf,ibrav)
        !
-       CALL stop_run( .TRUE. )
+       CALL stop_cp_run( )
        !
     END IF
     !
@@ -746,7 +746,7 @@ MODULE wannier_subroutines
                        vnhh, velh, fion, tps, mat_z, occ_f, rho )
        !
        CALL stop_clock('wf_close_opt')
-       CALL stop_run( .TRUE. )
+       CALL stop_cp_run( )
        !
     END IF
     !

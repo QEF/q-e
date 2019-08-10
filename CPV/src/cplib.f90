@@ -1421,46 +1421,6 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   !
 end subroutine dylmr2_
 
-
-SUBROUTINE print_lambda_x( lambda, descla, n, nshow, ccc, iunit )
-    USE kinds, ONLY : DP
-    USE descriptors,       ONLY: la_descriptor
-    USE io_global,         ONLY: stdout, ionode
-    USE cp_interfaces,     ONLY: collect_lambda
-    USE electrons_base,    ONLY: nudx
-    IMPLICIT NONE
-    real(DP), intent(in) :: lambda(:,:,:), ccc
-    TYPE(la_descriptor), INTENT(IN) :: descla(:)
-    integer, intent(in) :: n, nshow
-    integer, intent(in), optional :: iunit
-    !
-    integer :: nnn, j, un, i, is
-    real(DP), allocatable :: lambda_repl(:,:)
-    if( present( iunit ) ) then
-      un = iunit
-    else
-      un = stdout
-    end if
-    nnn = min( nudx, nshow )
-    ALLOCATE( lambda_repl( nudx, nudx ) )
-    IF( ionode ) WRITE( un,*)
-    DO is = 1, SIZE( lambda, 3 )
-       CALL collect_lambda( lambda_repl, lambda(:,:,is), descla(is) )
-       IF( ionode ) THEN
-          WRITE( un,3370) '    lambda   nudx, spin = ', nudx, is
-          IF( nnn < n ) WRITE( un,3370) '    print only first ', nnn
-          DO i=1,nnn
-             WRITE( un,3380) (lambda_repl(i,j)*ccc,j=1,nnn)
-          END DO
-       END IF
-    END DO
-    DEALLOCATE( lambda_repl )
-3370   FORMAT(26x,a,2i4)
-3380   FORMAT(9f8.4)
-    RETURN
-END SUBROUTINE print_lambda_x
-!-----------------------------------------------------------------------
-!
 !-----------------------------------------------------------------------
    SUBROUTINE denlcc_x( nnr, nspin, vxcr, sfac, drhocg, dcc )
 !-----------------------------------------------------------------------
@@ -2038,27 +1998,6 @@ END SUBROUTINE print_lambda_x
        !
        RETURN
     END SUBROUTINE collect_bec_x
-
-!------------------------------------------------------------------------
-    SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE descriptors
-       REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
-       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, j, ic, ir
-       IF( desc%active_node > 0 ) THEN
-          ir = desc%ir
-          ic = desc%ic
-          DO j = 1, desc%nc
-             DO i = 1, desc%nr
-                lambda_dist( i, j ) = lambda_repl( i + ir - 1, j + ic - 1 )
-             END DO
-          END DO
-       END IF
-       RETURN
-    END SUBROUTINE distribute_lambda_x
     !
 !------------------------------------------------------------------------
     SUBROUTINE distribute_bec_x( bec_repl, bec_dist, desc, nspin )
@@ -2092,102 +2031,3 @@ END SUBROUTINE print_lambda_x
        END IF
        RETURN
     END SUBROUTINE distribute_bec_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE descriptors
-       REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
-       REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, ii, j, me, np
-       me = desc%mype
-       np = desc%npc * desc%npr
-       IF( desc%active_node > 0 ) THEN
-          DO j = 1, desc%n
-             ii = me + 1
-             DO i = 1, desc%nrl
-                zmat_dist( i, j ) = zmat_repl( ii, j )
-                ii = ii + np
-             END DO
-          END DO
-       END IF
-       RETURN
-    END SUBROUTINE distribute_zmat_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE mp_global,   ONLY: intra_bgrp_comm
-       USE mp,          ONLY: mp_sum
-       USE descriptors
-       REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
-       REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, j, ic, ir
-       lambda_repl = 0.0d0
-       IF( desc%active_node > 0 ) THEN
-          ir = desc%ir
-          ic = desc%ic
-          DO j = 1, desc%nc
-             DO i = 1, desc%nr
-                lambda_repl( i + ir - 1, j + ic - 1 ) = lambda_dist( i, j )
-             END DO
-          END DO
-       END IF
-       CALL mp_sum( lambda_repl, intra_bgrp_comm )
-       RETURN
-    END SUBROUTINE collect_lambda_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE mp_global,   ONLY: intra_bgrp_comm
-       USE mp,          ONLY: mp_sum
-       USE descriptors
-       REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
-       REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, ii, j, me, np, nrl
-       zmat_repl = 0.0d0
-       me = desc%mype
-       np = desc%npc * desc%npr
-       nrl = desc%nrl
-       IF( desc%active_node > 0 ) THEN
-          DO j = 1, desc%n
-             ii = me + 1
-             DO i = 1, nrl
-                zmat_repl( ii, j ) = zmat_dist( i, j )
-                ii = ii + np
-             END DO
-          END DO
-       END IF
-       CALL mp_sum( zmat_repl, intra_bgrp_comm )
-       RETURN
-    END SUBROUTINE collect_zmat_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE descriptors
-       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-       INTEGER,  INTENT(IN)  :: i, j
-       REAL(DP), INTENT(IN)  :: val
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       IF( desc%active_node > 0 ) THEN
-          IF( ( i >= desc%ir ) .AND. ( i - desc%ir + 1 <= desc%nr ) ) THEN
-             IF( ( j >= desc%ic ) .AND. ( j - desc%ic + 1 <= desc%nc ) ) THEN
-                lambda_dist( i - desc%ir + 1, j - desc%ic + 1 ) = val
-             END IF
-          END IF
-       END IF
-       RETURN
-    END SUBROUTINE setval_lambda_x
-
-
-!------------------------------------------------------------------------
-

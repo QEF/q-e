@@ -30,7 +30,6 @@ PROGRAM do_projwfc
   USE mp_images,  ONLY : intra_image_comm
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE mp_diag,    ONLY : mp_start_diag, nproc_ortho
   USE command_line_options, ONLY : ndiag_
   USE spin_orb,   ONLY : lforcet
   USE wvfct,      ONLY : et, nbnd
@@ -45,6 +44,8 @@ PROGRAM do_projwfc
   !
   IMPLICIT NONE
   !
+  include 'laxlib.fh'
+  !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER (len=256) :: filpdos, filproj, outdir
@@ -56,6 +57,7 @@ PROGRAM do_projwfc
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
   INTEGER :: n_proj_boxes, irmin(3,N_MAX_BOXES), irmax(3,N_MAX_BOXES)
   LOGICAL :: lgww  !if .true. use GW QP energies from file bands.dat
+  INTEGER :: nproc_ortho
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
              Emin, Emax, DeltaE, filpdos, filproj, lgww, &
@@ -65,10 +67,11 @@ PROGRAM do_projwfc
   ! initialise environment
   !
   CALL mp_startup ( )
-  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
           do_distr_diag_inside_bgrp_ = .true. )
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
+  CALL laxlib_getval(nproc_ortho=nproc_ortho)
   !
   CALL environment_start ( 'PROJWFC' )
   !
@@ -241,7 +244,7 @@ PROGRAM do_projwfc
      ENDIF
   ENDIF
   !
-  CALL laxlib_free_ortho_group()
+  CALL laxlib_end()
   CALL environment_end ( 'PROJWFC' )
   !
   CALL stop_pp
@@ -1798,15 +1801,13 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE spin_orb, ONLY: lspinorb
   USE mp,       ONLY: mp_bcast
   USE mp_pools, ONLY: root_pool, intra_pool_comm
-  USE mp_diag,  ONLY: ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
-                      leg_ortho, ortho_cntx
   USE wavefunctions, ONLY: evc
-  USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst, zsqmcll, dsqmsym
-  USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor, descla_init
   USE projections
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   INTEGER, EXTERNAL :: find_free_unit
   !
@@ -1845,6 +1846,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
     ! flag to distinguish procs involved in linear algebra
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, ortho_cntx
   !
   !
   INTERFACE 
@@ -1868,6 +1870,8 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   auxname = TRIM(tmp_dir) // TRIM(ADJUSTL(prefix)) // '.AUX' // TRIM(nd_nmbr)
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
+  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
   !
   ALLOCATE( ic_notcnv( np_ortho(2) ) )
   ALLOCATE( notcnv_ip( np_ortho(2) ) )
@@ -1978,8 +1982,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
         !
         CALL blk2cyc_zredist( natomwfc, diag, nrlx, natomwfc, overlap_d, nx, nx, desc )
         !
-        CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, &
-           desc%npc * desc%npr, desc%mype, desc%comm )
+        CALL zhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, desc%npc * desc%npr, desc%mype, desc%comm )
         !
         CALL cyc2blk_zredist( natomwfc, vv, nrlx, natomwfc, work_d, nx, nx, desc )
         !
@@ -2004,7 +2007,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
            ENDDO
         ENDDO
         CALL sqr_zmm_cannon( 'N', 'C', natomwfc, ONE, e_work_d, nx, work_d, nx, ZERO, overlap_d, nx, desc )
-        CALL zsqmher( natomwfc, overlap_d, nx, desc )
+        CALL laxlib_zsqmher( natomwfc, overlap_d, nx, desc )
         DEALLOCATE( e_work_d )
      ENDIF
      !
@@ -2397,7 +2400,7 @@ CONTAINS
         !
      ENDDO
      !
-     CALL zsqmher( n, dm, nx, desc )
+     CALL laxlib_zsqmher( n, dm, nx, desc )
      !
      DEALLOCATE( work )
      !
@@ -2467,7 +2470,7 @@ CONTAINS
         !
      ENDDO
      !
-     CALL dsqmsym( n, dm, nx, desc )
+     CALL laxlib_dsqmsym( n, dm, nx, desc )
      !
      DEALLOCATE( work )
      !

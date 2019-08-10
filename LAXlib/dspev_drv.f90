@@ -10,19 +10,8 @@
 MODULE dspev_module
 
     USE la_param
-
     IMPLICIT NONE
-
     SAVE
-
-    PRIVATE
-
-    PUBLIC :: pdspev_drv, dspev_drv
-    PUBLIC :: diagonalize_parallel, diagonalize_serial
-
-#if defined __SCALAPACK
-    PUBLIC :: pdsyevd_drv
-#endif
 
 
 CONTAINS
@@ -600,54 +589,6 @@ CONTAINS
    !
 !==----------------------------------------------==!
 
-   SUBROUTINE pdspev_drv( jobz, ap, lda, w, z, ldz, &
-                          nrl, n, nproc, mpime, comm )
-     IMPLICIT NONE
-     CHARACTER, INTENT(IN) :: JOBZ
-     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
-     INTEGER, INTENT(IN) :: comm
-     REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
-     REAL(DP), ALLOCATABLE :: sd( : )
-     LOGICAL :: tv
-     !
-     IF( n < 1 ) RETURN
-     !
-     tv = .false.
-     IF( jobz == 'V' .OR. jobz == 'v' ) tv = .true.
-
-     ALLOCATE ( sd ( n ) )
-     CALL ptredv( tv, ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
-     CALL ptqliv( tv, w, sd, n, z, ldz, nrl, mpime, comm)
-     DEALLOCATE ( sd )
-     CALL peigsrtv( tv, w, z, ldz, n, nrl)
-
-     RETURN
-   END SUBROUTINE pdspev_drv
- 
-!==----------------------------------------------==!
-
-      SUBROUTINE dspev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
-        IMPLICIT NONE
-        CHARACTER ::       JOBZ, UPLO
-        INTEGER   ::       IOPT, INFO, LDZ, N
-        REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
-        REAL(DP), ALLOCATABLE :: WORK(:)
-
-        IF( n < 1 ) RETURN
-
-        ALLOCATE( work( 3*n ) )
-
-        CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
-        IF( info .NE. 0 ) THEN
-           CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',info )
-        END IF
-
-        DEALLOCATE( work )
- 
-        RETURN
-      END SUBROUTINE dspev_drv
-
-
 #if defined __SCALAPACK
 
   SUBROUTINE pdsyevd_drv( tv, n, nb, s, lds, w, ortho_cntx, ortho_comm )
@@ -800,6 +741,7 @@ END SUBROUTINE diagonalize_parallel
 
 
 SUBROUTINE diagonalize_serial( n, rhos, rhod )
+      USE la_interface_mod, ONLY: dspev_drv
       IMPLICIT NONE
       INTEGER,  INTENT(IN)  :: n
       REAL(DP)              :: rhos(:,:)
@@ -837,6 +779,53 @@ SUBROUTINE diagonalize_serial( n, rhos, rhod )
 
 END SUBROUTINE diagonalize_serial
 
-
-
 END MODULE dspev_module
+
+!==----------------------------------------------==!
+
+
+   SUBROUTINE pdspev_drv_x ( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
+     use dspev_module
+     IMPLICIT NONE
+     CHARACTER, INTENT(IN) :: JOBZ
+     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, INTENT(IN) :: comm
+     REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
+     REAL(DP), ALLOCATABLE :: sd( : )
+     LOGICAL :: tv
+     !
+     IF( n < 1 ) RETURN
+     !
+     tv = .false.
+     IF( jobz == 'V' .OR. jobz == 'v' ) tv = .true.
+
+     ALLOCATE ( sd ( n ) )
+     CALL ptredv( tv, ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
+     CALL ptqliv( tv, w, sd, n, z, ldz, nrl, mpime, comm)
+     DEALLOCATE ( sd )
+     CALL peigsrtv( tv, w, z, ldz, n, nrl)
+     RETURN
+   END SUBROUTINE pdspev_drv_x
+ 
+!==----------------------------------------------==!
+
+   SUBROUTINE dspev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
+     use dspev_module
+     IMPLICIT NONE
+     CHARACTER ::       JOBZ, UPLO
+     INTEGER   ::       IOPT, INFO, LDZ, N
+     REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
+     REAL(DP), ALLOCATABLE :: WORK(:)
+
+     IF( n < 1 ) RETURN
+
+     ALLOCATE( work( 3*n ) )
+
+     CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
+     IF( info .NE. 0 ) THEN
+        CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',info )
+     END IF
+     DEALLOCATE( work )
+     RETURN
+   END SUBROUTINE dspev_drv_x
+

@@ -12,11 +12,9 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   USE mp,                 ONLY : mp_bcast, mp_root_sum, mp_sum
   USE mp_bands_util,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE descriptors,        ONLY : la_descriptor, descla_init, descla_local_dims
-  USE parallel_toolkit,   ONLY : zsqmher
-  USE mp_diag,            ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                                 ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   !
   IMPLICIT NONE
+  include 'laxlib.fh'
   COMPLEX (DP), PARAMETER :: C_ONE = (1.D0,0.D0), C_ZERO = (0.D0,0.D0)
   !
   ! ... I/O variables
@@ -92,12 +90,19 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
 
   INTEGER, PARAMETER   :: blocksz = 256 ! used to optimize some omp parallel do loops
   INTEGER   :: nblock
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
+             ortho_parent_comm, ortho_cntx
+  LOGICAL :: do_distr_diag_inside_bgrp
 
   res_array     = 0.0
   !
   CALL start_clock( 'ppcg_k' )
   !
   !  ... Initialization and validation
+
+  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
+    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
 !
   print_info = 0 ! 3 
   sbsize3 = sbsize*3
@@ -1244,15 +1249,15 @@ CONTAINS
      ! ... diagonalize the reduced hamiltonian
      !     Calling block parallel algorithm
      !
-     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg e and vl are the same across ortho_parent_comm
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg e and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
-        IF( my_bgrp_id == root_bgrp_id) CALL pcdiaghg( nbnd, Hl, Sl, nx, e, vl, desc )
+        IF( my_bgrp_id == root_bgrp_id) CALL pdiaghg( nbnd, Hl, Sl, nx, e, vl, desc )
         IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
           CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
           CALL mp_bcast( e,  root_bgrp_id, inter_bgrp_comm )
         ENDIF
      ELSE
-        CALL pcdiaghg( nbnd, Hl, Sl, nx, e, vl, desc )
+        CALL pdiaghg( nbnd, Hl, Sl, nx, e, vl, desc )
      END IF
      !
      ! "Rotate" psi to eigenvectors
@@ -1422,7 +1427,7 @@ CONTAINS
      if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
 !     CALL zsqmher( nbnd, dm, nx, desc )
-     CALL zsqmher( k, dm, nx, desc )
+     CALL laxlib_zsqmher( k, dm, nx, desc )
      !
      DEALLOCATE( work )
      !

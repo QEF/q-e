@@ -7,17 +7,17 @@
 !
 !
 !----------------------------------------------------------------------------
-INTERFACE
-SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+INTERFACE diaghg
+SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
   !
   ! ... LAPACK version - uses both DSYGV and DSYGVX
   !
-  USE la_param
-  !
   IMPLICIT NONE
+  !
+  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
@@ -33,4 +33,236 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
   !
 END SUBROUTINE
+!----------------------------------------------------------------------------
+SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates eigenvalues and eigenvectors of the generalized problem
+  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  ! ... LAPACK version - uses both ZHEGV and ZHEGVX
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+  !
+  INTEGER, INTENT(IN) :: n, m, ldh
+    ! dimension of the matrix to be diagonalized
+    ! number of eigenstates to be calculate
+    ! leading dimension of h, as declared in the calling pgm unit
+  COMPLEX(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
+    ! actually intent(in) but compilers don't know and complain
+    ! matrix to be diagonalized
+    ! overlap matrix
+  REAL(DP), INTENT(OUT) :: e(n)
+    ! eigenvalues
+  COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
+    ! eigenvectors (column-wise)
+  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+END SUBROUTINE
 END INTERFACE
+!
+!
+!
+INTERFACE pdiaghg
+!----------------------------------------------------------------------------
+SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates eigenvalues and eigenvectors of the generalized problem
+  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  ! ... Parallel version, with full data distribution
+  !
+  USE descriptors,      ONLY : la_descriptor
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+  !
+  INTEGER, INTENT(IN) :: n, ldh
+    ! dimension of the matrix to be diagonalized
+    ! leading dimension of h, as declared in the calling pgm unit
+  COMPLEX(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
+    ! actually intent(in) but compilers don't know and complain
+    ! matrix to be diagonalized
+    ! overlap matrix
+  REAL(DP), INTENT(OUT) :: e(n)
+    ! eigenvalues
+  COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
+    ! eigenvectors (column-wise)
+  TYPE(la_descriptor), INTENT(IN) :: desc
+END SUBROUTINE 
+!
+!----------------------------------------------------------------------------
+SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, desc )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates eigenvalues and eigenvectors of the generalized problem
+  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  ! ... Parallel version with full data distribution
+  !
+  USE descriptors,       ONLY : la_descriptor
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+  !
+  INTEGER, INTENT(IN) :: n, ldh
+    ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+    ! leading dimension of h, as declared in the calling pgm unit
+  REAL(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
+    ! matrix to be diagonalized
+    ! overlap matrix
+  !
+  REAL(DP), INTENT(OUT) :: e(n)
+    ! eigenvalues
+  REAL(DP), INTENT(OUT) :: v(ldh,ldh)
+    ! eigenvectors (column-wise)
+  TYPE(la_descriptor), INTENT(IN) :: desc
+END SUBROUTINE 
+END INTERFACE
+
+INTERFACE laxlib_start
+  SUBROUTINE laxlib_start_drv( ndiag_, my_world_comm, parent_comm, do_distr_diag_inside_bgrp_  )
+    IMPLICIT NONE
+    INTEGER, INTENT(INOUT) :: ndiag_  ! (IN) input number of procs in the diag group, (OUT) actual number
+    INTEGER, INTENT(IN) :: my_world_comm ! parallel communicator of the "local" world
+    INTEGER, INTENT(IN) :: parent_comm ! parallel communicator inside which the distributed linear algebra group
+                                       ! communicators are created
+    LOGICAL, INTENT(IN) :: do_distr_diag_inside_bgrp_  ! comme son nom l'indique
+  END SUBROUTINE 
+END INTERFACE laxlib_start
+
+INTERFACE laxlib_getval
+SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_comm, ortho_row_comm, ortho_col_comm, &
+  ortho_comm_id, ortho_parent_comm, me_blacs, np_blacs, ortho_cntx, world_cntx, do_distr_diag_inside_bgrp  )
+  IMPLICIT NONE
+  INTEGER, OPTIONAL, INTENT(OUT) :: nproc_ortho
+  INTEGER, OPTIONAL, INTENT(OUT) :: leg_ortho
+  INTEGER, OPTIONAL, INTENT(OUT) :: np_ortho(2)
+  INTEGER, OPTIONAL, INTENT(OUT) :: me_ortho(2)
+  INTEGER, OPTIONAL, INTENT(OUT) :: ortho_comm
+  INTEGER, OPTIONAL, INTENT(OUT) :: ortho_row_comm
+  INTEGER, OPTIONAL, INTENT(OUT) :: ortho_col_comm
+  INTEGER, OPTIONAL, INTENT(OUT) :: ortho_comm_id
+  INTEGER, OPTIONAL, INTENT(OUT) :: ortho_parent_comm
+  INTEGER, OPTIONAL, INTENT(OUT) :: me_blacs
+  INTEGER, OPTIONAL, INTENT(OUT) :: np_blacs
+  INTEGER, OPTIONAL, INTENT(OUT) :: ortho_cntx
+  INTEGER, OPTIONAL, INTENT(OUT) :: world_cntx
+  LOGICAL, OPTIONAL, INTENT(OUT) :: do_distr_diag_inside_bgrp
+END SUBROUTINE
+END INTERFACE
+
+   INTERFACE print_lambda
+      SUBROUTINE print_lambda_x( lambda, descla, n, nshow, nudx, ccc, ionode, iunit )
+         USE descriptors,       ONLY: la_descriptor
+         IMPLICIT NONE
+         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         REAL(DP), INTENT(IN) :: lambda(:,:,:), ccc
+         TYPE(la_descriptor), INTENT(IN) :: descla(:)
+         INTEGER, INTENT(IN) :: n, nshow, nudx
+         LOGICAL, INTENT(IN) :: ionode
+         INTEGER, INTENT(IN) :: iunit
+      END SUBROUTINE
+   END INTERFACE
+
+INTERFACE dspev_drv
+   SUBROUTINE dspev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
+     IMPLICIT NONE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     CHARACTER ::       JOBZ, UPLO
+     INTEGER   ::       LDZ, N
+     REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
+   END SUBROUTINE
+   SUBROUTINE pdspev_drv_x ( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
+     IMPLICIT NONE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     CHARACTER, INTENT(IN) :: JOBZ
+     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, INTENT(IN) :: comm
+     REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
+   END SUBROUTINE
+END INTERFACE
+
+INTERFACE zhpev_drv
+   SUBROUTINE zhpev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
+     IMPLICIT NONE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     CHARACTER ::       JOBZ, UPLO
+     INTEGER   ::       LDZ, N
+     COMPLEX(DP) ::  AP( * ), Z( LDZ, * )
+     REAL(DP) ::  W( * )
+   END SUBROUTINE 
+   SUBROUTINE pzhpev_drv_x( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
+     IMPLICIT NONE
+     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     CHARACTER :: JOBZ
+     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, INTENT(IN) :: comm
+     COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
+     REAL(DP) :: w( * )
+   END SUBROUTINE 
+END INTERFACE
+
+   INTERFACE distribute_lambda
+      SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
+         USE descriptors, ONLY : la_descriptor
+         IMPLICIT NONE
+         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
+         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE distribute_lambda_x
+   END INTERFACE
+
+   INTERFACE collect_lambda
+      SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
+         USE descriptors, ONLY : la_descriptor
+         IMPLICIT NONE
+         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
+         REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE collect_lambda_x
+   END INTERFACE
+
+   INTERFACE setval_lambda
+      SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
+         USE descriptors, ONLY : la_descriptor
+         IMPLICIT NONE
+         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+         INTEGER,  INTENT(IN)  :: i, j
+         REAL(DP), INTENT(IN)  :: val
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE setval_lambda_x
+   END INTERFACE
+
+   INTERFACE distribute_zmat
+      SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
+         USE descriptors, ONLY : la_descriptor
+         IMPLICIT NONE
+         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
+         REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE distribute_zmat_x
+   END INTERFACE
+
+   INTERFACE collect_zmat
+      SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
+         USE descriptors, ONLY : la_descriptor
+         IMPLICIT NONE
+         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
+         REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE collect_zmat_x
+   END INTERFACE
+

@@ -22,7 +22,7 @@ SUBROUTINE from_scratch( )
                                      cell_force, velh, at, alat
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
-    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx
+    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx, nudx
     USE electrons_module,     ONLY : occn_info, distribute_c, collect_c, distribute_b, collect_b
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
@@ -43,7 +43,7 @@ SUBROUTINE from_scratch( )
                                      strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp
-    USE cp_interfaces,        ONLY : print_lambda, nlfq_bgrp, setval_lambda
+    USE cp_interfaces,        ONLY : nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
@@ -59,6 +59,8 @@ SUBROUTINE from_scratch( )
     USE matrix_inversion
     !
     IMPLICIT NONE
+    !
+    include 'laxlib.fh'
     !
     REAL(DP),    ALLOCATABLE :: emadt2(:), emaver(:)
     REAL(DP)                 :: verl1, verl2
@@ -258,7 +260,8 @@ SUBROUTINE from_scratch( )
          CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, descla, fion )
       END IF
 
-      if ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, ccc )
+      if ( iverbosity > 1 ) &
+         CALL print_lambda( lambda, descla, nbsp, 9, nudx, ccc, ionode, stdout )
 
       !
       if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )

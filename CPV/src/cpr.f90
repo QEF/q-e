@@ -91,7 +91,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecw,                    ONLY : ecutwfc
   USE gvect,                    ONLY : ecutrho
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
-  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda, prefor, dotcsc
+  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, prefor, dotcsc
   USE cp_main_variables,        ONLY : acc, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
@@ -120,6 +120,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE funct,                    ONLY : dft_is_meta
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   ! ... input/output variables
   !
@@ -564,7 +566,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          !  correction to displacement of ions
          !
-         IF ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
+         IF ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, nudx, 1.D0, ionode, stdout )
          !
          IF ( tortho ) THEN
            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, descla )
@@ -972,7 +974,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )
   !
-  IF( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, nbsp, 1.D0 )
+  IF( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 

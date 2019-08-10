@@ -53,7 +53,6 @@
       use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp, prefor
       use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp
-      use cp_interfaces,            ONLY : collect_lambda, distribute_lambda
       USE cp_main_variables,        ONLY : descla, drhor, drhog
       USE descriptors,              ONLY : la_descriptor, ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
@@ -93,6 +92,7 @@
       complex(dp) :: phi( ngw, nbspx )
       real(dp) :: dbec(nhsa,nbspx,3,3)
 !
+      include 'laxlib.fh'
 !
       integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip, nrlx
       integer :: inl, jnl, niter, istart, nss, nrl, me_rot, np_rot , comm

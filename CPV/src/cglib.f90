@@ -122,39 +122,6 @@
       end subroutine rotate
 
 
-!-----------------------------------------------------------------------
-      subroutine ddiag(nx,n,amat,dval,dvec,iflag)
-!-----------------------------------------------------------------------
-!
-      use dspev_module, only: dspev_drv
-      use kinds , only : dp
-
-      implicit none
-
-      integer nx,n,ndim,iflag,k,i,j
-      real(dp)   dval(n)
-      real(dp) amat(nx,n), dvec(nx,n)
-      real(dp), allocatable::  ap(:)
-
-      ndim=(n*(n+1))/2
-      allocate(ap(ndim))
-      ap(:)=0.d0
-
-      k=0
-      do j=1,n
-       do i=1,j
-        k=k+1
-        ap(k)=amat(i,j)
-       end do
-      end do
-
-      CALL dspev_drv( 'V', 'U', n, ap, dval, dvec, nx )
-
-      deallocate(ap)
-
-      return
-    end subroutine ddiag
-
     subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
 !this subroutines finds the minimum of a quadratic real function
       
@@ -206,7 +173,6 @@ subroutine pc2(a,beca,b,becb)
       use uspp_param, only: nh, nvb, ish
       use uspp, only :nhsa=>nkb
       use uspp, only :qq_nt
-      use parallel_toolkit, only : rep_matmul_drv
       
                            
       implicit none        
@@ -776,7 +742,6 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   ! ... trivial parallelization (splitting matrix B by columns) of dgemm 
   !
   USE kinds, ONLY : DP
-  USE parallel_toolkit
   !
   IMPLICIT NONE
   !

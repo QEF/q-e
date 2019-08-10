@@ -20,6 +20,8 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   !
   IMPLICIT NONE
   !
+  INCLUDE 'laxlib.fh'
+  !
   ! ... I/O variables
   !
   INTEGER, INTENT(IN) :: npw, npwx, nstart, nbnd, npol
@@ -108,7 +110,7 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('rotwfck:diag');  !write(*,*) 'start rotwfck:diag';FLUSH(6)
-  CALL cdiaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+  CALL diaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
   call stop_clock('rotwfck:diag');  !write(*,*) 'stop rotwfck:diag';FLUSH(6)
   call start_clock('rotwfck:evc'); !write(*,*) 'start rotwfck:evc';FLUSH(6)
   !
@@ -152,13 +154,12 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   USE cg_param,         ONLY : DP
   USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
           nbgrp, my_bgrp_id
-  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                               ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,      ONLY : la_descriptor, descla_init
-  USE parallel_toolkit, ONLY : zsqmher
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   ! ... I/O variables
   !
@@ -191,6 +192,10 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
+             ortho_parent_comm, ortho_cntx
+  LOGICAL :: do_distr_diag_inside_bgrp
+  !
   EXTERNAL  h_psi,    s_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
@@ -199,6 +204,10 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
 
   call start_clock('protwfck')
+  !
+  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
+    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
   !
   ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
@@ -251,15 +260,15 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('protwfck:diag')
-  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg en and vc are the same across ortho_parent_comm
+  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg en and vc are the same across ortho_parent_comm
      ! only the first bgrp performs the diagonalization
-     IF( my_bgrp_id == root_bgrp_id ) CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
+     IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nstart, hc, sc, nx, en, vc, desc )
      IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
        CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
        CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
      ENDIF
   ELSE
-     CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
+     CALL pdiaghg( nstart, hc, sc, nx, en, vc, desc )
   END IF
   call stop_clock('protwfck:diag')
   !
@@ -364,7 +373,7 @@ CONTAINS
      END DO
      if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
-     CALL zsqmher( nstart, dm, nx, desc )
+     CALL laxlib_zsqmher( nstart, dm, nx, desc )
      !
      DEALLOCATE( work )
      !

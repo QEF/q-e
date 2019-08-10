@@ -4,7 +4,8 @@ include ../make.inc
 
 MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG)../EIGENSOLVER_GPU/lib_eigsolve $(MOD_FLAG) .
 
-LAX = la_types.o \
+LAX = la_interface_mod.o \
+la_types.o \
 la_error.o \
 la_helper.o \
 cdiaghg.o \
@@ -29,6 +30,8 @@ la_test.x : test.o libqela.a
 	$(LD) $(LDFLAGS) -o la_test.x test.o libqela.a $(QELIBS)
 
 TEST : la_test.x
+
+la_interface_mod.o : laxlib.fh
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x

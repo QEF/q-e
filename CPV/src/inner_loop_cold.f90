@@ -40,7 +40,6 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
       USE mp_bands,       ONLY: intra_bgrp_comm
-      USE mp_diag,        ONLY: leg_ortho
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq, nlcc_any
@@ -53,11 +52,10 @@
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: descla, drhor, drhog
       USE descriptors,       ONLY: descla_init , la_descriptor
-      USE dspev_module,   ONLY: pdspev_drv, dspev_drv
-
-
       !
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 
 !input variables
       INTEGER                :: nfi
@@ -95,7 +93,7 @@
 
       INTEGER :: np(2), coor_ip(2), ipr, ipc, nr, nc, ir, ic, ii, jj, root, j
       TYPE(la_descriptor) :: desc_ip
-      INTEGER :: np_rot, me_rot, comm_rot, nrlx
+      INTEGER :: np_rot, me_rot, comm_rot, nrlx, leg_ortho
 
       CALL start_clock( 'inner_loop')
 
@@ -103,6 +101,7 @@
       allocate(c0hc0(nrcx, nrcx, nspin))
       allocate(h0c0(ngw,nx))
 
+      CALL laxlib_getval( leg_ortho = leg_ortho )
 
       lambdap=0.3d0!small step for free-energy calculation
 
@@ -532,11 +531,10 @@
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: descla
       USE descriptors,       ONLY: la_descriptor, descla_init
-      USE dspev_module,   ONLY: pdspev_drv, dspev_drv
-
-
       !
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
@@ -573,7 +571,7 @@
 
                CALL blk2cyc_redist( nss, epsi0, nrl, nss, psihpsi(1,1,is), SIZE(psihpsi,1), SIZE(psihpsi,2), descla(is) )
 
-               CALL pdspev_drv( 'V', epsi0, nrl, dval, zaux, nrl, nrl, nss, np_rot, me_rot, comm_rot )
+               CALL dspev_drv( 'V', epsi0, nrl, dval, zaux, nrl, nrl, nss, np_rot, me_rot, comm_rot )
                !
                IF( me_rot /= 0 ) dval = 0.0d0
                !

@@ -5,31 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!==----------------------------------------------==!
-    MODULE parallel_toolkit
-!==----------------------------------------------==!
-
-    USE la_param
-    IMPLICIT NONE
-    SAVE
-
-    PRIVATE
-
-    PUBLIC :: rep_matmul_drv
-    PUBLIC :: zrep_matmul_drv
-    PUBLIC :: dsqmdst, dsqmcll, dsqmred, dsqmsym
-    PUBLIC :: zsqmdst, zsqmcll, zsqmred, zsqmher
-
-    CONTAINS
-
 ! ---------------------------------------------------------------------------------
 
-SUBROUTINE dsqmdst( n, ar, ldar, a, lda, desc )
+SUBROUTINE laxlib_dsqmdst( n, ar, ldar, a, lda, desc )
   !
   !  Double precision SQuare Matrix DiSTribution
   !  This sub. take a replicated square matrix "ar" and distribute it
   !  across processors as described by descriptor "desc"
   !
+  USE la_param
   USE descriptors
   !
   implicit none
@@ -76,15 +60,16 @@ SUBROUTINE dsqmdst( n, ar, ldar, a, lda, desc )
 
   RETURN
 
-END SUBROUTINE dsqmdst
+END SUBROUTINE laxlib_dsqmdst
 
 
-SUBROUTINE zsqmdst( n, ar, ldar, a, lda, desc )
+SUBROUTINE laxlib_zsqmdst( n, ar, ldar, a, lda, desc )
   !
   !  double complex (Z) SQuare Matrix DiSTribution
   !  This sub. take a replicated square matrix "ar" and distribute it
   !  across processors as described by descriptor "desc"
   !
+  USE la_param
   USE descriptors
   !
   implicit none
@@ -131,17 +116,18 @@ SUBROUTINE zsqmdst( n, ar, ldar, a, lda, desc )
 
   RETURN
 
-END SUBROUTINE zsqmdst
+END SUBROUTINE laxlib_zsqmdst
 
 ! ---------------------------------------------------------------------------------
 
-SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
+SUBROUTINE laxlib_dsqmcll( n, a, lda, ar, ldar, desc, comm )
   !
   !  Double precision SQuare Matrix CoLLect
   !  This sub. take a distributed square matrix "a" and collect 
   !  the block assigned to processors into a replicated matrix "ar",
   !  matrix is distributed as described by descriptor desc
   !
+  USE la_param
   USE descriptors
   !
   implicit none
@@ -223,16 +209,17 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
 #endif
 
   RETURN
-END SUBROUTINE dsqmcll
+END SUBROUTINE laxlib_dsqmcll
 
 
-SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
+SUBROUTINE laxlib_zsqmcll( n, a, lda, ar, ldar, desc, comm )
   !
   !  double complex (Z) SQuare Matrix CoLLect
   !  This sub. take a distributed square matrix "a" and collect 
   !  the block assigned to processors into a replicated matrix "ar",
   !  matrix is distributed as described by descriptor desc
   !
+  USE la_param
   USE descriptors
   !
   implicit none
@@ -314,15 +301,16 @@ SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
 #endif
 
   RETURN
-END SUBROUTINE zsqmcll
+END SUBROUTINE laxlib_zsqmcll
 
 
 ! ---------------------------------------------------------------------------------
 
-SUBROUTINE dsqmwpb( n, a, lda, desc )
+SUBROUTINE laxlib_dsqmwpb( n, a, lda, desc )
    !
    ! Double precision SQuare Matrix WiPe Border subroutine
    !
+  USE la_param
    USE descriptors
    !
    IMPLICIT NONE
@@ -346,14 +334,15 @@ SUBROUTINE dsqmwpb( n, a, lda, desc )
    END DO
    !
    RETURN
-END SUBROUTINE dsqmwpb
+END SUBROUTINE laxlib_dsqmwpb
 
 ! ---------------------------------------------------------------------------------
 
-SUBROUTINE dsqmsym( n, a, lda, desc )
+SUBROUTINE laxlib_dsqmsym( n, a, lda, desc )
    !
    ! Double precision SQuare Matrix SYMmetrization
    !
+  USE la_param
    USE descriptors
    !
    IMPLICIT NONE
@@ -452,13 +441,14 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
 #endif
 
    RETURN
-END SUBROUTINE dsqmsym
+END SUBROUTINE laxlib_dsqmsym
 
 
-SUBROUTINE zsqmher( n, a, lda, desc )
+SUBROUTINE laxlib_zsqmher( n, a, lda, desc )
    !
    ! double complex (Z) SQuare Matrix HERmitianize
    !
+  USE la_param
    USE descriptors
    !
    IMPLICIT NONE
@@ -598,13 +588,13 @@ SUBROUTINE zsqmher( n, a, lda, desc )
 #endif
 
    RETURN
-END SUBROUTINE zsqmher
+END SUBROUTINE laxlib_zsqmher
 
 
 ! ---------------------------------------------------------------------------------
 
 
-SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
+SUBROUTINE laxlib_dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    !
    ! Double precision SQuare Matrix REDistribution
    ! 
@@ -616,6 +606,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    ! If you want to read, get prepared for an headache!
    ! Written struggling by Carlo Cavazzoni.
    !
+  USE la_param
    USE descriptors
    !
    IMPLICIT NONE
@@ -989,11 +980,11 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
 #endif
 
    RETURN
-END SUBROUTINE dsqmred
+END SUBROUTINE laxlib_dsqmred
 
 
 
-SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
+SUBROUTINE laxlib_zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    !
    ! double complex (Z) SQuare Matrix REDistribution
    ! 
@@ -1005,6 +996,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    ! If you want to read, get prepared for an headache!
    ! Written struggling by Carlo Cavazzoni.
    !
+  USE la_param
    USE descriptors
    !
    IMPLICIT NONE
@@ -1358,7 +1350,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
 #endif
 
    RETURN
-END SUBROUTINE zsqmred
+END SUBROUTINE laxlib_zsqmred
 
 
 
@@ -1370,6 +1362,7 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
   !  Parallel matrix multiplication with replicated matrix
   !  written by Carlo Cavazzoni
   !
+  USE la_param
   implicit none
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
@@ -1534,6 +1527,7 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
   !  Parallel matrix multiplication with replicated matrix
   !  written by Carlo Cavazzoni
   !
+  USE la_param
   implicit none
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
@@ -1691,11 +1685,6 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
   RETURN
 
 END SUBROUTINE zrep_matmul_drv
-
-
-!==----------------------------------------------==!
-END MODULE parallel_toolkit
-!==----------------------------------------------==!
 
 !
 !
@@ -4273,7 +4262,7 @@ END SUBROUTINE qe_pdtrtri
 SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    USE descriptors
    USE la_param
-   USE dspev_module,     ONLY : pdspev_drv
+   USE la_interface_mod, ONLY: dspev_drv
    IMPLICIT NONE
    LOGICAL, INTENT(IN) :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
@@ -4303,7 +4292,7 @@ SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    !  matrix "hh" is block distributed, matrix diag is cyclic distributed
    CALL blk2cyc_redist( n, diag, nrlx, n, hh, ldh, ldh, desc )
    !
-   CALL pdspev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
+   CALL dspev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
         desc%npc * desc%npr, desc%mype, desc%comm )
    !
    IF( tv ) CALL cyc2blk_redist( n, vv, nrlx, n, hh, ldh, ldh, desc )
@@ -4319,7 +4308,7 @@ END SUBROUTINE
 SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
    USE descriptors
    USE la_param
-   USE zhpev_module,     ONLY : pzhpev_drv
+   USE la_interface_mod, ONLY: zhpev_drv
    IMPLICIT NONE
    LOGICAL, INTENT(IN) :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
@@ -4347,7 +4336,7 @@ SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
 
    CALL blk2cyc_zredist( n, diag, nrlx, n, hh, ldh, ldh, desc )
    !
-   CALL pzhpev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
+   CALL zhpev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
         desc%npc * desc%npr, desc%mype, desc%comm )
    !
    if( tv ) CALL cyc2blk_zredist( n, vv, nrlx, n, hh, ldh, ldh, desc )
@@ -4529,3 +4518,120 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
    !
    RETURN
 END SUBROUTINE sqr_zsetmat
+
+!------------------------------------------------------------------------
+    SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
+!------------------------------------------------------------------------
+       USE la_param
+       USE descriptors
+       REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
+       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, j, ic, ir
+       IF( desc%active_node > 0 ) THEN
+          ir = desc%ir
+          ic = desc%ic
+          DO j = 1, desc%nc
+             DO i = 1, desc%nr
+                lambda_dist( i, j ) = lambda_repl( i + ir - 1, j + ic - 1 )
+             END DO
+          END DO
+       END IF
+       RETURN
+    END SUBROUTINE distribute_lambda_x
+    !
+!------------------------------------------------------------------------
+    SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
+!------------------------------------------------------------------------
+       USE la_param
+       USE mp_diag,   ONLY: ortho_parent_comm
+       USE descriptors
+       REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
+       REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, j, ic, ir, ierr
+       lambda_repl = 0.0d0
+       IF( desc%active_node > 0 ) THEN
+          ir = desc%ir
+          ic = desc%ic
+          DO j = 1, desc%nc
+             DO i = 1, desc%nr
+                lambda_repl( i + ir - 1, j + ic - 1 ) = lambda_dist( i, j )
+             END DO
+          END DO
+       END IF
+       CALL MPI_ALLREDUCE( MPI_IN_PLACE, lambda_repl, SIZE(lambda_repl), MPI_DOUBLE_PRECISION, &
+                           MPI_SUM, ortho_parent_comm, ierr )
+       RETURN
+    END SUBROUTINE collect_lambda_x
+
+!------------------------------------------------------------------------
+    SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
+!------------------------------------------------------------------------
+       USE la_param
+       USE mp_diag,   ONLY: ortho_parent_comm
+       USE descriptors
+       REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
+       REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, ii, j, me, np, nrl
+       zmat_repl = 0.0d0
+       me = desc%mype
+       np = desc%npc * desc%npr
+       nrl = desc%nrl
+       IF( desc%active_node > 0 ) THEN
+          DO j = 1, desc%n
+             ii = me + 1
+             DO i = 1, nrl
+                zmat_repl( ii, j ) = zmat_dist( i, j )
+                ii = ii + np
+             END DO
+          END DO
+       END IF
+       CALL MPI_ALLREDUCE( MPI_IN_PLACE, zmat_repl, SIZE(zmat_repl), MPI_DOUBLE_PRECISION, &
+                           MPI_SUM, ortho_parent_comm, ierr )
+       RETURN
+    END SUBROUTINE collect_zmat_x
+
+!------------------------------------------------------------------------
+    SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
+!------------------------------------------------------------------------
+       USE la_param
+       USE descriptors
+       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+       INTEGER,  INTENT(IN)  :: i, j
+       REAL(DP), INTENT(IN)  :: val
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       IF( desc%active_node > 0 ) THEN
+          IF( ( i >= desc%ir ) .AND. ( i - desc%ir + 1 <= desc%nr ) ) THEN
+             IF( ( j >= desc%ic ) .AND. ( j - desc%ic + 1 <= desc%nc ) ) THEN
+                lambda_dist( i - desc%ir + 1, j - desc%ic + 1 ) = val
+             END IF
+          END IF
+       END IF
+       RETURN
+    END SUBROUTINE setval_lambda_x
+
+!------------------------------------------------------------------------
+    SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
+!------------------------------------------------------------------------
+       USE la_param
+       USE descriptors
+       REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
+       REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, ii, j, me, np
+       me = desc%mype
+       np = desc%npc * desc%npr
+       IF( desc%active_node > 0 ) THEN
+          DO j = 1, desc%n
+             ii = me + 1
+             DO i = 1, desc%nrl
+                zmat_dist( i, j ) = zmat_repl( ii, j )
+                ii = ii + np
+             END DO
+          END DO
+       END IF
+       RETURN
+    END SUBROUTINE distribute_zmat_x
+    !

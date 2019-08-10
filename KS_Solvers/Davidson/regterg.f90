@@ -31,6 +31,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !
   IMPLICIT NONE
   !
+  include 'laxlib.fh'
+  !
   INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
@@ -205,7 +207,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
@@ -366,7 +368,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
@@ -516,13 +518,12 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   USE david_param,       ONLY : DP, stdout
   USE mp_bands_util,     ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_bands_util,     ONLY : gstart
-  USE mp_diag,           ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                                ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,       ONLY : la_descriptor, descla_init, descla_local_dims
-  USE parallel_toolkit,  ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
   USE mp,                ONLY : mp_bcast, mp_root_sum, mp_sum
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
@@ -585,6 +586,10 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
+             ortho_parent_comm, ortho_cntx
+  LOGICAL :: do_distr_diag_inside_bgrp
+  !
   REAL(DP), EXTERNAL :: ddot
   !
   EXTERNAL  h_psi, s_psi, g_psi
@@ -599,7 +604,11 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   !
   !
   CALL start_clock( 'regterg' )
-  !
+  ! 
+  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
+    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+  ! 
   IF ( nvec > nvecx / 2 ) CALL errore( 'pregter', 'nvecx is too small', 1 )
   !
   IF ( gstart == -1 ) CALL errore( 'pregter', 'gstart variable not initialized', 1 )
@@ -739,15 +748,15 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !     Calling block parallel algorithm
      !
      CALL start_clock( 'regterg:diag' )
-     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of prdiaghg ew and vl are the same across ortho_parent_comm
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg ew and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
-        IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nbase, hl, sl, nx, ew, vl, desc )
         IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
            CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
            CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
         ENDIF
      ELSE
-        CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        CALL pdiaghg( nbase, hl, sl, nx, ew, vl, desc )
      END IF
      CALL stop_clock( 'regterg:diag' )
      !
@@ -829,7 +838,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
         IF( ierr /= 0 ) &
            CALL errore( 'pregterg ',' cannot allocate hl ', ABS(ierr) )
 
-        CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, hl, nx, desc )
+        CALL laxlib_dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, hl, nx, desc )
 
         vl = sl
         DEALLOCATE( sl )
@@ -837,7 +846,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
         IF( ierr /= 0 ) &
            CALL errore( 'pregterg ',' cannot allocate sl ', ABS(ierr) )
 
-        CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, sl, nx, desc )
+        CALL laxlib_dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, sl, nx, desc )
 
         DEALLOCATE( vl )
         ALLOCATE( vl( nx , nx ), STAT=ierr )
@@ -867,15 +876,15 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !     Call block parallel algorithm
      !
      CALL start_clock( 'regterg:diag' )
-     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of prdiaghg ew and vl are the same across ortho_parent_comm
+     IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg ew and vl are the same across ortho_parent_comm
         ! only the first bgrp performs the diagonalization
-        IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nbase, hl, sl, nx, ew, vl, desc )
         IF( nbgrp > 1 ) THEN ! results must be brodcast to the other bnd groups
            CALL mp_bcast( vl, root_bgrp_id, inter_bgrp_comm )
            CALL mp_bcast( ew, root_bgrp_id, inter_bgrp_comm )
         ENDIF
      ELSE
-        CALL prdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+        CALL pdiaghg( nbase, hl, sl, nx, ew, vl, desc )
      END IF
      CALL stop_clock( 'regterg:diag' )
      !
@@ -1403,7 +1412,7 @@ CONTAINS
      END DO
      IF (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
-     CALL dsqmsym( nbase, dm, nx, desc )
+     CALL laxlib_dsqmsym( nbase, dm, nx, desc )
      !
      DEALLOCATE( work )
      !
@@ -1466,7 +1475,7 @@ CONTAINS
         !
      END DO
      !
-     CALL dsqmsym( nbase+notcnv, dm, nx, desc )
+     CALL laxlib_dsqmsym( nbase+notcnv, dm, nx, desc )
      !
      DEALLOCATE( vtmp )
      RETURN

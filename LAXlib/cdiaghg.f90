@@ -10,7 +10,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -192,10 +192,10 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !
   RETURN
   !
-END SUBROUTINE cdiaghg
+END SUBROUTINE laxlib_cdiaghg
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
+SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -205,9 +205,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   ! ... Parallel version, with full data distribution
   !
   USE la_param
-  USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor
-  USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
   USE mp_diag,          ONLY : ortho_parent_comm
 #if defined __SCALAPACK
   USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
@@ -384,11 +382,13 @@ CONTAINS
   !
   SUBROUTINE test_drv_begin()
      ALLOCATE( tt( n, n ) )
-     CALL zsqmcll( n, hh, nx, tt, n, desc, desc%comm )
+     CALL laxlib_zsqmcll( n, hh, nx, tt, n, desc, desc%comm )
      RETURN
   END SUBROUTINE test_drv_begin
   !
   SUBROUTINE test_drv_end()
+     !
+     USE la_interface_mod, ONLY: zhpev_drv
      !
      INTEGER :: i, j, k
      COMPLEX(DP), ALLOCATABLE :: diag(:,:)
@@ -423,11 +423,11 @@ CONTAINS
      IF ( info /= 0 ) &
         CALL lax_error__( 'test_drv_end', 'error broadcasting array e', ABS( info ) )
 #endif
-     CALL zsqmdst( n, tt, n, hh, nx, desc )
+     CALL laxlib_zsqmdst( n, tt, n, hh, nx, desc )
      DEALLOCATE( tt )
      CALL lax_error__('cdiaghg','stop serial',1)
      RETURN
   END SUBROUTINE test_drv_end
   !
-END SUBROUTINE pcdiaghg
+END SUBROUTINE laxlib_pcdiaghg
 !

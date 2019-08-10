@@ -114,10 +114,13 @@ MODULE cp_main_variables
                                  gstart, nudx, tpre, nbspx_bgrp )
       !------------------------------------------------------------------------
       !
-      USE mp_diag,     ONLY: np_ortho, me_ortho, ortho_comm, ortho_comm_id, ortho_cntx
       USE mp_bands,    ONLY: intra_bgrp_comm, me_bgrp
       USE mp,          ONLY: mp_max, mp_min
-      USE descriptors, ONLY: la_descriptor, descla_init
+      USE descriptors, ONLY: descla_init
+      !
+      IMPLICIT NONE
+      !
+      include 'laxlib.fh'
       !
       INTEGER,           INTENT(IN) :: ngw, ngw_g, ngb, ngs, ng, nr1,nr2,nr3, &
                                        nnr, nrxxs, nat, nax, nsp, nspin, &
@@ -129,6 +132,10 @@ MODULE cp_main_variables
       !
       INTEGER  :: iss, ierr, nlam, nrcx
       LOGICAL  :: gzero
+      INTEGER  :: np_ortho(2), me_ortho(2), ortho_comm, ortho_comm_id, ortho_cntx
+      !
+      CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+        ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
       !
       ! ... allocation of all arrays not already allocated in init and nlinit
       !

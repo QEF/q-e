@@ -11,14 +11,6 @@ MODULE zhpev_module
    IMPLICIT NONE
    SAVE
 
-   PRIVATE
-
-   PUBLIC :: pzhpev_drv, zhpev_drv
-#if defined __SCALAPACK
-   PUBLIC :: pzheevd_drv
-#endif
-
-
 CONTAINS
    !
    !-------------------------------------------------------------------------
@@ -1411,63 +1403,6 @@ CONTAINS
 
 !==----------------------------------------------==!
 
-   SUBROUTINE zhpev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
-
-
-        IMPLICIT NONE
-
-        CHARACTER ::       JOBZ, UPLO
-        INTEGER   ::       IOPT, INFO, LDZ, N
-        COMPLEX(DP) ::  AP( * ), Z( LDZ, * )
-        REAL(DP) ::  W( * )
-        REAL(DP), ALLOCATABLE :: RWORK(:)
-        COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
-
-        ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
-        CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
-        DEALLOCATE( rwork, zwork )
-        IF( INFO .NE. 0 ) THEN
-          CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',INFO )
-        END IF
-
-        RETURN
-   END SUBROUTINE zhpev_drv
-
-!==----------------------------------------------==!
-
-   SUBROUTINE pzhpev_drv( jobz, ap, lda, w, z, ldz, &
-                          nrl, n, nproc, mpime, comm )
-
-
-     IMPLICIT NONE
-     CHARACTER :: JOBZ
-     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
-     INTEGER, INTENT(IN) :: comm
-     COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
-     REAL(DP) :: w( * )
-     REAL(DP), ALLOCATABLE :: rwork( : )
-     COMPLEX(DP), ALLOCATABLE :: cwork( : )
-     !
-     ALLOCATE( rwork( n ) )
-     ALLOCATE( cwork( n ) )
-     !
-     CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
-
-     IF( jobz == 'V' .OR. jobz == 'v' ) THEN
-        CALL pzupgtr( n, nrl, ap, lda, cwork, z, ldz, nproc, mpime, comm)
-     END IF
-
-     CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime, comm)
-
-     DEALLOCATE( cwork )
-     DEALLOCATE( rwork )
-
-     RETURN
-   END SUBROUTINE pzhpev_drv
-
-
-!==----------------------------------------------==!
-
 
 #if defined __SCALAPACK
 
@@ -1580,3 +1515,61 @@ CONTAINS
 #endif
 
 END MODULE zhpev_module
+
+
+!==----------------------------------------------==!
+
+
+   SUBROUTINE zhpev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
+
+        use zhpev_module
+        IMPLICIT NONE
+
+        CHARACTER ::       JOBZ, UPLO
+        INTEGER   ::       IOPT, INFO, LDZ, N
+        COMPLEX(DP) ::  AP( * ), Z( LDZ, * )
+        REAL(DP) ::  W( * )
+        REAL(DP), ALLOCATABLE :: RWORK(:)
+        COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
+
+        ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
+        CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
+        DEALLOCATE( rwork, zwork )
+        IF( INFO .NE. 0 ) THEN
+          CALL lax_error__( ' zhpev_drv ', ' diagonalization failed ',INFO )
+        END IF
+
+        RETURN
+   END SUBROUTINE 
+
+!==----------------------------------------------==!
+
+   SUBROUTINE pzhpev_drv_x( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
+
+     use zhpev_module
+
+     IMPLICIT NONE
+     CHARACTER :: JOBZ
+     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, INTENT(IN) :: comm
+     COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
+     REAL(DP) :: w( * )
+     REAL(DP), ALLOCATABLE :: rwork( : )
+     COMPLEX(DP), ALLOCATABLE :: cwork( : )
+     !
+     ALLOCATE( rwork( n ) )
+     ALLOCATE( cwork( n ) )
+     !
+     CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
+
+     IF( jobz == 'V' .OR. jobz == 'v' ) THEN
+        CALL pzupgtr( n, nrl, ap, lda, cwork, z, ldz, nproc, mpime, comm)
+     END IF
+
+     CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime, comm)
+
+     DEALLOCATE( cwork )
+     DEALLOCATE( rwork )
+
+     RETURN
+   END SUBROUTINE 

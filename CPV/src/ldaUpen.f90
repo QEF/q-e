@@ -80,9 +80,9 @@ CONTAINS
       USE gvecw,              ONLY: ngw
       USE electrons_base,     ONLY: nspin, n => nbsp, nx => nbspx, ispin, f
       USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx, nwfcU, ns
-      USE dspev_module,       ONLY: dspev_drv
 !
       IMPLICIT NONE
+      include 'laxlib.fh'
       INTEGER,     intent(in) :: offset(nsp,nat)
       REAL(dp),    intent(in) :: proj(nwfcU,n)
       COMPLEX(dp), intent(in) :: swfc(ngw,nwfcU)
@@ -151,9 +151,9 @@ CONTAINS
       USE gvecw,              ONLY: ngw
       USE electrons_base,     ONLY: nspin, n => nbsp, nx => nbspx, ispin, f
       USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx, nwfcU, ns
-      USE dspev_module,       ONLY: dspev_drv
 !
       IMPLICIT NONE
+      include 'laxlib.fh'
       INTEGER, intent(in) :: is, iat
       REAL(dp), intent(in) :: dns(ldmx,ldmx,nspin,nat)
       REAL(dp), intent(inout) :: forceh

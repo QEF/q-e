@@ -170,7 +170,6 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
-      USE dspev_module,     ONLY: pdspev_drv, dspev_drv
 
       IMPLICIT NONE
 
@@ -263,9 +262,10 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
-      USE dspev_module,     ONLY: dspev_drv
 
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 
       ! ... declare subroutine arguments
 

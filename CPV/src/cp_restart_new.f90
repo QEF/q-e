@@ -69,7 +69,6 @@ MODULE cp_restart_new
                                            nproc_image
       USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
                                            root_bgrp, root_bgrp_id
-      USE mp_diag,                  ONLY : nproc_ortho
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g, ecutrho
       USE gvecs,                    ONLY : ngms_g, ecuts
@@ -1608,13 +1607,14 @@ MODULE cp_restart_new
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : collect_lambda
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(in) :: lambda(:,:)
     INTEGER, INTENT(out) :: ierr
+    !
+    include 'laxlib.fh'
     !
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     !
@@ -1647,9 +1647,11 @@ MODULE cp_restart_new
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : distribute_lambda
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(out) :: lambda(:,:)
@@ -1690,10 +1692,12 @@ MODULE cp_restart_new
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : collect_zmat
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     REAL(dp), INTENT(in) :: mat_z(:,:,:)
     INTEGER, INTENT(in)  :: ndw
     INTEGER, INTENT(out) :: ierr
@@ -1742,10 +1746,12 @@ MODULE cp_restart_new
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
     USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : distribute_zmat
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     REAL(dp), INTENT(out) :: mat_z(:,:,:)
     INTEGER, INTENT(in)  :: ndr
     INTEGER, INTENT(out) :: ierr

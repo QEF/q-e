@@ -81,8 +81,6 @@
    PUBLIC :: set_eitot
    PUBLIC :: set_evtot
    !
-   PUBLIC :: print_lambda
-   !
    PUBLIC :: move_electrons
    !
    PUBLIC :: compute_stress
@@ -106,7 +104,6 @@
    PUBLIC :: dennl
    PUBLIC :: nlfq_bgrp
    PUBLIC :: collect_bec
-   PUBLIC :: distribute_lambda
 
    ! ------------------------------------ !
 
@@ -806,19 +803,6 @@
       END SUBROUTINE
    END INTERFACE
 
-
-   INTERFACE print_lambda
-      SUBROUTINE print_lambda_x( lambda, descla, n, nshow, ccc, iunit )
-         USE kinds, ONLY : DP
-         USE descriptors,       ONLY: la_descriptor
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN) :: lambda(:,:,:), ccc
-         TYPE(la_descriptor), INTENT(IN) :: descla(:)
-         INTEGER, INTENT(IN) :: n, nshow
-         INTEGER, INTENT(IN), OPTIONAL :: iunit
-      END SUBROUTINE
-   END INTERFACE
-
    INTERFACE protate
       SUBROUTINE protate_x ( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
                            na, nsp, ish, nh, np_rot, me_rot, comm_rot  )
@@ -1023,62 +1007,6 @@
          INTEGER,  INTENT(IN)  :: nspin
       END SUBROUTINE collect_bec_x
    END INTERFACE
-
-   INTERFACE distribute_lambda
-      SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
-         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE distribute_lambda_x
-   END INTERFACE
-
-   PUBLIC :: collect_lambda
-   INTERFACE collect_lambda
-      SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
-         REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE collect_lambda_x
-   END INTERFACE
-
-   PUBLIC :: setval_lambda
-   INTERFACE setval_lambda
-      SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-         INTEGER,  INTENT(IN)  :: i, j
-         REAL(DP), INTENT(IN)  :: val
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE setval_lambda_x
-   END INTERFACE
-
-   PUBLIC :: distribute_zmat
-   INTERFACE distribute_zmat
-      SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
-         REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE distribute_zmat_x
-   END INTERFACE
-
-   PUBLIC :: collect_zmat
-   INTERFACE collect_zmat
-      SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
-         USE kinds,       ONLY : DP
-         USE descriptors, ONLY : la_descriptor
-         REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
-         REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-         TYPE(la_descriptor), INTENT(IN)  :: desc
-      END SUBROUTINE collect_zmat_x
-   END INTERFACE
-
 
 !=----------------------------------------------------------------------------=!
 

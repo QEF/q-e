@@ -43,7 +43,6 @@ CONTAINS
    SUBROUTINE mesure_diag_perf( n )
       !
       USE mp_bands,    ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
-      USE mp_diag,     ONLY: nproc_ortho, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
@@ -51,12 +50,18 @@ CONTAINS
       !
       IMPLICIT NONE
       !
+      include 'laxlib.fh'
+      !
       INTEGER, INTENT(IN) :: n
       REAL(DP), ALLOCATABLE :: s(:,:), a(:,:), d(:)
       REAL(DP) :: t1, tpar, tser
       INTEGER  :: nr, nc, ir, ic, nx
       TYPE(la_descriptor) :: desc
       INTEGER, PARAMETER :: paradim = 1000
+      INTEGER :: nproc_ortho, np_ortho(2), me_ortho(2), ortho_comm, ortho_comm_id, ortho_cntx
+      !
+      CALL laxlib_getval( nproc_ortho = nproc_ortho, np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+        ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
       !
       ! Check if number of PEs for orthogonalization/diagonalization is given from the input
       !
@@ -186,8 +191,6 @@ CONTAINS
       USE mp_bands,    ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, &
                              root_bgrp, my_bgrp_id, nbgrp
       USE mp_images,   ONLY: nimage, my_image_id
-      USE mp_diag,     ONLY: ortho_comm, nproc_ortho, np_ortho, &
-                             me_ortho, init_ortho_group, ortho_comm_id, ortho_cntx
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
@@ -195,22 +198,18 @@ CONTAINS
       !
       IMPLICIT NONE
       !
+      include 'laxlib.fh'
+      !
       INTEGER, INTENT(IN) :: n
       !
       REAL(DP), ALLOCATABLE :: c(:,:), a(:,:), b(:,:)
       REAL(DP) :: t1, tcan
-      INTEGER  :: nr, nc, ir, ic, np, lnode
+      INTEGER  :: nr, nc, ir, ic, lnode
       TYPE(la_descriptor) :: desc
+      INTEGER :: nproc_ortho, np_ortho(2), me_ortho(2), ortho_comm, ortho_comm_id, ortho_cntx
       !
-      np    = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 ) 
-      !
-      !  Make ortho group compatible with the number of electronic states
-      !
-      np    = MIN( np, n )
-      !
-      !  Now re-define the ortho group and test the performance
-      !
-      CALL init_ortho_group( np * np, world_comm, intra_bgrp_comm, nimage*nbgrp, my_bgrp_id + nbgrp * my_image_id )
+      CALL laxlib_getval( nproc_ortho = nproc_ortho, np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+        ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
 
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
 
@@ -242,7 +241,7 @@ CONTAINS
       IF( ionode ) THEN
          !
          WRITE( stdout, 90 )
-         WRITE( stdout, 120 ) tcan, np*np
+         WRITE( stdout, 120 ) tcan, nproc_ortho
  90      FORMAT(/,3X,'Matrix Multiplication Performances')
 120      FORMAT(3X,'ortho mmul, time for parallel driver      = ', 1F9.5, ' with ', I4, ' procs')
          !
@@ -602,11 +601,11 @@ CONTAINS
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
-      USE mp_diag,            ONLY: leg_ortho
       USE descriptors,        ONLY: la_descriptor, descla_init
-      USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: cp( ngwx, n )
@@ -618,11 +617,13 @@ CONTAINS
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
       TYPE(la_descriptor):: desc_ip
-      INTEGER :: np( 2 ), coor_ip( 2 )
+      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       !
       REAL(DP), ALLOCATABLE :: sigp(:,:)
 !
       IF( nss < 1 ) RETURN
+
+      CALL laxlib_getval( leg_ortho = leg_ortho )
 
       np(1) = desc%npr
       np(2) = desc%npc
@@ -690,7 +691,7 @@ CONTAINS
          CALL mp_sum( sig, inter_bgrp_comm )
       END IF
       !
-      CALL dsqmsym( nss, sig, nx, desc )
+      CALL laxlib_dsqmsym( nss, sig, nx, desc )
       !
       IF( desc%active_node > 0 ) THEN
          !
@@ -742,12 +743,13 @@ CONTAINS
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE mp_bands,           ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, my_bgrp_id, nbgrp
-      USE mp_diag,            ONLY: leg_ortho
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: la_descriptor, descla_init
 !
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 !
       INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
@@ -758,7 +760,7 @@ CONTAINS
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root, nx
       TYPE(la_descriptor) :: desc_ip
-      INTEGER :: np( 2 ), coor_ip( 2 )
+      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
 
       REAL(DP), ALLOCATABLE :: rhop(:,:)
       !
@@ -767,6 +769,8 @@ CONTAINS
       !
 
       IF( nss < 1 ) RETURN
+
+      CALL laxlib_getval( leg_ortho = leg_ortho )
 
       np(1) = desc%npr
       np(2) = desc%npc
@@ -882,12 +886,12 @@ CONTAINS
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
-      USE mp_diag,            ONLY: leg_ortho
       USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
       USE descriptors,        ONLY: la_descriptor, descla_init
-      USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
+      !
+      include 'laxlib.fh'
       !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: phi( ngwx, n )
@@ -898,11 +902,13 @@ CONTAINS
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
       TYPE(la_descriptor) :: desc_ip
-      INTEGER :: np( 2 ), coor_ip( 2 )
+      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
 
       REAL(DP), ALLOCATABLE :: taup( :, : )
       !
       IF( nss < 1 ) RETURN
+
+      CALL laxlib_getval( leg_ortho = leg_ortho )
       !
       !  get dimensions of the square processor grid
       !
@@ -979,7 +985,7 @@ CONTAINS
          CALL mp_sum( tau, inter_bgrp_comm )
       END IF
       !
-      CALL dsqmsym( nss, tau, nx, desc )
+      CALL laxlib_dsqmsym( nss, tau, nx, desc )
       !
       IF( desc%active_node > 0 ) THEN
          !
@@ -1031,11 +1037,12 @@ CONTAINS
       USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
-      USE mp_diag,           ONLY: leg_ortho
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
       USE descriptors,       ONLY: descla_init, la_descriptor
 !
       IMPLICIT NONE
+
+      include 'laxlib.fh'
 !
       TYPE(la_descriptor), INTENT(IN) :: desc( : )
       COMPLEX(DP) :: cp_bgrp( :, : ), phi( :, : )
@@ -1051,10 +1058,12 @@ CONTAINS
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: xd(:,:)
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
-      INTEGER :: np( 2 ), coor_ip( 2 )
+      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       TYPE(la_descriptor) :: desc_ip
 
       CALL start_clock( 'updatc' )
+
+      CALL laxlib_getval( leg_ortho = leg_ortho )
 
       DO iss = 1, nspin
          !
@@ -1364,19 +1373,22 @@ CONTAINS
       USE uspp,              ONLY: nkb, nkbus
       USE mp,                ONLY: mp_sum
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
-      USE mp_diag,           ONLY: leg_ortho
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
       USE descriptors,       ONLY: la_descriptor
       !
       IMPLICIT NONE
+      !
+      include 'laxlib.fh'
       !
       INTEGER, INTENT(IN) :: nrcx
       TYPE(la_descriptor), INTENT(IN) :: desc( : )
       REAL(DP), INTENT(IN)  :: bec_bgrp(:,:)
       REAL(DP), INTENT(OUT) :: bec_ortho(:,:)
       !
-      INTEGER :: ir, nr, i, ibgrp_i, nup
+      INTEGER :: ir, nr, i, ibgrp_i, nup, leg_ortho
       !
+      CALL laxlib_getval( leg_ortho = leg_ortho )
+
       bec_ortho = 0.0d0
       !
       IF( desc( 1 )%active_node > 0 ) THEN

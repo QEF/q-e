@@ -550,7 +550,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
         CLOSE(38)
      END IF
-     CALL stop_run( .TRUE. )
+     CALL stop_cp_run( )
   END IF
 
   IF(clwf.EQ.3.OR.clwf.EQ.4) THEN
@@ -2795,7 +2795,7 @@ SUBROUTINE write_psi( c, jw )
 
   IF( ionode ) WRITE( stdout, * ) "State Written", jw
   !
-  CALL stop_run( .TRUE. )
+  CALL stop_cp_run( )
   !
   RETURN
   !
@@ -3025,7 +3025,6 @@ END SUBROUTINE jacobi_rotation
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
        USE cp_main_variables, ONLY: descla
-       USE cp_interfaces,     ONLY: distribute_lambda, collect_lambda
        USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
        USE cp_main_variables, ONLY : nfi, iprint_stdout
        USE time_step,         ONLY : tps
@@ -3035,6 +3034,8 @@ END SUBROUTINE jacobi_rotation
        USE io_global,         ONLY : ionode, stdout
 
        IMPLICIT NONE
+
+       include 'laxlib.fh'
    
        INTEGER ,      INTENT(in)    :: nbsp
        REAL(DP),      INTENT(out)   :: U(nbsp,nbsp)

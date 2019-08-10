@@ -620,16 +620,18 @@ END SUBROUTINE setup
 LOGICAL FUNCTION check_para_diag( nbnd )
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_diag,          ONLY : np_ortho, ortho_parent_comm 
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp_pools,         ONLY : intra_pool_comm
   USE control_flags,    ONLY : gamma_only
 
   IMPLICIT NONE
 
+  include 'laxlib.fh'
+
   INTEGER, INTENT(IN) :: nbnd
   LOGICAL, SAVE :: first = .TRUE.
   LOGICAL, SAVE :: saved_value = .FALSE.
+  INTEGER :: np_ortho(2), ortho_parent_comm 
 
 #if defined(__MPI)
   IF( .NOT. first ) THEN
@@ -637,6 +639,8 @@ LOGICAL FUNCTION check_para_diag( nbnd )
       RETURN
   END IF
   first = .FALSE.
+  !
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm )
   !
   IF( np_ortho(1) > nbnd ) &
      CALL errore ('check_para_diag', 'Too few bands for required ndiag',nbnd)
