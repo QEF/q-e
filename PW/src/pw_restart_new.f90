@@ -235,8 +235,6 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
-              iunpun, 'PWSCF', title )
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
@@ -656,19 +654,18 @@ MODULE pw_restart_new
             NULLIFY(dipol_ptr)
          ENDIF
          NULLIFY ( bp_obj_ptr) 
-!------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
  10      CONTINUE
          !
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
+              iunpun, 'PWSCF', title )
          CALL qes_write (qexsd_xf,output)
          CALL qes_reset (output) 
-         !
-!-------------------------------------------------------------------------------
-! ... CLOSING
-!-------------------------------------------------------------------------------
-         !
          CALL qexsd_closeschema()
+         !
+!-------------------------------------------------------------------------------
          !
       END IF
       DEALLOCATE (ngk_g)

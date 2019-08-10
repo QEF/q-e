@@ -269,21 +269,8 @@ MODULE cp_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
-                 iunpun, 'CPV', title)
          output_obj%tagname="output"
          output_obj%lwrite = .TRUE.
-!-------------------------------------------------------------------------------
-! ... CP-SPECIFIC CELL variables
-!-------------------------------------------------------------------------------
-         !
-         CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
-              epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
-              force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
-              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
-         ! Wannier function centers
-         IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
-         !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED   
 !-------------------------------------------------------------------------------
@@ -451,14 +438,25 @@ MODULE cp_restart_new
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
          !
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
+                 iunpun, 'CPV', title)
          CALL qes_write (qexsd_xf, output_obj)
          CALL qes_reset (output_obj)
          !
-!-------------------------------------------------------------------------------
-! ... CLOSING
-!-------------------------------------------------------------------------------
+         ! CP-SPECIFIC CELL variables
+         !
+         CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
+              epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
+              force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
+              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
+         !
+         ! Wannier function centers
+         !
+         IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
          !
          CALL qexsd_closeschema()
+         !
+!-------------------------------------------------------------------------------
          !
       END IF
       !
@@ -703,7 +701,11 @@ MODULE cp_restart_new
       IF (.NOT. found ) &
          CALL errore ('cp_readfile', 'xml data file not found', 1)
       !
+      ! read XML file into "root" object
+      !
       root => parseFile (TRIM(filename))
+      !
+      ! copy from "root" object into geninfo, parinfo, output objs
       !
       nodePointer => item (getElementsByTagname (root, "general_info"),0)
       ierr = 0 
@@ -728,6 +730,7 @@ MODULE cp_restart_new
       END IF
       IF ( ierr > 100) CALL errore ('cp_readfile', 'missing data in file', ierr)
       !
+      ! copy CP-specific MD information directly into variables
       !
       CALL cp_readcp ( root, nat, nfi, simtime, acc, stau0, svel0, taui,  &
            cdmi, force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
@@ -738,12 +741,16 @@ MODULE cp_restart_new
       !
       ierr = 0
       !
-      ! Wannier function centers
+      ! copy Wannier function centers information directly into variables
+      !
       IF ( lwf ) CALL cp_readcenters ( root, wfc)
       !
       ierr = 0
       !   
       CALL destroy (root) 
+      !
+      ! objects filled, not get variables from objects
+      !
       CALL qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version) 
       !
       CALL  qexsd_copy_parallel_info (parinfo_obj, nproc_file, &

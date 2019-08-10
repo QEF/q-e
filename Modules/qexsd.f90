@@ -11,17 +11,17 @@ MODULE qexsd_module
   ! This module contains some common subroutines used to read and write
   ! in XML format the data produced by Quantum ESPRESSO package.
   !
-  ! Written by Giovanni Borghi, A. Ferretti, ... (2015).
-  !
-  ! Based on the qexml.f90 routine:
-  ! Written by Andrea Ferretti (2006).
   ! Initial work by Carlo Sbraccia (xml_io_base.f90)
+  ! Based on the qexml.f90 routines written by Andrea Ferretti (2006).
   ! Modified by Simone Ziraldo (2013).
+  ! Rewritten by Giovanni Borghi, A. Ferretti, et al. (2015).
+  ! Heavily modified by Pietro Delugas and Paolo Giannozzi (2016 on)
+  !
   !
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : input_xml_schema_file
   USE mp_world,         ONLY : nproc
-  USE mp_images,         ONLY : nimage,nproc_image
+  USE mp_images,        ONLY : nimage,nproc_image
   USE mp_pools,         ONLY : npool
   USE mp_bands,         ONLY : ntask_groups, nproc_bgrp, nbgrp
   USE global_version,   ONLY:  version_number, svn_revision
