@@ -31,10 +31,8 @@ MODULE mp_diag
   INTEGER :: ortho_comm_id= 0 ! id of the ortho_comm
   INTEGER :: ortho_parent_comm  = 0  ! parent communicator from which ortho group has been created
   !
-#if defined __SCALAPACK
   INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
   INTEGER :: np_blacs   =  1  ! BLACS number of processor
-#endif
   !
   INTEGER :: world_cntx = -1  ! BLACS context of all processor 
   INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
@@ -75,10 +73,8 @@ CONTAINS
     ortho_col_comm  = 0
     ortho_comm_id= 0
     ortho_parent_comm  = 0
-#if defined __SCALAPACK
     me_blacs   =  0
     np_blacs   =  1
-#endif
     world_cntx = -1  ! BLACS context of all processor 
     ortho_cntx = -1  ! BLACS context for ortho_comm
     do_distr_diag_inside_bgrp = .true.
