@@ -9,19 +9,19 @@
 MODULE pw_restart_new
 !----------------------------------------------------------------------------
   !
-  ! ... New PWscf I/O using xml schema and hdf5 binaries
+  ! ... New PWscf I/O using xml schema and (optionally) hdf5 binaries
   ! ... Parallel execution: the xml file is written by one processor only
   ! ... ("ionode_id"), read by all processors ;
   ! ... the wavefunction files are written / read by one processor per pool,
   ! ... collected on / distributed to all other processors in pool
   !
-  USE KINDS,        ONLY: DP
+  USE kinds, ONLY: dp
   USE qes_types_module
   USE qes_write_module, ONLY: qes_write
   USE qes_reset_module, ONLY: qes_reset 
   USE qes_init_module, ONLY: qes_init
-  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
-                          qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
+  USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema
+  USE qexsd_module, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
                           qexsd_init_magnetization,qexsd_init_band_structure,          &
@@ -227,9 +227,6 @@ MODULE pw_restart_new
       ! 
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
-      CALL qexsd_init_schema( iunpun )
-      !
-      !
       IF ( ionode ) THEN  
          !
          ! ... here we init the variables and finally write them to file
@@ -238,8 +235,6 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
-              'PWSCF', title )
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
@@ -659,19 +654,18 @@ MODULE pw_restart_new
             NULLIFY(dipol_ptr)
          ENDIF
          NULLIFY ( bp_obj_ptr) 
-!------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
  10      CONTINUE
          !
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
+              iunpun, 'PWSCF', title )
          CALL qes_write (qexsd_xf,output)
          CALL qes_reset (output) 
-         !
-!-------------------------------------------------------------------------------
-! ... CLOSING
-!-------------------------------------------------------------------------------
-         !
          CALL qexsd_closeschema()
+         !
+!-------------------------------------------------------------------------------
          !
       END IF
       DEALLOCATE (ngk_g)
@@ -933,19 +927,10 @@ MODULE pw_restart_new
       LOGICAL                 :: found
       CHARACTER(LEN=80)       :: errmsg = ' '
       CHARACTER(LEN=320)      :: filename
-      INTEGER,EXTERNAL        :: find_free_unit
       !  
       ! 
       ierr = 0
       ! 
-      iunpun = find_free_unit()
-      IF (iunpun < 0 ) THEN
-         ierr = 1
-         errmsg='internal error: no free unit to open data-file-schema.xml'
-         GOTO 100
-      END IF
-      CALL qexsd_init_schema( iunpun )
-      !
       filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // TRIM(xmlpun_schema)
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) THEN

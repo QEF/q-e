@@ -293,7 +293,6 @@ epw_readin.o : ../../Modules/ions_base.o
 epw_readin.o : ../../Modules/mp_global.o
 epw_readin.o : ../../Modules/mp_world.o
 epw_readin.o : ../../Modules/noncol.o
-epw_readin.o : ../../Modules/wavefunctions.o
 epw_readin.o : ../../PHonon/PH/phcom.o
 epw_readin.o : ../../PW/src/pwcom.o
 epw_readin.o : ../../PW/src/start_k.o

@@ -1190,8 +1190,9 @@ SUBROUTINE iosys()
   !
   !  ... initialize variables for vdW (dispersions) corrections
   !
+
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
-  !
+
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
      vdw_corr='grimme-d2'
