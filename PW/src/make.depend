@@ -188,7 +188,7 @@ bp_c_phase.o : ../../Modules/kind.o
 bp_c_phase.o : ../../Modules/mp_bands.o
 bp_c_phase.o : ../../Modules/noncol.o
 bp_c_phase.o : ../../Modules/qes_libs_module.o
-bp_c_phase.o : ../../Modules/qexsd.o
+bp_c_phase.o : ../../Modules/qexsd_init.o
 bp_c_phase.o : ../../Modules/recvec.o
 bp_c_phase.o : ../../Modules/uspp.o
 bp_c_phase.o : ../../Modules/wavefunctions.o
@@ -1459,6 +1459,7 @@ punch.o : io_rho_xml.o
 punch.o : pw_restart_new.o
 punch.o : pwcom.o
 punch.o : scf_mod.o
+punch.o : xdm_dispersion.o
 pw2blip.o : ../../FFTXlib/fft_scalar.o
 pw2blip.o : ../../FFTXlib/fft_support.o
 pw2blip.o : ../../Modules/cell_base.o
@@ -1511,7 +1512,7 @@ pw_init_qexsd_input.o : ../../Modules/kind.o
 pw_init_qexsd_input.o : ../../Modules/parameters.o
 pw_init_qexsd_input.o : ../../Modules/qes_libs_module.o
 pw_init_qexsd_input.o : ../../Modules/qes_types_module.o
-pw_init_qexsd_input.o : ../../Modules/qexsd.o
+pw_init_qexsd_input.o : ../../Modules/qexsd_init.o
 pw_init_qexsd_input.o : ../../Modules/qexsd_input.o
 pw_init_qexsd_input.o : ../../Modules/uspp.o
 pw_init_qexsd_input.o : pwcom.o
@@ -1540,6 +1541,7 @@ pw_restart_new.o : ../../Modules/qes_reset_module.o
 pw_restart_new.o : ../../Modules/qes_types_module.o
 pw_restart_new.o : ../../Modules/qes_write_module.o
 pw_restart_new.o : ../../Modules/qexsd.o
+pw_restart_new.o : ../../Modules/qexsd_init.o
 pw_restart_new.o : ../../Modules/qexsd_input.o
 pw_restart_new.o : ../../Modules/recvec.o
 pw_restart_new.o : ../../Modules/run_info.o
@@ -2314,6 +2316,7 @@ xdm_dispersion.o : ../../Modules/constants.o
 xdm_dispersion.o : ../../Modules/control_flags.o
 xdm_dispersion.o : ../../Modules/fft_base.o
 xdm_dispersion.o : ../../Modules/funct.o
+xdm_dispersion.o : ../../Modules/io_files.o
 xdm_dispersion.o : ../../Modules/io_global.o
 xdm_dispersion.o : ../../Modules/ions_base.o
 xdm_dispersion.o : ../../Modules/kind.o

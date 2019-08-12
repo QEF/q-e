@@ -20,15 +20,16 @@ MODULE pw_restart_new
   USE qes_write_module, ONLY: qes_write
   USE qes_reset_module, ONLY: qes_reset 
   USE qes_init_module, ONLY: qes_init
-  USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema
-  USE qexsd_module, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
+  USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf, &
+       qexsd_input_obj
+  USE qexsd_init,   ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
                           qexsd_init_magnetization,qexsd_init_band_structure,          &
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
-                          qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
+                          qexsd_init_forces,qexsd_init_stress,                         &
                           qexsd_init_outputElectricField,                              &
-                          qexsd_input_obj, qexsd_occ_obj,                               &
+                          qexsd_occ_obj,                               &
                           qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid,&
                           qexsd_init_dftU, qexsd_init_vdw
   USE io_global, ONLY : ionode, ionode_id
@@ -127,7 +128,7 @@ MODULE pw_restart_new
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
-      USE qexsd_module,         ONLY : qexsd_bp_obj, qexsd_start_k_obj
+      USE qexsd_init,           ONLY : qexsd_bp_obj, qexsd_start_k_obj
       USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, &
               qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
