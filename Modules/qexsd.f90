@@ -53,7 +53,6 @@ MODULE qexsd_module
   CHARACTER(10)    :: qexsd_default_version = trim( fmt_version  )
   LOGICAL          :: qexsd_current_version_init = .FALSE.
   ! 
-  TYPE (input_type)                            :: qexsd_input_obj
   TYPE (general_info_type)                     :: general_info
   TYPE (parallel_info_type)                    :: parallel_info
   TYPE (step_type), ALLOCATABLE                :: steps(:)
@@ -65,7 +64,6 @@ MODULE qexsd_module
   !
   PUBLIC :: qexsd_xf  
   PUBLIC :: qexsd_openschema, qexsd_closeschema
-  PUBLIC :: qexsd_input_obj
   PUBLIC :: qexsd_step_addstep, qexsd_reset_steps
   PUBLIC :: qexsd_current_version, qexsd_default_version, qexsd_current_version_init
   PUBLIC :: qexsd_set_status
@@ -95,7 +93,9 @@ CONTAINS
     SUBROUTINE qexsd_openschema(filename, ounit, prog, title)
       !------------------------------------------------------------------------
       !
-      USE  FoX_wxml,  ONLY: xml_OpenFile, xml_DeclareNamespace, xml_NewElement, xml_addAttribute, xml_addComment                         
+      USE  FoX_wxml,   ONLY: xml_OpenFile, xml_DeclareNamespace, &
+           xml_NewElement, xml_addAttribute, xml_addComment
+      USE qexsd_input, ONLY: qexsd_input_obj
       IMPLICIT NONE
       !
       CHARACTER(len=*), INTENT(IN) :: filename, prog, title

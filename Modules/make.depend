@@ -262,6 +262,7 @@ qexsd.o : qes_reset_module.o
 qexsd.o : qes_types_module.o
 qexsd.o : qes_write_module.o
 qexsd.o : qexsd_init.o
+qexsd.o : qexsd_input.o
 qexsd.o : version.o
 qexsd_copy.o : io_files.o
 qexsd_copy.o : kind.o
@@ -280,8 +281,6 @@ qexsd_init.o : qes_libs_module.o
 qexsd_init.o : qes_reset_module.o
 qexsd_init.o : qes_types_module.o
 qexsd_init.o : version.o
-qexsd_input.o : constants.o
-qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
 qexsd_input.o : qes_libs_module.o
 qexsd_input.o : qes_types_module.o

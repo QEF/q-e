@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2015 Quantum ESPRESSO group
+! Copyright (C) 2016-2019 Quantum ESPRESSO foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,25 +8,46 @@
 !---------------------------------------------------------
 MODULE qexsd_input
 !--------------------------------------------------------
-  ! This module contains the routines needed to initialise the data-structures 
-  ! contained in the PW XML input
+  ! This module contains the data structures for the XML input of pw.x
+  ! and the routines neeeded to initialise it
   !----------------------------------------------------------------------------
-  ! First version March 2016 
+  ! First version March 2016, modified Aug. 2019
   !----------- ------------- --------------------------------------------------- 
-  USE kinds,            ONLY : DP
-  USE input_parameters, ONLY : input_xml_schema_file
+  USE kinds, ONLY : dp
   !
-  USE constants,        ONLY : e2,bohr_radius_angs
   USE qes_types_module
   USE qes_libs_module
   !
   IMPLICIT NONE
   !
-  
-  PUBLIC                 
+  PRIVATE
   SAVE
+  !! input data structure
+  TYPE(input_type) :: qexsd_input_obj
+  PUBLIC :: qexsd_input_obj
+  !! routines for input data structure initialization
+  !! note that the data structure is passed as argument
+  PUBLIC :: &
+       qexsd_init_control_variables, &
+       qexsd_init_spin, &
+       qexsd_init_bands, &
+       qexsd_init_basis, &
+       qexsd_init_electron_control, &
+       qexsd_init_k_points_ibz, &
+       qexsd_init_ion_control, &
+       qexsd_init_cell_control, &
+       qexsd_init_symmetry_flags, &
+       qexsd_init_boundary_conditions, &
+       qexsd_init_ekin_functional, &
+       qexsd_init_external_atomic_forces, &
+       qexsd_init_free_positions, &
+       qexsd_init_starting_atomic_velocities, &
+       qexsd_init_spin_constraints, &
+       qexsd_init_electric_field_input, &
+       qexsd_init_atomic_constraints, &
+       qexsd_init_occupations, &
+       qexsd_init_smearing
   !
-  TYPE(input_type)               ::     input 
   CONTAINS
   !--------------------------------------------------------------------------------------------------------------------  
   SUBROUTINE  qexsd_init_control_variables(obj,title,calculation,restart_mode,&

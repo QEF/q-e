@@ -965,7 +965,7 @@ input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/mp_pools.o
 input.o : ../../Modules/noncol.o
 input.o : ../../Modules/qes_types_module.o
-input.o : ../../Modules/qexsd.o
+input.o : ../../Modules/qexsd_input.o
 input.o : ../../Modules/qmmm.o
 input.o : ../../Modules/read_namelists.o
 input.o : ../../Modules/read_pseudo.o

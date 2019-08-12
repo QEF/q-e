@@ -60,7 +60,6 @@
                                 gate, zgate, relaxz, block, block_1, block_2, block_height, real_space
 !
   USE fixed_occ,         ONLY:  f_inp               
-                                
 !
   USE kinds,             ONLY:   DP
   USE parameters,        ONLY:   ntypx
