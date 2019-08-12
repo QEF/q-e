@@ -312,7 +312,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters,      ONLY : deallocate_input_parameters
   USE wyckoff,               ONLY : nattot, sup_spacegroup
-  USE qexsd_module,          ONLY : qexsd_input_obj
+  USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
   !
   USE vlocal,        ONLY : starting_charge_ => starting_charge
