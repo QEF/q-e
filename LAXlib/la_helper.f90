@@ -317,13 +317,12 @@ END SUBROUTINE laxlib_start_drv
 
 !------------------------------------------------------------------------------!
 
-SUBROUTINE print_lambda_x( lambda, descla, n, nshow, nudx, ccc, ionode, iunit )
+SUBROUTINE print_lambda_x( lambda, idesc, n, nshow, nudx, ccc, ionode, iunit )
     USE la_param
-    USE descriptors,       ONLY: la_descriptor
-    USE la_interface_mod, ONLY: collect_lambda
     IMPLICIT NONE
+    include 'laxlib_low.fh'
     real(DP), intent(in) :: lambda(:,:,:), ccc
-    TYPE(la_descriptor), INTENT(IN) :: descla(:)
+    INTEGER, INTENT(IN) :: idesc(:,:)
     integer, intent(in) :: n, nshow, nudx
     logical, intent(in) :: ionode
     integer, intent(in) :: iunit
@@ -334,7 +333,7 @@ SUBROUTINE print_lambda_x( lambda, descla, n, nshow, nudx, ccc, ionode, iunit )
     ALLOCATE( lambda_repl( nudx, nudx ) )
     IF( ionode ) WRITE( iunit,*)
     DO is = 1, SIZE( lambda, 3 )
-       CALL collect_lambda( lambda_repl, lambda(:,:,is), descla(is) )
+       CALL collect_lambda( lambda_repl, lambda(:,:,is), idesc(:,is) )
        IF( ionode ) THEN
           WRITE( iunit,3370) '    lambda   nudx, spin = ', nudx, is
           IF( nnn < n ) WRITE( iunit,3370) '    print only first ', nnn
@@ -348,4 +347,146 @@ SUBROUTINE print_lambda_x( lambda, descla, n, nshow, nudx, ccc, ionode, iunit )
 3380   FORMAT(9f8.4)
     RETURN
 END SUBROUTINE print_lambda_x
+
+
+SUBROUTINE laxlib_init_desc_x( idesc, n, nx, np, me, comm, cntx, includeme )
+    USE la_param
+    USE descriptors,       ONLY: la_descriptor, descla_init, laxlib_desc_to_intarray
+    IMPLICIT NONE
+    include 'laxlib_param.fh'
+    INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
+    INTEGER, INTENT(IN)  :: n   !  the size of this matrix
+    INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing this descriptor or the same data distribution
+    INTEGER, INTENT(IN)  :: np(2), me(2), comm, cntx
+    INTEGER, INTENT(IN)  :: includeme
+    !
+    TYPE(la_descriptor) :: descla
+    !
+    CALL descla_init( descla, n, nx, np, me, comm, cntx, includeme )
+    CALL laxlib_desc_to_intarray( idesc, descla )
+    RETURN
+END SUBROUTINE laxlib_init_desc_x
+
+   SUBROUTINE descla_local_dims( i2g, nl, n, nx, np, me )
+      IMPLICIT NONE
+      INTEGER, INTENT(OUT) :: i2g  !  global index of the first local element
+      INTEGER, INTENT(OUT) :: nl   !  local number of elements
+      INTEGER, INTENT(IN)  :: n    !  number of actual element in the global array
+      INTEGER, INTENT(IN)  :: nx   !  dimension of the global array (nx>=n) to be distributed
+      INTEGER, INTENT(IN)  :: np   !  number of processors
+      INTEGER, INTENT(IN)  :: me   !  taskid for which i2g and nl are computed
+      !
+      !  note that we can distribute a global array larger than the
+      !  number of actual elements. This could be required for performance
+      !  reasons, and to have an equal partition of matrix having different size
+      !  like matrixes of spin-up and spin-down
+      !
+      INTEGER, EXTERNAL ::  ldim_block, ldim_cyclic, ldim_block_sca
+      INTEGER, EXTERNAL ::  gind_block, gind_cyclic, gind_block_sca
+      !
+#if __SCALAPACK
+      nl  = ldim_block_sca( nx, np, me )
+      i2g = gind_block_sca( 1, nx, np, me )
+#else
+      nl  = ldim_block( nx, np, me )
+      i2g = gind_block( 1, nx, np, me )
+#endif
+      ! This is to try to keep a matrix N * N into the same
+      ! distribution of a matrix NX * NX, useful to have
+      ! the matrix of spin-up distributed in the same way
+      ! of the matrix of spin-down
+      !
+      IF( i2g + nl - 1 > n ) nl = n - i2g + 1
+      IF( nl < 0 ) nl = 0
+      RETURN
+      !
+   END SUBROUTINE descla_local_dims
+
+
+!   ----------------------------------------------
+!   Simplified driver 
+
+   SUBROUTINE diagonalize_parallel_x( n, rhos, rhod, s, idesc )
+
+      USE la_param
+      USE dspev_module
+
+      IMPLICIT NONE
+      include 'laxlib_param.fh'
+      include 'laxlib_mid.fh'
+      include 'laxlib_low.fh'
+      REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
+      REAL(DP)              :: rhod(:)   !  output eigenvalues
+      REAL(DP)              :: s(:,:)    !  output eigenvectors
+      INTEGER,  INTENT(IN) :: n         !  size of the global matrix
+      INTEGER,  INTENT(IN) :: idesc(LAX_DESC_SIZE)
+
+      IF( n < 1 ) RETURN
+
+      !  Matrix is distributed on the same processors group
+      !  used for parallel matrix multiplication
+      !
+      IF( SIZE(s,1) /= SIZE(rhos,1) .OR. SIZE(s,2) /= SIZE(rhos,2) ) &
+         CALL lax_error__( " diagonalize_parallel ", " inconsistent dimension for s and rhos ", 1 )
+
+      IF ( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+         !
+         IF( SIZE(s,1) /= idesc(LAX_DESC_NRCX) ) &
+            CALL lax_error__( " diagonalize_parallel ", " inconsistent dimension ", 1)
+         !
+         !  Compute local dimension of the cyclically distributed matrix
+         !
+         s = rhos
+         !
+#if defined(__SCALAPACK)
+         CALL pdsyevd_drv( .true. , n, idesc(LAX_DESC_NRCX), s, SIZE(s,1), rhod, idesc(LAX_DESC_CNTX), idesc(LAX_DESC_COMM) )
+#else
+         CALL qe_pdsyevd( .true., n, idesc, s, SIZE(s,1), rhod )
+#endif
+         !
+      END IF
+
+      RETURN
+
+   END SUBROUTINE diagonalize_parallel_x
+
+
+   SUBROUTINE diagonalize_serial_x( n, rhos, rhod )
+      USE la_param
+      IMPLICIT NONE
+      include 'laxlib_low.fh'
+      INTEGER,  INTENT(IN)  :: n
+      REAL(DP)              :: rhos(:,:)
+      REAL(DP)              :: rhod(:)
+      !
+      ! inputs:
+      ! n     size of the eigenproblem
+      ! rhos  the symmetric matrix
+      ! outputs:
+      ! rhos  eigenvectors
+      ! rhod  eigenvalues
+      !
+      REAL(DP), ALLOCATABLE :: aux(:)
+      INTEGER :: i, j, k
+
+      IF( n < 1 ) RETURN
+
+      ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
+
+      !  pack lower triangle of rho into aux
+      !
+      k = 0
+      DO j = 1, n
+         DO i = j, n
+            k = k + 1
+            aux( k ) = rhos( i, j )
+         END DO
+      END DO
+
+      CALL dspev_drv( 'V', 'L', n, aux, rhod, rhos, SIZE(rhos,1) )
+
+      DEALLOCATE( aux )
+
+      RETURN
+   END SUBROUTINE diagonalize_serial_x
 

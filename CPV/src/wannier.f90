@@ -678,7 +678,7 @@ MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   SUBROUTINE wf_closing_options( nfi, c0, cm, bec, eigr, eigrb, taub,  &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,   &
-                                 velsm, acc, lambda, lambdam, descla, xnhe0, xnhem,   &
+                                 velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,   &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm,&
                                  xnhh0, xnhhm, vnhh, velh, ecut, ecutw, delt, &
                                  celldm, fion, tps, mat_z, occ_f, rho )
@@ -693,7 +693,6 @@ MODULE wannier_subroutines
     USE cell_base,      ONLY : h, hold
     USE uspp_param,     ONLY : nvb
     USE cp_interfaces,  ONLY : writefile
-    USE descriptors,    ONLY : la_descriptor
     !
     IMPLICIT NONE
     !
@@ -709,7 +708,7 @@ MODULE wannier_subroutines
     REAL(DP)    :: taus(:,:), tausm(:,:), vels(:,:), velsm(:,:)
     REAL(DP)    :: acc(:)
     REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:)
-    TYPE(la_descriptor), INTENT(IN) :: descla(:)
+    INTEGER, INTENT(IN) :: idesc(:,:)
     REAL(DP)    :: xnhe0, xnhem, vnhe, xnhp0(:), xnhpm(:), vnhp(:), ekincm
     INTEGER           :: nhpcl, nhpdim
     REAL(DP)    :: velh(:,:)
@@ -741,7 +740,7 @@ MODULE wannier_subroutines
        END IF
        !
        CALL writefile( h, hold, nfi, c0, cm, taus, &
-                       tausm, vels, velsm,acc, lambda, lambdam, descla, xnhe0, xnhem, &
+                       tausm, vels, velsm,acc, lambda, lambdam, idesc, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, fion, tps, mat_z, occ_f, rho )
        !

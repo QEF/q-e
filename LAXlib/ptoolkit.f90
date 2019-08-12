@@ -7,594 +7,12 @@
 !
 ! ---------------------------------------------------------------------------------
 
-SUBROUTINE laxlib_dsqmdst( n, ar, ldar, a, lda, desc )
-  !
-  !  Double precision SQuare Matrix DiSTribution
-  !  This sub. take a replicated square matrix "ar" and distribute it
-  !  across processors as described by descriptor "desc"
-  !
-  USE la_param
-  USE descriptors
-  !
-  implicit none
-  !
-  INTEGER, INTENT(IN) :: n
-  INTEGER, INTENT(IN) :: ldar
-  REAL(DP)            :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
-  INTEGER, INTENT(IN) :: lda
-  REAL(DP)            :: a(lda,*)
-  TYPE(la_descriptor), INTENT(IN) :: desc
-  !
-  REAL(DP), PARAMETER :: zero = 0_DP
-  !
-  INTEGER :: i, j, nr, nc, ic, ir, nx
-  !
-  IF( desc%active_node <= 0 ) THEN
-     RETURN
-  END IF
+MODULE laxlib_ptoolkit
+  IMPLICIT NONE
+  SAVE
+CONTAINS
 
-  nx  = desc%nrcx
-  ir  = desc%ir
-  ic  = desc%ic
-  nr  = desc%nr
-  nc  = desc%nc
-
-  IF( lda < nx ) &
-     CALL lax_error__( " dsqmdst ", " inconsistent dimension lda ", lda )
-  IF( n /= desc%n ) &
-     CALL lax_error__( " dsqmdst ", " inconsistent dimension n ", n )
-
-  DO j = 1, nc
-     DO i = 1, nr
-        a( i, j ) = ar( i + ir - 1, j + ic - 1 )
-     END DO
-     DO i = nr+1, nx
-        a( i, j ) = zero
-     END DO
-  END DO
-  DO j = nc + 1, nx
-     DO i = 1, nx
-        a( i, j ) = zero
-     END DO
-  END DO
-
-  RETURN
-
-END SUBROUTINE laxlib_dsqmdst
-
-
-SUBROUTINE laxlib_zsqmdst( n, ar, ldar, a, lda, desc )
-  !
-  !  double complex (Z) SQuare Matrix DiSTribution
-  !  This sub. take a replicated square matrix "ar" and distribute it
-  !  across processors as described by descriptor "desc"
-  !
-  USE la_param
-  USE descriptors
-  !
-  implicit none
-  !
-  INTEGER, INTENT(IN) :: n
-  INTEGER, INTENT(IN) :: ldar
-  COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
-  INTEGER, INTENT(IN) :: lda
-  COMPLEX(DP)         :: a(lda,*)
-  TYPE(la_descriptor), INTENT(IN) :: desc
-  !
-  COMPLEX(DP), PARAMETER :: zero = ( 0_DP , 0_DP )
-  !
-  INTEGER :: i, j, nr, nc, ic, ir, nx
-  !
-  IF( desc%active_node <= 0 ) THEN
-     RETURN
-  END IF
-
-  nx  = desc%nrcx
-  ir  = desc%ir
-  ic  = desc%ic
-  nr  = desc%nr
-  nc  = desc%nc
-
-  IF( lda < nx ) &
-     CALL lax_error__( " zsqmdst ", " inconsistent dimension lda ", lda )
-  IF( n /= desc%n ) &
-     CALL lax_error__( " zsqmdst ", " inconsistent dimension n ", n )
-
-  DO j = 1, nc
-     DO i = 1, nr
-        a( i, j ) = ar( i + ir - 1, j + ic - 1 )
-     END DO
-     DO i = nr+1, nx
-        a( i, j ) = zero
-     END DO
-  END DO
-  DO j = nc + 1, nx
-     DO i = 1, nx
-        a( i, j ) = zero
-     END DO
-  END DO
-
-  RETURN
-
-END SUBROUTINE laxlib_zsqmdst
-
-! ---------------------------------------------------------------------------------
-
-SUBROUTINE laxlib_dsqmcll( n, a, lda, ar, ldar, desc, comm )
-  !
-  !  Double precision SQuare Matrix CoLLect
-  !  This sub. take a distributed square matrix "a" and collect 
-  !  the block assigned to processors into a replicated matrix "ar",
-  !  matrix is distributed as described by descriptor desc
-  !
-  USE la_param
-  USE descriptors
-  !
-  implicit none
-  !
-  INTEGER, INTENT(IN) :: n
-  INTEGER, INTENT(IN) :: ldar
-  REAL(DP)            :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
-  INTEGER, INTENT(IN) :: lda
-  REAL(DP)            :: a(lda,*)
-  TYPE(la_descriptor), INTENT(IN) :: desc
-  INTEGER, INTENT(IN) :: comm
-  !
-  INTEGER :: i, j
-
-#if defined __MPI
-  !
-  INTEGER :: np, nx, ipc, ipr, npr, npc, noff
-  INTEGER :: ierr, ir, ic, nr, nc
-
-  REAL(DP), ALLOCATABLE :: buf(:,:)
-  !
-  IF( desc%active_node > 0 ) THEN
-     !
-     np = desc%npr * desc%npc
-     nx = desc%nrcx
-     npr = desc%npr
-     npc = desc%npc
-     !
-     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
-        ALLOCATE( buf( nx, nx * np ) )
-     ELSE
-        ALLOCATE( buf( 1, 1 ) )
-     END IF
-     !
-     IF( lda /= nx ) &
-        CALL lax_error__( " dsqmcll ", " inconsistent dimension lda ", lda )
-     !
-     IF( desc%n /= n ) &
-        CALL lax_error__( " dsqmcll ", " inconsistent dimension n ", n )
-     !
-     CALL mpi_gather( a, nx*nx, mpi_double_precision, &
-                      buf, nx*nx, mpi_double_precision, 0, desc%comm , ierr )
-     !
-     IF( ierr /= 0 ) &
-        CALL lax_error__( " dsqmcll ", " in gather ", ABS( ierr ) )
-     !
-     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
-        DO ipc = 1, npc
-           CALL descla_local_dims( ic, nc, n, desc%nx, npc, ipc-1 )
-           DO ipr = 1, npr
-              CALL descla_local_dims( ir, nr, n, desc%nx, npr, ipr-1 )
-              noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
-              DO j = 1, nc
-                 DO i = 1, nr
-                    ar( i + ir - 1, j + ic - 1 ) = buf( i, j + noff )
-                 END DO
-              END DO
-           END DO
-        END DO
-     END IF
-     !
-     DEALLOCATE( buf )
-     !
-  END IF
-  !
-  CALL mpi_bcast( ar,  ldar * n, mpi_double_precision, 0, comm, ierr )   
-  !
-  IF( ierr /= 0 ) &
-     CALL lax_error__( " dsqmcll ", " in bcast ", ABS( ierr ) )
-
-#else
-
-  DO j = 1, n
-     DO i = 1, n
-        ar( i, j ) = a( i, j )
-     END DO
-  END DO
-
-#endif
-
-  RETURN
-END SUBROUTINE laxlib_dsqmcll
-
-
-SUBROUTINE laxlib_zsqmcll( n, a, lda, ar, ldar, desc, comm )
-  !
-  !  double complex (Z) SQuare Matrix CoLLect
-  !  This sub. take a distributed square matrix "a" and collect 
-  !  the block assigned to processors into a replicated matrix "ar",
-  !  matrix is distributed as described by descriptor desc
-  !
-  USE la_param
-  USE descriptors
-  !
-  implicit none
-  !
-  INTEGER, INTENT(IN) :: n
-  INTEGER, INTENT(IN) :: ldar
-  COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
-  INTEGER, INTENT(IN) :: lda
-  COMPLEX(DP)         :: a(lda,*)
-  TYPE(la_descriptor), INTENT(IN) :: desc
-  INTEGER, INTENT(IN) :: comm
-  !
-  INTEGER :: i, j
-
-#if defined __MPI
-  !
-  INTEGER :: np, nx, ipc, ipr, npr, npc, noff
-  INTEGER :: ierr, ir, ic, nr, nc
-
-  COMPLEX(DP), ALLOCATABLE :: buf(:,:)
-  !
-  IF( desc%active_node > 0 ) THEN
-     !
-     np = desc%npr * desc%npc 
-     nx = desc%nrcx
-     npr = desc%npr
-     npc = desc%npc
-     !
-     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
-        ALLOCATE( buf( nx, nx * np ) )
-     ELSE
-        ALLOCATE( buf( 1, 1 ) )
-     END IF
-     !
-     IF( lda /= nx ) &
-        CALL lax_error__( " zsqmcll ", " inconsistent dimension lda ", lda )
-     !
-     IF( desc%n /= n ) &
-        CALL lax_error__( " zsqmcll ", " inconsistent dimension n ", n )
-     !
-     CALL mpi_gather( a, nx*nx, mpi_double_complex, &
-                      buf, nx*nx, mpi_double_complex, 0, desc%comm , ierr )
-     !
-     IF( ierr /= 0 ) &
-        CALL lax_error__( " zsqmcll ", " in gather ", ABS( ierr ) )
-     !
-     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
-        DO ipc = 1, npc
-           CALL descla_local_dims( ic, nc, n, desc%nx, npc, ipc-1 )
-           DO ipr = 1, npr
-              CALL descla_local_dims( ir, nr, n, desc%nx, npr, ipr-1 )
-              noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
-              DO j = 1, nc
-                 DO i = 1, nr
-                    ar( i + ir - 1, j + ic - 1 ) = buf( i, j + noff )
-                 END DO
-              END DO
-           END DO
-        END DO
-     END IF
-     !
-     DEALLOCATE( buf )
-     !
-  END IF
-  !
-  CALL mpi_bcast( ar,  ldar * n, mpi_double_complex, 0, comm, ierr )   
-  !
-  IF( ierr /= 0 ) &
-     CALL lax_error__( " zsqmcll ", " in bcast ", ABS( ierr ) )
-
-#else
-
-  DO j = 1, n
-     DO i = 1, n
-        ar( i, j ) = a( i, j )
-     END DO
-  END DO
-
-#endif
-
-  RETURN
-END SUBROUTINE laxlib_zsqmcll
-
-
-! ---------------------------------------------------------------------------------
-
-SUBROUTINE laxlib_dsqmwpb( n, a, lda, desc )
-   !
-   ! Double precision SQuare Matrix WiPe Border subroutine
-   !
-  USE la_param
-   USE descriptors
-   !
-   IMPLICIT NONE
-   !
-   INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda
-   REAL(DP)            :: a(lda,*)  !  matrix to be redistributed into b
-   TYPE(la_descriptor), INTENT(IN) :: desc
-   !
-   INTEGER :: i, j
-   !
-   DO j = 1, desc%nc
-      DO i = desc%nr + 1, desc%nrcx
-         a( i, j ) = 0_DP
-      END DO
-   END DO
-   DO j = desc%nc + 1, desc%nrcx
-      DO i = 1, desc%nrcx
-         a( i, j ) = 0_DP
-      END DO
-   END DO
-   !
-   RETURN
-END SUBROUTINE laxlib_dsqmwpb
-
-! ---------------------------------------------------------------------------------
-
-SUBROUTINE laxlib_dsqmsym( n, a, lda, desc )
-   !
-   ! Double precision SQuare Matrix SYMmetrization
-   !
-  USE la_param
-   USE descriptors
-   !
-   IMPLICIT NONE
-   !
-   INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda
-   REAL(DP)            :: a(lda,*) 
-   TYPE(la_descriptor), INTENT(IN) :: desc
-#if defined __MPI
-   INTEGER :: istatus( MPI_STATUS_SIZE )
-#endif
-   INTEGER :: i, j
-   INTEGER :: comm 
-   INTEGER :: nr, nc, dest, sreq, ierr, sour
-   REAL(DP) :: atmp
-
-#if defined __MPI
-
-   IF( desc%active_node <= 0 ) THEN
-      RETURN
-   END IF
-
-   IF( n /= desc%n ) &
-      CALL lax_error__( " dsqmsym ", " wrong global dim n ", n )
-   IF( lda /= desc%nrcx ) &
-      CALL lax_error__( " dsqmsym ", " wrong leading dim lda ", lda )
-
-   comm = desc%comm
-
-   nr = desc%nr 
-   nc = desc%nc 
-   IF( desc%myc == desc%myr ) THEN
-      !
-      !  diagonal block, procs work locally
-      !
-      DO j = 1, nc
-         DO i = j + 1, nr
-            a(i,j) = a(j,i)
-         END DO
-      END DO
-      !
-   ELSE IF( desc%myc > desc%myr ) THEN
-      !
-      !  super diagonal block, procs send the block to sub diag.
-      !
-      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
-                             desc%myc, desc%myr, dest )
-      CALL mpi_isend( a, lda*lda, MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL lax_error__( " dsqmsym ", " in isend ", ABS( ierr ) )
-      !
-   ELSE IF( desc%myc < desc%myr ) THEN
-      !
-      !  sub diagonal block, procs receive the block from super diag,
-      !  then transpose locally
-      !
-      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
-                             desc%myc, desc%myr, sour )
-      CALL mpi_recv( a, lda*lda, MPI_DOUBLE_PRECISION, sour, 1, comm, istatus, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL lax_error__( " dsqmsym ", " in recv ", ABS( ierr ) )
-      !
-      DO j = 1, lda
-         DO i = j + 1, lda
-            atmp = a(i,j)
-            a(i,j) = a(j,i)
-            a(j,i) = atmp
-         END DO
-      END DO
-      !
-   END IF
-
-   IF( desc%myc > desc%myr ) THEN
-      !
-      CALL MPI_Wait( sreq, istatus, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL lax_error__( " dsqmsym ", " in wait ", ABS( ierr ) )
-      !
-   END IF
-
-#else
-
-   DO j = 1, n
-      !
-      DO i = j + 1, n
-         !
-         a(i,j) = a(j,i)
-         !
-      END DO
-      !
-   END DO
-
-#endif
-
-   RETURN
-END SUBROUTINE laxlib_dsqmsym
-
-
-SUBROUTINE laxlib_zsqmher( n, a, lda, desc )
-   !
-   ! double complex (Z) SQuare Matrix HERmitianize
-   !
-  USE la_param
-   USE descriptors
-   !
-   IMPLICIT NONE
-   !
-   INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda
-   COMPLEX(DP)         :: a(lda,lda) 
-   TYPE(la_descriptor), INTENT(IN) :: desc
-#if defined __MPI
-   INTEGER :: istatus( MPI_STATUS_SIZE )
-#endif
-   INTEGER :: i, j
-   INTEGER :: comm, myid
-   INTEGER :: nr, nc, dest, sreq, ierr, sour
-   COMPLEX(DP) :: atmp
-   COMPLEX(DP), ALLOCATABLE :: tst1(:,:)
-   COMPLEX(DP), ALLOCATABLE :: tst2(:,:)
-
-#if defined __MPI
-
-   IF( desc%active_node <= 0 ) THEN
-      RETURN
-   END IF
-
-   IF( n /= desc%n ) &
-      CALL lax_error__( " zsqmsym ", " wrong global dim n ", n )
-   IF( lda /= desc%nrcx ) &
-      CALL lax_error__( " zsqmsym ", " wrong leading dim lda ", lda )
-
-   comm = desc%comm
-
-   nr = desc%nr 
-   nc = desc%nc 
-   IF( desc%myc == desc%myr ) THEN
-      !
-      !  diagonal block, procs work locally
-      !
-      DO j = 1, nc
-         a(j,j) = CMPLX( DBLE( a(j,j) ), 0_DP, KIND=DP )
-         DO i = j + 1, nr
-            a(i,j) = CONJG( a(j,i) )
-         END DO
-      END DO
-      !
-   ELSE IF( desc%myc > desc%myr ) THEN
-      !
-      !  super diagonal block, procs send the block to sub diag.
-      !
-      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
-                             desc%myc, desc%myr, dest )
-      CALL mpi_isend( a, lda*lda, MPI_DOUBLE_COMPLEX, dest, 1, comm, sreq, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL lax_error__( " zsqmher ", " in mpi_isend ", ABS( ierr ) )
-      !
-   ELSE IF( desc%myc < desc%myr ) THEN
-      !
-      !  sub diagonal block, procs receive the block from super diag,
-      !  then transpose locally
-      !
-      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
-                             desc%myc, desc%myr, sour )
-      CALL mpi_recv( a, lda*lda, MPI_DOUBLE_COMPLEX, sour, 1, comm, istatus, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL lax_error__( " zsqmher ", " in mpi_recv ", ABS( ierr ) )
-      !
-      DO j = 1, lda
-         DO i = j + 1, lda
-            atmp   = a(i,j)
-            a(i,j) = a(j,i)
-            a(j,i) = atmp
-         END DO
-      END DO
-      DO j = 1, nc
-         DO i = 1, nr
-            a(i,j)  = CONJG( a(i,j) )
-         END DO
-      END DO
-      !
-   END IF
-
-   IF( desc%myc > desc%myr ) THEN
-      !
-      CALL MPI_Wait( sreq, istatus, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL lax_error__( " zsqmher ", " in MPI_Wait ", ABS( ierr ) )
-      !
-   END IF
-
-#if defined __PIPPO
-   CALL MPI_Comm_rank( comm, myid, ierr )
-   ALLOCATE( tst1( n, n ) )
-   ALLOCATE( tst2( n, n ) )
-   tst1 = 0.0d0
-   tst2 = 0.0d0
-   do j = 1, desc%nc
-   do i = 1, desc%nr
-      tst1( i + desc%ir - 1, j + desc%ic - 1 ) = a( i , j )
-   end do
-   end do
-   CALL MPI_REDUCE( tst1, tst2, n*n, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm, ierr )
-   IF( myid == 0 ) THEN
-   DO j = 1, n
-      !
-      IF( tst2(j,j) /=  CMPLX( DBLE( tst2(j,j) ), 0_DP, KIND=DP ) ) &
-        WRITE( 4000, * ) j, tst2(j,j)
-      !
-      DO i = j + 1, n
-         !
-         IF( tst2(i,j) /= CONJG( tst2(j,i) ) )  WRITE( 4000, * ) i,j, tst2(i,j)
-         !
-      END DO
-      !
-   END DO
-   END IF
-   
-   DEALLOCATE( tst1 )
-   DEALLOCATE( tst2 )
-#endif
-
-#else
-
-   DO j = 1, n
-      !
-      a(j,j) = CMPLX( DBLE( a(j,j) ), 0_DP, KIND=DP )
-      !
-      DO i = j + 1, n
-         !
-         a(i,j) = CONJG( a(j,i) )
-         !
-      END DO
-      !
-   END DO
-
-#endif
-
-   RETURN
-END SUBROUTINE laxlib_zsqmher
-
-
-! ---------------------------------------------------------------------------------
-
-
-SUBROUTINE laxlib_dsqmred( na, a, lda, desca, nb, b, ldb, descb )
+SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    !
    ! Double precision SQuare Matrix REDistribution
    ! 
@@ -606,7 +24,7 @@ SUBROUTINE laxlib_dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    ! If you want to read, get prepared for an headache!
    ! Written struggling by Carlo Cavazzoni.
    !
-  USE la_param
+   USE la_param
    USE descriptors
    !
    IMPLICIT NONE
@@ -980,11 +398,9 @@ SUBROUTINE laxlib_dsqmred( na, a, lda, desca, nb, b, ldb, descb )
 #endif
 
    RETURN
-END SUBROUTINE laxlib_dsqmred
+END SUBROUTINE laxlib_dsqmred_x_x
 
-
-
-SUBROUTINE laxlib_zsqmred( na, a, lda, desca, nb, b, ldb, descb )
+SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    !
    ! double complex (Z) SQuare Matrix REDistribution
    ! 
@@ -1350,8 +766,659 @@ SUBROUTINE laxlib_zsqmred( na, a, lda, desca, nb, b, ldb, descb )
 #endif
 
    RETURN
-END SUBROUTINE laxlib_zsqmred
+END SUBROUTINE laxlib_zsqmred_x_x
 
+END MODULE laxlib_ptoolkit
+
+
+! ---------------------------------------------------------------------------------
+
+
+SUBROUTINE laxlib_dsqmdst_x( n, ar, ldar, a, lda, desc )
+  !
+  !  Double precision SQuare Matrix DiSTribution
+  !  This sub. take a replicated square matrix "ar" and distribute it
+  !  across processors as described by descriptor "desc"
+  !
+  USE la_param
+  USE descriptors
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: n
+  INTEGER, INTENT(IN) :: ldar
+  REAL(DP)            :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
+  INTEGER, INTENT(IN) :: lda
+  REAL(DP)            :: a(lda,*)
+  TYPE(la_descriptor), INTENT(IN) :: desc
+  !
+  REAL(DP), PARAMETER :: zero = 0_DP
+  !
+  INTEGER :: i, j, nr, nc, ic, ir, nx
+  !
+  IF( desc%active_node <= 0 ) THEN
+     RETURN
+  END IF
+
+  nx  = desc%nrcx
+  ir  = desc%ir
+  ic  = desc%ic
+  nr  = desc%nr
+  nc  = desc%nc
+
+  IF( lda < nx ) &
+     CALL lax_error__( " dsqmdst ", " inconsistent dimension lda ", lda )
+  IF( n /= desc%n ) &
+     CALL lax_error__( " dsqmdst ", " inconsistent dimension n ", n )
+
+  DO j = 1, nc
+     DO i = 1, nr
+        a( i, j ) = ar( i + ir - 1, j + ic - 1 )
+     END DO
+     DO i = nr+1, nx
+        a( i, j ) = zero
+     END DO
+  END DO
+  DO j = nc + 1, nx
+     DO i = 1, nx
+        a( i, j ) = zero
+     END DO
+  END DO
+
+  RETURN
+
+END SUBROUTINE laxlib_dsqmdst_x
+
+
+SUBROUTINE laxlib_zsqmdst_x( n, ar, ldar, a, lda, desc )
+  !
+  !  double complex (Z) SQuare Matrix DiSTribution
+  !  This sub. take a replicated square matrix "ar" and distribute it
+  !  across processors as described by descriptor "desc"
+  !
+  USE la_param
+  USE descriptors
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: n
+  INTEGER, INTENT(IN) :: ldar
+  COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
+  INTEGER, INTENT(IN) :: lda
+  COMPLEX(DP)         :: a(lda,*)
+  TYPE(la_descriptor), INTENT(IN) :: desc
+  !
+  COMPLEX(DP), PARAMETER :: zero = ( 0_DP , 0_DP )
+  !
+  INTEGER :: i, j, nr, nc, ic, ir, nx
+  !
+  IF( desc%active_node <= 0 ) THEN
+     RETURN
+  END IF
+
+  nx  = desc%nrcx
+  ir  = desc%ir
+  ic  = desc%ic
+  nr  = desc%nr
+  nc  = desc%nc
+
+  IF( lda < nx ) &
+     CALL lax_error__( " zsqmdst ", " inconsistent dimension lda ", lda )
+  IF( n /= desc%n ) &
+     CALL lax_error__( " zsqmdst ", " inconsistent dimension n ", n )
+
+  DO j = 1, nc
+     DO i = 1, nr
+        a( i, j ) = ar( i + ir - 1, j + ic - 1 )
+     END DO
+     DO i = nr+1, nx
+        a( i, j ) = zero
+     END DO
+  END DO
+  DO j = nc + 1, nx
+     DO i = 1, nx
+        a( i, j ) = zero
+     END DO
+  END DO
+
+  RETURN
+
+END SUBROUTINE laxlib_zsqmdst_x
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE laxlib_dsqmcll_x( n, a, lda, ar, ldar, desc, comm )
+  !
+  !  Double precision SQuare Matrix CoLLect
+  !  This sub. take a distributed square matrix "a" and collect 
+  !  the block assigned to processors into a replicated matrix "ar",
+  !  matrix is distributed as described by descriptor desc
+  !
+  USE la_param
+  USE descriptors
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: n
+  INTEGER, INTENT(IN) :: ldar
+  REAL(DP)            :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
+  INTEGER, INTENT(IN) :: lda
+  REAL(DP)            :: a(lda,*)
+  TYPE(la_descriptor), INTENT(IN) :: desc
+  INTEGER, INTENT(IN) :: comm
+  !
+  INTEGER :: i, j
+
+#if defined __MPI
+  !
+  INTEGER :: np, nx, ipc, ipr, npr, npc, noff
+  INTEGER :: ierr, ir, ic, nr, nc
+
+  REAL(DP), ALLOCATABLE :: buf(:,:)
+  !
+  IF( desc%active_node > 0 ) THEN
+     !
+     np = desc%npr * desc%npc
+     nx = desc%nrcx
+     npr = desc%npr
+     npc = desc%npc
+     !
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
+        ALLOCATE( buf( nx, nx * np ) )
+     ELSE
+        ALLOCATE( buf( 1, 1 ) )
+     END IF
+     !
+     IF( lda /= nx ) &
+        CALL lax_error__( " dsqmcll ", " inconsistent dimension lda ", lda )
+     !
+     IF( desc%n /= n ) &
+        CALL lax_error__( " dsqmcll ", " inconsistent dimension n ", n )
+     !
+     CALL mpi_gather( a, nx*nx, mpi_double_precision, &
+                      buf, nx*nx, mpi_double_precision, 0, desc%comm , ierr )
+     !
+     IF( ierr /= 0 ) &
+        CALL lax_error__( " dsqmcll ", " in gather ", ABS( ierr ) )
+     !
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
+        DO ipc = 1, npc
+           CALL descla_local_dims( ic, nc, n, desc%nx, npc, ipc-1 )
+           DO ipr = 1, npr
+              CALL descla_local_dims( ir, nr, n, desc%nx, npr, ipr-1 )
+              noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
+              DO j = 1, nc
+                 DO i = 1, nr
+                    ar( i + ir - 1, j + ic - 1 ) = buf( i, j + noff )
+                 END DO
+              END DO
+           END DO
+        END DO
+     END IF
+     !
+     DEALLOCATE( buf )
+     !
+  END IF
+  !
+  CALL mpi_bcast( ar,  ldar * n, mpi_double_precision, 0, comm, ierr )   
+  !
+  IF( ierr /= 0 ) &
+     CALL lax_error__( " dsqmcll ", " in bcast ", ABS( ierr ) )
+
+#else
+
+  DO j = 1, n
+     DO i = 1, n
+        ar( i, j ) = a( i, j )
+     END DO
+  END DO
+
+#endif
+
+  RETURN
+END SUBROUTINE laxlib_dsqmcll_x
+
+
+SUBROUTINE laxlib_zsqmcll_x( n, a, lda, ar, ldar, desc, comm )
+  !
+  !  double complex (Z) SQuare Matrix CoLLect
+  !  This sub. take a distributed square matrix "a" and collect 
+  !  the block assigned to processors into a replicated matrix "ar",
+  !  matrix is distributed as described by descriptor desc
+  !
+  USE la_param
+  USE descriptors
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: n
+  INTEGER, INTENT(IN) :: ldar
+  COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
+  INTEGER, INTENT(IN) :: lda
+  COMPLEX(DP)         :: a(lda,*)
+  TYPE(la_descriptor), INTENT(IN) :: desc
+  INTEGER, INTENT(IN) :: comm
+  !
+  INTEGER :: i, j
+
+#if defined __MPI
+  !
+  INTEGER :: np, nx, ipc, ipr, npr, npc, noff
+  INTEGER :: ierr, ir, ic, nr, nc
+
+  COMPLEX(DP), ALLOCATABLE :: buf(:,:)
+  !
+  IF( desc%active_node > 0 ) THEN
+     !
+     np = desc%npr * desc%npc 
+     nx = desc%nrcx
+     npr = desc%npr
+     npc = desc%npc
+     !
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
+        ALLOCATE( buf( nx, nx * np ) )
+     ELSE
+        ALLOCATE( buf( 1, 1 ) )
+     END IF
+     !
+     IF( lda /= nx ) &
+        CALL lax_error__( " zsqmcll ", " inconsistent dimension lda ", lda )
+     !
+     IF( desc%n /= n ) &
+        CALL lax_error__( " zsqmcll ", " inconsistent dimension n ", n )
+     !
+     CALL mpi_gather( a, nx*nx, mpi_double_complex, &
+                      buf, nx*nx, mpi_double_complex, 0, desc%comm , ierr )
+     !
+     IF( ierr /= 0 ) &
+        CALL lax_error__( " zsqmcll ", " in gather ", ABS( ierr ) )
+     !
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
+        DO ipc = 1, npc
+           CALL descla_local_dims( ic, nc, n, desc%nx, npc, ipc-1 )
+           DO ipr = 1, npr
+              CALL descla_local_dims( ir, nr, n, desc%nx, npr, ipr-1 )
+              noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
+              DO j = 1, nc
+                 DO i = 1, nr
+                    ar( i + ir - 1, j + ic - 1 ) = buf( i, j + noff )
+                 END DO
+              END DO
+           END DO
+        END DO
+     END IF
+     !
+     DEALLOCATE( buf )
+     !
+  END IF
+  !
+  CALL mpi_bcast( ar,  ldar * n, mpi_double_complex, 0, comm, ierr )   
+  !
+  IF( ierr /= 0 ) &
+     CALL lax_error__( " zsqmcll ", " in bcast ", ABS( ierr ) )
+
+#else
+
+  DO j = 1, n
+     DO i = 1, n
+        ar( i, j ) = a( i, j )
+     END DO
+  END DO
+
+#endif
+
+  RETURN
+END SUBROUTINE laxlib_zsqmcll_x
+
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE laxlib_dsqmwpb_x( n, a, lda, desc )
+   !
+   ! Double precision SQuare Matrix WiPe Border subroutine
+   !
+   USE la_param
+   USE descriptors
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP)            :: a(lda,*)  !  matrix to be redistributed into b
+   TYPE(la_descriptor), INTENT(IN) :: desc
+   !
+   INTEGER :: i, j
+   !
+   DO j = 1, desc%nc
+      DO i = desc%nr + 1, desc%nrcx
+         a( i, j ) = 0_DP
+      END DO
+   END DO
+   DO j = desc%nc + 1, desc%nrcx
+      DO i = 1, desc%nrcx
+         a( i, j ) = 0_DP
+      END DO
+   END DO
+   !
+   RETURN
+END SUBROUTINE laxlib_dsqmwpb_x
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE laxlib_dsqmsym_x( n, a, lda, idesc )
+   !
+   ! Double precision SQuare Matrix SYMmetrization
+   !
+   USE la_param
+   USE descriptors
+   !
+   IMPLICIT NONE
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP)            :: a(lda,*) 
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   TYPE(la_descriptor) :: desc
+#if defined __MPI
+   INTEGER :: istatus( MPI_STATUS_SIZE )
+#endif
+   INTEGER :: i, j
+   INTEGER :: comm 
+   INTEGER :: nr, nc, dest, sreq, ierr, sour
+   REAL(DP) :: atmp
+
+#if defined __MPI
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
+
+   IF( desc%active_node <= 0 ) THEN
+      RETURN
+   END IF
+
+   IF( n /= desc%n ) &
+      CALL lax_error__( " dsqmsym ", " wrong global dim n ", n )
+   IF( lda /= desc%nrcx ) &
+      CALL lax_error__( " dsqmsym ", " wrong leading dim lda ", lda )
+
+   comm = desc%comm
+
+   nr = desc%nr 
+   nc = desc%nc 
+   IF( desc%myc == desc%myr ) THEN
+      !
+      !  diagonal block, procs work locally
+      !
+      DO j = 1, nc
+         DO i = j + 1, nr
+            a(i,j) = a(j,i)
+         END DO
+      END DO
+      !
+   ELSE IF( desc%myc > desc%myr ) THEN
+      !
+      !  super diagonal block, procs send the block to sub diag.
+      !
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, dest )
+      CALL mpi_isend( a, lda*lda, MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " dsqmsym ", " in isend ", ABS( ierr ) )
+      !
+   ELSE IF( desc%myc < desc%myr ) THEN
+      !
+      !  sub diagonal block, procs receive the block from super diag,
+      !  then transpose locally
+      !
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, sour )
+      CALL mpi_recv( a, lda*lda, MPI_DOUBLE_PRECISION, sour, 1, comm, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " dsqmsym ", " in recv ", ABS( ierr ) )
+      !
+      DO j = 1, lda
+         DO i = j + 1, lda
+            atmp = a(i,j)
+            a(i,j) = a(j,i)
+            a(j,i) = atmp
+         END DO
+      END DO
+      !
+   END IF
+
+   IF( desc%myc > desc%myr ) THEN
+      !
+      CALL MPI_Wait( sreq, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " dsqmsym ", " in wait ", ABS( ierr ) )
+      !
+   END IF
+
+#else
+
+   DO j = 1, n
+      !
+      DO i = j + 1, n
+         !
+         a(i,j) = a(j,i)
+         !
+      END DO
+      !
+   END DO
+
+#endif
+
+   RETURN
+END SUBROUTINE laxlib_dsqmsym_x
+
+
+SUBROUTINE laxlib_zsqmher_x( n, a, lda, idesc )
+   !
+   ! double complex (Z) SQuare Matrix HERmitianize
+   !
+   USE la_param
+   USE descriptors
+   !
+   IMPLICIT NONE
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda
+   COMPLEX(DP)         :: a(lda,lda) 
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !
+   TYPE(la_descriptor) :: desc
+#if defined __MPI
+   INTEGER :: istatus( MPI_STATUS_SIZE )
+#endif
+   INTEGER :: i, j
+   INTEGER :: comm, myid
+   INTEGER :: nr, nc, dest, sreq, ierr, sour
+   COMPLEX(DP) :: atmp
+   COMPLEX(DP), ALLOCATABLE :: tst1(:,:)
+   COMPLEX(DP), ALLOCATABLE :: tst2(:,:)
+
+#if defined __MPI
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
+
+   IF( desc%active_node <= 0 ) THEN
+      RETURN
+   END IF
+
+   IF( n /= desc%n ) &
+      CALL lax_error__( " zsqmsym ", " wrong global dim n ", n )
+   IF( lda /= desc%nrcx ) &
+      CALL lax_error__( " zsqmsym ", " wrong leading dim lda ", lda )
+
+   comm = desc%comm
+
+   nr = desc%nr 
+   nc = desc%nc 
+   IF( desc%myc == desc%myr ) THEN
+      !
+      !  diagonal block, procs work locally
+      !
+      DO j = 1, nc
+         a(j,j) = CMPLX( DBLE( a(j,j) ), 0_DP, KIND=DP )
+         DO i = j + 1, nr
+            a(i,j) = CONJG( a(j,i) )
+         END DO
+      END DO
+      !
+   ELSE IF( desc%myc > desc%myr ) THEN
+      !
+      !  super diagonal block, procs send the block to sub diag.
+      !
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, dest )
+      CALL mpi_isend( a, lda*lda, MPI_DOUBLE_COMPLEX, dest, 1, comm, sreq, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " zsqmher ", " in mpi_isend ", ABS( ierr ) )
+      !
+   ELSE IF( desc%myc < desc%myr ) THEN
+      !
+      !  sub diagonal block, procs receive the block from super diag,
+      !  then transpose locally
+      !
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, sour )
+      CALL mpi_recv( a, lda*lda, MPI_DOUBLE_COMPLEX, sour, 1, comm, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " zsqmher ", " in mpi_recv ", ABS( ierr ) )
+      !
+      DO j = 1, lda
+         DO i = j + 1, lda
+            atmp   = a(i,j)
+            a(i,j) = a(j,i)
+            a(j,i) = atmp
+         END DO
+      END DO
+      DO j = 1, nc
+         DO i = 1, nr
+            a(i,j)  = CONJG( a(i,j) )
+         END DO
+      END DO
+      !
+   END IF
+
+   IF( desc%myc > desc%myr ) THEN
+      !
+      CALL MPI_Wait( sreq, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " zsqmher ", " in MPI_Wait ", ABS( ierr ) )
+      !
+   END IF
+
+#if defined __PIPPO
+   CALL MPI_Comm_rank( comm, myid, ierr )
+   ALLOCATE( tst1( n, n ) )
+   ALLOCATE( tst2( n, n ) )
+   tst1 = 0.0d0
+   tst2 = 0.0d0
+   do j = 1, desc%nc
+   do i = 1, desc%nr
+      tst1( i + desc%ir - 1, j + desc%ic - 1 ) = a( i , j )
+   end do
+   end do
+   CALL MPI_REDUCE( tst1, tst2, n*n, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm, ierr )
+   IF( myid == 0 ) THEN
+   DO j = 1, n
+      !
+      IF( tst2(j,j) /=  CMPLX( DBLE( tst2(j,j) ), 0_DP, KIND=DP ) ) &
+        WRITE( 4000, * ) j, tst2(j,j)
+      !
+      DO i = j + 1, n
+         !
+         IF( tst2(i,j) /= CONJG( tst2(j,i) ) )  WRITE( 4000, * ) i,j, tst2(i,j)
+         !
+      END DO
+      !
+   END DO
+   END IF
+   
+   DEALLOCATE( tst1 )
+   DEALLOCATE( tst2 )
+#endif
+
+#else
+
+   DO j = 1, n
+      !
+      a(j,j) = CMPLX( DBLE( a(j,j) ), 0_DP, KIND=DP )
+      !
+      DO i = j + 1, n
+         !
+         a(i,j) = CONJG( a(j,i) )
+         !
+      END DO
+      !
+   END DO
+
+#endif
+
+   RETURN
+END SUBROUTINE laxlib_zsqmher_x
+
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE laxlib_dsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
+   USE la_param
+   USE descriptors
+   USE laxlib_ptoolkit
+   !
+   IMPLICIT NONE
+   !
+   include 'laxlib_param.fh'
+   !
+   INTEGER, INTENT(IN) :: na
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP)            :: a(lda,lda)  !  matrix to be redistributed into b
+   INTEGER, INTENT(IN) :: idesca(LAX_DESC_SIZE)
+   INTEGER, INTENT(IN) :: nb
+   INTEGER, INTENT(IN) :: ldb
+   REAL(DP)            :: b(ldb,ldb)
+   INTEGER, INTENT(IN) :: idescb(LAX_DESC_SIZE)
+   !
+   TYPE(la_descriptor) :: desca
+   TYPE(la_descriptor) :: descb
+   !
+   CALL laxlib_intarray_to_desc(desca,idesca)
+   CALL laxlib_intarray_to_desc(descb,idescb)
+   CALL laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
+END SUBROUTINE
+
+SUBROUTINE laxlib_zsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
+   !
+   USE la_param
+   USE descriptors
+   USE laxlib_ptoolkit
+   !
+   IMPLICIT NONE
+   !
+   include 'laxlib_param.fh'
+   !
+   INTEGER, INTENT(IN) :: na
+   INTEGER, INTENT(IN) :: lda
+   COMPLEX(DP)         :: a(lda,lda)  !  matrix to be redistributed into b
+   INTEGER, INTENT(IN) :: idesca(LAX_DESC_SIZE)
+   INTEGER, INTENT(IN) :: nb
+   INTEGER, INTENT(IN) :: ldb
+   COMPLEX(DP)         :: b(ldb,ldb)
+   INTEGER, INTENT(IN) :: idescb(LAX_DESC_SIZE)
+   !
+   TYPE(la_descriptor) :: desca
+   TYPE(la_descriptor) :: descb
+   !
+   CALL laxlib_intarray_to_desc(desca,idesca)
+   CALL laxlib_intarray_to_desc(descb,idescb)
+   CALL laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
+END SUBROUTINE
 
 
 ! ---------------------------------------------------------------------------------
@@ -1697,7 +1764,7 @@ END SUBROUTINE zrep_matmul_drv
 !
 !
 
-SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, desc )
+SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    !
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
@@ -1711,7 +1778,9 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    REAL(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(:)
+   !
+   TYPE(la_descriptor) :: desc
    !
    !  performs one of the matrix-matrix operations
    !
@@ -1737,6 +1806,8 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    integer :: istatus( MPI_STATUS_SIZE )
    !
 #endif
+   !
+   CALL laxlib_intarray_to_desc(desc,idesc)
    !
    IF( desc%active_node < 0 ) THEN
       !
@@ -1990,12 +2061,12 @@ CONTAINS
       RETURN
    END SUBROUTINE shift_exch_block
 
-END SUBROUTINE sqr_mm_cannon
+END SUBROUTINE sqr_dmm_cannon_x
 
 
 !=----------------------------------------------------------------------------=!
 
-SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, desc )
+SUBROUTINE sqr_zmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    !
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
@@ -2009,7 +2080,9 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    COMPLEX(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    COMPLEX(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(:)
+   !
+   TYPE(la_descriptor) :: desc
    !
    !  performs one of the matrix-matrix operations
    !
@@ -2037,6 +2110,8 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    integer :: istatus( MPI_STATUS_SIZE )
    !
 #endif
+   !
+   CALL laxlib_intarray_to_desc(desc,idesc)
    !
    IF( desc%active_node < 0 ) THEN
       !
@@ -2290,26 +2365,27 @@ CONTAINS
       RETURN
    END SUBROUTINE shift_exch_block
 
-END SUBROUTINE sqr_zmm_cannon
+END SUBROUTINE sqr_zmm_cannon_x
 
 !
 !
 !
 !
 
-SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
+SUBROUTINE sqr_tr_cannon_x( n, a, lda, b, ldb, idesc )
    !
    !  Parallel square matrix transposition with Cannon's algorithm
    !
-   USE descriptors
    USE la_param
    !
    IMPLICIT NONE
    !
+   include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP)            :: a(lda,*), b(ldb,*)
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(:)
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -2324,7 +2400,7 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    !
 #endif
    !
-   IF( desc%active_node < 0 ) THEN
+   IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
       RETURN
    END IF
 
@@ -2332,31 +2408,31 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
      RETURN
    END IF
 
-   IF( desc%npr == 1 ) THEN
+   IF( idesc(LAX_DESC_NPR) == 1 ) THEN
       CALL mytranspose( a, lda, b, ldb, n, n )
       RETURN
    END IF
 
-   IF( desc%npr /= desc%npc ) &
+   IF( idesc(LAX_DESC_NPR) /= idesc(LAX_DESC_NPC) ) &
       CALL lax_error__( ' sqr_tr_cannon ', ' works only with square processor mesh ', 1 )
-   IF( n /= desc%n ) &
+   IF( n /= idesc(LAX_DESC_N) ) &
       CALL lax_error__( ' sqr_tr_cannon ', ' inconsistent size n  ', 1 )
-   IF( lda /= desc%nrcx ) &
+   IF( lda /= idesc(LAX_DESC_NRCX) ) &
       CALL lax_error__( ' sqr_tr_cannon ', ' inconsistent size lda  ', 1 )
-   IF( ldb /= desc%nrcx ) &
+   IF( ldb /= idesc(LAX_DESC_NRCX) ) &
       CALL lax_error__( ' sqr_tr_cannon ', ' inconsistent size ldb  ', 1 )
 
-   comm = desc%comm
+   comm = idesc(LAX_DESC_COMM)
 
-   rowid = desc%myr
-   colid = desc%myc
-   np    = desc%npr
+   rowid = idesc(LAX_DESC_MYR)
+   colid = idesc(LAX_DESC_MYC)
+   np    = idesc(LAX_DESC_NPR)
    !
    !  Compute the size of the local block
    !
-   nr = desc%nr 
-   nc = desc%nc 
-   nb = desc%nrcx
+   nr = idesc(LAX_DESC_NR) 
+   nc = idesc(LAX_DESC_NC) 
+   nb = idesc(LAX_DESC_NRCX)
    !
    allocate( ablk( nb, nb ) )
    DO j = 1, nc
@@ -2429,20 +2505,21 @@ END SUBROUTINE
 
 !
 
-SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
+SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    !
    !  redistribute a, array whose second dimension is distributed over processor row,
    !  to obtain b, with the second dim. distributed over processor clolumn 
    !
-   USE descriptors
    USE la_param
    !
    IMPLICIT NONE
    !
+   include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(:)
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -2455,7 +2532,7 @@ SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
    !
 #endif
    !
-   IF( desc%active_node < 0 ) THEN
+   IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
       RETURN
    END IF
 
@@ -2463,23 +2540,23 @@ SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
      RETURN
    END IF
 
-   IF( desc%npr == 1 ) THEN
+   IF( idesc(LAX_DESC_NPR) == 1 ) THEN
       b = a
       RETURN
    END IF
 
-   IF( desc%npr /= desc%npc ) &
+   IF( idesc(LAX_DESC_NPR) /= idesc(LAX_DESC_NPC) ) &
       CALL lax_error__( ' redist_row2col ', ' works only with square processor mesh ', 1 )
-   IF( n /= desc%n ) &
+   IF( n /= idesc(LAX_DESC_N) ) &
       CALL lax_error__( ' redist_row2col ', ' inconsistent size n  ', 1 )
-   IF( nx /= desc%nrcx ) &
+   IF( nx /= idesc(LAX_DESC_NRCX) ) &
       CALL lax_error__( ' redist_row2col ', ' inconsistent size lda  ', 1 )
 
-   comm = desc%comm
+   comm = idesc(LAX_DESC_COMM)
 
-   rowid = desc%myr
-   colid = desc%myc
-   np    = desc%npr
+   rowid = idesc(LAX_DESC_MYR)
+   colid = idesc(LAX_DESC_MYC)
+   np    = idesc(LAX_DESC_NPR)
    !
    irdst = colid
    icdst = rowid
@@ -2506,13 +2583,13 @@ SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
    !
    RETURN
 
-END SUBROUTINE redist_row2col
+END SUBROUTINE redist_row2col_x
 
 !
 !
 !
 
-SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
+SUBROUTINE cyc2blk_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
    !  Parallel square matrix redistribution.
    !  A (input) is cyclically distributed by rows across processors
@@ -2523,11 +2600,14 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    IMPLICIT NONE
    !
+   include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    REAL(DP) :: a( lda, nca ), b( ldb, ncb )
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
+   TYPE(la_descriptor) :: desc
    integer :: ierr, itag
    integer :: np, ip, me, nproc, comm_a
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
@@ -2541,6 +2621,8 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
    character(len=256) :: msg
    !
 #if defined (__MPI)
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
 
    IF( desc%active_node < 0 ) THEN
       RETURN
@@ -2668,10 +2750,10 @@ CONTAINS
       RETURN
    END SUBROUTINE check_rcvbuf_index
 
-END SUBROUTINE cyc2blk_redist
+END SUBROUTINE cyc2blk_redist_x
 
 
-SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
+SUBROUTINE cyc2blk_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
    !  Parallel square matrix redistribution.
    !  A (input) is cyclically distributed by rows across processors
@@ -2682,10 +2764,14 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    IMPLICIT NONE
    !
+   include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !
+   TYPE(la_descriptor) :: desc
    !
    integer :: ierr, itag
    integer :: np, ip, me, nproc, comm_a
@@ -2700,6 +2786,8 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    character(len=256) :: msg
    !
 #if defined (__MPI)
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
 
    IF( desc%active_node < 0 ) THEN
       RETURN
@@ -2819,12 +2907,12 @@ CONTAINS
       RETURN
    END SUBROUTINE check_rcvbuf_index
 
-END SUBROUTINE cyc2blk_zredist
+END SUBROUTINE cyc2blk_zredist_x
 
 
 
 
-SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
+SUBROUTINE blk2cyc_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
    !  Parallel square matrix redistribution.
    !  A (output) is cyclically distributed by rows across processors
@@ -2835,11 +2923,14 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    IMPLICIT NONE
    !
+   include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    REAL(DP) :: a( lda, nca ), b( ldb, ncb )
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
+   TYPE(la_descriptor) :: desc
    integer :: ierr, itag
    integer :: np, ip, me, comm_a, nproc
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
@@ -2853,6 +2944,8 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
    character(len=256) :: msg
    !
 #if defined (__MPI)
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
 
    IF( desc%active_node < 0 ) THEN
       RETURN
@@ -2945,10 +3038,10 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
 
    RETURN
 
-END SUBROUTINE blk2cyc_redist
+END SUBROUTINE blk2cyc_redist_x
 
 
-SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
+SUBROUTINE blk2cyc_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !
    !  Parallel square matrix redistribution.
    !  A (output) is cyclically distributed by rows across processors
@@ -2959,10 +3052,14 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    IMPLICIT NONE
    !
+   include 'laxlib_param.fh'
+   !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !
+   TYPE(la_descriptor) :: desc
    !
    integer :: ierr, itag
    integer :: np, ip, me, comm_a, nproc
@@ -2977,6 +3074,8 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    character(len=256) :: msg
    !
 #if defined (__MPI)
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
 
    IF( desc%active_node < 0 ) THEN
       RETURN
@@ -3069,7 +3168,7 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
 
    RETURN
 
-END SUBROUTINE blk2cyc_zredist
+END SUBROUTINE blk2cyc_zredist_x
 !
 !
 !
@@ -3079,7 +3178,7 @@ END SUBROUTINE blk2cyc_zredist
 !
 !
 
-SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
+SUBROUTINE qe_pzpotrf_x( sll, ldx, n, desc )
    !
    USE descriptors
    USE la_param
@@ -3304,11 +3403,11 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
 #endif
 
    return
-END SUBROUTINE qe_pzpotrf
+END SUBROUTINE qe_pzpotrf_x
 
 !  now the Double Precision subroutine
 
-SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
+SUBROUTINE qe_pdpotrf_x( sll, ldx, n, desc )
    !
    USE descriptors
    USE la_param
@@ -3528,14 +3627,14 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
 #endif
 
    return
-END SUBROUTINE qe_pdpotrf
+END SUBROUTINE qe_pdpotrf_x
 
 !
 !
 !
 !
 
-SUBROUTINE qe_pztrtri ( sll, ldx, n, desc )
+SUBROUTINE qe_pztrtri_x ( sll, ldx, n, desc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -3891,11 +3990,11 @@ SUBROUTINE qe_pztrtri ( sll, ldx, n, desc )
 
      END FUNCTION shift
 
-END SUBROUTINE qe_pztrtri
+END SUBROUTINE qe_pztrtri_x
 
 !  now the Double Precision subroutine
 
-SUBROUTINE qe_pdtrtri ( sll, ldx, n, desc )
+SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, desc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -4255,32 +4354,33 @@ SUBROUTINE qe_pdtrtri ( sll, ldx, n, desc )
 
      END FUNCTION shift
 
-END SUBROUTINE qe_pdtrtri
+END SUBROUTINE qe_pdtrtri_x
 
 
 
-SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
-   USE descriptors
+SUBROUTINE qe_pdsyevd_x( tv, n, idesc, hh, ldh, e )
    USE la_param
-   USE la_interface_mod, ONLY: dspev_drv
    IMPLICIT NONE
+   include 'laxlib_param.fh'
+   include 'laxlib_low.fh'
    LOGICAL, INTENT(IN) :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
    INTEGER, INTENT(IN) :: n, ldh
        ! n = matrix size, ldh = leading dimension of hh
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
        ! desc = descrittore della matrice 
    REAL(DP) :: hh( ldh, ldh )
        ! input:  hh = matrix to be diagonalized
    REAL(DP) :: e( n )
        ! output: hh = eigenvectors, e = eigenvalues
 
-   INTEGER :: nrlx, nrl
+   INTEGER :: nrlx, nrl, nproc
    REAL(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
    CHARACTER :: jobv
 
-   nrl  = desc%nrl
-   nrlx = desc%nrlx
+   nrl   = idesc(LAX_DESC_NRL) 
+   nrlx  = idesc(LAX_DESC_NRLX) 
+   nproc = idesc(LAX_DESC_NPC) * idesc(LAX_DESC_NPR)
 
    ALLOCATE( diag( nrlx, n ) )
    ALLOCATE( vv( nrlx, n ) )
@@ -4290,12 +4390,12 @@ SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    !
    !  Redistribute matrix "hh" into "diag",  
    !  matrix "hh" is block distributed, matrix diag is cyclic distributed
-   CALL blk2cyc_redist( n, diag, nrlx, n, hh, ldh, ldh, desc )
+   CALL blk2cyc_redist( n, diag, nrlx, n, hh, ldh, ldh, idesc )
    !
    CALL dspev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
-        desc%npc * desc%npr, desc%mype, desc%comm )
+        nproc, idesc(LAX_DESC_MYPE), idesc(LAX_DESC_COMM) )
    !
-   IF( tv ) CALL cyc2blk_redist( n, vv, nrlx, n, hh, ldh, ldh, desc )
+   IF( tv ) CALL cyc2blk_redist( n, vv, nrlx, n, hh, ldh, ldh, idesc )
    !
    DEALLOCATE( vv )
    DEALLOCATE( diag )
@@ -4305,16 +4405,16 @@ END SUBROUTINE
 
 
 
-SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
-   USE descriptors
+SUBROUTINE qe_pzheevd_x( tv, n, idesc, hh, ldh, e )
    USE la_param
-   USE la_interface_mod, ONLY: zhpev_drv
    IMPLICIT NONE
+   include 'laxlib_param.fh'
+   include 'laxlib_low.fh'
    LOGICAL, INTENT(IN) :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
    INTEGER, INTENT(IN) :: n, ldh
        ! n = matrix size, ldh = leading dimension of hh
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
        ! desc = descrittore della matrice 
    COMPLEX(DP) :: hh( ldh, ldh )
        ! input:  hh = matrix to be diagonalized
@@ -4325,8 +4425,8 @@ SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
    COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
    CHARACTER :: jobv
 
-   nrl  = desc%nrl
-   nrlx = desc%nrlx
+   nrl  = idesc(LAX_DESC_NRL)
+   nrlx = idesc(LAX_DESC_NRLX)
    !
    ALLOCATE( diag( nrlx, n ) )
    ALLOCATE( vv( nrlx, n ) )
@@ -4334,12 +4434,12 @@ SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
    jobv = 'N'
    IF( tv ) jobv = 'V'
 
-   CALL blk2cyc_zredist( n, diag, nrlx, n, hh, ldh, ldh, desc )
+   CALL blk2cyc_redist( n, diag, nrlx, n, hh, ldh, ldh, idesc )
    !
    CALL zhpev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
-        desc%npc * desc%npr, desc%mype, desc%comm )
+        idesc(LAX_DESC_NPC) * idesc(LAX_DESC_NPR), idesc(LAX_DESC_MYPE), idesc(LAX_DESC_COMM) )
    !
-   if( tv ) CALL cyc2blk_zredist( n, vv, nrlx, n, hh, ldh, ldh, desc )
+   if( tv ) CALL cyc2blk_redist( n, vv, nrlx, n, hh, ldh, ldh, idesc )
    !
    DEALLOCATE( vv ) 
    DEALLOCATE( diag )
@@ -4349,14 +4449,15 @@ END SUBROUTINE
 
 
 
-SUBROUTINE sqr_dsetmat( what, n, alpha, a, lda, desc )
+SUBROUTINE sqr_dsetmat_x( what, n, alpha, a, lda, idesc )
    !
    !  Set the values of a square distributed matrix 
    !
-   USE descriptors
    USE la_param
    !
    IMPLICIT NONE
+   !
+   include 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: what
      ! what = 'A' set all the values of "a" equal to alpha
@@ -4371,12 +4472,12 @@ SUBROUTINE sqr_dsetmat( what, n, alpha, a, lda, desc )
      ! leading dimension of a
    REAL(DP) :: a(lda,*)
      ! matrix whose values have to be set
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
      ! descriptor of matrix a
 
    INTEGER :: i, j
 
-   IF( desc%active_node < 0 ) THEN
+   IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
       !
       !  processors not interested in this computation return quickly
       !
@@ -4386,59 +4487,60 @@ SUBROUTINE sqr_dsetmat( what, n, alpha, a, lda, desc )
 
    SELECT CASE( what )
      CASE( 'U', 'u' )
-        IF( desc%myc > desc%myr ) THEN
-           DO j = 1, desc%nc
-              DO i = 1, desc%nr
+        IF( idesc(LAX_DESC_MYC) > idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
+              DO i = 1, idesc(LAX_DESC_NR)
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc%myc == desc%myr ) THEN
-           DO j = 1, desc%nc
+        ELSE IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
               DO i = 1, j - 1
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'L', 'l' )
-        IF( desc%myc < desc%myr ) THEN
-           DO j = 1, desc%nc
-              DO i = 1, desc%nr
+        IF( idesc(LAX_DESC_MYC) < idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
+              DO i = 1, idesc(LAX_DESC_NR)
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc%myc == desc%myr ) THEN
-           DO j = 1, desc%nc
-              DO i = j + 1, desc%nr
+        ELSE IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
+              DO i = j + 1, idesc(LAX_DESC_NR)
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'D', 'd' )
-        IF( desc%myc == desc%myr ) THEN
-           DO i = 1, desc%nr
+        IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           DO i = 1, idesc(LAX_DESC_NR)
               a( i, i ) = alpha
            END DO
         END IF
      CASE DEFAULT
-        DO j = 1, desc%nc
-           DO i = 1, desc%nr
+        DO j = 1, idesc(LAX_DESC_NC)
+           DO i = 1, idesc(LAX_DESC_NR)
               a( i, j ) = alpha
            END DO
         END DO
    END SELECT
    !
    RETURN
-END SUBROUTINE sqr_dsetmat
+END SUBROUTINE sqr_dsetmat_x
 
 
-SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
+SUBROUTINE sqr_zsetmat_x( what, n, alpha, a, lda, idesc )
    !
    !  Set the values of a square distributed matrix 
    !
-   USE descriptors
    USE la_param
    !
    IMPLICIT NONE
+   !
+   include 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: what
      ! what = 'A' set all the values of "a" equal to alpha
@@ -4454,12 +4556,12 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
      ! leading dimension of a
    COMPLEX(DP) :: a(lda,*)
      ! matrix whose values have to be set
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
      ! descriptor of matrix a
 
    INTEGER :: i, j
 
-   IF( desc%active_node < 0 ) THEN
+   IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
       !
       !  processors not interested in this computation return quickly
       !
@@ -4469,70 +4571,71 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
 
    SELECT CASE( what )
      CASE( 'U', 'u' )
-        IF( desc%myc > desc%myr ) THEN
-           DO j = 1, desc%nc
-              DO i = 1, desc%nr
+        IF( idesc(LAX_DESC_MYC) > idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
+              DO i = 1, idesc(LAX_DESC_NR)
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc%myc == desc%myr ) THEN
-           DO j = 1, desc%nc
+        ELSE IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
               DO i = 1, j - 1
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'L', 'l' )
-        IF( desc%myc < desc%myr ) THEN
-           DO j = 1, desc%nc
-              DO i = 1, desc%nr
+        IF( idesc(LAX_DESC_MYC) < idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
+              DO i = 1, idesc(LAX_DESC_NR)
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc%myc == desc%myr ) THEN
-           DO j = 1, desc%nc
-              DO i = j + 1, desc%nr
+        ELSE IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           DO j = 1, idesc(LAX_DESC_NC)
+              DO i = j + 1, idesc(LAX_DESC_NR)
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'D', 'd' )
-        IF( desc%myc == desc%myr ) THEN
-           DO i = 1, desc%nr
+        IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           DO i = 1, idesc(LAX_DESC_NR)
               a( i, i ) = alpha
            END DO
         END IF
      CASE( 'H', 'h' )
-        IF( desc%myc == desc%myr ) THEN
-           DO i = 1, desc%nr
+        IF( idesc(LAX_DESC_MYC) == idesc(LAX_DESC_MYR) ) THEN
+           DO i = 1, idesc(LAX_DESC_NR)
               a( i, i ) = CMPLX( DBLE( a(i,i) ), 0_DP, KIND=DP )
            END DO
         END IF
      CASE DEFAULT
-        DO j = 1, desc%nc
-           DO i = 1, desc%nr
+        DO j = 1, idesc(LAX_DESC_NC)
+           DO i = 1, idesc(LAX_DESC_NR)
               a( i, j ) = alpha
            END DO
         END DO
    END SELECT
    !
    RETURN
-END SUBROUTINE sqr_zsetmat
+END SUBROUTINE sqr_zsetmat_x
 
 !------------------------------------------------------------------------
-    SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
+    SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, idesc )
 !------------------------------------------------------------------------
        USE la_param
-       USE descriptors
+       IMPLICIT NONE
+       include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER, INTENT(IN)  :: idesc(:)
        INTEGER :: i, j, ic, ir
-       IF( desc%active_node > 0 ) THEN
-          ir = desc%ir
-          ic = desc%ic
-          DO j = 1, desc%nc
-             DO i = 1, desc%nr
+       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+          ir = idesc(LAX_DESC_IR)
+          ic = idesc(LAX_DESC_IC)
+          DO j = 1, idesc(LAX_DESC_NC)
+             DO i = 1, idesc(LAX_DESC_NR)
                 lambda_dist( i, j ) = lambda_repl( i + ir - 1, j + ic - 1 )
              END DO
           END DO
@@ -4541,21 +4644,22 @@ END SUBROUTINE sqr_zsetmat
     END SUBROUTINE distribute_lambda_x
     !
 !------------------------------------------------------------------------
-    SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
+    SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, idesc )
 !------------------------------------------------------------------------
        USE la_param
        USE mp_diag,   ONLY: ortho_parent_comm
-       USE descriptors
+       IMPLICIT NONE
+       include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
        REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER, INTENT(IN)  :: idesc(:)
        INTEGER :: i, j, ic, ir, ierr
        lambda_repl = 0.0d0
-       IF( desc%active_node > 0 ) THEN
-          ir = desc%ir
-          ic = desc%ic
-          DO j = 1, desc%nc
-             DO i = 1, desc%nr
+       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+          ir = idesc(LAX_DESC_IR)
+          ic = idesc(LAX_DESC_IC)
+          DO j = 1, idesc(LAX_DESC_NC)
+             DO i = 1, idesc(LAX_DESC_NR)
                 lambda_repl( i + ir - 1, j + ic - 1 ) = lambda_dist( i, j )
              END DO
           END DO
@@ -4566,21 +4670,22 @@ END SUBROUTINE sqr_zsetmat
     END SUBROUTINE collect_lambda_x
 
 !------------------------------------------------------------------------
-    SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
+    SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, idesc )
 !------------------------------------------------------------------------
        USE la_param
        USE mp_diag,   ONLY: ortho_parent_comm
-       USE descriptors
+       IMPLICIT NONE
+       include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
        REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, ii, j, me, np, nrl
+       INTEGER, INTENT(IN)  :: idesc(:)
+       INTEGER :: i, ii, j, me, np, nrl, ierr
        zmat_repl = 0.0d0
-       me = desc%mype
-       np = desc%npc * desc%npr
-       nrl = desc%nrl
-       IF( desc%active_node > 0 ) THEN
-          DO j = 1, desc%n
+       me = idesc(LAX_DESC_MYPE)
+       np = idesc(LAX_DESC_NPC) * idesc(LAX_DESC_NPR)
+       nrl = idesc(LAX_DESC_NRL)
+       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+          DO j = 1, idesc(LAX_DESC_N)
              ii = me + 1
              DO i = 1, nrl
                 zmat_repl( ii, j ) = zmat_dist( i, j )
@@ -4594,18 +4699,22 @@ END SUBROUTINE sqr_zsetmat
     END SUBROUTINE collect_zmat_x
 
 !------------------------------------------------------------------------
-    SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
+    SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, idesc )
 !------------------------------------------------------------------------
        USE la_param
-       USE descriptors
+       IMPLICIT NONE
+       include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
        INTEGER,  INTENT(IN)  :: i, j
        REAL(DP), INTENT(IN)  :: val
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       IF( desc%active_node > 0 ) THEN
-          IF( ( i >= desc%ir ) .AND. ( i - desc%ir + 1 <= desc%nr ) ) THEN
-             IF( ( j >= desc%ic ) .AND. ( j - desc%ic + 1 <= desc%nc ) ) THEN
-                lambda_dist( i - desc%ir + 1, j - desc%ic + 1 ) = val
+       INTEGER, INTENT(IN)  :: idesc(:)
+       INTEGER :: ir, ic
+       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+          ir = idesc(LAX_DESC_IR)
+          ic = idesc(LAX_DESC_IC)
+          IF( ( i >= ir ) .AND. ( i - ir + 1 <= idesc(LAX_DESC_NR) ) ) THEN
+             IF( ( j >= ic ) .AND. ( j - ic + 1 <= idesc(LAX_DESC_NC) ) ) THEN
+                lambda_dist( i - ir + 1, j - ic + 1 ) = val
              END IF
           END IF
        END IF
@@ -4613,20 +4722,21 @@ END SUBROUTINE sqr_zsetmat
     END SUBROUTINE setval_lambda_x
 
 !------------------------------------------------------------------------
-    SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
+    SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, idesc )
 !------------------------------------------------------------------------
        USE la_param
-       USE descriptors
+       IMPLICIT NONE
+       include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
        REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER, INTENT(IN)  :: idesc(:)
        INTEGER :: i, ii, j, me, np
-       me = desc%mype
-       np = desc%npc * desc%npr
-       IF( desc%active_node > 0 ) THEN
-          DO j = 1, desc%n
+       me = idesc(LAX_DESC_MYPE)
+       np = idesc(LAX_DESC_NPC) * idesc(LAX_DESC_NPR)
+       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+          DO j = 1, idesc(LAX_DESC_N)
              ii = me + 1
-             DO i = 1, desc%nrl
+             DO i = 1, idesc(LAX_DESC_NRL)
                 zmat_dist( i, j ) = zmat_repl( ii, j )
                 ii = ii + np
              END DO

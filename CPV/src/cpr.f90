@@ -95,7 +95,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_main_variables,        ONLY : acc, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp_bgrp, nfi, descla, &
+                                       rhor, bephi, becp_bgrp, nfi, idesc, &
                                        drhor, drhog, bec_bgrp, dbec
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
@@ -367,7 +367,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tpre ) THEN
         !
-        CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
+        CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )
         !
         CALL ions_thermal_stress( stress, thstress, pmass, omega, h, vels, nsp, na )
         !
@@ -554,7 +554,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
+           CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
            !
          ELSE
            !
@@ -566,10 +566,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          !  correction to displacement of ions
          !
-         IF ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, nudx, 1.D0, ionode, stdout )
+         IF ( iverbosity > 1 ) CALL print_lambda( lambda, idesc, nbsp, 9, nudx, 1.D0, ionode, stdout )
          !
          IF ( tortho ) THEN
-           CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, descla )
+           CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
          END IF
          !
          IF( force_pairing ) THEN
@@ -582,7 +582,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          CALL calbec_bgrp( nvb+1, nsp, eigr, cm_bgrp, bec_bgrp )
          !
          IF ( tpre ) THEN
-           CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
+           CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
          END IF
          !
          IF ( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
@@ -692,7 +692,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbspx )  
            END IF
            !
-           CALL eigs( nfi, lambdap, lambda, descla )
+           CALL eigs( nfi, lambdap, lambda, idesc )
            !
         ELSE
            !
@@ -840,14 +840,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF ( tcg ) THEN
           !
           CALL writefile( h, hold ,nfi, c0_bgrp, c0old, taus, tausm,  &
-                          vels, velsm, acc, lambda, lambdam, descla, xnhe0, xnhem,     &
+                          vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                           xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
            !
         ELSE
            !
            CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus,  &
-                           tausm, vels, velsm, acc,  lambda, lambdam, descla, xnhe0,   &
+                           tausm, vels, velsm, acc,  lambda, lambdam, idesc, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim, ekincm,&
                            xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
            !
@@ -932,7 +932,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         CALL wf_closing_options( nfi, c0_bgrp, cm_bgrp, bec_bgrp, eigr, eigrb,&
                                  taub, irb, ibrav, bg(:,1), bg(:,2), bg(:,3), &
                                  taus, tausm, vels, &
-                                 velsm, acc, lambda, lambdam, descla, xnhe0, xnhem,  &
+                                 velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutrho,  &
                                  ecutwfc,delt,celldm, fion, tps, z0t, f, rhor )
@@ -970,11 +970,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   IF ( tcg ) cm_bgrp = c0old
   !
   CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus, tausm, &
-                  vels, velsm, acc, lambda, lambdam, descla, xnhe0, xnhem, vnhe,    &
+                  vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem, vnhe,    &
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )
   !
-  IF( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
+  IF( iverbosity > 1 ) CALL print_lambda( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 

@@ -195,7 +195,7 @@ SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
 END SUBROUTINE laxlib_cdiaghg
 !
 !----------------------------------------------------------------------------
-SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
+SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -205,15 +205,17 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
   ! ... Parallel version, with full data distribution
   !
   USE la_param
-  USE descriptors,      ONLY : la_descriptor
+  USE descriptors,      ONLY : la_descriptor, laxlib_intarray_to_desc
   USE mp_diag,          ONLY : ortho_parent_comm
 #if defined __SCALAPACK
   USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE zhpev_module,     ONLY : pzheevd_drv
 #endif
-
   !
   IMPLICIT NONE
+  !
+  include 'laxlib_param.fh'
+  include 'laxlib_low.fh'
   !
   INTEGER, INTENT(IN) :: n, ldh
     ! dimension of the matrix to be diagonalized
@@ -226,7 +228,9 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
-  TYPE(la_descriptor), INTENT(IN) :: desc
+  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+  !
+  TYPE(la_descriptor) :: desc
   !
   INTEGER, PARAMETER  :: root = 0
   INTEGER             :: nx, info
@@ -240,6 +244,8 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
   ! ... input s and h are copied so that they are not destroyed
   !
   CALL start_clock( 'cdiaghg' )
+  !
+  CALL laxlib_intarray_to_desc(desc,idesc)
   !
   IF( desc%active_node > 0 ) THEN
      !
@@ -291,7 +297,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
      !CALL clear_upper_tr( ss )
      ! set to zero the upper triangle of ss
      !
-     CALL sqr_zsetmat( 'U', n, ZERO, ss, size(ss,1), desc )
+     CALL sqr_setmat( 'U', n, ZERO, ss, size(ss,1), idesc )
      !
      CALL pztrtri( 'L', 'N', n, ss, 1, 1, descsca, info )
      !
@@ -310,7 +316,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
   END IF
   !
@@ -318,12 +324,12 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, idesc )
      !
      ! ensure that "hh" is really Hermitian, it is sufficient to set the diagonal
      ! properly, because only the lower triangle of hh will be used
      ! 
-     CALL sqr_zsetmat( 'H', n, ZERO, hh, size(hh,1), desc )
+     CALL sqr_setmat( 'H', n, ZERO, hh, size(hh,1), idesc )
      !
   END IF
   !
@@ -342,7 +348,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
      !
 #else
      !
-     CALL qe_pzheevd( .true., n, desc, hh, SIZE( hh, 1 ), e )
+     CALL qe_pzheevd( .true., n, idesc, hh, SIZE( hh, 1 ), e )
      !
 #endif
      !
@@ -358,7 +364,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF ( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'C', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'C', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
   END IF
   !
@@ -387,8 +393,6 @@ CONTAINS
   END SUBROUTINE test_drv_begin
   !
   SUBROUTINE test_drv_end()
-     !
-     USE la_interface_mod, ONLY: zhpev_drv
      !
      INTEGER :: i, j, k
      COMPLEX(DP), ALLOCATABLE :: diag(:,:)

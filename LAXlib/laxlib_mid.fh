@@ -1,0 +1,34 @@
+!
+! Copyright (C) 2003-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+
+INTERFACE qe_pdsyevd
+SUBROUTINE qe_pdsyevd_x( tv, n, idesc, hh, ldh, e )
+         IMPLICIT NONE
+         include 'laxlib_param.fh'
+         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         LOGICAL, INTENT(IN) :: tv
+         INTEGER, INTENT(IN) :: n, ldh
+         INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+         REAL(DP) :: hh( ldh, ldh )
+         REAL(DP) :: e( n )
+END SUBROUTINE
+END INTERFACE
+
+INTERFACE qe_pzheevd
+SUBROUTINE qe_pzheevd_x( tv, n, idesc, hh, ldh, e )
+   IMPLICIT NONE
+   include 'laxlib_param.fh'
+   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   LOGICAL, INTENT(IN) :: tv
+   INTEGER, INTENT(IN) :: n, ldh
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   COMPLEX(DP) :: hh( ldh, ldh )
+   REAL(DP) :: e( n )
+END SUBROUTINE
+END INTERFACE

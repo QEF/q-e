@@ -9,18 +9,18 @@
 
 !=----------------------------------------------------------------------------=!
    SUBROUTINE ortho_gamma_x( iopt, cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
-                           x0, nx0, descla, diff, iter, n, nss, istart )
+                           x0, nx0, idesc, diff, iter, n, nss, istart )
 !=----------------------------------------------------------------------------=!
       !
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     ortho_alt_iterate, use_parallel_diag
-      USE dspev_module,       ONLY: diagonalize_serial, diagonalize_parallel
-      USE descriptors,        ONLY: la_descriptor
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
 
       IMPLICIT  NONE
+
+      include 'laxlib.fh'
 
       ! ... Arguments
 
@@ -32,9 +32,10 @@
       REAL(DP)    :: becp_dist( :, : )
       REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
       REAL(DP)    :: x0( nx0, nx0 )
-      TYPE(la_descriptor),  INTENT(IN)  :: descla
+      INTEGER,  INTENT(IN)  :: idesc(:)
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
+
       ! ... Locals
 
       REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:), rhot(:,:)
@@ -44,16 +45,16 @@
       ! ...   Subroutine body
       !
 
-      IF( descla%active_node > 0 ) THEN
+      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          !
-         IF( nx0 /= descla%nrcx ) &
+         IF( nx0 /= idesc(LAX_DESC_NRCX) ) &
             CALL errore( ' ortho_gamma ', ' inconsistent dimensions nx0 ' , nx0 )
          !
-         nr = descla%nr
-         nc = descla%nc
+         nr = idesc(LAX_DESC_NR)
+         nc = idesc(LAX_DESC_NC)
          !
-         ir = descla%ir
-         ic = descla%ic
+         ir = idesc(LAX_DESC_IR)
+         ic = idesc(LAX_DESC_IC)
          !
       ELSE
          !
@@ -89,9 +90,9 @@
       !
       CALL start_clock( 'rhoset' )
       !
-      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nx0, descla )
+      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nx0, idesc )
       !
-      IF( descla%active_node > 0 ) THEN
+      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          !
          ALLOCATE( rhot( nx0, nx0 ), STAT = info )   !   transpose of rho
          IF( info /= 0 ) &
@@ -100,7 +101,7 @@
          !    distributed array rhos contains "rho", 
          !    now transpose rhos and store the result in distributed array rhot
          !
-         CALL sqr_tr_cannon( nss, rhos, nx0, rhot, nx0, descla )
+         CALL sqr_tr_cannon( nss, rhos, nx0, rhot, nx0, idesc )
          !
          !  Compute the symmetric part of rho
          !
@@ -136,11 +137,11 @@
       !
       IF( use_parallel_diag ) THEN
          !
-         CALL diagonalize_parallel( nss, rhos, rhod, s, descla )
+         CALL diagonalize_parallel( nss, rhos, rhod, s, idesc )
          !
       ELSE
          !
-         IF( descla%active_node > 0 ) THEN
+         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
             !
             ALLOCATE( wrk( nss, nss ), STAT = info )
             IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating wrk ', 1 )
@@ -162,13 +163,13 @@
       !     sig = 1-<cp|s|cp>
       !
       CALL start_clock( 'sigset' )
-      CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nx0, descla )
+      CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nx0, idesc )
       CALL stop_clock( 'sigset' )
       !
       !     tau = <s'c0|s|s'c0>
       !
       CALL start_clock( 'tauset' )
-      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nx0, descla )
+      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nx0, idesc )
       CALL stop_clock( 'tauset' )
       !
       CALL start_clock( 'ortho_iter' )
@@ -182,11 +183,11 @@
          !
          IF( iopt == 0 ) THEN
             !
-            CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
+            CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
             !
          ELSE
             !
-            CALL ortho_alt_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
+            CALL ortho_alt_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, tau, nss, idesc)
             !
          END IF
          !
@@ -207,7 +208,7 @@
       !
       DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
       !
-      IF( descla%active_node > 0 )  CALL consistency_check( x0 )
+      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 )  CALL consistency_check( x0 )
 
       RETURN
 
@@ -216,7 +217,7 @@
       SUBROUTINE distribute_matrix( a, b )
          REAL(DP) :: a(:,:), b(:,:)
          INTEGER :: i, j
-         IF( descla%active_node > 0 ) THEN
+         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
             DO j = 1, nc
                DO i = 1, nr
                   b( i, j ) = a( i + ir - 1, j + ic - 1 )
@@ -230,14 +231,14 @@
          REAL(DP) :: a(:,:), b(:,:)
          INTEGER :: i, j
          a = 0.0d0
-         IF( descla%active_node > 0 ) THEN
+         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
             DO j = 1, nc
                DO i = 1, nr
                   a( ir + i - 1, ic + j - 1 ) = b( i, j )
                END DO
             END DO
          END IF
-         CALL mp_sum( a, descla%comm )
+         CALL mp_sum( a, idesc(LAX_DESC_COMM) )
          RETURN
       END SUBROUTINE
 
@@ -264,7 +265,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_x( eigr, cp_bgrp, phi_bgrp, x0, descla, diff, iter, ccc, bephi, becp_bgrp )
+   SUBROUTINE ortho_x( eigr, cp_bgrp, phi_bgrp, x0, idesc, diff, iter, ccc, bephi, becp_bgrp )
 !=----------------------------------------------------------------------------=!
       !
       !     input = cp (non-orthonormal), beta
@@ -288,14 +289,15 @@
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec
-      USE descriptors,    ONLY: la_descriptor
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
       !
       IMPLICIT NONE
       !
-      TYPE(la_descriptor), INTENT(IN) :: descla(:)
+      include 'laxlib.fh'
+      !
+      INTEGER, INTENT(IN) :: idesc(:,:)
       COMPLEX(DP) :: eigr(:,:)
       COMPLEX(DP) :: cp_bgrp(:,:), phi_bgrp(:,:)
       REAL(DP)    :: x0(:,:,:), diff, ccc
@@ -321,7 +323,7 @@
       !
       CALL start_clock( 'ortho' )
 
-      nrcx = MAXVAL( descla( : )%nrcx )
+      nrcx = MAXVAL( idesc( LAX_DESC_NRCX, : ) )
 
       ALLOCATE( becp_dist( nkbx, nrcx*nspin ), STAT = info )
       IF( info /= 0 ) &
@@ -332,12 +334,12 @@
          becp_bgrp = 0.0d0
          !
          CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, phi_bgrp, becp_bgrp )
-         CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, descla )
+         CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, idesc )
          !
          becp_bgrp = 0.0d0
          !
          CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, cp_bgrp, becp_bgrp )
-         CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, descla )
+         CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, idesc )
          !
       END IF
       !
@@ -351,9 +353,9 @@
          ALLOCATE( bec_col ( nkbx, nrcx*nspin ), STAT = info )
          IF( info /= 0 ) &
             CALL errore( ' ortho ', ' allocating bec_col ', ABS( info ) )
-         CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nrcx, descla(1) )
+         CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nrcx, idesc(:,1) )
          IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(2), bephi(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )
+            CALL redist_row2col( nupdwn(2), bephi(:,nrcx+1:), bec_col(:,nrcx+1:), nkbx, nrcx, idesc(:,2) )
          END IF
       END IF
       !
@@ -367,8 +369,8 @@
                qqf = qq_nt(iv,jv,is)
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
-                     IF( descla( iss )%active_node > 0 ) THEN
-                        DO i = 1, descla( iss )%nc
+                     IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+                        DO i = 1, idesc( LAX_DESC_NC, iss )
                            CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1,qbephi(inl+1,i,iss), 1 )
                         END DO
                      END IF
@@ -385,9 +387,9 @@
       qbecp  = 0.d0
 
       IF( nvb > 0 ) THEN
-         CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nrcx, descla(1) )
+         CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nrcx, idesc(:,1) )
          IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(2), becp_dist(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )
+            CALL redist_row2col( nupdwn(2), becp_dist(:,nrcx+1:), bec_col(:,nrcx+1:), nkbx, nrcx, idesc(:,2) )
          END IF
       END IF
 
@@ -399,8 +401,8 @@
                qqf = qq_nt(iv,jv,is)
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
-                     IF( descla( iss )%active_node > 0 ) THEN
-                        DO i = 1, descla( iss )%nc
+                     IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+                        DO i = 1, idesc( LAX_DESC_NC, iss )
                            CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1, qbecp(inl+1,i,iss), 1 )
                         END DO
                      END IF
@@ -426,11 +428,11 @@
       !
       DO iss = 1, nspin_sub
 
-         IF( descla( iss )%active_node > 0 ) xloc = x0(:,:,iss) * ccc
+         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) xloc = x0(:,:,iss) * ccc
 
          CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
-                           qbephi(:,:,iss), xloc, nx0, descla(iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )
+                           qbephi(:,:,iss), xloc, nx0, idesc(:,iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )
 
          IF( iter > ortho_max ) THEN
             WRITE( stdout, 100 ) diff, iter
@@ -441,7 +443,7 @@
             WRITE( stdout, 100 ) diff, iter
          ENDIF
          !     
-         IF( descla( iss )%active_node > 0 ) x0( :, :, iss ) = xloc / ccc
+         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) x0( :, :, iss ) = xloc / ccc
          !
       END DO
 

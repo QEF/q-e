@@ -15,11 +15,12 @@
 !
       USE kinds,             ONLY: DP
       use electrons_base,    ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
-      USE cp_main_variables, ONLY: descla
-      USE descriptors,       ONLY: la_descriptor , ldim_cyclic
+      USE cp_main_variables, ONLY: idesc
       USE mp,                ONLY: mp_sum, mp_bcast
 
       implicit none
+
+      include 'laxlib.fh'
 
       integer, intent(in)  :: nrlx
       real(DP) :: zmat( nrlx, nudx, nspin ), fmat( nrlx, nudx, nspin )
@@ -41,14 +42,14 @@
 
          nss      = nupdwn( iss )
          istart   = iupdwn( iss )
-         np_rot   = descla( iss )%npr * descla( iss )%npc
-         me_rot   = descla( iss )%mype
-         nrl      = descla( iss )%nrl
-         comm_rot = descla( iss )%comm
+         np_rot   = idesc( LAX_DESC_NPR, iss ) * idesc( LAX_DESC_NPC, iss )
+         me_rot   = idesc( LAX_DESC_MYPE, iss )
+         nrl      = idesc( LAX_DESC_NRL, iss )
+         comm_rot = idesc( LAX_DESC_COMM, iss )
 
-         IF( descla( iss )%active_node > 0 ) THEN
+         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
 
-            ALLOCATE( mtmp( MAXVAL(descla(:)%nrlx), nudx ) )
+            ALLOCATE( mtmp( MAXVAL(idesc(LAX_DESC_NRLX, :)), nudx ) )
 
             DO ip = 1, np_rot
 
@@ -92,11 +93,11 @@
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq_nt
       use gvecw, only: ngw
       use ions_base, only: nsp, na
-      USE cp_main_variables, ONLY: descla
-      USE descriptors,       ONLY: la_descriptor
+      USE cp_main_variables, ONLY: idesc
       USE cp_interfaces,     ONLY: protate
 
       implicit none
+      include 'laxlib.fh'
       integer, intent(in) :: nrlx
       real(kind=DP)    z0( nrlx, nudx, nspin )
       real(kind=DP)    bec( nhsa, n ), becdiag( nhsa, n )
@@ -109,10 +110,10 @@
       DO iss = 1, nspin
          istart   = iupdwn( iss )
          nss      = nupdwn( iss )
-         np_rot   = descla( iss )%npr * descla( iss )%npc
-         me_rot   = descla( iss )%mype
-         nrl      = descla( iss )%nrl
-         comm_rot = descla( iss )%comm
+         np_rot   = idesc( LAX_DESC_NPR, iss ) * idesc( LAX_DESC_NPC, iss )
+         me_rot   = idesc( LAX_DESC_MYPE, iss )
+         nrl      = idesc( LAX_DESC_NRL, iss )
+         comm_rot = idesc( LAX_DESC_COMM, iss )
          CALL protate ( c0, bec, c0diag, becdiag, ngw, nss, istart, z0(:,:,iss), nrl, &
                         na, nsp, ish, nh, np_rot, me_rot, comm_rot )
       END DO

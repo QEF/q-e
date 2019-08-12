@@ -11,7 +11,7 @@
 
    SUBROUTINE writefile_x                                         &
      &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
-     &       lambda,lambdam,descla,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
+     &       lambda,lambdam,idesc,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
 !-----------------------------------------------------------------------
 !
@@ -29,7 +29,6 @@
       USE mp,               ONLY: mp_bcast
       USE control_flags,    ONLY: tksw, ndw, io_level
       USE electrons_module, ONLY: collect_c
-      USE descriptors,      ONLY: la_descriptor
       USE gvecw,            ONLY: ngw
       USE wannier_module,   ONLY : wfc ! BS
 
@@ -49,7 +48,7 @@
       REAL(DP), INTENT(in) :: rho(:,:)
       REAL(DP), INTENT(in) :: occ_f(:)
       REAL(DP), INTENT(in) :: mat_z(:,:,:)
-      TYPE(la_descriptor), INTENT(IN) :: descla(:)
+      INTEGER, INTENT(IN) :: idesc(:,:)
 
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       INTEGER  :: nk = 1, ispin, i, ib, ierr
@@ -87,7 +86,7 @@
          !
          ALLOCATE( ctot( SIZE( c0, 1 ), nupdwn_tot(1) * nspin ) )
          !
-         CALL set_evtot( c0, ctot, lambda, descla, iupdwn_tot, nupdwn_tot )
+         CALL set_evtot( c0, ctot, lambda, idesc, iupdwn_tot, nupdwn_tot )
          !
       END IF
       !
@@ -233,13 +232,12 @@
 
 
 !------------------------------------------------------------------------------!
-   SUBROUTINE set_evtot_x( c0, ctot, lambda, descla, iupdwn_tot, nupdwn_tot )
+   SUBROUTINE set_evtot_x( c0, ctot, lambda, idesc, iupdwn_tot, nupdwn_tot )
 !------------------------------------------------------------------------------!
       USE kinds,             ONLY: DP
       USE electrons_base,    ONLY: nupdwn, nspin, iupdwn, nudx
       USE electrons_module,  ONLY: ei
       USE cp_interfaces,     ONLY: crot
-      USE descriptors,       ONLY: la_descriptor
       !
       IMPLICIT NONE
       !
@@ -249,7 +247,7 @@
       COMPLEX(DP), INTENT(OUT) :: ctot(:,:)
       REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
       INTEGER,     INTENT(IN)  :: iupdwn_tot(2), nupdwn_tot(2)
-      TYPE(la_descriptor), INTENT(IN) :: descla(:)
+      INTEGER, INTENT(IN) :: idesc(:,:)
       !
       REAL(DP),    ALLOCATABLE :: eitmp(:)
       REAL(DP),    ALLOCATABLE :: lambda_repl(:,:)
@@ -259,12 +257,12 @@
       !
       ctot = 0.0d0
       !
-      CALL collect_lambda( lambda_repl, lambda(:,:,1), descla(1) )
+      CALL collect_lambda( lambda_repl, lambda(:,:,1), idesc(:,1) )
       !
       CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(1), iupdwn_tot(1), iupdwn(1), lambda_repl, nudx, eitmp )
       !
       IF( nspin == 2 ) THEN
-         CALL collect_lambda( lambda_repl, lambda(:,:,2), descla(2) )
+         CALL collect_lambda( lambda_repl, lambda(:,:,2), idesc(:,2) )
          CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(2), iupdwn_tot(2), iupdwn(2), lambda_repl, nudx, eitmp )
       END IF
       !

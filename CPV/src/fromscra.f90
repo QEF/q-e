@@ -50,7 +50,7 @@ SUBROUTINE from_scratch( )
     USE wavefunctions, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : descla, bephi, becp_bgrp, nfi, &
+    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
@@ -182,7 +182,7 @@ SUBROUTINE from_scratch( )
        !
        CALL calbec_bgrp ( 1, nsp, eigr, cm_bgrp, bec_bgrp )
        !
-       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
+       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
        CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
@@ -228,7 +228,7 @@ SUBROUTINE from_scratch( )
          CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos,&
                     bec_bgrp, cm_bgrp, c0_bgrp, ei_unp, fromscra = .TRUE. )
          !
-         CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(1) )
+         CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, idesc(:,1) )
          !
       ELSE
          !
@@ -251,23 +251,23 @@ SUBROUTINE from_scratch( )
          &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
 
       if( tortho ) then
-         CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
+         CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
       else
          CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
       endif
       !
       IF ( ttforce ) THEN
-         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, descla, fion )
+         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
       END IF
 
       if ( iverbosity > 1 ) &
-         CALL print_lambda( lambda, descla, nbsp, 9, nudx, ccc, ionode, stdout )
+         CALL print_lambda( lambda, idesc, nbsp, 9, nudx, ccc, ionode, stdout )
 
       !
-      if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
+      if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )
       !
       IF ( tortho ) THEN
-         CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, descla )
+         CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
       END IF
       !
       IF( force_pairing ) THEN
@@ -281,7 +281,7 @@ SUBROUTINE from_scratch( )
       !
       CALL calbec_bgrp ( nvb+1, nsp, eigr, c0_bgrp, bec_bgrp )
       !
-      if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
+      if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
 
       if ( iverbosity > 1 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
       !

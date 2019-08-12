@@ -35,7 +35,7 @@ SUBROUTINE from_restart( )
                                      efield_berry_setup2, tefield2
    USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
-                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, descla
+                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, idesc
    USE time_step,             ONLY : delt
    USE fft_base,              ONLY : dfftp, dffts
    USE matrix_inversion
@@ -190,7 +190,7 @@ SUBROUTINE from_restart( )
    !
    CALL calbec_bgrp( 1, nsp, eigr, c0_bgrp, bec_bgrp )
    !
-   IF ( tpre     ) CALL caldbec_bgrp( eigr, c0_bgrp, dbec, descla )
+   IF ( tpre     ) CALL caldbec_bgrp( eigr, c0_bgrp, dbec, idesc )
    !
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )

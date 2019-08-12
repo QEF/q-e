@@ -1596,7 +1596,7 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
+    USE cp_main_variables, ONLY : idesc
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(in) :: filename
@@ -1614,7 +1614,7 @@ MODULE cp_restart_new
     IF ( ierr /= 0 ) RETURN
     !
     ALLOCATE( mrepl( nudx, nudx ) )
-    CALL collect_lambda( mrepl, lambda, descla(iss) )
+    CALL collect_lambda( mrepl, lambda, idesc(:,iss) )
     !
     IF ( ionode ) THEN
        WRITE (iunpun, iostat=ierr) mrepl
@@ -1636,7 +1636,7 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
+    USE cp_main_variables, ONLY : idesc
     !
     IMPLICIT NONE
 
@@ -1666,7 +1666,7 @@ MODULE cp_restart_new
        CLOSE( unit=iunpun, status='keep')
     END IF
     CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
-    CALL distribute_lambda( mrepl, lambda, descla(iss) )
+    CALL distribute_lambda( mrepl, lambda, idesc(:,iss) )
     DEALLOCATE( mrepl )
     !
   END SUBROUTINE cp_read_lambda
@@ -1681,7 +1681,7 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
+    USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
@@ -1711,7 +1711,7 @@ MODULE cp_restart_new
        !
        filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
        !
-       CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
+       CALL collect_zmat( mrepl, mat_z(:,:,iss), idesc(:,iss) )
        !
        IF ( ionode ) THEN
           WRITE (iunpun, iostat=ierr) mrepl
@@ -1735,7 +1735,7 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
+    USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
@@ -1771,7 +1771,7 @@ MODULE cp_restart_new
        END IF
        CALL mp_bcast (ierr, ionode_id, intra_image_comm )
        !
-       CALL distribute_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
+       CALL distribute_zmat( mrepl, mat_z(:,:,iss), idesc(:,iss) )
        !
     END DO
     !

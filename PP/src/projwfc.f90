@@ -1802,7 +1802,6 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE mp,       ONLY: mp_bcast
   USE mp_pools, ONLY: root_pool, intra_pool_comm
   USE wavefunctions, ONLY: evc
-  USE descriptors,      ONLY : la_descriptor, descla_init
   USE projections
   !
   IMPLICIT NONE
@@ -1836,8 +1835,8 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
-  TYPE(la_descriptor) :: desc
-  TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
+  INTEGER :: idesc(LAX_DESC_SIZE)
+  INTEGER, ALLOCATABLE :: idesc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
     ! matrix distribution descriptors
   INTEGER :: nx, nrl, nrlx
@@ -1875,10 +1874,10 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   ALLOCATE( ic_notcnv( np_ortho(2) ) )
   ALLOCATE( notcnv_ip( np_ortho(2) ) )
-  ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
-  CALL desc_init( natomwfc, desc, desc_ip )
+  CALL desc_init( natomwfc, idesc, idesc_ip )
   !
   ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
   !
@@ -1968,23 +1967,24 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      ! calculate O^{-1/2}
      !
-     IF ( desc%active_node > 0 ) THEN
+     IF ( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
         !
         !  Compute local dimension of the cyclically distributed matrix
         !
         ALLOCATE(work_d (nx, nx) )
 
-        nrl  = desc%nrl
-        nrlx = desc%nrlx
+        nrl  = idesc(LAX_DESC_NRL)
+        nrlx = idesc(LAX_DESC_NRLX)
 
         ALLOCATE( diag( nrlx, natomwfc ) )
         ALLOCATE( vv( nrlx, natomwfc ) )
         !
-        CALL blk2cyc_zredist( natomwfc, diag, nrlx, natomwfc, overlap_d, nx, nx, desc )
+        CALL blk2cyc_redist( natomwfc, diag, nrlx, natomwfc, overlap_d, nx, nx, idesc )
         !
-        CALL zhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, desc%npc * desc%npr, desc%mype, desc%comm )
+        CALL zhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, &
+                        idesc(LAX_DESC_NPC) * idesc(LAX_DESC_NPR), idesc(LAX_DESC_MYPE), idesc(LAX_DESC_COMM) )
         !
-        CALL cyc2blk_zredist( natomwfc, vv, nrlx, natomwfc, work_d, nx, nx, desc )
+        CALL cyc2blk_redist( natomwfc, vv, nrlx, natomwfc, work_d, nx, nx, idesc )
         !
         DEALLOCATE( vv )
         DEALLOCATE( diag )
@@ -1999,15 +1999,15 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
         e (i) = 1.d0 / dsqrt (e (i) )
      ENDDO
 
-     IF ( desc%active_node > 0 ) THEN
+     IF ( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
         ALLOCATE(e_work_d (nx, nx) )
-        DO j = 1, desc%nc
-           DO i = 1, desc%nr
-              e_work_d( i, j ) = e( j + desc%ic - 1 ) * work_d( i, j )
+        DO j = 1,  idesc(LAX_DESC_NC)
+           DO i = 1,  idesc(LAX_DESC_NR)
+              e_work_d( i, j ) = e( j +  idesc(LAX_DESC_IC) - 1 ) * work_d( i, j )
            ENDDO
         ENDDO
-        CALL sqr_zmm_cannon( 'N', 'C', natomwfc, ONE, e_work_d, nx, work_d, nx, ZERO, overlap_d, nx, desc )
-        CALL laxlib_zsqmher( natomwfc, overlap_d, nx, desc )
+        CALL sqr_mm_cannon( 'N', 'C', natomwfc, ONE, e_work_d, nx, work_d, nx, ZERO, overlap_d, nx, idesc )
+        CALL laxlib_zsqmher( natomwfc, overlap_d, nx, idesc )
         DEALLOCATE( e_work_d )
      ENDIF
      !
@@ -2318,30 +2318,31 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !
 CONTAINS
   !
-  SUBROUTINE desc_init( nsiz, desc, desc_ip )
+  SUBROUTINE desc_init( nsiz, idesc, idesc_ip )
      !
      INTEGER, INTENT(in)  :: nsiz
-     TYPE(la_descriptor), INTENT(out) :: desc
-     TYPE(la_descriptor), INTENT(out) :: desc_ip(:,:)
+     INTEGER, INTENT(out) :: idesc(:)
+     INTEGER, INTENT(out) :: idesc_ip(:,:,:)
      INTEGER :: i, j, rank
      INTEGER :: coor_ip( 2 )
      !
-     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
      !
-     nx = desc%nrcx
+     nx = idesc(LAX_DESC_NRCX)
      !
-     DO j = 0, desc%npc - 1
-        DO i = 0, desc%npr - 1
+     DO j = 0, idesc(LAX_DESC_NPC) - 1
+        DO i = 0, idesc(LAX_DESC_NPR) - 1
            coor_ip( 1 ) = i
            coor_ip( 2 ) = j
-           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
-           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
+           CALL laxlib_init_desc( idesc_ip(:,i+1,j+1), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
+                                  np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
+           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         ENDDO
      ENDDO
      !
      la_proc = .false.
-     IF( desc%active_node > 0 ) la_proc = .true.
+     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .true.
      !
      RETURN
   END SUBROUTINE desc_init
@@ -2373,15 +2374,15 @@ CONTAINS
      ldv = size( v, 1 )
      ldw = size( w, 1 )
      !
-     DO ipc = 1, desc%npc !  loop on column procs
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
         !
         DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( ipr, ipc )%nr
-           ir = desc_ip( ipr, ipc )%ir
+           nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
+           ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -2400,7 +2401,7 @@ CONTAINS
         !
      ENDDO
      !
-     CALL laxlib_zsqmher( n, dm, nx, desc )
+     CALL laxlib_zsqmher( n, dm, nx, idesc )
      !
      DEALLOCATE( work )
      !
@@ -2438,15 +2439,15 @@ CONTAINS
      ldv = size( v, 1 )
      ldw = size( w, 1 )
      !
-     DO ipc = 1, desc%npc !  loop on column procs
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
         !
         DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( ipr, ipc )%nr
-           ir = desc_ip( ipr, ipc )%ir
+           nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
+           ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -2470,7 +2471,7 @@ CONTAINS
         !
      ENDDO
      !
-     CALL laxlib_dsqmsym( n, dm, nx, desc )
+     CALL laxlib_dsqmsym( n, dm, nx, idesc )
      !
      DEALLOCATE( work )
      !
@@ -2490,21 +2491,21 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
         !
         beta = ZERO
 
-        DO ipr = 1, desc%npr
+        DO ipr = 1, idesc(LAX_DESC_NPR)
            !
-           nr = desc_ip( ipr, ipc )%nr
-           ir = desc_ip( ipr, ipc )%ir
+           nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
+           ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
            !
            root = rank_ip( ipr, ipc )
 
-           IF( ipr-1 == desc%myr .and. ipc-1 == desc%myc .and. la_proc ) THEN
+           IF( ipr-1 == idesc(LAX_DESC_MYR) .and. ipc-1 == idesc(LAX_DESC_MYC) .and. la_proc ) THEN
               !
               !  this proc sends his block
               !
@@ -2550,21 +2551,21 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
         !
         beta = 0.0d0
 
-        DO ipr = 1, desc%npr
+        DO ipr = 1, idesc(LAX_DESC_NPR)
            !
-           nr = desc_ip( ipr, ipc )%nr
-           ir = desc_ip( ipr, ipc )%ir
+           nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
+           ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
            !
            root = rank_ip( ipr, ipc )
 
-           IF( ipr-1 == desc%myr .and. ipc-1 == desc%myc .and. la_proc ) THEN
+           IF( ipr-1 == idesc(LAX_DESC_MYR) .and. ipc-1 == idesc(LAX_DESC_MYC) .and. la_proc ) THEN
               !
               !  this proc sends his block
               !

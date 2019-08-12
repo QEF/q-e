@@ -18,7 +18,6 @@ MODULE cp_main_variables
   USE energies,          ONLY : dft_energy_type
   USE pres_ai_mod,       ONLY : abivol, abisur, jellium, t_gauss, rho_gaus, &
                                 v_vol, posv, f_vol
-  USE descriptors,       ONLY : la_descriptor
   !
   IMPLICIT NONE
   SAVE
@@ -65,8 +64,7 @@ MODULE cp_main_variables
   !
   REAL(DP), ALLOCATABLE :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
   !
-  TYPE(la_descriptor), ALLOCATABLE :: descla(:) ! descriptor of the lambda distribution
-                                       ! see descriptors_module
+  INTEGER, ALLOCATABLE :: idesc(:,:) ! laxlib descriptor of the lambda distribution
   !
   INTEGER, PARAMETER :: nacx = 10      ! max number of averaged
                                        ! quantities saved to the restart
@@ -116,7 +114,6 @@ MODULE cp_main_variables
       !
       USE mp_bands,    ONLY: intra_bgrp_comm, me_bgrp
       USE mp,          ONLY: mp_max, mp_min
-      USE descriptors, ONLY: descla_init
       !
       IMPLICIT NONE
       !
@@ -203,21 +200,21 @@ MODULE cp_main_variables
       !  Compute local dimensions for lambda matrixes
       !
 
-      ALLOCATE( descla( nspin ) )
+      ALLOCATE( idesc( LAX_DESC_SIZE, nspin ) )
       !
       DO iss = 1, nspin
-         CALL descla_init( descla( iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+         CALL laxlib_init_desc( idesc( :, iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
       END DO
       !
-      nrcx = MAXVAL( descla( : )%nrcx )
+      nrcx = MAXVAL( idesc( LAX_DESC_NRCX, : ) )
       !
       nlam = 1
-      IF( SIZE( descla ) < 2 ) THEN
-         IF( descla(1)%active_node > 0 ) &
-            nlam = descla(1)%nrcx
+      IF( SIZE( idesc, 2 ) < 2 ) THEN
+         IF( idesc( LAX_DESC_ACTIVE_NODE, 1 ) > 0 ) &
+            nlam = idesc(LAX_DESC_NRCX,1)
       ELSE
-         IF( ( descla(1)%active_node > 0 ) .OR. ( descla(2)%active_node > 0 ) ) &
-            nlam = MAX( descla(1)%nrcx, descla(2)%nrcx )
+         IF( ( idesc( LAX_DESC_ACTIVE_NODE, 1) > 0 ) .OR. ( idesc( LAX_DESC_ACTIVE_NODE, 2 ) > 0 ) ) &
+            nlam = MAX( idesc(LAX_DESC_NRCX,1), idesc(LAX_DESC_NRCX,2) )
       END IF
 
       !
@@ -303,7 +300,7 @@ MODULE cp_main_variables
       IF( ALLOCATED( kedtaug ) ) DEALLOCATE( kedtaug )
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
       IF( ALLOCATED( taub ) )    DEALLOCATE( taub )
-      IF( ALLOCATED( descla ) )  DEALLOCATE( descla )
+      IF( ALLOCATED( idesc ) )  DEALLOCATE( idesc )
       !
       RETURN
       !

@@ -53,8 +53,7 @@
       use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp, prefor
       use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp
-      USE cp_main_variables,        ONLY : descla, drhor, drhog
-      USE descriptors,              ONLY : la_descriptor, ldim_cyclic
+      USE cp_main_variables,        ONLY : idesc, drhor, drhog
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
 
@@ -130,7 +129,7 @@
       INTEGER :: i_max
       REAL(kind=DP) :: max_sca
    
-      nrlx = MAXVAL(descla(:)%nrlx)
+      nrlx = MAXVAL(idesc(LAX_DESC_NRLX,:))
 
       allocate(bec0(nhsa,nbspx),becm(nhsa,nbspx), becdrdiag(nhsa,nbspx,3))
       allocate (ave_ene(nbspx))
@@ -199,7 +198,7 @@
       numok = 0
 
 !initialize  z0t
-      call id_matrix_init( descla, nspin )
+      call id_matrix_init( idesc, nspin )
 
       allocate(hpsi(ngw,nbspx),hpsi0(ngw,nbspx),gi(ngw,nbspx),hi(ngw,nbspx))
       do while ( itercg .lt. maxiter .and. (.not.ltresh) )
@@ -231,7 +230,7 @@
               call rotate( nrlx, z0t, c0(:,:), bec, c0diag, becdiag )
               c0(:,:)=c0diag(:,:)
               bec(:,:)=becdiag(:,:)
-              call id_matrix_init( descla, nspin )
+              call id_matrix_init( idesc, nspin )
            endif
         
 
@@ -402,8 +401,8 @@
            do iss=1,nspin
               nss=nupdwn(iss)
               istart=iupdwn(iss)
-              me_rot = descla( iss )%mype
-              np_rot = descla( iss )%npc * descla( iss )%npr
+              me_rot = idesc( LAX_DESC_MYPE, iss )
+              np_rot = idesc( LAX_DESC_NPC, iss ) * idesc( LAX_DESC_NPR, iss )
               allocate( fmat_ ( nrlx, nudx ) )
               do ip = 1, np_rot
                  if( me_rot == ( ip - 1 ) ) then
@@ -430,8 +429,8 @@
               do iss=1,nspin
                  nss=nupdwn(iss)
                  istart=iupdwn(iss)
-                 me_rot = descla( iss )%mype
-                 np_rot = descla( iss )%npc * descla( iss )%npr
+                 me_rot = idesc( LAX_DESC_MYPE, iss )
+                 np_rot = idesc( LAX_DESC_NPC, iss ) * idesc( LAX_DESC_NPR, iss)
                  allocate( fmat_ ( nrlx, nudx ) )
                  do ip = 1, np_rot
                     if( me_rot == ( ip - 1 ) ) then
@@ -520,8 +519,8 @@
          do iss = 1, nspin
             nss    = nupdwn(iss)
             istart = iupdwn(iss)
-            me_rot = descla( iss )%mype
-            np_rot = descla( iss )%npc * descla( iss )%npr
+            me_rot = idesc( LAX_DESC_MYPE, iss )
+            np_rot = idesc( LAX_DESC_NPC, iss ) * idesc( LAX_DESC_NPR, iss)
             allocate( fmat_ ( nrlx, nudx ) )
             do ip = 1, np_rot
                if( me_rot == ( ip - 1 ) ) then
@@ -810,14 +809,14 @@
        if(tpre) then!if pressure is need the following is written because of caldbec
           call  calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call caldbec_bgrp( eigr, c0, dbec, descla )
+            call caldbec_bgrp( eigr, c0, dbec, idesc )
             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           else
 
             !     calculation of the rotated quantities
             call rotate( nrlx, z0t, c0(:,:), bec, c0diag, becdiag )
             !     calculation of rho corresponding to the rotated wavefunctions
-            call caldbec_bgrp( eigr, c0diag, dbec, descla )
+            call caldbec_bgrp( eigr, c0diag, dbec, idesc )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor, &
                         drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           endif
@@ -918,7 +917,7 @@
            enddo
            CALL mp_sum( lambda_repl, intra_bgrp_comm )
                      !
-           CALL distribute_lambda( lambda_repl, lambda( :, :, is ), descla( is ) )
+           CALL distribute_lambda( lambda_repl, lambda( :, :, is ), idesc( :, is ) )
            !
         end do
         
@@ -995,7 +994,7 @@
             enddo
             
             CALL mp_sum( lambda_repl, intra_bgrp_comm )
-            CALL distribute_lambda( lambda_repl, lambda( :, :, 1 ), descla( 1 ) )
+            CALL distribute_lambda( lambda_repl, lambda( :, :, 1 ), idesc( :, 1 ) )
             cm(:,:)=c0(:,:)
             call calbec (1,nsp,eigr,cm,becm)
 
@@ -1014,13 +1013,13 @@
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, SIZE(fmat0,2), &
-                                  lambda_dist, nlam, nlam, descla(iss) )
+              CALL cyc2blk_redist( nss, fmat0(:,:,iss), nrlx, SIZE(fmat0,2), &
+                                  lambda_dist, nlam, nlam, idesc(:,iss) )
               !
               ! Perform lambdap = lambda * fmat0
               !
-              CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, lambda(1,1,iss), nlam, lambda_dist, nlam, &
-                                  0.0d0, lambdap(1,1,iss), nlam, descla(iss) )
+              CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, lambda(:,:,iss), nlam, lambda_dist, nlam, &
+                                  0.0d0, lambdap(:,:,iss), nlam, idesc(:,iss) )
               !
               lambda_dist      = lambda(:,:,iss)
               lambda(:,:,iss)  = lambdap(:,:,iss)
@@ -1036,7 +1035,7 @@
         !
   
         !
-        CALL nlfl_bgrp( bec, becdr, lambda, descla, fion ) 
+        CALL nlfl_bgrp( bec, becdr, lambda, idesc, fion ) 
           
         ! bforceion adds the force term due to electronic berry phase
         ! only in US-case
