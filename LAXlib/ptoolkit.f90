@@ -3178,15 +3178,17 @@ END SUBROUTINE blk2cyc_zredist_x
 !
 !
 
-SUBROUTINE qe_pzpotrf_x( sll, ldx, n, desc )
+SUBROUTINE qe_pzpotrf_x( sll, ldx, n, idesc )
    !
    USE descriptors
    USE la_param
    !
    implicit none
    !
+   include 'laxlib_param.fh'
+   !
    integer :: n, ldx
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   integer, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    real(DP)  :: one, zero
    complex(DP) :: sll( ldx, ldx ), cone, czero
    integer :: myrow, mycol, ierr
@@ -3197,6 +3199,7 @@ SUBROUTINE qe_pzpotrf_x( sll, ldx, n, desc )
    integer :: nr, nc
    integer :: rcomm, ccomm, color, key, myid, np
    complex(DP), allocatable :: ssnd( :, : ), srcv( :, : )
+   TYPE(la_descriptor) :: desc
 
    one   = 1.0_DP
    cone  = 1.0_DP
@@ -3204,6 +3207,8 @@ SUBROUTINE qe_pzpotrf_x( sll, ldx, n, desc )
    czero = 0.0_DP
 
 #if defined __MPI
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
 
    myrow = desc%myr
    mycol = desc%myc
@@ -3407,15 +3412,17 @@ END SUBROUTINE qe_pzpotrf_x
 
 !  now the Double Precision subroutine
 
-SUBROUTINE qe_pdpotrf_x( sll, ldx, n, desc )
+SUBROUTINE qe_pdpotrf_x( sll, ldx, n, idesc )
    !
    USE descriptors
    USE la_param
    !
    implicit none
    !
+   include 'laxlib_param.fh'
+   !
    integer  :: n, ldx
-   TYPE(la_descriptor), INTENT(IN) :: desc
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    REAL(DP) :: one, zero
    REAL(DP) :: sll( ldx, ldx )
    integer  :: myrow, mycol, ierr
@@ -3426,11 +3433,14 @@ SUBROUTINE qe_pdpotrf_x( sll, ldx, n, desc )
    integer  :: nr, nc
    integer  :: rcomm, ccomm, color, key, myid, np
    REAL(DP), ALLOCATABLE :: ssnd( :, : ), srcv( :, : )
+   TYPE(la_descriptor) :: desc
 
    one   = 1.0_DP
    zero  = 0.0_DP
 
 #if defined __MPI
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
 
    myrow = desc%myr
    mycol = desc%myc
@@ -3634,7 +3644,7 @@ END SUBROUTINE qe_pdpotrf_x
 !
 !
 
-SUBROUTINE qe_pztrtri_x ( sll, ldx, n, desc )
+SUBROUTINE qe_pztrtri_x ( sll, ldx, n, idesc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -3667,9 +3677,10 @@ SUBROUTINE qe_pztrtri_x ( sll, ldx, n, desc )
     USE la_param
 
     IMPLICIT NONE
+    INCLUDE 'laxlib_param.fh'
 
     INTEGER, INTENT( IN ) :: n, ldx
-    TYPE(la_descriptor), INTENT(IN) :: desc
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
     COMPLEX(DP), INTENT( INOUT ) :: sll( ldx, ldx )
 
     COMPLEX(DP), PARAMETER :: ONE = (1.0_DP, 0.0_DP)
@@ -3692,7 +3703,9 @@ SUBROUTINE qe_pztrtri_x ( sll, ldx, n, desc )
     ! B and BUF_RECV are used to overload the computation of matrix multiplication and the shift of the blocks
     COMPLEX(DP), ALLOCATABLE, DIMENSION( :, : ) :: B, C, BUF_RECV 
     COMPLEX(DP) :: first
+    TYPE(la_descriptor) :: desc
 
+    CALL laxlib_intarray_to_desc(desc,idesc)
     myrow = desc%myr
     mycol = desc%myc
     myid  = desc%mype
@@ -3994,7 +4007,7 @@ END SUBROUTINE qe_pztrtri_x
 
 !  now the Double Precision subroutine
 
-SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, desc )
+SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, idesc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -4027,9 +4040,10 @@ SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, desc )
     USE la_param
 
     IMPLICIT NONE
+    include 'laxlib_param.fh'
 
     INTEGER, INTENT( IN ) :: n, ldx
-    TYPE(la_descriptor), INTENT(IN) :: desc
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
     REAL(DP), INTENT( INOUT ) :: sll( ldx, ldx )
 
     REAL(DP), PARAMETER :: ONE = 1.0_DP
@@ -4052,6 +4066,9 @@ SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, desc )
     ! B and BUF_RECV are used to overload the computation of matrix multiplication and the shift of the blocks
     REAL(DP), ALLOCATABLE, DIMENSION( :, : ) :: B, C, BUF_RECV 
     REAL(DP) :: first
+    TYPE(la_descriptor) :: desc
+
+    CALL laxlib_intarray_to_desc(desc,idesc)
 
     myrow = desc%myr
     mycol = desc%myc

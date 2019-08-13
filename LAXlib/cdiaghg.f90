@@ -215,6 +215,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
   IMPLICIT NONE
   !
   include 'laxlib_param.fh'
+  include 'laxlib_mid.fh'
   include 'laxlib_low.fh'
   !
   INTEGER, INTENT(IN) :: n, ldh
@@ -280,7 +281,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
 
      IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
-     CALL qe_pzpotrf( ss, nx, n, desc )
+     CALL qe_pzpotrf( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -303,7 +304,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
      !
      IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
-     CALL qe_pztrtri( ss, nx, n, desc )
+     CALL qe_pztrtri( ss, nx, n, idesc )
 #endif
      !
   END IF

@@ -204,6 +204,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   !
   include 'laxlib_param.fh'
   include 'laxlib_low.fh'
+  include 'laxlib_mid.fh'
   !
   INTEGER, INTENT(IN) :: n, ldh
     ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
@@ -270,7 +271,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
      CALL PDPOTRF( 'L', n, ss, 1, 1, desch, info )
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
-     CALL qe_pdpotrf( ss, nx, n, desc )
+     CALL qe_pdpotrf( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -291,7 +292,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
      !
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
-     CALL qe_pdtrtri ( ss, nx, n, desc )
+     CALL qe_pdtrtri ( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -325,7 +326,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
 #if defined(__SCALAPACK)
      CALL pdsyevd_drv( .true., n, desc%nrcx, hh, SIZE(hh,1), e, ortho_cntx, ortho_comm )
 #else
-     CALL qe_pdsyevd( .true., n, desc, hh, SIZE(hh,1), e )
+     CALL qe_pdsyevd( .true., n, idesc, hh, SIZE(hh,1), e )
 #endif
      !
   END IF
