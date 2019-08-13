@@ -9,7 +9,7 @@ MODULE qexsd_module
   !----------------------------------------------------------------------------
   !
   ! This module contains subroutines used to read and write in XML format,
-  ! according to the "shema", the data produced by Quantum ESPRESSO
+  ! according to the "schema", the data produced by Quantum ESPRESSO
   !
   ! Based on initial work by Carlo Sbraccia (2003)
   ! and on the qexml.f90 routines written by Andrea Ferretti (2006)
@@ -52,9 +52,7 @@ MODULE qexsd_module
   CHARACTER(10)    :: qexsd_current_version = " "
   CHARACTER(10)    :: qexsd_default_version = trim( fmt_version  )
   LOGICAL          :: qexsd_current_version_init = .FALSE.
-  ! 
-  TYPE (general_info_type)                     :: general_info
-  TYPE (parallel_info_type)                    :: parallel_info
+  !
   TYPE (step_type), ALLOCATABLE                :: steps(:)
   INTEGER                                      :: exit_status
   TYPE ( closed_type )                         :: qexsd_closed_element
@@ -64,6 +62,7 @@ MODULE qexsd_module
   !
   PUBLIC :: qexsd_xf  
   PUBLIC :: qexsd_openschema, qexsd_closeschema
+  PUBLIC :: qexsd_readschema
   PUBLIC :: qexsd_step_addstep, qexsd_reset_steps
   PUBLIC :: qexsd_current_version, qexsd_default_version, qexsd_current_version_init
   PUBLIC :: qexsd_set_status
@@ -99,7 +98,9 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=*), INTENT(IN) :: filename, prog, title
-      INTEGER, INTENT(IN) :: ounit
+      INTEGER, INTENT(IN)          :: ounit
+      TYPE (general_info_type)  :: general_info
+      TYPE (parallel_info_type) :: parallel_info
       CHARACTER(len=16) :: subname = 'qexsd_openschema'
       INTEGER :: ierr, len_steps, i_step
       !
@@ -244,6 +245,111 @@ CONTAINS
       !
     END SUBROUTINE qexsd_closeschema
     !
+    !
+!-------------------------------------------
+! ... function reading xml and storing inofo into objects
+!-------------------------------------------
+!
+!------------------------------------------------------------------------
+    FUNCTION qexsd_readschema (filename, output_obj, parinfo_obj, &
+         geninfo_obj, input_obj) RESULT(ierr)
+!------------------------------------------------------------------------
+      !
+      USE qes_read_module, ONLY : qes_read
+      USE FoX_dom,         ONLY : parseFile, item, getElementsByTagname, &
+           destroy, nodeList, Node
+      !
+      IMPLICIT NONE 
+      ! 
+      CHARACTER(LEN=*), INTENT(IN) :: filename
+      TYPE( output_type ), OPTIONAL,       INTENT(OUT)   :: output_obj
+      TYPE(parallel_info_type), OPTIONAL,  INTENT(OUT)   :: parinfo_obj
+      TYPE(general_info_type ), OPTIONAL,  INTENT(OUT)   :: geninfo_obj
+      TYPE(input_type), OPTIONAL,          INTENT(OUT)   :: input_obj
+      ! 
+      TYPE(Node), POINTER     :: root, nodePointer
+      TYPE(nodeList),POINTER  :: listPointer
+      LOGICAL                 :: found
+      CHARACTER(LEN=80)       :: errmsg = ' '
+      CHARACTER(len=17)       :: subname = 'qexsd_readschema'
+      INTEGER                 :: ierr
+      ! 
+      ierr = 0
+      ! 
+      INQUIRE ( file=filename, exist=found )
+      IF (.NOT. found ) THEN
+         ierr = 1
+         errmsg='xml data file ' // TRIM(filename) // ' not found'
+         GOTO 100
+      END IF
+      !
+      ! read XML file into "root" object
+      !
+      root => parseFile(filename)
+      !
+      ! copy from "root" object into geninfo, parinfo, output objs
+      !
+      IF ( PRESENT ( geninfo_obj ) ) THEN 
+         nodePointer => item ( getElementsByTagname(root, "general_info"),0)
+         IF (ASSOCIATED(nodePointer)) THEN
+            CALL qes_read( nodePointer, geninfo_obj, ierr)
+         ELSE
+            ierr = 2
+         END IF
+         IF ( ierr /= 0 ) THEN
+            errmsg='error reading header of xml data file'
+            ierr = 2
+            GOTO 100
+         END IF
+      END IF 
+      ! 
+      IF ( PRESENT ( parinfo_obj ) ) THEN 
+         nodePointer => item ( getElementsByTagname(root,"parallel_info"),0)
+         IF (ASSOCIATED(nodePointer)) THEN
+            CALL qes_read(nodePointer, parinfo_obj, ierr)
+         ELSE
+            ierr = 3
+         END IF
+         IF ( ierr /= 0 ) THEN  
+            errmsg='error in parallel_info  of xsd data file' 
+            ierr = 3
+            GOTO 100
+         END IF
+      END IF  
+      ! 
+      IF ( PRESENT ( output_obj ) ) THEN
+         nodePointer => item ( getElementsByTagname(root, "output"),0)
+         IF (ASSOCIATED(nodePointer)) THEN
+            CALL qes_read ( nodePointer, output_obj, ierr ) 
+         ELSE
+            ierr = 4
+         END IF
+         IF ( ierr /= 0 ) THEN  
+            errmsg = 'error reading output_obj of xsd data file' 
+            ierr = 4
+            GOTO 100 
+         END IF 
+      END IF 
+      !
+      IF (PRESENT (input_obj)) THEN
+         nodePointer => item( getElementsByTagname(root, "input"),0)
+         IF ( ASSOCIATED(nodePointer) ) THEN
+            CALL qes_read (nodePointer, input_obj, ierr ) 
+         ELSE 
+            ierr =-1
+         END IF
+         IF ( ierr /= 0 ) THEN
+            errmsg = 'input info not found or not readable in xml file'
+            IF ( TRIM(input_obj%tagname) == 'input' )  CALL qes_reset (input_obj)
+            ierr =-1
+         END IF
+      END IF
+      ! 
+      CALL destroy(root)       
+      !
+ 100  IF ( ierr /= 0 ) CALL infomsg(subname,TRIM(errmsg))
+      !
+    END FUNCTION qexsd_readschema
 !
 !-------------------------------------------
 ! ... utilities

@@ -38,8 +38,7 @@ MODULE pw_restart_new
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
-  PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
-       read_collected_to_evc
+  PUBLIC :: pw_write_schema, pw_write_binaries, read_collected_to_evc
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -683,6 +682,7 @@ MODULE pw_restart_new
           END IF 
           RETURN
        END SUBROUTINE check_and_allocate 
+       !
     END SUBROUTINE pw_write_schema
     !
     !------------------------------------------------------------------------
@@ -905,92 +905,6 @@ MODULE pw_restart_new
       RETURN
       !
     END SUBROUTINE gk_l2gmap_kdip
-
-    !------------------------------------------------------------------------
-    SUBROUTINE pw_read_schema(ierr, restart_output, restart_parallel_info, restart_general_info, &
-                                  prev_input)
-      !------------------------------------------------------------------------
-      USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
-      !
-      USE FoX_dom,              ONLY : parseFile, item, getElementsByTagname, destroy, nodeList, Node
-      USE qes_read_module,      ONLY : qes_read
-      IMPLICIT NONE 
-      ! 
-      INTEGER                                            :: ierr
-      TYPE( output_type ),OPTIONAL,        INTENT(OUT)   :: restart_output
-      TYPE(parallel_info_type),OPTIONAL,   INTENT(OUT)   :: restart_parallel_info
-      TYPE(general_info_type ),OPTIONAL,   INTENT(OUT)   :: restart_general_info
-      TYPE(input_type),OPTIONAL,           INTENT(OUT)   :: prev_input
-      ! 
-      TYPE(Node), POINTER     :: root, nodePointer
-      TYPE(nodeList),POINTER  :: listPointer
-      LOGICAL                 :: found
-      CHARACTER(LEN=80)       :: errmsg = ' '
-      CHARACTER(LEN=320)      :: filename
-      !  
-      ! 
-      ierr = 0
-      ! 
-      filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // TRIM(xmlpun_schema)
-      INQUIRE ( file=filename, exist=found )
-      IF (.NOT. found ) THEN
-         ierr = 1
-         errmsg='xml data file ' // TRIM(filename) // ' not found'
-         GOTO 100
-      END IF
-      !
-      root => parseFile(filename)
-      !
-      IF ( PRESENT ( restart_general_info ) ) THEN 
-         nodePointer => item ( getElementsByTagname(root, "general_info"),0)
-         CALL qes_read( nodePointer, restart_general_info, ierr)
-         IF ( ierr /=0 ) THEN
-            errmsg='error reading header of xml data file'
-            GOTO 100
-         END IF
-      END IF 
-      ! 
-      IF ( PRESENT ( restart_parallel_info ) ) THEN 
-         nodePointer => item ( getElementsByTagname(root,"parallel_info"),0)
-         CALL qes_read(nodePointer, restart_parallel_info, ierr)
-         !
-         IF ( ierr /=0) THEN  
-            errmsg='error parallel_info  of xsd data file' 
-            GOTO 100
-         END IF
-      END IF  
-      ! 
-      IF ( PRESENT ( restart_output ) ) THEN
-         nodePointer => item ( getElementsByTagname(root, "output"),0)
-         CALL qes_read ( nodePointer, restart_output, ierr ) 
-         IF ( ierr /= 0 ) THEN  
-            errmsg = 'error output of xsd data file' 
-            GOTO 100 
-         END IF 
-         !
-      END IF 
-      !
-      IF (PRESENT (prev_input)) THEN
-         nodePointer => item( getElementsByTagname(root, "input"),0)
-         IF ( ASSOCIATED(nodePointer) ) THEN
-            CALL qes_read (nodePointer, prev_input, ierr ) 
-         ELSE 
-            ierr = 5
-         END IF
-         IF ( ierr /= 0 ) THEN
-             CALL infomsg ('pw_read_schema',& 
-                            'failed retrieving input info from xml file, please check it')
-             IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
-             ierr = 0
-         END IF
-      END IF
-      ! 
-      CALL destroy(root)       
-
- 100  CALL errore('pw_read_schema',TRIM(errmsg),ierr)
-      !
-    END SUBROUTINE pw_read_schema
-    !  
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_to_evc( dirname )
