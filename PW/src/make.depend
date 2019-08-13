@@ -1590,8 +1590,8 @@ read_conf_from_file.o : ../../Modules/ions_base.o
 read_conf_from_file.o : ../../Modules/kind.o
 read_conf_from_file.o : ../../Modules/qes_libs_module.o
 read_conf_from_file.o : ../../Modules/qes_types_module.o
+read_conf_from_file.o : ../../Modules/qexsd.o
 read_conf_from_file.o : ../../Modules/qexsd_copy.o
-read_conf_from_file.o : pw_restart_new.o
 read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
 read_file_new.o : ../../Modules/control_flags.o
@@ -1613,6 +1613,7 @@ read_file_new.o : ../../Modules/paw_variables.o
 read_file_new.o : ../../Modules/qes_bcast_module.o
 read_file_new.o : ../../Modules/qes_libs_module.o
 read_file_new.o : ../../Modules/qes_types_module.o
+read_file_new.o : ../../Modules/qexsd.o
 read_file_new.o : ../../Modules/qexsd_copy.o
 read_file_new.o : ../../Modules/read_pseudo.o
 read_file_new.o : ../../Modules/recvec.o
@@ -1842,6 +1843,7 @@ setup.o : ../../Modules/parameters.o
 setup.o : ../../Modules/paw_variables.o
 setup.o : ../../Modules/qes_libs_module.o
 setup.o : ../../Modules/qes_types_module.o
+setup.o : ../../Modules/qexsd.o
 setup.o : ../../Modules/qexsd_copy.o
 setup.o : ../../Modules/recvec.o
 setup.o : ../../Modules/uspp.o
@@ -1851,7 +1853,6 @@ setup.o : extfield.o
 setup.o : exx.o
 setup.o : exx_base.o
 setup.o : ldaU.o
-setup.o : pw_restart_new.o
 setup.o : pwcom.o
 setup.o : start_k.o
 setup.o : symm_base.o
@@ -2289,6 +2290,7 @@ wfcinit.o : ../../Modules/mp_bands.o
 wfcinit.o : ../../Modules/noncol.o
 wfcinit.o : ../../Modules/qes_libs_module.o
 wfcinit.o : ../../Modules/qes_types_module.o
+wfcinit.o : ../../Modules/qexsd.o
 wfcinit.o : ../../Modules/random_numbers.o
 wfcinit.o : ../../Modules/recvec.o
 wfcinit.o : ../../Modules/uspp.o

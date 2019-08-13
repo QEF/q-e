@@ -23,13 +23,14 @@ SUBROUTINE wfcinit()
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, tmp_dir, prefix, postfix
+                                   diropn, tmp_dir, prefix, postfix, xmlpun_schema
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-  USE pw_restart_new,       ONLY : pw_read_schema, read_collected_to_evc 
+  USE pw_restart_new,       ONLY : read_collected_to_evc 
+  USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   !
@@ -54,10 +55,10 @@ SUBROUTINE wfcinit()
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
-     CALL pw_read_schema( ierr, output_obj )
-     IF ( ierr == 0 ) THEN 
+     dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+     ierr = qexsd_readschema( TRIM(dirname) // xmlpun_schema, output_obj )
+     IF ( ierr <= 0 ) THEN 
         twfcollect_file = output_obj%band_structure%wf_collected   
-        dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
         IF ( twfcollect_file ) THEN
            CALL read_collected_to_evc(dirname )
         ELSE IF ( .NOT. exst_file) THEN
