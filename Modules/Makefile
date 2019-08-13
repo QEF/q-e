@@ -123,6 +123,7 @@ qes_read_module.o \
 qes_bcast_module.o \
 qexsd.o   \
 qexsd_copy.o   \
+qexsd_init.o   \
 qexsd_input.o \
 hdf5_qe.o\
 qeh5_module.o\

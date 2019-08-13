@@ -1219,7 +1219,7 @@
     ENDDO
     !
     ALLOCATE ( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-    ALLOCATE ( qb(nkb, nkb, ntyp, nbt) )
+    ALLOCATE ( qb(nhm, nhm, ntyp, nbt) ) 
     ALLOCATE ( qq_so(nhm, nhm, 4, ntyp) )
     !
     CALL ylmr2(lmaxq*lmaxq, nbt, dxk, qg, ylm)
