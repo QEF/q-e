@@ -33,22 +33,12 @@ PROGRAM open_grid
   USE noncollin_module,   ONLY : nspin_mag, npol
   USE fft_interfaces,     ONLY : fwfft
   !
-  USE qexsd_module,       ONLY : qexsd_input_obj
-  USE qes_types_module,   ONLY : input_type
   USE fft_base,           ONLY : dffts
   USE control_flags,      ONLY : gamma_only, io_level
   USE start_k, ONLY : init_start_k
   USE extfield,           ONLY : gate
   ! 
   IMPLICIT NONE
-  !
-  INTERFACE
-     SUBROUTINE   pw_init_qexsd_input(obj,obj_tagname)
-     IMPORT                       :: input_type
-     TYPE(input_type)             :: obj
-     CHARACTER(LEN=*),INTENT(IN)  :: obj_tagname
-     END SUBROUTINE
-  END INTERFACE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !

@@ -21,17 +21,6 @@ MODULE cp_restart_new
   !
   USE qes_types_module 
   USE qes_libs_module  
-  USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema
-  USE qexsd_module, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
-                          qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
-                          qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
-                          qexsd_init_magnetization,qexsd_init_band_structure,          &
-                          qexsd_init_dipole_info, qexsd_init_total_energy,             &
-                          qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
-                          qexsd_init_outputElectricField 
-  USE qexsd_copy, ONLY:  qexsd_copy_geninfo, qexsd_copy_parallel_info, &
-       qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
-       qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix, &
        qexsd_fmt, qexsd_version, create_directory
   USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
@@ -95,9 +84,16 @@ MODULE cp_restart_new
       USE wrappers,                 ONLY : f_copy
       USE uspp,                     ONLY : okvan
       USE input_parameters,         ONLY : vdw_corr, starting_ns_eigenvalue
-      USE qexsd_module,             ONLY: qexsd_init_vdw, qexsd_init_hybrid, qexsd_init_dftU 
+      USE qexsd_init, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,  & 
+                          qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
+                          qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
+                          qexsd_init_magnetization,qexsd_init_band_structure, &
+                          qexsd_init_dipole_info, qexsd_init_total_energy,    &
+                          qexsd_init_forces,qexsd_init_stress,                &
+                          qexsd_init_outputElectricField, qexsd_init_vdw,     &
+                          qexsd_init_hybrid, qexsd_init_dftU 
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
-
+      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf
       !
       IMPLICIT NONE
       !
@@ -600,6 +596,9 @@ MODULE cp_restart_new
       USE kernel_table,             ONLY : vdw_table_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
+      USE qexsd_copy, ONLY:  qexsd_copy_geninfo, qexsd_copy_parallel_info, &
+           qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
+           qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
       !
       IMPLICIT NONE
       !
@@ -1451,6 +1450,7 @@ MODULE cp_restart_new
     USE ions_base,   ONLY : nat
     USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, extractDataAttribute, &
                             extractDataContent, destroy
+    USE qexsd_copy,  ONLY : qexsd_copy_atomic_structure
     USE qes_read_module, ONLY : qes_read
     !
     IMPLICIT NONE
