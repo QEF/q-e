@@ -271,18 +271,20 @@ PROGRAM cp_postproc
         !
         !  use values from the XML file
         !
-        IF( lforces ) force( 1:3, 1:nat ) = force0( 1:3, 1:nat ) 
+        !!! IF( lforces ) force( 1:3, 1:nat ) = force0( 1:3, 1:nat ) 
         !
-        h0 = TRANSPOSE( ht0 )
+        !!! h0 = TRANSPOSE( ht0 )
         !
         ! from scaled to real coordinates
         !
-        tau_in( :, : ) = MATMUL( h0( :, : ), stau0( :, : ) )
+        !!! tau_in( :, : ) = MATMUL( h0( :, : ), stau0( :, : ) )
         !
         ! convert atomic units to Angstroms
         !
-        at     = h0     * bohr
-        tau_in = tau_in * bohr
+        !!! at     = h0  * bohr
+        !!! tau_in = tau_in * bohr
+        !
+        WRITE(*,*) "single frame case not implemented"
         !
      END IF
 
@@ -401,10 +403,10 @@ PROGRAM cp_postproc
   DEALLOCATE(ityp)
   IF( ALLOCATED( force  ) ) DEALLOCATE(force)
   IF( ALLOCATED( rho_in ) ) DEALLOCATE(rho_in)
-  IF( ALLOCATED( rho_out ) ) DEALLOCATE(rho_out)
-  DEALLOCATE( stau0 )
-  DEALLOCATE( svel0 )
-  DEALLOCATE( force0 )
+  IF( ALLOCATED( rho_out) ) DEALLOCATE(rho_out)
+  IF( ALLOCATED( stau0 ) )  DEALLOCATE( stau0 )
+  IF( ALLOCATED( svel0 ) )  DEALLOCATE( svel0 )
+  IF( ALLOCATED( force0) )  DEALLOCATE( force0 )
 
   CALL mp_global_end ()
   STOP
@@ -846,6 +848,4 @@ END SUBROUTINE write_pdb
 !   -  |   67 - 67    |   1X    | Blank                                         
 !  14. |   68 - 68    |   I3    | Footnote number                               
 !---------------------------------------------------------------------------
-
-
 
