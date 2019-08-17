@@ -1,48 +1,49 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+! --------------------------------------------------------------------
+! this routine writes the crystal structure in XSF, GRD and PDB format
+! from CP output files
+! --------------------------------------------------------------------
 ! This file holds XSF (=Xcrysden Structure File) utilities.
 ! Routines written by Tone Kokalj on Mon Jan 27 18:51:17 CET 2003
 ! modified by Gerardo Ballabio and Carlo Cavazzoni
 ! on Thu Jul 22 18:57:26 CEST 2004
+! Adapted to new XML format by Paolo Giannozzi, August 2019
 !
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-
-! --------------------------------------------------------------------
-! this routine writes the crystal structure in XSF, GRD and PDB format
-! from a FPMD output files
-! --------------------------------------------------------------------
-PROGRAM fpmd_postproc
+PROGRAM cp_postproc
 
   USE kinds,      ONLY : DP
   USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
-  USE io_files,   ONLY : prefix, iunpun, xmlpun, tmp_dir
+  USE io_files,   ONLY : prefix, iunpun, xmlpun_schema, tmp_dir, restart_dir
   USE mp_global,  ONLY : mp_startup, mp_global_end
-
-  USE iotk_module
-  USE xml_io_base
+  USE matrix_inversion, ONLY : invmat
+  USE qes_types_module, ONLY : output_type
+  USE qexsd_module,     ONLY : qexsd_readschema
+  USE qexsd_copy,       ONLY : qexsd_copy_atomic_species, &
+       qexsd_copy_atomic_structure, qexsd_copy_basis_set
 
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: maxsp = 20
 
-  INTEGER                    :: natoms, nsp, na(maxsp), atomic_number(maxsp)
-  INTEGER                    :: ounit, cunit, punit, funit, dunit, bunit, ksunit
-  INTEGER                    :: nr1, nr2, nr3, ns1, ns2, ns3
-  INTEGER                    :: np1, np2, np3, np, ispin
-  INTEGER, ALLOCATABLE       :: ityp(:)
-  REAL(DP)              :: at(3, 3), atinv(3, 3), ht0(3, 3), h0(3, 3)
+  TYPE (output_type)    :: output_obj 
+  INTEGER, ALLOCATABLE  :: ityp(:)
+  INTEGER               :: nat, nsp, ibrav
+  INTEGER               :: ounit, cunit, punit, funit, dunit, bunit, ksunit
+  INTEGER               :: nr1s, nr2s, nr3s, nr1, nr2, nr3, ns1, ns2, ns3
+  INTEGER               :: nr1b, nr2b, nr3b, ngm_g, ngms_g, npw_g
+  INTEGER               :: natoms, na(maxsp), atomic_number(maxsp)
+  INTEGER               :: np1, np2, np3, np, ispin
+  REAL(DP)              :: alat, amass(maxsp), ecutwfc, ecutrho
+  REAL(DP)              :: at(3, 3), bg(3,3), atinv(3, 3), ht0(3, 3), h0(3, 3)
   REAL(DP)              :: rhof, rhomax, rhomin, rhoc(6)
   REAL(DP), ALLOCATABLE :: rho_in(:,:,:), rho_out(:,:,:)
-  REAL(DP), ALLOCATABLE :: tau_in(:,:), tau_out(:,:)
+  REAL(DP), ALLOCATABLE :: tau(:,:), tau_in(:,:), tau_out(:,:)
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
   REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
 
@@ -52,9 +53,9 @@ PROGRAM fpmd_postproc
   CHARACTER(len=3)   :: atm( maxsp ), lab
   CHARACTER(len=4)   :: charge_density
   LOGICAL            :: lcharge, lforces, ldynamics, lpdb, lrotation
-  LOGICAL            :: lbinary, found
+  LOGICAL            :: lbinary, found, gamma_only
   INTEGER            :: nframes
-  INTEGER            :: ios, nat, ndr
+  INTEGER            :: ios, ndr
   INTEGER            :: nproc, mpime, world, root
 
   REAL(DP) :: x, y, z, fx, fy, fz
@@ -100,8 +101,6 @@ PROGRAM fpmd_postproc
   print_state = ' '          ! specify the Kohn-Sham state to plot: 'KS_1'
   lbinary = .TRUE.
 
-  
-
   call input_from_file()
 
   ! read namelist
@@ -136,7 +135,6 @@ PROGRAM fpmd_postproc
      STOP
   END IF
 
-
   ! check for wrong input
   IF (ldynamics .AND. nframes < 2) THEN
      WRITE(*,*) 'Error: dynamics requested, but only one frame'
@@ -159,97 +157,33 @@ PROGRAM fpmd_postproc
   !
 
   filepp = restart_dir( tmp_dir, ndr )
+  filepp = TRIM( filepp ) // '/' // TRIM(xmlpun_schema)
+  ierr = qexsd_readschema ( filepp, output_obj )
+  IF( ierr > 0 ) CALL errore(' cppp ', ' Cannot open file '//TRIM(filepp), ierr)
   !
-  filepp = TRIM( filepp ) // '/' // TRIM(xmlpun)
+  !   End of reading from data file - now copy to variables
   !
-  CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., &
-     ROOT = attr, IERR = ierr )
-  IF( ierr /= 0 ) CALL errore( ' cppp ', ' Cannot open file '//TRIM(filepp), 1 )
-
-     CALL iotk_scan_begin( dunit, "IONS", FOUND = found )
-
-     IF( .NOT. found ) THEN
-        CALL errore( ' cppp ', ' IONS not found in data-file.xml ', 1 )
-     END IF
-
-     CALL iotk_scan_dat( dunit, "NUMBER_OF_ATOMS", nat )
-     CALL iotk_scan_dat( dunit, "NUMBER_OF_SPECIES", nsp )
-
-     ALLOCATE( ityp( nat * np ) ) ! atomic species
-
-     DO i = 1, nsp
-        !
-        CALL iotk_scan_begin( dunit, "SPECIE" // TRIM( iotk_index( i ) ), FOUND = found )
-        !
-        IF( .NOT. found ) THEN
-           CALL errore( ' cppp ', "SPECIE" // TRIM( iotk_index( i ) ) // ' not found in data-file.xml ', 1 )
-        END IF
-
-        CALL iotk_scan_dat( dunit, "ATOM_TYPE", atm(i) )
-        !
-        ! CALL iotk_scan_dat( dunit, &
-        !                     TRIM( atm(i) )//"_MASS", amass(i), ATTR = attr )
-        !
-        ! CALL iotk_scan_dat( dunit, &
-        !                     "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
-        !
-        CALL iotk_scan_end( dunit, "SPECIE" // TRIM( iotk_index( i ) ) )
-        !
-     END DO
-
-      !
-      ! CALL iotk_scan_empty( dunit, "UNITS_FOR_ATOMIC_POSITIONS", attr )
-      ! CALL iotk_scan_attr( attr, "UNIT", pos_unit  )
-      !
-      DO i = 1, nat
-         !
-         CALL iotk_scan_empty( dunit, "ATOM" // TRIM( iotk_index( i ) ), attr )
-         CALL iotk_scan_attr( attr, "SPECIES", lab )
-         CALL iotk_scan_attr( attr, "INDEX",   ityp(i) )
-         ! CALL iotk_scan_attr( attr, "tau",     tau(:,i) )
-         ! CALL iotk_scan_attr( attr, "if_pos",  if_pos(:,i) )
-         !
-      END DO
-
-     CALL iotk_scan_end( dunit, "IONS" )
-
-     CALL iotk_scan_begin( dunit, "PLANE_WAVES" )
-        CALL iotk_scan_empty( dunit, "FFT_GRID", attr )
-        CALL iotk_scan_attr( attr, "nr1", nr1 )
-        CALL iotk_scan_attr( attr, "nr2", nr2 )
-        CALL iotk_scan_attr( attr, "nr3", nr3 )
-     CALL iotk_scan_end( dunit, "PLANE_WAVES" )
-
-     ALLOCATE( stau0( 3, nat ) )
-     ALLOCATE( svel0( 3, nat ) )
-     ALLOCATE( force0( 3, nat ) ) ! forces, atomic units
-
-     CALL iotk_scan_begin( dunit, "TIMESTEPS", attr )
-        CALL iotk_scan_begin( dunit, "STEP0" )
-           CALL iotk_scan_begin( dunit, "IONS_POSITIONS" )
-              CALL iotk_scan_dat( dunit, "stau", stau0 )
-              CALL iotk_scan_dat( dunit, "svel", svel0 )
-              CALL iotk_scan_dat( dunit, "force", force0 )
-           CALL iotk_scan_end( dunit, "IONS_POSITIONS" )
-           CALL iotk_scan_begin( dunit, "CELL_PARAMETERS" )
-              CALL iotk_scan_dat( dunit, "ht", ht0 )
-           CALL iotk_scan_end( dunit, "CELL_PARAMETERS" )
-        CALL iotk_scan_end( dunit, "STEP0" )
-     CALL iotk_scan_end( dunit, "TIMESTEPS" )
-     !
-     ispin = 1
-     !
-     !
-  CALL iotk_close_read( dunit )
-
+  CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
+       nsp, atm, amass )
   !
-  !   End of reading from data file
-  !
-
   IF ( nsp > maxsp ) THEN
      WRITE(*,*) 'Error: too many atomic species'
      STOP
   END IF
+  !
+  CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
+       atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
+  !
+  ht0(1,:) = at(:,1)
+  ht0(2,:) = at(:,2)
+  ht0(3,:) = at(:,3)
+  !
+  CALL qexsd_copy_basis_set ( output_obj%basis_set, gamma_only, ecutwfc,&
+       ecutrho, nr1s, nr2s, nr3s, nr1, nr2, nr3, nr1b, nr2b, nr3b, &
+       ngm_g, ngms_g, npw_g, bg(:,1), bg(:,2), bg(:,3) )
+  !
+  !   End of reading from data file
+  !
 
   natoms = nat
   !
@@ -327,9 +261,9 @@ PROGRAM fpmd_postproc
      !
      IF ( ldynamics ) WRITE(*,'("frame",1X,I4)') n
 
-     ! read data from files produced by fpmd
+     ! read data from files produced by cp
      !
-     CALL read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
+     CALL read_cp( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
                      natoms, nr1, nr2, nr3, ispin, at, tau_in, force, &
                      rho_in, prefix, tmp_dir, ndr, charge_density )
 
@@ -337,18 +271,20 @@ PROGRAM fpmd_postproc
         !
         !  use values from the XML file
         !
-        IF( lforces ) force( 1:3, 1:nat ) = force0( 1:3, 1:nat ) 
+        !!! IF( lforces ) force( 1:3, 1:nat ) = force0( 1:3, 1:nat ) 
         !
-        h0 = TRANSPOSE( ht0 )
+        !!! h0 = TRANSPOSE( ht0 )
         !
         ! from scaled to real coordinates
         !
-        tau_in( :, : ) = MATMUL( h0( :, : ), stau0( :, : ) )
+        !!! tau_in( :, : ) = MATMUL( h0( :, : ), stau0( :, : ) )
         !
         ! convert atomic units to Angstroms
         !
-        at     = h0     * bohr
-        tau_in = tau_in * bohr
+        !!! at     = h0  * bohr
+        !!! tau_in = tau_in * bohr
+        !
+        WRITE(*,*) "single frame case not implemented"
         !
      END IF
 
@@ -360,7 +296,7 @@ PROGRAM fpmd_postproc
 
      ! compute scaled coordinates
      !
-     CALL inverse( at, atinv )
+     CALL invmat( 3, at, atinv )
      sigma(:,:) = MATMUL(atinv(:,:), tau_in(:,:))
 
      ! compute cell dimensions and Euler angles
@@ -434,7 +370,9 @@ PROGRAM fpmd_postproc
 
   IF ( print_state /= ' ' ) THEN
      !
-     CALL read_density( TRIM( print_state ) // '.xml', dunit, nr1, nr2, nr3, rho_in, lbinary )
+     ! CALL read_density( TRIM( print_state ) // '.xml', dunit, nr1, nr2, nr3, rho_in, lbinary )
+     WRITE(*, *) 'DENSITY NOT READ'
+     
      CALL scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3 )
      !
      IF (output == 'xsf') THEN
@@ -465,29 +403,27 @@ PROGRAM fpmd_postproc
   DEALLOCATE(ityp)
   IF( ALLOCATED( force  ) ) DEALLOCATE(force)
   IF( ALLOCATED( rho_in ) ) DEALLOCATE(rho_in)
-  IF( ALLOCATED( rho_out ) ) DEALLOCATE(rho_out)
-  DEALLOCATE( stau0 )
-  DEALLOCATE( svel0 )
-  DEALLOCATE( force0 )
+  IF( ALLOCATED( rho_out) ) DEALLOCATE(rho_out)
+  IF( ALLOCATED( stau0 ) )  DEALLOCATE( stau0 )
+  IF( ALLOCATED( svel0 ) )  DEALLOCATE( svel0 )
+  IF( ALLOCATED( force0) )  DEALLOCATE( force0 )
 
   CALL mp_global_end ()
   STOP
-END PROGRAM fpmd_postproc
+END PROGRAM cp_postproc
 
 !
 !
 !
 
 
-SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
+SUBROUTINE read_cp( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
                       natoms, nr1, nr2, nr3, ispin, at, tau, force, &
                       rho, prefix, tmp_dir, ndr, charge_density )
 
   USE kinds,      ONLY: DP
   USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
-  USE io_files,   ONLY: check_file_exist
-  USE xml_io_base,ONLY: restart_dir
-  USE iotk_module
+  USE io_files,   ONLY: check_file_exist, restart_dir
 
   IMPLICIT NONE
 
@@ -545,119 +481,26 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
         filename = TRIM( filename ) // '/' // 'charge-density'
      END IF
      !
+     rho(:,:,:) = 0.0_dp
      !
      IF ( check_file_exist ( TRIM(filename)//'.dat' ) ) THEN
         !
-        CALL read_density( TRIM(filename)//'.dat', dunit, nr1, nr2, nr3, rho, lbinary )
+        WRITE(*, *) 'DENSITY NOT READ (1)'
+!        CALL read_density( TRIM(filename)//'.dat', dunit, nr1, nr2, nr3, rho, lbinary )
         !
      ELSEIF ( check_file_exist ( TRIM(filename)//'.xml' ) ) THEN
         !
-        CALL read_density( TRIM(filename)//'.xml', dunit, nr1, nr2, nr3, rho, lbinary )
+        WRITE(*, *) 'DENSITY NOT READ (2)'
+!        CALL read_density( TRIM(filename)//'.xml', dunit, nr1, nr2, nr3, rho, lbinary )
         !
      ELSE         
-        CALL infomsg ('read_fpmd', 'file '//TRIM(filename)//' not found' )
+        CALL infomsg ('read_cp', 'file '//TRIM(filename)//' not found' )
      ENDIF
      !
   END IF
 
   RETURN
-END SUBROUTINE read_fpmd
-
-
-
-SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho, lbinary )
-
-   USE kinds,      ONLY: DP
-   USE xml_io_base
-   USE iotk_module
-
-   IMPLICIT NONE
-
-   LOGICAL, INTENT(in)   :: lbinary
-   INTEGER, INTENT(in)   :: dunit
-   INTEGER, INTENT(in)   :: nr1, nr2, nr3
-   REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
-   CHARACTER(LEN=*), INTENT(IN) :: filename
-
-   INTEGER  :: ix, iy, iz, ierr
-   REAL(DP) :: rhomin, rhomax, rhof
-   INTEGER       :: n1, n2, n3
-   REAL(DP), ALLOCATABLE :: rho_plane(:)
-
-     !
-     WRITE(*,'("Reading density from: ", A80)' ) TRIM( filename ) 
-     !
-     CALL iotk_open_read( dunit, file = TRIM( filename ) , BINARY = lbinary, ROOT = attr, IERR = ierr )
-     !
-
-     CALL iotk_scan_begin( dunit, "CHARGE-DENSITY" )
-     CALL iotk_scan_empty( dunit, "INFO", attr )
-     CALL iotk_scan_attr( attr, "nr1",   n1 )
-     CALL iotk_scan_attr( attr, "nr2",   n2 )
-     CALL iotk_scan_attr( attr, "nr3",   n3 )
-         !
-     ALLOCATE( rho_plane( n1 * n2 ) )
-
-     ! read charge density from file
-     ! note: must transpose
-     DO iz = 1, n3
-       CALL iotk_scan_dat( dunit, "z" // iotk_index( iz ), rho_plane )
-       IF( iz <= nr3 ) THEN
-          DO iy = 1, MIN( n2, nr2 )
-             DO ix = 1, MIN( n1, nr1 )
-                rho(ix, iy, iz) = rho_plane( ix + ( iy - 1 ) * n1 )
-             END DO
-          END DO
-       END IF
-     END DO
-
-     CALL iotk_scan_end( dunit, "CHARGE-DENSITY" )
-     CALL iotk_close_read( dunit )
-
-     rhomin = MINVAL(rho(:,:,:))
-     rhomax = MAXVAL(rho(:,:,:))
-
-     ! print some info
-     WRITE(*,'(2x,"Density grid:")')
-     WRITE(*,'(3(2x,i6))') nr1, nr2, nr3
-     WRITE(*,'(2x,"spin = ",A4)') filename
-     WRITE(*,'(2x,"Minimum and maximum values:")')
-     WRITE(*,'(3(2x,1pe12.4))') rhomin, rhomax
-
-   RETURN
-END SUBROUTINE read_density
-
-!
-!
-!
-! compute inverse of 3*3 matrix
-!
-SUBROUTINE inverse( at, atinv )
-  IMPLICIT NONE
-
-  INTEGER, PARAMETER :: DP = KIND(0.0d0)
-
-  REAL(DP), INTENT(in)  :: at(3, 3)
-  REAL(DP), INTENT(out) :: atinv(3, 3)
-
-  REAL(DP) :: det
-
-  atinv(1, 1) = at(2, 2) * at(3, 3) - at(2, 3) * at(3, 2)
-  atinv(2, 1) = at(2, 3) * at(3, 1) - at(2, 1) * at(3, 3)
-  atinv(3, 1) = at(2, 1) * at(3, 2) - at(2, 2) * at(3, 1)
-  atinv(1, 2) = at(1, 3) * at(3, 2) - at(1, 2) * at(3, 3)
-  atinv(2, 2) = at(1, 1) * at(3, 3) - at(1, 3) * at(3, 1)
-  atinv(3, 2) = at(1, 2) * at(3, 1) - at(1, 1) * at(3, 2)
-  atinv(1, 3) = at(1, 2) * at(2, 3) - at(1, 3) * at(2, 2)
-  atinv(2, 3) = at(1, 3) * at(2, 1) - at(1, 1) * at(2, 3)
-  atinv(3, 3) = at(1, 1) * at(2, 2) - at(1, 2) * at(2, 1)
-
-  det = at(1, 1) * atinv(1, 1) + at(1, 2) * atinv(2, 1) + &
-        at(1, 3) * atinv(3, 1)
-  atinv(:,:) = atinv(:,:) / det;
-
-  RETURN
-END SUBROUTINE inverse
+END SUBROUTINE read_cp
 
 ! generate cell dimensions and Euler angles from cell vectors
 ! euler(1:6) = a, b, c, alpha, beta, gamma
@@ -1005,6 +848,4 @@ END SUBROUTINE write_pdb
 !   -  |   67 - 67    |   1X    | Blank                                         
 !  14. |   68 - 68    |   I3    | Footnote number                               
 !---------------------------------------------------------------------------
-
-
 
