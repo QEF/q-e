@@ -50,7 +50,7 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
-LIBMIN= ../minpack/minpacklib.a
+LIBMIN= 
 
 TLDEPS= phlibs
 
