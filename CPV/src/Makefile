@@ -120,7 +120,7 @@ UTIL=../../UtilXlib/libutil.a
 
 TLDEPS= bindir libs mods
 
-all : tldeps libcp.a manycp.x cp.x wfdd.x #cppp.x
+all : tldeps libcp.a manycp.x cp.x wfdd.x cppp.x
 
 manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
@@ -136,15 +136,10 @@ libcp.a : $(FOBJS) $(LOBJS)
 	 $(AR) $(ARFLAGS) $@ $?
 	 $(RANLIB) $@
 
-cp_version.o : cpver.h
-
-cpver.h :
-	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
-		> cpver.h
-
-#cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
-#	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
-#	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
+cppp.x : cppp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o cppp.x cppp.o  \
+		$(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
+	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
 	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
