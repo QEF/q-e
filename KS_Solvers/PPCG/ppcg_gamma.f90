@@ -1009,9 +1009,9 @@ CONTAINS
 !           !
        END IF
 #else
-       CALL qe_pdpotrf( XTXl, nx, k, idesc )
+       CALL laxlib_pdpotrf( XTXl, nx, k, idesc )
        !
-       CALL qe_pdtrtri ( XTXl, nx, k, idesc )
+       CALL laxlib_pdtrtri ( XTXl, nx, k, idesc )
 #endif
     !
     !

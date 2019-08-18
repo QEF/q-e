@@ -965,9 +965,9 @@ CONTAINS
 !           !
        END IF
 #else
-       CALL qe_pzpotrf( XTXl, nx, k, idesc )
+       CALL laxlib_pzpotrf( XTXl, nx, k, idesc )
        !
-       CALL qe_pztrtri ( XTXl, nx, k, idesc )
+       CALL laxlib_pztrtri ( XTXl, nx, k, idesc )
 #endif
     !
     !
