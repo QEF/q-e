@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-   MODULE descriptors
+   MODULE laxlib_descriptor
       !
       IMPLICIT NONE
       SAVE
@@ -194,4 +194,4 @@
       RETURN
    END SUBROUTINE 
 
-   END MODULE descriptors
+   END MODULE laxlib_descriptor

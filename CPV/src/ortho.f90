@@ -137,7 +137,7 @@
       !
       IF( use_parallel_diag ) THEN
          !
-         CALL diagonalize_parallel( nss, rhos, rhod, s, idesc )
+         CALL laxlib_diagonalize( nss, rhos, rhod, s, idesc )
          !
       ELSE
          !
@@ -148,7 +148,7 @@
             !
             CALL collect_matrix( wrk, rhos )
             !
-            CALL diagonalize_serial( nss, wrk, rhod )
+            CALL laxlib_diagonalize( nss, wrk, rhod )
             !
             CALL distribute_matrix( wrk, s )
             !

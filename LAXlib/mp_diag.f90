@@ -7,10 +7,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-MODULE mp_diag
+MODULE laxlib_processors_grid
   !----------------------------------------------------------------------------
-  !
-  USE la_param
   !
   IMPLICIT NONE 
   SAVE
@@ -83,6 +81,7 @@ CONTAINS
   !
 !------------------------------------------------------------------------------!
       FUNCTION laxlib_rank( comm )
+        USE laxlib_parallel_include
         IMPLICIT NONE
         INTEGER :: laxlib_rank
         INTEGER, INTENT(IN) :: comm
@@ -99,6 +98,7 @@ CONTAINS
 
 !------------------------------------------------------------------------------!
       FUNCTION laxlib_size( comm )
+        USE laxlib_parallel_include
         IMPLICIT NONE
         INTEGER :: laxlib_size
         INTEGER, INTENT(IN) :: comm
@@ -114,6 +114,7 @@ CONTAINS
       END FUNCTION laxlib_size
 
       SUBROUTINE laxlib_comm_split( old_comm, color, key, new_comm )
+         USE laxlib_parallel_include
          IMPLICIT NONE
          INTEGER, INTENT (IN) :: old_comm
          INTEGER, INTENT (IN) :: color, key
@@ -129,6 +130,7 @@ CONTAINS
       END SUBROUTINE  laxlib_comm_split
 
       SUBROUTINE laxlib_comm_free( comm )
+         USE laxlib_parallel_include
          IMPLICIT NONE
          INTEGER, INTENT (INOUT) :: comm
          INTEGER :: ierr
@@ -143,4 +145,4 @@ CONTAINS
       END SUBROUTINE laxlib_comm_free
 
   !
-END MODULE mp_diag
+END MODULE laxlib_processors_grid

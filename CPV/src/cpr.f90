@@ -566,7 +566,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          !  correction to displacement of ions
          !
-         IF ( iverbosity > 1 ) CALL print_lambda( lambda, idesc, nbsp, 9, nudx, 1.D0, ionode, stdout )
+         IF ( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, 9, nudx, 1.D0, ionode, stdout )
          !
          IF ( tortho ) THEN
            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
@@ -974,7 +974,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )
   !
-  IF( iverbosity > 1 ) CALL print_lambda( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
+  IF( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 

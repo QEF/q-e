@@ -69,7 +69,7 @@
 
                !  matrix is distributed
 
-               CALL qe_pdsyevd( .false., n, idesc(:,iss), lambda(:,:,iss), nlam, wr )
+               CALL laxlib_pdsyevd( .false., n, idesc(:,iss), lambda(:,:,iss), nlam, wr )
 
             ELSE
 

@@ -9,7 +9,6 @@
 
 MODULE dspev_module
 
-    USE la_param
     IMPLICIT NONE
     SAVE
 
@@ -82,8 +81,11 @@ CONTAINS
 !              this vector is equal on all processors. 
 !
 !
+      USE laxlib_parallel_include
 
       IMPLICIT NONE
+
+      include 'laxlib_kinds.fh'
 
       LOGICAL, INTENT(IN) :: tv
       INTEGER, intent(in) :: N, NRL, LDA, LDV
@@ -406,8 +408,11 @@ CONTAINS
 !
 !
 !
+      USE laxlib_parallel_include
 
       IMPLICIT NONE
+
+      include 'laxlib_kinds.fh'
 
       LOGICAL, INTENT(IN)  :: tv
       INTEGER, INTENT(IN)  :: n, nrl, ldz, mpime, comm
@@ -532,6 +537,7 @@ CONTAINS
 !
 
       IMPLICIT NONE
+      include 'laxlib_kinds.fh'
       LOGICAL, INTENT(IN) :: tv
       INTEGER, INTENT (IN) :: n,ldv,nrl
       REAL(DP), INTENT(INOUT) :: d(n),v(ldv,n)
@@ -571,6 +577,7 @@ CONTAINS
    !-------------------------------------------------------------------------
    FUNCTION pythag(a,b)
       IMPLICIT NONE
+      include 'laxlib_kinds.fh'
       REAL(DP) :: a, b, pythag
       REAL(DP) :: absa, absb
       absa=abs(a)
@@ -597,6 +604,8 @@ CONTAINS
      use elpa1
 #endif
      IMPLICIT NONE
+     !
+     include 'laxlib_kinds.fh'
      !
      LOGICAL, INTENT(IN)  :: tv  
        ! if tv is true compute eigenvalues and eigenvectors (not used)
@@ -703,6 +712,7 @@ END MODULE dspev_module
    SUBROUTINE pdspev_drv_x ( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
      use dspev_module
      IMPLICIT NONE
+     include 'laxlib_kinds.fh'
      CHARACTER, INTENT(IN) :: JOBZ
      INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
      INTEGER, INTENT(IN) :: comm
@@ -728,6 +738,7 @@ END MODULE dspev_module
    SUBROUTINE dspev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
      use dspev_module
      IMPLICIT NONE
+     include 'laxlib_kinds.fh'
      CHARACTER ::       JOBZ, UPLO
      INTEGER   ::       IOPT, INFO, LDZ, N
      REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )

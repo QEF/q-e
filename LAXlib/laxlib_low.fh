@@ -42,14 +42,14 @@ END INTERFACE
 INTERFACE dspev_drv
    SUBROUTINE dspev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
      IMPLICIT NONE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     include 'laxlib_kinds.fh'
      CHARACTER ::       JOBZ, UPLO
      INTEGER   ::       LDZ, N
      REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
    END SUBROUTINE
    SUBROUTINE pdspev_drv_x ( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
      IMPLICIT NONE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     include 'laxlib_kinds.fh'
      CHARACTER, INTENT(IN) :: JOBZ
      INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
      INTEGER, INTENT(IN) :: comm
@@ -60,7 +60,7 @@ END INTERFACE
 INTERFACE zhpev_drv
    SUBROUTINE zhpev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
      IMPLICIT NONE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     include 'laxlib_kinds.fh'
      CHARACTER ::       JOBZ, UPLO
      INTEGER   ::       LDZ, N
      COMPLEX(DP) ::  AP( * ), Z( LDZ, * )
@@ -68,7 +68,7 @@ INTERFACE zhpev_drv
    END SUBROUTINE 
    SUBROUTINE pzhpev_drv_x( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
      IMPLICIT NONE
-     INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+     include 'laxlib_kinds.fh'
      CHARACTER :: JOBZ
      INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
      INTEGER, INTENT(IN) :: comm
@@ -80,7 +80,7 @@ END INTERFACE
    INTERFACE distribute_lambda
       SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, idesc )
          IMPLICIT NONE
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
          REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
          INTEGER, INTENT(IN)  :: idesc(:)
@@ -90,7 +90,7 @@ END INTERFACE
    INTERFACE collect_lambda
       SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, idesc )
          IMPLICIT NONE
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
          REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
          INTEGER, INTENT(IN)  :: idesc(:)
@@ -100,7 +100,7 @@ END INTERFACE
    INTERFACE setval_lambda
       SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, idesc )
          IMPLICIT NONE
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
          INTEGER,  INTENT(IN)  :: i, j
          REAL(DP), INTENT(IN)  :: val
@@ -111,7 +111,7 @@ END INTERFACE
    INTERFACE distribute_zmat
       SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, idesc )
          IMPLICIT NONE
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
          REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
          INTEGER, INTENT(IN)  :: idesc(:)
@@ -121,7 +121,7 @@ END INTERFACE
    INTERFACE collect_zmat
       SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, idesc )
          IMPLICIT NONE
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
          REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
          INTEGER, INTENT(IN)  :: idesc(:)
@@ -156,7 +156,7 @@ END INTERFACE
       SUBROUTINE blk2cyc_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
          IMPLICIT NONE
          include 'laxlib_param.fh'
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          INTEGER, INTENT(IN) :: n
          INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
          REAL(DP) :: a( lda, nca ), b( ldb, ncb )
@@ -165,7 +165,7 @@ END INTERFACE
       SUBROUTINE blk2cyc_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
          IMPLICIT NONE
          include 'laxlib_param.fh'
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          INTEGER, INTENT(IN) :: n
          INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
          COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
@@ -177,7 +177,7 @@ END INTERFACE
       SUBROUTINE cyc2blk_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
          IMPLICIT NONE
          include 'laxlib_param.fh'
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          INTEGER, INTENT(IN) :: n
          INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
          REAL(DP) :: a( lda, nca ), b( ldb, ncb )
@@ -186,7 +186,7 @@ END INTERFACE
       SUBROUTINE cyc2blk_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
          IMPLICIT NONE
          include 'laxlib_param.fh'
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          INTEGER, INTENT(IN) :: n
          INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
          COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
@@ -199,7 +199,7 @@ INTERFACE laxlib_dsqmred
 SUBROUTINE laxlib_dsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
    IMPLICIT NONE
    include 'laxlib_param.fh'
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
    REAL(DP)            :: a(lda,lda)  !  matrix to be redistributed into b
@@ -215,7 +215,7 @@ INTERFACE laxlib_zsqmred
 SUBROUTINE laxlib_zsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
    IMPLICIT NONE
    include 'laxlib_param.fh'
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
    COMPLEX(DP)         :: a(lda,lda)  !  matrix to be redistributed into b
@@ -231,7 +231,7 @@ INTERFACE laxlib_dsqmsym
 SUBROUTINE laxlib_dsqmsym_x( n, a, lda, idesc )
    IMPLICIT NONE
    include 'laxlib_param.fh'
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
    REAL(DP)            :: a(lda,*)
@@ -242,7 +242,7 @@ END INTERFACE
 INTERFACE laxlib_zsqmher
 SUBROUTINE laxlib_zsqmher_x( n, a, lda, idesc )
    IMPLICIT NONE
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
@@ -255,7 +255,7 @@ INTERFACE sqr_setmat
 SUBROUTINE sqr_dsetmat_x( what, n, alpha, a, lda, idesc )
    IMPLICIT NONE
    include 'laxlib_param.fh'
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    CHARACTER(LEN=1), INTENT(IN) :: what
    INTEGER, INTENT(IN) :: n
    REAL(DP), INTENT(IN) :: alpha
@@ -266,7 +266,7 @@ END SUBROUTINE
 SUBROUTINE sqr_zsetmat_x( what, n, alpha, a, lda, idesc )
    IMPLICIT NONE
    include 'laxlib_param.fh'
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    CHARACTER(LEN=1), INTENT(IN) :: what
    INTEGER, INTENT(IN) :: n
    COMPLEX(DP), INTENT(IN) :: alpha
@@ -280,7 +280,7 @@ END INTERFACE
 INTERFACE sqr_mm_cannon
 SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    IMPLICIT NONE
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
    REAL(DP), INTENT(IN) :: alpha, beta
@@ -290,7 +290,7 @@ SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, 
 END SUBROUTINE
 SUBROUTINE sqr_zmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    IMPLICIT NONE
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
    COMPLEX(DP), INTENT(IN) :: alpha, beta
@@ -303,7 +303,7 @@ END INTERFACE
 INTERFACE sqr_tr_cannon
 SUBROUTINE sqr_tr_cannon_x( n, a, lda, b, ldb, idesc )
    IMPLICIT NONE
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP)            :: a(lda,*), b(ldb,*)
@@ -314,7 +314,7 @@ END INTERFACE
 INTERFACE redist_row2col
 SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    IMPLICIT NONE
-   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+   include 'laxlib_kinds.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)

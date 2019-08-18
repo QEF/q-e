@@ -19,9 +19,9 @@ SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
   !
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
-  USE la_param
-  !
+  USE laxlib_parallel_include
   IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
@@ -204,16 +204,17 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
   !
   ! ... Parallel version, with full data distribution
   !
-  USE la_param
-  USE descriptors,      ONLY : la_descriptor, laxlib_intarray_to_desc
-  USE mp_diag,          ONLY : ortho_parent_comm
+  USE laxlib_parallel_include
+  USE laxlib_descriptor,      ONLY : la_descriptor, laxlib_intarray_to_desc
+  USE laxlib_processors_grid, ONLY : ortho_parent_comm
 #if defined __SCALAPACK
-  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE laxlib_processors_grid, ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE zhpev_module,     ONLY : pzheevd_drv
 #endif
   !
   IMPLICIT NONE
   !
+  INCLUDE 'laxlib_kinds.fh'
   include 'laxlib_param.fh'
   include 'laxlib_mid.fh'
   include 'laxlib_low.fh'
@@ -281,7 +282,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
 
      IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
-     CALL qe_pzpotrf( ss, nx, n, idesc )
+     CALL laxlib_pzpotrf( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -304,7 +305,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
      !
      IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
-     CALL qe_pztrtri( ss, nx, n, idesc )
+     CALL laxlib_pztrtri( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -349,7 +350,7 @@ SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
      !
 #else
      !
-     CALL qe_pzheevd( .true., n, idesc, hh, SIZE( hh, 1 ), e )
+     CALL laxlib_pzheevd( .true., n, idesc, hh, SIZE( hh, 1 ), e )
      !
 #endif
      !

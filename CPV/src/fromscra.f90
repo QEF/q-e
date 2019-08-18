@@ -261,7 +261,7 @@ SUBROUTINE from_scratch( )
       END IF
 
       if ( iverbosity > 1 ) &
-         CALL print_lambda( lambda, idesc, nbsp, 9, nudx, ccc, ionode, stdout )
+         CALL laxlib_print_matrix( lambda, idesc, nbsp, 9, nudx, ccc, ionode, stdout )
 
       !
       if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )

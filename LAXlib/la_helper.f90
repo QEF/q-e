@@ -8,14 +8,14 @@
 !
 
 SUBROUTINE laxlib_end()
-  use mp_diag
+  use laxlib_processors_grid
   CALL laxlib_end_drv ( )
 END SUBROUTINE laxlib_end
 
 
 SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_comm, ortho_row_comm, ortho_col_comm, &
   ortho_comm_id, ortho_parent_comm, me_blacs, np_blacs, ortho_cntx, world_cntx, do_distr_diag_inside_bgrp  )
-  use mp_diag, ONLY : &
+  use laxlib_processors_grid, ONLY : &
     nproc_ortho_ => nproc_ortho, &
     leg_ortho_   => leg_ortho, &
     np_ortho_    => np_ortho, &
@@ -61,12 +61,54 @@ SUBROUTINE laxlib_getval_ ( nproc_ortho, leg_ortho, np_ortho, me_ortho, ortho_co
   IF( PRESENT(do_distr_diag_inside_bgrp) ) do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp_
 END SUBROUTINE
 !
+SUBROUTINE laxlib_get_status_x ( lax_status )
+  use laxlib_processors_grid, ONLY : &
+    nproc_ortho_ => nproc_ortho, &
+    leg_ortho_   => leg_ortho, &
+    np_ortho_    => np_ortho, &
+    me_ortho_    => me_ortho, &
+    ortho_comm_  => ortho_comm, & 
+    ortho_row_comm_ => ortho_row_comm, &
+    ortho_col_comm_ => ortho_col_comm, & 
+    ortho_comm_id_  => ortho_comm_id, &
+    ortho_parent_comm_ => ortho_parent_comm, &
+    me_blacs_    => me_blacs,  &
+    np_blacs_    => np_blacs, &
+    ortho_cntx_  => ortho_cntx, &
+    world_cntx_  => world_cntx, &
+    do_distr_diag_inside_bgrp_ => do_distr_diag_inside_bgrp
+  IMPLICIT NONE
+  include 'laxlib_param.fh'
+  INTEGER, INTENT(OUT) :: LAX_STATUS(:)
+  lax_status(LAX_STATUS_NPROC)= nproc_ortho_
+  lax_status(LAX_STATUS_LEG)= leg_ortho_
+  lax_status(LAX_STATUS_NP1)= np_ortho_( 1 )
+  lax_status(LAX_STATUS_NP2)= np_ortho_( 2 )
+  lax_status(LAX_STATUS_ME1)= me_ortho_( 1 )
+  lax_status(LAX_STATUS_ME2)= me_ortho_( 2 )
+  lax_status(LAX_STATUS_COMM)= ortho_comm_
+  lax_status(LAX_STATUS_ROWCOMM)= ortho_row_comm_
+  lax_status(LAX_STATUS_COLCOMM)= ortho_col_comm_
+  lax_status(LAX_STATUS_COMMID)= ortho_comm_id_
+  lax_status(LAX_STATUS_PARENTCOMM)= ortho_parent_comm_
+  lax_status(LAX_STATUS_MEBLACS)= me_blacs_
+  lax_status(LAX_STATUS_NPBLACS)= np_blacs_
+  lax_status(LAX_STATUS_ORTHOCNTX)= ortho_cntx_
+  lax_status(LAX_STATUS_WORLDCNTX)= world_cntx_
+  IF( do_distr_diag_inside_bgrp_ ) THEN
+     lax_status(LAX_STATUS_DISTDIAG)= 1
+  ELSE
+     lax_status(LAX_STATUS_DISTDIAG)= 2
+  END IF
+END SUBROUTINE
 
 !----------------------------------------------------------------------------
 
 SUBROUTINE laxlib_start_drv( ndiag_, my_world_comm, parent_comm, do_distr_diag_inside_bgrp_  )
     !
-    use mp_diag
+    use laxlib_processors_grid
+    USE laxlib_parallel_include
+    !
     !
     ! ... Ortho/diag/linear algebra group initialization
     !
@@ -144,8 +186,6 @@ SUBROUTINE laxlib_start_drv( ndiag_, my_world_comm, parent_comm, do_distr_diag_i
 CONTAINS
 
   SUBROUTINE init_ortho_group ( nproc_try_in, my_world_comm, comm_all, nparent_comm, my_parent_id )
-    !
-    USE mp_diag
     !
     IMPLICIT NONE
 
@@ -318,9 +358,9 @@ END SUBROUTINE laxlib_start_drv
 !------------------------------------------------------------------------------!
 
 SUBROUTINE print_lambda_x( lambda, idesc, n, nshow, nudx, ccc, ionode, iunit )
-    USE la_param
     IMPLICIT NONE
     include 'laxlib_low.fh'
+    include 'laxlib_kinds.fh'
     real(DP), intent(in) :: lambda(:,:,:), ccc
     INTEGER, INTENT(IN) :: idesc(:,:)
     integer, intent(in) :: n, nshow, nudx
@@ -350,8 +390,7 @@ END SUBROUTINE print_lambda_x
 
 
 SUBROUTINE laxlib_init_desc_x( idesc, n, nx, np, me, comm, cntx, includeme )
-    USE la_param
-    USE descriptors,       ONLY: la_descriptor, descla_init, laxlib_desc_to_intarray
+    USE laxlib_descriptor,       ONLY: la_descriptor, descla_init, laxlib_desc_to_intarray
     IMPLICIT NONE
     include 'laxlib_param.fh'
     INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
@@ -408,10 +447,10 @@ END SUBROUTINE laxlib_init_desc_x
 
    SUBROUTINE diagonalize_parallel_x( n, rhos, rhod, s, idesc )
 
-      USE la_param
       USE dspev_module
 
       IMPLICIT NONE
+      include 'laxlib_kinds.fh'
       include 'laxlib_param.fh'
       include 'laxlib_mid.fh'
       include 'laxlib_low.fh'
@@ -441,7 +480,7 @@ END SUBROUTINE laxlib_init_desc_x
 #if defined(__SCALAPACK)
          CALL pdsyevd_drv( .true. , n, idesc(LAX_DESC_NRCX), s, SIZE(s,1), rhod, idesc(LAX_DESC_CNTX), idesc(LAX_DESC_COMM) )
 #else
-         CALL qe_pdsyevd( .true., n, idesc, s, SIZE(s,1), rhod )
+         CALL laxlib_pdsyevd( .true., n, idesc, s, SIZE(s,1), rhod )
 #endif
          !
       END IF
@@ -452,8 +491,8 @@ END SUBROUTINE laxlib_init_desc_x
 
 
    SUBROUTINE diagonalize_serial_x( n, rhos, rhod )
-      USE la_param
       IMPLICIT NONE
+      include 'laxlib_kinds.fh'
       include 'laxlib_low.fh'
       INTEGER,  INTENT(IN)  :: n
       REAL(DP)              :: rhos(:,:)

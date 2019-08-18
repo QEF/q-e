@@ -7,7 +7,6 @@
 !
 MODULE zhpev_module
 
-   USE la_param
    IMPLICIT NONE
    SAVE
 
@@ -37,8 +36,11 @@ CONTAINS
       !     Courant Institute, Argonne National Lab, and Rice University
       !
 
+      USE laxlib_parallel_include
 
       IMPLICIT NONE
+
+      include 'laxlib_kinds.fh'
 
 !     .. __SCALAR Arguments ..
       INTEGER            LDA, N, NRL, NPROC, ME, comm
@@ -488,8 +490,11 @@ CONTAINS
 !     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
 !     Courant Institute, Argonne National Lab, and Rice University
 
+      USE laxlib_parallel_include
+
       IMPLICIT NONE
 
+      include 'laxlib_kinds.fh'
 !
 !     .. __SCALAR Arguments ..
 
@@ -754,8 +759,11 @@ CONTAINS
 !     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
 !     Courant Institute, Argonne National Lab, and Rice University
 !
+      USE laxlib_parallel_include
 
       IMPLICIT NONE
+
+      include 'laxlib_kinds.fh'
 
 !     .. __SCALAR Arguments ..
       CHARACTER          COMPZ
@@ -1412,7 +1420,10 @@ CONTAINS
 #if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
      USE elpa1
 #endif
+     USE laxlib_parallel_include
      IMPLICIT NONE
+
+     include 'laxlib_kinds.fh'
 
      LOGICAL, INTENT(IN)  :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
@@ -1524,6 +1535,7 @@ END MODULE zhpev_module
 
         use zhpev_module
         IMPLICIT NONE
+        include 'laxlib_kinds.fh'
 
         CHARACTER ::       JOBZ, UPLO
         INTEGER   ::       IOPT, INFO, LDZ, N
@@ -1549,6 +1561,7 @@ END MODULE zhpev_module
      use zhpev_module
 
      IMPLICIT NONE
+     include 'laxlib_kinds.fh'
      CHARACTER :: JOBZ
      INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
      INTEGER, INTENT(IN) :: comm

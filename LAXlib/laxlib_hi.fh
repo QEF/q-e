@@ -9,127 +9,50 @@
 !----------------------------------------------------------------------------
 INTERFACE diaghg
 SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
-  !----------------------------------------------------------------------------
-  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
-  ! ... On output both matrix are unchanged
-  !
-  ! ... LAPACK version - uses both DSYGV and DSYGVX
-  !
   IMPLICIT NONE
-  !
-  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-  !
+  include 'laxlib_kinds.fh'
   INTEGER, INTENT(IN) :: n, m, ldh
-    ! dimension of the matrix to be diagonalized
-    ! number of eigenstates to be calculated
-    ! leading dimension of h, as declared in the calling pgm unit
   REAL(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-    ! matrix to be diagonalized
-    ! overlap matrix
   REAL(DP), INTENT(OUT) :: e(n)
-    ! eigenvalues
   REAL(DP), INTENT(OUT) :: v(ldh,m)
-    ! eigenvectors (column-wise)
   INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
-  !
 END SUBROUTINE
-!----------------------------------------------------------------------------
 SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
-  !----------------------------------------------------------------------------
-  !
-  ! ... calculates eigenvalues and eigenvectors of the generalized problem
-  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
-  ! ... On output both matrix are unchanged
-  !
-  ! ... LAPACK version - uses both ZHEGV and ZHEGVX
-  !
   IMPLICIT NONE
-  !
-  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-  !
+  include 'laxlib_kinds.fh'
   INTEGER, INTENT(IN) :: n, m, ldh
-    ! dimension of the matrix to be diagonalized
-    ! number of eigenstates to be calculate
-    ! leading dimension of h, as declared in the calling pgm unit
   COMPLEX(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-    ! actually intent(in) but compilers don't know and complain
-    ! matrix to be diagonalized
-    ! overlap matrix
   REAL(DP), INTENT(OUT) :: e(n)
-    ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
-    ! eigenvectors (column-wise)
   INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
 END SUBROUTINE
 END INTERFACE
-!
-!
-!
+!----------------------------------------------------------------------------
 INTERFACE pdiaghg
-!----------------------------------------------------------------------------
 SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
-  !----------------------------------------------------------------------------
-  !
-  ! ... calculates eigenvalues and eigenvectors of the generalized problem
-  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
-  ! ... On output both matrix are unchanged
-  !
-  ! ... Parallel version, with full data distribution
-  !
   IMPLICIT NONE
-  !
-  include 'laxlib_param.fh'
-  !
-  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-  !
+  include 'laxlib_kinds.fh'
   INTEGER, INTENT(IN) :: n, ldh
-    ! dimension of the matrix to be diagonalized
-    ! leading dimension of h, as declared in the calling pgm unit
   COMPLEX(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
-    ! actually intent(in) but compilers don't know and complain
-    ! matrix to be diagonalized
-    ! overlap matrix
   REAL(DP), INTENT(OUT) :: e(n)
-    ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
-    ! eigenvectors (column-wise)
-  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+  INTEGER, INTENT(IN) :: idesc(:)
 END SUBROUTINE 
-!----------------------------------------------------------------------------
 SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
-  !----------------------------------------------------------------------------
-  !
-  ! ... calculates eigenvalues and eigenvectors of the generalized problem
-  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
-  ! ... On output both matrix are unchanged
-  !
-  ! ... Parallel version with full data distribution
-  !
   IMPLICIT NONE
-  !
-  include 'laxlib_param.fh'
-  !
-  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-  !
+  include 'laxlib_kinds.fh'
   INTEGER, INTENT(IN) :: n, ldh
-    ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
-    ! leading dimension of h, as declared in the calling pgm unit
   REAL(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
-    ! matrix to be diagonalized
-    ! overlap matrix
-  !
   REAL(DP), INTENT(OUT) :: e(n)
-    ! eigenvalues
   REAL(DP), INTENT(OUT) :: v(ldh,ldh)
-    ! eigenvectors (column-wise)
-  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+  INTEGER, INTENT(IN) :: idesc(:)
 END SUBROUTINE 
 END INTERFACE
-
-   INTERFACE print_lambda
+!----------------------------------------------------------------------------
+   INTERFACE laxlib_print_matrix
       SUBROUTINE print_lambda_x( lambda, idesc, n, nshow, nudx, ccc, ionode, iunit )
          IMPLICIT NONE
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          REAL(DP), INTENT(IN) :: lambda(:,:,:), ccc
          INTEGER, INTENT(IN) :: idesc(:,:)
          INTEGER, INTENT(IN) :: n, nshow, nudx
@@ -137,24 +60,20 @@ END INTERFACE
          INTEGER, INTENT(IN) :: iunit
       END SUBROUTINE
    END INTERFACE
-
-   INTERFACE diagonalize_parallel
+!----------------------------------------------------------------------------
+   INTERFACE laxlib_diagonalize
       SUBROUTINE diagonalize_parallel_x( n, rhos, rhod, s, idesc )
          IMPLICIT NONE
-         include 'laxlib_param.fh'
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
          REAL(DP)              :: rhod(:)   !  output eigenvalues
          REAL(DP)              :: s(:,:)    !  output eigenvectors
          INTEGER,  INTENT(IN) :: n         !  size of the global matrix
-         INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+         INTEGER, INTENT(IN) :: idesc(:)
       END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE diagonalize_serial
       SUBROUTINE diagonalize_serial_x( n, rhos, rhod )
          IMPLICIT NONE
-         INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+         include 'laxlib_kinds.fh'
          INTEGER,  INTENT(IN)  :: n
          REAL(DP)              :: rhos(:,:)
          REAL(DP)              :: rhod(:)

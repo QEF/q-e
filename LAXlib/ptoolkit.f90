@@ -24,10 +24,11 @@ SUBROUTINE laxlib_dsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    ! If you want to read, get prepared for an headache!
    ! Written struggling by Carlo Cavazzoni.
    !
-   USE la_param
-   USE descriptors
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
@@ -412,10 +413,11 @@ SUBROUTINE laxlib_zsqmred_x_x( na, a, lda, desca, nb, b, ldb, descb )
    ! If you want to read, get prepared for an headache!
    ! Written struggling by Carlo Cavazzoni.
    !
-  USE la_param
-   USE descriptors
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
@@ -780,10 +782,10 @@ SUBROUTINE laxlib_dsqmdst_x( n, ar, ldar, a, lda, desc )
   !  This sub. take a replicated square matrix "ar" and distribute it
   !  across processors as described by descriptor "desc"
   !
-  USE la_param
-  USE descriptors
+  USE laxlib_descriptor
   !
   implicit none
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
   INTEGER, INTENT(IN) :: ldar
@@ -836,10 +838,10 @@ SUBROUTINE laxlib_zsqmdst_x( n, ar, ldar, a, lda, desc )
   !  This sub. take a replicated square matrix "ar" and distribute it
   !  across processors as described by descriptor "desc"
   !
-  USE la_param
-  USE descriptors
+  USE laxlib_descriptor
   !
   implicit none
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
   INTEGER, INTENT(IN) :: ldar
@@ -894,10 +896,11 @@ SUBROUTINE laxlib_dsqmcll_x( n, a, lda, ar, ldar, desc, comm )
   !  the block assigned to processors into a replicated matrix "ar",
   !  matrix is distributed as described by descriptor desc
   !
-  USE la_param
-  USE descriptors
+  USE laxlib_descriptor
+  USE laxlib_parallel_include
   !
   implicit none
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
   INTEGER, INTENT(IN) :: ldar
@@ -986,10 +989,11 @@ SUBROUTINE laxlib_zsqmcll_x( n, a, lda, ar, ldar, desc, comm )
   !  the block assigned to processors into a replicated matrix "ar",
   !  matrix is distributed as described by descriptor desc
   !
-  USE la_param
-  USE descriptors
+  USE laxlib_descriptor
+  USE laxlib_parallel_include
   !
   implicit none
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n
   INTEGER, INTENT(IN) :: ldar
@@ -1077,10 +1081,10 @@ SUBROUTINE laxlib_dsqmwpb_x( n, a, lda, desc )
    !
    ! Double precision SQuare Matrix WiPe Border subroutine
    !
-   USE la_param
-   USE descriptors
+   USE laxlib_descriptor
    !
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
@@ -1109,10 +1113,11 @@ SUBROUTINE laxlib_dsqmsym_x( n, a, lda, idesc )
    !
    ! Double precision SQuare Matrix SYMmetrization
    !
-   USE la_param
-   USE descriptors
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
@@ -1218,10 +1223,11 @@ SUBROUTINE laxlib_zsqmher_x( n, a, lda, idesc )
    !
    ! double complex (Z) SQuare Matrix HERmitianize
    !
-   USE la_param
-   USE descriptors
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
@@ -1368,12 +1374,12 @@ END SUBROUTINE laxlib_zsqmher_x
 ! ---------------------------------------------------------------------------------
 
 SUBROUTINE laxlib_dsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
-   USE la_param
-   USE descriptors
+   USE laxlib_descriptor
    USE laxlib_ptoolkit
    !
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: na
@@ -1395,13 +1401,13 @@ END SUBROUTINE
 
 SUBROUTINE laxlib_zsqmred_x( na, a, lda, idesca, nb, b, ldb, idescb )
    !
-   USE la_param
-   USE descriptors
+   USE laxlib_descriptor
    USE laxlib_ptoolkit
    !
    IMPLICIT NONE
    !
    include 'laxlib_param.fh'
+   INCLUDE 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
@@ -1429,8 +1435,9 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
   !  Parallel matrix multiplication with replicated matrix
   !  written by Carlo Cavazzoni
   !
-  USE la_param
+  USE laxlib_parallel_include
   implicit none
+  INCLUDE 'laxlib_kinds.fh'
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
   INTEGER, INTENT(IN) :: m, n, k
@@ -1594,8 +1601,9 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
   !  Parallel matrix multiplication with replicated matrix
   !  written by Carlo Cavazzoni
   !
-  USE la_param
+  USE laxlib_parallel_include
   implicit none
+  INCLUDE 'laxlib_kinds.fh'
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
   INTEGER, INTENT(IN) :: m, n, k
@@ -1768,10 +1776,11 @@ SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, 
    !
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
-   USE descriptors
-   USE la_param
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
@@ -2070,10 +2079,11 @@ SUBROUTINE sqr_zmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, 
    !
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
-   USE descriptors
-   USE la_param
+   USE laxlib_descriptor
    !
+   USE laxlib_parallel_include
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
@@ -2376,11 +2386,12 @@ SUBROUTINE sqr_tr_cannon_x( n, a, lda, b, ldb, idesc )
    !
    !  Parallel square matrix transposition with Cannon's algorithm
    !
-   USE la_param
    !
+   USE laxlib_parallel_include
    IMPLICIT NONE
    !
    include 'laxlib_param.fh'
+   INCLUDE 'laxlib_kinds.fh'
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
@@ -2510,10 +2521,11 @@ SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    !  redistribute a, array whose second dimension is distributed over processor row,
    !  to obtain b, with the second dim. distributed over processor clolumn 
    !
-   USE la_param
    !
+   USE laxlib_parallel_include
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
@@ -2595,11 +2607,12 @@ SUBROUTINE cyc2blk_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !  A (input) is cyclically distributed by rows across processors
    !  B (output) is distributed by block across 2D processors grid
    !
-   USE descriptors 
-   USE la_param
+   USE laxlib_descriptor 
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
@@ -2759,11 +2772,12 @@ SUBROUTINE cyc2blk_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !  A (input) is cyclically distributed by rows across processors
    !  B (output) is distributed by block across 2D processors grid
    !
-   USE descriptors
-   USE la_param
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
@@ -2918,11 +2932,12 @@ SUBROUTINE blk2cyc_redist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !  A (output) is cyclically distributed by rows across processors
    !  B (input) is distributed by block across 2D processors grid
    !
-   USE descriptors
-   USE la_param
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
@@ -3047,11 +3062,12 @@ SUBROUTINE blk2cyc_zredist_x( n, a, lda, nca, b, ldb, ncb, idesc )
    !  A (output) is cyclically distributed by rows across processors
    !  B (input) is distributed by block across 2D processors grid
    !
-   USE descriptors
-   USE la_param
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    INTEGER, INTENT(IN) :: n
@@ -3178,14 +3194,15 @@ END SUBROUTINE blk2cyc_zredist_x
 !
 !
 
-SUBROUTINE qe_pzpotrf_x( sll, ldx, n, idesc )
+SUBROUTINE laxlib_pzpotrf_x( sll, ldx, n, idesc )
    !
-   USE descriptors
-   USE la_param
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    implicit none
    !
    include 'laxlib_param.fh'
+   include 'laxlib_kinds.fh'
    !
    integer :: n, ldx
    integer, INTENT(IN) :: idesc(LAX_DESC_SIZE)
@@ -3408,18 +3425,19 @@ SUBROUTINE qe_pzpotrf_x( sll, ldx, n, idesc )
 #endif
 
    return
-END SUBROUTINE qe_pzpotrf_x
+END SUBROUTINE laxlib_pzpotrf_x
 
 !  now the Double Precision subroutine
 
-SUBROUTINE qe_pdpotrf_x( sll, ldx, n, idesc )
+SUBROUTINE laxlib_pdpotrf_x( sll, ldx, n, idesc )
    !
-   USE descriptors
-   USE la_param
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
    !
    implicit none
    !
    include 'laxlib_param.fh'
+   include 'laxlib_kinds.fh'
    !
    integer  :: n, ldx
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
@@ -3637,14 +3655,14 @@ SUBROUTINE qe_pdpotrf_x( sll, ldx, n, idesc )
 #endif
 
    return
-END SUBROUTINE qe_pdpotrf_x
+END SUBROUTINE laxlib_pdpotrf_x
 
 !
 !
 !
 !
 
-SUBROUTINE qe_pztrtri_x ( sll, ldx, n, idesc )
+SUBROUTINE laxlib_pztrtri_x ( sll, ldx, n, idesc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -3673,10 +3691,11 @@ SUBROUTINE qe_pztrtri_x ( sll, ldx, n, idesc )
     !  written by Ivan Girotto
     !
 
-    USE descriptors
-    USE la_param
+    USE laxlib_descriptor
+    USE laxlib_parallel_include
 
     IMPLICIT NONE
+    INCLUDE 'laxlib_kinds.fh'
     INCLUDE 'laxlib_param.fh'
 
     INTEGER, INTENT( IN ) :: n, ldx
@@ -4003,11 +4022,11 @@ SUBROUTINE qe_pztrtri_x ( sll, ldx, n, idesc )
 
      END FUNCTION shift
 
-END SUBROUTINE qe_pztrtri_x
+END SUBROUTINE laxlib_pztrtri_x
 
 !  now the Double Precision subroutine
 
-SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, idesc )
+SUBROUTINE laxlib_pdtrtri_x ( sll, ldx, n, idesc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -4036,10 +4055,11 @@ SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, idesc )
     !  written by Ivan Girotto
     !
 
-    USE descriptors
-    USE la_param
+    USE laxlib_descriptor
+    USE laxlib_parallel_include
 
     IMPLICIT NONE
+    INCLUDE 'laxlib_kinds.fh'
     include 'laxlib_param.fh'
 
     INTEGER, INTENT( IN ) :: n, ldx
@@ -4371,13 +4391,13 @@ SUBROUTINE qe_pdtrtri_x ( sll, ldx, n, idesc )
 
      END FUNCTION shift
 
-END SUBROUTINE qe_pdtrtri_x
+END SUBROUTINE laxlib_pdtrtri_x
 
 
 
-SUBROUTINE qe_pdsyevd_x( tv, n, idesc, hh, ldh, e )
-   USE la_param
+SUBROUTINE laxlib_pdsyevd_x( tv, n, idesc, hh, ldh, e )
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    include 'laxlib_low.fh'
    LOGICAL, INTENT(IN) :: tv
@@ -4422,9 +4442,9 @@ END SUBROUTINE
 
 
 
-SUBROUTINE qe_pzheevd_x( tv, n, idesc, hh, ldh, e )
-   USE la_param
+SUBROUTINE laxlib_pzheevd_x( tv, n, idesc, hh, ldh, e )
    IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    include 'laxlib_low.fh'
    LOGICAL, INTENT(IN) :: tv
@@ -4470,10 +4490,9 @@ SUBROUTINE sqr_dsetmat_x( what, n, alpha, a, lda, idesc )
    !
    !  Set the values of a square distributed matrix 
    !
-   USE la_param
-   !
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: what
@@ -4553,10 +4572,9 @@ SUBROUTINE sqr_zsetmat_x( what, n, alpha, a, lda, idesc )
    !
    !  Set the values of a square distributed matrix 
    !
-   USE la_param
-   !
    IMPLICIT NONE
    !
+   INCLUDE 'laxlib_kinds.fh'
    include 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: what
@@ -4641,8 +4659,8 @@ END SUBROUTINE sqr_zsetmat_x
 !------------------------------------------------------------------------
     SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, idesc )
 !------------------------------------------------------------------------
-       USE la_param
        IMPLICIT NONE
+       INCLUDE 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
@@ -4663,9 +4681,10 @@ END SUBROUTINE sqr_zsetmat_x
 !------------------------------------------------------------------------
     SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, idesc )
 !------------------------------------------------------------------------
-       USE la_param
-       USE mp_diag,   ONLY: ortho_parent_comm
+       USE laxlib_processors_grid,   ONLY: ortho_parent_comm
+       USE laxlib_parallel_include
        IMPLICIT NONE
+       INCLUDE 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
        REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
@@ -4681,17 +4700,20 @@ END SUBROUTINE sqr_zsetmat_x
              END DO
           END DO
        END IF
+#if defined __MPI
        CALL MPI_ALLREDUCE( MPI_IN_PLACE, lambda_repl, SIZE(lambda_repl), MPI_DOUBLE_PRECISION, &
                            MPI_SUM, ortho_parent_comm, ierr )
+#endif
        RETURN
     END SUBROUTINE collect_lambda_x
 
 !------------------------------------------------------------------------
     SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, idesc )
 !------------------------------------------------------------------------
-       USE la_param
-       USE mp_diag,   ONLY: ortho_parent_comm
+       USE laxlib_processors_grid,   ONLY: ortho_parent_comm
+       USE laxlib_parallel_include
        IMPLICIT NONE
+       INCLUDE 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
        REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
@@ -4710,16 +4732,18 @@ END SUBROUTINE sqr_zsetmat_x
              END DO
           END DO
        END IF
+#if defined __MPI
        CALL MPI_ALLREDUCE( MPI_IN_PLACE, zmat_repl, SIZE(zmat_repl), MPI_DOUBLE_PRECISION, &
                            MPI_SUM, ortho_parent_comm, ierr )
+#endif
        RETURN
     END SUBROUTINE collect_zmat_x
 
 !------------------------------------------------------------------------
     SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, idesc )
 !------------------------------------------------------------------------
-       USE la_param
        IMPLICIT NONE
+       INCLUDE 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
        INTEGER,  INTENT(IN)  :: i, j
@@ -4741,8 +4765,8 @@ END SUBROUTINE sqr_zsetmat_x
 !------------------------------------------------------------------------
     SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, idesc )
 !------------------------------------------------------------------------
-       USE la_param
        IMPLICIT NONE
+       INCLUDE 'laxlib_kinds.fh'
        include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
        REAL(DP), INTENT(OUT) :: zmat_dist(:,:)

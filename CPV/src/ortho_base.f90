@@ -88,14 +88,14 @@ CONTAINS
       ! some MPIs (OpenMPI) the first time they call a collective routine take too much
       ! time to perform initializations, then perform a dummy call to get meaningful time
       !
-      CALL diagonalize_parallel( n, a, d, s, idesc )
+      CALL laxlib_diagonalize( n, a, d, s, idesc )
       !
       CALL set_a()
       !
       CALL mp_barrier( intra_bgrp_comm )
       t1 = f_wall()
       !
-      CALL diagonalize_parallel( n, a, d, s, idesc )
+      CALL laxlib_diagonalize( n, a, d, s, idesc )
       !
       tpar = f_wall() - t1
       CALL mp_max( tpar, intra_bgrp_comm )
@@ -116,7 +116,7 @@ CONTAINS
 
          t1 = f_wall()
 
-         CALL diagonalize_serial( n, a, d )
+         CALL laxlib_diagonalize( n, a, d )
 
          tser = f_wall() - t1
 
