@@ -19,7 +19,7 @@ PROGRAM cp_postproc
 
   USE kinds,      ONLY : DP
   USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
-  USE io_files,   ONLY : prefix, iunpun, xmlpun_schema, tmp_dir, restart_dir
+  USE io_files,   ONLY : prefix, tmp_dir, xmlfile
   USE mp_global,  ONLY : mp_startup, mp_global_end
   USE matrix_inversion, ONLY : invmat
   USE qes_types_module, ONLY : output_type
@@ -134,8 +134,7 @@ PROGRAM cp_postproc
   !  Now read the XML data file
   !
 
-  filepp = restart_dir( tmp_dir, ndr )
-  filepp = TRIM( filepp ) // '/' // TRIM(xmlpun_schema)
+  filepp = xmlfile( ndr )
   ierr = qexsd_readschema ( filepp, output_obj )
   IF( ierr > 0 ) CALL errore(' cppp ', ' Cannot open file '//TRIM(filepp), ierr)
   !
@@ -225,8 +224,7 @@ PROGRAM cp_postproc
      ! read data from files produced by cp
      !
      CALL read_cp( lforces, cunit, punit, funit, dunit, &
-                     natoms, at, tau_in, force, &
-                     prefix, tmp_dir, ndr )
+                     natoms, at, tau_in, force ) 
 
      WRITE(*,'(2x,"Cell parameters (Angstroms):")')
      WRITE(*,'(3(2x,f10.6))') ((at(i, j), i=1,3), j=1,3)
@@ -325,7 +323,7 @@ END PROGRAM cp_postproc
 
 
 SUBROUTINE read_cp( lforces, cunit, punit, funit, dunit, &
-                      natoms, at, tau, force, prefix, tmp_dir, ndr )
+                      natoms, at, tau, force )
 
   USE kinds,      ONLY: DP
   USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
@@ -335,10 +333,8 @@ SUBROUTINE read_cp( lforces, cunit, punit, funit, dunit, &
 
   LOGICAL, INTENT(in)   :: lforces
   INTEGER, INTENT(in)   :: cunit, punit, funit, dunit
-  INTEGER, INTENT(in)   :: natoms, ndr
+  INTEGER, INTENT(in)   :: natoms
   REAL(DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
-  CHARACTER(LEN=*), INTENT(IN) :: prefix
-  CHARACTER(LEN=*), INTENT(IN) :: tmp_dir
 
   INTEGER  :: i, j, ix, iy, iz
   REAL(DP) :: x, y, z, fx, fy, fz

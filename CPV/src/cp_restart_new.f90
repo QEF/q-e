@@ -21,7 +21,7 @@ MODULE cp_restart_new
   !
   USE qes_types_module 
   USE qes_libs_module  
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix, &
+  USE io_files,  ONLY : iunpun, xmlfile, restart_dir, &
        qexsd_fmt, qexsd_version, create_directory
   USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
   !
@@ -52,8 +52,7 @@ MODULE cp_restart_new
       USE constants,                ONLY : e2
       USE parameters,               ONLY : ntypx
       USE dener,                    ONLY : detot
-      USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
-                                           nwordwfc, diropn
+      USE io_files,                 ONLY : psfile, pseudo_dir
       USE mp_images,                ONLY : intra_image_comm, me_image, &
                                            nproc_image
       USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
@@ -251,7 +250,7 @@ MODULE cp_restart_new
       !
       ! XML descriptor
       ! 
-      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw, postfix
+      dirname=restart_dir(ndw)
       WRITE( stdout, '(/,3X,"writing restart file (with schema): ",A)' ) &
              TRIM(dirname)
       !
@@ -434,8 +433,8 @@ MODULE cp_restart_new
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
-                 iunpun, 'CPV', title)
+         filename = xmlfile(ndw)
+         CALL qexsd_openschema( filename, iunpun, 'CPV', title)
          CALL qes_write (qexsd_xf, output_obj)
          CALL qes_reset (output_obj)
          !
@@ -572,7 +571,6 @@ MODULE cp_restart_new
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, lxdm, iverbosity, lwf
-      USE io_files,                 ONLY : iunwfc, nwordwfc, diropn
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
@@ -694,8 +692,8 @@ MODULE cp_restart_new
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       !
-      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
-      filename = TRIM( dirname ) // TRIM( xmlpun_schema )
+      dirname = restart_dir(ndr)
+      filename= xmlfile(ndr)
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) &
          CALL errore ('cp_readfile', 'xml data file not found', 1)
@@ -818,8 +816,8 @@ MODULE cp_restart_new
       DO iss = 1, nspin
          ib = iupdwn(iss)
          nb = nupdwn(iss)
-         CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, c02, ' ' )
-         CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, cm2, 'm', ierr )
+         CALL cp_read_wfc( ndr, 1, 1, iss, nspin, c02, ' ' )
+         CALL cp_read_wfc( ndr, 1, 1, iss, nspin, cm2, 'm', ierr )
          IF ( ierr /= 0) THEN
             CALL infomsg('cp_readfile','wfc at t-dt not found')
             cm2(:,ib:ib+nb-1) = c02(:,ib:ib+nb-1)
@@ -1127,7 +1125,7 @@ MODULE cp_restart_new
   END SUBROUTINE cp_writecenters
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_read_wfc( ndr, tmp_dir, ik, nk, iss, nspin, c2, tag, ierr )
+  SUBROUTINE cp_read_wfc( ndr, ik, nk, iss, nspin, c2, tag, ierr )
     !------------------------------------------------------------------------
     !
     ! Wrapper, and ugly hack, for old cp_read_wfc called in restart.f90
@@ -1141,7 +1139,6 @@ MODULE cp_restart_new
     IMPLICIT NONE
     !
     INTEGER,               INTENT(IN)  :: ndr
-    CHARACTER(LEN=*),      INTENT(IN)  :: tmp_dir
     INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
     CHARACTER,             INTENT(IN)  :: tag
     COMPLEX(DP),           INTENT(OUT) :: c2(:,:)
@@ -1152,13 +1149,13 @@ MODULE cp_restart_new
     CHARACTER(LEN=320) :: filename
     REAL(DP)           :: scalef, xk(3), b1(3), b2(3), b3(3)
     LOGICAL            :: gamma_only
+    CHARACTER(LEN=6), EXTERNAL   :: int_to_char
     !
+    filename = restart_dir(ndr)
     IF ( tag == 'm' ) THEN
-       WRITE(filename,'(A,A,"_",I2,A,"wfcm",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
+       filename = TRIM(filename) //'wfcm'// TRIM(int_to_char(iss))
     ELSE
-       WRITE(filename,'(A,A,"_",I2,A,"wfc",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
+       filename = TRIM(filename) //'wfc'// TRIM(int_to_char(iss))
     END IF
     ib = iupdwn(iss)
     nb = nupdwn(iss)
@@ -1443,7 +1440,7 @@ MODULE cp_restart_new
   END SUBROUTINE cp_readcenters
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_read_cell( ndr, tmp_dir, ascii, ht, &
+  SUBROUTINE cp_read_cell( ndr, ascii, ht, &
                            htm, htvel, gvel, xnhh0, xnhhm, vnhh )
     !------------------------------------------------------------------------
     !
@@ -1457,7 +1454,6 @@ MODULE cp_restart_new
     IMPLICIT NONE
     !
     INTEGER,          INTENT(IN)    :: ndr
-    CHARACTER(LEN=*), INTENT(IN)    :: tmp_dir
     LOGICAL,          INTENT(IN)    :: ascii
     REAL(DP),         INTENT(INOUT) :: ht(3,3)
     REAL(DP),         INTENT(INOUT) :: htm(3,3)
@@ -1467,7 +1463,7 @@ MODULE cp_restart_new
     REAL(DP),         INTENT(INOUT) :: xnhhm(3,3)
     REAL(DP),         INTENT(INOUT) :: vnhh(3,3)
     !
-    CHARACTER(LEN=256) :: dirname, filename
+    CHARACTER(LEN=320) :: filename
     INTEGER            :: strlen
     INTEGER            :: i, ierr, nt_
     LOGICAL            :: found
@@ -1487,8 +1483,7 @@ MODULE cp_restart_new
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
     !
     !
-    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
-    filename = TRIM( dirname ) // TRIM( xmlpun_schema )
+    filename = xmlfile (ndr)
     INQUIRE ( file=filename, exist=found )
     IF (.NOT. found ) &
          CALL errore ('cp_read_cell', 'xml data file not found', 1)
@@ -1694,22 +1689,19 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw,postfix
-    !
-    IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
-         status='unknown', form='unformatted', iostat=ierr)
-    CALL mp_bcast (ierr, ionode_id, intra_image_comm )
-    IF ( ierr /= 0 ) RETURN
+    dirname = restart_dir(ndw) 
     !
     ALLOCATE( mrepl( nudx, nudx ) )
     !
     DO iss = 1, nspin
        !
-       filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
-       !
        CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
        !
+       filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
+       !
        IF ( ionode ) THEN
+          OPEN( unit=iunpun, file =TRIM(filename), &
+              status='unknown', form='unformatted', iostat=ierr)
           WRITE (iunpun, iostat=ierr) mrepl
           CLOSE( unit=iunpun, status='keep')
        END IF
@@ -1746,20 +1738,16 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr,postfix
-    !
-    IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
-         status='old', form='unformatted', iostat=ierr)
-    CALL mp_bcast (ierr, ionode_id, intra_image_comm )
-    IF ( ierr /= 0 ) RETURN
+    dirname = restart_dir(ndr) 
     !
     ALLOCATE( mrepl( nudx, nudx ) )
     !
     DO iss = 1, nspin
        !
        filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
-       !
        IF ( ionode ) THEN
+          OPEN( unit=iunpun, file =TRIM(filename), &
+            status='old', form='unformatted', iostat=ierr)
           READ (iunpun, iostat=ierr) mrepl
           CLOSE( unit=iunpun, status='keep')
        END IF
