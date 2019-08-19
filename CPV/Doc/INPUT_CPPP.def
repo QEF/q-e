@@ -45,10 +45,9 @@ namelist follow:
 	    default { 'xsf' } 
 	    info {
 		a string describing the output format to be performed,
-		allowed values: 'xsf', 'grd', 'xyz'
+		allowed values: 'xsf', 'xyz'
 		
 		    xsf     xcrysden format
-		    grd     GRD gaussian 3D grid format
 		    xyz     XMOL format
 	    }
 	}
@@ -64,12 +63,7 @@ namelist follow:
 	var lcharge  -type        LOGICAL { 
 	    default { .false. } 
 	    info {
-		This logical flag control the processing of charge density.
-
-		   .TRUE.  generate output file containing charge density.
-                           The file format is controlled by the "output" parameter
-
-		   .FALSE. do not generate charge density file
+		OBSOLETE - no longer implemented. Use "pp.x" instead.
 	    }
 	}
 
@@ -81,12 +75,12 @@ namelist follow:
 		   .TRUE.  extract forces from trajectory files and write
                            them to xcrysden file 
 
-		   .FALSE. do not proces forces
+		   .FALSE. do not process forces
 	    }
 	}
 	 
 	var ldynamics  -type      LOGICAL { 
-	    default { .false. } 
+	    default { .true. } 
 	    info {
 		This logical flag control the processing of atoms trajectory.
 
@@ -122,20 +116,6 @@ namelist follow:
 	    }
 	}
 
-	vargroup -type INTEGER {
-	    var ns1
-	    var ns2
-	    var ns3  
-	    default { 0 } 
-	    info {
-		Dimensions of the charge density 3D grid. 
-		
-		If ns1, ns2, ns3 are 0 or not specified, the dimensions
-		of the grid in the CP run are assumed; otherwise chargedensity
-		is re-sampled on the GRID specified with ns1,ns2,ns3 
-	    }
-	}
-	
 	vargroup -type INTEGER { 
 	    var np1 
 	    var np2 
@@ -144,12 +124,12 @@ namelist follow:
 	    info {
 		Number of replicas of atomic positions along cell parameters. 
 		
-		If ns1, ns2, ns3 are 1 or not specified, cppp.x do not 
-		replicate atomi positions in space.
+		If np1, np2, np3 are 1 or not specified, cppp.x does not 
+		replicate atomic positions in space.
 		
-		If ns1 ns2 ns3 are > 1 cppp.x replicate the positions along
-		a ns1 times, along b ns2 times and along c ns3 times.
-		the atomic positions used in the simunation.
+		If np1, np2, np3 are > 1 cppp.x replicates the atomic 
+                positions used in the simulation np1 times along "a",
+                np2 times along "b", np3 times along "c".
 	    }
 	}
 	
@@ -157,6 +137,7 @@ namelist follow:
 	    default { 1 } 
 	    info {
 		number of MD step to be read to build the trajectory
+                CURRENTLY MUST BE > 1
 	    }
 	}
 	
@@ -179,30 +160,5 @@ namelist follow:
 	    }
 	}
 	
-	var charge_density  -type CHARACTER { 
-	    default { 'full' } 
-	    info {
-		specify the component of the charge density to plot,
-		allowed values: 
-		
-		'full'   print the full electronic charge
-		'spin'   print the spin polarization (for LSD calculations)
-	    }
-	}
-	
-	var state  -type          CHARACTER { 
-	    default { ' ' } 
-	    info {
-		specify the Kohn-Sham state to plot, example: 'KS_1'
-	    }
-	}
-	
-	var lbinary  -type        LOGICAL { 
-	    default { .TRUE. } 
-	    info {
-		specify the file format of the wave function files
-		to be read and plotted
-	    }
-	}	
     }
 }

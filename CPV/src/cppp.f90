@@ -35,28 +35,20 @@ PROGRAM cp_postproc
   INTEGER, ALLOCATABLE  :: ityp(:)
   INTEGER               :: nat, nsp, ibrav
   INTEGER               :: ounit, cunit, punit, funit, dunit, bunit, ksunit
-  INTEGER               :: nr1s, nr2s, nr3s, nr1, nr2, nr3, ns1, ns2, ns3
-  INTEGER               :: nr1b, nr2b, nr3b, ngm_g, ngms_g, npw_g
   INTEGER               :: natoms, na(maxsp), atomic_number(maxsp)
-  INTEGER               :: np1, np2, np3, np, ispin
-  REAL(DP)              :: alat, amass(maxsp), ecutwfc, ecutrho
-  REAL(DP)              :: at(3, 3), bg(3,3), atinv(3, 3), ht0(3, 3), h0(3, 3)
-  REAL(DP)              :: rhof, rhomax, rhomin, rhoc(6)
-  REAL(DP), ALLOCATABLE :: rho_in(:,:,:), rho_out(:,:,:)
+  INTEGER               :: np1, np2, np3, np
+  REAL(DP)              :: alat, amass(maxsp)
+  REAL(DP)              :: at(3, 3), atinv(3, 3)
   REAL(DP), ALLOCATABLE :: tau(:,:), tau_in(:,:), tau_out(:,:)
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
   REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
 
   CHARACTER(len=256) :: filepp, fileout, output, outdir
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
-  CHARACTER(len=256) :: print_state
   CHARACTER(len=3)   :: atm( maxsp ), lab
-  CHARACTER(len=4)   :: charge_density
-  LOGICAL            :: lcharge, lforces, ldynamics, lpdb, lrotation
-  LOGICAL            :: lbinary, found, gamma_only
+  LOGICAL            :: lforces, ldynamics, lpdb, lrotation
   INTEGER            :: nframes
   INTEGER            :: ios, ndr
-  INTEGER            :: nproc, mpime, world, root
 
   REAL(DP) :: x, y, z, fx, fy, fz
   INTEGER  :: i, j, k, n, ix, iy, iz, ierr
@@ -64,10 +56,8 @@ PROGRAM cp_postproc
   REAL(DP) :: euler(6)
 
   NAMELIST /inputpp/ prefix, fileout, output, outdir, &
-                     lcharge, lforces, ldynamics, lpdb, lrotation, &
-                     ns1, ns2, ns3, np1, np2, np3, print_state, &
-                     atomic_number, nframes, ndr, charge_density, &
-                     lbinary
+                     lforces, ldynamics, lpdb, lrotation, &
+                     atomic_number, nframes, ndr
 
   ! default values
 
@@ -82,29 +72,26 @@ PROGRAM cp_postproc
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix    = 'cp'
   fileout   = 'out'
-  output    = 'xsf'  ! 'grd'
-  lcharge   = .false.
+  output    = 'xsf'
   lforces   = .false.
-  ldynamics = .false.
+  ldynamics = .true.
   lpdb      = .false.
   lrotation = .false.
-  ns1   = 0
-  ns2   = 0
-  ns3   = 0
   np1   = 1
   np2   = 1
   np3   = 1                  ! 
   nframes = 1                ! number of MD step to be read to buind the trajectory
   ndr   = 51                 ! restart file number
   atomic_number = 1          ! atomic number of the species in the restart file
-  charge_density = 'full'    ! specify the component to plot: 'full', 'spin'
-  print_state = ' '          ! specify the Kohn-Sham state to plot: 'KS_1'
-  lbinary = .TRUE.
 
   call input_from_file()
 
   ! read namelist
   READ( 5, inputpp, iostat=ios)
+  IF (ios /= 0) THEN
+     WRITE(*,*) 'Error reading namelist &inputpp'
+     STOP
+  END IF
 
   ! set file names
   !
@@ -123,8 +110,6 @@ PROGRAM cp_postproc
      ELSE
         fileout = TRIM(fileout) // '.xsf'
      END IF
-  ELSE IF (output == 'grd') THEN
-     fileout = TRIM(fileout) // '.grd'
   ELSE IF (output == 'xyz') THEN
      fileout = TRIM(fileout) // '.xyz'
   END IF
@@ -141,17 +126,10 @@ PROGRAM cp_postproc
      STOP
   END IF
   IF (.NOT. ldynamics) nframes = 1
-
-  IF (ldynamics .AND. lcharge) THEN
-     WRITE(*,*) 'Error: dynamics with charge density not supported'
+  IF ( nframes == 1 ) THEN
+     WRITE(*,*) 'Error: single frame not implemented'
      STOP
   END IF
-
-  IF (ldynamics .AND. ( print_state /= ' ' ) ) THEN
-     WRITE(*,*) 'Error: dynamics with print_state not supported'
-     STOP
-  END IF
-
   !
   !  Now read the XML data file
   !
@@ -174,14 +152,6 @@ PROGRAM cp_postproc
   CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
        atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
   !
-  ht0(1,:) = at(:,1)
-  ht0(2,:) = at(:,2)
-  ht0(3,:) = at(:,3)
-  !
-  CALL qexsd_copy_basis_set ( output_obj%basis_set, gamma_only, ecutwfc,&
-       ecutrho, nr1s, nr2s, nr3s, nr1, nr2, nr3, nr1b, nr2b, nr3b, &
-       ngm_g, ngms_g, npw_g, bg(:,1), bg(:,2), bg(:,3) )
-  !
   !   End of reading from data file
   !
 
@@ -191,8 +161,16 @@ PROGRAM cp_postproc
   !
   na = 0
   DO i = 1, nat
-     na( ityp( i ) ) = na( ityp( i ) ) + 1                 ! total number of atoms
+     na( ityp( i ) ) = na( ityp( i ) ) + 1 
   END DO
+
+  ! allocate arrays
+  ALLOCATE(tau_in(3, nat))                  ! atomic positions, angstroms
+  ALLOCATE(tau_out(3, nat * np))            ! replicated positions
+  ALLOCATE(sigma(3, nat ) )                 ! scaled coordinates
+  DEALLOCATE (ityp)
+  ALLOCATE (ityp(nat*np))
+  IF (lforces) ALLOCATE( force( 3, nat * np ) )
 
   ! assign species (from input) to each atom
   !
@@ -204,24 +182,7 @@ PROGRAM cp_postproc
      END DO
   END DO
 
-
-  ! allocate arrays
-  ALLOCATE(tau_in(3, nat))                  ! atomic positions, angstroms
-  ALLOCATE(tau_out(3, nat * np))            ! replicated positions
-  ALLOCATE(sigma(3, nat ) )                 ! scaled coordinates
-  !
-  IF (lforces) ALLOCATE( force( 3, nat * np ) )
-
-  ! charge density
-  IF ( lcharge .OR. print_state /= ' ' ) THEN
-     IF (ns1 == 0) ns1 = nr1
-     IF (ns2 == 0) ns2 = nr2
-     IF (ns3 == 0) ns3 = nr3
-     ALLOCATE( rho_in ( nr1, nr2, nr3 ) )     ! original charge density
-     ALLOCATE( rho_out( ns1, ns2, ns3 ) )     ! rescaled charge density
-  END IF
-
-  ! open output file for trajectories or charge density 
+  ! open output file for trajectories 
   !
   ounit = 10
   OPEN(ounit, file=fileout, status='unknown')
@@ -263,30 +224,9 @@ PROGRAM cp_postproc
 
      ! read data from files produced by cp
      !
-     CALL read_cp( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
-                     natoms, nr1, nr2, nr3, ispin, at, tau_in, force, &
-                     rho_in, prefix, tmp_dir, ndr, charge_density )
-
-     IF( nframes == 1 ) THEN
-        !
-        !  use values from the XML file
-        !
-        !!! IF( lforces ) force( 1:3, 1:nat ) = force0( 1:3, 1:nat ) 
-        !
-        !!! h0 = TRANSPOSE( ht0 )
-        !
-        ! from scaled to real coordinates
-        !
-        !!! tau_in( :, : ) = MATMUL( h0( :, : ), stau0( :, : ) )
-        !
-        ! convert atomic units to Angstroms
-        !
-        !!! at     = h0  * bohr
-        !!! tau_in = tau_in * bohr
-        !
-        WRITE(*,*) "single frame case not implemented"
-        !
-     END IF
+     CALL read_cp( lforces, cunit, punit, funit, dunit, &
+                     natoms, at, tau_in, force, &
+                     prefix, tmp_dir, ndr )
 
      WRITE(*,'(2x,"Cell parameters (Angstroms):")')
      WRITE(*,'(3(2x,f10.6))') ((at(i, j), i=1,3), j=1,3)
@@ -345,50 +285,19 @@ PROGRAM cp_postproc
      euler(2) = euler(2) * np2
      euler(3) = euler(3) * np3
 
-     IF ( lcharge ) &
-        CALL scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, &
-                           np1, np2, np3 )
-
      IF ( output == 'xsf' ) THEN
         ! write data as XSF format
-        CALL write_xsf( ldynamics, lforces, lcharge, ounit, n, at, &
-                        natoms, ityp, tau_out, force, rho_out, &
-                        ns1, ns2, ns3 )
-     ELSE IF( output == 'grd' ) THEN
-        ! write data as GRD format
-        CALL write_grd( ounit, at, rho_out, ns1, ns2, ns3 )
+        CALL write_xsf( ldynamics, lforces, ounit, n, at, & 
+                        natoms, ityp, tau_out, force )
      ELSE IF( output == 'xyz' ) THEN
         ! write data as XYZ format
-        CALL write_xyz( ldynamics, lforces, lcharge, ounit, n, at, &
-                        natoms, ityp, tau_out, force, rho_out, &
-                        ns1, ns2, ns3 )
+        CALL write_xyz( ldynamics, lforces, ounit, n, at, &
+                        natoms, ityp, tau_out, force )
      END IF
 
   END DO
 
   CLOSE(ounit)
-
-  IF ( print_state /= ' ' ) THEN
-     !
-     ! CALL read_density( TRIM( print_state ) // '.xml', dunit, nr1, nr2, nr3, rho_in, lbinary )
-     WRITE(*, *) 'DENSITY NOT READ'
-     
-     CALL scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3 )
-     !
-     IF (output == 'xsf') THEN
-        ! write data as XSF format
-        OPEN( unit = ksunit, file = TRIM( print_state ) // '.xsf' )
-        WRITE( ksunit, * ) 'CRYSTAL'  !  XSF files need this one line header
-        CALL write_xsf( ldynamics, lforces, .true., ksunit, n, at, &
-                        natoms, ityp, tau_out, force, rho_out, ns1, ns2, ns3 )
-     ELSE IF( output == 'grd' ) THEN
-        OPEN( unit = ksunit, file = TRIM( print_state ) // '.grd' )
-        CALL write_grd( ksunit, at, rho_out, ns1, ns2, ns3 )
-     END IF
-     !
-     CLOSE( ksunit )
-     !
-  END IF
 
   ! write atomic positions as PDB format
   CALL write_pdb( bunit, at, tau_out, natoms, ityp, euler, lrotation )
@@ -402,8 +311,6 @@ PROGRAM cp_postproc
   DEALLOCATE(tau_out)
   DEALLOCATE(ityp)
   IF( ALLOCATED( force  ) ) DEALLOCATE(force)
-  IF( ALLOCATED( rho_in ) ) DEALLOCATE(rho_in)
-  IF( ALLOCATED( rho_out) ) DEALLOCATE(rho_out)
   IF( ALLOCATED( stau0 ) )  DEALLOCATE( stau0 )
   IF( ALLOCATED( svel0 ) )  DEALLOCATE( svel0 )
   IF( ALLOCATED( force0) )  DEALLOCATE( force0 )
@@ -417,9 +324,8 @@ END PROGRAM cp_postproc
 !
 
 
-SUBROUTINE read_cp( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
-                      natoms, nr1, nr2, nr3, ispin, at, tau, force, &
-                      rho, prefix, tmp_dir, ndr, charge_density )
+SUBROUTINE read_cp( lforces, cunit, punit, funit, dunit, &
+                      natoms, at, tau, force, prefix, tmp_dir, ndr )
 
   USE kinds,      ONLY: DP
   USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
@@ -427,21 +333,17 @@ SUBROUTINE read_cp( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
 
   IMPLICIT NONE
 
-  LOGICAL, INTENT(in)   :: lforces, lcharge, lbinary
+  LOGICAL, INTENT(in)   :: lforces
   INTEGER, INTENT(in)   :: cunit, punit, funit, dunit
-  INTEGER, INTENT(in)   :: natoms, nr1, nr2, nr3, ispin, ndr
+  INTEGER, INTENT(in)   :: natoms, ndr
   REAL(DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
-  REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
   CHARACTER(LEN=*), INTENT(IN) :: prefix
   CHARACTER(LEN=*), INTENT(IN) :: tmp_dir
-  CHARACTER(LEN=*), INTENT(IN) :: charge_density
 
   INTEGER  :: i, j, ix, iy, iz
-  REAL(DP) :: rhomin, rhomax, rhof
   REAL(DP) :: x, y, z, fx, fy, fz
   CHARACTER(LEN=256) :: filename
   INTEGER       :: n1, n2, n3
-  REAL(DP), ALLOCATABLE :: rho_plane(:)
 
   ! read cell vectors
   ! NOTE: colums are lattice vectors
@@ -470,34 +372,6 @@ SUBROUTINE read_cp( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
         force(3, i) = fz
      END IF
   END DO
-
-  IF (lcharge) THEN
-
-     filename = restart_dir( tmp_dir, ndr )
-     !
-     IF( charge_density == 'spin' ) THEN
-        filename = TRIM( filename ) // '/' // 'spin-polarization'
-     ELSE
-        filename = TRIM( filename ) // '/' // 'charge-density'
-     END IF
-     !
-     rho(:,:,:) = 0.0_dp
-     !
-     IF ( check_file_exist ( TRIM(filename)//'.dat' ) ) THEN
-        !
-        WRITE(*, *) 'DENSITY NOT READ (1)'
-!        CALL read_density( TRIM(filename)//'.dat', dunit, nr1, nr2, nr3, rho, lbinary )
-        !
-     ELSEIF ( check_file_exist ( TRIM(filename)//'.xml' ) ) THEN
-        !
-        WRITE(*, *) 'DENSITY NOT READ (2)'
-!        CALL read_density( TRIM(filename)//'.xml', dunit, nr1, nr2, nr3, rho, lbinary )
-        !
-     ELSE         
-        CALL infomsg ('read_cp', 'file '//TRIM(filename)//' not found' )
-     ENDIF
-     !
-  END IF
 
   RETURN
 END SUBROUTINE read_cp
@@ -571,90 +445,15 @@ SUBROUTINE euler_to_at( euler, at )
   RETURN
 END SUBROUTINE euler_to_at
 
-! map charge density from a grid to another by linear interpolation
-! along the three axes
-SUBROUTINE scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, &
-                         np1, np2, np3 )
+SUBROUTINE write_xsf( ldynamics, lforces, ounit, n, at, &
+                      natoms, ityp, tau, force )
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: DP = KIND(0.0d0)
 
-  INTEGER, INTENT(in)        :: nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3
-  REAL(DP), INTENT(in)  :: rho_in( nr1, nr2, nr3 )
-  REAL(DP), INTENT(out) :: rho_out( ns1, ns2, ns3 )
-
-  INTEGER       :: i, j, k
-  INTEGER       :: i0(ns1), j0(ns2), k0(ns3), i1(ns1), j1(ns2), k1(ns3)
-  REAL(DP) :: x0(ns1), y0(ns2), z0(ns3), x1(ns1), y1(ns2), z1(ns3)
-
-  ! precompute interpolation data
-  DO i = 1, ns1
-     CALL scale_linear( i, nr1, ns1, np1, i0(i), i1(i), x0(i), x1(i) )
-  END DO
-  DO j = 1, ns2
-     CALL scale_linear( j, nr2, ns2, np2, j0(j), j1(j), y0(j), y1(j) )
-  END DO
-  DO k = 1, ns3
-     CALL scale_linear( k, nr3, ns3, np3, k0(k), k1(k), z0(k), z1(k) )
-  END DO
-
-  ! interpolate linearly along three axes
-  DO i = 1, ns1
-     DO j = 1, ns2
-        DO k = 1, ns3
-           rho_out(i, j, k) = &
-              rho_in(i1(i), j1(j), k1(k)) * x0(i) * y0(j) * z0(k) + &
-              rho_in(i0(i), j1(j), k1(k)) * x1(i) * y0(j) * z0(k) + &
-              rho_in(i1(i), j0(j), k1(k)) * x0(i) * y1(j) * z0(k) + &
-              rho_in(i1(i), j1(j), k0(k)) * x0(i) * y0(j) * z1(k) + &
-              rho_in(i0(i), j0(j), k1(k)) * x1(i) * y1(j) * z0(k) + &
-              rho_in(i0(i), j1(j), k0(k)) * x1(i) * y0(j) * z1(k) + &
-              rho_in(i1(i), j0(j), k0(k)) * x0(i) * y1(j) * z1(k) + &
-              rho_in(i0(i), j0(j), k0(k)) * x1(i) * y1(j) * z1(k)
-        END DO
-     END DO
-  END DO
-
-  RETURN
-END SUBROUTINE scale_charge
-
-! compute grid parameters for linear interpolation
-SUBROUTINE scale_linear( n, nr, ns, np, n0, n1, r0, r1 )
-  IMPLICIT NONE
-
-  INTEGER, PARAMETER :: DP = KIND(0.0d0)
-
-  INTEGER, INTENT(in)        :: n, nr, ns, np
-  INTEGER, INTENT(out)       :: n0, n1
-  REAL(DP), INTENT(out) :: r0, r1
-
-  ! map new grid point onto old grid
-  ! mapping is: 1 --> 1, ns+1 --> (nr*np)+1
-  r0 = REAL((n-1) * nr*np, DP) / ns + 1.0d0
-  ! indices of neighbors
-  n0 = int(r0)
-  n1 = n0 + 1
-  ! distances from neighbors
-  r0 = r0 - n0
-  r1 = 1.0d0 - r0
-  ! apply periodic boundary conditions
-  n0 = MOD(n0 - 1, nr) + 1
-  n1 = MOD(n1 - 1, nr) + 1
-
-  RETURN
-END SUBROUTINE scale_linear
-
-SUBROUTINE write_xsf( ldynamics, lforces, lcharge, ounit, n, at, &
-                      natoms, ityp, tau, force, rho, nr1, nr2, nr3 )
-  IMPLICIT NONE
-
-  INTEGER, PARAMETER :: DP = KIND(0.0d0)
-
-  LOGICAL, INTENT(in)       :: ldynamics, lforces, lcharge
+  LOGICAL, INTENT(in)       :: ldynamics, lforces
   INTEGER, INTENT(in)       :: ounit, n, natoms, ityp(natoms)
-  INTEGER, INTENT(in)       :: nr1, nr2, nr3
   REAL(DP), INTENT(in) :: at(3, 3), tau(3, natoms), force(3, natoms)
-  REAL(DP), INTENT(in) :: rho(nr1, nr2, nr3)
 
   INTEGER :: i, j, ix, iy, iz
 
@@ -687,42 +486,19 @@ SUBROUTINE write_xsf( ldynamics, lforces, lcharge, ounit, n, at, &
      END IF
   END DO
 
-  ! write charge density
-  IF (lcharge) THEN
-     ! XSF scalar-field header
-     WRITE(ounit,'(a)') 'BEGIN_BLOCK_DATAGRID_3D'
-     WRITE(ounit,'(a)') '3D_PWSCF'
-     WRITE(ounit,'(a)') 'DATAGRID_3D_UNKNOWN'
-
-     ! mesh dimensions
-     WRITE(ounit,*) nr1, nr2, nr3
-     ! origin
-     WRITE(ounit,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
-     ! lattice vectors
-     WRITE(ounit,'(3f10.6)') ((at(i, j), i=1,3), j=1,3)
-     ! charge density
-     WRITE(ounit,'(6e13.5)') &
-          (((rho(ix, iy, iz), ix=1,nr1), iy=1,nr2), iz=1,nr3)
-
-     WRITE(ounit,'(a)') 'END_DATAGRID_3D'
-     WRITE(ounit,'(a)') 'END_BLOCK_DATAGRID_3D'
-  END IF
-
   RETURN
 END SUBROUTINE write_xsf
 
 
-SUBROUTINE write_xyz( ldynamics, lforces, lcharge, ounit, n, at, &
-                      natoms, ityp, tau, force, rho, nr1, nr2, nr3 )
+SUBROUTINE write_xyz( ldynamics, lforces, ounit, n, at, &
+                      natoms, ityp, tau, force )
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: DP = KIND(0.0d0)
 
-  LOGICAL, INTENT(in)       :: ldynamics, lforces, lcharge
+  LOGICAL, INTENT(in)       :: ldynamics, lforces
   INTEGER, INTENT(in)       :: ounit, n, natoms, ityp(natoms)
-  INTEGER, INTENT(in)       :: nr1, nr2, nr3
   REAL(DP), INTENT(in) :: at(3, 3), tau(3, natoms), force(3, natoms)
-  REAL(DP), INTENT(in) :: rho(nr1, nr2, nr3)
   INTEGER :: i, j, ix, iy, iz
   CHARACTER*2 :: label(103)
   DATA label /" H", "He", "Li", "Be", " B", " C", " N", " O", " F", "Ne", &
@@ -757,30 +533,6 @@ SUBROUTINE write_xyz( ldynamics, lforces, lcharge, ounit, n, at, &
   RETURN
 END SUBROUTINE write_xyz
 
-
-SUBROUTINE write_grd( ounit, at, rho, nr1, nr2, nr3 )
-  IMPLICIT NONE
-
-  INTEGER, PARAMETER :: DP = KIND(0.0d0)
-
-  INTEGER, INTENT(in)       :: ounit
-  INTEGER, INTENT(in)       :: nr1, nr2, nr3
-  REAL(DP), INTENT(in) :: at(3, 3), rho(nr1, nr2, nr3)
-
-  INTEGER       :: i, j, k
-  REAL(DP) :: euler(6)
-
-  CALL at_to_euler( at, euler )
-
-  WRITE(ounit,*) 'charge density'
-  WRITE(ounit,*) '(1p,e12.5)'
-  WRITE(ounit,fmt='(6f9.3)') (euler(i), i=1,6)
-  WRITE(ounit,fmt='(3i5)') nr1 - 1, nr2 - 1, nr3 - 1
-  WRITE(ounit,fmt='(7i5)') 1, 0, 0, 0, nr1 - 1, nr2 - 1, nr3 - 1
-  WRITE(ounit,fmt='(1p,e12.5)') (((rho(i, j, k), i=1,nr1), j=1,nr2), k=1,nr3)
-
-  RETURN
-END SUBROUTINE write_grd
 
 SUBROUTINE write_pdb( bunit, at, tau, natoms, ityp, euler, lrotation )
   IMPLICIT NONE
