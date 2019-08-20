@@ -31,7 +31,7 @@ MODULE pw_restart_new
                           qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid,&
                           qexsd_init_dftU, qexsd_init_vdw
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix
+  USE io_files,  ONLY : iunpun, xmlpun_schema, restart_dir
   !
   IMPLICIT NONE
   !
@@ -217,7 +217,7 @@ MODULE pw_restart_new
       ! 
       ! XML descriptor
       ! 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+      dirname = restart_dir () 
       !
       IF ( ionode ) THEN  
          !
@@ -714,7 +714,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+      dirname = restart_dir () 
       !
       ! ... write wavefunctions and k+G vectors
       !

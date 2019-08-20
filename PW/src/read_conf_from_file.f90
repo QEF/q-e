@@ -14,7 +14,7 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
-  USE io_files,        ONLY : tmp_dir, prefix, postfix, xmlpun_schema, &
+  USE io_files,        ONLY : restart_dir, xmlpun_schema, &
                               psfile, pseudo_dir, pseudo_dir_cur
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau
   USE cell_base,       ONLY : alat, ibrav, at, bg, omega
@@ -32,7 +32,7 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !
   TYPE ( output_type)                   :: output_obj
   !
-  pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  pseudo_dir_cur = restart_dir () 
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
                 &  /,5X,A)') pseudo_dir_cur
   !

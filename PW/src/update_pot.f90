@@ -237,8 +237,8 @@ SUBROUTINE update_pot()
   ! ...                     + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
-  USE io_files,      ONLY : prefix, iunupdate, tmp_dir, wfc_dir, nd_nmbr, &
-                            postfix, seqopn
+  USE io_files,      ONLY : iunupdate, nd_nmbr, seqopn, restart_dir
+  USE io_files,      ONLY : wfc_dir, prefix
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp
@@ -349,7 +349,7 @@ SUBROUTINE update_pot()
   IF ( pot_order > 1 .AND. ionode ) THEN
      !
      ! FIXME: won't work for hdf5
-     dirname =  TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+     dirname =  restart_dir () 
      INQUIRE( FILE = TRIM( dirname ) // 'charge-old.dat', &
           EXIST = exists )
      !

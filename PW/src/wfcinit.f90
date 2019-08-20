@@ -23,7 +23,7 @@ SUBROUTINE wfcinit()
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, tmp_dir, prefix, postfix, xmlpun_schema
+                                   diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions, ONLY : evc
@@ -38,8 +38,9 @@ SUBROUTINE wfcinit()
   !
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
-  CHARACTER (LEN=256)                     :: dirname
-  TYPE ( output_type )                    :: output_obj
+  CHARACTER (LEN=256)  :: dirname
+  CHARACTER (LEN=320)  :: filename
+  TYPE ( output_type ) :: output_obj
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -55,8 +56,9 @@ SUBROUTINE wfcinit()
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
-     dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-     ierr = qexsd_readschema( TRIM(dirname) // xmlpun_schema, output_obj )
+     dirname = restart_dir ( ) 
+     filename= xmlfile ( ) 
+     ierr = qexsd_readschema( filename, output_obj )
      IF ( ierr <= 0 ) THEN 
         twfcollect_file = output_obj%band_structure%wf_collected   
         IF ( twfcollect_file ) THEN
