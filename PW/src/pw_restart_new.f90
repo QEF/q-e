@@ -31,7 +31,7 @@ MODULE pw_restart_new
                           qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid,&
                           qexsd_init_dftU, qexsd_init_vdw
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun, xmlpun_schema, restart_dir
+  USE io_files,  ONLY : iunpun, xmlfile
   !
   IMPLICIT NONE
   !
@@ -136,7 +136,6 @@ MODULE pw_restart_new
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
       CHARACTER(LEN=20)     :: dft_name
-      CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
@@ -217,8 +216,6 @@ MODULE pw_restart_new
       ! 
       ! XML descriptor
       ! 
-      dirname = restart_dir () 
-      !
       IF ( ionode ) THEN  
          !
          ! ... here we init the variables and finally write them to file
@@ -651,8 +648,7 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
  10      CONTINUE
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
-              iunpun, 'PWSCF', title )
+         CALL qexsd_openschema( xmlfile(), iunpun, 'PWSCF', title )
          CALL qes_write (qexsd_xf,output)
          CALL qes_reset (output) 
          CALL qexsd_closeschema()
@@ -684,7 +680,7 @@ MODULE pw_restart_new
       !
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : write_wfc
-      USE io_files,             ONLY : iunwfc, nwordwfc
+      USE io_files,             ONLY : restart_dir, iunwfc, nwordwfc
       USE cell_base,            ONLY : tpiba, alat, bg
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g

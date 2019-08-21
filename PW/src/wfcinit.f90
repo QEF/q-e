@@ -39,7 +39,6 @@ SUBROUTINE wfcinit()
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (LEN=256)  :: dirname
-  CHARACTER (LEN=320)  :: filename
   TYPE ( output_type ) :: output_obj
   !
   !
@@ -57,8 +56,7 @@ SUBROUTINE wfcinit()
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
      dirname = restart_dir ( ) 
-     filename= xmlfile ( ) 
-     ierr = qexsd_readschema( filename, output_obj )
+     ierr = qexsd_readschema( xmlfile(), output_obj )
      IF ( ierr <= 0 ) THEN 
         twfcollect_file = output_obj%band_structure%wf_collected   
         IF ( twfcollect_file ) THEN
