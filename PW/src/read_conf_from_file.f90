@@ -14,7 +14,7 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
-  USE io_files,        ONLY : restart_dir, xmlpun_schema, &
+  USE io_files,        ONLY : restart_dir, xmlfile, &
                               psfile, pseudo_dir, pseudo_dir_cur
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau
   USE cell_base,       ONLY : alat, ibrav, at, bg, omega
@@ -38,7 +38,7 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !
   ! ... check if restart file is present, if so read config parameters
   !
-  ierr = qexsd_readschema ( TRIM(pseudo_dir_cur)//xmlpun_schema, output_obj )
+  ierr = qexsd_readschema ( xmlfile(), output_obj )
   !
   IF (ierr == 0 ) THEN
      !

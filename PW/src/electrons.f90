@@ -31,8 +31,7 @@ SUBROUTINE electrons()
                                    kedtau, vnew
   USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
                                    do_makov_payne
-  USE io_files,             ONLY : iunmix, output_drho, &
-                                   iunres, iunefield, seqopn
+  USE io_files,             ONLY : iunres, seqopn
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : tefield, etotefield
   USE wvfct,                ONLY : nbnd, wg, et
@@ -384,8 +383,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    llondon, ldftd3, scf_must_converge, lxdm, ts_vdw
   USE control_flags,        ONLY : n_scf_steps, scf_error
 
-  USE io_files,             ONLY : iunmix, output_drho, &
-                                   iunres, iunefield, seqopn
+  USE io_files,             ONLY : iunmix, output_drho
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u
   USE extfield,             ONLY : tefield, etotefield, gate, etotgatefield !TB
