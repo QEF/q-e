@@ -20,7 +20,6 @@ program simple
   use pwcom, only :  nspin
   use uspp, ONLY : okvan
   use realus, ONLY : generate_qpointlist
-  USE io_files, ONLY : seqopn
   USE wannier_gw, ONLY : num_nbndv 
   USE gvect, ONLY : ngm
   USE gvecs, ONLY : doublegrid
