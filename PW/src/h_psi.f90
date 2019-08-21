@@ -135,8 +135,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   ! ... Here the product with the local potential V_loc psi
   !
-  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
-  !
   IF ( gamma_only ) THEN
      ! 
      IF ( real_space .and. nkb > 0  ) then 
@@ -217,8 +215,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      !
   END IF
   !  
-  CALL stop_clock( 'h_psi:pot' )
-  !
   if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
   !
   ! ... Here we add the Hubbard potential times psi
