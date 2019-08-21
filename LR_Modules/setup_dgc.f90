@@ -23,8 +23,8 @@ SUBROUTINE setup_dgc
   USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
-  USE funct,                ONLY : dft_is_gradient
-  USE xc_gga,               ONLY : gcxc, gcx_spin, gcc_spin, libxc_switches_gga
+  USE funct,                ONLY : dft_is_gradient, is_libxc
+  USE xc_gga,               ONLY : gcxc, gcx_spin, gcc_spin
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
                                    dvxc_ss, dvxc_s, vsgga, segni
@@ -50,8 +50,8 @@ SUBROUTINE setup_dgc
   !
   CALL start_clock( 'setup_dgc' )
   ! 
-  IF ( SUM(libxc_switches_gga(:)) /= 0 ) CALL errore( 'setup_dgc', 'libxc derivatives of &
-                                                      &xc potentials for GGA not implemented yet', 1 )
+  IF ( ANY(is_libxc(3:4)) ) CALL errore( 'setup_dgc', 'libxc derivatives of &
+                                          &xc potentials for GGA not implemented yet', 1 )
   !
   IF (noncolin .AND. domag) THEN
      ALLOCATE( segni(dfftp%nnr) )

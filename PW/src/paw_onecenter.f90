@@ -430,17 +430,16 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     INTEGER               :: ix,k               ! counters on directions and radial grid
     INTEGER               :: lsd                ! switch for local spin density
-    REAL(DP)              :: vs   !, zeta, amag, vx(2), vc(2), ex, ec  !^^^
+    REAL(DP)              :: vs, amag
     INTEGER               :: kpol 
     INTEGER               :: mytid, ntids
     !
-    !^^^******************************************   !^^^
-    REAL(DP), ALLOCATABLE :: arho(:,:), zeta(:), amag(:)
+    !^^^
+    REAL(DP), ALLOCATABLE :: arho(:,:)
     REAL(DP), ALLOCATABLE :: ex(:), ec(:)
     REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
     REAL(DP), PARAMETER   :: eps = 1.e-30_dp
-    !
-    !^^^*************************************
+    !^^^
     !
 #if defined(_OPENMP)
     INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
@@ -472,8 +471,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
     !
     ALLOCATE( arho(i%m,2) ) !^^^
-    ALLOCATE( zeta(i%m) )
-    ALLOCATE( amag(i%m) )
     ALLOCATE( ex(i%m) )
     ALLOCATE( ec(i%m) )
     ALLOCATE( vx(i%m,2) )
@@ -515,10 +512,12 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
                   e_rad(k) = e2*(ex(k)+ec(k))*(rho_rad(k,1)+rho_core(k)*g(i%t)%r2(k))
               vs = e2*0.5D0*( vx(k,1) + vc(k,1) - vx(k,2) - vc(k,2) )
               v_rad(k,ix,1) = e2*(0.5D0*( vx(k,1) + vc(k,1) + vx(k,2) + vc(k,2)))
-              IF ( amag(k) > eps12 ) THEN
-                 v_rad(k,ix,2:4) =  vs * rho_loc(k,2:4) / amag(k)
+              amag = SQRT(rho_loc(k,2)**2+rho_loc(k,3)**2+rho_loc(k,4)**2)
+              IF ( amag > eps12 ) THEN
+                 v_rad(k,ix,2:4) =  vs * rho_loc(k,2:4) / amag
               ELSE
                  v_rad(k,ix,2:4)=0.0_DP
+                 IF (present(energy)) e_rad(k)=0.0_DP
               ENDIF
            ENDDO
            !
@@ -584,9 +583,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     DEALLOCATE( rho_rad ) 
     DEALLOCATE( rho_loc ) 
     !
-    DEALLOCATE( arho ) !^^^
-    DEALLOCATE( zeta )
-    DEALLOCATE( amag )
+    DEALLOCATE( arho )
     DEALLOCATE( ex )
     DEALLOCATE( ec )
     DEALLOCATE( vx )
@@ -630,7 +627,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2
     USE funct,                  ONLY : igcc_is_lyp
-    USE xc_gga,                 ONLY : xc_gcx !  gcxc, gcx_spin, gcc_spin, gcc_spin_more
+    USE xc_gga,                 ONLY : xc_gcx
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -659,7 +656,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     !
     !
     !^^^
-    REAL(DP), ALLOCATABLE :: arho(:), grad2_v(:)
+    REAL(DP), ALLOCATABLE :: arho(:,:), grad2_v(:)
     REAL(DP), ALLOCATABLE :: r_vec(:,:) !, rh(:), zeta(:) !, grhor(:,:), grhoud(:), grh2(:)
     !
     REAL(DP), DIMENSION(i%m,nspin_gga) :: v1x, v2x, v1c, v2c  !workspace
@@ -740,7 +737,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         !
         !     GGA case
         !
-        ALLOCATE( arho(i%m), grad2_v(i%m) )
+        ALLOCATE( arho(i%m,1), grad2_v(i%m) )
         ALLOCATE( gradx(3,i%m,1))
         !
 !$omp do
@@ -751,8 +748,8 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
            CALL PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grad2, grad)
            !
            DO k = 1, i%m
-              arho(k) = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
-              arho(k) = ABS(arho(k))
+              arho(k,1) = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
+              arho(k,1) = ABS(arho(k,1))
               gradx(:,k,1) = grad(k,:,1)
            ENDDO
 !
@@ -1692,7 +1689,8 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
-    USE xc_gga,                 ONLY : gcxc, gcx_spin, gcc_spin, libxc_switches_gga
+    USE funct,                  ONLY : is_libxc
+    USE xc_gga,                 ONLY : gcxc, gcx_spin, gcc_spin
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     REAL(DP), INTENT(IN)    :: rho_lm(i%m,i%l**2,nspin_mag) ! charge density as lm components
@@ -1739,7 +1737,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
     !
-    IF ( SUM(libxc_switches_gga(:)) /= 0 )  CALL errore( 'PAW_dgcxc_potential', 'libxc derivatives of &
+    IF ( ANY(is_libxc(3:4)) )  CALL errore( 'PAW_dgcxc_potential', 'libxc derivatives of &
                                                         &xc potentials for GGA not available yet', 1 )
     !
     zero    = 0.0_DP

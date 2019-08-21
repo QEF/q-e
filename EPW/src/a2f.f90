@@ -29,7 +29,7 @@
   USE phcom,     ONLY : nmodes
   USE cell_base, ONLY : omega
   USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, & 
-                        delta_smear, degaussw, fsthick
+                        delta_smear, degaussw, fsthick, nc
   USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
   USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, two, zero, kelvin2Ry, pi
   USE mp,        ONLY : mp_barrier, mp_sum
@@ -214,7 +214,7 @@
     ! Usually this means "the number of electrons that contribute to the mobility" and so it is typically 8 (full shell)
     ! but not always. You might want to check this. 
     ! 
-    n = 8.0 / omega
+    n = nc / omega
     !print*,'omega ',omega
     WRITE (iures, '(a)') '# Temperature [K]                Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '  
     WRITE (iures, '("#     ", 15f12.7)') ( (degaussq+(ismear-1)*delta_qsmear)*ryd2mev,ismear=1,nqsmear )

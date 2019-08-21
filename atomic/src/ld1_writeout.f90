@@ -27,13 +27,11 @@ subroutine ld1_writeout
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
   use open_close_input_file, only: close_input_file
-  use FoX_wxml, only: xml_Openfile, xml_Close, xmlf_t
   implicit none
 
   integer :: &
        ios,   &  ! I/O control
        iunps     ! the unit with the pseudopotential
-  type(xmlf_t)  :: xml_desc
   logical, external :: matches
   logical :: oldformat
   character (len=20) :: dft_name

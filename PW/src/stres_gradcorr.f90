@@ -12,9 +12,10 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY: DP
-  USE funct,            ONLY: dft_is_gradient, dft_is_meta, get_igcc,  &
-                              tau_xc, tau_xc_spin, get_meta
-  USE xc_gga,           ONLY: xc_gcx !gcxc, gcx_spin, gcc_spin, gcc_spin_more
+  USE funct,            ONLY: dft_is_gradient, dft_is_meta, get_igcc, &
+                              get_meta
+  USE xc_gga,           ONLY: xc_gcx
+  USE xc_mgga,          ONLY: xc_metagcx
   USE mp_bands,         ONLY: intra_bgrp_comm
   USE mp,               ONLY: mp_sum
   USE fft_types,        ONLY: fft_type_descriptor
@@ -32,30 +33,29 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   !
   ! ... local variables
   !
-  INTEGER :: k, l, m, ipol, is, nspin0
+  INTEGER :: k, l, m, ipol, is, nspin0, np
   INTEGER :: nr1, nr2, nr3, nrxx, ngm
   REAL(DP), ALLOCATABLE :: grho(:,:,:), rhoaux(:,:)
   REAL(DP), ALLOCATABLE :: grho2(:,:), grho_ud(:),grhor2(:)
   COMPLEX(DP), ALLOCATABLE :: rhogaux(:,:)
-  !^^^
+  !
   REAL(DP), ALLOCATABLE :: zeta(:), rh(:)
   REAL(DP) :: sx(dfft%nnr), sc(dfft%nnr)
-  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), rhos(:)
-  REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:), v2c_ud(:)
-  INTEGER,  ALLOCATABLE :: null_v(:)
-  REAL(DP) :: vnull
+  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v3x(:,:), rhos(:)
+  REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:), v2c_ud(:)
   !
   REAL(DP), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0
   REAL(DP) :: sigma_gradcorr(3, 3)
   LOGICAL :: igcc_is_lyp
   !
-  ! ... dummy variables for meta-gga
-  REAL(DP) :: v3x, v3c, v3xup, v3xdw, v3cup, v3cdw
-  !
   !
   IF ( .NOT. dft_is_gradient() .AND. .NOT. dft_is_meta() ) RETURN
   !
   nspin0 = nspin
+  !
+  np = 1
+  IF (nspin0==2 .AND. dft_is_meta()) np=3
+  !
   !if (nspin==4) nspin0 = 1
   !if (nspin==4.and.domag) nspin0 = 2
   IF ( nspin==4 ) CALL errore('stres_gradcorr', &
@@ -77,8 +77,9 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   ALLOCATE( grho2(nrxx,nspin0)  )
   ALLOCATE( rhogaux(ngm,nspin0) )
   !
-  ALLOCATE( v1x(nrxx,nspin0), v2x(nrxx,nspin0) )
-  ALLOCATE( v1c(nrxx,nspin0), v2c(nrxx,nspin0) )
+  ALLOCATE( v1x(nrxx,nspin0), v2x(nrxx,nspin0), v3x(nrxx,nspin0) )
+  ALLOCATE( v1c(nrxx,nspin0), v2c(np,nrxx,nspin0), v3c(nrxx,nspin0) )
+  
   !
   ! calculate the gradient of rho+rhocore in real space
   ! in LSDA case rho is temporarily converted in (up,down) format
@@ -112,42 +113,27 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
      ! sigma_gradcor_{alpha,beta} ==
      !     omega^-1 \int (grad_alpha rho) ( D(rho*Exc)/D(grad_alpha rho) ) d3
      !
-     ALLOCATE( null_v(nrxx) )     
-     !
      ! routine computing v1x_v and v2x_v is different for GGA and meta-GGA
      ! FIXME : inefficient implementation
      !
-     null_v = 1
      grho2(:,1) = grho(1,:,1)**2 + grho(2,:,1)**2 + grho(3,:,1)**2
      !
-     WHERE( .NOT. (ABS(rhoaux(:,1))>epsr .AND. grho2(:,1)>epsg) ) null_v(:)  = 0
-     !
      IF ( .NOT. (dft_is_meta() .AND. get_meta() /= 4) ) &
-       CALL xc_gcx( nrxx, nspin, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
+       CALL xc_gcx( nrxx, nspin, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c(1,:,:) )
      !
-     DO k = 1, nrxx
-        IF ( dft_is_meta() .AND. get_meta() /= 4 .AND. null_v(k) /= 0 ) THEN
-           IF ( ABS(rhoaux(k,1))>epsr .AND. grho2(k,1)>epsg ) THEN
-              !
-              kedtau(k,1) = kedtau(k,1) / e2
-              CALL tau_xc( rhoaux(k,1), grho2(k,1), kedtau(k,1), sx(k), sc(k), &
-                                 v1x(k,1), v2x(k,1), v3x, v1c(k,1), v2c(k,1), v3c )
-              kedtau(k,1) = kedtau(k,1) * e2
-              !
-           ENDIF
-        ENDIF
-        !
-        DO l = 1, 3
-           DO m = 1, l
-              sigma_gradcorr(l,m) = sigma_gradcorr(l,m) + grho(l,k,1)*grho(m,k,1)* &
-                                    e2 * (v2x(k,1) + v2c(k,1)) !* null_v(k)
-           ENDDO
-        ENDDO
-        !
+     IF ( dft_is_meta() .AND. get_meta() /= 4 ) THEN
+        kedtau(:,1) = kedtau(:,1) / e2
+        CALL xc_metagcx( nrxx, 1, np, rhoaux, grho, kedtau, sx, sc, &
+                         v1x, v2x, v3x, v1c, v2c, v3c )
+        kedtau(:,1) = kedtau(:,1) * e2
+     ENDIF
+     !
+     DO l = 1, 3
+       DO m = 1, l
+         sigma_gradcorr(l,m) = sigma_gradcorr(l,m) + SUM( grho(l,:,1)*grho(m,:,1)*   &
+                                                          e2 * (v2x(:,1) + v2c(1,:,1)) )
+       ENDDO
      ENDDO
-     !
-     DEALLOCATE( null_v )
-     !
      !
   ELSEIF (nspin == 2) THEN
      !
@@ -167,7 +153,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
         !
         ALLOCATE( v2c_ud(dfft%nnr) )
         !
-        CALL xc_gcx( nrxx, nspin, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
+        CALL xc_gcx( nrxx, nspin, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c(1,:,:), v2c_ud )
         !
         DO l = 1, 3
            DO m = 1, l
@@ -179,8 +165,8 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
               !
               ! ... correlation
               sigma_gradcorr(l,m) = sigma_gradcorr(l,m)     +     &
-                  SUM( grho(l,:,1) * grho(m,:,1) * v2c(:,1) +     &
-                       grho(l,:,2) * grho(m,:,2) * v2c(:,2) +     &
+                  SUM( grho(l,:,1) * grho(m,:,1) * v2c(1,:,1) +     &
+                       grho(l,:,2) * grho(m,:,2) * v2c(1,:,2) +     &
                       (grho(l,:,1) * grho(m,:,2) +                &
                        grho(l,:,2) * grho(m,:,1)) * v2c_ud(:) ) * e2
            ENDDO
@@ -196,8 +182,8 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   DEALLOCATE( grho   )
   DEALLOCATE( grho2  )
   !
-  DEALLOCATE( v1x, v2x )
-  DEALLOCATE( v1c, v2c )
+  DEALLOCATE( v1x, v2x, v3x )
+  DEALLOCATE( v1c, v2c, v3c )
   !
   !
   DO l = 1, 3

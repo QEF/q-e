@@ -189,7 +189,9 @@ loc_scdm_k.o \
 scf_mod.o \
 set_kplusq.o \
 set_kup_and_kdw.o \
+set_occupations.o \
 set_rhoc.o \
+set_spin_vars.o \
 set_vrs.o \
 setlocal.o \
 setup.o \

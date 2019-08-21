@@ -34,7 +34,7 @@ MODULE io_rho_xml
       USE cell_base,        ONLY : bg, tpiba
       USE gvect,            ONLY : ig_l2g, mill
       USE control_flags,    ONLY : gamma_only
-      USE io_files,         ONLY : seqopn, tmp_dir, prefix, postfix
+      USE io_files,         ONLY : seqopn, postfix, restart_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_pools,         ONLY : my_pool_id
       USE mp_bands,         ONLY : my_bgrp_id, root_bgrp_id, &
@@ -52,7 +52,7 @@ MODULE io_rho_xml
       INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
-      dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
+      dirname = restart_dir ( )
       CALL create_directory( dirname )
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
@@ -127,7 +127,7 @@ MODULE io_rho_xml
       USE spin_orb,         ONLY : domag
       USE gvect,            ONLY : ig_l2g
       USE funct,            ONLY : dft_is_meta
-      USE io_files,         ONLY : seqopn, prefix, tmp_dir, postfix
+      USE io_files,         ONLY : seqopn, postfix, restart_dir
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
       USE mp_images,        ONLY : intra_image_comm
@@ -143,7 +143,7 @@ MODULE io_rho_xml
       INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
-      dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
+      dirname = restart_dir ( )
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
          nspin_=1

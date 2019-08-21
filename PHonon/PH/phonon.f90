@@ -35,7 +35,7 @@ PROGRAM phonon
   !
   ! Not implemented in ph.x:
   ! [6] [5] + constraints on the magnetization
-  ! [7] Tkatchenko-Scheffler, xdm, DFT-D3
+  ! [7] Tkatchenko-Scheffler, DFT-D3
   ! [8] Hybrid and meta-GGA functionals
   ! [9] External Electric field
   ! [10] nonperiodic boundary conditions.
@@ -101,7 +101,7 @@ PROGRAM phonon
   ENDIF
   ! YAMBO <
   !
-  CALL unset_mpi_comm_4_solvers()
+  CALL laxlib_free_ortho_group()
   CALL stop_smoothly_ph( .TRUE. )
   !
   STOP

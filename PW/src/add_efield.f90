@@ -24,109 +24,108 @@
 
 !
 !--------------------------------------------------------------------------
-SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
+SUBROUTINE add_efield( vpoten, etotefield, rho, iflag )
   !--------------------------------------------------------------------------
+  !! This routine adds an electric field to the local potential. The
+  !! field is made artificially periodic by introducing a saw-tooth
+  !! potential. The field is parallel to a reciprocal lattice vector bg, 
+  !! according to the index edir.
   !
-  !   This routine adds an electric field to the local potential. The
-  !   field is made artificially periodic by introducing a saw-tooth
-  !   potential. The field is parallel to a reciprocal lattice vector bg, 
-  !   according to the index edir.
+  !! * If \(\textit{dipfield}\) is false the electric field correction is 
+  !!   added to the potential given as input (the bare local potential) 
+  !!   only at the first call to this routine. In the following calls the
+  !!   routine exit.
+  !! * If \(\textit{dipfield}\) is true the dipole moment per unit surface
+  !!   is calculated and used to cancel the electric field due to periodic
+  !!   boundary conditions. This potential is added to the Hartree and 
+  !!   xc potential in v_of_rho. NB: in this case the electric field 
+  !!   contribution to the band energy is subtracted by deband.
   !
-  !   if dipfield is false the electric field correction is added to the
-  !   potential given as input (the bare local potential) only
-  !   at the first call to this routine. In the following calls
-  !   the routine exit.
+  USE kinds,         ONLY: DP
+  USE constants,     ONLY: fpi, eps8, e2, au_debye
+  USE ions_base,     ONLY: nat, ityp, zv
+  USE cell_base,     ONLY: alat, at, omega, bg
+  USE extfield,      ONLY: tefield, dipfield, edir, eamp, emaxpos, saw, &
+                           eopreg, forcefield, el_dipole, ion_dipole, tot_dipole
+  USE force_mod,     ONLY: lforce
+  USE io_global,     ONLY: stdout,ionode
+  USE control_flags, ONLY: mixing_beta
+  USE lsda_mod,      ONLY: nspin
+  USE mp_images,     ONLY: intra_image_comm
+  USE mp_bands,      ONLY: me_bgrp
+  USE fft_base,      ONLY: dfftp
+  USE mp,            ONLY: mp_bcast, mp_sum
+  USE control_flags, ONLY: iverbosity
   !
-  !   if dipfield is true the dipole moment per unit surface is calculated
-  !   and used to cancel the electric field due to periodic boundary
-  !   conditions. This potential is added to the Hartree and xc potential
-  !   in v_of_rho. NB: in this case the electric field contribution to the 
-  !   band energy is subtracted by deband.
-  !
-  !
-  USE kinds,         ONLY : DP
-  USE constants,     ONLY : fpi, eps8, e2, au_debye
-  USE ions_base,     ONLY : nat, ityp, zv
-  USE cell_base,     ONLY : alat, at, omega, bg
-  USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, saw, &
-                            eopreg, forcefield, el_dipole, ion_dipole, tot_dipole
-  USE force_mod,     ONLY : lforce
-  USE io_global,     ONLY : stdout,ionode
-  USE control_flags, ONLY : mixing_beta
-  USE lsda_mod,      ONLY : nspin
-  USE mp_images,     ONLY : intra_image_comm
-  USE mp_bands,      ONLY : me_bgrp
-  USE fft_base,      ONLY : dfftp
-  USE mp,            ONLY : mp_bcast, mp_sum
-  USE control_flags, ONLY : iverbosity
-  
   IMPLICIT NONE
   !
-  ! I/O variables
+  REAL(DP), INTENT(INOUT) :: vpoten(dfftp%nnr)
+  !! ef is added to this potential
+  REAL(DP), INTENT(INOUT) :: etotefield
+  !! contribution to etot due to ef
+  REAL(DP), INTENT(IN) :: rho(dfftp%nnr)
+  !! the density whose dipole is computed
+  LOGICAL,INTENT(IN) :: iflag
+  !! set to true to force recalculation of field
   !
-  REAL(DP),INTENT(INOUT) :: vpoten(dfftp%nnr)! ef is added to this potential
-  REAL(DP),INTENT(INOUT) :: etotefield       ! contribution to etot due to ef
-  REAL(DP),INTENT(IN)    :: rho(dfftp%nnr) ! the density whose dipole is computed
-  LOGICAL,INTENT(IN)     :: iflag ! set to true to force recalculation of field
-  !
-  ! local variables
+  ! ... local variables
   !
   INTEGER :: idx,  i, j, k, j0, k0
   INTEGER :: ir, na, ipol
   REAL(DP) :: length, vamp, value, sawarg, bmod
-
+  !
   LOGICAL :: first=.TRUE.
   SAVE first
-  
+  !
   !---------------------
   !  Execution control
   !---------------------
-
+  !
   IF (.NOT.tefield) RETURN
   ! efield only needs to be added on the first iteration, if dipfield
   ! is not used. note that for relax calculations it has to be added
   ! again on subsequent relax steps.
   IF ((.NOT.dipfield).AND.(.NOT.first) .AND..NOT. iflag) RETURN
   first=.FALSE.
-
-  IF ((edir.lt.1).or.(edir.gt.3)) THEN
-     CALL errore('add_efield',' wrong edir',1)
+  !
+  IF ((edir<1).OR.(edir>3)) THEN
+     CALL errore( 'add_efield', ' wrong edir', 1 )
   ENDIF
-
+  !
   !---------------------
   !  Variable initialization
   !---------------------
-
-  bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
-
+  !
+  bmod = SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
+  !
   tot_dipole = 0._dp
   el_dipole  = 0._dp
   ion_dipole = 0._dp
-  
+  !
   !---------------------
   !  Calculate dipole
   !---------------------
-  
-  if (dipfield) then
-  !
-  ! dipole correction is active 
-  !
-     CALL compute_el_dip(emaxpos, eopreg, edir, rho, el_dipole)
-     CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
-    
-     tot_dipole  = -el_dipole + ion_dipole
-     CALL mp_bcast(tot_dipole, 0, intra_image_comm)
-  !  
-  !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
-  !
-     etotefield=-e2*(eamp-tot_dipole/2.d0)*tot_dipole*omega/fpi 
-
-  !---------------------
-  !  Define forcefield
-  !  
-  !  F_{s} = e^{2} \left( eamp - dip \right) z_{v}\cross\frac{\vec{b_{3}}}{bmod} 
-  !---------------------
-    
+  ! 
+  IF (dipfield) THEN
+     !
+     ! dipole correction is active 
+     !
+     CALL compute_el_dip( emaxpos, eopreg, edir, rho, el_dipole )
+     CALL compute_ion_dip( emaxpos, eopreg, edir, ion_dipole )
+     !
+     tot_dipole = -el_dipole + ion_dipole
+     CALL mp_bcast( tot_dipole, 0, intra_image_comm )
+     !  
+     !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
+     !
+     etotefield = -e2 * (eamp-tot_dipole/2.d0) * tot_dipole * omega/fpi 
+     !
+     !---------------------
+     !  Define forcefield
+     !  
+     !  F_{s} = e^{2} \left( eamp - dip \right) z_{v}\cross\frac{\vec{b_{3}}}{bmod} 
+     !---------------------
+     !
      IF (lforce) THEN
         DO na=1,nat
            DO ipol=1,3
@@ -135,54 +134,48 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
            ENDDO
         ENDDO
      ENDIF
-
-  else
-  !
-  ! dipole correction is not active
-  !
-
-     CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
-
-  !  
-  !  E_{TOT} = -e^{2} eamp * iondip \frac{\Omega}{4\pi} 
-  !
+     !
+  ELSE
+     !
+     ! dipole correction is not active
+     !
+     CALL compute_ion_dip( emaxpos, eopreg, edir, ion_dipole )
+     !  
+     !  E_{TOT} = -e^{2} eamp * iondip \frac{\Omega}{4\pi} 
+     !
      etotefield=-e2*eamp*ion_dipole*omega/fpi 
-
-  !---------------------
-  !  Define forcefield
-  !  
-  !  F_{s} = e^{2}  eamp z_{v}\cross\frac{\vec{b_{3}}}{bmod} 
-  !---------------------
-    
+     !---------------------
+     !  Define forcefield
+     !  
+     !  F_{s} = e^{2}  eamp z_{v}\cross\frac{\vec{b_{3}}}{bmod} 
+     !---------------------
+     !
      IF (lforce) THEN
-        DO na=1,nat
-           DO ipol=1,3
-              forcefield(ipol,na)= e2 *eamp &
-                               *zv(ityp(na))*bg(ipol,edir)/bmod
+        DO na = 1, nat
+           DO ipol = 1, 3
+              forcefield(ipol,na) = e2 * eamp * &
+                                    zv(ityp(na))*bg(ipol,edir)/bmod
            ENDDO
         ENDDO
      ENDIF
-
-  end if
-
+     !
+  ENDIF
   !
   !  Calculate potential and print values 
   !   
-  
-  length=(1._dp-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
-  
-  vamp=e2*(eamp-tot_dipole)*length
-
+  length = (1._dp-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
+  !
+  vamp = e2*(eamp-tot_dipole)*length
+  !
   IF (ionode) THEN
        !
        ! Output data
        !
        WRITE( stdout,*)
        WRITE( stdout,'(5x,"Adding external electric field":)')
-
-       IF (dipfield) then
+       !
+       IF (dipfield) THEN
           WRITE( stdout,'(/5x,"Computed dipole along edir(",i1,") : ")' ) edir
-
           !
           !  If verbose prints also the different components
           !
@@ -192,38 +185,38 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
               WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
                                           ion_dipole, (ion_dipole*au_debye)
           ENDIF
-
+          !
           WRITE( stdout, '(8X,"Dipole       ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
                                             (tot_dipole* (omega/fpi)),   &
                                             ((tot_dipole* (omega/fpi))*au_debye)  
-
+          !
           WRITE( stdout, '(8x,"Dipole field ", 1F15.4," Ry au, ")') &
                                              tot_dipole
           WRITE( stdout,*)
-
+          !
        ENDIF
 
-       IF (abs(eamp)>0._dp) WRITE( stdout, &
+       IF (ABS(eamp)>0._dp) WRITE( stdout, &
           '(8x,"E field amplitude [Ha a.u.]: ", es11.4)') eamp 
-        
+       !
        WRITE( stdout,'(8x,"Potential amp.   ", f11.4," Ry")') vamp 
        WRITE( stdout,'(8x,"Total length     ", f11.4," bohr")') length
        WRITE( stdout,*)     
   ENDIF
-
-
   !
   !------------------------------
   !  Add potential
   !  
-  !  V\left(ijk\right) = e^{2} \left( eamp - dip \right) z_{v} 
+  !  V\left(ijk\right) = e^{2} \left( eamp - dip \right) z_{v}
   !          Saw\left( \frac{k}{nr3} \right) \frac{alat}{bmod} 
   !          
   !---------------------
-
   !
   ! Loop in the charge array
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  !
+  j0 = dfftp%my_i0r2p
+  k0 = dfftp%my_i0r3p
+  !
   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
      ! ... three dimensional indexes
@@ -236,24 +229,24 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
      idx = idx - dfftp%nr1x * j
      j   = j + j0
      i   = idx
-
+     !
      ! ... do not include points outside the physical range
-
+     !
      IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
- 
-     if (edir.eq.1) sawarg = DBLE(i)/DBLE(dfftp%nr1)
-     if (edir.eq.2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
-     if (edir.eq.3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
-     
+     !
+     IF (edir==1) sawarg = DBLE(i)/DBLE(dfftp%nr1)
+     IF (edir==2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
+     IF (edir==3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
+     !
      value = e2*(eamp - tot_dipole)*saw(emaxpos,eopreg,sawarg) * (alat/bmod)
-
+     !
      vpoten(ir) = vpoten(ir) + value
-
-  END DO
-  
-  
+     !
+  ENDDO
+  !
+  !
   RETURN
-
+  !
 END SUBROUTINE add_efield
 ! 
 

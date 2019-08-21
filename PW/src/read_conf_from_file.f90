@@ -7,18 +7,18 @@
 !
 !
 !-----------------------------------------------------------------------
-FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
-     omega, tau) RESULT (ierr)
+FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !-----------------------------------------------------------------------
   ! FIXME: half of the variables are passed as arguments, half in modules
+  ! FIXME: this routines does two different things
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
-  USE io_files,        ONLY : tmp_dir, prefix, postfix, &
+  USE io_files,        ONLY : restart_dir, xmlpun_schema, &
                               psfile, pseudo_dir, pseudo_dir_cur
-  USE ions_base,       ONLY : nsp, ityp, amass, atm
-  USE cell_base,       ONLY : alat, ibrav
-  USE pw_restart_new,  ONLY : pw_read_schema
+  USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau
+  USE cell_base,       ONLY : alat, ibrav, at, bg, omega
+  USE qexsd_module,    ONLY : qexsd_readschema
   USE qexsd_copy,      ONLY : qexsd_copy_atomic_species, &
                               qexsd_copy_atomic_structure
   USE qes_types_module,ONLY : output_type
@@ -27,22 +27,21 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   IMPLICIT NONE
   !
   LOGICAL,INTENT(in)     :: lmovecell
-  INTEGER,INTENT(in)     :: nat
   REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
-  REAL(DP),INTENT(inout) :: at(3,3), bg(3,3), omega
-  REAL(DP),INTENT(inout) :: tau(3,nat)
   INTEGER :: ierr, nat_
-!
+  !
   TYPE ( output_type)                   :: output_obj
   !
-  pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  pseudo_dir_cur = restart_dir () 
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
                 &  /,5X,A)') pseudo_dir_cur
   !
-  ! ... check if restart file is present, if yes read config parameters
+  ! ... check if restart file is present, if so read config parameters
   !
-  CALL pw_read_schema ( ierr, output_obj )
-  IF (ierr == 0 ) THEN 
+  ierr = qexsd_readschema ( TRIM(pseudo_dir_cur)//xmlpun_schema, output_obj )
+  !
+  IF (ierr == 0 ) THEN
+     !
      CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
           nsp, atm, amass, PSFILE=psfile, PSEUDO_DIR=pseudo_dir )
      IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
@@ -54,9 +53,8 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
      tau(:,1:nat) = tau(:,1:nat)/alat  
      CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
      CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-  END IF 
-  !
-  IF ( ierr > 0 ) THEN
+     !
+  ELSE
      !
      WRITE( stdout, '(5X,"Nothing found: ", &
                        & "using input atomic positions and unit cell",/)' )

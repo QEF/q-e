@@ -20,7 +20,7 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
 #endif
   USE cg_param,      ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
-       nbgrp, my_bgrp_id
+          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -123,7 +123,7 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   call start_clock('rotwfck:diag');  !write(*,*) 'start rotwfck:diag';FLUSH(6)
   !! cdiaghg on GPU. See interface from LAXlib module
-  CALL diaghg( nstart, nbnd, hc_d, sc_d, nstart, en_d, vc_d )
+  CALL diaghg( nstart, nbnd, hc_d, sc_d, nstart, en_d, vc_d, me_bgrp, root_bgrp, intra_bgrp_comm )
   call stop_clock('rotwfck:diag');  !write(*,*) 'stop rotwfck:diag';FLUSH(6)
   call start_clock('rotwfck:evc'); !write(*,*) 'start rotwfck:evc';FLUSH(6)
   !

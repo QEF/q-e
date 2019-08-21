@@ -24,7 +24,6 @@
            c_bgrp_pack
       USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn, nbspx
       USE electrons_module, ONLY: ei
-      USE io_files,         ONLY: tmp_dir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
       USE control_flags,    ONLY: tksw, ndw, io_level
@@ -53,7 +52,7 @@
 
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       INTEGER  :: nk = 1, ispin, i, ib, ierr
-      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
+      REAL(DP) :: xk(3,2)=0.0_dp, wk(2)=1.0_dp
       COMPLEX(DP), ALLOCATABLE :: ctot(:,:)
       REAL(DP),    ALLOCATABLE :: eitot(:,:)
       INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
@@ -121,7 +120,6 @@
 ! read from file and distribute data calculated in preceding iterations
 !
       USE kinds,          ONLY : DP
-      USE io_files,       ONLY : tmp_dir
       USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ, nbspx
       USE gvecw,          ONLY : ngw
       USE ions_base,      ONLY : nsp, na, cdmi, taui
@@ -152,13 +150,13 @@
       !
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib, ierr
-      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
+      REAL(DP) :: xk(3,2), wk(2)
       REAL(DP), ALLOCATABLE :: occ_ ( : )
       REAL(DP) :: b1(3) , b2(3), b3(3)
 
 
       IF( flag == -1 ) THEN
-        CALL cp_read_cell( ndr, tmp_dir, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
+        CALL cp_read_cell( ndr, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
         h     = TRANSPOSE( ht )
         hold  = TRANSPOSE( htm )
         velh  = TRANSPOSE( htvel )
@@ -167,7 +165,7 @@
  
       IF ( flag == 0 ) THEN
         DO ispin = 1, nspin
-          CALL cp_read_wfc( ndr, tmp_dir, 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
+          CALL cp_read_wfc( ndr, 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
         END DO
         CALL c_bgrp_pack( cm )
         RETURN

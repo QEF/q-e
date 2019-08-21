@@ -51,7 +51,7 @@
                             cumulant, bnd_cum, proj, write_wfn, iswitch, ntempxx, &
                             liso, lacon, lpade, etf_mem, epbwrite, &
                             nsiter, conv_thr_racon, specfun_el, specfun_ph, &
-                            pwc, nswc, nswfc, nswi, &
+                            pwc, nswc, nswfc, nswi, nc, &
                             nbndsub, nbndskip, system_2d, delta_approx, &
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, restart, restart_freq, &
@@ -73,7 +73,6 @@
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id
   USE io_epw,        ONLY : iunkf, iunqf
   USE noncollin_module, ONLY : npol
-  USE wavefunctions, ONLY : evc
   USE wvfct,         ONLY : npwx
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
@@ -114,7 +113,7 @@
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn,                &
        wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen,                    & 
-       elecselfen, phonselfen, use_ws,                                         &
+       elecselfen, phonselfen, use_ws, nc,                                     &
        rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           & 
@@ -291,6 +290,7 @@
   ! use_ws          : If .true., use the Wannier-center to create the Wigner-Seitz cell. 
   ! epmatkqread     : If .true., restart an IBTE calculation from scattering written to files. 
   ! selecqread      : If .true., restart from the selecq.fmt file
+  ! nc              : Number of carrier for the Ziman resistivity formula (can be fractional)
   !  
   ! Added by Manos Kioupakis
   ! omegamin  : Photon energy minimum
@@ -489,6 +489,7 @@
   use_ws     = .false.
   epmatkqread = .false.
   selecqread = .false.
+  nc         = 4.0d0
   !
   !     reading the namelist inputepw
   !

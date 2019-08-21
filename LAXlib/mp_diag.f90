@@ -10,9 +10,7 @@
 MODULE mp_diag
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_size, mp_rank, mp_sum, mp_comm_free, mp_comm_split
-  !
-  USE parallel_include
+  USE la_param
   !
   IMPLICIT NONE 
   SAVE
@@ -59,7 +57,7 @@ CONTAINS
                                        ! communicators are created
     LOGICAL, INTENT(IN) :: do_distr_diag_inside_bgrp_  ! comme son nom l'indique
     !
-    INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a mp_rank call
+    INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a laxlib_rank call
     !
     INTEGER :: nproc_ortho_try
     INTEGER :: parent_nproc ! nproc of the parent group
@@ -68,9 +66,9 @@ CONTAINS
     INTEGER :: nparent_comm ! mumber of parent communicators
     INTEGER :: ierr = 0
     !
-    world_nproc  = mp_size( my_world_comm ) ! the global number of processors in world_comm
-    mpime        = mp_rank( my_world_comm ) ! set the global MPI task index  (used in clocks)
-    parent_nproc = mp_size( parent_comm )! the number of processors in the current parent communicator
+    world_nproc  = laxlib_size( my_world_comm ) ! the global number of processors in world_comm
+    mpime        = laxlib_rank( my_world_comm ) ! set the global MPI task index  (used in clocks)
+    parent_nproc = laxlib_size( parent_comm )! the number of processors in the current parent communicator
     my_parent_id = mpime / parent_nproc  ! set the index of the current parent communicator
     nparent_comm = world_nproc/parent_nproc ! number of paren communicators
 
@@ -79,8 +77,8 @@ CONTAINS
 
     !
 #if defined __SCALAPACK
-    np_blacs     = mp_size( my_world_comm )
-    me_blacs     = mp_rank( my_world_comm )
+    np_blacs     = laxlib_size( my_world_comm )
+    me_blacs     = laxlib_rank( my_world_comm )
     !
     ! define a 1D grid containing all MPI tasks of the global communicator
     ! NOTE: world_cntx has the MPI communicator on entry and the BLACS context on exit
@@ -141,9 +139,9 @@ CONTAINS
 
 #if defined __MPI
 
-    me_all    = mp_rank( comm_all )
+    me_all    = laxlib_rank( comm_all )
     !
-    nproc_all = mp_size( comm_all )
+    nproc_all = laxlib_size( comm_all )
     !
     nproc_try = MIN( nproc_try_in, nproc_all )
     nproc_try = MAX( nproc_try, 1 )
@@ -195,7 +193,7 @@ CONTAINS
     !
     !  initialize the communicator for the new group by splitting the input communicator
     !
-    CALL mp_comm_split ( comm_all, color, key, ortho_comm )
+    CALL laxlib_comm_split ( comm_all, color, key, ortho_comm )
     !
     ! and remember where it comes from
     !
@@ -203,22 +201,22 @@ CONTAINS
     !
     !  Computes coordinates of the processors, in row maior order
     !
-    me_ortho1   = mp_rank( ortho_comm )
+    me_ortho1   = laxlib_rank( ortho_comm )
     !
     IF( me_all == 0 .AND. me_ortho1 /= 0 ) &
-         CALL errore( " init_ortho_group ", " wrong root task in ortho group ", ierr )
+         CALL lax_error__( " init_ortho_group ", " wrong root task in ortho group ", ierr )
     !
     if( color == 1 ) then
        ortho_comm_id = 1
        CALL GRID2D_COORDS( 'R', me_ortho1, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
        CALL GRID2D_RANK( 'R', np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2), ierr )
        IF( ierr /= me_ortho1 ) &
-            CALL errore( " init_ortho_group ", " wrong task coordinates in ortho group ", ierr )
+            CALL lax_error__( " init_ortho_group ", " wrong task coordinates in ortho group ", ierr )
        IF( me_ortho1*leg_ortho /= me_all ) &
-            CALL errore( " init_ortho_group ", " wrong rank assignment in ortho group ", ierr )
+            CALL lax_error__( " init_ortho_group ", " wrong rank assignment in ortho group ", ierr )
 
-       CALL mp_comm_split( ortho_comm, me_ortho(2), me_ortho(1), ortho_col_comm)
-       CALL mp_comm_split( ortho_comm, me_ortho(1), me_ortho(2), ortho_row_comm)
+       CALL laxlib_comm_split( ortho_comm, me_ortho(2), me_ortho(1), ortho_col_comm)
+       CALL laxlib_comm_split( ortho_comm, me_ortho(1), me_ortho(2), ortho_row_comm)
 
     else
        ortho_comm_id = 0
@@ -249,7 +247,12 @@ CONTAINS
 
          ! All MPI tasks defined in the global communicator take part in the definition of the BLACS grid
 
-         CALL mp_sum( blacsmap, my_world_comm ) 
+#if defined(__MPI)
+         CALL MPI_ALLREDUCE( MPI_IN_PLACE, blacsmap,  SIZE(blacsmap), MPI_INTEGER, MPI_SUM, my_world_comm, ierr )
+         IF( ierr /= 0 ) &
+            CALL lax_error__( ' init_ortho_group ', ' problem in MPI_ALLREDUCE of blacsmap ', ierr )
+#endif
+
 
          CALL BLACS_GRIDMAP( ortho_cntx_pe( j ), blacsmap, nprow, nprow, npcol )
 
@@ -258,13 +261,13 @@ CONTAINS
          IF( ( j == ( my_parent_id + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
 
             IF(  np_ortho(1) /= nprow ) &
-               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong no. of task rows ', 1 )
+               CALL lax_error__( ' init_ortho_group ', ' problem with SCALAPACK, wrong no. of task rows ', 1 )
             IF(  np_ortho(2) /= npcol ) &
-               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong no. of task columns ', 1 )
+               CALL lax_error__( ' init_ortho_group ', ' problem with SCALAPACK, wrong no. of task columns ', 1 )
             IF(  me_ortho(1) /= myrow ) &
-               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong task row ID ', 1 )
+               CALL lax_error__( ' init_ortho_group ', ' problem with SCALAPACK, wrong task row ID ', 1 )
             IF(  me_ortho(2) /= mycol ) &
-               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong task columns ID ', 1 )
+               CALL lax_error__( ' init_ortho_group ', ' problem with SCALAPACK, wrong task columns ID ', 1 )
 
             ortho_cntx = ortho_cntx_pe( j )
 
@@ -293,10 +296,10 @@ CONTAINS
     !  
     !  free resources associated to the communicator
     !
-    CALL mp_comm_free( ortho_comm )
+    CALL laxlib_comm_free( ortho_comm )
     IF(  ortho_comm_id > 0  ) THEN
-       CALL mp_comm_free( ortho_col_comm )
-       CALL mp_comm_free( ortho_row_comm )
+       CALL laxlib_comm_free( ortho_col_comm )
+       CALL laxlib_comm_free( ortho_row_comm )
     ENDIF
 #if defined __SCALAPACK
     IF(  ortho_cntx /= -1 ) CALL BLACS_GRIDEXIT( ortho_cntx )
@@ -304,5 +307,67 @@ CONTAINS
 #endif
     !
   END SUBROUTINE clean_ortho_group
+  !
+!------------------------------------------------------------------------------!
+      FUNCTION laxlib_rank( comm )
+        IMPLICIT NONE
+        INTEGER :: laxlib_rank
+        INTEGER, INTENT(IN) :: comm
+        INTEGER :: ierr, taskid
+
+        ierr = 0
+        taskid = 0
+#if defined(__MPI)
+        CALL mpi_comm_rank(comm,taskid,ierr)
+        IF (ierr/=0) CALL lax_error__( ' laxlib_rank ', ' problem getting MPI rank ', 1 )
+#endif
+        laxlib_rank = taskid
+      END FUNCTION laxlib_rank
+
+!------------------------------------------------------------------------------!
+      FUNCTION laxlib_size( comm )
+        IMPLICIT NONE
+        INTEGER :: laxlib_size
+        INTEGER, INTENT(IN) :: comm
+        INTEGER :: ierr, numtask
+
+        ierr = 0
+        numtask = 1
+#if defined(__MPI)
+        CALL mpi_comm_size(comm,numtask,ierr)
+        IF (ierr/=0) CALL lax_error__( ' laxlib_size ', ' problem getting MPI size ', 1 )
+#endif
+        laxlib_size = numtask
+      END FUNCTION laxlib_size
+
+      SUBROUTINE laxlib_comm_split( old_comm, color, key, new_comm )
+         IMPLICIT NONE
+         INTEGER, INTENT (IN) :: old_comm
+         INTEGER, INTENT (IN) :: color, key
+         INTEGER, INTENT (OUT) :: new_comm
+         INTEGER :: ierr
+         ierr = 0
+#if defined(__MPI)
+         CALL MPI_COMM_SPLIT( old_comm, color, key, new_comm, ierr )
+         IF (ierr/=0) CALL lax_error__( ' laxlib_comm_split ', ' problem splitting MPI communicator ', 1 )
+#else
+         new_comm = old_comm
+#endif
+      END SUBROUTINE  laxlib_comm_split
+
+      SUBROUTINE laxlib_comm_free( comm )
+         IMPLICIT NONE
+         INTEGER, INTENT (INOUT) :: comm
+         INTEGER :: ierr
+         ierr = 0
+#if defined(__MPI)
+         IF( comm /= MPI_COMM_NULL ) THEN
+            CALL mpi_comm_free( comm, ierr )
+            IF (ierr/=0) CALL lax_error__( ' laxlib_comm_free ', ' problem freeing MPI communicator ', 1 )
+         END IF
+#endif
+         RETURN
+      END SUBROUTINE laxlib_comm_free
+
   !
 END MODULE mp_diag

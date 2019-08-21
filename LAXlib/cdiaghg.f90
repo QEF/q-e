@@ -10,7 +10,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
+SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -19,9 +19,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
-  USE la_param,          ONLY : DP
-  USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
-  USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE la_param
   !
   IMPLICIT NONE
   !
@@ -37,6 +35,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
     ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
+  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
   !
   INTEGER                  :: lwork, nb, mm, info, i, j
     ! mm = number of calculated eigenvectors
@@ -155,11 +154,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      DEALLOCATE( work )
      !
      IF ( info > n ) THEN
-        CALL errore( 'cdiaghg', 'S matrix not positive definite', ABS( info ) )
+        CALL lax_error__( 'cdiaghg', 'S matrix not positive definite', ABS( info ) )
      ELSE IF ( info > 0 ) THEN
-        CALL errore( 'cdiaghg', 'eigenvectors failed to converge', ABS( info ) )
+        CALL lax_error__( 'cdiaghg', 'eigenvectors failed to converge', ABS( info ) )
      ELSE IF ( info < 0 ) THEN
-        CALL errore( 'cdiaghg', 'incorrect call to ZHEGV*', ABS( info ) )
+        CALL lax_error__( 'cdiaghg', 'incorrect call to ZHEGV*', ABS( info ) )
      END IF
      !
      ! ... restore input S matrix from saved diagonal and lower triangle
@@ -180,8 +179,14 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
-  CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )
+#if defined __MPI
+  CALL MPI_BCAST( e, SIZE(e), MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e', ABS( info ) )
+  CALL MPI_BCAST( v, SIZE(v), MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v', ABS( info ) )
+#endif
   !
   CALL stop_clock( 'cdiaghg' )
   !
@@ -191,7 +196,7 @@ END SUBROUTINE cdiaghg
 !
 #if defined(__CUDA)
 !----------------------------------------------------------------------------
-SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
+SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -201,9 +206,8 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   !
   USE cudafor
   USE zhegvdx_gpu
-  USE la_param,          ONLY : DP
-  USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
-  USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE la_param
+
 #define __USE_GLOBAL_BUFFER
 #if defined(__USE_GLOBAL_BUFFER)
   USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
@@ -227,6 +231,7 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   COMPLEX(DP), DEVICE,  INTENT(OUT) :: v_d(ldh,n)
     ! eigenvectors (column-wise), , allocated on the GPU
     ! NB: the dimension of v_d this is different from cdiaghg !!
+  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
   !
   INTEGER              :: lwork, info
   !
@@ -345,8 +350,35 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e_d(1:n), root_bgrp, intra_bgrp_comm )
-  CALL mp_bcast( v_d(1:ldh, 1:m), root_bgrp, intra_bgrp_comm )
+#if defined __MPI
+#if defined __GPU_MPI
+  info = cudaDeviceSynchronize()
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error synchronizing device (first)', ABS( info ) )
+  CALL MPI_BCAST( e_d, n, MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e_d', ABS( info ) )
+  CALL MPI_BCAST( v_d, ldh*m, MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v_d', ABS( info ) )
+  info = cudaDeviceSynchronize() ! this is probably redundant...
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error synchronizing device (second)', ABS( info ) )
+#else
+  ALLOCATE(e_h(n), v_h(ldh,m))
+  e_h(1:n) = e_d(1:n)
+  v_h(1:ldh, 1:m) = v_d(1:ldh, 1:m)
+  CALL MPI_BCAST( e_h, n, MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e_d', ABS( info ) )
+  CALL MPI_BCAST( v_h, ldh*m, MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v_d', ABS( info ) )
+  e_d(1:n) = e_h(1:n)
+  v_d(1:ldh, 1:m) = v_h(1:ldh, 1:m)
+  DEALLOCATE(e_h, v_h)
+#endif
+#endif
   !
   CALL stop_clock( 'cdiaghg_gpu' )
   !
@@ -365,8 +397,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version, with full data distribution
   !
-  USE la_param,         ONLY : DP
-  USE mp,               ONLY : mp_bcast
+  USE la_param
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
@@ -393,9 +424,9 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   TYPE(la_descriptor), INTENT(IN) :: desc
   !
   INTEGER, PARAMETER  :: root = 0
-  INTEGER             :: nx
+  INTEGER             :: nx, info
 #if defined __SCALAPACK
-  INTEGER             :: descsca( 16 ), info
+  INTEGER             :: descsca( 16 )
 #endif
     ! local block size
   COMPLEX(DP), ALLOCATABLE :: ss(:,:), hh(:,:), tt(:,:)
@@ -410,7 +441,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      nx   = desc%nrcx
      !
      IF( nx /= ldh ) &
-        CALL errore(" pcdiaghg ", " inconsistent leading dimension ", ldh )
+        CALL lax_error__(" pcdiaghg ", " inconsistent leading dimension ", ldh )
      !
      ALLOCATE( hh( nx, nx ) )
      ALLOCATE( ss( nx, nx ) )
@@ -429,14 +460,14 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
 #if defined __SCALAPACK
      CALL descinit( descsca, n, n, desc%nrcx, desc%nrcx, 0, 0, ortho_cntx, SIZE( ss, 1 ) , info )
      !
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' desckinit ', ABS( info ) )
 #endif
      !
 #if defined __SCALAPACK
 
      CALL pzpotrf( 'L', n, ss, 1, 1, descsca, info )
 
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
      CALL qe_pzpotrf( ss, nx, n, desc )
 #endif
@@ -459,7 +490,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
      CALL pztrtri( 'L', 'N', n, ss, 1, 1, descsca, info )
      !
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
      CALL qe_pztrtri( ss, nx, n, desc )
 #endif
@@ -526,7 +557,11 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL mp_bcast( e, root, ortho_parent_comm )
+#if defined __MPI
+  CALL MPI_BCAST( e, SIZE(e), MPI_DOUBLE_PRECISION, root, ortho_parent_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'pcdiaghg', 'error broadcasting array e', ABS( info ) )
+#endif
   !
   CALL stop_clock( 'cdiaghg:paragemm' )
   !
@@ -576,10 +611,14 @@ CONTAINS
         close(100)
         DEALLOCATE( diag )
      END IF
-     CALL mp_bcast( tt, 0, desc%comm )
+#if defined __MPI
+     CALL MPI_BCAST( tt, SIZE(tt), MPI_DOUBLE_COMPLEX, 0, desc%comm, info )
+     IF ( info /= 0 ) &
+        CALL lax_error__( 'test_drv_end', 'error broadcasting array e', ABS( info ) )
+#endif
      CALL zsqmdst( n, tt, n, hh, nx, desc )
      DEALLOCATE( tt )
-     CALL errore('cdiaghg','stop serial',1)
+     CALL lax_error__('cdiaghg','stop serial',1)
      RETURN
   END SUBROUTINE test_drv_end
   !

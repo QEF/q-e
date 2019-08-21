@@ -20,9 +20,9 @@
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, ntyp => nsp, tau
-  USE becmod,           ONLY : calbec
+  USE becmod,           ONLY : calbec, becp, allocate_bec_type
   USE lrus,             ONLY : becp1
-  USE uspp,             ONLY : vkb
+  USE uspp,             ONLY : vkb, nlcc_any, okvan, nkb
   USE pwcom,            ONLY : npwx, nbnd, nks
   USE klist_epw,        ONLY : xk_loc, isk_loc
   USE constants,        ONLY : tpi
@@ -33,21 +33,17 @@
   USE atom,             ONLY : msh, rgrid
   USE wavefunctions,    ONLY : evc
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE uspp_param,       ONLY : upf
+  USE uspp_param,       ONLY : upf, nhm
   USE m_gth,            ONLY : setlocq_gth
   USE units_lr,         ONLY : lrwfc, iuwfc
   USE phcom,            ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
   USE nlcc_ph,          ONLY : drc                           
-  USE uspp,             ONLY : nlcc_any
   USE elph2,            ONLY : igk_k_all, ngk_all
   USE mp,               ONLY : mp_barrier
   USE mp_global,        ONLY : inter_pool_comm, my_pool_id
   USE spin_orb,         ONLY : lspinorb
-  USE uspp_param,       ONLY : nhm
-  USE uspp,             ONLY : okvan, nkb
   USE lsda_mod,         ONLY : nspin, lsda, current_spin
-  USE becmod,           ONLY : becp, allocate_bec_type
   USE phus,             ONLY : int1, int1_nc, int2, int2_so, &
                                int4, int4_nc, int5, int5_so, &
                                alphap
@@ -110,7 +106,7 @@
     CALL allocate_bec_type(nkb, nbnd, becp)
   ENDIF
   ! 
-  DO na=1, nat
+  DO na = 1, nat
     !
     ! xq here is the first q of the star
     arg = (xq(1) * tau(1, na) + &
@@ -144,7 +140,7 @@
   ALLOCATE (aux1(npwx*npol, nbnd))
   !ALLOCATE (evc(npwx*npol, nbnd))
   ! 
-  DO ik=1, nks
+  DO ik = 1, nks
     !
     !
     IF (lsda) current_spin = isk_loc(ik)
@@ -180,16 +176,15 @@
           ENDDO
         ENDIF
       ENDDO
-      CALL calbec( ngk(ik), vkb, aux1, alphap(ipol,ik) )
+      CALL calbec( ngk(ik), vkb, aux1, alphap(ipol,ik) )      
     ENDDO
-    !
     !
   ENDDO
   !
   DEALLOCATE (aux1)
   !
-  IF( .NOT.  ALLOCATED(igk_k_all)) ALLOCATE (igk_k_all(npwx,nkstot))
-  IF( .NOT.  ALLOCATED(ngk_all))   ALLOCATE (ngk_all(nkstot))
+  IF( .NOT. ALLOCATED(igk_k_all) ) ALLOCATE (igk_k_all(npwx,nkstot))
+  IF( .NOT. ALLOCATED(ngk_all) )   ALLOCATE (ngk_all(nkstot))
   !
 #if defined(__MPI)
   !
@@ -204,7 +199,7 @@
   !
 #endif
   !
-  IF ( .NOT. first_run) CALL dvanqq2()
+  IF ( .NOT. first_run ) CALL dvanqq2()
   !
   CALL stop_clock( 'epw_init' )
   !

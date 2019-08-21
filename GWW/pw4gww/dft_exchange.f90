@@ -301,7 +301,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
    deallocate(fac)
    deallocate(prod_c,prod_g,prod_g2)
    deallocate(prod_r)
-   if(okvan) deallocate(becpr)
+   ! if(okvan) deallocate(becpr)
    if(l_whole_s) then
 !NOT_TO_BE_INCLUDED_START
       deallocate(e_x_off)

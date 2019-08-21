@@ -1219,7 +1219,7 @@
     ENDDO
     !
     ALLOCATE ( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-    ALLOCATE ( qb(nkb, nkb, ntyp, nbt) )
+    ALLOCATE ( qb(nhm, nhm, ntyp, nbt) ) 
     ALLOCATE ( qq_so(nhm, nhm, 4, ntyp) )
     !
     CALL ylmr2(lmaxq*lmaxq, nbt, dxk, qg, ylm)
@@ -1567,8 +1567,8 @@
   !
   any_uspp = ANY( upf(:)%tvanp )
   !
-  IF (any_uspp .and. noncolin) CALL errore('pw2wan90epw',&
-             'noncolin calculation not implimented with USP',1)
+  IF ( any_uspp ) CALL errore('pw2wan90epw',&
+    'dipole matrix calculation not implimented with USP - set vme=.true.',1)
   !
   ALLOCATE (dmec(3, nbnd, nbnd, nks))
   !

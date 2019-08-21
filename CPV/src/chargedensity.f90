@@ -65,7 +65,7 @@
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
       USE io_base,            ONLY: read_rhog
-      USE io_files,           ONLY: tmp_dir, prefix, postfix
+      USE io_files,           ONLY: restart_dir
       USE fft_rho
       USE fft_helper_subroutines, ONLY: c2psi_gamma
       !
@@ -182,8 +182,7 @@
          !
          IF( first ) THEN
             CALL errore('rhoofr','option trhor unverified, please report',1)
-            WRITE(filename,'(A,A,"_",I2,A,"charge-density")') &
-                 TRIM(tmp_dir), TRIM(prefix), ndr,postfix
+            filename = TRIM( restart_dir(ndr) ) // "charge-density"
             CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
                  ig_l2g, nspin, rhog )
             !

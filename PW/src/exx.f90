@@ -76,7 +76,7 @@ MODULE exx
   LOGICAL :: exx_fft_initialized = .FALSE.
   ! G^2 in custom grid
   REAL(kind=DP), DIMENSION(:), POINTER :: ggt => null()
-  ! G-vectors in custom grid
+  ! G-vectors in custom gri
   REAL(kind=DP), DIMENSION(:,:),POINTER :: gt => null()
   ! gstart_t=2 if ggt(1)=0, =1 otherwise
   INTEGER :: gstart_t
@@ -466,15 +466,17 @@ MODULE exx
     END IF
 
     !assign buffer
-    IF(DoLoc) then
+    IF(DoLoc) THEN
+      IF(gamma_only) THEN
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
-      DO ikq=1,SIZE(locbuff,3) 
-         DO ibnd=1, x_nbnd_occ 
+        DO ikq=1,SIZE(locbuff,3) 
+          DO ibnd=1, x_nbnd_occ 
             DO ir=1,nrxxs*npol
-               locbuff(ir,ibnd,ikq)=0.0_DP
+              locbuff(ir,ibnd,ikq)=0.0_DP
             ENDDO
-         ENDDO
-      ENDDO
+          ENDDO
+        ENDDO
+      ENDIF
     ELSE
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
       DO ikq=1,SIZE(exxbuff,3) 
@@ -1158,6 +1160,7 @@ MODULE exx
     !
     DEALLOCATE(big_result)
     DEALLOCATE( result, temppsic_dble, temppsic_aimag)
+    DEALLOCATE( psi_rhoc_work )
     DEALLOCATE( vc, fac )
     IF(okvan) DEALLOCATE( deexx )
     !

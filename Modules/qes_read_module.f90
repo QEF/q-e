@@ -2507,6 +2507,13 @@ MODULE qes_read_module
       obj%bravais_index_ispresent = .FALSE.
     END IF
     !
+    IF (hasAttribute(xml_node, "alternative_axes")) THEN
+      CALL extractDataAttribute(xml_node, "alternative_axes", obj%alternative_axes)
+      obj%alternative_axes_ispresent = .TRUE.
+    ELSE
+      obj%alternative_axes_ispresent = .FALSE.
+    END IF
+    !
 
 
 

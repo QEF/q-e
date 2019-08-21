@@ -16,11 +16,12 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   ! 1) iexch libxc + icorr libxc
   ! 2) iexch qe    + icorr qe
   !
-  USE kinds,        ONLY: DP
+  USE kinds,            ONLY: DP
+  USE funct,            ONLY: get_iexch, get_icorr, is_libxc
+  USE xc_lda_lsda,      ONLY: xc_lda, xc_lsda
 #if defined(__LIBXC)
   USE xc_f90_types_m
   USE xc_f90_lib_m
-  USE xc_lda_lsda
 #endif
   !
   IMPLICIT NONE
@@ -45,13 +46,16 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   LOGICAL :: exch_lxc_avail, corr_lxc_avail
 #endif
   !
+  INTEGER :: iexch, icorr
   INTEGER :: ir, length_lxc, length_dlxc
   REAL(DP), PARAMETER :: small = 1.E-10_DP, rho_trash = 0.5_DP
   !
+  iexch = get_iexch()
+  icorr = get_icorr()
   !
 #if defined(__LIBXC)
   !
-  IF (libxc_switches_lda(1)==1 .AND. libxc_switches_lda(2)==1) THEN
+  IF (is_libxc(1) .AND. is_libxc(2)) THEN
     !
     length_lxc = length*sr_d
     !
@@ -91,12 +95,12 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
               dmxc_lxc(length_dlxc) )
     !
     ! ... DERIVATIVE FOR EXCHANGE
-    CALL xc_f90_func_init( xc_func, xc_info1, iexch_l, pol_unpol )
+    CALL xc_f90_func_init( xc_func, xc_info1, iexch, pol_unpol )
      CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
     CALL xc_f90_func_end( xc_func )
     !
     ! ... DERIVATIVE FOR CORRELATION
-    CALL xc_f90_func_init( xc_func, xc_info2, icorr_l, pol_unpol )
+    CALL xc_f90_func_init( xc_func, xc_info2, icorr, pol_unpol )
      CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
     CALL xc_f90_func_end( xc_func )
     !
@@ -116,7 +120,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
     DEALLOCATE( dmex_lxc, dmcr_lxc, dmxc_lxc )
     DEALLOCATE( rho_lxc )
     !
-  ELSEIF (libxc_switches_lda(1)==0 .AND. libxc_switches_lda(2)==0 ) THEN
+  ELSEIF ((.NOT.is_libxc(1)) .AND. (.NOT.is_libxc(2)) ) THEN
     !
     IF ( sr_d == 1 ) CALL dmxc_lda( length, rho_in(:,1), dmuxc(:,1,1) )
     IF ( sr_d == 2 ) CALL dmxc_lsda( length, rho_in, dmuxc )
@@ -163,7 +167,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !! Computes the derivative of the xc potential with respect to the 
   !! local density.
   !
-  USE xc_lda_lsda,  ONLY: xc_lda, iexch_l, icorr_l
+  USE xc_lda_lsda,  ONLY: xc_lda
+  USE funct,        ONLY: get_iexch, get_icorr
   USE kinds,        ONLY: DP
   !
   IMPLICIT NONE
@@ -183,7 +188,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   REAL(DP) :: rho, rs, ex_s, vx_s
   REAL(DP) :: dpz
-  INTEGER :: iflg, ir, i1, i2, f1, f2
+  INTEGER  :: iexch, icorr
+  INTEGER  :: iflg, ir, i1, i2, f1, f2
   !
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,        &
                          pi34 = 0.75_DP/3.141592653589793_DP,   &
@@ -197,11 +203,14 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   ntids = omp_get_num_threads()
 #endif  
   !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  !
   dmuxc = 0.0_DP
   !
   ! ... first case: analytical derivatives available
   !
-  IF (iexch_l == 1 .AND. icorr_l == 1) THEN
+  IF (iexch == 1 .AND. icorr == 1) THEN
   !
 !$omp parallel if(ntids==1)
 !$omp do private( rs, rho, ex_s, vx_s )
@@ -280,7 +289,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !! local density in the spin-polarized case.
   !
   USE kinds,          ONLY: DP
-  USE xc_lda_lsda,    ONLY: xc_lsda, iexch_l, icorr_l
+  USE funct,          ONLY: get_iexch, get_icorr
+  USE xc_lda_lsda,    ONLY: xc_lsda
   !
   IMPLICIT NONE
   !
@@ -294,7 +304,6 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   ! ... local variables
   !
   REAL(DP), DIMENSION(length) :: rhotot, zeta, zeta_eff
-  REAL(DP), DIMENSION(length) :: null_v
   !
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux1, aux2, dr, dz
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, zetaux
@@ -307,6 +316,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   REAL(DP) :: dpz, dpz_polarized
   !
+  INTEGER :: iexch, icorr
   INTEGER :: ir, is, iflg
   INTEGER :: i1, i2, i3, i4
   INTEGER :: f1, f2, f3, f4
@@ -314,14 +324,15 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP,      &
                          pi34 = 0.75_DP/3.141592653589793_DP, &
                          third = 1.0_DP/3.0_DP, p43 = 4.0_DP/3.0_DP, &
-                         p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP,  &
-                         rho_trash = 0.5_DP, zeta_trash = 0.5_DP
+                         p49 = 4.0_DP/9.0_DP, m23 = -2.0_DP/3.0_DP
   !
-  dmuxc  = 0.0_DP
-  null_v = 1.0_DP
+  iexch = get_iexch()
+  icorr = get_icorr()
+  !
+  dmuxc = 0.0_DP
   rhotot(:) = rho_in(:,1) + rho_in(:,2)
   !
-  IF (iexch_l == 1 .AND. icorr_l == 1) THEN
+  IF (iexch == 1 .AND. icorr == 1) THEN
      !
      ! ... first case: analytical derivative available
      !
@@ -394,39 +405,40 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
      dz(:) = 1.E-6_DP  ! dz(:) = MIN( 1.d-6, 1.d-4*ABS(zeta(:)) )
      !
-     ! ... THRESHOLD STUFF
+     ! ... THRESHOLD STUFF AND dr(:)
+     dr(:) = 0.0_DP
+     zeta(:) = 0.0_dp
+     zeta_eff(:) = 0.0_dp
      DO ir = 1, length
-        zeta_s=zeta_trash
-        IF (rhotot(ir) <= small) THEN
-           rhotot(ir)=rho_trash ; null_v(ir) = 0.0_DP
+        IF (rhotot(ir) > small) THEN
+           zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
+           zeta(ir) = zeta_s
+           ! ... If zeta is too close to +-1, the derivative is computed at a slightly
+           ! smaller zeta
+           zeta_eff(ir) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(ir)) ), zeta_s )
+           dr(ir) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(ir) )
         ENDIF
-        IF (rhotot(ir) > small) zeta_s = (rho_in(ir,1) - rho_in(ir,2)) / rhotot(ir)
-        zeta(ir) = zeta_s
-        ! ... If zeta is too close to +-1, the derivative is computed at a slightly
-        ! smaller zeta
-        zeta_eff(ir) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(ir)) ), zeta_s )
-        IF (ABS(zeta_s) > 1.0_DP) null_v(ir) = 0.0_DP
      ENDDO
-     !
-     dr(:) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(:) )
      !
      rhoaux(i1:f1) = rhotot + dr    ;   zetaux(i1:f1) = zeta
      rhoaux(i2:f2) = rhotot - dr    ;   zetaux(i2:f2) = zeta
      rhoaux(i3:f3) = rhotot         ;   zetaux(i3:f3) = zeta_eff + dz
      rhoaux(i4:f4) = rhotot         ;   zetaux(i4:f4) = zeta_eff - dz
      !
-     !
      CALL xc_lsda( length*4, rhoaux, zetaux, aux1, aux2, vx, vc )
      !
+     WHERE (rhotot <= small)  ! ... to avoid NaN in the next operations
+        dr=1.0_DP ; rhotot=0.5d0
+     END WHERE
      !
      dmuxc(:,1,1) = ( vx(i1:f1,1) + vc(i1:f1,1) - vx(i2:f2,1) - vc(i2:f2,1) ) / (2.0_DP*dr)
      dmuxc(:,2,2) = ( vx(i1:f1,2) + vc(i1:f1,2) - vx(i2:f2,2) - vc(i2:f2,2) ) / (2.0_DP*dr)
      !
      aux1(i1:f1) = 1.0_DP / rhotot(:) / (2.0_DP*dz(:))
      aux1(i2:f2) = aux1(i1:f1)
-     DO is = 1, 2
-        vxc(i1:f2,is) = ( vx(i3:f4,is) + vc(i3:f4,is) ) * aux1(i1:f2)
-     ENDDO
+     !
+     vxc(i1:f2,1) = ( vx(i3:f4,1) + vc(i3:f4,1) ) * aux1(i1:f2)
+     vxc(i1:f2,2) = ( vx(i3:f4,2) + vc(i3:f4,2) ) * aux1(i1:f2)
      !
      dmuxc(:,2,1) = dmuxc(:,1,1) - (vxc(i1:f1,1) - vxc(i2:f2,1)) * (1.0_DP+zeta)
      dmuxc(:,1,2) = dmuxc(:,2,2) + (vxc(i1:f1,2) - vxc(i2:f2,2)) * (1.0_DP-zeta)
@@ -440,12 +452,9 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
   ENDIF
   !
-  ! ... bring to rydberg units and set to zero trash points
+  ! ... bring to Rydberg units
   !
-  dmuxc(:,1,1) = e2 * dmuxc(:,1,1) * null_v  !up-up
-  dmuxc(:,2,1) = e2 * dmuxc(:,2,1) * null_v  !down-up
-  dmuxc(:,1,2) = e2 * dmuxc(:,1,2) * null_v  !up-down
-  dmuxc(:,2,2) = e2 * dmuxc(:,2,2) * null_v  !down-down
+  dmuxc = e2 * dmuxc
   !
   RETURN
   !
@@ -474,10 +483,10 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   ! ... local variables
   !
-  REAL(DP), DIMENSION(length)     :: rhotot, amag, zeta, zeta_eff, dr, dz
-  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, zetaux
+  REAL(DP), DIMENSION(length) :: rhotot, amag, zeta, zeta_eff, dr, dz
   REAL(DP), DIMENSION(length) :: vs
-  INTEGER, DIMENSION(length) :: null_v
+  LOGICAL,  DIMENSION(length) :: is_null
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, zetaux
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux1, aux2
   REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: vx, vc
   REAL(DP), DIMENSION(length) :: dvxc_rho, dbx_rho, dby_rho, dbz_rho
@@ -486,7 +495,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
               dbx_mx, dbx_my, dbx_mz,    &
               dby_mx, dby_my, dby_mz,    &
               dbz_mx, dbz_my, dbz_mz
-  REAL(DP) :: rnull, zeta_s
+  REAL(DP) :: zeta_s
   !
   INTEGER :: i1, i2, i3, i4, i5, i
   INTEGER :: f1, f2, f3, f4, f5
@@ -504,7 +513,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   rhotot = rho_in
   zeta   = zeta_trash
   amag   = amag_trash
-  null_v = 1
+  is_null = .FALSE.
   !
   i1 = 1     ;   f1 = length    !           five blocks:  [ rho    , zeta    ]   
   i2 = f1+1  ;   f2 = 2*length  !                         [ rho+dr , zeta    ]   
@@ -517,17 +526,18 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   DO i = 1, length
      zeta_s = zeta_trash
      IF (rhotot(i) <= small) THEN
-        rhotot(i) = rho_trash ; null_v(i) = 0.0_DP
+        rhotot(i) = rho_trash
+        is_null(i) = .TRUE.
      ENDIF
      amag(i) = SQRT( m(i,1)**2 + m(i,2)**2 + m(i,3)**2 )
      IF (rhotot(i) > small) zeta_s = amag(i) / rhotot(i)
      zeta(i) = zeta_s
      zeta_eff(i) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(i)) ), zeta_s )
-     IF (ABS(zeta_s) > 1.0_DP) null_v(i) = 0
+     IF (ABS(zeta_s) > 1.0_DP) is_null(i) = .TRUE.
   ENDDO
   !
   dr = MIN( 1.E-6_DP, 1.E-4_DP * rhotot )
-  !   
+  !
   rhoaux(i1:f1) = rhotot         ;   zetaux(i1:f1) = zeta
   rhoaux(i2:f2) = rhotot + dr    ;   zetaux(i2:f2) = zeta
   rhoaux(i3:f3) = rhotot - dr    ;   zetaux(i3:f3) = zeta
@@ -542,7 +552,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   dvxc_rho(:) = ((vx(i2:f2,1) + vc(i2:f2,1) - vx(i3:f3,1) - vc(i3:f3,1)) + &
                 (vx(i2:f2,2) + vc(i2:f2,2) - vx(i3:f3,2) - vc(i3:f3,2))) / (4.0_DP*dr)
-  !   
+  !
   aux2(1:length) =  vx(i2:f2,1) + vc(i2:f2,1) - vx(i3:f3,1) - vc(i3:f3,1) - &
                   ( vx(i2:f2,2) + vc(i2:f2,2) - vx(i3:f3,2) - vc(i3:f3,2) )
   !
@@ -557,7 +567,7 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
   !
   DO i = 1, length
      !
-     IF ( null_v(i) == 0 ) THEN
+     IF ( is_null(i) ) THEN
         dmuxc(i,:,:) = 0.0_DP
         CYCLE
      ENDIF
@@ -578,8 +588,6 @@ SUBROUTINE dmxc_nc( length, rho_in, m, dmuxc )
      dmuxc(i,4,1) = dbz_rho(i)
      !
      ! ... Here the derivatives with respect to m
-     !
-     rnull = null_v(i)
      !
      dvxc_mx = aux1(i) * m(i,1) / rhotot(i) / (4.0_DP*dz(i)*amag(i))
      dvxc_my = aux1(i) * m(i,2) / rhotot(i) / (4.0_DP*dz(i)*amag(i))

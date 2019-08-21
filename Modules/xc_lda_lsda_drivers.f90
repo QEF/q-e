@@ -9,6 +9,9 @@
 MODULE xc_lda_lsda
 !
 USE kinds,     ONLY: DP
+USE funct,     ONLY: get_iexch, get_icorr, is_libxc,  &
+                     exx_is_active, get_exx_fraction, &
+                     get_finite_size_cell_volume
 !
 IMPLICIT NONE
 !
@@ -16,65 +19,13 @@ PRIVATE
 SAVE
 !
 !  LDA and LSDA exchange-correlation drivers
-PUBLIC :: xc, xc_lda, xc_lsda, select_lda_functionals
+PUBLIC :: xc, xc_lda, xc_lsda
 PUBLIC :: change_threshold_lda
-!
-PUBLIC :: libxc_switches_lda
-PUBLIC :: iexch_l, icorr_l
-PUBLIC :: exx_started_l, exx_fraction_l
-PUBLIC :: is_there_finite_size_corr, finite_size_cell_volume_l
-!
-!  use qe or libxc for the different terms (0: qe, 1: libxc)
-INTEGER :: libxc_switches_lda(2)
-!
-!  indexes defining xc functionals
-INTEGER  :: iexch_l, icorr_l
 !
 !  density threshold (set to default value)
 REAL(DP) :: rho_threshold = 1.E-10_DP
 !
-!  variables for hybrid exchange and finite_size_cell_volume correction
-LOGICAL  :: exx_started_l, is_there_finite_size_corr
-REAL(DP) :: exx_fraction_l, finite_size_cell_volume_l
-!
-!
  CONTAINS
-!
-!
-!----------------------------------------------------------------------------
-!----- Select functionals by the corresponding indexes ----------------------
-!----------------------------------------------------------------------------
-SUBROUTINE select_lda_functionals( iexch, icorr, exx_fraction, finite_size_cell_volume )
-   !
-   IMPLICIT NONE
-   !
-   INTEGER,  INTENT(IN) :: iexch, icorr
-   REAL(DP), INTENT(IN), OPTIONAL :: exx_fraction, finite_size_cell_volume
-   !
-   ! exchange-correlation indexes
-   iexch_l = iexch
-   icorr_l = icorr
-   !
-   ! hybrid exchange vars
-   exx_started_l  = .FALSE.
-   exx_fraction_l = 0._DP
-   IF ( PRESENT(exx_fraction) ) THEN
-      exx_started_l  = .TRUE.
-      exx_fraction_l = exx_fraction
-   ENDIF
-   !
-   ! finite size correction vars
-   is_there_finite_size_corr = .FALSE.
-   finite_size_cell_volume_l = -1.0_DP
-   IF ( PRESENT(finite_size_cell_volume) ) THEN
-      is_there_finite_size_corr = .TRUE.
-      finite_size_cell_volume_l = finite_size_cell_volume
-   ENDIF
-   !
-   !
-   RETURN
-   !
-END SUBROUTINE select_lda_functionals
 !
 !
 !-----------------------------------------------------------------------
@@ -139,12 +90,17 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   REAL(DP), ALLOCATABLE :: arho(:), zeta(:)
   !
-  INTEGER :: ir
+  INTEGER :: ir, iexch, icorr
   !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  !
+  ex_out = 0.0_DP ; vx_out = 0.0_DP
+  ec_out = 0.0_DP ; vc_out = 0.0_DP
   !
 #if defined(__LIBXC)
   !
-  IF (SUM(libxc_switches_lda) /= 0) THEN
+  IF ( ANY(is_libxc(1:2)) ) THEN
     !
     ALLOCATE( rho_lxc(length*sv_d) )
     ALLOCATE( vx_lxc(length*sv_d), vc_lxc(length*sv_d) )
@@ -180,21 +136,21 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   !
   ! ... EXCHANGE
-  IF ( libxc_switches_lda(1)==1 ) THEN
-     CALL xc_f90_func_init( xc_func, xc_info1, iexch_l, sv_d )
+  IF ( is_libxc(1) ) THEN
+     CALL xc_f90_func_init( xc_func, xc_info1, iexch, sv_d )
        fkind_x  = xc_f90_info_kind( xc_info1 )
        CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ex_out(1), vx_lxc(1) )
      CALL xc_f90_func_end( xc_func )
   ENDIF
   !
   ! ... CORRELATION
-  IF ( libxc_switches_lda(2)==1 ) THEN
-     CALL xc_f90_func_init( xc_func, xc_info2, icorr_l, sv_d )
+  IF ( is_libxc(2) ) THEN
+     CALL xc_f90_func_init( xc_func, xc_info2, icorr, sv_d )
       CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ec_out(1), vc_lxc(1) )
      CALL xc_f90_func_end( xc_func )
   ENDIF
   !
-  IF ( ((libxc_switches_lda(1)==0) .OR. (libxc_switches_lda(2)==0)) &
+  IF ( ((.NOT.is_libxc(1)) .OR. (.NOT.is_libxc(2))) &
         .AND. fkind_x/=XC_EXCHANGE_CORRELATION ) THEN
      !
      SELECT CASE( sr_d )
@@ -230,16 +186,16 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !  ... fill output arrays
   !  
   IF (sv_d == 1) THEN
-     IF (libxc_switches_lda(1)==1) vx_out(:,1) = vx_lxc(:)
-     IF (libxc_switches_lda(2)==1) vc_out(:,1) = vc_lxc(:)
+     IF (is_libxc(1)) vx_out(:,1) = vx_lxc(:)
+     IF (is_libxc(2)) vc_out(:,1) = vc_lxc(:)
   ELSE
-     IF (libxc_switches_lda(1)==1) THEN
+     IF (is_libxc(1)) THEN
         DO ir = 1, length
            vx_out(ir,1) = vx_lxc(2*ir-1)
            vx_out(ir,2) = vx_lxc(2*ir)
         ENDDO
      ENDIF
-     IF (libxc_switches_lda(2)==1) THEN
+     IF (is_libxc(2)) THEN
         DO ir = 1, length
            vc_out(ir,1) = vc_lxc(2*ir-1)
            vc_out(ir,2) = vc_lxc(2*ir)
@@ -247,7 +203,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      ENDIF
   ENDIF
   !
-  IF (SUM(libxc_switches_lda) /= 0) THEN
+  IF (ANY(is_libxc(1:2))) THEN
      DEALLOCATE( rho_lxc )
      DEALLOCATE( vx_lxc, vc_lxc )
   ENDIF
@@ -340,10 +296,13 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   ! ... local variables
   !
-  INTEGER  :: ir
+  INTEGER  :: ir, iexch, icorr
   REAL(DP) :: rho, rs
   REAL(DP) :: ex, ec, ec_
   REAL(DP) :: vx, vc, vc_
+  REAL(DP) :: exx_fraction
+  REAL(DP) :: finite_size_cell_volume
+  LOGICAL :: exx_started, is_there_finite_size_corr
   REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP, e2 = 2.0_DP
   !                      pi34 = (3/4pi)^(1/3)
@@ -354,6 +313,18 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
   ntids = omp_get_num_threads()
 #endif
+  !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  exx_started = exx_is_active()
+  exx_fraction = get_exx_fraction()
+  IF (iexch==8 .OR. icorr==10) THEN
+    CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
+                                      finite_size_cell_volume )
+    !
+    IF (.NOT. is_there_finite_size_corr) CALL errore( 'XC',&
+        'finite size corrected exchange used w/o initialization', 1 )
+  ENDIF
   !
 !$omp parallel if(ntids==1)
 !$omp do private( rho, rs, ex, ec, ec_, vx, vc, vc_ )
@@ -373,7 +344,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      !
      ! ... EXCHANGE
      !
-     SELECT CASE( iexch_l )
+     SELECT CASE( iexch )
      CASE( 1 )                      ! 'sla'
         !
         CALL slater( rs, ex, vx )
@@ -388,7 +359,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE( 4, 5 )                   ! 'oep','hf'
         !
-        IF ( exx_started_l ) THEN
+        IF ( exx_started ) THEN
            ex = 0.0_DP
            vx = 0.0_DP
         ELSE
@@ -398,23 +369,21 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      CASE( 6, 7 )                   ! 'pb0x' or 'DF-cx-0', or 'DF2-0',
         !                           ! 'B3LYP'
         CALL slater( rs, ex, vx )
-        IF ( exx_started_l ) THEN
-           ex = (1.0_DP - exx_fraction_l) * ex
-           vx = (1.0_DP - exx_fraction_l) * vx
+        IF ( exx_started ) THEN
+           ex = (1.0_DP - exx_fraction) * ex
+           vx = (1.0_DP - exx_fraction) * vx
         ENDIF
         !
      CASE( 8 )                      ! 'sla+kzk'
         !
-        IF (.NOT. is_there_finite_size_corr) CALL errore( 'XC',&
-             'finite size corrected exchange used w/o initialization', 2 )
-        CALL slaterKZK( rs, ex, vx, finite_size_cell_volume_l )
+        CALL slaterKZK( rs, ex, vx, finite_size_cell_volume )
         !
      CASE( 9 )                      ! 'X3LYP'
         !
         CALL slater( rs, ex, vx )
-        IF ( exx_started_l ) THEN
-           ex = (1.0_DP - exx_fraction_l) * ex
-           vx = (1.0_DP - exx_fraction_l) * vx
+        IF ( exx_started ) THEN
+           ex = (1.0_DP - exx_fraction) * ex
+           vx = (1.0_DP - exx_fraction) * vx
         ENDIF
         !
      CASE DEFAULT
@@ -427,7 +396,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
      !
      ! ... CORRELATION
      !
-     SELECT CASE( icorr_l )
+     SELECT CASE( icorr )
      CASE( 1 )
         !
         CALL pz( rs, 1, ec, vc )
@@ -466,9 +435,7 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE( 10 )
         !
-        IF (.NOT. is_there_finite_size_corr) CALL errore( 'XC',&
-             'finite size corrected exchange used w/o initialization', 3 )
-        CALL pzKZK( rs, ec, vc, finite_size_cell_volume_l )
+        CALL pzKZK( rs, ec, vc, finite_size_cell_volume )
         !
      CASE( 11 )
         !
@@ -554,10 +521,12 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !
   ! ...  local variables
   !
-  INTEGER  :: ir
+  INTEGER  :: ir, iexch, icorr
   REAL(DP) :: rho, rs, zeta
   REAL(DP) :: ex, ec, ec_
   REAL(DP) :: vx(2), vc(2), vc_(2)
+  REAL(DP) :: exx_fraction
+  LOGICAL :: exx_started
   !
   REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
                          pi34 = 0.6203504908994_DP
@@ -569,6 +538,11 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !
   ntids = omp_get_num_threads()
 #endif
+  !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  exx_started = exx_is_active()
+  exx_fraction = get_exx_fraction()
   !
 !$omp parallel if(ntids==1)
 !$omp do private( rho, rs, zeta, ex, ec, ec_, vx, vc, vc_ )
@@ -590,7 +564,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      !
      ! ... EXCHANGE
      !
-     SELECT CASE( iexch_l )
+     SELECT CASE( iexch )
      CASE( 1 )                                      ! 'sla'
         !
         CALL slater_spin( rho, zeta, ex, vx )
@@ -605,7 +579,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE( 4, 5 )                                   ! 'oep','hf'
         !
-        IF ( exx_started_l ) THEN
+        IF ( exx_started ) THEN
            ex = 0.0_DP
            vx = 0.0_DP
         ELSE
@@ -615,25 +589,25 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      CASE( 6 )                                      ! 'pb0x'
         !
         CALL slater_spin( rho, zeta, ex, vx )
-        IF ( exx_started_l ) THEN
-           ex = (1.0_DP - exx_fraction_l) * ex
-           vx = (1.0_DP - exx_fraction_l) * vx
+        IF ( exx_started ) THEN
+           ex = (1.0_DP - exx_fraction) * ex
+           vx = (1.0_DP - exx_fraction) * vx
         ENDIF
         !
      CASE( 7 )                                      ! 'B3LYP'
         !
         CALL slater_spin( rho, zeta, ex, vx )
-        IF ( exx_started_l ) THEN
-           ex = (1.0_DP - exx_fraction_l) * ex
-           vx = (1.0_DP - exx_fraction_l) * vx
+        IF ( exx_started ) THEN
+           ex = (1.0_DP - exx_fraction) * ex
+           vx = (1.0_DP - exx_fraction) * vx
         ENDIF
         !
      CASE( 9 )                                      ! 'X3LYP'
         !
         CALL slater_spin( rho, zeta, ex, vx )
-        IF ( exx_started_l ) THEN
-           ex = (1.0_DP - exx_fraction_l) * ex
-           vx = (1.0_DP - exx_fraction_l) * vx
+        IF ( exx_started ) THEN
+           ex = (1.0_DP - exx_fraction) * ex
+           vx = (1.0_DP - exx_fraction) * vx
         ENDIF
         !
      CASE DEFAULT
@@ -646,7 +620,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
      !
      ! ... CORRELATION
      !
-     SELECT CASE( icorr_l )
+     SELECT CASE( icorr )
      CASE( 0 )
         !
         ec = 0.0_DP
@@ -700,7 +674,7 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
         !
      CASE DEFAULT
         !
-        CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr_l )
+        CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr )
         !
      END SELECT
      !
