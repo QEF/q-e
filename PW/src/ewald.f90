@@ -62,6 +62,8 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! counter on atomic types
   ! number of R vectors included in r sum
   integer :: na_s, na_e, mykey
+  ! for parallelization of real-space sums
+  
   real(DP) :: charge, tpiba2, ewaldg, ewaldr, dtau (3), alpha, &
        r (3, mxr), r2 (mxr), rmax, rr, upperbound, fact
   ! total ionic charge in the cell

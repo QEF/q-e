@@ -136,13 +136,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   enddo
   deallocate (aux)
   !
-  ! R-space sum here
-  !
-  ! poor-man parallelization over atoms
-  ! - if nproc_bgrp=1   : na_s=1, na_e=nat, mykey=0
-  ! - if nproc_bgrp<=nat: each processor calculates atoms na_s to na_e; mykey=0
-  ! - if nproc_bgrp>nat : each processor takes care of atom na_s=na_e;
-  !   mykey labels how many times each atom appears (mykey=0 first time etc.)
+  ! R-space sum here (see ewald.f90 for details on parallelization)
   !
   CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
   IF ( mykey > 0 ) GO TO 100
