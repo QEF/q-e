@@ -620,7 +620,7 @@ CONTAINS
   
   SUBROUTINE write_xdmdat()
     ! save the XDM coefficients and vdw radii to the xdm.dat file for ph.x
-    USE io_files, ONLY: seqopn, postfix
+    USE io_files, ONLY: restart_dir
     USE io_global, ONLY: ionode
     USE ions_base, ONLY: nat
     INTEGER :: iunxdm, ierr
@@ -630,13 +630,14 @@ CONTAINS
 
     IF (ionode) THEN
        iunxdm = find_free_unit ()
-       CALL seqopn(iunxdm,postfix(2:6)//'xdm.dat','UNFORMATTED',lexist)
+       OPEN ( UNIT=iunxdm, FILE = TRIM(restart_dir() ) // 'xdm.dat', &
+            FORM='unformatted', STATUS='unknown' )
        WRITE (iunxdm,iostat=ierr) 1 ! version
        IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
        WRITE (iunxdm,iostat=ierr) lmax, rmax2
-       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',2)
        WRITE (iunxdm,iostat=ierr) 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
-       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',3)
        CLOSE (UNIT=iunxdm, STATUS='KEEP')
     ENDIF
 

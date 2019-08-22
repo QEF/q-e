@@ -18,7 +18,7 @@
   USE control_flags,        ONLY : io_level, conv_elec, lbands
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
+  USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : save_buffer
   USE klist,                ONLY : xk, wk, nks, nkstot
   USE lsda_mod,             ONLY : lsda, nspin

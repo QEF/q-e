@@ -18,7 +18,7 @@
   !! Imported the noncolinear case implemented by xlzhang
   !!
   !-----------------------------------------------------------------------
-  USE io_files,         ONLY : prefix, diropn, seqopn
+  USE io_files,         ONLY : prefix, diropn
   USE units_lr,         ONLY : iuwfc, lrwfc
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : npol, nspin_mag
