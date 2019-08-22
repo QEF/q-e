@@ -16,23 +16,22 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   USE kinds
   USE constants, ONLY : tpi, e2
-  USE mp_bands,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,        ONLY : mp_sum
   USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_force_ew 
   implicit none
   !
   !   First the dummy variables
   !
-
-  integer :: nat, ntyp, ngm, ityp (nat), gstart
+  integer, intent(in) :: nat, ntyp, ngm, ityp (nat), gstart
   ! input: the number of atoms
   ! input: the number of types of atom
   ! input: the number of G vectors
   ! input: the type of each atom
   ! input: first non-zero G vector
-  logical :: gamma_only
+  logical, intent(in) :: gamma_only
 
-  real(DP) :: factor, tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real(DP), intent(in) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, gcutm, alat
   ! input: the coordinates of the atoms
   ! input: the G vectors
@@ -44,10 +43,10 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! input: cut-off of g vectors
   ! input: the edge of the cell
   !
-  complex(DP) :: strf (ngm, ntyp)
+  complex(DP), intent(in) :: strf (ngm, ntyp)
   ! input: the structure factor on the potential
   !
-  real(DP) :: forceion (3, nat)
+  real(DP), intent(out) :: forceion (3, nat)
   ! output: the ewald part of the forces
   !
   integer, parameter :: mxr=50
@@ -61,6 +60,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! counter on atomic types
   ! the number of R vectors for real space su
   ! counter on polarization
+  integer :: na_s, na_e, mykey
 
   real(DP) :: sumnb, arg, tpiba2, alpha, dtau (3), r (3, mxr), &
        r2 (mxr), rmax, rr, charge, upperbound, fact
@@ -135,29 +135,36 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      enddo
   enddo
   deallocate (aux)
-  if (gstart == 1) goto 100
   !
-  ! R-space sum here (only for the processor that contains G=0)
+  ! R-space sum here
   !
+  ! poor-man parallelization over atoms
+  ! - if nproc_bgrp=1   : na_s=1, na_e=nat, mykey=0
+  ! - if nproc_bgrp<=nat: each processor calculates atoms na_s to na_e; mykey=0
+  ! - if nproc_bgrp>nat : each processor takes care of atom na_s=na_e;
+  !   mykey labels how many times each atom appears (mykey=0 first time etc.)
+  !
+  CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
+  IF ( mykey > 0 ) GO TO 100
   rmax = 5.d0 / (sqrt (alpha) * alat)
   !
   ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
   !
-  do na = 1, nat
+  do na = na_s, na_e
      do nb = 1, nat
         if (nb.eq.na) goto 50
-         dtau (:) = tau (:, na) - tau (:, nb)
+        dtau (:) = tau (:, na) - tau (:, nb)
         !
         ! generates nearest-neighbors shells r(i)=R(i)-dtau(i)
         !
         call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
         do n = 1, nrm
            rr = sqrt (r2 (n) ) * alat
-           factor = zv (ityp (na) ) * zv (ityp (nb) ) * e2 / rr**2 * &
+           fact = zv (ityp (na) ) * zv (ityp (nb) ) * e2 / rr**2 * &
                 (qe_erfc (sqrt (alpha) * rr) / rr + &
                 sqrt (8.0d0 * alpha / tpi) * exp ( - alpha * rr**2) ) * alat
            do ipol = 1, 3
-              forceion (ipol, na) = forceion (ipol, na) - factor * r (ipol, n)
+              forceion (ipol, na) = forceion (ipol, na) - fact * r (ipol, n)
            enddo
         enddo
 50      continue
