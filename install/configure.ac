@@ -35,9 +35,6 @@ X_AC_QE_AR()
 # Checking OpenMP...
 X_AC_QE_OPENMP()
 
-# Checking OpenMP...
-X_AC_QE_CUDA()
-
 # Checking MPIF90...
 X_AC_QE_MPIF90()
 
@@ -58,6 +55,9 @@ X_AC_QE_CPP()
 
 # Checking linker...
 X_AC_QE_LD()
+
+# Checking CUDA...
+X_AC_QE_CUDA()
 
 # Checking F90 rule...
 X_AC_QE_F90RULE()
