@@ -24,7 +24,7 @@ SUBROUTINE setup_dgc
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
   USE funct,                ONLY : dft_is_gradient, is_libxc
-  USE xc_gga,               ONLY : gcxc, gcx_spin, gcc_spin
+  USE xc_gga,               ONLY : xc_gcx !gcxc, gcx_spin, gcc_spin
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
                                    dvxc_ss, dvxc_s, vsgga, segni
@@ -33,13 +33,12 @@ SUBROUTINE setup_dgc
   !
   INTEGER :: k, is, ipol, jpol, ir
   !
-  REAL(DP), ALLOCATABLE :: rh(:), zeta(:)
-  REAL(DP), ALLOCATABLE :: grh(:,:,:), grho2(:,:), grh2(:)
+  REAL(DP), ALLOCATABLE :: grh(:,:,:)
   REAL(DP) :: fac, sgn(2)
   !
   REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:)
-  REAL(DP), ALLOCATABLE :: vrrx(:,:), vsrx(:,:), vssx(:,:), vrrc(:,:)
-  REAL(DP), ALLOCATABLE :: vsrc(:,:), vrzc(:,:), vssc(:), sc(:), sx(:)
+  REAL(DP), ALLOCATABLE :: v2c_ud(:)
+  REAL(DP), ALLOCATABLE :: sc(:), sx(:)
   !
   REAL(DP), ALLOCATABLE :: rhoout(:,:)
   COMPLEX(DP), ALLOCATABLE :: rhogout(:,:)
@@ -49,9 +48,6 @@ SUBROUTINE setup_dgc
   IF ( .NOT. dft_is_gradient() ) RETURN
   !
   CALL start_clock( 'setup_dgc' )
-  ! 
-  IF ( ANY(is_libxc(3:4)) ) CALL errore( 'setup_dgc', 'libxc derivatives of &
-                                          &xc potentials for GGA not implemented yet', 1 )
   !
   IF (noncolin .AND. domag) THEN
      ALLOCATE( segni(dfftp%nnr) )
@@ -65,26 +61,18 @@ SUBROUTINE setup_dgc
   IF (.NOT.ALLOCATED(dvxc_ss)) ALLOCATE( dvxc_ss(dfftp%nnr,nspin_gga,nspin_gga) )
   IF (.NOT.ALLOCATED(dvxc_s) ) ALLOCATE( dvxc_s(dfftp%nnr,nspin_gga,nspin_gga)  )
   IF (.NOT.ALLOCATED(grho)   ) ALLOCATE( grho(3,dfftp%nnr,nspin_gga) )
-  IF (.NOT.ALLOCATED(grho2)  ) ALLOCATE( grho2(dfftp%nnr,nspin_gga)  )
   IF (.NOT.ALLOCATED(rhoout) ) ALLOCATE( rhoout(dfftp%nnr,nspin_gga) )
   !
-  ALLOCATE( rh(dfftp%nnr) )
   ALLOCATE( v1x(dfftp%nnr,nspin_gga), v2x(dfftp%nnr,nspin_gga) )
   ALLOCATE( v1c(dfftp%nnr,nspin_gga), v2c(dfftp%nnr,nspin_gga) )
-  ALLOCATE( vrrx(dfftp%nnr,nspin_gga), vsrx(dfftp%nnr,nspin_gga) )
-  ALLOCATE( vssx(dfftp%nnr,nspin_gga), vrrc(dfftp%nnr,nspin_gga) )
-  ALLOCATE( vsrc(dfftp%nnr,nspin_gga), vssc(dfftp%nnr) )
+  IF (nspin_gga == 2) ALLOCATE( v2c_ud(dfftp%nnr) )
   ALLOCATE( sx(dfftp%nnr), sc(dfftp%nnr) )
-  IF (nspin_gga /= 1) THEN
-     ALLOCATE( zeta(dfftp%nnr) )
-     ALLOCATE( grh(dfftp%nnr,3,nspin_gga), grh2(dfftp%nnr) )
-     ALLOCATE( vrzc(dfftp%nnr,nspin_gga) )
-  ENDIF
+  ALLOCATE( grh(dfftp%nnr,3,nspin_gga) )
   !
   dvxc_rr(:,:,:) = 0.d0
   dvxc_sr(:,:,:) = 0.d0
   dvxc_ss(:,:,:) = 0.d0
-  dvxc_s(:,:,:) = 0.d0
+  dvxc_s(:,:,:)  = 0.d0
   grho(:,:,:) = 0.d0
   !
   sgn(1)=1.d0  ;   sgn(2)=-1.d0
@@ -128,69 +116,34 @@ SUBROUTINE setup_dgc
      !
   ENDIF
   !
-  grho2(:,1) = grho(1,:,1)**2 + grho(2,:,1)**2 + grho(3,:,1)**2
+  ! ... swap grho indices to match xc_gcx input (waiting for a better fix)
+  DO k = 1, dfftp%nnr
+     grh(k,1:3,1) = grho(1:3,k,1)
+     IF (nspin_gga==2) grh(k,1:3,2) = grho(1:3,k,2)
+  ENDDO
+  !
   !
   IF (nspin_gga == 1) THEN
      !
-     rh(:) = rhoout(:,1)
+     CALL dgcxc( dfftp%nnr, 1, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss )
      !
-     CALL gcxc( dfftp%nnr, rh, grho2(:,1), sx, sc, v1x(:,1), &
-                                v2x(:,1), v1c(:,1), v2c(:,1) )
+     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c )
      !
-     CALL dgcxc( dfftp%nnr, rh, grho2(:,1), vrrx(:,1), vsrx(:,1), &
-                       vssx(:,1), vrrc(:,1), vsrc(:,1), vssc )
-     !
-     dvxc_rr(:,1,1) = e2 * (vrrx(:,1) + vrrc(:,1))
-     dvxc_sr(:,1,1) = e2 * (vsrx(:,1) + vsrc(:,1))
-     dvxc_ss(:,1,1) = e2 * (vssx(:,1) + vssc(:)  )
-     dvxc_s(:,1,1)  = e2 * (v2x(:,1)  + v2c(:,1) )
+     dvxc_s(:,1,1)  = e2 * (v2x(:,1) + v2c(:,1))
      !
   ELSE
      !
-     grho2(:,2) = grho(1,:,2)**2 + grho(2,:,2)**2 + grho(3,:,2)**2
-     !   
-     CALL gcx_spin( dfftp%nnr, rhoout, grho2, sx, v1x, v2x )
+     CALL dgcxc( dfftp%nnr, nspin_gga, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss )
      !
-     ! ... swap grho indices to match dgcx_spin input (waiting for a better fix)
-     DO k = 1, dfftp%nnr
-        grh(k,1:3,1) = grho(1:3,k,1)
-        grh(k,1:3,2) = grho(1:3,k,2)
-     ENDDO
-     !
-     CALL dgcxc_spin( dfftp%nnr, rhoout, grh, vrrx, vsrx, vssx, vrrc, &
-                      vsrc, vssc, vrzc )
-     !
-     rh = rhoout(:,1) + rhoout(:,2)
-     grh2(:) = (grho(1,:,1)+grho(1,:,2))**2 + (grho(2,:,1) &   
-               +grho(2,:,2))**2 + (grho(3,:,1)+grho(3,:,2))**2
-     !
-     WHERE (rh(:) > epsr)  zeta = (rhoout(:,1)-rhoout(:,2)) / rh
-     !
-     CALL gcc_spin( dfftp%nnr, rh, zeta, grh2, sc, v1c, v2c(:,1) )
+     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
      !
      DO k = 1, dfftp%nnr
-        !
-        IF (rh(k) > epsr) THEN
-           dvxc_rr(k,1,1) = e2 * (vrrx(k,1) + vrrc(k,1) + vrzc(k,1) * (1.d0 - zeta(k)) / rh(k))
-           dvxc_rr(k,1,2) = e2 * (vrrc(k,1) - vrzc(k,1) * (1.d0 + zeta(k)) / rh(k))
-           dvxc_rr(k,2,1) = e2 * (vrrc(k,2) + vrzc(k,2) * (1.d0 - zeta(k)) / rh(k))
-           dvxc_rr(k,2,2) = e2 * (vrrx(k,2) + vrrc(k,2) - vrzc(k,2) * (1.d0 + zeta(k)) / rh(k))
-           !
+        IF ( rhoout(k,1)+rhoout(k,2) > epsr) THEN
            dvxc_s(k,1,1) = e2 * (v2x(k,1) + v2c(k,1))
            dvxc_s(k,1,2) = e2 * v2c(k,1)
            dvxc_s(k,2,1) = e2 * v2c(k,1)
            dvxc_s(k,2,2) = e2 * (v2x(k,2) + v2c(k,1))
         ENDIF
-        !
-        dvxc_sr(k,1,1) = e2 * (vsrx(k,1) + vsrc(k,1))   
-        dvxc_sr(k,1,2) = e2 * vsrc(k,1)   
-        dvxc_sr(k,2,1) = e2 * vsrc(k,2)   
-        dvxc_sr(k,2,2) = e2 * (vsrx(k,2) + vsrc(k,2))   
-        !
-        dvxc_ss(k,1,1) = e2 * (vssx(k,1) + vssc(k))   
-        dvxc_ss(k,1,2) = e2 * vssc(k)   
-        dvxc_ss(k,2,1) = e2 * vssc(k)   
-        dvxc_ss(k,2,2) = e2 * (vssx(k,2) + vssc(k))
      ENDDO
      !
   ENDIF
@@ -209,14 +162,10 @@ SUBROUTINE setup_dgc
      !
   ENDIF
   !
-  DEALLOCATE( rh, grho2  )
   DEALLOCATE( v1x, v2x, v1c, v2c )
-  DEALLOCATE( vrrx, vsrx, vssx, vrrc )
-  DEALLOCATE( vsrc, vssc, sx, sc )
-  IF (nspin_gga /= 1) THEN
-     DEALLOCATE( zeta, grh, grh2 )
-     DEALLOCATE( vrzc )
-  ENDIF
+  IF (nspin_gga == 2) DEALLOCATE( v2c_ud )
+  DEALLOCATE( sx, sc )
+  DEALLOCATE( grh )
   DEALLOCATE( rhoout )
   !
   CALL stop_clock( 'setup_dgc' )
