@@ -17,7 +17,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   USE kinds
   USE constants, ONLY : tpi, e2
-  USE mp_bands,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_ewald, do_comp_mt
   USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_ewald
@@ -25,17 +25,16 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   !   first the dummy variables
   !
-
-  integer :: nat, ntyp, ityp (nat), ngm, gstart
+  integer, intent(in) :: nat, ntyp, ityp (nat), ngm, gstart
   ! input: number of atoms in the unit cell
   ! input: number of different types of atoms
   ! input: the type of each atom
   ! input: number of plane waves for G sum
   ! input: first non-zero G vector
 
-  logical :: gamma_only
+  logical, intent(in) :: gamma_only
 
-  real(DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real(DP), intent(in) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, alat, gcutm
   ! input: the positions of the atoms in the cell
   ! input: the coordinates of G vectors
@@ -46,7 +45,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! input: the volume of the unit cell
   ! input: lattice parameter
   ! input: cut-off of g vectors
-  complex(DP) :: strf (ngm, ntyp)
+  complex(DP), intent(in)  :: strf (ngm, ntyp)
   ! input: structure factor
   real(DP) :: ewald
   ! output: the ewald energy
@@ -62,7 +61,9 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! counter on atoms
   ! counter on atomic types
   ! number of R vectors included in r sum
-
+  integer :: na_s, na_e, mykey
+  ! for parallelization of real-space sums
+  
   real(DP) :: charge, tpiba2, ewaldg, ewaldr, dtau (3), alpha, &
        r (3, mxr), r2 (mxr), rmax, rr, upperbound, fact
   ! total ionic charge in the cell
@@ -131,17 +132,24 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
      endif
   ENDIF
   !
-  ! R-space sum here (only for the processor that contains G=0)
+  ! R-space sum here
   !
+  ! poor-man parallelization over atoms
+  ! - if nproc_bgrp=1   : na_s=1, na_e=nat, mykey=0
+  ! - if nproc_bgrp<=nat: each processor calculates atoms na_s to na_e; mykey=0
+  ! - if nproc_bgrp>nat : each processor takes care of atom na_s=na_e;
+  !   mykey labels how many times each atom appears (mykey=0 first time etc.)
+  !
+  CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
   ewaldr = 0.d0
-  if (gstart.eq.2) then
+  IF ( mykey == 0 ) THEN
      rmax = 4.d0 / sqrt (alpha) / alat
      !
      ! with this choice terms up to ZiZj*erfc(4) are counted (erfc(4)=2x10^-8
      !
-     do na = 1, nat
+     do na = na_s, na_e
         do nb = 1, nat
-              dtau (:) = tau (:, na) - tau (:, nb)
+           dtau (:) = tau (:, na) - tau (:, nb)
            !
            ! generates nearest-neighbors shells
            !
