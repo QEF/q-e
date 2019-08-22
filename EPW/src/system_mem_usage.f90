@@ -26,10 +26,7 @@
   CHARACTER(len=200):: filename=' '
   CHARACTER(len=80) :: line
   CHARACTER(len=8)  :: pid_char=' '
-#if defined(__PGI)
-  INTEGER, EXTERNAL :: getpid
-#endif
-#if defined(__CRAY)
+#if defined(__PGI) || defined(__CRAY) || defined(__XLF)
   INTEGER, EXTERNAL :: getpid
 #endif
   INTEGER :: pid

@@ -225,6 +225,6 @@
   !
   CALL print_ps_info ( )
   !
-  CALL flush( stdout )
+  FLUSH( stdout )
   !
   END SUBROUTINE epw_summary

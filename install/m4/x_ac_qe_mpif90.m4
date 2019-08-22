@@ -79,6 +79,11 @@ ppc64-bg | ppc64-bgq )
         try_arflags="ruv"
         try_dflags="-D__XLF"
         ;;
+ppc64le )
+        try_f90="xlf"
+        try_mpif90="mpif90"
+        try_dflags="-D__XLF"
+        ;;
 * )
         AC_MSG_WARN($arch : unsupported architecture?)
         ;;
@@ -124,6 +129,7 @@ case "$arch" in
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
+        xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
         #
         if test "$ifort_version" != ""
         then
@@ -151,6 +157,10 @@ case "$arch" in
                 version=`echo $nagfor_version | cut -d ' ' -f5`
                 echo "${ECHO_T}nagfor $version"
                 f90_in_mpif90="nagfor"
+        elif test "$xlf_version" != ""
+        then
+                echo "${ECHO_T}xlf (version unknonw)"
+                f90_in_mpif90="xlf"
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
