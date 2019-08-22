@@ -1914,7 +1914,7 @@
   !! The file exists
   ! 
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
-  call flush(stdout)
+  FLUSH(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
   ALLOCATE (zstar(3, 3, nat))

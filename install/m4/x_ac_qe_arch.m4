@@ -32,6 +32,7 @@ then
                 *-pc-cygwin )           arch=cygwin ;;
                 sx*-nec* )              arch=necsx  ;;
                 powerpc64-*-linux-gnu ) arch=ppc64  ;;
+                powerpc64le-*-linux-gnu ) arch=ppc64le ;;
                 *-*-mingw32 )           arch=mingw32;;
                 *-*-mingw64 )           arch=mingw64;;
                 * )                     AC_MSG_WARN(Unrecognized build architecture)
