@@ -3094,11 +3094,6 @@ ppc64-bg | ppc64-bgq )
         try_arflags="ruv"
         try_dflags="-D__XLF"
         ;;
-ppc64le )
-        try_f90="xlf"
-        try_mpif90="mpif90"
-        try_dflags="-D__XLF"
-        ;;
 * )
         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $arch : unsupported architecture?" >&5
 $as_echo "$as_me: WARNING: $arch : unsupported architecture?" >&2;}
@@ -3389,6 +3384,7 @@ case "$arch" in
         then
                 echo "${ECHO_T}xlf (version unknonw)"
                 f90_in_mpif90="xlf"
+                try_dflags="-D__XLF"
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"

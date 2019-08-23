@@ -79,11 +79,6 @@ ppc64-bg | ppc64-bgq )
         try_arflags="ruv"
         try_dflags="-D__XLF"
         ;;
-ppc64le )
-        try_f90="xlf"
-        try_mpif90="mpif90"
-        try_dflags="-D__XLF"
-        ;;
 * )
         AC_MSG_WARN($arch : unsupported architecture?)
         ;;
@@ -161,6 +156,7 @@ case "$arch" in
         then
                 echo "${ECHO_T}xlf (version unknonw)"
                 f90_in_mpif90="xlf"
+                try_dflags="-D__XLF"
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
