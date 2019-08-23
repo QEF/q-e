@@ -55,7 +55,7 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
   !
 #if defined(__LIBXC)
   !
-  IF (is_libxc(1) .AND. is_libxc(2)) THEN
+  IF ( (is_libxc(1) .OR. iexch==0) .AND. (is_libxc(2) .OR. icorr==0)) THEN
     !
     length_lxc = length*sr_d
     !
@@ -95,14 +95,20 @@ SUBROUTINE dmxc( length, sr_d, rho_in, dmuxc )
               dmxc_lxc(length_dlxc) )
     !
     ! ... DERIVATIVE FOR EXCHANGE
-    CALL xc_f90_func_init( xc_func, xc_info1, iexch, pol_unpol )
-     CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
-    CALL xc_f90_func_end( xc_func )
+    dmex_lxc(:) = 0.0_DP
+    IF (iexch /= 0) THEN    
+       CALL xc_f90_func_init( xc_func, xc_info1, iexch, pol_unpol )
+        CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmex_lxc(1) )
+       CALL xc_f90_func_end( xc_func )
+    ENDIF    
     !
     ! ... DERIVATIVE FOR CORRELATION
-    CALL xc_f90_func_init( xc_func, xc_info2, icorr, pol_unpol )
-     CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
-    CALL xc_f90_func_end( xc_func )
+    dmcr_lxc(:) = 0.0_DP
+    IF (icorr /= 0) THEN
+       CALL xc_f90_func_init( xc_func, xc_info2, icorr, pol_unpol )
+        CALL xc_f90_lda_fxc( xc_func, length, rho_lxc(1), dmcr_lxc(1) )
+       CALL xc_f90_func_end( xc_func )
+    ENDIF
     !
     dmxc_lxc = (dmex_lxc + dmcr_lxc)*2.0_DP
     !
