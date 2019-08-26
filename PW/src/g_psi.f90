@@ -8,40 +8,45 @@
 #define TEST_NEW_PRECONDITIONING
 !
 !-----------------------------------------------------------------------
-subroutine g_psi (lda, n, m, npol, psi, e)
+SUBROUTINE g_psi( lda, n, m, npol, psi, e )
   !-----------------------------------------------------------------------
-  !
-  !    This routine computes an estimate of the inverse Hamiltonian
-  !    and applies it to m wavefunctions
+  !! This routine computes an estimate of the inverse Hamiltonian
+  !! and applies it to m wavefunctions.
   !
   USE kinds
   USE g_psi_mod
-  implicit none
-  integer :: lda, n, m, npol, ipol
-  ! input: the leading dimension of psi
-  ! input: the real dimension of psi
-  ! input: the number of bands
-  ! input: the number of coordinates of psi
-  ! local variable: counter of coordinates of psi
-  real(DP) :: e (m)
-  ! input: the eigenvectors
-  complex(DP) :: psi (lda, npol, m)
-  ! inp/out: the psi vector
   !
-  !    Local variables
+  IMPLICIT NONE
   !
-  real(DP), parameter :: eps = 1.0d-4
+  INTEGER :: lda
+  !! input: the leading dimension of psi
+  INTEGER :: n
+  !! input: the real dimension of psi
+  INTEGER :: m
+  !! input: the number of coordinates of psi
+  INTEGER :: npol
+  !! input: the number of bands
+  COMPLEX(DP) :: psi(lda, npol, m)
+  !! inp/out: the psi vector
+  REAL(DP) :: e(m)
+  !! input: the eigenvectors
+  !
+  !  ... local variables
+  !
+  INTEGER :: ipol
+  ! counter of coordinates of psi
+  REAL(DP), PARAMETER :: eps = 1.0d-4
   ! a small number
-  real(DP) :: x, scala, denm
+  REAL(DP) :: x, scala, denm
   !
-  integer :: k, i
+  INTEGER :: k, i
   ! counter on psi functions
   ! counter on G vectors
-  integer, parameter :: blocksize = 256
-  integer :: iblock, numblock
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: iblock, numblock
   ! chunking parameters
   !
-  call start_clock ('g_psi')
+  CALL start_clock( 'g_psi' )
   !
   ! compute the number of chuncks
   numblock  = (n+blocksize-1)/blocksize
@@ -49,40 +54,42 @@ subroutine g_psi (lda, n, m, npol, psi, e)
 #ifdef TEST_NEW_PRECONDITIONING
   scala = 1.d0
   !$omp parallel do collapse(3) private(x, denm)
-  do k = 1, m
-     do ipol=1, npol
-        do iblock = 1, numblock
-           do i = (iblock-1)*blocksize+1, MIN(iblock*blocksize, n)
+  DO k = 1, m
+     DO ipol=1, npol
+        DO iblock = 1, numblock
+           DO i = (iblock-1)*blocksize+1, MIN( iblock*blocksize, n )
               x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
-              denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
+              denm = 0.5_dp*(1.d0+x+SQRT(1.d0+(x-1)*(x-1.d0)))/scala
               psi (i, ipol, k) = psi (i, ipol, k) / denm
-           enddo
-        enddo
-     enddo
-  enddo
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
   !$omp end parallel do
 #else
   !$omp parallel do collapse(3) private(denm)
-  do ipol=1,npol
-     do k = 1, m
-        do iblock = 1, numblock
-           do i = (iblock-1)*blocksize+1, MIN(iblock*blocksize, n)
-              denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
+  DO ipol=1,npol
+     DO k = 1, m
+        DO iblock = 1, numblock
+           DO i = (iblock-1)*blocksize+1, MIN( iblock*blocksize, n )
+              denm = h_diag(i,ipol) - e(k) * s_diag(i,ipol)
               !
               ! denm = g2+v(g=0) - e(k)
               !
-                 if (abs (denm) < eps) denm = sign (eps, denm)
+                 IF (ABS(denm) < eps) denm = SIGN( eps, denm )
               !
               ! denm = sign( max( abs(denm),eps ), denm )
               !
-              psi (i, ipol, k) = psi (i, ipol, k) / denm
-           enddo
-        enddo
-     enddo
-  enddo
+              psi(i, ipol, k) = psi(i, ipol, k) / denm
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
   !$omp end parallel do
 #endif
-
-  call stop_clock ('g_psi')
-  return
-end subroutine g_psi
+  !
+  CALL stop_clock( 'g_psi' )
+  !
+  RETURN
+  !
+END SUBROUTINE g_psi

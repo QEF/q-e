@@ -7,14 +7,15 @@
 !
 MODULE g_psi_mod
   !
-  ! ... These are the variables needed in g_psi
+  !! Contains the variables needed in g_psi
   !  
   USE kinds, only : DP
   !
   IMPLICIT NONE
   !
-  REAL(DP), ALLOCATABLE :: &
-    h_diag (:,:),&   ! diagonal part of the Hamiltonian
-    s_diag (:,:)     ! diagonal part of the overlap matrix
+  REAL(DP), ALLOCATABLE :: h_diag(:,:)
+  !! diagonal part of the Hamiltonian
+  REAL(DP), ALLOCATABLE :: s_diag(:,:)
+  !! diagonal part of the overlap matrix
   !
 END MODULE g_psi_mod
