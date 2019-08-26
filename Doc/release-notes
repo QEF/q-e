@@ -35,6 +35,9 @@ Problems fixed in development branch :
     they were not broadcasted.
 
 Incompatible changes in development branch :
+  * ibrav=-13 crystal axis converted to a more standard orientation.
+    Atomic positions in crystal axis for the previous convention can
+    be converted by applying the transformation (x,y,z) => (y,-x,z)
   * Initialization has been reorganized, so some initialization routines
     do not perform exactly the same operations as before - should have no
     consequences for codes calling "read_file" to start the calculation,
