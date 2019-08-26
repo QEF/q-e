@@ -8,16 +8,16 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
-  !! author: Paolo Giannozzi
-  !!
+  !! Author: Paolo Giannozzi
+
   !! This routine divides the k points across nodes, sets the variable
   !! nks equal to the local (on this processors) number of k-points
   !! (nkstot on input is the total number of k-points)
   !! The distributed has "granularity kunit", that is, kunit consecutive 
   !! points stay on the same processor. Usually kunit=1; kunit=2 is used 
   !! in phonon calculations, when one has interspersed k_i and k_i+q and
-  !! it is needed that they stay on the same processor
-  !!
+  !! it is needed that they stay on the same processor.
+  !
   USE kinds,     ONLY : DP
   USE mp_pools,  ONLY : my_pool_id, npool, kunit
   !
@@ -75,13 +75,13 @@ SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
 END SUBROUTINE divide_et_impera
 !----------------------------------------------------------------------------
 FUNCTION global_kpoint_index ( nkstot, ik ) RESULT (ik_g)
-  !! Returns the index in the global list of k-points
+  !! Returns the index in the global list of k-points 
   !! of k-point "ik" in this pool
-
+  !
   USE mp_pools, ONLY : npool, my_pool_id, kunit
-
+  !
   IMPLICIT NONE
-  
+  !
   INTEGER, INTENT(IN) :: nkstot
   !! total number of k-points
   INTEGER, INTENT(IN) :: ik
@@ -118,18 +118,20 @@ END FUNCTION global_kpoint_index
 !----------------------------------------------------------------------------
 FUNCTION local_kpoint_index ( nkstot, ik_g ) RESULT (ik)
   !----------------------------------------------------------------------------
-  
-  ! ... Returns the local index index of a k-point, if it belongs to
-  ! ... current pool, or -1 if it does not
-
-  USE mp_pools, ONLY : npool, my_pool_id, kunit
-
+  !! Returns the local index index of a k-point, if it belongs to
+  !! current pool, or -1 if it does not
+  !
+  USE mp_pools,   ONLY: npool, my_pool_id, kunit
+  !
   IMPLICIT NONE
-  
-  INTEGER, INTENT(IN) :: nkstot, ik_g
-  ! total number of k-points
-  ! global index of k-point
-  INTEGER  :: ik ! return the index if we have it, -1 if we don't
+  !
+  INTEGER, INTENT(IN) :: nkstot
+  !! total number of k-points
+  INTEGER, INTENT(IN) :: ik_g
+  !! global index of k-point
+  INTEGER  :: ik 
+  !! return the index if we have it, -1 if we don't
+  !
   INTEGER  :: nks
   ! this is actually the number of k-points in this pool
   !

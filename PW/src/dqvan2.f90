@@ -6,38 +6,45 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
+SUBROUTINE dqvan2( ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
   !-----------------------------------------------------------------------
+  !! This routine computes the derivatives of the Fourier transform of
+  !! the Q function needed in stress assuming that the radial fourier
+  !! transform is already computed and stored in table qrad.
+  !! The formula implemented here is:
+
+  !!     dq(g,i,j) = sum_lm (-i)^l ap(lm,i,j) *
+  !!                ( yr_lm(g^) dqrad(g,l,i,j) + dyr_lm(g^) qrad(g,l,i,j))
   !
-  !    This routine computes the derivatives of the fourier transform of
-  !    the Q function needed in stress assuming that the radial fourier
-  !    transform is already computed and stored in table qrad.
-  !
-  !    The formula implemented here is
-  !
-  !     dq(g,i,j) = sum_lm (-i)^l ap(lm,i,j) *
-  !                ( yr_lm(g^) dqrad(g,l,i,j) + dyr_lm(g^) qrad(g,l,i,j))
-  !
-  USE kinds, ONLY: DP
-  USE us, ONLY: dq, qrad
-  USE uspp_param, ONLY: lmaxq, nbetam
-  USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
+  USE kinds,       ONLY: DP
+  USE us,          ONLY: dq, qrad
+  USE uspp_param,  ONLY: lmaxq, nbetam
+  USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
   !
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: ngy, ih, jh, np, ipol
-  ! ngy: the number of G vectors to compute
-  ! ih : first index of Q(ih,jh)
-  ! jh : second index of Q(ih,jh)
-  ! np : pseudopotential index
-  ! ipol:the polarization of the derivative
-  REAL(DP), INTENT(IN) ::  g(3,ngy), qmod (ngy), ylmk0 (ngy, lmaxq*lmaxq), &
-       dylmk0 (ngy, lmaxq * lmaxq)
-  ! g: G vectors
-  ! qmod: moduli of q+G vectors
-  ! ylmk0: spherical harmonics
-  ! dylmk0: derivetives of spherical harmonics
-  COMPLEX(DP), INTENT(OUT) :: dqg (ngy)
-  ! the fourier transform of interest
+  !
+  INTEGER, INTENT(IN) :: ngy
+  !! the number of G vectors to compute
+  INTEGER, INTENT(IN) :: ih
+  !! first index of Q(ih,jh)
+  INTEGER, INTENT(IN) :: jh
+  !! second index of Q(ih,jh)
+  INTEGER, INTENT(IN) :: np
+  !! pseudopotential index
+  INTEGER, INTENT(IN) :: ipol
+  !! the polarization of the derivative
+  REAL(DP), INTENT(IN) ::  g(3,ngy)
+  !! G vectors
+  REAL(DP), INTENT(IN) ::  qmod(ngy)
+  !! moduli of q+G vectors
+  REAL(DP), INTENT(IN) ::  ylmk0(ngy,lmaxq*lmaxq)
+  !! spherical harmonics
+  REAL(DP), INTENT(IN) ::  dylmk0(ngy,lmaxq*lmaxq)
+  !! derivetives of spherical harmonics
+  COMPLEX(DP), INTENT(OUT) :: dqg(ngy)
+  !! the fourier transform of interest
+  !
+  ! ... local variables
   !
   COMPLEX(DP) :: sig
   ! (-i)^L
@@ -52,7 +59,7 @@ SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
   ! the angular momentum L
   ! the possible LM's compatible with ih,j
   ! counters for interpolation table
-
+  !
   REAL(DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work, work1, qm1
   ! 1 divided by six
   ! 1 divided dq
@@ -66,50 +73,50 @@ SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
   !
   sixth = 1.d0 / 6.d0
   dqi = 1 / dq
-  nb = indv (ih, np)
-  mb = indv (jh, np)
+  nb = indv(ih, np)
+  mb = indv(jh, np)
   IF (nb >= mb) THEN
      ijv = nb * (nb - 1) / 2 + mb
   ELSE
      ijv = mb * (mb - 1) / 2 + nb
   ENDIF
-  ivl = nhtolm (ih, np)
-  jvl = nhtolm (jh, np)
-
-  IF (nb > nbetam .or. mb > nbetam) &
-       CALL errore (' dqvan2 ', ' wrong dimensions (1)', max(nb,mb))
-  IF (ivl > nlx .or. jvl > nlx) &
-       CALL errore (' dqvan2 ', ' wrong dimensions (2)', max(ivl,jvl))
-
+  ivl = nhtolm(ih, np)
+  jvl = nhtolm(jh, np)
+  !
+  IF (nb > nbetam .OR. mb > nbetam) &
+       CALL errore (' dqvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
+  IF (ivl > nlx .OR. jvl > nlx) &
+       CALL errore (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
+  !
   dqg(:) = (0.d0,0.d0)
   !
   !    and make the sum over the non zero LM
   !
-  DO lm = 1, lpx (ivl, jvl)
-     lp = lpl (ivl, jvl, lm)
+  DO lm = 1, lpx(ivl, jvl)
+     lp = lpl(ivl, jvl, lm)
      !
      !     extraction of angular momentum l from lp:
      !
      IF (lp==1) THEN
         l = 1
-     ELSEIF ( (lp>=2) .and. (lp<=4) ) THEN
+     ELSEIF ( (lp>=2) .AND. (lp<=4) ) THEN
         l = 2
-     ELSEIF ( (lp>=5) .and. (lp<=9) ) THEN
+     ELSEIF ( (lp>=5) .AND. (lp<=9) ) THEN
         l = 3
-     ELSEIF ( (lp>=10) .and. (lp<=16) ) THEN
+     ELSEIF ( (lp>=10) .AND. (lp<=16) ) THEN
         l = 4
-     ELSEIF ( (lp>=17) .and. (lp<=25) ) THEN
+     ELSEIF ( (lp>=17) .AND. (lp<=25) ) THEN
         l = 5
-     ELSEIF ( (lp>=26) .and. (lp<=36) ) THEN
+     ELSEIF ( (lp>=26) .AND. (lp<=36) ) THEN
         l = 6
-     ELSEIF ( (lp>=37) .and. (lp<=49) ) THEN
+     ELSEIF ( (lp>=37) .AND. (lp<=49) ) THEN
         l = 7
      ELSE
         CALL errore (' dqvan2 ', ' lp.gt.49 ', lp)
      ENDIF
-
-     sig = (0.d0, -1.d0) ** (l - 1)
-     sig = sig * ap (lp, ivl, jvl)
+     !
+     sig = (0.d0, -1.d0)**(l - 1)
+     sig = sig * ap(lp, ivl, jvl)
      !
      qm1 = -1.0_dp !  any number smaller than qmod(1)
      !
@@ -119,10 +126,10 @@ SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
         ! calculate quantites depending on the module of G only when needed
         !
 #if !defined(_OPENMP)
-        IF ( abs( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
+        IF ( ABS( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
 #endif
            qm = qmod (ig) * dqi
-           px = qm - int (qm)
+           px = qm - INT(qm)
            ux = 1.d0 - px
            vx = 2.d0 - px
            wx = 3.d0 - px
@@ -134,10 +141,10 @@ SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
 
            pwx = px * wx * 0.5d0
 
-           work = qrad (i0, ijv, l, np) * uvx * wx + &
-                  qrad (i1, ijv, l, np) * pwx * vx - &
-                  qrad (i2, ijv, l, np) * pwx * ux + &
-                  qrad (i3, ijv, l, np) * px * uvx
+           work = qrad(i0, ijv, l, np) * uvx * wx + &
+                  qrad(i1, ijv, l, np) * pwx * vx - &
+                  qrad(i2, ijv, l, np) * pwx * ux + &
+                  qrad(i3, ijv, l, np) * px * uvx
            work1 = - qrad(i0, ijv, l, np) * (ux*vx + vx*wx + ux*wx) * sixth &
                    + qrad(i1, ijv, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0 &
                    - qrad(i2, ijv, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0 &
@@ -150,14 +157,15 @@ SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
         ENDIF
 #endif
 
-        dqg (ig) = dqg (ig) + sig * dylmk0 (ig, lp) * work
-        IF (qmod (ig) > 1.d-9) dqg (ig) = dqg (ig) + &
-            sig * ylmk0 (ig, lp) * work1 * g (ipol, ig) / qmod (ig)
+        dqg(ig) = dqg(ig) + sig * dylmk0(ig, lp) * work
+        IF (qmod(ig) > 1.d-9) dqg(ig) = dqg(ig) + &
+            sig * ylmk0(ig, lp) * work1 * g(ipol, ig) / qmod(ig)
      ENDDO
 !$OMP END PARALLEL DO
-
+  !
   ENDDO
+  !
   RETURN
-
+  !
 END SUBROUTINE dqvan2
 
