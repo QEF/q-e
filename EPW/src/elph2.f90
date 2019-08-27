@@ -61,6 +61,7 @@
     sigmai_all(:,:),        &!
     sigmai_mode(:,:,:),     &! 
     zi_all(:,:),            &!
+    eta(:,:,:),             &!  Adaptative smearing
     esigmar_all(:,:,:),     &!
     esigmai_all(:,:,:),     &!   
     jdos(:),                &!
@@ -79,7 +80,8 @@
     epsilon2_abs_lorenz(:,:,:) ! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
   REAL(KIND=DP) ::          &!
     efnew,                  &!  Fermi level on the fine grid. Added globaly for efficiency reason 
-    deltaq                   !  Displacement of fine-mesh k-points for velocity corrections
+    deltaq,                 &!  Displacement of fine-mesh k-points for velocity corrections
+    threshold                !  Threshold below which the transition probabilities are not written to file in transport. 
   INTEGER ::                &!
     nkqf,                   &!  number of k+q points per pool (fine grid)
     nkf,                    &!  number of k points per pool (fine grid)
@@ -90,7 +92,9 @@
     ibndmin,                &!  band bounds for slimming down electron-phonon matrix 
     ibndmax,                &!
     lower_band,             &!  Lower band index for image (band) parallelization
-    upper_band               !  Upper band index for image (band) parallelization
+    upper_band,             &!  Upper band index for image (band) parallelization
+    lrepmatw2_merge,        &!  File merging dimensions
+    lrepmatw5_merge          !  File merging dimensions
   INTEGER, ALLOCATABLE ::   &! 
     igk(:),                 &!  Index for k+G vector
     igkq(:),                &!  Index for k+q+G vector
@@ -107,5 +111,6 @@
     exband(:),              &!  k-point independent list of bands excluded from the calculation of overlap and projection matrices in W90
     done_elph(:)
   LOGICAL ::                &!
-    elph                   
+    elph,                   &!
+    adapt_smearing           !  Adaptative smearing                   
   END MODULE elph2

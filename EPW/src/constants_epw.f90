@@ -50,7 +50,8 @@
   REAL(DP), PARAMETER :: kb       = 8.6173324d-05 ! eV/K
   REAL(DP), PARAMETER :: electron_SI = 1.602176487d-19
   REAL(DP), PARAMETER :: hbar     = 6.582119514E-16 ! eV*s
-  REAL(DP), PARAMETER :: hbarJ    = 1.054571800E-34 ! J*s  
+  REAL(DP), PARAMETER :: hbarJ    = 1.054571800E-34 ! J*s 
+  REAL(DP), PARAMETER :: byte2Mb  = 7.62939453125E-6 ! 8 / (1024 * 1024) because 8 bytes per number, value in Mb; FM : true if DP is REAL(8) in qe
   !
   ! ... zero up to a given accuracy
   !
@@ -66,6 +67,7 @@
   REAL(DP), PARAMETER :: eps20 = 1.0E-20_DP
   REAL(DP), PARAMETER :: eps24 = 1.0E-24_DP
   REAL(DP), PARAMETER :: eps32 = 1.0E-32_DP
+  REAL(DP), PARAMETER :: eps40 = 1.0E-40_DP
   REAL(DP), PARAMETER :: eps80 = 1.0E-80_DP
   REAL(DP), PARAMETER :: eps160 = 1.0E-160_DP
   !   

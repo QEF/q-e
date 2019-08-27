@@ -35,6 +35,7 @@
     USE elph2,         ONLY : inv_tau_all, zi_allvb, inv_tau_allcb, zi_allcb,   &
                               map_rebal, map_rebal_inv    
     USE transportcom,  ONLY : s_BZtoIBZ_full, ixkqf_tr
+    USE epwcom,        ONLY : int_mob, carrier, ncarrier
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL
 #endif
@@ -50,35 +51,18 @@
       CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1 )
     ENDIF
+#endif
     ! 
     IF (iterative_bte) THEN
-      CALL MPI_FILE_CLOSE(iunepmat,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparseq,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparsek,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparsei,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparsej,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparset,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-  
-      CALL MPI_FILE_CLOSE(iunepmatcb,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparseqcb,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparsekcb,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparseicb,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparsejcb,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
-      CALL MPI_FILE_CLOSE(iunsparsetcb,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1)
+      IF ((int_mob .and. carrier) .or. ((.not. int_mob .and. carrier) .and. (ncarrier < 0.0))) THEN
+        CLOSE(iunepmat)
+        CLOSE(iunsparseq)
+      ENDIF
+      IF ((int_mob .and. carrier) .or. ((.not. int_mob .and. carrier) .and. (ncarrier > 0.0))) THEN
+        CLOSE(iunepmatcb)
+        CLOSE(iunsparseqcb)
+      ENDIF  ! in all other cases it is still to decide which files to open
     ENDIF
-#endif
     ! 
     !----------------------------------------------------------------------------
     END SUBROUTINE iter_close

@@ -28,7 +28,7 @@
                             broyden_beta, band_plot, a2f, lacon, &
                             kmaps, kerwrite, kerread, imag_read, &
                             gap_edge, fsthick, filqf, filkf, &
-                            fileig, fila2f, fermi_energy, &
+                            fileig, fila2f, fermi_energy, nc, &
                             etf_mem, epwwrite, epwread, eptemp, &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep, &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1, &
@@ -205,6 +205,7 @@
   CALL mp_bcast (omegamax      , meta_ionode_id, world_comm)
   CALL mp_bcast (omegastep     , meta_ionode_id, world_comm)
   CALL mp_bcast (n_r           , meta_ionode_id, world_comm)
+  CALL mp_bcast (nc            , meta_ionode_id, world_comm)
   !
   ! characters
   !
