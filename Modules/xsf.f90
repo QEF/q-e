@@ -64,7 +64,7 @@ SUBROUTINE xsf_fast_datagrid_3d &
   ! XSF scalar-field header
   WRITE(ounit,'(a)') 'BEGIN_BLOCK_DATAGRID_3D'
   WRITE(ounit,'(a)') '3D_PWSCF'
-  WRITE(ounit,'(a)') 'DATAGRID_3D_UNKNOWN'
+  WRITE(ounit,'(a)') 'BEGIN_DATAGRID_3D_UNKNOWN'
 
   ! number of points in each direction
   WRITE(ounit,*) nr1+1, nr2+1, nr3+1
