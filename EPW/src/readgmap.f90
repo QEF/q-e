@@ -37,7 +37,7 @@
   INTEGER, INTENT(in) :: lower_bnd
   !! Lower bound for the k-parallellization
   ! 
-  REAL(kind=DP), INTENT(out) :: g0vec_all_r(3,125)
+  REAL(KIND = DP), INTENT(out) :: g0vec_all_r(3,125)
   !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
   !
   !  work variables
@@ -55,7 +55,7 @@
   INTEGER :: ios
   !! Integer variable for I/O control
   !
-  REAL(DP) :: tmp
+  REAL(KIND = DP) :: tmp
   !
   !  OBSOLETE: now we read directly the igkq to get the proper ngxx
   !
@@ -66,7 +66,7 @@
   !  extra shells. This may not work for strange shapes of the
   !  reciproc latt. In this case just set ngxx = ngm_g
   !
-  !  ngxx = nint(4./3.*3.14*(2+(3.0/4.0/3.14*dble(npwx))**(1./3.))**3.)
+  !  ngxx = NINT(4./3.*3.14*(2+(3.0/4.0/3.14*DBLE(npwx))**(1./3.))**3.)
   !
 
   !  Note that the k+q point below does not correspond to the actual (true) 
@@ -76,15 +76,15 @@
   ngxx = 0
   DO ik = 1, nks
     !
-    IF ( maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1)) > ngxx ) &
-      ngxx = maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1))
+    IF (MAXVAL(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1)) > ngxx ) &
+      ngxx = MAXVAL(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1))
     !
   ENDDO
   !
 #if defined(__MPI)
-  tmp = dble(ngxx)
+  tmp = DBLE(ngxx)
   CALL mp_max( tmp, inter_pool_comm )  
-  ngxx = nint(tmp)
+  ngxx = NINT(tmp)
 #endif
   !
   IF (meta_ionode) THEN
@@ -122,7 +122,7 @@
   !
   CALL mp_bcast( ng0vec, meta_ionode_id, world_comm )
   !
-  ALLOCATE (gmap(ngxx * ng0vec))
+  ALLOCATE(gmap(ngxx * ng0vec))
   !
   IF (meta_ionode) THEN
      !

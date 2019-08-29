@@ -11,7 +11,7 @@
                          lrepmatw2, lrepmatw4, lrepmatw5, lrepmatw6 ) 
   !-----------------------------------------------------------------------
   !!
-  !!  This subroutine computes the scattering rate (inv_tau)
+  !!  This SUBROUTINE computes the scattering rate (inv_tau)
   !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP, i4b
@@ -51,9 +51,9 @@
   !! Q-point index
   INTEGER, INTENT(IN) :: totq
   !! Total number of q-points in selecq
-  REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
+  REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
   !! Fermi level for the temperature itemp
-  REAL(KIND=DP), INTENT(IN) :: efcb(nstemp)
+  REAL(KIND = DP), INTENT(IN) :: efcb(nstemp)
   !! Second Fermi level for the temperature itemp. Could be unused (0).
 #if defined(__MPI)  
   INTEGER(kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_tot
@@ -73,13 +73,13 @@
   !! Total number of element written to file 
   INTEGER, INTENT(INOUT) :: ind_totcb
   !! Total number of element written to file 
-  INTEGER, INTENT (inout) :: lrepmatw2
+  INTEGER, INTENT(inout) :: lrepmatw2
   !! Offset for that core
-  INTEGER, INTENT (inout) :: lrepmatw4
+  INTEGER, INTENT(inout) :: lrepmatw4
   !! Offset for that core
-  INTEGER, INTENT (inout) :: lrepmatw5
+  INTEGER, INTENT(inout) :: lrepmatw5
   !! Offset for that core
-  INTEGER, INTENT (inout) :: lrepmatw6
+  INTEGER, INTENT(inout) :: lrepmatw6
 #endif   
   !
   ! Local variables
@@ -113,7 +113,7 @@
   INTEGER :: lsize
   !! Offset to tell where to start reading the file
 #endif
-  CHARACTER (len=256) :: filint
+  CHARACTER(LEN = 256) :: filint
   INTEGER :: ierr
   INTEGER :: ind(npool)
   INTEGER :: indcb(npool)
@@ -128,71 +128,71 @@
   INTEGER(kind=i4b) :: sparsecb_j((ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nstemp * nkf )
   INTEGER(kind=i4b) :: sparsecb_t((ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nstemp * nkf )
   !
-  REAL(kind=DP) :: tmp
+  REAL(KIND = DP) :: tmp
   !! Temporary variable
-  REAL(kind=DP) :: dfnk
+  REAL(KIND = DP) :: dfnk
   !! Derivative of f_nk with respect to \varepsilon_nk
-  REAL(kind=DP) :: ekk2
+  REAL(KIND = DP) :: ekk2
   !! Temporary variable to the eigenenergies for the degenerate average  
-  REAL(KIND=DP) :: ekk
+  REAL(KIND = DP) :: ekk
   !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
-  REAL(KIND=DP) :: ekq
+  REAL(KIND = DP) :: ekq
   !! Energy relative to Fermi level: $$\varepsilon_{m\mathbf{k+q}}-\varepsilon_F$$
-  REAL(KIND=DP) :: g2
+  REAL(KIND = DP) :: g2
   !! Electron-phonon matrix elements squared (g2 is Ry^2) 
-  REAL(KIND=DP) :: etemp
+  REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
-  REAL(KIND=DP) :: w0g1
+  REAL(KIND = DP) :: w0g1
   !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q}] $$ 
-  REAL(KIND=DP) :: w0g2 
+  REAL(KIND = DP) :: w0g2 
   !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q}] $$
-  REAL(KIND=DP) :: inv_wq 
+  REAL(KIND = DP) :: inv_wq 
   !! Inverse phonon frequency. Defined for efficiency reasons.
-  REAL(KIND=DP) :: inv_etemp
+  REAL(KIND = DP) :: inv_etemp
   !! Invese temperature inv_etemp = 1/etemp. Defined for efficiency reasons.
-  REAL(KIND=DP) :: g2_tmp 
+  REAL(KIND = DP) :: g2_tmp 
   !! Used to set component to 0 if the phonon freq. is too low. This is defined
   !! for efficiency reasons as if statement should be avoided in inner-most loops.
-  REAL(KIND=DP) :: inv_degaussw
+  REAL(KIND = DP) :: inv_degaussw
   !! 1.0/degaussw. Defined for efficiency reasons. 
-  REAL(KIND=DP) :: wq
+  REAL(KIND = DP) :: wq
   !! Phonon frequency $$\omega_{q\nu}$$ on the fine grid.  
-  REAL(KIND=DP) :: wgq
+  REAL(KIND = DP) :: wgq
   !! Bose-Einstein occupation function $$n_{q\nu}$$
-  REAL(kind=DP) :: weight
+  REAL(KIND = DP) :: weight
   !! Self-energy factor 
-  REAL(KIND=DP) :: fmkq
+  REAL(KIND = DP) :: fmkq
   !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
-  REAL(KIND=DP) :: vkk(3,ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
   !! Electronic velocity $$v_{n\mathbf{k}}$$
-  !REAL(kind=DP) :: trans_prob(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nstemp, nkf)
-  REAL(kind=DP) :: trans_prob( (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nstemp * nkf)
+  !REAL(KIND = DP) :: trans_prob(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nstemp, nkf)
+  REAL(KIND = DP) :: trans_prob( (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) * nstemp * nkf)
   !! Temporary array to store the scattering rates
-  !REAL(kind=DP) :: trans_probcb(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nstemp, nkf)
-  REAL(kind=DP) :: trans_probcb( (ibndmax-ibndmin+1)*(ibndmax-ibndmin+1)* nstemp* nkf )
+  !REAL(KIND = DP) :: trans_probcb(ibndmax-ibndmin+1, ibndmax-ibndmin+1, nstemp, nkf)
+  REAL(KIND = DP) :: trans_probcb( (ibndmax-ibndmin+1)*(ibndmax-ibndmin+1)* nstemp* nkf )
   !! Temporary array to store the scattering rates
-  REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the zi
-  REAL(KIND=DP) :: xkf_all(3,nkqtotf/2)
+  REAL(KIND = DP) :: xkf_all(3,nkqtotf/2)
   !! k-points coordinate from all cores 
-  REAL(KIND=DP) :: wkf_all(nkqtotf/2)
+  REAL(KIND = DP) :: wkf_all(nkqtotf/2)
   !! Weights from all the cores
-  REAL(KIND=DP) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+  REAL(KIND = DP) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
   !! Velocities from all the cores
   !
-  REAL(KIND=DP) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+  REAL(KIND = DP) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
-  REAL(KIND=DP), EXTERNAL :: DDOT
+  REAL(KIND = DP), EXTERNAL :: DDOT
   !! Dot product function
-  REAL(KIND=DP), EXTERNAL :: wgauss
+  REAL(KIND = DP), EXTERNAL :: wgauss
   !! Compute the approximate theta function. Here computes Fermi-Dirac 
-  REAL(KIND=DP), EXTERNAL :: w0gauss
+  REAL(KIND = DP), EXTERNAL :: w0gauss
   !! The derivative of wgauss:  an approximation to the delta function  
-  REAL(kind=DP) :: carrier_density, fnk, inv_cell
+  REAL(KIND = DP) :: carrier_density, fnk, inv_cell
   !  
   inv_cell = 1.0d0/omega
   ! 
-  IF ( iqq == 1 ) THEN
+  IF (iqq == 1) THEN
     !
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Scattering rate for IBTE")')
@@ -200,7 +200,7 @@
     WRITE(stdout,'(5x,"restart and restart_freq inputs deactivated (restart point at every q-points).")')
     WRITE(stdout,'(5x,"No intermediate mobility will be shown.")')
     !
-    IF ( fsthick < 1.d3 ) THEN
+    IF (fsthick < 1.d3) THEN
       WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
       WRITE(stdout, '(5x,a,f10.6,a)' ) 'This is computed with respect to the fine Fermi level ',ef * ryd2ev, ' eV'
       WRITE(stdout, '(5x,a,f10.6,a,f10.6,a)' ) 'Only states between ',(ef-fsthick) * ryd2ev, ' eV and ',&
@@ -234,15 +234,15 @@
     sparsecb_t(:) = zero
 
     !trans_probcb(:) = zero
-    etf_all(:,:) = zero
-    vkk_all(:,:,:) = zero
+    etf_all(:, :) = zero
+    vkk_all(:, :, :) = zero
     ! local index for each q-point
     ind(:) = 0
     indcb(:) = 0
     ! 
     ! loop over temperatures
     DO itemp = 1, nstemp
-      xkf_all(:,:) = 0.0d0
+      xkf_all(:, :) = 0.0d0
       wkf_all(:) = 0.0d0
       !
       etemp = transp_temp(itemp)
@@ -260,8 +260,8 @@
         !
         ! We are not consistent with ef from ephwann_shuffle but it should not 
         ! matter if fstick is large enough.
-        IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
-             ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
+        IF (( minval ( ABS(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+             ( minval ( ABS(etf (:, ikq) - ef) ) < fsthick )) THEN
           
           xkf_all(:, ik+lower_bnd - 1 ) = xkf(:,ikk)
           wkf_all(ik+lower_bnd - 1 ) = wkf(ikk)
@@ -290,7 +290,7 @@
                 !
                 ! SP : Avoid if statement in inner loops
                 ! the coupling from Gamma acoustic phonons is negligible
-                IF ( wq > eps_acustic ) THEN
+                IF (wq > eps_acustic) THEN
                   g2_tmp = 1.0
                   wgq = wgauss( -wq*inv_etemp, -99)
                   wgq = wgq / ( one - two * wgq )
@@ -302,17 +302,17 @@
                   inv_wq = 0.0
                 ENDIF
                 !
-                ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                ! here we take into account the zero-point SQRT(hbar/2M\omega)
                 ! with hbar = 1 and M already contained in the eigenmodes
                 ! g2 is Ry^2, wkf must already account for the spin factor
                 !
                 ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
-                ! need to treat it like the normal g with abs(g).
-                IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-                   .OR. abs(xqf (3, iq))> eps8 )) THEN
+                ! need to treat it like the normal g with ABS(g).
+                IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+                   .OR. ABS(xqf (3, iq))> eps8 )) THEN
                   ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                   !     number, in which case its square will be a negative number. 
-                  g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP )
+                  g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND = DP )
                 ELSE
                   g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                 ENDIF
@@ -331,7 +331,7 @@
                 !
               ENDDO !imode
               ! Only save the onces that really contribute
-              IF (ABS(tmp * dfnk) > 1d-40 ) THEN
+              IF (ABS(tmp * dfnk) > 1d-40) THEN
                 !IF (ind(my_pool_id+1)<10) print*,'ik ibnd jbnd ',ik, ibnd, jbnd
                 !IF (ind(my_pool_id+1)<10) print*,'VB ekk ',ekk
                 !IF (ind(my_pool_id+1)<10) print*,'VB ekq ',ekq
@@ -366,7 +366,7 @@
           !
           ! In this case we are also computing the scattering rate for another Fermi level position
           ! This is used to compute both the electron and hole mobility at the same time.  
-          IF ( ABS(efcb(itemp)) > eps4 ) THEN
+          IF (ABS(efcb(itemp)) > eps4) THEN
             ! 
             DO ibnd = 1, ibndmax-ibndmin+1
               !
@@ -391,7 +391,7 @@
                   !
                   ! SP : Avoid if statement in inner loops
                   ! the coupling from Gamma acoustic phonons is negligible
-                  IF ( wq > eps_acustic ) THEN
+                  IF (wq > eps_acustic) THEN
                     g2_tmp = 1.0
                     wgq = wgauss( -wq*inv_etemp, -99)
                     wgq = wgq / ( one - two * wgq )
@@ -403,17 +403,17 @@
                     inv_wq = 0.0
                   ENDIF
                   !
-                  ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                  ! here we take into account the zero-point SQRT(hbar/2M\omega)
                   ! with hbar = 1 and M already contained in the eigenmodes
                   ! g2 is Ry^2, wkf must already account for the spin factor
                   !
                   ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
-                  ! need to treat it like the normal g with abs(g).
-                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-                     .OR. abs(xqf (3, iq))> eps8 )) THEN
+                  ! need to treat it like the normal g with ABS(g).
+                  IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+                     .OR. ABS(xqf (3, iq))> eps8 )) THEN
                     ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                     !     number, in which case its square will be a negative number. 
-                    g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP)
+                    g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND = DP)
                   ELSE
                     g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                   ENDIF
@@ -433,7 +433,7 @@
                 ENDDO ! imode
                 ! 
                 ! Only save the onces that really contribute
-                IF (ABS(tmp * dfnk) > 1d-40 ) THEN
+                IF (ABS(tmp * dfnk) > 1d-40) THEN
                   indcb (my_pool_id+1) = indcb (my_pool_id+1) + 1
                   ! 
                   trans_probcb  ( indcb(my_pool_id+1) ) = tmp
@@ -463,9 +463,9 @@
     ! 
     ! SP - IBTE only with if EPW compiled with MPI
 #if defined(__MPI)
-    IF ( sum(ind) > 0 ) THEN
+    IF (sum(ind) > 0) THEN
       ! 
-      IF ( my_pool_id == 0 ) ind_tot = ind_tot + SUM(ind)
+      IF (my_pool_id == 0 ) ind_tot = ind_tot + SUM(ind)
       !CALL mp_bcast (ind_tot, ionode_id, world_comm)  
       CALL MPI_BCAST( ind_tot, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
 ! Can be uncommented
@@ -515,9 +515,9 @@
       CALL MP_SUM(wkf_all, world_comm)
       ! 
     ENDIF 
-    IF ( sum(indcb) > 0 ) THEN
+    IF (sum(indcb) > 0) THEN
       ! 
-      IF ( my_pool_id == 0 ) ind_totcb = ind_totcb + SUM(indcb)
+      IF (my_pool_id == 0 ) ind_totcb = ind_totcb + SUM(indcb)
       !CALL mp_bcast (ind_totcb, ionode_id, world_comm)
       CALL MPI_BCAST( ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
 !      WRITE(stdout,'(a,i9,E22.8)') '     Total number of element written in electron ',ind_totcb
@@ -573,7 +573,7 @@
     ! 
   ENDIF ! first_cycle
   ! 
-  IF ( iqq == totq ) THEN
+  IF (iqq == totq) THEN
     wkf_all(:) = zero
     ! Computes the k-velocity
     DO ik = 1, nkf
@@ -583,7 +583,7 @@
       wkf_all( ik+lower_bnd -1 ) = wkf(ikk) 
       ! 
       DO ibnd = 1, ibndmax-ibndmin+1
-        IF ( vme ) THEN
+        IF (vme) THEN
           vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
         ELSE
           vkk_all(:,ibnd, ik + lower_bnd -1 ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
@@ -595,7 +595,7 @@
     CALL mp_sum(etf_all, world_comm) 
     CALL mp_sum(wkf_all, world_comm)
     ! 
-    IF ( my_pool_id == 0 ) THEN
+    IF (my_pool_id == 0) THEN
 
       ! Now write total number of q-point inside and k-velocity
       !
@@ -603,12 +603,12 @@
       WRITE(iufilibtev_sup,'(a)') '# Number of elements in hole and electrons  '
       WRITE(iufilibtev_sup,'(2i16)') ind_tot, ind_totcb
       WRITE(iufilibtev_sup,'(a)') '# itemp    ef0    efcb'
-      DO itemp=1, nstemp
+      DO itemp = 1, nstemp
         WRITE(iufilibtev_sup,'(i8,2E22.12)') itemp, ef0(itemp), efcb(itemp)
       ENDDO
       WRITE(iufilibtev_sup,'(a)') '# ik  ibnd      velocity (x,y,z)              eig     weight '
-      DO ik=1, nkqtotf / 2
-        DO ibnd=1, ibndmax - ibndmin + 1
+      DO ik = 1, nkqtotf / 2
+        DO ibnd = 1, ibndmax - ibndmin + 1
           WRITE(iufilibtev_sup,'(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
         ENDDO
       ENDDO
@@ -617,13 +617,13 @@
     ENDIF ! master
     ! 
     ! Now print the carrier density for checking
-    DO itemp=1, nstemp
+    DO itemp = 1, nstemp
       etemp = transp_temp(itemp)
       carrier_density = 0.0
       ! 
-      IF ( ncarrier < 0.0 ) THEN ! VB
-        DO ik=1, nkf
-          DO ibnd=1, ibndmax - ibndmin + 1
+      IF (ncarrier < 0.0) THEN ! VB
+        DO ik = 1, nkf
+          DO ibnd = 1, ibndmax - ibndmin + 1
             ! This selects only valence bands for hole conduction
             IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
               !  energy at k (relative to Ef)
@@ -639,10 +639,10 @@
         WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp *ryd2ev/kelvin2eV, &
                       ef0(itemp)*ryd2ev,  carrier_density
       ELSE ! CB
-        DO ik=1, nkf
-          DO ibnd=1, ibndmax - ibndmin + 1
+        DO ik = 1, nkf
+          DO ibnd = 1, ibndmax - ibndmin + 1
             ! This selects only valence bands for hole conduction
-            IF (etf_all (ibnd, ik+lower_bnd-1 ) > efcb(itemp) ) THEN
+            IF (etf_all (ibnd, ik+lower_bnd-1 ) > efcb(itemp)) THEN
               !  energy at k (relative to Ef)
               ekk = etf_all(ibnd, ik+lower_bnd-1) - efcb(itemp)
               fnk = wgauss( -ekk / etemp, -99)

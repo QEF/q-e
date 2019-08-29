@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------
-  subroutine ktokpmq(xk, xq, sign, ipool, nkq, nkq_abs)
+  SUBROUTINE ktokpmq(xk, xq, sign, ipool, nkq, nkq_abs)
   !--------------------------------------------------------
   !!
   !!   For a given k point in cart coord, find the index 
@@ -39,9 +39,9 @@
   !! the index of k+sign*q
   INTEGER, INTENT(out) :: ipool
   !! The pool hosting the k+sign*q point
-  REAL(DP), INTENT(in) :: xk(3)
+  REAL(KIND = DP), INTENT(in) :: xk(3)
   !! coordinates of k points
-  REAL(DP), INTENT(in) :: xq(3)
+  REAL(KIND = DP), INTENT(in) :: xq(3)
   !! Coordinates of q point
   !
   ! work variables
@@ -52,18 +52,18 @@
   !! Mapping index of k+q on k
   INTEGER :: iks, nkl, nkr, jpool, kunit
   !
-  REAL(DP) :: xxk(3)
+  REAL(KIND = DP) :: xxk(3)
   !! Coords. of k-point
-  REAL(DP) :: xxq(3)
+  REAL(KIND = DP) :: xxq(3)
   !! Coords. of q-point
-  REAL(DP) :: xx, yy, zz
+  REAL(KIND = DP) :: xx, yy, zz
   !! current k and k+q points in crystal coords. in multiple of nk1, nk2, nk3
-  REAL(DP) :: xx_c, yy_c, zz_c
+  REAL(KIND = DP) :: xx_c, yy_c, zz_c
   !! k-points in crystal coords. in multiple of nk1, nk2, nk3
   !
   LOGICAL :: in_the_list, found
   !
-  IF (abs(sign).ne.1) call errore('ktokpmq','sign must be +1 or -1',1)
+  IF (abs(sign)/=1) call errore('ktokpmq','sign must be +1 or -1',1)
   !
   ! bring k and q in crystal coordinates
   !
@@ -78,25 +78,25 @@
   xx = xxk(1) * nk1
   yy = xxk(2) * nk2
   zz = xxk(3) * nk3
-  in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
-                abs(yy-nint(yy)) <= eps5 .AND. &
-                abs(zz-nint(zz)) <= eps5
-  IF ( .NOT. in_the_list) CALL errore('ktokpmq','is this a uniform k-mesh?',1)
+  in_the_list = ABS(xx-NINT(xx)) <= eps5 .AND. &
+                ABS(yy-NINT(yy)) <= eps5 .AND. &
+                ABS(zz-NINT(zz)) <= eps5
+  IF (.NOT. in_the_list) CALL errore('ktokpmq','is this a uniform k-mesh?',1)
   !
-  IF ( xx < -eps5 .or. yy < -eps5 .or. zz < -eps5 ) &
+  IF (xx < -eps5 .OR. yy < -eps5 .OR. zz < -eps5 ) &
      CALL errore('ktokpmq','coarse k-mesh needs to be strictly positive in 1st BZ',1)
   !
   !  now add the phonon wavevector and check that k+q falls again on the k grid
   !
-  xxk = xxk + dble(sign) * xxq
+  xxk = xxk + DBLE(sign) * xxq
   !
   xx = xxk(1) * nk1
   yy = xxk(2) * nk2
   zz = xxk(3) * nk3
-  in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
-                abs(yy-nint(yy)) <= eps5 .AND. &
-                abs(zz-nint(zz)) <= eps5
-  IF ( .NOT. in_the_list) CALL errore('ktokpmq','k+q does not fall on k-grid',1)
+  in_the_list = ABS(xx-NINT(xx)) <= eps5 .AND. &
+                ABS(yy-NINT(yy)) <= eps5 .AND. &
+                ABS(zz-NINT(zz)) <= eps5
+  IF (.NOT. in_the_list) CALL errore('ktokpmq','k+q does not fall on k-grid',1)
   !
   !  find the index of this k+q in the k-grid
   !
@@ -113,12 +113,12 @@
      !
      ! check that the k-mesh was defined in the positive region of 1st BZ
      !
-     IF ( xx_c < -eps5 .or. yy_c < -eps5 .or. zz_c < -eps5 ) &
+     IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5 ) &
         CALL errore('ktokpmq','coarse k-mesh needs to be strictly positive in 1st BZ',1)
      !
-     found = nint(xx_c) == nint(xx) .AND. &
-             nint(yy_c) == nint(yy) .AND. &
-             nint(zz_c) == nint(zz)
+     found = NINT(xx_c) == NINT(xx) .AND. &
+             NINT(yy_c) == NINT(yy) .AND. &
+             NINT(zz_c) == NINT(zz)
      IF (found) THEN  
         n = ik
         EXIT
@@ -127,7 +127,7 @@
   !
   !  26/06/2012 RM
   !  since coarse k- and q- meshes are commensurate, one can easily find n
-  !  n = nint(xx) * nk2 * nk3 + nint(yy) * nk3 + nint(zz) + 1
+  !  n = NINT(xx) * nk2 * nk3 + NINT(yy) * nk3 + NINT(zz) + 1
   !
   IF (n == 0) call errore('ktokpmq','problem indexing k+q',1)
   !
@@ -147,12 +147,12 @@
     !
     !  the reminder goes to the first nkr pools (0...nkr-1)
     !
-    IF ( jpool < nkr ) nkl = nkl + kunit
+    IF (jpool < nkr ) nkl = nkl + kunit
     !
     !  the index of the first k point in this pool
     !
     iks = nkl * jpool + 1
-    IF ( jpool >= nkr ) iks = iks + nkr * kunit
+    IF (jpool >= nkr ) iks = iks + nkr * kunit
     !
     IF (n >= iks) THEN
       ipool = jpool + 1
@@ -240,21 +240,21 @@
   IMPLICIT NONE
   ! 
   INTEGER, INTENT(in) :: n1, n2, n3
-  REAL(DP), INTENT(inout) :: xx, yy, zz
+  REAL(KIND = DP), INTENT(inout) :: xx, yy, zz
   INTEGER :: ib
   !
   ! more translations are needed to go back to the first BZ when the unit cell
   ! is far from cubic
   !
   DO ib = -2,0
-    IF (nint(xx) < ib*n1) xx = xx + (-ib+1)*n1
-    IF (nint(yy) < ib*n2) yy = yy + (-ib+1)*n2
-    IF (nint(zz) < ib*n3) zz = zz + (-ib+1)*n3
+    IF (NINT(xx) < ib*n1) xx = xx + (-ib+1)*n1
+    IF (NINT(yy) < ib*n2) yy = yy + (-ib+1)*n2
+    IF (NINT(zz) < ib*n3) zz = zz + (-ib+1)*n3
   ENDDO
   DO ib = 2,1,-1
-    IF (nint(xx) >= ib*n1) xx = xx - ib*n1
-    IF (nint(yy) >= ib*n2) yy = yy - ib*n2
-    IF (nint(zz) >= ib*n3) zz = zz - ib*n3
+    IF (NINT(xx) >= ib*n1) xx = xx - ib*n1
+    IF (NINT(yy) >= ib*n2) yy = yy - ib*n2
+    IF (NINT(zz) >= ib*n3) zz = zz - ib*n3
   ENDDO
   !
   !-------------------------------------------

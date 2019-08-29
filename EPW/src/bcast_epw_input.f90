@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   ! Code adapted from PH/bcast_ph_input - Quantum-ESPRESSO group
-  ! 09/2009 Very little of this subroutine in necessary.  Many 
+  ! 09/2009 Very little of this SUBROUTINE in necessary.  Many 
   ! excess variables
   !
   !-----------------------------------------------------------------------
@@ -59,7 +59,7 @@
   USE control_flags, ONLY : iverbosity
   USE ions_base,     ONLY : amass
   !
-  implicit none
+  IMPLICIT NONE
   !
   ! logicals
   !
@@ -234,7 +234,7 @@ SUBROUTINE bcast_epw_input1
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE io_global,  ONLY : meta_ionode_id
-  implicit none
+  IMPLICIT NONE
   !
   ! integers
   !

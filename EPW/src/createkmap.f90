@@ -10,7 +10,7 @@
   SUBROUTINE createkmap( xq )
   !-----------------------------------------------------------------------
   !!  
-  !!  This subroutine is called from elphon_shuffle_wrap for each
+  !!  This SUBROUTINE is called from elphon_shuffle_wrap for each
   !!  nq1*nq2*nq3 phonon on the coarse mesh.    
   !!
   !!  It folds the k+q mesh into the k mesh using 5^3 G_0 translations 
@@ -33,7 +33,7 @@
   !
   IMPLICIT NONE
   !
-  REAL(kind=DP), INTENT(in) :: xq(3)
+  REAL(KIND = DP), INTENT(in) :: xq(3)
   !! Coords. of q-point 
   !
   ! Local variables
@@ -50,38 +50,38 @@
   INTEGER :: ig1, ig2, ig3
   !! Counter on G_0-translations
   INTEGER :: g0vec(3)
-  !! G_0 in integer coords.
+  !! G_0 in INTEGER coords.
   INTEGER :: ig0
   !! Index of G_0 such that k+q+G_0 belongs to the 1st BZ
   INTEGER :: n
   !! Mapping index of k+q on k
   !
-  REAL(kind=DP) :: xk_q(3)
+  REAL(KIND = DP) :: xk_q(3)
   !! Coords. of k+q-point
-  REAL(kind=DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
+  REAL(KIND = DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
   !! k-points in crystal coords. in multiple of nk1, nk2, nk3
-  REAL(kind=DP) :: xx, yy, zz
+  REAL(KIND = DP) :: xx, yy, zz
   !! k+q in crystal coords. in multiple of nk1, nk2, nk3
-  REAL(kind=DP) :: xx_n, yy_n, zz_n
+  REAL(KIND = DP) :: xx_n, yy_n, zz_n
   !! k+q in crystal coords. in multiple of nk1, nk2, nk3 in 1st BZ
   !
   LOGICAL :: in_the_list, found
   !
-  IF ( .NOT.  ALLOCATED(xkq) ) ALLOCATE ( xkq(3,nkstot) )
-  xkq(:,:) = zero
+  IF (.NOT.  ALLOCATED(xkq) ) ALLOCATE(xkq(3,nkstot) )
+  xkq(:, :) = zero
   !
   IF (meta_ionode) THEN
     !
     !  the first proc keeps a copy of all kpoints !
     !
-    IF ( .NOT. ALLOCATED(shift) ) ALLOCATE ( shift(nkstot) )
+    IF (.NOT. ALLOCATED(shift) ) ALLOCATE(shift(nkstot) )
     shift(:) = 0
     !
     !  Now fold k+q back into the k-grid for wannier interpolation.
     !  Since this is done before divide and impera, every pool has all the kpoints.
     !
     !  bring q in crystal coordinates and check commensuration
-    !  loosy tolerance: not important since k+q is defined through nint() 
+    !  loosy tolerance: not important since k+q is defined through NINT() 
     !  bring q-point from cartesian to crystal coords.  
     !
     CALL cryst_to_cart(1, xq, at, -1)
@@ -89,10 +89,10 @@
     xx = xq(1) * nk1 
     yy = xq(2) * nk2 
     zz = xq(3) * nk3 
-    in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
-                  abs(yy-nint(yy)) <= eps5 .AND. &
-                  abs(zz-nint(zz)) <= eps5
-    IF ( .NOT. in_the_list) CALL errore('createkmap','q-vec not commensurate',1)
+    in_the_list = ABS(xx-NINT(xx)) <= eps5 .AND. &
+                  ABS(yy-NINT(yy)) <= eps5 .AND. &
+                  ABS(zz-NINT(zz)) <= eps5
+    IF (.NOT. in_the_list) CALL errore('createkmap','q-vec not commensurate',1)
     !
     ng0vec = 0
     DO ig1 = -2, 2
@@ -117,12 +117,12 @@
       xx_c(ik) = xk(1,ik) * nk1
       yy_c(ik) = xk(2,ik) * nk2
       zz_c(ik) = xk(3,ik) * nk3
-      in_the_list = abs(xx_c(ik)-nint(xx_c(ik))) <= eps5 .AND. &
-                    abs(yy_c(ik)-nint(yy_c(ik))) <= eps5 .AND. &
-                    abs(zz_c(ik)-nint(zz_c(ik))) <= eps5
-      IF ( .NOT. in_the_list) CALL errore('createkmap','is this a uniform k-mesh?',1)
+      in_the_list = ABS(xx_c(ik)-NINT(xx_c(ik))) <= eps5 .AND. &
+                    ABS(yy_c(ik)-NINT(yy_c(ik))) <= eps5 .AND. &
+                    ABS(zz_c(ik)-NINT(zz_c(ik))) <= eps5
+      IF (.NOT. in_the_list) CALL errore('createkmap','is this a uniform k-mesh?',1)
       !
-      IF ( (xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5) ) &
+      IF ((xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5) ) &
         CALL errore('createkmap','coarse k-mesh needs to be strictly positive in 1st BZ',1)
     ENDDO
     !
@@ -135,16 +135,16 @@
       xx = xk_q(1) * nk1
       yy = xk_q(2) * nk2
       zz = xk_q(3) * nk3
-      in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
-                    abs(yy-nint(yy)) <= eps5 .AND. &
-                    abs(zz-nint(zz)) <= eps5
-      IF ( .NOT. in_the_list) CALL errore('createkmap','k+q does not fall on k-grid',1)
+      in_the_list = ABS(xx-NINT(xx)) <= eps5 .AND. &
+                    ABS(yy-NINT(yy)) <= eps5 .AND. &
+                    ABS(zz-NINT(zz)) <= eps5
+      IF (.NOT. in_the_list) CALL errore('createkmap','k+q does not fall on k-grid',1)
       !
       !  find the index of this k+q in the k-grid
       !
-      i = mod( nint(xx + 2*nk1), nk1 ) 
-      j = mod( nint(yy + 2*nk2), nk2 ) 
-      k = mod( nint(zz + 2*nk3), nk3 ) 
+      i = mod( NINT(xx + 2*nk1), nk1 ) 
+      j = mod( NINT(yy + 2*nk2), nk2 ) 
+      k = mod( NINT(zz + 2*nk3), nk3 ) 
       !
       xx_n = xx
       yy_n = yy
@@ -158,9 +158,9 @@
       found = .false.
       DO jk = 1, nkstot
          !
-         found = nint(xx_c(jk)) == nint(xx_n) .AND. &
-                 nint(yy_c(jk)) == nint(yy_n) .AND. &
-                 nint(zz_c(jk)) == nint(zz_n)
+         found = NINT(xx_c(jk)) == NINT(xx_n) .AND. &
+                 NINT(yy_c(jk)) == NINT(yy_n) .AND. &
+                 NINT(zz_c(jk)) == NINT(zz_n)
          IF (found) THEN
             n = jk
             EXIT
@@ -169,7 +169,7 @@
       !
       !  26/06/2012 RM
       !  since coarse k- and q- meshes are commensurate, one can easily find n
-      !  n = nint(xx_n) * nk2 * nk3 + nint(yy_n) * nk3 + nint(zz_n) + 1
+      !  n = NINT(xx_n) * nk2 * nk3 + NINT(yy_n) * nk3 + NINT(zz_n) + 1
       !  n represents the index of k+q on the coarse k-grid.
       !
       IF (n == 0) CALL errore('createkmap','problem indexing k+q',1)
@@ -178,9 +178,9 @@
       !
       !  determine the G_0 such that k+q+G_0 belongs to the first BZ
       !
-      g0vec(1) = ( i - nint(xx) ) / nk1
-      g0vec(2) = ( j - nint(yy) ) / nk2
-      g0vec(3) = ( k - nint(zz) ) / nk3
+      g0vec(1) = ( i - NINT(xx) ) / nk1
+      g0vec(2) = ( j - NINT(yy) ) / nk2
+      g0vec(3) = ( k - NINT(zz) ) / nk3
       !
       !  now store the shift for this k+q point
       !
@@ -194,7 +194,7 @@
       ENDDO
       shift(ik) = ig0
       !
-      IF ( .NOT. in_the_list) CALL errore &
+      IF (.NOT. in_the_list) CALL errore &
          ('createkmap','cannot find the folding vector in the list',1)
       !
       !  obsolete:
@@ -213,7 +213,7 @@
     CALL cryst_to_cart(1, xq, bg, 1) 
     CALL cryst_to_cart(nkstot, xk, bg, 1)
     !
-    g0vec_all_r = dble(g0vec_all)
+    g0vec_all_r = DBLE(g0vec_all)
     CALL cryst_to_cart(ng0vec, g0vec_all_r, bg, 1)
     !
     !  the unit with kmap(ik) and shift(ik)
@@ -237,7 +237,7 @@
   !!
   !!  generate the map k+q --> k for folding the rotation matrix U(k+q) 
   !!  
-  !!  in parallel case, this subroutine must be called only by first proc 
+  !!  in parallel case, this SUBROUTINE must be called only by first proc 
   !!  (which has all the kpoints)
   !!
   !-----------------------------------------------------------------------
@@ -252,7 +252,7 @@
 
   IMPLICIT NONE
   !
-  REAL(kind=DP), INTENT(in) :: xxq(3)
+  REAL(KIND = DP), INTENT(in) :: xxq(3)
   !! The current q-point 
   ! 
   ! Local variables
@@ -263,9 +263,9 @@
   INTEGER :: n
   !! Mapping index of k+q on k
   !
-  REAL(kind=DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
+  REAL(KIND = DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
   !! k-points in crystal coords. in multiple of nk1, nk2, nk3
-  REAL(kind=DP) :: xx, yy, zz
+  REAL(KIND = DP) :: xx, yy, zz
   !! k+q in crystal coords. in multiple of nk1, nk2, nk3
   !
   LOGICAL :: in_the_list, found
@@ -279,12 +279,12 @@
   xx = xxq(1) * nk1 
   yy = xxq(2) * nk2 
   zz = xxq(3) * nk3 
-  in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
-                abs(yy-nint(yy)) <= eps5 .AND. &
-                abs(zz-nint(zz)) <= eps5
-  IF ( .NOT. in_the_list) CALL errore('createkmap2','q-vec not commensurate',1)
-  IF ( .NOT.  ALLOCATED(xkq) ) ALLOCATE ( xkq(3,nkstot) )
-  xkq(:,:) = zero
+  in_the_list = ABS(xx-NINT(xx)) <= eps5 .AND. &
+                ABS(yy-NINT(yy)) <= eps5 .AND. &
+                ABS(zz-NINT(zz)) <= eps5
+  IF (.NOT. in_the_list) CALL errore('createkmap2','q-vec not commensurate',1)
+  IF (.NOT.  ALLOCATED(xkq) ) ALLOCATE(xkq(3,nkstot) )
+  xkq(:, :) = zero
   !
   !  bring all the k-points from cartesian to crystal coordinates 
   !
@@ -297,12 +297,12 @@
     xx_c(ik) = xk(1,ik) * nk1
     yy_c(ik) = xk(2,ik) * nk2
     zz_c(ik) = xk(3,ik) * nk3
-    in_the_list = abs(xx_c(ik)-nint(xx_c(ik))) <= eps5 .AND. &
-                  abs(yy_c(ik)-nint(yy_c(ik))) <= eps5 .AND. &
-                  abs(zz_c(ik)-nint(zz_c(ik))) <= eps5
-    IF ( .NOT. in_the_list) CALL errore('createkmap2','is this a uniform k-mesh?',1)
+    in_the_list = ABS(xx_c(ik)-NINT(xx_c(ik))) <= eps5 .AND. &
+                  ABS(yy_c(ik)-NINT(yy_c(ik))) <= eps5 .AND. &
+                  ABS(zz_c(ik)-NINT(zz_c(ik))) <= eps5
+    IF (.NOT. in_the_list) CALL errore('createkmap2','is this a uniform k-mesh?',1)
     !
-    IF ( (xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5) ) &
+    IF ((xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5) ) &
       CALL errore('createkmap2','coarse k-mesh needs to be strictly positive in 1st BZ',1)
   ENDDO
   !
@@ -315,10 +315,10 @@
     xx = xkq(1,ik) * nk1
     yy = xkq(2,ik) * nk2
     zz = xkq(3,ik) * nk3
-    in_the_list = abs(xx-nint(xx)) <= eps5 .AND. &
-                  abs(yy-nint(yy)) <= eps5 .AND. &
-                  abs(zz-nint(zz)) <= eps5
-    IF ( .NOT. in_the_list) CALL errore('createkmap2','k+q does not fall on k-grid',1)
+    in_the_list = ABS(xx-NINT(xx)) <= eps5 .AND. &
+                  ABS(yy-NINT(yy)) <= eps5 .AND. &
+                  ABS(zz-NINT(zz)) <= eps5
+    IF (.NOT. in_the_list) CALL errore('createkmap2','k+q does not fall on k-grid',1)
     !
     !  find the index of this k+q in the k-grid
     !
@@ -330,9 +330,9 @@
     found = .false.
     DO jk = 1, nkstot
        !
-       found = nint(xx_c(jk)) == nint(xx) .and. &
-               nint(yy_c(jk)) == nint(yy) .and. &
-               nint(zz_c(jk)) == nint(zz)
+       found = NINT(xx_c(jk)) == NINT(xx) .AND. &
+               NINT(yy_c(jk)) == NINT(yy) .AND. &
+               NINT(zz_c(jk)) == NINT(zz)
        IF (found) THEN
           n = jk
           EXIT
@@ -406,9 +406,9 @@
   !! Converts a local G-vector index into the global index 
   INTEGER, ALLOCATABLE :: g2l(:)
   !! Local index of G-vector 
-  INTEGER, ALLOCATABLE :: mill_unsorted(:,:)
+  INTEGER, ALLOCATABLE :: mill_unsorted(:, :)
   !! Array of unsorted Miller indices of G-vectors
-  INTEGER, ALLOCATABLE :: mill(:,:)
+  INTEGER, ALLOCATABLE :: mill(:, :)
   !! Array of sorted Miller indices of G-vectors in increasing order of G^2 
   INTEGER, ALLOCATABLE :: igsrt(:)
   !! Array of G-vector indices in the initial (unsorted) list 
@@ -420,16 +420,16 @@
   !! itoj(i) returns the index of the G-vector in the sorted list 
   !! that was at i-th position in the unsorted list
   !
-  REAL(kind=DP) :: xx, yy, zz
+  REAL(KIND = DP) :: xx, yy, zz
   !! k-point in crystal coords. in multiple of nk1, nk2, nk3
-  REAL(kind=DP), ALLOCATABLE :: gg(:)
+  REAL(KIND = DP), ALLOCATABLE :: gg(:)
   !! G^2 in increasing order
-  REAL(kind=DP), ALLOCATABLE :: g(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: g(:, :)
   !! G-vectors cartesian components in increasing order of G^2
-  REAL(kind=DP), ALLOCATABLE :: g2sort_g(:)
+  REAL(KIND = DP), ALLOCATABLE :: g2sort_g(:)
   !! G-vectors for the current processor
-  REAL(kind=DP) :: tx(3), ty(3), t(3)
-  REAL(kind=DP), ALLOCATABLE :: tt(:)
+  REAL(KIND = DP) :: tx(3), ty(3), t(3)
+  REAL(KIND = DP), ALLOCATABLE :: tt(:)
   !
   LOGICAL :: in_the_list
   !! Variable in the list
@@ -455,10 +455,10 @@
         ENDDO
       ENDDO
     ENDDO
-    ig0 = nint( dble(ng0vec) / 2 )
+    ig0 = NINT( DBLE(ng0vec) / 2 )
     !
-    !IF ( .NOT.  ALLOCATED(shift)) ALLOCATE ( shift(nkstot) )
-    ALLOCATE (shift(nkstot))
+    !IF (.NOT.  ALLOCATED(shift)) ALLOCATE(shift(nkstot) )
+    ALLOCATE(shift(nkstot))
     ! 
     DO ik = 1, nkstot       
       !
@@ -467,17 +467,17 @@
       zz = xk_cryst(3,ik) * nk3
       ! check that the k-mesh was defined in the positive region of 1st BZ
       !
-      IF ( (xx < -eps5) .OR. (yy < -eps5) .OR. (zz < -eps5) ) &
+      IF ((xx < -eps5) .OR. (yy < -eps5) .OR. (zz < -eps5) ) &
          CALL errore('createkmap_pw2','coarse k-mesh needs to be strictly positive in 1st BZ',1)
       ! 
       shift(ik) = ig0
       WRITE(iukgmap,'(3i6)') ik, shift(ik)
       !
     ENDDO
-    !IF (ALLOCATED(shift)) DEALLOCATE (shift)
-    DEALLOCATE (shift)
+    !IF (ALLOCATED(shift)) DEALLOCATE(shift)
+    DEALLOCATE(shift)
     !
-    g0vec_all_r = dble(g0vec_all)
+    g0vec_all_r = DBLE(g0vec_all)
     ! bring G_0 vectors from crystal to cartesian coordinates
     CALL cryst_to_cart(ng0vec, g0vec_all_r, bg, 1)
     !
@@ -491,7 +491,7 @@
   CALL mp_barrier(inter_pool_comm)
   CALL mp_barrier(inter_image_comm)
   !
-  ! RM: The following is adapted from ggen subroutine in Modules/recvec_subs.f90
+  ! RM: The following is adapted from ggen SUBROUTINE in Modules/recvec_subs.f90
   !
   ngm_max = ngm_g
   !
@@ -504,16 +504,16 @@
   !
   !    and computes all the g vectors inside a sphere
   !
-  ALLOCATE (mill_unsorted(3, ngm_save))
-  ALLOCATE (igsrt(ngm_max))
-  ALLOCATE (g2l(ngm_max))
-  ALLOCATE (g2sort_g(ngm_max))
-  ALLOCATE (ig_l2g(ngm_max))
-  ALLOCATE (mill(3, ngm_max))
-  ALLOCATE (jtoi(ngm_max))
-  ALLOCATE (itoj(ngm_max))
-  ALLOCATE (g(3, ngm_max))
-  ALLOCATE (gg(ngm_max))
+  ALLOCATE(mill_unsorted(3, ngm_save))
+  ALLOCATE(igsrt(ngm_max))
+  ALLOCATE(g2l(ngm_max))
+  ALLOCATE(g2sort_g(ngm_max))
+  ALLOCATE(ig_l2g(ngm_max))
+  ALLOCATE(mill(3, ngm_max))
+  ALLOCATE(jtoi(ngm_max))
+  ALLOCATE(itoj(ngm_max))
+  ALLOCATE(g(3, ngm_max))
+  ALLOCATE(gg(ngm_max))
   !
   !    Set the total number of FFT mesh points and and initial value of gg.
   !    The choice of gcutm is due to the fact that we have to order the
@@ -525,7 +525,7 @@
   !
   ! allocate temporal array
   !
-  ALLOCATE (tt(dfftp%nr3))
+  ALLOCATE(tt(dfftp%nr3))
   !
   ! max miller indices (same convention as in module stick_set)
   !
@@ -541,7 +541,7 @@
     jstart = -nj
     DO j = jstart, nj
       !
-      IF ( dfftp%lpara .AND. fft_stick_index(dfftp,i,j) == 0) THEN
+      IF (dfftp%lpara .AND. fft_stick_index(dfftp,i,j) == 0) THEN
         is_local = .FALSE.
       ELSE
         is_local = .TRUE.
@@ -566,7 +566,7 @@
         IF (tt(k-kstart+1) <= gcutm) THEN
           ngm = ngm + 1
           IF (ngm > ngm_max) CALL errore('createkmap_pw2 1', 'too many g-vectors', ngm)
-          IF ( tt(k-kstart+1) > eps8 ) THEN
+          IF (tt(k-kstart+1) > eps8) THEN
             g2sort_g(ngm) = tt(k-kstart+1)
           ELSE
             g2sort_g(ngm) = 0.d0
@@ -583,17 +583,17 @@
     ENDDO !jloop
   ENDDO !iloop
   IF (ngm  /= ngm_max) &
-      CALL errore('createkmap_pw2', 'g-vectors missing !', abs(ngm - ngm_max))
+      CALL errore('createkmap_pw2', 'g-vectors missing !', ABS(ngm - ngm_max))
   !
   igsrt(1) = 0
   CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
-  DEALLOCATE ( g2sort_g, tt )
+  DEALLOCATE(g2sort_g, tt )
   !  
   ngm = 0
   !
   DO ng = 1, ngm_max
      !
-     IF ( g2l(igsrt(ng))>0 ) THEN
+     IF (g2l(igsrt(ng))>0) THEN
         ! fetch the indices
         i = mill_unsorted(1,g2l(igsrt(ng)))
         j = mill_unsorted(2,g2l(igsrt(ng)))
@@ -607,18 +607,18 @@
         gg(ngm) = sum(g(1:3,ngm)**2)
      ENDIF
   ENDDO !ngloop
-  DEALLOCATE ( g2l )
+  DEALLOCATE(g2l )
   !
   IF (ngm /= ngm_save) &
-     CALL errore('createkmap_pw2', 'g-vectors (ngm) missing !', abs(ngm - ngm_save))
+     CALL errore('createkmap_pw2', 'g-vectors (ngm) missing !', ABS(ngm - ngm_save))
   !
   CALL fft_set_nl( dfftp, at, g, mill )
   !
-  DO i=1, ngm_g
+  DO i = 1, ngm_g
     jtoi(i) = igsrt(i)
   ENDDO !
   !
-  DO i=1, ngm_g
+  DO i = 1, ngm_g
     itoj(jtoi(i)) = i
   ENDDO
   !
@@ -627,14 +627,14 @@
   CALL mp_barrier(inter_pool_comm)
   CALL mp_barrier(inter_image_comm)
   !
-  DEALLOCATE (ig_l2g)
-  DEALLOCATE (mill)
-  DEALLOCATE (mill_unsorted)
-  DEALLOCATE (igsrt)
-  DEALLOCATE (jtoi)
-  DEALLOCATE (itoj)
-  DEALLOCATE (g)
-  DEALLOCATE (gg)
+  DEALLOCATE(ig_l2g)
+  DEALLOCATE(mill)
+  DEALLOCATE(mill_unsorted)
+  DEALLOCATE(igsrt)
+  DEALLOCATE(jtoi)
+  DEALLOCATE(itoj)
+  DEALLOCATE(g)
+  DEALLOCATE(gg)
   !
   RETURN
   !
@@ -691,7 +691,7 @@
   !
   LOGICAL :: tfound
   !
-  ALLOCATE (gmap(ngm_g, ng0vec))
+  ALLOCATE(gmap(ngm_g, ng0vec))
   gmap(:, :) = 0
   guess_skip = 0
   !
@@ -703,8 +703,8 @@
       WRITE(stdout,'(/5x,"Progress kgmap: ")',advance='no')
       indold = 0
     ENDIF
-    indnew = nint( dble(ig0) / dble(ng0vec) * 40 )
-    IF (indnew.ne.indold) WRITE(stdout,'(a)',advance='no') '#'
+    indnew = NINT( DBLE(ig0) / DBLE(ng0vec) * 40 )
+    IF (indnew/=indold) WRITE(stdout,'(a)',advance='no') '#'
     indold = indnew
     !
     notfound = 0
@@ -774,7 +774,7 @@
     WRITE(iukgmap,'(9i10)') (gmap(ig1,ig0), ig0 = 1, ng0vec)
   ENDDO
   !
-  IF (iukgmap .ne. stdout) CLOSE(iukgmap)
+  IF (iukgmap /= stdout) CLOSE(iukgmap)
   WRITE(stdout,*)
   !
   RETURN

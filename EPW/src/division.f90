@@ -27,9 +27,9 @@
     USE mp_global,   ONLY : my_pool_id,npool
     USE pwcom,       ONLY : nkstot
     ! 
-    implicit none
-    integer :: ik0
-    integer :: nkl, nkr, iks
+    IMPLICIT NONE
+    INTEGER :: ik0
+    INTEGER :: nkl, nkr, iks
     !
 #if defined(__MPI)
     !
@@ -41,12 +41,12 @@
     !  the reminder goes to the first nkr pools  
     !   (0...nkr-1)
     !
-    IF ( my_pool_id < nkr ) nkl = nkl + 1 !kunit
+    IF (my_pool_id < nkr ) nkl = nkl + 1 !kunit
     !
     !  the index of the first k point in this pool
     !
     iks = nkl * my_pool_id + 1
-    IF ( my_pool_id >= nkr ) iks = iks + nkr * 1 !kunit
+    IF (my_pool_id >= nkr ) iks = iks + nkr * 1 !kunit
     !
     !  the index of the first k point block in this pool - 1
     !  (I will need the index of ik, not ikk)
@@ -75,11 +75,11 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: nktot
+    INTEGER, INTENT(in) :: nktot
     !! nktot k-points splited over pools
-    INTEGER, INTENT (out) :: lower_bnd
+    INTEGER, INTENT(out) :: lower_bnd
     !! Lower kpt bounds for that image pool 
-    INTEGER, INTENT (out) :: upper_bnd
+    INTEGER, INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
     !
 #if defined(__MPI)
@@ -99,7 +99,7 @@
     ! the index of the first k point in this pool
     !
     lower_bnd = my_pool_id * nkl + 1
-    IF ( my_pool_id >= nkr ) lower_bnd = my_pool_id * nkl + 1 + nkr
+    IF (my_pool_id >= nkr ) lower_bnd = my_pool_id * nkl + 1 + nkr
     !
     ! the index of the last k point in this pool
     !
@@ -141,18 +141,18 @@
     IMPLICIT NONE
     !
 #if defined(__MPI)
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT (in) :: nktot
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(in) :: nktot
     !! nktot k-points splited over pools
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT (out) :: lower_bnd
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(out) :: lower_bnd
     !! Lower kpt bounds for that image pool 
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT (out) :: upper_bnd
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
 #else
     INTEGER (KIND=8), INTENT (IN)  :: nktot
     !! nktot k-points splited over pools
-    INTEGER (KIND=8), INTENT (out) :: lower_bnd
+    INTEGER (KIND=8), INTENT(out) :: lower_bnd
     !! Lower kpt bounds for that image pool 
-    INTEGER (KIND=8), INTENT (out) :: upper_bnd
+    INTEGER (KIND=8), INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
 #endif
     !
@@ -173,7 +173,7 @@
     ! the index of the first k point in this pool
     !
     lower_bnd = my_pool_id * nkl + 1
-    IF ( my_pool_id >= nkr ) lower_bnd = my_pool_id * nkl + 1 + nkr
+    IF (my_pool_id >= nkr ) lower_bnd = my_pool_id * nkl + 1 + nkr
     !
     ! the index of the last k point in this pool
     !
@@ -211,11 +211,11 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: nbnd
+    INTEGER, INTENT(in) :: nbnd
     !! Total number of band to be splitted among images
-    INTEGER, INTENT (out) :: lower_bnd
+    INTEGER, INTENT(out) :: lower_bnd
     !! Lower band bounds for that image pool 
-    INTEGER, INTENT (out) :: upper_bnd 
+    INTEGER, INTENT(out) :: upper_bnd 
     !! Upper band bound for that image pool
     !
 #if defined(__MPI)
@@ -235,7 +235,7 @@
     ! the index of the first k point in this pool
     !
     lower_bnd = my_image_id * nkl + 1
-    IF ( my_image_id >= nkr ) lower_bnd = my_image_id * nkl + 1 + nkr
+    IF (my_image_id >= nkr ) lower_bnd = my_image_id * nkl + 1 + nkr
     !
     ! the index of the last k point in this pool
     !

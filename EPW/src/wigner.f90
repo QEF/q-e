@@ -10,7 +10,7 @@
   MODULE wigner
   !----------------------------------------------------------------------
   !! 
-  !! This module contains all the subroutine linked creation of Wigner-Seitz cell
+  !! This module contains all the SUBROUTINE linked creation of Wigner-Seitz cell
   !! 
   IMPLICIT NONE
   ! 
@@ -57,48 +57,48 @@
     !-----------------------------------------------------------------
     USE kinds,     ONLY : DP
     !
-    implicit none
+    IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: nk1
+    INTEGER, INTENT(in) :: nk1
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: nk2
+    INTEGER, INTENT(in) :: nk2
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: nk3
+    INTEGER, INTENT(in) :: nk3
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: nq1
+    INTEGER, INTENT(in) :: nq1
     !! size of the uniform q mesh
-    INTEGER, INTENT (in) :: nq2
+    INTEGER, INTENT(in) :: nq2
     !! size of the uniform q mesh
-    INTEGER, INTENT (in) :: nq3
+    INTEGER, INTENT(in) :: nq3
     !! size of the uniform q mesh
-    INTEGER, INTENT (in) :: dims
+    INTEGER, INTENT(in) :: dims
     !! Number of bands in the Wannier space
-    INTEGER, INTENT (in) :: dims2
+    INTEGER, INTENT(in) :: dims2
     !! Number of atoms
-    INTEGER, ALLOCATABLE, INTENT (out) :: irvec_k(:,:)
-    !! integer components of the ir-th Wigner-Seitz grid point in the basis
+    INTEGER, ALLOCATABLE, INTENT(out) :: irvec_k(:, :)
+    !! INTEGER components of the ir-th Wigner-Seitz grid point in the basis
     !! of the lattice vectors for electrons
-    INTEGER, ALLOCATABLE, INTENT (out) :: irvec_q(:,:)
-    !! integer components of the ir-th Wigner-Seitz grid point for phonons
-    INTEGER, ALLOCATABLE, INTENT (out) :: irvec_g(:,:)
-    !! integer components of the ir-th Wigner-Seitz grid point for electron-phonon
-    INTEGER, ALLOCATABLE, INTENT (out) :: ndegen_k (:,:,:)
+    INTEGER, ALLOCATABLE, INTENT(out) :: irvec_q(:, :)
+    !! INTEGER components of the ir-th Wigner-Seitz grid point for phonons
+    INTEGER, ALLOCATABLE, INTENT(out) :: irvec_g(:, :)
+    !! INTEGER components of the ir-th Wigner-Seitz grid point for electron-phonon
+    INTEGER, ALLOCATABLE, INTENT(out) :: ndegen_k (:, :, :)
     !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
-    INTEGER, ALLOCATABLE, INTENT (out) :: ndegen_q (:,:,:)
+    INTEGER, ALLOCATABLE, INTENT(out) :: ndegen_q (:, :, :)
     !! Wigner-Seitz weights for the phonon grid that depend on 
     !! atomic positions $R + \tau(nb) - \tau(na)$
-    INTEGER, ALLOCATABLE, INTENT (out) :: ndegen_g (:,:,:,:)
+    INTEGER, ALLOCATABLE, INTENT(out) :: ndegen_g (:, :, :, :)
     !! Wigner-Seitz weights for the electron-phonon grid that depend on 
     !! atomic positions $R - \tau(na)$
-    REAL(kind=DP), ALLOCATABLE, INTENT (out) :: wslen_k(:)
+    REAL(KIND = DP), ALLOCATABLE, INTENT(out) :: wslen_k(:)
     !! real-space length for electrons, in units of alat
-    REAL(kind=DP), ALLOCATABLE, INTENT (out) :: wslen_q(:)
+    REAL(KIND = DP), ALLOCATABLE, INTENT(out) :: wslen_q(:)
     !! real-space length for phonons, in units of alat
-    REAL(kind=DP), ALLOCATABLE, INTENT (out) :: wslen_g(:)
+    REAL(KIND = DP), ALLOCATABLE, INTENT(out) :: wslen_g(:)
     !! real-space length for electron-phonons, in units of alat
-    REAL(kind=DP), INTENT(in) :: w_centers(3,dims)
+    REAL(KIND = DP), INTENT(in) :: w_centers(3,dims)
     !! Wannier centers used for the creation of electron and el-ph WS cells
-    REAL(kind=DP), INTENT(in) :: tau(3,dims2)
+    REAL(KIND = DP), INTENT(in) :: tau(3,dims2)
     !! Atomic position in the unit cell. 
     ! 
     ! Work Variables
@@ -111,12 +111,12 @@
     INTEGER :: nrr_g
     !! maximum number of WS vectors for the electron-phonon
     INTEGER :: irvec_kk (3,20*nk1*nk2*nk3)
-    !! local integer components of the ir-th Wigner-Seitz grid point 
+    !! local INTEGER components of the ir-th Wigner-Seitz grid point 
     !! in the basis of the lattice vectors for electrons
     INTEGER :: irvec_qq (3,20*nq1*nq2*nq3)
-    !! local integer components of the ir-th Wigner-Seitz grid point for phonons
+    !! local INTEGER components of the ir-th Wigner-Seitz grid point for phonons
     INTEGER :: irvec_gg (3,20*nq1*nq2*nq3)
-    !! local integer components of the ir-th Wigner-Seitz grid point for electron-phonons
+    !! local INTEGER components of the ir-th Wigner-Seitz grid point for electron-phonons
     !! We use nk1 instead of nq1 because the k-grid is always larger or equal to q-grid.  
     INTEGER :: ndegen_kk (20*nk1*nk2*nk3, dims, dims)
     !! local Wigner-Seitz number of degenerescence (weights) for the electrons grid
@@ -124,15 +124,15 @@
     !! local Wigner-Seitz number of degenerescence (weights) for the phonons grid
     INTEGER :: ndegen_gg (20*nq1*nq2*nq3, dims2, dims, dims)
     !! local Wigner-Seitz number of degenerescence (weights) for the electron-phonons grid
-    REAL(kind=DP) :: wslen_kk (20*nk1*nk2*nk3)
+    REAL(KIND = DP) :: wslen_kk (20*nk1*nk2*nk3)
     !! local real-space length for electrons, in units of alat
-    REAL(kind=DP) :: wslen_qq (20*nq1*nq2*nq3)
+    REAL(KIND = DP) :: wslen_qq (20*nq1*nq2*nq3)
     !! local real-space length for phonons, in units of alat
-    REAL(kind=DP) :: wslen_gg (20*nq1*nq2*nq3)
+    REAL(KIND = DP) :: wslen_gg (20*nq1*nq2*nq3)
     !! local real-space length for electron-phonon, in units of alat
     !
     !  Check the bounds
-    IF ( nq1 > nk1 .OR. nq2 > nk2 .OR. nq3 > nk3 ) call errore &
+    IF (nq1 > nk1 .OR. nq2 > nk2 .OR. nq3 > nk3 ) call errore &
        ('wigner_seitz_wrap',' the phonon grid should be smaller than electron grid',1)
     !
     ! Now generated the un-sorted points for the electrons, phonons and electron-phonon
@@ -142,15 +142,15 @@
     CALL wigner_seitzkq ( nq1, nq2, nq3, irvec_qq, ndegen_qq, wslen_qq, nrr_q, tau, dims2)
     CALL wigner_seitzg  ( nq1, nq2, nq3, irvec_gg, ndegen_gg, wslen_gg, nrr_g, w_centers, tau, dims, dims2)
     ! 
-    ALLOCATE ( irvec_k(3,nrr_k) )
-    ALLOCATE ( irvec_q(3,nrr_q) )
-    ALLOCATE ( irvec_g(3,nrr_g) )
-    ALLOCATE ( ndegen_k(nrr_k, dims, dims) )
-    ALLOCATE ( ndegen_q(nrr_q, dims2, dims2) )
-    ALLOCATE ( ndegen_g(nrr_g, dims2, dims, dims) )
-    ALLOCATE ( wslen_k(nrr_k) )
-    ALLOCATE ( wslen_q(nrr_q) )
-    ALLOCATE ( wslen_g(nrr_g) )
+    ALLOCATE(irvec_k(3,nrr_k) )
+    ALLOCATE(irvec_q(3,nrr_q) )
+    ALLOCATE(irvec_g(3,nrr_g) )
+    ALLOCATE(ndegen_k(nrr_k, dims, dims) )
+    ALLOCATE(ndegen_q(nrr_q, dims2, dims2) )
+    ALLOCATE(ndegen_g(nrr_g, dims2, dims, dims) )
+    ALLOCATE(wslen_k(nrr_k) )
+    ALLOCATE(wslen_q(nrr_q) )
+    ALLOCATE(wslen_g(nrr_g) )
     ! 
     ! Create vectors with correct size. 
     DO ir = 1, nrr_k
@@ -187,26 +187,26 @@
     USE cell_base,     ONLY : at, bg
     USE constants_epw, ONLY : eps6
     !
-    implicit none
+    IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: nc1
+    INTEGER, INTENT(in) :: nc1
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: nc2
+    INTEGER, INTENT(in) :: nc2
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: nc3
+    INTEGER, INTENT(in) :: nc3
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: dims
+    INTEGER, INTENT(in) :: dims
     !! dim of shift(3,dims)
-    INTEGER, INTENT (out) :: irvec(3,20*nc1*nc2*nc3)
-    !! integer components of the ir-th Wigner-Seitz grid point in the basis of the lattice vectors
-    INTEGER, INTENT (out) :: ndegen(20*nc1*nc2*nc3, dims, dims)
+    INTEGER, INTENT(out) :: irvec(3,20*nc1*nc2*nc3)
+    !! INTEGER components of the ir-th Wigner-Seitz grid point in the basis of the lattice vectors
+    INTEGER, INTENT(out) :: ndegen(20*nc1*nc2*nc3, dims, dims)
     !! Number of degeneracies
-    INTEGER, INTENT (out) :: nrr
+    INTEGER, INTENT(out) :: nrr
     !! number of Wigner-Seitz grid points 
     !
-    REAL(kind=DP), INTENT (out) :: wslen(20*nc1*nc2*nc3)
+    REAL(KIND = DP), INTENT(out) :: wslen(20*nc1*nc2*nc3)
     !! real-space length, in units of alat
-    REAL(kind=DP), INTENT(in) :: shift(3,dims)
+    REAL(KIND = DP), INTENT(in) :: shift(3,dims)
     !! Wannier centers (electron WS cell) or atomic positions (lattice WS cell)
     !
     ! Work variables
@@ -228,15 +228,15 @@
     !! Temp
     INTEGER :: ndegen_tmp(20*nc1*nc2*nc3,dims,dims) 
     ! 
-    REAL(kind=DP) :: adot(3,3) 
+    REAL(KIND = DP) :: adot(3,3) 
     !! Dot product between lattice vector
-    REAL(kind=DP) :: dist(125)
+    REAL(KIND = DP) :: dist(125)
     !! Contains the distance squared |r-R|^2
-    REAL(kind=DP) :: mindist
+    REAL(KIND = DP) :: mindist
     !! Minimum distance
-    REAL(kind=DP) :: tot, tot2
+    REAL(KIND = DP) :: tot, tot2
     !! Sum of all the weigths
-    REAL(kind=DP) :: ndiff(3)
+    REAL(KIND = DP) :: ndiff(3)
     !! Distances. Must be now real because of fractional atoms 
     ! 
     LOGICAL :: found
@@ -246,7 +246,7 @@
     IF (nind < 125) then
       nind = 125
     ENDIF
-    ALLOCATE (ind(nind))
+    ALLOCATE(ind(nind))
     ! 
     DO ipol = 1, 3
      DO jpol = 1, 3
@@ -254,10 +254,10 @@
      ENDDO
     ENDDO
     !
-    CALL cryst_to_cart(dims,shift(:,:),bg,-1)
+    CALL cryst_to_cart(dims,shift(:, :),bg,-1)
     !
-    ndegen_tmp(:,:,:) = 0
-    irvec_tmp(:,:,:,:) = 0
+    ndegen_tmp(:, :, :) = 0
+    irvec_tmp(:, :, :, :) = 0
     DO iw = 1, dims
       DO iw2 = 1, dims
         nrr_tmp(iw,iw2) = 0
@@ -280,7 +280,7 @@
                     !ndiff(3) = n3 - i3*nc3 + (shift(3,iw2) + shift(3,iw)) / 2.d0
                     DO ipol = 1, 3
                       DO jpol = 1, 3
-                        dist(i) = dist(i) + dble(ndiff(ipol))*adot(ipol,jpol)*dble(ndiff(jpol))
+                        dist(i) = dist(i) + DBLE(ndiff(ipol))*adot(ipol,jpol)*DBLE(ndiff(jpol))
                       ENDDO
                     ENDDO
                     !  
@@ -300,7 +300,7 @@
               found = .false.
               i = 1
               mindist = dist(1)
-              DO WHILE ( abs(dist(i)-mindist) < eps6 .and. i < 125 )
+              DO WHILE ( ABS(dist(i)-mindist) < eps6 .AND. i < 125 )
                 IF (ind(i) == 63) found = .true.
                 i = i + 1
               ENDDO
@@ -318,13 +318,13 @@
     ENDDO ! iw 
     ! 
     nrr = nrr_tmp(1,1)
-    irvec(:,:) = irvec_tmp(:,:,1,1) 
+    irvec(:, :) = irvec_tmp(:,:,1,1) 
     DO iw = 1, dims
       DO iw2 = 1, dims
-        DO ir=1, nrr_tmp(iw, iw2)
+        DO ir = 1, nrr_tmp(iw, iw2)
           found = .false.
           DO irtot = 1, nrr
-            IF ( ALL(irvec_tmp(:, ir, iw, iw2) == irvec(:, irtot)) ) THEN
+            IF (ALL(irvec_tmp(:, ir, iw, iw2) == irvec(:, irtot))) THEN
               found = .true.
             ENDIF
           ENDDO !nrr
@@ -339,12 +339,12 @@
     ! Creates a pair of atoms depended degeneracy array but with a number of WS 
     ! vectors per pair that is equal to the global set. Populate with zero weights 
     ! the one that are not part of that pair set. 
-    ndegen(:,:,:) = 0
+    ndegen(:, :, :) = 0
     DO iw = 1, dims
       DO iw2 = 1, dims
-        DO ir=1, nrr_tmp(iw,iw2)
+        DO ir = 1, nrr_tmp(iw,iw2)
           DO irtot = 1, nrr
-            IF ( ALL(irvec(:, irtot) == irvec_tmp(:, ir, iw, iw2)) ) THEN
+            IF (ALL(irvec(:, irtot) == irvec_tmp(:, ir, iw, iw2))) THEN
               ndegen(irtot, iw, iw2) = ndegen_tmp(ir, iw, iw2)
             ENDIF
           ENDDO
@@ -357,16 +357,16 @@
         tot = 0.d0
         tot2 = 0.d0
         DO i = 1, nrr
-          IF (ndegen(i, iw, iw2) > 0 ) THEN
-            tot2 = tot2 + 1.d0 / dble(ndegen(i, iw, iw2))
+          IF (ndegen(i, iw, iw2) > 0) THEN
+            tot2 = tot2 + 1.d0 / DBLE(ndegen(i, iw, iw2))
           ENDIF
         ENDDO
         DO i = 1, nrr_tmp(iw, iw2)
-          tot = tot + 1.d0 / dble(ndegen_tmp(i, iw, iw2))
+          tot = tot + 1.d0 / DBLE(ndegen_tmp(i, iw, iw2))
         ENDDO
         !
-        !print*,'na, nb, tot tot2 ',na,nb,tot,tot2,nq1,nq2,nq3,dble(nq1*nq2*nq3)
-        IF(abs(tot-dble(nc1*nc2*nc3)) > eps6) call errore &
+        !print*,'na, nb, tot tot2 ',na,nb,tot,tot2,nq1,nq2,nq3,DBLE(nq1*nq2*nq3)
+        IF(abs(tot-DBLE(nc1*nc2*nc3)) > eps6) call errore &
          ('wigner_seitzkq',' weights do not add up to nc1*nc2*nc3',1)
         IF(abs(tot-tot2) > eps6) call errore &
          ('wigner_seitzkq',' weigths of pair of atoms is not equal to global weights',1)
@@ -380,13 +380,13 @@
     DO i = 1, nrr
       DO ipol = 1, 3
         DO jpol = 1, 3
-          wslen(i) = wslen(i) + dble(irvec(ipol,i))*adot(ipol,jpol)*dble(irvec(jpol,i))
+          wslen(i) = wslen(i) + DBLE(irvec(ipol,i))*adot(ipol,jpol)*DBLE(irvec(jpol,i))
         ENDDO
       ENDDO
-      wslen(i) = sqrt(wslen(i))
+      wslen(i) = SQRT(wslen(i))
     ENDDO
     !
-    CALL cryst_to_cart(dims,shift(:,:),at,1)
+    CALL cryst_to_cart(dims,shift(:, :),at,1)
     ! 
     !print*,'at/Wan index 1,1'
     !DO i = 1, nrr
@@ -397,7 +397,7 @@
     !  if (ndegen(i,1,2)>0) print*, i,irvec(:,i), ndegen(i,1,2)
     !ENDDO
     ! 
-    DEALLOCATE (ind) 
+    DEALLOCATE(ind) 
     ! 
     !-----------------------------------------------------------------------------
     END SUBROUTINE wigner_seitzkq
@@ -419,29 +419,29 @@
     USE cell_base,     ONLY : at, bg
     USE constants_epw, ONLY : eps6
     !
-    implicit none
+    IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: nc1
+    INTEGER, INTENT(in) :: nc1
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: nc2
+    INTEGER, INTENT(in) :: nc2
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: nc3
+    INTEGER, INTENT(in) :: nc3
     !! size of the uniform k mesh
-    INTEGER, INTENT (in) :: dims
+    INTEGER, INTENT(in) :: dims
     !! Dims is either nbndsub or 1 depending on use_ws
-    INTEGER, INTENT (in) :: dims2
+    INTEGER, INTENT(in) :: dims2
     !! Number of atoms
-    INTEGER, INTENT (out) :: irvec(3,20*nc1*nc2*nc3)
-    !! integer components of the ir-th Wigner-Seitz grid point in the basis of the lattice vectors
-    INTEGER, INTENT (out) :: ndegen(20*nc1*nc2*nc3,dims2,dims,dims)
+    INTEGER, INTENT(out) :: irvec(3,20*nc1*nc2*nc3)
+    !! INTEGER components of the ir-th Wigner-Seitz grid point in the basis of the lattice vectors
+    INTEGER, INTENT(out) :: ndegen(20*nc1*nc2*nc3,dims2,dims,dims)
     !! Number of degeneracies
-    INTEGER, INTENT (out) :: nrr
+    INTEGER, INTENT(out) :: nrr
     !! number of Wigner-Seitz grid points 
-    REAL(kind=DP), INTENT (in) :: w_centers(3,dims)
+    REAL(KIND = DP), INTENT(in) :: w_centers(3,dims)
     !! Wannier centers
-    REAL(kind=DP), INTENT (in) :: tau(3,dims2)
+    REAL(KIND = DP), INTENT(in) :: tau(3,dims2)
     !! Atomic positions
-    REAL(kind=DP), INTENT (out) :: wslen(20*nc1*nc2*nc3)
+    REAL(KIND = DP), INTENT(out) :: wslen(20*nc1*nc2*nc3)
     !! real-space length, in units of alat
     ! 
     ! work variables
@@ -471,15 +471,15 @@
     INTEGER :: ndegen_tmp(20*nc1*nc2*nc3,dims2,dims,dims)
     !! Temporary WS vectors weigths for each atoms
     ! 
-    REAL(kind=DP) :: adot(3,3)
+    REAL(KIND = DP) :: adot(3,3)
     !! Dot product between lattice vector
-    REAL(kind=DP) :: dist(125)
+    REAL(KIND = DP) :: dist(125)
     !! Contains the distance squared |r-R|^2
-    REAL(kind=DP) :: mindist
+    REAL(KIND = DP) :: mindist
     !! Minimum distance
-    REAL(kind=DP) :: tot, tot2
+    REAL(KIND = DP) :: tot, tot2
     !! Sum of all the weigths
-    REAL(kind=DP) :: ndiff(3)
+    REAL(KIND = DP) :: ndiff(3)
     !! Distances. Must be now real because of fractional atoms
     ! 
     LOGICAL :: found
@@ -489,7 +489,7 @@
     IF (nind < 125) THEN
       nind = 125
     ENDIF
-    ALLOCATE (ind(nind))
+    ALLOCATE(ind(nind))
     !
     DO ipol = 1, 3
       DO jpol = 1, 3
@@ -497,14 +497,14 @@
       ENDDO
     ENDDO
     ! 
-    CALL cryst_to_cart(dims2,tau(:,:),bg,-1)
-    CALL cryst_to_cart(dims,w_centers(:,:),bg,-1)
+    CALL cryst_to_cart(dims2,tau(:, :),bg,-1)
+    CALL cryst_to_cart(dims,w_centers(:, :),bg,-1)
     !
     ! Loop over grid points r on a unit cell that is 8 times larger than a 
     ! primitive supercell. In the end nrr contains the total number of grids 
     ! points that have been found in the Wigner-Seitz cell
     !
-    nrr_tmp(:,:,:) = 0
+    nrr_tmp(:, :, :) = 0
     DO iw = 1, dims
      DO iw2 = 1, dims 
       DO na = 1, dims2
@@ -531,7 +531,7 @@
                     ndiff(3) = n3 - i3*nc3 + tau(3,na) - ( w_centers(3,iw2) + w_centers(3,iw) ) / 2.d0
                     DO ipol = 1, 3
                       DO jpol = 1, 3
-                        dist(i) = dist(i) + dble(ndiff(ipol))*adot(ipol,jpol)*dble(ndiff(jpol))
+                        dist(i) = dist(i) + DBLE(ndiff(ipol))*adot(ipol,jpol)*DBLE(ndiff(jpol))
                       ENDDO
                     ENDDO
                     !  
@@ -550,7 +550,7 @@
               found = .false.
               i = 1
               mindist = dist(1)
-              DO WHILE ( abs(dist(i)-mindist) < eps6 .and. i < 125 )
+              DO WHILE ( ABS(dist(i)-mindist) < eps6 .AND. i < 125 )
                 IF (ind(i) == 63) found = .true.
                 i = i + 1
               ENDDO
@@ -571,14 +571,14 @@
     ! Now creates a global set of WS vectors from all the atoms pair. 
     ! Also remove the duplicated ones. 
     nrr = nrr_tmp(1,1,1)
-    irvec(:,:) = irvec_tmp(:, :, 1, 1, 1)
+    irvec(:, :) = irvec_tmp(:, :, 1, 1, 1)
     DO iw = 1, dims
      DO iw2 = 1, dims
       DO na = 1, dims2
-        DO ir=1, nrr_tmp(na,iw,iw2)
+        DO ir = 1, nrr_tmp(na,iw,iw2)
           found = .false.
           DO irtot = 1, nrr
-            IF ( ALL(irvec_tmp(:, ir, na, iw, iw2) == irvec(:, irtot)) ) THEN
+            IF (ALL(irvec_tmp(:, ir, na, iw, iw2) == irvec(:, irtot))) THEN
               found = .true.
             ENDIF
           ENDDO !nrr
@@ -594,13 +594,13 @@
     ! Creates a pair of atoms-dependent degeneracy array but with a number of WS 
     ! vectors per pair that is equal to the global set. Populate with zero weights 
     ! the one that are not part of that pair set. 
-    ndegen(:,:,:,:) = 0
+    ndegen(:, :, :, :) = 0
     DO iw = 1, dims
      DO iw2 = 1, dims
       DO na = 1, dims2
-        DO ir=1, nrr_tmp(na,iw,iw2)
+        DO ir = 1, nrr_tmp(na,iw,iw2)
           DO irtot = 1, nrr
-            IF ( ALL(irvec(:, irtot) == irvec_tmp(:, ir, na, iw, iw2)) ) THEN
+            IF (ALL(irvec(:, irtot) == irvec_tmp(:, ir, na, iw, iw2))) THEN
               ndegen(irtot, na, iw, iw2) = ndegen_tmp(ir, na, iw, iw2)
             ENDIF
           ENDDO
@@ -615,15 +615,15 @@
         tot = 0.d0
         tot2 = 0.d0
         DO i = 1, nrr
-          IF (ndegen(i, na, iw, iw2) > 0 ) THEN
-            tot2 = tot2 + 1.d0 / dble(ndegen(i, na, iw, iw2))
+          IF (ndegen(i, na, iw, iw2) > 0) THEN
+            tot2 = tot2 + 1.d0 / DBLE(ndegen(i, na, iw, iw2))
           ENDIF
         ENDDO
         DO i = 1, nrr_tmp(na, iw, iw2)
-          tot = tot + 1.d0 / dble(ndegen_tmp(i, na, iw, iw2))
+          tot = tot + 1.d0 / DBLE(ndegen_tmp(i, na, iw, iw2))
         ENDDO
         !
-        IF(abs(tot-dble(nc1*nc2*nc3)) > eps6) CALL errore &
+        IF(abs(tot-DBLE(nc1*nc2*nc3)) > eps6) CALL errore &
          ('wigner_seitzg',' weights do not add up to nq1*nq2*nq3',1)
         !WRITE(stdout,*) "tot ", tot, " tot2 ", tot2
         IF(abs(tot-tot2) > eps6) CALL errore &
@@ -640,10 +640,10 @@
     DO i = 1, nrr
       DO ipol = 1, 3
        DO jpol = 1, 3
-          wslen(i) = wslen(i) + dble(irvec(ipol,i))*adot(ipol,jpol)*dble(irvec(jpol,i))
+          wslen(i) = wslen(i) + DBLE(irvec(ipol,i))*adot(ipol,jpol)*DBLE(irvec(jpol,i))
        ENDDO
       ENDDO
-      wslen(i) = sqrt(wslen(i))
+      wslen(i) = SQRT(wslen(i))
     ENDDO
     !
     !print*,'index band,band,at = 1,1,1'
@@ -659,10 +659,10 @@
     !  if (ndegen(i,1,2,2)>0) print*,i, irvec(:,i), ndegen(i,1,2,2)
     !ENDDO
     !
-    CALL cryst_to_cart(dims2,tau(:,:),at,1)
-    CALL cryst_to_cart(dims,w_centers(:,:),at,1)
+    CALL cryst_to_cart(dims2,tau(:, :),at,1)
+    CALL cryst_to_cart(dims,w_centers(:, :),at,1)
     !
-    DEALLOCATE (ind)
+    DEALLOCATE(ind)
     ! 
     ! -----------------------------------------------------------------------------------------
     END SUBROUTINE wigner_seitzg

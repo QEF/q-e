@@ -37,13 +37,13 @@
   INTEGER, INTENT(in) :: nqc
   !! the total number of q-points in the list
   !
-  COMPLEX(DP), INTENT(out) :: dvscf(dfftp%nnr,nspin_mag) 
+  COMPLEX(KIND = DP), INTENT(out) :: dvscf(dfftp%nnr,nspin_mag) 
   !! dVscf potential is read from file
   !
   ! Local variables
   !
   INTEGER :: unf_recl, ios
-  REAL(DP) :: dummy 
+  REAL(KIND = DP) :: dummy 
   CHARACTER(len=256) :: tempfile
   CHARACTER(len=3) :: filelab
   !! file number

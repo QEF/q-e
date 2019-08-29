@@ -50,9 +50,9 @@
   !! Correspondence G-->S(G)
   INTEGER, INTENT(in) :: isym
   !! The symmetry which generates the current q in the star
-  REAL(DP), INTENT(in) :: xq0(3)
+  REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! The first q-point in the star (cartesian coords.)
-  COMPLEX(DP), INTENT(in) :: eigv(ngm,48)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv(ngm,48)
   !! e^{iGv} for 1...nsym (v the fractional translation)
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal
@@ -76,30 +76,30 @@
   INTEGER :: jbnd
   !! Counter on bands
   !
-  COMPLEX(kind=DP), POINTER :: dvscfin(:,:,:)
+  COMPLEX(KIND = DP), POINTER :: dvscfin(:, :, :)
   !! Change of the scf potential 
-  COMPLEX(kind=DP), POINTER :: dvscfins(:,:,:)
+  COMPLEX(KIND = DP), POINTER :: dvscfins(:, :, :)
   !! Change of the scf potential (smooth)
   !
   CALL start_clock('elphon_shuffle')
   !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
-  ALLOCATE (el_ph_mat(nbnd, nbnd, nks, 3 * nat))
+  ALLOCATE(el_ph_mat(nbnd, nbnd, nks, 3 * nat))
   ! 
   imode0 = 0
   DO irr = 1, nirr
      npe = npert(irr)
-     ALLOCATE ( dvscfin(dfftp%nnr, nspin_mag, npe) )
+     ALLOCATE(dvscfin(dfftp%nnr, nspin_mag, npe) )
      IF (okvan) THEN
-        ALLOCATE ( int3(nhm, nhm, nat, nspin_mag, npe) )
-        IF (noncolin) ALLOCATE ( int3_nc(nhm, nhm, nat, nspin, npe) )
+        ALLOCATE(int3(nhm, nhm, nat, nspin_mag, npe) )
+        IF (noncolin) ALLOCATE(int3_nc(nhm, nhm, nat, nspin, npe) )
      ENDIF
      !
      !   read the <prefix>.dvscf_q[iq] files
      !
      dvscfin = czero
-     IF ( my_pool_id == 0 ) THEN
+     IF (my_pool_id == 0) THEN
         DO ipert = 1, npe
            CALL readdvscf( dvscfin(1,1,ipert), imode0 + ipert, iq_irr, nqc_irr )
         ENDDO
@@ -107,7 +107,7 @@
      CALL mp_sum(dvscfin,inter_pool_comm)
      !
      IF (doublegrid) THEN
-       ALLOCATE ( dvscfins(dffts%nnr, nspin_mag, npe) )
+       ALLOCATE(dvscfins(dffts%nnr, nspin_mag, npe) )
        DO is = 1, nspin_mag
          DO ipert = 1, npe
            CALL fft_interpolate(dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
@@ -121,11 +121,11 @@
      CALL elphel2_shuffle( npe, imode0, dvscfins, gmapsym, eigv, isym, xq0, timerev )
      !
      imode0 = imode0 + npe
-     IF (doublegrid) DEALLOCATE (dvscfins)
-     DEALLOCATE (dvscfin)
+     IF (doublegrid) DEALLOCATE(dvscfins)
+     DEALLOCATE(dvscfin)
      IF (okvan) THEN
-        DEALLOCATE (int3)
-        IF (noncolin) DEALLOCATE (int3_nc)
+        DEALLOCATE(int3)
+        IF (noncolin) DEALLOCATE(int3_nc)
      ENDIF
   ENDDO
   !
@@ -144,7 +144,7 @@
         ! 
         ! Here is where we calculate epmatq, it appears to be
         ! epmatq = cone * conjug(u) * el_ph_mat + czero  
-        IF ( timerev ) THEN
+        IF (timerev) THEN
           CALL zgemv( 'n', nmodes, nmodes, cone, u, nmodes, &
             el_ph_mat(ibnd,jbnd,ik,:), 1, czero, epmatq(ibnd,jbnd,ik,:,iq), 1 )
         ELSE
@@ -155,7 +155,7 @@
       ENDDO
     ENDDO
   ENDDO
-  DEALLOCATE (el_ph_mat)
+  DEALLOCATE(el_ph_mat)
   !DBSP
   !write(*,*)'epmatq(:,:,215,:,iq)**2',SUM((REAL(REAL(epmatq(:,:,215,:,iq))))**2)+&
   !        SUM((REAL(AIMAG(epmatq(:,:,215,:,iq))))**2)

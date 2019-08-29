@@ -36,9 +36,9 @@
     !
     INTEGER, INTENT(IN) :: iter
     !! Iteration number
-    REAL(kind=DP), INTENT(IN) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP), INTENT(IN) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
     !! In solution for iteration i  
-    REAL(kind=DP), INTENT(IN) :: av_mob_old(nstemp)
+    REAL(KIND = DP), INTENT(IN) :: av_mob_old(nstemp)
     !! Error in the hole mobility
     LOGICAL, INTENT(IN) :: elec
     !! IF true we do electron mobility, if false the hole one. 
@@ -59,7 +59,7 @@
     INTEGER :: itemp
     !! Temperature index
     ! 
-    REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
+    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
     !! Vector to store the array
     !
     !
@@ -72,17 +72,17 @@
       aux(1) = iter
       ! 
       i = 1
-      DO itemp=1, nstemp
+      DO itemp = 1, nstemp
         i = i + 1  
         ! Value of the previous h mobility (used for error evaluation)
         aux(i) = av_mob_old(itemp)
       ENDDO
       ! 
       i = 1 + nstemp 
-      DO itemp=1, nstemp
-        DO ik=1, nkqtotf/2
-          DO ibnd=1, (ibndmax-ibndmin+1)
-            DO idir=1,3
+      DO itemp = 1, nstemp
+        DO ik = 1, nkqtotf/2
+          DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO idir = 1,3
               i = i +1
               aux(i) = F_in(idir, ibnd, ik, itemp)
             ENDDO
@@ -125,9 +125,9 @@
     !
     INTEGER, INTENT(INOUT) :: iter
     !! Iteration number
-    REAL(kind=DP), INTENT(INOUT) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP), INTENT(INOUT) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
     !! In solution for iteration i  
-    REAL(kind=DP), INTENT(INOUT) :: av_mob_old(nstemp)
+    REAL(KIND = DP), INTENT(INOUT) :: av_mob_old(nstemp)
     !! Error in the hole mobility
     LOGICAL, INTENT(IN) :: elec
     !! IF true we do electron mobility, if false the hole one. 
@@ -148,9 +148,9 @@
     INTEGER :: itemp
     !! Temperature index
     ! 
-    CHARACTER (len=256) :: name1
+    CHARACTER(LEN = 256) :: name1
  
-    REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
+    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
     !! Vector to store the array
     !
     IF (mpime == ionode_id) THEN
@@ -174,17 +174,17 @@
           iter = INT( aux(1) ) 
           !
           i = 1
-          DO itemp=1, nstemp
+          DO itemp = 1, nstemp
             i = i + 1  
             ! Last value of hole mobility 
             av_mob_old(itemp) = aux(i)
           ENDDO
           ! 
           i = 1 + nstemp 
-          DO itemp=1, nstemp
-            DO ik=1, nkqtotf/2
-              DO ibnd=1, (ibndmax-ibndmin+1)
-                DO idir=1,3
+          DO itemp = 1, nstemp
+            DO ik = 1, nkqtotf/2
+              DO ibnd = 1, (ibndmax-ibndmin+1)
+                DO idir = 1,3
                   i = i +1
                   F_in(idir, ibnd, ik, itemp) = aux(i)
                 ENDDO
@@ -211,17 +211,17 @@
           iter = INT( aux(1) )
           !
           i = 1
-          DO itemp=1, nstemp
+          DO itemp = 1, nstemp
             i = i + 1
             ! Last value of hole mobility 
             av_mob_old(itemp) = aux(i)
           ENDDO
           ! 
           i = 1 + nstemp
-          DO itemp=1, nstemp
-            DO ik=1, nkqtotf/2
-              DO ibnd=1, (ibndmax-ibndmin+1)
-                DO idir=1,3
+          DO itemp = 1, nstemp
+            DO ik = 1, nkqtotf/2
+              DO ibnd = 1, (ibndmax-ibndmin+1)
+                DO idir = 1,3
                   i = i +1
                   F_in(idir, ibnd, ik, itemp) = aux(i)
                 ENDDO
@@ -251,7 +251,7 @@
     SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2, lrepmatw4, lrepmatw5, lrepmatw6)
     !----------------------------------------------------------------------------
     ! 
-    ! This subroutine opens all the files needed to save scattering rates for the IBTE.
+    ! This SUBROUTINE opens all the files needed to save scattering rates for the IBTE.
     ! 
     USE kinds,            ONLY : DP
     USE io_files,         ONLY : tmp_dir, prefix
@@ -297,7 +297,7 @@
     ! 
     ! Local variables
     !
-    CHARACTER (len=256) :: filint
+    CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
     INTEGER :: ierr
     !! Error index
@@ -373,11 +373,11 @@
     !
     INTEGER, INTENT(IN) :: itemp
     !! Temperature index
-    REAL(KIND=DP), INTENT(IN) :: etemp
+    REAL(KIND = DP), INTENT(IN) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
-    REAL(KIND=DP), INTENT(IN) :: etf_all(nbndsub, nkqtotf)
+    REAL(KIND = DP), INTENT(IN) :: etf_all(nbndsub, nkqtotf)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
     ! 
     ! Local variables
@@ -389,12 +389,12 @@
     !! Even k+q index to read etf
     INTEGER :: ibnd
     !! Local band index
-    REAL(KIND=DP) :: ekk
+    REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
-    REAL(KIND=DP) :: temp
+    REAL(KIND = DP) :: temp
     !! Temporary file name used to write scattering rate to file. 
     !
-    CHARACTER (len=256) :: name1
+    CHARACTER(LEN = 256) :: name1
     !! Name used to write scattering rates to file. 
     !
     WRITE(stdout,'(/5x,"Writing scattering rate to file"/)')
@@ -403,11 +403,11 @@
       !
       ! Write to file
       temp = etemp * ryd2ev / kelvin2eV
-      IF ( temp < 10.d0 - eps4 ) THEN
+      IF (temp < 10.d0 - eps4) THEN
         WRITE(name1,'(a18,f4.2)') 'scattering_rate_00', temp
-      ELSEIF ( temp >= 10.d0 - eps4 .AND. temp < 100.d0 -eps4 ) THEN
+      ELSEIF (temp >= 10.d0 - eps4 .AND. temp < 100.d0 -eps4) THEN
         WRITE(name1,'(a17,f5.2)') 'scattering_rate_0', temp
-      ELSEIF ( temp >= 100.d0 -eps4 ) THEN
+      ELSEIF (temp >= 100.d0 -eps4) THEN
         WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
       ENDIF
       OPEN(iufilscatt_rate,FILE=name1, FORM='formatted')
@@ -458,13 +458,13 @@
     !
     IMPLICIT NONE
     !
-    REAL(KIND=DP), INTENT(IN) :: etemp
+    REAL(KIND = DP), INTENT(IN) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND=DP), INTENT(IN) :: ef0
+    REAL(KIND = DP), INTENT(IN) :: ef0
     !! Fermi level for the temperature itemp
-    REAL(KIND=DP), INTENT(out) :: etf_all(nbndsub, nkqtotf/2)
+    REAL(KIND = DP), INTENT(out) :: etf_all(nbndsub, nkqtotf/2)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
-    REAL(KIND=DP), INTENT(out) :: inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(out) :: inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2)
     !! Inverse scattering rates
     ! 
     ! Local variables
@@ -478,12 +478,12 @@
     !! Local band index read from file
     INTEGER :: ios
     !! Status of reading file
-    REAL(KIND=DP) :: temp
+    REAL(KIND = DP) :: temp
     !! Temporary file name used to write scattering rate to file. 
     !
-    CHARACTER (len=256) :: name1
+    CHARACTER(LEN = 256) :: name1
     !! Name used to write scattering rates to file. 
-    CHARACTER (len=256) :: dummy1
+    CHARACTER(LEN = 256) :: dummy1
     !! Dummy variable to store the text of the scattering_rate file 
     ! 
     WRITE(stdout,'(/5x,"Reading scattering rate from file"/)')
@@ -491,11 +491,11 @@
     IF (mpime == ionode_id) THEN
       ! Write to file
       temp = etemp * ryd2ev / kelvin2eV
-      IF ( temp < 10.d0 - eps4 ) THEN
+      IF (temp < 10.d0 - eps4) THEN
         WRITE(name1,'(a18,f4.2)') 'scattering_rate_00', temp
-      ELSEIF ( temp >= 10.d0 - eps4 .AND. temp < 100.d0 -eps4 ) THEN
+      ELSEIF (temp >= 10.d0 - eps4 .AND. temp < 100.d0 -eps4) THEN
         WRITE(name1,'(a17,f5.2)') 'scattering_rate_0', temp
-      ELSEIF ( temp >= 100.d0 -eps4 ) THEN
+      ELSEIF (temp >= 100.d0 -eps4) THEN
         WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
       ENDIF
       OPEN(iufilscatt_rate,FILE=name1, status='old',iostat=ios)
@@ -566,11 +566,11 @@
     !! Total number of q-points
     INTEGER, INTENT(IN) :: nktotf
     !! Total number of k-points
-    REAL(KIND=DP), INTENT(INOUT) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(INOUT) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND=DP), INTENT(INOUT) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(INOUT) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND=DP), INTENT(INOUT) :: zi_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(INOUT) :: zi_all(ibndmax-ibndmin+1, nktotf)
     !! Z parameter of electron-phonon self-energy accross all pools
     ! 
     ! Local variables
@@ -582,33 +582,33 @@
     !! Local band index
     INTEGER :: lsigma_all
     !! Length of the vector
-    REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 2 )
     !! Vector to store the array
     !
     IF (mpime == ionode_id) THEN
       !
       lsigma_all = 3 * (ibndmax-ibndmin+1) * nktotf +2
       ! First element is the current q-point
-      aux(1) = REAL( iqq -1, KIND=DP) ! we need to start at the next q
+      aux(1) = REAL( iqq -1, KIND = DP) ! we need to start at the next q
       ! Second element is the total number of q-points
-      aux(2) = REAL( totq, KIND=DP)
+      aux(2) = REAL( totq, KIND = DP)
       !
       i = 2
       ! 
-      DO ik=1, nktotf
-        DO ibnd=1, (ibndmax-ibndmin+1)
+      DO ik = 1, nktotf
+        DO ibnd = 1, (ibndmax-ibndmin+1)
           i = i +1
           aux(i) = sigmar_all(ibnd, ik)
         ENDDO
       ENDDO
-      DO ik=1, nktotf
-        DO ibnd=1, (ibndmax-ibndmin+1)
+      DO ik = 1, nktotf
+        DO ibnd = 1, (ibndmax-ibndmin+1)
           i = i +1
           aux(i) = sigmai_all(ibnd, ik)
         ENDDO
       ENDDO
-      DO ik=1, nktotf
-        DO ibnd=1, (ibndmax-ibndmin+1)
+      DO ik = 1, nktotf
+        DO ibnd = 1, (ibndmax-ibndmin+1)
           i = i +1
           aux(i) = zi_all(ibnd, ik)
         ENDDO
@@ -619,12 +619,12 @@
     ENDIF
     ! 
     ! Make everythin 0 except the range of k-points we are working on
-    IF (lower_bnd > 1 ) THEN 
+    IF (lower_bnd > 1) THEN 
       sigmar_all(:,1:lower_bnd-1) = zero
       sigmai_all(:,1:lower_bnd-1) = zero
       zi_all(:,1:lower_bnd-1) = zero
     ENDIF
-    IF (upper_bnd < nktotf ) THEN
+    IF (upper_bnd < nktotf) THEN
       sigmar_all(:,upper_bnd+1:nktotf) = zero
       sigmai_all(:,upper_bnd+1:nktotf) = zero
       zi_all(:,upper_bnd+1:nktotf) = zero
@@ -660,11 +660,11 @@
     !! Total number of q-points
     INTEGER, INTENT(IN) :: nktotf
     !! Total number of k-points
-    REAL(KIND=DP), INTENT(OUT) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(OUT) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND=DP), INTENT(OUT) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(OUT) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND=DP), INTENT(OUT) :: zi_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(OUT) :: zi_all(ibndmax-ibndmin+1, nktotf)
     !! Z parameter of electron-phonon self-energy accross all pools
     ! 
     ! Local variables
@@ -678,10 +678,10 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
-    REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 2 )
     !! Vector to store the array
     ! 
-    CHARACTER (len=256) :: name1
+    CHARACTER(LEN = 256) :: name1
     !
     IF (mpime == ionode_id) THEN
       !
@@ -705,24 +705,24 @@
         nqtotf_read = INT( aux(2) )
         !print*, 'iq',iq
         !print*, 'nqtotf_read ',nqtotf_read
-        IF ( nqtotf_read /= totq) CALL errore('io_scattering',&
+        IF (nqtotf_read /= totq) CALL errore('io_scattering',&
           &'Error: The current total number of q-point is not the same as the read one. ',1)
         ! 
         i = 2
-        DO ik=1, nktotf
-          DO ibnd=1, (ibndmax-ibndmin+1)
+        DO ik = 1, nktotf
+          DO ibnd = 1, (ibndmax-ibndmin+1)
             i = i +1
             sigmar_all(ibnd, ik) = aux(i)
           ENDDO
         ENDDO
-        DO ik=1, nktotf
-          DO ibnd=1, (ibndmax-ibndmin+1)
+        DO ik = 1, nktotf
+          DO ibnd = 1, (ibndmax-ibndmin+1)
             i = i +1
             sigmai_all(ibnd, ik) = aux(i)
           ENDDO
         ENDDO
-        DO ik=1, nktotf
-          DO ibnd=1, (ibndmax-ibndmin+1)
+        DO ik = 1, nktotf
+          DO ibnd = 1, (ibndmax-ibndmin+1)
             i = i +1
             zi_all(ibnd, ik) = aux(i)
           ENDDO
@@ -740,12 +740,12 @@
       CALL mp_bcast (zi_all, ionode_id, world_comm)
       ! 
       ! Make everythin 0 except the range of k-points we are working on
-      IF (lower_bnd > 1 ) THEN
+      IF (lower_bnd > 1) THEN
         sigmar_all(:,1:lower_bnd-1) = zero
         sigmai_all(:,1:lower_bnd-1) = zero
         zi_all(:,1:lower_bnd-1) = zero
       ENDIF
-      IF (upper_bnd < nktotf ) THEN
+      IF (upper_bnd < nktotf) THEN
         sigmar_all(:,upper_bnd+1:nktotf) = zero
         sigmai_all(:,upper_bnd+1:nktotf) = zero
         zi_all(:,upper_bnd+1:nktotf) = zero
@@ -797,29 +797,29 @@
     INTEGER :: ibnd
     !! band index
     ! 
-    REAL(KIND=DP) :: aux ( 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2 )
+    REAL(KIND = DP) :: aux ( 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2 )
     !! Vector to store the array inv_tau_all and zi_all
     !
     IF (mpime == meta_ionode_id) THEN
       !
       ltau_all = 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2
       ! First element is the iteration number
-      aux(1) = REAL( iqq -1, KIND=DP)   ! -1 because we will start at the next one. 
-      aux(2) = REAL( totq, KIND=DP)
+      aux(1) = REAL( iqq -1, KIND = DP)   ! -1 because we will start at the next one. 
+      aux(2) = REAL( totq, KIND = DP)
       i = 2
       ! 
-      DO itemp=1, nstemp
-        DO ik=1, nktotf
-          DO ibnd=1, (ibndmax-ibndmin+1)
+      DO itemp = 1, nstemp
+        DO ik = 1, nktotf
+          DO ibnd = 1, (ibndmax-ibndmin+1)
             i = i +1
             aux(i) = inv_tau_all(itemp,ibnd, ik)
           ENDDO
         ENDDO
       ENDDO
       !
-      DO itemp=1, nstemp
-        DO ik=1, nktotf
-          DO ibnd=1, (ibndmax-ibndmin+1)
+      DO itemp = 1, nstemp
+        DO ik = 1, nktotf
+          DO ibnd = 1, (ibndmax-ibndmin+1)
             i = i +1
             aux(i) = zi_allvb(itemp,ibnd, ik) 
           ENDDO
@@ -835,18 +835,18 @@
         aux(2) = totq
         i = 2
         ! 
-        DO itemp=1, nstemp
-          DO ik=1, nktotf
-            DO ibnd=1, (ibndmax-ibndmin+1)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, (ibndmax-ibndmin+1)
               i = i +1
               aux(i) = inv_tau_allcb(itemp,ibnd, ik)
             ENDDO
           ENDDO
         ENDDO
         !
-        DO itemp=1, nstemp
-          DO ik=1, nktotf
-            DO ibnd=1, (ibndmax-ibndmin+1)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, (ibndmax-ibndmin+1)
               i = i +1
               aux(i) = zi_allcb(itemp,ibnd, ik)     
             ENDDO
@@ -921,10 +921,10 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
-    REAL(KIND=DP) :: aux(2 * nstemp * (ibndmax - ibndmin + 1) * nktotf + 2)
+    REAL(KIND = DP) :: aux(2 * nstemp * (ibndmax - ibndmin + 1) * nktotf + 2)
     !! Vector to store the array
     ! 
-    CHARACTER (len=256) :: name1
+    CHARACTER(LEN = 256) :: name1
     !
     IF (mpime == meta_ionode_id) THEN
       !
@@ -948,22 +948,22 @@
         nqtotf_read = INT( aux(2) )
         !print*, 'iq',iq
         !print*, 'nqtotf_read ',nqtotf_read
-        IF ( nqtotf_read /= totq) CALL errore('io_scattering',&
+        IF (nqtotf_read /= totq) CALL errore('io_scattering',&
           &'Error: The current total number of q-point is not the same as the read one. ',1)
         ! 
         i = 2
-        DO itemp=1, nstemp
-          DO ik=1, nktotf
-            DO ibnd=1, (ibndmax-ibndmin+1)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, (ibndmax-ibndmin+1)
               i = i +1
               inv_tau_all(itemp,ibnd, ik) = aux(i)
             ENDDO
           ENDDO
         ENDDO
         ! 
-        DO itemp=1, nstemp
-          DO ik=1, nktotf
-            DO ibnd=1, (ibndmax-ibndmin+1)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, (ibndmax-ibndmin+1)
               i = i +1
               zi_allvb(itemp,ibnd, ik) = aux(i)
             ENDDO
@@ -991,22 +991,22 @@
           iqq = INT( aux(1) )
           iqq = iqq + 1 ! we need to start at the next q
           nqtotf_read = INT( aux(2) )
-          IF ( nqtotf_read /= totq) CALL errore('io_scattering',&
+          IF (nqtotf_read /= totq) CALL errore('io_scattering',&
             &'Error: The current total number of q-point is not the same as the read one. ',1)
           ! 
           i = 2
-          DO itemp=1, nstemp
-            DO ik=1, nktotf
-              DO ibnd=1, (ibndmax-ibndmin+1)
+          DO itemp = 1, nstemp
+            DO ik = 1, nktotf
+              DO ibnd = 1, (ibndmax-ibndmin+1)
                 i = i +1
                 inv_tau_allcb(itemp,ibnd, ik) = aux(i)
               ENDDO
             ENDDO
           ENDDO
           ! 
-          DO itemp=1, nstemp
-            DO ik=1, nktotf
-              DO ibnd=1, (ibndmax-ibndmin+1)
+          DO itemp = 1, nstemp
+            DO ik = 1, nktotf
+              DO ibnd = 1, (ibndmax-ibndmin+1)
                 i = i +1
                 zi_allcb(itemp,ibnd, ik) = aux(i)
               ENDDO
@@ -1072,7 +1072,7 @@
     !! Total number of k-points
     INTEGER, INTENT(OUT) :: nqtotf_new
     !! Total number of q-points
-    REAL(KIND=DP), INTENT(INOUT) :: inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(INOUT) :: inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nktotf)
     !! Scattering rate read from file restart_filq
     ! 
     ! Local variables
@@ -1088,9 +1088,9 @@
     !! Length of the vector
     INTEGER(kind=8) :: unf_recl
     !! 
-    REAL(KIND=DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 ), dummy
+    REAL(KIND = DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 ), dummy
     !! Vector to store the array 
-    CHARACTER (len=256) :: name1 
+    CHARACTER(LEN = 256) :: name1 
     ! 
     !
     IF (mpime == ionode_id) THEN
@@ -1117,9 +1117,9 @@
         nqtotf_new = INT( aux(2) )
         ! 
         i = 2
-        DO itemp=1, nstemp
-          DO ik=1, nktotf
-            DO ibnd=1, (ibndmax-ibndmin+1)
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            DO ibnd = 1, (ibndmax-ibndmin+1)
               i = i +1
               inv_tau_all_new(itemp,ibnd, ik) = aux(i)
             ENDDO

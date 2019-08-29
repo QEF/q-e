@@ -83,7 +83,7 @@
                                MPI_OFFSET 
 #endif
   !
-  implicit none
+  IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: nqc
   !! number of qpoints in the coarse grid
@@ -109,7 +109,7 @@
   !! Variable used for formatting output
   ! 
   INTEGER :: ios
-  !! integer variable for I/O control
+  !! INTEGER variable for I/O control
   INTEGER :: iq 
   !! Counter on coarse q-point grid
   INTEGER :: iqq
@@ -173,12 +173,12 @@
   INTEGER :: npool_tmp
   !! Pool tmp
   INTEGER, ALLOCATABLE :: irvec_k(:, :)
-  !! integer components of the ir-th Wigner-Seitz grid point in the basis
+  !! INTEGER components of the ir-th Wigner-Seitz grid point in the basis
   !! of the lattice vectors for electrons
   INTEGER, ALLOCATABLE :: irvec_q(:, :)
-  !! integer components of the ir-th Wigner-Seitz grid point for phonons
+  !! INTEGER components of the ir-th Wigner-Seitz grid point for phonons
   INTEGER, ALLOCATABLE :: irvec_g(:, :)
-  !! integer components of the ir-th Wigner-Seitz grid point for electron-phonon
+  !! INTEGER components of the ir-th Wigner-Seitz grid point for electron-phonon
   INTEGER, ALLOCATABLE :: ndegen_k (:, :, :)
   !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
   INTEGER, ALLOCATABLE :: ndegen_q (:, :, :)
@@ -225,13 +225,13 @@
   !! Maximum vector: at*nq
   REAL(KIND = DP) :: w_centers(3, nbndsub)
   !! Wannier centers  
-  REAL(KIND=DP) :: etemp
+  REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
-  REAL(KIND=DP) :: ef0(nstemp)
+  REAL(KIND = DP) :: ef0(nstemp)
   !! Fermi level for the temperature itemp  
-  REAL(KIND=DP) :: efcb(nstemp)
+  REAL(KIND = DP) :: efcb(nstemp)
   !! Second Fermi level for the temperature itemp  
-  REAL(KIND=DP) :: dummy(3)
+  REAL(KIND = DP) :: dummy(3)
   !! Dummy variable
   REAL(KIND = DP) :: vel_diff(3)
   !! Velocity difference when computed adaptative broadening
@@ -239,7 +239,7 @@
   !! Temporary adaptative broadening
   REAL(KIND = DP) :: val
   !! Temporary broadening value
-  REAL(KIND=DP), EXTERNAL :: fermicarrier
+  REAL(KIND = DP), EXTERNAL :: fermicarrier
   !! Function that returns the Fermi level so that n=p (if int_mob = .true.)  
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
@@ -271,7 +271,7 @@
   !! Average eta over degenerate states
   REAL(KIND = DP) :: e_1
   !! Eigenvalue 1 for deg. testing
-  REAL(KIND=DP) :: e_2
+  REAL(KIND = DP) :: e_2
   !! Eigenvalue 2 for deg. testing
 
   !
@@ -484,7 +484,7 @@
     !
     ! Dynamical Matrix
     !
-    IF ( .NOT. lifc) CALL dynbloch2wan(nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q)
+    IF (.NOT. lifc) CALL dynbloch2wan(nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q)
     !
     !
     ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
@@ -621,13 +621,13 @@
     !
     xxk = xkf (:, ik)
     !
-    IF ( 2*(ik/2) == ik ) THEN
+    IF (2*(ik/2) == ik) THEN
       !
       !  this is a k+q point : redefine as xkf (:, ik-1) + xxq
       !
-      CALL cryst_to_cart (1, xxq, at,-1)
+      CALL cryst_to_cart(1, xxq, at,-1)
       xxk = xkf (:, ik - 1) + xxq
-      CALL cryst_to_cart (1, xxq, bg, 1)
+      CALL cryst_to_cart(1, xxq, bg, 1)
       !
     ENDIF
     !
@@ -660,7 +660,7 @@
     ! SP: even when reading from input the number of electron needs to be correct
     already_skipped = .false.
     IF (nbndskip > 0) THEN
-      IF (.NOT. already_skipped ) THEN
+      IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
           nelec = nelec - one * nbndskip
         ELSE
@@ -802,15 +802,15 @@
   ENDIF
   ! 
   IF (iterative_bte .AND. epmatkqread) THEN
-    ALLOCATE (vkk_all(3, ibndmax - ibndmin + 1, nkqtotf / 2))
-    ALLOCATE (wkf_all(nkqtotf / 2))
+    ALLOCATE(vkk_all(3, ibndmax - ibndmin + 1, nkqtotf / 2))
+    ALLOCATE(wkf_all(nkqtotf / 2))
     !
     CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     ! 
-    DEALLOCATE (vkk_all)
-    DEALLOCATE (wkf_all)
-    DEALLOCATE (inv_tau_all)
-    DEALLOCATE (inv_tau_allcb)
+    DEALLOCATE(vkk_all)
+    DEALLOCATE(wkf_all)
+    DEALLOCATE(inv_tau_all)
+    DEALLOCATE(inv_tau_allcb)
     ! 
   ELSE ! (iterative_bte .AND. epmatkqread)   
     IF (iterative_bte) THEN
@@ -819,7 +819,7 @@
     ENDIF
     ! 
     IF (lifc) THEN
-      ALLOCATE (wscache(-2 * nq3:2 * nq3, -2 * nq2:2 * nq2, -2 * nq1:2 * nq1, nat, nat))
+      ALLOCATE(wscache(-2 * nq3:2 * nq3, -2 * nq2:2 * nq2, -2 * nq1:2 * nq1, nat, nat))
       wscache(:, :, :, :, :) = zero 
     ENDIF
     ! 
@@ -833,7 +833,7 @@
     homogeneous = .FALSE.
     IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
         (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
-        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0) ) THEN
+        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
       homogeneous = .TRUE.
     ELSE
       homogeneous = .FALSE.
@@ -846,7 +846,7 @@
     IF (ephwrite) THEN
       ! 
       totq = nqf
-      ALLOCATE (selecq(nqf))
+      ALLOCATE(selecq(nqf))
       DO iq = 1, nqf
         selecq(iq) = iq
       ENDDO
@@ -917,8 +917,8 @@
     IF (scattering .AND. .NOT. iterative_bte) THEN
       ALLOCATE(inv_tau_all(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
       ALLOCATE(zi_allvb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
-      inv_tau_all(:,:,:) = zero
-      zi_allvb(:,:,:)    = zero
+      inv_tau_all(:, :, :) = zero
+      zi_allvb(:, :, :)    = zero
     ENDIF
     IF (int_mob .AND. carrier .AND. .NOT. iterative_bte) THEN
       ALLOCATE(inv_tau_allcb(nstemp, ibndmax - ibndmin + 1, nkqtotf / 2))
@@ -1120,7 +1120,7 @@
         ! Adaptative smearing: computes phonon velocity
         ! -------------------------------------------------------------
         ! Needs to be adapted to work per mode 
-        !IF ( adapt_smearing ) THEN
+        !IF (adapt_smearing) THEN
         !  CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), dims, wf(imode, iq), rws, nrws)
         !ENDIF
         ! 
@@ -1181,7 +1181,7 @@
                !
                IF (eig_read) THEN
                  ! Use for indirect absorption - Kyle and Emmanouil Kioupakis --------------------------------
-                 DO icounter=1, 6
+                 DO icounter = 1, 6
                    CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
                    CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
                    IF (use_ws) THEN
@@ -1311,10 +1311,10 @@
                 !
                 IF ((ABS(xxq(1)) > eps8) .OR. (ABS(xxq(2)) > eps8) .OR. (ABS(xxq(3)) > eps8)) THEN
                   !      
-                  CALL cryst_to_cart (1, xxq, bg, 1)
+                  CALL cryst_to_cart(1, xxq, bg, 1)
                   CALL rgd_blk_epw_fine_mem(imode, nq1, nq2, nq3, xxq, uf, epmatlrT(:, :, imode, ik), &
                                         nmodes, epsi, zstar, bmatf, one)
-                  CALL cryst_to_cart (1, xxq, at, -1)
+                  CALL cryst_to_cart(1, xxq, at, -1)
                   !
                 ENDIF
                 !
@@ -1343,7 +1343,7 @@
       ! Now do the eigenvector rotation:
       ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
       !
-      DO ik=1, nkf
+      DO ik = 1, nkf
         CALL zgemm( 'n', 'n', (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
               (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), uf, nmodes, czero, &
               epf17(:,:,:,ik), (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) )
@@ -1453,7 +1453,7 @@
                 ! 
               ENDIF
               ! 
-              IF (.NOT. int_mob .AND. .NOT. carrier ) THEN
+              IF (.NOT. int_mob .AND. .NOT. carrier) THEN
                 IF (efermi_read) THEN
                   !
                   ef0(itemp) = fermi_energy

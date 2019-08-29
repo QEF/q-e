@@ -42,13 +42,13 @@
   use mp,         ONLY : mp_barrier, mp_sum
   use mp_global,  ONLY : inter_pool_comm
   !
-  implicit none
+  IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: iqq
+  INTEGER, INTENT(in) :: iqq
   !! Current q-point index from the selecq
-  INTEGER, INTENT (in) :: iq
+  INTEGER, INTENT(in) :: iq
   !! Current q-point index
-  INTEGER, INTENT (in) :: totq
+  INTEGER, INTENT(in) :: totq
   !! Total number of q-points in selecq.fmt
   ! 
   ! Local variables 
@@ -75,92 +75,92 @@
   INTEGER :: n
   !! Counter on number of mode degeneracies
   ! 
-  REAL(kind=DP) :: g2
+  REAL(KIND = DP) :: g2
   !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: ekk
+  REAL(KIND = DP) :: ekk
   !! Eigen energy on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekq
+  REAL(KIND = DP) :: ekq
   !! Eigen energy of k+q on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: wq
+  REAL(KIND = DP) :: wq
   !! Phonon frequency on the fine grid
-  REAL(kind=DP) :: wq_tmp
+  REAL(KIND = DP) :: wq_tmp
   !! Temporary Phonon frequency on the fine grid
-  REAL(kind=DP) :: ef0
+  REAL(KIND = DP) :: ef0
   !! Fermi energy level
-  REAL(kind=DP) :: wgkq
+  REAL(KIND = DP) :: wgkq
   !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
-  REAL(kind=DP) :: weight
+  REAL(KIND = DP) :: weight
   !! Imaginary part of the phonhon self-energy factor 
   !!$$ \pi N_q \Im(\frac{f_{nk}(T) - f_{mk+q(T)}}{\varepsilon_{nk}-\varepsilon_{mk+q}-\omega_{q\nu}+i\delta}) $$
   !! In practice the imaginary is performed with a delta Dirac
-  REAL(kind=DP) :: dosef
+  REAL(KIND = DP) :: dosef
   !! Density of state N(Ef)
-  REAL(kind=DP) :: w0g1
+  REAL(KIND = DP) :: w0g1
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: w0g2
+  REAL(KIND = DP) :: w0g2
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: inv_wq
+  REAL(KIND = DP) :: inv_wq
   !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
-  REAL(kind=DP) :: inv_eptemp0
+  REAL(KIND = DP) :: inv_eptemp0
   !! Inverse of temperature define for efficiency reasons
-  REAL(kind=DP) :: g2_tmp
+  REAL(KIND = DP) :: g2_tmp
   !! If the phonon frequency is too small discart g
-  REAL(kind=DP) :: gamma(nmodes)
+  REAL(KIND = DP) :: gamma(nmodes)
   !! Gamma is the imaginary part of the phonon self-energy 
-  REAL(kind=DP) :: gamma_v(nmodes)
+  REAL(KIND = DP) :: gamma_v(nmodes)
   !! Gamma is the imaginary part of the phonon self-energy multiplied by (1-coskkq)
-  REAL(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   !! $$(v_k \cdot v_{k+q}) / |v_k|^2$$
-  REAL(kind=DP) :: DDOT
+  REAL(KIND = DP) :: DDOT
   !! Dot product function
-  REAL(kind=DP) :: degaussw0
+  REAL(KIND = DP) :: degaussw0
   !! degaussw0 = (ismear-1) * delta_smear + degaussw
-  REAL(kind=DP) :: inv_degaussw0
+  REAL(KIND = DP) :: inv_degaussw0
   !! Inverse degaussw0 for efficiency reasons
-  REAL(kind=DP) :: lambda_tot
+  REAL(KIND = DP) :: lambda_tot
   !! Integrated lambda function
-  REAL(kind=DP) :: lambda_tr_tot
+  REAL(KIND = DP) :: lambda_tr_tot
   !! Integrated transport lambda function
-  REAL(kind=DP) :: wgkk
+  REAL(KIND = DP) :: wgkk
   !! Fermi-Dirac occupation factor $f_{nk}(T)$
-  REAL(kind=DP) :: eptemp0
+  REAL(KIND = DP) :: eptemp0
   !!eptemp0   = (ismear-1) * delta_smear + eptem
-  REAL(kind=DP) :: vkk(3,ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
   !! Electronic velocity $v_{nk}$
-  REAL(kind=DP) :: vkq(3,ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: vkq(3,ibndmax-ibndmin+1)
   !! Electronic velocity $v_{nk+q}$
-  REAL(kind=DP) :: tmp
+  REAL(KIND = DP) :: tmp
   !! Temporary value of lambda for av.
-  REAL(kind=DP) :: tmp2
+  REAL(KIND = DP) :: tmp2
   !! Temporary value of lambda_v for av.
-  REAL(kind=DP) :: tmp3
+  REAL(KIND = DP) :: tmp3
   !! Temporary value of lambda_v for av.
-  REAL(kind=DP) :: tmp4
+  REAL(KIND = DP) :: tmp4
   !! Temporary value of lambda_v for av.
-  REAL(kind=DP) :: lambda_tmp(nmodes)
+  REAL(KIND = DP) :: lambda_tmp(nmodes)
   !! Temporary value of lambda for av.  
-  REAL(kind=DP) :: lambda_v_tmp(nmodes)
+  REAL(KIND = DP) :: lambda_v_tmp(nmodes)
   !! Temporary value of lambda v for av.  
-  REAL(kind=DP) :: gamma_tmp(nmodes)
+  REAL(KIND = DP) :: gamma_tmp(nmodes)
   !! Temporary value of gamma for av.  
-  REAL(kind=DP) :: gamma_v_tmp(nmodes)
+  REAL(KIND = DP) :: gamma_v_tmp(nmodes)
   !! Temporary value of gamma v for av.  
-  REAL(kind=DP), external :: dos_ef
+  REAL(KIND = DP), EXTERNAL :: dos_ef
   !! Function to compute the Density of States at the Fermi level
-  REAL(kind=DP), external :: wgauss
+  REAL(KIND = DP), EXTERNAL :: wgauss
   !! Fermi-Dirac distribution function (when -99)
-  REAL(kind=DP), external :: w0gauss
+  REAL(KIND = DP), EXTERNAL :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP), external :: efermig
+  REAL(KIND = DP), EXTERNAL :: efermig
   !! Return the fermi energy
   !  
-  IF ( iq == 1 ) THEN 
+  IF (iq == 1) THEN 
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick < 1.d3 ) &
+    IF (fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -180,7 +180,7 @@
     !
     ! Fermi level and corresponding DOS
     !
-    IF ( efermi_read ) THEN
+    IF (efermi_read) THEN
       !
       ef0 = fermi_energy
       !
@@ -199,7 +199,7 @@
     !  N(Ef) in the equation for lambda is the DOS per spin
     dosef = dosef / two
     !
-    IF ( iq == 1 ) THEN 
+    IF (iq == 1) THEN 
       WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
       WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
       !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
@@ -227,28 +227,28 @@
       ! vectors also listed in Grimvall
       !
       IF (vme) THEN 
-        DO ibnd=1, ibndmax-ibndmin+1
-          DO jbnd=1, ibndmax-ibndmin+1
+        DO ibnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, ibndmax-ibndmin+1
             !
             ! vmef is in units of Ryd * bohr
             !
             vkk(:, ibnd ) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
             vkq(:, jbnd ) = REAL (vmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-            IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
+            IF (abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
                 coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
                 DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
           ENDDO
         ENDDO
       ELSE
-        DO ibnd=1, ibndmax-ibndmin+1
-          DO jbnd=1, ibndmax-ibndmin+1
+        DO ibnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, ibndmax-ibndmin+1
             !
             ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
             ! 1/m  = 2 in Rydberg atomic units
             !
             vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
             vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-            IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
+            IF (abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
                 coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
                 DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
           ENDDO
@@ -266,7 +266,7 @@
           (MINVAL(ABS(etf (:, ikq) - ef) ) < fsthick)) THEN
         !
         fermicount = fermicount + 1
-        DO imode=1, nmodes
+        DO imode = 1, nmodes
           !
           ! the phonon frequency
           wq = wf(imode, iq)
@@ -281,7 +281,7 @@
             g2_tmp = 0.0
           ENDIF   
           !
-          DO ibnd=1, ibndmax-ibndmin+1
+          DO ibnd = 1, ibndmax-ibndmin+1
             !
             !  the fermi occupation for k
             ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
@@ -291,12 +291,12 @@
               wgkk = wgauss(-ekk*inv_eptemp0, -99)
             ENDIF
             !
-            DO jbnd=1, ibndmax-ibndmin+1
+            DO jbnd = 1, ibndmax-ibndmin+1
               !
               !  the fermi occupation for k+q
               ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
               !
-              ! here we take into account the zero-point sqrt(hbar/2M\omega)
+              ! here we take into account the zero-point SQRT(hbar/2M\omega)
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
@@ -367,9 +367,9 @@
       wq = wf (imode, iq)
       DO jmode = 1, nmodes
         wq_tmp = wf (jmode, iq)
-        IF ( ABS(wq - wq_tmp) < eps6 ) THEN
+        IF (ABS(wq - wq_tmp) < eps6) THEN
           n = n + 1
-          IF ( wq_tmp > eps_acustic ) THEN 
+          IF (wq_tmp > eps_acustic) THEN 
             tmp  =  tmp  + gamma  ( jmode ) / pi / wq**two / dosef
             tmp2 =  tmp2 + gamma_v( jmode ) / pi / wq**two / dosef
           ENDIF
@@ -429,12 +429,12 @@ FUNCTION dos_ef_seq (ngauss, degauss, ef, et, wk, nks, nbnd)
   USE kinds, ONLY : DP
   USE mp,        ONLY : mp_sum
   IMPLICIT NONE
-  REAL(DP) :: dos_ef_seq
+  REAL(KIND = DP) :: dos_ef_seq
   INTEGER :: ngauss, nbnd, nks
-  REAL(DP) :: et (nbnd, nks), wk (nks), ef, degauss
+  REAL(KIND = DP) :: et (nbnd, nks), wk (nks), ef, degauss
   !
   INTEGER :: ik, ibnd
-  REAL(DP), EXTERNAL :: w0gauss
+  REAL(KIND = DP), EXTERNAL :: w0gauss
   !
   !     Compute DOS at E_F (states per Ry per unit cell)
   !

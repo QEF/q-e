@@ -41,7 +41,7 @@
   use cell_base,     ONLY : omega, alat, bg
   USE division,      ONLY : fkbounds
   ! 
-  implicit none
+  IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: iqq
   !! Q-index from the selected q
@@ -55,30 +55,30 @@
   INTEGER :: nksqtotf, lower_bnd, upper_bnd
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
-  REAL(kind=DP) :: tmp
+  REAL(KIND = DP) :: tmp
   !! Temporary variable to store real part of Sigma for the degenerate average
-  REAL(kind=DP) :: tmp2
+  REAL(KIND = DP) :: tmp2
   !! Temporary variable to store imag part of Sigma for the degenerate average
-  REAL(kind=DP) :: tmp3
+  REAL(KIND = DP) :: tmp3
   !! Temporary variable to store Z for the degenerate average
-  REAL(kind=DP) :: ekk2
+  REAL(KIND = DP) :: ekk2
   !! Temporary variable to the eigenenergies for the degenerate average
-  REAL(kind=DP) :: sigmar_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmar_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the real-part of Sigma 
-  REAL(kind=DP) :: sigmai_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmai_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the imag-part of Sigma 
-  REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
-  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight,  &
+  REAL(KIND = DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight,  &
                    w0g1, w0g2, inv_eptemp0, &
                    inv_degaussw, tpiba_new
-  REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss
-  REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:), etf_all(:,:)
-  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut
-  REAL(kind=DP) :: qsquared, qTF, dipole, rs, ekk1, degen
-  REAL(kind=DP) :: q(3)
+  REAL(KIND = DP), EXTERNAL :: efermig, dos_ef, wgauss, w0gauss
+  REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :), etf_all(:, :)
+  REAL(KIND = DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut
+  REAL(KIND = DP) :: qsquared, qTF, dipole, rs, ekk1, degen
+  REAL(KIND = DP) :: q(3)
   !! The q-point in cartesian unit.
-  !REAL(kind=DP) :: Nel, epsiHEG, meff, kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, qsquared, qTF, dipole, rs, ekk1
+  !REAL(KIND = DP) :: Nel, epsiHEG, meff, kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, qsquared, qTF, dipole, rs, ekk1
   ! loop over temperatures can be introduced
   !
   ! SP: Define the inverse so that we can efficiently multiply instead of
@@ -87,13 +87,13 @@
   inv_eptemp0  = 1.0/eptemp
   inv_degaussw = 1.0/degaussw
   !
-  IF ( iqq == 1 ) THEN
+  IF (iqq == 1) THEN
      !
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      WRITE(stdout,'(5x,"Electron-plasmon Self-Energy in the Migdal Approximation")')
      WRITE(stdout,'(5x,a/)') repeat('=',67)
      !
-     IF ( fsthick < 1.d3 ) &
+     IF (fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
            'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -102,7 +102,7 @@
   !
   ! Fermi level and corresponding DOS
   !
-  IF ( efermi_read ) THEN
+  IF (efermi_read) THEN
    !
     ef0 = fermi_energy
     !
@@ -114,7 +114,7 @@
     !
   ENDIF
   !
-  IF ( iqq == 1 ) THEN 
+  IF (iqq == 1) THEN 
     WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
     WRITE (stdout,'(a)') ' '
   ENDIF
@@ -138,12 +138,12 @@
   vF       =  1.d0/meff * (3.d0*pi**2*nel/omega/degen)**(1.d0/3.d0) 
   fermiHEG =  1.d0/(2.d0*meff) * (3.d0*pi**2*nel/omega/degen)**(2.d0/3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
   qTF      =  (6.d0*pi*nel/omega/degen/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
-  wpl0     =  sqrt(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
+  wpl0     =  SQRT(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
   wq       =  wpl0 ! [Ryd] 
   q(:)     =  xqf(:,iq)
-  CALL cryst_to_cart (1, q, bg, 1)
+  CALL cryst_to_cart(1, q, bg, 1)
   qsquared =  (q(1)**2 + q(2)**2 + q(3)**2)
-  qin      =  sqrt(qsquared)*tpiba_new
+  qin      =  SQRT(qsquared)*tpiba_new
   qcut     = wpl0 / vF / tpiba_new / 2.d0    ! 1/2 converts from Ryd to Ha
   !
   !if (.true.) qcut = qcut / 2.d0 ! renorm to account for Landau damping 
@@ -180,8 +180,8 @@
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       ! (but in this case they are the same)
       !
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
-       ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
+      IF (( minval ( ABS(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+       ( minval ( ABS(etf (:, ikq) - ef) ) < fsthick )) THEN
         !
         fermicount = fermicount + 1
         wgq = wgauss( -wq*inv_eptemp0, -99)
@@ -198,7 +198,7 @@
             ekq  = etf (ibndmin-1+jbnd, ikq) - ef0
             wgkq = wgauss( -ekq*inv_eptemp0, -99)  
             !
-!            if ( abs(ekq-ekk1) > 1d-8 ) then
+!            if ( ABS(ekq-ekk1) > 1d-8 ) then
 !              !dipole = (dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*conjg(dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)) +  &
 !              !          dmef(2, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*conjg(dmef(2, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)) +  &
 !              !          dmef(3, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*conjg(dmef(3, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)))   &
@@ -214,7 +214,7 @@
 !            endif 
               
             !computation of the dipole
-            IF ( ibnd==jbnd ) THEN
+            IF (ibnd==jbnd) THEN
               IF (sqrt(qsquared) > 1d-8) THEN
                 dipole = 1./(qsquared * tpiba_new * tpiba_new)
               ELSE
@@ -231,14 +231,14 @@
             !
             ! this approximates the dipoles as delta_ij
             !if (.false.) then
-            !  if (ibnd==jbnd .and. sqrt(qsquared) > 1d-8 ) then
+            !  if (ibnd==jbnd .AND. SQRT(qsquared) > 1d-8 ) then
             !    dipole = 1./(qsquared * tpiba_new * tpiba_new)
             !  else 
             !    dipole = 0.d0
             !  endif
             !endif
             !if (.true.) then
-            IF ( abs(dipole * (qsquared * tpiba_new * tpiba_new))  > 1 ) THEN
+            IF (ABS(dipole * (qsquared * tpiba_new * tpiba_new))  > 1) THEN
               dipole = 1./(qsquared*tpiba_new*tpiba_new)
             ENDIF
             !endif
@@ -260,7 +260,7 @@
             !
             !  the fermi occupation for k+q
             !
-            ! here we take into account the zero-point sqrt(hbar/2M\omega)
+            ! here we take into account the zero-point SQRT(hbar/2M\omega)
             ! with hbar = 1 and M already contained in the eigenmodes
             ! g2 is Ry^2, wkf must already account for the spin factor
             !
@@ -285,7 +285,7 @@
 !            endif
             !
 !              ecutse needs to be defined if it's used 
-!@             if ( abs(ekq-ekk) > ecutse ) weight = 0.d0
+!@             if ( ABS(ekq-ekk) > ecutse ) weight = 0.d0
             !
             sigmar_all(ibnd,ik+lower_bnd-1) = sigmar_all(ibnd,ik+lower_bnd-1) + g2 * weight
             !
@@ -293,7 +293,7 @@
 !            weight = wqf(iq) * aimag (                                                  &
 !                    ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
 !                      ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
-!@            if ( abs(ekq-ekk) > ecutse ) weight = 0.d0
+!@            if ( ABS(ekq-ekk) > ecutse ) weight = 0.d0
             !
             ! Delta implementation 
             w0g1=w0gauss( (ekk-ekq+wq)/degaussw, 0) /degaussw
@@ -319,7 +319,7 @@
                                              ( (ekk - ( ekq - wq ))**two + degaussw**two )**two +  &
                       ( one - wgkq + wgq ) * ( (ekk - ( ekq + wq ))**two - degaussw**two ) /       &
                                              ( (ekk - ( ekq + wq ))**two + degaussw**two )**two )  
-!@            if ( abs(ekq-ekk) > ecutse ) weight = 0.d0
+!@            if ( ABS(ekq-ekk) > ecutse ) weight = 0.d0
             !
             zi_all(ibnd,ik+lower_bnd-1) = zi_all(ibnd,ik+lower_bnd-1) + g2 * weight
             !
@@ -334,12 +334,12 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iqq == totq ) THEN
+  IF (iqq == totq) THEN
      !
-     ALLOCATE (xkf_all(3, nkqtotf))
-     ALLOCATE (etf_all(nbndsub, nkqtotf))
-     xkf_all(:,:) = zero
-     etf_all(:,:) = zero
+     ALLOCATE(xkf_all(3, nkqtotf))
+     ALLOCATE(etf_all(nbndsub, nkqtotf))
+     xkf_all(:, :) = zero
+     etf_all(:, :) = zero
      !
 #if defined(__MPI)
      !
@@ -376,7 +376,7 @@
          !sigmar_tmp(:) = zero
          DO jbnd = 1, ibndmax-ibndmin+1
            ekk2 = etf_all (ibndmin-1+jbnd, ikk)
-           IF ( ABS(ekk2-ekk) < eps6 ) THEN
+           IF (ABS(ekk2-ekk) < eps6) THEN
              n = n + 1
              tmp =  tmp + sigmar_all (jbnd,ik)
              tmp2 =  tmp2 + sigmai_all (jbnd,ik)
@@ -457,8 +457,8 @@
      !
      CLOSE(linewidth_elself)
      !
-     DEALLOCATE (xkf_all)
-     DEALLOCATE (etf_all)
+     DEALLOCATE(xkf_all)
+     DEALLOCATE(etf_all)
      !
   ENDIF 
   !
@@ -473,26 +473,26 @@
   !--------------------------------------------------------------------------
   !--------------------------------------------------------------------------
   SUBROUTINE get_eps_mahan (q,rs,kF,eps0)
-  !subroutine get_eps_mahan (q,qTF,kF,eps0)
+  !SUBROUTINE get_eps_mahan (q,qTF,kF,eps0)
   !
   ! Based on Eq. 5.166 of Mahan 2000. 
   !
   USE kinds,        ONLY : DP
   USE constants_epw, ONLY : pi
-  implicit none
+  IMPLICIT NONE
   ! 
-  REAL(kind=DP),    intent (OUT) :: eps0
-  REAL(kind=DP),    intent (IN)  :: q
-  REAL(kind=DP),    intent (IN)  :: rs
-  REAL(kind=DP),    intent (IN)  :: kF
+  REAL(KIND = DP),    intent (OUT) :: eps0
+  REAL(KIND = DP),    intent (IN)  :: q
+  REAL(KIND = DP),    intent (IN)  :: rs
+  REAL(KIND = DP),    intent (IN)  :: kF
   ! 
 ! internal
-  REAL(kind=DP) :: eta,x,alpha 
+  REAL(KIND = DP) :: eta,x,alpha 
   ! 
   eta   = 1.d-6
   alpha = (4.d0/9.d0/pi)**(1.d0/3.d0)
   ! 
-  if ( abs(q) >  1.d-10) then
+  if ( ABS(q) >  1.d-10) then
     x    = q / 2.d0 / kF 
     eps0 = 1.d0 + (1.d0-x**2)/(2.d0*x)*log (abs((1.d0+x)/(1.d0-x))) 
     eps0 = 1.d0 + alpha * rs / 2.d0 /pi / x**2 * eps0
@@ -502,7 +502,7 @@
     eps0 = 1.d0 + alpha * rs / 2.d0 /pi / x**2 * eps0
   endif
 
-!  if ( abs(q) >  1.d-10) then
+!  if ( ABS(q) >  1.d-10) then
 !    x    = q / 2.d0 / kF 
 !    eps0 = 1.d0 + (1.d0-x**2)/(2.d0*x)*log (abs((1.d0+x)/(1.d0-x))) 
 !    eps0 = 1.d0 + qTF**2/(2.d0*q**2) * eps0

@@ -10,7 +10,7 @@
   MODULE transport
   !----------------------------------------------------------------------
   !! 
-  !! This module contains all the subroutine linked with electronic transport  
+  !! This module contains all the SUBROUTINE linked with electronic transport  
   !! 
   IMPLICIT NONE
   ! 
@@ -21,7 +21,7 @@
                        cufkk, cufkq, homogeneous )
     !-----------------------------------------------------------------------
     !!
-    !!  This subroutine pre-computes the q-points that falls within the fstichk
+    !!  This SUBROUTINE pre-computes the q-points that falls within the fstichk
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
@@ -58,16 +58,16 @@
     !! List of selected q-points
     INTEGER, INTENT(IN) :: ndegen_k(nrr_k, dims, dims)
     !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
-    REAL(kind=DP), INTENT(IN) :: irvec_r(3, nrr_k)
+    REAL(KIND = DP), INTENT(IN) :: irvec_r(3, nrr_k)
     !! Wigner-Size supercell vectors, store in real instead of integer
-    COMPLEX(kind=DP), INTENT(OUT) :: cufkk (nbndsub, nbndsub)
+    COMPLEX(KIND = DP), INTENT(OUT) :: cufkk (nbndsub, nbndsub)
     !! Rotation matrix, fine mesh, points k
-    COMPLEX(kind=DP), INTENT(OUT) :: cufkq (nbndsub, nbndsub)
+    COMPLEX(KIND = DP), INTENT(OUT) :: cufkq (nbndsub, nbndsub)
     !! the same, for points k+q
     ! 
     ! Local variable
     INTEGER :: ios
-    !! integer variable for I/O control
+    !! INTEGER variable for I/O control
     INTEGER :: iq
     !! Counter on coarse q-point grid    
     INTEGER :: ik, ikk, ikq, ikl
@@ -105,53 +105,53 @@
     INTEGER :: kmap(nkf)
     !! k-point that are selected for that cpu
     ! 
-    REAL(kind=DP) :: xxq(3)
+    REAL(KIND = DP) :: xxq(3)
     !! Current q-point
-    REAL(kind=DP) :: xkk(3)
+    REAL(KIND = DP) :: xkk(3)
     !! Current k-point on the fine grid
-    REAL(kind=DP) :: xkq(3)
+    REAL(KIND = DP) :: xkq(3)
     !! Current k-point on the fine grid
-    REAL(kind=DP) :: rdotk(nrr_k)
+    REAL(KIND = DP) :: rdotk(nrr_k)
     !! $r\cdot k$
-    REAL(kind=DP) :: rdotk2(nrr_k)
+    REAL(KIND = DP) :: rdotk2(nrr_k)
     !! $r\cdot k$
-    REAL(kind=DP) :: etf_loc(nbndsub, nkf) 
+    REAL(KIND = DP) :: etf_loc(nbndsub, nkf) 
     !! Eigen-energies all full k-grid.
-    REAL(kind=DP) :: etf_locq(nbndsub, nkf) 
+    REAL(KIND = DP) :: etf_locq(nbndsub, nkf) 
     !! Eigen-energies all full k-grid.
-    REAL(kind=DP) :: etf_all(nbndsub, nkqtotf/2) 
+    REAL(KIND = DP) :: etf_all(nbndsub, nkqtotf/2) 
     !! Eigen-energies all full k-grid.
-    REAL(kind=DP) :: etf_tmp(nbndsub)
+    REAL(KIND = DP) :: etf_tmp(nbndsub)
     !! Temporary Eigen-energies at a give k-point
-    REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
+    REAL(KIND = DP) :: xkf_tmp (3, nkqtotf)
     !! Temporary k-point coordinate (dummy variable)
-    REAL(kind=DP) :: wkf_tmp(nkqtotf)
+    REAL(KIND = DP) :: wkf_tmp(nkqtotf)
     !! Temporary k-weights (dummy variable)
 
     ! 
-    COMPLEX(kind=DP) :: cfac(nrr_k, dims, dims)
+    COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k}$ exponential 
-    COMPLEX(kind=DP) :: cfacq(nrr_k, dims, dims)
+    COMPLEX(KIND = DP) :: cfacq(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k+q}$ exponential
     ! 
     !selecq(:) = 0
     rdotk(:)     = 0
     rdotk2(:)    = 0
-    cfac(:,:,:)  = czero
-    cfacq(:,:,:) = czero
+    cfac(:, :, :)  = czero
+    cfacq(:, :, :) = czero
     ! 
     IF (exst) THEN
       IF (mpime == ionode_id) THEN
         OPEN(UNIT=iunselecq, FILE='selecq.fmt', status='old', iostat=ios)
         READ (iunselecq,*) totq
-        ALLOCATE (selecq(totq))
+        ALLOCATE(selecq(totq))
         selecq(:) = 0
         READ (iunselecq,*) nqtot
         READ (iunselecq,*) selecq(:)
         CLOSE(iunselecq)
       ENDIF
       CALL mp_bcast(totq  , ionode_id, world_comm )
-      IF (.NOT. ALLOCATED(selecq)) ALLOCATE (selecq(totq))
+      IF (.NOT. ALLOCATED(selecq)) ALLOCATE(selecq(totq))
       CALL mp_bcast(nqtot , ionode_id, world_comm )
       CALL mp_bcast(selecq, ionode_id, world_comm )
       IF (nqtot /= nqtotf) THEN
@@ -160,11 +160,11 @@
       ENDIF
       !  
     ELSE
-      ALLOCATE (selecq(nqf))
+      ALLOCATE(selecq(nqf))
       selecq(:) = 0 
-      etf_loc(:,:)  = zero
-      etf_locq(:,:) = zero
-      etf_all(:,:) = zero
+      etf_loc(:, :)  = zero
+      etf_locq(:, :) = zero
+      etf_all(:, :) = zero
       ! 
       IF (homogeneous) THEN
         ! First store eigen energies on full grid.  
@@ -173,17 +173,17 @@
           xkk = xkf(:, ikk)
           CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
           IF (use_ws) THEN
-            DO iw=1, dims
-              DO iw2=1, dims
+            DO iw = 1, dims
+              DO iw2 = 1, dims
                 DO ir = 1, nrr_k
                   IF (ndegen_k(ir,iw2,iw) > 0) THEN
-                    cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                    cfac(ir,iw2,iw)  = EXP(ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
                   ENDIF
                 ENDDO
               ENDDO
             ENDDO
           ELSE
-            cfac(:,1,1)   = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+            cfac(:,1,1)   = EXP(ci*rdotk(:) ) / ndegen_k(:,1,1)
           ENDIF        
           CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_loc(:, ik), chw, cfac, dims)
         ENDDO
@@ -192,9 +192,9 @@
         ! In case of k-point symmetry
         IF (mp_mesh_k) THEN
           BZtoIBZ(:) = 0
-          s_BZtoIBZ(:,:,:) = 0
+          s_BZtoIBZ(:, :, :) = 0
           ! 
-          IF ( mpime == ionode_id ) THEN
+          IF (mpime == ionode_id) THEN
             ! 
             CALL set_sym_bl( )
             !
@@ -204,7 +204,7 @@
             ! 
             IF (iterative_bte) THEN
               BZtoIBZ_tmp(:) = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
+              DO ikbz = 1, nkf1*nkf2*nkf3
                 BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
               ENDDO
               BZtoIBZ(:) = BZtoIBZ_tmp(:)
@@ -218,7 +218,7 @@
         ! Apply a scissor shift to CBM if required by user
         ! The shift is apply to k and k+q
         IF (ABS(scissor) > eps6) THEN
-          IF ( noncolin ) THEN
+          IF (noncolin) THEN
             icbm = FLOOR(nelec/1.0d0) + 1
           ELSE
             icbm = FLOOR(nelec/2.0d0) + 1
@@ -232,7 +232,7 @@
           !WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
         ENDIF
         !  
-        DO iq=1, nqf
+        DO iq = 1, nqf
           xxq = xqf (:, iq)
           ! 
           found(:) = 0
@@ -246,14 +246,14 @@
             ! 
             ! Use k-point symmetry
             IF (mp_mesh_k) THEN
-              IF ( (( minval ( abs(etf_all(:, BZtoIBZ(ind1)) - ef) ) < fsthick ) .and. &
-                    ( minval ( abs(etf_all(:, BZtoIBZ(ind2)) - ef) ) < fsthick )) ) THEN
+              IF ((( minval ( ABS(etf_all(:, BZtoIBZ(ind1)) - ef) ) < fsthick ) .AND. &
+                    ( minval ( ABS(etf_all(:, BZtoIBZ(ind2)) - ef) ) < fsthick ))) THEN
                 found(my_pool_id+1) = 1
                 EXIT ! exit the loop 
               ENDIF
             ELSE
-              IF ( (( minval ( abs(etf_all(:, ind1) - ef) ) < fsthick ) .and. &
-                    ( minval ( abs(etf_all(:, ind2) - ef) ) < fsthick )) ) THEN
+              IF ((( minval ( ABS(etf_all(:, ind1) - ef) ) < fsthick ) .AND. &
+                    ( minval ( ABS(etf_all(:, ind2) - ef) ) < fsthick ))) THEN
                 found(my_pool_id+1) = 1
                 EXIT ! exit the loop 
               ENDIF
@@ -277,7 +277,7 @@
         ! Apply a scissor shift to CBM if required by user
         ! The shift is apply to k and k+q
         IF (ABS(scissor) > eps6) THEN
-          IF ( noncolin ) THEN
+          IF (noncolin) THEN
             icbm = FLOOR(nelec/1.0d0) + 1
           ELSE
             icbm = FLOOR(nelec/2.0d0) + 1
@@ -293,17 +293,17 @@
           xkk = xkf(:, ikk)
           CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
           IF (use_ws) THEN
-            DO iw=1, dims
-              DO iw2=1, dims
+            DO iw = 1, dims
+              DO iw2 = 1, dims
                 DO ir = 1, nrr_k
                   IF (ndegen_k(ir,iw2,iw) > 0) THEN
-                    cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                    cfac(ir,iw2,iw)  = EXP(ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
                   ENDIF
                 ENDDO
               ENDDO
             ENDDO
           ELSE
-            cfac(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+            cfac(:,1,1)  = EXP(ci*rdotk(:) ) / ndegen_k(:,1,1)
           ENDIF
           CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_tmp(:), chw, cfac, dims)
           ! 
@@ -313,7 +313,7 @@
             ENDDO              
           ENDIF
           ! Check for the k-points in this pool
-          IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+          IF (minval ( ABS(etf_tmp(:) - ef) ) < fsthick) THEN
             nkloc = nkloc + 1
             kmap(nkloc) = ik
           ENDIF
@@ -321,7 +321,7 @@
         ! 
         ! Now compute the q-loop doing WS separately for efficiency
         IF (use_ws) THEN
-          DO iq=1, nqf
+          DO iq = 1, nqf
             xxq = xqf (:, iq)
             etf_tmp(:) = zero
             found(:) = 0
@@ -331,11 +331,11 @@
               xkk = xkf(:, ikk)
               xkq = xkk + xxq
               CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-              DO iw=1, dims
-                DO iw2=1, dims
+              DO iw = 1, dims
+                DO iw2 = 1, dims
                   DO ir = 1, nrr_k
                     IF (ndegen_k(ir,iw2,iw) > 0) THEN
-                      cfacq(ir,iw2,iw) = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                      cfacq(ir,iw2,iw) = EXP(ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
                     ENDIF
                   ENDDO
                 ENDDO
@@ -348,7 +348,7 @@
                 ENDDO
               ENDIF
               ! 
-              IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+              IF (minval ( ABS(etf_tmp(:) - ef) ) < fsthick) THEN
                 found(my_pool_id+1) = 1
                 EXIT ! exit the loop 
               ENDIF
@@ -364,7 +364,7 @@
             ENDIF
           ENDDO ! iq
         ELSE ! use_ws
-          DO iq=1, nqf
+          DO iq = 1, nqf
             xxq = xqf (:, iq)
             etf_tmp(:) = zero
             found(:) = 0
@@ -374,7 +374,7 @@
               xkk = xkf(:, ikk)
               xkq = xkk + xxq
               CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-              cfacq(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+              cfacq(:,1,1)  = EXP(ci*rdotk(:) ) / ndegen_k(:,1,1)
               CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
               ! 
               IF (ABS(scissor) > eps6) THEN
@@ -383,7 +383,7 @@
                 ENDDO
               ENDIF
               ! 
-              IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+              IF (minval ( ABS(etf_tmp(:) - ef) ) < fsthick) THEN
                 found(my_pool_id+1) = 1
                 EXIT ! exit the loop 
               ENDIF
@@ -419,7 +419,7 @@
     SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle ) 
     !-----------------------------------------------------------------------
     !!
-    !!  This subroutine computes the scattering rate (inv_tau)
+    !!  This SUBROUTINE computes the scattering rate (inv_tau)
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
@@ -449,9 +449,9 @@
     !! Q-point index
     INTEGER, INTENT(IN) :: totq
     !! Total number of q-points within the fstichk window
-    REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
-    REAL(KIND=DP), INTENT(IN) :: efcb(nstemp)
+    REAL(KIND = DP), INTENT(IN) :: efcb(nstemp)
     !! Second Fermi level for the temperature itemp. Could be unused (0).
     !
     ! Local variables
@@ -474,86 +474,86 @@
     INTEGER :: nqtotf_new
     !! Number of q-point in the new dataset
     !
-    REAL(kind=DP) :: tmp
+    REAL(KIND = DP) :: tmp
     !! Temporary variable to store real part of Sigma for the degenerate average
-    REAL(kind=DP) :: tmp2
+    REAL(KIND = DP) :: tmp2
     !! Temporary variable for zi_all
-    REAL(kind=DP) :: ekk2
+    REAL(KIND = DP) :: ekk2
     !! Temporary variable to the eigenenergies for the degenerate average  
-    REAL(KIND=DP) :: ekk
+    REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
-    REAL(KIND=DP) :: ekq
+    REAL(KIND = DP) :: ekq
     !! Energy relative to Fermi level: $$\varepsilon_{m\mathbf{k+q}}-\varepsilon_F$$
-    REAL(KIND=DP) :: g2
+    REAL(KIND = DP) :: g2
     !! Electron-phonon matrix elements squared (g2 is Ry^2) 
-    REAL(KIND=DP) :: etemp
+    REAL(KIND = DP) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND=DP) :: w0g1
+    REAL(KIND = DP) :: w0g1
     !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q}] $$ 
-    REAL(KIND=DP) :: w0g2 
+    REAL(KIND = DP) :: w0g2 
     !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q}] $$
-    REAL(KIND=DP) :: inv_wq 
+    REAL(KIND = DP) :: inv_wq 
     !! Inverse phonon frequency. Defined for efficiency reasons.
-    REAL(KIND=DP) :: inv_etemp
+    REAL(KIND = DP) :: inv_etemp
     !! Invese temperature inv_etemp = 1/etemp. Defined for efficiency reasons.
-    REAL(KIND=DP) :: g2_tmp 
+    REAL(KIND = DP) :: g2_tmp 
     !! Used to set component to 0 if the phonon freq. is too low. This is defined
     !! for efficiency reasons as if statement should be avoided in inner-most loops.
-    REAL(KIND=DP) :: inv_degaussw
+    REAL(KIND = DP) :: inv_degaussw
     !! 1.0/degaussw. Defined for efficiency reasons. 
-    REAL(KIND=DP) :: wq
+    REAL(KIND = DP) :: wq
     !! Phonon frequency $$\omega_{q\nu}$$ on the fine grid.  
-    REAL(KIND=DP) :: wgq
+    REAL(KIND = DP) :: wgq
     !! Bose-Einstein occupation function $$n_{q\nu}$$
-    REAL(kind=DP) :: weight
+    REAL(KIND = DP) :: weight
     !! Self-energy factor 
-    REAL(KIND=DP) :: fmkq
+    REAL(KIND = DP) :: fmkq
     !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
-    REAL(KIND=DP) :: trans_prob
+    REAL(KIND = DP) :: trans_prob
     !! Transition probability function
-    REAL(KIND=DP) :: vkk(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
     !! Electronic velocity $$v_{n\mathbf{k}}$$
-    REAL(KIND=DP) :: vkq(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkq(3,ibndmax-ibndmin+1)
     !! Electronic velocity $$v_{m\mathbf{k+q}}$$
-    REAL(KIND=DP) :: vel_factor(ibndmax-ibndmin+1,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vel_factor(ibndmax-ibndmin+1,ibndmax-ibndmin+1)
     !! Velocity factor  $$ 1 - \frac{(v_{nk} \cdot v_{mk+q})}{ |v_{nk}|^2} $$
-    REAL(kind=DP) :: inv_tau_tmp(ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: inv_tau_tmp(ibndmax-ibndmin+1)
     !! Temporary array to store the scattering rates
-    REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
     !! Temporary array to store the zi
-    REAL(KIND=DP), ALLOCATABLE :: inv_tau_all_new (:,:,:)
+    REAL(KIND = DP), ALLOCATABLE :: inv_tau_all_new (:, :, :)
     !! New scattering rates to be merged
     !
-    REAL(KIND=DP), ALLOCATABLE :: etf_all(:,:)
+    REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
-    REAL(KIND=DP), EXTERNAL :: DDOT
+    REAL(KIND = DP), EXTERNAL :: DDOT
     !! Dot product function
-    REAL(KIND=DP), EXTERNAL :: efermig
+    REAL(KIND = DP), EXTERNAL :: efermig
     !! Function that returns the Fermi energy
-    REAL(KIND=DP), EXTERNAL :: wgauss
+    REAL(KIND = DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
-    REAL(KIND=DP), EXTERNAL :: w0gauss
+    REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function  
-    REAL(kind=DP), PARAMETER :: eps = 1.d-4
+    REAL(KIND = DP), PARAMETER :: eps = 1.d-4
     !! Tolerence parameter for the velocity
     ! 
     CALL start_clock ( 'SCAT' )
     ! 
-    IF ( iqq == 1 ) THEN
+    IF (iqq == 1) THEN
       !
       WRITE(stdout,'(/5x,a)') repeat('=',67)
       WRITE(stdout,'(5x,"Scattering rate")')
       WRITE(stdout,'(5x,a/)') repeat('=',67)
       !
-      IF ( fsthick < 1.d3 ) &
+      IF (fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
         WRITE(stdout, '(5x,a,f10.6,a)' ) 'This is computed with respect to the fine Fermi level ',ef * ryd2ev, ' eV'
         WRITE(stdout, '(5x,a,f10.6,a,f10.6,a)' ) 'Only states between ',(ef-fsthick) * ryd2ev, ' eV and ',&
                 (ef+fsthick) * ryd2ev, ' eV will be included'
         WRITE(stdout,'(5x,a/)')
       !
-      !IF ( .NOT. ALLOCATED (inv_tau_all) ) ALLOCATE ( inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2) )
-      !inv_tau_all(:,:,:) = zero
+      !IF (.NOT. ALLOCATED (inv_tau_all) ) ALLOCATE(inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2) )
+      !inv_tau_all(:, :, :) = zero
       !
     ENDIF
     ! 
@@ -577,10 +577,10 @@
           ikk = 2 * ik - 1
           ikq = ikk + 1
           !
-          IF ( scattering_0rta ) THEN 
+          IF (scattering_0rta) THEN 
             !vel_factor = 1 - (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
-            vel_factor(:,:) = zero
-            IF ( vme ) THEN 
+            vel_factor(:, :) = zero
+            IF (vme) THEN 
               DO ibnd = 1, ibndmax-ibndmin+1
                 !
                 ! vkk(3,nbnd) - velocity for k
@@ -591,7 +591,7 @@
                   ! vkq(3,nbnd) - velocity for k + q
                   vkq(:,jbnd) = REAL (vmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
                   !
-                  IF ( abs( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2 ) > eps) &
+                  IF (ABS(vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2 ) > eps) &
                     vel_factor(ibnd,jbnd) = DDOT(3, vkk(:,ibnd), 1, vkq(:,jbnd), 1) / &
                                             DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd), 1)
                 ENDDO
@@ -607,21 +607,21 @@
                   ! vkq(3,nbnd) - velocity for k + q
                   vkq(:,jbnd) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
                   !
-                  IF ( abs( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2 ) > eps) &
+                  IF (ABS(vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2 ) > eps) &
                     vel_factor(ibnd,jbnd) = DDOT(3, vkk(:,ibnd), 1, vkq(:,jbnd), 1) / &
                                             DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd), 1)
                 ENDDO  
               ENDDO
             ENDIF
-            vel_factor(:,:) = one - vel_factor(:,:)
+            vel_factor(:, :) = one - vel_factor(:, :)
           ENDIF
           !
           ! We are not consistent with ef from ephwann_shuffle but it should not 
           ! matter if fstick is large enough.
-          !IF ( ( minval ( abs(etf (:, ikk) - ef0(itemp)) ) < fsthick ) .AND. &
-          !     ( minval ( abs(etf (:, ikq) - ef0(itemp)) ) < fsthick ) ) THEN
-          IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
-               ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
+          !IF (( minval ( ABS(etf (:, ikk) - ef0(itemp)) ) < fsthick ) .AND. &
+          !     ( minval ( ABS(etf (:, ikq) - ef0(itemp)) ) < fsthick )) THEN
+          IF (( minval ( ABS(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+               ( minval ( ABS(etf (:, ikq) - ef) ) < fsthick )) THEN
             !
             DO imode = 1, nmodes
               !
@@ -630,7 +630,7 @@
               !
               ! SP : Avoid if statement in inner loops
               ! the coupling from Gamma acoustic phonons is negligible
-              IF ( wq > eps_acustic ) THEN
+              IF (wq > eps_acustic) THEN
                 g2_tmp = 1.0
                 wgq = wgauss( -wq*inv_etemp, -99)
                 wgq = wgq / ( one - two * wgq )
@@ -653,17 +653,17 @@
                   ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
                   fmkq = wgauss( -ekq*inv_etemp, -99)
                   !
-                  ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                  ! here we take into account the zero-point SQRT(hbar/2M\omega)
                   ! with hbar = 1 and M already contained in the eigenmodes
                   ! g2 is Ry^2, wkf must already account for the spin factor
                   !
                   ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
-                  ! need to treat it like the normal g with abs(g).
-                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-                     .OR. abs(xqf (3, iq))> eps8 )) THEN
+                  ! need to treat it like the normal g with ABS(g).
+                  IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+                     .OR. ABS(xqf (3, iq))> eps8 )) THEN
                     ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                     !     number, in which case its square will be a negative number. 
-                    g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP )
+                    g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND = DP )
                   ELSE
                     g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                   ENDIF
@@ -683,7 +683,7 @@
                   trans_prob = pi * wqf(iq) * g2 * & 
                                ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
                   !
-                  !if ((ik == 6) .and. (ibnd == 4) .and. jbnd==1 .and. imode==6) then
+                  !if ((ik == 6) .AND. (ibnd == 4) .AND. jbnd==1 .AND. imode==6) then
                   !  print*,'wqf(iq) ',wqf(iq)
                   !  print*,'wq ',wq
                   !  print*,'inv_etemp ',inv_etemp
@@ -695,11 +695,11 @@
                   !  print*,'inv_tau',SUM(inv_tau_all(1,5:8,27))
                   !end if
                   !  
-                  IF ( scattering_serta ) THEN 
+                  IF (scattering_serta) THEN 
                     ! energy relaxation time approximation 
                     inv_tau_all(itemp,ibnd,ik+lower_bnd-1) = inv_tau_all(itemp,ibnd,ik+lower_bnd-1) + two * trans_prob
                     
-                  ELSEIF ( scattering_0rta ) THEN 
+                  ELSEIF (scattering_0rta) THEN 
                     ! momentum relaxation time approximation
                     inv_tau_all(itemp,ibnd,ik+lower_bnd-1) = inv_tau_all(itemp,ibnd,ik+lower_bnd-1) &
                                            + two * trans_prob * vel_factor(ibnd,jbnd)
@@ -721,7 +721,7 @@
               !
               ! In this case we are also computing the scattering rate for another Fermi level position
               ! This is used to compute both the electron and hole mobility at the same time.  
-              IF ( ABS(efcb(itemp)) > eps ) THEN
+              IF (ABS(efcb(itemp)) > eps) THEN
                 ! 
                 DO ibnd = 1, ibndmax-ibndmin+1
                   !
@@ -734,17 +734,17 @@
                     ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
                     fmkq = wgauss( -ekq*inv_etemp, -99)
                     !
-                    ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                    ! here we take into account the zero-point SQRT(hbar/2M\omega)
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     !
                     ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
-                    ! need to treat it like the normal g with abs(g).
-                    IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-                       .OR. abs(xqf (3, iq))> eps8 )) THEN
+                    ! need to treat it like the normal g with ABS(g).
+                    IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+                       .OR. ABS(xqf (3, iq))> eps8 )) THEN
                       ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                       !     number, in which case its square will be a negative number. 
-                      g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP)
+                      g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND = DP)
                     ELSE
                       g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                     ENDIF
@@ -761,11 +761,11 @@
                     trans_prob = pi * wqf(iq) * g2 * &
                                  ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
                     !
-                    IF ( scattering_serta ) THEN
+                    IF (scattering_serta) THEN
                       ! energy relaxation time approximation 
                       inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1) = inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1) + two * trans_prob
                       !
-                    ELSEIF ( scattering_0rta ) THEN
+                    ELSEIF (scattering_0rta) THEN
                       ! momentum relaxation time approximation
                       inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1) = inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1) &
                                              + two * trans_prob * vel_factor(ibnd,jbnd)
@@ -796,21 +796,21 @@
       !
       ! Creation of a restart point
       IF (restart) THEN
-        IF (MOD(iqq,restart_freq) == 0 ) THEN
+        IF (MOD(iqq,restart_freq) == 0) THEN
           WRITE(stdout, '(a)' ) '     Creation of a restart point'
           ! 
           ! The mp_sum will aggreage the results on each k-points. 
           CALL mp_sum( inv_tau_all, world_comm )
           CALL mp_sum( zi_allvb,    world_comm )
           !
-          IF ( ABS(efcb(1)) > eps ) THEN
+          IF (ABS(efcb(1)) > eps) THEN
             ! 
             CALL mp_sum( inv_tau_allcb, world_comm ) 
             CALL mp_sum( zi_allcb,      world_comm ) 
             ! 
           ENDIF
           ! 
-          IF ( ABS(efcb(1)) > eps ) THEN
+          IF (ABS(efcb(1)) > eps) THEN
             CALL tau_write(iqq,totq,nkqtotf/2,.TRUE.)
           ELSE
             CALL tau_write(iqq,totq,nkqtotf/2,.FALSE.)
@@ -827,11 +827,11 @@
     !
     ! The k points are distributed among pools: here we collect them
     !
-    IF ( iqq == totq ) THEN
+    IF (iqq == totq) THEN
       !
       ! The total number of k points
       !
-      ALLOCATE ( etf_all ( nbndsub, nkqtotf ))
+      ALLOCATE(etf_all ( nbndsub, nkqtotf ))
       !
       CALL mp_sum( inv_tau_all, world_comm )
       IF (ABS(efcb(1)) > eps) CALL mp_sum( inv_tau_allcb, world_comm )
@@ -857,16 +857,16 @@
         WRITE(stdout, '(a,f8.3,a)' ) '     Temperature ',etemp * ryd2ev / kelvin2eV,' K'
         !
         ! In case we read another q-file, merge the scattering here
-        IF (restart_filq .ne. '') THEN
+        IF (restart_filq /= '') THEN
           ! 
-          ALLOCATE (inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
-          inv_tau_all_new(:,:,:) = zero
+          ALLOCATE(inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
+          inv_tau_all_new(:, :, :) = zero
           ! 
           CALL merge_read( nkqtotf/2, nqtotf_new, inv_tau_all_new ) 
           ! 
-          inv_tau_all(:,:,:) = ( inv_tau_all(:,:,:) * totq &
-                              + inv_tau_all_new(:,:,:) * nqtotf_new ) / (totq+nqtotf_new)
-          DEALLOCATE (inv_tau_all_new)
+          inv_tau_all(:, :, :) = ( inv_tau_all(:, :, :) * totq &
+                              + inv_tau_all_new(:, :, :) * nqtotf_new ) / (totq+nqtotf_new)
+          DEALLOCATE(inv_tau_all_new)
           !
           WRITE(stdout, '(a)' ) '     '
           WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ',totq+nqtotf_new,' q-points'
@@ -891,7 +891,7 @@
             tmp2 = 0.0_DP
             DO jbnd = 1, ibndmax-ibndmin+1
               ekk2 = etf_all (ibndmin-1+jbnd, ikk)
-              IF ( ABS(ekk2-ekk) < eps6 ) THEN
+              IF (ABS(ekk2-ekk) < eps6) THEN
                 n = n + 1
                 tmp =  tmp + inv_tau_all (itemp,jbnd,ik)
                 tmp2 =  tmp2 + zi_allvb(itemp,jbnd,ik)
@@ -922,7 +922,7 @@
               tmp2 = 0.0_DP
               DO jbnd = 1, ibndmax-ibndmin+1
                 ekk2 = etf_all (ibndmin-1+jbnd, ikk)
-                IF ( ABS(ekk2-ekk) < eps6 ) THEN
+                IF (ABS(ekk2-ekk) < eps6) THEN
                   n = n + 1 
                   tmp =  tmp + inv_tau_allcb (itemp,jbnd,ik)
                   tmp2 =  tmp2 + zi_allcb (itemp,jbnd,ik)
@@ -946,13 +946,13 @@
         !
       ENDDO !nstemp 
       !
-      DEALLOCATE (etf_all)
+      DEALLOCATE(etf_all)
       ! 
       ! Creation of a restart point at the end
       IF (restart) THEN
         WRITE(stdout, '(a)' ) '     Creation of the final restart point'
         ! 
-        IF ( ABS(efcb(1)) > eps ) THEN
+        IF (ABS(efcb(1)) > eps) THEN
           CALL tau_write(iqq,totq,nkqtotf/2,.TRUE.)
         ELSE
           CALL tau_write(iqq,totq,nkqtotf/2,.FALSE.)
@@ -980,7 +980,7 @@
     SUBROUTINE transport_coeffs (ef0, efcb)
     !-----------------------------------------------------------------------
     !!
-    !!  This subroutine computes the transport coefficients
+    !!  This SUBROUTINE computes the transport coefficients
     !!  SP - June 2018 - Update for symmetries in velocities when using homogeneous grids. 
     !!       This is currently commented out since it is ONLY needed if we are
     !!       interested in the off-diagonal mobility_\alpha\beta terms. 
@@ -1020,9 +1020,9 @@
     !
     IMPLICIT NONE
     ! 
-    REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
-    REAL(KIND=DP), INTENT(IN) :: efcb(nstemp)
+    REAL(KIND = DP), INTENT(IN) :: efcb(nstemp)
     !! Second Fermi level for the temperature itemp (could be 0)
     !
     ! Local variables
@@ -1058,129 +1058,129 @@
     INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
     !! symmetry 
     ! 
-    REAL(KIND=DP) :: ekk
+    REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
-   ! REAL(KIND=DP) :: ef0(nstemp)
+   ! REAL(KIND = DP) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
-    REAL(KIND=DP) :: dfnk
+    REAL(KIND = DP) :: dfnk
     !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
-    REAL(KIND=DP) :: etemp
+    REAL(KIND = DP) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND=DP) :: tau 
+    REAL(KIND = DP) :: tau 
     !! Relaxation time
-    REAL(KIND=DP) :: conv_factor1
+    REAL(KIND = DP) :: conv_factor1
     !! Conversion factor for the conductivity 
-    REAL(KIND=DP) :: inv_cell 
+    REAL(KIND = DP) :: inv_cell 
     !! Inverse of the volume in [Bohr^{-3}]
-    REAL(KIND=DP) :: carrier_density
+    REAL(KIND = DP) :: carrier_density
     !! Carrier density [nb of carrier per unit cell]
-    REAL(KIND=DP) :: carrier_density_prt
+    REAL(KIND = DP) :: carrier_density_prt
     !! Carrier density [nb of carrier per unit cell] in cm^-3 unit
-    REAL(KIND=DP) :: fnk
+    REAL(KIND = DP) :: fnk
     !! Fermi-Dirac occupation function 
-    REAL(KIND=DP) :: mobility
+    REAL(KIND = DP) :: mobility
     !! Sum of the diagonalized mobilities [cm^2/Vs] 
-    REAL(KIND=DP) :: mobility_xx
+    REAL(KIND = DP) :: mobility_xx
     !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
-    REAL(KIND=DP) :: mobility_yy
+    REAL(KIND = DP) :: mobility_yy
     !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
-    REAL(KIND=DP) :: mobility_zz
+    REAL(KIND = DP) :: mobility_zz
     !! Mobility along the zz axis after diagonalization [cm^2/Vs] 
-    REAL(KIND=DP) :: vkk(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
     !! Electron velocity vector for a band. 
-    REAL(KIND=DP) :: Sigma(9,nstemp)
+    REAL(KIND = DP) :: Sigma(9,nstemp)
     !! Conductivity matrix in vector form
-    REAL(KIND=DP) :: SigmaZ(9,nstemp)
+    REAL(KIND = DP) :: SigmaZ(9,nstemp)
     !! Conductivity matrix in vector form with Znk
-    REAL(KIND=DP) :: Sigma_m(3,3,nstemp)
+    REAL(KIND = DP) :: Sigma_m(3,3,nstemp)
     !! Conductivity matrix
-    REAL(KIND=DP) :: sigma_up(3,3)
+    REAL(KIND = DP) :: sigma_up(3,3)
     !! Conductivity matrix in upper-triangle
-    REAL(KIND=DP) :: sigma_eig(3)
+    REAL(KIND = DP) :: sigma_eig(3)
     !! Eigenvalues from the diagonalized conductivity matrix
-    REAL(KIND=DP) :: sigma_vect(3,3)
+    REAL(KIND = DP) :: sigma_vect(3,3)
     !! Eigenvectors from the diagonalized conductivity matrix
-    REAL(KIND=DP) :: Znk
+    REAL(KIND = DP) :: Znk
     !! Real Znk from \lambda_nk (called zi_allvb or zi_allcb)
-    REAL(KIND=DP) :: tdf_sigma(9)
+    REAL(KIND = DP) :: tdf_sigma(9)
     !! Temporary file
-    REAL(kind=DP), PARAMETER :: eps = 1.d-4
+    REAL(KIND = DP), PARAMETER :: eps = 1.d-4
     !! Tolerence
-    REAL(KIND=DP), EXTERNAL :: wgauss
+    REAL(KIND = DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
-    REAL(KIND=DP), EXTERNAL :: w0gauss
+    REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
-    REAL(KIND=DP), EXTERNAL :: efermig
+    REAL(KIND = DP), EXTERNAL :: efermig
     !! Function that returns the Fermi energy
-    CHARACTER (len=256) :: filsigma
+    CHARACTER(LEN = 256) :: filsigma
     !! File for the conductivity  
-    REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
+    REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
-    COMPLEX(kind=DP), ALLOCATABLE :: dmef_all(:,:,:,:)
+    COMPLEX(KIND = DP), ALLOCATABLE :: dmef_all(:, :, :, :)
     !! dipole matrix elements on the fine mesh among all pools
-    COMPLEX(kind=DP), ALLOCATABLE :: vmef_all(:,:,:,:)
+    COMPLEX(KIND = DP), ALLOCATABLE :: vmef_all(:, :, :, :)
     !! velocity matrix elements on the fine mesh among all pools
-    REAL(DP), ALLOCATABLE :: tdf_sigma_m(:,:,:,:)
+    REAL(KIND = DP), ALLOCATABLE :: tdf_sigma_m(:, :, :, :)
     !! transport distribution function
-    REAL(DP), ALLOCATABLE :: wkf_all(:)
+    REAL(KIND = DP), ALLOCATABLE :: wkf_all(:)
     !! k-point weight on the full grid across all pools
     !  SP - Uncomment to use symmetries on velocities
-    REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
+    REAL(KIND = DP) :: xkf_tmp (3, nkqtotf)
     !! Temporary k-point coordinate (dummy variable)
-    REAL(kind=DP) :: wkf_tmp(nkqtotf)
+    REAL(KIND = DP) :: wkf_tmp(nkqtotf)
     !! Temporary k-weights (dummy variable)
-    REAL(kind=DP) :: v_rot(3)
+    REAL(KIND = DP) :: v_rot(3)
     !! Rotated velocity by the symmetry operation
-    REAL(kind=DP) :: vk_cart(3)
+    REAL(KIND = DP) :: vk_cart(3)
     !! veloctiy in cartesian coordinate
-    REAL(kind=DP) :: sa(3,3), sb(3,3), sr(3,3)
+    REAL(KIND = DP) :: sa(3,3), sb(3,3), sr(3,3)
     CALL start_clock('MOB')
     !
     inv_cell = 1.0d0/omega
     ! for 2d system need to divide by area (vacuum in z-direction)
-    IF ( system_2d ) &
+    IF (system_2d ) &
        inv_cell = inv_cell * at(3,3) * alat
   
     ! 
     ! We can read the scattering rate from files. 
-    IF ( scatread ) THEN
+    IF (scatread) THEN
       conv_factor1 = electron_SI / ( hbar * bohr2ang * Ang2m )
-      Sigma_m(:,:,:) = zero
+      Sigma_m(:, :, :) = zero
       !
       ! Compute the Fermi level 
-      DO itemp=1, nstemp
+      DO itemp = 1, nstemp
         ! 
         etemp = transp_temp(itemp)
         ! 
         ! Lets gather the velocities from all pools
 #ifdef __MPI
         IF (vme) THEN 
-          ALLOCATE (vmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf))
           vmef_all(:, :, :, :) = czero
           CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, vmef, vmef_all)
         ELSE
-          ALLOCATE (dmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(dmef_all(3, nbndsub, nbndsub, nkqtotf))
           dmef_all(:, :, :, :) = czero
           CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, dmef, dmef_all)
         ENDIF
-        ALLOCATE (wkf_all(nkqtotf))
+        ALLOCATE(wkf_all(nkqtotf))
         wkf_all(:) = zero
         CALL poolgather2(1, nkqtotf, 2 * nkf, wkf, wkf_all)
 #else
         IF (vme) THEN
-          ALLOCATE (vmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf))
           vmef_all = vmef
         ELSE
-          ALLOCATE (dmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(dmef_all(3, nbndsub, nbndsub, nkqtotf))
           dmef_all = dmef
         ENDIF
 #endif     
-        ALLOCATE (tdf_sigma_m(3, 3, ibndmax-ibndmin+1, nkqtotf))
-        tdf_sigma_m(:,:,:,:) = zero 
+        ALLOCATE(tdf_sigma_m(3, 3, ibndmax-ibndmin+1, nkqtotf))
+        tdf_sigma_m(:, :, :, :) = zero 
         ! 
         ! In this case, the sum over q has already been done. It should therefore be ok 
         ! to do the mobility in sequential. Each cpu does the same thing below
-        ALLOCATE (etf_all(nbndsub, nkqtotf/2))
+        ALLOCATE(etf_all(nbndsub, nkqtotf/2))
         !
         CALL scattering_read(etemp, ef0(itemp), etf_all, inv_tau_all)
         ! 
@@ -1192,14 +1192,14 @@
             WRITE(stdout,'(5x,a/)') repeat('=',67)
           ENDIF
           !      
-          DO ik=1, nkqtotf/2 
+          DO ik = 1, nkqtotf/2 
             ikk=2 * ik - 1
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-            IF ( minval ( abs(etf_all (:, ik) - ef ) ) < fsthick ) THEN
+            IF (minval ( ABS(etf_all (:, ik) - ef ) ) < fsthick) THEN
               DO ibnd = 1, ibndmax-ibndmin+1
                 ! This selects only valence bands for hole conduction
-                IF (etf_all (ibndmin-1+ibnd, ik) < ef0(itemp)  ) THEN
-                  IF ( vme ) THEN
+                IF (etf_all (ibndmin-1+ibnd, ik) < ef0(itemp) ) THEN
+                  IF (vme) THEN
                     vkk(:,ibnd) = REAL (vmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk)) 
                   ELSE
                     vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
@@ -1230,7 +1230,7 @@
             ikk = 2 * ik - 1
             DO ibnd = 1, ibndmax-ibndmin+1
               ! This selects only valence bands for hole conduction
-              IF (etf_all (ibndmin-1+ibnd, ik) < ef0(itemp)  ) THEN
+              IF (etf_all (ibndmin-1+ibnd, ik) < ef0(itemp) ) THEN
                 !  energy at k (relative to Ef)
                 ekk = etf_all (ibndmin-1+ibnd, ik) - ef0(itemp)
                 fnk = wgauss( -ekk / etemp, -99)
@@ -1265,16 +1265,16 @@
             WRITE(stdout,'(5x,a/)') repeat('=',67)
           ENDIF
           !      
-          tdf_sigma_m(:,:,:,:) = zero
+          tdf_sigma_m(:, :, :, :) = zero
           !
           DO ik = 1, nkqtotf/2
             ikk = 2 * ik - 1
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-            IF ( minval ( abs(etf_all (:, ik) - ef ) ) < fsthick ) THEN
+            IF (minval ( ABS(etf_all (:, ik) - ef ) ) < fsthick) THEN
               DO ibnd = 1, ibndmax-ibndmin+1
                 ! This selects only conduction bands for electron conduction
-                IF (etf_all (ibndmin-1+ibnd, ik) > ef0(itemp)  ) THEN
-                  IF ( vme ) THEN 
+                IF (etf_all (ibndmin-1+ibnd, ik) > ef0(itemp) ) THEN
+                  IF (vme) THEN 
                     vkk(:,ibnd) = REAL (vmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                   ELSE 
                     vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
@@ -1305,7 +1305,7 @@
             ikk = 2 * ik - 1
             DO ibnd = 1, ibndmax-ibndmin+1
               ! This selects only conduction bands for electron conduction
-              IF (etf_all (ibndmin-1+ibnd, ik) > ef0(itemp)  ) THEN
+              IF (etf_all (ibndmin-1+ibnd, ik) > ef0(itemp) ) THEN
                 !  energy at k (relative to Ef)
                 ekk = etf_all (ibndmin-1+ibnd, ik) - ef0(itemp)
                 fnk = wgauss( -ekk / etemp, -99)
@@ -1333,23 +1333,23 @@
         ENDIF ! int_mob .OR. (ncarrier > 1E5)
         ! 
         IF (vme) THEN
-          DEALLOCATE (vmef_all)
+          DEALLOCATE(vmef_all)
         ELSE
-          DEALLOCATE (dmef_all)
+          DEALLOCATE(dmef_all)
         ENDIF
-        DEALLOCATE (tdf_sigma_m)
-        DEALLOCATE (etf_all)
+        DEALLOCATE(tdf_sigma_m)
+        DEALLOCATE(etf_all)
       ENDDO ! itemp
       !
     ELSE ! Case without reading the scattering rates from files.
       !
       !  SP - Uncomment to use symmetries on velocities
       IF (mp_mesh_k) THEN
-        IF ( mpime == ionode_id ) THEN
+        IF (mpime == ionode_id) THEN
           ! 
           CALL set_sym_bl( )
           BZtoIBZ(:) = 0
-          s_BZtoIBZ(:,:,:) = 0
+          s_BZtoIBZ(:, :, :) = 0
           ! What we get from this call is BZtoIBZ
           CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
                      nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
@@ -1358,7 +1358,7 @@
             ! Now we have to remap the points because the IBZ k-points have been
             ! changed to to load balancing. 
             BZtoIBZ_tmp(:) = 0
-            DO ikbz=1, nkf1*nkf2*nkf3
+            DO ikbz = 1, nkf1*nkf2*nkf3
               BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
             ENDDO
             BZtoIBZ(:) = BZtoIBZ_tmp(:) 
@@ -1389,9 +1389,9 @@
           !DBSP
           !write(stdout,*)'etemp ',etemp 
           !write(stdout,*)'inv_tau_all ', SUM(inv_tau_all(itemp,:,:))
-          !write(stdout,*)'inv_tau_all ', SUM(inv_tau_all(:,:,:))
+          !write(stdout,*)'inv_tau_all ', SUM(inv_tau_all(:, :, :))
           !
-          IF ( itemp == 1 ) THEN 
+          IF (itemp == 1) THEN 
             !
             ! tdf_sigma_ij(ibnd,ik) = v_i(ik,ibnd) * v_j(ik,ibnd) * tau(ik,ibnd)
             ! i,j - cartesian components and ij combined (i,j) index
@@ -1400,8 +1400,8 @@
             ! 7 = (3,1) = zx, 8 = (3,2) = zy, 9 = (3,3) = zz
             ! this can be reduced to 6 if we take into account symmetry xy=yx, ...
             tdf_sigma(:)  = zero
-            Sigma(:,:)    = zero
-            SigmaZ(:,:)   = zero
+            Sigma(:, :)    = zero
+            SigmaZ(:, :)   = zero
             !
           ENDIF
           !
@@ -1410,16 +1410,16 @@
             ikk = 2 * ik - 1
             !
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-            IF ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) THEN
+            IF (minval ( ABS(etf (:, ikk) - ef) ) < fsthick) THEN
               !
               DO ibnd = 1, ibndmax-ibndmin+1
                 !
                 ! This selects only valence bands for hole conduction
-                IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp) ) THEN 
+                IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp)) THEN 
                   !
                   ! vkk(3,nbnd) - velocity for k
                   tdf_sigma(:) = zero
-                  IF ( vme ) THEN
+                  IF (vme) THEN
                     ! vmef is in units of Ryd * bohr
                     vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                   ELSE 
@@ -1436,15 +1436,15 @@
                     ! 
                     ! Loop on full BZ 
                     nb = 0
-                    DO ikbz=1, nkf1*nkf2*nkf3
+                    DO ikbz = 1, nkf1*nkf2*nkf3
                       ! If the k-point from the full BZ is related by a symmetry operation 
                       ! to the current k-point, then take it.  
                       IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
                         nb = nb + 1
                         ! Transform the symmetry matrix from Crystal to cartesian
-                        sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
+                        sa (:, :) = dble ( s_BZtoIBZ(:,:,ikbz) )
                         sb = matmul ( bg, sa )
-                        sr (:,:) = matmul ( at, transpose (sb) )
+                        sr (:, :) = matmul ( at, transpose (sb) )
                         CALL dgemv( 'n', 3, 3, 1.d0,&
                           sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
                         ij = 0
@@ -1550,7 +1550,7 @@
             ikk = 2 * ik - 1
             DO ibnd = 1, ibndmax-ibndmin+1
               ! This selects only valence bands for hole conduction
-              IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp) ) THEN
+              IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp)) THEN
                 !  energy at k (relative to Ef)
                 ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)      
                 fnk = wgauss( -ekk / etemp, -99)
@@ -1566,7 +1566,7 @@
           ! 1 = (1,1) = xx, 2 = (1,2) = xy, 3 = (1,3) = xz
           ! 4 = (2,1) = yx, 5 = (2,2) = yy, 6 = (2,3) = yz
           ! 7 = (3,1) = zx, 8 = (3,2) = zy, 9 = (3,3) = zz
-          sigma_up(:,:) = zero
+          sigma_up(:, :) = zero
           sigma_up(1,1) = Sigma(1,itemp)
           sigma_up(1,2) = Sigma(2,itemp)
           sigma_up(1,3) = Sigma(3,itemp)
@@ -1595,7 +1595,7 @@
           WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg' 
           ! 
   !        ! Now do Znk ----------------------------------------------------------
-  !        sigma_up(:,:) = zero
+  !        sigma_up(:, :) = zero
   !        sigma_up(1,1) = SigmaZ(1,itemp)
   !        sigma_up(1,2) = SigmaZ(2,itemp)
   !        sigma_up(1,3) = SigmaZ(3,itemp)
@@ -1631,21 +1631,21 @@
         DO itemp = 1, nstemp
           !
           etemp = transp_temp(itemp)
-          IF ( itemp == 1 ) THEN
+          IF (itemp == 1) THEN
             tdf_sigma(:)  = zero
-            Sigma(:,:)    = zero
-            SigmaZ(:,:)   = zero
+            Sigma(:, :)    = zero
+            SigmaZ(:, :)   = zero
           ENDIF
           DO ik = 1, nkf
             ikk = 2 * ik - 1
-            IF ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) THEN
-              IF ( ABS(efcb(itemp)) < eps ) THEN  
+            IF (minval ( ABS(etf (:, ikk) - ef) ) < fsthick) THEN
+              IF (ABS(efcb(itemp)) < eps) THEN  
                 DO ibnd = 1, ibndmax-ibndmin+1
                   ! This selects only cond bands for electron conduction
-                  IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
+                  IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp)) THEN
                     ! vkk(3,nbnd) - velocity for k
                     tdf_sigma(:) = zero
-                    IF ( vme ) THEN
+                    IF (vme) THEN
                       ! vmef is in units of Ryd * bohr
                       vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                     ELSE
@@ -1661,15 +1661,15 @@
                       ! 
                       ! Loop on full BZ 
                       nb = 0
-                      DO ikbz=1, nkf1*nkf2*nkf3
+                      DO ikbz = 1, nkf1*nkf2*nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 
                         ! to the current k-point, then take it.  
                         IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
                           nb = nb + 1
                           ! Transform the symmetry matrix from Crystal to cartesian
-                          sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
+                          sa (:, :) = dble ( s_BZtoIBZ(:,:,ikbz) )
                           sb = matmul ( bg, sa )
-                          sr (:,:) = matmul ( at, transpose (sb) )
+                          sr (:, :) = matmul ( at, transpose (sb) )
                           CALL dgemv( 'n', 3, 3, 1.d0,&
                             sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
                           ij = 0
@@ -1725,11 +1725,11 @@
               ELSE ! In this case we have 2 Fermi levels
                 DO ibnd = 1, ibndmax-ibndmin+1
                   ! This selects only cond bands for hole conduction
-                  IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
+                  IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp)) THEN
                     ! 
                     !  SP - Uncomment to use symmetries on velocities
                     tdf_sigma(:) = zero
-                    IF ( vme ) THEN
+                    IF (vme) THEN
                       vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd,ibndmin-1+ibnd, ikk))
                     ELSE
                       vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd,ibndmin-1+ibnd, ikk))
@@ -1741,15 +1741,15 @@
                       ! 
                       ! Loop on full BZ 
                       nb = 0
-                      DO ikbz=1, nkf1*nkf2*nkf3
+                      DO ikbz = 1, nkf1*nkf2*nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 
                         ! to the current k-point, then take it.  
                         IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
                           nb = nb + 1
                           ! Transform the symmetry matrix from Crystal to cartesian
-                          sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
+                          sa (:, :) = dble ( s_BZtoIBZ(:,:,ikbz) )
                           sb = matmul ( bg, sa )
-                          sr (:,:) = matmul ( at, transpose (sb) )
+                          sr (:, :) = matmul ( at, transpose (sb) )
                           CALL dgemv( 'n', 3, 3, 1.d0,&
                             sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
                           ij = 0
@@ -1795,7 +1795,7 @@
                     Sigma(:,itemp) = Sigma(:,itemp) +  dfnk * tdf_sigma(:) * tau                      
 
 
-                    !IF ( vme ) THEN
+                    !IF (vme) THEN
                     !  vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                     !ELSE
                     !  vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
@@ -1849,7 +1849,7 @@
           etemp = transp_temp(itemp)
           IF (mpime == meta_ionode_id) THEN
             ! Sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
-            IF ( ABS(efcb(itemp)) < eps ) THEN 
+            IF (ABS(efcb(itemp)) < eps) THEN 
               WRITE(iufilsigma,'(11E16.8)') ef0(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
                                            conv_factor1 * Sigma(:,itemp) * inv_cell
             ELSE
@@ -1863,15 +1863,15 @@
             DO ibnd = 1, ibndmax-ibndmin+1
               ikk = 2 * ik - 1
               ! This selects only conduction bands for electron conduction
-              IF ( ABS(efcb(itemp)) < eps ) THEN 
-                IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
+              IF (ABS(efcb(itemp)) < eps) THEN 
+                IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp)) THEN
                   ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
                   fnk = wgauss( -ekk / etemp, -99)
                   ! The wkf(ikk) already include a factor 2
                   carrier_density = carrier_density + wkf(ikk) * fnk
                 ENDIF
               ELSE
-                IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
+                IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp)) THEN
                   ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
                   fnk = wgauss( -ekk / etemp, -99)
                   ! The wkf(ikk) already include a factor 2
@@ -1885,7 +1885,7 @@
           ! 1 = (1,1) = xx, 2 = (1,2) = xy, 3 = (1,3) = xz
           ! 4 = (2,1) = yx, 5 = (2,2) = yy, 6 = (2,3) = yz
           ! 7 = (3,1) = zx, 8 = (3,2) = zy, 9 = (3,3) = zz
-          sigma_up(:,:) = zero
+          sigma_up(:, :) = zero
           sigma_up(1,1) = Sigma(1,itemp)
           sigma_up(1,2) = Sigma(2,itemp)
           sigma_up(1,3) = Sigma(3,itemp)
@@ -1909,7 +1909,7 @@
        
           ! carrier_density in cm^-1
           carrier_density_prt = carrier_density * inv_cell * ( bohr2ang * ang2cm  )**(-3)
-          IF ( ABS(efcb(itemp)) < eps ) THEN
+          IF (ABS(efcb(itemp)) < eps) THEN
             WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
                                                      ef0(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis'
           ELSE
@@ -1924,7 +1924,7 @@
          !   WRITE(stdout,'(5x,a,1f10.5,a)') 'Warning: Sigma_offdiag = ',(Sigma_offdiag*100)/Sigma_diag, '% of Sigma_diag'
          ! ENDIF
           ! Now do the mobility with Znk factor ----------------------------------------------------------
-          sigma_up(:,:) = zero
+          sigma_up(:, :) = zero
           sigma_up(1,1) = SigmaZ(1,itemp)
           sigma_up(1,2) = SigmaZ(2,itemp)
           sigma_up(1,3) = SigmaZ(3,itemp)
@@ -1941,7 +1941,7 @@
           mobility = (mobility_xx+mobility_yy+mobility_zz)/3
           !
   ! DBSP - Z-factor
-  !        IF ( ABS(efcb(itemp)) < eps ) THEN
+  !        IF (ABS(efcb(itemp)) < eps) THEN
   !          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
   !                                                   ef0(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis [Z]'
   !        ELSE

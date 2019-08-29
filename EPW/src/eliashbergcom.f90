@@ -24,13 +24,13 @@
   !
   ! nsiw(:) : nr of grid points at each temperature on imag-axis, nsiw(nstemp)
   !
-  REAL(DP) :: wsphmax, dwsph, gap0
+  REAL(KIND = DP) :: wsphmax, dwsph, gap0
   !
   ! wsphmax  : maximum phonon frequency for evaluation of the integral over Omega (0,wsphmax)
   ! dwsph : frequency step for Eliashberg spectral function 
   ! gap0  : initial guess for Delta
   !
-  REAL(DP), ALLOCATABLE :: dws(:), ws(:), wsph(:), wsi(:), estemp(:)
+  REAL(KIND = DP), ALLOCATABLE :: dws(:), ws(:), wsph(:), wsi(:), estemp(:)
   !
   ! dws    : grid size at each bin dws(nsw)
   ! ws     : frequency on real-axis, ws(nsw)
@@ -49,14 +49,14 @@
   !
   ! Global variables for real and imag-axis isotropic equations Eliashberg equations
   !
-  REAL(DP), ALLOCATABLE :: a2f_iso(:), gap(:), fdwp(:), bewph(:)
+  REAL(KIND = DP), ALLOCATABLE :: a2f_iso(:), gap(:), fdwp(:), bewph(:)
   !
   ! a2f_iso: isotropic Eliashberg spectral function a2f_iso(nqstep)
   ! gap   : superconducting gap edge gap(nstemp)
   ! fdwp  : Fermi-Dirac distribution at frequency wp, fdwp(nsw)
   ! bewph : Boise-Einstein distribution at frequency wph, bewph(nqstep)
   !
-  REAL(DP), ALLOCATABLE :: Deltai(:), Deltaip(:), Znormi(:), NZnormi(:), Keri(:), Dsumi(:), Zsumi(:)
+  REAL(KIND = DP), ALLOCATABLE :: Deltai(:), Deltaip(:), Znormi(:), NZnormi(:), Keri(:), Dsumi(:), Zsumi(:)
   !
   ! Deltai  : gap function on imag-axis at iw, Deltai(nsiw(nstemp))
   ! Deltaip : gap function on imag-axis at iwp, Deltaip(nsiw(nstemp))
@@ -66,12 +66,12 @@
   ! Dsumi : contribution to Delta eqn from the imaginary-axis in the analytic continuation Dsumi(nsw)
   ! Zsumi : contribution to Znorm eqn from the imaginary-axis in the analytic continuation Zsumi(nsw)
   !
-  REAL(DP), ALLOCATABLE :: Gp(:,:), Gm(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: Gp(:, :), Gm(:, :)
   !
   ! Gp(nsw,nqstep)  : -bose(omegap)-fermi( omega+omegap) (eqn for Delta and Znorm analytic continuation)
   ! Gm(nsw,nqstep)  :  bose(omegap)+fermi(-omega+omegap) (eqn for Delta and Znorm analytic continuation)
   !
-  COMPLEX(DP), ALLOCATABLE :: Delta(:), Deltap(:), Znorm(:), Znormp(:), Kp(:,:), Km(:,:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: Delta(:), Deltap(:), Znorm(:), Znormp(:), Kp(:, :), Km(:, :)
   !
   ! Delta(nsw) : gap function on real-axis at iw
   ! Deltap(nsw): gap function on real-axis at iw
@@ -98,7 +98,7 @@
   ! nkfs : nr. of irreducible k-points within the Fermi shell on the fine mesh
   ! nbndfs  : nr. of electronic bands within the Fermi shell
   !
-  INTEGER, ALLOCATABLE :: ixkff(:), ixkf(:), ixkqf(:,:), ixqfs(:,:), nqfs(:)
+  INTEGER, ALLOCATABLE :: ixkff(:), ixkf(:), ixkqf(:, :), ixqfs(:, :), nqfs(:)
   !
   ! nkf = nr of irreducible k-points on the fine grid, if mp_mesh_k = .true.
   ! nkf = total nr of k-points on the fine grid,       otherwise
@@ -109,13 +109,13 @@
   !         ixqfs(nkfs,nqfs(ik))
   ! nqfs : nr of q-points at each k-point for which k+sign*q is within the Fermi shell nqfs(nkfs)
   !
-  REAL(DP) :: ef0, dosef
+  REAL(KIND = DP) :: ef0, dosef
   !
   ! ef0     : Fermi energy 
   ! dosef   : density of states at the Fermi energy
   !
-  REAL(DP), ALLOCATABLE :: g2(:,:,:,:,:), ekfs(:,:), xkff(:,:), xkfs(:,:), wkfs(:), & 
-                           a2fij(:,:,:,:,:), w0g(:,:), Agap(:,:,:)
+  REAL(KIND = DP), ALLOCATABLE :: g2(:, :, :, :, :), ekfs(:, :), xkff(:, :), xkfs(:, :), wkfs(:), & 
+                           a2fij(:, :, :, :, :), w0g(:, :), Agap(:, :, :)
   !
   ! g2      : e-ph matrix element squared |g_ji^nu(k,q)|^2, g2(nkfs_pool,nqftot,nbndfs,nbndfs,nmodes)
   ! ekfs : eigenvalues at E_i(k), etf(nbndfs,nkfs)
@@ -126,8 +126,8 @@
   ! w0g    : approximation for delta function w0g(nbndfs,nkfs)
   ! Agap   : superconducting gap edge Agap(nkfs,nbndfs,nstemp)
   !
-  REAL(DP), ALLOCATABLE :: ADeltai(:,:,:), ADeltaip(:,:,:), AZnormi(:,:,:), NAZnormi(:,:,:), & 
-                           AKeri(:,:,:,:,:), ADsumi(:,:,:), AZsumi(:,:,:)
+  REAL(KIND = DP), ALLOCATABLE :: ADeltai(:, :, :), ADeltaip(:, :, :), AZnormi(:, :, :), NAZnormi(:, :, :), & 
+                           AKeri(:, :, :, :, :), ADsumi(:, :, :), AZsumi(:, :, :)
   !
   ! ADeltai  : gap function on imag-axis at iw, ADeltai(nbndfs,nkfs,nsiw(nstemp))
   ! ADeltaip : gap function on imag-axis at iwp, ADeltaip(nbndfs,nkfs,nsiw(nstemp))
@@ -137,14 +137,14 @@
   ! ADsumi : contribution to Delta eqn from the imaginary-axis in the analytic continuation ADsumi(nbndfs,nkfs,nsw)
   ! AZsumi : contribution to Znorm eqn from the imaginary-axis in the analytic continuation AZsumi(nbndfs,nkfs,nsw)
   !
-  COMPLEX(DP), ALLOCATABLE :: AZnorm(:,:,:), AZnormp(:,:,:), ADelta(:,:,:), ADeltap(:,:,:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: AZnorm(:, :, :), AZnormp(:, :, :), ADelta(:, :, :), ADeltap(:, :, :)
   !
   ! AZnorm   : renormalization function on real-axis AZnorm(nbndfs,nkfs,nsw)
   ! AZnormp  : renormalization function on real-axis AZnormkq(nbndfs,nkfs,nsw)
   ! ADelta   : gap function on real-axis ADelta(nbndfs,nkfs,nsw)
   ! ADeltap  : gap function on real-axis ADeltap(nbndfs,nkfs,nsw)
   !
-  REAL(DP), ALLOCATABLE :: memlt_pool(:)
+  REAL(KIND = DP), ALLOCATABLE :: memlt_pool(:)
   !
   ! memlt_pool : maximum allocatable memory per pool
   !

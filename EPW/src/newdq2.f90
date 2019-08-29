@@ -39,9 +39,9 @@
   !
   INTEGER, INTENT(in) :: npe
   !! Number of perturbations for this irr representation
-  REAL(kind=DP), INTENT(in) :: xq0(3)
+  REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! The first q-point in the star (cartesian coords.)
-  COMPLEX(kind=DP), INTENT(in) :: dvscf(dfftp%nnr, nspin_mag, npe)
+  COMPLEX(KIND = DP), INTENT(in) :: dvscf(dfftp%nnr, nspin_mag, npe)
   !! Change of the selfconsistent potential
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal
@@ -65,41 +65,41 @@
   INTEGER :: jh
   !! Counter on beta functions
   !
-  REAL(kind=DP), ALLOCATABLE :: qmod(:)
+  REAL(KIND = DP), ALLOCATABLE :: qmod(:)
   !! the modulus of q+G
-  REAL(kind=DP), ALLOCATABLE :: qg(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: qg(:, :)
   !! the values of q+G
-  REAL(kind=DP), ALLOCATABLE :: ylmk0(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: ylmk0(:, :)
   !! the spherical harmonics at q+G
   !
-  COMPLEX(kind=DP), EXTERNAL :: ZDOTC
+  COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
   !! the scalar product function
-  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:), aux2(:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: qgm(:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:, :)
+  COMPLEX(KIND = DP), ALLOCATABLE :: qgm(:)
   !! the augmentation function at q+G
-  COMPLEX(kind=DP), ALLOCATABLE :: veff(:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: veff(:)
   !! effective potential
   !
   IF (.NOT. okvan) RETURN
   !
   CALL start_clock('newdq2')
   !
-  int3(:,:,:,:,:) = czero
+  int3(:, :, :, :, :) = czero
   !
-  ALLOCATE ( aux1(ngm) )
-  ALLOCATE ( aux2(ngm,nspin_mag) )
-  ALLOCATE ( veff(dfftp%nnr) )
-  ALLOCATE ( ylmk0(ngm, lmaxq * lmaxq) )
-  ALLOCATE ( qgm(ngm) )
-  ALLOCATE ( qmod(ngm) )
-  ALLOCATE ( qg(3,ngm) )
+  ALLOCATE(aux1(ngm) )
+  ALLOCATE(aux2(ngm,nspin_mag) )
+  ALLOCATE(veff(dfftp%nnr) )
+  ALLOCATE(ylmk0(ngm, lmaxq * lmaxq) )
+  ALLOCATE(qgm(ngm) )
+  ALLOCATE(qmod(ngm) )
+  ALLOCATE(qg(3,ngm) )
   aux1(:) = czero
-  aux2(:,:) = czero
+  aux2(:, :) = czero
   veff(:) = czero
-  ylmk0(:,:) = zero
+  ylmk0(:, :) = zero
   qgm(:) = czero
   qmod(:) = zero
-  qg(:,:) = zero
+  qg(:, :) = zero
   !
   !    first compute the spherical harmonics
   !
@@ -107,7 +107,7 @@
   CALL ylmr2( lmaxq * lmaxq, ngm, qg, qmod, ylmk0 )
   !
   DO ig = 1, ngm
-    qmod(ig) = sqrt( qmod(ig) )
+    qmod(ig) = SQRT( qmod(ig) )
   ENDDO
   !
   !     and for each perturbation of this irreducible representation
@@ -131,7 +131,7 @@
     ENDDO
     !
     DO nt = 1, ntyp
-      IF (upf(nt)%tvanp ) THEN
+      IF (upf(nt)%tvanp) THEN
         !
         DO ih = 1, nh(nt)
           DO jh = ih, nh(nt)
@@ -183,16 +183,16 @@
   !
 !DMRM
   !write(*,'(a,e20.12)') 'int3 = ', &
-  !SUM((REAL(REAL(int3(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int3(:,:,:,:,:))))**2)
+  !SUM((REAL(REAL(int3(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int3(:, :, :, :, :))))**2)
 !END
   !
-  DEALLOCATE (aux1)
-  DEALLOCATE (aux2)
-  DEALLOCATE (veff)
-  DEALLOCATE (ylmk0)
-  DEALLOCATE (qgm)
-  DEALLOCATE (qmod)
-  DEALLOCATE (qg)
+  DEALLOCATE(aux1)
+  DEALLOCATE(aux2)
+  DEALLOCATE(veff)
+  DEALLOCATE(ylmk0)
+  DEALLOCATE(qgm)
+  DEALLOCATE(qmod)
+  DEALLOCATE(qg)
   !
   CALL stop_clock('newdq2')
   !

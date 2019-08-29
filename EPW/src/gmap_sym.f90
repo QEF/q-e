@@ -37,7 +37,7 @@
   !! inverse symmetry matrix 
   INTEGER, INTENT(out) :: gmapsym(ngm,48)
   !! the map S(G) = gmapsym (G,S) 1...nsym
-  COMPLEX(kind=DP), INTENT(out) :: eigv(ngm, 48)
+  COMPLEX(KIND = DP), INTENT(out) :: eigv(ngm, 48)
   !! e^{ iGv} for 1...nsym
   !
   ! local variables
@@ -61,7 +61,7 @@
   INTEGER :: ism1
   !! Index for the inverse symmetry
   !
-  REAL(DP) :: rdotk
+  REAL(KIND = DP) :: rdotk
   !! $$\mathbf{r}\cdot\mathbf{k}
   !
   !  loop on the symmetries of the crystal
@@ -98,15 +98,15 @@
       !
       ! now the phase factors e^{iGv}
       !
-      IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN
+      IF (ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8) THEN
         !
-        rdotk = dble( mill(1,ig) ) * ft(1,isym) &
-              + dble( mill(2,ig) ) * ft(2,isym) &
-              + dble( mill(3,ig) ) * ft(3,isym)
+        rdotk = DBLE( mill(1,ig) ) * ft(1,isym) &
+              + DBLE( mill(2,ig) ) * ft(2,isym) &
+              + DBLE( mill(3,ig) ) * ft(3,isym)
         !
         ! the actual translation is -v (have a look at ruota_ijk.f90)
         ! 
-        eigv(ig,isym) = exp( - ci*twopi*rdotk ) 
+        eigv(ig,isym) = EXP(- ci*twopi*rdotk ) 
         !
       ELSE
         eigv(ig,isym) = cone

@@ -12,7 +12,7 @@
   !!
   !! Electron-phonon calculation with Wannier functions: load all phonon q's
   !!
-  !! This subroutine is the main driver of the electron-phonon 
+  !! This SUBROUTINE is the main driver of the electron-phonon 
   !! calculation. It first calculates the electron-phonon matrix elements
   !! on the coarse mesh and then passes the data off to [[ephwann_shuffle]]
   !! to perform the interpolation.
@@ -84,7 +84,7 @@
   INTEGER :: nqc
   !! Number of qpoints on the uniform grid
   INTEGER :: maxvalue
-  !! Temporary integer for max value
+  !! Temporary INTEGER for max value
   INTEGER :: nqxq_tmp
   !! Maximum G+q length  
   INTEGER :: ibnd
@@ -138,40 +138,40 @@
   INTEGER :: iunpun
   !! Unit of the file
   ! 
-  REAL(kind=DP), ALLOCATABLE :: xqc_irr(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: xqc_irr(:, :)
   !! The qpoints in the irr wedge
-  REAL(kind=DP), ALLOCATABLE :: xqc(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: xqc(:, :)
   !! The qpoints in the uniform mesh
-  REAL(kind=DP), ALLOCATABLE :: wqlist(:)
+  REAL(KIND = DP), ALLOCATABLE :: wqlist(:)
   !! The corresponding weigths
-  REAL(kind=DP) :: sxq(3, 48)
+  REAL(KIND = DP) :: sxq(3, 48)
   !! List of vectors in the star of q  
-  REAL(kind=DP) :: et_tmp(nbnd, nkstot)
+  REAL(KIND = DP) :: et_tmp(nbnd, nkstot)
   !! Temporary array containing the eigenvalues (KS or GW) when read from files
-  REAL(kind=DP) :: xq0(3) 
+  REAL(KIND = DP) :: xq0(3) 
   !! Current coarse q-point coords.
-  REAL(kind=DP) :: aq(3)
+  REAL(KIND = DP) :: aq(3)
   !! Store the current q-point for symmetry multiplication
-  REAL(kind=DP) :: saq(3)
+  REAL(KIND = DP) :: saq(3)
   !! Rotated q-point
-  REAL(kind=DP) :: raq(3)
+  REAL(KIND = DP) :: raq(3)
   !! Rotate q-point in cartesian coordinate
-  REAL(kind=DP) :: ft1
+  REAL(KIND = DP) :: ft1
   !! Fractional translation x
-  REAL(kind=DP) :: ft2
+  REAL(KIND = DP) :: ft2
   !! Fractional translation y
-  REAL(kind=DP) :: ft3
+  REAL(KIND = DP) :: ft3
   !! Fractional translation z
-  REAL(kind=DP) :: w_centers(3,nbndsub)
+  REAL(KIND = DP) :: w_centers(3,nbndsub)
   !! Wannier centers
-  REAL(kind=DP) :: qnorm_tmp
+  REAL(KIND = DP) :: qnorm_tmp
   !! Absolute value of xqc_irr
   !
-  COMPLEX(kind=DP) :: eigv(ngm, 48)
+  COMPLEX(KIND = DP) :: eigv(ngm, 48)
   !! $e^{ iGv}$ for 1...nsym (v the fractional translation)
-  COMPLEX(kind=DP) :: cz1(nmodes, nmodes)
+  COMPLEX(KIND = DP) :: cz1(nmodes, nmodes)
   !! The eigenvectors for the first q in the star
-  COMPLEX(kind=DP) :: cz2(nmodes, nmodes)
+  COMPLEX(KIND = DP) :: cz2(nmodes, nmodes)
   !! The rotated eigenvectors, for the current q in the star
   !
   CHARACTER(len=256) :: tempfile
@@ -184,8 +184,8 @@
   !! Append the number of the core that works on that file
   CHARACTER(len=80)   :: line
   !! Use to read external eigenvalues
-  CHARACTER(len=6), external :: int_to_char
-  !! Transform an integer into a character
+  CHARACTER(len=6), EXTERNAL :: int_to_char
+  !! Transform an INTEGER into a character
   !
   LOGICAL :: sym(48)
   !! Logical vectors that say which crystal symmetries exist in our system
@@ -206,9 +206,9 @@
   !
   IF (meta_ionode) READ(5,*) nqc_irr
   CALL mp_bcast(nqc_irr, meta_ionode_id, world_comm)
-  ALLOCATE (xqc_irr(3, nqc_irr))
-  ALLOCATE (xqc(3, nq1 * nq2 * nq3))
-  ALLOCATE (wqlist(nq1 * nq2 * nq3))
+  ALLOCATE(xqc_irr(3, nqc_irr))
+  ALLOCATE(xqc(3, nq1 * nq2 * nq3))
+  ALLOCATE(wqlist(nq1 * nq2 * nq3))
   xqc_irr(:, :) = zero
   xqc(:, :)     = zero
   wqlist(:)     = zero
@@ -233,9 +233,9 @@
   ENDDO
   !
   IF (maxvalue > nqxq) THEN
-    IF (ALLOCATED(qrad)) DEALLOCATE (qrad)
-    ALLOCATE (qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp))
-    qrad(:,:,:,:) = zero
+    IF (ALLOCATED(qrad)) DEALLOCATE(qrad)
+    ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp))
+    qrad(:, :, :, :) = zero
     ! RM - need to call init_us_1 to re-calculate qrad 
     CALL init_us_1
   ENDIF
@@ -250,7 +250,7 @@
   !
   ! Read in external electronic eigenvalues. e.g. GW 
   !
-  ALLOCATE (et_ks(nbnd, nks))
+  ALLOCATE(et_ks(nbnd, nks))
   et_ks(:, :) = zero
   IF (eig_read) THEN
     IF (meta_ionode) THEN
@@ -260,7 +260,7 @@
       OPEN(iuqpeig, FILE=tempfile, FORM='formatted', action='read', iostat=ios)
       IF (ios /= 0) CALL errore('elphon_shuffle_wrap','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
-      DO ik=1, nkstot
+      DO ik = 1, nkstot
         ! We do not save the k-point for the moment ==> should be read and
         ! tested against the current one  
         READ(iuqpeig,'(a)') line
@@ -273,12 +273,12 @@
     CALL mp_bcast(et_tmp, meta_ionode_id, world_comm)
     !
     CALL fkbounds(nkstot, ik_start, ik_stop)
-    et_ks(:,:)  = et_loc(:,:)
-    et_loc(:,:) = et_tmp(:,ik_start:ik_stop)
+    et_ks(:, :)  = et_loc(:, :)
+    et_loc(:, :) = et_tmp(:,ik_start:ik_stop)
   ENDIF
   !
   ! Do not recompute dipole matrix elements
-  IF ( epwread .AND. .NOT. epbread ) THEN 
+  IF (epwread .AND. .NOT. epbread) THEN 
     CONTINUE
   ELSE
     ! compute coarse grid dipole matrix elements.  Very fast 
@@ -288,7 +288,7 @@
   !  gather electronic eigenvalues for subsequent shuffle
   !  
   IF (eig_read) THEN
-    et_all(:,:) = zero
+    et_all(:, :) = zero
     CALL poolgather(nbnd, nkstot, nks, et_loc(1:nbnd,1:nks), et_all)
   ENDIF
   !
@@ -313,16 +313,16 @@
     !
     !  allocate dynamical matrix and ep matrix for all q's
     !
-    ALLOCATE (dynq(nmodes, nmodes, nq1 * nq2 * nq3))
-    ALLOCATE (epmatq(nbnd, nbnd, nks, nmodes, nq1 * nq2 * nq3))
-    ALLOCATE (epsi(3, 3))
-    ALLOCATE (zstar(3, 3, nat))
-    ALLOCATE (bmat(nbnd, nbnd, nks, nq1 * nq2 * nq3))
-    ALLOCATE (cu(nbnd, nbndsub, nks))
-    ALLOCATE (cuq(nbnd, nbndsub, nks)) 
-    ALLOCATE (lwin(nbnd, nks))
-    ALLOCATE (lwinq(nbnd, nks))
-    ALLOCATE (exband(nbnd))
+    ALLOCATE(dynq(nmodes, nmodes, nq1 * nq2 * nq3))
+    ALLOCATE(epmatq(nbnd, nbnd, nks, nmodes, nq1 * nq2 * nq3))
+    ALLOCATE(epsi(3, 3))
+    ALLOCATE(zstar(3, 3, nat))
+    ALLOCATE(bmat(nbnd, nbnd, nks, nq1 * nq2 * nq3))
+    ALLOCATE(cu(nbnd, nbndsub, nks))
+    ALLOCATE(cuq(nbnd, nbndsub, nks)) 
+    ALLOCATE(lwin(nbnd, nks))
+    ALLOCATE(lwinq(nbnd, nks))
+    ALLOCATE(exband(nbnd))
     !
     dynq(:, :, :)         = czero
     epmatq(:, :, :, :, :) = czero
@@ -346,12 +346,12 @@
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
     CALL find_sym(nat, tau, ityp, .false., m_loc)
-    IF ( .NOT. allfrac ) CALL remove_sym( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+    IF (.NOT. allfrac ) CALL remove_sym( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
     WRITE(stdout,'(5x,a,i3)') "Symmetries of crystal:         ", nsym
     !   
     ! The following loop is required to propertly set up the symmetry matrix s. 
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
-    DO iq_irr=1, nqc_irr
+    DO iq_irr = 1, nqc_irr
       xq = xqc_irr(:, iq_irr)
       ! search for the small group of q
       CALL set_small_group_of_q(nsymq, invsymq, minus_q)
@@ -361,16 +361,16 @@
       ! if minus_q is true calculate also irotmq and the G associated to Sq=-g+G
       CALL set_giq(xq, s, nsymq, nsym, irotmq, minus_q, gi, gimq)
     ENDDO
-  ENDIF ! epwread .and. .NOT. epbread
+  ENDIF ! epwread .AND. .NOT. epbread
   ! 
   ! CV: if we read the .fmt files we don't need to read the .epb anymore
   !
   IF (.NOT. epbread .AND. .NOT. epwread) THEN
     ! 
-    ALLOCATE (evq(npwx * npol, nbnd))
+    ALLOCATE(evq(npwx * npol, nbnd))
     IF (lifc) THEN
-      ALLOCATE (wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat, nat))
-      wscache(:,:,:,:,:) = zero      
+      ALLOCATE(wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat, nat))
+      wscache(:, :, :, :, :) = zero      
     ENDIF
     ! 
     ! In the loop over irr q-point, we need to read the pattern that
@@ -387,12 +387,12 @@
       IF (u_from_file) THEN
          ierr = 0
          ! ... look for an empty unit (only ionode needs it)
-         IF ( meta_ionode ) CALL iotk_free_unit(iunpun, ierr)
+         IF (meta_ionode ) CALL iotk_free_unit(iunpun, ierr)
          dirname = TRIM(dvscf_dir) // TRIM(prefix) // '.phsave'
          filename = TRIM(dirname) // '/patterns.' // &
                     TRIM(int_to_char(iq_irr)) // '.xml'
          INQUIRE(FILE=TRIM(filename), EXIST=exst )
-         IF ( .NOT. exst) CALL errore('elphon_shuffle_wrap', &
+         IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
          CALL iotk_open_read(iunpun, file = TRIM(filename), &
                                      binary = .FALSE., ierr = ierr)
@@ -459,7 +459,7 @@
       !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
-      IF ( .NOT. ALLOCATED(sumr) ) ALLOCATE ( sumr(2,3,nat,3) )
+      IF (.NOT. ALLOCATED(sumr) ) ALLOCATE(sumr(2,3,nat,3) )
       IF (meta_ionode) THEN
         CALL readmat_shuffle2(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
                               invs, s, irt, rtau)
@@ -503,29 +503,29 @@
           CALL s_axis_to_cart() ! give sr(:,:, isym)
           DO isym = 1, nsym
             WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
-            IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN
+            IF (ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8) THEN
                 ft1 = at(1,1)*ft(1,isym) + at(1,2)*ft(2,isym) + at(1,3)*ft(3,isym)
                 ft2 = at(2,1)*ft(1,isym) + at(2,2)*ft(2,isym) + at(2,3)*ft(3,isym)
                 ft3 = at(3,1)*ft(1,isym) + at(3,2)*ft(2,isym) + at(3,3)*ft(3,isym)
                 WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                       &        " )    f =( ",f10.7," )")') &
-                      isym, (s(1,ipol,isym),ipol=1,3), ft(1,isym)
+                      isym, (s(1,ipol,isym),ipol = 1,3), ft(1,isym)
                 WRITE(stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                            (s(2,ipol,isym),ipol=1,3), ft(2,isym)
+                            (s(2,ipol,isym),ipol = 1,3), ft(2,isym)
                 WRITE(stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                            (s(3,ipol,isym),ipol=1,3), ft(3,isym)
+                            (s(3,ipol,isym),ipol = 1,3), ft(3,isym)
                 WRITE(stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                       &        " )    f =( ",f10.7," )")') &
-                      isym, (sr(1,ipol,isym),ipol=1,3), ft1
+                      isym, (sr(1,ipol,isym),ipol = 1,3), ft1
                 WRITE(stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
-                            (sr(2,ipol,isym),ipol=1,3), ft2
+                            (sr(2,ipol,isym),ipol = 1,3), ft2
                 WRITE(stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
-                            (sr(3,ipol,isym),ipol=1,3), ft3
+                            (sr(3,ipol,isym),ipol = 1,3), ft3
             ELSE
                 WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), " )")') &
                                        isym,  (s (1, ipol, isym) , ipol = 1,3)
-                WRITE(stdout, '(17x," (",3(i6,5x)," )")')  (s(2,ipol,isym), ipol=1,3)
-                WRITE(stdout, '(17x," (",3(i6,5x)," )"/)') (s(3,ipol,isym), ipol=1,3)
+                WRITE(stdout, '(17x," (",3(i6,5x)," )")')  (s(2,ipol,isym), ipol = 1,3)
+                WRITE(stdout, '(17x," (",3(i6,5x)," )"/)') (s(3,ipol,isym), ipol = 1,3)
                 WRITE(stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7," )")') &
                                                    isym, (sr(1,ipol,isym), ipol = 1, 3)
                 WRITE(stdout, '(17x," (",3f11.7," )")')  (sr(2,ipol,isym), ipol = 1, 3)
@@ -548,12 +548,12 @@
         nsq = 0 ! nsq is the degeneracy of the small group for this iq in the star
         !
         DO jsym = 1, nsym
-          IF ( isq(jsym) == iq ) THEN
+          IF (isq(jsym) == iq) THEN
              nsq = nsq + 1
              sym_sgq(nsq) = jsym
           ENDIF
         ENDDO
-        IF ( nsq*nq .ne. nsym ) CALL errore('elphon_shuffle_wrap', 'wrong degeneracy', iq)
+        IF (nsq*nq /= nsym ) CALL errore('elphon_shuffle_wrap', 'wrong degeneracy', iq)
         ! 
         IF (iverbosity == 1) THEN
           !
@@ -692,30 +692,30 @@
       !
     ENDDO ! irr-q loop
     ! 
-    IF (nqc.ne.nq1*nq2*nq3) &
-       CALL errore('elphon_shuffle_wrap','nqc .ne. nq1*nq2*nq3',nqc)
-    wqlist = dble(1) / dble(nqc)
+    IF (nqc/=nq1*nq2*nq3) &
+       CALL errore('elphon_shuffle_wrap','nqc /= nq1*nq2*nq3',nqc)
+    wqlist = DBLE(1) / DBLE(nqc)
     !
-    IF (lifc) DEALLOCATE (wscache)
-    DEALLOCATE (evc)
-    DEALLOCATE (evq)
-    DEALLOCATE (vlocq)
-    DEALLOCATE (dmuxc)
-    DEALLOCATE (eigqts)
-    DEALLOCATE (rtau)
-    DEALLOCATE (u)
-    DEALLOCATE (npert)
+    IF (lifc) DEALLOCATE(wscache)
+    DEALLOCATE(evc)
+    DEALLOCATE(evq)
+    DEALLOCATE(vlocq)
+    DEALLOCATE(dmuxc)
+    DEALLOCATE(eigqts)
+    DEALLOCATE(rtau)
+    DEALLOCATE(u)
+    DEALLOCATE(npert)
     IF (okvan) THEN
-      DEALLOCATE (int1)
-      DEALLOCATE (int2)
-      DEALLOCATE (int4)
-      DEALLOCATE (int5)
+      DEALLOCATE(int1)
+      DEALLOCATE(int2)
+      DEALLOCATE(int4)
+      DEALLOCATE(int5)
       IF (noncolin) THEN 
-        DEALLOCATE (int1_nc)
-        DEALLOCATE (int4_nc)
+        DEALLOCATE(int1_nc)
+        DEALLOCATE(int4_nc)
         IF (lspinorb) THEN
-          DEALLOCATE (int2_so)
-          DEALLOCATE (int5_so)
+          DEALLOCATE(int2_so)
+          DEALLOCATE(int5_so)
         ENDIF
       ENDIF
     ENDIF
@@ -724,16 +724,16 @@
         CALL deallocate_bec_type( alphap(ipol,ik) )
       ENDDO
     ENDDO
-    DEALLOCATE (alphap)
+    DEALLOCATE(alphap)
     DO ik = 1, size(becp1)
       CALL deallocate_bec_type( becp1(ik) )
     ENDDO
-    DEALLOCATE (becp1)
+    DEALLOCATE(becp1)
     CALL deallocate_bec_type ( becp )
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
-  IF (my_image_id == 0 ) THEN
-    IF ( epbread .OR. epbwrite ) THEN
+  IF (my_image_id == 0) THEN
+    IF (epbread .OR. epbwrite) THEN
       !
       ! read/write the e-ph matrix elements and other info in the Bloch representation
       ! (coarse mesh) from/to .epb files (one for each pool)
@@ -744,7 +744,7 @@
       !
       IF (epbread) THEN
          inquire(file = tempfile, exist=exst)
-         IF ( .NOT.  exst) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
+         IF (.NOT.  exst) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
          OPEN(iuepb, file = tempfile, form = 'unformatted')
          WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
          READ(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
@@ -770,7 +770,7 @@
     CALL stop_epw
   ENDIF
   !
-  IF (  .NOT. epbread .AND. epwread ) THEN
+  IF ( .NOT. epbread .AND. epwread) THEN
   !  CV: need dummy nqc, xqc for the ephwann_shuffle call
      nqc = 1
      xqc = zero
@@ -786,27 +786,27 @@
   !
   ! free up some memory
   !
-  DEALLOCATE (umat_all)
-  DEALLOCATE (umat)
-  DEALLOCATE (xqc_irr)
-  DEALLOCATE (wqlist)
+  DEALLOCATE(umat_all)
+  DEALLOCATE(umat)
+  DEALLOCATE(xqc_irr)
+  DEALLOCATE(wqlist)
   ! 
   IF (maxvalue > nqxq) THEN
-    DEALLOCATE (qrad)
+    DEALLOCATE(qrad)
   ENDIF
   !
-  IF ( ASSOCIATED (igkq) )      NULLIFY    (igkq)
-  IF ( ALLOCATED  (dvpsi))      DEALLOCATE (dvpsi)
-  IF ( ALLOCATED  (dpsi) )      DEALLOCATE (dpsi)
-  IF ( ALLOCATED  (sumr) )      DEALLOCATE (sumr)
-  IF ( ALLOCATED  (cu) )        DEALLOCATE (cu)
-  IF ( ALLOCATED  (cuq) )       DEALLOCATE (cuq)
-  IF ( ALLOCATED  (lwin) )      DEALLOCATE (lwin)
-  IF ( ALLOCATED  (lwinq) )     DEALLOCATE (lwinq)
-  IF ( ALLOCATED  (bmat) )      DEALLOCATE (bmat)
-  IF ( ALLOCATED  (igk_k_all) ) DEALLOCATE (igk_k_all)
-  IF ( ALLOCATED  (ngk_all) )   DEALLOCATE (ngk_all)
-  IF ( ALLOCATED  (exband) )    DEALLOCATE (exband)
+  IF (ASSOCIATED (igkq) )      NULLIFY    (igkq)
+  IF (ALLOCATED  (dvpsi))      DEALLOCATE(dvpsi)
+  IF (ALLOCATED  (dpsi) )      DEALLOCATE(dpsi)
+  IF (ALLOCATED  (sumr) )      DEALLOCATE(sumr)
+  IF (ALLOCATED  (cu) )        DEALLOCATE(cu)
+  IF (ALLOCATED  (cuq) )       DEALLOCATE(cuq)
+  IF (ALLOCATED  (lwin) )      DEALLOCATE(lwin)
+  IF (ALLOCATED  (lwinq) )     DEALLOCATE(lwinq)
+  IF (ALLOCATED  (bmat) )      DEALLOCATE(bmat)
+  IF (ALLOCATED  (igk_k_all) ) DEALLOCATE(igk_k_all)
+  IF (ALLOCATED  (ngk_all) )   DEALLOCATE(ngk_all)
+  IF (ALLOCATED  (exband) )    DEALLOCATE(exband)
   ! 
   CALL stop_clock ( 'elphon_wrap' )
 !DBSP
@@ -821,7 +821,7 @@
   ! the electron-phonon wannier interpolation
   !
   IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle( nqc, xqc )
-  IF(etf_mem == 2 ) THEN
+  IF(etf_mem == 2) THEN
 #if defined(__MPI)         
     CALL ephwann_shuffle_mem( nqc, xqc )
 #else
@@ -831,7 +831,7 @@
     CALL ephwann_shuffle( nqc, xqc )
 #endif
   ENDIF        
-  DEALLOCATE (xqc)
+  DEALLOCATE(xqc)
   !
 5 FORMAT (8x,"q(",i5," ) = (",3f12.7," )") 
   !
@@ -848,20 +848,20 @@
   !
   IMPLICIT NONE
   !
-  REAL(kind=DP), INTENT(in) :: x(3)
+  REAL(KIND = DP), INTENT(in) :: x(3)
   !! Input x
   INTEGER, INTENT(in) :: s(3,3)
   !! Symmetry matrix
-  REAL(kind=DP), INTENT(out) :: sx(3)
+  REAL(KIND = DP), INTENT(out) :: sx(3)
   !! Output rotated x 
   !
   ! Local Variable
   INTEGER :: i
   !
   DO i = 1, 3
-     sx(i) = dble( s(i,1) ) * x(1) &
-           + dble( s(i,2) ) * x(2) &
-           + dble( s(i,3) ) * x(3)
+     sx(i) = DBLE( s(i,1) ) * x(1) &
+           + DBLE( s(i,2) ) * x(2) &
+           + DBLE( s(i,3) ) * x(3)
   ENDDO
   !
   RETURN
@@ -877,17 +877,17 @@
   !
   IMPLICIT NONE
   !
-  REAL(kind=DP), INTENT(in) :: x(3)
+  REAL(KIND = DP), INTENT(in) :: x(3)
   !! input: input vector
-  REAL(kind=DP), INTENT(in) :: y(3)
+  REAL(KIND = DP), INTENT(in) :: y(3)
   !! input: second input vector
-  REAL(kind=DP) :: accep
+  REAL(KIND = DP) :: accep
   !! acceptance parameter
   PARAMETER (accep = 1.0d-5)
   !
-  eqvect_strict = abs( x(1)-y(1) ) < accep .AND. &
-                  abs( x(2)-y(2) ) < accep .AND. &
-                  abs( x(3)-y(3) ) < accep
+  eqvect_strict = ABS(x(1)-y(1) ) < accep .AND. &
+                  ABS(x(2)-y(2) ) < accep .AND. &
+                  ABS(x(3)-y(3) ) < accep
   !
   END FUNCTION eqvect_strict
   !---------------------------------------------------------------------------

@@ -28,16 +28,16 @@ SUBROUTINE loadqmesh_para
 
   USE noncollin_module, ONLY : noncolin
   !
-  implicit none
+  IMPLICIT NONE
   !
-  real(kind=DP), ALLOCATABLE :: xqf_(:,:), wqf_(:)
-  integer :: iq, lower_bnd, upper_bnd, i, j, k, ios
+  REAL(KIND = DP), ALLOCATABLE :: xqf_(:, :), wqf_(:)
+  INTEGER :: iq, lower_bnd, upper_bnd, i, j, k, ios
   !
   !
-  integer :: rest
+  INTEGER :: rest
   !
   IF (mpime == ionode_id) THEN
-    IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
+    IF (filqf /= '') THEN ! load from file (crystal coordinates)
        !
        WRITE(stdout, *) '    Using q-mesh file: ', trim(filqf)
        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.true., q-mesh needs to be [-0.5:0.5] (crystal)' 
@@ -45,7 +45,7 @@ SUBROUTINE loadqmesh_para
 100    CALL errore('loadkmesh_para','opening file '//filqf,abs(ios))
        READ(iunqf, *) nqtotf
        !
-       ALLOCATE (xqf_ (3, nqtotf), wqf_(nqtotf))
+       ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf))
        !
        DO iq = 1, nqtotf
           !
@@ -54,46 +54,46 @@ SUBROUTINE loadqmesh_para
        ENDDO
        CLOSE(iunqf)
        !
-    ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
+    ELSEIF ((nqf1/=0) .AND. (nqf2/=0) .AND. (nqf3/=0)) THEN ! generate grid
        IF (mp_mesh_q) THEN
           IF (lscreen) CALL errore ('loadqmesh','If lscreen=.true. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge 
           WRITE (stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl ( )
           !
-          ALLOCATE ( xqf_ (3, nqf1*nqf2*nqf3), wqf_(nqf1*nqf2*nqf3) )
+          ALLOCATE(xqf_ (3, nqf1*nqf2*nqf3), wqf_(nqf1*nqf2*nqf3) )
           ! the result of this call is just nkqtotf
           CALL kpoint_grid ( nrot, time_reversal, .false., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
-          DEALLOCATE (xqf_, wqf_)
-          ALLOCATE ( xqf_ (3, nqtotf), wqf_(nqtotf)) 
+          DEALLOCATE(xqf_, wqf_)
+          ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf)) 
           CALL kpoint_grid ( nrot, time_reversal, .false., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           !  
           ! bring the k point to crystal coordinates       
-          CALL cryst_to_cart (nqtotf, xqf_, at, -1)
+          CALL cryst_to_cart(nqtotf, xqf_, at, -1)
           !
        ELSE
           !
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf =  nqf1 * nqf2 * nqf3
-          ALLOCATE ( xqf_ (3, nqtotf), wqf_(nqtotf) )
+          ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf) )
           wqf_(:) = 0.d0
           DO iq = 1, nqf1 * nqf2 * nqf3
-             wqf_(iq) = 1.d0/(dble(nqtotf))
+             wqf_(iq) = 1.d0/(DBLE(nqtotf))
           ENDDO
           DO i = 1, nqf1
              DO j = 1, nqf2
                 DO k = 1, nqf3
                    iq = (i-1)*nqf2*nqf3 + (j-1)*nqf3 + k
-                   xqf_(1, iq) = dble(i-1)/dble(nqf1)
-                   xqf_(2, iq) = dble(j-1)/dble(nqf2)
-                   xqf_(3, iq) = dble(k-1)/dble(nqf3)
+                   xqf_(1, iq) = DBLE(i-1)/DBLE(nqf1)
+                   xqf_(2, iq) = DBLE(j-1)/DBLE(nqf2)
+                   xqf_(3, iq) = DBLE(k-1)/DBLE(nqf3)
                 ENDDO
              ENDDO
           ENDDO
-          IF (lscreen .or. specfun_pl .or. plselfen) xqf_(:,:) = xqf_(:,:) - 0.5d0
+          IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(:, :) = xqf_(:, :) - 0.5d0
           !
        ENDIF
        !
@@ -102,22 +102,22 @@ SUBROUTINE loadqmesh_para
        WRITE (stdout, *) '    Using random q-mesh: ', rand_nq
        !
        nqtotf = rand_nq
-       ALLOCATE (xqf_ (3, nqtotf), wqf_(nqtotf))
+       ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf))
        !
        CALL init_random_seed()
        !
        DO iq = 1, nqtotf
           !
           !
-          wqf_(iq) = 1.d0/ dble(nqtotf)
+          wqf_(iq) = 1.d0/ DBLE(nqtotf)
           !
-          IF ( system_2d ) THEN
+          IF (system_2d) THEN
              CALL random_number(xqf_(1:2,iq))
-             IF (lscreen .or. specfun_pl .or. plselfen) xqf_(1:2,iq) = xqf_(1:2,iq) - 0.5d0
+             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(1:2,iq) = xqf_(1:2,iq) - 0.5d0
              xqf_(3,iq) = 0.d0
           ELSE
              CALL random_number(xqf_(:,iq))
-             IF (lscreen .or. specfun_pl .or. plselfen) xqf_(:,iq) = xqf_(:,iq) - 0.5d0
+             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf_(:,iq) = xqf_(:,iq) - 0.5d0
           ENDIF
           !
        ENDDO
@@ -134,7 +134,7 @@ SUBROUTINE loadqmesh_para
  !
  nqf = ( nqtotf / npool )
  rest = ( nqtotf - nqf * npool ) / 2
- IF (my_pool_id < rest ) THEN
+ IF (my_pool_id < rest) THEN
     nqf = nqf + 2
     lower_bnd = my_pool_id*nqf + 1
     upper_bnd = lower_bnd + nqf - 1
@@ -143,8 +143,8 @@ SUBROUTINE loadqmesh_para
     upper_bnd = lower_bnd + nqf - 1
  ENDIF
  !
- IF ( .NOT. ALLOCATED(xqf_)) ALLOCATE (xqf_(3,nqtotf))
- IF ( .NOT. ALLOCATED(wqf_)) ALLOCATE (wqf_(  nqtotf))
+ IF (.NOT. ALLOCATED(xqf_)) ALLOCATE(xqf_(3,nqtotf))
+ IF (.NOT. ALLOCATED(wqf_)) ALLOCATE(wqf_(  nqtotf))
  CALL mp_bcast(xqf_, ionode_id, inter_pool_comm)
  CALL mp_bcast(wqf_, ionode_id, inter_pool_comm)
  !
@@ -160,9 +160,9 @@ SUBROUTINE loadqmesh_para
  !
  !  Assign the weights and vectors to the correct bounds
  !
- ALLOCATE (xqf(3,nqf))
- ALLOCATE (wqf(  nqf))
- xqf(:,:) = xqf_ (:, lower_bnd:upper_bnd)
+ ALLOCATE(xqf(3,nqf))
+ ALLOCATE(wqf(  nqf))
+ xqf(:, :) = xqf_ (:, lower_bnd:upper_bnd)
  IF (noncolin) THEN 
     wqf(  :) = wqf_ ( lower_bnd:upper_bnd)/2.d0
  ELSE
@@ -175,8 +175,8 @@ SUBROUTINE loadqmesh_para
  WRITE( stdout, '(5x,"Size of q point mesh for interpolation: ",i10)' ) nqtotf 
  WRITE( stdout, '(5x,"Max number of q points per pool:",7x,i10)' ) nqf 
  !
- IF (ALLOCATED(xqf_)) DEALLOCATE (xqf_)
- IF (ALLOCATED(wqf_)) DEALLOCATE (wqf_)
+ IF (ALLOCATED(xqf_)) DEALLOCATE(xqf_)
+ IF (ALLOCATED(wqf_)) DEALLOCATE(wqf_)
  !
 END SUBROUTINE loadqmesh_para
 !-----------------------------------------------------------------------
@@ -201,12 +201,12 @@ SUBROUTINE loadqmesh_serial
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   USE io_epw,    ONLY : iunqf
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: iq, i, j, k, ios
+  INTEGER :: iq, i, j, k, ios
   !
   IF (mpime == ionode_id) THEN
-    IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
+    IF (filqf /= '') THEN ! load from file (crystal coordinates)
        !
        ! Each pool gets its own copy from the action=read statement
        !
@@ -215,33 +215,33 @@ SUBROUTINE loadqmesh_serial
        OPEN ( unit = iunqf, file = filqf, status = 'old', form = 'formatted', err=100, iostat=ios)
 100    CALL errore('loadqmesh_serial','opening file '//filqf,abs(ios))
        READ(iunqf, *) nqtotf
-       ALLOCATE (xqf(3, nqtotf), wqf(nqtotf))
+       ALLOCATE(xqf(3, nqtotf), wqf(nqtotf))
        DO iq = 1, nqtotf
           READ (iunqf, *) xqf (:, iq), wqf(iq)
        ENDDO
        CLOSE(iunqf)
        !
        ! bring xqf in crystal coordinates
-       ! CALL cryst_to_cart (nqtotf, xqf, at, -1)
+       ! CALL cryst_to_cart(nqtotf, xqf, at, -1)
        !
-    ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
+    ELSEIF ((nqf1/=0) .AND. (nqf2/=0) .AND. (nqf3/=0)) THEN ! generate grid
        IF (mp_mesh_q) THEN
           IF (lscreen) CALL errore ('loadqmesh','If lscreen=.true. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge 
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl ( )
           !                                         
-          ALLOCATE ( xqf (3, nqf1*nqf2*nqf3), wqf(nqf1*nqf2*nqf3) )
+          ALLOCATE(xqf (3, nqf1*nqf2*nqf3), wqf(nqf1*nqf2*nqf3) )
           ! the result of this call is just nkqtotf
           CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf, wqf)
-          DEALLOCATE ( xqf, wqf) 
-          ALLOCATE ( xqf(3, nqtotf), wqf(nqtotf)) 
+          DEALLOCATE(xqf, wqf) 
+          ALLOCATE(xqf(3, nqtotf), wqf(nqtotf)) 
           CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf, wqf)
           !
           ! bring xqf in crystal coordinates       
-          CALL cryst_to_cart (nqtotf, xqf, at, -1)
+          CALL cryst_to_cart(nqtotf, xqf, at, -1)
           !
        ELSE
           ! currently no offset.  
@@ -249,20 +249,20 @@ SUBROUTINE loadqmesh_serial
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf = nqf1 * nqf2 * nqf3
-          ALLOCATE ( xqf (3, nqtotf), wqf(nqtotf) )
-          wqf(:) = 1.d0 / (dble(nqtotf))
+          ALLOCATE(xqf (3, nqtotf), wqf(nqtotf) )
+          wqf(:) = 1.d0 / (DBLE(nqtotf))
           DO i = 1, nqf1
              DO j = 1, nqf2
                 DO k = 1, nqf3
                    iq = (i-1)*nqf2*nqf3 + (j-1)*nqf3 + k
-                   xqf(1, iq) = dble(i-1)/dble(nqf1)
-                   xqf(2, iq) = dble(j-1)/dble(nqf2)
-                   xqf(3, iq) = dble(k-1)/dble(nqf3)
+                   xqf(1, iq) = DBLE(i-1)/DBLE(nqf1)
+                   xqf(2, iq) = DBLE(j-1)/DBLE(nqf2)
+                   xqf(3, iq) = DBLE(k-1)/DBLE(nqf3)
                 ENDDO
              ENDDO
           ENDDO
-          IF (lscreen .or. specfun_pl .or. plselfen) THEN
-            xqf(:,:) = xqf(:,:) - 0.5d0
+          IF (lscreen .OR. specfun_pl .OR. plselfen) THEN
+            xqf(:, :) = xqf(:, :) - 0.5d0
             WRITE (stdout, '(a)') '     Shifting q mesh to [-0.5:0.5['
           ENDIF
           !
@@ -278,27 +278,27 @@ SUBROUTINE loadqmesh_serial
        WRITE (stdout, *) '    Using random q-mesh: ', rand_nq
        !
        nqtotf = rand_nq
-       ALLOCATE (xqf(3, nqtotf), wqf(nqtotf))
+       ALLOCATE(xqf(3, nqtotf), wqf(nqtotf))
        !WRITE(stdout,'(a)') '  '
-       wqf(:) = 1.d0/(dble(nqtotf))
+       wqf(:) = 1.d0/(DBLE(nqtotf))
        !
        CALL init_random_seed()
        !
        DO iq = 1, nqtotf
           !
-          IF ( system_2d ) THEN
+          IF (system_2d) THEN
              CALL random_number(xqf(1:2,iq))
-             IF (lscreen .or. specfun_pl .or. plselfen) xqf(1:2,iq) = xqf(1:2,iq) - 0.5d0
+             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(1:2,iq) = xqf(1:2,iq) - 0.5d0
              xqf(3,iq) = 0.d0
           ELSE
              CALL random_number(xqf(:,iq))
-             IF (lscreen .or. specfun_pl .or. plselfen) xqf(:,iq) = xqf(:,iq) - 0.5d0
+             IF (lscreen .OR. specfun_pl .OR. plselfen) xqf(:,iq) = xqf(:,iq) - 0.5d0
           ENDIF
           !
           !WRITE(stdout,'(4f12.7)') xqf(:,iq), wqf(iq)
           !
        ENDDO
-       IF (lscreen .or. specfun_pl .or. plselfen) WRITE (stdout, '(a)') '    Shifting q mesh to [-0.5:0.5['
+       IF (lscreen .OR. specfun_pl .OR. plselfen) WRITE (stdout, '(a)') '    Shifting q mesh to [-0.5:0.5['
        !WRITE(stdout,'(a)') '  '
        !
     ELSE ! don't know how to get grid
@@ -311,8 +311,8 @@ SUBROUTINE loadqmesh_serial
   !
   CALL mp_bcast (nqf, ionode_id, inter_pool_comm)
   CALL mp_bcast (nqtotf, ionode_id, inter_pool_comm)
-  IF ( .NOT. ALLOCATED(xqf)) ALLOCATE (xqf(3,nqtotf))
-  IF ( .NOT. ALLOCATED(wqf)) ALLOCATE (wqf(  nqtotf))
+  IF (.NOT. ALLOCATED(xqf)) ALLOCATE(xqf(3,nqtotf))
+  IF (.NOT. ALLOCATED(wqf)) ALLOCATE(wqf(  nqtotf))
   CALL mp_bcast(xqf, ionode_id, inter_pool_comm)
   CALL mp_bcast(wqf, ionode_id, inter_pool_comm)
   !

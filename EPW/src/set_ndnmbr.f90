@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------
-  subroutine set_ndnmbr ( pool, proc, procp, npool, ndlab)
+  SUBROUTINE set_ndnmbr ( pool, proc, procp, npool, ndlab)
   !----------------------------------------------------------------
   !
   !  create ndlab label from pool and proc numbers
@@ -17,9 +17,9 @@
   !  has the same number of procs.
   !
   !----------------------------------------------------------------
-  implicit none
+  IMPLICIT NONE
   character(len=3) :: ndlab
-  integer :: pool, proc, procp, node, nprocs, npool 
+  INTEGER :: pool, proc, procp, node, nprocs, npool 
   ! pool = 1,...,npool
   ! proc = 0,...,nproc_pool-1
   !
@@ -28,35 +28,35 @@
   node = (pool-1)*procp + proc + 1
   !
   ndlab = '   '
-  IF ( nprocs < 10 ) THEN
+  IF (nprocs < 10) THEN
     WRITE (ndlab(1:1),'(i1)') node
-  ELSEIF ( nprocs < 100 ) then
+  ELSEIF (nprocs < 100 ) then
 ! SP: Seems like QE change its convention to
-    IF ( node < 10 ) THEN
+    IF (node < 10) THEN
 !       ndlab = '0'
 !       WRITE (ndlab(2:2),'(i1)') node
        WRITE (ndlab(1:1),'(i1)') node
     ELSE
        WRITE (ndlab(1:2),'(i2)') node
     ENDIF
-  ELSEIF ( nprocs < 100 ) THEN
-    IF ( node < 10 ) THEN
+  ELSEIF (nprocs < 100) THEN
+    IF (node < 10) THEN
 !       ndlab = '00'
        WRITE (ndlab(1:1),'(i1)') node
-    ELSEIF ( node < 100 ) THEN
+    ELSEIF (node < 100) THEN
 !       ndlab = '0'
        WRITE (ndlab(1:2),'(i2)') node
     ELSE
        WRITE (ndlab(1:3),'(i3)') node
     ENDIF
   ELSE
-    IF ( node < 10 ) THEN
+    IF (node < 10) THEN
 !       ndlab = '000'
        WRITE (ndlab(1:1),'(i1)') node
-    ELSEIF ( node < 100 ) THEN
+    ELSEIF (node < 100) THEN
 !       ndlab = '00'
        WRITE (ndlab(1:2),'(i2)') node
-    ELSEIF ( node < 1000 ) THEN
+    ELSEIF (node < 1000) THEN
 !       ndlab = '0'
        WRITE (ndlab(1:3),'(i3)') node
     ELSE
@@ -64,5 +64,5 @@
     ENDIF
   ENDIF
   !
-  end subroutine set_ndnmbr
+  END SUBROUTINE set_ndnmbr
 

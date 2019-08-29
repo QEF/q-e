@@ -32,13 +32,13 @@
   INTEGER, INTENT(in) :: ipool
   !! poolfile number to be read (not used in serial case)
   !
-  COMPLEX(DP), INTENT(out) :: evc0(npwx*npol,nbnd)
+  COMPLEX(KIND = DP), INTENT(out) :: evc0(npwx*npol,nbnd)
   !! wavefunction is read from file
   !
   ! Local variables
   !
   INTEGER :: unf_recl, ios
-  REAL(DP) :: dummy 
+  REAL(KIND = DP) :: dummy 
   CHARACTER(len=256) :: tempfile
   CHARACTER(len=3) :: nd_nmbr0
   ! file number for shuffle

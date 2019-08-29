@@ -18,9 +18,9 @@
   USE io_global,   ONLY : stdout
   USE io_epw,      ONLY : iunimem
   ! 
-  implicit none
+  IMPLICIT NONE
   ! 
-  INTEGER, INTENT (inout) :: valueRSS(2)
+  INTEGER, INTENT(inout) :: valueRSS(2)
   !! Contains the value of the memory in kB
   ! 
   CHARACTER(len=200):: filename=' '

@@ -68,9 +68,9 @@
   INTEGER ::  ijs
   !! Counter on combined is and js polarization
   !
-  COMPLEX(kind=DP) :: sum_k
+  COMPLEX(KIND = DP) :: sum_k
   !! auxiliary sum variable
-  COMPLEX(kind=DP) :: sum_nc(npol)
+  COMPLEX(KIND = DP) :: sum_nc(npol)
   !! auxiliary sum variable non-collinear case
   !
   IF (.NOT. okvan) RETURN
@@ -81,7 +81,7 @@
   !
   ijkb0 = 0
   DO nt = 1, ntyp
-    IF ( upf(nt)%tvanp ) THEN
+    IF (upf(nt)%tvanp) THEN
       DO na = 1, nat
         IF (ityp(na) == nt) THEN
           !

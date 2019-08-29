@@ -30,101 +30,101 @@ LOGICAL, INTENT(in) :: time_reversal
 LOGICAL, INTENT(in) :: skip_equivalence
 !! True if equivalent point
 
-REAL(DP), INTENT(in) :: bg(3,3)
+REAL(KIND = DP), INTENT(in) :: bg(3,3)
 !! Reciprocal space vectors
 !
 INTEGER, INTENT(out) :: nks
-real(DP), INTENT(out):: xk(3,npk)
-real(DP), INTENT(out):: wk(npk)
+REAL(KIND = DP), INTENT(out):: xk(3,npk)
+REAL(KIND = DP), INTENT(out):: wk(npk)
 ! LOCAL:
 
 INTEGER :: s_save(3,3,nk1*nk2*nk3)
 
-real(DP), PARAMETER :: eps=1.0d-5
-real(DP) :: xkr(3), fact, xx, yy, zz
-real(DP), ALLOCATABLE:: xkg(:,:), wkk(:)
+REAL(KIND = DP), PARAMETER :: eps=1.0d-5
+REAL(KIND = DP) :: xkr(3), fact, xx, yy, zz
+REAL(KIND = DP), ALLOCATABLE:: xkg(:, :), wkk(:)
 INTEGER :: nkr, i,j,k, ns, n, nk, equiv(nk1*nk2*nk3), ik
 LOGICAL :: in_the_list
 !
 nkr=nk1*nk2*nk3
-ALLOCATE (xkg( 3,nkr),wkk(nkr))
+ALLOCATE(xkg( 3,nkr),wkk(nkr))
 equiv(:) = 0
-s_save(:,:,:) = 0
+s_save(:, :, :) = 0
 !
-DO i=1,nk1
-   DO j=1,nk2
-      DO k=1,nk3
+DO i = 1,nk1
+   DO j = 1,nk2
+      DO k = 1,nk3
          !  this is nothing but consecutive ordering
          n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
          !  xkg are the components of the complete grid in crystal axis
-         xkg(1,n) = dble(i-1)/nk1 
-         xkg(2,n) = dble(j-1)/nk2 
-         xkg(3,n) = dble(k-1)/nk3 
+         xkg(1,n) = DBLE(i-1)/nk1 
+         xkg(2,n) = DBLE(j-1)/nk2 
+         xkg(3,n) = DBLE(k-1)/nk3 
       ENDDO
    ENDDO
 ENDDO
 !  equiv(nk) =nk : k-point nk is not equivalent to any previous k-point
 !  equiv(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
-DO nk=1,nkr
+DO nk = 1,nkr
    equiv(nk)=nk
 ENDDO
 
-IF ( skip_equivalence ) THEN
+IF (skip_equivalence) THEN
   CALL infomsg('kpoint_grid', 'ATTENTION: skip check of k-points equivalence')
   wkk = 1.d0
 ELSE
-  DO nk=1,nkr
+  DO nk = 1,nkr
   !  check if this k-point has already been found equivalent to another
     IF (equiv(nk) == nk) THEN
       wkk(nk)   = 1.0d0
       !  check if there are equivalent k-point to this in the list
       !  (excepted those previously found to be equivalent to another)
       !  check both k and -k
-      DO ns=1,nrot
-         DO i=1,3
+      DO ns = 1,nrot
+         DO i = 1,3
             xkr(i) = s(i,1,ns) * xkg(1,nk) &
                    + s(i,2,ns) * xkg(2,nk) &
                    + s(i,3,ns) * xkg(3,nk)
-            xkr(i) = xkr(i) - nint( xkr(i) )
+            xkr(i) = xkr(i) - NINT( xkr(i) )
          ENDDO
          IF(t_rev(ns)==1) xkr = -xkr
          xx = xkr(1)*nk1 
          yy = xkr(2)*nk2 
          zz = xkr(3)*nk3 
-         in_the_list = abs(xx-nint(xx))<=eps .and. &
-                       abs(yy-nint(yy))<=eps .and. &
-                       abs(zz-nint(zz))<=eps
+         in_the_list = ABS(xx-NINT(xx))<=eps .AND. &
+                       ABS(yy-NINT(yy))<=eps .AND. &
+                       ABS(zz-NINT(zz))<=eps
          IF (in_the_list) THEN
             i = mod ( nint ( xkr(1)*nk1 + 2*nk1), nk1 ) + 1
             j = mod ( nint ( xkr(2)*nk2 + 2*nk2), nk2 ) + 1
             k = mod ( nint ( xkr(3)*nk3 + 2*nk3), nk3 ) + 1
             n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
-            IF (n>nk .and. equiv(n)==n) THEN
+            IF (n>nk .AND. equiv(n)==n) THEN
                equiv(n) = nk
                wkk(nk)=wkk(nk)+1.0d0
                s_save(:,:,n) = s(:,:,ns)
             ELSE
-               IF (equiv(n)/=nk .or. n<nk ) CALL errore('kpoint_grid', &
+               IF (equiv(n)/=nk .OR. n<nk ) CALL errore('kpoint_grid', &
                   'something wrong in the checking algorithm',1)
             ENDIF
          ENDIF
-         IF ( time_reversal ) THEN
+         IF (time_reversal) THEN
             xx =-xkr(1)*nk1 
             yy =-xkr(2)*nk2 
             zz =-xkr(3)*nk3 
-            in_the_list=abs(xx-nint(xx))<=eps.and.abs(yy-nint(yy))<=eps &
-                                               .and. abs(zz-nint(zz))<=eps
+            in_the_list=abs(xx-NINT(xx))<=eps.AND.abs(yy-NINT(yy))<=eps &
+                                               .AND. ABS(zz-NINT(zz))<=eps
             IF (in_the_list) THEN
                i = mod ( nint (-xkr(1)*nk1  + 2*nk1), nk1 ) + 1
                j = mod ( nint (-xkr(2)*nk2  + 2*nk2), nk2 ) + 1
                k = mod ( nint (-xkr(3)*nk3  + 2*nk3), nk3 ) + 1
                n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
-               IF (n>nk .and. equiv(n)==n) THEN
+               IF (n>nk .AND. equiv(n)==n) THEN
                   equiv(n) = nk
                   wkk(nk)=wkk(nk)+1.0d0
                   s_save(:,:,n) = -s(:,:,ns)
                ELSE
-                  IF (equiv(n)/=nk.or.n<nk) CALL errore('kpoint_grid', &
+                  IF (equiv(n)/=nk.OR.n<nk) CALL errore('kpoint_grid', &
                   'something wrong in the checking algorithm',2)
                ENDIF
             ENDIF
@@ -139,19 +139,19 @@ ENDIF
 nks=0
 fact=0.0d0
 ! 
-DO nk=1,nkr
+DO nk = 1,nkr
   BZtoIBZ(nk) = equiv(nk)
 ENDDO
 !
-DO nk=1,nkr
+DO nk = 1,nkr
   IF (equiv(nk) == nk) THEN
     nks=nks+1
     IF (nks>npk) CALL errore('kpoint_grid','too many k-points',1)
     wk(nks) = wkk(nk)
     fact    = fact+wk(nks)
     !  bring back into to the first BZ
-    DO i=1,3
-       xk(i,nks) = xkg(i,nk)-nint(xkg(i,nk))
+    DO i = 1,3
+       xk(i,nks) = xkg(i,nk)-NINT(xkg(i,nk))
     ENDDO
     ! DBSP
     BZtoIBZ(nk) = nks  
@@ -165,9 +165,9 @@ DO nk=1,nkr
 ENDDO
 
 ! Now do the symmetry mapping. 
-DO nk=1,nkr
+DO nk = 1,nkr
   ! If its an irreducible point 
-  IF ( equiv(nk) == nk  ) THEN
+  IF (equiv(nk) == nk ) THEN
     ! Then you have the identity matrix
     s_BZtoIBZ(:,:,nk) = s(:,:,1)
   ELSE
@@ -180,11 +180,11 @@ ENDDO
 !  go to cartesian axis (in units 2pi/a0)
 CALL cryst_to_cart(nks,xk,bg,1)
 !  normalize weights to one
-DO nk=1,nks
+DO nk = 1,nks
    wk(nk) = wk(nk)/fact
 ENDDO
 
-DEALLOCATE (xkg,wkk)
+DEALLOCATE(xkg,wkk)
 
 RETURN
 END SUBROUTINE kpoint_grid_epw

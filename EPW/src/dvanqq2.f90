@@ -79,52 +79,52 @@
   INTEGER :: is
   !! counter on spin
   ! 
-  REAL(kind=DP), ALLOCATABLE :: qmod(:)
+  REAL(KIND = DP), ALLOCATABLE :: qmod(:)
   !! the modulus of q+G
-  REAL(kind=DP), ALLOCATABLE :: qmodg(:)
+  REAL(KIND = DP), ALLOCATABLE :: qmodg(:)
   !! the modulus of G
-  REAL(DP), ALLOCATABLE :: qpg(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: qpg(:, :)
   !! the q+G vectors
-  REAL(kind=DP), ALLOCATABLE :: ylmkq(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: ylmkq(:, :)
   !! the spherical harmonics at q+G
-  REAL(kind=DP), ALLOCATABLE ::  ylmk0(:,:)
+  REAL(KIND = DP), ALLOCATABLE ::  ylmk0(:, :)
   !! the spherical harmonics at G
   !
-  COMPLEX(kind=DP) :: fact
+  COMPLEX(KIND = DP) :: fact
   !! e^{-i q * \tau} * conjg(e^{-i q * \tau}) 
-  COMPLEX(kind=DP) :: fact1
+  COMPLEX(KIND = DP) :: fact1
   !! -i * omega
-  COMPLEX(kind=DP), EXTERNAL :: ZDOTC
+  COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
   !! the scalar product function
-  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:), aux2(:), &
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:), &
        aux3(:), aux5(:), sk(:)
-  COMPLEX(kind=DP), ALLOCATABLE :: veff(:,:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: veff(:, :)
   !! effective potential
-  COMPLEX(kind=DP), ALLOCATABLE, TARGET :: qgm(:)
+  COMPLEX(KIND = DP), ALLOCATABLE, TARGET :: qgm(:)
   !! the augmentation function at G
-  COMPLEX(kind=DP), POINTER :: qgmq(:)
+  COMPLEX(KIND = DP), POINTER :: qgmq(:)
   !! the augmentation function at q+G
   ! 
   IF (.NOT. okvan) RETURN
   !
   CALL start_clock('dvanqq2')
   ! 
-  int1(:,:,:,:,:) = czero
-  int2(:,:,:,:,:) = czero
-  int4(:,:,:,:,:) = czero
-  int5(:,:,:,:,:) = czero
+  int1(:, :, :, :, :) = czero
+  int2(:, :, :, :, :) = czero
+  int4(:, :, :, :, :) = czero
+  int5(:, :, :, :, :) = czero
   !
-  ALLOCATE ( sk(ngm) )    
-  ALLOCATE ( aux1(ngm) )    
-  ALLOCATE ( aux2(ngm) )    
-  ALLOCATE ( aux3(ngm) )    
-  ALLOCATE ( aux5(ngm) )    
-  ALLOCATE ( qmodg(ngm) )    
-  ALLOCATE ( qmod(ngm) )
-  ALLOCATE ( qgmq(ngm) )
-  ALLOCATE ( qgm(ngm))
-  ALLOCATE ( ylmk0(ngm, lmaxq * lmaxq) )    
-  ALLOCATE ( ylmkq(ngm, lmaxq * lmaxq) )    
+  ALLOCATE(sk(ngm) )    
+  ALLOCATE(aux1(ngm) )    
+  ALLOCATE(aux2(ngm) )    
+  ALLOCATE(aux3(ngm) )    
+  ALLOCATE(aux5(ngm) )    
+  ALLOCATE(qmodg(ngm) )    
+  ALLOCATE(qmod(ngm) )
+  ALLOCATE(qgmq(ngm) )
+  ALLOCATE(qgm(ngm))
+  ALLOCATE(ylmk0(ngm, lmaxq * lmaxq) )    
+  ALLOCATE(ylmkq(ngm, lmaxq * lmaxq) )    
   sk(:) = czero
   aux1(:) = czero
   aux2(:) = czero
@@ -134,32 +134,32 @@
   qmod(:) = zero
   qgmq(:) = czero
   qgm(:) = czero
-  ylmk0(:,:) = zero
-  ylmkq(:,:) = zero
+  ylmk0(:, :) = zero
+  ylmkq(:, :) = zero
   !
   ! compute spherical harmonics
   !
   CALL ylmr2( lmaxq * lmaxq, ngm, g, gg, ylmk0 )
   !
   DO ig = 1, ngm
-    qmodg(ig) = sqrt( gg(ig) )
+    qmodg(ig) = SQRT( gg(ig) )
   ENDDO
   ! 
-  ALLOCATE ( qpg(3, ngm) )    
-  qpg(:,:) = zero
+  ALLOCATE(qpg(3, ngm) )    
+  qpg(:, :) = zero
   !
   CALL setqmod( ngm, xq, g, qmod, qpg )
   CALL ylmr2(lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
   !
-  DEALLOCATE (qpg)
+  DEALLOCATE(qpg)
   DO ig = 1, ngm
-    qmod(ig) = sqrt( qmod(ig) )
+    qmod(ig) = SQRT( qmod(ig) )
   ENDDO
   !
   !   we start by computing the FT of the effective potential
   !
-  ALLOCATE (veff(dfftp%nnr,nspin_mag))    
-  veff(:,:) = czero
+  ALLOCATE(veff(dfftp%nnr,nspin_mag))    
+  veff(:, :) = czero
   !
   DO is = 1, nspin_mag
     IF (nspin_mag /= 4 .OR. is == 1) THEN
@@ -179,7 +179,7 @@
   fact1 = CMPLX(0.d0, - tpiba * omega, kind=DP)
   !
   DO ntb = 1, ntyp
-    IF (upf(ntb)%tvanp ) THEN
+    IF (upf(ntb)%tvanp) THEN
       !
       DO ih = 1, nh(ntb)
         DO jh = ih, nh(ntb)
@@ -305,7 +305,7 @@
     int4_nc = czero
     IF (lspinorb) int5_so = czero
     DO ntb = 1, ntyp
-      IF ( upf(ntb)%tvanp ) THEN
+      IF (upf(ntb)%tvanp) THEN
         DO na = 1, nat
           IF (ityp(na) == ntb) THEN
             IF (upf(ntb)%has_so)  THEN
@@ -323,27 +323,27 @@
   !
 !DBRM
 !  write(*,'(a,e20.12)') 'int1 = ', &
-!  SUM((REAL(REAL(int1(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int1(:,:,:,:,:))))**2)
+!  SUM((REAL(REAL(int1(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int1(:, :, :, :, :))))**2)
 !  write(*,'(a,e20.12)') 'int2 = ', &
-!  SUM((REAL(REAL(int2(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int2(:,:,:,:,:))))**2)
+!  SUM((REAL(REAL(int2(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int2(:, :, :, :, :))))**2)
 !  write(*,'(a,e20.12)') 'int4 = ', &
-!  SUM((REAL(REAL(int4(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int4(:,:,:,:,:))))**2)
+!  SUM((REAL(REAL(int4(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int4(:, :, :, :, :))))**2)
 !  write(*,'(a,e20.12)') 'int5 = ', &
-!  SUM((REAL(REAL(int5(:,:,:,:,:))))**2)+SUM((REAL(AIMAG(int5(:,:,:,:,:))))**2)
+!  SUM((REAL(REAL(int5(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int5(:, :, :, :, :))))**2)
 !END
   !
-  DEALLOCATE (sk)
-  DEALLOCATE (aux1)
-  DEALLOCATE (aux2)
-  DEALLOCATE (aux3)
-  DEALLOCATE (aux5)
-  DEALLOCATE (qmodg)
-  DEALLOCATE (qmod)
-  DEALLOCATE (qgmq)
-  DEALLOCATE (qgm)
-  DEALLOCATE (ylmk0)
-  DEALLOCATE (ylmkq)
-  DEALLOCATE (veff)
+  DEALLOCATE(sk)
+  DEALLOCATE(aux1)
+  DEALLOCATE(aux2)
+  DEALLOCATE(aux3)
+  DEALLOCATE(aux5)
+  DEALLOCATE(qmodg)
+  DEALLOCATE(qmod)
+  DEALLOCATE(qgmq)
+  DEALLOCATE(qgm)
+  DEALLOCATE(ylmk0)
+  DEALLOCATE(ylmkq)
+  DEALLOCATE(veff)
   !
   CALL stop_clock ('dvanqq2')
   RETURN

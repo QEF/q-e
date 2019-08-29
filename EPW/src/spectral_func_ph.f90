@@ -40,13 +40,13 @@
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm, ionode_id
   !
-  implicit none
+  IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: iqq
+  INTEGER, INTENT(in) :: iqq
   !! Current q-point index from selecq
-  INTEGER, INTENT (in) :: iq
+  INTEGER, INTENT(in) :: iq
   !! Current q-point index 
-  INTEGER, INTENT (in) :: totq
+  INTEGER, INTENT(in) :: totq
   !! Total q-points in selecq window
   ! 
   INTEGER :: ik
@@ -66,55 +66,55 @@
   INTEGER :: iw 
   !! Counter on frequency for the phonon spectra
   !
-  REAL(kind=DP) :: ekk
+  REAL(KIND = DP) :: ekk
   !! Eigen energy on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekq
+  REAL(KIND = DP) :: ekq
   !! Eigen energy of k+q on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: wq
+  REAL(KIND = DP) :: wq
   !! Phonon frequency on the fine grid
-  REAL(kind=DP) :: ef0
+  REAL(KIND = DP) :: ef0
   !! Fermi energy level
-  REAL(kind=DP) :: wgkk
+  REAL(KIND = DP) :: wgkk
   !! Fermi-Dirac occupation factor $f_{nk}(T)$
-  REAL(kind=DP) :: wgkq
+  REAL(KIND = DP) :: wgkq
   !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
-  REAL(kind=DP) :: weight
+  REAL(KIND = DP) :: weight
   !! Self-energy factor 
-  REAL(kind=DP) :: dosef
+  REAL(KIND = DP) :: dosef
   !! Density of state N(Ef)
-  REAL(kind=DP) :: inv_degaussw
+  REAL(KIND = DP) :: inv_degaussw
   !! Inverse Gaussian for efficiency reasons   
-  REAL(kind=DP) :: inv_eptemp
+  REAL(KIND = DP) :: inv_eptemp
   !! Inverse temperature
-  REAL(kind=DP) :: inv_wq
+  REAL(KIND = DP) :: inv_wq
   !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons  
-  REAL(kind=DP) :: g2
+  REAL(KIND = DP) :: g2
     !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: g2_tmp
+  REAL(KIND = DP) :: g2_tmp
     !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: gamma0(nmodes)
+  REAL(KIND = DP) :: gamma0(nmodes)
   !! Phonon self-energy
-  REAL(kind=DP) :: ww
+  REAL(KIND = DP) :: ww
   !! Current frequency
-  REAL(kind=DP) :: dw
+  REAL(KIND = DP) :: dw
   !! Frequency intervals 
-  REAL(kind=DP), EXTERNAL :: efermig
+  REAL(KIND = DP), EXTERNAL :: efermig
   !! Function to compute the Fermi energy 
-  REAL(kind=DP), external :: dos_ef
+  REAL(KIND = DP), EXTERNAL :: dos_ef
   !! Function to compute the Density of States at the Fermi level
-  REAL(kind=DP), external :: wgauss
+  REAL(KIND = DP), EXTERNAL :: wgauss
   !! Fermi-Dirac distribution function (when -99)
-  REAL(kind=DP), external :: w0gauss
+  REAL(KIND = DP), EXTERNAL :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP) :: gammai_all(nw_specfun, nmodes)
+  REAL(KIND = DP) :: gammai_all(nw_specfun, nmodes)
   !! Imaginary part of the frequency dependent spectral function
-  REAL(kind=DP) :: gammar_all(nw_specfun, nmodes)
+  REAL(KIND = DP) :: gammar_all(nw_specfun, nmodes)
   !!  Real part of the Phonon self-energy (freq. dependent for spectral function)
   !
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
-  gammar_all(:,:) = zero
-  gammai_all(:,:) = zero
+  gammar_all(:, :) = zero
+  gammai_all(:, :) = zero
   !
   ! Thomas-Fermi screening according to Resta PRB 1977
   ! Here specific case of Diamond
@@ -129,7 +129,7 @@
     WRITE(stdout,'(5x,"Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")') 
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick < 1.d3 ) &
+    IF (fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -144,7 +144,7 @@
   !
   ! Fermi level and corresponding DOS
   !
-  IF ( efermi_read ) THEN
+  IF (efermi_read) THEN
     !
     ef0 = fermi_energy
     !
@@ -162,7 +162,7 @@
   !   N(Ef) in the equation for lambda is the DOS per spin
   dosef = dosef / two
   !
-  IF ( iqq == 1 ) THEN 
+  IF (iqq == 1) THEN 
     WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
     WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
   ENDIF
@@ -177,8 +177,8 @@
     ikq = ikk + 1
     ! 
     ! Here we must have ef, not ef0, to be consistent with ephwann_shuffle
-    IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
-         ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
+    IF (( minval ( ABS(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+         ( minval ( ABS(etf (:, ikq) - ef) ) < fsthick )) THEN
       !
       fermicount = fermicount + 1
       !
@@ -191,7 +191,7 @@
         !      innerloops. Therefore we do it here.
         inv_wq =  1.0/(two * wq)
         ! the coupling from Gamma acoustic phonons is negligible
-        IF ( wq > eps_acustic ) THEN
+        IF (wq > eps_acustic) THEN
           g2_tmp = 1.0
         ELSE
           g2_tmp = 0.0
@@ -211,12 +211,12 @@
             wgkq = wgauss( -ekq*inv_eptemp, -99)  
             !w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
             !
-            ! here we take into account the zero-point sqrt(hbar/2M\omega)
+            ! here we take into account the zero-point SQRT(hbar/2M\omega)
             ! with hbar = 1 and M already contained in the eigenmodes
             ! g2 is Ry^2, wkf must already account for the spin factor
             !
-            IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-               .OR. abs(xqf (3, iq))> eps8 )) THEN
+            IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+               .OR. ABS(xqf (3, iq))> eps8 )) THEN
               ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
               g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) !* epsTF
@@ -314,7 +314,7 @@
     DO imode = 1, nmodes
       ! 
       wq = wf (imode, iq)
-      !a_all(iw,iq) = a_all(iw,iq) + abs( gammai_all(imode,iq,iw) ) / pi / &
+      !a_all(iw,iq) = a_all(iw,iq) + ABS(gammai_all(imode,iq,iw) ) / pi / &
       !      ( ( ww - wq - gammar_all (imode,iq,iw) + gamma0 (imode))**two + (gammai_all(imode,iq,iw) )**two )
       ! SP: From Eq. 16 of PRB 9, 4733 (1974)
       !    Also in Eq.2 of PRL 119, 017001 (2017). 
@@ -336,7 +336,7 @@
     !
   ENDDO
   !
-  IF (iqq == totq ) THEN
+  IF (iqq == totq) THEN
     IF (mpime == ionode_id) THEN
       CLOSE(iospectral)
       CLOSE(iospectral_sup)

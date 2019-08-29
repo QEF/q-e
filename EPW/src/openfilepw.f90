@@ -11,7 +11,7 @@
   SUBROUTINE openfilepw
   !-----------------------------------------------------------------------
   !!
-  !!     This subroutine opens all the files necessary for the EPW
+  !!     This SUBROUTINE opens all the files necessary for the EPW
   !!     calculation.
   !!
   !! RM - Nov/Dec 2014
@@ -38,7 +38,7 @@
   iuwfc = 20 
   lrwfc = 2 * nbnd * npwx * npol 
   CALL diropn(iuwfc, 'wfc', lrwfc, exst) 
-  IF ( .NOT.  exst) CALL errore ('openfilepw','file '//TRIM( prefix )//'.wfc'//' not found',1)
+  IF (.NOT.  exst) CALL errore ('openfilepw','file '//TRIM( prefix )//'.wfc'//' not found',1)
   !
   !   file for setting unitary gauges of eigenstates
   !

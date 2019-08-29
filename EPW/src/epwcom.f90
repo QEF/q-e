@@ -81,96 +81,96 @@
   INTEGER :: restart_freq
   !! Create a restart point during the interpolation part every restart_freq q/k-points. 
   !
-  REAL (KIND=DP) :: degaussw
+  REAL(KIND = DP) :: degaussw
   !! smearing width for Fermi surface average in e-ph coupling after wann interp
-  REAL (KIND=DP) :: fsthick
+  REAL(KIND = DP) :: fsthick
   !! thickness of the Fermi shell for averaging the e-ph matrix element
-  REAL (KIND=DP) :: eptemp
+  REAL(KIND = DP) :: eptemp
   ! temperature for the electronic Fermi occupations in the e-p calculation 
-  REAL (KIND=DP) :: wmin
+  REAL(KIND = DP) :: wmin
   !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
-  REAL (KIND=DP) :: wmax
+  REAL(KIND = DP) :: wmax
   !! max frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
-  REAL (KIND=DP) :: dis_win_min
+  REAL(KIND = DP) :: dis_win_min
   !! min energy of the Wannier disentanglement window
-  REAL (KIND=DP) :: dis_win_max
+  REAL(KIND = DP) :: dis_win_max
   !! max energy of the Wannier disentanglement window
-  REAL (KIND=DP) :: dis_froz_min
+  REAL(KIND = DP) :: dis_froz_min
   !! min energy of the frozen Wannier disentanglement window
-  REAL (KIND=DP) :: dis_froz_max
+  REAL(KIND = DP) :: dis_froz_max
   !! max energy of the frozen Wannier disentanglement window
-  REAL (KIND=DP) :: delta_smear
+  REAL(KIND = DP) :: delta_smear
   !! change in energy for each additional smearing in the selfen_phon
   ! 
   ! Superconductivity
-  REAL (KIND=DP) :: eps_acustic
+  REAL(KIND = DP) :: eps_acustic
   !! min. phonon frequency for e-p and a2f calculations
-  REAL (KIND=DP) :: degaussq
+  REAL(KIND = DP) :: degaussq
   !! smearing for sum over q in e-ph coupling  
-  REAL (KIND=DP) :: delta_qsmear
+  REAL(KIND = DP) :: delta_qsmear
   !! change in energy for each additional smearing in the a2f
-  REAL (KIND=DP) :: muc
+  REAL(KIND = DP) :: muc
   !! effective Coulomb potential in Eliashberg equations
-  REAL (KIND=DP) :: wsfc
+  REAL(KIND = DP) :: wsfc
   !! intermediate freqeuncy between (0,wscut)
-  REAL (KIND=DP) :: pwc
+  REAL(KIND = DP) :: pwc
   !! power used to define a non-uniform grid between wsfc and wscut
-  REAL (KIND=DP) :: wscut
+  REAL(KIND = DP) :: wscut
   !! upper limit cutoff frequency in Eliashberg equations (at least 5 times wsphmax)
-  REAL (KIND=DP) :: tempsmin
+  REAL(KIND = DP) :: tempsmin
   !! min. temperature in Eliashberg equations
-  REAL (KIND=DP) :: tempsmax
+  REAL(KIND = DP) :: tempsmax
   !! max. temperature
-  REAL (KIND=DP) :: broyden_beta
+  REAL(KIND = DP) :: broyden_beta
   !! mixing factor for broyden mixing
-  REAL (KIND=DP) :: conv_thr_raxis
+  REAL(KIND = DP) :: conv_thr_raxis
   !! convergence threshold for iterative solution of real-axis Eliashberg equations
-  REAL (KIND=DP) :: conv_thr_iaxis
+  REAL(KIND = DP) :: conv_thr_iaxis
   !! convergence threshold for iterative solution of imag-axis Eliashberg equations
-  REAL (KIND=DP) :: conv_thr_racon
+  REAL(KIND = DP) :: conv_thr_racon
   !! convergence threshold for iterative solution of analytic continuation of
   !! Eliashberg equations from imag- to real-axis
-  REAL (KIND=DP) :: gap_edge
+  REAL(KIND = DP) :: gap_edge
   !! initial guess of the superconducting gap
-  REAL (KIND=DP) :: max_memlt
+  REAL(KIND = DP) :: max_memlt
   !! maximum memory that can be allocated per pool
-  REAL (KIND=DP) :: fermi_energy
+  REAL(KIND = DP) :: fermi_energy
   !! fermi energy is given in the input file 
-  REAL (KIND=DP) :: wmin_specfun
+  REAL(KIND = DP) :: wmin_specfun
   !! min frequency in electron spectral function due to e-p interaction 
-  REAL (KIND=DP) :: wmax_specfun
+  REAL(KIND = DP) :: wmax_specfun
   !! max frequency in electron spectral function due to e-p `interaction
-  REAL (kind=DP), dimension(50) :: temps 
+  REAL (KIND = DP), dimension(50) :: temps 
   !! temperature entering in the Eliashberg equtions (units of Kelvin)
   !
   ! Conductivity
-  REAL (KIND=DP) :: scissor
+  REAL(KIND = DP) :: scissor
   !! Value of the scissor shift in eV.
-  REAL (KIND=DP) :: ncarrier
+  REAL(KIND = DP) :: ncarrier
   !! Amount of carrier concentration in cm^-3 when doping a semiconductors
-  REAL (KIND=DP) :: nc
+  REAL(KIND = DP) :: nc
   !! Number of carrier per unit cell that participate to the conduction in the Ziman resistivity formula 
   ! 
   ! Plasmon
-  REAL (KIND=DP) :: nel
+  REAL(KIND = DP) :: nel
   !! fractional number of electrons in the unit cell
-  REAL (KIND=DP) :: meff
+  REAL(KIND = DP) :: meff
   !! Density-of-state effective mass (in unit of the electron mass)
-  REAL (KIND=DP) :: epsiHEG
+  REAL(KIND = DP) :: epsiHEG
   !! Dielectric constant at zero doping. 
-  REAL (KIND=DP) :: fermi_diff
+  REAL(KIND = DP) :: fermi_diff
   !! difference between Fermi energy and band edge (in eV)
-  REAL (KIND=DP) :: smear_rpa
+  REAL(KIND = DP) :: smear_rpa
   !! smearing for the calculation of the Lindhard function (in eV)
   ! 
   ! Phonon-assisted absorption
-  REAL (KIND=DP) :: omegamin
+  REAL(KIND = DP) :: omegamin
   !! Photon energy minimum (in eV)
-  REAL (KIND=DP) :: omegamax
+  REAL(KIND = DP) :: omegamax
   !! Photon energy maximum (in eV)
-  REAL (KIND=DP) :: omegastep
+  REAL(KIND = DP) :: omegastep
   !! Photon energy step (in eV)
-  REAL (KIND=DP) :: n_r
+  REAL(KIND = DP) :: n_r
   !! Refractive index
   !
   !LOGICAL :: tphases
@@ -301,20 +301,20 @@
   LOGICAL :: shortrange
   !! if .true. computes the long range interaction of el-ph. Can only be .true. if lpolar is also true.  
   !
-  CHARACTER(len=100) :: dvscf_dir ='./'
+  CHARACTER(LEN = 100) :: dvscf_dir ='./'
   !! directory for .dvscf and .dyn files (wannier interpolation)
-  CHARACTER(len=80) :: fileig 
+  CHARACTER(LEN = 80) :: fileig 
   !! output file for the electron-phonon coefficients
-  CHARACTER(len=256), dimension(200) :: proj 
+  CHARACTER(LEN = 256), dimension(200) :: proj 
   !! projections for W90 
-  CHARACTER(len=256) :: bands_skipped
+  CHARACTER(LEN = 256) :: bands_skipped
   !! k-point independent list of bands excluded from the calculation 
   !! of overlap and projection matrices in W90
-  CHARACTER(len=256), dimension(200) :: wdata
+  CHARACTER(LEN = 256), dimension(200) :: wdata
   !! any extra info for W90
-  CHARACTER(LEN=75) :: title 
+  CHARACTER(LEN = 75) :: title 
   !! ...  title of the simulation  
-  CHARACTER(LEN=10)  :: asr_typ
+  CHARACTER(LEN = 10)  :: asr_typ
   !! type of ASR if lifc=.true.
   !
 END MODULE control_epw
@@ -337,15 +337,15 @@ MODULE klist_epw
   !! Spin index of local k-point (used in LSDA calculations only)
   INTEGER, ALLOCATABLE :: isk_dummy(:)  
   !! Spin index on the fine grid - dummy at the moment
-  REAL(kind=DP), ALLOCATABLE :: xk_loc(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: xk_loc(:, :) 
   !! List of local (each cores) kpoints in cartesian coordinates
-  REAL(kind=DP), ALLOCATABLE :: xk_all(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: xk_all(:, :) 
   !! List of all kpoints in cartesian coordinates
-  REAL(kind=DP), ALLOCATABLE :: xk_cryst(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: xk_cryst(:, :) 
   !! List of all kpoints in crystal coordinates
-  REAL(kind=DP), ALLOCATABLE :: et_all(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: et_all(:, :) 
   !! Eigenenergies on the full coarse k-grid 
-  REAL(kind=DP), ALLOCATABLE :: et_loc(:, :) 
+  REAL(KIND = DP), ALLOCATABLE :: et_loc(:, :) 
   !! Eigenenergies on the local (each core) coarse k-grid 
   ! 
 END MODULE klist_epw
@@ -357,17 +357,17 @@ MODULE output_epw
   !!
   SAVE
   !
-  CHARACTER (LEN=80) :: filqf
+  CHARACTER(LEN = 80) :: filqf
   !! input  file for the fine q mesh
-  CHARACTER (LEN=80) :: filkf
+  CHARACTER(LEN = 80) :: filkf
   !! input  file for the fine k mesh
-  CHARACTER (LEN=80) :: filukk
+  CHARACTER(LEN = 80) :: filukk
   !! input  file for the rotation matrix U(k)
-  CHARACTER (LEN=80) :: fildvscf0
+  CHARACTER(LEN = 80) :: fildvscf0
   !! output file for the deltavscf used as a fake perturbation to set phases
-  CHARACTER (LEN=80) :: fila2f
+  CHARACTER(LEN = 80) :: fila2f
   !! input file containing eliashberg spectral function
-  CHARACTER (LEN=80) :: restart_filq
+  CHARACTER(LEN = 80) :: restart_filq
   !! input  file to restart from an exisiting q-file
   !
 END MODULE output_epw

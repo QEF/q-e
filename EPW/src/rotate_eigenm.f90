@@ -8,7 +8,7 @@
   !                                                                            
   ! 
   !--------------------------------------------------------------------------
-  subroutine rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, &
+  SUBROUTINE rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, &
       rtau, xq, cz1, cz2) 
   !--------------------------------------------------------------------------
   !!
@@ -48,9 +48,9 @@
   use control_flags, ONLY : iverbosity
   use cell_base,     ONLY : at, bg
   use ions_base,     ONLY : nat, amass, nat, ityp
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: iq_first, nqc, isym
+  INTEGER :: iq_first, nqc, isym
   !  originating q point of the star
   !  total number of qpoints
   !  fractional translation
@@ -60,15 +60,15 @@
   !  number of q in the star
   !  number of global (crystal) symmetries
   !  index of this q in the star
-  real(kind=DP) :: xq(3), rtau(3,48,nat)
+  REAL(KIND = DP) :: xq(3), rtau(3,48,nat)
   !  the rotated q vector
   !  the relative position of the rotated atom to the original one
-  integer :: s(3,3,48), irt(48,nat), invs(48)
+  INTEGER :: s(3,3,48), irt(48,nat), invs(48)
   !  the symmetry operation for the eigenmodes
   !  the rotated of each atom
   !  the folding G-vector
   !  the index of the inverse operation
-  complex(kind=DP) :: gamma(nmodes, nmodes), cz1( nmodes, nmodes), &
+  complex(KIND = DP) :: gamma(nmodes, nmodes), cz1( nmodes, nmodes), &
        cz2(nmodes, nmodes)
   !  the Gamma matrix for the symmetry operation on the dyn mat
   !  the eigenvectors for the first q in the star
@@ -76,19 +76,19 @@
   !
   ! variables for lapack zhpevx
   !
-  complex(kind=DP) :: cwork( 2*nmodes ), dynp( nmodes*(nmodes+1)/2 )
-  integer :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
-  real(kind=DP) :: w1( nmodes ), w2(nmodes), rwork( 7*nmodes )
+  complex(KIND = DP) :: cwork( 2*nmodes ), dynp( nmodes*(nmodes+1)/2 )
+  INTEGER :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
+  REAL(KIND = DP) :: w1( nmodes ), w2(nmodes), rwork( 7*nmodes )
   !  dynp: complex dynmat packed (upper triangular part for zhpevx)
   !  after hermitian-ization
   !
-  real(kind=DP), parameter :: eps = 1.d-10
+  REAL(KIND = DP), parameter :: eps = 1.d-10
   !
   ! work variables 
   !
-  integer :: imode, jmode, nu, mu, sna, ism1, na, nb
-  real(kind=DP) :: wtmp( nmodes ), arg, massfac, scart(3,3)
-  complex(kind=DP) :: cfac, dyn1(nmodes, nmodes), dyn2( nmodes, nmodes)
+  INTEGER :: imode, jmode, nu, mu, sna, ism1, na, nb
+  REAL(KIND = DP) :: wtmp( nmodes ), arg, massfac, scart(3,3)
+  complex(KIND = DP) :: cfac, dyn1(nmodes, nmodes), dyn2( nmodes, nmodes)
   !
   ! ------------------------------------------------------------------
   ! diagonalize dynq(iq_first) --> w1, cz1
@@ -120,8 +120,8 @@
     !  check the frequencies
     !
     DO nu = 1, nmodes
-      IF ( w1 (nu) > 0.d0 ) then
-         wtmp(nu) =  sqrt(abs( w1 (nu) ))
+      IF (w1 (nu) > 0.d0 ) then
+         wtmp(nu) =  SQRT(abs( w1 (nu) ))
       ELSE
          wtmp(nu) = -sqrt(abs( w1 (nu) ))
       ENDIF
@@ -171,7 +171,7 @@
   !
   !  possibly run some consistency checks
   !
-  IF ( iverbosity == 1 ) then
+  IF (iverbosity == 1 ) then
     !
     !  D_{Sq} = gamma * D_q * gamma^\dagger (Maradudin & Vosko, RMP, eq. 3.5) 
     ! 
@@ -194,8 +194,8 @@
     !  check the frequencies
     !
     DO nu = 1, nmodes
-      IF ( w2 (nu) > 0.d0 ) then
-         wtmp(nu) =  sqrt(abs( w2 (nu) ))
+      IF (w2 (nu) > 0.d0 ) then
+         wtmp(nu) =  SQRT(abs( w2 (nu) ))
       ELSE
          wtmp(nu) = -sqrt(abs( w2 (nu) ))
       ENDIF
@@ -234,9 +234,9 @@
      nmodes, cz2, nmodes, czero, dyn2, nmodes)
   !
   DO nu = 1, nmodes
-    w2(nu) = abs(dyn2(nu,nu))
+    w2(nu) = ABS(dyn2(nu,nu))
     DO mu = 1, nmodes
-    IF ( mu.ne.nu .and. abs(dyn2(mu,nu)) > eps ) call errore &
+    IF (mu/=nu .AND. ABS(dyn2(mu,nu)) > eps ) call errore &
       ('rotate_eigenm','problem with rotated eigenmodes',0)
     ENDDO
   ENDDO
@@ -246,8 +246,8 @@
     !  a simple check on the frequencies
     !
     DO nu = 1, nmodes
-      IF ( w2 (nu) > 0.d0 ) then
-         wtmp(nu) =  sqrt(abs( w2 (nu) ))
+      IF (w2 (nu) > 0.d0 ) then
+         wtmp(nu) =  SQRT(abs( w2 (nu) ))
       ELSE
          wtmp(nu) = -sqrt(abs( w2 (nu) ))
       ENDIF
@@ -257,4 +257,4 @@
     !
   ENDIF
   !
-  end subroutine rotate_eigenm
+  END SUBROUTINE rotate_eigenm

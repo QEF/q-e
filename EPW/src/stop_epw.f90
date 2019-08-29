@@ -22,7 +22,7 @@
   USE io_global,     ONLY : stdout
   USE printing,      ONLY : print_clock_epw
   ! 
-  implicit none
+  IMPLICIT NONE
   !
   CALL print_clock_epw
   write(stdout,'(a)') "                                                                                          "

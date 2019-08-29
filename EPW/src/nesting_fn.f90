@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  subroutine nesting_fn_q(iqq, iq)
+  SUBROUTINE nesting_fn_q(iqq, iq)
   !-----------------------------------------------------------------------
   !!
   !!  compute the imaginary part of the phonon self energy due to electron-
@@ -33,11 +33,11 @@
   USE mp,        ONLY : mp_barrier,mp_sum
   USE mp_global, ONLY : inter_pool_comm
   !
-  implicit none
+  IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: iqq
+  INTEGER, INTENT(in) :: iqq
   !! Current q-point index from selecq
-  INTEGER, INTENT (in) :: iq
+  INTEGER, INTENT(in) :: iq
   !! Current q-point index
   ! 
   INTEGER :: ik
@@ -56,22 +56,22 @@
   !! Upper bounds index after k or q paral
   !! Smearing for the Gaussian function 
   ! 
-  REAL(kind=DP) :: ekk
+  REAL(KIND = DP) :: ekk
   !! Eigen energy on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekq
+  REAL(KIND = DP) :: ekq
   !! Eigen energy of k+q on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ef0
+  REAL(KIND = DP) :: ef0
   !! Fermi energy level
-  REAL(kind=DP) :: weight
+  REAL(KIND = DP) :: weight
   !! Imaginary part of the phonhon self-energy factor 
-  REAL(kind=DP) :: dosef
+  REAL(KIND = DP) :: dosef
   !! Density of state N(Ef)
-  REAL(kind=DP) :: w0g1
+  REAL(KIND = DP) :: w0g1
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: w0g2
+  REAL(KIND = DP) :: w0g2
   !! Dirac delta for the imaginary part of $\Sigma$
-  real(kind=DP) :: w0gauss, dos_ef, gamma, degaussw0
-  real(kind=DP), external :: efermig
+  REAL(KIND = DP) :: w0gauss, dos_ef, gamma, degaussw0
+  REAL(KIND = DP), EXTERNAL :: efermig
   !
   !
   IF (iqq == 1) then 
@@ -79,7 +79,7 @@
     WRITE(stdout,'(5x,"Nesting Function in the double delta approx")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick < 1.d3 ) &
+    IF (fsthick < 1.d3 ) &
       WRITE(stdout, '(/5x,a,f10.6,a)' ) &
       'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -98,7 +98,7 @@
     !
     !   Note that the weights of k+q points must be set to zero here
     !   no spin-polarized calculation here
-    IF ( efermi_read ) THEN
+    IF (efermi_read) THEN
       ef0 = fermi_energy 
     ELSE
       ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_dummy)
@@ -124,8 +124,8 @@
       ikq = ikk + 1
       ! 
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
-          ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) then
+      IF (( minval ( ABS(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+          ( minval ( ABS(etf (:, ikq) - ef) ) < fsthick ) ) then
         !
         fermicount = fermicount + 1
         !

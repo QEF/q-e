@@ -24,19 +24,19 @@
   USE mp,            ONLY : mp_max, mp_min
   USE mp_global,     ONLY : inter_pool_comm
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: ik
+  INTEGER :: ik
   !! Counter on k-points in the pool
-  integer :: ibnd
+  INTEGER :: ibnd
   !! Counter on bands
-  real(kind=DP) :: ebnd
+  REAL(KIND = DP) :: ebnd
   !! Eigenvalue at etf(ibnd,ik)
-  real(kind=DP) :: ebndmin
+  REAL(KIND = DP) :: ebndmin
   !! Minimum eigenvalue
-  real(kind=DP) :: ebndmax
+  REAL(KIND = DP) :: ebndmax
   !! Maximum eigenvalue
-  real(kind=DP) :: tmp
+  REAL(KIND = DP) :: tmp
   !
   !
   ibndmin = 100000
@@ -48,7 +48,7 @@
     DO ibnd = 1, nbndsub
       ebnd = etf (ibnd, ik)
       !
-      IF  ( abs(ebnd - ef) < fsthick ) THEN
+      IF  ( ABS(ebnd - ef) < fsthick) THEN
         ibndmin = min(ibnd,ibndmin)
         ibndmax = max(ibnd,ibndmax)
         ebndmin = min(ebnd,ebndmin)

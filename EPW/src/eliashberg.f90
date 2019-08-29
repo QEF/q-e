@@ -26,11 +26,11 @@
   !
   CALL start_clock( 'ELIASHBERG' )
   !
-  IF ( liso ) THEN
+  IF (liso) THEN
      WRITE(stdout,'(/5x,a)') REPEAT('=',67)
      WRITE(stdout,'(5x,"Solve isotropic Eliashberg equations")')
      WRITE(stdout,'(5x,a/)') REPEAT('=',67)
-     IF ( fila2f .ne. ' ' ) THEN
+     IF (fila2f /= ' ') THEN
         CALL read_a2f
         CALL eliashberg_init
      ELSE
@@ -43,14 +43,14 @@
      ENDIF
      ! 
      CALL estimate_tc_gap
-     IF ( gap_edge > 0.d0 ) THEN
+     IF (gap_edge > 0.d0) THEN
         gap0 = gap_edge
      ENDIF
-     IF ( lreal ) CALL eliashberg_iso_raxis
-     IF ( limag ) CALL eliashberg_iso_iaxis
+     IF (lreal ) CALL eliashberg_iso_raxis
+     IF (limag ) CALL eliashberg_iso_iaxis
   ENDIF
   !
-  IF ( laniso ) THEN
+  IF (laniso) THEN
      WRITE(stdout,'(/5x,a)') REPEAT('=',67)
      WRITE(stdout,'(5x,"Solve anisotropic Eliashberg equations")')
      WRITE(stdout,'(5x,a/)') REPEAT('=',67)
@@ -62,13 +62,13 @@
      CALL eliashberg_init
      CALL evaluate_a2f_lambda
      CALL estimate_tc_gap
-     IF ( gap_edge > 0.d0 ) THEN 
+     IF (gap_edge > 0.d0) THEN 
         gap0 = gap_edge
      ENDIF
-     IF ( limag ) CALL eliashberg_aniso_iaxis
+     IF (limag ) CALL eliashberg_aniso_iaxis
   ENDIF
   !
-  IF ( .NOT. liso .AND. .NOT. laniso ) THEN 
+  IF (.NOT. liso .AND. .NOT. laniso) THEN 
      WRITE(stdout,'(/5x,a)') REPEAT('=',67)
      WRITE(stdout,'(5x,"Calculate Eliashberg spectral function")')
      WRITE(stdout,'(5x,a/)') REPEAT('=',67)

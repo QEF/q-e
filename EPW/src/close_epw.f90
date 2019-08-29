@@ -22,7 +22,7 @@
     SUBROUTINE iter_close
     !----------------------------------------------------------------------------
     ! 
-    ! This subroutine opens all the files needed to save scattering rates for the IBTE.
+    ! This SUBROUTINE opens all the files needed to save scattering rates for the IBTE.
     ! 
     USE kinds,         ONLY : DP
     USE io_files,      ONLY : tmp_dir, prefix
@@ -54,11 +54,11 @@
 #endif
     ! 
     IF (iterative_bte) THEN
-      IF ((int_mob .and. carrier) .or. ((.not. int_mob .and. carrier) .and. (ncarrier < 0.0))) THEN
+      IF ((int_mob .AND. carrier) .OR. ((.not. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
         CLOSE(iunepmat)
         CLOSE(iunsparseq)
       ENDIF
-      IF ((int_mob .and. carrier) .or. ((.not. int_mob .and. carrier) .and. (ncarrier > 0.0))) THEN
+      IF ((int_mob .AND. carrier) .OR. ((.not. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
         CLOSE(iunepmatcb)
         CLOSE(iunsparseqcb)
       ENDIF  ! in all other cases it is still to decide which files to open
@@ -100,45 +100,45 @@
     INTEGER :: ipol
     !! Polarization number
     !
-    IF ( epwread .and. .NOT. epbread ) THEN
+    IF (epwread .AND. .NOT. epbread) THEN
       !  EPW variables ONLY
       !
-      IF(ALLOCATED(etq))       DEALLOCATE (etq)
-      IF(ALLOCATED(etf))       DEALLOCATE (etf)
-      IF(ALLOCATED(xkq))       DEALLOCATE (xkq)
-      IF(ALLOCATED(xkf))       DEALLOCATE (xkf)
-      IF(ALLOCATED(wkf))       DEALLOCATE (wkf)
-      IF(ALLOCATED(xqf))       DEALLOCATE (xqf)
-      IF(ALLOCATED(wqf))       DEALLOCATE (wqf)
-      IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
+      IF(ALLOCATED(etq))       DEALLOCATE(etq)
+      IF(ALLOCATED(etf))       DEALLOCATE(etf)
+      IF(ALLOCATED(xkq))       DEALLOCATE(xkq)
+      IF(ALLOCATED(xkf))       DEALLOCATE(xkf)
+      IF(ALLOCATED(wkf))       DEALLOCATE(wkf)
+      IF(ALLOCATED(xqf))       DEALLOCATE(xqf)
+      IF(ALLOCATED(wqf))       DEALLOCATE(wqf)
+      IF(ALLOCATED(et_all))    DEALLOCATE(et_all)
       ! 
     ELSE
       !   
-      IF(ASSOCIATED(igkq))    DEALLOCATE (igkq)
-      IF(ALLOCATED(dyn))      DEALLOCATE (dyn)
-      IF(ALLOCATED(epsi))     DEALLOCATE (epsi)
-      IF(ALLOCATED(zstar))    DEALLOCATE (zstar)
-      IF(ALLOCATED(nbnd_occ)) DEALLOCATE (nbnd_occ)
-      IF(ALLOCATED(m_loc))    DEALLOCATE (m_loc)
-      IF(ALLOCATED(drc))      DEALLOCATE (drc)
+      IF(ASSOCIATED(igkq))    DEALLOCATE(igkq)
+      IF(ALLOCATED(dyn))      DEALLOCATE(dyn)
+      IF(ALLOCATED(epsi))     DEALLOCATE(epsi)
+      IF(ALLOCATED(zstar))    DEALLOCATE(zstar)
+      IF(ALLOCATED(nbnd_occ)) DEALLOCATE(nbnd_occ)
+      IF(ALLOCATED(m_loc))    DEALLOCATE(m_loc)
+      IF(ALLOCATED(drc))      DEALLOCATE(drc)
       !
       !  EPW variables
       !
-      IF(ALLOCATED(etq))       DEALLOCATE (etq)    
-      IF(ALLOCATED(etf))       DEALLOCATE (etf)    
-      IF(ALLOCATED(xkq))       DEALLOCATE (xkq)    
-      IF(ALLOCATED(xkf))       DEALLOCATE (xkf)    
-      IF(ALLOCATED(wkf))       DEALLOCATE (wkf)    
-      IF(ALLOCATED(xqf))       DEALLOCATE (xqf)    
-      IF(ALLOCATED(wqf))       DEALLOCATE (wqf)    
-      IF(ALLOCATED(xk_all))    DEALLOCATE (xk_all)
-      IF(ALLOCATED(xk_loc))    DEALLOCATE (xk_loc)
-      IF(ALLOCATED(xk_cryst))  DEALLOCATE (xk_cryst)
-      IF(ALLOCATED(et_all))    DEALLOCATE (et_all)    
-      IF(ALLOCATED(et_loc))    DEALLOCATE (et_loc)    
-      IF(ALLOCATED(isk_loc))   DEALLOCATE (isk_loc)    
-      IF(ALLOCATED(isk_all))   DEALLOCATE (isk_all)    
-    ENDIF ! epwread .and. .NOT. epbread 
+      IF(ALLOCATED(etq))       DEALLOCATE(etq)    
+      IF(ALLOCATED(etf))       DEALLOCATE(etf)    
+      IF(ALLOCATED(xkq))       DEALLOCATE(xkq)    
+      IF(ALLOCATED(xkf))       DEALLOCATE(xkf)    
+      IF(ALLOCATED(wkf))       DEALLOCATE(wkf)    
+      IF(ALLOCATED(xqf))       DEALLOCATE(xqf)    
+      IF(ALLOCATED(wqf))       DEALLOCATE(wqf)    
+      IF(ALLOCATED(xk_all))    DEALLOCATE(xk_all)
+      IF(ALLOCATED(xk_loc))    DEALLOCATE(xk_loc)
+      IF(ALLOCATED(xk_cryst))  DEALLOCATE(xk_cryst)
+      IF(ALLOCATED(et_all))    DEALLOCATE(et_all)    
+      IF(ALLOCATED(et_loc))    DEALLOCATE(et_loc)    
+      IF(ALLOCATED(isk_loc))   DEALLOCATE(isk_loc)    
+      IF(ALLOCATED(isk_all))   DEALLOCATE(isk_all)    
+    ENDIF ! epwread .AND. .NOT. epbread 
     !
     END SUBROUTINE deallocate_epw
     ! ---------------------------------------------------------------
@@ -154,7 +154,7 @@
     USE io_epw,    ONLY : iunepmatwe
     USE epwcom,    ONLY : etf_mem
     !
-    implicit none
+    IMPLICIT NONE
     !
     IF (etf_mem == 1 .OR. etf_mem == 2) THEN
       CLOSE (unit = iunepmatwe, status = 'delete')
@@ -162,8 +162,8 @@
     !
     CLOSE (unit = iuwfc, status = 'keep')
     CLOSE (unit = iudwf, status = 'keep')
-    IF (me_pool == root_pool ) THEN
-      IF (fildrho.ne.' ') CLOSE (unit = iudrho, status = 'keep')
+    IF (me_pool == root_pool) THEN
+      IF (fildrho/=' ') CLOSE (unit = iudrho, status = 'keep')
     ENDIF
     !
     END SUBROUTINE close_final

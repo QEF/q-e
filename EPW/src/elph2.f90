@@ -13,72 +13,72 @@
   !
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
-    el_ph_mat  (:,:,:,:),   &!  e-p matrix  (nbnd, nbnd, nks, 3*nat)
-    cu(:,:,:),              &!  rot matrix for wannier interpolation of k point, coarse mesh (nbnd*nbnd*nkstot)
-    cuq(:,:,:),             &!  rot matrix for wannier interpolation of k+q point, coarse mesh (nbnd*nbnd*nkstot)
-    chw (:,:,:),            &!  Hamiltonian in wannier basis 
-    chw_ks (:,:,:),         &!  Hamiltonian in wannier basis  (Kohn-Sham eigenvalues if many-body eigenvalues are read in)
-    cdmew (:,:,:,:),        &!  Dipole matrix in wannier basis 
-    cvmew (:,:,:,:),        &!  Velocity matrix in wannier basis 
-    rdw (:,:,:),            &!  dynamical matrix in wannier basis (real) 
-    epmatwp (:,:,:,:,:),    &!  e-p matrix  in wannier basis - electrons and phonons
-    umat(:,:,:),            &!  the rotation matrix for the unique setting of the wfs gauge -- on the local pool
-    umatq(:,:,:),           &!  the rotation matrix for the unique setting of the wfs gauge for the k + q-- on the local pool
-    umat_all(:,:,:),        &!  the rotation matrix for the unique setting of the wfs gauge -- for all k points
-    umatq_all(:,:,:),       &!  the rotation matrix for the unique setting of the wfs gauge -- for all k+q points
-    dynq  (:,:,:),          &!  dynamical matrix for every q (nmode, nmodes, nqtot)
-    epmatq (:,:,:,:,:),     &!  e-p matrix for every q (nbnd, nbnd, nks, nmodes, nqtot)
+  COMPLEX(KIND = DP), ALLOCATABLE :: &
+    el_ph_mat  (:, :, :, :),   &!  e-p matrix  (nbnd, nbnd, nks, 3*nat)
+    cu(:, :, :),              &!  rot matrix for wannier interpolation of k point, coarse mesh (nbnd*nbnd*nkstot)
+    cuq(:, :, :),             &!  rot matrix for wannier interpolation of k+q point, coarse mesh (nbnd*nbnd*nkstot)
+    chw (:, :, :),            &!  Hamiltonian in wannier basis 
+    chw_ks (:, :, :),         &!  Hamiltonian in wannier basis  (Kohn-Sham eigenvalues if many-body eigenvalues are read in)
+    cdmew (:, :, :, :),        &!  Dipole matrix in wannier basis 
+    cvmew (:, :, :, :),        &!  Velocity matrix in wannier basis 
+    rdw (:, :, :),            &!  dynamical matrix in wannier basis (real) 
+    epmatwp (:, :, :, :, :),    &!  e-p matrix  in wannier basis - electrons and phonons
+    umat(:, :, :),            &!  the rotation matrix for the unique setting of the wfs gauge -- on the local pool
+    umatq(:, :, :),           &!  the rotation matrix for the unique setting of the wfs gauge for the k + q-- on the local pool
+    umat_all(:, :, :),        &!  the rotation matrix for the unique setting of the wfs gauge -- for all k points
+    umatq_all(:, :, :),       &!  the rotation matrix for the unique setting of the wfs gauge -- for all k+q points
+    dynq  (:, :, :),          &!  dynamical matrix for every q (nmode, nmodes, nqtot)
+    epmatq (:, :, :, :, :),     &!  e-p matrix for every q (nbnd, nbnd, nks, nmodes, nqtot)
     epf17 (:, :, :, :),     &!  full ep matrix in bloch rep stored in mem (nkqtotf, nbnd, nbnd, nmodes)-nbnd inside wndw 
-    dmec(:,:,:,:),          &!  dipole matrix elements on the coarse mesh (ipol, nbnd, nbnd, nks)
-    dmef(:,:,:,:),          &!  dipole matrix elements on the fine   mesh (ipol, nbnd, nbnd, nks)
-    vmef(:,:,:,:),          &!  velocity matrix elements on the fine mesh (ipol, nbnd, nbnd, nks)
-    bmat(:,:,:,:),          &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
+    dmec(:, :, :, :),          &!  dipole matrix elements on the coarse mesh (ipol, nbnd, nbnd, nks)
+    dmef(:, :, :, :),          &!  dipole matrix elements on the fine   mesh (ipol, nbnd, nbnd, nks)
+    vmef(:, :, :, :),          &!  velocity matrix elements on the fine mesh (ipol, nbnd, nbnd, nks)
+    bmat(:, :, :, :),          &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
     eps_rpa(:)               !  screening
-  REAL(KIND=DP), ALLOCATABLE ::&
-    a_all(:,:),             &!  electronic spectral function du to electron-phonon interaction
-    a_all_ph(:,:),          &!  phononic spectral function du to electron-phonon interaction
-    et_ks(:,:),             &!  lda eigenvalues
-    xkq(:,:),               &!  local k+q grid, coarse (3, nks)
-    etq(:,:),               &!  eigenvalues of k+q wavefunctions
-    xkf(:,:),               &!  fine k point grid (3, nkqf)
-    xkfd(:,:,:),            &!  fine k point grid , displaced along each cartesian direction +/delta_q (3, nkqf, 6)
+  REAL(KIND = DP), ALLOCATABLE ::&
+    a_all(:, :),             &!  electronic spectral function du to electron-phonon interaction
+    a_all_ph(:, :),          &!  phononic spectral function du to electron-phonon interaction
+    et_ks(:, :),             &!  lda eigenvalues
+    xkq(:, :),               &!  local k+q grid, coarse (3, nks)
+    etq(:, :),               &!  eigenvalues of k+q wavefunctions
+    xkf(:, :),               &!  fine k point grid (3, nkqf)
+    xkfd(:, :, :),            &!  fine k point grid , displaced along each cartesian direction +/delta_q (3, nkqf, 6)
     wkf(:),                 &!  weights on the fine grid (nkqf)
-    xqf(:,:),               &!  fine q point grid 
+    xqf(:, :),               &!  fine q point grid 
     wqf(:),                 &!  weights on the fine q grid 
-    etf(:,:),               &!  interpolated eigenvalues (nbnd, nkqf)
-    etf_k(:,:),             &!  Saved interpolated KS eigenenergies for later used in q-parallelization (nbnd, nkqf)
-    etf_ks(:,:),            &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues in the case of eig_read
-    etfd(:,:,:),            &!  interpolated eigenvalues (nbnd, nkqf) eigenvalues for shifted grid in the case of eig_read
-    etfd_ks(:,:,:),         &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues for shifted grid in the case of eig_read
-    wf(:,:),                &!  interpolated eigenfrequencies 
-    gamma_all(:,:,:),       &!
-    gamma_nest(:,:),        &!  Nesting function in the case of q-parallelization
-    gamma_v_all(:,:,:),     &!
-    lambda_all(:,:,:),      &!
-    lambda_v_all(:,:,:),    &!
-    sigmar_all(:,:),        &!  To store sigmar, sigmai and zi globally
-    sigmai_all(:,:),        &!
-    sigmai_mode(:,:,:),     &! 
-    zi_all(:,:),            &!
-    eta(:,:,:),             &!  Adaptative smearing
-    esigmar_all(:,:,:),     &!
-    esigmai_all(:,:,:),     &!   
+    etf(:, :),               &!  interpolated eigenvalues (nbnd, nkqf)
+    etf_k(:, :),             &!  Saved interpolated KS eigenenergies for later used in q-parallelization (nbnd, nkqf)
+    etf_ks(:, :),            &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues in the case of eig_read
+    etfd(:, :, :),            &!  interpolated eigenvalues (nbnd, nkqf) eigenvalues for shifted grid in the case of eig_read
+    etfd_ks(:, :, :),         &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues for shifted grid in the case of eig_read
+    wf(:, :),                &!  interpolated eigenfrequencies 
+    gamma_all(:, :, :),       &!
+    gamma_nest(:, :),        &!  Nesting function in the case of q-parallelization
+    gamma_v_all(:, :, :),     &!
+    lambda_all(:, :, :),      &!
+    lambda_v_all(:, :, :),    &!
+    sigmar_all(:, :),        &!  To store sigmar, sigmai and zi globally
+    sigmai_all(:, :),        &!
+    sigmai_mode(:, :, :),     &! 
+    zi_all(:, :),            &!
+    eta(:, :, :),             &!  Adaptative smearing
+    esigmar_all(:, :, :),     &!
+    esigmai_all(:, :, :),     &!   
     jdos(:),                &!
-    spectra(:,:,:,:,:,:),   &!  dipole absorption spectra, polarizations, nomega, nsmear, dme/vme, absorption/emission
-    sumr(:,:,:,:),          &!  to apply the ASR correction to every xq
-    zstar(:,:,:),           &!  Born effective charges
-    epsi(:,:),              &!  dielectric tensor
-    inv_tau_all(:,:,:),     &!  scattering rate
-    inv_tau_allcb(:,:,:),   &!  Second scattering rate (for both)
-    zi_allvb(:,:,:),        &!  Z-factor in scattering rate  
-    zi_allcb(:,:,:),        &!  Second Z-factor in scattering rate (for both VB and CB calculations) 
+    spectra(:, :, :, :, :, :),   &!  dipole absorption spectra, polarizations, nomega, nsmear, dme/vme, absorption/emission
+    sumr(:, :, :, :),          &!  to apply the ASR correction to every xq
+    zstar(:, :, :),           &!  Born effective charges
+    epsi(:, :),              &!  dielectric tensor
+    inv_tau_all(:, :, :),     &!  scattering rate
+    inv_tau_allcb(:, :, :),   &!  Second scattering rate (for both)
+    zi_allvb(:, :, :),        &!  Z-factor in scattering rate  
+    zi_allcb(:, :, :),        &!  Second Z-factor in scattering rate (for both VB and CB calculations) 
     ifc(:,:,:,:,:,:,:),     &!  Interatomic force constant in real space
     omegap(:),              &!  Photon energy for phonon-assisted absorption
-    epsilon2_abs(:,:,:),    &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening 
-    wscache(:,:,:,:,:),     &!  Use as cache when doing IFC when lifc = .true.
-    epsilon2_abs_lorenz(:,:,:) ! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
-  REAL(KIND=DP) ::          &!
+    epsilon2_abs(:, :, :),    &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening 
+    wscache(:, :, :, :, :),     &!  Use as cache when doing IFC when lifc = .true.
+    epsilon2_abs_lorenz(:, :, :) ! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
+  REAL(KIND = DP) ::          &!
     efnew,                  &!  Fermi level on the fine grid. Added globaly for efficiency reason 
     deltaq,                 &!  Displacement of fine-mesh k-points for velocity corrections
     threshold                !  Threshold below which the transition probabilities are not written to file in transport. 
@@ -98,16 +98,16 @@
   INTEGER, ALLOCATABLE ::   &! 
     igk(:),                 &!  Index for k+G vector
     igkq(:),                &!  Index for k+q+G vector
-    igk_k_all(:,:),         &!  Global index (in case of parallel)
+    igk_k_all(:, :),         &!  Global index (in case of parallel)
     ngk_all(:),             &!  Global number of plane wave for each global k-point
     map_rebal(:),           &!  Map between the k-point and their load rebalanced one
     map_rebal_inv(:)         !  Map between the k-point and their load rebalanced one
   INTEGER, ALLOCATABLE ::   &!
     shift (:),              &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
     gmap(:)                  !  the map G -> G-G_0 in the large (density) G vectors set, for every G_0
-  LOGICAL, allocatable ::   &!
-    lwin(:,:),              &!  identify bands within outer energy windows (when disentanglement is used)
-    lwinq(:,:),             &!
+  LOGICAL, ALLOCATABLE ::   &!
+    lwin(:, :),              &!  identify bands within outer energy windows (when disentanglement is used)
+    lwinq(:, :),             &!
     exband(:),              &!  k-point independent list of bands excluded from the calculation of overlap and projection matrices in W90
     done_elph(:)
   LOGICAL ::                &!

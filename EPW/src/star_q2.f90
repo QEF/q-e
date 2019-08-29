@@ -10,7 +10,7 @@
   ! Adapted from QE
   ! 
   !-----------------------------------------------------------------------
-  subroutine star_q2 (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity, sym_smallq )
+  SUBROUTINE star_q2 (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity, sym_smallq )
   !-----------------------------------------------------------------------
   !
   ! Generate the star of q vectors that are equivalent to the input one
@@ -19,16 +19,16 @@
   !
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY : DP
-  implicit none
+  IMPLICIT NONE
   !
-  real(DP), parameter :: accep=1.e-5_dp
+  REAL(DP), parameter :: accep=1.e-5_dp
   !
-  integer :: sym_smallq(48)
+  INTEGER :: sym_smallq(48)
   !  
   integer, intent(in) :: nsym, s (3, 3, 48), invs(48)
   ! nsym matrices of symmetry operations
   ! invs: list of inverse operation indices
-  real(DP), intent(in) :: xq (3), at (3, 3), bg (3, 3)
+  REAL(DP), intent(in) :: xq (3), at (3, 3), bg (3, 3)
   ! xq: q vector
   ! at: direct lattice vectors
   ! bg: reciprocal lattice vectors
@@ -38,24 +38,24 @@
   ! isq : index of q in the star for a given sym
   ! imq : index of -q in the star (0 if not present)
   ! 
-  real(DP), intent(out) :: sxq (3, 48)
+  REAL(DP), intent(out) :: sxq (3, 48)
   ! list of vectors in the star of q
   logical, intent(in) :: verbosity
   ! if true prints several messages.
   !
-  integer :: nsq (48), isym, ism1, iq, i
+  INTEGER :: nsq (48), isym, ism1, iq, i
   ! number of symmetry ops. of bravais lattice
   ! counters on symmetry ops.
   ! index of inverse of isym
   ! counters
-  real(DP) :: saq (3, 48), aq (3), raq (3), zero (3)
+  REAL(DP) :: saq (3, 48), aq (3), raq (3), zero (3)
   ! auxiliary list of q (crystal coordinates)
   ! input q in crystal coordinates
   ! rotated q in crystal coordinates
   ! coordinates of fractionary translations
   ! a zero vector: used in eqvect
   ! 
-  logical, external :: eqvect
+  logical, EXTERNAL :: eqvect
   ! function used to compare two vectors
   !
   zero(:) = 0.d0
@@ -122,11 +122,11 @@
   WRITE( stdout, * )
   WRITE( stdout, '(5x,a,i4)') 'Number of q in the star = ', nq
   WRITE( stdout, '(5x,a)') 'List of q in the star:'
-  WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq(i,iq), i=1,3), iq=1,nq)
+  WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq(i,iq), i = 1,3), iq = 1,nq)
   if (imq == 0) then
      WRITE( stdout, '(5x,a)') 'In addition there is the -q list: '
-     WRITE( stdout, '(7x,i4,3f14.9)') (iq, (-sxq(i,iq), i=1,3), iq=1,nq)
+     WRITE( stdout, '(7x,i4,3f14.9)') (iq, (-sxq(i,iq), i = 1,3), iq = 1,nq)
   endif
   ENDIF
   return
-end subroutine star_q2
+END SUBROUTINE star_q2

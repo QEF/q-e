@@ -4,7 +4,7 @@
   !                                                                            
   ! This file is distributed under the terms of the GNU General Public         
   ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
+  ! present distribution, or http://www.gnu.ORg/copyleft.gpl.txt .             
   !                                                                            
   ! Adapted from the code PH/phq_readin - Quantum-ESPRESSO group               
   !-----------------------------------------------------------------------
@@ -81,10 +81,10 @@
   IMPLICIT NONE
   !
 #if ! defined(__NAG)
-  integer :: iargc
+  INTEGER :: iargc
 #endif
   INTEGER :: ios
-  !! integer variable for I/O control
+  !! INTEGER variable for I/O control
   INTEGER :: na
   !! counter on polarizations
   INTEGER :: it
@@ -102,11 +102,11 @@
   INTEGER :: nk3tmp  
   !! temp vars for saving kgrid info
   LOGICAL, EXTERNAL  :: imatches
-  CHARACTER(len=256) :: outdir
+  CHARACTER(LEN = 256) :: outdir
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf,                            &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
-       epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,                   &
+       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,   &
        eig_read, wepexst, epexst, vme,                                         &
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
        dvscf_dir, ngaussw, epmatkqread, selecqread,                            &
@@ -304,31 +304,31 @@
   nk3tmp = 0
   !
   IF (meta_ionode) THEN
-  !
-  ! ... Input from file ?
+    !
+    ! ... Input from file ?
     CALL input_from_file( )
-  !
-  ! ... Read the first line of the input file
-  !
-    READ( 5, '(A)', IOSTAT = ios ) title
-  !
+    !
+    ! ... Read the first line of the input file
+    !
+    READ(5, '(A)', IOSTAT = ios) title
+    !
   ENDIF
   ! 
   CALL mp_bcast(ios, meta_ionode_id, world_comm)
-  CALL errore('epw_readin', 'reading title ', ABS( ios ))
+  CALL errore('epw_readin', 'reading title ', ABS(ios))
   CALL mp_bcast(title, meta_ionode_id, world_comm)
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
   !
-  IF(imatches("&inputepw", title)) THEN
+  IF (imatches("&inputepw", title)) THEN
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
-    title='default'
-    IF (meta_ionode) REWIND(5, iostat=ios)
+    title = 'default'
+    IF (meta_ionode) REWIND(5, IOSTAT = ios)
     CALL mp_bcast(ios, meta_ionode_id, world_comm  )
-    CALL errore('epw_readin', 'Title line missing from input.', abs(ios))
+    CALL errore('epw_readin', 'Title line missing from input.', ABS(ios))
   ENDIF
   !
-  IF (.NOT. meta_ionode) goto 400
+  IF (.NOT. meta_ionode) GOTO 400
   !
   !   set default values for variables in namelist
   !
@@ -383,6 +383,7 @@
   filkf        = ' '
   fildrho      = ' '
   fildvscf     = ' '
+  filukk       = ' '
   rand_q       = .false.
   delta_approx = .false.
   rand_nq      = 1
@@ -495,13 +496,13 @@
   !
 #if defined(__CRAYY) 
   !   The Cray does not accept "err" and "iostat" together with a namelist
-  READ (5, inputepw)
+  READ(5, inputepw)
   ios = 0
 #else
   !
-  IF (meta_ionode) READ (5, inputepw, err = 200, iostat = ios)
+  IF (meta_ionode) READ(5, inputepw, ERR = 200, IOSTAT = ios)
 #endif
-200 CALL errore ('epw_readin', 'reading input_epw namelist', abs (ios) )
+200 CALL errore ('epw_readin', 'reading input_epw namelist', ABS(ios))
   !
   nk1tmp = nk1
   nk2tmp = nk2
@@ -510,44 +511,37 @@
   !     Check all namelist variables
   !
   ! file with rotation matrix U(k) for interpolation  
-  filukk=TRIM(prefix)//'.ukk'
-  IF (nsmear < 1) CALL errore ('epw_readin', &
-       & 'Wrong number of nsmears',1)
-  IF (iverbosity.ne.0 .and. iverbosity.ne.1 .and. iverbosity.ne.2 .and. iverbosity.ne.3) & 
-     CALL errore ('epw_readin', ' Wrong  iverbosity ', 1)
-!  IF (tphases .and. fildvscf0 == ' ') CALL errore ('epw_readin', &
-!       &' tphases requires fildvscf0', 1)
-  IF (epbread .and. epbwrite) CALL errore ('epw_readin', &
-       &' epbread cannot be used with epbwrite', 1)
-  IF (epbread .and. epwread) CALL errore ('epw_readin', &
-       &' epbread cannot be used with epwread', 1)
-  IF (degaussw*4.d0 > fsthick) CALL errore ('epw_readin', &
-       &' degaussw too close to fsthick', 1)
-  IF ( nbndskip < 0) CALL errore('epw_readin', &
+  filukk = TRIM(prefix) // '.ukk'
+  IF (nsmear < 1) CALL errore ('epw_readin', 'Wrong number of nsmears', 1)
+  IF (iverbosity < 0 .OR. iverbosity > 4)  CALL errore('epw_readin', ' Wrong iverbosity ', 1)
+  IF (epbread .AND. epbwrite) CALL errore('epw_readin', 'epbread cannot be used with epbwrite', 1)
+  IF (epbread .AND. epwread) CALL errore('epw_readin', 'epbread cannot be used with epwread', 1)
+  IF (degaussw * 4.d0 > fsthick) CALL errore('epw_readin', ' degaussw too close to fsthick', 1)
+  IF (nbndskip < 0) CALL errore('epw_readin', &
        &' nbndskip must not be less than 0', 1)
-  IF ((nw < 1) .or. (nw > 1000)) CALL errore ('epw_readin', &
+  IF ((nw < 1) .OR. (nw > 1000)) CALL errore ('epw_readin', &
        &' unreasonable nw', 1)
-  IF (elecselfen .and. plselfen) CALL errore('epw_readin', &
+  IF (elecselfen .AND. plselfen) CALL errore('epw_readin', &
        &'Electron-plasmon self-energy cannot be computed with electron-phonon',1)
-  IF (phonselfen .and. plselfen) CALL errore('epw_readin', &
+  IF (phonselfen .AND. plselfen) CALL errore('epw_readin', &
        &'Electron-plasmon self-energy cannot be computed with electron-phonon',1)
-  IF (specfun_el .and. plselfen) CALL errore('epw_readin', &
+  IF (specfun_el .AND. plselfen) CALL errore('epw_readin', &
        &'Electron-plasmon self-energy cannot be computed with el-ph spectral function',1)
-  IF (specfun_ph .and. plselfen) CALL errore('epw_readin', &
+  IF (specfun_ph .AND. plselfen) CALL errore('epw_readin', &
        &'Electron-plasmon self-energy cannot be computed with el-ph spectral function',1)
-  IF (elecselfen .and. specfun_pl ) CALL errore('epw_readin', &
+  IF (elecselfen .AND. specfun_pl ) CALL errore('epw_readin', &
        &'Electron-plasmon spectral function cannot be computed with electron-phonon',1)
-  IF (phonselfen .and. specfun_pl) CALL errore('epw_readin', &
+  IF (phonselfen .AND. specfun_pl) CALL errore('epw_readin', &
        &'Electron-plasmon spectral function cannot be computed with electron-phonon',1)
-  IF (specfun_el .and. specfun_pl) CALL errore('epw_readin', &
+  IF (specfun_el .AND. specfun_pl) CALL errore('epw_readin', &
        &'Electron-plasmon spectral function cannot be computed with el-ph spectral function',1)
-  IF (specfun_ph .and. specfun_pl) CALL errore('epw_readin', &
+  IF (specfun_ph .AND. specfun_pl) CALL errore('epw_readin', &
        &'Electron-plasmon spectral function cannot be computed with el-ph spectral function',1)
   IF (a2f .AND.  .NOT. phonselfen) CALL errore('epw_readin', &
        &'a2f requires phonoselfen',1)
   IF (elph .AND.  .NOT. ep_coupling ) CALL errore('epw_readin', &
       &'elph requires ep_coupling=.true.',1)
-  IF ( (elph .AND. wannierize) .AND. (epwread) ) CALL errore('epw_readin', &
+  IF ((elph .AND. wannierize) .AND. (epwread) ) CALL errore('epw_readin', &
        & 'must use same w90 rotation matrix for entire run', 1)
   IF (wannierize .AND.  .NOT. ep_coupling ) CALL errore('epw_readin', &
       &'wannierize requires ep_coupling=.true.',1)
@@ -561,51 +555,52 @@
        &' nqstep must be at least 2', 1)
   IF ((nbndsub > 200)) CALL errore ('epw_readin', & 
        ' too many wannier functions increase size of projx', 1)
-  IF (( phonselfen .OR. elecselfen .or. specfun_el .or. specfun_ph ) .and. ( mp_mesh_k .or. mp_mesh_q )) & 
+  IF (( phonselfen .OR. elecselfen .OR. specfun_el .OR. specfun_ph ) .AND. ( mp_mesh_k .OR. mp_mesh_q )) & 
      CALL errore('epw_readin', 'can only work with full uniform mesh',1)
-  IF (ephwrite .AND. .NOT. ep_coupling .and.  .NOT. elph ) CALL errore('epw_readin', &
+  IF (ephwrite .AND. .NOT. ep_coupling .AND.  .NOT. elph ) CALL errore('epw_readin', &
       &'ephwrite requires ep_coupling=.true., elph=.true.',1)
   IF (ephwrite .AND. (rand_k .OR. rand_q ) ) &
      CALL errore('epw_readin', 'ephwrite requires a uniform grid',1) 
-  IF (ephwrite .AND. (mod(nkf1,nqf1) .ne. 0 .OR. mod(nkf2,nqf2) .ne. 0 .OR. mod(nkf3,nqf3) .ne. 0 ) ) &
+  IF (ephwrite .AND. (mod(nkf1,nqf1) /= 0 .OR. mod(nkf2,nqf2) /= 0 .OR. mod(nkf3,nqf3) /= 0 ) ) &
      CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3',1)
-  IF (band_plot .AND. filkf == ' ' .and. filqf == ' ') CALL errore('epw_readin', &
+  IF (band_plot .AND. filkf == ' ' .AND. filqf == ' ') CALL errore('epw_readin', &
       &'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files',1)
-  IF (band_plot .AND. filkf .ne. ' ' .and. (nkf1 > 0 .or. nkf2 > 0 .or. nkf3 > 0) ) CALL errore('epw_readin', &
+  IF (band_plot .AND. filkf /= ' ' .AND. (nkf1 > 0 .OR. nkf2 > 0 .OR. nkf3 > 0) ) CALL errore('epw_readin', &
                 &'You should define either filkf or nkf when band_plot = .true.',1)
-  IF (band_plot .AND. filqf .ne. ' ' .and. (nqf1 > 0 .or. nqf2 > 0 .or. nqf3 > 0) ) CALL errore('epw_readin', &
+  IF (band_plot .AND. filqf /= ' ' .AND. (nqf1 > 0 .OR. nqf2 > 0 .OR. nqf3 > 0) ) CALL errore('epw_readin', &
                 &'You should define either filqf or nqf when band_plot = .true.',1)
-  IF ( filkf .ne. ' ' .AND. .NOT. efermi_read ) CALL errore('epw_readin', &
+  IF (filkf /= ' ' .AND. .NOT. efermi_read ) CALL errore('epw_readin', &
       &'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file',-1)
-  IF ( scattering .AND. nstemp < 1 ) CALL errore('epw_readin', &
+  IF (scattering .AND. nstemp < 1 ) CALL errore('epw_readin', &
        'wrong number of nstemp',1)
-  IF ( scattering .AND. maxval(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0 ) &
+  IF (scattering .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0 ) &
        CALL errore('epw_readin', 'define either (tempsmin and tempsmax) or temps(:)',1)
-  IF ( scattering .AND. tempsmax < tempsmin ) &
+  IF (scattering .AND. tempsmax < tempsmin ) &
        CALL errore('epw_readin', 'tempsmax should be greater than tempsmin',1)
-  IF ( (ABS(ncarrier) > 1E+5) .AND. .NOT. carrier ) CALL errore('epw_readin', &
+  IF ((ABS(ncarrier) > 1E+5) .AND. .NOT. carrier ) CALL errore('epw_readin', &
        'carrier must be .true. if you specify ncarrier.',1)
-  IF ( carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_readin', &
+  IF (carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_readin', &
        'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3',1)
-  IF ( (longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_readin',&
+  IF ((longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_readin',&
        &'Error: longrange or shortrange can only be true if lpolar is true as well.',1)
-  IF ( longrange .AND. shortrange) CALL errore('epw_readin',&
+  IF (longrange .AND. shortrange) CALL errore('epw_readin',&
        &'Error: longrange and shortrange cannot be both true.',1)
-  IF ( epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_readin',&
+  IF (epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_readin',&
        &'Error: kmaps has to be true for a restart run. ',1)
-  IF ( .NOT. epwread .AND. .NOT. epwwrite) CALL errore('epw_readin',&
+  IF (.NOT. epwread .AND. .NOT. epwwrite) CALL errore('epw_readin',&
        &'Error: Either epwread or epwwrite needs to be true. ',1)
-  IF ( lscreen .AND. etf_mem == 2) CALL errore('epw_readin',&
-       &'Error: lscreen not implemented with etf_mem=2 ',1)
+  IF (lscreen .AND. etf_mem == 2) CALL errore('epw_readin', 'Error: lscreen not implemented with etf_mem=2 ', 1)
+  IF (ABS(degaussw) < eps16 .AND. etf_mem == 2) CALL errore('epw_readin',&
+       & 'Error: adapt_smearing not implemented with etf_mem=2 ', 1)
   ! Make sure the files exists
-  IF ( filkf .ne. ' ' ) THEN
-    OPEN( unit = iunkf, file = filkf, status = 'old', form = 'formatted',err=100, iostat=ios)
-100 CALL errore('epw_readin','opening file '//filkf,abs(ios))
+  IF (filkf /= ' ') THEN
+    OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted',ERR = 100, IOSTAT = ios)
+100 CALL errore('epw_readin','opening file ' // filkf, ABS(ios))
     CLOSE(iunkf)
   ENDIF
-  IF ( filqf .ne. ' ' ) THEN
-    OPEN( unit = iunqf, file = filqf, status = 'old', form = 'formatted',err=101, iostat=ios)
-101 CALL errore('epw_readin','opening file '//filqf,abs(ios))
+  IF (filqf /= ' ') THEN
+    OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', form = 'formatted',err=101, iostat=ios)
+101 CALL errore('epw_readin','opening file ' // filqf, ABS(ios))
     CLOSE(iunqf)
   ENDIF  
   !
@@ -620,9 +615,8 @@
   degaussq = degaussq / ryd2mev
   delta_qsmear = delta_qsmear / ryd2mev
   !
-  ! fermi_energy read from the input file
-  ! from eV to Ryd
-  IF ( efermi_read ) THEN
+  ! fermi_energy read from the input file from eV to Ryd
+  IF (efermi_read) THEN
     fermi_energy = fermi_energy / ryd2ev
   ENDIF
   ! eptemp : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
@@ -659,7 +653,7 @@
   omegamax = omegamax / ryd2ev
   omegastep = omegastep / ryd2ev
   
-  IF ( scattering ) THEN
+  IF (scattering) THEN
     DO i = 1, ntempxx
       IF (temps(i) > 0.d0) THEN
         nstemp = i
@@ -675,8 +669,8 @@
   ! 
   xq(:) = zero
   !
-  tmp_dir = trim(outdir)
-  dvscf_dir = trim(dvscf_dir)//'/'
+  tmp_dir = TRIM(outdir)
+  dvscf_dir = TRIM(dvscf_dir) // '/'
   !
 400 CONTINUE
   CALL bcast_epw_input
@@ -690,24 +684,20 @@
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
-    ! In read_file, the call to allocate_wfc allocate evc with dimension ALLOCATE (evc(npwx*npol, nbnd))
+    ! In read_file, the call to allocate_wfc allocate evc with dimension ALLOCATE(evc(npwx*npol, nbnd))
     CALL read_file()
     ! 
-    !IF (mpime /= ionode_id) THEN
-    !  ALLOCATE (evc(npwx*npol, nbnd))
-    !ENDIF
-    !CALL mp_bcast(evc, ionode_id, world_comm) 
     ! 
     ! We define the global list of coarse grid k-points (cart and cryst)
-    ALLOCATE (xk_all(3, nkstot))
-    ALLOCATE (et_all(nbnd, nkstot))
-    ALLOCATE (isk_all(nkstot))
-    ALLOCATE (xk_cryst(3, nkstot))
-    xk_all(:,:)   = zero
-    et_all(:,:)   = zero
+    ALLOCATE(xk_all(3, nkstot))
+    ALLOCATE(et_all(nbnd, nkstot))
+    ALLOCATE(isk_all(nkstot))
+    ALLOCATE(xk_cryst(3, nkstot))
+    xk_all(:, :)   = zero
+    et_all(:, :)   = zero
     isk_all(:)    = 0
-    xk_cryst(:,:) = zero
-    DO ik=1, nkstot
+    xk_cryst(:, :) = zero
+    DO ik = 1, nkstot
       xk_all(:, ik)   = xk(:, ik)
       isk_all(ik)     = isk(ik)
       et_all(:, ik)   = et(:, ik)
@@ -722,13 +712,13 @@
     CALL mp_bcast(xk_cryst, ionode_id, world_comm)
     ! 
     ! We define the local list of kpt
-    ALLOCATE (xk_loc(3, nks))
-    ALLOCATE (et_loc(nbnd, nks))
-    ALLOCATE (isk_loc(nks))
-    xk_loc(:,:) = zero
-    et_loc(:,:) = zero
+    ALLOCATE(xk_loc(3, nks))
+    ALLOCATE(et_loc(nbnd, nks))
+    ALLOCATE(isk_loc(nks))
+    xk_loc(:, :) = zero
+    et_loc(:, :) = zero
     isk_loc(:) = 0
-    DO ik=1, nks
+    DO ik = 1, nks
       xk_loc(:, ik) = xk(:, ik)
       et_loc(:, ik) = et(:, ik)
       isk_loc(ik)   = isk(ik)
@@ -768,45 +758,40 @@
      iswitch = -4
   ENDIF
   !
-  CALL mp_bcast( iswitch, meta_ionode_id, world_comm )
-  CALL mp_bcast( modenum, meta_ionode_id, world_comm )
+  CALL mp_bcast(iswitch, meta_ionode_id, world_comm)
+  CALL mp_bcast(modenum, meta_ionode_id, world_comm)
   !
-  IF (tfixed_occ) &
-     CALL errore('epw_readin','phonon with arbitrary occupations not tested',1)
+  IF (tfixed_occ) CALL errore('epw_readin', 'phonon with arbitrary occupations not tested', 1)
   !
-  IF (elph.and.lsda) CALL errore('epw_readin', 'El-ph and spin not implemented', 1)
+  IF (elph .AND. lsda) CALL errore('epw_readin', 'El-ph and spin not implemented', 1)
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
-  CALL allocate_part( nat )
-  IF (me_pool /= 0 .or. my_pool_id /=0) goto 800 
+  CALL allocate_part(nat)
+  IF (me_pool /= 0 .OR. my_pool_id /=0) GOTO 800 
   IF (nat_todo < 0 .OR. nat_todo > nat) & 
-     CALL errore('epw_readin', 'nat_todo is wrong', 1)
-  IF (nat_todo.NE.0) THEN
-     IF (meta_ionode) READ(5, *, iostat = ios) (atomo(na), na = 1, nat_todo)
-     CALL mp_bcast( ios, meta_ionode_id, world_comm)
-     CALL mp_bcast( atomo, meta_ionode_id, world_comm )
+    CALL errore('epw_readin', 'nat_todo is wrong', 1)
+  IF (nat_todo /= 0) THEN
+    IF (meta_ionode) READ(5, *, IOSTAT = ios) (atomo(na), na = 1, nat_todo)
+    CALL mp_bcast(ios, meta_ionode_id, world_comm)
+    CALL mp_bcast(atomo, meta_ionode_id, world_comm)
   ENDIF
 800 CONTINUE
   CALL bcast_epw_input1
   !
   DO it = 1, ntyp
-     IF (amass(it) <= 0.d0) CALL errore('epw_readin', 'Wrong masses', it)
+    IF (amass(it) <= 0.d0) CALL errore('epw_readin', 'Wrong masses', it)
   ENDDO
   ! 
-! No k+q anymore, can we cut?
-!  IF (mod(nks,2) .ne. 0) CALL errore('epw_readin', &
-!      'k-points are odd', 0)
-  !
   !  broadcast the values of nq1, nq2, nq3
   !
-  CALL mp_bcast( nq1, meta_ionode_id, world_comm )
-  CALL mp_bcast( nq2, meta_ionode_id, world_comm )
-  CALL mp_bcast( nq3, meta_ionode_id, world_comm )
-  CALL mp_bcast( nk1, meta_ionode_id, world_comm )
-  CALL mp_bcast( nk2, meta_ionode_id, world_comm )
-  CALL mp_bcast( nk3, meta_ionode_id, world_comm )
+  CALL mp_bcast(nq1, meta_ionode_id, world_comm)
+  CALL mp_bcast(nq2, meta_ionode_id, world_comm)
+  CALL mp_bcast(nq3, meta_ionode_id, world_comm)
+  CALL mp_bcast(nk1, meta_ionode_id, world_comm)
+  CALL mp_bcast(nk2, meta_ionode_id, world_comm)
+  CALL mp_bcast(nk3, meta_ionode_id, world_comm)
   !
   amass = AMU_RY * amass
   !

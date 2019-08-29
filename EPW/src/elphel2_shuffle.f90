@@ -20,7 +20,7 @@
   !!
   !!      Shuffle mode implemented on may 7 2006
   !!
-  !!      Nota Bene: this subroutine is intended only for one proc per pool, 
+  !!      Nota Bene: this SUBROUTINE is intended only for one proc per pool, 
   !!      i.e. with no G-vector parallelization (some work on the igkq is 
   !!      required for that in the g-mapping)
   !!
@@ -98,11 +98,11 @@
   !! Correspondence  G->S(G)  
   INTEGER, INTENT(in) :: isym
   !! The symmetry which generates the current q in the star  
-  REAL(kind=DP), INTENT(in) :: xq0(3)
+  REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! The first q-point in the star (cartesian coords.)
-  COMPLEX(kind=DP), INTENT(in) :: dvscfins(dffts%nnr, nspin_mag, npe)
+  COMPLEX(KIND = DP), INTENT(in) :: dvscfins(dffts%nnr, nspin_mag, npe)
   !! Delta scf potential
-  COMPLEX(kind=DP), INTENT(in) :: eigv (ngm,48)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv (ngm,48)
   !! $e^{iGv}$ for 1...nsym (v the fractional translation)
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal
@@ -160,51 +160,51 @@
   !! Index for k+q+G
   !
   ! Local variables for rotating the wavefunctions (in order to use q in the irr wedge)
-  REAL(kind=DP) :: xkqtmp(3)
+  REAL(KIND = DP) :: xkqtmp(3)
   !! Temporary k+q vector for KB projectors 
-  REAL(kind=DP) :: sxk(3)
+  REAL(KIND = DP) :: sxk(3)
   !! Rotated k-point xk
-  REAL(kind=DP) :: g0vec_all_r(3,125)
+  REAL(KIND = DP) :: g0vec_all_r(3,125)
   !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
-  REAL(kind=DP) :: zero_vect(3)
+  REAL(KIND = DP) :: zero_vect(3)
   !! Temporary zero vector 
   ! 
-  COMPLEX(kind=DP) :: umat(nbnd, nbnd, nks)
+  COMPLEX(KIND = DP) :: umat(nbnd, nbnd, nks)
   !! the rotation matrix for the unique setting of the wfs gauge -- on the local pool
-  COMPLEX(kind=DP) :: umatq(nbnd, nbnd, nks)
+  COMPLEX(KIND = DP) :: umatq(nbnd, nbnd, nks)
   !! the rotation matrix for the unique setting of the wfs gauge -- on the local pool
-  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:, :)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:, :)
   !! Auxillary wavefunction 
-  COMPLEX(kind=DP), ALLOCATABLE :: aux2(:, :)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux2(:, :)
   !! Auxillary wavefunction
-  COMPLEX(kind=DP), ALLOCATABLE :: aux3(:, :)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux3(:, :)
   !! Auxillary wavefunction
-  COMPLEX(kind=DP), ALLOCATABLE :: eptmp(:, :)
+  COMPLEX(KIND = DP), ALLOCATABLE :: eptmp(:, :)
   !! Temporary array
-  COMPLEX(kind=DP), ALLOCATABLE :: elphmat(:, :, :)
+  COMPLEX(KIND = DP), ALLOCATABLE :: elphmat(:, :, :)
   !! arrays for e-ph matrix elements 
   !
 !DBSP - NAG complains ...
-  COMPLEX(kind=DP), EXTERNAL :: zdotc
+  COMPLEX(KIND = DP), EXTERNAL :: zdotc
 !DBSP
-!  REAL(kind=DP) :: b, c, d
+!  REAL(KIND = DP) :: b, c, d
 !END
   !
-  ALLOCATE (elphmat(nbnd, nbnd, npe)) 
-  ALLOCATE (eptmp(nbnd, nbnd)) 
-  ALLOCATE (aux1(dffts%nnr, npol))
-  ALLOCATE (aux2(npwx * npol, nbnd))
-  elphmat(:,:,:) = czero
-  eptmp(:,:) = czero
-  aux1(:,:) = czero
-  aux2(:,:) = czero
+  ALLOCATE(elphmat(nbnd, nbnd, npe)) 
+  ALLOCATE(eptmp(nbnd, nbnd)) 
+  ALLOCATE(aux1(dffts%nnr, npol))
+  ALLOCATE(aux2(npwx * npol, nbnd))
+  elphmat(:, :, :) = czero
+  eptmp(:, :) = czero
+  aux1(:, :) = czero
+  aux2(:, :) = czero
   zero_vect = zero
   !
-  IF (ALLOCATED(xkq) ) DEALLOCATE (xkq)                  
-  IF ( .NOT.  ALLOCATED(xkq) ) ALLOCATE ( xkq(3,nkstot) ) 
-  xkq(:,:) = zero
+  IF (ALLOCATED(xkq) ) DEALLOCATE(xkq)                  
+  IF (.NOT.  ALLOCATED(xkq) ) ALLOCATE(xkq(3,nkstot) ) 
+  xkq(:, :) = zero
   !
-  IF ( nproc_pool>1 ) CALL errore &
+  IF (nproc_pool>1 ) CALL errore &
     ('elphel2_shuffle', 'only one proc per pool in shuffle mode', 1)
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
@@ -213,16 +213,16 @@
   ! SP: Bound for band parallelism
   CALL fkbounds_bnd( nbnd, lower_band, upper_band )
   !
-  ALLOCATE (aux3(npwx * npol, lower_band:upper_band))
-  ALLOCATE (dvpsi(npwx * npol, lower_band:upper_band))
-  aux3(:,:) = czero
-  dvpsi(:,:) = czero
+  ALLOCATE(aux3(npwx * npol, lower_band:upper_band))
+  ALLOCATE(dvpsi(npwx * npol, lower_band:upper_band))
+  aux3(:, :) = czero
+  dvpsi(:, :) = czero
   !
   ! setup for k+q folding
   !
   CALL kpointdivision(ik0)
   !  
-  ALLOCATE (shift(nkstot))
+  ALLOCATE(shift(nkstot))
   shift(:) = 0
   ! gmap gets allocated inside readgmap
   CALL readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
@@ -237,10 +237,10 @@
   ! never remove this barrier
   CALL mp_barrier(inter_pool_comm)
   !
-  DO ik=1, nks
+  DO ik = 1, nks
     !
     IF (lsda) current_spin = isk_loc(ik)
-    elphmat(:,:,:) = czero
+    elphmat(:, :, :) = czero
 !DBSP
 !    b = zero
 !    c = zero
@@ -258,9 +258,9 @@
     !
     !   we define xkq(:,ik) and etq(:,ik) for the current xq
     !
-    IF (ALLOCATED(etq)) DEALLOCATE (etq)
-    IF (.NOT. ALLOCATED(etq)) ALLOCATE (etq(nbnd, nks))
-    etq(:,:) = zero
+    IF (ALLOCATED(etq)) DEALLOCATE(etq)
+    IF (.NOT. ALLOCATED(etq)) ALLOCATE(etq(nbnd, nks))
+    etq(:, :) = zero
     !
     xkq(:,ik) = xk_all(:,nkq_abs)
     etq(:,ik) = et_all(:,nkq_abs) 
@@ -280,13 +280,13 @@
     npw  = ngk_all(ik + lower_bnd - 1)
     npwq = ngk_all(nkq_abs)
     ! 
-    ALLOCATE (igk(npw))
-    ALLOCATE (igkq(npwq))
+    ALLOCATE(igk(npw))
+    ALLOCATE(igkq(npwq))
     ! 
     igk = igk_k_all(1:npw, ik + lower_bnd - 1)
     igkq = igk_k_all(1:npwq, nkq_abs)
     !
-    IF ( nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx ) &
+    IF (nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx ) &
       CALL errore('elphel2_shuffle', 'ngxx too small', 1 )
     !
     ! ----------------------------------------------------------------
@@ -369,15 +369,15 @@
     !
     ! we also recompute the derivative of the becp terms with the (rotated) wfs
     !
-    DO ipol=1, 3
+    DO ipol = 1, 3
       aux2 = czero
-      DO ibnd=1, nbnd
-        DO ig=1, npw
+      DO ibnd = 1, nbnd
+        DO ig = 1, npw
           aux2(ig,ibnd) = evc(ig,ibnd) * tpiba * ci * & 
                          ( sxk(ipol) + g(ipol,igk(ig)) )
         END DO
         IF (noncolin) THEN
-          DO ig=1, npw
+          DO ig = 1, npw
              aux2(ig+npwx,ibnd) = evc(ig+npwx,ibnd) * tpiba * ci * &
                          ( sxk(ipol) + g(ipol,igk(ig)) )
           ENDDO
@@ -396,7 +396,7 @@
     !   Calculation of the matrix element
     ! --------------------------------------------------
     !
-    DO ipert=1, npe
+    DO ipert = 1, npe
       !
       !  recalculate dvbare_q*psi_k 
       !  the call to dvqpsi_us3 differs from the old one to dvqpsi_us 
@@ -411,7 +411,7 @@
         CALL dvqpsi_us3(ik, u(:, mode), .false., xkqtmp, xq0, igk, igkq, npw, npwq)
       ENDIF
 !DBSP 
-!      b = b+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!      b = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
 !END
       !
       !  calculate dvscf_q*psi_k
@@ -431,12 +431,12 @@
       dvpsi = dvpsi + aux3
       !
 !DBSP
-!      c = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!      c = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
 !END
       !
       CALL adddvscf2( ipert, ik )
 !DBRM
-!      d = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!      d = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
 !END
       !
       ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
@@ -461,14 +461,14 @@
 !       write(*,*)'SUM dvpsi b ', b
 !       write(*,*)'SUM dvpsi c ', c
 !       write(*,*)'SUM dvpsi d ', d
-!       write(*,*)'elphmat(:,:,:)**2', SUM((REAL(REAL(elphmat(:,:,:))))**2)+SUM((REAL(AIMAG(elphmat(:,:,:))))**2)
+!       write(*,*)'elphmat(:, :, :)**2', SUM((REAL(REAL(elphmat(:, :, :))))**2)+SUM((REAL(AIMAG(elphmat(:, :, :))))**2)
 !     ENDIF
 !END
     !
     !  Rotate elphmat with the gauge matrices (this should be equivalent 
     !  to calculate elphmat with the truely rotated eigenstates)
     ! 
-    DO ipert=1, npe
+    DO ipert = 1, npe
       !
       ! the two zgemm call perform the following ops:
       !  elphmat = umat(k+q)^\dagger * [ elphmat * umat(k) ]
@@ -482,16 +482,16 @@
     !
     !  save eph matrix elements into el_ph_mat
     !
-    DO ipert=1, npe
-      DO jbnd=1, nbnd
-        DO ibnd=1, nbnd
+    DO ipert = 1, npe
+      DO jbnd = 1, nbnd
+        DO ibnd = 1, nbnd
           el_ph_mat(ibnd,jbnd,ik,ipert+imode0) = elphmat(ibnd,jbnd,ipert)
         ENDDO
       ENDDO
     ENDDO
     ! 
-    DEALLOCATE (igk)
-    DEALLOCATE (igkq)
+    DEALLOCATE(igk)
+    DEALLOCATE(igkq)
     !
   ENDDO ! ik
   !
@@ -501,14 +501,14 @@
   ! never remove this barrier - > insures that wfcs are restored to each pool before moving on
   CALL mp_barrier(world_comm)
   !
-  DEALLOCATE (elphmat)
-  DEALLOCATE (eptmp)
-  DEALLOCATE (aux1) 
-  DEALLOCATE (aux2)
-  DEALLOCATE (aux3)
-  DEALLOCATE (dvpsi)
-  DEALLOCATE (gmap)
-  DEALLOCATE (shift)
+  DEALLOCATE(elphmat)
+  DEALLOCATE(eptmp)
+  DEALLOCATE(aux1) 
+  DEALLOCATE(aux2)
+  DEALLOCATE(aux3)
+  DEALLOCATE(dvpsi)
+  DEALLOCATE(gmap)
+  DEALLOCATE(shift)
   !
   END SUBROUTINE elphel2_shuffle
   !
@@ -525,8 +525,8 @@
   !
   INTEGER, INTENT(in) :: npw
   INTEGER, INTENT(in) :: igk(npw)
-  COMPLEX(kind=DP), INTENT(inout) :: evc(npwx*npol, nbnd)
-  COMPLEX(kind=DP), INTENT(in) :: eigv1(ngm), eig0v
+  COMPLEX(KIND = DP), INTENT(inout) :: evc(npwx*npol, nbnd)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv1(ngm), eig0v
   !
   INTEGER :: ig
   !! Counter on G-vectors
@@ -549,30 +549,30 @@
   !------------------------------------------------------------
   !
   ! a simple symmetry operation in cartesian coordinates 
-  ! ( s is integer and in crystal coord!)
+  ! ( s is INTEGER and in crystal coord!)
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : at, bg
   !
   IMPLICIT NONE
   !
-  REAL(kind=DP), INTENT(in) :: x(3)
+  REAL(KIND = DP), INTENT(in) :: x(3)
   !! Input x
   INTEGER, INTENT(in) :: s(3,3)
   !! Symmetry matrix
-  REAL(kind=DP), INTENT(out) :: sx(3)
+  REAL(KIND = DP), INTENT(out) :: sx(3)
   !! Output rotated x
   !
-  REAL(DP) :: xcrys(3)
+  REAL(KIND = DP) :: xcrys(3)
   !! x in cartesian coords
   INTEGER :: i
   !
   xcrys = x
   CALL cryst_to_cart(1, xcrys, at, -1)
   DO i = 1, 3
-     sx(i) = dble(s(i,1)) * xcrys(1) &
-           + dble(s(i,2)) * xcrys(2) &
-           + dble(s(i,3)) * xcrys(3)
+     sx(i) = DBLE(s(i,1)) * xcrys(1) &
+           + DBLE(s(i,2)) * xcrys(2) &
+           + DBLE(s(i,3)) * xcrys(3)
   ENDDO
   CALL cryst_to_cart(1, sx, bg, +1)
   !

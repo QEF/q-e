@@ -59,7 +59,7 @@
   !! counter on atoms
   INTEGER :: itemp
   !! counter on temperatures 
-  REAL(kind=DP) :: xx_c, yy_c, zz_c
+  REAL(KIND = DP) :: xx_c, yy_c, zz_c
   !! k-points in crystal coords. in multiple of nk1, nk2, nk3
   LOGICAL :: magnetic_sym
   !! the symmetry operations
@@ -76,7 +76,7 @@
     !
     ! check that the k-mesh was defined in the positive region of 1st BZ
     !
-    IF ( xx_c < -eps5 .or. yy_c < -eps5 .or. zz_c < -eps5 ) &
+    IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5 ) &
       CALL errore('epw_setup','coarse k-mesh needs to be strictly positive in 1st BZ',1)
     !
   ENDDO
@@ -88,14 +88,14 @@
   ! Set non linear core correction stuff
   !
   nlcc_any = ANY( upf(1:ntyp)%nlcc )
-  IF (nlcc_any) ALLOCATE (drc(ngm, ntyp))    
+  IF (nlcc_any) ALLOCATE(drc(ngm, ntyp))    
   !
   !  2) If necessary calculate the local magnetization. This information is
   !      needed in sgama 
   !
   IF (noncolin .AND. domag) THEN
-    ALLOCATE (m_loc(3, nat))
-    DO na=1, nat
+    ALLOCATE(m_loc(3, nat))
+    DO na = 1, nat
       !
       m_loc(1, na) = starting_magnetization(ityp(na)) * &
                     SIN(angle1(ityp(na))) * COS(angle2(ityp(na)))
@@ -106,12 +106,12 @@
     ENDDO
     ux = zero
     IF (dft_is_gradient()) CALL compute_ux(m_loc,ux,nat)
-    DEALLOCATE (m_loc)
+    DEALLOCATE(m_loc)
   ENDIF
   !
   ! 3) Computes the derivative of the xc potential
   !
-  ALLOCATE (dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
+  ALLOCATE(dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
   CALL setup_dmuxc()
   !
   ! 3.1) Setup all gradient correction stuff
@@ -142,7 +142,7 @@
   !   We recalculate here the small group of q.
   !
   IF (nsymq==0) CALL set_small_group_of_q(nsymq, invsymq, minus_q)
-  IF ( .NOT. time_reversal ) minus_q = .FALSE.
+  IF (.NOT. time_reversal ) minus_q = .FALSE.
   !
   IF (modenum > 0) THEN
     search_sym = .FALSE.
@@ -152,8 +152,8 @@
   ! allocate and calculate rtau, the Bravais lattice vector associated
   ! to a rotation
   !
-  ALLOCATE (rtau(3, 48, nat))
-  ALLOCATE (npert(3 * nat))
+  ALLOCATE(rtau(3, 48, nat))
+  ALLOCATE(npert(3 * nat))
   CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
   !
   !    and calculate the vectors G associated to the symmetry Sq = q + G
@@ -163,12 +163,12 @@
   !
   search_sym = search_sym .AND. symmorphic_or_nzb()
   !
-  ALLOCATE (num_rap_mode(3 * nat))
+  ALLOCATE(num_rap_mode(3 * nat))
   num_rap_mode = -1
   IF (search_sym) CALL prepare_sym_analysis(nsymq, sr, t_rev, magnetic_sym)
   !
-  ALLOCATE (name_rap_mode(3 * nat))
-  ALLOCATE (u(3 * nat, 3 * nat))
+  ALLOCATE(name_rap_mode(3 * nat))
+  ALLOCATE(u(3 * nat, 3 * nat))
   u(:, :) = czero
   IF (.NOT. u_from_file) THEN
   ! SP: These calls set the u
@@ -176,31 +176,31 @@
   ENDIF
   CALL find_irrep_sym()
   ! 
-  DEALLOCATE (num_rap_mode)
-  DEALLOCATE (name_rap_mode)
+  DEALLOCATE(num_rap_mode)
+  DEALLOCATE(name_rap_mode)
   !
   !  8) set max perturbation
   !   
   npertx = 0
-  DO irr=1, nirr
+  DO irr = 1, nirr
     npertx = MAX(npertx, npert(irr))
   ENDDO
   !
-  ALLOCATE (transp_temp(nstemp))
+  ALLOCATE(transp_temp(nstemp))
   ! 
   transp_temp(:) = zero
   ! In case of scattering calculation
   IF (scattering) THEN
     ! 
-    IF (MAXVAL(temps(:)) > zero ) THEN
+    IF (MAXVAL(temps(:)) > zero) THEN
       transp_temp(:) = temps(:)
     ELSE
       IF (nstemp == 1) THEN
         transp_temp(1) = tempsmin
       ELSE
-        DO itemp=1, nstemp
-          transp_temp(itemp) = tempsmin + dble(itemp-1) * &
-                              ( tempsmax - tempsmin ) / dble(nstemp-1)
+        DO itemp = 1, nstemp
+          transp_temp(itemp) = tempsmin + DBLE(itemp-1) * &
+                              ( tempsmax - tempsmin ) / DBLE(nstemp-1)
         ENDDO
       ENDIF
     ENDIF
@@ -235,7 +235,7 @@
   ! 
   CALL start_clock ('epw_setup')
   !
-  ALLOCATE (transp_temp(nstemp))
+  ALLOCATE(transp_temp(nstemp))
   !
   transp_temp(:) = zero
   ! In case of scattering calculation
@@ -247,7 +247,7 @@
       IF (nstemp == 1) THEN
         transp_temp(1) = tempsmin
       ELSE
-        DO itemp=1, nstemp
+        DO itemp = 1, nstemp
           transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * &
                               (tempsmax - tempsmin) / DBLE(nstemp - 1)
         ENDDO

@@ -10,7 +10,7 @@
   SUBROUTINE wann_run
   !---------------------------------------------------------------------
   !
-  !  This is the subroutine which controls the w90 run.  Primarily,        
+  !  This is the SUBROUTINE which controls the w90 run.  Primarily,        
   !  we get the phases to remove degeneracies in the wfs, and 
   !  call pw2wan90epw 
   !  
@@ -41,12 +41,12 @@
   mp_grid(3) = nk3
   num_kpts = mp_grid(1) * mp_grid(2) * mp_grid(3)
   !
-  IF ( num_kpts .ne. nkstot ) & 
+  IF (num_kpts /= nkstot ) & 
     CALL errore('wannierize','inconsistent nscf and elph k-grids',1) 
-  IF ( nbnd < n_wannier ) &
+  IF (nbnd < n_wannier ) &
     CALL  errore('wannierize','Must have as many or more bands than Wannier functions',1) 
   !
-  ALLOCATE (kpt_latt(3, num_kpts) )
+  ALLOCATE(kpt_latt(3, num_kpts) )
   !
   WRITE(stdout, '(5x,a)') repeat("-",67)
   WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nk1, " x ", nk2, " x ", nk3 , " electronic grid"
@@ -66,13 +66,13 @@
   ! project the Wannier functions onto energy space
   !
 !  CALL proj_w90
-  DEALLOCATE (kpt_latt)
+  DEALLOCATE(kpt_latt)
   !
   WRITE(stdout, '(5x,a)') repeat("-",67)
   CALL print_clock( 'WANNIER' )
   WRITE(stdout, '(5x,a)') repeat("-",67)
   !
-  end SUBROUTINE wann_run
+  END SUBROUTINE wann_run
   !------------------------------------------------------------
   !
   !------------------------------------------------------------
@@ -80,7 +80,7 @@
   !------------------------------------------------------------
   !!
   !!
-  !!  This subroutine writes the prefix.win file which wannier90.x
+  !!  This SUBROUTINE writes the prefix.win file which wannier90.x
   !!  needs to run.  Primarily it contains information about the 
   !!  windows used for the disentanglement, and the initial projections.
   !!  JN - 10/2008  projections now in elph.in file  
@@ -100,7 +100,7 @@
   !
   INTEGER :: i
   !
-  REAL(KIND=DP) :: et_tmp(nbnd,nkstot)
+  REAL(KIND = DP) :: et_tmp(nbnd,nkstot)
   !! eigenvalues on full coarse k-mesh
   !
   LOGICAL :: random
@@ -119,7 +119,7 @@
     !
     random = .true.
     DO i = 1, nbndsub
-       IF (proj(i) .ne. ' ') THEN
+       IF (proj(i) /= ' ') THEN
           WRITE (iuwinfil,*) trim(proj(i))
           random = .false.
        ENDIF
@@ -129,7 +129,7 @@
     !
     WRITE (iuwinfil,'(a)') "end projections"
     !
-    IF (bands_skipped .ne. ' ') WRITE(iuwinfil,*) bands_skipped
+    IF (bands_skipped /= ' ') WRITE(iuwinfil,*) bands_skipped
     !
     WRITE (iuwinfil,'("num_wann ",i3)') nbndsub
     WRITE (iuwinfil,'("iprint ",i3)') iprint
@@ -137,10 +137,10 @@
     ! SP: This is not ok. Indeed you can have more bands in nscf.in than in 
     !     nbndskip+nbndsub. In which case the dis_win_max can be larger than 
     !     nbndskip+nbndsub. This is crucial for disantanglement. 
-    !IF ( dis_win_min < minval(et_tmp) ) dis_win_min = minval(et_tmp)
-    !IF ( dis_win_max > maxval(et_tmp) ) dis_win_max = maxval(et_tmp)
-    IF ( dis_froz_min < minval(et_tmp) ) dis_froz_min = minval(et_tmp)
-    IF ( dis_froz_max > maxval(et_tmp) ) dis_froz_max = maxval(et_tmp)
+    !IF (dis_win_min < minval(et_tmp) ) dis_win_min = minval(et_tmp)
+    !IF (dis_win_max > MAXVAL(et_tmp) ) dis_win_max = MAXVAL(et_tmp)
+    IF (dis_froz_min < minval(et_tmp) ) dis_froz_min = minval(et_tmp)
+    IF (dis_froz_max > MAXVAL(et_tmp) ) dis_froz_max = MAXVAL(et_tmp)
     !
     WRITE(iuwinfil, '("dis_win_min ", f18.12)')  dis_win_min
     WRITE(iuwinfil, '("dis_win_max ", f18.12)')  dis_win_max
@@ -150,7 +150,7 @@
     !
     ! write any extra parameters to the prefix.win file
     DO i = 1, nwanxx
-       IF (wdata(i) .ne. ' ') WRITE(iuwinfil,*) wdata(i)
+       IF (wdata(i) /= ' ') WRITE(iuwinfil,*) wdata(i)
     ENDDO
     !
     CLOSE (iuwinfil)
@@ -162,7 +162,7 @@
   SUBROUTINE proj_w90
 !------------------------------------------------------------
   !
-  ! This subroutine computes the energy projections of
+  ! This SUBROUTINE computes the energy projections of
   ! the computed Wannier functions
   ! 07/2010  Needs work.  Right now this sub is nearly worthless  
   !------------------------------------------------------------
@@ -182,9 +182,9 @@
   IMPLICIT NONE
   !
   INTEGER :: ik, ibnd, ne, ie, iwann
-  REAL(kind=DP) :: dE, sigma, argv, en, xxq(3)
-  REAL(kind=DP), ALLOCATABLE    ::  proj_wf(:,:)
-  COMPLEX(kind=DP), ALLOCATABLE ::  cu(:,:,:), cuq(:,:,:)
+  REAL(KIND = DP) :: dE, sigma, argv, en, xxq(3)
+  REAL(KIND = DP), ALLOCATABLE    ::  proj_wf(:, :)
+  COMPLEX(KIND = DP), ALLOCATABLE ::  cu(:, :, :), cuq(:, :, :)
   !
   LOGICAL :: lwin( nbnd, nks ), lwinq( nbnd, nks )
   ! FG: introduced after extensive compiler tests
@@ -203,11 +203,11 @@
   ne = int( (dis_win_max - dis_win_min + 1) / dE )
   IF (ne < 1)  CALL errore('proj_wan','Problem with disentanglement window',1)
   !
-  ALLOCATE (proj_wf(n_wannier, ne+1))
+  ALLOCATE(proj_wf(n_wannier, ne+1))
   proj_wf = 0.d0
   !
-  ALLOCATE (cu (nbnd, n_wannier, nks) )
-  ALLOCATE (cuq(nbnd, n_wannier, nks) )
+  ALLOCATE(cu (nbnd, n_wannier, nks) )
+  ALLOCATE(cuq(nbnd, n_wannier, nks) )
   !
   CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband) 
   ! FG: introduced after ifort checks
@@ -215,7 +215,7 @@
   DO iwann = 1, n_wannier
      !
      DO ie = 1, ne
-        en = dble(ie)/dble(ne) * (dis_win_max - dis_win_min + 1.0) + dis_win_min
+        en = DBLE(ie)/DBLE(ne) * (dis_win_max - dis_win_min + 1.0) + dis_win_min
         !
         DO ik = 1, nks
            DO ibnd = 1, nbnd
@@ -238,16 +238,16 @@
     WRITE(iuprojfil, '(5x,"Wannier energy projections")')
     !
     DO ie = 1, ne
-       en =  dble(ie)/dble(ne) * (dis_win_max - dis_win_min + 1) + dis_win_min
+       en =  DBLE(ie)/DBLE(ne) * (dis_win_max - dis_win_min + 1) + dis_win_min
        WRITE(iuprojfil, '(f9.3, 25f8.4)' )  en , proj_wf(:, ie)
     ENDDO
     !
     CLOSE (iuprojfil)
   ENDIF
   !
-  IF ( ALLOCATED(proj_wf)) DEALLOCATE (proj_wf)
-  IF ( ALLOCATED(cu))      DEALLOCATE (cu)
-  IF ( ALLOCATED(cuq))     DEALLOCATE (cuq)
+  IF (ALLOCATED(proj_wf)) DEALLOCATE(proj_wf)
+  IF (ALLOCATED(cu))      DEALLOCATE(cu)
+  IF (ALLOCATED(cuq))     DEALLOCATE(cuq)
   !
 !------------------------------------------------------------
   END  SUBROUTINE proj_w90

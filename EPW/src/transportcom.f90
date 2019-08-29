@@ -20,12 +20,12 @@
   !! lower bound for the k-depend index among the mpi pools
   INTEGER, ALLOCATABLE :: ixkqf_tr(:)
   !! Mapping matrix from k+q (where q is full BZ) to IBZ
-  INTEGER, ALLOCATABLE :: s_BZtoIBZ_full(:,:,:)
+  INTEGER, ALLOCATABLE :: s_BZtoIBZ_full(:, :, :)
   !! Rotation that brink that k-point from BZ to IBZ
   !
-  REAL(kind=DP), ALLOCATABLE :: transp_temp(:), & 
-                           SigmaS(:,:), SigmaS2(:,:), Seebeck(:,:), & 
-                           Kappael(:,:), Kappa(:,:),  mobilityh_save(:), &
+  REAL(KIND = DP), ALLOCATABLE :: transp_temp(:), & 
+                           SigmaS(:, :), SigmaS2(:, :), Seebeck(:, :), & 
+                           Kappael(:, :), Kappa(:, :),  mobilityh_save(:), &
                            mobilityel_save(:)
   !
   ! tdf_sigma(9,nbnd,nkf) : transport distribution function

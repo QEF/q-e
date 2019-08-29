@@ -9,8 +9,8 @@
   SUBROUTINE plot_band
   !-----------------------------------------------------------------------
   !!
-  !!  This subroutine writes output files for phonon dispersion and band structure 
-  !!  RM : this subroutine should be tested
+  !!  This SUBROUTINE writes output files for phonon dispersion and band structure 
+  !!  RM : this SUBROUTINE should be tested
   !!  SP : Modified so that it works with the current plotband.x of QE 5
   !!
   !-----------------------------------------------------------------------
@@ -42,22 +42,22 @@
   !! Global q-point index
   INTEGER :: nksqtotf
   !! Sum of total number of k+q points
-  REAL(kind=DP) :: dist
+  REAL(KIND = DP) :: dist
   !! Distance from Gamma
-  REAL(kind=DP) :: dprev
+  REAL(KIND = DP) :: dprev
   !! Previous distance
-  REAL(kind=DP) :: dcurr
+  REAL(KIND = DP) :: dcurr
   !! Current distance
-  REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
   !! K-points on the full k grid (all pools)
-  REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigenenergies on the full k grid (all pools)
   !
   nksqtotf =  nkqtotf/2
   !
   IF (filqf /= ' ') THEN
     ! 
-    IF ( my_pool_id == ionode_id ) THEN
+    IF (my_pool_id == ionode_id) THEN
       !
       OPEN(iufilfreq, file = "phband.freq", form = 'formatted')
       WRITE(iufilfreq, '(" &plot nbnd=",i4,", nks=",i6," /")') nmodes, nqtotf
@@ -70,8 +70,8 @@
       dcurr = 0.d0
       DO iq = 1, nqtotf
          !
-         IF ( iq .ne. 1 ) THEN  
-            dist = sqrt(   ( xqf(1,iq) - xqf(1,iq-1) ) * ( xqf(1,iq) - xqf(1,iq-1) ) & 
+         IF (iq /= 1) THEN  
+            dist = SQRT(   ( xqf(1,iq) - xqf(1,iq-1) ) * ( xqf(1,iq) - xqf(1,iq-1) ) & 
                          + ( xqf(2,iq) - xqf(2,iq-1) ) * ( xqf(2,iq) - xqf(2,iq-1) ) & 
                          + ( xqf(3,iq) - xqf(3,iq-1) ) * ( xqf(3,iq) - xqf(3,iq-1) ))
          ELSE 
@@ -80,8 +80,8 @@
          dcurr = dprev + dist
          dprev = dcurr
          WRITE(iufilfreq,'(10x,3f10.6)') xqf(:,iq)
-         WRITE(iufilfreq,'(1000f14.4)') (wf(imode,iq)*ryd2mev, imode=1,nmodes)
-         !WRITE(iufilfreq,'(1000f10.6)') dcurr, (wf(imode,iq)*ryd2mev, imode=1,nmodes)
+         WRITE(iufilfreq,'(1000f14.4)') (wf(imode,iq)*ryd2mev, imode = 1,nmodes)
+         !WRITE(iufilfreq,'(1000f10.6)') dcurr, (wf(imode,iq)*ryd2mev, imode = 1,nmodes)
          !
       ENDDO
       CLOSE(iufilfreq)
@@ -102,8 +102,8 @@
        !
     ENDDO
     !
-    IF ( .NOT. ALLOCATED(xkf_all) ) ALLOCATE ( xkf_all( 3, nkqtotf)) 
-    IF ( .NOT. ALLOCATED(etf_all) ) ALLOCATE (etf_all( nbndsub, nkqtotf))
+    IF (.NOT. ALLOCATED(xkf_all) ) ALLOCATE(xkf_all( 3, nkqtotf)) 
+    IF (.NOT. ALLOCATED(etf_all) ) ALLOCATE(etf_all( nbndsub, nkqtotf))
     !
 #if defined(__MPI)
     CALL poolgather2( 3,       nkqtotf, nkqf, xkf, xkf_all )
@@ -115,7 +115,7 @@
     etf_all = etf
 #endif
     !
-    IF ( my_pool_id == ionode_id ) THEN
+    IF (my_pool_id == ionode_id) THEN
       !
       OPEN(iufileig, file = "band.eig", form = 'formatted')
       WRITE(iufileig, '(" &plot nbnd=",i4,", nks=",i6," /")') nbndsub, nksqtotf
@@ -131,8 +131,8 @@
          ikk = 2 * ik - 1
          ikq = ikk + 1
          !
-         IF ( ikk .ne. 1 ) THEN
-            dist = sqrt(   ( xkf_all(1,ikk) - xkf_all(1,ikk-2) ) * ( xkf_all(1,ikk) - xkf_all(1,ikk-2) ) &
+         IF (ikk /= 1) THEN
+            dist = SQRT(   ( xkf_all(1,ikk) - xkf_all(1,ikk-2) ) * ( xkf_all(1,ikk) - xkf_all(1,ikk-2) ) &
                          + ( xkf_all(2,ikk) - xkf_all(2,ikk-2) ) * ( xkf_all(2,ikk) - xkf_all(2,ikk-2) ) &
                          + ( xkf_all(3,ikk) - xkf_all(3,ikk-2) ) * ( xkf_all(3,ikk) - xkf_all(3,ikk-2) ) )
          ELSE
@@ -141,8 +141,8 @@
          dcurr = dprev + dist
          dprev = dcurr
          WRITE(iufileig,'(10x,3f10.6)') xkf_all(:,ikk)
-         WRITE(iufileig,'(1000f20.12)') (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
-         !WRITE(iufileig,'(1000f10.6)') dcurr, (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
+         WRITE(iufileig,'(1000f20.12)') (etf_all(ibnd,ikk)*ryd2ev, ibnd = 1,nbndsub)
+         !WRITE(iufileig,'(1000f10.6)') dcurr, (etf_all(ibnd,ikk)*ryd2ev, ibnd = 1,nbndsub)
          !
       ENDDO
       CLOSE(iufileig)
@@ -153,8 +153,8 @@
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( ALLOCATED(xkf_all)) DEALLOCATE ( xkf_all )
-    IF ( ALLOCATED(etf_all)) DEALLOCATE ( etf_all )
+    IF (ALLOCATED(xkf_all)) DEALLOCATE(xkf_all )
+    IF (ALLOCATED(etf_all)) DEALLOCATE(etf_all )
     !
   ENDIF ! filkf
   !

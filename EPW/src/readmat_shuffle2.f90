@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  subroutine readmat_shuffle2 ( iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq,&
+  SUBROUTINE readmat_shuffle2 ( iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq,&
                                 invs, s, irt, rtau)
   !-----------------------------------------------------------------------
   !!
@@ -33,7 +33,7 @@
   USE io_epw,           ONLY : iudyn
   USE wan2bloch,        ONLY : dynifc2blochc
   !
-  implicit none
+  IMPLICIT NONE
   !
   ! Input
   INTEGER, INTENT(in) :: iq_irr
@@ -55,9 +55,9 @@
   INTEGER, INTENT(in) :: irt(48,nat)
   !! For each atoms give the rotated atoms
   !
-  REAL(kind=DP), INTENT(inout) :: sxq(3,48)
+  REAL(KIND = DP), INTENT(inout) :: sxq(3,48)
   !! Symmetry matrix 
-  REAL(kind=DP), INTENT(inout) :: rtau(3, 48, nat)
+  REAL(KIND = DP), INTENT(inout) :: rtau(3, 48, nat)
   !! the relative position of the rotated atom to the original one
   !
   ! Work variables 
@@ -70,13 +70,13 @@
   LOGICAL :: eqvect_strict
   !! True if we are using time reversal
   !
-  REAL(kind=DP) ::  arg, rwork( 7*nmodes ), aq(3), saq(3), raq(3)
-  REAL(kind=DP) :: xq(3)
+  REAL(KIND = DP) ::  arg, rwork( 7*nmodes ), aq(3), saq(3), raq(3)
+  REAL(KIND = DP) :: xq(3)
   !!  the rotated q vector
-  REAL(kind=DP) :: scart(3,3), massfac, w1( nmodes ),wtmp( nmodes )
+  REAL(KIND = DP) :: scart(3,3), massfac, w1( nmodes ),wtmp( nmodes )
   !  the q vectors in the star
-  COMPLEX(kind=DP) :: cfac, cwork( 2*nmodes )
-  COMPLEX(kind=DP) :: gamma(nmodes, nmodes), dynq_tmp(nmodes, nmodes), &
+  COMPLEX(KIND = DP) :: cfac, cwork( 2*nmodes )
+  COMPLEX(KIND = DP) :: gamma(nmodes, nmodes), dynq_tmp(nmodes, nmodes), &
                       cz1(nmodes, nmodes), dynp( nmodes*(nmodes+1)/2 )
   !  the Gamma matrix for the symmetry operation on the dyn mat
   !
@@ -96,19 +96,19 @@
   INTEGER             :: nqs, axis
   INTEGER, PARAMETER  :: nrwsx=200
   INTEGER             :: nrws
-  REAL(kind=DP)       :: eps, celldm_ (6), amass_, tau_ (3), q(3,nq1*nq2*nq3), &
+  REAL(KIND = DP)       :: eps, celldm_ (6), amass_, tau_ (3), q(3,nq1*nq2*nq3), &
                          dynr (2, 3, nat, 3, nat), sumz
-  REAL(kind=DP), allocatable :: m_loc(:,:), dchi_dtau(:,:,:,:)
-  REAL(kind=DP)              :: qout(3) 
-  REAL(kind=DP)              :: amass2(ntypx)
-  REAL(kind=DP)              :: rws(0:3,nrwsx)
-  REAL(kind=DP)              :: atws(3,3)
+  REAL(KIND = DP), ALLOCATABLE :: m_loc(:, :), dchi_dtau(:, :, :, :)
+  REAL(KIND = DP)              :: qout(3) 
+  REAL(KIND = DP)              :: amass2(ntypx)
+  REAL(KIND = DP)              :: rws(0:3,nrwsx)
+  REAL(KIND = DP)              :: atws(3,3)
   !! WS cell dist.  
-  REAL(kind=DP)              :: zstar_(3,3,nat)
+  REAL(KIND = DP)              :: zstar_(3,3,nat)
   !! Temporary array to store Z*
-  REAL(kind=DP)              :: epsi_(3,3)
+  REAL(KIND = DP)              :: epsi_(3,3)
   !! Temporary array to store Z*
-  COMPLEX(KIND=DP),allocatable :: dyn(:,:,:,:) ! 3,3,nat,nat
+  COMPLEX(KIND = DP),allocatable :: dyn(:, :, :, :) ! 3,3,nat,nat
   !! Dynamical matrix
   !
   axis = 3 
@@ -133,14 +133,14 @@
 
   IF (is_xml_file) THEN
     CALL read_dyn_mat_param(tempfile,ntyp,nat)
-    ALLOCATE (m_loc(3,nat))
-    ALLOCATE (dchi_dtau(3,3,3,nat) )
+    ALLOCATE(m_loc(3,nat))
+    ALLOCATE(dchi_dtau(3,3,3,nat) )
     CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
             celldm, at, bg, omega, atm, amass2, tau, ityp, &
             m_loc, nqs, lrigid, epsi_, zstar_, lraman, dchi_dtau)
-    ALLOCATE (dyn(3,3,nat,nat) )
+    ALLOCATE(dyn(3,3,nat,nat) )
     IF (ionode) THEN
-      DO nt=1, ntyp
+      DO nt = 1, ntyp
         IF (amass(nt) <= 0.0d0) amass(nt)=amass2(nt)
       END DO
     END IF
@@ -150,13 +150,13 @@
       zstar = zstar_
       epsi = epsi_
       !ASR on effective charges
-      DO i=1,3
-        DO j=1,3
+      DO i = 1,3
+        DO j = 1,3
           sumz=0.0d0
-          DO na=1,nat
+          DO na = 1,nat
             sumz = sumz + zstar(i,j,na)
           ENDDO
-          DO na=1,nat
+          DO na = 1,nat
             zstar(i,j,na) = zstar(i,j,na) - sumz/nat
           ENDDO
         ENDDO
@@ -176,7 +176,7 @@
     ! 
     DO iq = 1, mq
       q(:,iq) = 0.0d0
-      CALL read_dyn_mat(nat,iq,qout,dyn(:,:,:,:))
+      CALL read_dyn_mat(nat,iq,qout,dyn(:, :, :, :))
       q(:,iq) = qout(:)
       !
       DO na = 1,nat
@@ -191,17 +191,17 @@
       ! Impose the acoustic sum rule (q=0 needs to be the first q point in the coarse grid)
       ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
       !
-      IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) THEN
+      IF (ABS(q(1,iq)) < eps .AND. ABS(q(2,iq)) < eps .AND. ABS(q(3,iq)) < eps) THEN
         WRITE(stdout,'(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
-        IF (lpolar .and. .NOT. lrigid) CALL errore('readmat_shuffle2', &
+        IF (lpolar .AND. .NOT. lrigid) CALL errore('readmat_shuffle2', &
           &'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
       ENDIF
       DO na = 1,nat
        DO ipol = 1,3
         DO jpol = ipol,3
          !
-          IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) then
-             IF ( .NOT. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
+          IF (ABS(q(1,iq)) < eps .AND. ABS(q(2,iq)) < eps .AND. ABS(q(3,iq)) < eps ) then
+             IF (.NOT. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
              sumr(1,ipol,na,jpol) = sum ( dynr (1,ipol,na,jpol,:) )
              sumr(2,ipol,na,jpol) = sum ( dynr (2,ipol,na,jpol,:) )
           ENDIF
@@ -247,10 +247,10 @@
     read (iudyn, * ) ntyp_, nat_, ibrav_, celldm_
     ! 
     ! We stop testing celldm as it can be different between scf and nscf
-    !IF (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav.or.abs ( &
+    !IF (ntyp/=ntyp_.OR.nat/=nat_.OR.ibrav_/=ibrav.OR.abs ( &
     !   celldm_ (1) - celldm (1) )  > 1.0d-5) call errore ('readmat_shuffle2', &
     !   'inconsistent data', 1)
-    IF (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav ) call errore ('readmat_shuffle2', &
+    IF (ntyp/=ntyp_.OR.nat/=nat_.OR.ibrav_/=ibrav ) call errore ('readmat_shuffle2', &
        'inconsistent data', 1)
     ! 
     !  skip reading of cell parameters here
@@ -262,14 +262,14 @@
     ENDIF
     DO nt = 1, ntyp
        read (iudyn, * ) i, atm, amass_
-       IF (nt.ne.i.or.abs (amass_ - amass (nt) )  > 1.0d-2) then
+       IF (nt/=i.OR.abs (amass_ - amass (nt) )  > 1.0d-2) then
        write (stdout,*) amass_, amass(nt)
        call errore ('readmat_shuffle2', 'inconsistent data', 1)
     endif
     ENDDO
     DO na = 1, nat
        read (iudyn, * ) i, ityp_, tau_
-       IF (na.ne.i.or.ityp_.ne.ityp (na) ) call errore ('readmat_shuffle2', &
+       IF (na/=i.OR.ityp_/=ityp (na) ) call errore ('readmat_shuffle2', &
           'inconsistent data (names)', 10 + na)
     ENDDO
     !
@@ -299,7 +299,7 @@
       DO na = 1, nat
          DO nb = 1, nat
             read (iudyn, * ) naa, nbb
-            IF (na.ne.naa.or.nb.ne.nbb) call errore &
+            IF (na/=naa.OR.nb/=nbb) call errore &
                  ('readmat', 'error reading file', nb)
             read (iudyn, * ) &
                 ((dynr (1,i,na,j,nb), dynr (2,i,na,j,nb), j = 1, 3), i = 1, 3)
@@ -309,15 +309,15 @@
       ! impose the acoustic sum rule (q=0 needs to be the first q point in the coarse grid)
       ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
       !
-      IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) then
+      IF (ABS(q(1,iq)) < eps .AND. ABS(q(2,iq)) < eps .AND. ABS(q(3,iq)) < eps ) then
         WRITE(stdout,'(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
       ENDIF
       DO na = 1,nat
        DO ipol = 1,3
         DO jpol = ipol,3
           !
-          IF ( abs(q(1,iq)) < eps .and. abs(q(2,iq)) < eps .and. abs(q(3,iq)) < eps ) then
-             IF ( .NOT. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
+          IF (ABS(q(1,iq)) < eps .AND. ABS(q(2,iq)) < eps .AND. ABS(q(3,iq)) < eps ) then
+             IF (.NOT. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
              sumr(1,ipol,na,jpol) = sum ( dynr (1,ipol,na,jpol,:) )
              sumr(2,ipol,na,jpol) = sum ( dynr (2,ipol,na,jpol,:) )
           ENDIF
@@ -351,7 +351,7 @@
       !
     ENDDO
     !
-    IF ( abs(q(1,1)) < eps .and. abs(q(2,1)) < eps .and. abs(q(3,1)) < eps ) THEN
+    IF (ABS(q(1,1)) < eps .AND. ABS(q(2,1)) < eps .AND. ABS(q(3,1)) < eps) THEN
       !  read dielectric tensor and effective charges if present
       !  SP: Warning zstar is not properly bcast at the moment
       read (iudyn,'(a)') line
@@ -360,24 +360,24 @@
       !IF (lpolar) THEN
         IF (line(6:15).EQ.'Dielectric') THEN
           read (iudyn,'(a)') line
-          read (iudyn,*) ((epsi(i,j), j=1,3), i=1,3)
+          read (iudyn,*) ((epsi(i,j), j = 1,3), i = 1,3)
           read (iudyn,'(a)') line
           read (iudyn,'(a)') line
           read (iudyn,'(a)') line
           DO na = 1,nat
              read (iudyn,'(a)') line
-             read (iudyn,*) ((zstar(i,j,na), j=1,3), i=1,3)
+             read (iudyn,*) ((zstar(i,j,na), j = 1,3), i = 1,3)
           ENDDO
           WRITE (stdout,'(5x,a)') 'Read dielectric tensor and effective charges'
           !
           !ASR on effective charges
-          DO i=1,3
-             DO j=1,3
+          DO i = 1,3
+             DO j = 1,3
                 sumz=0.0d0
-                DO na=1,nat
+                DO na = 1,nat
                    sumz = sumz + zstar(i,j,na)
                 ENDDO
-                DO na=1,nat
+                DO na = 1,nat
                    zstar(i,j,na) = zstar(i,j,na) - sumz/nat
                 ENDDO
              ENDDO
@@ -399,8 +399,8 @@
   ! SP: Be careful, here time-reversal is not actual time reversal but is due to 
   !     change in order and values of the q in the star between QE 4 and 5.
   !
-  CALL cryst_to_cart (nq1*nq2*nq3, q, at, -1)
-  CALL cryst_to_cart (48, sxq, at, -1)
+  CALL cryst_to_cart(nq1*nq2*nq3, q, at, -1)
+  CALL cryst_to_cart(48, sxq, at, -1)
   !
   current_iq = iq_first
   !
@@ -411,9 +411,9 @@
       DO m1=-2,2
         DO m2=-2,2
           DO m3=-2,2
-            IF ((abs(q(1,jq)-(sxq(1,iq)+m1)) < eps .and. &
-                 abs(q(2,jq)-(sxq(2,iq)+m2)) < eps .and. &
-                 abs(q(3,jq)-(sxq(3,iq)+m3)) < eps )) THEN
+            IF ((abs(q(1,jq)-(sxq(1,iq)+m1)) < eps .AND. &
+                 ABS(q(2,jq)-(sxq(2,iq)+m2)) < eps .AND. &
+                 ABS(q(3,jq)-(sxq(3,iq)+m3)) < eps )) THEN
                  found = .true.
                  exit ! exit loop
             ENDIF
@@ -430,7 +430,7 @@
     ENDIF
   ENDDO
   ! Transform back the sxq in Cartesian 
-  CALL cryst_to_cart (48, sxq, bg, 1)
+  CALL cryst_to_cart(48, sxq, bg, 1)
   !
   ! In case of reading of the IFC to impose the asr in real space
   ! We still call the above just to make the checks. The content of dynq 
@@ -462,7 +462,7 @@
     !
     sym_sgq(:) = 0
     DO jsym = 1, nsym
-      IF ( isq(jsym) == iq ) then
+      IF (isq(jsym) == iq ) then
         nsq = nsq + 1
         sym_sgq(nsq) = jsym
       ENDIF
@@ -474,11 +474,11 @@
     ! 
     aq = sxq(:,1) ! This is xq0
     saq = xq
-    call cryst_to_cart (1, aq, at, - 1)
-    CALL cryst_to_cart (1, saq, at, -1)
+    call cryst_to_cart(1, aq, at, - 1)
+    CALL cryst_to_cart(1, saq, at, -1)
     ! Initialize isym
     isym = 1
-    DO jsym=1, nsq
+    DO jsym = 1, nsq
       ism1 = invs (sym_sgq(jsym))
       raq = 0.d0
       DO ipol = 1, 3
@@ -539,7 +539,7 @@
     !
     DO nu = 1, nmodes
       DO mu = 1, nmodes
-      IF ( mu.ne.nu .and. abs(dynq(mu,nu,current_iq)) > eps ) call errore &
+      IF (mu/=nu .AND. ABS(dynq(mu,nu,current_iq)) > eps ) call errore &
         ('rotate_eigenm','problem with rotated eigenmodes',0)
       ENDDO
     ENDDO
@@ -569,8 +569,8 @@
 
 
       DO nu = 1, nmodes
-        IF ( w1 (nu) > 0.d0 ) then
-           wtmp(nu) =  sqrt(abs( w1 (nu) ))
+        IF (w1 (nu) > 0.d0 ) then
+           wtmp(nu) =  SQRT(abs( w1 (nu) ))
         ELSE
            wtmp(nu) = -sqrt(abs( w1 (nu) ))
         ENDIF
@@ -586,7 +586,7 @@
       !       
       xq = -sxq(:,iq)
       !saq = xq
-      !CALL cryst_to_cart (1, saq, at, -1)
+      !CALL cryst_to_cart(1, saq, at, -1)
       !
       ism1 = invs (isym)
       !
@@ -613,7 +613,7 @@
       !
       DO nu = 1, nmodes
         DO mu = 1, nmodes
-        IF ( mu.ne.nu .and. abs(dynq(mu,nu,current_iq)) > eps ) call errore &
+        IF (mu/=nu .AND. ABS(dynq(mu,nu,current_iq)) > eps ) call errore &
           ('rotate_eigenm','problem with rotated eigenmodes',0)
         ENDDO
       ENDDO
@@ -623,7 +623,7 @@
     !
   ENDDO ! iq
   !
-  end subroutine readmat_shuffle2
+  END SUBROUTINE readmat_shuffle2
   !
   !---------------------------------------------------------------------------------
   SUBROUTINE read_ifc
@@ -652,7 +652,7 @@
   USE f90_unix_io,    ONLY : flush
 #endif
   !
-  implicit none
+  IMPLICIT NONE
   !
   LOGICAL             :: lpolar_, has_zstar, is_plain_text_file, is_xml_file
   CHARACTER (len=80)  :: line
@@ -661,17 +661,17 @@
                          idum, ibid, jbid, nabid, nbbid, m1bid, m2bid, m3bid, &
                          ntyp_, nat_, ibrav_, ityp_(nat), nqs
   INTEGER, parameter  :: ntypx = 10
-  REAL(kind=DP)       :: tau_(3,nat), amass2(ntypx)
+  REAL(KIND = DP)       :: tau_(3,nat), amass2(ntypx)
   CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
-  REAL(DP), ALLOCATABLE :: m_loc(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: m_loc(:, :)
   !
   WRITE(stdout,'(/5x,"Reading interatomic force constants"/)')
   FLUSH(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
-  IF (.NOT. ALLOCATED (zstar) ) ALLOCATE ( zstar(3,3,nat) )
-  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE ( epsi(3,3) )
-  IF ( .NOT.  ALLOCATED (ifc)) ALLOCATE ( ifc ( nq1, nq2, nq3, 3, 3, nat, nat ) )
+  IF (.NOT. ALLOCATED (zstar) ) ALLOCATE(zstar(3,3,nat) )
+  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE(epsi(3,3) )
+  IF (.NOT.  ALLOCATED (ifc)) ALLOCATE(ifc ( nq1, nq2, nq3, 3, 3, nat, nat ) )
   zstar=0.d0
   epsi=0.d0
 
@@ -686,8 +686,8 @@
     IF (is_xml_file) THEN
       ! pass the 'tempfile' as the '.xml' extension is added in the next routine
       CALL read_dyn_mat_param(tempfile,ntyp_,nat_)
-      ALLOCATE (m_loc(3, nat_))
-      ALLOCATE (atm(ntyp_))
+      ALLOCATE(m_loc(3, nat_))
+      ALLOCATE(atm(ntyp_))
       CALL read_dyn_mat_header(ntyp_, nat_, ibrav, nspin_mag, &
                celldm, at, bg, omega, atm, amass2, &
                tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar )
@@ -695,8 +695,8 @@
       call volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
       CALL read_ifc_param(nq1, nq2, nq3)
       CALL read_ifc_xml(nq1, nq2, nq3, nat_, ifc)
-      DEALLOCATE (m_loc)
-      DEALLOCATE (atm)
+      DEALLOCATE(m_loc)
+      DEALLOCATE(atm)
       ! 
     ELSE
       !
@@ -711,19 +711,19 @@
           read (iunifc, * ) line
         ENDDO
       ENDIF
-      DO i=1,ntyp_
+      DO i = 1,ntyp_
         READ(iunifc,'(a)') line
       ENDDO
-      DO na=1,nat
-        READ(iunifc,*) idum, idum, (tau_(j,na),j=1,3)
+      DO na = 1,nat
+        READ(iunifc,*) idum, idum, (tau_(j,na),j = 1,3)
       ENDDO
       READ(iunifc,*) lpolar_
       !
       IF (lpolar_) THEN
-        READ (iunifc,*) ((epsi(i,j), j=1,3), i=1,3)
-        DO na=1, nat
+        READ (iunifc,*) ((epsi(i,j), j = 1,3), i = 1,3)
+        DO na = 1, nat
            READ (iunifc,*) idum
-           READ (iunifc,*) ((zstar(i,j,na), j=1,3), i=1,3)
+           READ (iunifc,*) ((zstar(i,j,na), j = 1,3), i = 1,3)
         ENDDO
         WRITE (stdout,'(5x,a)') "Read Z* and epsilon"
       ENDIF
@@ -731,17 +731,17 @@
       READ (iunifc,*) idum
       !
       ifc = 0.d0
-      DO i=1, 3
-        DO j=1, 3
-          DO na=1, nat
-            DO nb=1, nat
+      DO i = 1, 3
+        DO j = 1, 3
+          DO na = 1, nat
+            DO nb = 1, nat
               READ (iunifc,*) ibid, jbid, nabid, nbbid
               IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
                 na.NE.nabid .OR. nb.NE.nbbid)                      &
                 CALL errore  ('read_epw','error in reading ifc',1)
               READ (iunifc,*) (((m1bid, m2bid, m3bid,        &
                          ifc(m1,m2,m3,i,j,na,nb),                  &
-                         m1=1,nq1),m2=1,nq2),m3=1,nq3)
+                         m1 = 1,nq1),m2 = 1,nq2),m3 = 1,nq3)
             ENDDO
           ENDDO
         ENDDO
@@ -751,10 +751,10 @@
   ENDIF
   !
   ! It has to be casted like this because mpi cannot cast 7 indices
-  DO i=1, 3
-    DO j=1, 3
-      DO na=1, nat
-        DO nb=1, nat
+  DO i = 1, 3
+    DO j = 1, 3
+      DO na = 1, nat
+        DO nb = 1, nat
           CALL mp_bcast (ifc(:,:,:,i,j,na,nb), ionode_id, inter_pool_comm)
           CALL mp_bcast (ifc(:,:,:,i,j,na,nb), root_pool, intra_pool_comm)
         ENDDO
@@ -797,53 +797,53 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   IMPLICIT NONE
   CHARACTER (LEN=10), intent(in) :: asr
   INTEGER, intent(in) :: nr1, nr2, nr3, nat, ibrav
-  REAL(DP), intent(in) :: tau(3,nat)
-  REAL(DP), intent(inout) :: frc(nr1,nr2,nr3,3,3,nat,nat), zeu(3,3,nat)
+  REAL(KIND = DP), intent(in) :: tau(3,nat)
+  REAL(KIND = DP), intent(inout) :: frc(nr1,nr2,nr3,3,3,nat,nat), zeu(3,3,nat)
   !
   INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1
-  REAL(DP) :: zeu_new(3,3,nat)
-  REAL(DP), ALLOCATABLE :: frc_new(:,:,:,:,:,:,:)
+  REAL(KIND = DP) :: zeu_new(3,3,nat)
+  REAL(KIND = DP), ALLOCATABLE :: frc_new(:,:,:,:,:,:,:)
   type vector
-     real(DP),pointer :: vec(:,:,:,:,:,:,:)
+     REAL(DP),pointer :: vec(:,:,:,:,:,:,:)
   end type vector
   !
   type (vector) u(6*3*nat)
   ! These are the "vectors" associated with the sum rules on force-constants
   !
-  integer :: u_less(6*3*nat),n_less,i_less
+  INTEGER :: u_less(6*3*nat),n_less,i_less
   ! indices of the vectors u that are not independent to the preceding ones,
   ! n_less = number of such vectors, i_less = temporary parameter
   !
-  integer, allocatable :: ind_v(:,:,:)
-  real(DP), allocatable :: v(:,:)
+  integer, ALLOCATABLE :: ind_v(:, :, :)
+  REAL(DP), ALLOCATABLE :: v(:, :)
   ! These are the "vectors" associated with symmetry conditions, coded by
   ! indicating the positions (i.e. the seven indices) of the non-zero elements
   ! (there
   ! should be only 2 of them) and the value of that element. We do so in order
   ! to limit the amount of memory used.
   !
-  real(DP), allocatable :: w(:,:,:,:,:,:,:), x(:,:,:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: w(:,:,:,:,:,:,:), x(:,:,:,:,:,:,:)
   ! temporary vectors and parameters
-  real(DP) :: scal,norm2, sum
+  REAL(DP) :: scal,norm2, sum
   !
-  real(DP) :: zeu_u(6*3,3,3,nat)
+  REAL(DP) :: zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
-  integer :: zeu_less(6*3),nzeu_less,izeu_less
+  INTEGER :: zeu_less(6*3),nzeu_less,izeu_less
   ! indices of the vectors zeu_u that are not independent to the preceding ones,
   ! nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(DP) :: zeu_w(3,3,nat), zeu_x(3,3,nat)
+  REAL(DP) :: zeu_w(3,3,nat), zeu_x(3,3,nat)
   ! temporary vectors
 
   ! Initialization. n is the number of sum rules to be considered (if
-  ! asr.ne.'simple')
+  ! asr/='simple')
   ! and 'axis' is the rotation axis in the case of a 1D system
   ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if
   ! axis='3')
   !
-  if((asr.ne.'simple').and.(asr.ne.'crystal').and.(asr.ne.'one-dim') &
-                      .and.(asr.ne.'zero-dim')) then
+  if((asr/='simple').AND.(asr/='crystal').AND.(asr/='one-dim') &
+                      .AND.(asr/='zero-dim')) then
      call errore('set_asr','invalid Acoustic Sum Rule:' // asr, 1)
   endif
   !
@@ -851,13 +851,13 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      !
      ! Simple Acoustic Sum Rule on effective charges
      !
-     do i=1,3
-        do j=1,3
+     do i = 1,3
+        do j = 1,3
            sum=0.0d0
-           do na=1,nat
+           do na = 1,nat
               sum = sum + zeu(i,j,na)
            end do
-           do na=1,nat
+           do na = 1,nat
               zeu(i,j,na) = zeu(i,j,na) - sum/nat
            end do
         end do
@@ -865,14 +865,14 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      !
      ! Simple Acoustic Sum Rule on force constants in real space
      !
-     do i=1,3
-        do j=1,3
-           do na=1,nat
+     do i = 1,3
+        do j = 1,3
+           do na = 1,nat
               sum=0.0d0
-               do nb=1,nat
-                  do n1=1,nr1
-                     do n2=1,nr2
-                        do n3=1,nr3
+               do nb = 1,nat
+                  do n1 = 1,nr1
+                     do n2 = 1,nr2
+                        do n3 = 1,nr3
                            sum=sum+frc(n1,n2,n3,i,j,na,nb)
                         end do
                      end do
@@ -893,19 +893,19 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   if(asr == 'one-dim') then
      ! the direction of periodicity is the rotation axis
      ! It will work only if the crystal axis considered is one of
-     ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
+     ! the cartesian axis (typically, ibrav = 1, 6 or 8, or 4 along the
      ! z-direction)
      if (nr1*nr2*nr3 == 1) axis=3
-     if ((nr1.ne.1).and.(nr2*nr3 == 1)) axis=1
-     if ((nr2.ne.1).and.(nr1*nr3 == 1)) axis=2
-     if ((nr3.ne.1).and.(nr1*nr2 == 1)) axis=3
-     if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
-          (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
+     if ((nr1/=1).AND.(nr2*nr3 == 1)) axis=1
+     if ((nr2/=1).AND.(nr1*nr3 == 1)) axis=2
+     if ((nr3/=1).AND.(nr1*nr2 == 1)) axis=3
+     if (((nr1/=1).AND.(nr2/=1)).OR.((nr2/=1).AND. &
+          (nr3/=1)).OR.((nr1/=1).AND.(nr3/=1))) then
         call errore('set_asr','too many directions of &
              & periodicity in 1D system',axis)
      endif
-     if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
-          ((ibrav.ne.4).or.(axis.ne.3)) ) then
+     if ((ibrav/=1).AND.(ibrav/=6).AND.(ibrav/=8).AND. &
+          ((ibrav/=4).OR.(axis/=3)) ) then
         write(stdout,*) 'asr: rotational axis may be wrong'
      endif
      write(stdout,'("asr rotation axis in 1D system= ",I4)') axis
@@ -918,18 +918,18 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! generating the vectors of the orthogonal of the subspace to project
   ! the effective charges matrix on
   !
-  zeu_u(:,:,:,:)=0.0d0
-  do i=1,3
-     do j=1,3
-        do na=1,nat
+  zeu_u(:, :, :, :)=0.0d0
+  do i = 1,3
+     do j = 1,3
+        do na = 1,nat
            zeu_new(i,j,na)=zeu(i,j,na)
         enddo
      enddo
   enddo
   !
   p=0
-  do i=1,3
-     do j=1,3
+  do i = 1,3
+     do j = 1,3
         ! These are the 3*3 vectors associated with the
         ! translational acoustic sum rules
         p=p+1
@@ -939,11 +939,11 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   enddo
   !
   if (n == 4) then
-     do i=1,3
+     do i = 1,3
         ! These are the 3 vectors associated with the
         ! single rotational sum rule (1D system)
         p=p+1
-        do na=1,nat
+        do na = 1,nat
            zeu_u(p,i,MOD(axis,3)+1,na)=-tau(MOD(axis+1,3)+1,na)
            zeu_u(p,i,MOD(axis+1,3)+1,na)=tau(MOD(axis,3)+1,na)
         enddo
@@ -952,12 +952,12 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   endif
   !
   if (n == 6) then
-     do i=1,3
-        do j=1,3
+     do i = 1,3
+        do j = 1,3
            ! These are the 3*3 vectors associated with the
            ! three rotational sum rules (0D system - typ. molecule)
            p=p+1
-           do na=1,nat
+           do na = 1,nat
               zeu_u(p,i,MOD(j,3)+1,na)=-tau(MOD(j+1,3)+1,na)
               zeu_u(p,i,MOD(j+1,3)+1,na)=tau(MOD(j,3)+1,na)
            enddo
@@ -969,22 +969,22 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! Gram-Schmidt orthonormalization of the set of vectors created.
   !
   nzeu_less=0
-  do k=1,p
-     zeu_w(:,:,:)=zeu_u(k,:,:,:)
-     zeu_x(:,:,:)=zeu_u(k,:,:,:)
-     do q=1,k-1
+  do k = 1,p
+     zeu_w(:, :, :)=zeu_u(k,:,:,:)
+     zeu_x(:, :, :)=zeu_u(k,:,:,:)
+     do q = 1,k-1
         r=1
-        do izeu_less=1,nzeu_less
+        do izeu_less = 1,nzeu_less
            if (zeu_less(izeu_less) == q) r=0
         enddo
-        if (r.ne.0) then
+        if (r/=0) then
            call sp_zeu(zeu_x,zeu_u(q,:,:,:),nat,scal)
-           zeu_w(:,:,:) = zeu_w(:,:,:) - scal* zeu_u(q,:,:,:)
+           zeu_w(:, :, :) = zeu_w(:, :, :) - scal* zeu_u(q,:,:,:)
         endif
      enddo
      call sp_zeu(zeu_w,zeu_w,nat,norm2)
      if (norm2 > 1.0d-16) then
-        zeu_u(k,:,:,:) = zeu_w(:,:,:) / DSQRT(norm2)
+        zeu_u(k,:,:,:) = zeu_w(:, :, :) / DSQRT(norm2)
      else
         nzeu_less=nzeu_less+1
         zeu_less(nzeu_less)=k
@@ -994,39 +994,39 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! Projection of the effective charge "vector" on the orthogonal of the
   ! subspace of the vectors verifying the sum rules
   !
-  zeu_w(:,:,:)=0.0d0
-  do k=1,p
+  zeu_w(:, :, :)=0.0d0
+  do k = 1,p
      r=1
-     do izeu_less=1,nzeu_less
+     do izeu_less = 1,nzeu_less
         if (zeu_less(izeu_less) == k) r=0
      enddo
-     if (r.ne.0) then
-        zeu_x(:,:,:)=zeu_u(k,:,:,:)
+     if (r/=0) then
+        zeu_x(:, :, :)=zeu_u(k,:,:,:)
         call sp_zeu(zeu_x,zeu_new,nat,scal)
-        zeu_w(:,:,:) = zeu_w(:,:,:) + scal*zeu_u(k,:,:,:)
+        zeu_w(:, :, :) = zeu_w(:, :, :) + scal*zeu_u(k,:,:,:)
      endif
   enddo
   !
   ! Final substraction of the former projection to the initial zeu, to get
   ! the new "projected" zeu
   !
-  zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
+  zeu_new(:, :, :)=zeu_new(:, :, :) - zeu_w(:, :, :)
   call sp_zeu(zeu_w,zeu_w,nat,norm2)
   WRITE(stdout,'(5x,"Norm of the difference between old and new effective charges: ", 1f12.7)') SQRT(norm2)
   !
   ! Check projection
   !
   !write(6,'("Check projection of zeu")')
-  !do k=1,p
-  !  zeu_x(:,:,:)=zeu_u(k,:,:,:)
+  !do k = 1,p
+  !  zeu_x(:, :, :)=zeu_u(k,:,:,:)
   !  call sp_zeu(zeu_x,zeu_new,nat,scal)
   !  if (DABS(scal) > 1d-10) write(6,'("k= ",I8," zeu_new|zeu_u(k)= ",F15.10)')
   !  k,scal
   !enddo
   !
-  do i=1,3
-     do j=1,3
-        do na=1,nat
+  do i = 1,3
+     do j = 1,3
+        do na = 1,nat
            zeu(i,j,na)=zeu_new(i,j,na)
         enddo
      enddo
@@ -1038,18 +1038,18 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! generating the vectors of the orthogonal of the subspace to project
   ! the force-constants matrix on
   !
-  do k=1,18*nat
+  do k = 1,18*nat
      allocate(u(k) % vec(nr1,nr2,nr3,3,3,nat,nat))
      u(k) % vec (:,:,:,:,:,:,:)=0.0d0
   enddo
-  ALLOCATE (frc_new(nr1,nr2,nr3,3,3,nat,nat))
-  do i=1,3
-     do j=1,3
-        do na=1,nat
-           do nb=1,nat
-              do n1=1,nr1
-                 do n2=1,nr2
-                    do n3=1,nr3
+  ALLOCATE(frc_new(nr1,nr2,nr3,3,3,nat,nat))
+  do i = 1,3
+     do j = 1,3
+        do na = 1,nat
+           do nb = 1,nat
+              do n1 = 1,nr1
+                 do n2 = 1,nr2
+                    do n3 = 1,nr3
                        frc_new(n1,n2,n3,i,j,na,nb)=frc(n1,n2,n3,i,j,na,nb)
                     enddo
                  enddo
@@ -1060,9 +1060,9 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   enddo
   !
   p=0
-  do i=1,3
-     do j=1,3
-        do na=1,nat
+  do i = 1,3
+     do j = 1,3
+        do na = 1,nat
            ! These are the 3*3*nat vectors associated with the
            ! translational acoustic sum rules
            p=p+1
@@ -1073,12 +1073,12 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   enddo
   !
   if (n == 4) then
-     do i=1,3
-        do na=1,nat
+     do i = 1,3
+        do na = 1,nat
            ! These are the 3*nat vectors associated with the
            ! single rotational sum rule (1D system)
            p=p+1
-           do nb=1,nat
+           do nb = 1,nat
               u(p) % vec (:,:,:,i,MOD(axis,3)+1,na,nb)=-tau(MOD(axis+1,3)+1,nb)
               u(p) % vec (:,:,:,i,MOD(axis+1,3)+1,na,nb)=tau(MOD(axis,3)+1,nb)
            enddo
@@ -1088,13 +1088,13 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   endif
   !
   if (n == 6) then
-     do i=1,3
-        do j=1,3
-           do na=1,nat
+     do i = 1,3
+        do j = 1,3
+           do na = 1,nat
               ! These are the 3*3*nat vectors associated with the
               ! three rotational sum rules (0D system - typ. molecule)
               p=p+1
-              do nb=1,nat
+              do nb = 1,nat
                  u(p) % vec (:,:,:,i,MOD(j,3)+1,na,nb)=-tau(MOD(j+1,3)+1,nb)
                  u(p) % vec (:,:,:,i,MOD(j+1,3)+1,na,nb)=tau(MOD(j,3)+1,nb)
               enddo
@@ -1106,31 +1106,31 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   allocate (ind_v(9*nat*nat*nr1*nr2*nr3,2,7), v(9*nat*nat*nr1*nr2*nr3,2) )
   m=0
-  do i=1,3
-     do j=1,3
-        do na=1,nat
-           do nb=1,nat
-              do n1=1,nr1
-                 do n2=1,nr2
-                    do n3=1,nr3
+  do i = 1,3
+     do j = 1,3
+        do na = 1,nat
+           do nb = 1,nat
+              do n1 = 1,nr1
+                 do n2 = 1,nr2
+                    do n3 = 1,nr3
                        ! These are the vectors associated with the symmetry
                        ! constraints
                        q=1
                        l=1
-                       do while((l <= m).and.(q.ne.0))
-                          if ((ind_v(l,1,1) == n1).and.(ind_v(l,1,2) == n2).and. &
-                               (ind_v(l,1,3) == n3).and.(ind_v(l,1,4) == i).and. &
-                               (ind_v(l,1,5) == j).and.(ind_v(l,1,6) == na).and. &
+                       do while((l <= m).AND.(q/=0))
+                          if ((ind_v(l,1,1) == n1).AND.(ind_v(l,1,2) == n2).AND. &
+                               (ind_v(l,1,3) == n3).AND.(ind_v(l,1,4) == i).AND. &
+                               (ind_v(l,1,5) == j).AND.(ind_v(l,1,6) == na).AND. &
                                (ind_v(l,1,7) == nb)) q=0
-                          if ((ind_v(l,2,1) == n1).and.(ind_v(l,2,2) == n2).and. &
-                               (ind_v(l,2,3) == n3).and.(ind_v(l,2,4) == i).and. &
-                               (ind_v(l,2,5) == j).and.(ind_v(l,2,6) == na).and. &
+                          if ((ind_v(l,2,1) == n1).AND.(ind_v(l,2,2) == n2).AND. &
+                               (ind_v(l,2,3) == n3).AND.(ind_v(l,2,4) == i).AND. &
+                               (ind_v(l,2,5) == j).AND.(ind_v(l,2,6) == na).AND. &
                                (ind_v(l,2,7) == nb)) q=0
                           l=l+1
                        enddo
-                       if ((n1 == MOD(nr1+1-n1,nr1)+1).and.(n2 == MOD(nr2+1-n2,nr2)+1) &
-                            .and.(n3 == MOD(nr3+1-n3,nr3)+1).and.(i == j).and.(na == nb)) q=0
-                       if (q.ne.0) then
+                       if ((n1 == MOD(nr1+1-n1,nr1)+1).AND.(n2 == MOD(nr2+1-n2,nr2)+1) &
+                            .AND.(n3 == MOD(nr3+1-n3,nr3)+1).AND.(i == j).AND.(na == nb)) q=0
+                       if (q/=0) then
                           m=m+1
                           ind_v(m,1,1)=n1
                           ind_v(m,1,2)=n2
@@ -1163,13 +1163,13 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   n_less=0
   allocate (w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat))
-  do k=1,p
+  do k = 1,p
      w(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
      x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
-     do l=1,m
+     do l = 1,m
         !
         call sp2(x,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
-        do r=1,2
+        do r = 1,2
            n1=ind_v(l,r,1)
            n2=ind_v(l,r,2)
            n3=ind_v(l,r,3)
@@ -1198,12 +1198,12 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
            i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
         endif
      endif
-     do q=1,k-1
+     do q = 1,k-1
         r=1
-        do i_less=1,n_less
+        do i_less = 1,n_less
            if (u_less(i_less) == q) r=0
         enddo
-        if (r.ne.0) then
+        if (r/=0) then
            call sp3(x,u(q) % vec (:,:,:,:,:,:,:), i1,na1,nr1,nr2,nr3,nat,scal)
            w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) - scal* u(q) % vec(:,:,:,:,:,:,:)
         endif
@@ -1221,9 +1221,9 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! subspace of the vectors verifying the sum rules and symmetry contraints
   !
   w(:,:,:,:,:,:,:)=0.0d0
-  do l=1,m
+  do l = 1,m
      call sp2(frc_new,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
-     do r=1,2
+     do r = 1,2
         n1=ind_v(l,r,1)
         n2=ind_v(l,r,2)
         n3=ind_v(l,r,3)
@@ -1234,12 +1234,12 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
         w(n1,n2,n3,i,j,na,nb)=w(n1,n2,n3,i,j,na,nb)+scal*v(l,r)
      enddo
   enddo
-  do k=1,p
+  do k = 1,p
      r=1
-     do i_less=1,n_less
+     do i_less = 1,n_less
         if (u_less(i_less) == k) r=0
      enddo
-     if (r.ne.0) then
+     if (r/=0) then
         x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
         call sp1(x,frc_new,nr1,nr2,nr3,nat,scal)
         w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) + scal*u(k)%vec(:,:,:,:,:,:,:)
@@ -1257,12 +1257,12 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! Check projection
   !
   !write(6,'("Check projection IFC")')
-  !do l=1,m
+  !do l = 1,m
   !  call sp2(frc_new,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
   !  if (DABS(scal) > 1d-10) write(6,'("l= ",I8," frc_new|v(l)= ",F15.10)')
   !  l,scal
   !enddo
-  !do k=1,p
+  !do k = 1,p
   !  x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
   !  call sp1(x,frc_new,nr1,nr2,nr3,nat,scal)
   !  if (DABS(scal) > 1d-10) write(6,'("k= ",I8," frc_new|u(k)= ",F15.10)')
@@ -1270,13 +1270,13 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !  deallocate(u(k) % vec)
   !enddo
   !
-  do i=1,3
-     do j=1,3
-        do na=1,nat
-           do nb=1,nat
-              do n1=1,nr1
-                 do n2=1,nr2
-                    do n3=1,nr3
+  do i = 1,3
+     do j = 1,3
+        do na = 1,nat
+           do nb = 1,nat
+              do n1 = 1,nr1
+                 do n2 = 1,nr2
+                    do n3 = 1,nr3
                        frc(n1,n2,n3,i,j,na,nb)=frc_new(n1,n2,n3,i,j,na,nb)
                     enddo
                  enddo
@@ -1291,27 +1291,27 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   WRITE (stdout,'(5x,a)') "Imposed crystal ASR"
   !
   return
-end subroutine set_asr2
+END SUBROUTINE set_asr2
 !
 !----------------------------------------------------------------------
-subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
+SUBROUTINE sp_zeu(zeu_u,zeu_v,nat,scal)
   !-----------------------------------------------------------------------
   !
   ! does the scalar product of two effective charges matrices zeu_u and zeu_v
   ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
   !
   USE kinds, ONLY: DP
-  implicit none
-  integer i,j,na,nat
-  real(DP) zeu_u(3,3,nat)
-  real(DP) zeu_v(3,3,nat)
-  real(DP) scal
+  IMPLICIT NONE
+  INTEGER i,j,na,nat
+  REAL(DP) zeu_u(3,3,nat)
+  REAL(DP) zeu_v(3,3,nat)
+  REAL(DP) scal
   !
   !
   scal=0.0d0
-  do i=1,3
-    do j=1,3
-      do na=1,nat
+  do i = 1,3
+    do j = 1,3
+      do na = 1,nat
         scal=scal+zeu_u(i,j,na)*zeu_v(i,j,na)
       enddo
     enddo
@@ -1319,11 +1319,11 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   !
   return
   !
-end subroutine sp_zeu
+END SUBROUTINE sp_zeu
 !
 !
 !----------------------------------------------------------------------
-subroutine sp1(u,v,nr1,nr2,nr3,nat,scal)
+SUBROUTINE sp1(u,v,nr1,nr2,nr3,nat,scal)
   !-----------------------------------------------------------------------
   !
   ! does the scalar product of two force-constants matrices u and v (considered
@@ -1332,21 +1332,21 @@ subroutine sp1(u,v,nr1,nr2,nr3,nat,scal)
   ! way)
   !
   USE kinds, ONLY: DP
-  implicit none
-  integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
-  real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
-  real(DP) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(DP) scal
+  IMPLICIT NONE
+  INTEGER nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
+  REAL(DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  REAL(DP) v(nr1,nr2,nr3,3,3,nat,nat)
+  REAL(DP) scal
   !
   !
   scal=0.0d0
-  do i=1,3
-    do j=1,3
-      do na=1,nat
-        do nb=1,nat
-          do n1=1,nr1
-            do n2=1,nr2
-              do n3=1,nr3
+  do i = 1,3
+    do j = 1,3
+      do na = 1,nat
+        do nb = 1,nat
+          do n1 = 1,nr1
+            do n2 = 1,nr2
+              do n3 = 1,nr3
                 scal=scal+u(n1,n2,n3,i,j,na,nb)*v(n1,n2,n3,i,j,na,nb)
               enddo
             enddo
@@ -1358,10 +1358,10 @@ subroutine sp1(u,v,nr1,nr2,nr3,nat,scal)
   !
   return
   !
-end subroutine sp1
+END SUBROUTINE sp1
 !
 !----------------------------------------------------------------------
-subroutine sp2(u,v,ind_v,nr1,nr2,nr3,nat,scal)
+SUBROUTINE sp2(u,v,ind_v,nr1,nr2,nr3,nat,scal)
   !-----------------------------------------------------------------------
   !
   ! does the scalar product of two force-constants matrices u and v (considered
@@ -1372,26 +1372,26 @@ subroutine sp2(u,v,ind_v,nr1,nr2,nr3,nat,scal)
   ! symmetry constraints
   !
   USE kinds, ONLY: DP
-  implicit none
-  integer nr1,nr2,nr3,i,nat
-  real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
-  integer ind_v(2,7)
-  real(DP) v(2)
-  real(DP) scal
+  IMPLICIT NONE
+  INTEGER nr1,nr2,nr3,i,nat
+  REAL(DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  INTEGER ind_v(2,7)
+  REAL(DP) v(2)
+  REAL(DP) scal
   !
   !
   scal=0.0d0
-  do i=1,2
+  do i = 1,2
     scal=scal+u(ind_v(i,1),ind_v(i,2),ind_v(i,3),ind_v(i,4),ind_v(i,5),ind_v(i,6), &
          ind_v(i,7))*v(i)
   enddo
   !
   return
   !
-end subroutine sp2
+END SUBROUTINE sp2
 !
 !----------------------------------------------------------------------
-subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
+SUBROUTINE sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
   !-----------------------------------------------------------------------
   !
   ! like sp1, but in the particular case when u is one of the u(k)%vec
@@ -1400,19 +1400,19 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
   ! that a lot of computer time can be saved (during Gram-Schmidt).
   !
   USE kinds, ONLY: DP
-  implicit none
-  integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
-  real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
-  real(DP) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(DP) scal
+  IMPLICIT NONE
+  INTEGER nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
+  REAL(DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  REAL(DP) v(nr1,nr2,nr3,3,3,nat,nat)
+  REAL(DP) scal
   !
   !
   scal=0.0d0
-  do j=1,3
-    do nb=1,nat
-      do n1=1,nr1
-        do n2=1,nr2
-          do n3=1,nr3
+  do j = 1,3
+    do nb = 1,nat
+      do n1 = 1,nr1
+        do n2 = 1,nr2
+          do n3 = 1,nr3
             scal=scal+u(n1,n2,n3,i,j,na,nb)*v(n1,n2,n3,i,j,na,nb)
           enddo
         enddo
@@ -1422,7 +1422,7 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
   !
   return
   !
-end subroutine sp3
+END SUBROUTINE sp3
 !
 
 !-------------------------------------------------------------------------------
@@ -1430,7 +1430,7 @@ SUBROUTINE check_is_xml_file(filename, is_xml_file)
 !-------------------------------------------------------------------------------
   !-----------------------------------------------------------------------------
   !!
-  !! This subroutine checks if a file is formatted in XML. It does so by
+  !! This SUBROUTINE checks if a file is formatted in XML. It does so by
   !! checking if the file exists and if the file + '.xml' in its name exists.
   !! If both of them or none of them exists, an error is raised. If only one of
   !! them exists, it sets the 'is_xml_file' to .true. of .false. depending of

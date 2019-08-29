@@ -38,42 +38,42 @@ SUBROUTINE rgd_blk_epw_fine_mem(imode,nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bm
   USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12
   USE epwcom,        ONLY : shortrange, nbndsub
   !
-  implicit none
+  IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: nq1
+  INTEGER, INTENT(in) :: nq1
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq2
+  INTEGER, INTENT(in) :: nq2
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq3
+  INTEGER, INTENT(in) :: nq3
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nmodes
+  INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
   ! 
-  REAL (kind=DP), INTENT (in) :: q(3)
+  REAL (KIND = DP), INTENT(in) :: q(3)
   !! q-vector from the full coarse or fine grid.
-  REAL (kind=DP), INTENT (in) :: epsil(3,3)
+  REAL (KIND = DP), INTENT(in) :: epsil(3,3)
   !! dielectric constant tensor
-  REAL (kind=DP), INTENT (in) :: zeu(3,3,nat)
+  REAL (KIND = DP), INTENT(in) :: zeu(3,3,nat)
   !! effective charges tensor
-  REAL (kind=DP), INTENT (in) :: signe
+  REAL (KIND = DP), INTENT(in) :: signe
   !! signe=+/-1.0 ==> add/subtract long range term
   ! 
-  COMPLEX (kind=DP), INTENT (in) :: uq(nmodes, nmodes)
+  COMPLEX (KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
   !! phonon eigenvec associated with q
-  COMPLEX (kind=DP), INTENT (inout) :: epmat(nbndsub,nbndsub)
+  COMPLEX (KIND = DP), INTENT(inout) :: epmat(nbndsub,nbndsub)
   !! e-ph matrix elements 
-  COMPLEX (kind=DP), INTENT (in) :: bmat(nbndsub,nbndsub) 
+  COMPLEX (KIND = DP), INTENT(in) :: bmat(nbndsub,nbndsub) 
   !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
   !
   ! work variables
   !
-  REAL(kind=DP) :: qeq,     &! <q+G| epsil | q+G>
+  REAL(KIND = DP) :: qeq,     &! <q+G| epsil | q+G>
        arg, zaq, g1, g2, g3, gmax, alph, geg
   INTEGER :: na, ipol, m1,m2,m3, imode
-  COMPLEX(kind=DP) :: fac, facqd, facq
-  COMPLEX(kind=DP) :: epmatl(nbndsub,nbndsub)
+  COMPLEX(KIND = DP) :: fac, facqd, facq
+  COMPLEX(KIND = DP) :: epmatl(nbndsub,nbndsub)
   !
-  IF ( abs ( abs(signe) - 1.0 ) > eps12 ) &
+  IF (abs ( ABS(signe) - 1.0 ) > eps12 ) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
   !
   gmax= 14.d0
@@ -81,7 +81,7 @@ SUBROUTINE rgd_blk_epw_fine_mem(imode,nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bm
   geg = gmax*alph*4.0d0
   fac = signe*e2*fpi/omega * ci
   !
-  epmatl(:,:) = czero   
+  epmatl(:, :) = czero   
   !
   DO m1 = -nq1,nq1
     DO m2 = -nq2,nq2
@@ -95,7 +95,7 @@ SUBROUTINE rgd_blk_epw_fine_mem(imode,nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bm
              g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3 )+      &
              g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3 )) !*twopi/alat
       !
-      IF (qeq > 0.0_DP .and. qeq/alph/4.0_DP < gmax ) THEN
+      IF (qeq > 0.0_DP .AND. qeq/alph/4.0_DP < gmax) THEN
         !
         qeq=qeq*twopi/alat
         facqd = fac*exp(-qeq/alph/4.0d0)/qeq !/(two*wq)
@@ -103,11 +103,11 @@ SUBROUTINE rgd_blk_epw_fine_mem(imode,nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bm
         DO na = 1,nat
           arg = -twopi* ( g1*tau(1,na)+ g2*tau(2,na)+ g3*tau(3,na) )
           facq = facqd * CMPLX(cos(arg),sin(arg),kind=DP)
-          DO ipol=1,3
+          DO ipol = 1,3
             zaq=g1*zeu(1,ipol,na)+g2*zeu(2,ipol,na)+g3*zeu(3,ipol,na)
             !
-            CALL zaxpy(nbndsub**2,facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:),1, epmat(:,:),1)
-            CALL zaxpy(nbndsub**2,facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:),1, epmatl(:,:),1)
+            CALL zaxpy(nbndsub**2,facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:, :),1, epmat(:, :),1)
+            CALL zaxpy(nbndsub**2,facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:, :),1, epmatl(:, :),1)
             !
           ENDDO !ipol
         ENDDO !nat
@@ -118,7 +118,7 @@ SUBROUTINE rgd_blk_epw_fine_mem(imode,nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bm
   ENDDO
   !
   ! In case we want only the short-range we do
-  ! g_s = sqrt(g*g - g_l*g_l)
+  ! g_s = SQRT(g*g - g_l*g_l)
   ! 
   ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
   ! case the sqrt will give an pure imaginary number. If it is positive we 

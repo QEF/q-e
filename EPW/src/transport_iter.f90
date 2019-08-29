@@ -10,7 +10,7 @@
   MODULE transport_iter
   !----------------------------------------------------------------------
   !! 
-  !! This module contains all the subroutine linked with self-consistent electronic transport  
+  !! This module contains all the SUBROUTINE linked with self-consistent electronic transport  
   !! 
   IMPLICIT NONE
   ! 
@@ -21,7 +21,7 @@
                      sparse_q, sparse_k, sparse_i, sparse_j, sparse_t) 
     !-----------------------------------------------------------------------
     !!
-    !!  This subroutine computes the scattering rate with the iterative BTE
+    !!  This SUBROUTINE computes the scattering rate with the iterative BTE
     !!  (inv_tau).
     !!  The fine k-point and q-point grid have to be commensurate. 
     !!  The k-point grid uses crystal symmetry to decrease computational cost.
@@ -69,15 +69,15 @@
     !! Band mapping index
     INTEGER, INTENT(IN) :: sparse_t(nind)
     !! Temperature mapping index
-    REAL(KIND=DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigenenergies
-    REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! Velocity of k
-    REAL(KIND=DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(IN) :: wkf_all(nkqtotf/2)
     !! Weight of k
-    REAL(KIND=DP), INTENT(IN) :: trans_prob(nind)
+    REAL(KIND = DP), INTENT(IN) :: trans_prob(nind)
     !! Transition probability
-    REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
     !! The Fermi level 
     ! 
     ! Local variables
@@ -131,52 +131,52 @@
     INTEGER :: n
     !! Use for averaging
     ! 
-    REAL(KIND=DP) :: tau
+    REAL(KIND = DP) :: tau
     !! Relaxation time
-    REAL(KIND=DP) :: ekk
+    REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
-    REAL(KIND=DP) :: ekq
+    REAL(KIND = DP) :: ekq
     !! Energy relative to Fermi level: $$\varepsilon_{m\mathbf{k+q}}-\varepsilon_F$$
-    REAL(KIND=DP) :: vkk(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
     !! Electronic velocity $$v_{n\mathbf{k}}$$
-    REAL(kind=DP) :: xkf_all(3,nkqtotf)
+    REAL(KIND = DP) :: xkf_all(3,nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
-    REAL(kind=DP) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
     !! SERTA solution
-    REAL(kind=DP) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
     !! In solution for iteration i
-    REAL(kind=DP) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
     !! In solution for iteration i
-    REAL(kind=DP) :: F_rot(3)
+    REAL(KIND = DP) :: F_rot(3)
     !! Rotated Fi_in by the symmetry operation 
-    REAL(kind=DP) :: error(nstemp)
+    REAL(KIND = DP) :: error(nstemp)
     !! Error in the hole mobility
-    REAL(kind=DP) :: av_mob_old(nstemp)
+    REAL(KIND = DP) :: av_mob_old(nstemp)
     !! Average hole mobility from previous iteration
-    REAL(kind=DP) :: av_mob(nstemp)
+    REAL(KIND = DP) :: av_mob(nstemp)
     !! Average hole mobility
-    REAL(kind=DP) :: tmp(ibndmax-ibndmin+1, nkqtotf/2, nstemp)
-    !REAL(kind=DP) :: tmp2(ibndmax-ibndmin+1, ibndmax-ibndmin+1,nstemp, nkqtotf/2, nqf)
-    REAL(kind=DP) :: tmp2
+    REAL(KIND = DP) :: tmp(ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    !REAL(KIND = DP) :: tmp2(ibndmax-ibndmin+1, ibndmax-ibndmin+1,nstemp, nkqtotf/2, nqf)
+    REAL(KIND = DP) :: tmp2
     !! Used for the averaging
-    REAL(kind=DP) :: tmp3(ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: tmp3(ibndmax-ibndmin+1)
     !! Used for the averaging
-    REAL(kind=DP) :: ekk2
+    REAL(KIND = DP) :: ekk2
     !! Use for averaging
-    REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
+    REAL(KIND = DP) :: xkf_tmp (3, nkqtotf)
     !! Temporary k-point coordinate (dummy variable)
-    REAL(kind=DP) :: wkf_tmp(nkqtotf)
+    REAL(KIND = DP) :: wkf_tmp(nkqtotf)
     !! Temporary k-weights (dummy variable)
-    REAL(kind=DP) :: dfnk
+    REAL(KIND = DP) :: dfnk
     !! df/de
-    REAL(kind=DP) :: etemp
+    REAL(KIND = DP) :: etemp
     !! Temperature
-    REAL(KIND=DP), EXTERNAL :: w0gauss
+    REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
     ! Gather all the k-point coordinate from all the pools
     ! 
     ! Gather all the k-point coordinate from all the pools
-    xkf_all(:,:) = zero
+    xkf_all(:, :) = zero
     av_mob(:)    = zero
 #ifdef __MPI
     CALL poolgather2 ( 3, nkqtotf, nkqf, xkf, xkf_all)
@@ -191,24 +191,24 @@
    ! print*,'allocated s_BZtoIBZ_full',ALLOCATED(s_BZtoIBZ_full)
     ! Deal with symmetries
     IF (mp_mesh_k) THEN
-      ALLOCATE (ixkqf_tr(nind), STAT=ierr)
-      ALLOCATE (s_BZtoIBZ_full(3, 3, nind), STAT=ierr)
+      ALLOCATE(ixkqf_tr(nind), STAT=ierr)
+      ALLOCATE(s_BZtoIBZ_full(3, 3, nind), STAT=ierr)
       ! For a given k-point in the IBZ gives the k-point index
       ! of all the k-point in the full BZ that are connected to the current 
       ! one by symmetry. nrot is the max number of symmetry 
       BZtoIBZ(:) = 0
-      s_BZtoIBZ(:,:,:) = 0
+      s_BZtoIBZ(:, :, :) = 0
       ixkqf_tr(:) = 0
       !call move_alloc(test1, s_BZtoIBZ_full)
-      s_BZtoIBZ_full(:,:,:) = 0
+      s_BZtoIBZ_full(:, :, :) = 0
       nsym(:) = 0
       ! 
-      IF ( mpime == ionode_id ) THEN
+      IF (mpime == ionode_id) THEN
         !  
         ! Computes nrot
         CALL set_sym_bl( )
         !
-        ALLOCATE (BZtoIBZ_mat(nrot, nkqtotf/2))   
+        ALLOCATE(BZtoIBZ_mat(nrot, nkqtotf/2))   
         BZtoIBZ_mat(:, :) = 0 
         !
         ! What we get from this call is BZtoIBZ
@@ -216,13 +216,13 @@
                    nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
         ! 
         BZtoIBZ_tmp(:) = 0
-        DO ikbz=1, nkf1*nkf2*nkf3
+        DO ikbz = 1, nkf1*nkf2*nkf3
           BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
         ENDDO
         BZtoIBZ(:) = BZtoIBZ_tmp(:)
         ! 
         ! Now create the mapping matrix
-        DO ikbz=1, nkf1*nkf2*nkf3
+        DO ikbz = 1, nkf1*nkf2*nkf3
           ik = BZtoIBZ(ikbz)
           nsym(ik) = nsym(ik) + 1 
           BZtoIBZ_mat( nsym(ik), ik) = ikbz
@@ -233,12 +233,12 @@
       CALL mp_bcast( nrot,        ionode_id, inter_pool_comm )
       CALL mp_bcast( s_BZtoIBZ,   ionode_id, inter_pool_comm )
       CALL mp_bcast( BZtoIBZ,     ionode_id, inter_pool_comm )
-      IF (mpime /= ionode_id) ALLOCATE (BZtoIBZ_mat(nrot, nkqtotf/2))
+      IF (mpime /= ionode_id) ALLOCATE(BZtoIBZ_mat(nrot, nkqtotf/2))
       CALL mp_bcast( BZtoIBZ_mat, ionode_id, inter_pool_comm )
       !
       WRITE(stdout,'(5x,"Symmetry mapping finished")')
       ! 
-      DO ind=1, nind
+      DO ind = 1, nind
         iq    = sparse_q( ind )
         ik    = sparse_k( ind )
         !print*,'ind ik ',ind, ik
@@ -251,10 +251,10 @@
     ENDIF ! mp_mesh_k
     !
     ! First computes the SERTA solution as the first step of the IBTE
-    F_SERTA(:,:,:,:) = zero
-    tmp(:,:,:) = zero
+    F_SERTA(:, :, :, :) = zero
+    tmp(:, :, :) = zero
     ! 
-    DO ind=1, nind
+    DO ind = 1, nind
       iq    = sparse_q( ind )
       ik    = sparse_k( ind )
       ibnd  = sparse_i( ind )
@@ -270,7 +270,7 @@
     WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')
     ! 
     tmp3(:) = zero
-    DO itemp=1, nstemp
+    DO itemp = 1, nstemp
       DO ik = 1, nkqtotf/2
         ! 
         DO ibnd = 1, ibndmax-ibndmin+1
@@ -279,7 +279,7 @@
           tmp2 = 0.0_DP
           DO jbnd = 1, ibndmax-ibndmin+1
             ekk2 = etf_all (jbnd, ik)
-            IF ( ABS(ekk2-ekk) < eps6 ) THEN
+            IF (ABS(ekk2-ekk) < eps6) THEN
               n = n + 1
               tmp2 =  tmp2 + tmp(ibnd,ik,itemp)
             ENDIF
@@ -293,11 +293,11 @@
       ENDDO ! nkqtotf  
     ENDDO ! itemp
     ! 
-    DO itemp=1, nstemp
+    DO itemp = 1, nstemp
       etemp = transp_temp(itemp)
-      DO ik=1, nkqtotf/2
-        DO ibnd=1, ibndmax-ibndmin+1
-          IF ( ABS(tmp(ibnd, ik, itemp)) > eps160 ) THEN
+      DO ik = 1, nkqtotf/2
+        DO ibnd = 1, ibndmax-ibndmin+1
+          IF (ABS(tmp(ibnd, ik, itemp)) > eps160) THEN
             ekk = etf_all (ibnd, ik) - ef0(itemp)
             dfnk = w0gauss( ekk / etemp, -99 ) / etemp
             F_SERTA(:, ibnd, ik, itemp) = dfnk * vkk_all(:,ibnd,ik) / ( two * tmp(ibnd,ik,itemp) )
@@ -326,7 +326,7 @@
   
     ! Read from file
     iter = 1
-    F_in(:,:,:,:) = zero
+    F_in(:, :, :, :) = zero
     IF (ncarrier > 1E5) THEN
       CALL Fin_read(iter, F_in, av_mob_old, .TRUE.)
     ENDIF
@@ -339,11 +339,11 @@
     ! 
     ! If it is the first time, put to SERTA
     IF (iter == 1) THEN
-      F_in(:,:,:,:) = F_SERTA(:,:,:,:)
+      F_in(:, :, :, :) = F_SERTA(:, :, :, :)
       av_mob_old(:) = 0.0
     ENDIF
     ! 
-    F_out(:,:,:,:) = zero
+    F_out(:, :, :, :) = zero
     error(:) = 1000
     ! 
     ! Now compute the Iterative solution for electron or hole
@@ -364,7 +364,7 @@
       ! 
       IF (mp_mesh_k) THEN
         ! Use k-point symmetry
-        DO ind=1, nind
+        DO ind = 1, nind
           !  
           F_rot(:) = zero
           iq    = sparse_q( ind )
@@ -387,7 +387,7 @@
           ! 
         ENDDO
       ELSE
-        DO ind=1, nind
+        DO ind = 1, nind
           !  
           iq    = sparse_q( ind )
           ik    = sparse_k( ind )
@@ -407,7 +407,7 @@
       DO itemp = 1, nstemp
         DO ik = 1, nkqtotf/2
           DO ibnd = 1, ibndmax-ibndmin+1
-            IF ( ABS(tmp(ibnd, ik, itemp)) > eps160 ) THEN
+            IF (ABS(tmp(ibnd, ik, itemp)) > eps160) THEN
               F_out(:, ibnd, ik, itemp) = F_SERTA(:, ibnd, ik, itemp) +&
                                F_out(:, ibnd, ik, itemp) / ( two * tmp(ibnd, ik, itemp) )
             ENDIF
@@ -451,8 +451,8 @@
     ENDDO ! end of while loop
     ! 
     IF ((mp_mesh_k)) THEN
-      DEALLOCATE (ixkqf_tr)
-      DEALLOCATE (s_BZtoIBZ_full)
+      DEALLOCATE(ixkqf_tr)
+      DEALLOCATE(s_BZtoIBZ_full)
     ENDIF
 
     ! 
@@ -466,8 +466,8 @@
     SUBROUTINE iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     !----------------------------------------------------------------------------
     !  
-    ! This subroutine opens all the required files to restart an IBTE calculation
-    ! then call the ibte subroutine to perform the iterations. 
+    ! This SUBROUTINE opens all the required files to restart an IBTE calculation
+    ! then call the ibte SUBROUTINE to perform the iterations. 
     ! This routine requires that the scattering rates have been computed previously. 
     !  
     ! ----------------------------------------------------------------------------
@@ -505,20 +505,20 @@
     !! Total number of component for conduction band
 #endif    
     !
-    REAL(kind=DP), INTENT(INOUT) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(INOUT) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
-    REAL(kind=DP), INTENT(INOUT) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(INOUT) :: wkf_all(nkqtotf/2)
     !! k-point weights from all the cpu
-    REAL(kind=DP), INTENT(INOUT) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(INOUT) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! velocity from all the k-points
-    REAL(KIND=DP), INTENT(INOUT) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(INOUT) :: ef0(nstemp)
     !! Fermi level for the temperature itemp     
-    REAL(KIND=DP), INTENT(INOUT) :: efcb(nstemp)
+    REAL(KIND = DP), INTENT(INOUT) :: efcb(nstemp)
     !! Fermi level for the temperature itemp for cb band    
     ! 
     ! Local variables
     !
-    CHARACTER (len=256) :: filint
+    CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read    
     ! 
     INTEGER :: ierr
@@ -581,16 +581,16 @@
     !! end for current CPU
 #endif
     ! 
-    REAL(kind=DP) :: dum1
+    REAL(KIND = DP) :: dum1
     !! Dummy variable
-    REAL(kind=DP), ALLOCATABLE :: trans_prob(:)
+    REAL(KIND = DP), ALLOCATABLE :: trans_prob(:)
     !! Transition probabilities
-    REAL(kind=DP), ALLOCATABLE :: trans_probcb(:)
+    REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
     !! Transition probabilities for cb    
     ! 
-    etf_all(:,:)   = zero
+    etf_all(:, :)   = zero
     wkf_all(:)     = zero
-    vkk_all(:,:,:) = zero
+    vkk_all(:, :, :) = zero
     ! 
     ! SP - The implementation only works with MPI so far
 #ifdef __MPI
@@ -601,7 +601,7 @@
       READ(iufilibtev_sup,'(a)')
       READ(iufilibtev_sup,*) ind_tot, ind_totcb
       READ(iufilibtev_sup,'(a)')
-      DO itemp=1, nstemp
+      DO itemp = 1, nstemp
         READ(iufilibtev_sup,*) dum1, ef0(itemp), efcb(itemp)
       ENDDO
       READ(iufilibtev_sup,'(a)')
@@ -634,7 +634,7 @@
       ! Allocate the local size 
       nind = upper_bnd - lower_bnd + 1
       WRITE(stdout,'(5x,a,i10)') 'Number of elements per core ',nind
-      ALLOCATE (trans_prob(nind))
+      ALLOCATE(trans_prob(nind))
       trans_prob(:) = 0.0d0
       ! 
       ! Open file containing trans_prob 
@@ -665,11 +665,11 @@
       CALL MPI_FILE_OPEN(world_comm,'sparset',MPI_MODE_RDONLY ,MPI_INFO_NULL, iunsparset, ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparset',1 )
       ! 
-      ALLOCATE ( sparse_q ( nind ) )
-      ALLOCATE ( sparse_k ( nind ) )
-      ALLOCATE ( sparse_i ( nind ) )
-      ALLOCATE ( sparse_j ( nind ) )
-      ALLOCATE ( sparse_t ( nind ) )
+      ALLOCATE(sparse_q ( nind ) )
+      ALLOCATE(sparse_k ( nind ) )
+      ALLOCATE(sparse_i ( nind ) )
+      ALLOCATE(sparse_j ( nind ) )
+      ALLOCATE(sparse_t ( nind ) )
       sparse_q(:) = 0.0d0
       sparse_k(:) = 0.0d0
       sparse_i(:) = 0.0d0
@@ -714,12 +714,12 @@
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
       CALL MPI_FILE_CLOSE(iunsparset,ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
-      DEALLOCATE (trans_prob)
-      DEALLOCATE (sparse_q)
-      DEALLOCATE (sparse_k)
-      DEALLOCATE (sparse_i)
-      DEALLOCATE (sparse_j)
-      DEALLOCATE (sparse_t) 
+      DEALLOCATE(trans_prob)
+      DEALLOCATE(sparse_q)
+      DEALLOCATE(sparse_k)
+      DEALLOCATE(sparse_i)
+      DEALLOCATE(sparse_j)
+      DEALLOCATE(sparse_t) 
       ! 
     ENDIF
     ! Electrons
@@ -729,7 +729,7 @@
       ! Allocate the local size 
       nind = upper_bnd - lower_bnd + 1
       WRITE(stdout,'(5x,a,i10)') 'Number of elements per core ',nind
-      ALLOCATE ( trans_probcb ( nind ) )
+      ALLOCATE(trans_probcb ( nind ) )
       trans_probcb(:) = 0.0d0
       ! 
       ! Open file containing trans_prob 
@@ -760,11 +760,11 @@
       CALL MPI_FILE_OPEN(world_comm, 'sparsetcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsetcb, ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparsetcb', 1 )    
       ! 
-      ALLOCATE ( sparsecb_q ( nind ) )
-      ALLOCATE ( sparsecb_k ( nind ) )
-      ALLOCATE ( sparsecb_i ( nind ) )
-      ALLOCATE ( sparsecb_j ( nind ) )
-      ALLOCATE ( sparsecb_t ( nind ) )
+      ALLOCATE(sparsecb_q ( nind ) )
+      ALLOCATE(sparsecb_k ( nind ) )
+      ALLOCATE(sparsecb_i ( nind ) )
+      ALLOCATE(sparsecb_j ( nind ) )
+      ALLOCATE(sparsecb_t ( nind ) )
       sparsecb_q(:) = 0.0d0
       sparsecb_k(:) = 0.0d0
       sparsecb_i(:) = 0.0d0
@@ -809,12 +809,12 @@
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
       CALL MPI_FILE_CLOSE(iunsparsetcb,ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
-      DEALLOCATE (trans_probcb)
-      DEALLOCATE (sparsecb_q)
-      DEALLOCATE (sparsecb_k)
-      DEALLOCATE (sparsecb_i)
-      DEALLOCATE (sparsecb_j)
-      DEALLOCATE (sparsecb_t)
+      DEALLOCATE(trans_probcb)
+      DEALLOCATE(sparsecb_q)
+      DEALLOCATE(sparsecb_k)
+      DEALLOCATE(sparsecb_i)
+      DEALLOCATE(sparsecb_j)
+      DEALLOCATE(sparsecb_t)
       ! 
     ENDIF
 #endif  

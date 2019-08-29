@@ -20,7 +20,7 @@
   !!  in frequency space, or using FFT.
   !!  To converge the FFT with a small dt, we use zero padding of ImSigma outside the 
   !!  calculated frequency range. If the convergence is not satisfactory, one can 
-  !!  set 'fact' to a larger value (6 is used as default, see the subroutine cumulant_time). 
+  !!  set 'fact' to a larger value (6 is used as default, see the SUBROUTINE cumulant_time). 
   !! 
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP, i4b
@@ -31,7 +31,7 @@
                             bnd_cum
   USE elph2,         ONLY : ibndmin, ibndmax
   !
-  implicit none
+  IMPLICIT NONE
   !
   CHARACTER(len=64) :: line
   !! Auxiliary string
@@ -56,29 +56,29 @@
   INTEGER :: i0
   !! Energy index of Fermi level (w=0)
   ! 
-  REAL (kind=DP) :: dw
+  REAL (KIND = DP) :: dw
   !! Freq. increment
-  REAL (kind=DP) :: e_thresh
+  REAL (KIND = DP) :: e_thresh
   !! Do the cumulant only for states with energy below e_thresh
-  REAL (kind=DP) :: a1, a2, a3, a4 
+  REAL (KIND = DP) :: a1, a2, a3, a4 
   !! Auxiliary variables
-  REAL (kind=DP) :: ekk
+  REAL (KIND = DP) :: ekk
   !! K-S energy
-  REAL (kind=DP) :: zeta
+  REAL (KIND = DP) :: zeta
   !! Z factor
-  REAL (kind=DP), ALLOCATABLE :: ww(:)
+  REAL (KIND = DP), ALLOCATABLE :: ww(:)
   !! Frequency variable
-  REAL (kind=DP), ALLOCATABLE :: ek(:)
+  REAL (KIND = DP), ALLOCATABLE :: ek(:)
   !! Eigenvalues for the band bnd_cum
-  REAL (kind=DP), ALLOCATABLE :: sigmar(:,:) ! kpt, omega
+  REAL (KIND = DP), ALLOCATABLE :: sigmar(:, :) ! kpt, omega
   !! Real self-energy for bnd_cum 
-  REAL (kind=DP), ALLOCATABLE :: sigmai(:,:)
+  REAL (KIND = DP), ALLOCATABLE :: sigmai(:, :)
   !! Imaginary self-energy for bnd_cum
-  REAL (kind=DP), ALLOCATABLE :: a_mig(:,:)
+  REAL (KIND = DP), ALLOCATABLE :: a_mig(:, :)
   !! Migdal spectral function (same as in spectral_func.f90 )
-  REAL (kind=DP), ALLOCATABLE :: a_cw(:)
+  REAL (KIND = DP), ALLOCATABLE :: a_cw(:)
   !! Cumulant spectral function (convolutions)
-  REAL (kind=DP), ALLOCATABLE :: a_ct(:), a_tmp(:)
+  REAL (KIND = DP), ALLOCATABLE :: a_ct(:), a_tmp(:)
   !! Cumulant spectral function (FFT) 
   !
   ! e_thresh can be changed if one needs e.g. only states below the Fermi level
@@ -93,13 +93,13 @@
   WRITE(stdout,'(5x,a/)') repeat('=',75)
   !
   OPEN (UNIT=iospectral_sup, FILE='specfun_sup.elself', status='old', iostat=ios)
-  IF (ios /= 0) CALL errore ('spectral_cumulant', 'opening file specfun_sup.elself', abs(ios) )
+  IF (ios /= 0) CALL errore ('spectral_cumulant', 'opening file specfun_sup.elself', ABS(ios) )
   !
   ! determine number of k points, ibndmin, ibndmax
-  DO im=1,6
+  DO im = 1,6
     READ (iospectral_sup, '(a)') line
   ENDDO
-  DO im=1,maxrecs
+  DO im = 1,maxrecs
     READ (iospectral_sup,*,iostat=ios) i1, i2
     IF (im == 1) ibndmin = i2
     IF (ios /= 0) EXIT
@@ -114,11 +114,11 @@
   WRITE(stdout,'(5x,a,i4,a,i4,a,i4,a,f12.6/)') "Check: nk = ", nk, &
          ", ibndmin = ", ibndmin, ", ibndmax = ", ibndmax, " kbT (eV) = ", eptemp*ryd2ev
   !
-  ALLOCATE ( ww(nw_specfun), ek(nk), sigmar(nk,nw_specfun), sigmai(nk,nw_specfun), &
+  ALLOCATE(ww(nw_specfun), ek(nk), sigmar(nk,nw_specfun), sigmai(nk,nw_specfun), &
              a_mig(nw_specfun,nk), a_cw(nw_specfun), a_ct(nw_specfun), a_tmp(nw_specfun) )
   !
   ! read and store Kohn-Sham energy, energy grid, real and im sigma for designated band
-  DO im=1,6
+  DO im = 1,6
     READ (iospectral_sup, '(a)') line
   ENDDO
   DO ibnd = 1, ibndmax-ibndmin+1
@@ -129,10 +129,10 @@
           ! ek, w read in eV; Sigma read in meV
           ek(ik)=a1/ryd2ev
           ww(iw)=a2/ryd2ev
-          sigmar(ik,iw)=a3/ryd2mev ! / ( exp( ww(iw)/eptemp )+1.d0 )
-          sigmai(ik,iw)=a4/ryd2mev ! / ( exp( ww(iw)/eptemp )+1.d0 )
+          sigmar(ik,iw)=a3/ryd2mev ! / ( EXP(ww(iw)/eptemp )+1.d0 )
+          sigmai(ik,iw)=a4/ryd2mev ! / ( EXP(ww(iw)/eptemp )+1.d0 )
           ! spec func as in spectral_func.f90
-          a_mig(iw,ik) = abs( sigmai(ik,iw) ) / pi / &
+          a_mig(iw,ik) = ABS(sigmai(ik,iw) ) / pi / &
                ( ( ww(iw) - ek(ik) - sigmar(ik,iw) )**two + (sigmai(ik,iw) )**two )
         ENDIF
       ENDDO
@@ -144,7 +144,7 @@
   ! open file for cumulant spectral function
   IF (bnd_cum < 10) THEN
     WRITE(filespec,'(a,i1,a)') 'specfun_cum',bnd_cum,'.elself'
-  ELSE IF (bnd_cum > 9 .and. bnd_cum < 100) THEN
+  ELSE IF (bnd_cum > 9 .AND. bnd_cum < 100) THEN
     WRITE(filespec,'(a,i2,a)') 'specfun_cum',bnd_cum,'.elself'
   ELSE
     WRITE(filespec,'(a,i3,a)') 'specfun_cum',bnd_cum,'.elself'
@@ -157,7 +157,7 @@
   WRITE(stdout,'(8x,a)') '                with convolutions  |    using FFT '
   !
   ! define index corresponding to omega=0 (Fermi level)
-  i0 = MINLOC( abs(ww(:)), dim=1 )
+  i0 = MINLOC( ABS(ww(:)), dim=1 )
   IF (abs(ww(i0)) > dw) CALL errore & 
      ('spectral_cumulant', 'w=0 needs to be included in [wmin:wmax]', 1 )
   !WRITE(stdout,'(5x,a,i4)') "      Check: ind(0) = ", i0
@@ -167,7 +167,7 @@
   ! 
   DO ik = 1, nk
     !
-    IF ( ek(ik) < e_thresh ) THEN
+    IF (ek(ik) < e_thresh) THEN
       !
       ekk = ek(ik)
       !
@@ -182,7 +182,7 @@
       DO iw = 1, nw_specfun
         !
         ! map the indices of the FFT frequency grid onto the original one
-        IF ( iw >= i0) THEN
+        IF (iw >= i0) THEN
           a_ct(iw) = a_tmp(iw-i0+1)
         ELSE
           a_ct(iw) = a_tmp(iw+nw_specfun-i0+1)
@@ -197,9 +197,9 @@
                  ik, ww(iw)*ryd2ev, a_cw(iw)/ryd2mev, a_ct(iw)/ryd2mev, zeta 
         ELSE 
           WRITE (iospectral_cum,'(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
-                 ik, ww(iw)*ryd2ev, a_cw(iw)/ryd2mev, a_ct(iw)/ryd2mev !/ ( exp( ww(iw)/eptemp )+1.d0 )
+                 ik, ww(iw)*ryd2ev, a_cw(iw)/ryd2mev, a_ct(iw)/ryd2mev !/ ( EXP(ww(iw)/eptemp )+1.d0 )
           WRITE (stdout,'(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
-                 ik, ww(iw)*ryd2ev, a_cw(iw)/ryd2mev, a_ct(iw)/ryd2mev !/ ( exp( ww(iw)/eptemp )+1.d0 )
+                 ik, ww(iw)*ryd2ev, a_cw(iw)/ryd2mev, a_ct(iw)/ryd2mev !/ ( EXP(ww(iw)/eptemp )+1.d0 )
           ! uncomment to multiply by Fermi occupation factor
         ENDIF
         !
@@ -216,7 +216,7 @@
   !
   CLOSE (iospectral_cum)
   !
-  DEALLOCATE ( ww, ek, sigmar, sigmai, a_mig, a_cw, a_ct, a_tmp )
+  DEALLOCATE(ww, ek, sigmar, sigmai, a_mig, a_cw, a_ct, a_tmp )
   !
   END SUBROUTINE spectral_cumulant
   !
@@ -232,21 +232,21 @@
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : degaussw, wmin_specfun, wmax_specfun, nw_specfun
   !
-  implicit none
+  IMPLICIT NONE
   !
-  REAL (kind=DP), INTENT (in) :: ek
+  REAL (KIND = DP), INTENT(in) :: ek
   !! K-S energy
-  REAL (kind=DP), INTENT (in) :: ww(nw_specfun)
+  REAL (KIND = DP), INTENT(in) :: ww(nw_specfun)
   !! Frequency variable
-  REAL (kind=DP), INTENT (in) :: sigmar(nw_specfun) 
+  REAL (KIND = DP), INTENT(in) :: sigmar(nw_specfun) 
   !! Real self-energy 
-  REAL (kind=DP), INTENT (in) :: sigmai(nw_specfun)
+  REAL (KIND = DP), INTENT(in) :: sigmai(nw_specfun)
   !! Imaginary self-energy
-  REAL (kind=DP), INTENT (in) :: a_mig(nw_specfun)
+  REAL (KIND = DP), INTENT(in) :: a_mig(nw_specfun)
   !! Migdal spectral function 
-  REAL (kind=DP), INTENT (out) :: a_cum(nw_specfun)
+  REAL (KIND = DP), INTENT(out) :: a_cum(nw_specfun)
   !! Cumulant spectral function
-  REAL (kind=DP), INTENT (out) :: zeta
+  REAL (KIND = DP), INTENT(out) :: zeta
   !! Z factor
   !
   ! local variables
@@ -266,43 +266,43 @@
   INTEGER :: i0
   !! Energy index of Fermi level
   ! 
-  REAL (kind=DP) :: dw
+  REAL (KIND = DP) :: dw
   !! Freq. increment
-  REAL (kind=DP) :: eqp
+  REAL (KIND = DP) :: eqp
   !! Renpormalized quasiparticle energy
-  REAL (kind=DP) :: si_ks
+  REAL (KIND = DP) :: si_ks
   !! ImSigma at KS energy
-  REAL (kind=DP) :: si_qp
+  REAL (KIND = DP) :: si_qp
   !! ImSigma at renormalized energy
-  REAL (kind=DP) :: diS
+  REAL (KIND = DP) :: diS
   !! Derivative of ImSigma at KS energy
-  REAL (kind=DP) :: drS
+  REAL (KIND = DP) :: drS
   !! Derivative of ReSigma at qp energy
-  REAL (kind=DP) :: a_qp(nw_specfun)
+  REAL (KIND = DP) :: a_qp(nw_specfun)
   !! Quasiparticle contribution to the spectral function 
-  REAL (kind=DP) :: a_s(nw_specfun)
+  REAL (KIND = DP) :: a_s(nw_specfun)
   !! Temporary quantity needed to compute the satelite 
-  REAL (kind=DP) :: conv(nw_specfun)
+  REAL (KIND = DP) :: conv(nw_specfun)
   !! Temporary quantity to compute the convolution 
-  REAL (kind=DP) :: a_s1(nw_specfun), a_s2(nw_specfun), a_s3(nw_specfun)
+  REAL (KIND = DP) :: a_s1(nw_specfun), a_s2(nw_specfun), a_s3(nw_specfun)
   !! satellites
   !
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
-  i0 = MINLOC( abs(ww(:)), dim=1 )
+  i0 = MINLOC( ABS(ww(:)), dim=1 )
   ! define index and energy of renormalized qp (note: qp energy needs to be the absolute max of a_mig)
   iqp = MAXLOC( a_mig(:), dim=1 )
   eqp = ww(iqp)
   !
   ! define index corresponding to unrenormalized (Kohn-Sham) energy
-  iks = MINLOC( abs(ww(:)-ek), dim=1 )
+  iks = MINLOC( ABS(ww(:)-ek), dim=1 )
   !WRITE(stdout,'(5x,a,i4,a,i4)') "      Check: ind(eks) = ", iks, " ind(eqp) = ", iqp
   !
-  si_qp = abs(sigmai(iqp))
-  si_ks = abs(sigmai(iks))
+  si_qp = ABS(sigmai(iqp))
+  si_ks = ABS(sigmai(iks))
   ! finite difference derivatives of Im and Re Sigma
-  diS = ( abs(sigmai(iks+1)) - abs(sigmai(iks-1)) ) / (2.d0*dw) 
+  diS = ( ABS(sigmai(iks+1)) - ABS(sigmai(iks-1)) ) / (2.d0*dw) 
   drS = ( sigmar(iqp+1) - sigmar(iqp-1) ) / (2.d0*dw)
-  zeta = exp( drS )
+  zeta = EXP(drS )
   !
   ! calculate Aqp and As1
   DO iw = 1, nw_specfun
@@ -311,8 +311,8 @@
     conv(iw) = a_qp(iw)
     !
     ind1=iks+iw-i0
-    IF (ind1>0 .and. ind1<nw_specfun) THEN !RC
-      a_s (iw) = ( abs(sigmai(ind1)) - si_ks - (ww(iw)) * diS ) * real (1.d0 / (ww(iw)-ci*degaussw)**2.d0 ) / pi
+    IF (ind1>0 .AND. ind1<nw_specfun) THEN !RC
+      a_s (iw) = ( ABS(sigmai(ind1)) - si_ks - (ww(iw)) * diS ) * real (1.d0 / (ww(iw)-ci*degaussw)**2.d0 ) / pi
     ELSE
       a_s (iw) = ( - si_ks - (ww(iw)) * diS ) * real (1.d0 / (ww(iw)-ci*degaussw)**2.d0 ) / pi
     ENDIF
@@ -328,8 +328,8 @@
       DO iw2 = 1, nw_specfun
         !
         indw = i0+iw-iw2
-        IF ( indw <= nw_specfun .and. indw > 0 ) THEN
-           a_cum(iw) = a_cum(iw) + abs( a_s(iw2) * conv(indw) ) * dw
+        IF (indw <= nw_specfun .AND. indw > 0) THEN
+           a_cum(iw) = a_cum(iw) + ABS(a_s(iw2) * conv(indw) ) * dw
         ENDIF
         !
       ENDDO
@@ -364,19 +364,19 @@
   USE fft_scalar,    ONLY : cfft3d
   USE epwcom,        ONLY : degaussw, wmin_specfun, wmax_specfun, nw_specfun
   !
-  implicit none
+  IMPLICIT NONE
   !
-  REAL (kind=DP), INTENT (in) :: ek
+  REAL (KIND = DP), INTENT(in) :: ek
   !! K-S energy
-  REAL (kind=DP), INTENT (in) :: ww(nw_specfun)
+  REAL (KIND = DP), INTENT(in) :: ww(nw_specfun)
   !! Frequency variable
-  REAL (kind=DP), INTENT (in) :: sigmar(nw_specfun) 
+  REAL (KIND = DP), INTENT(in) :: sigmar(nw_specfun) 
   !! Real self-energy 
-  REAL (kind=DP), INTENT (in) :: sigmai(nw_specfun)
+  REAL (KIND = DP), INTENT(in) :: sigmai(nw_specfun)
   !! Imaginary self-energy
-  REAL (kind=DP), INTENT (in) :: a_mig(nw_specfun)
+  REAL (KIND = DP), INTENT(in) :: a_mig(nw_specfun)
   !! Migdal spectral function 
-  REAL (kind=DP), INTENT (out) :: a_cum(nw_specfun)
+  REAL (KIND = DP), INTENT(out) :: a_cum(nw_specfun)
   !! Cumulant spectral function
   !
   ! local variables
@@ -395,28 +395,28 @@
   !! number of points used for FFT 
   !! Zero padding is used for ImSigma outside the energy range computed.
   ! 
-  REAL (kind=DP) :: fact
+  REAL (KIND = DP) :: fact
   !! factor used to increase the number of points for the FFT;
   !! fact=4 gives good convergence but it can be increased if needed.
-  REAL (kind=DP) :: dw
+  REAL (KIND = DP) :: dw
   !! Freq. increment
-  REAL (kind=DP) :: eqp
+  REAL (KIND = DP) :: eqp
   !! Renormalized quasiparticle energy
-  REAL (kind=DP) :: drS, zeta
+  REAL (KIND = DP) :: drS, zeta
   !! Derivative of ReSigma at qp energy, Z factor
-  REAL (kind=DP) :: smeart
+  REAL (KIND = DP) :: smeart
   !! small broadening
-  REAL (kind=DP) :: dt
+  REAL (KIND = DP) :: dt
   !! time increment
-  REAL (kind=DP) :: tmin, tmax
+  REAL (KIND = DP) :: tmin, tmax
   !! min and max of time interval
-  REAL (kind=DP) :: tt 
+  REAL (KIND = DP) :: tt 
   !! time variable
-  COMPLEX (kind=DP), ALLOCATABLE :: cumS(:)
+  COMPLEX (KIND = DP), ALLOCATABLE :: cumS(:)
   !! satellite part of the cumulant function
-  COMPLEX (kind=DP), ALLOCATABLE :: cum(:)
+  COMPLEX (KIND = DP), ALLOCATABLE :: cum(:)
   !! complete cumulant function
-  COMPLEX (kind=DP) :: qpfac
+  COMPLEX (KIND = DP) :: qpfac
   !! quasiparticle factor
   !
   fact = 6.d0
@@ -429,31 +429,31 @@
   dt = 2.d0*pi / ( (wmax_specfun - wmin_specfun) * fact )
   nw_new = int( fact * (nw_specfun-1) + 1 ) ! to be consistent with dt above
   !
-  ALLOCATE ( cumS(nw_new), cum(nw_new) )
+  ALLOCATE(cumS(nw_new), cum(nw_new) )
   !
-  i0 = MINLOC( abs(ww(:)), dim=1 )
+  i0 = MINLOC( ABS(ww(:)), dim=1 )
   !
   ! define index and energy of renormalized qp (note: qp energy needs to be the absolute max of a_mig)
   iqp = MAXLOC( a_mig(:), dim=1 )
   eqp = ww(iqp)
   !
   ! define index corresponding to unrenormalized (Kohn-Sham) energy
-  iks = MINLOC( abs(ww(:)-ek), dim=1 )
+  iks = MINLOC( ABS(ww(:)-ek), dim=1 )
   !
   drS = ( sigmar(iqp+1) - sigmar(iqp-1) ) / (2.d0*dw)
-  qpfac = exp( -ci*( ek + sigmar(iqp) ) + smeart*0.5d0 )
-  zeta = exp( drS )
+  qpfac = EXP(-ci*( ek + sigmar(iqp) ) + smeart*0.5d0 )
+  zeta = EXP(drS )
   !
   cumS = czero
   DO iw = 1, nw_new
     !
     ! the w shift is needed because FFT uses positive w \in [0:Omega], Omega=wmax-wmin
-    IF ( iw <= (nw_specfun-i0+1) ) THEN
+    IF (iw <= (nw_specfun-i0+1)) THEN
       ind1 = iw+i0-1
-      cumS(iw) = dw * abs(sigmai(ind1))/pi * real(1.d0 / (ek-ww(ind1)-ci*smeart)**2.d0 )
-    ELSE IF ( iw > (nw_new-i0+1) ) THEN
+      cumS(iw) = dw * ABS(sigmai(ind1))/pi * REAL(1.d0 / (ek-ww(ind1)-ci*smeart)**2.d0 )
+    ELSE IF (iw > (nw_new-i0+1)) THEN
       ind2 = iw-nw_new+i0-1
-      cumS(iw) = dw * abs(sigmai(ind2))/pi * real(1.d0 / (ek-ww(ind2)-ci*smeart)**2.d0 )
+      cumS(iw) = dw * ABS(sigmai(ind2))/pi * REAL(1.d0 / (ek-ww(ind2)-ci*smeart)**2.d0 )
     ENDIF
     !
   ENDDO
@@ -464,7 +464,7 @@
   !
   DO it = 1, nw_new
     !
-    tt = tmin + dble(it-1)*dt
+    tt = tmin + DBLE(it-1)*dt
     cumS(it) = cumS(it) * exp(ci*ek*tt)
     cum(it)  = zeta * qpfac**tt * exp(cumS(it))
     !
@@ -475,14 +475,14 @@
   !
   ! extract the spectral function a_cum on the original w FFT grid (nw_specfun points)
   DO iw = 1, nw_specfun
-    IF ( iw <= (nw_specfun-i0+1) ) THEN
-      a_cum(iw) = real(real(cum(iw)))
+    IF (iw <= (nw_specfun-i0+1)) THEN
+      a_cum(iw) = REAL(real(cum(iw)))
     ELSE 
       ind1 = iw+nw_new-nw_specfun
-      a_cum(iw) = real(real(cum(ind1)))
+      a_cum(iw) = REAL(real(cum(ind1)))
     ENDIF
   ENDDO
   !
-  DEALLOCATE ( cumS, cum )
+  DEALLOCATE(cumS, cum )
   !
   END SUBROUTINE cumulant_time

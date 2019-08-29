@@ -8,7 +8,7 @@
   !                                                                            
   ! Adapted from flib/hpsort_eps
   !---------------------------------------------------------------------
-  subroutine hpsort_eps_epw (n, ra, ind, eps)
+  SUBROUTINE hpsort_eps_epw (n, ra, ind, eps)
   !---------------------------------------------------------------------
   ! sort an array ra(1:n) into ascending order using heapsort algorithm,
   ! and considering two elements being equal if their values differ
@@ -29,15 +29,15 @@
   ! adapted from Numerical Recipes pg. 329 (new edition)
   !
   use kinds, ONLY : DP
-  implicit none  
+  IMPLICIT NONE  
   !-input/output variables
   integer, intent(in)   :: n  
-  real(DP), intent(in)  :: eps
-  integer :: ind (n)  
-  real(DP) :: ra (n)
+  REAL(DP), intent(in)  :: eps
+  INTEGER :: ind (n)  
+  REAL(DP) :: ra (n)
   !-local variables
-  integer :: i, ir, j, l, iind  
-  real(DP) :: rra  
+  INTEGER :: i, ir, j, l, iind  
+  REAL(DP) :: rra  
 !
   ! initialize index array
   IF (ind (1)  == 0) then  
@@ -55,7 +55,7 @@
   sorting: do 
   
     ! still in hiring phase
-    IF ( l > 1 ) then  
+    IF (l > 1 ) then  
        l    = l - 1  
        rra  = ra (l)  
        iind = ind (l)  
@@ -72,7 +72,7 @@
        ! decrease the size of the corporation
        ir = ir - 1  
        ! done with the last promotion
-       IF ( ir == 1 ) then  
+       IF (ir == 1 ) then  
           ! the least competent worker at all !
           ra (1)  = rra  
           !
@@ -86,9 +86,9 @@
     j = l + l  
     !
     DO while ( j <= ir )  
-       IF ( j < ir ) then  
+       IF (j < ir ) then  
           ! compare to better underling
-          IF ( hslt( ra (j),  ra (j + 1) ) ) then  
+          IF (hslt( ra (j),  ra (j + 1) ) ) then  
              j = j + 1  
           !else if ( .NOT. hslt( ra (j+1),  ra (j) ) ) then
              ! this means ra(j) == ra(j+1) within tolerance
@@ -96,7 +96,7 @@
           ENDIF
        ENDIF
        ! demote rra
-       IF ( hslt( rra, ra (j) ) ) then  
+       IF (hslt( rra, ra (j) ) ) then  
           ra (i) = ra (j)  
           ind (i) = ind (j)  
           i = j  
@@ -129,8 +129,8 @@ contains
   !  compare two real number and return the result
 
   logical function hslt( a, b )
-    REAL(DP) :: a, b
-    IF( abs(a-b) <  eps ) then
+    REAL(KIND = DP) :: a, b
+    IF( ABS(a-b) <  eps ) then
       hslt = .false.
     ELSE
       hslt = ( a < b )
@@ -138,4 +138,4 @@ contains
   end function hslt
 
   !
-end subroutine hpsort_eps_epw
+END SUBROUTINE hpsort_eps_epw

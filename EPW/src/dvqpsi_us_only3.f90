@@ -46,9 +46,9 @@
   !! Number of k+G-vectors inside 'ecut sphere'
   INTEGER, INTENT(in) :: igkq(npwq)
   !! k+G+q mapping
-  REAL(kind=DP), INTENT(in) :: xxkq(3) 
+  REAL(KIND = DP), INTENT(in) :: xxkq(3) 
   !! the k+q point (cartesian coordinates)
-  COMPLEX(kind=DP), INTENT(in) :: uact(3 * nat)
+  COMPLEX(KIND = DP), INTENT(in) :: uact(3 * nat)
   !! the pattern of displacements
   !
   ! Local variables
@@ -88,30 +88,30 @@
   INTEGER ::  ijs
   !! Counter on combined is and js polarization
   !
-  REAL(kind=DP), ALLOCATABLE :: deff(:,:,:)
+  REAL(KIND = DP), ALLOCATABLE :: deff(:, :, :)
   !
-  COMPLEX(kind=DP), ALLOCATABLE :: ps1(:,:), ps2(:,:,:), aux(:), deff_nc(:,:,:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: ps1_nc(:,:,:), ps2_nc(:,:,:,:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: ps1(:, :), ps2(:, :, :), aux(:), deff_nc(:, :, :, :)
+  COMPLEX(KIND = DP), ALLOCATABLE :: ps1_nc(:, :, :), ps2_nc(:, :, :, :)
   !
   LOGICAL :: ok
   ! 
   CALL start_clock('dvqpsi_us_on')
   IF (noncolin) THEN
-    ALLOCATE ( ps1_nc(nkb, npol, lower_band:upper_band) )
-    ALLOCATE ( ps2_nc(nkb, npol, lower_band:upper_band, 3) )
-    ALLOCATE ( deff_nc(nhm, nhm, nat, nspin) )
-    ps1_nc(:,:,:)   = czero
-    ps2_nc(:,:,:,:) = czero
-    deff_nc(:,:,:,:) = czero
+    ALLOCATE(ps1_nc(nkb, npol, lower_band:upper_band) )
+    ALLOCATE(ps2_nc(nkb, npol, lower_band:upper_band, 3) )
+    ALLOCATE(deff_nc(nhm, nhm, nat, nspin) )
+    ps1_nc(:, :, :)   = czero
+    ps2_nc(:, :, :, :) = czero
+    deff_nc(:, :, :, :) = czero
   ELSE
-    ALLOCATE ( ps1(nkb, lower_band:upper_band) )
-    ALLOCATE ( ps2(nkb, lower_band:upper_band, 3) )
-    ALLOCATE ( deff(nhm, nhm, nat) )
-    ps1(:,:)   = czero
-    ps2(:,:,:) = czero
-    deff(:,:,:) = zero
+    ALLOCATE(ps1(nkb, lower_band:upper_band) )
+    ALLOCATE(ps2(nkb, lower_band:upper_band, 3) )
+    ALLOCATE(deff(nhm, nhm, nat) )
+    ps1(:, :)   = czero
+    ps2(:, :, :) = czero
+    deff(:, :, :) = zero
   ENDIF
-  ALLOCATE ( aux(npwx) )
+  ALLOCATE(aux(npwx) )
   aux(:) = czero
   !
   IF (lsda) current_spin = isk_loc(ik)
@@ -135,7 +135,7 @@
             DO jh = 1, nh(nt)
               jkb = ijkb0 + jh
               DO ipol = 1, 3
-                IF ( abs( uact(mu+1) ) + abs( uact(mu+2) ) + abs( uact(mu+3) ) > eps12 ) THEN
+                IF (ABS(uact(mu+1) ) + ABS(uact(mu+2) ) + ABS(uact(mu+3) ) > eps12) THEN
                   IF (noncolin) THEN
                     ijs = 0
                     DO is = 1, npol
@@ -257,15 +257,15 @@
     ENDDO
   ENDDO
   !
-  DEALLOCATE (aux)
+  DEALLOCATE(aux)
   IF (noncolin) THEN
-    DEALLOCATE (ps1_nc)
-    DEALLOCATE (ps2_nc)
-    DEALLOCATE (deff_nc)
+    DEALLOCATE(ps1_nc)
+    DEALLOCATE(ps2_nc)
+    DEALLOCATE(deff_nc)
   ELSE
-    DEALLOCATE (ps1)
-    DEALLOCATE (ps2)
-    DEALLOCATE (deff)
+    DEALLOCATE(ps1)
+    DEALLOCATE(ps2)
+    DEALLOCATE(deff)
   ENDIF
   !
   CALL stop_clock('dvqpsi_us_on')

@@ -42,7 +42,7 @@
   USE cell_base,     ONLY : omega, alat, bg
   USE division,      ONLY : fkbounds
   ! 
-  implicit none
+  IMPLICIT NONE
   ! 
   INTEGER, INTENT(IN) :: iqq
   !! Q-point index in selecq
@@ -56,14 +56,14 @@
   !
   INTEGER :: iw, ik, ikk, ikq, ibnd, jbnd, fermicount
   INTEGER :: nksqtotf, lower_bnd, upper_bnd
-  REAL(kind=DP), external :: efermig, dos_ef, wgauss
-  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
-  REAL(kind=DP) :: specfun_sum, esigmar0, tpiba_new
-  REAL(kind=DP) :: fermi(nw_specfun)
-  REAL(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
-  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, &
+  REAL(KIND = DP), EXTERNAL :: efermig, dos_ef, wgauss
+  REAL(KIND = DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
+  REAL(KIND = DP) :: specfun_sum, esigmar0, tpiba_new
+  REAL(KIND = DP) :: fermi(nw_specfun)
+  REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :) , etf_all(:, :)
+  REAL(KIND = DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, &
                    qsquared, qTF, dipole, rs, ekk1, degen
-  REAL(kind=DP) :: q(3)
+  REAL(KIND = DP) :: q(3)
   !! The q-point in cartesian unit. 
   !
   ! loop over temperatures can be introduced
@@ -72,13 +72,13 @@
   !
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
   !
-  IF ( iqq == 1 ) THEN
+  IF (iqq == 1) THEN
      !
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
      WRITE(stdout,'(5x,a/)') repeat('=',67)
      !
-     IF ( fsthick < 1.d3 ) &
+     IF (fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
            'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -87,7 +87,7 @@
   !
   ! Fermi level and corresponding DOS
   !
-  IF ( efermi_read ) THEN
+  IF (efermi_read) THEN
     !
     ef0 = fermi_energy
     !
@@ -99,7 +99,7 @@
     !
   ENDIF
   !
-  IF ( iqq == 1 ) THEN 
+  IF (iqq == 1) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
      WRITE (stdout,'(a)') ' '
   ENDIF
@@ -131,16 +131,16 @@
   vF       =  1.d0/meff * (3.d0*pi**2*nel/omega/degen)**(1.d0/3.d0)
   fermiHEG =  1.d0/(2.d0*meff) * (3.d0*pi**2*nel/omega/degen)**(2.d0/3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
   qTF      =  (6.d0*pi*nel/omega/degen/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
-  wpl0     =  sqrt(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
+  wpl0     =  SQRT(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
   wq       =  wpl0 ! [Ryd] 
   q(:)     =  xqf(:,iq) 
-  CALL cryst_to_cart (1, q, bg, 1)
+  CALL cryst_to_cart(1, q, bg, 1)
   qsquared =  (q(1)**2 + q(2)**2 + q(3)**2)
-  qin      =  sqrt(qsquared)*tpiba_new
+  qin      =  SQRT(qsquared)*tpiba_new
   qcut     =  wpl0 / vF  / tpiba_new / 2.d0 ! 1/2 converts from Ryd to Ha
   !qcut = qcut / 2.d0 ! phenomenological Landau damping
   ! 
-  ! qcut2  = kF * ( sqrt( 1.d0 + wpl0 / fermiHEG) - 1.d0 ) / tpiba_new
+  ! qcut2  = kF * ( SQRT( 1.d0 + wpl0 / fermiHEG) - 1.d0 ) / tpiba_new
   CALL get_eps_mahan (qin,rs,kF,eps0) ! qin should be in atomic units for Mahan formula
   !call get_eps_mahan (qin,qTF,kF,eps0) ! qin should be in atomic units for Mahan formula
   deltaeps = -(1.d0/(epsiHEG+eps0-1.d0)-1.d0/epsiHEG)
@@ -173,8 +173,8 @@
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       ! (but in this case they are the same)
       !
-      IF ( ( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .AND. &
-          ( minval ( abs(etf (:, ikq) - ef) ) < fsthick ) ) THEN
+      IF (( minval ( ABS(etf (:, ikk) - ef) ) < fsthick ) .AND. &
+          ( minval ( ABS(etf (:, ikq) - ef) ) < fsthick )) THEN
         !
         fermicount = fermicount + 1
         !
@@ -251,8 +251,8 @@
   !
   IF (iqq == totq) THEN
     !
-    ALLOCATE (xkf_all(3,       nkqtotf))
-    ALLOCATE (etf_all(nbndsub, nkqtotf))
+    ALLOCATE(xkf_all(3,       nkqtotf))
+    ALLOCATE(etf_all(nbndsub, nkqtotf))
     xkf_all(:, :) = zero
     etf_all(:, :) = zero
     !
@@ -313,7 +313,7 @@
           !  the energy of the electron at k
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
           !
-          a_all(iw,ik) = a_all(iw,ik) + abs( esigmai_all(ibnd,ik,iw) ) / pi / &
+          a_all(iw,ik) = a_all(iw,ik) + ABS(esigmai_all(ibnd,ik,iw) ) / pi / &
              ( ( ww - ekk - esigmar_all(ibnd,ik,iw) )**two + (esigmai_all(ibnd,ik,iw) )**two )
           !
         ENDDO
@@ -326,12 +326,12 @@
       !
     ENDDO
     !
-    DO ik=1, nksqtotf
+    DO ik = 1, nksqtotf
       !
       ! The spectral function should integrate to 1 for each k-point
       specfun_sum = 0.0
       ! 
-      DO iw=1, nw_specfun
+      DO iw = 1, nw_specfun
          !
          ww = wmin_specfun + dble (iw-1) * dw
          fermi(iw) = wgauss(-ww/eptemp, -99) 
@@ -353,9 +353,9 @@
     !
     IF (me_pool == 0) CLOSE(iospectral)
     !
-    DO ibnd=1, ibndmax-ibndmin+1
+    DO ibnd = 1, ibndmax-ibndmin+1
       !
-      DO ik=1, nksqtotf
+      DO ik = 1, nksqtotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
@@ -363,7 +363,7 @@
         !  the energy of the electron at k
         ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
         !
-        DO iw=1, nw_specfun
+        DO iw = 1, nw_specfun
           !
           ww = wmin_specfun + dble (iw-1) * dw
           WRITE(stdout,'(2i9,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4,2x,f12.4)') ik,&
@@ -385,8 +385,8 @@
     !
     IF (me_pool == 0) CLOSE(iospectral_sup)
     !
-    DEALLOCATE (xkf_all)
-    DEALLOCATE (etf_all)
+    DEALLOCATE(xkf_all)
+    DEALLOCATE(etf_all)
   ENDIF
   !
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)

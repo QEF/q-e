@@ -40,13 +40,13 @@
   USE mp_global,     ONLY : me_pool, inter_pool_comm
   USE division,      ONLY : fkbounds
   !
-  implicit none
+  IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: iqq
+  INTEGER, INTENT(in) :: iqq
   !! Current q-point index in selecq  
-  INTEGER, INTENT (in) :: iq
+  INTEGER, INTENT(in) :: iq
   !! Current q-point index  
-  INTEGER, INTENT (in) :: totq
+  INTEGER, INTENT(in) :: totq
   !! Total number of q-point in window
   ! 
   ! Local variables
@@ -74,43 +74,43 @@
   INTEGER :: upper_bnd
   !! Upper bounds index after k or q paral
   ! 
-  REAL(kind=DP) :: g2
+  REAL(KIND = DP) :: g2
   !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: ekk
+  REAL(KIND = DP) :: ekk
   !! Eigen energy on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekq
+  REAL(KIND = DP) :: ekq
   !! Eigen energy of k+q on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: wq
+  REAL(KIND = DP) :: wq
   !! Phonon frequency on the fine grid
-  REAL(kind=DP) :: ef0
+  REAL(KIND = DP) :: ef0
   !! Fermi energy level
-  REAL(kind=DP) :: wgq
+  REAL(KIND = DP) :: wgq
   !! Bose occupation factor $n_{q\nu}(T)$
-  REAL(kind=DP) :: wgkq
+  REAL(KIND = DP) :: wgkq
   !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
-  REAL(kind=DP) :: weight
+  REAL(KIND = DP) :: weight
   !! Self-energy factor 
   !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$ 
   !!$$ + N_q \Re( \frac{1- f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q\nu} - i\delta }) $$
-  REAL(kind=DP) :: inv_wq
+  REAL(KIND = DP) :: inv_wq
   !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
-  REAL(kind=DP) :: inv_eptemp0
+  REAL(KIND = DP) :: inv_eptemp0
   !! Inverse of temperature define for efficiency reasons
-  REAL(kind=DP) :: g2_tmp
+  REAL(KIND = DP) :: g2_tmp
   !! If the phonon frequency is too small discart g
-  REAL(kind=DP) :: inv_degaussw
+  REAL(KIND = DP) :: inv_degaussw
   !! Inverse of the smearing for efficiency reasons  
-  REAL(kind=DP) :: ww
+  REAL(KIND = DP) :: ww
   !! Current frequency
-  REAL(kind=DP) :: dw 
+  REAL(KIND = DP) :: dw 
   !! Frequency intervals
-  real(kind=DP) :: specfun_sum, esigmar0
-  real(kind=DP) :: fermi(nw_specfun)
-  real(kind=DP), external :: efermig, dos_ef, wgauss
+  REAL(KIND = DP) :: specfun_sum, esigmar0
+  REAL(KIND = DP) :: fermi(nw_specfun)
+  REAL(KIND = DP), EXTERNAL :: efermig, dos_ef, wgauss
   !
   ! variables for collecting data from all pools in parallel case 
   !
-  real(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :) , etf_all(:, :)
   ! 
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
@@ -128,7 +128,7 @@
     WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick < 1.d3 ) &
+    IF (fsthick < 1.d3 ) &
        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
           'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
@@ -172,7 +172,7 @@
   ! loop over all k points of the fine mesh
   !
   fermicount = 0 
-  DO ik=1, nkf
+  DO ik = 1, nkf
     !
     ikk = 2 * ik - 1
     ikq = ikk + 1
@@ -184,7 +184,7 @@
         (MINVAL(ABS(etf (:, ikq) - ef) ) < fsthick)) THEN
       !
       fermicount = fermicount + 1
-      DO imode=1, nmodes
+      DO imode = 1, nmodes
         !
         ! the phonon frequency and Bose occupation
         wq = wf (imode, iq)
@@ -211,12 +211,12 @@
             ekq = etf (ibndmin-1+jbnd, ikq) - ef0
             wgkq = wgauss( -ekq/eptemp, -99)  
             !
-            ! here we take into account the zero-point sqrt(hbar/2M\omega)
+            ! here we take into account the zero-point SQRT(hbar/2M\omega)
             ! with hbar = 1 and M already contained in the eigenmodes
             ! g2 is Ry^2, wkf must already account for the spin factor
             !
-            IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-               .OR. abs(xqf (3, iq))> eps8 )) THEN
+            IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+               .OR. ABS(xqf (3, iq))> eps8 )) THEN
               ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
               g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp )
@@ -262,10 +262,10 @@
   !
   IF (iqq == totq) THEN
     !
-    ALLOCATE (xkf_all(3,       nkqtotf))
-    ALLOCATE (etf_all(nbndsub, nkqtotf))
-    xkf_all(:,:) = zero
-    etf_all(:,:) = zero
+    ALLOCATE(xkf_all(3,       nkqtotf))
+    ALLOCATE(etf_all(nbndsub, nkqtotf))
+    xkf_all(:, :) = zero
+    etf_all(:, :) = zero
     !
 #if defined(__MPI)
     !
@@ -307,7 +307,7 @@
 &         Real Sigma[meV]  Im Sigma[meV]'
     ENDIF
     !
-    DO ik=1, nksqtotf
+    DO ik = 1, nksqtotf
       !
       ikk = 2 * ik - 1
       ikq = ikk + 1
@@ -315,16 +315,16 @@
       WRITE(stdout,'(/5x,"ik = ",i5," coord.: ", 3f12.7)') ik, xkf_all (:,ikk)
       WRITE(stdout,'(5x,a)') repeat('-',67)
       !
-      DO iw=1, nw_specfun
+      DO iw = 1, nw_specfun
         !
         ww = wmin_specfun + dble (iw-1) * dw
         !
-        DO ibnd=1, ibndmax-ibndmin+1
+        DO ibnd = 1, ibndmax-ibndmin+1
           !
           !  the energy of the electron at k
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
           !
-          a_all(iw,ik) = a_all(iw,ik) + abs( esigmai_all(ibnd,ik,iw) ) / pi / &
+          a_all(iw,ik) = a_all(iw,ik) + ABS(esigmai_all(ibnd,ik,iw) ) / pi / &
              ( ( ww - ekk - esigmar_all(ibnd,ik,iw) )**two + (esigmai_all(ibnd,ik,iw) )**two )
           !
         ENDDO
@@ -337,12 +337,12 @@
       !
     ENDDO
     !
-    DO ik=1, nksqtotf
+    DO ik = 1, nksqtotf
       !
       ! The spectral function should integrate to 1 for each k-point
       specfun_sum = 0.0
       ! 
-      DO iw=1, nw_specfun
+      DO iw = 1, nw_specfun
         !
         ww = wmin_specfun + dble (iw-1) * dw
         fermi(iw) = wgauss(-ww/eptemp, -99) 
@@ -364,9 +364,9 @@
     !
     IF (me_pool == 0)  CLOSE(iospectral)
     !
-    DO ibnd=1, ibndmax-ibndmin+1
+    DO ibnd = 1, ibndmax-ibndmin+1
       !
-      DO ik=1, nksqtotf
+      DO ik = 1, nksqtotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
@@ -396,8 +396,8 @@
     !
     IF (me_pool == 0)  CLOSE(iospectral_sup)
     !
-    DEALLOCATE (xkf_all)
-    DEALLOCATE (etf_all)
+    DEALLOCATE(xkf_all)
+    DEALLOCATE(etf_all)
     !
   ENDIF
   !

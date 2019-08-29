@@ -48,14 +48,14 @@
   INTEGER, INTENT(in) :: nkstot
   !! total number of kpoints across pools
   ! 
-  REAL(kind=DP), INTENT(in) :: xxq(3)
+  REAL(KIND = DP), INTENT(in) :: xxq(3)
   !! the qpoint for folding of U
-  REAL(kind=DP), INTENT(inout) :: w_centers(3,nbndsub)
+  REAL(KIND = DP), INTENT(inout) :: w_centers(3,nbndsub)
   !! Wannier centers
   !
-  COMPLEX(kind=DP), INTENT(out) :: cu(nbnd, nbndsub, nks)
+  COMPLEX(KIND = DP), INTENT(out) :: cu(nbnd, nbndsub, nks)
   !! U(k) matrix for k-points in the pool
-  COMPLEX(kind=DP), INTENT(out) :: cuq(nbnd, nbndsub, nks)
+  COMPLEX(KIND = DP), INTENT(out) :: cuq(nbnd, nbndsub, nks)
   !! U(k+q) matrix for k+q-points in the pool
   ! 
   ! work variables 
@@ -69,15 +69,15 @@
   INTEGER :: jbnd
   !! Counter on wannierized bands
   INTEGER :: ios
-  !! integer variable for I/O control
+  !! INTEGER variable for I/O control
   INTEGER :: ik_start
   !! Index of first k-point in the pool  
   INTEGER :: ik_stop
   !! Index of last k-point in the pool
   !
-  COMPLEX(kind=DP) :: cu_big(nbnd, nbndsub, nkstot)
+  COMPLEX(KIND = DP) :: cu_big(nbnd, nbndsub, nkstot)
   !! U(k) matrix for all k-points
-  COMPLEX(kind=DP) :: cuq_big(nbnd, nbndsub, nkstot)
+  COMPLEX(KIND = DP) :: cuq_big(nbnd, nbndsub, nkstot)
   !! U(k+q) matrix for all k+q-points
   !
   LOGICAL :: lwin_big(nbnd,nkstot)
@@ -144,7 +144,7 @@
   !
   CALL fkbounds(nkstot, ik_start, ik_stop)
   !
-  IF ( (ik_stop-ik_start+1) .ne. nks ) & 
+  IF ((ik_stop-ik_start+1) /= nks ) & 
     CALL errore('loadumat',"Improper parallel ukk load",1)
   !
   cu = cu_big(:, :, ik_start:ik_stop)

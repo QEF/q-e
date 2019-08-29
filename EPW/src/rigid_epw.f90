@@ -28,27 +28,27 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: nq1
+  INTEGER, INTENT(in) :: nq1
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq2
+  INTEGER, INTENT(in) :: nq2
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq3
+  INTEGER, INTENT(in) :: nq3
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nat
+  INTEGER, INTENT(in) :: nat
   !! Number of atoms
   ! 
-  REAL (kind=DP), INTENT (in) :: q(3)
+  REAL (KIND = DP), INTENT(in) :: q(3)
   !! q-vector from the full coarse or fine grid.
-  REAL (kind=DP), INTENT (in) :: epsil(3, 3)
+  REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
   !! dielectric constant tensor
-  REAL (kind=DP), INTENT (in) :: zeu(3, 3, nat)
+  REAL (KIND = DP), INTENT(in) :: zeu(3, 3, nat)
   !! effective charges tensor
-  REAL (kind=DP), INTENT (in) :: signe
+  REAL (KIND = DP), INTENT(in) :: signe
   !! signe=+/-1.0 ==> add/subtract rigid-ion term
-  REAL (kind=DP), INTENT (in) :: tau(3, nat)
+  REAL (KIND = DP), INTENT(in) :: tau(3, nat)
   !! Atomic positions
   ! 
-  COMPLEX (kind=DP), INTENT (inout) :: dyn(3 * nat, 3 * nat)
+  COMPLEX (KIND = DP), INTENT(inout) :: dyn(3 * nat, 3 * nat)
   !! Dynamical matrix
   !
   ! Local variables
@@ -65,29 +65,29 @@
   !! Loop over q-points
   !INTEGER :: nrx1, nrx2, nrx3
   !
-  REAL(DP):: geg                    
+  REAL(KIND = DP):: geg                    
   !! <q+G| epsil | q+G>
-  REAL(kind=DP) :: alph
+  REAL(KIND = DP) :: alph
   !! Ewald parameter
-  REAL(kind=DP) :: fac
+  REAL(KIND = DP) :: fac
   !! Missing definition
-  REAL(kind=DP) :: g1, g2, g3
+  REAL(KIND = DP) :: g1, g2, g3
   !! Missing definition
-  REAL(kind=DP) :: facgd
+  REAL(KIND = DP) :: facgd
   !! fac * EXP(-geg / (alph * 4.0d0)) / geg
-  REAL(kind=DP) :: arg
+  REAL(KIND = DP) :: arg
   !! Missing definition
-  REAL(kind=DP) :: gmax
+  REAL(KIND = DP) :: gmax
   !! Maximum G
-  REAL(kind=DP) :: zag(3)
+  REAL(KIND = DP) :: zag(3)
   !! Z * G
-  REAL(kind=DP) :: zbg(3)
+  REAL(KIND = DP) :: zbg(3)
   !! Z * G
-  REAL(kind=DP) :: zcg(3)
+  REAL(KIND = DP) :: zcg(3)
   !! Z * G
-  REAL(kind=DP) :: fnat(3)
+  REAL(KIND = DP) :: fnat(3)
   !! Missing definition
-  COMPLEX(kind=DP) :: facg
+  COMPLEX(KIND = DP) :: facg
   !! Missing definition
   !
   ! alph is the Ewald parameter, geg is an estimate of G^2
@@ -95,7 +95,7 @@
   ! very rough estimate: geg/4/alph > gmax = 14 
   ! (exp (-14) = 10^-6)
   !
-  IF ( abs(abs(signe) - 1.0) > eps6 ) &
+  IF (ABS(abs(signe) - 1.0) > eps6 ) &
        CALL errore('rgd_blk',' wrong value for signe ',1)
   gmax = 14.d0
   alph = 1.0d0
@@ -103,7 +103,7 @@
   !
   ! Estimate of nrx1,nrx2,nrx3 generating all vectors up to G^2 < geg
   ! Only for dimensions where periodicity is present, e.g. if nr1=1 
-  ! and nr2=1, then the G-vectors run along nr3 only.
+  ! and nr2 = 1, then the G-vectors run along nr3 only.
   ! (useful if system is in vacuum, e.g. 1D or 2D)
   !
   ! SP - Apr 2019 - Should be overkill 
@@ -143,22 +143,22 @@
                g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
                g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
         !
-        IF ( geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax ) THEN
+        IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
           !
           facgd = fac * EXP(-geg / (alph * 4.0d0)) / geg
           !
-          DO na=1, nat
+          DO na = 1, nat
             zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
             fnat(:) = 0.d0
-            DO nb=1, nat
+            DO nb = 1, nat
               arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1, nb)) + &
                                  g2 * (tau(2, na) - tau(2, nb)) + &
                                  g3 * (tau(3, na) - tau(3, nb)))
               zcg(:)  = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
               fnat(:) = fnat(:) + zcg(:) * COS(arg)
             ENDDO
-            DO j=1, 3 
-              DO i=1, 3 
+            DO j = 1, 3 
+              DO i = 1, 3 
                 dyn((na - 1) * 3 + i, (na - 1) * 3 + j) = dyn((na - 1) * 3 + i,(na - 1) * 3 + j) & 
                                              - facgd * zag(i) * fnat(j) 
               ENDDO ! i
@@ -174,21 +174,21 @@
                g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
                g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
         !
-        IF ( geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax ) THEN
+        IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
           !
           facgd = fac * exp(- geg / (alph * 4.0d0)) / geg
           !
-          DO nb=1, nat
+          DO nb = 1, nat
             zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
-            DO na=1, nat
+            DO na = 1, nat
               zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
               arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1 ,nb)) + &
                               g2 * (tau(2, na) - tau(2, nb)) + &
                               g3 * (tau(3, na) - tau(3, nb)) )
               !
               facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
-              DO j=1, 3 
-                DO i=1, 3 
+              DO j = 1, 3 
+                DO i = 1, 3 
                   dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn((na - 1) * 3 + i, (nb - 1) * 3 + j) & 
                                                + facg * zag(i) * zbg(j)
                 ENDDO ! i
@@ -237,29 +237,29 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: nq1
+  INTEGER, INTENT(in) :: nq1
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq2
+  INTEGER, INTENT(in) :: nq2
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nq3
+  INTEGER, INTENT(in) :: nq3
   !! Coarse q-point grid 
-  INTEGER, INTENT (in) :: nmodes
+  INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
   ! 
-  REAL (kind=DP), INTENT (in) :: q(3)
+  REAL (KIND = DP), INTENT(in) :: q(3)
   !! q-vector from the full coarse or fine grid.
-  REAL (kind=DP), INTENT (in) :: epsil(3, 3)
+  REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
   !! dielectric constant tensor
-  REAL (kind=DP), INTENT (in) :: zeu(3, 3, nat)
+  REAL (KIND = DP), INTENT(in) :: zeu(3, 3, nat)
   !! effective charges tensor
-  REAL (kind=DP), INTENT (in) :: signe
+  REAL (KIND = DP), INTENT(in) :: signe
   !! signe=+/-1.0 ==> add/subtract long range term
   ! 
-  COMPLEX (kind=DP), INTENT (in) :: uq(nmodes, nmodes)
+  COMPLEX (KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
   !! phonon eigenvec associated with q
-  COMPLEX (kind=DP), INTENT (inout) :: epmat(nmodes)
+  COMPLEX (KIND = DP), INTENT(inout) :: epmat(nmodes)
   !! e-ph matrix elements 
-  COMPLEX (kind=DP), INTENT (in) :: bmat 
+  COMPLEX (KIND = DP), INTENT(in) :: bmat 
   !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
   !
   ! work variables
@@ -273,28 +273,28 @@
   INTEGER :: m1, m2, m3
   !! Loop over q-points
   ! 
-  REAL(kind=DP) :: qeq
+  REAL(KIND = DP) :: qeq
   !! <q+G| epsil | q+G>
-  REAL(kind=DP) :: arg
+  REAL(KIND = DP) :: arg
   !!
-  REAL(kind=DP) :: zaq
+  REAL(KIND = DP) :: zaq
   !!
-  REAL(kind=DP) :: g1, g2, g3
+  REAL(KIND = DP) :: g1, g2, g3
   !!
-  REAL(kind=DP) :: gmax
+  REAL(KIND = DP) :: gmax
   !!
-  REAL(kind=DP) :: alph
+  REAL(KIND = DP) :: alph
   !!
-  REAL(kind=DP) :: geg
+  REAL(KIND = DP) :: geg
   !!
   !
-  COMPLEX(kind=DP) :: fac
+  COMPLEX(KIND = DP) :: fac
   !!
-  COMPLEX(kind=DP) :: facqd
+  COMPLEX(KIND = DP) :: facqd
   !!
-  COMPLEX(kind=DP) :: facq
+  COMPLEX(KIND = DP) :: facq
   !!
-  COMPLEX(kind=DP) :: epmatl(nmodes)
+  COMPLEX(KIND = DP) :: epmatl(nmodes)
   !! Long-range part of the el-ph matrix elements
   !
   IF(ABS(ABS(signe) - 1.0) > eps12) &
@@ -339,15 +339,15 @@
              g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
              g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
       !
-      IF ( qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax ) THEN
+      IF (qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax) THEN
         !
         qeq = qeq * twopi / alat
         facqd = fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
         !
-        DO na=1, nat
+        DO na = 1, nat
           arg = - twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
           facq = facqd * CMPLX(COS(arg), SIN(arg), DP)
-          DO ipol=1, 3
+          DO ipol = 1, 3
             zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
             !
             epmat = epmat + facq * zaq * uq(3 * (na - 1) + ipol, :) * bmat
@@ -362,7 +362,7 @@
   ENDDO ! m1 
   !
   ! In case we want only the short-range we do
-  ! g_s = sqrt(g*g - g_l*g_l)
+  ! g_s = SQRT(g*g - g_l*g_l)
   ! 
   ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
   ! case the sqrt will give an pure imaginary number. If it is positive we 
@@ -420,20 +420,20 @@
   INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
   ! 
-  REAL (kind=DP), INTENT(in) :: q(3)
+  REAL (KIND = DP), INTENT(in) :: q(3)
   !! q-vector from the full coarse or fine grid.
-  REAL (kind=DP), INTENT(in) :: epsil(3, 3)
+  REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
   !! dielectric constant tensor
-  REAL (kind=DP), INTENT(in) :: zeu(3, 3, nat)
+  REAL (KIND = DP), INTENT(in) :: zeu(3, 3, nat)
   !! effective charges tensor
-  REAL (kind=DP), INTENT(in) :: signe
+  REAL (KIND = DP), INTENT(in) :: signe
   !! signe=+/-1.0 ==> add/subtract long range term
   ! 
-  COMPLEX (kind=DP), INTENT(in) :: uq(nmodes, nmodes)
+  COMPLEX (KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
   !! phonon eigenvec associated with q
-  COMPLEX (kind=DP), INTENT(inout) :: epmat(nbndsub, nbndsub, nmodes)
+  COMPLEX (KIND = DP), INTENT(inout) :: epmat(nbndsub, nbndsub, nmodes)
   !! e-ph matrix elements 
-  COMPLEX (kind=DP), INTENT(in) :: bmat(nbndsub, nbndsub) 
+  COMPLEX (KIND = DP), INTENT(in) :: bmat(nbndsub, nbndsub) 
   !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
   !
   ! work variables
@@ -449,28 +449,28 @@
   INTEGER :: imode
   !! Mode index
   !
-  REAL(kind=DP) :: qeq
+  REAL(KIND = DP) :: qeq
   !! <q+G| epsil | q+G>
-  REAL(kind=DP) :: arg
+  REAL(KIND = DP) :: arg
   !!
-  REAL(kind=DP) :: zaq
+  REAL(KIND = DP) :: zaq
   !!
-  REAL(kind=DP) :: g1, g2, g3
+  REAL(KIND = DP) :: g1, g2, g3
   !!
-  REAL(kind=DP) :: gmax
+  REAL(KIND = DP) :: gmax
   !!
-  REAL(kind=DP) :: alph
+  REAL(KIND = DP) :: alph
   !!
-  REAL(kind=DP) :: geg
+  REAL(KIND = DP) :: geg
   !!
   !
-  COMPLEX(kind=DP) :: fac
+  COMPLEX(KIND = DP) :: fac
   !!
-  COMPLEX(kind=DP) :: facqd
+  COMPLEX(KIND = DP) :: facqd
   !!
-  COMPLEX(kind=DP) :: facq
+  COMPLEX(KIND = DP) :: facq
   !!
-  COMPLEX(kind=DP) :: epmatl(nbndsub, nbndsub, nmodes)
+  COMPLEX(KIND = DP) :: epmatl(nbndsub, nbndsub, nmodes)
   !! Long-range part of the matrix element
   !
   IF (ABS(ABS(signe) - 1.0) > eps12) &
@@ -481,7 +481,7 @@
   geg = gmax * alph * 4.0d0
   fac = signe * e2 * fpi / omega * ci
   !
-  epmatl(:,:,:) = czero   
+  epmatl(:, :, :) = czero   
   !
   DO m1=-nq1, nq1
     DO m2=-nq2, nq2
@@ -495,18 +495,18 @@
              g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
              g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3)) !*twopi/alat
       !
-      IF (qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax ) THEN
+      IF (qeq > 0.0d0 .AND. qeq / (alph * 4.0d0) < gmax) THEN
         !
         qeq = qeq * twopi / alat
         facqd = fac * EXP(-qeq / (alph * 4.0d0)) / qeq !/(two*wq)
         !
-        DO na=1, nat
+        DO na = 1, nat
           arg = -twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
           facq = facqd * CMPLX(COS(arg), SIN(arg), DP)
-          DO ipol=1, 3
+          DO ipol = 1, 3
             zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
             !
-            DO imode=1, nmodes
+            DO imode = 1, nmodes
               CALL zaxpy(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmat(:, :, imode), 1)
               CALL zaxpy(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmatl(:, :, imode), 1)
             ENDDO
@@ -520,7 +520,7 @@
   ENDDO ! m1
   !
   ! In case we want only the short-range we do
-  ! g_s = sqrt(g*g - g_l*g_l)
+  ! g_s = SQRT(g*g - g_l*g_l)
   ! 
   ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
   ! case the sqrt will give an pure imaginary number. If it is positive we 
@@ -549,43 +549,43 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (in) :: nmodes
+  INTEGER, INTENT(in) :: nmodes
   !! Number of phonon modes
   !
-  REAL (kind=DP), INTENT (inout) :: q(3)
+  REAL (KIND = DP), INTENT(inout) :: q(3)
   !! q vector (in crystal coordinates
-  REAL (kind=DP), INTENT (inout) :: w(nmodes)
+  REAL (KIND = DP), INTENT(inout) :: w(nmodes)
   !! phonon frequencies associated with q
-  REAL (kind=DP), INTENT (in) :: epsil(3,3) 
+  REAL (KIND = DP), INTENT(in) :: epsil(3,3) 
   !! dielectric constant tensor
   !
-  COMPLEX (kind=DP), INTENT (out) :: eps_rpa(nmodes) 
+  COMPLEX(KIND = DP), INTENT(out) :: eps_rpa(nmodes) 
   !! electronic screening
   !
   ! Working variable
   INTEGER :: im 
   !! Mode counter
   ! 
-  REAL (kind=DP) :: n
+  REAL (KIND = DP) :: n
   !! Electron density in atomic units
-  REAL (kind=DP) :: rs
+  REAL (KIND = DP) :: rs
   !! Prefactor for the dielectric screening 
-  REAL (kind=DP) :: EF
+  REAL (KIND = DP) :: EF
   !! Fermi-level in eV
-  REAL (kind=DP) :: kF
+  REAL (KIND = DP) :: kF
   !! Fermi wavevector
-  REAL (kind=DP) :: pref
+  REAL (KIND = DP) :: pref
   !! Prefactor for the dielectric function 
-  REAL (kind=DP) :: eta
+  REAL (KIND = DP) :: eta
   !! Broadening for the dielectric function
-  REAL (kind=DP) :: q2
+  REAL (KIND = DP) :: q2
   !! q-point square
-  REAL (kind=DP) :: qm
+  REAL (KIND = DP) :: qm
   !! Internal units for Hedin's formula
-  REAL (kind=DP) :: eps_ave
+  REAL (KIND = DP) :: eps_ave
   !! Average dielectric function (semiconductor/insulator)
   ! 
-  COMPLEX (kind=DP) :: u
+  COMPLEX (KIND = DP) :: u
   !! Complex frequency argument
   ! 
   LOGICAL, SAVE :: first_call=.true.
@@ -595,9 +595,9 @@
     FUNCTION H_eps (z)
       USE kinds, ONLY : DP
       !
-      COMPLEX(kind=DP) H_eps
+      COMPLEX(KIND = DP) H_eps
       !! Function for the Lindhard function see Eq.(56) of Hedin (1965) 
-      COMPLEX(kind=DP), INTENT(in)  :: z
+      COMPLEX(KIND = DP), INTENT(in)  :: z
       !! Complex argument of the function
       !!
     END FUNCTION H_eps
@@ -625,15 +625,15 @@
   !
   CALL cryst_to_cart(1, q, bg, 1)
   q2 = q(1)**2 + q(2)**2 + q(3)**2
-  qm = sqrt(q2) * ( twopi / alat ) / kF / 2.d0 ! internal units for Hedin's formula
+  qm = SQRT(q2) * ( twopi / alat ) / kF / 2.d0 ! internal units for Hedin's formula
   !
-  IF (ABS(qm) > eps10 ) THEN
-    DO im=1, nmodes
+  IF (ABS(qm) > eps10) THEN
+    DO im = 1, nmodes
       u = w(im) + SIGN(eta, w(im)) * ci
       eps_rpa(im) = 1.d0 + pref * ( H_eps(qm + u / qm) + H_eps( qm - u / qm) ) / qm**3
       !WRITE(stdout,'(a)') " ! epsilon(q,w) "
       !WRITE(stdout,'(f12.8,i4,3f12.8)') qm*2*kF/(2.d0*pi/alat), im,
-      !real(eps_rpa(im)), aimag(eps_rpa(im)), abs(eps_rpa(im))
+      !real(eps_rpa(im)), aimag(eps_rpa(im)), ABS(eps_rpa(im))
     ENDDO
   ELSE 
     eps_rpa = cone
@@ -647,7 +647,7 @@
   !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
-  COMPLEX(DP) FUNCTION H_eps (z)
+  COMPLEX(KIND = DP) FUNCTION H_eps (z)
   !--------------------------------------------------------------------------
   !!  
   !! Function used in the Lindhard function. See Eq.(56) of Hedin (1965)
@@ -658,7 +658,7 @@
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT (in) :: z
+  COMPLEX(KIND = DP), INTENT(in) :: z
   !! Argument of the Lindhard function
   !
   IF (ABS(z - 1.d0) > eps10) THEN
@@ -691,29 +691,29 @@
   INTEGER, INTENT(in) :: nmodes
   !! Number of phonon modes
   !
-  REAL(kind=DP), INTENT (inout) :: q(3)
+  REAL(KIND = DP), INTENT(inout) :: q(3)
   !! q vector (in crystal coordinates)
-  REAL(kind=DP), INTENT (in) :: epsil(3,3)
+  REAL(KIND = DP), INTENT(in) :: epsil(3,3)
   !! dielectric constant tensor
   !
-  COMPLEX(kind=DP), INTENT (out) :: eps_tf(nmodes)
+  COMPLEX(KIND = DP), INTENT(out) :: eps_tf(nmodes)
   !! electronic screening
   !
   ! Working variable
   !
-  REAL (kind=DP) :: n
+  REAL (KIND = DP) :: n
   !! Electron density in atomic units
-  REAL(kind=DP) :: EF
+  REAL(KIND = DP) :: EF
   !! Fermi-level in eV
-  REAL(kind=DP) :: q2
+  REAL(KIND = DP) :: q2
   !! q-point square
-  REAL(kind=DP) :: qtf
+  REAL(KIND = DP) :: qtf
   !! Thomas-Fermi wavector
-  REAL(kind=DP) :: qtfc
+  REAL(KIND = DP) :: qtfc
   !! Thomas-Fermi wavector in unit of 2pi/a
-  REAL(kind=DP) :: qm
+  REAL(KIND = DP) :: qm
   !! Modulus of q 
-  REAL(kind=DP) :: eps_ave
+  REAL(KIND = DP) :: eps_ave
   !! Average dielectric function (semiconductor/insulator)
   ! 
   LOGICAL, SAVE :: first_call=.true.
@@ -741,12 +741,12 @@
   IF (ABS(qm) > eps10) THEN
     eps_tf = 1.d0 + qtfc**2 / q2
     !WRITE(stdout,'(a)') " ! epsilon_tf "
-    !WRITE(stdout,'(2f12.8)') qm, real(eps_tf)
+    !WRITE(stdout,'(2f12.8)') qm, REAL(eps_tf)
   ELSE
     eps_tf = cone
   ENDIF
   !
-  CALL cryst_to_cart (1, q, at, -1)
+  CALL cryst_to_cart(1, q, at, -1)
   !
   !--------------------------------------------------------------------------
   END SUBROUTINE tf_epsilon
@@ -767,13 +767,13 @@
   !  input variables
   INTEGER :: nbnd 
   !! number of bands (possibly in the optimal subspace)
-  COMPLEX(kind=DP) :: cufkk(nbnd, nbnd)
+  COMPLEX(KIND = DP) :: cufkk(nbnd, nbnd)
   !! rotation matrix U(k)^\dagger, fine mesh
-  COMPLEX(kind=DP) :: cufkq(nbnd, nbnd)
+  COMPLEX(KIND = DP) :: cufkq(nbnd, nbnd)
   !! rotation matrix U(k+q)^\dagger, fine mesh
   !
   !  output variables
-  COMPLEX(kind=DP) :: bmatf(nbnd, nbnd)
+  COMPLEX(KIND = DP) :: bmatf(nbnd, nbnd)
   ! overlap wfcs in Bloch representation, fine grid
   !
   !  every pool works with its own subset of k points on the fine grid
@@ -785,7 +785,7 @@
   CALL zgemm( 'n', 'c', nbnd, nbnd, nbnd, cone, cufkq, &
               nbnd, cufkk, nbnd, czero, bmatf, nbnd )
   !
-  !bmatf = bmatf / dble(nkstot)
+  !bmatf = bmatf / DBLE(nkstot)
   !
   !
   END SUBROUTINE compute_umn_f
@@ -809,11 +809,11 @@
   INTEGER, INTENT(in) :: nbndsub
   !! Number of band on the subspace of Wannier
   ! 
-  COMPLEX(kind=DP), INTENT(in) :: cuk(nbnd, nbndsub, nks)
+  COMPLEX(KIND = DP), INTENT(in) :: cuk(nbnd, nbndsub, nks)
   !! rotation matrix U(k), coarse mesh
-  COMPLEX(kind=DP), INTENT(in) :: cukq(nbnd, nbndsub, nks)
+  COMPLEX(KIND = DP), INTENT(in) :: cukq(nbnd, nbndsub, nks)
   !! rotation matrix U(k+q), coarse mesh
-  COMPLEX(kind=DP), INTENT(out) :: bmat(nbnd, nbnd, nks)
+  COMPLEX(KIND = DP), INTENT(out) :: bmat(nbnd, nbnd, nks)
   !! overlap wfcs in Bloch representation, fine grid
   !
   ! Work variables 

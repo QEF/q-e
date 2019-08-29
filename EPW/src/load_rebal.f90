@@ -29,7 +29,7 @@
   USE mp_global,     ONLY : inter_pool_comm, mp_bcast
   USE transportcom,  ONLY : lower_bnd
   !
-  implicit none
+  IMPLICIT NONE
 
   INTEGER :: pool_index(npool) 
   !! Index of the current pool
@@ -46,18 +46,18 @@
   INTEGER :: map_rebal_inv_tmp(nkqtotf/2)
   !! Temporary inverse map between the initial ordering of k-point and the rebalanced one
   !
-  REAL(kind=DP) :: xkf_all(3,nkqtotf)
+  REAL(KIND = DP) :: xkf_all(3,nkqtotf)
   !! Collect k-point coordinate (and k+q) from all pools in parallel case
-  REAL(kind=DP) :: wkf_all(nkqtotf)
+  REAL(KIND = DP) :: wkf_all(nkqtotf)
   !! Collect k-point coordinate (and k+q) from all pools in parallel case
-  REAL(kind=DP) :: etf_all(nbndsub, nkqtotf)
+  REAL(KIND = DP) :: etf_all(nbndsub, nkqtotf)
   !! Collect all the eigenenergies
   !
   ! Gather all the k-point coordinate and all the weights from all the pools
   ! Gather also all the eigeneneriges
-  xkf_all(:,:) = zero
+  xkf_all(:, :) = zero
   wkf_all(:) = zero
-  etf_all(:,:) = zero
+  etf_all(:, :) = zero
   ! 
 #ifdef __MPI
   CALL poolgather2 ( 1, nkqtotf, 2*nkf, wkf, wkf_all )
@@ -69,14 +69,14 @@
   etf_all = etf
 #endif 
   ! 
-  ALLOCATE (map_rebal(nkqtotf/2))
-  ALLOCATE (map_rebal_inv(nkqtotf/2))
+  ALLOCATE(map_rebal(nkqtotf/2))
+  ALLOCATE(map_rebal_inv(nkqtotf/2))
   ! 
   kpt_in(:) = 0 
   kpt_out(:) = 0 
   ! 
   !The sorting is done by master only
-  IF ( my_pool_id == 0 ) THEN
+  IF (my_pool_id == 0) THEN
     ! 
     ikpt = 0
     ikpt2 = 0
@@ -84,7 +84,7 @@
     DO ik = 1, nkqtotf/2
       ikk = 2 * ik - 1
       ikq = ikk + 1
-      IF ( minval ( abs(etf_all(:, ikk) - ef) ) < fsthick ) THEN
+      IF (minval ( ABS(etf_all(:, ikk) - ef) ) < fsthick) THEN
         ikpt = ikpt + 1  
         kpt_in( ikpt) = ikk
       ELSE 
@@ -123,24 +123,24 @@
   tot = ( nkqtotf / (2 * npool) )
   rest = ( (nkqtotf/2) - tot * npool )
   ! 
-  DO ipool=1, npool
-    DO ik=1,  tot
+  DO ipool = 1, npool
+    DO ik = 1,  tot
       map_rebal_inv_tmp(ik + (ipool - 1) * tot) = map_rebal_inv( npool * ik - (npool-ipool) )
     ENDDO
   ENDDO
   ! Do the rest
-  DO ik=1, rest
+  DO ik = 1, rest
     map_rebal_inv_tmp(ik + npool * tot) = map_rebal_inv( npool * tot + ik )
   ENDDO
   map_rebal_inv(:) = map_rebal_inv_tmp(:) 
   ! 
   ! Now recontruct map_rebal so that it is the inverse mapping as map_rebal_inv
-  DO ik=1,nkqtotf/2
+  DO ik = 1,nkqtotf/2
     map_rebal( map_rebal_inv(ik) ) = ik
   ENDDO
   ! 
   ! We then assign this new order to the local k-points and weights on each cpu
-  DO ik=1,nkf
+  DO ik = 1,nkf
     ikk = 2 * ik - 1
     xkf(:,ikk)   = xkf_all(:,2 * map_rebal_inv( ik + lower_bnd - 1  )-1 )
     xkf(:,ikk+1) = xkf_all(:,2 * map_rebal_inv( ik + lower_bnd - 1  )  )

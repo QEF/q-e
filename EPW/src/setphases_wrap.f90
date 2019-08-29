@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !
-  subroutine setphases_wrap
+  SUBROUTINE setphases_wrap
   !---------------------------------------------------------------------
   !!
   !!  This is the wrapper which is used to set the phases of the wavefunctions  
@@ -27,7 +27,7 @@
   use elph2,           only : umat, umat_all
   use pwcom,           only : nbnd, nks
   !
-  implicit none
+  IMPLICIT NONE
   !
   INTEGER :: ik
   !! K-point 
@@ -35,14 +35,14 @@
   !! Band-index
   INTEGER :: jbnd
   !! Band index
-  REAL(kind=DP) :: zero_vect(3)
+  REAL(KIND = DP) :: zero_vect(3)
   !! Real vector
   !
   IF (nproc_pool>1) call errore &
        ('setphases_wrap', 'only one proc per pool', 1)
   !
-  ALLOCATE (umat_all(nbnd, nbnd, nkstot))
-  ALLOCATE (umat(nbnd, nbnd, nks))
+  ALLOCATE(umat_all(nbnd, nbnd, nkstot))
+  ALLOCATE(umat(nbnd, nbnd, nks))
   umat_all = (0.d0, 0.d0)
   zero_vect = 0.d0
   !
@@ -50,9 +50,9 @@
   WRITE(stdout,'(5x,a)') 'No wavefunction gauge setting applied' 
   !
   IF (ionode) THEN
-    DO ik=1, nkstot
-      DO ibnd=1, nbnd
-        DO jbnd=1, nbnd
+    DO ik = 1, nkstot
+      DO ibnd = 1, nbnd
+        DO jbnd = 1, nbnd
           IF (ibnd == jbnd) then
             umat_all(ibnd, jbnd, ik) = (1.d0, 0.d0)
           ELSE
@@ -62,9 +62,9 @@
       ENDDO
     ENDDO
   ENDIF
-  DO ik=1, nks
-    DO ibnd=1, nbnd
-      DO jbnd=1, nbnd
+  DO ik = 1, nks
+    DO ibnd = 1, nbnd
+      DO jbnd = 1, nbnd
         IF (ibnd == jbnd) then
           umat(ibnd, jbnd, ik) = (1.d0, 0.d0)
         ELSE
@@ -88,4 +88,4 @@
   !   ENDDO
   !ENDIF
   !
-  end subroutine setphases_wrap
+  END SUBROUTINE setphases_wrap

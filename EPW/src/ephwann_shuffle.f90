@@ -106,7 +106,7 @@
   !! Variable used for formatting output
   ! 
   INTEGER :: ios
-  !! integer variable for I/O control
+  !! INTEGER variable for I/O control
   INTEGER :: iq 
   !! Counter on coarse q-point grid
   INTEGER :: iqq
@@ -172,12 +172,12 @@
   INTEGER :: npool_tmp
   !! Temporary number of pools
   INTEGER, ALLOCATABLE :: irvec_k(:, :)
-  !! integer components of the ir-th Wigner-Seitz grid point in the basis
+  !! INTEGER components of the ir-th Wigner-Seitz grid point in the basis
   !! of the lattice vectors for electrons
   INTEGER, ALLOCATABLE :: irvec_q(:, :)
-  !! integer components of the ir-th Wigner-Seitz grid point for phonons
+  !! INTEGER components of the ir-th Wigner-Seitz grid point for phonons
   INTEGER, ALLOCATABLE :: irvec_g(:, :)
-  !! integer components of the ir-th Wigner-Seitz grid point for electron-phonon
+  !! INTEGER components of the ir-th Wigner-Seitz grid point for electron-phonon
   INTEGER, ALLOCATABLE :: ndegen_k(:, :, :)
   !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
   INTEGER, ALLOCATABLE :: ndegen_q(:, :, :)
@@ -271,7 +271,7 @@
   !! k-point weights for all the k-points
   REAL(KIND = DP) :: eta_av
   !! Average eta over degenerate states
-  REAL(KIND = DP), ALLOCATABLE :: eta_deg(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: eta_deg(:, :)
   !! Average eta over degenerate states
   REAL(KIND = DP) :: e_1
   !! Eigenvalue 1 for deg. testing
@@ -553,9 +553,9 @@
     DEALLOCATE(dynq)
     IF (.NOT. vme) DEALLOCATE(dmec)
     IF (etf_mem == 0) THEN
-      DEALLOCATE (epmatwe)
+      DEALLOCATE(epmatwe)
     ELSE
-      DEALLOCATE (epmatwe_mem)
+      DEALLOCATE(epmatwe_mem)
     ENDIF
   ENDIF ! (epwread .AND. .NOT. epbread)
   !
@@ -606,7 +606,7 @@
   wf(:, :)             = zero
   etf(:, :)            = zero
   etf_ks(:, :)         = zero
-  epmatf(:,:,:)        = czero
+  epmatf(:, :, :)        = czero
   cufkk(:, :)          = czero
   cufkq(:, :)          = czero
   uf(:, :)             = czero
@@ -640,7 +640,7 @@
   ALLOCATE(rdotk(nrr_k))
   ALLOCATE(rdotk2(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
-  ALLOCATE (irvec_r(3, nrr_k))
+  ALLOCATE(irvec_r(3, nrr_k))
   irvec_r = REAL(irvec_k, KIND = DP)
   cfac(:, :, :)  = czero
   cfacq(:, :, :) = czero
@@ -770,7 +770,7 @@
   ! Apply a possible shift to eigenenergies (applied later)
   icbm = 1
   IF (ABS(scissor) > eps6) THEN
-    IF ( noncolin ) THEN
+    IF (noncolin) THEN
       icbm = FLOOR(nelec / 1.0d0) + 1
     ELSE
       icbm = FLOOR(nelec / 2.0d0) + 1
@@ -887,9 +887,9 @@
     ! 
     ! Check if the grids are homogeneous and commensurate
     homogeneous = .FALSE.
-    IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+    IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
          (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
-         (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. (MOD(nkf3,nqf3) == 0) ) THEN
+         (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. (MOD(nkf3,nqf3) == 0)) THEN
       homogeneous = .TRUE.
     ELSE
       homogeneous = .FALSE.
@@ -902,7 +902,7 @@
     IF (ephwrite) THEN
       ! 
       totq = nqf
-      ALLOCATE (selecq(nqf))
+      ALLOCATE(selecq(nqf))
       DO iq = 1, nqf
         selecq(iq) = iq
       ENDDO
@@ -1094,7 +1094,7 @@
     ! 
     DO iqq = iq_restart, totq
       ! This needs to be uncommented. 
-      epf17(:,:,:,:) = czero
+      epf17(:, :, :, :) = czero
       cufkk(:, :) = czero
       cufkq(:, :) = czero
       ! 
@@ -1513,7 +1513,7 @@
                 ! SP: Determination of the Fermi level for intrinsic or doped carrier 
                 ! 
                 ! VB only
-                IF ( ncarrier < 0.0 ) THEN
+                IF (ncarrier < 0.0) THEN
                   ef0(itemp) = fermicarrier(etemp)               
                   WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
                   ! We only compute 1 Fermi level so we do not need the other
@@ -1529,8 +1529,8 @@
                 ! 
               ENDIF
               ! 
-              IF (.NOT. int_mob .AND. .NOT. carrier ) THEN
-                IF ( efermi_read ) THEN
+              IF (.NOT. int_mob .AND. .NOT. carrier) THEN
+                IF (efermi_read) THEN
                   !
                   ef0(itemp) = fermi_energy
                   !
@@ -1548,7 +1548,7 @@
             ! 
           ENDIF ! iqq=0
           !   
-          IF ( .NOT. iterative_bte ) THEN
+          IF (.NOT. iterative_bte) THEN
             CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle)
             ! Computes the SERTA mobility
             IF (iqq == totq) CALL transport_coeffs (ef0,efcb)
@@ -1791,60 +1791,60 @@
   !! Look-up table for the exponential (speed optimization) in the case of
   !! homogeneous grids.
 
-  !IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-  !     (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen ) THEN
+  !IF ((nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
+  !     (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN
   !  ! Make a check   
-  !  IF ((nqf1>nkf1) .or. (nqf2>nkf2) .or. (nqf3>nkf3)) &
+  !  IF ((nqf1>nkf1) .OR. (nqf2>nkf2) .OR. (nqf3>nkf3)) &
   !          CALL errore('The fine q-grid cannot be larger than the fine k-grid',1)
   !  ! Along x
   !  DO ikx = -2*nk1, 2*nk1
   !    DO ikfx = 0, nkf1-1
   !      !rdotk = twopi * ( xk(1)*irvec_kk(1,ir))
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf1) * ikx )
-  !      tablex(ikx+2*nk1+1,ikfx+1) = exp( ci*rdotk_scal )
+  !      tablex(ikx+2*nk1+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! For k+q
   !  DO ikx = -2*nk1, 2*nk1
   !    DO ikfx = 0, 2*nkf1
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf1) * ikx )
-  !      tableqx(ikx+2*nk1+1,ikfx+1) = exp( ci*rdotk_scal )
+  !      tableqx(ikx+2*nk1+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! Along y
   !  DO ikx = -2*nk2, 2*nk2
   !    DO ikfx = 0, nkf2-1
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf2) * ikx )
-  !      tabley(ikx+2*nk2+1,ikfx+1) = exp( ci*rdotk_scal )
+  !      tabley(ikx+2*nk2+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! For k+q
   !  DO ikx = -2*nk2, 2*nk2
   !    DO ikfx = 0, 2*nkf2
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf2) * ikx )
-  !      tableqy(ikx+2*nk2+1,ikfx+1) = exp( ci*rdotk_scal )
+  !      tableqy(ikx+2*nk2+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! Along z
   !  DO ikx = -2*nk3, 2*nk3
   !    DO ikfx = 0, nkf3-1
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf3) * ikx )
-  !      tablez(ikx+2*nk3+1,ikfx+1) = exp( ci*rdotk_scal )
+  !      tablez(ikx+2*nk3+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! For k+q
   !  DO ikx = -2*nk3, 2*nk3
   !    DO ikfx = 0, 2*nkf3
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf3) * ikx )
-  !      tableqz(ikx+2*nk3+1,ikfx+1) = exp( ci*rdotk_scal )
+  !      tableqz(ikx+2*nk3+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !ENDIF
   !       ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
   !       ! + optimize the 2\pi r\cdot k with Blas
-  !       IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-  !          (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen ) THEN
-  !         ! We need to use NINT (nearest integer to x) rather than INT
+  !       IF ((nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
+  !          (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN
+  !         ! We need to use NINT (nearest INTEGER to x) rather than INT
   !         xkk1 = NINT(xkk(1)*(nkf1)) + 1
   !         xkk2 = NINT(xkk(2)*(nkf2)) + 1
   !         xkk3 = NINT(xkk(3)*(nkf3)) + 1
@@ -1860,17 +1860,17 @@
   !                   tableqy(irvec_k(2,ir)+2*nk2+1,xkq2) * tableqz(irvec_k(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
   !         ENDDO
   !         !DBSP
-  !         !IF ( (iq == 1) .and. (ik ==12)) THEN
+  !         !IF ((iq == 1) .AND. (ik ==12)) THEN
   !         !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-  !         !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+  !         !  cfac1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !         !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-  !         !  cfacq1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+  !         !  cfacq1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !         !ENDIF
   !       ELSE
   !         CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-  !         cfac(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+  !         cfac(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !         CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-  !         cfacq(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+  !         cfacq(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !       ENDIF
   !       !
   !  
@@ -1976,7 +1976,7 @@
     !
     IF (etf_mem == 0) THEN
       ! SP: The call to epmatwp is now inside the loop
-      !     This is important as otherwise the lrepmatw integer 
+      !     This is important as otherwise the lrepmatw INTEGER 
       !     could become too large for integer(kind=4).
       !     Note that in Fortran the record length has to be a integer
       !     of kind 4. 
@@ -2143,7 +2143,7 @@
     epmatwp = czero
     IF (mpime == ionode_id) THEN
       ! SP: The call to epmatwp is now inside the loop
-      !     This is important as otherwise the lrepmatw integer 
+      !     This is important as otherwise the lrepmatw INTEGER 
       !     could become too large for integer(kind=4).
       !     Note that in Fortran the record length has to be a integer
       !     of kind 4.      
@@ -2208,9 +2208,9 @@
   !
   imelt = (ibndmax - ibndmin + 1)**2 * nmodes * nkf
   rmelt = imelt * 8 / 1048576.d0 ! 8 bytes per number, value in Mb
-  IF (rmelt < 1000.0 ) THEN
+  IF (rmelt < 1000.0) THEN
     chunit =  ' Mb '
-    IF (rmelt < 1.0 ) THEN
+    IF (rmelt < 1.0) THEN
       chunit = ' Kb '
       rmelt  = rmelt * 1024.d0
     ENDIF
@@ -2334,24 +2334,24 @@
   ! 
   IMPLICIT NONE
   ! 
-  INTEGER, INTENT (in) :: nks
+  INTEGER, INTENT(in) :: nks
   !! the total number of K points
-  INTEGER, INTENT (in) :: nbnd
+  INTEGER, INTENT(in) :: nbnd
   !! the number of bands
-  INTEGER, INTENT (in) :: ngauss
+  INTEGER, INTENT(in) :: ngauss
   !! the type of smearing
-  INTEGER, INTENT (in) :: is
+  INTEGER, INTENT(in) :: is
   !!
-  INTEGER, INTENT (in) :: isk(nks)
+  INTEGER, INTENT(in) :: isk(nks)
   !!
   !
-  REAL(KIND = DP), INTENT (in) :: wk (nks)
+  REAL(KIND = DP), INTENT(in) :: wk (nks)
   !! the weight of the k points
-  REAL(KIND = DP), INTENT (in) :: et (nbnd, nks) 
+  REAL(KIND = DP), INTENT(in) :: et (nbnd, nks) 
   !! the energy eigenvalues
-  REAL(KIND = DP), INTENT (in) :: degauss
+  REAL(KIND = DP), INTENT(in) :: degauss
   !! gaussian broadening
-  REAL(KIND = DP), INTENT (in) :: e
+  REAL(KIND = DP), INTENT(in) :: e
   !! the energy to check
   !
   REAL(KIND = DP)  :: sumkg_seq 
@@ -2482,7 +2482,7 @@
   FUNCTION fermicarrier(temp)
   !-----------------------------------------------------------------------
   !!
-  !!  This subroutine computes the Fermi energy associated with a given 
+  !!  This SUBROUTINE computes the Fermi energy associated with a given 
   !!  carrier concentration using bissection
   !!
   !-----------------------------------------------------------------------

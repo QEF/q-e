@@ -66,12 +66,12 @@
   INTEGER, INTENT(in) :: igkq(npwq)
   !! k+G+q mapping
   ! 
-  REAL(kind=DP), INTENT (in) :: xq0(3)
+  REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! Current coarse q-point coordinate
-  REAL(kind=DP), INTENT (in) :: xxkq(3)
+  REAL(KIND = DP), INTENT(in) :: xxkq(3)
   !! k+q point coordinate 
   ! 
-  COMPLEX(kind=DP), INTENT(in) :: uact(3 * nat)
+  COMPLEX(KIND = DP), INTENT(in) :: uact(3 * nat)
   !! the pattern of displacements
   !
   ! Local variables
@@ -93,41 +93,41 @@
   INTEGER :: ip
   !! counter on polarizations
   !
-  REAL(kind=DP) :: fac
+  REAL(KIND = DP) :: fac
   !! spin degeneracy factor
   !
-  COMPLEX(kind=DP) :: gtau
+  COMPLEX(KIND = DP) :: gtau
   !! e^{-i G * \tau}
-  COMPLEX(kind=DP) :: u1, u2, u3
+  COMPLEX(KIND = DP) :: u1, u2, u3
   !! components of displacement pattern u 
-  COMPLEX(kind=DP) :: gu0
+  COMPLEX(KIND = DP) :: gu0
   !! scalar product q * u
-  COMPLEX(kind=DP) :: gu
+  COMPLEX(KIND = DP) :: gu
   !! q * u + G * u
-  COMPLEX(kind=DP) :: fact
+  COMPLEX(KIND = DP) :: fact
   !! e^{-i q * \tau}
-  COMPLEX(kind=DP), ALLOCATABLE, TARGET :: aux(:)
-  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:), aux2(:)
-  COMPLEX(kind=DP), POINTER :: auxs(:)
-  COMPLEX(kind=DP), ALLOCATABLE :: drhoc(:)
+  COMPLEX(KIND = DP), ALLOCATABLE, TARGET :: aux(:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:)
+  COMPLEX(KIND = DP), POINTER :: auxs(:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: drhoc(:)
   !! response core charge density
   !
   CALL start_clock('dvqpsi_us3')
   !
   IF (nlcc_any .AND. addnlcc) THEN
-     ALLOCATE (drhoc(dfftp%nnr))
-     ALLOCATE (aux(dfftp%nnr))
-     ALLOCATE (auxs(dffts%nnr))
+     ALLOCATE(drhoc(dfftp%nnr))
+     ALLOCATE(aux(dfftp%nnr))
+     ALLOCATE(auxs(dffts%nnr))
   ENDIF
-  ALLOCATE (aux1(dffts%nnr))
-  ALLOCATE (aux2(dffts%nnr))
+  ALLOCATE(aux1(dffts%nnr))
+  ALLOCATE(aux2(dffts%nnr))
   !
   !    We start by computing the contribution of the local potential.
   !    The computation of the derivative of the local potential is done in
   !    reciprocal space while the product with the wavefunction is done in
   !    real space
   !
-  dvpsi(:,:) = czero
+  dvpsi(:, :) = czero
   aux1(:) = czero
   DO na = 1, nat
     fact = tpiba * (0.d0, -1.d0) * eigqts(na)
@@ -135,7 +135,7 @@
     u1 = uact(mu+1)
     u2 = uact(mu+2)
     u3 = uact(mu+3)
-    IF (abs(u1) + abs(u2) + abs(u3) > eps12) THEN
+    IF (abs(u1) + ABS(u2) + ABS(u3) > eps12) THEN
       nt = ityp(na)
       gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
       DO ig = 1, ngms
@@ -158,7 +158,7 @@
       u1 = uact(mu+1)
       u2 = uact(mu+2)
       u3 = uact(mu+3)
-      IF (abs(u1) + abs(u2) + abs(u3) > eps12) THEN
+      IF (abs(u1) + ABS(u2) + ABS(u3) > eps12) THEN
         nt = ityp(na)
         gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
         IF (upf(nt)%nlcc) THEN
@@ -192,12 +192,12 @@
       rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
     ENDDO
     !
-    IF ( dft_is_gradient() ) &
+    IF (dft_is_gradient() ) &
       CALL dgradcorr( dfftp, rho%of_r, grho, &
              dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq0, drhoc, &
              1, nspin_gga, g, aux )
     !
-    IF ( dft_is_nonlocc() ) &
+    IF (dft_is_nonlocc() ) &
       CALL dnonloccorr( rho%of_r, drhoc, xq0, aux )
     !
     DO is = 1, nspin_lsda
@@ -222,7 +222,7 @@
   DO ibnd = lower_band, upper_band
     DO ip = 1, npol
       aux2(:) = czero
-      IF ( ip == 1 ) THEN
+      IF (ip == 1) THEN
         DO ig = 1, npw
           aux2( dffts%nl( igk(ig) ) ) = evc(ig,ibnd)
         ENDDO
@@ -242,7 +242,7 @@
       ! and finally dV_loc/dtau * psi is transformed in reciprocal space
       !
       CALL fwfft('Wave', aux2, dffts)
-      IF ( ip == 1 ) THEN
+      IF (ip == 1) THEN
         DO ig = 1, npwq
           dvpsi(ig,ibnd) = aux2( dffts%nl( igkq(ig) ) )
         ENDDO
@@ -255,12 +255,12 @@
   ENDDO
   ! 
   IF (nlcc_any .AND. addnlcc) THEN
-    DEALLOCATE (drhoc)
-    DEALLOCATE (aux)
-    DEALLOCATE (auxs)
+    DEALLOCATE(drhoc)
+    DEALLOCATE(aux)
+    DEALLOCATE(auxs)
   ENDIF
-  DEALLOCATE (aux1)
-  DEALLOCATE (aux2)
+  DEALLOCATE(aux1)
+  DEALLOCATE(aux2)
   !
   !   We add the contribution of the nonlocal potential in the US form
   !   First a term similar to the KB case.

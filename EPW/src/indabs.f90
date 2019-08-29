@@ -33,24 +33,24 @@
   USE mp_global,     ONLY : inter_pool_comm
   USE cell_base,     ONLY : omega
   !
-  implicit none
+  IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iq
   !! Q-point index    
   !
   ! Local variables 
-  CHARACTER (len=256) :: nameF='epsilon2_indabs.dat'
+  CHARACTER(LEN = 256) :: nameF='epsilon2_indabs.dat'
   !! Name of the file
   CHARACTER (len=10) :: c
   !! Number of eta values, in string format
-  CHARACTER (len=256) :: format_string
+  CHARACTER(LEN = 256) :: format_string
   !! Format string
   !
   LOGICAL :: opnd
   !! Check whether the file is open. 
   ! 
   INTEGER :: ios
-  !! integer variable for I/O control
+  !! INTEGER variable for I/O control
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
   INTEGER :: ik
@@ -85,78 +85,78 @@
   !! Counter on denominator imaginary broadening values
   INTEGER, PARAMETER :: neta = 9
   !! Broadening parameter
-  REAL(kind=DP) :: tmp
+  REAL(KIND = DP) :: tmp
   !! Temporary variable to store real part of Sigma for the degenerate average
-  REAL(kind=DP) :: tmp2
+  REAL(KIND = DP) :: tmp2
   !! Temporary variable to store imag part of Sigma for the degenerate average
-  REAL(kind=DP) :: tmp3
+  REAL(KIND = DP) :: tmp3
   !! Temporary variable to store Z for the degenerate average
-  REAL(kind=DP) :: ekk2
+  REAL(KIND = DP) :: ekk2
   !! Temporary variable to the eigenenergies for the degenerate average
-  REAL(kind=DP) :: sigmar_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmar_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the real-part of Sigma 
-  REAL(kind=DP) :: sigmai_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmai_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the imag-part of Sigma 
-  REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
-  REAL(kind=DP) :: g2
+  REAL(KIND = DP) :: g2
   !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: ekk
+  REAL(KIND = DP) :: ekk
   !! Eigen energy on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekq
+  REAL(KIND = DP) :: ekq
   !! Eigen energy of k+q on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekmk
+  REAL(KIND = DP) :: ekmk
   !! Eigen energy on the fine grid relative to the Fermi level for the intermediate band
-  REAL(kind=DP) :: ekmq
+  REAL(KIND = DP) :: ekmq
   !! Eigen energy of k+q on the fine grid relative to the Fermi level for the intermediate band
-  REAL(kind=DP) :: wq(nmodes), nqv(nmodes)
+  REAL(KIND = DP) :: wq(nmodes), nqv(nmodes)
   !! Phonon frequencies and phonon occupations on the fine grid
-  REAL(kind=DP) :: ef0
+  REAL(KIND = DP) :: ef0
   !! Fermi energy level
-  REAL(kind=DP) :: wgq
+  REAL(KIND = DP) :: wgq
   !! Bose occupation factor $n_{q\nu}(T)$
-  REAL(kind=DP) :: wgkk, wgkq
+  REAL(KIND = DP) :: wgkk, wgkq
   !! Fermi-Dirac occupation factor $f_{nk+q}(T)$, $f_{nk}(T)$
-  REAL(kind=DP) :: weighta, weighte
+  REAL(KIND = DP) :: weighta, weighte
   !!- delta function for absorption, emission
-  REAL(kind=DP) :: w0g1
+  REAL(KIND = DP) :: w0g1
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: w0g2
+  REAL(KIND = DP) :: w0g2
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: inv_wq
+  REAL(KIND = DP) :: inv_wq
   !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
-  REAL(kind=DP) :: inv_eptemp0
+  REAL(KIND = DP) :: inv_eptemp0
   !! Inverse of temperature define for efficiency reasons
-  REAL(kind=DP) :: g2_tmp
+  REAL(KIND = DP) :: g2_tmp
   !! If the phonon frequency is too small discart g
-  REAL(kind=DP) :: inv_degaussw
+  REAL(KIND = DP) :: inv_degaussw
   !! Inverse of the smearing for efficiency reasons
-  REAL(KIND=DP) :: pfac
+  REAL(KIND = DP) :: pfac
   !! Occupation prefactors
-  REAL(KIND=DP) :: pface
+  REAL(KIND = DP) :: pface
   !! Occupation prefactors
-  REAL(KIND=DP) :: cfac
+  REAL(KIND = DP) :: cfac
   !! Absorption prefactor
-  REAL(kind=DP) :: eta(neta) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /)/ryd2eV
+  REAL(KIND = DP) :: eta(neta) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /)/ryd2eV
   !! Imaginary broadening of matrix element denominators
-  REAL(kind=DP), EXTERNAL :: dos_ef
+  REAL(KIND = DP), EXTERNAL :: dos_ef
   !! Function to compute the Density of States at the Fermi level
-  REAL(kind=DP), EXTERNAL :: wgauss
+  REAL(KIND = DP), EXTERNAL :: wgauss
   !! Fermi-Dirac distribution function (when -99)
-  REAL(kind=DP), EXTERNAL :: w0gauss
+  REAL(KIND = DP), EXTERNAL :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
   !! Collect k-point coordinate from all pools in parallel case
-  REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Collect eigenenergies from all pools in parallel case
-  COMPLEX(KIND=DP) :: vkk(3,ibndmax-ibndmin+1,ibndmax-ibndmin+1)
+  COMPLEX(KIND = DP) :: vkk(3,ibndmax-ibndmin+1,ibndmax-ibndmin+1)
   !!- Velocity matrix elements at k, k+q
-  COMPLEX(KIND=DP) :: vkq(3,ibndmax-ibndmin+1,ibndmax-ibndmin+1)
+  COMPLEX(KIND = DP) :: vkq(3,ibndmax-ibndmin+1,ibndmax-ibndmin+1)
   !!- Velocity matrix elements at k, k+q
-  COMPLEX (KIND=DP) :: s1a(3), s1e(3), s2a(3), s2e(3)
+  COMPLEX (KIND = DP) :: s1a(3), s1e(3), s2a(3), s2e(3)
   !! Transition probability function    
-  COMPLEX (KIND=DP) :: epf(ibndmax-ibndmin+1, ibndmax-ibndmin+1,nmodes)
+  COMPLEX (KIND = DP) :: epf(ibndmax-ibndmin+1, ibndmax-ibndmin+1,nmodes)
   !! Generalized matrix elements for phonon-assisted absorption
   ! 
   ! SP: Define the inverse so that we can efficiently multiply instead of
@@ -178,14 +178,14 @@
     WRITE(stdout,'(5x,"Phonon-assisted absorption")')
     WRITE(stdout,'(5x,a/)') repeat('=',67)
     !
-    IF ( fsthick < 1.d3 ) &
+    IF (fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Temperature T = ',eptemp * ryd2ev, ' eV'
     ! 
-    IF ( .NOT. ALLOCATED (omegap) )    ALLOCATE (omegap(nomega))
-    IF ( .NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE (epsilon2_abs(3,nomega,neta))
-    IF ( .NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE (epsilon2_abs_lorenz(3,nomega,neta))
+    IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
+    IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3,nomega,neta))
+    IF (.NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3,nomega,neta))
     ! 
     epsilon2_abs = 0.d0
     epsilon2_abs_lorenz = 0.d0
@@ -198,7 +198,7 @@
   !
   nksqtotf = nkqtotf/2 ! odd-even for k,k+q
   !
-  IF ( efermi_read ) THEN
+  IF (efermi_read) THEN
      !
      ef0 = fermi_energy
   ELSE
@@ -217,14 +217,14 @@
       wq(imode) = wf (imode, iq)
       ! 
       epf(:,:,imode) = epf17(:, :, imode,ik)
-      IF ( wq(imode) > eps_acustic ) THEN
+      IF (wq(imode) > eps_acustic) THEN
         nqv(imode) = wgauss( -wq(imode)/(eptemp), -99)
         nqv(imode) = nqv(imode) / ( one - two * nqv(imode) )
       ENDIF
     ENDDO
     !
     ! RM - vme version should be checked
-    IF ( vme ) THEN 
+    IF (vme) THEN 
       DO ibnd = 1, ibndmax-ibndmin+1
         DO jbnd = 1, ibndmax-ibndmin+1
           ! vmef is in units of Ryd * bohr
@@ -246,7 +246,7 @@
       !  the energy of the electron at k (relative to Ef)
       ekk = etf (ibndmin-1+ibnd, ikk) - ef0
       !
-      IF ( abs(ekk) < fsthick ) THEN
+      IF (ABS(ekk) < fsthick) THEN
         !
         wgkk = wgauss( -ekk*inv_eptemp0, -99)  
         ! 
@@ -255,16 +255,16 @@
           ! The fermi occupation for k+q
           ekq = etf (ibndmin-1+jbnd, ikq) - ef0
           !  
-          IF ( abs(ekq) < fsthick .AND. ekq < ekk+wq(nmodes)+omegamax + 6.0*degaussw ) THEN
+          IF (ABS(ekq) < fsthick .AND. ekq < ekk+wq(nmodes)+omegamax + 6.0*degaussw) THEN
             !
             wgkq = wgauss ( -ekq*inv_eptemp0, -99)  
             !
-            IF ( ekq-ekk-wq(nmodes)-omegamax > 6.0*degaussw ) CYCLE 
-            IF ( ekq-ekk+wq(nmodes)-omegamin < 6.0*degaussw ) CYCLE 
+            IF (ekq-ekk-wq(nmodes)-omegamax > 6.0*degaussw ) CYCLE 
+            IF (ekq-ekk+wq(nmodes)-omegamin < 6.0*degaussw ) CYCLE 
             ! 
             DO imode = 1, nmodes
               !
-              IF ( wq(imode) > eps_acustic ) THEN
+              IF (wq(imode) > eps_acustic) THEN
                 !
                 DO m = 1, neta
                   s1a = czero
@@ -294,7 +294,7 @@
                   ! 
                   DO iw = 1, nomega
                     !
-                    IF ( ABS(ekq-ekk-wq(imode)-omegap(iw)) > 6.0*degaussw .AND. &
+                    IF (ABS(ekq-ekk-wq(imode)-omegap(iw)) > 6.0*degaussw .AND. &
                          ABS(ekq-ekk+wq(imode)-omegap(iw)) > 6.0*degaussw) CYCLE
                     ! 
                     weighte = w0gauss( ( ekq - ekk - omegap(iw) + wq(imode))  / degaussw, 0) / degaussw
@@ -303,17 +303,17 @@
                     DO ipol = 1, 3
                       epsilon2_abs(ipol,iw,m) = epsilon2_abs(ipol,iw,m)  + &
                            (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pfac  * weighta * abs( s1a(ipol) + s2a(ipol) )**2 / (2 * wq(imode) * omega )
+                           cfac / omegap(iw)**2 * pfac  * weighta * ABS(s1a(ipol) + s2a(ipol) )**2 / (2 * wq(imode) * omega )
                       epsilon2_abs(ipol,iw,m) = epsilon2_abs(ipol,iw,m)  + &
                            (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pface * weighte * abs( s1e(ipol) + s2e(ipol) )**2 / (2 * wq(imode) * omega )
+                           cfac / omegap(iw)**2 * pface * weighte * ABS(s1e(ipol) + s2e(ipol) )**2 / (2 * wq(imode) * omega )
                       epsilon2_abs_lorenz(ipol,iw,m) = epsilon2_abs_lorenz(ipol,iw,m)  + &
                            (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pfac  * abs( s1a(ipol) + s2a(ipol) )**2 / (2 * wq(imode) * omega ) * &
+                           cfac / omegap(iw)**2 * pfac  * ABS(s1a(ipol) + s2a(ipol) )**2 / (2 * wq(imode) * omega ) * &
                            ( degaussw / ( degaussw**2 + (ekq - ekk - omegap(iw) - wq(imode))**2 ))/pi
                       epsilon2_abs_lorenz(ipol,iw,m) = epsilon2_abs_lorenz(ipol,iw,m)  + &
                            (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pface * abs( s1e(ipol) + s2e(ipol) )**2 / (2 * wq(imode) * omega ) * &
+                           cfac / omegap(iw)**2 * pface * ABS(s1e(ipol) + s2e(ipol) )**2 / (2 * wq(imode) * omega ) * &
                            ( degaussw / ( degaussw**2 + (ekq - ekk - omegap(iw) + wq(imode))**2 ))/pi
                     ENDDO ! ipol
                     !
@@ -337,7 +337,7 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iq == nqtotf ) THEN
+  IF (iq == nqtotf) THEN
     !
 #if defined(__MPI)
     !
@@ -364,7 +364,7 @@
     ! For test-farm checking purposes, only show m=1
     WRITE(stdout,'(5x,a)') 'Photon energy (eV), Imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
-      WRITE(stdout,'(5x,f15.6,3E22.14)') omegap(iw)*ryd2ev, (epsilon2_abs(ipol,iw,1), ipol=1,3)
+      WRITE(stdout,'(5x,f15.6,3E22.14)') omegap(iw)*ryd2ev, (epsilon2_abs(ipol,iw,1), ipol = 1,3)
     ENDDO
     WRITE(stdout,'(5x,a)')
     WRITE(stdout,'(5x,a)') 'Values with other broadening are reported in the files epsilon2_indabs.dat'
@@ -378,7 +378,7 @@
     WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
     WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
-      WRITE(iuindabs, format_string) omegap(iw)*ryd2ev, ( SUM(epsilon2_abs(:,iw,m))/3.0d0, m=1,neta)
+      WRITE(iuindabs, format_string) omegap(iw)*ryd2ev, ( SUM(epsilon2_abs(:,iw,m))/3.0d0, m = 1,neta)
     ENDDO
     CLOSE(iuindabs)
     ! 
@@ -386,7 +386,7 @@
     WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
     WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
-      WRITE(iuindabs, format_string) omegap(iw)*ryd2ev, ( SUM(epsilon2_abs_lorenz(:,iw,m))/3.0d0, m=1,neta )
+      WRITE(iuindabs, format_string) omegap(iw)*ryd2ev, ( SUM(epsilon2_abs_lorenz(:,iw,m))/3.0d0, m = 1,neta )
     ENDDO
     CLOSE(iuindabs)
   ENDIF

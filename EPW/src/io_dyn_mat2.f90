@@ -48,14 +48,14 @@
     ! Local variables
     INTEGER :: ierr
 
-    IF ( meta_ionode ) THEN
+    IF (meta_ionode) THEN
        !
        CALL iotk_free_unit( iunout, ierr )
        !
     END IF
     !
     CALL errore( 'read_dyn_mat_param', 'no free units to write ', ierr )
-    IF ( meta_ionode ) THEN
+    IF (meta_ionode) THEN
        !
        ! ... open XML descriptor
        !
@@ -90,23 +90,23 @@
     !! Number of atoms
     INTEGER, INTENT(OUT) :: ibrav, nspin_mag, nqs
     CHARACTER(LEN=3), INTENT(OUT) :: atm(ntyp)
-    REAL(DP), INTENT(OUT) :: celldm(6)
-    REAL(DP), INTENT(OUT) :: at(3,3)
+    REAL(KIND = DP), INTENT(OUT) :: celldm(6)
+    REAL(KIND = DP), INTENT(OUT) :: at(3,3)
     !! Real-space lattice
-    REAL(DP), INTENT(OUT) :: bg(3,3)
+    REAL(KIND = DP), INTENT(OUT) :: bg(3,3)
     !! Reciprocal-space latrice
-    REAL(DP), INTENT(OUT) :: omega
-    REAL(DP), INTENT(OUT) :: amass(ntyp)
-    REAL(DP), INTENT(OUT) :: tau(3,nat)
-    REAL(DP), INTENT(OUT) :: m_loc(3,nat)
+    REAL(KIND = DP), INTENT(OUT) :: omega
+    REAL(KIND = DP), INTENT(OUT) :: amass(ntyp)
+    REAL(KIND = DP), INTENT(OUT) :: tau(3,nat)
+    REAL(KIND = DP), INTENT(OUT) :: m_loc(3,nat)
     INTEGER,  INTENT(OUT) :: ityp(nat)
-    REAL(DP), INTENT(OUT), OPTIONAL :: epsil(3,3)
-    REAL(DP), INTENT(OUT), OPTIONAL :: zstareu(3,3,nat)
+    REAL(KIND = DP), INTENT(OUT), OPTIONAL :: epsil(3,3)
+    REAL(KIND = DP), INTENT(OUT), OPTIONAL :: zstareu(3,3,nat)
     LOGICAL, INTENT(OUT), OPTIONAL :: lrigid
     LOGICAL, INTENT(OUT), OPTIONAL :: lraman
-    REAL(DP), INTENT(OUT), OPTIONAL :: ramtns(3,3,3,nat)
+    REAL(KIND = DP), INTENT(OUT), OPTIONAL :: ramtns(3,3,3,nat)
 
-    REAL(DP) :: aux(3,3)
+    REAL(KIND = DP) :: aux(3,3)
     INTEGER :: nt, na, kc
     LOGICAL :: found_z, lrigid_
     !
@@ -120,11 +120,11 @@
        CALL iotk_scan_dat( iunout, "BG", bg )
        CALL iotk_scan_dat( iunout, "UNIT_CELL_VOLUME_AU", omega )
 
-       DO nt=1, ntyp
+       DO nt = 1, ntyp
           CALL iotk_scan_dat(iunout,"TYPE_NAME"//TRIM(iotk_index(nt)),atm(nt))
           CALL iotk_scan_dat(iunout,"MASS" // TRIM(iotk_index(nt)),amass(nt))
        ENDDO
-       DO na=1,nat
+       DO na = 1,nat
           CALL iotk_scan_empty( iunout,"ATOM" // TRIM( iotk_index(na) ), attr )
           CALL iotk_scan_attr( attr, "INDEX",  ityp(na) )
           CALL iotk_scan_attr( attr, "TAU", tau(:,na) )
@@ -144,9 +144,9 @@
              CALL iotk_scan_dat(iunout,"EPSILON",epsil)
              CALL iotk_scan_begin(iunout, "ZSTAR", FOUND=found_z )
              IF (found_z) THEN
-                DO na=1, nat
+                DO na = 1, nat
                    CALL iotk_scan_dat(iunout,"Z_AT_"//TRIM(iotk_index(na)),&
-                                        aux(:,:))
+                                        aux(:, :))
                    IF (PRESENT(zstareu)) zstareu(:,:,na)=aux
                 ENDDO
                 CALL iotk_scan_end(iunout, "ZSTAR" )
@@ -161,7 +161,7 @@
                          CALL iotk_scan_dat(iunout, &
                              "RAMAN_S_ALPHA"//TRIM(iotk_index(na)) &
                               // TRIM(iotk_index(kc)),aux)
-                         IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:,:)
+                         IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:, :)
                       ENDDO
                    ENDDO
                    CALL iotk_scan_END(iunout,"RAMAN_TENSOR_A2")
@@ -186,8 +186,8 @@
     !!   be already opened. iq is the number of the dynamical matrix to read.
     !!
     INTEGER, INTENT(IN) :: nat, iq
-    REAL(DP), INTENT(OUT) :: xq(3)
-    COMPLEX(DP), INTENT(OUT) :: dyn(3,3,nat,nat)
+    REAL(KIND = DP), INTENT(OUT) :: xq(3)
+    COMPLEX(KIND = DP), INTENT(OUT) :: dyn(3,3,nat,nat)
 
     INTEGER :: na, nb
 
@@ -196,8 +196,8 @@
 
        CALL iotk_scan_dat(iunout,"Q_POINT",xq)
 
-       DO na=1, nat
-          DO nb=1,nat
+       DO na = 1, nat
+          DO nb = 1,nat
              CALL iotk_scan_dat(iunout,"PHI"//TRIM(iotk_index(na))&
                    &//TRIM(iotk_index(nb)),dyn(:,:,na,nb))
           ENDDO
@@ -240,26 +240,26 @@
     SUBROUTINE read_ifc_xml( nr1, nr2, nr3, nat, phid)
 
     INTEGER, INTENT(IN) :: nr1, nr2, nr3, nat
-    REAL(DP), INTENT(OUT) :: phid(nr1*nr2*nr3,3,3,nat,nat)
+    REAL(KIND = DP), INTENT(OUT) :: phid(nr1*nr2*nr3,3,3,nat,nat)
     INTEGER :: na, nb, nn, m1, m2, m3
-    REAL(DP) :: aux(3,3)
+    REAL(KIND = DP) :: aux(3,3)
 
     IF (meta_ionode) THEN
        CALL iotk_scan_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
 
-       DO na=1,nat
-          DO nb=1,nat
+       DO na = 1,nat
+          DO nb = 1,nat
              nn=0
-             DO m3=1,nr3
-                DO m2=1,nr2
-                   DO m1=1,nr1
+             DO m3 = 1,nr3
+                DO m2 = 1,nr2
+                   DO m1 = 1,nr1
                       nn=nn+1
                       CALL iotk_scan_begin( iunout, "s_s1_m1_m2_m3" //     &
                           TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) //  &
                           TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) //  &
                           TRIM(iotk_index(m3)) )
                       CALL iotk_scan_dat( iunout, 'IFC', aux )
-                      phid(nn,:,:,na,nb) = aux(:,:)
+                      phid(nn,:,:,na,nb) = aux(:, :)
                       CALL iotk_scan_end( iunout, "s_s1_m1_m2_m3" //     &
                            TRIM(iotk_index(na)) // TRIM(iotk_index(nb)) //  &
                            TRIM(iotk_index(m1)) // TRIM(iotk_index(m2)) //  &

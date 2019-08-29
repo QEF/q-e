@@ -20,9 +20,9 @@
   !!
   !!  02/06/2013 Modified by Roxana Margine 
   !!
-  !!  This subroutine computes the contribution from phonon iq to all k-points
+  !!  This SUBROUTINE computes the contribution from phonon iq to all k-points
   !!  The outer loop in ephwann_shuffle.f90 will loop over all iq points
-  !!  The contribution from each iq is summed at the end of this subroutine for iqq=totq
+  !!  The contribution from each iq is summed at the end of this SUBROUTINE for iqq=totq
   !!  to recover the per-ik electron self energy
   !!
   !!  RM 24/02/2014
@@ -50,7 +50,7 @@
   USE io_global,     ONLY : ionode_id
   USE io_scattering, ONLY : electron_write
   !
-  implicit none
+  IMPLICIT NONE
   !
   LOGICAL, INTENT (INOUT) :: first_cycle
   !! Use to determine weather this is the first cycle after restart 
@@ -82,60 +82,60 @@
   INTEGER :: nksqtotf
   !! Total number of k+q points 
   ! 
-  REAL(kind=DP) :: tmp
+  REAL(KIND = DP) :: tmp
   !! Temporary variable to store real part of Sigma for the degenerate average
-  REAL(kind=DP) :: tmp2
+  REAL(KIND = DP) :: tmp2
   !! Temporary variable to store imag part of Sigma for the degenerate average
-  REAL(kind=DP) :: tmp3
+  REAL(KIND = DP) :: tmp3
   !! Temporary variable to store Z for the degenerate average
-  REAL(kind=DP) :: ekk2
+  REAL(KIND = DP) :: ekk2
   !! Temporary variable to the eigenenergies for the degenerate average
-  REAL(kind=DP) :: sigmar_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmar_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the real-part of Sigma 
-  REAL(kind=DP) :: sigmai_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmai_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the imag-part of Sigma 
-  REAL(kind=DP) :: zi_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
   !! Temporary array to store the Z
-  REAL(kind=DP) :: g2
+  REAL(KIND = DP) :: g2
   !! Electron-phonon matrix elements squared in Ry^2
-  REAL(kind=DP) :: ekk
+  REAL(KIND = DP) :: ekk
   !! Eigen energy on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: ekq
+  REAL(KIND = DP) :: ekq
   !! Eigen energy of k+q on the fine grid relative to the Fermi level
-  REAL(kind=DP) :: wq
+  REAL(KIND = DP) :: wq
   !! Phonon frequency on the fine grid
-  REAL(kind=DP) :: ef0
+  REAL(KIND = DP) :: ef0
   !! Fermi energy level
-  REAL(kind=DP) :: wgq
+  REAL(KIND = DP) :: wgq
   !! Bose occupation factor $n_{q\nu}(T)$
-  REAL(kind=DP) :: wgkq
+  REAL(KIND = DP) :: wgkq
   !! Fermi-Dirac occupation factor $f_{nk+q}(T)$
-  REAL(kind=DP) :: weight
+  REAL(KIND = DP) :: weight
   !! Self-energy factor 
   !!$$ N_q \Re( \frac{f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q\nu} - i\delta }) $$ 
   !!$$ + N_q \Re( \frac{1- f_{mk+q}(T) + n_{q\nu}(T)}{ \varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q\nu} - i\delta }) $$ 
-  REAL(kind=DP) :: w0g1
+  REAL(KIND = DP) :: w0g1
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: w0g2
+  REAL(KIND = DP) :: w0g2
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(kind=DP) :: inv_wq
+  REAL(KIND = DP) :: inv_wq
   !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
-  REAL(kind=DP) :: inv_eptemp0
+  REAL(KIND = DP) :: inv_eptemp0
   !! Inverse of temperature define for efficiency reasons
-  REAL(kind=DP) :: g2_tmp
+  REAL(KIND = DP) :: g2_tmp
   !! If the phonon frequency is too small discart g
-  REAL(kind=DP) :: inv_degaussw
+  REAL(KIND = DP) :: inv_degaussw
   !! Inverse of the smearing for efficiency reasons
-  REAL(kind=DP), external :: dos_ef
+  REAL(KIND = DP), EXTERNAL :: dos_ef
   !! Function to compute the Density of States at the Fermi level
-  REAL(kind=DP), external :: wgauss
+  REAL(KIND = DP), EXTERNAL :: wgauss
   !! Fermi-Dirac distribution function (when -99)
-  REAL(kind=DP), external :: w0gauss
+  REAL(KIND = DP), EXTERNAL :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
   !! Collect k-point coordinate from all pools in parallel case
-  REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
+  REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Collect eigenenergies from all pools in parallel case
   !  
   ! SP: Define the inverse so that we can efficiently multiply instead of
@@ -209,7 +209,7 @@
            ( MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
           !
           fermicount = fermicount + 1
-          DO imode=1, nmodes
+          DO imode = 1, nmodes
              !
              ! the phonon frequency and Bose occupation
              wq = wf (imode, iq)
@@ -227,23 +227,23 @@
                g2_tmp = 0.0
              ENDIF
              !
-             DO ibnd=1, ibndmax-ibndmin+1
+             DO ibnd = 1, ibndmax-ibndmin+1
                 !
                 !  the energy of the electron at k (relative to Ef)
                 ekk = etf (ibndmin-1+ibnd, ikk) - ef0
                 !
-                DO jbnd=1, ibndmax-ibndmin+1
+                DO jbnd = 1, ibndmax-ibndmin+1
                    !
                    !  the fermi occupation for k+q
                    ekq = etf (ibndmin-1+jbnd, ikq) - ef0
                    wgkq = wgauss( -ekq*inv_eptemp0, -99)  
                    !
-                   ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                   ! here we take into account the zero-point SQRT(hbar/2M\omega)
                    ! with hbar = 1 and M already contained in the eigenmodes
                    ! g2 is Ry^2, wkf must already account for the spin factor
                    !
-                   IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
-                      .OR. abs(xqf (3, iq))> eps8 )) THEN                         
+                   IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+                      .OR. ABS(xqf (3, iq))> eps8 )) THEN                         
                      ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                      !     number, in which case its square will be a negative number. 
                      g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp  )
@@ -273,7 +273,7 @@
                    weight = pi * wqf(iq) * ( (wgkq+wgq)*w0g1 + (one-wgkq+wgq)*w0g2 )
                    !
                    sigmai_all(ibnd,ik+lower_bnd-1) = sigmai_all(ibnd,ik+lower_bnd-1) + g2 * weight
-                   !if(ik+lower_bnd-1==8 .and. ibnd == 1 .and. jbnd == 3 .and. imode == 6) THEN
+                   !if(ik+lower_bnd-1==8 .AND. ibnd == 1 .AND. jbnd == 3 .AND. imode == 6) THEN
                    !  print*,'sigmai_all ',sigmai_all(ibnd,ik+lower_bnd-1), g2, weight, wq, ekk
                    !  print*,'wqf(iq) wgkq wgq w0g1 w0g2', wqf(iq), wgkq, wgq, w0g1, w0g2
                    !  print*,'ekq degaussw ',ekq, degaussw
@@ -325,10 +325,10 @@
   !
   IF (iqq == totq) THEN
     !
-    ALLOCATE (xkf_all(3,       nkqtotf))
-    ALLOCATE (etf_all(nbndsub, nkqtotf))
-    xkf_all(:,:) = zero
-    etf_all(:,:) = zero
+    ALLOCATE(xkf_all(3,       nkqtotf))
+    ALLOCATE(etf_all(nbndsub, nkqtotf))
+    xkf_all(:, :) = zero
+    etf_all(:, :) = zero
     !
 #if defined(__MPI)
     !
@@ -353,17 +353,17 @@
     ! Average over degenerate eigenstates:
     WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')
     ! 
-    DO ik=1, nksqtotf
+    DO ik = 1, nksqtotf
       ikk = 2 * ik - 1
       ikq = ikk + 1
       ! 
-      DO ibnd=1, ibndmax - ibndmin + 1
+      DO ibnd = 1, ibndmax - ibndmin + 1
         ekk = etf_all(ibndmin - 1 + ibnd, ikk)
         n = 0
         tmp = 0.0_DP
         tmp2 = 0.0_DP
         tmp3 = 0.0_DP
-        DO jbnd=1, ibndmax - ibndmin + 1
+        DO jbnd = 1, ibndmax - ibndmin + 1
           ekk2 = etf_all(ibndmin - 1 + jbnd, ikk) 
           IF (ABS(ekk2 - ekk) < eps6) THEN
             n = n + 1
@@ -399,7 +399,7 @@
         WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sigma)(meV)'
       ENDIF
       ! 
-      DO ik=1, nksqtotf
+      DO ik = 1, nksqtotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
@@ -407,7 +407,7 @@
         WRITE(stdout,'(/5x,"ik = ",i7," coord.: ", 3f12.7)') ik, xkf_all(:,ikk)
         WRITE(stdout,'(5x,a)') repeat('-',67)
         !
-        DO ibnd=1, ibndmax - ibndmin + 1
+        DO ibnd = 1, ibndmax - ibndmin + 1
           !
           ! note that ekk does not depend on q 
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
@@ -419,8 +419,8 @@
                              ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik), one/zi_all(ibnd,ik)-one
 !          WRITE(stdout, 103) ik, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
 !                             ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik)
-          IF ( iverbosity == 3 ) THEN
-            DO imode=1, nmodes
+          IF (iverbosity == 3) THEN
+            DO imode = 1, nmodes
               WRITE(linewidth_elself,'(i9,2x)',advance='no') ik
               WRITE(linewidth_elself,'(i9,2x)',advance='no') ibndmin-1+ibnd
               WRITE(linewidth_elself,'(E22.14,2x)',advance='no') ryd2ev * ekk
@@ -440,9 +440,9 @@
       ENDDO
     ENDIF
     !
-    DO ibnd=1, ibndmax - ibndmin + 1
+    DO ibnd = 1, ibndmax - ibndmin + 1
       !
-      DO ik=1, nksqtotf
+      DO ik = 1, nksqtotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
@@ -464,8 +464,8 @@
     !
     CLOSE(linewidth_elself)
     !
-    DEALLOCATE (xkf_all)
-    DEALLOCATE (etf_all)
+    DEALLOCATE(xkf_all)
+    DEALLOCATE(etf_all)
     !
   ENDIF 
   !
