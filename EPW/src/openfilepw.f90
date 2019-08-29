@@ -31,7 +31,7 @@
   LOGICAL :: exst
   !! logical variable to check file existe
   !
-  IF (len_trim(prefix) == 0) CALL errore('openfilepw', 'wrong prefix', 1)
+  IF (len_TRIM(prefix) == 0) CALL errore('openfilepw', 'wrong prefix', 1)
   !
   !     The file with the wavefunctions
   !

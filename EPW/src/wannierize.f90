@@ -112,7 +112,7 @@
     !
     IF (nbndsub > nwanxx) call errore('write_winfil',"Too many wannier bands",nbndsub)
     !
-    OPEN (unit = iuwinfil, file = trim(prefix)//".win", form = 'formatted')
+    OPEN (unit = iuwinfil, file = TRIM(prefix)//".win", form = 'formatted')
     !    
     !  more input and options for interfacing with w90 can/will be added later
     WRITE (iuwinfil,'(a)') "begin projections"
@@ -120,7 +120,7 @@
     random = .true.
     DO i = 1, nbndsub
        IF (proj(i) /= ' ') THEN
-          WRITE (iuwinfil,*) trim(proj(i))
+          WRITE (iuwinfil,*) TRIM(proj(i))
           random = .false.
        ENDIF
     ENDDO
@@ -233,7 +233,7 @@
   !
   IF (meta_ionode) THEN
     !
-    OPEN (unit = iuprojfil, file = trim(prefix)//".projw90", form = 'formatted')
+    OPEN (unit = iuprojfil, file = TRIM(prefix)//".projw90", form = 'formatted')
     !
     WRITE(iuprojfil, '(5x,"Wannier energy projections")')
     !

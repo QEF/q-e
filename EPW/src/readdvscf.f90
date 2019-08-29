@@ -47,7 +47,7 @@
   CHARACTER(len=256) :: tempfile
   CHARACTER(len=3) :: filelab
   !! file number
-  INTEGER(kind=8) :: mult_unit, file_size
+  INTEGER(KIND = 8) :: mult_unit, file_size
   !
   !  the call to set_ndnmbr is just a trick to get quickly
   !  a file label by exploiting an existing subroutine
@@ -55,7 +55,7 @@
   !  purpose was for pools and nodes)
   !   
   CALL set_ndnmbr(0, iq, 1, nqc, filelab)
-  tempfile = trim(dvscf_dir) // trim(prefix) // '.dvscf_q' // filelab
+  tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dvscf_q' // filelab
   INQUIRE (IOLENGTH=unf_recl) dummy 
   unf_recl = unf_recl  * lrdrho
   !unf_recl = iofactor * lrdrho
@@ -72,9 +72,9 @@
   IF(ios /= 0) CALL errore('readdvscf','error opening ' // tempfile, iudvscf)
   !
   ! check that the binary file is long enough
-  INQUIRE(FILE=tempfile, size=file_size)
+  INQUIRE(FILE = tempfile, size=file_size)
   IF (mult_unit > file_size) CALL errore('readdvscf', &
-       trim(tempfile)//' too short, check ecut', iudvscf)
+       TRIM(tempfile)//' too short, check ecut', iudvscf)
   !
   READ(iudvscf, rec = recn) dvscf
   CLOSE(iudvscf, status = 'keep')

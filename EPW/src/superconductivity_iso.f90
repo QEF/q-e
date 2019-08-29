@@ -895,7 +895,7 @@
     ELSEIF (temp >= 100.d0) THEN 
        WRITE(name1,'(a,a5,f6.2)') TRIM(prefix),'.ker_', temp
     ENDIF
-    OPEN(iufilker, FILE=name1, FORM='unformatted')
+    OPEN(iufilker, FILE = name1, FORM = 'unformatted')
     !
     IF (iter == 1) THEN
        IF (.NOT. ALLOCATED(Deltaold) ) ALLOCATE(Deltaold(nsw) )

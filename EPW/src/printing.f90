@@ -276,13 +276,13 @@
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
-    REAL(KIND = DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! Velocity
-    REAL(KIND = DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigenenergies of k
-    REAL(KIND = DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nkqtotf/2)
     !! Weight of k
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
 
     ! Local variables
@@ -617,13 +617,13 @@
     !
     REAL(KIND = DP), INTENT(in) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
-    REAL(KIND = DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! Velocity
-    REAL(KIND = DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigenenergies of k
-    REAL(KIND = DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nkqtotf/2)
     !! Weight of k
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
 
     ! Local variables
@@ -894,15 +894,15 @@
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
-    REAL(KIND = DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! Velocity
-    REAL(KIND = DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigenenergies of k
-    REAL(KIND = DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nkqtotf/2)
     !! Weight of k
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
-    REAL(KIND = DP), INTENT(INOUT) :: av_mob(nstemp)
+    REAL(KIND = DP), INTENT(inout) :: av_mob(nstemp)
     !! Maximum error for all temperature
 
     ! Local variables
@@ -1219,17 +1219,17 @@
     !
     IMPLICIT NONE
     !
-    REAL(KIND = DP), INTENT(IN) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
+    REAL(KIND = DP), INTENT(in) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
-    REAL(KIND = DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! Velocity
-    REAL(KIND = DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigenenergies of k
-    REAL(KIND = DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nkqtotf/2)
     !! Weight of k
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
-    REAL(KIND = DP), INTENT(INOUT) :: av_mob(nstemp)
+    REAL(KIND = DP), INTENT(inout) :: av_mob(nstemp)
     !! Maximum error for all temperature
 
     ! Local variables

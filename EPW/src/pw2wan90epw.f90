@@ -386,13 +386,13 @@
   ! Now we read the .nnkp file 
   !
   IF (meta_ionode) THEN  ! Read nnkp file on ionode only
-    INQUIRE(FILE=trim(seedname2)//".nnkp",exist=have_nnkp)
+    INQUIRE(FILE = TRIM(seedname2)//".nnkp",exist=have_nnkp)
     IF (.NOT.  have_nnkp) THEN
        CALL errore( 'pw2wannier90', 'Could not find the file '&
-          &//trim(seedname2)//'.nnkp', 1 )
+          &//TRIM(seedname2)//'.nnkp', 1 )
     ENDIF
     iun_nnkp = find_free_unit()
-    OPEN(UNIT=iun_nnkp, FILE=trim(seedname2)//".nnkp",FORM='formatted')
+    OPEN(UNIT = iun_nnkp, FILE = TRIM(seedname2)//".nnkp",FORM = 'formatted')
   ENDIF
   !
   IF (meta_ionode) THEN   ! read from ionode only
@@ -403,14 +403,14 @@
          CALL scan_file_to(iun_nnkp,'projections',found)
          IF (.NOT.  found) THEN
            CALL errore( 'pw2wannier90', 'Could not find projections block in '&
-              &//trim(seedname2)//'.nnkp', 1 )
+              &//TRIM(seedname2)//'.nnkp', 1 )
          ENDIF
        ENDIF
     ELSE
       CALL scan_file_to(iun_nnkp,'projections',found)
       IF (.NOT.  found) THEN
         CALL errore( 'pw2wannier90', 'Could not find projections block in '&
-           &//trim(seedname2)//'.nnkp', 1 )
+           &//TRIM(seedname2)//'.nnkp', 1 )
       ENDIF
     ENDIF
     READ(iun_nnkp,*) n_proj
@@ -470,7 +470,7 @@
     CALL scan_file_to(iun_nnkp,'nnkpts',found)
     IF (.NOT. found) THEN
        CALL errore( 'pw2wannier90epw', 'Could not find nnkpts block in '&
-          &//trim(seedname2)//'.nnkp', 1 )
+          &//TRIM(seedname2)//'.nnkp', 1 )
     ENDIF
     READ(iun_nnkp,*) nnb
   ENDIF
@@ -539,7 +539,7 @@
     CALL scan_file_to(iun_nnkp,'exclude_bands',found)
     IF (.NOT. found) THEN
       CALL errore( 'pw2wannier90epw', 'Could not find exclude_bands block in '&
-         &//trim(seedname2)//'.nnkp', 1 )
+         &//TRIM(seedname2)//'.nnkp', 1 )
     ENDIF
     READ(iun_nnkp,*) nexband
     excluded_band(1:nbnd) = .false.
@@ -646,8 +646,8 @@
     IF (eig_read) THEN
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
            nbnd, ",", nkstot,")"
-      tempFILE=trim(prefix)//'.eig'
-      OPEN(iuqpeig, FILE=tempfile, FORM='formatted', action='read', iostat=ios)
+      tempFILE = TRIM(prefix)//'.eig'
+      OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', action='read', iostat=ios)
       IF (ios /= 0) CALL errore('run_wannier','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
       DO ik = 1, nkstot
@@ -660,8 +660,8 @@
     ENDIF
 
 ! SP : This file is not used for now. Only required to build the UNK file
-!      tempFILE=trim(prefix)//'.mmn'
-!      OPEN(iummn, FILE=tempfile, iostat=ios, FORM='unformatted')
+!      tempFILE = TRIM(prefix)//'.mmn'
+!      OPEN(iummn, FILE = tempfile, iostat=ios, FORM = 'unformatted')
 !      WRITE(iummn) m_mat
 !      CLOSE(iummn)
 
@@ -1445,7 +1445,7 @@
       ALLOCATE(m_mat_tmp(nbnd,nbnd,nnb,nkstot) )
       m_mat_tmp = czero
       !
-      filmmn=trim(prefix)//'.mmn'
+      filmmn=TRIM(prefix)//'.mmn'
       OPEN (unit = iummn, file = filmmn, form = 'formatted')
       DO ik = 1, nkstot
         DO ib = 1, nnb
@@ -1500,7 +1500,7 @@
   !
   WRITE(stdout,'(5x,a)') 'MMN calculated'
   !
-  ! reopen wfc here, leaving UNIT=20 in the same state
+  ! reopen wfc here, leaving UNIT = 20 in the same state
   iuwfc = 20
   CALL diropn(iuwfc,'wfc',lrwfc,exst)  
   !
@@ -2207,14 +2207,14 @@
     !
     IF (meta_ionode) THEN 
       IF (wvfn_formatted) THEN 
-        OPEN(UNIT=iun_plot, FILE=wfnname,FORM='formatted')
+        OPEN(UNIT = iun_plot, FILE = wfnname,FORM = 'formatted')
          IF (reduce_unk) THEN
            WRITE(iun_plot,*)  n1by2, n2by2, n3by2, ik_g, nbnd-nexband
          ELSE
            WRITE(iun_plot,*)  dffts%nr1, dffts%nr2, dffts%nr3, ik_g, nbnd-nexband
          ENDIF
       ELSE
-         OPEN(UNIT=iun_plot, FILE=wfnname,FORM='unformatted')
+         OPEN(UNIT = iun_plot, FILE = wfnname,FORM = 'unformatted')
          IF (reduce_unk) THEN
            WRITE(iun_plot)  n1by2, n2by2, n3by2, ik_g, nbnd-nexband
          ELSE

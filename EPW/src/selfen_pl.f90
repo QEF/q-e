@@ -401,7 +401,7 @@
      WRITE(stdout,'(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
      !
      ! Write to file
-     OPEN(UNIT=linewidth_elself,FILE='linewidth.plself')
+     OPEN(UNIT = linewidth_elself,FILE = 'linewidth.plself')
      WRITE(linewidth_elself, '(a)') '# Electron lifetime (meV)'
      WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sgima)(meV)'
      ! 

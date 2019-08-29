@@ -48,17 +48,17 @@
     !! If the file exist
     LOGICAL, INTENT(in) :: homogeneous
     !! Check if the grids are homogeneous and commensurate
-    INTEGER, INTENT(IN) :: nrr_k
+    INTEGER, INTENT(in) :: nrr_k
     !! Number of WS points for electrons    
-    INTEGER, INTENT(IN) :: dims
+    INTEGER, INTENT(in) :: dims
     !! Dims is either nat if use_ws or 1 if not
-    INTEGER, INTENT(INOUT) :: totq
+    INTEGER, INTENT(inout) :: totq
     !! Total number of q-points inside fsthick
     INTEGER, ALLOCATABLE, INTENT(OUT) :: selecq(:)
     !! List of selected q-points
-    INTEGER, INTENT(IN) :: ndegen_k(nrr_k, dims, dims)
+    INTEGER, INTENT(in) :: ndegen_k(nrr_k, dims, dims)
     !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
-    REAL(KIND = DP), INTENT(IN) :: irvec_r(3, nrr_k)
+    REAL(KIND = DP), INTENT(in) :: irvec_r(3, nrr_k)
     !! Wigner-Size supercell vectors, store in real instead of integer
     COMPLEX(KIND = DP), INTENT(OUT) :: cufkk (nbndsub, nbndsub)
     !! Rotation matrix, fine mesh, points k
@@ -142,7 +142,7 @@
     ! 
     IF (exst) THEN
       IF (mpime == ionode_id) THEN
-        OPEN(UNIT=iunselecq, FILE='selecq.fmt', status='old', iostat=ios)
+        OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', status='old', iostat=ios)
         READ (iunselecq,*) totq
         ALLOCATE(selecq(totq))
         selecq(:) = 0
@@ -403,7 +403,7 @@
       ENDIF ! homogeneous
       !  
       IF (mpime == ionode_id) THEN
-        OPEN(UNIT=iunselecq, FILE='selecq.fmt', action='write')
+        OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', action='write')
         WRITE (iunselecq,*) totq    ! Selected number of q-points
         WRITE (iunselecq,*) nqtotf  ! Total number of q-points 
         WRITE (iunselecq,*) selecq(1:totq)
@@ -443,15 +443,15 @@
     !
     LOGICAL, INTENT (INOUT) :: first_cycle
     !! Use to determine weather this is the first cycle after restart 
-    INTEGER, INTENT(IN) :: iqq
+    INTEGER, INTENT(in) :: iqq
     !! Q-point index from the selected q
-    INTEGER, INTENT(IN) :: iq
+    INTEGER, INTENT(in) :: iq
     !! Q-point index
-    INTEGER, INTENT(IN) :: totq
+    INTEGER, INTENT(in) :: totq
     !! Total number of q-points within the fstichk window
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
-    REAL(KIND = DP), INTENT(IN) :: efcb(nstemp)
+    REAL(KIND = DP), INTENT(in) :: efcb(nstemp)
     !! Second Fermi level for the temperature itemp. Could be unused (0).
     !
     ! Local variables
@@ -840,7 +840,7 @@
       !print*,'zi_allvb SUM ',SUM(zi_allvb)
       !print*,'inv_tau_all SUM ',SUM(inv_tau_all)
       !
-#ifdef __MPI
+#if defined(__MPI)
       !
       ! collect contributions from all pools (sum over k-points)
       ! this finishes the integral over the BZ (k)
@@ -1020,9 +1020,9 @@
     !
     IMPLICIT NONE
     ! 
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
-    REAL(KIND = DP), INTENT(IN) :: efcb(nstemp)
+    REAL(KIND = DP), INTENT(in) :: efcb(nstemp)
     !! Second Fermi level for the temperature itemp (could be 0)
     !
     ! Local variables
@@ -1153,7 +1153,7 @@
         etemp = transp_temp(itemp)
         ! 
         ! Lets gather the velocities from all pools
-#ifdef __MPI
+#if defined(__MPI)
         IF (vme) THEN 
           ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf))
           vmef_all(:, :, :, :) = czero

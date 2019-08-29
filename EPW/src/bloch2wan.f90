@@ -217,7 +217,7 @@
     !
     IF (mpime == ionode_id) THEN
       !
-      OPEN(UNIT=iudecayH,FILE='decay.H')
+      OPEN(UNIT = iudecayH,FILE = 'decay.H')
       WRITE(iudecayH, '(/3x,a/)') '#Spatial decay of Hamiltonian in Wannier basis'
       DO ir = 1, nrr
         !
@@ -460,7 +460,7 @@
     ! the unit in r-space is angstrom
     !
     IF (mpime == ionode_id) THEN
-      OPEN(UNIT=iudecayP,FILE='decay.P')
+      OPEN(UNIT = iudecayP,FILE = 'decay.P')
       WRITE(iudecayP, '(/3x,a/)') '#Spatial decay of dipole in Wannier basis'
       DO ir = 1, nrr
         !
@@ -600,7 +600,7 @@
     !  the matrix for the first mode only
     !
     IF (mpime == ionode_id) THEN
-      OPEN(UNIT=iudecaydyn,FILE='decay.dynmat')
+      OPEN(UNIT = iudecaydyn,FILE = 'decay.dynmat')
       WRITE(iudecaydyn, '(/3x,a/)') '#Spatial decay of Dynamical matrix in Wannier basis'
       DO ir = 1, nrr
         !
@@ -764,8 +764,8 @@
     ! RM - bvec can be writen on file by making a small change in
     ! W90/hamiltonian.F90/hamilotonian_write_rmn
     !
-    tempFILE=trim(prefix)//'.bvec'
-    OPEN(iubvec, FILE=tempfile, action='read', iostat=ios)
+    tempFILE = TRIM(prefix)//'.bvec'
+    OPEN(iubvec, FILE = tempfile, action='read', iostat=ios)
     IF (ios /= 0) THEN
       !
       ! if it doesn't exist, then we just set the bvec and wb to zero
@@ -801,8 +801,8 @@
     M_mn = czero
     !
     IF (mpime == ionode_id) THEN
-      tempFILE=trim(prefix)//'.mmn'
-      OPEN(iummn, FILE=tempfile, status = 'old', form = 'formatted', iostat=ios)
+      tempFILE = TRIM(prefix)//'.mmn'
+      OPEN(iummn, FILE = tempfile, status = 'old', form = 'formatted', iostat=ios)
       !
       IF (ios /= 0) THEN
         ! if it doesn't exist, then we just set the mmn to zero
@@ -1005,7 +1005,7 @@
     ! [mind when comparing with wannier code (angstrom units) with write_rmn=.true.]
     !
     IF (mpime == ionode_id) then
-      OPEN(UNIT=iudecayv,FILE='decay.v')
+      OPEN(UNIT = iudecayv,FILE = 'decay.v')
       WRITE(iudecayv, '(/3x,a/)') '#Spatial decay of Velocity matrix element in Wannier basis'
       DO ir = 1, nrr
         !
@@ -1172,7 +1172,7 @@
     !  the matrix for the first mode only
     !
     IF (mpime == ionode_id) THEN
-      OPEN(UNIT=iuwane,FILE='decay.epwane')
+      OPEN(UNIT = iuwane,FILE = 'decay.epwane')
       WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in Wannier basis'
       DO ir = 1, nrr
         ! 
@@ -1292,7 +1292,7 @@
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
       IF (mpime == ionode_id) THEN
-        IF (ir == 1) open(UNIT=iuwanep,FILE='decay.epmat_wanep',status='unknown')
+        IF (ir == 1) open(UNIT = iuwanep,FILE = 'decay.epmat_wanep',status='unknown')
         IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
         DO ire = 1, nrr_k
           !
@@ -1429,7 +1429,7 @@
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
       IF (mpime == ionode_id) THEN
-        IF (ir == 1) OPEN(UNIT=iuwanep, FILE='decay.epmat_wanep', status='unknown')
+        IF (ir == 1) OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', status='unknown')
         IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
         DO ire = 1, nrr_k
           !

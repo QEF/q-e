@@ -1022,7 +1022,7 @@
     ! Restart in IBTE case
     IF (iterative_bte) THEN
       IF (mpime == ionode_id) THEN
-        INQUIRE(FILE='restart_ibte.fmt',EXIST=exst)
+        INQUIRE(FILE = 'restart_ibte.fmt',EXIST = exst)
       ENDIF
       CALL mp_bcast(exst, ionode_id, world_comm)
       ! 
@@ -2219,7 +2219,7 @@
     chunit = ' Gb '
   ENDIF
   WRITE(stdout, '(/,5x,a, i13, a,f7.2,a,a)') "Number of ep-matrix elements per pool :", &
-       imelt, " ~= ", rmelt, trim(chunit), " (@ 8 bytes/ DP)"
+       imelt, " ~= ", rmelt, TRIM(chunit), " (@ 8 bytes/ DP)"
   !
   !---------------------------------
   END SUBROUTINE mem_size

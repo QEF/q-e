@@ -101,8 +101,8 @@
          WRITE(name1,'(a,a12,f6.2)') TRIM(prefix),'.imag_aniso_', temp
       ENDIF 
       ! 
-      OPEN(iufilgap, FILE=name1, FORM='formatted', err=100, iostat=ios)
-100 CALL errore('eliashberg_read_aniso_iaxis','opening file '//name1,abs(ios))
+      OPEN(iufilgap, FILE = name1, FORM = 'formatted', err=100, iostat=ios)
+100 CALL errore('eliashberg_read_aniso_iaxis','opening file '//name1,ABS(ios))
       READ(iufilgap,'(a)') word
       DO iw = 1, nsiw(itemp) ! loop over omega
          DO ik = 1, nkfs
@@ -202,7 +202,7 @@
        ELSEIF (temp >= 100.d0) THEN
           WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_',temp
        ENDIF     
-       OPEN(iufilgap, FILE=name1, FORM='formatted')
+       OPEN(iufilgap, FILE = name1, FORM = 'formatted')
        WRITE(iufilgap,'(5a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Znorm(w)', 'Delta(w) [eV]', 'NZnorm(w)'
        DO iw = 1, nsiw(itemp) ! loop over omega
           DO ik = 1, nkfs
@@ -233,7 +233,7 @@
        ELSEIF (temp >= 100.d0) THEN
           WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
        ENDIF
-       OPEN(iufilgap, FILE=name1, FORM='formatted')
+       OPEN(iufilgap, FILE = name1, FORM = 'formatted')
        WRITE(iufilgap,'(4a20)') 'w [eV]', 'Znorm(w)', 'Delta(w) [eV]', 'NZnorm(w)'
        DO iw = 1, nsiw(itemp) ! loop over omega
           WRITE(iufilgap,'(4ES20.10)') wsi(iw), Znormi(iw), Deltai(iw), NZnormi(iw)
@@ -294,7 +294,7 @@
           ELSEIF (temp >= 100.d0) THEN
              WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
           ENDIF
-          OPEN(iufilgap, FILE=name1, FORM='formatted')
+          OPEN(iufilgap, FILE = name1, FORM = 'formatted')
           WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]',&
                                                             'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        ENDIF
@@ -340,7 +340,7 @@
        ELSEIF (temp >= 100.d0) THEN
           WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
        ENDIF
-       OPEN(iufilgap, FILE=name1, FORM='formatted')
+       OPEN(iufilgap, FILE = name1, FORM = 'formatted')
        WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        lgap = .true.
        ! DO iw = 1, nsw
@@ -399,7 +399,7 @@
           ELSEIF (temp >= 100.d0) THEN
              WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
           ENDIF
-          OPEN(iufilgap, FILE=name1, FORM='formatted')
+          OPEN(iufilgap, FILE = name1, FORM = 'formatted')
           WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]',&
                                                             'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        ENDIF
@@ -445,7 +445,7 @@
        ELSEIF (temp >= 100.d0) THEN
           WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
        ENDIF
-       OPEN(iufilgap, FILE=name1, FORM='formatted')
+       OPEN(iufilgap, FILE = name1, FORM = 'formatted')
        WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
        lgap = .true.
        ! DO iw = 1, nsw
@@ -497,8 +497,8 @@
     wsph(:) = zero
     !
     IF (mpime == ionode_id) THEN
-      OPEN(iua2ffil, FILE=fila2f, status='unknown', err=100, iostat=ios)
-100   CALL errore('read_a2f','opening file'//fila2f,abs(ios))
+      OPEN(iua2ffil, FILE = fila2f, status='unknown', err=100, iostat=ios)
+100   CALL errore('read_a2f','opening file'//fila2f,ABS(ios))
     !
       DO iwph = 1, nqstep
          READ(iua2ffil,*) wsph(iwph), a2f_iso(iwph) ! freq from meV to eV
@@ -551,10 +551,10 @@
     !
     ! read frequencies from file
     IF (mpime == ionode_id) THEN
-      filfreq = trim(tmp_dir) // trim(prefix) // '.freq'
-      !OPEN(iufilfreq, FILE=filfreq, status='unknown', FORM='formatted', err=100, iostat=ios)
-      OPEN(iufilfreq, FILE=filfreq, status='unknown', FORM='unformatted', err=100, iostat=ios)
-100   CALL errore('read_frequencies','opening file '//filfreq,abs(ios))
+      filfreq = TRIM(tmp_dir) // TRIM(prefix) // '.freq'
+      !OPEN(iufilfreq, FILE = filfreq, status='unknown', FORM = 'formatted', err=100, iostat=ios)
+      OPEN(iufilfreq, FILE = filfreq, status='unknown', FORM = 'unformatted', err=100, iostat=ios)
+100   CALL errore('read_frequencies','opening file '//filfreq,ABS(ios))
       !READ(iufilfreq,'(2i7)') nqtotf, nmodes
       READ(iufilfreq) nqtotf, nmodes
     ENDIF
@@ -639,10 +639,10 @@
       !
       ! read eigenvalues on the irreducible fine k-mesh
       !  
-      filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
-      !OPEN(iufilegnv, FILE=filegnv, status='unknown', FORM='formatted', err=100, iostat=ios)
-      OPEN(iufilegnv, FILE=filegnv, status='unknown', FORM='unformatted', err=100, iostat=ios)
-100   CALL errore('read_eigenvalues','opening file '//filegnv,abs(ios))
+      filegnv = TRIM(tmp_dir) // TRIM(prefix) // '.egnv'
+      !OPEN(iufilegnv, FILE = filegnv, status='unknown', FORM = 'formatted', err=100, iostat=ios)
+      OPEN(iufilegnv, FILE = filegnv, status='unknown', FORM = 'unformatted', err=100, iostat=ios)
+100   CALL errore('read_eigenvalues','opening file '//filegnv,ABS(ios))
       !
       !READ(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nkfs 
       !READ(iufilegnv,'(i7,5ES20.10)') nbnd_, ef, ef0, dosef, degaussw, fsthick
@@ -830,10 +830,10 @@
     !
     IF (mpime == ionode_id) THEN
       !
-      filikmap = trim(tmp_dir) // trim(prefix) // '.ikmap'
-      !OPEN(iufilikmap, FILE=filikmap, status='old', FORM='formatted', err=100, iostat=ios)
-      OPEN(iufilikmap, FILE=filikmap, status='old', FORM='unformatted', err=100, iostat=ios)
-100   CALL errore('read_kqmap','opening file '//filikmap,abs(ios))
+      filikmap = TRIM(tmp_dir) // TRIM(prefix) // '.ikmap'
+      !OPEN(iufilikmap, FILE = filikmap, status='old', FORM = 'formatted', err=100, iostat=ios)
+      OPEN(iufilikmap, FILE = filikmap, status='old', FORM = 'unformatted', err=100, iostat=ios)
+100   CALL errore('read_kqmap','opening file '//filikmap,ABS(ios))
       !
       ! nkf_mesh - Total number of k points
       !          - These are irreducible k-points if mp_mesh_k = .true.
@@ -1116,13 +1116,13 @@
     DO ipool = 1, npool ! nr of pools 
        CALL set_ndnmbr(0,ipool,1,npool,filelab)
 #if defined(__MPI)
-       filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
+       filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat' // filelab
 #else
-       filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
+       filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
 #endif
-       !OPEN(iufileph, FILE=filephmat, status='old', FORM='formatted', err=100, iostat=ios)
-       OPEN(iufileph, FILE=filephmat, status='old', FORM='unformatted', err=100, iostat=ios)
-100 CALL errore('read_ephmat','opening file '//filephmat,abs(ios))
+       !OPEN(iufileph, FILE = filephmat, status='old', FORM = 'formatted', err=100, iostat=ios)
+       OPEN(iufileph, FILE = filephmat, status='old', FORM = 'unformatted', err=100, iostat=ios)
+100 CALL errore('read_ephmat','opening file '//filephmat,ABS(ios))
        !READ(iufileph,'(2i7)') tmp_pool_id, nkpool(ipool)
        READ(iufileph) tmp_pool_id, nkpool(ipool)
        IF (ipool /= tmp_pool_id )  CALL errore('read_ephmat', &
@@ -1152,11 +1152,11 @@
     DO ipool = 1, npool ! nr of pools 
        CALL set_ndnmbr(0,ipool,1,npool,filelab)
 #if defined(__MPI)
-       filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
+       filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat' // filelab
 #else
-       filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
+       filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
 #endif     
-       OPEN(iufileph, FILE=filephmat, status='old', FORM='unformatted')
+       OPEN(iufileph, FILE = filephmat, status='old', FORM = 'unformatted')
        READ(iufileph) tmp_pool_id, nks
        IF (ipool >= nmin .AND. ipool <= nmax) THEN
           DO iq = 1, nqtotf ! loop over q-points 
@@ -1279,7 +1279,7 @@
     !
     ! write phonon frequencies to file
     IF (my_pool_id == 0) THEN
-      filfreq = trim(tmp_dir) // trim(prefix) // '.freq'
+      filfreq = TRIM(tmp_dir) // TRIM(prefix) // '.freq'
       IF (iq == 1) THEN
         !OPEN(iufilfreq, file = filfreq, form = 'formatted')
         !WRITE(iufilfreq,'(2i7)') nqtotf, nmodes
@@ -1345,7 +1345,7 @@
       !
       ! write eigenvalues to file
       IF (my_pool_id == 0) THEN
-        filegnv = trim(tmp_dir) // trim(prefix) // '.egnv'
+        filegnv = TRIM(tmp_dir) // TRIM(prefix) // '.egnv'
         !OPEN(iufilegnv, file = filegnv, form = 'formatted')
         OPEN(iufilegnv, file = filegnv, form = 'unformatted')
         IF (nks /= nkfs ) CALL errore('write_ephmat', &
@@ -1372,9 +1372,9 @@
     !
 #if defined(__MPI)
     CALL set_ndnmbr(0,my_pool_id+1,1,npool,filelab)
-    filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat' // filelab
+    filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat' // filelab
 #else
-    filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
+    filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
 #endif
     IF (iq == 1) THEN 
        !OPEN(iufileph, file = filephmat, form = 'formatted')
@@ -1663,7 +1663,7 @@
          WRITE(stdout,'(/5x,a,i9/)') 'Nr. of k-points on the uniform grid: ', nkf_mesh
       ENDIF
       !
-      filikmap = trim(tmp_dir) // trim(prefix) // '.ikmap'
+      filikmap = TRIM(tmp_dir) // TRIM(prefix) // '.ikmap'
       !OPEN(iufilikmap, file = filikmap, form = 'formatted')
       !WRITE(iufilikmap,'(i9)') nkf_mesh
       OPEN(iufilikmap, file = filikmap, form = 'unformatted')
@@ -2133,7 +2133,7 @@
        WRITE(name1,'(a,a1,a4,a12,f6.2)') TRIM(prefix), '.', cname, '_aniso_gap0_', temp
     ENDIF
     !
-    OPEN(iufilgap, FILE=name1, FORM='formatted')
+    OPEN(iufilgap, FILE = name1, FORM = 'formatted')
     DO ibin = 1, nbin
        WRITE(iufilgap,'(2ES20.10)') temp + delta_k_bin(ibin)/MAXVAL(delta_k_bin(:)), dbin*DBLE(ibin)
     ENDDO
@@ -2236,7 +2236,7 @@
           CALL errore( 'eliashberg_write', ' Too many bands ',1)
         ENDIF
         !
-        OPEN(iufilgapFS, FILE=name1, FORM='formatted')
+        OPEN(iufilgapFS, FILE = name1, FORM = 'formatted')
         WRITE(iufilgapFS,*) 'Cubfile created from EPW calculation'
         WRITE(iufilgapFS,*) 'gap'
         WRITE(iufilgapFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
@@ -2262,7 +2262,7 @@
     ELSEIF (temp >= 100.d0) THEN
        WRITE(name1,'(a,a1,a4,a14,f6.2)') TRIM(prefix), '.', cname, '_aniso_gap_FS_', temp
     ENDIF
-    OPEN(iufilgapFS, FILE=name1, FORM='formatted')
+    OPEN(iufilgapFS, FILE = name1, FORM = 'formatted')
     WRITE(iufilgapFS,'(a78)') '#               k-point                  Band Enk-Ef [eV]        Delta(0) [eV]'
     DO i = 1, nkf1
       DO j = 1, nkf2

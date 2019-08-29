@@ -62,13 +62,13 @@
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, electron_SI, ang2m
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
   USE ions_base,     ONLY : amass
   USE mp_world,      ONLY : world_comm, mpime
   USE partial,       ONLY : atomo, nat_todo
-  USE constants,     ONLY : AMU_RY
+  USE constants,     ONLY : AMU_RY, eps16
   USE mp_global,     ONLY : my_pool_id, me_pool
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id
   USE io_epw,        ONLY : iunkf, iunqf

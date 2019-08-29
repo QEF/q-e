@@ -144,7 +144,7 @@
   COMPLEX (KIND = DP), INTENT(out)  :: f_out(nsize1,nsize2,nsize3,nkstot)
   ! output  ( contains values for all k-point )
   !
-#ifdef __MPI
+#if defined(__MPI)
   INTEGER :: rest, nbase, nkst
   ! the rest of the INTEGER division nkstot / npo
   ! the position in the original list

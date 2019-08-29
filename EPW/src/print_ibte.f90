@@ -45,20 +45,20 @@
   !
   LOGICAL, INTENT (INOUT) :: first_cycle
   !! Use to determine weather this is the first cycle after restart 
-  INTEGER, INTENT(IN) :: iqq
+  INTEGER, INTENT(in) :: iqq
   !! Q-point index from selecq
-  INTEGER, INTENT(IN) :: iq
+  INTEGER, INTENT(in) :: iq
   !! Q-point index
-  INTEGER, INTENT(IN) :: totq
+  INTEGER, INTENT(in) :: totq
   !! Total number of q-points in selecq
-  REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+  REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
   !! Fermi level for the temperature itemp
-  REAL(KIND = DP), INTENT(IN) :: efcb(nstemp)
+  REAL(KIND = DP), INTENT(in) :: efcb(nstemp)
   !! Second Fermi level for the temperature itemp. Could be unused (0).
 #if defined(__MPI)  
-  INTEGER(kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_tot
+  INTEGER(kind=MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
   !! Total number of element written to file 
-  INTEGER(kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_totcb
+  INTEGER(kind=MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
   !! Total number of element written to file 
   INTEGER (kind=MPI_OFFSET_KIND), INTENT(inout) :: lrepmatw2
   !! Offset for that core
@@ -69,9 +69,9 @@
   INTEGER (kind=MPI_OFFSET_KIND), INTENT(inout) :: lrepmatw6
   !! Offset for that core
 #else
-  INTEGER, INTENT(INOUT) :: ind_tot
+  INTEGER, INTENT(inout) :: ind_tot
   !! Total number of element written to file 
-  INTEGER, INTENT(INOUT) :: ind_totcb
+  INTEGER, INTENT(inout) :: ind_totcb
   !! Total number of element written to file 
   INTEGER, INTENT(inout) :: lrepmatw2
   !! Offset for that core
@@ -560,7 +560,7 @@
     ! 
     ! Save to file restart information in formatted way for possible restart
     IF (my_pool_id == 0) THEN
-      OPEN(UNIT=iunrestart,FILE='restart_ibte.fmt')
+      OPEN(UNIT = iunrestart,FILE = 'restart_ibte.fmt')
       WRITE (iunrestart,*) iqq
       WRITE (iunrestart,*) ind_tot
       WRITE (iunrestart,*) ind_totcb
@@ -599,7 +599,7 @@
 
       ! Now write total number of q-point inside and k-velocity
       !
-      OPEN(iufilibtev_sup,FILE='IBTEvel_sup.fmt', FORM='formatted')
+      OPEN(iufilibtev_sup,FILE = 'IBTEvel_sup.fmt', FORM = 'formatted')
       WRITE(iufilibtev_sup,'(a)') '# Number of elements in hole and electrons  '
       WRITE(iufilibtev_sup,'(2i16)') ind_tot, ind_totcb
       WRITE(iufilibtev_sup,'(a)') '# itemp    ef0    efcb'

@@ -38,17 +38,17 @@
 
   pid=getpid()
   WRITE(pid_char,'(I8)') pid
-  filename='/proc/'//trim(adjustl(pid_char))//'/status'
+  filename='/proc/'//TRIM(ADJUSTL(pid_char))//'/status'
 
   !--- read system file
 
-  inquire (FILE=filename,exist=ifxst)
+  inquire (FILE = filename,exist=ifxst)
   if ( .NOT. ifxst) then
     write (stdout,'(a)') 'System file does not exist'
     return
   endif
 
-  open(UNIT=iunimem, FILE=filename, action='read')
+  open(UNIT = iunimem, FILE = filename, action='read')
   do
     read (iunimem,'(a)',end=120) line
     ! Peak virtual memory usage

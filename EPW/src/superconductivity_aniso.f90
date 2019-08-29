@@ -1707,7 +1707,7 @@
             CALL errore( 'eliashberg_setup', 'Too many bands ',1)  
           ENDIF  
           !  
-          OPEN(iufillambdaFS, FILE=name1, FORM='formatted')
+          OPEN(iufillambdaFS, FILE = name1, FORM = 'formatted')
           WRITE(iufillambdaFS,*) 'Cubfile created from EPW calculation'
           WRITE(iufillambdaFS,*) 'lambda'
           WRITE(iufillambdaFS,'(i5,3f12.6)') 1, 0.0d0, 0.0d0, 0.0d0
@@ -1725,7 +1725,7 @@
       ! Cartesian coordinate, band index, energy distance from Fermi level
       ! and lambda value.
       !
-      OPEN(unit = iufillambdaFS, file = TRIM(prefix)//".lambda_FS", FORM='formatted')
+      OPEN(unit = iufillambdaFS, file = TRIM(prefix)//".lambda_FS", FORM = 'formatted')
       WRITE(iufillambdaFS,'(a75)') '#               k-point                  Band Enk-Ef [eV]            lambda'
       DO i = 1, nkf1
          DO j = 1, nkf2

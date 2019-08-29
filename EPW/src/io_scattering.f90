@@ -34,13 +34,13 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: iter
+    INTEGER, INTENT(in) :: iter
     !! Iteration number
-    REAL(KIND = DP), INTENT(IN) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP), INTENT(in) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
     !! In solution for iteration i  
-    REAL(KIND = DP), INTENT(IN) :: av_mob_old(nstemp)
+    REAL(KIND = DP), INTENT(in) :: av_mob_old(nstemp)
     !! Error in the hole mobility
-    LOGICAL, INTENT(IN) :: elec
+    LOGICAL, INTENT(in) :: elec
     !! IF true we do electron mobility, if false the hole one. 
     ! 
     ! Local variable
@@ -123,13 +123,13 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(INOUT) :: iter
+    INTEGER, INTENT(inout) :: iter
     !! Iteration number
-    REAL(KIND = DP), INTENT(INOUT) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP), INTENT(inout) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
     !! In solution for iteration i  
-    REAL(KIND = DP), INTENT(INOUT) :: av_mob_old(nstemp)
+    REAL(KIND = DP), INTENT(inout) :: av_mob_old(nstemp)
     !! Error in the hole mobility
-    LOGICAL, INTENT(IN) :: elec
+    LOGICAL, INTENT(in) :: elec
     !! IF true we do electron mobility, if false the hole one. 
     !
     ! Local variable
@@ -158,9 +158,9 @@
       ! First inquire if the file exists
       IF (elec) THEN
 #if defined(__MPI)
-        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restartcb1'
+        name1 = TRIM(tmp_dir) // TRIM(prefix) // '.Fin_restartcb1'
 #else
-        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restartcb'
+        name1 = TRIM(tmp_dir) // TRIM(prefix) // '.Fin_restartcb'
 #endif
         INQUIRE(file = name1, exist=exst)
         ! 
@@ -195,9 +195,9 @@
         ENDIF
       ELSE ! hole
 #if defined(__MPI)
-        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restart1'
+        name1 = TRIM(tmp_dir) // TRIM(prefix) // '.Fin_restart1'
 #else
-        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restart'
+        name1 = TRIM(tmp_dir) // TRIM(prefix) // '.Fin_restart'
 #endif
         INQUIRE(file = name1, exist=exst)
         ! 
@@ -248,18 +248,236 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2, lrepmatw4, lrepmatw5, lrepmatw6)
+    SUBROUTINE iter_merge_parallel()
+    !----------------------------------------------------------------------------
+    USE kinds,            ONLY : DP
+    USE io_epw,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,&
+                                 iunepmatcb, iunsparseq_merge, iunsparsek_merge,iunsparsei_merge, &
+                                 iunsparsej_merge,iunsparset_merge, iunepmatcb_merge,&
+                                 iunsparseqcb_merge, iunsparsekcb_merge,&
+                                 iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge
+    USE mp_global,        ONLY : my_pool_id, npool, world_comm 
+    USE io_files,         ONLY : tmp_dir, prefix 
+    USE mp,               ONLY : mp_sum, mp_barrier
+    USE io_global,        ONLY : stdout
+    USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+#if defined(__MPI)
+    USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE,MPI_INFO_NULL, &
+                                 MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, MPI_INTEGER
+#endif
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: i2, i4, i5, i6
+    !! Indexes to loop over file sizes
+    INTEGER :: ipool
+    !! Process index
+    CHARACTER(LEN = 256) :: filint
+    !! Name of the file to write/read
+    CHARACTER(LEN = 256) :: my_pool_id_ch
+    !! Pool number, character
+    REAL(KIND = DP), ALLOCATABLE :: trans_prob(:)
+    !! Variable for reading and writing trans_prob
+    REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
+    !! Variable for reading and writing trans_prob
+    INTEGER :: lrepmatw2_tot(npool)
+    !! Lenght of each file
+    INTEGER :: lrepmatw5_tot(npool)
+    !! Lenght of each file
+    CHARACTER(LEN = 256) :: dirname(2)
+    !! Name of the directory to hold files
+    CHARACTER(LEN = 256) :: filename(6)
+    !! Name of the files to merge files
+    CHARACTER(LEN = 256) :: path_to_files(2)
+    !! Name of the path to files
+    INTEGER :: ich
+    !! Loop over directories
+    INTEGER, ALLOCATABLE :: sparse(:, :)
+    !! Vaariable for reading and writing the files
+    INTEGER, ALLOCATABLE :: sparsecb(:, :)
+    !! Vaariable for reading and writing the files
+    INTEGER :: ierr
+    !! Error variable for MPI
+    INTEGER :: ifil
+    !! Index over the files
+    INTEGER :: io_u(6)
+    !! Input output units
+#if defined(__MPI)
+    INTEGER (KIND = MPI_OFFSET_KIND) :: lsize
+    !! Size of what we write
+    INTEGER (KIND = MPI_OFFSET_KIND) :: lrepmatw
+    !! Offset while writing scattering to files
+    !
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
+      !
+      ALLOCATE(trans_prob(lrepmatw2_merge)) !There may be a problem if lrepmatw2_merge == 0
+      ALLOCATE(sparse(5, lrepmatw2_merge))
+      !
+      io_u(1) = iunepmat_merge
+      io_u(2) = iunsparseq_merge
+      io_u(3) = iunsparsek_merge
+      io_u(4) = iunsparsei_merge
+      io_u(5) = iunsparsej_merge
+      io_u(6) = iunsparset_merge
+      !
+      dirname(1) = 'Fepmatkq1'
+      dirname(2) = 'Fsparse'
+      !
+      filename(1) = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkq1' 
+      filename(2) = 'sparseq'
+      filename(3) = 'sparsek'
+      filename(4) = 'sparsei'
+      filename(5) = 'sparsej'
+      filename(6) = 'sparset'
+      !
+      path_to_files(1)='./'//ADJUSTL(TRIM(dirname(1)))//'/'//TRIM(prefix)//'.epmatkq1'//'_'
+      path_to_files(2)='./'//ADJUSTL(TRIM(dirname(2)))//'/'//'sparse'//'_'
+      !
+      lrepmatw2_tot = 0
+      lrepmatw2_tot(my_pool_id + 1) = lrepmatw2_merge
+      CALL mp_sum(lrepmatw2_tot, world_comm)
+      DO ich = 1, 6
+        CALL mp_barrier(world_comm)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL,io_u(ich), ierr)
+      ENDDO
+      !
+      DO ich = 1, 2 
+        ! Read files per processor
+        WRITE(my_pool_id_ch,"(I0)") my_pool_id
+        filint = TRIM(path_to_files(ich))//TRIM(my_pool_id_ch)
+        OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACTION = 'read', ACCESS = 'stream')
+        IF (ich == 1) THEN
+          DO i2 = 1, lrepmatw2_merge
+            READ(iunepmat) trans_prob(i2)
+          ENDDO
+        ELSE
+          DO i2 = 1, lrepmatw2_merge
+            DO ifil = 1, 5
+              READ(iunepmat) sparse(ifil, i2)
+            ENDDO
+          ENDDO
+        ENDIF
+        CLOSE(iunepmat, STATUS = 'delete')
+        IF (ich == 1) THEN
+          lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
+          & 8_MPI_OFFSET_KIND 
+          lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
+          CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+        ELSE
+          DO ifil = 1, 5
+            lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
+            & 4_MPI_OFFSET_KIND 
+            lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
+            CALL MPI_FILE_WRITE_AT(io_u(ifil+1), lrepmatw, sparse(ifil,:), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+          ENDDO
+        ENDIF
+      ENDDO
+      !
+      DO ich = 1, 6
+        CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+      ENDDO
+      !
+      DEALLOCATE(trans_prob)
+      DEALLOCATE(sparse)
+      !
+    ENDIF
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
+      !
+      ALLOCATE(trans_probcb(lrepmatw5_merge))
+      ALLOCATE(sparsecb(5, lrepmatw5_merge))
+      !
+      io_u(1) = iunepmatcb_merge
+      io_u(2) = iunsparseqcb_merge
+      io_u(3) = iunsparsekcb_merge
+      io_u(4) = iunsparseicb_merge
+      io_u(5) = iunsparsejcb_merge
+      io_u(6) = iunsparsetcb_merge
+      !
+      dirname(1) = 'Fepmatkqcb1'
+      dirname(2) = 'Fsparsecb'
+      !
+      filename(1) = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkqcb1' 
+      filename(2) = 'sparseqcb'
+      filename(3) = 'sparsekcb'
+      filename(4) = 'sparseicb'
+      filename(5) = 'sparsejcb'
+      filename(6) = 'sparsetcb'
+      !
+      path_to_files(1) = './' // ADJUSTL(TRIM(dirname(1))) // '/' // TRIM(prefix) // '.epmatkqcb1' // '_'
+      path_to_files(2) = './' // ADJUSTL(TRIM(dirname(2))) // '/' // 'sparsecb' // '_'
+      !
+      lrepmatw5_tot = 0
+      lrepmatw5_tot(my_pool_id + 1) = lrepmatw5_merge
+      CALL mp_sum(lrepmatw5_tot, world_comm)
+      DO ich = 1, 6
+        CALL mp_barrier(world_comm)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL, io_u(ich), ierr)
+      ENDDO
+      !
+      DO ich = 1, 2
+        ! Read files per processor
+        WRITE(my_pool_id_ch, "(I0)") my_pool_id
+        filint = TRIM(path_to_files(ich)) // TRIM(my_pool_id_ch)
+        OPEN(UNIT = iunepmatcb, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACTION = 'read', ACCESS = 'stream')
+        IF (ich == 1) THEN
+          DO i2 = 1, lrepmatw5_merge
+            READ(iunepmatcb) trans_probcb(i2)
+          ENDDO
+        ELSE
+          DO i2 = 1, lrepmatw5_merge
+            DO ifil = 1 ,5
+              READ(iunepmatcb) sparsecb(ifil, i2)
+            ENDDO
+          ENDDO
+        ENDIF
+        CLOSE(iunepmatcb, STATUS = 'delete')
+        IF (ich == 1) THEN
+          lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
+          & 8_MPI_OFFSET_KIND 
+          lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
+          CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+        ELSE
+          DO ifil = 1, 5
+            lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
+            & 4_MPI_OFFSET_KIND 
+            lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
+            CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+          ENDDO
+        ENDIF
+      ENDDO
+      !
+      DO ich = 1, 6
+        CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+      ENDDO
+      ! 
+      DEALLOCATE(trans_probcb)
+      DEALLOCATE(sparsecb)
+      !
+    ENDIF ! in all other cases it is still to decide which files to open
+    ! 
+#endif
+    !----------------------------------------------------------------------------
+    END SUBROUTINE iter_merge_parallel
+    !----------------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------------
+    SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart)
     !----------------------------------------------------------------------------
     ! 
     ! This SUBROUTINE opens all the files needed to save scattering rates for the IBTE.
     ! 
     USE kinds,            ONLY : DP
-    USE io_files,         ONLY : tmp_dir, prefix
+    USE io_files,         ONLY : tmp_dir, prefix, create_directory, delete_if_present
     USE io_epw,           ONLY : iunepmat, iunsparseq, iunsparsek, &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
                                  iunsparsekcb, iunsparseicb, iunsparsejcb,&
-                                 iunsparsetcb, iunepmatcb 
-    USE mp_world,         ONLY : world_comm
+                                 iunsparsetcb, iunepmatcb, iunrestart
+    USE mp_global,        ONLY : world_comm, my_pool_id, npool
+    USE mp,               ONLY : mp_barrier, mp_bcast
+    USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+    USE io_global,        ONLY : ionode_id
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
                                  MPI_OFFSET_KIND
@@ -267,87 +485,211 @@
     ! 
     IMPLICIT NONE
     !  
+    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    !! To restart opening files
+    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
+    !! To restart opening files
 #if defined(__MPI)
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_tot
+    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_totcb
+    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw2
-    !! Offset while writing scattering to files
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw4
-    !! Offset while writing scattering to files
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw5
-    !! Offset while writing scattering to files
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw6
-    !! Offset while writing scattering to files
 #else
-    INTEGER, INTENT(INOUT) :: ind_tot
+    INTEGER, INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER, INTENT(INOUT) :: ind_totcb
+    INTEGER, INTENT(inout) :: ind_totcb
     !! Total number of component for conduction band
-    INTEGER, INTENT(INOUT) :: lrepmatw2
-    !! Offset while writing scattering to files
-    INTEGER, INTENT(INOUT) :: lrepmatw4
-    !! Offset while writing scattering to files
-    INTEGER, INTENT(INOUT) :: lrepmatw5
-    !! Offset while writing scattering to files
-    INTEGER, INTENT(INOUT) :: lrepmatw6
-    !! Offset while writing scattering to files
 #endif  
     ! 
     ! Local variables
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
+    CHARACTER(LEN = 256) :: my_pool_id_ch
+    !! my_pool_id in character type
+    CHARACTER(LEN = 256) :: dirname(2), dirnamecb(2)
+    !! Name of the directory to hold files
+    LOGICAL :: exst
+    !! Logical for existence of files
+    LOGICAL :: exst2
+    !! Logical for existence of files
     INTEGER :: ierr
     !! Error index
+    INTEGER :: ilrep
+    !! index to loop over the reading elements
+    INTEGER :: dummy_int
+    !! Dummy INTEGER for reading
+    INTEGER :: ipool
+    !! Pool index
+    INTEGER (KIND = 8) :: position_byte
+    !! Position in the file in byte
+    REAL (KIND = DP) :: dummy_real
+    !! Dummy variable for reading
+    !
+    WRITE(my_pool_id_ch, "(I0)") my_pool_id
+    !
+    dirname(1)   = 'Fepmatkq1'
+    dirname(2)   = 'Fsparse'
+    dirnamecb(1) = 'Fepmatkqcb1'
+    dirnamecb(2) = 'Fsparsecb'
     ! 
-#if defined(__MPI)
-    filint = trim(tmp_dir)//trim(prefix)//'.epmatkq1'
-    CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunepmat,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN X.epmatkq1',1 )
+    INQUIRE(FILE = 'restart_ibte.fmt',EXIST = exst)
     !
-    CALL MPI_FILE_OPEN(world_comm, 'sparseq', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparseq,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparseq',1 )
+    IF (my_pool_id == ionode_id) THEN
+      IF (exst) THEN
+        OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old')
+        READ (iunrestart,*) 
+        READ (iunrestart,*) 
+        READ (iunrestart,*) 
+        READ (iunrestart,*) 
+        DO ipool = 1, npool
+          READ (iunrestart,*) lrepmatw2_restart(ipool)
+        ENDDO
+        DO ipool = 1, npool
+          READ (iunrestart,*) lrepmatw5_restart(ipool)
+        ENDDO
+        CLOSE(iunrestart)
+      ENDIF
+    ENDIF
+    CALL mp_bcast(exst, ionode_id, world_comm )
+    CALL mp_bcast(lrepmatw2_restart, ionode_id, world_comm )
+    CALL mp_bcast(lrepmatw5_restart, ionode_id, world_comm )
     !
-    CALL MPI_FILE_OPEN(world_comm, 'sparsek', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsek,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsek',1 )
+    ! The restart_ibte.fmt exist - we try to restart
+    IF (exst) THEN
+      ! Hole
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+        !
+        filint = './'//ADJUSTL(TRIM(dirname(1)))//'/'//TRIM(prefix)//'.epmatkq1'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        ! 
+        IF (exst2) THEN
+          OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'rewind', ACTION = 'readwrite')
+          ! This is done to move the pointer to the right position after a restart (the position is in byte)
+          IF (lrepmatw2_restart(my_pool_id + 1) > 0) THEN
+            position_byte = (lrepmatw2_restart(my_pool_id + 1) - 1) * 8 + 1  
+            READ(iunepmat, POS=position_byte) dummy_real 
+          ENDIF
+        ELSE 
+          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fepmatkq1 folder', 1) 
+        ENDIF
+        ! 
+        filint = './'//ADJUSTL(TRIM(dirname(2)))//'/'//'sparse'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        ! 
+        IF (exst2) THEN
+          OPEN(UNIT = iunsparseq, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'rewind', ACTION = 'readwrite')
+          IF (lrepmatw2_restart(my_pool_id + 1) > 0) THEN 
+            position_byte = (5 * lrepmatw2_restart(my_pool_id + 1) - 1) * 4 + 1
+            READ(iunsparseq, POS = position_byte) dummy_int
+          ENDIF
+        ELSE
+          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fsparse folder', 1) 
+        ENDIF
+        !
+      ENDIF ! Hole
+      ! Electron
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 1E5))) THEN
+        !
+        filint = './'//ADJUSTL(TRIM(dirnamecb(1)))//'/'//TRIM(prefix)//'.epmatkqcb1'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        ! 
+        IF (exst2) THEN
+          OPEN(UNIT = iunepmatcb, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'rewind', ACTION = 'readwrite')
+          ! This is done to move the pointer to the right position after a restart (the position is in byte)
+          IF (lrepmatw5_restart(my_pool_id + 1) > 0) THEN
+            position_byte = (lrepmatw5_restart(my_pool_id + 1) - 1) * 8 + 1  
+            READ(iunepmatcb, POS=position_byte) dummy_real
+          ENDIF
+        ELSE
+          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fepmatkqcb1 folder', 1)
+        ENDIF
+        ! 
+        filint = './'//ADJUSTL(TRIM(dirnamecb(2)))//'/'//'sparsecb'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        ! 
+        IF (exst2) THEN
+          OPEN(UNIT = iunsparseqcb, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'rewind', ACTION = 'readwrite')
+          IF (lrepmatw5_restart(my_pool_id + 1) > 0) THEN
+            position_byte = (5 * lrepmatw5_restart(my_pool_id + 1) - 1) * 4 + 1 
+            READ(iunsparseqcb, POS = position_byte) dummy_int
+          ENDIF
+        ELSE
+          CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fsparse folder', 1)
+        ENDIF
+        !
+      ENDIF ! electron
+      lrepmatw2_merge = lrepmatw2_restart(my_pool_id + 1)
+      lrepmatw5_merge = lrepmatw5_restart(my_pool_id + 1)
+      !  
+    ELSE ! no restart file present
+      ! Hole
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+        ! 
+        CALL create_directory(ADJUSTL(TRIM(dirname(1))))
+        CALL create_directory(ADJUSTL(TRIM(dirname(2))))
+        ! 
+        filint = './'//ADJUSTL(TRIM(dirname(1)))//'/'//TRIM(prefix)//'.epmatkq1'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        ! 
+        IF (exst2) THEN
+          ! The file should not exist, we remove it
+          CALL delete_if_present(filint)
+          OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ELSE
+          OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ENDIF 
+        ! 
+        filint = './'//ADJUSTL(TRIM(dirname(2)))//'/'//'sparse'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        ! 
+        IF (exst2) THEN
+          ! The file should not exist, we remove it
+          CALL delete_if_present(filint)
+          OPEN(UNIT = iunsparseq, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ELSE
+          OPEN(UNIT = iunsparseq, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ENDIF 
+        ! 
+      ENDIF ! Hole
+      ! Electron
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 1E5))) THEN
+        ! 
+        CALL create_directory(ADJUSTL(TRIM(dirnamecb(1))))
+        CALL create_directory(ADJUSTL(TRIM(dirnamecb(2))))        
+        ! 
+        filint = './'//ADJUSTL(TRIM(dirnamecb(1)))//'/'//TRIM(prefix)//'.epmatkqcb1'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        !  
+        IF (exst2) THEN
+          ! The file should not exist, we remove it
+          CALL delete_if_present(filint)
+          OPEN(UNIT = iunepmatcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ELSE
+          OPEN(UNIT = iunepmatcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ENDIF
+        ! 
+        filint = './'//ADJUSTL(TRIM(dirnamecb(2)))//'/'//'sparsecb'//'_'//TRIM(my_pool_id_ch)
+        INQUIRE(FILE = filint, EXIST = exst2)
+        ! 
+        IF (exst2) THEN
+          ! The file should not exist, we remove it
+          CALL delete_if_present(filint)
+          OPEN(UNIT = iunsparseqcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ELSE
+          OPEN(UNIT = iunsparseqcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
+        ENDIF
+        !  
+      ENDIF !electron 
+      lrepmatw2_merge = 0
+      lrepmatw5_merge = 0
+      ! 
+    ENDIF ! restart 
     !
-    CALL MPI_FILE_OPEN(world_comm, 'sparsei', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsei,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsei',1 )
-    !
-    CALL MPI_FILE_OPEN(world_comm, 'sparsej', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsej,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsej',1 )
-    !
-    CALL MPI_FILE_OPEN(world_comm, 'sparset', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparset,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparset',1 )
-    ! 
-    ! ELECTRONS
-    filint = trim(tmp_dir)//trim(prefix)//'.epmatkqcb1'
-    CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunepmatcb,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN X.epmatkqcb1',1 )
-    !
-    CALL MPI_FILE_OPEN(world_comm, 'sparseqcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparseqcb,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparseqcb',1 )
-    !
-    CALL MPI_FILE_OPEN(world_comm, 'sparsekcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsekcb,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsek',1 )
-    !
-    CALL MPI_FILE_OPEN(world_comm, 'sparseicb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparseicb,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsei',1 )
-    !
-    CALL MPI_FILE_OPEN(world_comm, 'sparsejcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsejcb,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsej',1 )
-    !
-    CALL MPI_FILE_OPEN(world_comm, 'sparsetcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsetcb,ierr)
-    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparset',1 )
-#endif
     ind_tot   = 0
     ind_totcb = 0
-    lrepmatw2 = 0
-    lrepmatw4 = 0
-    lrepmatw5 = 0
-    lrepmatw6 = 0
+    lrepmatw2_restart(:) = 0
+    lrepmatw5_restart(:) = 0
     ! 
     !----------------------------------------------------------------------------
     END SUBROUTINE iter_open
@@ -371,13 +713,13 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: itemp
+    INTEGER, INTENT(in) :: itemp
     !! Temperature index
-    REAL(KIND = DP), INTENT(IN) :: etemp
+    REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
-    REAL(KIND = DP), INTENT(IN) :: etf_all(nbndsub, nkqtotf)
+    REAL(KIND = DP), INTENT(in) :: etf_all(nbndsub, nkqtotf)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
     ! 
     ! Local variables
@@ -410,7 +752,7 @@
       ELSEIF (temp >= 100.d0 -eps4) THEN
         WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
       ENDIF
-      OPEN(iufilscatt_rate,FILE=name1, FORM='formatted')
+      OPEN(iufilscatt_rate,FILE = name1, FORM = 'formatted')
       WRITE(iufilscatt_rate,'(a)') '# Inverse scattering time (ps)'
       WRITE(iufilscatt_rate,'(a)') '#      ik       ibnd                 E(ibnd)    scattering rate(1/ps)'
       !
@@ -458,9 +800,9 @@
     !
     IMPLICIT NONE
     !
-    REAL(KIND = DP), INTENT(IN) :: etemp
+    REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND = DP), INTENT(IN) :: ef0
+    REAL(KIND = DP), INTENT(in) :: ef0
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(out) :: etf_all(nbndsub, nkqtotf/2)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
@@ -498,7 +840,7 @@
       ELSEIF (temp >= 100.d0 -eps4) THEN
         WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
       ENDIF
-      OPEN(iufilscatt_rate,FILE=name1, status='old',iostat=ios)
+      OPEN(iufilscatt_rate,FILE = name1, status='old',iostat=ios)
       WRITE(stdout,'(a16,a22)') '     Open file: ',name1   
       ! There are two comment line at the beginning of the file
       READ(iufilscatt_rate,*) dummy1
@@ -560,17 +902,17 @@
     ! Local variable
     LOGICAL :: exst
     !
-    INTEGER, INTENT(IN) :: iqq
+    INTEGER, INTENT(in) :: iqq
     !! Current q-point
-    INTEGER, INTENT(IN) :: totq
+    INTEGER, INTENT(in) :: totq
     !! Total number of q-points
-    INTEGER, INTENT(IN) :: nktotf
+    INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    REAL(KIND = DP), INTENT(INOUT) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(INOUT) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(INOUT) :: zi_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: zi_all(ibndmax-ibndmin+1, nktotf)
     !! Z parameter of electron-phonon self-energy accross all pools
     ! 
     ! Local variables
@@ -654,11 +996,11 @@
     ! Local variable
     LOGICAL :: exst
     !
-    INTEGER, INTENT(INOUT) :: iqq
+    INTEGER, INTENT(inout) :: iqq
     !! Current q-point
-    INTEGER, INTENT(IN) :: totq
+    INTEGER, INTENT(in) :: totq
     !! Total number of q-points
-    INTEGER, INTENT(IN) :: nktotf
+    INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
     REAL(KIND = DP), INTENT(OUT) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
     !! Real part of the electron-phonon self-energy accross all pools
@@ -687,9 +1029,9 @@
       !
       ! First inquire if the file exists
 #if defined(__MPI)
-      name1 = trim(tmp_dir) // trim(prefix) // '.sigma_restart1'
+      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart1'
 #else
-      name1 = trim(tmp_dir) // trim(prefix) // '.sigma_restart'
+      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart'
 #endif    
       INQUIRE(file = name1, exist=exst)
       ! 
@@ -774,13 +1116,13 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: iqq
+    INTEGER, INTENT(in) :: iqq
     !! q-point from the selected ones within the fstick window. 
-    INTEGER, INTENT(IN) :: totq
+    INTEGER, INTENT(in) :: totq
     !! Total number of q-points
-    INTEGER, INTENT(IN) :: nktotf
+    INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    LOGICAL, INTENT(IN) :: second
+    LOGICAL, INTENT(in) :: second
     !! IF we have two Fermi level
     ! 
     ! Local variable
@@ -899,13 +1241,13 @@
     ! Local variable
     LOGICAL :: exst
     !
-    INTEGER, INTENT(INOUT) :: iqq
+    INTEGER, INTENT(inout) :: iqq
     !! Current q-point from selecq.fmt
-    INTEGER, INTENT(IN) :: totq
+    INTEGER, INTENT(in) :: totq
     !! Total number of q-points
-    INTEGER, INTENT(IN) :: nktotf
+    INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    LOGICAL, INTENT(IN) :: second
+    LOGICAL, INTENT(in) :: second
     !! IF we have two Fermi level
     ! 
     ! Local variables
@@ -930,9 +1272,9 @@
       !
       ! First inquire if the file exists
 #if defined(__MPI)
-      name1 = trim(tmp_dir) // trim(prefix) // '.tau_restart1'
+      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.tau_restart1'
 #else
-      name1 = trim(tmp_dir) // trim(prefix) // '.tau_restart'
+      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.tau_restart'
 #endif 
       INQUIRE(file = name1, exist=exst)
       ! 
@@ -975,9 +1317,9 @@
       IF (second) THEN
         ! First inquire if the file exists
 #if defined(__MPI)
-        name1 = trim(tmp_dir) // trim(prefix) // '.tau_restart_CB1'
+        name1 = TRIM(tmp_dir) // TRIM(prefix) // '.tau_restart_CB1'
 #else
-        name1 = trim(tmp_dir) // trim(prefix) // '.tau_restart_CB'
+        name1 = TRIM(tmp_dir) // TRIM(prefix) // '.tau_restart_CB'
 #endif 
         INQUIRE(file = name1, exist=exst)
         ! 
@@ -1068,11 +1410,11 @@
     ! Local variable
     LOGICAL :: exst
     !
-    INTEGER, INTENT(IN) :: nktotf
+    INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
     INTEGER, INTENT(OUT) :: nqtotf_new
     !! Total number of q-points
-    REAL(KIND = DP), INTENT(INOUT) :: inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nktotf)
     !! Scattering rate read from file restart_filq
     ! 
     ! Local variables
@@ -1086,17 +1428,19 @@
     !! Local band index
     INTEGER :: ltau_all
     !! Length of the vector
-    INTEGER(kind=8) :: unf_recl
+    INTEGER(KIND = 8) :: unf_recl
     !! 
-    REAL(KIND = DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 ), dummy
+    REAL(KIND = DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
     !! Vector to store the array 
+    REAL(KIND = DP) :: dummy
+    !! Test what the record length is
     CHARACTER(LEN = 256) :: name1 
     ! 
     !
     IF (mpime == ionode_id) THEN
       !
       ! First inquire if the file exists
-      name1 = trim(tmp_dir) // trim(restart_filq)
+      name1 = TRIM(tmp_dir) // TRIM(restart_filq)
       INQUIRE(file = name1, exist=exst)
       ! 
       IF (exst) THEN ! read the file
@@ -1105,7 +1449,7 @@
         !CALL diropn (iufiltau_all, 'tau_restart', ltau_all, exst)
         ! 
         INQUIRE (IOLENGTH = unf_recl) dummy  
-        unf_recl = unf_recl * int(ltau_all, kind=kind(unf_recl))
+        unf_recl = unf_recl * INT(ltau_all, KIND=kind(unf_recl))
         open (unit = iufiltau_all, file = restart_filq, iostat = ios, form ='unformatted', &
          status = 'unknown', access = 'direct', recl = unf_recl)
         !  

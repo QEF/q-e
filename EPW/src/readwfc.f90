@@ -48,9 +48,9 @@
   CALL set_ndnmbr( ipool, me_pool, nproc_pool, npool, nd_nmbr0 )
   !
 #if defined(__MPI)
-  tempfile = trim(tmp_dir) // trim(prefix) // '.wfc' // nd_nmbr0
+  tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // nd_nmbr0
 # else
-  tempfile = trim(tmp_dir) // trim(prefix) // '.wfc'
+  tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc'
 #endif
   INQUIRE (IOLENGTH = unf_recl) dummy 
   unf_recl = unf_recl * lrwfc

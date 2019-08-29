@@ -256,8 +256,8 @@
     IF (meta_ionode) THEN
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
            nbnd, ",", nkstot,")"
-      tempfile = trim(prefix)//'.eig'
-      OPEN(iuqpeig, FILE=tempfile, FORM='formatted', action='read', iostat=ios)
+      tempfile = TRIM(prefix)//'.eig'
+      OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', action='read', iostat=ios)
       IF (ios /= 0) CALL errore('elphon_shuffle_wrap','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
       DO ik = 1, nkstot
@@ -391,7 +391,7 @@
          dirname = TRIM(dvscf_dir) // TRIM(prefix) // '.phsave'
          filename = TRIM(dirname) // '/patterns.' // &
                     TRIM(int_to_char(iq_irr)) // '.xml'
-         INQUIRE(FILE=TRIM(filename), EXIST=exst )
+         INQUIRE(FILE = TRIM(filename), EXIST = exst )
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
          CALL iotk_open_read(iunpun, file = TRIM(filename), &
@@ -738,9 +738,9 @@
       ! read/write the e-ph matrix elements and other info in the Bloch representation
       ! (coarse mesh) from/to .epb files (one for each pool)
       !
-      tempfile = trim(tmp_dir) // trim(prefix) // '.epb' 
+      tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.epb' 
       CALL set_ndnmbr(0, my_pool_id+1, 1, npool, filelab)
-      tempfile = trim(tmp_dir) // trim(prefix) // '.epb' // filelab
+      tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.epb' // filelab
       !
       IF (epbread) THEN
          inquire(file = tempfile, exist=exst)

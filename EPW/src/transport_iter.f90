@@ -57,27 +57,27 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: nind
+    INTEGER, INTENT(in) :: nind
     !! Total number of elements per cpu
-    INTEGER, INTENT(IN) :: sparse_q(nind)
+    INTEGER, INTENT(in) :: sparse_q(nind)
     !! Q-point mapping index
-    INTEGER, INTENT(IN) :: sparse_k(nind)
+    INTEGER, INTENT(in) :: sparse_k(nind)
     !! K-point mapping index
-    INTEGER, INTENT(IN) :: sparse_i(nind)
+    INTEGER, INTENT(in) :: sparse_i(nind)
     !! Band mapping index
-    INTEGER, INTENT(IN) :: sparse_j(nind)
+    INTEGER, INTENT(in) :: sparse_j(nind)
     !! Band mapping index
-    INTEGER, INTENT(IN) :: sparse_t(nind)
+    INTEGER, INTENT(in) :: sparse_t(nind)
     !! Temperature mapping index
-    REAL(KIND = DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigenenergies
-    REAL(KIND = DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! Velocity of k
-    REAL(KIND = DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nkqtotf/2)
     !! Weight of k
-    REAL(KIND = DP), INTENT(IN) :: trans_prob(nind)
+    REAL(KIND = DP), INTENT(in) :: trans_prob(nind)
     !! Transition probability
-    REAL(KIND = DP), INTENT(IN) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
     ! 
     ! Local variables
@@ -178,7 +178,7 @@
     ! Gather all the k-point coordinate from all the pools
     xkf_all(:, :) = zero
     av_mob(:)    = zero
-#ifdef __MPI
+#if defined(__MPI)
     CALL poolgather2 ( 3, nkqtotf, nkqf, xkf, xkf_all)
 #else
     xkf_all = xkf
@@ -494,26 +494,26 @@
     IMPLICIT NONE
     ! 
 #if defined(__MPI)
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_tot
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_totcb
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
-    INTEGER, INTENT(INOUT) :: ind_tot
+    INTEGER, INTENT(inout) :: ind_tot
     !! Tota number of component for valence band
-    INTEGER, INTENT(INOUT) :: ind_totcb
+    INTEGER, INTENT(inout) :: ind_totcb
     !! Total number of component for conduction band
 #endif    
     !
-    REAL(KIND = DP), INTENT(INOUT) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(inout) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
-    REAL(KIND = DP), INTENT(INOUT) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(inout) :: wkf_all(nkqtotf/2)
     !! k-point weights from all the cpu
-    REAL(KIND = DP), INTENT(INOUT) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(inout) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
     !! velocity from all the k-points
-    REAL(KIND = DP), INTENT(INOUT) :: ef0(nstemp)
+    REAL(KIND = DP), INTENT(inout) :: ef0(nstemp)
     !! Fermi level for the temperature itemp     
-    REAL(KIND = DP), INTENT(INOUT) :: efcb(nstemp)
+    REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
     !! Fermi level for the temperature itemp for cb band    
     ! 
     ! Local variables
@@ -569,15 +569,15 @@
     INTEGER (kind=MPI_OFFSET_KIND) :: upper_bnd
     !! end for current CPU
 #else
-    INTEGER (kind=8) :: lrepmatw2
+    INTEGER (KIND = 8) :: lrepmatw2
     !! Local core offset for reading
     INTEGER (kind=i4b) :: lrepmatw4
     !! Local core offset for reading
-    INTEGER (kind=8) :: lsize
+    INTEGER (KIND = 8) :: lsize
     !! Offset to tell where to start reading the file
-    INTEGER (kind=8) :: lower_bnd
+    INTEGER (KIND = 8) :: lower_bnd
     !! start for current CPU
-    INTEGER (kind=8) :: upper_bnd
+    INTEGER (KIND = 8) :: upper_bnd
     !! end for current CPU
 #endif
     ! 
@@ -593,11 +593,11 @@
     vkk_all(:, :, :) = zero
     ! 
     ! SP - The implementation only works with MPI so far
-#ifdef __MPI
+#if defined(__MPI)
     ! Read velocities
     IF (mpime == ionode_id) THEN
       !
-      OPEN(UNIT=iufilibtev_sup,FILE='IBTEvel_sup.fmt',status='old',iostat=ios)
+      OPEN(UNIT = iufilibtev_sup,FILE = 'IBTEvel_sup.fmt',status='old',iostat=ios)
       READ(iufilibtev_sup,'(a)')
       READ(iufilibtev_sup,*) ind_tot, ind_totcb
       READ(iufilibtev_sup,'(a)')
@@ -638,7 +638,7 @@
       trans_prob(:) = 0.0d0
       ! 
       ! Open file containing trans_prob 
-      filint = trim(tmp_dir)//trim(prefix)//'.epmatkq1'
+      filint = TRIM(tmp_dir)//TRIM(prefix)//'.epmatkq1'
       CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmat, ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1',1 )
       !
@@ -733,7 +733,7 @@
       trans_probcb(:) = 0.0d0
       ! 
       ! Open file containing trans_prob 
-      filint = trim(tmp_dir)//trim(prefix)//'.epmatkqcb1'
+      filint = TRIM(tmp_dir)//TRIM(prefix)//'.epmatkqcb1'
       CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatcb, ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1', 1 )
       !

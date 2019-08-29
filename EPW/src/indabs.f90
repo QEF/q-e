@@ -35,7 +35,7 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: iq
+  INTEGER, INTENT(in) :: iq
   !! Q-point index    
   !
   ! Local variables 
@@ -374,7 +374,7 @@
     WRITE(c,"(i0)") neta+1
     format_string = "("//TRIM(c) // "E22.14)"
 
-    OPEN(UNIT=iuindabs,FILE=nameF)
+    OPEN(UNIT = iuindabs,FILE = nameF)
     WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
     WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
@@ -382,7 +382,7 @@
     ENDDO
     CLOSE(iuindabs)
     ! 
-    OPEN(UNIT=iuindabs,FILE='epsilon2_indabs_lorenz.dat')
+    OPEN(UNIT = iuindabs,FILE = 'epsilon2_indabs_lorenz.dat')
     WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
     WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega

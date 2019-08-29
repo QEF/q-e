@@ -285,8 +285,8 @@
   !
   IF (iqq == 1) THEN
     IF (mpime == ionode_id) THEN
-      OPEN(UNIT=iospectral,FILE='specfun.phon')
-      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.phon')
+      OPEN(UNIT = iospectral,FILE = 'specfun.phon')
+      OPEN(UNIT = iospectral_sup,FILE = 'specfun_sup.phon')
       WRITE(iospectral, '(/2x,a)') '#Phonon spectral function (meV)'
       WRITE(iospectral_sup, '(2x,a)') '#Phonon eigenenergies + real and im part of phonon self-energy (meV)'
       WRITE(iospectral, '(/2x,a)') '#Q-point    Energy[eV]     A(q,w)[meV^-1]'

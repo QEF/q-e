@@ -534,7 +534,7 @@
   DEALLOCATE(lwin)
   DEALLOCATE(lwinq)
   DEALLOCATE(exband)
-  CLOSE(iunepmatwe, STATUS= 'delete')
+  CLOSE(iunepmatwe, STATUS =  'delete')
   CLOSE(iunepmatwp)
   ! 
   ! Check Memory usage
@@ -1525,7 +1525,7 @@
     IF (mpime == ionode_id) THEN
       !
       IF (phonselfen) THEN
-        OPEN(UNIT=lambda_phself,FILE='lambda.phself')
+        OPEN(UNIT = lambda_phself,FILE = 'lambda.phself')
         WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
         WRITE(lambda_phself, *) '#Modes     ',(imode, imode = 1, nmodes)
         DO iqq = 1, nqtotf

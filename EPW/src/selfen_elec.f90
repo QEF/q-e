@@ -54,11 +54,11 @@
   !
   LOGICAL, INTENT (INOUT) :: first_cycle
   !! Use to determine weather this is the first cycle after restart 
-  INTEGER, INTENT(IN) :: iqq
+  INTEGER, INTENT(in) :: iqq
   !! Q-point index from selecq.fmt window
-  INTEGER, INTENT(IN) :: iq
+  INTEGER, INTENT(in) :: iq
   !! Q-point index from full grid
-  INTEGER, INTENT(IN) :: totq
+  INTEGER, INTENT(in) :: totq
   !! Total number of q-points from the selecq.fmt grid. 
   !
   ! Local variables 
@@ -391,7 +391,7 @@
     !
     IF (mpime == ionode_id) THEN
       ! Write to file
-      OPEN(UNIT=linewidth_elself, FILE='linewidth.elself')
+      OPEN(UNIT = linewidth_elself, FILE = 'linewidth.elself')
       WRITE(linewidth_elself, '(a)') '# Electron linewidth = 2*Im(Sigma) (meV)'
       IF (iverbosity == 3) THEN
         WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      imode          Im(Sigma)(meV)'

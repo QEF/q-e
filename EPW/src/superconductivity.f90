@@ -398,7 +398,7 @@
     ELSEIF (temp >= 100.d0) THEN
        WRITE(fildos,'(a,a6,f6.2)') TRIM(prefix),'.qdos_', temp
     ENDIF
-    OPEN(iuqdos, FILE=fildos, FORM='formatted')
+    OPEN(iuqdos, FILE = fildos, FORM = 'formatted')
     !
     IF (.NOT. ALLOCATED(dos_qp) ) ALLOCATE(dos_qp(nsw) )
     dos_qp(:) = 0.d0          
@@ -469,7 +469,7 @@
     ELSEIF (temp >= 100.d0) THEN
        WRITE(filfe,'(a,a4,f6.2)') TRIM(prefix),'.fe_', temp
     ENDIF
-    OPEN(iufe, FILE=filfe, FORM='formatted')
+    OPEN(iufe, FILE = filfe, FORM = 'formatted')
     !
     dFE = 0.d0
     IF (laniso) THEN

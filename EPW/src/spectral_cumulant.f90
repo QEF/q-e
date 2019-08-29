@@ -92,7 +92,7 @@
   WRITE(stdout,'(5x,a)') 'Warning: the routine is sequential but very fast.'
   WRITE(stdout,'(5x,a/)') repeat('=',75)
   !
-  OPEN (UNIT=iospectral_sup, FILE='specfun_sup.elself', status='old', iostat=ios)
+  OPEN (UNIT = iospectral_sup, FILE = 'specfun_sup.elself', status='old', iostat=ios)
   IF (ios /= 0) CALL errore ('spectral_cumulant', 'opening file specfun_sup.elself', ABS(ios) )
   !
   ! determine number of k points, ibndmin, ibndmax
@@ -149,7 +149,7 @@
   ELSE
     WRITE(filespec,'(a,i3,a)') 'specfun_cum',bnd_cum,'.elself'
   ENDIF
-  OPEN (UNIT=iospectral_cum,FILE=filespec)
+  OPEN (UNIT = iospectral_cum,FILE = filespec)
   !
   WRITE(iospectral_cum,'(a)') '#       k   Energy [eV]            A(k,w) [meV^-1]            Z-factor    '
   WRITE(iospectral_cum,'(a)') '#                       with convolutions  |    using FFT    '

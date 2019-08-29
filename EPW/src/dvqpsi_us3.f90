@@ -135,7 +135,7 @@
     u1 = uact(mu+1)
     u2 = uact(mu+2)
     u3 = uact(mu+3)
-    IF (abs(u1) + ABS(u2) + ABS(u3) > eps12) THEN
+    IF (ABS(u1) + ABS(u2) + ABS(u3) > eps12) THEN
       nt = ityp(na)
       gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
       DO ig = 1, ngms
@@ -158,7 +158,7 @@
       u1 = uact(mu+1)
       u2 = uact(mu+2)
       u3 = uact(mu+3)
-      IF (abs(u1) + ABS(u2) + ABS(u3) > eps12) THEN
+      IF (ABS(u1) + ABS(u2) + ABS(u3) > eps12) THEN
         nt = ityp(na)
         gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
         IF (upf(nt)%nlcc) THEN

@@ -56,7 +56,7 @@ SUBROUTINE loadkmesh_para
   IF (mpime == ionode_id) THEN
     IF (filkf /= '') THEN ! load from file (crystal coordinates)
       !
-      WRITE(stdout, *) '    Using k-mesh file: ', trim(filkf)
+      WRITE(stdout, *) '    Using k-mesh file: ', TRIM(filkf)
       OPEN( unit = iunkf, file = filkf, status = 'old', form = 'formatted',err=100, iostat=ios)
 100   CALL errore('loadkmesh_para','opening file '//filkf,abs(ios))
       READ(iunkf, *) nkqtotf 
@@ -326,7 +326,7 @@ SUBROUTINE loadkmesh_serial
       !
       ! Each pool gets its own copy from the action=read statement
       !
-      WRITE (stdout, *) '     Using k-mesh file: ', trim(filkf)
+      WRITE (stdout, *) '     Using k-mesh file: ', TRIM(filkf)
       OPEN ( unit = iunkf, file = filkf, status = 'old', form = 'formatted', err=100, iostat=ios)
 100   CALL errore('loadkmesh_serial','opening file '//filkf,abs(ios))
       READ(iunkf, *) nkqtotf

@@ -188,9 +188,9 @@
       ig0 = 0
       DO WHILE ( (ig0 <= ng0vec) .AND. ( .NOT. in_the_list) )
         ig0 = ig0 + 1
-        in_the_list = ( (abs(g0vec(1) - g0vec_all(1,ig0)) <= eps5) .AND. &
-                        (abs(g0vec(2) - g0vec_all(2,ig0)) <= eps5) .AND. &
-                        (abs(g0vec(3) - g0vec_all(3,ig0)) <= eps5))
+        in_the_list = ((ABS(g0vec(1) - g0vec_all(1,ig0)) <= eps5) .AND. &
+                       (ABS(g0vec(2) - g0vec_all(2,ig0)) <= eps5) .AND. &
+                       (ABS(g0vec(3) - g0vec_all(3,ig0)) <= eps5))
       ENDDO
       shift(ik) = ig0
       !
@@ -441,7 +441,7 @@
     WRITE(stdout, '(/5x,a)') 'Calculating kgmap'
     FLUSH(stdout)
     !
-    OPEN(iukgmap,file = TRIM(prefix)//'.kgmap',FORM='formatted')
+    OPEN(iukgmap,file = TRIM(prefix)//'.kgmap',FORM = 'formatted')
     ! 
     ! the 5^3 possible G_0 translations
     ng0vec = 0

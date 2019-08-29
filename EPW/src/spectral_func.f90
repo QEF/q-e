@@ -294,8 +294,8 @@
     ! and constant matrix elements for dipole transitions)
     !
     IF (me_pool == 0) then
-      OPEN(UNIT=iospectral,FILE='specfun.elself') 
-      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.elself') 
+      OPEN(UNIT = iospectral,FILE = 'specfun.elself') 
+      OPEN(UNIT = iospectral_sup,FILE = 'specfun_sup.elself') 
     ENDIF
     IF (me_pool == 0) then
       WRITE(iospectral, '(/2x,a/)') '#Electronic spectral function (meV)'

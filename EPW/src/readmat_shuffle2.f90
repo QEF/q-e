@@ -126,7 +126,7 @@
   ! purpose was for pools and nodes)
   !
   CALL set_ndnmbr ( 0, iq_irr, 1, nqc_irr, filelab)
-  tempfile = trim(dvscf_dir) // trim(prefix) // '.dyn_q' // trim(filelab)
+  tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dyn_q' // TRIM(filelab)
   ! the following function will check either or not the file is formatted in
   ! xml. If no file is found, an error is raised
   call check_is_xml_file(tempfile, is_xml_file)
@@ -700,7 +700,7 @@
       ! 
     ELSE
       !
-      OPEN(UNIT=iunifc,FILE=tempfile,status='old',iostat=ios)
+      OPEN(UNIT = iunifc,FILE = tempfile,status='old',iostat=ios)
       IF (ios /= 0) call errore ('read_ifc', 'error opening ifc.q2r',iunifc)
       !
       !  read real-space interatomic force constants
@@ -1441,7 +1441,7 @@ SUBROUTINE check_is_xml_file(filename, is_xml_file)
   !
   !  input variables
   !
-  CHARACTER(len=256), INTENT(IN)  :: filename
+  CHARACTER(len=256), INTENT(in)  :: filename
   !! The name of the file to check if formatted in XML format
   !! This string is assumed to be trimmed
   LOGICAL, INTENT(OUT)            :: is_xml_file
@@ -1454,8 +1454,8 @@ SUBROUTINE check_is_xml_file(filename, is_xml_file)
 
   filename_xml = TRIM(filename) // '.xml'
   filename_xml = TRIM(filename_xml)
-  INQUIRE(FILE=filename, EXIST=is_plain_text_file)
-  INQUIRE(FILE=filename_xml, EXIST=is_xml_file)
+  INQUIRE(FILE = filename, EXIST = is_plain_text_file)
+  INQUIRE(FILE = filename_xml, EXIST = is_xml_file)
   ! Tell user if any inconsistencies
   IF (is_xml_file .AND. is_plain_text_file) THEN
     ! 2 different type of files exist => warn user

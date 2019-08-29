@@ -54,11 +54,11 @@
 #endif
     ! 
     IF (iterative_bte) THEN
-      IF ((int_mob .AND. carrier) .OR. ((.not. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
         CLOSE(iunepmat)
         CLOSE(iunsparseq)
       ENDIF
-      IF ((int_mob .AND. carrier) .OR. ((.not. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
         CLOSE(iunepmatcb)
         CLOSE(iunsparseqcb)
       ENDIF  ! in all other cases it is still to decide which files to open

@@ -44,11 +44,11 @@
   ! 
   IMPLICIT NONE
   ! 
-  INTEGER, INTENT(IN) :: iqq
+  INTEGER, INTENT(in) :: iqq
   !! Q-point index in selecq
-  INTEGER, INTENT(IN) :: iq 
+  INTEGER, INTENT(in) :: iq 
   !! Q-point index
-  INTEGER, INTENT(IN) :: totq
+  INTEGER, INTENT(in) :: totq
   !! Total number of q-points in fsthick window
  
   !
@@ -283,8 +283,8 @@
     ! and constant matrix elements for dipole transitions)
     !
     IF (me_pool == 0) then
-      OPEN(UNIT=iospectral,FILE='specfun.plself') 
-      OPEN(UNIT=iospectral_sup,FILE='specfun_sup.plself') 
+      OPEN(UNIT = iospectral,FILE = 'specfun.plself') 
+      OPEN(UNIT = iospectral_sup,FILE = 'specfun_sup.plself') 
     ENDIF
     IF (me_pool == 0) then
       WRITE(iospectral, '(/2x,a/)') '#Electron-plasmon spectral function (meV)'

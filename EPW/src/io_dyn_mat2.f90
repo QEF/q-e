@@ -38,7 +38,7 @@
     !! 
     !! Read paramters from the dynamical matrix
     !! 
-    CHARACTER(LEN=256), INTENT(IN) :: fildyn
+    CHARACTER(LEN=256), INTENT(in) :: fildyn
     !! Name of the file to read
     INTEGER, INTENT(OUT) :: ntyp
     !! Number of type of atoms
@@ -84,9 +84,9 @@
     !!   
     !! Read the dynamical matrix
     !!
-    INTEGER, INTENT(IN) :: ntyp
+    INTEGER, INTENT(in) :: ntyp
     !! Number of type of atoms
-    INTEGER, INTENT(IN) :: nat
+    INTEGER, INTENT(in) :: nat
     !! Number of atoms
     INTEGER, INTENT(OUT) :: ibrav, nspin_mag, nqs
     CHARACTER(LEN=3), INTENT(OUT) :: atm(ntyp)
@@ -185,7 +185,7 @@
     !!   This routine reads the dynamical matrix file. The file is assumed to
     !!   be already opened. iq is the number of the dynamical matrix to read.
     !!
-    INTEGER, INTENT(IN) :: nat, iq
+    INTEGER, INTENT(in) :: nat, iq
     REAL(KIND = DP), INTENT(OUT) :: xq(3)
     COMPLEX(KIND = DP), INTENT(OUT) :: dyn(3,3,nat,nat)
 
@@ -239,7 +239,7 @@
 
     SUBROUTINE read_ifc_xml( nr1, nr2, nr3, nat, phid)
 
-    INTEGER, INTENT(IN) :: nr1, nr2, nr3, nat
+    INTEGER, INTENT(in) :: nr1, nr2, nr3, nat
     REAL(KIND = DP), INTENT(OUT) :: phid(nr1*nr2*nr3,3,3,nat,nat)
     INTEGER :: na, nb, nn, m1, m2, m3
     REAL(KIND = DP) :: aux(3,3)

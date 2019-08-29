@@ -59,7 +59,7 @@
   wkf_all(:) = zero
   etf_all(:, :) = zero
   ! 
-#ifdef __MPI
+#if defined(__MPI)
   CALL poolgather2 ( 1, nkqtotf, 2*nkf, wkf, wkf_all )
   CALL poolgather2 ( 3, nkqtotf, 2*nkf, xkf, xkf_all )
   CALL poolgather2 ( nbndsub, nkqtotf, 2*nkf, etf, etf_all )
