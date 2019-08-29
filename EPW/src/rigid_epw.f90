@@ -369,7 +369,7 @@
   ! will get a pure real number.
   ! In any case, when g_s will be squared both will become real numbers. 
   IF (shortrange) THEN
-    !epmat = ZSQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
+    !epmat = ZSQRT(epmat*CONJG(epmat) - epmatl*CONJG(epmatl))
     epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
   ENDIF        
   !
@@ -527,7 +527,7 @@
   ! will get a pure real number.
   ! In any case, when g_s will be squared both will become real numbers. 
   IF (shortrange) THEN
-    !epmat = ZSQRT(epmat*conjg(epmat) - epmatl*conjg(epmatl))
+    !epmat = ZSQRT(epmat*CONJG(epmat) - epmatl*CONJG(epmatl))
     epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
   ENDIF        
   !

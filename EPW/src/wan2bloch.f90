@@ -157,8 +157,8 @@
       DO jbnd = 1, nbnd
         INNER : DO ibnd = 1, nbnd
           IF (ABS(cz(ibnd, jbnd)) > eps12) THEN
-            cz(:, jbnd) = cz(:, jbnd) * conjg( cz(ibnd,jbnd) )
-            cz(:, jbnd) = cz(:, jbnd)/sqrt(zdotu(nbnd,conjg(cz(:,jbnd)),1,cz(:, jbnd),1) )
+            cz(:, jbnd) = cz(:, jbnd) * CONJG( cz(ibnd,jbnd) )
+            cz(:, jbnd) = cz(:, jbnd)/sqrt(zdotu(nbnd,CONJG(cz(:,jbnd)),1,cz(:, jbnd),1) )
             EXIT INNER
           ENDIF
         END DO INNER
@@ -349,8 +349,8 @@
       DO jmode = 1,nmodes
         INNER : DO imode = 1,nmodes
           IF (ABS(cz(imode, jmode)) > eps12) THEN
-            cz(:, jmode) = cz(:, jmode) * conjg( cz(imode,jmode) )
-            cz(:, jmode) = cz(:, jmode)/sqrt( zdotu(nmodes,conjg(cz(:, jmode)),1,cz(:, jmode),1) )
+            cz(:, jmode) = cz(:, jmode) * CONJG( cz(imode,jmode) )
+            cz(:, jmode) = cz(:, jmode)/sqrt( zdotu(nmodes,CONJG(cz(:, jmode)),1,cz(:, jmode),1) )
             EXIT INNER
           ENDIF
         END DO INNER
@@ -1015,7 +1015,7 @@
     !
     DO ipol = 1, 3
       !
-      ! cvmef_tmp(:, :) = MATMUL( cvmef(ipol,:,:), conjg(transpose(cuf(:, :))) )
+      ! cvmef_tmp(:, :) = MATMUL( cvmef(ipol,:,:), CONJG(transpose(cuf(:, :))) )
       ! vmef(ipol,:,:) = MATMUL( cuf(:, :), cvmef_tmp(:, :) )
       !
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, cvmef(ipol,:,:), &
@@ -1033,7 +1033,7 @@
     !
     DO ipol = 1, 3
       !
-      ! chf_a_tmp(:, :) = MATMUL( chf_a(ipol,:,:), conjg(transpose(cuf(:, :))) )
+      ! chf_a_tmp(:, :) = MATMUL( chf_a(ipol,:,:), CONJG(transpose(cuf(:, :))) )
       ! chf_a(ipol,:,:) = MATMUL(cuf(:, :), chf_a_tmp(:, :) )
       !
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, chf_a(ipol,:,:), &

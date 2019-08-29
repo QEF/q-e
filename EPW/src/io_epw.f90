@@ -170,6 +170,81 @@
   INTEGER :: iunsparseicb_merge  = 409
   INTEGER :: iunsparsejcb_merge  = 410
   INTEGER :: iunsparsetcb_merge  = 411
-
+  ! 
+  ! 
+  PUBLIC :: io_error
+  ! 
+  CONTAINS
+  !----------------------------------------------------------------------------
+  SUBROUTINE io_error(error_msg)
+  !----------------------------------------------------------------------------
+  !!
+  !! Abort the code and gives an error message
+  !! 
+  !! This routine is adapted from wannier90-3.0.0/src/io.F90
+  !! 
+  !----------------------------------------------------------------------------
+  ! 
+  IMPLICIT NONE
+  ! 
+  CHARACTER(LEN = *), INTENT(in) :: error_msg
+  ! 
+  ! Local variables
+#ifdef MPI
+  CHARACTER(LEN = 50) :: filename
+  !! name of the file
+  INTEGER :: stderr
+  !! Standard error
+  INTEGER :: ierr
+  !! Error number
+  INTEGER :: whoami
+  !! Returns node number
+  INTEGER :: num_nodes
+  !! Number of nodes
+  ! 
+  CALL mpi_comm_rank(mpi_comm_world, whoami, ierr)
+  CALL mpi_comm_size(mpi_comm_world, num_nodes, ierr)
+  ! 
+  IF (num_nodes > 1) THEN
+    IF (whoami > 99999) THEN
+      WRITE(filename, '(a,a,I0,a)') TRIM(seedname), '.node_', whoami, '.werr'
+    ELSE
+      WRITE(filename, '(a,a,I5.5,a)') TRIM(seedname), '.node_', whoami, '.werr'
+    ENDIF
+    stderr = io_file_unit()
+    OPEN(UNIT = stderr, FILE = TRIM(filename), FORM = 'formatted', ERR = 105)
+    WRITE(stderr, '(1x,a)') TRIM(error_msg)
+    WRITE(stderr)
+  ENDIF
+  ! 
+105 WRITE(*, '(1x,a)') TRIM(error_msg)
+106 WRITE(*, '(1x,a,I0,a)') "Error on node ", whoami, ": examine the output/error files for details"
+  ! 
+  IF (whoami == 0) THEN
+    WRITE(stdout, *) 'Exiting.......'
+    WRITE(stdout, '(1x,a)') TRIM(error_msg)
+    CLOSE(stdout)
+  ENDIF
+  ! 
+  CALL MPI_abort(MPI_comm_world, 1, ierr)
+  ! 
+#else
+  ! 
+  WRITE(stdout, *) 'Exiting.......'
+  WRITE(stdout, '(1x,a)') TRIM(error_msg)
+  ! 
+  CLOSE(stdout)
+  ! 
+  WRITE(*, '(1x,a)') TRIM(error_msg)
+  WRITE(*, '(A)') "Error: examine the output/error file for details"
+#endif
+  !  
+#ifdef EXIT_FLAG
+  CALL EXIT(1)
+#else
+  STOP 
+#endif
+  ! 
+  END SUBROUTINE io_error
   ! 
 END MODULE io_epw

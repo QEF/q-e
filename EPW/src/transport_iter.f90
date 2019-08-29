@@ -537,25 +537,25 @@
     !! Dummy counter for bands
     INTEGER :: nind
     !! Number of local elements per cores. 
-    INTEGER(kind=i4b), ALLOCATABLE :: sparse_q( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparse_q( : )
     !! Index mapping for q-points
-    INTEGER(kind=i4b), ALLOCATABLE :: sparse_k( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparse_k( : )
     !! Index mapping for k-points
-    INTEGER(kind=i4b), ALLOCATABLE :: sparse_i( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparse_i( : )
     !! Index mapping for i bands
-    INTEGER(kind=i4b), ALLOCATABLE :: sparse_j( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparse_j( : )
     !! Index mapping for j bands
-    INTEGER(kind=i4b), ALLOCATABLE :: sparse_t( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparse_t( : )
     !! Index mapping for temperature 
-    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_q( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparsecb_q( : )
     !! Index mapping for q-points for cb
-    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_k( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparsecb_k( : )
     !! Index mapping for k-points for cb
-    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_i( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparsecb_i( : )
     !! Index mapping for i bands for cb
-    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_j( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparsecb_j( : )
     !! Index mapping for j bands for cb
-    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_t( : )
+    INTEGER(KIND = i4b), ALLOCATABLE :: sparsecb_t( : )
     !! Index mapping for temperature for cb
 #if defined(__MPI)
     INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
@@ -571,7 +571,7 @@
 #else
     INTEGER (KIND = 8) :: lrepmatw2
     !! Local core offset for reading
-    INTEGER (kind=i4b) :: lrepmatw4
+    INTEGER (KIND = i4b) :: lrepmatw4
     !! Local core offset for reading
     INTEGER (KIND = 8) :: lsize
     !! Offset to tell where to start reading the file

@@ -63,7 +63,7 @@
   !
   LOGICAL :: in_the_list, found
   !
-  IF (abs(sign)/=1) call errore('ktokpmq','sign must be +1 or -1',1)
+  IF (ABS(sign)/=1) call errore('ktokpmq','sign must be +1 or -1',1)
   !
   ! bring k and q in crystal coordinates
   !
@@ -228,7 +228,7 @@
   !--------------------------------------------
   ! 
   !---------------------------------
-  SUBROUTINE backtoBZ( xx, yy, zz, n1, n2, n3 )
+  SUBROUTINE backtoBZ(xx, yy, zz, n1, n2, n3)
   !---------------------------------
   !!
   !!  Brings xx, yy, and zz  into first BZ 
@@ -240,21 +240,25 @@
   IMPLICIT NONE
   ! 
   INTEGER, INTENT(in) :: n1, n2, n3
+  !! cell size
   REAL(KIND = DP), INTENT(inout) :: xx, yy, zz
+  !! kgrid
+  ! Local variables
   INTEGER :: ib
+  !! Size of replicas
   !
   ! more translations are needed to go back to the first BZ when the unit cell
   ! is far from cubic
   !
-  DO ib = -2,0
-    IF (NINT(xx) < ib*n1) xx = xx + (-ib+1)*n1
-    IF (NINT(yy) < ib*n2) yy = yy + (-ib+1)*n2
-    IF (NINT(zz) < ib*n3) zz = zz + (-ib+1)*n3
+  DO ib = -2, 0
+    IF (NINT(xx) < ib * n1) xx = xx + (-ib + 1) * n1
+    IF (NINT(yy) < ib * n2) yy = yy + (-ib + 1) * n2
+    IF (NINT(zz) < ib * n3) zz = zz + (-ib + 1) * n3
   ENDDO
-  DO ib = 2,1,-1
-    IF (NINT(xx) >= ib*n1) xx = xx - ib*n1
-    IF (NINT(yy) >= ib*n2) yy = yy - ib*n2
-    IF (NINT(zz) >= ib*n3) zz = zz - ib*n3
+  DO ib = 2, 1, -1
+    IF (NINT(xx) >= ib * n1) xx = xx - ib * n1
+    IF (NINT(yy) >= ib * n2) yy = yy - ib * n2
+    IF (NINT(zz) >= ib * n3) zz = zz - ib * n3
   ENDDO
   !
   !-------------------------------------------

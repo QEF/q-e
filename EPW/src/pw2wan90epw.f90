@@ -1333,21 +1333,21 @@
                           IF (excluded_band(n)) CYCLE
                           IF (lspinorb) THEN
                             Mkb(m,n) = Mkb(m,n) + phase1 * &
-                               ( qq_so(ih,jh,1,nt) * conjg( becp%nc(ikb,1,m) ) * becp2_nc(jkb,1,n) &
-                               + qq_so(ih,jh,2,nt) * conjg( becp%nc(ikb,1,m) ) * becp2_nc(jkb,2,n) &
-                               + qq_so(ih,jh,3,nt) * conjg( becp%nc(ikb,2,m) ) * becp2_nc(jkb,1,n) &
-                               + qq_so(ih,jh,4,nt) * conjg( becp%nc(ikb,2,m) ) * becp2_nc(jkb,2,n) )
+                               ( qq_so(ih,jh,1,nt) * CONJG( becp%nc(ikb,1,m) ) * becp2_nc(jkb,1,n) &
+                               + qq_so(ih,jh,2,nt) * CONJG( becp%nc(ikb,1,m) ) * becp2_nc(jkb,2,n) &
+                               + qq_so(ih,jh,3,nt) * CONJG( becp%nc(ikb,2,m) ) * becp2_nc(jkb,1,n) &
+                               + qq_so(ih,jh,4,nt) * CONJG( becp%nc(ikb,2,m) ) * becp2_nc(jkb,2,n) )
                           ELSE
                             Mkb(m,n) = Mkb(m,n) + phase1 * qb(ih,jh,nt,ind) * &
-                               ( conjg( becp%nc(ikb,1,m) ) * becp2_nc(jkb,1,n) &
-                               + conjg( becp%nc(ikb,2,m) ) * becp2_nc(jkb,2,n) )
+                               ( CONJG( becp%nc(ikb,1,m) ) * becp2_nc(jkb,1,n) &
+                               + CONJG( becp%nc(ikb,2,m) ) * becp2_nc(jkb,2,n) )
                           ENDIF
                         ENDDO
                       ELSE
                         DO n = 1, nbnd
                           IF (excluded_band(n)) CYCLE
                           Mkb(m,n) = Mkb(m,n) + phase1 * qb(ih,jh,nt,ind) * &
-                                     conjg( becp%k(ikb,m) ) * becp2(jkb,n)
+                                     CONJG( becp%k(ikb,m) ) * becp2(jkb,n)
                         ENDDO
                       ENDIF
                     ENDDO ! m
@@ -1581,7 +1581,7 @@
   !
   ! computes velocity dmec = v_mn(\alpha,k) in the local approximation 
   ! acording to [Eqn. 60 of Comp. Phys. Commun. 209, 116 (2016)] 
-  ! v_mn(\alpha,k) = k \delta_mn + \sum_G * conjg(c_mk(G)) * c_nk(G) * G 
+  ! v_mn(\alpha,k) = k \delta_mn + \sum_G * CONJG(c_mk(G)) * c_nk(G) * G 
   !
   DO ik = 1, nks
     !
@@ -1602,11 +1602,11 @@
         DO ig = 1, npw
           IF (igk_k(ig,ik) > SIZE(g,2) .OR. igk_k(ig,ik) < 1) CYCLE
           !
-          caux = conjg(evc(ig,ibnd)) * evc(ig,jbnd) 
+          caux = CONJG(evc(ig,ibnd)) * evc(ig,jbnd) 
           !
           IF (noncolin) THEN
             !
-            caux = caux + conjg(evc(ig+npwx,ibnd)) * evc(ig+npwx,jbnd)
+            caux = caux + CONJG(evc(ig+npwx,ibnd)) * evc(ig+npwx,jbnd)
             !
           ENDIF
           !
@@ -1623,11 +1623,11 @@
       DO ig = 1, npw
         IF (igk_k(ig,ik) > SIZE(g,2) .OR. igk_k(ig,ik) < 1) CYCLE
         !
-        caux = conjg(evc(ig,ibnd)) * evc(ig,ibnd) 
+        caux = CONJG(evc(ig,ibnd)) * evc(ig,ibnd) 
         !
         IF (noncolin) THEN
           !
-          caux = caux + conjg(evc(ig+npwx,ibnd)) * evc(ig+npwx,ibnd)
+          caux = caux + CONJG(evc(ig+npwx,ibnd)) * evc(ig+npwx,ibnd)
           !
         ENDIF
         !
@@ -1930,7 +1930,7 @@
       CALL zgemm( 'n', 'n', nbnd, nbnd, nbnd, cone, m_mn_tmp1(:, :), & 
            nbnd, umat_all(:,:,ikb), nbnd, czero, m_mn_tmp2(:, :), nbnd )
       ! 
-      ! m_mn_tmp1 = MATMUL( conjg( transpose (umat(:,:,ik) )), m_mat(:,:,ib,ik_g ) )
+      ! m_mn_tmp1 = MATMUL( CONJG( transpose (umat(:,:,ik) )), m_mat(:,:,ib,ik_g ) )
       ! m_mn_tmp2 = MATMUL( m_mn_tmp1, umat_g(:,:,ikb) )
       !
       m_mn_tmp3(:,:,ib,ik_g) = m_mn_tmp2(:, :)

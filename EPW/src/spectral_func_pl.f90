@@ -204,7 +204,7 @@
             else
               if (abs(ekq-ekk1) > 1d-6) then
                 dipole = REAL( dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk) * &
-                             conjg(dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk))/((ekk1-ekk)**2 + degaussw**2) )
+                             CONJG(dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk))/((ekk1-ekk)**2 + degaussw**2) )
               else 
                 dipole = 0.d0
               endif

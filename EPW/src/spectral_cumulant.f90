@@ -37,7 +37,7 @@
   !! Auxiliary string
   CHARACTER(len=64) :: filespec
   !! Spectral function file
-  INTEGER (kind=i4b) :: maxrecs=1.0E9
+  INTEGER (KIND = i4b) :: maxrecs=1.0E9
   !! Maximum number of lines in the specfun_sup.elself 
   INTEGER :: ios 
   !! Status of opening file

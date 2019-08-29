@@ -16,8 +16,61 @@
   ! 
   CONTAINS
     ! 
+    !---------------------------------
+    SUBROUTINE para_bounds(lower, upper, total)
+    !---------------------------------
+    !!
+    !! Subroutine finds the lower and upper
+    !! bounds if we split some quantity over pools
+    !!
+    !---------------------------------
+    !
+    USE mp_global,   ONLY : my_pool_id, npool
+    !
+    IMPLICIT NONE
+    ! 
+    INTEGER, INTENT(out) :: lower
+    !! Lower bound
+    INTEGER, INTENT(out) :: upper
+    !! Upper bound
+    INTEGER, INTENT(in)  :: total
+    !! Total quantity
+    !
+#if defined(__MPI)
+    !  
+    INTEGER :: rest, nrst
+    !
+    IF (total <= npool) THEN
+      IF (my_pool_id < total) THEN
+        lower = my_pool_id + 1
+        upper = lower
+      ELSE
+        lower = 1
+        upper  = 0
+      ENDIF
+    ELSE
+      nrst = total / npool
+      rest = total - nrst * npool
+      IF (my_pool_id < rest) THEN
+        nrst = nrst + 1
+        lower = my_pool_id * nrst + 1
+        upper = lower + nrst - 1
+      ELSE
+        lower = rest * (nrst + 1) + (my_pool_id - rest) * nrst + 1
+        upper = lower + nrst - 1
+      ENDIF
+    ENDIF
+#else
+    lower = 1
+    upper = total
+#endif
+    !
+    ! -----------------------------------------
+    END SUBROUTINE para_bounds
+    !--------------------------------------------
+    ! 
     !---------------------------------------------------------------------
-    SUBROUTINE kpointdivision ( ik0 )
+    SUBROUTINE kpointdivision (ik0)
     !---------------------------------------------------------------------
     !!
     !! This is just to find the first kpoint block in the pool
@@ -28,39 +81,46 @@
     USE pwcom,       ONLY : nkstot
     ! 
     IMPLICIT NONE
-    INTEGER :: ik0
-    INTEGER :: nkl, nkr, iks
+    !  
+    INTEGER, INTENT(out) :: ik0
+    !! Return the first kpoint in the pool
+    ! Local variables
+    INTEGER :: nkl
+    !! Number of kpoints block
+    INTEGER :: nkr
+    !! Reminder
+    INTEGER :: iks
+    !! Index of the first kpoint in the pool 
     !
 #if defined(__MPI)
     !
-    !   number of kpoint blocks, kpoints per pool and reminder
+    ! Number of kpoint blocks, kpoints per pool and reminder
     !
-    nkl   = 1 * ( nkstot / npool )
-    nkr   = ( nkstot - nkl * npool ) / 1
+    nkl = 1 * (nkstot / npool)
+    nkr = (nkstot - nkl * npool) / 1
     !
-    !  the reminder goes to the first nkr pools  
-    !   (0...nkr-1)
+    ! The reminder goes to the first nkr pools (0...nkr-1)
     !
-    IF (my_pool_id < nkr ) nkl = nkl + 1 !kunit
+    IF (my_pool_id < nkr) nkl = nkl + 1 !kunit
     !
-    !  the index of the first k point in this pool
+    ! The index of the first k point in this pool
     !
     iks = nkl * my_pool_id + 1
-    IF (my_pool_id >= nkr ) iks = iks + nkr * 1 !kunit
+    IF (my_pool_id >= nkr) iks = iks + nkr * 1 !kunit
     !
     !  the index of the first k point block in this pool - 1
     !  (I will need the index of ik, not ikk)
     !
-    ik0 = ( iks - 1 )
-    !
+    ik0 = (iks - 1)
 #else
     ik0 = 0
 #endif
-    !
+    !-----------------------------------------------------------------------
     END SUBROUTINE kpointdivision
+    !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE fkbounds( nktot, lower_bnd, upper_bnd )
+    SUBROUTINE fkbounds(nktot, lower_bnd, upper_bnd)
     !-----------------------------------------------------------------------
     !!
     !!   Subroutine finds the lower and upper bounds a k-grid in parallel

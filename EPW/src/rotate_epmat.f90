@@ -100,7 +100,7 @@
   !
   ! the inverse transform also requires the hermitian conjugate
   !
-  cz_tmp = conjg( transpose( cz2 ) )
+  cz_tmp = CONJG( transpose( cz2 ) )
   cz2 = cz_tmp
   !
   nexband_tmp = 0

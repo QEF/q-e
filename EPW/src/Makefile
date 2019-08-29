@@ -19,6 +19,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 #
 
 EPWOBJS = \
+kinds_epw.o \
 epwcom.o \
 constants_epw.o \
 io_epw.o \
@@ -34,8 +35,8 @@ transportcom.o \
 close_epw.o \
 printing.o \
 transport.o \
-transport_iter.o \
 wigner.o \
+transport_iter.o \
 a2f.o \
 adddvscf2.o \
 bcast_epw_input.o \

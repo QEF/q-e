@@ -49,7 +49,7 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
-  USE elph2,         ONLY : epmatq, dynq, sumr, et_ks, &
+  USE elph2,         ONLY : epmatq, dynq, sumr, et_ks, xkq, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all, exband, wscache, umat, umat_all
   USE klist_epw,     ONLY : xk_all, et_loc, et_all
@@ -66,6 +66,7 @@
   USE becmod,        ONLY : becp, deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
                             int4, int4_nc, int5, int5_so, alphap
+  USE kfold,         ONLY : shift
 
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
@@ -368,10 +369,15 @@
   IF (.NOT. epbread .AND. .NOT. epwread) THEN
     ! 
     ALLOCATE(evq(npwx * npol, nbnd))
+    ALLOCATE(xkq(3, nkstot)) ! Used in createkmap 
+    ALLOCATE(shift(nkstot)) ! Used in createkmap
     IF (lifc) THEN
       ALLOCATE(wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat, nat))
       wscache(:, :, :, :, :) = zero      
     ENDIF
+    evq(:,:)   = zero
+    xkq(:, :)  = zero
+    shift(:)   = 0
     ! 
     ! In the loop over irr q-point, we need to read the pattern that
     ! corresponds to the dvscf file computed with QE 5.
@@ -423,8 +429,8 @@
       nsymq = copy_sym(nsym, sym)    
       !
       ! Recompute the inverses as the order of sym.ops. has changed
-      CALL inverse_s( )       
-      CALL s_axis_to_cart( )
+      CALL inverse_s(        
+      CALL s_axis_to_cart()
       !
       ! This computes gi, gimq
       CALL set_giq(xq, s, nsymq, nsym, irotmq, minus_q, gi, gimq)
@@ -479,10 +485,10 @@
         ! SP: First the vlocq needs to be initialized properly with the first
         !     q in the star
         xq = xq0      
-        CALL epw_init(.false.)
+        CALL epw_init(.FALSE.)
         !
         ! retrieve the q in the star
-        xq = sxq(:,iq)                               
+        xq = sxq(:, iq)                               
         !
         ! and populate the uniform grid
         nqc = nqc + 1
@@ -493,7 +499,7 @@
         !
         !  prepare the gmap for the refolding
         !
-        CALL createkmap( xq )                      
+        CALL createkmap(xq)              
         !
         IF (iverbosity == 1) THEN
           !
@@ -569,16 +575,16 @@
             saq = xq
             CALL cryst_to_cart(1, aq, at, -1)
             DO j = 1, 3
-              raq(j) = s(j,1,ism1) * aq(1) &
-                     + s(j,2,ism1) * aq(2) &
-                     + s(j,3,ism1) * aq(3)
+              raq(j) = s(j, 1, ism1) * aq(1) &
+                     + s(j, 2, ism1) * aq(2) &
+                     + s(j, 3, ism1) * aq(3)
             ENDDO
             CALL cryst_to_cart(1, saq, at, -1)
             nog = eqvect_strict(raq, saq) 
             !
             !  check whether the symmetry belongs to a symmorphic group
             !
-            symmo = ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 )
+            symmo = (ft(1, isym)**2 + ft(2, isym)**2 + ft(3, isym)**2 > 1.0d-8)
             !
             WRITE(stdout,'(3i5,L3,L3)') iq, i, isym, nog, symmo
             !
@@ -601,10 +607,10 @@
           raq = zero
           DO ipol = 1, 3
             DO jpol = 1, 3
-              raq(ipol) = raq(ipol) + s(ipol,jpol,ism1) * aq(jpol)
+              raq(ipol) = raq(ipol) + s(ipol, jpol, ism1) * aq(jpol)
             ENDDO
           ENDDO
-          nog = eqvect_strict(raq,saq)
+          nog = eqvect_strict(raq, saq)
           IF (nog) THEN ! This is the symmetry such that Sq=q
             isym = sym_sgq(jsym)
             EXIT
@@ -612,15 +618,15 @@
           ! If we enter into that loop it means that we have not found 
           ! such symmetry within the small group of q. 
           IF (jsym == nsq) THEN
-            CALL errore( 'elphon_shuffle_wrap ', 'No sym. such that Sxq0=iq was found in the sgq !', 1 )
+            CALL errore('elphon_shuffle_wrap ', 'No sym. such that Sxq0=iq was found in the sgq !', 1)
           ENDIF
         ENDDO
         !
         !
-        CALL loadumat( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers )
+        CALL loadumat(nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
         !
         ! Calculate overlap U_k+q U_k^\dagger
-        IF (lpolar) CALL compute_umn_c( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
+        IF (lpolar) CALL compute_umn_c(nbnd, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
         !
         !   calculate the sandwiches
         !
@@ -630,14 +636,14 @@
         ! are equal to 5+ digits).
         ! For any volunteers, please write to giustino@civet.berkeley.edu
         !
-        CALL elphon_shuffle( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .false. )
+        CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .FALSE.)
         !
         !  bring epmatq in the mode representation of iq_first, 
         !  and then in the cartesian representation of iq
         !
-        CALL rotate_eigenm( iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2 )
+        CALL rotate_eigenm(iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2)
         !
-        CALL rotate_epmat( cz1, cz2, xq, nqc, lwin, lwinq, exband )
+        CALL rotate_epmat(cz1, cz2, xq, nqc, lwin, lwinq, exband)
   !DBSP
         !write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
         !write(*,*)'epmatq(:,:,2,:,nqc)**2',SUM((REAL(REAL(epmatq(:,:,2,:,nqc))))**2)+&
@@ -651,36 +657,36 @@
           ! SP: First the vlocq need to be initialized propertly with the first
           !     q in the star
           xq = -xq0
-          CALL epw_init(.false.)
+          CALL epw_init(.FALSE.)
           !
           ! retrieve the q in the star
-          xq = -sxq(:,iq)
+          xq = -sxq(:, iq)
           !
           ! and populate the uniform grid
           nqc = nqc + 1
           xqc(:,nqc) = xq
           !
-          IF (iq == 1) write(stdout,*)
+          IF (iq == 1) WRITE(stdout,*)
           WRITE(stdout,5) nqc, xq
           !
           !  prepare the gmap for the refolding
           !
-          CALL createkmap( xq )
+          CALL createkmap(xq)
           !
-          CALL loadumat( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers )
+          CALL loadumat(nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
           !
           ! Calculate overlap U_k+q U_k^\dagger
-          IF (lpolar) CALL compute_umn_c( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
+          IF (lpolar) CALL compute_umn_c(nbnd, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
           !
           xq0 = -xq0
           !
-          CALL elphon_shuffle( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .true. )
+          CALL elphon_shuffle(iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .TRUE.)
           !  bring epmatq in the mode representation of iq_first, 
           !  and then in the cartesian representation of iq
           !
-          CALL rotate_eigenm( iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2 )
+          CALL rotate_eigenm(iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2)
           !
-          CALL rotate_epmat( cz1, cz2, xq, nqc, lwin, lwinq, exband )
+          CALL rotate_epmat(cz1, cz2, xq, nqc, lwin, lwinq, exband)
           !
           xq0 = -xq0
         ENDIF ! end imq == 0  
@@ -692,13 +698,14 @@
       !
     ENDDO ! irr-q loop
     ! 
-    IF (nqc/=nq1*nq2*nq3) &
-       CALL errore('elphon_shuffle_wrap','nqc /= nq1*nq2*nq3',nqc)
+    IF (nqc /= nq1 * nq2 * nq3) CALL errore('elphon_shuffle_wrap', 'nqc /= nq1*nq2*nq3', nqc)
     wqlist = DBLE(1) / DBLE(nqc)
     !
     IF (lifc) DEALLOCATE(wscache)
     DEALLOCATE(evc)
     DEALLOCATE(evq)
+    DEALLOCATE(xkq)
+    DEALLOCATE(shift) 
     DEALLOCATE(vlocq)
     DEALLOCATE(dmuxc)
     DEALLOCATE(eigqts)
@@ -721,15 +728,15 @@
     ENDIF
     DO ik = 1, nks
       DO ipol = 1, 3
-        CALL deallocate_bec_type( alphap(ipol,ik) )
+        CALL deallocate_bec_type alphap(ipol, ik))
       ENDDO
     ENDDO
     DEALLOCATE(alphap)
     DO ik = 1, size(becp1)
-      CALL deallocate_bec_type( becp1(ik) )
+      CALL deallocate_bec_type(becp1(ik))
     ENDDO
     DEALLOCATE(becp1)
-    CALL deallocate_bec_type ( becp )
+    CALL deallocate_bec_type(becp)
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
   IF (my_image_id == 0) THEN
@@ -743,21 +750,21 @@
       tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.epb' // filelab
       !
       IF (epbread) THEN
-         inquire(file = tempfile, exist=exst)
-         IF (.NOT.  exst) CALL errore( 'elphon_shuffle_wrap', 'epb files not found ', 1)
-         OPEN(iuepb, file = tempfile, form = 'unformatted')
-         WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
-         READ(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
-         CLOSE(iuepb)
-         WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
+        INQUIRE(FILE = tempfile, EXIST = exst)
+        IF (.NOT.  exst) CALL errore('elphon_shuffle_wrap', 'epb files not found ', 1)
+        OPEN(iuepb, FILE = tempfile, FORM = 'unformatted')
+        WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
+        READ(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
+        CLOSE(iuepb)
+        WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
       ENDIF
       !
       IF (epbwrite) THEN
-         OPEN(iuepb, file = tempfile, form = 'unformatted')
-         WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
-         WRITE(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
-         CLOSE(iuepb)
-         WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
+        OPEN(iuepb, FILE = tempfile, FORM = 'unformatted')
+        WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
+        WRITE(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
+        CLOSE(iuepb)
+        WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
       ENDIF
     ENDIF
   ENDIF
@@ -778,8 +785,7 @@
   !
   ENDIF
   !
-  !CALL mp_barrier(inter_pool_comm)
-  CALL mp_barrier(world_comm)
+  !CALL mp_barrier(world_comm)
   !
   !   now dynq is the cartesian dyn mat ( not divided by the masses)
   !   and epmatq is the epmat in cartesian representation (rotation in elphon_shuffle)
@@ -795,6 +801,7 @@
     DEALLOCATE(qrad)
   ENDIF
   !
+  ! FIXME : No if allocated 
   IF (ASSOCIATED (igkq) )      NULLIFY    (igkq)
   IF (ALLOCATED  (dvpsi))      DEALLOCATE(dvpsi)
   IF (ALLOCATED  (dpsi) )      DEALLOCATE(dpsi)
@@ -808,7 +815,7 @@
   IF (ALLOCATED  (ngk_all) )   DEALLOCATE(ngk_all)
   IF (ALLOCATED  (exband) )    DEALLOCATE(exband)
   ! 
-  CALL stop_clock ( 'elphon_wrap' )
+  CALL stop_clock('elphon_wrap')
 !DBSP
 !  DO iq = 1, nqc
 !    write(*,*) iq, xqc(:,iq)
@@ -820,15 +827,15 @@
   !
   ! the electron-phonon wannier interpolation
   !
-  IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle( nqc, xqc )
+  IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle(nqc, xqc)
   IF(etf_mem == 2) THEN
 #if defined(__MPI)         
-    CALL ephwann_shuffle_mem( nqc, xqc )
+    CALL ephwann_shuffle_mem(nqc, xqc)
 #else
     WRITE(stdout,'(/5x,a)') 'WARNING: etf_mem==2 only works with MPI'
     WRITE(stdout,'(5x,a)')  '         Changing to etf_mem == 1 and continue ...'
     etf_mem = 1
-    CALL ephwann_shuffle( nqc, xqc )
+    CALL ephwann_shuffle(nqc, xqc)
 #endif
   ENDIF        
   DEALLOCATE(xqc)
@@ -836,10 +843,12 @@
 5 FORMAT (8x,"q(",i5," ) = (",3f12.7," )") 
   !
   RETURN
+  !---------------------------------------------------------------------------
   END SUBROUTINE elphon_shuffle_wrap
+  !---------------------------------------------------------------------------
   !
   !---------------------------------------------------------------------------
-  SUBROUTINE irotate( x, s, sx)
+  SUBROUTINE irotate(x, s, sx)
   !---------------------------------------------------------------------------
   !!
   !! a simple symmetry operation in crystal coordinates ( s is INTEGER!)
@@ -859,16 +868,18 @@
   INTEGER :: i
   !
   DO i = 1, 3
-     sx(i) = DBLE( s(i,1) ) * x(1) &
-           + DBLE( s(i,2) ) * x(2) &
-           + DBLE( s(i,3) ) * x(3)
+     sx(i) = DBLE(s(i, 1)) * x(1) &
+           + DBLE(s(i, 2)) * x(2) &
+           + DBLE(s(i, 3)) * x(3)
   ENDDO
   !
   RETURN
   ! 
+  !---------------------------------------------------------------------------
   END SUBROUTINE irotate
   !---------------------------------------------------------------------------
-  LOGICAL function eqvect_strict(x, y)
+  !---------------------------------------------------------------------------
+  LOGICAL FUNCTION eqvect_strict(x, y)
   !-----------------------------------------------------------------------
   !!
   !! This function test if two tridimensional vectors are equal
@@ -885,10 +896,11 @@
   !! acceptance parameter
   PARAMETER (accep = 1.0d-5)
   !
-  eqvect_strict = ABS(x(1)-y(1) ) < accep .AND. &
-                  ABS(x(2)-y(2) ) < accep .AND. &
-                  ABS(x(3)-y(3) ) < accep
+  eqvect_strict = ABS(x(1) - y(1) ) < accep .AND. &
+                  ABS(x(2) - y(2) ) < accep .AND. &
+                  ABS(x(3) - y(3) ) < accep
   !
+  !---------------------------------------------------------------------------
   END FUNCTION eqvect_strict
   !---------------------------------------------------------------------------
   SUBROUTINE read_modes(iunpun, current_iq, ierr)

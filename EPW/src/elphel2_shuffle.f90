@@ -422,7 +422,7 @@
       DO ibnd = lower_band, upper_band
         CALL invfft_wave(npw, igk, evc(:,ibnd), aux1)
         IF (timerev) THEN
-          CALL apply_dpot(dffts%nnr, aux1, conjg(dvscfins(:,:,ipert)), current_spin)
+          CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:,:,ipert)), current_spin)
         ELSE
           CALL apply_dpot(dffts%nnr, aux1, dvscfins(:,:,ipert), current_spin)
         ENDIF

@@ -221,7 +221,7 @@
            DO ibnd = 1, nbnd
               !
               argv = ( et(ibnd,ik)*ryd2ev - en ) **2/ (2 * sigma **2)
-              proj_wf(iwann, ie ) = proj_wf(iwann, ie ) + exp(-argv) * real (  cu(ibnd, iwann,ik ) * conjg( cu(ibnd, iwann,ik) ))
+              proj_wf(iwann, ie ) = proj_wf(iwann, ie ) + exp(-argv) * real (  cu(ibnd, iwann,ik ) * CONJG( cu(ibnd, iwann,ik) ))
               !
            ENDDO
         ENDDO

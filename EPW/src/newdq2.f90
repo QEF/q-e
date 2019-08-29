@@ -11,7 +11,7 @@
   ! Adapted from LR_Modules/newdq.f90 (QE)
   !
   !----------------------------------------------------------------------
-  SUBROUTINE newdq2( dvscf, npe, xq0, timerev )
+  SUBROUTINE newdq2(dvscf, npe, xq0, timerev)
   !----------------------------------------------------------------------
   !!
   !! This routine computes the contribution of the selfconsistent
@@ -75,6 +75,7 @@
   COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
   !! the scalar product function
   COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:, :)
+  !! Auxillary variable
   COMPLEX(KIND = DP), ALLOCATABLE :: qgm(:)
   !! the augmentation function at q+G
   COMPLEX(KIND = DP), ALLOCATABLE :: veff(:)
@@ -86,28 +87,28 @@
   !
   int3(:, :, :, :, :) = czero
   !
-  ALLOCATE(aux1(ngm) )
-  ALLOCATE(aux2(ngm,nspin_mag) )
-  ALLOCATE(veff(dfftp%nnr) )
-  ALLOCATE(ylmk0(ngm, lmaxq * lmaxq) )
-  ALLOCATE(qgm(ngm) )
-  ALLOCATE(qmod(ngm) )
-  ALLOCATE(qg(3,ngm) )
-  aux1(:) = czero
-  aux2(:, :) = czero
-  veff(:) = czero
+  ALLOCATE(aux1(ngm))
+  ALLOCATE(aux2(ngm, nspin_mag))
+  ALLOCATE(veff(dfftp%nnr))
+  ALLOCATE(ylmk0(ngm, lmaxq * lmaxq))
+  ALLOCATE(qgm(ngm))
+  ALLOCATE(qmod(ngm))
+  ALLOCATE(qg(3, ngm))
+  aux1(:)     = czero
+  aux2(:, :)  = czero
+  veff(:)     = czero
   ylmk0(:, :) = zero
-  qgm(:) = czero
-  qmod(:) = zero
-  qg(:, :) = zero
+  qgm(:)      = czero
+  qmod(:)     = zero
+  qg(:, :)    = zero
   !
   !    first compute the spherical harmonics
   !
-  CALL setqmod( ngm, xq0, g, qmod, qg )
-  CALL ylmr2( lmaxq * lmaxq, ngm, qg, qmod, ylmk0 )
+  CALL setqmod(ngm, xq0, g, qmod, qg)
+  CALL ylmr2(lmaxq * lmaxq, ngm, qg, qmod, ylmk0)
   !
   DO ig = 1, ngm
-    qmod(ig) = SQRT( qmod(ig) )
+    qmod(ig) = SQRT(qmod(ig))
   ENDDO
   !
   !     and for each perturbation of this irreducible representation
@@ -115,18 +116,17 @@
   !     the Q functions
   !
   DO ipert = 1, npe
-    !
     DO is = 1, nspin_mag
       DO ir = 1, dfftp%nnr
         IF (timerev) THEN
-          veff(ir) = conjg(dvscf(ir,is,ipert))
+          veff(ir) = CONJG(dvscf(ir, is, ipert))
         ELSE
-          veff(ir) = dvscf(ir,is,ipert)
+          veff(ir) = dvscf(ir, is, ipert)
         ENDIF
       ENDDO
       CALL fwfft('Rho', veff, dfftp)
       DO ig = 1, ngm
-        aux2(ig,is) = veff( dfftp%nl(ig) )
+        aux2(ig, is) = veff(dfftp%nl(ig))
       ENDDO
     ENDDO
     !
@@ -136,19 +136,19 @@
         DO ih = 1, nh(nt)
           DO jh = ih, nh(nt)
             !
-            CALL qvan2( ngm, ih, jh, nt, qmod, qgm, ylmk0 )
+            CALL qvan2(ngm, ih, jh, nt, qmod, qgm, ylmk0)
             !
             DO na = 1, nat
               IF (ityp(na) == nt) THEN
                 DO ig = 1, ngm
-                  aux1(ig) = qgm(ig) * eigts1(mill(1,ig),na) * &
-                                       eigts2(mill(2,ig),na) * &
-                                       eigts3(mill(3,ig),na) * &
+                  aux1(ig) = qgm(ig) * eigts1(mill(1, ig), na) * &
+                                       eigts2(mill(2, ig), na) * &
+                                       eigts3(mill(3, ig), na) * &
                                        eigqts(na)
                 ENDDO
                 DO is = 1, nspin_mag
-                  int3(ih,jh,na,is,ipert) = omega * &
-                                  ZDOTC(ngm,aux1,1,aux2(1,is),1)
+                  int3(ih, jh, na, is, ipert) = omega * &
+                                  ZDOTC(ngm, aux1, 1, aux2(1, is), 1)
                 ENDDO
               ENDIF
             ENDDO
@@ -164,7 +164,7 @@
             DO ih = 1, nh(nt)
               DO jh = ih, nh(nt)
                 DO is = 1, nspin_mag
-                  int3(jh,ih,na,is,ipert) = int3(ih,jh,na,is,ipert)
+                  int3(jh, ih, na, is, ipert) = int3(ih, jh, na, is, ipert)
                 ENDDO
               ENDDO
             ENDDO
@@ -179,7 +179,7 @@
   !
   CALL mp_sum(int3, intra_pool_comm)
   !
-  IF (noncolin) CALL set_int3_nc( npe )
+  IF (noncolin) CALL set_int3_nc(npe)
   !
 !DMRM
   !write(*,'(a,e20.12)') 'int3 = ', &

@@ -2784,6 +2784,6 @@
   WRITE(stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6)' ) fermicarrier * ryd2ev
   !
-  return   
+  RETURN   
   END FUNCTION fermicarrier
   !--------------------------------------------------------------------------

@@ -7,17 +7,17 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  SUBROUTINE loadumat( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
-                       exband, w_centers )
+  SUBROUTINE loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
+                       exband, w_centers)
   !----------------------------------------------------------------------------
   !!
-  !!   wannier interpolation of e-p vertex:
-  !!   load rotation matrix on coarse mesh and distribute
+  !! Wannier interpolation of e-p vertex:
+  !! load rotation matrix on coarse mesh and distribute
   !!
-  !!   07/2010 JN changed the way this was done.  Previously
-  !!   a pool scatter call that didn't work on hbar was performed
-  !!   and some crazy packing scheme was needed to use poolscatter
-  !!   subsequently it is just a bcast followed by an appropriate assignment
+  !! 07/2010 JN changed the way this was done.  Previously
+  !! a pool scatter call that didn't work on hbar was performed
+  !! and some crazy packing scheme was needed to use poolscatter
+  !! subsequently it is just a bcast followed by an appropriate assignment
   !! 
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
@@ -29,6 +29,7 @@
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast
   USE division,      ONLY : fkbounds
+  USE elph2,         ONLY : xkq
   !
   IMPLICIT NONE
   ! 
@@ -38,7 +39,6 @@
   !! Band windows at k+q
   LOGICAL, INTENT(out) :: exband(nbnd)
   !! Band excluded
-  !
   INTEGER, INTENT(in) :: nbnd
   !! Number of bands
   INTEGER, INTENT(in) :: nbndsub
@@ -47,18 +47,16 @@
   !! number of kpoints 
   INTEGER, INTENT(in) :: nkstot
   !! total number of kpoints across pools
-  ! 
   REAL(KIND = DP), INTENT(in) :: xxq(3)
   !! the qpoint for folding of U
   REAL(KIND = DP), INTENT(inout) :: w_centers(3,nbndsub)
   !! Wannier centers
-  !
   COMPLEX(KIND = DP), INTENT(out) :: cu(nbnd, nbndsub, nks)
   !! U(k) matrix for k-points in the pool
   COMPLEX(KIND = DP), INTENT(out) :: cuq(nbnd, nbndsub, nks)
   !! U(k+q) matrix for k+q-points in the pool
   ! 
-  ! work variables 
+  ! Local variables 
   !
   INTEGER :: ik
   !! Counter of k-point index
@@ -74,15 +72,13 @@
   !! Index of first k-point in the pool  
   INTEGER :: ik_stop
   !! Index of last k-point in the pool
-  !
   COMPLEX(KIND = DP) :: cu_big(nbnd, nbndsub, nkstot)
   !! U(k) matrix for all k-points
   COMPLEX(KIND = DP) :: cuq_big(nbnd, nbndsub, nkstot)
   !! U(k+q) matrix for all k+q-points
-  !
-  LOGICAL :: lwin_big(nbnd,nkstot)
+  LOGICAL :: lwin_big(nbnd, nkstot)
   !! .true. if the band ibnd lies within the outer window at k-point ik
-  LOGICAL :: lwinq_big(nbnd,nkstot)
+  LOGICAL :: lwinq_big(nbnd, nkstot)
   !! .true. if the band ibnd lies within the outer window at k+qpoint ikq
   !
   cu_big = czero
@@ -91,7 +87,7 @@
     !
     ! first proc read rotation matrix (coarse mesh) from file
     !
-    OPEN(iunukk, FILE = filukk, status='old', FORM = 'formatted', iostat=ios)
+    OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
     IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
     !
     DO ik = 1, nkstot
@@ -102,12 +98,12 @@
       ENDDO
     ENDDO
     DO ik = 1, nkstot
-       DO ibnd = 1, nbnd
-          READ(iunukk,*) lwin_big(ibnd,ik)
-       ENDDO
+      DO ibnd = 1, nbnd
+        READ(iunukk,*) lwin_big(ibnd, ik)
+      ENDDO
     ENDDO
     DO ibnd = 1, nbnd
-       READ(iunukk,*) exband(ibnd)
+      READ(iunukk,*) exband(ibnd)
     ENDDO
     ! Read the Wannier centers
     DO iw = 1, nbndsub
@@ -124,7 +120,10 @@
     !
     !  generates kmap(ik) for this xxq
     !
-    CALL createkmap2( xxq )
+    ALLOCATE(xkq(3, nkstot)) ! Required for createkmap2
+    xkq(:, :) = zero
+    CALL createkmap2(xxq)
+    DEALLOCATE(xkq)
     !
     !  and we generate the matrix for the q-displaced mesh
     !
@@ -132,8 +131,7 @@
       cuq_big(:, :, ik) = cu_big(:, :, kmap(ik))
       lwinq_big(:, ik) = lwin_big(:, kmap(ik))
     ENDDO
-    !
-  ENDIF
+  ENDIF ! meta_ionode
   !
   CALL mp_bcast(cu_big, ionode_id, inter_pool_comm)
   CALL mp_bcast(cuq_big, ionode_id, inter_pool_comm)   
@@ -144,8 +142,7 @@
   !
   CALL fkbounds(nkstot, ik_start, ik_stop)
   !
-  IF ((ik_stop-ik_start+1) /= nks ) & 
-    CALL errore('loadumat',"Improper parallel ukk load",1)
+  IF ((ik_stop - ik_start + 1) /= nks) CALL errore('loadumat', "Improper parallel ukk load", 1)
   !
   cu = cu_big(:, :, ik_start:ik_stop)
   cuq = cuq_big(:, :, ik_start:ik_stop)
@@ -153,5 +150,6 @@
   lwinq = lwin_big(:, ik_start:ik_stop)
   !
   RETURN
-  !
+  !-----------------------------------------------------------------------
   END SUBROUTINE loadumat
+  !-----------------------------------------------------------------------

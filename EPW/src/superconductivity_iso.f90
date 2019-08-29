@@ -375,7 +375,7 @@
         IF (i <= nsw) THEN
           root = SQRT( Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0 ) )
           IF (aimag(root) < zero) THEN 
-             esqrt = Znormp(i) / conjg(root)
+             esqrt = Znormp(i) / CONJG(root)
           ELSE  
              esqrt = Znormp(i) / root
           ENDIF
@@ -387,7 +387,7 @@
         i = ABS(iw - iwp) + 1
         root = SQRT( Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0 ) )
         IF (aimag(root) < zero) THEN 
-           esqrt = Znormp(i) / conjg(root)
+           esqrt = Znormp(i) / CONJG(root)
         ELSE  
            esqrt = Znormp(i) / root
         ENDIF

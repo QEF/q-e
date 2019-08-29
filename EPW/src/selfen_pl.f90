@@ -199,14 +199,14 @@
             wgkq = wgauss( -ekq*inv_eptemp0, -99)  
             !
 !            if ( ABS(ekq-ekk1) > 1d-8 ) then
-!              !dipole = (dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*conjg(dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)) +  &
-!              !          dmef(2, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*conjg(dmef(2, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)) +  &
-!              !          dmef(3, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*conjg(dmef(3, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)))   &
+!              !dipole = (dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*CONJG(dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)) +  &
+!              !          dmef(2, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*CONJG(dmef(2, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)) +  &
+!              !          dmef(3, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)*CONJG(dmef(3, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk)))   &
 !              !          /3.d0/(ekq-ekk)**2 
 !
-!              !dipole = dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk)*conjg(dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk))/(ekq-ekk)**2 
+!              !dipole = dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk)*CONJG(dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk))/(ekq-ekk)**2 
 !              dipole = dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk)/((ekk1-ekk)**2 + (degaussw/10)**2  )
-!              !dipole = dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk)*conjg(dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk))/((ekk1-ekk)**2 + (degaussw/10)**2  )
+!              !dipole = dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk)*CONJG(dmef(1, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk))/((ekk1-ekk)**2 + (degaussw/10)**2  )
 !                         !abs (dmef(3, ibndmin-1+jbnd, ibndmin-1+ibnd, ikk))**2 )/3.d0/((ekq-ekk)**2 + degaussw**2  )
 !              ! THIS EXPRESSION NEEDS TO BE DIVIDED BY THE TRANSITION ENERGIES^2 (SEE GROSSO PARRAVICINI PG 258 FOR THE CORRECT EXPRESSION IN THE Q->0 LIMIT!!!!!!!!!1)
 !            !else
@@ -223,7 +223,7 @@
             ELSE
               IF (abs(ekk-ekk1) > 1d-8) THEN
                 dipole = REAL( dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk)*&
-                             conjg(dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk))/((ekk1-ekk)**2 + degaussw**2) ) 
+                             CONJG(dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk))/((ekk1-ekk)**2 + degaussw**2) ) 
               ELSE 
                 dipole = 0.d0
               ENDIF

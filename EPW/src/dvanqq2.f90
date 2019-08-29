@@ -91,7 +91,7 @@
   !! the spherical harmonics at G
   !
   COMPLEX(KIND = DP) :: fact
-  !! e^{-i q * \tau} * conjg(e^{-i q * \tau}) 
+  !! e^{-i q * \tau} * CONJG(e^{-i q * \tau}) 
   COMPLEX(KIND = DP) :: fact1
   !! -i * omega
   COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
@@ -202,7 +202,7 @@
               ENDDO
               !
               DO na = 1, nat
-                fact = eigqts(na) * conjg( eigqts(nb) )
+                fact = eigqts(na) * CONJG( eigqts(nb) )
                 !
                 !    nb is the atom of the augmentation function
                 !
@@ -227,7 +227,7 @@
                                      ( g(jpol,ig) + xq(jpol) )
                          ENDDO
                          int5(ijh,ipol,jpol,na,nb) = &
-                             conjg(fact) * tpiba2 * omega * &
+                             CONJG(fact) * tpiba2 * omega * &
                              ZDOTC(ngm, aux3, 1, aux1, 1)
                       ELSE
                          int5(ijh,ipol,jpol,na,nb) = &

@@ -164,11 +164,11 @@
           !
           ctmp = czero
           DO mbnd = 1, nbnd
-            ctmp = ctmp + conjg(cu(mbnd,ibnd,ik)) * et_opt(mbnd,ik) * cu(mbnd,jbnd,ik)
+            ctmp = ctmp + CONJG(cu(mbnd,ibnd,ik)) * et_opt(mbnd,ik) * cu(mbnd,jbnd,ik)
           ENDDO
           !
           chs(ibnd, jbnd, ik) = ctmp
-          chs(jbnd, ibnd, ik) = conjg(ctmp)
+          chs(jbnd, ibnd, ik) = CONJG(ctmp)
           !
         ENDDO
       ENDDO
@@ -415,7 +415,7 @@
       DO ipol = 1, 3
         !
         ! dmec_utmp(:, :) = MATMUL( dmec_opt(ipol,:,:,ik), cu(:,:,ik) )
-        ! cps(ipol,:,:,ik) = MATMUL( conjg(transpose( cu(:,:,ik))), dmec_utmp(:, :) )
+        ! cps(ipol,:,:,ik) = MATMUL( CONJG(transpose( cu(:,:,ik))), dmec_utmp(:, :) )
         !
         CALL zgemm ('n', 'n', nbnd, nbndsub, nbnd, cone, dmec_opt(ipol,:,:,ik), &
                    nbnd, cu(:,:,ik), nbnd, czero, dmec_utmp(:, :), nbnd)
@@ -922,7 +922,7 @@
         CALL ktokpmq ( xk(:,ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
         !
         ! M_mn_utmp(:, :) = MATMUL( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
-        ! cvs(:,:,ib,ik) = MATMUL( conjg(transpose(cu(:,:,ik))), M_mn_utmp(:, :) )
+        ! cvs(:,:,ib,ik) = MATMUL( CONJG(transpose(cu(:,:,ik))), M_mn_utmp(:, :) )
         !
         CALL zgemm ('n', 'n', nbnd, nbndsub, nbnd, cone, m_mat_opt(:,:,ib,ik), &
                    nbnd, cu_big(:,:,nkb_abs), nbnd, czero, M_mn_utmp(:, :), nbnd)

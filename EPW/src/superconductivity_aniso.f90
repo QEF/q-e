@@ -660,7 +660,7 @@
                                root = SQRT(   AZnormp(jbnd,ixkqf(ik,iq0),i)**2.d0 & 
                                             * ( ws(i)**2.d0 - ADeltap(jbnd,ixkqf(ik,iq0),i)**2.d0 ) )
                                IF (aimag(root) < zero) THEN 
-                                  esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / conjg(root)
+                                  esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / CONJG(root)
                                ELSE  
                                   esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / root
                                ENDIF
@@ -677,7 +677,7 @@
                             root = SQRT(   AZnormp(jbnd,ixkqf(ik,iq0),i)**2.d0 & 
                                          * ( ws(i)**2.d0 - ADeltap(jbnd,ixkqf(ik,iq0),i)**2.d0 ) )
                             IF (aimag(root) < zero) THEN 
-                               esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / conjg(root)
+                               esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / CONJG(root)
                             ELSE  
                                esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / root
                             ENDIF
