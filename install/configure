@@ -4497,7 +4497,7 @@ test_ldflags="`echo $ldflags | sed 's/\$([^)]*)//g'`"
 
 
 
-# Checking Cuda...
+# Checking CUDA...
 
 
 
@@ -4760,9 +4760,12 @@ fi
 
    if test "x$NVCC" = "xno"
    then
-      as_fn_error $? "Cannot find nvcc compiler. To enable CUDA, please add path to
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot find nvcc compiler. To enable CUDA, please add path to
                     nvcc in the PATH environment variable and/or specify the path
-                    where CUDA is installed using: --with-cuda=PATH" "$LINENO" 5
+                    where CUDA is installed using: --with-cuda=PATH" >&5
+$as_echo "$as_me: WARNING: Cannot find nvcc compiler. To enable CUDA, please add path to
+                    nvcc in the PATH environment variable and/or specify the path
+                    where CUDA is installed using: --with-cuda=PATH" >&2;}
    fi
 
 
@@ -4792,9 +4795,12 @@ $as_echo_n "checking whether nvcc works... " >&6; }
    }
 EOF
 
-   if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+   if test "x$NVCC" != "xno"
    then
-      ac_compile_nvcc=yes
+      if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+      then
+         ac_compile_nvcc=yes
+      fi
    fi
    rm -f conftest.cu conftest.o
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_compile_nvcc" >&5
@@ -4802,7 +4808,8 @@ $as_echo "$ac_compile_nvcc" >&6; }
 
    if test "x$ac_compile_nvcc" = "xno"
    then
-      as_fn_error $? "CUDA compiler has problems." "$LINENO" 5
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: CUDA compiler has problems." >&5
+$as_echo "$as_me: WARNING: CUDA compiler has problems." >&2;}
    fi
 
 

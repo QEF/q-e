@@ -91,7 +91,7 @@ then
    AC_PATH_PROG([NVCC],[nvcc],[no],[$PATH:$CUDAPATH/bin])
    if test "x$NVCC" = "xno"
    then
-      AC_MSG_ERROR([Cannot find nvcc compiler. To enable CUDA, please add path to
+      AC_MSG_WARN([Cannot find nvcc compiler. To enable CUDA, please add path to
                     nvcc in the PATH environment variable and/or specify the path
                     where CUDA is installed using: --with-cuda=PATH])
    fi
@@ -122,16 +122,19 @@ then
    }
 EOF
 
-   if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+   if test "x$NVCC" != "xno"
    then
-      ac_compile_nvcc=yes
+      if $NVCC -c $NVCCFLAGS conftest.cu &> /dev/null
+      then
+         ac_compile_nvcc=yes
+      fi
    fi
    rm -f conftest.cu conftest.o
    AC_MSG_RESULT([$ac_compile_nvcc])
 
    if test "x$ac_compile_nvcc" = "xno"
    then
-      AC_MSG_ERROR([CUDA compiler has problems.])
+      AC_MSG_WARN([CUDA compiler has problems.])
    fi
 
 
