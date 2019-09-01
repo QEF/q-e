@@ -16,9 +16,9 @@
   ! 
   CONTAINS
     ! 
-    !---------------------------------
+    !--------------------------------------------------------------------
     SUBROUTINE para_bounds(lower, upper, total)
-    !---------------------------------
+    !--------------------------------------------------------------------
     !!
     !! Subroutine finds the lower and upper
     !! bounds if we split some quantity over pools
@@ -38,7 +38,11 @@
     !
 #if defined(__MPI)
     !  
-    INTEGER :: rest, nrst
+    ! Local variables
+    INTEGER :: rest
+    !! Remaining
+    INTEGER :: nrst
+    !! 
     !
     IF (total <= npool) THEN
       IF (my_pool_id < total) THEN
@@ -65,12 +69,12 @@
     upper = total
 #endif
     !
-    ! -----------------------------------------
+    ! --------------------------------------------------------------------
     END SUBROUTINE para_bounds
-    !--------------------------------------------
+    !---------------------------------------------------------------------
     ! 
     !---------------------------------------------------------------------
-    SUBROUTINE kpointdivision (ik0)
+    SUBROUTINE kpointdivision(ik0)
     !---------------------------------------------------------------------
     !!
     !! This is just to find the first kpoint block in the pool
@@ -84,6 +88,7 @@
     !  
     INTEGER, INTENT(out) :: ik0
     !! Return the first kpoint in the pool
+    !  
     ! Local variables
     INTEGER :: nkl
     !! Number of kpoints block
@@ -176,13 +181,12 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE fkbounds
-    !
     !-----------------------------------------------------------------------
     !
-    !
     !-----------------------------------------------------------------------
-    SUBROUTINE fkbounds2( nktot, lower_bnd, upper_bnd )
+    SUBROUTINE fkbounds2(nktot, lower_bnd, upper_bnd)
     !-----------------------------------------------------------------------
     !!
     !!   Subroutine finds the lower and upper bounds a k-grid in parallel
@@ -201,24 +205,28 @@
     IMPLICIT NONE
     !
 #if defined(__MPI)
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(in) :: nktot
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(in) :: nktot
     !! nktot k-points splited over pools
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(out) :: lower_bnd
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(out) :: lower_bnd
     !! Lower kpt bounds for that image pool 
-    INTEGER (kind=MPI_OFFSET_KIND), INTENT(out) :: upper_bnd
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
 #else
-    INTEGER (KIND=8), INTENT (IN)  :: nktot
+    INTEGER(KIND = 8), INTENT(in)  :: nktot
     !! nktot k-points splited over pools
-    INTEGER (KIND=8), INTENT(out) :: lower_bnd
+    INTEGER(KIND = 8), INTENT(out) :: lower_bnd
     !! Lower kpt bounds for that image pool 
-    INTEGER (KIND=8), INTENT(out) :: upper_bnd
+    INTEGER(KIND = 8), INTENT(out) :: upper_bnd
     !! Upper kpt for that image pool
 #endif
     !
 #if defined(__MPI)
     !
-    INTEGER :: nkl, nkr
+    ! Local variables
+    INTEGER :: nkl
+    !! ADD
+    INTEGER :: nkr
+    !! ADD
     !
     ! find the bounds of k-dependent arrays in the parallel case
     ! number of kpoint blocks, kpoints per pool and reminder
@@ -250,12 +258,12 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE fkbounds2
+    !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    !-----------------------------------------------------------------------
-    !-----------------------------------------------------------------------
-    SUBROUTINE fkbounds_bnd( nbnd, lower_bnd, upper_bnd )
+    SUBROUTINE fkbounds_bnd(nbnd, lower_bnd, upper_bnd)
     !-----------------------------------------------------------------------
     !!
     !!   Subroutine finds the lower and upper bounds in band parallelization
@@ -266,7 +274,7 @@
     !!    lower_bnd= 11 and upper_bnd=19 for the second pool
     !-----------------------------------------------------------------------
     !
-    USE mp_images,    ONLY: nimage, my_image_id
+    USE mp_images,  ONLY : nimage, my_image_id
     ! number of images, number of processor within an image, index of the proc within an image
     !
     IMPLICIT NONE
@@ -280,7 +288,11 @@
     !
 #if defined(__MPI)
     !
-    INTEGER :: nkl, nkr
+    ! Local variables 
+    INTEGER :: nkl
+    !! ADD
+    INTEGER :: nkr
+    !!
     !
     ! find the bounds of k-dependent arrays in the parallel case
     ! number of kpoint blocks, kpoints per pool and reminder
@@ -312,9 +324,11 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE fkbounds_bnd
-    !
     !-----------------------------------------------------------------------
     !
+  !-----------------------------------------------------------------------
   END MODULE division
+  !-----------------------------------------------------------------------
 
