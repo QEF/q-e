@@ -194,7 +194,7 @@
       IF (ABS(q(1,iq)) < eps .AND. ABS(q(2,iq)) < eps .AND. ABS(q(3,iq)) < eps) THEN
         WRITE(stdout,'(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
         IF (lpolar .AND. .NOT. lrigid) CALL errore('readmat_shuffle2', &
-          &'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
+          &'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ',1)
       ENDIF
       DO na = 1,nat
        DO ipol = 1,3
@@ -385,7 +385,7 @@
           !
         ELSE 
           IF (lpolar) CALL errore('readmat_shuffle2',&
-             'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
+             'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ',1)
         ENDIF
         !
       !ENDIF
@@ -406,15 +406,15 @@
   !
   DO iq = 1, nq
     ! 
-    found = .false.
+    found = .FALSE.
     DO jq = 1, mq
       DO m1=-2,2
         DO m2=-2,2
           DO m3=-2,2
-            IF ((abs(q(1,jq)-(sxq(1,iq)+m1)) < eps .AND. &
+            IF ((ABS(q(1,jq)-(sxq(1,iq)+m1)) < eps .AND. &
                  ABS(q(2,jq)-(sxq(2,iq)+m2)) < eps .AND. &
                  ABS(q(3,jq)-(sxq(3,iq)+m3)) < eps )) THEN
-                 found = .true.
+                 found = .TRUE.
                  exit ! exit loop
             ENDIF
           ENDDO
@@ -425,7 +425,7 @@
       if (found) exit
     ENDDO
     current_iq = current_iq + 1
-    IF (found .eqv. .false.) THEN
+    IF (found .eqv. .FALSE.) THEN
       call errore ('readmat_shuffle2', 'wrong qpoint', 1)
     ENDIF
   ENDDO
@@ -570,9 +570,9 @@
 
       DO nu = 1, nmodes
         IF (w1 (nu) > 0.d0 ) then
-           wtmp(nu) =  SQRT(abs( w1 (nu) ))
+           wtmp(nu) =  SQRT(ABS( w1 (nu) ))
         ELSE
-           wtmp(nu) = -sqrt(abs( w1 (nu) ))
+           wtmp(nu) = -sqrt(ABS( w1 (nu) ))
         ENDIF
       ENDDO
       WRITE ( stdout, '(5x,"Frequencies of the matrix for the current q in the star")')
@@ -649,40 +649,48 @@
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
   USE mp_world,  ONLY : mpime, world_comm
 #if defined(__NAG)
-  USE f90_unix_io,    ONLY : flush
+  USE f90_unix_io, ONLY : flush
 #endif
   !
   IMPLICIT NONE
   !
-  LOGICAL             :: lpolar_, has_zstar, is_plain_text_file, is_xml_file
-  CHARACTER (len=80)  :: line
-  CHARACTER(len=256)  :: tempfile
-  INTEGER             :: ios, i, j, m1,m2,m3, na,nb, &
+  ! Local variables 
+  LOGICAL               :: lpolar_,
+  !! Polar flag
+  LOGICAL               :: has_zstar,
+  !! Does it has Born effective charges
+  LOGICAL               :: is_plain_text_file
+  !! Is the file txt
+  LOGICAL               :: is_xml_file
+  !! Is the file XML
+  CHARACTER(LEN = 80)   :: line
+  CHARACTER(LEN = 256)  :: tempfile
+  INTEGER               :: ios, i, j, m1,m2,m3, na,nb, &
                          idum, ibid, jbid, nabid, nbbid, m1bid, m2bid, m3bid, &
                          ntyp_, nat_, ibrav_, ityp_(nat), nqs
   INTEGER, parameter  :: ntypx = 10
   REAL(KIND = DP)       :: tau_(3,nat), amass2(ntypx)
-  CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
+  CHARACTER(LEN = 3), ALLOCATABLE :: atm(:)
   REAL(KIND = DP), ALLOCATABLE :: m_loc(:, :)
   !
-  WRITE(stdout,'(/5x,"Reading interatomic force constants"/)')
+  WRITE(stdout, '(/5x,"Reading interatomic force constants"/)')
   FLUSH(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
-  IF (.NOT. ALLOCATED (zstar) ) ALLOCATE(zstar(3,3,nat) )
-  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE(epsi(3,3) )
-  IF (.NOT.  ALLOCATED (ifc)) ALLOCATE(ifc ( nq1, nq2, nq3, 3, 3, nat, nat ) )
-  zstar=0.d0
-  epsi=0.d0
+  IF (.NOT. ALLOCATED (zstar) ) ALLOCATE(zstar(3, 3, nat))
+  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE(epsi(3, 3))
+  IF (.NOT.  ALLOCATED (ifc)) ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
+  zstar = 0.d0
+  epsi = 0.d0
 
   ! generic name for the ifc.q2r file. If it is xml, the file will be named
   ! ifc.q2r.xml instead
   tempfile = TRIM(dvscf_dir) // 'ifc.q2r'
   ! The following function will check if the file exists in xml format
   CALL check_is_xml_file(tempfile, is_xml_file)
-
+  ! 
   IF (mpime == ionode_id) THEN
-
+    ! 
     IF (is_xml_file) THEN
       ! pass the 'tempfile' as the '.xml' extension is added in the next routine
       CALL read_dyn_mat_param(tempfile,ntyp_,nat_)
@@ -700,8 +708,8 @@
       ! 
     ELSE
       !
-      OPEN(UNIT = iunifc,FILE = tempfile,status='old',iostat=ios)
-      IF (ios /= 0) call errore ('read_ifc', 'error opening ifc.q2r',iunifc)
+      OPEN(UNIT = iunifc, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) call errore ('read_ifc', 'error opening ifc.q2r', iunifc)
       !
       !  read real-space interatomic force constants
       !
@@ -762,15 +770,14 @@
     ENDDO
   ENDDO
   !
-  CALL mp_bcast (zstar, ionode_id, world_comm)
-  CALL mp_bcast (epsi, ionode_id, world_comm)
-  CALL mp_bcast (tau_, ionode_id, world_comm)
-  CALL mp_bcast (ibrav_, ionode_id, world_comm)
+  CALL mp_bcast(zstar, ionode_id, world_comm)
+  CALL mp_bcast(epsi, ionode_id, world_comm)
+  CALL mp_bcast(tau_, ionode_id, world_comm)
+  CALL mp_bcast(ibrav_, ionode_id, world_comm)
   !
-  WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nq1,nq2,nq3,3,3,nat,nat)
+  WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nq1, nq2, nq3, 3, 3, nat, nat)
   !
-  CALL set_asr2 (asr_typ, nq1, nq2, nq3, ifc, zstar, &
-             nat, ibrav_, tau_)
+  CALL set_asr2(asr_typ, nq1, nq2, nq3, ifc, zstar, nat, ibrav_, tau_)
   !
   CALL mp_barrier(inter_pool_comm)
   IF (mpime == ionode_id) THEN
@@ -779,11 +786,12 @@
   !
   WRITE(stdout,'(/5x,"Finished reading ifcs"/)')
   !
+  !-------------------------------------------------------------------------------
   END SUBROUTINE read_ifc
-!-------------------------------------------------------------------------------
-!
-!----------------------------------------------------------------------
-SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
+  !-------------------------------------------------------------------------------
+  !
+  !----------------------------------------------------------------------
+  SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !-----------------------------------------------------------------------
   !!
   !! Set the acoustic sum rule. 
@@ -1433,7 +1441,7 @@ SUBROUTINE check_is_xml_file(filename, is_xml_file)
   !! This SUBROUTINE checks if a file is formatted in XML. It does so by
   !! checking if the file exists and if the file + '.xml' in its name exists.
   !! If both of them or none of them exists, an error is raised. If only one of
-  !! them exists, it sets the 'is_xml_file' to .true. of .false. depending of
+  !! them exists, it sets the 'is_xml_file' to .TRUE. of .FALSE. depending of
   !! the file found.
   !!
   !-----------------------------------------------------------------------------
@@ -1445,7 +1453,7 @@ SUBROUTINE check_is_xml_file(filename, is_xml_file)
   !! The name of the file to check if formatted in XML format
   !! This string is assumed to be trimmed
   LOGICAL, INTENT(OUT)            :: is_xml_file
-  !! Is .true. if the file is in xml format. .false. otherwise.
+  !! Is .TRUE. if the file is in xml format. .FALSE. otherwise.
   !
   !  local variables
   !

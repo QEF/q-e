@@ -125,9 +125,9 @@
   !epsTF =  (qTF**2 + qsquared) / (qTF**2/eps0 * sin (sqrt(qsquared)*RTF)/(sqrt(qsquared)*RTF)+qsquared)
   !
   IF (iqq == 1) THEN 
-    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")') 
-    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     !
     IF (fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -197,14 +197,14 @@
           g2_tmp = 0.0
         ENDIF   
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           !  the fermi occupation for k
           ekk = etf (ibndmin-1+ibnd, ikk) - ef0
           wgkk = wgauss( -ekk*inv_eptemp, -99)
           !w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
           !
-          DO jbnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, nbndfst
             !
             !  the fermi occupation for k+q
             ekq = etf (ibndmin-1+jbnd, ikq) - ef0
@@ -342,7 +342,7 @@
       CLOSE(iospectral_sup)
     ENDIF 
   ENDIF   
-  WRITE(stdout,'(5x,a/)') repeat('-',67)
+  WRITE(stdout,'(5x,a/)') REPEAT('-',67)
   ! 
 100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
 101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')

@@ -36,7 +36,7 @@
     !
     INTEGER, INTENT(in) :: iter
     !! Iteration number
-    REAL(KIND = DP), INTENT(in) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP), INTENT(in) :: F_in(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i  
     REAL(KIND = DP), INTENT(in) :: av_mob_old(nstemp)
     !! Error in the hole mobility
@@ -59,7 +59,7 @@
     INTEGER :: itemp
     !! Temperature index
     ! 
-    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
+    REAL(KIND = DP) :: aux ( 3 * (nbndfst) * (nktotf) * nstemp + nstemp + 1 )
     !! Vector to store the array
     !
     !
@@ -67,7 +67,7 @@
     aux(:) = zero
     IF (mpime == ionode_id) THEN
       !
-      lfi_all = 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1
+      lfi_all = 3 * (nbndfst) * (nktotf) * nstemp + nstemp + 1
       ! First element is the iteration number
       aux(1) = iter
       ! 
@@ -80,8 +80,8 @@
       ! 
       i = 1 + nstemp 
       DO itemp = 1, nstemp
-        DO ik = 1, nkqtotf/2
-          DO ibnd = 1, (ibndmax-ibndmin+1)
+        DO ik = 1, nktotf
+          DO ibnd = 1, (nbndfst)
             DO idir = 1,3
               i = i +1
               aux(i) = F_in(idir, ibnd, ik, itemp)
@@ -125,7 +125,7 @@
     !
     INTEGER, INTENT(inout) :: iter
     !! Iteration number
-    REAL(KIND = DP), INTENT(inout) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP), INTENT(inout) :: F_in(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i  
     REAL(KIND = DP), INTENT(inout) :: av_mob_old(nstemp)
     !! Error in the hole mobility
@@ -150,7 +150,7 @@
     ! 
     CHARACTER(LEN = 256) :: name1
  
-    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
+    REAL(KIND = DP) :: aux ( 3 * (nbndfst) * (nktotf) * nstemp + nstemp + 1 )
     !! Vector to store the array
     !
     IF (mpime == ionode_id) THEN
@@ -166,7 +166,7 @@
         ! 
         IF (exst) THEN ! read the file
           !
-          lfi_all = 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1
+          lfi_all = 3 * (nbndfst) * (nktotf) * nstemp + nstemp + 1
           CALL diropn (iufilFi_all, 'Fin_restartcb', lfi_all, exst)
           CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
           !
@@ -182,8 +182,8 @@
           ! 
           i = 1 + nstemp 
           DO itemp = 1, nstemp
-            DO ik = 1, nkqtotf/2
-              DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO ik = 1, nktotf
+              DO ibnd = 1, (nbndfst)
                 DO idir = 1,3
                   i = i +1
                   F_in(idir, ibnd, ik, itemp) = aux(i)
@@ -203,7 +203,7 @@
         ! 
         IF (exst) THEN ! read the file
           !
-          lfi_all = 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1
+          lfi_all = 3 * (nbndfst) * (nktotf) * nstemp + nstemp + 1
           CALL diropn (iufilFi_all, 'Fin_restart', lfi_all, exst)
           CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
           !
@@ -219,8 +219,8 @@
           ! 
           i = 1 + nstemp
           DO itemp = 1, nstemp
-            DO ik = 1, nkqtotf/2
-              DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO ik = 1, nktotf
+              DO ibnd = 1, (nbndfst)
                 DO idir = 1,3
                   i = i +1
                   F_in(idir, ibnd, ik, itemp) = aux(i)
@@ -756,12 +756,12 @@
       WRITE(iufilscatt_rate,'(a)') '# Inverse scattering time (ps)'
       WRITE(iufilscatt_rate,'(a)') '#      ik       ibnd                 E(ibnd)    scattering rate(1/ps)'
       !
-      DO ik = 1, nkqtotf/2
+      DO ik = 1, nktotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           ! note that ekk does not depend on q
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0(itemp)
@@ -804,9 +804,9 @@
     !! Temperature in Ry (this includes division by kb)
     REAL(KIND = DP), INTENT(in) :: ef0
     !! Fermi level for the temperature itemp
-    REAL(KIND = DP), INTENT(out) :: etf_all(nbndsub, nkqtotf/2)
+    REAL(KIND = DP), INTENT(out) :: etf_all(nbndsub, nktotf)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
-    REAL(KIND = DP), INTENT(out) :: inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(out) :: inv_tau_all(nstemp,nbndfst,nktotf)
     !! Inverse scattering rates
     ! 
     ! Local variables
@@ -846,9 +846,9 @@
       READ(iufilscatt_rate,*) dummy1
       READ(iufilscatt_rate,*) dummy1
       !
-      DO ik = 1, nkqtotf/2
+      DO ik = 1, nktotf
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           READ(iufilscatt_rate,*) ik_tmp, ibnd_tmp, &
                etf_all(ibndmin-1+ibnd, ik), inv_tau_all(1,ibnd,ik) 
@@ -908,11 +908,11 @@
     !! Total number of q-points
     INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    REAL(KIND = DP), INTENT(inout) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: sigmar_all(nbndfst, nktotf)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(inout) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: sigmai_all(nbndfst, nktotf)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(inout) :: zi_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: zi_all(nbndfst, nktotf)
     !! Z parameter of electron-phonon self-energy accross all pools
     ! 
     ! Local variables
@@ -924,12 +924,12 @@
     !! Local band index
     INTEGER :: lsigma_all
     !! Length of the vector
-    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND = DP) :: aux ( 3 * (nbndfst) * nktotf + 2 )
     !! Vector to store the array
     !
     IF (mpime == ionode_id) THEN
       !
-      lsigma_all = 3 * (ibndmax-ibndmin+1) * nktotf +2
+      lsigma_all = 3 * (nbndfst) * nktotf +2
       ! First element is the current q-point
       aux(1) = REAL( iqq -1, KIND = DP) ! we need to start at the next q
       ! Second element is the total number of q-points
@@ -938,19 +938,19 @@
       i = 2
       ! 
       DO ik = 1, nktotf
-        DO ibnd = 1, (ibndmax-ibndmin+1)
+        DO ibnd = 1, (nbndfst)
           i = i +1
           aux(i) = sigmar_all(ibnd, ik)
         ENDDO
       ENDDO
       DO ik = 1, nktotf
-        DO ibnd = 1, (ibndmax-ibndmin+1)
+        DO ibnd = 1, (nbndfst)
           i = i +1
           aux(i) = sigmai_all(ibnd, ik)
         ENDDO
       ENDDO
       DO ik = 1, nktotf
-        DO ibnd = 1, (ibndmax-ibndmin+1)
+        DO ibnd = 1, (nbndfst)
           i = i +1
           aux(i) = zi_all(ibnd, ik)
         ENDDO
@@ -1002,11 +1002,11 @@
     !! Total number of q-points
     INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    REAL(KIND = DP), INTENT(OUT) :: sigmar_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(OUT) :: sigmar_all(nbndfst, nktotf)
     !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(OUT) :: sigmai_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(OUT) :: sigmai_all(nbndfst, nktotf)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(OUT) :: zi_all(ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(OUT) :: zi_all(nbndfst, nktotf)
     !! Z parameter of electron-phonon self-energy accross all pools
     ! 
     ! Local variables
@@ -1020,7 +1020,7 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
-    REAL(KIND = DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND = DP) :: aux ( 3 * (nbndfst) * nktotf + 2 )
     !! Vector to store the array
     ! 
     CHARACTER(LEN = 256) :: name1
@@ -1037,7 +1037,7 @@
       ! 
       IF (exst) THEN ! read the file
         !
-        lsigma_all = 3 * (ibndmax-ibndmin+1) * nktotf +2
+        lsigma_all = 3 * (nbndfst) * nktotf +2
         CALL diropn (iufilsigma_all, 'sigma_restart', lsigma_all, exst)
         CALL davcio ( aux, lsigma_all, iufilsigma_all, 1, -1 )
         !
@@ -1052,19 +1052,19 @@
         ! 
         i = 2
         DO ik = 1, nktotf
-          DO ibnd = 1, (ibndmax-ibndmin+1)
+          DO ibnd = 1, (nbndfst)
             i = i +1
             sigmar_all(ibnd, ik) = aux(i)
           ENDDO
         ENDDO
         DO ik = 1, nktotf
-          DO ibnd = 1, (ibndmax-ibndmin+1)
+          DO ibnd = 1, (nbndfst)
             i = i +1
             sigmai_all(ibnd, ik) = aux(i)
           ENDDO
         ENDDO
         DO ik = 1, nktotf
-          DO ibnd = 1, (ibndmax-ibndmin+1)
+          DO ibnd = 1, (nbndfst)
             i = i +1
             zi_all(ibnd, ik) = aux(i)
           ENDDO
@@ -1139,12 +1139,12 @@
     INTEGER :: ibnd
     !! band index
     ! 
-    REAL(KIND = DP) :: aux ( 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2 )
+    REAL(KIND = DP) :: aux ( 2 * nstemp * (nbndfst) * nktotf +2 )
     !! Vector to store the array inv_tau_all and zi_all
     !
     IF (mpime == meta_ionode_id) THEN
       !
-      ltau_all = 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2
+      ltau_all = 2 * nstemp * (nbndfst) * nktotf +2
       ! First element is the iteration number
       aux(1) = REAL( iqq -1, KIND = DP)   ! -1 because we will start at the next one. 
       aux(2) = REAL( totq, KIND = DP)
@@ -1152,7 +1152,7 @@
       ! 
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
-          DO ibnd = 1, (ibndmax-ibndmin+1)
+          DO ibnd = 1, (nbndfst)
             i = i +1
             aux(i) = inv_tau_all(itemp,ibnd, ik)
           ENDDO
@@ -1161,7 +1161,7 @@
       !
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
-          DO ibnd = 1, (ibndmax-ibndmin+1)
+          DO ibnd = 1, (nbndfst)
             i = i +1
             aux(i) = zi_allvb(itemp,ibnd, ik) 
           ENDDO
@@ -1179,7 +1179,7 @@
         ! 
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
-            DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO ibnd = 1, (nbndfst)
               i = i +1
               aux(i) = inv_tau_allcb(itemp,ibnd, ik)
             ENDDO
@@ -1188,7 +1188,7 @@
         !
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
-            DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO ibnd = 1, (nbndfst)
               i = i +1
               aux(i) = zi_allcb(itemp,ibnd, ik)     
             ENDDO
@@ -1263,7 +1263,7 @@
     !! Length of the vector
     INTEGER :: nqtotf_read
     !! Total number of q-point read
-    REAL(KIND = DP) :: aux(2 * nstemp * (ibndmax - ibndmin + 1) * nktotf + 2)
+    REAL(KIND = DP) :: aux(2 * nstemp * (nbndfst) * nktotf + 2)
     !! Vector to store the array
     ! 
     CHARACTER(LEN = 256) :: name1
@@ -1280,7 +1280,7 @@
       ! 
       IF (exst) THEN ! read the file
         !
-        ltau_all = 2 * nstemp * (ibndmax-ibndmin+1) * nktotf + 2
+        ltau_all = 2 * nstemp * (nbndfst) * nktotf + 2
         CALL diropn (iufiltau_all, 'tau_restart', ltau_all, exst)
         CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
         !
@@ -1296,7 +1296,7 @@
         i = 2
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
-            DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO ibnd = 1, (nbndfst)
               i = i +1
               inv_tau_all(itemp,ibnd, ik) = aux(i)
             ENDDO
@@ -1305,7 +1305,7 @@
         ! 
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
-            DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO ibnd = 1, (nbndfst)
               i = i +1
               zi_allvb(itemp,ibnd, ik) = aux(i)
             ENDDO
@@ -1325,7 +1325,7 @@
         ! 
         IF (exst) THEN ! read the file
           !
-          ltau_all = nstemp * (ibndmax-ibndmin+1) * nktotf +2
+          ltau_all = nstemp * (nbndfst) * nktotf +2
           CALL diropn (iufiltau_all, 'tau_restart_CB', ltau_all, exst)
           CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
           !
@@ -1339,7 +1339,7 @@
           i = 2
           DO itemp = 1, nstemp
             DO ik = 1, nktotf
-              DO ibnd = 1, (ibndmax-ibndmin+1)
+              DO ibnd = 1, (nbndfst)
                 i = i +1
                 inv_tau_allcb(itemp,ibnd, ik) = aux(i)
               ENDDO
@@ -1348,7 +1348,7 @@
           ! 
           DO itemp = 1, nstemp
             DO ik = 1, nktotf
-              DO ibnd = 1, (ibndmax-ibndmin+1)
+              DO ibnd = 1, (nbndfst)
                 i = i +1
                 zi_allcb(itemp,ibnd, ik) = aux(i)
               ENDDO
@@ -1414,7 +1414,7 @@
     !! Total number of k-points
     INTEGER, INTENT(OUT) :: nqtotf_new
     !! Total number of q-points
-    REAL(KIND = DP), INTENT(inout) :: inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nktotf)
+    REAL(KIND = DP), INTENT(inout) :: inv_tau_all_new(nstemp, nbndfst, nktotf)
     !! Scattering rate read from file restart_filq
     ! 
     ! Local variables
@@ -1430,7 +1430,7 @@
     !! Length of the vector
     INTEGER(KIND = 8) :: unf_recl
     !! 
-    REAL(KIND = DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
+    REAL(KIND = DP) :: aux ( nstemp * (nbndfst) * nktotf + 2 )
     !! Vector to store the array 
     REAL(KIND = DP) :: dummy
     !! Test what the record length is
@@ -1445,7 +1445,7 @@
       ! 
       IF (exst) THEN ! read the file
         !
-        ltau_all = nstemp * (ibndmax-ibndmin+1) * nktotf +2
+        ltau_all = nstemp * (nbndfst) * nktotf +2
         !CALL diropn (iufiltau_all, 'tau_restart', ltau_all, exst)
         ! 
         INQUIRE (IOLENGTH = unf_recl) dummy  
@@ -1463,7 +1463,7 @@
         i = 2
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
-            DO ibnd = 1, (ibndmax-ibndmin+1)
+            DO ibnd = 1, (nbndfst)
               i = i +1
               inv_tau_all_new(itemp,ibnd, ik) = aux(i)
             ENDDO

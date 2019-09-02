@@ -68,7 +68,7 @@
       !
       IF (limag) THEN
         iter = 1
-        conv = .false.
+        conv = .FALSE.
         DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL sum_eliashberg_iso_iaxis( itemp, iter, conv )
           CALL mix_broyden( nsiw(itemp), Deltai, Deltaip, broyden_beta, iter, broyden_ndim, conv )
@@ -102,7 +102,7 @@
         CALL start_clock( 'raxis_pade' )
         !
         iter = 1
-        conv = .false.
+        conv = .FALSE.
         N = 80 * nsiw(itemp) / 100
         IF (mod(N,2) /= 0 ) N = N + 1
         DO WHILE ( .NOT. conv .AND. iter <= nsiter )
@@ -136,7 +136,7 @@
         CALL start_clock( 'raxis_acon' )
         !
         iter = 1
-        conv = .false.
+        conv = .FALSE.
         DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL analytic_cont_iso_iaxis_to_raxis( itemp, iter, conv )
           rdeltain(:)  = REAL(Deltap(:))
@@ -270,7 +270,7 @@
     WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, '   error = ', errdelta, &
                                            '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
     !
-    IF (errdelta < conv_thr_iaxis ) conv = .true.
+    IF (errdelta < conv_thr_iaxis ) conv = .TRUE.
     IF (errdelta < conv_thr_iaxis .OR. iter == nsiter) THEN
       gap(itemp) = Deltai(1)
       gap0 = gap(itemp)
@@ -411,7 +411,7 @@
                  '   error = ', errdelta, '   Re[Znorm(1)] = ', REAL(Znorm(1)), & 
                  '   Re[Delta(1)] = ', REAL(Delta(1))
     !
-    IF (errdelta < conv_thr_racon ) conv = .true.
+    IF (errdelta < conv_thr_racon ) conv = .TRUE.
     IF (errdelta < conv_thr_racon .OR. iter == nsiter) THEN
        cname = 'acon'
        CALL eliashberg_write_raxis( itemp, cname )
@@ -508,7 +508,7 @@
     errdelta = reldelta / absdelta
     !
     IF (errdelta > zero) THEN 
-       conv = .true.
+       conv = .TRUE.
        WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'pade = ', N, & 
               '   error = ', errdelta, '   Re[Znorm(1)] = ', REAL(Znorm(1)), & 
               '   Re[Delta(1)] = ', REAL(Delta(1))
@@ -780,7 +780,7 @@
        WRITE(stdout,'(5x,a,i3,a,f8.4,a,a,i3,a)') 'temp(', itemp, ') = ', estemp(itemp)/kelvin2eV, ' K '
        WRITE(stdout,'(a)') '    '
        iter = 1
-       conv = .false.
+       conv = .FALSE.
        DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL integrate_eliashberg_iso_raxis( itemp, iter, conv )
           rdeltain(:) = REAL(Deltap(:))
@@ -961,7 +961,7 @@
     WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'iter = ', iter, '   error = ', errdelta, & 
                                   '   Re[Znorm(1)] = ', REAL(Znorm(1)), '   Re[Delta(1)] = ', REAL(Delta(1)) 
     !
-    IF (errdelta < conv_thr_raxis) conv = .true.
+    IF (errdelta < conv_thr_raxis) conv = .TRUE.
     IF (errdelta < conv_thr_raxis .OR. iter == nsiter) THEN
       cname = 'real'
       CALL eliashberg_write_raxis( itemp, cname )

@@ -217,7 +217,7 @@
   LOGICAL :: mp_mesh_k
   !! if .TRUE. use points in the irreducible wedge for the uniform fine k-mesh
   LOGICAL :: eig_read
-  !! if .true. then readin a set of electronic eigenvalues in eV to replace the calcualted ones
+  !! if .TRUE. then readin a set of electronic eigenvalues in eV to replace the calcualted ones
   LOGICAL :: wepexst
   !! if .TRUE. prefix.epmatwe files are already on disk.  don't recalculate. debugging param
   LOGICAL :: epexst
@@ -225,81 +225,81 @@
   LOGICAL :: vme
   !! if .TRUE. calculate velocity matrix elements
   LOGICAL :: band_plot
-  ! band_plot : if .true. write filrs to plot band structure and phonon dispersion
+  ! band_plot : if .TRUE. write filrs to plot band structure and phonon dispersion
   LOGICAL :: lpolar 
-  !! if .true. enable the correct Wannier interpolation in the case of polar material.  
+  !! if .TRUE. enable the correct Wannier interpolation in the case of polar material.  
   LOGICAL :: lscreen
-  !! if .true. the e-ph matrix elements are screened by the RPA or TF dielectric function
+  !! if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
   LOGICAL :: lifc
-  !! if .true. reads interatomic force constants produced by q2r.x for phonon interpolation
+  !! if .TRUE. reads interatomic force constants produced by q2r.x for phonon interpolation
   LOGICAL :: cumulant
-  !! if .true. calculates the electron spectral function using the cumulant expansion method
+  !! if .TRUE. calculates the electron spectral function using the cumulant expansion method
   LOGICAL :: delta_approx
-  !! if .true. the double delta approximation is used for the phonon self energy
+  !! if .TRUE. the double delta approximation is used for the phonon self energy
   LOGICAL :: ep_coupling
-  !! if .true. run e-p coupling calculation
+  !! if .TRUE. run e-p coupling calculation
   LOGICAL :: efermi_read
-  !! if .true. fermi energy is read from the input file
+  !! if .TRUE. fermi energy is read from the input file
   LOGICAL :: system_2d
-  !! if .true. the system is 2 dimensional (vaccum is in z-direction)
+  !! if .TRUE. the system is 2 dimensional (vaccum is in z-direction)
   LOGICAL :: prtgkk
-  !! if .true. print the |g| vertex in [meV].
+  !! if .TRUE. print the |g| vertex in [meV].
   LOGICAL :: lphase
-  !! if .true. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
+  !! if .TRUE. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
   LOGICAL :: lindabs
-  !! if .true., perform phonon-assisted absorption calculations
+  !! if .TRUE., perform phonon-assisted absorption calculations
   LOGICAL :: use_ws
-  !! if .true., use Wannier-centers to compute the Wigner-Seitz cell. 
+  !! if .TRUE., use Wannier-centers to compute the Wigner-Seitz cell. 
   LOGICAL :: epmatkqread
-  !! if .true., restart and IBTE calculation from the scattering rates written to files. 
+  !! if .TRUE., restart and IBTE calculation from the scattering rates written to files. 
   LOGICAL :: selecqread
-  !! if .true., restart from the selecq.fmt file
+  !! if .TRUE., restart from the selecq.fmt file
   !
   ! Superconductivity
   LOGICAL :: ephwrite
-  !! if .true. write el-ph matrix elements on the fine mesh to file
+  !! if .TRUE. write el-ph matrix elements on the fine mesh to file
   LOGICAL :: lreal
-  !! if .true. solve real-axis Eliashberg eqautions
+  !! if .TRUE. solve real-axis Eliashberg eqautions
   LOGICAL :: limag
-  !! if .true. solve imag-axis Eliashberg eqautions
+  !! if .TRUE. solve imag-axis Eliashberg eqautions
   LOGICAL :: lpade
-  !! if .true. use pade approximants to continue imag-axis Eliashberg equtions to real-axis
+  !! if .TRUE. use pade approximants to continue imag-axis Eliashberg equtions to real-axis
   LOGICAL :: lacon
-  !! if .true. use analytic continuation to continue imag-axis Eliashberg equtions to real-axis
+  !! if .TRUE. use analytic continuation to continue imag-axis Eliashberg equtions to real-axis
   LOGICAL :: liso
-  !! if .true. solve isotropic case
+  !! if .TRUE. solve isotropic case
   LOGICAL :: laniso
-  !! if .true. solve anisotropic case
+  !! if .TRUE. solve anisotropic case
   LOGICAL :: lunif
-  !! if .true. a uniform grid is defined between wsfc and wc for real-axis calculations
+  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
   LOGICAL :: kerwrite
-  !! if .true. write Kp and Km to files .ker for real-axis calculations
+  !! if .TRUE. write Kp and Km to files .ker for real-axis calculations
   LOGICAL :: kerread
-  !! if .true. read Kp and Km from files .ker for real-axis calculations
+  !! if .TRUE. read Kp and Km from files .ker for real-axis calculations
   LOGICAL :: imag_read
-  !! if .true. read from file Delta and Znorm on the imaginary-axis
+  !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
   LOGICAL :: eliashberg
-  !! if .true. solve the Eliashberg equations 
+  !! if .TRUE. solve the Eliashberg equations 
   !
   ! Conductivity
   LOGICAL :: scattering
-  !! if .true. scattering rates are calculated
+  !! if .TRUE. scattering rates are calculated
   LOGICAL :: scattering_serta
-  !! if .true. scattering rates are calculated using self-energy relaxation-time-approx
+  !! if .TRUE. scattering rates are calculated using self-energy relaxation-time-approx
   LOGICAL :: scatread
-  !! if .true. the scattering rates are read from file.
+  !! if .TRUE. the scattering rates are read from file.
   LOGICAL :: scattering_0rta
-  !! if .true. scattering rates are calculated using 0th order relaxation-time-approx
+  !! if .TRUE. scattering rates are calculated using 0th order relaxation-time-approx
   LOGICAL :: int_mob
-  !! if .true. computes the intrinsic mobilities. This means that the electron and hole carrier density is equal.
+  !! if .TRUE. computes the intrinsic mobilities. This means that the electron and hole carrier density is equal.
   LOGICAL :: iterative_bte
-  !! if .true. the iterative solution for BTE is compute. A first run with scattering_serta = .true. is required. 
+  !! if .TRUE. the iterative solution for BTE is compute. A first run with scattering_serta = .TRUE. is required. 
   LOGICAL :: carrier
-  !! if .true. computes the doped electronic mobilities.
+  !! if .TRUE. computes the doped electronic mobilities.
   LOGICAL :: longrange
-  !! if .true. computes the long range interaction of el-ph. Can only be .true. if lpolar is also true.
+  !! if .TRUE. computes the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
   LOGICAL :: shortrange
-  !! if .true. computes the long range interaction of el-ph. Can only be .true. if lpolar is also true.  
+  !! if .TRUE. computes the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.  
   !
   CHARACTER(LEN = 100) :: dvscf_dir ='./'
   !! directory for .dvscf and .dyn files (wannier interpolation)
@@ -315,7 +315,7 @@
   CHARACTER(LEN = 75) :: title 
   !! ...  title of the simulation  
   CHARACTER(LEN = 10)  :: asr_typ
-  !! type of ASR if lifc=.true.
+  !! type of ASR if lifc=.TRUE.
   !
 END MODULE control_epw
 !

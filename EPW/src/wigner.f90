@@ -297,11 +297,11 @@
               ! if R=0 is one of them, then the current point r belongs to 
               ! Wignez-Seitz cell => set found to true
               !
-              found = .false.
+              found = .FALSE.
               i = 1
               mindist = dist(1)
               DO WHILE ( ABS(dist(i)-mindist) < eps6 .AND. i < 125 )
-                IF (ind(i) == 63) found = .true.
+                IF (ind(i) == 63) found = .TRUE.
                 i = i + 1
               ENDDO
               !
@@ -322,10 +322,10 @@
     DO iw = 1, dims
       DO iw2 = 1, dims
         DO ir = 1, nrr_tmp(iw, iw2)
-          found = .false.
+          found = .FALSE.
           DO irtot = 1, nrr
             IF (ALL(irvec_tmp(:, ir, iw, iw2) == irvec(:, irtot))) THEN
-              found = .true.
+              found = .TRUE.
             ENDIF
           ENDDO !nrr
           IF( .NOT.  found) THEN
@@ -547,11 +547,11 @@
               ! if R=0 is one of them, then the current point r belongs to 
               ! Wignez-Seitz cell => set found to true
               !
-              found = .false.
+              found = .FALSE.
               i = 1
               mindist = dist(1)
               DO WHILE ( ABS(dist(i)-mindist) < eps6 .AND. i < 125 )
-                IF (ind(i) == 63) found = .true.
+                IF (ind(i) == 63) found = .TRUE.
                 i = i + 1
               ENDDO
               !
@@ -576,10 +576,10 @@
      DO iw2 = 1, dims
       DO na = 1, dims2
         DO ir = 1, nrr_tmp(na,iw,iw2)
-          found = .false.
+          found = .FALSE.
           DO irtot = 1, nrr
             IF (ALL(irvec_tmp(:, ir, na, iw, iw2) == irvec(:, irtot))) THEN
-              found = .true.
+              found = .TRUE.
             ENDIF
           ENDDO !nrr
           IF( .NOT.  found) THEN

@@ -157,9 +157,9 @@
   INTEGER :: dims2
   !! Dims is either nat if use_ws or 1 if not
   INTEGER :: iw 
-  !! Counter on bands when use_ws == .true.
+  !! Counter on bands when use_ws == .TRUE.
   INTEGER :: iw2
-  !! Counter on bands when use_ws == .true.
+  !! Counter on bands when use_ws == .TRUE.
   INTEGER :: itemp
   !! Temperature index
   INTEGER :: icbm
@@ -240,7 +240,7 @@
   REAL(KIND = DP) :: val
   !! Temporary broadening value
   REAL(KIND = DP), EXTERNAL :: fermicarrier
-  !! Function that returns the Fermi level so that n=p (if int_mob = .true.)  
+  !! Function that returns the Fermi level so that n=p (if int_mob = .TRUE.)  
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
   REAL(KIND = DP), EXTERNAL :: efermig_seq
@@ -413,7 +413,7 @@
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
     WRITE(stdout, '(5x,a,i8)' ) 'Maximum number of cores for efficient parallelization ',nrr_g * nmodes
-    WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .true. '
+    WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .TRUE. '
   ENDIF
   !
 #ifndef __MPI  
@@ -658,7 +658,7 @@
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ! SP: even when reading from input the number of electron needs to be correct
-    already_skipped = .false.
+    already_skipped = .FALSE.
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
@@ -666,7 +666,7 @@
         ELSE
           nelec = nelec - two * nbndskip
         ENDIF
-        already_skipped = .true.
+        already_skipped = .TRUE.
         WRITE(stdout,'(/5x,"Skipping the first ",i4," bands:")') nbndskip
         WRITE(stdout,'(/5x,"The Fermi level will be determined with ",f9.5," electrons")') nelec
       ENDIF
@@ -682,7 +682,7 @@
     ! here we take into account that we may skip bands when we wannierize
     ! (spin-unpolarized)
     ! RM - add the noncolin case
-    already_skipped = .false.
+    already_skipped = .FALSE.
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN 
@@ -690,7 +690,7 @@
         ELSE
           nelec = nelec - two * nbndskip
         ENDIF
-        already_skipped = .true.
+        already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ",i4," bands:")') nbndskip
         WRITE(stdout, '(/5x,"The Fermi level will be determined with ",f9.5," electrons")') nelec
       ENDIF
@@ -714,7 +714,7 @@
     ! with the wannier functions, or 'coarse' Fermi level is inaccurate
     IF (ABS(efnew - ef) * ryd2eV > 0.250d0 .AND. (.NOT. eig_read)) &
        WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
-    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ef = efnew
     !
@@ -740,7 +740,7 @@
   CALL fermiwindow
   ! 
   ! Define it only once for the full run. 
-  CALL fkbounds(nkqtotf / 2, lower_bnd, upper_bnd)
+  CALL fkbounds(nktotf, lower_bnd, upper_bnd)
   ! 
   ! Re-order the k-point according to weather they are in or out of the fshick
   ! windows
@@ -782,7 +782,7 @@
   !
   CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
   !
-  ALLOCATE(etf_all(ibndmax - ibndmin + 1, nkqtotf / 2))
+  ALLOCATE(etf_all(nbndfst, nktotf))
   etf_all(:, :) = zero
   ! 
   ! ------------------------------------------------
@@ -793,8 +793,8 @@
   !  
   ! Initialization and restart when doing IBTE
   IF (iterative_bte) THEN
-    ALLOCATE(inv_tau_all(ibndmax - ibndmin + 1, nkqtotf / 2, nstemp))
-    ALLOCATE(inv_tau_allcb(ibndmax - ibndmin + 1, nkqtotf / 2, nstemp))
+    ALLOCATE(inv_tau_all(nbndfst, nktotf, nstemp))
+    ALLOCATE(inv_tau_allcb(nbndfst, nktotf, nstemp))
     inv_tau_all(:, :, :)   = zero
     inv_tau_allcb(:, :, :) = zero
     lrepmatw2_restart(:) = 0 
@@ -802,8 +802,8 @@
   ENDIF
   ! 
   IF (iterative_bte .AND. epmatkqread) THEN
-    ALLOCATE(vkk_all(3, ibndmax - ibndmin + 1, nkqtotf / 2))
-    ALLOCATE(wkf_all(nkqtotf / 2))
+    ALLOCATE(vkk_all(3, nbndfst, nktotf))
+    ALLOCATE(wkf_all(nktotf))
     !
     CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     ! 
@@ -865,12 +865,12 @@
           CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
         ELSE 
           WRITE(stdout, '(5x,a)')' '
-          WRITE(stdout, '(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
+          WRITE(stdout, '(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .FALSE. '
           CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
         ENDIF
       ELSE ! exst
         IF (selecqread) THEN
-          CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
+          CALL errore( 'ephwann_shuffle', 'Variable selecqread == .TRUE. but file selecq.fmt not found.',1 ) 
         ELSE
           CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
         ENDIF
@@ -889,8 +889,8 @@
     first_time = .TRUE.
     ! 
     ! Fine mesh set of g-matrices.  It is large for memory storage
-    ALLOCATE(epf17(ibndmax - ibndmin + 1, ibndmax - ibndmin + 1, nmodes, nkf))
-    ALLOCATE(eptmp(ibndmax - ibndmin + 1, ibndmax - ibndmin + 1, nmodes, nkf))
+    ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf))
+    ALLOCATE(eptmp(nbndfst, nbndfst, nmodes, nkf))
     ALLOCATE(epmatlrT(nbndsub, nbndsub, nmodes, nkf))
     IF (phonselfen) THEN
       ALLOCATE(lambda_all(nmodes, totq, nsmear))
@@ -903,9 +903,9 @@
       gamma_v_all(:, :, :) = zero
     ENDIF
     IF (specfun_el .OR. specfun_pl) THEN
-      ALLOCATE(esigmar_all(ibndmax - ibndmin + 1, nkqtotf / 2, nw_specfun))
-      ALLOCATE(esigmai_all(ibndmax - ibndmin + 1, nkqtotf / 2, nw_specfun))
-      ALLOCATE(a_all(nw_specfun, nkqtotf / 2))
+      ALLOCATE(esigmar_all(nbndfst, nktotf, nw_specfun))
+      ALLOCATE(esigmai_all(nbndfst, nktotf, nw_specfun))
+      ALLOCATE(a_all(nw_specfun, nktotf))
       esigmar_all(:, :, :) = zero
       esigmai_all(:, :, :) = zero
       a_all(:, :) = zero
@@ -915,26 +915,26 @@
       a_all_ph(:, :) = zero
     ENDIF
     IF (scattering .AND. .NOT. iterative_bte) THEN
-      ALLOCATE(inv_tau_all(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
-      ALLOCATE(zi_allvb(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
+      ALLOCATE(inv_tau_all(nstemp, nbndfst, nktotf))
+      ALLOCATE(zi_allvb(nstemp, nbndfst, nktotf))
       inv_tau_all(:, :, :) = zero
       zi_allvb(:, :, :)    = zero
     ENDIF
     IF (int_mob .AND. carrier .AND. .NOT. iterative_bte) THEN
-      ALLOCATE(inv_tau_allcb(nstemp, ibndmax - ibndmin + 1, nkqtotf / 2))
-      ALLOCATE(zi_allcb(nstemp, ibndmax - ibndmin + 1, nkqtotf / 2))
+      ALLOCATE(inv_tau_allcb(nstemp, nbndfst, nktotf))
+      ALLOCATE(zi_allcb(nstemp, nbndfst, nktotf))
       inv_tau_allcb(:, :, :) = zero
       zi_allcb(:, :, :)      = zero
     ENDIF
     IF (elecselfen .OR. plselfen) THEN
-      ALLOCATE(sigmar_all(ibndmax - ibndmin + 1, nkqtotf / 2))
-      ALLOCATE(sigmai_all(ibndmax - ibndmin + 1, nkqtotf / 2))
-      ALLOCATE(zi_all(ibndmax - ibndmin + 1, nkqtotf / 2))
+      ALLOCATE(sigmar_all(nbndfst, nktotf))
+      ALLOCATE(sigmai_all(nbndfst, nktotf))
+      ALLOCATE(zi_all(nbndfst, nktotf))
       sigmar_all(:, :) = zero
       sigmai_all(:, :) = zero
       zi_all(:, :)     = zero
       IF (iverbosity == 3) THEN
-        ALLOCATE(sigmai_mode(ibndmax - ibndmin + 1, nmodes, nkqtotf / 2))
+        ALLOCATE(sigmai_mode(nbndfst, nmodes, nktotf))
         sigmai_mode(:, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
@@ -942,15 +942,15 @@
     ! Restart in SERTA case or self-energy case
     IF (restart) THEN
       IF (elecselfen) THEN
-        CALL electron_read(iq_restart, totq, nkqtotf/2, sigmar_all, sigmai_all, zi_all)
+        CALL electron_read(iq_restart, totq, nktotf, sigmar_all, sigmai_all, zi_all)
       ENDIF
       IF (scattering) THEN
         IF (int_mob .AND. carrier) THEN
           ! Here inv_tau_all and inv_tau_allcb gets updated
-          CALL tau_read(iq_restart, totq, nkqtotf / 2, .TRUE.)
+          CALL tau_read(iq_restart, totq, nktotf, .TRUE.)
         ELSE
           ! Here inv_tau_all gets updated
-          CALL tau_read(iq_restart, totq, nkqtotf / 2, .FALSE.)
+          CALL tau_read(iq_restart, totq, nktotf, .FALSE.)
         ENDIF
       ENDIF
       !
@@ -1004,14 +1004,14 @@
         IF (lower_bnd - 1 >= 1) THEN
           inv_tau_all(:, 1:lower_bnd - 1, :) = 0d0
         ENDIF
-        IF (upper_bnd + 1 <= nkqtotf / 2) THEN
-          inv_tau_all(:, upper_bnd + 1:nkqtotf / 2, :) = 0d0
+        IF (upper_bnd + 1 <= nktotf) THEN
+          inv_tau_all(:, upper_bnd + 1:nktotf, :) = 0d0
         ENDIF
         IF (lower_bnd - 1 >=  1) THEN
           inv_tau_allcb(:, 1:lower_bnd - 1, :) = 0d0
         ENDIF
-        IF (upper_bnd + 1 <= nkqtotf/2) THEN
-          inv_tau_allcb(:, upper_bnd + 1: nkqtotf / 2, :) = 0d0
+        IF (upper_bnd + 1 <= nktotf) THEN
+          inv_tau_allcb(:, upper_bnd + 1: nktotf, :) = 0d0
         ENDIF
 
 #if defined(__MPI)
@@ -1035,12 +1035,12 @@
     ! Adaptative smearing when degauss = 0                         
     adapt_smearing = .FALSE.                                       
     IF (ABS(degaussw) < eps16) THEN                                
-      ALLOCATE(eta(nmodes, ibndmax - ibndmin + 1, nkf))             
+      ALLOCATE(eta(nmodes, nbndfst, nkf))             
       ALLOCATE(vmefp(3, nmodes, nmodes))                        
       eta(:, :, :)   = zero                                          
       vmefp(:, :, :) = czero                                         
       adapt_smearing = .TRUE.
-      ALLOCATE(eta_deg(nmodes, ibndmax - ibndmin + 1))
+      ALLOCATE(eta_deg(nmodes, nbndfst))
     ENDIF
     ! 
     DO iqq = iq_restart, totq
@@ -1344,9 +1344,9 @@
       ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
       !
       DO ik = 1, nkf
-        CALL zgemm( 'n', 'n', (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
-              (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), uf, nmodes, czero, &
-              epf17(:,:,:,ik), (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) )
+        CALL zgemm( 'n', 'n', (nbndfst) * (nbndfst), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
+              (nbndfst) * (nbndfst), uf, nmodes, czero, &
+              epf17(:,:,:,ik), (nbndfst) * (nbndfst) )
         ! 
       ENDDO
       ! 
@@ -1487,7 +1487,7 @@
             ! Finished, now compute SERTA and IBTE mobilities
             IF (iqq == totq) THEN
               WRITE(stdout, '(5x,a)')' '
-              WRITE(stdout, '(5x,"epmatkqread automatically changed to .true. as all scattering have been computed.")')
+              WRITE(stdout, '(5x,"epmatkqread automatically changed to .TRUE. as all scattering have been computed.")')
               WRITE(stdout, '(5x,a)')' '
               ! Close files
               CALL iter_close()
@@ -1631,8 +1631,8 @@
     ! 
     ! Now do the second step of mobility
     IF (iterative_bte) THEN
-      ALLOCATE(vkk_all(3, ibndmax - ibndmin + 1, nkqtotf / 2))
-      ALLOCATE(wkf_all(nkqtotf / 2))
+      ALLOCATE(vkk_all(3, nbndfst, nktotf))
+      ALLOCATE(wkf_all(nktotf))
       !
       CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
       ! 

@@ -63,11 +63,11 @@
   !! Temporary variable to store Z for the degenerate average
   REAL(KIND = DP) :: ekk2
   !! Temporary variable to the eigenenergies for the degenerate average
-  REAL(KIND = DP) :: sigmar_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmar_tmp(nbndfst)
   !! Temporary array to store the real-part of Sigma 
-  REAL(KIND = DP) :: sigmai_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmai_tmp(nbndfst)
   !! Temporary array to store the imag-part of Sigma 
-  REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: zi_tmp(nbndfst)
   !! Temporary array to store the Z
   REAL(KIND = DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, weight,  &
                    w0g1, w0g2, inv_eptemp0, &
@@ -89,9 +89,9 @@
   !
   IF (iqq == 1) THEN
      !
-     WRITE(stdout,'(/5x,a)') repeat('=',67)
+     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
      WRITE(stdout,'(5x,"Electron-plasmon Self-Energy in the Migdal Approximation")')
-     WRITE(stdout,'(5x,a/)') repeat('=',67)
+     WRITE(stdout,'(5x,a/)') REPEAT('=',67)
      !
      IF (fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
@@ -121,7 +121,7 @@
   !
   ! The total number of k points
   !
-  nksqtotf = nkqtotf/2 ! odd-even for k,k+q
+  nksqtotf = nktotf ! odd-even for k,k+q
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
@@ -146,7 +146,7 @@
   qin      =  SQRT(qsquared)*tpiba_new
   qcut     = wpl0 / vF / tpiba_new / 2.d0    ! 1/2 converts from Ryd to Ha
   !
-  !if (.true.) qcut = qcut / 2.d0 ! renorm to account for Landau damping 
+  !if (.TRUE.) qcut = qcut / 2.d0 ! renorm to account for Landau damping 
   !
   CALL get_eps_mahan (qin,rs,kF,eps0) ! qin should be in atomic units for Mahan formula
   deltaeps = -(1.d0/(epsiHEG+eps0-1.d0)-1.d0/epsiHEG)
@@ -187,12 +187,12 @@
         wgq = wgauss( -wq*inv_eptemp0, -99)
         wgq = wgq / ( one - two * wgq )
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           !  the energy of the electron at k (relative to Ef)
           ekk = etf (ibndmin-1+ibnd, ikk) - ef0
           !
-          DO jbnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, nbndfst
             !
             ekk1 = etf (ibndmin-1+jbnd, ikk) - ef0
             ekq  = etf (ibndmin-1+jbnd, ikq) - ef0
@@ -230,14 +230,14 @@
             ENDIF
             !
             ! this approximates the dipoles as delta_ij
-            !if (.false.) then
+            !if (.FALSE.) then
             !  if (ibnd==jbnd .AND. SQRT(qsquared) > 1d-8 ) then
             !    dipole = 1./(qsquared * tpiba_new * tpiba_new)
             !  else 
             !    dipole = 0.d0
             !  endif
             !endif
-            !if (.true.) then
+            !if (.TRUE.) then
             IF (ABS(dipole * (qsquared * tpiba_new * tpiba_new))  > 1) THEN
               dipole = 1./(qsquared*tpiba_new*tpiba_new)
             ENDIF
@@ -367,14 +367,14 @@
        ikk = 2 * ik - 1
        ikq = ikk + 1
        ! 
-       DO ibnd = 1, ibndmax-ibndmin+1
+       DO ibnd = 1, nbndfst
          ekk = etf_all (ibndmin-1+ibnd, ikk)
          n = 0
          tmp = 0.0_DP
          tmp2 = 0.0_DP
          tmp3 = 0.0_DP
          !sigmar_tmp(:) = zero
-         DO jbnd = 1, ibndmax-ibndmin+1
+         DO jbnd = 1, nbndfst
            ekk2 = etf_all (ibndmin-1+jbnd, ikk)
            IF (ABS(ekk2-ekk) < eps6) THEN
              n = n + 1
@@ -384,9 +384,9 @@
            ENDIF
            ! 
          ENDDO ! jbnd
-         sigmar_tmp(ibnd) = tmp / float(n)
-         sigmai_tmp(ibnd) = tmp2 / float(n)
-         zi_tmp(ibnd) = tmp3 / float(n)
+         sigmar_tmp(ibnd) = tmp / FLOAT(n)
+         sigmai_tmp(ibnd) = tmp2 / FLOAT(n)
+         zi_tmp(ibnd) = tmp3 / FLOAT(n)
          !
        ENDDO ! ibnd
        sigmar_all (:,ik) = sigmar_tmp(:)
@@ -411,9 +411,9 @@
         ikq = ikk + 1
         !
         WRITE(stdout,'(/5x,"ik = ",i7," coord.: ", 3f12.7)') ik, xkf_all(:,ikk)
-        WRITE(stdout,'(5x,a)') repeat('-',67)
+        WRITE(stdout,'(5x,a)') REPEAT('-',67)
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           ! note that ekk does not depend on q 
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
@@ -429,11 +429,11 @@
           WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev*sigmai_all(ibnd,ik)
           !
         ENDDO
-        WRITE(stdout,'(5x,a/)') repeat('-',67)
+        WRITE(stdout,'(5x,a/)') REPEAT('-',67)
         !
      ENDDO
      !
-     DO ibnd = 1, ibndmax-ibndmin+1
+     DO ibnd = 1, nbndfst
         !
         DO ik = 1, nksqtotf
            !

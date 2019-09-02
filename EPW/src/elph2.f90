@@ -76,17 +76,19 @@
     ifc(:,:,:,:,:,:,:),      &!  Interatomic force constant in real space
     omegap(:),               &!  Photon energy for phonon-assisted absorption
     epsilon2_abs(:, :, :),   &!  Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening 
-    wscache(:, :, :, :, :),  &!  Use as cache when doing IFC when lifc = .true.
+    wscache(:, :, :, :, :),  &!  Use as cache when doing IFC when lifc = .TRUE.
     epsilon2_abs_lorenz(:, :, :) ! Imaginary part of dielectric function for phonon-assisted absorption, vs omega, vs broadening
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason 
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
-    threshold                 !  Threshold below which the transition probabilities are not written to file in transport. 
+    threshold                &!  Threshold below which the transition probabilities are not written to file in transport. 
+    nbndfst                   !  Number of bands within the fsthick window. 
   INTEGER ::                 &!
     nkqf,                    &!  number of k+q points per pool (fine grid)
     nkf,                     &!  number of k points per pool (fine grid)
     nqf,                     &!  number of q points per pool (fine grid)
     nkqtotf,                 &!  total number of k+q points (fine grid)
+    nktotf,                  &!  total number of k points (fine grid)
     nqtotf,                  &!  total number of q points (fine grid)
     nrr,                     &!  number of wigner-seitz points (elec interp only)
     ibndmin,                 &!  band bounds for slimming down electron-phonon matrix 

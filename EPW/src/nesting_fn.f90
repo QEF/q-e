@@ -75,9 +75,9 @@
   !
   !
   IF (iqq == 1) then 
-    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Nesting Function in the double delta approx")')
-    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     !
     IF (fsthick < 1.d3 ) &
       WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -129,12 +129,12 @@
         !
         fermicount = fermicount + 1
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           ekk = etf (ibndmin-1+ibnd, ikk) - ef0
           w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
           !
-          DO jbnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, nbndfst
             !
             ekq = etf (ibndmin-1+jbnd, ikq) - ef0
             w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
@@ -166,13 +166,13 @@
     CALL mp_sum(fermicount, inter_pool_comm)
     !
     WRITE(stdout,'(/5x,"iq = ",i5," coord.: ", 3f9.5, " wt: ", f9.5)') iq, xqf(:,iq) , wqf(iq)
-    WRITE(stdout,'(5x,a)') repeat('-',67)
+    WRITE(stdout,'(5x,a)') REPEAT('-',67)
        ! 
     WRITE(stdout, 102)  gamma
-    WRITE(stdout,'(5x,a/)') repeat('-',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('-',67)
     !
     WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
-      'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
+      'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nktotf
     !
     !
     CALL stop_clock('nesting')

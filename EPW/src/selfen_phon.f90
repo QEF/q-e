@@ -39,8 +39,8 @@
                          nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,   &
                          dmef, vmef, gamma_all,gamma_v_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4, eps6, eps8
-  use mp,         ONLY : mp_barrier, mp_sum
-  use mp_global,  ONLY : inter_pool_comm
+  USE mp,         ONLY : mp_barrier, mp_sum
+  USE mp_global,  ONLY : inter_pool_comm
   !
   IMPLICIT NONE
   !
@@ -74,7 +74,8 @@
   !! Smearing for the Gaussian function 
   INTEGER :: n
   !! Counter on number of mode degeneracies
-  ! 
+  INTEGER :: nbnd
+  !! Total number of bands considered 
   REAL(KIND = DP) :: g2
   !! Electron-phonon matrix elements squared in Ry^2
   REAL(KIND = DP) :: ekk
@@ -109,7 +110,7 @@
   !! Gamma is the imaginary part of the phonon self-energy 
   REAL(KIND = DP) :: gamma_v(nmodes)
   !! Gamma is the imaginary part of the phonon self-energy multiplied by (1-coskkq)
-  REAL(KIND = DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: coskkq(nbndfst, nbndfst)
   !! $$(v_k \cdot v_{k+q}) / |v_k|^2$$
   REAL(KIND = DP) :: DDOT
   !! Dot product function
@@ -125,9 +126,9 @@
   !! Fermi-Dirac occupation factor $f_{nk}(T)$
   REAL(KIND = DP) :: eptemp0
   !!eptemp0   = (ismear-1) * delta_smear + eptem
-  REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: vkk(3, nbndfst)
   !! Electronic velocity $v_{nk}$
-  REAL(KIND = DP) :: vkq(3,ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: vkq(3, nbndfst)
   !! Electronic velocity $v_{nk+q}$
   REAL(KIND = DP) :: tmp
   !! Temporary value of lambda for av.
@@ -155,10 +156,12 @@
   REAL(KIND = DP), EXTERNAL :: efermig
   !! Return the fermi energy
   !  
+  nbnd = nbndfst
+  ! 
   IF (iq == 1) THEN 
-    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
-    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     !
     IF (fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
@@ -170,8 +173,8 @@
   !
   DO ismear = 1, nsmear
     !
-    degaussw0 = (ismear-1) * delta_smear + degaussw
-    eptemp0   = (ismear-1) * delta_smear + eptemp
+    degaussw0 = (ismear - 1) * delta_smear + degaussw
+    eptemp0   = (ismear - 1) * delta_smear + eptemp
     ! 
     ! SP: Multiplication is faster than division ==> Important if called a lot
     !     in inner loops
@@ -227,21 +230,21 @@
       ! vectors also listed in Grimvall
       !
       IF (vme) THEN 
-        DO ibnd = 1, ibndmax-ibndmin+1
-          DO jbnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbnd
+          DO jbnd = 1, nbnd
             !
             ! vmef is in units of Ryd * bohr
             !
-            vkk(:, ibnd ) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
-            vkq(:, jbnd ) = REAL (vmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-            IF (abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
-                coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
-                DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+            vkk(:, ibnd) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
+            vkq(:, jbnd) = REAL(vmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq))
+            IF (ABS(vkk(1, ibnd)**2 + vkk(2, ibnd)**2 + vkk(3, ibnd)**2) > eps4) &
+                coskkq(ibnd, jbnd ) = DDOT(3, vkk(:, ibnd ), 1, vkq(:, jbnd), 1) / &
+                DDOT(3, vkk(:, ibnd), 1, vkk(:, ibnd), 1)
           ENDDO
         ENDDO
       ELSE
-        DO ibnd = 1, ibndmax-ibndmin+1
-          DO jbnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbnd
+          DO jbnd = 1, nbnd
             !
             ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
             ! 1/m  = 2 in Rydberg atomic units
@@ -255,15 +258,9 @@
         ENDDO
       ENDIF
       !
-      !DBSP
-      !if (ik==3) THEN
-      !  print*,'vkk(:, 2)',vkk(:, 2)
-      !  print*,'vkq(:, 2)',vkq(:, 2)
-      !ENDIF         
-      !
-      ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-      IF ((MINVAL(ABS(etf (:, ikk) - ef) ) < fsthick) .AND. &
-          (MINVAL(ABS(etf (:, ikq) - ef) ) < fsthick)) THEN
+      ! Here we must have ef, not ef0, to be consistent with ephwann_shuffle
+      IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
+          (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
         !
         fermicount = fermicount + 1
         DO imode = 1, nmodes
@@ -273,7 +270,7 @@
           !
           ! SP : We should avoid branching statements (if statements) in
           !      innerloops. Therefore we do it here.
-          inv_wq =  1.0/(two * wq)
+          inv_wq = 1.0d0 / (two * wq)
           ! the coupling from Gamma acoustic phonons is negligible
           IF (wq > eps_acustic) THEN
             g2_tmp = 1.0
@@ -281,17 +278,17 @@
             g2_tmp = 0.0
           ENDIF   
           !
-          DO ibnd = 1, ibndmax-ibndmin+1
+          DO ibnd = 1, nbnd
             !
             !  the fermi occupation for k
             ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
             IF (delta_approx) THEN
-              w0g1 = w0gauss( ekk / degaussw0, 0) / degaussw0
+              w0g1 = w0gauss(ekk / degaussw0, 0) / degaussw0
             ELSE
-              wgkk = wgauss(-ekk*inv_eptemp0, -99)
+              wgkk = wgauss(-ekk * inv_eptemp0, -99)
             ENDIF
             !
-            DO jbnd = 1, ibndmax-ibndmin+1
+            DO jbnd = 1, nbndfst
               !
               !  the fermi occupation for k+q
               ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
@@ -304,21 +301,21 @@
                  .OR. ABS(xqf(3, iq)) > eps8)) THEN              
                 ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
-                g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) 
+                g2 = REAL((epf17(jbnd, ibnd, imode, ik)**two) * inv_wq * g2_tmp) 
               ELSE
-                g2 = (ABS(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
+                g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
               ENDIF
               !
               IF (delta_approx) THEN 
                 !
-                w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
+                w0g2 = w0gauss(ekq / degaussw0, 0) / degaussw0
                 ! the expression below is positive-definite, but also an
                 ! approximation which neglects some fine features
                 weight = pi * wq * wkf (ikk) * w0g1 * w0g2
                 !
               ELSE
                 !
-                wgkq = wgauss( -ekq*inv_eptemp0, -99)
+                wgkq = wgauss(-ekq * inv_eptemp0, -99)
                 !
                 ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q + id]
                 ! This is the imaginary part of minus the phonon self-energy, sans
@@ -366,37 +363,37 @@
       tmp4 = 0.0_DP
       wq = wf (imode, iq)
       DO jmode = 1, nmodes
-        wq_tmp = wf (jmode, iq)
+        wq_tmp = wf(jmode, iq)
         IF (ABS(wq - wq_tmp) < eps6) THEN
           n = n + 1
           IF (wq_tmp > eps_acustic) THEN 
-            tmp  =  tmp  + gamma  ( jmode ) / pi / wq**two / dosef
-            tmp2 =  tmp2 + gamma_v( jmode ) / pi / wq**two / dosef
+            tmp  =  tmp  + gamma  (jmode) / pi / wq**two / dosef
+            tmp2 =  tmp2 + gamma_v(jmode) / pi / wq**two / dosef
           ENDIF
           tmp3 =  tmp3 + gamma(jmode)
           tmp4 =  tmp4 + gamma_v(jmode)
         ENDIF
       ENDDO ! jbnd
-      lambda_tmp(imode)   = tmp / float(n)
-      lambda_v_tmp(imode) = tmp2 / float(n)
-      gamma_tmp(imode)    = tmp3 / float(n)
-      gamma_v_tmp(imode)  = tmp4 / float(n)
+      lambda_tmp(imode)   = tmp / FLOAT(n)
+      lambda_v_tmp(imode) = tmp2 / FLOAT(n)
+      gamma_tmp(imode)    = tmp3 / FLOAT(n)
+      gamma_v_tmp(imode)  = tmp4 / FLOAT(n)
     ENDDO
-    lambda_all( :, iq, ismear )   = lambda_tmp(:)
-    lambda_v_all( :, iq, ismear ) = lambda_v_tmp(:)
-    gamma_all( :, iq, ismear )    = gamma_tmp(:)
-    gamma_v_all( :, iq, ismear )  = gamma_v_tmp(:)
-    lambda_tot = sum(lambda_all(:,iq,ismear))
-    lambda_tr_tot = sum(lambda_v_all(:,iq,ismear))
+    lambda_all(:, iq, ismear)   = lambda_tmp(:)
+    lambda_v_all(:, iq, ismear) = lambda_v_tmp(:)
+    gamma_all(:, iq, ismear)    = gamma_tmp(:)
+    gamma_v_all(:, iq, ismear)  = gamma_v_tmp(:)
+    lambda_tot = SUM(lambda_all(:, iq,ismear))
+    lambda_tr_tot = SUM(lambda_v_all(:, iq, ismear))
     !
-    WRITE(stdout,'(/5x,"ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:,iq), wqf(iq)
-    WRITE(stdout,'(5x,a)') repeat('-',67)
+    WRITE(stdout,'(/5x,"ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:, iq), wqf(iq)
+    WRITE(stdout,'(5x,a)') REPEAT('-',67)
     !
     DO imode = 1, nmodes
       ! 
       wq = wf (imode, iq)
-      WRITE(stdout, 102) imode, lambda_all(imode,iq,ismear),ryd2mev*gamma_all(imode,iq,ismear), ryd2mev*wq
-      WRITE(stdout, 104) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v_all(imode,iq,ismear), ryd2mev*wq
+      WRITE(stdout, 102) imode, lambda_all(imode, iq, ismear), ryd2mev * gamma_all(imode, iq, ismear), ryd2mev * wq
+      WRITE(stdout, 104) imode, lambda_v_all(imode, iq, ismear), ryd2mev * gamma_v_all(imode, iq, ismear), ryd2mev * wq
       !
     ENDDO
     !
@@ -404,9 +401,9 @@
     WRITE(stdout, 105) lambda_tr_tot
     ! 
     IF (.NOT. specfun_ph) THEN
-      WRITE(stdout,'(5x,a/)') repeat('-',67)
-      WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
-          'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2
+      WRITE(stdout, '(5x,a/)') REPEAT('-',67)
+      WRITE(stdout, '(/5x,a,i8,a,i8/)' ) &
+          'Number of (k,k+q) pairs on the Fermi surface: ', fermicount, ' out of ', nktotf
     ENDIF
     !
   ENDDO !smears
@@ -420,32 +417,57 @@
   !
   RETURN
   !
-END SUBROUTINE selfen_phon_q
-! 
-!-----------------------------------------------------------------------
-FUNCTION dos_ef_seq (ngauss, degauss, ef, et, wk, nks, nbnd)
+  !-----------------------------------------------------------------------
+  END SUBROUTINE selfen_phon_q
+  !-----------------------------------------------------------------------
+  ! 
+  !-----------------------------------------------------------------------
+  FUNCTION dos_ef_seq(ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE mp,        ONLY : mp_sum
+  USE mp,    ONLY : mp_sum
+  ! 
   IMPLICIT NONE
+  ! 
+  INTEGER, INTENT(in) :: ngauss
+  !! Number of smearing
+  INTEGER, INTENT(in) :: nbnd
+  !! Total number of bands considered
+  INTEGER, INTENT(in) :: nks
+  !!  Number of kpoints
+  REAL(KIND = DP), INTENT(in) :: et(nbnd, nks)
+  !! Eigenenergies
+  REAL(KIND = DP), INTENT(in) :: wk(nks)
+  !! K-point weights
+  REAL(KIND = DP), INTENT(in) :: ef
+  !! Fermi level  
+  REAL(KIND = DP), INTENT(in) :: degauss
+  !! Smearing value
+  ! 
   REAL(KIND = DP) :: dos_ef_seq
-  INTEGER :: ngauss, nbnd, nks
-  REAL(KIND = DP) :: et (nbnd, nks), wk (nks), ef, degauss
+  !! Output of the function
   !
-  INTEGER :: ik, ibnd
+  ! Local variables
+  INTEGER :: ik
+  !! K-point value
+  INTEGER :: ibnd
+  !! Band number
   REAL(KIND = DP), EXTERNAL :: w0gauss
+  !! Fermi-Dirac function
   !
-  !     Compute DOS at E_F (states per Ry per unit cell)
+  ! Compute DOS at E_F (states per Ry per unit cell)
   !
   dos_ef_seq = 0.0d0
   DO ik = 1, nks
-     DO ibnd = 1, nbnd
-        dos_ef_seq = dos_ef_seq + wk (ik) * w0gauss ( (et (ibnd, ik) - ef) &
-             / degauss, ngauss) / degauss
-     ENDDO
+    DO ibnd = 1, nbnd
+      dos_ef_seq = dos_ef_seq + wk(ik) * w0gauss((et(ibnd, ik) - ef) &
+           / degauss, ngauss) / degauss
+    ENDDO
   ENDDO
   !
   RETURN
-END FUNCTION dos_ef_seq
+  !-----------------------------------------------------------------------
+  END FUNCTION dos_ef_seq
+  !-----------------------------------------------------------------------
 

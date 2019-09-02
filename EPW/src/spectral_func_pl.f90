@@ -74,9 +74,9 @@
   !
   IF (iqq == 1) THEN
      !
-     WRITE(stdout,'(/5x,a)') repeat('=',67)
+     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
      WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
-     WRITE(stdout,'(5x,a/)') repeat('=',67)
+     WRITE(stdout,'(5x,a/)') REPEAT('=',67)
      !
      IF (fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
@@ -106,7 +106,7 @@
   !
   ! The total number of k points
   !
-  nksqtotf = nkqtotf/2 ! odd-even for k,k+q
+  nksqtotf = nktotf ! odd-even for k,k+q
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
@@ -182,12 +182,12 @@
         wgq = wgauss( -wq/eptemp, -99)
         wgq = wgq / ( one - two * wgq )
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           !  the energy of the electron at k (relative to Ef)
           ekk = etf (ibndmin-1+ibnd, ikk) - ef0
           !  
-          DO jbnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, nbndfst
             !
             !  the fermi occupation for k+q
             ekk1 = etf (ibndmin-1+jbnd, ikk) - ef0
@@ -302,13 +302,13 @@
       ikq = ikk + 1
       !
       WRITE(stdout,'(/5x,"ik = ",i5," coord.: ", 3f12.7)') ik, xkf_all (:,ikk)
-      WRITE(stdout,'(5x,a)') repeat('-',67)
+      WRITE(stdout,'(5x,a)') REPEAT('-',67)
       !
       DO iw = 1, nw_specfun
         !
         ww = wmin_specfun + dble (iw-1) * dw
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           !  the energy of the electron at k
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
@@ -322,7 +322,7 @@
         !
       ENDDO
       !
-      WRITE(stdout,'(5x,a/)') repeat('-',67)
+      WRITE(stdout,'(5x,a/)') REPEAT('-',67)
       !
     ENDDO
     !
@@ -353,7 +353,7 @@
     !
     IF (me_pool == 0) CLOSE(iospectral)
     !
-    DO ibnd = 1, ibndmax-ibndmin+1
+    DO ibnd = 1, nbndfst
       !
       DO ik = 1, nksqtotf
         !

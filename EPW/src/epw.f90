@@ -132,8 +132,8 @@
       !
       ! Read Wannier matrix from a previous run
       !
-      WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') repeat('-',67), '     Using ', &
-           TRIM(filukk) , ' from disk', repeat('-',67) 
+      WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
+           TRIM(filukk) , ' from disk', REPEAT('-',67) 
     ENDIF
     !
     IF (elph) THEN

@@ -35,11 +35,11 @@ MODULE  wannierEPW
                       ! iknum = nkstot for unpolarized and non-collinear
    CHARACTER(LEN=15)  :: wan_mode    ! running mode
    LOGICAL            :: logwann
-   LOGICAL            :: write_unk   ! Set to .true. to write the periodic part of the Bloch functions. Default is .false.
-   LOGICAL            :: reduce_unk  ! Set to .true. to reduce file-size (and resolution) of Bloch functions by a factor of 8.
-                                     ! Default is .false. (only relevant if write_unk=.true.)
-   LOGICAL            :: wvfn_formatted ! Set to .true. to write formatted wavefunctions.
-                                        ! Default is .false. (only relevant if write_unk=.true.)
+   LOGICAL            :: write_unk   ! Set to .TRUE. to write the periodic part of the Bloch functions. Default is .FALSE.
+   LOGICAL            :: reduce_unk  ! Set to .TRUE. to reduce file-size (and resolution) of Bloch functions by a factor of 8.
+                                     ! Default is .FALSE. (only relevant if write_unk=.TRUE.)
+   LOGICAL            :: wvfn_formatted ! Set to .TRUE. to write formatted wavefunctions.
+                                        ! Default is .FALSE. (only relevant if write_unk=.TRUE.)
    LOGICAL            :: write_amn      ! write A_mn(k) matrices to file (not used in library mode)
    LOGICAL            :: write_mmn      ! write M_mn(k,b) matrices to file
    LOGICAL            :: write_spn      ! write S matrices between Bloch states (non-collinear spin calculation only)
@@ -77,7 +77,7 @@ MODULE  wannierEPW
    COMPLEX(KIND = DP), ALLOCATABLE :: u_mat(:, :, :)   ! unitary matrix at each k-point u_mat(n_wannier,n_wannier,iknum)
    COMPLEX(KIND = DP), ALLOCATABLE :: u_mat_opt(:, :, :) ! unitary matrix for the optimal sub-space at each k-point
                                                 ! u_mat_opt(num_bands,n_wannier,iknum)
-   LOGICAL, ALLOCATABLE     :: lwindow(:, :) ! lwindow(iband,ik) is .true. if the band ibnd lies within the
+   LOGICAL, ALLOCATABLE     :: lwindow(:, :) ! lwindow(iband,ik) is .TRUE. if the band ibnd lies within the
                                             ! outer enery window ak k-point ik
                                             ! lwindow(num_bands,iknum)
    REAL(KIND = DP), ALLOCATABLE    :: wann_centers(:, :) ! centers of WFs (Cartesian coords., units of Angstrom)

@@ -48,9 +48,9 @@
   !
   ALLOCATE(kpt_latt(3, num_kpts) )
   !
-  WRITE(stdout, '(5x,a)') repeat("-",67)
+  WRITE(stdout, '(5x,a)') REPEAT("-",67)
   WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nk1, " x ", nk2, " x ", nk3 , " electronic grid"
-  WRITE(stdout, '(5x,a)') repeat("-",67)
+  WRITE(stdout, '(5x,a)') REPEAT("-",67)
   !
   kpt_latt = xk_cryst(:,1:num_kpts)
   CALL mp_bcast(kpt_latt, ionode_id, world_comm)
@@ -68,9 +68,9 @@
 !  CALL proj_w90
   DEALLOCATE(kpt_latt)
   !
-  WRITE(stdout, '(5x,a)') repeat("-",67)
+  WRITE(stdout, '(5x,a)') REPEAT("-",67)
   CALL print_clock( 'WANNIER' )
-  WRITE(stdout, '(5x,a)') repeat("-",67)
+  WRITE(stdout, '(5x,a)') REPEAT("-",67)
   !
   END SUBROUTINE wann_run
   !------------------------------------------------------------
@@ -117,11 +117,11 @@
     !  more input and options for interfacing with w90 can/will be added later
     WRITE (iuwinfil,'(a)') "begin projections"
     !
-    random = .true.
+    random = .TRUE.
     DO i = 1, nbndsub
        IF (proj(i) /= ' ') THEN
           WRITE (iuwinfil,*) TRIM(proj(i))
-          random = .false.
+          random = .FALSE.
        ENDIF
     ENDDO
     !

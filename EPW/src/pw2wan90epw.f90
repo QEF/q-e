@@ -40,8 +40,8 @@
   outdir = './'
   seedname2 = prefix
   spin_component = 'none'
-  wvfn_formatted = .false.
-  reduce_unk = .false.
+  wvfn_formatted = .FALSE.
+  reduce_unk = .FALSE.
   !
   !
   WRITE(stdout,*)
@@ -314,11 +314,11 @@
   ENDDO
 
   IF (meta_ionode) THEN
-    !postproc_setup = .true.
-    post_proc_flag = .true.
+    !postproc_setup = .TRUE.
+    post_proc_flag = .TRUE.
     CALL wannier_setup(seedname2, mp_grid, iknum,        &  ! input
            rlatt, glatt, kpt_latt, nbnd,                 &  ! input
-           nat, atsym, atcart, .false., noncolin,        &  ! input
+           nat, atsym, atcart, .FALSE., noncolin,        &  ! input
            nnb, kpb, g_kpb, num_bands, n_wannier,        &  ! output
            center_w, l_w, mr_w, r_w, zaxis,              &  ! output
            xaxis, alpha_w, exclude_bands)                   ! output
@@ -349,28 +349,28 @@
      n_proj = n_wannier
   !ENDIF
   !
-  WRITE (stdout,*)
-  WRITE (stdout,*) '    Initial Wannier projections'
-  WRITE (stdout,*)
+  WRITE(stdout, *)
+  WRITE(stdout, *) '    Initial Wannier projections'
+  WRITE(stdout, *)
   !
   DO iw = 1, n_proj
-     WRITE (stdout, '(5x,"(",3f10.5,") :  l = ",i3, " mr = ", i3)') center_w(:,iw), l_w(iw), mr_w(iw)
+    WRITE (stdout, '(5x,"(",3f10.5,") :  l = ",i3, " mr = ", i3)') center_w(:,iw), l_w(iw), mr_w(iw)
   ENDDO
   !
-  excluded_band(1:nbnd) = .false.
+  excluded_band(1:nbnd) = .FALSE.
   nexband = 0
   band_loop: DO ibnd = 1, nbnd
-     indexb = exclude_bands(ibnd)
-     IF (indexb>nbnd .OR. indexb<0) THEN
-        CALL errore('setup_nnkp',' wrong excluded band index ', 1)
-     ELSEIF (indexb == 0) THEN
-        EXIT band_loop
-     ELSE
-        nexband = nexband + 1
-        excluded_band(indexb) = .true.
-     ENDIF
+    indexb = exclude_bands(ibnd)
+    IF (indexb > nbnd .OR. indexb < 0) THEN
+      CALL errore('setup_nnkp',' wrong excluded band index ', 1)
+    ELSEIF (indexb == 0) THEN
+      EXIT band_loop
+    ELSE
+      nexband = nexband + 1
+      excluded_band(indexb) = .TRUE.
+    ENDIF
   ENDDO band_loop
-
+  !  
   WRITE(stdout,'(/,"      - Number of bands is (",i3,")")') num_bands
   WRITE(stdout,'("      - Number of total bands is (",i3,")")') nbnd
   WRITE(stdout,'("      - Number of excluded bands is (",i3,")")') nexband
@@ -381,18 +381,18 @@
   ENDIF
   !
   IF ((nbnd-nexband) /= num_bands ) &
-      CALL errore('setup_nnkp',' something wrong with num_bands',1)
+      CALL errore('setup_nnkp', ' something wrong with num_bands', 1)
   ! 
   ! Now we read the .nnkp file 
   !
   IF (meta_ionode) THEN  ! Read nnkp file on ionode only
-    INQUIRE(FILE = TRIM(seedname2)//".nnkp",exist=have_nnkp)
+    INQUIRE(FILE = TRIM(seedname2)//".nnkp", EXIST = have_nnkp)
     IF (.NOT.  have_nnkp) THEN
        CALL errore( 'pw2wannier90', 'Could not find the file '&
           &//TRIM(seedname2)//'.nnkp', 1 )
     ENDIF
     iun_nnkp = find_free_unit()
-    OPEN(UNIT = iun_nnkp, FILE = TRIM(seedname2)//".nnkp",FORM = 'formatted')
+    OPEN(UNIT = iun_nnkp, FILE = TRIM(seedname2)//".nnkp", FORM = 'formatted')
   ENDIF
   !
   IF (meta_ionode) THEN   ! read from ionode only
@@ -434,7 +434,7 @@
       IF (znorm < eps6) CALL errore('read_nnkp',' |zaxis| < eps ',1)
       coseno = ( xaxis(1,iw)*zaxis(1,iw) + xaxis(2,iw)*zaxis(2,iw) + &
                  xaxis(3,iw)*zaxis(3,iw )) / xnorm / znorm
-      IF (abs(coseno) > eps6) &
+      IF (ABS(coseno) > eps6) &
            CALL errore('read_nnkp',' xaxis and zaxis are not orthogonal !',1)
       IF (alpha_w(iw) < eps6) &
            CALL errore('read_nnkp',' zona value must be positive', 1)
@@ -484,7 +484,7 @@
   ALLOCATE(ig_(iknum, nnbx))
   ALLOCATE(ig_check(iknum, nnbx))
   ALLOCATE(zerophase(iknum, nnb))
-  zerophase = .false.
+  zerophase = .FALSE.
   !
   ! Read data about neighbours
   WRITE(stdout,*)
@@ -506,16 +506,16 @@
     DO ib = 1, nnb
       IF ((g_kpb(1,ik,ib) == 0) .AND.  &
            (g_kpb(2,ik,ib) == 0) .AND.  &
-           (g_kpb(3,ik,ib) == 0) ) zerophase(ik,ib) = .true.
+           (g_kpb(3,ik,ib) == 0) ) zerophase(ik,ib) = .TRUE.
       g_(:) = REAL( g_kpb(:,ik,ib) )
       CALL cryst_to_cart(1, g_, bg, 1)
       gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
       ig_(ik,ib) = 0
       ig = 1
       DO WHILE  (gg(ig) <= gg_ + eps6)
-        IF ((abs(g(1,ig)-g_(1)) < eps6) .AND.  &
-             (abs(g(2,ig)-g_(2)) < eps6) .AND.  &
-             (abs(g(3,ig)-g_(3)) < eps6) ) ig_(ik,ib) = ig
+        IF ((ABS(g(1,ig)-g_(1)) < eps6) .AND.  &
+             (ABS(g(2,ig)-g_(2)) < eps6) .AND.  &
+             (ABS(g(3,ig)-g_(3)) < eps6) ) ig_(ik,ib) = ig
         ig = ig + 1
       ENDDO
     ENDDO
@@ -542,12 +542,12 @@
          &//TRIM(seedname2)//'.nnkp', 1 )
     ENDIF
     READ(iun_nnkp,*) nexband
-    excluded_band(1:nbnd) = .false.
+    excluded_band(1:nbnd) = .FALSE.
     DO i = 1, nexband
       READ(iun_nnkp,*) indexb
       IF (indexb<1 .OR. indexb>nbnd) &
         CALL errore('pw2wannier90epw',' wrong excluded band index ', 1)
-      excluded_band(indexb) = .true.
+      excluded_band(indexb) = .TRUE.
     ENDDO
   ENDIF
   num_bands = nbnd - nexband
@@ -589,9 +589,9 @@
   READ(iun_nnkp,*,end=20) line1, line2
   IF(line1/='begin')  GOTO 10
   IF(line2/=keyword) GOTO 10
-  found = .true.
+  found = .TRUE.
   RETURN
-20 found = .false.
+20 found = .FALSE.
   REWIND(iun_nnkp)
   !
   END SUBROUTINE scan_file_to
@@ -668,7 +668,7 @@
     CALL wannier_run(seedname2, mp_grid, iknum,   &              ! input
                      rlatt, glatt, kpt_latt, num_bands,       &  ! input
                      n_wannier, nnb, nat, atsym,              &  ! input
-                     atcart, .false., m_mat, a_mat, eigval,   &  ! input
+                     atcart, .FALSE., m_mat, a_mat, eigval,   &  ! input
                      u_mat, u_mat_opt, lwindow, wann_centers, &  ! output
                      wann_spreads, spreads)                      ! output
   ENDIF
@@ -850,16 +850,16 @@
     IF (noncolin) THEN
       ! we do the projection as g(r)*a(r) and g(r)*b(r)
       DO iw = 1, n_proj
-        spin_z_pos = .false.; spin_z_neg = .false.
+        spin_z_pos = .FALSE.; spin_z_neg = .FALSE.
         ! detect if spin quantisation axis is along z
-        IF ((abs(spin_qaxis(1,iw)-0.0d0)<eps6) .AND. & 
-             (abs(spin_qaxis(2,iw)-0.0d0)<eps6) .AND. &
-             (abs(spin_qaxis(3,iw)-1.0d0)<eps6)) THEN
-          spin_z_pos=.true.
+        IF ((ABS(spin_qaxis(1,iw)-0.0d0)<eps6) .AND. & 
+             (ABS(spin_qaxis(2,iw)-0.0d0)<eps6) .AND. &
+             (ABS(spin_qaxis(3,iw)-1.0d0)<eps6)) THEN
+          spin_z_pos=.TRUE.
         ELSEIF (ABS(spin_qaxis(1,iw)-0.0d0)<eps6 .AND. & 
                  ABS(spin_qaxis(2,iw)-0.0d0)<eps6 .AND. &
                  ABS(spin_qaxis(3,iw)+1.0d0)<eps6) THEN
-          spin_z_neg = .true.
+          spin_z_neg = .TRUE.
         ENDIF
         IF (spin_z_pos .OR. spin_z_neg) THEN
           ibnd1 = 0
@@ -985,16 +985,16 @@
   !
   gf_spinor = czero
   DO iw = 1, n_proj
-    spin_z_pos = .false.; spin_z_neg = .false.
+    spin_z_pos = .FALSE.; spin_z_neg = .FALSE.
     ! detect if spin quantisation axis is along z
     IF ((abs(spin_qaxis(1,iw)-0.0d0)<eps6) .AND. & 
          (abs(spin_qaxis(2,iw)-0.0d0)<eps6) .AND. &
          (abs(spin_qaxis(3,iw)-1.0d0)<eps6)) THEN 
-      spin_z_pos = .true.
+      spin_z_pos = .TRUE.
     ELSEIF (ABS(spin_qaxis(1,iw)-0.0d0)<eps6 .AND. &
              ABS(spin_qaxis(2,iw)-0.0d0)<eps6 .AND. &
              ABS(spin_qaxis(3,iw)+1.0d0)<eps6) THEN
-      spin_z_neg=.true.
+      spin_z_neg=.TRUE.
     ENDIF
     IF (spin_z_pos .OR. spin_z_neg) THEN
       IF (spin_z_pos) THEN
@@ -1215,9 +1215,9 @@
       ENDDO
     ENDDO
     !
-    ALLOCATE(ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-    ALLOCATE(qb(nhm, nhm, ntyp, nbt) ) 
-    ALLOCATE(qq_so(nhm, nhm, 4, ntyp) )
+    ALLOCATE(ylm(nbt,lmaxq*lmaxq), qgm(nbt))
+    ALLOCATE(qb(nhm, nhm, ntyp, nbt)) 
+    ALLOCATE(qq_so(nhm, nhm, 4, ntyp))
     !
     CALL ylmr2(lmaxq*lmaxq, nbt, dxk, qg, ylm)
     qg(:) = SQRT(qg(:)) * tpiba
@@ -1440,7 +1440,7 @@
   !
   ! RM - write mmn to file
   IF (meta_ionode) THEN
-    write_mmn = .true.
+    write_mmn = .TRUE.
     IF (write_mmn) THEN
       ALLOCATE(m_mat_tmp(nbnd,nbnd,nnb,nkstot) )
       m_mat_tmp = czero
@@ -1565,7 +1565,7 @@
   any_uspp = ANY( upf(:)%tvanp )
   !
   IF (any_uspp ) CALL errore('pw2wan90epw',&
-    'dipole matrix calculation not implimented with USP - set vme=.true.',1)
+    'dipole matrix calculation not implimented with USP - set vme=.TRUE.',1)
   !
   ALLOCATE(dmec(3, nbnd, nbnd, nks))
   !
@@ -1694,7 +1694,7 @@
   !! Rotation matrix
   !
   LOGICAL, ALLOCATABLE :: lwindow_tmp(:, :)
-  !! .true. if the band ibnd lies within the outer window at k-point ik 
+  !! .TRUE. if the band ibnd lies within the outer window at k-point ik 
   !
   ! RM: Band-dimension of u_mat_opt and lwindow is num_bands while
   !     that of u_kc is nbnd to be compatible when reading umat in loadumat. 
@@ -1732,7 +1732,7 @@
     ALLOCATE(u_kc(nbnd, n_wannier, iknum))
     u_kc(:, :, :) = czero
     !
-    OPEN(unit=iunukk, file=filukk, form='formatted')
+    OPEN(UNIT = iunukk, FILE = filukk, FORM = 'formatted')
     ! u_kc(1:num_bands,:,:) = u_kc_tmp(1:num_bands,:,:)
     ! u_kc(num_bands+1:nbnd,:,:) = czero
     DO ik = 1, iknum
@@ -1754,7 +1754,7 @@
     !
     ! needs also lwindow when disentanglement is used
     ALLOCATE(lwindow_tmp(nbnd, iknum) )
-    lwindow_tmp(:, :) = .false.
+    lwindow_tmp(:, :) = .FALSE.
     !
     DO ik = 1, iknum
       ibnd1 = 0
@@ -2500,7 +2500,7 @@
 !  z(:) = z(:)/zz
   !
   coseno = (x(1)*z(1) + x(2)*z(2) + x(3)*z(3))/xx/zz
-  IF (abs(coseno) > eps8) CALL errore('set_u_matrix',' xaxis and zaxis are not orthogonal !',1)
+  IF (ABS(coseno) > eps8) CALL errore('set_u_matrix',' xaxis and zaxis are not orthogonal !',1)
   !
   y(1) = (z(2)*x(3) - x(2)*z(3))/xx/zz
   y(2) = (z(3)*x(1) - x(3)*z(1))/xx/zz
@@ -2655,7 +2655,7 @@ FUNCTION px(cost,phi)
   USE constants_epw, ONLY : fpi
   IMPLICIT NONE
   REAL(KIND = DP) ::px, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   px =  SQRT(3.d0/fpi) * sint * cos(phi)
   RETURN
 END FUNCTION px
@@ -2664,7 +2664,7 @@ FUNCTION py(cost,phi)
   USE constants_epw, ONLY : fpi
   IMPLICIT NONE
   REAL(KIND = DP) ::py, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   py =  SQRT(3.d0/fpi) * sint * sin(phi)
   RETURN
 END FUNCTION py
@@ -2682,7 +2682,7 @@ FUNCTION dxz(cost,phi)
   USE constants_epw, ONLY : fpi
   IMPLICIT NONE
   REAL(KIND = DP) ::dxz, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   dxz =  SQRT(15.d0/fpi) * sint*cost * cos(phi)
   RETURN
 END FUNCTION dxz
@@ -2691,7 +2691,7 @@ FUNCTION dyz(cost,phi)
   USE constants_epw, ONLY : fpi
   IMPLICIT NONE
   REAL(KIND = DP) ::dyz, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   dyz =  SQRT(15.d0/fpi) * sint*cost * sin(phi)
   RETURN
 END FUNCTION dyz
@@ -2700,7 +2700,7 @@ FUNCTION dx2my2(cost,phi)
   USE constants_epw, ONLY : fpi
   IMPLICIT NONE
   REAL(KIND = DP) ::dx2my2, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   dx2my2 =  SQRT(3.75d0/fpi) * sint*sint * cos(2.d0*phi)
   RETURN
 END FUNCTION dx2my2
@@ -2709,7 +2709,7 @@ FUNCTION dxy(cost,phi)
   USE constants_epw, ONLY : fpi
   IMPLICIT NONE
   REAL(KIND = DP) ::dxy, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   dxy =  SQRT(3.75d0/fpi) * sint*sint * sin(2.d0*phi)
   RETURN
 END FUNCTION dxy
@@ -2727,7 +2727,7 @@ FUNCTION fxz2(cost,phi)
   USE constants_epw, ONLY : pi
   IMPLICIT NONE
   REAL(KIND = DP) ::fxz2, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   fxz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * cos(phi)
   RETURN
 END FUNCTION fxz2
@@ -2736,7 +2736,7 @@ FUNCTION fyz2(cost,phi)
   USE constants_epw, ONLY : pi
   IMPLICIT NONE
   REAL(KIND = DP) ::fyz2, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   fyz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * sin(phi)
   RETURN
 END FUNCTION fyz2
@@ -2745,7 +2745,7 @@ FUNCTION fzx2my2(cost,phi)
   USE constants_epw, ONLY : pi
   IMPLICIT NONE
   REAL(KIND = DP) ::fzx2my2, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   fzx2my2 =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * cos(2.d0*phi)
   RETURN
 END FUNCTION fzx2my2
@@ -2754,7 +2754,7 @@ FUNCTION fxyz(cost,phi)
   USE constants_epw, ONLY : pi
   IMPLICIT NONE
   REAL(KIND = DP) ::fxyz, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   fxyz =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * sin(2.d0*phi)
   RETURN
 END FUNCTION fxyz
@@ -2763,7 +2763,7 @@ FUNCTION fxx2m3y2(cost,phi)
   USE constants_epw, ONLY : pi
   IMPLICIT NONE
   REAL(KIND = DP) ::fxx2m3y2, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   fxx2m3y2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * cos(3.d0*phi)
   RETURN
 END FUNCTION fxx2m3y2
@@ -2772,7 +2772,7 @@ FUNCTION fy3x2my2(cost,phi)
   USE constants_epw, ONLY : pi
   IMPLICIT NONE
   REAL(KIND = DP) ::fy3x2my2, cost, phi, sint
-  sint = SQRT(abs(1.d0 - cost*cost))
+  sint = SQRT(ABS(1.d0 - cost*cost))
   fy3x2my2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * sin(3.d0*phi)
   RETURN
 END FUNCTION fy3x2my2

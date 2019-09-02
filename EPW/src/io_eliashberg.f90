@@ -302,7 +302,7 @@
        DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
              IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
-                lgap = .true.
+                lgap = .TRUE.
                 ! DO iw = 1, nsw
                 DO iw = 1, nsw-1   ! FG: this change is to prevent segfault in ws(iw+1) and ADelta(*,*,iw+1)
                    IF (lgap .AND. iw < nqstep .AND. REAL(ADelta(ibnd,ik,iw)) > 0.d0 &
@@ -311,7 +311,7 @@
                       Agap(ibnd,ik,itemp) = (   ( REAL(ADelta(ibnd,ik,iw))   - ws(iw)   ) * ws(iw+1) &
                                               - ( REAL(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) * ws(iw) ) &
                                           / ( ( REAL(ADelta(ibnd,ik,iw)) - ws(iw) ) - ( REAL(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) )
-                      lgap = .false.
+                      lgap = .FALSE.
                    ENDIF
                    IF (iverbosity == 2) THEN
                       WRITE(iufilgap,'(6ES20.10)') ws(iw), ekfs(ibnd,ik)-ef0, &
@@ -342,14 +342,14 @@
        ENDIF
        OPEN(iufilgap, FILE = name1, FORM = 'formatted')
        WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
-       lgap = .true.
+       lgap = .TRUE.
        ! DO iw = 1, nsw
        DO iw = 1, nsw-1   ! this change is to prevent segfault in Delta(iw+1) and ws(iw+1)
           IF (lgap .AND. iw < nqstep .AND. REAL(Delta(iw)) > 0.d0 .AND. REAL(Delta(iw+1)) > 0.d0 .AND. &
                ( ws(iw) - REAL(Delta(iw)) )*( ws(iw+1) - REAL(Delta(iw+1)) ) < 0.d0) THEN
              gap(itemp) = ( ( REAL(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( REAL(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
                         / ( ( REAL(Delta(iw)) - ws(iw) ) - ( REAL(Delta(iw+1)) - ws(iw+1) ) )
-             lgap = .false.
+             lgap = .FALSE.
           ENDIF
           WRITE(iufilgap,'(5ES20.10)') ws(iw), REAL(Znorm(iw)), aimag(Znorm(iw)), &
                                        REAL(Delta(iw)), aimag(Delta(iw))
@@ -407,7 +407,7 @@
        DO ik = 1, nkfs
           DO ibnd = 1, nbndfs
              IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
-                lgap = .true.
+                lgap = .TRUE.
                 ! DO iw = 1, nsw
                 DO iw = 1, nsw-1   ! FG: this change is to prevent segfault in ws(iw+1) and ADelta(*,*,iw+1)
                    IF (lgap .AND. iw < nqstep .AND. REAL(ADelta(ibnd,ik,iw)) > 0.d0 &
@@ -416,7 +416,7 @@
                       Agap(ibnd,ik,itemp) = (   ( REAL(ADelta(ibnd,ik,iw))   - ws(iw)   ) * ws(iw+1) &
                                               - ( REAL(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) * ws(iw) ) &
                                           / ( ( REAL(ADelta(ibnd,ik,iw)) - ws(iw) ) - ( REAL(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) )
-                      lgap = .false.
+                      lgap = .FALSE.
                    ENDIF
                    IF (iverbosity == 2) THEN
                       WRITE(iufilgap,'(6ES20.10)') ws(iw), ekfs(ibnd,ik)-ef0, &
@@ -447,14 +447,14 @@
        ENDIF
        OPEN(iufilgap, FILE = name1, FORM = 'formatted')
        WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
-       lgap = .true.
+       lgap = .TRUE.
        ! DO iw = 1, nsw
        DO iw = 1, nsw-1   ! this change is to prevent segfault in Delta(iw+1) and ws(iw+1)
           IF (lgap .AND. iw < nqstep .AND. REAL(Delta(iw)) > 0.d0 .AND. REAL(Delta(iw+1)) > 0.d0 .AND. &
                ( ws(iw) - REAL(Delta(iw)) )*( ws(iw+1) - REAL(Delta(iw+1)) ) < 0.d0) THEN
              gap(itemp) = ( ( REAL(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( REAL(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
                         / ( ( REAL(Delta(iw)) - ws(iw) ) - ( REAL(Delta(iw+1)) - ws(iw+1) ) )
-             lgap = .false.
+             lgap = .FALSE.
           ENDIF
           WRITE(iufilgap,'(5ES20.10)') ws(iw), REAL(Znorm(iw)), aimag(Znorm(iw)), &
                                        REAL(Delta(iw)), aimag(Delta(iw))
@@ -836,7 +836,7 @@
 100   CALL errore('read_kqmap','opening file '//filikmap,ABS(ios))
       !
       ! nkf_mesh - Total number of k points
-      !          - These are irreducible k-points if mp_mesh_k = .true.
+      !          - These are irreducible k-points if mp_mesh_k = .TRUE.
       READ(iufilikmap) nkf_mesh
       !
       IF (.NOT. ALLOCATED(ixkf) ) ALLOCATE(ixkf(nkf_mesh))
@@ -893,9 +893,9 @@
                                 ABS(yy-NINT(yy) ) <= eps5 .AND. &
                                 ABS(zz-NINT(zz) ) <= eps5
                   IF (in_the_list) THEN
-                     i = mod( NINT( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                     j = mod( NINT( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                     k = mod( NINT( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                     i = MOD( NINT( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                     j = MOD( NINT( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                     k = MOD( NINT( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                      n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
                      IF (n > nk .AND. equiv_(n) == n) THEN
                         equiv_(n) = nk
@@ -912,9 +912,9 @@
                                    ABS(yy-NINT(yy) ) <= eps5 .AND. &
                                    ABS(zz-NINT(zz) ) <= eps5
                      IF (in_the_list) THEN
-                        i = mod( NINT( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                        j = mod( NINT( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                        k = mod( NINT( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                        i = MOD( NINT( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                        j = MOD( NINT( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                        k = MOD( NINT( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                         n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
                         IF (n > nk .AND. equiv_(n) == n) THEN
                            equiv_(n) = nk
@@ -966,7 +966,7 @@
     !
     ! find the index of k+sign*q on the fine k-mesh
     ! nkfs - total nr. of k-points within the Fermi shell (fine mesh)
-    !      - these are irreducible k-points if mp_mesh_k=.true.
+    !      - these are irreducible k-points if mp_mesh_k=.TRUE.
     ! nqtotf - total nr of q-points on the fine mesh
     !
     DO ik = lower_bnd, upper_bnd
@@ -1316,7 +1316,7 @@
     dosef = dosef / two
     !
     ! find the bounds of k-dependent arrays in the parallel case
-    nkftot = nkqtotf / 2 
+    nkftot = nktotf 
     CALL fkbounds( nkftot, lower_bnd, upper_bnd )
     !
     IF (iq == 1) THEN
@@ -1351,13 +1351,13 @@
         IF (nks /= nkfs ) CALL errore('write_ephmat', &
           'nks should be equal to nr. of irreducible k-points within the Fermi shell on the fine mesh',1)
         !WRITE(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nks
-        !WRITE(iufilegnv,'(i7,5ES20.10)') ibndmax-ibndmin+1, ef, ef0, dosef, degaussw, fsthick
+        !WRITE(iufilegnv,'(i7,5ES20.10)') nbndfst, ef, ef0, dosef, degaussw, fsthick
         WRITE(iufilegnv) nkftot, nkf1, nkf2, nkf3, nks
-        WRITE(iufilegnv) ibndmax-ibndmin+1, ef, ef0, dosef, degaussw, fsthick
+        WRITE(iufilegnv) nbndfst, ef, ef0, dosef, degaussw, fsthick
         DO ik = 1, nks
            !WRITE(iufilegnv,'(4f15.9)') wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
            WRITE(iufilegnv) wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
-           DO ibnd = 1, ibndmax-ibndmin+1
+           DO ibnd = 1, nbndfst
               !WRITE(iufilegnv,'(ES20.10)') ekfs(ibnd,ik)
               WRITE(iufilegnv) ekfs(ibnd,ik)
            ENDDO
@@ -1411,9 +1411,9 @@
             wq = wf(imode, iq)
             inv_wq =  1.0/(two * wq) 
             !
-            DO ibnd = 1, ibndmax-ibndmin+1
+            DO ibnd = 1, nbndfst
               IF (ABS(ekfs(ibnd,ixkf(lower_bnd+ik-1)) - ef0 ) < fsthick) THEN
-                DO jbnd = 1, ibndmax-ibndmin+1
+                DO jbnd = 1, nbndfst
                   IF (ABS(ekfs(jbnd,ixkqf(ixkf(lower_bnd+ik-1),iq)) - ef0 ) < fsthick) THEN
                     !
                     ! here we take into account the zero-point SQRT(hbar/2M\omega)
@@ -1550,9 +1550,9 @@
        CALL mp_barrier(inter_pool_comm)
        !
        IF (mp_mesh_k) THEN
-          WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr irreducible k-points within the Fermi shell = ', nks, ' out of ', nkqtotf / 2
+          WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr irreducible k-points within the Fermi shell = ', nks, ' out of ', nktotf
        ELSE
-          WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr k-points within the Fermi shell = ', nks, ' out of ', nkqtotf / 2
+          WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr k-points within the Fermi shell = ', nks, ' out of ', nktotf
        ENDIF
     ENDIF ! iq
     !
@@ -1592,7 +1592,7 @@
     !! k-point index
     INTEGER :: nkf_mesh
     !! Total number of k points
-    !! These are irreducible k-points if mp_mesh_k = .true.
+    !! These are irreducible k-points if mp_mesh_k = .TRUE.
     INTEGER :: lower_bnd
     !! Lower bounds index after k or q paral
     INTEGER :: upper_bnd
@@ -1610,8 +1610,8 @@
     CHARACTER(LEN = 256) :: filikmap
     !! Name of the file
     !
-    nkf_mesh = nkqtotf / 2 
-    nbndfs = ibndmax - ibndmin + 1
+    nkf_mesh = nktotf 
+    nbndfs = nbndfst
     !
 #if defined(__MPI)
     IF (.NOT. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
@@ -1862,9 +1862,9 @@
                             ABS(yy-NINT(yy) ) <= eps5 .AND. &
                             ABS(zz-NINT(zz) ) <= eps5
               IF (in_the_list) THEN
-                i = mod( NINT( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                j = mod( NINT( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                k = mod( NINT( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                i = MOD( NINT( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                j = MOD( NINT( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                k = MOD( NINT( xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                 n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
                 IF (n > nk .AND. equiv_(n) == n) THEN
                    equiv_(n) = nk
@@ -1881,9 +1881,9 @@
                               ABS(yy-NINT(yy) ) <= eps5 .AND. &
                               ABS(zz-NINT(zz) ) <= eps5
                 IF (in_the_list) THEN
-                  i = mod( NINT( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
-                  j = mod( NINT( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
-                  k = mod( NINT( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
+                  i = MOD( NINT( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
+                  j = MOD( NINT( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
+                  k = MOD( NINT( -xkr(3)*nkf3 + 2*nkf3), nkf3 ) + 1
                   n = (k-1) + (j-1)*nkf3 + (i-1)*nkf2*nkf3 + 1
                   IF (n > nk .AND. equiv_(n) == n) THEN
                     equiv_(n) = nk

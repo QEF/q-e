@@ -100,7 +100,7 @@
   !
   INTEGER, ALLOCATABLE :: ixkff(:), ixkf(:), ixkqf(:, :), ixqfs(:, :), nqfs(:)
   !
-  ! nkf = nr of irreducible k-points on the fine grid, if mp_mesh_k = .true.
+  ! nkf = nr of irreducible k-points on the fine grid, if mp_mesh_k = .TRUE.
   ! nkf = total nr of k-points on the fine grid,       otherwise
   ! ixkff : index of k-point on the full k-grid ixkff(nkftot)
   ! ixkf : index of k-point on the irreducible k-grid within the Fermi shell ixkf(nkf)

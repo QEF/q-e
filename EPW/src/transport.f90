@@ -112,15 +112,15 @@
     !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
     REAL(KIND = DP) :: trans_prob
     !! Transition probability function
-    REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkk(3,nbndfst)
     !! Electronic velocity $$v_{n\mathbf{k}}$$
-    REAL(KIND = DP) :: vkq(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkq(3,nbndfst)
     !! Electronic velocity $$v_{m\mathbf{k+q}}$$
-    REAL(KIND = DP) :: vel_factor(ibndmax-ibndmin+1,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vel_factor(nbndfst,nbndfst)
     !! Velocity factor  $$ 1 - \frac{(v_{nk} \cdot v_{mk+q})}{ |v_{nk}|^2} $$
-    REAL(KIND = DP) :: inv_tau_tmp(ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: inv_tau_tmp(nbndfst)
     !! Temporary array to store the scattering rates
-    REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: zi_tmp(nbndfst)
     !! Temporary array to store the zi
     REAL(KIND = DP), ALLOCATABLE :: inv_tau_all_new (:, :, :)
     !! New scattering rates to be merged
@@ -142,9 +142,9 @@
     ! 
     IF (iqq == 1) THEN
       !
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') REPEAT('=',67)
       WRITE(stdout,'(5x,"Scattering rate")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(5x,a/)') REPEAT('=',67)
       !
       IF (fsthick < 1.d3 ) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
@@ -153,7 +153,7 @@
                 (ef+fsthick) * ryd2ev, ' eV will be included'
         WRITE(stdout,'(5x,a/)')
       !
-      !IF (.NOT. ALLOCATED (inv_tau_all) ) ALLOCATE(inv_tau_all(nstemp,ibndmax-ibndmin+1,nkqtotf/2) )
+      !IF (.NOT. ALLOCATED (inv_tau_all) ) ALLOCATE(inv_tau_all(nstemp,nbndfst,nktotf) )
       !inv_tau_all(:, :, :) = zero
       !
     ENDIF
@@ -182,12 +182,12 @@
             !vel_factor = 1 - (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
             vel_factor(:, :) = zero
             IF (vme) THEN 
-              DO ibnd = 1, ibndmax-ibndmin+1
+              DO ibnd = 1, nbndfst
                 !
                 ! vkk(3,nbnd) - velocity for k
                 vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                 !
-                DO jbnd = 1, ibndmax-ibndmin+1
+                DO jbnd = 1, nbndfst
                   !
                   ! vkq(3,nbnd) - velocity for k + q
                   vkq(:,jbnd) = REAL (vmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
@@ -198,12 +198,12 @@
                 ENDDO
               ENDDO
             ELSE
-              DO ibnd = 1, ibndmax-ibndmin+1
+              DO ibnd = 1, nbndfst
                 !
                 ! vkk(3,nbnd) - velocity for k
                 vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                 !
-                DO jbnd = 1, ibndmax-ibndmin+1
+                DO jbnd = 1, nbndfst
                   ! 
                   ! vkq(3,nbnd) - velocity for k + q
                   vkq(:,jbnd) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
@@ -243,12 +243,12 @@
                 inv_wq = 0.0
               ENDIF
               !
-              DO ibnd = 1, ibndmax-ibndmin+1
+              DO ibnd = 1, nbndfst
                 !
                 !  energy at k (relative to Ef)
                 ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
                 !
-                DO jbnd = 1, ibndmax-ibndmin+1
+                DO jbnd = 1, nbndfst
                   !
                   !  energy and fermi occupation at k+q
                   ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
@@ -324,12 +324,12 @@
               ! This is used to compute both the electron and hole mobility at the same time.  
               IF (ABS(efcb(itemp)) > eps) THEN
                 ! 
-                DO ibnd = 1, ibndmax-ibndmin+1
+                DO ibnd = 1, nbndfst
                   !
                   !  energy at k (relative to Ef)
                   ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
                   !
-                  DO jbnd = 1, ibndmax-ibndmin+1
+                  DO jbnd = 1, nbndfst
                     !
                     !  energy and fermi occupation at k+q
                     ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
@@ -412,9 +412,9 @@
           ENDIF
           ! 
           IF (ABS(efcb(1)) > eps) THEN
-            CALL tau_write(iqq,totq,nkqtotf/2,.TRUE.)
+            CALL tau_write(iqq,totq,nktotf,.TRUE.)
           ELSE
-            CALL tau_write(iqq,totq,nkqtotf/2,.FALSE.)
+            CALL tau_write(iqq,totq,nktotf,.FALSE.)
           ENDIF
           ! 
           ! Now show intermediate mobility with that amount of q-points
@@ -460,10 +460,10 @@
         ! In case we read another q-file, merge the scattering here
         IF (restart_filq /= '') THEN
           ! 
-          ALLOCATE(inv_tau_all_new(nstemp, ibndmax-ibndmin+1, nkqtotf/2))
+          ALLOCATE(inv_tau_all_new(nstemp, nbndfst, nktotf))
           inv_tau_all_new(:, :, :) = zero
           ! 
-          CALL merge_read( nkqtotf/2, nqtotf_new, inv_tau_all_new ) 
+          CALL merge_read( nktotf, nqtotf_new, inv_tau_all_new ) 
           ! 
           inv_tau_all(:, :, :) = ( inv_tau_all(:, :, :) * totq &
                               + inv_tau_all_new(:, :, :) * nqtotf_new ) / (totq+nqtotf_new)
@@ -472,7 +472,7 @@
           WRITE(stdout, '(a)' ) '     '
           WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ',totq+nqtotf_new,' q-points'
           ! 
-          CALL tau_write(iqq+nqtotf_new,totq+nqtotf_new,nkqtotf/2, .FALSE.)
+          CALL tau_write(iqq+nqtotf_new,totq+nqtotf_new,nktotf, .FALSE.)
           WRITE(stdout, '(a)' ) '     Write to restart file the sum'
           WRITE(stdout, '(a)' ) '     '
           !
@@ -481,16 +481,16 @@
         ! Average over degenerate eigenstates:
         WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')
         ! 
-        DO ik = 1, nkqtotf/2
+        DO ik = 1, nktotf
           ikk = 2 * ik - 1
           ikq = ikk + 1
           ! 
-          DO ibnd = 1, ibndmax-ibndmin+1
+          DO ibnd = 1, nbndfst
             ekk = etf_all (ibndmin-1+ibnd, ikk)
             n = 0
             tmp = 0.0_DP
             tmp2 = 0.0_DP
-            DO jbnd = 1, ibndmax-ibndmin+1
+            DO jbnd = 1, nbndfst
               ekk2 = etf_all (ibndmin-1+jbnd, ikk)
               IF (ABS(ekk2-ekk) < eps6) THEN
                 n = n + 1
@@ -499,8 +499,8 @@
               ENDIF
               ! 
             ENDDO ! jbnd
-            inv_tau_tmp(ibnd) = tmp / float(n)
-            zi_tmp(ibnd) = tmp2 / float(n)
+            inv_tau_tmp(ibnd) = tmp / FLOAT(n)
+            zi_tmp(ibnd) = tmp2 / FLOAT(n)
             !
           ENDDO ! ibnd
           inv_tau_all (itemp,:,ik) = inv_tau_tmp(:)
@@ -512,16 +512,16 @@
           ! Average over degenerate eigenstates:
           WRITE(stdout,'(5x,"Average over degenerate eigenstates in CB is performed")')
           ! 
-          DO ik = 1, nkqtotf/2
+          DO ik = 1, nktotf
             ikk = 2 * ik - 1 
             ikq = ikk + 1 
             ! 
-            DO ibnd = 1, ibndmax-ibndmin+1
+            DO ibnd = 1, nbndfst
               ekk = etf_all (ibndmin-1+ibnd, ikk)
               n = 0 
               tmp = 0.0_DP
               tmp2 = 0.0_DP
-              DO jbnd = 1, ibndmax-ibndmin+1
+              DO jbnd = 1, nbndfst
                 ekk2 = etf_all (ibndmin-1+jbnd, ikk)
                 IF (ABS(ekk2-ekk) < eps6) THEN
                   n = n + 1 
@@ -530,8 +530,8 @@
                 ENDIF
                 ! 
               ENDDO ! jbnd
-              inv_tau_tmp(ibnd) = tmp / float(n)
-              zi_tmp(ibnd) = tmp2 / float(n)
+              inv_tau_tmp(ibnd) = tmp / FLOAT(n)
+              zi_tmp(ibnd) = tmp2 / FLOAT(n)
               !
             ENDDO ! ibnd
             inv_tau_allcb (itemp,:,ik) = inv_tau_tmp(:)
@@ -554,9 +554,9 @@
         WRITE(stdout, '(a)' ) '     Creation of the final restart point'
         ! 
         IF (ABS(efcb(1)) > eps) THEN
-          CALL tau_write(iqq,totq,nkqtotf/2,.TRUE.)
+          CALL tau_write(iqq,totq,nktotf,.TRUE.)
         ELSE
-          CALL tau_write(iqq,totq,nkqtotf/2,.FALSE.)
+          CALL tau_write(iqq,totq,nktotf,.FALSE.)
         ENDIF
         ! 
       ENDIF ! restart
@@ -687,7 +687,7 @@
     !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
     REAL(KIND = DP) :: mobility_zz
     !! Mobility along the zz axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkk(3,nbndfst)
     !! Electron velocity vector for a band. 
     REAL(KIND = DP) :: Sigma(9,nstemp)
     !! Conductivity matrix in vector form
@@ -776,28 +776,28 @@
           dmef_all = dmef
         ENDIF
 #endif     
-        ALLOCATE(tdf_sigma_m(3, 3, ibndmax-ibndmin+1, nkqtotf))
+        ALLOCATE(tdf_sigma_m(3, 3, nbndfst, nkqtotf))
         tdf_sigma_m(:, :, :, :) = zero 
         ! 
         ! In this case, the sum over q has already been done. It should therefore be ok 
         ! to do the mobility in sequential. Each cpu does the same thing below
-        ALLOCATE(etf_all(nbndsub, nkqtotf/2))
+        ALLOCATE(etf_all(nbndsub, nktotf))
         !
         CALL scattering_read(etemp, ef0(itemp), etf_all, inv_tau_all)
         ! 
         ! This is hole mobility. ----------------------------------------------------
         IF (int_mob .OR. (ncarrier < -1E5)) THEN
           IF (itemp == 1) THEN
-            WRITE(stdout,'(/5x,a)') repeat('=',67)
+            WRITE(stdout,'(/5x,a)') REPEAT('=',67)
             WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
-            WRITE(stdout,'(5x,a/)') repeat('=',67)
+            WRITE(stdout,'(5x,a/)') REPEAT('=',67)
           ENDIF
           !      
-          DO ik = 1, nkqtotf/2 
+          DO ik = 1, nktotf 
             ikk=2 * ik - 1
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
             IF (minval ( ABS(etf_all (:, ik) - ef ) ) < fsthick) THEN
-              DO ibnd = 1, ibndmax-ibndmin+1
+              DO ibnd = 1, nbndfst
                 ! This selects only valence bands for hole conduction
                 IF (etf_all (ibndmin-1+ibnd, ik) < ef0(itemp) ) THEN
                   IF (vme) THEN
@@ -827,9 +827,9 @@
           ! 
           carrier_density = 0.0
           ! 
-          DO ik = 1, nkqtotf/2
+          DO ik = 1, nktotf
             ikk = 2 * ik - 1
-            DO ibnd = 1, ibndmax-ibndmin+1
+            DO ibnd = 1, nbndfst
               ! This selects only valence bands for hole conduction
               IF (etf_all (ibndmin-1+ibnd, ik) < ef0(itemp) ) THEN
                 !  energy at k (relative to Ef)
@@ -861,18 +861,18 @@
         ! This is electron mobility. ----------------------------------------------------
         IF (int_mob .OR. (ncarrier > 1E5)) THEN
           IF (itemp == 1) THEN
-            WRITE(stdout,'(/5x,a)') repeat('=',67)
+            WRITE(stdout,'(/5x,a)') REPEAT('=',67)
             WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Electron density [cm^-3]  Electron mobility [cm^2/Vs]")')
-            WRITE(stdout,'(5x,a/)') repeat('=',67)
+            WRITE(stdout,'(5x,a/)') REPEAT('=',67)
           ENDIF
           !      
           tdf_sigma_m(:, :, :, :) = zero
           !
-          DO ik = 1, nkqtotf/2
+          DO ik = 1, nktotf
             ikk = 2 * ik - 1
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
             IF (minval ( ABS(etf_all (:, ik) - ef ) ) < fsthick) THEN
-              DO ibnd = 1, ibndmax-ibndmin+1
+              DO ibnd = 1, nbndfst
                 ! This selects only conduction bands for electron conduction
                 IF (etf_all (ibndmin-1+ibnd, ik) > ef0(itemp) ) THEN
                   IF (vme) THEN 
@@ -902,9 +902,9 @@
           ! 
           carrier_density = 0.0
           ! 
-          DO ik = 1, nkqtotf/2
+          DO ik = 1, nktotf
             ikk = 2 * ik - 1
-            DO ibnd = 1, ibndmax-ibndmin+1
+            DO ibnd = 1, nbndfst
               ! This selects only conduction bands for electron conduction
               IF (etf_all (ibndmin-1+ibnd, ik) > ef0(itemp) ) THEN
                 !  energy at k (relative to Ef)
@@ -952,7 +952,7 @@
           BZtoIBZ(:) = 0
           s_BZtoIBZ(:, :, :) = 0
           ! What we get from this call is BZtoIBZ
-          CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
+          CALL kpoint_grid_epw ( nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1*nkf2*nkf3, &
                      nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
           ! 
           IF (iterative_bte) THEN
@@ -980,7 +980,7 @@
       ! the case for doped mobilities.
       ! 
       ! find the bounds of k-dependent arrays in the parallel case in each pool
-      CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
+      CALL fkbounds( nktotf, lower_bnd, upper_bnd )
       ! 
       IF (int_mob .OR. (ncarrier < -1E5)) THEN
         ! 
@@ -1013,7 +1013,7 @@
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
             IF (minval ( ABS(etf (:, ikk) - ef) ) < fsthick) THEN
               !
-              DO ibnd = 1, ibndmax-ibndmin+1
+              DO ibnd = 1, nbndfst
                 !
                 ! This selects only valence bands for hole conduction
                 IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp)) THEN 
@@ -1134,9 +1134,9 @@
         !
         conv_factor1 = electron_SI / ( hbar * bohr2ang * Ang2m )
         !
-        WRITE(stdout,'(/5x,a)') repeat('=',67)
+        WRITE(stdout,'(/5x,a)') REPEAT('=',67)
         WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
-        WRITE(stdout,'(5x,a/)') repeat('=',67)
+        WRITE(stdout,'(5x,a/)') REPEAT('=',67)
         ! 
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)
@@ -1149,7 +1149,7 @@
           ! 
           DO ik = 1, nkf
             ikk = 2 * ik - 1
-            DO ibnd = 1, ibndmax-ibndmin+1
+            DO ibnd = 1, nbndfst
               ! This selects only valence bands for hole conduction
               IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp)) THEN
                 !  energy at k (relative to Ef)
@@ -1241,7 +1241,7 @@
             ikk = 2 * ik - 1
             IF (minval ( ABS(etf (:, ikk) - ef) ) < fsthick) THEN
               IF (ABS(efcb(itemp)) < eps) THEN  
-                DO ibnd = 1, ibndmax-ibndmin+1
+                DO ibnd = 1, nbndfst
                   ! This selects only cond bands for electron conduction
                   IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp)) THEN
                     ! vkk(3,nbnd) - velocity for k
@@ -1324,7 +1324,7 @@
                   ENDIF
                 ENDDO 
               ELSE ! In this case we have 2 Fermi levels
-                DO ibnd = 1, ibndmax-ibndmin+1
+                DO ibnd = 1, nbndfst
                   ! This selects only cond bands for hole conduction
                   IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp)) THEN
                     ! 
@@ -1443,9 +1443,9 @@
         ENDIF
         !
         conv_factor1 = electron_SI / ( hbar * bohr2ang * Ang2m )
-        WRITE(stdout,'(/5x,a)') repeat('=',67)
+        WRITE(stdout,'(/5x,a)') REPEAT('=',67)
         WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
-        WRITE(stdout,'(5x,a/)') repeat('=',67)
+        WRITE(stdout,'(5x,a/)') REPEAT('=',67)
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)
           IF (mpime == meta_ionode_id) THEN
@@ -1461,7 +1461,7 @@
           carrier_density = 0.0
           ! 
           DO ik = 1, nkf
-            DO ibnd = 1, ibndmax-ibndmin+1
+            DO ibnd = 1, nbndfst
               ikk = 2 * ik - 1
               ! This selects only conduction bands for electron conduction
               IF (ABS(efcb(itemp)) < eps) THEN 

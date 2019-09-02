@@ -7,7 +7,7 @@
   ! or http://www.gnu.org/copyleft/gpl.txt .
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE rgd_blk (nq1, nq2, nq3, nat, dyn, q, tau, epsil, zeu, signe)
+  SUBROUTINE rgd_blk(nq1, nq2, nq3, nat, dyn, q, tau, epsil, zeu, signe)
   !-----------------------------------------------------------------------
   !! This is adapted from QE PH/rigid.f90 
   !!
@@ -95,7 +95,7 @@
   ! very rough estimate: geg/4/alph > gmax = 14 
   ! (exp (-14) = 10^-6)
   !
-  IF (ABS(abs(signe) - 1.0) > eps6 ) &
+  IF (ABS(ABS(signe) - 1.0) > eps6 ) &
        CALL errore('rgd_blk',' wrong value for signe ',1)
   gmax = 14.d0
   alph = 1.0d0
@@ -131,9 +131,9 @@
 !  DO m1 = -nrx1, nrx1
 !    DO m2 = -nrx2, nrx2
 !      DO m3 = -nrx3, nrx3
-  DO m1=-nq1, nq1
-    DO m2=-nq2, nq2
-      DO m3=-nq3, nq3
+  DO m1 = -nq1, nq1
+    DO m2 = -nq2, nq2
+      DO m3 = -nq3, nq3
         !
         g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1,3)
         g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2,3)
@@ -205,7 +205,7 @@
   !-------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw (nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
+  SUBROUTINE rgd_blk_epw(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -297,8 +297,7 @@
   COMPLEX(KIND = DP) :: epmatl(nmodes)
   !! Long-range part of the el-ph matrix elements
   !
-  IF(ABS(ABS(signe) - 1.0) > eps12) &
-       CALL errore('rgd_blk_epw','Erong value for signe ',1)
+  IF(ABS(ABS(signe) - 1.0) > eps12) CALL errore('rgd_blk_epw', 'Erong value for signe ', 1)
   !
   gmax = 14.d0
   alph = 1.0d0
@@ -326,10 +325,9 @@
   !
   epmatl(:) = czero   
   !DO m1 = -nrx1, nrx1
-  ! TO be test
-  DO m1=-nq1, nq1
-    DO m2=-nq2, nq2
-      DO m3=-nq3, nq3
+  DO m1 = -nq1, nq1
+    DO m2 = -nq2, nq2
+      DO m3 = -nq3, nq3
       !
       g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
       g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
@@ -346,7 +344,7 @@
         !
         DO na = 1, nat
           arg = - twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
-          facq = facqd * CMPLX(COS(arg), SIN(arg), DP)
+          facq = facqd * CMPLX(COS(arg), SIN(arg), KIND = DP)
           DO ipol = 1, 3
             zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
             !
@@ -378,7 +376,7 @@
   !-------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw_fine (nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
+  SUBROUTINE rgd_blk_epw_fine(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -473,8 +471,7 @@
   COMPLEX(KIND = DP) :: epmatl(nbndsub, nbndsub, nmodes)
   !! Long-range part of the matrix element
   !
-  IF (ABS(ABS(signe) - 1.0) > eps12) &
-       CALL errore ('rgd_blk_epw_fine','Wrong value for signe ',1)
+  IF (ABS(ABS(signe) - 1.0) > eps12) CALL errore ('rgd_blk_epw_fine', 'Wrong value for signe ', 1)
   !
   gmax = 14.d0
   alph = 1.0d0
@@ -483,9 +480,9 @@
   !
   epmatl(:, :, :) = czero   
   !
-  DO m1=-nq1, nq1
-    DO m2=-nq2, nq2
-      DO m3=-nq3, nq3
+  DO m1 = -nq1, nq1
+    DO m2 = -nq2, nq2
+      DO m3 = -nq3, nq3
       !
       g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
       g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
@@ -502,7 +499,7 @@
         !
         DO na = 1, nat
           arg = -twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
-          facq = facqd * CMPLX(COS(arg), SIN(arg), DP)
+          facq = facqd * CMPLX(COS(arg), SIN(arg), kind=DP)
           DO ipol = 1, 3
             zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
             !
@@ -536,7 +533,7 @@
   !-----------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------------
-  SUBROUTINE rpa_epsilon (q, w, nmodes, epsil, eps_rpa)
+  SUBROUTINE rpa_epsilon(q, w, nmodes, epsil, eps_rpa)
   !-----------------------------------------------------------------------------
   !
   !  Compute the Lindhard dielectric function for the homogeneous electron gas
@@ -556,7 +553,7 @@
   !! q vector (in crystal coordinates
   REAL (KIND = DP), INTENT(inout) :: w(nmodes)
   !! phonon frequencies associated with q
-  REAL (KIND = DP), INTENT(in) :: epsil(3,3) 
+  REAL (KIND = DP), INTENT(in) :: epsil(3, 3) 
   !! dielectric constant tensor
   !
   COMPLEX(KIND = DP), INTENT(out) :: eps_rpa(nmodes) 
@@ -588,7 +585,7 @@
   COMPLEX (KIND = DP) :: u
   !! Complex frequency argument
   ! 
-  LOGICAL, SAVE :: first_call=.true.
+  LOGICAL, SAVE :: first_call=.TRUE.
   !! Logical for first_call the routine 
   !
   INTERFACE
@@ -605,7 +602,7 @@
   !
   n = nel / omega
   EF = fermi_diff / ha2ev
-  kF = (3.d0 * pi**2 * n)**(1.d0/3.d0)
+  kF = (3.d0 * pi**2 * n)**(1.d0 / 3.d0)
   eps_ave = (epsil(1, 1) + epsil(2, 2) + epsil(3, 3)) / 3.d0
   rs  = (3.d0 / ( 4.d0 * pi * n ) )**(1.d0/3.d0) * meff / eps_ave
   w = w * 0.5d0 / EF / 4.d0 !Ha&internal units for Hedin's formula
@@ -613,12 +610,12 @@
   eta = smear_rpa / ha2ev / EF / 4.d0
   !
   IF (first_call) THEN
-    first_call = .false.
+    first_call = .FALSE.
     WRITE(stdout,'(5x,"Calculation of Lindhard screening: use with care")')
     WRITE(stdout,'(5x,"Warning: current implementation for doubly degenerate band, one valley")')
     !WRITE(stdout,'(a,f12.8,a,f12.8)') ' omega(nmodes) (eV) ', w(nmodes)*ha2ev*EF*4.d0,' eta ',eta*EF*4.d0*ha2ev
     WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'Nel = ', nel, ', n = ', n, ' au^-3, meff = ', meff
-    WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'EF = ', EF*ha2ev, ' eV, kF = ', kF, ' au^-1, rs = ', rs
+    WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'EF = ', EF * ha2ev, ' eV, kF = ', kF, ' au^-1, rs = ', rs
     IF (eps_ave < eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
   ENDIF
   IF (eps_ave < eps5) eps_ave = 1.d0
@@ -662,8 +659,8 @@
   !! Argument of the Lindhard function
   !
   IF (ABS(z - 1.d0) > eps10) THEN
-    IF (ABS( (z + 1.d0) / (z - 1.d0) ) > eps10) THEN
-      H_eps = 2.d0 * z + ( 1.d0 - z**2 ) * LOG( (z + 1.d0) / (z - 1.d0))
+    IF (ABS((z + 1.d0) / (z - 1.d0)) > eps10) THEN
+      H_eps = 2.d0 * z + (1.d0 - z**2) * LOG((z + 1.d0) / (z - 1.d0))
     ENDIF
   ENDIF
   !
@@ -674,7 +671,7 @@
   !--------------------------------------------------------------------------
   ! 
   !--------------------------------------------------------------------------
-  SUBROUTINE tf_epsilon (q, nmodes, epsil, eps_tf)
+  SUBROUTINE tf_epsilon(q, nmodes, epsil, eps_tf)
   !--------------------------------------------------------------------------
   !!
   !!  Compute the Thomas-Fermi dielectric screening
@@ -693,9 +690,8 @@
   !
   REAL(KIND = DP), INTENT(inout) :: q(3)
   !! q vector (in crystal coordinates)
-  REAL(KIND = DP), INTENT(in) :: epsil(3,3)
+  REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
   !! dielectric constant tensor
-  !
   COMPLEX(KIND = DP), INTENT(out) :: eps_tf(nmodes)
   !! electronic screening
   !
@@ -716,7 +712,7 @@
   REAL(KIND = DP) :: eps_ave
   !! Average dielectric function (semiconductor/insulator)
   ! 
-  LOGICAL, SAVE :: first_call=.true.
+  LOGICAL, SAVE :: first_call = .TRUE.
   !! Logical for first_call the routine 
   !
   n = nel / omega
@@ -726,12 +722,12 @@
   qtfc = qtf / (twopi / alat)
   !
   IF (first_call) THEN
-    first_call = .false.
-    WRITE(stdout,'(5x,"Calculation of Thomas-Fermi screening: use with care")')
-    WRITE(stdout,'(5x,"Warning: current implementation for doubly degenerate band, one valley")')
-    WRITE(stdout,'(5x,a,f12.8,a,f12.8,a,f12.8)') 'Nel = ', nel, ', n = ', n, ' au^-3, EF (eV) = ', EF*ha2ev
-    WRITE(stdout,'(5x,a,f12.8,a,f12.8)') 'q_tf (au-1) = ', qtf, ', q_tf (tpiba) = ', qtfc
-    IF (eps_ave < eps5) WRITE(stdout,'(5x,"Warning: dielectric constant not found; set to 1")')
+    first_call = .FALSE.
+    WRITE(stdout, '(5x,"Calculation of Thomas-Fermi screening: use with care")')
+    WRITE(stdout, '(5x,"Warning: current implementation for doubly degenerate band, one valley")')
+    WRITE(stdout, '(5x,a,f12.8,a,f12.8,a,f12.8)') 'Nel = ', nel, ', n = ', n, ' au^-3, EF (eV) = ', EF*ha2ev
+    WRITE(stdout, '(5x,a,f12.8,a,f12.8)') 'q_tf (au-1) = ', qtf, ', q_tf (tpiba) = ', qtfc
+    IF (eps_ave < eps5) WRITE(stdout, '(5x,"Warning: dielectric constant not found; set to 1")')
   ENDIF
   IF (eps_ave < eps5) eps_ave = 1.d0
   !
@@ -753,7 +749,7 @@
   !--------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE compute_umn_f (nbnd, cufkk, cufkq, bmatf)
+  SUBROUTINE compute_umn_f(nbnd, cufkk, cufkq, bmatf)
   !-----------------------------------------------------------------------
   !!
   !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i{q+G}r}|\Psi_{nk}> $$ 
@@ -782,8 +778,7 @@
   !
   !  U(k'+q')^\dagger * U(k')
   !
-  CALL zgemm( 'n', 'c', nbnd, nbnd, nbnd, cone, cufkq, &
-              nbnd, cufkk, nbnd, czero, bmatf, nbnd )
+  CALL zgemm( 'n', 'c', nbnd, nbnd, nbnd, cone, cufkq, nbnd, cufkk, nbnd, czero, bmatf, nbnd)
   !
   !bmatf = bmatf / DBLE(nkstot)
   !
@@ -791,7 +786,7 @@
   END SUBROUTINE compute_umn_f
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE compute_umn_c (nbnd, nbndsub, nks, cuk, cukq, bmat)
+  SUBROUTINE compute_umn_c(nbnd, nbndsub, nks, cuk, cukq, bmat)
   !-----------------------------------------------------------------------
   !!
   !! Calculates $$ U_{k+q} U_k^\dagger = <\Psi_{mk+q}|e^{i(q+G)r}|\Psi_{nk}> $$ 
@@ -827,12 +822,176 @@
   !  U(k+q) * U(k)^\dagger 
   !
   DO ik = 1, nks
-    CALL zgemm( 'n', 'c', nbnd, nbnd, nbndsub, cone, cukq(:,:,ik), &
-                nbnd, cuk(:,:,ik), nbnd, czero, bmat(:,:,ik), nbnd )
+    CALL zgemm( 'n', 'c', nbnd, nbnd, nbndsub, cone, cukq(:, :, ik), &
+                nbnd, cuk(:, :, ik), nbnd, czero, bmat(:, :, ik), nbnd )
   ENDDO
   !
   !WRITE(stdout,'(5x,a)') 'UMN calculated'
   !WRITE(stdout,*)
   !
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE compute_umn_c
+  !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  SUBROUTINE rgd_blk_der(nq1, nq2, nq3, nat, dyn_der, q, tau, epsil, zeu, signe)
+  !-----------------------------------------------------------------------
+  !!
+  !! compute the rigid-ion (long-range) derivative term for q 
+  !!
+  USE kinds,         ONLY : DP
+  USE constants_epw, ONLY : pi, fpi, e2, ci, twopi
+  USE cell_base,     ONLY : bg, omega, alat
+  USE constants_epw, ONLY : eps6
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: nq1
+  !! Coarse q-point grid 
+  INTEGER, INTENT(in) :: nq2
+  !! Coarse q-point grid 
+  INTEGER, INTENT(in) :: nq3
+  !! Coarse q-point grid 
+  INTEGER, INTENT(in) :: nat
+  !! Number of atoms
+  ! 
+  REAL(KIND = DP), INTENT(in) :: q(3)
+  !! q-vector from the full coarse or fine grid.
+  REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
+  !! dielectric constant tensor
+  REAL(KIND = DP), INTENT(in) :: zeu(3, 3, nat)
+  !! effective charges tensor
+  REAL(KIND = DP), INTENT(in) :: signe
+  !! signe=+/-1.0 ==> add/subtract rigid-ion term
+  REAL(KIND = DP), INTENT(in) :: tau(3, nat)
+  !! Atomic positions
+  ! 
+  COMPLEX(KIND = DP), INTENT(inout) :: dyn_der(3, 3 * nat, 3 * nat)
+  !! Dynamical matrix
+  COMPLEX(KIND = DP) :: dyn_der_part(7, 3, 3 * nat, 3 * nat)
+  !! Dynamical matrix, partial summations
+  !
+  ! Local variables
+  !
+  INTEGER :: na
+  !! Atom index 1 
+  INTEGER :: nb
+  !! Atom index 2
+  INTEGER :: i 
+  !! Cartesian direction 1
+  INTEGER :: j
+  !! Cartesian direction 1
+  INTEGER :: m1, m2, m3 
+  !! Loop over q-points
+  INTEGER :: isum
+  !! Index to sum the different component of the derivative
+  REAL(KIND = DP):: geg                    
+  !! <q+G| epsil | q+G>
+  REAL(KIND = DP):: geg2                    
+  !! <q+G| epsil | q+G>**2
+  REAL(KIND = DP) :: alph  
+  !! Missing definition
+  REAL(KIND = DP) :: fac
+  !! Missing definition
+  REAL(KIND = DP) :: g1, g2, g3
+  !! Missing definition
+  REAL(KIND = DP) :: facgd
+  !! Missing definition
+  REAL(KIND = DP) :: arg
+  !! Missing definition
+  REAL(KIND = DP) :: gmax
+  !! Missing definition
+  REAL(KIND = DP) :: arg_no_g(3)
+  !! Missing definition
+  REAL(KIND = DP) :: zag(3)
+  !! Missing definition
+  REAL(KIND = DP) :: zbg(3) 
+  !! Missing definition
+  REAL(KIND = DP) :: zcg(3)
+  !! Missing definition
+  REAL(KIND = DP) :: fnat(3)
+  !! Missing definition
+  REAL(KIND = DP) :: zbg_der(3, 3)
+  !! Missing definition
+  REAL(KIND = DP) :: zag_der(3, 3)
+  !! Missing definition
+  COMPLEX(KIND = DP) :: facg
+  !! Missing definition
+  !
+  ! alph is the Ewald parameter, geg is an estimate of G^2
+  ! such that the G-space sum is convergent for that alph
+  ! very rough estimate: geg/4/alph > gmax = 14 
+  ! (exp (-14) = 10^-6)
+  !
+  gmax = 14.d0
+  alph = 1.0d0
+  geg = gmax * alph * 4.0d0
+  !
+  IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk_der', ' wrong value for signe ', 1)
+  ! 
+  gmax = 14.d0
+  alph = 1.0d0
+  geg = gmax * alph * 4.0d0
+  fac = signe * e2 * fpi / omega 
+  !
+  DO m1 = -nq1, nq1
+    DO m2 = -nq2, nq2
+      DO m3 = -nq3, nq3
+        !
+        g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3)
+        g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3)
+        g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3)
+        !
+        g1 = g1 + q(1)
+        g2 = g2 + q(2)
+        g3 = g3 + q(3)
+        !
+        geg = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3) + &
+               g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3) + &
+               g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3))
+        !
+        IF (geg > 0.0d0 .AND. geg / (alph * 4.0d0) < gmax) THEN
+          !
+          facgd = fac * EXP(-geg / (alph * 4.0d0) ) / geg * (alat / twopi)
+          !
+          DO nb = 1, nat
+            zbg(:) = g1 * zeu(1, :, nb) + g2 * zeu(2, :, nb) + g3 * zeu(3, :, nb)
+            zbg_der(:, :) = zeu(:, :, nb)
+            DO na = 1, nat
+              zag(:) = g1 * zeu(1, :, na) + g2 * zeu(2, :, na) + g3 * zeu(3, :, na)
+              zag_der(:, :) = zeu(:, :, na) 
+              arg = 2.d0 * pi * (g1 * (tau(1, na) - tau(1, nb)) + &
+                                 g2 * (tau(2, na) - tau(2, nb)) + &
+                                 g3 * (tau(3, na) - tau(3, nb)))
+              arg_no_g(:) = 2.d0 * pi * (tau(:,na) - tau(:,nb))
+              !
+              facg = facgd * CMPLX(COS(arg), SIN(arg), DP)
+              DO j = 1, 3 
+                DO i = 1, 3 
+                  dyn_der_part(1, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag_der(:, i) * zbg(j)
+                  dyn_der_part(2, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag(i) * zbg_der(:, j)
+                  dyn_der_part(3, :, (na - 1) * 3 + i,( nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
+                    * (epsil(:, 1) * g1 + epsil(:, 2) * g2 + epsil(:, 3) * g3) / geg
+                  dyn_der_part(4, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
+                    * (epsil(1, :) * g1 + epsil(2, :) * g2 + epsil(3, :) * g3) / geg
+                  dyn_der_part(5, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) = facg * zag(i) * zbg(j) * ci * arg_no_g(:)
+                  dyn_der_part(6, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
+                    * (epsil(1, :) * g1 + epsil(2, :) * g2 + epsil(3, :) * g3) / (4d0 * alph)
+                  dyn_der_part(7, :, (na - 1) * 3 + i, (nb - 1) * 3 + j) =-facg * zag(i) * zbg(j) &
+                    * (epsil(:, 1) * g1 + epsil(:, 2) * g2 + epsil(:, 3) * g3) / (4d0 * alph)
+                  DO isum = 1, 7
+                    dyn_der(:, (na - 1) * 3 + i, (nb - 1) * 3 + j) = dyn_der(:, (na - 1) * 3 + i, (nb - 1) * 3 + j) &
+                      + dyn_der_part(isum, :, (na - 1) * 3 + i, (nb - 1) * 3 + j )
+                  ENDDO ! isum
+                ENDDO ! i
+              ENDDO ! j
+            ENDDO ! na
+          ENDDO ! nb
+        ENDIF ! geg >
+      ENDDO ! m3
+    ENDDO ! m2
+  ENDDO ! m1 
+  !
+  !-----------------------------------------------------------------------
+  END SUBROUTINE rgd_blk_der
+  !-----------------------------------------------------------------------

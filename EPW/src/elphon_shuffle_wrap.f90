@@ -301,7 +301,7 @@
   ELSE
     ! 
     ! 26/06/2012 RM
-    ! if we do not have epmatq already on file then epbread=.false.
+    ! if we do not have epmatq already on file then epbread=.FALSE.
     ! .kgmap is used from disk and .kmap is regenerated for each q-point 
     ! 
     WRITE(stdout,'(/5x,a)') 'Using kmap and kgmap from disk'
@@ -346,7 +346,7 @@
     WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
-    CALL find_sym(nat, tau, ityp, .false., m_loc)
+    CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
     IF (.NOT. allfrac ) CALL remove_sym( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
     WRITE(stdout,'(5x,a,i3)') "Symmetries of crystal:         ", nsym
     !   
@@ -408,9 +408,9 @@
          IF (meta_ionode) CALL iotk_close_read(iunpun)
       ENDIF
       !  
-      WRITE(stdout,'(//5x,a)') repeat('=',67) 
+      WRITE(stdout,'(//5x,a)') REPEAT('=',67) 
       WRITE(stdout,'(5x,"irreducible q point # ",i4)') iq_irr
-      WRITE(stdout,'(5x,a/)') repeat('=',67) 
+      WRITE(stdout,'(5x,a/)') REPEAT('=',67) 
       FLUSH(stdout)
       !
       xq = xqc_irr(:,iq_irr)
@@ -419,9 +419,9 @@
       ! 
       ! ~~~~~~~~ setup small group of q symmetry ~~~~~~~~ 
       !
-      minus_q = .true.
-      sym = .false.
-      sym(1:nsym) = .true.
+      minus_q = .TRUE.
+      sym = .FALSE.
+      sym(1:nsym) = .TRUE.
       CALL smallg_q(xq, 0, at, bg, nsym, s, sym, minus_q) ! s is intent(in)
       !
       ! SP: Notice that the function copy_sym reshuffles the s matrix for each irr_q.  
@@ -443,7 +443,7 @@
       ! ######################### star of q #########################
       ! 
       sym_smallq(:) = 0
-      CALL star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .true., sym_smallq)
+      CALL star_q2(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., sym_smallq)
       !
       ! The reason for xq instead of xq0 in the above is because xq is passed to QE through module  
       xq0 = xq
@@ -460,7 +460,7 @@
       !  (from phq_setup.f90)
       !
       DO isym = 1, nsym
-        sym(isym) = .true.
+        sym(isym) = .TRUE.
       ENDDO
       !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)

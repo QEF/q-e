@@ -180,7 +180,7 @@
   ! iprint       : verbosity of the wannier90 code
   ! write_wfn    : writes out UNK files from pwscf run for plotting of XSF files
   ! kmaps        : if true, read kmap and kgmap from disk (prior run)
-  ! eig_read     : if .true. then readin a set of electronic eigenvalues in eV to replace the calcualted ones
+  ! eig_read     : if .TRUE. then readin a set of electronic eigenvalues in eV to replace the calcualted ones
   ! wepexst      : if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
   ! epexst       : if .TRUE. prefix.epmatwp files are already on disk. don't recalculate  debugging param
   ! vme          : if .TRUE. calculate velocity matrix elements
@@ -214,20 +214,20 @@
   ! gap_edge : initial guess of the superconducting gap (in eV)
   ! nsiter   : nr of iterations for self-consitency cycle
   ! muc     : effective Coulomb potential
-  ! lreal   : if .true. solve the real-axis Eliashberg eqautions
-  ! limag   : if .true. solve the imag-axis Eliashberg eqautions
-  ! lpade   : if .true. use pade approximants to continue imag-axis 
+  ! lreal   : if .TRUE. solve the real-axis Eliashberg eqautions
+  ! limag   : if .TRUE. solve the imag-axis Eliashberg eqautions
+  ! lpade   : if .TRUE. use pade approximants to continue imag-axis 
   !           Eliashberg equtions to real-axis
-  ! lacon   : if .true. use analytic continuation to continue imag-axis 
+  ! lacon   : if .TRUE. use analytic continuation to continue imag-axis 
   !           Eliashberg equtions to real-axis
-  ! liso    : if .true. solve isotropic case
-  ! laniso  : if .true. solve anisotropic case
-  ! lunif   : if .true. a uniform grid is defined between wsfc and wscut for real-axis calculations
-  ! kerwrite: if .true. write Kp and Km to files .ker for real-axis calculations
-  ! kerread : if .true. read Kp and Km from files .ker for real-axis calculations
-  ! imag_read    : if .true. read from files Delta and Znorm on the imaginary-axis
-  ! eliashberg   : if .true. solve the Eliashberg equations
-  ! ep_coupling  : if .true. run e-p coupling calculation
+  ! liso    : if .TRUE. solve isotropic case
+  ! laniso  : if .TRUE. solve anisotropic case
+  ! lunif   : if .TRUE. a uniform grid is defined between wsfc and wscut for real-axis calculations
+  ! kerwrite: if .TRUE. write Kp and Km to files .ker for real-axis calculations
+  ! kerread : if .TRUE. read Kp and Km from files .ker for real-axis calculations
+  ! imag_read    : if .TRUE. read from files Delta and Znorm on the imaginary-axis
+  ! eliashberg   : if .TRUE. solve the Eliashberg equations
+  ! ep_coupling  : if .TRUE. run e-p coupling calculation
   ! fila2f       : input file with eliashberg spectral function 
   ! max_memlt    : maximum memory that can be allocated per pool 
   ! efermi_read  : if. true. read from input file
@@ -235,19 +235,19 @@
   ! wmin_specfun : min frequency in electron spectral function due to e-p interaction (units of eV)
   ! wmax_specfun : max frequency in electron spectral function due to e-p interaction (units of eV)
   ! nw_specfun   : nr. of bins for frequency in electron spectral function due to e-p interaction 
-  ! system_2d    : if .true. two-dimensional system (vaccum is in z-direction)  
-  ! delta_approx : if .true. the double delta approximation is used to compute the phonon self-energy 
+  ! system_2d    : if .TRUE. two-dimensional system (vaccum is in z-direction)  
+  ! delta_approx : if .TRUE. the double delta approximation is used to compute the phonon self-energy 
   !
   ! added by CV & SP
-  ! lpolar  : if .true. enable the correct Wannier interpolation in the case of polar material.  
-  ! lifc    : if .true. reads interatomic force constants produced by q2r.x for phonon interpolation
-  ! asr_typ : select type of ASR if lifc=.true. (as in matdyn); otherwise it is the usual simple sum rule
-  ! lscreen : if .true. the e-ph matrix elements are screened by the RPA or TF dielectric function
+  ! lpolar  : if .TRUE. enable the correct Wannier interpolation in the case of polar material.  
+  ! lifc    : if .TRUE. reads interatomic force constants produced by q2r.x for phonon interpolation
+  ! asr_typ : select type of ASR if lifc=.TRUE. (as in matdyn); otherwise it is the usual simple sum rule
+  ! lscreen : if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
   ! scr_typ : if 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
   ! fermi_diff : difference between Fermi energy and band edge (in eV)
   ! smear_rpa  : smearing for the calculation of the Lindhard function (in eV)
-  ! cumulant   : if .true. calculates the electron spectral function using the cumulant expansion method
-  !              (can be used as independent postprocessing by setting ep_coupling=.false.)
+  ! cumulant   : if .TRUE. calculates the electron spectral function using the cumulant expansion method
+  !              (can be used as independent postprocessing by setting ep_coupling=.FALSE.)
   ! bnd_cum    : band index for which the cumulant calculation is done 
   !              (for more than one band, perform multiple calculations and add the results together)
   !
@@ -257,26 +257,26 @@
   ! specfun_el      : if .TRUE. calculate electron spectral function due to e-p interaction
   ! specfun_ph      : if .TRUE. calculate phonon spectral function due to e-p interaction
   ! specfun_pl      : if .TRUE. calculate plason spectral function 
-  ! restart         : if .true. a run can be restarted from the interpolation level
+  ! restart         : if .TRUE. a run can be restarted from the interpolation level
   ! restart_freq    : Create a restart point every restart_freq q/k-points
   ! restart_filq    : Use to merge different q-grid scattering rates (name of the file)
-  ! scattering      : if .true. scattering rates are calculated
-  ! scattering_serta: if .true. scattering rates are calculated using self-energy relaxation-time-approx
-  ! scatread        : if .true. the current scattering rate file is read from file. 
-  ! scattering_0rta : if .true. scattering rates are calculated using 0th order relaxation-time-approx
-  ! int_mob         : if .true. computes the intrinsic mobilities. This means that the
+  ! scattering      : if .TRUE. scattering rates are calculated
+  ! scattering_serta: if .TRUE. scattering rates are calculated using self-energy relaxation-time-approx
+  ! scatread        : if .TRUE. the current scattering rate file is read from file. 
+  ! scattering_0rta : if .TRUE. scattering rates are calculated using 0th order relaxation-time-approx
+  ! int_mob         : if .TRUE. computes the intrinsic mobilities. This means that the
   !                   electron and hole carrier density is equal. 
-  ! iterative_bte   : if .true. computes the iterative solution to the BTE. Need a
+  ! iterative_bte   : if .TRUE. computes the iterative solution to the BTE. Need a
   !                   prior run with ERTA. 
   ! scissor         : Value of the scissor shitf in eV. This only affects the CBM of etf. Do you use in
   !                   metals obviously.
-  ! carrier         : if .true. computes the doped carrier mobilities. 
+  ! carrier         : if .TRUE. computes the doped carrier mobilities. 
   ! ncarrier        : Set the Fermi level so that the carrier concentration is
   !                   " ncarrier". If ncarrier > 0, electron doping, hole doping otherwise
-  ! longrange       : if .true. computes the long-range part of the el-ph (can
-  !                   only be used with lpolar = .true. )
-  ! shortrange      : if .true. computes the short-range part of the el-ph (can
-  !                   only be used with lpolar = .true. )
+  ! longrange       : if .TRUE. computes the long-range part of the el-ph (can
+  !                   only be used with lpolar = .TRUE. )
+  ! shortrange      : if .TRUE. computes the short-range part of the el-ph (can
+  !                   only be used with lpolar = .TRUE. )
   ! prtgkk          : Print the vertex |g| [meV]. This generates huge outputs.   
   ! etf_mem         : if 0 no optimization, if 1 less memory is used for the fine grid interpolation
   !                   When etf_mem == 2, an additional loop is done on mode for the fine grid interpolation
@@ -285,11 +285,11 @@
   ! nel             : Fractional number of electrons in the unit cell
   ! meff            : Density of state effective mass (in unit of the electron mass)
   ! epsiHEG         : Dielectric constant at zero doping
-  ! lphase          : If .true., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
+  ! lphase          : If .TRUE., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
   ! mob_maxiter     : Maximum number of iteration for the IBTE. 
-  ! use_ws          : If .true., use the Wannier-center to create the Wigner-Seitz cell. 
-  ! epmatkqread     : If .true., restart an IBTE calculation from scattering written to files. 
-  ! selecqread      : If .true., restart from the selecq.fmt file
+  ! use_ws          : If .TRUE., use the Wannier-center to create the Wigner-Seitz cell. 
+  ! epmatkqread     : If .TRUE., restart an IBTE calculation from scattering written to files. 
+  ! selecqread      : If .TRUE., restart from the selecq.fmt file
   ! nc              : Number of carrier for the Ziman resistivity formula (can be fractional)
   !  
   ! Added by Manos Kioupakis
@@ -334,26 +334,26 @@
   !
   amass(:)     = 0.d0
   iverbosity   = 0
-  elph         = .false.
-  elecselfen   = .false.
-  phonselfen   = .false.
-  plselfen     = .false.
-  specfun_el   = .false.
-  specfun_ph   = .false.
-  specfun_pl   = .false.
-  epbread      = .false.
-  epbwrite     = .false.
-  epwread      = .false.
-  epwwrite     = .true.
-  restart      = .false.
+  elph         = .FALSE.
+  elecselfen   = .FALSE.
+  phonselfen   = .FALSE.
+  plselfen     = .FALSE.
+  specfun_el   = .FALSE.
+  specfun_ph   = .FALSE.
+  specfun_pl   = .FALSE.
+  epbread      = .FALSE.
+  epbwrite     = .FALSE.
+  epwread      = .FALSE.
+  epwwrite     = .TRUE.
+  restart      = .FALSE.
   restart_freq = 100
-  wannierize   = .false.
-  write_wfn    = .false.
-  kmaps        = .false.
-  nest_fn      = .false.
-  wepexst      = .false.
-  epexst       = .false.
-  eig_read     = .false.
+  wannierize   = .FALSE.
+  write_wfn    = .FALSE.
+  kmaps        = .FALSE.
+  nest_fn      = .FALSE.
+  wepexst      = .FALSE.
+  epexst       = .FALSE.
+  eig_read     = .FALSE.
   dis_win_max  = 1d3
   dis_win_min  = -1d3
   dis_froz_max =  1d3
@@ -370,8 +370,8 @@
   fsthick      = 1.d10 ! eV
   eptemp       = 300.0d0
   degaussw     = 0.025d0 ! eV
-!  tphases      = .false.
-  a2f          = .false.
+!  tphases      = .FALSE.
+  a2f          = .FALSE.
   etf_mem      = 1 
 !  fildvscf0    = ' '
   ngaussw      = 1
@@ -384,10 +384,10 @@
   fildrho      = ' '
   fildvscf     = ' '
   filukk       = ' '
-  rand_q       = .false.
-  delta_approx = .false.
+  rand_q       = .FALSE.
+  delta_approx = .FALSE.
   rand_nq      = 1
-  rand_k       = .false.
+  rand_k       = .FALSE.
   rand_nk      = 1
   nq1          = 0
   nq2          = 0
@@ -401,8 +401,8 @@
   nkf1         = 0
   nkf2         = 0
   nkf3         = 0
-  mp_mesh_k    = .false.
-  mp_mesh_q    = .false.
+  mp_mesh_k    = .FALSE.
+  mp_mesh_q    = .FALSE.
   nbndsub      = 0
   nbndskip     = 0
   nsmear       = 1
@@ -411,34 +411,34 @@
               ! INTEGER :: modenum = 0. In QE 5, modenum variable does not exist
               ! anymore. Change the default EPW value to match the previous QE
               ! one. 
-  vme = .false.
-  ephwrite = .false.
-  band_plot = .false.
+  vme = .FALSE.
+  ephwrite = .FALSE.
+  band_plot = .FALSE.
   nqsmear = 10
   nqstep = 500
   delta_qsmear = 0.05d0 ! meV 
   degaussq = 0.05d0 ! meV
-  lreal   = .false.
-  lunif   = .true.
-  limag   = .false.
-  lpade   = .false.
-  lacon   = .false.
-  liso    = .false.
-  laniso  = .false.
-  lpolar  = .false.
-  lifc    = .false.
+  lreal   = .FALSE.
+  lunif   = .TRUE.
+  limag   = .FALSE.
+  lpade   = .FALSE.
+  lacon   = .FALSE.
+  liso    = .FALSE.
+  laniso  = .FALSE.
+  lpolar  = .FALSE.
+  lifc    = .FALSE.
   asr_typ = 'simple'
-  lscreen = .false. 
+  lscreen = .FALSE. 
   scr_typ = 0
   fermi_diff  = 1.d0
   smear_rpa   = 0.05d0
-  cumulant    = .false.
+  cumulant    = .FALSE.
   bnd_cum     = 1
-  kerwrite    = .false.
-  kerread     = .false.
-  imag_read   = .false.
-  eliashberg  = .false.
-  ep_coupling = .true.
+  kerwrite    = .FALSE.
+  kerread     = .FALSE.
+  imag_read   = .FALSE.
+  eliashberg  = .FALSE.
+  ep_coupling = .TRUE.
   nswfc    = 0
   nswc     = 0
   nswi     = 0 
@@ -459,37 +459,37 @@
   muc     = 0.d0
   fila2f  = ' '
   max_memlt = 2.85d0
-  efermi_read = .false.
+  efermi_read = .FALSE.
   fermi_energy = 0.d0
   wmin_specfun = 0.d0 ! eV
   wmax_specfun = 0.3d0 ! eV
   nw_specfun = 100
-  system_2d = .false.
-  scattering = .false.
-  scattering_serta = .false.
-  scatread = .false.
-  scattering_0rta = .false.
-  int_mob    = .false.
-  iterative_bte = .false.
+  system_2d = .FALSE.
+  scattering = .FALSE.
+  scattering_serta = .FALSE.
+  scatread = .FALSE.
+  scattering_0rta = .FALSE.
+  int_mob    = .FALSE.
+  iterative_bte = .FALSE.
   scissor    = 0.d0 ! eV
-  carrier    = .false.
+  carrier    = .FALSE.
   ncarrier   = 0.d0 ! cm^-3
-  longrange  = .false.
-  shortrange = .false.  
-  prtgkk     = .false.
+  longrange  = .FALSE.
+  shortrange = .FALSE.  
+  prtgkk     = .FALSE.
   nel        = 0.0d0
   meff       = 1.d0
   epsiHEG    = 1.d0 
-  lphase     = .false. 
+  lphase     = .FALSE. 
   omegamin   = 0.d0  ! eV
   omegamax   = 10.d0 ! eV
   omegastep  = 1.d0  ! eV
   n_r        = 1.d0
-  lindabs    = .false.
+  lindabs    = .FALSE.
   mob_maxiter= 50
-  use_ws     = .false.
-  epmatkqread = .false.
-  selecqread = .false.
+  use_ws     = .FALSE.
+  epmatkqread = .FALSE.
+  selecqread = .FALSE.
   nc         = 4.0d0
   !
   !     reading the namelist inputepw
@@ -540,11 +540,11 @@
   IF (a2f .AND.  .NOT. phonselfen) CALL errore('epw_readin', &
        &'a2f requires phonoselfen',1)
   IF (elph .AND.  .NOT. ep_coupling ) CALL errore('epw_readin', &
-      &'elph requires ep_coupling=.true.',1)
+      &'elph requires ep_coupling=.TRUE.',1)
   IF ((elph .AND. wannierize) .AND. (epwread) ) CALL errore('epw_readin', &
        & 'must use same w90 rotation matrix for entire run', 1)
   IF (wannierize .AND.  .NOT. ep_coupling ) CALL errore('epw_readin', &
-      &'wannierize requires ep_coupling=.true.',1)
+      &'wannierize requires ep_coupling=.TRUE.',1)
   IF ((wmin > wmax)) &
        CALL errore ('epw_readin', ' check wmin, wmax ', 1)
   IF ((wmin_specfun > wmax_specfun)) &
@@ -558,19 +558,19 @@
   IF (( phonselfen .OR. elecselfen .OR. specfun_el .OR. specfun_ph ) .AND. ( mp_mesh_k .OR. mp_mesh_q )) & 
      CALL errore('epw_readin', 'can only work with full uniform mesh',1)
   IF (ephwrite .AND. .NOT. ep_coupling .AND.  .NOT. elph ) CALL errore('epw_readin', &
-      &'ephwrite requires ep_coupling=.true., elph=.true.',1)
+      &'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.',1)
   IF (ephwrite .AND. (rand_k .OR. rand_q ) ) &
      CALL errore('epw_readin', 'ephwrite requires a uniform grid',1) 
-  IF (ephwrite .AND. (mod(nkf1,nqf1) /= 0 .OR. mod(nkf2,nqf2) /= 0 .OR. mod(nkf3,nqf3) /= 0 ) ) &
+  IF (ephwrite .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0 ) ) &
      CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3',1)
   IF (band_plot .AND. filkf == ' ' .AND. filqf == ' ') CALL errore('epw_readin', &
       &'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files',1)
   IF (band_plot .AND. filkf /= ' ' .AND. (nkf1 > 0 .OR. nkf2 > 0 .OR. nkf3 > 0) ) CALL errore('epw_readin', &
-                &'You should define either filkf or nkf when band_plot = .true.',1)
+                &'You should define either filkf or nkf when band_plot = .TRUE.',1)
   IF (band_plot .AND. filqf /= ' ' .AND. (nqf1 > 0 .OR. nqf2 > 0 .OR. nqf3 > 0) ) CALL errore('epw_readin', &
-                &'You should define either filqf or nqf when band_plot = .true.',1)
+                &'You should define either filqf or nqf when band_plot = .TRUE.',1)
   IF (filkf /= ' ' .AND. .NOT. efermi_read ) CALL errore('epw_readin', &
-      &'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file',-1)
+      &'WARNING: if k-points are along a line, then efermi_read=.TRUE. and fermi_energy must be given in the input file',-1)
   IF (scattering .AND. nstemp < 1 ) CALL errore('epw_readin', &
        'wrong number of nstemp',1)
   IF (scattering .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0 ) &
@@ -578,7 +578,7 @@
   IF (scattering .AND. tempsmax < tempsmin ) &
        CALL errore('epw_readin', 'tempsmax should be greater than tempsmin',1)
   IF ((ABS(ncarrier) > 1E+5) .AND. .NOT. carrier ) CALL errore('epw_readin', &
-       'carrier must be .true. if you specify ncarrier.',1)
+       'carrier must be .TRUE. if you specify ncarrier.',1)
   IF (carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_readin', &
        'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3',1)
   IF ((longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_readin',&
@@ -635,7 +635,7 @@
   ! from cm-1 to Ryd
   eps_acustic = eps_acustic / ev2cmm1 / ryd2ev 
   !
-  !    reads the q point (just if ldisp = .false.)
+  !    reads the q point (just if ldisp = .FALSE.)
   !
   ! wmin and wmax from eV to Ryd
   wmin = wmin / ryd2ev

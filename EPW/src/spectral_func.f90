@@ -27,14 +27,14 @@
   USE io_epw,        ONLY : iospectral_sup ,iospectral
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, eps_acustic, &
-                            fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
+                            fsthick, eptemp, ngaussw, degaussw, wmin_specfun, &
                             wmax_specfun, nw_specfun, shortrange, &
                             efermi_read, fermi_energy
   USE pwcom,         ONLY : nelec, ef
   USE klist_epw,     ONLY : isk_dummy
-  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
-                            epf17, wkf, nkf, wf, wqf, xkf, nkqtotf,&
-                            esigmar_all, esigmai_all, a_all
+  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, nktotf, &
+                            epf17, wkf, nkf, wf, wqf, xkf, nkqtotf, &
+                            esigmar_all, esigmai_all, a_all, nbndfst
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps8
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : me_pool, inter_pool_comm
@@ -67,8 +67,6 @@
   !! Counter on mode
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
-  INTEGER :: nksqtotf
-  !! Total number of k+q points 
   INTEGER :: lower_bnd
   !! Lower bounds index after k or q paral
   INTEGER :: upper_bnd
@@ -124,9 +122,9 @@
   !
   IF (iqq == 1) THEN
     !
-    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
-    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     !
     IF (fsthick < 1.d3 ) &
        WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
@@ -154,12 +152,8 @@
     WRITE (stdout,'(a)') ' '
   ENDIF
   !
-  ! The total number of k points
-  !
-  nksqtotf = nkqtotf/2 ! odd-even for k,k+q
-  !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
-  CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
+  CALL fkbounds(nktotf, lower_bnd, upper_bnd )
   !
   ! SP: Sum rule added to conserve the number of electron. 
   IF (iq == 1) THEN
@@ -200,12 +194,12 @@
           g2_tmp = 0.0
         ENDIF           
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           !  the energy of the electron at k (relative to Ef)
           ekk = etf (ibndmin-1+ibnd, ikk) - ef0
           !  
-          DO jbnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, nbndfst
             !
             !  the fermi occupation for k+q
             ekq = etf (ibndmin-1+jbnd, ikq) - ef0
@@ -307,19 +301,19 @@
 &         Real Sigma[meV]  Im Sigma[meV]'
     ENDIF
     !
-    DO ik = 1, nksqtotf
+    DO ik = 1, nktotf
       !
       ikk = 2 * ik - 1
       ikq = ikk + 1
       !
       WRITE(stdout,'(/5x,"ik = ",i5," coord.: ", 3f12.7)') ik, xkf_all (:,ikk)
-      WRITE(stdout,'(5x,a)') repeat('-',67)
+      WRITE(stdout,'(5x,a)') REPEAT('-',67)
       !
       DO iw = 1, nw_specfun
         !
         ww = wmin_specfun + dble (iw-1) * dw
         !
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           !
           !  the energy of the electron at k
           ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
@@ -333,11 +327,11 @@
         !
       ENDDO
       !
-      WRITE(stdout,'(5x,a/)') repeat('-',67)
+      WRITE(stdout,'(5x,a/)') REPEAT('-',67)
       !
     ENDDO
     !
-    DO ik = 1, nksqtotf
+    DO ik = 1, nktotf
       !
       ! The spectral function should integrate to 1 for each k-point
       specfun_sum = 0.0
@@ -364,9 +358,9 @@
     !
     IF (me_pool == 0)  CLOSE(iospectral)
     !
-    DO ibnd = 1, ibndmax-ibndmin+1
+    DO ibnd = 1, nbndfst
       !
-      DO ik = 1, nksqtotf
+      DO ik = 1, nktotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1

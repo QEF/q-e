@@ -213,7 +213,7 @@
     !
     ! Hamiltonian matrix is in Ryd units and spatial dimensions in bohr
     ! [mind when comparing with wannier code (eV and angstrom units) with
-    ! write_hr=.true.]
+    ! write_hr=.TRUE.]
     !
     IF (mpime == ionode_id) THEN
       !
@@ -1002,7 +1002,7 @@
     ! check spatial decay of position matrix elements in Wannier basis
     !
     ! position matrix cvmew and spatial dimensions are in units of bohr
-    ! [mind when comparing with wannier code (angstrom units) with write_rmn=.true.]
+    ! [mind when comparing with wannier code (angstrom units) with write_rmn=.TRUE.]
     !
     IF (mpime == ionode_id) then
       OPEN(UNIT = iudecayv,FILE = 'decay.v')

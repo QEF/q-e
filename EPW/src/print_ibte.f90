@@ -111,25 +111,25 @@
   !! Nb of Matrix elements that are non-zero in the cb
   INTEGER :: nbnd
   !! Range of bands within fsthick 
-  INTEGER(KIND = i4b) :: sparse_q((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_q((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of q-points for mapping 
-  INTEGER(KIND = i4b) :: sparse_k((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_k((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of k-points for mapping 
-  INTEGER(KIND = i4b) :: sparse_i((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_i((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of i-bands for mapping
-  INTEGER(KIND = i4b) :: sparse_j((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_j((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of j-bands for mapping
-  INTEGER(KIND = i4b) :: sparse_t((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_t((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of temperature for mapping
-  INTEGER(KIND = i4b) :: sparsecb_q((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_q((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of q-points for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_k((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_k((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of k-points for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_i((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_i((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of i-band for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_j((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_j((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of j-band for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_t((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_t((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Index of temeprature for cb for mapping 
   REAL(KIND = DP) :: tmp
   !! Temporary variable
@@ -166,21 +166,21 @@
   !! Self-energy factor 
   REAL(KIND = DP) :: fmkq
   !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
-  REAL(KIND = DP) :: vkk(3, ibndmax - ibndmin + 1)
+  REAL(KIND = DP) :: vkk(3, nbndfst)
   !! Electronic velocity $$v_{n\mathbf{k}}$$
-  REAL(KIND = DP) :: trans_prob((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  REAL(KIND = DP) :: trans_prob((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Temporary array to store the scattering rates
-  REAL(KIND = DP) :: trans_probcb((ibndmax - ibndmin + 1) * (ibndmax - ibndmin + 1) * nstemp * nkf)
+  REAL(KIND = DP) :: trans_probcb((nbndfst) * (nbndfst) * nstemp * nkf)
   !! Temporary array to store the scattering rates
-  REAL(KIND = DP) :: wkf_all(nkqtotf / 2)
+  REAL(KIND = DP) :: wkf_all(nktotf)
   !! Weights from all the cores
-  REAL(KIND = DP) :: vkk_all(3, ibndmax - ibndmin + 1, nkqtotf / 2)
+  REAL(KIND = DP) :: vkk_all(3, nbndfst, nktotf)
   !! Velocities from all the cores
-  REAL(KIND = DP) :: inv_eta(nmodes, ibndmax - ibndmin + 1, nkqtotf / 2)
+  REAL(KIND = DP) :: inv_eta(nmodes, nbndfst, nktotf)
   !! Inverse of the eta for speed purposes 
-  REAL(KIND = DP) :: etf_all(ibndmax - ibndmin + 1, nkqtotf / 2)
+  REAL(KIND = DP) :: etf_all(nbndfst, nktotf)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
-  REAL(KIND = DP) :: epf2_deg(ibndmax - ibndmin + 1, ibndmax - ibndmin + 1, nmodes)
+  REAL(KIND = DP) :: epf2_deg(nbndfst, nbndfst, nmodes)
   !! Epc in degeneracies
   REAL(KIND = DP) :: w_1
   !! Temporary electronic energy
@@ -192,9 +192,9 @@
   !! Fermi-Dirac
   REAL(KIND = DP) :: inv_cell
   !! cell volume
-  REAL(KIND = DP) :: inv_tau_all_MPI(ibndmax - ibndmin + 1, nkqtotf / 2, nstemp)
+  REAL(KIND = DP) :: inv_tau_all_MPI(nbndfst, nktotf, nstemp)
   !! Auxiliary variables
-  REAL(KIND = DP) :: inv_tau_allcb_MPI(ibndmax - ibndmin + 1, nkqtotf / 2, nstemp)
+  REAL(KIND = DP) :: inv_tau_allcb_MPI(nbndfst, nktotf, nstemp)
   !! Auxiliary variables
   REAL(KIND = DP), EXTERNAL :: DDOT
   !! Dot product function
@@ -206,13 +206,13 @@
   !! The derivative of wgauss:  an approximation to the delta function 
   !  
   inv_cell = 1.0d0 / omega
-  nbnd = ibndmax - ibndmin + 1
+  nbnd = nbndfst
   ! 
   IF (iqq == 1) THEN
     !
-    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Scattering rate for IBTE")')
-    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Restart and restart_freq inputs deactivated (restart point at every q-points).")')
     WRITE(stdout,'(5x,"No intermediate mobility will be shown.")')
     !
@@ -592,8 +592,8 @@
         WRITE(iufilibtev_sup,'(i8,2E22.12)') itemp, ef0(itemp), efcb(itemp)
       ENDDO
       WRITE(iufilibtev_sup,'(a)') '# ik  ibnd      velocity (x,y,z)              eig     weight '
-      DO ik = 1, nkqtotf / 2
-        DO ibnd = 1, ibndmax - ibndmin + 1
+      DO ik = 1, nktotf
+        DO ibnd = 1, nbndfst
           WRITE(iufilibtev_sup,'(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
         ENDDO
       ENDDO
@@ -604,8 +604,8 @@
       WRITE(iufilibtev_sup,'(a)') '# Hole relaxation time  '
       WRITE(iufilibtev_sup,'(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
       DO itemp = 1, nstemp
-        DO ik = 1, nkqtotf / 2
-          DO ibnd = 1, ibndmax - ibndmin + 1
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
             WRITE(iufilibtev_sup,'(i5,i8,i6,2E22.12)') itemp, ik, ibnd, etf_all(ibnd, ik), inv_tau_all(ibnd, ik, itemp)
           ENDDO
         ENDDO
@@ -617,8 +617,8 @@
       WRITE(iufilibtev_sup,'(a)') '# Hole relaxation time  '
       WRITE(iufilibtev_sup,'(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
       DO itemp = 1, nstemp
-        DO ik = 1, nkqtotf / 2
-          DO ibnd = 1, ibndmax - ibndmin + 1
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
             WRITE(iufilibtev_sup,'(i5,i8,i6,2E22.12)') itemp, ik, ibnd, etf_all(ibnd, ik), inv_tau_allcb(ibnd, ik, itemp)
           ENDDO
         ENDDO

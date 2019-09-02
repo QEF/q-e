@@ -77,9 +77,9 @@
   COMPLEX(KIND = DP) :: cuq_big(nbnd, nbndsub, nkstot)
   !! U(k+q) matrix for all k+q-points
   LOGICAL :: lwin_big(nbnd, nkstot)
-  !! .true. if the band ibnd lies within the outer window at k-point ik
+  !! .TRUE. if the band ibnd lies within the outer window at k-point ik
   LOGICAL :: lwinq_big(nbnd, nkstot)
-  !! .true. if the band ibnd lies within the outer window at k+qpoint ikq
+  !! .TRUE. if the band ibnd lies within the outer window at k+qpoint ikq
   !
   cu_big = czero
   cuq_big = czero

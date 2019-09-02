@@ -53,7 +53,7 @@
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigenenergies on the full k grid (all pools)
   !
-  nksqtotf =  nkqtotf/2
+  nksqtotf =  nktotf
   !
   IF (filqf /= ' ') THEN
     ! 

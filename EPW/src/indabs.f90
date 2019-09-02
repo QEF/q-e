@@ -93,11 +93,11 @@
   !! Temporary variable to store Z for the degenerate average
   REAL(KIND = DP) :: ekk2
   !! Temporary variable to the eigenenergies for the degenerate average
-  REAL(KIND = DP) :: sigmar_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmar_tmp(nbndfst)
   !! Temporary array to store the real-part of Sigma 
-  REAL(KIND = DP) :: sigmai_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: sigmai_tmp(nbndfst)
   !! Temporary array to store the imag-part of Sigma 
-  REAL(KIND = DP) :: zi_tmp(ibndmax-ibndmin+1)
+  REAL(KIND = DP) :: zi_tmp(nbndfst)
   !! Temporary array to store the Z
   REAL(KIND = DP) :: g2
   !! Electron-phonon matrix elements squared in Ry^2
@@ -150,13 +150,13 @@
   !! Collect k-point coordinate from all pools in parallel case
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Collect eigenenergies from all pools in parallel case
-  COMPLEX(KIND = DP) :: vkk(3,ibndmax-ibndmin+1,ibndmax-ibndmin+1)
+  COMPLEX(KIND = DP) :: vkk(3,nbndfst,nbndfst)
   !!- Velocity matrix elements at k, k+q
-  COMPLEX(KIND = DP) :: vkq(3,ibndmax-ibndmin+1,ibndmax-ibndmin+1)
+  COMPLEX(KIND = DP) :: vkq(3,nbndfst,nbndfst)
   !!- Velocity matrix elements at k, k+q
   COMPLEX (KIND = DP) :: s1a(3), s1e(3), s2a(3), s2e(3)
   !! Transition probability function    
-  COMPLEX (KIND = DP) :: epf(ibndmax-ibndmin+1, ibndmax-ibndmin+1,nmodes)
+  COMPLEX (KIND = DP) :: epf(nbndfst, nbndfst,nmodes)
   !! Generalized matrix elements for phonon-assisted absorption
   ! 
   ! SP: Define the inverse so that we can efficiently multiply instead of
@@ -174,9 +174,9 @@
   cfac = 16.d0*pi**2
   ! 
   IF (iq == 1) THEN
-    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Phonon-assisted absorption")')
-    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     !
     IF (fsthick < 1.d3 ) &
          WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
@@ -196,7 +196,7 @@
   !
   ! The total number of k points
   !
-  nksqtotf = nkqtotf/2 ! odd-even for k,k+q
+  nksqtotf = nktotf ! odd-even for k,k+q
   !
   IF (efermi_read) THEN
      !
@@ -225,16 +225,16 @@
     !
     ! RM - vme version should be checked
     IF (vme) THEN 
-      DO ibnd = 1, ibndmax-ibndmin+1
-        DO jbnd = 1, ibndmax-ibndmin+1
+      DO ibnd = 1, nbndfst
+        DO jbnd = 1, nbndfst
           ! vmef is in units of Ryd * bohr
           vkk(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk)
           vkq(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq)
         ENDDO
       ENDDO
     ELSE
-      DO ibnd = 1, ibndmax-ibndmin+1
-        DO jbnd = 1, ibndmax-ibndmin+1
+      DO ibnd = 1, nbndfst
+        DO jbnd = 1, nbndfst
            ! Dme's already corrected for GW corrections in wan2bloch.f90
           vkk(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) 
           vkq(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq) 
@@ -242,7 +242,7 @@
       ENDDO
     ENDIF
     ! 
-    DO ibnd = 1, ibndmax-ibndmin+1
+    DO ibnd = 1, nbndfst
       !  the energy of the electron at k (relative to Ef)
       ekk = etf (ibndmin-1+ibnd, ikk) - ef0
       !
@@ -250,7 +250,7 @@
         !
         wgkk = wgauss( -ekk*inv_eptemp0, -99)  
         ! 
-        DO jbnd = 1, ibndmax-ibndmin+1
+        DO jbnd = 1, nbndfst
           ! 
           ! The fermi occupation for k+q
           ekq = etf (ibndmin-1+jbnd, ikq) - ef0
@@ -272,7 +272,7 @@
                   s2a = czero
                   s2e = czero
                   !
-                  DO mbnd = 1, ibndmax-ibndmin+1
+                  DO mbnd = 1, nbndfst
                     !
                     ! The energy of the electron at k (relative to Ef)
                     ekmk = etf (ibndmin-1+mbnd, ikk) - ef0

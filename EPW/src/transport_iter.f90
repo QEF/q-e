@@ -69,11 +69,11 @@
     !! Band mapping index
     INTEGER, INTENT(in) :: sparse_t(nind)
     !! Temperature mapping index
-    REAL(KIND = DP), INTENT(in) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: etf_all(nbndfst,nktotf)
     !! Eigenenergies
-    REAL(KIND = DP), INTENT(in) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3,nbndfst,nktotf)
     !! Velocity of k
-    REAL(KIND = DP), INTENT(in) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nktotf)
     !! Weight of k
     REAL(KIND = DP), INTENT(in) :: trans_prob(nind)
     !! Transition probability
@@ -126,7 +126,7 @@
     !! For a given k-point in the IBZ gives the k-point index
     !! of all the k-point in the full BZ that are connected to the current 
     !! one by symmetry. nrot is the max number of symmetry 
-    INTEGER :: nsym(nkqtotf/2)
+    INTEGER :: nsym(nktotf)
     !! Temporary matrix used to count how many symmetry for that k-point
     INTEGER :: n
     !! Use for averaging
@@ -137,15 +137,15 @@
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
     REAL(KIND = DP) :: ekq
     !! Energy relative to Fermi level: $$\varepsilon_{m\mathbf{k+q}}-\varepsilon_F$$
-    REAL(KIND = DP) :: vkk(3,ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: vkk(3,nbndfst)
     !! Electronic velocity $$v_{n\mathbf{k}}$$
     REAL(KIND = DP) :: xkf_all(3,nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
-    REAL(KIND = DP) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP) :: F_SERTA(3, nbndfst, nktotf, nstemp)
     !! SERTA solution
-    REAL(KIND = DP) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP) :: F_in(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i
-    REAL(KIND = DP) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    REAL(KIND = DP) :: F_out(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i
     REAL(KIND = DP) :: F_rot(3)
     !! Rotated Fi_in by the symmetry operation 
@@ -155,11 +155,11 @@
     !! Average hole mobility from previous iteration
     REAL(KIND = DP) :: av_mob(nstemp)
     !! Average hole mobility
-    REAL(KIND = DP) :: tmp(ibndmax-ibndmin+1, nkqtotf/2, nstemp)
-    !REAL(KIND = DP) :: tmp2(ibndmax-ibndmin+1, ibndmax-ibndmin+1,nstemp, nkqtotf/2, nqf)
+    REAL(KIND = DP) :: tmp(nbndfst, nktotf, nstemp)
+    !REAL(KIND = DP) :: tmp2(nbndfst, nbndfst,nstemp, nktotf, nqf)
     REAL(KIND = DP) :: tmp2
     !! Used for the averaging
-    REAL(KIND = DP) :: tmp3(ibndmax-ibndmin+1)
+    REAL(KIND = DP) :: tmp3(nbndfst)
     !! Used for the averaging
     REAL(KIND = DP) :: ekk2
     !! Use for averaging
@@ -208,11 +208,11 @@
         ! Computes nrot
         CALL set_sym_bl( )
         !
-        ALLOCATE(BZtoIBZ_mat(nrot, nkqtotf/2))   
+        ALLOCATE(BZtoIBZ_mat(nrot, nktotf))   
         BZtoIBZ_mat(:, :) = 0 
         !
         ! What we get from this call is BZtoIBZ
-        CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
+        CALL kpoint_grid_epw ( nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1*nkf2*nkf3, &
                    nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
         ! 
         BZtoIBZ_tmp(:) = 0
@@ -233,7 +233,7 @@
       CALL mp_bcast( nrot,        ionode_id, inter_pool_comm )
       CALL mp_bcast( s_BZtoIBZ,   ionode_id, inter_pool_comm )
       CALL mp_bcast( BZtoIBZ,     ionode_id, inter_pool_comm )
-      IF (mpime /= ionode_id) ALLOCATE(BZtoIBZ_mat(nrot, nkqtotf/2))
+      IF (mpime /= ionode_id) ALLOCATE(BZtoIBZ_mat(nrot, nktotf))
       CALL mp_bcast( BZtoIBZ_mat, ionode_id, inter_pool_comm )
       !
       WRITE(stdout,'(5x,"Symmetry mapping finished")')
@@ -271,13 +271,13 @@
     ! 
     tmp3(:) = zero
     DO itemp = 1, nstemp
-      DO ik = 1, nkqtotf/2
+      DO ik = 1, nktotf
         ! 
-        DO ibnd = 1, ibndmax-ibndmin+1
+        DO ibnd = 1, nbndfst
           ekk = etf_all (ibnd, ik)
           n = 0
           tmp2 = 0.0_DP
-          DO jbnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, nbndfst
             ekk2 = etf_all (jbnd, ik)
             IF (ABS(ekk2-ekk) < eps6) THEN
               n = n + 1
@@ -285,7 +285,7 @@
             ENDIF
             ! 
           ENDDO ! jbnd
-          tmp3(ibnd) = tmp2 / float(n)
+          tmp3(ibnd) = tmp2 / FLOAT(n)
           !
         ENDDO ! ibnd
          tmp(:,ik,itemp) = tmp3(:)
@@ -295,8 +295,8 @@
     ! 
     DO itemp = 1, nstemp
       etemp = transp_temp(itemp)
-      DO ik = 1, nkqtotf/2
-        DO ibnd = 1, ibndmax-ibndmin+1
+      DO ik = 1, nktotf
+        DO ibnd = 1, nbndfst
           IF (ABS(tmp(ibnd, ik, itemp)) > eps160) THEN
             ekk = etf_all (ibnd, ik) - ef0(itemp)
             dfnk = w0gauss( ekk / etemp, -99 ) / etemp
@@ -348,17 +348,17 @@
     ! 
     ! Now compute the Iterative solution for electron or hole
     WRITE(stdout,'(5x,a)') ' '
-    WRITE(stdout,'(5x,a)') repeat('=',67)
+    WRITE(stdout,'(5x,a)') REPEAT('=',67)
     WRITE(stdout,'(5x,"Start solving iterative Boltzmann Transport Equation")')
-    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
     !  
     DO WHILE (MAXVAL(error) > eps6)  
       WRITE(stdout,'(/5x,"Iteration number:", i10," "/)') iter
       ! 
       IF (iter > mob_maxiter) THEN
-        WRITE(stdout,'(5x,a)') repeat('=',67)
+        WRITE(stdout,'(5x,a)') REPEAT('=',67)
         WRITE(stdout,'(5x,"The iteration reached the maximum but did not converge.")')
-        WRITE(stdout,'(5x,a/)') repeat('=',67)
+        WRITE(stdout,'(5x,a/)') REPEAT('=',67)
         exit
       ENDIF
       ! 
@@ -405,8 +405,8 @@
       CALL mp_sum(F_out, world_comm)  
       ! 
       DO itemp = 1, nstemp
-        DO ik = 1, nkqtotf/2
-          DO ibnd = 1, ibndmax-ibndmin+1
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
             IF (ABS(tmp(ibnd, ik, itemp)) > eps160) THEN
               F_out(:, ibnd, ik, itemp) = F_SERTA(:, ibnd, ik, itemp) +&
                                F_out(:, ibnd, ik, itemp) / ( two * tmp(ibnd, ik, itemp) )
@@ -505,11 +505,11 @@
     !! Total number of component for conduction band
 #endif    
     !
-    REAL(KIND = DP), INTENT(inout) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(inout) :: etf_all(nbndfst,nktotf)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
-    REAL(KIND = DP), INTENT(inout) :: wkf_all(nkqtotf/2)
+    REAL(KIND = DP), INTENT(inout) :: wkf_all(nktotf)
     !! k-point weights from all the cpu
-    REAL(KIND = DP), INTENT(inout) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    REAL(KIND = DP), INTENT(inout) :: vkk_all(3,nbndfst,nktotf)
     !! velocity from all the k-points
     REAL(KIND = DP), INTENT(inout) :: ef0(nstemp)
     !! Fermi level for the temperature itemp     
@@ -606,8 +606,8 @@
       ENDDO
       READ(iufilibtev_sup,'(a)')
       ! 
-      DO ik = 1, nkqtotf/2
-        DO ibnd = 1, ibndmax-ibndmin+1
+      DO ik = 1, nktotf
+        DO ibnd = 1, nbndfst
           READ(iufilibtev_sup,*) iktmp, ibtmp, vkk_all(:,ibnd,ik), etf_all(ibnd,ik), wkf_all(ik)
         ENDDO
       ENDDO

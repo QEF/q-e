@@ -406,9 +406,9 @@
       !  
       mode = imode0 + ipert
       IF (timerev) THEN
-        CALL dvqpsi_us3(ik, CONJG(u(:, mode)), .false., xkqtmp, xq0, igk, igkq, npw, npwq)
+        CALL dvqpsi_us3(ik, CONJG(u(:, mode)), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq)
       ELSE
-        CALL dvqpsi_us3(ik, u(:, mode), .false., xkqtmp, xq0, igk, igkq, npw, npwq)
+        CALL dvqpsi_us3(ik, u(:, mode), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq)
       ENDIF
 !DBSP 
 !      b = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)

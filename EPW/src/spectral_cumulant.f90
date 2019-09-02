@@ -85,12 +85,12 @@
   e_thresh = 10.d0 / ryd2ev ! referred to the Fermi level
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
   !
-  WRITE(stdout,'(/5x,a)') repeat('=',75)
+  WRITE(stdout,'(/5x,a)') REPEAT('=',75)
   WRITE(stdout,'(5x,a)') 'Performing the CUMULANT EXPANSION of the retarded Greens function to obtain'
   WRITE(stdout,'(5x,a)') 'the electron spectral function.'
   WRITE(stdout,'(5x,a)') 'There is no spin degeneracy factor, as in spectral_func.f90'
   WRITE(stdout,'(5x,a)') 'Warning: the routine is sequential but very fast.'
-  WRITE(stdout,'(5x,a/)') repeat('=',75)
+  WRITE(stdout,'(5x,a/)') REPEAT('=',75)
   !
   OPEN (UNIT = iospectral_sup, FILE = 'specfun_sup.elself', status='old', iostat=ios)
   IF (ios /= 0) CALL errore ('spectral_cumulant', 'opening file specfun_sup.elself', ABS(ios) )
@@ -121,7 +121,7 @@
   DO im = 1,6
     READ (iospectral_sup, '(a)') line
   ENDDO
-  DO ibnd = 1, ibndmax-ibndmin+1
+  DO ibnd = 1, nbndfst
     DO ik = 1, nk
       DO iw = 1, nw_specfun
         READ (iospectral_sup,*) i1, i2, a1, a2, a3, a4
@@ -175,7 +175,7 @@
       CALL cumulant_conv( ekk, ww, sigmar(ik,:), -sigmai(ik,:), a_mig(:,ik), a_cw, zeta )
       !
       ! cumulant calculated in time domain + FFT (ImSigma>0 in EPW)
-      IF (.true.) THEN
+      IF (.TRUE.) THEN
         CALL cumulant_time( ekk, ww, sigmar(ik,:), -sigmai(ik,:), a_mig(:,ik), a_tmp )
       ENDIF
       !

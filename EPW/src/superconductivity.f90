@@ -90,8 +90,8 @@
          'muc should be >= 0.d0',1) 
     IF (eliashberg .AND. (rand_k .OR. rand_q ) .AND. (fila2f == ' ') ) &
          CALL errore('eliashberg_init', 'eliashberg requires a uniform grid when fila2f is not used',1)
-    IF (eliashberg .AND. (mod(nkf1,nqf1) /= 0 .OR. mod(nkf2,nqf2) &
-         /= 0 .OR. mod(nkf3,nqf3) /= 0 ) .AND. (fila2f == ' ') ) &
+    IF (eliashberg .AND. (mod(nkf1,nqf1) /= 0 .OR. MOD(nkf2,nqf2) &
+         /= 0 .OR. MOD(nkf3,nqf3) /= 0 ) .AND. (fila2f == ' ') ) &
          CALL errore('eliashberg_init', &
          'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used',1)
     !
@@ -147,7 +147,7 @@
         ENDDO
       ELSEIF (nswi > 0 .AND. wscut > 0.d0) THEN
         nsiw(:) = nswi
-        WRITE(stdout,'(5x,a)') 'when nswi > 0, wscut is not used for limag=.true.'
+        WRITE(stdout,'(5x,a)') 'when nswi > 0, wscut is not used for limag=.TRUE.'
       ENDIF
       !
       IF (ABS(wscut) < eps6) THEN 
@@ -526,7 +526,7 @@
     my_pool_id = 0
 #endif  
     !
-    limag_fly = .false.
+    limag_fly = .FALSE.
     !
     CALL fkbounds( nkfs, lower_bnd, upper_bnd )
     !
@@ -551,7 +551,7 @@
     IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
-      limag_fly = .true.
+      limag_fly = .TRUE.
       !
       ! remove memory required for AKeri 
       ! imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
@@ -609,7 +609,7 @@
     my_pool_id = 0
 #endif  
     !
-    lacon_fly = .false.
+    lacon_fly = .FALSE.
     !
     CALL fkbounds( nkfs, lower_bnd, upper_bnd )
     !
@@ -628,7 +628,7 @@
     IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
-      lacon_fly = .true.
+      lacon_fly = .TRUE.
       !
       ! remove memory required for a2fij
       imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:)) * nbndfs**2 * nqstep

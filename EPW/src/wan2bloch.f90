@@ -410,7 +410,7 @@
     COMPLEX(KIND = DP) :: champ( nmodes*(nmodes+1)/2 )
     COMPLEX(KIND = DP) :: cwork( 2*nmodes ), cz( nmodes, nmodes)
     !
-    LOGICAL, SAVE :: first=.true.
+    LOGICAL, SAVE :: first=.TRUE.
     !
     INTEGER :: n1,n2,n3, m1,m2,m3, i
     !! 
@@ -449,7 +449,7 @@
     CALL cryst_to_cart(1, xq, bg, 1)
     !
     IF (first) THEN
-      first = .false.
+      first = .FALSE.
       DO na = 1, nat
         DO nb = 1, nat
           total_weight = zero
@@ -621,7 +621,7 @@
     ! work variables
     !
     ! Dyn mat in Bloch basis, fine mesh
-    LOGICAL,SAVE :: first=.true.
+    LOGICAL,SAVE :: first=.TRUE.
     !
     INTEGER :: n1,n2,n3, m1,m2,m3, i
     !! 
@@ -644,7 +644,7 @@
     !CALL cryst_to_cart(1, xq, bg, 1)
     !
     IF (first) THEN
-      first = .false.
+      first = .FALSE.
       DO na = 1, nat
         DO nb = 1, nat
           total_weight = zero
@@ -761,7 +761,7 @@
     INTEGER, INTENT(in) :: nrr 
     !! kpoint number for the interpolation
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .true.
+    !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     !
     REAL(KIND = DP), INTENT(in) :: etf(nbnd)
@@ -894,7 +894,7 @@
     INTEGER, INTENT(in) :: irvec(3, nrr)
     !! coordinates of WS points
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .true.
+    !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     !
     REAL(KIND = DP), INTENT(in) :: etf(nbnd)
@@ -1047,7 +1047,7 @@
     ! \hbar v_{mn,\alpha}(k') = H^(H)_{mn,\alpha}(k') &
     !                         - (E^(H)_nk'-E^(H)_mk') * A^(H)_{mn,\alpha}(k')
     !
-    ! RM - use etf instead of etf_ks when eig_read=.false.
+    ! RM - use etf instead of etf_ks when eig_read=.FALSE.
     IF (eig_read) THEN
       DO ibnd = 1, nbnd
         DO jbnd = 1, nbnd
@@ -1097,10 +1097,10 @@
     INTEGER, INTENT(in) :: irvec_g ( 3, nrr_g)
     !! Coordinates of WS points
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .true.
+    !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     INTEGER, INTENT(in) :: nat
-    !! Is equal to the number of atoms if use_ws == .true. or 1 otherwise
+    !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise
     INTEGER, INTENT(in) :: ndegen_g (nrr_g, nat, dims, dims)
     !! Number of degeneracy of WS points
     INTEGER, INTENT(in) :: nbnd
@@ -1389,7 +1389,7 @@
     INTEGER, INTENT(in) :: nmodes
     !! number of phonon modes
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .true.
+    !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     !
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
@@ -1497,7 +1497,7 @@
     INTEGER, INTENT(in) :: nrr
     !! Number of Wigner-Size points
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .true.
+    !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     !
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
@@ -1611,10 +1611,10 @@
     INTEGER, INTENT(in) :: nrr_g
     !! Number of phononic WS points
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .true.
+    !! Is equal to the number of Wannier function if use_ws == .TRUE.
     !! Is equal to 1 otherwise.
     INTEGER, INTENT(in) :: nat
-    !! Is equal to the number of atoms if use_ws == .true. or 1 otherwise. 
+    !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise. 
     INTEGER, INTENT(in) :: irvec_g( 3, nrr_g)
     !! Coordinates of WS points
     INTEGER, INTENT(in) :: ndegen_g(nrr_g, nat, dims, dims)
@@ -1746,8 +1746,8 @@
       IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_READ_AT',1)
 #endif    
       ! 
-      !write(stdout,*)'ir  epmatw ',use_ws, ir, sum(epmatw)
-      !IF (mpime==1)  write(999,*),'cpu2 ir  epmatw ',use_ws, ir, sum(epmatw)
+      !write(stdout,*)'ir  epmatw ',use_ws, ir, SUM(epmatw)
+      !IF (mpime==1)  write(999,*),'cpu2 ir  epmatw ',use_ws, ir, SUM(epmatw)
       !
       IF (use_ws) THEN
         DO iw2 = 1, dims
@@ -1758,8 +1758,8 @@
       ELSE 
         CALL ZAXPY( nbnd * nbnd * nrr_k, cfac(ir,1,1), epmatw, 1, epmatf, 1)
       ENDIF
-      !write(stdout,*)'ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), sum(epmatf)
-      !IF (mpime==1) write(999,*),'cpu2 ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), sum(epmatf)
+      !write(stdout,*)'ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), SUM(epmatf)
+      !IF (mpime==1) write(999,*),'cpu2 ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), SUM(epmatf)
       ! 
     ENDDO
     DEALLOCATE(epmatw)

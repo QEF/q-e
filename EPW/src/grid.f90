@@ -119,7 +119,7 @@
           ALLOCATE(xkfval(3, 2 * nkqtotf))   
           xkf_(:, :) = 0.0d0
           xkfval(:, :) = 0.0d0
-          CALL kpoint_grid(nrot, time_reversal, .false., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
+          CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf_tmp, wkf_tmp)
           !  
           ! assign to k and k+q for xkf and wkf 
@@ -169,7 +169,7 @@
           ALLOCATE(wkf_(nkqtotf))
           wkf_(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
-            wkf_(2 * ik - 1) = 2.d0 / (DBLE(nkqtotf / 2))
+            wkf_(2 * ik - 1) = 2.d0 / (DBLE(nktotf))
           ENDDO
           DO i = 1, nkf1
             DO j = 1, nkf2
@@ -229,7 +229,7 @@
     !
     !  scatter the k points of the fine mesh across the pools
     !
-    nkqf = 2 * (nkqtotf / 2 / npool)
+    nkqf = 2 * (nktotf / npool)
     rest = (nkqtotf - nkqf * npool) / 2
     IF (my_pool_id < rest) THEN
       nkqf = nkqf + 2
@@ -425,7 +425,7 @@
           ALLOCATE(wkf(nkqtotf))
           wkf(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
-            wkf(2 * ik - 1) = 2.d0 / (DBLE(nkqtotf / 2))
+            wkf(2 * ik - 1) = 2.d0 / (DBLE(nktotf))
           ENDDO
           DO i = 1, nkf1
             DO j = 1, nkf2
@@ -479,7 +479,7 @@
       ENDIF
       !
       ! Serial
-      nkf = nkqtotf / 2
+      nkf = nktotf
       nkqf = nkqtotf
       !
     ENDIF
@@ -603,7 +603,7 @@
       IF (filqf /= '') THEN ! load from file (crystal coordinates)
         !
         WRITE(stdout, *) '    Using q-mesh file: ', TRIM(filqf)
-        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.true., q-mesh needs to be [-0.5:0.5] (crystal)' 
+        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)' 
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', ERR = ierr, IOSTAT = ios)
         IF (ierr /= 0) CALL errore('loadkmesh_para', 'Opening file ' // filqf, ABS(ios))
         READ(iunqf, *) nqtotf
@@ -620,7 +620,7 @@
         !
       ELSEIF ((nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_q) THEN
-          IF (lscreen) CALL errore('loadqmesh', 'If lscreen = .true. do not use mp_mesh_q', 1)
+          IF (lscreen) CALL errore('loadqmesh', 'If lscreen = .TRUE. do not use mp_mesh_q', 1)
           ! get size of the mp_mesh in the irr wedge 
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
@@ -628,11 +628,11 @@
           ALLOCATE(xqf_ (3, nqf1 * nqf2 * nqf3))
           ALLOCATE(wqf_(nqf1 * nqf2 * nqf3))
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid ( nrot, time_reversal, .false., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           DEALLOCATE(xqf_, wqf_)
           ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf)) 
-          CALL kpoint_grid ( nrot, time_reversal, .false., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           !  
           ! bring the k point to crystal coordinates       
@@ -787,7 +787,7 @@
         ! Each pool gets its own copy from the action=read statement
         !
         WRITE(stdout, *) '    Using q-mesh file: ', TRIM(filqf)
-        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.true., q-mesh needs to be [-0.5:0.5] (crystal)'
+        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)'
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', ERR = ierr, IOSTAT = ios)
         IF (ierr /= 0) CALL errore('loadqmesh_serial', 'opening file ' // filqf, ABS(ios))
         READ(iunqf, *) nqtotf
@@ -803,7 +803,7 @@
         !
       ELSEIF ((nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_q) THEN
-          IF (lscreen) CALL errore ('loadqmesh', 'If lscreen=.true. do not use mp_mesh_q',1)
+          IF (lscreen) CALL errore ('loadqmesh', 'If lscreen=.TRUE. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge 
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
@@ -964,9 +964,9 @@
     INTEGER :: found(npool)
     !! Indicate if a q-point was found within the window
     INTEGER :: iw
-    !! Counter on bands when use_ws == .true.
+    !! Counter on bands when use_ws == .TRUE.
     INTEGER :: iw2
-    !! Counter on bands when use_ws == .true.
+    !! Counter on bands when use_ws == .TRUE.
     INTEGER :: ir
     !! Counter for WS loop
     INTEGER :: nqtot 
@@ -1003,7 +1003,7 @@
     !! Eigen-energies all full k-grid.
     REAL(KIND = DP) :: etf_locq(nbndsub, nkf) 
     !! Eigen-energies all full k-grid.
-    REAL(KIND = DP) :: etf_all(nbndsub, nkqtotf / 2) 
+    REAL(KIND = DP) :: etf_all(nbndsub, nktotf) 
     !! Eigen-energies all full k-grid.
     REAL(KIND = DP) :: etf_tmp(nbndsub)
     !! Temporary Eigen-energies at a give k-point
@@ -1068,7 +1068,7 @@
           ENDIF        
           CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf_loc(:, ik), chw, cfac, dims)
         ENDDO
-        CALL poolgather(nbndsub, nkqtotf / 2, nkf, etf_loc, etf_all )
+        CALL poolgather(nbndsub, nktotf, nkf, etf_loc, etf_all )
         ! 
         ! In case of k-point symmetry
         IF (mp_mesh_k) THEN
@@ -1105,7 +1105,7 @@
             icbm = FLOOR(nelec / 2.0d0) + 1
           ENDIF
           !
-          DO ik = 1, nkqtotf / 2
+          DO ik = 1, nktotf
             DO ibnd = icbm, nbndsub
               etf_all(ibnd, ik) = etf_all(ibnd, ik) + scissor
             ENDDO
@@ -1148,7 +1148,7 @@
             selecq(totq) = iq
             ! 
             IF (MOD(totq, restart_freq) == 0) THEN
-              WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total', totq, iq
+              WRITE(stdout,'(5x,a,i12,i12)')'Number selected, total', totq, iq
             ENDIF
           ENDIF
         ENDDO ! iq
@@ -1238,7 +1238,7 @@
               totq = totq + 1
               selecq(totq) = iq
               IF (MOD(totq, restart_freq) == 0) THEN
-                WRITE(stdout, '(5x,a,i8,i8)') 'Number selected, total', totq, iq
+                WRITE(stdout, '(5x,a,i12,i12)') 'Number selected, total', totq, iq
               ENDIF
             ENDIF
           ENDDO ! iq
@@ -1273,7 +1273,7 @@
               totq = totq + 1
               selecq(totq) = iq
               IF (MOD(totq, restart_freq) == 0) THEN
-                WRITE(stdout,i '(5x,a,i8,i8)')'Number selected, total', totq, iq
+                WRITE(stdout,i '(5x,a,i12,i12)')'Number selected, total', totq, iq
               ENDIF
             ENDIF
           ENDDO ! iq            
@@ -1339,9 +1339,9 @@
     !! K-points that are within the fshick windows
     INTEGER :: kpt_out(nkqtotf)
     !! K-points that are outside of the fshick windows
-    INTEGER :: map_rebal_tmp(nkqtotf / 2)
+    INTEGER :: map_rebal_tmp(nktotf)
     !! Temporary map between the initial ordering of k-point and the rebalanced one
-    INTEGER :: map_rebal_inv_tmp(nkqtotf / 2)
+    INTEGER :: map_rebal_inv_tmp(nktotf)
     !! Temporary inverse map between the initial ordering of k-point and the rebalanced one
     !
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
@@ -1367,8 +1367,8 @@
     etf_all = etf
 #endif 
     ! 
-    ALLOCATE(map_rebal(nkqtotf / 2))
-    ALLOCATE(map_rebal_inv(nkqtotf / 2))
+    ALLOCATE(map_rebal(nktotf))
+    ALLOCATE(map_rebal_inv(nktotf))
     ! 
     kpt_in(:) = 0 
     kpt_out(:) = 0 
@@ -1379,7 +1379,7 @@
       ikpt = 0
       ikpt2 = 0
       ! 
-      DO ik = 1, nkqtotf / 2
+      DO ik = 1, nktotf
         ikk = 2 * ik - 1
         ikq = ikk + 1
         IF (MINVAL(ABS(etf_all(:, ikk) - ef)) < fsthick) THEN
@@ -1419,7 +1419,7 @@
     ! the second core has the second k-point etc 
     ! 
     tot = (nkqtotf / (2 * npool))
-    rest = ((nkqtotf / 2) - tot * npool)
+    rest = ((nktotf) - tot * npool)
     ! 
     DO ipool = 1, npool
       DO ik = 1,  tot
@@ -1433,7 +1433,7 @@
     map_rebal_inv(:) = map_rebal_inv_tmp(:) 
     ! 
     ! Now recontruct map_rebal so that it is the inverse mapping as map_rebal_inv
-    DO ik = 1, nkqtotf / 2
+    DO ik = 1, nktotf
       map_rebal(map_rebal_inv(ik)) = ik
     ENDDO
     ! 

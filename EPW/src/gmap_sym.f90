@@ -83,7 +83,7 @@
       k = s(3,1,isym) * mill(1,ig) + s(3,2,isym) * mill(2,ig) + s(3,3,isym) * mill(3,ig)
       !
       jg = 0
-      tfound = .false.
+      tfound = .FALSE.
       DO WHILE ( ( .NOT. tfound) .AND. (jg < ngm) )
         jg = jg + 1
         tfound = (i == mill(1,jg)) .AND. (j == mill(2,jg)) .AND. (k == mill(3,jg))

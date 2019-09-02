@@ -84,7 +84,7 @@
        !
        IF (( limag .AND. .NOT. imag_read ) .OR. ( limag .AND. imag_read .AND. itemp /= 1 )) THEN
           iter = 1
-          conv = .false.
+          conv = .FALSE.
           DO WHILE ( .NOT. conv .AND. iter <= nsiter ) 
              CALL sum_eliashberg_aniso_iaxis( itemp, iter, conv )
              IF (mpime == ionode_id) THEN
@@ -136,7 +136,7 @@
           WRITE(stdout,'(5x,a,f10.4)') 'Cutoff frequency wscut = ', wscut
           WRITE(stdout,'(a)') '  '
           CALL start_clock( 'raxis_pade' )
-          conv = .false.
+          conv = .FALSE.
           N = 90 * nsiw(itemp) / 100
           IF (mod(N,2) /= 0 ) N = N + 1
           CALL pade_cont_aniso_iaxis_to_raxis( itemp, N, conv )
@@ -169,7 +169,7 @@
           CALL start_clock( 'raxis_acon' )
           !
           iter = 1
-          conv = .false.
+          conv = .FALSE.
           DO WHILE ( .NOT. conv .AND. iter <= nsiter )
             CALL analytic_cont_aniso_iaxis_to_raxis( itemp, iter, conv )
             IF (mpime == ionode_id) THEN
@@ -444,7 +444,7 @@
                    '   relerr = ', errdelta, '   abserr = ', reldelta / DBLE(nsiw(itemp)), &
                    '   Znormi(1) = ', Znormi(1), '   Deltai(1) = ', Deltai(1)
       !
-      IF (errdelta < conv_thr_iaxis) conv = .true.
+      IF (errdelta < conv_thr_iaxis) conv = .TRUE.
       IF (errdelta < conv_thr_iaxis .OR. iter == nsiter) THEN
          gap(itemp) = Deltai(1)
          gap0 = gap(itemp)
@@ -733,7 +733,7 @@
                    '   error = ', errdelta, '   Re[Znorm(1)] = ', REAL(Znorm(1)), & 
                    '   Re[Delta(1)] = ', REAL(Delta(1))
       !
-      IF (errdelta < conv_thr_racon ) conv = .true.
+      IF (errdelta < conv_thr_racon ) conv = .TRUE.
       IF (errdelta < conv_thr_racon .OR. iter == nsiter) THEN
          cname = 'acon'
          CALL eliashberg_write_raxis( itemp, cname )
@@ -926,7 +926,7 @@
       errdelta = reldelta / absdelta
       !
       IF (errdelta > zero) THEN
-         conv = .true.
+         conv = .TRUE.
          WRITE(stdout,'(5x,a,i6,a,ES20.10,a,ES20.10,a,ES20.10)') 'pade = ', N, & 
                 '   error = ', errdelta, '   Re[Znorm(1)] = ', REAL(Znorm(1)), & 
                 '   Re[Delta(1)] = ', REAL(Delta(1))
