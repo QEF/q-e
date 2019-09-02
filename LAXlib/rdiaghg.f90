@@ -193,8 +193,20 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   ! ... On output both matrix are unchanged
   !
   USE cudafor
+#if defined(__USE_CUSOLVER)
+  USE cusolverdn
+#else
   USE dsygvdx_gpu
+#endif
   USE la_param
+  !
+#define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER)
+  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+#define VARTYPE POINTER
+#else
+#define VARTYPE ALLOCATABLE
+#endif
   !
   IMPLICIT NONE
   !
@@ -225,10 +237,20 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   REAL(DP), ALLOCATABLE, PINNED :: e_h(:)
   !
   INTEGER                       :: lwork_d, liwork
-  REAL(DP), ALLOCATABLE, DEVICE :: work_d(:)
+  REAL(DP), VARTYPE             :: work_d(:)
+  ATTRIBUTES( DEVICE )          :: work_d
   !  
   ! Temp arrays to save H and S.
   REAL(DP), ALLOCATABLE, DEVICE :: h_diag_d(:), s_diag_d(:)
+  !
+#if defined(__USE_CUSOLVER)
+  INTEGER :: devInfo_d, h_meig
+  ATTRIBUTES( DEVICE )   :: devInfo_d
+  TYPE(cusolverDnHandle) :: cuSolverHandle
+  REAL(DP), VARTYPE      :: h_bkp_d(:,:), s_bkp_d(:,:)
+  ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
+#endif
+#undef VARTYPE
   !
   CALL start_clock( 'rdiaghg_gpu' )
   !
@@ -236,6 +258,7 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   !
   IF ( me_bgrp == root_bgrp ) THEN
      !
+#if ! defined(__USE_CUSOLVER)
      ALLOCATE(e_h(n), v_h(ldh,n))
      !
      ALLOCATE(h_diag_d(n), s_diag_d(n))
@@ -244,13 +267,17 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
         h_diag_d(i) = DBLE( h_d(i,i) )
         s_diag_d(i) = DBLE( s_d(i,i) )
      END DO
-     ! 
+     !
      lwork  = 1 + 6*n + 2*n*n
      liwork = 3 + 5*n
      ALLOCATE(work(lwork), iwork(liwork))
      !
      lwork_d = 2*64*64 + 66*n
+#if ! defined(__USE_GLOBAL_BUFFER)
      ALLOCATE(work_d(1*lwork_d), STAT = info)
+#else
+     CALL dev%lock_buffer( work_d,  lwork_d, info )
+#endif
      IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
      !
      CALL dsygvdx_gpu(n, h_d, ldh, s_d, ldh, v_d, ldh, 1, m, e_d, work_d, &
@@ -276,9 +303,73 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
      DEALLOCATE(h_diag_d,s_diag_d)
      ! 
      DEALLOCATE(work, iwork)
+#if ! defined(__USE_GLOBAL_BUFFER)
      DEALLOCATE(work_d)
+#else
+     CALL dev%release_buffer( work_d,  info )
+#endif
      
      DEALLOCATE(v_h, e_h)
+#else
+! vvv __USE_CUSOLVER
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(h_bkp_d(n,n), s_bkp_d(n,n), STAT = info)
+      IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( h_bkp_d,  (/ n, n /), info )
+      CALL dev%lock_buffer( s_bkp_d,  (/ n, n /), info )
+#endif
+
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            h_bkp_d(i,j) = h_d(i,j)
+            s_bkp_d(i,j) = s_d(i,j)
+         ENDDO
+      ENDDO
+
+      info = cusolverDnCreate(cuSolverHandle)
+      IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' cusolverDnCreate failed ', ABS( info ) )
+      IF ( info /= CUSOLVER_STATUS_SUCCESS ) CALL errore( ' rdiaghg_gpu ', 'cusolverDnCreate',  ABS( info ) )
+
+
+      info = cusolverDnDsygvdx_bufferSize(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, &
+                                                         CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                               n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, lwork_d)
+      IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' cusolverDnDsygvdx_bufferSize failed ', ABS( info ) )
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(work_d(1*lwork_d), STAT = info)
+      IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( work_d,  lwork_d, info )
+#endif
+      info = cusolverDnDsygvdx(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, &
+                                               CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                               n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig,&
+                                               e_d, work_d, lwork_d, devInfo_d)
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            IF(j <= m) v_d(i,j) = h_d(i,j)
+            h_d(i,j) = h_bkp_d(i,j)
+            s_d(i,j) = s_bkp_d(i,j)
+         ENDDO
+      ENDDO
+      !
+      IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' cusolverDnDsygvdx failed ', ABS( info ) )
+      info = cusolverDnDestroy(cuSolverHandle)
+      IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      DEALLOCATE(work_d)
+      DEALLOCATE(h_bkp_d, s_bkp_d)
+#else
+      CALL dev%release_buffer( work_d,  info )
+      CALL dev%release_buffer( h_bkp_d, info )
+      CALL dev%release_buffer( s_bkp_d, info )
+#endif
+#endif
+     !
   END IF
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors

@@ -205,9 +205,15 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   !
   !
   USE cudafor
+  !
+#if defined(__USE_CUSOLVER)
+  USE cusolverdn
+#else
   USE zhegvdx_gpu
+#endif
+  !
   USE la_param
-
+  !
 #define __USE_GLOBAL_BUFFER
 #if defined(__USE_GLOBAL_BUFFER)
   USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
@@ -255,8 +261,16 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   ! Temp arrays to save H and S.
   REAL(DP), VARTYPE    :: h_diag_d(:), s_diag_d(:)
   ATTRIBUTES( DEVICE ) :: work_d, rwork_d, h_diag_d, s_diag_d
-#undef VARTYPE
   INTEGER :: i, j
+#if defined( __USE_CUSOLVER )
+  INTEGER                :: devInfo_d, h_meig
+  ATTRIBUTES( DEVICE )   :: devInfo_d
+  TYPE(cusolverDnHandle) :: cuSolverHandle
+  !
+  COMPLEX(DP), VARTYPE   :: h_bkp_d(:,:), s_bkp_d(:,:)
+  ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
+#endif
+#undef VARTYPE
   !
   !
   !
@@ -266,6 +280,71 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   ! ... only the first processor diagonalizes the matrix
   !
   IF ( me_bgrp == root_bgrp ) THEN
+      !
+      ! Keeping compatibility for both CUSolver and CustomEigensolver, CUSolver below
+      !
+#if defined(__USE_CUSOLVER)
+!
+! vvv __USE_CUSOLVER
+
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(h_bkp_d(n,n), s_bkp_d(n,n), STAT = info)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( h_bkp_d,  (/ n, n /), info )
+      CALL dev%lock_buffer( s_bkp_d,  (/ n, n /), info )
+#endif
+      !
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            h_bkp_d(i,j) = h_d(i,j)
+            s_bkp_d(i,j) = s_d(i,j)
+         ENDDO
+      ENDDO
+      !
+      info = cusolverDnCreate(cuSolverHandle)
+      IF ( info /= CUSOLVER_STATUS_SUCCESS ) CALL errore( ' cdiaghg_gpu ', 'cusolverDnCreate',  ABS( info ) )
+      !
+      info = cusolverDnZhegvdx_bufferSize(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                               n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, lwork_d)
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(work_d(1*lwork_d), STAT = info)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( work_d,  lwork_d, info )
+#endif
+      !
+      info = cusolverDnZhegvdx(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                  n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, work_d, lwork, devInfo_d)
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            IF(j <= m) v_d(i,j) = h_d(i,j)
+            h_d(i,j) = h_bkp_d(i,j)
+            s_d(i,j) = s_bkp_d(i,j)
+         ENDDO
+      ENDDO
+      !
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cusolverDnZhegvdx failed ', ABS( info ) )
+      info = cusolverDnDestroy(cuSolverHandle)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      DEALLOCATE(work_d)
+      DEALLOCATE(h_bkp_d, s_bkp_d)
+#else
+      CALL dev%release_buffer( work_d,  info )
+      CALL dev%release_buffer( h_bkp_d, info )
+      CALL dev%release_buffer( s_bkp_d, info )
+#endif
+! ^^^ __USE_CUSOLVER
+      !
+      ! Keeping compatibility for both CUSolver and CustomEigensolver, CustomEigensolver below
+      !
+#else
+! vvv not __USE_CUSOLVER
 #if ! defined(__USE_GLOBAL_BUFFER)
       ! NB: dimension is different!
       ALLOCATE(v_h(ldh,n), e_h(n))
@@ -344,6 +423,8 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
       CALL dev%release_buffer( rwork_d, info)
       CALL pin%release_buffer(v_h, info)
       CALL pin%release_buffer(e_h, info)
+#endif
+! ^^^ not __USE_CUSOLVER
 #endif
      !
   END IF
