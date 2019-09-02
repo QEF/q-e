@@ -382,7 +382,7 @@ subroutine ld1_readin(input_file)
      rmatch_augfun=-1.0_dp   ! force a crash
      rmatch_augfun_nc =.false.
      lgipaw_reconstruction = .false.
-     use_paw_as_gipaw = .true. 
+     use_paw_as_gipaw = .false. 
 
      if (ionode) read(qestdin,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id, world_comm)
