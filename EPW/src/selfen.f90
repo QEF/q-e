@@ -524,10 +524,10 @@
                            delta_approx, vme
     use pwcom,      ONLY : nelec, ef
     USE klist_epw,  ONLY : isk_dummy
-    use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf, &
-                           nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,   &
-                           dmef, vmef, gamma_all,gamma_v_all, efnew, nbndfst, &
-                           nktotf
+    use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf,   &
+                           nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,     &
+                           dmef, vmef, gamma_all, g amma_v_all, efnew, nbndfst, &
+                           nktotf, adapt_smearing
     USE mp,         ONLY : mp_barrier, mp_sum
     USE mp_global,  ONLY : inter_pool_comm
     USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4, eps6, eps8
@@ -564,8 +564,6 @@
     !! Smearing for the Gaussian function 
     INTEGER :: n
     !! Counter on number of mode degeneracies
-    INTEGER :: nbnd
-    !! Total number of bands considered 
     REAL(KIND = DP) :: g2
     !! Electron-phonon matrix elements squared in Ry^2
     REAL(KIND = DP) :: ekk
@@ -646,7 +644,7 @@
     REAL(KIND = DP), EXTERNAL :: efermig
     !! Return the fermi energy
     !  
-    nbnd = nbndfst
+    IF (adapt_smearing) CALL errore('selfen_phon_q', 'adapt_smearing cannot be used with phonon self-energy ', 1) 
     ! 
     IF (iq == 1) THEN 
       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
@@ -717,8 +715,8 @@
         ! vectors also listed in Grimvall
         !
         IF (vme) THEN 
-          DO ibnd = 1, nbnd
-            DO jbnd = 1, nbnd
+          DO ibnd = 1, nbndfst
+            DO jbnd = 1, nbndfst
               !
               ! vmef is in units of Ryd * bohr
               !
@@ -730,8 +728,8 @@
             ENDDO
           ENDDO
         ELSE
-          DO ibnd = 1, nbnd
-            DO jbnd = 1, nbnd
+          DO ibnd = 1, nbndfst
+            DO jbnd = 1, nbndfst
               !
               ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
               ! 1/m  = 2 in Rydberg atomic units
@@ -765,7 +763,7 @@
               g2_tmp = 0.0
             ENDIF   
             !
-            DO ibnd = 1, nbnd
+            DO ibnd = 1, nbndfst
               !
               !  the fermi occupation for k
               ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
@@ -928,7 +926,7 @@
                               efermi_read, fermi_energy, degaussw,& 
                               nel, meff, epsiHEG 
     USE pwcom,         ONLY : ef
-    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, dmef, &
+    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, dmef, adapt_smearing, &
                               nkf, wqf, xkf, nkqtotf, efnew, nbndfst, nktotf,  &
                               sigmar_all, sigmai_all, sigmai_mode, zi_all
     USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, eps8
@@ -1047,8 +1045,8 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !!
     !
+    IF (adapt_smearing) CALL errore('selfen_pl_q', 'adapt_smearing cannot be used with plasmon self-energy ', 1) 
     ! SP: Define the inverse so that we can efficiently multiply instead of dividing
-    ! 
     inv_eptemp0  = 1.0 / eptemp
     inv_degaussw = 1.0 / degaussw
     !
@@ -1413,7 +1411,7 @@
     !-----------------------------------------------------------------------
     END FUNCTION dos_ef_seq
     !-----------------------------------------------------------------------
-
+    ! 
   !-----------------------------------------------------------------------
   END MODULE selfen
   !-----------------------------------------------------------------------
