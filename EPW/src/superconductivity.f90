@@ -90,8 +90,8 @@
          'muc should be >= 0.d0',1) 
     IF (eliashberg .AND. (rand_k .OR. rand_q ) .AND. (fila2f == ' ') ) &
          CALL errore('eliashberg_init', 'eliashberg requires a uniform grid when fila2f is not used',1)
-    IF (eliashberg .AND. (mod(nkf1,nqf1) /= 0 .OR. MOD(nkf2,nqf2) &
-         /= 0 .OR. MOD(nkf3,nqf3) /= 0 ) .AND. (fila2f == ' ') ) &
+    IF (eliashberg .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) &
+         /= 0 .OR. MOD(nkf3, nqf3) /= 0 ) .AND. (fila2f == ' ') ) &
          CALL errore('eliashberg_init', &
          'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used',1)
     !
@@ -829,7 +829,7 @@
            ! becomes unstable - certainly it happens only
            ! when u(:) is very small
            !
-  !if(abs(g(p-1,i)) == 0) then
+  !if(ABS(g(p-1,i)) == 0) then
   !       write(6,'(4x, "fitting parameter too small. g(p-1,i)= ",2f9.5)')g(p-1,i)
   !       stop
   !end if
