@@ -1438,18 +1438,18 @@
            ENDDO
          ENDDO
        ENDDO 
-       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ',SQRT(2.0d0) * val * ryd2mev,' meV'
-       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ',SQRT(2.0d0) * MAXVAL(eta) * ryd2mev,' meV'
+       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', SQRT(2.0d0) * val * ryd2mev,' meV'
+       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', SQRT(2.0d0) * MAXVAL(eta) * ryd2mev,' meV'
       ENDIF
       !
-      IF (prtgkk     ) CALL print_gkk(iq)
-      IF (phonselfen ) CALL selfen_phon_q(iqq, iq, totq)
-      IF (elecselfen ) CALL selfen_elec_q(iqq, iq, totq, first_cycle)
-      IF (plselfen .AND. .NOT. vme ) CALL selfen_pl_q(iqq, iq, totq)
-      IF (nest_fn    ) CALL nesting_fn_q(iqq, iq)
-      IF (specfun_el ) CALL spectral_func_q(iqq, iq, totq)
-      IF (specfun_ph ) CALL spectral_func_ph(iqq, iq, totq)
-      IF (specfun_pl .AND. .NOT. vme ) CALL spectral_func_pl_q(iqq, iq, totq)
+      IF (prtgkk    ) CALL print_gkk(iq)
+      IF (phonselfen) CALL selfen_phon_q(iqq, iq, totq)
+      IF (elecselfen) CALL selfen_elec_q(iqq, iq, totq, first_cycle)
+      IF (plselfen .AND. .NOT. vme) CALL selfen_pl_q(iqq, iq, totq)
+      IF (nest_fn   ) CALL nesting_fn_q(iqq, iq)
+      IF (specfun_el) CALL spectral_func_q(iqq, iq, totq)
+      IF (specfun_ph) CALL spectral_func_ph(iqq, iq, totq)
+      IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq)
       IF (ephwrite) THEN
         IF (iq == 1) THEN 
            CALL kmesh_fine
@@ -1784,7 +1784,9 @@
   !
   CALL stop_clock('ephwann')
   !
+  !--------------------------------------------------------------------------
   END SUBROUTINE ephwann_shuffle
+  !--------------------------------------------------------------------------
   ! 
   ! --------------------------------------------------------------------------------------------------------
   ! SP - This is a possible optimization using a look-up table. Might be useful in some case. Do not remove.
@@ -2327,7 +2329,9 @@
   efermig_seq = Ef
   RETURN
   !
+  !--------------------------------------------------------------------------
   END FUNCTION efermig_seq
+  !--------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
   FUNCTION sumkg_seq(et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
@@ -2388,7 +2392,9 @@
   !
   RETURN
   !
+  !--------------------------------------------------------------------------
   END FUNCTION sumkg_seq
+  !--------------------------------------------------------------------------
   !
   !-----------------------------------------------------------------
   SUBROUTINE rwepmatw(epmatw, nbnd, np, nmodes, nrec, iun, iop)
@@ -2791,5 +2797,6 @@
        &      5x,"Ef = ",f10.6)' ) fermicarrier * ryd2ev
   !
   RETURN   
+  !-----------------------------------------------------------------------
   END FUNCTION fermicarrier
   !--------------------------------------------------------------------------
