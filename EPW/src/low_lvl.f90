@@ -389,6 +389,87 @@
     END SUBROUTINE system_mem_usage
     !--------------------------------------------------------------------------
     ! 
+    !--------------------------------------------------------------------------
+    FUNCTION utility_zdotu(a, b)
+    !--------------------------------------------------------------------------
+    !! 
+    !! Dot product function 
+    !! 
+    USE kinds, ONLY: DP
+    ! 
+    COMPLEX(KIND = DP), INTENT(in)  :: a(:) 
+    !! Input vector
+    COMPLEX(KIND = DP), INTENT(in)  :: b(:)
+    !!
+    COMPLEX(KIND = DP) :: utility_zdotu
+    !! Output
+    ! 
+    utility_zdotu = SUM(a * b)
+    ! 
+    RETURN
+    !--------------------------------------------------------------------------
+    END FUNCTION utility_zdotu
+    !--------------------------------------------------------------------------
+    ! 
+    !--------------------------------------------------------------------------
+    SUBROUTINE degen_sort(input_array, sizes, output, repeat_list)
+    !--------------------------------------------------------------------------
+    !! 
+    !! Find degenerate values using a bubble sorting algorithms
+    !! 
+    !! From: https://stackoverflow.com/questions/7502489/bubble-sort-algorithm-javascript/37901176
+    !! 
+    !! On exititing, repeat_list contains 0 for bands that are non-degenerate and 
+    !! a group index for the one that are. 
+    !! Example: the following set of eigenenergies from array = [0,0.1,0.1,0.1,0.2,0.3,0.3]
+    !!          gives repeat_list = [0,1,1,1,0,2,2]
+    !--------------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : eps8
+    !
+    IMPLICIT NONE
+    ! 
+    LOGICAL, INTENT(out) :: output
+    !! Return true on return if degenercies found
+    INTEGER, INTENT(in) :: sizes
+    !! Sizes of the array
+    INTEGER, INTENT(out) :: repeat_list(sizes)
+    !! Array containing the degeneracices
+    REAL(KIND = DP), INTENT(in) :: input_array(sizes)
+    !! Input array
+    ! 
+    ! Local variables
+    INTEGER :: j
+    !! Index of size
+    INTEGER :: degen_label
+    !! Degen index      
+    !
+    output         = .FALSE.
+    degen_label    = 0
+    repeat_list(:) = 0
+    ! 
+    DO j = 1, sizes - 1
+      IF ((ABS(input_array(j) - input_array(j + 1)) / (ABS(input_array(j)) + ABS(input_array(j + 1))) / 2d0) < eps8) THEN
+        IF (j == 1) THEN
+          degen_label = 1
+        ELSE
+          IF ((ABS(input_array(j) - input_array(j - 1)) / (ABS(input_array(j)) + ABS(input_array(j - 1))) / 2d0) > eps8) &
+          & degen_label = degen_label + 1
+        ENDIF
+        repeat_list(j)     = degen_label
+        repeat_list(j + 1) = degen_label
+        output             = .TRUE.
+      ELSE
+        repeat_list(j + 1) = 0
+      ENDIF
+    ENDDO
+    !
+    RETURN
+    !--------------------------------------------------------------------------
+    END SUBROUTINE degen_sort
+    !--------------------------------------------------------------------------
+
+
   !----------------------------------------------------------------------
   END MODULE low_lvl
   !----------------------------------------------------------------------
