@@ -916,7 +916,7 @@
     ELSE ! ephwrite
       ! Check if the file has been pre-computed
       IF (mpime == ionode_id) THEN
-        INQUIRE(FILE = 'selecq.fmt',EXIST = exst)
+        INQUIRE(FILE = 'selecq.fmt', EXIST = exst)
       ENDIF
       CALL mp_bcast(exst, ionode_id, world_comm)
       ! 
@@ -932,7 +932,7 @@
         ENDIF
       ELSE ! exst
         IF (selecqread) THEN
-          CALL errore( 'ephwann_shuffle', 'Variable selecqread == .TRUE. but file selecq.fmt not found.',1 ) 
+          CALL errore('ephwann_shuffle', 'Variable selecqread == .TRUE. but file selecq.fmt not found.',1 ) 
         ELSE
           CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
         ENDIF

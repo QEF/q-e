@@ -93,7 +93,7 @@
   USE pwcom,       ONLY : et, nbnd, nkstot, nks
   USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
                           dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
-                          bands_skipped, wdata 
+                          bands_skipped, wdata, vme
   USE constants_epw, ONLY : ryd2ev
   !
   IMPLICIT NONE
@@ -147,6 +147,7 @@
     WRITE(iuwinfil, '("dis_froz_min ", f18.12)') dis_froz_min
     WRITE(iuwinfil, '("dis_froz_max ", f18.12)') dis_froz_max
     WRITE(iuwinfil, '("num_iter ", i7)')       num_iter
+    IF (vme) WRITE(iuwinfil, '("write_bvec = .true.")')
     !
     ! write any extra parameters to the prefix.win file
     DO i = 1, nwanxx

@@ -761,8 +761,8 @@
     !          M_mn matrix
     !--------------------------------------------------------------
     !
-    ! RM - bvec can be writen on file by making a small change in
-    ! W90/hamiltonian.F90/hamilotonian_write_rmn
+    ! RM - bvec are writen on file if write_bvec = .true. is specified
+    !      in the wannier input
     !
     tempFILE = TRIM(prefix)//'.bvec'
     OPEN(iubvec, FILE = tempfile, action='read', iostat=ios)
@@ -777,7 +777,7 @@
     ELSE
       READ(iubvec,*) tempfile
       READ(iubvec,*) nkstot_tmp, nnb
-      IF (nkstot_tmp /= nkstot) CALL errore ('vmebloch2wan','Unexpected number of k-points in .bvec file', 0)
+      IF (nkstot_tmp /= nkstot) CALL errore ('vmebloch2wan','Unexpected number of k-points in .bvec file', 1)
       ALLOCATE(bvec(3, nnb, nkstot), wb(nnb) )
       DO ik = 1, nkstot
         DO ib = 1, nnb

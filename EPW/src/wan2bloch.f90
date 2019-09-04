@@ -1248,7 +1248,7 @@
           DO jbnd = 1, nbnd
             IF ((list_dup(ibnd) == ideg) .AND. (list_dup(jbnd) == ideg)) THEN
               ijbndc = ijbndc + 1
-              jbndc = deg_dim(ideg) - MOD(ijbndc,deg_dim(ideg))
+              jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
               ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
               vmef(:, ibnd, jbnd) = vmef_deg(:, ibndc, jbndc)
             ENDIF
@@ -1452,7 +1452,7 @@
           total_weight = zero
           DO n1 = -2 * nq1, 2 * nq1
             DO n2 = -2 * nq2, 2 * nq2
-              DO n3 =-2 * nq3, 2 * nq3
+              DO n3 = -2 * nq3, 2 * nq3
                 !
                 ! Sum over R vectors in the supercell - safe range 
                 DO i = 1, 3
@@ -1521,7 +1521,7 @@
       ELSE ! use_ws
         DO ir = 1, nrr_q
           rdotq = twopi * DOT_PRODUCT(xq, DBLE(irvec_q(:, ir)))
-          cfac = EXP(ci*rdotq) / DBLE(ndegen_q(ir,1,1))
+          cfac = EXP(ci * rdotq) / DBLE(ndegen_q(ir, 1, 1))
           irvec_tmp(:) = alat * MATMUL(at, DBLE(irvec_q(:, ir)))
           DO ipol = 1, 3
             chf_a(ipol, :, :) = chf_a(ipol, :, :) + &
@@ -1644,12 +1644,13 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE vmewan2blochp
     !--------------------------------------------------------------------------
+    ! 
     !---------------------------------------------------------------------------
     SUBROUTINE ephwan2blochp(nmodes, xxq, irvec_g, ndegen_g, nrr_g, cuf, epmatf, nbnd, nrr_k, dims, nat)
     !---------------------------------------------------------------------------
     !!
     !! Even though this is for phonons, we use the same notations
-    !! adopted for the electronic case (nmodes->nmodes etc)
+    !! adopted for the electronic case (nmodes -> nmodes etc)
     !!
     USE kinds,            ONLY : DP
     USE epwcom,           ONLY : etf_mem, use_ws
@@ -1760,7 +1761,7 @@
     CALL mp_bcast(diff, ionode_id, world_comm)
     !
     ! If you are the last cpu with less element
-    IF (ir_stop-ir_start /= diff) THEN
+    IF (ir_stop - ir_start /= diff) THEN
       add = 1
     ELSE
       add = 0    
@@ -1791,7 +1792,7 @@
         !   
         ! note xxq is assumed to be already in cryst coord
         !
-        rdotk = twopi * DOT_PRODUCT( xxq, DBLE(irvec_g(:, ir)))
+        rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         ! Note that ndegen is always > 0 if use_ws == false
         cfac(1, ir, 1, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1, 1))
       ENDDO
@@ -1808,7 +1809,7 @@
           DO iw2 = 1, dims
             DO iw = 1, dims
               CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatwp(iw, iw2, :, 3 * (na - 1) + 1:3 * na, ir), 1, &
-                eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1) 
+                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1) 
             ENDDO
           ENDDO
         ENDDO 
@@ -1855,7 +1856,7 @@
                                        INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                        INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                        INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
-                                          (INT(3_MPI_OFFSET_KIND * (na - 1_MPI_OFFSET_KIND), KIND = MPI_OFFSET_KIND) + &
+                                      (INT(3_MPI_OFFSET_KIND * (na - 1_MPI_OFFSET_KIND), KIND = MPI_OFFSET_KIND) + &
           INT(3_MPI_OFFSET_KIND * nat, KIND = MPI_OFFSET_KIND) * (INT(ir, KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND))
           !  
           ! SP: mpi seek is used to set the position at which we should start
@@ -1869,22 +1870,22 @@
           !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
           !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
           CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
-          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT',1)
-          IF (add == 1 .AND. irn == ir_stop + add) cycle
+          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT', 1)
+          IF (add == 1 .AND. irn == ir_stop + add) CYCLE
           !   
           DO iw2 = 1, dims
             DO iw = 1, dims
               CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatw(iw, iw2, :, :), 1, &
-                eptmp(iw,iw2,:,3*(na-1)+1:3*na), 1)
+                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
             ENDDO
           ENDDO
 #else      
-          CALL rwepmatw (epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
+          CALL rwepmatw(epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
           !
           DO iw2 = 1, dims
             DO iw = 1, dims
-              CALL ZAXPY( nrr_k * 3, cfac(na,ir,iw,iw2), epmatw(iw,iw2,:,3*(na-1)+1:3*na), 1, &
-                eptmp(iw,iw2,:,3*(na-1)+1:3*na), 1)
+              CALL ZAXPY(nrr_k * 3, cfac(na, ir, iw, iw2), epmatw(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1, &
+                   eptmp(iw, iw2, :, 3 * (na - 1) + 1:3 * na), 1)
             ENDDO
           ENDDO
 #endif
@@ -1894,28 +1895,28 @@
 #if defined(__MPI)
         ALLOCATE(epmatw(nbnd, nbnd, nrr_k, 1))
         ! Although this should almost never be problematic (see explaination below)
-        lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd , kind = MPI_OFFSET_KIND ) * &
-                                        INT( nbnd , kind = MPI_OFFSET_KIND ) * &
-                                        INT( nrr_k, kind = MPI_OFFSET_KIND ) 
+        lrepmatw2 = 2_MPI_OFFSET_KIND * INT(nbnd , KIND = MPI_OFFSET_KIND) * &
+                                        INT(nbnd , KIND = MPI_OFFSET_KIND) * &
+                                        INT(nrr_k, KIND = MPI_OFFSET_KIND) 
 #else
         ALLOCATE(epmatw(nbnd, nbnd, nrr_k, nmodes))
-        lrepmatw2 = INT(2 * nbnd * nbnd * nrr_k, kind = 8)
+        lrepmatw2 = INT(2 * nbnd * nbnd * nrr_k, KIND = 8)
 #endif
         ! 
-        DO irn=ir_start, ir_stop + add
-          ir = (irn-1)/nmodes + 1
-          imode = MOD(irn-1,nmodes) + 1
+        DO irn = ir_start, ir_stop + add
+          ir = (irn - 1) / nmodes + 1
+          imode = MOD(irn - 1, nmodes) + 1
           ! 
 #if defined(__MPI)
           IF (add == 1 .AND. irn == ir_stop + add) lrepmatw2 = 0_MPI_OFFSET_KIND 
           !
           !  Direct read of epmatwp for this ir
           lrepmatw = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
-                                       INT( nbnd , kind=MPI_OFFSET_KIND ) * &
-                                       INT( nbnd , kind=MPI_OFFSET_KIND ) * &
-                                       INT( nrr_k, kind=MPI_OFFSET_KIND ) * &
-                                     ( INT( imode - 1_MPI_OFFSET_KIND, kind=MPI_OFFSET_KIND ) + &
-          INT(nmodes, kind=MPI_OFFSET_KIND ) * ( INT( ir, kind=MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND ) )
+                                       INT(nbnd , KIND = MPI_OFFSET_KIND) * &
+                                       INT(nbnd , KIND = MPI_OFFSET_KIND) * &
+                                       INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
+                                      (INT(imode - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) + &
+          INT(nmodes, KIND = MPI_OFFSET_KIND) * (INT(ir, KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND))
           !  
           ! SP: mpi seek is used to set the position at which we should start
           ! reading the file. It is given in bits. 
@@ -1923,23 +1924,18 @@
           !        or noncollective (=non blocking) if using MPI_FILE_SEEK & MPI_FILE_READ. 
           !        Here we want non blocking because not all the process have the same nb of ir. 
           !
-          !CALL MPI_FILE_SEEK(iunepmatwp2,lrepmatw,MPI_SEEK_SET,ierr)
-          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_SEEK',1 )
-          !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
-          !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
-          !CALL MPI_FILE_READ_AT_ALL(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
           CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
-          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT',1)
-          IF (add == 1 .AND. irn == ir_stop + add) cycle
+          IF (ierr /= 0) CALL errore('ephwan2blochp', 'error in MPI_FILE_READ_AT', 1)
+          IF (add == 1 .AND. irn == ir_stop + add) CYCLE
           !   
-          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1,ir,1,1), epmatw(:,:,:,1), 1, &
-                eptmp(:,:,:,imode), 1)
+          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), epmatw(:, :, :, 1), 1, &
+                     eptmp(:, :, :, imode), 1)
           ! 
 #else      
-          CALL rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
+          CALL rwepmatw(epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
           !
-          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1,ir,1,1), &
-              epmatw(:,:,:,imode), 1, eptmp(:,:,:,imode), 1)
+          CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), &
+              epmatw(:, :, :, imode), 1, eptmp(:, :, :, imode), 1)
 
 #endif
         ENDDO ! irn 
@@ -1962,11 +1958,12 @@
     !
     CALL stop_clock('ephW2Bp')
     !
+    !---------------------------------------------------------------------------
     END SUBROUTINE ephwan2blochp
+    !---------------------------------------------------------------------------
     !
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2bloch ( nbnd, nrr, epmatw, cufkk, cufkq, &
-           epmatf, nmodes, cfac, dims )
+    SUBROUTINE ephwan2bloch(nbnd, nrr, epmatw, cufkk, cufkq, epmatf, nmodes, cfac, dims)
     !---------------------------------------------------------------------------
     !!
     !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
@@ -1985,12 +1982,10 @@
     INTEGER, INTENT(in) :: nmodes
     !! number of phonon modes
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .TRUE.
-    !! Is equal to 1 otherwise.
-    !
+    !! Is equal to the number of Wannier function if use_ws == .TRUE. Is equal to 1 otherwise.
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
     !! Exponential factor
-    COMPLEX(KIND = DP), INTENT(in) :: epmatw( nbnd, nbnd, nrr, nmodes)
+    COMPLEX(KIND = DP), INTENT(in) :: epmatw(nbnd, nbnd, nrr, nmodes)
     !! e-p matrix in Wannier representation
     COMPLEX(KIND = DP), INTENT(in) :: cufkk(nbnd, nbnd)
     !! rotation matrix U(k)^\dagger, fine k mesh
@@ -1999,8 +1994,7 @@
     COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd, nmodes)
     !! e-p matrix in Bloch representation, fine grid
     !
-    ! work variables 
-    !
+    ! Local variables 
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
@@ -2010,7 +2004,7 @@
     INTEGER :: imode
     !! Counter on  phonon modes
     !
-    COMPLEX(KIND = DP) :: eptmp( nbnd, nbnd)
+    COMPLEX(KIND = DP) :: eptmp(nbnd, nbnd)
     !! Temporary variable
     CALL start_clock('ephW2B')
     !
@@ -2024,18 +2018,7 @@
     !  g~(k',q') is epmatf(nmodes, nmodes, ik)
     !  every pool works with its own subset of k points on the fine grid
     !
-    epmatf = czero
-    !
-    !DO ir = 1, nrr
-    !   !
-    !   ! rdotk = twopi * dot_product ( xk, DBLE(irvec(:,ir)) )
-    !   ! cfac = EXP(ci*rdotk ) / DBLE( ndegen(ir) )
-    !   !
-    !   DO imode = 1, nmodes
-    !     epmatf(:,:,imode) = epmatf(:,:,imode) + cfac(ir) * epmatw(:,:,ir,imode)
-    !   ENDDO
-    !   !
-    !ENDDO
+    epmatf(:, :, :) = czero
     !
     DO imode = 1, nmodes
       IF (use_ws) THEN
@@ -2047,7 +2030,7 @@
           ENDDO
         ENDDO
       ELSE 
-        CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :, imode), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :, imode), 1 )
+        CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :, imode), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :, imode), 1)
       ENDIF
     ENDDO
     !
@@ -2066,20 +2049,20 @@
     !
     DO imode = 1, nmodes
       !
-      CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
+      CALL zgemm('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
            nbnd, epmatf (:, :, imode), nbnd, czero, eptmp, nbnd)
-      CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
+      CALL zgemm('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
            nbnd, cufkk, nbnd, czero, epmatf(:, :, imode), nbnd)
       !
     ENDDO
     CALL stop_clock('ephW2B')
-
     !
+    !---------------------------------------------------------------------------
     END SUBROUTINE ephwan2bloch
+    !---------------------------------------------------------------------------
     ! 
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2bloch_mem ( nbnd, nrr, epmatw, cufkk, cufkq, &
-           epmatf, cfac, dims )
+    SUBROUTINE ephwan2bloch_mem(nbnd, nrr, epmatw, cufkk, cufkq, epmatf, cfac, dims)
     !---------------------------------------------------------------------------
     !!
     !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
@@ -2096,9 +2079,7 @@
     INTEGER, INTENT(in) :: nrr
     !! Number of Wigner-Size points
     INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .TRUE.
-    !! Is equal to 1 otherwise.
-    !
+    !! Is equal to the number of Wannier function if use_ws == .TRUE. Is equal to 1 otherwise.
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
     !! Exponential factor
     COMPLEX(KIND = DP), INTENT(in) :: epmatw(nbnd, nbnd, nrr)
@@ -2110,16 +2091,14 @@
     COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd)
     !! e-p matrix in Bloch representation, fine grid
     !
-    ! work variables 
-    !
+    ! Local variables 
     INTEGER :: ir
     !! Counter on real-space index
     INTEGER :: iw
     !! Counter on Wannier functions
     INTEGER :: iw2
     !! Counter on Wannier functions
-    !
-    COMPLEX(KIND = DP) :: eptmp( nbnd, nbnd)
+    COMPLEX(KIND = DP) :: eptmp(nbnd, nbnd)
     !! Temporary variable
     !
     !----------------------------------------------------------
@@ -2132,29 +2111,18 @@
     !  g~(k',q') is epmatf(nmodes, nmodes, ik)
     !  every pool works with its own subset of k points on the fine grid
     !
-    epmatf = czero
-    !
-    !DO ir = 1, nrr
-    !   !
-    !   ! note xk is assumed to be already in cryst coord
-    !   !
-    !   ! rdotk = twopi * dot_product ( xk, DBLE(irvec(:,ir)) )
-    !   ! cfac = EXP(ci*rdotk ) / DBLE( ndegen(ir) )
-    !   !
-    !   epmatf(:, :) = epmatf(:, :) + cfac(ir) * epmatw(:,:,ir)
-    !   !
-    !ENDDO
+    epmatf(:, :) = czero
     !
     IF (use_ws) THEN
       DO iw2 = 1, dims
         DO iw = 1, dims
           DO ir = 1, nrr
-           epmatf(iw,iw2) = epmatf(iw,iw2) + epmatw(iw,iw2,ir) * cfac(ir,iw,iw2)
+           epmatf(iw, iw2) = epmatf(iw, iw2) + epmatw(iw, iw2, ir) * cfac(ir, iw, iw2)
           ENDDO
         ENDDO
       ENDDO
     ELSE
-      CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :), nbnd**2, cfac(:,1,1), 1, cone, epmatf(:, :), 1 )
+      CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :), 1)
     ENDIF
     !
     !----------------------------------------------------------
@@ -2172,14 +2140,16 @@
     !
     !
     CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
-               nbnd, epmatf (:, :), nbnd, czero, eptmp, nbnd)
+               nbnd, epmatf(:, :), nbnd, czero, eptmp, nbnd)
     CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
                nbnd, cufkk, nbnd, czero, epmatf(:, :), nbnd)
     !
+    !---------------------------------------------------------------------------
     END SUBROUTINE ephwan2bloch_mem
+    !---------------------------------------------------------------------------
     ! 
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2blochp_mem (imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatf, nbnd, nrr_k, dims, nat )
+    SUBROUTINE ephwan2blochp_mem(imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatf, nbnd, nrr_k, dims, nat)
     !---------------------------------------------------------------------------
     !!
     !! Even though this is for phonons, I use the same notations
@@ -2214,7 +2184,7 @@
     !! Is equal to 1 otherwise.
     INTEGER, INTENT(in) :: nat
     !! Is equal to the number of atoms if use_ws == .TRUE. or 1 otherwise. 
-    INTEGER, INTENT(in) :: irvec_g( 3, nrr_g)
+    INTEGER, INTENT(in) :: irvec_g(3, nrr_g)
     !! Coordinates of WS points
     INTEGER, INTENT(in) :: ndegen_g(nrr_g, nat, dims, dims)
     !! Number of degeneracy of WS points
@@ -2224,14 +2194,12 @@
     !! Number of electronic WS points
     REAL(KIND = DP) :: xxq(3)
     !! Kpoint for the interpolation (WARNING: this must be in crystal coord!)
-    COMPLEX(KIND = DP), INTENT(out) :: epmatf (nbnd, nbnd, nrr_k)
+    COMPLEX(KIND = DP), INTENT(out) :: epmatf(nbnd, nbnd, nrr_k)
     !! e-p matrix in Bloch representation, fine grid
     ! 
     ! Local variables 
-    !
     CHARACTER(LEN = 256) :: filint
     !! File name
-    !
     INTEGER :: ir
     !! Real space WS index
     INTEGER :: ir_start
@@ -2249,9 +2217,9 @@
     INTEGER :: na
     !! Index on atom
 #if defined(__MPI)  
-    INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
-    INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw2
     !! Offset to tell where to start reading the file
 #else
     INTEGER(KIND = 8) :: lrepmatw
@@ -2265,7 +2233,7 @@
     !
     COMPLEX(KIND = DP) :: cfac(nrr_g, dims, dims)
     !! Factor for the FT
-    COMPLEX(KIND = DP), ALLOCATABLE :: epmatw( :,:,:)
+    COMPLEX(KIND = DP), ALLOCATABLE :: epmatw(:, :, :)
     !! El-ph matrix elements
     !
     CALL start_clock('ephW2Bp')
@@ -2282,9 +2250,9 @@
     CALL para_bounds(ir_start, ir_stop, nrr_g)
     !
 #if defined(__MPI)  
-    filint = TRIM(tmp_dir)//TRIM(prefix)//'.epmatwp1'
-    CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
-    IF( ierr /= 0 ) CALL errore( 'ephwan2blochp_mem', 'error in MPI_FILE_OPEN',1 )
+    filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp1'
+    CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp2, ierr)
+    IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_OPEN', 1)
 #endif  
     !
     cfac(:, :, :) = czero
@@ -2293,12 +2261,12 @@
       DO ir = ir_start, ir_stop
         !   
         ! note xxq is assumed to be already in cryst coord
-        rdotk = twopi * dot_product ( xxq, DBLE(irvec_g(:, ir)) )
+        rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
         na = (imode - 1) / 3 + 1
         DO iw2 = 1, dims
           DO iw = 1, dims 
             IF (ndegen_g(ir, na, iw, iw2) > 0) &
-              cfac(ir,iw,iw2) = EXP(ci*rdotk ) / DBLE( ndegen_g(ir, na, iw, iw2) )
+              cfac(ir, iw, iw2) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, na, iw, iw2))
           ENDDO
         ENDDO
       ENDDO
@@ -2306,18 +2274,18 @@
       DO ir = ir_start, ir_stop
         !   
         ! note xxq is assumed to be already in cryst coord
-        rdotk = twopi * DOT_PRODUCT( xxq, DBLE(irvec_g(:, ir)) )
-        cfac(ir,1,1) = EXP( ci*rdotk ) / DBLE( ndegen_g(ir, 1, 1, 1) )
+        rdotk = twopi * DOT_PRODUCT(xxq, DBLE(irvec_g(:, ir)))
+        cfac(ir, 1, 1) = EXP(ci * rdotk) / DBLE(ndegen_g(ir, 1, 1, 1))
       ENDDO
     ENDIF
     ! 
-    ALLOCATE(epmatw( nbnd, nbnd, nrr_k))
+    ALLOCATE(epmatw(nbnd, nbnd, nrr_k))
     epmatw(:, :, :) = czero
     !
 #if defined(__MPI)  
-    lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                    INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                    INT( nrr_k , kind = MPI_OFFSET_KIND )
+    lrepmatw2 = 2_MPI_OFFSET_KIND * INT(nbnd , KIND = MPI_OFFSET_KIND) * &
+                                    INT(nbnd , KIND = MPI_OFFSET_KIND) * &
+                                    INT(nrr_k, KIND = MPI_OFFSET_KIND)
 #endif                          
     ! 
     DO ir = ir_start, ir_stop
@@ -2326,15 +2294,15 @@
       !     kind=MPI_OFFSET_KIND, the number "2" and "8" are default kind 4. The other as well. Therefore
       !     if the product is too large, this will crash. The solution (kind help recieved from Ian Bush) is below:
 #if defined(__MPI)    
-      lrepmatw = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                     INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                     INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
-                                     INT( nmodes, kind = MPI_OFFSET_KIND ) * &
-               8_MPI_OFFSET_KIND * ( INT( ir    , kind = MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND ) + &
-               2_MPI_OFFSET_KIND *   INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                     INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                     INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
-               8_MPI_OFFSET_KIND * ( INT( imode , kind = MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND )
+      lrepmatw = 2_MPI_OFFSET_KIND * INT(nbnd  ,KIND = MPI_OFFSET_KIND) * &
+                                     INT(nbnd  ,KIND = MPI_OFFSET_KIND) * &
+                                     INT(nrr_k ,KIND = MPI_OFFSET_KIND) * &
+                                     INT(nmodes,KIND = MPI_OFFSET_KIND) * &
+               8_MPI_OFFSET_KIND *  (INT(ir    ,KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND) + &
+               2_MPI_OFFSET_KIND *   INT(nbnd  ,KIND = MPI_OFFSET_KIND) * &
+                                     INT(nbnd  ,KIND = MPI_OFFSET_KIND) * &
+                                     INT(nrr_k ,KIND = MPI_OFFSET_KIND) * &
+               8_MPI_OFFSET_KIND *  (INT(imode ,KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND)
       !
       ! SP: mpi seek is used to set the position at which we should start
       ! reading the file. It is given in bits. 
@@ -2347,38 +2315,35 @@
       !CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
       !IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
       CALL MPI_FILE_READ_AT(iunepmatwp2, lrepmatw, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_READ_AT',1)
+      IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_READ_AT', 1)
 #endif    
       ! 
-      !write(stdout,*)'ir  epmatw ',use_ws, ir, SUM(epmatw)
-      !IF (mpime==1)  write(999,*),'cpu2 ir  epmatw ',use_ws, ir, SUM(epmatw)
-      !
       IF (use_ws) THEN
         DO iw2 = 1, dims
           DO iw = 1, dims
-            CALL ZAXPY( nrr_k, cfac(ir, iw, iw2), epmatw(iw, iw2, :), 1, epmatf(iw, iw2, :), 1)
+            CALL ZAXPY(nrr_k, cfac(ir, iw, iw2), epmatw(iw, iw2, :), 1, epmatf(iw, iw2, :), 1)
           ENDDO
         ENDDO
       ELSE 
-        CALL ZAXPY( nbnd * nbnd * nrr_k, cfac(ir,1,1), epmatw, 1, epmatf, 1)
+        CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(ir, 1, 1), epmatw, 1, epmatf, 1)
       ENDIF
-      !write(stdout,*)'ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), SUM(epmatf)
-      !IF (mpime==1) write(999,*),'cpu2 ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), SUM(epmatf)
       ! 
     ENDDO
     DEALLOCATE(epmatw)
     !
     CALL mp_sum(epmatf, world_comm)
     ! 
-    !
 #if defined(__MPI)  
     CALL MPI_FILE_CLOSE(iunepmatwp2, ierr)
-    IF( ierr /= 0 ) CALL errore( 'ephwan2blochp_mem', 'error in MPI_FILE_CLOSE',1 )
+    IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'error in MPI_FILE_CLOSE', 1)
 #endif  
     !
     CALL stop_clock('ephW2Bp')
     !
-    END SUBROUTINE ephwan2blochp_mem
-    ! 
     !--------------------------------------------------------------------------
+    END SUBROUTINE ephwan2blochp_mem
+    !--------------------------------------------------------------------------
+    ! 
+  !--------------------------------------------------------------------------
   END MODULE wan2bloch
+  !--------------------------------------------------------------------------
