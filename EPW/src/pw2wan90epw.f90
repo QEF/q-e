@@ -31,9 +31,9 @@
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=4) :: spin_component
+  CHARACTER(LEN = 4) :: spin_component
   !! Determine the spin case
-  CHARACTER(LEN=256) :: outdir
+  CHARACTER(LEN = 256) :: outdir
   !! Name of the output directory
   !
   !
@@ -43,31 +43,30 @@
   wvfn_formatted = .FALSE.
   reduce_unk = .FALSE.
   !
-  !
   WRITE(stdout,*)
-  SELECT CASE ( TRIM( spin_component ) )
-  CASE ( 'up' )
-     WRITE(stdout,*) '    Spin CASE ( up )'
-     ispinw  = 1
-     ikstart = 1
-     ikstop  = nkstot/2
-     iknum   = nkstot/2
-  CASE ( 'down' )
-     WRITE(stdout,*) '    Spin CASE ( down )'
-     ispinw = 2
-     ikstart = nkstot/2 + 1
-     ikstop  = nkstot
-     iknum   = nkstot/2
+  SELECT CASE (TRIM(spin_component))
+  CASE ('up')
+    WRITE(stdout,*) '    Spin CASE ( up )'
+    ispinw  = 1
+    ikstart = 1
+    ikstop  = nkstot / 2
+    iknum   = nkstot / 2
+  CASE ('down')
+    WRITE(stdout,*) '    Spin CASE ( down )'
+    ispinw  = 2
+    ikstart = nkstot / 2 + 1
+    ikstop  = nkstot
+    iknum   = nkstot / 2
   CASE DEFAULT
-     IF (noncolin) THEN
-        WRITE(stdout,*) '    Spin CASE ( non-collinear )'
-     ELSE
-        WRITE(stdout,*) '    Spin CASE ( default = unpolarized )'
-     ENDIF
-     ispinw = 0
-     ikstart = 1
-     ikstop  = nkstot
-     iknum   = nkstot
+    IF (noncolin) THEN
+      WRITE(stdout,*) '    Spin CASE ( non-collinear )'
+    ELSE
+      WRITE(stdout,*) '    Spin CASE ( default = unpolarized )'
+    ENDIF
+    ispinw  = 0
+    ikstart = 1
+    ikstop  = nkstot
+    iknum   = nkstot
   END SELECT
   !
   WRITE(stdout,*) 
@@ -78,21 +77,19 @@
   CALL ylm_expansion
   CALL compute_amn_para
   CALL compute_mmn_para
-  !
   CALL phases_a_m
-  !
   CALL write_band
-  !
   IF (write_wfn) CALL write_plot
   !
   WRITE(stdout,*)
   WRITE(stdout,*) '    Running Wannier90'
   !
   CALL run_wannier
-  !
   CALL lib_dealloc
   !
+  !-------------------------------------------------------------------------
   END SUBROUTINE pw2wan90epw
+  !-------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------
   SUBROUTINE lib_dealloc
@@ -131,10 +128,12 @@
   DEALLOCATE(wann_centers)
   DEALLOCATE(wann_spreads)
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE lib_dealloc
+  !-----------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------
-  SUBROUTINE setup_nnkp(  )
+  SUBROUTINE setup_nnkp()
   !-----------------------------------------------------------------------
   !! 
   !! This routine write and read the .nnkp file. 
@@ -218,8 +217,8 @@
   INTEGER, EXTERNAL :: find_free_unit
   !! Look for a free unit for the .nnkp file.
 
-! SP: An interface is required because the Wannier routine has optional
-!     arguments
+  ! SP: An interface is required because the Wannier routine has optional
+  !     arguments
   INTERFACE
     SUBROUTINE wannier_setup(seed__name, mp_grid_loc, num_kpts_loc, &
      real_lattice_loc, recip_lattice_loc, kpt_latt_loc, num_bands_tot, &
@@ -563,22 +562,23 @@
   !
   RETURN
   !
+  !--------------------------------------------------------------------------
   END SUBROUTINE setup_nnkp
   !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE scan_file_to( iun_nnkp, keyword, found )
+  SUBROUTINE scan_file_to(iun_nnkp, keyword, found)
   !-----------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
-  CHARACTER(len=*), INTENT(in) :: keyword
+  CHARACTER(LEN = *), INTENT(in) :: keyword
   !! Keyword searched for
   INTEGER, INTENT(in)          :: iun_nnkp
   !! Unit for .nnkp file
   LOGICAL, INTENT(out)         :: found
   !! Check if the section in the .nnkp file is found.
-  CHARACTER(len=80)            :: line1, line2
+  CHARACTER(LEN = 80)            :: line1, line2
   !
   ! by uncommenting the following line the file scan restarts every time
   ! from the beginning thus making the reading independent on the order
@@ -594,6 +594,7 @@
 20 found = .FALSE.
   REWIND(iun_nnkp)
   !
+  ! ------------------------------------------------------------------------
   END SUBROUTINE scan_file_to
   ! ------------------------------------------------------------------------
   !
@@ -629,7 +630,7 @@
   !! Integer variable for I/O control
   CHARACTER(LEN = 256) :: tempfile
   !! Temporary file
-  CHARACTER (len=80) :: line
+  CHARACTER(LEN = 80) :: line
   !! Temporary character
   !
   ALLOCATE(u_mat(n_wannier, n_wannier, iknum))
@@ -697,6 +698,7 @@
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE run_wannier
   !-----------------------------------------------------------------------
   !
@@ -730,6 +732,12 @@
   ! 
   IMPLICIT NONE
   ! 
+  LOGICAL :: any_uspp
+  !! Check if uspp are used
+  LOGICAL :: spin_z_pos
+  !! Detect if spin quantisation axis is along +z
+  LOGICAL :: spin_z_neg
+  !! Detect if spin quantisation axis is along -z
   INTEGER :: iw
   !! Counter on number of projections
   INTEGER :: ik
@@ -750,10 +758,8 @@
   !! Index of spin-up/spin-down polarizations
   INTEGER ::  istart
   !! Index on plane waves
-  !
   REAL(KIND = DP) :: zero_vect(3)
   !! Temporary zero vector
-  !
   COMPLEX(KIND = DP) :: amn
   !! Element of A_mn matrix
   COMPLEX(KIND = DP) :: zdotc
@@ -765,26 +771,19 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: sgf(:, :)
   !! Guiding functions
   !
-  LOGICAL :: any_uspp
-  !! Check if uspp are used
-  LOGICAL :: spin_z_pos
-  !! Detect if spin quantisation axis is along +z
-  LOGICAL :: spin_z_neg
-  !! Detect if spin quantisation axis is along -z
-  !
   !nocolin: we have half as many projections g(r) defined as wannier
   !         functions. We project onto (1,0) (ie up spin) and then onto
   !         (0,1) to obtain num_wann projections. jry
   !
-  any_uspp = ANY( upf(:)%tvanp )
+  any_uspp = ANY(upf(:)%tvanp)
   !
 !  IF (any_uspp .AND. noncolin) CALL errore('pw2wan90epw',&
 !      'noncolin calculation not implemented with USP',1)
   !
-  ALLOCATE(a_mat(num_bands,n_wannier,iknum) )
-  ALLOCATE(sgf(npwx,n_proj) )
-  ALLOCATE(gf_spinor(2*npwx,n_proj) )
-  ALLOCATE(sgf_spinor(2*npwx,n_proj) )
+  ALLOCATE(a_mat(num_bands, n_wannier, iknum))
+  ALLOCATE(sgf(npwx, n_proj))
+  ALLOCATE(gf_spinor(2 * npwx, n_proj))
+  ALLOCATE(sgf_spinor(2 * npwx, n_proj))
   !
   ! initialize
   a_mat = czero
@@ -795,8 +794,8 @@
   WRITE (stdout,'(5x,a)') 'AMN'
   !
   IF (any_uspp) THEN
-    CALL deallocate_bec_type( becp )
-    CALL allocate_bec_type( nkb, n_wannier, becp )
+    CALL deallocate_bec_type(becp)
+    CALL allocate_bec_type(nkb, n_wannier, becp)
     CALL init_us_1
   ENDIF
   !
@@ -955,11 +954,12 @@
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE compute_amn_para
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE orient_gf_spinor( npw )
+  SUBROUTINE orient_gf_spinor(npw)
   !-----------------------------------------------------------------------
   USE kinds,            ONLY : DP
   USE constants_epw,    ONLY : czero, cone, eps6
@@ -1023,6 +1023,7 @@
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE orient_gf_spinor
   !-----------------------------------------------------------------------
   !
@@ -1506,6 +1507,7 @@
   !
   RETURN
   !
+  !------------------------------------------------------------------------
   END SUBROUTINE compute_mmn_para
   !------------------------------------------------------------------------
   !
@@ -1652,6 +1654,7 @@
   !
   RETURN
   ! 
+  !------------------------------------------------------------------------
   END SUBROUTINE compute_pmn_para
   !-----------------------------------------------------------------------
   !
@@ -1790,6 +1793,7 @@
   !
   RETURN
   !
+  !------------------------------------------------------------------------
   END SUBROUTINE write_filukk
   !-----------------------------------------------------------------------
   !
@@ -1978,6 +1982,7 @@
   !
   RETURN
   !
+  !------------------------------------------------------------------------
   END SUBROUTINE phases_a_m
   !-----------------------------------------------------------------------
   !
@@ -2099,6 +2104,7 @@
   !
   RETURN
   !
+  !------------------------------------------------------------------------
   END SUBROUTINE write_band
   !-----------------------------------------------------------------------
   !
@@ -2392,6 +2398,7 @@
   !
   RETURN
   !
+  !------------------------------------------------------------------------
   END SUBROUTINE write_plot
   !---------------------------------------
   SUBROUTINE ylm_expansion 
@@ -2478,9 +2485,12 @@
   !
   RETURN
   !
+  !------------------------------------------------------------------------
   END SUBROUTINE check_inverse
   !--------------------------------------------   
-  SUBROUTINE set_u_matrix(x,z,u)
+  !------------------------------------------------------------------------
+  SUBROUTINE set_u_matrix(x, z, u)
+  !------------------------------------------------------------------------
   ! 
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps8
@@ -2510,10 +2520,9 @@
   u(2,:) = y(:)
   u(3,:) = z(:)/zz
   !
-!  WRITE (stdout,'(3f10.7)') u(:, :)
-  !
   RETURN
   !
+  !------------------------------------------------------------------------
   END SUBROUTINE set_u_matrix
   !--------------------------------------------
   SUBROUTINE ylm_wannier(ylm,l,mr,r,nr) 
@@ -2630,160 +2639,180 @@
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE ylm_wannier
-
-!======== l = 0 =====================================================================
-FUNCTION s()
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  FUNCTION s()
+  !-----------------------------------------------------------------------
+  !!  
+  !! l = 0
+  !!
   USE kinds,         ONLY : DP
   USE constants_epw, ONLY : fpi
+  ! 
   IMPLICIT NONE
+  ! 
   REAL(KIND = DP) :: s
+  ! 
   s = 1.d0/ SQRT(fpi)
+  ! 
   RETURN
-END FUNCTION s
-!======== l = 1 =====================================================================
-FUNCTION p_z(cost)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::p_z, cost
-  p_z =  SQRT(3.d0/fpi) * cost
-  RETURN
-END FUNCTION p_z
-FUNCTION px(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::px, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  px =  SQRT(3.d0/fpi) * sint * cos(phi)
-  RETURN
-END FUNCTION px
-FUNCTION py(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::py, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  py =  SQRT(3.d0/fpi) * sint * sin(phi)
-  RETURN
-END FUNCTION py
-!======== l = 2 =====================================================================
-FUNCTION dz2(cost)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::dz2, cost
-  dz2 =  SQRT(1.25d0/fpi) * (3.d0* cost*cost-1.d0)
-  RETURN
-END FUNCTION dz2
-FUNCTION dxz(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::dxz, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  dxz =  SQRT(15.d0/fpi) * sint*cost * cos(phi)
-  RETURN
-END FUNCTION dxz
-FUNCTION dyz(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::dyz, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  dyz =  SQRT(15.d0/fpi) * sint*cost * sin(phi)
-  RETURN
-END FUNCTION dyz
-FUNCTION dx2my2(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::dx2my2, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  dx2my2 =  SQRT(3.75d0/fpi) * sint*sint * cos(2.d0*phi)
-  RETURN
-END FUNCTION dx2my2
-FUNCTION dxy(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : fpi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::dxy, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  dxy =  SQRT(3.75d0/fpi) * sint*sint * sin(2.d0*phi)
-  RETURN
-END FUNCTION dxy
-!======== l = 3 =====================================================================
-FUNCTION fz3(cost)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : pi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::fz3, cost
-  fz3 =  0.25d0*sqrt(7.d0/pi) * ( 5.d0 * cost * cost - 3.d0 ) * cost
-  RETURN
-END FUNCTION fz3
-FUNCTION fxz2(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : pi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::fxz2, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  fxz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * cos(phi)
-  RETURN
-END FUNCTION fxz2
-FUNCTION fyz2(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : pi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::fyz2, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  fyz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * sin(phi)
-  RETURN
-END FUNCTION fyz2
-FUNCTION fzx2my2(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : pi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::fzx2my2, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  fzx2my2 =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * cos(2.d0*phi)
-  RETURN
-END FUNCTION fzx2my2
-FUNCTION fxyz(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : pi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::fxyz, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  fxyz =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * sin(2.d0*phi)
-  RETURN
-END FUNCTION fxyz
-FUNCTION fxx2m3y2(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : pi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::fxx2m3y2, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  fxx2m3y2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * cos(3.d0*phi)
-  RETURN
-END FUNCTION fxx2m3y2
-FUNCTION fy3x2my2(cost,phi)
-  USE kinds, ONLY :  DP
-  USE constants_epw, ONLY : pi
-  IMPLICIT NONE
-  REAL(KIND = DP) ::fy3x2my2, cost, phi, sint
-  sint = SQRT(ABS(1.d0 - cost*cost))
-  fy3x2my2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * sin(3.d0*phi)
-  RETURN
-END FUNCTION fy3x2my2
-!
+  !-----------------------------------------------------------------------
+  END FUNCTION s
+  !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  FUNCTION p_z(cost)
+  !-----------------------------------------------------------------------
+  !! l = 1 
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::p_z, cost
+    p_z =  SQRT(3.d0/fpi) * cost
+    RETURN
+  END FUNCTION p_z
+  FUNCTION px(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::px, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    px =  SQRT(3.d0/fpi) * sint * cos(phi)
+    RETURN
+  END FUNCTION px
+  FUNCTION py(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::py, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    py =  SQRT(3.d0/fpi) * sint * sin(phi)
+    RETURN
+  END FUNCTION py
+  !======== l = 2 =====================================================================
+  FUNCTION dz2(cost)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::dz2, cost
+    dz2 =  SQRT(1.25d0/fpi) * (3.d0* cost*cost-1.d0)
+    RETURN
+  END FUNCTION dz2
+  FUNCTION dxz(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::dxz, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    dxz =  SQRT(15.d0/fpi) * sint*cost * cos(phi)
+    RETURN
+  END FUNCTION dxz
+  FUNCTION dyz(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::dyz, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    dyz =  SQRT(15.d0/fpi) * sint*cost * sin(phi)
+    RETURN
+  END FUNCTION dyz
+  FUNCTION dx2my2(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::dx2my2, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    dx2my2 =  SQRT(3.75d0/fpi) * sint*sint * cos(2.d0*phi)
+    RETURN
+  END FUNCTION dx2my2
+  FUNCTION dxy(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : fpi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::dxy, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    dxy =  SQRT(3.75d0/fpi) * sint*sint * sin(2.d0*phi)
+    RETURN
+  END FUNCTION dxy
+  !======== l = 3 =====================================================================
+  FUNCTION fz3(cost)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : pi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::fz3, cost
+    fz3 =  0.25d0*sqrt(7.d0/pi) * ( 5.d0 * cost * cost - 3.d0 ) * cost
+    RETURN
+  END FUNCTION fz3
+  FUNCTION fxz2(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : pi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::fxz2, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    fxz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * cos(phi)
+    RETURN
+  END FUNCTION fxz2
+  FUNCTION fyz2(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : pi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::fyz2, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    fyz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * sin(phi)
+    RETURN
+  END FUNCTION fyz2
+  FUNCTION fzx2my2(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : pi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::fzx2my2, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    fzx2my2 =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * cos(2.d0*phi)
+    RETURN
+  END FUNCTION fzx2my2
+  FUNCTION fxyz(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : pi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::fxyz, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    fxyz =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * sin(2.d0*phi)
+    RETURN
+  END FUNCTION fxyz
+  FUNCTION fxx2m3y2(cost,phi)
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : pi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::fxx2m3y2, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    fxx2m3y2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * cos(3.d0*phi)
+    RETURN
+  !-----------------------------------------------------------------------
+  END FUNCTION fxx2m3y2
+  !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  FUNCTION fy3x2my2(cost,phi)
+  !-----------------------------------------------------------------------
+    USE kinds, ONLY :  DP
+    USE constants_epw, ONLY : pi
+    IMPLICIT NONE
+    REAL(KIND = DP) ::fy3x2my2, cost, phi, sint
+    sint = SQRT(ABS(1.d0 - cost*cost))
+    fy3x2my2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * sin(3.d0*phi)
+    RETURN
+  !-----------------------------------------------------------------------
+  END FUNCTION fy3x2my2
+  !-----------------------------------------------------------------------
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   !-----------------------------------------------------------------------
-  !
-  ! This routine computes a table with the radial Fourier transform 
-  ! of the radial functions.
-  !
+  !!
+  !! This routine computes a table with the radial Fourier transform 
+  !! of the radial functions.
+  !!
   USE kinds,      ONLY : dp
   USE constants,  ONLY : fpi
   USE cell_base,  ONLY : omega
@@ -2806,9 +2835,9 @@ END FUNCTION fy3x2my2
   !    compute the radial mesh
   !
   DO ir = 1, mesh_r
-     x = xmin  + DBLE (ir - 1) * dx 
-     r (ir) = exp (x) / alfa
-     rij (ir) = dx  * r (ir)
+    x = xmin  + DBLE (ir - 1) * dx 
+    r (ir) = exp (x) / alfa
+    rij (ir) = dx  * r (ir)
   ENDDO
   !
   IF (rvalue==1) func_r(:) = 2.d0 * alfa**(3.d0/2.d0) * exp(-alfa*r(:))
@@ -2820,17 +2849,19 @@ END FUNCTION fy3x2my2
   pref = fpi/sqrt(omega)
   !
   DO l = 0, lmax
-     DO ig = 1,ng
-       CALL sph_bes (mesh_r, r(1), q(ig), l, bes)
-       aux(:) = bes(:) * func_r(:) * r(:) * r(:)
-       CALL simpson (mesh_r, aux, rij, rad_int)
-       radial(ig,l) = rad_int * pref
-     ENDDO
+    DO ig = 1,ng
+      CALL sph_bes (mesh_r, r(1), q(ig), l, bes)
+      aux(:) = bes(:) * func_r(:) * r(:) * r(:)
+      CALL simpson (mesh_r, aux, rij, rad_int)
+      radial(ig,l) = rad_int * pref
+    ENDDO
   ENDDO
   !
   DEALLOCATE(bes, func_r, r, rij, aux )
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE radialpart
+  !-----------------------------------------------------------------------
 

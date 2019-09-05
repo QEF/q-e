@@ -11,7 +11,7 @@
                         lrepmatw2_restart, lrepmatw5_restart, ctype) 
   !-----------------------------------------------------------------------
   !!
-  !!  This SUBROUTINE computes the transition probability and the scattering rates.
+  !!  This subroutine computes the transition probability and the scattering rates.
   !!  Only the elements larger than threshold are saved on file. 
   !!
   !-----------------------------------------------------------------------

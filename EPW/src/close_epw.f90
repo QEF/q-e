@@ -21,9 +21,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE iter_close
     !----------------------------------------------------------------------------
-    ! 
-    ! This SUBROUTINE opens all the files needed to save scattering rates for the IBTE.
-    ! 
+    !! 
+    !! This subroutine opens all the files needed to save scattering rates for the IBTE.
+    !! 
     USE kinds,         ONLY : DP
     USE io_files,      ONLY : tmp_dir, prefix
     USE io_epw,        ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
@@ -48,8 +48,8 @@
     ! 
 #if defined(__MPI)
     IF (etf_mem == 1) then
-      CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
-      IF( ierr /= 0 ) CALL errore( 'iter_close', 'error in MPI_FILE_CLOSE',1 )
+      CALL MPI_FILE_CLOSE(iunepmatwp2, ierr)
+      IF( ierr /= 0 ) CALL errore('iter_close', 'error in MPI_FILE_CLOSE', 1)
     ENDIF
 #endif
     ! 
@@ -67,7 +67,7 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE iter_close
     !----------------------------------------------------------------------------
-
+    ! 
     !----------------------------------------------------------------------
     SUBROUTINE deallocate_epw
     !----------------------------------------------------------------------
@@ -101,7 +101,7 @@
     !! Polarization number
     !
     IF (epwread .AND. .NOT. epbread) THEN
-      !  EPW variables ONLY
+      !  EPW variables only
       !
       IF(ALLOCATED(etq))       DEALLOCATE(etq)
       IF(ALLOCATED(etf))       DEALLOCATE(etf)
@@ -140,8 +140,9 @@
       IF(ALLOCATED(isk_all))   DEALLOCATE(isk_all)    
     ENDIF ! epwread .AND. .NOT. epbread 
     !
+    !---------------------------------------------------------------
     END SUBROUTINE deallocate_epw
-    ! ---------------------------------------------------------------
+    !---------------------------------------------------------------
     ! 
     !------------------------------------------------------------------
     SUBROUTINE close_final
@@ -157,16 +158,19 @@
     IMPLICIT NONE
     !
     IF (etf_mem == 1 .OR. etf_mem == 2) THEN
-      CLOSE (unit = iunepmatwe, status = 'delete')
+      CLOSE(UNIT = iunepmatwe, STATUS = 'delete')
     ENDIF
     !
-    CLOSE (unit = iuwfc, status = 'keep')
-    CLOSE (unit = iudwf, status = 'keep')
+    CLOSE(UNIT = iuwfc, STATUS = 'keep')
+    CLOSE(UNIT = iudwf, STATUS = 'keep')
     IF (me_pool == root_pool) THEN
-      IF (fildrho/=' ') CLOSE (unit = iudrho, status = 'keep')
+      IF (fildrho/=' ') CLOSE(UNIT = iudrho, STATUS = 'keep')
     ENDIF
     !
+    !------------------------------------------------------------------
     END SUBROUTINE close_final
-    ! ------------------------------------------------------------------
+    !------------------------------------------------------------------
     ! 
+  !------------------------------------------------------------------
   END MODULE close_epw
+  !------------------------------------------------------------------

@@ -106,7 +106,7 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE Fin_write
     !----------------------------------------------------------------------------
-
+    ! 
     !----------------------------------------------------------------------------
     SUBROUTINE Fin_read(iter, F_in, av_mob_old, elec)
     !----------------------------------------------------------------------------
@@ -1325,12 +1325,12 @@
         ! 
         IF (exst) THEN ! read the file
           !
-          ltau_all = nstemp * (nbndfst) * nktotf +2
-          CALL diropn (iufiltau_all, 'tau_restart_CB', ltau_all, exst)
-          CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
+          ltau_all = nstemp * (nbndfst) * nktotf + 2
+          CALL diropn(iufiltau_all, 'tau_restart_CB', ltau_all, exst)
+          CALL davcio(aux, ltau_all, iufiltau_all, 1, -1)
           !
           ! First element is the iteration number
-          iqq = INT( aux(1) )
+          iqq = INT(aux(1))
           iqq = iqq + 1 ! we need to start at the next q
           nqtotf_read = INT( aux(2) )
           IF (nqtotf_read /= totq) CALL errore('io_scattering',&
@@ -1362,30 +1362,30 @@
       !
     ENDIF
     ! 
-    CALL mp_bcast (exst, meta_ionode_id, world_comm)
+    CALL mp_bcast(exst, meta_ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (iqq,          meta_ionode_id, world_comm)
-      CALL mp_bcast (inv_tau_all, meta_ionode_id, world_comm)
-      CALL mp_bcast (zi_allvb,    meta_ionode_id, world_comm)
-      IF (second) CALL mp_bcast (inv_tau_allcb, meta_ionode_id, world_comm)
-      IF (second) CALL mp_bcast (zi_allcb, meta_ionode_id, world_comm)
+      CALL mp_bcast(iqq,          meta_ionode_id, world_comm)
+      CALL mp_bcast(inv_tau_all, meta_ionode_id, world_comm)
+      CALL mp_bcast(zi_allvb,    meta_ionode_id, world_comm)
+      IF (second) CALL mp_bcast(inv_tau_allcb, meta_ionode_id, world_comm)
+      IF (second) CALL mp_bcast(zi_allcb, meta_ionode_id, world_comm)
       ! 
       ! Make everythin 0 except the range of k-points we are working on
-      IF (lower_bnd > 1 )      inv_tau_all(:,:,1:lower_bnd-1) = zero
-      IF (upper_bnd < nktotf ) inv_tau_all(:,:,upper_bnd+1:nktotf) = zero
-      IF (lower_bnd > 1 )      zi_allvb(:,:,1:lower_bnd-1) = zero
-      IF (upper_bnd < nktotf ) zi_allvb(:,:,upper_bnd+1:nktotf) = zero
+      IF (lower_bnd > 1)      inv_tau_all(:, :, 1:lower_bnd - 1) = zero
+      IF (upper_bnd < nktotf) inv_tau_all(:, :, upper_bnd + 1:nktotf) = zero
+      IF (lower_bnd > 1)      zi_allvb(:, :, 1:lower_bnd - 1) = zero
+      IF (upper_bnd < nktotf) zi_allvb(:, :, upper_bnd + 1:nktotf) = zero
       !  
       IF (second) THEN
         ! Make everythin 0 except the range of k-points we are working on
-        IF (lower_bnd > 1 )      inv_tau_allcb(:,:,1:lower_bnd-1) = zero
-        IF (upper_bnd < nktotf ) inv_tau_allcb(:,:,upper_bnd+1:nktotf) = zero
-        IF (lower_bnd > 1 )      zi_allcb(:,:,1:lower_bnd-1) = zero
-        IF (upper_bnd < nktotf ) zi_allcb(:,:,upper_bnd+1:nktotf) = zero
+        IF (lower_bnd > 1)      inv_tau_allcb(:, :, 1:lower_bnd - 1) = zero
+        IF (upper_bnd < nktotf) inv_tau_allcb(:, :, upper_bnd + 1:nktotf) = zero
+        IF (lower_bnd > 1)      zi_allcb(:, :, 1:lower_bnd - 1) = zero
+        IF (upper_bnd < nktotf) zi_allcb(:, :, upper_bnd + 1:nktotf) = zero
       ENDIF 
       ! 
-      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau: ',iqq,'/',totq
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau: ', iqq, '/', totq
     ENDIF
     ! 
     !----------------------------------------------------------------------------
@@ -1430,7 +1430,7 @@
     !! Length of the vector
     INTEGER(KIND = 8) :: unf_recl
     !! 
-    REAL(KIND = DP) :: aux ( nstemp * (nbndfst) * nktotf + 2 )
+    REAL(KIND = DP) :: aux (nstemp * (nbndfst) * nktotf + 2)
     !! Vector to store the array 
     REAL(KIND = DP) :: dummy
     !! Test what the record length is
@@ -1441,7 +1441,7 @@
       !
       ! First inquire if the file exists
       name1 = TRIM(tmp_dir) // TRIM(restart_filq)
-      INQUIRE(file = name1, exist=exst)
+      INQUIRE(FILE = name1, EXIST = exst)
       ! 
       IF (exst) THEN ! read the file
         !
@@ -1449,23 +1449,23 @@
         !CALL diropn (iufiltau_all, 'tau_restart', ltau_all, exst)
         ! 
         INQUIRE (IOLENGTH = unf_recl) dummy  
-        unf_recl = unf_recl * INT(ltau_all, KIND=kind(unf_recl))
-        open (unit = iufiltau_all, file = restart_filq, iostat = ios, form ='unformatted', &
-         status = 'unknown', access = 'direct', recl = unf_recl)
+        unf_recl = unf_recl * INT(ltau_all, KIND = KIND(unf_recl))
+        OPEN(UNIT = iufiltau_all, FILE = restart_filq, IOSTAT = ios, FORM ='unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
         !  
-        CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
+        CALL davcio(aux, ltau_all, iufiltau_all, 1, -1)
         !
         ! First element is the iteration number
-        iq = INT( aux(1) )
+        iq = INT(aux(1))
         iq = iq + 1 ! we need to start at the next q
-        nqtotf_new = INT( aux(2) )
+        nqtotf_new = INT(aux(2))
         ! 
         i = 2
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
             DO ibnd = 1, (nbndfst)
               i = i +1
-              inv_tau_all_new(itemp,ibnd, ik) = aux(i)
+              inv_tau_all_new(itemp, ibnd, ik) = aux(i)
             ENDDO
           ENDDO
         ENDDO
@@ -1473,13 +1473,13 @@
       ENDIF
     ENDIF
     ! 
-    CALL mp_bcast (exst, ionode_id, world_comm)
+    CALL mp_bcast(exst, ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (nqtotf_new, ionode_id, world_comm)
-      CALL mp_bcast (inv_tau_all_new, ionode_id, world_comm)
+      CALL mp_bcast(nqtotf_new, ionode_id, world_comm)
+      CALL mp_bcast(inv_tau_all_new, ionode_id, world_comm)
       ! 
-      WRITE(stdout, '(a,a)' ) '     Correctly read file ',restart_filq
+      WRITE(stdout, '(a,a)' ) '     Correctly read file ', restart_filq
     ENDIF
     ! 
     !----------------------------------------------------------------------------
