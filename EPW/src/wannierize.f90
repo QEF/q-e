@@ -9,12 +9,11 @@
   !--------------------------------------------------------------------
   SUBROUTINE wann_run
   !---------------------------------------------------------------------
-  !
-  !  This is the SUBROUTINE which controls the w90 run.  Primarily,        
-  !  we get the phases to remove degeneracies in the wfs, and 
-  !  call pw2wan90epw 
-  !  
-  !---------------------------------------------------------------------
+  !!
+  !!  This is the SUBROUTINE which controls the w90 run.  Primarily,        
+  !!  we get the phases to remove degeneracies in the wfs, and 
+  !!  call pw2wan90epw 
+  !!  
   !
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout, ionode_id
@@ -28,31 +27,28 @@
   !
   IMPLICIT NONE
   !
-  ! intend in variables
-  !
+  ! Local variables
   INTEGER :: num_kpts
   !! number of k-points in wannierization 
   !
   !
-  CALL start_clock( 'WANNIER' )
+  CALL start_clock('WANNIER')
   ! 
   mp_grid(1) = nk1
   mp_grid(2) = nk2
   mp_grid(3) = nk3
   num_kpts = mp_grid(1) * mp_grid(2) * mp_grid(3)
   !
-  IF (num_kpts /= nkstot ) & 
-    CALL errore('wannierize','inconsistent nscf and elph k-grids',1) 
-  IF (nbnd < n_wannier ) &
-    CALL  errore('wannierize','Must have as many or more bands than Wannier functions',1) 
+  IF (num_kpts /= nkstot) CALL errore('wannierize', 'inconsistent nscf and elph k-grids', 1) 
+  IF (nbnd < n_wannier )  CALL errore('wannierize', 'Must have as many or more bands than Wannier functions', 1) 
   !
-  ALLOCATE(kpt_latt(3, num_kpts) )
+  ALLOCATE(kpt_latt(3, num_kpts))
   !
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
   WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nk1, " x ", nk2, " x ", nk3 , " electronic grid"
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
   !
-  kpt_latt = xk_cryst(:,1:num_kpts)
+  kpt_latt = xk_cryst(:, 1:num_kpts)
   CALL mp_bcast(kpt_latt, ionode_id, world_comm)
   !
   ! write the short input file for the wannier90 code
@@ -65,13 +61,13 @@
   !
   ! project the Wannier functions onto energy space
   !
-!  CALL proj_w90
   DEALLOCATE(kpt_latt)
   !
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
-  CALL print_clock( 'WANNIER' )
+  CALL print_clock('WANNIER')
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
   !
+  !------------------------------------------------------------
   END SUBROUTINE wann_run
   !------------------------------------------------------------
   !
@@ -98,49 +94,47 @@
   !
   IMPLICIT NONE
   !
+  LOGICAL :: random
+  !! Random 
   INTEGER :: i
-  !
-  REAL(KIND = DP) :: et_tmp(nbnd,nkstot)
+  !!
+  REAL(KIND = DP) :: et_tmp(nbnd, nkstot)
   !! eigenvalues on full coarse k-mesh
   !
-  LOGICAL :: random
-  !
-  CALL poolgather ( nbnd, nkstot, nks, et(1:nbnd,1:nks), et_tmp)
-  et_tmp = et_tmp*ryd2ev
+  CALL poolgather(nbnd, nkstot, nks, et(1:nbnd, 1:nks), et_tmp)
+  et_tmp = et_tmp * ryd2ev
   !
   IF (meta_ionode) THEN
     !
-    IF (nbndsub > nwanxx) call errore('write_winfil',"Too many wannier bands",nbndsub)
+    IF (nbndsub > nwanxx) CALL errore('write_winfil', "Too many wannier bands", nbndsub)
     !
-    OPEN (unit = iuwinfil, file = TRIM(prefix)//".win", form = 'formatted')
+    OPEN(UNIT = iuwinfil, FILE = TRIM(prefix) // ".win", FORM = 'formatted')
     !    
     !  more input and options for interfacing with w90 can/will be added later
-    WRITE (iuwinfil,'(a)') "begin projections"
+    WRITE(iuwinfil, '(a)') "begin projections"
     !
     random = .TRUE.
     DO i = 1, nbndsub
-       IF (proj(i) /= ' ') THEN
-          WRITE (iuwinfil,*) TRIM(proj(i))
-          random = .FALSE.
-       ENDIF
+      IF (proj(i) /= ' ') THEN
+        WRITE(iuwinfil,*) TRIM(proj(i))
+        random = .FALSE.
+      ENDIF
     ENDDO
     !
-    IF (random) WRITE(iuwinfil,*) 'random' 
+    IF (random) WRITE(iuwinfil, *) 'random' 
     !
-    WRITE (iuwinfil,'(a)') "end projections"
+    WRITE(iuwinfil,'(a)') "end projections"
     !
-    IF (bands_skipped /= ' ') WRITE(iuwinfil,*) bands_skipped
+    IF (bands_skipped /= ' ') WRITE(iuwinfil, *) bands_skipped
     !
-    WRITE (iuwinfil,'("num_wann ",i3)') nbndsub
-    WRITE (iuwinfil,'("iprint ",i3)') iprint
+    WRITE(iuwinfil, '("num_wann ",i3)') nbndsub
+    WRITE(iuwinfil, '("iprint ",i3)') iprint
     !
-    ! SP: This is not ok. Indeed you can have more bands in nscf.in than in 
+    ! SP: You can have more bands in nscf.in than in 
     !     nbndskip+nbndsub. In which case the dis_win_max can be larger than 
     !     nbndskip+nbndsub. This is crucial for disantanglement. 
-    !IF (dis_win_min < minval(et_tmp) ) dis_win_min = minval(et_tmp)
-    !IF (dis_win_max > MAXVAL(et_tmp) ) dis_win_max = MAXVAL(et_tmp)
-    IF (dis_froz_min < minval(et_tmp) ) dis_froz_min = minval(et_tmp)
-    IF (dis_froz_max > MAXVAL(et_tmp) ) dis_froz_max = MAXVAL(et_tmp)
+    IF (dis_froz_min < MINVAL(et_tmp)) dis_froz_min = MINVAL(et_tmp)
+    IF (dis_froz_max > MAXVAL(et_tmp)) dis_froz_max = MAXVAL(et_tmp)
     !
     WRITE(iuwinfil, '("dis_win_min ", f18.12)')  dis_win_min
     WRITE(iuwinfil, '("dis_win_max ", f18.12)')  dis_win_max
@@ -151,22 +145,24 @@
     !
     ! write any extra parameters to the prefix.win file
     DO i = 1, nwanxx
-       IF (wdata(i) /= ' ') WRITE(iuwinfil,*) wdata(i)
+      IF (wdata(i) /= ' ') WRITE(iuwinfil, *) wdata(i)
     ENDDO
     !
-    CLOSE (iuwinfil)
+    CLOSE(iuwinfil)
     !
   ENDIF
   !
-  END SUBROUTINE write_winfil
-!------------------------------------------------------------
-  SUBROUTINE proj_w90
-!------------------------------------------------------------
-  !
-  ! This SUBROUTINE computes the energy projections of
-  ! the computed Wannier functions
-  ! 07/2010  Needs work.  Right now this sub is nearly worthless  
   !------------------------------------------------------------
+  END SUBROUTINE write_winfil
+  !------------------------------------------------------------
+  ! 
+  !------------------------------------------------------------
+  SUBROUTINE proj_w90
+  !------------------------------------------------------------
+  !!
+  !! This SUBROUTINE computes the energy projections of
+  !! the computed Wannier functions
+  !! 07/2010  Needs work.  Right now this sub is nearly worthless  
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : prefix 
@@ -182,16 +178,40 @@
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ibnd, ne, ie, iwann
-  REAL(KIND = DP) :: dE, sigma, argv, en, xxq(3)
-  REAL(KIND = DP), ALLOCATABLE    ::  proj_wf(:, :)
-  COMPLEX(KIND = DP), ALLOCATABLE ::  cu(:, :, :), cuq(:, :, :)
+  LOGICAL :: lwin(nbnd, nks)
+  !! Bands within the energy window
+  LOGICAL :: lwinq(nbnd, nks)
+  !! k+q bands within the energy window
+  LOGICAL :: exband(nbnd)
+  !! Exclude bands
+  INTEGER :: ik
+  !! K-point index
+  INTEGER :: ibnd
+  !! 
+  INTEGER :: ne 
+  !!
+  INTEGER :: ie
+  !!
+  INTEGER :: iwann
+  !!
+  REAL(KIND = DP) :: dE
+  !! 
+  REAL(KIND = DP) :: sigma
+  !! 
+  REAL(KIND = DP) :: argv
+  !! 
+  REAL(KIND = DP) :: en
+  !! 
+  REAL(KIND = DP) :: xxq(3)
+  !! Current q-point
+  REAL(KIND = DP), ALLOCATABLE :: proj_wf(:, :)
+  !! Projection
+  COMPLEX(KIND = DP), ALLOCATABLE :: cu(:, :, :)
+  !! k rotation matrix
+  COMPLEX(KIND = DP), ALLOCATABLE :: cuq(:, :, :)
+  !! k+q rotation matrix
   !
-  LOGICAL :: lwin( nbnd, nks ), lwinq( nbnd, nks )
-  ! FG: introduced after extensive compiler tests
-  LOGICAL :: exband( nbnd )
-  !
-  WRITE(stdout,'(5x,"Computing energy projections")')
+  WRITE(stdout, '(5x,"Computing energy projections")')
   ! dummy var
   xxq = zero
   !
@@ -201,32 +221,27 @@
   !
   ! maxvalue = dis_win_max + 1
   ! minvalue = dis_win_min - 1
-  ne = int( (dis_win_max - dis_win_min + 1) / dE )
-  IF (ne < 1)  CALL errore('proj_wan','Problem with disentanglement window',1)
+  ne = INT((dis_win_max - dis_win_min + 1) / dE)
+  IF (ne < 1) CALL errore('proj_wan', 'Problem with disentanglement window', 1)
   !
-  ALLOCATE(proj_wf(n_wannier, ne+1))
+  ALLOCATE(proj_wf(n_wannier, ne + 1))
   proj_wf = 0.d0
   !
-  ALLOCATE(cu (nbnd, n_wannier, nks) )
-  ALLOCATE(cuq(nbnd, n_wannier, nks) )
+  ALLOCATE(cu(nbnd, n_wannier, nks))
+  ALLOCATE(cuq(nbnd, n_wannier, nks))
   !
   CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband) 
-  ! FG: introduced after ifort checks
   !
   DO iwann = 1, n_wannier
-     !
-     DO ie = 1, ne
-        en = DBLE(ie)/DBLE(ne) * (dis_win_max - dis_win_min + 1.0) + dis_win_min
-        !
-        DO ik = 1, nks
-           DO ibnd = 1, nbnd
-              !
-              argv = ( et(ibnd,ik)*ryd2ev - en ) **2/ (2 * sigma **2)
-              proj_wf(iwann, ie ) = proj_wf(iwann, ie ) + exp(-argv) * real (  cu(ibnd, iwann,ik ) * CONJG( cu(ibnd, iwann,ik) ))
-              !
-           ENDDO
+    DO ie = 1, ne
+      en = DBLE(ie) / DBLE(ne) * (dis_win_max - dis_win_min + 1.0) + dis_win_min
+      DO ik = 1, nks
+        DO ibnd = 1, nbnd
+          argv = (et(ibnd, ik) * ryd2ev - en)**2 / (2 * sigma **2)
+          proj_wf(iwann, ie) = proj_wf(iwann, ie) + EXP(-argv) * REAL(cu(ibnd, iwann, ik) * CONJG(cu(ibnd, iwann, ik)))
         ENDDO
-     ENDDO
+      ENDDO
+    ENDDO
   ENDDO
   !
   ! sum the contributions from all k-points
@@ -234,22 +249,21 @@
   !
   IF (meta_ionode) THEN
     !
-    OPEN (unit = iuprojfil, file = TRIM(prefix)//".projw90", form = 'formatted')
+    OPEN(UNIT = iuprojfil, FILE = TRIM(prefix) // ".projw90", FORM = 'formatted')
     !
     WRITE(iuprojfil, '(5x,"Wannier energy projections")')
     !
     DO ie = 1, ne
-       en =  DBLE(ie)/DBLE(ne) * (dis_win_max - dis_win_min + 1) + dis_win_min
-       WRITE(iuprojfil, '(f9.3, 25f8.4)' )  en , proj_wf(:, ie)
+      en =  DBLE(ie) / DBLE(ne) * (dis_win_max - dis_win_min + 1) + dis_win_min
+      WRITE(iuprojfil, '(f9.3, 25f8.4)') en, proj_wf(:, ie)
     ENDDO
     !
-    CLOSE (iuprojfil)
+    CLOSE(iuprojfil)
   ENDIF
+  DEALLOCATE(proj_wf)
+  DEALLOCATE(cu)
+  DEALLOCATE(cuq)
   !
-  IF (ALLOCATED(proj_wf)) DEALLOCATE(proj_wf)
-  IF (ALLOCATED(cu))      DEALLOCATE(cu)
-  IF (ALLOCATED(cuq))     DEALLOCATE(cuq)
-  !
-!------------------------------------------------------------
-  END  SUBROUTINE proj_w90
-!------------------------------------------------------------
+  !------------------------------------------------------------
+  END SUBROUTINE proj_w90
+  !------------------------------------------------------------
