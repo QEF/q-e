@@ -557,6 +557,248 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE loadkmesh_fullBZ
     !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE kpoint_grid_epw(nrot, time_reversal, skip_equivalence, s, t_rev, &
+                               bg, nk1, nk2, nk3, BZtoIBZ, s_BZtoIBZ)
+    !-----------------------------------------------------------------------
+    !!
+    !!  Automatic generation of a uniform grid of k-points with symmetry. 
+    !!  Routine copied from PW/src/kpoint_grid.f90.
+    !!  We had to duplicate because the BZtoIBZ array was deallocated and is needed in
+    !!  EPW 
+    !!
+    USE kinds,            ONLY : DP
+    USE division,         ONLY : fkbounds
+    USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
+    USE mp_world,         ONLY : mpime
+    USE mp_global,        ONLY : world_comm, my_pool_id, npool, inter_pool_comm
+    USE io_global,        ONLY : ionode_id, stdout
+    USE kinds_epw,        ONLY : SIK2
+    USE constants_epw,    ONLY : eps6
+    #if defined(__MPI)
+    USE parallel_include, ONLY : MPI_INTEGER
+    #endif
+    ! 
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nrot
+    !! Number of Bravais symmetry
+    INTEGER, INTENT(in) :: nk1, nk2, nk3
+    !! k-grid 
+    INTEGER, INTENT(in) :: t_rev(48)
+    !! Time-reversal sym
+    INTEGER, INTENT(in) :: s(3, 3, 48)
+    !! Symmetry matrice. 
+    INTEGER(SIK2), INTENT(inout) :: s_BZtoIBZ(nk1 * nk2 * nk3)
+    !! Symeetry matrix that links an point to its IBZ friend.
+    INTEGER, INTENT(inout) :: BZtoIBZ(nk1 * nk2 * nk3)
+    !! Number of rotation
+    LOGICAL, INTENT(in) :: time_reversal
+    !! True if time reversal
+    LOGICAL, INTENT(in) :: skip_equivalence
+    !! True if equivalent point
+    REAL(KIND = DP), INTENT(in) :: bg(3, 3)
+    !! Reciprocal space vectors
+    !
+    ! Local variables
+    LOGICAL :: in_the_list
+    !! Is the current point in the list
+    INTEGER(SIK2) :: s_save(nk1 * nk2 * nk3)
+    !! Temporary symmetry matrix
+    INTEGER :: nkr
+    !! Total number of points
+    INTEGER :: i, j, k
+    !! Index on grid size
+    INTEGER :: ns
+    !! Index on symmetry operations
+    INTEGER :: n
+    !! Global k-point index
+    INTEGER :: nk
+    !! Equivalent point
+    INTEGER :: equiv(nk1 * nk2 * nk3)
+    !! Equivalent k-points
+    INTEGER :: ik
+    !! K-point index 
+    INTEGER :: lower_bnd
+    !! K-point paralelization (lower-bound index)
+    INTEGER :: upper_bnd
+    !! K-point paralelization (upper-bound index) 
+    INTEGER :: cumul_nks
+    !! Sum of points
+    INTEGER :: BZtoIBZ_tmp(nk1 * nk2 * nk3)
+    !! Temporrary BZtoIBZ map
+    INTEGER :: ierr
+    !! Error 
+    INTEGER, ALLOCATABLE :: nkspar(:)
+    !! Number of irr points (IBZ)
+    REAL(KIND = DP) :: xkr(3)
+    !! Current point
+    REAL(KIND = DP) :: xx, yy, zz
+    !! Current point coordinate
+    REAL(KIND = DP), ALLOCATABLE :: xkg(:, :)
+    !! Current point
+    REAL(KIND = DP), ALLOCATABLE :: wkk(:)
+    !! Weight of the k-point
+    !
+    nkr = nk1 * nk2 * nk3
+    ALLOCATE(nkspar(npool))
+    ALLOCATE(xkg(3, nkr))
+    ALLOCATE(wkk(nkr))
+    equiv(:) = 0
+    s_save(:) = 0
+    !
+    DO i = 1, nk1
+      DO j = 1, nk2
+        DO k = 1, nk3
+          !  this is nothing but consecutive ordering
+          n = (k - 1) + ( j- 1 ) * nk3 + (i - 1) * nk2 * nk3 + 1
+          !  xkg are the components of the complete grid in crystal axis
+          xkg(1, n) = DBLE(i - 1) / nk1 
+          xkg(2, n) = DBLE(j - 1) / nk2 
+          xkg(3, n) = DBLE(k - 1) / nk3 
+        ENDDO
+      ENDDO
+    ENDDO
+    !  equiv(nk) =nk : k-point nk is not equivalent to any previous k-point
+    !  equiv(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
+    DO nk = 1, nkr
+      equiv(nk) = nk
+    ENDDO
+    !
+    IF (skip_equivalence) THEN
+      CALL infomsg('kpoint_grid', 'ATTENTION: skip check of k-points equivalence')
+      wkk = 1.d0
+    ELSE
+      DO nk = 1, nkr
+        !  check if this k-point has already been found equivalent to another
+        IF (equiv(nk) == nk) THEN
+          wkk(nk) = 1.0d0
+          !  check if there are equivalent k-point to this in the list
+          !  (excepted those previously found to be equivalent to another)
+          !  check both k and -k
+          DO ns = 1, nrot
+            DO i = 1, 3
+              xkr(i) = s(i, 1, ns) * xkg(1, nk) &
+                     + s(i, 2, ns) * xkg(2, nk) &
+                     + s(i, 3, ns) * xkg(3, nk)
+              xkr(i) = xkr(i) - NINT(xkr(i))
+            ENDDO
+            IF(t_rev(ns) == 1) xkr = -xkr
+            xx = xkr(1) * nk1 
+            yy = xkr(2) * nk2 
+            zz = xkr(3) * nk3 
+            in_the_list = ABS(xx - NINT(xx)) <= eps6 .AND. &
+                          ABS(yy - NINT(yy)) <= eps6 .AND. &
+                          ABS(zz - NINT(zz)) <= eps6
+            IF (in_the_list) THEN
+              i = MOD(NINT(xkr(1) * nk1 + 2 * nk1), nk1) + 1
+              j = MOD(NINT(xkr(2) * nk2 + 2 * nk2), nk2) + 1
+              k = MOD(NINT(xkr(3) * nk3 + 2 * nk3), nk3) + 1
+              n = (k - 1) + (j - 1) * nk3 + (i - 1) * nk2 * nk3 + 1
+              IF (n > nk .AND. equiv(n) == n) THEN
+                equiv(n) = nk
+                wkk(nk) = wkk(nk) + 1.0d0
+                s_save(n) = ns
+              ELSE
+                IF (equiv(n) /= nk .OR. n < nk) CALL errore('kpoint_grid', &
+                   'something wrong in the checking algorithm', 1)
+              ENDIF
+            ENDIF
+    !        IF (time_reversal) THEN
+    !           xx =-xkr(1)*nk1 
+    !           yy =-xkr(2)*nk2 
+    !           zz =-xkr(3)*nk3 
+    !           in_the_list=ABS(xx-NINT(xx))<=eps.AND.ABS(yy-NINT(yy))<=eps &
+    !                                              .AND. ABS(zz-NINT(zz))<=eps
+    !           IF (in_the_list) THEN
+    !              i = mod ( nint (-xkr(1)*nk1  + 2*nk1), nk1 ) + 1
+    !              j = mod ( nint (-xkr(2)*nk2  + 2*nk2), nk2 ) + 1
+    !              k = mod ( nint (-xkr(3)*nk3  + 2*nk3), nk3 ) + 1
+    !              n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+    !              IF (n>nk .AND. equiv(n)==n) THEN
+    !                 equiv(n) = nk
+    !                 wkk(nk)=wkk(nk)+1.0d0
+    !                 s_save(:,:,n) = -s(:,:,ns)
+    !              ELSE
+    !                 IF (equiv(n)/=nk.OR.n<nk) CALL errore('kpoint_grid', &
+    !                 'something wrong in the checking algorithm',2)
+    !              ENDIF
+    !           ENDIF
+    !        ENDIF
+          ENDDO
+        ENDIF
+      ENDDO
+    ENDIF
+    ! 
+    !  count irreducible points and order them
+    nkspar(:) = 0
+    DO nk = 1, nkr
+      BZtoIBZ(nk) = equiv(nk)
+    ENDDO
+    !
+    CALL fkbounds(nkr, lower_bnd, upper_bnd)
+    DO nk = lower_bnd, upper_bnd
+      IF (equiv(nk) == nk) THEN
+        nkspar(my_pool_id + 1) = nkspar(my_pool_id + 1) + 1
+        IF (nkspar(my_pool_id + 1) > nkr) CALL errore('kpoint_grid', 'Too many k-points', 1)
+        BZtoIBZ(nk) = nkspar(my_pool_id + 1)
+        ! Change all the one above
+        DO ik = nk, nkr
+          IF (equiv(ik) == nk) THEN
+            BZtoIBZ(ik) = nkspar(my_pool_id + 1)
+          ENDIF
+        ENDDO
+      ENDIF
+    ENDDO
+    !Now recompose the vector with the right order 
+    CALL mp_sum(nkspar, world_comm)
+    cumul_nks = 0
+    IF (my_pool_id > 0) THEN
+      DO i = 1, my_pool_id
+        cumul_nks = cumul_nks + nkspar(i)
+      ENDDO
+    ENDIF
+    DO ik = 1, nkr
+      IF((BZtoIBZ(ik) > nkspar(my_pool_id + 1)) .OR. (ik < lower_bnd)) THEN
+        BZtoIBZ (ik) = 0
+      ELSE
+        BZtoIBZ(ik) = BZtoIBZ(ik) + cumul_nks
+      ENDIF
+    ENDDO
+    BZtoIBZ_tmp(:) = 0
+    DO i = 1, npool
+      IF (my_pool_id + 1 == i) THEN
+        DO ik = 1, nkr
+          IF (BZtoIBZ_tmp(ik) == 0) THEN
+            BZtoIBZ_tmp(ik) = BZtoIBZ(ik)
+          ENDIF
+        ENDDO
+      ENDIF
+      CALL mp_bcast(BZtoIBZ_tmp, i - 1, inter_pool_comm)
+    ENDDO
+    !
+    BZtoIBZ = BZtoIBZ_tmp
+    !
+    ! Now do the symmetry mapping. 
+    DO nk = 1, nkr
+      ! If its an irreducible point 
+      IF (equiv(nk) == nk) THEN
+        ! Then you have the identity matrix
+        s_BZtoIBZ(nk) = 1
+      ELSE
+        s_BZtoIBZ(nk) = s_save(nk)  
+      ENDIF
+    ENDDO
+    ! 
+    DEALLOCATE(xkg)
+    DEALLOCATE(wkk)
+    DEALLOCATE(nkspar)
+    RETURN
+    !-----------------------------------------------------------------------
+    END SUBROUTINE kpoint_grid_epw
+    !-----------------------------------------------------------------------
+    ! 
     !-----------------------------------------------------------------------
     SUBROUTINE loadqmesh_para
     !-----------------------------------------------------------------------
@@ -1448,6 +1690,304 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE load_rebal
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    SUBROUTINE special_points(nb_sp, xkf_all, xkf_sp)
+    !-----------------------------------------------------------------------
+    !! 
+    !! This routine determines  the special k-points that are sent to 
+    !! themselves as a result of symmetry. 
+    !! e.g. the point [1 1 1] is sent to itself by the symmetry that exchanges
+    !!      the x and y coordinates. 
+    !! 
+    !-----------------------------------------------------------------------  
+    USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout
+    USE cell_base,     ONLY : alat, at, omega, bg
+    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE elph2,         ONLY : nkqtotf, nkf
+    USE constants_epw, ONLY : eps6, zero
+    USE wigner,        ONLY : backtoWS
+    USE mp,            ONLY : mp_sum
+    USE mp_global,     ONLY : world_comm
+    USE division,      ONLY : fkbounds
+    USE mp_world,      ONLY : mpime
+    USE io_global,     ONLY : ionode_id
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(out) :: nb_sp
+    !! Number of special points
+    INTEGER, INTENT(out), ALLOCATABLE :: xkf_sp(:, :) 
+    !! List of special k-points. The first index is the kpt index and the other 
+    REAL(KIND = DP), INTENT(in) :: xkf_all(3, nktotf)
+    !! All the k-points (just k-points, not k and k+q)
+    ! 
+    ! Local variables
+    INTEGER :: ik
+    !! K-point variable
+    INTEGER :: nb
+    !! Symmetry index
+    INTEGER :: counter
+    !! Counter on the number of symmetries
+    INTEGER :: nrws
+    !! Maximum number of WS vectors
+    INTEGER :: lower_bnd
+    !! Lower bounds index after k para
+    INTEGER :: upper_bnd
+    !! Upper bounds index after k paral
+    INTEGER :: xkt_sp(48, nktotf)
+    !! Temp list of special k-points
+    INTEGER, PARAMETER :: nrwsx = 200
+    !! Variable for WS folding
+    REAL(KIND = DP) :: sa(3, 3)
+    !! Symmetry matrix in crystal
+    REAL(KIND = DP) :: sb(3, 3)
+    !! Symmetry matrix (intermediate step)
+    REAL(KIND = DP) :: sr(3, 3)
+    !! Symmetry matrix in cartesian coordinate 
+    REAL(KIND = DP) :: xk(3)
+    !! Current k-point coordinate
+    REAL(KIND = DP) :: S_xk(3)
+    !! Rotated k-point
+    REAL(KIND = DP) :: ws(3)
+    !! Wigner-Seitz vector
+    REAL(KIND = DP) :: rws(4, nrwsx) 
+    !! Real WS vectors 
+    INTEGER :: n
+    !! Loop index
+    INTEGER :: m
+    !! Loop index
+    INTEGER :: l
+    !! Loop index
+    REAL(KIND = DP) :: S_xk_border(3, 27)
+    !! Look for special points on the border
+    INTEGER :: counter_n
+    !! Counter for special points on the border
+    LOGICAL :: sym_found
+    !! Logical for IF statement
+    ! 
+    ! Split the k-point across cores
+    CALL fkbounds(nktotf, lower_bnd, upper_bnd)
+    ! 
+    rws(:, :) = zero 
+    CALL wsinit(rws, nrwsx, nrws, bg)
+    xkt_sp(:, :) = 0
+    ! 
+    nb_sp = 0
+    DO ik = 1, nkf
+      counter = 0
+      ! We could skip nb==1 to avoid identity symmetry 
+      DO nb = 1, nrot
+        sa(:, :) = DBLE(s(:, :, nb))
+        sb       = MATMUL(bg, sa)
+        sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+        sr       = TRANSPOSE(sr)
+        xk = xkf_all(:, ik + lower_bnd - 1)
+        CALL cryst_to_cart(1, xk, bg, 1)
+        CALL backtoWS(xk, ws, rws, nrwsx, nrws)
+        xk = ws
+        CALL dgemv('n', 3, 3, 1.d0, sr, 3, xk, 1 ,0.d0 , S_xk, 1)     
+        ! 
+        ! Needed for border_points
+        counter_n = 0
+        DO n = -1, 1
+          DO m = -1, 1
+            DO l = -1, 1
+              counter_n = counter_n + 1
+              S_xk_border(:, counter_n) = S_xk(:) + REAL(n, KIND = DP) * bg(:, 1) &
+                         + REAL(m, KIND = DP) * bg (:, 2) + REAL(l, KIND = DP) * bg (:, 3)
+            ENDDO
+          ENDDO
+        ENDDO
+        sym_found = .FALSE.
+        !
+        IF (DOT_PRODUCT(xk - S_xk, xk - S_xk) < eps6) THEN
+          counter = counter + 1 
+          xkt_sp(counter, ik + lower_bnd - 1) = nb
+          sym_found = .TRUE.
+        ENDIF
+        ! Now check if the symmetry was not found because the point is on border
+        IF (.NOT. sym_found) THEN
+          DO counter_n = 1, 27
+            IF (DOT_PRODUCT(xk(:) - S_xk_border(:, counter_n), xk(:) - S_xk_border(:, counter_n)) < eps6) THEN
+              counter = counter + 1
+              xkt_sp(counter, ik + lower_bnd - 1) = nb
+            ENDIF
+          ENDDO
+        ENDIF
+        !
+      ENDDO ! nb
+      IF (counter > 1) THEN
+        nb_sp = nb_sp + 1
+      ENDIF
+      !    
+    ENDDO ! ik
+    ! 
+    ! Gather from all cores
+    CALL mp_sum(xkt_sp, world_comm)
+    CALL mp_sum(nb_sp, world_comm)
+    ! 
+    !! 48 symmetries + 1 index for the index of kpt
+    ALLOCATE(xkf_sp(49, nb_sp ))
+    xkf_sp(:, :) = 0
+    ! 
+    counter = 0
+    DO ik = 1, nktotf
+      IF (xkt_sp(2, ik) > 0) THEN
+        counter = counter + 1
+        xkf_sp(1, counter) = ik
+        xkf_sp(2:49, counter) = xkt_sp(:, ik) 
+      ENDIF
+    ENDDO ! ik
+    ! 
+    !-----------------------------------------------------------------------
+    END SUBROUTINE special_points
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    SUBROUTINE k_avg(F_out, vkk_all, nb_sp, xkf_sp)
+    !-----------------------------------------------------------------------
+    !! 
+    !! This routines enforces symmetry.
+    !! Averages points which leaves the k-point unchanged by symmetry
+    !!   e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives 
+    !!        k=[1,1,1] and q=[0,1,0].
+    !! 
+    !! Samuel Ponce & Francesco Macheda
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : nstemp
+    USE elph2,         ONLY : nkqtotf, ibndmax, ibndmin, nkf, nbndfst
+    USE cell_base,     ONLY : bg, at
+    USE constants_epw, ONLY : eps6, zero
+    USE symm_base,     ONLY : s, nrot
+    USE division,      ONLY : fkbounds
+    USE mp,            ONLY : mp_sum
+    USE mp_global,     ONLY : world_comm
+    ! 
+    IMPLICIT NONE
+    ! 
+    INTEGER, INTENT(in) :: nb_sp
+    !! Lenght of xkf_sp
+    INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
+    !! Special points indexes and symmetries
+    REAL(KIND = DP), INTENT(inout) :: F_out(3, nbndfst, nktotf, nstemp)
+    !! In solution for iteration i
+    REAL(KIND = DP), INTENT(inout) :: vkk_all(3, nbndfst, nktotf)
+    !! Velocity of k
+    ! 
+    ! Local variables
+    LOGICAL :: special_map(nkf)
+    !! Special mapping
+    INTEGER :: itemp
+    !! Temperature index
+    INTEGER :: ik
+    !! K-point index
+    INTEGER :: ibnd
+    !! Band index
+    INTEGER :: lower_bnd
+    !! Lower bounds index after k para
+    INTEGER :: upper_bnd
+    !! Upper bounds index after k paral
+    INTEGER :: sp
+    !! Local index
+    INTEGER ::nb
+    !! Local index
+    LOGICAL :: special
+    !! Local logical
+    INTEGER :: counter_average
+    !! Local counter
+    INTEGER :: index_sp(nkf)
+    !! Index of special points
+    REAL(KIND = DP) :: xkk_cart (3)
+    !! k-point coordinate in Cartesian unit
+    REAL(KIND = DP) :: mean(nbndfst)
+    !! Mean of the velocities
+    REAL(KIND = DP) :: mean_pop(nbndfst)
+    !! Mean of the populations
+    REAL(KIND = DP) :: sa(3, 3)
+    !! Symmetry matrix in crystal
+    REAL(KIND = DP) :: sb(3, 3)
+    !! Symmetry matrix in crystal
+    REAL(KIND = DP) :: sr(3, 3)
+    !! Symmetry matrix in crystal
+    REAL(KIND = DP) :: S_vkk(3, nbndfst)
+    !! Rotated vector
+    REAL(KIND = DP) :: S_F_out(3, nbndfst)
+    !! Rotated vector
+    REAL(KIND = DP) :: tmp_vkk(3, nbndfst)
+    !! Temporary vector
+    REAL(KIND = DP) :: tmp_F_out(3, nbndfst)
+    !! Temporary vector
+    REAL(KIND = DP) :: F_out_loc(3, nbndfst, nktotf, nstemp)
+    !! Local F_out where the k-points have been spread
+    REAL(KIND = DP) :: vkk_all_loc(3, nbndfst, nktotf)
+    !! Local velocity where the k-points have been spread
+    ! 
+    ! Split the k-point across cores
+    CALL fkbounds(nktotf, lower_bnd, upper_bnd)
+    ! 
+    F_out_loc(:, :, :, :) = zero
+    vkk_all_loc(:, :, :) = zero
+    special_map(:) = .FALSE. 
+    index_sp(:) = 0
+    DO ik = 1, nkf
+      DO sp = 1,nb_sp
+        IF (ik + lower_bnd - 1 == xkf_sp(1, sp)) THEN
+          special_map(ik) = .TRUE. 
+          index_sp(ik) = sp
+        ENDIF
+      ENDDO
+    ENDDO ! ik
+    !  
+    DO itemp = 1, nstemp
+      DO ik = 1, nkf
+        IF (special_map(ik)) THEN
+          counter_average = 0
+          tmp_vkk = zero
+          tmp_F_out = zero
+          DO nb = 1,nrot
+            IF (index_sp(ik) > 0) THEN 
+              IF (xkf_sp(nb + 1, index_sp(ik)) > 0) THEN
+                counter_average = counter_average + 1
+                sa(:, :) = DBLE(s(:, :, xkf_sp(nb + 1, index_sp(ik))))
+                sb       = MATMUL(bg, sa)
+                sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+                sr       = TRANSPOSE(sr)
+                DO ibnd = 1, nbndfst
+                  CALL dgemv('n', 3, 3, 1.d0, sr, 3, vkk_all(:, ibnd, ik + lower_bnd - 1), 1, 0.d0, S_vkk(:, ibnd), 1)
+                  CALL dgemv('n', 3, 3, 1.d0, sr, 3, F_out(:, ibnd, ik + lower_bnd - 1, itemp), 1, 0.d0, S_F_out(:, ibnd), 1)
+                  tmp_vkk(:, ibnd) = tmp_vkk(:, ibnd) + S_vkk(:, ibnd)
+                  tmp_F_out(:, ibnd) = tmp_F_out(:, ibnd) + S_F_out(:, ibnd)
+                ENDDO ! ibnd
+              ENDIF
+            ENDIF
+          ENDDO ! sp
+          DO ibnd = 1, nbndfst
+            vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = tmp_vkk(:, ibnd) / DBLE(counter_average)
+            F_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = tmp_F_out(:, ibnd) / DBLE(counter_average)
+          ENDDO
+          ! 
+        ELSE ! not a special point 
+          DO ibnd = 1, nbndfst
+            vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = vkk_all(:, ibnd, ik + lower_bnd - 1)
+            F_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = F_out(:, ibnd, ik + lower_bnd - 1, itemp) 
+          ENDDO 
+        ENDIF ! special
+      ENDDO! ik
+    ENDDO! itemp
+    ! 
+    ! Gather from all cores
+    CALL mp_sum(vkk_all_loc, world_comm)
+    CALL mp_sum(F_out_loc, world_comm)
+    ! 
+    F_out = F_out_loc
+    vkk_all = vkk_all_loc
+    !  
+    !-----------------------------------------------------------------------
+    END SUBROUTINE k_avg
     !-----------------------------------------------------------------------
     ! 
   !-----------------------------------------------------------------------
