@@ -46,7 +46,7 @@
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
   USE start_k,       ONLY : nk1, nk2, nk3
-  USE transportcom,  ONLY : transp_temp
+  USE elph2,         ONLY : transp_temp
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   !
   IMPLICIT NONE
@@ -224,9 +224,8 @@
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, &
-                            temps
-  USE transportcom,  ONLY : transp_temp
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps
+  USE elph2,         ONLY : transp_temp
   !
   IMPLICIT NONE
   !
@@ -256,9 +255,9 @@
   ENDIF
   ! 
   ! We have to bcast here because before it has not been allocated
-  CALL mp_bcast (transp_temp, ionode_id, world_comm)    !  
+  CALL mp_bcast(transp_temp, ionode_id, world_comm)
   ! 
-  CALL stop_clock ('epw_setup')
+  CALL stop_clock('epw_setup')
   !
   RETURN
   !-----------------------------------------------------------------------

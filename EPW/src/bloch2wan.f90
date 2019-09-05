@@ -243,11 +243,13 @@
     !
     CALL stop_clock ( 'Ham: step 2' )
     !
+    !--------------------------------------------------------------------------
     END SUBROUTINE hambloch2wan 
+    !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE dmebloch2wan ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, &
-       nrr, irvec, wslen, lwin, exband )
+    SUBROUTINE dmebloch2wan(nbnd, nbndsub, nks, nkstot, dmec, xk, cu, &
+                            nrr, irvec, wslen, lwin, exband)
     !--------------------------------------------------------------------------
     !!
     !!  From the Dipole in Bloch representationi (coarse mesh), 
@@ -291,13 +293,12 @@
     COMPLEX(KIND = DP), INTENT(in) :: cu(nbnd, nbndsub, nks)
     !! rotation matrix from wannier code
     !
-    LOGICAL, INTENT(in) :: lwin(nbnd,nks)
+    LOGICAL, INTENT(in) :: lwin(nbnd, nks)
     !! Bands at k within outer energy window
     LOGICAL, INTENT(in) :: exband(nbnd)
     !! Bands excluded from the calculation of overlap and projection matrices
     !
     ! Local variables
-    !
     INTEGER :: ipol
     !! Counter on polarization
     INTEGER :: ik
@@ -417,9 +418,9 @@
         ! dmec_utmp(:, :) = MATMUL( dmec_opt(ipol,:,:,ik), cu(:,:,ik) )
         ! cps(ipol,:,:,ik) = MATMUL( CONJG(transpose( cu(:,:,ik))), dmec_utmp(:, :) )
         !
-        CALL zgemm ('n', 'n', nbnd, nbndsub, nbnd, cone, dmec_opt(ipol,:,:,ik), &
+        CALL zgemm('n', 'n', nbnd, nbndsub, nbnd, cone, dmec_opt(ipol,:,:,ik), &
                    nbnd, cu(:,:,ik), nbnd, czero, dmec_utmp(:, :), nbnd)
-        CALL zgemm ('c', 'n', nbndsub, nbndsub, nbnd, cone, cu(:,:,ik), &
+        CALL zgemm('c', 'n', nbndsub, nbndsub, nbnd, cone, cu(:,:,ik), &
                    nbnd, dmec_utmp(:, :), nbnd, czero, cps(ipol,:,:,ik), nbndsub)
         !
       ENDDO
@@ -484,10 +485,12 @@
     !
     CALL stop_clock ( 'Dipole: step 2' )
     !
+    !------------------------------------------------------------------------
     END SUBROUTINE dmebloch2wan
+    !------------------------------------------------------------------------
     ! 
     !------------------------------------------------------------------------
-    SUBROUTINE dynbloch2wan ( nmodes, nq, xk, dynq, nrr, irvec, wslen )
+    SUBROUTINE dynbloch2wan(nmodes, nq, xk, dynq, nrr, irvec, wslen )
     !------------------------------------------------------------------------
     !!
     !!  From the Dynamical Matrix in Bloch representation (coarse mesh), 
@@ -612,11 +615,13 @@
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
-    END SUBROUTINE dynbloch2wan
-    !-----------------------------------------------------
     !--------------------------------------------------------------------------
-    SUBROUTINE vmebloch2wan ( nbnd, nbndsub, nks, nkstot, xk, cu, &
-       nrr, irvec, wslen, lwin, exband )
+    END SUBROUTINE dynbloch2wan
+    !--------------------------------------------------------------------------
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE vmebloch2wan(nbnd, nbndsub, nks, nkstot, xk, cu, &
+                            nrr, irvec, wslen, lwin, exband)
     !--------------------------------------------------------------------------
     !!
     !!  Calculate the velocity matrix elements in the Wannier basis
@@ -637,6 +642,7 @@
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
     USE division,  ONLY : fkbounds
+    USE kfold,     ONLY : ktokpmq  
     !
     IMPLICIT NONE
     !
@@ -843,7 +849,7 @@
     !
     IF (nexband_tmp > 0) THEN
       DO ik = 1, nks
-        CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
+        CALL ktokpmq(xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
         !
         jbnd = 0
         DO j = 1, nbnd
@@ -876,7 +882,7 @@
       ENDDO
     ELSE
       DO ik = 1, nks
-        CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
+        CALL ktokpmq(xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
         !
         jbnd = 0
         DO j = 1, nbnd
@@ -906,27 +912,27 @@
     !
     ! <u^(W)_nk | u^(W)_m(k+b)> is cvs(nbndsub,nbndsub,nnb,nks)
     !
-    ALLOCATE(cvs(nbndsub,nbndsub,nnb,nks) )
+    ALLOCATE(cvs(nbndsub, nbndsub, nnb, nks))
     !
     cvs(:, :, :, :) = czero
     M_mn_utmp(:, :) = czero
     !
     DO ik = 1, nks
       !
-      CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
+      CALL ktokpmq(xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
       !
       DO ib = 1, nnb
         !
         ! bring bvec to units of 2piba since xk is cartesian units of 2piba
         b_tmp(:) = alat / (twopi) * bvec(:,ib,nkk_abs)
-        CALL ktokpmq ( xk(:,ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
+        CALL ktokpmq(xk(:,ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
         !
         ! M_mn_utmp(:, :) = MATMUL( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
         ! cvs(:,:,ib,ik) = MATMUL( CONJG(transpose(cu(:,:,ik))), M_mn_utmp(:, :) )
         !
-        CALL zgemm ('n', 'n', nbnd, nbndsub, nbnd, cone, m_mat_opt(:,:,ib,ik), &
+        CALL ZGEMM('n', 'n', nbnd, nbndsub, nbnd, cone, m_mat_opt(:, :, ib, ik), &
                    nbnd, cu_big(:,:,nkb_abs), nbnd, czero, M_mn_utmp(:, :), nbnd)
-        CALL zgemm ('c', 'n', nbndsub, nbndsub, nbnd, cone, cu(:,:,ik), &
+        CALL ZGEMM('c', 'n', nbndsub, nbndsub, nbnd, cone, cu(:, :, ik), &
                    nbnd, M_mn_utmp(:, :), nbnd, czero, cvs(:,:,ib,ik), nbndsub)
       ENDDO
       !
@@ -940,7 +946,7 @@
     !
     DO ik = 1, nks
       !
-      CALL ktokpmq ( xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
+      CALL ktokpmq(xk(:,ik), zero_vect, +1, ipool, nkk, nkk_abs)
       !
       DO ib = 1, nnb
         !

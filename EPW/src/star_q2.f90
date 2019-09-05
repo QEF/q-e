@@ -43,8 +43,6 @@
   !! direct lattice vectors
   REAL(KIND = DP), INTENT(in) :: bg(3, 3)
   !! reciprocal lattice vectors
-  REAL(KIND = DP), INTENT(in) :: 
-  !! 
   REAL(KIND = DP), INTENT(out) :: sxq(3, 48)
   !! list of vectors in the star of q
   ! 
@@ -105,7 +103,7 @@
       IF (eqvect(raq, saq(1, iq), zero, accep)) THEN
         isq(isym) = iq
         nsq(iq) = nsq(iq) + 1
-      ENDDIF
+      ENDIF
     ENDDO
     IF (isq(isym) == 0) THEN
       nq = nq + 1

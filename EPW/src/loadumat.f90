@@ -23,19 +23,20 @@
   USE kinds,         ONLY : DP
   USE klist_epw,     ONLY : kmap   
   USE epwcom,        ONLY : filukk
-  USE constants_epw, ONLY : czero
+  USE constants_epw, ONLY : czero, zero
   USE io_epw,        ONLY : iunukk
   USE io_global,     ONLY : ionode_id, meta_ionode
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast
   USE division,      ONLY : fkbounds
   USE elph2,         ONLY : xkq
+  USE kfold,         ONLY : createkmap2
   !
   IMPLICIT NONE
   ! 
-  LOGICAL, INTENT(out) :: lwin(nbnd,nks)
+  LOGICAL, INTENT(out) :: lwin(nbnd, nks)
   !! Band windows at k
-  LOGICAL, INTENT(out) :: lwinq(nbnd,nks)
+  LOGICAL, INTENT(out) :: lwinq(nbnd, nks)
   !! Band windows at k+q
   LOGICAL, INTENT(out) :: exband(nbnd)
   !! Band excluded
@@ -49,7 +50,7 @@
   !! total number of kpoints across pools
   REAL(KIND = DP), INTENT(in) :: xxq(3)
   !! the qpoint for folding of U
-  REAL(KIND = DP), INTENT(inout) :: w_centers(3,nbndsub)
+  REAL(KIND = DP), INTENT(inout) :: w_centers(3, nbndsub)
   !! Wannier centers
   COMPLEX(KIND = DP), INTENT(out) :: cu(nbnd, nbndsub, nks)
   !! U(k) matrix for k-points in the pool

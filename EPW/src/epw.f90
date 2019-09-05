@@ -6,9 +6,9 @@
   ! License. See the file `LICENSE' in the root directory of the               
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
-  ! Adapted from PH/ph.f90  
   !-----------------------------------------------------------------------
   PROGRAM epw
+  !-----------------------------------------------------------------------
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !! version: v5.1
   !! license: GNU
@@ -28,10 +28,11 @@
   USE environment,     ONLY : environment_start
   USE elph2,           ONLY : elph 
   USE close_epw,       ONLY : close_final, deallocate_epw
+  USE cum_mod,         ONLY : spectral_cumulant
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=12) :: code = 'EPW'
+  CHARACTER(LEN = 12) :: code = 'EPW'
   !! Name of the program
   !
   version_number = '5.1.0'
@@ -45,7 +46,7 @@
   CALL mp_startup(start_images = .TRUE.)
   !
   ! Display the logo
-  IF (mpime == ionode_id) then
+  IF (mpime == ionode_id) THEN
     WRITE(stdout, '(a)') "                                                                                      "
     WRITE(stdout, '(a)') "                                       ``:oss/                                        "
     WRITE(stdout, '(a)') "                           `.+s+.     .+ys--yh+     `./ss+.                           "
@@ -132,13 +133,11 @@
       !
       ! Read Wannier matrix from a previous run
       !
-      WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
+      WRITE(stdout, '(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
            TRIM(filukk) , ' from disk', REPEAT('-',67) 
     ENDIF
     !
     IF (elph) THEN
-      !
-!      CALL dvanqq2()
       !
       CALL elphon_shuffle_wrap()
       !
@@ -169,4 +168,6 @@
   !
   STOP
   !
+  !-----------------------------------------------------------------------
   END PROGRAM epw
+  !-----------------------------------------------------------------------

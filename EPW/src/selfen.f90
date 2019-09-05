@@ -50,8 +50,7 @@
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, eta, nbndfst, &
                               nkf, epf17, wf, wqf, xkf, nkqtotf, adapt_smearing, &
                               sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, &
-                              nktotf
-    USE transportcom,  ONLY : lower_bnd
+                              nktotf, lower_bnd
     USE control_flags, ONLY : iverbosity
     USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
@@ -466,7 +465,7 @@
           ikq = ikk + 1
           !
           ! note that ekk does not depend on q 
-          ekk = etf_all (ibndmin-1+ibnd, ikk) - ef0
+          ekk = etf_all(ibndmin - 1 + ibnd, ikk) - ef0
           !
           ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
           !zi_all (ibnd,ik) = one / ( one + zi_all (ibnd,ik) )
@@ -487,7 +486,8 @@
     ENDIF 
     !
     100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
-    102 FORMAT(5x, 'E( ', i3, ' )=', f9.4, ' eV   Re[Sigma]=', f15.6, ' meV Im[Sigma]=', f15.6, ' meV     Z=', f15.6, ' lam=', f15.6)
+    102 FORMAT(5x, 'E( ', i3, ' )=', f9.4, ' eV   Re[Sigma]=', f15.6, ' meV Im[Sigma]=', &
+               f15.6, ' meV     Z=', f15.6, ' lam=', f15.6)
     !
     RETURN
     !
@@ -526,7 +526,7 @@
     USE klist_epw,  ONLY : isk_dummy
     use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf,   &
                            nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,     &
-                           dmef, vmef, gamma_all, g amma_v_all, efnew, nbndfst, &
+                           dmef, vmef, gamma_all, gamma_v_all, efnew, nbndfst, &
                            nktotf, adapt_smearing
     USE mp,         ONLY : mp_barrier, mp_sum
     USE mp_global,  ONLY : inter_pool_comm
@@ -1048,7 +1048,6 @@
     IF (adapt_smearing) CALL errore('selfen_pl_q', 'adapt_smearing cannot be used with plasmon self-energy ', 1) 
     ! SP: Define the inverse so that we can efficiently multiply instead of dividing
     inv_eptemp0  = 1.0 / eptemp
-    inv_degaussw = 1.0 / degaussw
     !
     IF (iqq == 1) THEN
       !
@@ -1313,7 +1312,8 @@
     ENDIF 
     !
     100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
-    102 FORMAT(5x, 'E( ', i3, ' )=', f9.4, ' eV   Re[Sigma]=', f15.6, ' meV Im[Sigma]=', f15.6, ' meV     Z=', f15.6, ' lam=', f15.6)
+    102 FORMAT(5x, 'E( ', i3, ' )=', f9.4, ' eV   Re[Sigma]=', f15.6, ' meV Im[Sigma]=', &
+               f15.6, ' meV     Z=', f15.6, ' lam=', f15.6)
     !
     RETURN
     !

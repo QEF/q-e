@@ -23,20 +23,20 @@
                             nstemp, scattering_serta, scattering_0rta, shortrange, nqf1, &
                             restart, restart_freq, restart_filq, vme, ncarrier, nqf2, nqf3
   USE pwcom,         ONLY : ef
-  USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
+  USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf,      & 
                             epf17, nkqtotf, inv_tau_all, inv_tau_allcb, adapt_smearing, &
-                            xqf, xkf, wkf, dmef, vmef, nqf, eta
-  USE transportcom,  ONLY : transp_temp, lower_bnd
-  USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
-                            eps6, eps10, bohr2ang, ang2cm, eps4, eps8
+                            xqf, xkf, wkf, dmef, vmef, nqf, eta, transp_temp, lower_bnd,&
+                            nbndfst, nktotf
+  USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
+                            eps6, eps10, bohr2ang, ang2cm
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : world_comm, my_pool_id, npool
   USE io_global,     ONLY : ionode_id
-  USE io_epw,        ONLY : iunepmat, iunepmatcb, iufilibtev_sup, iunrestart, &
+  USE io_epw,        ONLY : iunepmat, iunepmatcb, iufilibtev_sup, iunrestart, iuntau,   &
                             iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, &
-                            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb, &
-                            iuntau, iuntaucb
+                            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb,     &
+                            iunsparsetcb, iuntaucb
   USE elph2,         ONLY : lrepmatw2_merge, lrepmatw5_merge, threshold
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, MPI_INTEGER8, &
@@ -111,25 +111,25 @@
   !! Nb of Matrix elements that are non-zero in the cb
   INTEGER :: nbnd
   !! Range of bands within fsthick 
-  INTEGER(KIND = i4b) :: sparse_q((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_q(nbndfst * nbndfst * nstemp * nkf)
   !! Index of q-points for mapping 
-  INTEGER(KIND = i4b) :: sparse_k((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_k(nbndfst * nbndfst * nstemp * nkf)
   !! Index of k-points for mapping 
-  INTEGER(KIND = i4b) :: sparse_i((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_i(nbndfst * nbndfst * nstemp * nkf)
   !! Index of i-bands for mapping
-  INTEGER(KIND = i4b) :: sparse_j((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_j(nbndfst * nbndfst * nstemp * nkf)
   !! Index of j-bands for mapping
-  INTEGER(KIND = i4b) :: sparse_t((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparse_t(nbndfst * nbndfst * nstemp * nkf)
   !! Index of temperature for mapping
-  INTEGER(KIND = i4b) :: sparsecb_q((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_q(nbndfst * nbndfst * nstemp * nkf)
   !! Index of q-points for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_k((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_k(nbndfst * nbndfst * nstemp * nkf)
   !! Index of k-points for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_i((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_i(nbndfst * nbndfst * nstemp * nkf)
   !! Index of i-band for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_j((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_j(nbndfst * nbndfst * nstemp * nkf)
   !! Index of j-band for cb for mapping 
-  INTEGER(KIND = i4b) :: sparsecb_t((nbndfst) * (nbndfst) * nstemp * nkf)
+  INTEGER(KIND = i4b) :: sparsecb_t(nbndfst * nbndfst * nstemp * nkf)
   !! Index of temeprature for cb for mapping 
   REAL(KIND = DP) :: tmp
   !! Temporary variable
@@ -168,9 +168,9 @@
   !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
   REAL(KIND = DP) :: vkk(3, nbndfst)
   !! Electronic velocity $$v_{n\mathbf{k}}$$
-  REAL(KIND = DP) :: trans_prob((nbndfst) * (nbndfst) * nstemp * nkf)
+  REAL(KIND = DP) :: trans_prob(nbndfst * nbndfst * nstemp * nkf)
   !! Temporary array to store the scattering rates
-  REAL(KIND = DP) :: trans_probcb((nbndfst) * (nbndfst) * nstemp * nkf)
+  REAL(KIND = DP) :: trans_probcb(nbndfst * nbndfst * nstemp * nkf)
   !! Temporary array to store the scattering rates
   REAL(KIND = DP) :: wkf_all(nktotf)
   !! Weights from all the cores
@@ -210,24 +210,19 @@
   ! 
   IF (iqq == 1) THEN
     !
-    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
-    WRITE(stdout,'(5x,"Scattering rate for IBTE")')
-    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
-    WRITE(stdout,'(5x,"Restart and restart_freq inputs deactivated (restart point at every q-points).")')
-    WRITE(stdout,'(5x,"No intermediate mobility will be shown.")')
+    WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+    WRITE(stdout, '(5x,"Scattering rate for IBTE")')
+    WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+    WRITE(stdout, '(5x,"Restart and restart_freq inputs deactivated (restart point at every q-points).")')
+    WRITE(stdout, '(5x,"No intermediate mobility will be shown.")')
     !
     IF (fsthick < 1.d3) THEN
       WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
       WRITE(stdout, '(5x,a,f10.6,a)' ) 'This is computed with respect to the fine Fermi level ',ef * ryd2ev, ' eV'
-      WRITE(stdout, '(5x,a,f10.6,a,f10.6,a)' ) 'Only states between ',(ef - fsthick) * ryd2ev, ' eV and ',&
+      WRITE(stdout, '(5x,a,f10.6,a,f10.6,a)' ) 'Only states between ', (ef - fsthick) * ryd2ev, ' eV and ', &
               (ef + fsthick) * ryd2ev, ' eV will be included'
-      WRITE(stdout,'(5x,a/)')
+      WRITE(stdout, '(5x,a/)')
     ENDIF
-    lrepmatw  = 0
-    lrepmatw2 = 0
-    lrepmatw4 = 0
-    lrepmatw5 = 0
-    lrepmatw6 = 0
     !
   ENDIF
   ! 
@@ -292,7 +287,7 @@
             g2 = 0.d0
             n  = 0
             DO pbnd = 1, nbnd 
-              w_2 = etf(ibndmin-1+pbnd, ikq)
+              w_2 = etf(ibndmin - 1 + pbnd, ikq)
               IF (ABS(w_2 - w_1) < eps6) THEN
                 n = n + 1
                 g2 = g2 + ABS(epf17(pbnd, ibnd, nu, ik))**two
@@ -337,7 +332,7 @@
         wq(imode) = wf(imode, iq)
         IF (wq(imode) > eps_acustic) THEN
           g2_tmp(imode) = 1.0d0
-          wgq(imode)    = wgauss(- wq(imode) * inv_etemp, -99)
+          wgq(imode)    = wgauss(-wq(imode) * inv_etemp, -99)
           wgq(imode)    = wgq(imode) / (one - two * wgq(imode))
           inv_wq(imode) =  1.0d0 / (two * wq(imode))
         ELSE

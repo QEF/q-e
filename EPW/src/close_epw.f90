@@ -33,8 +33,7 @@
     USE epwcom,        ONLY : iterative_bte, mp_mesh_k, int_mob, carrier, etf_mem, &
                               epmatkqread
     USE elph2,         ONLY : inv_tau_all, zi_allvb, inv_tau_allcb, zi_allcb,   &
-                              map_rebal, map_rebal_inv    
-    USE transportcom,  ONLY : s_BZtoIBZ_full, ixkqf_tr
+                              map_rebal, map_rebal_inv, s_BZtoIBZ_full, ixkqf_tr
     USE epwcom,        ONLY : int_mob, carrier, ncarrier
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL

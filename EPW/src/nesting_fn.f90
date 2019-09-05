@@ -27,8 +27,8 @@
   USE pwcom,     ONLY : nelec, ef
   USE klist_epw, ONLY : isk_dummy
   USE elph2,     ONLY : ibndmax, ibndmin, etf, &
-                        wkf, xqf, wqf, nkqf, &
-                        nkf, nkqtotf, xqf
+                        wkf, xqf, wqf, nkqf, nktotf, &
+                        nkf, nkqtotf, xqf, nbndfst
   USE constants_epw, ONLY : ryd2ev, two
   USE mp,        ONLY : mp_barrier,mp_sum
   USE mp_global, ONLY : inter_pool_comm
@@ -70,20 +70,25 @@
   !! Dirac delta for the imaginary part of $\Sigma$
   REAL(KIND = DP) :: w0g2
   !! Dirac delta for the imaginary part of $\Sigma$
-  REAL(KIND = DP) :: w0gauss, dos_ef, gamma, degaussw0
+  REAL(KIND = DP) :: w0gauss
+  !! 
+  REAL(KIND = DP) :: dos_ef
+  !! 
+  REAL(KIND = DP) :: gamma
+  !! 
+  REAL(KIND = DP) :: degaussw0
+  !! 
   REAL(KIND = DP), EXTERNAL :: efermig
   !
   !
-  IF (iqq == 1) then 
-    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
-    WRITE(stdout,'(5x,"Nesting Function in the double delta approx")')
-    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
+  IF (iqq == 1) THEN
+    WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+    WRITE(stdout, '(5x,"Nesting Function in the double delta approx")')
+    WRITE(stdout, '(5x,a/)') REPEAT('=',67)
     !
-    IF (fsthick < 1.d3 ) &
-      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+    IF (fsthick < 1.d3 ) WRITE(stdout, '(/5x,a,f10.6,a)' ) &
       'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-    WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-      'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
   ENDIF
   !
   ! SP: The Gamma function needs to be put to 0 for each q
@@ -92,7 +97,7 @@
   ! Here we loop on smearing values
   DO ismear = 1, nsmear
     !
-    degaussw0 = (ismear-1)*delta_smear+degaussw
+    degaussw0 = (ismear - 1) * delta_smear + degaussw
     !
     ! Fermi level and corresponding DOS
     !
@@ -104,13 +109,13 @@
       ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_dummy)
     ENDIF
     !
-    dosef = dos_ef (ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
+    dosef = dos_ef(ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
     !  N(Ef) in the equation for lambda is the DOS per spin
     dosef = dosef / two
     !
-    IF (iqq == 1) then
-      WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
-      WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
+    IF (iqq == 1) THEN
+      WRITE(stdout, 100) degaussw0 * ryd2ev, ngaussw
+      WRITE(stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
     ENDIF
     !
     !
@@ -124,20 +129,20 @@
       ikq = ikk + 1
       ! 
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-      IF (( minval ( ABS(etf (:, ikk) - ef) ) < fsthick ) .AND. &
-          ( minval ( ABS(etf (:, ikq) - ef) ) < fsthick ) ) then
+      IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
+          (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) then
         !
         fermicount = fermicount + 1
         !
         DO ibnd = 1, nbndfst
           !
-          ekk = etf (ibndmin-1+ibnd, ikk) - ef0
-          w0g1 = w0gauss ( ekk / degaussw0, 0) / degaussw0
+          ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
+          w0g1 = w0gauss(ekk / degaussw0, 0) / degaussw0
           !
           DO jbnd = 1, nbndfst
             !
-            ekq = etf (ibndmin-1+jbnd, ikq) - ef0
-            w0g2 = w0gauss ( ekq / degaussw0, 0) / degaussw0
+            ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
+            w0g2 = w0gauss(ekq / degaussw0, 0) / degaussw0
             !
             ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q +id]
             ! This is the imaginary part of the phonon self-energy, sans the matrix elements
@@ -148,7 +153,7 @@
             ! the below expression is positive-definite, but also an approximation
             ! which neglects some fine features
             !
-            weight = wkf (ikk) * w0g1 * w0g2
+            weight = wkf(ikk) * w0g1 * w0g2
             !
             gamma  = gamma  + weight  
             !
@@ -162,26 +167,28 @@
     ! collect contributions from all pools (sum over k-points)
     ! this finishes the integral over the BZ  (k)
     !
-    CALL mp_sum(gamma,inter_pool_comm) 
+    CALL mp_sum(gamma, inter_pool_comm) 
     CALL mp_sum(fermicount, inter_pool_comm)
     !
-    WRITE(stdout,'(/5x,"iq = ",i5," coord.: ", 3f9.5, " wt: ", f9.5)') iq, xqf(:,iq) , wqf(iq)
-    WRITE(stdout,'(5x,a)') REPEAT('-',67)
+    WRITE(stdout, '(/5x,"iq = ",i5," coord.: ", 3f9.5, " wt: ", f9.5)') iq, xqf(:, iq) , wqf(iq)
+    WRITE(stdout, '(5x,a)') REPEAT('-',67)
        ! 
-    WRITE(stdout, 102)  gamma
-    WRITE(stdout,'(5x,a/)') REPEAT('-',67)
+    WRITE(stdout, 102) gamma
+    WRITE(stdout, '(5x,a/)') REPEAT('-',67)
     !
-    WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
-      'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nktotf
+    WRITE(stdout, '(/5x,a,i8,a,i8/)') &
+      'Number of (k,k+q) pairs on the Fermi surface: ', fermicount, ' out of ', nktotf
     !
     !
     CALL stop_clock('nesting')
   ENDDO !smears
   !
   !
-100 format(5x,'Gaussian Broadening: ',f7.3,' eV, ngauss=',i4)
-101 format(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
-102 format(5x,' Nesting function (q)=',e15.6,' [Adimensional]')
+100 FORMAT(5x, 'Gaussian Broadening: ',f7.3,' eV, ngauss=', i4)
+101 FORMAT(5x, 'DOS =', f10.6, ' states/spin/eV/Unit Cell at Ef=', f10.6, ' eV')
+102 FORMAT(5x, 'Nesting function (q)=', e15.6, ' [Adimensional]')
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE nesting_fn_q
+  !-----------------------------------------------------------------------
   !

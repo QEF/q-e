@@ -431,7 +431,7 @@
                           wmax_specfun, nw_specfun
     USE pwcom,     ONLY : nelec, ef
     USE klist_epw, ONLY : isk_dummy
-    USE elph2,     ONLY : epf17, ibndmax, ibndmin, etf, &
+    USE elph2,     ONLY : epf17, ibndmax, ibndmin, etf, nbndfst, &
                           wkf, xqf, nkqf, nkf, wf, a_all_ph, efnew
     USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, cone, ci, eps8
     USE mp_world,      ONLY : mpime
@@ -668,7 +668,8 @@
         WRITE(iospectral, '(/2x,a)') '#Phonon spectral function (meV)'
         WRITE(iospectral_sup, '(2x,a)') '#Phonon eigenenergies + real and im part of phonon self-energy (meV)'
         WRITE(iospectral, '(/2x,a)') '#Q-point    Energy[eV]     A(q,w)[meV^-1]'
-        WRITE(iospectral_sup, '(2x,a)') '#Q-point    Mode       w_q[eV]        w[eV]    Real Sigma(w)[meV]   Real Sigma(w=0)[meV]     Im Sigma(w)[meV]'
+        WRITE(iospectral_sup, '(2x,a)') '#Q-point    Mode       w_q[eV]        w[eV]    &
+                                        &Real Sigma(w)[meV]   Real Sigma(w=0)[meV]     Im Sigma(w)[meV]'
       ENDIF
     ENDIF
     !
@@ -697,8 +698,9 @@
               ((ww**2 - wq**2 - 2 * wq * (gammar_all(iw, imode) - gamma0(imode)))**two + (2.0d0 * wq * gammai_all(iw, imode))**two)
         !
         IF (mpime == ionode_id) THEN
-          WRITE(iospectral_sup, '(2i9,2x,f12.5,2x,f12.5,2x,E22.14,2x,E22.14,2x,E22.14)') iq, &
-               imode, ryd2ev * wq, ryd2ev * ww, ryd2mev * gammar_all(iw, imode), ryd2mev * gamma0(imode), ryd2mev * gammai_all(iw, imode)
+          WRITE(iospectral_sup, '(2i9, 2x, f12.5, 2x, f12.5, 2x, E22.14, 2x, E22.14, 2x, E22.14)') iq, &
+                imode, ryd2ev * wq, ryd2ev * ww, ryd2mev * gammar_all(iw, imode), ryd2mev * gamma0(imode), &
+                ryd2mev * gammai_all(iw, imode)
         ENDIF
         !
       ENDDO 
@@ -747,19 +749,20 @@
     USE io_global,     ONLY : stdout
     USE io_epw,        ONLY : iospectral_sup, iospectral
     USE epwcom,        ONLY : nbndsub, &
-                              fsthick, eptemp, ngaussw, degaussw, wmin_specfun, &
-                              wmax_specfun, nw_specfun, &
-                              efermi_read, fermi_energy, nel, meff, epsiHEG 
+                              fsthick, eptemp, ngaussw, degaussw, epsiHEG, &
+                              wmax_specfun, nw_specfun, wmin_specfun,      &
+                              efermi_read, fermi_energy, nel, meff
     USE pwcom,         ONLY : nelec, ef
     USE klist_epw,     ONLY : isk_dummy
-    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nbndfst, &
-                              wkf, nkf, wqf, xkf, nkqtotf, xqf, dmef
+    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nbndfst,   &
+                              wkf, nkf, wqf, xkf, nkqtotf, xqf, dmef, &
                               esigmar_all, esigmai_all, a_all, nktotf
     USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : me_pool, inter_pool_comm 
     USE cell_base,     ONLY : omega, alat, bg
     USE division,      ONLY : fkbounds
+    USE selfen,        ONLY : get_eps_mahan
     ! 
     IMPLICIT NONE
     ! 
@@ -843,6 +846,8 @@
     !! 
     REAL(KIND = DP) :: degen
     !! 
+    REAL(KIND = DP) :: fermi(nw_specfun)
+    !!
     REAL(KIND = DP) :: q(3)
     !! The q-point in cartesian unit.
     REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
@@ -984,8 +989,8 @@
                                CONJG(dmef(1, ibndmin - 1 + jbnd, ibndmin - 1 + ibnd, ikk)) / ((ekk1 - ekk)**2 + degaussw**2))
                 ELSE 
                   dipole = 0.d0
-                ENIDF
-              ENIDF
+                ENDIF
+              ENDIF
               !
               g2 = dipole * 4.d0 * pi * (wq * deltaeps / 2.d0) / omega * 2.d0 ! The q^-2 is cancelled by the q->0 limit of the dipole. See e.g., pg. 258 of Grosso Parravicini. 
               !
@@ -1003,7 +1008,7 @@
                     (one - wgkq + wgq) / (-(ekq + wq) - ci * degaussw)))
                 esigmar_all(ibnd, ik + lower_bnd - 1, iw) = esigmar_all(ibnd, ik + lower_bnd - 1, iw) - esigmar0
                 !
-                weight = wqf(iq) * AIMAG(((wgkq + wgq  / (ww - (ekq - wq) - ci * degaussw)  +  &
+                weight = wqf(iq) * AIMAG((wgkq + wgq  / (ww - (ekq - wq) - ci * degaussw)  +  &
                          (one - wgkq + wgq) / (ww - (ekq + wq) - ci * degaussw)))
                 !
                 esigmai_all(ibnd, ik + lower_bnd - 1, iw) = esigmai_all(ibnd, ik + lower_bnd - 1, iw) + g2 * weight

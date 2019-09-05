@@ -6,9 +6,9 @@
   ! License. See the file `LICENSE' in the root directory of the               
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
-  !--------------------------------------------------------
-  SUBROUTINE readwfc( ipool, recn, evc0 )
-  !--------------------------------------------------------
+  !------------------------------------------------------------
+  SUBROUTINE readwfc(ipool, recn, evc0)
+  !------------------------------------------------------------
   !
   !  open wfc files as direct access, read, and close again
   !
@@ -22,6 +22,7 @@
   USE units_lr, ONLY : lrwfc, iuwfc
   USE wvfct,    ONLY : npwx
   USE pwcom,    ONLY : nbnd
+  USE low_lvl,  ONLY : set_ndnmbr
   USE noncollin_module, ONLY : npol
   USE mp_global,        ONLY : nproc_pool, me_pool, npool
   !
@@ -31,36 +32,40 @@
   !! kpoint number
   INTEGER, INTENT(in) :: ipool
   !! poolfile number to be read (not used in serial case)
-  !
-  COMPLEX(KIND = DP), INTENT(out) :: evc0(npwx*npol,nbnd)
+  COMPLEX(KIND = DP), INTENT(out) :: evc0(npwx * npol, nbnd)
   !! wavefunction is read from file
   !
   ! Local variables
-  !
-  INTEGER :: unf_recl, ios
-  REAL(KIND = DP) :: dummy 
-  CHARACTER(len=256) :: tempfile
-  CHARACTER(len=3) :: nd_nmbr0
-  ! file number for shuffle
+  CHARACTER(LEN = 256) :: tempfile
+  !! Temp file 
+  CHARACTER(LEN = 3) :: nd_nmbr0
+  !! File number
+  INTEGER :: unf_recl
+  !! Rcl unit
+  INTEGER :: ios
+  !! Error number
+  REAL(KIND = DP) :: dummy
+  !! Dummy variable 
   !
   !  open the wfc file, read and close
   !
-  CALL set_ndnmbr( ipool, me_pool, nproc_pool, npool, nd_nmbr0 )
+  CALL set_ndnmbr(ipool, me_pool, nproc_pool, npool, nd_nmbr0)
   !
 #if defined(__MPI)
   tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // nd_nmbr0
 # else
   tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc'
 #endif
-  INQUIRE (IOLENGTH = unf_recl) dummy 
+  INQUIRE(IOLENGTH = unf_recl) dummy 
   unf_recl = unf_recl * lrwfc
   !
-  OPEN(iuwfc, file = tempfile, form = 'unformatted', &
-       access = 'direct', iostat = ios, recl = unf_recl)
+  OPEN(iuwfc, FILE = tempfile, FORM = 'unformatted', ACCESS = 'direct', IOSTAT = ios, RECL = unf_recl)
   IF (ios /= 0) CALL errore('readwfc', 'error opening wfc file', iuwfc)
-  READ (iuwfc, rec = recn) evc0
-  CLOSE(iuwfc, status = 'keep')
+  READ(iuwfc, REC = recn) evc0
+  CLOSE(iuwfc, STATUS = 'keep')
   !
   RETURN
   !
+  !------------------------------------------------------------
   END SUBROUTINE readwfc
+  !------------------------------------------------------------

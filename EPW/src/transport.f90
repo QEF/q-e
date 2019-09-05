@@ -17,7 +17,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle ) 
+    SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle) 
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the scattering rate (inv_tau)
@@ -32,8 +32,8 @@
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
                               epf17, nqtotf, nkqtotf, inv_tau_all, inv_tau_allcb, &
-                              xqf, zi_allvb, zi_allcb, nbndfst, nktotf
-    USE transportcom,  ONLY : transp_temp, lower_bnd
+                              xqf, zi_allvb, zi_allcb, nbndfst, nktotf, transp_temp, &
+                              lower_bnd
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
                               eps6, eps8, eps4
     USE mp,            ONLY : mp_barrier, mp_sum
@@ -341,7 +341,8 @@
                     !
                     IF (scattering_serta) THEN
                       ! energy relaxation time approximation 
-                      inv_tau_allcb(itemp, ibnd, ik + lower_bnd - 1) = inv_tau_allcb(itemp, ibnd, ik + lower_bnd - 1) + two * trans_prob
+                      inv_tau_allcb(itemp, ibnd, ik + lower_bnd - 1) = &
+                      inv_tau_allcb(itemp, ibnd, ik + lower_bnd - 1) + two * trans_prob
                       !
                     ELSEIF (scattering_0rta) THEN
                       ! momentum relaxation time approximation
@@ -566,9 +567,8 @@
                               iterative_bte, vme
     USE pwcom,         ONLY : ef 
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef, & 
-                              inv_tau_all, nkqtotf, inv_tau_allcb,      &
+                              inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
                               zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
-    USE transportcom,  ONLY : transp_temp
     USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI, &
                               kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
     USE mp,            ONLY : mp_sum, mp_bcast
@@ -585,6 +585,8 @@
     USE noncollin_module, ONLY : noncolin
     USE io_scattering, ONLY : scattering_read
     USE division,      ONLY : fkbounds
+    USE grid,          ONLY : kpoint_grid_epw
+    USE kinds_epw,     ONLY : SIK2
     !
     IMPLICIT NONE
     ! 
@@ -622,7 +624,7 @@
     !! Temporary mapping
     INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
-    INTEGER :: s_BZtoIBZ(3, 3, nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! symmetry 
     ! 
     REAL(KIND = DP) :: ekk
@@ -996,10 +998,10 @@
                       IF (BZtoIBZ(ikbz) == ik + lower_bnd - 1) THEN
                         nb = nb + 1
                         ! Transform the symmetry matrix from Crystal to cartesian
-                        sa(:, :) = DBLE(s_BZtoIBZ(:, :, ikbz))
+                        sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
                         sb       = MATMUL(bg, sa)
                         sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-                        CALL dgemv('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
+                        CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
                         ij = 0
                         DO j = 1, 3
                           DO i = 1, 3
@@ -1205,10 +1207,10 @@
                         IF (BZtoIBZ(ikbz) == ik + lower_bnd - 1) THEN
                           nb = nb + 1
                           ! Transform the symmetry matrix from Crystal to cartesian
-                          sa(:, :) = DBLE(s_BZtoIBZ(:, :, ikbz))
+                          sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
                           sb       = MATMUL(bg, sa)
                           sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-                          CALL dgemv( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
+                          CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
                           ij = 0
                           DO j = 1, 3
                             DO i = 1, 3
@@ -1281,10 +1283,10 @@
                         IF (BZtoIBZ(ikbz) == ik + lower_bnd - 1) THEN
                           nb = nb + 1
                           ! Transform the symmetry matrix from Crystal to cartesian
-                          sa(:, :) = DBLE(s_BZtoIBZ(:, :, ikbz))
+                          sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
                           sb       = MATMUL(bg, sa)
                           sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-                          CALL dgemv('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
+                          CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
                           ij = 0
                           DO j = 1, 3
                             DO i = 1, 3

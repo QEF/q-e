@@ -58,8 +58,8 @@
                             sigmar_all, zi_allvb, inv_tau_all, eta,             &
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
-                            a_all, a_all_ph, wscache, lambda_v_all
-  USE transportcom,  ONLY : transp_temp,  lower_bnd, upper_bnd 
+                            a_all, a_all_ph, wscache, lambda_v_all, transp_temp,&
+                            lower_bnd, upper_bnd, nbndfst, nktotf
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem  
@@ -68,7 +68,8 @@
                             ephbloch2wanp_mem
   USE wigner,        ONLY : wigner_seitz_wrap
   USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine
-  USE transport,     ONLY : transport_coeffs, scattering_rate_q, qwindow
+  USE transport,     ONLY : transport_coeffs, scattering_rate_q
+  USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk
   USE io_scattering, ONLY : electron_read, tau_read, iter_open, iter_merge_parallel
   USE transport_iter,ONLY : iter_restart
@@ -78,6 +79,10 @@
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, npool
   USE mp_world,      ONLY : mpime, world_comm
+  USE low_lvl,       ONLY : system_mem_usage, fermiwindow
+  USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
+  USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
+  USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET 
@@ -633,7 +638,7 @@
     !
     ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
     ! + optimize the 2\pi r\cdot k with Blas
-    CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1)
+    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1)
     ! 
     DO iw = 1, dims
       DO iw2 = 1, dims
@@ -1136,8 +1141,8 @@
           xkk = xkf(:, ikk)
           xkq = xkk + xxq
           !
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1)
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1)
           !
           IF (use_ws) THEN
             DO iw = 1, dims
@@ -1182,8 +1187,8 @@
                IF (eig_read) THEN
                  ! Use for indirect absorption - Kyle and Emmanouil Kioupakis --------------------------------
                  DO icounter = 1, 6
-                   CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
-                   CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
+                   CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
+                   CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
                    IF (use_ws) THEN
                      DO iw = 1, dims
                        DO iw2 = 1, dims
@@ -1206,16 +1211,18 @@
                    CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd_ks(:, ikq, icounter), chw_ks, cfacqd, dims)
                  ENDDO ! icounter
                  ! ----------------------------------------------------------------------------------------- 
-                 CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), chw_ks, cfac, dims)
-                 CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), etf(:, ikq), etf_ks(:, ikq), chw_ks, cfacq, dims)
+                 CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), & 
+                                   etf(:, ikk), etf_ks(:, ikk), chw_ks, cfac, dims)
+                 CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), &
+                                   etf(:, ikq), etf_ks(:, ikq), chw_ks, cfacq, dims)
                  ! 
                  ! To Satisfy Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
                  DO ibnd = 1, nbnd
                    DO jbnd = 1, nbnd
                      IF (ABS(etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2)) > eps6) THEN
                        vmef(1,ibnd,jbnd,ikk) = vmef(1,ibnd,jbnd,ikk) * &
-                            ( etfd(ibnd,ikk,1)    - etfd(jbnd,ikk,2) )/ &
-                            ( etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2))
+                            (etfd(ibnd,ikk,1)    - etfd(jbnd,ikk,2) )/ &
+                            (etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2))
                      ENDIF
                      IF (ABS(etfd_ks(ibnd,ikk,3) - etfd_ks(jbnd,ikk,4)) > eps6) THEN
                        vmef(2,ibnd,jbnd,ikk) = vmef(2,ibnd,jbnd,ikk) * &

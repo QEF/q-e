@@ -39,7 +39,8 @@
     lower_bnd,               &!  Lower bound for the k-depend index among the mpi pools
     upper_bnd,               &!  Upper bound for the k-depend index among the mpi pools
     lrepmatw2_merge,         &!  File merging dimensions
-    lrepmatw5_merge           !  File merging dimensions
+    lrepmatw5_merge,         &!  File merging dimensions
+    nbndfst                   !  Number of bands within the fsthick window.
   INTEGER, ALLOCATABLE ::    &! 
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
@@ -50,12 +51,11 @@
     shift(:),                &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
     gmap(:),                 &!  the map G -> G-G_0 in the large (density) G vectors set, for every G_0
     ixkqf_tr(:),             &!  Mapping matrix from k+q (where q is full BZ) to IBZ
-    s_BZtoIBZ_full(:, :, :)   !  Rotation that brink that k-point from BZ to IBZ
+    s_BZtoIBZ_full(:)         !  Rotation that brink that k-point from BZ to IBZ
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason 
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
-    threshold                &!  Threshold below which the transition probabilities are not written to file in transport. 
-    nbndfst                   !  Number of bands within the fsthick window. 
+    threshold                 !  Threshold below which the transition probabilities are not written to file in transport. 
   REAL(KIND = DP), ALLOCATABLE ::&
     a_all(:, :),             &!  electronic spectral function du to electron-phonon interaction
     a_all_ph(:, :),          &!  phononic spectral function du to electron-phonon interaction

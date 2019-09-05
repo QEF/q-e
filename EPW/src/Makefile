@@ -22,27 +22,30 @@ EPWOBJS = \
 kinds_epw.o \
 epwcom.o \
 constants_epw.o \
-io_epw.o \
 elph2.o \
+io_epw.o \
+low_lvl.o \
 division.o \
+wan2bloch.o \
 eliashbergcom.o \
 superconductivity.o \
 superconductivity_aniso.o \
 superconductivity_iso.o \
 io_eliashberg.o \
 io_scattering.o \
-transportcom.o \
+wigner.o \
+grid.o \
+cum_mod.o \
 close_epw.o \
 printing.o \
 transport.o \
-wigner.o \
 transport_iter.o \
+kfold.o \
 a2f.o \
 adddvscf2.o \
 bcast_epw_input.o \
 bloch2wan.o \
 broyden.o \
-createkmap.o \
 dvanqq2.o \
 dvqpsi_us3.o \
 dvqpsi_us_only3.o \
@@ -56,17 +59,10 @@ epw_init.o \
 epw_readin.o \
 epw_setup.o \
 epw_summary.o \
-fermiwindow.o \
 gmap_sym.o \
 indabs.o \
 io_dyn_mat2.o \
-kfold.o \
-kpoint_grid_epw.o \
-ktokpmq.o \
-loadkmesh.o \
-loadqmesh.o \
 loadumat.o \
-load_rebal.o \
 nesting_fn.o \
 newdq2.o \
 openfilepw.o \
@@ -81,23 +77,14 @@ readwfc.o \
 rigid_epw.o \
 rotate_eigenm.o \
 rotate_epmat.o \
-selfen_elec.o \
-selfen_phon.o \
-selfen_pl.o \
-set_ndnmbr.o \
+selfen.o \
 setphases_wrap.o \
-sort.o \
-spectral_cumulant.o \
 spectral_func.o \
-spectral_func_ph.o \
-spectral_func_pl.o \
 star_q2.o \
 stop_epw.o \
 wannierEPW.o \
 wannierize.o \
-pw2wan90epw.o \
-wan2bloch.o \
-system_mem_usage.o
+pw2wan90epw.o
 
 # setphases.o \ : SP: We keep it in case its usefull in the future but now depreciated.
 

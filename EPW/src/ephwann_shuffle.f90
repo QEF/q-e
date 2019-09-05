@@ -37,7 +37,7 @@
                             epmatkqread, selecqread, restart_freq, nsmear
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero,             &
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
                             twopi, ci, kelvin2eV, eps6, eps8, eps16, byte2Mb 
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
@@ -55,9 +55,8 @@
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf 
-  USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
-                            upper_bnd 
+                            nktotf,  transp_temp, mobilityh_save,               &
+                            mobilityel_save, lower_bnd, upper_bnd 
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -66,7 +65,8 @@
                             ephbloch2wanp_mem
   USE wigner,        ONLY : wigner_seitz_wrap
   USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine
-  USE transport,     ONLY : transport_coeffs, scattering_rate_q, qwindow
+  USE transport,     ONLY : transport_coeffs, scattering_rate_q
+  USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk
   USE io_scattering, ONLY : electron_read, tau_read, iter_open, iter_merge_parallel
   USE transport_iter,ONLY : iter_restart
@@ -76,6 +76,10 @@
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, npool
   USE mp_world,      ONLY : mpime, world_comm
+  USE low_lvl,       ONLY : system_mem_usage, fermiwindow
+  USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
+  USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
+  USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -319,7 +323,7 @@
   cuq(:, :, :) = czero
   lwin(:, :)   = .FALSE.
   lwinq(:, :)  = .FALSE.
-  exband(:)    = .FALSE 
+  exband(:)    = .FALSE. 
   !
   IF (epwread) THEN
     !
@@ -464,7 +468,7 @@
       cvmew(:, :, :, :) = czero
     ELSE
       ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k))
-      cdnew(:, :, :, :) = czero
+      cdmew(:, :, :, :) = czero
     ENDIF
     ! 
     ! SP : Let the user chose. If false use files on disk
@@ -678,7 +682,7 @@
     !
     ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
     ! + optimize the 2\pi r\cdot k with Blas
-    CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1 )
+    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1 )
     ! 
     DO iw = 1, dims
       DO iw2 = 1, dims
@@ -1183,8 +1187,8 @@
         xkk = xkf(:, ikk)
         xkq = xkk + xxq
         !
-        CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
-        CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1)
+        CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
+        CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1)
         !
         IF (use_ws) THEN
           DO iw = 1, dims
@@ -1229,8 +1233,8 @@
              IF (eig_read) THEN
                ! Use for indirect absorption - Kyle and Emmanouil Kioupakis --------------------------------
                DO icounter = 1, 6
-                 CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
-                 CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
+                 CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
+                 CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
                  IF (use_ws) THEN
                    DO iw = 1, dims
                      DO iw2 = 1, dims
@@ -1253,8 +1257,10 @@
                  CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd_ks(:, ikq, icounter), chw_ks, cfacqd, dims)
                ENDDO ! icounter
                ! ----------------------------------------------------------------------------------------- 
-               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), chw_ks, cfac, dims)
-               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), etf(:, ikq), etf_ks(:, ikq), chw_ks, cfacq, dims)
+               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), &
+                                 etf(:, ikk), etf_ks(:, ikk), chw_ks, cfac, dims)
+               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), & 
+                                 etf(:, ikq), etf_ks(:, ikq), chw_ks, cfacq, dims)
                ! 
                ! To Satisfy Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
                DO ibnd = 1, nbnd
@@ -1869,15 +1875,15 @@
   !         ENDDO
   !         !DBSP
   !         !IF ((iq == 1) .AND. (ik ==12)) THEN
-  !         !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+  !         !  CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
   !         !  cfac1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
-  !         !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+  !         !  CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
   !         !  cfacq1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !         !ENDIF
   !       ELSE
-  !         CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+  !         CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
   !         cfac(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
-  !         CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+  !         CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
   !         cfacq(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !       ENDIF
   !       !
@@ -2194,6 +2200,7 @@
   !!
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
+  USE elph2,     ONLY : nbndfst
   !
   IMPLICIT NONE
   !

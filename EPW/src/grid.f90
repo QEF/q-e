@@ -30,10 +30,11 @@
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
                           rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
-    USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq 
+    USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq, nktotf 
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_epw,    ONLY : iunkf
+    USE low_lvl,   ONLY : init_random_seed
     USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
@@ -56,8 +57,6 @@
     !! Counter on the k-point index along nkf1, nkf2, nkf3
     INTEGER :: rest
     !! rest from the division of nr of q-points over pools
-    INTEGER :: ierr
-    !! Error number
     !
     REAL(KIND = DP), ALLOCATABLE :: xkf_(:, :), xkf_tmp(:, :), xkfval(:, :)
     !! coordinates k-points
@@ -68,8 +67,8 @@
       IF (filkf /= '') THEN ! load from file (crystal coordinates)
         !
         WRITE(stdout, *) '    Using k-mesh file: ', TRIM(filkf)
-        OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', ERR = ierr, IOSTAT = ios)
-        IF (ierr /= 0)ALL errore('loadkmesh_para', 'opening file ' // filkf, ABS(ios))
+        OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('loadkmesh_para', 'opening file ' // filkf, ABS(ios))
         READ(iunkf, *) nkqtotf 
         !
         ALLOCATE(xkf_(3, 2 * nkqtotf))
@@ -169,7 +168,7 @@
           ALLOCATE(wkf_(nkqtotf))
           wkf_(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
-            wkf_(2 * ik - 1) = 2.d0 / (DBLE(nktotf))
+            wkf_(2 * ik - 1) = 2.d0 / DBLE(nktotf)
           ENDDO
           DO i = 1, nkf1
             DO j = 1, nkf2
@@ -315,10 +314,11 @@
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
                           rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
-    USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq
+    USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq, nktotf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_epw,    ONLY : iunkf
+    USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
     !
     IMPLICIT NONE
@@ -333,8 +333,6 @@
     !! q-point index
     INTEGER :: i, j, k
     !! Counter on the k-point index along nkf1, nkf2, nkf3
-    INTEGER :: ierr
-    !! Error number. 
     REAL(KIND = DP), ALLOCATABLE :: xkf_tmp(:, :)
     !! coordinates k-points
     REAL(KIND = DP), ALLOCATABLE :: wkf_tmp(:)
@@ -346,8 +344,8 @@
         ! Each pool gets its own copy from the action=read statement
         !
         WRITE(stdout, *) '     Using k-mesh file: ', TRIM(filkf)
-        OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', ERR = ierr, IOSTAT = ios)
-        IF (ierr /= 0) CALL errore('loadkmesh_serial', 'opening file '//filkf, ABS(ios))
+        OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('loadkmesh_serial', 'opening file ' // filkf, ABS(ios))
         READ(iunkf, *) nkqtotf
         ALLOCATE(xkf(3, 2 * nkqtotf))
         ALLOCATE(wkf(2 * nkqtotf))
@@ -425,7 +423,7 @@
           ALLOCATE(wkf(nkqtotf))
           wkf(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
-            wkf(2 * ik - 1) = 2.d0 / (DBLE(nktotf))
+            wkf(2 * ik - 1) = 2.d0 / DBLE(nktotf)
           ENDDO
           DO i = 1, nkf1
             DO j = 1, nkf2
@@ -576,9 +574,9 @@
     USE io_global,        ONLY : ionode_id, stdout
     USE kinds_epw,        ONLY : SIK2
     USE constants_epw,    ONLY : eps6
-    #if defined(__MPI)
+#if defined(__MPI)
     USE parallel_include, ONLY : MPI_INTEGER
-    #endif
+#endif
     ! 
     IMPLICIT NONE
     !
@@ -628,8 +626,6 @@
     !! Sum of points
     INTEGER :: BZtoIBZ_tmp(nk1 * nk2 * nk3)
     !! Temporrary BZtoIBZ map
-    INTEGER :: ierr
-    !! Error 
     INTEGER, ALLOCATABLE :: nkspar(:)
     !! Number of irr points (IBZ)
     REAL(KIND = DP) :: xkr(3)
@@ -819,6 +815,8 @@
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_epw,    ONLY : iunqf
     USE noncollin_module, ONLY : noncolin
+    USE constants_epw, ONLY : eps4
+    USE low_lvl,   ONLY : init_random_seed
     !
     IMPLICIT NONE
     !
@@ -832,8 +830,6 @@
     !! Directions
     INTEGER :: ios
     !! Status of the reading of the file
-    INTEGER :: ierr
-    !! Error number.
     INTEGER :: rest
     !! Remaining of cores numbers
     REAL(KIND = DP), ALLOCATABLE :: xqf_(:, :)
@@ -846,8 +842,8 @@
         !
         WRITE(stdout, *) '    Using q-mesh file: ', TRIM(filqf)
         IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)' 
-        OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', ERR = ierr, IOSTAT = ios)
-        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Opening file ' // filqf, ABS(ios))
+        OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('loadkmesh_para', 'Opening file ' // filqf, ABS(ios))
         READ(iunqf, *) nqtotf
         !
         ALLOCATE(xqf_(3, nqtotf))
@@ -935,7 +931,7 @@
       ENDIF
     ENDIF
     !
-  #if defined(__MPI)
+#if defined(__MPI)
     CALL mp_bcast (nqtotf, ionode_id, inter_pool_comm)
     !
     !  scatter the q points of the fine mesh across the pools
@@ -958,7 +954,7 @@
     CALL mp_bcast(xqf_, ionode_id, inter_pool_comm)
     CALL mp_bcast(wqf_, ionode_id, inter_pool_comm)
     !
-  #else
+#else
     !
     ! In serial the definitions are much easier 
     !
@@ -966,7 +962,7 @@
     lower_bnd = 1
     upper_bnd = nqf
     !
-  #endif
+#endif
     !
     !  Assign the weights and vectors to the correct bounds
     !
@@ -1010,6 +1006,7 @@
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_epw,    ONLY : iunqf
+    USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
     ! 
     IMPLICIT NONE
@@ -1020,8 +1017,6 @@
     !! Directions
     INTEGER :: ios
     !! Status integer
-    INTEGER :: ierr
-    !! Error number. 
     !
     IF (mpime == ionode_id) THEN
       IF (filqf /= '') THEN ! load from file (crystal coordinates)
@@ -1030,8 +1025,8 @@
         !
         WRITE(stdout, *) '    Using q-mesh file: ', TRIM(filqf)
         IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)'
-        OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', ERR = ierr, IOSTAT = ios)
-        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'opening file ' // filqf, ABS(ios))
+        OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
+        IF (ios /= 0) CALL errore('loadqmesh_serial', 'opening file ' // filqf, ABS(ios))
         READ(iunqf, *) nqtotf
         ALLOCATE(xqf(3, nqtotf))
         ALLOCATE(wqf(nqtotf))
@@ -1051,7 +1046,7 @@
           call set_sym_bl()
           !                                         
           ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3))
-          ALOCATE(wqf(nqf1 * nqf2 * nqf3))
+          ALLOCATE(wqf(nqf1 * nqf2 * nqf3))
           ! the result of this call is just nkqtotf
           CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0, 0, 0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
@@ -1153,7 +1148,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
-                              map_rebal
+                              map_rebal, nktotf
     USE io_global,     ONLY : ionode_id, stdout
     USE io_epw,        ONLY : iunselecq
     USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
@@ -1168,6 +1163,7 @@
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE wan2bloch,     ONLY : hamwan2bloch
     USE io_eliashberg, ONLY : kpmq_map
+    USE kinds_epw,     ONLY : SIK2
     !
     IMPLICIT NONE
     !
@@ -1225,7 +1221,7 @@
     !! Temporary mapping
     INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
-    INTEGER :: s_BZtoIBZ(3, 3, nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! symmetry 
     INTEGER :: nkloc
     !! number of k-point selected on that cpu 
@@ -1294,7 +1290,7 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           xkk = xkf(:, ikk)
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
           IF (use_ws) THEN
             DO iw = 1, dims
               DO iw2 = 1, dims
@@ -1315,15 +1311,14 @@
         ! In case of k-point symmetry
         IF (mp_mesh_k) THEN
           BZtoIBZ(:) = 0
-          s_BZtoIBZ(:, :, :) = 0
+          s_BZtoIBZ(:) = 0
           ! 
           IF (mpime == ionode_id) THEN
             ! 
             CALL set_sym_bl()
             !
             ! What we get from this call is BZtoIBZ
-            CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
-                       nkf1, nkf2, nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp, BZtoIBZ, s_BZtoIBZ)
+            CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
             ! 
             IF (iterative_bte) THEN
               BZtoIBZ_tmp(:) = 0
@@ -1412,7 +1407,7 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           xkk = xkf(:, ikk)
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
           IF (use_ws) THEN
             DO iw = 1, dims
               DO iw2 = 1, dims
@@ -1451,7 +1446,7 @@
               ikk = 2 * ik - 1
               xkk = xkf(:, ikk)
               xkq = xkk + xxq
-              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1)
+              CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1)
               DO iw = 1, dims
                 DO iw2 = 1, dims
                   DO ir = 1, nrr_k
@@ -1494,7 +1489,7 @@
               ikk = 2 * ik - 1
               xkk = xkf(:, ikk)
               xkq = xkk + xxq
-              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1)
+              CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1)
               cfacq(:, 1, 1) = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
               CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
               ! 
@@ -1515,7 +1510,7 @@
               totq = totq + 1
               selecq(totq) = iq
               IF (MOD(totq, restart_freq) == 0) THEN
-                WRITE(stdout,i '(5x,a,i12,i12)')'Number selected, total', totq, iq
+                WRITE(stdout, '(5x,a,i12,i12)')'Number selected, total', totq, iq
               ENDIF
             ENDIF
           ENDDO ! iq            
@@ -1524,9 +1519,9 @@
       !  
       IF (mpime == ionode_id) THEN
         OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', ACTION = 'write')
-        WRITE (iunselecq,*) totq    ! Selected number of q-points
-        WRITE (iunselecq,*) nqtotf  ! Total number of q-points 
-        WRITE (iunselecq,*) selecq(1:totq)
+        WRITE(iunselecq,*) totq    ! Selected number of q-points
+        WRITE(iunselecq,*) nqtotf  ! Total number of q-points 
+        WRITE(iunselecq,*) selecq(1:totq)
         CLOSE(iunselecq)
       ENDIF
       ! 
@@ -1548,14 +1543,14 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE elph2,         ONLY : etf, nkf, nkqtotf, xkf, wkf, etf, map_rebal, map_rebal_inv
+    USE elph2,         ONLY : etf, nkf, nkqtotf, xkf, wkf, etf, map_rebal, map_rebal_inv, &
+                              lower_bnd, nktotf
     USE epwcom,        ONLY : fsthick, nbndsub, mp_mesh_k
     USE pwcom,         ONLY : ef
     USE mp_global,     ONLY : my_pool_id, npool
     USE constants_epw, ONLY : zero
     USE io_global,     ONLY : ionode_id
     USE mp_global,     ONLY : inter_pool_comm, mp_bcast
-    USE transportcom,  ONLY : lower_bnd
     !
     IMPLICIT NONE
     !  
@@ -1661,7 +1656,7 @@
     ! the second core has the second k-point etc 
     ! 
     tot = (nkqtotf / (2 * npool))
-    rest = ((nktotf) - tot * npool)
+    rest = (nktotf - tot * npool)
     ! 
     DO ipool = 1, npool
       DO ik = 1,  tot
@@ -1706,7 +1701,7 @@
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : alat, at, omega, bg
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE elph2,         ONLY : nkqtotf, nkf
+    USE elph2,         ONLY : nkf, nktotf
     USE constants_epw, ONLY : eps6, zero
     USE wigner,        ONLY : backtoWS
     USE mp,            ONLY : mp_sum
@@ -1788,7 +1783,7 @@
         CALL cryst_to_cart(1, xk, bg, 1)
         CALL backtoWS(xk, ws, rws, nrwsx, nrws)
         xk = ws
-        CALL dgemv('n', 3, 3, 1.d0, sr, 3, xk, 1 ,0.d0 , S_xk, 1)     
+        CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xk, 1 ,0.d0 , S_xk, 1)     
         ! 
         ! Needed for border_points
         counter_n = 0
@@ -1859,7 +1854,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : nstemp
-    USE elph2,         ONLY : nkqtotf, ibndmax, ibndmin, nkf, nbndfst
+    USE elph2,         ONLY : nkqtotf, ibndmax, ibndmin, nkf, nbndfst, nktotf
     USE cell_base,     ONLY : bg, at
     USE constants_epw, ONLY : eps6, zero
     USE symm_base,     ONLY : s, nrot
@@ -1901,7 +1896,7 @@
     !! Local counter
     INTEGER :: index_sp(nkf)
     !! Index of special points
-    REAL(KIND = DP) :: xkk_cart (3)
+    REAL(KIND = DP) :: xkk_cart(3)
     !! k-point coordinate in Cartesian unit
     REAL(KIND = DP) :: mean(nbndfst)
     !! Mean of the velocities
@@ -1957,8 +1952,8 @@
                 sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                 sr       = TRANSPOSE(sr)
                 DO ibnd = 1, nbndfst
-                  CALL dgemv('n', 3, 3, 1.d0, sr, 3, vkk_all(:, ibnd, ik + lower_bnd - 1), 1, 0.d0, S_vkk(:, ibnd), 1)
-                  CALL dgemv('n', 3, 3, 1.d0, sr, 3, F_out(:, ibnd, ik + lower_bnd - 1, itemp), 1, 0.d0, S_F_out(:, ibnd), 1)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vkk_all(:, ibnd, ik + lower_bnd - 1), 1, 0.d0, S_vkk(:, ibnd), 1)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, F_out(:, ibnd, ik + lower_bnd - 1, itemp), 1, 0.d0, S_F_out(:, ibnd), 1)
                   tmp_vkk(:, ibnd) = tmp_vkk(:, ibnd) + S_vkk(:, ibnd)
                   tmp_F_out(:, ibnd) = tmp_F_out(:, ibnd) + S_F_out(:, ibnd)
                 ENDDO ! ibnd

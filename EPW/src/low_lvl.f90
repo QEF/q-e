@@ -16,16 +16,23 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    LOGICAL function hslt(a, b)
+    LOGICAL function hslt(a, b, eps)
     !-----------------------------------------------------------------------
     !! 
-    !! compare two real number and return the result
+    !! Compare two real number and return the result
     !!  
+    USE kinds,  ONLY : DP
+    ! 
+    IMPLICIT NONE
+    ! 
     REAL(KIND = DP), INTENT(in) :: a
     !! Input number a
     REAL(KIND = DP), INTENT(in) :: b
     !! Input number b
-    IF (ABS(a-b) < eps) THEN
+    REAL(KIND = DP), INTENT(in) :: eps
+    !! Tolerence
+    ! 
+    IF (ABS(a - b) < eps) THEN
       hslt = .FALSE.
     ELSE
       hslt = (a < b )
@@ -40,8 +47,9 @@
     !! 
     !! Create seeds for random number generation
     !!
-    !-----------------------------------------------------------------------
     !
+    IMPLICIT NONE
+    ! 
     INTEGER :: i
     !! Division by number running from 1 to n
     INTEGER :: n
@@ -155,13 +163,13 @@
     !!
     !! adapted from Numerical Recipes pg. 329 (new edition)
     !
-    use kinds, ONLY : DP
+    USE kinds, ONLY : DP
     ! 
     IMPLICIT NONE  
     ! 
     INTEGER, INTENT(in) :: n
     !! Size of the array  
-    INTEGER, INTENT(in) :: ind(n)
+    INTEGER, INTENT(inout) :: ind(n)
     !! Array
     REAL(KIND = DP), INTENT(inout) :: ra(n)
     !! Sorted array
@@ -183,9 +191,9 @@
     !! Input array 
     ! 
     ! initialize index array
-    IF (ind(1)  == 0) THEN
+    IF (ind(1) == 0) THEN
       DO i = 1, n  
-        ind (i) = i  
+        ind(i) = i  
       ENDDO
     ENDIF
     ! nothing to order
@@ -228,12 +236,12 @@
       DO WHILE(j <= ir)  
         IF (j < ir) THEN  
           ! compare to better underling
-          IF (hslt(ra(j), ra(j + 1))) THEN 
+          IF (hslt(ra(j), ra(j + 1), eps)) THEN 
             j = j + 1  
           ENDIF
         ENDIF
         ! demote rra
-        IF (hslt(rra, ra(j))) THEN  
+        IF (hslt(rra, ra(j), eps)) THEN  
           ra(i) = ra(j)  
           ind(i) = ind(j)  
           i = j  
@@ -504,8 +512,39 @@
     !-----------------------------------------------------------------------
     END FUNCTION matinv3
     !-----------------------------------------------------------------------
-
-
+    !-----------------------------------------------------------------------
+    PURE FUNCTION find_minimum(grid, grid_dim) RESULT(minpos)
+    !-----------------------------------------------------------------------
+    !!
+    !! Return the position of a minimum and its value in a grid
+    !! 
+    USE kinds,         ONLY : DP
+    ! 
+    INTEGER, INTENT(in) :: grid_dim
+    !! Grid dimension
+    REAL(KIND = DP), INTENT(in) :: grid(grid_dim)
+    !! Actual grid
+    !
+    ! Local variable
+    INTEGER :: i
+    !! Index of the grid
+    REAL(KIND = DP) :: minvalore
+    !! Minimum value
+    INTEGER :: minpos
+    !! Return the minimum position
+    !  
+    minvalore = grid(1)
+    minpos = 1
+    DO i = 2, grid_dim
+      IF (grid(i) < minvalore) THEN !supposing only one minimum
+        minpos = i
+        minvalore = grid(i)
+      ENDIF
+    ENDDO
+    !-----------------------------------------------------------------------
+    END FUNCTION find_minimum
+    !-----------------------------------------------------------------------
+    ! 
   !----------------------------------------------------------------------
   END MODULE low_lvl
   !----------------------------------------------------------------------

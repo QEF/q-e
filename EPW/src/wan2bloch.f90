@@ -42,6 +42,7 @@
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : czero, cone, zero, one, eps12, eps16
     USE epwcom,        ONLY : lphase, use_ws
+    USE low_lvl,       ONLY : utility_zdotu, degen_sort
     !
     IMPLICIT NONE
     !
@@ -285,14 +286,15 @@
     !! and corresponds to the reality of the interatomic force constants
     !!
     !
-    USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg
-    USE phcom,     ONLY : nq1, nq2, nq3
-    USE ions_base, ONLY : amass, tau, nat, ityp
-    USE elph2,     ONLY : rdw, epsi, zstar
-    USE epwcom,    ONLY : lpolar, lphase, use_ws
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : at, bg
+    USE phcom,         ONLY : nq1, nq2, nq3
+    USE ions_base,     ONLY : amass, tau, nat, ityp
+    USE elph2,         ONLY : rdw, epsi, zstar
+    USE epwcom,        ONLY : lpolar, lphase, use_ws
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
-    USE rigid,     ONLY : cdiagh2
+    USE rigid,         ONLY : cdiagh2
+    USE low_lvl,       ONLY : utility_zdotu
     !
     IMPLICIT NONE
     !
@@ -313,13 +315,14 @@
     !! Rotation matrix, fine mesh 
     !
     ! Local variables
-    !
-    ! variables for lapack ZHPEVX
-    INTEGER :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
-    REAL(KIND = DP) :: w( nmodes ), rwork( 7*nmodes )
-    COMPLEX(KIND = DP) :: champ( nmodes*(nmodes+1)/2 )
-    COMPLEX(KIND = DP) :: cwork( 2*nmodes ), cz( nmodes, nmodes)
-    !
+    INTEGER :: neig
+    !! The total number of eigenvalues found
+    INTEGER :: info
+    !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
+    INTEGER :: ifail(nmodes)
+    !! Contains the indices of the eigenvectors that failed to converge
+    INTEGER :: iwork(5 * nmodes)
+    !! Integer work array
     INTEGER :: imode
     !! Counter on modes
     INTEGER :: jmode
@@ -330,14 +333,22 @@
     !! Counter on atoms
     INTEGER :: nb
     !! Counter on atoms
-    !
+    REAL(KIND = DP) :: rwork(7 * nmodes)
+    !! Real work array
+    REAL(KIND = DP) :: w(nmodes)
+    !! Eigenvalues
     REAL(KIND = DP) :: xq(3)
     !! Coordinates q-point
     REAL(KIND = DP) :: rdotk
     !! $$\mathbf{r}\cdot\mathbf{k}   
     REAL(KIND = DP) :: massfac
     !! inverse square root of masses
-    !
+    COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
+    !! Complex Hamiltonian packed in upper triangle
+    COMPLEX(KIND = DP) :: cwork(2 * nmodes)
+    !! Complex work array
+    COMPLEX(KIND = DP) :: cz(nmodes, nmodes)
+    !! Eigenvectors
     COMPLEX(KIND = DP) :: chf(nmodes, nmodes)
     ! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(KIND = DP) :: cfac
@@ -345,7 +356,7 @@
     COMPLEX(KIND = DP) :: zdotu
     !! Dot product between the two phonon eigenvectors. 
     !
-    CALL start_clock ( 'DynW2B' )
+    CALL start_clock ('DynW2B')
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
     !----------------------------------------------------------
@@ -362,24 +373,24 @@
     !
     IF (use_ws) THEN
       DO ir = 1, nrr_q
-        rdotk = twopi * DOT_PRODUCT(xq, DBLE(irvec_q( :, ir) ))
+        rdotk = twopi * DOT_PRODUCT(xq, DBLE(irvec_q(:, ir)))
         DO na = 1, nat
           DO nb = 1, nat
             IF (ndegen_q(ir, na, nb) > 0) THEN
-              cfac = EXP(ci*rdotk ) / DBLE( ndegen_q(ir,na,nb) )
+              cfac = EXP(ci * rdotk) / DBLE(ndegen_q(ir, na, nb))
               ! To map atom coordinate to mode basis. 
-              chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) = &
-                chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) &
-              + cfac * rdw(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb, ir )
+              chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
+              chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) &
+              + cfac * rdw(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb, ir)
             ENDIF
           ENDDO
         ENDDO
       ENDDO
     ELSE ! use_ws
       DO ir = 1, nrr_q
-        rdotk = twopi * DOT_PRODUCT(xq, DBLE(irvec_q( :, ir) ))
-        cfac = EXP(ci*rdotk ) / DBLE( ndegen_q(ir,1,1) )
-        chf = chf + cfac * rdw (:,:, ir ) 
+        rdotk = twopi * DOT_PRODUCT(xq, DBLE(irvec_q(:, ir)))
+        cfac = EXP(ci * rdotk) / DBLE(ndegen_q(ir, 1, 1))
+        chf = chf + cfac * rdw(:, :, ir) 
       ENDDO
     ENDIF
     !
@@ -389,7 +400,7 @@
     !  add the long-range term to D(q)
     IF (lpolar) THEN
       ! xq has to be in 2pi/a     
-      CALL rgd_blk (nq1,nq2,nq3,nat,chf,xq,tau,epsi,zstar,+1.d0)
+      CALL rgd_blk(nq1, nq2, nq3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
@@ -397,10 +408,10 @@
     !
     DO na = 1, nat
       DO nb = 1, nat
-        massfac = 1.d0 / sqrt ( amass(ityp(na)) * amass(ityp(nb)) )
+        massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)) )
         !
-        chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) = &
-           chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) * massfac
+        chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
+        chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac
         ! 
       ENDDO
     ENDDO
@@ -417,20 +428,20 @@
     !
     DO jmode = 1, nmodes
      DO imode = 1, jmode
-       champ(imode + (jmode - 1) * jmode/2 ) = &
-       ( chf( imode, jmode) + conjg ( chf( jmode, imode) ) ) * 0.5d0
+       champ(imode + (jmode - 1) * jmode / 2) = &
+        (chf(imode, jmode) + CONJG(chf(jmode, imode))) * 0.5d0
      ENDDO
     ENDDO
     !
     !CALL zhpevx ('V', 'A', 'U', nmodes, champ, zero, zero, &
     !             0, 0, -one, neig, w, cz, nmodes, cwork, &
     !             rwork, iwork, ifail, info)
-    CALL cdiagh2(nmodes,chf,nmodes,w,cz)
+    CALL cdiagh2(nmodes, chf, nmodes, w, cz)
     ! 
     ! clean noise
     DO jmode = 1,nmodes
       DO imode = 1,nmodes
-        IF (ABS( cz(imode,jmode) ) < eps12 ) cz(imode,jmode) = czero
+        IF (ABS(cz(imode, jmode)) < eps12) cz(imode, jmode) = czero
       ENDDO
     ENDDO
     ! 
@@ -439,8 +450,8 @@
       DO jmode = 1,nmodes
         INNER : DO imode = 1,nmodes
           IF (ABS(cz(imode, jmode)) > eps12) THEN
-            cz(:, jmode) = cz(:, jmode) * CONJG( cz(imode,jmode) )
-            cz(:, jmode) = cz(:, jmode) / SQRT(utility_zdotu(CONJG(cz(:, jmode)),cz(:, jmode)) )
+            cz(:, jmode) = cz(:, jmode) * CONJG(cz(imode,jmode))
+            cz(:, jmode) = cz(:, jmode) / SQRT(utility_zdotu(CONJG(cz(:, jmode)),cz(:, jmode)))
             EXIT INNER
           ENDIF
         END DO INNER
@@ -984,6 +995,7 @@
     USE cell_base,     ONLY : at, alat
     USE epwcom,        ONLY : eig_read, use_ws
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one
+    USE low_lvl,       ONLY : degen_sort
     !   
     IMPLICIT NONE
     !
@@ -1235,7 +1247,7 @@
           CALL zhpevx('V', 'A', 'U', deg_dim(ideg), champ , zero, zero, &
                     0, 0, -one, neig, w, cz, deg_dim(ideg), cwork, rwork, iwork, ifail, info)
           !
-          vmef_deg(ipol,i :, :) = zero
+          vmef_deg(ipol, :, :) = zero
           DO ibndc = 1, deg_dim(ideg)
             vmef_deg(ipol, ibndc, ibndc) = w(ibndc)
           ENDDO
@@ -1289,6 +1301,7 @@
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one, eps8
     USE ions_base,     ONLY : amass, tau, nat, ityp
     USE io_global,     ONLY : stdout
+    USE low_lvl,       ONLY : degen_sort
     !   
     IMPLICIT NONE
     !
@@ -1660,6 +1673,7 @@
     USE mp,               ONLY : mp_sum, mp_bcast
     USE mp_world,         ONLY : world_comm, mpime
     USE io_global,        ONLY : ionode_id
+    USE division,         ONLY : para_bounds
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE
@@ -2163,6 +2177,7 @@
     USE io_global,        ONLY : stdout
     USE epwcom,           ONLY : use_ws
     USE mp_world,         ONLY : mpime
+    USE division,         ONLY : para_bounds
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &

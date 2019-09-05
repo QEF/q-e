@@ -49,7 +49,6 @@
     USE io_files,      ONLY : prefix
     USE io_epw,        ONLY : iukmap
     USE klist_epw,     ONLY : kmap
-    USE kfold,         ONLY : g0vec_all, ng0vec, shift, g0vec_all_r
     USE io_global,     ONLY : meta_ionode
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : world_comm
@@ -395,7 +394,6 @@
     USE fft_types,     ONLY : fft_stick_index
     USE fft_ggen,      ONLY : fft_set_nl
     USE constants,     ONLY : eps8
-    USE kfold
     USE constants_epw, ONLY : eps5
 #if defined(__NAG) 
     USE f90_unix_io,   ONLY : flush
@@ -659,6 +657,7 @@
     !
     RETURN
     !
+    !-------------------------------------------------------------------------
     END SUBROUTINE createkmap_pw2
     !-------------------------------------------------------------------------
     ! 
@@ -681,11 +680,8 @@
     !! the large sphere (density set).
     !!
     !-----------------------------------------------------------------
-    USE io_global,     ONLY : stdout, meta_ionode
-    USE io_epw,        ONLY : iukgmap
-    ! SP: Sucidal. Produce too much data. Only use for debugging. 
-    ! USE control_flags, ONLY : iverbosity
-    USE kfold
+    USE io_global, ONLY : stdout, meta_ionode
+    USE io_epw,    ONLY : iukgmap
     !
     IMPLICIT NONE
     !

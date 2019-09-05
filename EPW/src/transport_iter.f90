@@ -31,16 +31,14 @@
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : alat, at, omega, bg
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : fsthick, mob_maxiter, bfieldx, bfieldy, bfieldz, & 
-                              eps_acustic, degaussw, nstemp, & 
-                              system_2d, int_mob, ncarrier, restart, restart_freq,&
+    USE epwcom,        ONLY : fsthick, mob_maxiter, eps_acustic, degaussw, nstemp, & 
+                              system_2d, int_mob, ncarrier, restart, restart_freq, &
                               mp_mesh_k, nkf1, nkf2, nkf3, vme, broyden_beta
     USE pwcom,         ONLY : ef 
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef, & 
-                              wf, xkf, epf17, nqtotf, nkqtotf, & 
-                              map_rebal, xqf, wqf, nqf
-    USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
-                              ixkqf_tr, s_BZtoIBZ_full
+                              wf, xkf, epf17, nqtotf, nkqtotf, nbndfst, nktotf, & 
+                              map_rebal, xqf, wqf, nqf, transp_temp, mobilityh_save, &
+                              mobilityel_save, lower_bnd, ixkqf_tr, s_BZtoIBZ_full
     USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
                               electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8, eps10, &
                               eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
@@ -50,16 +48,16 @@
     USE io_global,     ONLY : ionode_id
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_eliashberg, ONLY : kpmq_map
-    USE printing,      ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym, &
-                              print_mobB_red, k_derivative_cart_red, &
-                              k_avg, k_derivative_cart_red_gen
-    USE io_scattering, ONLY : Fin_write, Fin_read, Fin_writeb, Fin_readb, F_write
+    USE printing,      ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
+    USE grid,          ONLY : k_avg
+    USE io_scattering, ONLY : Fin_write, Fin_read 
     USE noncollin_module, ONLY : noncolin
     USE io_files,      ONLY : diropn
     USE control_flags, ONLY : iverbosity
     USE io_epw,        ONLY : iufilibtev_sup
     USE kinds_epw,     ONLY : SIK2
     USE wigner,        ONLY : backtoWS
+    USE grid,          ONLY : special_points, kpoint_grid_epw
     !
     IMPLICIT NONE
     !
@@ -360,8 +358,7 @@
       wkf(:) = 0d0
       ! What we get from this call is BZtoIBZ
       CALL start_clock('kpoint_paral')
-      CALL kpoint_grid_epw_parallel(nrot, time_reversal, .FALSE., s, t_rev, bg, &
-                                    nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+      CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
       CALL stop_clock('kpoint_paral')
       ! 
       BZtoIBZ_tmp(:) = 0
@@ -480,7 +477,7 @@
           itemp = sparse_t(ind)
           ! 
           CALL cryst_to_cart(1, F_in(:, jbnd, ixkqf_tr(ind), itemp), at, -1)
-          CALL dgemv('n', 3, 3, 1.d0, REAL(s(:, :, s_BZtoIBZ_full(ind)), KIND = DP), &
+          CALL DGEMV('n', 3, 3, 1.d0, REAL(s(:, :, s_BZtoIBZ_full(ind)), KIND = DP), &
                      3, F_in(:, jbnd, ixkqf_tr(ind), itemp), 1, 0.d0, F_rot(:), 1)
           CALL cryst_to_cart(1, F_in(:, jbnd, ixkqf_tr(ind), itemp), bg, 1)
           CALL cryst_to_cart(1, F_rot, bg, 1)
@@ -573,7 +570,8 @@
     !!  
     ! ----------------------------------------------------------------------------
     USE kinds,            ONLY : DP, i4b
-    USE elph2,            ONLY : nkqtotf, ibndmin, ibndmax, inv_tau_all, inv_tau_allcb
+    USE elph2,            ONLY : nkqtotf, ibndmin, ibndmax, inv_tau_all, inv_tau_allcb, &
+                                 nbndfst, nktotf
     USE mp_world,         ONLY : mpime, world_comm
     USE io_global,        ONLY : ionode_id, stdout
     USE io_files,         ONLY : tmp_dir, prefix

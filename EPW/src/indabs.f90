@@ -26,8 +26,8 @@
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, efnew, &
-                            dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, etf_ks
-  USE transportcom,  ONLY : lower_bnd, upper_bnd
+                            dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
+                            etf_ks, lower_bnd, upper_bnd, nbndfst, nktotf
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm
@@ -39,16 +39,16 @@
   !! Q-point index    
   !
   ! Local variables 
-  CHARACTER(LEN = 256) :: nameF='epsilon2_indabs.dat'
+  CHARACTER(LEN = 256) :: nameF = 'epsilon2_indabs.dat'
   !! Name of the file
-  CHARACTER (len=10) :: c
+  CHARACTER(LEN = 10) :: c
   !! Number of eta values, in string format
   CHARACTER(LEN = 256) :: format_string
   !! Format string
   !
+  ! Local variables
   LOGICAL :: opnd
   !! Check whether the file is open. 
-  ! 
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: n
@@ -150,42 +150,43 @@
   !! Collect k-point coordinate from all pools in parallel case
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Collect eigenenergies from all pools in parallel case
-  COMPLEX(KIND = DP) :: vkk(3,nbndfst,nbndfst)
+  COMPLEX(KIND = DP) :: vkk(3, nbndfst, nbndfst)
   !!- Velocity matrix elements at k, k+q
-  COMPLEX(KIND = DP) :: vkq(3,nbndfst,nbndfst)
+  COMPLEX(KIND = DP) :: vkq(3, nbndfst, nbndfst)
   !!- Velocity matrix elements at k, k+q
-  COMPLEX (KIND = DP) :: s1a(3), s1e(3), s2a(3), s2e(3)
+  COMPLEX(KIND = DP) :: s1a(3), s1e(3), s2a(3), s2e(3)
   !! Transition probability function    
-  COMPLEX (KIND = DP) :: epf(nbndfst, nbndfst,nmodes)
+  COMPLEX(KIND = DP) :: epf(nbndfst, nbndfst, nmodes)
   !! Generalized matrix elements for phonon-assisted absorption
   ! 
   ! SP: Define the inverse so that we can efficiently multiply instead of
   ! dividing
   ! 
-  inv_eptemp0 = 1.0/eptemp
-  inv_degaussw = 1.0/degaussw
+  inv_eptemp0 = 1.0 / eptemp
+  inv_degaussw = 1.0 / degaussw
   !
-  nomega = INT((omegamax - omegamin)/omegastep) + 1
+  nomega = INT((omegamax - omegamin) / omegastep) + 1
   ! 
   ! 300 K  
   ! Epsilon2 prefactor for velocity matrix elements, including factor of 2 for spin (weights for k-points are divided by 2 to be normalized to 1)
   ! C = 8*pi^2*e^2 = 8*pi^2*2 approx 157.9136704
   ! 
-  cfac = 16.d0*pi**2
+  cfac = 16.d0 * pi**2
   ! 
   IF (iq == 1) THEN
-    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
-    WRITE(stdout,'(5x,"Phonon-assisted absorption")')
-    WRITE(stdout,'(5x,a/)') REPEAT('=',67)
+    WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+    WRITE(stdout, '(5x,"Phonon-assisted absorption")')
+    WRITE(stdout, '(5x,a/)') REPEAT('=',67)
     !
-    IF (fsthick < 1.d3 ) &
-         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-    WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-         'Temperature T = ',eptemp * ryd2ev, ' eV'
+    IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', eptemp * ryd2ev, ' eV'
     ! 
-    IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
-    IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3,nomega,neta))
-    IF (.NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3,nomega,neta))
+    !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
+    !IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3, nomega, neta))
+    !IF (.NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta))
+    ALLOCATE(omegap(nomega))
+    ALLOCATE(epsilon2_abs(3, nomega, neta))
+    ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta))
     ! 
     epsilon2_abs = 0.d0
     epsilon2_abs_lorenz = 0.d0
@@ -199,11 +200,11 @@
   nksqtotf = nktotf ! odd-even for k,k+q
   !
   IF (efermi_read) THEN
-     !
-     ef0 = fermi_energy
+    !
+    ef0 = fermi_energy
   ELSE
-     !
-     ef0 = efnew
+    !
+    ef0 = efnew
   ENDIF
   ! 
   DO ik = 1, nkf
@@ -214,9 +215,9 @@
     DO imode = 1, nmodes
       !
       ! the phonon frequency at this q and nu 
-      wq(imode) = wf (imode, iq)
+      wq(imode) = wf(imode, iq)
       ! 
-      epf(:,:,imode) = epf17(:, :, imode,ik)
+      epf(:, :, imode) = epf17(:, :, imode,ik)
       IF (wq(imode) > eps_acustic) THEN
         nqv(imode) = wgauss( -wq(imode)/(eptemp), -99)
         nqv(imode) = nqv(imode) / ( one - two * nqv(imode) )
@@ -228,39 +229,39 @@
       DO ibnd = 1, nbndfst
         DO jbnd = 1, nbndfst
           ! vmef is in units of Ryd * bohr
-          vkk(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk)
-          vkq(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq)
+          vkk(:, ibnd, jbnd) = vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
+          vkq(:, ibnd, jbnd) = vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
         ENDDO
       ENDDO
     ELSE
       DO ibnd = 1, nbndfst
         DO jbnd = 1, nbndfst
            ! Dme's already corrected for GW corrections in wan2bloch.f90
-          vkk(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) 
-          vkq(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq) 
+          vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk) 
+          vkq(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq) 
         ENDDO
       ENDDO
     ENDIF
     ! 
     DO ibnd = 1, nbndfst
       !  the energy of the electron at k (relative to Ef)
-      ekk = etf (ibndmin-1+ibnd, ikk) - ef0
+      ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
       !
       IF (ABS(ekk) < fsthick) THEN
         !
-        wgkk = wgauss( -ekk*inv_eptemp0, -99)  
+        wgkk = wgauss(-ekk * inv_eptemp0, -99)  
         ! 
         DO jbnd = 1, nbndfst
           ! 
           ! The fermi occupation for k+q
-          ekq = etf (ibndmin-1+jbnd, ikq) - ef0
+          ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
           !  
-          IF (ABS(ekq) < fsthick .AND. ekq < ekk+wq(nmodes)+omegamax + 6.0*degaussw) THEN
+          IF (ABS(ekq) < fsthick .AND. ekq < ekk + wq(nmodes) + omegamax + 6.0 * degaussw) THEN
             !
-            wgkq = wgauss ( -ekq*inv_eptemp0, -99)  
+            wgkq = wgauss(-ekq * inv_eptemp0, -99)  
             !
-            IF (ekq-ekk-wq(nmodes)-omegamax > 6.0*degaussw ) CYCLE 
-            IF (ekq-ekk+wq(nmodes)-omegamin < 6.0*degaussw ) CYCLE 
+            IF (ekq - ekk - wq(nmodes) - omegamax > 6.0 * degaussw) CYCLE 
+            IF (ekq - ekk + wq(nmodes) - omegamin < 6.0 * degaussw) CYCLE 
             ! 
             DO imode = 1, nmodes
               !
@@ -275,64 +276,51 @@
                   DO mbnd = 1, nbndfst
                     !
                     ! The energy of the electron at k (relative to Ef)
-                    ekmk = etf (ibndmin-1+mbnd, ikk) - ef0
+                    ekmk = etf(ibndmin - 1 + mbnd, ikk) - ef0
                     ! The energy of the electron at k+q (relative to Ef)
-                    ekmq = etf (ibndmin-1+mbnd, ikq) - ef0
+                    ekmq = etf(ibndmin - 1 + mbnd, ikq) - ef0
                     !
-                    s1a(:)  = s1a(:) + epf(mbnd, jbnd,imode) * 0.5 * vkk(:,ibnd, mbnd)  / &
-                         (  ekmk  - ekq + wq(imode) + ci * eta(m) )
-                    s1e(:)  = s1e(:) + epf(mbnd, jbnd,imode) * 0.5 * vkk(:,ibnd, mbnd)  / &
-                         (  ekmk  - ekq - wq(imode) + ci * eta(m) )
-                    s2a(:) =  s2a(:) + epf(ibnd, mbnd,imode) * 0.5 * vkq(:,mbnd, jbnd)   / &
-                         (  ekmq  - ekk - wq(imode)+ ci * eta(m))
-                    s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * 0.5 * vkq(:,mbnd, jbnd)   / &
-                         (  ekmq  - ekk + wq(imode)+ ci * eta(m))
+                    s1a(:) = s1a(:) + epf(mbnd, jbnd,imode) * 0.5 * vkk(:, ibnd, mbnd) / &
+                             (ekmk  - ekq + wq(imode) + ci * eta(m))
+                    s1e(:) = s1e(:) + epf(mbnd, jbnd,imode) * 0.5 * vkk(:, ibnd, mbnd) / &
+                             (ekmk  - ekq - wq(imode) + ci * eta(m))
+                    s2a(:) =  s2a(:) + epf(ibnd, mbnd,imode) * 0.5 * vkq(:, mbnd, jbnd) / &
+                             (ekmq  - ekk - wq(imode)+ ci * eta(m))
+                    s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * 0.5 * vkq(:, mbnd, jbnd) / &
+                             (ekmq  - ekk + wq(imode)+ ci * eta(m))
                   ENDDO
                   ! 
-                  pfac  =  nqv(imode)      * wgkk *(one- wgkq ) - (nqv(imode)+one)*(one-wgkk) * wgkq 
-                  pface = (nqv(imode)+one) * wgkk *(one- wgkq ) -  nqv(imode)     *(one-wgkk) * wgkq
+                  pfac  =  nqv(imode)      * wgkk * (one - wgkq) - (nqv(imode) + one) * (one - wgkk) * wgkq 
+                  pface = (nqv(imode) + one) * wgkk * (one - wgkq) -  nqv(imode) * (one - wgkk) * wgkq
                   ! 
                   DO iw = 1, nomega
                     !
-                    IF (ABS(ekq-ekk-wq(imode)-omegap(iw)) > 6.0*degaussw .AND. &
-                         ABS(ekq-ekk+wq(imode)-omegap(iw)) > 6.0*degaussw) CYCLE
+                    IF (ABS(ekq - ekk - wq(imode) - omegap(iw)) > 6.0 * degaussw .AND. &
+                        ABS(ekq - ekk + wq(imode) - omegap(iw)) > 6.0 * degaussw) CYCLE
                     ! 
-                    weighte = w0gauss( ( ekq - ekk - omegap(iw) + wq(imode))  / degaussw, 0) / degaussw
-                    weighta = w0gauss( ( ekq - ekk - omegap(iw) - wq(imode))  / degaussw, 0) / degaussw
+                    weighte = w0gauss((ekq - ekk - omegap(iw) + wq(imode)) / degaussw, 0) / degaussw
+                    weighta = w0gauss((ekq - ekk - omegap(iw) - wq(imode)) / degaussw, 0) / degaussw
                     ! 
                     DO ipol = 1, 3
-                      epsilon2_abs(ipol,iw,m) = epsilon2_abs(ipol,iw,m)  + &
-                           (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pfac  * weighta * ABS(s1a(ipol) + s2a(ipol) )**2 / (2 * wq(imode) * omega )
-                      epsilon2_abs(ipol,iw,m) = epsilon2_abs(ipol,iw,m)  + &
-                           (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pface * weighte * ABS(s1e(ipol) + s2e(ipol) )**2 / (2 * wq(imode) * omega )
-                      epsilon2_abs_lorenz(ipol,iw,m) = epsilon2_abs_lorenz(ipol,iw,m)  + &
-                           (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pfac  * ABS(s1a(ipol) + s2a(ipol) )**2 / (2 * wq(imode) * omega ) * &
-                           ( degaussw / ( degaussw**2 + (ekq - ekk - omegap(iw) - wq(imode))**2 ))/pi
-                      epsilon2_abs_lorenz(ipol,iw,m) = epsilon2_abs_lorenz(ipol,iw,m)  + &
-                           (wkf(ikk)/2.0) * wqf(iq) * &
-                           cfac / omegap(iw)**2 * pface * ABS(s1e(ipol) + s2e(ipol) )**2 / (2 * wq(imode) * omega ) * &
-                           ( degaussw / ( degaussw**2 + (ekq - ekk - omegap(iw) + wq(imode))**2 ))/pi
+                      epsilon2_abs(ipol, iw, m) = epsilon2_abs(ipol, iw, m) + (wkf(ikk) / 2.0) * wqf(iq) * &
+                           cfac / omegap(iw)**2 * pfac  * weighta * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega)
+                      epsilon2_abs(ipol, iw, m) = epsilon2_abs(ipol, iw, m) + (wkf(ikk) / 2.0) * wqf(iq) * &
+                           cfac / omegap(iw)**2 * pface * weighte * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega)
+                      epsilon2_abs_lorenz(ipol, iw, m) = epsilon2_abs_lorenz(ipol, iw, m) + (wkf(ikk) / 2.0) * wqf(iq) * &
+                           cfac / omegap(iw)**2 * pfac  * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega) * &
+                           (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) - wq(imode))**2)) / pi
+                      epsilon2_abs_lorenz(ipol, iw, m) = epsilon2_abs_lorenz(ipol, iw, m)  + (wkf(ikk) / 2.0) * wqf(iq) * &
+                           cfac / omegap(iw)**2 * pface * ABS(s1e(ipol) + s2e(ipol))**2 / (2 * wq(imode) * omega) * &
+                           (degaussw / (degaussw**2 + (ekq - ekk - omegap(iw) + wq(imode))**2 )) / pi
                     ENDDO ! ipol
-                    !
                   ENDDO ! iw
-                  !
                 ENDDO ! neta
-                ! 
               ENDIF ! if wq > acoustic
-              ! 
             ENDDO ! imode
-            !
           ENDIF ! endif  ekq in fsthick
-          !
         ENDDO ! jbnd
-        !
       ENDIF  ! endif  ekk in fsthick
-      !
     ENDDO ! ibnd
-    ! 
   ENDDO ! ik
   !
   ! The k points are distributed among pools: here we collect them
@@ -344,8 +332,8 @@
     ! Note that poolgather2 works with the doubled grid (k and k+q)
     !
     CALL mp_barrier(inter_pool_comm)
-    CALL mp_sum( epsilon2_abs, inter_pool_comm )
-    CALL mp_sum( epsilon2_abs_lorenz, inter_pool_comm )
+    CALL mp_sum(epsilon2_abs, inter_pool_comm)
+    CALL mp_sum(epsilon2_abs_lorenz, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     !
 #endif
@@ -355,40 +343,42 @@
     WRITE(c,"(i0)") neta
     format_string = "(5x,f15.6," // TRIM(c) // "E22.14)"
     ! 
-    WRITE(stdout,'(5x,a)')
-    WRITE(stdout,'(5x,a)') 'Phonon-assisted absorption versus energy'
-    WRITE(stdout,'(5x,a,4f15.6)') 'Broadenings: ', eta(1:4)
-    WRITE(stdout,'(5x,a,5f15.6)') '   ', eta(5:9)
-    WRITE(stdout,'(5x,a)')
-    WRITE(stdout,'(5x,a)') 'For the first Broadening we have:'
+    WRITE(stdout, '(5x,a)')
+    WRITE(stdout, '(5x,a)') 'Phonon-assisted absorption versus energy'
+    WRITE(stdout, '(5x,a,4f15.6)') 'Broadenings: ', eta(1:4)
+    WRITE(stdout, '(5x,a,5f15.6)') '   ', eta(5:9)
+    WRITE(stdout, '(5x,a)')
+    WRITE(stdout, '(5x,a)') 'For the first Broadening we have:'
     ! For test-farm checking purposes, only show m=1
-    WRITE(stdout,'(5x,a)') 'Photon energy (eV), Imaginary dielectric function along x,y,z'
+    WRITE(stdout, '(5x,a)') 'Photon energy (eV), Imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
-      WRITE(stdout,'(5x,f15.6,3E22.14)') omegap(iw)*ryd2ev, (epsilon2_abs(ipol,iw,1), ipol = 1,3)
+      WRITE(stdout, '(5x,f15.6,3E22.14)') omegap(iw) * ryd2ev, (epsilon2_abs(ipol, iw, 1), ipol = 1, 3)
     ENDDO
-    WRITE(stdout,'(5x,a)')
-    WRITE(stdout,'(5x,a)') 'Values with other broadening are reported in the files epsilon2_indabs.dat'
-    WRITE(stdout,'(5x,a)')
+    WRITE(stdout, '(5x,a)')
+    WRITE(stdout, '(5x,a)') 'Values with other broadening are reported in the files epsilon2_indabs.dat'
+    WRITE(stdout, '(5x,a)')
     ! 
     ! Output to file
-    WRITE(c,"(i0)") neta+1
+    WRITE(c,"(i0)") neta + 1
     format_string = "("//TRIM(c) // "E22.14)"
 
-    OPEN(UNIT = iuindabs,FILE = nameF)
-    WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
-    WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
+    OPEN(UNIT = iuindabs, FILE = nameF)
+    WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
+    WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
-      WRITE(iuindabs, format_string) omegap(iw)*ryd2ev, ( SUM(epsilon2_abs(:,iw,m))/3.0d0, m = 1,neta)
+      WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs(:, iw, m)) / 3.0d0, m = 1, neta)
     ENDDO
     CLOSE(iuindabs)
     ! 
-    OPEN(UNIT = iuindabs,FILE = 'epsilon2_indabs_lorenz.dat')
-    WRITE(iuindabs,'(a)') '# Phonon-assisted absorption versus energy'
-    WRITE(iuindabs,'(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
+    OPEN(UNIT = iuindabs, FILE = 'epsilon2_indabs_lorenz.dat')
+    WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
+    WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
     DO iw = 1, nomega
-      WRITE(iuindabs, format_string) omegap(iw)*ryd2ev, ( SUM(epsilon2_abs_lorenz(:,iw,m))/3.0d0, m = 1,neta )
+      WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs_lorenz(:, iw, m)) / 3.0d0, m = 1, neta)
     ENDDO
     CLOSE(iuindabs)
   ENDIF
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE indabs
+  !-----------------------------------------------------------------------

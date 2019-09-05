@@ -729,6 +729,7 @@
   USE constants_epw,   ONLY : czero, cone, zero, eps6
   USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
   USE mp,              ONLY : mp_sum
+  USE kfold,           ONLY : ktokpmq
   ! 
   IMPLICIT NONE
   ! 
@@ -1065,6 +1066,7 @@
   USE mp,              ONLY : mp_sum
   USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
   USE mp_world,        ONLY : mpime
+  USE kfold,           ONLY : ktokpmq
   ! 
   IMPLICIT NONE
   !
@@ -1816,6 +1818,7 @@
                               nnb, kpb, iknum, excluded_band
   USE elph2,           ONLY : umat, umat_all
   USE constants_epw,   ONLY : czero, cone, zero
+  USE kfold,           ONLY : ktokpmq
   !
   IMPLICIT NONE
   !
@@ -2133,6 +2136,7 @@
   USE scatter_mod,     ONLY : gather_grid
   USE constants_epw,   ONLY : czero, zero
   USE mp_global,       ONLY : my_pool_id
+  USE kfold,           ONLY : ktokpmq
   !
   IMPLICIT NONE
   !
@@ -2198,7 +2202,7 @@
   DO ik = 1, nks
     !
     ! returns in-pool index nkq and absolute index nkq_abs of xk
-    CALL ktokpmq ( xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs )
+    CALL ktokpmq(xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs)
     ik_g = nkq_abs
     !
     spin = ispinw
@@ -2524,8 +2528,11 @@
   !
   !------------------------------------------------------------------------
   END SUBROUTINE set_u_matrix
-  !--------------------------------------------
-  SUBROUTINE ylm_wannier(ylm,l,mr,r,nr) 
+  !------------------------------------------------------------------------
+  ! 
+  !------------------------------------------------------------------------
+  SUBROUTINE ylm_wannier(ylm, l, mr, r, nr) 
+  !------------------------------------------------------------------------
   !
   ! this routine returns in ylm(r) the values at the nr points r(1:3,1:nr) 
   ! of the spherical harmonic identified  by indices (l,mr) 

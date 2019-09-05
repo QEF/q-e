@@ -186,6 +186,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE constants_epw, ONLY : eps6
+    USE low_lvl,       ONLY : hpsort_eps_epw
     !
     IMPLICIT NONE
     !
@@ -405,6 +406,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE constants_epw, ONLY : eps6
+    USE low_lvl,       ONLY : hpsort_eps_epw
     !
     IMPLICIT NONE
     !
@@ -647,6 +649,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg
     USE constants_epw, ONLY : zero, eps8
+    USE low_lvl,       ONLY : find_minimum
     ! 
     IMPLICIT NONE
     ! 

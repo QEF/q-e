@@ -1054,6 +1054,7 @@
     USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, npool
     USE division,      ONLY : fkbounds
+    USE low_lvl,       ONLY : set_ndnmbr
     !  
     IMPLICIT NONE
     !
@@ -1202,7 +1203,7 @@
     END SUBROUTINE read_ephmat
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE write_ephmat( iq )
+    SUBROUTINE write_ephmat(iq)
     !-----------------------------------------------------------------------
     !!
     !!  This SUBROUTINE writes the elph matrix elements in a format required 
@@ -1221,13 +1222,14 @@
                            nkf1, nkf2, nkf3, efermi_read, fermi_energy
     USE pwcom,      ONLY : ef 
     USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
-                           nqtotf, wf, xqf, nkqtotf, efnew 
+                           nqtotf, wf, xqf, nkqtotf, efnew, nbndfst, nktotf 
     USE eliashbergcom, ONLY : nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
     USE superconductivity, ONLY : mem_size_eliashberg, mem_integer_size_eliashberg
     USE constants_epw, ONLY : ryd2ev, ryd2mev, two, eps8
-    USE mp,         ONLY : mp_barrier, mp_sum
-    USE mp_global,  ONLY : inter_pool_comm, my_pool_id, npool
-    USE division,   ONLY : fkbounds
+    USE mp,            ONLY : mp_barrier, mp_sum
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
+    USE division,      ONLY : fkbounds
+    USE low_lvl,       ONLY : set_ndnmbr
     !
     IMPLICIT NONE
     ! 
@@ -1236,6 +1238,14 @@
     !
     ! Local variables
     !
+    CHARACTER(LEN = 256) :: filfreq
+    !! 
+    CHARACTER(LEN = 256) :: filegnv
+    !! 
+    CHARACTER(LEN = 256) :: filephmat
+    !! 
+    CHARACTER(LEN = 3) :: filelab
+    !! 
     INTEGER :: ik
     !! Counter on the k-point index 
     INTEGER :: ikk
@@ -1264,9 +1274,9 @@
     REAL(KIND = DP) :: ef0
     !! Fermi energy level
     REAL(KIND = DP) :: wq
-    !! phonon freq
     !! phonon freq on the fine grid
     REAL(KIND = DP) :: inv_wq
+    !! 
     REAL(KIND = DP):: g2
     !! Electron-phonon matrix element square
     REAL(KIND = DP), EXTERNAL :: dos_ef
@@ -1274,26 +1284,18 @@
     REAL(KIND = DP), EXTERNAL :: efermig
     !! Return the fermi energy
     !
-    CHARACTER(LEN = 256) :: filfreq, filegnv, filephmat
-    CHARACTER (len=3) :: filelab
-    !
     ! write phonon frequencies to file
     IF (my_pool_id == 0) THEN
       filfreq = TRIM(tmp_dir) // TRIM(prefix) // '.freq'
       IF (iq == 1) THEN
-        !OPEN(iufilfreq, file = filfreq, form = 'formatted')
-        !WRITE(iufilfreq,'(2i7)') nqtotf, nmodes
-        OPEN(iufilfreq, file = filfreq, form = 'unformatted')
+        OPEN(iufilfreq, FILE = filfreq, FORM = 'unformatted')
         WRITE(iufilfreq) nqtotf, nmodes
       ELSE
-        !OPEN(iufilfreq, file = filfreq, position='append', form = 'formatted')
-        OPEN(iufilfreq, file = filfreq, position='append', form = 'unformatted')
+        OPEN(iufilfreq, FILE = filfreq, POSITION = 'append', FORM = 'unformatted')
       ENDIF
-      !WRITE(iufilfreq,'(3f15.9)') xqf(1,iq), xqf(2,iq), xqf(3,iq)
-      WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
+      WRITE(iufilfreq) xqf(1, iq), xqf(2, iq), xqf(3, iq)
       DO imode = 1, nmodes
-        !WRITE(iufilfreq,'(ES20.10)') wf(imode,iq)
-        WRITE(iufilfreq) wf(imode,iq)
+        WRITE(iufilfreq) wf(imode, iq)
       ENDDO
       CLOSE(iufilfreq)
     ENDIF
@@ -1317,7 +1319,7 @@
     !
     ! find the bounds of k-dependent arrays in the parallel case
     nkftot = nktotf 
-    CALL fkbounds( nkftot, lower_bnd, upper_bnd )
+    CALL fkbounds(nkftot, lower_bnd, upper_bnd)
     !
     IF (iq == 1) THEN
       !
@@ -1330,7 +1332,7 @@
         ikk = 2 * ik - 1
         ikq = ikk + 1
         !
-        IF (minval( ABS(etf(:,ikk) - ef  ) ) < fsthick) THEN
+        IF (MINVAL(ABS(etf(:,ikk) - ef)) < fsthick) THEN
           fermicount = fermicount + 1
         ENDIF
         !
@@ -1340,27 +1342,22 @@
       nks = fermicount
       !
       ! collect contributions from all pools (sum over k-points)
-      CALL mp_sum( nks, inter_pool_comm )
+      CALL mp_sum(nks, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
       !
       ! write eigenvalues to file
       IF (my_pool_id == 0) THEN
         filegnv = TRIM(tmp_dir) // TRIM(prefix) // '.egnv'
-        !OPEN(iufilegnv, file = filegnv, form = 'formatted')
-        OPEN(iufilegnv, file = filegnv, form = 'unformatted')
+        OPEN(iufilegnv, FILE = filegnv, FORM = 'unformatted')
         IF (nks /= nkfs ) CALL errore('write_ephmat', &
           'nks should be equal to nr. of irreducible k-points within the Fermi shell on the fine mesh',1)
-        !WRITE(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nks
-        !WRITE(iufilegnv,'(i7,5ES20.10)') nbndfst, ef, ef0, dosef, degaussw, fsthick
         WRITE(iufilegnv) nkftot, nkf1, nkf2, nkf3, nks
         WRITE(iufilegnv) nbndfst, ef, ef0, dosef, degaussw, fsthick
         DO ik = 1, nks
-           !WRITE(iufilegnv,'(4f15.9)') wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
-           WRITE(iufilegnv) wkfs(ik), xkfs(1,ik), xkfs(2,ik), xkfs(3,ik) 
-           DO ibnd = 1, nbndfst
-              !WRITE(iufilegnv,'(ES20.10)') ekfs(ibnd,ik)
-              WRITE(iufilegnv) ekfs(ibnd,ik)
-           ENDDO
+          WRITE(iufilegnv) wkfs(ik), xkfs(1, ik), xkfs(2, ik), xkfs(3, ik) 
+          DO ibnd = 1, nbndfst
+            WRITE(iufilegnv) ekfs(ibnd, ik)
+          ENDDO
         ENDDO
         CLOSE(iufilegnv)
       ENDIF
@@ -1371,7 +1368,7 @@
     ! in .ephmat files (one for each pool)
     !
 #if defined(__MPI)
-    CALL set_ndnmbr(0,my_pool_id+1,1,npool,filelab)
+    CALL set_ndnmbr(0, my_pool_id + 1, 1, npool, filelab)
     filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat' // filelab
 #else
     filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
@@ -1472,10 +1469,12 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE write_ephmat
+    !-----------------------------------------------------------------------
     !                                                                            
     !-----------------------------------------------------------------------
-    SUBROUTINE count_kpoints( iq )
+    SUBROUTINE count_kpoints(iq)
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
@@ -1483,7 +1482,7 @@
                           efermi_read, fermi_energy, mp_mesh_k
     USE pwcom,     ONLY : nelec, ef
     USE klist_epw, ONLY : isk_dummy
-    USE elph2,     ONLY : etf, nkqf, wkf, nkf, nkqtotf
+    USE elph2,     ONLY : etf, nkqf, wkf, nkf, nkqtotf, nktotf
     USE constants_epw, ONLY : two
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_global, ONLY : inter_pool_comm
@@ -1573,7 +1572,7 @@
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, fsthick, mp_mesh_k
     USE pwcom,     ONLY : ef
     USE io_epw,    ONLY : iufilikmap
-    USE elph2,     ONLY : xkf, wkf, etf, nkf, nkqtotf, ibndmin, ibndmax
+    USE elph2,     ONLY : xkf, wkf, etf, nkf, nkqtotf, ibndmin, ibndmax, nktotf, nbndfst
     USE eliashbergcom, ONLY : nkfs, ixkf, xkfs, wkfs, ekfs, nbndfs, memlt_pool
     USE superconductivity, ONLY : mem_size_eliashberg, mem_integer_size_eliashberg
     USE constants_epw, ONLY : zero
@@ -1581,6 +1580,7 @@
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
     USE division,  ONLY : fkbounds
+    USE kfold,     ONLY : backtoBZ 
     !
     IMPLICIT NONE
     !
@@ -1687,7 +1687,7 @@
          xx = xkf_(1,nk) * nkf1
          yy = xkf_(2,nk) * nkf2
          zz = xkf_(3,nk) * nkf3
-         CALL backtoBZ( xx, yy, zz, nkf1, nkf2, nkf3 )
+         CALL backtoBZ(xx, yy, zz, nkf1, nkf2, nkf3)
          xkf_(1,nk) = xx / DBLE(nkf1)
          xkf_(2,nk) = yy / DBLE(nkf2)
          xkf_(3,nk) = zz / DBLE(nkf3)
@@ -2010,10 +2010,12 @@
     ! 
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE kqmap_fine
+    !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE kpmq_map( xk, xq, sign1, nkq )
+    SUBROUTINE kpmq_map(xk, xq, sign1, nkq)
     !-----------------------------------------------------------------------
     !!
     !! this routine finds the index of k+q or k-q point on the fine k-mesh
@@ -2022,6 +2024,7 @@
     USE epwcom,    ONLY : nkf1, nkf2, nkf3
     USE constants_epw, ONLY : eps5
     USE mp,        ONLY : mp_bcast, mp_barrier
+    USE kfold,     ONLY : backtoBZ
     ! 
     IMPLICIT NONE
     !
@@ -2052,7 +2055,7 @@
     !  find the index of this k+q or k-q in the k-grid
     !  make sure xx, yy, zz are in the 1st BZ
     !
-    CALL backtoBZ( xx, yy, zz, nkf1, nkf2, nkf3 )
+    CALL backtoBZ(xx, yy, zz, nkf1, nkf2, nkf3)
     !
     ! since k- and q- meshes are commensurate, nkq can be easily found
     !

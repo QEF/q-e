@@ -8,7 +8,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------
-  MODULE cumulant
+  MODULE cum_mod
   !----------------------------------------------------------------------
   !! 
   !! This module contains the various routines use for cumulant expansion
@@ -40,7 +40,7 @@
     USE io_epw,        ONLY : iospectral_sup, iospectral_cum
     USE epwcom,        ONLY : degaussw, eptemp, wmin_specfun, wmax_specfun, nw_specfun, &
                               bnd_cum
-    USE elph2,         ONLY : ibndmin, ibndmax
+    USE elph2,         ONLY : ibndmin, ibndmax, nbndfst
     !
     IMPLICIT NONE
     !
@@ -514,7 +514,5 @@
     !-----------------------------------------------------------------------
     ! 
   !-----------------------------------------------------------------------
-  END MODULE cumulant
+  END MODULE cum_mod
   !-----------------------------------------------------------------------
-
-

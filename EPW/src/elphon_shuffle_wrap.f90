@@ -66,8 +66,8 @@
   USE becmod,        ONLY : becp, deallocate_bec_type
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
                             int4, int4_nc, int5, int5_so, alphap
-  USE kfold,         ONLY : shift
-
+  USE kfold,         ONLY : shift, createkmap_pw2, createkmap
+  USE low_lvl,       ONLY : set_ndnmbr
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -429,7 +429,7 @@
       nsymq = copy_sym(nsym, sym)    
       !
       ! Recompute the inverses as the order of sym.ops. has changed
-      CALL inverse_s(        
+      CALL inverse_s()
       CALL s_axis_to_cart()
       !
       ! This computes gi, gimq
@@ -728,7 +728,7 @@
     ENDIF
     DO ik = 1, nks
       DO ipol = 1, 3
-        CALL deallocate_bec_type alphap(ipol, ik))
+        CALL deallocate_bec_type(alphap(ipol, ik))
       ENDDO
     ENDDO
     DEALLOCATE(alphap)

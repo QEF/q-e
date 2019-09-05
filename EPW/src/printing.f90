@@ -28,7 +28,8 @@
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, nbndfst, &
-                              nkf, epf17, xkf, nkqtotf, wf, adapt_smearing
+                              nkf, epf17, xkf, nkqtotf, wf, adapt_smearing, &
+                              nktotf
     USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
@@ -210,30 +211,30 @@
     ! Only master writes
     IF (mpime == ionode_id) THEN
       !
-      WRITE(stdout, '(5x,a)') ' Electron-phonon vertex |g| (meV)'
+      WRITE(stdout, '(5x, a)') ' Electron-phonon vertex |g| (meV)'
       !
-      WRITE(stdout, '(/5x,"iq = ",i7," coord.: ", 3f12.7)') iq, xqf(:, iq)
+      WRITE(stdout, '(/5x, "iq = ", i7, " coord.: ", 3f12.7)') iq, xqf(:, iq)
       DO ik = 1, nktotf
         !
         ikk = 2 * ik - 1
         ikq = ikk + 1
         !
-        WRITE(stdout,'(5x,"ik = ",i7," coord.: ", 3f12.7)') ik, xkf_all(:, ikk)
-        WRITE(stdout, '(5x,a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
-        WRITE(stdout,'(5x,a)') REPEAT('-',78)
+        WRITE(stdout, '(5x, "ik = ", i7, " coord.: ", 3f12.7)') ik, xkf_all(:, ikk)
+        WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
+        WRITE(stdout, '(5x, a)') REPEAT('-',78)
         !
         DO ibnd = 1, nbndfst
           ekk = etf_all(ibndmin - 1 + ibnd, ikk) 
           DO jbnd = 1, nbndfst
             ekq = etf_all(ibndmin - 1 + jbnd, ikq) 
             DO nu = 1, nmodes
-              WRITE(stdout,'(3i9,3f12.4,1e20.10)') ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, nu, ryd2ev * ekk, ryd2ev * ekq, &
-                                           ryd2mev * wf(nu, iq), ryd2mev * epc(ibnd, jbnd, nu, ik)
+              WRITE(stdout, '(3i9, 3f12.4, 1e20.10)') ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, & 
+                   nu, ryd2ev * ekk, ryd2ev * ekq, ryd2mev * wf(nu, iq), ryd2mev * epc(ibnd, jbnd, nu, ik)
             ENDDO
           ENDDO  
           !
         ENDDO
-        WRITE(stdout,'(5x,a/)') REPEAT('-',78)
+        WRITE(stdout,'(5x, a/)') REPEAT('-',78)
         !
       ENDDO
     ENDIF ! master node
@@ -257,8 +258,8 @@
     USE cell_base,     ONLY : at, omega, bg
     USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
                               nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf, nbndfst 
-    USE transportcom,  ONLY : lower_bnd, transp_temp
+    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, lower_bnd, transp_temp, & 
+                              nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : s, nrot
@@ -359,10 +360,10 @@
     IF (ncarrier < -1E5) THEN
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout,'(/5x,a)') REPEAT('=',71)
-      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -379,14 +380,14 @@
                   ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb        = MATMUL(bg, sa)
-                  sr (:, :) = MATMUL(at, TRANSPOSE(sb))
-                  sr        = TRANSPOSE(sr) 
+                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                  sb       = MATMUL(bg, sa)
+                  sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+                  sr       = TRANSPOSE(sr) 
                   !
-                  CALL dgemv( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1 )
+                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1 )
                   ! 
-                  CALL dgemv( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1 )
+                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1 )
                   !
                   DO j = 1, 3
                     DO i = 1, 3
@@ -423,7 +424,7 @@
         ENDDO
         ! 
         ! Print the resulting mobility
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
         ! 
       ENDDO
       ! 
@@ -434,10 +435,10 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :)    = zero
       ! 
-      WRITE(stdout, '(/5x,a)') REPEAT('=',71)
-      WRITE(stdout, '(5x,"  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout, '(5x,"   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
-      WRITE(stdout, '(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -452,13 +453,13 @@
                   ikbz = BZtoIBZ_mat(nb, ik)
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb        = MATMUL(bg, sa)
-                  sr (:, :) = MATMUL(at, TRANSPOSE(sb))
-                  sr        = TRANSPOSE(sr)
-                  CALL dgemv( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
+                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                  sb       = MATMUL(bg, sa)
+                  sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+                  sr       = TRANSPOSE(sr)
+                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
                   ! 
-                  CALL dgemv( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1)
+                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1)
                   !
                   DO j = 1, 3
                     DO i = 1, 3
@@ -494,7 +495,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
         !
       ENDDO
       ! 
@@ -518,8 +519,8 @@
     USE cell_base,     ONLY : at, omega, bg
     USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
                               nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf, nbndfst 
-    USE transportcom,  ONLY : lower_bnd, transp_temp
+    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, &
+                              lower_bnd, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                                electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
@@ -595,10 +596,10 @@
     IF (ncarrier < -1E5) THEN
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout,'(/5x,a)') REPEAT('=',71)
-      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -631,7 +632,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
         !  
       ENDDO
       ! 
@@ -642,10 +643,10 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout,'(/5x,a)') REPEAT('=',71)
-      WRITE(stdout,'(5x,"  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -680,7 +681,7 @@
           ENDDO
         ENDDO
         !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
         ! 
       ENDDO
       ! 
@@ -703,8 +704,8 @@
     USE cell_base,     ONLY : at, bg
     USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
                               nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf, nbndfst 
-    USE transportcom,  ONLY : lower_bnd, transp_temp
+    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, &
+                              lower_bnd, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ, eps80
     USE symm_base,     ONLY : s, nrot
@@ -807,10 +808,10 @@
     IF (ncarrier < -1E5) THEN ! If true print hole
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout,'(/5x,a)') REPEAT('=',71)
-      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -826,14 +827,14 @@
                   ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb        = MATMUL(bg, sa)
-                  sr (:, :) = MATMUL(at, TRANSPOSE(sb))
-                  sr        = TRANSPOSE(sr)
+                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                  sb       = MATMUL(bg, sa)
+                  sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+                  sr       = TRANSPOSE(sr)
                   ! 
-                  CALL dgemv('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
                   ! 
-                  CALL dgemv('n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1, 0.d0, Fi_rot(:), 1)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1, 0.d0, Fi_rot(:), 1)
                   !
                   DO j = 1, 3
                     DO i = 1, 3
@@ -869,7 +870,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
         ! 
       ENDDO
       ! 
@@ -879,10 +880,10 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout,'(/5x,a)') REPEAT('=',71)
-      WRITE(stdout,'(5x,"  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -898,14 +899,14 @@
                   ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb        = MATMUL(bg, sa)
-                  sr (:, :) = MATMUL(at, TRANSPOSE (sb))
-                  sr        = TRANSPOSE(sr)
+                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                  sb       = MATMUL(bg, sa)
+                  sr(:, :) = MATMUL(at, TRANSPOSE (sb))
+                  sr       = TRANSPOSE(sr)
                   ! 
-                  CALL dgemv( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0 ,v_rot(:), 1 )
+                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0 ,v_rot(:), 1 )
                   ! 
-                  CALL dgemv( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1, 0.d0, Fi_rot(:), 1 )
+                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1, 0.d0, Fi_rot(:), 1 )
                   !
                   DO j = 1, 3
                     DO i = 1, 3
@@ -941,7 +942,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
         ! 
       ENDDO
       ! 
@@ -964,8 +965,8 @@
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : omega 
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf, nbndfst 
-    USE transportcom,  ONLY : transp_temp
+    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, transp_temp, &
+                              nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ, eps80
     USE noncollin_module, ONLY : noncolin
@@ -1044,10 +1045,10 @@
     IF (ncarrier < -1E5) THEN ! If true print hole
       sigma(:, :, :)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') REPEAT('=',71)
-      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -1082,7 +1083,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
         ! 
       ENDDO
       ! 
@@ -1092,10 +1093,10 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') REPEAT('=',71)
-      WRITE(stdout,'(5x,"  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',71)
+      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -1130,7 +1131,7 @@
           ENDDO
         ENDDO
         !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
         ! 
       ENDDO
       ! 
@@ -1143,7 +1144,7 @@
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0) 
+    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, etemp) 
     !-----------------------------------------------------------------------
     !! 
     !! This routine print the mobility in a nice format and in proper units.
@@ -1159,29 +1160,33 @@
     REAL(KIND = DP), INTENT(in) :: sigma(3, 3)
     !! Conductivity tensor
     REAL(KIND = DP), INTENT(in) :: carrier_density
-    !! Carrier density in cm^-3
+    !! Carrier density in a.u.
     REAL(KIND = DP), INTENT(in) :: Fi_check(3)
     !! Integrated population vector
     REAL(KIND = DP), INTENT(in) :: ef0
     !! Fermi-level 
+    REAL(KIND = DP), INTENT(in) :: etemp
+    !! Temperature in Ry (this includes division by kb)
     ! 
     ! Local variables
     REAL(KIND = DP) :: mobility(3, 3)
     !! mobility 
     REAL(KIND = DP) :: inv_cell
     !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND = DP) :: nden
+    !! Carrier density in cm^-3
     ! 
     inv_cell = 1.0d0 / omega
     ! carrier_density in cm^-1
-    carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-    IF (ABS(carrier_density) < eps80) CALL errore('print_mob_sym', 'The carrier density is 0', 1)
+    nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+    IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
     ! 
-    mobility(:, :) = (sigma(:, :) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+    mobility(:, :) = (sigma(:, :) * electron_SI * (bohr2ang * ang2cm)**2) / (nden * hbarJ)
     ! 
     WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
-          carrier_density, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
-    WRITE(stdout,'(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
-    WRITE(stdout,'(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+           nden, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+    WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
+    WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
     ! 
     !-----------------------------------------------------------------------
     END SUBROUTINE prtmob
