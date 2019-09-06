@@ -1699,7 +1699,7 @@ MODULE cp_restart_new
     !
     DO iss = 1, nspin
        !
-       CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
+       CALL collect_zmat( mrepl, mat_z(:,:,iss), idesc(:,iss) )
        !
        filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
        !
