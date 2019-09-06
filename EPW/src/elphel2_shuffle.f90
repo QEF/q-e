@@ -62,7 +62,7 @@
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : stdout
   USE wavefunctions, ONLY : evc
-  USE io_files,      ONLY : diropn, seqopn
+  USE io_files,      ONLY : diropn
   USE wvfct,         ONLY : npwx
   USE pwcom,         ONLY : current_spin, lsda, nbnd, nks
   USE klist_epw,     ONLY : xk_loc, xk_all, isk_loc, et_all

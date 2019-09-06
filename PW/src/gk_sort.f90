@@ -8,25 +8,34 @@
 !----------------------------------------------------------------------------
 SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    !----------------------------------------------------------------------------
+   !! Sorts k+g in order of increasing magnitude, up to ecut.
    !
-   ! ... sorts k+g in order of increasing magnitude, up to ecut
-   ! ... NB: this version should yield the same ordering for different ecut
-   ! ...     and the same ordering in all machines AS LONG AS INPUT DATA
-   ! ...     IS EXACTLY THE SAME
+   !! NB: this version should yield the same ordering for different ecut
+   !!     and the same ordering in all machines AS LONG AS INPUT DATA
+   !!     IS EXACTLY THE SAME
    !
-   USE kinds,     ONLY : DP
-   USE constants, ONLY : eps8
-   USE wvfct,     ONLY : npwx
+   USE kinds,      ONLY: DP
+   USE constants,  ONLY: eps8
+   USE wvfct,      ONLY: npwx
    !
    IMPLICIT NONE
    !
-   REAL(DP), INTENT(in) :: k(3)      ! the k point
-   INTEGER, INTENT(in) :: ngm        ! the number of g vectors
-   REAL(DP), INTENT(in) :: g(3,ngm)  ! the coordinates of G vectors
-   REAL(DP), INTENT(in) :: ecut      ! the cut-off energy
-   INTEGER, INTENT(out) :: ngk       ! the number of k+G vectors inside the "ecut sphere"
-   INTEGER, INTENT(out) :: igk(npwx) ! the correspondence k+G <-> G
-   REAL(DP), INTENT(out) :: gk(npwx) ! the moduli of k+G
+   REAL(DP), INTENT(IN)  :: k(3)
+   !! the k point
+   INTEGER,  INTENT(IN)  :: ngm
+   !! the number of g vectors
+   REAL(DP), INTENT(IN)  :: g(3,ngm)
+   !! the coordinates of G vectors
+   REAL(DP), INTENT(IN)  :: ecut
+   !! the cut-off energy
+   INTEGER,  INTENT(OUT) :: ngk
+   !! the number of k+G vectors inside the "ecut sphere"
+   INTEGER,  INTENT(OUT) :: igk(npwx)
+   !! the correspondence k+G <-> G
+   REAL(DP), INTENT(OUT) :: gk(npwx)
+   !! the moduli of k+G
+   !
+   !  ... local variables
    !
    INTEGER :: ng   ! counter on   G vectors
    INTEGER :: nk   ! counter on k+G vectors
@@ -35,15 +44,15 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    !
    ! ... first we count the number of k+G vectors inside the cut-off sphere
    !
-   q2x = ( sqrt( sum(k(:)**2) ) + sqrt( ecut ) )**2
+   q2x = ( SQRT( SUM(k(:)**2) ) + SQRT( ecut ) )**2
    !
    ngk = 0
    igk(:) = 0
-   gk (:) = 0.0_dp
+   gk (:) = 0.0_DP
    !
    DO ng = 1, ngm
-      q = sum( ( k(:) + g(:,ng) )**2 )
-      IF(q<=eps8) q=0.d0
+      q = SUM( ( k(:) + g(:,ng) )**2 )
+      IF ( q <= eps8 ) q = 0.0_DP
       !
       ! ... here if |k+G|^2 <= Ecut
       !
@@ -58,12 +67,12 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
          igk(ngk) = ng
       ELSE
          ! if |G| > |k| + SQRT( Ecut )  stop search and order vectors
-         IF ( sum( g(:,ng)**2 ) > ( q2x + eps8 ) ) exit
+         IF ( SUM( g(:,ng)**2 ) > ( q2x + eps8 ) ) EXIT
       ENDIF
    ENDDO
    !
    IF ( ng > ngm ) &
-      CALL infomsg( 'gk_sort', 'unexpected exit from do-loop')
+      CALL infomsg( 'gk_sort', 'unexpected exit from do-loop' )
    !
    ! ... order vector gk keeping initial position in index
    !
@@ -72,7 +81,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    ! ... now order true |k+G|
    !
    DO nk = 1, ngk
-      gk(nk) = sum( (k(:) + g(:,igk(nk)) )**2 )
+      gk(nk) = SUM( (k(:) + g(:,igk(nk)) )**2 )
    ENDDO
    !
 END SUBROUTINE gk_sort

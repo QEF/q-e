@@ -92,36 +92,18 @@ build:intel:
     - rm -r /tmp/save
 
 
-# build:cudafortran:
-#   tags: [galileo]
-#   script:
-#     - module load profile/advanced pgi/17.10 cuda/8.0.61
-#     - ./configure --enable-openmp --with-cuda=$CUDA_HOME
-#     - make pw cp
-#     - make clean
-#     - ./configure --disable-parallel --with-cuda=$CUDA_HOME
-#     - export OMP_NUM_THREADS=1
-#     - make pw cp
-#     - cd test-suite
-#     - mkdir -p /tmp/save
-#     - make run-tests-pw-serial
-#     - make run-tests-cp-serial
-#     - rm -r /tmp/save
-
-build:cudafortran:
-  tags: [galileo]
+pgi cuda mpi:
+  tags: [k80]
   script:
     - module purge
-    - module load profile/global pgi/17.10 cuda/8.0.61
-    - module list
-    - ./configure --enable-openmp --with-cuda=$CUDA_HOME
-    - make pw cp
+    - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
+    - ./configure --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
+    - make -j pw
+    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+    - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
+    - cd test-suite
+    - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
     - make clean
-    - ./configure --disable-parallel --with-cuda=$CUDA_HOME
-    - make pw cp
-    #- cd test-suite
-    #- mkdir -p /tmp/save
-    #- make run-tests-pw-serial
-    #- make run-tests-cp-serial
-    #- rm -r /tmp/save
-
+    - make run-tests-pw-parallel
+    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
+    - make clean && make run-tests-pw-parallel

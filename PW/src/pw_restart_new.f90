@@ -19,7 +19,6 @@ MODULE pw_restart_new
   USE qes_types_module
   USE qes_write_module, ONLY: qes_write
   USE qes_reset_module, ONLY: qes_reset 
-  USE qes_init_module, ONLY: qes_init
   USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf
   USE qexsd_input,  ONLY: qexsd_input_obj
   USE qexsd_init,   ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
@@ -32,7 +31,7 @@ MODULE pw_restart_new
                           qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid,&
                           qexsd_init_dftU, qexsd_init_vdw
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix
+  USE io_files,  ONLY : iunpun, xmlfile
   !
   IMPLICIT NONE
   !
@@ -65,18 +64,15 @@ MODULE pw_restart_new
       USE uspp_param,           ONLY : upf
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, ibrav
-      USE gvect,                ONLY : ig_l2g
-      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv
+      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : nwordwfc, iunwfc, psfile
-      USE buffers,              ONLY : get_buffer
-      USE wavefunctions, ONLY : evc
+      USE io_files,             ONLY : psfile, pseudo_dir
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, tot_charge, ltetra 
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        nks_start, xk_start, wk_start
-      USE gvect,                ONLY : ngm, ngm_g, g, mill
+      USE gvect,                ONLY : ngm, ngm_g, g
       USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
@@ -98,7 +94,6 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
-      USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_short, get_inlc, get_nonlocc_name, dft_is_nonlocc
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
@@ -130,9 +125,7 @@ MODULE pw_restart_new
       USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, &
               qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
-      USE io_files,             ONLY : pseudo_dir
       USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
-      USE input_parameters,     ONLY :  ts_vdw_econv_thr, ts_vdw_isolated
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
       USE martyna_tuckerman,    ONLY : do_comp_mt 
@@ -143,7 +136,6 @@ MODULE pw_restart_new
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
       CHARACTER(LEN=20)     :: dft_name
-      CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=8)      :: smearing_loc
       CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
@@ -224,8 +216,6 @@ MODULE pw_restart_new
       ! 
       ! XML descriptor
       ! 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-      !
       IF ( ionode ) THEN  
          !
          ! ... here we init the variables and finally write them to file
@@ -409,9 +399,9 @@ MODULE pw_restart_new
                     dftd3_threebody_pt => dftd3_threebody_
                 ELSE IF ( ts_vdw ) THEN
                     dispersion_energy_term = 2._DP * EtsvdW/e2
-                    ts_vdw_isolated_ = ts_vdw_isolated
+                    ts_vdw_isolated_ = vdw_isolated
                     ts_vdw_isolated_pt => ts_vdw_isolated_
-                    ts_vdw_econv_thr_ = ts_vdw_econv_thr
+                    ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
                 END IF
             END IF 
@@ -658,8 +648,7 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
  10      CONTINUE
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), &
-              iunpun, 'PWSCF', title )
+         CALL qexsd_openschema( xmlfile(), iunpun, 'PWSCF', title )
          CALL qes_write (qexsd_xf,output)
          CALL qes_reset (output) 
          CALL qexsd_closeschema()
@@ -691,7 +680,7 @@ MODULE pw_restart_new
       !
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : write_wfc
-      USE io_files,             ONLY : iunwfc, nwordwfc
+      USE io_files,             ONLY : restart_dir, iunwfc, nwordwfc
       USE cell_base,            ONLY : tpiba, alat, bg
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
@@ -721,7 +710,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+      dirname = restart_dir () 
       !
       ! ... write wavefunctions and k+G vectors
       !

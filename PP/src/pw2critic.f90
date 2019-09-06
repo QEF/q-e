@@ -105,7 +105,7 @@ PROGRAM pw2critic
   WRITE (lu1) atm(1:nsp)
   WRITE (lu1) ityp(1:nat)
   WRITE (lu1) tau(:,1:nat) * alat
-  WRITE (lu1) at(1:3,1:3) * alat
+  WRITE (lu1) at(1:3,1:3)
 
   ! global info for the wavefunction
   write (lu1) nk, nbnd, nspin, gamma_only

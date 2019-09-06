@@ -1535,8 +1535,6 @@ pw_restart_new.o : ../../Modules/mp_bands.o
 pw_restart_new.o : ../../Modules/mp_pools.o
 pw_restart_new.o : ../../Modules/noncol.o
 pw_restart_new.o : ../../Modules/paw_variables.o
-pw_restart_new.o : ../../Modules/qes_init_module.o
-pw_restart_new.o : ../../Modules/qes_read_module.o
 pw_restart_new.o : ../../Modules/qes_reset_module.o
 pw_restart_new.o : ../../Modules/qes_types_module.o
 pw_restart_new.o : ../../Modules/qes_write_module.o

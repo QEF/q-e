@@ -26,7 +26,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE ions_base,        ONLY : tau, nat, ityp, zv
   USE ener,             ONLY : etot, ef
   USE force_mod,        ONLY : force
-  USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, seqopn, &
+  USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, &
                                exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para

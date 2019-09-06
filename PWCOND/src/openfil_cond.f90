@@ -10,14 +10,12 @@
 SUBROUTINE openfil_cond()
   !----------------------------------------------------------------------------
   !
-  ! ... This routine opens some files needed by pwcond,
+  ! ... This routine opens some files needed by pwcond
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
   USE wvfct,            ONLY : nbnd, npwx
-  USE io_files,         ONLY : prefix, iunpun, iunsat, iunwfc, &
-                               nwordwfc, nwordatwfc, iunefield, &
-                               iunefieldm, iunefieldp
+  USE io_files,         ONLY : iunwfc, nwordwfc
   USE noncollin_module, ONLY : npol
   USE buffers,          ONLY : open_buffer
   USE control_flags,    ONLY : io_level

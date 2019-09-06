@@ -25,7 +25,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE ener,             ONLY : etot
   USE f90sockets,       ONLY : readbuffer, writebuffer
   USE extrapolation,    ONLY : update_file, update_pot
-  USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, tmp_dir, postfix, &
+  USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, restart_dir, &
                                wfc_dir, delete_if_present, seqopn
   !
   IMPLICIT NONE
@@ -40,6 +40,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   LOGICAL :: isinit=.false., hasdata=.false., exst, firststep
   CHARACTER*12 :: header
   CHARACTER*1024 :: parbuffer
+  CHARACTER(LEN=256) :: dirname
   INTEGER :: socket, nat, rid, ccmd, i, info, rid_old=-1
   REAL*8 :: sigma(3,3), omega_reset, at_reset(3,3), dist_reset, ang_reset
   REAL *8 :: cellh(3,3), cellih(3,3), vir(3,3), pot, mtxbuffer(9)
@@ -358,8 +359,9 @@ CONTAINS
     CALL delete_if_present(TRIM( wfc_dir ) // TRIM( prefix ) // '.oldwfc' // nd_nmbr)
     CALL delete_if_present(TRIM( wfc_dir ) // TRIM( prefix ) // '.old2wfc' // nd_nmbr)
     IF ( ionode ) THEN
-       CALL delete_if_present(TRIM( tmp_dir ) // TRIM( prefix ) // postfix // 'charge-density.old.dat')
-       CALL delete_if_present(TRIM( tmp_dir ) // TRIM( prefix ) // postfix // 'charge-density.old2.dat')
+       dirname = restart_dir ( )
+       CALL delete_if_present(TRIM( dirname ) // 'charge-density.old.dat')
+       CALL delete_if_present(TRIM( dirname ) // 'charge-density.old2.dat')
        !
        ! ... The easiest way to wipe the iunupdate unit, is to delete it
        ! ... and run update_file(), which will recreate the file

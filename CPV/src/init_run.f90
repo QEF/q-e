@@ -62,8 +62,7 @@ SUBROUTINE init_run()
   USE efield_module,            ONLY : allocate_efield, allocate_efield2
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
-  USE io_files,                 ONLY : tmp_dir, prefix, create_directory, &
-       restart_dir
+  USE io_files,                 ONLY : tmp_dir, create_directory, restart_dir
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
@@ -104,12 +103,13 @@ SUBROUTINE init_run()
   IF( nbgrp > 1 .AND. force_pairing ) &
      CALL errore( ' init_run ', ' force_pairing with parallelization over bands not implemented yet ', 1 )
   !
-  CALL printout_base_init( tmp_dir, prefix )
+  ! ... Open files containing MD information
   !
-  dirname = restart_dir( tmp_dir, ndw )
+  CALL printout_base_init( )
   !
   ! ... Create main restart directory
   !
+  dirname = restart_dir( ndw )
   CALL create_directory( dirname )
   !
   ! ... initialize g-vectors, fft grids 

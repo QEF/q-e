@@ -56,7 +56,7 @@ SUBROUTINE loadqmesh_para
        !
     ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
        IF (mp_mesh_q) THEN
-          IF (lscreen) CALL errore ('If lscreen=.true. do not use mp_mesh_q',1)
+          IF (lscreen) CALL errore ('loadqmesh','If lscreen=.true. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge 
           WRITE (stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl ( )
@@ -226,7 +226,7 @@ SUBROUTINE loadqmesh_serial
        !
     ELSEIF ( (nqf1.ne.0) .and. (nqf2.ne.0) .and. (nqf3.ne.0) ) THEN ! generate grid
        IF (mp_mesh_q) THEN
-          IF (lscreen) CALL errore ('If lscreen=.true. do not use mp_mesh_q',1)
+          IF (lscreen) CALL errore ('loadqmesh','If lscreen=.true. do not use mp_mesh_q',1)
           ! get size of the mp_mesh in the irr wedge 
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl ( )

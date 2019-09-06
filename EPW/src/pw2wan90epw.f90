@@ -725,9 +725,6 @@
   USE uspp_param,      ONLY : upf
   USE noncollin_module,ONLY : noncolin, npol
   USE constants_epw,   ONLY : czero, cone, zero, eps6
-#if defined(__NAG)
-  USE f90_unix_io,     ONLY : flush
-#endif
   USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
   USE mp,              ONLY : mp_sum
   ! 
@@ -814,7 +811,7 @@
     ik_g = nkq_abs
     !
     WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
-    CALL FLUSH(stdout)
+    FLUSH(stdout)
     ! SP: Replaced by our wrapper to deal with parallel
     CALL readwfc( my_pool_id+1, ik, evc ) 
     !
@@ -1258,7 +1255,7 @@
     ik_g = nkq_abs
     !
     WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
-    CALL flush(stdout)
+    FLUSH(stdout)
     !
     ! read wfc at k
     CALL readwfc( my_pool_id+1, ik, evc )
