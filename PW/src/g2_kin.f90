@@ -7,11 +7,10 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE g2_kin ( ik )
+SUBROUTINE g2_kin( ik )
   !----------------------------------------------------------------------------
-  !
-  ! ... Calculation of kinetic energy - includes the case of the modified
-  ! ... kinetic energy functional for variable-cell calculations
+  !! Calculation of kinetic energy - includes the case of the modified
+  !! kinetic energy functional for variable-cell calculations.
   !
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : tpiba2 
@@ -22,7 +21,7 @@ SUBROUTINE g2_kin ( ik )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT (IN) :: ik
+  INTEGER, INTENT(IN) :: ik
   !
   ! ... local variables
   !

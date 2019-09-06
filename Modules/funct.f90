@@ -422,7 +422,7 @@ CONTAINS
     ENDDO
     !
     ! ----------------------------------------------
-    ! FIRST WE CHECK ALL THE SHORT NAMES
+    ! NOW WE CHECK ALL THE SHORT NAMES
     ! Note: comparison is done via exact matching
     ! ----------------------------------------------
     !
@@ -621,6 +621,35 @@ CONTAINS
               dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
               &//gradc (igcc) //'-'// nonlocc(inlc)
        ENDIF
+       !
+       ! ----------------------------------------------------------------------
+       ! CHECK LIBXC FUNCTIONALS BY INDEX NOTATION, IF PRESENT (USED in PHonon)
+       ! ----------------------------------------------------------------------
+       !
+       IF (dftout(1:3) .EQ. 'XC-') THEN
+#if defined(__LIBXC)
+          is_libxc = .FALSE.
+          !
+          READ( dftout(4:6),   * ) iexch
+          READ( dftout(8:10),  * ) icorr
+          READ( dftout(12:14), * ) igcx
+          READ( dftout(16:18), * ) igcc
+          imeta  = 0
+          imetac = 0 
+          inlc   = 0
+          !
+          IF (iexch /= 0) is_libxc(1) = .TRUE.
+          IF (icorr /= 0) is_libxc(2) = .TRUE.
+          IF (igcx  /= 0) is_libxc(3) = .TRUE.
+          IF (igcc  /= 0) is_libxc(4) = .TRUE.
+          !
+          dft_defined = .TRUE.
+#else
+          CALL errore( 'set_dft_from_name', 'libxc functionals needed, but &
+                                            &libxc is not active', 1 )
+#endif
+       ENDIF
+       !
     END SELECT
     !
     !
@@ -811,7 +840,7 @@ CONTAINS
          DO j = 1, length-ii
             IF (dft(ii+j:ii+j) .EQ. ' ') EXIT
          ENDDO
-       ELSE IF ( dft(ii-1:ii-1).EQ.' ' ) THEN
+       ELSEIF (dft(ii-1:ii-1).EQ. ' ') THEN
          DO j = 1, length-ii
             IF (dft(ii+j:ii+j) .EQ. ' ') EXIT
          ENDDO
@@ -1284,8 +1313,8 @@ CONTAINS
   FUNCTION get_dft_short()
     !---------------------------------------------------------------------
     !
-    CHARACTER(LEN=12) :: get_dft_short
-    CHARACTER(LEN=12) :: shortname
+    CHARACTER(LEN=18) :: get_dft_short
+    CHARACTER(LEN=18) :: shortname
     !
     shortname = 'no shortname'
     !
@@ -1398,6 +1427,16 @@ CONTAINS
     ELSEIF (inlc==3) THEN
        shortname = 'RVV10'
     ENDIF
+    !
+#if defined(__LIBXC)
+    IF ( ANY(is_libxc(:)) ) THEN
+       shortname = 'XC-000-000-000-000'
+       WRITE( shortname(4:6),   '(i3.3)' ) iexch
+       WRITE( shortname(8:10),  '(i3.3)' ) icorr
+       WRITE( shortname(12:14), '(i3.3)' ) igcx
+       WRITE( shortname(16:18), '(i3.3)' ) igcc
+    ENDIF
+#endif
     !
     get_dft_short = shortname
     !

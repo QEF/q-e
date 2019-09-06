@@ -30,7 +30,7 @@ SUBROUTINE openfilq()
   USE wvfct,          ONLY : nbnd, npwx
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
-  USE io_files,       ONLY : prefix,tmp_dir, diropn,seqopn
+  USE io_files,       ONLY : prefix,tmp_dir, diropn
   USE noncollin_module, ONLY : npol, nspin_mag
   USE mp_pools,       ONLY : me_pool
   USE io_global,      ONLY : ionode

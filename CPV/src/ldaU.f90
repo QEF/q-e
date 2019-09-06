@@ -259,7 +259,7 @@
         ! poor-man parallelization over bands
         ! - if nproc_pool=1   : nb_s=1, nb_e=n, mykey=0
         ! - if nproc_pool<=nbnd:each processor calculates band nb_s to nb_e; mykey=0
-        ! - if nproc_pool>nbnd :each processor takes care of band na_s=nb_e;
+        ! - if nproc_pool>nbnd :each processor takes care of band nb_s=nb_e;
         !   mykey labels how many times each band appears (mykey=0 first time etc.)
         !
         CALL block_distribute( n, me_pool, nproc_pool, nb_s, nb_e, mykey )

@@ -13,8 +13,7 @@ SUBROUTINE read_file()
   ! Wrapper routine for backwards compatibility
   !
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, postfix, &
-       tmp_dir, wfc_dir
+  USE io_files,             ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer
   USE wvfct,                ONLY : nbnd, npwx
   USE noncollin_module,     ONLY : npol
@@ -36,7 +35,7 @@ SUBROUTINE read_file()
   !
   ! ... Read the contents of the xml data file
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  dirname = restart_dir( )
   WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
@@ -96,7 +95,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE gvecw,           ONLY : ecutwfc
   USE fft_base,        ONLY : dfftp, dffts
   USE io_global,       ONLY : stdout, ionode, ionode_id
-  USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur
+  USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur, &
+                              restart_dir, xmlfile
   USE mp_global,       ONLY : nproc_file, nproc_pool_file, &
                               nproc_image_file, ntask_groups_file, &
                               nproc_bgrp_file, nproc_ortho_file
@@ -114,7 +114,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
        edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
        relaxz, block, block_1, block_2, block_height
-  USE io_files,        ONLY : tmp_dir, prefix, postfix, xmlpun_schema
   USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                               sname, inverse_s, s_axis_to_cart, &
                               time_reversal, no_t_rev, nosym, checkallsym
@@ -173,7 +172,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   TYPE (input_type)         :: input_obj
   !
   !
-  filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // TRIM(xmlpun_schema)
+  filename = xmlfile ( )
   !
 #if defined(__BEOWULF)
    IF (ionode) THEN
@@ -199,7 +198,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        nproc_pool_file, nproc_image_file, ntask_groups_file, &
        nproc_bgrp_file, nproc_ortho_file)
   !
-  pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  pseudo_dir_cur = restart_dir ( )
   CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
        nsp, atm, amass, angle1, angle2, starting_magnetization, &
        psfile, pseudo_dir ) 

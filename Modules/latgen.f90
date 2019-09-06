@@ -323,6 +323,7 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      a3(1) = a1(1)
      a3(3) =-a1(3)
   ELSEIF (ibrav == -13) THEN
+     CALL infomsg('latgen','BEWARE: axis for ibrav=-13 changed, see documentation!')
      !
      !     One face centered monoclinic lattice unique axis b
      !
@@ -332,9 +333,9 @@ SUBROUTINE latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      sen = sqrt( 1.d0 - celldm(5) ** 2 )
      a1(1) = 0.5d0 * celldm(1)
-     a1(2) =-a1(1) * celldm(2)
-     a2(1) = a1(1)
-     a2(2) =-a1(2)
+     a1(2) = a1(1) * celldm(2)
+     a2(1) =-a1(1)
+     a2(2) = a1(2)
      a3(1) = celldm(1) * celldm(3) * celldm(5)
      a3(3) = celldm(1) * celldm(3) * sen
      !

@@ -36,7 +36,7 @@ SUBROUTINE setup()
   USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
-  USE io_files,           ONLY : tmp_dir, prefix, postfix, xmlpun_schema
+  USE io_files,           ONLY : xmlfile
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
@@ -92,7 +92,6 @@ SUBROUTINE setup()
   INTEGER  :: na, is, ierr, ibnd, ik, nrot_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
-  CHARACTER(LEN=320) :: filename
   !
   LOGICAL, EXTERNAL  :: check_para_diag
   !
@@ -164,10 +163,9 @@ SUBROUTINE setup()
      !
      ! ... in these cases, we need to read the Fermi energy
      !
-     filename = TRIM( tmp_dir ) // TRIM( prefix ) // postfix // xmlpun_schema
-     ierr = qexsd_readschema( filename , output_obj )
+     ierr = qexsd_readschema( xmlfile() , output_obj )
      IF (ierr > 0) CALL errore( 'setup ', 'problem reading ef from file ' // &
-             & TRIM(filename), ierr )
+             & TRIM(xmlfile()), ierr )
      CALL qexsd_copy_efermi ( output_obj%band_structure, &
           nelec, ef, two_fermi_energies, ef_up, ef_dw )
      CALL qes_reset  ( output_obj )

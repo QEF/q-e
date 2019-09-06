@@ -439,7 +439,7 @@
   IF (meta_ionode) THEN
     !
     WRITE(stdout, '(/5x,a)') 'Calculating kgmap'
-    CALL flush(stdout)
+    FLUSH(stdout)
     !
     OPEN(iukgmap,file = TRIM(prefix)//'.kgmap',FORM='formatted')
     ! 

@@ -666,7 +666,7 @@
   REAL(DP), ALLOCATABLE :: m_loc(:,:)
   !
   WRITE(stdout,'(/5x,"Reading interatomic force constants"/)')
-  CALL flush(stdout)
+  FLUSH(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
   IF (.NOT. ALLOCATED (zstar) ) ALLOCATE ( zstar(3,3,nat) )

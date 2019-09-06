@@ -9,6 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
+  !! Calls the xc GGA drivers and calculates total energy and potential.
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
@@ -72,9 +73,9 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   ALLOCATE( v1c(dfftp%nnr,nspin0), v2c(dfftp%nnr,nspin0) )
   !
   IF ( nspin==4 .AND. domag ) THEN
-     ALLOCATE( vgg( dfftp%nnr, nspin0 ) )
-     ALLOCATE( vsave( dfftp%nnr, nspin ) )
-     ALLOCATE( segni( dfftp%nnr ) )
+     ALLOCATE( vgg(dfftp%nnr,nspin0)  )
+     ALLOCATE( vsave(dfftp%nnr,nspin) )
+     ALLOCATE( segni(dfftp%nnr) )
      vsave=v
      v=0._DP
   ENDIF
@@ -216,7 +217,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   DEALLOCATE( v1x, v2x )
   DEALLOCATE( v1c, v2c )
   !
-  ALLOCATE( dh( dfftp%nnr ) )    
+  ALLOCATE( dh(dfftp%nnr) )    
   !
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
@@ -233,19 +234,20 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   vtxc = vtxc + omega * vtxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
   etxc = etxc + omega * etxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
-
-  IF (nspin==4.AND.domag) THEN
-     DO is=1,nspin0
-        vgg(:,is)=v(:,is)
+  !
+  IF (nspin==4 .AND. domag) THEN
+     DO is = 1, nspin0
+        vgg(:,is) = v(:,is)
      ENDDO
-     v=vsave
-     DO k=1,dfftp%nnr
-        v(k,1)=v(k,1)+0.5d0*(vgg(k,1)+vgg(k,2))
-        amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
-        IF (amag>1.d-12) THEN
-           v(k,2)=v(k,2)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,2)/amag
-           v(k,3)=v(k,3)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,3)/amag
-           v(k,4)=v(k,4)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,4)/amag
+     !
+     v = vsave
+     DO k = 1, dfftp%nnr
+        v(k,1) = v(k,1) + 0.5d0*(vgg(k,1)+vgg(k,2))
+        amag = SQRT(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
+        IF (amag > 1.d-12) THEN
+           v(k,2) = v(k,2) + segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,2)/amag
+           v(k,3) = v(k,3) + segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,3)/amag
+           v(k,4) = v(k,4) + segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,4)/amag
         ENDIF
      ENDDO
   ENDIF
@@ -254,7 +256,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   DEALLOCATE( h )
   DEALLOCATE( grho2 )
   DEALLOCATE( rhoaux )
-  IF (nspin==4.and.domag) THEN
+  IF (nspin==4 .AND. domag) THEN
      DEALLOCATE( vgg )
      DEALLOCATE( vsave )
      DEALLOCATE( segni )

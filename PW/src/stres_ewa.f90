@@ -15,7 +15,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   USE kinds
   USE constants, only : tpi, e2, eps6
-  USE mp_bands,  ONLY : intra_bgrp_comm
+  USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,        ONLY : mp_sum
   USE Coul_cut_2D, ONLY: do_cutoff_2D, cutoff_stres_sigmaewa
 
@@ -23,18 +23,17 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   !   first the dummy variables
   !
-
-  integer :: nat, ntyp, ityp (nat), ngm, gstart
+  integer, intent(in) :: nat, ntyp, ityp (nat), ngm, gstart
   ! input: number of atoms in the unit cell
   ! input: number of different types of atoms
   ! input: the type of each atom
   ! input: number of plane waves for G sum
   ! input: first nonzero g vector
 
-  logical :: gamma_only
+  logical, intent(in) :: gamma_only
 
-  real(DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
-       at (3, 3), bg (3, 3), omega, alat, gcutm, sigmaewa (3, 3)
+  real(DP), intent(in) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+       at (3, 3), bg (3, 3), omega, alat, gcutm
   ! input: the positions of the atoms in the cell
   ! input: the coordinates of G vectors
   ! input: the square moduli of G vectors
@@ -44,6 +43,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! input: the volume of the unit cell
   ! input: measure of length
   ! input: cut-off of g vectors
+  real(DP), intent(out) ::  sigmaewa (3, 3)
   ! output: the ewald stress
   !
   !    here the local variables
@@ -57,6 +57,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! counter on atoms
   ! counter on atoms
   ! number of R vectors included in r sum
+  integer :: na_s, na_e, mykey
 
   real(DP) :: charge, arg, tpiba2, dtau (3), alpha, r (3, mxr), &
        r2 (mxr), rmax, rr, upperbound, fact, fac, g2, g2a, sdewald, sewald
@@ -137,25 +138,26 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      sigmaewa (l, l) = sigmaewa (l, l) + sdewald
   enddo
   !
-  ! R-space sum here (only for the processor that contains G=0)
+  ! R-space sum here (see ewald.f90 for details on parallelization)
   !
-  if (gstart.eq.2) then
+  CALL block_distribute( nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
+  IF ( mykey == 0 ) THEN
      rmax = 4.0d0 / sqrt (alpha) / alat
      !
      ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
      !
-     do na = 1, nat
+     do na = na_s, na_e
         do nb = 1, nat
-              dtau (:) = tau (:, na) - tau (:, nb)
+           dtau (:) = tau (:, na) - tau (:, nb)
            !
            !     generates nearest-neighbors shells r(i)=R(i)-dtau(i)
            !
            call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
            do nr = 1, nrm
               rr = sqrt (r2 (nr) ) * alat
-              fac = - e2 / 2.0d0 / omega * alat**2 * zv (ityp (na) ) * &
+              fac = - e2 / 2.0_dp/ omega * alat**2 * zv (ityp (na) ) * &
                    zv ( ityp (nb) ) / rr**3 * (qe_erfc (sqrt (alpha) * rr) + &
-                   rr * sqrt (8 * alpha / tpi) * exp ( - alpha * rr**2) )
+                   rr * sqrt (8.0_dp * alpha / tpi) * exp ( - alpha * rr**2) )
               do l = 1, 3
                  do m = 1, l
                     sigmaewa (l, m) = sigmaewa (l, m) + fac * r(l,nr) * r(m,nr)

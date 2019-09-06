@@ -204,6 +204,14 @@ cplib_meta.o : ../../UtilXlib/mp.o
 cplib_meta.o : energies.o
 cplib_meta.o : modules.o
 cplib_meta.o : smallbox_gvec.o
+cppp.o : ../../Modules/constants.o
+cppp.o : ../../Modules/invmat.o
+cppp.o : ../../Modules/io_files.o
+cppp.o : ../../Modules/kind.o
+cppp.o : ../../Modules/mp_global.o
+cppp.o : ../../Modules/qes_types_module.o
+cppp.o : ../../Modules/qexsd.o
+cppp.o : ../../Modules/qexsd_copy.o
 cpr.o : ../../Modules/autopilot.o
 cpr.o : ../../Modules/cell_base.o
 cpr.o : ../../Modules/check_stop.o
