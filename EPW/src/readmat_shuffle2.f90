@@ -19,7 +19,7 @@
   use io_files,         ONLY : prefix 
   USE cell_base,        ONLY : ibrav, celldm, omega, at, bg
   USE ions_base,        ONLY : amass, tau, nat, ntyp => nsp, ityp
-  USE elph2,            ONLY : dynq, sumr, zstar, epsi
+  USE elph2,            ONLY : dynq, zstar, epsi
   USE symm_base,        ONLY : nsym
   USE epwcom,           ONLY : dvscf_dir, lpolar, lifc
   USE modes,            ONLY : nmodes
@@ -175,6 +175,8 @@
   !! 
   REAL(KIND = DP) :: dynr(2, 3, nat, 3, nat)
   !! 
+  REAL(KIND = DP) :: sumr(2, 3, nat, 3)
+  !! Sum to impose the ASR
   REAL(KIND = DP) :: sumz
   !! 
   REAL(KIND = DP) :: qout(3)
@@ -209,7 +211,6 @@
   !! Dynamical matrix
   !
   axis = 3 
-  ALLOCATE(sumr(2, 3, nat, 3))
   sumr(:, :, :, :) = zero
   ! 
   ! the call to set_ndnmbr is just a trick to get quickly
@@ -685,8 +686,6 @@
     ENDIF
   ENDDO ! iq
   ! 
-  DEALLOCATE(sumr)
-  !
   !---------------------------------------------------------------------------------
   END SUBROUTINE readmat_shuffle2
   !---------------------------------------------------------------------------------

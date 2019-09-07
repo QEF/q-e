@@ -49,11 +49,11 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
-  USE elph2,         ONLY : epmatq, dynq, sumr, et_ks, xkq, &
+  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all, exband, wscache, umat, umat_all
   USE klist_epw,     ONLY : xk_all, et_loc, et_all
-  USE constants_epw, ONLY : ryd2ev, zero, czero
+  USE constants_epw, ONLY : ryd2ev, zero, czero, eps6
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
   USE noncollin_module, ONLY : m_loc, npol, noncolin
@@ -67,7 +67,7 @@
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
                             int4, int4_nc, int5, int5_so, alphap
   USE kfold,         ONLY : shift, createkmap_pw2, createkmap
-  USE low_lvl,       ONLY : set_ndnmbr
+  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_modes
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -76,6 +76,26 @@
   !
   IMPLICIT NONE
   ! 
+  CHARACTER(LEN = 256) :: tempfile
+  !! Temporary .eig file
+  CHARACTER(LEN = 256) :: dirname
+  !! Name of the directory
+  CHARACTER(LEN = 256) :: filename
+  !! Name of the file
+  CHARACTER(LEN = 3) :: filelab
+  !! Append the number of the core that works on that file
+  CHARACTER(LEN = 80)   :: line
+  !! Use to read external eigenvalues
+  CHARACTER(LEN = 6), EXTERNAL :: int_to_char
+  !! Transform an INTEGER into a character
+  LOGICAL :: sym(48)
+  !! Logical vectors that say which crystal symmetries exist in our system
+  LOGICAL :: nog
+  !! Find if G=0 or not in $$S(q_0)+G=q$$
+  LOGICAL :: symmo
+  !! Check whether the symmetry belongs to a symmorphic group
+  LOGICAL :: exst
+  !! Find if a file exists.
   INTEGER :: sym_smallq(48) 
   !! Set of all symmetries for the small group of one q.
   !! This is a subset of total crystal symmetries that remains
@@ -102,7 +122,7 @@
   !! Lower bound for the k-point of the coarse grid in parallel 
   INTEGER :: ik_stop
   !! Higher bound for the k-point of the coarse grid in parallel 
-  INTEGER :: gmapsym(ngm,48)
+  INTEGER :: gmapsym(ngm, 48)
   !! Correspondence G -> S(G)
   INTEGER :: nq
   !! Degeneracy of the star of q
@@ -138,7 +158,6 @@
   !! Error index when reading/writing a file
   INTEGER :: iunpun
   !! Unit of the file
-  ! 
   REAL(KIND = DP), ALLOCATABLE :: xqc_irr(:, :)
   !! The qpoints in the irr wedge
   REAL(KIND = DP), ALLOCATABLE :: xqc(:, :)
@@ -163,11 +182,10 @@
   !! Fractional translation y
   REAL(KIND = DP) :: ft3
   !! Fractional translation z
-  REAL(KIND = DP) :: w_centers(3,nbndsub)
+  REAL(KIND = DP) :: w_centers(3, nbndsub)
   !! Wannier centers
   REAL(KIND = DP) :: qnorm_tmp
   !! Absolute value of xqc_irr
-  !
   COMPLEX(KIND = DP) :: eigv(ngm, 48)
   !! $e^{ iGv}$ for 1...nsym (v the fractional translation)
   COMPLEX(KIND = DP) :: cz1(nmodes, nmodes)
@@ -175,37 +193,11 @@
   COMPLEX(KIND = DP) :: cz2(nmodes, nmodes)
   !! The rotated eigenvectors, for the current q in the star
   !
-  CHARACTER(len=256) :: tempfile
-  !! Temporary .eig file
-  CHARACTER(len=256) :: dirname
-  !! Name of the directory
-  CHARACTER(len=256) :: filename
-  !! Name of the file
-  CHARACTER(len=3) :: filelab
-  !! Append the number of the core that works on that file
-  CHARACTER(len=80)   :: line
-  !! Use to read external eigenvalues
-  CHARACTER(len=6), EXTERNAL :: int_to_char
-  !! Transform an INTEGER into a character
-  !
-  LOGICAL :: sym(48)
-  !! Logical vectors that say which crystal symmetries exist in our system
-  LOGICAL :: eqvect_strict
-  !! This function tests if two tridimensional vectors are equal
-  LOGICAL :: nog
-  !! Find if G=0 or not in $$S(q_0)+G=q$$
-  LOGICAL :: symmo
-  !! Check whether the symmetry belongs to a symmorphic group
-  LOGICAL :: exst
-  !! Find if a file exists.
-  !
-  ! ---------------------------------------------------------------------
-  !
-  CALL start_clock( 'elphon_wrap' )
+  CALL start_clock('elphon_wrap')
   !
   ! Read qpoint list from stdin
   !
-  IF (meta_ionode) READ(5,*) nqc_irr
+  IF (meta_ionode) READ(5, *) nqc_irr
   CALL mp_bcast(nqc_irr, meta_ionode_id, world_comm)
   ALLOCATE(xqc_irr(3, nqc_irr))
   ALLOCATE(xqc(3, nq1 * nq2 * nq3))
@@ -216,7 +208,7 @@
   !  
   IF (meta_ionode) THEN
     DO iq_irr = 1, nqc_irr
-      READ(5,*) xqc_irr(:,iq_irr)
+      READ(5,*) xqc_irr(:, iq_irr)
     ENDDO
   ENDIF
   CALL mp_bcast(xqc_irr, meta_ionode_id, world_comm)
@@ -245,8 +237,7 @@
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
-    IF (nkstot /= nk1 * nk2 * nk3) &
-       CALL errore('elphon_shuffle_wrap','nscf run inconsistent with epw input',1)  
+    IF (nkstot /= nk1 * nk2 * nk3) CALL errore('elphon_shuffle_wrap', 'nscf run inconsistent with epw input', 1)  
   ENDIF
   !
   ! Read in external electronic eigenvalues. e.g. GW 
@@ -258,14 +249,14 @@
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
            nbnd, ",", nkstot,")"
       tempfile = TRIM(prefix)//'.eig'
-      OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', action='read', iostat=ios)
+      OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', ACTION = 'read', IOSTAT = ios)
       IF (ios /= 0) CALL errore('elphon_shuffle_wrap','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
       DO ik = 1, nkstot
         ! We do not save the k-point for the moment ==> should be read and
         ! tested against the current one  
         READ(iuqpeig,'(a)') line
-        READ(iuqpeig,*) et_tmp(:,ik)
+        READ(iuqpeig,*) et_tmp(:, ik)
       ENDDO
       CLOSE(iuqpeig)
       ! from eV to Ryd
@@ -275,7 +266,7 @@
     !
     CALL fkbounds(nkstot, ik_start, ik_stop)
     et_ks(:, :)  = et_loc(:, :)
-    et_loc(:, :) = et_tmp(:,ik_start:ik_stop)
+    et_loc(:, :) = et_tmp(:, ik_start:ik_stop)
   ENDIF
   !
   ! Do not recompute dipole matrix elements
@@ -290,7 +281,7 @@
   !  
   IF (eig_read) THEN
     et_all(:, :) = zero
-    CALL poolgather(nbnd, nkstot, nks, et_loc(1:nbnd,1:nks), et_all)
+    CALL poolgather(nbnd, nkstot, nks, et_loc(1:nbnd, 1:nks), et_all)
   ENDIF
   !
   IF (.NOT. kmaps) THEN
@@ -342,13 +333,13 @@
     !     First we start by setting up the lattice & crystal symm. as done in PHonon/PH/q2qstar.f90
     ! 
     ! ~~~~~~~~ setup Bravais lattice symmetry ~~~~~~~~
-    CALL set_sym_bl( ) ! This should define the s matrix
+    CALL set_sym_bl() ! This should define the s matrix
     WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
     CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
-    IF (.NOT. allfrac ) CALL remove_sym( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
-    WRITE(stdout,'(5x,a,i3)') "Symmetries of crystal:         ", nsym
+    IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
+    WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
     !   
     ! The following loop is required to propertly set up the symmetry matrix s. 
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
@@ -372,7 +363,7 @@
     ALLOCATE(xkq(3, nkstot)) ! Used in createkmap 
     ALLOCATE(shift(nkstot)) ! Used in createkmap
     IF (lifc) THEN
-      ALLOCATE(wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat, nat))
+      ALLOCATE(wscache(-2 * nq3:2 * nq3, -2 * nq2:2 * nq2, -2 * nq1:2 * nq1, nat, nat))
       wscache(:, :, :, :, :) = zero      
     ENDIF
     evq(:,:)   = zero
@@ -393,27 +384,24 @@
       IF (u_from_file) THEN
          ierr = 0
          ! ... look for an empty unit (only ionode needs it)
-         IF (meta_ionode ) CALL iotk_free_unit(iunpun, ierr)
+         IF (meta_ionode) CALL iotk_free_unit(iunpun, ierr)
          dirname = TRIM(dvscf_dir) // TRIM(prefix) // '.phsave'
-         filename = TRIM(dirname) // '/patterns.' // &
-                    TRIM(int_to_char(iq_irr)) // '.xml'
+         filename = TRIM(dirname) // '/patterns.' // TRIM(int_to_char(iq_irr)) // '.xml'
          INQUIRE(FILE = TRIM(filename), EXIST = exst )
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
-         CALL iotk_open_read(iunpun, file = TRIM(filename), &
-                                     binary = .FALSE., ierr = ierr)
+         CALL iotk_open_read(iunpun, FILE = TRIM(filename), binary = .FALSE., ierr = ierr)
          CALL read_modes(iunpun, iq_irr, ierr)
-         IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', & 
-                                    'problem with modes file', 1)
+         IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
          IF (meta_ionode) CALL iotk_close_read(iunpun)
       ENDIF
       !  
-      WRITE(stdout,'(//5x,a)') REPEAT('=',67) 
-      WRITE(stdout,'(5x,"irreducible q point # ",i4)') iq_irr
-      WRITE(stdout,'(5x,a/)') REPEAT('=',67) 
+      WRITE(stdout, '(//5x,a)') REPEAT('=',67) 
+      WRITE(stdout, '(5x,"irreducible q point # ",i4)') iq_irr
+      WRITE(stdout, '(5x,a/)') REPEAT('=',67) 
       FLUSH(stdout)
       !
-      xq = xqc_irr(:,iq_irr)
+      xq = xqc_irr(:, iq_irr)
       !
       ! SP : The following is largely inspiered by PHonon/PH/q2qstar.f90
       ! 
@@ -465,7 +453,6 @@
       !
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
-      IF (.NOT. ALLOCATED(sumr) ) ALLOCATE(sumr(2,3,nat,3) )
       IF (meta_ionode) THEN
         CALL readmat_shuffle2(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
                               invs, s, irt, rtau)
@@ -473,7 +460,6 @@
       CALL mp_bcast(zstar, meta_ionode_id, world_comm)
       CALL mp_bcast(epsi , meta_ionode_id, world_comm)
       CALL mp_bcast(dynq , meta_ionode_id, world_comm)
-      CALL mp_bcast(sumr , meta_ionode_id, world_comm)
       !
       ! now dynq is the cartesian dyn mat (not divided by the masses)
       !
@@ -555,11 +541,11 @@
         !
         DO jsym = 1, nsym
           IF (isq(jsym) == iq) THEN
-             nsq = nsq + 1
-             sym_sgq(nsq) = jsym
+            nsq = nsq + 1
+            sym_sgq(nsq) = jsym
           ENDIF
         ENDDO
-        IF (nsq*nq /= nsym ) CALL errore('elphon_shuffle_wrap', 'wrong degeneracy', iq)
+        IF (nsq * nq /= nsym ) CALL errore('elphon_shuffle_wrap', 'wrong degeneracy', iq)
         ! 
         IF (iverbosity == 1) THEN
           !
@@ -580,7 +566,7 @@
                      + s(j, 3, ism1) * aq(3)
             ENDDO
             CALL cryst_to_cart(1, saq, at, -1)
-            nog = eqvect_strict(raq, saq) 
+            nog = eqvect_strict(raq, saq, eps6) 
             !
             !  check whether the symmetry belongs to a symmorphic group
             !
@@ -600,8 +586,6 @@
         saq = xq
         CALL cryst_to_cart(1, aq, at, - 1)
         CALL cryst_to_cart(1, saq, at, -1)
-        !write(*,*)'xq0 ',aq
-        !write(*,*)'xq ',saq
         DO jsym = 1, nsq
           ism1 = invs(sym_sgq(jsym))
           raq = zero
@@ -610,7 +594,7 @@
               raq(ipol) = raq(ipol) + s(ipol, jpol, ism1) * aq(jpol)
             ENDDO
           ENDDO
-          nog = eqvect_strict(raq, saq)
+          nog = eqvect_strict(raq, saq, eps6)
           IF (nog) THEN ! This is the symmetry such that Sq=q
             isym = sym_sgq(jsym)
             EXIT
@@ -644,13 +628,13 @@
         CALL rotate_eigenm(iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2)
         !
         CALL rotate_epmat(cz1, cz2, xq, nqc, lwin, lwinq, exband)
-  !DBSP
+        !DBSP
         !write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
         !write(*,*)'epmatq(:,:,2,:,nqc)**2',SUM((REAL(REAL(epmatq(:,:,2,:,nqc))))**2)+&
         !  SUM((REAL(AIMAG(epmatq(:,:,2,:,nqc))))**2)
         !print*,'dynq ', SUM(dynq(:,:,nqc))
         !print*,'et ', et_loc(:,2)
-  !END
+        !END
         ! SP: Now we treat separately the case imq == 0
         IF (imq == 0) THEN
           !
@@ -666,7 +650,7 @@
           nqc = nqc + 1
           xqc(:,nqc) = xq
           !
-          IF (iq == 1) WRITE(stdout,*)
+          IF (iq == 1) WRITE(stdout, *)
           WRITE(stdout,5) nqc, xq
           !
           !  prepare the gmap for the refolding
@@ -732,7 +716,7 @@
       ENDDO
     ENDDO
     DEALLOCATE(alphap)
-    DO ik = 1, size(becp1)
+    DO ik = 1, SIZE(becp1)
       CALL deallocate_bec_type(becp1(ik))
     ENDDO
     DEALLOCATE(becp1)
@@ -777,18 +761,16 @@
     CALL stop_epw
   ENDIF
   !
-  IF ( .NOT. epbread .AND. epwread) THEN
+  IF (.NOT. epbread .AND. epwread) THEN
   !  CV: need dummy nqc, xqc for the ephwann_shuffle call
-     nqc = 1
-     xqc = zero
-     WRITE(stdout,'(/5x,"Do not need to read .epb files; read .fmt files"/)')
+    nqc = 1
+    xqc = zero
+    WRITE(stdout, '(/5x,"Do not need to read .epb files; read .fmt files"/)')
   !
   ENDIF
   !
-  !CALL mp_barrier(world_comm)
-  !
-  !   now dynq is the cartesian dyn mat ( not divided by the masses)
-  !   and epmatq is the epmat in cartesian representation (rotation in elphon_shuffle)
+  ! now dynq is the cartesian dyn mat ( not divided by the masses)
+  ! and epmatq is the epmat in cartesian representation (rotation in elphon_shuffle)
   !
   ! free up some memory
   !
@@ -805,7 +787,6 @@
   IF (ASSOCIATED (igkq) )      NULLIFY    (igkq)
   IF (ALLOCATED  (dvpsi))      DEALLOCATE(dvpsi)
   IF (ALLOCATED  (dpsi) )      DEALLOCATE(dpsi)
-  IF (ALLOCATED  (sumr) )      DEALLOCATE(sumr)
   IF (ALLOCATED  (cu) )        DEALLOCATE(cu)
   IF (ALLOCATED  (cuq) )       DEALLOCATE(cuq)
   IF (ALLOCATED  (lwin) )      DEALLOCATE(lwin)
@@ -816,14 +797,14 @@
   IF (ALLOCATED  (exband) )    DEALLOCATE(exband)
   ! 
   CALL stop_clock('elphon_wrap')
-!DBSP
-!  DO iq = 1, nqc
-!    write(*,*) iq, xqc(:,iq)
-!    write(*,*)'epmatq(:,:,2,:,iq)',SUM(epmatq(:,:,2,:,iq))
-!    write(*,*)'epmatq(:,:,2,:,iq)**2',SUM((REAL(REAL(epmatq(:,:,2,:,iq))))**2)+&
-!               SUM((REAL(AIMAG(epmatq(:,:,2,:,iq))))**2)
-!  ENDDO
-!END
+  !DBSP
+  !  DO iq = 1, nqc
+  !    write(*,*) iq, xqc(:,iq)
+  !    write(*,*)'epmatq(:,:,2,:,iq)',SUM(epmatq(:,:,2,:,iq))
+  !    write(*,*)'epmatq(:,:,2,:,iq)**2',SUM((REAL(REAL(epmatq(:,:,2,:,iq))))**2)+&
+  !               SUM((REAL(AIMAG(epmatq(:,:,2,:,iq))))**2)
+  !  ENDDO
+  !END
   !
   ! the electron-phonon wannier interpolation
   !
@@ -846,138 +827,3 @@
   !---------------------------------------------------------------------------
   END SUBROUTINE elphon_shuffle_wrap
   !---------------------------------------------------------------------------
-  !
-  !---------------------------------------------------------------------------
-  SUBROUTINE irotate(x, s, sx)
-  !---------------------------------------------------------------------------
-  !!
-  !! a simple symmetry operation in crystal coordinates ( s is INTEGER!)
-  !!
-  USE kinds, ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  REAL(KIND = DP), INTENT(in) :: x(3)
-  !! Input x
-  INTEGER, INTENT(in) :: s(3,3)
-  !! Symmetry matrix
-  REAL(KIND = DP), INTENT(out) :: sx(3)
-  !! Output rotated x 
-  !
-  ! Local Variable
-  INTEGER :: i
-  !
-  DO i = 1, 3
-     sx(i) = DBLE(s(i, 1)) * x(1) &
-           + DBLE(s(i, 2)) * x(2) &
-           + DBLE(s(i, 3)) * x(3)
-  ENDDO
-  !
-  RETURN
-  ! 
-  !---------------------------------------------------------------------------
-  END SUBROUTINE irotate
-  !---------------------------------------------------------------------------
-  !---------------------------------------------------------------------------
-  LOGICAL FUNCTION eqvect_strict(x, y)
-  !-----------------------------------------------------------------------
-  !!
-  !! This function test if two tridimensional vectors are equal
-  !!
-  USE kinds, ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  REAL(KIND = DP), INTENT(in) :: x(3)
-  !! input: input vector
-  REAL(KIND = DP), INTENT(in) :: y(3)
-  !! input: second input vector
-  REAL(KIND = DP) :: accep
-  !! acceptance parameter
-  PARAMETER (accep = 1.0d-5)
-  !
-  eqvect_strict = ABS(x(1) - y(1) ) < accep .AND. &
-                  ABS(x(2) - y(2) ) < accep .AND. &
-                  ABS(x(3) - y(3) ) < accep
-  !
-  !---------------------------------------------------------------------------
-  END FUNCTION eqvect_strict
-  !---------------------------------------------------------------------------
-  SUBROUTINE read_modes(iunpun, current_iq, ierr)
-  !---------------------------------------------------------------------------
-  !!
-  !! This routine reads the displacement patterns.
-  !!
-  USE modes,        ONLY : nirr, npert, u
-  USE lr_symm_base, ONLY : minus_q, nsymq  
-  USE iotk_module,  ONLY : iotk_index, iotk_scan_dat, iotk_scan_begin, &
-                           iotk_scan_end
-  USE io_global,    ONLY : meta_ionode, meta_ionode_id
-  USE mp,           ONLY : mp_bcast
-  USE mp_global,    ONLY : world_comm
-  ! 
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(in) :: current_iq
-  !! Current q-point 
-  INTEGER, INTENT(in) :: iunpun
-  !! Current q-point 
-  INTEGER, INTENT(out) :: ierr
-  !! Error
-  !
-  ! Local variables
-  INTEGER :: imode0, imode
-  !! Counter on modes
-  INTEGER :: irr
-  !! Counter on irreducible representations
-  INTEGER :: ipert
-  !! Counter on perturbations at each irr
-  INTEGER :: iq
-  !! Current q-point 
-  !
-  ierr = 0
-  IF (meta_ionode) THEN
-     CALL iotk_scan_begin(iunpun, "IRREPS_INFO")
-     !
-     CALL iotk_scan_dat(iunpun, "QPOINT_NUMBER", iq)
-  ENDIF
-  CALL mp_bcast(iq,  meta_ionode_id, world_comm)
-  IF (iq /= current_iq) CALL errore('read_modes', &
-            'problems with current_iq', 1 )
-  ! 
-  IF (meta_ionode) THEN
-     !
-     CALL iotk_scan_dat(iunpun, "QPOINT_GROUP_RANK", nsymq)
-     CALL iotk_scan_dat(iunpun, "MINUS_Q_SYM", minus_q)
-     CALL iotk_scan_dat(iunpun, "NUMBER_IRR_REP", nirr)
-     imode0 = 0
-     DO irr = 1, nirr
-        CALL iotk_scan_begin(iunpun, "REPRESENTION"// &
-                                   TRIM( iotk_index(irr) ))
-        CALL iotk_scan_dat(iunpun, "NUMBER_OF_PERTURBATIONS", npert(irr))
-        DO ipert = 1, npert(irr)
-           imode = imode0 + ipert
-           CALL iotk_scan_begin(iunpun, "PERTURBATION"// &
-                                   TRIM( iotk_index(ipert) ))
-           CALL iotk_scan_dat(iunpun, "DISPLACEMENT_PATTERN", u(:,imode))
-           CALL iotk_scan_end(iunpun, "PERTURBATION"// &
-                                  TRIM( iotk_index(ipert) ))
-        ENDDO
-        imode0 = imode0 + npert(irr)
-        CALL iotk_scan_end(iunpun, "REPRESENTION"// &
-                                   TRIM( iotk_index(irr) ))
-     ENDDO
-     !
-     CALL iotk_scan_end(iunpun, "IRREPS_INFO")
-     !
-  ENDIF
-  !
-  CALL mp_bcast(nirr   , meta_ionode_id, world_comm)
-  CALL mp_bcast(npert  , meta_ionode_id, world_comm)
-  CALL mp_bcast(nsymq  , meta_ionode_id, world_comm)
-  CALL mp_bcast(minus_q, meta_ionode_id, world_comm)
-  CALL mp_bcast(u      , meta_ionode_id, world_comm)
-  !
-  RETURN
-  !
-  END SUBROUTINE read_modes

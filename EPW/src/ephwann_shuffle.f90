@@ -94,6 +94,10 @@
   !! qpoint list, coarse mesh
   ! 
   ! Local  variables
+  CHARACTER(LEN = 256) :: filint
+  !! Name of the file to write/read 
+  CHARACTER(LEN = 30)  :: myfmt
+  !! Variable used for formatting output
   LOGICAL :: already_skipped
   !! Skipping band during the Wannierization
   LOGICAL :: exst
@@ -104,12 +108,6 @@
   !! Check wheter this is the first timeafter a restart. 
   LOGICAL :: homogeneous
   !! Check if the k and q grids are homogenous and commensurate.
-  !
-  CHARACTER(LEN = 256) :: filint
-  !! Name of the file to write/read 
-  CHARACTER(LEN = 30)  :: myfmt
-  !! Variable used for formatting output
-  ! 
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: iq 
@@ -310,7 +308,7 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
   ! 
-  CALL start_clock ( 'ephwann' )
+  CALL start_clock ('ephwann')
   ! 
   IF (nbndsub /= nbnd) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !

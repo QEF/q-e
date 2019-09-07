@@ -87,7 +87,6 @@
     esigmai_all(:, :, :),    &!  energy of the imaginary self-energy  
     jdos(:),                 &!  j-DOS
     spectra(:, :, :, :, :, :), &!  dipole absorption spectra, polarizations, nomega, nsmear, dme/vme, absorption/emission
-    sumr(:, :, :, :),        &!  to apply the ASR correction to every xq
     zstar(:, :, :),          &!  Born effective charges
     epsi(:, :),              &!  dielectric tensor
     inv_tau_all(:, :, :),    &!  scattering rate
