@@ -35,6 +35,7 @@
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_epw,    ONLY : iunkf
     USE low_lvl,   ONLY : init_random_seed
+    USE constants_epw, ONLY : eps4
     USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
@@ -57,11 +58,16 @@
     !! Counter on the k-point index along nkf1, nkf2, nkf3
     INTEGER :: rest
     !! rest from the division of nr of q-points over pools
-    !
-    REAL(KIND = DP), ALLOCATABLE :: xkf_(:, :), xkf_tmp(:, :), xkfval(:, :)
+    REAL(KIND = DP), ALLOCATABLE :: xkf_(:, :)
     !! coordinates k-points
-    REAL(KIND = DP), ALLOCATABLE :: wkf_(:), wkf_tmp(:)
+    REAL(KIND = DP), ALLOCATABLE :: xkf_tmp(:, :)
+    !! Temporary k-point
+    REAL(KIND = DP), ALLOCATABLE :: xkfval(:, :)
+    !! K-point
+    REAL(KIND = DP), ALLOCATABLE :: wkf_(:)
     !! weights k-points
+    REAL(KIND = DP), ALLOCATABLE :: wkf_tmp(:)
+    !! Temporary weights
     !
     IF (mpime == ionode_id) THEN
       IF (filkf /= '') THEN ! load from file (crystal coordinates)
@@ -228,7 +234,7 @@
     !
     !  scatter the k points of the fine mesh across the pools
     !
-    nkqf = 2 * (nktotf / npool)
+    nkqf = 2 * (nkqtotf / (2 * npool))
     rest = (nkqtotf - nkqf * npool) / 2
     IF (my_pool_id < rest) THEN
       nkqf = nkqf + 2
@@ -240,8 +246,10 @@
     ENDIF
     !
     nkf = nkqf / 2 
-    IF (.NOT. ALLOCATED(xkf_)) ALLOCATE(xkf_(3, nkqtotf))
-    IF (.NOT. ALLOCATED(wkf_)) ALLOCATE(wkf_(nkqtotf))
+    IF ((mpime /= ionode_id) THEN
+      ALLOCATE(xkf_(3, nkqtotf))
+      ALLOCATE(wkf_(nkqtotf))
+    ENDIF
     CALL mp_bcast(xkf_, ionode_id, inter_pool_comm)
     CALL mp_bcast(wkf_, ionode_id, inter_pool_comm)
     !
@@ -287,7 +295,7 @@
       wkf(:) = wkf_(lower_bnd:upper_bnd)
     ENDIF  
     !
-    IF (ABS(sum (wkf_ (:)) - 2.d0) > 1.d-4 ) &
+    IF (ABS(SUM(wkf_ (:)) - 2.d0) > eps4) &
       WRITE(stdout, '(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_para]")')
     !
     WRITE(stdout, '(5x,"Size of k point mesh for interpolation: ",i10)') nkqtotf 

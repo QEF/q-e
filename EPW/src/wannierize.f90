@@ -175,6 +175,7 @@
   USE wannierEPW,  ONLY : n_wannier
   USE wvfct,       ONLY : nbnd, et
   USE klist,       ONLY : nks, nkstot
+  USE elph2,       ONLY : xkq
   !
   IMPLICIT NONE
   !
@@ -229,8 +230,9 @@
   !
   ALLOCATE(cu(nbnd, n_wannier, nks))
   ALLOCATE(cuq(nbnd, n_wannier, nks))
-  !
+  ALLOCATE(xkq(3, nks))
   CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband) 
+  DEALLOCATE(xkq) 
   !
   DO iwann = 1, n_wannier
     DO ie = 1, ne

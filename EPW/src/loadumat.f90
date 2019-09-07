@@ -121,10 +121,8 @@
     !
     !  generates kmap(ik) for this xxq
     !
-    ALLOCATE(xkq(3, nkstot)) ! Required for createkmap2
     xkq(:, :) = zero
     CALL createkmap2(xxq)
-    DEALLOCATE(xkq)
     !
     !  and we generate the matrix for the q-displaced mesh
     !

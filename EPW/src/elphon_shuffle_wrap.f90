@@ -43,7 +43,7 @@
                             sr, nrot, copy_sym, set_sym_bl, find_sym, & 
                             inverse_s, remove_sym, allfrac
   USE start_k,       ONLY : nk1, nk2, nk3
-  USE phcom,         ONLY : dpsi, dvpsi, evq, nq1, nq3, nq2 
+  USE phcom,         ONLY : evq, nq1, nq3, nq2 
   USE qpoint,        ONLY : igkq, xq, eigqts
   USE modes,         ONLY : nmodes, u, npert
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
@@ -745,28 +745,28 @@
       !
       IF (epbwrite) THEN
         OPEN(iuepb, FILE = tempfile, FORM = 'unformatted')
-        WRITE(stdout,'(/5x,"Writing epmatq on .epb files"/)') 
+        WRITE(stdout, '(/5x,"Writing epmatq on .epb files"/)') 
         WRITE(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
         CLOSE(iuepb)
-        WRITE(stdout,'(/5x,"The .epb files have been correctly written"/)')
+        WRITE(stdout, '(/5x,"The .epb files have been correctly written"/)')
       ENDIF
     ENDIF
   ENDIF
   !
   ! In case of image parallelization we want to stop after writing the .epb file
   IF (nimage > 1) THEN
-    WRITE(stdout,'(/5x,"Image parallelization. The code will stop now. "/)')
-    WRITE(stdout,'(/5x,"You need to restart a calculation by reading the .epb "/)')
-    WRITE(stdout,'(/5x,"                       with pool parallelization only. "/)')
+    WRITE(stdout, '(/5x,"Image parallelization. The code will stop now. "/)')
+    WRITE(stdout, '(/5x,"You need to restart a calculation by reading the .epb "/)')
+    WRITE(stdout, '(/5x,"                       with pool parallelization only. "/)')
     CALL stop_epw
   ENDIF
   !
   IF (.NOT. epbread .AND. epwread) THEN
-  !  CV: need dummy nqc, xqc for the ephwann_shuffle call
+    ! CV: need dummy nqc, xqc for the ephwann_shuffle call
     nqc = 1
     xqc = zero
     WRITE(stdout, '(/5x,"Do not need to read .epb files; read .fmt files"/)')
-  !
+    !
   ENDIF
   !
   ! now dynq is the cartesian dyn mat ( not divided by the masses)
@@ -783,18 +783,16 @@
     DEALLOCATE(qrad)
   ENDIF
   !
-  ! FIXME : No if allocated 
-  IF (ASSOCIATED (igkq) )      NULLIFY    (igkq)
-  IF (ALLOCATED  (dvpsi))      DEALLOCATE(dvpsi)
-  IF (ALLOCATED  (dpsi) )      DEALLOCATE(dpsi)
-  IF (ALLOCATED  (cu) )        DEALLOCATE(cu)
-  IF (ALLOCATED  (cuq) )       DEALLOCATE(cuq)
-  IF (ALLOCATED  (lwin) )      DEALLOCATE(lwin)
-  IF (ALLOCATED  (lwinq) )     DEALLOCATE(lwinq)
-  IF (ALLOCATED  (bmat) )      DEALLOCATE(bmat)
-  IF (ALLOCATED  (igk_k_all) ) DEALLOCATE(igk_k_all)
-  IF (ALLOCATED  (ngk_all) )   DEALLOCATE(ngk_all)
-  IF (ALLOCATED  (exband) )    DEALLOCATE(exband)
+  ! FIXME 
+  IF (ASSOCIATED(igkq))      NULLIFY(igkq)
+  IF (ALLOCATED(cu))        DEALLOCATE(cu)
+  IF (ALLOCATED(cuq))       DEALLOCATE(cuq)
+  IF (ALLOCATED(lwin))      DEALLOCATE(lwin)
+  IF (ALLOCATED(lwinq))     DEALLOCATE(lwinq)
+  IF (ALLOCATED(bmat))      DEALLOCATE(bmat)
+  IF (ALLOCATED(igk_k_all)) DEALLOCATE(igk_k_all)
+  IF (ALLOCATED(ngk_all))   DEALLOCATE(ngk_all)
+  IF (ALLOCATED(exband))    DEALLOCATE(exband)
   ! 
   CALL stop_clock('elphon_wrap')
   !DBSP

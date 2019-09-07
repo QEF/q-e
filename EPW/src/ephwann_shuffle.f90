@@ -55,7 +55,7 @@
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf,  transp_temp, mobilityh_save,               &
+                            nktotf,  transp_temp, mobilityh_save, xkq,          &
                             mobilityel_save, lower_bnd, upper_bnd 
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
@@ -224,7 +224,7 @@
   !! Current k-point on the fine grid
   REAL(KIND = DP) :: xkk(3)
   !! Current k-point on the fine grid
-  REAL(KIND = DP) :: xkq(3)
+  REAL(KIND = DP) :: xkq2(3)
   !! Current k+q point on the fine grid
   REAL(KIND = DP) :: rws(0:3, nrwsx)
   !! Real-space wigner-Seitz vectors
@@ -382,7 +382,9 @@
   ! w_centers is allocated inside loadumat
   IF (.NOT. epwread) THEN
     xxq = 0.d0
+    ALLOCATE(xkq(3, nkstot))
     CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+    DEALLOCATE(xkq)
   ENDIF
   !
   ! Inside we allocate irvec_k, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g,
@@ -512,8 +514,10 @@
       xxq = xqc(:, iq)
       !
       ! we need the cu again for the k+q points, we generate the map here
-      !
+      ! 
+      ALLOCATE(xkq(3, nkstot))
       CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+      DEALLOCATE(xkq)
       !
       DO imode = 1, nmodes
         !
@@ -595,7 +599,7 @@
   CALL loadqmesh_serial
   CALL loadkmesh_para
   ! Defines the total number of k-points
-  nktotf = nktotf
+  nktotf = nkqtotf / 2
   !
   ALLOCATE(epmatwef(nbndsub, nbndsub, nrr_k, nmodes))
   ALLOCATE(wf(nmodes, nqf))
@@ -789,7 +793,7 @@
   ! Identify the bands within fsthick from the Fermi level
   ! Return ibndmin and ibndmax
   CALL fermiwindow
-  nbndfst = nbndfst
+  nbndfst = ibndmax - ibndmin + 1
   ! 
   ! Define it only once for the full run. 
   CALL fkbounds(nktotf, lower_bnd, upper_bnd)
@@ -1183,10 +1187,10 @@
         ikq = ikk + 1
         !
         xkk = xkf(:, ikk)
-        xkq = xkk + xxq
+        xkq2 = xkk + xxq
         !
         CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
-        CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1)
+        CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq2, 1, 0.0_DP, rdotk2, 1)
         !
         IF (use_ws) THEN
           DO iw = 1, dims
@@ -1860,9 +1864,9 @@
   !         xkk1 = NINT(xkk(1)*(nkf1)) + 1
   !         xkk2 = NINT(xkk(2)*(nkf2)) + 1
   !         xkk3 = NINT(xkk(3)*(nkf3)) + 1
-  !         xkq1 = NINT(xkq(1)*(nkf1)) + 1
-  !         xkq2 = NINT(xkq(2)*(nkf2)) + 1
-  !         xkq3 = NINT(xkq(3)*(nkf3)) + 1
+  !         xkq1 = NINT(xkq2(1)*(nkf1)) + 1
+  !         xkq2 = NINT(xkq2(2)*(nkf2)) + 1
+  !         xkq3 = NINT(xkq2(3)*(nkf3)) + 1
   !         ! 
   !         ! SP: Look-up table is more effecient than calling the exp function.
   !         DO ir = 1, nrr_k
@@ -1875,13 +1879,13 @@
   !         !IF ((iq == 1) .AND. (ik ==12)) THEN
   !         !  CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
   !         !  cfac1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
-  !         !  CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+  !         !  CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq2, 1, 0.0_DP, rdotk, 1 )
   !         !  cfacq1(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !         !ENDIF
   !       ELSE
   !         CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
   !         cfac(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
-  !         CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+  !         CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq2, 1, 0.0_DP, rdotk, 1 )
   !         cfacq(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !       ENDIF
   !       !

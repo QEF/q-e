@@ -32,7 +32,7 @@
   USE constants_epw,    ONLY : cone, czero, twopi, rydcm1, eps6, zero
   USE io_epw,           ONLY : iudyn
   USE wan2bloch,        ONLY : dynifc2blochc
-  USE low_lvl,          ONLY : set_ndnmbr
+  USE low_lvl,          ONLY : set_ndnmbr, eqvect_strict
   !
   IMPLICIT NONE
   !
@@ -61,8 +61,6 @@
   !! the relative position of the rotated atom to the original one
   !
   ! Local variables 
-  LOGICAL :: eqvect_strict
-  !! True if we are using time reversal
   LOGICAL :: found
   !! Is it found 
   LOGICAL :: lrigid
@@ -560,7 +558,7 @@
           raq(ipol) = raq(ipol) + s(ipol, jpol, ism1) * aq(jpol)
         ENDDO
       ENDDO
-      nog = eqvect_strict(raq, saq)
+      nog = eqvect_strict(raq, saq, eps6)
       IF (nog) THEN ! This is the symmetry such that Sq=q
         isym = sym_sgq(jsym)
         EXIT
@@ -916,6 +914,12 @@
   !! Z*
   !
   ! Local variables
+  TYPE vector
+    REAL(KIND = DP), pointer :: vec(:, :, :, :, :, :, :)
+  END TYPE vector
+  !
+  TYPE (vector) u(6 * 3 * nat)
+  ! These are the "vectors" associated with the sum rules on force-constants
   INTEGER :: axis
   !! 
   INTEGER :: n
@@ -938,6 +942,12 @@
   !! Number of index that are no independent
   INTEGER :: i_less
   !! temporary parameter
+  INTEGER :: zeu_less(6 * 3)
+  !! indices of the vectors zeu_u that are not independent to the preceding ones,
+  INTEGER :: nzeu_less
+  !! number of such vectors
+  INTEGER :: izeu_less 
+  !!  temporary parameter
   INTEGER, ALLOCATABLE :: w(:, :, :, :, :, :, :)
   !! temporary vectors and parameters
   INTEGER, ALLOCATABLE :: x(:, :, :, :, :, :, :)
@@ -946,33 +956,26 @@
   !! 
   REAL(KIND = DP) :: zeu_new(3, 3, nat)
   !! 
+  REAL(KIND = DP) :: scal
+  !! 
+  REAL(KIND = DP) :: norm2
+  !! 
+  REAL(KIND = DP) :: sum
+  !! 
+  REAL(KIND = DP) :: zeu_u(6 * 3, 3, 3, nat)
+  !! These are the "vectors" associated with the sum rules on effective charges
+  REAL(KIND = DP) :: zeu_w(3, 3, nat)
+  !! 
+  REAL(KIND = DP) :: zeu_x(3, 3, nat)
+  !! 
   REAL(KIND = DP), ALLOCATABLE :: frc_new(:,:,:,:,:,:,:)
-  type vector
-     REAL(DP),pointer :: vec(:,:,:,:,:,:,:)
-  end type vector
   !
-  type (vector) u(6*3*nat)
-  ! These are the "vectors" associated with the sum rules on force-constants
+  REAL(KIND = DP), ALLOCATABLE :: v(:, :)
+  !! These are the "vectors" associated with symmetry conditions, coded by
+  !! indicating the positions (i.e. the seven indices) of the non-zero elements (there
+  !! should be only 2 of them) and the value of that element. We do so in order
+  !! to limit the amount of memory used.
   !
-  REAL(DP), ALLOCATABLE :: v(:, :)
-  ! These are the "vectors" associated with symmetry conditions, coded by
-  ! indicating the positions (i.e. the seven indices) of the non-zero elements
-  ! (there
-  ! should be only 2 of them) and the value of that element. We do so in order
-  ! to limit the amount of memory used.
-  !
-  REAL(DP) :: scal,norm2, sum
-  !
-  REAL(DP) :: zeu_u(6*3,3,3,nat)
-  ! These are the "vectors" associated with the sum rules on effective charges
-  !
-  INTEGER :: zeu_less(6*3),nzeu_less,izeu_less
-  ! indices of the vectors zeu_u that are not independent to the preceding ones,
-  ! nzeu_less = number of such vectors, izeu_less = temporary parameter
-  !
-  REAL(DP) :: zeu_w(3,3,nat), zeu_x(3,3,nat)
-  ! temporary vectors
-
   ! Initialization. n is the number of sum rules to be considered (if
   ! asr/='simple')
   ! and 'axis' is the rotation axis in the case of a 1D system
