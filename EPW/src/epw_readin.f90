@@ -594,15 +594,21 @@
        & 'Error: adapt_smearing not implemented with etf_mem=2 ', 1)
   ! Make sure the files exists
   IF (filkf /= ' ') THEN
-    OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted',ERR = 100, IOSTAT = ios)
+    OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', ERR = 100, IOSTAT = ios)
 100 CALL errore('epw_readin','opening file ' // filkf, ABS(ios))
     CLOSE(iunkf)
   ENDIF
   IF (filqf /= ' ') THEN
-    OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', form = 'formatted',err=101, iostat=ios)
+    OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', form = 'formatted', ERR =101, IOSTAT = ios)
 101 CALL errore('epw_readin','opening file ' // filqf, ABS(ios))
     CLOSE(iunqf)
   ENDIF  
+  IF (iterative_bte) THEN
+    ! The fine grids have to be homogeneous and the same. Otherwise the populations can oscillate. 
+    IF (nkf1 /= nqf1 .OR. nkf2 /= nqf2 .OR. nkf3 /= nqf3) THEN
+      CALL errore('epw_readin', 'Error: the fine k-points and q-points grids have to be the same when doing IBTE.', 1) 
+    ENDIF
+  ENDIF
   !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd

@@ -59,7 +59,7 @@
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
                             a_all, a_all_ph, wscache, lambda_v_all, transp_temp,&
-                            lower_bnd, upper_bnd, nbndfst, nktotf
+                            lower_bnd, upper_bnd, nbndfst, nktotf, xkq
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem  
@@ -97,6 +97,10 @@
   !! qpoint list, coarse mesh
   ! 
   ! Local  variables
+  CHARACTER(LEN = 256) :: filint
+  !! Name of the file to write/read 
+  CHARACTER(LEN = 30)  :: myfmt
+  !! Variable used for formatting output
   LOGICAL :: already_skipped
   !! Skipping band during the Wannierization
   LOGICAL :: exst
@@ -107,12 +111,6 @@
   !! Check wheter this is the first timeafter a restart. 
   LOGICAL :: homogeneous
   !! Check if the k and q grids are homogenous and commensurate.
-  !
-  CHARACTER(LEN = 256) :: filint
-  !! Name of the file to write/read 
-  CHARACTER(LEN = 30)  :: myfmt
-  !! Variable used for formatting output
-  ! 
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: iq 
@@ -176,7 +174,7 @@
   INTEGER :: ipool
   !! Cpu index.
   INTEGER :: npool_tmp
-  !! Pool tmp
+  !! Temporary number of pools
   INTEGER, ALLOCATABLE :: irvec_k(:, :)
   !! INTEGER components of the ir-th Wigner-Seitz grid point in the basis
   !! of the lattice vectors for electrons
@@ -184,12 +182,11 @@
   !! INTEGER components of the ir-th Wigner-Seitz grid point for phonons
   INTEGER, ALLOCATABLE :: irvec_g(:, :)
   !! INTEGER components of the ir-th Wigner-Seitz grid point for electron-phonon
-  INTEGER, ALLOCATABLE :: ndegen_k (:, :, :)
+  INTEGER, ALLOCATABLE :: ndegen_k(:, :, :)
   !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
-  INTEGER, ALLOCATABLE :: ndegen_q (:, :, :)
-  !! Wigner-Seitz weights for the phonon grid that depend on 
-  !! atomic positions $R + \tau(nb) - \tau(na)$
-  INTEGER, ALLOCATABLE :: ndegen_g (:, :, :, :)
+  INTEGER, ALLOCATABLE :: ndegen_q(:, :, :)
+  !! Wigner-Seitz weights for the phonon grid that depend on atomic positions $R + \tau(nb) - \tau(na)$
+  INTEGER, ALLOCATABLE :: ndegen_g(:, :, :, :)
   !! Wigner-Seitz weights for the electron-phonon grid that depend on 
   !! atomic positions $R - \tau(na)$
   INTEGER, ALLOCATABLE :: selecq(:)
@@ -206,14 +203,20 @@
   !! To average eta_av
 #if defined(__MPI)
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_tot
+  !! Total number of points store on file 
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_totcb
+  !! Total number of points store on file (CB)
+  INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
   !! Offset to tell where to start reading the file
 #else
   INTEGER :: ind_tot
+  !! Total number of points store on file 
   INTEGER :: ind_totcb
+  !! Total number of points store on file (CB)
+  INTEGER :: lsize
   !! Offset to tell where to start reading the file
 #endif
-  !  
+  ! 
   REAL(KIND = DP) :: rdotk_scal
   !! Real (instead of array) for $r\cdot k$
   REAL(KIND = DP) :: xxq(3)
@@ -222,7 +225,7 @@
   !! Current k-point on the fine grid
   REAL(KIND = DP) :: xkk(3)
   !! Current k-point on the fine grid
-  REAL(KIND = DP) :: xkq(3)
+  REAL(KIND = DP) :: xkq2(3)
   !! Current k+q point on the fine grid
   REAL(KIND = DP) :: rws(0:3, nrwsx)
   !! Real-space wigner-Seitz vectors
@@ -252,9 +255,9 @@
   !! Same but in sequential
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
-  REAL(KIND = DP), ALLOCATABLE :: w2 (:)
+  REAL(KIND = DP), ALLOCATABLE :: w2(:)
   !! Interpolated phonon frequency
-  REAL(KIND = DP), ALLOCATABLE :: irvec_r (:, :)
+  REAL(KIND = DP), ALLOCATABLE :: irvec_r(:, :)
   !! Wigner-Size supercell vectors, store in real instead of integer
   REAL(KIND = DP), ALLOCATABLE :: rdotk(:)
   !! $r\cdot k$
@@ -309,16 +312,15 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
   ! 
-  IF (nbndsub /= nbnd) &
-       WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used:  nbndsub = ', nbndsub
+  CALL start_clock ('ephwann')
+  ! 
+  IF (nbndsub /= nbnd) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
   ALLOCATE(cu(nbnd, nbndsub, nks))
   ALLOCATE(cuq(nbnd, nbndsub, nks))
   ALLOCATE(lwin(nbnd, nks))
   ALLOCATE(lwinq(nbnd, nks))
   ALLOCATE(exband(nbnd)) 
-  !
-  CALL start_clock ('ephwann')
   !
   IF (epwread) THEN
     !
@@ -366,12 +368,12 @@
   ENDIF
   !
   ALLOCATE(w2(3 * nat))
+  w2(:) = zero
   ! 
   IF (lpolar) THEN
     WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic long-range interaction for polar materials [lpolar]'
     WRITE(stdout, '(5x,a)' )   ' '
   ENDIF
-
   !
   ! Determine Wigner-Seitz points
   ! 
@@ -379,7 +381,9 @@
   ! w_centers is allocated inside loadumat
   IF (.NOT. epwread) THEN
     xxq = 0.d0
+    ALLOCATE(xkq(3, nkstot))
     CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+    DEALLOCATE(xkq)
   ENDIF
   !
   ! Inside we allocate irvec_k, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g,
@@ -396,7 +400,7 @@
     ! Center the WS at Gamma for electonic part, the phonon part and el-ph part
     dims  = 1
     dims2 = 1
-    dummy(:) = (/0.0,0.0,0.0/)
+    dummy(:) = (/0.0, 0.0, 0.0/)
     CALL wigner_seitz_wrap(nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
                            ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, &
                            dummy, dims, dummy, dims2)
@@ -454,13 +458,15 @@
     !   Bloch to Wannier transform
     ! ------------------------------------------------------
     !
-    ALLOCATE(chw   (nbndsub, nbndsub, nrr_k))
+    ALLOCATE(chw(nbndsub, nbndsub, nrr_k))
     ALLOCATE(chw_ks(nbndsub, nbndsub, nrr_k))
-    ALLOCATE(rdw   (nmodes,  nmodes,  nrr_q))
+    ALLOCATE(rdw(nmodes, nmodes, nrr_q))
     IF (vme) THEN 
       ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k))
+      cvmew(:, :, :, :) = czero
     ELSE
       ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k))
+      cdmew(:, :, :, :) = czero
     ENDIF
     ! 
     ! SP : Let the user chose. If false use files on disk
@@ -499,8 +505,10 @@
       xxq = xqc(:, iq)
       !
       ! we need the cu again for the k+q points, we generate the map here
-      !
+      ! 
+      ALLOCATE(xkq(3, nkstot))
       CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+      DEALLOCATE(xkq)
       !
       DO imode = 1, nmodes
         !
@@ -552,14 +560,15 @@
   WRITE(stdout, '(a)' )             '     '
   
   !
-  !  At this point, we will interpolate the Wannier rep to the Bloch rep 
-  !  for electrons, phonons and the ep-matrix
+  ! At this point, we will interpolate the Wannier rep to the Bloch rep 
+  ! for electrons, phonons and the ep-matrix
   !
-  !  need to add some sort of parallelization (on g-vectors?)  what
-  !  else can be done when we don't ever see the wfcs??
-  !
+  ! Load the fine-grid q and k grids. 
+  ! nkqtotf is computed inside
   CALL loadqmesh_serial
   CALL loadkmesh_para
+  ! Defines the total number of k-points
+  nktotf = nkqtotf / 2
   !
   ALLOCATE(epmatwef(nbndsub, nbndsub, nrr_k))
   ALLOCATE(wf(nmodes, nqf))
@@ -581,8 +590,10 @@
   !
   IF (vme) THEN 
     ALLOCATE(vmef(3, nbndsub, nbndsub, 2 * nkf))
+    vmef(:, :, :, :) = czero
   ELSE
     ALLOCATE(dmef(3, nbndsub, nbndsub, 2 * nkf))
+    dmef(:, :, :, :) = czero
   ENDIF
   !
   IF (vme .AND. eig_read) THEN
@@ -595,13 +606,13 @@
     etfd(:, :, :)     = zero
     etfd_ks(:, :, :)  = zero
   ENDIF
-
+  ! 
   ALLOCATE(cfac(nrr_k, dims, dims))
   ALLOCATE(cfacq(nrr_k, dims, dims))
   ALLOCATE(rdotk(nrr_k))
   ALLOCATE(rdotk2(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
-  ALLOCATE(irvec_r(3,nrr_k))
+  ALLOCATE(irvec_r(3, nrr_k))
   irvec_r = REAL(irvec_k, KIND = DP)
   ! 
   ! Zeroing everything - initialization is important !
@@ -624,14 +635,14 @@
   !
   DO ik = 1, nkqf
     !
-    xxk = xkf (:, ik)
+    xxk = xkf(:, ik)
     !
-    IF (2*(ik/2) == ik) THEN
+    IF (2 * (ik / 2) == ik) THEN
       !
       !  this is a k+q point : redefine as xkf (:, ik-1) + xxq
       !
-      CALL cryst_to_cart(1, xxq, at,-1)
-      xxk = xkf (:, ik - 1) + xxq
+      CALL cryst_to_cart(1, xxq, at, -1)
+      xxk = xkf(:, ik - 1) + xxq
       CALL cryst_to_cart(1, xxq, bg, 1)
       !
     ENDIF
@@ -643,13 +654,12 @@
     DO iw = 1, dims
       DO iw2 = 1, dims
         DO ir = 1, nrr_k
-          IF (ndegen_k(ir, iw2, iw) > 0 ) cfac(ir, iw2, iw) = EXP(ci * rdotk(ir)) / ndegen_k(ir, iw2, iw)
+          IF (ndegen_k(ir, iw2, iw) > 0) cfac(ir, iw2, iw) = EXP(ci * rdotk(ir)) / ndegen_k(ir, iw2, iw)
         ENDDO
       ENDDO
     ENDDO
     ! 
     CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac, dims)
-    !
   ENDDO
   !
   WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
@@ -658,8 +668,7 @@
     !
     ef = fermi_energy
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
-    WRITE(stdout, '(/5x,a,f10.6,a)') &
-        'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)') 'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ! SP: even when reading from input the number of electron needs to be correct
@@ -672,8 +681,8 @@
           nelec = nelec - two * nbndskip
         ENDIF
         already_skipped = .TRUE.
-        WRITE(stdout,'(/5x,"Skipping the first ",i4," bands:")') nbndskip
-        WRITE(stdout,'(/5x,"The Fermi level will be determined with ",f9.5," electrons")') nelec
+        WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
+        WRITE(stdout, '(/5x,"The Fermi level will be determined with ", f9.5, " electrons")') nelec
       ENDIF
     ENDIF
     !      
@@ -696,15 +705,14 @@
           nelec = nelec - two * nbndskip
         ENDIF
         already_skipped = .TRUE.
-        WRITE(stdout, '(/5x,"Skipping the first ",i4," bands:")') nbndskip
-        WRITE(stdout, '(/5x,"The Fermi level will be determined with ",f9.5," electrons")') nelec
+        WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
+        WRITE(stdout, '(/5x,"The Fermi level will be determined with ", f9.5, " electrons")') nelec
       ENDIF
     ENDIF
     !
     ! Fermi energy
     !  
-    ! since wkf(:,ikq) = 0 these bands do not bring any contribution to Fermi level
-    !  
+    ! Since wkf(:,ikq) = 0 these bands do not bring any contribution to Fermi level
     IF (ABS(degaussw) < eps16) THEN
       ! Use 1 meV instead 
       efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, 1.0d0 / ryd2mev, ngaussw, 0, isk_dummy)
@@ -742,7 +750,10 @@
     WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
   ENDIF
   !
+  ! Identify the bands within fsthick from the Fermi level
+  ! Return ibndmin and ibndmax
   CALL fermiwindow
+  nbndfst = ibndmax - ibndmin + 1
   ! 
   ! Define it only once for the full run. 
   CALL fkbounds(nktotf, lower_bnd, upper_bnd)
@@ -750,7 +761,7 @@
   ! Re-order the k-point according to weather they are in or out of the fshick
   ! windows
   IF (iterative_bte .AND. mp_mesh_k) THEN
-    CALL load_rebal 
+    CALL load_rebal
   ENDIF
   !
   !  xqf must be in crystal coordinates
@@ -765,6 +776,8 @@
     atws(:, 1) = at(:, 1) * DBLE(nq1)
     atws(:, 2) = at(:, 2) * DBLE(nq2)
     atws(:, 3) = at(:, 3) * DBLE(nq3)
+    rws(:, :)  = zero
+    nrws       = 0
     ! initialize WS r-vectors
     CALL wsinit(rws, nrwsx, nrws, atws)
   ELSE 
@@ -1139,10 +1152,10 @@
           ikq = ikk + 1
           !
           xkk = xkf(:, ikk)
-          xkq = xkk + xxq
+          xkq2 = xkk + xxq
           !
           CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
-          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1)
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkq2, 1, 0.0_DP, rdotk2, 1)
           !
           IF (use_ws) THEN
             DO iw = 1, dims

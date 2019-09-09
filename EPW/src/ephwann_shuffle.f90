@@ -190,7 +190,7 @@
   !! atomic positions $R - \tau(na)$
   INTEGER, ALLOCATABLE :: selecq(:)
   !! Selected q-points within the fsthick window
-  INTEGER, PARAMETER :: nrwsx=200
+  INTEGER, PARAMETER :: nrwsx = 200
   !! Maximum number of real-space Wigner-Seitz
   INTEGER :: lrepmatw2_restart(npool)
   !! To restart opening files
@@ -430,8 +430,8 @@
   ! Open like this only in sequential. Otherwize open with MPI-open
   IF ((etf_mem == 1) .AND. (ionode)) THEN
     ! open the .epmatwe file with the proper record length
-    lrepmatw  = 2 * nbndsub * nbndsub * nrr_k * nmodes
-    filint    = TRIM(prefix)//'.epmatwp'
+    lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+    filint   = TRIM(prefix)//'.epmatwp'
     CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
   ENDIF
 #endif
@@ -462,7 +462,7 @@
     !
     ALLOCATE(chw(nbndsub, nbndsub, nrr_k))
     ALLOCATE(chw_ks(nbndsub, nbndsub, nrr_k))
-    ALLOCATE(rdw(nmodes,  nmodes,  nrr_q))
+    ALLOCATE(rdw(nmodes, nmodes, nrr_q))
     IF (vme) THEN 
       ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k))
       cvmew(:, :, :, :) = czero
@@ -684,27 +684,18 @@
     !
     ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
     ! + optimize the 2\pi r\cdot k with Blas
-    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1 )
+    CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1)
     ! 
     DO iw = 1, dims
       DO iw2 = 1, dims
         DO ir = 1, nrr_k
-          IF (ndegen_k(ir, iw2, iw) > 0 ) &
-            cfac(ir,iw2,iw) = EXP(ci * rdotk(ir)) / ndegen_k(ir, iw2, iw)
+          IF (ndegen_k(ir, iw2, iw) > 0) cfac(ir, iw2, iw) = EXP(ci * rdotk(ir)) / ndegen_k(ir, iw2, iw)
         ENDDO
       ENDDO
     ENDDO
     ! 
     CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac, dims)
   ENDDO
-  !
-  ! 27/06/2012 RM
-  ! in the case when a random or uniform fine k-mesh is used
-  ! calculate the Fermi level corresponding to the fine k-mesh 
-  ! this Fermi level is then used as a reference in fermiwindow 
-  ! 06/05/2014 CV
-  ! calculate the Fermi level corresponding to the fine k-mesh
-  ! or read it from input (Fermi level from the coarse grid may be wrong or inaccurate)
   !
   WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
   !
@@ -725,16 +716,16 @@
           nelec = nelec - two * nbndskip
         ENDIF
         already_skipped = .TRUE.
-        WRITE(stdout,'(/5x,"Skipping the first ", i4, " bands:")') nbndskip
-        WRITE(stdout,'(/5x,"The Fermi level will be determined with ", f9.5, " electrons")') nelec
+        WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
+        WRITE(stdout, '(/5x,"The Fermi level will be determined with ", f9.5, " electrons")') nelec
       ENDIF
     ENDIF
     !      
   ELSEIF (band_plot) THEN 
     !
-    WRITE(stdout,'(/5x,a)') REPEAT('=',67)
+    WRITE(stdout, '(/5x,a)') REPEAT('=',67)
     WRITE(stdout, '(/5x,"Fermi energy corresponds to the coarse k-mesh")')
-    WRITE(stdout,'(/5x,a)') REPEAT('=',67) 
+    WRITE(stdout, '(/5x,a)') REPEAT('=',67) 
     !
   ELSE 
     ! here we take into account that we may skip bands when we wannierize
@@ -749,8 +740,8 @@
           nelec = nelec - two * nbndskip
         ENDIF
         already_skipped = .TRUE.
-        WRITE(stdout,'(/5x,"Skipping the first ", i4, " bands:")') nbndskip
-        WRITE(stdout,'(/5x,"The Fermi level will be determined with ", f9.5, " electrons")') nelec
+        WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
+        WRITE(stdout, '(/5x,"The Fermi level will be determined with ", f9.5, " electrons")') nelec
       ENDIF
     ENDIF
     !
@@ -759,7 +750,7 @@
     ! Since wkf(:,ikq) = 0 these bands do not bring any contribution to Fermi level
     IF (ABS(degaussw) < eps16) THEN
       ! Use 1 meV instead 
-      efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, 1.0d0/ryd2mev, ngaussw, 0, isk_dummy)
+      efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, 1.0d0 / ryd2mev, ngaussw, 0, isk_dummy)
     ELSE
       efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
     ENDIF
