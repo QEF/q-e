@@ -589,27 +589,43 @@ CONTAINS
             ENDIF
             !
          CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
-            !
+            ! Clearly it makes sense to check for positive delta_t
+            ! If a negative delta_t is given, I suggest to have a message
+            ! printed, that delta_t is ignored (TODO)
             IF ( delta_t > 0 ) THEN
                !
-               temperature = temp_new*delta_t
+               temperature = temperature*delta_t
                !
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"Thermalization: T (",F6.1,"K) rescaled ",&
                                  & "by a factor ",F6.3)' ) temp_new, delta_t
+               !
                CALL thermalize( 0, temp_new, temperature )
+               !
             ENDIF
-            !
          CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
-            !
-            IF ( MOD( istep, nraise ) == 0 .AND. delta_t < 0 ) THEN
+            IF ( mod( istep, nraise ) == 0 ) THEN
                !
-               temperature = temp_new + delta_t
+               ! First printing message, than reduce target temperature:
                !
-               WRITE( UNIT = stdout, &
+               IF ( delta_t > 0 ) THEN
+                 WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) augmented ",&
+                                 & "by ",F6.3)' ) temperature, delta_t
+
+               ELSE
+                 WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
-                                 & "by ",F6.3)' ) temp_new, -delta_t
+                                 & "by ",F6.3)' ) temperature, -delta_t
+               ENDIF
+               ! I check whether the temperature is negative, so that I avoid
+               ! nonsensical behavior:
+               IF (temperature < 0.0D0 ) CALL errore('apply_thermostat','Negative target temperature',1)
+               !
+               temperature = temperature + delta_t
+               !
                CALL thermalize( 0, temp_new, temperature )
+               !
             ENDIF
             !
          CASE( 'berendsen', 'Berendsen' )
