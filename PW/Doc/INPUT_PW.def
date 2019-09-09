@@ -2330,12 +2330,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                         (second method) see parameters @ref tempw and @ref nraise
                     }
                     opt -val 'rescale-T' {
-                        control ionic temperature via velocity rescaling
-                        (third method) see parameter @ref delta_t
+                        scale temperature of the thermostat every @ref nraise steps
+                        by @ref delta_t, starting from @ref tempw.
+                        The temperature is controlled via velocitiy rescaling.
                     }
                     opt -val 'reduce-T' {
-                        reduce ionic temperature every @ref nraise steps
-                        by the (negative) value @ref delta_t
+                        reduce temperature of the thermostat every @ref nraise steps
+                        by the (negative) value @ref delta_t, starting from @ref tempw.
+                        If  @ref delta_t is positive, the target temperature is augmented.
+                        The temperature is controlled via velocitiy rescaling.
                     }
                     opt -val 'berendsen' {
                         control ionic temperature using "soft" velocity
