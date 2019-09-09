@@ -30,7 +30,7 @@
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
                           rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
-    USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq, nktotf 
+    USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_epw,    ONLY : iunkf
@@ -174,7 +174,7 @@
           ALLOCATE(wkf_(nkqtotf))
           wkf_(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
-            wkf_(2 * ik - 1) = 2.d0 / DBLE(nktotf)
+            wkf_(2 * ik - 1) = 2.d0 / DBLE(nkqtotf / 2)
           ENDDO
           DO i = 1, nkf1
             DO j = 1, nkf2
@@ -246,7 +246,7 @@
     ENDIF
     !
     nkf = nkqf / 2 
-    IF ((mpime /= ionode_id) THEN
+    IF (mpime /= ionode_id) THEN
       ALLOCATE(xkf_(3, nkqtotf))
       ALLOCATE(wkf_(nkqtotf))
     ENDIF
@@ -322,7 +322,7 @@
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
                           rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
-    USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq, nktotf
+    USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_epw,    ONLY : iunkf
@@ -431,7 +431,7 @@
           ALLOCATE(wkf(nkqtotf))
           wkf(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
-            wkf(2 * ik - 1) = 2.d0 / DBLE(nktotf)
+            wkf(2 * ik - 1) = 2.d0 / DBLE(nkqtotf / 2)
           ENDDO
           DO i = 1, nkf1
             DO j = 1, nkf2
@@ -485,7 +485,7 @@
       ENDIF
       !
       ! Serial
-      nkf = nktotf
+      nkf = nkqtotf / 2
       nkqf = nkqtotf
       !
     ENDIF
