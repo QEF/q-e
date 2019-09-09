@@ -8,7 +8,7 @@
   !                                                                            
   !-----------------------------------------------------------------------
   SUBROUTINE readmat_shuffle2(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
-                              invs, s, irt, rtau) 
+                              invs, s, irt, rtau, sumr) 
   !-----------------------------------------------------------------------
   !!
   !! read dynamical matrix for the q points, either in plain text or xml.
@@ -59,6 +59,8 @@
   !! Symmetry matrix 
   REAL(KIND = DP), INTENT(inout) :: rtau(3, 48, nat)
   !! the relative position of the rotated atom to the original one
+  REAL(KIND = DP), INTENT(inout) :: sumr(2, 3, nat, 3)
+  !! Sum to impose the ASR
   !
   ! Local variables 
   LOGICAL :: found
@@ -173,8 +175,6 @@
   !! 
   REAL(KIND = DP) :: dynr(2, 3, nat, 3, nat)
   !! 
-  REAL(KIND = DP) :: sumr(2, 3, nat, 3)
-  !! Sum to impose the ASR
   REAL(KIND = DP) :: sumz
   !! 
   REAL(KIND = DP) :: qout(3)
@@ -209,7 +209,6 @@
   !! Dynamical matrix
   !
   axis = 3 
-  sumr(:, :, :, :) = zero
   ! 
   ! the call to set_ndnmbr is just a trick to get quickly
   ! a file label by exploiting an existing subroutine
@@ -473,7 +472,7 @@
   ! SP: Be careful, here time-reversal is not actual time reversal but is due to 
   !     change in order and values of the q in the star between QE 4 and 5.
   !
-  CALL cryst_to_cart(nq1*nq2*nq3, q, at, -1)
+  CALL cryst_to_cart(nq1 * nq2 * nq3, q, at, -1)
   CALL cryst_to_cart(48, sxq, at, -1)
   !
   current_iq = iq_first
@@ -645,7 +644,7 @@
           wtmp(nu) = -SQRT(ABS(w1(nu)))
         ENDIF
       ENDDO
-      WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star")')
+      WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^-1)")')
       WRITE(stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
     ENDIF
     !END --------------------------------------------------

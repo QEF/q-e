@@ -187,6 +187,8 @@
   !! Wannier centers
   REAL(KIND = DP) :: qnorm_tmp
   !! Absolute value of xqc_irr
+  REAL(KIND = DP) :: sumr(2, 3, nat, 3)
+  !! Sum to impose the ASR
   COMPLEX(KIND = DP) :: eigv(ngm, 48)
   !! $e^{ iGv}$ for 1...nsym (v the fractional translation)
   COMPLEX(KIND = DP) :: cz1(nmodes, nmodes)
@@ -374,6 +376,7 @@
     ! In the loop over irr q-point, we need to read the pattern that
     ! corresponds to the dvscf file computed with QE 5.
     !
+    sumr(:, :, :, :) = zero
     nqc = 0
     iq_first = 1
     DO iq_irr = 1, nqc_irr
@@ -456,7 +459,7 @@
       !
       IF (meta_ionode) THEN
         CALL readmat_shuffle2(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
-                              invs, s, irt, rtau)
+                              invs, s, irt, rtau, sumr)
       ENDIF
       CALL mp_bcast(zstar, meta_ionode_id, world_comm)
       CALL mp_bcast(epsi , meta_ionode_id, world_comm)
