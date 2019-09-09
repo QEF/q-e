@@ -1509,7 +1509,7 @@
         ENDIF ! scattering
         ! --------------------------------------       
         !
-        CALL stop_clock ( 'ep-interp' )
+        CALL stop_clock ('ep-interp')
         !
       ENDIF ! scatread
     ENDDO  ! end loop over q points

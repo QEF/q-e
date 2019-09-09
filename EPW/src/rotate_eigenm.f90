@@ -44,7 +44,7 @@
   USE io_global,     ONLY : stdout
   USE elph2,         ONLY : dynq
   USE phcom,         ONLY : nmodes
-  USE constants_epw, ONLY : cone, czero, twopi, rydcm1, eps10 
+  USE constants_epw, ONLY : cone, czero, twopi, rydcm1, eps10, cmm12meV 
   USE control_flags, ONLY : iverbosity
   USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, nat, ityp
@@ -159,7 +159,7 @@
         wtmp(nu) = -SQRT(ABS(w1(nu)))
       ENDIF
     ENDDO
-    WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star")') 
+    WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (cm^{-1})")') 
     WRITE(stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
     !
   ENDIF
@@ -232,7 +232,8 @@
         wtmp(nu) = -SQRT(ABS(w2(nu)))
       ENDIF
     ENDDO
-    WRITE(stdout, '(6(2x,f10.5) )') (wtmp(nu) * rydcm1 * 0.12398d0, nu = 1, nmodes)
+    WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (meV)")') 
+    WRITE(stdout, '(6(2x,f10.5))') (wtmp(nu) * rydcm1 * cmm12meV, nu = 1, nmodes)
     !
   ENDIF
   !
@@ -281,8 +282,8 @@
         wtmp(nu) = -SQRT(ABS(w2(nu)))
       ENDIF
     ENDDO
-    WRITE (stdout, '(5x,"Frequencies of the matrix for the current q in the star")') 
-    WRITE (stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
+    WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^{-1})")') 
+    WRITE(stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
     !
   ENDIF
   !

@@ -92,8 +92,9 @@
   !! Logical vectors that say which crystal symmetries exist in our system
   LOGICAL :: nog
   !! Find if G=0 or not in $$S(q_0)+G=q$$
-  LOGICAL :: symmo
-  !! Check whether the symmetry belongs to a symmorphic group
+  LOGICAL :: non_symmorphic
+  !! Check whether the symmetry belongs to a non-symmorphic group
+  !! non_symmorphic == TRUE if it has fractional translation. 
   LOGICAL :: exst
   !! Find if a file exists.
   INTEGER :: sym_smallq(48) 
@@ -478,23 +479,23 @@
         !
         ! and populate the uniform grid
         nqc = nqc + 1
-        xqc(:,nqc) = xq
+        xqc(:, nqc) = xq
         !
-        IF (iq == 1) WRITE(stdout,*)
-        WRITE(stdout,5) nqc, xq
+        IF (iq == 1) WRITE(stdout, *)
+        WRITE(stdout, 5) nqc, xq
         !
-        !  prepare the gmap for the refolding
+        ! Prepare the gmap for the refolding
         !
         CALL createkmap(xq)              
         !
         IF (iverbosity == 1) THEN
           !
-          !   description of symmetries
+          ! Description of symmetries
           !
           WRITE(stdout, '(36x,"s",24x,"frac. trans.")')
           CALL s_axis_to_cart() ! give sr(:,:, isym)
           DO isym = 1, nsym
-            WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
+            WRITE(stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
             IF (ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8) THEN
                 ft1 = at(1,1)*ft(1,isym) + at(1,2)*ft(2,isym) + at(1,3)*ft(3,isym)
                 ft2 = at(2,1)*ft(1,isym) + at(2,2)*ft(2,isym) + at(2,3)*ft(3,isym)
@@ -549,7 +550,7 @@
         ! 
         IF (iverbosity == 1) THEN
           !
-          WRITE(stdout,*) 'iq, i, isym, nog, symmo'
+          WRITE(stdout,*) 'iq, i, isym, nog, non_symmorphic'
           DO i = 1, nsq
             !
             isym = sym_sgq(i)
@@ -570,9 +571,10 @@
             !
             !  check whether the symmetry belongs to a symmorphic group
             !
-            symmo = (ft(1, isym)**2 + ft(2, isym)**2 + ft(3, isym)**2 > 1.0d-8)
+            !symmo = (ft(1, isym)**2 + ft(2, isym)**2 + ft(3, isym)**2 > 1.0d-8)
+            non_symmorphic = (ft(1, isym) /= 0.0d0 .OR. ft(2, isym) /= 0.0d0 .OR. ft(3, isym) /= 0.0d0)
             !
-            WRITE(stdout,'(3i5,L3,L3)') iq, i, isym, nog, symmo
+            WRITE(stdout,'(3i5,L3,L3)') iq, i, isym, nog, non_symmorphic
             !
           ENDDO  
           !
