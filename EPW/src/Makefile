@@ -34,6 +34,7 @@ superconductivity_iso.o \
 io_eliashberg.o \
 io_scattering.o \
 wigner.o \
+readmat.o \
 grid.o \
 cum_mod.o \
 close_epw.o \
@@ -72,7 +73,6 @@ poolgather.o \
 print_ibte.o \
 readdvscf.o \
 readgmap.o \
-readmat.o \
 readwfc.o \
 rigid_epw.o \
 rotate_eigenm.o \

@@ -958,10 +958,6 @@
     !! number of such vectors
     INTEGER :: izeu_less 
     !!  temporary parameter
-    INTEGER, ALLOCATABLE :: w(:, :, :, :, :, :, :)
-    !! temporary vectors and parameters
-    INTEGER, ALLOCATABLE :: x(:, :, :, :, :, :, :)
-    !! temporary vectors and parameters
     INTEGER, ALLOCATABLE :: ind_v(:, :, :)
     !! 
     REAL(KIND = DP) :: zeu_new(3, 3, nat)
@@ -978,6 +974,10 @@
     !! 
     REAL(KIND = DP) :: zeu_x(3, 3, nat)
     !! 
+    REAL(KIND = DP), ALLOCATABLE :: w(:, :, :, :, :, :, :)
+    !! temporary vectors and parameters
+    REAL(KIND = DP), ALLOCATABLE :: x(:, :, :, :, :, :, :)
+    !! temporary vectors and parameters
     REAL(KIND = DP), ALLOCATABLE :: frc_new(:,:,:,:,:,:,:)
     !
     REAL(KIND = DP), ALLOCATABLE :: v(:, :)
@@ -1108,323 +1108,297 @@
     !
     ! Gram-Schmidt orthonormalization of the set of vectors created.
     !
-    nzeu_less=0
-    do k = 1,p
-       zeu_w(:, :, :)=zeu_u(k,:,:,:)
-       zeu_x(:, :, :)=zeu_u(k,:,:,:)
-       do q = 1,k-1
-          r=1
-          do izeu_less = 1,nzeu_less
-             if (zeu_less(izeu_less) == q) r=0
-          enddo
-          if (r/=0) then
-             call sp_zeu(zeu_x,zeu_u(q,:,:,:),nat,scal)
-             zeu_w(:, :, :) = zeu_w(:, :, :) - scal* zeu_u(q,:,:,:)
-          endif
-       enddo
-       call sp_zeu(zeu_w,zeu_w,nat,norm2)
-       if (norm2 > 1.0d-16) then
-          zeu_u(k,:,:,:) = zeu_w(:, :, :) / DSQRT(norm2)
-       else
-          nzeu_less=nzeu_less+1
-          zeu_less(nzeu_less)=k
-       endif
-    enddo
+    nzeu_less = 0
+    DO k = 1, p
+      zeu_w(:, :, :) = zeu_u(k, :, :, :)
+      zeu_x(:, :, :) = zeu_u(k, :, :, :)
+      DO q = 1, k - 1
+        r = 1
+        DO izeu_less = 1, nzeu_less
+          IF (zeu_less(izeu_less) == q) r = 0
+        ENDDO
+        IF (r /= 0) THEN
+          CALL sp_zeu(zeu_x, zeu_u(q, :, :, :), nat,scal)
+          zeu_w(:, :, :) = zeu_w(:, :, :) - scal * zeu_u(q, :, :, :)
+        ENDIF
+      ENDDO
+      CALL sp_zeu(zeu_w, zeu_w, nat, norm2)
+      IF (norm2 > 1.0d-16) THEN
+        zeu_u(k,:,:,:) = zeu_w(:, :, :) / DSQRT(norm2)
+      ELSE
+        nzeu_less = nzeu_less + 1
+        zeu_less(nzeu_less) = k
+      ENDIF
+    ENDDO
     !
     ! Projection of the effective charge "vector" on the orthogonal of the
     ! subspace of the vectors verifying the sum rules
     !
-    zeu_w(:, :, :)=0.0d0
-    do k = 1,p
-       r=1
-       do izeu_less = 1,nzeu_less
-          if (zeu_less(izeu_less) == k) r=0
-       enddo
-       if (r/=0) then
-          zeu_x(:, :, :)=zeu_u(k,:,:,:)
-          call sp_zeu(zeu_x,zeu_new,nat,scal)
-          zeu_w(:, :, :) = zeu_w(:, :, :) + scal*zeu_u(k,:,:,:)
-       endif
-    enddo
+    zeu_w(:, :, :) = 0.0d0
+    DO k = 1, p
+      r = 1
+      DO izeu_less = 1,nzeu_less
+        IF (zeu_less(izeu_less) == k) r = 0
+      ENDDO
+      IF (r /= 0) THEN
+        zeu_x(:, :, :) = zeu_u(k, :, :, :)
+        CALL sp_zeu(zeu_x, zeu_new, nat, scal)
+        zeu_w(:, :, :) = zeu_w(:, :, :) + scal * zeu_u(k, :, :, :)
+      ENDIF
+    ENDDO
     !
     ! Final substraction of the former projection to the initial zeu, to get
     ! the new "projected" zeu
     !
-    zeu_new(:, :, :)=zeu_new(:, :, :) - zeu_w(:, :, :)
-    call sp_zeu(zeu_w,zeu_w,nat,norm2)
-    WRITE(stdout,'(5x,"Norm of the difference between old and new effective charges: ", 1f12.7)') SQRT(norm2)
+    zeu_new(:, :, :) = zeu_new(:, :, :) - zeu_w(:, :, :)
+    cALL sp_zeu(zeu_w, zeu_w, nat, norm2)
+    WRITE(stdout, '(5x,"Norm of the difference between old and new effective charges: ", 1f12.7)') SQRT(norm2)
     !
-    ! Check projection
-    !
-    !write(6,'("Check projection of zeu")')
-    !do k = 1,p
-    !  zeu_x(:, :, :)=zeu_u(k,:,:,:)
-    !  call sp_zeu(zeu_x,zeu_new,nat,scal)
-    !  if (DABS(scal) > 1d-10) write(6,'("k= ",I8," zeu_new|zeu_u(k)= ",F15.10)')
-    !  k,scal
-    !enddo
-    !
-    do i = 1,3
-       do j = 1,3
-          do na = 1,nat
-             zeu(i,j,na)=zeu_new(i,j,na)
-          enddo
-       enddo
-    enddo
+    DO i = 1, 3
+      DO j = 1, 3
+        DO na = 1, nat
+          zeu(i, j, na) = zeu_new(i, j, na)
+        ENDDO
+      ENDDO
+    ENDDO
     !
     ! Acoustic Sum Rule on force constants
-    !
     !
     ! generating the vectors of the orthogonal of the subspace to project
     ! the force-constants matrix on
     !
-    do k = 1,18*nat
-       allocate(u(k) % vec(nr1,nr2,nr3,3,3,nat,nat))
-       u(k) % vec (:,:,:,:,:,:,:)=0.0d0
-    enddo
-    ALLOCATE(frc_new(nr1,nr2,nr3,3,3,nat,nat))
-    do i = 1,3
-       do j = 1,3
-          do na = 1,nat
-             do nb = 1,nat
-                do n1 = 1,nr1
-                   do n2 = 1,nr2
-                      do n3 = 1,nr3
-                         frc_new(n1,n2,n3,i,j,na,nb)=frc(n1,n2,n3,i,j,na,nb)
-                      enddo
-                   enddo
-                enddo
-             enddo
-          enddo
-       enddo
-    enddo
+    DO k = 1, 18 * nat
+      ALLOCATE(u(k) % vec(nr1, nr2, nr3, 3, 3, nat, nat))
+      u(k) % vec (:, :, :, :, :, :, :) = 0.0d0
+    ENDDO
+    ALLOCATE(frc_new(nr1, nr2, nr3, 3, 3, nat, nat))
+    DO i = 1, 3
+      DO j = 1, 3
+        DO na = 1, nat
+          DO nb = 1, nat
+            DO n1 = 1, nr1
+              DO n2 = 1, nr2
+                DO n3 = 1, nr3
+                  frc_new(n1, n2, n3, i, j, na, nb) = frc(n1, n2, n3, i, j, na, nb)
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
     !
-    p=0
-    do i = 1,3
-       do j = 1,3
-          do na = 1,nat
-             ! These are the 3*3*nat vectors associated with the
-             ! translational acoustic sum rules
-             p=p+1
-             u(p) % vec (:,:,:,i,j,na,:)=1.0d0
-             !
-          enddo
-       enddo
-    enddo
+    p = 0
+    DO i = 1, 3
+      DO j = 1, 3
+        DO na = 1, nat
+          ! These are the 3*3*nat vectors associated with the
+          ! translational acoustic sum rules
+          p = p + 1
+          u(p) % vec(:, :, :, i, j, na, :) = 1.0d0
+          !
+        ENDDO
+      ENDDO
+    ENDDO
     !
-    if (n == 4) then
-       do i = 1,3
-          do na = 1,nat
-             ! These are the 3*nat vectors associated with the
-             ! single rotational sum rule (1D system)
-             p=p+1
-             do nb = 1,nat
-                u(p) % vec (:,:,:,i,MOD(axis,3)+1,na,nb)=-tau(MOD(axis+1,3)+1,nb)
-                u(p) % vec (:,:,:,i,MOD(axis+1,3)+1,na,nb)=tau(MOD(axis,3)+1,nb)
-             enddo
-             !
-          enddo
-       enddo
-    endif
+    IF (n == 4) THEN
+      DO i = 1, 3
+        DO na = 1, nat
+          ! These are the 3*nat vectors associated with the
+          ! single rotational sum rule (1D system)
+          p = p + 1
+          DO nb = 1, nat
+            u(p) % vec(: ,:, :, i, MOD(axis, 3) + 1, na, nb) = -tau(MOD(axis + 1, 3) + 1, nb)
+            u(p) % vec(:, :, :, i, MOD(axis + 1, 3) + 1, na, nb) = tau(MOD(axis, 3) + 1, nb)
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDIF
     !
-    if (n == 6) then
-       do i = 1,3
-          do j = 1,3
-             do na = 1,nat
-                ! These are the 3*3*nat vectors associated with the
-                ! three rotational sum rules (0D system - typ. molecule)
-                p=p+1
-                do nb = 1,nat
-                   u(p) % vec (:,:,:,i,MOD(j,3)+1,na,nb)=-tau(MOD(j+1,3)+1,nb)
-                   u(p) % vec (:,:,:,i,MOD(j+1,3)+1,na,nb)=tau(MOD(j,3)+1,nb)
-                enddo
-                !
-             enddo
-          enddo
-       enddo
-    endif
+    IF (n == 6) THEN
+      DO i = 1, 3
+        DO j = 1, 3
+          DO na = 1, nat
+            ! These are the 3*3*nat vectors associated with the
+            ! three rotational sum rules (0D system - typ. molecule)
+            p = p + 1
+            DO nb = 1, nat
+              u(p) % vec(:, :, :, i, MOD(j, 3) + 1, na, nb) = -tau(MOD(j + 1, 3) + 1, nb)
+              u(p) % vec(:, :, :, i, MOD(j + 1, 3) + 1, na, nb) = tau(MOD(j, 3) + 1, nb)
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDIF
     !
-    allocate (ind_v(9*nat*nat*nr1*nr2*nr3,2,7), v(9*nat*nat*nr1*nr2*nr3,2) )
-    m=0
-    do i = 1,3
-       do j = 1,3
-          do na = 1,nat
-             do nb = 1,nat
-                do n1 = 1,nr1
-                   do n2 = 1,nr2
-                      do n3 = 1,nr3
-                         ! These are the vectors associated with the symmetry
-                         ! constraints
-                         q=1
-                         l=1
-                         do while((l <= m).AND.(q/=0))
-                            if ((ind_v(l,1,1) == n1).AND.(ind_v(l,1,2) == n2).AND. &
-                                 (ind_v(l,1,3) == n3).AND.(ind_v(l,1,4) == i).AND. &
-                                 (ind_v(l,1,5) == j).AND.(ind_v(l,1,6) == na).AND. &
-                                 (ind_v(l,1,7) == nb)) q=0
-                            if ((ind_v(l,2,1) == n1).AND.(ind_v(l,2,2) == n2).AND. &
-                                 (ind_v(l,2,3) == n3).AND.(ind_v(l,2,4) == i).AND. &
-                                 (ind_v(l,2,5) == j).AND.(ind_v(l,2,6) == na).AND. &
-                                 (ind_v(l,2,7) == nb)) q=0
-                            l=l+1
-                         enddo
-                         if ((n1 == MOD(nr1+1-n1,nr1)+1).AND.(n2 == MOD(nr2+1-n2,nr2)+1) &
-                              .AND.(n3 == MOD(nr3+1-n3,nr3)+1).AND.(i == j).AND.(na == nb)) q=0
-                         if (q/=0) then
-                            m=m+1
-                            ind_v(m,1,1)=n1
-                            ind_v(m,1,2)=n2
-                            ind_v(m,1,3)=n3
-                            ind_v(m,1,4)=i
-                            ind_v(m,1,5)=j
-                            ind_v(m,1,6)=na
-                            ind_v(m,1,7)=nb
-                            v(m,1)=1.0d0/DSQRT(2.0d0)
-                            ind_v(m,2,1)=MOD(nr1+1-n1,nr1)+1
-                            ind_v(m,2,2)=MOD(nr2+1-n2,nr2)+1
-                            ind_v(m,2,3)=MOD(nr3+1-n3,nr3)+1
-                            ind_v(m,2,4)=j
-                            ind_v(m,2,5)=i
-                            ind_v(m,2,6)=nb
-                            ind_v(m,2,7)=na
-                            v(m,2)=-1.0d0/DSQRT(2.0d0)
-                         endif
-                      enddo
-                   enddo
-                enddo
-             enddo
-          enddo
-       enddo
-    enddo
+    ALLOCATE(ind_v(9 * nat * nat * nr1 * nr2 * nr3, 2, 7))
+    ALLOCATE(v(9 * nat * nat * nr1 * nr2 * nr3, 2))
+    m = 0
+    DO i = 1, 3
+      DO j = 1, 3
+        DO na = 1, nat
+          DO nb = 1, nat
+            DO n1 = 1, nr1
+              DO n2 = 1, nr2
+                DO n3 = 1, nr3
+                  ! These are the vectors associated with the symmetry
+                  ! constraints
+                  q = 1
+                  l = 1
+                  DO WHILE((l <= m) .AND. (q /= 0))
+                    IF ((ind_v(l, 1, 1) == n1) .AND. (ind_v(l, 1, 2) == n2) .AND. &
+                        (ind_v(l, 1, 3) == n3) .AND. (ind_v(l, 1, 4) == i) .AND. &
+                        (ind_v(l, 1, 5) == j) .AND. (ind_v(l, 1, 6) == na) .AND. &
+                        (ind_v(l, 1, 7) == nb)) q = 0
+                    IF ((ind_v(l, 2, 1) == n1) .AND. (ind_v(l, 2, 2) == n2) .AND. &
+                        (ind_v(l, 2, 3) == n3) .AND. (ind_v(l, 2, 4) == i) .AND. &
+                        (ind_v(l, 2, 5) == j) .AND. (ind_v(l, 2, 6) == na) .AND. &
+                        (ind_v(l, 2, 7) == nb)) q = 0
+                    l = l + 1
+                  ENDDO
+                  IF ((n1 == MOD(nr1 + 1 - n1, nr1) + 1) .AND. (n2 == MOD(nr2 + 1 - n2, nr2) + 1) &
+                       .AND. (n3 == MOD(nr3 + 1 - n3, nr3) + 1) .AND. (i == j) .AND. (na == nb)) q = 0
+                  IF (q /= 0) THEN
+                    m = m + 1
+                    ind_v(m, 1, 1) = n1
+                    ind_v(m, 1, 2) = n2
+                    ind_v(m, 1, 3) = n3
+                    ind_v(m, 1, 4) = i
+                    ind_v(m, 1, 5) = j
+                    ind_v(m, 1, 6) = na
+                    ind_v(m, 1, 7) = nb
+                    v(m, 1) = 1.0d0 / DSQRT(2.0d0)
+                    ind_v(m, 2, 1) = MOD(nr1 + 1 - n1, nr1) + 1
+                    ind_v(m, 2, 2) = MOD(nr2 + 1 - n2, nr2) + 1
+                    ind_v(m, 2, 3) = MOD(nr3 + 1 - n3, nr3) + 1
+                    ind_v(m, 2, 4) = j
+                    ind_v(m, 2, 5) = i
+                    ind_v(m, 2, 6) = nb
+                    ind_v(m, 2, 7) = na
+                    v(m, 2) = -1.0d0 / DSQRT(2.0d0)
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
     !
     ! Gram-Schmidt orthonormalization of the set of vectors created.
     ! Note that the vectors corresponding to symmetry constraints are already
     ! orthonormalized by construction.
     !
-    n_less=0
-    allocate (w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat))
-    do k = 1,p
-       w(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
-       x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
-       do l = 1,m
-          !
-          call sp2(x,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
-          do r = 1,2
-             n1=ind_v(l,r,1)
-             n2=ind_v(l,r,2)
-             n3=ind_v(l,r,3)
-             i=ind_v(l,r,4)
-             j=ind_v(l,r,5)
-             na=ind_v(l,r,6)
-             nb=ind_v(l,r,7)
-             w(n1,n2,n3,i,j,na,nb)=w(n1,n2,n3,i,j,na,nb)-scal*v(l,r)
-          enddo
-       enddo
-       if (k <= (9*nat)) then
-          na1=MOD(k,nat)
-          if (na1 == 0) na1=nat
-          j1=MOD((k-na1)/nat,3)+1
-          i1=MOD((((k-na1)/nat)-j1+1)/3,3)+1
-       else
-          q=k-9*nat
-          if (n == 4) then
-             na1=MOD(q,nat)
-             if (na1 == 0) na1=nat
-             i1=MOD((q-na1)/nat,3)+1
-          else
-             na1=MOD(q,nat)
-             if (na1 == 0) na1=nat
-             j1=MOD((q-na1)/nat,3)+1
-             i1=MOD((((q-na1)/nat)-j1+1)/3,3)+1
-          endif
-       endif
-       do q = 1,k-1
-          r=1
-          do i_less = 1,n_less
-             if (u_less(i_less) == q) r=0
-          enddo
-          if (r/=0) then
-             call sp3(x,u(q) % vec (:,:,:,:,:,:,:), i1,na1,nr1,nr2,nr3,nat,scal)
-             w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) - scal* u(q) % vec(:,:,:,:,:,:,:)
-          endif
-       enddo
-       call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-       if (norm2 > 1.0d-16) then
-          u(k) % vec (:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) / DSQRT(norm2)
-       else
-          n_less=n_less+1
-          u_less(n_less)=k
-       endif
-    enddo
+    n_less = 0
+    ALLOCATE(w(nr1, nr2, nr3, 3, 3, nat, nat))
+    ALLOCATE(x(nr1, nr2, nr3, 3, 3, nat, nat))
+    DO k = 1, p
+      w(:, :, :, :, :, :, :) = u(k) % vec(:, :, :, :, :, :, :)
+      x(:, :, :, :, :, :, :) = u(k) % vec(:, :, :, :, :, :, :)
+      DO l = 1, m
+        !
+        CALL sp2(x, v(l, :), ind_v(l, :, :), nr1, nr2, nr3, nat, scal)
+        DO r = 1, 2
+          n1 = ind_v(l, r, 1)
+          n2 = ind_v(l, r, 2)
+          n3 = ind_v(l, r, 3)
+          i = ind_v(l, r, 4)
+          j = ind_v(l, r, 5)
+          na = ind_v(l, r, 6)
+          nb = ind_v(l, r, 7)
+          w(n1, n2, n3, i, j, na, nb) = w(n1, n2, n3, i, j, na, nb) - scal * v(l, r)
+        ENDDO
+      ENDDO
+      IF (k <= (9 * nat)) THEN
+        na1 = MOD(k, nat)
+        IF (na1 == 0) na1 = nat
+        j1 = MOD((k - na1) / nat, 3) + 1
+        i1 = MOD((((k - na1) / nat) - j1 + 1) / 3, 3) + 1
+      ELSE
+        q = k - 9 * nat
+        IF (n == 4) THEN
+          na1 = MOD(q, nat)
+          IF (na1 == 0) na1 = nat
+          i1 = MOD((q - na1) / nat, 3) + 1
+        ELSE
+          na1 = MOD(q, nat)
+          IF (na1 == 0) na1 = nat
+          j1 = MOD((q - na1) / nat, 3) + 1
+          i1 = MOD((((q - na1) / nat) - j1 + 1) / 3, 3) + 1
+        ENDIF
+      ENDIF
+      DO q = 1, k - 1
+        r = 1
+        DO i_less = 1, n_less
+          IF (u_less(i_less) == q) r = 0
+        ENDDO
+        IF (r /= 0) THEN
+          CALL sp3(x, u(q) % vec(:, :, :, :, :, :, :), i1, na1, nr1, nr2, nr3, nat, scal)
+          w(:, :, :, :, :, :, :) = w(:, :, :, :, :, :, :) - scal * u(q) % vec(:, :, :, :, :, :, :)
+        ENDIF
+      ENDDO
+      CALL sp1(w, w, nr1, nr2, nr3, nat, norm2)
+      IF (norm2 > 1.0d-16) THEN
+        u(k) % vec(:, :, :, :, :, :, :) = w(:, :, :, :, :, :, :) / DSQRT(norm2)
+      ELSE
+        n_less = n_less + 1
+        u_less(n_less) = k
+      ENDIF
+    ENDDO
     !
     ! Projection of the force-constants "vector" on the orthogonal of the
     ! subspace of the vectors verifying the sum rules and symmetry contraints
     !
-    w(:,:,:,:,:,:,:)=0.0d0
-    do l = 1,m
-       call sp2(frc_new,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
-       do r = 1,2
-          n1=ind_v(l,r,1)
-          n2=ind_v(l,r,2)
-          n3=ind_v(l,r,3)
-          i=ind_v(l,r,4)
-          j=ind_v(l,r,5)
-          na=ind_v(l,r,6)
-          nb=ind_v(l,r,7)
-          w(n1,n2,n3,i,j,na,nb)=w(n1,n2,n3,i,j,na,nb)+scal*v(l,r)
-       enddo
-    enddo
-    do k = 1,p
-       r=1
-       do i_less = 1,n_less
-          if (u_less(i_less) == k) r=0
-       enddo
-       if (r/=0) then
-          x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
-          call sp1(x,frc_new,nr1,nr2,nr3,nat,scal)
-          w(:,:,:,:,:,:,:) = w(:,:,:,:,:,:,:) + scal*u(k)%vec(:,:,:,:,:,:,:)
-       endif
-       deallocate(u(k) % vec)
-    enddo
+    w(:, :, :, :, :, :, :) = 0.0d0
+    DO l = 1, m
+      CALL sp2(frc_new, v(l, :), ind_v(l, :, :), nr1, nr2, nr3, nat, scal)
+      DO r = 1, 2
+        n1 = ind_v(l, r, 1)
+        n2 = ind_v(l, r, 2)
+        n3 = ind_v(l, r, 3)
+        i = ind_v(l, r, 4)
+        j = ind_v(l, r, 5)
+        na = ind_v(l, r, 6)
+        nb = ind_v(l, r, 7)
+        w(n1, n2, n3, i, j, na, nb) = w(n1, n2, n3, i, j, na, nb) + scal * v(l, r)
+      ENDDO
+    ENDDO
+    DO k = 1, p
+      r = 1
+      DO i_less = 1,n_less
+        IF (u_less(i_less) == k) r = 0
+      ENDDO
+      IF (r /= 0) THEN
+        x(:, :, :, :, :, :, :) = u(k) % vec(:, :, :, :, :, :, :)
+        call sp1(x, frc_new, nr1, nr2, nr3, nat, scal)
+        w(:, :, :, :, :, :, :) = w(:, :, :, :, :, :, :) + scal * u(k)%vec(:, :, :, :, :, :, :)
+      ENDIF
+      DEALLOCATE(u(k)%vec)
+    ENDDO
     !
     ! Final substraction of the former projection to the initial frc, to get
     ! the new "projected" frc
     !
-    frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - w(:,:,:,:,:,:,:)
-    call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-    WRITE(stdout,'(5x,"Norm of the difference between old and new force-constants: ", 1f12.7)') SQRT(norm2)
+    frc_new(:, :, :, :, :, :, :) = frc_new(:, :, :, :, :, :, :) - w(:, :, :, :, :, :, :)
+    CALL sp1(w, w, nr1, nr2, nr3, nat, norm2)
+    ! 
+    WRITE(stdout, '(5x,"Norm of the difference between old and new force-constants: ", 1f12.7)') SQRT(norm2)
     !
-    ! Check projection
-    !
-    !write(6,'("Check projection IFC")')
-    !do l = 1,m
-    !  call sp2(frc_new,v(l,:),ind_v(l,:,:),nr1,nr2,nr3,nat,scal)
-    !  if (DABS(scal) > 1d-10) write(6,'("l= ",I8," frc_new|v(l)= ",F15.10)')
-    !  l,scal
-    !enddo
-    !do k = 1,p
-    !  x(:,:,:,:,:,:,:)=u(k) % vec (:,:,:,:,:,:,:)
-    !  call sp1(x,frc_new,nr1,nr2,nr3,nat,scal)
-    !  if (DABS(scal) > 1d-10) write(6,'("k= ",I8," frc_new|u(k)= ",F15.10)')
-    !  k,scal
-    !  deallocate(u(k) % vec)
-    !enddo
-    !
-    do i = 1,3
-       do j = 1,3
-          do na = 1,nat
-             do nb = 1,nat
-                do n1 = 1,nr1
-                   do n2 = 1,nr2
-                      do n3 = 1,nr3
-                         frc(n1,n2,n3,i,j,na,nb)=frc_new(n1,n2,n3,i,j,na,nb)
-                      enddo
-                   enddo
-                enddo
-             enddo
-          enddo
-       enddo
-    enddo
+    DO i = 1, 3
+      DO j = 1, 3
+        DO na = 1, nat
+          DO nb = 1, nat
+            DO n1 = 1, nr1
+              DO n2 = 1, nr2
+                DO n3 = 1, nr3
+                  frc(n1, n2, n3, i, j, na, nb) = frc_new(n1, n2, n3, i, j, na, nb)
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
     DEALLOCATE(x)
     DEALLOCATE(w)
     DEALLOCATE(v)
@@ -1552,7 +1526,6 @@
     !! Index vector
     REAL(KIND = DP), INTENT(in) :: u(nr1, nr2, nr3, 3, 3, nat, nat)
     !! Input vector
-    INTEGER ind_v(2,7)
     REAL(KIND = DP), INTENT(in) :: v(2)
     !! input vector
     REAL(KIND = DP), INTENT(out) :: scal
