@@ -475,6 +475,13 @@ CONTAINS
                             &     "Characteristic time =",i3,"*timestep")') &
                                nraise
                !
+            CASE( 'svr', 'Svr', 'SVR' )
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is controlled by ", &
+                            &     "stochastic velocity rescaling",/,5x,&
+                            &     "Characteristic time   =",i3,"*timestep")') &
+                               nraise
             CASE( 'initial', 'Initial' )
                !
                WRITE( UNIT = stdout, &
@@ -611,6 +618,13 @@ CONTAINS
                 FMT = '(/,5X,"Soft (Berendsen) velocity rescaling")' )
             !
             CALL thermalize( nraise, temp_new, temperature )
+            !
+         CASE( 'svr', 'Svr', 'SVR' )
+            !
+            WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Canonical sampling velocity rescaling")' )
+            !
+            CALL thermalize_resamp_vscaling( nraise, temp_new, temperature )
             !
          CASE( 'andersen', 'Andersen' )
             !
@@ -1602,5 +1616,76 @@ CONTAINS
      !
    END SUBROUTINE smart_MC
    !
-   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE thermalize_resamp_vscaling (nraise, system_temp, required_temp)
+      !-----------------------------------------------------------------------
+      !
+      ! Sample velocities using stochastic velocity rescaling, based on
+      ! Bussi, Donadio, Parrinello, J. Chem. Phys. 126, 014101 (2007),
+      ! doi: 10.1063/1.2408420
+      !
+      ! Implemented (2019) by Leonid Kahle and Ngoc Linh Nguyen,
+      ! Theory and Simulations of Materials Laboratory, EPFL.
+      !
+      USE ions_base,          ONLY : nat, if_pos
+      USE constraints_module, ONLY : nconstr
+      USE cell_base,          ONLY : alat
+      USE random_numbers,     ONLY : gauss_dist, sum_of_gaussians2
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(in) :: system_temp, required_temp
+      INTEGER,  INTENT(in) :: nraise
+      !
+      INTEGER  :: i, ndof
+      REAL(DP) :: factor, rr
+      REAL(DP) :: aux, aux2
+      real(DP), external :: gasdev, sumnoises
+      INTEGER  :: na
+      !
+      ! ... the number of degrees of freedom
+      !
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
+         !
+         ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
+         !
+      ELSE
+         !
+         ndof = 3*nat - 3 - nconstr
+         !
+      ENDIF
+      !
+      IF ( nraise > 0 ) THEN
+         !
+         ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
+         ! ... Equivalent to traditional rescaling if nraise=1
+         !
+         factor = exp(-1.0/nraise)
+      ELSE
+         !
+         factor = 0.0
+         !
+      ENDIF
+      !
+      IF ( system_temp > 0.D0 .and. required_temp > 0.D0 ) THEN
+         !
+         ! Applying Eq. (A7) from J. Chem. Phys. 126, 014101 (2007)
+         !
+         rr = gauss_dist(0.0D0, 1.0D0)
+         aux2 = factor + (1.0D0-factor)*( sum_of_gaussians2(ndof-1) +rr**2) &
+                * required_temp/(ndof*system_temp) &
+                + 2*rr*sqrt((factor*(1.0D0-factor)*required_temp)/(ndof*system_temp))
+         !
+         aux  = sqrt(aux2)
+
+      ELSE
+         !
+         aux = 0.d0
+         !
+      ENDIF
+      !
+      ! Global rescaling applied to velocities
+      vel(:,:) = vel(:,:) * aux
+      !
+   END SUBROUTINE thermalize_resamp_vscaling
 END MODULE dynamics_module
