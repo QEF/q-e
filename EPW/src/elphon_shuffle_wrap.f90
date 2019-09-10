@@ -68,6 +68,7 @@
                             int4, int4_nc, int5, int5_so, alphap
   USE kfold,         ONLY : shift, createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_modes
+  USE readmat,       ONLY : readmat_shuffle2, read_ifc
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif

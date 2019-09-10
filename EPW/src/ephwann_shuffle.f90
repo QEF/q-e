@@ -55,8 +55,7 @@
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf,  transp_temp, mobilityh_save, xkq,          &
-                            mobilityel_save, lower_bnd, upper_bnd 
+                            nktotf,  transp_temp, xkq, lower_bnd, upper_bnd 
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -80,6 +79,7 @@
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
+  USE readmat,       ONLY : read_ifc
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -616,7 +616,7 @@
   wf(:, :)             = zero
   etf(:, :)            = zero
   etf_ks(:, :)         = zero
-  epmatf(:, :, :)        = czero
+  epmatf(:, :, :)      = czero
   cufkk(:, :)          = czero
   cufkq(:, :)          = czero
   uf(:, :)             = czero
@@ -891,8 +891,8 @@
     ! Check if the grids are homogeneous and commensurate
     homogeneous = .FALSE.
     IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
-         (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
-         (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. (MOD(nkf3,nqf3) == 0)) THEN
+        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
+        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
       homogeneous = .TRUE.
     ELSE
       homogeneous = .FALSE.
@@ -919,24 +919,24 @@
       ! 
       IF (exst) THEN
         IF (selecqread) THEN
-          WRITE(stdout,'(5x,a)')' '
-          WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
+          WRITE(stdout, '(5x,a)')' '
+          WRITE(stdout, '(5x,a)')'Reading selecq.fmt file. '
           CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
         ELSE 
-          WRITE(stdout,'(5x,a)')' '
-          WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .FALSE. '
+          WRITE(stdout, '(5x,a)')' '
+          WRITE(stdout, '(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .FALSE. '
           CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
         ENDIF
       ELSE ! exst
         IF (selecqread) THEN
-          CALL errore('ephwann_shuffle', 'Variable selecqread == .TRUE. but file selecq.fmt not found.',1 ) 
+          CALL errore( 'ephwann_shuffle', 'Variable selecqread == .TRUE. but file selecq.fmt not found.',1 ) 
         ELSE
           CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
         ENDIF
       ENDIF
       ! 
-      WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ', totq, ' q-points'
-      WRITE(stdout,'(5x,a)')' '
+      WRITE(stdout, '(5x,a,i8,a)')'We only need to compute ', totq, ' q-points'
+      WRITE(stdout, '(5x,a)')' '
       ! 
     ENDIF ! ephwrite
     ! 
@@ -949,11 +949,10 @@
     ! 
     ! Fine mesh set of g-matrices.  It is large for memory storage
     ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf))
-    epf17(:, :, :, :) = czero
     IF (phonselfen) THEN
       ALLOCATE(lambda_all(nmodes, totq, nsmear))
       ALLOCATE(lambda_v_all(nmodes, totq, nsmear))
-      ALLOCATE(gamma_all  (nmodes, totq, nsmear))
+      ALLOCATE(gamma_all(nmodes, totq, nsmear))
       ALLOCATE(gamma_v_all(nmodes, totq, nsmear))
       lambda_all(:, :, :)   = zero
       lambda_v_all(:, :, :) = zero
@@ -1025,7 +1024,7 @@
     ! Restart in IBTE case
     IF (iterative_bte) THEN
       IF (mpime == ionode_id) THEN
-        INQUIRE(FILE = 'restart_ibte.fmt',EXIST = exst)
+        INQUIRE(FILE = 'restart_ibte.fmt', EXIST = exst)
       ENDIF
       CALL mp_bcast(exst, ionode_id, world_comm)
       ! 
@@ -1075,7 +1074,7 @@
         CALL mp_bcast(ind_tot,   ionode_id, world_comm)
         CALL mp_bcast(ind_totcb, ionode_id, world_comm)
 #endif
-        IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_BCAST',1 )
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         ! 
         ! Now, the iq_restart point has been done, so we need to do the next 
         iq_restart = iq_restart + 1
@@ -1103,7 +1102,7 @@
       ! 
       iq = selecq(iqq)
       !   
-      CALL start_clock ( 'ep-interp' )
+      CALL start_clock ('ep-interp')
       !
       ! In case of big calculation, show progression of iq (especially usefull when
       ! elecselfen = true as nothing happen during the calculation otherwise. 
@@ -1556,7 +1555,7 @@
           IF (.NOT. iterative_bte) THEN
             CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle)
             ! Computes the SERTA mobility
-            IF (iqq == totq) CALL transport_coeffs (ef0,efcb)
+            IF (iqq == totq) CALL transport_coeffs(ef0, efcb)
           ENDIF
           ! 
           IF (iterative_bte) THEN
@@ -1630,8 +1629,8 @@
         DO iqq = 1, nqtotf
           !
           DO imode = 1, nmodes
-            WRITE(linewidth_phself,'(i9,i6,E20.8,E22.10)') iqq, imode, &
-                     ryd2mev * wf(imode, iqq), 2.0d0 * ryd2mev * REAL(gamma_all(imode, iqq, 1))
+            WRITE(linewidth_phself, '(i9,i6,E20.8,E22.10)') iqq, imode, &
+                                   ryd2mev * wf(imode, iqq), 2.0d0 * ryd2mev * REAL(gamma_all(imode, iqq, 1))
           ENDDO
           !
         ENDDO
@@ -1645,7 +1644,7 @@
     ! if scattering is read then Fermi level and scissor have not been computed.
     IF (scatread) THEN
       IF (ABS(scissor) > 0.000001) THEN
-        icbm = FLOOR(nelec/2.0d0) + nbndskip + 1
+        icbm = FLOOR(nelec / 2.0d0) + nbndskip + 1
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ikq = ikk + 1

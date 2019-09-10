@@ -72,7 +72,7 @@ poolgather.o \
 print_ibte.o \
 readdvscf.o \
 readgmap.o \
-readmat_shuffle2.o \
+readmat.o \
 readwfc.o \
 rigid_epw.o \
 rotate_eigenm.o \

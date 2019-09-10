@@ -40,7 +40,7 @@
     USE io_epw,        ONLY : iospectral_sup, iospectral_cum
     USE epwcom,        ONLY : degaussw, eptemp, wmin_specfun, wmax_specfun, nw_specfun, &
                               bnd_cum
-    USE elph2,         ONLY : ibndmin, ibndmax, nbndfst
+    USE elph2,         ONLY : ibndmin, ibndmax
     !
     IMPLICIT NONE
     !
@@ -128,21 +128,21 @@
     !
     ALLOCATE(ww(nw_specfun))
     ALLOCATE(ek(nk))
-    ALLOCATE(sigmar(nk,nw_specfun))
-    ALLOCATE(sigmai(nk,nw_specfun))
-    ALLOCATE(a_mig(nw_specfun,nk))
+    ALLOCATE(sigmar(nk, nw_specfun))
+    ALLOCATE(sigmai(nk, nw_specfun))
+    ALLOCATE(a_mig(nw_specfun, nk))
     ALLOCATE(a_cw(nw_specfun))
     ALLOCATE(a_ct(nw_specfun))
     ALLOCATE(a_tmp(nw_specfun))
     !
     ! read and store Kohn-Sham energy, energy grid, real and im sigma for designated band
     DO im = 1,6
-      READ (iospectral_sup, '(a)') line
+      READ(iospectral_sup, '(a)') line
     ENDDO
-    DO ibnd = 1, nbndfst
+    DO ibnd = 1, ibndmax - ibndmin + 1
       DO ik = 1, nk
         DO iw = 1, nw_specfun
-          READ (iospectral_sup,*) i1, i2, a1, a2, a3, a4
+          READ(iospectral_sup,*) i1, i2, a1, a2, a3, a4
           IF (i2 == bnd_cum) THEN
             ! ek, w read in eV; Sigma read in meV
             ek(ik) = a1 / ryd2ev
@@ -150,13 +150,13 @@
             sigmar(ik, iw) = a3 / ryd2mev ! / ( EXP(ww(iw)/eptemp )+1.d0 )
             sigmai(ik, iw) = a4 / ryd2mev ! / ( EXP(ww(iw)/eptemp )+1.d0 )
             ! spec func as in spectral_func.f90
-            a_mig(iw, ik) = ABS(sigmai(ik, iw) ) / pi / ((ww(iw) - ek(ik) - sigmar(ik, iw))**two + (sigmai(ik, iw) )**two)
+            a_mig(iw, ik) = ABS(sigmai(ik, iw)) / pi / ((ww(iw) - ek(ik) - sigmar(ik, iw))**two + (sigmai(ik, iw) )**two)
           ENDIF
         ENDDO
       ENDDO
     ENDDO
     ! 
-    CLOSE (iospectral_sup)
+    CLOSE(iospectral_sup)
     !
     ! open file for cumulant spectral function
     IF (bnd_cum < 10) THEN
@@ -203,15 +203,15 @@
           ! write cumulant spectral function on file (in meV^-1, as in spectral_func.f90)
           ! 3rd column: A_cum using convolutions; 4th column: A_cum using FFT
           IF (iw == 1) THEN
-            WRITE (iospectral_cum, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7,3x,f8.4)') &
-                   ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta 
-            WRITE (stdout,'(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7,3x,f8.4)') &
-                   ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta 
+            WRITE(iospectral_cum, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7,3x,f8.4)') &
+                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta 
+            WRITE(stdout,'(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7,3x,f8.4)') &
+                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta 
           ELSE 
-            WRITE (iospectral_cum, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
-                   ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev !/ ( EXP(ww(iw)/eptemp )+1.d0 )
-            WRITE (stdout, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
-                   ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev !/ ( EXP(ww(iw)/eptemp )+1.d0 )
+            WRITE(iospectral_cum, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
+                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev !/ ( EXP(ww(iw)/eptemp )+1.d0 )
+            WRITE(stdout, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
+                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev !/ ( EXP(ww(iw)/eptemp )+1.d0 )
             ! uncomment to multiply by Fermi occupation factor
           ENDIF
           !
@@ -226,7 +226,7 @@
     ! 
     WRITE(stdout, '(5x,a)') 'The file specfun_cum[BND].elself has been correctly written'
     !
-    CLOSE (iospectral_cum)
+    CLOSE(iospectral_cum)
     !
     DEALLOCATE(ww)
     DEALLOCATE(ek)
@@ -237,7 +237,9 @@
     DEALLOCATE(a_ct)
     DEALLOCATE(a_tmp)
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE spectral_cumulant
+    !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
     SUBROUTINE cumulant_conv(ek, ww, sigmar, sigmai, a_mig, a_cum, zeta)
