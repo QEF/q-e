@@ -1008,6 +1008,13 @@ SUBROUTINE iosys()
      temperature  = tempw
      nraise_      = nraise
      !
+   CASE( 'svr', 'Svr', 'SVR' )
+     !
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
+     temperature  = tempw
+     nraise_      = nraise
+     !
   CASE( 'andersen', 'Andersen' )
      !
      control_temp = .true.

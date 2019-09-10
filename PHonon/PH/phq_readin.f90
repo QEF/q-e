@@ -814,13 +814,14 @@ SUBROUTINE phq_readin()
      ENDIF
   ENDIF
   IF (lgamma_gamma.AND.ldiag) CALL errore('phq_readin','incompatible flags',1)
+  IF (lgamma_gamma.AND.elph ) CALL errore('phq_readin','lgamma_gamma and electron-phonon are incompatible',1)
   !
   IF (tfixed_occ) &
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
   !
   !YAMBO >
-  IF (elph.AND..NOT.(lgauss .or. ltetra).and..NOT.elph_yambo) CALL errore ('phq_readin', 'Electron-&
-       &phonon only for metals', 1)
+  IF (elph.AND..NOT.(lgauss .or. ltetra).and..NOT.elph_yambo) &
+          CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
   IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
        &a DeltaVscf file', 1)
