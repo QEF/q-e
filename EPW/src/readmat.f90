@@ -888,6 +888,7 @@
       CLOSE(iunifc)
     ENDIF
     !
+    DEALLOCATE(ifc)
     WRITE(stdout, '(/5x,"Finished reading ifcs"/)')
     !
     !-------------------------------------------------------------------------------
