@@ -2,7 +2,8 @@ New in development branch:
   * turbo_eels code of TDDFPT module now works with ultrasoft pseudopotentials
     and spin-orbit coupling together (Oleksandr Motornyi, Andrea Dal Corso,
     Nathalie Vast). lr_sm1_psi.f90 of LR_Modules is rewritten and simplified.
-
+  * Stochastic-velocity rescaling as a new thermostat for constant-cell MD as
+    implemented in dynamics_module (Leonid Kahle, Ngoc Linh Nguyen)
 Problems fixed in development branch :
   * at2celldm wasn't properly converting vectors into celldm parameters
     in the ibtrav=91 case (Tone)
