@@ -2348,6 +2348,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                         control ionic temperature using Andersen thermostat
                         see parameters @ref tempw and @ref nraise
                     }
+                    opt -val 'svr' {
+                        control ionic temperature using stochastic-velocity rescaling
+                        (Donadio, Bussi, Parrinello, J. Chem. Phys. 126, 014101, 2007),
+                        with parameters @ref tempw and @ref nraise.
+                    }
                     opt -val 'initial' {
                         initialize ion velocities to temperature @ref tempw
                         and leave uncontrolled further on
@@ -2418,6 +2423,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     if @ref ion_temperature == 'andersen' :
                            the "collision frequency" parameter is given as nu=1/tau
                            defined above, so nu*dt = 1/nraise
+
+                    if @ref ion_temperature == 'svr' :
+                           the "characteristic time" of the thermostat is set to
+                           tau = nraise*dt
                 }
             }
 
