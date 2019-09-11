@@ -312,11 +312,16 @@
   ! 
   IF (nbndsub /= nbnd) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
-  ALLOCATE(cu(nbnd, nbndsub, nks))
-  ALLOCATE(cuq(nbnd, nbndsub, nks))
-  ALLOCATE(lwin(nbnd, nks))
-  ALLOCATE(lwinq(nbnd, nks))
-  ALLOCATE(exband(nbnd)) 
+  ALLOCATE(cu(nbnd, nbndsub, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cu', 1)
+  ALLOCATE(cuq(nbnd, nbndsub, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cuq', 1)
+  ALLOCATE(lwin(nbnd, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwin', 1)
+  ALLOCATE(lwinq(nbnd, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lwinq', 1)
+  ALLOCATE(exband(nbnd), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating exband', 1)
   cu(:, :, :)  = czero
   cuq(:, :, :) = czero
   lwin(:, :)   = .FALSE.
@@ -336,10 +341,12 @@
       READ(crystal,*) bg
       READ(crystal,*) omega
       READ(crystal,*) alat
-      ALLOCATE(tau(3, nat))
+      ALLOCATE(tau(3, nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating tau', 1)
       READ(crystal,*) tau
       READ(crystal,*) amass
-      ALLOCATE(ityp(nat))
+      ALLOCATE(ityp(nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ityp', 1)
       READ(crystal,*) ityp
       READ(crystal,*) noncolin
       READ(crystal,*) w_centers
@@ -363,7 +370,8 @@
       CLOSE(crystal)
     ENDIF
     IF (lifc) THEN
-      ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat))
+      ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ifc', 1)
       ifc(:, :, :, :, :, :, :) = zero
     ENDIF
     ! 
@@ -371,7 +379,8 @@
     CONTINUE
   ENDIF
   !
-  ALLOCATE(w2(3 * nat))
+  ALLOCATE(w2(3 * nat), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating w2', 1)
   w2(:) = zero
   ! 
   IF (lpolar) THEN
@@ -385,9 +394,11 @@
   ! w_centers is allocated inside loadumat
   IF (.NOT. epwread) THEN
     xxq = 0.d0
-    ALLOCATE(xkq(3, nkstot))
+    ALLOCATE(xkq(3, nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating xkq', 1)
     CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
-    DEALLOCATE(xkq)
+    DEALLOCATE(xkq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating xkq', 1)
   ENDIF
   !
   ! Inside we allocate irvec_k, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g,
@@ -463,25 +474,33 @@
     !   Bloch to Wannier transform
     ! ------------------------------------------------------
     !
-    ALLOCATE(chw(nbndsub, nbndsub, nrr_k))
-    ALLOCATE(chw_ks(nbndsub, nbndsub, nrr_k))
-    ALLOCATE(rdw(nmodes, nmodes, nrr_q))
+    ALLOCATE(chw(nbndsub, nbndsub, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating chw', 1)
+    ALLOCATE(chw_ks(nbndsub, nbndsub, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating chw_ks', 1)
+    ALLOCATE(rdw(nmodes, nmodes, nrr_q), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating rdw', 1)
     IF (vme) THEN 
-      ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k))
+      ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cvmew', 1)
       cvmew(:, :, :, :) = czero
     ELSE
-      ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k))
+      ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cdmew', 1)
       cdmew(:, :, :, :) = czero
     ENDIF
     ! 
     ! SP : Let the user chose. If false use files on disk
     IF (etf_mem == 0) THEN
-      ALLOCATE(epmatwe(nbndsub, nbndsub, nrr_k, nmodes, nqc))
-      ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g))
+      ALLOCATE(epmatwe(nbndsub, nbndsub, nrr_k, nmodes, nqc), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatwe', 1)
+      ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatwp', 1)
       epmatwe(:, :, :, :, :) = czero
       epmatwp(:, :, : ,: ,:) = czero
     ELSE
-      ALLOCATE(epmatwe_mem(nbndsub, nbndsub, nrr_k, nmodes))
+      ALLOCATE(epmatwe_mem(nbndsub, nbndsub, nrr_k, nmodes), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatwe_mem', 1)
       epmatwe_mem(:, :, :, :) = czero
     ENDIF
     !
@@ -518,9 +537,11 @@
       !
       ! we need the cu again for the k+q points, we generate the map here
       ! 
-      ALLOCATE(xkq(3, nkstot))
+      ALLOCATE(xkq(3, nkstot), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating xkq', 1)
       CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
-      DEALLOCATE(xkq)
+      DEALLOCATE(xkq, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating xkq', 1)
       !
       DO imode = 1, nmodes
         !
@@ -559,21 +580,30 @@
        CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers) 
     ENDIF
     !
-    DEALLOCATE(epmatq)
-    DEALLOCATE(dynq)
+    DEALLOCATE(epmatq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatq', 1)
+    DEALLOCATE(dynq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dynq', 1)
     IF (.NOT. vme) DEALLOCATE(dmec)
     IF (etf_mem == 0) THEN
-      DEALLOCATE(epmatwe)
+      DEALLOCATE(epmatwe, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwe', 1)
     ELSE
-      DEALLOCATE(epmatwe_mem)
+      DEALLOCATE(epmatwe_mem, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwe_mem', 1)
     ENDIF
   ENDIF ! (epwread .AND. .NOT. epbread)
   !
-  DEALLOCATE(cu)
-  DEALLOCATE(cuq)
-  DEALLOCATE(lwin)
-  DEALLOCATE(lwinq)
-  DEALLOCATE(exband)
+  DEALLOCATE(cu, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cu', 1)
+  DEALLOCATE(cuq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cuq', 1)
+  DEALLOCATE(lwin, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwin', 1)
+  DEALLOCATE(lwinq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lwinq', 1)
+  DEALLOCATE(exband, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating exband', 1)
   ! 
   IF (etf_mem == 1) THEN
     CLOSE(iunepmatwe, STATUS = 'delete')
@@ -592,7 +622,6 @@
   WRITE(stdout, '(a,i10,a)' ) '                   VmPeak =',valueRSS(1)/1024,'Mb'
   WRITE(stdout, '(a)' )             '     ==================================================================='
   WRITE(stdout, '(a)' )             '     '
-  
   !
   ! At this point, we will interpolate the Wannier rep to the Bloch rep 
   ! for electrons, phonons and the ep-matrix
@@ -604,17 +633,28 @@
   ! Defines the total number of k-points
   nktotf = nkqtotf / 2
   !
-  ALLOCATE(epmatwef(nbndsub, nbndsub, nrr_k, nmodes))
-  ALLOCATE(wf(nmodes, nqf))
-  ALLOCATE(etf(nbndsub, nkqf))
-  ALLOCATE(etf_ks(nbndsub, nkqf)) 
-  ALLOCATE(epmatf(nbndsub, nbndsub, nmodes))
-  ALLOCATE(cufkk(nbndsub, nbndsub))
-  ALLOCATE(cufkq(nbndsub, nbndsub))
-  ALLOCATE(uf(nmodes, nmodes))
-  ALLOCATE(bmatf(nbndsub, nbndsub))
-  ALLOCATE(eps_rpa(nmodes))
-  ALLOCATE(isk_dummy(nkqf))
+  ALLOCATE(epmatwef(nbndsub, nbndsub, nrr_k, nmodes), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatwef', 1)
+  ALLOCATE(wf(nmodes, nqf), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wf', 1)
+  ALLOCATE(etf(nbndsub, nkqf), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf', 1)
+  ALLOCATE(etf_ks(nbndsub, nkqf), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf_ks', 1)
+  ALLOCATE(epmatf(nbndsub, nbndsub, nmodes), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epmatf', 1)
+  ALLOCATE(cufkk(nbndsub, nbndsub), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cufkk', 1)
+  ALLOCATE(cufkq(nbndsub, nbndsub), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cufkq', 1)
+  ALLOCATE(uf(nmodes, nmodes), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating uf', 1)
+  ALLOCATE(bmatf(nbndsub, nbndsub), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating bmatf', 1)
+  ALLOCATE(eps_rpa(nmodes), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eps_rpa', 1)
+  ALLOCATE(isk_dummy(nkqf), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating isk_dummy', 1)
   epmatwef(:, :, :, :) = czero
   wf(:, :)             = zero
   etf(:, :)            = zero
@@ -630,30 +670,41 @@
   ! Allocate velocity and dipole matrix elements after getting grid size
   !
   IF (vme) THEN 
-    ALLOCATE(vmef(3, nbndsub, nbndsub, 2 * nkf))
+    ALLOCATE(vmef(3, nbndsub, nbndsub, 2 * nkf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vmef', 1)
     vmef(:, :, :, :) = czero
   ELSE
-    ALLOCATE(dmef(3, nbndsub, nbndsub, 2 * nkf))
+    ALLOCATE(dmef(3, nbndsub, nbndsub, 2 * nkf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating dmef', 1)
     dmef(:, :, :, :) = czero
   ENDIF
   !
   IF (vme .AND. eig_read) THEN
-    ALLOCATE(cfacd(nrr_k, dims, dims, 6))
-    ALLOCATE(cfacqd(nrr_k, dims, dims, 6))
-    ALLOCATE(etfd(nbndsub, nkqf, 6))
-    ALLOCATE(etfd_ks(nbndsub, nkqf, 6))
+    ALLOCATE(cfacd(nrr_k, dims, dims, 6), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cfacd', 1)
+    ALLOCATE(cfacqd(nrr_k, dims, dims, 6), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cfacqd', 1)
+    ALLOCATE(etfd(nbndsub, nkqf, 6), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etfd', 1)
+    ALLOCATE(etfd_ks(nbndsub, nkqf, 6), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etfd_ks', 1)
     cfacd(:, :, :, :) = czero
     cfacqd(:, :, :, :)= czero
     etfd(:, :, :)     = zero
     etfd_ks(:, :, :)  = zero
   ENDIF
   ! 
-  ALLOCATE(cfac(nrr_k, dims, dims))
-  ALLOCATE(cfacq(nrr_k, dims, dims))
-  ALLOCATE(rdotk(nrr_k))
-  ALLOCATE(rdotk2(nrr_k))
+  ALLOCATE(cfac(nrr_k, dims, dims), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cfac', 1)
+  ALLOCATE(cfacq(nrr_k, dims, dims), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cfacq', 1)
+  ALLOCATE(rdotk(nrr_k), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating rdotk', 1)
+  ALLOCATE(rdotk2(nrr_k), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating rdotk2', 1)
   ! This is simply because dgemv take only real number (not integer)
-  ALLOCATE(irvec_r(3, nrr_k))
+  ALLOCATE(irvec_r(3, nrr_k), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating irvec_r', 1)
   irvec_r = REAL(irvec_k, KIND = DP)
   cfac(:, :, :)  = czero
   cfacq(:, :, :) = czero
@@ -836,7 +887,8 @@
   !
   CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
   !
-  ALLOCATE(etf_all(nbndfst, nktotf))
+  ALLOCATE(etf_all(nbndfst, nktotf), STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf_all', 1)
   etf_all(:, :) = zero
   ! 
   ! ------------------------------------------------
@@ -847,8 +899,10 @@
   !  
   ! Initialization and restart when doing IBTE
   IF (iterative_bte) THEN
-    ALLOCATE(inv_tau_all(nbndfst, nktotf, nstemp))
-    ALLOCATE(inv_tau_allcb(nbndfst, nktotf, nstemp))
+    ALLOCATE(inv_tau_all(nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_all', 1)
+    ALLOCATE(inv_tau_allcb(nbndfst, nktotf, nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_allcb', 1)
     inv_tau_all(:, :, :)   = zero
     inv_tau_allcb(:, :, :) = zero
     lrepmatw2_restart(:)   = 0 
@@ -864,15 +918,21 @@
   ENDIF
   ! 
   IF (iterative_bte .AND. epmatkqread) THEN
-    ALLOCATE(vkk_all(3, nbndfst, nktotf))
-    ALLOCATE(wkf_all(nktotf))
+    ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vkk_all', 1)
+    ALLOCATE(wkf_all(nktotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wkf_all', 1)
     !
     CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     ! 
-    DEALLOCATE(vkk_all)
-    DEALLOCATE(wkf_all)
-    DEALLOCATE(inv_tau_all)
-    DEALLOCATE(inv_tau_allcb)
+    DEALLOCATE(vkk_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating vkk_all', 1)
+    DEALLOCATE(wkf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wkf_all', 1)
+    DEALLOCATE(inv_tau_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all', 1)
+    DEALLOCATE(inv_tau_allcb, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb', 1)
     ! 
   ELSE ! (iterative_bte .AND. epmatkqread)   
     IF (iterative_bte) THEN
@@ -881,7 +941,8 @@
     ENDIF
     ! 
     IF (lifc) THEN
-      ALLOCATE(wscache(-2 * nqc3:2 * nqc3, -2 * nqc2:2 * nqc2, -2 * nqc1:2 * nqc1, nat, nat))
+      ALLOCATE(wscache(-2 * nqc3:2 * nqc3, -2 * nqc2:2 * nqc2, -2 * nqc1:2 * nqc1, nat, nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wscache', 1)
       wscache(:, :, :, :, :) = zero 
     ENDIF
     ! 
@@ -908,7 +969,8 @@
     IF (ephwrite) THEN
       ! 
       totq = nqf
-      ALLOCATE(selecq(nqf))
+      ALLOCATE(selecq(nqf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating selecq', 1)
       DO iq = 1, nqf
         selecq(iq) = iq
       ENDDO
@@ -951,50 +1013,67 @@
     first_time = .TRUE.
     ! 
     ! Fine mesh set of g-matrices.  It is large for memory storage
-    ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf))
+    ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epf17', 1)
     IF (phonselfen) THEN
-      ALLOCATE(lambda_all(nmodes, totq, nsmear))
-      ALLOCATE(lambda_v_all(nmodes, totq, nsmear))
-      ALLOCATE(gamma_all(nmodes, totq, nsmear))
-      ALLOCATE(gamma_v_all(nmodes, totq, nsmear))
+      ALLOCATE(lambda_all(nmodes, totq, nsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lambda_all', 1)
+      ALLOCATE(lambda_v_all(nmodes, totq, nsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating lambda_v_all', 1)
+      ALLOCATE(gamma_all(nmodes, totq, nsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating gamma_all', 1)
+      ALLOCATE(gamma_v_all(nmodes, totq, nsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating gamma_v_all', 1)
       lambda_all(:, :, :)   = zero
       lambda_v_all(:, :, :) = zero
       gamma_all(:, :, :)    = zero
       gamma_v_all(:, :, :)  = zero
     ENDIF
     IF (specfun_el .OR. specfun_pl) THEN
-      ALLOCATE(esigmar_all(nbndfst, nktotf, nw_specfun))
-      ALLOCATE(esigmai_all(nbndfst, nktotf, nw_specfun))
-      ALLOCATE(a_all(nw_specfun, nktotf))
+      ALLOCATE(esigmar_all(nbndfst, nktotf, nw_specfun), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating esigmar_all', 1)
+      ALLOCATE(esigmai_all(nbndfst, nktotf, nw_specfun), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating esigmai_all', 1)
+      ALLOCATE(a_all(nw_specfun, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating a_all', 1)
       esigmar_all(:, :, :) = zero
       esigmai_all(:, :, :) = zero
       a_all(:, :) = zero
     ENDIF
     IF (specfun_ph) THEN
-      ALLOCATE(a_all_ph(nw_specfun, totq))
+      ALLOCATE(a_all_ph(nw_specfun, totq), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating a_all_ph', 1)
       a_all_ph(:, :) = zero
     ENDIF
     IF (scattering .AND. .NOT. iterative_bte) THEN
-      ALLOCATE(inv_tau_all(nstemp, nbndfst, nktotf))
-      ALLOCATE(zi_allvb(nstemp, nbndfst, nktotf))
+      ALLOCATE(inv_tau_all(nstemp, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_all', 1)
+      ALLOCATE(zi_allvb(nstemp, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating zi_allvb', 1)
       inv_tau_all(:, :, :) = zero
       zi_allvb(:, :, :)    = zero
     ENDIF
     IF (int_mob .AND. carrier) THEN
-      ALLOCATE(inv_tau_allcb(nstemp, nbndfst, nktotf))
-      ALLOCATE(zi_allcb(nstemp, nbndfst, nktotf))
+      ALLOCATE(inv_tau_allcb(nstemp, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_allcb', 1)
+      ALLOCATE(zi_allcb(nstemp, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating zi_allcb', 1)
       inv_tau_allcb(:, :, :) = zero
       zi_allcb(:, :, :)      = zero
     ENDIF
     IF (elecselfen .OR. plselfen) THEN
-      ALLOCATE(sigmar_all(nbndfst, nktotf))
-      ALLOCATE(sigmai_all(nbndfst, nktotf))
-      ALLOCATE(zi_all(nbndfst, nktotf))
+      ALLOCATE(sigmar_all(nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating sigmar_all', 1)
+      ALLOCATE(sigmai_all(nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating sigmai_all', 1)
+      ALLOCATE(zi_all(nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating zi_all', 1)
       sigmar_all(:, :) = zero
       sigmai_all(:, :) = zero
       zi_all(:, :)     = zero
       IF (iverbosity == 3) THEN
-        ALLOCATE(sigmai_mode(nbndfst, nmodes, nktotf))
+        ALLOCATE(sigmai_mode(nbndfst, nmodes, nktotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating sigmai_mode', 1)
         sigmai_mode(:, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
@@ -1089,12 +1168,15 @@
     ! Adaptative smearing when degauss = 0                         
     adapt_smearing = .FALSE.                                       
     IF (ABS(degaussw) < eps16) THEN                                
-      ALLOCATE(eta(nmodes, nbndfst, nkf))             
-      ALLOCATE(vmefp(3, nmodes, nmodes))                        
+      ALLOCATE(eta(nmodes, nbndfst, nkf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eta', 1)
+      ALLOCATE(vmefp(3, nmodes, nmodes), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vmefp', 1)
       eta(:, :, :)   = zero                                          
       vmefp(:, :, :) = czero                                         
       adapt_smearing = .TRUE.
-      ALLOCATE(eta_deg(nmodes, nbndfst))
+      ALLOCATE(eta_deg(nmodes, nbndfst), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eta_deg', 1)
     ENDIF
     ! 
     DO iqq = iq_restart, totq
@@ -1676,113 +1758,183 @@
     ENDIF ! if scattering 
     ! 
     ! Now deallocate 
-    DEALLOCATE(epf17)
-    DEALLOCATE(selecq)
-    DEALLOCATE(tau)
+    DEALLOCATE(epf17, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epf17', 1)
+    DEALLOCATE(selecq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating selecq', 1)
+    DEALLOCATE(tau, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating tau', 1)
     IF (scattering .AND. .NOT. iterative_bte) THEN
-      DEALLOCATE(inv_tau_all)
-      DEALLOCATE(zi_allvb)
+      DEALLOCATE(inv_tau_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all', 1)
+      DEALLOCATE(zi_allvb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating zi_allvb', 1)
     ENDIF
     IF (int_mob .AND. carrier) THEN
-      DEALLOCATE(inv_tau_allcb)
+      DEALLOCATE(inv_tau_allcb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb', 1)
       DeALLOCATE(zi_allcb)
     ENDIF
     IF (elecselfen .OR. plselfen) THEN
-      DEALLOCATE(sigmar_all)
-      DEALLOCATE(sigmai_all)
-      DEALLOCATE(zi_all)
+      DEALLOCATE(sigmar_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating sigmar_all', 1)
+      DEALLOCATE(sigmai_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating sigmai_all', 1)
+      DEALLOCATE(zi_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating zi_all', 1)
       IF (iverbosity == 3) DEALLOCATE(sigmai_mode)
     ENDIF
     IF (phonselfen) THEN
-      DEALLOCATE(lambda_all)
-      DEALLOCATE(lambda_v_all)
-      DEALLOCATE(gamma_all)
-      DEALLOCATE(gamma_v_all)
+      DEALLOCATE(lambda_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lambda_all', 1)
+      DEALLOCATE(lambda_v_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating lambda_v_all', 1)
+      DEALLOCATE(gamma_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gamma_all', 1)
+      DEALLOCATE(gamma_v_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating gamma_v_all', 1)
     ENDIF
     IF (specfun_el .OR. specfun_pl) THEN
-      DEALLOCATE(esigmar_all)
-      DEALLOCATE(esigmai_all)
-      DEALLOCATE(a_all)
+      DEALLOCATE(esigmar_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating esigmar_all', 1)
+      DEALLOCATE(esigmai_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating esigmai_all', 1)
+      DEALLOCATE(a_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating a_all', 1)
     ENDIF
     IF (specfun_ph) THEN
-      DEALLOCATE(a_all_ph)
+      DEALLOCATE(a_all_ph, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating a_all_ph', 1)
     ENDIF
     IF (lifc) THEN
-      DEALLOCATE(ifc)
-      DEALLOCATE(wscache)
+      DEALLOCATE(ifc, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ifc', 1)
+      DEALLOCATE(wscache, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wscache', 1)
     ENDIF
     ! 
     ! Now do the second step of mobility
     IF (iterative_bte) THEN
-      ALLOCATE(vkk_all(3, nbndfst, nktotf))
-      ALLOCATE(wkf_all(nktotf))
+      ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vkk_all', 1)
+      ALLOCATE(wkf_all(nktotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wkf_all', 1)
       vkk_all(:, :, :) = zero
       wkf_all(:) = zero
       !
       CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
       ! 
-      DEALLOCATE(vkk_all)
-      DEALLOCATE(wkf_all)
-      DEALLOCATE(inv_tau_all)
-      DEALLOCATE(inv_tau_allcb)
+      DEALLOCATE(vkk_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating vkk_all', 1)
+      DEALLOCATE(wkf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wkf_all', 1)
+      DEALLOCATE(inv_tau_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all', 1)
+      DEALLOCATE(inv_tau_allcb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb', 1)
     ENDIF
     ! 
   ENDIF ! (iterative_bte .AND. epmatkqread)
   ! 
   IF (mp_mesh_k .AND. iterative_bte) THEN
-    DEALLOCATE(map_rebal)
-    DEALLOCATE(map_rebal_inv)
+    DEALLOCATE(map_rebal, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal', 1)
+    DEALLOCATE(map_rebal_inv, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal_inv', 1)
   ENDIF
   IF (vme .AND. eig_read) THEN
-    DEALLOCATE(cfacd)
-    DEALLOCATE(cfacqd)
-    DEALLOCATE(etfd)
-    DEALLOCATE(etfd_ks)
+    DEALLOCATE(cfacd, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cfacd', 1)
+    DEALLOCATE(cfacqd, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cfacqd', 1)
+    DEALLOCATE(etfd, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etfd', 1)
+    DEALLOCATE(etfd_ks, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etfd_ks', 1)
   ENDIF
   IF (vme) THEN
-    DEALLOCATE(vmef)
-    DEALLOCATE(cvmew)
+    DEALLOCATE(vmef, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating vmef', 1)
+    DEALLOCATE(cvmew, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cvmew', 1)
   ELSE
-    DEALLOCATE(cdmew)
-    DEALLOCATE(dmef)
+    DEALLOCATE(cdmew, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cdmew', 1)
+    DEALLOCATE(dmef, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dmef', 1)
   ENDIF
   IF (etf_mem == 0) DEALLOCATE(epmatwp)
   ! 
-  DEALLOCATE(ityp)
-  DEALLOCATE(chw)
-  DEALLOCATE(chw_ks)
-  DEALLOCATE(rdw)
-  DEALLOCATE(epsi)
-  DEALLOCATE(zstar)
-  DEALLOCATE(epmatwef)
-  DEALLOCATE(wf)
-  DEALLOCATE(etf)
-  DEALLOCATE(etf_ks)
-  DEALLOCATE(epmatf)
-  DEALLOCATE(cufkk)
-  DEALLOCATE(cufkq)
-  DEALLOCATE(uf)
-  DEALLOCATE(isk_dummy)
-  DEALLOCATE(eps_rpa)
-  DEALLOCATE(bmatf) 
-  DEALLOCATE(w2)
-  DEALLOCATE(cfac)
-  DEALLOCATE(cfacq)
-  DEALLOCATE(rdotk)
-  DEALLOCATE(rdotk2)
-  DEALLOCATE(irvec_r)
-  DEALLOCATE(irvec_k)
-  DEALLOCATE(irvec_q)
-  DEALLOCATE(irvec_g)
-  DEALLOCATE(ndegen_k)
-  DEALLOCATE(ndegen_q)
-  DEALLOCATE(ndegen_g)
-  DEALLOCATE(wslen_k)
-  DEALLOCATE(wslen_q)
-  DEALLOCATE(wslen_g)
-  DEALLOCATE(etf_all)
-  DEALLOCATE(transp_temp)
-  DEALLOCATE(et_ks)
+  DEALLOCATE(ityp, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ityp', 1)
+  DEALLOCATE(chw, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating chw', 1)
+  DEALLOCATE(chw_ks, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating chw_ks', 1)
+  DEALLOCATE(rdw, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating rdw', 1)
+  DEALLOCATE(epsi, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epsi', 1)
+  DEALLOCATE(zstar, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating zstar', 1)
+  DEALLOCATE(epmatwef, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwef', 1)
+  DEALLOCATE(wf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wf', 1)
+  DEALLOCATE(etf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf', 1)
+  DEALLOCATE(etf_ks, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf_ks', 1)
+  DEALLOCATE(epmatf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatf', 1)
+  DEALLOCATE(cufkk, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cufkk', 1)
+  DEALLOCATE(cufkq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cufkq', 1)
+  DEALLOCATE(uf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating uf', 1)
+  DEALLOCATE(isk_dummy, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating isk_dummy', 1)
+  DEALLOCATE(eps_rpa, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating eps_rpa', 1)
+  DEALLOCATE(bmatf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating bmatf', 1)
+  DEALLOCATE(w2, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating w2', 1)
+  DEALLOCATE(cfac, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cfac', 1)
+  DEALLOCATE(cfacq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cfacq', 1)
+  DEALLOCATE(rdotk, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating rdotk', 1)
+  DEALLOCATE(rdotk2, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating rdotk2', 1)
+  DEALLOCATE(irvec_r, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating irvec_r', 1)
+  DEALLOCATE(irvec_k, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating irvec_k', 1)
+  DEALLOCATE(irvec_q, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating irvec_q', 1)
+  DEALLOCATE(irvec_g, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating irvec_g', 1)
+  DEALLOCATE(ndegen_k, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ndegen_k', 1)
+  DEALLOCATE(ndegen_q, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ndegen_q', 1)
+  DEALLOCATE(ndegen_g, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ndegen_g', 1)
+  DEALLOCATE(wslen_k, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wslen_k', 1)
+  DEALLOCATE(wslen_q, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wslen_q', 1)
+  DEALLOCATE(wslen_g, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wslen_g', 1)
+  DEALLOCATE(etf_all, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etf_all', 1)
+  DEALLOCATE(transp_temp, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating transp_temp', 1)
+  DEALLOCATE(et_ks, STAT = ierr)
+  IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating et_ks', 1)
   !
   CALL stop_clock('ephwann')
   !
@@ -1800,7 +1952,6 @@
 !  COMPLEX(KIND = DP) :: tablex (4*nkc1+1,nkf1)
   !! Look-up table for the exponential (speed optimization) in the case of
   !! homogeneous grids.
-
   !IF ((nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
   !     (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN
   !  ! Make a check   
@@ -2047,27 +2198,31 @@
   ! 
   CHARACTER(LEN = 256) :: filint                                                                                   
   !! Name of the file
-  LOGICAL             :: exst                           
+  LOGICAL :: exst                           
   !! The file exists
-  INTEGER             :: ibnd, jbnd
+  INTEGER :: ibnd, jbnd
   !! Band index
-  INTEGER             :: jmode, imode
+  INTEGER :: jmode, imode
   !! Mode index        
-  INTEGER             :: irk, irq, irg
+  INTEGER :: irk, irq, irg
   !! WS vector looping index on electron, phonons and el-ph
-  INTEGER             :: ipol
+  INTEGER :: ipol
   !! Cartesian direction (polarison direction)
-  INTEGER             :: lrepmatw
+  INTEGER :: lrepmatw
   !! Record length
-  INTEGER             :: ios 
+  INTEGER :: ios 
   !! Status of files
+  INTEGER :: ierr
+  !! Error status
   ! 
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
   FLUSH(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
-  ALLOCATE(zstar(3, 3, nat))
-  ALLOCATE(epsi(3, 3))
+  ALLOCATE(zstar(3, 3, nat), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_read', 'Error allocating zstar', 1)
+  ALLOCATE(epsi(3, 3), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epsi', 1)
   ! 
   IF (mpime == ionode_id) THEN
     !
@@ -2096,13 +2251,18 @@
   CALL mp_bcast(zstar,   ionode_id, world_comm)
   CALL mp_bcast(epsi,    ionode_id, world_comm)
   !
-  ALLOCATE(chw(nbndsub, nbndsub, nrr_k))
-  ALLOCATE(chw_ks(nbndsub, nbndsub, nrr_k))
-  ALLOCATE(rdw(nmodes, nmodes,  nrr_q))
+  ALLOCATE(chw(nbndsub, nbndsub, nrr_k), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_read', 'Error allocating chw', 1)
+  ALLOCATE(chw_ks(nbndsub, nbndsub, nrr_k), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_read', 'Error allocating chw_ks', 1)
+  ALLOCATE(rdw(nmodes, nmodes,  nrr_q), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_read', 'Error allocating rdw', 1)
   IF (vme) THEN 
-    ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k))
+    ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cvmew', 1)
   ELSE
-    ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k))
+    ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cdmew', 1)
   ENDIF
   !
   IF (mpime == ionode_id) THEN
@@ -2151,7 +2311,8 @@
   ENDIF
   !
   IF (etf_mem == 0) THEN
-    ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g))
+    ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epmatwp', 1)
     epmatwp = czero
     IF (mpime == ionode_id) THEN
       ! SP: The call to epmatwp is now inside the loop
@@ -2576,7 +2737,6 @@
   inv_cell = 1.0d0 / omega
   ! for 2d system need to divide by area (vacuum in z-direction)
   IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
-
   ! vbm index
   IF (noncolin) THEN
     ivbm = FLOOR(nelec / 1.0d0)
