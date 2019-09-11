@@ -509,7 +509,7 @@
     USE cell_base,     ONLY : at, bg, alat
     USE ions_base,     ONLY : nat, tau
     USE elph2,         ONLY : rdw, epsi, zstar
-    USE epwcom,        ONLY : lpolar, nq1, nq2, nq3
+    USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
     USE io_epw,        ONLY : iudecaydyn
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
     USE io_global,     ONLY : ionode_id
@@ -557,7 +557,7 @@
     IF (lpolar) THEN
       DO ik = 1, nq
         !xk has to be in cart. coord.
-        CALL rgd_blk(nq1, nq2, nq3, nat, dynq(1, 1, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
+        CALL rgd_blk(nqc1, nqc2, nqc3, nat, dynq(1, 1, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
         !
       ENDDO
     ENDIF

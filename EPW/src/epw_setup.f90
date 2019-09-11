@@ -42,7 +42,7 @@
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
-                            nk1, nk2, nk3
+                            nkc1, nkc2, nkc3
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
@@ -60,7 +60,7 @@
   INTEGER :: itemp
   !! counter on temperatures 
   REAL(KIND = DP) :: xx_c, yy_c, zz_c
-  !! k-points in crystal coords. in multiple of nk1, nk2, nk3
+  !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
   LOGICAL :: magnetic_sym
   !! the symmetry operations
   LOGICAL :: symmorphic_or_nzb
@@ -70,14 +70,14 @@
   !
   !  loosy tolerance: not important 
   DO jk = 1, nkstot
-    xx_c = xk_cryst(1,jk) * nk1
-    yy_c = xk_cryst(2,jk) * nk2
-    zz_c = xk_cryst(3,jk) * nk3
+    xx_c = xk_cryst(1, jk) * nkc1
+    yy_c = xk_cryst(2, jk) * nkc2
+    zz_c = xk_cryst(3, jk) * nkc3
     !
     ! check that the k-mesh was defined in the positive region of 1st BZ
     !
-    IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5 ) &
-      CALL errore('epw_setup','coarse k-mesh needs to be strictly positive in 1st BZ',1)
+    IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5) &
+      CALL errore('epw_setup', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
     !
   ENDDO
   !

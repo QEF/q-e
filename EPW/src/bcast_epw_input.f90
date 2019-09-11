@@ -25,9 +25,9 @@
                             delta_qsmear, degaussw, degaussq, conv_thr_raxis, &
                             conv_thr_racon, conv_thr_iaxis, broyden_ndim,     &
                             broyden_beta, band_plot, a2f, lacon,              &
-                            kmaps, kerwrite, kerread, imag_read,              &
-                            gap_edge, fsthick, filqf, filkf, nq1, nq2, nq3,   &
-                            fileig, fila2f, fermi_energy, nc, nk1, nk2, nk3,  &
+                            kmaps, kerwrite, kerread, imag_read, nkc3,        &
+                            gap_edge, fsthick, filqf, filkf, nqc1, nqc2, nqc3,&
+                            fileig, fila2f, fermi_energy, nc, nkc1, nkc2,     &
                             etf_mem, epwwrite, epwread, eptemp,               &
                             eps_acustic, ephwrite, epbread, nsiter, nqstep,   &
                             nqsmear, nqf3, nqf2, nqf1, nkf3, nkf2, nkf1,      &
@@ -147,6 +147,12 @@
   CALL mp_bcast(nsmear      , meta_ionode_id, world_comm)       
   CALL mp_bcast(rand_nq     , meta_ionode_id, world_comm)      
   CALL mp_bcast(rand_nk     , meta_ionode_id, world_comm)      
+  CALL mp_bcast(nkc1        , meta_ionode_id, world_comm)
+  CALL mp_bcast(nkc2        , meta_ionode_id, world_comm)
+  CALL mp_bcast(nkc3        , meta_ionode_id, world_comm)
+  CALL mp_bcast(nqc1        , meta_ionode_id, world_comm)
+  CALL mp_bcast(nqc2        , meta_ionode_id, world_comm)
+  CALL mp_bcast(nqc3        , meta_ionode_id, world_comm)
   CALL mp_bcast(nkf1        , meta_ionode_id, world_comm)
   CALL mp_bcast(nkf2        , meta_ionode_id, world_comm)
   CALL mp_bcast(nkf3        , meta_ionode_id, world_comm)

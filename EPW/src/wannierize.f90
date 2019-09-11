@@ -18,7 +18,7 @@
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout, ionode_id
   USE wvfct,          ONLY : nbnd
-  USE epwcom,         ONLY : nk1, nk2, nk3
+  USE epwcom,         ONLY : nkc1, nkc2, nkc3
   USE pwcom,          ONLY : nkstot 
   USE klist_epw,      ONLY : xk_cryst           
   USE wannierEPW,     ONLY : mp_grid, n_wannier, kpt_latt
@@ -34,9 +34,9 @@
   !
   CALL start_clock('WANNIER')
   ! 
-  mp_grid(1) = nk1
-  mp_grid(2) = nk2
-  mp_grid(3) = nk3
+  mp_grid(1) = nkc1
+  mp_grid(2) = nkc2
+  mp_grid(3) = nkc3
   num_kpts = mp_grid(1) * mp_grid(2) * mp_grid(3)
   !
   IF (num_kpts /= nkstot) CALL errore('wannierize', 'inconsistent nscf and elph k-grids', 1) 
@@ -45,7 +45,7 @@
   ALLOCATE(kpt_latt(3, num_kpts))
   !
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
-  WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nk1, " x ", nk2, " x ", nk3 , " electronic grid"
+  WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nkc1, " x ", nkc2, " x ", nkc3 , " electronic grid"
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
   !
   kpt_latt = xk_cryst(:, 1:num_kpts)

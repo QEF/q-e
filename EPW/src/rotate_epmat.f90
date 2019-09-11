@@ -21,7 +21,7 @@
   !--------------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE elph2,         ONLY : epmatq, zstar, epsi, bmat
-  USE epwcom,        ONLY : lpolar, nq1, nq2, nq3
+  USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
   USE modes,         ONLY : nmodes
   USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
   USE pwcom,         ONLY : nbnd, nks
@@ -171,7 +171,7 @@
         !
         IF (lpolar) THEN
           IF ((ABS(xq(1)) > eps8) .OR. (ABS(xq(2)) > eps8) .OR. (ABS(xq(3)) > eps8)) THEN
-            CALL rgd_blk_epw(nq1, nq2, nq3, xq, cz2t, eptmp, &
+            CALL rgd_blk_epw(nqc1, nqc2, nqc3, xq, cz2t, eptmp, &
                      nmodes, epsi, zstar, bmat(ibnd, jbnd, ik, iq), -one)
           ENDIF
         ENDIF

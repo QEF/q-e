@@ -34,7 +34,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl, lindabs, mob_maxiter, use_ws, epbread,  &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nq1, nq2, nq3, nk1, nk2, nk3
+                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -363,7 +363,7 @@
       CLOSE(crystal)
     ENDIF
     IF (lifc) THEN
-      ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
+      ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat))
       ifc(:, :, :, :, :, :, :) = zero
     ENDIF
     ! 
@@ -397,7 +397,7 @@
     ! Use atomic position to contstruct the WS for the phonon part
     dims  = nbndsub
     dims2 = nat
-    CALL wigner_seitz_wrap(nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
+    CALL wigner_seitz_wrap(nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, irvec_k, irvec_q, irvec_g, &
                            ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, &
                            w_centers, dims, tau, dims2)
   ELSE
@@ -405,7 +405,7 @@
     dims  = 1
     dims2 = 1
     dummy(:) = (/0.0, 0.0, 0.0/)
-    CALL wigner_seitz_wrap(nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
+    CALL wigner_seitz_wrap(nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, irvec_k, irvec_q, irvec_g, &
                            ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, &
                            dummy, dims, dummy, dims2)
   ENDIF
@@ -807,9 +807,9 @@
     !
     ! build the WS cell corresponding to the force constant grid
     !
-    atws(:, 1) = at(:, 1) * DBLE(nq1)
-    atws(:, 2) = at(:, 2) * DBLE(nq2)
-    atws(:, 3) = at(:, 3) * DBLE(nq3)
+    atws(:, 1) = at(:, 1) * DBLE(nqc1)
+    atws(:, 2) = at(:, 2) * DBLE(nqc2)
+    atws(:, 3) = at(:, 3) * DBLE(nqc3)
     rws(:, :)  = zero
     nrws       = 0
     ! initialize WS r-vectors
@@ -881,7 +881,7 @@
     ENDIF
     ! 
     IF (lifc) THEN
-      ALLOCATE(wscache(-2 * nq3:2 * nq3, -2 * nq2:2 * nq2, -2 * nq1:2 * nq1, nat, nat))
+      ALLOCATE(wscache(-2 * nqc3:2 * nqc3, -2 * nqc2:2 * nqc2, -2 * nqc1:2 * nqc1, nat, nat))
       wscache(:, :, :, :, :) = zero 
     ENDIF
     ! 
@@ -1405,7 +1405,7 @@
               IF ((ABS(xxq(1)) > eps8) .OR. (ABS(xxq(2)) > eps8) .OR. (ABS(xxq(3)) > eps8)) THEN
                 !      
                 CALL cryst_to_cart(1, xxq, bg, 1)
-                CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, nmodes, epsi, zstar, bmatf, one)
+                CALL rgd_blk_epw_fine(nqc1, nqc2, nqc3, xxq, uf, epmatf, nmodes, epsi, zstar, bmatf, one)
                 CALL cryst_to_cart(1, xxq, at, -1)
                 !
               ENDIF
@@ -1797,7 +1797,7 @@
   ! SP: Create a look-up table for the exponential of the factor. 
   !     This can only work with homogeneous fine grids.
   ! 
-!  COMPLEX(KIND = DP) :: tablex (4*nk1+1,nkf1)
+!  COMPLEX(KIND = DP) :: tablex (4*nkc1+1,nkf1)
   !! Look-up table for the exponential (speed optimization) in the case of
   !! homogeneous grids.
 
@@ -1807,46 +1807,46 @@
   !  IF ((nqf1>nkf1) .OR. (nqf2>nkf2) .OR. (nqf3>nkf3)) &
   !          CALL errore('The fine q-grid cannot be larger than the fine k-grid',1)
   !  ! Along x
-  !  DO ikx = -2*nk1, 2*nk1
+  !  DO ikx = -2*nkc1, 2*nkc1
   !    DO ikfx = 0, nkf1-1
   !      !rdotk = twopi * ( xk(1)*irvec_kk(1,ir))
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf1) * ikx )
-  !      tablex(ikx+2*nk1+1,ikfx+1) = EXP(ci*rdotk_scal )
+  !      tablex(ikx+2*nkc1+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! For k+q
-  !  DO ikx = -2*nk1, 2*nk1
+  !  DO ikx = -2*nkc1, 2*nkc1
   !    DO ikfx = 0, 2*nkf1
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf1) * ikx )
-  !      tableqx(ikx+2*nk1+1,ikfx+1) = EXP(ci*rdotk_scal )
+  !      tableqx(ikx+2*nkc1+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! Along y
-  !  DO ikx = -2*nk2, 2*nk2
+  !  DO ikx = -2*nkc2, 2*nkc2
   !    DO ikfx = 0, nkf2-1
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf2) * ikx )
-  !      tabley(ikx+2*nk2+1,ikfx+1) = EXP(ci*rdotk_scal )
+  !      tabley(ikx+2*nkc2+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! For k+q
-  !  DO ikx = -2*nk2, 2*nk2
+  !  DO ikx = -2*nkc2, 2*nkc2
   !    DO ikfx = 0, 2*nkf2
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf2) * ikx )
-  !      tableqy(ikx+2*nk2+1,ikfx+1) = EXP(ci*rdotk_scal )
+  !      tableqy(ikx+2*nkc2+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! Along z
-  !  DO ikx = -2*nk3, 2*nk3
+  !  DO ikx = -2*nkc3, 2*nkc3
   !    DO ikfx = 0, nkf3-1
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf3) * ikx )
-  !      tablez(ikx+2*nk3+1,ikfx+1) = EXP(ci*rdotk_scal )
+  !      tablez(ikx+2*nkc3+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !  ! For k+q
-  !  DO ikx = -2*nk3, 2*nk3
+  !  DO ikx = -2*nkc3, 2*nkc3
   !    DO ikfx = 0, 2*nkf3
   !      rdotk_scal = twopi * ( (REAL(ikfx,KIND = DP)/nkf3) * ikx )
-  !      tableqz(ikx+2*nk3+1,ikfx+1) = EXP(ci*rdotk_scal )
+  !      tableqz(ikx+2*nkc3+1,ikfx+1) = EXP(ci*rdotk_scal )
   !    ENDDO
   !  ENDDO
   !ENDIF
@@ -1864,10 +1864,10 @@
   !         ! 
   !         ! SP: Look-up table is more effecient than calling the exp function.
   !         DO ir = 1, nrr_k
-  !           cfac(ir) = ( tablex(irvec_k(1,ir)+2*nk1+1,xkk1) *&
-  !                   tabley(irvec_k(2,ir)+2*nk2+1,xkk2) * tablez(irvec_k(3,ir)+2*nk3+1,xkk3) ) / ndegen_k(ir)
-  !           cfacq(ir) = ( tableqx(irvec_k(1,ir)+2*nk1+1,xkq1) *&
-  !                   tableqy(irvec_k(2,ir)+2*nk2+1,xkq2) * tableqz(irvec_k(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
+  !           cfac(ir) = ( tablex(irvec_k(1,ir)+2*nkc1+1,xkk1) *&
+  !                   tabley(irvec_k(2,ir)+2*nkc2+1,xkk2) * tablez(irvec_k(3,ir)+2*nkc3+1,xkk3) ) / ndegen_k(ir)
+  !           cfacq(ir) = ( tableqx(irvec_k(1,ir)+2*nkc1+1,xkq1) *&
+  !                   tableqy(irvec_k(2,ir)+2*nkc2+1,xkq2) * tableqz(irvec_k(3,ir)+2*nkc3+1,xkq3) ) /  ndegen_k(ir)
   !         ENDDO
   !         !DBSP
   !         !IF ((iq == 1) .AND. (ik ==12)) THEN
@@ -2016,7 +2016,7 @@
   !--------------------------------------------------------------------------------
   SUBROUTINE epw_read(nrr_k, nrr_q, nrr_g)
   !--------------------------------------------------------------------------------
-  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc, nq1, nq3, nq2
+  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc, nqc1, nqc2, nqc3
   USE pwcom,     ONLY : ef
   USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
   USE ions_base, ONLY : nat

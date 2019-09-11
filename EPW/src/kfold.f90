@@ -36,7 +36,7 @@
     !-----------------------------------------------------------------------
     !!  
     !!  This SUBROUTINE is called from elphon_shuffle_wrap for each
-    !!  nq1*nq2*nq3 phonon on the coarse mesh.    
+    !!  nqc1*nqc2*nqc3 phonon on the coarse mesh.    
     !!
     !!  It folds the k+q mesh into the k mesh using 5^3 G_0 translations 
     !!
@@ -45,7 +45,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE klist,         ONLY : nkstot, xk
-    USE epwcom,        ONLY : nk1, nk2, nk3
+    USE epwcom,        ONLY : nkc1, nkc2, nkc3
     USE io_files,      ONLY : prefix
     USE io_epw,        ONLY : iukmap
     USE klist_epw,     ONLY : kmap
@@ -83,11 +83,11 @@
     REAL(KIND = DP) :: xk_q(3)
     !! Coords. of k+q-point
     REAL(KIND = DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
-    !! k-points in crystal coords. in multiple of nk1, nk2, nk3
+    !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: xx, yy, zz
-    !! k+q in crystal coords. in multiple of nk1, nk2, nk3
+    !! k+q in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: xx_n, yy_n, zz_n
-    !! k+q in crystal coords. in multiple of nk1, nk2, nk3 in 1st BZ
+    !! k+q in crystal coords. in multiple of nkc1, nkc2, nkc3 in 1st BZ
     !
     LOGICAL :: in_the_list
     !! Is the point in the list
@@ -105,9 +105,9 @@
       !
       CALL cryst_to_cart(1, xq, at, -1)
       !
-      xx = xq(1) * nk1 
-      yy = xq(2) * nk2 
-      zz = xq(3) * nk3 
+      xx = xq(1) * nkc1 
+      yy = xq(2) * nkc2 
+      zz = xq(3) * nkc3 
       in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                     ABS(yy - NINT(yy)) <= eps5 .AND. &
                     ABS(zz - NINT(zz)) <= eps5
@@ -133,9 +133,9 @@
         !
         !  check that the k's are actually on a uniform mesh centered at gamma
         !
-        xx_c(ik) = xk(1, ik) * nk1
-        yy_c(ik) = xk(2, ik) * nk2
-        zz_c(ik) = xk(3, ik) * nk3
+        xx_c(ik) = xk(1, ik) * nkc1
+        yy_c(ik) = xk(2, ik) * nkc2
+        zz_c(ik) = xk(3, ik) * nkc3
         in_the_list = ABS(xx_c(ik) - NINT(xx_c(ik))) <= eps5 .AND. &
                       ABS(yy_c(ik) - NINT(yy_c(ik))) <= eps5 .AND. &
                       ABS(zz_c(ik) - NINT(zz_c(ik))) <= eps5
@@ -151,9 +151,9 @@
         !
         xk_q(:) = xk(:, ik) + xq(:)
         !
-        xx = xk_q(1) * nk1
-        yy = xk_q(2) * nk2
-        zz = xk_q(3) * nk3
+        xx = xk_q(1) * nkc1
+        yy = xk_q(2) * nkc2
+        zz = xk_q(3) * nkc3
         in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                       ABS(yy - NINT(yy)) <= eps5 .AND. &
                       ABS(zz - NINT(zz)) <= eps5
@@ -161,9 +161,9 @@
         !
         !  find the index of this k+q in the k-grid
         !
-        i = MOD(NINT(xx + 2 * nk1), nk1) 
-        j = MOD(NINT(yy + 2 * nk2), nk2) 
-        k = MOD(NINT(zz + 2 * nk3), nk3) 
+        i = MOD(NINT(xx + 2 * nkc1), nkc1) 
+        j = MOD(NINT(yy + 2 * nkc2), nkc2) 
+        k = MOD(NINT(zz + 2 * nkc3), nkc3) 
         !
         xx_n = xx
         yy_n = yy
@@ -171,7 +171,7 @@
         !
         !  make sure xx_n, yy_n and zz_n are in 1st BZ
         !
-        CALL backtoBZ(xx_n, yy_n, zz_n, nk1, nk2, nk3)
+        CALL backtoBZ(xx_n, yy_n, zz_n, nkc1, nkc2, nkc3)
         !
         n = 0
         found = .FALSE.
@@ -197,15 +197,15 @@
         !
         !  determine the G_0 such that k+q+G_0 belongs to the first BZ
         !
-        g0vec(1) = (i - NINT(xx)) / nk1
-        g0vec(2) = (j - NINT(yy)) / nk2
-        g0vec(3) = (k - NINT(zz)) / nk3
+        g0vec(1) = (i - NINT(xx)) / nkc1
+        g0vec(2) = (j - NINT(yy)) / nkc2
+        g0vec(3) = (k - NINT(zz)) / nkc3
         !
         !  now store the shift for this k+q point
         !
         in_the_list = .FALSE.
         ig0 = 0
-        DO WHILE ( (ig0 <= ng0vec) .AND. ( .NOT. in_the_list) )
+        DO WHILE((ig0 <= ng0vec) .AND. (.NOT. in_the_list))
           ig0 = ig0 + 1
           in_the_list = ((ABS(g0vec(1) - g0vec_all(1,ig0)) <= eps5) .AND. &
                          (ABS(g0vec(2) - g0vec_all(2,ig0)) <= eps5) .AND. &
@@ -266,7 +266,7 @@
     USE cell_base,     ONLY : at, bg
     USE klist,         ONLY : nkstot, xk
     USE klist_epw,     ONLY : kmap  
-    USE epwcom,        ONLY : nk1, nk2, nk3
+    USE epwcom,        ONLY : nkc1, nkc2, nkc3
     USE elph2,         ONLY : xkq
     USE constants_epw, ONLY : eps5, zero
 
@@ -284,9 +284,9 @@
     !! Mapping index of k+q on k
     !
     REAL(KIND = DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
-    !! k-points in crystal coords. in multiple of nk1, nk2, nk3
+    !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: xx, yy, zz
-    !! k+q in crystal coords. in multiple of nk1, nk2, nk3
+    !! k+q in crystal coords. in multiple of nkc1, nkc2, nkc3
     !
     LOGICAL :: in_the_list
     !! Is the file in the list
@@ -299,9 +299,9 @@
     ! 
     CALL cryst_to_cart(1, xxq, at, -1)
     !
-    xx = xxq(1) * nk1 
-    yy = xxq(2) * nk2 
-    zz = xxq(3) * nk3 
+    xx = xxq(1) * nkc1 
+    yy = xxq(2) * nkc2 
+    zz = xxq(3) * nkc3 
     in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                   ABS(yy - NINT(yy)) <= eps5 .AND. &
                   ABS(zz - NINT(zz)) <= eps5
@@ -315,9 +315,9 @@
       !
       !  check that the k's are actually on a uniform mesh centered at gamma
       !
-      xx_c(ik) = xk(1, ik) * nk1
-      yy_c(ik) = xk(2, ik) * nk2
-      zz_c(ik) = xk(3, ik) * nk3
+      xx_c(ik) = xk(1, ik) * nkc1
+      yy_c(ik) = xk(2, ik) * nkc2
+      zz_c(ik) = xk(3, ik) * nkc3
       in_the_list = ABS(xx_c(ik) - NINT(xx_c(ik))) <= eps5 .AND. &
                     ABS(yy_c(ik) - NINT(yy_c(ik))) <= eps5 .AND. &
                     ABS(zz_c(ik) - NINT(zz_c(ik))) <= eps5
@@ -333,9 +333,9 @@
       !
       xkq(:, ik) = xk(:, ik) + xxq(:)
       !
-      xx = xkq(1, ik) * nk1
-      yy = xkq(2, ik) * nk2
-      zz = xkq(3, ik) * nk3
+      xx = xkq(1, ik) * nkc1
+      yy = xkq(2, ik) * nkc2
+      zz = xkq(3, ik) * nkc3
       in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                     ABS(yy - NINT(yy)) <= eps5 .AND. &
                     ABS(zz - NINT(zz)) <= eps5
@@ -345,7 +345,7 @@
       !
       ! make sure xx, yy and zz are in 1st BZ
       !
-      CALL backtoBZ(xx, yy, zz, nk1, nk2, nk3)
+      CALL backtoBZ(xx, yy, zz, nkc1, nkc2, nkc3)
       !
       n = 0
       found = .FALSE.
@@ -383,7 +383,7 @@
     !-------------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE epwcom,        ONLY : nk1, nk2, nk3
+    USE epwcom,        ONLY : nkc1, nkc2, nkc3
     USE pwcom,         ONLY : nkstot
     USE klist_epw,     ONLY : xk_cryst
     USE io_global,     ONLY : stdout, meta_ionode
@@ -441,7 +441,7 @@
     !! that was at i-th position in the unsorted list
     !
     REAL(KIND = DP) :: xx, yy, zz
-    !! k-point in crystal coords. in multiple of nk1, nk2, nk3
+    !! k-point in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: tx(3), ty(3), t(3)
     !! Reciprocal lattice vectors
     REAL(KIND = DP), ALLOCATABLE :: gg(:)
@@ -483,9 +483,9 @@
       ! 
       DO ik = 1, nkstot       
         !
-        xx = xk_cryst(1, ik) * nk1
-        yy = xk_cryst(2, ik) * nk2
-        zz = xk_cryst(3, ik) * nk3
+        xx = xk_cryst(1, ik) * nkc1
+        yy = xk_cryst(2, ik) * nkc2
+        zz = xk_cryst(3, ik) * nkc3
         ! check that the k-mesh was defined in the positive region of 1st BZ
         !
         IF ((xx < -eps5) .OR. (yy < -eps5) .OR. (zz < -eps5) ) &
@@ -861,7 +861,7 @@
     USE kinds,          only : DP
     use pwcom,          ONLY : nkstot
     USE cell_base,      ONLY : at
-    USE epwcom,         ONLY : nk1, nk2, nk3
+    USE epwcom,         ONLY : nkc1, nkc2, nkc3
     use klist_epw,      ONLY : xk_cryst
     USE mp_global,      ONLY : nproc_pool, npool
     USE mp_images,      ONLY : nproc_image
@@ -896,9 +896,9 @@
     REAL(KIND = DP) :: xxq(3)
     !! Coords. of q-point
     REAL(KIND = DP) :: xx, yy, zz
-    !! current k and k+q points in crystal coords. in multiple of nk1, nk2, nk3
+    !! current k and k+q points in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: xx_c, yy_c, zz_c
-    !! k-points in crystal coords. in multiple of nk1, nk2, nk3
+    !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
     !
     LOGICAL :: in_the_list
     !! Is it in the list
@@ -917,9 +917,9 @@
     !
     !  check that k is actually on a uniform mesh centered at gamma
     !
-    xx = xxk(1) * nk1
-    yy = xxk(2) * nk2
-    zz = xxk(3) * nk3
+    xx = xxk(1) * nkc1
+    yy = xxk(2) * nkc2
+    zz = xxk(3) * nkc3
     in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                   ABS(yy - NINT(yy)) <= eps5 .AND. &
                   ABS(zz - NINT(zz)) <= eps5
@@ -932,9 +932,9 @@
     !
     xxk = xxk + DBLE(sign) * xxq
     !
-    xx = xxk(1) * nk1
-    yy = xxk(2) * nk2
-    zz = xxk(3) * nk3
+    xx = xxk(1) * nkc1
+    yy = xxk(2) * nkc2
+    zz = xxk(3) * nkc3
     in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                   ABS(yy - NINT(yy)) <= eps5 .AND. &
                   ABS(zz - NINT(zz)) <= eps5
@@ -944,14 +944,14 @@
     !
     ! make sure xx, yy and zz are in 1st BZ
     !
-    CALL backtoBZ(xx, yy, zz, nk1, nk2, nk3)
+    CALL backtoBZ(xx, yy, zz, nkc1, nkc2, nkc3)
     !
     n = 0
     found = .FALSE.
     DO ik = 1, nkstot
-      xx_c = xk_cryst(1, ik) * nk1
-      yy_c = xk_cryst(2, ik) * nk2
-      zz_c = xk_cryst(3, ik) * nk3
+      xx_c = xk_cryst(1, ik) * nkc1
+      yy_c = xk_cryst(2, ik) * nkc2
+      zz_c = xk_cryst(3, ik) * nkc3
       !
       ! check that the k-mesh was defined in the positive region of 1st BZ
       !

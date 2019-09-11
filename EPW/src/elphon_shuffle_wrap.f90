@@ -48,7 +48,7 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       & 
-                            nk1, nk2, nk3, nq1, nq2, nq3, lpolar
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all, exband, wscache
@@ -204,8 +204,8 @@
   IF (meta_ionode) READ(5, *) nqc_irr
   CALL mp_bcast(nqc_irr, meta_ionode_id, world_comm)
   ALLOCATE(xqc_irr(3, nqc_irr))
-  ALLOCATE(xqc(3, nq1 * nq2 * nq3))
-  ALLOCATE(wqlist(nq1 * nq2 * nq3))
+  ALLOCATE(xqc(3, nqc1 * nqc2 * nqc3))
+  ALLOCATE(wqlist(nqc1 * nqc2 * nqc3))
   xqc_irr(:, :) = zero
   xqc(:, :)     = zero
   wqlist(:)     = zero
@@ -241,7 +241,7 @@
   IF (epwread .AND. .NOT. epbread) THEN
     CONTINUE
   ELSE
-    IF (nkstot /= nk1 * nk2 * nk3) CALL errore('elphon_shuffle_wrap', 'nscf run inconsistent with epw input', 1)  
+    IF (nkstot /= nkc1 * nkc2 * nkc3) CALL errore('elphon_shuffle_wrap', 'nscf run inconsistent with epw input', 1)  
   ENDIF
   !
   ! Read in external electronic eigenvalues. e.g. GW 
@@ -309,11 +309,11 @@
     !
     !  allocate dynamical matrix and ep matrix for all q's
     !
-    ALLOCATE(dynq(nmodes, nmodes, nq1 * nq2 * nq3))
-    ALLOCATE(epmatq(nbnd, nbnd, nks, nmodes, nq1 * nq2 * nq3))
+    ALLOCATE(dynq(nmodes, nmodes, nqc1 * nqc2 * nqc3))
+    ALLOCATE(epmatq(nbnd, nbnd, nks, nmodes, nqc1 * nqc2 * nqc3))
     ALLOCATE(epsi(3, 3))
     ALLOCATE(zstar(3, 3, nat))
-    ALLOCATE(bmat(nbnd, nbnd, nks, nq1 * nq2 * nq3))
+    ALLOCATE(bmat(nbnd, nbnd, nks, nqc1 * nqc2 * nqc3))
     ALLOCATE(cu(nbnd, nbndsub, nks))
     ALLOCATE(cuq(nbnd, nbndsub, nks)) 
     ALLOCATE(lwin(nbnd, nks))
@@ -329,7 +329,7 @@
     !
     ! read interatomic force constat matrix from q2r
     IF (lifc) THEN
-      ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
+      ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat))
       ifc(:, :, :, :, :, :, :) = zero
       CALL read_ifc
     ENDIF
@@ -370,7 +370,7 @@
     ALLOCATE(xkq(3, nkstot)) ! Used in createkmap 
     ALLOCATE(shift(nkstot)) ! Used in createkmap
     IF (lifc) THEN
-      ALLOCATE(wscache(-2 * nq3:2 * nq3, -2 * nq2:2 * nq2, -2 * nq1:2 * nq1, nat, nat))
+      ALLOCATE(wscache(-2 * nqc3:2 * nqc3, -2 * nqc2:2 * nqc2, -2 * nqc1:2 * nqc1, nat, nat))
       wscache(:, :, :, :, :) = zero      
     ENDIF
     evq(:,:)   = zero
@@ -691,7 +691,7 @@
       !
     ENDDO ! irr-q loop
     ! 
-    IF (nqc /= nq1 * nq2 * nq3) CALL errore('elphon_shuffle_wrap', 'nqc /= nq1*nq2*nq3', nqc)
+    IF (nqc /= nqc1 * nqc2 * nqc3) CALL errore('elphon_shuffle_wrap', 'nqc /= nq1*nq2*nq3', nqc)
     wqlist = DBLE(1) / DBLE(nqc)
     !
     IF (lifc) THEN

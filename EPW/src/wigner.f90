@@ -16,7 +16,7 @@
   ! 
   CONTAINS
     !-----------------------------------------------------------------
-    SUBROUTINE wigner_seitz_wrap(nk1, nk2, nk3, nq1, nq2, nq3, &
+    SUBROUTINE wigner_seitz_wrap(nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, &
                                  irvec_k,  irvec_q,  irvec_g,  &
                                  ndegen_k, ndegen_q, ndegen_g, &
                                  wslen_k,  wslen_q,  wslen_g,  &
@@ -40,7 +40,7 @@
     !! 
     !! Note 1: ndegen_k is always > 0 while ndegen_q and ndegen_g might contains 0 weigths. 
     !! Note 2: No sorting of vectors is needed anymore  
-    !! Note 3: The dimension 20*nk1*nk2*nk3 should be safe enough.
+    !! Note 3: The dimension 20*nkc1*nkc2*nkc3 should be safe enough.
     !! Note 4: The Wigner-Seitz construction in EPW was done by constructing a cell
     !!         centred unit cell. This is fine for electronic properties (this is what is done in wannier90).
     !!         However for phonon or electron-phonon properties, one can have issues when the cell
@@ -59,17 +59,17 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: nk1
+    INTEGER, INTENT(in) :: nkc1
     !! size of the uniform k mesh
-    INTEGER, INTENT(in) :: nk2
+    INTEGER, INTENT(in) :: nkc2
     !! size of the uniform k mesh
-    INTEGER, INTENT(in) :: nk3
+    INTEGER, INTENT(in) :: nkc3
     !! size of the uniform k mesh
-    INTEGER, INTENT(in) :: nq1
+    INTEGER, INTENT(in) :: nqc1
     !! size of the uniform q mesh
-    INTEGER, INTENT(in) :: nq2
+    INTEGER, INTENT(in) :: nqc2
     !! size of the uniform q mesh
-    INTEGER, INTENT(in) :: nq3
+    INTEGER, INTENT(in) :: nqc3
     !! size of the uniform q mesh
     INTEGER, INTENT(in) :: dims
     !! Number of bands in the Wannier space
@@ -110,37 +110,37 @@
     !! maximum number of WS vectors for the phonons
     INTEGER :: nrr_g
     !! maximum number of WS vectors for the electron-phonon
-    INTEGER :: irvec_kk (3, 20 * nk1 * nk2 * nk3)
+    INTEGER :: irvec_kk (3, 20 * nkc1 * nkc2 * nkc3)
     !! local INTEGER components of the ir-th Wigner-Seitz grid point 
     !! in the basis of the lattice vectors for electrons
-    INTEGER :: irvec_qq(3, 20 * nq1 * nq2 * nq3)
+    INTEGER :: irvec_qq(3, 20 * nqc1 * nqc2 * nqc3)
     !! local INTEGER components of the ir-th Wigner-Seitz grid point for phonons
-    INTEGER :: irvec_gg(3, 20 * nq1 * nq2 * nq3)
+    INTEGER :: irvec_gg(3, 20 * nqc1 * nqc2 * nqc3)
     !! local INTEGER components of the ir-th Wigner-Seitz grid point for electron-phonons
-    !! We use nk1 instead of nq1 because the k-grid is always larger or equal to q-grid.  
-    INTEGER :: ndegen_kk(20 * nk1 * nk2 * nk3, dims, dims)
+    !! We use nkc1 instead of nqc1 because the k-grid is always larger or equal to q-grid.  
+    INTEGER :: ndegen_kk(20 * nkc1 * nkc2 * nkc3, dims, dims)
     !! local Wigner-Seitz number of degenerescence (weights) for the electrons grid
-    INTEGER :: ndegen_qq(20 * nq1 * nq2 * nq3, dims2, dims2)
+    INTEGER :: ndegen_qq(20 * nqc1 * nqc2 * nqc3, dims2, dims2)
     !! local Wigner-Seitz number of degenerescence (weights) for the phonons grid
-    INTEGER :: ndegen_gg(20 * nq1 * nq2 * nq3, dims2, dims, dims)
+    INTEGER :: ndegen_gg(20 * nqc1 * nqc2 * nqc3, dims2, dims, dims)
     !! local Wigner-Seitz number of degenerescence (weights) for the electron-phonons grid
-    REAL(KIND = DP) :: wslen_kk(20 * nk1 * nk2 * nk3)
+    REAL(KIND = DP) :: wslen_kk(20 * nkc1 * nkc2 * nkc3)
     !! local real-space length for electrons, in units of alat
-    REAL(KIND = DP) :: wslen_qq(20 * nq1 * nq2 * nq3)
+    REAL(KIND = DP) :: wslen_qq(20 * nqc1 * nqc2 * nqc3)
     !! local real-space length for phonons, in units of alat
-    REAL(KIND = DP) :: wslen_gg(20 * nq1 * nq2 * nq3)
+    REAL(KIND = DP) :: wslen_gg(20 * nqc1 * nqc2 * nqc3)
     !! local real-space length for electron-phonon, in units of alat
     !
     !  Check the bounds
-    IF (nq1 > nk1 .OR. nq2 > nk2 .OR. nq3 > nk3 ) call errore &
+    IF (nqc1 > nkc1 .OR. nqc2 > nkc2 .OR. nqc3 > nkc3 ) call errore &
        ('wigner_seitz_wrap', ' the phonon grid should be smaller than electron grid', 1)
     !
     ! Now generated the un-sorted points for the electrons, phonons and electron-phonon
     !
     ! If dims > 1, it includes the position of Wannier-Centers
-    CALL wigner_seitzkq(nk1, nk2, nk3, irvec_kk, ndegen_kk, wslen_kk, nrr_k, w_centers, dims)
-    CALL wigner_seitzkq(nq1, nq2, nq3, irvec_qq, ndegen_qq, wslen_qq, nrr_q, tau, dims2)
-    CALL wigner_seitzg(nq1, nq2, nq3, irvec_gg, ndegen_gg, wslen_gg, nrr_g, w_centers, tau, dims, dims2)
+    CALL wigner_seitzkq(nkc1, nkc2, nkc3, irvec_kk, ndegen_kk, wslen_kk, nrr_k, w_centers, dims)
+    CALL wigner_seitzkq(nqc1, nqc2, nqc3, irvec_qq, ndegen_qq, wslen_qq, nrr_q, tau, dims2)
+    CALL wigner_seitzg(nqc1, nqc2, nqc3, irvec_gg, ndegen_gg, wslen_gg, nrr_g, w_centers, tau, dims, dims2)
     ! 
     ALLOCATE(irvec_k(3, nrr_k))
     ALLOCATE(irvec_q(3, nrr_q))
@@ -180,7 +180,7 @@
     !! Calculates a grid of points that fall inside of (and eventually 
     !! on the surface of) the Wigner-Seitz supercell centered on the 
     !! origin of the Bravais lattice with primitive translations 
-    !! nk1*a_1+nk2*a_2+nk3*a_3
+    !! nkc1*a_1+nkc2*a_2+nkc3*a_3
     !!  
     !-----------------------------------------------------------------
     USE kinds,         ONLY : DP
@@ -610,7 +610,7 @@
           ENDDO
           !
           IF (ABS(tot - DBLE(nc1 * nc2 * nc3)) > eps6) CALL errore &
-             ('wigner_seitzg', ' weights do not add up to nq1*nq2*nq3', 1)
+             ('wigner_seitzg', ' weights do not add up to nqc1*nqc2*nqc3', 1)
           IF (ABS(tot - tot2) > eps6) CALL errore &
              ('wigner_seitzg', ' weigths of pair of atoms is not equal to global weights', 1)
         ENDDO

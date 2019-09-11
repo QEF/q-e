@@ -566,7 +566,7 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE kpoint_grid_epw(nrot, time_reversal, skip_equivalence, s, t_rev, &
-                               bg, nk1, nk2, nk3, BZtoIBZ, s_BZtoIBZ)
+                               bg, nkc1, nkc2, nkc3, BZtoIBZ, s_BZtoIBZ)
     !-----------------------------------------------------------------------
     !!
     !!  Automatic generation of a uniform grid of k-points with symmetry. 
@@ -590,15 +590,15 @@
     !
     INTEGER, INTENT(in) :: nrot
     !! Number of Bravais symmetry
-    INTEGER, INTENT(in) :: nk1, nk2, nk3
+    INTEGER, INTENT(in) :: nkc1, nkc2, nkc3
     !! k-grid 
     INTEGER, INTENT(in) :: t_rev(48)
     !! Time-reversal sym
     INTEGER, INTENT(in) :: s(3, 3, 48)
     !! Symmetry matrice. 
-    INTEGER(SIK2), INTENT(inout) :: s_BZtoIBZ(nk1 * nk2 * nk3)
+    INTEGER(SIK2), INTENT(inout) :: s_BZtoIBZ(nkc1 * nkc2 * nkc3)
     !! Symeetry matrix that links an point to its IBZ friend.
-    INTEGER, INTENT(inout) :: BZtoIBZ(nk1 * nk2 * nk3)
+    INTEGER, INTENT(inout) :: BZtoIBZ(nkc1 * nkc2 * nkc3)
     !! Number of rotation
     LOGICAL, INTENT(in) :: time_reversal
     !! True if time reversal
@@ -610,7 +610,7 @@
     ! Local variables
     LOGICAL :: in_the_list
     !! Is the current point in the list
-    INTEGER(SIK2) :: s_save(nk1 * nk2 * nk3)
+    INTEGER(SIK2) :: s_save(nkc1 * nkc2 * nkc3)
     !! Temporary symmetry matrix
     INTEGER :: nkr
     !! Total number of points
@@ -622,7 +622,7 @@
     !! Global k-point index
     INTEGER :: nk
     !! Equivalent point
-    INTEGER :: equiv(nk1 * nk2 * nk3)
+    INTEGER :: equiv(nkc1 * nkc2 * nkc3)
     !! Equivalent k-points
     INTEGER :: ik
     !! K-point index 
@@ -632,7 +632,7 @@
     !! K-point paralelization (upper-bound index) 
     INTEGER :: cumul_nks
     !! Sum of points
-    INTEGER :: BZtoIBZ_tmp(nk1 * nk2 * nk3)
+    INTEGER :: BZtoIBZ_tmp(nkc1 * nkc2 * nkc3)
     !! Temporrary BZtoIBZ map
     INTEGER, ALLOCATABLE :: nkspar(:)
     !! Number of irr points (IBZ)
@@ -645,22 +645,22 @@
     REAL(KIND = DP), ALLOCATABLE :: wkk(:)
     !! Weight of the k-point
     !
-    nkr = nk1 * nk2 * nk3
+    nkr = nkc1 * nkc2 * nkc3
     ALLOCATE(nkspar(npool))
     ALLOCATE(xkg(3, nkr))
     ALLOCATE(wkk(nkr))
     equiv(:) = 0
     s_save(:) = 0
     !
-    DO i = 1, nk1
-      DO j = 1, nk2
-        DO k = 1, nk3
+    DO i = 1, nkc1
+      DO j = 1, nkc2
+        DO k = 1, nkc3
           !  this is nothing but consecutive ordering
-          n = (k - 1) + ( j- 1 ) * nk3 + (i - 1) * nk2 * nk3 + 1
+          n = (k - 1) + ( j- 1 ) * nkc3 + (i - 1) * nkc2 * nkc3 + 1
           !  xkg are the components of the complete grid in crystal axis
-          xkg(1, n) = DBLE(i - 1) / nk1 
-          xkg(2, n) = DBLE(j - 1) / nk2 
-          xkg(3, n) = DBLE(k - 1) / nk3 
+          xkg(1, n) = DBLE(i - 1) / nkc1 
+          xkg(2, n) = DBLE(j - 1) / nkc2 
+          xkg(3, n) = DBLE(k - 1) / nkc3 
         ENDDO
       ENDDO
     ENDDO
@@ -689,17 +689,17 @@
               xkr(i) = xkr(i) - NINT(xkr(i))
             ENDDO
             IF(t_rev(ns) == 1) xkr = -xkr
-            xx = xkr(1) * nk1 
-            yy = xkr(2) * nk2 
-            zz = xkr(3) * nk3 
+            xx = xkr(1) * nkc1 
+            yy = xkr(2) * nkc2 
+            zz = xkr(3) * nkc3 
             in_the_list = ABS(xx - NINT(xx)) <= eps6 .AND. &
                           ABS(yy - NINT(yy)) <= eps6 .AND. &
                           ABS(zz - NINT(zz)) <= eps6
             IF (in_the_list) THEN
-              i = MOD(NINT(xkr(1) * nk1 + 2 * nk1), nk1) + 1
-              j = MOD(NINT(xkr(2) * nk2 + 2 * nk2), nk2) + 1
-              k = MOD(NINT(xkr(3) * nk3 + 2 * nk3), nk3) + 1
-              n = (k - 1) + (j - 1) * nk3 + (i - 1) * nk2 * nk3 + 1
+              i = MOD(NINT(xkr(1) * nkc1 + 2 * nkc1), nkc1) + 1
+              j = MOD(NINT(xkr(2) * nkc2 + 2 * nkc2), nkc2) + 1
+              k = MOD(NINT(xkr(3) * nkc3 + 2 * nkc3), nkc3) + 1
+              n = (k - 1) + (j - 1) * nkc3 + (i - 1) * nkc2 * nkc3 + 1
               IF (n > nk .AND. equiv(n) == n) THEN
                 equiv(n) = nk
                 wkk(nk) = wkk(nk) + 1.0d0
@@ -710,16 +710,16 @@
               ENDIF
             ENDIF
     !        IF (time_reversal) THEN
-    !           xx =-xkr(1)*nk1 
-    !           yy =-xkr(2)*nk2 
-    !           zz =-xkr(3)*nk3 
+    !           xx =-xkr(1)*nkc1 
+    !           yy =-xkr(2)*nkc2 
+    !           zz =-xkr(3)*nkc3 
     !           in_the_list=ABS(xx-NINT(xx))<=eps.AND.ABS(yy-NINT(yy))<=eps &
     !                                              .AND. ABS(zz-NINT(zz))<=eps
     !           IF (in_the_list) THEN
-    !              i = mod ( nint (-xkr(1)*nk1  + 2*nk1), nk1 ) + 1
-    !              j = mod ( nint (-xkr(2)*nk2  + 2*nk2), nk2 ) + 1
-    !              k = mod ( nint (-xkr(3)*nk3  + 2*nk3), nk3 ) + 1
-    !              n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+    !              i = mod ( nint (-xkr(1)*nkc1  + 2*nkc1), nkc1 ) + 1
+    !              j = mod ( nint (-xkr(2)*nkc2  + 2*nkc2), nkc2 ) + 1
+    !              k = mod ( nint (-xkr(3)*nkc3  + 2*nkc3), nkc3 ) + 1
+    !              n = (k-1) + (j-1)*nkc3 + (i-1)*nkc2*nkc3 + 1
     !              IF (n>nk .AND. equiv(n)==n) THEN
     !                 equiv(n) = nk
     !                 wkk(nk)=wkk(nk)+1.0d0

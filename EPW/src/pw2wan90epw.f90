@@ -15,7 +15,7 @@
   !!
   !! 10/2008  Parellel computation of Amn and Mmn 
   !! 12/2008  Added phase setting of overlap matrix elements
-  !! 02/2009  works with standard nk1*nk2*nk3 grids
+  !! 02/2009  works with standard nkc1*nkc2*nkc3 grids
   !! 12/2009  works with USPP 
   !! 12/2014  RM: Imported the noncolinear case implemented by xlzhang
   !! 06/2016  SP: Debug of SOC + print/reading of nnkp file

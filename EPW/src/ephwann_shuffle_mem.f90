@@ -38,7 +38,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl, lindabs, mob_maxiter, use_ws,           &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nk1, nk2, nk3, nq1, nq2, nq3
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &
@@ -398,7 +398,7 @@
     ! Use atomic position to contstruct the WS for the phonon part
     dims  = nbndsub
     dims2 = nat
-    CALL wigner_seitz_wrap(nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
+    CALL wigner_seitz_wrap(nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, irvec_k, irvec_q, irvec_g, &
                            ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, &
                            w_centers, dims, tau, dims2)
   ELSE
@@ -406,7 +406,7 @@
     dims  = 1
     dims2 = 1
     dummy(:) = (/0.0, 0.0, 0.0/)
-    CALL wigner_seitz_wrap(nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
+    CALL wigner_seitz_wrap(nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, irvec_k, irvec_q, irvec_g, &
                            ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, &
                            dummy, dims, dummy, dims2)
   ENDIF
@@ -781,9 +781,9 @@
     !
     ! build the WS cell corresponding to the force constant grid
     !
-    atws(:, 1) = at(:, 1) * DBLE(nq1)
-    atws(:, 2) = at(:, 2) * DBLE(nq2)
-    atws(:, 3) = at(:, 3) * DBLE(nq3)
+    atws(:, 1) = at(:, 1) * DBLE(nqc1)
+    atws(:, 2) = at(:, 2) * DBLE(nqc2)
+    atws(:, 3) = at(:, 3) * DBLE(nqc3)
     rws(:, :)  = zero
     nrws       = 0
     ! initialize WS r-vectors
@@ -853,7 +853,7 @@
     ENDIF
     ! 
     IF (lifc) THEN
-      ALLOCATE(wscache(-2 * nq3:2 * nq3, -2 * nq2:2 * nq2, -2 * nq1:2 * nq1, nat, nat))
+      ALLOCATE(wscache(-2 * nqc3:2 * nqc3, -2 * nqc2:2 * nqc2, -2 * nqc1:2 * nqc1, nat, nat))
       wscache(:, :, :, :, :) = zero 
     ENDIF
     ! 
@@ -1341,7 +1341,7 @@
                 IF ((ABS(xxq(1)) > eps8) .OR. (ABS(xxq(2)) > eps8) .OR. (ABS(xxq(3)) > eps8)) THEN
                   !      
                   CALL cryst_to_cart(1, xxq, bg, 1)
-                  CALL rgd_blk_epw_fine_mem(imode, nq1, nq2, nq3, xxq, uf, epmatlrT(:, :, imode, ik), &
+                  CALL rgd_blk_epw_fine_mem(imode, nqc1, nqc2, nqc3, xxq, uf, epmatlrT(:, :, imode, ik), &
                                         nmodes, epsi, zstar, bmatf, one)
                   CALL cryst_to_cart(1, xxq, at, -1)
                   !

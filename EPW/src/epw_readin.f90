@@ -28,13 +28,15 @@
   USE fixed_occ,     ONLY : tfixed_occ
   USE qpoint,        ONLY : xq
   USE output,        ONLY : fildvscf, fildrho
+  USE start_k,       ONLY : nk1, nk2, nk3 
+  USe disp,          ONLY : nq1, nq2, nq3
   USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
                             ngaussw, dvscf_dir, eptemp, bands_skipped, wdata, kmaps,   &
                             num_iter, dis_froz_max, fsthick, dis_froz_min, eig_read,   &
-                            vme, degaussw, epexst, epwwrite, epbread, phonselfen,      &
+                            vme, degaussw, epexst, epwwrite, epbread, phonselfen, nqc2,&
                             elecselfen, a2f, plselfen, specfun_pl, nest_fn, filukk,    &
-                            rand_nk, rand_k, rand_nq, rand_q, nk1, nk2, nk3, nq1, nq2, &
-                            nq3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acustic, nw,  &
+                            rand_nk, rand_k, rand_nq, rand_q, nkc1, nkc2, nkc3, nqc1,  &
+                            nqc3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acustic, nw, &
                             wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
                             delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
                             broyden_beta, conv_thr_raxis, tempsmax, tempsmin, temps,   &
@@ -495,11 +497,21 @@
   !
   IF (meta_ionode) READ(5, inputepw, ERR = 200, IOSTAT = ios)
 #endif
-200 CALL errore ('epw_readin', 'reading input_epw namelist', ABS(ios))
+200 CALL errore('epw_readin', 'reading input_epw namelist', ABS(ios))
   !
   nk1tmp = nk1
   nk2tmp = nk2
   nk3tmp = nk3
+  ! 
+  ! Explaination: nk? and nq? are used by QE modules and therefore needs to be define
+  !               We define a EPW coarse grid nkc? and nqc? which is the same as nk? and nq?
+  !               but internal to EPW. 
+  nkc1 = nk1
+  nkc2 = nk2
+  nkc3 = nk3
+  nqc1 = nq1
+  nqc2 = nq2
+  nqc3 = nq3
   !
   !     Check all namelist variables
   !
@@ -785,12 +797,12 @@
   ! 
   !  broadcast the values of nq1, nq2, nq3
   !
-  !CALL mp_bcast(nq1, meta_ionode_id, world_comm)
-  !CALL mp_bcast(nq2, meta_ionode_id, world_comm)
-  !CALL mp_bcast(nq3, meta_ionode_id, world_comm)
-  !CALL mp_bcast(nk1, meta_ionode_id, world_comm)
-  !CALL mp_bcast(nk2, meta_ionode_id, world_comm)
-  !CALL mp_bcast(nk3, meta_ionode_id, world_comm)
+  CALL mp_bcast(nq1, meta_ionode_id, world_comm)
+  CALL mp_bcast(nq2, meta_ionode_id, world_comm)
+  CALL mp_bcast(nq3, meta_ionode_id, world_comm)
+  CALL mp_bcast(nk1, meta_ionode_id, world_comm)
+  CALL mp_bcast(nk2, meta_ionode_id, world_comm)
+  CALL mp_bcast(nk3, meta_ionode_id, world_comm)
   !
   amass = AMU_RY * amass
   !

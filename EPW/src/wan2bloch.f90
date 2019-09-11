@@ -290,7 +290,7 @@
     USE cell_base,     ONLY : at, bg
     USE ions_base,     ONLY : amass, tau, nat, ityp
     USE elph2,         ONLY : rdw, epsi, zstar
-    USE epwcom,        ONLY : lpolar, lphase, use_ws, nq1, nq2, nq3
+    USE epwcom,        ONLY : lpolar, lphase, use_ws, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
     USE rigid,         ONLY : cdiagh2
     USE low_lvl,       ONLY : utility_zdotu
@@ -399,7 +399,7 @@
     !  add the long-range term to D(q)
     IF (lpolar) THEN
       ! xq has to be in 2pi/a     
-      CALL rgd_blk(nq1, nq2, nq3, nat, chf, xq, tau, epsi, zstar, +1.d0)
+      CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
@@ -481,7 +481,7 @@
     USE cell_base, ONLY : at, bg
     USE ions_base, ONLY : amass, tau, nat, ityp
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
-    USE epwcom,    ONLY : lpolar, nq1, nq2, nq3
+    USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, czero, zero, one, eps8
     USE io_global, ONLY : stdout
     !
@@ -572,9 +572,9 @@
       first = .FALSE.
       DO na = 1, nat
         DO nb = 1, nat
-          DO n1 = -2 * nq1, 2 * nq1
-            DO n2 = -2 * nq2, 2 * nq2
-              DO n3 = -2 * nq3, 2 * nq3
+          DO n1 = -2 * nqc1, 2 * nqc1
+            DO n2 = -2 * nqc2, 2 * nqc2
+              DO n3 = -2 * nqc3, 2 * nqc3
                 DO i = 1, 3
                   r(i) = n1 * at(i, 1) + n2 * at(i, 2) + n3 * at(i, 3)
                   r_ws(i) = r(i) + tau(i, na) - tau(i, nb)
@@ -604,9 +604,9 @@
     DO na = 1, nat
       DO nb = 1, nat
         total_weight = zero
-        DO n1 = -2 * nq1, 2 * nq1
-          DO n2 = -2 * nq2, 2 * nq2
-            DO n3 = -2 * nq3, 2 * nq3
+        DO n1 = -2 * nqc1, 2 * nqc1
+          DO n2 = -2 * nqc2, 2 * nqc2
+            DO n3 = -2 * nqc3, 2 * nqc3
               !
               ! Sum over r-vectors in the supercell - safe range
               !
@@ -619,12 +619,12 @@
                 !
                 ! Find the vector corresponding to r in the original cell
                 !
-                m1 = MOD(n1 + 1, nq1)
-                IF (m1 <= 0) m1 = m1 + nq1
-                m2 = MOD(n2 + 1, nq2)
-                IF (m2 <= 0) m2 = m2 + nq2
-                m3 = MOD(n3 + 1, nq3)
-                IF (m3 <= 0) m3 = m3 + nq3
+                m1 = MOD(n1 + 1, nqc1)
+                IF (m1 <= 0) m1 = m1 + nqc1
+                m2 = MOD(n2 + 1, nqc2)
+                IF (m2 <= 0) m2 = m2 + nqc2
+                m3 = MOD(n3 + 1, nqc3)
+                IF (m3 <= 0) m3 = m3 + nqc3
                 !
                 arg = twopi * (xq(1) * r(1) + xq(2) * r(2) + xq(3) * r(3))
                 DO ipol = 1, 3
@@ -638,7 +638,7 @@
             ENDDO
           ENDDO
         ENDDO
-        IF (ABS(total_weight - nq1 * nq2 * nq3) > eps8) THEN
+        IF (ABS(total_weight - nqc1 * nqc2 * nqc3) > eps8) THEN
           WRITE(stdout,*) total_weight
           CALL errore ('dynifc2bloch', 'wrong total_weight', 1)
         ENDIF
@@ -657,7 +657,7 @@
     !
     IF (lpolar) THEN
       ! xq has to be in 2pi/a     
-      CALL rgd_blk(nq1, nq2, nq3, nat, chf, xq, tau, epsi, zstar, +1.d0)
+      CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
@@ -714,7 +714,7 @@
     USE cell_base, ONLY : at 
     USE ions_base, ONLY : tau, nat
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
-    USE epwcom,    ONLY : lpolar, nq1, nq2, nq3
+    USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, czero, zero, eps8
     USE io_global, ONLY : stdout
     !
@@ -767,9 +767,9 @@
       first = .FALSE.
       DO na = 1, nat
         DO nb = 1, nat
-          DO n1 = -2 * nq1, 2 * nq1
-            DO n2 = -2 * nq2, 2 * nq2
-              DO n3 = -2 * nq3, 2 * nq3
+          DO n1 = -2 * nqc1, 2 * nqc1
+            DO n2 = -2 * nqc2, 2 * nqc2
+              DO n3 = -2 * nqc3, 2 * nqc3
                 DO i = 1, 3
                   r(i) = n1 * at(i, 1) + n2 * at(i, 2) + n3 * at(i, 3)
                   r_ws(i) = r(i) + tau(i, na) - tau(i, nb)
@@ -788,9 +788,9 @@
     DO na = 1, nat
       DO nb = 1, nat
         total_weight = zero
-        DO n1 = -2 * nq1, 2 * nq1
-          DO n2= -2 * nq2, 2 * nq2
-            DO n3 = -2 * nq3, 2 * nq3
+        DO n1 = -2 * nqc1, 2 * nqc1
+          DO n2= -2 * nqc2, 2 * nqc2
+            DO n3 = -2 * nqc3, 2 * nqc3
               !
               ! Sum over R vectors in the supercell - safe range
               !
@@ -803,12 +803,12 @@
                 !
                 ! Find the vector corresponding to R in the original cell
                 !
-                m1 = MOD(n1 + 1, nq1)
-                IF (m1 <= 0) m1 = m1 + nq1
-                m2 = MOD(n2 + 1, nq2)
-                IF (m2 <= 0) m2 = m2 + nq2
-                m3 = MOD(n3 + 1, nq3)
-                IF (m3 <= 0) m3 = m3 + nq3
+                m1 = MOD(n1 + 1, nqc1)
+                IF (m1 <= 0) m1 = m1 + nqc1
+                m2 = MOD(n2 + 1, nqc2)
+                IF (m2 <= 0) m2 = m2 + nqc2
+                m3 = MOD(n3 + 1, nqc3)
+                IF (m3 <= 0) m3 = m3 + nqc3
                 !
                 arg = twopi * (xq(1) * r(1) + xq(2) * r(2) + xq(3) * r(3))
                 DO ipol = 1, 3
@@ -822,7 +822,7 @@
             ENDDO
           ENDDO
         ENDDO
-        IF (ABS(total_weight - nq1 * nq2 * nq3) > eps8) THEN
+        IF (ABS(total_weight - nqc1 * nqc2 * nqc3) > eps8) THEN
           WRITE(stdout,*) total_weight
           CALL errore ('dynifc2bloch', 'wrong total_weight', 1)
         ENDIF
@@ -841,7 +841,7 @@
     !
     IF (lpolar) THEN
       ! xq has to be in 2pi/a     
-      CALL rgd_blk(nq1, nq2, nq3, nat, chf, xq, tau, epsi, zstar, +1.d0)
+      CALL rgd_blk(nqc1, nqc2, nqc3, nat, chf, xq, tau, epsi, zstar, +1.d0)
       !
     ENDIF
     !
@@ -1293,7 +1293,7 @@
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : rdw, epsi, zstar, wscache, ifc
     USE cell_base,     ONLY : at, alat, bg
-    USE epwcom,        ONLY : eig_read, use_ws, lpolar, lifc, nq1, nq2, nq3
+    USE epwcom,        ONLY : eig_read, use_ws, lpolar, lifc, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one, eps8
     USE ions_base,     ONLY : amass, tau, nat, ityp
     USE io_global,     ONLY : stdout
@@ -1439,9 +1439,9 @@
         first = .FALSE.
         DO na = 1, nat
           DO nb = 1, nat
-            DO n1 = -2 * nq1, 2 * nq1
-              DO n2 = -2 * nq2, 2 * nq2
-                DO n3 = -2 * nq3, 2 * nq3
+            DO n1 = -2 * nqc1, 2 * nqc1
+              DO n2 = -2 * nqc2, 2 * nqc2
+                DO n3 = -2 * nqc3, 2 * nqc3
                   DO i = 1, 3
                     r(i) = n1 * at(i, 1) + n2 * at(i, 2) + n3 * at(i, 3)
                     r_ws(i) = r(i) + tau(i, na) - tau(i, nb)
@@ -1459,9 +1459,9 @@
       DO na = 1, nat
         DO nb = 1, nat
           total_weight = zero
-          DO n1 = -2 * nq1, 2 * nq1
-            DO n2 = -2 * nq2, 2 * nq2
-              DO n3 = -2 * nq3, 2 * nq3
+          DO n1 = -2 * nqc1, 2 * nqc1
+            DO n2 = -2 * nqc2, 2 * nqc2
+              DO n3 = -2 * nqc3, 2 * nqc3
                 !
                 ! Sum over R vectors in the supercell - safe range 
                 DO i = 1, 3
@@ -1472,12 +1472,12 @@
                 IF (weight > zero) THEN
                   !
                   ! Find the vector corresponding to R in the orginial cell
-                  m1 = MOD(n1 + 1, nq1)
-                  IF (m1 <= 0) m1 = m1 + nq1
-                  m2 = MOD(n2 + 1, nq2)
-                  IF (m2 <= 0) m2 = m2 + nq2
-                  m3 = MOD(n3 + 1, nq3)
-                  IF (m3 <= 0) m3 = m3 + nq3
+                  m1 = MOD(n1 + 1, nqc1)
+                  IF (m1 <= 0) m1 = m1 + nqc1
+                  m2 = MOD(n2 + 1, nqc2)
+                  IF (m2 <= 0) m2 = m2 + nqc2
+                  m3 = MOD(n3 + 1, nqc3)
+                  IF (m3 <= 0) m3 = m3 + nqc3
                   !
                   arg = twopi * (xq(1) * r(1) + xq(2) * r(2) + xq(3) * r(3))
                   DO ipol = 1, 3
@@ -1491,7 +1491,7 @@
               ENDDO
             ENDDO
           ENDDO
-          IF (ABS(total_weight - nq1 * nq2 * nq3) > eps8) THEN
+          IF (ABS(total_weight - nqc1 * nqc2 * nqc3) > eps8) THEN
             WRITE(stdout,*) total_weight
             CALL errore ('vmewan2blochp', 'wrong total_weight', 1)
           END IF
@@ -1545,7 +1545,7 @@
     ! add the long-range term to D(q)
     IF (lpolar) THEN
       ! xq has to be in 2pi/a     
-      CALL rgd_blk_der(nq1, nq2, nq3, nat, chf_a, xq, tau, epsi, zstar, +1.d0)
+      CALL rgd_blk_der(nqc1, nqc2, nqc3, nat, chf_a, xq, tau, epsi, zstar, +1.d0)
     ENDIF
     ! 
     !----------------------------------------------------------

@@ -32,7 +32,7 @@
     USE ions_base,        ONLY : amass, tau, nat, ntyp => nsp, ityp
     USE elph2,            ONLY : dynq, zstar, epsi
     USE symm_base,        ONLY : nsym
-    USE epwcom,           ONLY : dvscf_dir, lpolar, lifc, nq1, nq2, nq3
+    USE epwcom,           ONLY : dvscf_dir, lpolar, lifc, nqc1, nqc2, nqc3
     USE modes,            ONLY : nmodes
     USE control_flags,    ONLY : iverbosity
     USE noncollin_module, ONLY : nspin_mag
@@ -181,7 +181,7 @@
     !! 
     REAL(KIND = DP) :: tau_(3)
     !! 
-    REAL(KIND = DP) :: q(3, nq1 * nq2 * nq3)
+    REAL(KIND = DP) :: q(3, nqc1 * nqc2 * nqc3)
     !! 
     REAL(KIND = DP) :: dynr(2, 3, nat, 3, nat)
     !! 
@@ -482,7 +482,7 @@
     ! SP: Be careful, here time-reversal is not actual time reversal but is due to 
     !     change in order and values of the q in the star between QE 4 and 5.
     !
-    CALL cryst_to_cart(nq1 * nq2 * nq3, q, at, -1)
+    CALL cryst_to_cart(nqc1 * nqc2 * nqc3, q, at, -1)
     CALL cryst_to_cart(48, sxq, at, -1)
     !
     current_iq = iq_first
@@ -521,9 +521,9 @@
     IF (lifc) THEN
       !
       ! build the WS cell corresponding to the force constant grid
-      atws(:, 1) = at(:, 1) * DBLE(nq1)
-      atws(:, 2) = at(:, 2) * DBLE(nq2)
-      atws(:, 3) = at(:, 3) * DBLE(nq3)
+      atws(:, 1) = at(:, 1) * DBLE(nqc1)
+      atws(:, 2) = at(:, 2) * DBLE(nqc2)
+      atws(:, 3) = at(:, 3) * DBLE(nqc3)
       ! initialize WS r-vectors
       CALL wsinit(rws, nrwsx, nrws, atws)
       ! dynifc2blochc requires ifc
@@ -708,7 +708,7 @@
     !
     USE kinds,     ONLY : DP
     USE elph2,     ONLY : ifc, zstar, epsi
-    USE epwcom,    ONLY : asr_typ, dvscf_dir, nq1, nq2, nq3
+    USE epwcom,    ONLY : asr_typ, dvscf_dir, nqc1, nqc2, nqc3
     USE ions_base, ONLY : nat
     USE cell_base, ONLY : ibrav, omega, at, bg, celldm, alat
     USE io_global, ONLY : stdout
@@ -797,8 +797,8 @@
                  celldm, at, bg, omega, atm, amass2, &
                  tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar)
         call volume(alat, at(1, 1), at(1, 2), at(1, 3), omega)
-        CALL read_ifc_param(nq1, nq2, nq3)
-        CALL read_ifc_xml(nq1, nq2, nq3, nat_, ifc)
+        CALL read_ifc_param(nqc1, nqc2, nqc3)
+        CALL read_ifc_xml(nqc1, nqc2, nqc3, nat_, ifc)
         DEALLOCATE(m_loc)
         DEALLOCATE(atm)
         ! 
@@ -843,7 +843,7 @@
                 IF (i /= ibid .OR. j /= jbid .OR. na /= nabid .OR. nb /= nbbid)  &
                   CALL errore('read_epw', 'error in reading ifc', 1)
                 READ(iunifc, *) (((m1bid, m2bid, m3bid, ifc(m1, m2, m3, i, j, na, nb), &
-                           m1 = 1, nq1), m2 = 1, nq2), m3 = 1, nq3)
+                           m1 = 1, nqc1), m2 = 1, nqc2), m3 = 1, nqc3)
               ENDDO
             ENDDO
           ENDDO
@@ -868,9 +868,9 @@
     CALL mp_bcast(tau_, ionode_id, world_comm)
     CALL mp_bcast(ibrav_, ionode_id, world_comm)
     !
-    WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nq1, nq2, nq3, 3, 3, nat, nat)
+    WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat)
     !
-    CALL set_asr2(asr_typ, nq1, nq2, nq3, ifc, zstar, nat, ibrav_, tau_)
+    CALL set_asr2(asr_typ, nqc1, nqc2, nqc3, ifc, zstar, nat, ibrav_, tau_)
     !
     !CALL mp_barrier(inter_pool_comm)
     IF (mpime == ionode_id) THEN

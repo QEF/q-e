@@ -7,7 +7,7 @@
   ! or http://www.gnu.org/copyleft/gpl.txt .
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw_fine_mem(imode, nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
+  SUBROUTINE rgd_blk_epw_fine_mem(imode, nqc1, nqc2, nqc3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -42,11 +42,11 @@
   !
   INTEGER, INTENT(in) :: imode
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq1
+  INTEGER, INTENT(in) :: nqc1
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq2
+  INTEGER, INTENT(in) :: nqc2
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq3
+  INTEGER, INTENT(in) :: nqc3
   !! Coarse q-point grid 
   INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
@@ -110,9 +110,9 @@
   !
   epmatl(:, :) = czero   
   !
-  DO m1= -nq1, nq1
-    DO m2= -nq2, nq2
-      DO m3= -nq3, nq3
+  DO m1= -nqc1, nqc1
+    DO m2= -nqc2, nqc2
+      DO m3= -nqc3, nqc3
       !
       g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
       g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)

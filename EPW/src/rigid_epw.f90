@@ -7,7 +7,7 @@
   ! or http://www.gnu.org/copyleft/gpl.txt .
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE rgd_blk(nq1, nq2, nq3, nat, dyn, q, tau, epsil, zeu, signe)
+  SUBROUTINE rgd_blk(nqc1, nqc2, nqc3, nat, dyn, q, tau, epsil, zeu, signe)
   !-----------------------------------------------------------------------
   !! This is adapted from QE PH/rigid.f90 
   !!
@@ -28,11 +28,11 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: nq1
+  INTEGER, INTENT(in) :: nqc1
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq2
+  INTEGER, INTENT(in) :: nqc2
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq3
+  INTEGER, INTENT(in) :: nqc3
   !! Coarse q-point grid 
   INTEGER, INTENT(in) :: nat
   !! Number of atoms
@@ -107,19 +107,19 @@
   ! (useful if system is in vacuum, e.g. 1D or 2D)
   !
   ! SP - Apr 2019 - Should be overkill 
-  !IF (nq1 == 1) THEN 
+  !IF (nqc1 == 1) THEN 
   !  nrx1=0
   !ELSE
   !  nrx1 = int( sqrt (geg) / &
   !              sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
   !ENDIF
-  !IF (nq2 == 1) THEN 
+  !IF (nqc2 == 1) THEN 
   !  nrx2=0
   !ELSE
   !  nrx2 = int( sqrt (geg) / &
   !              sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
   !ENDIF
-  !IF (nq3 == 1) THEN 
+  !IF (nqc3 == 1) THEN 
   !  nrx3=0
   !ELSE
   !  nrx3 = int( sqrt (geg) / &
@@ -131,9 +131,9 @@
 !  DO m1 = -nrx1, nrx1
 !    DO m2 = -nrx2, nrx2
 !      DO m3 = -nrx3, nrx3
-  DO m1 = -nq1, nq1
-    DO m2 = -nq2, nq2
-      DO m3 = -nq3, nq3
+  DO m1 = -nqc1, nqc1
+    DO m2 = -nqc2, nqc2
+      DO m3 = -nqc3, nqc3
         !
         g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1,3)
         g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2,3)
@@ -205,7 +205,7 @@
   !-------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
+  SUBROUTINE rgd_blk_epw(nqc1, nqc2, nqc3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -237,11 +237,11 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: nq1
+  INTEGER, INTENT(in) :: nqc1
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq2
+  INTEGER, INTENT(in) :: nqc2
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq3
+  INTEGER, INTENT(in) :: nqc3
   !! Coarse q-point grid 
   INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
@@ -304,19 +304,19 @@
   geg = gmax * alph * 4.0d0
   fac = signe * e2 * fpi / omega * ci
   !
- ! IF (nq1 == 1) THEN 
+ ! IF (nqc1 == 1) THEN 
  !    nrx1=0
  ! ELSE
  !    nrx1 = int( sqrt (geg) / &
  !                sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
  ! ENDIF
- ! IF (nq2 == 1) THEN 
+ ! IF (nqc2 == 1) THEN 
  !    nrx2=0
  ! ELSE
  !    nrx2 = int( sqrt (geg) / &
  !                sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
  ! ENDIF
- ! IF (nq3 == 1) THEN 
+ ! IF (nqc3 == 1) THEN 
  !    nrx3=0
  ! ELSE
  !    nrx3 = int( sqrt (geg) / &
@@ -325,9 +325,9 @@
   !
   epmatl(:) = czero   
   !DO m1 = -nrx1, nrx1
-  DO m1 = -nq1, nq1
-    DO m2 = -nq2, nq2
-      DO m3 = -nq3, nq3
+  DO m1 = -nqc1, nqc1
+    DO m2 = -nqc2, nqc2
+      DO m3 = -nqc3, nqc3
       !
       g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
       g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
@@ -376,7 +376,7 @@
   !-------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------
-  SUBROUTINE rgd_blk_epw_fine(nq1, nq2, nq3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
+  SUBROUTINE rgd_blk_epw_fine(nqc1, nqc2, nqc3, q, uq, epmat, nmodes, epsil, zeu, bmat, signe)
   !-------------------------------------------------------------------------------
   !!
   !! Compute the long range term for the e-ph vertex
@@ -409,11 +409,11 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: nq1
+  INTEGER, INTENT(in) :: nqc1
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq2
+  INTEGER, INTENT(in) :: nqc2
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq3
+  INTEGER, INTENT(in) :: nqc3
   !! Coarse q-point grid 
   INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
@@ -480,9 +480,9 @@
   !
   epmatl(:, :, :) = czero   
   !
-  DO m1 = -nq1, nq1
-    DO m2 = -nq2, nq2
-      DO m3 = -nq3, nq3
+  DO m1 = -nqc1, nqc1
+    DO m2 = -nqc2, nqc2
+      DO m3 = -nqc3, nqc3
       !
       g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
       g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
@@ -834,7 +834,7 @@
   END SUBROUTINE compute_umn_c
   !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------
-  SUBROUTINE rgd_blk_der(nq1, nq2, nq3, nat, dyn_der, q, tau, epsil, zeu, signe)
+  SUBROUTINE rgd_blk_der(nqc1, nqc2, nqc3, nat, dyn_der, q, tau, epsil, zeu, signe)
   !-----------------------------------------------------------------------
   !!
   !! compute the rigid-ion (long-range) derivative term for q 
@@ -846,11 +846,11 @@
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in) :: nq1
+  INTEGER, INTENT(in) :: nqc1
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq2
+  INTEGER, INTENT(in) :: nqc2
   !! Coarse q-point grid 
-  INTEGER, INTENT(in) :: nq3
+  INTEGER, INTENT(in) :: nqc3
   !! Coarse q-point grid 
   INTEGER, INTENT(in) :: nat
   !! Number of atoms
@@ -934,9 +934,9 @@
   geg = gmax * alph * 4.0d0
   fac = signe * e2 * fpi / omega 
   !
-  DO m1 = -nq1, nq1
-    DO m2 = -nq2, nq2
-      DO m3 = -nq3, nq3
+  DO m1 = -nqc1, nqc1
+    DO m2 = -nqc2, nqc2
+      DO m3 = -nqc3, nqc3
         !
         g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3)
         g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3)
