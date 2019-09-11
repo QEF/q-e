@@ -49,7 +49,7 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
-  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, &
+  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
                             ngk_all, exband, wscache, umat, umat_all
   USE klist_epw,     ONLY : xk_all, et_loc, et_all
@@ -209,6 +209,11 @@
   xqc_irr(:, :) = zero
   xqc(:, :)     = zero
   wqlist(:)     = zero
+  IF (lifc) THEN
+    ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
+    ifc(:, :, :, :, :, :, :) = zero
+  ENDIF
+
   !  
   IF (meta_ionode) THEN
     DO iq_irr = 1, nqc_irr
@@ -329,7 +334,9 @@
     cuq(:, :, :)          = czero
     !
     ! read interatomic force constat matrix from q2r
-    IF (lifc) CALL read_ifc
+    IF (lifc) THEN
+      CALL read_ifc
+    ENDIF
     !
     ! SP: The symmetries are now consistent with QE 5. This means that the order of the q in the star
     !     should be the same as in the .dyn files produced by QE 5.
@@ -691,7 +698,9 @@
     IF (nqc /= nq1 * nq2 * nq3) CALL errore('elphon_shuffle_wrap', 'nqc /= nq1*nq2*nq3', nqc)
     wqlist = DBLE(1) / DBLE(nqc)
     !
-    IF (lifc) DEALLOCATE(wscache)
+    IF (lifc) THEN
+      DEALLOCATE(wscache)
+    ENDIF
     DEALLOCATE(evc)
     DEALLOCATE(evq)
     DEALLOCATE(xkq)
@@ -824,6 +833,9 @@
 #endif
   ENDIF        
   DEALLOCATE(xqc)
+  IF (lifc) THEN
+    DEALLOCATE(ifc)
+  ENDIF
   !
 5 FORMAT (8x,"q(",i5," ) = (",3f12.7," )") 
   !

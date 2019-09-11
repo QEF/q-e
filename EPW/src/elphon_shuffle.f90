@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE elphon_shuffle( iq_irr, nqc_irr, iq, gmapsym, eigv, isym, xq0, timerev )
+  SUBROUTINE elphon_shuffle(iq_irr, nqc_irr, iq, gmapsym, eigv, isym, xq0, timerev)
   !-----------------------------------------------------------------------
   !!
   !! Electron-phonon calculation from data saved in fildvscf
@@ -46,13 +46,13 @@
   !! Total number of irreducible q-points in the list
   INTEGER, INTENT(in) :: iq
   !! Current q-point in the star of iq_irr q-point
-  INTEGER, INTENT(in) :: gmapsym(ngm,48)
+  INTEGER, INTENT(in) :: gmapsym(ngm, 48)
   !! Correspondence G-->S(G)
   INTEGER, INTENT(in) :: isym
   !! The symmetry which generates the current q in the star
   REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! The first q-point in the star (cartesian coords.)
-  COMPLEX(KIND = DP), INTENT(in) :: eigv(ngm,48)
+  COMPLEX(KIND = DP), INTENT(in) :: eigv(ngm, 48)
   !! e^{iGv} for 1...nsym (v the fractional translation)
   LOGICAL, INTENT(in) :: timerev
   !!  true if we are using time reversal
@@ -90,10 +90,10 @@
   imode0 = 0
   DO irr = 1, nirr
      npe = npert(irr)
-     ALLOCATE(dvscfin(dfftp%nnr, nspin_mag, npe) )
+     ALLOCATE(dvscfin(dfftp%nnr, nspin_mag, npe))
      IF (okvan) THEN
-        ALLOCATE(int3(nhm, nhm, nat, nspin_mag, npe) )
-        IF (noncolin) ALLOCATE(int3_nc(nhm, nhm, nat, nspin, npe) )
+        ALLOCATE(int3(nhm, nhm, nat, nspin_mag, npe))
+        IF (noncolin) ALLOCATE(int3_nc(nhm, nhm, nat, nspin, npe))
      ENDIF
      !
      !   read the <prefix>.dvscf_q[iq] files
@@ -101,7 +101,7 @@
      dvscfin = czero
      IF (my_pool_id == 0) THEN
         DO ipert = 1, npe
-           CALL readdvscf( dvscfin(1,1,ipert), imode0 + ipert, iq_irr, nqc_irr )
+           CALL readdvscf(dvscfin(1, 1, ipert), imode0 + ipert, iq_irr, nqc_irr)
         ENDDO
      ENDIF
      CALL mp_sum(dvscfin,inter_pool_comm)
@@ -110,22 +110,22 @@
        ALLOCATE(dvscfins(dffts%nnr, nspin_mag, npe) )
        DO is = 1, nspin_mag
          DO ipert = 1, npe
-           CALL fft_interpolate(dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
+           CALL fft_interpolate(dfftp, dvscfin(:, is, ipert), dffts, dvscfins(:, is, ipert))
          ENDDO 
        ENDDO
      ELSE
        dvscfins => dvscfin
      ENDIF
      !
-     CALL newdq2( dvscfin, npe, xq0, timerev )
-     CALL elphel2_shuffle( npe, imode0, dvscfins, gmapsym, eigv, isym, xq0, timerev )
+     CALL newdq2(dvscfin, npe, xq0, timerev)
+     CALL elphel2_shuffle(npe, imode0, dvscfins, gmapsym, eigv, isym, xq0, timerev)
      !
      imode0 = imode0 + npe
      IF (doublegrid) DEALLOCATE(dvscfins)
      DEALLOCATE(dvscfin)
      IF (okvan) THEN
-        DEALLOCATE(int3)
-        IF (noncolin) DEALLOCATE(int3_nc)
+       DEALLOCATE(int3)
+       IF (noncolin) DEALLOCATE(int3_nc)
      ENDIF
   ENDDO
   !
@@ -145,11 +145,11 @@
         ! Here is where we calculate epmatq, it appears to be
         ! epmatq = cone * conjug(u) * el_ph_mat + czero  
         IF (timerev) THEN
-          CALL zgemv( 'n', nmodes, nmodes, cone, u, nmodes, &
-            el_ph_mat(ibnd,jbnd,ik,:), 1, czero, epmatq(ibnd,jbnd,ik,:,iq), 1 )
+          CALL ZGEMV('n', nmodes, nmodes, cone, u, nmodes, &
+            el_ph_mat(ibnd, jbnd, ik, :), 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
         ELSE
-          CALL zgemv( 'n', nmodes, nmodes, cone, CONJG(u), nmodes, &
-            el_ph_mat(ibnd,jbnd,ik,:), 1, czero, epmatq(ibnd,jbnd,ik,:,iq), 1 )
+          CALL ZGEMV('n', nmodes, nmodes, cone, CONJG(u), nmodes, &
+            el_ph_mat(ibnd, jbnd, ik, :), 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
         ENDIF 
         !
       ENDDO
@@ -163,4 +163,6 @@
   !
   CALL stop_clock('elphon_shuffle')
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE elphon_shuffle
+  !-----------------------------------------------------------------------

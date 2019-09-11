@@ -793,7 +793,7 @@
         total_weight = zero
         DO n1 = -2 * nq1, 2 * nq1
           DO n2= -2 * nq2, 2 * nq2
-            DO n3 = -2*nq3,2*nq3
+            DO n3 = -2 * nq3, 2 * nq3
               !
               ! Sum over R vectors in the supercell - safe range
               !

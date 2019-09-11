@@ -527,6 +527,7 @@
       atws(:, 3) = at(:, 3) * DBLE(nq3)
       ! initialize WS r-vectors
       CALL wsinit(rws, nrwsx, nrws, atws)
+      ! dynifc2blochc requires ifc
       CALL dynifc2blochc(nmodes, rws, nrws, q(:, 1), dynq_tmp)
       dynq(:, :, iq_first) = dynq_tmp
       WRITE(stdout, '(5x,a)') "Dyn mat calculated from ifcs"
@@ -782,17 +783,7 @@
     WRITE(stdout, '(/5x,"Reading interatomic force constants"/)')
     FLUSH(stdout)
     ! 
-    ! This is important in restart mode as zstar etc has not been allocated
-    !IF (.NOT. ALLOCATED (zstar) ) ALLOCATE(zstar(3, 3, nat))
-    !IF (.NOT. ALLOCATED (epsi) ) ALLOCATE(epsi(3, 3))
-    !IF (.NOT. ALLOCATED (ifc)) ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
-    !ALLOCATE(zstar(3, 3, nat))
-    !ALLOCATE(epsi(3, 3))
-    ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
-    !zstar = 0.d0
-    !epsi = 0.d0
-    ! generic name for the ifc.q2r file. If it is xml, the file will be named
-    ! ifc.q2r.xml instead
+    ! Generic name for the ifc.q2r file. If it is xml, the file will be named ifc.q2r.xml instead
     tempfile = TRIM(dvscf_dir) // 'ifc.q2r'
     ! The following function will check if the file exists in xml format
     CALL check_is_xml_file(tempfile, is_xml_file)
@@ -888,7 +879,6 @@
       CLOSE(iunifc)
     ENDIF
     !
-    DEALLOCATE(ifc)
     WRITE(stdout, '(/5x,"Finished reading ifcs"/)')
     !
     !-------------------------------------------------------------------------------

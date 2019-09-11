@@ -55,7 +55,7 @@
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf,  transp_temp, xkq, lower_bnd, upper_bnd 
+                            nktotf,  transp_temp, xkq, lower_bnd, upper_bnd
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -440,8 +440,8 @@
   !
   IF (epwread .AND. .NOT. epbread) THEN
     !
-    !  read all quantities in Wannier representation from file
-    !  in parallel case all pools read the same file
+    ! Read all quantities in Wannier representation from file
+    ! in parallel case all pools read the same file
     CALL epw_read(nrr_k, nrr_q, nrr_g)
     !
   ELSE !if not epwread (i.e. need to calculate fmt file)
@@ -2006,22 +2006,22 @@
     IF (eig_read) CLOSE(iunksdata)
     !
   ENDIF
-  !---------------------------------
+  !--------------------------------------------------------------------------------
   END SUBROUTINE epw_write
-  !---------------------------------
-  !---------------------------------
+  !--------------------------------------------------------------------------------
+  !--------------------------------------------------------------------------------
   SUBROUTINE epw_read(nrr_k, nrr_q, nrr_g)
-  !---------------------------------
+  !--------------------------------------------------------------------------------
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
   USE pwcom,     ONLY : ef
-  USE elph2,     ONLY : chw, rdw, epmatwp, &
-                        cdmew, cvmew, chw_ks, zstar, epsi
+  USE phcom,     ONLY : nq1, nq3, nq2
+  USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
   USE ions_base, ONLY : nat
   USE phcom,     ONLY : nmodes  
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, diropn
   USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
-  USE constants_epw, ONLY :  czero
+  USE constants_epw, ONLY : czero, zero
 #if defined(__NAG)
   USE f90_unix_io,ONLY : flush
 #endif
@@ -2142,7 +2142,9 @@
     CALL mp_bcast(cdmew, ionode_id, world_comm)
   ENDIF
   !
-  IF (lifc) CALL read_ifc
+  IF (lifc) THEN
+    CALL read_ifc
+  ENDIF
   !
   IF (etf_mem == 0) THEN
     ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g))
