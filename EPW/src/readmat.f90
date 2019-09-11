@@ -32,10 +32,9 @@
     USE ions_base,        ONLY : amass, tau, nat, ntyp => nsp, ityp
     USE elph2,            ONLY : dynq, zstar, epsi
     USE symm_base,        ONLY : nsym
-    USE epwcom,           ONLY : dvscf_dir, lpolar, lifc
+    USE epwcom,           ONLY : dvscf_dir, lpolar, lifc, nq1, nq2, nq3
     USE modes,            ONLY : nmodes
     USE control_flags,    ONLY : iverbosity
-    USE phcom,            ONLY : nq1, nq2, nq3
     USE noncollin_module, ONLY : nspin_mag
     USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
                                  read_dyn_mat
@@ -709,10 +708,9 @@
     !
     USE kinds,     ONLY : DP
     USE elph2,     ONLY : ifc, zstar, epsi
-    USE epwcom,    ONLY : asr_typ, dvscf_dir
+    USE epwcom,    ONLY : asr_typ, dvscf_dir, nq1, nq2, nq3
     USE ions_base, ONLY : nat
     USE cell_base, ONLY : ibrav, omega, at, bg, celldm, alat
-    USE phcom,     ONLY : nq1, nq2, nq3
     USE io_global, ONLY : stdout
     USE io_epw,    ONLY : iunifc
     USE noncollin_module, ONLY : nspin_mag
@@ -1142,7 +1140,7 @@
     ! the new "projected" zeu
     !
     zeu_new(:, :, :) = zeu_new(:, :, :) - zeu_w(:, :, :)
-    cALL sp_zeu(zeu_w, zeu_w, nat, norm2)
+    CALL sp_zeu(zeu_w, zeu_w, nat, norm2)
     WRITE(stdout, '(5x,"Norm of the difference between old and new effective charges: ", 1f12.7)') SQRT(norm2)
     !
     DO i = 1, 3
@@ -1406,7 +1404,7 @@
     SUBROUTINE sp_zeu(zeu_u, zeu_v, nat, scal)
     !-----------------------------------------------------------------------
     !!
-    !! does the scalar product of two effective charges matrices zeu_u and zeu_v
+    !! Does the scalar product of two effective charges matrices zeu_u and zeu_v
     !! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
     !!
     USE kinds, ONLY: DP
@@ -1419,7 +1417,7 @@
     !! 
     REAL(KIND = DP), INTENT(in) :: zeu_v(3, 3, nat)
     !! 
-    REAL(KIND = DP), INTENT(out) :: scal
+    REAL(KIND = DP), INTENT(inout) :: scal
     !! 
     ! Local variables
     INTEGER :: i

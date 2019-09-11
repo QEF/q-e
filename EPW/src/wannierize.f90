@@ -18,7 +18,7 @@
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout, ionode_id
   USE wvfct,          ONLY : nbnd
-  USE start_k,        ONLY : nk1, nk2, nk3
+  USE epwcom,         ONLY : nk1, nk2, nk3
   USE pwcom,          ONLY : nkstot 
   USE klist_epw,      ONLY : xk_cryst           
   USE wannierEPW,     ONLY : mp_grid, n_wannier, kpt_latt

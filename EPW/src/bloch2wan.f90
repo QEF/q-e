@@ -508,9 +508,8 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, alat
     USE ions_base,     ONLY : nat, tau
-    USE phcom,         ONLY : nq1, nq2, nq3
     USE elph2,         ONLY : rdw, epsi, zstar
-    USE epwcom,        ONLY : lpolar
+    USE epwcom,        ONLY : lpolar, nq1, nq2, nq3
     USE io_epw,        ONLY : iudecaydyn
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
     USE io_global,     ONLY : ionode_id
@@ -558,7 +557,7 @@
     IF (lpolar) THEN
       DO ik = 1, nq
         !xk has to be in cart. coord.
-        CALL rgd_blk (nq1,nq2,nq3,nat,dynq(1,1,ik),xk(:,ik),tau,epsi,zstar,-1.d0)
+        CALL rgd_blk(nq1, nq2, nq3, nat, dynq(1, 1, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
         !
       ENDDO
     ENDIF
@@ -603,11 +602,11 @@
     !  the matrix for the first mode only
     !
     IF (mpime == ionode_id) THEN
-      OPEN(UNIT = iudecaydyn,FILE = 'decay.dynmat')
+      OPEN(UNIT = iudecaydyn, FILE = 'decay.dynmat')
       WRITE(iudecaydyn, '(/3x,a/)') '#Spatial decay of Dynamical matrix in Wannier basis'
       DO ir = 1, nrr
         !
-        tmp =  MAXVAL(ABS(rdw(:,:,ir)) )
+        tmp =  MAXVAL(ABS(rdw(:, :, ir)) )
         WRITE(iudecaydyn, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
@@ -771,20 +770,22 @@
     !      in the wannier input
     !
     tempFILE = TRIM(prefix)//'.bvec'
-    OPEN(iubvec, FILE = tempfile, action='read', iostat=ios)
+    OPEN(iubvec, FILE = tempfile, ACTION = 'read', IOSTAT = ios)
     IF (ios /= 0) THEN
       !
       ! if it doesn't exist, then we just set the bvec and wb to zero
       !
       nnb = 1
-      ALLOCATE(bvec(3,nnb,nkstot), wb(nnb) )
+      ALLOCATE(bvec(3, nnb, nkstot))
+      ALLOCATE(wb(nnb))
       bvec = zero
       wb   = zero
     ELSE
       READ(iubvec,*) tempfile
       READ(iubvec,*) nkstot_tmp, nnb
-      IF (nkstot_tmp /= nkstot) CALL errore ('vmebloch2wan','Unexpected number of k-points in .bvec file', 1)
-      ALLOCATE(bvec(3, nnb, nkstot), wb(nnb) )
+      IF (nkstot_tmp /= nkstot) CALL errore('vmebloch2wan', 'Unexpected number of k-points in .bvec file', 1)
+      ALLOCATE(bvec(3, nnb, nkstot))
+      ALLOCATE(wb(nnb) )
       DO ik = 1, nkstot
         DO ib = 1, nnb
           READ(iubvec,*) bvec(:,ib,ik), wb(ib)
@@ -803,12 +804,12 @@
     ! RM - M_mn matrix is writen on file in pw2wan90epw.f90/compute_mmn_para
     !    - dimensions of M_mn are M_mn(nbnd, nbnd, nnb, nkstot)
     !
-    ALLOCATE(M_mn(nbnd, nbnd, nnb, nkstot) )
+    ALLOCATE(M_mn(nbnd, nbnd, nnb, nkstot))
     M_mn = czero
     !
     IF (mpime == ionode_id) THEN
       tempFILE = TRIM(prefix)//'.mmn'
-      OPEN(iummn, FILE = tempfile, status = 'old', form = 'formatted', iostat=ios)
+      OPEN(iummn, FILE = tempfile, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
       !
       IF (ios /= 0) THEN
         ! if it doesn't exist, then we just set the mmn to zero
@@ -819,7 +820,7 @@
           DO ib = 1, nnb
             DO jbnd = 1, nbnd
               DO ibnd = 1, nbnd
-                READ(iummn,*) M_mn(ibnd,jbnd,ib,ik)
+                READ(iummn,*) M_mn(ibnd, jbnd, ib, ik)
               ENDDO
             ENDDO
           ENDDO

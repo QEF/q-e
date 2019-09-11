@@ -21,9 +21,8 @@
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg, omega, alat
-  USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
-  USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+  USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
                             nbndskip, etf_mem, scr_typ, nw_specfun,             &
@@ -34,7 +33,8 @@
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl, lindabs, mob_maxiter, use_ws, epbread,  &
-                            epmatkqread, selecqread, restart_freq, nsmear
+                            epmatkqread, selecqread, restart_freq, nsmear,      &
+                            nq1, nq2, nq3, nk1, nk2, nk3
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -55,7 +55,7 @@
                             inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
                             etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf,  transp_temp, xkq, lower_bnd, upper_bnd
+                            nktotf, transp_temp, xkq, lower_bnd, upper_bnd, ifc
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -362,7 +362,10 @@
     IF (mpime == ionode_id) THEN
       CLOSE(crystal)
     ENDIF
-    CALL mp_barrier(inter_pool_comm)
+    IF (lifc) THEN
+      ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
+      ifc(:, :, :, :, :, :, :) = zero
+    ENDIF
     ! 
   ELSE
     CONTINUE
@@ -1705,6 +1708,7 @@
       DEALLOCATE(a_all_ph)
     ENDIF
     IF (lifc) THEN
+      DEALLOCATE(ifc)
       DEALLOCATE(wscache)
     ENDIF
     ! 
@@ -2012,9 +2016,8 @@
   !--------------------------------------------------------------------------------
   SUBROUTINE epw_read(nrr_k, nrr_q, nrr_g)
   !--------------------------------------------------------------------------------
-  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
+  USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc, nq1, nq3, nq2
   USE pwcom,     ONLY : ef
-  USE phcom,     ONLY : nq1, nq3, nq2
   USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
   USE ions_base, ONLY : nat
   USE phcom,     ONLY : nmodes  
@@ -2029,6 +2032,7 @@
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : inter_pool_comm, world_comm
   USE mp_world,  ONLY : mpime
+  USE readmat,   ONLY : read_ifc
   !
   IMPLICIT NONE
   !

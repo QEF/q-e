@@ -288,10 +288,9 @@
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE phcom,         ONLY : nq1, nq2, nq3
     USE ions_base,     ONLY : amass, tau, nat, ityp
     USE elph2,         ONLY : rdw, epsi, zstar
-    USE epwcom,        ONLY : lpolar, lphase, use_ws
+    USE epwcom,        ONLY : lpolar, lphase, use_ws, nq1, nq2, nq3
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
     USE rigid,         ONLY : cdiagh2
     USE low_lvl,       ONLY : utility_zdotu
@@ -480,10 +479,9 @@
     !
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg
-    USE phcom,     ONLY : nq1, nq2, nq3
     USE ions_base, ONLY : amass, tau, nat, ityp
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
-    USE epwcom,    ONLY : lpolar
+    USE epwcom,    ONLY : lpolar, nq1, nq2, nq3
     USE constants_epw, ONLY : twopi, czero, zero, one, eps8
     USE io_global, ONLY : stdout
     !
@@ -714,10 +712,9 @@
     !
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at 
-    USE phcom,     ONLY : nq1, nq2, nq3
     USE ions_base, ONLY : tau, nat
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
-    USE epwcom,    ONLY : lpolar
+    USE epwcom,    ONLY : lpolar, nq1, nq2, nq3
     USE constants_epw, ONLY : twopi, czero, zero, eps8
     USE io_global, ONLY : stdout
     !
@@ -1296,8 +1293,7 @@
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : rdw, epsi, zstar, wscache, ifc
     USE cell_base,     ONLY : at, alat, bg
-    USE phcom,         ONLY : nq1, nq2, nq3
-    USE epwcom,        ONLY : eig_read, use_ws, lpolar, lifc
+    USE epwcom,        ONLY : eig_read, use_ws, lpolar, lifc, nq1, nq2, nq3
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one, eps8
     USE ions_base,     ONLY : amass, tau, nat, ityp
     USE io_global,     ONLY : stdout

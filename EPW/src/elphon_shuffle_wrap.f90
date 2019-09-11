@@ -39,33 +39,33 @@
   USE io_epw,        ONLY : iuepb, iuqpeig
   USE pwcom,         ONLY : nks, nbnd, nkstot
   USE cell_base,     ONLY : at, bg
-  USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart, &
-                            sr, nrot, copy_sym, set_sym_bl, find_sym, & 
-                            inverse_s, remove_sym, allfrac
-  USE start_k,       ONLY : nk1, nk2, nk3
-  USE phcom,         ONLY : evq, nq1, nq3, nq2 
+  USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
+                            sr, nrot, copy_sym, set_sym_bl, find_sym, inverse_s,& 
+                            remove_sym, allfrac
+  USE phcom,         ONLY : evq
   USE qpoint,        ONLY : igkq, xq, eigqts
   USE modes,         ONLY : nmodes, u, npert
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
-  USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
-                            nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
-  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, &
+  USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
+                            nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       & 
+                            nk1, nk2, nk3, nq1, nq2, nq3, lpolar
+  USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
-                            ngk_all, exband, wscache, umat, umat_all
+                            ngk_all, exband, wscache
   USE klist_epw,     ONLY : xk_all, et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, czero, eps6
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
   USE noncollin_module, ONLY : m_loc, npol, noncolin
-  USE iotk_module,   ONLY : iotk_open_read, iotk_scan_dat, iotk_free_unit, &
+  USE iotk_module,   ONLY : iotk_open_read, iotk_scan_dat, iotk_free_unit,      &
                             iotk_close_read
   USE division,      ONLY : fkbounds
   USE uspp,          ONLY : okvan
   USE spin_orb,      ONLY : lspinorb 
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : becp, deallocate_bec_type
-  USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
-                            int4, int4_nc, int5, int5_so, alphap
+  USE phus,          ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, int5,  &
+                            int5_so, alphap
   USE kfold,         ONLY : shift, createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_modes
   USE readmat,       ONLY : readmat_shuffle2, read_ifc
@@ -209,11 +209,6 @@
   xqc_irr(:, :) = zero
   xqc(:, :)     = zero
   wqlist(:)     = zero
-  IF (lifc) THEN
-    ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
-    ifc(:, :, :, :, :, :, :) = zero
-  ENDIF
-
   !  
   IF (meta_ionode) THEN
     DO iq_irr = 1, nqc_irr
@@ -324,7 +319,6 @@
     ALLOCATE(lwin(nbnd, nks))
     ALLOCATE(lwinq(nbnd, nks))
     ALLOCATE(exband(nbnd))
-    !
     dynq(:, :, :)         = czero
     epmatq(:, :, :, :, :) = czero
     epsi(:, :)            = zero
@@ -335,6 +329,8 @@
     !
     ! read interatomic force constat matrix from q2r
     IF (lifc) THEN
+      ALLOCATE(ifc(nq1, nq2, nq3, 3, 3, nat, nat))
+      ifc(:, :, :, :, :, :, :) = zero
       CALL read_ifc
     ENDIF
     !
@@ -699,6 +695,7 @@
     wqlist = DBLE(1) / DBLE(nqc)
     !
     IF (lifc) THEN
+      DEALLOCATE(ifc)
       DEALLOCATE(wscache)
     ENDIF
     DEALLOCATE(evc)
@@ -833,9 +830,6 @@
 #endif
   ENDIF        
   DEALLOCATE(xqc)
-  IF (lifc) THEN
-    DEALLOCATE(ifc)
-  ENDIF
   !
 5 FORMAT (8x,"q(",i5," ) = (",3f12.7," )") 
   !

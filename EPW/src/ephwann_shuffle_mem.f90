@@ -25,9 +25,8 @@
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg, omega, alat
-  USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
-  USE phcom,         ONLY : nq1, nq2, nq3, nmodes
+  USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
                             nbndskip, scr_typ, nw_specfun,                      &
@@ -38,7 +37,8 @@
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl, lindabs, mob_maxiter, use_ws,           &
-                            epmatkqread, selecqread, restart_freq, nsmear
+                            epmatkqread, selecqread, restart_freq, nsmear,      &
+                            nk1, nk2, nk3, nq1, nq2, nq3
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &

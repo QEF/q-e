@@ -41,11 +41,11 @@
   USE funct,         ONLY : dft_is_gradient
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
+                            nk1, nk2, nk3
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
-  USE start_k,       ONLY : nk1, nk2, nk3
   USE elph2,         ONLY : transp_temp
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   !

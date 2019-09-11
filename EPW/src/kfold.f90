@@ -45,7 +45,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE klist,         ONLY : nkstot, xk
-    USE start_k,       ONLY : nk1, nk2, nk3
+    USE epwcom,        ONLY : nk1, nk2, nk3
     USE io_files,      ONLY : prefix
     USE io_epw,        ONLY : iukmap
     USE klist_epw,     ONLY : kmap
@@ -266,7 +266,7 @@
     USE cell_base,     ONLY : at, bg
     USE klist,         ONLY : nkstot, xk
     USE klist_epw,     ONLY : kmap  
-    USE start_k,       ONLY : nk1, nk2, nk3
+    USE epwcom,        ONLY : nk1, nk2, nk3
     USE elph2,         ONLY : xkq
     USE constants_epw, ONLY : eps5, zero
 
@@ -383,7 +383,7 @@
     !-------------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE start_k,       ONLY : nk1, nk2, nk3
+    USE epwcom,        ONLY : nk1, nk2, nk3
     USE pwcom,         ONLY : nkstot
     USE klist_epw,     ONLY : xk_cryst
     USE io_global,     ONLY : stdout, meta_ionode
@@ -861,7 +861,7 @@
     USE kinds,          only : DP
     use pwcom,          ONLY : nkstot
     USE cell_base,      ONLY : at
-    USE start_k,        ONLY : nk1, nk2, nk3
+    USE epwcom,         ONLY : nk1, nk2, nk3
     use klist_epw,      ONLY : xk_cryst
     USE mp_global,      ONLY : nproc_pool, npool
     USE mp_images,      ONLY : nproc_image

@@ -40,6 +40,10 @@
   !! use random points for the fine q-mesh
   INTEGER :: rand_nk
   !! use random points for the fine k-mesh
+  INTEGER :: nq1, nq2, nq3
+  !! qx,qy,qz sizes of the uniform phonon coarse mesh to be used
+  INTEGER :: nk1, nk2, nk3
+  !! kx,ky,kz sizes of the uniform electron coarse mesh to be used
   INTEGER :: nqf1, nqf2, nqf3
   !! qx,qy,qz sizes of the uniform phonon fine mesh to be used
   INTEGER :: nkf1, nkf2, nkf3

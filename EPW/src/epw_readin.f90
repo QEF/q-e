@@ -27,41 +27,34 @@
   USE lsda_mod,      ONLY : lsda, isk
   USE fixed_occ,     ONLY : tfixed_occ
   USE qpoint,        ONLY : xq
-  USE disp,          ONLY : nq1, nq2, nq3
   USE output,        ONLY : fildvscf, fildrho
   USE epwcom,        ONLY : delta_smear, nsmear, dis_win_min, dis_win_max, wannierize, &
-                            ngaussw, dvscf_dir, eptemp, bands_skipped, wdata, &
-                            num_iter, dis_froz_max, fsthick, dis_froz_min, &
-                            vme, degaussw, epexst, eig_read, kmaps, &
-                            epwwrite, epbread, phonselfen, elecselfen, &
-                            a2f, plselfen, specfun_pl, nest_fn, filukk, & 
-                            rand_nk, rand_k, rand_nq, rand_q,  &
-                            nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, &
-                            eps_acustic, nw, wmax, wmin, &
-                            mp_mesh_q, mp_mesh_k, filqf, filkf, delta_qsmear, degaussq, &
-                            band_plot, ephwrite, nstemp, broyden_beta, &
-                            conv_thr_raxis, tempsmax, tempsmin, temps, broyden_ndim, &
-                            wscut, wsfc, nqstep, limag, lreal, muc, gap_edge, &
-                            conv_thr_iaxis, nqsmear, iprint, wepexst, epwread, & 
-                            eliashberg, imag_read, kerread, kerwrite, lunif, &
-                            fermi_energy, efermi_read, max_memlt, fila2f, &
-                            ep_coupling, nw_specfun, wmax_specfun, &
-                            wmin_specfun, laniso, lpolar, lifc, asr_typ, &
-                            lscreen, scr_typ, fermi_diff, smear_rpa, & 
-                            cumulant, bnd_cum, proj, write_wfn, iswitch, ntempxx, &
-                            liso, lacon, lpade, etf_mem, epbwrite, &
-                            nsiter, conv_thr_racon, specfun_el, specfun_ph, &
-                            pwc, nswc, nswfc, nswi, nc, &
-                            nbndsub, nbndskip, system_2d, delta_approx, &
-                            title, int_mob, scissor, iterative_bte, scattering, &
-                            ncarrier, carrier, scattering_serta, restart, restart_freq, &
-                            scattering_0rta, longrange, shortrange, scatread, &
-                            restart_filq, prtgkk, nel, meff, epsiHEG, lphase, &
-                            omegamin, omegamax, omegastep, n_r, lindabs, &
-                            mob_maxiter, use_ws, epmatkqread, selecqread
+                            ngaussw, dvscf_dir, eptemp, bands_skipped, wdata, kmaps,   &
+                            num_iter, dis_froz_max, fsthick, dis_froz_min, eig_read,   &
+                            vme, degaussw, epexst, epwwrite, epbread, phonselfen,      &
+                            elecselfen, a2f, plselfen, specfun_pl, nest_fn, filukk,    &
+                            rand_nk, rand_k, rand_nq, rand_q, nk1, nk2, nk3, nq1, nq2, &
+                            nq3, nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, eps_acustic, nw,  &
+                            wmax, wmin, mp_mesh_q, mp_mesh_k, filqf, filkf, nswi, nc,  &
+                            delta_qsmear, degaussq, band_plot, ephwrite, nstemp,       &
+                            broyden_beta, conv_thr_raxis, tempsmax, tempsmin, temps,   &
+                            broyden_ndim, wscut, wsfc, nqstep, limag, lreal, muc,      &
+                            gap_edge, conv_thr_iaxis, nqsmear, iprint, wepexst, nswfc, &
+                            epwread, eliashberg, imag_read, kerread, kerwrite, lunif,  &
+                            fermi_energy, efermi_read, max_memlt, fila2f, pwc, nswc,   &
+                            ep_coupling, nw_specfun, wmax_specfun, wmin_specfun,       &
+                            laniso, lpolar, lifc, asr_typ, lscreen, scr_typ, nbndsub,  &
+                            fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
+                            iswitch, ntempxx, liso, lacon, lpade, etf_mem, epbwrite,   &
+                            nsiter, conv_thr_racon, specfun_el, specfun_ph, nbndskip,  &
+                            system_2d, delta_approx, title, int_mob, scissor,          &
+                            iterative_bte, scattering, selecqread, epmatkqread,        &  
+                            ncarrier, carrier, scattering_serta, restart, restart_freq,&
+                            scattering_0rta, longrange, shortrange, scatread, use_ws,  &
+                            restart_filq, prtgkk, nel, meff, epsiHEG, lphase,          &
+                            omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph
-  USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, electron_SI, ang2m
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
@@ -106,7 +99,7 @@
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, fildvscf,                            &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
-       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,   &
+       filukk, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,           &
        eig_read, wepexst, epexst, vme,                                         &
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
        dvscf_dir, ngaussw, epmatkqread, selecqread,                            &
@@ -792,12 +785,12 @@
   ! 
   !  broadcast the values of nq1, nq2, nq3
   !
-  CALL mp_bcast(nq1, meta_ionode_id, world_comm)
-  CALL mp_bcast(nq2, meta_ionode_id, world_comm)
-  CALL mp_bcast(nq3, meta_ionode_id, world_comm)
-  CALL mp_bcast(nk1, meta_ionode_id, world_comm)
-  CALL mp_bcast(nk2, meta_ionode_id, world_comm)
-  CALL mp_bcast(nk3, meta_ionode_id, world_comm)
+  !CALL mp_bcast(nq1, meta_ionode_id, world_comm)
+  !CALL mp_bcast(nq2, meta_ionode_id, world_comm)
+  !CALL mp_bcast(nq3, meta_ionode_id, world_comm)
+  !CALL mp_bcast(nk1, meta_ionode_id, world_comm)
+  !CALL mp_bcast(nk2, meta_ionode_id, world_comm)
+  !CALL mp_bcast(nk3, meta_ionode_id, world_comm)
   !
   amass = AMU_RY * amass
   !

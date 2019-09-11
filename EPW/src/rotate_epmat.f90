@@ -21,12 +21,11 @@
   !--------------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE elph2,         ONLY : epmatq, zstar, epsi, bmat
-  USE epwcom,        ONLY : lpolar
+  USE epwcom,        ONLY : lpolar, nq1, nq2, nq3
   USE modes,         ONLY : nmodes
   USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
   USE pwcom,         ONLY : nbnd, nks
   USE ions_base,     ONLY : amass, ityp
-  USE phcom,         ONLY : nq1, nq2, nq3
   ! 
   IMPLICIT NONE
   !
