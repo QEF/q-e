@@ -778,7 +778,7 @@
   !
   !  U(k'+q')^\dagger * U(k')
   !
-  CALL zgemm( 'n', 'c', nbnd, nbnd, nbnd, cone, cufkq, nbnd, cufkk, nbnd, czero, bmatf, nbnd)
+  CALL ZGEMM( 'n', 'c', nbnd, nbnd, nbnd, cone, cufkq, nbnd, cufkk, nbnd, czero, bmatf, nbnd)
   !
   !bmatf = bmatf / DBLE(nkstot)
   !
@@ -822,7 +822,7 @@
   !  U(k+q) * U(k)^\dagger 
   !
   DO ik = 1, nks
-    CALL zgemm( 'n', 'c', nbnd, nbnd, nbndsub, cone, cukq(:, :, ik), &
+    CALL ZGEMM( 'n', 'c', nbnd, nbnd, nbndsub, cone, cukq(:, :, ik), &
                 nbnd, cuk(:, :, ik), nbnd, czero, bmat(:, :, ik), nbnd )
   ENDDO
   !

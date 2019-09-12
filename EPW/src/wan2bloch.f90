@@ -60,7 +60,7 @@
     ! 
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
     !! Exponential factor
-    COMPLEX(KIND = DP), INTENT(in) :: chw( nbnd, nbnd, nrr)
+    COMPLEX(KIND = DP), INTENT(in) :: chw(nbnd, nbnd, nrr)
     !! Hamiltonian in Wannier basis
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nbnd, nbnd)
     !! Rotation matrix U^\dagger, fine mesh
@@ -96,6 +96,8 @@
     !! Size of the degenerate subspace
     INTEGER :: ig
     !! Degenerate group index
+    INTEGER :: ierr
+    !! Error status
     INTEGER, ALLOCATABLE :: iwork(:)
     !! IWORK(1) returns the optimal LIWORK. 
     INTEGER, ALLOCATABLE :: degen_group(:, :)
@@ -161,24 +163,31 @@
     ! Hermitization
     chf = 0.5d0 * (chf + TRANSPOSE(CONJG(chf)))
     ! 
-    ALLOCATE(rwork(nbnd**2 + 2 * nbnd)) 
-    ALLOCATE(iwork(3 + 5 * nbnd))
-    ALLOCATE(cwork(nbnd**2 + 2 * nbnd))
+    ALLOCATE(rwork(nbnd**2 + 2 * nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
+    ALLOCATE(iwork(3 + 5 * nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
+    ALLOCATE(cwork(nbnd**2 + 2 * nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating cwork', 1)
     ! 
     ! Diagonalization routine
     cz(:, :) = chf(:, :)
-    CALL zheevd('V', 'L', nbnd, cz, nbnd, w, cwork, 2 * nbnd + nbnd**2, &
+    CALL ZHEEVD('V', 'L', nbnd, cz, nbnd, w, cwork, 2 * nbnd + nbnd**2, &
             rwork, 1 + 5 * nbnd + 2 * (nbnd**2), iwork, 3 + 5 * nbnd, info)
     ! 
-    DEALLOCATE(rwork)
-    DEALLOCATE(iwork)
-    DEALLOCATE(cwork)
+    DEALLOCATE(rwork, STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating rwork', 1)
+    DEALLOCATE(iwork, STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating iwork', 1)
+    DEALLOCATE(cwork, STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating cwork', 1)
     ! 
     ! Find the degenerate eigenvalues w
     CALL degen_sort(w, SIZE(w), duplicates, list_dup) 
     ! 
     ndeg = MAXVAL(list_dup)
-    ALLOCATE(degen_group(2, ndeg))
+    ALLOCATE(degen_group(2, ndeg), STAT = ierr)
+    IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating degen_group', 1)
     degen_group(:, :) = 0
     ! 
     ! degen_group contains the starting and ending position of each group
@@ -225,29 +234,41 @@
       ! Size of the degenerate subspace 
       length   = ending - starting + 1
       ! 
-      ALLOCATE(rwork(length**2 + 2 * length))
-      ALLOCATE(iwork(3 + 5 * length))
-      ALLOCATE(cwork(length**2 + 2 * length))
-      ALLOCATE(Uk(nbnd, length))
-      ALLOCATE(P_prime(length, length))
-      ALLOCATE(wp(length))
+      ALLOCATE(rwork(length**2 + 2 * length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
+      ALLOCATE(iwork(3 + 5 * length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)
+      ALLOCATE(cwork(length**2 + 2 * length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating cwork', 1)
+      ALLOCATE(Uk(nbnd, length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating Uk', 1)
+      ALLOCATE(P_prime(length, length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating P_prime', 1)
+      ALLOCATE(wp(length), STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating wp', 1)
       ! 
       Uk(:, :) = cz(:, starting:ending)
       P_prime = MATMUL(TRANSPOSE(CONJG(Uk)), MATMUL(P, Uk))
       ! Diagonalization of P_prime
-      CALL zheevd('V', 'L', length, P_prime, length, wp, cwork, &
+      CALL ZHEEVD('V', 'L', length, P_prime, length, wp, cwork, &
                 2 * length + length**2, rwork, 1 + 5 * length + 2 * length**2, &
                 iwork, 3 + 5 * length, info)
       ! On exiting P_prime is the eigenvector of the P_prime matrix and wp the eigenvector. 
       ! 
       cz(:, starting:ending) = MATMUL(Uk, P_prime)
       ! 
-      DEALLOCATE(rwork)
-      DEALLOCATE(iwork)
-      DEALLOCATE(cwork)
-      DEALLOCATE(Uk)
-      DEALLOCATE(P_prime)
-      DEALLOCATE(wp)
+      DEALLOCATE(rwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating rwork', 1)
+      DEALLOCATE(iwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating iwork', 1)
+      DEALLOCATE(cwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating cwork', 1)
+      DEALLOCATE(Uk, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating Uk', 1)
+      DEALLOCATE(P_prime, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating P_prime', 1)
+      DEALLOCATE(wp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error deallocating wp', 1)
     ENDDO ! ig
     ! 
     DO jbnd = 1, nbnd
@@ -475,15 +496,14 @@
     !!  From the IFCs in the format of q2r, find the corresponding
     !!  dynamical matrix for a given q point (as in matdyn.x) on the fine grid
     !!
-    !--------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg
     USE ions_base, ONLY : amass, tau, nat, ityp
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
-    USE constants_epw, ONLY : twopi, czero, zero, one, eps8
     USE io_global, ONLY : stdout
+    USE constants_epw, ONLY : twopi, czero, zero, one, eps8
     !
     IMPLICIT NONE
     !
@@ -493,9 +513,9 @@
     !! Number of Wigner-Size real space vectors
     REAL(KIND = DP), INTENT(in) :: rws(0:3, nrws)
     !! Real space Wigner-Seitz vector
-    REAL(KIND = DP), INTENT(in) :: xxq (3)
+    REAL(KIND = DP), INTENT(in) :: xxq(3)
     !! qpoint coordinates for the interpolation
-    REAL(KIND = DP), INTENT(out) :: eig (nmodes)
+    REAL(KIND = DP), INTENT(out) :: eig(nmodes)
     !! interpolated phonon eigenvalues for this qpoint
     COMPLEX(KIND = DP), INTENT(out) :: cuf(nmodes, nmodes)
     !! Rotation matrix, fine mesh 
@@ -562,7 +582,7 @@
     COMPLEX(KIND = DP) :: dyn(3, 3, nat, nat)
     !! Dynamical matrix
     !
-    CALL start_clock ( 'DynW2B' )
+    CALL start_clock('DynW2B')
     ! 
     xq = xxq
     ! bring xq in cart. coordinates
@@ -639,8 +659,8 @@
           ENDDO
         ENDDO
         IF (ABS(total_weight - nqc1 * nqc2 * nqc3) > eps8) THEN
-          WRITE(stdout,*) total_weight
-          CALL errore ('dynifc2bloch', 'wrong total_weight', 1)
+          WRITE(stdout, *) total_weight
+          CALL errore('dynifc2bloch', 'wrong total_weight', 1)
         ENDIF
       ENDDO
     ENDDO
@@ -951,9 +971,9 @@
     ! Note p(k') is p^(H)(k') in PRB 74, 195118 (2006) notations
     !
     DO ipol = 1, 3
-      CALL zgemm('n', 'c', nbnd, nbnd, nbnd, cone, cdmef(ipol, :, :), &
+      CALL ZGEMM('n', 'c', nbnd, nbnd, nbnd, cone, cdmef(ipol, :, :), &
                  nbnd, cuf(:, :), nbnd, czero, cdmef_tmp(:, :), nbnd)
-      CALL zgemm('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:, :), &
+      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:, :), &
                  nbnd, cdmef_tmp(:, :), nbnd, czero, dmef(ipol, :, :), nbnd)
     ENDDO
     !
@@ -1051,6 +1071,8 @@
     !! The total number of eigenvalues found
     INTEGER :: info
     !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
+    INTEGER :: ierr
+    !! Error status
     INTEGER, ALLOCATABLE :: ifail(:)
     !! Contains the indices of the eigenvectors that failed to converge
     INTEGER, ALLOCATABLE :: iwork(:)
@@ -1152,9 +1174,9 @@
     !
     DO ipol = 1, 3
       !
-      CALL zgemm('n', 'c', nbnd, nbnd, nbnd, cone, cvmef(ipol, :, :), &
+      CALL ZGEMM('n', 'c', nbnd, nbnd, nbnd, cone, cvmef(ipol, :, :), &
                  nbnd, cuf(:, :), nbnd, czero, cvmef_tmp(:, :), nbnd)
-      CALL zgemm('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:, :), &
+      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:, :), &
                  nbnd, cvmef_tmp(:, :), nbnd, czero, vmef(ipol, :, :), nbnd)
     ENDDO
     !
@@ -1170,9 +1192,9 @@
       ! chf_a_tmp(:, :) = matmul( chf_a(ipol,:,:), CONJG(transpose(cuf(:, :))) )
       ! chf_a(ipol,:,:) = matmul(cuf(:, :), chf_a_tmp(:, :) )
       !
-      CALL zgemm('n', 'c', nbnd, nbnd, nbnd, cone, chf_a(ipol, :, :), &
+      CALL ZGEMM('n', 'c', nbnd, nbnd, nbnd, cone, chf_a(ipol, :, :), &
                  nbnd, cuf(:, :), nbnd, czero, chf_a_tmp(:, :), nbnd)
-      CALL zgemm('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:, :), &
+      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:, :), &
                  nbnd, chf_a_tmp(:, :), nbnd, czero, chf_a(ipol, :, :), nbnd)
     ENDDO
     !
@@ -1202,7 +1224,8 @@
     !
     ! Count degeneracies and their dimensionality
     IF (duplicates .eqv. .TRUE.) THEN
-      ALLOCATE(deg_dim(MAXVAL(list_dup))) 
+      ALLOCATE(deg_dim(MAXVAL(list_dup)), STAT = ierr)
+      IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating deg_dim(MAXVAL', 1)
       deg_dim = 0
       DO ideg = 1, SIZE(deg_dim)
         DO ibnd = 1, nbnd
@@ -1213,14 +1236,22 @@
       ENDDO
       ! Now allocate matrixes for each degenerate subspace 
       DO ideg = 1, SIZE(deg_dim)
-        ALLOCATE(vmef_deg(3, deg_dim(ideg), deg_dim(ideg)))
-        ALLOCATE(ifail(deg_dim(ideg)))
-        ALLOCATE(iwork(5 * deg_dim(ideg)))
-        ALLOCATE(w(deg_dim(ideg)))
-        ALLOCATE(rwork(7 * deg_dim(ideg)))
-        ALLOCATE(champ(deg_dim(ideg) * (deg_dim(ideg) + 1) / 2))
-        ALLOCATE(cwork(2 * deg_dim(ideg)))
-        ALLOCATE(cz(deg_dim(ideg), deg_dim(ideg)))
+        ALLOCATE(vmef_deg(3, deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating vmef_deg(3, deg_dim(ideg), deg_dim', 1)
+        ALLOCATE(ifail(deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating ifail(deg_dim', 1)
+        ALLOCATE(iwork(5 * deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating iwork(5 * deg_dim', 1)
+        ALLOCATE(w(deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating w(deg_dim', 1)
+        ALLOCATE(rwork(7 * deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating rwork(7 * deg_dim', 1)
+        ALLOCATE(champ(deg_dim(ideg) * (deg_dim(ideg) + 1) / 2), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating champ(deg_dim(ideg) * (deg_dim', 1)
+        ALLOCATE(cwork(2 * deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating cwork(2 * deg_dim', 1)
+        ALLOCATE(cz(deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error allocating cz(deg_dim(ideg), deg_dim', 1)
         ijbndc = 0
         DO ibnd = 1, nbnd
           DO jbnd = 1, nbnd
@@ -1264,14 +1295,22 @@
           ENDDO
         ENDDO
         !
-        DEALLOCATE(vmef_deg)
-        DEALLOCATE(ifail)
-        DEALLOCATE(iwork)
-        DEALLOCATE(w)
-        DEALLOCATE(rwork)
-        DEALLOCATE(champ)
-        DEALLOCATE(cwork)
-        DEALLOCATE(cz)
+        DEALLOCATE(vmef_deg, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating vmef_deg', 1)
+        DEALLOCATE(ifail, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating ifail', 1)
+        DEALLOCATE(iwork, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating iwork', 1)
+        DEALLOCATE(w, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating w', 1)
+        DEALLOCATE(rwork, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating rwork', 1)
+        DEALLOCATE(champ, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating champ', 1)
+        DEALLOCATE(cwork, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating cwork', 1)
+        DEALLOCATE(cz, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2bloch', 'Error deallocating cz', 1)
         !
       ENDDO !ideg
       !
@@ -1372,6 +1411,8 @@
     !! Find corresponding vector [used when lifc == .TRUE.]
     INTEGER :: i
     !! Cartesian direction
+    INTEGER :: ierr
+    !! Error status
     INTEGER, ALLOCATABLE :: deg_dim(:)
     !! Index that keeps track of degeneracies and their dimensionality
     INTEGER, ALLOCATABLE :: ifail(:)
@@ -1556,9 +1597,9 @@
     ! Note that the e_{\mu\nu}(q) = cuf are already mass scaled with 1.0/sqrt(amass(ityp(na)))
     ! 
     DO ipol = 1, 3
-      CALL zgemm ('n', 'n', nmodes, nmodes, nmodes, cone, chf_a(ipol, :, :), &
+      CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, chf_a(ipol, :, :), &
                  nmodes, cuf(:, :), nmodes, czero, chf_a_tmp(:, :), nmodes)
-      CALL zgemm ('c', 'n', nmodes, nmodes, nmodes, cone, cuf(:, :), &
+      CALL ZGEMM('c', 'n', nmodes, nmodes, nmodes, cone, cuf(:, :), &
                  nmodes, chf_a_tmp(:, :), nmodes, czero, chf_a(ipol, :, :), nmodes)
     ENDDO
     !
@@ -1576,7 +1617,8 @@
     ! Count degeneracies and their dimensionality
     !
     IF (duplicates .eqv. .TRUE.) THEN
-      ALLOCATE(deg_dim(MAXVAL(list_dup)))
+      ALLOCATE(deg_dim(MAXVAL(list_dup)), STAT = ierr)
+      IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating deg_dim(MAXVAL', 1)
       deg_dim = 0
       DO ideg = 1, size(deg_dim)
         DO imode = 1, nmodes
@@ -1585,14 +1627,22 @@
       ENDDO
       ! Now allocate matrixes for each degenerate subspace 
       DO ideg = 1, SIZE(deg_dim)
-        ALLOCATE(vmef_deg(3, deg_dim(ideg), deg_dim(ideg)))
-        ALLOCATE(ifail(deg_dim(ideg)))
-        ALLOCATE(iwork(5 * deg_dim(ideg)))
-        ALLOCATE(w(deg_dim(ideg)))
-        ALLOCATE(rwork(7 * deg_dim(ideg)))
-        ALLOCATE(champ(deg_dim(ideg) * (deg_dim(ideg) + 1) / 2))
-        ALLOCATE(cwork(2 * deg_dim(ideg)))
-        ALLOCATE(cz(deg_dim(ideg), deg_dim(ideg)))
+        ALLOCATE(vmef_deg(3, deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating vmef_deg(3, deg_dim(ideg), deg_dim', 1)
+        ALLOCATE(ifail(deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating ifail(deg_dim', 1)
+        ALLOCATE(iwork(5 * deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating iwork(5 * deg_dim', 1)
+        ALLOCATE(w(deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating w(deg_dim', 1)
+        ALLOCATE(rwork(7 * deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating rwork(7 * deg_dim', 1)
+        ALLOCATE(champ(deg_dim(ideg) * (deg_dim(ideg) + 1) / 2), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating champ(deg_dim(ideg) * (deg_dim', 1)
+        ALLOCATE(cwork(2 * deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating cwork(2 * deg_dim', 1)
+        ALLOCATE(cz(deg_dim(ideg), deg_dim(ideg)), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error allocating cz(deg_dim(ideg), deg_dim', 1)
         ijmodec = 0
         DO imode = 1, nmodes
           DO jmode = 1, nmodes
@@ -1636,14 +1686,22 @@
           ENDDO
         ENDDO
         !
-        DEALLOCATE(vmef_deg)
-        DEALLOCATE(ifail)
-        DEALLOCATE(iwork)
-        DEALLOCATE(w)
-        DEALLOCATE(rwork)
-        DEALLOCATE(champ)
-        DEALLOCATE(cwork)
-        DEALLOCATE(cz)
+        DEALLOCATE(vmef_deg, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating vmef_deg', 1)
+        DEALLOCATE(ifail, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating ifail', 1)
+        DEALLOCATE(iwork, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating iwork', 1)
+        DEALLOCATE(w, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating w', 1)
+        DEALLOCATE(rwork, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating rwork', 1)
+        DEALLOCATE(champ, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating champ', 1)
+        DEALLOCATE(cwork, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating cwork', 1)
+        DEALLOCATE(cz, STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmewan2blochp', 'Error deallocating cz', 1)
         !
       ENDDO !ideg
     ENDIF
@@ -1716,8 +1774,6 @@
     !! Starting ir for this cores
     INTEGER :: ir_stop
     !! Ending ir for this pool
-    INTEGER :: ierr
-    !! Return if there is an error
     INTEGER :: na
     !! Atom index
     INTEGER :: imode
@@ -1726,6 +1782,8 @@
     !! Difference between starting and ending on master core
     INTEGER :: add
     !! Additional element
+    INTEGER :: ierr
+    !! Error status
 #if defined(__MPI)
     INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
@@ -1839,14 +1897,16 @@
       IF (use_ws) THEN
         !
 #if defined(__MPI)
-        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, 3))
+        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, 3), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error allocating epmatw', 1)
         ! Although this should almost never be problematic (see explaination below)
         lrepmatw2 = 2_MPI_OFFSET_KIND * INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                         INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                         INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
                                         3_MPI_OFFSET_KIND
 #else
-        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, nmodes))
+        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, nmodes), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error allocating epmatw', 1)
         lrepmatw2 = INT( 2 * nbnd * nbnd * nrr_k * 3, KIND = 8)
 #endif
         ! 
@@ -1903,13 +1963,15 @@
         ! --------------------------------
       ELSE ! use_ws 
 #if defined(__MPI)
-        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, 1))
+        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, 1), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error allocating epmatw', 1)
         ! Although this should almost never be problematic (see explaination below)
         lrepmatw2 = 2_MPI_OFFSET_KIND * INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                         INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                         INT(nrr_k, KIND = MPI_OFFSET_KIND) 
 #else
-        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, nmodes))
+        ALLOCATE(epmatw(nbnd, nbnd, nrr_k, nmodes), STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error allocating epmatw', 1)
         lrepmatw2 = INT(2 * nbnd * nbnd * nrr_k, KIND = 8)
 #endif
         ! 
@@ -1946,11 +2008,11 @@
           !
           CALL ZAXPY(nbnd * nbnd * nrr_k, cfac(1, ir, 1, 1), &
               epmatw(:, :, :, imode), 1, eptmp(:, :, :, imode), 1)
-
 #endif
         ENDDO ! irn 
       ENDIF ! use_ws 
-      DEALLOCATE(epmatw)
+      DEALLOCATE(epmatw, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwan2blochp', 'Error deallocating epmatw', 1)
     ENDIF ! etf_mem
     !
     CALL mp_sum(eptmp, world_comm)
@@ -1962,9 +2024,8 @@
     ! [Eqn. 22 of PRB 76, 165108 (2007)]
     ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
     !
-    Call zgemm('n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, & 
+    Call ZGEMM('n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, & 
                 nbnd * nbnd * nrr_k, cuf, nmodes, czero, epmatf, nbnd * nbnd * nrr_k)
-
     !
     CALL stop_clock('ephW2Bp')
     !
@@ -2059,9 +2120,9 @@
     !
     DO imode = 1, nmodes
       !
-      CALL zgemm('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
-           nbnd, epmatf (:, :, imode), nbnd, czero, eptmp, nbnd)
-      CALL zgemm('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
+      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
+           nbnd, epmatf(:, :, imode), nbnd, czero, eptmp, nbnd)
+      CALL ZGEMM('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
            nbnd, cufkk, nbnd, czero, epmatf(:, :, imode), nbnd)
       !
     ENDDO
@@ -2149,9 +2210,9 @@
     !  epmatf  = [ cufkq * epmatf ] * cufkk^\dagger
     !
     !
-    CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
+    CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
                nbnd, epmatf(:, :), nbnd, czero, eptmp, nbnd)
-    CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
+    CALL ZGEMM('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
                nbnd, cufkk, nbnd, czero, epmatf(:, :), nbnd)
     !
     !---------------------------------------------------------------------------
@@ -2223,10 +2284,10 @@
     !! Counter on Wannier functions
     INTEGER :: iunepmatwp2
     !! Return the file unit
-    INTEGER :: ierr
-    !! Return if there is an error
     INTEGER :: na
     !! Index on atom
+    INTEGER :: ierr
+    !! Error status
 #if defined(__MPI)  
     INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
@@ -2290,7 +2351,8 @@
       ENDDO
     ENDIF
     ! 
-    ALLOCATE(epmatw(nbnd, nbnd, nrr_k))
+    ALLOCATE(epmatw(nbnd, nbnd, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'Error allocating epmatw', 1)
     epmatw(:, :, :) = czero
     !
 #if defined(__MPI)  
@@ -2340,7 +2402,8 @@
       ENDIF
       ! 
     ENDDO
-    DEALLOCATE(epmatw)
+    DEALLOCATE(epmatw, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwan2blochp_mem', 'Error deallocating epmatw', 1)
     !
     CALL mp_sum(epmatf, world_comm)
     ! 

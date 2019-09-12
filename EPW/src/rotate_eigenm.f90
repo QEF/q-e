@@ -242,7 +242,7 @@
   !  transformation of the eigenvectors: e_{Sq} = gamma * e_q  (MV eq. 2.36)
   !  -----------------------------------------------------------------------
   !
-  CALL zgemm('n', 'n', nmodes, nmodes, nmodes, cone, gamma, &
+  CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, gamma, &
        nmodes, cz1 , nmodes, czero , cz2, nmodes)
   !
   !   now check that cz2 diagonalizes dyn2 (after dividing by the masses)
@@ -261,8 +261,8 @@
   ! here I have checked that the matrix rotated with gamma 
   ! is perfectly equal to the one read from file for this q in the star
   !
-  CALL zgemm('c', 'n', nmodes, nmodes, nmodes, cone, cz2, nmodes, dyn2, nmodes, czero, dyn1, nmodes)
-  CALL zgemm('n', 'n', nmodes, nmodes, nmodes, cone, dyn1, nmodes, cz2, nmodes, czero, dyn2, nmodes)
+  CALL ZGEMM('c', 'n', nmodes, nmodes, nmodes, cone, cz2, nmodes, dyn2, nmodes, czero, dyn1, nmodes)
+  CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, dyn1, nmodes, cz2, nmodes, czero, dyn2, nmodes)
   !
   DO nu = 1, nmodes
     w2(nu) = ABS(dyn2(nu, nu))

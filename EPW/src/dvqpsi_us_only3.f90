@@ -10,7 +10,7 @@
   ! adapted from PH/dvqpsi_us_only (QE)
   !
   !----------------------------------------------------------------------
-  SUBROUTINE dvqpsi_us_only3 (ik, uact, xxkq, igkq, npwq)
+  SUBROUTINE dvqpsi_us_only3(ik, uact, xxkq, igkq, npwq)
   !----------------------------------------------------------------------
   !!
   !! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -52,7 +52,8 @@
   !! the pattern of displacements
   !
   ! Local variables
-  !
+  LOGICAL :: ok
+  !! 
   INTEGER :: na
   !! Counter on atoms
   INTEGER :: nb
@@ -87,31 +88,47 @@
   !! Counter on polarization
   INTEGER ::  ijs
   !! Counter on combined is and js polarization
-  !
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP), ALLOCATABLE :: deff(:, :, :)
   !
-  COMPLEX(KIND = DP), ALLOCATABLE :: ps1(:, :), ps2(:, :, :), aux(:), deff_nc(:, :, :, :)
-  COMPLEX(KIND = DP), ALLOCATABLE :: ps1_nc(:, :, :), ps2_nc(:, :, :, :)
-  !
-  LOGICAL :: ok
+  COMPLEX(KIND = DP), ALLOCATABLE :: ps1(:, :)
+  !! 
+  COMPLEX(KIND = DP), ALLOCATABLE :: ps2(:, :, :)
+  !!  
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux(:)
+  !!  
+  COMPLEX(KIND = DP), ALLOCATABLE :: deff_nc(:, :, :, :)
+  !!  
+  COMPLEX(KIND = DP), ALLOCATABLE :: ps1_nc(:, :, :)
+  !!  
+  COMPLEX(KIND = DP), ALLOCATABLE :: ps2_nc(:, :, :, :)
+  !!  
   ! 
   CALL start_clock('dvqpsi_us_on')
   IF (noncolin) THEN
-    ALLOCATE(ps1_nc(nkb, npol, lower_band:upper_band) )
-    ALLOCATE(ps2_nc(nkb, npol, lower_band:upper_band, 3) )
-    ALLOCATE(deff_nc(nhm, nhm, nat, nspin) )
-    ps1_nc(:, :, :)   = czero
+    ALLOCATE(ps1_nc(nkb, npol, lower_band:upper_band), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating ps1_nc', 1)
+    ALLOCATE(ps2_nc(nkb, npol, lower_band:upper_band, 3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating ps2_nc', 1)
+    ALLOCATE(deff_nc(nhm, nhm, nat, nspin), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating deff_nc', 1)
+    ps1_nc(:, :, :) = czero
     ps2_nc(:, :, :, :) = czero
     deff_nc(:, :, :, :) = czero
   ELSE
-    ALLOCATE(ps1(nkb, lower_band:upper_band) )
-    ALLOCATE(ps2(nkb, lower_band:upper_band, 3) )
-    ALLOCATE(deff(nhm, nhm, nat) )
-    ps1(:, :)   = czero
+    ALLOCATE(ps1(nkb, lower_band:upper_band), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating ps1', 1)
+    ALLOCATE(ps2(nkb, lower_band:upper_band, 3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating ps2', 1)
+    ALLOCATE(deff(nhm, nhm, nat), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating deff', 1)
+    ps1(:, :) = czero
     ps2(:, :, :) = czero
     deff(:, :, :) = zero
   ENDIF
-  ALLOCATE(aux(npwx) )
+  ALLOCATE(aux(npwx), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating aux', 1)
   aux(:) = czero
   !
   IF (lsda) current_spin = isk_loc(ik)
@@ -120,9 +137,9 @@
   !
   DO ibnd = lower_band, upper_band
     IF (noncolin) THEN
-      CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
+      CALL compute_deff_nc(deff_nc, et(ibnd, ik))
     ELSE
-      CALL compute_deff( deff, et(ibnd,ik) )
+      CALL compute_deff(deff, et(ibnd, ik))
     ENDIF
     !
     ijkb0 = 0
@@ -135,27 +152,23 @@
             DO jh = 1, nh(nt)
               jkb = ijkb0 + jh
               DO ipol = 1, 3
-                IF (ABS(uact(mu+1) ) + ABS(uact(mu+2) ) + ABS(uact(mu+3) ) > eps12) THEN
+                IF (ABS(uact(mu + 1)) + ABS(uact(mu + 2)) + ABS(uact(mu + 3)) > eps12) THEN
                   IF (noncolin) THEN
                     ijs = 0
                     DO is = 1, npol
                       DO js = 1, npol
                         ijs = ijs + 1
-                        ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                               deff_nc(ih,jh,na,ijs) * &
-                               alphap(ipol,ik)%nc(jkb,js,ibnd) * uact(mu+ipol)
-                        ps2_nc(ikb,is,ibnd,ipol) = ps2_nc(ikb,is,ibnd,ipol) + &
-                               deff_nc(ih,jh,na,ijs) * becp1(ik)%nc(jkb,js,ibnd) * &
-                               (0.d0,-1.d0) * uact(mu+ipol) * tpiba
+                        ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + deff_nc(ih, jh, na, ijs) * &
+                               alphap(ipol, ik)%nc(jkb, js, ibnd) * uact(mu + ipol)
+                        ps2_nc(ikb, is, ibnd, ipol) = ps2_nc(ikb, is, ibnd, ipol) + &
+                               deff_nc(ih, jh, na, ijs) * becp1(ik)%nc(jkb, js, ibnd) * &
+                               (0.d0, -1.d0) * uact(mu + ipol) * tpiba
                       ENDDO
                     ENDDO
                   ELSE
-                    ps1(ikb,ibnd) = ps1(ikb,ibnd) + &
-                        deff(ih,jh,na) * &
-                        alphap(ipol,ik)%k(jkb,ibnd) * uact(mu+ipol)
-                    ps2(ikb,ibnd,ipol) = ps2(ikb,ibnd,ipol) + &
-                        deff(ih,jh,na) * becp1(ik)%k(jkb,ibnd) * &
-                        (0.d0,-1.d0) * uact(mu+ipol) * tpiba
+                    ps1(ikb, ibnd) = ps1(ikb, ibnd) + deff(ih, jh, na) * alphap(ipol, ik)%k(jkb, ibnd) * uact(mu + ipol)
+                    ps2(ikb, ibnd, ipol) = ps2(ikb, ibnd, ipol) + deff(ih, jh, na) * becp1(ik)%k(jkb, ibnd) * &
+                                           (0.d0, -1.d0) * uact(mu + ipol) * tpiba
                   ENDIF
                   IF (okvan) THEN
                     IF (noncolin) THEN
@@ -163,15 +176,13 @@
                       DO is = 1, npol
                         DO js = 1, npol
                           ijs = ijs + 1
-                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                             int1_nc(ih,jh,ipol,na,ijs) * &
-                             becp1(ik)%nc(jkb,js,ibnd) * uact(mu+ipol)
+                          ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int1_nc(ih, jh, ipol, na, ijs) * &
+                             becp1(ik)%nc(jkb, js, ibnd) * uact(mu + ipol)
                         ENDDO
                       ENDDO
                     ELSE
-                      ps1(ikb,ibnd) = ps1(ikb, ibnd) + &
-                          int1(ih,jh,ipol,na,current_spin) * &
-                          becp1(ik)%k(jkb,ibnd) * uact(mu+ipol)
+                      ps1(ikb, ibnd) = ps1(ikb, ibnd) + int1(ih, jh, ipol, na, current_spin) * &
+                          becp1(ik)%k(jkb, ibnd) * uact(mu + ipol)
                     ENDIF
                   ENDIF ! okvan
                 ENDIF  ! uact>0
@@ -184,22 +195,19 @@
                         DO is = 1, npol
                           DO js = 1, npol
                             ijs = ijs + 1
-                            ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                               int2_so(ih,jh,ipol,nb,na,ijs) * &
-                               becp1(ik)%nc(jkb,js,ibnd) * uact(nu+ipol)
+                            ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int2_so(ih, jh, ipol, nb, na, ijs) * &
+                               becp1(ik)%nc(jkb, js, ibnd) * uact(nu + ipol)
                           ENDDO
                         ENDDO
                       ELSE
                         DO is = 1, npol
-                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                             int2(ih,jh,ipol,nb,na) * &
-                             becp1(ik)%nc(jkb,is,ibnd) * uact(nu+ipol)
+                          ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int2(ih, jh, ipol, nb, na) * &
+                             becp1(ik)%nc(jkb, is, ibnd) * uact(nu + ipol)
                         ENDDO
                       ENDIF
                     ELSE
-                      ps1(ikb,ibnd) = ps1(ikb,ibnd) + &
-                          int2(ih,jh,ipol,nb,na) * &
-                          becp1(ik)%k(jkb,ibnd) * uact(nu+ipol)
+                      ps1(ikb,ibnd) = ps1(ikb,ibnd) + int2(ih, jh, ipol, nb, na) * &
+                          becp1(ik)%k(jkb, ibnd) * uact(nu + ipol)
                     ENDIF
                   ENDDO
                 ENDIF  ! okvan
@@ -216,11 +224,11 @@
   !
   IF (nkb > 0) THEN
     IF (noncolin) THEN
-      CALL ZGEMM( 'n', 'n', npwq, (upper_band-lower_band+1)*npol, nkb, &
-                  cone, vkb, npwx, ps1_nc, nkb, cone, dvpsi, npwx )
+      CALL ZGEMM('n', 'n', npwq, (upper_band - lower_band + 1)*npol, nkb, &
+                 cone, vkb, npwx, ps1_nc, nkb, cone, dvpsi, npwx)
     ELSE
-      CALL ZGEMM( 'n', 'n', npwq, (upper_band-lower_band+1), nkb, &
-                  cone, vkb, npwx, ps1, nkb, cone, dvpsi, npwx )
+      CALL ZGEMM('n', 'n', npwq, (upper_band - lower_band + 1), nkb, &
+                 cone, vkb, npwx, ps1, nkb, cone, dvpsi, npwx)
     ENDIF
   ENDIF
   !
@@ -231,45 +239,53 @@
       ok = .FALSE.
       IF (noncolin) THEN
         DO ibnd = lower_band, upper_band
-           ok = ok .OR. ( ABS(ps2_nc(ikb,1,ibnd,ipol) ) > eps12 ) .OR. &
-                        ( ABS(ps2_nc(ikb,2,ibnd,ipol) ) > eps12 )
+          ok = ok .OR. (ABS(ps2_nc(ikb, 1, ibnd, ipol) ) > eps12) .OR. &
+                       (ABS(ps2_nc(ikb, 2, ibnd, ipol) ) > eps12)
         ENDDO
       ELSE
         DO ibnd = lower_band, upper_band
-           ok = ok .OR. ( ABS(ps2(ikb,ibnd,ipol) ) > eps12)
+          ok = ok .OR. (ABS(ps2(ikb, ibnd, ipol)) > eps12)
         ENDDO
       ENDIF
       IF (ok) THEN
         DO ig = 1, npwq
           igg = igkq(ig)
-          !aux(ig) =  vkb(ig,ikb) * ( xk(ipol,ikq) + g(ipol,igg) )
-          aux(ig) = vkb(ig,ikb) * ( xxkq(ipol) + g(ipol,igg) )
+          aux(ig) = vkb(ig, ikb) * (xxkq(ipol) + g(ipol, igg))
         ENDDO
         DO ibnd = lower_band, upper_band
           IF (noncolin) THEN
-            CALL ZAXPY( npwq, ps2_nc(ikb,1,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1 )
-            CALL ZAXPY( npwq, ps2_nc(ikb,2,ibnd,ipol), aux, 1, dvpsi(1+npwx,ibnd), 1 )
+            CALL ZAXPY(npwq, ps2_nc(ikb, 1, ibnd, ipol), aux, 1, dvpsi(1, ibnd), 1)
+            CALL ZAXPY(npwq, ps2_nc(ikb, 2, ibnd, ipol), aux, 1, dvpsi(1 + npwx, ibnd), 1)
           ELSE
-            CALL ZAXPY( npwq, ps2(ikb,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1 )
+            CALL ZAXPY(npwq, ps2(ikb, ibnd, ipol), aux, 1, dvpsi(1, ibnd), 1)
           ENDIF
         ENDDO
       ENDIF
     ENDDO
   ENDDO
   !
-  DEALLOCATE(aux)
+  DEALLOCATE(aux, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating aux', 1)
   IF (noncolin) THEN
-    DEALLOCATE(ps1_nc)
-    DEALLOCATE(ps2_nc)
-    DEALLOCATE(deff_nc)
+    DEALLOCATE(ps1_nc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating ps1_nc', 1)
+    DEALLOCATE(ps2_nc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating ps2_nc', 1)
+    DEALLOCATE(deff_nc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating deff_nc', 1)
   ELSE
-    DEALLOCATE(ps1)
-    DEALLOCATE(ps2)
-    DEALLOCATE(deff)
+    DEALLOCATE(ps1, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating ps1', 1)
+    DEALLOCATE(ps2, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating ps2', 1)
+    DEALLOCATE(deff, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating deff', 1)
   ENDIF
   !
   CALL stop_clock('dvqpsi_us_on')
   !
   RETURN
   !
+  !----------------------------------------------------------------------
   END SUBROUTINE dvqpsi_us_only3
+  !----------------------------------------------------------------------

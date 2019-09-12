@@ -10,7 +10,7 @@
   ! adapted from PH/dvqpsi_us (QE)
   !
   !----------------------------------------------------------------------
-  SUBROUTINE dvqpsi_us3( ik, uact, addnlcc, xxkq, xq0, igk, igkq, npw, npwq )
+  SUBROUTINE dvqpsi_us3(ik, uact, addnlcc, xxkq, xq0, igk, igkq, npw, npwq)
   !----------------------------------------------------------------------
   !!
   !! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -54,7 +54,6 @@
   !
   LOGICAL, INTENT(in) :: addnlcc
   !! True if NLCC is present
-  !
   INTEGER, INTENT(in) :: ik
   !! Counter on k-point
   INTEGER, INTENT(in) :: npw
@@ -65,17 +64,14 @@
   !! k+G mapping
   INTEGER, INTENT(in) :: igkq(npwq)
   !! k+G+q mapping
-  ! 
   REAL(KIND = DP), INTENT(in) :: xq0(3)
   !! Current coarse q-point coordinate
   REAL(KIND = DP), INTENT(in) :: xxkq(3)
   !! k+q point coordinate 
-  ! 
   COMPLEX(KIND = DP), INTENT(in) :: uact(3 * nat)
   !! the pattern of displacements
   !
   ! Local variables
-  !
   INTEGER :: na
   !! counter on atoms
   INTEGER :: mu
@@ -92,10 +88,10 @@
   !! counter on spin
   INTEGER :: ip
   !! counter on polarizations
-  !
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP) :: fac
   !! spin degeneracy factor
-  !
   COMPLEX(KIND = DP) :: gtau
   !! e^{-i G * \tau}
   COMPLEX(KIND = DP) :: u1, u2, u3
@@ -107,43 +103,50 @@
   COMPLEX(KIND = DP) :: fact
   !! e^{-i q * \tau}
   COMPLEX(KIND = DP), ALLOCATABLE, TARGET :: aux(:)
+  !! Auxillary variable
   COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:)
+  !! Auxillary variable 
   COMPLEX(KIND = DP), POINTER :: auxs(:)
+  !! Auxiallary pointer
   COMPLEX(KIND = DP), ALLOCATABLE :: drhoc(:)
   !! response core charge density
   !
   CALL start_clock('dvqpsi_us3')
   !
   IF (nlcc_any .AND. addnlcc) THEN
-     ALLOCATE(drhoc(dfftp%nnr))
-     ALLOCATE(aux(dfftp%nnr))
-     ALLOCATE(auxs(dffts%nnr))
+    ALLOCATE(drhoc(dfftp%nnr), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating drhoc', 1)
+    ALLOCATE(aux(dfftp%nnr), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating aux', 1)
+    ALLOCATE(auxs(dffts%nnr), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating auxs', 1)
   ENDIF
-  ALLOCATE(aux1(dffts%nnr))
-  ALLOCATE(aux2(dffts%nnr))
+  ALLOCATE(aux1(dffts%nnr), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating aux1', 1)
+  ALLOCATE(aux2(dffts%nnr), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating aux2', 1)
   !
   !    We start by computing the contribution of the local potential.
   !    The computation of the derivative of the local potential is done in
-  !    reciprocal space while the product with the wavefunction is done in
-  !    real space
+  !    reciprocal space while the product with the wavefunction is done in real space
   !
   dvpsi(:, :) = czero
   aux1(:) = czero
   DO na = 1, nat
     fact = tpiba * (0.d0, -1.d0) * eigqts(na)
     mu = 3 * (na - 1)
-    u1 = uact(mu+1)
-    u2 = uact(mu+2)
-    u3 = uact(mu+3)
+    u1 = uact(mu + 1)
+    u2 = uact(mu + 2)
+    u3 = uact(mu + 3)
     IF (ABS(u1) + ABS(u2) + ABS(u3) > eps12) THEN
       nt = ityp(na)
       gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
       DO ig = 1, ngms
-        gtau = eigts1(mill(1,ig),na) * &
-               eigts2(mill(2,ig),na) * & 
-               eigts3(mill(3,ig),na)
-        gu = gu0 + g(1,ig) * u1 + g(2,ig) * u2 + g(3,ig) * u3
-        aux1(dffts%nl(ig)) = aux1(dffts%nl(ig)) + vlocq(ig,nt) * gu * fact * gtau
+        gtau = eigts1(mill(1, ig), na) * &
+               eigts2(mill(2, ig), na) * & 
+               eigts3(mill(3, ig), na)
+        gu = gu0 + g(1, ig) * u1 + g(2, ig) * u2 + g(3, ig) * u3
+        aux1(dffts%nl(ig)) = aux1(dffts%nl(ig)) + vlocq(ig, nt) * gu * fact * gtau
       ENDDO
     ENDIF
   ENDDO
@@ -155,19 +158,19 @@
     DO na = 1, nat
       fact = tpiba * (0.d0, -1.d0) * eigqts(na)
       mu = 3 * (na - 1)
-      u1 = uact(mu+1)
-      u2 = uact(mu+2)
-      u3 = uact(mu+3)
+      u1 = uact(mu + 1)
+      u2 = uact(mu + 2)
+      u3 = uact(mu + 3)
       IF (ABS(u1) + ABS(u2) + ABS(u3) > eps12) THEN
         nt = ityp(na)
         gu0 = xq0(1) * u1 + xq0(2) * u2 + xq0(3) * u3
         IF (upf(nt)%nlcc) THEN
-          DO ig = 1,ngm
-            gtau = eigts1(mill(1,ig),na) * &
-                   eigts2(mill(2,ig),na) * &
-                   eigts3(mill(3,ig),na)
-            gu = gu0 + g(1,ig) * u1 + g(2,ig) * u2 + g(3,ig) * u3
-            drhoc(dfftp%nl(ig)) = drhoc(dfftp%nl(ig)) + drc(ig,nt) * gu * fact * gtau
+          DO ig = 1, ngm
+            gtau = eigts1(mill(1, ig), na) * &
+                   eigts2(mill(2, ig), na) * &
+                   eigts3(mill(3, ig), na)
+            gu = gu0 + g(1, ig) * u1 + g(2, ig) * u2 + g(3, ig) * u3
+            drhoc(dfftp%nl(ig)) = drhoc(dfftp%nl(ig)) + drc(ig, nt) * gu * fact * gtau
           ENDDO
         ENDIF
       ENDIF
@@ -178,7 +181,7 @@
     aux(:) = czero
     IF (.NOT. lsda) THEN
       DO ir = 1, dfftp%nnr
-        aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
+        aux(ir) = drhoc(ir) * dmuxc(ir, 1, 1)
       ENDDO
     ELSE
       is = isk_loc(ik)
@@ -189,19 +192,20 @@
     !
     fac = 1.d0 / DBLE(nspin_lsda)
     DO is = 1, nspin_lsda
-      rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
+      rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core
     ENDDO
     !
-    IF (dft_is_gradient() ) &
-      CALL dgradcorr( dfftp, rho%of_r, grho, &
-             dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq0, drhoc, &
-             1, nspin_gga, g, aux )
+    IF (dft_is_gradient()) THEN
+      CALL dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq0, drhoc, &
+                     1, nspin_gga, g, aux)
+    ENDIF
     !
-    IF (dft_is_nonlocc() ) &
-      CALL dnonloccorr( rho%of_r, drhoc, xq0, aux )
+    IF (dft_is_nonlocc()) THEN
+      CALL dnonloccorr(rho%of_r, drhoc, xq0, aux)
+    ENDIF
     !
     DO is = 1, nspin_lsda
-      rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
+      rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core
     ENDDO
     !
     CALL fwfft('Rho', aux, dfftp)
@@ -224,11 +228,11 @@
       aux2(:) = czero
       IF (ip == 1) THEN
         DO ig = 1, npw
-          aux2( dffts%nl( igk(ig) ) ) = evc(ig,ibnd)
+          aux2(dffts%nl(igk(ig))) = evc(ig, ibnd)
         ENDDO
       ELSE
         DO ig = 1, npw
-          aux2( dffts%nl( igk(ig) ) ) = evc(ig+npwx,ibnd)
+          aux2(dffts%nl(igk(ig))) = evc(ig + npwx, ibnd)
         ENDDO
       ENDIF
       !
@@ -244,23 +248,28 @@
       CALL fwfft('Wave', aux2, dffts)
       IF (ip == 1) THEN
         DO ig = 1, npwq
-          dvpsi(ig,ibnd) = aux2( dffts%nl( igkq(ig) ) )
+          dvpsi(ig, ibnd) = aux2(dffts%nl(igkq(ig)))
         ENDDO
       ELSE
         DO ig = 1, npwq
-          dvpsi(ig+npwx,ibnd) = aux2( dffts%nl( igkq(ig) ) )
+          dvpsi(ig + npwx, ibnd) = aux2(dffts%nl(igkq(ig)))
         ENDDO
       ENDIF
     ENDDO
   ENDDO
   ! 
   IF (nlcc_any .AND. addnlcc) THEN
-    DEALLOCATE(drhoc)
-    DEALLOCATE(aux)
-    DEALLOCATE(auxs)
+    DEALLOCATE(drhoc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating drhoc', 1)
+    DEALLOCATE(aux, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating aux', 1)
+    DEALLOCATE(auxs, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating auxs', 1)
   ENDIF
-  DEALLOCATE(aux1)
-  DEALLOCATE(aux2)
+  DEALLOCATE(aux1, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating aux1', 1)
+  DEALLOCATE(aux2, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating aux2', 1)
   !
   !   We add the contribution of the nonlocal potential in the US form
   !   First a term similar to the KB case.
@@ -272,4 +281,6 @@
   !
   RETURN
   !
+  !----------------------------------------------------------------------
   END SUBROUTINE dvqpsi_us3
+  !----------------------------------------------------------------------

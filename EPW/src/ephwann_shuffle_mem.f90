@@ -1373,7 +1373,7 @@
       ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
       !
       DO ik = 1, nkf
-        CALL zgemm( 'n', 'n', (nbndfst) * (nbndfst), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
+        CALL ZGEMM( 'n', 'n', (nbndfst) * (nbndfst), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
               (nbndfst) * (nbndfst), uf, nmodes, czero, &
               epf17(:,:,:,ik), (nbndfst) * (nbndfst) )
         ! 

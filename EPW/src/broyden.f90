@@ -433,10 +433,12 @@
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE mix_broyden_aniso
+  !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mix_broyden2_aniso( ik, ibnd, ndim, deltaout, deltain, alphamix, iter, n_iter, conv )
+  SUBROUTINE mix_broyden2_aniso(ik, ibnd, ndim, deltaout, deltain, alphamix, iter, n_iter, conv)
   !-----------------------------------------------------------------------
   !!
   !! Modified Broyden's method for potential/charge density mixing
@@ -580,7 +582,7 @@
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE mix_broyden2_aniso
-  !
   !-----------------------------------------------------------------------
 

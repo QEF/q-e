@@ -416,9 +416,9 @@
         ! dmec_utmp(:, :) = MATMUL( dmec_opt(ipol,:,:,ik), cu(:,:,ik) )
         ! cps(ipol,:,:,ik) = MATMUL( CONJG(transpose( cu(:,:,ik))), dmec_utmp(:, :) )
         !
-        CALL zgemm('n', 'n', nbnd, nbndsub, nbnd, cone, dmec_opt(ipol, :, :, ik), &
+        CALL ZGEMM('n', 'n', nbnd, nbndsub, nbnd, cone, dmec_opt(ipol, :, :, ik), &
                    nbnd, cu(:, :, ik), nbnd, czero, dmec_utmp(:, :), nbnd)
-        CALL zgemm('c', 'n', nbndsub, nbndsub, nbnd, cone, cu(:, :, ik), &
+        CALL ZGEMM('c', 'n', nbndsub, nbndsub, nbnd, cone, cu(:, :, ik), &
                    nbnd, dmec_utmp(:, :), nbnd, czero, cps(ipol, :, :, ik), nbndsub)
         !
       ENDDO

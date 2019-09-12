@@ -10,10 +10,9 @@
   ! Adapted from PH/dvanqq (QE)
   ! 
   !----------------------------------------------------------------------
-  SUBROUTINE dvanqq2
+  SUBROUTINE dvanqq2()
   !----------------------------------------------------------------------
   !!
-  !! New
   !! This routine calculates two integrals of the Q functions and
   !! its derivatives with V_loc and V_eff which are used
   !! to compute term dV_bare/dtau * psi  in addusdvqpsi.
@@ -30,6 +29,7 @@
   !! Imported the noncolinear case implemented by xlzhang
   !!
   !! Roxana Margine - Dec 2018: Updated based on QE 6.3
+  !! SP: Sept. 2019 - Cleaning  
   !!
   !
   USE kinds,            ONLY : DP
@@ -78,7 +78,8 @@
   !! counter on polarizations
   INTEGER :: is
   !! counter on spin
-  ! 
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP), ALLOCATABLE :: qmod(:)
   !! the modulus of q+G
   REAL(KIND = DP), ALLOCATABLE :: qmodg(:)
@@ -89,15 +90,16 @@
   !! the spherical harmonics at q+G
   REAL(KIND = DP), ALLOCATABLE ::  ylmk0(:, :)
   !! the spherical harmonics at G
-  !
   COMPLEX(KIND = DP) :: fact
   !! e^{-i q * \tau} * CONJG(e^{-i q * \tau}) 
   COMPLEX(KIND = DP) :: fact1
   !! -i * omega
   COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
   !! the scalar product function
-  COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:), &
-       aux3(:), aux5(:), sk(:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:), aux3(:), aux5(:)
+  !! Auxiallary array
+  COMPLEX(KIND = DP), ALLOCATABLE :: sk(:)
+  !! 
   COMPLEX(KIND = DP), ALLOCATABLE :: veff(:, :)
   !! effective potential
   COMPLEX(KIND = DP), ALLOCATABLE, TARGET :: qgm(:)
@@ -114,17 +116,28 @@
   int4(:, :, :, :, :) = czero
   int5(:, :, :, :, :) = czero
   !
-  ALLOCATE(sk(ngm) )    
-  ALLOCATE(aux1(ngm) )    
-  ALLOCATE(aux2(ngm) )    
-  ALLOCATE(aux3(ngm) )    
-  ALLOCATE(aux5(ngm) )    
-  ALLOCATE(qmodg(ngm) )    
-  ALLOCATE(qmod(ngm) )
-  ALLOCATE(qgmq(ngm) )
-  ALLOCATE(qgm(ngm))
-  ALLOCATE(ylmk0(ngm, lmaxq * lmaxq) )    
-  ALLOCATE(ylmkq(ngm, lmaxq * lmaxq) )    
+  ALLOCATE(sk(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating sk', 1)
+  ALLOCATE(aux1(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating aux1', 1)
+  ALLOCATE(aux2(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating aux2', 1)
+  ALLOCATE(aux3(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating aux3', 1)
+  ALLOCATE(aux5(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating aux5', 1)
+  ALLOCATE(qmodg(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating qmodg', 1)
+  ALLOCATE(qmod(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating qmod', 1)
+  ALLOCATE(qgmq(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating qgmq', 1)
+  ALLOCATE(qgm(ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating qgm', 1)
+  ALLOCATE(ylmk0(ngm, lmaxq * lmaxq), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating ylmk0', 1)
+  ALLOCATE(ylmkq(ngm, lmaxq * lmaxq), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating ylmkq', 1)
   sk(:) = czero
   aux1(:) = czero
   aux2(:) = czero
@@ -139,136 +152,130 @@
   !
   ! compute spherical harmonics
   !
-  CALL ylmr2( lmaxq * lmaxq, ngm, g, gg, ylmk0 )
+  CALL ylmr2(lmaxq * lmaxq, ngm, g, gg, ylmk0)
   !
   DO ig = 1, ngm
-    qmodg(ig) = SQRT( gg(ig) )
+    qmodg(ig) = SQRT(gg(ig))
   ENDDO
   ! 
-  ALLOCATE(qpg(3, ngm) )    
+  ALLOCATE(qpg(3, ngm), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating qpg', 1)
   qpg(:, :) = zero
   !
-  CALL setqmod( ngm, xq, g, qmod, qpg )
+  CALL setqmod(ngm, xq, g, qmod, qpg)
   CALL ylmr2(lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
   !
-  DEALLOCATE(qpg)
+  DEALLOCATE(qpg, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating qpg', 1)
   DO ig = 1, ngm
-    qmod(ig) = SQRT( qmod(ig) )
+    qmod(ig) = SQRT(qmod(ig))
   ENDDO
   !
   !   we start by computing the FT of the effective potential
   !
-  ALLOCATE(veff(dfftp%nnr,nspin_mag))    
+  ALLOCATE(veff(dfftp%nnr, nspin_mag), STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error allocating veff', 1)
   veff(:, :) = czero
   !
   DO is = 1, nspin_mag
     IF (nspin_mag /= 4 .OR. is == 1) THEN
       DO ir = 1, dfftp%nnr
-        veff(ir,is) = CMPLX(vltot(ir) + v%of_r(ir,is), zero, kind=DP)
+        veff(ir, is) = CMPLX(vltot(ir) + v%of_r(ir, is), zero, KIND = DP)
       ENDDO
     ELSE
       DO ir = 1, dfftp%nnr
-        veff(ir,is) = CMPLX(v%of_r(ir,is), zero, kind=DP)
+        veff(ir, is) = CMPLX(v%of_r(ir, is), zero, KIND = DP)
       ENDDO
     ENDIF
-    CALL fwfft('Rho', veff(:,is), dfftp)
+    CALL fwfft('Rho', veff(:, is), dfftp)
   ENDDO
   !
-  !    We compute here two of the three integrals needed in the phonon
+  ! We compute here two of the three integrals needed in the phonon
   !
-  fact1 = CMPLX(0.d0, - tpiba * omega, kind=DP)
+  fact1 = CMPLX(0.d0, - tpiba * omega, KIND = DP)
   !
   DO ntb = 1, ntyp
     IF (upf(ntb)%tvanp) THEN
       !
       DO ih = 1, nh(ntb)
         DO jh = ih, nh(ntb)
-          ijh = ijtoh(ih,jh,ntb)
+          ijh = ijtoh(ih, jh, ntb)
           !
-          !    compute the augmentation function
+          ! Compute the augmentation function
           !
-          CALL qvan2( ngm, ih, jh, ntb, qmodg, qgm, ylmk0 )
-          CALL qvan2( ngm, ih, jh, ntb, qmod, qgmq, ylmkq )
+          CALL qvan2(ngm, ih, jh, ntb, qmodg, qgm, ylmk0)
+          CALL qvan2(ngm, ih, jh, ntb, qmod, qgmq, ylmkq)
           !
-          !     NB: for this integral the moving atom and the atom of Q
-          !     do not necessarily coincide
+          ! NB: for this integral the moving atom and the atom of Q
+          ! do not necessarily coincide
           !
           DO nb = 1, nat
             IF (ityp(nb) == ntb) THEN
               DO ig = 1, ngm
-                aux1(ig) = qgmq(ig) * eigts1(mill(1,ig),nb) &
-                                    * eigts2(mill(2,ig),nb) &
-                                    * eigts3(mill(3,ig),nb)
+                aux1(ig) = qgmq(ig) * eigts1(mill(1, ig), nb) &
+                                    * eigts2(mill(2, ig), nb) &
+                                    * eigts3(mill(3, ig), nb)
               ENDDO
               !
               DO na = 1, nat
-                fact = eigqts(na) * CONJG( eigqts(nb) )
+                fact = eigqts(na) * CONJG(eigqts(nb))
                 !
                 !    nb is the atom of the augmentation function
                 !
                 nta = ityp(na)
                 DO ig = 1, ngm
-                   sk(ig) = vlocq(ig,nta) * eigts1(mill(1,ig),na) &
-                                          * eigts2(mill(2,ig),na) &
-                                          * eigts3(mill(3,ig),na) 
+                  sk(ig) = vlocq(ig, nta) * eigts1(mill(1, ig), na) &
+                                          * eigts2(mill(2, ig), na) &
+                                          * eigts3(mill(3, ig), na) 
                 ENDDO
                 !
                 DO ipol = 1, 3
-                   DO ig = 1, ngm
-                     aux5(ig) = sk(ig) * ( g(ipol,ig) + xq(ipol) )
-                   ENDDO
-                   int2(ih,jh,ipol,na,nb) = fact * fact1 * &
-                         ZDOTC(ngm, aux1, 1, aux5, 1)
-                   ! 
-                   DO jpol = 1, 3
-                      IF (jpol >= ipol) THEN
-                         DO ig = 1, ngm
-                            aux3(ig) = aux5(ig) * &
-                                     ( g(jpol,ig) + xq(jpol) )
-                         ENDDO
-                         int5(ijh,ipol,jpol,na,nb) = &
-                             CONJG(fact) * tpiba2 * omega * &
-                             ZDOTC(ngm, aux3, 1, aux1, 1)
-                      ELSE
-                         int5(ijh,ipol,jpol,na,nb) = &
-                             int5(ijh,jpol,ipol,na,nb)
-                      ENDIF
-                   ENDDO
+                  DO ig = 1, ngm
+                    aux5(ig) = sk(ig) * (g(ipol, ig) + xq(ipol))
+                  ENDDO
+                  int2(ih, jh, ipol, na, nb) = fact * fact1 * ZDOTC(ngm, aux1, 1, aux5, 1)
+                  ! 
+                  DO jpol = 1, 3
+                    IF (jpol >= ipol) THEN
+                      DO ig = 1, ngm
+                        aux3(ig) = aux5(ig) * (g(jpol, ig) + xq(jpol))
+                      ENDDO
+                      int5(ijh, ipol, jpol, na, nb) = CONJG(fact) * tpiba2 * omega * &
+                         ZDOTC(ngm, aux3, 1, aux1, 1)
+                    ELSE
+                      int5(ijh, ipol, jpol, na, nb) = int5(ijh, jpol, ipol, na, nb)
+                    ENDIF
+                  ENDDO
                 ENDDO !ipol
                 !
               ENDDO !na
               !
               DO ig = 1, ngm
-                 aux1(ig) = qgm(ig) * eigts1(mill(1,ig),nb) &
-                                    * eigts2(mill(2,ig),nb) &
-                                    * eigts3(mill(3,ig),nb)
+                aux1(ig) = qgm(ig) * eigts1(mill(1,ig),nb) &
+                                   * eigts2(mill(2,ig),nb) &
+                                   * eigts3(mill(3,ig),nb)
               ENDDO
               !
               DO is = 1, nspin_mag
                 DO ipol = 1, 3
                   DO ig = 1, ngm
-                    aux2(ig) = veff(dfftp%nl(ig),is) * g(ipol,ig)
+                    aux2(ig) = veff(dfftp%nl(ig), is) * g(ipol, ig)
                   ENDDO
-                  int1(ih,jh,ipol,nb,is) = - fact1 * &
-                     ZDOTC(ngm, aux1, 1, aux2, 1)
+                  int1(ih, jh, ipol, nb, is) = - fact1 * ZDOTC(ngm, aux1, 1, aux2, 1)
                   DO jpol = 1, 3
                     IF (jpol >= ipol) THEN
                       DO ig = 1, ngm
                          aux3(ig) = aux2(ig) * g(jpol,ig)
                       ENDDO
-                      int4(ijh,ipol,jpol,nb,is) = - tpiba2 * &
-                          omega * ZDOTC(ngm, aux3, 1, aux1, 1)
+                      int4(ijh, ipol, jpol, nb, is) = - tpiba2 * omega * ZDOTC(ngm, aux3, 1, aux1, 1)
                     ELSE
-                      int4(ijh,ipol,jpol,nb,is) = &
-                          int4(ijh,jpol,ipol,nb,is)
+                      int4(ijh, ipol, jpol, nb, is) = int4(ijh, jpol, ipol, nb, is)
                     ENDIF
                   ENDDO ! jpol
                 ENDDO ! ipol
               ENDDO ! is
-              !
             ENDIF ! ityp
           ENDDO ! nb
-          !
         ENDDO ! jh
       ENDDO ! ih
       !
@@ -281,18 +288,16 @@
             IF (ityp(nb) == ntb) THEN
               DO ipol = 1, 3
                 DO is = 1, nspin_mag
-                  int1(jh,ih,ipol,nb,is) = int1(ih,jh,ipol,nb,is)
+                  int1(jh, ih, ipol, nb, is) = int1(ih, jh, ipol, nb, is)
                 ENDDO
                 DO na = 1, nat
-                  int2(jh,ih,ipol,na,nb) = int2(ih,jh,ipol,na,nb)
-                ENDDO
-              ENDDO
+                  int2(jh, ih, ipol, na, nb) = int2(ih, jh, ipol, na, nb)
+                ENDDO ! na
+              ENDDO ! ipol
             ENDIF
-          ENDDO
-          !
+          ENDDO ! nb
         ENDDO ! jh
       ENDDO ! ih
-      !
     ENDIF ! upf
   ENDDO ! ntb
   CALL mp_sum(int1, intra_pool_comm)
@@ -309,43 +314,46 @@
         DO na = 1, nat
           IF (ityp(na) == ntb) THEN
             IF (upf(ntb)%has_so)  THEN
-              CALL transform_int4_so(int4,na)
-              CALL transform_int5_so(int5,na)
+              CALL transform_int4_so(int4, na)
+              CALL transform_int5_so(int5, na)
             ELSE
-              CALL transform_int4_nc(int4,na)
+              CALL transform_int4_nc(int4, na)
               IF (lspinorb) CALL transform_int5_nc(int5,na)
             ENDIF
           ENDIF
         ENDDO
       ENDIF
-    ENDDO
+    ENDDO ! ntb
   ENDIF
   !
-!DBRM
-!  write(*,'(a,e20.12)') 'int1 = ', &
-!  SUM((REAL(REAL(int1(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int1(:, :, :, :, :))))**2)
-!  write(*,'(a,e20.12)') 'int2 = ', &
-!  SUM((REAL(REAL(int2(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int2(:, :, :, :, :))))**2)
-!  write(*,'(a,e20.12)') 'int4 = ', &
-!  SUM((REAL(REAL(int4(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int4(:, :, :, :, :))))**2)
-!  write(*,'(a,e20.12)') 'int5 = ', &
-!  SUM((REAL(REAL(int5(:, :, :, :, :))))**2)+SUM((REAL(AIMAG(int5(:, :, :, :, :))))**2)
-!END
+  DEALLOCATE(sk, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating sk', 1)
+  DEALLOCATE(aux1, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating aux1', 1)
+  DEALLOCATE(aux2, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating aux2', 1)
+  DEALLOCATE(aux3, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating aux3', 1)
+  DEALLOCATE(aux5, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating aux5', 1)
+  DEALLOCATE(qmodg, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating qmodg', 1)
+  DEALLOCATE(qmod, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating qmod', 1)
+  DEALLOCATE(qgmq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating qgmq', 1)
+  DEALLOCATE(qgm, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating qgm', 1)
+  DEALLOCATE(ylmk0, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating ylmk0', 1)
+  DEALLOCATE(ylmkq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating ylmkq', 1)
+  DEALLOCATE(veff, STAT = ierr)
+  IF (ierr /= 0) CALL errore('dvanqq2', 'Error deallocating veff', 1)
   !
-  DEALLOCATE(sk)
-  DEALLOCATE(aux1)
-  DEALLOCATE(aux2)
-  DEALLOCATE(aux3)
-  DEALLOCATE(aux5)
-  DEALLOCATE(qmodg)
-  DEALLOCATE(qmod)
-  DEALLOCATE(qgmq)
-  DEALLOCATE(qgm)
-  DEALLOCATE(ylmk0)
-  DEALLOCATE(ylmkq)
-  DEALLOCATE(veff)
-  !
-  CALL stop_clock ('dvanqq2')
+  CALL stop_clock('dvanqq2')
   RETURN
   ! 
+  !----------------------------------------------------------------------
   END SUBROUTINE dvanqq2
+  !----------------------------------------------------------------------

@@ -48,7 +48,7 @@
 #if defined(__MPI)
     IF (etf_mem == 1) then
       CALL MPI_FILE_CLOSE(iunepmatwp2, ierr)
-      IF( ierr /= 0 ) CALL errore('iter_close', 'error in MPI_FILE_CLOSE', 1)
+      IF (ierr /= 0) CALL errore('iter_close', 'error in MPI_FILE_CLOSE', 1)
     ENDIF
 #endif
     ! 

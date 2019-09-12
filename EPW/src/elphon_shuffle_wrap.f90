@@ -12,7 +12,7 @@
   !!
   !! Electron-phonon calculation with Wannier functions: load all phonon q's
   !!
-  !! This SUBROUTINE is the main driver of the electron-phonon 
+  !! This routine is the main driver of the electron-phonon 
   !! calculation. It first calculates the electron-phonon matrix elements
   !! on the coarse mesh and then passes the data off to [[ephwann_shuffle]]
   !! to perform the interpolation.
@@ -20,12 +20,11 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
-  USE mp_global,     ONLY : my_pool_id, inter_pool_comm, &
-                            npool, inter_image_comm, world_comm  
+  USE mp_global,     ONLY : my_pool_id, inter_pool_comm, npool, inter_image_comm, world_comm  
   USE mp_images,     ONLY : my_image_id, nimage
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast
-  USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id
+  USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id, ionode_id
   USE us,            ONLY : nqxq, dq, qrad
   USE gvect,         ONLY : gcutm, ngm
   USE cellmd,        ONLY : cell_factor
@@ -34,11 +33,11 @@
   USE wavefunctions, ONLY : evc
   USE wvfct,         ONLY : npwx
   USE eqv,           ONLY : vlocq, dmuxc
-  USE ions_base,     ONLY : nat, nsp, tau, ityp
+  USE ions_base,     ONLY : nat, nsp, tau, ityp, amass
   USE control_flags, ONLY : iverbosity
-  USE io_epw,        ONLY : iuepb, iuqpeig
-  USE pwcom,         ONLY : nks, nbnd, nkstot
-  USE cell_base,     ONLY : at, bg
+  USE io_epw,        ONLY : iuepb, iuqpeig, crystal
+  USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
+  USE cell_base,     ONLY : at, bg, alat, omega
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
                             sr, nrot, copy_sym, set_sym_bl, find_sym, inverse_s,& 
                             remove_sym, allfrac
@@ -223,8 +222,7 @@
   !
   maxvalue = nqxq
   DO iq_irr = 1, nqc_irr
-    qnorm_tmp = SQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + &
-                     xqc_irr(3, iq_irr)**2)
+    qnorm_tmp = SQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
     nqxq_tmp = INT(((SQRT(gcutm) + qnorm_tmp) / dq + 4) * cell_factor)
     IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
   ENDDO
@@ -234,7 +232,7 @@
     ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp))
     qrad(:, :, :, :) = zero
     ! RM - need to call init_us_1 to re-calculate qrad 
-    CALL init_us_1
+    CALL init_us_1()
   ENDIF
   ! 
   ! do not perform the check if restart
@@ -255,12 +253,12 @@
       tempfile = TRIM(prefix)//'.eig'
       OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', ACTION = 'read', IOSTAT = ios)
       IF (ios /= 0) CALL errore('elphon_shuffle_wrap','error opening' // tempfile, 1)
-      READ(iuqpeig,'(a)') line
+      READ(iuqpeig, '(a)') line
       DO ik = 1, nkstot
         ! We do not save the k-point for the moment ==> should be read and
         ! tested against the current one  
-        READ(iuqpeig,'(a)') line
-        READ(iuqpeig,*) et_tmp(:, ik)
+        READ(iuqpeig, '(a)') line
+        READ(iuqpeig, *) et_tmp(:, ik)
       ENDDO
       CLOSE(iuqpeig)
       ! from eV to Ryd
@@ -301,6 +299,55 @@
     ! 
     WRITE(stdout,'(/5x,a)') 'Using kmap and kgmap from disk'
   ENDIF
+  ! 
+  IF (epwread) THEN
+    !
+    ! We need some crystal info
+    IF (mpime == ionode_id) THEN
+      !
+      OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
+      READ(crystal,*) nat
+      READ(crystal,*) nmodes
+      READ(crystal,*) nelec
+      READ(crystal,*) at
+      READ(crystal,*) bg
+      READ(crystal,*) omega
+      READ(crystal,*) alat
+      ALLOCATE(tau(3, nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap.f90', 'Error allocating tau', 1)
+      READ(crystal,*) tau
+      READ(crystal,*) amass
+      ALLOCATE(ityp(nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap.f90', 'Error allocating ityp', 1)
+      READ(crystal,*) ityp
+      READ(crystal,*) noncolin
+      READ(crystal,*) w_centers
+      ! 
+    ENDIF ! mpime == ionode_id
+    CALL mp_bcast(nat      , ionode_id, world_comm)
+    IF (mpime /= ionode_id) ALLOCATE(ityp(nat))
+    CALL mp_bcast(nmodes   , ionode_id, world_comm)
+    CALL mp_bcast(nelec    , ionode_id, world_comm)
+    CALL mp_bcast(at       , ionode_id, world_comm)
+    CALL mp_bcast(bg       , ionode_id, world_comm)
+    CALL mp_bcast(omega    , ionode_id, world_comm)
+    CALL mp_bcast(alat     , ionode_id, world_comm)
+    IF (mpime /= ionode_id) ALLOCATE(tau(3, nat) )
+    CALL mp_bcast(tau      , ionode_id, world_comm)
+    CALL mp_bcast(amass    , ionode_id, world_comm)
+    CALL mp_bcast(ityp     , ionode_id, world_comm)
+    CALL mp_bcast(noncolin , ionode_id, world_comm)
+    CALL mp_bcast(w_centers, ionode_id, world_comm)
+    IF (mpime == ionode_id) THEN
+      CLOSE(crystal)
+    ENDIF
+  ENDIF ! epwread
+  ! 
+  IF (lifc) THEN
+    ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap.f90', 'Error allocating ifc', 1)
+    ifc(:, :, :, :, :, :, :) = zero
+  ENDIF
   !
   ! Do not do symmetry stuff 
   IF (epwread .AND. .NOT. epbread) THEN
@@ -329,8 +376,6 @@
     !
     ! read interatomic force constat matrix from q2r
     IF (lifc) THEN
-      ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat))
-      ifc(:, :, :, :, :, :, :) = zero
       CALL read_ifc
     ENDIF
     !
@@ -695,7 +740,6 @@
     wqlist = DBLE(1) / DBLE(nqc)
     !
     IF (lifc) THEN
-      DEALLOCATE(ifc)
       DEALLOCATE(wscache)
     ENDIF
     DEALLOCATE(evc)
@@ -742,7 +786,7 @@
       ! (coarse mesh) from/to .epb files (one for each pool)
       !
       tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.epb' 
-      CALL set_ndnmbr(0, my_pool_id+1, 1, npool, filelab)
+      CALL set_ndnmbr(0, my_pool_id + 1, 1, npool, filelab)
       tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.epb' // filelab
       !
       IF (epbread) THEN
@@ -830,6 +874,17 @@
 #endif
   ENDIF        
   DEALLOCATE(xqc)
+  IF (lifc) THEN
+    DEALLOCATE(ifc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ifc', 1)    
+  ENDIF
+  ! 
+  IF (epwread) THEN
+    DEALLOCATE(tau, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating tau', 1)
+    DEALLOCATE(ityp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ityp', 1)
+  ENDIF ! epwread
   !
 5 FORMAT (8x,"q(",i5," ) = (",3f12.7," )") 
   !

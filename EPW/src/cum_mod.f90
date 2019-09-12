@@ -18,7 +18,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE spectral_cumulant 
+    SUBROUTINE spectral_cumulant()
     !-----------------------------------------------------------------------
     !!
     !!  Compute the electron spectral function including the electron-
@@ -66,6 +66,8 @@
     !! Total number of k-points 
     INTEGER :: i0
     !! Energy index of Fermi level (w=0)
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: dw
     !! Freq. increment
     REAL(KIND = DP) :: e_thresh
@@ -126,14 +128,22 @@
     WRITE(stdout, '(5x,a,i4,a,i4,a,i4,a,f12.6/)') "Check: nk = ", nk, &
            ", ibndmin = ", ibndmin, ", ibndmax = ", ibndmax, " kbT (eV) = ", eptemp * ryd2ev
     !
-    ALLOCATE(ww(nw_specfun))
-    ALLOCATE(ek(nk))
-    ALLOCATE(sigmar(nk, nw_specfun))
-    ALLOCATE(sigmai(nk, nw_specfun))
-    ALLOCATE(a_mig(nw_specfun, nk))
-    ALLOCATE(a_cw(nw_specfun))
-    ALLOCATE(a_ct(nw_specfun))
-    ALLOCATE(a_tmp(nw_specfun))
+    ALLOCATE(ww(nw_specfun), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating ww', 1)
+    ALLOCATE(ek(nk), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating ek', 1)
+    ALLOCATE(sigmar(nk, nw_specfun), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating sigmar', 1)
+    ALLOCATE(sigmai(nk, nw_specfun), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating sigmai', 1)
+    ALLOCATE(a_mig(nw_specfun, nk), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating a_mig', 1)
+    ALLOCATE(a_cw(nw_specfun), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating a_cw', 1)
+    ALLOCATE(a_ct(nw_specfun), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating a_ct', 1)
+    ALLOCATE(a_tmp(nw_specfun), STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error allocating a_tmp', 1)
     !
     ! read and store Kohn-Sham energy, energy grid, real and im sigma for designated band
     DO im = 1,6
@@ -228,14 +238,22 @@
     !
     CLOSE(iospectral_cum)
     !
-    DEALLOCATE(ww)
-    DEALLOCATE(ek)
-    DEALLOCATE(sigmar)
-    DEALLOCATE(sigmai)
-    DEALLOCATE(a_mig)
-    DEALLOCATE(a_cw)
-    DEALLOCATE(a_ct)
-    DEALLOCATE(a_tmp)
+    DEALLOCATE(ww, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating ww', 1)
+    DEALLOCATE(ek, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating ek', 1)
+    DEALLOCATE(sigmar, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating sigmar', 1)
+    DEALLOCATE(sigmai, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating sigmai', 1)
+    DEALLOCATE(a_mig, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating a_mig', 1)
+    DEALLOCATE(a_cw, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating a_cw', 1)
+    DEALLOCATE(a_ct, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating a_ct', 1)
+    DEALLOCATE(a_tmp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('spectral_cumulant', 'Error deallocating a_tmp', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE spectral_cumulant
@@ -418,7 +436,8 @@
     INTEGER :: nw_new
     !! number of points used for FFT 
     !! Zero padding is used for ImSigma outside the energy range computed.
-    ! 
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: fact
     !! factor used to increase the number of points for the FFT;
     !! fact=4 gives good convergence but it can be increased if needed.
@@ -453,8 +472,10 @@
     dt = two * pi / ((wmax_specfun - wmin_specfun) * fact)
     nw_new = INT(fact * (nw_specfun - 1) + 1) ! to be consistent with dt above
     !
-    ALLOCATE(cumS(nw_new))
-    ALLOCATE(cum(nw_new))
+    ALLOCATE(cumS(nw_new), STAT = ierr)
+    IF (ierr /= 0) CALL errore('cumulant_time', 'Error allocating cumS', 1)
+    ALLOCATE(cum(nw_new), STAT = ierr)
+    IF (ierr /= 0) CALL errore('cumulant_time', 'Error allocating cum', 1)
     !
     i0 = MINLOC(ABS(ww(:)), DIM = 1)
     !
@@ -483,7 +504,7 @@
       !
     ENDDO
     !
-    CALL cfft3d ( cumS(:), nw_new,1,1, nw_new,1,1, 1, -1 )
+    CALL cfft3d(cumS(:), nw_new, 1, 1, nw_new, 1, 1, 1, -1)
     !this is needed because cfft3d(...,-1) carries a renomalization factor 1/nw_new
     cumS = cumS * nw_new
     !
@@ -495,7 +516,7 @@
       !
     ENDDO
     !
-    CALL cfft3d(cum(:), nw_new, 1, 1, nw_new,1, 1, 1, 1)
+    CALL cfft3d(cum(:), nw_new, 1, 1, nw_new, 1, 1, 1, 1)
     cum = cum * dt / pi
     !
     ! extract the spectral function a_cum on the original w FFT grid (nw_specfun points)
@@ -508,8 +529,10 @@
       ENDIF
     ENDDO
     !
-    DEALLOCATE(cumS)
-    DEALLOCATE(cum)
+    DEALLOCATE(cumS, STAT = ierr)
+    IF (ierr /= 0) CALL errore('cumulant_time', 'Error deallocating cumS', 1)
+    DEALLOCATE(cum, STAT = ierr)
+    IF (ierr /= 0) CALL errore('cumulant_time', 'Error deallocating cum', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE cumulant_time

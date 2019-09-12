@@ -1917,9 +1917,9 @@
     !  Amn(k) = <psi_k,m|GF_n>.  
     !  We want U(k)^\dagger<psi_k,m|GF_m>
     !
-    ! CALL zgemm( 'c', 'n', nbnd, n_wannier, nbnd, cone, umat(:,:,ik), & 
+    ! CALL ZGEMM( 'c', 'n', nbnd, n_wannier, nbnd, cone, umat(:,:,ik), & 
     !      nbnd, a_mat(:,:,ik_g), nbnd, czero, a_mat_tmp(:,:,ik_g), nbnd )
-    CALL zgemm( 'c', 'n', nbnd, n_wannier, nbnd, cone, umat(:,:,ik), &
+    CALL ZGEMM( 'c', 'n', nbnd, n_wannier, nbnd, cone, umat(:,:,ik), &
          nbnd, a_mat_tmp1(:,:,ik_g), nbnd, czero, a_mat_tmp(:,:,ik_g), nbnd )
     !
     DO ib = 1,nnb
@@ -1930,11 +1930,11 @@
       ! = U(k)^\dagger (M_mn) = m_mat_tmp, 
       ! Mmn(k,k+b)' = m_mat_tmp*U(k+b) 
       !
-      ! CALL zgemm('c', 'n', nbnd, nbnd, nbnd, cone, umat(:,:,ik), & 
+      ! CALL ZGEMM('c', 'n', nbnd, nbnd, nbnd, cone, umat(:,:,ik), & 
       !      nbnd, m_mat(:,:,ib,ik_g), nbnd, czero, m_mn_tmp1(:, :), nbnd )
-      CALL zgemm( 'c', 'n', nbnd, nbnd, nbnd, cone, umat(:,:,ik), &
+      CALL ZGEMM( 'c', 'n', nbnd, nbnd, nbnd, cone, umat(:,:,ik), &
            nbnd, m_mat_tmp(:,:,ib,ik_g), nbnd, czero, m_mn_tmp1(:, :), nbnd )
-      CALL zgemm( 'n', 'n', nbnd, nbnd, nbnd, cone, m_mn_tmp1(:, :), & 
+      CALL ZGEMM( 'n', 'n', nbnd, nbnd, nbnd, cone, m_mn_tmp1(:, :), & 
            nbnd, umat_all(:,:,ikb), nbnd, czero, m_mn_tmp2(:, :), nbnd )
       ! 
       ! m_mn_tmp1 = MATMUL( CONJG( transpose (umat(:,:,ik) )), m_mat(:,:,ib,ik_g ) )
