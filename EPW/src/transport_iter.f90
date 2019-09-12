@@ -218,8 +218,8 @@
     !! Error in the Hall mobility
     REAL(KIND = DP) :: av_mob_old(nstemp)
     !! Average hole mobility from previous iteration
-    REAL(KIND = DP) :: av_mob(nstemp)
-    !! Average hole mobility
+    REAL(KIND = DP) :: max_mob(nstemp)
+    !! Maximum mobility use for error calculations
     REAL(KIND = DP) :: av_outdiag_old(nstemp)
     !! Average hall mobility from previous iteration, inner loop
     REAL(KIND = DP) :: av_outdiag(nstemp)
@@ -385,7 +385,7 @@
         ixkqf_tr(ind) = BZtoIBZ(nkq_abs)
       ENDDO
       ! 
-    ENDIF
+    ENDIF ! mp_mesh_k
     ! 
     ! Determines the special k-points are k-points that are sent to themselves via a non-identity  symmetry operation.
     CALL mp_bcast(s, ionode_id, world_comm)
@@ -393,7 +393,9 @@
     !
     F_SERTA(:, :, :, :) = zero
     ! 
-    IF (iverbosity == 4 ) WRITE(stdout, *) 'temp k-index  ibnd       k-point          eig[Ry]        F_SERTA   '
+    IF (iverbosity == 4) THEN
+      WRITE(stdout, *) 'temp k-index  ibnd       k-point          eig[Ry]        F_SERTA   '
+    ENDIF
     DO itemp = 1, nstemp
       etemp = transp_temp(itemp)
       DO ik = 1, nktotf
@@ -417,7 +419,7 @@
     ENDDO
     ! 
     ! We now do IBTE with and without k-point symmetries
-    av_mob(:) = zero 
+    max_mob(:) = zero 
     ! K-point symmetry. 
     IF (mp_mesh_k) THEN
       ! Averages points which leaves the k-point unchanged by symmetry in F and v. 
@@ -516,16 +518,16 @@
       !  
       IF (mp_mesh_k) THEN
         CALL k_avg(F_out, vkk_all, nb_sp, xkf_sp)
-        CALL print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, av_mob)
+        CALL print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
       ELSE
-        CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, av_mob)
+        CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob)
       ENDIF
       ! 
       ! Computes the error
       DO itemp = 1, nstemp
-        error(itemp) = ABS(av_mob(itemp) - av_mob_old(itemp))
+        error(itemp) = ABS(max_mob(itemp) - av_mob_old(itemp))
       ENDDO
-      av_mob_old = av_mob
+      av_mob_old = max_mob
       WRITE(stdout, '(a)')
       WRITE(stdout, '(50x, 1E16.6, a)') MAXVAL(error), '       Err'
       !

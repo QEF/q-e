@@ -348,12 +348,15 @@
     !! Sum rule on population
     REAL(KIND = DP) :: sfac
     !! Spin factor
+    REAL(KIND = DP) :: max_mob(nstemp)
+    !! Maximum mobility
     ! 
     IF (noncolin) THEN
       sfac = 1.0
     ELSE
       sfac = 2.0
     ENDIF
+    max_mob(:) = zero
     Fi_check(:, :) = zero
     ! 
     ! Hole
@@ -361,8 +364,8 @@
       sigma(:, :, :) = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -385,9 +388,8 @@
                   sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                   sr       = TRANSPOSE(sr) 
                   !
-                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1 )
-                  ! 
-                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1 )
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1)
                   !
                   DO j = 1, 3
                     DO i = 1, 3
@@ -424,7 +426,7 @@
         ENDDO
         ! 
         ! Print the resulting mobility
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
         ! 
       ENDDO
       ! 
@@ -436,8 +438,8 @@
       sigma(:, :, :)    = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -495,7 +497,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
         !
       ENDDO
       ! 
@@ -551,7 +553,6 @@
     !! Combined x,y,z index
     INTEGER :: i, j
     !! Cartesian index
-    ! 
     REAL(KIND = DP) :: etemp
     !! Temperature in Ry (this includes division by kb)
     REAL(KIND = DP) :: sigma(3, 3, nstemp)
@@ -584,8 +585,11 @@
     !! The derivative of wgauss:  an approximation to the delta function 
     REAL(KIND = DP) :: sfac
     !! Spin factor
+    REAL(KIND = DP) :: max_mob(nstemp)
+    !! Maximum mobility 
     !
     Fi_check(:, :) = zero
+    max_mob(:) = zero
     IF (noncolin) THEN
       sfac = 1.0
     ELSE
@@ -597,8 +601,8 @@
       sigma(:, :, :) = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                    Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                      [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -632,7 +636,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
         !  
       ENDDO
       ! 
@@ -644,8 +648,8 @@
       sigma(:, :, :) = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                    Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                      [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -681,7 +685,7 @@
           ENDDO
         ENDDO
         !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
         ! 
       ENDDO
       ! 
@@ -693,7 +697,7 @@
     !-----------------------------------------------------------------------
     !  
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+    SUBROUTINE print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob) 
     !-----------------------------------------------------------------------
     !!
     !!  This routine prints the iterative mobility using k-point symmetry ( electron or hole )
@@ -732,7 +736,7 @@
     !! Weight of k
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
-    REAL(KIND = DP), INTENT(inout) :: av_mob(nstemp)
+    REAL(KIND = DP), INTENT(inout) :: max_mob(nstemp)
     !! Maximum error for all temperature
 
     ! Local variables
@@ -809,8 +813,8 @@
       sigma(:, :, :) = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -870,7 +874,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
         ! 
       ENDDO
       ! 
@@ -881,8 +885,8 @@
       sigma(:, :, :) = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -942,7 +946,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
         ! 
       ENDDO
       ! 
@@ -955,7 +959,7 @@
     !-----------------------------------------------------------------------
     !  
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+    SUBROUTINE print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob) 
     !-----------------------------------------------------------------------
     !!
     !!  This routine prints the iterative mobility without k-point symmetry ( electron or hole )
@@ -985,7 +989,7 @@
     !! Weight of k
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
-    REAL(KIND = DP), INTENT(inout) :: av_mob(nstemp)
+    REAL(KIND = DP), INTENT(inout) :: max_mob(nstemp)
     !! Maximum error for all temperature
 
     ! Local variables
@@ -1046,8 +1050,8 @@
       sigma(:, :, :)    = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -1083,7 +1087,7 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp)
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
         ! 
       ENDDO
       ! 
@@ -1094,8 +1098,8 @@
       sigma(:, :, :)    = zero
       ! 
       WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                  [cm^2/Vs]")')
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',71)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
@@ -1131,7 +1135,7 @@
           ENDDO
         ENDDO
         !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
         ! 
       ENDDO
       ! 
@@ -1144,7 +1148,7 @@
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, etemp) 
+    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, etemp, max_mob) 
     !-----------------------------------------------------------------------
     !! 
     !! This routine print the mobility in a nice format and in proper units.
@@ -1167,6 +1171,8 @@
     !! Fermi-level 
     REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in Ry (this includes division by kb)
+    REAL(KIND = DP), INTENT(inout) :: max_mob
+    !! Maximum error for all temperature
     ! 
     ! Local variables
     REAL(KIND = DP) :: mobility(3, 3)
@@ -1181,12 +1187,14 @@
     nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
     IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
     ! 
-    mobility(:, :) = (sigma(:, :) * electron_SI * (bohr2ang * ang2cm)**2) / (nden * hbarJ)
+    mobility(:, :) = (sigma(:, :) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
     ! 
     WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
            nden, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
     WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+    ! 
+    max_mob = MAXVAL(mobility(:,:))
     ! 
     !-----------------------------------------------------------------------
     END SUBROUTINE prtmob

@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE elphon_shuffle_wrap
+  SUBROUTINE elphon_shuffle_wrap()
   !-----------------------------------------------------------------------
   !!
   !! Electron-phonon calculation with Wannier functions: load all phonon q's
@@ -159,12 +159,6 @@
   !! Error index when reading/writing a file
   INTEGER :: iunpun
   !! Unit of the file
-  REAL(KIND = DP), ALLOCATABLE :: xqc_irr(:, :)
-  !! The qpoints in the irr wedge
-  REAL(KIND = DP), ALLOCATABLE :: xqc(:, :)
-  !! The qpoints in the uniform mesh
-  REAL(KIND = DP), ALLOCATABLE :: wqlist(:)
-  !! The corresponding weigths
   REAL(KIND = DP) :: sxq(3, 48)
   !! List of vectors in the star of q  
   REAL(KIND = DP) :: et_tmp(nbnd, nkstot)
@@ -189,6 +183,12 @@
   !! Absolute value of xqc_irr
   REAL(KIND = DP) :: sumr(2, 3, nat, 3)
   !! Sum to impose the ASR
+  REAL(KIND = DP), ALLOCATABLE :: xqc_irr(:, :)
+  !! The qpoints in the irr wedge
+  REAL(KIND = DP), ALLOCATABLE :: xqc(:, :)
+  !! The qpoints in the uniform mesh
+  REAL(KIND = DP), ALLOCATABLE :: wqlist(:)
+  !! The corresponding weigths
   COMPLEX(KIND = DP) :: eigv(ngm, 48)
   !! $e^{ iGv}$ for 1...nsym (v the fractional translation)
   COMPLEX(KIND = DP) :: cz1(nmodes, nmodes)
@@ -202,9 +202,12 @@
   !
   IF (meta_ionode) READ(5, *) nqc_irr
   CALL mp_bcast(nqc_irr, meta_ionode_id, world_comm)
-  ALLOCATE(xqc_irr(3, nqc_irr))
-  ALLOCATE(xqc(3, nqc1 * nqc2 * nqc3))
-  ALLOCATE(wqlist(nqc1 * nqc2 * nqc3))
+  ALLOCATE(xqc_irr(3, nqc_irr), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating xqc_irr', 1)
+  ALLOCATE(xqc(3, nqc1 * nqc2 * nqc3), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating xqc', 1)
+  ALLOCATE(wqlist(nqc1 * nqc2 * nqc3), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating wqlist', 1)
   xqc_irr(:, :) = zero
   xqc(:, :)     = zero
   wqlist(:)     = zero
@@ -228,8 +231,11 @@
   ENDDO
   !
   IF (maxvalue > nqxq) THEN
-    IF (ALLOCATED(qrad)) DEALLOCATE(qrad)
-    ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp))
+    !IF (ALLOCATED(qrad)) DEALLOCATE(qrad)
+    IF (epwread) THEN
+      ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad(maxvalue, nbetam * ', 1)
+    ENDIF
     qrad(:, :, :, :) = zero
     ! RM - need to call init_us_1 to re-calculate qrad 
     CALL init_us_1()
@@ -244,7 +250,8 @@
   !
   ! Read in external electronic eigenvalues. e.g. GW 
   !
-  ALLOCATE(et_ks(nbnd, nks))
+  ALLOCATE(et_ks(nbnd, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating et_ks', 1)
   et_ks(:, :) = zero
   IF (eig_read) THEN
     IF (meta_ionode) THEN
@@ -314,11 +321,11 @@
       READ(crystal,*) omega
       READ(crystal,*) alat
       ALLOCATE(tau(3, nat), STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap.f90', 'Error allocating tau', 1)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating tau', 1)
       READ(crystal,*) tau
       READ(crystal,*) amass
       ALLOCATE(ityp(nat), STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap.f90', 'Error allocating ityp', 1)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ityp', 1)
       READ(crystal,*) ityp
       READ(crystal,*) noncolin
       READ(crystal,*) w_centers
@@ -345,7 +352,7 @@
   ! 
   IF (lifc) THEN
     ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
-    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap.f90', 'Error allocating ifc', 1)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ifc', 1)
     ifc(:, :, :, :, :, :, :) = zero
   ENDIF
   !
@@ -356,16 +363,26 @@
     !
     !  allocate dynamical matrix and ep matrix for all q's
     !
-    ALLOCATE(dynq(nmodes, nmodes, nqc1 * nqc2 * nqc3))
-    ALLOCATE(epmatq(nbnd, nbnd, nks, nmodes, nqc1 * nqc2 * nqc3))
-    ALLOCATE(epsi(3, 3))
-    ALLOCATE(zstar(3, 3, nat))
-    ALLOCATE(bmat(nbnd, nbnd, nks, nqc1 * nqc2 * nqc3))
-    ALLOCATE(cu(nbnd, nbndsub, nks))
-    ALLOCATE(cuq(nbnd, nbndsub, nks)) 
-    ALLOCATE(lwin(nbnd, nks))
-    ALLOCATE(lwinq(nbnd, nks))
-    ALLOCATE(exband(nbnd))
+    ALLOCATE(dynq(nmodes, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating dynq', 1)
+    ALLOCATE(epmatq(nbnd, nbnd, nks, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating epmatq', 1)
+    ALLOCATE(epsi(3, 3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating epsi', 1)
+    ALLOCATE(zstar(3, 3, nat), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating zstar', 1)
+    ALLOCATE(bmat(nbnd, nbnd, nks, nqc1 * nqc2 * nqc3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating bmat', 1)
+    ALLOCATE(cu(nbnd, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating cu', 1)
+    ALLOCATE(cuq(nbnd, nbndsub, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating cuq', 1)
+    ALLOCATE(lwin(nbnd, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating lwin', 1)
+    ALLOCATE(lwinq(nbnd, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating lwinq', 1)
+    ALLOCATE(exband(nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating exband', 1)
     dynq(:, :, :)         = czero
     epmatq(:, :, :, :, :) = czero
     epsi(:, :)            = zero
@@ -411,11 +428,15 @@
   !
   IF (.NOT. epbread .AND. .NOT. epwread) THEN
     ! 
-    ALLOCATE(evq(npwx * npol, nbnd))
-    ALLOCATE(xkq(3, nkstot)) ! Used in createkmap 
-    ALLOCATE(shift(nkstot)) ! Used in createkmap
+    ALLOCATE(evq(npwx * npol, nbnd), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating evq', 1)
+    ALLOCATE(xkq(3, nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating xkq', 1)
+    ALLOCATE(shift(nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating shift', 1)
     IF (lifc) THEN
-      ALLOCATE(wscache(-2 * nqc3:2 * nqc3, -2 * nqc2:2 * nqc2, -2 * nqc1:2 * nqc1, nat, nat))
+      ALLOCATE(wscache(-2 * nqc3:2 * nqc3, -2 * nqc2:2 * nqc2, -2 * nqc1:2 * nqc1, nat, nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating wscache', 1)
       wscache(:, :, :, :, :) = zero      
     ENDIF
     evq(:,:)   = zero
@@ -740,29 +761,48 @@
     wqlist = DBLE(1) / DBLE(nqc)
     !
     IF (lifc) THEN
-      DEALLOCATE(wscache)
+      DEALLOCATE(wscache, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating wscache', 1)
     ENDIF
-    DEALLOCATE(evc)
-    DEALLOCATE(evq)
-    DEALLOCATE(xkq)
-    DEALLOCATE(shift) 
-    DEALLOCATE(vlocq)
-    DEALLOCATE(dmuxc)
-    DEALLOCATE(eigqts)
-    DEALLOCATE(rtau)
-    DEALLOCATE(u)
-    DEALLOCATE(npert)
+    DEALLOCATE(evc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating evc', 1)
+    DEALLOCATE(evq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating evq', 1)
+    DEALLOCATE(xkq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xkq', 1)
+    DEALLOCATE(shift, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating shift', 1)
+    DEALLOCATE(vlocq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating vlocq', 1)
+    DEALLOCATE(dmuxc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating dmuxc', 1)
+    DEALLOCATE(eigqts, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating eigqts', 1)
+    DEALLOCATE(rtau, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating rtau', 1)
+    DEALLOCATE(u, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating u', 1)
+    DEALLOCATE(npert, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating npert', 1)
     IF (okvan) THEN
-      DEALLOCATE(int1)
-      DEALLOCATE(int2)
-      DEALLOCATE(int4)
-      DEALLOCATE(int5)
+      DEALLOCATE(int1, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int1', 1)
+      DEALLOCATE(int2, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int2', 1)
+      DEALLOCATE(int4, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int4', 1)
+      DEALLOCATE(int5, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int5', 1)
       IF (noncolin) THEN 
-        DEALLOCATE(int1_nc)
-        DEALLOCATE(int4_nc)
+        DEALLOCATE(int1_nc, STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int1_nc', 1)
+        DEALLOCATE(int4_nc, STAT = ierr)
+        IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int4_nc', 1)
         IF (lspinorb) THEN
-          DEALLOCATE(int2_so)
-          DEALLOCATE(int5_so)
+          DEALLOCATE(int2_so, STAT = ierr)
+          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int2_so', 1)
+          DEALLOCATE(int5_so, STAT = ierr)
+          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating int5_so', 1)
         ENDIF
       ENDIF
     ENDIF
@@ -771,11 +811,13 @@
         CALL deallocate_bec_type(alphap(ipol, ik))
       ENDDO
     ENDDO
-    DEALLOCATE(alphap)
+    DEALLOCATE(alphap, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating alphap', 1)
     DO ik = 1, SIZE(becp1)
       CALL deallocate_bec_type(becp1(ik))
     ENDDO
-    DEALLOCATE(becp1)
+    DEALLOCATE(becp1, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating becp1', 1)
     CALL deallocate_bec_type(becp)
   ENDIF ! IF (.NOT. epbread .AND. .NOT. epwread) THEN
   !
@@ -814,7 +856,7 @@
     WRITE(stdout, '(/5x,"Image parallelization. The code will stop now. "/)')
     WRITE(stdout, '(/5x,"You need to restart a calculation by reading the .epb "/)')
     WRITE(stdout, '(/5x,"                       with pool parallelization only. "/)')
-    CALL stop_epw
+    CALL stop_epw()
   ENDIF
   !
   IF (.NOT. epbread .AND. epwread) THEN
@@ -830,25 +872,35 @@
   !
   ! free up some memory
   !
-  DEALLOCATE(umat_all)
-  DEALLOCATE(umat)
-  DEALLOCATE(xqc_irr)
-  DEALLOCATE(wqlist)
+  NULLIFY(igkq)
+  DEALLOCATE(umat_all, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating umat_all', 1)
+  DEALLOCATE(umat, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating umat', 1)
+  DEALLOCATE(xqc_irr, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc_irr', 1)
+  DEALLOCATE(wqlist, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating wqlist', 1)
   ! 
   IF (maxvalue > nqxq) THEN
-    DEALLOCATE(qrad)
+    DEALLOCATE(qrad, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
   ENDIF
-  !
-  ! FIXME 
-  IF (ASSOCIATED(igkq))      NULLIFY(igkq)
-  IF (ALLOCATED(cu))        DEALLOCATE(cu)
-  IF (ALLOCATED(cuq))       DEALLOCATE(cuq)
-  IF (ALLOCATED(lwin))      DEALLOCATE(lwin)
-  IF (ALLOCATED(lwinq))     DEALLOCATE(lwinq)
-  IF (ALLOCATED(bmat))      DEALLOCATE(bmat)
-  IF (ALLOCATED(igk_k_all)) DEALLOCATE(igk_k_all)
-  IF (ALLOCATED(ngk_all))   DEALLOCATE(ngk_all)
-  IF (ALLOCATED(exband))    DEALLOCATE(exband)
+  ! 
+  IF (.NOT. epwread .AND. epbread) THEN
+    DEALLOCATE(cu, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating cu', 1)
+    DEALLOCATE(cuq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating cuq', 1)
+    DEALLOCATE(lwin, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating lwin', 1)
+    DEALLOCATE(lwinq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating lwinq', 1)
+    DEALLOCATE(exband, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating exband', 1)
+    DEALLOCATE(bmat, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating bmat', 1)
+  ENDIF
   ! 
   CALL stop_clock('elphon_wrap')
   !DBSP
@@ -873,7 +925,8 @@
     CALL ephwann_shuffle(nqc, xqc)
 #endif
   ENDIF        
-  DEALLOCATE(xqc)
+  DEALLOCATE(xqc, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc', 1)
   IF (lifc) THEN
     DEALLOCATE(ifc, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ifc', 1)    
