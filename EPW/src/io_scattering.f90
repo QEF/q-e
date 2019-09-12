@@ -1486,6 +1486,98 @@
     END SUBROUTINE merge_read
     !----------------------------------------------------------------------------
     ! 
+    !-----------------------------------------------------------------
+    SUBROUTINE rwepmatw(epmatw, nbnd, np, nmodes, nrec, iun, iop)
+    !-----------------------------------------------------------------
+    !!
+    !! A simple wrapper to the davcio routine to read/write arrays
+    !! instead of vectors 
+    !!
+    !-----------------------------------------------------------------
+    USE kinds, ONLY : DP
+    USE mp,    ONLY : mp_barrier
+    ! 
+    IMPLICIT NONE
+    ! 
+    INTEGER, INTENT(in) :: nbnd
+    !! Total number of bands
+    INTEGER, INTENT(in) :: np
+    !! np is either nrr_k or nq (epmatwe and epmatwp have the same structure)
+    INTEGER, INTENT(in) :: nmodes
+    !! Number of modes
+    INTEGER, INTENT(in) :: nrec
+    !! Place where to start reading/writing
+    INTEGER, INTENT(in) :: iun
+    !! Record number
+    INTEGER, INTENT(in) :: iop
+    !! If -1, read and if +1 write the matrix
+    COMPLEX(KIND = DP), INTENT(inout) :: epmatw(nbnd, nbnd, np, nmodes)
+    !! El-ph matrix to read or write
+    !
+    ! Local variables
+    INTEGER :: lrec
+    !! Record length
+    INTEGER :: i
+    !! Index number 
+    INTEGER :: ibnd
+    !! Band index
+    INTEGER :: jbnd
+    !! Band index
+    INTEGER :: imode
+    !! Mode index
+    INTEGER :: ip
+    !! REal space index (either nrr_k or nq)
+    COMPLEX(KIND = DP):: aux(nbnd * nbnd * np * nmodes)
+    !! 1-D vector to store the matrix elements. 
+    !
+    lrec = 2 * nbnd * nbnd * np * nmodes
+    !
+    IF (iop == -1) then
+      !
+      !  read matrix
+      !
+      CALL davcio(aux, lrec, iun, nrec, -1)
+      !
+      i = 0
+      DO imode = 1, nmodes
+       DO ip = 1, np
+        DO jbnd = 1, nbnd
+         DO ibnd = 1, nbnd
+           i = i + 1
+           epmatw(ibnd, jbnd, ip, imode) = aux(i)
+           ! 
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+      !
+    ELSEIF (iop == 1) THEN 
+      !
+      !  write matrix
+      !
+      i = 0
+      DO imode = 1, nmodes
+       DO ip = 1, np
+        DO jbnd = 1, nbnd
+         DO ibnd = 1, nbnd
+           i = i + 1
+           aux(i) = epmatw(ibnd, jbnd, ip, imode)
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+      !
+      CALL davcio(aux, lrec, iun, nrec, +1)
+      !
+    ELSE
+      !
+      CALL errore('rwepmatw','iop not permitted', 1)
+      !
+    ENDIF
+    !
+    !----------------------------------------------------------------------
+    END SUBROUTINE rwepmatw
+    !----------------------------------------------------------------------
   !------------------------------------------------------------------------------
   END MODULE io_scattering
   !------------------------------------------------------------------------------

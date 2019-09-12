@@ -887,7 +887,7 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1)
   ENDIF
   ! 
-  IF (.NOT. epwread .AND. epbread) THEN
+  IF (.NOT. (epwread .AND. .NOT. epbread)) THEN
     DEALLOCATE(cu, STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating cu', 1)
     DEALLOCATE(cuq, STAT = ierr)

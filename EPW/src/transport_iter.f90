@@ -450,17 +450,17 @@
     error(:) = 1000
     ! Now compute the Iterative solution for electron or hole
     WRITE(stdout, '(5x,a)') ' '
-    WRITE(stdout, '(5x,a)') REPEAT('=',67)
+    WRITE(stdout, '(5x,a)') REPEAT('=',93)
     WRITE(stdout, '(5x,"Start solving iterative Boltzmann Transport Equation")')
-    WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+    WRITE(stdout, '(5x,a/)') REPEAT('=',93)
     !  
     DO WHILE(MAXVAL(error) > eps6)
       WRITE(stdout, '(/5x,"Iteration number:", i10," "/)') iter
       ! 
       IF (iter > mob_maxiter) THEN
-        WRITE(stdout, '(5x,a)') REPEAT('=',67)
+        WRITE(stdout, '(5x,a)') REPEAT('=',93)
         WRITE(stdout, '(5x,"The iteration reached the maximum but did not converge.")')
-        WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+        WRITE(stdout, '(5x,a/)') REPEAT('=',93)
         EXIT
       ENDIF
       ! 
@@ -529,7 +529,7 @@
       ENDDO
       av_mob_old = max_mob
       WRITE(stdout, '(a)')
-      WRITE(stdout, '(50x, 1E16.6, a)') MAXVAL(error), '       Err'
+      WRITE(stdout, '(50x, 1E16.6, a)') MAXVAL(error), '    Max error'
       !
       ! Save F_in
       ! Linear mixing

@@ -363,10 +363,7 @@
     IF (ncarrier < -1E5) THEN
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      CALL prtheader(-1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -437,10 +434,7 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :)    = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      CALL prtheader(1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -600,10 +594,7 @@
     IF (ncarrier < -1E5) THEN
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                    Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                      [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      CALL prtheader(-1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -647,10 +638,7 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                    Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                      [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      CALL prtheader(+1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -812,10 +800,7 @@
     IF (ncarrier < -1E5) THEN ! If true print hole
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      CALL prtheader(-1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -884,10 +869,7 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :) = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      CALL prtheader(+1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -1049,10 +1031,8 @@
     IF (ncarrier < -1E5) THEN ! If true print hole
       sigma(:, :, :)    = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      ! Print header where -1 means hole
+      CALL prtheader(-1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -1097,10 +1077,7 @@
       ! Needed because of residual values from the hole above
       sigma(:, :, :)    = zero
       ! 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',71)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',71)
+      CALL prtheader(+1)
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)
         DO ik = 1,  nktotf
@@ -1198,6 +1175,33 @@
     ! 
     !-----------------------------------------------------------------------
     END SUBROUTINE prtmob
+    !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    SUBROUTINE prtheader(cal_type)
+    !-----------------------------------------------------------------------
+    !! 
+    !! This routine print a header for mobility calculation
+    !! 
+    USE io_global,     ONLY : stdout
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: cal_type
+    !! +1 means electron and -1 means hole. 
+    IF (cal_type == -1) THEN 
+      WRITE(stdout, '(/5x, a)') REPEAT('=',93)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',93)
+    ENDIF
+    IF (cal_type == 1) THEN
+      WRITE(stdout, '(/5x, a)') REPEAT('=',93)
+      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',93)
+    ENDIF
+    !-----------------------------------------------------------------------
+    END SUBROUTINE prtheader
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------

@@ -689,9 +689,9 @@
     END SUBROUTINE fractrasl
     !------------------------------------------------------------
     !
-    !------------------------------------------------------------
+    !-----------------------------------------------------------------------
     SUBROUTINE rotate_cart(x, s, sx)
-    !------------------------------------------------------------
+    !-----------------------------------------------------------------------
     !!
     !! A simple symmetry operation in cartesian coordinates 
     !! ( s is INTEGER and in crystal coord!)
@@ -721,10 +721,319 @@
     ENDDO
     CALL cryst_to_cart(1, sx, bg, +1)
     !
-    !------------------------------------------------------------
+    !-----------------------------------------------------------------------
     END SUBROUTINE rotate_cart
-    !------------------------------------------------------------
-
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    FUNCTION fermicarrier(temp)
+    !-----------------------------------------------------------------------
+    !!
+    !!  This routine computes the Fermi energy associated with a given 
+    !!  carrier concentration using bissection
+    !!
+    !-----------------------------------------------------------------------
+    USE cell_base, ONLY : omega, alat, at
+    USE kinds,     ONLY : DP
+    USE io_global, ONLY : stdout
+    USE elph2,     ONLY : etf, nkf, wkf
+    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5
+    USE noncollin_module, ONLY : noncolin
+    USE pwcom,     ONLY : nelec
+    USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, &
+                          system_2d, carrier
+    USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
+    USE mp_global, ONLY : inter_pool_comm
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: temp
+    !! Temperature in kBT [Ry] unit.
+    ! 
+    ! Local variables 
+    INTEGER :: i
+    !! Index for the bisection iteration
+    INTEGER :: ik
+    !! k-point index per pool
+    INTEGER :: ikk
+    !! Odd index to read etf
+    INTEGER :: ibnd
+    !! Local band index
+    INTEGER :: ivbm
+    !! Index of the VBM
+    INTEGER :: icbm
+    !! Index of the CBM
+    INTEGER, PARAMETER :: maxiter = 500 ! 300
+    !! Maximum interation
+    REAL(KIND = DP) :: fermicarrier
+    !! Fermi level returned
+    REAL(KIND = DP) :: fnk
+    !! Fermi-Diract occupation
+    REAL(KIND = DP) :: ks_exp(nbndsub, nkf)
+    !! Exponential of the eigenvalues divided by kBT
+    REAL(KIND = DP) :: ks_expcb(nbndsub, nkf)
+    !! Exponential of the eigenvalues divided by kBT for CB
+    REAL(KIND = DP) :: fermi_exp
+    !! Fermi level in exponential format
+    REAL(KIND = DP) :: rel_err
+    !! Relative error
+    REAL(KIND = DP) :: factor
+    !! Factor that goes from number of carrier per unit cell to number of
+    !! carrier per cm^-3
+    REAL(KIND = DP) :: arg
+    !! Argument of the exponential
+    REAL(KIND = DP) :: inv_cell
+    !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND = DP) :: evbm
+    !! Energy of the VBM
+    REAL(KIND = DP) :: ecbm
+    !! Energy of the CBM
+    REAL(KIND = DP) :: Ef
+    !! Energy of the current Fermi level for the bisection method
+    REAL(KIND = DP) :: Elw
+    !! Energy lower bound for the bisection method
+    REAL(KIND = DP) :: Eup
+    !! Energy upper bound for the bisection method
+    REAL(KIND = DP) :: hole_density
+    !! Hole carrier density
+    REAL(KIND = DP) :: electron_density 
+    !! Electron carrier density
+    REAL(KIND = DP), PARAMETER :: maxarg = 200.d0
+    !! Maximum value for the argument of the exponential
+    ! 
+    Ef = 0.0d0
+    ! 
+    inv_cell = 1.0d0 / omega
+    ! for 2d system need to divide by area (vacuum in z-direction)
+    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
+    ! vbm index
+    IF (noncolin) THEN
+      ivbm = FLOOR(nelec / 1.0d0)
+    ELSE
+      ivbm = FLOOR(nelec / 2.0d0)
+    ENDIF  
+    icbm = ivbm + 1 ! Nb of bands
+    !
+    ! Initialization value. Should be large enough ...
+    evbm = -10000
+    ecbm = 10000 ! In Ry
+    ! 
+    DO ik = 1, nkf
+      ikk = 2 * ik - 1
+      DO ibnd = 1, nbndsub
+        IF (ibnd < ivbm + 1) THEN
+          IF (etf(ibnd, ikk) > evbm) THEN
+            evbm = etf (ibnd, ikk)
+          ENDIF
+        ENDIF
+        ! Find cbm index 
+        IF (ibnd > ivbm) THEN
+          IF (etf(ibnd, ikk) < ecbm) THEN
+            ecbm = etf (ibnd, ikk)
+          ENDIF
+        ENDIF
+        ! 
+      ENDDO
+    ENDDO
+    !
+    ! Find max and min across pools
+    !         
+    CALL mp_max(evbm, inter_pool_comm)
+    CALL mp_min(ecbm, inter_pool_comm)
+    !    
+    WRITE(stdout, '(5x,"Valence band maximum    = ",f10.6," eV")') evbm * ryd2ev
+    WRITE(stdout, '(5x,"Conduction band minimum = ",f10.6," eV")') ecbm * ryd2ev
+    ! 
+    ! Store e^(e_nk/kbT) on each core
+    DO ik = 1, nkf
+      DO ibnd = 1, nbndsub
+        ikk = 2 * ik - 1
+        ! Because the number are so large. It does lead to instabilities
+        ! Therefore we rescale everything to the VBM
+        arg = (etf(ibnd, ikk) - evbm) / temp 
+        !
+        IF (arg < - maxarg) THEN
+          ks_exp(ibnd, ik) = 0.0d0
+        ELSE
+          ks_exp(ibnd, ik) = EXP(arg)
+        ENDIF
+      ENDDO
+    ENDDO
+    !
+    ! Store e^(e_nk/kbT) on each core for the electrons (CBM only)
+    DO ik = 1, nkf
+      DO ibnd = 1, nbndsub
+        ikk = 2 * ik - 1
+        ! Because the number are so large. It does lead to instabilities
+        ! Therefore we rescale everything to the CBM
+        arg = (etf(ibnd, ikk) - ecbm) / temp
+        !
+        IF (arg > maxarg) THEN
+          ks_expcb(ibnd, ik) = 1.0d200
+        ELSE
+          ks_expcb(ibnd, ik) = EXP(arg)
+        ENDIF
+      ENDDO
+    ENDDO
+    !
+    ! Starting bounds energy for the biscection method. The energies are rescaled
+    ! to the VBM
+    Elw = 1.0d0  ! This is e^0 = 1.0 
+    Eup = 1d-160 ! This is e^(-large) = 0.0 (small)
+    !
+    ! Intrinsic mobilities (electron and hole concentration are the same)   
+    IF (int_mob .AND. .NOT. carrier) THEN
+      ! Use bisection method
+      DO i = 1, maxiter
+        !
+        !WRITE(stdout,*),'Iteration ',i
+        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
+        Ef = SQRT(Eup) * SQRT(Elw)     
+        ! 
+        !WRITE(stdout,*),'Ef ', - log (Ef) * temp * ryd2ev
+        hole_density = 0.0
+        electron_density = 0.0
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          ! Compute hole carrier concentration
+          DO ibnd = 1, ivbm 
+            ! Discard very large numbers
+            IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
+              fnk = 0.0d0
+            ELSE
+              fnk = 1.0d0 / ( ks_exp(ibnd, ik) * Ef  + 1.0d0)  
+            ENDIF
+            ! The wkf(ikk) already include a factor 2
+            hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk)
+          ENDDO
+          ! Compute electron carrier concentration
+          DO ibnd = icbm, nbndsub            
+            ! Discard very large numbers
+            IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
+              fnk = 0.0d0
+            ELSE
+              fnk = 1.0d0 / ( ks_exp(ibnd, ik) * Ef  + 1.0d0)
+            ENDIF
+            ! The wkf(ikk) already include a factor 2
+            electron_density = electron_density + wkf(ikk) * fnk
+          ENDDO    
+          ! 
+        ENDDO 
+        !
+        CALL mp_sum(hole_density, inter_pool_comm)
+        CALL mp_sum(electron_density, inter_pool_comm)
+        ! 
+        ! WRITE(stdout,*),'hole_density ',hole_density * (1.0d0/omega) * ( bohr2ang * ang2cm  )**(-3)
+        ! WRITE(stdout,*),'electron_density ',electron_density * (1.0d0/omega) * (bohr2ang * ang2cm  )**(-3)
+        rel_err = (hole_density - electron_density) / hole_density
+        !
+        IF (ABS(rel_err) < eps5) THEN
+          fermi_exp = Ef
+          fermicarrier = evbm - (LOG(fermi_exp) * temp)
+          return
+        ELSEIF ((rel_err) > eps5) THEN
+          Elw = Ef                           
+        ELSE                                   
+          Eup = Ef 
+        ENDIF
+      ENDDO ! iteration
+    ENDIF 
+    ! 
+    Eup = 1.0d0 ! e^(0) =1
+    Elw = 1.0d80 ! e^large yields fnk = 1
+    ! 
+    factor = inv_cell * (bohr2ang * ang2cm)**(-3)
+    ! Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
+    IF (ncarrier > 1E5) THEN
+      ! Use bisection method
+      DO i = 1, maxiter
+        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
+        Ef = SQRT(Eup) * SQRT(Elw)
+        ! 
+        electron_density = 0.0
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          ! Compute electron carrier concentration
+          DO ibnd = icbm, nbndsub
+            ! Discard very large numbers
+            IF (ks_expcb(ibnd, ik) * Ef > 1d60) THEN
+              fnk = 0.0d0
+            ELSE
+              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * Ef  + 1.0d0)
+            ENDIF
+            ! The wkf(ikk) already include a factor 2
+            electron_density = electron_density + wkf(ikk) * fnk * factor
+          ENDDO
+          ! 
+        ENDDO
+        !
+        CALL mp_sum(electron_density, inter_pool_comm)
+        ! 
+        rel_err = (electron_density - ncarrier) / electron_density
+        !
+        IF (ABS(rel_err) < eps5) THEN
+          fermi_exp = Ef
+          fermicarrier = ecbm - (LOG(fermi_exp) * temp)
+          RETURN
+        ELSEIF ((rel_err) > eps5) THEN
+          Eup = Ef
+        ELSE
+          Elw = Ef
+        ENDIF
+      ENDDO ! iteration
+    ENDIF
+    ! 
+    ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
+    Eup = 1d-160 ! e^(-large) = 0.0 (small)
+    Elw = 1.0d0 ! e^0 = 1
+    !    
+    IF (ncarrier < -1E5) THEN
+      ! Use bisection method
+      DO i = 1, maxiter
+        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
+        Ef = SQRT(Eup) * SQRT(Elw)
+        ! 
+        hole_density = 0.0
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          ! Compute hole carrier concentration
+          DO ibnd = 1, ivbm
+            ! Discard very large numbers
+            IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
+              fnk = 0.0d0
+            ELSE
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * Ef  + 1.0d0)
+            ENDIF
+            ! The wkf(ikk) already include a factor 2
+            hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
+          ENDDO
+          ! 
+        ENDDO
+        !
+        CALL mp_sum(hole_density, inter_pool_comm)
+        !
+        ! In this case ncarrier is a negative number
+        rel_err = (hole_density - ABS(ncarrier)) / hole_density
+        !
+        IF (ABS(rel_err) < eps5) THEN
+          fermi_exp = Ef
+          fermicarrier = evbm - (LOG(fermi_exp) * temp)
+          RETURN
+        ELSEIF ((rel_err) > eps5) THEN
+          Elw = Ef
+        ELSE
+          Eup = Ef
+        ENDIF
+      ENDDO ! iteration
+    ENDIF
+    ! 
+    WRITE(stdout, '(5x,"Warning: too many iterations in bisection"/ &
+         &      5x,"Ef = ",f10.6)' ) fermicarrier * ryd2ev
+    !
+    RETURN   
+    !-----------------------------------------------------------------------
+    END FUNCTION fermicarrier
+    !--------------------------------------------------------------------------
   !------------------------------------------------------------------------
   END MODULE low_lvl
   !------------------------------------------------------------------------

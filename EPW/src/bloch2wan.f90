@@ -633,8 +633,11 @@
     !
     IMPLICIT NONE
     !
-    !  input variables
-    !
+    ! Input variables
+    LOGICAL, INTENT(in) :: lwin(nbnd,nks)
+    !! Bands at k within outer energy window
+    LOGICAL, INTENT(in) :: exband(nbnd)
+    !! Bands excluded from the calculation of overlap and projection matrices
     INTEGER, INTENT(in) :: nbnd
     !! number of bands
     INTEGER, INTENT(in) :: nbndsub
@@ -647,22 +650,14 @@
     !! number of WS points
     INTEGER, INTENT(in) :: irvec(3, nrr)
     !! Coordinate of Wannier space points
-    !
     REAL(KIND = DP), INTENT(in) :: xk(3, nks)
     !! kpoint coordinates (cartesian in units of 2piba)
     REAL(KIND = DP), INTENT(in) :: wslen(nrr)
     !! WS vectors length (alat units)
-    !
     COMPLEX(KIND = DP), INTENT(in) :: cu(nbnd, nbndsub, nks)
     !! rotation matrix from wannier code
     !
-    LOGICAL, INTENT(in) :: lwin(nbnd,nks)
-    !! Bands at k within outer energy window
-    LOGICAL, INTENT(in) :: exband(nbnd)
-    !! Bands excluded from the calculation of overlap and projection matrices
-    !
     ! Local variables
-    !
     INTEGER :: ipol
     !! Counter on polarization
     INTEGER :: ik
@@ -707,7 +702,6 @@
     !! Number of k-point to test
     INTEGER :: ierr
     !! Error status
-    !
     REAL(KIND = DP), ALLOCATABLE :: bvec(:, :, :)
     !! b-vectors connecting each k-point to its nearest neighbors
     REAL(KIND = DP), ALLOCATABLE :: wb(:)
@@ -726,7 +720,6 @@
     !! temporary zero vector
     REAL(KIND = DP) :: delta
     !! \delta_nm = 1 if n == m and 0 if n /= m
-    !
     COMPLEX(KIND = DP) :: Apos(3, nbndsub, nbndsub, nks)
     !! A^W_{mn,\alpha}(k)
     COMPLEX(KIND = DP), ALLOCATABLE :: M_mn(:, :, :, :)
@@ -1338,12 +1331,11 @@
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
+    USE io_scattering, ONLY : rwepmatw
     !
     IMPLICIT NONE
     !
-    !  input variables - note irvec is dimensioned with nrr_k 
-    !                    (which is assumed to be larger than nrr_q)
-    !
+    ! Input variables - note irvec is dimensioned with nrr_k (which is assumed to be larger than nrr_q)
     INTEGER, INTENT(in) :: nbnd
     !! Number of electronic bands
     INTEGER, INTENT(in) :: nrr_k
@@ -1358,11 +1350,9 @@
     !! Coordinates of real space vector 
     INTEGER, INTENT(in) :: irvec_g(3, nrr_g)
     !! Coordinates of real space vector 
-    !
     REAL(KIND = DP), INTENT(in) :: xk(3, nq)
     !! K-point coordinates (cartesian in units of 2piba) 
-    ! 
-    COMPLEX(KIND = DP), INTENT(in) :: epmatwe(nbnd, nbnd, nrr_k, nmodes)
+    COMPLEX(KIND = DP), INTENT(inout) :: epmatwe(nbnd, nbnd, nrr_k, nmodes)
     !! EP matrix in electron-wannier representation and phonon bloch representation
     !!   (Cartesian coordinates)
     !
