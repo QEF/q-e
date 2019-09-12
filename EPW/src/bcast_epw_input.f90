@@ -37,17 +37,17 @@
                             specfun_el, specfun_ph, lifc, asr_typ,            &
                             lscreen, scr_typ, fermi_diff, smear_rpa,          &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen,&
-                            specfun_pl, cumulant, bnd_cum,                    &
+                            specfun_pl, cumulant, bnd_cum, iterative_bte,     &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear,&
                             wsfc, wscut, write_wfn, wmin_specfun, wmin,       &
                             wmax_specfun, wmax, wepexst, wannierize,          &
-                            vme, longrange, shortrange, system_2d,            &
+                            vme, longrange, shortrange, system_2d, lindabs,   &
                             tempsmin, tempsmax, temps, delta_approx, title,   &
                             scattering, scattering_serta, scattering_0rta,    &
-                            int_mob, scissor, carrier, ncarrier, iterative_bte, &
-                            restart, restart_freq, prtgkk, nel, meff, epsiHEG, &
+                            int_mob, scissor, carrier, ncarrier,              &
+                            restart, restart_freq, prtgkk, nel, meff, epsiHEG,&
                             scatread, restart, restart_freq, restart_filq,    &
-                            lphase, omegamin, omegamax, omegastep, n_r, lindabs,&
+                            lphase, omegamin, omegamax, omegastep, n_r,       &
                             mob_maxiter, use_ws, epmatkqread, selecqread 
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
@@ -235,12 +235,15 @@
   !-----------------------------------------------------------------------
   SUBROUTINE bcast_epw_input1
   !-----------------------------------------------------------------------
-  !
+  !! 
+  !! Second batch of broadcasting. 
+  !!
 #if defined(__MPI)
   USE partial,    ONLY : nat_todo, atomo
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE io_global,  ONLY : meta_ionode_id
+  ! 
   IMPLICIT NONE
   !
   ! integers
