@@ -646,6 +646,84 @@
     !---------------------------------------------------------------------------
     END SUBROUTINE read_modes
     !---------------------------------------------------------------------------
+    ! 
+    !------------------------------------------------------------
+    SUBROUTINE fractrasl(npw, igk, evc, eigv1, eig0v)
+    !------------------------------------------------------------
+    !!
+    !! Routine to compute fractional translations
+    !! 
+    USE kinds, ONLY : DP
+    USE wvfct, ONLY : nbnd, npwx
+    USE gvect, ONLY : ngm
+    USE noncollin_module, ONLY : noncolin, npol
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: npw
+    !! Number of plane-waves
+    INTEGER, INTENT(in) :: igk(npw)
+    !! G mapping
+    COMPLEX(KIND = DP), INTENT(inout) :: evc(npwx * npol, nbnd)
+    !! 
+    COMPLEX(KIND = DP), INTENT(in) :: eigv1(ngm)
+    !! Eigenvalues
+    COMPLEX(KIND = DP), INTENT(in) :: eig0v
+    !! Eigenvalues
+    !
+    INTEGER :: ig
+    !! Counter on G-vectors
+    INTEGER :: ibnd
+    !! Counter on bands
+    ! 
+    DO ibnd = 1, nbnd
+      DO ig = 1, npw
+        evc(ig, ibnd) = evc(ig, ibnd) * eigv1(igk(ig)) * eig0v
+        IF (noncolin) THEN
+          evc(ig + npwx, ibnd) = evc(ig + npwx, ibnd) * eigv1(igk(ig)) * eig0v
+        ENDIF
+      ENDDO
+    ENDDO
+    !
+    !------------------------------------------------------------
+    END SUBROUTINE fractrasl
+    !------------------------------------------------------------
+    !
+    !------------------------------------------------------------
+    SUBROUTINE rotate_cart(x, s, sx)
+    !------------------------------------------------------------
+    !!
+    !! A simple symmetry operation in cartesian coordinates 
+    !! ( s is INTEGER and in crystal coord!)
+    !!
+    USE kinds, ONLY : DP
+    USE cell_base, ONLY : at, bg
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: x(3)
+    !! Input x
+    INTEGER, INTENT(in) :: s(3,3)
+    !! Symmetry matrix
+    REAL(KIND = DP), INTENT(out) :: sx(3)
+    !! Output rotated x
+    !
+    REAL(KIND = DP) :: xcrys(3)
+    !! x in cartesian coords
+    INTEGER :: i
+    !
+    xcrys = x
+    CALL cryst_to_cart(1, xcrys, at, -1)
+    DO i = 1, 3
+       sx(i) = DBLE(s(i,1)) * xcrys(1) &
+             + DBLE(s(i,2)) * xcrys(2) &
+             + DBLE(s(i,3)) * xcrys(3)
+    ENDDO
+    CALL cryst_to_cart(1, sx, bg, +1)
+    !
+    !------------------------------------------------------------
+    END SUBROUTINE rotate_cart
+    !------------------------------------------------------------
 
   !------------------------------------------------------------------------
   END MODULE low_lvl

@@ -328,55 +328,6 @@
   lwinq(:, :)  = .FALSE.
   exband(:)    = .FALSE. 
   !
-  !IF (epwread) THEN
-  !  !
-  !  ! We need some crystal info
-  !  IF (mpime == ionode_id) THEN
-  !    !
-  !    OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
-  !    READ(crystal,*) nat
-  !    READ(crystal,*) nmodes
-  !    READ(crystal,*) nelec
-  !    READ(crystal,*) at
-  !    READ(crystal,*) bg
-  !    READ(crystal,*) omega
-  !    READ(crystal,*) alat
-  !    ALLOCATE(tau(3, nat), STAT = ierr)
-  !    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating tau', 1)
-  !    READ(crystal,*) tau
-  !    READ(crystal,*) amass
-  !    ALLOCATE(ityp(nat), STAT = ierr)
-  !    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ityp', 1)
-  !    READ(crystal,*) ityp
-  !    READ(crystal,*) noncolin
-  !    READ(crystal,*) w_centers
-  !    ! 
-  !  ENDIF ! mpime == ionode_id
-  !  CALL mp_bcast(nat      , ionode_id, world_comm)
-  !  IF (mpime /= ionode_id) ALLOCATE(ityp(nat))
-  !  CALL mp_bcast(nmodes   , ionode_id, world_comm)
-  !  CALL mp_bcast(nelec    , ionode_id, world_comm)
-  !  CALL mp_bcast(at       , ionode_id, world_comm)
-  !  CALL mp_bcast(bg       , ionode_id, world_comm)
-  !  CALL mp_bcast(omega    , ionode_id, world_comm)
-  !  CALL mp_bcast(alat     , ionode_id, world_comm)
-  !  IF (mpime /= ionode_id) ALLOCATE(tau(3, nat) )
-  !  CALL mp_bcast(tau      , ionode_id, world_comm)
-  !  CALL mp_bcast(amass    , ionode_id, world_comm)
-  !  CALL mp_bcast(ityp     , ionode_id, world_comm)
-  !  CALL mp_bcast(noncolin , ionode_id, world_comm)
-  !  CALL mp_bcast(w_centers, ionode_id, world_comm)
-  !  IF (mpime == ionode_id) THEN
-  !    CLOSE(crystal)
-  !  ENDIF
-  !  IF (lifc) THEN
-  !    ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
-  !    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ifc', 1)
-  !    ifc(:, :, :, :, :, :, :) = zero
-  !  ENDIF
-  !  ! 
-  !ENDIF ! epwread
-  !
   ALLOCATE(w2(3 * nat), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating w2', 1)
   w2(:) = zero
@@ -1051,7 +1002,7 @@
       inv_tau_all(:, :, :) = zero
       zi_allvb(:, :, :)    = zero
     ENDIF
-    IF (int_mob .AND. carrier) THEN
+    IF (int_mob .AND. carrier .AND. .NOT. iterative_bte) THEN
       ALLOCATE(inv_tau_allcb(nstemp, nbndfst, nktotf), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating inv_tau_allcb', 1)
       ALLOCATE(zi_allcb(nstemp, nbndfst, nktotf), STAT = ierr)
@@ -1760,18 +1711,17 @@
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epf17', 1)
     DEALLOCATE(selecq, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating selecq', 1)
-    !DEALLOCATE(tau, STAT = ierr)
-    !IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating tau', 1)
     IF (scattering .AND. .NOT. iterative_bte) THEN
       DEALLOCATE(inv_tau_all, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_all', 1)
       DEALLOCATE(zi_allvb, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating zi_allvb', 1)
     ENDIF
-    IF (int_mob .AND. carrier) THEN
+    IF (int_mob .AND. carrier .AND. .NOT. iterative_bte) THEN
       DEALLOCATE(inv_tau_allcb, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating inv_tau_allcb', 1)
-      DeALLOCATE(zi_allcb)
+      DEALLOCATE(zi_allcb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating zi_allcb', 1)
     ENDIF
     IF (elecselfen .OR. plselfen) THEN
       DEALLOCATE(sigmar_all, STAT = ierr)
@@ -1780,7 +1730,10 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating sigmai_all', 1)
       DEALLOCATE(zi_all, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating zi_all', 1)
-      IF (iverbosity == 3) DEALLOCATE(sigmai_mode)
+      IF (iverbosity == 3) THEN
+        DEALLOCATE(sigmai_mode, STAT = ierr)
+        IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating sigmai_mode', 1)
+      ENDIF
     ENDIF
     IF (phonselfen) THEN
       DEALLOCATE(lambda_all, STAT = ierr)
@@ -1805,8 +1758,6 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating a_all_ph', 1)
     ENDIF
     IF (lifc) THEN
-      !DEALLOCATE(ifc, STAT = ierr)
-      !IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ifc', 1)
       DEALLOCATE(wscache, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating wscache', 1)
     ENDIF
@@ -1861,10 +1812,11 @@
     DEALLOCATE(dmef, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dmef', 1)
   ENDIF
-  IF (etf_mem == 0) DEALLOCATE(epmatwp)
+  IF (etf_mem == 0) THEN
+    DEALLOCATE(epmatwp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epmatwp', 1)
+  ENDIF
   ! 
-  !DEALLOCATE(ityp, STAT = ierr)
-  !IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating ityp', 1)
   DEALLOCATE(chw, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating chw', 1)
   DEALLOCATE(chw_ks, STAT = ierr)

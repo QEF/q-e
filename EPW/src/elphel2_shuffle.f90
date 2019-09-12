@@ -11,48 +11,49 @@
   SUBROUTINE elphel2_shuffle( npe, imode0, dvscfins, gmapsym, eigv, isym, xq0, timerev )
   !---------------------------------------------------------------------
   !!
-  !!      Calculation of the electron-phonon matrix elements el_ph_mat
-  !!      <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
+  !! Calculation of the electron-phonon matrix elements el_ph_mat
+  !! <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
   !!
-  !!      Written by Feliciano Giustino based on the routine PH/elphon.f90/elphel. 
-  !!      Main difference w.r.t. to original routine is gauge fixing, 
-  !!      shuffle (umklapp) mode and all-q implementation.
+  !! Written by Feliciano Giustino based on the routine PH/elphon.f90/elphel. 
+  !! Main difference w.r.t. to original routine is gauge fixing, 
+  !! shuffle (umklapp) mode and all-q implementation.
   !!
-  !!      Shuffle mode implemented on may 7 2006
+  !! Shuffle mode implemented on may 7 2006
   !!
-  !!      Nota Bene: this SUBROUTINE is intended only for one proc per pool, 
-  !!      i.e. with no G-vector parallelization (some work on the igkq is 
-  !!      required for that in the g-mapping)
+  !! Nota Bene: this SUBROUTINE is intended only for one proc per pool, 
+  !! i.e. with no G-vector parallelization (some work on the igkq is 
+  !! required for that in the g-mapping)
   !!
-  !!      In order to allow a pool reading the wfc file of another
-  !!      pool, I had to modify the bound npwx in PW/n_plane_waves.f90
-  !!      which is now the max across all pools. In this way lrwfc is
-  !!      the same for all pools.
+  !! In order to allow a pool reading the wfc file of another
+  !! pool, I had to modify the bound npwx in PW/n_plane_waves.f90
+  !! which is now the max across all pools. In this way lrwfc is
+  !! the same for all pools.
   !!
-  !!      RM - Nov/Dec 2014
-  !!      Imported the noncolinear case implemented by xlzhang
+  !! RM - Nov/Dec 2014
+  !! Imported the noncolinear case implemented by xlzhang
   !!
-  !!      SP - Nov 2015
-  !!      We want g(k,Sq) = < k+S(q)(r) | V_S(q)(r) | k(r) >
-  !!                      = < k+S(q)(r) | V_q({S|v}^-1 r) | k(r) > 
-  !!                      = < k+S(q)({S|v}r) | V_q (r) | k({S|v}r) > 
+  !! SP - Nov 2015
+  !! We want g(k,Sq) = < k+S(q)(r) | V_S(q)(r) | k(r) >
+  !!                 = < k+S(q)(r) | V_q({S|v}^-1 r) | k(r) > 
+  !!                 = < k+S(q)({S|v}r) | V_q (r) | k({S|v}r) > 
   !!
-  !!      It is important to note that the KB projectors that are applied to the V need
-  !!      to be computed at (r) and not ({S|v}r). Therefore, for the KB proj (computed in 
-  !!      init_us_2, we need to provide the < Sk+q (r)| and |Sk (r)>.
-  !!      See Eq. 11.40 and 11.41 of the R. Martin Electronic Structure book.
+  !! It is important to note that the KB projectors that are applied to the V need
+  !! to be computed at (r) and not ({S|v}r). Therefore, for the KB proj (computed in 
+  !! init_us_2, we need to provide the < Sk+q (r)| and |Sk (r)>.
+  !! See Eq. 11.40 and 11.41 of the R. Martin Electronic Structure book.
   !! 
-  !!      Note that in QE Sq is defined as S^-1(q)                
+  !! Note that in QE Sq is defined as S^-1(q)                
   !! 
-  !!      In case of time-reversal
-  !!      ------------------------
-  !!       g(k,-Sq) = < k-S(q)({S|v}r) | V^loc_-q (r) + (V^nloc_q)* | k({S|v}r) > 
-  !!       where V^loc_{-q} is obtained with setlocq and V^nloc_q = CONGJ(u_pattern)*dvscfins*u_pattern.
-  !!       We have to do this splitting because we do not have V^nloc_-q and
-  !!       V^loc has to be computed at -q to be mappable with the vkb of the wavefunctions
-  !!       computed in init_us_2.
+  !! In case of time-reversal
+  !! ------------------------
+  !!  g(k,-Sq) = < k-S(q)({S|v}r) | V^loc_-q (r) + (V^nloc_q)* | k({S|v}r) > 
+  !!  where V^loc_{-q} is obtained with setlocq and V^nloc_q = CONGJ(u_pattern)*dvscfins*u_pattern.
+  !!  We have to do this splitting because we do not have V^nloc_-q and
+  !!  V^loc has to be computed at -q to be mappable with the vkb of the wavefunctions
+  !!  computed in init_us_2.
   !! 
-  !!      Roxana Margine - Jan 2019: Updated based on QE 6.3 for US 
+  !! Roxana Margine - Jan 2019: Updated based on QE 6.3 for US 
+  !! SP - Sept. 2019: Cleaning 
   !!
   !---------------------------------------------------------------------
   !
@@ -87,6 +88,7 @@
   USE klist,         ONLY : nkstot
   USE division,      ONLY : kpointdivision, fkbounds, fkbounds_bnd
   USE kfold,         ONLY : ktokpmq
+  USE low_lvl,       ONLY : fractrasl, rotate_cart 
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   ! 
   IMPLICIT NONE
@@ -109,10 +111,8 @@
   !!  true if we are using time reversal
   !
   ! Local variables
-  !
   LOGICAL :: exst
   !! logical variable to check file exists
-  !
   INTEGER :: ik
   !! Counter on k-points in the pool
   INTEGER :: ik0
@@ -155,21 +155,21 @@
   !! Index of k+q-point in the pool
   INTEGER :: nkq_abs
   !! Absolute index of k+q-point
+  INTEGER :: ierr
+  !! Error status
   INTEGER, ALLOCATABLE :: igk(:)
   !! Index for k+G
   INTEGER, ALLOCATABLE :: igkq(:)
   !! Index for k+q+G
-  !
   ! Local variables for rotating the wavefunctions (in order to use q in the irr wedge)
   REAL(KIND = DP) :: xkqtmp(3)
   !! Temporary k+q vector for KB projectors 
   REAL(KIND = DP) :: sxk(3)
   !! Rotated k-point xk
-  REAL(KIND = DP) :: g0vec_all_r(3,125)
+  REAL(KIND = DP) :: g0vec_all_r(3, 125)
   !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
   REAL(KIND = DP) :: zero_vect(3)
   !! Temporary zero vector 
-  ! 
   COMPLEX(KIND = DP) :: umat(nbnd, nbnd, nks)
   !! the rotation matrix for the unique setting of the wfs gauge -- on the local pool
   COMPLEX(KIND = DP) :: umatq(nbnd, nbnd, nks)
@@ -184,38 +184,38 @@
   !! Temporary array
   COMPLEX(KIND = DP), ALLOCATABLE :: elphmat(:, :, :)
   !! arrays for e-ph matrix elements 
-  !
-!DBSP - NAG complains ...
   COMPLEX(KIND = DP), EXTERNAL :: zdotc
-!DBSP
-!  REAL(KIND = DP) :: b, c, d
-!END
+  !! Important for NAG compiler
   !
-  ALLOCATE(elphmat(nbnd, nbnd, npe)) 
-  ALLOCATE(eptmp(nbnd, nbnd)) 
-  ALLOCATE(aux1(dffts%nnr, npol))
-  ALLOCATE(aux2(npwx * npol, nbnd))
+  ALLOCATE(elphmat(nbnd, nbnd, npe), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating elphmat', 1)
+  ALLOCATE(eptmp(nbnd, nbnd), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating eptmp', 1)
+  ALLOCATE(aux1(dffts%nnr, npol), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux1', 1)
+  ALLOCATE(aux2(npwx * npol, nbnd), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux2', 1)
   elphmat(:, :, :) = czero
   eptmp(:, :) = czero
   aux1(:, :) = czero
   aux2(:, :) = czero
   zero_vect = zero
-  !
-  IF (ALLOCATED(xkq) ) DEALLOCATE(xkq)                  
-  IF (.NOT.  ALLOCATED(xkq) ) ALLOCATE(xkq(3,nkstot) ) 
   xkq(:, :) = zero
   !
-  IF (nproc_pool>1 ) CALL errore &
-    ('elphel2_shuffle', 'only one proc per pool in shuffle mode', 1)
+  IF (nproc_pool > 1) THEN
+    CALL errore('elphel2_shuffle', 'only one proc per pool in shuffle mode', 1)
+  ENDIF
   !
   ! find the bounds of k-dependent arrays in the parallel case in each pool
-  CALL fkbounds( nkstot, lower_bnd, upper_bnd )
+  CALL fkbounds(nkstot, lower_bnd, upper_bnd)
   !
   ! SP: Bound for band parallelism
-  CALL fkbounds_bnd( nbnd, lower_band, upper_band )
+  CALL fkbounds_bnd(nbnd, lower_band, upper_band)
   !
-  ALLOCATE(aux3(npwx * npol, lower_band:upper_band))
-  ALLOCATE(dvpsi(npwx * npol, lower_band:upper_band))
+  ALLOCATE(aux3(npwx * npol, lower_band:upper_band), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux3', 1)
+  ALLOCATE(dvpsi(npwx * npol, lower_band:upper_band), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating dvpsi', 1)
   aux3(:, :) = czero
   dvpsi(:, :) = czero
   !
@@ -223,30 +223,35 @@
   !
   CALL kpointdivision(ik0)
   !  
-  ALLOCATE(shift(nkstot))
+  ALLOCATE(shift(nkstot), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating shift', 1)
   shift(:) = 0
   ! gmap gets allocated inside readgmap
   CALL readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
   !
-  IF (imode0 == 0 .AND. iverbosity == 1) WRITE(stdout,5) ngxx
-5 FORMAT (5x,'Estimated size of gmap: ngxx =',i5)
+  IF (imode0 == 0 .AND. iverbosity == 1) WRITE(stdout, 5) ngxx
+5 FORMAT(5x,'Estimated size of gmap: ngxx =', i5)
   !
   ! close all sequential files in order to re-open them as direct access
   ! close all .wfc files in order to prepare shuffled read
   !
-  CLOSE(iuwfc, status = 'keep')
+  CLOSE(iuwfc, STATUS = 'keep')
   ! never remove this barrier
   CALL mp_barrier(inter_pool_comm)
-  !
+  ! 
+  ALLOCATE(etq(nbnd, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating etq', 1)
   DO ik = 1, nks
     !
-    IF (lsda) current_spin = isk_loc(ik)
+    etq(:, :) = zero
     elphmat(:, :, :) = czero
-!DBSP
-!    b = zero
-!    c = zero
-!    d = zero
-!END
+    IF (lsda) THEN
+      current_spin = isk_loc(ik)
+    ENDIF
+    !DBSP
+    !b = zero
+    !c = zero
+    !d = zero
     !
     ! find index, and possibly pool, of k+q 
     ! the index nkq (nkq_abs) takes into account the even/odd ordering 
@@ -258,10 +263,6 @@
     CALL ktokpmq(xk_loc(:, ik), xq, +1, ipool, nkq, nkq_abs)
     !
     !   we define xkq(:,ik) and etq(:,ik) for the current xq
-    !
-    IF (ALLOCATED(etq)) DEALLOCATE(etq)
-    IF (.NOT. ALLOCATED(etq)) ALLOCATE(etq(nbnd, nks))
-    etq(:, :) = zero
     !
     xkq(:, ik) = xk_all(:, nkq_abs)
     etq(:, ik) = et_all(:, nkq_abs) 
@@ -281,14 +282,17 @@
     npw  = ngk_all(ik + lower_bnd - 1)
     npwq = ngk_all(nkq_abs)
     ! 
-    ALLOCATE(igk(npw))
-    ALLOCATE(igkq(npwq))
+    ALLOCATE(igk(npw), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating igk', 1)
+    ALLOCATE(igkq(npwq), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating igkq', 1)
     ! 
     igk = igk_k_all(1:npw, ik + lower_bnd - 1)
     igkq = igk_k_all(1:npwq, nkq_abs)
     !
-    IF (nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx ) &
+    IF (nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx) THEN
       CALL errore('elphel2_shuffle', 'ngxx too small', 1)
+    ENDIF
     !
     ! ----------------------------------------------------------------
     ! Set the gauge for the eigenstates: unitary transform and phases
@@ -333,8 +337,8 @@
     !
     !  u_{k+q+G_0} carries an additional factor e^{i G_0 v}
     !
-    CALL fractrasl(npw,  igk,  evc, eigv(:,isym), cone)
-    CALL fractrasl(npwq, igkq, evq, eigv(:,isym), cone)
+    CALL fractrasl(npw,  igk,  evc, eigv(:, isym), cone)
+    CALL fractrasl(npwq, igkq, evq, eigv(:, isym), cone)
     !
     ! ---------------------------------------------------------------------
     ! wave function rotation to generate matrix elements for the star of q
@@ -359,7 +363,7 @@
     ! Since in QE a normal rotation s is defined as S^-1 we have here
     ! sxk = S(k).  
     !
-    CALL rotate_cart(xk_loc(:,ik), s(:,:,isym), sxk)
+    CALL rotate_cart(xk_loc(:, ik), s(:, :, isym), sxk)
     !
     ! here we generate vkb on the igk() set and for k ...
     CALL init_us_2(npw, igk, sxk, vkb)
@@ -378,8 +382,7 @@
         END DO
         IF (noncolin) THEN
           DO ig = 1, npw
-            aux2(ig + npwx, ibnd) = evc(ig + npwx, ibnd) * tpiba * ci * &
-                        (sxk(ipol) + g(ipol, igk(ig)))
+            aux2(ig + npwx, ibnd) = evc(ig + npwx, ibnd) * tpiba * ci * (sxk(ipol) + g(ipol, igk(ig)))
           ENDDO
         ENDIF
       ENDDO
@@ -410,9 +413,8 @@
       ELSE
         CALL dvqpsi_us3(ik, u(:, mode), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq)
       ENDIF
-!DBSP 
-!      b = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
-!END
+      !DBSP 
+      !b = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
       !
       !  calculate dvscf_q*psi_k
       !
@@ -430,14 +432,12 @@
       ENDDO
       dvpsi = dvpsi + aux3
       !
-!DBSP
-!      c = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
-!END
+      !DBSP
+      !c = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
       !
       CALL adddvscf2(ipert, ik)
-!DBRM
-!      d = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
-!END
+      ! DBPS
+      !d = c+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
       !
       ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
       !
@@ -446,7 +446,7 @@
         DO jbnd = 1, nbnd
           elphmat(jbnd, ibnd, ipert) = ZDOTC(npwq, evq(1, jbnd), 1, dvpsi(1, ibnd), 1)
           IF (noncolin) THEN
-            elphmat(jbnd, ibnd,ipert) = elphmat(jbnd, ibnd, ipert) + &
+            elphmat(jbnd, ibnd, ipert) = elphmat(jbnd, ibnd, ipert) + &
                ZDOTC(npwq, evq(npwx + 1, jbnd), 1, dvpsi(npwx + 1, ibnd), 1)
           ENDIF
         ENDDO
@@ -490,8 +490,10 @@
       ENDDO
     ENDDO
     ! 
-    DEALLOCATE(igk)
-    DEALLOCATE(igkq)
+    DEALLOCATE(igk, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating igk', 1)
+    DEALLOCATE(igkq, STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating igkq', 1)
     !
   ENDDO ! ik
   !
@@ -501,84 +503,25 @@
   ! never remove this barrier - > insures that wfcs are restored to each pool before moving on
   CALL mp_barrier(world_comm)
   !
-  DEALLOCATE(elphmat)
-  DEALLOCATE(eptmp)
-  DEALLOCATE(aux1) 
-  DEALLOCATE(aux2)
-  DEALLOCATE(aux3)
-  DEALLOCATE(dvpsi)
-  DEALLOCATE(gmap)
-  DEALLOCATE(shift)
+  DEALLOCATE(elphmat, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating elphmat', 1)
+  DEALLOCATE(eptmp, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating eptmp', 1)
+  DEALLOCATE(aux1, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating aux1', 1)
+  DEALLOCATE(aux2, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating aux2', 1)
+  DEALLOCATE(aux3, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating aux3', 1)
+  DEALLOCATE(dvpsi, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating dvpsi', 1)
+  DEALLOCATE(gmap, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating gmap', 1)
+  DEALLOCATE(shift, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating shift', 1)
+  DEALLOCATE(etq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating etq', 1)
   !
   !------------------------------------------------------------
   END SUBROUTINE elphel2_shuffle
-  !------------------------------------------------------------
-  !
-  !------------------------------------------------------------
-  SUBROUTINE fractrasl(npw, igk, evc, eigv1, eig0v)
-  !------------------------------------------------------------
-  !
-  USE kinds, ONLY : DP
-  USE wvfct, ONLY : nbnd, npwx
-  USE gvect, ONLY : ngm
-  USE noncollin_module, ONLY : noncolin, npol
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(in) :: npw
-  INTEGER, INTENT(in) :: igk(npw)
-  COMPLEX(KIND = DP), INTENT(inout) :: evc(npwx * npol, nbnd)
-  COMPLEX(KIND = DP), INTENT(in) :: eigv1(ngm), eig0v
-  !
-  INTEGER :: ig
-  !! Counter on G-vectors
-  INTEGER :: ibnd
-  !! Counter on bands
-  ! 
-  DO ibnd = 1, nbnd
-    DO ig = 1, npw
-      evc(ig, ibnd) = evc(ig, ibnd) * eigv1(igk(ig)) * eig0v
-      IF (noncolin) THEN
-        evc(ig + npwx, ibnd) = evc(ig + npwx, ibnd) * eigv1(igk(ig)) * eig0v
-      ENDIF
-    ENDDO
-  ENDDO
-  !
-  !------------------------------------------------------------
-  END SUBROUTINE fractrasl
-  !------------------------------------------------------------
-  !
-  !------------------------------------------------------------
-  SUBROUTINE rotate_cart(x, s, sx)
-  !------------------------------------------------------------
-  !
-  ! a simple symmetry operation in cartesian coordinates 
-  ! ( s is INTEGER and in crystal coord!)
-  !
-  USE kinds, ONLY : DP
-  USE cell_base, ONLY : at, bg
-  !
-  IMPLICIT NONE
-  !
-  REAL(KIND = DP), INTENT(in) :: x(3)
-  !! Input x
-  INTEGER, INTENT(in) :: s(3,3)
-  !! Symmetry matrix
-  REAL(KIND = DP), INTENT(out) :: sx(3)
-  !! Output rotated x
-  !
-  REAL(KIND = DP) :: xcrys(3)
-  !! x in cartesian coords
-  INTEGER :: i
-  !
-  xcrys = x
-  CALL cryst_to_cart(1, xcrys, at, -1)
-  DO i = 1, 3
-     sx(i) = DBLE(s(i,1)) * xcrys(1) &
-           + DBLE(s(i,2)) * xcrys(2) &
-           + DBLE(s(i,3)) * xcrys(3)
-  ENDDO
-  CALL cryst_to_cart(1, sx, bg, +1)
-  !
-  END SUBROUTINE rotate_cart
   !------------------------------------------------------------

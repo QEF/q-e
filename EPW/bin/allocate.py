@@ -8,7 +8,10 @@
 
 import numpy as np
 
-with open('ephwann_shuffle.f90','r') as F:
+# File name
+file_name = 'elphel2_shuffle.f90'
+
+with open(file_name,'r') as F:
   for lines in F:
     tmp = lines
     tmp_split = lines.split()
@@ -56,3 +59,7 @@ with open('ephwann_shuffle.f90','r') as F:
       print str(tmp[0:start-10])+'IF (ierr /= 0) CALL errore(\''+str(name_sub)+'\', \'Error deallocating '+str(tmp[start+1:end])+'\', 1)' 
     else:
       print str(lines),
+
+
+
+

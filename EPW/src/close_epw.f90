@@ -83,9 +83,8 @@
     USE phcom,             ONLY : drc, dyn, dvpsi
     USE noncollin_module,  ONLY : m_loc
     USE control_lr,        ONLY : nbnd_occ
-    USE elph2,             ONLY : epf17, epsi, etf,&
-                                  etq, wkf, wqf, &
-                                  xkq, zstar, xkf, xqf, epmatwp, eps_rpa
+    USE elph2,             ONLY : epf17, epsi, etf, wkf, wqf, &
+                                  zstar, xkf, xqf, epmatwp, eps_rpa
     USE klist_epw,         ONLY : xk_all, xk_loc, xk_cryst, et_all, et_loc, & 
                                   isk_loc, isk_all
     USE epwcom,            ONLY : epbread, epwread
@@ -102,9 +101,7 @@
     IF (epwread .AND. .NOT. epbread) THEN
       !  EPW variables only
       !
-      IF(ALLOCATED(etq))       DEALLOCATE(etq)
       IF(ALLOCATED(etf))       DEALLOCATE(etf)
-      IF(ALLOCATED(xkq))       DEALLOCATE(xkq)
       IF(ALLOCATED(xkf))       DEALLOCATE(xkf)
       IF(ALLOCATED(wkf))       DEALLOCATE(wkf)
       IF(ALLOCATED(xqf))       DEALLOCATE(xqf)
@@ -123,9 +120,7 @@
       !
       !  EPW variables
       !
-      IF(ALLOCATED(etq))       DEALLOCATE(etq)    
       IF(ALLOCATED(etf))       DEALLOCATE(etf)    
-      IF(ALLOCATED(xkq))       DEALLOCATE(xkq)    
       IF(ALLOCATED(xkf))       DEALLOCATE(xkf)    
       IF(ALLOCATED(wkf))       DEALLOCATE(wkf)    
       IF(ALLOCATED(xqf))       DEALLOCATE(xqf)    
