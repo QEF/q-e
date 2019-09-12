@@ -8,26 +8,24 @@
 !----------------------------------------------------------------------------
 SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine applies the Hamiltonian and the S matrix
-  ! ... to a vector psi and puts the result in hpsi and spsi
-  ! ... Wrapper routine - calls h_psi and s_psi
+  !! This routine applies the Hamiltonian and the S matrix
+  !! to a vector psi and puts the result in hpsi and spsi.  
+  !! Wrapper routine - calls h_psi and s_psi.
   !
   ! ... No bgrp parallelization here !
   !
-  USE kinds,  ONLY: DP
-  USE control_flags, ONLY : gamma_only
-  USE bp,     ONLY: lelfield
-  USE noncollin_module, &
-              ONLY: npol 
-  USE realus, ONLY : real_space, &
-                     invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
-                     invfft_orbital_k, fwfft_orbital_k, s_psir_k
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : gamma_only
+  USE bp,               ONLY : lelfield
+  USE noncollin_module, ONLY : npol 
+  USE realus,           ONLY : real_space, &
+                               invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
+                               invfft_orbital_k,     fwfft_orbital_k,     s_psir_k
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n
-  COMPLEX (DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
+  COMPLEX(DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
   !
   !
   CALL start_clock( 'hs_1psi' )
