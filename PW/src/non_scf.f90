@@ -7,10 +7,9 @@
 !  
 !
 !-----------------------------------------------------------------------
-  SUBROUTINE non_scf ( )
+SUBROUTINE non_scf( )
   !-----------------------------------------------------------------------
-  !
-  ! ... diagonalization of the KS hamiltonian in the non-scf case
+  !! Diagonalization of the KS hamiltonian in the non-scf case.
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, lorbm
@@ -23,7 +22,7 @@
   USE klist,                ONLY : xk, wk, nks, nkstot
   USE lsda_mod,             ONLY : lsda, nspin
   USE wvfct,                ONLY : nbnd, et, npwx
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   !
   IMPLICIT NONE
   !
@@ -39,22 +38,22 @@
   WRITE( stdout, 9002 )
   FLUSH( stdout )
   !
-  IF ( lelfield) THEN
+  IF ( lelfield ) THEN
      !
-     CALL c_bands_efield ( iter )
+     CALL c_bands_efield( iter )
      !
   ELSE
      !
-     CALL c_bands_nscf ( )
+     CALL c_bands_nscf()
      !
-  END IF
+  ENDIF
   !
   ! ... check if calculation was stopped in c_bands
   !
   IF ( stopped_by_user ) THEN
      conv_elec=.FALSE.
      RETURN
-  END IF
+  ENDIF
   !
   ! ... xk, wk, isk, et, wg are distributed across pools;
   ! ... the first node has a complete copy of xk, wk, isk,
@@ -69,10 +68,10 @@
   ! ... may be needed in further calculations such as phonon
   !
   IF ( lbands ) THEN
-     CALL weights_only  ( )
+     CALL weights_only( )
   ELSE
-     CALL weights  ( )
-  END IF
+     CALL weights( )
+  ENDIF
   !
   ! ... Note that if you want to use more k-points for the phonon
   ! ... calculation then those needed for self-consistency, you can,
@@ -85,14 +84,14 @@
   !
   ! ... write band eigenvalues (conv_elec is used in print_ks_energies)
   !
-  conv_elec = .true.
-  CALL print_ks_energies ( ) 
+  conv_elec = .TRUE.
+  CALL print_ks_energies() 
   !
   ! ... save converged wfc if they have not been written previously
   ! ... FIXME: it shouldn't be necessary to do this here
   !
   IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
-        CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
+        CALL save_buffer( evc, nwordwfc, iunwfc, nks )
   !
   ! ... do a Berry phase polarization calculation if required
   !
@@ -103,6 +102,7 @@
   IF ( lorbm ) CALL orbm_kubo()
   !
   CALL stop_clock( 'electrons' )
+  !
   !
 9000 FORMAT(/'     total cpu time spent up to now is ',F10.1,' secs' )
 9002 FORMAT(/'     Band Structure Calculation' )
