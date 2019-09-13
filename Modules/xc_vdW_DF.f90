@@ -54,7 +54,6 @@ MODULE vdW_DF
 
 USE kinds,             ONLY : dp
 USE constants,         ONLY : pi, e2
-USE funct,             ONLY : get_inlc
 USE mp,                ONLY : mp_sum, mp_barrier, mp_get, mp_size, mp_rank, mp_bcast
 USE mp_images,         ONLY : intra_image_comm
 USE mp_bands,          ONLY : intra_bgrp_comm
@@ -65,10 +64,10 @@ USE control_flags,     ONLY : iverbosity, gamma_only
 
 
 ! ----------------------------------------------------------------------
-! No implicit variables 
+! No implicit variables
 
 IMPLICIT NONE
- 
+
 
 ! ----------------------------------------------------------------------
 ! By default everything is private
@@ -86,7 +85,7 @@ SAVE
 ! Public functions
 
 PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_energy, vdW_DF_potential, &
-           stress_vdW_DF, interpolate_kernel, saturate_q,              &
+           vdW_DF_stress, interpolate_kernel, saturate_q,              &
            initialize_spline_interpolation, spline_interpolation
 
 
@@ -94,14 +93,12 @@ PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_energy, vdW_DF_potential, &
 ! Public variables
 
 PUBLIC  :: inlc, Nr_points, r_max, q_mesh
-PUBLIC  :: vdW_type  !!!!!!! Remove in next commit
 
 
 ! ----------------------------------------------------------------------
 ! General variables
 
 INTEGER                  :: inlc   = 1
-INTEGER                  :: vdW_type  = 1 !!!!!!! Remove in next commit
 REAL(DP), PARAMETER      :: epsr   = 1.0D-12
 ! A small number to cut off densities
 
@@ -351,7 +348,6 @@ CONTAINS
   ! Write out the vdW-DF information and initialize the calculation.
 
   IF ( first_iteration ) THEN
-     inlc = get_inlc()
      CALL generate_kernel
      IF ( ionode ) CALL vdW_info
      first_iteration = .FALSE.
@@ -531,7 +527,6 @@ CONTAINS
   ! Write out the vdW-DF information and initialize the calculation.
 
   IF ( first_iteration ) THEN
-     inlc = get_inlc()
      CALL generate_kernel
      IF ( ionode ) CALL vdW_info
      first_iteration = .FALSE.
@@ -676,12 +671,12 @@ CONTAINS
 
   INTEGER, PARAMETER        :: m_cut = 12                          ! How many terms to include in the sum
                                                                    ! of SOLER equation 5.
-  
+
   REAL(DP)                  :: rho                                 ! Local variable for the density.
   REAL(DP)                  :: r_s                                 ! Wigner-Seitz radius.
   REAL(DP)                  :: s                                   ! Reduced gradient.
   REAL(DP)                  :: q
-  REAL(DP)                  :: ec 
+  REAL(DP)                  :: ec
   REAL(DP)                  :: dq0_dq                              ! The derivative of the saturated
                                                                    ! q0 with respect to q.
 
@@ -697,7 +692,7 @@ CONTAINS
   dq0_drho(:)     = 0.0D0
   dq0_dgradrho(:) = 0.0D0
 
-  
+
   DO i_grid = 1, dfftp%nnr
 
      rho = total_rho(i_grid)
@@ -817,7 +812,7 @@ CONTAINS
   REAL(DP),  INTENT(OUT)     :: q0(:), dq0_drho_up(:), dq0_drho_down(:)  ! Output variables.
   REAL(DP),  INTENT(OUT)     :: dq0_dgradrho_up(:), dq0_dgradrho_down(:) ! Output variables.
   COMPLEX(DP), INTENT(INOUT) :: thetas(:,:)                              ! The thetas from SOLER.
-  
+
   REAL(DP)                   :: rho, up, down                            ! Local copy of densities.
   REAL(DP)                   :: zeta                                     ! Spin polarization.
   REAL(DP)                   :: r_s                                      ! Wigner-Seitz radius.
@@ -907,7 +902,7 @@ CONTAINS
      call pw_spin( r_s, zeta, ec, vc )
      dqc_drho_up   = vc(1)
      dqc_drho_down = vc(2)
- 
+
      qx = ( up * q0x_up + down * q0x_down ) / rho
      qc = -4.0D0*pi/3.0D0 * ec
      q  = qx + qc
@@ -1614,10 +1609,10 @@ CONTAINS
 
   ! ####################################################################
   !                         |                 |
-  !                         |  STRESS_VDW_DF  |
+  !                         |  VDW_DF_STRESS  |
   !                         |_________________|
 
-  SUBROUTINE stress_vdW_DF (rho_valence, rho_core, nspin, sigma)
+  SUBROUTINE vdW_DF_stress (rho_valence, rho_core, nspin, sigma)
 
   use gvect,           ONLY : ngm, g
   USE cell_base,       ONLY : tpiba
@@ -1656,7 +1651,7 @@ CONTAINS
   END IF
 #else
   IF ( nspin>=2 ) THEN
-     CALL errore ('stress_vdW_DF',   'vdW stress not implemented for nspin > 1', 1)
+     CALL errore ('vdW_DF_stress',   'vdW stress not implemented for nspin > 1', 1)
   END IF
 #endif
 
@@ -1693,8 +1688,8 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Stress
 
-  CALL stress_vdW_DF_gradient (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas, sigma_grad)
-  CALL stress_vdW_DF_kernel   (total_rho, q0, thetas, sigma_ker)
+  CALL vdW_DF_stress_gradient (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas, sigma_grad)
+  CALL vdW_DF_stress_kernel   (total_rho, q0, thetas, sigma_ker)
 
   sigma = - (sigma_grad + sigma_ker)
 
@@ -1706,7 +1701,7 @@ CONTAINS
 
   DEALLOCATE( total_rho, grad_rho, thetas, q0, dq0_drho, dq0_dgradrho )
 
-  END SUBROUTINE stress_vdW_DF
+  END SUBROUTINE vdW_DF_stress
 
 
 
@@ -1717,11 +1712,11 @@ CONTAINS
 
   ! ####################################################################
   !                     |                          |
-  !                     |  STRESS_VDW_DF_GRADIENT  |
+  !                     |  VDW_DF_STRESS_GRADIENT  |
   !                     |__________________________|
 
-  SUBROUTINE stress_vdW_DF_gradient (total_rho, grad_rho, q0, dq0_drho, &
-                                     dq0_dgradrho, thetas, sigma)
+  SUBROUTINE vdW_DF_stress_gradient (total_rho, grad_rho, q0, &
+             dq0_drho, dq0_dgradrho, thetas, sigma)
 
   USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
   USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
@@ -1847,7 +1842,7 @@ CONTAINS
 
   DEALLOCATE( d2y_dx2, u_vdW )
 
-  END SUBROUTINE stress_vdW_DF_gradient
+  END SUBROUTINE vdW_DF_stress_gradient
 
 
 
@@ -1857,11 +1852,11 @@ CONTAINS
 
 
   ! ####################################################################
-  !                      |                          |
-  !                      |  STRESS_VDW_DF_KERNEL    |
-  !                      |__________________________|
+  !                      |                        |
+  !                      |  VDW_DF_STRESS_KERNEL  |
+  !                      |________________________|
 
-  SUBROUTINE stress_vdW_DF_kernel (total_rho, q0, thetas, sigma)
+  SUBROUTINE vdW_DF_stress_kernel (total_rho, q0, thetas, sigma)
 
   USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
   USE cell_base,             ONLY : omega, tpiba, tpiba2
@@ -1928,7 +1923,7 @@ CONTAINS
 
   DEALLOCATE( dkernel_of_dk )
 
-  END SUBROUTINE stress_vdW_DF_kernel
+  END SUBROUTINE vdW_DF_stress_kernel
 
 
 
@@ -2169,7 +2164,7 @@ CONTAINS
   ! Thonhauser, Valentino Cooper, and David Langreth. These codes, in
   ! turn, benefited from earlier codes written by Maxime Dion and Henrik
   ! Rydberg.
-  
+
   SUBROUTINE generate_kernel
 
   IMPLICIT NONE
@@ -2223,7 +2218,7 @@ CONTAINS
 
 
   ! --------------------------------------------------------------------
-  ! Start the timer. 
+  ! Start the timer.
 
   CALL start_clock ( 'vdW_kernel' )
 
@@ -2436,7 +2431,7 @@ CONTAINS
   !    END DO
   !    DO q1_i = 1, Nqs
   !       DO q2_i = 1, q1_i
-  !          WRITE(21, '(1p4e23.14)') d2phi_dk2(:, q1_i, q2_i)   
+  !          WRITE(21, '(1p4e23.14)') d2phi_dk2(:, q1_i, q2_i)
   !       END DO
   !    END DO
   !    CLOSE (21)
@@ -2448,13 +2443,13 @@ CONTAINS
   ! IF (ionode) WRITE(stdout,'(/ / A)') "     vdW-DF kernel read from file."
   ! OPEN(UNIT=21, FILE='vdW_kernel_table', STATUS='old', FORM='formatted', ACTION='read')
   ! read(21, '(/ / / / / /)')
-  ! DO q1_i = 1, Nqs 
+  ! DO q1_i = 1, Nqs
   !    DO q2_i = 1, q1_i
   !       READ(21, '(1p4e23.14)') kernel(:, q1_i, q2_i)
   !       kernel(:, q2_i, q1_i) = kernel(:, q1_i, q2_i)
   !    END DO
   ! END DO
-  ! DO q1_i = 1, Nqs 
+  ! DO q1_i = 1, Nqs
   !    DO q2_i = 1, q1_i
   !       READ(21, '(1p4e23.14)')    d2phi_dk2(:, q1_i, q2_i)
   !       d2phi_dk2(:, q2_i, q1_i) = d2phi_dk2(:, q1_i, q2_i)
@@ -2467,7 +2462,7 @@ CONTAINS
 
 
   ! --------------------------------------------------------------------
-  ! Stop the timer. 
+  ! Stop the timer.
 
   CALL stop_clock ( 'vdW_kernel' )
 
