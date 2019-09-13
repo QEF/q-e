@@ -72,7 +72,6 @@
     !! Total number of q-points from the selecq.fmt grid. 
     !
     ! Local variables 
-    !
     INTEGER :: n
     !! Integer for the degenerate average over eigenstates
     INTEGER :: ik
@@ -89,6 +88,8 @@
     !! Counter on mode
     INTEGER :: fermicount
     !! Number of states on the Fermi surface
+    INTEGER :: ierr 
+    !! Error status
     REAL(KIND = DP) :: tmp
     !! Temporary variable to store real part of Sigma for the degenerate average
     REAL(KIND = DP) :: tmp2
@@ -194,9 +195,9 @@
     !
     IF (iqq == 1) THEN
       !
-      WRITE(stdout,'(/5x,a)') REPEAT('=',67)
-      WRITE(stdout,'(5x,"Electron (Imaginary) Self-Energy in the Migdal Approximation")')
-      WRITE(stdout,'(5x,a/)') REPEAT('=',67)
+      WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+      WRITE(stdout, '(5x,"Electron (Imaginary) Self-Energy in the Migdal Approximation")')
+      WRITE(stdout, '(5x,a/)') REPEAT('=',67)
       !
       IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
       WRITE(stdout, '(/5x,a,f10.6,a)') 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
@@ -217,7 +218,7 @@
     !
     IF ((iqq == 1) .AND. .NOT. adapt_smearing) THEN 
       WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
-      WRITE (stdout,'(a)') ' '
+      WRITE (stdout, '(a)') ' '
     ENDIF
     !
     IF (restart) THEN
@@ -240,92 +241,88 @@
       !
       fermicount = 0 
       DO ik = 1, nkf
-         !
-         ikk = 2 * ik - 1
-         ikq = ikk + 1
-         !
-         ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-         ! (but in this case they are the same)
-         !
-         IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
-             (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
-            !
-            fermicount = fermicount + 1
-            DO imode = 1, nmodes
-               DO ibnd = 1, nbndfst
-                  !
-                  !  the energy of the electron at k (relative to Ef)
-                  ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
-                  ! 
-                  eta_tmp     = eta2(ibnd, imode, ik) 
-                  inv_eta_tmp = inv_eta(ibnd, imode, ik)  
-                  !
-                  DO jbnd = 1, nbndfst
-                     !
-                     !  the fermi occupation for k+q
-                     ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
-                     wgkq = wgauss(-ekq * inv_eptemp, -99)  
-                     !
-                     ! here we take into account the zero-point SQRT(hbar/2M\omega)
-                     ! with hbar = 1 and M already contained in the eigenmodes
-                     ! g2 is Ry^2, wkf must already account for the spin factor
-                     !
-                     ! SP: Shortrange is disabled for efficiency reasons 
-                     !IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
-                     !   .OR. ABS(xqf (3, iq))> eps8 )) THEN                         
-                     !  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
-                     !  !     number, in which case its square will be a negative number. 
-                     !  g2 = REAL((epf17 (jbnd, ibnd, imode, ik)**two) * inv_wq(imode) * g2_tmp(imode))
-                     !ELSE
-                     !  g2 = (ABS(epf17 (jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
-                     !ENDIF        
-                     ! 
-                     g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
-                     !
-                     ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
-                     ! The sign was corrected according to Eq. (7.282) page 489 from Mahan's book 
-                     ! (Many-Particle Physics, 3rd edition)
-                     ! 
-                     weight = wqf(iq) * REAL(((wgkq + wgq(imode)) / (ekk - (ekq - wq(imode)) - ci * eta_tmp)  +  &
-                                             (one - wgkq + wgq(imode)) / (ekk - (ekq + wq(imode)) - ci * eta_tmp)))
-                     !
-                     sigmar_all(ibnd, ik + lower_bnd - 1) = sigmar_all(ibnd, ik + lower_bnd - 1) + g2 * weight
-                     !
-                     ! Logical implementation
-                     ! weight = wqf(iq) * aimag (                                                  &
-                     !         ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
-                     !           ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
-                     !
-                     ! Delta implementation 
-                     w0g1   = w0gauss((ekk - ekq + wq(imode)) * inv_eta_tmp, 0) * inv_eta_tmp
-                     w0g2   = w0gauss((ekk - ekq - wq(imode)) * inv_eta_tmp, 0) * inv_eta_tmp
-                     weight = pi * wqf(iq) * ((wgkq + wgq(imode)) * w0g1 + (one - wgkq + wgq(imode)) * w0g2)
-                     !
-                     sigmai_all(ibnd, ik + lower_bnd - 1) = sigmai_all(ibnd, ik + lower_bnd - 1) + g2 * weight
-                     !
-                     ! Mode-resolved
-                     IF (iverbosity == 3) THEN
-                       sigmai_mode(ibnd, imode, ik + lower_bnd - 1) = sigmai_mode(ibnd, imode, ik + lower_bnd - 1) + g2 * weight
-                     ENDIF
-                     !
-                     ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
-                     !
-                     weight = wqf(iq) * &
-                              ((      wgkq + wgq(imode)) * ((ekk - (ekq - wq(imode)))**two - eta_tmp**two) /       &
-                                                           ((ekk - (ekq - wq(imode)))**two + eta_tmp**two)**two +  &
-                               (one - wgkq + wgq(imode)) * ((ekk - (ekq + wq(imode)))**two - eta_tmp**two) /       &
-                                                           ((ekk - (ekq + wq(imode)))**two + eta_tmp**two)**two )  
-                     !
-                     zi_all(ibnd, ik + lower_bnd - 1) = zi_all(ibnd, ik + lower_bnd - 1) + g2 * weight
-                     ! 
-                  ENDDO !jbnd
-                  !
-               ENDDO !ibnd
-               !
-            ENDDO !imode
-            !
-         ENDIF ! endif  fsthick
-         !
+        !
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
+        !
+        ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
+        ! (but in this case they are the same)
+        !
+        IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
+           (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
+          !
+          fermicount = fermicount + 1
+          DO imode = 1, nmodes
+            DO ibnd = 1, nbndfst
+              !
+              !  the energy of the electron at k (relative to Ef)
+              ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
+              ! 
+              eta_tmp     = eta2(ibnd, imode, ik) 
+              inv_eta_tmp = inv_eta(ibnd, imode, ik)  
+              !
+              DO jbnd = 1, nbndfst
+                !
+                !  the fermi occupation for k+q
+                ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
+                wgkq = wgauss(-ekq * inv_eptemp, -99)  
+                !
+                ! here we take into account the zero-point SQRT(hbar/2M\omega)
+                ! with hbar = 1 and M already contained in the eigenmodes
+                ! g2 is Ry^2, wkf must already account for the spin factor
+                !
+                ! SP: Shortrange is disabled for efficiency reasons 
+                !IF (shortrange .AND. ( ABS(xqf (1, iq))> eps8 .OR. ABS(xqf (2, iq))> eps8 &
+                !   .OR. ABS(xqf (3, iq))> eps8 )) THEN                         
+                !  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
+                !  !     number, in which case its square will be a negative number. 
+                !  g2 = REAL((epf17 (jbnd, ibnd, imode, ik)**two) * inv_wq(imode) * g2_tmp(imode))
+                !ELSE
+                !  g2 = (ABS(epf17 (jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
+                !ENDIF        
+                ! 
+                g2 = (ABS(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq(imode) * g2_tmp(imode)
+                !
+                ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
+                ! The sign was corrected according to Eq. (7.282) page 489 from Mahan's book 
+                ! (Many-Particle Physics, 3rd edition)
+                ! 
+                weight = wqf(iq) * REAL(((wgkq + wgq(imode)) / (ekk - (ekq - wq(imode)) - ci * eta_tmp)  +  &
+                                        (one - wgkq + wgq(imode)) / (ekk - (ekq + wq(imode)) - ci * eta_tmp)))
+                !
+                sigmar_all(ibnd, ik + lower_bnd - 1) = sigmar_all(ibnd, ik + lower_bnd - 1) + g2 * weight
+                !
+                ! Logical implementation
+                ! weight = wqf(iq) * aimag (                                                  &
+                !         ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
+                !           ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
+                !
+                ! Delta implementation 
+                w0g1   = w0gauss((ekk - ekq + wq(imode)) * inv_eta_tmp, 0) * inv_eta_tmp
+                w0g2   = w0gauss((ekk - ekq - wq(imode)) * inv_eta_tmp, 0) * inv_eta_tmp
+                weight = pi * wqf(iq) * ((wgkq + wgq(imode)) * w0g1 + (one - wgkq + wgq(imode)) * w0g2)
+                !
+                sigmai_all(ibnd, ik + lower_bnd - 1) = sigmai_all(ibnd, ik + lower_bnd - 1) + g2 * weight
+                !
+                ! Mode-resolved
+                IF (iverbosity == 3) THEN
+                  sigmai_mode(ibnd, imode, ik + lower_bnd - 1) = sigmai_mode(ibnd, imode, ik + lower_bnd - 1) + g2 * weight
+                ENDIF
+                !
+                ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
+                !
+                weight = wqf(iq) * &
+                         ((      wgkq + wgq(imode)) * ((ekk - (ekq - wq(imode)))**two - eta_tmp**two) /       &
+                                                      ((ekk - (ekq - wq(imode)))**two + eta_tmp**two)**two +  &
+                          (one - wgkq + wgq(imode)) * ((ekk - (ekq + wq(imode)))**two - eta_tmp**two) /       &
+                                                      ((ekk - (ekq + wq(imode)))**two + eta_tmp**two)**two )  
+                !
+                zi_all(ibnd, ik + lower_bnd - 1) = zi_all(ibnd, ik + lower_bnd - 1) + g2 * weight
+                ! 
+              ENDDO !jbnd
+            ENDDO !ibnd
+          ENDDO !imode
+        ENDIF ! endif  fsthick
       ENDDO ! end loop on k
       !
       ! Creation of a restart point
@@ -346,8 +343,10 @@
     !
     IF (iqq == totq) THEN
       !
-      ALLOCATE(xkf_all(3, nkqtotf))
-      ALLOCATE(etf_all(nbndsub, nkqtotf))
+      ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_elec_q', 'Error allocating xkf_all', 1)
+      ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_elec_q', 'Error allocating etf_all', 1)
       xkf_all(:, :) = zero
       etf_all(:, :) = zero
       !
@@ -440,21 +439,21 @@
                                ryd2mev * sigmai_all(ibnd,ik), zi_all(ibnd, ik), one / zi_all(ibnd, ik) - one
             IF (iverbosity == 3) THEN
               DO imode = 1, nmodes
-                WRITE(linewidth_elself,'(i9,2x)', ADVANCE = 'no') ik
-                WRITE(linewidth_elself,'(i9,2x)', ADVANCE = 'no') ibndmin - 1 + ibnd
-                WRITE(linewidth_elself,'(E22.14,2x)', ADVANCE = 'no') ryd2ev * ekk
-                WRITE(linewidth_elself,'(i9,2x)', ADVANCE = 'no') imode
-                WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev * sigmai_mode(ibnd, imode, ik)
+                WRITE(linewidth_elself, '(i9,2x)', ADVANCE = 'no') ik
+                WRITE(linewidth_elself, '(i9,2x)', ADVANCE = 'no') ibndmin - 1 + ibnd
+                WRITE(linewidth_elself, '(E22.14,2x)', ADVANCE = 'no') ryd2ev * ekk
+                WRITE(linewidth_elself, '(i9,2x)', ADVANCE = 'no') imode
+                WRITE(linewidth_elself, '(E22.14,2x)') ryd2mev * sigmai_mode(ibnd, imode, ik)
               ENDDO
             ELSE
-              WRITE(linewidth_elself,'(i9,2x)', ADVANCE = 'no') ik
-              WRITE(linewidth_elself,'(i9,2x)', ADVANCE = 'no') ibndmin - 1 + ibnd
-              WRITE(linewidth_elself,'(E22.14,2x)', ADVANCE = 'no') ryd2ev * ekk
-              WRITE(linewidth_elself,'(E22.14,2x)') ryd2mev * sigmai_all(ibnd, ik)
+              WRITE(linewidth_elself, '(i9,2x)', ADVANCE = 'no') ik
+              WRITE(linewidth_elself, '(i9,2x)', ADVANCE = 'no') ibndmin - 1 + ibnd
+              WRITE(linewidth_elself, '(E22.14,2x)', ADVANCE = 'no') ryd2ev * ekk
+              WRITE(linewidth_elself, '(E22.14,2x)') ryd2mev * sigmai_all(ibnd, ik)
             ENDIF
             !
           ENDDO
-          WRITE(stdout,'(5x,a/)') REPEAT('-',67)
+          WRITE(stdout, '(5x,a/)') REPEAT('-',67)
           !
         ENDDO
       ENDIF
@@ -471,7 +470,7 @@
           ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
           !zi_all (ibnd,ik) = one / ( one + zi_all (ibnd,ik) )
           !
-          WRITE(stdout,'(2i9,5f12.4)') ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd, ik), &
+          WRITE(stdout, '(2i9,5f12.4)') ik, ibndmin - 1 + ibnd, ryd2ev * ekk, ryd2mev * sigmar_all(ibnd, ik), &
                          ryd2mev * sigmai_all(ibnd, ik), zi_all(ibnd, ik), one / zi_all(ibnd, ik) - one
           ! 
         ENDDO
@@ -481,8 +480,10 @@
       ENDDO
       !
       CLOSE(linewidth_elself)
-      DEALLOCATE(xkf_all)
-      DEALLOCATE(etf_all)
+      DEALLOCATE(xkf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_elec_q', 'Error deallocating xkf_all', 1)
+      DEALLOCATE(etf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_elec_q', 'Error deallocating etf_all', 1)
       !
     ENDIF 
     !
@@ -830,8 +831,8 @@
       ! collect contributions from all pools (sum over k-points)
       ! this finishes the integral over the BZ  (k)
       !
-      CALL mp_sum(gamma,inter_pool_comm) 
-      CALL mp_sum(gamma_v,inter_pool_comm) 
+      CALL mp_sum(gamma, inter_pool_comm) 
+      CALL mp_sum(gamma_v, inter_pool_comm) 
       CALL mp_sum(fermicount, inter_pool_comm)
       CALL mp_barrier(inter_pool_comm)
       ! 
@@ -965,6 +966,8 @@
     !! 
     INTEGER :: n
     !! 
+    INTEGER :: ierr
+    !! Error status
     !! Integer for the degenerate average over eigenstates
     REAL(KIND = DP) :: tmp
     !! Temporary variable to store real part of Sigma for the degenerate average
@@ -1213,8 +1216,10 @@
     !
     IF (iqq == totq) THEN
       !
-      ALLOCATE(xkf_all(3, nkqtotf))
-      ALLOCATE(etf_all(nbndsub, nkqtotf))
+      ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_pl_q', 'Error allocating xkf_all', 1)
+      ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_pl_q', 'Error allocating etf_all', 1)
       xkf_all(:, :) = zero
       etf_all(:, :) = zero
       !
@@ -1308,8 +1313,10 @@
       !
       CLOSE(linewidth_elself)
       !
-      DEALLOCATE(xkf_all)
-      DEALLOCATE(etf_all)
+      DEALLOCATE(xkf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_pl_q', 'Error deallocating xkf_all', 1)
+      DEALLOCATE(etf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_pl_q', 'Error deallocating etf_all', 1)
       !
     ENDIF 
     !
@@ -1417,4 +1424,3 @@
   !-----------------------------------------------------------------------
   END MODULE selfen
   !-----------------------------------------------------------------------
-

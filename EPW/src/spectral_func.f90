@@ -62,7 +62,6 @@
     !! Total number of q-point in window
     ! 
     ! Local variables
-    !
     INTEGER :: iw
     !! Counter on the frequency
     INTEGER :: ik
@@ -83,6 +82,8 @@
     !! Lower bounds index after k or q paral
     INTEGER :: upper_bnd
     !! Upper bounds index after k or q paral
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: g2
     !! Electron-phonon matrix elements squared in Ry^2
     REAL(KIND = DP) :: ekk
@@ -264,8 +265,10 @@
     !
     IF (iqq == totq) THEN
       !
-      ALLOCATE(xkf_all(3, nkqtotf))
-      ALLOCATE(etf_all(nbndsub, nkqtotf))
+      ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_q', 'Error allocating xkf_all', 1)
+      ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_q', 'Error allocating etf_all', 1)
       xkf_all(:, :) = zero
       etf_all(:, :) = zero
       !
@@ -392,8 +395,10 @@
       !
       IF (me_pool == 0) CLOSE(iospectral_sup)
       !
-      DEALLOCATE(xkf_all)
-      DEALLOCATE(etf_all)
+      DEALLOCATE(xkf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_q', 'Error deallocating xkf_all', 1)
+      DEALLOCATE(etf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_q', 'Error deallocating etf_all', 1)
       !
     ENDIF
     !
@@ -448,6 +453,7 @@
     INTEGER, INTENT(in) :: totq
     !! Total q-points in selecq window
     ! 
+    ! Local variables
     INTEGER :: ik
     !! Counter on the k-point index 
     INTEGER :: ikk
@@ -794,6 +800,8 @@
     !! 
     INTEGER :: upper_bnd
     !! 
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: g2
     !! 
     REAL(KIND = DP) :: ekk
@@ -869,14 +877,14 @@
     dw = (wmax_specfun - wmin_specfun) / DBLE(nw_specfun - 1)
     !
     IF (iqq == 1) THEN
-       !
-       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-       WRITE(stdout, '(5x,"Electron Spectral Function in the Migdal Approximation")')
-       WRITE(stdout, '(5x,a/)') REPEAT('=',67)
-       !
-       IF (fsthick < 1.d3 ) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-       WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
-       !
+      !
+      WRITE(stdout, '(/5x,a)') REPEAT('=',67)
+      WRITE(stdout, '(5x,"Electron Spectral Function in the Migdal Approximation")')
+      WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+      !
+      IF (fsthick < 1.d3 ) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+      WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
+      !
     ENDIF
     !
     ! Fermi level and corresponding DOS
@@ -1026,8 +1034,10 @@
     !
     IF (iqq == totq) THEN
       !
-      ALLOCATE(xkf_all(3, nkqtotf))
-      ALLOCATE(etf_all(nbndsub, nkqtotf))
+      ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error allocating xkf_all', 1)
+      ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error allocating etf_all', 1)
       xkf_all(:, :) = zero
       etf_all(:, :) = zero
       !
@@ -1150,8 +1160,10 @@
       !
       IF (me_pool == 0) CLOSE(iospectral_sup)
       !
-      DEALLOCATE(xkf_all)
-      DEALLOCATE(etf_all)
+      DEALLOCATE(xkf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error deallocating xkf_all', 1)
+      DEALLOCATE(etf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('spectral_func_pl_q', 'Error deallocating etf_all', 1)
     ENDIF
     !
     100 FORMAT(5x, 'Gaussian Broadening: ', f10.6, ' eV, ngauss=', i4)
@@ -1166,4 +1178,3 @@
   !-----------------------------------------------------------------------
   END MODULE spectral_func
   !-----------------------------------------------------------------------
-

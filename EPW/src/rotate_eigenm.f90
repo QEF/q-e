@@ -140,8 +140,7 @@
   !
   DO jmode = 1, nmodes
     DO imode = 1, jmode
-      dynp(imode + (jmode - 1) * jmode / 2) = &
-          (dyn1(imode, jmode) + CONJG(dyn1(jmode, imode))) / 2.d0
+      dynp(imode + (jmode - 1) * jmode / 2) = (dyn1(imode, jmode) + CONJG(dyn1(jmode, imode))) / 2.d0
     ENDDO
   ENDDO
   !
@@ -150,8 +149,7 @@
   !
   IF (iverbosity == 1) THEN
     !
-    !  check the frequencies
-    !
+    ! check the frequencies
     DO nu = 1, nmodes
       IF (w1(nu) > 0.d0) THEN
         wtmp(nu) =  SQRT(ABS(w1(nu)))
@@ -160,25 +158,25 @@
       ENDIF
     ENDDO
     WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (cm^{-1})")') 
-    WRITE(stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
+    WRITE(stdout, '(6(2x,f10.5))') (wtmp(nu) * rydcm1, nu = 1, nmodes)
     !
   ENDIF
   !
-  !  here dyn1 is dynq(:,:,iq_first) after dividing by the masses
-  !  (the true dyn matrix D_q)
+  ! here dyn1 is dynq(:,:,iq_first) after dividing by the masses
+  ! (the true dyn matrix D_q)
   !
-  !  -----------------------------------------------------------------------
-  !  the matrix gamma (Maradudin & Vosko, RMP, eq. 2.37)   
-  !  -----------------------------------------------------------------------
+  ! -----------------------------------------------------------------------
+  ! the matrix gamma (Maradudin & Vosko, RMP, eq. 2.37)   
+  ! -----------------------------------------------------------------------
   !
-  !  I have built the matrix by following step-by-step q2star_ph.f90 and
-  !  rotate_and_add_dyn.f90
+  ! I have built the matrix by following step-by-step q2star_ph.f90 and
+  ! rotate_and_add_dyn.f90
   !
   ism1 = invs(isym)
   !
-  !  the symmetry matrix in cartesian coordinates 
-  !  (so that we avoid going back and forth with the dynmat)  
-  !  note the presence of both at and bg in the transform!
+  ! the symmetry matrix in cartesian coordinates 
+  ! (so that we avoid going back and forth with the dynmat)  
+  ! note the presence of both at and bg in the transform!
   !
   scart = DBLE(s(:, :, ism1))
   scart = MATMUL(MATMUL(bg, scart), TRANSPOSE(at))
@@ -208,22 +206,21 @@
     !
     !  D_{Sq} = gamma * D_q * gamma^\dagger (Maradudin & Vosko, RMP, eq. 3.5) 
     ! 
-    CALL zgemm ('n', 'n', nmodes, nmodes, nmodes, cone, gamma, &
+    CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, gamma, &
            nmodes, dyn1 , nmodes, czero , dyn2, nmodes)
-    CALL zgemm ('n', 'c', nmodes, nmodes, nmodes, cone, dyn2, &
+    CALL ZGEMM('n', 'c', nmodes, nmodes, nmodes, cone, dyn2, &
            nmodes, gamma, nmodes, czero, dyn1, nmodes)
     !
     DO jmode = 1, nmodes
       DO imode = 1, jmode
-        dynp(imode + (jmode - 1) * jmode / 2) = &
-            (dyn1(imode, jmode) + CONJG(dyn1(jmode, imode))) / 2.d0
+        dynp(imode + (jmode - 1) * jmode / 2) = (dyn1(imode, jmode) + CONJG(dyn1(jmode, imode))) / 2.d0
       ENDDO
     ENDDO
     !
-    CALL zhpevx('V', 'A', 'U', nmodes, dynp, 0.0, 0.0, &
+    CALL ZHPEVX('V', 'A', 'U', nmodes, dynp, 0.0, 0.0, &
                 0, 0, -1.0, neig, w2, cz2, nmodes, cwork, rwork, iwork, ifail, info)
     !
-    !  check the frequencies
+    ! Check the frequencies
     !
     DO nu = 1, nmodes
       IF (w2(nu) > 0.d0) THEN
@@ -238,9 +235,9 @@
   ENDIF
   !
   !
-  !  -----------------------------------------------------------------------
-  !  transformation of the eigenvectors: e_{Sq} = gamma * e_q  (MV eq. 2.36)
-  !  -----------------------------------------------------------------------
+  ! -----------------------------------------------------------------------
+  ! transformation of the eigenvectors: e_{Sq} = gamma * e_q  (MV eq. 2.36)
+  ! -----------------------------------------------------------------------
   !
   CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, gamma, &
        nmodes, cz1 , nmodes, czero , cz2, nmodes)
@@ -256,7 +253,7 @@
   ENDDO
   !
   ! the rotated matrix and the one read from file
-  IF (iverbosity == 1) WRITE(stdout,'(2f15.10)') dyn2 - dyn1 
+  IF (iverbosity == 1) WRITE(stdout, '(2f15.10)') dyn2 - dyn1 
   !
   ! here I have checked that the matrix rotated with gamma 
   ! is perfectly equal to the one read from file for this q in the star
@@ -273,7 +270,7 @@
   !
   IF (iverbosity == 1) THEN
     !
-    !  a simple check on the frequencies
+    ! A simple check on the frequencies
     !
     DO nu = 1, nmodes
       IF (w2(nu) > 0.d0 ) then
@@ -283,7 +280,7 @@
       ENDIF
     ENDDO
     WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^{-1})")') 
-    WRITE(stdout, '(6(2x,f10.5))' ) (wtmp(nu) * rydcm1, nu = 1, nmodes)
+    WRITE(stdout, '(6(2x,f10.5))') (wtmp(nu) * rydcm1, nu = 1, nmodes)
     !
   ENDIF
   !

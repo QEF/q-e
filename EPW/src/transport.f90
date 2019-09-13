@@ -20,21 +20,21 @@
     SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle) 
     !-----------------------------------------------------------------------
     !!
-    !!  This routine computes the scattering rate (inv_tau)
+    !! This routine computes the scattering rate (inv_tau)
     !!
-    !-----------------------------------------------------------------------
+    ! 
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, & 
-                              nstemp, scattering_serta, scattering_0rta, shortrange,&
-                              restart, restart_freq, restart_filq, vme
+    USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, restart,      & 
+                              nstemp, scattering_serta, scattering_0rta, shortrange, &
+                              restart_freq, restart_filq, vme
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
-                              epf17, nqtotf, nkqtotf, inv_tau_all, inv_tau_allcb, &
+                              epf17, nqtotf, nkqtotf, inv_tau_all, inv_tau_allcb,    &
                               xqf, zi_allvb, zi_allcb, nbndfst, nktotf, transp_temp, &
                               lower_bnd
-    USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
+    USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev,        & 
                               eps6, eps8, eps4
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
@@ -75,7 +75,8 @@
     !! Index over temperature range
     INTEGER :: nqtotf_new
     !! Number of q-point in the new dataset
-    !
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: tmp
     !! Temporary variable to store real part of Sigma for the degenerate average
     REAL(KIND = DP) :: tmp2
@@ -125,7 +126,6 @@
     !! Temporary array to store the zi
     REAL(KIND = DP), ALLOCATABLE :: inv_tau_all_new (:, :, :)
     !! New scattering rates to be merged
-    !
     REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
     !! Eigen-energies on the fine grid collected from all pools in parallel case
     REAL(KIND = DP), EXTERNAL :: DDOT
@@ -145,7 +145,7 @@
       WRITE(stdout, '(5x,"Scattering rate")')
       WRITE(stdout, '(5x,a/)') REPEAT('=',67)
       !
-      IF (fsthick < 1.d3 ) &
+      IF (fsthick < 1.d3) &
         WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
         WRITE(stdout, '(5x,a,f10.6,a)' ) 'This is computed with respect to the fine Fermi level ',ef * ryd2ev, ' eV'
         WRITE(stdout, '(5x,a,f10.6,a,f10.6,a)' ) 'Only states between ',(ef - fsthick) * ryd2ev, ' eV and ', &
@@ -189,7 +189,7 @@
                   !
                   IF (ABS(vkk(1, ibnd)**2 + vkk(2, ibnd)**2 + vkk(3, ibnd)**2 ) > eps4) &
                     vel_factor(ibnd, jbnd) = DDOT(3, vkk(:, ibnd), 1, vkq(:, jbnd), 1) / &
-                                            DDOT(3, vkk(:, ibnd), 1, vkk(:, ibnd), 1)
+                                             DDOT(3, vkk(:, ibnd), 1, vkk(:, ibnd), 1)
                 ENDDO
               ENDDO
             ELSE
@@ -205,7 +205,7 @@
                   !
                   IF (ABS(vkk(1, ibnd)**2 + vkk(2, ibnd)**2 + vkk(3, ibnd)**2 ) > eps4) &
                     vel_factor(ibnd, jbnd) = DDOT(3, vkk(:, ibnd), 1, vkq(:, jbnd), 1) / &
-                                            DDOT(3, vkk(:, ibnd), 1, vkk(:, ibnd), 1)
+                                             DDOT(3, vkk(:, ibnd), 1, vkk(:, ibnd), 1)
                 ENDDO  
               ENDDO
             ENDIF
@@ -272,8 +272,7 @@
                   !   [1 - f(E_k+q) + n(w_q)] * delta[E_k - E_k+q - w_q] } 
                   !
                   ! DBSP Just to try
-                  trans_prob = pi * wqf(iq) * g2 * & 
-                               ((fmkq + wgq) * w0g1 + (one - fmkq + wgq) * w0g2)
+                  trans_prob = pi * wqf(iq) * g2 * ((fmkq + wgq) * w0g1 + (one - fmkq + wgq) * w0g2)
                   !
                   IF (scattering_serta) THEN 
                     ! energy relaxation time approximation 
@@ -403,7 +402,8 @@
       !
       ! The total number of k points
       !
-      ALLOCATE(etf_all(nbndsub, nkqtotf))
+      ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('scattering_rate_q', 'Error allocating etf_all', 1)
       !
       CALL mp_sum(inv_tau_all, world_comm)
       IF (ABS(efcb(1)) > eps4) CALL mp_sum(inv_tau_allcb, world_comm)
@@ -429,14 +429,16 @@
         ! In case we read another q-file, merge the scattering here
         IF (restart_filq /= '') THEN
           ! 
-          ALLOCATE(inv_tau_all_new(nstemp, nbndfst, nktotf))
+          ALLOCATE(inv_tau_all_new(nstemp, nbndfst, nktotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('scattering_rate_q', 'Error allocating inv_tau_all_new', 1)
           inv_tau_all_new(:, :, :) = zero
           ! 
           CALL merge_read(nktotf, nqtotf_new, inv_tau_all_new) 
           ! 
           inv_tau_all(:, :, :) = (inv_tau_all(:, :, :) * totq &
                               + inv_tau_all_new(:, :, :) * nqtotf_new) / (totq + nqtotf_new)
-          DEALLOCATE(inv_tau_all_new)
+          DEALLOCATE(inv_tau_all_new, STAT = ierr)
+          IF (ierr /= 0) CALL errore('scattering_rate_q', 'Error deallocating inv_tau_all_new', 1)
           !
           WRITE(stdout, '(a)' ) '     '
           WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ', totq + nqtotf_new, ' q-points'
@@ -515,7 +517,8 @@
         !
       ENDDO !nstemp 
       !
-      DEALLOCATE(etf_all)
+      DEALLOCATE(etf_all, STAT = ierr)
+      IF (ierr /= 0) CALL errore('scattering_rate_q', 'Error deallocating etf_all', 1)
       ! 
       ! Creation of a restart point at the end
       IF (restart) THEN
@@ -550,7 +553,7 @@
     SUBROUTINE transport_coeffs(ef0, efcb)
     !-----------------------------------------------------------------------
     !!
-    !!  This SUBROUTINE computes the transport coefficients
+    !!  This routine computes the transport coefficients
     !!  SP - June 2018 - Update for symmetries in velocities when using homogeneous grids. 
     !!       This is currently commented out since it is ONLY needed if we are
     !!       interested in the off-diagonal mobility_\alpha\beta terms. 
@@ -562,20 +565,17 @@
     USE cell_base,     ONLY : alat, at, omega
     USE io_files,      ONLY : prefix 
     USE io_epw,        ONLY : iufilsigma 
-    USE epwcom,        ONLY : nbndsub, fsthick, & 
-                              system_2d, nstemp, &
-                              int_mob, ncarrier, scatread, &
-                              iterative_bte, vme
+    USE epwcom,        ONLY : nbndsub, fsthick, system_2d, nstemp,              &
+                              int_mob, ncarrier, scatread, iterative_bte, vme
     USE pwcom,         ONLY : ef 
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef, & 
+    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef,      & 
                               inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
                               zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
-    USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI, &
+    USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI,         &
                               kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
     USE mp,            ONLY : mp_sum, mp_bcast
     USE mp_global,     ONLY : world_comm
     USE mp_world,      ONLY : mpime
-    ! SP - Uncomment to use symmetries on velocities
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_global,     ONLY : ionode_id
     USE cell_base,     ONLY : bg
@@ -622,13 +622,14 @@
     !! k-point index that run on the full BZ
     INTEGER :: nb
     !! Number of points in the BZ corresponding to a point in IBZ    
+    INTEGER :: ierr
+    !! Error status
     INTEGER :: BZtoIBZ_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
     INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
     INTEGER(SIK2) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! symmetry 
-    ! 
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
     REAL(KIND = DP) :: dfnk
@@ -712,7 +713,6 @@
     inv_cell = 1.0d0 / omega
     ! for 2d system need to divide by area (vacuum in z-direction)
     IF (system_2d ) inv_cell = inv_cell * at(3, 3) * alat
-  
     ! 
     ! We can read the scattering rate from files. 
     IF (scatread) THEN
@@ -727,32 +727,39 @@
         ! Lets gather the velocities from all pools
 #if defined(__MPI)
         IF (vme) THEN 
-          ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating vmef_all', 1)
           vmef_all(:, :, :, :) = czero
           CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, vmef, vmef_all)
         ELSE
-          ALLOCATE(dmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(dmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating dmef_all', 1)
           dmef_all(:, :, :, :) = czero
           CALL poolgatherc4(3, nbndsub, nbndsub, nkqtotf, 2 * nkf, dmef, dmef_all)
         ENDIF
-        ALLOCATE(wkf_all(nkqtotf))
+        ALLOCATE(wkf_all(nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating wkf_all', 1)
         wkf_all(:) = zero
         CALL poolgather2(1, nkqtotf, 2 * nkf, wkf, wkf_all)
 #else
         IF (vme) THEN
-          ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(vmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating vmef_all', 1)
           vmef_all = vmef
         ELSE
-          ALLOCATE(dmef_all(3, nbndsub, nbndsub, nkqtotf))
+          ALLOCATE(dmef_all(3, nbndsub, nbndsub, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating dmef_all', 1)
           dmef_all = dmef
         ENDIF
 #endif     
-        ALLOCATE(tdf_sigma_m(3, 3, nbndfst, nkqtotf))
+        ALLOCATE(tdf_sigma_m(3, 3, nbndfst, nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating tdf_sigma_m', 1)
         tdf_sigma_m(:, :, :, :) = zero 
         ! 
         ! In this case, the sum over q has already been done. It should therefore be ok 
         ! to do the mobility in sequential. Each cpu does the same thing below
-        ALLOCATE(etf_all(nbndsub, nktotf))
+        ALLOCATE(etf_all(nbndsub, nktotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('transport_coeffs', 'Error allocating etf_all', 1)
         !
         CALL scattering_read(etemp, ef0(itemp), etf_all, inv_tau_all)
         ! 
@@ -905,12 +912,16 @@
         ENDIF ! int_mob .OR. (ncarrier > 1E5)
         ! 
         IF (vme) THEN
-          DEALLOCATE(vmef_all)
+          DEALLOCATE(vmef_all, STAT = ierr)
+          IF (ierr /= 0) CALL errore('transport_coeffs', 'Error deallocating vmef_all', 1)
         ELSE
-          DEALLOCATE(dmef_all)
+          DEALLOCATE(dmef_all, STAT = ierr)
+          IF (ierr /= 0) CALL errore('transport_coeffs', 'Error deallocating dmef_all', 1)
         ENDIF
-        DEALLOCATE(tdf_sigma_m)
-        DEALLOCATE(etf_all)
+        DEALLOCATE(tdf_sigma_m, STAT = ierr)
+        IF (ierr /= 0) CALL errore('transport_coeffs', 'Error deallocating tdf_sigma_m', 1)
+        DEALLOCATE(etf_all, STAT = ierr)
+        IF (ierr /= 0) CALL errore('transport_coeffs', 'Error deallocating etf_all', 1)
       ENDDO ! itemp
       !
     ELSE ! Case without reading the scattering rates from files.
@@ -1161,7 +1172,6 @@
   !        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis [Z]'
   !        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis [Z]'
   !        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg [Z]'
-  
           ! 
         ENDDO ! nstemp
         !
@@ -1464,7 +1474,6 @@
   !        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis [Z]'
   !        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis [Z]'
   !        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg [Z]'
-  
           ! 
         ENDDO ! nstemp
         WRITE(stdout,'(5x)')

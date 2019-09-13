@@ -7,10 +7,10 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------------------
-  SUBROUTINE wann_run
+  SUBROUTINE wann_run()
   !---------------------------------------------------------------------
   !!
-  !!  This is the SUBROUTINE which controls the w90 run.  Primarily,        
+  !!  This is the routine which controls the w90 run.  Primarily,        
   !!  we get the phases to remove degeneracies in the wfs, and 
   !!  call pw2wan90epw 
   !!  
@@ -30,7 +30,8 @@
   ! Local variables
   INTEGER :: num_kpts
   !! number of k-points in wannierization 
-  !
+  INTEGER :: ierr
+  !! Error status
   !
   CALL start_clock('WANNIER')
   ! 
@@ -40,9 +41,10 @@
   num_kpts = mp_grid(1) * mp_grid(2) * mp_grid(3)
   !
   IF (num_kpts /= nkstot) CALL errore('wannierize', 'inconsistent nscf and elph k-grids', 1) 
-  IF (nbnd < n_wannier )  CALL errore('wannierize', 'Must have as many or more bands than Wannier functions', 1) 
+  IF (nbnd < n_wannier)  CALL errore('wannierize', 'Must have as many or more bands than Wannier functions', 1) 
   !
-  ALLOCATE(kpt_latt(3, num_kpts))
+  ALLOCATE(kpt_latt(3, num_kpts), STAT = ierr)
+  IF (ierr /= 0) CALL errore('wann_run', 'Error allocating kpt_latt', 1)
   !
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
   WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nkc1, " x ", nkc2, " x ", nkc3 , " electronic grid"
@@ -53,15 +55,16 @@
   !
   ! write the short input file for the wannier90 code
   !
-  CALL write_winfil
+  CALL write_winfil()
   !
   ! run the wannier90 code to create MLWFs
   !
-  CALL pw2wan90epw
+  CALL pw2wan90epw()
   !
   ! project the Wannier functions onto energy space
   !
-  DEALLOCATE(kpt_latt)
+  DEALLOCATE(kpt_latt, STAT = ierr)
+  IF (ierr /= 0) CALL errore('wann_run', 'Error deallocating kpt_latt', 1)
   !
   WRITE(stdout, '(5x,a)') REPEAT("-",67)
   CALL print_clock('WANNIER')
@@ -72,15 +75,13 @@
   !------------------------------------------------------------
   !
   !------------------------------------------------------------
-  SUBROUTINE write_winfil
+  SUBROUTINE write_winfil()
   !------------------------------------------------------------
   !!
-  !!
-  !!  This SUBROUTINE writes the prefix.win file which wannier90.x
+  !!  This routine writes the prefix.win file which wannier90.x
   !!  needs to run.  Primarily it contains information about the 
   !!  windows used for the disentanglement, and the initial projections.
   !!  JN - 10/2008  projections now in elph.in file  
-  !------------------------------------------------------------
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : prefix
@@ -95,10 +96,11 @@
   !
   IMPLICIT NONE
   !
+  ! Local variables
   LOGICAL :: random
   !! Random 
   INTEGER :: i
-  !!
+  !! Band index
   REAL(KIND = DP) :: et_tmp(nbnd, nkstot)
   !! eigenvalues on full coarse k-mesh
   !
@@ -151,17 +153,17 @@
     !
     CLOSE(iuwinfil)
     !
-  ENDIF
+  ENDIF ! meta_ionode
   !
   !------------------------------------------------------------
   END SUBROUTINE write_winfil
   !------------------------------------------------------------
   ! 
   !------------------------------------------------------------
-  SUBROUTINE proj_w90
+  SUBROUTINE proj_w90()
   !------------------------------------------------------------
   !!
-  !! This SUBROUTINE computes the energy projections of
+  !! This routine computes the energy projections of
   !! the computed Wannier functions
   !! 07/2010  Needs work.  Right now this sub is nearly worthless  
   !
@@ -196,6 +198,8 @@
   !!
   INTEGER :: iwann
   !!
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP) :: dE
   !! 
   REAL(KIND = DP) :: sigma
@@ -226,14 +230,19 @@
   ne = INT((dis_win_max - dis_win_min + 1) / dE)
   IF (ne < 1) CALL errore('proj_wan', 'Problem with disentanglement window', 1)
   !
-  ALLOCATE(proj_wf(n_wannier, ne + 1))
+  ALLOCATE(proj_wf(n_wannier, ne + 1), STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating proj_wf', 1)
   proj_wf = 0.d0
   !
-  ALLOCATE(cu(nbnd, n_wannier, nks))
-  ALLOCATE(cuq(nbnd, n_wannier, nks))
-  ALLOCATE(xkq(3, nks))
+  ALLOCATE(cu(nbnd, n_wannier, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating cu', 1)
+  ALLOCATE(cuq(nbnd, n_wannier, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating cuq', 1)
+  ALLOCATE(xkq(3, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error allocating xkq', 1)
   CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband) 
-  DEALLOCATE(xkq) 
+  DEALLOCATE(xkq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error deallocating xkq', 1)
   !
   DO iwann = 1, n_wannier
     DO ie = 1, ne
@@ -263,9 +272,12 @@
     !
     CLOSE(iuprojfil)
   ENDIF
-  DEALLOCATE(proj_wf)
-  DEALLOCATE(cu)
-  DEALLOCATE(cuq)
+  DEALLOCATE(proj_wf, STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error deallocating proj_wf', 1)
+  DEALLOCATE(cu, STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error deallocating cu', 1)
+  DEALLOCATE(cuq, STAT = ierr)
+  IF (ierr /= 0) CALL errore('proj_w90', 'Error deallocating cuq', 1)
   !
   !------------------------------------------------------------
   END SUBROUTINE proj_w90

@@ -30,6 +30,12 @@
   ! 
   IMPLICIT NONE
   !
+  LOGICAL, INTENT(in) :: lwin(nbnd, nks)
+  !! Bands at k within outer energy window
+  LOGICAL, INTENT(in) :: lwinq(nbnd, nks)
+  !! Bands at k+q within outer energy window
+  LOGICAL, INTENT(in) :: exband(nbnd)
+  !! Bands excluded from the calculation of overlap and projection matrices
   INTEGER, INTENT(in) :: iq
   !!  Current qpoint
   REAL(KIND = DP), INTENT(in) :: xq(3)
@@ -38,12 +44,6 @@
   !! eigenvectors for the first q in the star
   COMPLEX(KIND = DP), INTENT(inout) :: cz2(nmodes, nmodes)
   !!  Rotated eigenvectors for the current q in the star
-  LOGICAL, INTENT(in) :: lwin(nbnd, nks)
-  !! Bands at k within outer energy window
-  LOGICAL, INTENT(in) :: lwinq(nbnd, nks)
-  !! Bands at k+q within outer energy window
-  LOGICAL, INTENT(in) :: exband(nbnd)
-  !! Bands excluded from the calculation of overlap and projection matrices
   !
   ! Local variables 
   INTEGER :: mu
@@ -167,7 +167,7 @@
         ! bring e-p matrix from the cartesian representation of the
         ! first q in the star to the corresponding eigenmode representation
         !
-        CALL zgemv('t', nmodes, nmodes, cone, cz1, nmodes,  &
+        CALL ZGEMV('t', nmodes, nmodes, cone, cz1, nmodes,  &
                    epmatq_opt(ibnd, jbnd, ik, :), 1, czero, eptmp, 1)
         !
         IF (lpolar) THEN
@@ -179,7 +179,7 @@
         !
         ! rotate epmat in the cartesian representation for this q in the star
         !
-        CALL zgemv('t', nmodes, nmodes, cone, cz2, nmodes, &
+        CALL ZGEMV('t', nmodes, nmodes, cone, cz2, nmodes, &
                   eptmp, 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
       ENDDO
     ENDDO
@@ -188,4 +188,3 @@
   !---------------------------------------------------------------------------
   END SUBROUTINE rotate_epmat
   !---------------------------------------------------------------------------
-

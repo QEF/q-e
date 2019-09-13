@@ -578,10 +578,8 @@
     !
     CALL cryst_to_cart(nq, xk, bg, 1)
     !
-    !
-    !  check spatial decay of dynamical matrix in Wannier basis
-    !  the unit in r-space is angstrom, and I am plotting
-    !  the matrix for the first mode only
+    ! check spatial decay of dynamical matrix in Wannier basis
+    ! the unit in r-space is angstrom, and I am plotting the matrix for the first mode only
     !
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iudecaydyn, FILE = 'decay.dynmat')

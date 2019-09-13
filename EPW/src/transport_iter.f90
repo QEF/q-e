@@ -26,7 +26,6 @@
     !!  The fine k-point and q-point grid have to be commensurate. 
     !!  The k-point grid uses crystal symmetry to decrease computational cost.
     !!
-    !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP, sgl
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : alat, at, omega, bg
@@ -35,12 +34,13 @@
                               system_2d, int_mob, ncarrier, restart, restart_freq, &
                               mp_mesh_k, nkf1, nkf2, nkf3, vme, broyden_beta
     USE pwcom,         ONLY : ef 
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef, & 
-                              wf, xkf, epf17, nqtotf, nkqtotf, nbndfst, nktotf, & 
-                              map_rebal, xqf, wqf, nqf, transp_temp, mobilityh_save, &
-                              mobilityel_save, lower_bnd, ixkqf_tr, s_BZtoIBZ_full
-    USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
-                              electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8, eps10, &
+    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef,   & 
+                              wf, xkf, epf17, nqtotf, nkqtotf, nbndfst, nktotf,    & 
+                              map_rebal, xqf, wqf, nqf, transp_temp,               &
+                              mobilityel_save, lower_bnd, ixkqf_tr, s_BZtoIBZ_full,&
+                              mobilityh_save
+    USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,        & 
+                              electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8,    &
                               eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm, world_comm, my_pool_id
@@ -94,8 +94,6 @@
     !! Is the current k-point a special k-point    
     LOGICAL :: special_map(nind)
     !! Special k-point map
-    INTEGER :: ierr
-    !! Error flag
     INTEGER :: ind
     !! Index for sparse matrix
     INTEGER :: iter
@@ -182,6 +180,8 @@
     !! Symmetry mapping
     INTEGER :: max_size 
     !! Max size of the arrays
+    INTEGER :: ierr
+    !! Error status
     INTEGER, ALLOCATABLE :: sp_map(:, :)
     !! Mapping for special points
     INTEGER, ALLOCATABLE :: counter_map(:)
@@ -194,7 +194,6 @@
     !! Inverse of k_inside_fsthick_id_nrot_inv
     INTEGER, ALLOCATABLE :: xkf_sp(:, :)
     !! Special k-points
-    ! 
     REAL(KIND = DP) :: tau
     !! Relaxation time
     REAL(KIND = DP) :: ekk
@@ -330,21 +329,23 @@
     ! 
     IF (iverbosity == 4) THEN
       ! Array size reporting
-      WRITE(stdout,'(5x,a)') 'Big array size reporting [Mb]'
-      WRITE(stdout,'(5x,a)') '-- ibte --'
-      WRITE(stdout,'(5x,a,f12.6)') 'BZtoIBZ : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
-      WRITE(stdout,'(5x,a,f12.6)') 's_BZtoIBZ : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 / 4 !INTEGER(SIK2)
-      WRITE(stdout,'(5x,a,f12.6)') 'F_SERTA : ',  (3 * (nbndfst) * (nktotf) * nstemp) * byte2Mb!REAL(8)
-      WRITE(stdout,'(5x,a,f12.6)') 'BZtoIBZ_mat : ',  nrot * (nktotf) * byte2Mb / 2 !INTEGER(4) 
-      WRITE(stdout,'(5x,a,f12.6)') 'xkf_bz : ', 3 * nkf1 * nkf2 * nkf3 * byte2Mb / 2 !REAL(4)
+      WRITE(stdout, '(5x,a)') 'Big array size reporting [Mb]'
+      WRITE(stdout, '(5x,a)') '-- ibte --'
+      WRITE(stdout, '(5x,a,f12.6)') 'BZtoIBZ : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
+      WRITE(stdout, '(5x,a,f12.6)') 's_BZtoIBZ : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 / 4 !INTEGER(SIK2)
+      WRITE(stdout, '(5x,a,f12.6)') 'F_SERTA : ',  (3 * (nbndfst) * (nktotf) * nstemp) * byte2Mb!REAL(8)
+      WRITE(stdout, '(5x,a,f12.6)') 'BZtoIBZ_mat : ',  nrot * (nktotf) * byte2Mb / 2 !INTEGER(4) 
+      WRITE(stdout, '(5x,a,f12.6)') 'xkf_bz : ', 3 * nkf1 * nkf2 * nkf3 * byte2Mb / 2 !REAL(4)
       rws(:, :) = zero
       CALL wsinit(rws, nrwsx, nrws, bg)
     ENDIF
     ! 
     ! Deal with symmetries
     IF (mp_mesh_k) THEN
-      ALLOCATE(ixkqf_tr(nind))
-      ALLOCATE(s_BZtoIBZ_full(nind))
+      ALLOCATE(ixkqf_tr(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error allocating ixkqf_tr', 1)
+      ALLOCATE(s_BZtoIBZ_full(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error allocating s_BZtoIBZ_full', 1)
       ! For a given k-point in the IBZ gives the k-point index
       ! of all the k-point in the full BZ that are connected to the current 
       ! one by symmetry. nrot is the max number of symmetry 
@@ -411,7 +412,7 @@
               IF (SUM(ABS(F_SERTA(:, ibnd, ik, itemp))) > eps160) THEN
                 xkk = xkf_all(:, 2 * ik - 1)
                 CALL cryst_to_cart(1, xkk, bg, 1)
-                WRITE(stdout,'(3i8,4f12.6,3E14.5)') itemp, ik, ibnd, xkk, ekk, F_SERTA(:, ibnd, ik, itemp)
+                WRITE(stdout, '(3i8,4f12.6,3E14.5)') itemp, ik, ibnd, xkk, ekk, F_SERTA(:, ibnd, ik, itemp)
               ENDIF
             ENDIF ! iverbosity 4
           ENDIF
@@ -551,10 +552,13 @@
     ENDDO ! end of while loop
     ! 
     ! Deallocate 
-    DEALLOCATE(xkf_sp)  
+    DEALLOCATE(xkf_sp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ibte', 'Error deallocating xkf_sp', 1)
     IF (mp_mesh_k) THEN
-      DEALLOCATE(ixkqf_tr)
-      DEALLOCATE(s_BZtoIBZ_full) 
+      DEALLOCATE(ixkqf_tr, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating ixkqf_tr', 1)
+      DEALLOCATE(s_BZtoIBZ_full, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating s_BZtoIBZ_full', 1)
     ENDIF 
     ! 
     RETURN
@@ -619,10 +623,8 @@
     !! Fermi level for the temperature itemp for cb band    
     ! 
     ! Local variables
-    !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read    
-    ! 
     INTEGER :: ierr
     !! Error status
     INTEGER :: ik
@@ -682,7 +684,6 @@
     INTEGER(KIND = 8) :: upper_bnd
     !! end for current CPU
 #endif
-    ! 
     REAL(KIND = DP) :: dum1
     !! Dummy variable
     REAL(KIND = DP), ALLOCATABLE :: trans_prob(:)
@@ -764,7 +765,8 @@
       ! Allocate the local size 
       nind = upper_bnd - lower_bnd + 1
       WRITE(stdout, '(5x,a,i10)') 'Number of elements per core ', nind
-      ALLOCATE(trans_prob(nind))
+      ALLOCATE(trans_prob(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating trans_prob', 1)
       trans_prob(:) = 0.0d0
       ! 
       ! Open file containing trans_prob 
@@ -795,11 +797,16 @@
       CALL MPI_FILE_OPEN(world_comm, 'sparset', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparset, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparset', 1)
       ! 
-      ALLOCATE(sparse_q(nind))
-      ALLOCATE(sparse_k(nind))
-      ALLOCATE(sparse_i(nind))
-      ALLOCATE(sparse_j(nind))
-      ALLOCATE(sparse_t(nind))
+      ALLOCATE(sparse_q(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_q', 1)
+      ALLOCATE(sparse_k(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_k', 1)
+      ALLOCATE(sparse_i(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_i', 1)
+      ALLOCATE(sparse_j(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_j', 1)
+      ALLOCATE(sparse_t(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_t', 1)
       sparse_q(:) = 0.0d0
       sparse_k(:) = 0.0d0
       sparse_i(:) = 0.0d0
@@ -845,12 +852,18 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparset, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
-      DEALLOCATE(trans_prob)
-      DEALLOCATE(sparse_q)
-      DEALLOCATE(sparse_k)
-      DEALLOCATE(sparse_i)
-      DEALLOCATE(sparse_j)
-      DEALLOCATE(sparse_t) 
+      DEALLOCATE(trans_prob, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating trans_prob', 1)
+      DEALLOCATE(sparse_q, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_q', 1)
+      DEALLOCATE(sparse_k, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_k', 1)
+      DEALLOCATE(sparse_i, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_i', 1)
+      DEALLOCATE(sparse_j, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_j', 1)
+      DEALLOCATE(sparse_t, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_t', 1)
       ! 
     ENDIF
     ! Electrons
@@ -860,7 +873,8 @@
       ! Allocate the local size 
       nind = upper_bnd - lower_bnd + 1
       WRITE(stdout, '(5x,a,i10)') 'Number of elements per core ', nind
-      ALLOCATE(trans_probcb(nind))
+      ALLOCATE(trans_probcb(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating trans_probcb', 1)
       trans_probcb(:) = 0.0d0
       ! 
       ! Open file containing trans_prob 
@@ -891,11 +905,16 @@
       CALL MPI_FILE_OPEN(world_comm, 'sparsetcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsetcb, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsetcb', 1)    
       ! 
-      ALLOCATE(sparsecb_q(nind))
-      ALLOCATE(sparsecb_k(nind))
-      ALLOCATE(sparsecb_i(nind))
-      ALLOCATE(sparsecb_j(nind))
-      ALLOCATE(sparsecb_t(nind))
+      ALLOCATE(sparsecb_q(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_q', 1)
+      ALLOCATE(sparsecb_k(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_k', 1)
+      ALLOCATE(sparsecb_i(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_i', 1)
+      ALLOCATE(sparsecb_j(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_j', 1)
+      ALLOCATE(sparsecb_t(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_t', 1)
       sparsecb_q(:) = 0.0d0
       sparsecb_k(:) = 0.0d0
       sparsecb_i(:) = 0.0d0
@@ -940,12 +959,18 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsetcb, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
-      DEALLOCATE(trans_probcb)
-      DEALLOCATE(sparsecb_q)
-      DEALLOCATE(sparsecb_k)
-      DEALLOCATE(sparsecb_i)
-      DEALLOCATE(sparsecb_j)
-      DEALLOCATE(sparsecb_t)
+      DEALLOCATE(trans_probcb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating trans_probcb', 1)
+      DEALLOCATE(sparsecb_q, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_q', 1)
+      DEALLOCATE(sparsecb_k, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_k', 1)
+      DEALLOCATE(sparsecb_i, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_i', 1)
+      DEALLOCATE(sparsecb_j, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_j', 1)
+      DEALLOCATE(sparsecb_t, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_t', 1)
       ! 
     ENDIF
 #endif  

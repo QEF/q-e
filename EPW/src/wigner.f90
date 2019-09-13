@@ -110,6 +110,8 @@
     !! maximum number of WS vectors for the phonons
     INTEGER :: nrr_g
     !! maximum number of WS vectors for the electron-phonon
+    INTEGER :: ierr
+    !! Error status
     INTEGER :: irvec_kk (3, 20 * nkc1 * nkc2 * nkc3)
     !! local INTEGER components of the ir-th Wigner-Seitz grid point 
     !! in the basis of the lattice vectors for electrons
@@ -142,15 +144,24 @@
     CALL wigner_seitzkq(nqc1, nqc2, nqc3, irvec_qq, ndegen_qq, wslen_qq, nrr_q, tau, dims2)
     CALL wigner_seitzg(nqc1, nqc2, nqc3, irvec_gg, ndegen_gg, wslen_gg, nrr_g, w_centers, tau, dims, dims2)
     ! 
-    ALLOCATE(irvec_k(3, nrr_k))
-    ALLOCATE(irvec_q(3, nrr_q))
-    ALLOCATE(irvec_g(3, nrr_g))
-    ALLOCATE(ndegen_k(nrr_k, dims, dims))
-    ALLOCATE(ndegen_q(nrr_q, dims2, dims2))
-    ALLOCATE(ndegen_g(nrr_g, dims2, dims, dims))
-    ALLOCATE(wslen_k(nrr_k))
-    ALLOCATE(wslen_q(nrr_q))
-    ALLOCATE(wslen_g(nrr_g))
+    ALLOCATE(irvec_k(3, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating irvec_k', 1)
+    ALLOCATE(irvec_q(3, nrr_q), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating irvec_q', 1)
+    ALLOCATE(irvec_g(3, nrr_g), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating irvec_g', 1)
+    ALLOCATE(ndegen_k(nrr_k, dims, dims), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating ndegen_k', 1)
+    ALLOCATE(ndegen_q(nrr_q, dims2, dims2), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating ndegen_q', 1)
+    ALLOCATE(ndegen_g(nrr_g, dims2, dims, dims), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating ndegen_g', 1)
+    ALLOCATE(wslen_k(nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating wslen_k', 1)
+    ALLOCATE(wslen_q(nrr_q), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating wslen_q', 1)
+    ALLOCATE(wslen_g(nrr_g), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitz_wrap', 'Error allocating wslen_g', 1)
     ! 
     ! Create vectors with correct size. 
     DO ir = 1, nrr_k
@@ -224,6 +235,8 @@
     !! Index of sorting
     INTEGER :: nind 
     !! The metric tensor
+    INTEGER :: ierr
+    !! Error status
     INTEGER :: nrr_tmp(dims, dims)
     !! Temporary WS matrix
     INTEGER :: irvec_tmp(3, 20 * nc1 * nc2 * nc3, dims, dims)
@@ -245,7 +258,8 @@
     IF (nind < 125) THEN
       nind = 125
     ENDIF
-    ALLOCATE(ind(nind))
+    ALLOCATE(ind(nind), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitzkq', 'Error allocating ind', 1)
     ! 
     DO ipol = 1, 3
      DO jpol = 1, 3
@@ -363,7 +377,7 @@
           tot = tot + 1.d0 / DBLE(ndegen_tmp(i, iw, iw2))
         ENDDO
         !
-        IF (ABS(tot - DBLE(nc1*nc2*nc3)) > eps6) call errore &
+        IF (ABS(tot - DBLE(nc1*nc2*nc3)) > eps6) CALL errore &
          ('wigner_seitzkq',' weights do not add up to nc1*nc2*nc3', 1)
         IF (ABS(tot - tot2) > eps6) CALL errore &
          ('wigner_seitzkq', ' weigths of pair of atoms is not equal to global weights', 1)
@@ -385,7 +399,8 @@
     !
     CALL cryst_to_cart(dims, shift(:, :), at, 1)
     ! 
-    DEALLOCATE(ind) 
+    DEALLOCATE(ind, STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitzkq', 'Error deallocating ind', 1)
     ! 
     !-----------------------------------------------------------------------------
     END SUBROUTINE wigner_seitzkq
@@ -454,6 +469,8 @@
     !! Index of sorting
     INTEGER :: nind
     !! The metric tensor
+    INTEGER :: ierr
+    !! Error status
     INTEGER :: nrr_tmp(dims2, dims, dims)
     !! Temporary array that contains the max number of WS vectors
     !! for a pair of atoms. 
@@ -476,7 +493,8 @@
     IF (nind < 125) THEN
       nind = 125
     ENDIF
-    ALLOCATE(ind(nind))
+    ALLOCATE(ind(nind), STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitzg', 'Error allocating ind', 1)
     !
     DO ipol = 1, 3
       DO jpol = 1, 3
@@ -537,7 +555,7 @@
                 found = .FALSE.
                 i = 1
                 mindist = dist(1)
-                DO WHILE (ABS(dist(i) - mindist) < eps6 .AND. i < 125 )
+                DO WHILE (ABS(dist(i) - mindist) < eps6 .AND. i < 125)
                   IF (ind(i) == 63) found = .TRUE.
                   i = i + 1
                 ENDDO
@@ -633,7 +651,8 @@
     CALL cryst_to_cart(dims2, tau(:, :), at, 1)
     CALL cryst_to_cart(dims, w_centers(:, :), at, 1)
     !
-    DEALLOCATE(ind)
+    DEALLOCATE(ind, STAT = ierr)
+    IF (ierr /= 0) CALL errore('wigner_seitzg', 'Error deallocating ind', 1)
     ! 
     !------------------------------------------------------------------------------------------
     END SUBROUTINE wigner_seitzg

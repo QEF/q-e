@@ -54,10 +54,8 @@
     !! number of WS points
     INTEGER, INTENT(in) :: dims
     !! dims = nbndsub if use_ws or 1 otherwise
-    ! 
     REAL(KIND = DP), INTENT(out) :: eig (nbnd)
     !! interpolated hamiltonian eigenvalues for this kpoint 
-    ! 
     COMPLEX(KIND = DP), INTENT(in) :: cfac(nrr, dims, dims)
     !! Exponential factor
     COMPLEX(KIND = DP), INTENT(in) :: chw(nbnd, nbnd, nrr)
@@ -153,7 +151,7 @@
         ENDDO
       ENDDO
     ELSE
-      CALL zgemv('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac(:, 1, 1), 1, cone, chf, 1)
+      CALL ZGEMV('n', nbnd**2, nrr, cone, chw, nbnd**2, cfac(:, 1, 1), 1, cone, chf, 1)
     ENDIF
     !
     !---------------------------------------------------------------------
@@ -327,7 +325,6 @@
     !! coordinates of phononic WS points
     INTEGER, INTENT(in) :: ndegen_q(nrr_q, nat, nat)
     !! degeneracy of WS points
-    !
     REAL(KIND = DP), INTENT(in) :: xxq(3)
     !! kpoint coordinates for the interpolation
     REAL(KIND = DP), INTENT(out) :: eig(nmodes)
@@ -959,7 +956,7 @@
         ENDDO
       ENDDO
     ELSE
-      CALL zgemv('n', 3 * (nbnd**2), nrr, cone, cdmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cdmef(:, :, :), 1)
+      CALL ZGEMV('n', 3 * (nbnd**2), nrr, cone, cdmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cdmef(:, :, :), 1)
     ENDIF
     !
     !----------------------------------------------------------
@@ -1130,7 +1127,7 @@
         ENDDO
       ENDDO
     ELSE
-      CALL zgemv('n', 3 * (nbnd**2), nrr, cone, cvmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cvmef(:, :, :), 1)
+      CALL ZGEMV('n', 3 * (nbnd**2), nrr, cone, cvmew(:, :, :, :), 3 * (nbnd**2), cfac(:, 1, 1), 1, cone, cvmef(:, :, :), 1)
     ENDIF 
     !
     ! k-derivative of the Hamiltonian in the Wannier gauge
@@ -1274,7 +1271,7 @@
             ENDDO
           ENDDO
           !
-          CALL zhpevx('V', 'A', 'U', deg_dim(ideg), champ , zero, zero, &
+          CALL ZHPEVX('V', 'A', 'U', deg_dim(ideg), champ , zero, zero, &
                     0, 0, -one, neig, w, cz, deg_dim(ideg), cwork, rwork, iwork, ifail, info)
           !
           vmef_deg(ipol, :, :) = zero
@@ -1372,7 +1369,7 @@
     !! interpolated velocity matrix elements in Bloch basis, fine mesh, in the degenerate subspaces
     !
     ! Local variables
-    LOGICAL, SAVE :: first=.TRUE.
+    LOGICAL, SAVE :: first = .TRUE.
     !! First entrance [used when lifc == .TRUE.]
     LOGICAL :: duplicates
     !! Returns if the modes contains degeneracices for that q-point.
@@ -1666,7 +1663,7 @@
             ENDDO
           ENDDO
           !
-          CALL zhpevx('V', 'A', 'U', deg_dim(ideg), champ , zero, zero, &
+          CALL ZHPEVX('V', 'A', 'U', deg_dim(ideg), champ , zero, zero, &
                     0, 0, -one, neig, w, cz, deg_dim(ideg), cwork, rwork, iwork, ifail, info)
           !
           vmef_deg(ipol, :, :) = zero
@@ -1738,8 +1735,6 @@
     ! 
     IMPLICIT NONE
     !
-    !  input variables
-    !
     INTEGER, INTENT(in) :: nmodes
     !! Total number of modes
     INTEGER, INTENT(in) :: nrr_g
@@ -1764,7 +1759,6 @@
     !! e-p matrix in Bloch representation, fine grid
     ! 
     ! Local variables 
-    !
     INTEGER :: ir
     !! Real space WS index
     INTEGER :: iw
@@ -2077,7 +2071,6 @@
     !! Counter on the number of Wannier functions
     INTEGER :: imode
     !! Counter on  phonon modes
-    !
     COMPLEX(KIND = DP) :: eptmp(nbnd, nbnd)
     !! Temporary variable
     CALL start_clock('ephW2B')
@@ -2196,7 +2189,7 @@
         ENDDO
       ENDDO
     ELSE
-      CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:, :, :), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :), 1)
+      CALL ZGEMV('n', nbnd**2, nrr, cone, epmatw(:, :, :), nbnd**2, cfac(:, 1, 1), 1, cone, epmatf(:, :), 1)
     ENDIF
     !
     !----------------------------------------------------------
@@ -2305,7 +2298,6 @@
     !
     REAL(KIND = DP) :: rdotk
     !! Exponential for the FT
-    !
     COMPLEX(KIND = DP) :: cfac(nrr_g, dims, dims)
     !! Factor for the FT
     COMPLEX(KIND = DP), ALLOCATABLE :: epmatw(:, :, :)

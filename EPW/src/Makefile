@@ -26,6 +26,7 @@ elph2.o \
 io_epw.o \
 low_lvl.o \
 division.o \
+rigid_epw.o \
 wan2bloch.o \
 wigner.o \
 io_dyn_mat2.o \
@@ -33,6 +34,7 @@ readmat.o \
 io_scattering.o \
 cum_mod.o \
 close_epw.o \
+poolgathering.o \
 printing.o \
 kfold.o \
 io_eliashberg.o \
@@ -40,11 +42,9 @@ eliashbergcom.o \
 superconductivity.o \
 superconductivity_iso.o \
 superconductivity_aniso.o \
-poolgathering.o \
 grid.o \
 transport.o \
 transport_iter.o \
-rigid_epw.o \
 a2f.o \
 adddvscf2.o \
 bcast_epw_input.o \

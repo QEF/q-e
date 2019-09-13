@@ -71,7 +71,7 @@
   !! a zero vector: used in eqvect
   REAL(KIND = DP), PARAMETER :: accep = 1.e-5_dp
   !! Tolerence
-  
+  !  
   zero(:) = 0.d0
   !
   ! go to  crystal coordinates
@@ -112,9 +112,9 @@
       saq(:, nq) = raq(:)
       sym_smallq(nq) = isym
       DO i = 1, 3
-         sxq(i, nq) = bg(i, 1) * saq(1, nq) &
-                    + bg(i, 2) * saq(2, nq) &
-                    + bg(i, 3) * saq(3, nq)
+        sxq(i, nq) = bg(i, 1) * saq(1, nq) &
+                   + bg(i, 2) * saq(2, nq) &
+                   + bg(i, 3) * saq(3, nq)
       ENDDO
     ENDIF
   ENDDO

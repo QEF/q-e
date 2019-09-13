@@ -7,7 +7,8 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !
-  SUBROUTINE setphases_wrap
+  !---------------------------------------------------------------------
+  SUBROUTINE setphases_wrap()
   !---------------------------------------------------------------------
   !!
   !!  This is the wrapper which is used to set the phases of the wavefunctions  
@@ -17,7 +18,6 @@
   !!  
   !!  The phases for all wavefunctions are now stored in umat_all
   !!  
-  !!
   !---------------------------------------------------------------------
   USE kinds,           ONLY : DP
   use klist,           only : nkstot
@@ -35,19 +35,21 @@
   !! Band-index
   INTEGER :: jbnd
   !! Band index
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP) :: zero_vect(3)
   !! Real vector
   !
-  IF (nproc_pool>1) call errore &
-       ('setphases_wrap', 'only one proc per pool', 1)
+  IF (nproc_pool>1) CALL errore('setphases_wrap', 'only one proc per pool', 1)
   !
-  ALLOCATE(umat_all(nbnd, nbnd, nkstot))
-  ALLOCATE(umat(nbnd, nbnd, nks))
+  ALLOCATE(umat_all(nbnd, nbnd, nkstot), STAT = ierr)
+  IF (ierr /= 0) CALL errore('setphases_wrap', 'Error allocating umat_all', 1)
+  ALLOCATE(umat(nbnd, nbnd, nks), STAT = ierr)
+  IF (ierr /= 0) CALL errore('setphases_wrap', 'Error allocating umat', 1)
   umat_all = (0.d0, 0.d0)
   zero_vect = 0.d0
   !
-  !
-  WRITE(stdout,'(5x,a)') 'No wavefunction gauge setting applied' 
+  WRITE(stdout, '(5x,a)') 'No wavefunction gauge setting applied' 
   !
   IF (ionode) THEN
     DO ik = 1, nkstot
@@ -78,14 +80,6 @@
   !
   CALL mp_sum(umat_all, inter_pool_comm)
   !
-  !IF (iverbosity == 1) then
-  !   WRITE (stdout,* ) "Phase setting matrices:"
-  !   DO ik = 1, nkstot
-  !      DO ibnd = 1, nbnd
-  !         WRITE(stdout, '(8f8.5)') umat_all(:,ibnd, ik)
-  !      ENDDO
-  !      WRITE(stdout,*)
-  !   ENDDO
-  !ENDIF
-  !
+  !---------------------------------------------------------------------
   END SUBROUTINE setphases_wrap
+  !---------------------------------------------------------------------

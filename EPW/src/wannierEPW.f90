@@ -13,10 +13,16 @@
   MODULE wannierEPW
   !-----------------------------------------------------------------------------------------
   !! 
-  !! 
+  !! Interface between Wannier and EPW
   !!   
   USE kinds, ONLY : DP
   ! 
+  CHARACTER(LEN = 15) :: wan_mode
+  !! running mode
+  CHARACTER(LEN = 256) :: seedname2
+  !! prepended to file names in wannier90. For implementation of wannier_lib
+  CHARACTER(LEN = 3), ALLOCATABLE :: atsym(:)
+  !! atomic symbols. atsym(nat)
   LOGICAL :: logwann
   !! 
   LOGICAL :: write_unk   
@@ -39,12 +45,6 @@
   !! lwindow(num_bands,iknum)
   LOGICAL, ALLOCATABLE :: excluded_band(:) 
   !! list of bands to exclude from the calculation of WFs
-  CHARACTER(LEN = 15) :: wan_mode    
-  !! running mode
-  CHARACTER(LEN = 256) :: seedname2 
-  !! prepended to file names in wannier90. For implementation of wannier_lib
-  CHARACTER(LEN = 3), ALLOCATABLE :: atsym(:) 
-  !! atomic symbols. atsym(nat)
   INTEGER :: nnb          
   !! number of b-vectors
   INTEGER :: iun_nnkp
