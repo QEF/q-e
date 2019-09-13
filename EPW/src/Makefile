@@ -27,10 +27,10 @@ io_epw.o \
 low_lvl.o \
 division.o \
 wan2bloch.o \
-io_scattering.o \
 wigner.o \
 io_dyn_mat2.o \
 readmat.o \
+io_scattering.o \
 cum_mod.o \
 close_epw.o \
 printing.o \

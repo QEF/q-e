@@ -10,7 +10,8 @@
   MODULE io_scattering
   !----------------------------------------------------------------------
   !! 
-  !! This module contains various printing routines
+  !! This module contains various writing or reading routines to files. 
+  !! Most of them are for restart purposes. 
   !! 
   IMPLICIT NONE
   ! 
@@ -149,7 +150,7 @@
     !! Temperature index
     ! 
     CHARACTER(LEN = 256) :: name1
- 
+    !! Variable name
     REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + nstemp + 1)
     !! Vector to store the array
     !
@@ -1540,15 +1541,15 @@
       !
       i = 0
       DO imode = 1, nmodes
-       DO ip = 1, np
-        DO jbnd = 1, nbnd
-         DO ibnd = 1, nbnd
-           i = i + 1
-           epmatw(ibnd, jbnd, ip, imode) = aux(i)
-           ! 
-         ENDDO
+        DO ip = 1, np
+          DO jbnd = 1, nbnd
+            DO ibnd = 1, nbnd
+              i = i + 1
+              epmatw(ibnd, jbnd, ip, imode) = aux(i)
+              ! 
+            ENDDO
+          ENDDO
         ENDDO
-       ENDDO
       ENDDO
       !
     ELSEIF (iop == 1) THEN 
@@ -1557,27 +1558,344 @@
       !
       i = 0
       DO imode = 1, nmodes
-       DO ip = 1, np
-        DO jbnd = 1, nbnd
-         DO ibnd = 1, nbnd
-           i = i + 1
-           aux(i) = epmatw(ibnd, jbnd, ip, imode)
-         ENDDO
+        DO ip = 1, np
+          DO jbnd = 1, nbnd
+            DO ibnd = 1, nbnd
+              i = i + 1
+              aux(i) = epmatw(ibnd, jbnd, ip, imode)
+            ENDDO
+          ENDDO
         ENDDO
-       ENDDO
       ENDDO
       !
       CALL davcio(aux, lrec, iun, nrec, +1)
       !
     ELSE
       !
-      CALL errore('rwepmatw','iop not permitted', 1)
+      CALL errore('rwepmatw', 'iop not permitted', 1)
       !
     ENDIF
     !
     !----------------------------------------------------------------------
     END SUBROUTINE rwepmatw
     !----------------------------------------------------------------------
+    ! 
+    !----------------------------------------------------------------------
+    SUBROUTINE epw_write(nrr_k, nrr_q, nrr_g, w_centers)
+    !----------------------------------------------------------------------
+    !
+    USE kinds,     ONLY : DP
+    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
+    USE pwcom,     ONLY : ef, nelec
+    USE elph2,     ONLY : chw, rdw, cdmew, cvmew, chw_ks, &
+                          zstar, epsi, epmatwp
+    USE ions_base, ONLY : amass, ityp, nat, tau
+    USE cell_base, ONLY : at, bg, omega, alat
+    USE phcom,     ONLY : nmodes  
+    USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
+                          crystal
+    USE noncollin_module, ONLY : noncolin              
+    USE io_files,  ONLY : prefix, diropn
+    USE mp,        ONLY : mp_barrier
+    USE mp_global, ONLY : inter_pool_comm
+    USE mp_world,  ONLY : mpime
+    USE io_global, ONLY : ionode_id, stdout
+    !
+    IMPLICIT NONE
+    ! 
+    INTEGER, INTENT(in) :: nrr_k
+    !! Number of WS vectors for the electrons
+    INTEGER, INTENT(in) :: nrr_q
+    !! Number of WS vectors for the phonons
+    INTEGER, INTENT(in) :: nrr_g
+    !! Number of WS vectors for the electron-phonons
+    REAL(KIND = DP), INTENT(in) :: w_centers(3, nbndsub)
+    !! Wannier center
+    ! 
+    ! Local variables
+    CHARACTER(LEN = 256) :: filint
+    !! Name of the file
+    LOGICAL             :: exst
+    !! The file exists
+    INTEGER :: ibnd, jbnd
+    !! Band index
+    INTEGER :: jmode, imode
+    !! Mode index        
+    INTEGER :: irk, irq, irg
+    !! WS vector looping index on electron, phonons and el-ph
+    INTEGER :: ipol
+    !! Cartesian direction (polarison direction)
+    INTEGER :: lrepmatw
+    !! Record length
+    !
+    WRITE(stdout,'(/5x,"Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file"/)')
+    !
+    IF (mpime == ionode_id) THEN
+      !
+      OPEN(UNIT = epwdata, FILE = 'epwdata.fmt')
+      OPEN(UNIT = crystal, FILE = 'crystal.fmt')
+      IF (vme) THEN 
+        OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt')
+      ELSE
+        OPEN(UNIT = iundmedata, FILE = 'dmedata.fmt')
+      ENDIF
+      IF (eig_read) OPEN(UNIT = iunksdata, FILE = 'ksdata.fmt')
+      WRITE(crystal,*) nat
+      WRITE(crystal,*) nmodes
+      WRITE(crystal,*) nelec
+      WRITE(crystal,*) at
+      WRITE(crystal,*) bg
+      WRITE(crystal,*) omega
+      WRITE(crystal,*) alat
+      WRITE(crystal,*) tau
+      WRITE(crystal,*) amass
+      WRITE(crystal,*) ityp
+      WRITE(crystal,*) noncolin
+      WRITE(crystal,*) w_centers
+      !
+      WRITE(epwdata,*) ef
+      WRITE(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
+      WRITE(epwdata,*) zstar, epsi
+      !
+      DO ibnd = 1, nbndsub
+        DO jbnd = 1, nbndsub
+          DO irk = 1, nrr_k
+            WRITE (epwdata,*) chw(ibnd, jbnd, irk)
+            IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd, jbnd, irk)
+            DO ipol = 1, 3
+              IF (vme) THEN 
+                WRITE(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
+              ELSE
+                WRITE(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+      DO imode = 1, nmodes
+        DO jmode = 1, nmodes
+          DO irq = 1, nrr_q
+            WRITE(epwdata,*) rdw(imode, jmode, irq) 
+          ENDDO
+        ENDDO
+      ENDDO
+      !
+      IF (etf_mem == 0) THEN
+        ! SP: The call to epmatwp is now inside the loop
+        !     This is important as otherwise the lrepmatw INTEGER 
+        !     could become too large for integer(kind=4).
+        !     Note that in Fortran the record length has to be a integer
+        !     of kind 4. 
+        lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+        filint   = TRIM(prefix)//'.epmatwp'
+        CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
+        DO irg = 1, nrr_g
+          CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, +1)
+        ENDDO
+        ! 
+        CLOSE(iunepmatwp)
+      ENDIF 
+      !
+      CLOSE(epwdata)
+      CLOSE(crystal)
+      IF (vme) THEN 
+        CLOSE(iunvmedata)
+      ELSE
+        CLOSE(iundmedata)
+      ENDIF
+      IF (eig_read) CLOSE(iunksdata)
+      !
+    ENDIF
+    !--------------------------------------------------------------------------------
+    END SUBROUTINE epw_write
+    !--------------------------------------------------------------------------------
+    ! 
+    !--------------------------------------------------------------------------------
+    SUBROUTINE epw_read(nrr_k, nrr_q, nrr_g)
+    !--------------------------------------------------------------------------------
+    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc, nqc1, nqc2, nqc3
+    USE pwcom,     ONLY : ef
+    USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
+    USE ions_base, ONLY : nat
+    USE phcom,     ONLY : nmodes  
+    USE io_global, ONLY : stdout
+    USE io_files,  ONLY : prefix, diropn
+    USE io_epw,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
+    USE constants_epw, ONLY : czero, zero
+#if defined(__NAG)
+    USE f90_unix_io,ONLY : flush
+#endif
+    USE io_global, ONLY : ionode_id
+    USE mp,        ONLY : mp_barrier, mp_bcast
+    USE mp_global, ONLY : inter_pool_comm, world_comm
+    USE mp_world,  ONLY : mpime
+    USE readmat,   ONLY : read_ifc
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(out) :: nrr_k
+    !! Number of WS vectors for the electrons 
+    INTEGER, INTENT(out) :: nrr_q
+    !! Number of WS vectors for the phonons
+    INTEGER, INTENT(out) :: nrr_g
+    !! Number of WS vectors for the electron-phonons
+    ! 
+    ! Local variables
+    ! 
+    CHARACTER(LEN = 256) :: filint                                                                                   
+    !! Name of the file
+    LOGICAL :: exst                           
+    !! The file exists
+    INTEGER :: ibnd, jbnd
+    !! Band index
+    INTEGER :: jmode, imode
+    !! Mode index        
+    INTEGER :: irk, irq, irg
+    !! WS vector looping index on electron, phonons and el-ph
+    INTEGER :: ipol
+    !! Cartesian direction (polarison direction)
+    INTEGER :: lrepmatw
+    !! Record length
+    INTEGER :: ios 
+    !! Status of files
+    INTEGER :: ierr
+    !! Error status
+    ! 
+    WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
+    FLUSH(stdout)
+    ! 
+    ! This is important in restart mode as zstar etc has not been allocated
+    ALLOCATE(zstar(3, 3, nat), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating zstar', 1)
+    ALLOCATE(epsi(3, 3), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epsi', 1)
+    ! 
+    IF (mpime == ionode_id) THEN
+      !
+      OPEN(UNIT = epwdata, FILE = 'epwdata.fmt', STATUS = 'old', IOSTAT = ios)
+      IF (ios /= 0) CALL errore ('ephwann_shuffle', 'error opening epwdata.fmt', epwdata)
+      IF (eig_read) OPEN(UNIT = iunksdata, FILE = 'ksdata.fmt', STATUS = 'old', IOSTAT = ios)
+      IF (eig_read .AND. ios /= 0) CALL errore ('ephwann_shuffle', 'error opening ksdata.fmt', iunksdata)
+      IF (vme) THEN 
+        OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt', STATUS = 'old', IOSTAT = ios)
+        IF (ios /= 0) CALL errore ('ephwann_shuffle', 'error opening vmedata.fmt', iunvmedata)
+      ELSE
+        OPEN(UNIT = iundmedata, FILE = 'dmedata.fmt', STATUS = 'old', IOSTAT = ios)
+        IF (ios /= 0) CALL errore ('ephwann_shuffle', 'error opening dmedata.fmt', iundmedata)
+      ENDIF
+      READ(epwdata,*) ef
+      READ(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
+      READ(epwdata,*) zstar, epsi
+      ! 
+    ENDIF
+    CALL mp_bcast(ef,      ionode_id, world_comm)
+    CALL mp_bcast(nbndsub, ionode_id, world_comm)
+    CALL mp_bcast(nrr_k,   ionode_id, world_comm)
+    CALL mp_bcast(nmodes,  ionode_id, world_comm)
+    CALL mp_bcast(nrr_q,   ionode_id, world_comm)
+    CALL mp_bcast(nrr_g,   ionode_id, world_comm)
+    CALL mp_bcast(zstar,   ionode_id, world_comm)
+    CALL mp_bcast(epsi,    ionode_id, world_comm)
+    !
+    ALLOCATE(chw(nbndsub, nbndsub, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating chw', 1)
+    ALLOCATE(chw_ks(nbndsub, nbndsub, nrr_k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating chw_ks', 1)
+    ALLOCATE(rdw(nmodes, nmodes,  nrr_q), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_read', 'Error allocating rdw', 1)
+    IF (vme) THEN 
+      ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cvmew', 1)
+    ELSE
+      ALLOCATE(cdmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cdmew', 1)
+    ENDIF
+    !
+    IF (mpime == ionode_id) THEN
+     !
+     DO ibnd = 1, nbndsub
+       DO jbnd = 1, nbndsub
+         DO irk = 1, nrr_k
+           READ(epwdata,*) chw(ibnd, jbnd, irk)
+           IF (eig_read) READ(iunksdata,*) chw_ks(ibnd, jbnd, irk)
+           DO ipol = 1,3
+             IF (vme) THEN 
+               READ(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
+             ELSE
+               READ(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
+             ENDIF
+           ENDDO
+         ENDDO
+       ENDDO
+     ENDDO
+     !
+     IF (.NOT. lifc) THEN
+       DO imode = 1, nmodes
+         DO jmode = 1, nmodes
+           DO irq = 1, nrr_q
+             READ(epwdata,*) rdw(imode, jmode, irq)
+           ENDDO
+         ENDDO
+       ENDDO
+     ENDIF
+     !
+    ENDIF
+    !
+    CALL mp_bcast(chw, ionode_id, world_comm)
+    !
+    IF (eig_read) CALL mp_bcast(chw_ks, ionode_id, world_comm)
+    IF (.NOT. lifc) CALL mp_bcast(rdw, ionode_id, world_comm)
+    !
+    IF (vme) THEN 
+      CALL mp_bcast(cvmew, ionode_id, world_comm)
+    ELSE
+      CALL mp_bcast(cdmew, ionode_id, world_comm)
+    ENDIF
+    !
+    IF (lifc) THEN
+      CALL read_ifc
+    ENDIF
+    !
+    IF (etf_mem == 0) THEN
+      ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epmatwp', 1)
+      epmatwp = czero
+      IF (mpime == ionode_id) THEN
+        ! SP: The call to epmatwp is now inside the loop
+        !     This is important as otherwise the lrepmatw INTEGER 
+        !     could become too large for integer(kind=4).
+        !     Note that in Fortran the record length has to be a integer
+        !     of kind 4.      
+        lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+        filint   = TRIM(prefix)//'.epmatwp'
+        CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
+        DO irg = 1, nrr_g
+          CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, -1)
+        ENDDO
+        !  
+        CLOSE(iunepmatwp)
+      ENDIF
+      !
+      CALL mp_bcast(epmatwp, ionode_id, world_comm)
+      !
+    ENDIF
+    !
+    !CALL mp_barrier(inter_pool_comm)
+    IF (mpime == ionode_id) THEN
+      CLOSE(epwdata)
+      IF (vme) THEN 
+        CLOSE(iunvmedata)
+      ELSE
+        CLOSE(iundmedata)
+      ENDIF
+    ENDIF
+    !
+    WRITE(stdout, '(/5x,"Finished reading Wann rep data from file"/)')
+    !
+    !------------------------------------------------------------------------------
+    END SUBROUTINE epw_read
+    !------------------------------------------------------------------------------
   !------------------------------------------------------------------------------
   END MODULE io_scattering
   !------------------------------------------------------------------------------

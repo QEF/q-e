@@ -7,15 +7,15 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   ! Adapted from the code PH/phq_init - Quantum-ESPRESSO group                 
-  !--------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   SUBROUTINE epw_init(first_run)
   !----------------------------------------------------------------------------
   !
-  !!     This initialization is done nqc_irr times from elphon_shuffle_wrap
-  !!     not all of the following code is necessary.  More adaptation from
-  !!     phq_init is needed   
+  !! This initialization is done nqc_irr times from elphon_shuffle_wrap
+  !! not all of the following code is necessary.  More adaptation from
+  !! phq_init is needed   
   !!
-  !!     Roxana Margine - Dec 2018: Updated based on QE 6.3
+  !! Roxana Margine - Dec 2018: Updated based on QE 6.3
   !!
   !
   USE kinds,            ONLY : DP
@@ -44,16 +44,14 @@
   USE mp_global,        ONLY : inter_pool_comm, my_pool_id
   USE spin_orb,         ONLY : lspinorb
   USE lsda_mod,         ONLY : nspin, lsda, current_spin
-  USE phus,             ONLY : int1, int1_nc, int2, int2_so, &
-                               int4, int4_nc, int5, int5_so, &
-                               alphap
+  USE phus,             ONLY : int1, int1_nc, int2, int2_so,        &
+                               int4, int4_nc, int5, int5_so, alphap
   !
   IMPLICIT NONE
   !
-  LOGICAL :: first_run
+  LOGICAL, INTENT(in) :: first_run
   !
-  ! ... Local variables
-  !
+  ! Local variables
   INTEGER :: nt
   !! counter on atom types
   INTEGER :: ik
@@ -66,36 +64,47 @@
   !! counter on atoms
   INTEGER :: ig
   !! counter on G vectors
-  !
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP) :: arg
   !! the argument of the phase
-  !
   COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:, :)
   !! used to compute alphap
   !
-  !
-  CALL start_clock( 'epw_init' )
+  CALL start_clock('epw_init')
   ! 
   IF (first_run) THEN
-    ALLOCATE(vlocq(ngm, ntyp))
-    ALLOCATE(eigqts(nat))
+    ALLOCATE(vlocq(ngm, ntyp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating vlocq', 1)
+    ALLOCATE(eigqts(nat), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating eigqts', 1)
     IF (okvan) THEN
-      ALLOCATE(int1(nhm, nhm, 3, nat, nspin_mag))
-      ALLOCATE(int2(nhm, nhm, 3, nat, nat))
-      ALLOCATE(int4(nhm * (nhm + 1)/2, 3, 3, nat, nspin_mag))
-      ALLOCATE(int5(nhm * (nhm + 1)/2, 3, 3, nat , nat))
+      ALLOCATE(int1(nhm, nhm, 3, nat, nspin_mag), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int1', 1)
+      ALLOCATE(int2(nhm, nhm, 3, nat, nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int2', 1)
+      ALLOCATE(int4(nhm * (nhm + 1) / 2, 3, 3, nat, nspin_mag), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int4(nhm * ', 1)
+      ALLOCATE(int5(nhm * (nhm + 1) / 2, 3, 3, nat , nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int5(nhm * ', 1)
       IF (noncolin) THEN
-        ALLOCATE(int1_nc(nhm, nhm, 3, nat, nspin))
-        ALLOCATE(int4_nc(nhm, nhm, 3, 3, nat, nspin))
+        ALLOCATE(int1_nc(nhm, nhm, 3, nat, nspin), STAT = ierr)
+        IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int1_nc', 1)
+        ALLOCATE(int4_nc(nhm, nhm, 3, 3, nat, nspin), STAT = ierr)
+        IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int4_nc', 1)
         IF (lspinorb) THEN
-          ALLOCATE(int2_so(nhm, nhm, 3, nat, nat, nspin))
-          ALLOCATE(int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
+          ALLOCATE(int2_so(nhm, nhm, 3, nat, nat, nspin), STAT = ierr)
+          IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int2_so', 1)
+          ALLOCATE(int5_so(nhm, nhm, 3, 3, nat, nat, nspin), STAT = ierr)
+          IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int5_so', 1)
         ENDIF
       ENDIF ! noncolin
     ENDIF ! okvan
     !  
-    ALLOCATE(becp1(nks))
-    ALLOCATE(alphap(3, nks))
+    ALLOCATE(becp1(nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating becp1', 1)
+    ALLOCATE(alphap(3, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating alphap', 1)
     ! 
     DO ik = 1, nks
       CALL allocate_bec_type(nkb, nbnd, becp1(ik))
@@ -136,7 +145,8 @@
     !
   END DO
   !
-  ALLOCATE(aux1(npwx*npol, nbnd))
+  ALLOCATE(aux1(npwx * npol, nbnd), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_init', 'Error allocating aux1', 1)
   ! 
   DO ik = 1, nks
     !
@@ -178,10 +188,15 @@
     !
   ENDDO
   !
-  DEALLOCATE(aux1)
+  DEALLOCATE(aux1, STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_init', 'Error deallocating aux1', 1)
   !
-  IF (.NOT. ALLOCATED(igk_k_all)) ALLOCATE(igk_k_all(npwx, nkstot))
-  IF (.NOT. ALLOCATED(ngk_all))   ALLOCATE(ngk_all(nkstot))
+  IF (first_run) THEN
+    ALLOCATE(igk_k_all(npwx, nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating igk_k_all', 1)
+    ALLOCATE(ngk_all(nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating ngk_all', 1)
+  ENDIF
   !
 #if defined(__MPI)
   !
@@ -196,8 +211,12 @@
   !
 #endif
   !
-  IF (.NOT. first_run) CALL dvanqq2()
+  IF (.NOT. first_run) THEN
+    CALL dvanqq2()
+  ENDIF
   !
   CALL stop_clock('epw_init')
   !
+  !----------------------------------------------------------------------------
   END SUBROUTINE epw_init
+  !----------------------------------------------------------------------------

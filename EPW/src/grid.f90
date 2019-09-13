@@ -1393,7 +1393,7 @@
             selecq(totq) = iq
             ! 
             IF (MOD(totq, restart_freq) == 0) THEN
-              WRITE(stdout,'(5x,a,i12,i12)')'Number selected, total', totq, iq
+              WRITE(stdout,'(5x,a,i15,i15)')'Number selected, total', totq, iq
             ENDIF
           ENDIF
         ENDDO ! iq

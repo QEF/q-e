@@ -13,13 +13,10 @@
   !!
   !! Common variables for the epw program
   !!  
-  !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : npk
-  !!
-  !! ... the variable controlling the EPW run
-  !!
+  !
   SAVE
   ! 
   INTEGER :: ngaussw
@@ -144,7 +141,7 @@
   !! min frequency in electron spectral function due to e-p interaction 
   REAL(KIND = DP) :: wmax_specfun
   !! max frequency in electron spectral function due to e-p `interaction
-  REAL (KIND = DP), dimension(50) :: temps 
+  REAL(KIND = DP) :: temps(50) 
   !! temperature entering in the Eliashberg equtions (units of Kelvin)
   !
   ! Conductivity
@@ -177,8 +174,6 @@
   REAL(KIND = DP) :: n_r
   !! Refractive index
   !
-  !LOGICAL :: tphases
-  !! tphases:  if .TRUE. set absolute reference for unitary gauge of the eigenvectors
   LOGICAL :: elecselfen
   !! if .TRUE. calculate electron selfenergy due to e-p interaction
   LOGICAL :: phonselfen
@@ -194,8 +189,7 @@
   LOGICAL :: epwwrite
   !! if .TRUE. write all quantities in Wannier representation to file epwdata.fmt
   LOGICAL :: restart
-  !! if .TRUE. restart a calculation stopped during the interpolation phase from reading 
-  !! the XXX.restart file. 
+  !! if .TRUE. restart a calculation stopped during the interpolation phase from reading the XXX.restart file. 
   LOGICAL :: specfun_el
   !! if .TRUE. calculate spectral electron function due to e-p interaction
   LOGICAL :: specfun_ph
@@ -309,22 +303,25 @@
   !! directory for .dvscf and .dyn files (wannier interpolation)
   CHARACTER(LEN = 80) :: fileig 
   !! output file for the electron-phonon coefficients
-  CHARACTER(LEN = 256), dimension(200) :: proj 
+  CHARACTER(LEN = 256) :: proj(200) 
   !! projections for W90 
   CHARACTER(LEN = 256) :: bands_skipped
   !! k-point independent list of bands excluded from the calculation 
   !! of overlap and projection matrices in W90
-  CHARACTER(LEN = 256), dimension(200) :: wdata
+  CHARACTER(LEN = 256) :: wdata(200)
   !! any extra info for W90
   CHARACTER(LEN = 75) :: title 
   !! ...  title of the simulation  
   CHARACTER(LEN = 10)  :: asr_typ
   !! type of ASR if lifc=.TRUE.
   !
-END MODULE control_epw
-!
-!
-MODULE klist_epw
+  !-----------------------------------------------------------------------
+  END MODULE control_epw
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  MODULE klist_epw
+  !-----------------------------------------------------------------------
   !!        
   !! The variable for the k-points 
   !! 
@@ -351,11 +348,13 @@ MODULE klist_epw
   !! Eigenenergies on the full coarse k-grid 
   REAL(KIND = DP), ALLOCATABLE :: et_loc(:, :) 
   !! Eigenenergies on the local (each core) coarse k-grid 
-  ! 
-END MODULE klist_epw
-!
-!
-MODULE output_epw
+  !-----------------------------------------------------------------------
+  END MODULE klist_epw
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  MODULE output_epw
+  !-----------------------------------------------------------------------
   !!
   !! ... the name of the files
   !!
@@ -374,10 +373,16 @@ MODULE output_epw
   CHARACTER(LEN = 80) :: restart_filq
   !! input  file to restart from an exisiting q-file
   !
-END MODULE output_epw
-!
-MODULE epwcom
+  !-----------------------------------------------------------------------
+  END MODULE output_epw
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  MODULE epwcom
+  !-----------------------------------------------------------------------
   USE control_epw
   USE output_epw
   USE klist_epw
-END MODULE epwcom
+  !-----------------------------------------------------------------------
+  END MODULE epwcom
+  !-----------------------------------------------------------------------

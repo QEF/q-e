@@ -1033,8 +1033,216 @@
     RETURN   
     !-----------------------------------------------------------------------
     END FUNCTION fermicarrier
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    FUNCTION sumkg_seq(et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
+    !-----------------------------------------------------------------------
+    !!
+    !!  This function computes the number of states under a given energy e
+    !!
+    USE kinds, ONLY : DP
+    USE mp,    ONLY : mp_sum
+    ! 
+    IMPLICIT NONE
+    ! 
+    INTEGER, INTENT(in) :: nks
+    !! the total number of K points
+    INTEGER, INTENT(in) :: nbnd
+    !! the number of bands
+    INTEGER, INTENT(in) :: ngauss
+    !! the type of smearing
+    INTEGER, INTENT(in) :: is
+    !!
+    INTEGER, INTENT(in) :: isk(nks)
+    !!
+    REAL(KIND = DP), INTENT(in) :: wk (nks)
+    !! the weight of the k points
+    REAL(KIND = DP), INTENT(in) :: et (nbnd, nks)
+    !! the energy eigenvalues
+    REAL(KIND = DP), INTENT(in) :: degauss
+    !! gaussian broadening
+    REAL(KIND = DP), INTENT(in) :: e
+    !! the energy to check
+    REAL(KIND = DP)  :: sumkg_seq
+    !! Output of the function
+    !
+    ! Local variables
+    INTEGER :: ik
+    !! Counter on k points
+    INTEGER :: ibnd
+    !! Counter on the band energy
+    REAL(KIND = DP) ::sum1
+    !! Sum
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! Function which compute the smearing 
+    !
+    sumkg_seq = 0.d0
+    DO ik = 1, nks
+      sum1 = 0.d0
+      IF (is /= 0) THEN
+        IF (isk(ik) /= is) CYCLE
+      ENDIF
+      DO ibnd = 1, nbnd
+        sum1 = sum1 + wgauss((e - et(ibnd, ik)) / degauss, ngauss)
+      ENDDO
+      sumkg_seq = sumkg_seq + wk (ik) * sum1
+    ENDDO
+    !
+    RETURN
+    !
     !--------------------------------------------------------------------------
-  !------------------------------------------------------------------------
+    END FUNCTION sumkg_seq
+    !--------------------------------------------------------------------------
+    ! 
+    !--------------------------------------------------------------------
+    FUNCTION efermig_seq(et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
+    !--------------------------------------------------------------------
+    !!
+    !! Finds the Fermi energy - Gaussian Broadening
+    !! (see Methfessel and Paxton, PRB 40, 3616 (1989 )
+    !!
+    USE io_global,     ONLY : stdout
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : ryd2ev, eps10
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nks
+    !! Number of k-points per pool
+    INTEGER, INTENT(in) :: nbnd
+    !! Number of band
+    INTEGER, INTENT(in) :: Ngauss
+    !! 
+    INTEGER, INTENT(in) :: is
+    !! 
+    INTEGER, INTENT(in) :: isk(nks)
+    !! 
+    REAL(KIND = DP), INTENT(in) :: wk(nks)
+    !!
+    REAL(KIND = DP), INTENT(in) :: et(nbnd, nks)
+    !!
+    REAL(KIND = DP), INTENT(in) :: Degauss
+    !!
+    REAL(KIND = DP), INTENT(in) :: nelec
+    !! Number of electron (charge)
+    ! 
+    ! Local variables
+    INTEGER :: i
+    !! Iteration number. 
+    INTEGER :: kpoint
+    !! k-point index
+    INTEGER, PARAMETER :: maxiter = 300
+    !! Maximum iteration number 
+    REAL(KIND = DP) :: efermig_seq 
+    !! Fermi energy (seq)
+    REAL(KIND = DP) :: Ef
+    !! Fermi energy
+    REAL (KIND = DP) :: Eup
+    !! Upper bound
+    REAL (KIND = DP) :: Elw
+    !! Lower bound 
+    REAL (KIND = DP) :: sumkup 
+    !! Sum upper one
+    REAL (KIND = DP) :: sumklw
+    !! Sum lower one
+    REAL (KIND = DP) :: sumkmid
+    !! Sum final
+    !REAL(KIND = DP), EXTERNAL :: sumkg_seq
+    !! K-point sum
+    !
+    ! Find bounds for the Fermi energy. Very safe choice!
+    !
+    Elw = et(1, 1)
+    Eup = et(nbnd, 1)
+    DO kpoint = 2, nks
+      Elw = MIN(Elw, et(1, kpoint))
+      Eup = MAX(Eup, et(nbnd, kpoint))
+    ENDDO
+    Eup = Eup + 2 * Degauss
+    Elw = Elw - 2 * Degauss
+    !
+    ! Bisection method
+    !
+    sumkup = sumkg_seq(et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
+    sumklw = sumkg_seq(et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
+    IF ((sumkup - nelec) < -eps10 .OR. (sumklw - nelec) > eps10) THEN
+      CALL errore ('efermig_seq', 'internal error, cannot bracket Ef', 1)
+    ENDIF
+    DO i = 1, maxiter
+      Ef = (Eup + Elw) / 2.d0
+      sumkmid = sumkg_seq(et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
+      IF (ABS(sumkmid-nelec) < eps10) THEN
+        efermig_seq = Ef
+        RETURN
+      ELSEIF ((sumkmid - nelec) < -eps10) THEN
+        Elw = Ef
+      ELSE
+        Eup = Ef
+      ENDIF
+    ENDDO
+    IF (is /= 0) WRITE(stdout, '(5x, "Spin Component #", i3)') is
+    WRITE(stdout, '(5x,"Warning: too many iterations in bisection"/ &
+         &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) Ef * ryd2ev, sumkmid
+    !
+    efermig_seq = Ef
+    RETURN
+    !
+    !--------------------------------------------------------------------------
+    END FUNCTION efermig_seq
+    !--------------------------------------------------------------------------
+    ! 
+    !--------------------------------------------------------------------------
+    SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf)
+    !--------------------------------------------------------------------------
+    !!
+    !! This routine estimates the amount of memory taken up by 
+    !! the $$<k+q| dV_q,nu |k>$$ on the fine meshes and prints 
+    !! out a useful(?) message   
+    !!
+    USE io_global, ONLY : stdout
+    USE kinds,     ONLY : DP
+    USE elph2,     ONLY : nbndfst
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: ibndmin
+    !! Min band
+    INTEGER, INTENT(in) :: ibndmax
+    !! Min band
+    INTEGER, INTENT(in) :: nmodes
+    !! Number of modes
+    INTEGER, INTENT(in) :: nkf
+    !! Number of k-points in pool 
+    !
+    ! Local variables
+    INTEGER :: imelt
+    !! Size in number of elements
+    REAL(KIND = DP) :: rmelt
+    !! Size in byte
+    CHARACTER(LEN = 256) :: chunit
+    !! Unit name
+    !
+    imelt = (nbndfst)**2 * nmodes * nkf
+    rmelt = imelt * 8 / 1048576.d0 ! 8 bytes per number, value in Mb
+    IF (rmelt < 1000.0) THEN
+      chunit =  ' Mb '
+      IF (rmelt < 1.0) THEN
+        chunit = ' Kb '
+        rmelt  = rmelt * 1024.d0
+      ENDIF
+    ELSE
+      rmelt = rmelt / 1024.d0
+      chunit = ' Gb '
+    ENDIF
+    WRITE(stdout, '(/,5x,a, i13, a,f7.2,a,a)') "Number of ep-matrix elements per pool :", &
+         imelt, " ~= ", rmelt, TRIM(chunit), " (@ 8 bytes/ DP)"
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE mem_size
+    !--------------------------------------------------------------------------
+
+  !-------------------------------------------------------------------------
   END MODULE low_lvl
-  !------------------------------------------------------------------------
+  !-------------------------------------------------------------------------
 

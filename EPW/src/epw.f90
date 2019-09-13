@@ -119,20 +119,17 @@
     !
     CALL print_clock('EPW')
     !
-    !  Generates the perturbation matrix which fixes the gauge of 
-    !  the calculated wavefunctions
-    !
+    ! Generates the perturbation matrix which fixes the gauge of 
+    ! the calculated wavefunctions
     CALL setphases_wrap
     !
     IF (wannierize) THEN
       !
-      !  Create U(k, k') localization matrix 
-      !      
+      ! Create U(k, k') localization matrix 
       CALL wann_run
     ELSE
       !
       ! Read Wannier matrix from a previous run
-      !
       WRITE(stdout, '(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
            TRIM(filukk) , ' from disk', REPEAT('-',67) 
     ENDIF
@@ -143,13 +140,11 @@
       !
     ENDIF
     !
-    ! ... cleanup of the variables
-    !
+    ! Cleanup of the variables
     CALL clean_pw(.FALSE.)
-    CALL deallocate_epw
+    CALL deallocate_epw()
     !
-    ! ... Close the files
-    !
+    ! Close the files
     CALL close_final()
     !
   ENDIF
@@ -162,9 +157,8 @@
     CALL eliashberg_eqs()
   ENDIF
   !
-  ! ... Print statistics and exit gracefully    
-  !
-  CALL stop_epw
+  ! Print statistics and exit gracefully    
+  CALL stop_epw()
   !
   STOP
   !

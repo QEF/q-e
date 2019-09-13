@@ -72,7 +72,7 @@
   USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk
   USE io_scattering, ONLY : electron_read, tau_read, iter_open, rwepmatw,       &
-                            iter_merge_parallel
+                            iter_merge_parallel, epw_read, epw_write
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
@@ -80,7 +80,8 @@
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, npool
   USE mp_world,      ONLY : mpime, world_comm
-  USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier
+  USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,       &
+                            sumkg_seq, efermig_seq, mem_size
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
@@ -252,7 +253,7 @@
   !! Function that returns the Fermi level so that n=p (if int_mob = .TRUE.)  
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
-  REAL(KIND = DP), EXTERNAL :: efermig_seq
+  !REAL(KIND = DP), EXTERNAL :: efermig_seq
   !! Same but in sequential
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
