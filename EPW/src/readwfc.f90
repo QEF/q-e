@@ -9,13 +9,12 @@
   !------------------------------------------------------------
   SUBROUTINE readwfc(ipool, recn, evc0)
   !------------------------------------------------------------
-  !
-  !  open wfc files as direct access, read, and close again
-  !
-  ! RM - Nov/Dec 2014
-  ! Imported the noncolinear case implemented by xlzhang
-  !
-  !-------------------------------------------------------------
+  !!
+  !! Open wfc files as direct access, read, and close again
+  !!
+  !! RM - Nov/Dec 2014
+  !! Imported the noncolinear case implemented by xlzhang
+  !!
   !
   USE kinds,    ONLY : DP
   USE io_files, ONLY : prefix, tmp_dir
@@ -47,8 +46,7 @@
   REAL(KIND = DP) :: dummy
   !! Dummy variable 
   !
-  !  open the wfc file, read and close
-  !
+  ! Open the wfc file, read and close
   CALL set_ndnmbr(ipool, me_pool, nproc_pool, npool, nd_nmbr0)
   !
 #if defined(__MPI)

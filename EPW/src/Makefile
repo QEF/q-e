@@ -44,6 +44,7 @@ poolgathering.o \
 grid.o \
 transport.o \
 transport_iter.o \
+rigid_epw.o \
 a2f.o \
 adddvscf2.o \
 bcast_epw_input.o \
@@ -76,7 +77,6 @@ print_ibte.o \
 readdvscf.o \
 readgmap.o \
 readwfc.o \
-rigid_epw.o \
 rotate_eigenm.o \
 rotate_epmat.o \
 setphases_wrap.o \

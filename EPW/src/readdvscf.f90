@@ -37,8 +37,7 @@
   !! the current q-point
   INTEGER, INTENT(in) :: nqc
   !! the total number of q-points in the list
-  !
-  COMPLEX(KIND = DP), INTENT(out) :: dvscf(dfftp%nnr,nspin_mag) 
+  COMPLEX(KIND = DP), INTENT(out) :: dvscf(dfftp%nnr, nspin_mag) 
   !! dVscf potential is read from file
   !
   ! Local variables

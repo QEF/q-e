@@ -69,6 +69,7 @@
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_modes
   USE readmat,       ONLY : readmat_shuffle2, read_ifc
   USE poolgathering, ONLY : poolgather
+  USE rigid_epw,     ONLY : compute_umn_c
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif

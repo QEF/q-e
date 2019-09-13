@@ -7,14 +7,13 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------------
-  SUBROUTINE readgmap (nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd) 
+  SUBROUTINE readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd) 
   !--------------------------------------------------------------
   !!
-  !!  read map of G vectors G -> G-G_0 for a given q point
-  !!  (this is used for the folding of k+q into the first BZ) 
-  !!    
+  !! read map of G vectors G -> G-G_0 for a given q point
+  !! (this is used for the folding of k+q into the first BZ) 
   !!
-  !--------------------------------------------------------------
+  ! 
   USE kinds,    ONLY : DP
   USE mp_global,ONLY : inter_pool_comm, world_comm
   USE mp,       ONLY : mp_bcast, mp_max
@@ -26,8 +25,6 @@
   !
   IMPLICIT NONE
   !
-  ! variables for folding of k+q grid
-  !
   INTEGER, INTENT(in) :: nkstot
   !! Total number of k-points
   INTEGER, INTENT(out) :: ngxx
@@ -36,12 +33,10 @@
   !! Number of G_0 vectors
   INTEGER, INTENT(in) :: lower_bnd
   !! Lower bound for the k-parallellization
-  ! 
-  REAL(KIND = DP), INTENT(out) :: g0vec_all_r(3,125)
+  REAL(KIND = DP), INTENT(out) :: g0vec_all_r(3, 125)
   !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
   !
-  !  work variables
-  !
+  ! Lork variables
   INTEGER :: ik
   !! Counter on k-points 
   INTEGER :: ik1, itmp
@@ -54,48 +49,49 @@
   !! Counter on G vectors
   INTEGER :: ios
   !! Integer variable for I/O control
-  !
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP) :: tmp
+  !! Temporary variable
   !
-  !  OBSOLETE: now we read directly the igkq to get the proper ngxx
+  ! OBSOLETE: now we read directly the igkq to get the proper ngxx
+  ! read only a piece of the map to save time 
+  ! the proper allocation bound would be ngxx = max(max(igkq))
+  ! where the max is taken over the ig and the ik
+  ! Here I use a simpler estimate: take the sphere npwx + two
+  ! extra shells. This may not work for strange shapes of the
+  ! reciproc latt. In this case just set ngxx = ngm_g
   !
-  !  read only a piece of the map to save time 
-  !  the proper allocation bound would be ngxx = max(max(igkq))
-  !  where the max is taken over the ig and the ik
-  !  Here I use a simpler estimate: take the sphere npwx + two
-  !  extra shells. This may not work for strange shapes of the
-  !  reciproc latt. In this case just set ngxx = ngm_g
+  ! ngxx = NINT(4./3.*3.14*(2+(3.0/4.0/3.14*DBLE(npwx))**(1./3.))**3.)
   !
-  !  ngxx = NINT(4./3.*3.14*(2+(3.0/4.0/3.14*DBLE(npwx))**(1./3.))**3.)
-  !
-
-  !  Note that the k+q point below does not correspond to the actual (true) 
-  !  k+q, but since we only need to take the max over k and k+q this
-  !  does not matter
+  ! Note that the k+q point below does not correspond to the actual (true) 
+  ! k+q, but since we only need to take the max over k and k+q this
+  ! does not matter
   !
   ngxx = 0
   DO ik = 1, nks
     !
-    IF (MAXVAL(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1)) > ngxx ) &
-      ngxx = MAXVAL(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1))
+    IF (MAXVAL(igk_k_all(1:ngk_all(ik + lower_bnd - 1), ik + lower_bnd - 1)) > ngxx) THEN
+      ngxx = MAXVAL(igk_k_all(1:ngk_all(ik + lower_bnd - 1), ik + lower_bnd - 1))
+    ENDIF
     !
   ENDDO
   !
 #if defined(__MPI)
   tmp = DBLE(ngxx)
-  CALL mp_max( tmp, inter_pool_comm )  
+  CALL mp_max(tmp, inter_pool_comm)  
   ngxx = NINT(tmp)
 #endif
   !
   IF (meta_ionode) THEN
     !
-    OPEN(iukgmap, FILE = TRIM(prefix)//'.kgmap', FORM = 'formatted', status='old', iostat=ios)
+    OPEN(iukgmap, FILE = TRIM(prefix)//'.kgmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
     IF (ios /=0) CALL errore('readgmap', 'error opening kgmap file', iukgmap)
     !
     DO ik = 1, nkstot
-      READ(iukgmap,*) ik1, shift(ik1)
+      READ(iukgmap, *) ik1, shift(ik1)
     ENDDO
-    READ(iukgmap,*) ng0vec
+    READ(iukgmap, *) ng0vec
     !
     !  the following seems crazy but I make it for compatibility
     !  with versions up to 2.1.5:
@@ -109,8 +105,8 @@
     !  'fake' reading is because the gmap appears *after* the
     !  wrong kmap.
     !
-    OPEN(iukmap, FILE = TRIM(prefix)//'.kmap', FORM = 'formatted', status='old', iostat=ios)
-    IF (ios /= 0) CALL errore ('readgmap', 'error opening kmap file', iukmap)
+    OPEN(iukmap, FILE = TRIM(prefix)//'.kmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
+    IF (ios /= 0) CALL errore('readgmap', 'error opening kmap file', iukmap)
     DO ik = 1, nkstot
       READ(iukmap,*) ik1, itmp, shift(ik1)
     ENDDO
@@ -120,9 +116,10 @@
   !
   ! first node broadcasts ng0vec to all nodes for allocation of gmap
   !
-  CALL mp_bcast( ng0vec, meta_ionode_id, world_comm )
+  CALL mp_bcast(ng0vec, meta_ionode_id, world_comm)
   !
-  ALLOCATE(gmap(ngxx * ng0vec))
+  ALLOCATE(gmap(ngxx * ng0vec), STAT = ierr)
+  IF (ierr /= 0) CALL errore('readgmap', 'Error allocating gmap', 1)
   !
   IF (meta_ionode) THEN
      !
@@ -133,7 +130,7 @@
       ! 
       ! at variance with the nscf calculation, here gmap is read as a vector,
       ! 
-      READ(iukgmap,*) ( gmap(ng0vec * ( ig - 1 ) + ishift), ishift = 1, ng0vec )
+      READ(iukgmap,*) (gmap(ng0vec * ( ig - 1 ) + ishift), ishift = 1, ng0vec)
     ENDDO
     !
     CLOSE(iukgmap)
@@ -146,4 +143,6 @@
   CALL mp_bcast(shift, meta_ionode_id, world_comm)
   CALL mp_bcast(gmap, meta_ionode_id, world_comm)
   !
+  !--------------------------------------------------------------
   END SUBROUTINE readgmap
+  !--------------------------------------------------------------

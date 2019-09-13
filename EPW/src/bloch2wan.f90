@@ -505,10 +505,9 @@
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier
     USE mp_global,     ONLY : inter_pool_comm
+    USE rigid_epw,     ONLY : rgd_blk
     ! 
     IMPLICIT NONE
-    !
-    !  input variables
     !
     INTEGER, INTENT(in) :: nmodes
     !! number of branches
@@ -518,27 +517,22 @@
     !! number of WS points
     INTEGER, INTENT(in) :: irvec(3, nrr)
     !! coordinates of WS points
-    !
     REAL(KIND = DP), INTENT(in) :: xk(3, nq)
     !! kpoint coordinates (cartesian in units of 2piba)
     REAL(KIND = DP), INTENT(in) :: wslen(nrr)
     !! WS vectors length (alat units)
-    !
-    COMPLEX(KIND = DP), INTENT(in) :: dynq(nmodes, nmodes, nq)
+    COMPLEX(KIND = DP), INTENT(inout) :: dynq(nmodes, nmodes, nq)
     !! dynamical matrix in bloch representation (Cartesian coordinates)
     !
-    ! work variables
-    !
+    ! Local variables
     INTEGER :: ik
     !! Counter on k-point
     INTEGER :: ir
     !! Counter on WS points
-    !
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
     REAL(KIND = DP) :: tmp
     !! Temporary variables
-    !
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
     !
@@ -546,7 +540,7 @@
     IF (lpolar) THEN
       DO ik = 1, nq
         !xk has to be in cart. coord.
-        CALL rgd_blk(nqc1, nqc2, nqc3, nat, dynq(1, 1, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
+        CALL rgd_blk(nqc1, nqc2, nqc3, nat, dynq(:, :, ik), xk(:, ik), tau, epsi, zstar, -1.d0)
         !
       ENDDO
     ENDIF
@@ -1422,7 +1416,7 @@
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
       IF (mpime == ionode_id) THEN
-        IF (ir == 1) OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', status='unknown')
+        IF (ir == 1) OPEN(UNIT = iuwanep, FILE = 'decay.epmat_wanep', STATUS = 'unknown')
         IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
         DO ire = 1, nrr_k
           !

@@ -73,19 +73,19 @@
   WRITE(stdout,*) '    Initializing Wannier90'
   WRITE(stdout,*) 
   !
-  CALL setup_nnkp
-  CALL ylm_expansion
-  CALL compute_amn_para
-  CALL compute_mmn_para
-  CALL phases_a_m
-  CALL write_band
-  IF (write_wfn) CALL write_plot
+  CALL setup_nnkp()
+  CALL ylm_expansion()
+  CALL compute_amn_para()
+  CALL compute_mmn_para()
+  CALL phases_a_m()
+  CALL write_band()
+  IF (write_wfn) CALL write_plot()
   !
   WRITE(stdout,*)
   WRITE(stdout,*) '    Running Wannier90'
   !
-  CALL run_wannier
-  CALL lib_dealloc
+  CALL run_wannier()
+  CALL lib_dealloc()
   !
   !-------------------------------------------------------------------------
   END SUBROUTINE pw2wan90epw
@@ -648,7 +648,7 @@
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
            nbnd, ",", nkstot,")"
       tempFILE = TRIM(prefix)//'.eig'
-      OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', action='read', iostat=ios)
+      OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', action='read', IOSTAT = ios)
       IF (ios /= 0) CALL errore('run_wannier','error opening' // tempfile, 1)
       READ(iuqpeig,'(a)') line
       DO ik = 1, nkstot
@@ -662,7 +662,7 @@
 
 ! SP : This file is not used for now. Only required to build the UNK file
 !      tempFILE = TRIM(prefix)//'.mmn'
-!      OPEN(iummn, FILE = tempfile, iostat=ios, FORM = 'unformatted')
+!      OPEN(iummn, FILE = tempfile, IOSTAT = ios, FORM = 'unformatted')
 !      WRITE(iummn) m_mat
 !      CLOSE(iummn)
 

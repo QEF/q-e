@@ -27,7 +27,7 @@
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub
-    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, nbndfst, &
+    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, nbndfst,    &
                               nkf, epf17, xkf, nkqtotf, wf, adapt_smearing, &
                               nktotf
     USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, eps8
@@ -66,7 +66,8 @@
     !! Mode index
     INTEGER :: n
     !! Number of modes
-    !
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate from all pools in parallel case
     REAL(KIND = DP) :: etf_all(nbndsub, nkqtotf)
@@ -93,8 +94,10 @@
     ! find the bounds of k-dependent arrays in the parallel case in each pool
     CALL fkbounds(nktotf, lower_bnd, upper_bnd)
     ! 
-    ALLOCATE(epc(nbndfst, nbndfst, nmodes, nktotf))
-    ALLOCATE(epc_sym(nbndfst, nbndfst, nmodes))
+    ALLOCATE(epc(nbndfst, nbndfst, nmodes, nktotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('print_gkk', 'Error allocating epc', 1)
+    ALLOCATE(epc_sym(nbndfst, nbndfst, nmodes), STAT = ierr)
+    IF (ierr /= 0) CALL errore('print_gkk', 'Error allocating epc_sym', 1)
     ! 
     epc(:, :, :, :)  = zero
     epc_sym(:, :, :) = zero
@@ -105,7 +108,7 @@
       ikq = ikk + 1
       ! 
       DO nu = 1, nmodes
-        wq = wf (nu, iq)
+        wq = wf(nu, iq)
         DO ibnd = 1, nbndfst
           DO jbnd = 1, nbndfst
             gamma = (ABS(epf17(jbnd, ibnd, nu, ik)))**two
@@ -121,8 +124,8 @@
         ENDDO   ! ibnd        
       ENDDO ! loop on modes
       !
-      !  Here we "SYMMETRIZE": actually we simply take the averages over
-      !  degenerate states, it is only a convention because g is gauge-dependent!
+      ! Here we "SYMMETRIZE": actually we simply take the averages over
+      ! degenerate states, it is only a convention because g is gauge-dependent!
       !
       ! first the phonons
       DO ibnd = 1, nbndfst
@@ -234,13 +237,15 @@
           ENDDO  
           !
         ENDDO
-        WRITE(stdout,'(5x, a/)') REPEAT('-',78)
+        WRITE(stdout, '(5x, a/)') REPEAT('-',78)
         !
       ENDDO
     ENDIF ! master node
     ! 
-    DEALLOCATE(epc)
-    DEALLOCATE(epc_sym)
+    DEALLOCATE(epc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('print_gkk', 'Error deallocating epc', 1)
+    DEALLOCATE(epc_sym, STAT = ierr)
+    IF (ierr /= 0) CALL errore('print_gkk', 'Error deallocating epc_sym', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE print_gkk
@@ -250,14 +255,12 @@
     SUBROUTINE print_serta_sym(F_SERTA, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0) 
     !-----------------------------------------------------------------------
     !!
-    !!  This routine prints the SERTA mobility using k-point symmetry.
+    !! This routine prints the SERTA mobility using k-point symmetry.
     !!
-    !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : at, omega, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
-                              nkf1, nkf2, nkf3
+    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, nkf1, nkf2, nkf3
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, lower_bnd, transp_temp, & 
                               nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
@@ -378,8 +381,7 @@
                 IF (BZtoIBZ_mat(nb, ik) > 0) THEN 
                   ikbz = BZtoIBZ_mat(nb, ik)
                   ! 
-                  ! Transform the symmetry matrix from Crystal to
-                  ! cartesian
+                  ! Transform the symmetry matrix from Crystal to cartesian
                   sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
                   sb       = MATMUL(bg, sa)
                   sr(:, :) = MATMUL(at, TRANSPOSE(sb))
@@ -454,7 +456,6 @@
                   sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                   sr       = TRANSPOSE(sr)
                   CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
-                  ! 
                   CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1)
                   !
                   DO j = 1, 3
@@ -507,14 +508,13 @@
     SUBROUTINE print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0) 
     !-----------------------------------------------------------------------
     !!
-    !!  This routine prints the SERTA mobility without k-point symmetry
+    !! This routine prints the SERTA mobility without k-point symmetry
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : at, omega, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
-                              nkf1, nkf2, nkf3
+    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, nkf1, nkf2, nkf3
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, &
                               lower_bnd, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
@@ -678,7 +678,6 @@
       ENDDO
       ! 
     ENDIF
-    
     RETURN
     !
     END SUBROUTINE print_serta
@@ -694,8 +693,7 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : at, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
-                              nkf1, nkf2, nkf3
+    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, nkf1, nkf2, nkf3
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, &
                               lower_bnd, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
@@ -726,7 +724,6 @@
     !! The Fermi level 
     REAL(KIND = DP), INTENT(inout) :: max_mob(nstemp)
     !! Maximum error for all temperature
-
     ! Local variables
     INTEGER :: itemp
     !! temperature index
@@ -973,7 +970,6 @@
     !! The Fermi level 
     REAL(KIND = DP), INTENT(inout) :: max_mob(nstemp)
     !! Maximum error for all temperature
-
     ! Local variables
     INTEGER :: itemp
     !! temperature index

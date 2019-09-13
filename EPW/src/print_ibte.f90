@@ -11,10 +11,9 @@
                         lrepmatw2_restart, lrepmatw5_restart, ctype) 
   !-----------------------------------------------------------------------
   !!
-  !!  This subroutine computes the transition probability and the scattering rates.
-  !!  Only the elements larger than threshold are saved on file. 
+  !! This subroutine computes the transition probability and the scattering rates.
+  !! Only the elements larger than threshold are saved on file. 
   !!
-  !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP, i4b
   USE cell_base,     ONLY : omega
   USE io_global,     ONLY : stdout
@@ -257,7 +256,7 @@
       ikk = 2 * ik - 1
       ikq = ikk + 1
       ! 
-      wkf_all(ik + lower_bnd - 1 ) = wkf(ikk)
+      wkf_all(ik + lower_bnd - 1) = wkf(ikk)
       !
       ! Average over the k electrons
       DO nu = 1, nmodes
@@ -530,15 +529,15 @@
     !
     IF (my_pool_id == 0) THEN
       OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt')
-      WRITE (iunrestart,*) iqq
-      WRITE (iunrestart,*) ind_tot
-      WRITE (iunrestart,*) ind_totcb
-      WRITE (iunrestart,*) npool
+      WRITE(iunrestart, *) iqq
+      WRITE(iunrestart, *) ind_tot
+      WRITE(iunrestart, *) ind_totcb
+      WRITE(iunrestart, *) npool
       DO ipool = 1, npool
-        WRITE (iunrestart,*) lrepmatw2_restart(ipool)
+        WRITE(iunrestart, *) lrepmatw2_restart(ipool)
       ENDDO
       DO ipool = 1, npool 
-        WRITE (iunrestart,*) lrepmatw5_restart(ipool)
+        WRITE(iunrestart, *) lrepmatw5_restart(ipool)
       ENDDO
       CLOSE(iunrestart)
       ! 
@@ -580,28 +579,28 @@
     IF (my_pool_id == 0) THEN
       ! Now write total number of q-point inside and k-velocity
       OPEN(iufilibtev_sup, FILE = 'IBTEvel_sup.fmt', FORM = 'formatted')
-      WRITE(iufilibtev_sup,'(a)') '# Number of elements in hole and electrons  '
-      WRITE(iufilibtev_sup,'(2i16)') ind_tot, ind_totcb
-      WRITE(iufilibtev_sup,'(a)') '# itemp    ef0    efcb'
+      WRITE(iufilibtev_sup, '(a)') '# Number of elements in hole and electrons  '
+      WRITE(iufilibtev_sup, '(2i16)') ind_tot, ind_totcb
+      WRITE(iufilibtev_sup, '(a)') '# itemp    ef0    efcb'
       DO itemp = 1, nstemp
-        WRITE(iufilibtev_sup,'(i8,2E22.12)') itemp, ef0(itemp), efcb(itemp)
+        WRITE(iufilibtev_sup, '(i8,2E22.12)') itemp, ef0(itemp), efcb(itemp)
       ENDDO
-      WRITE(iufilibtev_sup,'(a)') '# ik  ibnd      velocity (x,y,z)              eig     weight '
+      WRITE(iufilibtev_sup, '(a)') '# ik  ibnd      velocity (x,y,z)              eig     weight '
       DO ik = 1, nktotf
         DO ibnd = 1, nbndfst
-          WRITE(iufilibtev_sup,'(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
+          WRITE(iufilibtev_sup, '(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
         ENDDO
       ENDDO
       CLOSE(iufilibtev_sup)
       ! 
       ! Save the inv_tau and inv_tau_all on file (formatted)
       OPEN(iufilibtev_sup, FILE = 'inv_tau.fmt', FORM = 'formatted')
-      WRITE(iufilibtev_sup,'(a)') '# Hole relaxation time  '
-      WRITE(iufilibtev_sup,'(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+      WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
+      WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
           DO ibnd = 1, nbndfst
-            WRITE(iufilibtev_sup,'(i5,i8,i6,2E22.12)') itemp, ik, ibnd, etf_all(ibnd, ik), inv_tau_all(ibnd, ik, itemp)
+            WRITE(iufilibtev_sup, '(i5,i8,i6,2E22.12)') itemp, ik, ibnd, etf_all(ibnd, ik), inv_tau_all(ibnd, ik, itemp)
           ENDDO
         ENDDO
       ENDDO
@@ -609,12 +608,12 @@
       ! 
       ! Save the inv_tau and inv_tau_all on file (formatted)
       OPEN(iufilibtev_sup, FILE = 'inv_taucb.fmt', FORM = 'formatted')
-      WRITE(iufilibtev_sup,'(a)') '# Hole relaxation time  '
-      WRITE(iufilibtev_sup,'(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+      WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
+      WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
           DO ibnd = 1, nbndfst
-            WRITE(iufilibtev_sup,'(i5,i8,i6,2E22.12)') itemp, ik, ibnd, etf_all(ibnd, ik), inv_tau_allcb(ibnd, ik, itemp)
+            WRITE(iufilibtev_sup, '(i5,i8,i6,2E22.12)') itemp, ik, ibnd, etf_all(ibnd, ik), inv_tau_allcb(ibnd, ik, itemp)
           ENDDO
         ENDDO
       ENDDO

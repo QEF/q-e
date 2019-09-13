@@ -101,7 +101,7 @@
          WRITE(name1,'(a,a12,f6.2)') TRIM(prefix),'.imag_aniso_', temp
       ENDIF 
       ! 
-      OPEN(iufilgap, FILE = name1, FORM = 'formatted', err=100, iostat=ios)
+      OPEN(iufilgap, FILE = name1, FORM = 'formatted', err=100, IOSTAT = ios)
 100 CALL errore('eliashberg_read_aniso_iaxis','opening file '//name1,ABS(ios))
       READ(iufilgap,'(a)') word
       DO iw = 1, nsiw(itemp) ! loop over omega
@@ -497,7 +497,7 @@
     wsph(:) = zero
     !
     IF (mpime == ionode_id) THEN
-      OPEN(iua2ffil, FILE = fila2f, status='unknown', err=100, iostat=ios)
+      OPEN(iua2ffil, FILE = fila2f, STATUS = 'unknown', err=100, IOSTAT = ios)
 100   CALL errore('read_a2f','opening file'//fila2f,ABS(ios))
     !
       DO iwph = 1, nqstep
@@ -552,8 +552,8 @@
     ! read frequencies from file
     IF (mpime == ionode_id) THEN
       filfreq = TRIM(tmp_dir) // TRIM(prefix) // '.freq'
-      !OPEN(iufilfreq, FILE = filfreq, status='unknown', FORM = 'formatted', err=100, iostat=ios)
-      OPEN(iufilfreq, FILE = filfreq, status='unknown', FORM = 'unformatted', err=100, iostat=ios)
+      !OPEN(iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'formatted', err=100, IOSTAT = ios)
+      OPEN(iufilfreq, FILE = filfreq, STATUS = 'unknown', FORM = 'unformatted', err=100, IOSTAT = ios)
 100   CALL errore('read_frequencies','opening file '//filfreq,ABS(ios))
       !READ(iufilfreq,'(2i7)') nqtotf, nmodes
       READ(iufilfreq) nqtotf, nmodes
@@ -640,8 +640,8 @@
       ! read eigenvalues on the irreducible fine k-mesh
       !  
       filegnv = TRIM(tmp_dir) // TRIM(prefix) // '.egnv'
-      !OPEN(iufilegnv, FILE = filegnv, status='unknown', FORM = 'formatted', err=100, iostat=ios)
-      OPEN(iufilegnv, FILE = filegnv, status='unknown', FORM = 'unformatted', err=100, iostat=ios)
+      !OPEN(iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'formatted', err=100, IOSTAT = ios)
+      OPEN(iufilegnv, FILE = filegnv, STATUS = 'unknown', FORM = 'unformatted', err=100, IOSTAT = ios)
 100   CALL errore('read_eigenvalues','opening file '//filegnv,ABS(ios))
       !
       !READ(iufilegnv,'(5i7)') nkftot, nkf1, nkf2, nkf3, nkfs 
@@ -831,8 +831,8 @@
     IF (mpime == ionode_id) THEN
       !
       filikmap = TRIM(tmp_dir) // TRIM(prefix) // '.ikmap'
-      !OPEN(iufilikmap, FILE = filikmap, status='old', FORM = 'formatted', err=100, iostat=ios)
-      OPEN(iufilikmap, FILE = filikmap, status='old', FORM = 'unformatted', err=100, iostat=ios)
+      !OPEN(iufilikmap, FILE = filikmap, STATUS = 'old', FORM = 'formatted', err=100, IOSTAT = ios)
+      OPEN(iufilikmap, FILE = filikmap, STATUS = 'old', FORM = 'unformatted', err=100, IOSTAT = ios)
 100   CALL errore('read_kqmap','opening file '//filikmap,ABS(ios))
       !
       ! nkf_mesh - Total number of k points
@@ -1121,8 +1121,8 @@
 #else
        filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
 #endif
-       !OPEN(iufileph, FILE = filephmat, status='old', FORM = 'formatted', err=100, iostat=ios)
-       OPEN(iufileph, FILE = filephmat, status='old', FORM = 'unformatted', err=100, iostat=ios)
+       !OPEN(iufileph, FILE = filephmat, STATUS = 'old', FORM = 'formatted', err=100, IOSTAT = ios)
+       OPEN(iufileph, FILE = filephmat, STATUS = 'old', FORM = 'unformatted', err=100, IOSTAT = ios)
 100 CALL errore('read_ephmat','opening file '//filephmat,ABS(ios))
        !READ(iufileph,'(2i7)') tmp_pool_id, nkpool(ipool)
        READ(iufileph) tmp_pool_id, nkpool(ipool)
@@ -1157,7 +1157,7 @@
 #else
        filephmat = TRIM(tmp_dir) // TRIM(prefix) // '.ephmat'
 #endif     
-       OPEN(iufileph, FILE = filephmat, status='old', FORM = 'unformatted')
+       OPEN(iufileph, FILE = filephmat, STATUS = 'old', FORM = 'unformatted')
        READ(iufileph) tmp_pool_id, nks
        IF (ipool >= nmin .AND. ipool <= nmax) THEN
           DO iq = 1, nqtotf ! loop over q-points 

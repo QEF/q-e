@@ -315,6 +315,7 @@
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
     USE rigid,         ONLY : cdiagh2
     USE low_lvl,       ONLY : utility_zdotu
+    USE rigid_epw,     ONLY : rgd_blk
     !
     IMPLICIT NONE
     !
@@ -503,6 +504,7 @@
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
     USE io_global, ONLY : stdout
+    USE rigid_epw, ONLY : rgd_blk
     USE constants_epw, ONLY : twopi, czero, zero, one, eps8
     !
     IMPLICIT NONE
@@ -725,10 +727,9 @@
     SUBROUTINE dynifc2blochc(nmodes, rws, nrws, xq, chf)
     !--------------------------------------------------------------------------
     !!
-    !!  From the IFCs in the format of q2r, find the corresponding
-    !!  dynamical matrix for a given q point (as in matdyn.x) on the coarse grid
+    !! From the IFCs in the format of q2r, find the corresponding
+    !! dynamical matrix for a given q point (as in matdyn.x) on the coarse grid
     !!
-    !--------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at 
@@ -737,6 +738,7 @@
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, czero, zero, eps8
     USE io_global, ONLY : stdout
+    USE rigid_epw, ONLY : rgd_blk
     !
     IMPLICIT NONE
     !
@@ -1337,6 +1339,7 @@
     USE ions_base,     ONLY : amass, tau, nat, ityp
     USE io_global,     ONLY : stdout
     USE low_lvl,       ONLY : degen_sort
+    USE rigid_epw,     ONLY : rgd_blk_der
     !   
     IMPLICIT NONE
     !

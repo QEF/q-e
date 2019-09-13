@@ -26,6 +26,7 @@
   USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
   USE pwcom,         ONLY : nbnd, nks
   USE ions_base,     ONLY : amass, ityp
+  USE rigid_epw,     ONLY : rgd_blk_epw
   ! 
   IMPLICIT NONE
   !

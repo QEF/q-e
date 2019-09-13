@@ -50,7 +50,6 @@
   !! Coarse q-point grid 
   INTEGER, INTENT(in) :: nmodes
   !! Max number of modes
-  ! 
   REAL(KIND = DP), INTENT(in) :: q(3)
   !! q-vector from the full coarse or fine grid.
   REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
@@ -59,7 +58,6 @@
   !! effective charges tensor
   REAL(KIND = DP), INTENT(in) :: signe
   !! signe=+/-1.0 ==> add/subtract long range term
-  ! 
   COMPLEX(KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
   !! phonon eigenvec associated with q
   COMPLEX(KIND = DP), INTENT(inout) :: epmat(nbndsub, nbndsub)
@@ -67,7 +65,7 @@
   COMPLEX(KIND = DP), INTENT(in) :: bmat(nbndsub, nbndsub) 
   !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
   !
-  ! work variables
+  ! Local variables
   INTEGER :: na
   !! Atom index 1 
   INTEGER :: nb
@@ -76,7 +74,6 @@
   !! Polarison
   INTEGER :: m1, m2, m3
   !! Loop over q-points
-  !
   REAL(KIND = DP) :: qeq
   !! <q+G| epsil | q+G>
   REAL(KIND = DP) :: arg
@@ -91,7 +88,6 @@
   !!
   REAL(KIND = DP) :: geg
   !!
-  !
   COMPLEX(KIND = DP) :: fac
   !!
   COMPLEX(KIND = DP) :: facqd
@@ -110,39 +106,38 @@
   !
   epmatl(:, :) = czero   
   !
-  DO m1= -nqc1, nqc1
-    DO m2= -nqc2, nqc2
-      DO m3= -nqc3, nqc3
-      !
-      g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
-      g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
-      g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
-      !
-      qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3 ) + &
-             g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3 ) + &
-             g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3 )) !*twopi/alat
-      !
-      IF (qeq > 0.0_DP .AND. qeq / alph / 4.0_DP < gmax) THEN
+  DO m1 = -nqc1, nqc1
+    DO m2 = -nqc2, nqc2
+      DO m3 = -nqc3, nqc3
         !
-        qeq = qeq * twopi / alat
-        facqd = fac * EXP(-qeq / alph / 4.0d0) / qeq !/(two*wq)
+        g1 = m1 * bg(1, 1) + m2 * bg(1, 2) + m3 * bg(1, 3) + q(1)
+        g2 = m1 * bg(2, 1) + m2 * bg(2, 2) + m3 * bg(2, 3) + q(2)
+        g3 = m1 * bg(3, 1) + m2 * bg(3, 2) + m3 * bg(3, 3) + q(3)
         !
-        DO na = 1, nat
-          arg = -twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
-          facq = facqd * CMPLX(COS(arg), SIN(arg), KIND = DP)
-          DO ipol = 1,3
-            zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
-            !
-            CALL ZAXPY(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmat(:, :), 1)
-            CALL ZAXPY(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmatl(:, :), 1)
-            !
-          ENDDO !ipol
-        ENDDO !nat
-      ENDIF
-      !
-      ENDDO
-    ENDDO
-  ENDDO
+        qeq = (g1 * (epsil(1, 1) * g1 + epsil(1, 2) * g2 + epsil(1, 3) * g3 ) + &
+               g2 * (epsil(2, 1) * g1 + epsil(2, 2) * g2 + epsil(2, 3) * g3 ) + &
+               g3 * (epsil(3, 1) * g1 + epsil(3, 2) * g2 + epsil(3, 3) * g3 )) !*twopi/alat
+        !
+        IF (qeq > 0.0_DP .AND. qeq / alph / 4.0_DP < gmax) THEN
+          !
+          qeq = qeq * twopi / alat
+          facqd = fac * EXP(-qeq / alph / 4.0d0) / qeq !/(two*wq)
+          !
+          DO na = 1, nat
+            arg = -twopi * (g1 * tau(1, na) + g2 * tau(2, na) + g3 * tau(3, na))
+            facq = facqd * CMPLX(COS(arg), SIN(arg), KIND = DP)
+            DO ipol = 1, 3
+              zaq = g1 * zeu(1, ipol, na) + g2 * zeu(2, ipol, na) + g3 * zeu(3, ipol, na)
+              !
+              CALL ZAXPY(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmat(:, :), 1)
+              CALL ZAXPY(nbndsub**2, facq * zaq * uq(3 * (na - 1) + ipol, imode), bmat(:, :), 1, epmatl(:, :), 1)
+              !
+            ENDDO !ipol
+          ENDDO !nat
+        ENDIF ! (qeq > 0.0_DP .AND. qeq / alph / 4.0_DP < gmax)
+      ENDDO ! m3
+    ENDDO ! m2
+  ENDDO ! m1
   !
   ! In case we want only the short-range we do
   ! g_s = SQRT(g*g - g_l*g_l)
@@ -157,4 +152,6 @@
   ENDIF        
   !
   !
-END SUBROUTINE rgd_blk_epw_fine_mem
+  !-------------------------------------------------------------------------------
+  END SUBROUTINE rgd_blk_epw_fine_mem
+  !-------------------------------------------------------------------------------
