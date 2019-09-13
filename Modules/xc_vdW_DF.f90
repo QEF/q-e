@@ -54,7 +54,8 @@ MODULE vdW_DF
 
 USE kinds,             ONLY : dp
 USE constants,         ONLY : pi, e2
-USE mp,                ONLY : mp_sum, mp_barrier, mp_get, mp_size, mp_rank
+USE funct,             ONLY : get_inlc
+USE mp,                ONLY : mp_sum, mp_barrier, mp_get, mp_size, mp_rank, mp_bcast
 USE mp_images,         ONLY : intra_image_comm
 USE mp_bands,          ONLY : intra_bgrp_comm
 USE io_global,         ONLY : stdout, ionode
@@ -62,8 +63,6 @@ USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
 
-
-USE kernel_table,      ONLY : kernel, d2phi_dk2
 
 ! ----------------------------------------------------------------------
 ! No implicit variables 
@@ -86,21 +85,24 @@ SAVE
 ! ----------------------------------------------------------------------
 ! Public functions
 
-PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, stress_vdW_DF, &
-           interpolate_kernel, initialize_spline_interpolation
+PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_energy, vdW_DF_potential, &
+           stress_vdW_DF, interpolate_kernel, saturate_q,              &
+           initialize_spline_interpolation, spline_interpolation
 
 
 ! ----------------------------------------------------------------------
 ! Public variables
 
-PUBLIC  :: vdW_type, Nr_points, r_max, Nqs, q_mesh, q_cut, q_min
+PUBLIC  :: inlc, Nr_points, r_max, q_mesh
+PUBLIC  :: vdW_type  !!!!!!! Remove in next commit
 
 
 ! ----------------------------------------------------------------------
 ! General variables
 
-INTEGER                  :: vdW_type  = 1
-REAL(DP), PARAMETER      :: epsr      = 1.0D-12
+INTEGER                  :: inlc   = 1
+INTEGER                  :: vdW_type  = 1 !!!!!!! Remove in next commit
+REAL(DP), PARAMETER      :: epsr   = 1.0D-12
 ! A small number to cut off densities
 
 
@@ -155,20 +157,20 @@ REAL(DP), DIMENSION(Nqs) :: q_mesh = (/  &
 ! actually in the variable q_mesh. Also, do not set any q value to 0.
 ! This will cause an infinity in the Fourier transform.
 
-REAL(DP) :: q_cut, q_min, dk, dr
+REAL(DP) :: q_cut, q_min, dr, dk
 ! The maximum and minimum values of q and the k-space spacing of grid
 ! points. During a vdW run, values of q0 found larger than q_cut will
 ! be saturated (SOLER equation 5) to q_cut.
 
-! REAL(DP) :: kernel(0:Nr_points, Nqs, Nqs), d2phi_dk2(0:Nr_points, Nqs, Nqs)
-! ! Matrices holding the Fourier transformed kernel function  and its
-! ! second derivative for each pair of q values. The ordering is
-! ! kernel(k_point, q1_value, q2_value).
+REAL(DP) :: kernel( 0:Nr_points, Nqs, Nqs ), d2phi_dk2( 0:Nr_points, Nqs, Nqs )
+! Matrices holding the Fourier transformed kernel function  and its
+! second derivative for each pair of q values. The ordering is
+! kernel(k_point, q1_value, q2_value).
 
-REAL(DP) :: W_ab(Nintegration_points, Nintegration_points)
+REAL(DP) :: W_ab( Nintegration_points, Nintegration_points )
 ! Defined in DION equation 16.
 
-REAL(DP) :: a_points(Nintegration_points)
+REAL(DP) :: a_points( Nintegration_points )
 ! The values of the "a" points (DION equation 14).
 
 INTEGER  :: idx
@@ -195,8 +197,8 @@ CONTAINS
      IMPLICIT NONE
      REAL(DP) :: s, Fs, Z_ab=0.0D0
 
-     IF (vdW_type == 1) Z_ab = -0.8491D0
-     IF (vdW_type == 2) Z_ab = -1.887D0
+     IF (inlc == 1) Z_ab = -0.8491D0
+     IF (inlc == 2) Z_ab = -1.887D0
      Fs = 1.0D0 - Z_ab * s**2 / 9.0D0
 
   END FUNCTION Fs
@@ -209,8 +211,8 @@ CONTAINS
      IMPLICIT NONE
      REAL(DP) :: s, dFs_ds, Z_ab=0.0D0
 
-     IF (vdW_type == 1) Z_ab = -0.8491D0
-     IF (vdW_type == 2) Z_ab = -1.887D0
+     IF (inlc == 1) Z_ab = -0.8491D0
+     IF (inlc == 2) Z_ab = -1.887D0
      dFs_ds =  -2.0D0 * s * Z_ab / 9.0D0
 
   END FUNCTION dFs_ds
@@ -346,15 +348,10 @@ CONTAINS
 
 
   ! --------------------------------------------------------------------
-  ! Check that the requested non-local functional is implemented.
-
-  if ( vdW_type /= 1 .AND. vdW_type /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
-
-
-  ! --------------------------------------------------------------------
-  ! Write out the vdW-DF imformation and initialize the kernel.
+  ! Write out the vdW-DF information and initialize the calculation.
 
   IF ( first_iteration ) THEN
+     inlc = get_inlc()
      CALL generate_kernel
      IF ( ionode ) CALL vdW_info
      first_iteration = .FALSE.
@@ -365,9 +362,9 @@ CONTAINS
   ! Allocate arrays. nnr is a PWSCF variable that holds the number of
   ! points assigned to a given processor.
 
-  allocate( q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr), &
-            grad_rho(3,dfftp%nnr) )
-  allocate( total_rho(dfftp%nnr), potential(dfftp%nnr), thetas(dfftp%nnr, Nqs) )
+  allocate( total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr),                &
+            potential(dfftp%nnr), thetas(dfftp%nnr, Nqs),               &
+            q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
 
 
   ! --------------------------------------------------------------------
@@ -402,7 +399,7 @@ CONTAINS
   ! inverse fourier transformed to get the u_i(r) functions of SOLER
   ! equation 11. Add the energy we find to the output variable etxc.
 
-  CALL vdW_energy (thetas, Ec_nl)
+  CALL vdW_DF_energy (thetas, Ec_nl)
   etxc = etxc + Ec_nl
 
   IF ( iverbosity > 0 ) THEN
@@ -427,7 +424,7 @@ CONTAINS
      CALL invfft('Rho', thetas(:,theta_i), dfftp)
   END DO
 
-  CALL get_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, thetas, potential)
+  CALL vdW_DF_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, thetas, potential)
   v(:,1) = v(:,1) + e2 * potential(:)
 
 
@@ -440,7 +437,7 @@ CONTAINS
      vtxc = vtxc + e2 * grid_cell_volume * rho_valence(i_grid,1) * potential(i_grid)
   END DO
 
-  DEALLOCATE ( potential, q0, grad_rho, dq0_drho, dq0_dgradrho, total_rho, thetas )
+  DEALLOCATE ( total_rho, grad_rho, potential, thetas, q0, dq0_drho, dq0_dgradrho )
 
   END SUBROUTINE xc_vdW_DF
 
@@ -456,8 +453,8 @@ CONTAINS
   !                          |  XC_VDW_DF_spin  |
   !                          |__________________|
   !
-  ! This subroutine is as similar to xc_vdW_DF as possible, but
-  ! handles the collinear nspin=2 case.
+  ! This subroutine is as similar to xc_vdW_DF as possible, but handles
+  ! the collinear nspin=2 case.
 
   SUBROUTINE xc_vdW_DF_spin (rho_valence, rho_core, etxc, vtxc, v)
 
@@ -531,15 +528,10 @@ CONTAINS
 
 
   ! --------------------------------------------------------------------
-  ! Check that the requested non-local functional is implemented.
-
-  if ( vdW_type /= 1 .AND. vdW_type /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
-
-
-  ! --------------------------------------------------------------------
-  ! Write out the vdW-DF imformation and initialize the kernel.
+  ! Write out the vdW-DF information and initialize the calculation.
 
   IF ( first_iteration ) THEN
+     inlc = get_inlc()
      CALL generate_kernel
      IF ( ionode ) CALL vdW_info
      first_iteration = .FALSE.
@@ -550,13 +542,11 @@ CONTAINS
   ! Allocate arrays. nnr is a PWSCF variable that holds the number of
   ! points assigned to a given processor.
 
-  ALLOCATE( q0(dfftp%nnr), total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr) )
-  ALLOCATE( rho_up(dfftp%nnr), rho_down(dfftp%nnr) )
-  ALLOCATE( dq0_drho_up (dfftp%nnr), dq0_dgradrho_up  (dfftp%nnr) )
-  ALLOCATE( dq0_drho_down(dfftp%nnr), dq0_dgradrho_down(dfftp%nnr) )
-  ALLOCATE( grad_rho_up(3,dfftp%nnr), grad_rho_down(3,dfftp%nnr) )
-  ALLOCATE( potential_up(dfftp%nnr), potential_down(dfftp%nnr) )
-  ALLOCATE( thetas(dfftp%nnr, Nqs) )
+  ALLOCATE( total_rho(dfftp%nnr), rho_up(dfftp%nnr), rho_down(dfftp%nnr),         &
+     grad_rho(3,dfftp%nnr), grad_rho_up(3,dfftp%nnr), grad_rho_down(3,dfftp%nnr), &
+     potential_up(dfftp%nnr), potential_down(dfftp%nnr), thetas(dfftp%nnr, Nqs),  &
+     q0(dfftp%nnr), dq0_drho_up(dfftp%nnr), dq0_dgradrho_up(dfftp%nnr),           &
+     dq0_drho_down(dfftp%nnr), dq0_dgradrho_down(dfftp%nnr) )
 
 
   ! --------------------------------------------------------------------
@@ -593,8 +583,9 @@ CONTAINS
   ! charge-density and the gradient of the charge-density. These are
   ! needed for the potential calculated below.
 
-  CALL get_q0_on_grid_spin (total_rho, rho_up, rho_down, grad_rho, grad_rho_up, grad_rho_down, &
-       q0, dq0_drho_up, dq0_drho_down, dq0_dgradrho_up, dq0_dgradrho_down, thetas)
+  CALL get_q0_on_grid_spin (total_rho, rho_up, rho_down, grad_rho, &
+       grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
+       dq0_dgradrho_up, dq0_dgradrho_down, thetas)
 
 
   ! --------------------------------------------------------------------
@@ -603,7 +594,7 @@ CONTAINS
   ! inverse fourier transformed to get the u_i(r) functions of SOLER
   ! equation 11. Add the energy we find to the output variable etxc.
 
-  CALL vdW_energy(thetas, Ec_nl)
+  CALL vdW_DF_energy(thetas, Ec_nl)
   etxc = etxc + Ec_nl
 
   IF ( iverbosity > 0 ) THEN
@@ -628,8 +619,8 @@ CONTAINS
      CALL invfft('Rho', thetas(:,theta_i), dfftp)
   END DO
 
-  CALL get_potential (q0, dq0_drho_up  , dq0_dgradrho_up  , grad_rho_up  , thetas, potential_up  )
-  CALL get_potential (q0, dq0_drho_down, dq0_dgradrho_down, grad_rho_down, thetas, potential_down)
+  CALL vdW_DF_potential (q0, dq0_drho_up  , dq0_dgradrho_up  , grad_rho_up  , thetas, potential_up  )
+  CALL vdW_DF_potential (q0, dq0_drho_down, dq0_dgradrho_down, grad_rho_down, thetas, potential_down)
 
   v(:,1) = v(:,1) + e2 * potential_up  (:)
   v(:,2) = v(:,2) + e2 * potential_down(:)
@@ -647,9 +638,9 @@ CONTAINS
             rho_valence(i_grid,2)) * 0.5_dp * potential_down(i_grid)
   END DO
 
-  DEALLOCATE( potential_up, potential_down, q0, grad_rho, grad_rho_up, &
-              grad_rho_down, dq0_drho_up, dq0_drho_down, thetas,       &
-              dq0_dgradrho_up, dq0_dgradrho_down, total_rho, rho_up, rho_down )
+  DEALLOCATE( total_rho, rho_up, rho_down, grad_rho, grad_rho_up, grad_rho_down, &
+              potential_up, potential_down, thetas,                              &
+              q0, dq0_drho_up, dq0_dgradrho_up, dq0_drho_down, dq0_dgradrho_down )
 
   END SUBROUTINE xc_vdW_DF_spin
 
@@ -892,14 +883,14 @@ CONTAINS
 
 
      IF ( calc_qx_up ) THEN
-        s_up    = sqrt( grad_rho_up(1,i_grid)**2 + grad_rho_up(2,i_grid)**2 + &
+        s_up    = SQRT( grad_rho_up(1,i_grid)**2 + grad_rho_up(2,i_grid)**2 + &
                   grad_rho_up(3,i_grid)**2 ) / (2.0D0 * kF(up) * up)
         qx_up   = kF(2.0D0*up) * Fs(fac*s_up)
         CALL saturate_q (qx_up, 4.0D0*q_cut, q0x_up, dq0x_up_dq)
      END IF
 
      IF ( calc_qx_down ) THEN
-        s_down  = sqrt( grad_rho_down(1,i_grid)**2 + grad_rho_down(2,i_grid)**2 + &
+        s_down  = SQRT( grad_rho_down(1,i_grid)**2 + grad_rho_down(2,i_grid)**2 + &
                   grad_rho_down(3,i_grid)**2) / (2.0D0 * kF(down) * down)
         qx_down = kF(2.0D0*down) * Fs(fac*s_down)
         CALL saturate_q (qx_down, 4.0D0*q_cut, q0x_down, dq0x_down_dq)
@@ -1054,16 +1045,16 @@ CONTAINS
 
 
   ! ####################################################################
-  !                            |             |
-  !                            | VDW_ENERGY  |
-  !                            |_____________|
+  !                          |               |
+  !                          | vdW_DF_energy |
+  !                          |_______________|
   !
   ! This routine carries out the integration of equation 8 of SOLER.  It
   ! returns the non-local exchange-correlation energy and the u_alpha(k)
   ! arrays used to find the u_alpha(r) arrays via equations 11 and 12 in
   ! SOLER.
 
-  SUBROUTINE vdW_energy (thetas, vdW_xc_energy)
+  SUBROUTINE vdW_DF_energy (thetas, vdW_xc_energy)
 
   USE gvect,           ONLY : gg, ngm, igtongl, gl, ngl, gstart
   USE cell_base,       ONLY : tpiba, omega
@@ -1096,9 +1087,9 @@ CONTAINS
 
 
 
+  ALLOCATE ( u_vdW(dfftp%nnr,Nqs), kernel_of_k(Nqs, Nqs) )
   vdW_xc_energy = 0.0D0
-  ALLOCATE (u_vdW(dfftp%nnr,Nqs), kernel_of_k(Nqs, Nqs))
-  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP,kind=dp)
+  u_vdW(:,:)    = CMPLX(0.0_DP, 0.0_DP, kind=dp)
 
 
   ! --------------------------------------------------------------------
@@ -1140,7 +1131,7 @@ CONTAINS
 
   END DO
 
-  IF ( gamma_only ) u_vdW(dfftp%nlm(:),:) = CONJG(u_vdW(dfftp%nl(:),:))
+  IF ( gamma_only ) u_vdW(dfftp%nlm(:),:) = CONJG( u_vdW(dfftp%nl(:),:) )
 
 
   ! --------------------------------------------------------------------
@@ -1157,9 +1148,9 @@ CONTAINS
   vdW_xc_energy = 0.5D0 * e2 * omega * vdW_xc_energy
 
   thetas(:,:) = u_vdW(:,:)
-  DEALLOCATE (u_vdW, kernel_of_k)
+  DEALLOCATE ( u_vdW, kernel_of_k )
 
-  END SUBROUTINE vdW_energy
+  END SUBROUTINE vdW_DF_energy
 
 
 
@@ -1169,9 +1160,9 @@ CONTAINS
 
 
   ! ####################################################################
-  !                          |                 |
-  !                          |  GET_POTENTIAL  |
-  !                          |_________________|
+  !                        |                   |
+  !                        |  vdW_DF_potential |
+  !                        |___________________|
   !
   ! This routine finds the non-local correlation contribution to the
   ! potential (i.e. the derivative of the non-local piece of the energy
@@ -1183,7 +1174,7 @@ CONTAINS
   ! respect to q is interpolated here, along with the polynomials
   ! themselves.
 
-  SUBROUTINE get_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, u_vdW, potential)
+  SUBROUTINE vdW_DF_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, u_vdW, potential)
 
   USE gvect,               ONLY : g
   USE cell_base,           ONLY : alat, tpiba
@@ -1246,7 +1237,7 @@ CONTAINS
   IF (.NOT. ALLOCATED( d2y_dx2) ) THEN
 
      ALLOCATE( d2y_dx2(Nqs, Nqs) )
-     CALL initialize_spline_interpolation (q_mesh, d2y_dx2(:,:))
+     CALL initialize_spline_interpolation ( q_mesh, d2y_dx2(:,:) )
 
   end if
 
@@ -1272,7 +1263,7 @@ CONTAINS
 
      END DO
 
-     IF ( q_hi == q_low ) CALL errore('get_potential','qhi == qlow',1)
+     IF ( q_hi == q_low ) CALL errore('vdW_DF_potential','qhi == qlow',1)
 
      dq = q_mesh(q_hi) - q_mesh(q_low)
 
@@ -1321,7 +1312,7 @@ CONTAINS
 
   DEALLOCATE ( h_prefactor, h )
 
-  END SUBROUTINE get_potential
+  END SUBROUTINE vdW_DF_potential
 
 
 
@@ -1467,7 +1458,7 @@ CONTAINS
 
 
 
-  Nx = size(x)
+  Nx = SIZE(x)
 
   ALLOCATE( temp_array(Nx), y(Nx) )
 
@@ -1665,7 +1656,7 @@ CONTAINS
   END IF
 #else
   IF ( nspin>=2 ) THEN
-     CALL errore ('stres_vdW_DF',   'vdW stress not implemented for nspin > 1', 1)
+     CALL errore ('stress_vdW_DF',   'vdW stress not implemented for nspin > 1', 1)
   END IF
 #endif
 
@@ -1677,11 +1668,8 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Allocations
 
-  ALLOCATE( grad_rho(3,dfftp%nnr) )
-  ALLOCATE( total_rho(dfftp%nnr) )
-  ALLOCATE( q0(dfftp%nnr) )
-  ALLOCATE( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
-  ALLOCATE( thetas(dfftp%nnr, Nqs) )
+  ALLOCATE( total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr), thetas(dfftp%nnr, Nqs), &
+            q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
 
 
   ! --------------------------------------------------------------------
@@ -1716,7 +1704,7 @@ CONTAINS
      END DO
   END DO
 
-  DEALLOCATE( grad_rho, total_rho, q0, dq0_drho, dq0_dgradrho, thetas )
+  DEALLOCATE( total_rho, grad_rho, thetas, q0, dq0_drho, dq0_dgradrho )
 
   END SUBROUTINE stress_vdW_DF
 
@@ -1936,7 +1924,7 @@ CONTAINS
 
   END DO
 
-  CALL mp_sum(  sigma, intra_bgrp_comm )
+  CALL mp_sum( sigma, intra_bgrp_comm )
 
   DEALLOCATE( dkernel_of_dk )
 
@@ -2053,8 +2041,8 @@ CONTAINS
 
      IF ( igtongl(g_i) .ne. last_g) THEN
 
-        g = sqrt(gl(igtongl(g_i))) * tpiba
-        call interpolate_kernel(g, kernel_of_k)
+        g = SQRT(gl(igtongl(g_i))) * tpiba
+        CALL interpolate_kernel(g, kernel_of_k)
         last_g = igtongl(g_i)
 
      END IF
@@ -2186,16 +2174,16 @@ CONTAINS
 
   IMPLICIT NONE
 
-  INTEGER  :: a_i, b_i, q1_i, q2_i, r_i, idx
+  INTEGER  :: a_i, b_i, q1_i, q2_i, r_i
   ! Indexing variables.
 
-  REAL(DP) :: weights(Nintegration_points)
+  REAL(DP) :: weights( Nintegration_points )
   ! Array to hold dx values for the Gaussian-Legendre integration of the kernel.
 
-  REAL(DP) :: a_points2(Nintegration_points)
+  REAL(DP) :: a_points2( Nintegration_points )
   ! The square of the "a" points (DION equation 14).
 
-  REAL(DP) :: sin_a(Nintegration_points), cos_a(Nintegration_points)
+  REAL(DP) :: sin_a( Nintegration_points ), cos_a( Nintegration_points )
   ! Sine and cosine values of the aforementioned points a.
 
   REAL(DP) :: d1, d2, d, integral
@@ -2208,7 +2196,7 @@ CONTAINS
   ! Starting and ending q value for each  processor, also the total
   ! number of calculations to do, i.e. (Nqs^2 + Nqs)/2.
 
-  REAL(DP), ALLOCATABLE :: phi(:,:), d2phi_dk2(:,:)
+  REAL(DP), ALLOCATABLE :: phi(:,:), phi_deriv(:,:)
   ! Arrays to store the kernel functions and their second derivatives.
   ! They are stored as phi(radial_point, idx).
 
@@ -2246,8 +2234,8 @@ CONTAINS
 
   q_cut = q_mesh(Nqs)
   q_min = q_mesh(1)
-  dk    = 2.0D0*pi/r_max
   dr    = r_max/Nr_points
+  dk    = 2.0D0*pi/r_max
 
 
   ! --------------------------------------------------------------------
@@ -2256,13 +2244,14 @@ CONTAINS
 
   Ntotal = (Nqs**2 + Nqs)/2
   ALLOCATE ( indices(Ntotal, 2) )
-  idx = 1
 
 
   ! --------------------------------------------------------------------
   ! This part fills in the indices array. It just loops through the q1
   ! and q2 values and stores them. Sections of this array will be
   ! assigned to each of the processors later.
+
+  idx = 1
 
   DO q1_i = 1, Nqs
      DO q2_i = 1, q1_i
@@ -2275,10 +2264,10 @@ CONTAINS
 
   ! --------------------------------------------------------------------
   ! Figure out the baseline number of functions to be calculated by each
-  ! processor and how many processors get 1 extra job.
+  ! processor and how many processors get one extra job.
 
-  nproc  = mp_size(intra_image_comm)
-  mpime  = mp_rank(intra_image_comm)
+  nproc  = mp_size( intra_image_comm )
+  mpime  = mp_rank( intra_image_comm )
   Nper   = Ntotal/nproc
   Nextra = MOD(Ntotal, nproc)
 
@@ -2320,8 +2309,11 @@ CONTAINS
   ! Store how many jobs are assigned to me.
 
   my_Nqs    = my_end_q - my_start_q + 1
-  ALLOCATE( phi(0:Nr_points, my_Nqs), d2phi_dk2(0:Nr_points, my_Nqs) )
+  ALLOCATE( phi( 0:Nr_points, my_Nqs ), phi_deriv( 0:Nr_points, my_Nqs ) )
+
   phi       = 0.0D0
+  phi_deriv = 0.0D0
+  kernel    = 0.0D0
   d2phi_dk2 = 0.0D0
 
 
@@ -2351,28 +2343,29 @@ CONTAINS
 
   DO a_i = 1, Nintegration_points
      DO b_i = 1, Nintegration_points
-        W_ab(a_i, b_i) = 2.0D0 * weights(a_i)*weights(b_i) * (             &
-             (3.0D0-a_points2(a_i))*a_points(b_i)*cos_a(b_i)*sin_a(a_i)  + &
-             (3.0D0-a_points2(b_i))*a_points(a_i)*cos_a(a_i)*sin_a(b_i)  + &
-             (a_points2(a_i)+a_points2(b_i)-3.0D0)*sin_a(a_i)*sin_a(b_i) - &
-             3.0D0*a_points(a_i)*a_points(b_i)*cos_a(a_i)*cos_a(b_i) )   / &
-             (a_points(a_i)*a_points(b_i))
+        W_ab(a_i, b_i) = 2.0D0 * weights(a_i)*weights(b_i) * (            &
+            (3.0D0-a_points2(a_i))*a_points(b_i) *sin_a(a_i)*cos_a(b_i) + &
+            (3.0D0-a_points2(b_i))*a_points(a_i) *cos_a(a_i)*sin_a(b_i) + &
+            (a_points2(a_i)+a_points2(b_i)-3.0D0)*sin_a(a_i)*sin_a(b_i) - &
+            3.0D0*a_points(a_i)*a_points(b_i)*cos_a(a_i)*cos_a(b_i) )   / &
+            (a_points(a_i)*a_points(b_i) )
      END DO
   END DO
 
 
   ! --------------------------------------------------------------------
-  ! Now, we loop over all the pairs q1,q2 that are assigned to us and
+  ! Now, we loop over all the pairs (q1,q2) that are assigned to us and
   ! perform our calculations.
 
   DO idx = 1, my_Nqs
+
      ! -----------------------------------------------------------------
      ! First, get the value of phi(q1*r, q2*r) for each r and the
      ! particular values of q1 and q2 we are using.
 
      DO r_i = 1, Nr_points
-        d1 = q_mesh( indices(idx+my_start_q-1, 1) ) * dr * r_i
-        d2 = q_mesh( indices(idx+my_start_q-1, 2) ) * dr * r_i
+        d1  = q_mesh( indices(idx+my_start_q-1, 1) ) * dr * r_i
+        d2  = q_mesh( indices(idx+my_start_q-1, 2) ) * dr * r_i
         phi(r_i, idx) = phi_value(d1, d2)
      END DO
 
@@ -2388,18 +2381,89 @@ CONTAINS
      ! Determine the spline interpolation coefficients for the Fourier
      ! transformed kernel function.
 
-     CALL set_up_splines( phi(:, idx), d2phi_dk2(:, idx) )
+     CALL set_up_splines( phi(:, idx), phi_deriv(:, idx) )
 
   END DO
 
 
   ! --------------------------------------------------------------------
-  ! Finally, we write out the results, after letting everybody catch up.
+  ! Finally, we collect the results after letting everybody catch up.
 
   CALL mp_barrier( intra_image_comm )
-  CALL write_kernel_table_file( phi, d2phi_dk2, nproc, mpime, Ntotal, proc_indices )
 
-  DEALLOCATE( phi, d2phi_dk2, indices, proc_indices )
+  DO proc_i = 0, nproc-1
+
+     IF ( proc_i >= Ntotal ) EXIT
+
+     CALL mp_get ( phi      , phi      , mpime, 0, proc_i, 0, intra_image_comm )
+     CALL mp_get ( phi_deriv, phi_deriv, mpime, 0, proc_i, 0, intra_image_comm )
+
+     IF ( mpime == 0 ) THEN
+
+        DO idx = proc_indices(proc_i+1,1), proc_indices(proc_i+1,2)
+           q1_i = indices(idx, 1)
+           q2_i = indices(idx, 2)
+           kernel    (:, q1_i, q2_i) = phi       (:, idx - proc_indices(proc_i+1,1) + 1)
+           d2phi_dk2 (:, q1_i, q2_i) = phi_deriv (:, idx - proc_indices(proc_i+1,1) + 1)
+           kernel    (:, q2_i, q1_i) = kernel    (:, q1_i, q2_i)
+           d2phi_dk2 (:, q2_i, q1_i) = d2phi_dk2 (:, q1_i, q2_i)
+        END DO
+
+     END IF
+
+  END DO
+
+  CALL mp_bcast ( kernel   , 0, intra_image_comm )
+  CALL mp_bcast ( d2phi_dk2, 0, intra_image_comm )
+
+
+  ! --------------------------------------------------------------------
+  ! Keep the lines below for testing and combatibility with the old
+  ! kernel file reading/writing method.
+  !
+  ! Writing the calculated kernel.
+  !
+  ! IF ( ionode ) THEN
+  !    WRITE(stdout,'(/ / A)') "     vdW-DF kernel table calculated and written to file."
+  !    OPEN(UNIT=21, FILE='kernel_table', STATUS='replace', FORM='formatted', ACTION='write')
+  !    WRITE(21, '(2i5,f13.8)') Nqs, Nr_points
+  !    WRITE(21, '(1p4e23.14)') r_max
+  !    WRITE(21, '(1p4e23.14)') q_mesh
+  !    DO q1_i = 1, Nqs
+  !       DO q2_i = 1, q1_i
+  !          WRITE(21, '(1p4e23.14)') kernel(:, q1_i, q2_i)
+  !       END DO
+  !    END DO
+  !    DO q1_i = 1, Nqs
+  !       DO q2_i = 1, q1_i
+  !          WRITE(21, '(1p4e23.14)') d2phi_dk2(:, q1_i, q2_i)   
+  !       END DO
+  !    END DO
+  !    CLOSE (21)
+  ! END IF
+  !
+  !
+  ! Reading the kernel from an old kernel file.
+  !
+  ! IF (ionode) WRITE(stdout,'(/ / A)') "     vdW-DF kernel read from file."
+  ! OPEN(UNIT=21, FILE='vdW_kernel_table', STATUS='old', FORM='formatted', ACTION='read')
+  ! read(21, '(/ / / / / /)')
+  ! DO q1_i = 1, Nqs 
+  !    DO q2_i = 1, q1_i
+  !       READ(21, '(1p4e23.14)') kernel(:, q1_i, q2_i)
+  !       kernel(:, q2_i, q1_i) = kernel(:, q1_i, q2_i)
+  !    END DO
+  ! END DO
+  ! DO q1_i = 1, Nqs 
+  !    DO q2_i = 1, q1_i
+  !       READ(21, '(1p4e23.14)')    d2phi_dk2(:, q1_i, q2_i)
+  !       d2phi_dk2(:, q2_i, q1_i) = d2phi_dk2(:, q1_i, q2_i)
+  !    END DO
+  ! END DO
+  ! CLOSE (21)
+
+
+  DEALLOCATE( indices, proc_indices, phi, phi_deriv )
 
 
   ! --------------------------------------------------------------------
@@ -2554,7 +2618,7 @@ CONTAINS
 
 
   phi_value = 0.0D0
-  IF (d1==0.0D0 .AND. d2==0.0D0) THEN
+  IF ( d1==0.0D0 .AND. d2==0.0D0 ) THEN
      phi_value = 0.0D0
      RETURN
   END IF
@@ -2573,7 +2637,7 @@ CONTAINS
      ELSEIF (d1 <= small) THEN
         nu(a_i) = a_points(a_i)**2/2.0D0
      ELSE
-        nu(a_i) = a_points(a_i)**2/((-exp(-(a_points(a_i)**2*gamma)/d1**2) + 1.0D0)*2.0D0)
+        nu(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d1**2) + 1.0D0)*2.0D0)
      END IF
 
      IF ( a_points(a_i) <= small .AND. d2 > small) THEN
@@ -2581,7 +2645,7 @@ CONTAINS
      ELSEIF (d2 < small) THEN
         nu1(a_i) = a_points(a_i)**2/2.0D0
      ELSE
-        nu1(a_i) = a_points(a_i)**2/((-exp(-(a_points(a_i)**2*gamma)/d2**2) + 1.0D0)*2.0D0)
+        nu1(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d2**2) + 1.0D0)*2.0D0)
      END IF
   END DO
 
@@ -2730,12 +2794,12 @@ CONTAINS
   temp_array = 0
 
   DO r_i = 1, Nr_points - 1
-     temp_1  = dble(r_i - (r_i - 1))/dble( (r_i + 1) - (r_i - 1) )
+     temp_1  = DBLE(r_i - (r_i - 1))/DBLE( (r_i + 1) - (r_i - 1) )
      temp_2  = temp_1 * D2(r_i-1) + 2.0D0
      D2(r_i) = (temp_1 - 1.0D0)/temp_2
-     temp_array(r_i) = ( phi(r_i+1) - phi(r_i))/dble( dk*((r_i+1) - r_i) ) - &
-          ( phi(r_i) - phi(r_i-1))/dble( dk*(r_i - (r_i-1)) )
-     temp_array(r_i) = (6.0D0*temp_array(r_i)/dble( dk*((r_i+1) - (r_i-1)) )-&
+     temp_array(r_i) = ( phi(r_i+1) - phi(r_i))/DBLE( dk*((r_i+1) - r_i) ) - &
+          ( phi(r_i) - phi(r_i-1))/DBLE( dk*(r_i - (r_i-1)) )
+     temp_array(r_i) = (6.0D0*temp_array(r_i)/DBLE( dk*((r_i+1) - (r_i-1)) )-&
           temp_1*temp_array(r_i-1))/temp_2
   END DO
 
@@ -2747,161 +2811,6 @@ CONTAINS
   DEALLOCATE( temp_array )
 
   END SUBROUTINE set_up_splines
-
-
-
-
-
-
-
-
-  ! ####################################################################
-  !                       |                           |
-  !                       |  WRITE_KERNEL_TABLE_FILE  |
-  !                       |___________________________|
-  !
-  ! Subroutine to write out the vdW_kernel_table file. All processors
-  ! pass their data to processor 0 which is the one that actually does
-  ! the writing. This is the only communication in the entire program.
-
-  SUBROUTINE write_kernel_table_file(phi, d2phi_dk2, nproc, mpime, Ntotal, proc_indices )
-
-  REAL(DP), TARGET    :: phi(:,:), d2phi_dk2(:,:)
-  ! Each processor passes in its array of kernel values and second
-  ! derivative values for the q-pairs it calculated. They are stored as
-  ! phi(index of function, function_values).
-
-  INTEGER, INTENT(IN) :: nproc, mpime, Ntotal
-  ! Number or procs, rank of current processor.
-
-  INTEGER, INTENT(IN) :: proc_indices(:,:) 
-
-  INTEGER :: proc_Nqs
-  ! Number of calculated functions for a particular processor.
-
-  REAL(DP), POINTER :: data(:,:)
-  ! Pointer to point to the needed section of the phi and d2phi_dk2
-  ! arrays. This is needed because some processors may have calculated
-  ! 1 extra function if the number of processors is not an even divisor
-  ! of (Nqs^2+Nqs)/2. Processor 0 is guaranteed to be one of those with
-  ! an extra calculation (if there are any), so it can collect the
-  ! arrays from other processors and put it in its array. Data then
-  ! points to either the entire array (if the other processor also had
-  ! an extra calculation), or just the first proc_Nqs entries (which is
-  ! guaranteed to be at most 1 less than the proc_Nqs for processor 0.
- 
-  INTEGER :: proc_i
-
-
-
-
-  IF (ionode) THEN
-
-     ! -----------------------------------------------------------------
-     ! Open the file for writing. The file used to be written in binary
-     ! to save space but it is formatted now.
-
-     OPEN(UNIT=21, FILE='kernel_table_test', status='replace', &
-          form='formatted', action='write')
-
-
-     ! -----------------------------------------------------------------
-     ! Write the relevant header information that will be read in by the
-     ! kernel_table module.
-
-     WRITE(21, '(2i5,f13.8)') Nqs, Nr_points
-     WRITE(21, '(1p4e23.14)') r_max
-     WRITE(21, '(1p4e23.14)') q_mesh
-
-
-     ! -----------------------------------------------------------------
-     ! Processor 0 writes its kernel functions first.
-
-     data => phi(:,:)
-     CALL write_data(21, data)
-
-  ENDIF
-
-
-  ! --------------------------------------------------------------------
-  ! Now, loop over all other processors (if any) and collect their
-  ! kernel functions in the phi array of processor 0, which is big
-  ! enough to hold any of them. Figure out how many functions should
-  ! have been passed and make data point to just the right amount of the
-  ! phi array. Then write the data.
-
-  DO proc_i = 1, nproc-1
-     ! This line for the case of more processors than q points.
-     IF ( proc_i >= Ntotal ) EXIT
-     CALL mp_get(phi, phi, mpime, 0, proc_i, 0, intra_image_comm)
-     IF ( ionode ) THEN
-        proc_Nqs = proc_indices(proc_i+1, 2) - proc_indices(proc_i+1,1) + 1
-        data => phi(:,1:proc_Nqs)
-        CALL write_data(21, data)
-     ENDIF
-  ENDDO
-
-
-  ! --------------------------------------------------------------------
-  ! Here, we basically repeat the process exactly but for the second
-  ! derivatives d2phi_dk2 instead of the kernel itself.
-
-  IF ( ionode ) THEN
-     data => d2phi_dk2(:,:)
-     CALL write_data(21, data)
-  ENDIF
-
-  DO proc_i = 1, nproc-1
-     ! PG: next line for the case of more processors than q points
-     IF ( proc_i >= Ntotal ) EXIT
-     CALL mp_get(d2phi_dk2, d2phi_dk2, mpime, 0, proc_i, 0, intra_image_comm)
-     IF (mpime == 0) THEN
-        proc_Nqs = proc_indices(proc_i+1,2) - proc_indices(proc_i+1,1) + 1
-        data => d2phi_dk2(:, 1:proc_Nqs)
-        CALL write_data(21, data)
-     END IF
-  END DO
-
-  IF ( ionode ) CLOSE(21)
-
-  END SUBROUTINE write_kernel_table_file
-
-
-
-
-
-
-
-
-  ! ####################################################################
-  !                           |              |
-  !                           |  WRITE_DATA  |
-  !                           !______________|
-  !
-  ! Write matrix data held in the point "array" to the file with unit
-  ! number "file". Data used to be binary but it is formatted now.
-
-  SUBROUTINE write_data(file, array)
-
-  REAL(DP), POINTER   :: array(:,:)
-  ! Input pointer to the matrix data to be written.
-
-  INTEGER, INTENT(IN) :: file
-  ! Unit number of file to write to.
-
-  INTEGER :: ios
-  ! Indexing variable.
-
-
-
-
-  DO idx = 1, SIZE(array,2)
-     WRITE (file, '(1p4e23.14)', err=100, iostat=ios) array(:,idx)
-  ENDDO
-
-100 CALL errore ('generate_vdW_kernel_table', 'Writing table file', ABS(ios) )
-
-  END SUBROUTINE write_data
 
 
 
