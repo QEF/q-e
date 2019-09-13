@@ -9,14 +9,14 @@
   ! Adapted from the code PH/phq_summary - Quantum-ESPRESSO group     
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE epw_summary
+  SUBROUTINE epw_summary()
   !-----------------------------------------------------------------------
   !!
-  !!    Output symmetry informations 
-  !! 
-  !!    27/03/2018 - Update with recent PHonon/PH/phq_summary.f90 routine - S. Ponce
+  !! Output symmetry informations 
   !!
-  !!    RM - Nov 2018: Updated based on QE 6.3
+  !! 27/03/2018 - Update with recent PHonon/PH/phq_summary.f90 routine - S. Ponce
+  !!
+  !! RM - Nov 2018: Updated based on QE 6.3
   !!
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
@@ -61,8 +61,6 @@
   ! 
   REAL(KIND = DP) :: ft1, ft2, ft3
   !! fractionary translation
-  !! fractionary translation
-  !! fractionary translation
   REAL(KIND = DP) :: xkg(3)
   !! k point in crystal coordinates
   !
@@ -94,7 +92,7 @@
     WRITE(stdout, '(/)')
   ENDIF
   !
-  !    Description of the unit cell
+  ! Description of the unit cell
   !
   WRITE(stdout, '(2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') &
        (i, celldm(i), i = 1, 6)
@@ -107,7 +105,7 @@
        &         3(15x,"b(",i1,") = (",3f8.4," )  ",/ ) )') &
        & (apol, (bg(ipol, apol), ipol = 1, 3), apol = 1, 3)
   !
-  !    description of the atoms inside the unit cell
+  ! Description of the atoms inside the unit cell
   !
   WRITE(stdout, '(/, 5x,"Atoms inside the unit cell: ")')
   WRITE(stdout, '(/,3x,"Cartesian axes")')
@@ -119,7 +117,7 @@
        & (na,atm(ityp(na)), amass(ityp(na))/amu_ry, na,  &
        & (tau(ipol,na), ipol = 1, 3), na = 1, nat)
   !
-  !   description of symmetries
+  ! Description of symmetries
   !
   WRITE(stdout, * )
   IF (nsymq <= 1 .AND. .NOT. minus_q) THEN
@@ -226,4 +224,6 @@
   !
   FLUSH(stdout)
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE epw_summary
+  !-----------------------------------------------------------------------

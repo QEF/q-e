@@ -50,6 +50,7 @@
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : me_pool, inter_pool_comm
     USE division,      ONLY : fkbounds
+    USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -763,6 +764,7 @@
     USE cell_base,     ONLY : omega, alat, bg
     USE division,      ONLY : fkbounds
     USE selfen,        ONLY : get_eps_mahan
+    USE poolgathering, ONLY : poolgather2
     ! 
     IMPLICIT NONE
     ! 

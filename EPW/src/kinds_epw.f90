@@ -19,5 +19,6 @@
   INTEGER, PARAMETER :: SIK1 = SELECTED_INT_KIND(1)
   INTEGER, PARAMETER :: SIK2 = SELECTED_INT_KIND(2)
   !
+  !-----------------------------------------------------------------------
   END MODULE kinds_epw
-
+  !-----------------------------------------------------------------------

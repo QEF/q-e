@@ -58,7 +58,10 @@
   !! U(k+q) matrix for k+q-points in the pool
   ! 
   ! Local variables 
-  !
+  LOGICAL :: lwin_big(nbnd, nkstot)
+  !! .TRUE. if the band ibnd lies within the outer window at k-point ik
+  LOGICAL :: lwinq_big(nbnd, nkstot)
+  !! .TRUE. if the band ibnd lies within the outer window at k+qpoint ikq
   INTEGER :: ik
   !! Counter of k-point index
   INTEGER :: iw
@@ -77,16 +80,12 @@
   !! U(k) matrix for all k-points
   COMPLEX(KIND = DP) :: cuq_big(nbnd, nbndsub, nkstot)
   !! U(k+q) matrix for all k+q-points
-  LOGICAL :: lwin_big(nbnd, nkstot)
-  !! .TRUE. if the band ibnd lies within the outer window at k-point ik
-  LOGICAL :: lwinq_big(nbnd, nkstot)
-  !! .TRUE. if the band ibnd lies within the outer window at k+qpoint ikq
   !
   cu_big = czero
   cuq_big = czero
   IF (meta_ionode) THEN
     !
-    ! first proc read rotation matrix (coarse mesh) from file
+    ! First proc read rotation matrix (coarse mesh) from file
     !
     OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
     IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
@@ -94,37 +93,34 @@
     DO ik = 1, nkstot
       DO ibnd = 1, nbnd
         DO jbnd = 1, nbndsub
-           READ(iunukk,*) cu_big(ibnd, jbnd, ik)
+           READ(iunukk, *) cu_big(ibnd, jbnd, ik)
         ENDDO
       ENDDO
     ENDDO
     DO ik = 1, nkstot
       DO ibnd = 1, nbnd
-        READ(iunukk,*) lwin_big(ibnd, ik)
+        READ(iunukk, *) lwin_big(ibnd, ik)
       ENDDO
     ENDDO
     DO ibnd = 1, nbnd
-      READ(iunukk,*) exband(ibnd)
+      READ(iunukk, *) exband(ibnd)
     ENDDO
     ! Read the Wannier centers
     DO iw = 1, nbndsub
-      READ(iunukk,*) w_centers(:,iw)
+      READ(iunukk, *) w_centers(:, iw)
     ENDDO
     !
     CLOSE(iunukk)
     !
-    !  generate U(k+q) through the map 
-    !
-    !
+    ! Generate U(k+q) through the map 
     ! here we create the map k+q --> k
     ! (first proc has a copy of all kpoints)
-    !
-    !  generates kmap(ik) for this xxq
+    ! Generates kmap(ik) for this xxq
     !
     xkq(:, :) = zero
     CALL createkmap2(xxq)
     !
-    !  and we generate the matrix for the q-displaced mesh
+    ! and we generate the matrix for the q-displaced mesh
     !
     DO ik = 1, nkstot
       cuq_big(:, :, ik) = cu_big(:, :, kmap(ik))

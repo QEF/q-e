@@ -91,6 +91,7 @@
                           dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
                           bands_skipped, wdata, vme
   USE constants_epw, ONLY : ryd2ev
+  USE poolgathering, ONLY : poolgather
   !
   IMPLICIT NONE
   !

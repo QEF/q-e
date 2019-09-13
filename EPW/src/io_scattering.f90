@@ -46,7 +46,7 @@
     ! 
     ! Local variable
     LOGICAL :: exst
-    !! 
+    !! File exist
     INTEGER :: i
     !! Running index for the vector
     INTEGER :: lfi_all
@@ -59,10 +59,8 @@
     !! Direction index
     INTEGER :: itemp
     !! Temperature index
-    ! 
     REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + nstemp + 1)
     !! Vector to store the array
-    !
     !
     exst = .FALSE.
     aux(:) = zero
@@ -101,7 +99,6 @@
       ENDIF
       CLOSE(iufilFi_all)
       !
-      ! 
     ENDIF
     !
     !----------------------------------------------------------------------------
@@ -134,8 +131,10 @@
     !! IF true we do electron mobility, if false the hole one. 
     !
     ! Local variable
+    CHARACTER(LEN = 256) :: name1
+    !! Variable name
     LOGICAL :: exst
-    !! 
+    !! Does the file exist
     INTEGER :: i
     !! Running index for the vector
     INTEGER :: lfi_all
@@ -148,9 +147,6 @@
     !! Direction index
     INTEGER :: itemp
     !! Temperature index
-    ! 
-    CHARACTER(LEN = 256) :: name1
-    !! Variable name
     REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + nstemp + 1)
     !! Vector to store the array
     !
@@ -240,7 +236,6 @@
       CALL mp_bcast(iter,       ionode_id, world_comm)
       CALL mp_bcast(F_in,       ionode_id, world_comm)
       CALL mp_bcast(av_mob_old, ionode_id, world_comm)
-      ! 
       WRITE(stdout, '(a,i10)' ) '     Restart from iter: ', iter
     ENDIF ! exists
     !
@@ -252,10 +247,10 @@
     SUBROUTINE iter_merge_parallel()
     !----------------------------------------------------------------------------
     USE kinds,            ONLY : DP
-    USE io_epw,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,&
-                                 iunepmatcb, iunsparseq_merge, iunsparsek_merge,iunsparsei_merge, &
-                                 iunsparsej_merge,iunsparset_merge, iunepmatcb_merge,&
-                                 iunsparseqcb_merge, iunsparsekcb_merge,&
+    USE io_epw,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
+                                 iunepmatcb, iunsparseq_merge, iunsparsek_merge,          &
+                                 iunsparsej_merge,iunsparset_merge, iunepmatcb_merge,     &
+                                 iunsparseqcb_merge, iunsparsekcb_merge, iunsparsei_merge,&
                                  iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge
     USE mp_global,        ONLY : my_pool_id, npool, world_comm 
     USE io_files,         ONLY : tmp_dir, prefix 
@@ -265,45 +260,46 @@
     USE epwcom,           ONLY : int_mob, carrier, ncarrier
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE,MPI_INFO_NULL, &
-                                 MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, MPI_INTEGER
+                                 MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION,          &
+                                 MPI_STATUS_IGNORE, MPI_INTEGER
 #endif
     !
     IMPLICIT NONE
     !
-    INTEGER :: i2, i4, i5, i6
-    !! Indexes to loop over file sizes
-    INTEGER :: ipool
-    !! Process index
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
     CHARACTER(LEN = 256) :: my_pool_id_ch
     !! Pool number, character
-    REAL(KIND = DP), ALLOCATABLE :: trans_prob(:)
-    !! Variable for reading and writing trans_prob
-    REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
-    !! Variable for reading and writing trans_prob
-    INTEGER :: lrepmatw2_tot(npool)
-    !! Lenght of each file
-    INTEGER :: lrepmatw5_tot(npool)
-    !! Lenght of each file
     CHARACTER(LEN = 256) :: dirname(2)
     !! Name of the directory to hold files
     CHARACTER(LEN = 256) :: filename(6)
     !! Name of the files to merge files
     CHARACTER(LEN = 256) :: path_to_files(2)
     !! Name of the path to files
+    INTEGER :: i2, i4, i5, i6
+    !! Indexes to loop over file sizes
+    INTEGER :: ipool
+    !! Process index
+    INTEGER :: lrepmatw2_tot(npool)
+    !! Lenght of each file
+    INTEGER :: lrepmatw5_tot(npool)
+    !! Lenght of each file
     INTEGER :: ich
     !! Loop over directories
-    INTEGER, ALLOCATABLE :: sparse(:, :)
-    !! Vaariable for reading and writing the files
-    INTEGER, ALLOCATABLE :: sparsecb(:, :)
-    !! Vaariable for reading and writing the files
-    INTEGER :: ierr
-    !! Error variable for MPI
     INTEGER :: ifil
     !! Index over the files
     INTEGER :: io_u(6)
     !! Input output units
+    INTEGER :: ierr
+    !! Error status
+    INTEGER, ALLOCATABLE :: sparse(:, :)
+    !! Vaariable for reading and writing the files
+    INTEGER, ALLOCATABLE :: sparsecb(:, :)
+    !! Vaariable for reading and writing the files
+    REAL(KIND = DP), ALLOCATABLE :: trans_prob(:)
+    !! Variable for reading and writing trans_prob
+    REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
+    !! Variable for reading and writing trans_prob
 #if defined(__MPI)
     INTEGER (KIND = MPI_OFFSET_KIND) :: lsize
     !! Size of what we write
@@ -312,8 +308,10 @@
     !
     IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
       !
-      ALLOCATE(trans_prob(lrepmatw2_merge)) !There may be a problem if lrepmatw2_merge == 0
-      ALLOCATE(sparse(5, lrepmatw2_merge))
+      ALLOCATE(trans_prob(lrepmatw2_merge), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_prob', 1)
+      ALLOCATE(sparse(5, lrepmatw2_merge), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparse', 1)
       !
       io_u(1) = iunepmat_merge
       io_u(2) = iunsparseq_merge
@@ -332,8 +330,8 @@
       filename(5) = 'sparsej'
       filename(6) = 'sparset'
       !
-      path_to_files(1)='./'//ADJUSTL(TRIM(dirname(1)))//'/'//TRIM(prefix)//'.epmatkq1'//'_'
-      path_to_files(2)='./'//ADJUSTL(TRIM(dirname(2)))//'/'//'sparse'//'_'
+      path_to_files(1) = './' // ADJUSTL(TRIM(dirname(1))) // '/' // TRIM(prefix) // '.epmatkq1' // '_'
+      path_to_files(2) = './' // ADJUSTL(TRIM(dirname(2))) // '/' // 'sparse' // '_'
       !
       lrepmatw2_tot = 0
       lrepmatw2_tot(my_pool_id + 1) = lrepmatw2_merge
@@ -345,8 +343,8 @@
       !
       DO ich = 1, 2 
         ! Read files per processor
-        WRITE(my_pool_id_ch,"(I0)") my_pool_id
-        filint = TRIM(path_to_files(ich))//TRIM(my_pool_id_ch)
+        WRITE(my_pool_id_ch, "(I0)") my_pool_id
+        filint = TRIM(path_to_files(ich)) // TRIM(my_pool_id_ch)
         OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACTION = 'read', ACCESS = 'stream')
         IF (ich == 1) THEN
           DO i2 = 1, lrepmatw2_merge
@@ -379,14 +377,18 @@
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
       ENDDO
       !
-      DEALLOCATE(trans_prob)
-      DEALLOCATE(sparse)
+      DEALLOCATE(trans_prob, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_prob', 1)
+      DEALLOCATE(sparse, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparse', 1)
       !
     ENDIF
     IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
       !
-      ALLOCATE(trans_probcb(lrepmatw5_merge))
-      ALLOCATE(sparsecb(5, lrepmatw5_merge))
+      ALLOCATE(trans_probcb(lrepmatw5_merge), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_probcb', 1)
+      ALLOCATE(sparsecb(5, lrepmatw5_merge), STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparsecb', 1)
       !
       io_u(1) = iunepmatcb_merge
       io_u(2) = iunsparseqcb_merge
@@ -452,8 +454,10 @@
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
       ENDDO
       ! 
-      DEALLOCATE(trans_probcb)
-      DEALLOCATE(sparsecb)
+      DEALLOCATE(trans_probcb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_probcb', 1)
+      DEALLOCATE(sparsecb, STAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparsecb', 1)
       !
     ENDIF ! in all other cases it is still to decide which files to open
     ! 
@@ -466,13 +470,13 @@
     SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart)
     !----------------------------------------------------------------------------
     ! 
-    ! This SUBROUTINE opens all the files needed to save scattering rates for the IBTE.
+    ! This routine opens all the files needed to save scattering rates for the IBTE.
     ! 
     USE kinds,            ONLY : DP
     USE io_files,         ONLY : tmp_dir, prefix, create_directory, delete_if_present
-    USE io_epw,           ONLY : iunepmat, iunsparseq, iunsparsek, &
+    USE io_epw,           ONLY : iunepmat, iunsparseq, iunsparsek,                 &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
-                                 iunsparsekcb, iunsparseicb, iunsparsejcb,&
+                                 iunsparsekcb, iunsparseicb, iunsparsejcb,         &
                                  iunsparsetcb, iunepmatcb, iunrestart
     USE mp_global,        ONLY : world_comm, my_pool_id, npool
     USE mp,               ONLY : mp_barrier, mp_bcast
@@ -534,7 +538,7 @@
     dirnamecb(1) = 'Fepmatkqcb1'
     dirnamecb(2) = 'Fsparsecb'
     ! 
-    INQUIRE(FILE = 'restart_ibte.fmt',EXIST = exst)
+    INQUIRE(FILE = 'restart_ibte.fmt', EXIST = exst)
     !
     IF (my_pool_id == ionode_id) THEN
       IF (exst) THEN
@@ -561,7 +565,7 @@
       ! Hole
       IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
         !
-        filint = './'//ADJUSTL(TRIM(dirname(1)))//'/'//TRIM(prefix)//'.epmatkq1'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirname(1))) // '/'//TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         ! 
         IF (exst2) THEN
@@ -576,7 +580,7 @@
           CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fepmatkq1 folder', 1) 
         ENDIF
         ! 
-        filint = './'//ADJUSTL(TRIM(dirname(2)))//'/'//'sparse'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirname(2))) // '/' // 'sparse' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         ! 
         IF (exst2) THEN
@@ -594,7 +598,7 @@
       ! Electron
       IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 1E5))) THEN
         !
-        filint = './'//ADJUSTL(TRIM(dirnamecb(1)))//'/'//TRIM(prefix)//'.epmatkqcb1'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirnamecb(1))) // '/' // TRIM(prefix) // '.epmatkqcb1'//'_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         ! 
         IF (exst2) THEN
@@ -603,13 +607,13 @@
           ! This is done to move the pointer to the right position after a restart (the position is in byte)
           IF (lrepmatw5_restart(my_pool_id + 1) > 0) THEN
             position_byte = (lrepmatw5_restart(my_pool_id + 1) - 1) * 8 + 1  
-            READ(iunepmatcb, POS=position_byte) dummy_real
+            READ(iunepmatcb, POS = position_byte) dummy_real
           ENDIF
         ELSE
           CALL errore('iter_open', 'A restart_ibte.fmt is present but not the Fepmatkqcb1 folder', 1)
         ENDIF
         ! 
-        filint = './'//ADJUSTL(TRIM(dirnamecb(2)))//'/'//'sparsecb'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirnamecb(2))) // '/' // 'sparsecb' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         ! 
         IF (exst2) THEN
@@ -634,7 +638,7 @@
         CALL create_directory(ADJUSTL(TRIM(dirname(1))))
         CALL create_directory(ADJUSTL(TRIM(dirname(2))))
         ! 
-        filint = './'//ADJUSTL(TRIM(dirname(1)))//'/'//TRIM(prefix)//'.epmatkq1'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirname(1))) // '/' // TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         ! 
         IF (exst2) THEN
@@ -647,7 +651,7 @@
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ENDIF 
         ! 
-        filint = './'//ADJUSTL(TRIM(dirname(2)))//'/'//'sparse'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirname(2))) // '/' // 'sparse' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         ! 
         IF (exst2) THEN
@@ -667,7 +671,7 @@
         CALL create_directory(ADJUSTL(TRIM(dirnamecb(1))))
         CALL create_directory(ADJUSTL(TRIM(dirnamecb(2))))        
         ! 
-        filint = './'//ADJUSTL(TRIM(dirnamecb(1)))//'/'//TRIM(prefix)//'.epmatkqcb1'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirnamecb(1))) // '/' // TRIM(prefix) // '.epmatkqcb1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         !  
         IF (exst2) THEN
@@ -680,7 +684,7 @@
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ENDIF
         ! 
-        filint = './'//ADJUSTL(TRIM(dirnamecb(2)))//'/'//'sparsecb'//'_'//TRIM(my_pool_id_ch)
+        filint = './' // ADJUSTL(TRIM(dirnamecb(2))) // '/' // 'sparsecb' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
         ! 
         IF (exst2) THEN
@@ -711,7 +715,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE scattering_write(itemp, etemp, ef0, etf_all)
     !----------------------------------------------------------------------------
-    !
+    !! 
+    !! Write scattering rates
+    !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE io_epw,    ONLY : iufilscatt_rate
@@ -789,7 +795,7 @@
       !
       CLOSE(iufilscatt_rate)
     ENDIF
-    CALL mp_barrier(inter_pool_comm)
+    !CALL mp_barrier(inter_pool_comm)
     ! 
     !----------------------------------------------------------------------------
     END SUBROUTINE scattering_write
@@ -798,7 +804,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE scattering_read(etemp, ef0, etf_all, inv_tau_all)
     !----------------------------------------------------------------------------
-    !
+    !!
+    !! Read scattering files
+    !!  
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE io_epw,    ONLY : iufilscatt_rate
@@ -822,6 +830,10 @@
     !! Inverse scattering rates
     ! 
     ! Local variables
+    CHARACTER(LEN = 256) :: name1
+    !! Name used to write scattering rates to file. 
+    CHARACTER(LEN = 256) :: dummy1
+    !! Dummy variable to store the text of the scattering_rate file 
     INTEGER :: ik
     !! K-point index
     INTEGER :: ik_tmp
@@ -834,11 +846,6 @@
     !! Status of reading file
     REAL(KIND = DP) :: temp
     !! Temporary file name used to write scattering rate to file. 
-    !
-    CHARACTER(LEN = 256) :: name1
-    !! Name used to write scattering rates to file. 
-    CHARACTER(LEN = 256) :: dummy1
-    !! Dummy variable to store the text of the scattering_rate file 
     ! 
     WRITE(stdout,'(/5x,"Reading scattering rate from file"/)')
     !
@@ -846,29 +853,27 @@
       ! Write to file
       temp = etemp * ryd2ev / kelvin2eV
       IF (temp < 10.d0 - eps4) THEN
-        WRITE(name1,'(a18,f4.2)') 'scattering_rate_00', temp
+        WRITE(name1, '(a18,f4.2)') 'scattering_rate_00', temp
       ELSEIF (temp >= 10.d0 - eps4 .AND. temp < 100.d0 -eps4) THEN
-        WRITE(name1,'(a17,f5.2)') 'scattering_rate_0', temp
+        WRITE(name1, '(a17,f5.2)') 'scattering_rate_0', temp
       ELSEIF (temp >= 100.d0 -eps4) THEN
-        WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
+        WRITE(name1, '(a16,f6.2)') 'scattering_rate_', temp
       ENDIF
-      OPEN(iufilscatt_rate,FILE = name1, status='old',iostat=ios)
+      OPEN(iufilscatt_rate, FILE = name1, STATUS = 'old', IOSTAT = ios)
       WRITE(stdout,'(a16,a22)') '     Open file: ',name1   
       ! There are two comment line at the beginning of the file
-      READ(iufilscatt_rate,*) dummy1
-      READ(iufilscatt_rate,*) dummy1
+      READ(iufilscatt_rate, *) dummy1
+      READ(iufilscatt_rate, *) dummy1
       !
       DO ik = 1, nktotf
         !
         DO ibnd = 1, nbndfst
           !
-          READ(iufilscatt_rate,*) ik_tmp, ibnd_tmp, &
-               etf_all(ibndmin - 1 + ibnd, ik), inv_tau_all(1, ibnd, ik) 
+          READ(iufilscatt_rate, *) ik_tmp, ibnd_tmp, etf_all(ibndmin - 1 + ibnd, ik), inv_tau_all(1, ibnd, ik) 
           inv_tau_all(1, ibnd, ik) = inv_tau_all(1, ibnd, ik) / (ryd2mev * meV2invps) 
-       
           !
           ! Check that the file corresponds to the run we are making
-          IF (ABS(ibnd_tmp - ibndmin - ibnd +1 ) > 0)  CALL errore('io_scattering', &
+          IF (ABS(ibnd_tmp - ibndmin - ibnd + 1) > 0)  CALL errore('io_scattering', &
             'Band read from the scattering_rate file do not match current calculation ', 1)
           ! 
         ENDDO
@@ -882,7 +887,6 @@
       etf_all = etf_all + ef0
       !
       CLOSE(iufilscatt_rate)
-      ! 
     ENDIF
     CALL mp_bcast(etf_all, ionode_id, world_comm)
     CALL mp_bcast(inv_tau_all, ionode_id, world_comm)
@@ -892,11 +896,12 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE scattering_read
     !----------------------------------------------------------------------------
-
     !----------------------------------------------------------------------------
     SUBROUTINE electron_write(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
     !----------------------------------------------------------------------------
-    !
+    !!
+    !! Write self-energy
+    !! 
     USE kinds,     ONLY : DP
     USE elph2,     ONLY : ibndmax, ibndmin, lower_bnd, upper_bnd, nbndfst
     USE io_epw,    ONLY : iufilsigma_all
@@ -907,9 +912,6 @@
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
-    !
-    ! Local variable
-    LOGICAL :: exst
     !
     INTEGER, INTENT(in) :: iqq
     !! Current q-point
@@ -925,6 +927,8 @@
     !! Z parameter of electron-phonon self-energy accross all pools
     ! 
     ! Local variables
+    LOGICAL :: exst
+    !! Does the file exist
     INTEGER :: i
     !! Iterative index
     INTEGER :: ik
@@ -945,7 +949,6 @@
       aux(2) = REAL(totq, KIND = DP)
       !
       i = 2
-      ! 
       DO ik = 1, nktotf
         DO ibnd = 1, nbndfst
           i = i + 1
@@ -988,7 +991,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE electron_read(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
     !----------------------------------------------------------------------------
-    !
+    !! 
+    !! Self-energy reading
+    !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : ibndmax, ibndmin, lower_bnd, upper_bnd, nbndfst
@@ -1000,9 +1005,6 @@
     USE io_global, ONLY : ionode_id
     !
     IMPLICIT NONE
-    !
-    ! Local variable
-    LOGICAL :: exst
     !
     INTEGER, INTENT(inout) :: iqq
     !! Current q-point
@@ -1018,6 +1020,8 @@
     !! Z parameter of electron-phonon self-energy accross all pools
     ! 
     ! Local variables
+    LOGICAL :: exst
+    !! Does the file exist
     INTEGER :: i
     !! Iterative index
     INTEGER :: ik
@@ -1119,7 +1123,9 @@
     USE mp,        ONLY : mp_barrier
     USE mp_world,  ONLY : mpime
     USE constants_epw, ONLY : zero
-    !
+    !! 
+    !! Write scattering rates
+    !! 
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iqq
@@ -1157,7 +1163,7 @@
       ! 
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
-          DO ibnd = 1, (nbndfst)
+          DO ibnd = 1, nbndfst
             i = i + 1
             aux(i) = inv_tau_all(itemp, ibnd, ik)
           ENDDO
@@ -1166,7 +1172,7 @@
       !
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
-          DO ibnd = 1, (nbndfst)
+          DO ibnd = 1, nbndfst
             i = i +1
             aux(i) = zi_allvb(itemp, ibnd, ik) 
           ENDDO
@@ -1181,10 +1187,9 @@
         aux(1) = iqq - 1   ! -1 because we will start at the next one. 
         aux(2) = totq
         i = 2
-        ! 
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
-            DO ibnd = 1, (nbndfst)
+            DO ibnd = 1, nbndfst
               i = i + 1
               aux(i) = inv_tau_allcb(itemp, ibnd, ik)
             ENDDO
@@ -1193,7 +1198,7 @@
         !
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
-            DO ibnd = 1, (nbndfst)
+            DO ibnd = 1, nbndfst
               i = i + 1
               aux(i) = zi_allcb(itemp, ibnd, ik)     
             ENDDO
@@ -1228,7 +1233,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE tau_read(iqq, totq, nktotf, second)
     !----------------------------------------------------------------------------
-    !
+    !!
+    !! Scattering read
+    !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, meta_ionode_id
     USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
@@ -1240,7 +1247,7 @@
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_global, ONLY : world_comm
     USE mp_world,  ONLY : mpime
-    !
+    ! 
     IMPLICIT NONE
     !
     INTEGER, INTENT(inout) :: iqq
@@ -1272,7 +1279,6 @@
     REAL(KIND = DP) :: aux(2 * nstemp * nbndfst * nktotf + 2)
     !! Vector to store the array
     ! 
-    !
     IF (mpime == meta_ionode_id) THEN
       !
       ! First inquire if the file exists
@@ -1395,7 +1401,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE merge_read(nktotf, nqtotf_new, inv_tau_all_new)
     !----------------------------------------------------------------------------
-    !
+    !!
+    !! File merging
+    !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : ibndmax, ibndmin, nbndfst
@@ -1408,12 +1416,9 @@
     !
     IMPLICIT NONE
     !
-    ! Local variable
-    LOGICAL :: exst
-    !
     INTEGER, INTENT(in) :: nktotf
     !! Total number of k-points
-    INTEGER, INTENT(OUT) :: nqtotf_new
+    INTEGER, INTENT(out) :: nqtotf_new
     !! Total number of q-points
     REAL(KIND = DP), INTENT(inout) :: inv_tau_all_new(nstemp, nbndfst, nktotf)
     !! Scattering rate read from file restart_filq
@@ -1421,6 +1426,8 @@
     ! Local variables
     CHARACTER(LEN = 256) :: name1
     !! Name of the file 
+    LOGICAL :: exst
+    !! Does the variable exist
     INTEGER :: i, iq, ios
     !! Iterative index
     INTEGER :: itemp
@@ -1432,7 +1439,7 @@
     INTEGER :: ltau_all
     !! Length of the vector
     INTEGER(KIND = 8) :: unf_recl
-    !! 
+    !! Record length unit
     REAL(KIND = DP) :: aux(nstemp * nbndfst * nktotf + 2)
     !! Vector to store the array 
     REAL(KIND = DP) :: dummy
@@ -1449,7 +1456,7 @@
         ltau_all = nstemp * nbndfst * nktotf + 2
         !CALL diropn (iufiltau_all, 'tau_restart', ltau_all, exst)
         ! 
-        INQUIRE (IOLENGTH = unf_recl) dummy  
+        INQUIRE(IOLENGTH = unf_recl) dummy  
         unf_recl = unf_recl * INT(ltau_all, KIND = KIND(unf_recl))
         OPEN(UNIT = iufiltau_all, FILE = restart_filq, IOSTAT = ios, FORM ='unformatted', &
              STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)

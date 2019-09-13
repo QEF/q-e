@@ -46,6 +46,7 @@
   USE lsda_mod,         ONLY : nspin, lsda, current_spin
   USE phus,             ONLY : int1, int1_nc, int2, int2_so,        &
                                int4, int4_nc, int5, int5_so, alphap
+  USE poolgathering,    ONLY : poolgather_int, poolgather_int1
   !
   IMPLICIT NONE
   !
@@ -202,7 +203,7 @@
   !
   CALL poolgather_int(npwx, nkstot, nks, igk_k(:, 1:nks), igk_k_all) 
   CALL poolgather_int1(nkstot, nks, ngk(1:nks), ngk_all) 
-  CALL mp_barrier(inter_pool_comm)
+  !CALL mp_barrier(inter_pool_comm)
   !
 #else
   !

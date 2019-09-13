@@ -17,7 +17,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE loadkmesh_para
+    SUBROUTINE loadkmesh_para()
     !-----------------------------------------------------------------------
     !!
     !! Load fine k mesh and distribute among pools
@@ -58,6 +58,8 @@
     !! Counter on the k-point index along nkf1, nkf2, nkf3
     INTEGER :: rest
     !! rest from the division of nr of q-points over pools
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP), ALLOCATABLE :: xkf_(:, :)
     !! coordinates k-points
     REAL(KIND = DP), ALLOCATABLE :: xkf_tmp(:, :)
@@ -77,8 +79,10 @@
         IF (ios /= 0) CALL errore('loadkmesh_para', 'opening file ' // filkf, ABS(ios))
         READ(iunkf, *) nkqtotf 
         !
-        ALLOCATE(xkf_(3, 2 * nkqtotf))
-        ALLOCATE(wkf_(2 * nkqtotf))
+        ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
+        ALLOCATE(wkf_(2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
         !
         DO ik = 1, nkqtotf
           !
@@ -110,18 +114,27 @@
           WRITE(stdout,'(a,3i4)') '     Using uniform MP k-mesh: ', nkf1, nkf2, nkf3
           call set_sym_bl()
           !
-          ALLOCATE(xkf_(3, 2 * nkf1 * nkf2 * nkf3))
-          ALLOCATE(wkf_(2 * nkf1 * nkf2 * nkf3))
+          ALLOCATE(xkf_(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
+          ALLOCATE(wkf_(2 * nkf1 * nkf2 * nkf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
           ! the result of this call is just nkqtotf
           CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf_, wkf_)
-          DEALLOCATE(xkf_)
-          DEALLOCATE(wkf_)
-          ALLOCATE(xkf_(3, 2 * nkqtotf))
-          ALLOCATE(wkf_(2 * nkqtotf)) 
-          ALLOCATE(xkf_tmp(3, nkqtotf))
-          ALLOCATE(wkf_tmp(nkqtotf))
-          ALLOCATE(xkfval(3, 2 * nkqtotf))   
+          DEALLOCATE(xkf_, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating xkf_', 1)
+          DEALLOCATE(wkf_, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating wkf_', 1)
+          ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
+          ALLOCATE(wkf_(2 * nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
+          ALLOCATE(xkf_tmp(3, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_tmp', 1)
+          ALLOCATE(wkf_tmp(nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_tmp', 1)
+          ALLOCATE(xkfval(3, 2 * nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkfval', 1)
           xkf_(:, :) = 0.0d0
           xkfval(:, :) = 0.0d0
           CALL kpoint_grid(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1 * nkf2 * nkf3, &
@@ -141,8 +154,10 @@
             wkf_(ikk)   = 2.d0 * wkf_tmp(ik)
             wkf_(ikq)   = 0.d0
           ENDDO
-          DEALLOCATE(xkf_tmp)
-          DEALLOCATE(wkf_tmp)
+          DEALLOCATE(xkf_tmp, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating xkf_tmp', 1)
+          DEALLOCATE(wkf_tmp, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating wkf_tmp', 1)
           !       
           ! bring the k point to crystal coordinates       
           CALL cryst_to_cart(2 * nkqtotf, xkfval, at, -1)
@@ -163,15 +178,18 @@
           !
           nkqtotf = 2 * nkqtotf 
           ! 
-          DEALLOCATE(xkfval)
+          DEALLOCATE(xkfval, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating xkfval', 1)
           !
         ELSE ! mp_mesh_k
           !
-          WRITE (stdout,'(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           nkqtotf = 2 * nkf1 * nkf2 * nkf3
-          ALLOCATE(xkf_ (3, nkqtotf))
-          ALLOCATE(wkf_(nkqtotf))
+          ALLOCATE(xkf_ (3, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_ ', 1)
+          ALLOCATE(wkf_(nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
           wkf_(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
             wkf_(2 * ik - 1) = 2.d0 / DBLE(nkqtotf / 2)
@@ -198,8 +216,10 @@
         WRITE(stdout, *) '     Using random k-mesh: ', rand_nk
         !
         nkqtotf = rand_nk
-        ALLOCATE(xkf_(3, 2 * nkqtotf))
-        ALLOCATE(wkf_(2 * nkqtotf))
+        ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
+        ALLOCATE(wkf_(2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
         !
         CALL init_random_seed()
         !
@@ -247,8 +267,10 @@
     !
     nkf = nkqf / 2 
     IF (mpime /= ionode_id) THEN
-      ALLOCATE(xkf_(3, nkqtotf))
-      ALLOCATE(wkf_(nkqtotf))
+      ALLOCATE(xkf_(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
+      ALLOCATE(wkf_(nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf_', 1)
     ENDIF
     CALL mp_bcast(xkf_, ionode_id, inter_pool_comm)
     CALL mp_bcast(wkf_, ionode_id, inter_pool_comm)
@@ -265,13 +287,16 @@
     !
     ! Assign the weights and vectors to the correct bounds
     !
-    ALLOCATE(xkf(3, nkqf))
-    ALLOCATE(wkf(nkqf))
+    ALLOCATE(xkf(3, nkqf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf', 1)
+    ALLOCATE(wkf(nkqf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating wkf', 1)
     xkf(:, :) = xkf_(:, lower_bnd:upper_bnd)
     ! 
     ! KMB: set coordinates of displaced vectors for indabs
     IF (vme .AND. eig_read) THEN
-      ALLOCATE(xkfd(3, nkqf, 6)) 
+      ALLOCATE(xkfd(3, nkqf, 6), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkfd', 1)
       deltaq = 0.001d0
       DO ik = 1, nkqf
         !--bring the k point to cartesian coordinates                                                                                                                           
@@ -301,18 +326,20 @@
     WRITE(stdout, '(5x,"Size of k point mesh for interpolation: ",i10)') nkqtotf 
     WRITE(stdout, '(5x,"Max number of k points per pool:",7x,i10)') nkqf 
     !
-    DEALLOCATE(xkf_)
-    DEALLOCATE(wkf_)
+    DEALLOCATE(xkf_, STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating xkf_', 1)
+    DEALLOCATE(wkf_, STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error deallocating wkf_', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE loadkmesh_para
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE loadkmesh_serial
+    SUBROUTINE loadkmesh_serial()
     !-----------------------------------------------------------------------
     !!
-    !!  Load fine k mesh in sequential
+    !! Load fine k mesh in sequential
     !!
     !-----------------------------------------------------------------------
     USE io_global, ONLY : ionode_id, stdout
@@ -341,6 +368,8 @@
     !! q-point index
     INTEGER :: i, j, k
     !! Counter on the k-point index along nkf1, nkf2, nkf3
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP), ALLOCATABLE :: xkf_tmp(:, :)
     !! coordinates k-points
     REAL(KIND = DP), ALLOCATABLE :: wkf_tmp(:)
@@ -355,8 +384,10 @@
         OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_serial', 'opening file ' // filkf, ABS(ios))
         READ(iunkf, *) nkqtotf
-        ALLOCATE(xkf(3, 2 * nkqtotf))
-        ALLOCATE(wkf(2 * nkqtotf))
+        ALLOCATE(xkf(3, 2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
+        ALLOCATE(wkf(2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
         DO ik = 1, nkqtotf
           !
           ikk = 2 * ik - 1
@@ -387,20 +418,28 @@
       ELSEIF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_k) THEN
           ! get size of the mp_mesh in the irr wedge 
-          WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
+          WRITE(stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           CALL set_sym_bl()
           !                                         
-          ALLOCATE(xkf(3, 2 * nkf1 * nkf2 * nkf3))
-          ALLOCATE(wkf(2 * nkf1 * nkf2 * nkf3))
+          ALLOCATE(xkf(3, 2 * nkf1 * nkf2 * nkf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
+          ALLOCATE(wkf(2 * nkf1 * nkf2 * nkf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
           ! the result of this call is just nkqtotf
           CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf, wkf)
-          DEALLOCATE(xkf)
-          DEALLOCATE(wkf) 
-          ALLOCATE(xkf(3, 2 * nkqtotf))
-          ALLOCATE(wkf(2 * nkqtotf))
-          ALLOCATE(xkf_tmp(3, nkqtotf))
-          ALLOCATE(wkf_tmp(nkqtotf))
+          DEALLOCATE(xkf, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating xkf', 1)
+          DEALLOCATE(wkf, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating wkf', 1)
+          ALLOCATE(xkf(3, 2 * nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
+          ALLOCATE(wkf(2 * nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
+          ALLOCATE(xkf_tmp(3, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf_tmp', 1)
+          ALLOCATE(wkf_tmp(nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf_tmp', 1)
           CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nkf1 * nkf2 * nkf3, &
                0, 0, 0, nkf1, nkf2, nkf3, nkqtotf, xkf_tmp, wkf_tmp)
           !  
@@ -414,8 +453,10 @@
             wkf(ikk)   = 2.d0 * wkf_tmp(ik)
             wkf(ikq)   = 0.d0
           ENDDO
-          DEALLOCATE(xkf_tmp)
-          DEALLOCATE(wkf_tmp)
+          DEALLOCATE(xkf_tmp, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating xkf_tmp', 1)
+          DEALLOCATE(wkf_tmp, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error deallocating wkf_tmp', 1)
           !       
           ! bring the k point to crystal coordinates       
           CALL cryst_to_cart(2 * nkqtotf, xkf, at, -1)
@@ -427,8 +468,10 @@
           WRITE (stdout, '(a,3i4)') '     Using uniform k-mesh: ', nkf1, nkf2, nkf3
           !
           nkqtotf = 2 * nkf1 * nkf2 * nkf3
-          ALLOCATE(xkf(3, nkqtotf))
-          ALLOCATE(wkf(nkqtotf))
+          ALLOCATE(xkf(3, nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
+          ALLOCATE(wkf(nkqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
           wkf(:) = 0.d0
           DO ik = 1, nkf1 * nkf2 * nkf3
             wkf(2 * ik - 1) = 2.d0 / DBLE(nkqtotf / 2)
@@ -453,8 +496,10 @@
         WRITE (stdout, *) '    Using random k-mesh: ', rand_nk
         !
         nkqtotf = rand_nk
-        ALLOCATE(xkf(3, 2 * nkqtotf))
-        ALLOCATE(wkf(2 * nkqtotf))
+        ALLOCATE(xkf(3, 2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
+        ALLOCATE(wkf(2 * nkqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
         !
         CALL init_random_seed()
         !
@@ -494,15 +539,18 @@
     CALL mp_bcast(nkqf, ionode_id, inter_pool_comm)
     CALL mp_bcast(nkqtotf, ionode_id, inter_pool_comm)
     IF (mpime /= ionode_id) THEN
-      ALLOCATE(xkf(3, nkqtotf))
-      ALLOCATE(wkf(nkqtotf))
+      ALLOCATE(xkf(3, nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
+      ALLOCATE(wkf(nkqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating wkf', 1)
     ENDIF
     CALL mp_bcast(xkf, ionode_id, inter_pool_comm)
     CALL mp_bcast(wkf, ionode_id, inter_pool_comm)
     !
     ! KMB: set coordinates of displaced vectors - indabs
     IF (vme .AND. eig_read) THEN
-      ALLOCATE(xkfd(3, nkqf, 6)) 
+      ALLOCATE(xkfd(3, nkqf, 6), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkfd', 1)
       deltaq = 0.001d0
       DO ik = 1, nkqf
         ! Bring the k point to cartesian coordinates                                                                                                                           
@@ -546,7 +594,10 @@
     REAL(KIND = DP), INTENT(inout) :: xkf_bz(3, nktotbz)
     !! Return the grid on full BZ
     !
-    INTEGER :: ik, i, j, k, ios
+    INTEGER :: ik
+    !! K-point index
+    INTEGER :: i, j, k
+    !! K-point grid dim
     ! 
     IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0)) THEN
       DO i = 1, nkf1
@@ -634,6 +685,8 @@
     !! Sum of points
     INTEGER :: BZtoIBZ_tmp(nkc1 * nkc2 * nkc3)
     !! Temporrary BZtoIBZ map
+    INTEGER :: ierr
+    !! Error status
     INTEGER, ALLOCATABLE :: nkspar(:)
     !! Number of irr points (IBZ)
     REAL(KIND = DP) :: xkr(3)
@@ -646,18 +699,21 @@
     !! Weight of the k-point
     !
     nkr = nkc1 * nkc2 * nkc3
-    ALLOCATE(nkspar(npool))
-    ALLOCATE(xkg(3, nkr))
-    ALLOCATE(wkk(nkr))
+    ALLOCATE(nkspar(npool), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error allocating nkspar', 1)
+    ALLOCATE(xkg(3, nkr), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error allocating xkg', 1)
+    ALLOCATE(wkk(nkr), STAT = ierr)
+    IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error allocating wkk', 1)
     equiv(:) = 0
     s_save(:) = 0
     !
     DO i = 1, nkc1
       DO j = 1, nkc2
         DO k = 1, nkc3
-          !  this is nothing but consecutive ordering
+          ! this is nothing but consecutive ordering
           n = (k - 1) + ( j- 1 ) * nkc3 + (i - 1) * nkc2 * nkc3 + 1
-          !  xkg are the components of the complete grid in crystal axis
+          ! xkg are the components of the complete grid in crystal axis
           xkg(1, n) = DBLE(i - 1) / nkc1 
           xkg(2, n) = DBLE(j - 1) / nkc2 
           xkg(3, n) = DBLE(k - 1) / nkc3 
@@ -671,7 +727,7 @@
     ENDDO
     !
     IF (skip_equivalence) THEN
-      CALL infomsg('kpoint_grid', 'ATTENTION: skip check of k-points equivalence')
+      CALL infomsg('kpoint_grid_epw', 'ATTENTION: skip check of k-points equivalence')
       wkk = 1.d0
     ELSE
       DO nk = 1, nkr
@@ -705,7 +761,7 @@
                 wkk(nk) = wkk(nk) + 1.0d0
                 s_save(n) = ns
               ELSE
-                IF (equiv(n) /= nk .OR. n < nk) CALL errore('kpoint_grid', &
+                IF (equiv(n) /= nk .OR. n < nk) CALL errore('kpoint_grid_epw', &
                    'something wrong in the checking algorithm', 1)
               ENDIF
             ENDIF
@@ -745,7 +801,7 @@
     DO nk = lower_bnd, upper_bnd
       IF (equiv(nk) == nk) THEN
         nkspar(my_pool_id + 1) = nkspar(my_pool_id + 1) + 1
-        IF (nkspar(my_pool_id + 1) > nkr) CALL errore('kpoint_grid', 'Too many k-points', 1)
+        IF (nkspar(my_pool_id + 1) > nkr) CALL errore('kpoint_grid_epw', 'Too many k-points', 1)
         BZtoIBZ(nk) = nkspar(my_pool_id + 1)
         ! Change all the one above
         DO ik = nk, nkr
@@ -795,16 +851,20 @@
       ENDIF
     ENDDO
     ! 
-    DEALLOCATE(xkg)
-    DEALLOCATE(wkk)
-    DEALLOCATE(nkspar)
+    DEALLOCATE(xkg, STAT = ierr)
+    IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error deallocating xkg', 1)
+    DEALLOCATE(wkk, STAT = ierr)
+    IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error deallocating wkk', 1)
+    DEALLOCATE(nkspar, STAT = ierr)
+    IF (ierr /= 0) CALL errore('kpoint_grid_epw', 'Error deallocating nkspar', 1)
+    ! 
     RETURN
     !-----------------------------------------------------------------------
     END SUBROUTINE kpoint_grid_epw
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE loadqmesh_para
+    SUBROUTINE loadqmesh_para()
     !-----------------------------------------------------------------------
     !!
     !!  Load fine q mesh and distribute among pools
@@ -840,6 +900,8 @@
     !! Status of the reading of the file
     INTEGER :: rest
     !! Remaining of cores numbers
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP), ALLOCATABLE :: xqf_(:, :)
     !! Temporary q-point
     REAL(KIND = DP), ALLOCATABLE :: wqf_(:)
@@ -854,8 +916,10 @@
         IF (ios /= 0) CALL errore('loadkmesh_para', 'Opening file ' // filqf, ABS(ios))
         READ(iunqf, *) nqtotf
         !
-        ALLOCATE(xqf_(3, nqtotf))
-        ALLOCATE(wqf_(nqtotf))
+        ALLOCATE(xqf_(3, nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_', 1)
+        ALLOCATE(wqf_(nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
         !
         DO iq = 1, nqtotf
           !
@@ -871,13 +935,17 @@
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
           !
-          ALLOCATE(xqf_ (3, nqf1 * nqf2 * nqf3))
-          ALLOCATE(wqf_(nqf1 * nqf2 * nqf3))
+          ALLOCATE(xqf_ (3, nqf1 * nqf2 * nqf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
+          ALLOCATE(wqf_(nqf1 * nqf2 * nqf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
           ! the result of this call is just nkqtotf
           CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
-          DEALLOCATE(xqf_, wqf_)
-          ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf)) 
+          DEALLOCATE(xqf_, wqf_, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating xqf_, wqf_', 1)
+          ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ (3, nqtotf), wqf_', 1)
           CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           !  
@@ -889,7 +957,8 @@
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf =  nqf1 * nqf2 * nqf3
-          ALLOCATE(xqf_(3, nqtotf), wqf_(nqtotf) )
+          ALLOCATE(xqf_(3, nqtotf), wqf_(nqtotf) , STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_(3, nqtotf), wqf_', 1)
           wqf_(:) = 0.d0
           DO iq = 1, nqf1 * nqf2 * nqf3
             wqf_(iq) = 1.d0 / (DBLE(nqtotf))
@@ -913,8 +982,10 @@
         WRITE(stdout, *) '    Using random q-mesh: ', rand_nq
         !
         nqtotf = rand_nq
-        ALLOCATE(xqf_ (3, nqtotf))
-        ALLOCATE(wqf_(nqtotf))
+        ALLOCATE(xqf_ (3, nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
+        ALLOCATE(wqf_(nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
         !
         CALL init_random_seed()
         !
@@ -956,8 +1027,10 @@
     ENDIF
     !
     IF (mpime /= ionode_id) THEN
-      ALLOCATE(xqf_(3, nqtotf))
-      ALLOCATE(wqf_(nqtotf))
+      ALLOCATE(xqf_(3, nqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_', 1)
+      ALLOCATE(wqf_(nqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
     ENDIF
     CALL mp_bcast(xqf_, ionode_id, inter_pool_comm)
     CALL mp_bcast(wqf_, ionode_id, inter_pool_comm)
@@ -974,8 +1047,10 @@
     !
     !  Assign the weights and vectors to the correct bounds
     !
-    ALLOCATE(xqf(3, nqf))
-    ALLOCATE(wqf(nqf))
+    ALLOCATE(xqf(3, nqf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf', 1)
+    ALLOCATE(wqf(nqf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf', 1)
     xqf(:, :) = xqf_ (:, lower_bnd:upper_bnd)
     IF (noncolin) THEN 
       wqf(:) = wqf_(lower_bnd:upper_bnd) / 2.d0
@@ -989,14 +1064,16 @@
     WRITE(stdout, '(5x,"Size of q point mesh for interpolation: ",i10)') nqtotf 
     WRITE(stdout, '(5x,"Max number of q points per pool:",7x,i10)') nqf 
     !
-    DEALLOCATE(xqf_)
-    DEALLOCATE(wqf_)
+    DEALLOCATE(xqf_, STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating xqf_', 1)
+    DEALLOCATE(wqf_, STAT = ierr)
+    IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating wqf_', 1)
     !-----------------------------------------------------------------------
     END SUBROUTINE loadqmesh_para
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE loadqmesh_serial
+    SUBROUTINE loadqmesh_serial()
     !-----------------------------------------------------------------------
     !!
     !!  Load fine q mesh in sequential
@@ -1025,6 +1102,8 @@
     !! Directions
     INTEGER :: ios
     !! Status integer
+    INTEGER :: ierr
+    !! Error status
     !
     IF (mpime == ionode_id) THEN
       IF (filqf /= '') THEN ! load from file (crystal coordinates)
@@ -1036,8 +1115,10 @@
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadqmesh_serial', 'opening file ' // filqf, ABS(ios))
         READ(iunqf, *) nqtotf
-        ALLOCATE(xqf(3, nqtotf))
-        ALLOCATE(wqf(nqtotf))
+        ALLOCATE(xqf(3, nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
+        ALLOCATE(wqf(nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
         DO iq = 1, nqtotf
           READ (iunqf, *) xqf(:, iq), wqf(iq)
         ENDDO
@@ -1053,15 +1134,21 @@
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
           !                                         
-          ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3))
-          ALLOCATE(wqf(nqf1 * nqf2 * nqf3))
+          ALLOCATE(xqf(3, nqf1 * nqf2 * nqf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
+          ALLOCATE(wqf(nqf1 * nqf2 * nqf3), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
           ! the result of this call is just nkqtotf
           CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0, 0, 0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
-          DEALLOCATE(xqf)
-          DEALLOCATE(wqf) 
-          ALLOCATE(xqf(3, nqtotf))
-          ALLOCATE(wqf(nqtotf)) 
+          DEALLOCATE(xqf, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error deallocating xqf', 1)
+          DEALLOCATE(wqf, STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error deallocating wqf', 1)
+          ALLOCATE(xqf(3, nqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
+          ALLOCATE(wqf(nqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
           CALL kpoint_grid(nrot, time_reversal, s, t_rev, bg, nqf1 * nqf2 * nqf3, &
                0,0,0, nqf1, nqf2, nqf3, nqtotf, xqf, wqf)
           !
@@ -1074,8 +1161,10 @@
           WRITE (stdout, '(a,3i4)') '     Using uniform q-mesh: ', nqf1, nqf2, nqf3
           !
           nqtotf = nqf1 * nqf2 * nqf3
-          ALLOCATE(xqf (3, nqtotf))
-          ALLOCATE(wqf(nqtotf))
+          ALLOCATE(xqf (3, nqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf ', 1)
+          ALLOCATE(wqf(nqtotf), STAT = ierr)
+          IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
           wqf(:) = 1.d0 / (DBLE(nqtotf))
           DO i = 1, nqf1
             DO j = 1, nqf2
@@ -1098,8 +1187,10 @@
         WRITE (stdout, *) '    Using random q-mesh: ', rand_nq
         !
         nqtotf = rand_nq
-        ALLOCATE(xqf(3, nqtotf))
-        ALLOCATE(wqf(nqtotf))
+        ALLOCATE(xqf(3, nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
+        ALLOCATE(wqf(nqtotf), STAT = ierr)
+        IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
         wqf(:) = 1.d0 / (DBLE(nqtotf))
         !
         CALL init_random_seed()
@@ -1129,8 +1220,10 @@
     CALL mp_bcast(nqf, ionode_id, inter_pool_comm)
     CALL mp_bcast(nqtotf, ionode_id, inter_pool_comm)
     IF (mpime /= ionode_id) THEN
-      ALLOCATE(xqf(3, nqtotf))
-      ALLOCATE(wqf(nqtotf))
+      ALLOCATE(xqf(3, nqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
+      ALLOCATE(wqf(nqtotf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
     ENDIF
     CALL mp_bcast(xqf, ionode_id, inter_pool_comm)
     CALL mp_bcast(wqf, ionode_id, inter_pool_comm)
@@ -1172,6 +1265,7 @@
     USE wan2bloch,     ONLY : hamwan2bloch
     USE io_eliashberg, ONLY : kpmq_map
     USE kinds_epw,     ONLY : SIK2
+    USE poolgathering, ONLY : poolgather
     !
     IMPLICIT NONE
     !
@@ -1225,6 +1319,8 @@
     !! Temporary k-q points.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
+    INTEGER :: ierr
+    !! Error status
     INTEGER :: BZtoIBZ_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
     INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
@@ -1270,11 +1366,12 @@
     IF (exst) THEN
       IF (mpime == ionode_id) THEN
         OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', STATUS = 'old', IOSTAT = ios)
-        READ (iunselecq,*) totq
-        ALLOCATE(selecq(totq))
+        READ(iunselecq,*) totq
+        ALLOCATE(selecq(totq), STAT = ierr)
+        IF (ierr /= 0) CALL errore('qwindow', 'Error allocating selecq', 1)
         selecq(:) = 0
-        READ (iunselecq,*) nqtot
-        READ (iunselecq,*) selecq(:)
+        READ(iunselecq,*) nqtot
+        READ(iunselecq,*) selecq(:)
         CLOSE(iunselecq)
       ENDIF
       CALL mp_bcast(totq, ionode_id, world_comm)
@@ -1287,7 +1384,8 @@
       ENDIF
       !  
     ELSE
-      ALLOCATE(selecq(nqf))
+      ALLOCATE(selecq(nqf), STAT = ierr)
+      IF (ierr /= 0) CALL errore('qwindow', 'Error allocating selecq', 1)
       selecq(:) = 0 
       etf_loc(:, :)  = zero
       etf_locq(:, :) = zero
@@ -1314,7 +1412,7 @@
           ENDIF        
           CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf_loc(:, ik), chw, cfac, dims)
         ENDDO
-        CALL poolgather(nbndsub, nktotf, nkf, etf_loc, etf_all )
+        CALL poolgather(nbndsub, nktotf, nkf, etf_loc, etf_all)
         ! 
         ! In case of k-point symmetry
         IF (mp_mesh_k) THEN
@@ -1393,7 +1491,7 @@
             selecq(totq) = iq
             ! 
             IF (MOD(totq, restart_freq) == 0) THEN
-              WRITE(stdout,'(5x,a,i15,i15)')'Number selected, total', totq, iq
+              WRITE(stdout, '(5x,a,i15,i15)')'Number selected, total', totq, iq
             ENDIF
           ENDIF
         ENDDO ! iq
@@ -1527,9 +1625,9 @@
       !  
       IF (mpime == ionode_id) THEN
         OPEN(UNIT = iunselecq, FILE = 'selecq.fmt', ACTION = 'write')
-        WRITE(iunselecq,*) totq    ! Selected number of q-points
-        WRITE(iunselecq,*) nqtotf  ! Total number of q-points 
-        WRITE(iunselecq,*) selecq(1:totq)
+        WRITE(iunselecq, *) totq    ! Selected number of q-points
+        WRITE(iunselecq, *) nqtotf  ! Total number of q-points 
+        WRITE(iunselecq, *) selecq(1:totq)
         CLOSE(iunselecq)
       ENDIF
       ! 
@@ -1539,7 +1637,7 @@
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE load_rebal
+    SUBROUTINE load_rebal()
     !-----------------------------------------------------------------------
     !!
     !! Routine used to rebalance the load on k-points.  
@@ -1559,6 +1657,7 @@
     USE constants_epw, ONLY : zero
     USE io_global,     ONLY : ionode_id
     USE mp_global,     ONLY : inter_pool_comm, mp_bcast
+    USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
     !  
@@ -1580,6 +1679,8 @@
     !! Rest of the points
     INTEGER :: tot
     !! Total number of k-point
+    INTEGER :: ierr
+    !! Error status
     INTEGER :: kpt_in(nkqtotf)
     !! K-points that are within the fshick windows
     INTEGER :: kpt_out(nkqtotf)
@@ -1612,8 +1713,10 @@
     etf_all = etf
 #endif 
     ! 
-    ALLOCATE(map_rebal(nktotf))
-    ALLOCATE(map_rebal_inv(nktotf))
+    ALLOCATE(map_rebal(nktotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('load_rebal', 'Error allocating map_rebal', 1)
+    ALLOCATE(map_rebal_inv(nktotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('load_rebal', 'Error allocating map_rebal_inv', 1)
     ! 
     kpt_in(:) = 0 
     kpt_out(:) = 0 
@@ -1728,6 +1831,8 @@
     !! All the k-points (just k-points, not k and k+q)
     ! 
     ! Local variables
+    LOGICAL :: sym_found
+    !! Logical for IF statement
     INTEGER :: ik
     !! K-point variable
     INTEGER :: nb
@@ -1740,6 +1845,16 @@
     !! Lower bounds index after k para
     INTEGER :: upper_bnd
     !! Upper bounds index after k paral
+    INTEGER :: n
+    !! Loop index
+    INTEGER :: m
+    !! Loop index
+    INTEGER :: l
+    !! Loop index
+    INTEGER :: counter_n
+    !! Counter for special points on the border
+    INTEGER :: ierr
+    !! Error status
     INTEGER :: xkt_sp(48, nktotf)
     !! Temp list of special k-points
     INTEGER, PARAMETER :: nrwsx = 200
@@ -1758,18 +1873,8 @@
     !! Wigner-Seitz vector
     REAL(KIND = DP) :: rws(4, nrwsx) 
     !! Real WS vectors 
-    INTEGER :: n
-    !! Loop index
-    INTEGER :: m
-    !! Loop index
-    INTEGER :: l
-    !! Loop index
     REAL(KIND = DP) :: S_xk_border(3, 27)
     !! Look for special points on the border
-    INTEGER :: counter_n
-    !! Counter for special points on the border
-    LOGICAL :: sym_found
-    !! Logical for IF statement
     ! 
     ! Split the k-point across cores
     CALL fkbounds(nktotf, lower_bnd, upper_bnd)
@@ -1833,7 +1938,8 @@
     CALL mp_sum(nb_sp, world_comm)
     ! 
     !! 48 symmetries + 1 index for the index of kpt
-    ALLOCATE(xkf_sp(49, nb_sp ))
+    ALLOCATE(xkf_sp(49, nb_sp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('special_points', 'Error allocating xkf_sp', 1)
     xkf_sp(:, :) = 0
     ! 
     counter = 0

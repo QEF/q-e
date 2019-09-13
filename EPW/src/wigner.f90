@@ -661,7 +661,7 @@
     !! Maximum number of WS vector 
     REAL(KIND = DP), INTENT(in) :: rws(4, nrwsx)
     !! List of WS vectors
-    REAL(KIND = DP), INTENT(OUT) :: ws(3)
+    REAL(KIND = DP), INTENT(out) :: ws(3)
     !! Vector back into the first WS cell. 
     ! 
     ! Local variables

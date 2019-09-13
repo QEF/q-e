@@ -36,6 +36,7 @@
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE division,      ONLY : fkbounds
+    USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -43,7 +44,6 @@
     !! Current q-point index 
     !
     ! Local variables 
-    ! 
     INTEGER :: lower_bnd
     !! Lower bounds index after k or q paral
     INTEGER :: upper_bnd

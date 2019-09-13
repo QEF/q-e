@@ -58,6 +58,7 @@
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE io_scattering, ONLY : electron_write
+    USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -932,8 +933,9 @@
     USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm 
-    use cell_base,     ONLY : omega, alat, bg
+    USE cell_base,     ONLY : omega, alat, bg
     USE division,      ONLY : fkbounds
+    USE poolgathering, ONLY : poolgather2
     ! 
     IMPLICIT NONE
     !

@@ -10,11 +10,10 @@
   SUBROUTINE indabs(iq)
   !-----------------------------------------------------------------------
   !! 
-  !!  Phonon assisted absorption
-  !!  12/03/2018 E. Kioupakis: First implementation
-  !!  08/04/2018 S. Ponce: Cleaning 
+  !! Phonon assisted absorption
+  !! 12/03/2018 E. Kioupakis: First implementation
+  !! 08/04/2018 S. Ponce: Cleaning 
   !!
-  !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout, ionode_id
   USE io_epw,        ONLY : iuindabs
@@ -45,7 +44,6 @@
   !! Number of eta values, in string format
   CHARACTER(LEN = 256) :: format_string
   !! Format string
-  !
   ! Local variables
   LOGICAL :: opnd
   !! Check whether the file is open. 
@@ -83,6 +81,8 @@
   !! Polarization direction
   INTEGER :: m
   !! Counter on denominator imaginary broadening values
+  INTEGER :: ierr
+  !! Error status 
   INTEGER, PARAMETER :: neta = 9
   !! Broadening parameter
   REAL(KIND = DP) :: tmp
@@ -137,7 +137,7 @@
   !! Occupation prefactors
   REAL(KIND = DP) :: cfac
   !! Absorption prefactor
-  REAL(KIND = DP) :: eta(neta) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /)/ryd2eV
+  REAL(KIND = DP) :: eta(neta) = (/ 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 /) / ryd2eV
   !! Imaginary broadening of matrix element denominators
   REAL(KIND = DP), EXTERNAL :: dos_ef
   !! Function to compute the Density of States at the Fermi level
@@ -159,8 +159,7 @@
   COMPLEX(KIND = DP) :: epf(nbndfst, nbndfst, nmodes)
   !! Generalized matrix elements for phonon-assisted absorption
   ! 
-  ! SP: Define the inverse so that we can efficiently multiply instead of
-  ! dividing
+  ! SP: Define the inverse so that we can efficiently multiply instead of dividing
   ! 
   inv_eptemp0 = 1.0 / eptemp
   inv_degaussw = 1.0 / degaussw
@@ -184,14 +183,17 @@
     !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
     !IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3, nomega, neta))
     !IF (.NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta))
-    ALLOCATE(omegap(nomega))
-    ALLOCATE(epsilon2_abs(3, nomega, neta))
-    ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta))
+    ALLOCATE(omegap(nomega), STAT = ierr)
+    IF (ierr /= 0) CALL errore('indabs', 'Error allocating omegap', 1)
+    ALLOCATE(epsilon2_abs(3, nomega, neta), STAT = ierr)
+    IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
+    ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta), STAT = ierr)
+    IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
     ! 
     epsilon2_abs = 0.d0
     epsilon2_abs_lorenz = 0.d0
     DO iw = 1, nomega
-      omegap(iw) = omegamin + (iw-1) * omegastep
+      omegap(iw) = omegamin + (iw - 1) * omegastep
     ENDDO
   ENDIF
   !
@@ -219,8 +221,8 @@
       ! 
       epf(:, :, imode) = epf17(:, :, imode,ik)
       IF (wq(imode) > eps_acustic) THEN
-        nqv(imode) = wgauss( -wq(imode)/(eptemp), -99)
-        nqv(imode) = nqv(imode) / ( one - two * nqv(imode) )
+        nqv(imode) = wgauss(-wq(imode) / eptemp, -99)
+        nqv(imode) = nqv(imode) / (one - two * nqv(imode))
       ENDIF
     ENDDO
     !
@@ -236,7 +238,7 @@
     ELSE
       DO ibnd = 1, nbndfst
         DO jbnd = 1, nbndfst
-           ! Dme's already corrected for GW corrections in wan2bloch.f90
+          ! Dme's already corrected for GW corrections in wan2bloch.f90
           vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk) 
           vkq(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq) 
         ENDDO
@@ -361,7 +363,6 @@
     ! Output to file
     WRITE(c,"(i0)") neta + 1
     format_string = "("//TRIM(c) // "E22.14)"
-
     OPEN(UNIT = iuindabs, FILE = nameF)
     WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
     WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'

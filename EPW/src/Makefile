@@ -40,6 +40,7 @@ eliashbergcom.o \
 superconductivity.o \
 superconductivity_iso.o \
 superconductivity_aniso.o \
+poolgathering.o \
 grid.o \
 transport.o \
 transport_iter.o \
@@ -71,7 +72,6 @@ newdq2.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \
-poolgather.o \
 print_ibte.o \
 readdvscf.o \
 readgmap.o \

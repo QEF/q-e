@@ -56,18 +56,22 @@
     !! Random number
     INTEGER :: clock
     !! Clock count
+    INTEGER :: ierr
+    !! Error status
     INTEGER, ALLOCATABLE :: seed(:)
     !! Seeds
     !     
     CALL RANDOM_SEED(SIZE = n)
-    ALLOCATE(seed(n))
+    ALLOCATE(seed(n), STAT = ierr)
+    IF (ierr /= 0) CALL errore('init_random_seed', 'Error allocating seed', 1)
     !      
     CALL SYSTEM_CLOCK(COUNT = clock)
     !        
     seed = clock + 37 * (/(i - 1, i = 1, n)/)
     CALL RANDOM_SEED(PUT = seed)
     !        
-    DEALLOCATE(seed)
+    DEALLOCATE(seed, STAT = ierr)
+    IF (ierr /= 0) CALL errore('init_random_seed', 'Error deallocating seed', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE init_random_seed
@@ -76,11 +80,10 @@
     !-----------------------------------------------------------------------
     SUBROUTINE fermiwindow 
     !-----------------------------------------------------------------------
-    !
-    ! Find the band indices of the first
-    ! and last state falling within the window e_fermi+-efermithickness
-    ! 
-    !-----------------------------------------------------------------------
+    !!
+    !! Find the band indices of the first
+    !! and last state falling within the window e_fermi+-efermithickness
+    !! 
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
@@ -270,7 +273,6 @@
     !!  the restriction set in startup.f90 that every pool 
     !!  has the same number of procs.
     !!
-    !----------------------------------------------------------------
     IMPLICIT NONE
     ! 
     CHARACTER(LEN = 3), INTENT(out) :: ndlab 
@@ -334,7 +336,6 @@
     !! process ( so it will be master only in case of MPI ).
     !! Memory is reported from the /proc/PID_NUMBER/status file
     ! 
-    ! ---------------------------------------------------------------------
 #ifdef __INTEL_COMPILER
     USE ifport !if on intel compiler
 #endif  
@@ -346,19 +347,21 @@
     INTEGER, INTENT(inout) :: valueRSS(2)
     !! Contains the value of the memory in kB
     ! 
+    ! Local variables
     CHARACTER(LEN = 200) :: filename = ' '
     !! Name of the file
     CHARACTER(LEN = 80) :: line
     !! Line in the file
     CHARACTER(LEN = 8) :: pid_char = ' '
+    !! 
+    LOGICAL :: ifxst
+    !! Does the file exists
 #if defined(__PGI) || defined(__CRAY) || defined(__XLF)
     INTEGER, EXTERNAL :: getpid
     !! PID of the process
 #endif
     INTEGER :: pid
     !! PID of the process
-    LOGICAL :: ifxst
-    !! Does the file exists
     ! 
     valueRSS = -1    ! return negative number if not found
     ! 
@@ -1148,8 +1151,6 @@
     !! Sum lower one
     REAL (KIND = DP) :: sumkmid
     !! Sum final
-    !REAL(KIND = DP), EXTERNAL :: sumkg_seq
-    !! K-point sum
     !
     ! Find bounds for the Fermi energy. Very safe choice!
     !
@@ -1241,8 +1242,6 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE mem_size
     !--------------------------------------------------------------------------
-
   !-------------------------------------------------------------------------
   END MODULE low_lvl
   !-------------------------------------------------------------------------
-

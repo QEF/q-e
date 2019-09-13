@@ -39,6 +39,7 @@
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
     USE io_scattering, ONLY : scattering_write, tau_write, merge_read
+    USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
     !
@@ -587,6 +588,7 @@
     USE division,      ONLY : fkbounds
     USE grid,          ONLY : kpoint_grid_epw
     USE kinds_epw,     ONLY : SIK2
+    USE poolgathering, ONLY : poolgatherc4, poolgather2
     !
     IMPLICIT NONE
     ! 

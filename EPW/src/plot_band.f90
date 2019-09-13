@@ -6,28 +6,29 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE plot_band
+  SUBROUTINE plot_band()
   !-----------------------------------------------------------------------
   !!
-  !!  This SUBROUTINE writes output files for phonon dispersion and band structure 
-  !!  RM : this SUBROUTINE should be tested
-  !!  SP : Modified so that it works with the current plotband.x of QE 5
+  !! This SUBROUTINE writes output files for phonon dispersion and band structure 
+  !! RM : this SUBROUTINE should be tested
+  !! SP : Modified so that it works with the current plotband.x of QE 5
   !!
-  !-----------------------------------------------------------------------
-  USE kinds,      ONLY : DP
-  USE cell_base,  ONLY : at, bg
-  USE phcom,      ONLY : nmodes
-  USE epwcom,     ONLY : nbndsub, filqf, filkf
-  USE elph2,      ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
+  USE kinds,         ONLY : DP
+  USE cell_base,     ONLY : at, bg
+  USE phcom,         ONLY : nmodes
+  USE epwcom,        ONLY : nbndsub, filqf, filkf
+  USE elph2,         ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
   USE constants_epw, ONLY : ryd2mev, ryd2ev
-  USE io_epw,     ONLY : iufilfreq, iufileig
-  USE elph2,      ONLY : nkqf
-  USE io_global,  ONLY : ionode_id
-  USE mp,         ONLY : mp_barrier, mp_sum
-  USE mp_global,  ONLY : inter_pool_comm, my_pool_id
+  USE io_epw,        ONLY : iufilfreq, iufileig
+  USE elph2,         ONLY : nkqf
+  USE io_global,     ONLY : ionode_id
+  USE mp,            ONLY : mp_barrier, mp_sum
+  USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+  USE poolgathering, ONLY : poolgather2
   !
   IMPLICIT NONE
   !
+  ! Local variables
   INTEGER :: ik
   !! Global k-point index
   INTEGER :: ikk
@@ -40,6 +41,8 @@
   !! Mode index
   INTEGER :: iq
   !! Global q-point index
+  INTEGER :: ierr
+  !! Error status
   REAL(KIND = DP) :: dist
   !! Distance from Gamma
   REAL(KIND = DP) :: dprev
@@ -85,7 +88,6 @@
       CALL cryst_to_cart(nqtotf, xqf, at, -1)
       !
     ENDIF
-    !CALL mp_barrier(inter_pool_comm)
   ENDIF ! filqf
   ! 
   IF (filkf /= ' ') THEN
@@ -97,10 +99,10 @@
       !
     ENDDO
     !
-    !IF (.NOT. ALLOCATED(xkf_all) ) ALLOCATE(xkf_all( 3, nkqtotf)) 
-    !IF (.NOT. ALLOCATED(etf_all) ) ALLOCATE(etf_all( nbndsub, nkqtotf))
-    ALLOCATE(xkf_all(3, nkqtotf)) 
-    ALLOCATE(etf_all(nbndsub, nkqtotf))
+    ALLOCATE(xkf_all(3, nkqtotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_band', 'Error allocating xkf_all', 1)
+    ALLOCATE(etf_all(nbndsub, nkqtotf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_band', 'Error allocating etf_all', 1)
     !
 #if defined(__MPI)
     CALL poolgather2(3,       nkqtotf, nkqf, xkf, xkf_all)
@@ -149,10 +151,10 @@
     ENDIF
     CALL mp_barrier(inter_pool_comm)
     !
-    !IF (ALLOCATED(xkf_all)) DEALLOCATE(xkf_all )
-    !IF (ALLOCATED(etf_all)) DEALLOCATE(etf_all )
-    DEALLOCATE(xkf_all)
-    DEALLOCATE(etf_all)
+    DEALLOCATE(xkf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_band', 'Error deallocating xkf_all', 1)
+    DEALLOCATE(etf_all, STAT = ierr)
+    IF (ierr /= 0) CALL errore('plot_band', 'Error deallocating etf_all', 1)
     !
   ENDIF ! filkf
   !

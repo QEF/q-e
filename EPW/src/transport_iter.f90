@@ -58,6 +58,7 @@
     USE kinds_epw,     ONLY : SIK2
     USE wigner,        ONLY : backtoWS
     USE grid,          ONLY : special_points, kpoint_grid_epw
+    USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
     !

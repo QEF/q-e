@@ -185,7 +185,7 @@
     !! 
     !----------------------------------------------------------------------------
     ! 
-    USE io_global,     ONLY : stdout
+    USE io_global, ONLY : stdout
     ! 
     IMPLICIT NONE
     ! 

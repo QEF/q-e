@@ -40,6 +40,7 @@
   INTEGER, INTENT(in) :: iq
   !! Current q-point index
   ! 
+  ! Local variables
   INTEGER :: ik
   !! Counter on the k-point index 
   INTEGER :: ikk
@@ -55,7 +56,6 @@
   INTEGER :: ismear
   !! Upper bounds index after k or q paral
   !! Smearing for the Gaussian function 
-  ! 
   REAL(KIND = DP) :: ekk
   !! Eigen energy on the fine grid relative to the Fermi level
   REAL(KIND = DP) :: ekq
@@ -79,7 +79,7 @@
   REAL(KIND = DP) :: degaussw0
   !! 
   REAL(KIND = DP), EXTERNAL :: efermig
-  !
+  !! 
   !
   IF (iqq == 1) THEN
     WRITE(stdout, '(/5x,a)') REPEAT('=',67)

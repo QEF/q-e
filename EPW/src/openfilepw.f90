@@ -8,7 +8,7 @@
   !                                                                            
   ! Adapted from the code PH/openfilq - Quantum-ESPRESSO group                
   !-----------------------------------------------------------------------
-  SUBROUTINE openfilepw
+  SUBROUTINE openfilepw()
   !-----------------------------------------------------------------------
   !!
   !! This SUBROUTINE opens all the files necessary for the EPW
@@ -28,6 +28,7 @@
   !
   IMPLICIT NONE
   !
+  ! Local variables
   LOGICAL :: exst
   !! logical variable to check file existe
   !
@@ -46,4 +47,6 @@
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE openfilepw
+  !-----------------------------------------------------------------------
