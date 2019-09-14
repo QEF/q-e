@@ -222,6 +222,10 @@
               (ef + fsthick) * ryd2ev, ' eV will be included'
       WRITE(stdout, '(5x,a/)')
     ENDIF
+    ! 
+    ! We save matrix elements larger than threshold defined in ephwann_shuffle
+    WRITE(stdout,'(5x,a,1E20.12)') 'Save matrix elements larger than threshold: ', threshold
+    WRITE(stdout,'(5x," ")')
     !
   ENDIF
   ! 
