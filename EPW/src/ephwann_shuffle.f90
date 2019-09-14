@@ -1510,84 +1510,14 @@
         ! Conductivity ---------------------------------------------------------
         IF (scattering) THEN
           !   
-          ! If we want to compute intrinsic mobilities, call fermicarrier to 
-          ! correctly positionned the ef0 level.
-          ! This is only done once for iq = 0 
+          ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
+          ! This is only done once for the first iq. 
           IF (iqq == iq_restart) THEN
-            ! 
             DO itemp = 1, nstemp
-              ! 
-              etemp = transp_temp(itemp) 
-              WRITE(stdout, '(/5x,"Temperature ",f8.3," K")' ) etemp * ryd2ev / kelvin2eV
-              ! 
-              ! Small gap semiconductor. Computes intrinsic mobility by placing 
-              ! the Fermi level such that carrier density is equal for electron and holes
-              IF (int_mob .AND. .NOT. carrier) THEN               
-                !
-                ef0(itemp) = fermicarrier(etemp)
-                WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev  
-                ! We only compute 1 Fermi level so we do not need the other
-                efcb(itemp) = 0
-                ! 
-                ctype = -1 
-                !   
-              ENDIF
-              ! 
-              ! Large bandgap semiconductor. Place the gap at the value ncarrier.
-              ! The user want both VB and CB mobilities. 
-              IF (int_mob .AND. carrier) THEN
-                ! 
-                ncarrier = - ABS(ncarrier) 
-                ef0(itemp) = fermicarrier(etemp)
-                WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev 
-                ! 
-                ncarrier = ABS(ncarrier) 
-                efcb(itemp) = fermicarrier(etemp)
-                WRITE(stdout, '(5x,"Mobility CB Fermi level ",f10.6," eV")' )  efcb(itemp) * ryd2ev
-                !
-                ctype = 0
-                !  
-              ENDIF   
-              ! 
-              ! User decide the carrier concentration and choose to only look at VB or CB  
-              IF (.NOT. int_mob .AND. carrier) THEN
-                ! SP: Determination of the Fermi level for intrinsic or doped carrier 
-                ! 
-                ! VB only
-                IF (ncarrier < 0.0) THEN
-                  ef0(itemp) = fermicarrier(etemp)               
-                  WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
-                  ! We only compute 1 Fermi level so we do not need the other
-                  efcb(itemp) = 0
-                  ctype = -1 
-                ELSE ! CB 
-                  efcb(itemp) = fermicarrier(etemp)               
-                  WRITE(stdout, '(5x,"Mobility CB Fermi level ",f10.6," eV")' )  efcb(itemp) * ryd2ev
-                  ! We only compute 1 Fermi level so we do not need the other
-                  ef0(itemp) = 0
-                  ctype = 1
-                ENDIF
-                ! 
-              ENDIF
-              ! 
-              IF (.NOT. int_mob .AND. .NOT. carrier) THEN
-                IF (efermi_read) THEN
-                  !
-                  ef0(itemp) = fermi_energy
-                  !
-                ELSE !SP: This is added for efficiency reason because the efermig routine is slow
-                  ef0(itemp) = efnew
-                ENDIF
-                ! We only compute 1 Fermi level so we do not need the other
-                efcb(itemp) = 0
-                ctype = -1   
-                !  
-              ENDIF
-              ! 
-            ENDDO
-            !
-            ! 
-          ENDIF ! iqq=0
+              etemp = transp_temp(itemp)
+              CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+            ENDDO 
+          ENDIF
           !   
           IF (.NOT. iterative_bte) THEN
             CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle)
@@ -1697,7 +1627,7 @@
         IF (int_mob .OR. carrier) THEN
           ! SP: Determination of the Fermi level for intrinsic or doped carrier 
           !     One also need to apply scissor before calling it.
-          ef0(itemp) = fermicarrier(etemp)
+          CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
         ELSE
           IF (efermi_read) THEN
             ef0(itemp) = fermi_energy

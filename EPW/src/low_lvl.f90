@@ -729,7 +729,7 @@
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    FUNCTION fermicarrier(temp)
+    SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the Fermi energy associated with a given 
@@ -739,19 +739,27 @@
     USE cell_base, ONLY : omega, alat, at
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : etf, nkf, wkf
-    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5
+    USE elph2,     ONLY : etf, nkf, wkf, efnew
+    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
-    USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, &
-                          system_2d, carrier
+    USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
+                          system_2d, carrier, efermi_read 
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global, ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
-    REAL(KIND = DP), INTENT(in) :: temp
+    INTEGER, INTENT(in) :: itemp
+    !! Temperature index
+    INTEGER, INTENT(out) :: ctype
+    !! Calculation type: -1 = hole, +1 = electron and 0 = both.
+    REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in kBT [Ry] unit.
+    REAL(KIND = DP), INTENT(inout) :: ef0(nstemp)
+    !! Fermi level for the temperature itemp
+    REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
+    !! Second fermi level for the temperature itemp
     ! 
     ! Local variables 
     INTEGER :: i
@@ -768,8 +776,10 @@
     !! Index of the CBM
     INTEGER, PARAMETER :: maxiter = 500 ! 300
     !! Maximum interation
-    REAL(KIND = DP) :: fermicarrier
+    REAL(KIND = DP) :: fermi
     !! Fermi level returned
+    REAL(KIND = DP) :: fermicb
+    !! Fermi level returned for second Fermi level
     REAL(KIND = DP) :: fnk
     !! Fermi-Diract occupation
     REAL(KIND = DP) :: ks_exp(nbndsub, nkf)
@@ -804,9 +814,11 @@
     REAL(KIND = DP), PARAMETER :: maxarg = 200.d0
     !! Maximum value for the argument of the exponential
     ! 
-    Ef = 0.0d0
-    ! 
+    Ef      = zero
+    fermi   = zero
+    fermicb = zero
     inv_cell = 1.0d0 / omega
+    ! 
     ! for 2d system need to divide by area (vacuum in z-direction)
     IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
     ! vbm index
@@ -835,7 +847,6 @@
             ecbm = etf (ibnd, ikk)
           ENDIF
         ENDIF
-        ! 
       ENDDO
     ENDDO
     !
@@ -844,8 +855,10 @@
     CALL mp_max(evbm, inter_pool_comm)
     CALL mp_min(ecbm, inter_pool_comm)
     !    
-    WRITE(stdout, '(5x,"Valence band maximum    = ",f10.6," eV")') evbm * ryd2ev
-    WRITE(stdout, '(5x,"Conduction band minimum = ",f10.6," eV")') ecbm * ryd2ev
+    IF (itemp == 1) THEN
+      WRITE(stdout, '(5x,"Valence band maximum    = ",f10.6," eV")') evbm * ryd2ev
+      WRITE(stdout, '(5x,"Conduction band minimum = ",f10.6," eV")') ecbm * ryd2ev
+    ENDIF
     ! 
     ! Store e^(e_nk/kbT) on each core
     DO ik = 1, nkf
@@ -853,7 +866,7 @@
         ikk = 2 * ik - 1
         ! Because the number are so large. It does lead to instabilities
         ! Therefore we rescale everything to the VBM
-        arg = (etf(ibnd, ikk) - evbm) / temp 
+        arg = (etf(ibnd, ikk) - evbm) / etemp 
         !
         IF (arg < - maxarg) THEN
           ks_exp(ibnd, ik) = 0.0d0
@@ -869,7 +882,7 @@
         ikk = 2 * ik - 1
         ! Because the number are so large. It does lead to instabilities
         ! Therefore we rescale everything to the CBM
-        arg = (etf(ibnd, ikk) - ecbm) / temp
+        arg = (etf(ibnd, ikk) - ecbm) / etemp
         !
         IF (arg > maxarg) THEN
           ks_expcb(ibnd, ik) = 1.0d200
@@ -879,12 +892,10 @@
       ENDDO
     ENDDO
     !
-    ! Starting bounds energy for the biscection method. The energies are rescaled
-    ! to the VBM
+    ! Case 1 : Intrinsic mobilities (electron and hole concentration are the same)   
+    ! Starting bounds energy for the biscection method. The energies are rescaled to the VBM
     Elw = 1.0d0  ! This is e^0 = 1.0 
     Eup = 1d-160 ! This is e^(-large) = 0.0 (small)
-    !
-    ! Intrinsic mobilities (electron and hole concentration are the same)   
     IF (int_mob .AND. .NOT. carrier) THEN
       ! Use bisection method
       DO i = 1, maxiter
@@ -893,7 +904,7 @@
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
         Ef = SQRT(Eup) * SQRT(Elw)     
         ! 
-        !WRITE(stdout,*),'Ef ', - log (Ef) * temp * ryd2ev
+        !WRITE(stdout,*),'Ef ', - log (Ef) * etemp * ryd2ev
         hole_density = 0.0
         electron_density = 0.0
         DO ik = 1, nkf
@@ -904,7 +915,7 @@
             IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
               fnk = 0.0d0
             ELSE
-              fnk = 1.0d0 / ( ks_exp(ibnd, ik) * Ef  + 1.0d0)  
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * Ef  + 1.0d0)  
             ENDIF
             ! The wkf(ikk) already include a factor 2
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk)
@@ -915,7 +926,7 @@
             IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
               fnk = 0.0d0
             ELSE
-              fnk = 1.0d0 / ( ks_exp(ibnd, ik) * Ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * Ef  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk
@@ -932,8 +943,8 @@
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
-          fermicarrier = evbm - (LOG(fermi_exp) * temp)
-          return
+          fermi = evbm - (LOG(fermi_exp) * etemp)
+          EXIT
         ELSEIF ((rel_err) > eps5) THEN
           Elw = Ef                           
         ELSE                                   
@@ -942,55 +953,13 @@
       ENDDO ! iteration
     ENDIF 
     ! 
-    Eup = 1.0d0 ! e^(0) =1
-    Elw = 1.0d80 ! e^large yields fnk = 1
-    ! 
-    factor = inv_cell * (bohr2ang * ang2cm)**(-3)
-    ! Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
-    IF (ncarrier > 1E5) THEN
-      ! Use bisection method
-      DO i = 1, maxiter
-        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = SQRT(Eup) * SQRT(Elw)
-        ! 
-        electron_density = 0.0
-        DO ik = 1, nkf
-          ikk = 2 * ik - 1
-          ! Compute electron carrier concentration
-          DO ibnd = icbm, nbndsub
-            ! Discard very large numbers
-            IF (ks_expcb(ibnd, ik) * Ef > 1d60) THEN
-              fnk = 0.0d0
-            ELSE
-              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * Ef  + 1.0d0)
-            ENDIF
-            ! The wkf(ikk) already include a factor 2
-            electron_density = electron_density + wkf(ikk) * fnk * factor
-          ENDDO
-          ! 
-        ENDDO
-        !
-        CALL mp_sum(electron_density, inter_pool_comm)
-        ! 
-        rel_err = (electron_density - ncarrier) / electron_density
-        !
-        IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = Ef
-          fermicarrier = ecbm - (LOG(fermi_exp) * temp)
-          RETURN
-        ELSEIF ((rel_err) > eps5) THEN
-          Eup = Ef
-        ELSE
-          Elw = Ef
-        ENDIF
-      ENDDO ! iteration
-    ENDIF
-    ! 
+    ! Case 2 :
     ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
+    factor = inv_cell * (bohr2ang * ang2cm)**(-3)
     Eup = 1d-160 ! e^(-large) = 0.0 (small)
     Elw = 1.0d0 ! e^0 = 1
-    !    
-    IF (ncarrier < -1E5) THEN
+    IF (ncarrier < -1E5 .OR. (int_mob .AND. carrier)) THEN
+      IF (int_mob .AND. carrier) ncarrier = - ABS(ncarrier)
       ! Use bisection method
       DO i = 1, maxiter
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
@@ -1020,8 +989,8 @@
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
-          fermicarrier = evbm - (LOG(fermi_exp) * temp)
-          RETURN
+          fermi = evbm - (LOG(fermi_exp) * etemp)
+          EXIT
         ELSEIF ((rel_err) > eps5) THEN
           Elw = Ef
         ELSE
@@ -1030,12 +999,120 @@
       ENDDO ! iteration
     ENDIF
     ! 
-    WRITE(stdout, '(5x,"Warning: too many iterations in bisection"/ &
-         &      5x,"Ef = ",f10.6)' ) fermicarrier * ryd2ev
+    ! Case 3 : Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
+    Eup = 1.0d0 ! e^(0) =1
+    Elw = 1.0d80 ! e^large yields fnk = 1
+    IF (ncarrier > 1E5 .OR. (int_mob .AND. carrier)) THEN
+      IF (int_mob .AND. carrier) ncarrier = ABS(ncarrier)
+      ! Use bisection method
+      DO i = 1, maxiter
+        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
+        Ef = SQRT(Eup) * SQRT(Elw)
+        ! 
+        electron_density = 0.0
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          ! Compute electron carrier concentration
+          DO ibnd = icbm, nbndsub
+            ! Discard very large numbers
+            IF (ks_expcb(ibnd, ik) * Ef > 1d60) THEN
+              fnk = 0.0d0
+            ELSE
+              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * Ef  + 1.0d0)
+            ENDIF
+            ! The wkf(ikk) already include a factor 2
+            electron_density = electron_density + wkf(ikk) * fnk * factor
+          ENDDO
+          ! 
+        ENDDO
+        !
+        CALL mp_sum(electron_density, inter_pool_comm)
+        ! 
+        rel_err = (electron_density - ncarrier) / electron_density
+        !
+        IF (ABS(rel_err) < eps5) THEN
+          fermi_exp = Ef
+          fermicb = ecbm - (LOG(fermi_exp) * etemp)
+          EXIT
+        ELSEIF ((rel_err) > eps5) THEN
+          Eup = Ef
+        ELSE
+          Elw = Ef
+        ENDIF
+      ENDDO ! iteration
+    ENDIF
+    ! 
+    IF (i == maxiter) THEN
+      WRITE(stdout, '(5x,"Warning: too many iterations in bisection"/ &
+           &      5x,"Ef = ",f10.6)' ) fermi * ryd2ev
+    ENDIF
+    ! 
+    ! Print results
+    !  
+    WRITE(stdout, '(/5x,"Temperature ",f8.3," K")' ) etemp * ryd2ev / kelvin2eV
+    ! 
+    ! Small gap semiconductor. Computes intrinsic mobility by placing 
+    ! the Fermi level such that carrier density is equal for electron and holes
+    IF (int_mob .AND. .NOT. carrier) THEN
+      !
+      ef0(itemp) = fermi
+      WRITE(stdout, '(5x,"Mobility Fermi level = ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+      ! We only compute 1 Fermi level so we do not need the other
+      efcb(itemp) = 0
+      ctype = -1
+      !   
+    ENDIF
+    ! 
+    ! Large bandgap semiconductor. Place the gap at the value ncarrier.
+    ! The user want both VB and CB mobilities. 
+    IF (int_mob .AND. carrier) THEN
+      ! 
+      ef0(itemp) = fermi
+      WRITE(stdout, '(5x,"Mobility VB Fermi level = ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+      ! 
+      efcb(itemp) = fermicb
+      WRITE(stdout, '(5x,"Mobility CB Fermi level = ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+      ctype = 0
+      !  
+    ENDIF
+    ! 
+    ! User decide the carrier concentration and choose to only look at VB or CB  
+    IF (.NOT. int_mob .AND. carrier) THEN
+      ! 
+      ! VB only
+      IF (ncarrier < 0.0) THEN
+        ef0(itemp) = fermi
+        WRITE(stdout, '(5x,"Mobility VB Fermi level = ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+        ! We only compute 1 Fermi level so we do not need the other
+        efcb(itemp) = 0
+        ctype = -1
+      ELSE ! CB 
+        efcb(itemp) = fermicb
+        WRITE(stdout, '(5x,"Mobility CB Fermi level = ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+        ! We only compute 1 Fermi level so we do not need the other
+        ef0(itemp) = 0
+        ctype = 1
+      ENDIF
+    ENDIF
+    ! 
+    ! In the case were we do not want mobility (just scattering rates)
+    IF (.NOT. int_mob .AND. .NOT. carrier) THEN
+      IF (efermi_read) THEN
+        !
+        ef0(itemp) = fermi_energy
+        !
+      ELSE !SP: This is added for efficiency reason because the efermig routine is slow
+        ef0(itemp) = efnew
+      ENDIF
+      ! We only compute 1 Fermi level so we do not need the other
+      efcb(itemp) = 0
+      ctype = -1
+      !  
+    ENDIF
     !
     RETURN   
     !-----------------------------------------------------------------------
-    END FUNCTION fermicarrier
+    END SUBROUTINE fermicarrier
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
