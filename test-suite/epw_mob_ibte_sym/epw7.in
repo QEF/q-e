@@ -15,13 +15,13 @@
 
   scattering  = .true.
   scattering_serta = .true.
-  int_mob     = .true.
+  int_mob     = .false.
   carrier     = .true.
   ncarrier    =  1E13
   mp_mesh_k   = .true.
   iterative_bte = .true.
-  epmatkqread = .false.
-  mob_maxiter = 3
+  epmatkqread = .true.
+  mob_maxiter = 20
   broyden_beta= 1.0
 
   scissor     =  0.7
@@ -31,7 +31,7 @@
 
   restart      = .true.
   restart_freq = 50
-  selecqread   = .false.
+  selecqread   = .true.
 
   etf_mem     = 1
   lpolar      = .false.
@@ -63,11 +63,14 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 4.0
+  fsthick     = 0.5
   eptemp      = 1 ! K 
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = './save/'
+
+  efermi_read  = .true
+  fermi_energy = 7.560801 ! 7.660801
   
   nkf1        = 7
   nkf2        = 7

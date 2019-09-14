@@ -784,12 +784,12 @@
     ENDIF
     etf(icbm:nbndsub, :) = etf(icbm:nbndsub, :) + scissor
     !    
-    WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+    WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the CB ",i6)' ) scissor * ryd2ev, icbm
   ENDIF
   !
   ! Identify the bands within fsthick from the Fermi level
   ! Return ibndmin and ibndmax
-  CALL fermiwindow
+  CALL fermiwindow()
   nbndfst = ibndmax - ibndmin + 1
   ! 
   ! Define it only once for the full run. 
