@@ -387,12 +387,11 @@
         ixkqf_tr(ind) = BZtoIBZ(nkq_abs)
       ENDDO
       ! 
+      ! Determines the special k-points are k-points that are sent to themselves via a non-identity  symmetry operation.
+      CALL special_points(nb_sp, xkf_all(:, 1:nkqtotf:2), xkf_sp)  
+      ! 
     ENDIF ! mp_mesh_k
     ! 
-    ! Determines the special k-points are k-points that are sent to themselves via a non-identity  symmetry operation.
-    CALL mp_bcast(s, ionode_id, world_comm)
-    CALL special_points(nb_sp, xkf_all(:, 1:nkqtotf:2), xkf_sp)
-    !
     F_SERTA(:, :, :, :) = zero
     ! 
     IF (iverbosity == 4) THEN
@@ -428,20 +427,20 @@
       ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
       CALL k_avg(F_SERTA, vkk_all, nb_sp, xkf_sp)
       CALL print_serta_sym(F_SERTA, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
-    ELSE
+    ELSE  
       CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
     ENDIF
     ! 
     ! Possibily read from file
     iter = 1
     F_in(:, :, :, :) = zero
-    IF (ncarrier > 1E5) THEN
-      CALL Fin_read(iter, F_in, av_mob_old, .TRUE.)
-    ENDIF
-    ! 
-    IF (ncarrier < -1E5) THEN
-      CALL Fin_read(iter, F_in, av_mob_old, .FALSE.)
-    ENDIF
+    !IF (ncarrier > 1E5) THEN
+    !  CALL Fin_read(iter, F_in, av_mob_old, .TRUE.)
+    !ENDIF
+    !! 
+    !IF (ncarrier < -1E5) THEN
+    !  CALL Fin_read(iter, F_in, av_mob_old, .FALSE.)
+    !ENDIF
     ! If it is the first time, put to SERTA
     IF (iter == 1) THEN
       F_in(:, :, :, :) = F_SERTA(:, :, :, :)
@@ -541,20 +540,20 @@
       iter = iter + 1
       ! 
       ! Save F_in to file:
-      IF (ncarrier > 1E5) THEN
-        CALL Fin_write(iter, F_in, av_mob_old, .TRUE.)
-      ENDIF
-      ! 
-      IF (ncarrier < -1E5) THEN
-        CALL Fin_write(iter, F_in, av_mob_old, .FALSE.)
-      ENDIF
+      !IF (ncarrier > 1E5) THEN
+      !  CALL Fin_write(iter, F_in, av_mob_old, .TRUE.)
+      !ENDIF
+      !! 
+      !IF (ncarrier < -1E5) THEN
+      !  CALL Fin_write(iter, F_in, av_mob_old, .FALSE.)
+      !ENDIF
       ! 
     ENDDO ! end of while loop
     ! 
     ! Deallocate 
-    DEALLOCATE(xkf_sp, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ibte', 'Error deallocating xkf_sp', 1)
     IF (mp_mesh_k) THEN
+      DEALLOCATE(xkf_sp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating xkf_sp', 1)      
       DEALLOCATE(ixkqf_tr, STAT = ierr)
       IF (ierr /= 0) CALL errore('ibte', 'Error deallocating ixkqf_tr', 1)
       DEALLOCATE(s_BZtoIBZ_full, STAT = ierr)

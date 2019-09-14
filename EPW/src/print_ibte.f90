@@ -446,7 +446,7 @@
                 inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) = inv_tau_allcb(ibnd, ik + lower_bnd - 1, itemp) + tmp2
                 ! 
                 IF (ABS(tmp2 * dfnk) > threshold) THEN
-                  indcb (my_pool_id + 1) = indcb (my_pool_id+1) + 1
+                  indcb (my_pool_id + 1) = indcb(my_pool_id + 1) + 1
                   trans_probcb(indcb(my_pool_id + 1)) = tmp
                   sparsecb_q(indcb(my_pool_id + 1)) = iq
                   sparsecb_k(indcb(my_pool_id + 1)) = ik + lower_bnd - 1
