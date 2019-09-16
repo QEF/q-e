@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on 16Sep2019 at 18: 0:41 
+     Program EPW v.5.2.0 starts on 16Sep2019 at 22:14:31 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -134,9 +134,9 @@
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     EPW          :      0.35s CPU      0.36s WALL
+     EPW          :      0.37s CPU      0.39s WALL
 
-     EPW          :      1.05s CPU      1.06s WALL
+     EPW          :      1.06s CPU      1.09s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -200,19 +200,19 @@
 
      Wannier Function centers (cartesian, alat) and spreads (ang):
 
-     (  -0.99814   0.57721  -0.18063) :   0.91109
-     (   0.50001   0.28885  -0.32866) :   1.32709
-     (  -0.00187   0.57717  -0.18064) :   0.91103
-     (   0.49993   0.28878   0.14360) :   1.38700
-     (   0.00007   0.57724   0.95855) :   1.38700
-     (   0.50187   0.28885   0.63431) :   0.91103
-     (  -0.00001   0.57718   0.48629) :   1.32709
-     (  -0.50186   0.28882   0.63432) :   0.91109
-     (   0.50001  -0.28790  -0.19566) :   0.87903
-     (   0.99999  -0.57812   0.61929) :   0.87903
+     (  -0.99814   0.57719  -0.18062) :   0.91111
+     (   0.49999   0.28887  -0.32866) :   1.32709
+     (  -0.00187   0.57720  -0.18064) :   0.91101
+     (   0.49990   0.28875   0.14360) :   1.38703
+     (   0.00005   0.57732   0.95855) :   1.38699
+     (   0.50187   0.28886   0.63431) :   0.91102
+     (  -0.00000   0.57717   0.48628) :   1.32710
+     (  -0.50186   0.28881   0.63432) :   0.91108
+     (   0.49999  -0.28791  -0.19567) :   0.87900
+     (   0.99999  -0.57812   0.61928) :   0.87903
 
      -------------------------------------------------------------------
-     WANNIER      :      4.26s CPU      4.30s WALL (       1 calls)
+     WANNIER      :      4.37s CPU      4.39s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -221,7 +221,7 @@
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      1.96s CPU      1.97s WALL (       1 calls)
+     kmaps        :      2.13s CPU      2.15s WALL (       1 calls)
      Symmetries of Bravais lattice:  24
      Symmetries of crystal:          12
 
@@ -324,7 +324,7 @@
 
      The Fermi level will be determined with  12.00000 electrons
 
-     Fermi energy is calculated from the fine k-mesh: Ef =  12.528297 eV
+     Fermi energy is calculated from the fine k-mesh: Ef =  12.528295 eV
 
      Warning: check if difference with Fermi level fine grid makes sense
 
@@ -353,19 +353,19 @@
 
      ik =       1 coord.:    0.0000000   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   4 )=  -1.2887 eV   Re[Sigma]=     101.016494 meV Im[Sigma]=       0.000000 meV     Z=       0.285487 lam=       2.502788
-     E(   5 )=  -1.1464 eV   Re[Sigma]=      94.639992 meV Im[Sigma]=      12.000001 meV     Z=       0.386762 lam=       1.585573
-     E(   6 )=  -1.1464 eV   Re[Sigma]=      94.639992 meV Im[Sigma]=      12.000001 meV     Z=       0.386762 lam=       1.585573
-     E(   7 )=   0.5478 eV   Re[Sigma]=       5.123967 meV Im[Sigma]=       0.000000 meV     Z=       0.983694 lam=       0.016576
+     E(   4 )=  -1.2887 eV   Re[Sigma]=     101.113537 meV Im[Sigma]=       0.000001 meV     Z=       0.286269 lam=       2.493224
+     E(   5 )=  -1.1464 eV   Re[Sigma]=      93.914420 meV Im[Sigma]=      11.917705 meV     Z=       0.388513 lam=       1.573917
+     E(   6 )=  -1.1464 eV   Re[Sigma]=      93.914420 meV Im[Sigma]=      11.917705 meV     Z=       0.388513 lam=       1.573917
+     E(   7 )=   0.5477 eV   Re[Sigma]=       5.125108 meV Im[Sigma]=       0.000000 meV     Z=       0.983714 lam=       0.016555
      -------------------------------------------------------------------
 
-        1        4     -1.2887    101.0165      0.0000      0.2855      2.5028
+        1        4     -1.2887    101.1135      0.0000      0.2863      2.4932
   
-        1        5     -1.1464     94.6400     12.0000      0.3868      1.5856
+        1        5     -1.1464     93.9144     11.9177      0.3885      1.5739
   
-        1        6     -1.1464     94.6400     12.0000      0.3868      1.5856
+        1        6     -1.1464     93.9144     11.9177      0.3885      1.5739
   
-        1        7      0.5478      5.1240      0.0000      0.9837      0.0166
+        1        7      0.5477      5.1251      0.0000      0.9837      0.0166
   
      ===================================================================
      Memory usage:  VmHWM =        57Mb
@@ -374,11 +374,11 @@
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     43.24s CPU     43.69s WALL (       1 calls)
+     elphon_wrap  :     42.89s CPU     43.22s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      3.13s CPU      3.14s WALL (       9 calls)
+     set_drhoc    :      3.11s CPU      3.11s WALL (       9 calls)
      init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
      init_us_1    :      0.05s CPU      0.05s WALL (       2 calls)
 
@@ -399,7 +399,7 @@
 
 
      Total program execution
-     EPW          :     48.65s CPU     49.15s WALL
+     EPW          :     48.40s CPU     48.80s WALL
 
                                                                                           
  Please consider citing:                                                                  

@@ -1,5 +1,5 @@
 &control
-    calculation='scf'
+    calculation='nscf'
     prefix='gan'
     restart_mode='from_scratch'
     pseudo_dir='./'
