@@ -92,7 +92,6 @@
   !
   INTEGER, INTENT(in) :: nqc
   !! number of qpoints in the coarse grid
-  !
   REAL(KIND = DP), INTENT(in) :: xqc(3, nqc)
   !! qpoint list, coarse mesh
   ! 
@@ -218,7 +217,6 @@
   INTEGER :: lsize
   !! Offset to tell where to start reading the file
 #endif
-  ! 
   REAL(KIND = DP) :: rdotk_scal
   !! Real (instead of array) for $r\cdot k$
   REAL(KIND = DP) :: xxq(3)
@@ -283,7 +281,6 @@
   !! Eigenvalue 1 for deg. testing
   REAL(KIND = DP) :: e_2
   !! Eigenvalue 2 for deg. testing
-  !
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwe(:, :, :, :, :)
   !! e-p matrix  in wannier basis - electrons
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwe_mem(:, :, :, :)
@@ -1917,5 +1914,3 @@
   !         cfacq(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !       ENDIF
   !       !
-  !  
-  !

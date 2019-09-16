@@ -419,7 +419,7 @@
       ENDDO
     ENDDO
     ! 
-    ! We now do IBTE with and without k-point symmetries
+    ! We now do SERTA with and without k-point symmetries
     max_mob(:) = zero 
     ! K-point symmetry. 
     IF (mp_mesh_k) THEN

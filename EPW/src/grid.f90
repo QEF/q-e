@@ -1419,23 +1419,20 @@
           BZtoIBZ(:) = 0
           s_BZtoIBZ(:) = 0
           ! 
-          IF (mpime == ionode_id) THEN
-            ! 
-            CALL set_sym_bl()
-            !
-            ! What we get from this call is BZtoIBZ
-            CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
-            ! 
-            IF (iterative_bte) THEN
-              BZtoIBZ_tmp(:) = 0
-              DO ikbz = 1, nkf1 * nkf2 * nkf3
-                BZtoIBZ_tmp(ikbz) = map_rebal(BZtoIBZ(ikbz))
-              ENDDO
-              BZtoIBZ(:) = BZtoIBZ_tmp(:)
-            ENDIF
-            ! 
-          ENDIF ! mpime
-          CALL mp_bcast(BZtoIBZ, ionode_id, inter_pool_comm)
+          ! 
+          CALL set_sym_bl()
+          !
+          ! What we get from this call is BZtoIBZ
+          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+          ! 
+          IF (iterative_bte) THEN
+            BZtoIBZ_tmp(:) = 0
+            DO ikbz = 1, nkf1 * nkf2 * nkf3
+              BZtoIBZ_tmp(ikbz) = map_rebal(BZtoIBZ(ikbz))
+            ENDDO
+            BZtoIBZ(:) = BZtoIBZ_tmp(:)
+          ENDIF
+          ! 
           ! 
         ENDIF ! mp_mesh_k
         ! 

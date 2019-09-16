@@ -108,8 +108,6 @@
   !! Nb of Matrix elements that are non-zero 
   INTEGER :: indcb(npool)
   !! Nb of Matrix elements that are non-zero in the cb
-  INTEGER :: nbnd
-  !! Range of bands within fsthick 
   INTEGER(KIND = i4b) :: sparse_q(nbndfst * nbndfst * nstemp * nkf)
   !! Index of q-points for mapping 
   INTEGER(KIND = i4b) :: sparse_k(nbndfst * nbndfst * nstemp * nkf)
@@ -205,7 +203,6 @@
   !! The derivative of wgauss:  an approximation to the delta function 
   !  
   inv_cell = 1.0d0 / omega
-  nbnd = nbndfst
   ! 
   IF (iqq == 1) THEN
     !
@@ -238,7 +235,7 @@
     inv_eta(:, :, :) = zero 
     IF (adapt_smearing) THEN
       DO ik = 1, nkf
-        DO ibnd = 1, nbnd
+        DO ibnd = 1, nbndfst
           DO imode = 1, nmodes
             inv_eta(imode, ibnd, ik) = 1.0d0 / (SQRT(2d0) * eta(imode, ibnd, ik))
           ENDDO
@@ -246,7 +243,7 @@
       ENDDO
     ELSE
       DO ik = 1, nkf
-        DO ibnd = 1, nbnd
+        DO ibnd = 1, nbndfst
           DO imode = 1, nmodes
             inv_eta(imode, ibnd, ik) = 1.0d0 / degaussw
           ENDDO
@@ -264,12 +261,12 @@
       !
       ! Average over the k electrons
       DO nu = 1, nmodes
-        DO jbnd = 1, nbnd
-          DO ibnd = 1, nbnd
+        DO jbnd = 1, nbndfst
+          DO ibnd = 1, nbndfst
             w_1 = etf(ibndmin - 1 + ibnd, ikk)
             g2  = zero
             n   = 0
-            DO pbnd = 1, nbnd
+            DO pbnd = 1, nbndfst
               w_2 = etf(ibndmin - 1 + pbnd, ikk)
               IF (ABS(w_2-w_1) < eps6) THEN
                 n = n + 1
@@ -284,12 +281,12 @@
       !
       ! Average over the k+q electrons
       DO nu = 1, nmodes
-        DO jbnd = 1, nbnd
-          DO ibnd = 1, nbnd
+        DO jbnd = 1, nbndfst
+          DO ibnd = 1, nbndfst
             w_1 = etf(ibndmin - 1 + jbnd, ikq)
             g2 = 0.d0
             n  = 0
-            DO pbnd = 1, nbnd 
+            DO pbnd = 1, nbndfst
               w_2 = etf(ibndmin - 1 + pbnd, ikq)
               IF (ABS(w_2 - w_1) < eps6) THEN
                 n = n + 1
@@ -352,7 +349,7 @@
         !
         IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
           IF (ctype == 0 .OR. ctype == -1) THEN ! hole          
-            DO ibnd = 1, nbnd
+            DO ibnd = 1, nbndfst
               ! Energy at k (relative to Ef)
               ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0(itemp)
               ! Fermi-Dirac occupation $f_{nk}$
@@ -362,7 +359,7 @@
               ! derivative Fermi distribution -df_nk/dE_nk = (f_nk)*(1-f_nk)/ (k_B T) 
               dfnk = w0gauss(ekk * inv_etemp, -99 ) * inv_etemp
               !  
-              DO jbnd = 1, nbnd
+              DO jbnd = 1, nbndfst
                 !
                 ! Energy and fermi occupation at k+q
                 ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0(itemp)
@@ -422,7 +419,7 @@
           ! This is used to compute both the electron and hole mobility at the same time.  
           IF (ctype == 0 .OR. ctype == 1) THEN
             ! 
-            DO ibnd = 1, nbnd
+            DO ibnd = 1, nbndfst
               ! Energy at k (relative to Ef)
               ekk = etf(ibndmin - 1 + ibnd, ikk) - efcb(itemp) 
               ! Fermi-Diract distribution $f_{nk}$
@@ -431,7 +428,7 @@
               ! Derivative Fermi distribution (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
               dfnk = w0gauss(ekk * inv_etemp, -99) * inv_etemp
               !
-              DO jbnd = 1, nbnd
+              DO jbnd = 1, nbndfst
                 !
                 !  energy and fermi occupation at k+q
                 ekq = etf(ibndmin - 1 + jbnd, ikq) - efcb(itemp)
@@ -565,7 +562,7 @@
       ! 
       wkf_all(ik + lower_bnd -1 ) = wkf(ikk) 
       ! 
-      DO ibnd = 1, nbnd
+      DO ibnd = 1, nbndfst
         IF (vme) THEN
           vkk_all(:, ibnd, ik + lower_bnd - 1) = REAL(vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikk))
         ELSE
@@ -632,7 +629,7 @@
       ! 
       IF (ncarrier < 0.0) THEN ! VB
         DO ik = 1, nkf
-          DO ibnd = 1, nbnd
+          DO ibnd = 1, nbndfst
             ! This selects only valence bands for hole conduction
             IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
               ! Energy at k (relative to Ef)
@@ -648,7 +645,7 @@
         WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
       ELSE ! CB
         DO ik = 1, nkf
-          DO ibnd = 1, nbnd
+          DO ibnd = 1, nbndfst
             ! This selects only valence bands for hole conduction
             IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
               !  energy at k (relative to Ef)
