@@ -70,7 +70,7 @@
 
   fsthick     = 0.45 ! eV 
   eptemp      = 1 ! K 
-  degaussw    = 0.15 ! eV
+  degaussw    = 0.100 ! eV
 
   efermi_read  = .true
   fermi_energy = 12.97605

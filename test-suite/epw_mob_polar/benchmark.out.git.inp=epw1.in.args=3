@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.2.0 starts on 16Sep2019 at 16:57:44 
+     Program EPW v.5.2.0 starts on 16Sep2019 at 18: 0:41 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -134,7 +134,7 @@
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     EPW          :      0.36s CPU      0.37s WALL
+     EPW          :      0.35s CPU      0.36s WALL
 
      EPW          :      1.05s CPU      1.06s WALL
 
@@ -212,7 +212,7 @@
      (   0.99999  -0.57812   0.61929) :   0.87903
 
      -------------------------------------------------------------------
-     WANNIER      :      4.24s CPU      4.27s WALL (       1 calls)
+     WANNIER      :      4.26s CPU      4.30s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -221,7 +221,7 @@
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      2.06s CPU      2.08s WALL (       1 calls)
+     kmaps        :      1.96s CPU      1.97s WALL (       1 calls)
      Symmetries of Bravais lattice:  24
      Symmetries of crystal:          12
 
@@ -346,24 +346,26 @@
      Fermi Surface thickness =   2.000000 eV
 
      Golden Rule strictly enforced with T =   0.000086 eV
+     Gaussian Broadening:   0.010000 eV, ngauss=   1
+ 
      Average over degenerate eigenstates is performed
      WARNING: only the eigenstates within the Fermi window are meaningful
 
      ik =       1 coord.:    0.0000000   0.0000000   0.0000000
      -------------------------------------------------------------------
-     E(   4 )=  -1.2887 eV   Re[Sigma]=     102.516597 meV Im[Sigma]=       0.000000 meV     Z=       0.272913 lam=       2.664177
-     E(   5 )=  -1.1464 eV   Re[Sigma]=     109.236111 meV Im[Sigma]=       0.000000 meV     Z=       0.209850 lam=       3.765305
-     E(   6 )=  -1.1464 eV   Re[Sigma]=     109.236111 meV Im[Sigma]=       0.000000 meV     Z=       0.209850 lam=       3.765305
-     E(   7 )=   0.5478 eV   Re[Sigma]=       5.105567 meV Im[Sigma]=       0.000000 meV     Z=       0.982974 lam=       0.017321
+     E(   4 )=  -1.2887 eV   Re[Sigma]=     101.016494 meV Im[Sigma]=       0.000000 meV     Z=       0.285487 lam=       2.502788
+     E(   5 )=  -1.1464 eV   Re[Sigma]=      94.639992 meV Im[Sigma]=      12.000001 meV     Z=       0.386762 lam=       1.585573
+     E(   6 )=  -1.1464 eV   Re[Sigma]=      94.639992 meV Im[Sigma]=      12.000001 meV     Z=       0.386762 lam=       1.585573
+     E(   7 )=   0.5478 eV   Re[Sigma]=       5.123967 meV Im[Sigma]=       0.000000 meV     Z=       0.983694 lam=       0.016576
      -------------------------------------------------------------------
 
-        1        4     -1.2887    102.5166      0.0000      0.2729      2.6642
+        1        4     -1.2887    101.0165      0.0000      0.2855      2.5028
   
-        1        5     -1.1464    109.2361      0.0000      0.2099      3.7653
+        1        5     -1.1464     94.6400     12.0000      0.3868      1.5856
   
-        1        6     -1.1464    109.2361      0.0000      0.2099      3.7653
+        1        6     -1.1464     94.6400     12.0000      0.3868      1.5856
   
-        1        7      0.5478      5.1056      0.0000      0.9830      0.0173
+        1        7      0.5478      5.1240      0.0000      0.9837      0.0166
   
      ===================================================================
      Memory usage:  VmHWM =        57Mb
@@ -372,18 +374,18 @@
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     44.01s CPU     44.39s WALL (       1 calls)
+     elphon_wrap  :     43.24s CPU     43.69s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      3.15s CPU      3.16s WALL (       9 calls)
+     set_drhoc    :      3.13s CPU      3.14s WALL (       9 calls)
      init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
      init_us_1    :      0.05s CPU      0.05s WALL (       2 calls)
 
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.08s CPU      0.10s WALL (       1 calls)
+     ephwann      :      0.09s CPU      0.10s WALL (       1 calls)
      ep-interp    :      0.00s CPU      0.00s WALL (       1 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
@@ -394,16 +396,12 @@
      HamW2B       :      0.00s CPU      0.00s WALL (       5 calls)
      ephW2Bp      :      0.00s CPU      0.00s WALL (       1 calls)
      ephW2B       :      0.00s CPU      0.00s WALL (       1 calls)
-     vmewan2bloch :      0.00s CPU      0.00s WALL (       1 calls)
-     vmewan2bloch :      0.00s CPU      0.00s WALL (       1 calls)
 
 
      Total program execution
-     EPW          :     49.38s CPU     49.82s WALL
+     EPW          :     48.65s CPU     49.15s WALL
 
                                                                                           
  Please consider citing:                                                                  
  S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
                                                                                           
- In addition, since you have used the following functionalities, please cite:             
-   adapt_smearing :: F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                
