@@ -1327,6 +1327,7 @@
     !! This routine computes the phonon velocity by computing the q derivative of 
     !! the dynamical matrix. 
     !! This routines is required for adaptative broadening.
+    !! Samuel Ponce & Francesco Macheda
     !! 
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : rdw, epsi, zstar, wscache, ifc

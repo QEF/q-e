@@ -1294,14 +1294,14 @@
     !! Number of k-points in pool 
     !
     ! Local variables
+    CHARACTER(LEN = 256) :: chunit
+    !! Unit name
     INTEGER :: imelt
     !! Size in number of elements
     REAL(KIND = DP) :: rmelt
     !! Size in byte
-    CHARACTER(LEN = 256) :: chunit
-    !! Unit name
     !
-    imelt = (nbndfst)**2 * nmodes * nkf
+    imelt = (nbndfst**2) * nmodes * nkf
     rmelt = imelt * 8 / 1048576.d0 ! 8 bytes per number, value in Mb
     IF (rmelt < 1000.0) THEN
       chunit =  ' Mb '
@@ -1318,6 +1318,113 @@
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE mem_size
+    !--------------------------------------------------------------------------
+    ! 
+    !--------------------------------------------------------------------------
+    SUBROUTINE broadening(ik, ikk, ikq, w2, vmefp, eta)
+    !--------------------------------------------------------------------------
+    !!
+    !! This routine computes the adaptative broadening
+    !! It requires electronic and phononic velocities
+    !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
+    !! Samuel Ponce & Francesco Macheda
+    !!
+    USE io_global,     ONLY : stdout
+    USE cell_base,     ONLY : alat, bg
+    USE kinds,         ONLY : DP
+    USE elph2,         ONLY : nbndfst, nkf, dmef, vmef, ibndmin, etf
+    USE epwcom,        ONLY : vme, nqf1, nqf2, nqf3
+    USE phcom,         ONLY : nmodes
+    USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, eps6
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: ik
+    !! Current k-point on that core
+    INTEGER, INTENT(in) :: ikk
+    !! Current k point on that core (ikk = 2 * ik + 1)
+    INTEGER, INTENT(in) :: ikq
+    !! k+q point on that core
+    REAL(KIND = DP), INTENT(in) :: w2(nmodes)
+    !! Phonon frequencies
+    REAL(KIND = DP), INTENT(out) :: eta(nmodes, nbndfst, nkf)
+    !! Adaptative smearing value
+    COMPLEX(KIND = DP), INTENT(in) :: vmefp(3, nmodes, nmodes)
+    !! Phonon velocity
+    !
+    ! Local variables
+    INTEGER :: ibnd
+    !! Band index
+    INTEGER :: jbnd
+    !! Band index
+    INTEGER :: imode
+    !! Mode index
+    INTEGER :: n_av
+    !! To average eta_av
+    REAL(KIND = DP) :: rmelt
+    !! Size in byte
+    REAL(KIND = DP) :: vel_diff(3)
+    !! Velocity difference when computed adaptative broadening
+    REAL(KIND = DP) :: eta_tmp(3)
+    !! Temporary adaptative broadening
+    REAL(KIND = DP) :: eta_av
+    !! Average eta over degenerate states
+    REAL(KIND = DP) :: eta_deg(nmodes, nbndfst)
+    !! Average eta over degenerate states
+    REAL(KIND = DP) :: e_1
+    !! Eigenvalue 1 for deg. testing
+    REAL(KIND = DP) :: e_2
+    !! Eigenvalue 2 for deg. testing
+    !
+    eta_deg(:, :) = zero
+    ! vmefp and vmef are obtained using irvec, which are without alat; therefore I multiply them to bg without alat
+    DO ibnd = 1, nbndfst
+      DO imode = 1, nmodes
+        IF (w2(imode) > 0) THEN
+          IF (vme) THEN
+            vel_diff(:) = REAL(vmefp(:, imode, imode) / &
+                              (2d0 * SQRT(w2(imode))) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
+          ELSE
+            vel_diff(:) = REAL(vmefp(:, imode ,imode) / &
+                              (2d0 * SQRT(w2(imode))) - dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
+          ENDIF
+          IF (SQRT(DOT_PRODUCT(vel_diff, vel_diff)) < eps40) THEN
+            eta(imode, ibnd, ik) = 1.0d0 / ryd2mev
+          ELSE
+            eta_tmp(1) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 1)) / DBLE(nqf1))
+            eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 2)) / DBLE(nqf2))
+            eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 3)) / DBLE(nqf3))
+            !eta(imode, ibnd, ik) = MAXVAL(eta_tmp) !Eq. (24) of PRB 97 075405 (2015)
+            !eta(imode, ibnd, ik) = SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/SQRT(12d0) !Eq. (18) of Computer Physics Communications 185 (2014) 1747–1758
+            ! The prefactor 0.5 is arbitrary and is to speedup convergence
+            eta(imode, ibnd, ik) = 0.5d0 * SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2) / SQRT(12d0)
+          ENDIF
+        ELSE
+          ! Fixed value 1 meV
+          eta(imode, ibnd, ik) = 1.0d0 / ryd2mev
+        ENDIF
+      ENDDO
+    ENDDO
+    ! Average eta over the degenerate electronic states electrons
+    DO imode = 1, nmodes
+      DO ibnd = 1, nbndfst
+        e_1    = etf(ibndmin - 1 + ibnd, ikk)
+        eta_av = zero
+        n_av   = 0
+        DO jbnd = 1, nbndfst
+          e_2 = etf(ibndmin - 1 + jbnd, ikk)
+          IF (ABS(e_2 - e_1) < eps6) THEN
+           n_av   = n_av + 1
+           eta_av = eta_av + eta(imode, jbnd, ik)
+          ENDIF
+        ENDDO
+        eta_deg(imode, ibnd) = eta_av / FLOAT(n_av)
+      ENDDO
+    ENDDO
+    eta(:, :, ik) = eta_deg(:, :)
+    !
+    !--------------------------------------------------------------------------
+    END SUBROUTINE broadening
     !--------------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE low_lvl

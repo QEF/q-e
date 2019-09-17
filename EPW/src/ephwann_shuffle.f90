@@ -77,7 +77,7 @@
   USE mp_global,     ONLY : inter_pool_comm, npool
   USE mp_world,      ONLY : mpime, world_comm
   USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,         &
-                            sumkg_seq, efermig_seq, mem_size
+                            sumkg_seq, efermig_seq, mem_size, broadening
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
@@ -200,8 +200,6 @@
   !! To restart opening files
   INTEGER :: ctype
   !! Calculation type: -1 = hole, +1 = electron and 0 = both.
-  INTEGER :: n_av
-  !! To average eta_av
 #if defined(__MPI)
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_tot
   !! Total number of points store on file 
@@ -241,10 +239,6 @@
   !! Second Fermi level for the temperature itemp  
   REAL(KIND = DP) :: dummy(3)
   !! Dummy variable
-  REAL(KIND = DP) :: vel_diff(3)
-  !! Velocity difference when computed adaptative broadening
-  REAL(KIND = DP) :: eta_tmp(3)
-  !! Temporary adaptative broadening
   REAL(KIND = DP) :: val
   !! Temporary broadening value
   !REAL(KIND = DP), EXTERNAL :: fermicarrier
@@ -273,14 +267,6 @@
   !! velocity from all the k-point
   REAL(KIND = DP), ALLOCATABLE :: wkf_all(:)
   !! k-point weights for all the k-points
-  REAL(KIND = DP) :: eta_av
-  !! Average eta over degenerate states
-  REAL(KIND = DP), ALLOCATABLE :: eta_deg(:, :)
-  !! Average eta over degenerate states
-  REAL(KIND = DP) :: e_1
-  !! Eigenvalue 1 for deg. testing
-  REAL(KIND = DP) :: e_2
-  !! Eigenvalue 2 for deg. testing
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwe(:, :, :, :, :)
   !! e-p matrix  in wannier basis - electrons
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwe_mem(:, :, :, :)
@@ -1124,8 +1110,6 @@
       eta(:, :, :)   = zero                                          
       vmefp(:, :, :) = czero                                         
       adapt_smearing = .TRUE.
-      ALLOCATE(eta_deg(nmodes, nbndfst), STAT = ierr)
-      IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eta_deg', 1)
     ENDIF
     ! 
     DO iqq = iq_restart, totq
@@ -1360,51 +1344,8 @@
             ! Computes adaptative smearing
             ! 
             IF (adapt_smearing) THEN
-              ! vmefp and vmef are obtained using irvec, which are without alat; therefore I multiply them to bg without alat
-              DO ibnd = 1, nbndfst
-                DO imode = 1, nmodes
-                  IF (w2(imode) > 0) THEN
-                    IF (vme) THEN
-                      vel_diff(:) = REAL(vmefp(:, imode, imode) / &
-                                        (2d0 * SQRT(w2(imode))) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
-                    ELSE
-                      vel_diff(:) = REAL(vmefp(:, imode ,imode) / &
-                                        (2d0 * SQRT(w2(imode))) - dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
-                    ENDIF
-                    IF (SQRT(DOT_PRODUCT(vel_diff, vel_diff)) < eps40) THEN
-                      eta(imode, ibnd, ik) = 1.0d0 / ryd2mev
-                    ELSE
-                      eta_tmp(1) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 1)) / DBLE(nqf1))
-                      eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 2)) / DBLE(nqf2))
-                      eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 3)) / DBLE(nqf3))
-                      !eta(imode, ibnd, ik) = MAXVAL(eta_tmp) !Eq. (24) of PRB 97 075405 (2015)
-                      !eta(imode, ibnd, ik) = SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/SQRT(12d0) !Eq. (18) of Computer Physics Communications 185 (2014) 1747–1758
-                      ! The prefactor 0.2 is arbitrary and is to speedup convergence
-                      eta(imode, ibnd, ik) = 0.2d0 * SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2) / SQRT(12d0) 
-                    ENDIF
-                  ELSE
-                    ! Fixed value 1 meV
-                    eta(imode, ibnd, ik) = 1.0d0 / ryd2mev
-                  ENDIF
-                ENDDO
-              ENDDO
-              ! Average eta over the degenerate electronic states electrons
-              DO imode = 1, nmodes
-                DO ibnd = 1, nbndfst
-                  e_1    = etf(ibndmin - 1 + ibnd, ikk)
-                  eta_av = zero
-                  n_av   = 0
-                  DO jbnd = 1, nbndfst
-                    e_2 = etf(ibndmin - 1 + jbnd, ikk)
-                    IF (ABS(e_2 - e_1) < eps6) THEN
-                     n_av   = n_av + 1
-                     eta_av = eta_av + eta(imode, jbnd, ik)
-                    ENDIF
-                  ENDDO
-                  eta_deg(imode, ibnd) = eta_av / FLOAT(n_av)
-                ENDDO
-              ENDDO
-              eta(:, :, ik) = eta_deg(:, :)
+              ! Return the value of the adaptative broadening eta
+              CALL broadening(ik, ikk, ikq, w2, vmefp, eta)
               !
             ENDIF ! adapt_smearing
             !
