@@ -52,10 +52,10 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all, eta, nbndfst,    &
-                            inv_tau_allcb, zi_allcb, exband, xkfd, etfd,        &
-                            etfd_ks, gamma_v_all, esigmar_all, esigmai_all,     &
+                            inv_tau_allcb, zi_allcb, exband, xkfd, gamma_v_all, &
+                            esigmar_all, esigmai_all, lower_bnd, upper_bnd, ifc,&
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf, transp_temp, xkq, lower_bnd, upper_bnd, ifc
+                            nktotf, transp_temp, xkq
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -83,6 +83,7 @@
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
   USE readmat,       ONLY : read_ifc
   USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine
+  USE indabs,        ONLY : indabs_main, renorm_eig
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -287,10 +288,6 @@
   !! Used to store $e^{2\pi r \cdot k}$ exponential 
   COMPLEX(KIND = DP), ALLOCATABLE :: cfacq(:, :, :)
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
-  COMPLEX(KIND = DP), ALLOCATABLE :: cfacd(:, :, :, :)
-  !! Used to store $e^{2\pi r \cdot k}$ exponential of displaced vector 
-  COMPLEX(KIND = DP), ALLOCATABLE :: cfacqd(:, :, :, :)
-  !! Used to store $e^{2\pi r \cdot k+q}$ exponential of dispaced vector
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
   ! 
@@ -614,21 +611,6 @@
     dmef(:, :, :, :) = czero
   ENDIF
   !
-  IF (vme .AND. eig_read) THEN
-    ALLOCATE(cfacd(nrr_k, dims, dims, 6), STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cfacd', 1)
-    ALLOCATE(cfacqd(nrr_k, dims, dims, 6), STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cfacqd', 1)
-    ALLOCATE(etfd(nbndsub, nkqf, 6), STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etfd', 1)
-    ALLOCATE(etfd_ks(nbndsub, nkqf, 6), STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etfd_ks', 1)
-    cfacd(:, :, :, :) = czero
-    cfacqd(:, :, :, :)= czero
-    etfd(:, :, :)     = zero
-    etfd_ks(:, :, :)  = zero
-  ENDIF
-  ! 
   ALLOCATE(cfac(nrr_k, dims, dims), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating cfac', 1)
   ALLOCATE(cfacq(nrr_k, dims, dims), STAT = ierr)
@@ -1241,66 +1223,9 @@
              ! ------------------------------------------------------
              !
              IF (eig_read) THEN
-               ! Use for indirect absorption - Kyle and Emmanouil Kioupakis --------------------------------
-               DO icounter = 1, 6
-                 CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
-                 CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
-                 IF (use_ws) THEN
-                   DO iw = 1, dims
-                     DO iw2 = 1, dims
-                       DO ir = 1, nrr_k
-                         IF (ndegen_k(ir, iw2, iw) > 0) THEN
-                           cfacd(ir, iw2, iw, icounter)  = EXP(ci * rdotk(ir))  / ndegen_k(ir, iw2, iw)
-                           cfacqd(ir, iw2, iw, icounter) = EXP(ci * rdotk2(ir)) / ndegen_k(ir, iw2, iw)
-                         ENDIF
-                       ENDDO
-                     ENDDO
-                   ENDDO
-                 ELSE
-                   cfacd(:, 1, 1, icounter)  = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
-                   cfacqd(:, 1, 1, icounter) = EXP(ci * rdotk2(:)) / ndegen_k(:, 1, 1)
-                 ENDIF
-                 ! 
-                 CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etfd(:, ikk, icounter), chw, cfacd, dims)
-                 CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd(:, ikq, icounter), chw, cfacqd, dims)
-                 CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etfd_ks(:, ikk, icounter), chw_ks, cfacd, dims)
-                 CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd_ks(:, ikq, icounter), chw_ks, cfacqd, dims)
-               ENDDO ! icounter
-               ! ----------------------------------------------------------------------------------------- 
-               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), &
-                                 etf(:, ikk), etf_ks(:, ikk), chw_ks, cfac, dims)
-               CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), & 
-                                 etf(:, ikq), etf_ks(:, ikq), chw_ks, cfacq, dims)
                ! 
-               ! To Satisfy Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
-               DO ibnd = 1, nbnd
-                 DO jbnd = 1, nbnd
-                   IF (ABS(etfd_ks(ibnd, ikk, 1) - etfd_ks(jbnd, ikk, 2)) > eps6) THEN
-                     vmef(1, ibnd, jbnd, ikk) = vmef(1, ibnd, jbnd, ikk) * (etfd(ibnd, ikk, 1) - etfd(jbnd, ikk, 2)) / &
-                         (etfd_ks(ibnd, ikk, 1) - etfd_ks(jbnd, ikk, 2))
-                   ENDIF
-                   IF (ABS(etfd_ks(ibnd, ikk, 3) - etfd_ks(jbnd, ikk, 4)) > eps6) THEN
-                     vmef(2, ibnd, jbnd, ikk) = vmef(2, ibnd, jbnd, ikk) * (etfd(ibnd, ikk, 3) - etfd(jbnd, ikk, 4)) / &
-                         (etfd_ks(ibnd, ikk, 3) - etfd_ks(jbnd, ikk, 4))
-                   ENDIF
-                   IF (ABS(etfd_ks(ibnd, ikk, 5) - etfd_ks(jbnd, ikk, 6)) > eps6) THEN
-                     vmef(3, ibnd, jbnd, ikk) = vmef(3, ibnd, jbnd, ikk) * (etfd(ibnd, ikk, 5) - etfd(jbnd, ikk, 6)) / &
-                         (etfd_ks(ibnd, ikk, 5) - etfd_ks(jbnd, ikk, 6))
-                   ENDIF
-                   IF (ABS(etfd_ks(ibnd, ikq, 1) - etfd_ks(jbnd, ikq, 2)) > eps6) THEN
-                     vmef(1, ibnd, jbnd, ikq) = vmef(1, ibnd, jbnd, ikq) * (etfd(ibnd, ikq, 1) - etfd(jbnd, ikq, 2)) / &
-                         (etfd_ks(ibnd, ikq, 1) - etfd_ks(jbnd, ikq, 2))
-                   ENDIF
-                   IF (ABS(etfd_ks(ibnd, ikq, 3) - etfd_ks(jbnd, ikq, 4)) > eps6) THEN
-                     vmef(2, ibnd, jbnd, ikq) = vmef(2, ibnd, jbnd, ikq) * (etfd(ibnd, ikq, 3) - etfd(jbnd, ikq, 4)) / &
-                         (etfd_ks(ibnd, ikq, 3) - etfd_ks(jbnd, ikq, 4))
-                   ENDIF
-                   IF (ABS(etfd_ks(ibnd, ikq, 5) - etfd_ks(jbnd, ikq, 6)) > eps6) THEN
-                     vmef(3, ibnd, jbnd, ikq) = vmef(3, ibnd, jbnd, ikq) * (etfd(ibnd, ikq, 5) - etfd(jbnd, ikq, 6) ) / &
-                         (etfd_ks(ibnd, ikq, 5) - etfd_ks(jbnd, ikq, 6))
-                   ENDIF
-                 ENDDO
-               ENDDO
+               ! Renormalize the eigenvalues and vmef with the read eigenvalues
+               CALL renorm_eig(ikk, ikq, nrr_k, dims, ndegen_k, irvec_k, irvec_r, cufkk, cufkq, cfac, cfacq)  
                ! 
              ELSE ! eig_read
                CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), etf(:, ikk), etf_ks(:, ikk), chw, cfac, dims)
@@ -1443,7 +1368,7 @@
         ENDIF
         ! 
         ! Indirect absorption
-        IF (lindabs .AND. .NOT. scattering)  CALL indabs(iq)  
+        IF (lindabs .AND. .NOT. scattering)  CALL indabs_main(iq)  
         ! 
         ! Conductivity ---------------------------------------------------------
         IF (scattering) THEN
@@ -1661,16 +1586,6 @@
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal', 1)
     DEALLOCATE(map_rebal_inv, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating map_rebal_inv', 1)
-  ENDIF
-  IF (vme .AND. eig_read) THEN
-    DEALLOCATE(cfacd, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cfacd', 1)
-    DEALLOCATE(cfacqd, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating cfacqd', 1)
-    DEALLOCATE(etfd, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etfd', 1)
-    DEALLOCATE(etfd_ks, STAT = ierr)
-    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating etfd_ks', 1)
   ENDIF
   IF (vme) THEN
     DEALLOCATE(vmef, STAT = ierr)

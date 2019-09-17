@@ -45,6 +45,7 @@ superconductivity_aniso.o \
 grid.o \
 transport.o \
 transport_iter.o \
+indabs.o \
 a2f.o \
 adddvscf2.o \
 bcast_epw_input.o \
@@ -66,7 +67,6 @@ epw_readin.o \
 epw_setup.o \
 epw_summary.o \
 gmap_sym.o \
-indabs.o \
 loadumat.o \
 nesting_fn.o \
 newdq2.o \

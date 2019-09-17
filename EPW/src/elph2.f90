@@ -70,8 +70,6 @@
     etf(:, :),               &!  interpolated eigenvalues (nbnd, nkqf)
     etf_k(:, :),             &!  Saved interpolated KS eigenenergies for later used in q-parallelization (nbnd, nkqf)
     etf_ks(:, :),            &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues in the case of eig_read
-    etfd(:, :, :),           &!  interpolated eigenvalues (nbnd, nkqf) eigenvalues for shifted grid in the case of eig_read
-    etfd_ks(:, :, :),        &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues for shifted grid in the case of eig_read
     wf(:, :),                &!  interpolated eigenfrequencies 
     gamma_all(:, :, :),      &!  Gamma
     gamma_nest(:, :),        &!  Nesting function in the case of q-parallelization
