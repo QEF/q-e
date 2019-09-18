@@ -721,7 +721,7 @@
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE dynifc2blochc(nmodes, rws, nrws, xq, chf)
+    SUBROUTINE dynifc2blochc(nmodes, rws, nrws, xxq, chf)
     !--------------------------------------------------------------------------
     !!
     !! From the IFCs in the format of q2r, find the corresponding
@@ -729,7 +729,7 @@
     !!
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at 
+    USE cell_base, ONLY : at, bg 
     USE ions_base, ONLY : tau, nat
     USE elph2,     ONLY : ifc, epsi, zstar, wscache
     USE epwcom,    ONLY : lpolar, nqc1, nqc2, nqc3
@@ -745,8 +745,8 @@
     !! Number of Wigner-Size real space vectors
     REAL(KIND = DP), INTENT(in) :: rws(0:3, nrws)
     !! Wigner-Seitz radius 
-    REAL(KIND = DP), INTENT(in) :: xq(3)
-    !! qpoint coordinates for the interpolation
+    REAL(KIND = DP), INTENT(in) :: xxq(3)
+    !! Crystal q-point coordinates for the interpolation
     COMPLEX(KIND = DP), INTENT(out) :: chf(nmodes, nmodes)
     !! dyn mat (not divided by the masses)
     !
@@ -775,6 +775,8 @@
     !! 2 * pi * r  
     REAL(KIND = DP) :: r(3)
     !! Real-space vector
+    REAL(KIND = DP) :: xq(3)
+    !! Q-point coordinate in Cartesian coordinate. 
     REAL(KIND = DP) :: r_ws(3)
     !! Real space vector including fractional translation
     REAL(KIND = DP), EXTERNAL :: wsweight
@@ -782,6 +784,10 @@
     COMPLEX(KIND = DP) :: dyn(3, 3, nat, nat)
     !! Dynamical matrix
     !
+    xq = xxq
+    ! bring xq in cart. coordinates
+    CALL cryst_to_cart(1, xq, bg, 1)
+    ! 
     IF (first) THEN
       first = .FALSE.
       DO na = 1, nat
