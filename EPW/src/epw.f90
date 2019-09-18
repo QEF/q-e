@@ -6,11 +6,11 @@
   ! License. See the file `LICENSE' in the root directory of the               
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
-  ! Adapted from PH/ph.f90  
   !-----------------------------------------------------------------------
   PROGRAM epw
+  !-----------------------------------------------------------------------
   !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v5.1
+  !! version: v5.2
   !! license: GNU
   !! summary: EPW main driver 
   !!  
@@ -28,13 +28,14 @@
   USE environment,     ONLY : environment_start
   USE elph2,           ONLY : elph 
   USE close_epw,       ONLY : close_final, deallocate_epw
+  USE cum_mod,         ONLY : spectral_cumulant
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=12) :: code = 'EPW'
+  CHARACTER(LEN = 12) :: code = 'EPW'
   !! Name of the program
   !
-  version_number = '5.1.0'
+  version_number = '5.2.0'
   !
   CALL init_clocks(.TRUE.)
   !
@@ -45,7 +46,7 @@
   CALL mp_startup(start_images = .TRUE.)
   !
   ! Display the logo
-  IF (mpime == ionode_id) then
+  IF (mpime == ionode_id) THEN
     WRITE(stdout, '(a)') "                                                                                      "
     WRITE(stdout, '(a)') "                                       ``:oss/                                        "
     WRITE(stdout, '(a)') "                           `.+s+.     .+ys--yh+     `./ss+.                           "
@@ -118,39 +119,32 @@
     !
     CALL print_clock('EPW')
     !
-    !  Generates the perturbation matrix which fixes the gauge of 
-    !  the calculated wavefunctions
-    !
+    ! Generates the perturbation matrix which fixes the gauge of 
+    ! the calculated wavefunctions
     CALL setphases_wrap
     !
     IF (wannierize) THEN
       !
-      !  Create U(k, k') localization matrix 
-      !      
+      ! Create U(k, k') localization matrix 
       CALL wann_run
     ELSE
       !
       ! Read Wannier matrix from a previous run
-      !
-      WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') repeat('-',67), '     Using ', &
-           trim(filukk) , ' from disk', repeat('-',67) 
+      WRITE(stdout, '(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
+           TRIM(filukk) , ' from disk', REPEAT('-',67) 
     ENDIF
     !
     IF (elph) THEN
-      !
-!      CALL dvanqq2()
       !
       CALL elphon_shuffle_wrap()
       !
     ENDIF
     !
-    ! ... cleanup of the variables
-    !
+    ! Cleanup of the variables
     CALL clean_pw(.FALSE.)
-    CALL deallocate_epw
+    CALL deallocate_epw()
     !
-    ! ... Close the files
-    !
+    ! Close the files
     CALL close_final()
     !
   ENDIF
@@ -163,10 +157,11 @@
     CALL eliashberg_eqs()
   ENDIF
   !
-  ! ... Print statistics and exit gracefully    
-  !
-  CALL stop_epw
+  ! Print statistics and exit gracefully    
+  CALL stop_epw()
   !
   STOP
   !
+  !-----------------------------------------------------------------------
   END PROGRAM epw
+  !-----------------------------------------------------------------------

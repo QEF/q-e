@@ -8,17 +8,17 @@
   !                                                                            
   ! Adapted from the code PH/openfilq - Quantum-ESPRESSO group                
   !-----------------------------------------------------------------------
-  SUBROUTINE openfilepw
+  SUBROUTINE openfilepw()
   !-----------------------------------------------------------------------
   !!
-  !!     This subroutine opens all the files necessary for the EPW
-  !!     calculation.
+  !! This SUBROUTINE opens all the files necessary for the EPW
+  !! calculation.
   !!
   !! RM - Nov/Dec 2014
   !! Imported the noncolinear case implemented by xlzhang
   !!
   !-----------------------------------------------------------------------
-  USE io_files,         ONLY : prefix, diropn
+  USE io_files,         ONLY : prefix, diropn, seqopn
   USE units_lr,         ONLY : iuwfc, lrwfc
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : npol, nspin_mag
@@ -28,22 +28,25 @@
   !
   IMPLICIT NONE
   !
+  ! Local variables
   LOGICAL :: exst
   !! logical variable to check file existe
   !
-  IF (len_trim(prefix) == 0) CALL errore('openfilepw', 'wrong prefix', 1)
+  IF (len_TRIM(prefix) == 0) CALL errore('openfilepw', 'wrong prefix', 1)
   !
-  !     The file with the wavefunctions
+  ! The file with the wavefunctions
   !
   iuwfc = 20 
   lrwfc = 2 * nbnd * npwx * npol 
   CALL diropn(iuwfc, 'wfc', lrwfc, exst) 
-  IF ( .NOT.  exst) CALL errore ('openfilepw','file '//TRIM( prefix )//'.wfc'//' not found',1)
+  IF (.NOT. exst) CALL errore ('openfilepw', 'file ' // TRIM(prefix) // '.wfc' // ' not found', 1)
   !
-  !   file for setting unitary gauges of eigenstates
+  ! file for setting unitary gauges of eigenstates
   !
-  lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
+  lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
   !
   RETURN
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE openfilepw
+  !-----------------------------------------------------------------------

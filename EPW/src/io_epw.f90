@@ -32,10 +32,13 @@
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
             iudecaydyn, iudecayv, iummn, iubvec
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
-            iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs
+            iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iuntau, iuntaucb
   PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
             iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb, &
-            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb
+            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb, iufilF, iunepmat_merge,&
+            iunsparseq_merge,iunsparsek_merge,iunsparsei_merge,iunsparsej_merge, &
+            iunsparset_merge, iunepmatcb_merge, iunsparseqcb_merge, iunsparsekcb_merge,&
+            iunsparseicb_merge, iunsparsejcb_merge, iunsparsetcb_merge
 
   !
   ! Output of physically relevant quantities (60-100)
@@ -120,6 +123,8 @@
   INTEGER :: iunrestart      = 139  ! restart file during writing of IBTE scattering elements
   INTEGER :: iunepmat        = 140  ! Opening the epmatkq files
   INTEGER :: iunepmatcb      = 141  ! Opening the epmatkqcb file
+  INTEGER :: iuntau          = 142  ! Opening the tau file
+  INTEGER :: iuntaucb        = 143  ! Opening the taucb file
 
   !
   ! Output quantites related to Wannier (201-250)
@@ -146,8 +151,107 @@
   INTEGER :: iufilFi_all     = 256 ! Fi_all file to retart at X iteration
   INTEGER :: iufilsigma_all  = 257 ! Sigmar_all and Sigmai_all file to retart an interpolation
   INTEGER :: iufiltau_all    = 258 ! inv_tau_all file to retart an interpolation
+  INTEGER :: iufilF          = 259 ! $\partial_E f_{nk}$ in .fmt mode
   !
   ! Output quantities related to Indirect absorption (301-325)
   INTEGER :: iuindabs        = 301 ! Indirect absorption data
+  !
+  ! Merging of files
+  INTEGER :: iunepmat_merge  = 400
+  INTEGER :: iunsparseq_merge  = 401
+  INTEGER :: iunsparsek_merge  = 402
+  INTEGER :: iunsparsei_merge  = 403
+  INTEGER :: iunsparsej_merge  = 404
+  INTEGER :: iunsparset_merge  = 405
+  !
+  INTEGER :: iunepmatcb_merge  = 406
+  INTEGER :: iunsparseqcb_merge  = 407
+  INTEGER :: iunsparsekcb_merge  = 408
+  INTEGER :: iunsparseicb_merge  = 409
+  INTEGER :: iunsparsejcb_merge  = 410
+  INTEGER :: iunsparsetcb_merge  = 411
   ! 
-END MODULE io_epw
+  ! 
+  PUBLIC :: io_error
+  ! 
+  CONTAINS
+    !----------------------------------------------------------------------------
+    SUBROUTINE io_error(error_msg)
+    !----------------------------------------------------------------------------
+    !!
+    !! Abort the code and gives an error message
+    !! 
+    !! This routine is adapted from wannier90-3.0.0/src/io.F90
+    !! 
+    !----------------------------------------------------------------------------
+    ! 
+    USE io_global, ONLY : stdout
+    ! 
+    IMPLICIT NONE
+    ! 
+    CHARACTER(LEN = *), INTENT(in) :: error_msg
+    !! Error message
+    ! 
+    ! Local variables
+#ifdef MPI
+    CHARACTER(LEN = 50) :: filename
+    !! name of the file
+    INTEGER :: stderr
+    !! Standard error
+    INTEGER :: ierr
+    !! Error number
+    INTEGER :: whoami
+    !! Returns node number
+    INTEGER :: num_nodes
+    !! Number of nodes
+    ! 
+    CALL mpi_comm_rank(mpi_comm_world, whoami, ierr)
+    CALL mpi_comm_size(mpi_comm_world, num_nodes, ierr)
+    ! 
+    IF (num_nodes > 1) THEN
+      IF (whoami > 99999) THEN
+        WRITE(filename, '(a,a,I0,a)') TRIM(seedname), '.node_', whoami, '.werr'
+      ELSE
+        WRITE(filename, '(a,a,I5.5,a)') TRIM(seedname), '.node_', whoami, '.werr'
+      ENDIF
+      stderr = io_file_unit()
+      OPEN(UNIT = stderr, FILE = TRIM(filename), FORM = 'formatted', ERR = 105)
+      WRITE(stderr, '(1x,a)') TRIM(error_msg)
+      WRITE(stderr)
+    ENDIF
+    ! 
+105 WRITE(*, '(1x,a)') TRIM(error_msg)
+106 WRITE(*, '(1x,a,I0,a)') "Error on node ", whoami, ": examine the output/error files for details"
+    ! 
+    IF (whoami == 0) THEN
+      WRITE(stdout, *) 'Exiting.......'
+      WRITE(stdout, '(1x,a)') TRIM(error_msg)
+      CLOSE(stdout)
+    ENDIF
+    ! 
+    CALL MPI_abort(MPI_comm_world, 1, ierr)
+    ! 
+#else
+    ! 
+    WRITE(stdout, *) 'Exiting.......'
+    WRITE(stdout, '(1x,a)') TRIM(error_msg)
+    ! 
+    CLOSE(stdout)
+    ! 
+    WRITE(*, '(1x,a)') TRIM(error_msg)
+    WRITE(*, '(A)') "Error: examine the output/error file for details"
+#endif
+    !  
+#ifdef EXIT_FLAG
+    CALL EXIT(1)
+#else
+    STOP 
+#endif
+    ! 
+    !----------------------------------------------------------------------------
+    END SUBROUTINE io_error
+    !----------------------------------------------------------------------------
+    ! 
+  !----------------------------------------------------------------------------
+  END MODULE io_epw
+  !----------------------------------------------------------------------------

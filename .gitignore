@@ -34,3 +34,5 @@ W90
 archive/wannier90-*tgz
 wannier90-*
 tempdir
+EPW/src/tags
+EPW/src/tmp

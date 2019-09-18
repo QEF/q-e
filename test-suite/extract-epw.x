@@ -71,6 +71,7 @@ mobx=`grep " x-axis" $fname | awk '{print $5}'`
 mobav=`grep "   avg" $fname | awk '{print $1}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
 indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'` 
+### mobnew=`grep "       Temp     " $fname -A4 | grep -v "Temp" | grep -v "[K]" | grep -v "===" | awk '{print $1; print $2; print $5}'`
 
 if test "$efm" != ""; then
         echo efm
@@ -122,6 +123,11 @@ if test "$mobav" != ""; then
         echo mobav
         for x in $mobav; do echo $x; done
 fi
+
+## if test "$mobnew" != ""; then
+##         echo mobnew
+##         for x in $mobnew; do echo $x; done
+## fi
 
 if test "$density" != ""; then
         echo density

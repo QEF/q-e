@@ -7,18 +7,18 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE gmap_sym( nsym, s, ft, gmapsym, eigv, invs )
+  SUBROUTINE gmap_sym(nsym, s, ft, gmapsym, eigv, invs)
   !-----------------------------------------------------------------------
   !!
-  !!   For every G vector, find S(G) for all the symmetry operations
-  !!   of the crystal. Construct the matrix
-  !!   eigv(ig,isym) = $e^{i G v(S)}$ where v(S) is the (possible) 
-  !!   fractional translation associated with the symmetry operation
+  !! For every G vector, find S(G) for all the symmetry operations
+  !! of the crystal. Construct the matrix
+  !! eigv(ig,isym) = $e^{i G v(S)}$ where v(S) is the (possible) 
+  !! fractional translation associated with the symmetry operation
   !!
-  !!   No parallelization on G-vecs at the moment  
-  !!   (actually this is done on the global array, but in elphel2.f90
-  !!   every processor has just a chunk of the array, I may need some
-  !!   communication)
+  !! No parallelization on G-vecs at the moment  
+  !! (actually this is done on the global array, but in elphel2.f90
+  !! every processor has just a chunk of the array, I may need some
+  !! communication)
   !!
   !----------------------------------------------------------------------
   USE kinds,         ONLY : DP
@@ -29,21 +29,20 @@
   !
   INTEGER, INTENT(in) :: nsym
   !! the number of symmetries of the crystal
-  INTEGER, INTENT(in) :: s(3,3,48)
+  INTEGER, INTENT(in) :: s(3, 3, 48)
   !! the symmetry matrices
-  REAL(dp), INTENT(in) :: ft(3,48)
-  !! the fractional traslations in crystal axis
   INTEGER, INTENT(in) :: invs(48)
   !! inverse symmetry matrix 
-  INTEGER, INTENT(out) :: gmapsym(ngm,48)
+  INTEGER, INTENT(out) :: gmapsym(ngm, 48)
   !! the map S(G) = gmapsym (G,S) 1...nsym
-  COMPLEX(kind=DP), INTENT(out) :: eigv(ngm, 48)
+  REAL(KIND = DP), INTENT(in) :: ft(3, 48)
+  !! the fractional traslations in crystal axis
+  COMPLEX(KIND = DP), INTENT(out) :: eigv(ngm, 48)
   !! e^{ iGv} for 1...nsym
   !
-  ! local variables
-  !
+  ! Local variables
   LOGICAL :: tfound
-  !!
+  !! Found
   INTEGER :: ig
   !! Counter on the G-vector
   INTEGER :: jg
@@ -60,63 +59,63 @@
   !! Counter on the symmetry 
   INTEGER :: ism1
   !! Index for the inverse symmetry
-  !
-  REAL(DP) :: rdotk
+  REAL(KIND = DP) :: rdotk
   !! $$\mathbf{r}\cdot\mathbf{k}
   !
-  !  loop on the symmetries of the crystal
+  ! Loop on the symmetries of the crystal
   !
   DO isym = 1, nsym
     !
     ism1 = invs(isym)
     !
-    ! loop on the G vectors 
+    ! Loop on the G vectors 
     !
     notfound = 0
     !
     DO ig = 1, ngm
       !
-      !  the rotated G-vector
+      ! The rotated G-vector
       !
-      i = s(1,1,isym) * mill(1,ig) + s(1,2,isym) * mill(2,ig) + s(1,3,isym) * mill(3,ig)
-      j = s(2,1,isym) * mill(1,ig) + s(2,2,isym) * mill(2,ig) + s(2,3,isym) * mill(3,ig)
-      k = s(3,1,isym) * mill(1,ig) + s(3,2,isym) * mill(2,ig) + s(3,3,isym) * mill(3,ig)
-      !
+      i = s(1, 1, isym) * mill(1, ig) + s(1, 2, isym) * mill(2, ig) + s(1, 3, isym) * mill(3, ig)
+      j = s(2, 1, isym) * mill(1, ig) + s(2, 2, isym) * mill(2, ig) + s(2, 3, isym) * mill(3, ig)
+      k = s(3, 1, isym) * mill(1, ig) + s(3, 2, isym) * mill(2, ig) + s(3, 3, isym) * mill(3, ig)
       jg = 0
-      tfound = .false.
-      DO WHILE ( ( .NOT. tfound) .AND. (jg < ngm) )
+      tfound = .FALSE.
+      DO WHILE ((.NOT. tfound) .AND. (jg < ngm))
         jg = jg + 1
-        tfound = (i == mill(1,jg)) .AND. (j == mill(2,jg)) .AND. (k == mill(3,jg))
+        tfound = (i == mill(1, jg)) .AND. (j == mill(2, jg)) .AND. (k == mill(3, jg))
       ENDDO
       !
       IF (tfound) THEN
-        gmapsym(ig,isym) = jg
+        gmapsym(ig, isym) = jg
       ELSE
-        gmapsym(ig,isym) = 0
+        gmapsym(ig, isym) = 0
         notfound = notfound + 1
       ENDIF
       !
       ! now the phase factors e^{iGv}
       !
-      IF ( ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8 ) THEN
+      IF (ft(1, isym)**2 + ft(2, isym)**2 + ft(3, isym)**2 > 1.0d-8) THEN
         !
-        rdotk = dble( mill(1,ig) ) * ft(1,isym) &
-              + dble( mill(2,ig) ) * ft(2,isym) &
-              + dble( mill(3,ig) ) * ft(3,isym)
+        rdotk = DBLE(mill(1, ig)) * ft(1, isym) &
+              + DBLE(mill(2, ig)) * ft(2, isym) &
+              + DBLE(mill(3, ig)) * ft(3, isym)
         !
         ! the actual translation is -v (have a look at ruota_ijk.f90)
         ! 
-        eigv(ig,isym) = exp( - ci*twopi*rdotk ) 
+        eigv(ig, isym) = EXP(-ci * twopi * rdotk) 
         !
       ELSE
-        eigv(ig,isym) = cone
+        eigv(ig, isym) = cone
       ENDIF
-      !
-    ENDDO
+    ENDDO ! ig
     !
-    IF (notfound > 0) &
-      CALL errore('gmap_sym','incomplete mapping of G vectors: notfound = ',notfound)
+    IF (notfound > 0) THEN
+      CALL errore('gmap_sym', 'incomplete mapping of G vectors: notfound = ', notfound)
+    ENDIF
     !
   ENDDO
   !
+  !-----------------------------------------------------------------------
   END SUBROUTINE gmap_sym
+  !-----------------------------------------------------------------------
