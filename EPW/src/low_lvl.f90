@@ -340,7 +340,7 @@
     USE ifport !if on intel compiler
 #endif  
     USE io_global,   ONLY : stdout
-    USE io_epw,      ONLY : iunimem
+    USE io_var,      ONLY : iunimem
     ! 
     IMPLICIT NONE
     ! 

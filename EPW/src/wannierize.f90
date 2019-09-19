@@ -46,9 +46,9 @@
   ALLOCATE(kpt_latt(3, num_kpts), STAT = ierr)
   IF (ierr /= 0) CALL errore('wann_run', 'Error allocating kpt_latt', 1)
   !
-  WRITE(stdout, '(5x,a)') REPEAT("-",67)
-  WRITE(stdout, '(a, i2,a,i2,a,i2,a)') "     Wannierization on ", nkc1, " x ", nkc2, " x ", nkc3 , " electronic grid"
-  WRITE(stdout, '(5x,a)') REPEAT("-",67)
+  WRITE(stdout, '(5x,a)') REPEAT("-", 67)
+  WRITE(stdout, '(a, i2, a, i2, a, i2, a)') "     Wannierization on ", nkc1, " x ", nkc2, " x ", nkc3 , " electronic grid"
+  WRITE(stdout, '(5x, a)') REPEAT("-",67)
   !
   kpt_latt = xk_cryst(:, 1:num_kpts)
   CALL mp_bcast(kpt_latt, ionode_id, world_comm)
@@ -66,9 +66,9 @@
   DEALLOCATE(kpt_latt, STAT = ierr)
   IF (ierr /= 0) CALL errore('wann_run', 'Error deallocating kpt_latt', 1)
   !
-  WRITE(stdout, '(5x,a)') REPEAT("-",67)
+  WRITE(stdout, '(5x, a)') REPEAT("-", 67)
   CALL print_clock('WANNIER')
-  WRITE(stdout, '(5x,a)') REPEAT("-",67)
+  WRITE(stdout, '(5x, a)') REPEAT("-", 67)
   !
   !------------------------------------------------------------
   END SUBROUTINE wann_run
@@ -85,12 +85,12 @@
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : prefix
-  USE io_epw,      ONLY : iuwinfil
+  USE io_var,      ONLY : iuwinfil
   USE io_global,   ONLY : meta_ionode
   USE pwcom,       ONLY : et, nbnd, nkstot, nks
   USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
                           dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
-                          bands_skipped, wdata, vme
+                          bands_skipped, wdata, vme, auto_projections
   USE constants_epw, ONLY : ryd2ev
   USE poolgathering, ONLY : poolgather
   !
@@ -109,29 +109,33 @@
   !
   IF (meta_ionode) THEN
     !
-    IF (nbndsub > nwanxx) CALL errore('write_winfil', "Too many wannier bands", nbndsub)
+    IF (nbndsub > nwanxx) CALL errore('write_winfil', 'Too many wannier bands', nbndsub)
     !
     OPEN(UNIT = iuwinfil, FILE = TRIM(prefix) // ".win", FORM = 'formatted')
     !    
     !  more input and options for interfacing with w90 can/will be added later
-    WRITE(iuwinfil, '(a)') "begin projections"
-    !
-    random = .TRUE.
-    DO i = 1, nbndsub
-      IF (proj(i) /= ' ') THEN
-        WRITE(iuwinfil,*) TRIM(proj(i))
-        random = .FALSE.
-      ENDIF
-    ENDDO
-    !
-    IF (random) WRITE(iuwinfil, *) 'random' 
-    !
-    WRITE(iuwinfil,'(a)') "end projections"
+    IF (auto_projections) THEN
+      WRITE(iuwinfil, '(a)') "auto_projections = .true."
+    ELSE
+      WRITE(iuwinfil, '(a)') "begin projections"
+      !
+      random = .TRUE.
+      DO i = 1, nbndsub
+        IF (proj(i) /= ' ') THEN
+          WRITE(iuwinfil, *) TRIM(proj(i))
+          random = .FALSE.
+        ENDIF
+      ENDDO
+      !
+      IF (random) WRITE(iuwinfil, '(a)') "random" 
+      !
+      WRITE(iuwinfil, '(a)') "end projections"
+    ENDIF
     !
     IF (bands_skipped /= ' ') WRITE(iuwinfil, *) bands_skipped
     !
-    WRITE(iuwinfil, '("num_wann ",i3)') nbndsub
-    WRITE(iuwinfil, '("iprint ",i3)') iprint
+    WRITE(iuwinfil, '("num_wann = ", i3)') nbndsub
+    WRITE(iuwinfil, '("iprint = ", i3)') iprint
     !
     ! SP: You can have more bands in nscf.in than in 
     !     nbndskip+nbndsub. In which case the dis_win_max can be larger than 
@@ -139,12 +143,12 @@
     IF (dis_froz_min < MINVAL(et_tmp)) dis_froz_min = MINVAL(et_tmp)
     IF (dis_froz_max > MAXVAL(et_tmp)) dis_froz_max = MAXVAL(et_tmp)
     !
-    WRITE(iuwinfil, '("dis_win_min ", f18.12)')  dis_win_min
-    WRITE(iuwinfil, '("dis_win_max ", f18.12)')  dis_win_max
-    WRITE(iuwinfil, '("dis_froz_min ", f18.12)') dis_froz_min
-    WRITE(iuwinfil, '("dis_froz_max ", f18.12)') dis_froz_max
-    WRITE(iuwinfil, '("num_iter ", i7)')       num_iter
-    IF (vme) WRITE(iuwinfil, '("write_bvec = .true.")')
+    WRITE(iuwinfil, '("dis_win_min = ", f18.12)')  dis_win_min
+    WRITE(iuwinfil, '("dis_win_max = ", f18.12)')  dis_win_max
+    WRITE(iuwinfil, '("dis_froz_min = ", f18.12)') dis_froz_min
+    WRITE(iuwinfil, '("dis_froz_max = ", f18.12)') dis_froz_max
+    WRITE(iuwinfil, '("num_iter = ", i7)')         num_iter
+    IF (vme) WRITE(iuwinfil, '(a)') "write_bvec = .true."
     !
     ! write any extra parameters to the prefix.win file
     DO i = 1, nwanxx
@@ -169,7 +173,7 @@
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : prefix 
-  USE io_epw,      ONLY : iuprojfil
+  USE io_var,      ONLY : iuprojfil
   USE mp_global,   ONLY : inter_pool_comm
   USE io_global,   ONLY : stdout, meta_ionode
   USE mp,          ONLY : mp_sum
@@ -217,7 +221,7 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: cuq(:, :, :)
   !! k+q rotation matrix
   !
-  WRITE(stdout, '(5x,"Computing energy projections")')
+  WRITE(stdout, '(5x, "Computing energy projections")')
   ! dummy var
   xxq = zero
   !
@@ -263,7 +267,7 @@
     !
     OPEN(UNIT = iuprojfil, FILE = TRIM(prefix) // ".projw90", FORM = 'formatted')
     !
-    WRITE(iuprojfil, '(5x,"Wannier energy projections")')
+    WRITE(iuprojfil, '(5x, "Wannier energy projections")')
     !
     DO ie = 1, ne
       en =  DBLE(ie) / DBLE(ne) * (dis_win_max - dis_win_min + 1) + dis_win_min

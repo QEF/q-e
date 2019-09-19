@@ -46,7 +46,7 @@
     USE klist,         ONLY : nkstot, xk
     USE epwcom,        ONLY : nkc1, nkc2, nkc3
     USE io_files,      ONLY : prefix
-    USE io_epw,        ONLY : iukmap
+    USE io_var,        ONLY : iukmap
     USE klist_epw,     ONLY : kmap
     USE io_global,     ONLY : meta_ionode
     USE mp,            ONLY : mp_barrier
@@ -378,7 +378,7 @@
     USE klist_epw,     ONLY : xk_cryst
     USE io_global,     ONLY : stdout, meta_ionode
     USE io_files,      ONLY : prefix
-    USE io_epw,        ONLY : iukgmap
+    USE io_var,        ONLY : iukgmap
     USE gvect,         ONLY : ngm, ngm_g, gcutm
     USE fft_base,      ONLY : dfftp
     USE fft_types,     ONLY : fft_stick_index
@@ -694,7 +694,7 @@
     !!
     !-----------------------------------------------------------------
     USE io_global, ONLY : stdout, meta_ionode
-    USE io_epw,    ONLY : iukgmap
+    USE io_var,    ONLY : iukgmap
     !
     IMPLICIT NONE
     !

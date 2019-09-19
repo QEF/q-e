@@ -37,7 +37,7 @@
     USE kinds,         ONLY : DP, i4b
     USE constants_epw, ONLY : pi, two, zero, ryd2ev, ryd2mev, ci
     USE io_global,     ONLY : stdout
-    USE io_epw,        ONLY : iospectral_sup, iospectral_cum
+    USE io_var,        ONLY : iospectral_sup, iospectral_cum
     USE epwcom,        ONLY : degaussw, eptemp, wmin_specfun, wmax_specfun, nw_specfun, &
                               bnd_cum
     USE elph2,         ONLY : ibndmin, ibndmax

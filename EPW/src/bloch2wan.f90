@@ -31,7 +31,7 @@
     USE cell_base, ONLY : at, bg, alat 
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, zero, ryd2ev
     USE io_global, ONLY : ionode_id
-    USE io_epw,    ONLY : iudecayH
+    USE io_var,    ONLY : iudecayH
     USE mp_global, ONLY : inter_pool_comm
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
@@ -257,7 +257,7 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, alat
     USE elph2,         ONLY : cdmew
-    USE io_epw,        ONLY : iudecayP
+    USE io_var,        ONLY : iudecayP
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
     USE io_global,     ONLY : ionode_id
     USE mp_global,     ONLY : inter_pool_comm
@@ -499,7 +499,7 @@
     USE ions_base,     ONLY : nat, tau
     USE elph2,         ONLY : rdw, epsi, zstar
     USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
-    USE io_epw,        ONLY : iudecaydyn
+    USE io_var,        ONLY : iudecaydyn
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
     USE io_global,     ONLY : ionode_id
     USE mp_world,      ONLY : mpime
@@ -614,7 +614,7 @@
     USE cell_base, ONLY : at, bg, alat
     USE elph2,     ONLY : cvmew
     USE constants_epw, ONLY : twopi, one, zero, ci, czero, cone, bohr2ang
-    USE io_epw,    ONLY : iummn, iubvec, iudecayv
+    USE io_var,    ONLY : iummn, iubvec, iudecayv
     USE io_files,  ONLY : prefix
     USE io_global, ONLY : ionode_id, stdout
     USE mp_global, ONLY : inter_pool_comm, my_pool_id
@@ -1035,7 +1035,7 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
-    USE io_epw,    ONLY : iuwane
+    USE io_var,    ONLY : iuwane
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp       , ONLY : mp_sum 
@@ -1190,7 +1190,7 @@
     USE cell_base,     ONLY : at, bg, alat
     USE elph2,         ONLY : epmatwp
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
-    USE io_epw,        ONLY : iuwanep
+    USE io_var,        ONLY : iuwanep
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
@@ -1319,11 +1319,11 @@
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
-    USE io_epw,        ONLY : iunepmatwe, iunepmatwp, iuwanep
+    USE io_var,        ONLY : iunepmatwe, iunepmatwp, iuwanep
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
-    USE io_scattering, ONLY : rwepmatw
+    USE io_epw, ONLY : rwepmatw
     !
     IMPLICIT NONE
     !

@@ -38,7 +38,7 @@
                               eps6, eps8, eps4
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
-    USE io_scattering, ONLY : scattering_write, tau_write, merge_read
+    USE io_epw, ONLY : scattering_write, tau_write, merge_read
     USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
@@ -564,7 +564,7 @@
     USE io_global,     ONLY : stdout, meta_ionode_id
     USE cell_base,     ONLY : alat, at, omega
     USE io_files,      ONLY : prefix 
-    USE io_epw,        ONLY : iufilsigma 
+    USE io_var,        ONLY : iufilsigma 
     USE epwcom,        ONLY : nbndsub, fsthick, system_2d, nstemp,              &
                               int_mob, ncarrier, scatread, iterative_bte, vme
     USE pwcom,         ONLY : ef 
@@ -584,7 +584,7 @@
     USE epwcom,        ONLY : mp_mesh_k, nkf1, nkf2, nkf3
     USE constants_epw, ONLY : eps6, eps4
     USE noncollin_module, ONLY : noncolin
-    USE io_scattering, ONLY : scattering_read
+    USE io_epw, ONLY : scattering_read
     USE division,      ONLY : fkbounds
     USE grid,          ONLY : kpoint_grid_epw
     USE kinds_epw,     ONLY : SIK2

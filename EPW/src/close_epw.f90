@@ -26,7 +26,7 @@
     !! 
     USE kinds,         ONLY : DP
     USE io_files,      ONLY : tmp_dir, prefix
-    USE io_epw,        ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
+    USE io_var,        ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
                               iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
                               iunsparsekcb, iunrestart, iunsparseicb, iunsparsejcb,&
                               iunsparsetcb, iunepmatcb, iunepmatwp2
@@ -146,7 +146,7 @@
     USE units_ph,  ONLY : iudwf, iudrho
     USE phcom,     ONLY : fildrho
     USE mp_global, ONLY : me_pool,root_pool
-    USE io_epw,    ONLY : iunepmatwe
+    USE io_var,    ONLY : iunepmatwe
     USE epwcom,    ONLY : etf_mem
     !
     IMPLICIT NONE

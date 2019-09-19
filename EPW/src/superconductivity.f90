@@ -364,7 +364,7 @@
     !! Computes the quasiparticle density of states in the superconducting state
     !!
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iuqdos
+    USE io_var,        ONLY : iuqdos
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : lreal, limag, liso, laniso, fsthick
     USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, dws, Delta, ADelta, & 
@@ -443,7 +443,7 @@
     !!
     !
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufe
+    USE io_var,        ONLY : iufe
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : liso, laniso, fsthick
     USE eliashbergcom, ONLY : estemp, wsi, nsiw, ADeltai, AZnormi, NAZnormi, &

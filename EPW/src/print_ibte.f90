@@ -32,7 +32,7 @@
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : world_comm, my_pool_id, npool
   USE io_global,     ONLY : ionode_id
-  USE io_epw,        ONLY : iunepmat, iunepmatcb, iufilibtev_sup, iunrestart, iuntau,   &
+  USE io_var,        ONLY : iunepmat, iunepmatcb, iufilibtev_sup, iunrestart, iuntau,   &
                             iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, &
                             iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb,     &
                             iunsparsetcb, iuntaucb

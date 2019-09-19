@@ -50,11 +50,11 @@
     USE io_eliashberg, ONLY : kpmq_map
     USE printing,      ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
     USE grid,          ONLY : k_avg
-    USE io_scattering, ONLY : Fin_write, Fin_read 
+    USE io_epw, ONLY : Fin_write, Fin_read 
     USE noncollin_module, ONLY : noncolin
     USE io_files,      ONLY : diropn
     USE control_flags, ONLY : iverbosity
-    USE io_epw,        ONLY : iufilibtev_sup
+    USE io_var,        ONLY : iufilibtev_sup
     USE kinds_epw,     ONLY : SIK2
     USE wigner,        ONLY : backtoWS
     USE grid,          ONLY : special_points, kpoint_grid_epw
@@ -583,7 +583,7 @@
     USE io_files,         ONLY : tmp_dir, prefix
     USE epwcom,           ONLY : nstemp, ncarrier
     USE constants_epw,    ONLY : zero
-    USE io_epw,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
+    USE io_var,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
                                  iunsparsekcb, iunrestart, iunsparseicb, iunsparsejcb,&
                                  iunsparsetcb, iunepmatcb

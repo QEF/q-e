@@ -829,7 +829,7 @@
     !!
     !
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufilker
+    USE io_var,        ONLY : iufilker
     USE io_global,     ONLY : stdout
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : nswfc, nqstep, nsiter, muc, conv_thr_raxis, &

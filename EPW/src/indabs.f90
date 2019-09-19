@@ -27,7 +27,7 @@
     !!
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout, ionode_id
-    USE io_epw,        ONLY : iuindabs
+    USE io_var,        ONLY : iuindabs
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, shortrange, &
                               fsthick, eptemp, ngaussw, degaussw, &

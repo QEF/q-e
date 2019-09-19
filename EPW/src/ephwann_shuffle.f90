@@ -41,7 +41,7 @@
                             twopi, ci, kelvin2eV, eps6, eps8, eps16, byte2Mb 
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
-  USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
+  USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
                             iunepmatwp, crystal, iunepmatwp2, iunrestart,       &
                             iuntau, iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
@@ -67,7 +67,7 @@
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk
-  USE io_scattering, ONLY : electron_read, tau_read, iter_open, rwepmatw,       &
+  USE io_epw, ONLY : electron_read, tau_read, iter_open, rwepmatw,       &
                             iter_merge_parallel, epw_read, epw_write
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
@@ -81,7 +81,7 @@
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
-  USE readmat,       ONLY : read_ifc
+  USE io_epw,       ONLY : read_ifc
   USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine
   USE indabs,        ONLY : indabs_main, renorm_eig
 #if defined(__MPI)

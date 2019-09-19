@@ -24,7 +24,7 @@
   USE klist_epw,     ONLY : kmap   
   USE epwcom,        ONLY : filukk
   USE constants_epw, ONLY : czero, zero
-  USE io_epw,        ONLY : iunukk
+  USE io_var,        ONLY : iunukk
   USE io_global,     ONLY : ionode_id, meta_ionode
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast

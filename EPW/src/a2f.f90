@@ -37,7 +37,7 @@
   USE mp_world,  ONLY : mpime, world_comm
   USE io_global, ONLY : ionode_id
   USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iua2ffil, iudosfil, iua2ftrfil, iures
+  USE io_var,    ONLY : iua2ffil, iudosfil, iua2ftrfil, iures
   USE io_files,  ONLY : prefix
   ! 
   IMPLICIT NONE
