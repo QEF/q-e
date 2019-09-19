@@ -74,7 +74,6 @@ openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \
 print_ibte.o \
-readgmap.o \
 rotate_eigenm.o \
 rotate_epmat.o \
 setphases_wrap.o \
