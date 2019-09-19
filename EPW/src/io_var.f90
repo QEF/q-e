@@ -29,7 +29,7 @@
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
   PUBLIC :: iuwinfil, iun_plot, iuprojfil, iudecayH, iudecayP, &
-            iudecaydyn, iudecayv, iummn, iubvec
+            iudecaydyn, iudecayv, iunnkp, iuamn, iummn, iubvec
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
             iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs, iuntau, iuntaucb
   PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
@@ -129,17 +129,19 @@
   ! Output quantites related to Wannier (201-250)
   !  
   INTEGER :: iuwinfil        = 201  ! Wannier projectors and other quantities
+  INTEGER :: iunnkp          = 202  !
 ! SP : Not used for now but could be in the future. Would require the amn as well.
-  INTEGER :: iummn           = 202  ! Overlap of the cell periodic part of the Bloch 
+  INTEGER :: iuamn           = 203  !
+  INTEGER :: iummn           = 204  ! Overlap of the cell periodic part of the Bloch
                                     ! states <u_nmk|u_nk+b>
-  INTEGER :: iun_plot        = 203  ! UNK file (needed by Wannier90 for plotting the 
+  INTEGER :: iun_plot        = 205  ! UNK file (needed by Wannier90 for plotting the
                                     ! real space Wannier functions)
-  INTEGER :: iuprojfil       = 205  ! Unit for projector [.projw90]  
-  INTEGER :: iudecayH        = 206  ! Hamiltonian decay in real space
-  INTEGER :: iudecayP        = 207  ! Dipole decay in real space
-  INTEGER :: iudecaydyn      = 208  ! Dynamical matrix decay in real space
-  INTEGER :: iudecayv        = 209  ! Velocity matrix decay in real space
-  INTEGER :: iubvec          = 206  ! b-vectors and their weight wb
+  INTEGER :: iuprojfil       = 206  ! Unit for projector [.projw90]
+  INTEGER :: iudecayH        = 207  ! Hamiltonian decay in real space
+  INTEGER :: iudecayP        = 208  ! Dipole decay in real space
+  INTEGER :: iudecaydyn      = 209  ! Dynamical matrix decay in real space
+  INTEGER :: iudecayv        = 210  ! Velocity matrix decay in real space
+  INTEGER :: iubvec          = 211  ! b-vectors and their weight wb
   !
   ! Output quantites related to transport (251-300)
   INTEGER :: iufilsigma      = 251 ! Electrical conductivity

@@ -18,7 +18,156 @@
   USE parameters, ONLY : npk
   !
   SAVE
-  ! 
+  !
+  CHARACTER(LEN = 100) :: dvscf_dir ='./'
+  !! directory for .dvscf and .dyn files (wannier interpolation)
+  CHARACTER(LEN = 80) :: fileig
+  !! output file for the electron-phonon coefficients
+  CHARACTER(LEN = 256) :: proj(200)
+  !! projections for W90
+  CHARACTER(LEN = 80) :: scdm_entanglement
+  !! disentanglement type in the SCDM algorithm
+  CHARACTER(LEN = 256) :: bands_skipped
+  !! k-point independent list of bands excluded from the calculation
+  !! of overlap and projection matrices in W90
+  CHARACTER(LEN = 256) :: wdata(200)
+  !! any extra info for W90
+  CHARACTER(LEN = 75) :: title
+  !! ...  title of the simulation
+  CHARACTER(LEN = 10)  :: asr_typ
+  !! type of ASR if lifc=.TRUE.
+  !
+  LOGICAL :: elecselfen
+  !! if .TRUE. calculate electron selfenergy due to e-p interaction
+  LOGICAL :: phonselfen
+  !! if .TRUE. calculate phonon selfenergy due to e-p interaction
+  LOGICAL :: plselfen
+  !! if .TRUE. calculate the electron-plason self-energy
+  LOGICAL :: epbread
+  !! if .TRUE. read epmatq from files .epb
+  LOGICAL :: epbwrite
+  !! if .TRUE. write epmatq to files .epb
+  LOGICAL :: epwread
+  !! if .TRUE. read all quantities in Wannier representation from file epwdata.fmt
+  LOGICAL :: epwwrite
+  !! if .TRUE. write all quantities in Wannier representation to file epwdata.fmt
+  LOGICAL :: restart
+  !! if .TRUE. restart a calculation stopped during the interpolation phase from XXX.restart file.
+  LOGICAL :: specfun_el
+  !! if .TRUE. calculate spectral electron function due to e-p interaction
+  LOGICAL :: specfun_ph
+  !! if .TRUE. calculate spectral phonon function due to e-p interaction
+  LOGICAL :: specfun_pl
+  !! if .TRUE. calculate plasmon spectral function
+  LOGICAL :: wannierize
+  !! if .TRUE. run the wannier90 code
+  LOGICAL :: auto_projections
+  !! to automatically generate initial projections for W90
+  LOGICAL :: scdm_proj
+  !! wannier functions via the SCDM algorithm
+  LOGICAL :: a2f
+  !! if .TRUE. calculate Eliashberg spectral electron function from selfen_phon
+  LOGICAL :: write_wfn
+  !! if .TRUE. write UNK files in wannier90
+  LOGICAL :: kmaps
+  !! if .TRUE. read kmap and kgmap from disk. 
+  LOGICAL :: nest_fn
+  !! if .TRUE. calculate the electronic nesting function (metals only)
+  LOGICAL :: rand_q
+  !! if .TRUE. use random points for the fine q-mesh
+  LOGICAL :: rand_k
+  !! if .TRUE. use random points for the fine k-mesh
+  LOGICAL :: mp_mesh_q
+  !! if .TRUE. use points in the irreducible wedge for the uniform fine q-mesh
+  LOGICAL :: mp_mesh_k
+  !! if .TRUE. use points in the irreducible wedge for the uniform fine k-mesh
+  LOGICAL :: eig_read
+  !! if .TRUE. read a set of electronic eigenvalues in eV to replace the calcualted ones
+  LOGICAL :: wepexst
+  !! if .TRUE. prefix.epmatwe files are already on disk. don't recalculate. debugging param
+  LOGICAL :: epexst
+  !! if .TRUE. prefix.epmatwp files are already on disk. don't recalculate. debugging param
+  LOGICAL :: vme
+  !! if .TRUE. calculate velocity matrix elements
+  LOGICAL :: band_plot
+  !! if .TRUE. write files to plot band structure and phonon dispersion
+  LOGICAL :: lpolar
+  !! if .TRUE. enable the correct Wannier interpolation in the case of polar material.
+  LOGICAL :: lscreen
+  !! if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
+  LOGICAL :: lifc
+  !! if .TRUE. read interatomic force constants produced by q2r.x for phonon interpolation
+  LOGICAL :: cumulant
+  !! if .TRUE. calculate the electron spectral function using the cumulant expansion method
+  LOGICAL :: delta_approx
+  !! if .TRUE. the double delta approximation is used for the phonon self energy
+  LOGICAL :: ep_coupling
+  !! if .TRUE. run e-p coupling calculation
+  LOGICAL :: efermi_read
+  !! if .TRUE. fermi energy is read from the input file
+  LOGICAL :: system_2d
+  !! if .TRUE. the system is 2 dimensional (vaccum is in z-direction)
+  LOGICAL :: prtgkk
+  !! if .TRUE. print the |g| vertex in [meV].
+  LOGICAL :: lphase
+  !! if .TRUE. fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian.
+  LOGICAL :: lindabs
+  !! if .TRUE. perform phonon-assisted absorption calculations
+  LOGICAL :: use_ws
+  !! if .TRUE. use Wannier-centers to compute the Wigner-Seitz cell.
+  LOGICAL :: epmatkqread
+  !! if .TRUE. restart and IBTE calculation from the scattering rates written to files.
+  LOGICAL :: selecqread
+  !! if .TRUE. restart from the selecq.fmt file
+  !
+  ! Superconductivity
+  LOGICAL :: ephwrite
+  !! if .TRUE. write e-ph matrix elements on the fine mesh to file
+  LOGICAL :: lreal
+  !! if .TRUE. solve real-axis Eliashberg eqautions
+  LOGICAL :: limag
+  !! if .TRUE. solve imag-axis Eliashberg eqautions
+  LOGICAL :: lpade
+  !! if .TRUE. use pade approximants to continue imag-axis Eliashberg equtions
+  !to real-axis
+  LOGICAL :: lacon
+  !! if .TRUE. use analytic continuation to continue imag-axis Eliashberg
+  !equtions to real-axis
+  LOGICAL :: liso
+  !! if .TRUE. solve isotropic case
+  LOGICAL :: laniso
+  !! if .TRUE. solve anisotropic case
+  LOGICAL :: lunif
+  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
+  LOGICAL :: kerwrite
+  !! if .TRUE. write Kp and Km to files .ker for real-axis calculations
+  LOGICAL :: kerread
+  !! if .TRUE. read Kp and Km from files .ker for real-axis calculations
+  LOGICAL :: imag_read
+  !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
+  LOGICAL :: eliashberg
+  !! if .TRUE. solve the Eliashberg equations
+  !
+  ! Conductivity
+  LOGICAL :: scattering
+  !! if .TRUE. scattering rates are calculated
+  LOGICAL :: scattering_serta
+  !! if .TRUE. scattering rates are calculated using self-energy relaxation-time-approx
+  LOGICAL :: scatread
+  !! if .TRUE. the scattering rates are read from file.
+  LOGICAL :: scattering_0rta
+  !! if .TRUE. scattering rates are calculated using 0th order relaxation-time-approx
+  LOGICAL :: int_mob
+  !! if .TRUE. compute the intrinsic mobilities. This means that the electron and hole carrier density is equal.
+  LOGICAL :: iterative_bte
+  !! if .TRUE. the iterative solution for BTE is computed. A first run with scattering_serta = .TRUE. is required.
+  LOGICAL :: carrier
+  !! if .TRUE. compute the doped electronic mobilities.
+  LOGICAL :: longrange
+  !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
+  LOGICAL :: shortrange
+  !! if .TRUE. compute the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
+  !
   INTEGER :: ngaussw
   !! smearing type for Fermi surface average in e-ph coupling after wann. interp.
   INTEGER :: nw
@@ -92,6 +241,10 @@
   !! min frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
   REAL(KIND = DP) :: wmax
   !! max frequency for frequency scan in \delta( e_k - e_k+q - w ) when strict sel. rule is applied
+  REAL(KIND = DP) :: delta_smear
+  !! change in energy for each additional smearing in the selfen_phon
+  !
+  ! Wannierization
   REAL(KIND = DP) :: dis_win_min
   !! min energy of the Wannier disentanglement window
   REAL(KIND = DP) :: dis_win_max
@@ -100,8 +253,10 @@
   !! min energy of the frozen Wannier disentanglement window
   REAL(KIND = DP) :: dis_froz_max
   !! max energy of the frozen Wannier disentanglement window
-  REAL(KIND = DP) :: delta_smear
-  !! change in energy for each additional smearing in the selfen_phon
+  REAL(KIND = DP)    :: scdm_mu
+  !! parameter for Wannier functions via SCDM algorithm
+  REAL(KIND = DP)    :: scdm_sigma
+  !! parameter for Wannier functions via SCDM algorithm
   ! 
   ! Superconductivity
   REAL(KIND = DP) :: eps_acustic
@@ -173,147 +328,6 @@
   !! Photon energy step (in eV)
   REAL(KIND = DP) :: n_r
   !! Refractive index
-  !
-  LOGICAL :: elecselfen
-  !! if .TRUE. calculate electron selfenergy due to e-p interaction
-  LOGICAL :: phonselfen
-  !! if .TRUE. calculate phonon selfenergy due to e-p interaction
-  LOGICAL :: plselfen
-  !! if .TRUE. calculate the electron-plason self-energy 
-  LOGICAL :: epbread
-  !! if .TRUE. read epmatq from files .epb
-  LOGICAL :: epbwrite
-  !! if .TRUE. write epmatq to files .epb
-  LOGICAL :: epwread
-  !! if .TRUE. read all quantities in Wannier representation from file epwdata.fmt
-  LOGICAL :: epwwrite
-  !! if .TRUE. write all quantities in Wannier representation to file epwdata.fmt
-  LOGICAL :: restart
-  !! if .TRUE. restart a calculation stopped during the interpolation phase from reading the XXX.restart file. 
-  LOGICAL :: specfun_el
-  !! if .TRUE. calculate spectral electron function due to e-p interaction
-  LOGICAL :: specfun_ph
-  !! if .TRUE. calculate spectral phonon function due to e-p interaction
-  LOGICAL :: specfun_pl
-  !! if .TRUE. calculate plasmon spectral function
-  LOGICAL :: wannierize
-  !! if .TRUE. run the wannier90 code
-  LOGICAL :: a2f
-  !! if .TRUE. calculate Eliashberg spectral electron function from selfen_phon
-  LOGICAL :: write_wfn
-  !! if .TRUE. write out UNK files in wannier90
-  LOGICAL :: kmaps
-  !! if .TRUE. read kmap and kgmap from disk.  Do not calculate
-  LOGICAL :: nest_fn
-  !! if .TRUE. calculate the electronic nesting function (metals only)
-  LOGICAL :: rand_q
-  !! if .TRUE. use random points for the fine q-mesh
-  LOGICAL :: rand_k
-  !! if .TRUE. use random points for the fine k-mesh
-  LOGICAL :: mp_mesh_q
-  !! if .TRUE. use points in the irreducible wedge for the uniform fine q-mesh
-  LOGICAL :: mp_mesh_k
-  !! if .TRUE. use points in the irreducible wedge for the uniform fine k-mesh
-  LOGICAL :: eig_read
-  !! if .TRUE. then readin a set of electronic eigenvalues in eV to replace the calcualted ones
-  LOGICAL :: wepexst
-  !! if .TRUE. prefix.epmatwe files are already on disk.  don't recalculate. debugging param
-  LOGICAL :: epexst
-  !! if .TRUE. prefix.epmatwp files are already on disk.  don't recalculate  debugging param
-  LOGICAL :: vme
-  !! if .TRUE. calculate velocity matrix elements
-  LOGICAL :: band_plot
-  ! band_plot : if .TRUE. write filrs to plot band structure and phonon dispersion
-  LOGICAL :: lpolar 
-  !! if .TRUE. enable the correct Wannier interpolation in the case of polar material.  
-  LOGICAL :: lscreen
-  !! if .TRUE. the e-ph matrix elements are screened by the RPA or TF dielectric function
-  LOGICAL :: lifc
-  !! if .TRUE. reads interatomic force constants produced by q2r.x for phonon interpolation
-  LOGICAL :: cumulant
-  !! if .TRUE. calculates the electron spectral function using the cumulant expansion method
-  LOGICAL :: delta_approx
-  !! if .TRUE. the double delta approximation is used for the phonon self energy
-  LOGICAL :: ep_coupling
-  !! if .TRUE. run e-p coupling calculation
-  LOGICAL :: efermi_read
-  !! if .TRUE. fermi energy is read from the input file
-  LOGICAL :: system_2d
-  !! if .TRUE. the system is 2 dimensional (vaccum is in z-direction)
-  LOGICAL :: prtgkk
-  !! if .TRUE. print the |g| vertex in [meV].
-  LOGICAL :: lphase
-  !! if .TRUE. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
-  LOGICAL :: lindabs
-  !! if .TRUE., perform phonon-assisted absorption calculations
-  LOGICAL :: use_ws
-  !! if .TRUE., use Wannier-centers to compute the Wigner-Seitz cell. 
-  LOGICAL :: epmatkqread
-  !! if .TRUE., restart and IBTE calculation from the scattering rates written to files. 
-  LOGICAL :: selecqread
-  !! if .TRUE., restart from the selecq.fmt file
-  !
-  ! Superconductivity
-  LOGICAL :: ephwrite
-  !! if .TRUE. write el-ph matrix elements on the fine mesh to file
-  LOGICAL :: lreal
-  !! if .TRUE. solve real-axis Eliashberg eqautions
-  LOGICAL :: limag
-  !! if .TRUE. solve imag-axis Eliashberg eqautions
-  LOGICAL :: lpade
-  !! if .TRUE. use pade approximants to continue imag-axis Eliashberg equtions to real-axis
-  LOGICAL :: lacon
-  !! if .TRUE. use analytic continuation to continue imag-axis Eliashberg equtions to real-axis
-  LOGICAL :: liso
-  !! if .TRUE. solve isotropic case
-  LOGICAL :: laniso
-  !! if .TRUE. solve anisotropic case
-  LOGICAL :: lunif
-  !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
-  LOGICAL :: kerwrite
-  !! if .TRUE. write Kp and Km to files .ker for real-axis calculations
-  LOGICAL :: kerread
-  !! if .TRUE. read Kp and Km from files .ker for real-axis calculations
-  LOGICAL :: imag_read
-  !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
-  LOGICAL :: eliashberg
-  !! if .TRUE. solve the Eliashberg equations 
-  !
-  ! Conductivity
-  LOGICAL :: scattering
-  !! if .TRUE. scattering rates are calculated
-  LOGICAL :: scattering_serta
-  !! if .TRUE. scattering rates are calculated using self-energy relaxation-time-approx
-  LOGICAL :: scatread
-  !! if .TRUE. the scattering rates are read from file.
-  LOGICAL :: scattering_0rta
-  !! if .TRUE. scattering rates are calculated using 0th order relaxation-time-approx
-  LOGICAL :: int_mob
-  !! if .TRUE. computes the intrinsic mobilities. This means that the electron and hole carrier density is equal.
-  LOGICAL :: iterative_bte
-  !! if .TRUE. the iterative solution for BTE is compute. A first run with scattering_serta = .TRUE. is required. 
-  LOGICAL :: carrier
-  !! if .TRUE. computes the doped electronic mobilities.
-  LOGICAL :: longrange
-  !! if .TRUE. computes the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.
-  LOGICAL :: shortrange
-  !! if .TRUE. computes the long range interaction of el-ph. Can only be .TRUE. if lpolar is also true.  
-  !
-  CHARACTER(LEN = 100) :: dvscf_dir ='./'
-  !! directory for .dvscf and .dyn files (wannier interpolation)
-  CHARACTER(LEN = 80) :: fileig 
-  !! output file for the electron-phonon coefficients
-  CHARACTER(LEN = 256) :: proj(200) 
-  !! projections for W90 
-  CHARACTER(LEN = 256) :: bands_skipped
-  !! k-point independent list of bands excluded from the calculation 
-  !! of overlap and projection matrices in W90
-  CHARACTER(LEN = 256) :: wdata(200)
-  !! any extra info for W90
-  CHARACTER(LEN = 75) :: title 
-  !! ...  title of the simulation  
-  CHARACTER(LEN = 10)  :: asr_typ
-  !! type of ASR if lifc=.TRUE.
   !
   !-----------------------------------------------------------------------
   END MODULE control_epw

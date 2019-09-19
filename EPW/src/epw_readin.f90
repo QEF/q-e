@@ -54,7 +54,9 @@
                             ncarrier, carrier, scattering_serta, restart, restart_freq,&
                             scattering_0rta, longrange, shortrange, scatread, use_ws,  &
                             restart_filq, prtgkk, nel, meff, epsiHEG, lphase,          &
-                            omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter
+                            omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  & 
+                            auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   & 
+                            scdm_sigma 
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, electron_SI, ang2m
@@ -129,7 +131,9 @@
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
        scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
-       epsiHEG, lphase, omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter
+       epsiHEG, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           & 
+       mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   & 
+       scdm_sigma
   ! tphases, fildvscf0
   !
   ! amass    : atomic masses
@@ -167,13 +171,18 @@
   !
   !  added by @jn
   !
-  ! wannierize : if .TRUE. run the wannier90 code to maximally localize the WFs
-  ! dis_win_min : lower bound on wannier90 disentanglement window
-  ! dis_win_max : upper bound on wannier90 disentanglement window
+  ! wannierize   : if .TRUE. run the wannier90 code to maximally localize the WFs
+  ! dis_win_min  : lower bound on wannier90 disentanglement window
+  ! dis_win_max  : upper bound on wannier90 disentanglement window
   ! dis_froz_min : lower bound on frozen wannier90 disentanglement window
   ! dis_froz_max : upper bound on frozen wannier90 disentanglement window
   ! num_iter     : number of iterations used in the wannier90 minimisation
   ! proj         : initial projections (states) of the wannier functions before minimization
+  ! auto_prjections: if .TRUE. automatically generate initial projections for W90
+  ! scdm_proj    : if .TRUE. calculate MLWFs without an initial guess via the SCDM algorithm
+  ! scdm_entanglement : disentanglement type in the SCDM algorithm
+  ! scdm_mu      : parameter for Wannier functions via SCDM algorithm
+  ! scdm_sigma   : parameter for Wannier functions via SCDM algorithm
   ! bands_skipped: k-point independent list of bands excluded from the calculation of overlap and projection matrices in W90
   ! wdata        : Empty array that can be used to pass extra info to prefix.win file, for things not explicitly declared here 
   ! iprint       : verbosity of the wannier90 code
@@ -358,6 +367,11 @@
   dis_froz_min = -1d3
   num_iter     = 200
   proj(:)      = ''
+  auto_projections = .FALSE.
+  scdm_proj    = .FALSE.
+  scdm_entanglement = 'isolated'
+  scdm_mu      = 0.d0
+  scdm_sigma   = 1.d0
   bands_skipped= ''
   wdata(:)     = ''
   iprint       = 2

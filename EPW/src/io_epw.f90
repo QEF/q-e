@@ -1398,6 +1398,7 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE tau_read
     !----------------------------------------------------------------------------
+    ! 
     !----------------------------------------------------------------------------
     SUBROUTINE merge_read(nktotf, nqtotf_new, inv_tau_all_new)
     !----------------------------------------------------------------------------
@@ -2157,9 +2158,7 @@
     !! Read IFC parameters 
     !! 
     USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
-                            iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
-                            iotk_scan_attr, iotk_free_unit, iotk_close_read, &
-                            iotk_scan_empty
+                            iotk_attlenx, iotk_scan_dat, iotk_scan_end
     USE kinds,       ONLY : DP
     USE mp_images,   ONLY : intra_image_comm
     USE io_global,   ONLY : meta_ionode
