@@ -418,7 +418,7 @@
                 sumr(2, ipol, na, jpol) = SUM(dynr(2, ipol, na, jpol, :))
               ENDIF
               !
-              dynr (:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol)
+              dynr(:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol)
               !
             ENDDO
           ENDDO
