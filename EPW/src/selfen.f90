@@ -40,7 +40,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_epw,        ONLY : linewidth_elself
+    USE io_var,        ONLY : linewidth_elself
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, shortrange, &
                               fsthick, eptemp, ngaussw, degaussw, &
@@ -57,7 +57,7 @@
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE io_scattering, ONLY : electron_write
+    USE io_epw, ONLY : electron_write
     USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
@@ -923,7 +923,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_epw,        ONLY : linewidth_elself
+    USE io_var,        ONLY : linewidth_elself
     USE epwcom,        ONLY : nbndsub, fsthick, eptemp, ngaussw,  &
                               efermi_read, fermi_energy, degaussw,& 
                               nel, meff, epsiHEG 

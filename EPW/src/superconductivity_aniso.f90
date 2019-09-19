@@ -1413,7 +1413,7 @@
     !
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_epw,        ONLY : iua2ffil, iudosfil, iufillambda, iufillambdaFS
+    USE io_var,        ONLY : iua2ffil, iudosfil, iufillambda, iufillambdaFS
     USE io_files,      ONLY : prefix
     USE phcom,         ONLY : nmodes
     USE cell_base,     ONLY : bg

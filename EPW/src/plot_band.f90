@@ -19,7 +19,7 @@
   USE epwcom,        ONLY : nbndsub, filqf, filkf
   USE elph2,         ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
   USE constants_epw, ONLY : ryd2mev, ryd2ev
-  USE io_epw,        ONLY : iufilfreq, iufileig
+  USE io_var,        ONLY : iufilfreq, iufileig
   USE elph2,         ONLY : nkqf
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_barrier, mp_sum

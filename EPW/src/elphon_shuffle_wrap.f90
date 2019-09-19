@@ -35,7 +35,7 @@
   USE eqv,           ONLY : vlocq, dmuxc
   USE ions_base,     ONLY : nat, nsp, tau, ityp, amass
   USE control_flags, ONLY : iverbosity
-  USE io_epw,        ONLY : iuepb, iuqpeig, crystal
+  USE io_var,        ONLY : iuepb, iuqpeig, crystal
   USE pwcom,         ONLY : nks, nbnd, nkstot, nelec
   USE cell_base,     ONLY : at, bg, alat, omega
   USE symm_base,     ONLY : irt, s, nsym, ft, sname, invs, s_axis_to_cart,      &
@@ -67,7 +67,7 @@
                             int5_so, alphap
   USE kfold,         ONLY : shift, createkmap_pw2, createkmap
   USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_modes
-  USE readmat,       ONLY : readmat_shuffle2, read_ifc
+  USE io_epw,        ONLY : read_ifc, readdvscf
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
 #if defined(__NAG)
@@ -530,8 +530,7 @@
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
       IF (meta_ionode) THEN
-        CALL readmat_shuffle2(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
-                              invs, s, irt, rtau, sumr)
+        CALL dynmat(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
       ENDIF
       CALL mp_bcast(zstar, meta_ionode_id, world_comm)
       CALL mp_bcast(epsi , meta_ionode_id, world_comm)

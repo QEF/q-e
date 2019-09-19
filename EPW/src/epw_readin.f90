@@ -66,7 +66,7 @@
   USE constants,     ONLY : AMU_RY, eps16
   USE mp_global,     ONLY : my_pool_id, me_pool
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id
-  USE io_epw,        ONLY : iunkf, iunqf
+  USE io_var,        ONLY : iunkf, iunqf
   USE noncollin_module, ONLY : npol
   USE wvfct,         ONLY : npwx
 #if defined(__NAG)

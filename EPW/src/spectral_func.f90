@@ -35,7 +35,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_epw,        ONLY : iospectral_sup ,iospectral
+    USE io_var,        ONLY : iospectral_sup ,iospectral
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, eps_acustic, &
                               fsthick, eptemp, ngaussw, degaussw, wmin_specfun, &
@@ -428,7 +428,7 @@
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE io_epw,    ONLY : iospectral_sup, iospectral
+    USE io_var,    ONLY : iospectral_sup, iospectral
     USE phcom,     ONLY : nmodes
     USE epwcom,    ONLY : nbndsub, fsthick, &
                           eptemp, ngaussw, degaussw, &
@@ -754,7 +754,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_epw,        ONLY : iospectral_sup, iospectral
+    USE io_var,        ONLY : iospectral_sup, iospectral
     USE epwcom,        ONLY : nbndsub, &
                               fsthick, eptemp, ngaussw, degaussw, epsiHEG, &
                               wmax_specfun, nw_specfun, wmin_specfun,      &

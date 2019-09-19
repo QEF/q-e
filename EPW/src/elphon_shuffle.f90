@@ -33,6 +33,7 @@
   USE uspp,      ONLY : okvan
   USE lsda_mod,  ONLY : nspin
   USE fft_base,  ONLY : dfftp, dffts
+  USE io_epw,    ONLY : readdvscf
   USE uspp_param,       ONLY : nhm
   USE constants_epw,    ONLY : czero, cone
   USE fft_interfaces,   ONLY : fft_interpolate
@@ -107,7 +108,7 @@
     dvscfin = czero
     IF (my_pool_id == 0) THEN
        DO ipert = 1, npe
-          CALL readdvscf(dvscfin(1, 1, ipert), imode0 + ipert, iq_irr, nqc_irr)
+          CALL readdvscf(dvscfin(:, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
        ENDDO
     ENDIF
     CALL mp_sum(dvscfin,inter_pool_comm)

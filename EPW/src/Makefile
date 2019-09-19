@@ -17,26 +17,26 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 #
 # The above is in alphabetical order except when order matter during compilation
 #
+##### io_scattering.o \
 
 EPWOBJS = \
 kinds_epw.o \
 epwcom.o \
 constants_epw.o \
 elph2.o \
-io_epw.o \
+io_var.o \
 low_lvl.o \
 division.o \
 rigid_epw.o \
-wan2bloch.o \
+io_epw.o \
 wigner.o \
-io_dyn_mat2.o \
-readmat.o \
-io_scattering.o \
+wan2bloch.o \
 cum_mod.o \
 close_epw.o \
 poolgathering.o \
 printing.o \
 kfold.o \
+dynmat.o \
 io_eliashberg.o \
 eliashbergcom.o \
 superconductivity.o \
@@ -74,9 +74,7 @@ openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \
 print_ibte.o \
-readdvscf.o \
 readgmap.o \
-readwfc.o \
 rotate_eigenm.o \
 rotate_epmat.o \
 setphases_wrap.o \

@@ -608,7 +608,7 @@
   USE mp_world,  ONLY : world_comm
   USE cell_base, ONLY : alat
   USE io_files,  ONLY : prefix
-  USE io_epw,    ONLY : iuqpeig
+  USE io_var,    ONLY : iuqpeig
   USE pwcom,     ONLY : nkstot
   USE wannierEPW,ONLY : u_mat, lwindow, wann_centers, wann_spreads, eigval,  &
                         n_wannier, spreads, nnb, rlatt, glatt, kpt_latt,     &
@@ -730,6 +730,8 @@
   USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
   USE mp,              ONLY : mp_sum
   USE kfold,           ONLY : ktokpmq
+  USE mp_world,        ONLY : mpime
+  USE io_epw,          ONLY : readwfc
   ! 
   IMPLICIT NONE
   ! 
@@ -950,6 +952,11 @@
   !
   CALL mp_sum(a_mat, inter_pool_comm)
   !
+  !IF (mpime == 0) WRITE(900,*) a_mat
+  !IF (mpime == 0) FLUSH(900)
+  !IF (mpime == 1) WRITE(901,*) a_mat
+  !IF (mpime == 1) FLUSH(901)
+
   WRITE(stdout,*)
   WRITE(stdout,'(5x,a)') 'AMN calculated'
   !
@@ -1059,7 +1066,7 @@
   USE wannierEPW,      ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
                               excluded_band, write_mmn, zerophase
   USE constants_epw,   ONLY : czero, cone, twopi, zero
-  USE io_epw,          ONLY : iummn
+  USE io_var,          ONLY : iummn
 #if defined(__NAG)
   USE f90_unix_io,     ONLY : flush
 #endif
@@ -1067,6 +1074,7 @@
   USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
   USE mp_world,        ONLY : mpime
   USE kfold,           ONLY : ktokpmq
+  USE io_epw,          ONLY : readwfc
   ! 
   IMPLICIT NONE
   !
@@ -1546,6 +1554,7 @@
   USE uspp,            ONLY : nkb
   USE wannierEPW,      ONLY : n_wannier
   USE io_global,       ONLY : meta_ionode
+  USE io_epw,          ONLY : readwfc
   !
   IMPLICIT NONE
   !  
@@ -1671,7 +1680,7 @@
   ! 07/2010 Fixed the rotation for ndimwin when lower bands are not included
   !
   USE kinds,        ONLY : DP
-  USE io_epw,       ONLY : iunukk
+  USE io_var,       ONLY : iunukk
   USE wvfct,        ONLY : nbnd
   USE wannierEPW,   ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow, &
                            excluded_band, num_bands, wann_centers
@@ -2121,7 +2130,7 @@
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, meta_ionode
-  USE io_epw,          ONLY : iun_plot
+  USE io_var,          ONLY : iun_plot
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : gcutw
   USE wavefunctions,   ONLY : evc, psic, psic_nc
@@ -2137,6 +2146,7 @@
   USE constants_epw,   ONLY : czero, zero
   USE mp_global,       ONLY : my_pool_id
   USE kfold,           ONLY : ktokpmq
+  USE io_epw,          ONLY : readwfc
   !
   IMPLICIT NONE
   !

@@ -28,7 +28,7 @@
     !!
     !---------------------------------------------------------------------- 
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufilgap
+    USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : nstemp, fsthick
@@ -163,7 +163,7 @@
     !! on the imaginary-axis
     !!
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufilgap
+    USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : fsthick, laniso, liso
@@ -254,7 +254,7 @@
     ! equations on the real-axis 
     !
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufilgap
+    USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
@@ -372,7 +372,7 @@
     ! equations on the real-axis 
     !
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufilgap
+    USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE control_flags, ONLY : iverbosity
     USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
@@ -478,7 +478,7 @@
     USE eliashbergcom, ONLY : wsphmax, wsph, a2f_iso, memlt_pool
     USE constants_epw, ONLY : zero
     USE mp_global,     ONLY : npool
-    USE io_epw,        ONLY : iua2ffil 
+    USE io_var,        ONLY : iua2ffil 
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
@@ -529,7 +529,7 @@
     ! read the frequencies obtained from a previous epw run
     !
     USE io_global, ONLY : stdout, ionode_id
-    USE io_epw,    ONLY : iufilfreq
+    USE io_var,    ONLY : iufilfreq
     USE io_files,  ONLY : prefix, tmp_dir
     USE phcom,     ONLY : nmodes
     USE elph2,   ONLY : nqtotf, wf, wqf, xqf
@@ -607,7 +607,7 @@
     USE epwcom,        ONLY : nkf1, nkf2, nkf3, degaussw, fsthick, mp_mesh_k
     USE eliashbergcom, ONLY : nkfs, nbndfs, dosef, ef0, ekfs, wkfs, xkfs, w0g
     USE constants_epw, ONLY : ryd2ev, zero
-    USE io_epw,        ONLY : iufilegnv
+    USE io_var,        ONLY : iufilegnv
     USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
@@ -753,7 +753,7 @@
     !
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, ionode_id
-    USE io_epw,    ONLY : iufilikmap
+    USE io_var,    ONLY : iufilikmap
     USE io_files,  ONLY : prefix, tmp_dir
     USE symm_base, ONLY : t_rev, time_reversal, s, set_sym_bl
     USE phcom,     ONLY : nmodes
@@ -1043,7 +1043,7 @@
     !!
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
-    USE io_epw,        ONLY : iufileph
+    USE io_var,        ONLY : iufileph
     USE io_files,      ONLY : prefix, tmp_dir
     USE phcom,         ONLY : nmodes
     USE elph2,         ONLY : nqtotf, wf
@@ -1215,7 +1215,7 @@
     !-----------------------------------------------------------------------
     USE kinds,      ONLY : DP
     USE io_global,  ONLY : stdout
-    USE io_epw,     ONLY : iufilfreq, iufilegnv, iufileph
+    USE io_var,     ONLY : iufilfreq, iufilegnv, iufileph
     USE io_files,   ONLY : prefix, tmp_dir
     USE phcom,      ONLY : nmodes
     USE epwcom,     ONLY : nbndsub, fsthick, ngaussw, degaussw, shortrange, & 
@@ -1571,7 +1571,7 @@
     USE io_files,  ONLY : prefix, tmp_dir
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, fsthick, mp_mesh_k
     USE pwcom,     ONLY : ef
-    USE io_epw,    ONLY : iufilikmap
+    USE io_var,    ONLY : iufilikmap
     USE elph2,     ONLY : xkf, wkf, etf, nkf, nkqtotf, ibndmin, ibndmax, nktotf, nbndfst
     USE eliashbergcom, ONLY : nkfs, ixkf, xkfs, wkfs, ekfs, nbndfs, memlt_pool
     USE superconductivity, ONLY : mem_size_eliashberg, mem_integer_size_eliashberg
@@ -2075,7 +2075,7 @@
     ! gap on the Fermi surface
     !
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufilgap
+    USE io_var,        ONLY : iufilgap
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : fsthick
     USE eliashbergcom, ONLY : estemp, Agap, nkfs, nbndfs, ef0, ekfs, w0g
@@ -2155,7 +2155,7 @@
     ! This routine writes to files the superconducting gap on the Fermi surface
     !
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufilgapFS
+    USE io_var,        ONLY : iufilgapFS
     USE io_files,      ONLY : prefix
     USE cell_base,     ONLY : bg
     USE control_flags, ONLY : iverbosity

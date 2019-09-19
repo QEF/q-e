@@ -33,7 +33,7 @@
     USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_epw,    ONLY : iunkf
+    USE io_var,    ONLY : iunkf
     USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
     USE noncollin_module, ONLY : noncolin
@@ -352,7 +352,7 @@
     USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_epw,    ONLY : iunkf
+    USE io_var,    ONLY : iunkf
     USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
     !
@@ -881,7 +881,7 @@
     USE elph2,     ONLY : xqf, wqf, nqf, nqtotf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_epw,    ONLY : iunqf
+    USE io_var,    ONLY : iunqf
     USE noncollin_module, ONLY : noncolin
     USE constants_epw, ONLY : eps4
     USE low_lvl,   ONLY : init_random_seed
@@ -1090,7 +1090,7 @@
     USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
     USE cell_base, ONLY : at, bg
     USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_epw,    ONLY : iunqf
+    USE io_var,    ONLY : iunqf
     USE low_lvl,   ONLY : init_random_seed
     USE constants_epw, ONLY : eps4
     ! 
@@ -1251,7 +1251,7 @@
     USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
                               map_rebal, nktotf
     USE io_global,     ONLY : ionode_id, stdout
-    USE io_epw,        ONLY : iunselecq
+    USE io_var,        ONLY : iunselecq
     USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast

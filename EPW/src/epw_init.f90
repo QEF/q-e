@@ -47,6 +47,7 @@
   USE phus,             ONLY : int1, int1_nc, int2, int2_so,        &
                                int4, int4_nc, int5, int5_so, alphap
   USE poolgathering,    ONLY : poolgather_int, poolgather_int1
+  USE io_epw,           ONLY : readwfc
   !
   IMPLICIT NONE
   !

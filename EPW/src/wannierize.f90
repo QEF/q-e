@@ -85,7 +85,7 @@
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : prefix
-  USE io_epw,      ONLY : iuwinfil
+  USE io_var,      ONLY : iuwinfil
   USE io_global,   ONLY : meta_ionode
   USE pwcom,       ONLY : et, nbnd, nkstot, nks
   USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
@@ -169,7 +169,7 @@
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : prefix 
-  USE io_epw,      ONLY : iuprojfil
+  USE io_var,      ONLY : iuprojfil
   USE mp_global,   ONLY : inter_pool_comm
   USE io_global,   ONLY : stdout, meta_ionode
   USE mp,          ONLY : mp_sum

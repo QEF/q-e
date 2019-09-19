@@ -18,7 +18,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE readmat_shuffle2(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
+    SUBROUTINE dynmat(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
                                 invs, s, irt, rtau, sumr) 
     !-----------------------------------------------------------------------
     !!
@@ -36,11 +36,11 @@
     USE modes,            ONLY : nmodes
     USE control_flags,    ONLY : iverbosity
     USE noncollin_module, ONLY : nspin_mag
-    USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
+    USE io_epw,           ONLY : read_dyn_mat_param, read_dyn_mat_header,&
                                  read_dyn_mat
     USE io_global,        ONLY : ionode, stdout
     USE constants_epw,    ONLY : cone, czero, twopi, rydcm1, eps6, zero
-    USE io_epw,           ONLY : iudyn
+    USE io_var,           ONLY : iudyn
     USE wan2bloch,        ONLY : dynifc2blochc
     USE low_lvl,          ONLY : set_ndnmbr, eqvect_strict
     !
@@ -236,14 +236,14 @@
     IF (is_xml_file) THEN
       CALL read_dyn_mat_param(tempfile, ntyp, nat)
       ALLOCATE(m_loc(3, nat), STAT = ierr)
-      IF (ierr /= 0) CALL errore('readmat_shuffle2', 'Error allocating m_loc', 1)
+      IF (ierr /= 0) CALL errore('dynmat', 'Error allocating m_loc', 1)
       ALLOCATE(dchi_dtau(3, 3, 3,nat), STAT = ierr)
-      IF (ierr /= 0) CALL errore('readmat_shuffle2', 'Error allocating dchi_dtau', 1)
+      IF (ierr /= 0) CALL errore('dynmat', 'Error allocating dchi_dtau', 1)
       CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
               celldm, at, bg, omega, atm, amass2, tau, ityp, &
               m_loc, nqs, lrigid, epsi_, zstar_, lraman, dchi_dtau)
       ALLOCATE(dyn(3, 3, nat, nat), STAT = ierr)
-      IF (ierr /= 0) CALL errore('readmat_shuffle2', 'Error allocating dyn', 1)
+      IF (ierr /= 0) CALL errore('dynmat', 'Error allocating dyn', 1)
       IF (ionode) THEN
         DO nt = 1, ntyp
           IF (amass(nt) <= 0.0d0) amass(nt) = amass2(nt)
@@ -298,7 +298,7 @@
         !
         IF (ABS(q(1, iq)) < eps6 .AND. ABS(q(2, iq)) < eps6 .AND. ABS(q(3, iq)) < eps6) THEN
           WRITE(stdout, '(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
-          IF (lpolar .AND. .NOT. lrigid) CALL errore('readmat_shuffle2', &
+          IF (lpolar .AND. .NOT. lrigid) CALL errore('dynmat', &
             &'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ',1)
         ENDIF
         DO na = 1, nat
@@ -340,7 +340,7 @@
       !  
     ELSE ! not a xml file
       OPEN(UNIT = iudyn, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('readmat_shuffle2', 'opening file' // tempfile, ABS(ios))
+      IF (ios /= 0) CALL errore('dynmat', 'opening file' // tempfile, ABS(ios))
       !
       !  read header and run some checks
       !
@@ -350,9 +350,9 @@
       ! 
       ! We stop testing celldm as it can be different between scf and nscf
       !IF (ntyp/=ntyp_.OR.nat/=nat_.OR.ibrav_/=ibrav.OR.abs ( &
-      !   celldm_ (1) - celldm (1) )  > 1.0d-5) call errore ('readmat_shuffle2', &
+      !   celldm_ (1) - celldm (1) )  > 1.0d-5) call errore ('dynmat', &
       !   'inconsistent data', 1)
-      IF (ntyp /= ntyp_ .OR. nat /= nat_ .OR. ibrav_ /= ibrav) CALL errore ('readmat_shuffle2', &
+      IF (ntyp /= ntyp_ .OR. nat /= nat_ .OR. ibrav_ /= ibrav) CALL errore ('dynmat', &
          'inconsistent data', 1)
       ! 
       !  skip reading of cell parameters here
@@ -366,12 +366,12 @@
         READ(iudyn, *) i, atm, amass_
         IF (nt /=i .OR. ABS(amass_ - amass(nt))  > 1.0d-2) THEN
           WRITE(stdout,*) amass_, amass(nt)
-          CALL errore('readmat_shuffle2', 'inconsistent data', 1)
+          CALL errore('dynmat', 'inconsistent data', 1)
         ENDIF
       ENDDO
       DO na = 1, nat
         READ(iudyn, * ) i, ityp_, tau_
-        IF (na /= i .OR. ityp_ /= ityp(na)) CALL errore('readmat_shuffle2', &
+        IF (na /= i .OR. ityp_ /= ityp(na)) CALL errore('dynmat', &
             'inconsistent data (names)', 10 + na)
       ENDDO
       !
@@ -476,7 +476,7 @@
           ENDDO
           !
         ELSE 
-          IF (lpolar) CALL errore('readmat_shuffle2', &
+          IF (lpolar) CALL errore('dynmat', &
              'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ', 1)
         ENDIF
       ENDIF
@@ -514,7 +514,7 @@
       ENDDO
       current_iq = current_iq + 1
       IF (found .EQV. .FALSE.) THEN
-        CALL errore('readmat_shuffle2', 'wrong qpoint', 1)
+        CALL errore('dynmat', 'wrong qpoint', 1)
       ENDIF
     ENDDO
     ! Transform back the sxq in Cartesian 
@@ -581,7 +581,7 @@
         ! If we enter into that loop it means that we have not found 
         ! such symmetry within the small group of Q. 
         IF (jsym == nsq) THEN
-          CALL errore('readmat_shuffle2 ', 'No sym. such that Sxq0=iq was found in the sgq !', 1)
+          CALL errore('dynmat ', 'No sym. such that Sxq0=iq was found in the sgq !', 1)
         ENDIF
       ENDDO
       !
@@ -700,7 +700,7 @@
     ENDDO ! iq
     ! 
     !---------------------------------------------------------------------------------
-    END SUBROUTINE readmat_shuffle2
+    END SUBROUTINE dynmat
     !---------------------------------------------------------------------------------
     !
     !---------------------------------------------------------------------------------
@@ -717,10 +717,10 @@
     USE ions_base, ONLY : nat
     USE cell_base, ONLY : ibrav, omega, at, bg, celldm, alat
     USE io_global, ONLY : stdout
-    USE io_epw,    ONLY : iunifc
+    USE io_var,    ONLY : iunifc
     USE noncollin_module, ONLY : nspin_mag
-    USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
-                                 read_dyn_mat, read_ifc_xml, read_ifc_param
+    USE io_epw,    ONLY : read_dyn_mat_param, read_dyn_mat_header,&
+                          read_dyn_mat, read_ifc_xml, read_ifc_param
     USE io_global, ONLY : ionode_id
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool

@@ -25,7 +25,7 @@
   USE fft_base,  ONLY : dfftp
   !USE pwcom
   USE epwcom,    ONLY : dvscf_dir
-  USE io_epw,    ONLY : iudvscf
+  USE io_var,    ONLY : iudvscf
   USE low_lvl,   ONLY : set_ndnmbr 
   USE noncollin_module, ONLY : nspin_mag
   !

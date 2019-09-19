@@ -18,7 +18,7 @@
   USE mp_global,ONLY : inter_pool_comm, world_comm
   USE mp,       ONLY : mp_bcast, mp_max
   use io_global,ONLY : meta_ionode, meta_ionode_id
-  use io_epw,   ONLY : iukgmap, iukmap
+  use io_var,   ONLY : iukgmap, iukmap
   use pwcom,    ONLY : nks
   use elph2,    ONLY : shift, gmap, igk_k_all, ngk_all
   USE io_files, ONLY : prefix
