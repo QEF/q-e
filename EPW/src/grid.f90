@@ -70,14 +70,20 @@
     !! weights k-points
     REAL(KIND = DP), ALLOCATABLE :: wkf_tmp(:)
     !! Temporary weights
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filkf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
-      IF (filkf /= '') THEN ! load from file (crystal coordinates)
+      IF (filkf /= '') THEN ! load from file
         !
         WRITE(stdout, *) '    Using k-mesh file: ', TRIM(filkf)
         OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_para', 'opening file ' // filkf, ABS(ios))
-        READ(iunkf, *) nkqtotf 
+        READ(iunkf, FMT='(I, A)') nkqtotf, coordinate_type 
+        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+           CALL errore('loadkmesh_para', 'ERROR: Specify either crystal or cartesian coordinates in the filkf file', 1)
         !
         ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
         IF (ierr /= 0) CALL errore('loadkmesh_para', 'Error allocating xkf_', 1)
@@ -94,15 +100,14 @@
           ! SP: This is so we can input a weight of 1 to random file 
           !     This way you can feed the same file for the k and q grid  
           wkf_(ikk) = wkf_(ikk) * 2.d0  
-          !
-          !  bring the k point to crystal coordinates
-          ! CALL cryst_to_cart( 1, xkf_ (:,ikk), at, -1)
-          !
           xkf_(:, ikq) = xkf_(:, ikk) 
           wkf_(ikq) = 0.d0
           !
         ENDDO
         CLOSE(iunkf)
+        IF (imatches("cartesian", coordinate_type)) THEN
+          CALL cryst_to_cart(nkqtotf, xkf_, at, -1)
+        ENDIF
         !
         ! redefine nkqtotf to include the k+q points
         !
@@ -374,16 +379,23 @@
     !! coordinates k-points
     REAL(KIND = DP), ALLOCATABLE :: wkf_tmp(:)
     !! weights k-points
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filkf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
-      IF (filkf /= '') THEN ! load from file (crystal coordinates)
+      IF (filkf /= '') THEN ! load from file
         !
         ! Each pool gets its own copy from the action=read statement
         !
         WRITE(stdout, *) '     Using k-mesh file: ', TRIM(filkf)
         OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_serial', 'opening file ' // filkf, ABS(ios))
-        READ(iunkf, *) nkqtotf
+        READ(iunkf, FMT='(I, A)') nkqtotf, coordinate_type
+        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+          CALL errore('loadkmesh_serial', 'ERROR: Specify either crystal or cartesian coordinates in the filkf file', 1)
+        !
         ALLOCATE(xkf(3, 2 * nkqtotf), STAT = ierr)
         IF (ierr /= 0) CALL errore('loadkmesh_serial', 'Error allocating xkf', 1)
         ALLOCATE(wkf(2 * nkqtotf), STAT = ierr)
@@ -398,15 +410,14 @@
           ! SP: This is so we can input a weight of 1 to random file 
           !     This way you can feed the same file for the k and q grid  
           wkf(ikk) = wkf(ikk) * 2.d0
-          !
-          !  bring the k point to crystal coordinates
-          ! CALL cryst_to_cart( 1, xkf_ (:,ikk), at, -1)
-          !
           xkf(:, ikq) = xkf(:, ikk)
           wkf(ikq) = 0.d0
           !
         ENDDO
         CLOSE(iunkf)
+        IF (imatches("cartesian", coordinate_type)) THEN
+          CALL cryst_to_cart(nkqtotf, xkf, at, -1)
+        ENDIF
         !
         ! redefine nkqtotf to include the k+q points
         !
@@ -906,15 +917,21 @@
     !! Temporary q-point
     REAL(KIND = DP), ALLOCATABLE :: wqf_(:)
     !! Temporary weight of q-point
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filqf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
-      IF (filqf /= '') THEN ! load from file (crystal coordinates)
+      IF (filqf /= '') THEN ! load from file 
         !
         WRITE(stdout, *) '    Using q-mesh file: ', TRIM(filqf)
         IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)' 
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_para', 'Opening file ' // filqf, ABS(ios))
-        READ(iunqf, *) nqtotf
+        READ(iunqf, FMT='(I, A)') nqtotf, coordinate_type
+        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+          CALL errore('loadqmesh_para', 'ERROR: Specify either crystal or cartesian coordinates in the filqf file', 1)
         !
         ALLOCATE(xqf_(3, nqtotf), STAT = ierr)
         IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_', 1)
@@ -927,6 +944,9 @@
           !
         ENDDO
         CLOSE(iunqf)
+        IF (imatches("cartesian", coordinate_type)) THEN
+          CALL cryst_to_cart(nqtotf, xqf_, at, -1)
+        ENDIF
         !
       ELSEIF ((nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_q) THEN
@@ -1104,9 +1124,12 @@
     !! Status integer
     INTEGER :: ierr
     !! Error status
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filqf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
-      IF (filqf /= '') THEN ! load from file (crystal coordinates)
+      IF (filqf /= '') THEN ! load from file
         !
         ! Each pool gets its own copy from the action=read statement
         !
@@ -1114,18 +1137,25 @@
         IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)'
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadqmesh_serial', 'opening file ' // filqf, ABS(ios))
-        READ(iunqf, *) nqtotf
+        READ(iunqf, FMT='(I, A)') nqtotf, coordinate_type
+        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+          CALL errore('loadqmesh_serial', 'ERROR: Specify either crystal or cartesian coordinates in the filqf file', 1)
+        !
         ALLOCATE(xqf(3, nqtotf), STAT = ierr)
         IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating xqf', 1)
         ALLOCATE(wqf(nqtotf), STAT = ierr)
         IF (ierr /= 0) CALL errore('loadqmesh_serial', 'Error allocating wqf', 1)
+        !
         DO iq = 1, nqtotf
+          !
           READ (iunqf, *) xqf(:, iq), wqf(iq)
+          !
         ENDDO
         CLOSE(iunqf)
-        !
-        ! bring xqf in crystal coordinates
-        ! CALL cryst_to_cart(nqtotf, xqf, at, -1)
+        IF (imatches("cartesian", coordinate_type)) THEN
+          CALL cryst_to_cart(nqtotf, xqf, at, -1)
+        ENDIF
         !
       ELSEIF ((nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0)) THEN ! generate grid
         IF (mp_mesh_q) THEN
