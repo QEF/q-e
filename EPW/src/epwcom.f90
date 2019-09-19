@@ -253,9 +253,9 @@
   !! min energy of the frozen Wannier disentanglement window
   REAL(KIND = DP) :: dis_froz_max
   !! max energy of the frozen Wannier disentanglement window
-  REAL(KIND = DP)    :: scdm_mu
+  REAL(KIND = DP) :: scdm_mu
   !! parameter for Wannier functions via SCDM algorithm
-  REAL(KIND = DP)    :: scdm_sigma
+  REAL(KIND = DP) :: scdm_sigma
   !! parameter for Wannier functions via SCDM algorithm
   ! 
   ! Superconductivity

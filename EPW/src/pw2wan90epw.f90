@@ -21,15 +21,15 @@
   !! 06/2016  SP: Debug of SOC + print/reading of nnkp file
   !!
   !------------------------------------------------------------------------
-  USE io_global,  ONLY : stdout
-  USE klist,      ONLY : nkstot
-  USE io_files,   ONLY : prefix
-  USE epwcom,     ONLY : write_wfn, scdm_proj, scdm_entanglement, & 
-                         scdm_mu, scdm_sigma
+  USE io_global,        ONLY : stdout
+  USE klist,            ONLY : nkstot
+  USE io_files,         ONLY : prefix
+  USE epwcom,           ONLY : write_wfn, scdm_proj, scdm_entanglement, & 
+                               scdm_mu, scdm_sigma
+  USE wannierEPW,       ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
+                               ikstart, ikstop, iknum
+  USE constants_epw,    ONLY : zero, one
   USE noncollin_module, ONLY : noncolin
-  USE wannierEPW, ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
-                         ikstart, ikstop, iknum
-  USE constants_epw, ONLY : zero, one
   !
   IMPLICIT NONE
   !
