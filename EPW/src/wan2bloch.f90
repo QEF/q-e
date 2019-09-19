@@ -1735,6 +1735,7 @@
     USE mp_world,         ONLY : world_comm, mpime
     USE io_global,        ONLY : ionode_id
     USE division,         ONLY : para_bounds
+    USE io_scattering,    ONLY : rwepmatw
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE
