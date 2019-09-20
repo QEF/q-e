@@ -3966,11 +3966,10 @@ SUBROUTINE laxlib_pztrtri_x ( sll, ldx, n, idesc )
        END IF
     END DO
 
-    IF( myrow >= mycol ) THEN
-       CALL mpi_comm_free( col_comm, ierr )
-       IF( ierr /= 0 ) &
+    ! split communicator is present and must be freed on all processors
+    CALL mpi_comm_free( col_comm, ierr )
+    IF( ierr /= 0 ) &
           CALL lax_error__( " pztrtri ", " in mpi_comm_free 25 ", ABS( ierr ) )
-    END IF
 
     DEALLOCATE(B)
     DEALLOCATE(C)
@@ -4028,7 +4027,7 @@ END SUBROUTINE laxlib_pztrtri_x
 
 SUBROUTINE laxlib_pdtrtri_x ( sll, ldx, n, idesc )
     
-    ! pztrtri computes the parallel inversion of a lower triangular matrix 
+    ! pdtrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
     ! The algorithm is based on the schema below and executes the model 
     ! recursively to each column C2 under the diagonal.     
@@ -4335,11 +4334,10 @@ SUBROUTINE laxlib_pdtrtri_x ( sll, ldx, n, idesc )
        END IF
     END DO
 
-    IF( myrow >= mycol ) THEN
-       CALL mpi_comm_free( col_comm, ierr )
-       IF( ierr /= 0 ) &
+    ! split communicator is present and must be freed on all processors
+    CALL mpi_comm_free( col_comm, ierr )
+    IF( ierr /= 0 ) &
           CALL lax_error__( " pdtrtri ", " in mpi_comm_free 25 ", ABS( ierr ) )
-    END IF
 
     DEALLOCATE(B)
     DEALLOCATE(C)

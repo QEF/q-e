@@ -58,7 +58,6 @@
   wdata(10) = 'dis_mix_ratio     = 1.0'
   wdata(11) = 'conv_tol = 1E-9'
   wdata(12) = 'conv_window = 4'
-  wdata(13) = 'write_bvec  = .true.'
 
   elecselfen  = .false.
   phonselfen  = .false.
