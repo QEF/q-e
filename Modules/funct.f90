@@ -807,7 +807,7 @@ CONTAINS
        ii = ii+1
        IF (ii == length-1) EXIT
        !
-       IF ( ii==1 .OR. (ii>1 .AND. dft(ii-1:ii-1).EQ.' ') ) THEN
+       IF ( ii==1 .OR. (ii>1 .AND. dft(MAX(ii-1,1):MAX(ii-1,1)).EQ.' ') ) THEN
          DO j = 1, length-ii
             IF (dft(ii+j:ii+j) .EQ. ' ') EXIT
          ENDDO
