@@ -6,76 +6,124 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!--------------------------------------------------------------------
-subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg, is, isk)
+!----------------------------------------------------------------------
+SUBROUTINE iweights( nks, wk, nbnd, nelec, et, Ef, wg, is, isk )
   !--------------------------------------------------------------------
-  !     calculates weights for semiconductors and insulators
-  !     (bands are either empty or filled)
-  !     On output, Ef is the highest occupied Kohn-Sham level
+  !! Calculates weights for semiconductors and insulators (bands
+  !! are either empty or filled).
+  !! On output, Ef is the highest occupied Kohn-Sham level.
+  !
+  !! NOTE: wg must be (INOUT) and not (OUT) because if is/=0 only terms for
+  !! spin=is are initialized; the remaining terms should be kept, not lost.
+  !
   USE kinds
-  USE noncollin_module, ONLY: noncolin
-  USE mp,       ONLY : mp_max
-  USE mp_pools, ONLY : inter_pool_comm
-  implicit none
+  USE noncollin_module,    ONLY: noncolin
+  USE mp,                  ONLY: mp_max
+  USE mp_pools,            ONLY: inter_pool_comm
   !
-  integer, intent(in)  :: nks, nbnd, is, isk(nks)
-  real(DP), intent(in) :: wk (nks), et(nbnd, nks), nelec
-  ! wg must be (inout) and not (out) because if is/=0 only terms for
-  ! spin=is are initialized; the remaining terms should be kept, not lost
-  real(DP), intent(inout) :: wg (nbnd, nks)
-  real(DP), intent(out) :: Ef
-  integer :: kpoint, ibnd
-
-  CALL iweights_only (nks, wk, is, isk, nbnd, nelec, wg )
+  IMPLICIT NONE
   !
-  Ef = - 1.0d+20
-  do kpoint = 1, nks
-     if (is /= 0) then
-        if (isk(kpoint) .ne.  is ) cycle
-     end if
-     do ibnd = 1, nbnd
-        if (wg (ibnd, kpoint) > 0.d0 ) Ef = MAX (Ef, et (ibnd, kpoint) )
-     enddo
-  enddo
+  INTEGER, INTENT(IN) :: nks
+  !! number of k points in this pool
+  INTEGER, INTENT(IN) :: nbnd
+  !! number of bands
+  INTEGER, INTENT(IN) :: is
+  !! spin label (0 or 1,2)
+  INTEGER, INTENT(IN) :: isk(nks)
+  !! for each k-point: 1=spin up, 2=spin down
+  REAL(DP), INTENT(IN) :: wk(nks)
+  !! weight of k points
+  REAL(DP), INTENT(IN) :: et(nbnd,nks)
+  !! eigenvalues of the hamiltonian
+  REAL(DP), INTENT(IN) :: nelec
+  !! number of electrons
+  REAL(DP), INTENT(INOUT) :: wg(nbnd,nks)
+  !! the weight of each k point and band
+  REAL(DP), INTENT(OUT) :: Ef
+  !! the Fermi energy
+  !
+  ! ... local variables
+  !
+  INTEGER :: kpoint, ibnd
+  !
+  CALL iweights_only( nks, wk, is, isk, nbnd, nelec, wg )
+  !
+  Ef = -1.0d+20
+  !
+  DO kpoint = 1, nks
+     !
+     IF (is /= 0) THEN
+        IF (isk(kpoint) /=  is) CYCLE
+     ENDIF
+     !
+     DO ibnd = 1, nbnd
+        IF ( wg(ibnd, kpoint) > 0.0_DP ) Ef = MAX( Ef, et(ibnd,kpoint) )
+     ENDDO
+     !
+  ENDDO
   !
   ! find max across pools
   !
   CALL mp_max( ef, inter_pool_comm )
-
-  return
-end subroutine iweights
+  !
+  RETURN
+  !
+END SUBROUTINE iweights
+!
 !
 !--------------------------------------------------------------------
-subroutine iweights_only (nks, wk, is, isk, nbnd, nelec, wg )
+SUBROUTINE iweights_only( nks, wk, is, isk, nbnd, nelec, wg )
   !--------------------------------------------------------------------
-  !     calculates weights for semiconductors and insulators
-  !     (bands are either empty or filled)
-
+  !! Calculates weights for semiconductors and insulators (bands
+  !! are either empty or filled).
+  !
   USE kinds
   USE noncollin_module, ONLY: noncolin
-  implicit none
   !
-  integer, intent(in) :: nks, nbnd, is, isk(nks)
-  real(DP), intent(in) :: wk (nks), nelec
-  real(DP), intent(out) :: wg (nbnd, nks)
-  real(DP) :: degspin 
-  integer :: kpoint, ibnd
-
-  degspin=2.d0
-  if (noncolin) degspin=1.d0
-  if (is /= 0)  degspin=1.d0
-  do kpoint = 1, nks
-     if (is /= 0) then
-        if (isk(kpoint) .ne.  is ) cycle
-     end if
-     do ibnd = 1, nbnd
-        if (ibnd <= nint (nelec) / degspin) then
-           wg (ibnd, kpoint) = wk (kpoint)
-        else
-           wg (ibnd, kpoint) = 0.d0
-        endif
-     enddo
-  enddo
-
-  return
-end subroutine iweights_only
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: nks
+  !! number of k points in this pool
+  INTEGER, INTENT(IN) :: nbnd
+  !! number of bands
+  INTEGER, INTENT(IN) :: is
+  !! spin label (0 or 1,2)
+  INTEGER, INTENT(IN) :: isk(nks)
+  !! for each k-point: 1=spin up, 2=spin down
+  REAL(DP), INTENT(IN) :: wk(nks)
+  !! weight of k points
+  REAL(DP), INTENT(IN) :: nelec
+  !! number of electrons
+  REAL(DP), INTENT(OUT) :: wg(nbnd,nks)
+  !! the weight of each k point and band
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: degspin 
+  INTEGER :: kpoint, ibnd
+  !
+  degspin = 2.0_DP
+  IF (noncolin) degspin = 1.0_DP
+  IF (is /= 0)  degspin = 1.0_DP
+  !
+  DO kpoint = 1, nks
+     !
+     IF (is /= 0) THEN
+        IF (isk(kpoint) /=  is) CYCLE
+     ENDIF
+     !
+     DO ibnd = 1, nbnd
+        !
+        IF ( ibnd <= NINT(nelec)/degspin ) THEN
+           wg(ibnd,kpoint) = wk(kpoint)
+        ELSE
+           wg(ibnd,kpoint) = 0.0_DP
+        ENDIF
+        !
+     ENDDO
+     !
+  ENDDO
+  !
+  RETURN
+  !
+END SUBROUTINE iweights_only
