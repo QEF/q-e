@@ -57,40 +57,41 @@
   !!
   !---------------------------------------------------------------------
   !
-  USE kinds,         ONLY : DP 
-  USE mp_global,     ONLY : my_pool_id, nproc_pool, intra_pool_comm, &
-                            inter_pool_comm, inter_image_comm, world_comm
-  USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
-  USE io_global,     ONLY : stdout
-  USE wavefunctions, ONLY : evc
-  USE io_files,      ONLY : diropn
-  USE wvfct,         ONLY : npwx
-  USE pwcom,         ONLY : current_spin, lsda, nbnd, nks
-  USE klist_epw,     ONLY : xk_loc, xk_all, isk_loc, et_all
-  USE cell_base,     ONLY : tpiba
-  USE gvect,         ONLY : ngm, g
-  USE uspp,          ONLY : vkb
-  USE symm_base,     ONLY : s
-  USE modes,         ONLY : u  
-  USE qpoint,        ONLY : xq, npwq
-  USE eqv,           ONLY : dvpsi
-  USE phcom,         ONLY : evq
-  USE units_lr,      ONLY : lrwfc, iuwfc
-  USE phus,          ONLY : alphap
-  USE lrus,          ONLY : becp1
-  USE becmod,        ONLY : calbec 
-  USE elph2,         ONLY : shift, gmap, el_ph_mat, igk_k_all, &
-                            umat_all, xkq, etq, &
-                            ngk_all, lower_band, upper_band
-  USE fft_base,      ONLY : dffts
-  USE constants_epw, ONLY : czero, cone, ci, zero
-  USE control_flags, ONLY : iverbosity
-  USE klist,         ONLY : nkstot
-  USE division,      ONLY : kpointdivision, fkbounds, fkbounds_bnd
-  USE kfold,         ONLY : ktokpmq
-  USE low_lvl,       ONLY : fractrasl, rotate_cart 
-  USE io_epw,        ONLY : readwfc, readgmap
+  USE kinds,            ONLY : DP 
+  USE mp_global,        ONLY : my_pool_id, nproc_pool, intra_pool_comm, &
+                               inter_pool_comm, inter_image_comm, world_comm
+  USE mp,               ONLY : mp_barrier, mp_bcast, mp_sum
+  USE io_global,        ONLY : stdout
+  USE wavefunctions,    ONLY : evc
+  USE io_files,         ONLY : diropn
+  USE wvfct,            ONLY : npwx
+  USE pwcom,            ONLY : current_spin, lsda, nbnd, nks
+  USE klist_epw,        ONLY : xk_loc, xk_all, isk_loc, et_all
+  USE cell_base,        ONLY : tpiba
+  USE gvect,            ONLY : ngm, g
+  USE uspp,             ONLY : vkb
+  USE symm_base,        ONLY : s
+  USE modes,            ONLY : u  
+  USE qpoint,           ONLY : xq, npwq
+  USE eqv,              ONLY : dvpsi
+  USE phcom,            ONLY : evq
+  USE units_lr,         ONLY : lrwfc, iuwfc
+  USE phus,             ONLY : alphap
+  USE lrus,             ONLY : becp1
+  USE becmod,           ONLY : calbec 
+  USE elph2,            ONLY : shift, gmap, el_ph_mat, igk_k_all, &
+                               umat_all, xkq, etq, &
+                               ngk_all, lower_band, upper_band
+  USE fft_base,         ONLY : dffts
+  USE constants_epw,    ONLY : czero, cone, ci, zero
+  USE control_flags,    ONLY : iverbosity
+  USE klist,            ONLY : nkstot
+  USE division,         ONLY : kpointdivision, fkbounds, fkbounds_bnd
+  USE kfold,            ONLY : ktokpmq
+  USE low_lvl,          ONLY : fractrasl, rotate_cart 
+  USE io_epw,           ONLY : readwfc, readgmap
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE dvqpsi,           ONLY : dvqpsi_us3
   ! 
   IMPLICIT NONE
   !

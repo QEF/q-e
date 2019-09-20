@@ -70,6 +70,7 @@
   USE io_epw,        ONLY : read_ifc, readdvscf
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
+  USE rotate,        ONLY : rotate_epmat, rotate_eigenm
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif

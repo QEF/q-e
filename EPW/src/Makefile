@@ -43,6 +43,7 @@ superconductivity.o \
 superconductivity_iso.o \
 superconductivity_aniso.o \
 grid.o \
+rotate.o \
 transport.o \
 transport_iter.o \
 indabs.o \
@@ -51,9 +52,7 @@ adddvscf2.o \
 bcast_epw_input.o \
 bloch2wan.o \
 broyden.o \
-dvanqq2.o \
-dvqpsi_us3.o \
-dvqpsi_us_only3.o \
+dvqpsi.o \
 eliashberg.o \
 elphel2_shuffle.o \
 elphon_shuffle.o \
@@ -69,13 +68,10 @@ epw_summary.o \
 gmap_sym.o \
 loadumat.o \
 nesting_fn.o \
-newdq2.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \
 print_ibte.o \
-rotate_eigenm.o \
-rotate_epmat.o \
 setphases_wrap.o \
 star_q2.o \
 stop_epw.o \
