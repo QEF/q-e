@@ -7,26 +7,26 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine allocate_locpot
+SUBROUTINE allocate_locpot
   !-----------------------------------------------------------------------
-  !
-  ! dynamical allocation of arrays:
-  ! local potential for each kind of atom, structure factor
+  !! Dynamical allocation of arrays:
+  !! local potential for each kind of atom, structure factor
   !
   USE ions_base, ONLY : nat, ntyp => nsp
   USE vlocal,    ONLY : vloc, strf
   USE gvect,     ONLY : eigts1, eigts2, eigts3, ngm, ngl
   USE fft_base , ONLY : dfftp
   !
-  implicit none
+  IMPLICIT NONE
   !
-  allocate (vloc( ngl, ntyp))    
-  allocate (strf( ngm, ntyp))    
-
-  allocate( eigts1(-dfftp%nr1:dfftp%nr1,nat) )
-  allocate( eigts2(-dfftp%nr2:dfftp%nr2,nat) )
-  allocate( eigts3(-dfftp%nr3:dfftp%nr3,nat) )
-
-  return
-end subroutine allocate_locpot
+  ALLOCATE( vloc( ngl, ntyp) )
+  ALLOCATE( strf( ngm, ntyp) )
+  !
+  ALLOCATE( eigts1(-dfftp%nr1:dfftp%nr1,nat) )
+  ALLOCATE( eigts2(-dfftp%nr2:dfftp%nr2,nat) )
+  ALLOCATE( eigts3(-dfftp%nr3:dfftp%nr3,nat) )
+  !
+  RETURN
+  !
+END SUBROUTINE ALLOCATE_locpot
 

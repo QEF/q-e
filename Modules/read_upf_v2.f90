@@ -16,7 +16,7 @@ MODULE read_upf_v2_module
    USE pseudo_types, ONLY: pseudo_upf
    USE radial_grids, ONLY: radial_grid_type
    USE parser,       ONLY : version_compare
-   USE FoX_DOM
+   USE FoX_dom
    !
    PRIVATE
    PUBLIC :: read_upf_v2

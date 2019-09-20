@@ -1,0 +1,755 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.2.0 starts on 16Sep2019 at 22:15:20 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+
+     No symmetry!
+                                    s                        frac. trans.
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+
+                       cryst. coord.
+     EPW          :      0.00s CPU      0.00s WALL
+
+     EPW          :      0.00s CPU      0.00s WALL
+
+     No wavefunction gauge setting applied
+
+     -------------------------------------------------------------------
+     Using gan.ukk from disk
+     -------------------------------------------------------------------
+
+
+     Using kmap and kgmap from disk
+
+     Do not need to read .epb files; read .fmt files
+
+
+     Band disentanglement is used: nbndsub =   10
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       21
+     Number of WS vectors for phonons       21
+     Number of WS vectors for electron-phonon       21
+     Maximum number of cores for efficient parallelization      252
+     Results may improve by using use_ws == .TRUE. 
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =        11Mb
+                   VmPeak =       273Mb
+     ===================================================================
+     
+     Using uniform q-mesh:   20  20  20
+     Size of q point mesh for interpolation:       8000
+     Using uniform MP k-mesh:   20  20  20
+     Size of k point mesh for interpolation:        968
+     Max number of k points per pool:              968
+
+     Fermi energy coarse grid =   0.000000 eV
+
+     ===================================================================
+
+     Fermi energy is read from the input file: Ef =  11.481879 eV
+
+     ===================================================================
+
+     Skipping the first   12 bands:
+
+     The Fermi level will be determined with  12.00000 electrons
+
+              ibndmin =     4  ebndmin =     0.800
+              ibndmax =     6  ebndmax =     0.837
+
+
+     Number of ep-matrix elements per pool :        52272 ~=  408.38 Kb (@ 8 bytes/ DP)
+      
+     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+     Number selected, total             50             50
+     Number selected, total            100            103
+     Number selected, total            150            193
+     Number selected, total            200            255
+     Number selected, total            250            309
+     Number selected, total            300            359
+     Number selected, total            350            409
+     Number selected, total            400            460
+     Number selected, total            450            515
+     Number selected, total            500            598
+     Number selected, total            550            660
+     Number selected, total            600            712
+     Number selected, total            650            762
+     Number selected, total            700            812
+     Number selected, total            750            864
+     Number selected, total            800            919
+     Number selected, total            850           1001
+     Number selected, total            900           1062
+     Number selected, total            950           1113
+     Number selected, total           1000           1163
+     Number selected, total           1050           1215
+     Number selected, total           1100           1268
+     Number selected, total           1150           1336
+     Number selected, total           1200           1411
+     Number selected, total           1250           1470
+     Number selected, total           1300           1522
+     Number selected, total           1350           1576
+     Number selected, total           1400           1629
+     Number selected, total           1450           1683
+     Number selected, total           1500           1764
+     Number selected, total           1550           1834
+     Number selected, total           1600           1890
+     Number selected, total           1650           1942
+     Number selected, total           1700           1995
+     Number selected, total           1750           2055
+     Number selected, total           1800           2134
+     Number selected, total           1850           2211
+     Number selected, total           1900           2270
+     Number selected, total           1950           2324
+     Number selected, total           2000           2377
+     Number selected, total           2050           2620
+     Number selected, total           2100           2683
+     Number selected, total           2150           2739
+     Number selected, total           2200           2794
+     Number selected, total           2250           3024
+     Number selected, total           2300           3095
+     Number selected, total           2350           3154
+     Number selected, total           2400           3236
+     Number selected, total           2450           3444
+     Number selected, total           2500           3520
+     Number selected, total           2550           3597
+     Number selected, total           2600           3679
+     Number selected, total           2650           3878
+     Number selected, total           2700           3955
+     Number selected, total           2750           4024
+     Number selected, total           2800           4102
+     Number selected, total           2850           4278
+     Number selected, total           2900           4354
+     Number selected, total           2950           4419
+     Number selected, total           3000           4491
+     Number selected, total           3050           4644
+     Number selected, total           3100           4724
+     Number selected, total           3150           4796
+     Number selected, total           3200           4858
+     Number selected, total           3250           4921
+     Number selected, total           3300           5058
+     Number selected, total           3350           5126
+     Number selected, total           3400           5194
+     Number selected, total           3450           5253
+     Number selected, total           3500           5311
+     Number selected, total           3550           5418
+     Number selected, total           3600           5493
+     Number selected, total           3650           5552
+     Number selected, total           3700           5613
+     Number selected, total           3750           5666
+     Number selected, total           3800           5721
+     Number selected, total           3850           5801
+     Number selected, total           3900           5878
+     Number selected, total           3950           5935
+     Number selected, total           4000           5995
+     Number selected, total           4050           6049
+     Number selected, total           4100           6101
+     Number selected, total           4150           6160
+     Number selected, total           4200           6233
+     Number selected, total           4250           6293
+     Number selected, total           4300           6346
+     Number selected, total           4350           6399
+     Number selected, total           4400           6451
+     Number selected, total           4450           6503
+     Number selected, total           4500           6558
+     Number selected, total           4550           6624
+     Number selected, total           4600           6686
+     Number selected, total           4650           6739
+     Number selected, total           4700           6789
+     Number selected, total           4750           6840
+     Number selected, total           4800           6894
+     Number selected, total           4850           6949
+     Number selected, total           4900           7016
+     Number selected, total           4950           7078
+     Number selected, total           5000           7130
+     Number selected, total           5050           7180
+     Number selected, total           5100           7230
+     Number selected, total           5150           7281
+     Number selected, total           5200           7334
+     Number selected, total           5250           7403
+     Number selected, total           5300           7471
+     Number selected, total           5350           7522
+     Number selected, total           5400           7572
+     Number selected, total           5450           7622
+     Number selected, total           5500           7673
+     Number selected, total           5550           7725
+     Number selected, total           5600           7803
+     Number selected, total           5650           7866
+     Number selected, total           5700           7920
+     Number selected, total           5750           7970
+     We only need to compute     5780 q-points
+      
+     Valence band maximum    =  11.381869 eV
+     Conduction band minimum =  13.076044 eV
+
+     Temperature  100.000 K
+     Mobility VB Fermi level =  11.508747 eV
+
+     Temperature  300.000 K
+     Mobility VB Fermi level =  11.821326 eV
+
+     ===================================================================
+     Scattering rate for IBTE
+     ===================================================================
+
+     Restart and restart_freq inputs deactivated (restart point at every q-points).
+     No intermediate mobility will be shown.
+
+     Fermi Surface thickness =   0.600000 eV
+     This is computed with respect to the fine Fermi level  11.481879 eV
+     Only states between  10.881879 eV and  12.081879 eV will be included
+
+     Save matrix elements larger than threshold:   0.173611111111E-24
+      
+     Progression iq (fine) =         50/      5780
+     Progression iq (fine) =        100/      5780
+     Progression iq (fine) =        150/      5780
+     Progression iq (fine) =        200/      5780
+     Progression iq (fine) =        250/      5780
+     Progression iq (fine) =        300/      5780
+     Progression iq (fine) =        350/      5780
+     Progression iq (fine) =        400/      5780
+     Progression iq (fine) =        450/      5780
+     Progression iq (fine) =        500/      5780
+     Progression iq (fine) =        550/      5780
+     Progression iq (fine) =        600/      5780
+     Progression iq (fine) =        650/      5780
+     Progression iq (fine) =        700/      5780
+     Progression iq (fine) =        750/      5780
+     Progression iq (fine) =        800/      5780
+     Progression iq (fine) =        850/      5780
+     Progression iq (fine) =        900/      5780
+     Progression iq (fine) =        950/      5780
+     Progression iq (fine) =       1000/      5780
+     Progression iq (fine) =       1050/      5780
+     Progression iq (fine) =       1100/      5780
+     Progression iq (fine) =       1150/      5780
+     Progression iq (fine) =       1200/      5780
+     Progression iq (fine) =       1250/      5780
+     Progression iq (fine) =       1300/      5780
+     Progression iq (fine) =       1350/      5780
+     Progression iq (fine) =       1400/      5780
+     Progression iq (fine) =       1450/      5780
+     Progression iq (fine) =       1500/      5780
+     Progression iq (fine) =       1550/      5780
+     Progression iq (fine) =       1600/      5780
+     Progression iq (fine) =       1650/      5780
+     Progression iq (fine) =       1700/      5780
+     Progression iq (fine) =       1750/      5780
+     Progression iq (fine) =       1800/      5780
+     Progression iq (fine) =       1850/      5780
+     Progression iq (fine) =       1900/      5780
+     Progression iq (fine) =       1950/      5780
+     Progression iq (fine) =       2000/      5780
+     Progression iq (fine) =       2050/      5780
+     Progression iq (fine) =       2100/      5780
+     Progression iq (fine) =       2150/      5780
+     Progression iq (fine) =       2200/      5780
+     Progression iq (fine) =       2250/      5780
+     Progression iq (fine) =       2300/      5780
+     Progression iq (fine) =       2350/      5780
+     Progression iq (fine) =       2400/      5780
+     Progression iq (fine) =       2450/      5780
+     Progression iq (fine) =       2500/      5780
+     Progression iq (fine) =       2550/      5780
+     Progression iq (fine) =       2600/      5780
+     Progression iq (fine) =       2650/      5780
+     Progression iq (fine) =       2700/      5780
+     Progression iq (fine) =       2750/      5780
+     Progression iq (fine) =       2800/      5780
+     Progression iq (fine) =       2850/      5780
+     Progression iq (fine) =       2900/      5780
+     Progression iq (fine) =       2950/      5780
+     Progression iq (fine) =       3000/      5780
+     Progression iq (fine) =       3050/      5780
+     Progression iq (fine) =       3100/      5780
+     Progression iq (fine) =       3150/      5780
+     Progression iq (fine) =       3200/      5780
+     Progression iq (fine) =       3250/      5780
+     Progression iq (fine) =       3300/      5780
+     Progression iq (fine) =       3350/      5780
+     Progression iq (fine) =       3400/      5780
+     Progression iq (fine) =       3450/      5780
+     Progression iq (fine) =       3500/      5780
+     Progression iq (fine) =       3550/      5780
+     Progression iq (fine) =       3600/      5780
+     Progression iq (fine) =       3650/      5780
+     Progression iq (fine) =       3700/      5780
+     Progression iq (fine) =       3750/      5780
+     Progression iq (fine) =       3800/      5780
+     Progression iq (fine) =       3850/      5780
+     Progression iq (fine) =       3900/      5780
+     Progression iq (fine) =       3950/      5780
+     Progression iq (fine) =       4000/      5780
+     Progression iq (fine) =       4050/      5780
+     Progression iq (fine) =       4100/      5780
+     Progression iq (fine) =       4150/      5780
+     Progression iq (fine) =       4200/      5780
+     Progression iq (fine) =       4250/      5780
+     Progression iq (fine) =       4300/      5780
+     Progression iq (fine) =       4350/      5780
+     Progression iq (fine) =       4400/      5780
+     Progression iq (fine) =       4450/      5780
+     Progression iq (fine) =       4500/      5780
+     Progression iq (fine) =       4550/      5780
+     Progression iq (fine) =       4600/      5780
+     Progression iq (fine) =       4650/      5780
+     Progression iq (fine) =       4700/      5780
+     Progression iq (fine) =       4750/      5780
+     Progression iq (fine) =       4800/      5780
+     Progression iq (fine) =       4850/      5780
+     Progression iq (fine) =       4900/      5780
+     Progression iq (fine) =       4950/      5780
+     Progression iq (fine) =       5000/      5780
+     Progression iq (fine) =       5050/      5780
+     Progression iq (fine) =       5100/      5780
+     Progression iq (fine) =       5150/      5780
+     Progression iq (fine) =       5200/      5780
+     Progression iq (fine) =       5250/      5780
+     Progression iq (fine) =       5300/      5780
+     Progression iq (fine) =       5350/      5780
+     Progression iq (fine) =       5400/      5780
+     Progression iq (fine) =       5450/      5780
+     Progression iq (fine) =       5500/      5780
+     Progression iq (fine) =       5550/      5780
+     Progression iq (fine) =       5600/      5780
+     Progression iq (fine) =       5650/      5780
+     Progression iq (fine) =       5700/      5780
+     Progression iq (fine) =       5750/      5780
+      100.000     11.5087       0.100000E+14
+      300.000     11.8213       0.999997E+13
+      
+     epmatkqread automatically changed to .TRUE. as all scattering have been computed.
+      
+     ===================================================================
+     Memory usage:  VmHWM =        39Mb
+                   VmPeak =       318Mb
+     ===================================================================
+
+     Number of elements per core     564324
+     Symmetry mapping finished
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.82012E-24    0.834098E-03    0.339326E-19    0.000000E+00
+                                                     -0.484751E-20    0.834098E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.547114E-01
+      300.000  11.8213   0.10000E+14  -0.79571E-24    0.217186E-02    0.533136E-19    0.000000E+00
+                                                     -0.193618E-19    0.217186E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.248976E-01
+      
+     =============================================================================================
+     Start solving iterative Boltzmann Transport Equation
+     =============================================================================================
+
+
+     Iteration number:         1 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.11632E-23    0.831078E-03    0.484751E-20    0.000000E+00
+                                                     -0.145425E-19    0.831078E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.799893E-01
+      300.000  11.8213   0.10000E+14   0.98117E-24    0.219116E-02    0.969269E-20    0.000000E+00
+                                                     -0.193240E-19    0.219116E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.397599E-01
+
+                                                      0.799893E-01    Max error
+
+     Iteration number:         2 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.51053E-24    0.844406E-03   -0.484751E-20    0.000000E+00
+                                                     -0.363563E-20    0.844406E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.899088E-01
+      300.000  11.8213   0.10000E+14  -0.47479E-24    0.220985E-02   -0.955766E-20    0.000000E+00
+                                                     -0.969051E-20    0.220985E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.481744E-01
+
+                                                      0.991951E-02    Max error
+
+     Iteration number:         3 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.12537E-23    0.850238E-03   -0.484751E-20    0.000000E+00
+                                                     -0.484751E-20    0.850238E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.938233E-01
+      300.000  11.8213   0.10000E+14   0.98324E-24    0.222146E-02   -0.968533E-20    0.000000E+00
+                                                     -0.983593E-20    0.222146E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.528632E-01
+
+                                                      0.468872E-02    Max error
+
+     Iteration number:         4 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.52991E-24    0.852360E-03   -0.484751E-20    0.000000E+00
+                                                     -0.969502E-20    0.852360E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.953605E-01
+      300.000  11.8213   0.10000E+14  -0.83607E-25    0.222799E-02   -0.982587E-20    0.000000E+00
+                                                     -0.242922E-19    0.222799E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.554387E-01
+
+                                                      0.257554E-02    Max error
+
+     Iteration number:         5 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.36189E-24    0.853076E-03   -0.484751E-20    0.000000E+00
+                                                      0.484751E-20    0.853076E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.959651E-01
+      300.000  11.8213   0.10000E+14   0.29424E-24    0.223146E-02   -0.145793E-19    0.000000E+00
+                                                     -0.358595E-21    0.223146E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.568423E-01
+
+                                                      0.140360E-02    Max error
+
+     Iteration number:         6 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.29727E-24    0.853312E-03   -0.484751E-20    0.000000E+00
+                                                      0.000000E+00    0.853312E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.962031E-01
+      300.000  11.8213   0.10000E+14   0.73600E-24    0.223324E-02   -0.973060E-20    0.000000E+00
+                                                     -0.331375E-22    0.223324E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.576031E-01
+
+                                                      0.760809E-03    Max error
+
+     Iteration number:         7 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.16027E-23    0.853389E-03   -0.484751E-20    0.000000E+00
+                                                     -0.969502E-20    0.853389E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.962969E-01
+      300.000  11.8213   0.10000E+14  -0.19559E-24    0.223413E-02   -0.976847E-20    0.000000E+00
+                                                     -0.975072E-20    0.223413E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.580142E-01
+
+                                                      0.411126E-03    Max error
+
+     Iteration number:         8 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.40067E-24    0.853414E-03   -0.484751E-20    0.000000E+00
+                                                     -0.969502E-20    0.853414E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963339E-01
+      300.000  11.8213   0.10000E+14   0.62493E-24    0.223457E-02   -0.974835E-20    0.000000E+00
+                                                     -0.487950E-20    0.223457E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.582359E-01
+
+                                                      0.221701E-03    Max error
+
+     Iteration number:         9 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.15510E-24    0.853422E-03   -0.484751E-20    0.000000E+00
+                                                     -0.484751E-20    0.853422E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963485E-01
+      300.000  11.8213   0.10000E+14   0.16156E-26    0.223479E-02   -0.978622E-20    0.000000E+00
+                                                     -0.973297E-20    0.223479E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.583553E-01
+
+                                                      0.119408E-03    Max error
+
+     Iteration number:        10 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.11632E-24    0.853425E-03   -0.484751E-20    0.000000E+00
+                                                     -0.969502E-20    0.853425E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963542E-01
+      300.000  11.8213   0.10000E+14  -0.54920E-24    0.223489E-02   -0.986197E-20    0.000000E+00
+                                                     -0.197097E-19    0.223489E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584196E-01
+
+                                                      0.642599E-04    Max error
+
+     Iteration number:        11 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.31019E-24    0.853426E-03   -0.484751E-20    0.000000E+00
+                                                      0.000000E+00    0.853426E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963565E-01
+      300.000  11.8213   0.10000E+14   0.96077E-24    0.223494E-02   -0.974835E-20    0.000000E+00
+                                                     -0.973060E-20    0.223494E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584542E-01
+
+                                                      0.345648E-04    Max error
+
+     Iteration number:        12 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.50406E-24    0.853426E-03   -0.484751E-20    0.000000E+00
+                                                     -0.484751E-20    0.853426E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963574E-01
+      300.000  11.8213   0.10000E+14   0.11040E-23    0.223497E-02   -0.973060E-20    0.000000E+00
+                                                     -0.191180E-19    0.223497E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584728E-01
+
+                                                      0.185859E-04    Max error
+
+     Iteration number:        13 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14  -0.21972E-24    0.853426E-03   -0.484751E-20    0.000000E+00
+                                                      0.000000E+00    0.853426E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963578E-01
+      300.000  11.8213   0.10000E+14   0.46933E-24    0.223498E-02   -0.145391E-19    0.000000E+00
+                                                     -0.145781E-19    0.223498E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584827E-01
+
+                                                      0.999183E-05    Max error
+
+     Iteration number:        14 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.77548E-24    0.853426E-03   -0.484751E-20    0.000000E+00
+                                                     -0.484751E-20    0.853426E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963579E-01
+      300.000  11.8213   0.10000E+14   0.24254E-24    0.223498E-02   -0.100135E-19    0.000000E+00
+                                                     -0.940988E-20    0.223498E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584881E-01
+
+                                                      0.537094E-05    Max error
+
+     Iteration number:        15 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.77548E-24    0.853426E-03   -0.484751E-20    0.000000E+00
+                                                     -0.969502E-20    0.853426E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963579E-01
+      300.000  11.8213   0.10000E+14  -0.11844E-24    0.223499E-02   -0.973060E-20    0.000000E+00
+                                                     -0.193878E-19    0.223499E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584910E-01
+
+                                                      0.288682E-05    Max error
+
+     Iteration number:        16 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.41359E-24    0.853426E-03   -0.484751E-20    0.000000E+00
+                                                     -0.484751E-20    0.853426E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963580E-01
+      300.000  11.8213   0.10000E+14   0.73711E-25    0.223499E-02   -0.974954E-20    0.000000E+00
+                                                     -0.968918E-20    0.223499E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584926E-01
+
+                                                      0.155155E-05    Max error
+
+     Iteration number:        17 
+
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      100.000  11.5087   0.10000E+14   0.67208E-24    0.853426E-03   -0.484751E-20    0.000000E+00
+                                                     -0.969502E-20    0.853426E-03    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.963580E-01
+      300.000  11.8213   0.10000E+14  -0.16933E-24    0.223499E-02   -0.972942E-20    0.000000E+00
+                                                     -0.875778E-22    0.223499E-02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.584934E-01
+
+                                                      0.833870E-06    Max error
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+     ephwann      :    177.12s CPU    187.35s WALL (       1 calls)
+     ep-interp    :    175.07s CPU    185.27s WALL (    5780 calls)
+
+     DynW2B       :      0.27s CPU      0.28s WALL (    5780 calls)
+     HamW2B       :    136.40s CPU    143.06s WALL ( 5596492 calls)
+     ephW2Bp      :      6.30s CPU      8.56s WALL (    5780 calls)
+     ephW2B       :      2.58s CPU      2.82s WALL (  105154 calls)
+     print_ibte   :     11.56s CPU     12.02s WALL (    5780 calls)
+     kpoint_paral :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+     Total program execution
+     EPW          :   2m57.12s CPU   3m 7.35s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          
+ In addition, since you have used the following functionalities, please cite:             
+   scattering :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+   iterative_bte :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)  
+   iterative_bte :: F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                 

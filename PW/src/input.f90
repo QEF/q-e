@@ -312,7 +312,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters,      ONLY : deallocate_input_parameters
   USE wyckoff,               ONLY : nattot, sup_spacegroup
-  USE qexsd_module,          ONLY : qexsd_input_obj
+  USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
   !
   USE vlocal,        ONLY : starting_charge_ => starting_charge
@@ -1008,6 +1008,13 @@ SUBROUTINE iosys()
      temperature  = tempw
      nraise_      = nraise
      !
+   CASE( 'svr', 'Svr', 'SVR' )
+     !
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
+     temperature  = tempw
+     nraise_      = nraise
+     !
   CASE( 'andersen', 'Andersen' )
      !
      control_temp = .true.
@@ -1190,8 +1197,9 @@ SUBROUTINE iosys()
   !
   !  ... initialize variables for vdW (dispersions) corrections
   !
+
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
-  !
+
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
      vdw_corr='grimme-d2'

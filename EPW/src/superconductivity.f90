@@ -10,7 +10,7 @@
   MODULE superconductivity
   !----------------------------------------------------------------------
   !! 
-  !! This module contains all the subroutine linked with superconductivity using  
+  !! This module contains all the SUBROUTINE linked with superconductivity using  
   !! the isotropic or anisotropic Eliashberg formalism. 
   !! 
   IMPLICIT NONE
@@ -37,61 +37,61 @@
     IMPLICIT NONE
     !
     INTEGER :: itemp, iwph, imelt
-    REAL(DP) :: dtemp
+    REAL(KIND = DP) :: dtemp
     !
-    IF ( eliashberg .AND. liso .AND. laniso ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. liso .AND. laniso ) CALL errore('eliashberg_init', &
          'liso or laniso needs to be true',1)
-    IF (  .NOT. eliashberg .AND. liso ) CALL errore('eliashberg_init', &
+    IF ( .NOT. eliashberg .AND. liso ) CALL errore('eliashberg_init', &
          'liso requires eliashberg true',1)
-    IF (  .NOT. eliashberg .AND. laniso ) CALL errore('eliashberg_init', &
+    IF ( .NOT. eliashberg .AND. laniso ) CALL errore('eliashberg_init', &
          'laniso requires eliashberg true',1)
-    IF ( laniso .and. (fila2f .ne. ' ') ) &
+    IF (laniso .AND. (fila2f /= ' ') ) &
          CALL errore('eliashberg_init', 'anisotropic case can not use fila2f',1)
-    IF ( eliashberg .AND. lreal .AND. laniso ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. lreal .AND. laniso ) CALL errore('eliashberg_init', &
          'lreal is implemented only for the isotriopic case',1)
-    IF ( eliashberg .AND. lreal .AND. limag )  & 
+    IF (eliashberg .AND. lreal .AND. limag )  & 
          CALL errore('eliashberg_init', 'lreal or limag needs to be true',1)
-    IF ( eliashberg .AND. lreal .AND. lacon )  &
+    IF (eliashberg .AND. lreal .AND. lacon )  &
          CALL errore('eliashberg_init', 'lreal or lacon needs to be true',1)
-    IF ( eliashberg .AND. lreal .AND.  lpade ) &
+    IF (eliashberg .AND. lreal .AND.  lpade ) &
          CALL errore('eliashberg_init', 'lreal or lpade needs to be true',1)
-    IF ( eliashberg .AND. imag_read .AND.  .NOT. limag .AND.  .NOT. laniso ) &
+    IF (eliashberg .AND. imag_read .AND.  .NOT. limag .AND.  .NOT. laniso ) &
          CALL errore('eliashberg_init', 'imag_read requires limag true and laniso true',1)
-    IF ( eliashberg .AND. lpade .AND.  .NOT. limag ) &                
+    IF (eliashberg .AND. lpade .AND.  .NOT. limag ) &                
          CALL errore('eliashberg_init', 'lpade requires limag true',1)
-    IF ( eliashberg .AND. lacon .AND. ( .NOT. limag .OR.  .NOT. lpade ) ) & 
+    IF (eliashberg .AND. lacon .AND. ( .NOT. limag .OR.  .NOT. lpade ) ) & 
          CALL errore('eliashberg_init', 'lacon requires both limag and lpade true',1)
-    IF ( eliashberg .AND. lreal .AND. (kerread .AND. kerwrite) ) & 
+    IF (eliashberg .AND. lreal .AND. (kerread .AND. kerwrite) ) & 
          CALL errore('eliashberg_init', 'kerread cannot be used with kerwrite',1)
-    IF ( eliashberg .AND. lreal .AND. ( .NOT. kerread .AND.  .NOT. kerwrite) ) &
+    IF (eliashberg .AND. lreal .AND. ( .NOT. kerread .AND.  .NOT. kerwrite) ) &
          CALL errore('eliashberg_init', 'kerread or kerwrite must be true',1)
-    IF ( eliashberg .AND. lreal .AND. wsfc > wscut ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. lreal .AND. wsfc > wscut ) CALL errore('eliashberg_init', &
          'wsfc should be < wscut',1)
-    IF ( eliashberg .AND. lreal .AND. wsfc < 0.d0 ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. lreal .AND. wsfc < 0.d0 ) CALL errore('eliashberg_init', &
          'wsfc should be > 0.d0',1)
-    IF ( eliashberg .AND. nswi > 0 .AND.  .NOT. limag ) &
+    IF (eliashberg .AND. nswi > 0 .AND.  .NOT. limag ) &
          CALL errore('eliashberg_init', 'nswi requires limag true',1)
-    IF ( eliashberg .AND. nswi < 0 ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. nswi < 0 ) CALL errore('eliashberg_init', &
          'nswi should be > 0',1)
-    IF ( eliashberg .AND. wscut < 0.d0 ) &
+    IF (eliashberg .AND. wscut < 0.d0 ) &
          CALL errore('eliashberg_init', 'wscut should be > 0.d0',1)
-    IF ( eliashberg .AND. nstemp < 1 ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. nstemp < 1 ) CALL errore('eliashberg_init', &
          'wrong number of nstemp',1)
-    IF ( eliashberg .AND. maxval(temps(:)) > 0.d0 .AND. & 
+    IF (eliashberg .AND. MAXVAL(temps(:)) > 0.d0 .AND. & 
          tempsmin > 0.d0 .AND. tempsmax > 0.d0 ) &
          CALL errore('eliashberg_init', & 
          'define either (tempsmin and tempsmax) or temp(:)',1)
-    IF ( eliashberg .AND. tempsmax < tempsmin ) &
+    IF (eliashberg .AND. tempsmax < tempsmin ) &
          CALL errore('eliashberg_init', & 
          'tempsmax should be greater than tempsmin',1)
-    IF ( eliashberg .AND. nsiter < 1 ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. nsiter < 1 ) CALL errore('eliashberg_init', &
          'wrong number of nsiter',1)
-    IF ( eliashberg .AND. muc < 0.d0 ) CALL errore('eliashberg_init', &
+    IF (eliashberg .AND. muc < 0.d0 ) CALL errore('eliashberg_init', &
          'muc should be >= 0.d0',1) 
-    IF ( eliashberg .and. (rand_k .OR. rand_q ) .and. (fila2f == ' ') ) &
+    IF (eliashberg .AND. (rand_k .OR. rand_q ) .AND. (fila2f == ' ') ) &
          CALL errore('eliashberg_init', 'eliashberg requires a uniform grid when fila2f is not used',1)
-    IF ( eliashberg .and. (mod(nkf1,nqf1) .ne. 0 .OR. mod(nkf2,nqf2) &
-         .ne. 0 .OR. mod(nkf3,nqf3) .ne. 0 ) .and. (fila2f == ' ') ) &
+    IF (eliashberg .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) &
+         /= 0 .OR. MOD(nkf3, nqf3) /= 0 ) .AND. (fila2f == ' ') ) &
          CALL errore('eliashberg_init', &
          'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used',1)
     !
@@ -101,28 +101,28 @@
       ENDIF
     ENDDO
     !
-    IF ( .NOT. ALLOCATED(estemp) ) ALLOCATE ( estemp(nstemp) )
+    IF (.NOT. ALLOCATED(estemp) ) ALLOCATE(estemp(nstemp) )
     estemp(:) = 0.d0
     !
     ! go from K to eV
-    IF ( maxval(temps(:)) > 0.d0 ) THEN
+    IF (MAXVAL(temps(:)) > 0.d0) THEN
       DO itemp= 1, nstemp 
         estemp(itemp) = temps(itemp) * kelvin2eV
       ENDDO
     ELSE
-      IF ( nstemp == 1 ) THEN
+      IF (nstemp == 1) THEN
         estemp(1) = tempsmin * kelvin2eV
       ELSE
-        dtemp = ( tempsmax - tempsmin ) * kelvin2eV / dble(nstemp-1)
+        dtemp = ( tempsmax - tempsmin ) * kelvin2eV / DBLE(nstemp-1)
         DO itemp = 1, nstemp
-          estemp(itemp) = tempsmin * kelvin2eV + dble(itemp-1) * dtemp
+          estemp(itemp) = tempsmin * kelvin2eV + DBLE(itemp-1) * dtemp
         ENDDO
       ENDIF
     ENDIF
     !
-    IF ( lreal ) THEN
+    IF (lreal) THEN
       !
-      IF ( ABS(wsfc) < eps6 .OR. ABS(wscut) < eps6 .OR. nswfc == 0 .OR. nswc == 0 ) THEN 
+      IF (ABS(wsfc) < eps6 .OR. ABS(wscut) < eps6 .OR. nswfc == 0 .OR. nswc == 0) THEN 
         wsfc  =  5.d0 * wsphmax
         wscut = 15.d0 * wsphmax
         nswfc = 5 * nqstep
@@ -132,44 +132,44 @@
       WRITE(stdout,'(5x,a7,f12.6,a11,f12.6)') 'wsfc = ', wsfc, '   wscut = ', wscut
       WRITE(stdout,'(5x,a8,i8,a10,i8,a9,i8)') 'nswfc = ', nswfc, '   nswc = ', nswc, & 
                                                '   nsw = ', nsw 
-      IF ( nsw == 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
+      IF (nsw == 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
       !
-    ELSEIF ( limag ) THEN
+    ELSEIF (limag) THEN
       !
-      IF ( .NOT. ALLOCATED(nsiw) ) ALLOCATE ( nsiw(nstemp) )
+      IF (.NOT. ALLOCATED(nsiw) ) ALLOCATE(nsiw(nstemp) )
       nsiw(:) = 0
       !
-      IF ( nswi > 0 ) THEN
+      IF (nswi > 0) THEN
         nsiw(:) = nswi
-      ELSEIF ( wscut > 0.d0 ) THEN
+      ELSEIF (wscut > 0.d0) THEN
         DO itemp = 1, nstemp
            nsiw(itemp) = int(0.5d0 * ( wscut / pi / estemp(itemp) - 1.d0 )) + 1
         ENDDO
-      ELSEIF ( nswi > 0 .AND. wscut > 0.d0 ) THEN
+      ELSEIF (nswi > 0 .AND. wscut > 0.d0) THEN
         nsiw(:) = nswi
-        WRITE(stdout,'(5x,a)') 'when nswi > 0, wscut is not used for limag=.true.'
+        WRITE(stdout,'(5x,a)') 'when nswi > 0, wscut is not used for limag=.TRUE.'
       ENDIF
       !
-      IF ( ABS(wscut) < eps6 ) THEN 
+      IF (ABS(wscut) < eps6) THEN 
         wscut = 10.d0 * wsphmax
       ENDIF
       ! 
-      IF ( lpade .OR. lacon ) THEN 
-        nsw = nqstep * nint(wscut/wsphmax)
-        IF ( nsw == 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
+      IF (lpade .OR. lacon) THEN 
+        nsw = nqstep * NINT(wscut/wsphmax)
+        IF (nsw == 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
       ENDIF
       !
     ENDIF
     !
     ! create phonon grid 
     !
-    !dwsph = wsphmax / dble(nqstep-1)
-    dwsph = wsphmax / dble(nqstep)
-    IF ( .NOT. ALLOCATED(wsph) ) ALLOCATE ( wsph(nqstep) )
+    !dwsph = wsphmax / DBLE(nqstep-1)
+    dwsph = wsphmax / DBLE(nqstep)
+    IF (.NOT. ALLOCATED(wsph) ) ALLOCATE(wsph(nqstep) )
     wsph(:) = 0.d0
     DO iwph = 1, nqstep
-      !wsph(iwph) = dble(iwph-1) * dwsph
-      wsph(iwph) = dble(iwph) * dwsph
+      !wsph(iwph) = DBLE(iwph-1) * dwsph
+      wsph(iwph) = DBLE(iwph) * dwsph
     ENDDO
     !
     ! memory allocated for wsph, estemp
@@ -188,7 +188,7 @@
     SUBROUTINE estimate_tc_gap
     !-----------------------------------------------------------------------
     !
-    ! this subroutine estimates the Tc using Allen-Dynes formula and 
+    ! this SUBROUTINE estimates the Tc using Allen-Dynes formula and 
     ! the BCS superconducting gap as the initial guess for Delta 
     !  
     USE kinds,         ONLY : DP
@@ -204,9 +204,9 @@
     IMPLICIT NONE
     !  
     INTEGER :: iwph
-    REAL(DP):: l_a2f, logavg, tc
+    REAL(KIND = DP):: l_a2f, logavg, tc
     !
-    IF ( mpime == ionode_id ) THEN
+    IF (mpime == ionode_id) THEN
       l_a2f  = 0.0d0 
       logavg = 0.0d0
       DO iwph = 1, nqstep
@@ -215,19 +215,19 @@
       ENDDO
       l_a2f  = l_a2f  * 2.d0 * dwsph
       logavg = logavg * 2.d0 * dwsph
-      logavg = exp( logavg / l_a2f )
+      logavg = EXP(logavg / l_a2f )
       WRITE(stdout,'(5x,a,f12.7)') 'Electron-phonon coupling strength = ', l_a2f
       WRITE(stdout,'(a)') ' '
       !
       ! Allen-Dynes estimate of Tc
       !
-      tc = logavg / 1.2d0 * exp( - 1.04d0 * ( 1.d0 + l_a2f ) &
+      tc = logavg / 1.2d0 * EXP(- 1.04d0 * ( 1.d0 + l_a2f ) &
                                  / ( l_a2f - muc * ( 1.d0 + 0.62d0 * l_a2f ) ) )
       !
       ! initial guess for the gap edge using BCS superconducting ratio 3.52
       !
       gap0 = 3.52d0 * tc / 2.d0
-      IF ( gap0 <= 0.d0 ) CALL errore('estimate_tc_gap', &
+      IF (gap0 <= 0.d0 ) CALL errore('estimate_tc_gap', &
          'initial guess for gap edge should be > 0.d0',1)
       !
       ! tc in K
@@ -237,15 +237,15 @@
       WRITE(stdout,'(a)') '  '
       WRITE(stdout,'(5x,a,f15.7,a)') 'Estimated BCS superconducting gap = ', gap0, ' eV'
       !
-      IF ( tempsmin > 1.3d0*tc .OR. minval(temps(:)) > 1.3d0*tc ) THEN
+      IF (tempsmin > 1.3d0*tc .OR. minval(temps(:)) > 1.3d0*tc) THEN
          CALL errore('eliashberg_init','tempsmin or minval(temps) > estimated Allen-Dynes 1.3*Tc',-1)
-      ELSEIF ( tempsmax > tc .OR. maxval(temps(:)) > tc ) THEN
+      ELSEIF (tempsmax > tc .OR. MAXVAL(temps(:)) > tc) THEN
          WRITE(stdout,'(a)') '  '
          WRITE(stdout,'(5x,a)') 'WARNING WARNING WARNING '
          WRITE(stdout,'(a)') '  '
          WRITE(stdout,'(5x,a)') 'The code will crash for tempsmax much larger than Allen-Dynes Tc'
-      ELSEIF ( tempsmax > 1.5d0*tc .OR. maxval(temps(:)) > 1.5d0*tc ) THEN
-         CALL errore('eliashberg_init','tempsmax or maxval(temps) > estimated Allen-Dynes 1.5*Tc',-1)
+      ELSEIF (tempsmax > 1.5d0*tc .OR. MAXVAL(temps(:)) > 1.5d0*tc) THEN
+         CALL errore('eliashberg_init','tempsmax or MAXVAL(temps) > estimated Allen-Dynes 1.5*Tc',-1)
       ENDIF
       !
     ENDIF
@@ -259,7 +259,7 @@
     SUBROUTINE mem_size_eliashberg( imelt )
     !-----------------------------------------------------------------------
     !
-    !  subroutine estimates the amount of memory taken up or 
+    !  SUBROUTINE estimates the amount of memory taken up or 
     !  released by different arrays 
     !  if imelt > 0 memory is added
     !  if imelt < 0 memory is subtracted  
@@ -274,15 +274,15 @@
     IMPLICIT NONE
     !
     INTEGER :: imelt
-    REAL(DP) :: rmelt
+    REAL(KIND = DP) :: rmelt
     ! 
-    ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+    ! This is only a quick fix since the SUBROUTINE was written for parallel execution - FG June 2014
 #if ! defined(__MPI)
     my_pool_id = 0
 #endif
     !
     rmelt = 0.d0
-    rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+    rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
     rmelt = rmelt + memlt_pool(my_pool_id+1)
     !
     memlt_pool(:) = 0.d0
@@ -292,13 +292,13 @@
     CALL mp_sum( memlt_pool, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( maxval(memlt_pool(:)) > max_memlt ) THEN
+    IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
        WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
        CALL errore('mem_size_eliashberg', 'Size of required memory exceeds max_memlt',1)
-    ELSEIF( maxval(memlt_pool(:)) > 0.5d0*max_memlt ) THEN 
+    ELSEIF( MAXVAL(memlt_pool(:)) > 0.5d0*max_memlt) THEN 
        WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
     ENDIF
     !
     RETURN
@@ -309,7 +309,7 @@
     SUBROUTINE mem_integer_size_eliashberg( imelt )
     !-----------------------------------------------------------------------
     !
-    !  subroutine estimates the amount of memory taken up or 
+    !  SUBROUTINE estimates the amount of memory taken up or 
     !  released by different arrays 
     !  if imelt > 0 memory is added
     !  if imelt < 0 memory is subtracted  
@@ -324,15 +324,15 @@
     IMPLICIT NONE
     !
     INTEGER :: imelt
-    REAL(DP) :: rmelt
+    REAL(KIND = DP) :: rmelt
     !
-    ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+    ! This is only a quick fix since the SUBROUTINE was written for parallel execution - FG June 2014
 #if ! defined(__MPI)
     my_pool_id = 0
 #endif  
     !
     rmelt = 0.d0
-    rmelt = dble(imelt) * 4.d0 / 1073741824.d0 ! 4 bytes per number, value in Gb
+    rmelt = DBLE(imelt) * 4.d0 / 1073741824.d0 ! 4 bytes per number, value in Gb
     rmelt = rmelt + memlt_pool(my_pool_id+1)
     !
     memlt_pool(:) = 0.d0
@@ -342,13 +342,13 @@
     CALL mp_sum( memlt_pool, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( maxval(memlt_pool(:)) > max_memlt ) THEN
+    IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
        WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
        CALL errore('mem_integer_size_eliashberg', 'Size of required memory exceeds max_memlt',1)
-    ELSEIF( maxval(memlt_pool(:)) > 0.5d0*max_memlt ) THEN
+    ELSEIF( MAXVAL(memlt_pool(:)) > 0.5d0*max_memlt) THEN
        WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
     ENDIF
     !
     RETURN
@@ -364,7 +364,7 @@
     !! Computes the quasiparticle density of states in the superconducting state
     !!
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iuqdos
+    USE io_var,        ONLY : iuqdos
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : lreal, limag, liso, laniso, fsthick
     USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, dws, Delta, ADelta, & 
@@ -373,62 +373,62 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: itemp
+    INTEGER, INTENT(in) :: itemp
     !! Counter on temperature
     INTEGER :: iw, ik, ibnd
-    REAL(kind=DP) :: degaussw0, temp, weight
-    REAL(kind=DP), ALLOCATABLE :: dos_qp(:)
-    COMPLEX(kind=DP) :: omega
-    CHARACTER (len=256) :: fildos
+    REAL(KIND = DP) :: degaussw0, temp, weight
+    REAL(KIND = DP), ALLOCATABLE :: dos_qp(:)
+    COMPLEX(KIND = DP) :: omega
+    CHARACTER(LEN = 256) :: fildos
     !
     ! SP: This needs to be initialized
     degaussw0 = 0.0_DP
     !
-    IF ( lreal ) THEN 
+    IF (lreal) THEN 
        degaussw0 = 1.d0 * dws(1)
-    ELSEIF ( limag ) THEN 
+    ELSEIF (limag) THEN 
        degaussw0 = 1.d0 * dwsph
     ENDIF
     !
     temp = estemp(itemp) / kelvin2eV
-    IF ( temp < 10.d0 ) THEN
+    IF (temp < 10.d0) THEN
        WRITE(fildos,'(a,a8,f4.2)') TRIM(prefix),'.qdos_00', temp
-    ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0 ) THEN
+    ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
        WRITE(fildos,'(a,a7,f5.2)') TRIM(prefix),'.qdos_0', temp
-    ELSEIF ( temp >= 100.d0 ) THEN
+    ELSEIF (temp >= 100.d0) THEN
        WRITE(fildos,'(a,a6,f6.2)') TRIM(prefix),'.qdos_', temp
     ENDIF
-    OPEN(iuqdos, FILE=fildos, FORM='formatted')
+    OPEN(iuqdos, FILE = fildos, FORM = 'formatted')
     !
-    IF ( .NOT. ALLOCATED(dos_qp) ) ALLOCATE ( dos_qp(nsw) )
+    IF (.NOT. ALLOCATED(dos_qp) ) ALLOCATE(dos_qp(nsw) )
     dos_qp(:) = 0.d0          
     !
-    IF ( laniso ) THEN
+    IF (laniso) THEN
        WRITE(iuqdos,'(5a20)') 'w [eV]', 'N_S/N_F'
        DO iw = 1, nsw 
           omega = ws(iw) + ci*degaussw0
           DO ik = 1, nkfs
              DO ibnd = 1, nbndfs
-                IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
+                IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
                    weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik)
                    dos_qp(iw) = dos_qp(iw) + weight & 
-                              * real( omega / sqrt( omega*omega - ADelta(ibnd,ik,iw)*ADelta(ibnd,ik,iw) ) ) 
+                              * REAL( omega / SQRT( omega*omega - ADelta(ibnd,ik,iw)*ADelta(ibnd,ik,iw) ) ) 
                 ENDIF
              ENDDO
           ENDDO
           WRITE(iuqdos,'(2ES20.10)') ws(iw), dos_qp(iw)
        ENDDO
-    ELSEIF ( liso ) THEN 
+    ELSEIF (liso) THEN 
        WRITE(iuqdos,'(5a20)') 'w [eV]', 'N_S/N_F'
        DO iw = 1, nsw
           omega = ws(iw) + ci*degaussw0
-          dos_qp(iw) = dos_qp(iw) + real( omega / sqrt( omega*omega - Delta(iw)*Delta(iw) ) ) 
+          dos_qp(iw) = dos_qp(iw) + REAL( omega / SQRT( omega*omega - Delta(iw)*Delta(iw) ) ) 
           WRITE(iuqdos,'(2ES20.10)') ws(iw), dos_qp(iw)
        ENDDO
     ENDIF
     CLOSE(iuqdos)
     !
-    IF ( ALLOCATED(dos_qp) ) DEALLOCATE (dos_qp)
+    IF (ALLOCATED(dos_qp) ) DEALLOCATE(dos_qp)
     !
     RETURN
     !
@@ -443,7 +443,7 @@
     !!
     !
     USE kinds,         ONLY : DP
-    USE io_epw,        ONLY : iufe
+    USE io_var,        ONLY : iufe
     USE io_files,      ONLY : prefix
     USE epwcom,        ONLY : liso, laniso, fsthick
     USE eliashbergcom, ONLY : estemp, wsi, nsiw, ADeltai, AZnormi, NAZnormi, &
@@ -453,41 +453,41 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: itemp
+    INTEGER, INTENT(in) :: itemp
     !! Counter on temperature
     ! 
     ! Local variables
     INTEGER :: iw, ik, ibnd 
-    REAL(DP) :: dFE, omega, temp, weight
-    CHARACTER (len=256) :: filfe
+    REAL(KIND = DP) :: dFE, omega, temp, weight
+    CHARACTER(LEN = 256) :: filfe
     !
     temp = estemp(itemp) / kelvin2eV
-    IF ( temp < 10.d0 ) THEN
+    IF (temp < 10.d0) THEN
        WRITE(filfe,'(a,a6,f4.2)') TRIM(prefix),'.fe_00', temp
-    ELSEIF ( temp >= 10.d0 .AND. temp < 100.d0 ) THEN
+    ELSEIF (temp >= 10.d0 .AND. temp < 100.d0) THEN
        WRITE(filfe,'(a,a5,f5.2)') TRIM(prefix),'.fe_0', temp
-    ELSEIF ( temp >= 100.d0 ) THEN
+    ELSEIF (temp >= 100.d0) THEN
        WRITE(filfe,'(a,a4,f6.2)') TRIM(prefix),'.fe_', temp
     ENDIF
-    OPEN(iufe, FILE=filfe, FORM='formatted')
+    OPEN(iufe, FILE = filfe, FORM = 'formatted')
     !
     dFE = 0.d0
-    IF ( laniso ) THEN
+    IF (laniso) THEN
        DO iw = 1, nsiw(itemp)
           DO ik = 1, nkfs
              DO ibnd = 1, nbndfs
-                IF ( abs( ekfs(ibnd,ik) - ef0 ) < fsthick ) THEN
+                IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
                    weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik)
-                   omega = sqrt( wsi(iw)*wsi(iw) + ADeltai(ibnd,ik,iw)*ADeltai(ibnd,ik,iw) )
+                   omega = SQRT( wsi(iw)*wsi(iw) + ADeltai(ibnd,ik,iw)*ADeltai(ibnd,ik,iw) )
                    dFE = dFE - weight * ( omega - wsi(iw) ) & 
                        * ( AZnormi(ibnd,ik,iw) - NAZnormi(ibnd,ik,iw) * wsi(iw) / omega )
                 ENDIF
              ENDDO
           ENDDO
        ENDDO
-    ELSEIF ( liso ) THEN
+    ELSEIF (liso) THEN
        DO iw = 1, nsiw(itemp) 
-          omega = sqrt( wsi(iw)*wsi(iw) + Deltai(iw)*Deltai(iw) )
+          omega = SQRT( wsi(iw)*wsi(iw) + Deltai(iw)*Deltai(iw) )
           dFE = dFE - ( omega - wsi(iw) ) &
               * ( Znormi(iw) - NZnormi(iw) * wsi(iw) / omega )
        ENDDO
@@ -519,26 +519,26 @@
     IMPLICIT NONE
     !
     INTEGER  :: itemp, lower_bnd, upper_bnd, imelt
-    REAL(DP) :: rmelt
+    REAL(KIND = DP) :: rmelt
     !
-    ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+    ! This is only a quick fix since the SUBROUTINE was written for parallel execution - FG June 2014
 #if ! defined(__MPI)
     my_pool_id = 0
 #endif  
     !
-    limag_fly = .false.
+    limag_fly = .FALSE.
     !
     CALL fkbounds( nkfs, lower_bnd, upper_bnd )
     !
     ! get the size of the AKeri kernels that need to stored in each pool
-    ! imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
-    ! rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+    ! imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
+    ! rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
     ! RM - avoid problems when imelt is greater than (2^31)-1 (singed long integer) 
     !
-    imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:))
-    rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+    imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:))
+    rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
     imelt = nbndfs**2 * ( 2 * nsiw(itemp) )
-    rmelt = dble(imelt) * rmelt 
+    rmelt = DBLE(imelt) * rmelt 
     rmelt = rmelt + memlt_pool(my_pool_id+1)
     !
     memlt_pool(:) = 0.d0
@@ -548,19 +548,19 @@
     CALL mp_sum( memlt_pool, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( maxval(memlt_pool(:)) > max_memlt ) THEN
+    IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
-           " ~= ", maxval(memlt_pool(:)), " Gb"
-      limag_fly = .true.
+           " ~= ", MAXVAL(memlt_pool(:)), " Gb"
+      limag_fly = .TRUE.
       !
       ! remove memory required for AKeri 
-      ! imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
+      ! imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
       ! RM - avoid problems when imelt is greater than (2^31)-1 (singed long integer)
       !
-      imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:))
-      rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+      imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:))
+      rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
       imelt = nbndfs**2 * ( 2 * nsiw(itemp) )
-      rmelt = dble(imelt) * rmelt
+      rmelt = DBLE(imelt) * rmelt
       rmelt = - rmelt + memlt_pool(my_pool_id+1)
       !
       memlt_pool(:) = 0.d0
@@ -572,11 +572,11 @@
       ! 
     ENDIF
     !
-    IF ( limag_fly ) THEN
+    IF (limag_fly) THEN
       WRITE(stdout,'(/,5x,a/)') "AKeri is calculated on the fly since its size exceedes max_memlt"
     ELSE
       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
-           " ~= ", maxval(memlt_pool(:)), " Gb"
+           " ~= ", MAXVAL(memlt_pool(:)), " Gb"
     ENDIF
     !
     RETURN
@@ -602,20 +602,20 @@
     IMPLICIT NONE
     !
     INTEGER  :: lower_bnd, upper_bnd, imelt
-    REAL(DP) :: rmelt
+    REAL(KIND = DP) :: rmelt
     !
-    ! This is only a quick fix since the subroutine was written for parallel execution - FG June 2014
+    ! This is only a quick fix since the SUBROUTINE was written for parallel execution - FG June 2014
 #if ! defined(__MPI)
     my_pool_id = 0
 #endif  
     !
-    lacon_fly = .false.
+    lacon_fly = .FALSE.
     !
     CALL fkbounds( nkfs, lower_bnd, upper_bnd )
     !
     ! get the size of a2fij that need to stored in each pool
-    imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * nqstep
-    rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+    imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:)) * nbndfs**2 * nqstep
+    rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
     rmelt = rmelt + memlt_pool(my_pool_id+1)
     !
     memlt_pool(:) = 0.d0
@@ -625,21 +625,21 @@
     CALL mp_sum( memlt_pool, inter_pool_comm )
     CALL mp_barrier(inter_pool_comm)
     !
-    IF ( maxval(memlt_pool(:)) > max_memlt ) THEN
+    IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
-           " ~= ", maxval(memlt_pool(:)), " Gb"
-      lacon_fly = .true.
+           " ~= ", MAXVAL(memlt_pool(:)), " Gb"
+      lacon_fly = .TRUE.
       !
       ! remove memory required for a2fij
-      imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * nqstep
+      imelt = ( upper_bnd - lower_bnd + 1 ) * MAXVAL(nqfs(:)) * nbndfs**2 * nqstep
       CALL mem_size_eliashberg( -imelt )
     ENDIF
     !
-    IF ( lacon_fly ) THEN
+    IF (lacon_fly) THEN
       WRITE(stdout,'(/,5x,a/)') "a2fij is calculated on the fly since its size exceedes max_memlt"
     ELSE
       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
-           " ~= ", maxval(memlt_pool(:)), " Gb"
+           " ~= ", MAXVAL(memlt_pool(:)), " Gb"
     ENDIF
     !
     RETURN
@@ -675,26 +675,26 @@
     WRITE(stdout,'(5x,a,i6,a,f12.6,a,f12.6)') 'nswc  = ', nswc,  '  from ', wsfc, ' to ', wscut
     WRITE(stdout,'(a)') '    '
     !
-    IF ( .NOT. ALLOCATED(ws) )  ALLOCATE ( ws(nsw) )
-    IF ( .NOT. ALLOCATED(dws) ) ALLOCATE ( dws(nsw) )
+    IF (.NOT. ALLOCATED(ws) )  ALLOCATE(ws(nsw) )
+    IF (.NOT. ALLOCATED(dws) ) ALLOCATE(dws(nsw) )
     ws(:) = 0.d0
     dws(:) = 0.d0
     !
     DO iw = 1, nswfc
-       dws(iw) = wsfc / dble(nswfc)
-       ws(iw) = dble(iw) * dws(iw)
+       dws(iw) = wsfc / DBLE(nswfc)
+       ws(iw) = DBLE(iw) * dws(iw)
     ENDDO
     DO iw = nswfc + 1, nsw
-       dws(iw) = ( wscut - wsfc ) / dble(nswc)
-       IF ( lunif ) THEN 
-          ws(iw) = wsfc + dble(iw) * dws(iw)
+       dws(iw) = ( wscut - wsfc ) / DBLE(nswc)
+       IF (lunif) THEN 
+          ws(iw) = wsfc + DBLE(iw) * dws(iw)
        ELSE 
           ! RM this needs to be checked
-          ws(iw) = wsfc + dble( iw/nswc )**pwc * (wscut - wsfc)
+          ws(iw) = wsfc + DBLE( iw/nswc )**pwc * (wscut - wsfc)
        ENDIF
     ENDDO
     !
-    IF ( .NOT. lunif ) THEN 
+    IF (.NOT. lunif) THEN 
        DO iw = nswfc+1, nsw-1
           dws(iw) = ws(iw+1) - ws(iw)
        ENDDO
@@ -731,24 +731,24 @@
     imelt = nsiw(itemp) + nsw 
     CALL mem_size_eliashberg( imelt )
     !
-    IF ( .NOT. ALLOCATED(wsi) )  ALLOCATE ( wsi(nsiw(itemp)) )
+    IF (.NOT. ALLOCATED(wsi) )  ALLOCATE(wsi(nsiw(itemp)) )
     wsi(:) = 0.d0
     DO iw = 1, nsiw(itemp)
        n = iw - 1
-       wsi(iw) = dble(2*n+1) * pi * estemp(itemp) 
+       wsi(iw) = DBLE(2*n+1) * pi * estemp(itemp) 
        !WRITE(*,*) iw, wsi(iw)
     ENDDO
     !
     ! frequency-grid for real-axis ( Pade approximants and analytic continuation)
     !
-    IF ( lpade .OR. lacon ) THEN
-       IF ( .NOT. ALLOCATED(ws) )  ALLOCATE ( ws(nsw) )
+    IF (lpade .OR. lacon) THEN
+       IF (.NOT. ALLOCATED(ws) )  ALLOCATE(ws(nsw) )
        ws(:) = 0.d0
        DO iw = 1, nsw
-          IF ( iw <= nqstep ) THEN 
+          IF (iw <= nqstep) THEN 
              ws(iw) = wsph(iw)
           ELSE
-             ws(iw) = wsphmax + dble(iw-nqstep)*dwsph
+             ws(iw) = wsphmax + DBLE(iw-nqstep)*dwsph
           ENDIF
           !WRITE(*,*) iw, ws(iw), wsph(iw)
        ENDDO
@@ -768,18 +768,18 @@
     !
     ! using this sub:
     !
-    ! integer :: N
-    ! complex(DP) :: z(N), u(N), a(N), w, padapp
+    ! INTEGER :: N
+    ! COMPLEX(KIND = DP) :: z(N), u(N), a(N), w, padapp
     !
     ! call pade_coeff ( N, z, u, a)
     ! call pade_eval ( N, z, a, w, padapp)
     !
     !-----------------------------------------------------------
-    subroutine pade_coeff ( N, z, u, a)
+    SUBROUTINE pade_coeff ( N, z, u, a)
     !-----------------------------------------------------------
     ! N-point Pade' approximant - find the Pade' coefficients
     !
-    ! This subroutine uses the recursive algorithm described in
+    ! This SUBROUTINE uses the recursive algorithm described in
     ! HJ Vidberg and JW Serene, "Solving the Eliashberg equations
     ! by means of N-point Pade' approximants", J Low Temp Phys
     ! 29, 179 (1977). The notation adopted here is the same as
@@ -801,18 +801,18 @@
     USE, INTRINSIC :: IEEE_ARITHMETIC
 #endif
     !
-    implicit none
+    IMPLICIT NONE
     INTEGER :: N
     INTEGER :: i 
     INTEGER :: p
-    REAL(kind=DP) :: ar
+    REAL(KIND = DP) :: ar
     !! Real part
-    REAL(kind=DP) :: ai
+    REAL(KIND = DP) :: ai
     !! Complex part
-    COMPLEX(kind=DP) :: z(N), u(N)
-    COMPLEX(kind=DP) :: g(N,N), a(N)
+    COMPLEX(KIND = DP) :: z(N), u(N)
+    COMPLEX(KIND = DP) :: g(N,N), a(N)
     ! g(p,i) = g_p (z_i) in the notation of Vidberg and Serene
-    COMPLEX(kind=DP) :: tmp1, tmp2
+    COMPLEX(KIND = DP) :: tmp1, tmp2
     !
     do p = 1, N
       if (p == 1) then
@@ -829,7 +829,7 @@
            ! becomes unstable - certainly it happens only
            ! when u(:) is very small
            !
-  !if(abs(g(p-1,i)) == 0) then
+  !if(ABS(g(p-1,i)) == 0) then
   !       write(6,'(4x, "fitting parameter too small. g(p-1,i)= ",2f9.5)')g(p-1,i)
   !       stop
   !end if
@@ -844,13 +844,13 @@
       !
       ! check whether a(p) is not NaN
       !
-      ar = real(a(p))
+      ar = REAL(a(p))
       ai = aimag(a(p))
 #if ! defined(__GFORTRAN__) || (__GNUC__ > 4 )
-      IF ( IEEE_IS_NAN(ar) .or. IEEE_IS_NAN(ai) ) THEN
-  !     write(6,*) (z(i),i=1,N)
-  !     write(6,*) (u(i),i=1,N)
-  !     write(6,*) (a(i),i=1,N)
+      IF (IEEE_IS_NAN(ar) .OR. IEEE_IS_NAN(ai)) THEN
+  !     write(6,*) (z(i),i = 1,N)
+  !     write(6,*) (u(i),i = 1,N)
+  !     write(6,*) (a(i),i = 1,N)
         write(6,*) 'one or more coefficients are NaN'
   !     call errore('pade_coeff','one or more coefficients are NaN',1)
       ENDIF
@@ -858,14 +858,14 @@
       !
     enddo
     !
-    end subroutine pade_coeff
+    END SUBROUTINE pade_coeff
     !
     !-----------------------------------------------------------
-    subroutine pade_eval ( N, z, a, w, padapp)
+    SUBROUTINE pade_eval ( N, z, a, w, padapp)
     !-----------------------------------------------------------
     ! N-point Pade' approximant - evaluate the Pade' approximant
     !
-    ! This subroutine uses the recursive algorithm described in
+    ! This SUBROUTINE uses the recursive algorithm described in
     ! HJ Vidberg and JW Serene, "Solving the Eliashberg equations
     ! by means of N-point Pade' approximants", J Low Temp Phys
     ! 29, 179 (1977). The notation adopted here is the same as
@@ -884,11 +884,11 @@
     !-----------------------------------------------------------
     !
     USE kinds,          ONLY : DP
-    implicit none
-    integer :: N
-    complex(DP) :: a(N), z(N), acap(0:N), bcap(0:N)
-    complex(DP) :: w, padapp
-    integer :: i
+    IMPLICIT NONE
+    INTEGER :: N
+    COMPLEX(KIND = DP) :: a(N), z(N), acap(0:N), bcap(0:N)
+    COMPLEX(KIND = DP) :: w, padapp
+    INTEGER :: i
     !
     acap(0) = 0.d0
     acap(1) = a(1)
@@ -901,7 +901,7 @@
     enddo
     padapp = acap(N)/bcap(N)
     !
-    end subroutine pade_eval
+    END SUBROUTINE pade_eval
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
@@ -917,23 +917,23 @@
     ! 
     IMPLICIT NONE
     !
-    REAL(kind=DP), INTENT (in) :: omega
+    REAL(KIND = DP), INTENT(in) :: omega
     !! frequency w at point iw on the real-axis
-    REAL(kind=DP), INTENT (in) :: omegap
+    REAL(KIND = DP), INTENT(in) :: omegap
     !! frequency w' at point iwp on the real-axis
-    REAL(kind=DP), INTENT (in) :: temp
+    REAL(KIND = DP), INTENT(in) :: temp
     !! temperature in eV
-    REAL(kind=DP), INTENT (out) :: rgammap
+    REAL(KIND = DP), INTENT(out) :: rgammap
     !! -bose_einstein( w' ) - fermi_dirac(  w + w' )
-    REAL(kind=DP), INTENT (out) :: rgammam
+    REAL(KIND = DP), INTENT(out) :: rgammam
     !! bose_einstein( w' ) + fermi_dirac( -w + w' )
     ! 
     rgammap = 0.d0
     rgammam = 0.d0
-    IF ( ABS(temp) < eps6 ) THEN
+    IF (ABS(temp) < eps6) THEN
        rgammap = 0.d0
        rgammam = 1.d0
-    ELSEIF ( omegap > 0.d0 ) THEN 
+    ELSEIF (omegap > 0.d0) THEN 
        rgammap = 0.5d0 * (   tanh( 0.5d0 * ( omega + omegap ) / temp ) &
                            - 1.d0 / tanh( 0.5d0 * omegap / temp ) )
        rgammam = 0.5d0 * (   tanh( 0.5d0 * ( omega - omegap ) / temp ) &
@@ -957,23 +957,23 @@
     !
     IMPLICIT NONE
     !
-    IF( ALLOCATED(wsph) )  DEALLOCATE (wsph)
-    IF( ALLOCATED(estemp)) DEALLOCATE (estemp)
+    IF( ALLOCATED(wsph) )  DEALLOCATE(wsph)
+    IF( ALLOCATED(estemp)) DEALLOCATE(estemp)
     !
-    IF ( liso ) THEN 
-       IF ( limag ) THEN
+    IF (liso) THEN 
+       IF (limag) THEN
           CALL deallocate_eliashberg_iso_iaxis
        ENDIF
        CALL deallocate_eliashberg_iso_raxis
     ENDIF
     !
-    IF ( laniso ) THEN
-       IF ( limag ) THEN
+    IF (laniso) THEN
+       IF (limag) THEN
           CALL deallocate_eliashberg_aniso_iaxis
        ENDIF
        CALL deallocate_eliashberg_aniso_raxis
-       IF( ALLOCATED(gap))  DEALLOCATE (gap)
-       IF( ALLOCATED(Agap)) DEALLOCATE (Agap)
+       IF( ALLOCATED(gap))  DEALLOCATE(gap)
+       IF( ALLOCATED(Agap)) DEALLOCATE(Agap)
     ENDIF
     !
     CALL deallocate_elphon
@@ -994,12 +994,12 @@
     !
     IMPLICIT NONE
     !
-    IF( ALLOCATED(wsi) )     DEALLOCATE (wsi)
-    IF( ALLOCATED(Deltai) )  DEALLOCATE (Deltai)
-    IF( ALLOCATED(Deltaip) ) DEALLOCATE (Deltaip)
-    IF( ALLOCATED(Znormi) )  DEALLOCATE (Znormi)
-    IF( ALLOCATED(NZnormi) ) DEALLOCATE (NZnormi)
-    IF( ALLOCATED(Keri) )    DEALLOCATE (Keri)
+    IF( ALLOCATED(wsi) )     DEALLOCATE(wsi)
+    IF( ALLOCATED(Deltai) )  DEALLOCATE(Deltai)
+    IF( ALLOCATED(Deltaip) ) DEALLOCATE(Deltaip)
+    IF( ALLOCATED(Znormi) )  DEALLOCATE(Znormi)
+    IF( ALLOCATED(NZnormi) ) DEALLOCATE(NZnormi)
+    IF( ALLOCATED(Keri) )    DEALLOCATE(Keri)
     !
     RETURN
     !
@@ -1016,27 +1016,27 @@
     !
     IMPLICIT NONE
     !
-    IF( ALLOCATED(ws) )    DEALLOCATE (ws)
+    IF( ALLOCATED(ws) )    DEALLOCATE(ws)
     !
-    IF( ALLOCATED(Delta))  DEALLOCATE (Delta)
-    IF( ALLOCATED(Deltap)) DEALLOCATE (Deltap)
-    IF( ALLOCATED(Znorm))  DEALLOCATE (Znorm)
-    IF( ALLOCATED(Znormp)) DEALLOCATE (Znormp)
-    IF( ALLOCATED(gap))    DEALLOCATE (gap)
+    IF( ALLOCATED(Delta))  DEALLOCATE(Delta)
+    IF( ALLOCATED(Deltap)) DEALLOCATE(Deltap)
+    IF( ALLOCATED(Znorm))  DEALLOCATE(Znorm)
+    IF( ALLOCATED(Znormp)) DEALLOCATE(Znormp)
+    IF( ALLOCATED(gap))    DEALLOCATE(gap)
     !
-    IF ( lreal ) THEN
-       IF( ALLOCATED(dws) )   DEALLOCATE (dws)
-       IF( ALLOCATED(fdwp) )  DEALLOCATE (fdwp)
-       IF( ALLOCATED(bewph) ) DEALLOCATE (bewph)
-       IF( ALLOCATED(Kp))     DEALLOCATE (Kp)    
-       IF( ALLOCATED(Km))     DEALLOCATE (Km) 
+    IF (lreal) THEN
+       IF( ALLOCATED(dws) )   DEALLOCATE(dws)
+       IF( ALLOCATED(fdwp) )  DEALLOCATE(fdwp)
+       IF( ALLOCATED(bewph) ) DEALLOCATE(bewph)
+       IF( ALLOCATED(Kp))     DEALLOCATE(Kp)    
+       IF( ALLOCATED(Km))     DEALLOCATE(Km) 
     ENDIF
     !
-    IF ( limag .AND. lacon ) THEN
-       IF( ALLOCATED(Gp))     DEALLOCATE (Gp)
-       IF( ALLOCATED(Gm))     DEALLOCATE (Gm)
-       IF( ALLOCATED(Dsumi) ) DEALLOCATE (Dsumi)
-       IF( ALLOCATED(Zsumi) ) DEALLOCATE (Zsumi)
+    IF (limag .AND. lacon) THEN
+       IF( ALLOCATED(Gp))     DEALLOCATE(Gp)
+       IF( ALLOCATED(Gm))     DEALLOCATE(Gm)
+       IF( ALLOCATED(Dsumi) ) DEALLOCATE(Dsumi)
+       IF( ALLOCATED(Zsumi) ) DEALLOCATE(Zsumi)
     ENDIF
     !
     RETURN
@@ -1053,15 +1053,15 @@
     !
     IMPLICIT NONE
     !
-    IF( ALLOCATED(wsi) )      DEALLOCATE (wsi)
+    IF( ALLOCATED(wsi) )      DEALLOCATE(wsi)
     !
-    IF( ALLOCATED(Deltai) )   DEALLOCATE (Deltai)
-    IF( ALLOCATED(Znormi) )   DEALLOCATE (Znormi)
+    IF( ALLOCATED(Deltai) )   DEALLOCATE(Deltai)
+    IF( ALLOCATED(Znormi) )   DEALLOCATE(Znormi)
     ! 
-    IF( ALLOCATED(ADeltai) )  DEALLOCATE (ADeltai)
-    IF( ALLOCATED(ADeltaip) ) DEALLOCATE (ADeltaip)
-    IF( ALLOCATED(AZnormi) )  DEALLOCATE (AZnormi)
-    IF( ALLOCATED(NAZnormi) ) DEALLOCATE (NAZnormi)
+    IF( ALLOCATED(ADeltai) )  DEALLOCATE(ADeltai)
+    IF( ALLOCATED(ADeltaip) ) DEALLOCATE(ADeltaip)
+    IF( ALLOCATED(AZnormi) )  DEALLOCATE(AZnormi)
+    IF( ALLOCATED(NAZnormi) ) DEALLOCATE(NAZnormi)
     !
     RETURN
     !
@@ -1077,15 +1077,15 @@
     !
     IMPLICIT NONE
     !
-    IF( ALLOCATED(ws))       DEALLOCATE (ws) 
+    IF( ALLOCATED(ws))       DEALLOCATE(ws) 
     !
-    IF( ALLOCATED(Delta))    DEALLOCATE (Delta)
-    IF( ALLOCATED(Znorm))    DEALLOCATE (Znorm)
+    IF( ALLOCATED(Delta))    DEALLOCATE(Delta)
+    IF( ALLOCATED(Znorm))    DEALLOCATE(Znorm)
     !
-    IF( ALLOCATED(ADelta) )  DEALLOCATE (ADelta)
-    IF( ALLOCATED(ADeltap) ) DEALLOCATE (ADeltap)
-    IF( ALLOCATED(AZnorm) )  DEALLOCATE (AZnorm)
-    IF( ALLOCATED(AZnormp) ) DEALLOCATE (AZnormp)
+    IF( ALLOCATED(ADelta) )  DEALLOCATE(ADelta)
+    IF( ALLOCATED(ADeltap) ) DEALLOCATE(ADeltap)
+    IF( ALLOCATED(AZnorm) )  DEALLOCATE(AZnorm)
+    IF( ALLOCATED(AZnormp) ) DEALLOCATE(AZnormp)
     !
     RETURN
     !
@@ -1102,19 +1102,19 @@
     !
     IMPLICIT NONE
     !
-    IF( ALLOCATED(wf) )      DEALLOCATE (wf)
-    IF( ALLOCATED(wqf) )     DEALLOCATE (wqf)
-    IF( ALLOCATED(ekfs) )    DEALLOCATE (ekfs)
-    IF( ALLOCATED(xkfs) )    DEALLOCATE (xkfs)
-    IF( ALLOCATED(wkfs) )    DEALLOCATE (wkfs)
-    IF( ALLOCATED(xkff) )    DEALLOCATE (xkff)
-    IF( ALLOCATED(g2) )      DEALLOCATE (g2)
-    IF( ALLOCATED(a2f_iso) ) DEALLOCATE (a2f_iso)
-    IF( ALLOCATED(w0g) )     DEALLOCATE (w0g)
-    IF( ALLOCATED(ixkff) )   DEALLOCATE (ixkff)
-    IF( ALLOCATED(ixkqf) )   DEALLOCATE (ixkqf)
-    IF( ALLOCATED(ixqfs) )   DEALLOCATE (ixqfs)
-    IF( ALLOCATED(nqfs) )    DEALLOCATE (nqfs)
+    IF( ALLOCATED(wf) )      DEALLOCATE(wf)
+    IF( ALLOCATED(wqf) )     DEALLOCATE(wqf)
+    IF( ALLOCATED(ekfs) )    DEALLOCATE(ekfs)
+    IF( ALLOCATED(xkfs) )    DEALLOCATE(xkfs)
+    IF( ALLOCATED(wkfs) )    DEALLOCATE(wkfs)
+    IF( ALLOCATED(xkff) )    DEALLOCATE(xkff)
+    IF( ALLOCATED(g2) )      DEALLOCATE(g2)
+    IF( ALLOCATED(a2f_iso) ) DEALLOCATE(a2f_iso)
+    IF( ALLOCATED(w0g) )     DEALLOCATE(w0g)
+    IF( ALLOCATED(ixkff) )   DEALLOCATE(ixkff)
+    IF( ALLOCATED(ixkqf) )   DEALLOCATE(ixkqf)
+    IF( ALLOCATED(ixqfs) )   DEALLOCATE(ixqfs)
+    IF( ALLOCATED(nqfs) )    DEALLOCATE(nqfs)
     !
     RETURN
     !

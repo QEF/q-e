@@ -8,7 +8,7 @@
   !                                                                            
   ! Adapted from the code PH/phq_setup - Quantum-ESPRESSO group                
   !-----------------------------------------------------------------------
-  SUBROUTINE epw_setup
+  SUBROUTINE epw_setup()
   !-----------------------------------------------------------------------
   !!
   !! EPW setup.  
@@ -41,16 +41,20 @@
   USE funct,         ONLY : dft_is_gradient
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
+                            nkc1, nkc2, nkc3
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
-  USE start_k,       ONLY : nk1, nk2, nk3
-  USE transportcom,  ONLY : transp_temp
+  USE elph2,         ONLY : transp_temp
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   !
   IMPLICIT NONE
   ! 
+  LOGICAL :: magnetic_sym
+  !! the symmetry operations
+  LOGICAL :: symmorphic_or_nzb
+  !! Symmorphic operation
   INTEGER :: jk
   !! counter on k points
   INTEGER :: irr
@@ -59,25 +63,23 @@
   !! counter on atoms
   INTEGER :: itemp
   !! counter on temperatures 
-  REAL(kind=DP) :: xx_c, yy_c, zz_c
-  !! k-points in crystal coords. in multiple of nk1, nk2, nk3
-  LOGICAL :: magnetic_sym
-  !! the symmetry operations
-  LOGICAL :: symmorphic_or_nzb
-  !!
+  INTEGER :: ierr
+  !! Error status
+  REAL(KIND = DP) :: xx_c, yy_c, zz_c
+  !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
   !
   CALL start_clock('epw_setup')
   !
   !  loosy tolerance: not important 
   DO jk = 1, nkstot
-    xx_c = xk_cryst(1,jk) * nk1
-    yy_c = xk_cryst(2,jk) * nk2
-    zz_c = xk_cryst(3,jk) * nk3
+    xx_c = xk_cryst(1, jk) * nkc1
+    yy_c = xk_cryst(2, jk) * nkc2
+    zz_c = xk_cryst(3, jk) * nkc3
     !
     ! check that the k-mesh was defined in the positive region of 1st BZ
     !
-    IF ( xx_c < -eps5 .or. yy_c < -eps5 .or. zz_c < -eps5 ) &
-      CALL errore('epw_setup','coarse k-mesh needs to be strictly positive in 1st BZ',1)
+    IF (xx_c < -eps5 .OR. yy_c < -eps5 .OR. zz_c < -eps5) &
+      CALL errore('epw_setup', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
     !
   ENDDO
   !
@@ -88,30 +90,31 @@
   ! Set non linear core correction stuff
   !
   nlcc_any = ANY( upf(1:ntyp)%nlcc )
-  IF (nlcc_any) ALLOCATE (drc(ngm, ntyp))    
+  IF (nlcc_any) ALLOCATE(drc(ngm, ntyp))    
   !
   !  2) If necessary calculate the local magnetization. This information is
   !      needed in sgama 
   !
   IF (noncolin .AND. domag) THEN
-    ALLOCATE (m_loc(3, nat))
-    DO na=1, nat
-      !
-      m_loc(1, na) = starting_magnetization(ityp(na)) * &
-                    SIN(angle1(ityp(na))) * COS(angle2(ityp(na)))
-      m_loc(2, na) = starting_magnetization(ityp(na)) * &
-                    SIN(angle1(ityp(na))) * SIN(angle2(ityp(na)))
-      m_loc(3, na) = starting_magnetization(ityp(na)) * &
-                    COS(angle1(ityp(na)))
+    ALLOCATE(m_loc(3, nat), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating m_loc', 1)
+    DO na = 1, nat
+      m_loc(1, na) = starting_magnetization(ityp(na)) * SIN(angle1(ityp(na))) * COS(angle2(ityp(na)))
+      m_loc(2, na) = starting_magnetization(ityp(na)) * SIN(angle1(ityp(na))) * SIN(angle2(ityp(na)))
+      m_loc(3, na) = starting_magnetization(ityp(na)) * COS(angle1(ityp(na)))
     ENDDO
     ux = zero
-    IF (dft_is_gradient()) CALL compute_ux(m_loc,ux,nat)
-    DEALLOCATE (m_loc)
+    IF (dft_is_gradient()) THEN
+      CALL compute_ux(m_loc,ux,nat)
+    ENDIF
+    DEALLOCATE(m_loc, STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_setup', 'Error deallocating m_loc', 1)
   ENDIF
   !
   ! 3) Computes the derivative of the xc potential
   !
-  ALLOCATE (dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
+  ALLOCATE(dmuxc(dfftp%nnr, nspin_mag, nspin_mag), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating dmuxc', 1)
   CALL setup_dmuxc()
   !
   ! 3.1) Setup all gradient correction stuff
@@ -141,19 +144,24 @@
   !   not been calculated by set_nscf because this is a recover run. 
   !   We recalculate here the small group of q.
   !
-  IF (nsymq==0) CALL set_small_group_of_q(nsymq, invsymq, minus_q)
-  IF ( .NOT. time_reversal ) minus_q = .FALSE.
+  IF (nsymq == 0) THEN
+    CALL set_small_group_of_q(nsymq, invsymq, minus_q)
+  ENDIF
+  IF (.NOT. time_reversal) THEN
+    minus_q = .FALSE.
+  ENDIF
   !
   IF (modenum > 0) THEN
     search_sym = .FALSE.
     minus_q = .FALSE.
   ENDIF
   !
-  ! allocate and calculate rtau, the Bravais lattice vector associated
-  ! to a rotation
+  ! Allocate and calculate rtau, the Bravais lattice vector associated to a rotation
   !
-  ALLOCATE (rtau(3, 48, nat))
-  ALLOCATE (npert(3 * nat))
+  ALLOCATE(rtau(3, 48, nat), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating rtau', 1)
+  ALLOCATE(npert(3 * nat), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating npert', 1)
   CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
   !
   !    and calculate the vectors G associated to the symmetry Sq = q + G
@@ -163,80 +171,39 @@
   !
   search_sym = search_sym .AND. symmorphic_or_nzb()
   !
-  ALLOCATE (num_rap_mode(3 * nat))
+  ALLOCATE(num_rap_mode(3 * nat), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating num_rap_mode', 1)
   num_rap_mode = -1
-  IF (search_sym) CALL prepare_sym_analysis(nsymq, sr, t_rev, magnetic_sym)
+  IF (search_sym) THEN
+    CALL prepare_sym_analysis(nsymq, sr, t_rev, magnetic_sym)
+  ENDIF
   !
-  ALLOCATE (name_rap_mode(3 * nat))
-  ALLOCATE (u(3 * nat, 3 * nat))
+  ALLOCATE(name_rap_mode(3 * nat), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating name_rap_mode', 1)
+  ALLOCATE(u(3 * nat, 3 * nat), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating u', 1)
   u(:, :) = czero
   IF (.NOT. u_from_file) THEN
-  ! SP: These calls set the u
+     ! SP: These calls set the u
      CALL find_irrep()
   ENDIF
   CALL find_irrep_sym()
   ! 
-  DEALLOCATE (num_rap_mode)
-  DEALLOCATE (name_rap_mode)
+  DEALLOCATE(num_rap_mode, STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error deallocating num_rap_mode', 1)
+  DEALLOCATE(name_rap_mode, STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error deallocating name_rap_mode', 1)
   !
   !  8) set max perturbation
   !   
   npertx = 0
-  DO irr=1, nirr
+  DO irr = 1, nirr
     npertx = MAX(npertx, npert(irr))
   ENDDO
   !
-  ALLOCATE (transp_temp(nstemp))
+  ALLOCATE(transp_temp(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating transp_temp', 1)
   ! 
-  transp_temp(:) = zero
-  ! In case of scattering calculation
-  IF (scattering) THEN
-    ! 
-    IF (MAXVAL(temps(:)) > zero ) THEN
-      transp_temp(:) = temps(:)
-    ELSE
-      IF (nstemp == 1) THEN
-        transp_temp(1) = tempsmin
-      ELSE
-        DO itemp=1, nstemp
-          transp_temp(itemp) = tempsmin + dble(itemp-1) * &
-                              ( tempsmax - tempsmin ) / dble(nstemp-1)
-        ENDDO
-      ENDIF
-    ENDIF
-  ENDIF
-  ! We have to bcast here because before it has not been allocated
-  CALL mp_bcast(transp_temp, ionode_id, world_comm)    !  
-  ! 
-  CALL stop_clock('epw_setup')
-  RETURN
-  !
-  END SUBROUTINE epw_setup
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE epw_setup_restart
-  !-----------------------------------------------------------------------
-  !!
-  !! Setup in the case of a restart
-  !! 
-  ! ----------------------------------------------------------------------
-  USE constants_epw, ONLY : zero
-  USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : world_comm
-  USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, &
-                            temps
-  USE transportcom,  ONLY : transp_temp
-  !
-  IMPLICIT NONE
-  !
-  INTEGER :: itemp
-  !! Counter on temperature
-  ! 
-  CALL start_clock ('epw_setup')
-  !
-  ALLOCATE (transp_temp(nstemp))
-  !
   transp_temp(:) = zero
   ! In case of scattering calculation
   IF (scattering) THEN
@@ -247,18 +214,68 @@
       IF (nstemp == 1) THEN
         transp_temp(1) = tempsmin
       ELSE
-        DO itemp=1, nstemp
-          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * &
-                              (tempsmax - tempsmin) / DBLE(nstemp - 1)
+        DO itemp = 1, nstemp
+          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
+        ENDDO
+      ENDIF
+    ENDIF
+  ENDIF
+  ! We have to bcast here because before it has not been allocated
+  CALL mp_bcast(transp_temp, ionode_id, world_comm)  
+  ! 
+  CALL stop_clock('epw_setup')
+  RETURN
+  !
+  !-----------------------------------------------------------------------
+  END SUBROUTINE epw_setup
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE epw_setup_restart()
+  !-----------------------------------------------------------------------
+  !!
+  !! Setup in the case of a restart
+  !! 
+  ! ----------------------------------------------------------------------
+  USE constants_epw, ONLY : zero
+  USE io_global,     ONLY : ionode_id
+  USE mp_global,     ONLY : world_comm
+  USE mp,            ONLY : mp_bcast
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps
+  USE elph2,         ONLY : transp_temp
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: itemp
+  !! Counter on temperature
+  INTEGER :: ierr
+  !! Error status
+  ! 
+  CALL start_clock('epw_setup')
+  !
+  ALLOCATE(transp_temp(nstemp), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_setup_restart', 'Error allocating transp_temp', 1)
+  !
+  transp_temp(:) = zero
+  ! In case of scattering calculation
+  IF (scattering) THEN
+    IF (MAXVAL(temps(:)) > zero) THEN
+      transp_temp(:) = temps(:)
+    ELSE
+      IF (nstemp == 1) THEN
+        transp_temp(1) = tempsmin
+      ELSE
+        DO itemp = 1, nstemp
+          transp_temp(itemp) = tempsmin + DBLE(itemp - 1) * (tempsmax - tempsmin) / DBLE(nstemp - 1)
         ENDDO
       ENDIF
     ENDIF
   ENDIF
   ! 
   ! We have to bcast here because before it has not been allocated
-  CALL mp_bcast (transp_temp, ionode_id, world_comm)    !  
+  CALL mp_bcast(transp_temp, ionode_id, world_comm)
   ! 
-  CALL stop_clock ('epw_setup')
+  CALL stop_clock('epw_setup')
   !
   RETURN
   !-----------------------------------------------------------------------

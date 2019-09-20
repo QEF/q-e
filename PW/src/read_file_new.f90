@@ -13,8 +13,7 @@ SUBROUTINE read_file()
   ! Wrapper routine for backwards compatibility
   !
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, postfix, &
-       tmp_dir, wfc_dir
+  USE io_files,             ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer
   USE wvfct,                ONLY : nbnd, npwx
   USE noncollin_module,     ONLY : npol
@@ -36,7 +35,7 @@ SUBROUTINE read_file()
   !
   ! ... Read the contents of the xml data file
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  dirname = restart_dir( )
   WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
@@ -96,7 +95,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE gvecw,           ONLY : ecutwfc
   USE fft_base,        ONLY : dfftp, dffts
   USE io_global,       ONLY : stdout, ionode, ionode_id
-  USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur
+  USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur, &
+                              restart_dir, xmlfile
   USE mp_global,       ONLY : nproc_file, nproc_pool_file, &
                               nproc_image_file, ntask_groups_file, &
                               nproc_bgrp_file, nproc_ortho_file
@@ -114,7 +114,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
        edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
        relaxz, block, block_1, block_2, block_height
-  USE io_files,        ONLY : tmp_dir, prefix, postfix
   USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                               sname, inverse_s, s_axis_to_cart, &
                               time_reversal, no_t_rev, nosym, checkallsym
@@ -143,10 +142,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE uspp,            ONLY : okvan
   USE paw_variables,   ONLY : okpaw
   !
-  USE pw_restart_new,  ONLY : pw_read_schema
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
+  USE qexsd_module,    ONLY : qexsd_readschema
   USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
        qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
@@ -165,26 +164,29 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
   LOGICAL  :: magnetic_sym, lvalid_input, lfixed
   CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
+  CHARACTER(LEN=320):: filename
   REAL(dp) :: exx_fraction, screening_parameter
-  TYPE (output_type)      :: output_obj 
+  TYPE (output_type)        :: output_obj 
   TYPE (parallel_info_type) :: parinfo_obj
   TYPE (general_info_type ) :: geninfo_obj
   TYPE (input_type)         :: input_obj
   !
   !
+  filename = xmlfile ( )
+  !
 #if defined(__BEOWULF)
    IF (ionode) THEN
-      CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
+      ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
    END IF
    CALL mp_bcast(ierr,intra_image_comm)
-   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', abs(ierr) ) 
+   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
    CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
    CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
    CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
    CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
 #else
-  CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
-  IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', abs(ierr) ) 
+   ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
+   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
 #endif
   !
   ! ... Now read all needed variables from xml objects
@@ -196,7 +198,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        nproc_pool_file, nproc_image_file, ntask_groups_file, &
        nproc_bgrp_file, nproc_ortho_file)
   !
-  pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  pseudo_dir_cur = restart_dir ( )
   CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
        nsp, atm, amass, angle1, angle2, starting_magnetization, &
        psfile, pseudo_dir ) 

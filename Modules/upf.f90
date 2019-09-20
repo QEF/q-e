@@ -38,10 +38,10 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    !! @Note last revision: 11-05-2018 PG - removed xml_only
    !
    USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
-   USE read_upf_v1_module,ONLY: read_upf_v1
-   USE read_upf_v2_module,ONLY: read_upf_v2
-   USE read_upf_schema_module ,ONLY: read_upf_schema
-   USE FoX_DOM,      ONLY: Node, domException, parseFile, getFirstChild, &
+   USE read_upf_v1_module, ONLY: read_upf_v1
+   USE read_upf_v2_module, ONLY: read_upf_v2
+   USE read_upf_schema_module, ONLY: read_upf_schema
+   USE FoX_dom, ONLY: Node, domException, parseFile, getFirstChild, &
         getExceptionCode, getTagName    
    IMPLICIT NONE
    INTEGER,INTENT(IN), OPTIONAL            :: unit

@@ -114,6 +114,10 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   igcx = get_igcx()
   igcc = get_igcc()
   !
+  ex = 0.0_DP ;  v1x = 0.0_DP ;  v2x = 0.0_DP
+  ec = 0.0_DP ;  v1c = 0.0_DP ;  v2c = 0.0_DP
+  IF ( PRESENT(v2c_ud) ) v2c_ud = 0.0_DP
+  !
 #if defined(__LIBXC)
   !
   POLARIZED = .FALSE.

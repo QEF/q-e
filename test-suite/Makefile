@@ -164,7 +164,8 @@ clean:
                 epw_*/*.imag_aniso* epw_*/*.imag_iso* epw_*/*.pade_* epw_*/*qdos_* \
                 epw_*/epsilon2_indabs.dat epw_*/epsilon2_indabs_lorenz.dat \
                 epw_mob_ibte_sym/save epw_*/*.bvec epw_*/*.fc epw_*/*.xml epw_*/*.labelinfo.dat \
-                epw_mob_ibte/save epw_mob/save
+                epw_mob_ibte/save epw_mob/save epw_*/Fepmatkq1 epw_*/Fepmatkqcb1 epw_*/Fsparse \
+                epw_*/Fsparsecb epw_*/inv_taucb_tmp epw_*/inv_tau_tmp epw_mob_polar/save
                 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save epw_pl/save/ epw_polar/save/ \

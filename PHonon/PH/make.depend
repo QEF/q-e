@@ -149,7 +149,6 @@ bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
 bcast_ph_input.o : ../../Modules/mp_world.o
 bcast_ph_input.o : ../../Modules/run_info.o
-bcast_ph_input.o : ../../PW/src/start_k.o
 bcast_ph_input.o : ../../UtilXlib/mp.o
 bcast_ph_input.o : dfile_star.o
 bcast_ph_input.o : elph.o
@@ -298,10 +297,15 @@ d2ionq.o : ../../Modules/kind.o
 d2ionq.o : ../../Modules/mp_bands.o
 d2ionq.o : ../../PW/src/Coul_cut_2D.o
 d2ionq.o : ../../UtilXlib/mp.o
-d2ionq_mm.o : ../../Modules/constants.o
-d2ionq_mm.o : ../../Modules/mm_dispersion.o
-d2ionq_mm.o : ../../Modules/mp_images.o
-d2ionq_mm.o : ../../UtilXlib/mp.o
+d2ionq_disp.o : ../../Modules/constants.o
+d2ionq_disp.o : ../../Modules/control_flags.o
+d2ionq_disp.o : ../../Modules/io_files.o
+d2ionq_disp.o : ../../Modules/io_global.o
+d2ionq_disp.o : ../../Modules/kind.o
+d2ionq_disp.o : ../../Modules/mm_dispersion.o
+d2ionq_disp.o : ../../Modules/mp_images.o
+d2ionq_disp.o : ../../UtilXlib/mp.o
+d2ionq_disp.o : save_ph_input.o
 d2mxc.o : ../../Modules/kind.o
 d2nsq_bare.o : ../../LR_Modules/lrcom.o
 d2nsq_bare.o : ../../Modules/io_global.o
@@ -1035,7 +1039,6 @@ openfilq.o : ../../Modules/uspp.o
 openfilq.o : ../../PW/src/buffers.o
 openfilq.o : ../../PW/src/ldaU.o
 openfilq.o : ../../PW/src/pwcom.o
-openfilq.o : ../../PW/src/start_k.o
 openfilq.o : acfdtest.o
 openfilq.o : dfile_autoname.o
 openfilq.o : dfile_star.o

@@ -310,6 +310,13 @@ MODULE funct
   !          J. Chem. Phys. 131, 044108 (2009) ]
   ! These two modifications accounts only for a 1e-5 Ha difference for a
   ! single He atom. Info by Fabien Bruneval.
+  !
+  ! NOTE FOR LIBXC USERS: to use libxc functionals you must enforce them from input (use
+  ! 'input_dft' in &system) and write their names in the input string. The order is not
+  ! relevant, neither the separation between one name and the other. The 'XC_' prefix
+  ! is not necessary.
+  ! You can use combinations of qe and libxc functionals, when they are compatible.
+  !
   ! ------------------------------------------------------------------------
   !
   INTEGER, PARAMETER :: notset = -1
@@ -388,15 +395,12 @@ CONTAINS
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
     INTEGER :: len, l, i
-    CHARACTER(len=50):: dftout
+    CHARACTER(len=150):: dftout
     LOGICAL :: dft_defined = .FALSE.
+    LOGICAL :: check_libxc
     CHARACTER(LEN=1), EXTERNAL :: capital
     INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
                 save_metac, save_inlc
-#if defined(__LIBXC)
-    INTEGER :: fkind
-    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
-#endif
     !
     ! Exit if set to discard further input dft
     !
@@ -422,7 +426,7 @@ CONTAINS
     ENDDO
     !
     ! ----------------------------------------------
-    ! FIRST WE CHECK ALL THE SHORT NAMES
+    ! NOW WE CHECK ALL THE SHORT NAMES
     ! Note: comparison is done via exact matching
     ! ----------------------------------------------
     !
@@ -621,29 +625,55 @@ CONTAINS
               dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
               &//gradc (igcc) //'-'// nonlocc(inlc)
        ENDIF
+       !
+       ! ----------------------------------------------------------------------
+       ! CHECK LIBXC FUNCTIONALS BY INDEX NOTATION, IF PRESENT (USED in PHonon)
+       ! ----------------------------------------------------------------------
+       !
+       IF (dftout(1:3) .EQ. 'XC-') THEN
+#if defined(__LIBXC)
+          is_libxc = .FALSE.
+          !
+          READ( dftout(4:6),   * ) iexch
+          READ( dftout(8:10),  * ) icorr
+          READ( dftout(12:14), * ) igcx
+          READ( dftout(16:18), * ) igcc
+          imeta  = 0
+          imetac = 0 
+          inlc   = 0
+          !
+          IF (iexch /= 0) is_libxc(1) = .TRUE.
+          IF (icorr /= 0) is_libxc(2) = .TRUE.
+          IF (igcx  /= 0) is_libxc(3) = .TRUE.
+          IF (igcc  /= 0) is_libxc(4) = .TRUE.
+          !
+          dft_defined = .TRUE.
+#else
+          CALL errore( 'set_dft_from_name', 'libxc functionals needed, but &
+                                            &libxc is not active', 1 )
+#endif
+       ENDIF
+       !
     END SELECT
     !
     !
-    ! ... A temporary fix in order to keep the q-e input notation for SCAN-functionls
+    ! ... A temporary fix to keep the q-e input notation for SCAN-functionals
     !     valid.
-    IF (imeta==5 .OR. imeta==6) THEN
 #if defined(__LIBXC)
+    IF (imeta==5 .OR. imeta==6) THEN
        IF (imeta==6) scan_exx = .TRUE.
        imeta  = 263 
        imetac = 267
        is_libxc(5:6) = .TRUE.
-#else
-       CALL errore( 'set_dft_from_name', 'libxc needed for this functional', 2 )
-#endif
     ELSEIF (imeta==3) THEN
-#if defined(__LIBXC)
        imeta  = 208
        imetac = 231
        is_libxc(5:6) = .TRUE.
-#else
-       CALL errore( 'set_dft_from_name', 'libxc needed for this functional', 2 )
-#endif
     ENDIF
+#else
+    IF (imeta==3 .OR. imeta==5 .OR. imeta==6) &
+          CALL errore( 'set_dft_from_name', 'libxc needed for this functional', 2 )
+#endif
     !
     !----------------------------------------------------------------
     ! If the DFT was not yet defined, check every part of the string
@@ -651,60 +681,18 @@ CONTAINS
     !
     IF (.NOT. dft_defined) THEN
        !
-       iexch = matching( 1, dftout, nxc,   exc,     is_libxc(1) )
-       icorr = matching( 2, dftout, ncc,   corr,    is_libxc(2) )
-       igcx  = matching( 3, dftout, ngcx,  gradx,   is_libxc(3) )
-       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )
-       imeta = matching( 5, dftout, nmeta, meta,    is_libxc(5) )
-       IF ( is_libxc(5) ) THEN
-         imetac = matching( 6, dftout, nmeta, meta, is_libxc(6) )
-       ELSE
-         imetac = 0
-       ENDIF
-       inlc  = matching( 7, dftout, ncnl,  nonlocc, is_libxc(7) )
+       is_libxc(:) = .FALSE.
+       !
+       iexch = matching( dftout, nxc,   exc   )
+       icorr = matching( dftout, ncc,   corr  )
+       igcx  = matching( dftout, ngcx,  gradx )
+       igcc  = matching( dftout, ngcc,  gradc )
+       imeta = matching( dftout, nmeta, meta  )
+       imetac = 0
+       inlc  = matching( dftout, ncnl, nonlocc )
        !
 #if defined(__LIBXC)
-       fkind = -100
-       IF (is_libxc(1)) THEN
-         CALL xc_f90_func_init( xc_func, xc_info, iexch, 1 )
-         fkind = xc_f90_info_kind( xc_info )
-         CALL xc_f90_func_end( xc_func )
-       ENDIF
-       !
-       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
-          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
-                       &been found together with a correlation one', 2 )
-       !
-       fkind = -100
-       IF (is_libxc(3)) THEN
-         CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )
-         fkind = xc_f90_info_kind( xc_info )
-         CALL xc_f90_func_end( xc_func )
-       ENDIF
-       IF (igcc/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
-          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
-                       &been found together with a correlation one', 3 )
-       !
-       IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) THEN
-          CALL errore( 'set_dft_from_name', 'An LDA functional has been found, but &
-                       &libxc GGA functionals already include the LDA part)', 4 )
-       ENDIF
-       !
-       ! ... at the moment, for q-e functionals, imeta defines both exchange and 
-       !     correlation part.
-       IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0) &
-          CALL errore( 'set_dft_from_name', 'Two conflicting metaGGA functionals &
-                       &have been found', 5 )
-       !
-       fkind = -100
-       IF (is_libxc(5)) THEN
-         CALL xc_f90_func_init( xc_func, xc_info, imeta, 1 )
-         fkind = xc_f90_info_kind( xc_info )
-         CALL xc_f90_func_end( xc_func )
-       ENDIF
-       IF (imetac/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
-          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
-                       &been found together with a correlation one', 6 )
+       CALL matching_libxc( dftout )
 #endif
        !
     ENDIF
@@ -769,92 +757,41 @@ CONTAINS
     ENDIF
     IF (save_inlc /= notset  .AND. save_inlc /= inlc)   THEN
        WRITE (stdout,*) inlc, save_inlc
-       CALL errore( 'set_dft_from_name', ' conflicting values for inlc',  1 )
+       CALL errore( 'set_dft_from_name', ' conflicting values for inlc', 1 )
     ENDIF
     !
     RETURN
     !
   END SUBROUTINE set_dft_from_name
   !
-  !
   !-----------------------------------------------------------------
-  FUNCTION matching( fslot, dft, n, name, its_libxc )
-    !------------------------------------------------------------
+  INTEGER FUNCTION matching( dft, n, name )
+    !-----------------------------------------------------------------
+    !! Looks for matches between the names of each single term of the 
+    !! xc-functional and the input dft string.
     !
     IMPLICIT NONE
     !
-    INTEGER :: matching
-    INTEGER, INTENT(IN) :: fslot
     INTEGER, INTENT(IN):: n
-    LOGICAL, INTENT(OUT) :: its_libxc
     CHARACTER(LEN=*), INTENT(IN):: name(0:n)
     CHARACTER(LEN=*), INTENT(IN):: dft
+    INTEGER :: i
     LOGICAL, EXTERNAL :: matches
-    INTEGER :: i, k, ii, j, length
-    INTEGER :: family, fkind
-#if defined(__LIBXC)
-    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
-#endif
     !
-    its_libxc = .FALSE.
     matching = notset
     !
-    length = LEN( dft )
-    !
-    ii = 0
-    !
-    DO i = 1, length
-       ii = ii+1
-       IF (ii == length-1) EXIT
-       !
-       IF ( ii==1 .OR. (ii>1 .AND. dft(MAX(ii-1,1):MAX(ii-1,1)).EQ.' ') ) THEN
-         DO j = 1, length-ii
-            IF (dft(ii+j:ii+j) .EQ. ' ') EXIT
-         ENDDO
-       ENDIF
-       !
-       IF (dft(ii:ii+2) .EQ. 'XC_') THEN
+    DO i = n, 0, -1
+       IF ( matches(name(i), TRIM(dft)) ) THEN
           !
-#if defined(__LIBXC)
-          matching = xc_f90_functional_get_number( dft(ii:ii+j-1) )
-          IF (matching == -1) CALL errore( 'matching', 'Unrecognized libxc functional', 1 )
-          !
-          CALL xc_f90_func_init( xc_func, xc_info, matching, 1 )
-          family = xc_f90_info_family( xc_info )
-          fkind  = xc_f90_info_kind( xc_info )
-          CALL xc_f90_func_end( xc_func )
-          !
-          IF ( slot_match_libxc( fslot, family, fkind ) ) THEN
-             its_libxc = .TRUE.
-             RETURN
+          IF ( matching == notset ) THEN
+           !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
+           matching = i
           ELSE
-             matching = notset
+             WRITE(*, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
+                                  matching, TRIM(name(matching))
+             CALL errore( 'set_dft', 'two conflicting matching values', 1 )
           ENDIF
-#else
-          CALL errore( 'matching', 'A libxc functional has been found, &
-                                   &but libxc library is not active', 2 )
-#endif
-          !
-       ELSE
-          !
-          DO k = n, 0, -1
-             IF ( matches(name(k), dft(ii:ii+j-1)) ) THEN
-                IF ( matching == notset ) THEN
-                   ! write(*, '("matches",i2,2X,A,2X,A)') k, name(k), trim(dft)
-                   matching = k
-                ELSE
-                   WRITE(*, '(2(2X,i2,2X,A))') k, TRIM(name(k)), &
-                                               matching, TRIM(name(matching))
-                   CALL errore( 'set_dft', 'two conflicting matching values', 3 )
-                ENDIF
-             ENDIF
-          ENDDO
-          IF (matching /= notset) RETURN
-          !
        ENDIF
-       !
-       ii = ii+j
-       !
     ENDDO
     !
     IF (matching == notset) matching = 0
@@ -862,46 +799,191 @@ CONTAINS
   END FUNCTION matching
   !
   !
-  !----------------------------------------------------------------------------
-  FUNCTION slot_match_libxc( fslot, family, fkind )
-    !-------------------------------------------------------------------------
+#if defined(__LIBXC)
+  !--------------------------------------------------------------------------------
+  SUBROUTINE matching_libxc( dft )
+    !------------------------------------------------------------------------------
+    !! It spans the libxc functionals and looks for matches with the input dft
+    !! string. Then stores the corresponding indices.  
+    !! It also makes some compatibility checks.
     !
     IMPLICIT NONE
-    ! 
-    LOGICAL :: slot_match_libxc
-    INTEGER, INTENT(IN) :: fslot, family, fkind
     !
-#if defined(__LIBXC)
-    slot_match_libxc=.TRUE.
+    CHARACTER(LEN=*), INTENT(IN) :: dft
     !
-    SELECT CASE( fslot )
-    CASE( 1 )
-       IF (family==XC_FAMILY_LDA      .AND. fkind==XC_EXCHANGE)             RETURN
-       IF (family==XC_FAMILY_LDA      .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-    CASE( 2 )
-       IF (family==XC_FAMILY_LDA      .AND. fkind==XC_CORRELATION)          RETURN
-    CASE( 3 )
-       IF (family==XC_FAMILY_GGA      .AND. fkind==XC_EXCHANGE)             RETURN
-       IF (family==XC_FAMILY_GGA      .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-       IF (family==XC_FAMILY_HYB_GGA  .AND. fkind==XC_EXCHANGE)             RETURN
-       IF (family==XC_FAMILY_HYB_GGA  .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-    CASE( 4 )
-       IF (family==XC_FAMILY_GGA      .AND. fkind==XC_CORRELATION)          RETURN
-    CASE( 5 )
-       IF (family==XC_FAMILY_MGGA     .AND. fkind==XC_EXCHANGE)             RETURN
-       IF (family==XC_FAMILY_MGGA     .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-       IF (family==XC_FAMILY_HYB_MGGA .AND. fkind==XC_EXCHANGE)             RETURN
-       IF (family==XC_FAMILY_HYB_MGGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-    CASE( 6 )
-       IF (family==XC_FAMILY_MGGA     .AND. fkind==XC_CORRELATION)          RETURN
-    END SELECT
+    CHARACTER(LEN=256) :: name
+    INTEGER :: i, l, fkind, fkind_v(3), family
+    INTEGER, PARAMETER :: ID_MAX_LIBXC=600
+    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+    LOGICAL, EXTERNAL :: matches
+    CHARACTER(LEN=1), EXTERNAL :: capital
+    !
+    DO i = 1, ID_MAX_LIBXC
+       !
+       CALL xc_f90_functional_get_name( i, name )
+       !
+       DO l = 1, LEN_TRIM(name)
+          name(l:l) = capital( name(l:l) )
+       ENDDO
+       !
+       IF ( TRIM(name) .EQ. 'UNKNOWN' ) CYCLE
+       !
+       IF ( matches(TRIM(name), TRIM(dft)) ) THEN
+          !
+          !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
+          !
+          fkind=-100 ; family=-100
+          CALL xc_f90_func_init( xc_func, xc_info, i, 1 )
+          fkind = xc_f90_info_kind( xc_info )
+          family = xc_f90_info_family( xc_info )
+          CALL xc_f90_func_end( xc_func )
+          !   
+          SELECT CASE( family )
+          CASE( XC_FAMILY_LDA )
+             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+                iexch = i
+                is_libxc(1) = .TRUE.
+             ELSEIF (fkind==XC_CORRELATION) THEN
+                icorr = i
+                is_libxc(2) = .TRUE.
+             ENDIF
+             fkind_v(1) = fkind
+             !   
+          CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
+             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+                igcx = i
+                is_libxc(3) = .TRUE.
+             ELSEIF (fkind==XC_CORRELATION) THEN
+                igcc = i
+                is_libxc(4) = .TRUE.
+             ENDIF
+             fkind_v(2) = fkind
+             !
+          CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
+             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+                imeta = i
+                is_libxc(5) = .TRUE.
+             ELSEIF (fkind==XC_CORRELATION) THEN
+                imetac = i
+                is_libxc(6) = .TRUE.
+             ENDIF
+             fkind_v(3) = fkind
+             !
+          END SELECT
+          !
+       ENDIF
+       !
+    ENDDO
+    !
+    ! ... overlaps check (between qe and libxc)
+    !
+    IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc( dft )
+    !
+    ! ... some compatibility checks
+    !   
+    IF (icorr/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &   
+       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
+                    &been found together with a correlation one', 2 )   
+    !     
+    IF (igcc/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)  &   
+       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
+                    &been found together with a correlation one', 3 )   
+    !   
+    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) THEN   
+       CALL errore( 'matching_libxc', 'An LDA functional has been found, but &   
+                    &libxc GGA functionals already include the LDA part', 4 )   
+    ENDIF   
+    !   
+    ! ... for q-e functionals imeta defines both exchange and    
+    !     correlation part.   
+    IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0) &   
+       CALL errore( 'matching_libxc', 'Two conflicting metaGGA functionals &   
+                    &have been found', 5 )   
+    !   
+    IF (imetac/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
+       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
+                    &been found together with a correlation one', 6 )   
+    !   
+  END SUBROUTINE matching_libxc
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE check_overlaps_qe_libxc( dft )
+    !------------------------------------------------------------------------
+    !! It fixes eventual overlap issues between qe and libxc names when qe and
+    !! libxc functionals are used together.
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: dft
+    !
+    CHARACTER(LEN=4) :: qe_name
+    CHARACTER(LEN=256) :: lxc_name
+    INTEGER :: i, l, ch, qedft, nlxc
+    INTEGER :: id_vec(6)
+    LOGICAL, EXTERNAL :: matches
+    CHARACTER(LEN=1), EXTERNAL :: capital
+    !
+    id_vec(1)=iexch ; id_vec(2)=icorr
+    id_vec(3)=igcx  ; id_vec(4)=igcc
+    id_vec(5)=imeta ; id_vec(6)=imetac
+    !
+    DO ch = 1, 5
+       IF (.NOT.is_libxc(ch)) THEN
+          !
+          SELECT CASE( ch )
+          CASE( 1 )
+             qe_name = exc(iexch)
+          CASE( 2 )
+             qe_name = corr(icorr)
+          CASE( 3 )
+             qe_name = gradx(igcx)
+          CASE( 4 )
+             qe_name = gradc(igcc)
+          CASE( 5 )
+             qe_name = meta(imeta)
+          END SELECT
+          !
+          qedft = 0
+          i = 0
+          DO WHILE ( i < LEN_TRIM(dft) )
+            i = i + 1
+            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+               qedft = qedft + 1
+               i = i + LEN_TRIM(qe_name)-1
+            ENDIF
+          ENDDO
+          !
+          nlxc = 0
+          DO i = 1, 6
+            IF (is_libxc(i)) THEN
+              CALL xc_f90_functional_get_name( id_vec(i), lxc_name )
+              DO l = 1, LEN_TRIM(lxc_name)
+                 lxc_name(l:l) = capital( lxc_name(l:l) )
+              ENDDO
+              IF (matches( TRIM(qe_name), TRIM(lxc_name))) nlxc = nlxc + 1
+            ENDIF
+          ENDDO
+          !
+          IF (qedft == nlxc) THEN
+             SELECT CASE( ch )
+             CASE( 1 )
+                iexch = 0
+             CASE( 2 )
+                icorr = 0
+             CASE( 3 )
+                igcx  = 0
+             CASE( 4 )
+                igcc  = 0
+             CASE( 5 )
+                imeta = 0
+             END SELECT
+          ENDIF  
+          !
+       ENDIF
+    ENDDO
+    !
+  END SUBROUTINE
 #endif
-    !
-    slot_match_libxc=.FALSE.
-    !
-    RETURN
-    !
-  END FUNCTION
   !
   !
   !-----------------------------------------------------------------------
@@ -1280,8 +1362,8 @@ CONTAINS
   FUNCTION get_dft_short()
     !---------------------------------------------------------------------
     !
-    CHARACTER(LEN=12) :: get_dft_short
-    CHARACTER(LEN=12) :: shortname
+    CHARACTER(LEN=18) :: get_dft_short
+    CHARACTER(LEN=18) :: shortname
     !
     shortname = 'no shortname'
     !
@@ -1394,6 +1476,16 @@ CONTAINS
     ELSEIF (inlc==3) THEN
        shortname = 'RVV10'
     ENDIF
+    !
+#if defined(__LIBXC)
+    IF ( ANY(is_libxc(:)) ) THEN
+       shortname = 'XC-000-000-000-000'
+       WRITE( shortname(4:6),   '(i3.3)' ) iexch
+       WRITE( shortname(8:10),  '(i3.3)' ) icorr
+       WRITE( shortname(12:14), '(i3.3)' ) igcx
+       WRITE( shortname(16:18), '(i3.3)' ) igcc
+    ENDIF
+#endif
     !
     get_dft_short = shortname
     !

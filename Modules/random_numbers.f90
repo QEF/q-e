@@ -204,4 +204,86 @@ MODULE random_numbers
       !
     END FUNCTION gauss_dist_vect
     !
+    !-----------------------------------------------------------------------
+    FUNCTION gamma_dist (ialpha)
+      !-----------------------------------------------------------------------
+      !
+      ! gamma-distributed random number, implemented as described in
+      ! Numerical recipes (Press, Teukolsky, Vetterling, Flannery)
+      !
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: ialpha
+      REAL(DP) gamma_dist
+      INTEGER j
+      REAL(DP) am,e,s,v1,v2,x,y
+      REAL(DP), external :: ran1
+      !
+      IF ( ialpha < 1 ) CALL errore('gamma_dist',  'bad alpha in gamma_dist', 1)
+      !
+      ! For small  alpha, it is more efficient to calculate Gamma as the waiting time
+      ! to the alpha-th event oin a Poisson random process of unit mean.
+      ! Define alpha as small for 0 < alpha < 6:
+      IF ( ialpha < 6 ) THEN
+        !
+        x = 1.0D0
+        DO j=1,ialpha
+          x = x * randy()
+        ENDDO
+        x = -LOG(x)
+      ELSE
+        DO
+          v1 = 2.0D0*randy()-1.0D0
+          v2 = 2.0D0*randy()-1.0D0
+          !
+          ! need to get this condition met:
+          IF ( v1**2+v2**2 > 1.0D0) CYCLE
+          !
+          y = v2 / v1
+          am = ialpha - 1
+          s = sqrt(2.0D0 * am + 1.0D0)
+          x = s * y + am
+          !
+          IF ( x <= 0.) CYCLE
+          !
+          e = (1.0D0+y**2)* exp( am * log( x / am ) - s * y)
+          !
+          IF (randy() > e) THEN
+            CYCLE
+          ELSE
+            EXIT
+          ENDIF
+        ENDDO
+      ENDIF
+    !
+    gamma_dist=x
+    !
+  ENDFUNCTION gamma_dist
+  !
+  !-----------------------------------------------------------------------
+  FUNCTION sum_of_gaussians2(inum_gaussians)
+    !-----------------------------------------------------------------------
+    ! returns the sum of inum independent gaussian noises squared, i.e. the result
+    ! is equivalent to summing the square of the return values of inum calls
+    ! to gauss_dist.
+    !
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: inum_gaussians
+    !
+    REAL(DP) sum_of_gaussians2
+    !
+    IF ( inum_gaussians < 0 ) THEN
+      CALL errore('sum_of_gaussians2',  'negative number of gaussians', 1)
+    ELSEIF ( inum_gaussians == 0 ) THEN
+      sum_of_gaussians2 = 0.0D0
+    ELSEIF ( inum_gaussians == 1 ) THEN
+      sum_of_gaussians2 = gauss_dist( 0.0D0, 1.0D0 )**2
+    ELSEIF( MODULO(inum_gaussians,2) == 0 ) THEN
+      sum_of_gaussians2 = 2.0 * gamma_dist( inum_gaussians/2 )
+    ELSE
+      sum_of_gaussians2 = 2.0 * gamma_dist((inum_gaussians-1)/2) + &
+                gauss_dist( 0.0D0, 1.0D0 )**2
+    ENDIF
+    !
+  ENDFUNCTION sum_of_gaussians2
+  !
 END MODULE random_numbers

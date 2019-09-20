@@ -20,6 +20,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   USE mp_world, ONLY : mpime,nproc,world_comm
   USE mp, ONLY : mp_sum
   USE random_numbers, ONLY : randy
+  USE mp_bands, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   
   !
   IMPLICIT NONE
@@ -146,7 +147,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   write(stdout,*) 'Call rdiaghg'
   FLUSH(stdout)
 
-  CALL rdiaghg( max_state, max_state, hr, sr, max_state, en, hr(1,1,2) )
+  CALL rdiaghg( max_state, max_state, hr, sr, max_state, en, hr(1,1,2), me_bgrp, root_bgrp, intra_bgrp_comm )
   write(stdout,*) 'Done'
   FLUSH(stdout)
 

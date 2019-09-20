@@ -430,17 +430,16 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     INTEGER               :: ix,k               ! counters on directions and radial grid
     INTEGER               :: lsd                ! switch for local spin density
-    REAL(DP)              :: vs   !, zeta, amag, vx(2), vc(2), ex, ec  !^^^
+    REAL(DP)              :: vs, amag
     INTEGER               :: kpol 
     INTEGER               :: mytid, ntids
     !
-    !^^^******************************************   !^^^
-    REAL(DP), ALLOCATABLE :: arho(:,:), zeta(:), amag(:)
+    !^^^
+    REAL(DP), ALLOCATABLE :: arho(:,:)
     REAL(DP), ALLOCATABLE :: ex(:), ec(:)
     REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
     REAL(DP), PARAMETER   :: eps = 1.e-30_dp
-    !
-    !^^^*************************************
+    !^^^
     !
 #if defined(_OPENMP)
     INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
@@ -472,8 +471,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
     !
     ALLOCATE( arho(i%m,2) ) !^^^
-    ALLOCATE( zeta(i%m) )
-    ALLOCATE( amag(i%m) )
     ALLOCATE( ex(i%m) )
     ALLOCATE( ec(i%m) )
     ALLOCATE( vx(i%m,2) )
@@ -515,10 +512,12 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
                   e_rad(k) = e2*(ex(k)+ec(k))*(rho_rad(k,1)+rho_core(k)*g(i%t)%r2(k))
               vs = e2*0.5D0*( vx(k,1) + vc(k,1) - vx(k,2) - vc(k,2) )
               v_rad(k,ix,1) = e2*(0.5D0*( vx(k,1) + vc(k,1) + vx(k,2) + vc(k,2)))
-              IF ( amag(k) > eps12 ) THEN
-                 v_rad(k,ix,2:4) =  vs * rho_loc(k,2:4) / amag(k)
+              amag = SQRT(rho_loc(k,2)**2+rho_loc(k,3)**2+rho_loc(k,4)**2)
+              IF ( amag > eps12 ) THEN
+                 v_rad(k,ix,2:4) =  vs * rho_loc(k,2:4) / amag
               ELSE
                  v_rad(k,ix,2:4)=0.0_DP
+                 IF (present(energy)) e_rad(k)=0.0_DP
               ENDIF
            ENDDO
            !
@@ -584,9 +583,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     DEALLOCATE( rho_rad ) 
     DEALLOCATE( rho_loc ) 
     !
-    DEALLOCATE( arho ) !^^^
-    DEALLOCATE( zeta )
-    DEALLOCATE( amag )
+    DEALLOCATE( arho )
     DEALLOCATE( ex )
     DEALLOCATE( ec )
     DEALLOCATE( vx )
@@ -1693,7 +1690,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : is_libxc
-    USE xc_gga,                 ONLY : gcxc, gcx_spin, gcc_spin
+    USE xc_gga,                 ONLY : xc_gcx
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     REAL(DP), INTENT(IN)    :: rho_lm(i%m,i%l**2,nspin_mag) ! charge density as lm components
@@ -1721,18 +1718,16 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
 
     REAL(DP)                :: div_h(i%m,i%l**2,nspin_gga)  ! div(hamiltonian)
     !
-    !^^^ 
-    REAL(DP), ALLOCATABLE :: r(:,:), rh(:), rho(:), zeta(:), arho(:), grh2(:), sign_v(:)
-    REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:)
-    REAL(DP), ALLOCATABLE :: vrrx(:,:), vsrx(:,:), vssx(:,:), &
-                             vrrc(:,:), vsrc(:,:), vssc(:), vrzc(:,:)
-    REAL(DP), DIMENSION(i%m) :: sx, sc, v2c
-    !^^^
-    REAL(DP) :: dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+    ! 
+    REAL(DP), ALLOCATABLE :: r(:,:), rho(:), arho(:), gradsw(:,:,:), sign_v(:)
+    REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:), v2c_ud(:)
+    REAL(DP), ALLOCATABLE :: dsvxc_rr(:,:,:), dsvxc_sr(:,:,:), dsvxc_ss(:,:,:)
+    
+    REAL(DP), DIMENSION(i%m) :: sx, sc
+    !
+    REAL(DP) :: dsvxc_s(nspin_gga,nspin_gga)
     INTEGER  :: k, ix, is, lm! counters on spin and mesh
     INTEGER  :: js, ls, ks, ipol
-    REAL(DP) :: dsvxc_rr(2,2), dsvxc_sr(2,2), &
-                dsvxc_ss(2,2), dsvxc_s(2,2)
     REAL(DP) :: a(2,2,2), b(2,2,2,2), c(2,2,2)
     REAL(DP) :: s1
     REAL(DP) :: ps(2,2), ps1(3,2,2), ps2(3,2,2,2)
@@ -1740,26 +1735,26 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     !
     IF (TIMING) CALL start_clock( 'PAW_dgcxc_v' )
     !
-    IF ( ANY(is_libxc(3:4)) )  CALL errore( 'PAW_dgcxc_potential', 'libxc derivatives of &
-                                                        &xc potentials for GGA not available yet', 1 )
-    !
     zero    = 0.0_DP
     gc_rad  = 0.0_DP
     h_rad   = 0.0_DP
     vout_lm = 0.0_DP
     !
+    ALLOCATE( r(i%m,nspin_gga) )
     ALLOCATE( v1x(i%m,nspin_gga), v2x(i%m,nspin_gga) )
-    ALLOCATE( v1c(i%m,nspin_gga) )
-    !
-    ALLOCATE( vrrx(i%m,nspin_gga), vsrx(i%m,nspin_gga), vssx(i%m,nspin_gga) )
-    ALLOCATE( vrrc(i%m,nspin_gga), vsrc(i%m,nspin_gga), vssc(i%m) )
+    ALLOCATE( v1c(i%m,nspin_gga), v2c(i%m,nspin_gga) )
+    IF (nspin_gga==2) ALLOCATE( v2c_ud(i%m) )
+    ALLOCATE( dsvxc_rr(i%m,nspin_gga,nspin_gga) )
+    ALLOCATE( dsvxc_sr(i%m,nspin_gga,nspin_gga) )
+    ALLOCATE( dsvxc_ss(i%m,nspin_gga,nspin_gga) )
+    ALLOCATE( gradsw(3,i%m,nspin_gga) )
     !
     !
     IF ( nspin_mag == 1 ) THEN
        !
        !     GGA case - no spin polarization
        !
-       ALLOCATE( arho(i%m), sign_v(i%m) )
+       ALLOCATE( sign_v(i%m) )
        !
        DO ix = ix_s, ix_e
           !
@@ -1773,12 +1768,12 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
           DO k = 1, i%m
              !
              ! ... arho_v is the absolute value of real charge, sgn is its sign
-             arho(k) = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
-             arho(k) = ABS(arho(k))
+             r(k,1) = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
+             r(k,1) = ABS(r(k,1))
              !
              ! ... using grad(rho)**2 here, so its eps has to be eps**2
-             IF ( arho(k)<eps .OR. grad2(k,1)<eps2 ) THEN
-                arho(k) = 0.5_DP
+             IF ( r(k,1)<eps .OR. grad2(k,1)<eps2 ) THEN
+                r(k,1) = 0.5_DP
                 grad2(k,1) = 0.2_DP
                 sign_v(k)  = 0.0_DP
              ENDIF
@@ -1786,9 +1781,14 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
           ENDDO
           !
           !
-          CALL gcxc( i%m, arho, grad2(:,1), sx, sc, v1x, v2x, v1c, v2c )
+          ! swap gradient indexes to match xc_gcx input (temporary)
+          DO k = 1, i%m
+             gradsw(1:3,k,1) = grad(k,1:3,1)
+          ENDDO
           !
-          CALL dgcxc( i%m, arho, grad2(:,1), vrrx, vsrx, vssx, vrrc, vsrc, vssc )
+          CALL dgcxc( i%m, nspin_mag, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
+          !
+          CALL xc_gcx( i%m, nspin_mag, r, gradsw, sx, sc, v1x, v2x, v1c, v2c )
           !
           DO k = 1, i%m
              !
@@ -1796,39 +1796,34 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
                   grad(k,2,1) * dgrad(k,2,1) + &
                   grad(k,3,1) * dgrad(k,3,1)
              !
-             dvxc_rr = vrrx(k,1) + vrrc(k,1)
-             dvxc_sr = vsrx(k,1) + vsrc(k,1)
-             dvxc_ss = vssx(k,1) + vssc(k)
-             dvxc_s  = v2x(k,1)  + v2c(k)
+             dsvxc_s = v2x(k,1) + v2c(k,1)
              !
-             gc_rad(k,ix,1)  = dvxc_rr * drho_rad(k,1) * g(i%t)%rm2(k) &
-                               + dvxc_sr * s1 * sign_v(k)
+             gc_rad(k,ix,1)  = dsvxc_rr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) &
+                               + dsvxc_sr(k,1,1) * s1 * sign_v(k)
              !
-             h_rad(k,:,ix,1) = ( (dvxc_sr * drho_rad(k,1) * g(i%t)%rm2(k) + &
-                                  dvxc_ss*s1) * grad(k,:,1) + &
-                                  dvxc_s*dgrad(k,:,1) ) * g(i%t)%r2(k) * sign_v(k)
+             h_rad(k,:,ix,1) = ( (dsvxc_sr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) + &
+                                  dsvxc_ss(k,1,1)*s1) * grad(k,:,1) + &
+                                  dsvxc_s(1,1)*dgrad(k,:,1) ) * g(i%t)%r2(k) * sign_v(k)
              !
           ENDDO
           !
        ENDDO
        !
-       DEALLOCATE( arho, sign_v )
+       DEALLOCATE( sign_v )
        !
        !
     ELSEIF ( nspin_mag==2 .OR. nspin_mag==4 ) THEN
        !
        !    \sigma-GGA case - spin polarization
        !
-       ALLOCATE( r(i%m,2), grh2(i%m) )
-       ALLOCATE( rh(i%m), zeta(i%m)  )
-       ALLOCATE( vrzc(i%m,2)         )
+       ALLOCATE( r(i%m,2) )
        !
        IF ( nspin_mag==4 ) THEN
           CALL compute_drho_spin_lm( i, rho_lm, drho_lm, rhoout_lm, &
                                      drhoout_lm, segni_rad )
        ELSE
-          rhoout_lm=rho_lm
-          drhoout_lm=drho_lm
+          rhoout_lm  = rho_lm
+          drhoout_lm = drho_lm
        ENDIF
        !
        DO ix = ix_s, ix_e
@@ -1844,50 +1839,27 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
           r(:,1) = rho_rad(:,1)*g(i%t)%rm2(:) + rho_core(:)/DBLE(nspin_gga)
           r(:,2) = rho_rad(:,2)*g(i%t)%rm2(:) + rho_core(:)/DBLE(nspin_gga)
           !
-          CALL gcx_spin( i%m, r, grad2, sx, v1x, v2x )
+          ! swap gradient indexes to match xc_gcx input (temporary)
+          DO k = 1, i%m
+             gradsw(1:3,k,1) = grad(k,1:3,1)
+             gradsw(1:3,k,2) = grad(k,1:3,2)
+          ENDDO
           !
-          CALL dgcxc_spin( i%m, r, grad, vrrx, vsrx, vssx, vrrc, vsrc, vssc, vrzc )
+          CALL dgcxc( i%m, nspin_gga, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
           !
-          !
-          rh = r(:,1) + r(:,2)
-          !
-          WHERE ( rh > eps )
-             zeta = ( r(:,1)-r(:,2) ) / rh
-             grh2 = ( grad(:,1,1) + grad(:,1,2) )**2 + &
-                    ( grad(:,2,1) + grad(:,2,2) )**2 + &
-                    ( grad(:,3,1) + grad(:,3,2) )**2
-          ELSEWHERE
-             zeta = 2.d0 !zeta_trash   ! value out of threshold: results automitically
-             grh2 = 0.d0 !grh2_trash   ! set to zero here (in gcc_spin).
-          END WHERE
-          !
-          CALL gcc_spin( i%m, rh, zeta, grh2, sc, v1c, v2c )
-          !
+          CALL xc_gcx( i%m, nspin_gga, r, gradsw, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
           !
           DO k = 1, i%m
              !
-             IF ( rh(k) > eps ) THEN
-                dsvxc_rr(1,1) = vrrx(k,1) + vrrc(k,1) + vrzc(k,1) *(1.d0-zeta(k)) / rh(k)
-                dsvxc_rr(1,2) = vrrc(k,1) - vrzc(k,1) * (1.d0 + zeta(k)) / rh(k)
-                dsvxc_rr(2,1) = vrrc(k,2) + vrzc(k,2) * (1.d0 - zeta(k)) / rh(k)
-                dsvxc_rr(2,2) = vrrx(k,2) + vrrc(k,2) - vrzc(k,2) *(1.d0+zeta(k)) / rh(k)
-                dsvxc_s(1,1) = v2x(k,1) + v2c(k)
-                dsvxc_s(1,2) = v2c(k)
-                dsvxc_s(2,1) = v2c(k)
-                dsvxc_s(2,2) = v2x(k,2) + v2c(k)
+             IF ( r(k,1)+r(k,2) > eps ) THEN
+                dsvxc_s(1,1) = v2x(k,1) + v2c(k,1)
+                dsvxc_s(1,2) = v2c(k,1)
+                dsvxc_s(2,1) = v2c(k,1)
+                dsvxc_s(2,2) = v2x(k,2) + v2c(k,1)
              ELSE
-                dsvxc_rr = 0._DP
                 dsvxc_s = 0._DP
              ENDIF
              !
-             dsvxc_sr(1,1) = vsrx(k,1) + vsrc(k,1)
-             dsvxc_sr(1,2) = vsrc(k,1)
-             dsvxc_sr(2,1) = vsrc(k,2)
-             dsvxc_sr(2,2) = vsrx(k,2) + vsrc(k,2)
-             dsvxc_ss(1,1) = vssx(k,1) + vssc(k)
-             dsvxc_ss(1,2) = vssc(k)
-             dsvxc_ss(2,1) = vssc(k)
-             dsvxc_ss(2,2) = vssx(k,2) + vssc(k)
              ps(:,:) = (0._DP, 0._DP)
              !
              DO is = 1, nspin_gga
@@ -1902,18 +1874,18 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
                    DO ks = 1, nspin_gga
                       !
                       IF ( is==js .AND. js==ks ) THEN
-                         a(is,js,ks) = dsvxc_sr(is,is)
-                         c(is,js,ks) = dsvxc_sr(is,is)
+                         a(is,js,ks) = dsvxc_sr(k,is,is)
+                         c(is,js,ks) = dsvxc_sr(k,is,is)
                       ELSE
                          IF ( is==1 ) THEN
-                            a(is,js,ks) = dsvxc_sr(1,2)
+                            a(is,js,ks) = dsvxc_sr(k,1,2)
                          ELSE
-                            a(is,js,ks) = dsvxc_sr(2,1)
+                            a(is,js,ks) = dsvxc_sr(k,2,1)
                          ENDIF
                          IF ( js==1 ) THEN
-                            c(is,js,ks) = dsvxc_sr(1,2)
+                            c(is,js,ks) = dsvxc_sr(k,1,2)
                          ELSE
-                            c(is,js,ks) = dsvxc_sr(2,1)
+                            c(is,js,ks) = dsvxc_sr(k,2,1)
                          ENDIF
                       ENDIF
                       !
@@ -1922,12 +1894,12 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
                       DO ls = 1, nspin_gga
                          !
                          IF ( is==js .AND. js==ks .AND. ks==ls ) THEN
-                            b(is,js,ks,ls) = dsvxc_ss(is,is)
+                            b(is,js,ks,ls) = dsvxc_ss(k,is,is)
                          ELSE
                             IF ( is==1 ) THEN
-                               b(is,js,ks,ls) = dsvxc_ss(1,2)
+                               b(is,js,ks,ls) = dsvxc_ss(k,1,2)
                             ELSE
-                               b(is,js,ks,ls) = dsvxc_ss(2,1)
+                               b(is,js,ks,ls) = dsvxc_ss(k,2,1)
                             ENDIF
                          ENDIF
                          !
@@ -1941,7 +1913,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
              DO is = 1, nspin_gga
                 DO js = 1, nspin_gga
                    !
-                   gc_rad(k,ix,is)  = gc_rad(k,ix,is)  + dsvxc_rr(is,js) &
+                   gc_rad(k,ix,is)  = gc_rad(k,ix,is)  + dsvxc_rr(k,is,js) &
                                               * drho_rad(k,js)*g(i%t)%rm2(k)
                    h_rad(k,:,ix,is) = h_rad(k,:,ix,is) + dsvxc_s(is,js)  &
                                               * dgrad(k,:,js)
@@ -1950,10 +1922,10 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
                       !
                       gc_rad(k,ix,is) = gc_rad(k,ix,is)+a(is,js,ks)*ps(js,ks)
                       h_rad(k,:,ix,is) = h_rad(k,:,ix,is) + &
-                            c(is,js,ks) * ps1(:,js,ks)
+                                         c(is,js,ks) * ps1(:,js,ks)
                       DO ls = 1, nspin_gga
                          h_rad(k,:,ix,is) = h_rad(k,:,ix,is) + &
-                                b(is,js,ks,ls) * ps2(:,js,ks,ls)
+                                            b(is,js,ks,ls) * ps2(:,js,ks,ls)
                       ENDDO
                       !
                    ENDDO
@@ -1967,20 +1939,17 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
           !   
        ENDDO ! ix
        !
-       DEALLOCATE( r, grh2  )
-       DEALLOCATE( rh, zeta )
-       DEALLOCATE( vrzc     )
-       !
     ELSE
        !
        CALL errore( 'PAW_gcxc_v', 'unknown spin number', 2 )
        !
     ENDIF 
     !
-    DEALLOCATE( v1x, v2x )
-    DEALLOCATE( v1c      )
-    DEALLOCATE( vrrx, vsrx, vssx )
-    DEALLOCATE( vrrc, vsrc, vssc )
+    DEALLOCATE( r )
+    DEALLOCATE( v1x, v2x, v1c )
+    IF (nspin_gga==2) DEALLOCATE( v2c_ud )
+    DEALLOCATE( dsvxc_rr, dsvxc_sr, dsvxc_ss )
+    DEALLOCATE( gradsw )
     !
     ! convert the first part of the GC correction back to spherical harmonics
     CALL PAW_rad2lm( i, gc_rad, gc_lm, i%l, nspin_gga )

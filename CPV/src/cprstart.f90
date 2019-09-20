@@ -74,7 +74,7 @@ PROGRAM main
   !
   CALL cpr_loop( 1 )
   !
-  CALL unset_mpi_comm_4_solvers ()
+  CALL laxlib_free_ortho_group ()
   CALL stop_run()
   CALL do_stop( .TRUE. )
   !

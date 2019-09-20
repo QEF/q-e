@@ -345,8 +345,6 @@ open_grid.o : ../../Modules/mp_images.o
 open_grid.o : ../../Modules/mp_pools.o
 open_grid.o : ../../Modules/noncol.o
 open_grid.o : ../../Modules/parameters.o
-open_grid.o : ../../Modules/qes_types_module.o
-open_grid.o : ../../Modules/qexsd.o
 open_grid.o : ../../Modules/recvec.o
 open_grid.o : ../../Modules/wavefunctions.o
 open_grid.o : ../../PW/src/buffers.o
@@ -787,8 +785,6 @@ vasp_xml_module.o : ../../Modules/mp_bands.o
 vasp_xml_module.o : ../../Modules/mp_global.o
 vasp_xml_module.o : ../../Modules/noncol.o
 vasp_xml_module.o : ../../Modules/paw_variables.o
-vasp_xml_module.o : ../../Modules/qes_libs_module.o
-vasp_xml_module.o : ../../Modules/qes_types_module.o
 vasp_xml_module.o : ../../Modules/recvec.o
 vasp_xml_module.o : ../../Modules/recvec_subs.o
 vasp_xml_module.o : ../../Modules/uspp.o
@@ -862,10 +858,10 @@ work_function.o : ../../PW/src/scf_mod.o
 work_function.o : ../../UtilXlib/mp.o
 write_hamiltonians.o : ../../Modules/cell_base.o
 write_hamiltonians.o : ../../Modules/constants.o
-write_hamiltonians.o : ../../Modules/input_parameters.o
 write_hamiltonians.o : ../../Modules/io_global.o
 write_hamiltonians.o : ../../Modules/ions_base.o
 write_hamiltonians.o : ../../Modules/kind.o
+write_hamiltonians.o : ../../Modules/run_info.o
 write_hamiltonians.o : ../../Modules/version.o
 write_hamiltonians.o : ../../Modules/wannier_new.o
 write_hamiltonians.o : ../../PW/src/pwcom.o

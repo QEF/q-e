@@ -23,10 +23,10 @@ SUBROUTINE punch( what )
   !
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
-       tmp_dir, prefix, postfix, create_directory
-  USE control_flags,        ONLY : io_level, lscf
+       tmp_dir, prefix, restart_dir, xmlfile, create_directory
+  USE control_flags,        ONLY : io_level, lscf, lxdm
   USE klist,                ONLY : nks
-  USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
+  USE io_files,             ONLY : psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
   USE spin_orb,             ONLY : lforcet
   USE scf,                  ONLY : rho
@@ -39,6 +39,7 @@ SUBROUTINE punch( what )
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions, ONLY : evc
+  USE xdm_module,           ONLY : write_xdmdat
   !
   IMPLICIT NONE
   !
@@ -52,14 +53,14 @@ SUBROUTINE punch( what )
   IF (io_level < 0 ) RETURN
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-      TRIM( prefix ) // postfix
+      TRIM ( restart_dir ( ) )
   iunpun = 4
   !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries
   !
   ! ... create the main restart directory (if needed)
   !
-  CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // postfix )
+  CALL create_directory( restart_dir ( ) )
   !
   ! ... wf_collect keeps track whether wfcs are written in portable format
   !
@@ -84,13 +85,13 @@ SUBROUTINE punch( what )
      !
      IF (ionode) THEN
         !
-        cp_source = TRIM(tmp_dir)//TRIM(prefix)//postfix//xmlpun_schema
+        cp_source = xmlfile ( )
         cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//'.xml'
         cp_status = f_copy(cp_source, cp_dest)
         !
         DO nt = 1, nsp
            cp_source = TRIM(pseudo_dir)//psfile(nt)
-           cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//postfix//psfile(nt)
+           cp_dest   = TRIM(restart_dir ( ) ) //psfile(nt)
            IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
                 cp_status = f_copy(cp_source, cp_dest)
         END DO
@@ -98,16 +99,21 @@ SUBROUTINE punch( what )
         inlc = get_inlc()
         IF ( inlc > 0 ) THEN 
            cp_source = TRIM(kernel_file_name)
-           cp_dest = TRIM(tmp_dir)//TRIM(prefix)//postfix//TRIM(vdw_table_name)
+           cp_dest = TRIM(restart_dir () ) // TRIM(vdw_table_name)
            IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
               cp_status = f_copy(cp_source, cp_dest)
         END IF  
+
+        ! write XDM dispersion data (coefficients and vdw radii) to xdm.dat
+        IF (lxdm) THEN
+           CALL write_xdmdat()
+        ENDIF
      END IF
      !
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
      CALL pw_write_binaries( )
-     !
+
      ! ... if allocated, deallocate variables containing info on ionic steps 
      ! 
      CALL qexsd_reset_steps()

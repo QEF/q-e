@@ -9,18 +9,21 @@
 !
 MODULE basis
   !
-  ! ... The variables needed to describe atomic wavefunctions
+  !! The variables needed to describe the atomic wavefunctions.
   !
-  USE kinds, ONLY : dp
+  USE kinds, ONLY : DP
+  !
   SAVE
   !
-  INTEGER :: &
-       natomwfc            ! number of (starting) atomic wavefunctions
-  COMPLEX(dp), ALLOCATABLE :: &
-       swfcatom(:,:)       ! S * (starting) atomic wavefunctions
-  CHARACTER(len=30) ::    &!
-       starting_wfc,      &! 'random','atomic','file','atomic+random' (default)
-       starting_pot,      &! 'atomic' or 'file'
-       startingconfig      ! 'input' or 'file'
+  INTEGER :: natomwfc
+  !! number of (starting) atomic wavefunctions
+  COMPLEX(DP), ALLOCATABLE :: swfcatom(:,:)
+  !! S * (starting) atomic wavefunctions
+  CHARACTER(len=30) :: starting_wfc
+  !! It can be: 'random', 'atomic', 'file', 'atomic+random' (default)
+  CHARACTER(len=30) :: starting_pot
+  !! It can be 'atomic' or 'file'
+  CHARACTER(len=30) :: startingconfig
+  !! It can be 'input' or 'file'
   !
 END MODULE basis

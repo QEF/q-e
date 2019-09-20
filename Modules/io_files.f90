@@ -22,7 +22,7 @@ MODULE io_files
   !
   SAVE
   PUBLIC :: create_directory, check_tempdir, clean_tempdir, check_file_exist, &
-       delete_if_present, check_writable, restart_dir, check_restartfile
+       delete_if_present, check_writable, restart_dir, xmlfile, check_restartfile
   !
   ! ... directory for all temporary files
   CHARACTER(len=256) :: tmp_dir = './'
@@ -305,56 +305,58 @@ CONTAINS
   END FUNCTION check_writable 
   !-----------------------------------------------------------------------
   !
-  !
   !------------------------------------------------------------------------
-  FUNCTION restart_dir( outdir, runit )
+  FUNCTION restart_dir( runit )
     !------------------------------------------------------------------------
     !
-    ! CP specific
-    CHARACTER(LEN=256)           :: restart_dir
-    CHARACTER(LEN=*), INTENT(IN) :: outdir
-    INTEGER,          INTENT(IN) :: runit
+    CHARACTER(LEN=256)  :: restart_dir
+    INTEGER, INTENT(IN), OPTIONAL :: runit
     !
-    CHARACTER(LEN=256)         :: dirname
-    INTEGER                    :: strlen
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    ! ... main restart directory
+    ! ... main restart directory (contains final / or Windows equivalent)
     !
-    dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save/'
-    !
-    IF ( LEN( outdir ) > 1 ) THEN
-       !
-       strlen = INDEX( outdir, ' ' ) - 1
-       !
-       dirname = outdir(1:strlen) // '/' // dirname
-       !
+    IF ( PRESENT (runit) ) THEN
+       restart_dir = TRIM(tmp_dir) // TRIM(prefix) // '_' // &
+               TRIM(int_to_char(runit)) // postfix
+    ELSE
+       restart_dir = TRIM(tmp_dir) // TRIM(prefix) // postfix
     END IF
-    !
-    restart_dir = TRIM( dirname )
     !
     RETURN
     !
-    END FUNCTION restart_dir
+  END FUNCTION restart_dir
+  !
+  !------------------------------------------------------------------------
+  FUNCTION xmlfile ( runit )
+    !------------------------------------------------------------------------
+    !
+    CHARACTER(LEN=320)  :: xmlfile
+    INTEGER, INTENT(IN), OPTIONAL :: runit
+    !
+    ! ... xml file in main restart directory 
+    !
+    xmlfile = TRIM( restart_dir(runit) ) // xmlpun_schema
+    !
+    RETURN
+    !
+    END FUNCTION xmlfile
     !
     !------------------------------------------------------------------------
-    FUNCTION check_restartfile( outdir, ndr )
+    FUNCTION check_restartfile( ndr )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
       LOGICAL                      :: check_restartfile
-      INTEGER,          INTENT(IN) :: ndr
-      CHARACTER(LEN=*), INTENT(IN) :: outdir
-      CHARACTER(LEN=256)           :: filename
+      INTEGER, INTENT(IN), OPTIONAL:: ndr
+      CHARACTER(LEN=320)           :: filename
       LOGICAL                      :: lval
       !
       !
-      filename = restart_dir( outdir, ndr )
+      filename = xmlfile( ndr )
       !
       IF ( ionode ) THEN
-         !
-         filename = TRIM( filename ) // '/' // TRIM( xmlpun_schema )
          !
          INQUIRE( FILE = TRIM( filename ), EXIST = lval )
          !

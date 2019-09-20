@@ -7,16 +7,14 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
+SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
   !
   ! ... LAPACK version - uses both DSYGV and DSYGVX
   !
-  USE la_param,          ONLY : DP
-  USE mp,                ONLY : mp_bcast
-  USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  USE la_param
   !
   IMPLICIT NONE
   !
@@ -32,6 +30,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
     ! eigenvalues
   REAL(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
+  INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
   !
   INTEGER               :: lwork, nb, mm, info, i, j
     ! mm = number of calculated eigenvectors
@@ -141,11 +140,11 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      DEALLOCATE( work )
      !
      IF ( info > n ) THEN
-        CALL errore( 'rdiaghg', 'S matrix not positive definite', ABS( info ) )
+        CALL lax_error__( 'rdiaghg', 'S matrix not positive definite', ABS( info ) )
      ELSE IF ( info > 0 ) THEN
-        CALL errore( 'rdiaghg', 'eigenvectors failed to converge', ABS( info ) )
+        CALL lax_error__( 'rdiaghg', 'eigenvectors failed to converge', ABS( info ) )
      ELSE IF ( info < 0 ) THEN
-        CALL errore( 'rdiaghg', 'incorrect call to DSYGV*', ABS( info ) )
+        CALL lax_error__( 'rdiaghg', 'incorrect call to DSYGV*', ABS( info ) )
      END IF
      
      ! ... restore input S matrix from saved diagonal and lower triangle
@@ -168,8 +167,14 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
-  CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )
+#if defined __MPI
+  CALL MPI_BCAST( e, SIZE(e), MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'rdiaghg', 'error broadcasting array e', ABS( info ))
+  CALL MPI_BCAST( v, SIZE(v), MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'rdiaghg', 'error broadcasting array v', ABS( info ))
+#endif
   !
   CALL stop_clock( 'rdiaghg' )
   !
@@ -187,8 +192,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version with full data distribution
   !
-  USE la_param,          ONLY : DP
-  USE mp,                ONLY : mp_bcast
+  USE la_param
   USE descriptors,       ONLY : la_descriptor
   USE mp_diag,           ONLY : ortho_parent_comm
 #if defined __SCALAPACK
@@ -213,14 +217,14 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   TYPE(la_descriptor), INTENT(IN) :: desc
   !
   INTEGER, PARAMETER    :: root = 0
-  INTEGER               :: nx
+  INTEGER               :: nx, info
     ! local block size
   REAL(DP), PARAMETER   :: one = 1_DP
   REAL(DP), PARAMETER   :: zero = 0_DP
   REAL(DP), ALLOCATABLE :: hh(:,:)
   REAL(DP), ALLOCATABLE :: ss(:,:)
 #if defined(__SCALAPACK)
-  INTEGER     :: desch( 16 ), info
+  INTEGER     :: desch( 16 )
 #endif
   INTEGER               :: i
   !
@@ -231,7 +235,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      nx   = desc%nrcx
      !
      IF( nx /= ldh ) &
-        CALL errore(" prdiaghg ", " inconsistent leading dimension ", ldh )
+        CALL lax_error__(" prdiaghg ", " inconsistent leading dimension ", ldh )
      !
      ALLOCATE( hh( nx, nx ) )
      ALLOCATE( ss( nx, nx ) )
@@ -254,12 +258,12 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
 #if defined(__SCALAPACK)
      CALL descinit( desch, n, n, desc%nrcx, desc%nrcx, 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
   
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' descinit ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' descinit ', ABS( info ) )
 #endif
      !
 #if defined(__SCALAPACK)
      CALL PDPOTRF( 'L', n, ss, 1, 1, desch, info )
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' problems computing cholesky ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
      CALL qe_pdpotrf( ss, nx, n, desc )
 #endif
@@ -280,7 +284,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
 
      CALL PDTRTRI( 'L', 'N', n, ss, 1, 1, desch, info )
      !
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' problems computing inverse ', ABS( info ) )
+     IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
      CALL qe_pdtrtri ( ss, nx, n, desc )
 #endif
@@ -334,7 +338,11 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL mp_bcast( e, root, ortho_parent_comm )
+#if defined __MPI
+  CALL MPI_BCAST( e, SIZE(e), MPI_DOUBLE_PRECISION, root, ortho_parent_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'prdiaghg', 'error broadcasting array e', ABS( info ))
+#endif
   !
   CALL stop_clock( 'rdiaghg:paragemm' )
   !

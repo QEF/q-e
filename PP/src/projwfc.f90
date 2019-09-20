@@ -241,7 +241,7 @@ PROGRAM do_projwfc
      ENDIF
   ENDIF
   !
-  CALL unset_mpi_comm_4_solvers()
+  CALL laxlib_free_ortho_group()
   CALL environment_end ( 'PROJWFC' )
   !
   CALL stop_pp

@@ -34,7 +34,6 @@
       USE pres_ai_mod,      ONLY : P_ext, Surf_t, volclu, surfclu, abivol, &
                                    abisur, pvar, n_ele
       USE cp_main_variables, ONLY : nprint_nfi, iprint_stdout
-      USE io_files,          ONLY : tmp_dir
       USE control_flags,     ONLY : ndw
       USE io_global,         ONLY : ionode, ionode_id, stdout
       USE control_flags,     ONLY : lwf, lwfpbe0nscf  ! exx_wf related
@@ -89,10 +88,10 @@
       IF( tprint ) THEN
          IF ( tfile ) THEN
             ! we're writing files, let's save nfi
-            CALL save_print_counter( nfi, tmp_dir, ndw )
+            CALL save_print_counter( nfi, ndw )
          ELSE IF ( tfilei ) then
             ! not there yet, save the old nprint_nfi
-            CALL save_print_counter( nprint_nfi, tmp_dir, ndw )
+            CALL save_print_counter( nprint_nfi, ndw )
          END IF
       END IF
       !

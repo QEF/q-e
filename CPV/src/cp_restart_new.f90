@@ -21,18 +21,7 @@ MODULE cp_restart_new
   !
   USE qes_types_module 
   USE qes_libs_module  
-  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
-                          qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
-                          qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
-                          qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
-                          qexsd_init_magnetization,qexsd_init_band_structure,          &
-                          qexsd_init_dipole_info, qexsd_init_total_energy,             &
-                          qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
-                          qexsd_init_outputElectricField 
-  USE qexsd_copy, ONLY:  qexsd_copy_geninfo, qexsd_copy_parallel_info, &
-       qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
-       qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix, &
+  USE io_files,  ONLY : iunpun, xmlfile, restart_dir, &
        qexsd_fmt, qexsd_version, create_directory
   USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
   !
@@ -63,8 +52,7 @@ MODULE cp_restart_new
       USE constants,                ONLY : e2
       USE parameters,               ONLY : ntypx
       USE dener,                    ONLY : detot
-      USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
-                                           nwordwfc, diropn
+      USE io_files,                 ONLY : psfile, pseudo_dir
       USE mp_images,                ONLY : intra_image_comm, me_image, &
                                            nproc_image
       USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
@@ -95,10 +83,17 @@ MODULE cp_restart_new
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
       USE wrappers,                 ONLY : f_copy
       USE uspp,                     ONLY : okvan
-      USE input_parameters,         ONLY : vdw_corr, london, starting_ns_eigenvalue
-      USE qexsd_module,             ONLY: qexsd_init_vdw, qexsd_init_hybrid, qexsd_init_dftU 
+      USE input_parameters,         ONLY : vdw_corr, starting_ns_eigenvalue
+      USE qexsd_init, ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,  & 
+                          qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
+                          qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
+                          qexsd_init_magnetization,qexsd_init_band_structure, &
+                          qexsd_init_dipole_info, qexsd_init_total_energy,    &
+                          qexsd_init_forces,qexsd_init_stress,                &
+                          qexsd_init_outputElectricField, qexsd_init_vdw,     &
+                          qexsd_init_hybrid, qexsd_init_dftU 
       USE qexsd_input, ONLY: qexsd_init_k_points_ibz
-
+      USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf
       !
       IMPLICIT NONE
       !
@@ -175,22 +170,23 @@ MODULE cp_restart_new
       TYPE(occupations_type)       :: bands_occu 
       TYPE(k_points_IBZ_type)      :: k_points_IBZ 
       CHARACTER(LEN=6), EXTERNAL   :: int_to_char
-      TYPE (vdW_type),POINTER      :: vdW_ =>NULL() 
-      TYPE (dftU_type),POINTER     :: dftU_ => NULL() 
-      TYPE (hybrid_type),POINTER   :: hybrid_ => NULL() 
+      TYPE (vdW_type),POINTER      :: vdW_ 
+      TYPE (dftU_type),POINTER     :: dftU_ 
+      TYPE (hybrid_type),POINTER   :: hybrid_
       REAL(DP),ALLOCATABLE         :: london_c6_(:) 
       CHARACTER(LEN=3),ALLOCATABLE :: species_(:) 
       REAL(DP),TARGET              :: lond_rcut_, lond_s6_, ts_vdw_econv_thr_      
       REAL(DP),POINTER             :: london_s6_pt, lonrcut_opt, ts_thr_opt 
       INTEGER,POINTER              :: nbnd_pt, nbnd_up_pt, nbnd_dw_pt 
       CHARACTER(LEN=20),TARGET     :: non_locc_, vdw_corr_ 
-      CHARACTER(LEN=20),POINTER    :: non_locc_opt=>NULL(), vdw_corr_opt=>NULL()
-      LOGICAL,POINTER              :: ts_isol_opt => NULL() 
+      CHARACTER(LEN=20),POINTER    :: non_locc_opt, vdw_corr_opt 
+      LOGICAL,POINTER              :: ts_isol_opt 
       LOGICAL,TARGET               :: ts_vdW_isolated_ 
       !
       ! ... subroutine body
       !
       NULLIFY( london_s6_pt, lonrcut_opt, ts_thr_opt, nbnd_pt, nbnd_up_pt, nbnd_dw_pt) 
+      NULLIFY ( vdW_, dftU_, hybrid_, non_locc_opt, vdw_corr_opt, ts_isol_opt )
       CALL start_clock('restart')
       !
       IF( force_pairing ) &
@@ -254,13 +250,11 @@ MODULE cp_restart_new
       !
       ! XML descriptor
       ! 
-      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw, postfix
+      dirname=restart_dir(ndw)
       WRITE( stdout, '(/,3X,"writing restart file (with schema): ",A)' ) &
              TRIM(dirname)
       !
       CALL create_directory( TRIM(dirname) )
-      !
-      CALL qexsd_init_schema( iunpun )
       !
       IF ( ionode ) THEN
          !
@@ -270,20 +264,8 @@ MODULE cp_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'CPV' )
          output_obj%tagname="output"
          output_obj%lwrite = .TRUE.
-!-------------------------------------------------------------------------------
-! ... CP-SPECIFIC CELL variables
-!-------------------------------------------------------------------------------
-         !
-         CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
-              epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
-              force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
-              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
-         ! Wannier function centers
-         IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
-         !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO - TO BE VERIFIED   
 !-------------------------------------------------------------------------------
@@ -451,14 +433,25 @@ MODULE cp_restart_new
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
          !
+         filename = xmlfile(ndw)
+         CALL qexsd_openschema( filename, iunpun, 'CPV', title)
          CALL qes_write (qexsd_xf, output_obj)
          CALL qes_reset (output_obj)
          !
-!-------------------------------------------------------------------------------
-! ... CLOSING
-!-------------------------------------------------------------------------------
+         ! CP-SPECIFIC CELL variables
+         !
+         CALL cp_writecp( qexsd_xf, nfi, simtime, ekin, eht, esr, eself, &
+              epseu, enl, exc, vave, enthal, acc, stau0, svel0, taui, cdmi,&
+              force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
+              htvel, gvel, xnhh0, vnhh, staum, svelm, xnhpm, xnhem, htm, xnhhm)
+         !
+         ! Wannier function centers
+         !
+         IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
          !
          CALL qexsd_closeschema()
+         !
+!-------------------------------------------------------------------------------
          !
       END IF
       !
@@ -578,7 +571,6 @@ MODULE cp_restart_new
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, lxdm, iverbosity, lwf
-      USE io_files,                 ONLY : iunwfc, nwordwfc, diropn
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
@@ -603,6 +595,9 @@ MODULE cp_restart_new
       USE kernel_table,             ONLY : vdw_table_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
+      USE qexsd_copy, ONLY:  qexsd_copy_geninfo, qexsd_copy_parallel_info, &
+           qexsd_copy_atomic_species, qexsd_copy_atomic_structure, &
+           qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_band_structure
       !
       IMPLICIT NONE
       !
@@ -695,23 +690,19 @@ MODULE cp_restart_new
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      INTEGER, EXTERNAL :: find_free_unit
       !
-      ! ... look for an empty unit
       !
-      iunpun = find_free_unit( )
-      IF ( iunpun < 0 ) CALL errore( 'cp_readfile', &
-                   'no free units to read wavefunctions', 1 )
-      !
-      CALL qexsd_init_schema( iunpun )
-      !
-      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
-      filename = TRIM( dirname ) // TRIM( xmlpun_schema )
+      dirname = restart_dir(ndr)
+      filename= xmlfile(ndr)
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) &
          CALL errore ('cp_readfile', 'xml data file not found', 1)
       !
+      ! read XML file into "root" object
+      !
       root => parseFile (TRIM(filename))
+      !
+      ! copy from "root" object into geninfo, parinfo, output objs
       !
       nodePointer => item (getElementsByTagname (root, "general_info"),0)
       ierr = 0 
@@ -736,6 +727,7 @@ MODULE cp_restart_new
       END IF
       IF ( ierr > 100) CALL errore ('cp_readfile', 'missing data in file', ierr)
       !
+      ! copy CP-specific MD information directly into variables
       !
       CALL cp_readcp ( root, nat, nfi, simtime, acc, stau0, svel0, taui,  &
            cdmi, force, nhpcl, nhpdim, xnhp0, vnhp, ekincm, xnhe0, vnhe, ht,&
@@ -746,12 +738,16 @@ MODULE cp_restart_new
       !
       ierr = 0
       !
-      ! Wannier function centers
+      ! copy Wannier function centers information directly into variables
+      !
       IF ( lwf ) CALL cp_readcenters ( root, wfc)
       !
       ierr = 0
       !   
       CALL destroy (root) 
+      !
+      ! objects filled, not get variables from objects
+      !
       CALL qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version) 
       !
       CALL  qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
@@ -820,8 +816,8 @@ MODULE cp_restart_new
       DO iss = 1, nspin
          ib = iupdwn(iss)
          nb = nupdwn(iss)
-         CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, c02, ' ' )
-         CALL cp_read_wfc( ndr, tmp_dir, 1, 1, iss, nspin, cm2, 'm', ierr )
+         CALL cp_read_wfc( ndr, 1, 1, iss, nspin, c02, ' ' )
+         CALL cp_read_wfc( ndr, 1, 1, iss, nspin, cm2, 'm', ierr )
          IF ( ierr /= 0) THEN
             CALL infomsg('cp_readfile','wfc at t-dt not found')
             cm2(:,ib:ib+nb-1) = c02(:,ib:ib+nb-1)
@@ -1129,7 +1125,7 @@ MODULE cp_restart_new
   END SUBROUTINE cp_writecenters
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_read_wfc( ndr, tmp_dir, ik, nk, iss, nspin, c2, tag, ierr )
+  SUBROUTINE cp_read_wfc( ndr, ik, nk, iss, nspin, c2, tag, ierr )
     !------------------------------------------------------------------------
     !
     ! Wrapper, and ugly hack, for old cp_read_wfc called in restart.f90
@@ -1143,7 +1139,6 @@ MODULE cp_restart_new
     IMPLICIT NONE
     !
     INTEGER,               INTENT(IN)  :: ndr
-    CHARACTER(LEN=*),      INTENT(IN)  :: tmp_dir
     INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
     CHARACTER,             INTENT(IN)  :: tag
     COMPLEX(DP),           INTENT(OUT) :: c2(:,:)
@@ -1154,13 +1149,13 @@ MODULE cp_restart_new
     CHARACTER(LEN=320) :: filename
     REAL(DP)           :: scalef, xk(3), b1(3), b2(3), b3(3)
     LOGICAL            :: gamma_only
+    CHARACTER(LEN=6), EXTERNAL   :: int_to_char
     !
+    filename = restart_dir(ndr)
     IF ( tag == 'm' ) THEN
-       WRITE(filename,'(A,A,"_",I2,A,"wfcm",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
+       filename = TRIM(filename) //'wfcm'// TRIM(int_to_char(iss))
     ELSE
-       WRITE(filename,'(A,A,"_",I2,A,"wfc",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
+       filename = TRIM(filename) //'wfc'// TRIM(int_to_char(iss))
     END IF
     ib = iupdwn(iss)
     nb = nupdwn(iss)
@@ -1445,7 +1440,7 @@ MODULE cp_restart_new
   END SUBROUTINE cp_readcenters
   !
   !------------------------------------------------------------------------
-  SUBROUTINE cp_read_cell( ndr, tmp_dir, ascii, ht, &
+  SUBROUTINE cp_read_cell( ndr, ascii, ht, &
                            htm, htvel, gvel, xnhh0, xnhhm, vnhh )
     !------------------------------------------------------------------------
     !
@@ -1453,12 +1448,12 @@ MODULE cp_restart_new
     USE ions_base,   ONLY : nat
     USE FoX_dom,     ONLY : Node, parseFile, item, getElementsByTagname, extractDataAttribute, &
                             extractDataContent, destroy
+    USE qexsd_copy,  ONLY : qexsd_copy_atomic_structure
     USE qes_read_module, ONLY : qes_read
     !
     IMPLICIT NONE
     !
     INTEGER,          INTENT(IN)    :: ndr
-    CHARACTER(LEN=*), INTENT(IN)    :: tmp_dir
     LOGICAL,          INTENT(IN)    :: ascii
     REAL(DP),         INTENT(INOUT) :: ht(3,3)
     REAL(DP),         INTENT(INOUT) :: htm(3,3)
@@ -1468,7 +1463,7 @@ MODULE cp_restart_new
     REAL(DP),         INTENT(INOUT) :: xnhhm(3,3)
     REAL(DP),         INTENT(INOUT) :: vnhh(3,3)
     !
-    CHARACTER(LEN=256) :: dirname, filename
+    CHARACTER(LEN=320) :: filename
     INTEGER            :: strlen
     INTEGER            :: i, ierr, nt_
     LOGICAL            :: found
@@ -1486,17 +1481,9 @@ MODULE cp_restart_new
     CHARACTER(LEN=3) :: atm_(ntypx)
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
-    INTEGER, EXTERNAL :: find_free_unit
     !
-    ! ... look for an empty unit
     !
-    iunpun = find_free_unit( )
-    IF ( iunpun < 0 ) CALL errore( 'cp_read_cell', 'no free units ', 1 )
-    !
-    CALL qexsd_init_schema( iunpun )
-    !
-    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
-    filename = TRIM( dirname ) // TRIM( xmlpun_schema )
+    filename = xmlfile (ndr)
     INQUIRE ( file=filename, exist=found )
     IF (.NOT. found ) &
          CALL errore ('cp_read_cell', 'xml data file not found', 1)
@@ -1702,22 +1689,19 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw,postfix
-    !
-    IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
-         status='unknown', form='unformatted', iostat=ierr)
-    CALL mp_bcast (ierr, ionode_id, intra_image_comm )
-    IF ( ierr /= 0 ) RETURN
+    dirname = restart_dir(ndw) 
     !
     ALLOCATE( mrepl( nudx, nudx ) )
     !
     DO iss = 1, nspin
        !
-       filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
-       !
        CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
        !
+       filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
+       !
        IF ( ionode ) THEN
+          OPEN( unit=iunpun, file =TRIM(filename), &
+              status='unknown', form='unformatted', iostat=ierr)
           WRITE (iunpun, iostat=ierr) mrepl
           CLOSE( unit=iunpun, status='keep')
        END IF
@@ -1754,20 +1738,16 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr,postfix
-    !
-    IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
-         status='old', form='unformatted', iostat=ierr)
-    CALL mp_bcast (ierr, ionode_id, intra_image_comm )
-    IF ( ierr /= 0 ) RETURN
+    dirname = restart_dir(ndr) 
     !
     ALLOCATE( mrepl( nudx, nudx ) )
     !
     DO iss = 1, nspin
        !
        filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
-       !
        IF ( ionode ) THEN
+          OPEN( unit=iunpun, file =TRIM(filename), &
+            status='old', form='unformatted', iostat=ierr)
           READ (iunpun, iostat=ierr) mrepl
           CLOSE( unit=iunpun, status='keep')
        END IF

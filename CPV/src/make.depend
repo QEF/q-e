@@ -145,6 +145,7 @@ cp_restart_new.o : ../../Modules/qes_read_module.o
 cp_restart_new.o : ../../Modules/qes_types_module.o
 cp_restart_new.o : ../../Modules/qexsd.o
 cp_restart_new.o : ../../Modules/qexsd_copy.o
+cp_restart_new.o : ../../Modules/qexsd_init.o
 cp_restart_new.o : ../../Modules/qexsd_input.o
 cp_restart_new.o : ../../Modules/recvec.o
 cp_restart_new.o : ../../Modules/run_info.o
@@ -203,6 +204,14 @@ cplib_meta.o : ../../UtilXlib/mp.o
 cplib_meta.o : energies.o
 cplib_meta.o : modules.o
 cplib_meta.o : smallbox_gvec.o
+cppp.o : ../../Modules/constants.o
+cppp.o : ../../Modules/invmat.o
+cppp.o : ../../Modules/io_files.o
+cppp.o : ../../Modules/kind.o
+cppp.o : ../../Modules/mp_global.o
+cppp.o : ../../Modules/qes_types_module.o
+cppp.o : ../../Modules/qexsd.o
+cppp.o : ../../Modules/qexsd_copy.o
 cpr.o : ../../Modules/autopilot.o
 cpr.o : ../../Modules/cell_base.o
 cpr.o : ../../Modules/check_stop.o
@@ -511,7 +520,6 @@ init.o : ../../Modules/fft_base.o
 init.o : ../../Modules/gvecw.o
 init.o : ../../Modules/input_parameters.o
 init.o : ../../Modules/invmat.o
-init.o : ../../Modules/io_files.o
 init.o : ../../Modules/io_global.o
 init.o : ../../Modules/ions_base.o
 init.o : ../../Modules/kind.o
@@ -919,7 +927,6 @@ print_out.o : ../../Modules/control_flags.o
 print_out.o : ../../Modules/electrons_base.o
 print_out.o : ../../Modules/funct.o
 print_out.o : ../../Modules/input_parameters.o
-print_out.o : ../../Modules/io_files.o
 print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
@@ -1009,7 +1016,6 @@ restart.o : ../../Modules/cell_base.o
 restart.o : ../../Modules/control_flags.o
 restart.o : ../../Modules/electrons_base.o
 restart.o : ../../Modules/gvecw.o
-restart.o : ../../Modules/io_files.o
 restart.o : ../../Modules/ions_base.o
 restart.o : ../../Modules/kind.o
 restart.o : ../../UtilXlib/mp.o

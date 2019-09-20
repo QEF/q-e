@@ -9,37 +9,35 @@
 MODULE pw_restart_new
 !----------------------------------------------------------------------------
   !
-  ! ... New PWscf I/O using xml schema and hdf5 binaries
+  ! ... New PWscf I/O using xml schema and (optionally) hdf5 binaries
   ! ... Parallel execution: the xml file is written by one processor only
   ! ... ("ionode_id"), read by all processors ;
   ! ... the wavefunction files are written / read by one processor per pool,
   ! ... collected on / distributed to all other processors in pool
   !
-  USE KINDS,        ONLY: DP
+  USE kinds, ONLY: dp
   USE qes_types_module
   USE qes_write_module, ONLY: qes_write
   USE qes_reset_module, ONLY: qes_reset 
-  USE qes_init_module, ONLY: qes_init
-  USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
-                          qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
+  USE qexsd_module, ONLY: qexsd_openschema, qexsd_closeschema, qexsd_xf
+  USE qexsd_input,  ONLY: qexsd_input_obj
+  USE qexsd_init,   ONLY: qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
                           qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
                           qexsd_init_magnetization,qexsd_init_band_structure,          &
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
-                          qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
-                          qexsd_init_outputElectricField,                              &
-                          qexsd_input_obj, qexsd_occ_obj,                               &
+                          qexsd_init_forces, qexsd_init_stress,                        &
+                          qexsd_init_outputElectricField, qexsd_occ_obj,               &
                           qexsd_init_outputPBC, qexsd_init_gate_info, qexsd_init_hybrid,&
                           qexsd_init_dftU, qexsd_init_vdw
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix
+  USE io_files,  ONLY : iunpun, xmlfile
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
-  PUBLIC :: pw_write_schema, pw_write_binaries, pw_read_schema, &
-       read_collected_to_evc
+  PUBLIC :: pw_write_schema, pw_write_binaries, read_collected_to_evc
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -66,18 +64,15 @@ MODULE pw_restart_new
       USE uspp_param,           ONLY : upf
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, ibrav
-      USE gvect,                ONLY : ig_l2g
-      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv
+      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv, amass
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : nwordwfc, iunwfc, psfile
-      USE buffers,              ONLY : get_buffer
-      USE wavefunctions, ONLY : evc
+      USE io_files,             ONLY : psfile, pseudo_dir
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, tot_charge, ltetra 
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        nks_start, xk_start, wk_start
-      USE gvect,                ONLY : ngm, ngm_g, g, mill
+      USE gvect,                ONLY : ngm, ngm_g, g
       USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
       USE gvecs,                ONLY : ngms_g, dual
@@ -99,7 +94,6 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization, magtot, absmag
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, magtot_nc, &
                                        lambda
-      USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_short, get_inlc, get_nonlocc_name, dft_is_nonlocc
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
@@ -127,23 +121,23 @@ MODULE pw_restart_new
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
-      USE qexsd_module,         ONLY : qexsd_bp_obj, qexsd_start_k_obj
+      USE qexsd_init,           ONLY : qexsd_bp_obj, qexsd_start_k_obj
       USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, &
               qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
-      USE io_files,             ONLY : pseudo_dir
       USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3, do_makov_payne 
-      USE input_parameters,     ONLY :  ts_vdw_econv_thr, ts_vdw_isolated
       USE Coul_cut_2D,          ONLY : do_cutoff_2D 
       USE esm,                  ONLY : do_comp_esm 
       USE martyna_tuckerman,    ONLY : do_comp_mt 
+      USE run_info,             ONLY : title
       !
       IMPLICIT NONE
       !
       LOGICAL, INTENT(IN) :: only_init, wf_collect
       !
       CHARACTER(LEN=20)     :: dft_name
-      CHARACTER(LEN=256)    :: dirname
+      CHARACTER(LEN=8)      :: smearing_loc
+      CHARACTER(LEN=8), EXTERNAL :: schema_smearing
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -154,22 +148,22 @@ MODULE pw_restart_new
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
       REAL(DP),TARGET                 :: h_energy
       TYPE(gateInfo_type),TARGET      :: gate_info_temp
-      TYPE(gateInfo_type),POINTER     :: gate_info_ptr => NULL()
+      TYPE(gateInfo_type),POINTER     :: gate_info_ptr
       TYPE(dipoleOutput_type),TARGET  :: dipol_obj 
-      TYPE(dipoleOutput_type),POINTER :: dipol_ptr  => NULL()
-      TYPE(BerryPhaseOutput_type),  POINTER :: bp_obj_ptr => NULL()
-      TYPE(hybrid_type), POINTER            :: hybrid_obj => NULL()
-      TYPE(vdW_type), POINTER               :: vdw_obj => NULL()
-      TYPE(dftU_type), POINTER              :: dftU_obj => NULL() 
+      TYPE(dipoleOutput_type),POINTER :: dipol_ptr 
+      TYPE(BerryPhaseOutput_type),  POINTER :: bp_obj_ptr
+      TYPE(hybrid_type), POINTER            :: hybrid_obj 
+      TYPE(vdW_type), POINTER               :: vdw_obj
+      TYPE(dftU_type), POINTER              :: dftU_obj 
       REAL(DP), TARGET                      :: lumo_tmp, ef_targ, dispersion_energy_term 
-      REAL(DP), POINTER                     :: lumo_energy => NULL(), ef_point => NULL()
+      REAL(DP), POINTER                     :: lumo_energy, ef_point 
       REAL(DP), ALLOCATABLE                 :: ef_updw(:)
       !
       !
       !
       TYPE(output_type) :: output
       REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr,  gatefield_corr  
-      LOGICAL, POINTER    :: optimization_has_converged => NULL() 
+      LOGICAL, POINTER    :: optimization_has_converged 
       LOGICAL, TARGET     :: conv_opt  
       LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
@@ -179,20 +173,23 @@ MODULE pw_restart_new
       CHARACTER(LEN=20),TARGET   :: dft_nonlocc_
       INTEGER,TARGET             :: dftd3_version_
       CHARACTER(LEN=20),TARGET   :: vdw_corr_, pbc_label 
-      CHARACTER(LEN=20),POINTER  :: non_local_term_pt =>NULL(), vdw_corr_pt=>NULL()
+      CHARACTER(LEN=20),POINTER  :: non_local_term_pt, vdw_corr_pt 
       REAL(DP),TARGET            :: temp(20), lond_rcut_, lond_s6_, ts_vdw_econv_thr_, xdm_a1_, xdm_a2_, ectuvcut_,&
                                     scr_par_, loc_thr_  
-      REAL(DP),POINTER           :: vdw_term_pt =>NULL(), ts_thr_pt=>NULL(), london_s6_pt=>NULL(),&
-                                    london_rcut_pt=>NULL(), xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), &
-                                    ts_vdw_econv_thr_pt=>NULL(), ectuvcut_opt=>NULL(), scr_par_opt=>NULL(), &
-                                    loc_thr_p => NULL(), h_energy_ptr => NULL()  
+      REAL(DP),POINTER           :: vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, xdm_a1_pt, xdm_a2_pt, &
+                                    ts_vdw_econv_thr_pt, ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr
       LOGICAL,TARGET             :: dftd3_threebody_, ts_vdw_isolated_
-      LOGICAL,POINTER            :: ts_isol_pt=>NULL(), dftd3_threebody_pt=>NULL(), ts_vdw_isolated_pt =>NULL()
-      INTEGER,POINTER            :: dftd3_version_pt => NULL() 
+      LOGICAL,POINTER            :: ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt 
+      INTEGER,POINTER            :: dftd3_version_pt
       TYPE(smearing_type),TARGET :: smear_obj 
-      TYPE(smearing_type),POINTER:: smear_obj_ptr => NULL() 
+      TYPE(smearing_type),POINTER:: smear_obj_ptr 
 
-      NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr )
+      NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
+      NULLIFY( gate_info_ptr, dipol_ptr, bp_obj_ptr, hybrid_obj, vdw_obj, dftU_obj, lumo_energy, ef_point)  
+      NULLIFY ( optimization_has_converged, non_local_term_pt, vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt,  &
+                xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt,     & 
+                dftd3_version_pt )
+      NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, smear_obj_ptr) 
 
       !
       ! Global PW dimensions need to be properly computed, reducing across MPI tasks
@@ -219,11 +216,6 @@ MODULE pw_restart_new
       ! 
       ! XML descriptor
       ! 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-      !
-      CALL qexsd_init_schema( iunpun )
-      !
-      !
       IF ( ionode ) THEN  
          !
          ! ... here we init the variables and finally write them to file
@@ -232,7 +224,6 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'PWSCF' )
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
@@ -408,9 +399,9 @@ MODULE pw_restart_new
                     dftd3_threebody_pt => dftd3_threebody_
                 ELSE IF ( ts_vdw ) THEN
                     dispersion_energy_term = 2._DP * EtsvdW/e2
-                    ts_vdw_isolated_ = ts_vdw_isolated
+                    ts_vdw_isolated_ = vdw_isolated
                     ts_vdw_isolated_pt => ts_vdw_isolated_
-                    ts_vdw_econv_thr_ = ts_vdw_econv_thr
+                    ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
                 END IF
             END IF 
@@ -535,8 +526,9 @@ MODULE pw_restart_new
          IF ( lgauss ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
                smear_obj = qexsd_input_obj%bands%smearing
-            ELSE 
-               CALL qexsd_init_smearing(smear_obj, smearing, degauss)
+            ELSE
+               smearing_loc = schema_smearing( smearing )
+               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss)
             END IF  
             smear_obj_ptr => smear_obj  
          END IF 
@@ -651,19 +643,17 @@ MODULE pw_restart_new
             NULLIFY(dipol_ptr)
          ENDIF
          NULLIFY ( bp_obj_ptr) 
-!------------------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
  10      CONTINUE
          !
+         CALL qexsd_openschema( xmlfile(), iunpun, 'PWSCF', title )
          CALL qes_write (qexsd_xf,output)
          CALL qes_reset (output) 
-         !
-!-------------------------------------------------------------------------------
-! ... CLOSING
-!-------------------------------------------------------------------------------
-         !
          CALL qexsd_closeschema()
+         !
+!-------------------------------------------------------------------------------
          !
       END IF
       DEALLOCATE (ngk_g)
@@ -681,6 +671,7 @@ MODULE pw_restart_new
           END IF 
           RETURN
        END SUBROUTINE check_and_allocate 
+       !
     END SUBROUTINE pw_write_schema
     !
     !------------------------------------------------------------------------
@@ -689,7 +680,7 @@ MODULE pw_restart_new
       !
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : write_wfc
-      USE io_files,             ONLY : iunwfc, nwordwfc
+      USE io_files,             ONLY : restart_dir, iunwfc, nwordwfc
       USE cell_base,            ONLY : tpiba, alat, bg
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
@@ -719,7 +710,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+      dirname = restart_dir () 
       !
       ! ... write wavefunctions and k+G vectors
       !
@@ -903,101 +894,6 @@ MODULE pw_restart_new
       RETURN
       !
     END SUBROUTINE gk_l2gmap_kdip
-
-    !------------------------------------------------------------------------
-    SUBROUTINE pw_read_schema(ierr, restart_output, restart_parallel_info, restart_general_info, &
-                                  prev_input)
-      !------------------------------------------------------------------------
-      USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
-      !
-      USE FoX_dom,              ONLY : parseFile, item, getElementsByTagname, destroy, nodeList, Node
-      USE qes_read_module,      ONLY : qes_read
-      IMPLICIT NONE 
-      ! 
-      INTEGER                                            :: ierr
-      TYPE( output_type ),OPTIONAL,        INTENT(OUT)   :: restart_output
-      TYPE(parallel_info_type),OPTIONAL,   INTENT(OUT)   :: restart_parallel_info
-      TYPE(general_info_type ),OPTIONAL,   INTENT(OUT)   :: restart_general_info
-      TYPE(input_type),OPTIONAL,           INTENT(OUT)   :: prev_input
-      ! 
-      TYPE(Node), POINTER     :: root, nodePointer
-      TYPE(nodeList),POINTER  :: listPointer
-      LOGICAL                 :: found
-      CHARACTER(LEN=80)       :: errmsg = ' '
-      CHARACTER(LEN=320)      :: filename
-      INTEGER,EXTERNAL        :: find_free_unit
-      !  
-      ! 
-      ierr = 0
-      ! 
-      iunpun = find_free_unit()
-      IF (iunpun < 0 ) THEN
-         ierr = 1
-         errmsg='internal error: no free unit to open data-file-schema.xml'
-         GOTO 100
-      END IF
-      CALL qexsd_init_schema( iunpun )
-      !
-      filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // TRIM(xmlpun_schema)
-      INQUIRE ( file=filename, exist=found )
-      IF (.NOT. found ) THEN
-         ierr = 1
-         errmsg='xml data file ' // TRIM(filename) // ' not found'
-         GOTO 100
-      END IF
-      !
-      root => parseFile(filename)
-      !
-      IF ( PRESENT ( restart_general_info ) ) THEN 
-         nodePointer => item ( getElementsByTagname(root, "general_info"),0)
-         CALL qes_read( nodePointer, restart_general_info, ierr)
-         IF ( ierr /=0 ) THEN
-            errmsg='error reading header of xml data file'
-            GOTO 100
-         END IF
-      END IF 
-      ! 
-      IF ( PRESENT ( restart_parallel_info ) ) THEN 
-         nodePointer => item ( getElementsByTagname(root,"parallel_info"),0)
-         CALL qes_read(nodePointer, restart_parallel_info, ierr)
-         !
-         IF ( ierr /=0) THEN  
-            errmsg='error parallel_info  of xsd data file' 
-            GOTO 100
-         END IF
-      END IF  
-      ! 
-      IF ( PRESENT ( restart_output ) ) THEN
-         nodePointer => item ( getElementsByTagname(root, "output"),0)
-         CALL qes_read ( nodePointer, restart_output, ierr ) 
-         IF ( ierr /= 0 ) THEN  
-            errmsg = 'error output of xsd data file' 
-            GOTO 100 
-         END IF 
-         !
-      END IF 
-      !
-      IF (PRESENT (prev_input)) THEN
-         nodePointer => item( getElementsByTagname(root, "input"),0)
-         IF ( ASSOCIATED(nodePointer) ) THEN
-            CALL qes_read (nodePointer, prev_input, ierr ) 
-         ELSE 
-            ierr = 5
-         END IF
-         IF ( ierr /= 0 ) THEN
-             CALL infomsg ('pw_read_schema',& 
-                            'failed retrieving input info from xml file, please check it')
-             IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset (prev_input) 
-             ierr = 0
-         END IF
-      END IF
-      ! 
-      CALL destroy(root)       
-
- 100  CALL errore('pw_read_schema',TRIM(errmsg),ierr)
-      !
-    END SUBROUTINE pw_read_schema
-    !  
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_to_evc( dirname )

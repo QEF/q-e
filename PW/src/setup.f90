@@ -36,7 +36,7 @@ SUBROUTINE setup()
   USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
-  USE io_files,           ONLY : tmp_dir, prefix
+  USE io_files,           ONLY : xmlfile
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
@@ -76,10 +76,10 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-  USE pw_restart_new,     ONLY : pw_read_schema
+  USE qexsd_module,       ONLY : qexsd_readschema
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
-  USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
+  USE qes_types_module,   ONLY : output_type
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
@@ -95,7 +95,7 @@ SUBROUTINE setup()
   !
   LOGICAL, EXTERNAL  :: check_para_diag
   !
-  TYPE(output_type)                         :: output_obj 
+  TYPE(output_type)  :: output_obj 
   !  
 #if defined(__MPI)
   LOGICAL :: lpara = .true.
@@ -163,9 +163,9 @@ SUBROUTINE setup()
      !
      ! ... in these cases, we need to read the Fermi energy
      !
-     CALL pw_read_schema( ierr , output_obj )
-     CALL errore( 'setup ', 'problem reading ef from file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
+     ierr = qexsd_readschema( xmlfile() , output_obj )
+     IF (ierr > 0) CALL errore( 'setup ', 'problem reading ef from file ' // &
+             & TRIM(xmlfile()), ierr )
      CALL qexsd_copy_efermi ( output_obj%band_structure, &
           nelec, ef, two_fermi_energies, ef_up, ef_dw )
      CALL qes_reset  ( output_obj )

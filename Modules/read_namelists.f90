@@ -30,12 +30,11 @@ MODULE read_namelists_module
   REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
   !
   PUBLIC :: read_namelists, sm_not_set
-  !
-  ! ... modules needed by read_xml.f90
-  !
+  PUBLIC :: check_namelist_read ! made public upon request of A.Jay
+  ! FIXME: should the following ones be public?
   PUBLIC :: control_defaults, system_defaults, &
        electrons_defaults, wannier_ac_defaults, ions_defaults, &
-       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast, &
+       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast,&
        system_bcast, electrons_bcast, ions_bcast, cell_bcast, &
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &

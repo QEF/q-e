@@ -78,19 +78,6 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-ia32:pgf* | ia64:pgf* | x86_64:pgf* )
-	    try_fflags_nomain="-Mnomain"
-        try_fflags="-fast"
-        try_fflags_openmp="-mp"
-        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_openmp="-mp"
-        try_ldflags_static="-Bstatic"
-        try_dflags="$try_dflags -D__PGI"
-        have_cpp=1
-        ;;
 ia32:path* | ia64:path* | x86_64:path* )
         try_fflags="-march=auto -O2"
         try_f90flags="\$(FFLAGS)"
@@ -98,21 +85,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_ldflags=""
         try_ldflags_static="-static"
         have_cpp=0
-        ;;
-*:*gfortran )
-	try_fflags="-O3 -g"
-        if test "$use_debug" -eq 1; then
-            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
-        fi
-        if test "$use_pedantic" -eq 1; then
-            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
-        fi
-        try_fflags_openmp="-fopenmp"
-        try_f90flags="\$(FFLAGS) -x f95-cpp-input"
-        try_fflags_noopt="-O0 -g"
-        try_ldflags="-g"
-        try_ldflags_openmp="-pthread -fopenmp"
-        try_ldflags_static="-static"
         ;;
 crayxt*:cray* )
         try_fflags_nomain=""
@@ -216,6 +188,34 @@ ppc64-bgq:*xlf* )
         try_ldflags_openmp="-qstatic -qsmp=noauto:omp -qtm -qthreaded"
         pre_fdflags="-WF,"
         xlf_flags=1
+        ;;
+*:pgf* )
+	try_fflags_nomain="-Mnomain"
+        try_fflags="-fast"
+        try_fflags_openmp="-mp"
+        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_fflags_noopt="-O0"
+        try_ldflags=""
+        try_ldflags_openmp="-mp"
+        try_ldflags_static="-Bstatic"
+        try_dflags="$try_dflags -D__PGI"
+        have_cpp=1
+        ;;
+*:*gfortran )
+	try_fflags="-O3 -g"
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
+        fi
+        if test "$use_pedantic" -eq 1; then
+            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
+        fi
+        try_fflags_openmp="-fopenmp"
+        try_f90flags="\$(FFLAGS) -x f95-cpp-input"
+        try_fflags_noopt="-O0 -g"
+        try_ldflags="-g"
+        try_ldflags_openmp="-pthread -fopenmp"
+        try_ldflags_static="-static"
         ;;
 
 * )
