@@ -20,24 +20,25 @@
   !!
   !-----------------------------------------------------------------------
   !
-  USE kinds,     ONLY : DP
-  USE mp,        ONLY : mp_barrier, mp_sum
-  USE mp_pools,  ONLY : my_pool_id, npool, inter_pool_comm
-  USE ions_base, ONLY : nat
-  USE pwcom,     ONLY : nbnd, nks, nkstot
-  USE gvect,     ONLY : ngm
-  USE gvecs,     ONLY : doublegrid
-  USE modes,     ONLY : nmodes, nirr, npert, u
-  USE elph2,     ONLY : epmatq, el_ph_mat
-  USE lrus,      ONLY : int3, int3_nc
-  USE uspp,      ONLY : okvan
-  USE lsda_mod,  ONLY : nspin
-  USE fft_base,  ONLY : dfftp, dffts
-  USE io_epw,    ONLY : readdvscf
+  USE kinds,            ONLY : DP
+  USE mp,               ONLY : mp_barrier, mp_sum
+  USE mp_pools,         ONLY : my_pool_id, npool, inter_pool_comm
+  USE ions_base,        ONLY : nat
+  USE pwcom,            ONLY : nbnd, nks, nkstot
+  USE gvect,            ONLY : ngm
+  USE gvecs,            ONLY : doublegrid
+  USE modes,            ONLY : nmodes, nirr, npert, u
+  USE elph2,            ONLY : epmatq, el_ph_mat
+  USE lrus,             ONLY : int3, int3_nc
+  USE uspp,             ONLY : okvan
+  USE lsda_mod,         ONLY : nspin
+  USE fft_base,         ONLY : dfftp, dffts
+  USE io_epw,           ONLY : readdvscf
   USE uspp_param,       ONLY : nhm
   USE constants_epw,    ONLY : czero, cone
   USE fft_interfaces,   ONLY : fft_interpolate
   USE noncollin_module, ONLY : nspin_mag, noncolin
+  USE dvqpsi,           ONLY : newdq2 
   !
   IMPLICIT NONE
   !
@@ -147,12 +148,12 @@
   !
   CALL mp_barrier(inter_pool_comm)
   !
-  !  the output e-p matrix in the pattern representation
-  !  must be transformed in the cartesian basis
-  !  epmat_{CART} = conjg ( U ) * epmat_{PATTERN}
+  ! the output e-p matrix in the pattern representation
+  ! must be transformed in the cartesian basis
+  ! epmat_{CART} = conjg ( U ) * epmat_{PATTERN}
   !
-  !  note it is not U^\dagger but u_pattern! 
-  !  Have a look to symdyn_munu.f90 for comparison
+  ! note it is not U^\dagger but u_pattern! 
+  ! Have a look to symdyn_munu.f90 for comparison
   !
   DO ibnd = 1, nbnd
     DO jbnd = 1, nbnd

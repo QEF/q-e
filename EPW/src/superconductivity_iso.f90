@@ -25,16 +25,17 @@
     !! Eliashberg equations on the imaginary-axis.  
     !!
     !
-    USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
-                              limag, lpade, lacon
-    USE eliashbergcom, ONLY : nsw, nsiw, Deltai, Deltaip, Delta, Deltap, estemp
-    USE constants_epw, ONLY : kelvin2eV, ci
-    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE kinds,             ONLY : DP
+    USE io_global,         ONLY : stdout
+    USE control_flags,     ONLY : iverbosity
+    USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, &
+                                  limag, lpade, lacon
+    USE eliashbergcom,     ONLY : nsw, nsiw, Deltai, Deltaip, Delta, Deltap, estemp
+    USE constants_epw,     ONLY : kelvin2eV, ci
+    USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
     USE superconductivity, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, & 
                                   deallocate_eliashberg_iso_iaxis, deallocate_eliashberg
+    USE broyden,           ONLY : mix_broyden, mix_broyden2
     ! 
     IMPLICIT NONE
     !
@@ -71,7 +72,7 @@
         conv = .FALSE.
         DO WHILE ( .NOT. conv .AND. iter <= nsiter )
           CALL sum_eliashberg_iso_iaxis( itemp, iter, conv )
-          CALL mix_broyden( nsiw(itemp), Deltai, Deltaip, broyden_beta, iter, broyden_ndim, conv )
+          CALL mix_broyden(nsiw(itemp), Deltai, Deltaip, broyden_beta, iter, broyden_ndim, conv)
           iter = iter + 1
         ENDDO ! iter
         !
@@ -143,8 +144,8 @@
           cdeltain(:)  = aimag(Deltap(:))
           rdeltaout(:) = REAL(Delta(:))
           cdeltaout(:) = aimag(Delta(:))
-          CALL mix_broyden ( nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv )
-          CALL mix_broyden2( nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv )
+          CALL mix_broyden(nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv)
+          CALL mix_broyden2(nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv)
           Deltap(:) = rdeltain(:) + ci * cdeltain(:)
           iter = iter + 1
         ENDDO ! iter
@@ -176,10 +177,12 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE eliashberg_iso_iaxis
+    !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE sum_eliashberg_iso_iaxis( itemp, iter, conv ) 
+    SUBROUTINE sum_eliashberg_iso_iaxis(itemp, iter, conv) 
     !-----------------------------------------------------------------------
     !!
     !! This routine solves the isotropic Eliashberg equations on the imaginary-axis
@@ -721,24 +724,21 @@
     rgammap = zero
     rgammam = zero
     IF (ABS(temp) < eps6) THEN
-       rgammap = zero
-       rgammam = one
+      rgammap = zero
+      rgammam = one
     ELSEIF (omegap > zero) THEN
-       rgammap = 0.5d0 * (   tanh( 0.5d0 * ( omega + omegap ) / temp ) &
-                           - 1.d0 / tanh( 0.5d0 * omegap / temp ) )
-       rgammam = 0.5d0 * (   tanh( 0.5d0 * ( omega - omegap ) / temp ) &
-                           + 1.d0 / tanh( 0.5d0 * omegap / temp ) )
+      rgammap = 0.5d0 * (TANH(0.5d0 * (omega + omegap) / temp) &
+                          - 1.d0 / tanh(0.5d0 * omegap / temp))
+      rgammam = 0.5d0 * (TANH(0.5d0 * (omega - omegap) / temp) &
+                          + 1.d0 / TANH(0.5d0 * omegap / temp))
     ENDIF
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE gamma_acont
-    !
     !-----------------------------------------------------------------------
     !          
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !                              
     !-----------------------------------------------------------------------
     SUBROUTINE eliashberg_iso_raxis
     !-----------------------------------------------------------------------
@@ -747,13 +747,14 @@
     !! Eliashberg equations directly on the real-axis.  
     !!
     !
-    USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
-    USE eliashbergcom, ONLY : nsw, Delta, Deltap, gap, estemp
-    USE constants_epw, ONLY : kelvin2eV, ci
-    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE kinds,             ONLY : DP
+    USE io_global,         ONLY : stdout
+    USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim
+    USE eliashbergcom,     ONLY : nsw, Delta, Deltap, gap, estemp
+    USE constants_epw,     ONLY : kelvin2eV, ci
+    USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
     USE superconductivity, ONLY : deallocate_eliashberg, gen_freqgrid_raxis
+    USE broyden,           ONLY : mix_broyden, mix_broyden2
     ! 
     IMPLICIT NONE
     !
@@ -768,61 +769,63 @@
     REAL(KIND = DP), EXTERNAL :: get_clock
     LOGICAL :: conv
     !
-    CALL start_clock( 'iso_raxis' ) 
+    CALL start_clock('iso_raxis') 
     !
     WRITE(stdout,'(5x,a)') 'Solve isotropic Eliashberg equations on real-axis'
     !
-    CALL gen_freqgrid_raxis
+    CALL gen_freqgrid_raxis()
     !
     DO itemp = 1, nstemp ! loop over temperature
-       !
-       WRITE(stdout,'(a)') '    '
-       WRITE(stdout,'(5x,a,i3,a,f8.4,a,a,i3,a)') 'temp(', itemp, ') = ', estemp(itemp)/kelvin2eV, ' K '
-       WRITE(stdout,'(a)') '    '
-       iter = 1
-       conv = .FALSE.
-       DO WHILE ( .NOT. conv .AND. iter <= nsiter )
-          CALL integrate_eliashberg_iso_raxis( itemp, iter, conv )
-          rdeltain(:) = REAL(Deltap(:))
-          cdeltain(:) = aimag(Deltap(:))
-          rdeltaout(:) = REAL(Delta(:))
-          cdeltaout(:) = aimag(Delta(:))
-          CALL mix_broyden ( nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv )
-          CALL mix_broyden2( nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv )
-          Deltap(:) = rdeltain(:) + ci * cdeltain(:)
-          iter = iter + 1
-       ENDDO ! iter
-       WRITE(stdout,'(5x,a,i3,a,f8.4,a,a,i3,a,f10.6,a,a,f10.6,a)') &
-                    'temp(', itemp, ') = ', estemp(itemp)/kelvin2eV, ' K ', &
-                    '  gap_edge(', itemp, ') = ', gap(itemp), ' eV ', &
-                    '  Re[Delta(1)] = ', REAL(Delta(1)), ' eV '
-       WRITE(stdout,'(a)') '    '
-       tcpu = get_clock( 'iso_raxis' )
-       WRITE( stdout,'(5x,a,i3,a,f8.1,a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
-       !
-       IF (conv) THEN
-          WRITE(stdout,'(a)') '    '
-          CALL print_clock( 'iso_raxis' )
-          WRITE(stdout,'(a)') '    '
-       ELSEIF (.NOT. conv .AND. (iter-1) == nsiter) THEN
-          CALL deallocate_eliashberg
-          WRITE(stdout,'(a)') '  '
-          CALL stop_clock( 'iso_raxis' )
-          CALL print_clock( 'iso_raxis' )
-          CALL errore('integrate_eliashberg_iso_raxis','converged was not reached',1)
-          RETURN
-       ENDIF
-       !
+      !
+      WRITE(stdout, '(a)') '    '
+      WRITE(stdout, '(5x,a,i3,a,f8.4,a,a,i3,a)') 'temp(', itemp, ') = ', estemp(itemp) / kelvin2eV, ' K '
+      WRITE(stdout, '(a)') '    '
+      iter = 1
+      conv = .FALSE.
+      DO WHILE(.NOT. conv .AND. iter <= nsiter)
+        CALL integrate_eliashberg_iso_raxis(itemp, iter, conv)
+        rdeltain(:) = REAL(Deltap(:))
+        cdeltain(:) = AIMAG(Deltap(:))
+        rdeltaout(:) = REAL(Delta(:))
+        cdeltaout(:) = AIMAG(Delta(:))
+        CALL mix_broyden(nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv)
+        CALL mix_broyden2(nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv)
+        Deltap(:) = rdeltain(:) + ci * cdeltain(:)
+        iter = iter + 1
+      ENDDO ! iter
+      WRITE(stdout,'(5x,a,i3,a,f8.4,a,a,i3,a,f10.6,a,a,f10.6,a)') &
+                   'temp(', itemp, ') = ', estemp(itemp)/kelvin2eV, ' K ', &
+                   '  gap_edge(', itemp, ') = ', gap(itemp), ' eV ', &
+                   '  Re[Delta(1)] = ', REAL(Delta(1)), ' eV '
+      WRITE(stdout,'(a)') '    '
+      tcpu = get_clock( 'iso_raxis' )
+      WRITE( stdout,'(5x,a,i3,a,f8.1,a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
+      !
+      IF (conv) THEN
+        WRITE(stdout,'(a)') '    '
+        CALL print_clock( 'iso_raxis' )
+        WRITE(stdout,'(a)') '    '
+      ELSEIF (.NOT. conv .AND. (iter - 1) == nsiter) THEN
+        CALL deallocate_eliashberg
+        WRITE(stdout, '(a)') '  '
+        CALL stop_clock('iso_raxis')
+        CALL print_clock('iso_raxis')
+        CALL errore('integrate_eliashberg_iso_raxis', 'converged was not reached', 1)
+        RETURN
+      ENDIF
+      !
     ENDDO ! itemp
     !    
-    CALL stop_clock( 'iso_raxis' )
+    CALL stop_clock('iso_raxis')
     ! 
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE eliashberg_iso_raxis
+    !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE integrate_eliashberg_iso_raxis( itemp, iter, conv ) 
+    SUBROUTINE integrate_eliashberg_iso_raxis(itemp, iter, conv) 
     !-----------------------------------------------------------------------
     !!
     !! This routine solves the isotropic Eliashberg equations directly on the real-axis
@@ -849,25 +852,32 @@
     !! True if the calculation is converged  
     ! 
     ! Local variables
+    CHARACTER(LEN = 256) :: name1
+    !! 
+    CHARACTER(LEN = 256) :: cname
+    !! 
     INTEGER :: iw, iwp
     !! Counter on frequency real-axis
     REAL(KIND = DP) :: dstep
-    !!
+    !! Step size
     REAL(KIND = DP) :: temp
     !! Temperature in K
     REAL(KIND = DP) :: a, b, c, d
     !! Temporary variables for reading kernelp and kernelm from file
     REAL(KIND = DP) :: absdelta, reldelta, errdelta
     !! Errors in Delta
-    REAL(KIND = DP), ALLOCATABLE :: wesqrt(:), desqrt(:)
+    REAL(KIND = DP), ALLOCATABLE :: wesqrt(:)
+    !! 
+    REAL(KIND = DP), ALLOCATABLE :: desqrt(:)
+    !! FIXME 
+    REAL(KIND = DP), EXTERNAL :: wgauss
+    !! 
     COMPLEX(KIND = DP) :: esqrt
     !! Temporary working variables
     COMPLEX(KIND = DP) :: kernelp, kernelm
     !! Temporary arrays for kernels K_{+}(w,w',T) and K_{-}(w,w'T)
     COMPLEX(KIND = DP), ALLOCATABLE, SAVE :: Deltaold(:)
     !! gap
-    REAL(KIND = DP), EXTERNAL :: wgauss
-    CHARACTER(len=256) :: name1, cname
     !
     IF (.NOT. ALLOCATED(wesqrt) ) ALLOCATE(wesqrt(nsw) )
     IF (.NOT. ALLOCATED(desqrt) ) ALLOCATE(desqrt(nsw) )

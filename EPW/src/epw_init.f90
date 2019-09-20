@@ -48,6 +48,7 @@
                                int4, int4_nc, int5, int5_so, alphap
   USE poolgathering,    ONLY : poolgather_int, poolgather_int1
   USE io_epw,           ONLY : readwfc
+  USE dvqpsi,           ONLY : dvanqq2
   !
   IMPLICIT NONE
   !

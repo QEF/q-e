@@ -20,26 +20,27 @@
     !-----------------------------------------------------------------------
     SUBROUTINE eliashberg_aniso_iaxis
     !-----------------------------------------------------------------------
-    !
-    ! This routine is the driver of the self-consistent cycle for the anisotropic 
-    ! Eliashberg equations on the imaginary-axis.  
-    !
-    USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE control_flags, ONLY : iverbosity
-    USE epwcom,        ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, & 
-                              limag, lpade, lacon, fsthick, imag_read, wscut
-    USE eliashbergcom, ONLY : nsw, nsiw, ADelta, ADeltap, ADeltai, ADeltaip, &
-                              estemp, nkfs, nbndfs, ekfs, ef0
+    !!
+    !! This routine is the driver of the self-consistent cycle for the anisotropic 
+    !! Eliashberg equations on the imaginary-axis.  
+    !!
+    USE kinds,             ONLY : DP
+    USE io_global,         ONLY : stdout
+    USE control_flags,     ONLY : iverbosity
+    USE epwcom,            ONLY : nsiter, nstemp, broyden_beta, broyden_ndim, & 
+                                  limag, lpade, lacon, fsthick, imag_read, wscut
+    USE eliashbergcom,     ONLY : nsw, nsiw, ADelta, ADeltap, ADeltai, ADeltaip, &
+                               estemp, nkfs, nbndfs, ekfs, ef0
     USE superconductivity, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
                                   mem_size_eliashberg, deallocate_eliashberg_aniso_iaxis, & 
                                   deallocate_eliashberg_aniso_raxis, deallocate_eliashberg
-    USE constants_epw, ONLY : kelvin2eV, ci, pi
-    USE io_global,     ONLY : ionode_id
-    USE mp_global,     ONLY : inter_pool_comm
-    USE mp,            ONLY : mp_bcast, mp_barrier
-    USE mp_world,      ONLY : mpime
-    USE io_eliashberg, ONLY : eliashberg_read_aniso_iaxis
+    USE constants_epw,     ONLY : kelvin2eV, ci, pi
+    USE io_global,         ONLY : ionode_id
+    USE mp_global,         ONLY : inter_pool_comm
+    USE mp,                ONLY : mp_bcast, mp_barrier
+    USE mp_world,          ONLY : mpime
+    USE io_eliashberg,     ONLY : eliashberg_read_aniso_iaxis
+    USE broyden,           ONLY : mix_broyden_aniso, mix_broyden2_aniso
     ! 
     IMPLICIT NONE
     !
@@ -80,7 +81,7 @@
        WRITE(stdout,'(5x,a,f10.4)') 'Cutoff frequency wscut = ', (2.d0*nsiw(itemp)+1)*pi*estemp(itemp)
        WRITE(stdout,'(a)') '  '
        CALL start_clock( 'iaxis_imag' )
-       CALL gen_freqgrid_iaxis( itemp )
+       CALL gen_freqgrid_iaxis(itemp)
        !
        IF (( limag .AND. .NOT. imag_read ) .OR. ( limag .AND. imag_read .AND. itemp /= 1 )) THEN
           iter = 1
@@ -177,11 +178,11 @@
                 DO ibnd = 1, nbndfs
                   IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
                     rdeltain(:)  = REAL(ADeltap(ibnd,ik,:))
-                    cdeltain(:)  = aimag(ADeltap(ibnd,ik,:))
+                    cdeltain(:)  = AIMAG(ADeltap(ibnd,ik,:))
                     rdeltaout(:) = REAL(ADelta(ibnd,ik,:))
-                    cdeltaout(:) = aimag(ADelta(ibnd,ik,:))
-                    CALL mix_broyden_aniso ( ik, ibnd, nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv )
-                    CALL mix_broyden2_aniso( ik, ibnd, nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv )
+                    cdeltaout(:) = AIMAG(ADelta(ibnd,ik,:))
+                    CALL mix_broyden_aniso(ik, ibnd, nsw, rdeltaout, rdeltain, broyden_beta, iter, broyden_ndim, conv)
+                    CALL mix_broyden2_aniso(ik, ibnd, nsw, cdeltaout, cdeltain, broyden_beta, iter, broyden_ndim, conv)
                     ADeltap(ik,ibnd,:) = rdeltain(:) + ci * cdeltain(:)
                   ENDIF
                 ENDDO
@@ -237,30 +238,32 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE eliashberg_aniso_iaxis
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE sum_eliashberg_aniso_iaxis( itemp, iter, conv ) 
     !-----------------------------------------------------------------------
     !
-    ! This routine solves the anisotropic Eliashberg equations on the imaginary-axis
-    !
-    USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE elph2,         ONLY : wqf
-    USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick
-    USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, Agap, wsi, AKeri, limag_fly, & 
-                              NAZnormi, AZnormi, ADeltai, ADeltaip, NZnormi, Znormi, & 
-                              Deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, & 
-                              nqfs, wkfs, w0g, ekfs
+    !-----------------------------------------------------------------------
+    SUBROUTINE sum_eliashberg_aniso_iaxis(itemp, iter, conv) 
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine solves the anisotropic Eliashberg equations on the imaginary-axis
+    !!
+    USE kinds,             ONLY : DP
+    USE io_global,         ONLY : stdout
+    USE elph2,             ONLY : wqf
+    USE epwcom,            ONLY : nsiter, nstemp, muc, conv_thr_iaxis, fsthick
+    USE eliashbergcom,     ONLY : nsiw, estemp, gap0, gap, Agap, wsi, AKeri, limag_fly, & 
+                                  NAZnormi, AZnormi, ADeltai, ADeltaip, NZnormi, Znormi, & 
+                                  Deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, & 
+                                  nqfs, wkfs, w0g, ekfs
     USE superconductivity, ONLY : mem_size_eliashberg, eliashberg_memlt_aniso_iaxis
-    USE constants_epw, ONLY : pi, zero, czero 
-    USE io_global,     ONLY : ionode_id
-    USE mp_global,     ONLY : inter_pool_comm
-    USE mp_world,      ONLY : mpime
-    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-    USE io_eliashberg, ONLY : eliashberg_write_iaxis
-    USE division,      ONLY : fkbounds
+    USE constants_epw,     ONLY : pi, zero, czero 
+    USE io_global,         ONLY : ionode_id
+    USE mp_global,         ONLY : inter_pool_comm
+    USE mp_world,          ONLY : mpime
+    USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
+    USE io_eliashberg,     ONLY : eliashberg_write_iaxis
+    USE division,          ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -309,48 +312,48 @@
     desqrt(:, :, :) = zero
     !
     IF (iter == 1) THEN
-       !
-       IF (itemp == 1) THEN 
-          ! get the size of required memory for  gap, Agap
-          imelt = ( 1 + nbndfs * nkfs ) * nstemp 
-          CALL mem_size_eliashberg( imelt )
-       ENDIF
-       !
-       ! get the size of required memory for  
-       ! wesqrt, desqrt, Deltai, Znormi, NZnormi, ADeltai, ADeltaip, AZnormi, NAZnormi, Deltaold
-       imelt = ( 4 + 6 * nbndfs * nkfs ) * nsiw(itemp)
-       CALL mem_size_eliashberg( imelt )
-       !
-       IF (.NOT. ALLOCATED(gap) )       ALLOCATE(gap(nstemp) )
-       IF (.NOT. ALLOCATED(Agap) )      ALLOCATE(Agap(nbndfs,nkfs,nstemp) )
-       IF (.NOT. ALLOCATED(Deltai) )    ALLOCATE(Deltai(nsiw(itemp)) )
-       IF (.NOT. ALLOCATED(Znormi) )    ALLOCATE(Znormi(nsiw(itemp)) )
-       IF (.NOT. ALLOCATED(NZnormi) )   ALLOCATE(NZnormi(nsiw(itemp)) )
-       IF (.NOT. ALLOCATED(ADeltai) )   ALLOCATE(ADeltai(nbndfs,nkfs,nsiw(itemp)) )
-       IF (.NOT. ALLOCATED(ADeltaip) )  ALLOCATE(ADeltaip(nbndfs,nkfs,nsiw(itemp)) )
-       IF (.NOT. ALLOCATED(AZnormi) )   ALLOCATE(AZnormi(nbndfs,nkfs,nsiw(itemp)) )
-       IF (.NOT. ALLOCATED(NAZnormi) )  ALLOCATE(NAZnormi(nbndfs,nkfs,nsiw(itemp)) )
-       gap(itemp) = zero
-       Agap(:,:,itemp) = zero
-       ADeltaip(:, :, :) = zero
-       !
-       DO ik = 1, nkfs
-          DO ibnd = 1, nbndfs
-             IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
-                DO iw = 1, nsiw(itemp)
-                   IF (wsi(iw) < 2.d0*wsphmax) THEN
-                      ADeltaip(ibnd,ik,iw) = gap0
-                   ELSE
-                      ADeltaip(ibnd,ik,iw) = zero
-                   ENDIF
-                ENDDO
-             ENDIF
-          ENDDO ! ibnd
-       ENDDO ! ik
-       !
-       CALL eliashberg_memlt_aniso_iaxis( itemp )
-       IF (.NOT. limag_fly ) CALL kernel_aniso_iaxis( itemp )
-       !
+      !
+      IF (itemp == 1) THEN 
+        ! get the size of required memory for  gap, Agap
+        imelt = ( 1 + nbndfs * nkfs ) * nstemp 
+        CALL mem_size_eliashberg( imelt )
+      ENDIF
+      !
+      ! get the size of required memory for  
+      ! wesqrt, desqrt, Deltai, Znormi, NZnormi, ADeltai, ADeltaip, AZnormi, NAZnormi, Deltaold
+      imelt = ( 4 + 6 * nbndfs * nkfs ) * nsiw(itemp)
+      CALL mem_size_eliashberg( imelt )
+      !
+      IF (.NOT. ALLOCATED(gap) )       ALLOCATE(gap(nstemp) )
+      IF (.NOT. ALLOCATED(Agap) )      ALLOCATE(Agap(nbndfs,nkfs,nstemp) )
+      IF (.NOT. ALLOCATED(Deltai) )    ALLOCATE(Deltai(nsiw(itemp)) )
+      IF (.NOT. ALLOCATED(Znormi) )    ALLOCATE(Znormi(nsiw(itemp)) )
+      IF (.NOT. ALLOCATED(NZnormi) )   ALLOCATE(NZnormi(nsiw(itemp)) )
+      IF (.NOT. ALLOCATED(ADeltai) )   ALLOCATE(ADeltai(nbndfs,nkfs,nsiw(itemp)) )
+      IF (.NOT. ALLOCATED(ADeltaip) )  ALLOCATE(ADeltaip(nbndfs,nkfs,nsiw(itemp)) )
+      IF (.NOT. ALLOCATED(AZnormi) )   ALLOCATE(AZnormi(nbndfs,nkfs,nsiw(itemp)) )
+      IF (.NOT. ALLOCATED(NAZnormi) )  ALLOCATE(NAZnormi(nbndfs,nkfs,nsiw(itemp)) )
+      gap(itemp) = zero
+      Agap(:,:,itemp) = zero
+      ADeltaip(:, :, :) = zero
+      !
+      DO ik = 1, nkfs
+        DO ibnd = 1, nbndfs
+          IF (ABS(ekfs(ibnd, ik) - ef0 ) < fsthick) THEN
+            DO iw = 1, nsiw(itemp)
+              IF (wsi(iw) < 2.d0 * wsphmax) THEN
+                ADeltaip(ibnd, ik, iw) = gap0
+              ELSE
+                ADeltaip(ibnd, ik, iw) = zero
+              ENDIF
+            ENDDO
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! ik
+      !
+      CALL eliashberg_memlt_aniso_iaxis( itemp )
+      IF (.NOT. limag_fly ) CALL kernel_aniso_iaxis( itemp )
+      !
     ENDIF 
     Deltai(:) = zero
     Znormi(:) = zero
