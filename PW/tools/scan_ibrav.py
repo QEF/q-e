@@ -38,8 +38,8 @@ def main() :
                       default=[0, 0, 0], nargs=3,
                       dest="angle",                    metavar=("1","2","3"),
                       help="initial rotation of the cell (degrees) around x,y,z")
-  parser.add_argument('-t', type=float, default=1.e-3,  dest="mthr", help="match threshold", metavar="THR")
-  parser.add_argument('-k', type=float, default=1.e-15, dest="kthr", help="convergence threshold", metavar="THR")
+#  parser.add_argument('-t', type=float, default=1.e-3,  dest="mthr", help="match threshold", metavar="THR")
+  parser.add_argument('-k', type=float, default=1.e-8, dest="kthr", help="convergence threshold", metavar="THR")
   parser.add_argument('-x', type=str, dest="ibrav2cell_x", help="full path to the ibrav2cell.x tool from PW/tools/ \
                       (default: look in the same directory as this program)", metavar="/path/to/ibrav2cell.x")
 
@@ -95,9 +95,9 @@ def main() :
                "maxls"   : 10000,
                "maxcor"  : 10000,
                "eps"     : 1.e-6,
-               "ftol"    : 1.e-24,
-               "gtol"    : 1.e-24,
-               "disp"    : False
+               "ftol"    : pow(args.kthr,2),
+               "gtol"    : args.kthr,
+               "disp"    : False,
                 }
 
       bnds = guess_bounds(p,ibrav)
