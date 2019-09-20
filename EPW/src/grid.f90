@@ -40,6 +40,10 @@
     !
     IMPLICIT NONE
     !
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filkf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL :: imatches 
+    !! Regex matching text.
     INTEGER :: ios
     !! INTEGER variable for I/O control
     INTEGER :: ik
@@ -70,9 +74,6 @@
     !! weights k-points
     REAL(KIND = DP), ALLOCATABLE :: wkf_tmp(:)
     !! Temporary weights
-    CHARACTER(LEN = 10) :: coordinate_type
-    !! filkf coordinate type (crystal or cartesian)
-    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
       IF (filkf /= '') THEN ! load from file
@@ -80,9 +81,10 @@
         WRITE(stdout, *) '    Using k-mesh file: ', TRIM(filkf)
         OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_para', 'opening file ' // filkf, ABS(ios))
-        READ(iunkf, FMT='(I, A)') nkqtotf, coordinate_type 
-        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
-        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+        READ(iunkf, *) nkqtotf, coordinate_type 
+        ! Default 
+        IF (TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT. imatches("crystal", coordinate_type) .AND. .NOT. imatches("cartesian", coordinate_type)) &
            CALL errore('loadkmesh_para', 'ERROR: Specify either crystal or cartesian coordinates in the filkf file', 1)
         !
         ALLOCATE(xkf_(3, 2 * nkqtotf), STAT = ierr)
@@ -363,6 +365,10 @@
     !
     IMPLICIT NONE
     !
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filkf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL  :: imatches
+    !! Regex matching text.
     INTEGER :: ios
     !! INTEGER variable for I/O control
     INTEGER :: ik
@@ -379,9 +385,6 @@
     !! coordinates k-points
     REAL(KIND = DP), ALLOCATABLE :: wkf_tmp(:)
     !! weights k-points
-    CHARACTER(LEN = 10) :: coordinate_type
-    !! filkf coordinate type (crystal or cartesian)
-    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
       IF (filkf /= '') THEN ! load from file
@@ -391,9 +394,10 @@
         WRITE(stdout, *) '     Using k-mesh file: ', TRIM(filkf)
         OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_serial', 'opening file ' // filkf, ABS(ios))
-        READ(iunkf, FMT='(I, A)') nkqtotf, coordinate_type
-        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
-        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+        READ(iunkf, *) nkqtotf, coordinate_type
+        ! Default
+        IF (TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT. imatches("crystal", coordinate_type) .AND. .NOT. imatches("cartesian", coordinate_type)) &
           CALL errore('loadkmesh_serial', 'ERROR: Specify either crystal or cartesian coordinates in the filkf file', 1)
         !
         ALLOCATE(xkf(3, 2 * nkqtotf), STAT = ierr)
@@ -899,6 +903,10 @@
     !
     IMPLICIT NONE
     !
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filkf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL  :: imatches
+    !! Regex matching text.
     INTEGER :: iq 
     !! Q-point index
     INTEGER :: lower_bnd
@@ -917,9 +925,6 @@
     !! Temporary q-point
     REAL(KIND = DP), ALLOCATABLE :: wqf_(:)
     !! Temporary weight of q-point
-    CHARACTER(LEN = 10) :: coordinate_type
-    !! filqf coordinate type (crystal or cartesian)
-    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
       IF (filqf /= '') THEN ! load from file 
@@ -928,9 +933,9 @@
         IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)' 
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadkmesh_para', 'Opening file ' // filqf, ABS(ios))
-        READ(iunqf, FMT='(I, A)') nqtotf, coordinate_type
-        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
-        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+        READ(iunqf, *) nqtotf, coordinate_type
+        IF (TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT. imatches("crystal", coordinate_type) .AND. .NOT. imatches("cartesian", coordinate_type)) &
           CALL errore('loadqmesh_para', 'ERROR: Specify either crystal or cartesian coordinates in the filqf file', 1)
         !
         ALLOCATE(xqf_(3, nqtotf), STAT = ierr)
@@ -1116,6 +1121,10 @@
     ! 
     IMPLICIT NONE
     !
+    CHARACTER(LEN = 10) :: coordinate_type
+    !! filqf coordinate type (crystal or cartesian)
+    LOGICAL, EXTERNAL  :: imatches
+    !! Regex matching text.
     INTEGER :: iq
     !! Q-index 
     INTEGER :: i, j, k
@@ -1124,9 +1133,6 @@
     !! Status integer
     INTEGER :: ierr
     !! Error status
-    CHARACTER(LEN = 10) :: coordinate_type
-    !! filqf coordinate type (crystal or cartesian)
-    LOGICAL, EXTERNAL  :: imatches
     !
     IF (mpime == ionode_id) THEN
       IF (filqf /= '') THEN ! load from file
@@ -1137,9 +1143,9 @@
         IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.TRUE., q-mesh needs to be [-0.5:0.5] (crystal)'
         OPEN(UNIT = iunqf, FILE = filqf, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
         IF (ios /= 0) CALL errore('loadqmesh_serial', 'opening file ' // filqf, ABS(ios))
-        READ(iunqf, FMT='(I, A)') nqtotf, coordinate_type
-        IF ( TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
-        IF (.NOT.imatches("crystal", coordinate_type) .AND. .NOT.imatches("cartesian", coordinate_type)) &
+        READ(iunqf, *) nqtotf, coordinate_type
+        IF (TRIM(coordinate_type) .EQ. ' ') coordinate_type = 'crystal'
+        IF (.NOT. imatches("crystal", coordinate_type) .AND. .NOT. imatches("cartesian", coordinate_type)) &
           CALL errore('loadqmesh_serial', 'ERROR: Specify either crystal or cartesian coordinates in the filqf file', 1)
         !
         ALLOCATE(xqf(3, nqtotf), STAT = ierr)
