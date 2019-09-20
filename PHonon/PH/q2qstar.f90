@@ -14,7 +14,7 @@
 ! Syntax:
 !   q2qstar.x filein [fileout]
 !
-! fileout default: filein.rot (old format) or filein.rot.xml (new format)
+! fileout default: rot_filein (old format) or rot_filein.xml (new format)
 !
 !----------------------------------------------------------------------------
 PROGRAM Q2QSTAR
@@ -63,7 +63,7 @@ PROGRAM Q2QSTAR
   COMPLEX(DP),ALLOCATABLE :: phi(:,:,:,:), d2(:,:)
   INTEGER :: i,j, icar,jcar, na,nb
   !
-  NAMELIST / input / fildyn
+  !NAMELIST / input / fildyn
   !
   CALL mp_startup()
   CALL environment_start(CODE)
@@ -82,7 +82,7 @@ PROGRAM Q2QSTAR
   IF (nargs > 1) THEN
     CALL get_command_argument(2, filout)
   ELSE
-      filout = TRIM(fildyn)//".rot"
+      filout = "rot_"//TRIM(fildyn)
   ENDIF
   CALL mp_bcast(filout, ionode_id,world_comm)
   !

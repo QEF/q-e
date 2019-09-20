@@ -17,86 +17,67 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 #
 # The above is in alphabetical order except when order matter during compilation
 #
+##### io_scattering.o \
 
 EPWOBJS = \
+kinds_epw.o \
 epwcom.o \
 constants_epw.o \
-io_epw.o \
 elph2.o \
+io_var.o \
+low_lvl.o \
 division.o \
+rigid_epw.o \
+io_epw.o \
+wigner.o \
+wan2bloch.o \
+cum_mod.o \
+close_epw.o \
+poolgathering.o \
+printing.o \
+kfold.o \
+dynmat.o \
+io_eliashberg.o \
 eliashbergcom.o \
 superconductivity.o \
-superconductivity_aniso.o \
 superconductivity_iso.o \
-io_eliashberg.o \
-io_scattering.o \
-transportcom.o \
-close_epw.o \
-printing.o \
+superconductivity_aniso.o \
+grid.o \
+rotate.o \
 transport.o \
 transport_iter.o \
-wigner.o \
+indabs.o \
 a2f.o \
 adddvscf2.o \
 bcast_epw_input.o \
 bloch2wan.o \
 broyden.o \
-createkmap.o \
-dvanqq2.o \
-dvqpsi_us3.o \
-dvqpsi_us_only3.o \
+dvqpsi.o \
 eliashberg.o \
 elphel2_shuffle.o \
 elphon_shuffle.o \
 elphon_shuffle_wrap.o \
+selfen.o \
+spectral_func.o \
 ephwann_shuffle.o \
 ephwann_shuffle_mem.o \
 epw_init.o \
 epw_readin.o \
 epw_setup.o \
 epw_summary.o \
-fermiwindow.o \
 gmap_sym.o \
-indabs.o \
-io_dyn_mat2.o \
-kfold.o \
-kpoint_grid_epw.o \
-ktokpmq.o \
-loadkmesh.o \
-loadqmesh.o \
 loadumat.o \
-load_rebal.o \
 nesting_fn.o \
-newdq2.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \
-poolgather.o \
 print_ibte.o \
-readdvscf.o \
-readgmap.o \
-readmat_shuffle2.o \
-readwfc.o \
-rigid_epw.o \
-rotate_eigenm.o \
-rotate_epmat.o \
-selfen_elec.o \
-selfen_phon.o \
-selfen_pl.o \
-set_ndnmbr.o \
 setphases_wrap.o \
-sort.o \
-spectral_cumulant.o \
-spectral_func.o \
-spectral_func_ph.o \
-spectral_func_pl.o \
 star_q2.o \
 stop_epw.o \
 wannierEPW.o \
 wannierize.o \
-pw2wan90epw.o \
-wan2bloch.o \
-system_mem_usage.o
+pw2wan90epw.o
 
 # setphases.o \ : SP: We keep it in case its usefull in the future but now depreciated.
 

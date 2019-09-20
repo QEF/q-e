@@ -10,7 +10,7 @@
   ! adapted from LR_Modules/adddvscf.f90 (QE)
   !
   !----------------------------------------------------------------------
-  SUBROUTINE adddvscf2( ipert, ik )
+  SUBROUTINE adddvscf2(ipert, ik)
   !----------------------------------------------------------------------
   !!
   !! This routine computes the contribution of the selfconsistent
@@ -68,9 +68,9 @@
   INTEGER ::  ijs
   !! Counter on combined is and js polarization
   !
-  COMPLEX(kind=DP) :: sum_k
+  COMPLEX(KIND = DP) :: sum_k
   !! auxiliary sum variable
-  COMPLEX(kind=DP) :: sum_nc(npol)
+  COMPLEX(KIND = DP) :: sum_nc(npol)
   !! auxiliary sum variable non-collinear case
   !
   IF (.NOT. okvan) RETURN
@@ -81,11 +81,11 @@
   !
   ijkb0 = 0
   DO nt = 1, ntyp
-    IF ( upf(nt)%tvanp ) THEN
+    IF (upf(nt)%tvanp) THEN
       DO na = 1, nat
         IF (ityp(na) == nt) THEN
           !
-          !   we multiply the integral for the becp term and the beta_n
+          ! We multiply the integral for the becp term and the beta_n
           !
           DO ibnd = lower_band, upper_band
             DO ih = 1, nh(nt)
@@ -102,8 +102,7 @@
                    DO is = 1, npol
                      DO js = 1, npol
                        ijs = ijs + 1
-                       sum_nc(is) = sum_nc(is) + int3_nc(ih,jh,na,ijs,ipert) * &
-                             becp1(ik)%nc(jkb,js,ibnd)
+                       sum_nc(is) = sum_nc(is) + int3_nc(ih, jh, na, ijs, ipert) * becp1(ik)%nc(jkb, js, ibnd)
                      ENDDO
                    ENDDO
                  ELSE
@@ -112,10 +111,10 @@
                  ENDIF
                ENDDO
                IF (noncolin) THEN
-                  CALL zaxpy( npwq, sum_nc(1), vkb(1,ikb), 1, dvpsi(1,ibnd), 1 )
-                  CALL zaxpy( npwq, sum_nc(2), vkb(1,ikb), 1, dvpsi(1+npwx,ibnd), 1 )
+                 CALL ZAXPY(npwq, sum_nc(1), vkb(1, ikb), 1, dvpsi(1, ibnd), 1)
+                 CALL ZAXPY(npwq, sum_nc(2), vkb(1, ikb), 1, dvpsi(1 + npwx, ibnd), 1)
                ELSE
-                  CALL zaxpy( npwq, sum_k, vkb(1,ikb), 1, dvpsi(1,ibnd), 1 )
+                 CALL ZAXPY(npwq, sum_k, vkb(1, ikb), 1, dvpsi(1, ibnd), 1)
                ENDIF
             ENDDO
           ENDDO
@@ -123,14 +122,16 @@
         ENDIF
       ENDDO
     ELSE
-       DO na = 1, nat
-          IF (ityp(na) == nt) ijkb0 = ijkb0 + nh(nt)
-       ENDDO
+      DO na = 1, nat
+        IF (ityp(na) == nt) ijkb0 = ijkb0 + nh(nt)
+      ENDDO
     ENDIF
   ENDDO
   !
   CALL stop_clock('adddvscf2')
   !
   RETURN
-  !
+  ! 
+  !----------------------------------------------------------------------
   END SUBROUTINE adddvscf2
+  !----------------------------------------------------------------------
