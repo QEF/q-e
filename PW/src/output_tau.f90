@@ -6,21 +6,27 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE output_tau( print_lattice, print_final  )
+SUBROUTINE output_tau( print_lattice, print_final )
   !----------------------------------------------------------------------------
+  !! Print cell parameters and atomic positions.
   !
-  USE io_global, ONLY : stdout
-  USE kinds,     ONLY : DP
-  USE constants, ONLY : bohr_radius_angs, AVOGADRO
-  USE cell_base, ONLY : alat, at, bg, omega, cell_units
-  USE ions_base, ONLY : nat, tau, ityp, atm, if_pos, tau_format, amass
+  USE io_global,   ONLY : stdout
+  USE kinds,       ONLY : DP
+  USE constants,   ONLY : bohr_radius_angs, AVOGADRO
+  USE cell_base,   ONLY : alat, at, bg, omega, cell_units
+  USE ions_base,   ONLY : nat, tau, ityp, atm, if_pos, tau_format, amass
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN)         :: print_lattice, print_final
-  REAL (DP), ALLOCATABLE :: tau_out(:,:)
-  INTEGER                     :: na, i, k
+  LOGICAL, INTENT(IN) :: print_lattice
+  !! if .TRUE. prints lattice parameters
+  LOGICAL, INTENT(IN) :: print_final
+  !! if .TRUE. prints the final coordinates
   !
+  ! ... local variables
+  !
+  REAL(DP), ALLOCATABLE :: tau_out(:,:)
+  INTEGER :: na, i, k
   !
   ! ... tau in output format
   !
@@ -38,12 +44,10 @@ SUBROUTINE output_tau( print_lattice, print_final  )
      WRITE( stdout, '(5x,a,1F12.5," g/cm^3")') &
                     "density = ", SUM( amass(ityp(1:nat)) )&
                                   /(omega*bohr_radius_angs**3 * 1.d-24)/AVOGADRO
-
-     SELECT CASE (cell_units)
      !
      ! ... convert output cell from internally used format
      ! ... (alat units) to the same format used in input
-     !
+     SELECT CASE( cell_units )
      CASE( 'alat' )
         WRITE( stdout, '(/"CELL_PARAMETERS (alat=",f12.8,")")') alat 
         WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )
@@ -59,13 +63,11 @@ SUBROUTINE output_tau( print_lattice, print_final  )
         WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )
      END SELECT
      !
-  END IF
+  ENDIF
   !
+  ! ... convert output atomic positions from internally used format
+  ! ... (a0 units) to the same format used in input
   SELECT CASE( tau_format )
-     !
-     ! ... convert output atomic positions from internally used format
-     ! ... (a0 units) to the same format used in input
-     !
   CASE( 'alat' )
      !
      WRITE( stdout, '(/"ATOMIC_POSITIONS (alat)")' )
@@ -79,7 +81,7 @@ SUBROUTINE output_tau( print_lattice, print_final  )
      !
      WRITE( stdout, '(/"ATOMIC_POSITIONS (crystal)")' )
      !
-     call cryst_to_cart( nat, tau_out, bg, -1 )
+     CALL cryst_to_cart( nat, tau_out, bg, -1 )
      !
   CASE( 'angstrom' )
      !
@@ -104,9 +106,9 @@ SUBROUTINE output_tau( print_lattice, print_final  )
         END IF
      ELSE
         WRITE( stdout,'(A3,3X,3F20.10)') atm(ityp(na)), tau_out(:,na)
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
   IF ( print_final  ) WRITE( stdout, '("End final coordinates")') 
   WRITE( stdout, '(/)' )
