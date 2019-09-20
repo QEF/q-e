@@ -158,6 +158,7 @@ elphel2_shuffle.o : ../../PW/src/symm_base.o
 elphel2_shuffle.o : ../../UtilXlib/mp.o
 elphel2_shuffle.o : constants_epw.o
 elphel2_shuffle.o : division.o
+elphel2_shuffle.o : dvqpsi.o
 elphel2_shuffle.o : elph2.o
 elphel2_shuffle.o : epwcom.o
 elphel2_shuffle.o : io_epw.o
@@ -176,6 +177,7 @@ elphon_shuffle.o : ../../PHonon/PH/phcom.o
 elphon_shuffle.o : ../../PW/src/pwcom.o
 elphon_shuffle.o : ../../UtilXlib/mp.o
 elphon_shuffle.o : constants_epw.o
+elphon_shuffle.o : dvqpsi.o
 elphon_shuffle.o : elph2.o
 elphon_shuffle.o : io_epw.o
 elphon_shuffle_wrap.o : ../../LR_Modules/lrcom.o
@@ -303,6 +305,7 @@ epw_init.o : ../../PHonon/PH/phcom.o
 epw_init.o : ../../PW/src/pwcom.o
 epw_init.o : ../../UtilXlib/mp.o
 epw_init.o : constants_epw.o
+epw_init.o : dvqpsi.o
 epw_init.o : elph2.o
 epw_init.o : epwcom.o
 epw_init.o : io_epw.o
@@ -676,6 +679,7 @@ superconductivity_aniso.o : ../../Modules/mp_global.o
 superconductivity_aniso.o : ../../Modules/mp_world.o
 superconductivity_aniso.o : ../../PHonon/PH/phcom.o
 superconductivity_aniso.o : ../../UtilXlib/mp.o
+superconductivity_aniso.o : broyden.o
 superconductivity_aniso.o : constants_epw.o
 superconductivity_aniso.o : division.o
 superconductivity_aniso.o : eliashbergcom.o
@@ -690,6 +694,7 @@ superconductivity_iso.o : ../../Modules/io_files.o
 superconductivity_iso.o : ../../Modules/io_global.o
 superconductivity_iso.o : ../../Modules/kind.o
 superconductivity_iso.o : ../../UtilXlib/mp.o
+superconductivity_iso.o : broyden.o
 superconductivity_iso.o : constants_epw.o
 superconductivity_iso.o : eliashbergcom.o
 superconductivity_iso.o : epwcom.o
