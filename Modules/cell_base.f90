@@ -721,13 +721,13 @@
             CASE ( 'volume' )
               !CALL errore(' init_dofree ', &
               !   ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
-              !IF ( ibrav /= 1 ) THEN
-              !  CALL errore('cell_dofree', 'Isotropic expansion is only allowed for ibrav=1; i.e. for simple cubic', 1)
-              !END IF
-              !iforceh      = 0
-              !iforceh(1,1) = 1
-              !iforceh(2,2) = 1
-              !iforceh(3,3) = 1
+              IF ( ibrav /= 1 ) THEN
+                CALL errore('cell_dofree', 'Isotropic expansion is only allowed for ibrav=1; i.e. for simple cubic', 1)
+              END IF
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,2) = 1
+              iforceh(3,3) = 1
               isotropic    = .TRUE.
             CASE ('x')
               iforceh      = 0
