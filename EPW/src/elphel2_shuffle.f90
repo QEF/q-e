@@ -91,7 +91,7 @@
   USE low_lvl,          ONLY : fractrasl, rotate_cart 
   USE io_epw,           ONLY : readwfc, readgmap
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE dvqpsi,           ONLY : dvqpsi_us3
+  USE dvqpsi,           ONLY : dvqpsi_us3, adddvscf2
   ! 
   IMPLICIT NONE
   !

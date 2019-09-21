@@ -70,7 +70,8 @@
   USE io_epw,        ONLY : read_ifc, readdvscf
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
-  USE rotate,        ONLY : rotate_epmat, rotate_eigenm
+  USE rotate,        ONLY : rotate_epmat, rotate_eigenm, star_q2, gmap_sym
+  USE pw2wan2epw,    ONLY : compute_pmn_para
 #if defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -531,7 +532,7 @@
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
       IF (meta_ionode) THEN
-        CALL dynmat(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
+        CALL dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, invs, s, irt, rtau, sumr)
       ENDIF
       CALL mp_bcast(zstar, meta_ionode_id, world_comm)
       CALL mp_bcast(epsi , meta_ionode_id, world_comm)

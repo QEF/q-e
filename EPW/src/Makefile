@@ -37,7 +37,7 @@ close_epw.o \
 poolgathering.o \
 printing.o \
 kfold.o \
-dynmat.o \
+dynmat_asr.o \
 io_eliashberg.o \
 broyden.o \
 plot.o \
