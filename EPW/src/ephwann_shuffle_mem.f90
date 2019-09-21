@@ -71,8 +71,8 @@
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk
-  USE io_epw, ONLY : electron_read, tau_read, iter_open, rwepmatw,       &
-                            iter_merge_parallel, epw_read, epw_write
+  USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
+  USE io_transport,  ONLY : electron_read, tau_read, iter_open, iter_merge_parallel
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
