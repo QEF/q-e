@@ -8,28 +8,29 @@
 !-----------------------------------------------------------------------
 SUBROUTINE hinit0()
   !-----------------------------------------------------------------------
+  !! Hamiltonian initialization: atomic position independent initialization
+  !! for nonlocal PP, structure factors, local potential, core charge.
   !
-  ! ... hamiltonian initialization: 
-  ! ... atomic position independent initialization for nonlocal PP,
-  ! ... structure factors, local potential, core charge
-  !
-  USE kinds,        ONLY : dp
-  USE ions_base,    ONLY : nat, nsp, ityp, tau
-  USE basis,        ONLY : startingconfig
-  USE cell_base,    ONLY : at, bg, omega, tpiba2
-  USE cellmd,       ONLY : omega_old, at_old, lmovecell
-  USE fft_base,     ONLY : dfftp
-  USE gvect,        ONLY : ngm, g, eigts1, eigts2, eigts3
-  USE vlocal,       ONLY : strf
-  USE realus,       ONLY : generate_qpointlist,betapointlist,init_realspace_vars,real_space
-  use ldaU,         ONLY : lda_plus_U, U_projection
-  USE control_flags,ONLY : tqr, tq_smoothing, tbeta_smoothing
-  USE io_global,    ONLY : stdout
+  USE kinds,            ONLY : DP
+  USE ions_base,        ONLY : nat, nsp, ityp, tau
+  USE basis,            ONLY : startingconfig
+  USE cell_base,        ONLY : at, bg, omega, tpiba2
+  USE cellmd,           ONLY : omega_old, at_old, lmovecell
+  USE fft_base,         ONLY : dfftp
+  USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
+  USE vlocal,           ONLY : strf
+  USE realus,           ONLY : generate_qpointlist, betapointlist, &
+                               init_realspace_vars, real_space
+  USE ldaU,             ONLY : lda_plus_U, U_projection
+  USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing
+  USE io_global,        ONLY : stdout
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik                 ! counter on k points
-  REAL(dp), ALLOCATABLE :: gk(:) ! work space
+  INTEGER :: ik
+  ! counter on k points
+  REAL(DP), ALLOCATABLE :: gk(:)
+  ! work space
   !
   CALL start_clock( 'hinit0' )
   !
@@ -63,12 +64,13 @@ SUBROUTINE hinit0()
      CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      CALL scale_h()
      !
-  END IF
+  ENDIF
   !
   ! ... initialize the structure factor
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-       dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+                   dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                   strf, eigts1, eigts2, eigts3 )
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters
@@ -85,12 +87,12 @@ SUBROUTINE hinit0()
   CALL set_rhoc()
   !
   IF ( tqr ) CALL generate_qpointlist()
-  
+  !
   IF (real_space ) THEN
      CALL betapointlist()
      CALL init_realspace_vars()
      WRITE(stdout,'(5X,"Real space initialisation completed")')    
-  END IF
+  ENDIF
   !
   CALL stop_clock( 'hinit0' )
   !
