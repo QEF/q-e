@@ -7,19 +7,19 @@
 
   ep_coupling = .true.
   elph        = .true.
-  kmaps       = .true.
-  epbwrite    = .false.
+  kmaps       = .false.
+  epbwrite    = .true.
   epbread     = .false.
-  epwwrite    = .false.
-  epwread     = .true.
+
+  epwwrite = .true.
+  epwread  = .false.
 
   etf_mem     = 0
-  vme         = .false. 
 
   nbndsub     =  5,
   nbndskip    =  0
 
-  wannierize  = .false.
+  wannierize  = .true.
   num_iter    = 500
   dis_froz_max= 8.8
   proj(1)     = 'B:pz'
@@ -28,6 +28,7 @@
   proj(4)     = 'f=0.5,0.5,0.5:s'
 
   iverbosity  = 0
+
 
   eps_acustic = 5.0    ! Lowest boundary for the 
   ephwrite    = .true. ! Writes .ephmat files used when wliasberg = .true.
