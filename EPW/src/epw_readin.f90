@@ -421,7 +421,7 @@
               ! INTEGER :: modenum = 0. In QE 5, modenum variable does not exist
               ! anymore. Change the default EPW value to match the previous QE
               ! one. 
-  vme = .FALSE.
+  vme = .TRUE. ! Was false by default until EPW 5.1
   ephwrite = .FALSE.
   band_plot = .FALSE.
   nqsmear = 10

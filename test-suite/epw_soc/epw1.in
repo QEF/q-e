@@ -12,8 +12,10 @@
   epwwrite    = .true.
   epwread     = .false.
 
-  nbndsub     =  4
-  nbndskip    =  5
+  vme         = .false.
+
+  nbndsub     =  8
+  nbndskip    =  10
 
   wannierize  = .true.
   num_iter    = 300
@@ -41,10 +43,10 @@
   a2f         = .true.
 
 
-  fsthick     = 6 ! eV
-  eptemp      = 300 ! K
-  degaussw    = 0.1  ! eV
-  degaussq    = 0.05 ! meV
+  fsthick     = 20 ! eV
+  eptemp      = 500 ! K
+  degaussw    = 0.2  ! eV
+  degaussq    = 0.1 ! meV
 
   dvscf_dir   = './save'
 

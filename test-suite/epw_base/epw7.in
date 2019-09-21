@@ -12,6 +12,7 @@
   epbread     = .false.
 
   etf_mem     = 2
+  vme         = .false. 
 
   restart      = .true.
   restart_freq = 50
@@ -33,7 +34,6 @@
   nest_fn     = .false.
   phonselfen  = .false.
   a2f         = .false.
-
 
   fsthick     = 1.5 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)

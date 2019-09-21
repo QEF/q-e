@@ -32,6 +32,7 @@
   asr_typ     = 'crystal'
 
   etf_mem     = 1
+  vme         = .false.
 
   nbndsub     =  16
   nbndskip    =  0
