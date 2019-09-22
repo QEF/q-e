@@ -38,6 +38,7 @@ printing.o \
 kfold.o \
 dynmat.o \
 io_eliashberg.o \
+broyden.o \
 eliashbergcom.o \
 superconductivity.o \
 superconductivity_iso.o \
@@ -51,7 +52,6 @@ a2f.o \
 adddvscf2.o \
 bcast_epw_input.o \
 bloch2wan.o \
-broyden.o \
 dvqpsi.o \
 eliashberg.o \
 elphel2_shuffle.o \
