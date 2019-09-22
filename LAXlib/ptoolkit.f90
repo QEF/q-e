@@ -1781,13 +1781,14 @@ SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, 
    !
    IMPLICIT NONE
    INCLUDE 'laxlib_kinds.fh'
+   INCLUDE 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
    REAL(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
    TYPE(la_descriptor) :: desc
    !
@@ -2084,13 +2085,14 @@ SUBROUTINE sqr_zmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, 
    USE laxlib_parallel_include
    IMPLICIT NONE
    INCLUDE 'laxlib_kinds.fh'
+   INCLUDE 'laxlib_param.fh'
    !
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
    COMPLEX(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    COMPLEX(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
    TYPE(la_descriptor) :: desc
    !
@@ -2396,7 +2398,7 @@ SUBROUTINE sqr_tr_cannon_x( n, a, lda, b, ldb, idesc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP)            :: a(lda,*), b(ldb,*)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -2531,7 +2533,7 @@ SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
    !
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
@@ -4662,7 +4664,7 @@ END SUBROUTINE sqr_zsetmat_x
        include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-       INTEGER, INTENT(IN)  :: idesc(:)
+       INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
        INTEGER :: i, j, ic, ir
        IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
           ir = idesc(LAX_DESC_IR)
@@ -4686,7 +4688,7 @@ END SUBROUTINE sqr_zsetmat_x
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
        REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-       INTEGER, INTENT(IN)  :: idesc(:)
+       INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
        INTEGER :: i, j, ic, ir, ierr
        lambda_repl = 0.0d0
        IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
@@ -4715,7 +4717,7 @@ END SUBROUTINE sqr_zsetmat_x
        include 'laxlib_param.fh'
        REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
        REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-       INTEGER, INTENT(IN)  :: idesc(:)
+       INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
        INTEGER :: i, ii, j, me, np, nrl, ierr
        zmat_repl = 0.0d0
        me = idesc(LAX_DESC_MYPE)
@@ -4746,7 +4748,7 @@ END SUBROUTINE sqr_zsetmat_x
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
        INTEGER,  INTENT(IN)  :: i, j
        REAL(DP), INTENT(IN)  :: val
-       INTEGER, INTENT(IN)  :: idesc(:)
+       INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
        INTEGER :: ir, ic
        IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
           ir = idesc(LAX_DESC_IR)
@@ -4768,7 +4770,7 @@ END SUBROUTINE sqr_zsetmat_x
        include 'laxlib_param.fh'
        REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
        REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-       INTEGER, INTENT(IN)  :: idesc(:)
+       INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
        INTEGER :: i, ii, j, me, np
        me = idesc(LAX_DESC_MYPE)
        np = idesc(LAX_DESC_NPC) * idesc(LAX_DESC_NPR)

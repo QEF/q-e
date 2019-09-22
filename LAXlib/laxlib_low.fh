@@ -81,9 +81,10 @@ END INTERFACE
       SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, idesc )
          IMPLICIT NONE
          include 'laxlib_kinds.fh'
+         include 'laxlib_param.fh'
          REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
          REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-         INTEGER, INTENT(IN)  :: idesc(:)
+         INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
       END SUBROUTINE distribute_lambda_x
    END INTERFACE
 
@@ -91,9 +92,10 @@ END INTERFACE
       SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, idesc )
          IMPLICIT NONE
          include 'laxlib_kinds.fh'
+         include 'laxlib_param.fh'
          REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
          REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-         INTEGER, INTENT(IN)  :: idesc(:)
+         INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
       END SUBROUTINE collect_lambda_x
    END INTERFACE
 
@@ -101,10 +103,11 @@ END INTERFACE
       SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, idesc )
          IMPLICIT NONE
          include 'laxlib_kinds.fh'
+         include 'laxlib_param.fh'
          REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
          INTEGER,  INTENT(IN)  :: i, j
          REAL(DP), INTENT(IN)  :: val
-         INTEGER, INTENT(IN)  :: idesc(:)
+         INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
       END SUBROUTINE setval_lambda_x
    END INTERFACE
 
@@ -112,9 +115,10 @@ END INTERFACE
       SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, idesc )
          IMPLICIT NONE
          include 'laxlib_kinds.fh'
+         include 'laxlib_param.fh'
          REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
          REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-         INTEGER, INTENT(IN)  :: idesc(:)
+         INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
       END SUBROUTINE distribute_zmat_x
    END INTERFACE
 
@@ -122,9 +126,10 @@ END INTERFACE
       SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, idesc )
          IMPLICIT NONE
          include 'laxlib_kinds.fh'
+         include 'laxlib_param.fh'
          REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
          REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-         INTEGER, INTENT(IN)  :: idesc(:)
+         INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
       END SUBROUTINE collect_zmat_x
    END INTERFACE
 
@@ -281,22 +286,24 @@ INTERFACE sqr_mm_cannon
 SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    IMPLICIT NONE
    include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
    REAL(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
 SUBROUTINE sqr_zmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    IMPLICIT NONE
    include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
    COMPLEX(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    COMPLEX(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
 END INTERFACE
 
@@ -304,10 +311,11 @@ INTERFACE sqr_tr_cannon
 SUBROUTINE sqr_tr_cannon_x( n, a, lda, b, ldb, idesc )
    IMPLICIT NONE
    include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP)            :: a(lda,*), b(ldb,*)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
 END INTERFACE
 
@@ -315,9 +323,10 @@ INTERFACE redist_row2col
 SUBROUTINE redist_row2col_x( n, a, b, ldx, nx, idesc )
    IMPLICIT NONE
    include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
-   INTEGER, INTENT(IN) :: idesc(:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
 END INTERFACE

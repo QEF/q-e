@@ -31,21 +31,23 @@ END INTERFACE
 INTERFACE pdiaghg
 SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
   IMPLICIT NONE
+  include 'laxlib_param.fh'
   include 'laxlib_kinds.fh'
   INTEGER, INTENT(IN) :: n, ldh
   COMPLEX(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
   REAL(DP), INTENT(OUT) :: e(n)
   COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
-  INTEGER, INTENT(IN) :: idesc(:)
+  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE 
 SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   IMPLICIT NONE
+  include 'laxlib_param.fh'
   include 'laxlib_kinds.fh'
   INTEGER, INTENT(IN) :: n, ldh
   REAL(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
   REAL(DP), INTENT(OUT) :: e(n)
   REAL(DP), INTENT(OUT) :: v(ldh,ldh)
-  INTEGER, INTENT(IN) :: idesc(:)
+  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE 
 END INTERFACE
 !----------------------------------------------------------------------------
@@ -64,12 +66,13 @@ END INTERFACE
    INTERFACE laxlib_diagonalize
       SUBROUTINE diagonalize_parallel_x( n, rhos, rhod, s, idesc )
          IMPLICIT NONE
+         include 'laxlib_param.fh'
          include 'laxlib_kinds.fh'
          REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
          REAL(DP)              :: rhod(:)   !  output eigenvalues
          REAL(DP)              :: s(:,:)    !  output eigenvectors
          INTEGER,  INTENT(IN) :: n         !  size of the global matrix
-         INTEGER, INTENT(IN) :: idesc(:)
+         INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
       END SUBROUTINE
       SUBROUTINE diagonalize_serial_x( n, rhos, rhod )
          IMPLICIT NONE
