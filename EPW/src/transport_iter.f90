@@ -49,7 +49,7 @@
     USE io_eliashberg,    ONLY : kpmq_map
     USE printing,         ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
     USE grid,             ONLY : k_avg
-    USE io_transport,     ONLY : Fin_write, Fin_read 
+    USE io_transport,     ONLY : fin_write, fin_read 
     USE noncollin_module, ONLY : noncolin
     USE io_files,         ONLY : diropn
     USE control_flags,    ONLY : iverbosity
@@ -89,26 +89,12 @@
     ! Local variables
     LOGICAL :: exst
     !! Local variable
-    LOGICAL :: special
-    !! Is the current k-point a special k-point    
-    LOGICAL :: special_map(nind)
-    !! Special k-point map
     INTEGER :: ind
     !! Index for sparse matrix
     INTEGER :: iter
     !! Innter IBTE loop
-    INTEGER :: iter_restart
-    !! Innter IBTE loop
-    INTEGER :: iterb
-    !! Outer B-field iteration loop
-    INTEGER :: iterb_restart
-    !! B-field loop used for restart only
-    INTEGER :: i, iiq, iq
-    !! Cartesian direction index 
-    INTEGER :: j
-    !! Cartesian direction index 
-    INTEGER :: ij
-    !! Cartesian direction index 
+    INTEGER :: iq
+    !! q-point
     INTEGER :: ik
     !! K-point index
     INTEGER :: ikk
@@ -145,52 +131,14 @@
     !! nrot is the max number of symmetry 
     INTEGER :: nsym(nktotf)
     !! Temporary matrix used to count how many symmetry for that k-point
-    INTEGER :: n
-    !! Use for averaging
-    INTEGER :: ikaux
-    !! Counter on the k-point inside fsthick
-    INTEGER :: counter
-    !! Counter
-    INTEGER :: k_inside_fsthick(nstemp)
-    !! Number of k-points inside fsthick
-    INTEGER :: k_inside_fsthick_nrot(nstemp)
-    !! Number of k-points inside fsthick, full grid
-    INTEGER :: k_inside_fsthick_id_nrot_inv(nkf1 * nkf2 * nkf3, nstemp)
-    !! Id of k-points inside fsthick, full grid, inverse 
-    INTEGER :: nktotbz
-    !! K-point on full BZ
-    INTEGER :: ind1
-    !! Index 1
-    INTEGER :: ind2
-    !! Index 2
     INTEGER :: nb_sp
     !! Number of special points
-    INTEGER :: sp
-    !! Local index
-    INTEGER :: counter_average
-    !! Local counter
-    INTEGER :: index_sp
-    !! Local index
-    INTEGER :: isym
-    !! Symmetry index
-    INTEGER :: jsym
-    !! Symmetry index
-    INTEGER :: sym_map(nind)
-    !! Symmetry mapping
-    INTEGER :: max_size 
-    !! Max size of the arrays
     INTEGER :: ierr
     !! Error status
-    INTEGER, ALLOCATABLE :: sp_map(:, :)
-    !! Mapping for special points
-    INTEGER, ALLOCATABLE :: counter_map(:)
-    !! Counter mapping for special k-points
-    INTEGER, ALLOCATABLE ::  k_inside_fsthick_id(:, :)
-    !! Id of k-points inside fsthick
-    INTEGER, ALLOCATABLE ::  k_inside_fsthick_id_nrot(:, :, :)
-    !! Id of k-points inside fsthick, full grid
-    INTEGER, ALLOCATABLE ::  k_inside_fsthick_id_nrot_tot(:, :)
-    !! Inverse of k_inside_fsthick_id_nrot_inv
+    INTEGER :: nrws
+    !! Maximum number of WS vectors
+    INTEGER, PARAMETER :: nrwsx = 200
+    !! Variable for WS folding
     INTEGER, ALLOCATABLE :: xkf_sp(:, :)
     !! Special k-points
     REAL(KIND = DP) :: tau
@@ -203,15 +151,13 @@
     !! Electronic velocity $$v_{n\mathbf{k}}$$
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
-    REAL(KIND = DP) :: F_SERTA(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP) :: f_serta(3, nbndfst, nktotf, nstemp)
     !! SERTA solution
-    !REAL(KIND = DP) :: F_SERTA_2(3, nbndfst, nktotf, nstemp)
-    !! SERTA solution (for testing)
-    REAL(KIND = DP) :: F_in(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP) :: f_in(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i
-    REAL(KIND = DP) :: F_out(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP) :: f_out(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i
-    REAL(KIND = DP) :: F_rot(3)
+    REAL(KIND = DP) :: f_rot(3)
     !! Rotated Fi_in by the symmetry operation 
     REAL(KIND = DP) :: error(nstemp)
     !! Error in the Hall mobility
@@ -219,105 +165,20 @@
     !! Average hole mobility from previous iteration
     REAL(KIND = DP) :: max_mob(nstemp)
     !! Maximum mobility use for error calculations
-    REAL(KIND = DP) :: av_outdiag_old(nstemp)
-    !! Average hall mobility from previous iteration, inner loop
-    REAL(KIND = DP) :: av_outdiag(nstemp)
-    !! Average hall mobility, inner loop
-    REAL(KIND = DP) :: av_outdiag_old_b(nstemp)
-    !! Average hall mobility from previous iteration, outer loop
-    REAL(KIND = DP) :: av_outdiag_b(nstemp)
-    !! Average hall mobility, outer loop
-    REAL(KIND = DP) :: ekk2
-    !! Use for averaging
-    REAL(KIND = DP) :: vB(3)
-    !! v_nk(i) cross B(j)
-    REAL(KIND = DP) :: sigma0(3, 3, nstemp)
-    !! Conductivity tensor without Magnetic field.
-    REAL(KIND = DP) :: sigma0_SI(3, 3, nstemp)
-    !! Conductivity tensor without Magnetic field, international system units. 
-    REAL(KIND = DP) :: sigmaB(3, 3, nstemp)
-    !! Conductivity tensor with Magnetic field. 
-    REAL(KIND = DP) :: sigmaB_SI(3, 3, nstemp)
-    !! Conductivity tensor with Magnetic field, international system units.
-    REAL(KIND = DP) :: MobilityB(3, 3, nstemp)
-    !! Conductivity tensor with Magnetic field. 
-    REAL(KIND = DP) :: Mobility0(3, 3, nstemp)
-    !! Conductivity tensor with Magnetic field.
-    REAL(KIND = DP) :: Mobility0_inv(3, 3, nstemp)
-    !! Conductivity tensor with Magnetic field,inverse
-    REAL(KIND = DP) :: carrier_density
-    !! Carrier density [nb of carrier per unit cell]
-    REAL(KIND = DP) :: Hall(3, 3, nstemp)
-    !! Hall factor
-    REAL(KIND = DP) :: sigma0_inv(3, 3, nstemp)
-    !! Hall factor
-    REAL(KIND = DP) :: bfield_norm
-    !! Norm of the B-field
-    REAL(KIND = DP) :: dF_in(3, 3, nbndfst, nktotf, nstemp)
-    !! k-derivative of F_in    
-    REAL(KIND = DP) :: xkk_cart(3)
-    !! Cartesian coordinate
-    REAL(KIND = DP) :: xk(3)
-    !! K-point
-    REAL(KIND = DP) ::xq(3)
-    !! Q-point
-    REAL(KIND = DP) :: sa(3,3)
-    !! Symmetry matrix in crystal
-    REAL(KIND = DP) :: sb(3,3)
-    !! Symmetry matrix (intermediate step)
-    REAL(KIND = DP) :: sr(3,3)
-    !! Symmetry matrix in cartesian coordinate 
-    REAL(KIND = DP) :: S_xq(3)
-    !! Rotated q-point
-    REAL(KIND = DP) :: F_in_b_rot(3)
-    !! Temp rotation
     REAL(KIND = DP) :: dfnk
     !! Local variable
     REAL(KIND = DP) :: etemp
     !! Local variable
-    REAL(KIND = DP), EXTERNAL :: wgauss
-    !! Compute the approximate theta function. Here computes Fermi-Dirac
-    REAL(KIND = DP), EXTERNAL :: w0gauss
-    !! The derivative of wgauss:  an approximation to the delta function
-    ! Gather all the k-point coordinate from all the pools
-    REAL(KIND = DP) :: B_abs
-    !! Absolute magnetic field (Tesla)
-    REAL(KIND = DP) :: tolerence
-    !! Tolerence for the iterative loop
-    REAL(KIND = DP) :: sa_sp(3, 3)
-    !! Symmetry matrix in crystal for special points
-    REAL(KIND = DP) :: sa_tot(3, 3)
-    !! Symmetry matrix in crystal
     REAL(KIND = DP) :: xkk(3) 
     !! K-point index for printing
-    REAL(KIND = DP), ALLOCATABLE :: vkk_all_b_red(:, :, :, :)
-    !! Velocity on the smaller grid use for B-field calculation
-    REAL(KIND = DP), ALLOCATABLE :: xkk_all_b_red(:, :, :)
-    !! Velocity on the smaller grid use for B-field calculation
-    REAL(KIND = DP), ALLOCATABLE :: etf_all_b_red(:, :, :)
-    !! Eigenenergies, in presence of magnetic field, smaller grid
-    REAL(KIND = DP), ALLOCATABLE :: wkf_all_b_red(:)
-    !! Weight of k, smaller grid    
-    REAL(KIND = DP), ALLOCATABLE :: dF_in_cart_red(:, :, :, :, :)
-    !! k-derivative of F_in, in cartesian directions, smaller grid
-    REAL(KIND = DP), ALLOCATABLE :: F_SERTA_b_red(:, :, :, :)
-    !! SERTA solution, in presence of magnetic field, smaller grid
-    REAL(KIND = DP), ALLOCATABLE :: F_in_b_red(:, :, :, :)
-    !! In solution for iteration i, in presence of magnetic field, smaller grid
-    REAL(KIND = DP), ALLOCATABLE :: F_out_b_red(:, :, :, :)
-    !! In solution for iteration i, in presence of magnetic field, smaller grid
-    REAL(KIND = DP), ALLOCATABLE :: tmp_b_red(:, :, :)
-    !! Relaxation time, smaller grid
-    REAL(KIND = DP), ALLOCATABLE :: xkf_bz(:, :)
-    !! K-points on the full BZ 
     REAL(KIND = DP) :: ws(3)
     !! Wigner-Seitz vector
-    INTEGER :: nrws
-    !! Maximum number of WS vectors
-    INTEGER, PARAMETER :: nrwsx = 200
-    !! Variable for WS folding
     REAL(KIND = DP) :: rws(4, nrwsx)
     !! Real WS vectors 
+    REAL(KIND = DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss:  an approximation to the delta function
+    REAL(KIND = DP), ALLOCATABLE :: xkf_bz(:, :)
+    !! K-points on the full BZ 
     ! 
     xkf_all(:, :) = zero
 #if defined(__MPI)
@@ -391,7 +252,7 @@
       ! 
     ENDIF ! mp_mesh_k
     ! 
-    F_SERTA(:, :, :, :) = zero
+    f_serta(:, :, :, :) = zero
     ! 
     IF (iverbosity == 4) THEN
       WRITE(stdout, *) 'temp k-index  ibnd       k-point          eig[Ry]        F_SERTA   '
@@ -404,13 +265,13 @@
             ekk = etf_all (ibnd, ik) - ef0(itemp)
             dfnk = w0gauss( ekk / etemp, -99 ) / etemp
             ! (-) sign is because w0gauss is - df/de
-            F_SERTA(:, ibnd, ik, itemp) = - dfnk * vkk_all(:, ibnd, ik) / (inv_tau(ibnd, ik, itemp))
+            f_serta(:, ibnd, ik, itemp) = - dfnk * vkk_all(:, ibnd, ik) / (inv_tau(ibnd, ik, itemp))
             !   
             IF (iverbosity == 4) THEN
-              IF (SUM(ABS(F_SERTA(:, ibnd, ik, itemp))) > eps160) THEN
+              IF (SUM(ABS(f_serta(:, ibnd, ik, itemp))) > eps160) THEN
                 xkk = xkf_all(:, 2 * ik - 1)
                 CALL cryst_to_cart(1, xkk, bg, 1)
-                WRITE(stdout, '(3i8,4f12.6,3E14.5)') itemp, ik, ibnd, xkk, ekk, F_SERTA(:, ibnd, ik, itemp)
+                WRITE(stdout, '(3i8,4f12.6,3E14.5)') itemp, ik, ibnd, xkk, ekk, f_serta(:, ibnd, ik, itemp)
               ENDIF
             ENDIF ! iverbosity 4
           ENDIF
@@ -432,21 +293,21 @@
     ! 
     ! Possibily read from file
     iter = 1
-    F_in(:, :, :, :) = zero
+    f_in(:, :, :, :) = zero
     !IF (ncarrier > 1E5) THEN
-    !  CALL Fin_read(iter, F_in, av_mob_old, .TRUE.)
+    !  CALL fin_read(iter, F_in, av_mob_old, .TRUE.)
     !ENDIF
     !! 
     !IF (ncarrier < -1E5) THEN
-    !  CALL Fin_read(iter, F_in, av_mob_old, .FALSE.)
+    !  CALL fin_read(iter, F_in, av_mob_old, .FALSE.)
     !ENDIF
     ! If it is the first time, put to SERTA
     IF (iter == 1) THEN
-      F_in(:, :, :, :) = F_SERTA(:, :, :, :)
+      f_in(:, :, :, :) = f_serta(:, :, :, :)
       av_mob_old(:) = zero
     ENDIF
     ! 
-    F_out(:, :, :, :) = zero
+    f_out(:, :, :, :) = zero
     error(:) = 1000
     ! Now compute the Iterative solution for electron or hole
     WRITE(stdout, '(5x,a)') ' '
@@ -471,20 +332,20 @@
         ! Use k-point symmetry
         DO ind = 1, nind
           !  
-          F_rot(:) = zero
+          f_rot(:) = zero
           iq    = sparse_q(ind)
           ik    = sparse_k(ind)
           ibnd  = sparse_i(ind)
           jbnd  = sparse_j(ind)
           itemp = sparse_t(ind)
           ! 
-          CALL cryst_to_cart(1, F_in(:, jbnd, ixkqf_tr(ind), itemp), at, -1)
+          CALL cryst_to_cart(1, f_in(:, jbnd, ixkqf_tr(ind), itemp), at, -1)
           CALL DGEMV('n', 3, 3, 1.d0, REAL(s(:, :, s_BZtoIBZ_full(ind)), KIND = DP), &
-                     3, F_in(:, jbnd, ixkqf_tr(ind), itemp), 1, 0.d0, F_rot(:), 1)
-          CALL cryst_to_cart(1, F_in(:, jbnd, ixkqf_tr(ind), itemp), bg, 1)
+                     3, f_in(:, jbnd, ixkqf_tr(ind), itemp), 1, 0.d0, f_rot(:), 1)
+          CALL cryst_to_cart(1, f_in(:, jbnd, ixkqf_tr(ind), itemp), bg, 1)
           CALL cryst_to_cart(1, F_rot, bg, 1)
           ! 
-          F_out(:, ibnd, ik, itemp) = F_out(:, ibnd, ik, itemp) + trans_prob(ind) * F_rot(:)
+          f_out(:, ibnd, ik, itemp) = f_out(:, ibnd, ik, itemp) + trans_prob(ind) * f_rot(:)
           ! 
         ENDDO
       ELSE
@@ -498,7 +359,7 @@
           ! We need F_in at k+q point
           CALL kpmq_map(xkf_all(:, 2 * ik - 1), xqf(:, iq), +1, nkq_abs)
           ! 
-          F_out(:, ibnd, ik, itemp) = F_out(:, ibnd, ik, itemp) + trans_prob(ind) * F_in(:, jbnd, nkq_abs, itemp)
+          f_out(:, ibnd, ik, itemp) = f_out(:, ibnd, ik, itemp) + trans_prob(ind) * f_in(:, jbnd, nkq_abs, itemp)
           !  
         ENDDO
       ENDIF
@@ -509,8 +370,8 @@
         DO ik = 1, nktotf
           DO ibnd = 1, nbndfst
             IF (ABS(inv_tau(ibnd, ik, itemp)) > eps160) THEN
-              F_out(:, ibnd, ik, itemp) = F_SERTA(:, ibnd, ik, itemp) + &
-                               F_out(:, ibnd, ik, itemp) / (inv_tau(ibnd, ik, itemp))
+              f_out(:, ibnd, ik, itemp) = f_serta(:, ibnd, ik, itemp) + &
+                               f_out(:, ibnd, ik, itemp) / (inv_tau(ibnd, ik, itemp))
             ENDIF
           ENDDO
         ENDDO
@@ -540,11 +401,11 @@
       ! 
       ! Save F_in to file:
       !IF (ncarrier > 1E5) THEN
-      !  CALL Fin_write(iter, F_in, av_mob_old, .TRUE.)
+      !  CALL fin_write(iter, F_in, av_mob_old, .TRUE.)
       !ENDIF
       !! 
       !IF (ncarrier < -1E5) THEN
-      !  CALL Fin_write(iter, F_in, av_mob_old, .FALSE.)
+      !  CALL fin_write(iter, F_in, av_mob_old, .FALSE.)
       !ENDIF
       ! 
     ENDDO ! end of while loop

@@ -680,7 +680,7 @@
     !-----------------------------------------------------------------------
     !  
     !----------------------------------------------------------------------------
-    SUBROUTINE Fin_write(iter, F_in, av_mob_old, elec)
+    SUBROUTINE fin_write(iter, F_in, av_mob_old, elec)
     !----------------------------------------------------------------------------
     !!
     !! Writes the F without magnetic field for restart
@@ -699,7 +699,7 @@
     !
     INTEGER, INTENT(in) :: iter
     !! Iteration number
-    REAL(KIND = DP), INTENT(in) :: F_in(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP), INTENT(in) :: f_in(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i  
     REAL(KIND = DP), INTENT(in) :: av_mob_old(nstemp)
     !! Error in the hole mobility
@@ -745,7 +745,7 @@
           DO ibnd = 1, nbndfst
             DO idir = 1, 3
               i = i +1
-              aux(i) = F_in(idir, ibnd, ik, itemp)
+              aux(i) = f_in(idir, ibnd, ik, itemp)
             ENDDO
           ENDDO
         ENDDO
@@ -764,11 +764,11 @@
     ENDIF
     !
     !----------------------------------------------------------------------------
-    END SUBROUTINE Fin_write
+    END SUBROUTINE fin_write
     !----------------------------------------------------------------------------
     ! 
     !----------------------------------------------------------------------------
-    SUBROUTINE Fin_read(iter, F_in, av_mob_old, elec)
+    SUBROUTINE fin_read(iter, F_in, av_mob_old, elec)
     !----------------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
@@ -785,7 +785,7 @@
     !
     INTEGER, INTENT(inout) :: iter
     !! Iteration number
-    REAL(KIND = DP), INTENT(inout) :: F_in(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP), INTENT(inout) :: f_in(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i  
     REAL(KIND = DP), INTENT(inout) :: av_mob_old(nstemp)
     !! Error in the hole mobility
@@ -845,7 +845,7 @@
               DO ibnd = 1, nbndfst
                 DO idir = 1, 3
                   i = i + 1
-                  F_in(idir, ibnd, ik, itemp) = aux(i)
+                  f_in(idir, ibnd, ik, itemp) = aux(i)
                 ENDDO
               ENDDO
             ENDDO
@@ -882,7 +882,7 @@
               DO ibnd = 1, (nbndfst)
                 DO idir = 1, 3
                   i = i + 1
-                  F_in(idir, ibnd, ik, itemp) = aux(i)
+                  f_in(idir, ibnd, ik, itemp) = aux(i)
                 ENDDO
               ENDDO
             ENDDO
@@ -902,7 +902,7 @@
     ENDIF ! exists
     !
     !----------------------------------------------------------------------------
-    END SUBROUTINE Fin_read
+    END SUBROUTINE fin_read
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------

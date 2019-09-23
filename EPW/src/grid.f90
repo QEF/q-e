@@ -1900,13 +1900,13 @@
     !! Symmetry matrix in cartesian coordinate 
     REAL(KIND = DP) :: xk(3)
     !! Current k-point coordinate
-    REAL(KIND = DP) :: S_xk(3)
+    REAL(KIND = DP) :: s_xk(3)
     !! Rotated k-point
     REAL(KIND = DP) :: ws(3)
     !! Wigner-Seitz vector
     REAL(KIND = DP) :: rws(4, nrwsx) 
     !! Real WS vectors 
-    REAL(KIND = DP) :: S_xk_border(3, 27)
+    REAL(KIND = DP) :: s_xk_border(3, 27)
     !! Look for special points on the border
     ! 
     ! Split the k-point across cores
@@ -1927,7 +1927,7 @@
         sr       = TRANSPOSE(sr)
         xk = xkf_all(:, ik + lower_bnd - 1)
         CALL cryst_to_cart(1, xk, bg, 1)
-        CALL backtoWS(xk, ws, rws, nrwsx, nrws)
+        CALL backtows(xk, ws, rws, nrwsx, nrws)
         xk = ws
         CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xk, 1 ,0.d0 , S_xk, 1)     
         ! 
@@ -1937,7 +1937,7 @@
           DO m = -1, 1
             DO l = -1, 1
               counter_n = counter_n + 1
-              S_xk_border(:, counter_n) = S_xk(:) + REAL(n, KIND = DP) * bg(:, 1) &
+              s_xk_border(:, counter_n) = s_xk(:) + REAL(n, KIND = DP) * bg(:, 1) &
                          + REAL(m, KIND = DP) * bg (:, 2) + REAL(l, KIND = DP) * bg (:, 3)
             ENDDO
           ENDDO
@@ -1952,7 +1952,7 @@
         ! Now check if the symmetry was not found because the point is on border
         IF (.NOT. sym_found) THEN
           DO counter_n = 1, 27
-            IF (DOT_PRODUCT(xk(:) - S_xk_border(:, counter_n), xk(:) - S_xk_border(:, counter_n)) < eps6) THEN
+            IF (DOT_PRODUCT(xk(:) - s_xk_border(:, counter_n), xk(:) - s_xk_border(:, counter_n)) < eps6) THEN
               counter = counter + 1
               xkt_sp(counter, ik + lower_bnd - 1) = nb
             ENDIF
@@ -2015,7 +2015,7 @@
     !! Lenght of xkf_sp
     INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
     !! Special points indexes and symmetries
-    REAL(KIND = DP), INTENT(inout) :: F_out(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP), INTENT(inout) :: f_out(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i
     REAL(KIND = DP), INTENT(inout) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity of k
@@ -2055,15 +2055,15 @@
     !! Symmetry matrix in crystal
     REAL(KIND = DP) :: sr(3, 3)
     !! Symmetry matrix in crystal
-    REAL(KIND = DP) :: S_vkk(3, nbndfst)
+    REAL(KIND = DP) :: s_vkk(3, nbndfst)
     !! Rotated vector
-    REAL(KIND = DP) :: S_F_out(3, nbndfst)
+    REAL(KIND = DP) :: s_f_out(3, nbndfst)
     !! Rotated vector
     REAL(KIND = DP) :: tmp_vkk(3, nbndfst)
     !! Temporary vector
-    REAL(KIND = DP) :: tmp_F_out(3, nbndfst)
+    REAL(KIND = DP) :: tmp_f_out(3, nbndfst)
     !! Temporary vector
-    REAL(KIND = DP) :: F_out_loc(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP) :: f_out_loc(3, nbndfst, nktotf, nstemp)
     !! Local F_out where the k-points have been spread
     REAL(KIND = DP) :: vkk_all_loc(3, nbndfst, nktotf)
     !! Local velocity where the k-points have been spread
@@ -2071,7 +2071,7 @@
     ! Split the k-point across cores
     CALL fkbounds(nktotf, lower_bnd, upper_bnd)
     ! 
-    F_out_loc(:, :, :, :) = zero
+    f_out_loc(:, :, :, :) = zero
     vkk_all_loc(:, :, :) = zero
     special_map(:) = .FALSE. 
     index_sp(:) = 0
@@ -2099,23 +2099,23 @@
                 sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                 sr       = TRANSPOSE(sr)
                 DO ibnd = 1, nbndfst
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vkk_all(:, ibnd, ik + lower_bnd - 1), 1, 0.d0, S_vkk(:, ibnd), 1)
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, F_out(:, ibnd, ik + lower_bnd - 1, itemp), 1, 0.d0, S_F_out(:, ibnd), 1)
-                  tmp_vkk(:, ibnd) = tmp_vkk(:, ibnd) + S_vkk(:, ibnd)
-                  tmp_F_out(:, ibnd) = tmp_F_out(:, ibnd) + S_F_out(:, ibnd)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vkk_all(:, ibnd, ik + lower_bnd - 1), 1, 0.d0, s_vkk(:, ibnd), 1)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, f_out(:, ibnd, ik + lower_bnd - 1, itemp), 1, 0.d0, s_f_out(:, ibnd), 1)
+                  tmp_vkk(:, ibnd) = tmp_vkk(:, ibnd) + s_vkk(:, ibnd)
+                  tmp_f_out(:, ibnd) = tmp_f_out(:, ibnd) + s_f_out(:, ibnd)
                 ENDDO ! ibnd
               ENDIF
             ENDIF
           ENDDO ! sp
           DO ibnd = 1, nbndfst
             vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = tmp_vkk(:, ibnd) / DBLE(counter_average)
-            F_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = tmp_F_out(:, ibnd) / DBLE(counter_average)
+            f_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = tmp_f_out(:, ibnd) / DBLE(counter_average)
           ENDDO
           ! 
         ELSE ! not a special point 
           DO ibnd = 1, nbndfst
             vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = vkk_all(:, ibnd, ik + lower_bnd - 1)
-            F_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = F_out(:, ibnd, ik + lower_bnd - 1, itemp) 
+            f_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = f_out(:, ibnd, ik + lower_bnd - 1, itemp) 
           ENDDO 
         ENDIF ! special
       ENDDO! ik

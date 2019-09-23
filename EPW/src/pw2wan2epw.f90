@@ -806,7 +806,7 @@
       ENDIF
   
   ! SP : This file is not used for now. Only required to build the UNK file
-  !      tempFILE = TRIM(prefix)//'.mmn'
+  !      tempfile = TRIM(prefix)//'.mmn'
   !      OPEN(iummn, FILE = tempfile, IOSTAT = ios, FORM = 'unformatted')
   !      WRITE(iummn) m_mat
   !      CLOSE(iummn)
@@ -945,7 +945,7 @@
       sgf_spinor(:, :) = czero
     ENDIF
     !
-    WRITE(stdout,'(5x, a)') 'AMN'
+    WRITE(stdout, '(5x, a)') 'AMN'
     !
     IF (any_uspp) THEN
       CALL deallocate_bec_type(becp)
@@ -1299,11 +1299,11 @@
     !
     ! vv: Write info about SCDM in output
     IF (TRIM(scdm_entanglement) == 'isolated') THEN
-      WRITE(stdout,'(1x, a, a/)') 'Case  : ', TRIM(scdm_entanglement)
+      WRITE(stdout, '(1x, a, a/)') 'Case  : ', TRIM(scdm_entanglement)
     ELSEIF ((TRIM(scdm_entanglement) == 'erfc') .OR. &
             (TRIM(scdm_entanglement) == 'gaussian')) THEN
-      WRITE(stdout,'(1x, a, a)') 'Case  : ',trim(scdm_entanglement)
-      WRITE(stdout,'(1x, a, f10.3, a/, 1x, a, f10.3, a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
+      WRITE(stdout, '(1x, a, a)') 'Case  : ', TRIM(scdm_entanglement)
+      WRITE(stdout, '(1x, a, f10.3, a/, 1x, a, f10.3, a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
     ENDIF
     !
     ! vv: Allocate all the variables for the SCDM method:
@@ -1332,6 +1332,8 @@
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv_spin', 1)
       ALLOCATE(rwork(2 * 2 * nrtot), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
+      ALLOCATE(psi_gamma(2 * nrtot, numbands), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
     ELSE
       minmn = MIN(numbands, nrtot)
       ALLOCATE(qr_tau(2 * minmn), STAT = ierr)
@@ -1340,17 +1342,12 @@
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv', 1)
       ALLOCATE(rwork(2 * nrtot), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
+      ALLOCATE(psi_gamma(nrtot, numbands), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
     ENDIF
     !
     ALLOCATE(nowfc(n_wannier, numbands), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating nowfc', 1)
-    IF (noncolin) THEN
-      ALLOCATE(psi_gamma(2 * nrtot, numbands), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating pis_gamma', 1)
-    ELSE
-      ALLOCATE(psi_gamma(nrtot, numbands), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating pis_gamma', 1)
-    ENDIF
     ALLOCATE(focc(numbands), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating focc', 1)
     minmn2 = MIN(numbands, n_wannier)
@@ -1378,7 +1375,7 @@
     a_mat(:, :, :) = czero
     zero_vect(:) = zero
     !
-    WRITE (stdout,'(5x,a)') 'AMN'
+    WRITE(stdout, '(5x, a)') 'AMN'
     !
     ! Check that Gamma-point is first in the list of k-vectors
     !
@@ -1397,6 +1394,7 @@
     !
     ibnd1 = 0
     f_gamma = zero
+    psi_gamma(:, :) = czero
     IF (noncolin) THEN
       DO ibnd = 1, nbtot
         IF (excluded_band(ibnd)) CYCLE
@@ -1424,7 +1422,6 @@
         CALL invfft('Wave', psic_nc(:, 2), dffts)
         !
         ! vv: Build Psi_k = Unk * focc at G-point only
-        psi_gamma(:, :) = czero
 #if defined(__MPI)
         CALL gather_grid(dffts, psic_nc(:, 1), psic_nc_all(:, 1))
         CALL gather_grid(dffts, psic_nc(:, 2), psic_nc_all(:, 2))
@@ -1478,7 +1475,7 @@
         psi_gamma(1:nrtot, ibnd1) = psic(1:nrtot) * f_gamma / norm_psi
 #endif
       ENDDO ! ibnd
-    ENDIF
+    ENDIF !noncolin
     !
     ! vv: Perform QR factorization with pivoting on Psi_Gamma
     ! vv: Preliminary call to define optimal values for lwork and cwork size
@@ -1487,8 +1484,13 @@
     qr_tau(:)    = czero
     tmp_cwork(:) = czero
     rwork(:)     = zero
-    CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                piv, qr_tau, tmp_cwork, -1, rwork, info)
+    IF (noncolin) THEN
+      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, tmp_cwork, -1, rwork, info)
+    ELSE
+      CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, tmp_cwork, -1, rwork, info)
+    ENDIF
     IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
     !
     lcwork = AINT(REAL(tmp_cwork(1)))
@@ -1501,14 +1503,24 @@
     !
 #if defined(__MPI)
     IF (meta_ionode) THEN
-      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                  piv, qr_tau, cwork, lcwork, rwork, info)
+      IF (noncolin) THEN 
+        CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                    piv, qr_tau, cwork, lcwork, rwork, info)
+      ELSE
+        CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                    piv, qr_tau, cwork, lcwork, rwork, info)
+      ENDIF
       IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
     ENDIF
     CALL mp_bcast(piv, meta_ionode_id, world_comm)
 #else
-    CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                piv, qr_tau, cwork, lcwork, rwork, info)
+    IF (noncolin) THEN 
+      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, cwork, lcwork, rwork, info)
+    ELSE
+      CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, cwork, lcwork, rwork, info)
+    ENDIF
     IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
 #endif
     !
@@ -1549,10 +1561,17 @@
     ENDDO
     !
     cpos(:, :) = zero
-    DO iw = 1, n_wannier
-      cpos(iw, :) = rpos(piv_pos(iw), :)
-      cpos(iw, :) = cpos(iw, :) - ANINT(cpos(iw, :))
-    ENDDO
+    IF (noncolin) THEN 
+      DO iw = 1, n_wannier
+        cpos(iw, :) = rpos(piv_pos(iw), :)
+        cpos(iw, :) = cpos(iw, :) - ANINT(cpos(iw, :))
+      ENDDO
+    ELSE
+      DO iw = 1, n_wannier
+        cpos(iw, :) = rpos(piv(iw), :)
+        cpos(iw, :) = cpos(iw, :) - ANINT(cpos(iw, :))
+      ENDDO
+    ENDIF
     !
 #if defined(__MPI)
     WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
@@ -1640,6 +1659,7 @@
         DO ibnd = 1, nbtot
           IF (excluded_band(ibnd)) CYCLE
           ibnd1 = ibnd1 + 1
+          !
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
             focc(ibnd1) = 1.0d0
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
@@ -1709,6 +1729,7 @@
         DO ibnd = 1, nbtot
           IF (excluded_band(ibnd)) CYCLE
           ibnd1 = ibnd1 + 1
+          !
           a_mat(ibnd1, iw, ik_g) = Amat(ibnd1, iw)
         ENDDO ! bands
       ENDDO ! wannier fns
@@ -1763,11 +1784,12 @@
     ENDIF
 #endif
     !
-    WRITE(stdout,*)
-    WRITE(stdout,'(5x,a)') 'AMN calculated'
+    WRITE(stdout, *)
+    WRITE(stdout, '(5x, a)') 'AMN calculated'
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE compute_amn_with_scdm
     !-----------------------------------------------------------------------
     !
