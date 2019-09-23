@@ -659,7 +659,7 @@
     !------------------------------------------------------------------------------------------
     ! 
     ! -----------------------------------------------------------------------------------------
-    SUBROUTINE backtoWS(v, ws, rws, nrwsx, nrws)
+    SUBROUTINE backtows(v, ws, rws, nrwsx, nrws)
     ! -----------------------------------------------------------------------------------------
     !! 03/2019 - F. Macheda and S. Ponce
     !! This subroutines takes a vector "v" like a k-point and bring it back to the 
