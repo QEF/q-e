@@ -57,7 +57,7 @@
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE io_epw, ONLY : electron_write
+    USE io_transport,  ONLY : electron_write
     USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE

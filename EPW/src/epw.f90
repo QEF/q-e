@@ -29,6 +29,7 @@
   USE elph2,           ONLY : elph 
   USE close_epw,       ONLY : close_final, deallocate_epw
   USE cum_mod,         ONLY : spectral_cumulant
+  USE wannierization,  ONLY : setphases_wrap, wann_run
   !
   IMPLICIT NONE
   !
@@ -81,7 +82,7 @@
   !
   ! Read in the input file
   !
-  CALL epw_readin
+  CALL epw_readin()
   !
   IF (epwread .AND. .NOT. epbread) THEN
     WRITE(stdout,'(a)') "                      "
@@ -91,14 +92,14 @@
     WRITE(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
     WRITE(stdout,'(a)') "     ------------------------------------------------------------------------ "
     WRITE(stdout,'(a)') "                      "
-    CALL epw_setup_restart
+    CALL epw_setup_restart()
   ELSE
-    CALL epw_setup
+    CALL epw_setup()
   ENDIF
   !
   !  Print run info to stdout
   !
-  CALL epw_summary
+  CALL epw_summary()
   !
   IF (ep_coupling) THEN 
     !
@@ -106,7 +107,7 @@
     IF (epwread .AND. .NOT. epbread) THEN
       CONTINUE
     ELSE 
-      CALL openfilepw
+      CALL openfilepw()
     ENDIF
     !
     CALL print_clock('EPW' )
@@ -121,12 +122,12 @@
     !
     ! Generates the perturbation matrix which fixes the gauge of 
     ! the calculated wavefunctions
-    CALL setphases_wrap
+    CALL setphases_wrap()
     !
     IF (wannierize) THEN
       !
       ! Create U(k, k') localization matrix 
-      CALL wann_run
+      CALL wann_run()
     ELSE
       !
       ! Read Wannier matrix from a previous run

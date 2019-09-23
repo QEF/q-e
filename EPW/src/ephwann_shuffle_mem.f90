@@ -71,8 +71,9 @@
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE grid,          ONLY : qwindow
   USE printing,      ONLY : print_gkk
-  USE io_epw, ONLY : electron_read, tau_read, iter_open, rwepmatw,       &
-                            iter_merge_parallel, epw_read, epw_write
+  USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
+  USE io_transport,  ONLY : electron_read, tau_read, iter_open, print_ibte,     &
+                            iter_merge_parallel
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
@@ -85,8 +86,9 @@
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
-  USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f
+  USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine_mem
   USE indabs,        ONLY : indabs_main, renorm_eig
+  USE plot,          ONLY : nesting_fn_q, a2f_main, plot_band
 #if defined(__MPI)
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
@@ -1469,9 +1471,9 @@
         CLOSE(linewidth_phself)
       ENDIF
     ENDIF
-    IF (band_plot) CALL plot_band
+    IF (band_plot) CALL plot_band()
     !
-    IF (a2f) CALL eliashberg_a2f
+    IF (a2f) CALL a2f_main()
     ! 
     ! if scattering is read then Fermi level and scissor have not been computed.
     IF (scatread) THEN
