@@ -12,7 +12,7 @@
   epwwrite    = .true.
   epwread     = .false.
 
-  vme         = .false. 
+  vme         = .false.
 
   nbndsub     =  4
   nbndskip    =  5
@@ -38,12 +38,9 @@
 
   iverbosity  = 0
 
-  elecselfen  = .false.
+  elecselfen  = .true.
   phonselfen  = .true.
-  a2f         = .false.
-
-  lifc        = .true.
-  asr_typ     = 'crystal'
+  a2f         = .true.
 
   fsthick     = 6 ! eV
   eptemp      = 300 ! K

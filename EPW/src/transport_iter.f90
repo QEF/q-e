@@ -21,44 +21,43 @@
                     sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, inv_tau) 
     !-----------------------------------------------------------------------
     !!
-    !!  This SUBROUTINE computes the scattering rate with the iterative BTE
-    !!  (inv_tau).
-    !!  The fine k-point and q-point grid have to be commensurate. 
-    !!  The k-point grid uses crystal symmetry to decrease computational cost.
+    !! This routine computes the scattering rate with the iterative BTE (inv_tau).
+    !! The fine k-point and q-point grid have to be commensurate. 
+    !! The k-point grid uses crystal symmetry to decrease computational cost.
     !!
-    USE kinds,         ONLY : DP, sgl
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : alat, at, omega, bg
-    USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : fsthick, mob_maxiter, eps_acustic, degaussw, nstemp, & 
-                              system_2d, int_mob, ncarrier, restart, restart_freq, &
-                              mp_mesh_k, nkf1, nkf2, nkf3, vme, broyden_beta
-    USE pwcom,         ONLY : ef 
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef,   & 
-                              wf, xkf, epf17, nqtotf, nkqtotf, nbndfst, nktotf,    & 
-                              map_rebal, xqf, wqf, nqf, transp_temp,               &
-                              mobilityel_save, lower_bnd, ixkqf_tr, s_BZtoIBZ_full,&
-                              mobilityh_save
-    USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,        & 
-                              electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8,    &
-                              eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
-    USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
-    USE mp_global,     ONLY : inter_pool_comm, world_comm, my_pool_id
-    USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : ionode_id
-    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_eliashberg, ONLY : kpmq_map
-    USE printing,      ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
-    USE grid,          ONLY : k_avg
-    USE io_epw, ONLY : Fin_write, Fin_read 
+    USE kinds,            ONLY : DP, sgl
+    USE io_global,        ONLY : stdout
+    USE cell_base,        ONLY : alat, at, omega, bg
+    USE phcom,            ONLY : nmodes
+    USE epwcom,           ONLY : fsthick, mob_maxiter, eps_acustic, degaussw, nstemp, & 
+                                 system_2d, int_mob, ncarrier, restart, restart_freq, &
+                                 mp_mesh_k, nkf1, nkf2, nkf3, vme, broyden_beta
+    USE pwcom,            ONLY : ef 
+    USE elph2,            ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef,   & 
+                                 wf, xkf, epf17, nqtotf, nkqtotf, nbndfst, nktotf,    & 
+                                 map_rebal, xqf, wqf, nqf, transp_temp,               &
+                                 mobilityel_save, lower_bnd, ixkqf_tr, s_BZtoIBZ_full,&
+                                 mobilityh_save
+    USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,        & 
+                                 electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8,    &
+                                 eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
+    USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
+    USE mp_global,        ONLY : inter_pool_comm, world_comm, my_pool_id
+    USE mp_world,         ONLY : mpime
+    USE io_global,        ONLY : ionode_id
+    USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE io_eliashberg,    ONLY : kpmq_map
+    USE printing,         ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
+    USE grid,             ONLY : k_avg
+    USE io_transport,     ONLY : Fin_write, Fin_read 
     USE noncollin_module, ONLY : noncolin
-    USE io_files,      ONLY : diropn
-    USE control_flags, ONLY : iverbosity
-    USE io_var,        ONLY : iufilibtev_sup
-    USE kinds_epw,     ONLY : SIK2
-    USE wigner,        ONLY : backtoWS
-    USE grid,          ONLY : special_points, kpoint_grid_epw
-    USE poolgathering, ONLY : poolgather2
+    USE io_files,         ONLY : diropn
+    USE control_flags,    ONLY : iverbosity
+    USE io_var,           ONLY : iufilibtev_sup
+    USE kinds_epw,        ONLY : SIK2
+    USE wigner,           ONLY : backtoWS
+    USE grid,             ONLY : special_points, kpoint_grid_epw
+    USE poolgathering,    ONLY : poolgather2
     !
     IMPLICIT NONE
     !

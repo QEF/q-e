@@ -29,6 +29,7 @@ low_lvl.o \
 division.o \
 rigid_epw.o \
 io_epw.o \
+io_transport.o \
 wigner.o \
 wan2bloch.o \
 cum_mod.o \
@@ -36,9 +37,10 @@ close_epw.o \
 poolgathering.o \
 printing.o \
 kfold.o \
-dynmat.o \
+dynmat_asr.o \
 io_eliashberg.o \
 broyden.o \
+plot.o \
 eliashbergcom.o \
 superconductivity.o \
 superconductivity_iso.o \
@@ -47,9 +49,9 @@ grid.o \
 rotate.o \
 transport.o \
 transport_iter.o \
+pw2wan2epw.o \
+wannierization.o \
 indabs.o \
-a2f.o \
-adddvscf2.o \
 bcast_epw_input.o \
 bloch2wan.o \
 dvqpsi.o \
@@ -65,21 +67,10 @@ epw_init.o \
 epw_readin.o \
 epw_setup.o \
 epw_summary.o \
-gmap_sym.o \
 loadumat.o \
-nesting_fn.o \
 openfilepw.o \
-rgd_blk_epw_fine_mem.o \
-plot_band.o \
-print_ibte.o \
-setphases_wrap.o \
-star_q2.o \
 stop_epw.o \
-wannierEPW.o \
-wannierize.o \
-pw2wan90epw.o
-
-# setphases.o \ : SP: We keep it in case its usefull in the future but now depreciated.
+wannierEPW.o
 
 #default : epw
 

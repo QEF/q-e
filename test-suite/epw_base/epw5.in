@@ -12,6 +12,7 @@
   epbread     = .false.
 
   etf_mem     = 0
+  vme         = .false.
 
   epwwrite    = .true.
   epwread     = .false.
@@ -29,7 +30,6 @@
   elecselfen  = .true.
   phonselfen  = .false.
   a2f         = .false.
-
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)

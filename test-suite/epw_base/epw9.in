@@ -13,6 +13,7 @@
   epbread     = .false.
 
   etf_mem     = 1
+  vme         = .false.
 
   epwwrite    = .false.
   epwread     = .true.
@@ -37,7 +38,6 @@
   nw_specfun   = 20
   cumulant     = .true.
   bnd_cum      = 4
-
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
