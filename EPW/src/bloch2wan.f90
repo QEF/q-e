@@ -608,8 +608,6 @@
     !!
     !! RM 03/2018: debugged and updated
     !
-    !--------------------------------------------------------------------------
-    !
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg, alat
     USE elph2,     ONLY : cvmew
@@ -617,8 +615,8 @@
     USE io_var,    ONLY : iummn, iubvec, iudecayv
     USE io_files,  ONLY : prefix
     USE io_global, ONLY : ionode_id, stdout
-    USE mp_global, ONLY : inter_pool_comm, my_pool_id
-    USE mp,        ONLY : mp_barrier, mp_sum
+    USE mp_global, ONLY : inter_pool_comm, my_pool_id, world_comm
+    USE mp,        ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_world,  ONLY : mpime
     USE division,  ONLY : fkbounds
     USE kfold,     ONLY : ktokpmq  
@@ -650,6 +648,8 @@
     !! rotation matrix from wannier code
     !
     ! Local variables
+    CHARACTER(LEN = 256) :: tempfile
+    !! Temporary file
     INTEGER :: ipol
     !! Counter on polarization
     INTEGER :: ik
@@ -727,9 +727,6 @@
     COMPLEX(KIND = DP) :: ctmp
     !! Temporary variable to store M_mn
     !
-    CHARACTER(LEN = 256) :: tempfile
-    !! Temporary file
-    !
     ! setup rotation matrix - we need access to all for the k+b
     cu_big = czero
     CALL fkbounds(nkstot, ikstart, ikstop)
@@ -744,34 +741,49 @@
     ! RM - bvec are writen on file if write_bvec = .true. is specified
     !      in the wannier input
     !
-    tempFILE = TRIM(prefix) // '.bvec'
-    OPEN(iubvec, FILE = tempfile, ACTION = 'read', IOSTAT = ios)
-    IF (ios /= 0) THEN
-      !
-      ! if it doesn't exist, then we just set the bvec and wb to zero
-      !
-      nnb = 1
-      ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
-      IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
-      ALLOCATE(wb(nnb), STAT = ierr)
-      IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
-      bvec = zero
-      wb   = zero
-    ELSE
-      READ(iubvec,*) tempfile
-      READ(iubvec,*) nkstot_tmp, nnb
-      IF (nkstot_tmp /= nkstot) CALL errore('vmebloch2wan', 'Unexpected number of k-points in .bvec file', 1)
-      ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
-      IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
-      ALLOCATE(wb(nnb), STAT = ierr)
-      IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
-      DO ik = 1, nkstot
-        DO ib = 1, nnb
-          READ(iubvec,*) bvec(:, ib, ik), wb(ib)
+    IF (mpime == ionode_id) THEN
+      tempfile = TRIM(prefix) // '.bvec'
+      OPEN(iubvec, FILE = tempfile, ACTION = 'read', IOSTAT = ios)
+      IF (ios /= 0) THEN
+        !
+        ! if it doesn't exist, then we just set the bvec and wb to zero
+        !
+        nnb = 1
+        ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
+        ALLOCATE(wb(nnb), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
+        bvec = zero
+        wb   = zero
+      ELSE
+        READ(iubvec,*) tempfile
+        READ(iubvec,*) nkstot_tmp, nnb
+        IF (nkstot_tmp /= nkstot) CALL errore('vmebloch2wan', 'Unexpected number of k-points in .bvec file', 1)
+        ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
+        ALLOCATE(wb(nnb), STAT = ierr)
+        IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
+        DO ik = 1, nkstot
+          DO ib = 1, nnb
+            READ(iubvec,*) bvec(:, ib, ik), wb(ib)
+          ENDDO
         ENDDO
-      ENDDO
-      CLOSE(iubvec)
+        CLOSE(iubvec)
+      ENDIF
     ENDIF
+    ! 
+    CALL mp_bcast(nnb, ionode_id, world_comm)
+    ! 
+    ! All other cpu than master
+    IF (mpime /= ionode_id) THEN
+      ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
+      IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
+      ALLOCATE(wb(nnb), STAT = ierr)
+      IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
+    ENDIF
+    ! 
+    CALL mp_bcast(bvec, ionode_id, world_comm)
+    CALL mp_bcast(wb, ionode_id, world_comm)
     !
     ! b-vectors in units of Ang^-1 and wb-weights in units of Ang^2
     ! when read from file
@@ -788,7 +800,7 @@
     M_mn = czero
     !
     IF (mpime == ionode_id) THEN
-      tempFILE = TRIM(prefix)//'.mmn'
+      tempfile = TRIM(prefix)//'.mmn'
       OPEN(iummn, FILE = tempfile, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
       !
       IF (ios /= 0) THEN
@@ -809,7 +821,7 @@
         !
       ENDIF
     ENDIF
-    CALL mp_sum(M_mn,inter_pool_comm)
+    CALL mp_bcast(M_mn, ionode_id, world_comm)
     !
     CALL start_clock('Velocity: step 1')
     !

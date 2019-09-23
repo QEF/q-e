@@ -806,7 +806,7 @@
       ENDIF
   
   ! SP : This file is not used for now. Only required to build the UNK file
-  !      tempFILE = TRIM(prefix)//'.mmn'
+  !      tempfile = TRIM(prefix)//'.mmn'
   !      OPEN(iummn, FILE = tempfile, IOSTAT = ios, FORM = 'unformatted')
   !      WRITE(iummn) m_mat
   !      CLOSE(iummn)
