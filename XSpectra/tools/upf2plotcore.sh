@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "Deprecated: use extract_core.x from upftools instead"
+exit 1
+
 LANG=C
 
 cat $1 | awk '

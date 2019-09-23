@@ -62,7 +62,8 @@ elif [[ "$1" == "5" ]]
 then
   echo "Removing restart files ..."
   echo "Running EPW ..."
-  rm *.Fin_restart1 *.Fin_restartcb1 restart_ibte.fmt
+######  rm *.Fin_restart1 *.Fin_restartcb1 restart_ibte.fmt
+  rm restart_ibte.fmt
   echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4"  
   ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/epw.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]

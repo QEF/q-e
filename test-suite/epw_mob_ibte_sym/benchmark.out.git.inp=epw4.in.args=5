@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.1.0 starts on 27Feb2019 at 17:53: 9 
+     Program EPW v.5.2.0 starts on 16Sep2019 at 11:38:25 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -45,7 +45,8 @@
      ./si.save/
 
      IMPORTANT: XC functional enforced from input :
-     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
@@ -65,7 +66,8 @@
      number of atomic types    =            1
      kinetic-energy cut-off    =      10.0000  Ry
      charge density cut-off    =      40.0000  Ry
-     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
 
 
      celldm(1)=   10.26200  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -325,9 +327,9 @@
                 l(4) =   1
                 l(5) =   2
                 l(6) =   2
-     EPW          :      0.25s CPU      0.26s WALL
+     EPW          :      0.26s CPU      0.32s WALL
 
-     EPW          :      0.32s CPU      0.33s WALL
+     EPW          :      0.34s CPU      0.40s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -805,23 +807,23 @@
 
      Wannier Function centers (cartesian, alat) and spreads (ang):
 
-     (   0.04064   0.04064   0.04064) :   2.52567
-     (   0.04064  -0.04064  -0.04064) :   2.52567
-     (  -0.04064   0.04064  -0.04064) :   2.52567
-     (  -0.04064  -0.04064   0.04064) :   2.52567
-     (   0.33426   0.33426   0.33426) :   2.12918
-     (   0.33426   0.16574   0.16574) :   2.12918
-     (   0.16574   0.33426   0.16574) :   2.12918
-     (   0.16574   0.16574   0.33426) :   2.12918
+     (   0.04064   0.04064   0.04064) :   2.52564
+     (   0.04064  -0.04064  -0.04064) :   2.52564
+     (  -0.04064   0.04064  -0.04064) :   2.52564
+     (  -0.04064  -0.04064   0.04064) :   2.52564
+     (   0.33426   0.33426   0.33426) :   2.12921
+     (   0.33426   0.16574   0.16574) :   2.12921
+     (   0.16574   0.33426   0.16574) :   2.12921
+     (   0.16574   0.16574   0.33426) :   2.12921
 
      -------------------------------------------------------------------
-     WANNIER      :     11.48s CPU     11.51s WALL (       1 calls)
+     WANNIER      :     11.23s CPU     11.31s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Calculating kgmap
 
      Progress kgmap: ########################################
-     kmaps        :      0.05s CPU      0.05s WALL (       1 calls)
+     kmaps        :      0.07s CPU      0.07s WALL (       1 calls)
      Symmetries of Bravais lattice:  48
      Symmetries of crystal:          48
 
@@ -885,28 +887,22 @@
      The .epb files have been correctly written
 
 
-     Band disentanglement is used:  nbndsub =    8
+     Band disentanglement is used: nbndsub =    8
      Use zone-centred Wigner-Seitz cells 
      Number of WS vectors for electrons      279
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
      Maximum number of cores for efficient parallelization      114
-     Results may improve by using use_ws == .true. 
+     Results may improve by using use_ws == .TRUE. 
 
      Velocity matrix elements calculated
  
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
 
-
-     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
-
-
-     Finished reading Wann rep data from file
-
      ===================================================================
-     Memory usage:  VmHWM =        68Mb
-                   VmPeak =       336Mb
+     Memory usage:  VmHWM =        65Mb
+                   VmPeak =       332Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
@@ -929,48 +925,48 @@
 
      Number of ep-matrix elements per pool :         2400 ~=   18.75 Kb (@ 8 bytes/ DP)
       
-     A selecq.fmt file was found but re-created because selecqread == .false. 
-     Number selected, total     100     100
+     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+     Number selected, total         100         100
      We only need to compute      100 q-points
       
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        68Mb
-                   VmPeak =       336Mb
+     Memory usage:  VmHWM =        65Mb
+                   VmPeak =       332Mb
      ===================================================================
 
 
      Unfolding on the coarse grid
-     elphon_wrap  :     14.36s CPU     14.85s WALL (       1 calls)
+     elphon_wrap  :     21.45s CPU     22.08s WALL (       1 calls)
 
      INITIALIZATION: 
 
-     set_drhoc    :      0.17s CPU      0.17s WALL (       9 calls)
+     set_drhoc    :      0.18s CPU      0.18s WALL (       9 calls)
      init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.02s CPU      0.02s WALL (       2 calls)
+
 
 
      Electron-Phonon interpolation
-     ephwann      :      4.53s CPU      4.98s WALL (       1 calls)
-     ep-interp    :      3.29s CPU      3.69s WALL (     100 calls)
+     ephwann      :      4.59s CPU      5.05s WALL (       1 calls)
+     ep-interp    :      3.39s CPU      3.80s WALL (     100 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.03s CPU      0.03s WALL (       1 calls)
      ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
-     ep: step 2   :      0.47s CPU      0.47s WALL (      48 calls)
+     ep: step 2   :      0.46s CPU      0.46s WALL (      48 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      0.43s CPU      0.44s WALL (   20791 calls)
-     ephW2Bp      :      0.22s CPU      0.55s WALL (     100 calls)
+     HamW2B       :      0.48s CPU      0.49s WALL (   20791 calls)
+     ephW2Bp      :      0.22s CPU      0.56s WALL (     100 calls)
+     ephW2B       :      0.16s CPU      0.17s WALL (    3539 calls)
+     vmewan2bloch :      2.24s CPU      2.29s WALL (   20000 calls)
+     vmewan2bloch :      2.24s CPU      2.29s WALL (   20000 calls)
 
 
      Total program execution
-     EPW          :     30.69s CPU     31.67s WALL
+     EPW          :     37.61s CPU     38.83s WALL
 
                                                                                           
  Please consider citing:                                                                  
  S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
                                                                                           
- In addition, if you used anisotropic Eliashberg superconductivity please cite:           
-              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
-              if you used transport properties (scattering rates, mobility) please cite:  
-              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     

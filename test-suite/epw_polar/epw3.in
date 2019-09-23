@@ -14,6 +14,7 @@
   epwread     = .true.
 
   etf_mem     = 1
+  vme         = .false.
   lpolar      = .true.
   lphase      = .true.
 
@@ -46,7 +47,6 @@
   elecselfen  = .true.
   phonselfen  = .false.
   a2f         = .false.
-
 
   fsthick     = 2.0 ! eV
   eptemp      = 300 ! K
