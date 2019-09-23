@@ -52,8 +52,7 @@ PROGRAM do_ppacf
   USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
-  USE kernel_table,         ONLY : Nqs, vdw_table_name, kernel_file_name
-  USE vdW_DF,               ONLY : get_potential, vdW_energy
+  USE vdW_DF,               ONLY : Nqs, vdW_DF_potential, vdW_DF_energy
   USE vdW_DF_scale,         ONLY : xc_vdW_DF_ncc, xc_vdW_DF_spin_ncc, &
                                    get_q0cc_on_grid, get_q0cc_on_grid_spin
   USE vasp_xml,             ONLY : readxmlfile_vasp
@@ -159,7 +158,7 @@ PROGRAM do_ppacf
   TYPE(scf_type) :: exgc, ecgc, tcgc
   !
   NAMELIST / ppacf / code_num,outdir, prefix, n_lambda, lplot, ltks, lfock, use_ace, &
-                     pseudo_dir, vdw_table_name, lecnl_qxln, lecnl_qx
+                     pseudo_dir, lecnl_qxln, lecnl_qx
   !
   ! initialise environment
   !
@@ -209,7 +208,6 @@ PROGRAM do_ppacf
   CALL mp_bcast( lecnl_qx,   ionode_id, world_comm )
   CALL mp_bcast( dcc,        ionode_id, world_comm )
   CALL mp_bcast( pseudo_dir, ionode_id, world_comm )
-  CALL mp_bcast( vdw_table_name, ionode_id, world_comm )
   !
   ncc = n_lambda
   WRITE( stdout, '(//5x,"entering subroutine acf ..."/)')
@@ -675,11 +673,11 @@ PROGRAM do_ppacf
         CALL invfft( 'Rho', thetasm(:,iq), dfftp )
      ENDDO
      !
-     CALL vdW_energy( u_vdW, Ec_nl )
+     CALL vdW_DF_energy( u_vdW, Ec_nl )
      CALL mp_sum( Ec_nl, intra_bgrp_comm )
      WRITE(stdout,*) '     Non-local energy : ', Ec_nl
-     CALL vdW_energy( up_vdW, Ec_nl )
-     CALL vdW_energy( um_vdW, Ec_nl )
+     CALL vdW_DF_energy( up_vdW, Ec_nl )
+     CALL vdW_DF_energy( um_vdW, Ec_nl )
      !
      DO iq = 1, Nqs
         CALL invfft( 'Rho', u_vdW(:,iq),  dfftp )
@@ -688,12 +686,12 @@ PROGRAM do_ppacf
      ENDDO
      !
      IF (nspin == 1) THEN
-        CALL get_potential( q0,dq0_drho(:,1), dq0_dgradrho(:,1), tot_grad_rho,    &
+        CALL vdW_DF_potential( q0,dq0_drho(:,1), dq0_dgradrho(:,1), tot_grad_rho,    &
                                                         u_vdW, potential_vdW(:,1) )
      ELSEIF (nspin == 2) THEN
-        CALL get_potential( q0,dq0_drho(:,1), dq0_dgradrho(:,1), grad_rho(:,:,1), &
+        CALL vdW_DF_potential( q0,dq0_drho(:,1), dq0_dgradrho(:,1), grad_rho(:,:,1), &
                                                         u_vdW, potential_vdW(:,1) )
-        CALL get_potential( q0,dq0_drho(:,2), dq0_dgradrho(:,2), grad_rho(:,:,2), &
+        CALL vdW_DF_potential( q0,dq0_drho(:,2), dq0_dgradrho(:,2), grad_rho(:,:,2), &
                                                         u_vdW, potential_vdW(:,2) )
      ENDIF
      !

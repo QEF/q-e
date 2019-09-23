@@ -132,7 +132,6 @@ cp_restart_new.o : ../../Modules/io_base.o
 cp_restart_new.o : ../../Modules/io_files.o
 cp_restart_new.o : ../../Modules/io_global.o
 cp_restart_new.o : ../../Modules/ions_base.o
-cp_restart_new.o : ../../Modules/kernel_table.o
 cp_restart_new.o : ../../Modules/kind.o
 cp_restart_new.o : ../../Modules/mm_dispersion.o
 cp_restart_new.o : ../../Modules/mp_bands.o
@@ -520,7 +519,6 @@ init.o : ../../Modules/fft_base.o
 init.o : ../../Modules/gvecw.o
 init.o : ../../Modules/input_parameters.o
 init.o : ../../Modules/invmat.o
-init.o : ../../Modules/io_files.o
 init.o : ../../Modules/io_global.o
 init.o : ../../Modules/ions_base.o
 init.o : ../../Modules/kind.o
@@ -614,7 +612,6 @@ input.o : ../../Modules/input_parameters.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
 input.o : ../../Modules/ions_base.o
-input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/read_input.o
@@ -928,7 +925,6 @@ print_out.o : ../../Modules/control_flags.o
 print_out.o : ../../Modules/electrons_base.o
 print_out.o : ../../Modules/funct.o
 print_out.o : ../../Modules/input_parameters.o
-print_out.o : ../../Modules/io_files.o
 print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
@@ -1018,7 +1014,6 @@ restart.o : ../../Modules/cell_base.o
 restart.o : ../../Modules/control_flags.o
 restart.o : ../../Modules/electrons_base.o
 restart.o : ../../Modules/gvecw.o
-restart.o : ../../Modules/io_files.o
 restart.o : ../../Modules/ions_base.o
 restart.o : ../../Modules/kind.o
 restart.o : ../../UtilXlib/mp.o

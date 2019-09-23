@@ -84,27 +84,36 @@ SAVE
 ! ----------------------------------------------------------------------
 ! Public functions
 
-PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_energy, vdW_DF_potential, &
-           vdW_DF_stress, interpolate_kernel, saturate_q,              &
+PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_stress,                   &
+           vdW_DF_energy, vdW_DF_potential,                            &
+           generate_kernel, interpolate_kernel,                        &
            initialize_spline_interpolation, spline_interpolation
 
 
 ! ----------------------------------------------------------------------
 ! Public variables
 
-PUBLIC  :: inlc, Nr_points, r_max, q_mesh
+PUBLIC  :: inlc, vdW_DF_analysis, Nr_points, r_max, q_min, q_cut, Nqs, q_mesh
 
 
 ! ----------------------------------------------------------------------
 ! General variables
 
-INTEGER                  :: inlc   = 1
-REAL(DP), PARAMETER      :: epsr   = 1.0D-12
+INTEGER                  :: inlc            = 1
+! The non-local correlation
+
+INTEGER                  :: vdW_DF_analysis = 0
+! vdW-DF analysis tool as described in PRB 97, 085115 (2018)
+
+REAL(DP), PARAMETER      :: epsr            = 1.0D-12
 ! A small number to cut off densities
+
+INTEGER                  :: idx
+! Indexing variable
 
 
 ! ----------------------------------------------------------------------
-! Kernel specific variables
+! Kernel specific parameters and variables
 
 INTEGER, PARAMETER       :: Nr_points = 1024
 ! The number of radial points (also the number of k points) used in the
@@ -123,20 +132,20 @@ REAL(DP), PARAMETER      :: r_max     = 100.0D0
 ! maximum k point value and the vdW_DF code will crash if it encounters
 ! a g-vector with a magnitude greater than 2*pi/r_max *Nr_points.
 
-INTEGER, PARAMETER       :: Nintegration_points = 256
-! Number of integration points for real-space kernel generation (see
-! DION equation 14). This is how many a's and b's there will be.
+REAL(DP), PARAMETER      :: dr = r_max/Nr_points, dk = 2.0D0*pi/r_max
+! Real space and k-space spacing of grid points.
 
-REAL(DP), PARAMETER      :: a_min = 0.0D0, a_max = 64.0D0
-! Min/max values for the a and b integration in DION equation 14.
+REAL(DP), PARAMETER      :: q_min = 1.0D-5, q_cut = 5.0D0
+! The maximum and minimum values of q. During a vdW run, values of q0
+! found larger than q_cut will be saturated (SOLER equation 5) to q_cut.
 
-INTEGER, PARAMETER       :: Nqs = 20
-REAL(DP), DIMENSION(Nqs) :: q_mesh = (/  &
-   1.0D-5             , 0.0449420825586261D0, 0.0975593700991365D0, 0.159162633466142D0, &
+INTEGER,  PARAMETER                 :: Nqs    = 20
+REAL(DP), PARAMETER, DIMENSION(Nqs) :: q_mesh = (/  &
+   q_min              , 0.0449420825586261D0, 0.0975593700991365D0, 0.159162633466142D0, &
    0.231286496836006D0, 0.315727667369529D0 , 0.414589693721418D0 , 0.530335368404141D0, &
    0.665848079422965D0, 0.824503639537924D0 , 1.010254382520950D0 , 1.227727621364570D0, &
    1.482340921174910D0, 1.780437058359530D0 , 2.129442028133640D0 , 2.538050036534580D0, &
-   3.016440085356680D0, 3.576529545442460D0 , 4.232271035198720D0 , 5.0D0 /)
+   3.016440085356680D0, 3.576529545442460D0 , 4.232271035198720D0 , q_cut /)
 
 ! The above two parameters define the q mesh to be used in the vdW_DF
 ! code. These are perhaps the most important to have set correctly.
@@ -154,10 +163,12 @@ REAL(DP), DIMENSION(Nqs) :: q_mesh = (/  &
 ! actually in the variable q_mesh. Also, do not set any q value to 0.
 ! This will cause an infinity in the Fourier transform.
 
-REAL(DP) :: q_cut, q_min, dr, dk
-! The maximum and minimum values of q and the k-space spacing of grid
-! points. During a vdW run, values of q0 found larger than q_cut will
-! be saturated (SOLER equation 5) to q_cut.
+INTEGER,  PARAMETER      :: Nintegration_points = 256
+! Number of integration points for real-space kernel generation (see
+! DION equation 14). This is how many a's and b's there will be.
+
+REAL(DP), PARAMETER      :: a_min = 0.0D0, a_max = 64.0D0
+! Min/max values for the a and b integration in DION equation 14.
 
 REAL(DP) :: kernel( 0:Nr_points, Nqs, Nqs ), d2phi_dk2( 0:Nr_points, Nqs, Nqs )
 ! Matrices holding the Fourier transformed kernel function  and its
@@ -169,9 +180,6 @@ REAL(DP) :: W_ab( Nintegration_points, Nintegration_points )
 
 REAL(DP) :: a_points( Nintegration_points )
 ! The values of the "a" points (DION equation 14).
-
-INTEGER  :: idx
-! General indexing variable.
 
 CONTAINS
 
@@ -1436,7 +1444,7 @@ CONTAINS
 
   IMPLICIT NONE
 
-  REAL(DP), INTENT(IN)  :: x(:)                 ! The input abscissa values.
+  REAL(DP), INTENT(IN)    :: x(:)               ! The input abscissa values.
   REAL(DP), INTENT(INOUT) :: d2y_dx2(:,:)       ! The output array (allocated outside this routine)
                                                 ! that holds the second derivatives required for
                                                 ! interpolating the function.
@@ -2066,55 +2074,6 @@ CONTAINS
 
 
   ! ####################################################################
-  !                          |            |
-  !                          |  VDW_INFO  |
-  !                          |____________|
-
-  SUBROUTINE vdW_info
-
-  IMPLICIT NONE
-
-
-
-
-  WRITE(stdout,'(/)')
-  WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"% You are using vdW-DF, which was implemented by the Thonhauser group. %")')
-  WRITE(stdout,'(5x,"% Please cite the following two papers that made this development      %")')
-  WRITE(stdout,'(5x,"% possible and the two reviews that describe the various versions:     %")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"%   T. Thonhauser et al., PRL 115, 136402 (2015).                      %")')
-  WRITE(stdout,'(5x,"%   T. Thonhauser et al., PRB 76, 125112 (2007).                       %")')
-  WRITE(stdout,'(5x,"%   K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).             %")')
-  WRITE(stdout,'(5x,"%   D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009). %")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"% If you are calculating the stress with vdW-DF, please also cite:     %")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"%   R. Sabatini et al., J. Phys.: Condens. Matter 24, 424209 (2012).   %")')
-  WRITE(stdout,'(5x,"%                                                                      %")')
-  WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
-  WRITE(stdout,'(/)')
-
-  IF ( iverbosity > 0 ) THEN
-     WRITE(stdout,'(5x,"Carrying out vdW-DF run using the following parameters:")')
-     WRITE(stdout,'(5X,A,I3,A,I5,A,F8.3)' ) "Nqs    = ", Nqs, "  Npoints = ", Nr_points, &
-                  "  r_max = ", r_max
-     WRITE(stdout,'(5X,"q_mesh =",4F12.8)') (q_mesh(idx), idx=1, 4)
-     WRITE(stdout,'(13X,4F12.8)') (q_mesh(idx), idx=5, Nqs)
-  END IF
-
-  END SUBROUTINE
-
-
-
-
-
-
-
-
-  ! ####################################################################
   !                           |                 |
   !                           | GENERATE_KERNEL |
   !                           |_________________|
@@ -2224,16 +2183,6 @@ CONTAINS
 
 
   ! --------------------------------------------------------------------
-  ! Set the minimum and maximum values of q and the k-space spacing of
-  ! grid points.
-
-  q_cut = q_mesh(Nqs)
-  q_min = q_mesh(1)
-  dr    = r_max/Nr_points
-  dk    = 2.0D0*pi/r_max
-
-
-  ! --------------------------------------------------------------------
   ! The total number of phi_alpha_beta functions that have to be
   ! calculated.
 
@@ -2337,15 +2286,39 @@ CONTAINS
   ! for each value of a and b.
 
   DO a_i = 1, Nintegration_points
-     DO b_i = 1, Nintegration_points
-        W_ab(a_i, b_i) = 2.0D0 * weights(a_i)*weights(b_i) * (            &
-            (3.0D0-a_points2(a_i))*a_points(b_i) *sin_a(a_i)*cos_a(b_i) + &
-            (3.0D0-a_points2(b_i))*a_points(a_i) *cos_a(a_i)*sin_a(b_i) + &
-            (a_points2(a_i)+a_points2(b_i)-3.0D0)*sin_a(a_i)*sin_a(b_i) - &
-            3.0D0*a_points(a_i)*a_points(b_i)*cos_a(a_i)*cos_a(b_i) )   / &
-            (a_points(a_i)*a_points(b_i) )
-     END DO
+  DO b_i = 1, Nintegration_points
+     W_ab(a_i, b_i) = 2.0D0 * weights(a_i)*weights(b_i) * (           &
+        (3.0D0-a_points2(a_i))*a_points(b_i) *sin_a(a_i)*cos_a(b_i) + &
+        (3.0D0-a_points2(b_i))*a_points(a_i) *cos_a(a_i)*sin_a(b_i) + &
+        (a_points2(a_i)+a_points2(b_i)-3.0D0)*sin_a(a_i)*sin_a(b_i) - &
+        3.0D0*a_points(a_i)*a_points(b_i)*cos_a(a_i)*cos_a(b_i) )   / &
+        (a_points(a_i)*a_points(b_i) )
   END DO
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! vdW-DF analysis tool as described in PRB 97, 085115 (2018).
+
+  IF      ( vdW_DF_analysis == 1 ) THEN
+
+     DO a_i = 1, Nintegration_points
+     DO b_i = 1, Nintegration_points
+        W_ab(a_i, b_i) = weights(a_i)*weights(b_i) *                  &
+           a_points(a_i)*a_points(b_i)*sin_a(a_i)*sin_a(b_i)
+     END DO
+     END DO
+
+  ELSE IF ( vdW_DF_analysis == 2 ) THEN
+
+     DO a_i = 1, Nintegration_points
+     DO b_i = 1, Nintegration_points
+        W_ab(a_i, b_i) = W_ab(a_i, b_i) - weights(a_i)*weights(b_i) *  &
+           a_points(a_i)*a_points(b_i)*sin_a(a_i)*sin_a(b_i)
+     END DO
+     END DO
+
+  END IF
 
 
   ! --------------------------------------------------------------------
@@ -2627,9 +2600,10 @@ CONTAINS
   ! unnecessary but I wanted to be careful.
 
   DO a_i = 1, Nintegration_points
+
      IF ( a_points(a_i) <= small .AND. d1 > small) THEN
         nu(a_i) = 9.0D0/8.0D0*d1**2/pi
-     ELSEIF (d1 <= small) THEN
+     ELSE IF (d1 <= small) THEN
         nu(a_i) = a_points(a_i)**2/2.0D0
      ELSE
         nu(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d1**2) + 1.0D0)*2.0D0)
@@ -2637,11 +2611,12 @@ CONTAINS
 
      IF ( a_points(a_i) <= small .AND. d2 > small) THEN
         nu1(a_i) = 9.0D0/8.0D0*d2**2/pi
-     ELSEIF (d2 < small) THEN
+     ELSE IF (d2 < small) THEN
         nu1(a_i) = a_points(a_i)**2/2.0D0
      ELSE
         nu1(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d2**2) + 1.0D0)*2.0D0)
      END IF
+
   END DO
 
 
@@ -2649,19 +2624,19 @@ CONTAINS
   ! Carry out the integration of DION equation 13.
 
   DO a_i = 1, Nintegration_points
-     DO b_i = 1, Nintegration_points
-        w = nu(a_i)
-        x = nu(b_i)
-        y = nu1(a_i)
-        z = nu1(b_i)
+  DO b_i = 1, Nintegration_points
+     w = nu(a_i)
+     x = nu(b_i)
+     y = nu1(a_i)
+     z = nu1(b_i)
 
-        ! --------------------------------------------------------------
-        ! Again, watch out for possible numerical problems
+     ! --------------------------------------------------------------
+     ! Again, watch out for possible numerical problems
 
-        IF (w < small .or. x<small .OR. y<small .OR. z<small) CYCLE
-        T = (1.0D0/(w+x) + 1.0D0/(y+z))*(1.0D0/((w+y)*(x+z)) + 1.0D0/((w+z)*(y+x)))
-        phi_value = phi_value + T * W_ab(a_i, b_i)
-     END DO
+     IF (w < small .or. x<small .OR. y<small .OR. z<small) CYCLE
+     T = (1.0D0/(w+x) + 1.0D0/(y+z))*(1.0D0/((w+y)*(x+z)) + 1.0D0/((w+z)*(y+x)))
+     phi_value = phi_value + T * W_ab(a_i, b_i)
+  END DO
   END DO
 
   phi_value = 1.0D0/pi**2*phi_value
@@ -2806,6 +2781,55 @@ CONTAINS
   DEALLOCATE( temp_array )
 
   END SUBROUTINE set_up_splines
+
+
+
+
+
+
+
+
+  ! ####################################################################
+  !                          |            |
+  !                          |  VDW_INFO  |
+  !                          |____________|
+
+  SUBROUTINE vdW_info
+
+  IMPLICIT NONE
+
+
+
+
+  WRITE(stdout,'(/)')
+  WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"% You are using vdW-DF, which was implemented by the Thonhauser group. %")')
+  WRITE(stdout,'(5x,"% Please cite the following two papers that made this development      %")')
+  WRITE(stdout,'(5x,"% possible and the two reviews that describe the various versions:     %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%   T. Thonhauser et al., PRL 115, 136402 (2015).                      %")')
+  WRITE(stdout,'(5x,"%   T. Thonhauser et al., PRB 76, 125112 (2007).                       %")')
+  WRITE(stdout,'(5x,"%   K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).             %")')
+  WRITE(stdout,'(5x,"%   D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009). %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"% If you are calculating the stress with vdW-DF, please also cite:     %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%   R. Sabatini et al., J. Phys.: Condens. Matter 24, 424209 (2012).   %")')
+  WRITE(stdout,'(5x,"%                                                                      %")')
+  WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
+  WRITE(stdout,'(/)')
+
+  IF ( iverbosity > 0 ) THEN
+     WRITE(stdout,'(5x,"Carrying out vdW-DF run using the following parameters:")')
+     WRITE(stdout,'(5X,A,I3,A,I5,A,F8.3)' ) "Nqs    = ", Nqs, "  Npoints = ", Nr_points, &
+                  "  r_max = ", r_max
+     WRITE(stdout,'(5X,"q_mesh =",4F12.8)') (q_mesh(idx), idx=1, 4)
+     WRITE(stdout,'(13X,4F12.8)') (q_mesh(idx), idx=5, Nqs)
+  END IF
+
+  END SUBROUTINE
 
 
 

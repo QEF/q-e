@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.4.1 starts on 23Sep2019 at 12:39:59 
+     Program PWSCF v.6.4.1 starts on 23Sep2019 at 12:52:45 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -158,11 +158,11 @@ A''    1.00 -1.00
 
      site n.     atom                  positions (cryst. coord.)
          1           O   tau(   1) = (  0.0000000  0.0017328 -0.0059061  )
-         2           H   tau(   2) = (  0.0000000  0.1028222 -0.0673461  )
+         2           H   tau(   2) = (  0.0000000  0.1028222 -0.0673462  )
          3           H   tau(   3) = (  0.0000000  0.0514258  0.0868231  )
          4           O   tau(   4) = (  0.0000000  0.1170814  0.2892982  )
-         5           H   tau(   5) = ( -0.0975766  0.0688239  0.3367766  )
-         6           H   tau(   6) = (  0.0975766  0.0688239  0.3367766  )
+         5           H   tau(   5) = ( -0.0975766  0.0688240  0.3367766  )
+         6           H   tau(   6) = (  0.0975766  0.0688240  0.3367766  )
 
      number of k points=     1
                        cart. coord. in units 2pi/alat
@@ -260,7 +260,7 @@ A''    1.00 -1.00
 
      Starting wfcs are   12 randomized atomic wfcs
 
-     total cpu time spent up to now is       26.5 secs
+     total cpu time spent up to now is       26.1 secs
 
      Self-consistent Calculation
 
@@ -276,11 +276,11 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       26.9 secs
+     total cpu time spent up to now is       26.5 secs
 
-     total energy              =     -68.61255685 Ry
-     Harris-Foulkes estimate   =     -69.74358395 Ry
-     estimated scf accuracy    <       1.47053641 Ry
+     total energy              =     -68.61255669 Ry
+     Harris-Foulkes estimate   =     -69.74358427 Ry
+     estimated scf accuracy    <       1.47053703 Ry
 
      iteration #  2     ecut=    30.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
@@ -290,15 +290,15 @@ A''    1.00 -1.00
 
 
      -----------------------------------------------
-     Non-local corr. energy    =       0.29919547 Ry
+     Non-local corr. energy    =       0.29919548 Ry
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       27.3 secs
+     total cpu time spent up to now is       26.9 secs
 
-     total energy              =     -68.82976620 Ry
-     Harris-Foulkes estimate   =     -69.34187945 Ry
-     estimated scf accuracy    <       0.99498446 Ry
+     total energy              =     -68.82976627 Ry
+     Harris-Foulkes estimate   =     -69.34187941 Ry
+     estimated scf accuracy    <       0.99498411 Ry
 
      iteration #  3     ecut=    30.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
@@ -312,11 +312,11 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       27.7 secs
+     total cpu time spent up to now is       27.3 secs
 
      total energy              =     -69.04870183 Ry
      Harris-Foulkes estimate   =     -69.06820230 Ry
-     estimated scf accuracy    <       0.03427255 Ry
+     estimated scf accuracy    <       0.03427254 Ry
 
      iteration #  4     ecut=    30.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
@@ -330,7 +330,7 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       28.1 secs
+     total cpu time spent up to now is       27.7 secs
 
      total energy              =     -69.05570611 Ry
      Harris-Foulkes estimate   =     -69.05607760 Ry
@@ -348,7 +348,7 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       28.5 secs
+     total cpu time spent up to now is       28.1 secs
 
      total energy              =     -69.05590281 Ry
      Harris-Foulkes estimate   =     -69.05588163 Ry
@@ -366,7 +366,7 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       28.9 secs
+     total cpu time spent up to now is       28.5 secs
 
      total energy              =     -69.05590617 Ry
      Harris-Foulkes estimate   =     -69.05590851 Ry
@@ -384,7 +384,7 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       29.3 secs
+     total cpu time spent up to now is       28.8 secs
 
      total energy              =     -69.05590651 Ry
      Harris-Foulkes estimate   =     -69.05590663 Ry
@@ -392,7 +392,7 @@ A''    1.00 -1.00
 
      iteration #  8     ecut=    30.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  4.43E-10,  avg # of iterations =  2.0
+     ethr =  4.41E-10,  avg # of iterations =  2.0
 
      negative rho (up, down):  1.893E-03 0.000E+00
 
@@ -402,7 +402,7 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       29.7 secs
+     total cpu time spent up to now is       29.2 secs
 
      total energy              =     -69.05590648 Ry
      Harris-Foulkes estimate   =     -69.05590653 Ry
@@ -410,7 +410,7 @@ A''    1.00 -1.00
 
      iteration #  9     ecut=    30.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
-     ethr =  1.69E-10,  avg # of iterations =  2.0
+     ethr =  1.68E-10,  avg # of iterations =  2.0
 
      negative rho (up, down):  1.891E-03 0.000E+00
 
@@ -420,7 +420,7 @@ A''    1.00 -1.00
      -----------------------------------------------
 
 
-     total cpu time spent up to now is       30.1 secs
+     total cpu time spent up to now is       29.6 secs
 
      End of self-consistent calculation
 
@@ -439,42 +439,42 @@ A''    1.00 -1.00
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =    -122.46807785 Ry
-     hartree contribution      =      64.43497759 Ry
-     xc contribution           =     -17.37527098 Ry
-     ewald contribution        =       6.35246473 Ry
+     one-electron contribution =    -122.46808442 Ry
+     hartree contribution      =      64.43498058 Ry
+     xc contribution           =     -17.37527169 Ry
+     ewald contribution        =       6.35246902 Ry
 
      convergence has been achieved in   9 iterations
 
      Forces acting on atoms (cartesian axes, Ry/au):
 
-     atom    1 type  1   force =     0.00000000    0.00095625   -0.00217434
-     atom    2 type  2   force =     0.00000000    0.00013616    0.00067786
-     atom    3 type  2   force =     0.00000000   -0.00035421    0.00013294
-     atom    4 type  1   force =     0.00000000    0.00087773    0.00122786
-     atom    5 type  2   force =     0.00001972   -0.00080797    0.00006784
-     atom    6 type  2   force =    -0.00001972   -0.00080797    0.00006784
+     atom    1 type  1   force =     0.00000000    0.00095675   -0.00217392
+     atom    2 type  2   force =     0.00000000    0.00013592    0.00067796
+     atom    3 type  2   force =     0.00000000   -0.00035449    0.00013242
+     atom    4 type  1   force =     0.00000000    0.00087868    0.00122673
+     atom    5 type  2   force =     0.00001880   -0.00080843    0.00006841
+     atom    6 type  2   force =    -0.00001880   -0.00080843    0.00006841
      The non-local contrib.  to forces
-     atom    1 type  1   force =     0.00000000    2.37277510    0.53165394
-     atom    2 type  2   force =     0.00000000   -0.15344377    0.12907039
-     atom    3 type  2   force =     0.00000000   -0.06954767   -0.18712626
-     atom    4 type  1   force =     0.00000000   -1.58418865    1.86394271
-     atom    5 type  2   force =     0.16527621    0.07169165   -0.09125198
-     atom    6 type  2   force =    -0.16527621    0.07169165   -0.09125198
+     atom    1 type  1   force =     0.00000000    2.37277538    0.53165432
+     atom    2 type  2   force =     0.00000000   -0.15344376    0.12907026
+     atom    3 type  2   force =     0.00000000   -0.06954763   -0.18712605
+     atom    4 type  1   force =     0.00000000   -1.58418783    1.86394291
+     atom    5 type  2   force =     0.16527658    0.07169173   -0.09125214
+     atom    6 type  2   force =    -0.16527658    0.07169173   -0.09125214
      The ionic contribution  to forces
-     atom    1 type  1   force =    -0.00000000   -4.70114709   -3.35460747
-     atom    2 type  2   force =    -0.00000000    2.82811782   -2.66092597
-     atom    3 type  2   force =     0.00000000    1.08890147    2.53590863
-     atom    4 type  1   force =     0.00000000    3.35642550   -0.50250843
-     atom    5 type  2   force =    -3.10291310   -1.28614885    1.99106662
-     atom    6 type  2   force =     3.10291310   -1.28614885    1.99106662
+     atom    1 type  1   force =    -0.00000000   -4.70114639   -3.35460645
+     atom    2 type  2   force =    -0.00000000    2.82811785   -2.66092417
+     atom    3 type  2   force =     0.00000000    1.08890119    2.53590618
+     atom    4 type  1   force =     0.00000000    3.35642644   -0.50251250
+     atom    5 type  2   force =    -3.10291758   -1.28614954    1.99106847
+     atom    6 type  2   force =     3.10291758   -1.28614954    1.99106847
      The local contribution  to forces
-     atom    1 type  1   force =     0.00000011    2.32987984    2.82104555
-     atom    2 type  2   force =     0.00000001   -2.67394764    2.53280069
-     atom    3 type  2   force =     0.00000001   -1.01911854   -2.34837722
-     atom    4 type  1   force =     0.00000001   -1.77074534   -1.35995075
-     atom    5 type  2   force =     2.93765576    1.21423850   -1.89947756
-     atom    6 type  2   force =    -2.93765576    1.21423851   -1.89947757
+     atom    1 type  1   force =     0.00000011    2.32987937    2.82104459
+     atom    2 type  2   force =     0.00000001   -2.67394792    2.53279913
+     atom    3 type  2   force =     0.00000001   -1.01911858   -2.34837549
+     atom    4 type  1   force =     0.00000001   -1.77074615   -1.35994798
+     atom    5 type  2   force =     2.93765896    1.21423866   -1.89947868
+     atom    6 type  2   force =    -2.93765896    1.21423867   -1.89947869
      The core correction contribution to forces
      atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
      atom    2 type  2   force =     0.00000000    0.00000000    0.00000000
@@ -490,12 +490,12 @@ A''    1.00 -1.00
      atom    5 type  2   force =     0.00000000    0.00000000    0.00000000
      atom    6 type  2   force =     0.00000000    0.00000000    0.00000000
      The SCF correction term to forces
-     atom    1 type  1   force =    -0.00000013    0.00003751    0.00000265
+     atom    1 type  1   force =    -0.00000013    0.00003750    0.00000265
      atom    2 type  2   force =    -0.00000000   -0.00000113    0.00000176
-     atom    3 type  2   force =    -0.00000001   -0.00000035   -0.00000321
-     atom    4 type  1   force =    -0.00000005   -0.00002466    0.00001333
-     atom    5 type  2   force =     0.00000084   -0.00000016   -0.00000022
-     atom    6 type  2   force =    -0.00000085   -0.00000016   -0.00000022
+     atom    3 type  2   force =    -0.00000001   -0.00000035   -0.00000320
+     atom    4 type  1   force =    -0.00000004   -0.00002466    0.00001333
+     atom    5 type  2   force =     0.00000084   -0.00000017   -0.00000022
+     atom    6 type  2   force =    -0.00000084   -0.00000017   -0.00000022
 
      Total force =     0.003140     Total SCF correction =     0.000047
 
@@ -531,8 +531,8 @@ A''    1.00 -1.00
                                 0.00      0.00      0.00
                                 0.00      0.00      0.00
 
-     ewald   stress (kbar)   -173.91     -0.00      0.00
-                               -0.00   -139.58     15.06
+     ewald   stress (kbar)   -173.91      0.00      0.00
+                                0.00   -139.58     15.06
                                 0.00     15.06    549.84
 
      hubbard stress (kbar)      0.00      0.00      0.00
@@ -563,27 +563,27 @@ A''    1.00 -1.00
 
      Writing output data file /benchmarks/tempdir/water_vdw.save/
  
-     init_run     :     25.98s CPU     26.03s WALL (       1 calls)
-     electrons    :      3.38s CPU      3.72s WALL (       1 calls)
-     forces       :      0.20s CPU      0.21s WALL (       1 calls)
-     stress       :      0.75s CPU      0.77s WALL (       1 calls)
+     init_run     :     25.75s CPU     25.80s WALL (       1 calls)
+     electrons    :      3.27s CPU      3.50s WALL (       1 calls)
+     forces       :      0.24s CPU      0.24s WALL (       1 calls)
+     stress       :      0.71s CPU      0.73s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     wfcinit      :      0.01s CPU      0.02s WALL (       1 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (       1 calls)
      wfcinit:wfcr :      0.01s CPU      0.01s WALL (       1 calls)
-     potinit      :     25.73s CPU     25.78s WALL (       1 calls)
+     potinit      :     25.51s CPU     25.55s WALL (       1 calls)
      hinit0       :      0.20s CPU      0.20s WALL (       1 calls)
 
      Called by electrons:
      c_bands      :      0.20s CPU      0.20s WALL (       9 calls)
-     sum_band     :      0.20s CPU      0.21s WALL (       9 calls)
-     v_of_rho     :     28.29s CPU     28.50s WALL (      10 calls)
-     v_h          :      0.03s CPU      0.04s WALL (      10 calls)
-     v_xc         :     28.25s CPU     28.46s WALL (      10 calls)
-     newd         :      0.17s CPU      0.19s WALL (      10 calls)
-     mix_rho      :      0.05s CPU      0.06s WALL (       9 calls)
-     vdW_kernel   :     25.24s CPU     25.25s WALL (       1 calls)
+     sum_band     :      0.20s CPU      0.20s WALL (       9 calls)
+     v_of_rho     :     27.96s CPU     28.18s WALL (      10 calls)
+     v_h          :      0.03s CPU      0.03s WALL (      10 calls)
+     v_xc         :     27.93s CPU     28.14s WALL (      10 calls)
+     newd         :      0.16s CPU      0.19s WALL (      10 calls)
+     mix_rho      :      0.05s CPU      0.05s WALL (       9 calls)
+     vdW_kernel   :     25.03s CPU     25.04s WALL (       1 calls)
 
      Called by c_bands:
      init_us_2    :      0.01s CPU      0.01s WALL (      19 calls)
@@ -591,10 +591,10 @@ A''    1.00 -1.00
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (       9 calls)
-     addusdens    :      0.12s CPU      0.12s WALL (       9 calls)
+     addusdens    :      0.11s CPU      0.11s WALL (       9 calls)
 
      Called by *egterg:
-     h_psi        :      0.17s CPU      0.18s WALL (      28 calls)
+     h_psi        :      0.18s CPU      0.18s WALL (      28 calls)
      s_psi        :      0.00s CPU      0.00s WALL (      28 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      18 calls)
      rdiaghg      :      0.01s CPU      0.01s WALL (      27 calls)
@@ -604,24 +604,24 @@ A''    1.00 -1.00
 
      Called by h_psi:
      h_psi:calbec :      0.01s CPU      0.01s WALL (      28 calls)
-     vloc_psi     :      0.16s CPU      0.17s WALL (      28 calls)
+     vloc_psi     :      0.17s CPU      0.17s WALL (      28 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (      28 calls)
 
      General routines
      calbec       :      0.01s CPU      0.01s WALL (      42 calls)
-     fft          :      1.39s CPU      1.47s WALL (     659 calls)
+     fft          :      1.31s CPU      1.41s WALL (     659 calls)
      ffts         :      0.02s CPU      0.02s WALL (      19 calls)
-     fftw         :      0.16s CPU      0.17s WALL (     256 calls)
+     fftw         :      0.18s CPU      0.18s WALL (     256 calls)
      interpolate  :      0.04s CPU      0.04s WALL (      10 calls)
  
      Parallel routines
-     fft_scatt_xy :      0.17s CPU      0.17s WALL (     934 calls)
-     fft_scatt_yz :      0.56s CPU      0.61s WALL (     934 calls)
+     fft_scatt_xy :      0.16s CPU      0.16s WALL (     934 calls)
+     fft_scatt_yz :      0.54s CPU      0.61s WALL (     934 calls)
  
-     PWSCF        :     30.79s CPU     31.25s WALL
+     PWSCF        :     30.28s CPU     30.64s WALL
 
  
-   This run was terminated on:  12:40:30  23Sep2019            
+   This run was terminated on:  12:53:16  23Sep2019            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -471,7 +471,6 @@ ppacf.o : ../../Modules/funct.o
 ppacf.o : ../../Modules/gvecw.o
 ppacf.o : ../../Modules/io_files.o
 ppacf.o : ../../Modules/io_global.o
-ppacf.o : ../../Modules/kernel_table.o
 ppacf.o : ../../Modules/kind.o
 ppacf.o : ../../Modules/mp_bands.o
 ppacf.o : ../../Modules/mp_global.o
@@ -779,7 +778,6 @@ vasp_xml_module.o : ../../Modules/gvecw.o
 vasp_xml_module.o : ../../Modules/io_files.o
 vasp_xml_module.o : ../../Modules/io_global.o
 vasp_xml_module.o : ../../Modules/ions_base.o
-vasp_xml_module.o : ../../Modules/kernel_table.o
 vasp_xml_module.o : ../../Modules/kind.o
 vasp_xml_module.o : ../../Modules/mp_bands.o
 vasp_xml_module.o : ../../Modules/mp_global.o
@@ -898,7 +896,6 @@ xc_vdW_scale_mod.o : ../../Modules/constants.o
 xc_vdW_scale_mod.o : ../../Modules/control_flags.o
 xc_vdW_scale_mod.o : ../../Modules/fft_base.o
 xc_vdW_scale_mod.o : ../../Modules/io_global.o
-xc_vdW_scale_mod.o : ../../Modules/kernel_table.o
 xc_vdW_scale_mod.o : ../../Modules/kind.o
 xc_vdW_scale_mod.o : ../../Modules/mp_bands.o
 xc_vdW_scale_mod.o : ../../Modules/recvec.o

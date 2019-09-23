@@ -15,13 +15,13 @@ MODULE vdW_DF_scale
 !----------------------------------------
 USE kinds,             ONLY : dp
 USE constants,         ONLY : pi, e2
-USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max, q_cut, q_min, kernel, d2phi_dk2, dk
 USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
 USE mp_bands,          ONLY : intra_bgrp_comm
 USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
+USE vdW_DF,            ONLY : inlc, q_mesh, Nqs, q_cut, q_min, generate_kernel
 
 implicit none
 
@@ -29,6 +29,59 @@ REAL(DP), PARAMETER :: epsr =1.d-12  ! a small number to cut off densities
 
 
 CONTAINS
+
+
+
+
+  FUNCTION Fs(s)
+     IMPLICIT NONE
+     REAL(DP) :: s, Fs, Z_ab=0.0D0
+
+     IF (inlc == 1) Z_ab = -0.8491D0
+     IF (inlc == 2) Z_ab = -1.887D0
+     Fs = 1.0D0 - Z_ab * s**2 / 9.0D0
+  END FUNCTION Fs
+
+
+
+
+  FUNCTION kF(rho)
+     IMPLICIT NONE
+     REAL(DP) :: rho, kF
+
+     kF = ( 3.0D0 * pi**2 * rho )**(1.0D0/3.0D0)
+  END FUNCTION kF
+
+
+
+
+  SUBROUTINE saturate_q (q, q_cutoff, q0, dq0_dq)
+
+     IMPLICIT NONE 
+     REAL(DP),  INTENT(IN)      :: q             ! Input q.
+     REAL(DP),  INTENT(IN)      :: q_cutoff      ! Cutoff q.
+     REAL(DP),  INTENT(OUT)     :: q0            ! Output saturated q.
+     REAL(DP),  INTENT(OUT)     :: dq0_dq        ! Derivative of dq0/dq.
+     REAL(DP)                   :: e_exp         ! Exponent.
+     INTEGER,   PARAMETER       :: m_cut = 12    ! No. of terms in sum of SOLER Eq. 5.
+     INTEGER                    :: idx
+
+     e_exp  = 0.0D0
+     dq0_dq = 0.0D0
+
+     DO idx = 1, m_cut
+        e_exp  = e_exp + (q/q_cutoff)**idx/idx
+        dq0_dq = dq0_dq + (q/q_cutoff)**(idx-1)
+     END Do
+
+     q0     = q_cutoff*(1.0D0 - EXP(-e_exp))
+     dq0_dq = dq0_dq * EXP(-e_exp)
+
+  END SUBROUTINE saturate_q
+
+
+
+
   ! ####################################################################
   !                           |                 |
   !                           |  XC_VDW_DF_ncc  |
@@ -39,7 +92,7 @@ CONTAINS
   USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
   USE scf,                   ONLY : rho, rho_core
-  USE vdW_DF,                ONLY : vdw_type,vdW_energy
+  USE vdW_DF,                ONLY : vdW_DF_energy
 
   implicit none
 
@@ -77,13 +130,23 @@ CONTAINS
                                                  ! charge. This just holds the piece assigned
                                                  ! to this processor.
 
+  LOGICAL, SAVE :: first_iteration = .TRUE.      ! Whether this is the first time this
+                                                 ! routine has been called.
+
 
 
 
   ! --------------------------------------------------------------------
   ! Check that the requested non-local functional is implemented.
 
-  if ( vdW_type /= 1 .AND. vdW_type /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
+  if ( inlc /= 1 .AND. inlc /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
+
+
+  ! --------------------------------------------------------------------
+  ! Initialize the calculation.
+
+  IF ( first_iteration ) CALL generate_kernel
+  first_iteration = .FALSE.
 
 
   ! --------------------------------------------------------------------
@@ -126,7 +189,7 @@ CONTAINS
   ! inverse fourier transformed to get the u_i(r) functions of SOLER
   ! equation 11. Add the energy we find to the output variable etxc.
 
-  call vdW_energy (thetas, Ec_nl)
+  call vdW_DF_energy (thetas, Ec_nl)
   call mp_sum(Ec_nl, intra_bgrp_comm)
   etcnlccc = Ec_nl
 
@@ -154,7 +217,7 @@ CONTAINS
   USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
   USE scf,                   ONLY : rho, rho_core
-  USE vdW_DF,                ONLY : vdw_type,vdW_energy
+  USE vdW_DF,                ONLY : vdW_DF_energy
 
   implicit none
 
@@ -203,14 +266,23 @@ CONTAINS
                                                 ! This just holds the piece assigned
                                                 ! to this processor.
 
+  LOGICAL, SAVE :: first_iteration = .TRUE.     ! Whether this is the first time this
+                                                ! routine has been called.
+
 
 
 
   ! --------------------------------------------------------------------
   ! Check that the requested non-local functional is implemented.
 
-  if ( vdW_type /= 1 .AND. vdW_type /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
+  if ( inlc /= 1 .AND. inlc /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
 
+
+  ! --------------------------------------------------------------------
+  ! Initialize the calculation.
+
+  IF ( first_iteration ) CALL generate_kernel
+  first_iteration = .FALSE.
 
 
   ! --------------------------------------------------------------------
@@ -265,7 +337,7 @@ CONTAINS
   ! inverse fourier transformed to get the u_i(r) functions of SOLER
   ! equation 11. Add the energy we find to the output variable etxc.
 
-  call vdW_energy(thetas, Ec_nl)
+  call vdW_DF_energy(thetas, Ec_nl)
   call mp_sum(Ec_nl, intra_bgrp_comm)
   etcnlccc = Ec_nl
 
@@ -294,7 +366,6 @@ CONTAINS
 
   SUBROUTINE get_q0cc_on_grid (cc,lecnl_qx,total_rho, grad_rho, q0, thetas)
 
-  USE vdW_DF,               ONLY : saturate_q, Fs, kF
   USE vdW_DF,               ONLY : spline_interpolation
 
   implicit none
@@ -420,7 +491,6 @@ CONTAINS
   SUBROUTINE get_q0cc_on_grid_spin (cc,lecnl_qx,total_rho, rho_up, rho_down, grad_rho, &
              grad_rho_up, grad_rho_down, q0, thetas)
 
-  USE vdW_DF,               ONLY : saturate_q, Fs, kF
   USE vdW_DF,               ONLY : spline_interpolation
 
   implicit none
