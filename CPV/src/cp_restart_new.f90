@@ -344,6 +344,9 @@ MODULE cp_restart_new
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_thr_opt => ts_vdw_econv_thr_
               END SELECT 
+           ELSE
+              vdw_corr_ = 'none'
+              vdw_corr_opt => vdw_corr_ 
            END IF 
            IF ( dft_is_nonlocc() ) THEN 
               non_locc_ = TRIM ( get_nonlocc_name()) 
