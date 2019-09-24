@@ -253,6 +253,9 @@
                 dftd3_threebody_ = dftd3_threebody
                 dftd3_threebody_pt => dftd3_threebody_
         END SELECT
+     ELSE
+        vdw_corr_ = 'none'
+        vdw_corr_pointer => vdw_corr_
      END IF
      IF (dft_is_nonlocc) THEN
          vdw_nonlocc_ = TRIM(get_nonlocc_name())

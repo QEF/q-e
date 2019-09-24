@@ -11,6 +11,7 @@
   epbread     = .false.
 
   etf_mem     = 0
+  vme         = .false.
 
   epwwrite    = .true.
   epwread     = .false.

@@ -404,6 +404,9 @@ MODULE pw_restart_new
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_vdw_econv_thr_pt => ts_vdw_econv_thr_
                 END IF
+            ELSE
+                vdw_corr_ = 'none'
+                vdw_corr_pt => vdw_corr_
             END IF 
             IF (dft_is_vdw) THEN
                 dft_nonlocc_ = TRIM(get_nonlocc_name())

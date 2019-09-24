@@ -9,9 +9,10 @@
   kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
-
   epwwrite    = .true.
   epwread     = .false.
+
+  vme         = .false. 
 
   nbndsub     =  4
   nbndskip    =  0
@@ -28,7 +29,6 @@
   elecselfen  = .true.
   phonselfen  = .true.
   a2f         = .true.
-
 
   fsthick     = 15 ! eV
   eptemp      = 2000 ! K

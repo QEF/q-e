@@ -34,7 +34,7 @@
   selecqread   = .false.
 
   etf_mem     = 1
-  vme         = .false.
+  vme         = .true.
 
   lifc        = .false.
   asr_typ     = 'simple'

@@ -14,6 +14,7 @@
   epwread     = .false.
 
   etf_mem     = 1
+  vme         = .false. 
 
   lifc        = .true.
   asr_typ     = 'crystal'

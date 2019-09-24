@@ -421,7 +421,7 @@
               ! INTEGER :: modenum = 0. In QE 5, modenum variable does not exist
               ! anymore. Change the default EPW value to match the previous QE
               ! one. 
-  vme = .FALSE.
+  vme = .TRUE. ! Was false by default until EPW 5.1
   ephwrite = .FALSE.
   band_plot = .FALSE.
   nqsmear = 10
@@ -533,78 +533,78 @@
   ! file with rotation matrix U(k) for interpolation  
   filukk = TRIM(prefix) // '.ukk'
   IF (nsmear < 1) CALL errore('epw_readin', 'Wrong number of nsmears', 1)
-  IF (iverbosity < 0 .OR. iverbosity > 4)  CALL errore('epw_readin', ' Wrong iverbosity ', 1)
+  IF (iverbosity < 0 .OR. iverbosity > 4) CALL errore('epw_readin', 'Wrong iverbosity', 1)
   IF (epbread .AND. epbwrite) CALL errore('epw_readin', 'epbread cannot be used with epbwrite', 1)
   IF (epbread .AND. epwread) CALL errore('epw_readin', 'epbread cannot be used with epwread', 1)
   IF (degaussw * 4.d0 > fsthick) CALL errore('epw_readin', ' degaussw too close to fsthick', 1)
   IF (nbndskip < 0) CALL errore('epw_readin', ' nbndskip must not be less than 0', 1)
-  IF ((nw < 1) .OR. (nw > 1000)) CALL errore ('epw_readin', ' unreasonable nw', 1)
+  IF ((nw < 1) .OR. (nw > 1000)) CALL errore ('epw_readin', 'unreasonable nw', 1)
   IF (elecselfen .AND. plselfen) CALL errore('epw_readin', &
-       &'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)
+      'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)
   IF (phonselfen .AND. plselfen) CALL errore('epw_readin', &
-       &'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)
+      'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)
   IF (specfun_el .AND. plselfen) CALL errore('epw_readin', &
-       &'Electron-plasmon self-energy cannot be computed with el-ph spectral function', 1)
+      'Electron-plasmon self-energy cannot be computed with el-ph spectral function', 1)
   IF (specfun_ph .AND. plselfen) CALL errore('epw_readin', &
-       &'Electron-plasmon self-energy cannot be computed with el-ph spectral function', 1)
+      'Electron-plasmon self-energy cannot be computed with el-ph spectral function', 1)
   IF (elecselfen .AND. specfun_pl ) CALL errore('epw_readin', &
-       &'Electron-plasmon spectral function cannot be computed with electron-phonon', 1)
+      'Electron-plasmon spectral function cannot be computed with electron-phonon', 1)
   IF (phonselfen .AND. specfun_pl) CALL errore('epw_readin', &
-       &'Electron-plasmon spectral function cannot be computed with electron-phonon', 1)
+      'Electron-plasmon spectral function cannot be computed with electron-phonon', 1)
   IF (specfun_el .AND. specfun_pl) CALL errore('epw_readin', &
-       &'Electron-plasmon spectral function cannot be computed with el-ph spectral function', 1)
+      'Electron-plasmon spectral function cannot be computed with el-ph spectral function', 1)
   IF (specfun_ph .AND. specfun_pl) CALL errore('epw_readin', &
-       &'Electron-plasmon spectral function cannot be computed with el-ph spectral function', 1)
+      'Electron-plasmon spectral function cannot be computed with el-ph spectral function', 1)
   IF (a2f .AND. .NOT. phonselfen) CALL errore('epw_readin', 'a2f requires phonoselfen', 1)
-  IF (elph .AND.  .NOT. ep_coupling ) CALL errore('epw_readin', 'elph requires ep_coupling=.TRUE.', 1)
+  IF (elph .AND. .NOT. ep_coupling) CALL errore('epw_readin', 'elph requires ep_coupling=.true.', 1)
   IF ((elph .AND. wannierize) .AND. (epwread)) CALL errore('epw_readin', &
-       & 'must use same w90 rotation matrix for entire run', 1)
+      'must use same w90 rotation matrix for entire run', 1)
   IF (wannierize .AND. .NOT. ep_coupling) CALL errore('epw_readin', &
-      &'wannierize requires ep_coupling=.TRUE.', 1)
-  IF ((wmin > wmax)) CALL errore ('epw_readin', ' check wmin, wmax ', 1)
-  IF ((wmin_specfun > wmax_specfun)) CALL errore ('epw_readin', ' check wmin_specfun, wmax_specfun ', 1)
-  IF ((nw_specfun < 2)) CALL errore ('epw_readin', ' nw_specfun must be at least 2', 1)
-  IF ((nqstep < 2)) CALL errore ('epw_readin', ' nqstep must be at least 2', 1)
-  IF ((nbndsub > 200)) CALL errore ('epw_readin', ' too many wannier functions increase size of projx', 1)
-  IF (( phonselfen .OR. elecselfen .OR. specfun_el .OR. specfun_ph ) .AND. ( mp_mesh_k .OR. mp_mesh_q )) & 
-     CALL errore('epw_readin', 'can only work with full uniform mesh',1)
-  IF (ephwrite .AND. .NOT. ep_coupling .AND.  .NOT. elph ) CALL errore('epw_readin', &
-      &'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.',1)
-  IF (ephwrite .AND. (rand_k .OR. rand_q ) ) &
-     CALL errore('epw_readin', 'ephwrite requires a uniform grid',1) 
-  IF (ephwrite .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0 ) ) &
-     CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3',1)
+      'wannierize requires ep_coupling=.true.', 1)
+  IF ((wmin > wmax)) CALL errore('epw_readin', ' check wmin, wmax ', 1)
+  IF ((wmin_specfun > wmax_specfun)) CALL errore('epw_readin', 'check wmin_specfun, wmax_specfun', 1)
+  IF ((nw_specfun < 2)) CALL errore('epw_readin', 'nw_specfun must be at least 2', 1)
+  IF ((nqstep < 2)) CALL errore('epw_readin', 'nqstep must be at least 2', 1)
+  IF ((nbndsub > 200)) CALL errore('epw_readin', 'too many wannier functions increase size of projx', 1)
+  IF ((phonselfen .OR. elecselfen .OR. specfun_el .OR. specfun_ph) .AND. (mp_mesh_k .OR. mp_mesh_q)) & 
+    CALL errore('epw_readin', 'can only work with full uniform mesh', 1)
+  IF (ephwrite .AND. .NOT. ep_coupling .AND. .NOT. elph) CALL errore('epw_readin', &
+      'ephwrite requires ep_coupling=.TRUE., elph=.TRUE.', 1)
+  IF (ephwrite .AND. (rand_k .OR. rand_q)) &
+    CALL errore('epw_readin', 'ephwrite requires a uniform grid', 1) 
+  IF (ephwrite .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0)) &
+    CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3', 1)
   IF (band_plot .AND. filkf == ' ' .AND. filqf == ' ') CALL errore('epw_readin', &
-      &'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files',1)
-  IF (band_plot .AND. filkf /= ' ' .AND. (nkf1 > 0 .OR. nkf2 > 0 .OR. nkf3 > 0) ) CALL errore('epw_readin', &
-                &'You should define either filkf or nkf when band_plot = .TRUE.',1)
-  IF (band_plot .AND. filqf /= ' ' .AND. (nqf1 > 0 .OR. nqf2 > 0 .OR. nqf3 > 0) ) CALL errore('epw_readin', &
-                &'You should define either filqf or nqf when band_plot = .TRUE.',1)
-  IF (filkf /= ' ' .AND. .NOT. efermi_read ) CALL errore('epw_readin', &
-      &'WARNING: if k-points are along a line, then efermi_read=.TRUE. and fermi_energy must be given in the input file',-1)
+      'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files', 1)
+  IF (band_plot .AND. filkf /= ' ' .AND. (nkf1 > 0 .OR. nkf2 > 0 .OR. nkf3 > 0)) CALL errore('epw_readin', &
+      'You should define either filkf or nkf when band_plot = .true.', 1)
+  IF (band_plot .AND. filqf /= ' ' .AND. (nqf1 > 0 .OR. nqf2 > 0 .OR. nqf3 > 0)) CALL errore('epw_readin', &
+     'You should define either filqf or nqf when band_plot = .true.', 1)
+  IF (filkf /= ' ' .AND. .NOT. efermi_read) CALL errore('epw_readin', &
+     'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file', -1)
   IF (scattering .AND. nstemp < 1) CALL errore('epw_readin', 'wrong number of nstemp', 1)
-  IF (scattering .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0 ) &
-       CALL errore('epw_readin', 'define either (tempsmin and tempsmax) or temps(:)',1)
+  IF (scattering .AND. MAXVAL(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0) &
+    CALL errore('epw_readin', 'define either (tempsmin and tempsmax) or temps(:)', 1)
   IF (scattering .AND. tempsmax < tempsmin) CALL errore('epw_readin', 'tempsmax should be greater than tempsmin', 1)
   IF ((ABS(ncarrier) > 1E+5) .AND. .NOT. carrier) CALL errore('epw_readin', &
-       'carrier must be .TRUE. if you specify ncarrier.', 1)
-  IF (carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_readin', &
-       'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3', 1)
-  IF ((longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_readin',&
-       &'Error: longrange or shortrange can only be true if lpolar is true as well.', 1)
+      'carrier must be .TRUE. if you specify ncarrier.', 1)
+  IF (carrier .AND. (ABS(ncarrier) < 1E+5))  CALL errore('epw_readin', &
+      'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3', 1)
+  IF ((longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_readin', &
+      'Error: longrange or shortrange can only be true if lpolar is true as well.', 1)
   IF (longrange .AND. shortrange) CALL errore('epw_readin',&
-       &'Error: longrange and shortrange cannot be both true.',1)
-  IF (epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_readin',&
-       &'Error: kmaps has to be true for a restart run. ',1)
-  IF (.NOT. epwread .AND. .NOT. epwwrite) CALL errore('epw_readin',&
-       &'Error: Either epwread or epwwrite needs to be true. ',1)
-  IF (lscreen .AND. etf_mem == 2) CALL errore('epw_readin', 'Error: lscreen not implemented with etf_mem=2 ', 1)
-  IF (ABS(degaussw) < eps16 .AND. etf_mem == 2) CALL errore('epw_readin',&
-       & 'Error: adapt_smearing not implemented with etf_mem=2 ', 1)
+      'Error: longrange and shortrange cannot be both true.', 1)
+  IF (epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_readin', &
+      'Error: kmaps has to be true for a restart run. ', 1)
+  IF (.NOT. epwread .AND. .NOT. epwwrite) CALL errore('epw_readin', &
+      'Error: Either epwread or epwwrite needs to be true. ', 1)
+  IF (lscreen .AND. etf_mem == 2) CALL errore('epw_readin', 'Error: lscreen not implemented with etf_mem=2', 1)
+  IF (ABS(degaussw) < eps16 .AND. etf_mem == 2) CALL errore('epw_readin', &
+      'Error: adapt_smearing not implemented with etf_mem=2', 1)
   ! Make sure the files exists
   IF (filkf /= ' ') THEN
     OPEN(UNIT = iunkf, FILE = filkf, STATUS = 'old', FORM = 'formatted', ERR = 100, IOSTAT = ios)
-100 CALL errore('epw_readin','opening file ' // filkf, ABS(ios))
+100 CALL errore('epw_readin', 'opening file ' // filkf, ABS(ios))
     CLOSE(iunkf)
   ENDIF
   IF (filqf /= ' ') THEN
@@ -618,6 +618,10 @@
       CALL errore('epw_readin', 'Error: the fine k-points and q-points grids have to be the same when doing IBTE.', 1) 
     ENDIF
   ENDIF
+  IF (auto_projections .AND. proj(1) /= ' ') CALL errore('epw_readin', & 
+      'Cannot specify both auto_projections and projections block', 1)
+  IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) & 
+    CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
   !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd

@@ -38,7 +38,7 @@
                               eps6, eps8, eps4
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
-    USE io_epw, ONLY : scattering_write, tau_write, merge_read
+    USE io_transport,  ONLY : scattering_write, tau_write, merge_read
     USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
@@ -560,35 +560,35 @@
     !!       At the moment we just want mobility_\alpha\alpha so it makes no difference.
     !!
     !-----------------------------------------------------------------------
-    USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout, meta_ionode_id
-    USE cell_base,     ONLY : alat, at, omega
-    USE io_files,      ONLY : prefix 
-    USE io_var,        ONLY : iufilsigma 
-    USE epwcom,        ONLY : nbndsub, fsthick, system_2d, nstemp,              &
-                              int_mob, ncarrier, scatread, iterative_bte, vme
-    USE pwcom,         ONLY : ef 
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef,      & 
-                              inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
-                              zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
-    USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI,         &
-                              kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
-    USE mp,            ONLY : mp_sum, mp_bcast
-    USE mp_global,     ONLY : world_comm
-    USE mp_world,      ONLY : mpime
-    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_global,     ONLY : ionode_id
-    USE cell_base,     ONLY : bg
-    USE mp,            ONLY : mp_bcast
-    USE mp_global,     ONLY : inter_pool_comm
-    USE epwcom,        ONLY : mp_mesh_k, nkf1, nkf2, nkf3
-    USE constants_epw, ONLY : eps6, eps4
+    USE kinds,            ONLY : DP
+    USE io_global,        ONLY : stdout, meta_ionode_id
+    USE cell_base,        ONLY : alat, at, omega
+    USE io_files,         ONLY : prefix 
+    USE io_var,           ONLY : iufilsigma 
+    USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp,              &
+                                 int_mob, ncarrier, scatread, iterative_bte, vme
+    USE pwcom,            ONLY : ef 
+    USE elph2,            ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef,      & 
+                                 inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
+                                 zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
+    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev, electron_SI,         &
+                                 kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
+    USE mp,               ONLY : mp_sum, mp_bcast
+    USE mp_global,        ONLY : world_comm
+    USE mp_world,         ONLY : mpime
+    USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE io_global,        ONLY : ionode_id
+    USE cell_base,        ONLY : bg
+    USE mp,               ONLY : mp_bcast
+    USE mp_global,        ONLY : inter_pool_comm
+    USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3
+    USE constants_epw,    ONLY : eps6, eps4
+    USE io_transport,     ONLY : scattering_read
+    USE division,         ONLY : fkbounds
+    USE grid,             ONLY : kpoint_grid_epw
+    USE kinds_epw,        ONLY : SIK2
+    USE poolgathering,    ONLY : poolgatherc4, poolgather2
     USE noncollin_module, ONLY : noncolin
-    USE io_epw, ONLY : scattering_read
-    USE division,      ONLY : fkbounds
-    USE grid,          ONLY : kpoint_grid_epw
-    USE kinds_epw,     ONLY : SIK2
-    USE poolgathering, ONLY : poolgatherc4, poolgather2
     !
     IMPLICIT NONE
     ! 

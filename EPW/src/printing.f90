@@ -279,7 +279,7 @@
     !! Corresponding symmetry matrix
     INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
-    REAL(KIND = DP), INTENT(in) :: F_SERTA(3, nbndfst, nktotf, nstemp)  
+    REAL(KIND = DP), INTENT(in) :: f_serta(3, nbndfst, nktotf, nstemp)  
     !! SERTA solution 
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity
@@ -374,7 +374,7 @@
             IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
               !
               vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = F_SERTA(:, ibnd, ik, itemp)
+              Fi_cart(:) = f_serta(:, ibnd, ik, itemp)
               !
               ! Loop on the point equivalent by symmetry in the full BZ
               DO nb = 1, nrot
@@ -443,7 +443,7 @@
           DO ibnd = 1, nbndfst
             IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
               vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = F_SERTA(:, ibnd, ik, itemp) 
+              Fi_cart(:) = f_serta(:, ibnd, ik, itemp) 
               ! 
               ! Loop on the point equivalent by symmetry in the full BZ
               DO nb = 1, nrot
@@ -525,7 +525,7 @@
     !
     IMPLICIT NONE
     !
-    REAL(KIND = DP), INTENT(in) :: F_SERTA(3, nbndfst, nktotf, nstemp)  
+    REAL(KIND = DP), INTENT(in) :: f_serta(3, nbndfst, nktotf, nstemp)  
     !! SERTA solution 
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity
@@ -602,10 +602,10 @@
             IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
               DO j = 1, 3
                 DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * F_SERTA(i, ibnd, ik, itemp) * wkf_all(ik)
+                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_serta(i, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + F_SERTA(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
+              Fi_check(:, itemp) = Fi_check(:, itemp) + f_serta(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
         ENDDO ! ik
@@ -646,10 +646,10 @@
             IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
               DO j = 1, 3
                 DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * F_SERTA(i, ibnd, ik, itemp) * wkf_all(ik)
+                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_serta(i, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + F_SERTA(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
+              Fi_check(:, itemp) = Fi_check(:, itemp) + f_serta(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
               ! 
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
@@ -712,7 +712,7 @@
     !! Corresponding symmetry matrix
     INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
-    REAL(KIND = DP), INTENT(in) :: F_out(3, nbndfst, nktotf, nstemp)  
+    REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)  
     !! SERTA solution 
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity
@@ -804,7 +804,7 @@
           DO ibnd = 1, nbndfst
             IF (etf_all (ibnd, ik) < ef0(itemp)) THEN
               vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = F_out(:, ibnd, ik, itemp)
+              Fi_cart(:) = f_out(:, ibnd, ik, itemp)
               ! 
               ! Loop on the point equivalent by symmetry in the full BZ
               DO nb = 1, nrot
@@ -873,7 +873,7 @@
           DO ibnd = 1, nbndfst
             IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
               vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = F_out(:, ibnd, ik, itemp)
+              Fi_cart(:) = f_out(:, ibnd, ik, itemp)
               ! 
               ! Loop on the point equivalent by symmetry in the full BZ
               DO nb = 1, nrot
@@ -958,7 +958,7 @@
     !
     IMPLICIT NONE
     !
-    REAL(KIND = DP), INTENT(in) :: F_out(3, nbndfst, nktotf, nstemp)  
+    REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)  
     !! SERTA solution 
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity
@@ -1036,10 +1036,10 @@
             IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
               DO j = 1, 3
                 DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * F_out(i, ibnd, ik, itemp) * wkf_all(ik)
+                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_out(i, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + F_out(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
+              Fi_check(:, itemp) = Fi_check(:, itemp) + f_out(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
               ! 
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
@@ -1081,10 +1081,10 @@
             IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
               DO j = 1, 3
                 DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * F_out(i, ibnd, ik, itemp) * wkf_all(ik)
+                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_out(i, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + F_out(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3) 
+              Fi_check(:, itemp) = Fi_check(:, itemp) + f_out(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3) 
               ! 
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
