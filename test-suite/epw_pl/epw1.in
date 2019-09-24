@@ -12,6 +12,8 @@
   epwwrite    = .true.
   epwread     = .false.
 
+  vme         = .false. 
+
   nbndsub     =  8
   nbndskip    =  0
 
@@ -42,7 +44,6 @@
   a2f         = .false.
    
   band_plot   = .true.
-
 
   fsthick     = 3.0
   eptemp      = 20.0

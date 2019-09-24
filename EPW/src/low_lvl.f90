@@ -16,7 +16,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    LOGICAL function hslt(a, b, eps)
+    LOGICAL FUNCTION hslt(a, b, eps)
     !-----------------------------------------------------------------------
     !! 
     !! Compare two real number and return the result
@@ -39,6 +39,452 @@
     ENDIF
     !-----------------------------------------------------------------------
     END FUNCTION hslt
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION s()
+    !-----------------------------------------------------------------------
+    !!  
+    !! s-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP) :: s
+
+    s = 1.d0 / SQRT(fpi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION s
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION px(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! p-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! Phi
+    REAL(KIND = DP) :: px
+    !! Output
+    ! 
+    ! Local variable 
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    px =  SQRT(3.d0 / fpi) * sint * cos(phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION px
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION py(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! p-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! Cos
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! Phi
+    REAL(KIND = DP) :: py
+    !! Output 
+    !
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! Sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    py =  SQRT(3.d0 / fpi) * sint * sin(phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION py
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION p_z(cost)
+    !-----------------------------------------------------------------------
+    !!  
+    !! p-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP) :: p_z
+    !! Output
+    !
+    p_z =  SQRT(3.d0 / fpi) * cost
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION p_z
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION dz2(cost)
+    !-----------------------------------------------------------------------
+    !!  
+    !! d-orbital 
+    !!
+    USE kinds, ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP) :: dz2
+    !! Output
+    !
+    dz2 =  SQRT(1.25d0 / fpi) * (3.d0 * cost * cost - 1.d0)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION dz2
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION dxz(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! d-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: dxz
+    !! Output
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    dxz =  SQRT(15.d0 / fpi) * sint * cost * COS(phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION dxz
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION dyz(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! d-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: dyz
+    !! output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    dyz =  SQRT(15.d0 / fpi) * sint * cost * SIN(phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION dyz
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION dx2my2(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! d-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: dx2my2
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    dx2my2 =  SQRT(3.75d0 / fpi) * sint * sint * COS(2.d0 * phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION dx2my2
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION dxy(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! d-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : fpi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: dxy
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    dxy =  SQRT(3.75d0 / fpi) * sint * sint * SIN(2.d0 * phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION dxy
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    PURE FUNCTION fz3(cost)
+    !-----------------------------------------------------------------------
+    !!  
+    !! f-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : pi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP) :: fz3
+    !! Output
+    !
+    fz3 = 0.25d0 * SQRT(7.d0 / pi) * (5.d0 * cost * cost - 3.d0) * cost
+    ! 
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION fz3
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION fxz2(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! f-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : pi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: fxz2
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    fxz2 = 0.25d0 * SQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * COS(phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION fxz2
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION fyz2(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! f-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : pi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: fyz2
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    fyz2 = 0.25d0 * SQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * SIN(phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION fyz2
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    PURE FUNCTION fzx2my2(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! f-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : pi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: fzx2my2
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    fzx2my2 = 0.25d0 * SQRT(105d0/pi) * sint * sint * cost * COS(2.d0 * phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION fzx2my2
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    PURE FUNCTION fxyz(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! f-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : pi
+    !
+    IMPLICIT NONE
+    ! 
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: fxyz
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    fxyz = 0.25d0 * SQRT(105d0 / pi) * sint * sint * cost * SIN(2.d0 * phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION fxyz
+    !-----------------------------------------------------------------------
+    !  
+    !-----------------------------------------------------------------------
+    PURE FUNCTION fxx2m3y2(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! f-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : pi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: fxx2m3y2
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    fxx2m3y2 = 0.25d0 * SQRT(17.5d0 / pi) * sint * sint * sint * COS(3.d0 * phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION fxx2m3y2
+    !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    FUNCTION fy3x2my2(cost, phi)
+    !-----------------------------------------------------------------------
+    !!  
+    !! f-orbital 
+    !!
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : pi
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND = DP), INTENT(in) :: cost
+    !! cos(t)
+    REAL(KIND = DP), INTENT(in) :: phi
+    !! phi
+    REAL(KIND = DP) :: fy3x2my2
+    !! Output
+    ! 
+    ! Local variables
+    REAL(KIND = DP) :: sint
+    !! sin(t)
+    !
+    sint = SQRT(ABS(1.d0 - cost * cost))
+    fy3x2my2 = 0.25d0 * SQRT(17.5d0 / pi) * sint * sint * sint * SIN(3.d0 * phi)
+    !
+    RETURN
+    !-----------------------------------------------------------------------
+    END FUNCTION fy3x2my2
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------

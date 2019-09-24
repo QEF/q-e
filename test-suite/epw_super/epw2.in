@@ -10,11 +10,11 @@
   kmaps       = .false.
   epbwrite    = .true.
   epbread     = .false.
-
-  epwwrite = .true.
-  epwread  = .false.
+  epwwrite    = .true.
+  epwread     = .false.
 
   etf_mem     = 0
+  vme         = .false.
 
   nbndsub     =  5,
   nbndskip    =  0
@@ -29,7 +29,6 @@
 
   iverbosity  = 0
 
-
   eps_acustic = 5.0    ! Lowest boundary for the 
   ephwrite    = .true. ! Writes .ephmat files used when wliasberg = .true.
 
@@ -41,13 +40,11 @@
 
   eliashberg  = .true.
 
-  liso = .true.
+  laniso = .true.
   limag = .true.
   lpade = .true.
-  lacon = .true.
 
   conv_thr_iaxis = 1.0d-2
-  conv_thr_racon = 1.0d-2
 
   wscut = 0.5   ! eV   Upper limit over frequency integration/summation in the Elisashberg eq
 
@@ -83,6 +80,6 @@
           0.000000000   0.000000000   0.291867841 
           0.000000000   0.384900179   0.000000000 
           0.000000000   0.384900179   0.291867841 
-          0.333333333   0.577350269   0.000000000  
+          0.333333333   0.577350269   0.000000000 
           0.333333333   0.577350269   0.291867841 
 

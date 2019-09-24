@@ -48,10 +48,20 @@ PROGRAM extract_core
 
       ios = 0
       CALL read_upf( upf_in, IERR = ios, GRID = grid, FILENAME = TRIM(filein)  )
+      !! read UPF v.2
       IF (ios ==-81 ) THEN
-         IF (ionode) is_xml = make_emended_upf_copy( TRIM(filein), 'tmp.upf' )
-         CALL  read_upf(upf_in,  IERR = ios, GRID = grid, FILENAME = 'tmp.upf' )
-         IF (ionode) ios = f_remove('tmp.upf' )
+         !! Bad characters found: try to remove them and fix the file
+         is_xml = make_emended_upf_copy( TRIM(filein), 'tmp.upf' )
+         IF (is_xml) THEN
+            !! read fixed UPF v.2 file, remove after reading
+            CALL read_upf(upf_in, IERR = ios, GRID = grid, FILENAME = 'tmp.upf')
+            ios = f_remove('tmp.upf' )
+         ELSE
+            !! Not an UPF v.2 file: read UPF v.1
+            OPEN (UNIT = 999, FILE = filein, STATUS = 'old', FORM = 'formatted')
+            CALL  read_upf(upf_in, grid, ios, UNIT = 999 )
+            CLOSE (UNIT = 999, STATUS = 'keep')
+         END IF
       END IF
  
       IF(upf_in%has_gipaw) THEN 

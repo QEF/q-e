@@ -11,6 +11,7 @@
   epbread     = .true.
 
   etf_mem     = 1
+  vme         = .false.
   use_ws      = .true.
 
   epwwrite    = .true.
