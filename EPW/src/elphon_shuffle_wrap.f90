@@ -917,15 +917,15 @@
   !
   ! the electron-phonon wannier interpolation
   !
-  IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle(nqc, xqc)
+  IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle(nqc, xqc, w_centers)
   IF(etf_mem == 2) THEN
 #if defined(__MPI)         
-    CALL ephwann_shuffle_mem(nqc, xqc)
+    CALL ephwann_shuffle_mem(nqc, xqc, w_centers)
 #else
     WRITE(stdout,'(/5x,a)') 'WARNING: etf_mem==2 only works with MPI'
     WRITE(stdout,'(5x,a)')  '         Changing to etf_mem == 1 and continue ...'
     etf_mem = 1
-    CALL ephwann_shuffle(nqc, xqc)
+    CALL ephwann_shuffle(nqc, xqc, w_centers)
 #endif
   ENDIF        
   DEALLOCATE(xqc, STAT = ierr)

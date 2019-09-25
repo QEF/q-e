@@ -20,17 +20,19 @@
   lifc        = .false.
   asr_typ     = 'simple'
 
-  nbndsub     =  10
+  use_ws      = .true.
+
+  nbndsub     =  14
   nbndskip    =  12
 
   wannierize  = .true.
   num_iter    = 1500
-  iprint      = 2
+  iprint      = 3
   dis_win_max = 25.5
   dis_win_min = 2.2
   dis_froz_max= 14.5
   proj(1)     = 'Ga:sp3'
-  proj(2)     = 'N:s'
+  proj(2)     = 'N:p'
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
   wdata(3) = 'G 0.00 0.00 0.00 M 0.50 0.00 0.00'
@@ -55,12 +57,12 @@
 
   dvscf_dir   = './save/'
 
-  nkf1         = 1
-  nkf2         = 1
-  nkf3         = 1
-  nqf1         = 1
-  nqf2         = 1
-  nqf3         = 1
+  efermi_read = .true
+  fermi_energy= 11.80
+  band_plot   = .true.
+
+  filkf       = './MGA.txt'
+  filqf       = './MGA.txt'
  
   nk1         = 2
   nk2         = 2
