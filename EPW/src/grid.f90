@@ -1432,7 +1432,7 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           xkk = xkf(:, ikk)
-          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
           IF (use_ws) THEN
             DO iw = 1, dims
               DO iw2 = 1, dims
@@ -1454,7 +1454,6 @@
         IF (mp_mesh_k) THEN
           BZtoIBZ(:) = 0
           s_BZtoIBZ(:) = 0
-          ! 
           ! 
           CALL set_sym_bl()
           !

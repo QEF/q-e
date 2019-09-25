@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------
-  SUBROUTINE ephwann_shuffle_mem(nqc, xqc)
+  SUBROUTINE ephwann_shuffle_mem(nqc, xqc, w_centers)
   !---------------------------------------------------------------------
   !!
   !! Wannier interpolation of electron-phonon vertex
@@ -98,9 +98,10 @@
   !
   INTEGER, INTENT(in) :: nqc
   !! number of qpoints in the coarse grid
-  !
   REAL(KIND = DP), INTENT(in) :: xqc(3, nqc)
   !! qpoint list, coarse mesh
+  REAL(KIND = DP), INTENT(in) :: w_centers(3, nbndsub)
+  !! Wannier centers
   ! 
   ! Local  variables
   CHARACTER(LEN = 256) :: filint
@@ -222,7 +223,6 @@
   INTEGER :: lsize
   !! Offset to tell where to start reading the file
 #endif
-  ! 
   REAL(KIND = DP) :: rdotk_scal
   !! Real (instead of array) for $r\cdot k$
   REAL(KIND = DP) :: xxq(3)
@@ -237,8 +237,6 @@
   !! Real-space wigner-Seitz vectors
   REAL(KIND = DP) :: atws(3, 3)
   !! Maximum vector: at*nq
-  REAL(KIND = DP) :: w_centers(3, nbndsub)
-  !! Wannier centers  
   REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
   REAL(KIND = DP) :: ef0(nstemp)
@@ -287,7 +285,6 @@
   !! Eigenvalue 1 for deg. testing
   REAL(KIND = DP) :: e_2
   !! Eigenvalue 2 for deg. testing
-  !
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwe_mem(:, :, :, :)
   !! e-p matrix  in wannier basis - electrons (written on disk)
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwef(:, :, :)

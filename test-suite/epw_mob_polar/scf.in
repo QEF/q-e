@@ -20,8 +20,7 @@
  &electrons
     diagonalization='david'
     mixing_beta=0.7
-    conv_thr=1.0d-12
-    diago_thr_init = 1.0e-6
+    conv_thr=1.0d-14
     diago_full_acc = .true.
  /
 ATOMIC_SPECIES

@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------
-  SUBROUTINE ephwann_shuffle(nqc, xqc)
+  SUBROUTINE ephwann_shuffle(nqc, xqc, w_centers)
   !---------------------------------------------------------------------
   !!
   !! Wannier interpolation of electron-phonon vertex
@@ -97,6 +97,8 @@
   !! number of qpoints in the coarse grid
   REAL(KIND = DP), INTENT(in) :: xqc(3, nqc)
   !! qpoint list, coarse mesh
+  REAL(KIND = DP), INTENT(in) :: w_centers(3, nbndsub)
+  !! Wannier centers 
   ! 
   ! Local  variables
   CHARACTER(LEN = 256) :: filint
@@ -232,8 +234,6 @@
   !! Real-space wigner-Seitz vectors
   REAL(KIND = DP) :: atws(3, 3)
   !! Maximum vector: at*nq
-  REAL(KIND = DP) :: w_centers(3, nbndsub)
-  !! Wannier centers  
   REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
   REAL(KIND = DP) :: ef0(nstemp)

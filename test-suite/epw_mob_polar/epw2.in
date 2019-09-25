@@ -39,17 +39,19 @@
   lifc        = .false.
   asr_typ     = 'simple'
 
-  nbndsub     =  10
+  use_ws      = .true.
+
+  nbndsub     =  14
   nbndskip    =  12
 
   wannierize  = .false.
   num_iter    = 1500
-  iprint      = 2
+  iprint      = 3
   dis_win_max = 25.5
   dis_win_min = 2.2
   dis_froz_max= 14.5
   proj(1)     = 'Ga:sp3'
-  proj(2)     = 'N:s'
+  proj(2)     = 'N:p'
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
   wdata(3) = 'G 0.00 0.00 0.00 M 0.50 0.00 0.00'
@@ -68,25 +70,25 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 0.6 ! eV 
+  fsthick     = 0.4 ! eV 
   eptemp      = 1 ! K 
-  degaussw    = 0.15 ! eV
+  degaussw    = 0.00 ! eV
 
   efermi_read  = .true
-  fermi_energy = 11.481879
+  fermi_energy = 11.481872
 
-!     Valence band maximum    =  11.381879 eV
-!     Conduction band minimum =  13.076050 eV
+!     Valence band maximum    =  11.381872 eV
+!     Conduction band minimum =  13.076046 eV
 
   dvscf_dir   = './save/'
 
-  nkf1         = 20
-  nkf2         = 20
-  nkf3         = 20
+  nkf1         = 12
+  nkf2         = 12
+  nkf3         = 12
 
-  nqf1         = 20
-  nqf2         = 20
-  nqf3         = 20
+  nqf1         = 12
+  nqf2         = 12
+  nqf3         = 12
  
   nk1         = 2
   nk2         = 2
