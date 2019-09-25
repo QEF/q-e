@@ -693,7 +693,7 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
-                                       root_bgrp_id, nbgrp
+                                       root_bgrp_id
       !
       IMPLICIT NONE
       !
@@ -713,14 +713,11 @@ MODULE pw_restart_new
       iks = global_kpoint_index (nkstot, 1)
       ike = iks + nks - 1
       !
-      ! ... ngk_g: global number of k+G vectors for all k points
+      ! ... ngk_g: global number of k+G vectors
       !
-      ALLOCATE( ngk_g( nkstot ) )
-      ngk_g = 0
-      ngk_g(iks:ike) = ngk(1:nks)
-      CALL mp_sum( ngk_g, inter_pool_comm)
-      CALL mp_sum( ngk_g, intra_pool_comm)
-      ngk_g = ngk_g / nbgrp
+      ALLOCATE( ngk_g( nks ) )
+      ngk_g(1:nks) = ngk(1:nks)
+      CALL mp_sum( ngk_g, intra_bgrp_comm)
       !
       ! ... The igk_l2g array yields the correspondence between the
       ! ... local k+G index and the global G index
@@ -754,7 +751,7 @@ MODULE pw_restart_new
          CALL mp_max( npw_g, intra_pool_comm )
          !
          igk_l2g_kdip = 0
-         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik), ngk(ik), igk_l2g, &
                               igk_l2g_kdip )
          !
          ! ... mill_k(:,i) contains Miller indices for (k+G)_i
@@ -903,7 +900,7 @@ MODULE pw_restart_new
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_bands,             ONLY : nbgrp, root_bgrp, intra_bgrp_comm
+      USE mp_bands,             ONLY : root_bgrp, intra_bgrp_comm
       USE mp_pools,             ONLY : me_pool, root_pool, &
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
@@ -930,12 +927,9 @@ MODULE pw_restart_new
       !
       ! ... ngk_g: global number of k+G vectors for all k points
       !
-      ALLOCATE( ngk_g( nkstot ) )
-      ngk_g = 0
-      ngk_g(iks:ike) = ngk(1:nks)
-      CALL mp_sum( ngk_g, inter_pool_comm)
-      CALL mp_sum( ngk_g, intra_pool_comm)
-      ngk_g = ngk_g / nbgrp
+      ALLOCATE( ngk_g( nks ) )
+      ngk_g(1:nks) = ngk(1:nks)
+      CALL mp_sum( ngk_g, intra_bgrp_comm)
       !
       ! ... the root processor of each pool reads
       !
@@ -972,7 +966,7 @@ MODULE pw_restart_new
          CALL mp_max( npw_g, intra_pool_comm )
          !
          igk_l2g_kdip = 0
-         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik), ngk(ik), igk_l2g, &
                               igk_l2g_kdip )
          !
          evc=(0.0_DP, 0.0_DP)
@@ -1011,6 +1005,7 @@ MODULE pw_restart_new
       DEALLOCATE ( mill_k )
       DEALLOCATE ( igk_l2g )
       DEALLOCATE ( igk_l2g_kdip )
+      DEALLOCATE ( ngk_g )
       !
       RETURN
       !
