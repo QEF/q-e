@@ -208,12 +208,6 @@ MODULE pw_restart_new
       !
       npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
-      ! ... find out the global number of G vectors: ngm_g
-      !
-      ngm_g = ngm
-      CALL mp_sum( ngm_g, intra_bgrp_comm )
-      ! 
-      ! 
       ! XML descriptor
       ! 
       IF ( ionode ) THEN  
@@ -692,10 +686,9 @@ MODULE pw_restart_new
       USE buffers,              ONLY : get_buffer
       USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k, wk
-      USE gvect,                ONLY : ngm, ngm_g, g, mill
+      USE gvect,                ONLY : ngm, g, mill
       USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
-      USE gvecs,                ONLY : ngms_g
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
@@ -705,7 +698,7 @@ MODULE pw_restart_new
       IMPLICIT NONE
       !
       INTEGER               :: i, ig, ngg, ipol, ispin
-      INTEGER               :: ik, ik_g, ike, iks, npw_g, npwx_g
+      INTEGER               :: ik, ik_g, ike, iks, npw_g
       INTEGER, EXTERNAL     :: global_kpoint_index
       INTEGER,  ALLOCATABLE :: ngk_g(:), mill_k(:,:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:), igk_l2g_kdip(:)
@@ -728,10 +721,6 @@ MODULE pw_restart_new
       CALL mp_sum( ngk_g, inter_pool_comm)
       CALL mp_sum( ngk_g, intra_pool_comm)
       ngk_g = ngk_g / nbgrp
-      !
-      ! ... npwx_g: maximum number of G vector among all k points
-      !
-      npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
       ! ... The igk_l2g array yields the correspondence between the
       ! ... local k+G index and the global G index
@@ -927,7 +916,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=320)   :: filename, msg
       INTEGER              :: i, ik, ik_g, ig, ipol, ik_s
-      INTEGER              :: npol_, npwx_g, nbnd_
+      INTEGER              :: npol_, nbnd_
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, EXTERNAL    :: global_kpoint_index
       INTEGER, ALLOCATABLE :: ngk_g(:), mill_k(:,:)
@@ -947,10 +936,6 @@ MODULE pw_restart_new
       CALL mp_sum( ngk_g, inter_pool_comm)
       CALL mp_sum( ngk_g, intra_pool_comm)
       ngk_g = ngk_g / nbgrp
-      !
-      ! ... npwx_g: maximum number of G vector among all k points
-      !
-      npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
       ! ... the root processor of each pool reads
       !
