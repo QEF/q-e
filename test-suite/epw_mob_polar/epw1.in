@@ -47,11 +47,11 @@
   wdata(12) = 'conv_tol = 1E-8'
   wdata(13) = 'conv_window = 4'
 
-  elecselfen  = .true.
+  elecselfen  = .false.
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 2.0 ! eV 
+  fsthick     = 100.0 ! eV 
   eptemp      = 1 ! K 
   degaussw    = 0.01 ! eV
 
