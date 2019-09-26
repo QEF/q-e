@@ -1530,47 +1530,49 @@ END SUBROUTINE write_dft_name
 !-----------------------------------------------------------------------
 SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
   !-----------------------------------------------------------------------
-  !     non local correction for the correlation
+  !     non-local contribution to the correlation energy
   !
-  !     input:  rho_valence, rho_core
-  !     definition:  E_nl = \int E_nl(rho',grho',rho'',grho'',|r'-r''|) dr
-  !     output: enl = E_nl
-  !             vnl= D(E_x)/D(rho)
-  !             v  = Correction to the potential
+  !     input      :  rho_valence, rho_core
+  !     definition :  E_nl = \int E_nl(rho',grho',rho'',grho'',|r'-r''|) dr
+  !     output     :  enl = E^nl_c
+  !                   vnl = D(E^nl_c)/D(rho)
+  !                   v   = non-local contribution to the potential
   !
-
-  USE vdW_DF, ONLY: xc_vdW_DF, xc_vdW_DF_spin, vdw_type
+  !
+  USE vdW_DF, ONLY: xc_vdW_DF, xc_vdW_DF_spin, inlc_ => inlc
   USE rVV10,  ONLY: xc_rVV10
-
+  !
   IMPLICIT NONE
-
-  REAL(DP), INTENT(IN) :: rho_valence(:,:), rho_core(:)
-  INTEGER, INTENT(IN)  :: nspin
+  !
+  REAL(DP), INTENT(IN)    :: rho_valence(:,:), rho_core(:)
+  INTEGER,  INTENT(IN)    :: nspin
   REAL(DP), INTENT(INOUT) :: v(:,:)
   REAL(DP), INTENT(INOUT) :: enl, vnl
-
-  if ( inlc == 1 .or. inlc == 2 .or. inlc == 4 .or. inlc == 5 .or. inlc == 6 ) then
-
-     vdw_type = inlc
-     if( nspin == 1 ) then
+  !
+  IF ( inlc == 1 .OR. inlc == 2) THEN
+     !
+     inlc_ = inlc
+     IF ( nspin == 1 ) THEN
         CALL xc_vdW_DF      (rho_valence, rho_core, enl, vnl, v)
-     else if( nspin == 2 ) then
+     ELSE IF ( nspin == 2 ) THEN
         CALL xc_vdW_DF_spin (rho_valence, rho_core, enl, vnl, v)
-     else
-        CALL errore ('nlc','vdW-DF not available for noncollinear spin case',1)
-     end if
-
-  elseif (inlc == 3) then
-      if(imeta == 0) then
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
-      else
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
-      endif
-  else
-     enl = 0.0_DP
-     vnl = 0.0_DP
-     v = 0.0_DP
-  endif
+     ELSE
+        CALL errore ('nlc', 'vdW-DF not available for noncollinear spin case',1)
+     END If
+     !
+  ELSE IF ( inlc == 3 ) THEN
+     !
+     IF ( imeta == 0 ) THEN
+       CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
+     ELSE
+       CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
+     END IF
+     !
+  ELSE
+     !
+     CALL errore ('nlc', 'inlc choice for E^nl_c not implemented',1)
+     !
+  END IF
   !
   RETURN
 END SUBROUTINE nlc

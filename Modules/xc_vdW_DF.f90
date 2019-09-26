@@ -1,5 +1,5 @@
 ! Copyright (C) 2001-2009 Quantum ESPRESSO group
-! Copyright (C) 2015 Brian Kolb, Timo Thonhauser
+! Copyright (C) 2019 Brian Kolb, Timo Thonhauser
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,8 +13,8 @@ MODULE vdW_DF
 ! This module calculates the non-local correlation contribution to the
 ! energy and potential according to
 !
-!    M. Dion, H. Rydberg, E. Schroeder, D. C. Langreth, and
-!    B. I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).
+!    M. Dion, H. Rydberg, E. Schroeder, D.C. Langreth, and
+!    B.I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).
 !
 ! henceforth referred to as DION. Further information about the
 ! functional and its corresponding potential can be found in:
@@ -30,49 +30,156 @@ MODULE vdW_DF
 ! henceforth referred to as THONHAUSER.
 !
 !
-! Two review article show many of the vdW-DF applications:
+! Two review articles show many of the vdW-DF applications:
 !
-!    D. C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009).
+!    D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009).
 !
-!    K. Berland et al, Rep. Prog. Phys. 78, 066501 (2015).
+!    K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).
 !
 !
 ! The method implemented is based on the method of G. Roman-Perez and
-! J. M. Soler described in:
+! J.M. Soler described in:
 !
-!    G. Roman-Perez and J. M. Soler, PRL 103, 096102 (2009).
+!    G. Roman-Perez and J.M. Soler, Phys. Rev. Lett. 103, 096102 (2009).
 !
 ! henceforth referred to as SOLER.
 !
 !
-! There are a number of subroutines in this file. All are used only by
-! other subroutines here except for the xc_vdW_DF subroutine, which is
-! the driver routine for the vdW-DF calculations and is called from
-! v_of_rho. This routine handles setting up the parallel run (if any)
-! and carries out the calls necessary to calculate the non-local
-! correlation contributions to the energy and potential.
+! xc_vdW_DF and xc_vdW_DF_spin are the driver routines for vdW-DF
+! calculations and are called from Modules/funct.f90. The routines here
+! set up the parallel run (if any) and carry out the calls necessary to
+! calculate the non-local correlation contributions to the energy and
+! potential.
 
 
 USE kinds,             ONLY : dp
 USE constants,         ONLY : pi, e2
-USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max, q_cut, q_min, kernel, d2phi_dk2, dk
-USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
+USE mp,                ONLY : mp_sum, mp_barrier, mp_get, mp_size, mp_rank, mp_bcast
+USE mp_images,         ONLY : intra_image_comm
 USE mp_bands,          ONLY : intra_bgrp_comm
 USE io_global,         ONLY : stdout, ionode
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft, invfft
 USE control_flags,     ONLY : iverbosity, gamma_only
 
-implicit none
 
-REAL(DP), PARAMETER :: epsr =1.d-12  ! a small number to cut off densities
-integer :: vdw_type = 1
+! ----------------------------------------------------------------------
+! No implicit variables
 
-private
-public  :: xc_vdW_DF, xc_vdW_DF_spin, stress_vdW_DF, interpolate_kernel, &
-           vdw_type, initialize_spline_interpolation
-public  :: vdW_energy, get_potential
-public  :: Fs, kF, saturate_q, spline_interpolation
+IMPLICIT NONE
+
+
+! ----------------------------------------------------------------------
+! By default everything is private
+
+PRIVATE
+
+
+! ----------------------------------------------------------------------
+! Save all objects in this module
+
+SAVE
+
+
+! ----------------------------------------------------------------------
+! Public functions
+
+PUBLIC  :: xc_vdW_DF, xc_vdW_DF_spin, vdW_DF_stress,                   &
+           vdW_DF_energy, vdW_DF_potential,                            &
+           generate_kernel, interpolate_kernel,                        &
+           initialize_spline_interpolation, spline_interpolation
+
+
+! ----------------------------------------------------------------------
+! Public variables
+
+PUBLIC  :: inlc, vdW_DF_analysis, Nr_points, r_max, q_min, q_cut, Nqs, q_mesh
+
+
+! ----------------------------------------------------------------------
+! General variables
+
+INTEGER                  :: inlc            = 1
+! The non-local correlation
+
+INTEGER                  :: vdW_DF_analysis = 0
+! vdW-DF analysis tool as described in PRB 97, 085115 (2018)
+
+REAL(DP), PARAMETER      :: epsr            = 1.0D-12
+! A small number to cut off densities
+
+INTEGER                  :: idx
+! Indexing variable
+
+
+! ----------------------------------------------------------------------
+! Kernel specific parameters and variables
+
+INTEGER, PARAMETER       :: Nr_points = 1024
+! The number of radial points (also the number of k points) used in the
+! formation of the kernel functions for each pair of q values.
+! Increasing this value will help in case you get a run-time error
+! saying that you are trying to use a k value that is larger than the
+! largest tabulated k point since the largest k point will be 2*pi/r_max
+! * Nr_points. Memory usage of the vdW_DF piece of PWSCF will increase
+! roughly linearly with this variable.
+
+REAL(DP), PARAMETER      :: r_max     = 100.0D0
+! The value of the maximum radius to use for the real-space kernel
+! functions for each pair of q values. The larger this value is the
+! smaller the smallest k value will be since the smallest k point value
+! is 2*pi/r_max. Be careful though, since this will also decrease the
+! maximum k point value and the vdW_DF code will crash if it encounters
+! a g-vector with a magnitude greater than 2*pi/r_max *Nr_points.
+
+REAL(DP), PARAMETER      :: dr = r_max/Nr_points, dk = 2.0D0*pi/r_max
+! Real space and k-space spacing of grid points.
+
+REAL(DP), PARAMETER      :: q_min = 1.0D-5, q_cut = 5.0D0
+! The maximum and minimum values of q. During a vdW run, values of q0
+! found larger than q_cut will be saturated (SOLER equation 5) to q_cut.
+
+INTEGER,  PARAMETER                 :: Nqs    = 20
+REAL(DP), PARAMETER, DIMENSION(Nqs) :: q_mesh = (/  &
+   q_min              , 0.0449420825586261D0, 0.0975593700991365D0, 0.159162633466142D0, &
+   0.231286496836006D0, 0.315727667369529D0 , 0.414589693721418D0 , 0.530335368404141D0, &
+   0.665848079422965D0, 0.824503639537924D0 , 1.010254382520950D0 , 1.227727621364570D0, &
+   1.482340921174910D0, 1.780437058359530D0 , 2.129442028133640D0 , 2.538050036534580D0, &
+   3.016440085356680D0, 3.576529545442460D0 , 4.232271035198720D0 , q_cut /)
+
+! The above two parameters define the q mesh to be used in the vdW_DF
+! code. These are perhaps the most important to have set correctly.
+! Increasing the number of q points will DRAMATICALLY increase the
+! memory usage of the vdW_DF code because the memory consumption depends
+! quadratically on the number of q points in the mesh. Increasing the
+! number of q points may increase accuracy of the vdW_DF code, although,
+! in testing it was found to have little effect. The largest value of
+! the q mesh is q_cut. All values of q0 (DION equation 11) larger than
+! this value during a run will be saturated to this value using equation
+! 5 of SOLER. In testing, increasing the value of q_cut was found to
+! have little impact on the results, although it is possible that in
+! some systems it may be more important. Always make sure that the
+! variable Nqs is consistent with the number of q points that are
+! actually in the variable q_mesh. Also, do not set any q value to 0.
+! This will cause an infinity in the Fourier transform.
+
+INTEGER,  PARAMETER      :: Nintegration_points = 256
+! Number of integration points for real-space kernel generation (see
+! DION equation 14). This is how many a's and b's there will be.
+
+REAL(DP), PARAMETER      :: a_min = 0.0D0, a_max = 64.0D0
+! Min/max values for the a and b integration in DION equation 14.
+
+REAL(DP) :: kernel( 0:Nr_points, Nqs, Nqs ), d2phi_dk2( 0:Nr_points, Nqs, Nqs )
+! Matrices holding the Fourier transformed kernel function  and its
+! second derivative for each pair of q values. The ordering is
+! kernel(k_point, q1_value, q2_value).
+
+REAL(DP) :: W_ab( Nintegration_points, Nintegration_points )
+! Defined in DION equation 16.
+
+REAL(DP) :: a_points( Nintegration_points )
+! The values of the "a" points (DION equation 14).
 
 CONTAINS
 
@@ -88,109 +195,92 @@ CONTAINS
   !                           |  functions  |
   !                           |_____________|
   !
-  ! Functions to be used in get_q0_on_grid and get_q0_on_grid_spin().
+  ! Functions to be used in get_q0_on_grid and get_q0_on_grid_spin.
 
-  function Fs(s)
+  FUNCTION Fs(s)
 
-     implicit none
-     real(dp) :: s, Fs, Z_ab
-     real(dp) :: fa=0.1234D0, fb=17.33D0, fc=0.163D0  ! Reparameterized values
-                                                      ! from JCTC 5, 2745 (2009).
+     IMPLICIT NONE
+     REAL(DP) :: s, Fs, Z_ab=0.0D0
 
-     if(vdw_type == 4) then
-         Fs = ( 1 + 15.0D0*fa*s**2 + fb*s**4 + fc*s**6 )**(1.0D0/15.0D0)
-     else
-         ! ------------------------------------------------------------
-         ! Original functional choice for Fs, as definded in DION
-         if (vdw_type == 1) Z_ab = -0.8491D0
-         if (vdw_type == 2) Z_ab = -1.887D0
-         Fs = 1.0D0 - Z_ab * s**2 / 9.0D0
-     end if
+     IF (inlc == 1) Z_ab = -0.8491D0
+     IF (inlc == 2) Z_ab = -1.887D0
+     Fs = 1.0D0 - Z_ab * s**2 / 9.0D0
 
-  end function Fs
+  END FUNCTION Fs
 
 
 
 
-  function dFs_ds(s)
+  FUNCTION dFs_ds(s)
 
-     implicit none
-     real(dp) :: s, dFs_ds, Z_ab
-     real(dp) :: fa=0.1234D0, fb=17.33D0, fc=0.163D0  ! Reparameterized values
-                                                      ! from JCTC 5, 2745 (2009).
+     IMPLICIT NONE
+     REAL(DP) :: s, dFs_ds, Z_ab=0.0D0
 
-     if(vdw_type == 4) then
-         dFs_ds = ( 30.0D0*fa*s + 4.0D0*fb*s**3 + 6.0D0*fc*s**5 ) &
-                / ( 15.0D0*( 1.0D0 + 15.0D0*fa*s**2 + fb*s**4 + fc*s**6 )**(14.0D0/15.0D0) )
-     else
-         ! ------------------------------------------------------------
-         ! Original functional choice for Fs, as definded in DION
-         if (vdw_type == 1) Z_ab = -0.8491D0
-         if (vdw_type == 2) Z_ab = -1.887D0
-         dFs_ds =  -2.0D0 * s * Z_ab / 9.0D0
-     end if
+     IF (inlc == 1) Z_ab = -0.8491D0
+     IF (inlc == 2) Z_ab = -1.887D0
+     dFs_ds =  -2.0D0 * s * Z_ab / 9.0D0
 
-  end function dFs_ds
+  END FUNCTION dFs_ds
 
 
 
 
-  function kF(rho)
+  FUNCTION kF(rho)
 
-     implicit none
-     real(dp) :: rho, kF
+     IMPLICIT NONE
+     REAL(DP) :: rho, kF
 
      kF = ( 3.0D0 * pi**2 * rho )**(1.0D0/3.0D0)
 
-  end function kF
+  END FUNCTION kF
 
 
 
 
-  function dkF_drho(rho)
+  FUNCTION dkF_drho(rho)
 
-     implicit none
-     real(dp) :: rho, dkF_drho
+     IMPLICIT NONE
+     REAL(DP) :: rho, dkF_drho
 
      dkF_drho = (1.0D0/3.0D0) * kF(rho) / rho
 
-  end function dkF_drho
+  END FUNCTION dkF_drho
 
 
 
 
-  function ds_drho(rho, s)
+  FUNCTION ds_drho(rho, s)
 
-     implicit none
-     real(dp) :: rho, s, ds_drho
+     IMPLICIT NONE
+     REAL(DP) :: rho, s, ds_drho
 
      ds_drho = -s * ( dkF_drho(rho) / kF(rho) + 1.0D0 / rho )
 
-  end function ds_drho
+  END FUNCTION ds_drho
 
 
 
 
-  function ds_dgradrho(rho)
+  FUNCTION ds_dgradrho(rho)
 
-     implicit none
-     real(dp) :: rho, ds_dgradrho
+     IMPLICIT NONE
+     REAL(DP) :: rho, ds_dgradrho
 
      ds_dgradrho = 1.0D0 / (2.0D0 * kF(rho) * rho)
 
-  end function ds_dgradrho
+  END FUNCTION ds_dgradrho
 
 
 
 
-  function dqx_drho(rho, s)
+  FUNCTION dqx_drho(rho, s)
 
-     implicit none
-     real(dp) :: rho, s, dqx_drho
+     IMPLICIT NONE
+     REAL(DP) :: rho, s, dqx_drho
 
      dqx_drho = dkF_drho(rho) * Fs(s) + kF(rho) * dFs_ds(s) * ds_drho(rho, s)
 
-  end function dqx_drho
+  END FUNCTION dqx_drho
 
 
 
@@ -209,80 +299,76 @@ CONTAINS
   USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
 
-  implicit none
+  IMPLICIT NONE
 
   ! --------------------------------------------------------------------
   ! Local variables
   !                                               _
-  real(dp), intent(IN) :: rho_valence(:,:)       !
-  real(dp), intent(IN) :: rho_core(:)            !  PWSCF input variables
-  real(dp), intent(inout) :: etxc, vtxc, v(:,:)  !_
+  REAL(DP), INTENT(IN)    :: rho_valence(:,:)    !
+  REAL(DP), INTENT(IN)    :: rho_core(:)         !  PWSCF input variables
+  REAL(DP), INTENT(INOUT) :: etxc, vtxc, v(:,:)  !_
 
-
-  integer :: i_grid, theta_i, i_proc             ! Indexing variables over grid points,
+  INTEGER :: i_grid, theta_i, i_proc             ! Indexing variables over grid points,
                                                  ! theta functions, and processors.
 
-  real(dp) :: grid_cell_volume                   ! The volume of the unit cell per G-grid point.
+  REAL(DP) :: grid_cell_volume                   ! The volume of the unit cell per G-grid point.
 
-  real(dp), allocatable ::  q0(:)                ! The saturated value of q (equations 11 and 12
+  REAL(DP), ALLOCATABLE ::  q0(:)                ! The saturated value of q (equations 11 and 12
                                                  ! of DION). This saturation is that of
                                                  ! equation 5 in SOLER.
 
-  real(dp), allocatable :: grad_rho(:,:)         ! The gradient of the charge density. The
+  REAL(DP), ALLOCATABLE :: grad_rho(:,:)         ! The gradient of the charge density. The
                                                  ! format is as follows:
                                                  ! grad_rho(cartesian_component,grid_point).
 
-  real(dp), allocatable :: potential(:)          ! The vdW contribution to the potential
+  REAL(DP), ALLOCATABLE :: potential(:)          ! The vdW contribution to the potential.
 
-  real(dp), allocatable :: dq0_drho(:)           ! The derivative of the saturated q0
+  REAL(DP), ALLOCATABLE :: dq0_drho(:)           ! The derivative of the saturated q0
                                                  ! (equation 5 of SOLER) with respect
                                                  ! to the charge density (see
                                                  ! get_q0_on_grid subroutine for details).
 
-  real(dp), allocatable :: dq0_dgradrho(:)       ! The derivative of the saturated q0
+  REAL(DP), ALLOCATABLE :: dq0_dgradrho(:)       ! The derivative of the saturated q0
                                                  ! (equation 5 of SOLER) with respect
                                                  ! to the gradient of the charge density
                                                  ! (again, see get_q0_on_grid subroutine).
 
-  complex(dp), allocatable :: thetas(:,:)        ! These are the functions of equation 8 of
+  COMPLEX(DP), ALLOCATABLE :: thetas(:,:)        ! These are the functions of equation 8 of
                                                  ! SOLER. They will be forward Fourier transformed
                                                  ! in place to get theta(k) and worked on in
                                                  ! place to get the u_alpha(r) of equation 11
                                                  ! in SOLER. They are formatted as follows:
                                                  ! thetas(grid_point, theta_i).
 
-  real(dp) :: Ec_nl                              ! The non-local vdW contribution to the energy.
+  REAL(DP) :: Ec_nl                              ! The non-local vdW contribution to the energy.
 
-  real(dp), allocatable :: total_rho(:)          ! This is the sum of the valence and core
+  REAL(DP), ALLOCATABLE :: total_rho(:)          ! This is the sum of the valence and core
                                                  ! charge. This just holds the piece assigned
                                                  ! to this processor.
 
-  logical, save :: first_iteration = .TRUE.      ! Whether this is the first time this
+  LOGICAL, SAVE :: first_iteration = .TRUE.      ! Whether this is the first time this
                                                  ! routine has been called.
 
 
 
 
   ! --------------------------------------------------------------------
-  ! Check that the requested non-local functional is implemented.
+  ! Write out the vdW-DF information and initialize the calculation.
 
-  if ( vdW_type /= 1 .AND. vdW_type /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
-
-
-  ! --------------------------------------------------------------------
-  ! Write out the vdW-DF imformation.
-
-  if ( ionode .AND. first_iteration ) call vdW_info
-  first_iteration = .FALSE.
+  IF ( first_iteration ) THEN
+     CALL generate_kernel
+     IF ( ionode ) CALL vdW_info
+     first_iteration = .FALSE.
+  END IF
 
 
   ! --------------------------------------------------------------------
   ! Allocate arrays. nnr is a PWSCF variable that holds the number of
   ! points assigned to a given processor.
 
-  allocate( q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr), &
-       grad_rho(3,dfftp%nnr) )
-  allocate( total_rho(dfftp%nnr), potential(dfftp%nnr), thetas(dfftp%nnr, Nqs) )
+  allocate( total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr),                &
+            potential(dfftp%nnr), thetas(dfftp%nnr, Nqs),               &
+            q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
 
 
   ! --------------------------------------------------------------------
@@ -297,7 +383,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
 
-  call fft_gradient_r2r (dfftp, total_rho, g, grad_rho)
+  CALL fft_gradient_r2r (dfftp, total_rho, g, grad_rho)
 
 
   ! --------------------------------------------------------------------
@@ -313,36 +399,36 @@ CONTAINS
 
   ! --------------------------------------------------------------------
   ! Carry out the integration in equation 8 of SOLER. This also turns
-  ! the thetas array into the precursor to the u_i(k) array which is
+  ! the theta arrays into the precursor to the u_i(k) array which is
   ! inverse fourier transformed to get the u_i(r) functions of SOLER
   ! equation 11. Add the energy we find to the output variable etxc.
 
-  call vdW_energy (thetas, Ec_nl)
+  CALL vdW_DF_energy (thetas, Ec_nl)
   etxc = etxc + Ec_nl
 
-  if (iverbosity > 0) then
-     call mp_sum(Ec_nl, intra_bgrp_comm)
-     if (ionode) then
-        write(stdout,'(/ / A)')       "     -----------------------------------------------"
-        write(stdout,'(A, F15.8, A)') "     Non-local corr. energy    =  ", Ec_nl, " Ry"
-        write(stdout,'(A /)')         "     -----------------------------------------------"
-     end if
-  end if
+  IF ( iverbosity > 0 ) THEN
+     CALL mp_sum(Ec_nl, intra_bgrp_comm)
+     IF ( ionode ) THEN
+        WRITE(stdout,'(/ / A)')       "     -----------------------------------------------"
+        WRITE(stdout,'(A, F15.8, A)') "     Non-local corr. energy    =  ", Ec_nl, " Ry"
+        WRITE(stdout,'(A /)')         "     -----------------------------------------------"
+     END IF
+  END IF
 
 
   ! --------------------------------------------------------------------
   ! Here we calculate the potential. This is calculated via equation 10
   ! of SOLER, using the u_i(r) calculated from quations 11 and 12 of
   ! SOLER. Each processor allocates the array to be the size of the full
-  ! grid  because, as can be seen in SOLER equation 10, processors need
+  ! grid because, as can be seen in SOLER equation 10, processors need
   ! to access grid points outside their allocated regions. Begin by
   ! FFTing the u_i(k) to get the u_i(r) of SOLER equation 11.
 
-  do theta_i = 1, Nqs
+  DO theta_i = 1, Nqs
      CALL invfft('Rho', thetas(:,theta_i), dfftp)
-  end do
+  END DO
 
-  call get_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, thetas, potential)
+  CALL vdW_DF_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, thetas, potential)
   v(:,1) = v(:,1) + e2 * potential(:)
 
 
@@ -351,11 +437,11 @@ CONTAINS
 
   grid_cell_volume = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
-  do i_grid = 1, dfftp%nnr
+  DO i_grid = 1, dfftp%nnr
      vtxc = vtxc + e2 * grid_cell_volume * rho_valence(i_grid,1) * potential(i_grid)
-  end do
+  END DO
 
-  deallocate ( potential, q0, grad_rho, dq0_drho, dq0_dgradrho, total_rho, thetas )
+  DEALLOCATE ( total_rho, grad_rho, potential, thetas, q0, dq0_drho, dq0_dgradrho )
 
   END SUBROUTINE xc_vdW_DF
 
@@ -371,104 +457,99 @@ CONTAINS
   !                          |  XC_VDW_DF_spin  |
   !                          |__________________|
   !
-  ! This subroutine is as similar to xc_vdW_DF() as possible, but
-  ! handles the collinear nspin=2 case.
+  ! This subroutine is as similar to xc_vdW_DF as possible, but handles
+  ! the collinear nspin=2 case.
 
   SUBROUTINE xc_vdW_DF_spin (rho_valence, rho_core, etxc, vtxc, v)
 
   USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
 
-  implicit none
+  IMPLICIT NONE
 
   ! --------------------------------------------------------------------
   ! Local variables
   !                                              _
-  real(dp), intent(IN) :: rho_valence(:,:)      !
-  real(dp), intent(IN) :: rho_core(:)           !  PWSCF input variables
-  real(dp), intent(inout) :: etxc, vtxc, v(:,:) !_
+  REAL(DP), INTENT(IN) :: rho_valence(:,:)      !
+  REAL(DP), INTENT(IN) :: rho_core(:)           ! PWSCF input variables.
+  REAL(DP), INTENT(INOUT) :: etxc, vtxc, v(:,:) !_
 
 
-  integer :: i_grid, theta_i, i_proc            ! Indexing variables over grid points,
+  INTEGER :: i_grid, theta_i, i_proc            ! Indexing variables over grid points,
                                                 ! theta functions, and processors, and a
                                                 ! generic index.
 
-  real(dp) :: grid_cell_volume                  ! The volume of the unit cell per G-grid point.
+  REAL(DP) :: grid_cell_volume                  ! The volume of the unit cell per G-grid point.
 
-  real(dp), allocatable :: q0(:)                ! The saturated value of q (equations 11 and 12
+  REAL(DP), ALLOCATABLE :: q0(:)                ! The saturated value of q (equations 11 and 12
                                                 ! of DION). This saturation is that of
                                                 ! equation 5 in SOLER.
 
-  real(dp), allocatable :: grad_rho(:,:)        ! The gradient of the charge density. The
+  REAL(DP), ALLOCATABLE :: grad_rho(:,:)        ! The gradient of the charge density. The
                                                 ! format is as follows:
-                                                ! grad_rho(cartesian_component,grid_point)
-  real(dp), allocatable :: grad_rho_up(:,:)     ! The gradient of the up charge density.
-                                                ! Same format as grad_rho
-  real(dp), allocatable :: grad_rho_down(:,:)   ! The gradient of the down charge density.
-                                                ! Same format as grad_rho
+                                                ! grad_rho(cartesian_component,grid_point).
+  REAL(DP), ALLOCATABLE :: grad_rho_up(:,:)     ! The gradient of the up charge density.
+                                                ! Same format as grad_rho.
+  REAL(DP), ALLOCATABLE :: grad_rho_down(:,:)   ! The gradient of the down charge density.
+                                                ! Same format as grad_rho.
 
-  real(dp), allocatable :: potential_up(:)      ! The vdW contribution to the potential.
-  real(dp), allocatable :: potential_down(:)    ! The vdW contribution to the potential.
+  REAL(DP), ALLOCATABLE :: potential_up(:)      ! The vdW contribution to the potential.
+  REAL(DP), ALLOCATABLE :: potential_down(:)    ! The vdW contribution to the potential.
 
-  real(dp), allocatable :: dq0_drho_up(:)       ! The derivative of the saturated q0
-  real(dp), allocatable :: dq0_drho_down(:)     ! (equation 5 of SOLER) with respect
+  REAL(DP), ALLOCATABLE :: dq0_drho_up(:)       ! The derivative of the saturated q0
+  REAL(DP), ALLOCATABLE :: dq0_drho_down(:)     ! (equation 5 of SOLER) with respect
                                                 ! to the charge density (see
                                                 ! get_q0_on_grid subroutine for details).
 
-  real(dp), allocatable :: dq0_dgradrho_up(:)   ! The derivative of the saturated q0
-  real(dp), allocatable :: dq0_dgradrho_down(:) ! (equation 5 of SOLER) with respect
+  REAL(DP), ALLOCATABLE :: dq0_dgradrho_up(:)   ! The derivative of the saturated q0
+  REAL(DP), ALLOCATABLE :: dq0_dgradrho_down(:) ! (equation 5 of SOLER) with respect
                                                 ! to the gradient of the charge density
                                                 ! (again, see get_q0_on_grid subroutine).
 
-  complex(dp), allocatable :: thetas(:,:)       ! These are the functions of equation 8 of
+  COMPLEX(DP), ALLOCATABLE :: thetas(:,:)       ! These are the functions of equation 8 of
                                                 ! SOLER. They will be forward Fourier transformed
                                                 ! in place to get theta(k) and worked on in
                                                 ! place to get the u_alpha(r) of equation 11
                                                 ! in SOLER. They are formatted as follows:
                                                 ! thetas(grid_point, theta_i).
 
-  real(dp) :: Ec_nl                             ! The non-local vdW contribution to the energy.
+  REAL(DP) :: Ec_nl                             ! The non-local vdW contribution to the energy.
 
-  real(dp), allocatable :: total_rho(:)         ! This is the sum of the valence (up and down)
+  REAL(DP), ALLOCATABLE :: total_rho(:)         ! This is the sum of the valence (up and down)
                                                 ! and core charge. This just holds the piece
                                                 ! assigned to this processor.
-  real(dp), allocatable :: rho_up(:)            ! This is the just the up valence charge.
+  REAL(DP), ALLOCATABLE :: rho_up(:)            ! This is the just the up valence charge.
                                                 ! This just holds the piece assigned
                                                 ! to this processor.
-  real(dp), allocatable :: rho_down(:)          ! This is the just the down valence charge.
+  REAL(DP), ALLOCATABLE :: rho_down(:)          ! This is the just the down valence charge.
                                                 ! This just holds the piece assigned
                                                 ! to this processor.
 
-  logical, save :: first_iteration = .TRUE.     ! Whether this is the first time this
+  LOGICAL, SAVE :: first_iteration = .TRUE.     ! Whether this is the first time this
                                                 ! routine has been called.
 
 
 
 
   ! --------------------------------------------------------------------
-  ! Check that the requested non-local functional is implemented.
+  ! Write out the vdW-DF information and initialize the calculation.
 
-  if ( vdW_type /= 1 .AND. vdW_type /= 2) call errore('xc_vdW_DF','E^nl_c not implemented',1)
-
-
-  ! --------------------------------------------------------------------
-  ! Write out the vdW-DF imformation.
-
-  if ( ionode .AND. first_iteration ) call vdW_info
-  first_iteration = .FALSE.
+  IF ( first_iteration ) THEN
+     CALL generate_kernel
+     IF ( ionode ) CALL vdW_info
+     first_iteration = .FALSE.
+  END IF
 
 
   ! --------------------------------------------------------------------
   ! Allocate arrays. nnr is a PWSCF variable that holds the number of
   ! points assigned to a given processor.
 
-  allocate( q0(dfftp%nnr), total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr) )
-  allocate( rho_up(dfftp%nnr), rho_down(dfftp%nnr) )
-  allocate( dq0_drho_up (dfftp%nnr), dq0_dgradrho_up  (dfftp%nnr) )
-  allocate( dq0_drho_down(dfftp%nnr), dq0_dgradrho_down(dfftp%nnr) )
-  allocate( grad_rho_up(3,dfftp%nnr), grad_rho_down(3,dfftp%nnr) )
-  allocate( potential_up(dfftp%nnr), potential_down(dfftp%nnr) )
-  allocate( thetas(dfftp%nnr, Nqs) )
+  ALLOCATE( total_rho(dfftp%nnr), rho_up(dfftp%nnr), rho_down(dfftp%nnr),         &
+     grad_rho(3,dfftp%nnr), grad_rho_up(3,dfftp%nnr), grad_rho_down(3,dfftp%nnr), &
+     potential_up(dfftp%nnr), potential_down(dfftp%nnr), thetas(dfftp%nnr, Nqs),  &
+     q0(dfftp%nnr), dq0_drho_up(dfftp%nnr), dq0_dgradrho_up(dfftp%nnr),           &
+     dq0_drho_down(dfftp%nnr), dq0_dgradrho_down(dfftp%nnr) )
 
 
   ! --------------------------------------------------------------------
@@ -482,17 +563,19 @@ CONTAINS
   total_rho = rho_up + rho_down
 
 #if defined (__SPIN_BALANCED)
-     rho_up   = total_rho*0.5D0
-     rho_down = rho_up
-     write(stdout,'(/,/,"     Performing spin-balanced Ecnl calculation!")')
+  rho_up   = total_rho*0.5D0
+  rho_down = rho_up
+  WRITE(stdout,'(/,/,"     Performing spin-balanced Ecnl calculation!")')
 #endif
+
 
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
 
-  call fft_gradient_r2r (dfftp, total_rho, g, grad_rho)
-  call fft_gradient_r2r (dfftp, rho_up,    g, grad_rho_up)
-  call fft_gradient_r2r (dfftp, rho_down,  g, grad_rho_down)
+  CALL fft_gradient_r2r (dfftp, total_rho, g, grad_rho)
+  CALL fft_gradient_r2r (dfftp, rho_up,    g, grad_rho_up)
+  CALL fft_gradient_r2r (dfftp, rho_down,  g, grad_rho_down)
+
 
   ! --------------------------------------------------------------------
   ! Find the value of q0 for all assigned grid points. q is defined in
@@ -503,8 +586,9 @@ CONTAINS
   ! charge-density and the gradient of the charge-density. These are
   ! needed for the potential calculated below.
 
-  CALL get_q0_on_grid_spin (total_rho, rho_up, rho_down, grad_rho, grad_rho_up, grad_rho_down, &
-       q0, dq0_drho_up, dq0_drho_down, dq0_dgradrho_up, dq0_dgradrho_down, thetas)
+  CALL get_q0_on_grid_spin (total_rho, rho_up, rho_down, grad_rho, &
+       grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
+       dq0_dgradrho_up, dq0_dgradrho_down, thetas)
 
 
   ! --------------------------------------------------------------------
@@ -513,17 +597,17 @@ CONTAINS
   ! inverse fourier transformed to get the u_i(r) functions of SOLER
   ! equation 11. Add the energy we find to the output variable etxc.
 
-  call vdW_energy(thetas, Ec_nl)
+  CALL vdW_DF_energy(thetas, Ec_nl)
   etxc = etxc + Ec_nl
 
-  if (iverbosity > 0) then
-     call mp_sum(Ec_nl, intra_bgrp_comm)
-     if (ionode) then
-        write(stdout,'(/ / A)')       "     -----------------------------------------------"
-        write(stdout,'(A, F15.8, A)') "     Non-local corr. energy    =  ", Ec_nl, " Ry"
-        write(stdout,'(A /)')         "     -----------------------------------------------"
-     end if
-  end if
+  IF ( iverbosity > 0 ) THEN
+     CALL mp_sum(Ec_nl, intra_bgrp_comm)
+     IF (ionode) THEN
+        WRITE(stdout,'(/ / A)')       "     -----------------------------------------------"
+        WRITE(stdout,'(A, F15.8, A)') "     Non-local corr. energy    =  ", Ec_nl, " Ry"
+        WRITE(stdout,'(A /)')         "     -----------------------------------------------"
+     END IF
+  END IF
 
 
   ! --------------------------------------------------------------------
@@ -534,12 +618,13 @@ CONTAINS
   ! to access grid points outside their allocated regions. Begin by
   ! FFTing the u_i(k) to get the u_i(r) of SOLER equation 11.
 
-  do theta_i = 1, Nqs
+  DO theta_i = 1, Nqs
      CALL invfft('Rho', thetas(:,theta_i), dfftp)
-  end do
+  END DO
 
-  call get_potential (q0, dq0_drho_up  , dq0_dgradrho_up  , grad_rho_up  , thetas, potential_up  )
-  call get_potential (q0, dq0_drho_down, dq0_dgradrho_down, grad_rho_down, thetas, potential_down)
+  CALL vdW_DF_potential (q0, dq0_drho_up  , dq0_dgradrho_up  , grad_rho_up  , thetas, potential_up  )
+  CALL vdW_DF_potential (q0, dq0_drho_down, dq0_dgradrho_down, grad_rho_down, thetas, potential_down)
+
   v(:,1) = v(:,1) + e2 * potential_up  (:)
   v(:,2) = v(:,2) + e2 * potential_down(:)
 
@@ -549,16 +634,16 @@ CONTAINS
 
   grid_cell_volume = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
-  do i_grid = 1, dfftp%nnr
-     vtxc = vtxc + e2 * grid_cell_volume * (rho_valence(i_grid,1) + &
-          rho_valence(i_grid,2)) * 0.5_dp * potential_up  (i_grid)  &
-                 + e2 * grid_cell_volume * (rho_valence(i_grid,1) - &
-          rho_valence(i_grid,2)) * 0.5_dp * potential_down(i_grid)
-  end do
+  DO i_grid = 1, dfftp%nnr
+     vtxc = vtxc + e2 * grid_cell_volume * (rho_valence(i_grid,1) +   &
+            rho_valence(i_grid,2)) * 0.5_dp * potential_up  (i_grid)  &
+                 + e2 * grid_cell_volume * (rho_valence(i_grid,1) -   &
+            rho_valence(i_grid,2)) * 0.5_dp * potential_down(i_grid)
+  END DO
 
-  deallocate( potential_up, potential_down, q0, grad_rho, grad_rho_up, &
-              grad_rho_down, dq0_drho_up, dq0_drho_down, thetas, &
-              dq0_dgradrho_up, dq0_dgradrho_down, total_rho, rho_up, rho_down )
+  DEALLOCATE( total_rho, rho_up, rho_down, grad_rho, grad_rho_up, grad_rho_down, &
+              potential_up, potential_down, thetas,                              &
+              q0, dq0_drho_up, dq0_dgradrho_up, dq0_drho_down, dq0_dgradrho_down )
 
   END SUBROUTINE xc_vdW_DF_spin
 
@@ -584,28 +669,30 @@ CONTAINS
 
   SUBROUTINE get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp),  intent(IN)     :: total_rho(:), grad_rho(:,:)         ! Input variables needed
+  REAL(DP), INTENT(IN)      :: total_rho(:), grad_rho(:,:)         ! Input variables needed.
 
-  real(dp),  intent(OUT)    :: q0(:), dq0_drho(:), dq0_dgradrho(:) ! Output variables that have been allocated
+  REAL(DP), INTENT(OUT)     :: q0(:), dq0_drho(:), dq0_dgradrho(:) ! Output variables that have been allocated
                                                                    ! outside this routine but will be set here.
-  complex(dp), intent(inout):: thetas(:,:)                         ! The thetas from SOLER.
+  COMPLEX(DP), INTENT(INOUT):: thetas(:,:)                         ! The thetas from SOLER.
 
-  integer,   parameter      :: m_cut = 12                          ! How many terms to include in the sum
+  INTEGER, PARAMETER        :: m_cut = 12                          ! How many terms to include in the sum
                                                                    ! of SOLER equation 5.
-  
-  real(dp)                  :: rho                                 ! Local variable for the density.
-  real(dp)                  :: r_s                                 ! Wigner–Seitz radius.
-  real(dp)                  :: s                                   ! Reduced gradient.
-  real(dp)                  :: q
-  real(dp)                  :: ec 
-  real(dp)                  :: dq0_dq                              ! The derivative of the saturated
+
+  REAL(DP)                  :: rho                                 ! Local variable for the density.
+  REAL(DP)                  :: r_s                                 ! Wigner-Seitz radius.
+  REAL(DP)                  :: s                                   ! Reduced gradient.
+  REAL(DP)                  :: q
+  REAL(DP)                  :: ec
+  REAL(DP)                  :: dq0_dq                              ! The derivative of the saturated
                                                                    ! q0 with respect to q.
 
-  integer                   :: i_grid, idx                         ! Indexing variables.
+  INTEGER                   :: i_grid                              ! Indexing variable.
 
-  !
+
+
+
   ! --------------------------------------------------------------------
   ! Initialize q0-related arrays.
 
@@ -613,7 +700,8 @@ CONTAINS
   dq0_drho(:)     = 0.0D0
   dq0_dgradrho(:) = 0.0D0
 
-  do i_grid = 1, dfftp%nnr
+
+  DO i_grid = 1, dfftp%nnr
 
      rho = total_rho(i_grid)
 
@@ -626,7 +714,7 @@ CONTAINS
      ! q_cut and dq0_drho = dq0_dgradrho = 0 and go on to the next
      ! point.
 
-     if ( rho < epsr ) cycle
+     IF ( rho < epsr ) CYCLE
 
 
      ! -----------------------------------------------------------------
@@ -634,7 +722,7 @@ CONTAINS
 
      r_s = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
 
-     s   = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 ) / &
+     s   = SQRT( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 ) / &
            (2.0D0 * kF(rho) * rho )
 
 
@@ -642,8 +730,7 @@ CONTAINS
      ! This is the q value defined in equations 11 and 12 of DION.
      ! Use pw() from flib/functionals.f90 to get qc = kf/eps_x * eps_c.
      !
-     call pw(r_s, 1, ec, dq0_drho(i_grid))
-     !
+     CALL pw(r_s, 1, ec, dq0_drho(i_grid))
      q = -4.0D0*pi/3.0D0 * ec + kF(rho) * Fs(s)
 
 
@@ -651,7 +738,7 @@ CONTAINS
      ! Bring q into its proper bounds.
 
      CALL saturate_q ( q, q_cut, q0(i_grid), dq0_dq )
-     if (q0(i_grid) < q_min) q0(i_grid) = q_min
+     IF (q0(i_grid) < q_min) q0(i_grid) = q_min
 
 
      ! -----------------------------------------------------------------
@@ -674,7 +761,7 @@ CONTAINS
                             (dq0_drho(i_grid) - ec)/rho + dqx_drho(rho, s) )
      dq0_dgradrho(i_grid) = dq0_dq * rho * kF(rho) * dFs_ds(s) * ds_dgradrho(rho)
 
-  end do
+  END DO
 
 
   ! --------------------------------------------------------------------
@@ -698,13 +785,13 @@ CONTAINS
 
   CALL spline_interpolation (q_mesh, q0, thetas)
 
-  do i_grid = 1, dfftp%nnr
+  DO i_grid = 1, dfftp%nnr
      thetas(i_grid,:) = thetas(i_grid,:) * total_rho(i_grid)
-  end do
+  END DO
 
-  do idx = 1, Nqs
+  DO idx = 1, Nqs
      CALL fwfft ('Rho', thetas(:,idx), dfftp)
-  end do
+  END DO
 
   END SUBROUTINE get_q0_on_grid
 
@@ -724,29 +811,29 @@ CONTAINS
              grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
              dq0_dgradrho_up, dq0_dgradrho_down, thetas)
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp),  intent(IN)      :: total_rho(:), grad_rho(:,:)              ! Input variables.
-  real(dp),  intent(IN)      :: rho_up(:), grad_rho_up(:,:)              ! Input variables.
-  real(dp),  intent(IN)      :: rho_down(:), grad_rho_down(:,:)          ! Input variables.
+  REAL(DP),  INTENT(IN)      :: total_rho(:), grad_rho(:,:)              ! Input variables.
+  REAL(DP),  INTENT(IN)      :: rho_up(:), grad_rho_up(:,:)              ! Input variables.
+  REAL(DP),  INTENT(IN)      :: rho_down(:), grad_rho_down(:,:)          ! Input variables.
 
-  real(dp),  intent(OUT)     :: q0(:), dq0_drho_up(:), dq0_drho_down(:)  ! Output variables.
-  real(dp),  intent(OUT)     :: dq0_dgradrho_up(:), dq0_dgradrho_down(:) ! Output variables.
-  complex(dp), intent(inout) :: thetas(:,:)                              ! The thetas from SOLER.
-  
-  real(dp)                   :: rho, up, down                            ! Local copy of densities.
-  real(dp)                   :: zeta                                     ! Spin polarization.
-  real(dp)                   :: r_s                                      ! Wigner-Seitz radius.
-  real(dp)                   :: q, qc, qx, qx_up, qx_down                ! q for exchange and correlation.
-  real(dp)                   :: q0x_up, q0x_down                         ! Saturated q values.
-  real(dp)                   :: fac
-  real(dp)                   :: ec, vc(2)
-  real(dp)                   :: dq0_dq, dq0x_up_dq, dq0x_down_dq         ! Derivative of q0 w.r.t q.
-  real(dp)                   :: dqc_drho_up, dqc_drho_down               ! Intermediate values.
-  real(dp)                   :: dqx_drho_up, dqx_drho_down               ! Intermediate values.
-  real(dp)                   :: s_up, s_down                             ! Reduced gradients.
-  integer                    :: i_grid, idx                              ! Indexing variables
-  logical                    :: calc_qx_up, calc_qx_down
+  REAL(DP),  INTENT(OUT)     :: q0(:), dq0_drho_up(:), dq0_drho_down(:)  ! Output variables.
+  REAL(DP),  INTENT(OUT)     :: dq0_dgradrho_up(:), dq0_dgradrho_down(:) ! Output variables.
+  COMPLEX(DP), INTENT(INOUT) :: thetas(:,:)                              ! The thetas from SOLER.
+
+  REAL(DP)                   :: rho, up, down                            ! Local copy of densities.
+  REAL(DP)                   :: zeta                                     ! Spin polarization.
+  REAL(DP)                   :: r_s                                      ! Wigner-Seitz radius.
+  REAL(DP)                   :: q, qc, qx, qx_up, qx_down                ! q for exchange and correlation.
+  REAL(DP)                   :: q0x_up, q0x_down                         ! Saturated q values.
+  REAL(DP)                   :: fac
+  REAL(DP)                   :: ec, vc(2)
+  REAL(DP)                   :: dq0_dq, dq0x_up_dq, dq0x_down_dq         ! Derivative of q0 w.r.t q.
+  REAL(DP)                   :: dqc_drho_up, dqc_drho_down               ! Intermediate values.
+  REAL(DP)                   :: dqx_drho_up, dqx_drho_down               ! Intermediate values.
+  REAL(DP)                   :: s_up, s_down                             ! Reduced gradients.
+  INTEGER                    :: i_grid                                   ! Indexing variable.
+  LOGICAL                    :: calc_qx_up, calc_qx_down
 
 
   fac = 2.0D0**(-1.0D0/3.0D0)
@@ -762,7 +849,7 @@ CONTAINS
   dq0_dgradrho_down(:) = 0.0D0
 
 
-  do i_grid = 1, dfftp%nnr
+  DO i_grid = 1, dfftp%nnr
 
      rho  = total_rho(i_grid)
      up   = rho_up(i_grid)
@@ -777,13 +864,13 @@ CONTAINS
      ! q_cut and dq0_drho = dq0_dgradrho = 0 and go on to the next
      ! point.
 
-     if ( rho < epsr ) cycle
+     IF ( rho < epsr ) CYCLE
 
      calc_qx_up   = .TRUE.
      calc_qx_down = .TRUE.
 
-     if ( up   < epsr/2.0D0 ) calc_qx_up   = .FALSE.
-     if ( down < epsr/2.0D0 ) calc_qx_down = .FALSE.
+     IF ( up   < epsr/2.0D0 ) calc_qx_up   = .FALSE.
+     IF ( down < epsr/2.0D0 ) calc_qx_down = .FALSE.
 
 
      ! -----------------------------------------------------------------
@@ -798,19 +885,19 @@ CONTAINS
      dqx_drho_down = 0.0D0
 
 
-     if (calc_qx_up) then
-        s_up    = sqrt( grad_rho_up(1,i_grid)**2 + grad_rho_up(2,i_grid)**2 + &
+     IF ( calc_qx_up ) THEN
+        s_up    = SQRT( grad_rho_up(1,i_grid)**2 + grad_rho_up(2,i_grid)**2 + &
                   grad_rho_up(3,i_grid)**2 ) / (2.0D0 * kF(up) * up)
         qx_up   = kF(2.0D0*up) * Fs(fac*s_up)
         CALL saturate_q (qx_up, 4.0D0*q_cut, q0x_up, dq0x_up_dq)
-     end if
+     END IF
 
-     if (calc_qx_down) then
-        s_down  = sqrt( grad_rho_down(1,i_grid)**2 + grad_rho_down(2,i_grid)**2 + &
+     IF ( calc_qx_down ) THEN
+        s_down  = SQRT( grad_rho_down(1,i_grid)**2 + grad_rho_down(2,i_grid)**2 + &
                   grad_rho_down(3,i_grid)**2) / (2.0D0 * kF(down) * down)
         qx_down = kF(2.0D0*down) * Fs(fac*s_down)
         CALL saturate_q (qx_down, 4.0D0*q_cut, q0x_down, dq0x_down_dq)
-     end if
+     END IF
 
 
      ! -----------------------------------------------------------------
@@ -821,8 +908,9 @@ CONTAINS
      zeta = (up - down) / rho
      IF ( ABS(zeta) > 1.0D0 ) zeta = SIGN(1.0D0, zeta)
      call pw_spin( r_s, zeta, ec, vc )
-     dqc_drho_up = vc(1)  ;   dqc_drho_down = vc(2)
-     !
+     dqc_drho_up   = vc(1)
+     dqc_drho_down = vc(2)
+
      qx = ( up * q0x_up + down * q0x_down ) / rho
      qc = -4.0D0*pi/3.0D0 * ec
      q  = qx + qc
@@ -832,7 +920,7 @@ CONTAINS
      ! Bring q into its proper bounds.
 
      CALL saturate_q (q, q_cut, q0(i_grid), dq0_dq)
-     if (q0(i_grid) < q_min) q0(i_grid) = q_min
+     IF (q0(i_grid) < q_min) q0(i_grid) = q_min
 
 
      ! -----------------------------------------------------------------
@@ -851,20 +939,20 @@ CONTAINS
      ! The parts in square brackets are what is calculated here. The
      ! dP_dq0 term will be interpolated later.
 
-     if (calc_qx_up) then
+     IF ( calc_qx_up ) THEN
         dqx_drho_up   = 2.0D0*dq0x_up_dq*up*dqx_drho(2.0D0*up, fac*s_up) + q0x_up*down/rho
         dq0_dgradrho_up (i_grid) = 2.0D0 * dq0_dq * dq0x_up_dq * up * kF(2.0D0*up) * &
                         dFs_ds(fac*s_up) * ds_dgradrho(2.0D0*up)
-     end if
+     END IF
 
-     if (calc_qx_down) then
+     IF ( calc_qx_down ) THEN
         dqx_drho_down = 2.0D0*dq0x_down_dq*down*dqx_drho(2.0D0*down, fac*s_down) + q0x_down*up/rho
         dq0_dgradrho_down(i_grid) = 2.0D0 * dq0_dq * dq0x_down_dq * down * kF(2.0D0*down) * &
                         dFs_ds(fac*s_down) * ds_dgradrho(2.0D0*down)
-     end if
+     END IF
 
-     if (calc_qx_down) dqx_drho_up   = dqx_drho_up   - q0x_down*down/rho
-     if (calc_qx_up)   dqx_drho_down = dqx_drho_down - q0x_up  *up  /rho
+     IF ( calc_qx_down ) dqx_drho_up   = dqx_drho_up   - q0x_down*down/rho
+     IF ( calc_qx_up )   dqx_drho_down = dqx_drho_down - q0x_up  *up  /rho
 
      dqc_drho_up   = -4.0D0*pi/3.0D0 * (dqc_drho_up   - ec)
      dqc_drho_down = -4.0D0*pi/3.0D0 * (dqc_drho_down - ec)
@@ -872,7 +960,7 @@ CONTAINS
      dq0_drho_up  (i_grid) = dq0_dq * (dqc_drho_up   + dqx_drho_up  )
      dq0_drho_down(i_grid) = dq0_dq * (dqc_drho_down + dqx_drho_down)
 
-  end do
+  END DO
 
 
   ! --------------------------------------------------------------------
@@ -896,13 +984,13 @@ CONTAINS
 
   CALL spline_interpolation (q_mesh, q0, thetas)
 
-  do i_grid = 1, dfftp%nnr
+  DO i_grid = 1, dfftp%nnr
      thetas(i_grid,:) = thetas(i_grid,:) * total_rho(i_grid)
-  end do
+  END DO
 
-  do idx = 1, Nqs
+  DO idx = 1, Nqs
      CALL fwfft ('Rho', thetas(:,idx), dfftp)
-  end do
+  END Do
 
   END SUBROUTINE get_q0_on_grid_spin
 
@@ -918,20 +1006,18 @@ CONTAINS
   !                            |  saturate_q  |
   !                            |______________|
 
-  SUBROUTINE saturate_q (q, q_cut, q0, dq0_dq)
+  SUBROUTINE saturate_q (q, q_cutoff, q0, dq0_dq)
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp),  intent(IN)      :: q             ! Input q.
-  real(dp),  intent(IN)      :: q_cut         ! Cutoff q.
-  real(dp),  intent(OUT)     :: q0            ! Output saturated q.
-  real(dp),  intent(OUT)     :: dq0_dq        ! Derivative of dq0/dq.
+  REAL(DP),  INTENT(IN)      :: q             ! Input q.
+  REAL(DP),  INTENT(IN)      :: q_cutoff      ! Cutoff q.
+  REAL(DP),  INTENT(OUT)     :: q0            ! Output saturated q.
+  REAL(DP),  INTENT(OUT)     :: dq0_dq        ! Derivative of dq0/dq.
 
-  integer,    parameter      :: m_cut = 12    ! How many terms to include
-                                              ! in the sum of SOLER equation 5.
-
-  real(dp)                   :: e             ! Exponent.
-  integer                    :: idx           ! Indexing variable.
+  REAL(DP)                   :: e_exp         ! Exponent.
+  INTEGER,   PARAMETER       :: m_cut = 12    ! How many terms to include in
+                                              ! the sum of SOLER equation 5.
 
 
 
@@ -941,16 +1027,16 @@ CONTAINS
   ! SOLER. Also, we find the derivative dq0_dq needed for the
   ! derivatives dq0_drho and dq0_dgradrh0 discussed below.
 
-  e      = 0.0D0
+  e_exp  = 0.0D0
   dq0_dq = 0.0D0
 
-  do idx = 1, m_cut
-     e      = e + (q/q_cut)**idx/idx
-     dq0_dq = dq0_dq + (q/q_cut)**(idx-1)
-  end do
+  DO idx = 1, m_cut
+     e_exp  = e_exp + (q/q_cutoff)**idx/idx
+     dq0_dq = dq0_dq + (q/q_cutoff)**(idx-1)
+  END Do
 
-  q0     = q_cut*(1.0D0 - exp(-e))
-  dq0_dq = dq0_dq * exp(-e)
+  q0     = q_cutoff*(1.0D0 - EXP(-e_exp))
+  dq0_dq = dq0_dq * EXP(-e_exp)
 
   END SUBROUTINE saturate_q
 
@@ -962,51 +1048,51 @@ CONTAINS
 
 
   ! ####################################################################
-  !                            |             |
-  !                            | VDW_ENERGY  |
-  !                            |_____________|
+  !                          |               |
+  !                          | vdW_DF_energy |
+  !                          |_______________|
   !
   ! This routine carries out the integration of equation 8 of SOLER.  It
   ! returns the non-local exchange-correlation energy and the u_alpha(k)
   ! arrays used to find the u_alpha(r) arrays via equations 11 and 12 in
   ! SOLER.
 
-  SUBROUTINE vdW_energy (thetas, vdW_xc_energy)
+  SUBROUTINE vdW_DF_energy (thetas, vdW_xc_energy)
 
   USE gvect,           ONLY : gg, ngm, igtongl, gl, ngl, gstart
   USE cell_base,       ONLY : tpiba, omega
 
-  implicit none
+  IMPLICIT NONE
 
-  complex(dp), intent(inout) :: thetas(:,:)            ! On input this variable holds the theta
+  COMPLEX(DP), INTENT(INOUT) :: thetas(:,:)            ! On input this variable holds the theta
                                                        ! functions (equation 8, SOLER) in the format
                                                        ! thetas(grid_point, theta_i). On output
                                                        ! this array holds u_alpha(k) =
-                                                       ! Sum_j[theta_beta(k)phi_alpha_beta(k)]
+                                                       ! Sum_j[theta_beta(k)phi_alpha_beta(k)].
 
-  real(dp), intent(out) :: vdW_xc_energy               ! The non-local correlation energy.
+  REAL(DP), INTENT(OUT) :: vdW_xc_energy               ! The non-local correlation energy.
 
-  real(dp), allocatable :: kernel_of_k(:,:)            ! This array will hold the interpolated kernel
+  REAL(DP), ALLOCATABLE :: kernel_of_k(:,:)            ! This array will hold the interpolated kernel
                                                        ! values for each pair of q values in the q_mesh.
 
-  real(dp)    :: g                                     ! The magnitude of the current g vector.
-  integer     :: last_g                                ! The shell number of the last g vector.
+  REAL(DP)    :: g                                     ! The magnitude of the current g vector.
+  INTEGER     :: last_g                                ! The shell number of the last g vector.
 
 
-  integer     :: g_i, q1_i, q2_i, i_grid               ! Index variables.
+  INTEGER     :: g_i, q1_i, q2_i, i_grid               ! Index variables.
 
-  complex(dp) :: theta(Nqs), thetam(Nqs), theta_g(Nqs) ! Temporary storage arrays used since we
+  COMPLEX(DP) :: theta(Nqs), thetam(Nqs), theta_g(Nqs) ! Temporary storage arrays used since we
                                                        ! are overwriting the thetas array here.
-  real(dp)    :: G0_term, G_multiplier
+  REAL(DP)    :: G0_term, G_multiplier
 
-  complex(dp), allocatable :: u_vdw(:,:)               ! Temporary array holding u_alpha(k).
-
-
+  COMPLEX(DP), ALLOCATABLE :: u_vdw(:,:)               ! Temporary array holding u_alpha(k).
 
 
+
+
+  ALLOCATE ( u_vdW(dfftp%nnr,Nqs), kernel_of_k(Nqs, Nqs) )
   vdW_xc_energy = 0.0D0
-  allocate (u_vdW(dfftp%nnr,Nqs), kernel_of_k(Nqs, Nqs))
-  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP,kind=dp)
+  u_vdW(:,:)    = CMPLX(0.0_DP, 0.0_DP, kind=dp)
 
 
   ! --------------------------------------------------------------------
@@ -1023,34 +1109,32 @@ CONTAINS
   ! but all the cases are handled by conditionals inside the loop
 
   G_multiplier = 1.0D0
-  if (gamma_only) G_multiplier = 2.0D0
+  IF ( gamma_only ) G_multiplier = 2.0D0
 
   last_g = -1
 
-  do g_i = 1, ngm
+  DO g_i = 1, ngm
 
-     if ( igtongl(g_i) .ne. last_g) then
-
-        g = sqrt(gl(igtongl(g_i))) * tpiba
-        call interpolate_kernel(g, kernel_of_k)
+     IF ( igtongl(g_i) .NE. last_g) THEN
+        g = SQRT(gl(igtongl(g_i))) * tpiba
+        CALL interpolate_kernel(g, kernel_of_k)
         last_g = igtongl(g_i)
-
-     end if
+     END IF
 
      theta = thetas(dfftp%nl(g_i),:)
 
-     do q2_i = 1, Nqs
-        do q1_i = 1, Nqs
+     DO q2_i = 1, Nqs
+        DO q1_i = 1, Nqs
            u_vdW(dfftp%nl(g_i),q2_i)  = u_vdW(dfftp%nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
-        end do
-        vdW_xc_energy = vdW_xc_energy + G_multiplier * (u_vdW(dfftp%nl(g_i),q2_i)*conjg(theta(q2_i)))
-     end do
+        END DO
+        vdW_xc_energy = vdW_xc_energy + G_multiplier * (u_vdW(dfftp%nl(g_i),q2_i)*CONJG(theta(q2_i)))
+     END DO
 
-     if (g_i < gstart ) vdW_xc_energy = vdW_xc_energy / G_multiplier
+     IF (g_i < gstart ) vdW_xc_energy = vdW_xc_energy / G_multiplier
 
-  end do
+  END DO
 
-  if (gamma_only) u_vdW(dfftp%nlm(:),:) = CONJG(u_vdW(dfftp%nl(:),:))
+  IF ( gamma_only ) u_vdW(dfftp%nlm(:),:) = CONJG( u_vdW(dfftp%nl(:),:) )
 
 
   ! --------------------------------------------------------------------
@@ -1067,9 +1151,9 @@ CONTAINS
   vdW_xc_energy = 0.5D0 * e2 * omega * vdW_xc_energy
 
   thetas(:,:) = u_vdW(:,:)
-  deallocate (u_vdW, kernel_of_k)
+  DEALLOCATE ( u_vdW, kernel_of_k )
 
-  END SUBROUTINE vdW_energy
+  END SUBROUTINE vdW_DF_energy
 
 
 
@@ -1079,9 +1163,9 @@ CONTAINS
 
 
   ! ####################################################################
-  !                          |                 |
-  !                          |  GET_POTENTIAL  |
-  !                          |_________________|
+  !                        |                   |
+  !                        |  vdW_DF_potential |
+  !                        |___________________|
   !
   ! This routine finds the non-local correlation contribution to the
   ! potential (i.e. the derivative of the non-local piece of the energy
@@ -1093,56 +1177,56 @@ CONTAINS
   ! respect to q is interpolated here, along with the polynomials
   ! themselves.
 
-  SUBROUTINE get_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, u_vdW, potential)
+  SUBROUTINE vdW_DF_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, u_vdW, potential)
 
   USE gvect,               ONLY : g
   USE cell_base,           ONLY : alat, tpiba
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(in) ::  q0(:), grad_rho(:,:)       ! Input arrays holding the value of q0 for
+  REAL(DP), INTENT(IN) ::  q0(:), grad_rho(:,:)       ! Input arrays holding the value of q0 for
                                                       ! all points assigned to this processor and
                                                       ! the gradient of the charge density for
                                                       ! points assigned to this processor.
 
-  real(dp), intent(in) :: dq0_drho(:), dq0_dgradrho(:)! The derivative of q0 with respect to the
+  REAL(DP), INTENT(IN) :: dq0_drho(:), dq0_dgradrho(:)! The derivative of q0 with respect to the
                                                       ! charge density and gradient of the charge
                                                       ! density (almost). See comments in the
                                                       ! get_q0_on_grid subroutine above.
 
-  complex(dp), intent(in) :: u_vdW(:,:)               ! The functions u_alpha(r) obtained by
+  COMPLEX(DP), INTENT(IN) :: u_vdW(:,:)               ! The functions u_alpha(r) obtained by
                                                       ! inverse transforming the functions
-                                                      ! u_alph(k). See equations 11 and 12 in SOLER
+                                                      ! u_alph(k). See equations 11 and 12 in SOLER.
 
-  real(dp), intent(inout) :: potential(:)             ! The non-local correlation potential for
+  REAL(DP), INTENT(INOUT) :: potential(:)             ! The non-local correlation potential for
                                                       ! points on the grid over the whole cell (not
                                                       ! just those assigned to this processor).
 
-  real(dp), allocatable, save :: d2y_dx2(:,:)         ! Second derivatives of P_alpha polynomials
+  REAL(DP), ALLOCATABLE, SAVE :: d2y_dx2(:,:)         ! Second derivatives of P_alpha polynomials
                                                       ! for interpolation.
 
-  integer :: i_grid, P_i,icar                         ! Index variables.
+  INTEGER :: i_grid, P_i,icar                         ! Index variables.
 
-  integer :: q_low, q_hi, q                           ! Variables to find the bin in the q_mesh that
+  INTEGER :: q_low, q_hi, q                           ! Variables to find the bin in the q_mesh that
                                                       ! a particular q0 belongs to (for interpolation).
-  real(dp) :: dq, a, b, c, d, e, f                    ! Intermediate variables used in the
+  REAL(DP) :: dq, a, b, c, d, e, f                    ! Intermediate variables used in the
                                                       ! interpolation of the polynomials.
 
-  real(dp) :: y(Nqs), dP_dq0, P                       ! The y values for a given polynomial (all 0
+  REAL(DP) :: y(Nqs), dP_dq0, P                       ! The y values for a given polynomial (all 0
                                                       ! exept for element i of P_i) The derivative
                                                       ! of P at a given q0 and the value of P at a
                                                       ! given q0. Both of these are interpolated
                                                       ! below.
 
-  real(dp) :: gradient2                               ! Squared gradient.
+  REAL(DP) :: gradient2                               ! Squared gradient.
 
-  real(dp)   , allocatable ::h_prefactor(:)
-  complex(dp), allocatable ::h(:)
-
-
+  REAL(DP)   , ALLOCATABLE ::h_prefactor(:)
+  COMPLEX(DP), ALLOCATABLE ::h(:)
 
 
-  allocate (h_prefactor(dfftp%nnr), h(dfftp%nnr))
+
+
+  ALLOCATE ( h_prefactor(dfftp%nnr), h(dfftp%nnr) )
 
   potential     = 0.0D0
   h_prefactor   = 0.0D0
@@ -1153,15 +1237,15 @@ CONTAINS
   ! We have already calculated this once but it is very fast and it's
   ! just as easy to calculate it again.
 
-  if (.not. allocated( d2y_dx2) ) then
+  IF (.NOT. ALLOCATED( d2y_dx2) ) THEN
 
-     allocate( d2y_dx2(Nqs, Nqs) )
-     call initialize_spline_interpolation (q_mesh, d2y_dx2(:,:))
+     ALLOCATE( d2y_dx2(Nqs, Nqs) )
+     CALL initialize_spline_interpolation ( q_mesh, d2y_dx2(:,:) )
 
   end if
 
 
-  do i_grid = 1, dfftp%nnr
+  DO i_grid = 1, dfftp%nnr
 
      q_low = 1
      q_hi = Nqs
@@ -1170,19 +1254,19 @@ CONTAINS
      ! -----------------------------------------------------------------
      ! Figure out which bin our value of q0 is in in the q_mesh.
 
-     do while ( (q_hi - q_low) > 1)
+     DO WHILE ( (q_hi - q_low) > 1)
 
-        q = int((q_hi + q_low)/2)
+        q = INT((q_hi + q_low)/2)
 
-        if (q_mesh(q) > q0(i_grid)) then
+        IF (q_mesh(q) > q0(i_grid)) THEN
            q_hi = q
-        else
+        ELSE
            q_low = q
-        end if
+        END IF
 
-     end do
+     END DO
 
-     if (q_hi == q_low) call errore('get_potential','qhi == qlow',1)
+     IF ( q_hi == q_low ) CALL errore('vdW_DF_potential','qhi == qlow',1)
 
      dq = q_mesh(q_hi) - q_mesh(q_low)
 
@@ -1193,7 +1277,7 @@ CONTAINS
      e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
      f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
 
-     do P_i = 1, Nqs
+     DO P_i = 1, Nqs
         y = 0.0D0
         y(P_i) = 1.0D0
 
@@ -1203,34 +1287,35 @@ CONTAINS
 
         ! --------------------------------------------------------------
         ! The first term in equation 10 of SOLER.
-
         potential(i_grid) = potential(i_grid) + u_vdW(i_grid,P_i)* (P + dP_dq0 * dq0_drho(i_grid))
-        if (q0(i_grid) .ne. q_mesh(Nqs)) then
+        IF (q0(i_grid) .NE. q_mesh(Nqs)) THEN
            h_prefactor(i_grid) = h_prefactor(i_grid) + u_vdW(i_grid,P_i)*dP_dq0*dq0_dgradrho(i_grid)
-        end if
-     end do
-  end do
+        END IF
 
-  do icar = 1,3
+     END DO
+
+  END DO
+
+  DO icar = 1,3
 
      h(:) = CMPLX( h_prefactor(:) * grad_rho(icar,:), 0.0_DP, kind=dp )
 
-     do i_grid = 1, dfftp%nnr
+     DO i_grid = 1, dfftp%nnr
         gradient2 = grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2
-        if ( gradient2 > 0.0D0 ) h(i_grid) = h(i_grid) / SQRT( gradient2 )
-     end do
+        IF ( gradient2 > 0.0D0 ) h(i_grid) = h(i_grid) / SQRT( gradient2 )
+     END DO
 
      CALL fwfft ('Rho', h, dfftp)
      h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP, kind=dp) * tpiba * g(icar,:) * h(dfftp%nl(:))
-     if (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))
+     IF (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))
      CALL invfft ('Rho', h, dfftp)
      potential(:) = potential(:) - REAL(h(:))
 
-  end do
+  END Do
 
-  deallocate (h_prefactor, h)
+  DEALLOCATE ( h_prefactor, h )
 
-  END SUBROUTINE get_potential
+  END SUBROUTINE vdW_DF_potential
 
 
 
@@ -1244,37 +1329,36 @@ CONTAINS
   !                       |  SPLINE_INTERPOLATION  |
   !                       |________________________|
   !
-  ! This routine is modeled after an algorithm from "Numerical Recipes
-  ! in C" by Cambridge University press, page 97.  It was adapted for
-  ! Fortran, of course and for the problem at hand, in that it finds the
-  ! bin a particular x value is in and then loops over all the P_i
-  ! functions so we only have to find the bin once.
+  ! This routine is modeled after an algorithm from NUMERICAL_RECIPES It
+  ! was adapted for Fortran, of course and for the problem at hand, in
+  ! that it finds the bin a particular x value is in and then loops over
+  ! all the P_i functions so we only have to find the bin once.
 
   SUBROUTINE spline_interpolation (x, evaluation_points, values)
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(in) :: x(:), evaluation_points(:)     ! Input variables. The x values used to
+  REAL(DP), INTENT(IN) :: x(:), evaluation_points(:)     ! Input variables. The x values used to
                                                          ! form the interpolation (q_mesh in this
                                                          ! case) and the values of q0 for which we
                                                          ! are interpolating the function.
 
-  complex(dp), intent(inout) :: values(:,:)              ! An output array (allocated outside this
+  COMPLEX(DP), INTENT(INOUT) :: values(:,:)              ! An output array (allocated outside this
                                                          ! routine) that stores the interpolated
                                                          ! values of the P_i (SOLER equation 3)
                                                          ! polynomials. The format is
                                                          ! values(grid_point, P_i).
 
-  integer :: Ngrid_points, Nx                            ! Total number of grid points to evaluate
+  INTEGER :: Ngrid_points, Nx                            ! Total number of grid points to evaluate
                                                          ! and input x points.
 
-  real(dp), allocatable, save :: d2y_dx2(:,:)            ! The second derivatives required to do
+  REAL(DP), ALLOCATABLE, SAVE :: d2y_dx2(:,:)            ! The second derivatives required to do
                                                          ! the interpolation.
 
-  integer :: i_grid, lower_bound, upper_bound, idx, P_i  ! Some indexing variables.
+  INTEGER :: i_grid, lower_bound, upper_bound, P_i       ! Some indexing variables.
 
-  real(dp), allocatable :: y(:)                          ! Temporary variables needed for the
-  real(dp) :: a, b, c, d, dx                             ! interpolation.
+  REAL(DP), ALLOCATABLE :: y(:)                          ! Temporary variables needed for the
+  REAL(DP) :: a, b, c, d, dx                             ! interpolation.
 
 
 
@@ -1286,7 +1370,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Allocate the temporary array.
 
-  allocate( y(Nx) )
+  ALLOCATE( y(Nx) )
 
 
   ! --------------------------------------------------------------------
@@ -1295,29 +1379,29 @@ CONTAINS
   ! interpolations. So we allocate the array and call
   ! initialize_spline_interpolation to get d2y_dx2.
 
-  if (.not. allocated(d2y_dx2) ) then
+  IF (.NOT. ALLOCATED(d2y_dx2) ) THEN
 
-     allocate( d2y_dx2(Nx,Nx) )
-     call initialize_spline_interpolation(x, d2y_dx2)
+     ALLOCATE( d2y_dx2(Nx,Nx) )
+     CALL initialize_spline_interpolation(x, d2y_dx2)
 
-  end if
+  END IF
 
-  do i_grid=1, Ngrid_points
+  DO i_grid=1, Ngrid_points
 
      lower_bound = 1
      upper_bound = Nx
 
-     do while ( (upper_bound - lower_bound) > 1 )
+     DO WHILE ( (upper_bound - lower_bound) > 1 )
 
         idx = (upper_bound+lower_bound) / 2
 
-        if ( evaluation_points(i_grid) > x(idx) ) then
+        IF ( evaluation_points(i_grid) > x(idx) ) THEN
            lower_bound = idx
-        else
+        ELSE
            upper_bound = idx
-        end if
+        END IF
 
-     end do
+     END DO
 
      dx = x(upper_bound)-x(lower_bound)
 
@@ -1326,18 +1410,18 @@ CONTAINS
      c = ((a**3-a)*dx**2)/6.0D0
      d = ((b**3-b)*dx**2)/6.0D0
 
-     do P_i = 1, Nx
+     DO P_i = 1, Nx
 
         y = 0
         y(P_i) = 1
 
         values(i_grid, P_i) = a*y(lower_bound) + b*y(upper_bound) &
              + (c*d2y_dx2(P_i,lower_bound) + d*d2y_dx2(P_i, upper_bound))
-     end do
+     END DO
 
-  end do
+  END DO
 
-  deallocate( y )
+  DEALLOCATE( y )
 
   END SUBROUTINE spline_interpolation
 
@@ -1353,36 +1437,35 @@ CONTAINS
   !                  |  INITIALIZE_SPLINE_INTERPOLATION  |
   !                  |___________________________________|
   !
-  ! This routine is modeled after an algorithm from "Numerical Recipes
-  ! in C" by Cambridge University Press, pages 96-97. It was adapted
-  ! for Fortran and for the problem at hand.
+  ! This routine is modeled after an algorithm from NUMERICAL_RECIPES It
+  ! was adapted for Fortran and for the problem at hand.
 
   SUBROUTINE initialize_spline_interpolation (x, d2y_dx2)
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(in)  :: x(:)                 ! The input abscissa values.
-  real(dp), intent(inout) :: d2y_dx2(:,:)       ! The output array (allocated outside this routine)
+  REAL(DP), INTENT(IN)    :: x(:)               ! The input abscissa values.
+  REAL(DP), INTENT(INOUT) :: d2y_dx2(:,:)       ! The output array (allocated outside this routine)
                                                 ! that holds the second derivatives required for
                                                 ! interpolating the function.
 
-  integer :: Nx, P_i, idx                       ! The total number of x points and some indexing
+  INTEGER :: Nx, P_i                            ! The total number of x points and some indexing
                                                 ! variables.
 
-  real(dp), allocatable :: temp_array(:), y(:)  ! Some temporary arrays required. y is the array
+  REAL(DP), ALLOCATABLE :: temp_array(:), y(:)  ! Some temporary arrays required. y is the array
                                                 ! that holds the funcion values (all either 0 or
                                                 ! 1 here).
 
-  real(dp) :: temp1, temp2                      ! Some temporary variables required.
+  REAL(DP) :: temp1, temp2                      ! Some temporary variables required.
 
 
 
 
-  Nx = size(x)
+  Nx = SIZE(x)
 
-  allocate( temp_array(Nx), y(Nx) )
+  ALLOCATE( temp_array(Nx), y(Nx) )
 
-  do P_i=1, Nx
+  DO P_i=1, Nx
 
      ! -----------------------------------------------------------------
      ! In the Soler method, the polynomicals that are interpolated are Kroneker
@@ -1395,7 +1478,7 @@ CONTAINS
      d2y_dx2(P_i,1) = 0.0D0
      temp_array(1) = 0.0D0
 
-     do idx = 2, Nx-1
+     DO idx = 2, Nx-1
 
         temp1 = (x(idx)-x(idx-1))/(x(idx+1)-x(idx-1))
         temp2 = temp1 * d2y_dx2(P_i,idx-1) + 2.0D0
@@ -1406,19 +1489,19 @@ CONTAINS
         temp_array(idx) = (6.0D0*temp_array(idx)/(x(idx+1)-x(idx-1)) &
              - temp1*temp_array(idx-1))/temp2
 
-     end do
+     END DO
 
      d2y_dx2(P_i,Nx) = 0.0D0
 
-     do idx=Nx-1, 1, -1
+     DO idx=Nx-1, 1, -1
 
         d2y_dx2(P_i,idx) = d2y_dx2(P_i,idx) * d2y_dx2(P_i,idx+1) + temp_array(idx)
 
-     end do
+     END DO
 
-  end do
+  END DO
 
-  deallocate( temp_array, y)
+  DEALLOCATE( temp_array, y )
 
   END SUBROUTINE initialize_spline_interpolation
 
@@ -1434,26 +1517,26 @@ CONTAINS
   !                          | INTERPOLATE_KERNEL |
   !                          |____________________|
   !
-  ! This routine is modeled after an algorithm from "Numerical Recipes in C" by
-  ! Cambridge University Press, page 97.  Adapted for Fortran and the problem at
-  ! hand.  This function is used to find the Phi_alpha_beta needed for equations
+  ! This routine is modeled after an algorithm from NUMERICAL_RECIPES
+  ! Adapted for Fortran and the problem at hand. This function is used
+  ! to find the Phi_alpha_beta needed for equations
   ! 8 and 11 of SOLER.
 
   SUBROUTINE interpolate_kernel (k, kernel_of_k)
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(in) :: k                    ! Input value, the magnitude of the g-vector
+  REAL(DP), INTENT(IN)    :: k                 ! Input value, the magnitude of the g-vector
                                                ! for the current point.
 
-  real(dp), intent(inout) :: kernel_of_k(:,:)  ! An output array (allocated outside this routine)
+  REAL(DP), INTENT(INOUT) :: kernel_of_k(:,:)  ! An output array (allocated outside this routine)
                                                ! that holds the interpolated value of the kernel
                                                ! for each pair of q points (i.e. the phi_alpha_beta
                                                ! of the Soler method.
 
-  integer :: q1_i, q2_i, k_i                   ! Indexing variables.
+  INTEGER  :: q1_i, q2_i, k_i                  ! Indexing variables.
 
-  real(dp) :: A, B, C, D                       ! Intermediate values for the interpolation.
+  REAL(DP) :: A, B, C, D                       ! Intermediate values for the interpolation.
 
 
 
@@ -1465,12 +1548,12 @@ CONTAINS
   ! that case, a kernel file should be generated with a larger number of
   ! radial points.
 
-  if ( k >= Nr_points*dk ) then
+  IF ( k >= Nr_points*dk ) THEN
 
-     write(*,'(A,F10.5,A,F10.5)') "k =  ", k, "     k_max =  ",Nr_points*dk
-     call errore('interpolate kernel', 'k value requested is out of range',1)
+     WRITE(*,'(A,F10.5,A,F10.5)') "k =  ", k, "     k_max =  ", Nr_points*dk
+     CALL errore('interpolate kernel', 'k value requested is out of range',1)
 
-  end if
+  END IF
 
   kernel_of_k = 0.0D0
 
@@ -1479,28 +1562,28 @@ CONTAINS
   ! This integer division figures out which bin k is in since the kernel
   ! is set on a uniform grid.
 
-  k_i = int(k/dk)
+  k_i = INT(k/dk)
 
 
   ! --------------------------------------------------------------------
   ! Test to see if we are trying to interpolate a k that is one of the
-  ! actual function points we have.  The value is just the value of the
+  ! actual function points we have. The value is just the value of the
   ! function in that case.
 
-  if (mod(k,dk) == 0) then
+  IF ( MOD(k,dk) == 0 ) THEN
 
-     do q1_i = 1, Nqs
-        do q2_i = 1, q1_i
+     DO q1_i = 1, Nqs
+        DO q2_i = 1, q1_i
 
            kernel_of_k(q1_i, q2_i) = kernel(k_i,q1_i, q2_i)
            kernel_of_k(q2_i, q1_i) = kernel(k_i,q2_i, q1_i)
 
-        end do
-     end do
+        END DO
+     END DO
 
-     return
+     RETURN
 
-  end if
+  END IF
 
 
   ! --------------------------------------------------------------------
@@ -1512,16 +1595,16 @@ CONTAINS
   C = (A**3-A)*dk**2/6.0D0
   D = (B**3-B)*dk**2/6.0D0
 
-  do q1_i = 1, Nqs
-     do q2_i = 1, q1_i
+  DO q1_i = 1, Nqs
+     DO q2_i = 1, q1_i
 
         kernel_of_k(q1_i, q2_i) = A*kernel(k_i, q1_i, q2_i) + B*kernel(k_i+1, q1_i, q2_i) &
-             +(C*d2phi_dk2(k_i, q1_i, q2_i) + D*d2phi_dk2(k_i+1, q1_i, q2_i))
+                        + (C*d2phi_dk2(k_i, q1_i, q2_i) + D*d2phi_dk2(k_i+1, q1_i, q2_i))
 
         kernel_of_k(q2_i, q1_i) = kernel_of_k(q1_i, q2_i)
 
-     end do
-  end do
+     END DO
+  END DO
 
   END SUBROUTINE interpolate_kernel
 
@@ -1534,33 +1617,33 @@ CONTAINS
 
   ! ####################################################################
   !                         |                 |
-  !                         |  STRESS_VDW_DF  |
+  !                         |  VDW_DF_STRESS  |
   !                         |_________________|
 
-  SUBROUTINE stress_vdW_DF (rho_valence, rho_core, nspin, sigma)
+  SUBROUTINE vdW_DF_stress (rho_valence, rho_core, nspin, sigma)
 
   use gvect,           ONLY : ngm, g
   USE cell_base,       ONLY : tpiba
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(IN)     :: rho_valence(:)         !
-  real(dp), intent(IN)     :: rho_core(:)            ! Input variables
-  integer,  intent(IN)     :: nspin                  !
-  real(dp), intent(inout)  :: sigma(3,3)             !
+  REAL(DP), INTENT(IN)     :: rho_valence(:)         !
+  REAL(dp), INTENT(IN)     :: rho_core(:)            ! Input variables.
+  INTEGER,  INTENT(IN)     :: nspin                  !
+  REAL(dp), INTENT(INOUT)  :: sigma(3,3)             !
 
-  real(dp), allocatable    :: grad_rho(:,:)          !
-  real(dp), allocatable    :: total_rho(:)           ! Rho values
+  REAL(DP), ALLOCATABLE    :: grad_rho(:,:)          !
+  REAL(DP), ALLOCATABLE    :: total_rho(:)           ! Rho values.
 
-  real(dp), allocatable    :: q0(:)                  !
-  real(dp), allocatable    :: dq0_drho(:)            ! Q-values
-  real(dp), allocatable    :: dq0_dgradrho(:)        !
+  REAL(DP), ALLOCATABLE    :: q0(:)                  !
+  REAL(DP), ALLOCATABLE    :: dq0_drho(:)            ! q-values.
+  REAL(DP), ALLOCATABLE    :: dq0_dgradrho(:)        !
 
-  complex(dp), allocatable :: thetas(:,:)            ! Thetas
-  integer                  :: i_proc, theta_i, l, m
+  COMPLEX(DP), ALLOCATABLE :: thetas(:,:)            ! Thetas.
+  INTEGER                  :: i_proc, theta_i, l, m
 
-  real(dp)                 :: sigma_grad(3,3)
-  real(dp)                 :: sigma_ker(3,3)
+  REAL(DP)                 :: sigma_grad(3,3)
+  REAL(DP)                 :: sigma_ker(3,3)
 
 
 
@@ -1569,15 +1652,15 @@ CONTAINS
   ! Tests
 
 #if defined (__SPIN_BALANCED)
-  if ( nspin==2 ) then
-     write(stdout,'(/,/ "     Performing spin-balanced Ecnl stress calculation!")')
-  else if ( nspin > 2 ) then
-     call errore ('stres_vdW_DF','noncollinear vdW stress not implemented',1)
-  end if
+  IF ( nspin==2 ) THEN
+     WRITE(stdout,'(/,/ "     Performing spin-balanced Ecnl stress calculation!")')
+  ELSE IF ( nspin > 2 ) THEN
+     CALL errore ('stres_vdW_DF', 'noncollinear vdW stress not implemented', 1)
+  END IF
 #else
-  if ( nspin>=2 ) then
-     call errore ('stres_vdW_DF',   'vdW stress not implemented for nspin > 1',1)
-  end if
+  IF ( nspin>=2 ) THEN
+     CALL errore ('vdW_DF_stress',   'vdW stress not implemented for nspin > 1', 1)
+  END IF
 #endif
 
   sigma(:,:)      = 0.0_DP
@@ -1588,28 +1671,21 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Allocations
 
-  allocate( grad_rho(3,dfftp%nnr) )
-  allocate( total_rho(dfftp%nnr) )
-  allocate( q0(dfftp%nnr) )
-  allocate( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
-  allocate( thetas(dfftp%nnr, Nqs) )
+  ALLOCATE( total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr), thetas(dfftp%nnr, Nqs), &
+            q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
 
 
   ! --------------------------------------------------------------------
   ! Charge
 
   total_rho = rho_valence(:) + rho_core(:)
-#if defined (__SPIN_BALANCED)
-  !if ( nspin == 2 ) then
-  !   total_rho = rho_valence(:,2) + total_rho(:)
-  !end if
-#endif
 
 
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
 
-  call fft_gradient_r2r (dfftp, total_rho,  g, grad_rho)
+  CALL fft_gradient_r2r (dfftp, total_rho,  g, grad_rho)
+
 
   ! --------------------------------------------------------------------
   ! Get q0.
@@ -1620,20 +1696,20 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Stress
 
-  CALL stress_vdW_DF_gradient (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas, sigma_grad)
-  CALL stress_vdW_DF_kernel   (total_rho, q0, thetas, sigma_ker)
+  CALL vdW_DF_stress_gradient (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas, sigma_grad)
+  CALL vdW_DF_stress_kernel   (total_rho, q0, thetas, sigma_ker)
 
   sigma = - (sigma_grad + sigma_ker)
 
-  do l = 1, 3
-     do m = 1, l - 1
+  DO l = 1, 3
+     DO m = 1, l - 1
         sigma (m, l) = sigma (l, m)
-     enddo
-  enddo
+     END DO
+  END DO
 
-  deallocate( grad_rho, total_rho, q0, dq0_drho, dq0_dgradrho, thetas )
+  DEALLOCATE( total_rho, grad_rho, thetas, q0, dq0_drho, dq0_dgradrho )
 
-  END SUBROUTINE stress_vdW_DF
+  END SUBROUTINE vdW_DF_stress
 
 
 
@@ -1644,48 +1720,47 @@ CONTAINS
 
   ! ####################################################################
   !                     |                          |
-  !                     |  STRESS_VDW_DF_GRADIENT  |
+  !                     |  VDW_DF_STRESS_GRADIENT  |
   !                     |__________________________|
 
-  SUBROUTINE stress_vdW_DF_gradient (total_rho, grad_rho, q0, dq0_drho, &
-                                     dq0_dgradrho, thetas, sigma)
+  SUBROUTINE vdW_DF_stress_gradient (total_rho, grad_rho, q0, &
+             dq0_drho, dq0_dgradrho, thetas, sigma)
 
-  USE gvect,                 ONLY : ngm, g, gg, igtongl, &
-                                    gl, ngl, gstart
+  USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
   USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(IN)     :: total_rho(:)           !
-  real(dp), intent(IN)     :: grad_rho(:, :)         ! Input variables.
-  real(dp), intent(inout)  :: sigma(:,:)             !
-  real(dp), intent(IN)     :: q0(:)                  !
-  real(dp), intent(IN)     :: dq0_drho(:)            !
-  real(dp), intent(IN)     :: dq0_dgradrho(:)        !
-  complex(dp), intent(IN)  :: thetas(:,:)            !
+  REAL(DP), INTENT(IN)     :: total_rho(:)           !
+  REAL(DP), INTENT(IN)     :: grad_rho(:, :)         !
+  REAL(DP), INTENT(INOUT)  :: sigma(:,:)             !
+  REAL(DP), INTENT(IN)     :: q0(:)                  ! Input variables.
+  REAL(DP), INTENT(IN)     :: dq0_drho(:)            !
+  REAL(DP), INTENT(IN)     :: dq0_dgradrho(:)        !
+  COMPLEX(DP), INTENT(IN)  :: thetas(:,:)            !
 
-  complex(dp), allocatable :: u_vdW(:,:)             !
+  COMPLEX(DP), ALLOCATABLE :: u_vdW(:,:)             !
 
-  real(dp), allocatable    :: d2y_dx2(:,:)           !
-  real(dp) :: y(Nqs), dP_dq0, P, a, b, c, d, e, f    ! Interpolation.
-  real(dp) :: dq                                     !
+  REAL(DP), ALLOCATABLE    :: d2y_dx2(:,:)           !
+  REAL(DP) :: y(Nqs), dP_dq0, P, a, b, c, d, e, f    ! Interpolation.
+  REAL(DP) :: dq                                     !
 
-  integer  :: q_low, q_hi, q, q1_i, q2_i , g_i       ! Loop and q-points.
+  INTEGER  :: q_low, q_hi, q, q1_i, q2_i , g_i       ! Loop and q-points.
 
-  integer  :: l, m
-  real(dp) :: prefactor                              ! Final summation of sigma.
-  real(dp) :: grad2                                  ! Magnitude of density gradient.
+  INTEGER  :: l, m
+  REAL(DP) :: prefactor                              ! Final summation of sigma
+  REAL(DP) :: grad2                                  ! magnitude of density gradient.
 
-  integer  :: i_proc, theta_i, i_grid, q_i, &        !
-              ix, iy, iz                             ! Iterators.
+  INTEGER  :: i_proc, theta_i, i_grid, q_i, &        ! Iterators.
+              ix, iy, iz                             !
 
-  character(LEN=1) :: intvar
-
-
+  CHARACTER(LEN=1) :: intvar
 
 
-  allocate( d2y_dx2(Nqs, Nqs) )
-  allocate( u_vdW(dfftp%nnr, Nqs) )
+
+
+  ALLOCATE( d2y_dx2(Nqs, Nqs) )
+  ALLOCATE( u_vdW(dfftp%nnr, Nqs) )
 
   sigma(:,:) = 0.0_DP
   prefactor  = 0.0_DP
@@ -1694,62 +1769,61 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Get u in k-space.
 
-  call thetas_to_uk(thetas, u_vdW)
+  CALL thetas_to_uk(thetas, u_vdW)
 
 
   ! --------------------------------------------------------------------
   ! Get u in real space.
 
-  do theta_i = 1, Nqs
+  DO theta_i = 1, Nqs
      CALL invfft('Rho', u_vdW(:,theta_i), dfftp)
-  end do
+  END DO
 
 
   ! --------------------------------------------------------------------
   ! Get the second derivatives for interpolating the P_i.
 
-  call initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
+  CALL initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
 
 
   ! --------------------------------------------------------------------
   ! Do the real space integration to obtain the stress component.
 
-  do i_grid = 1, dfftp%nnr
+  DO i_grid = 1, dfftp%nnr
 
-     if ( total_rho(i_grid) < epsr ) cycle
+     IF ( total_rho(i_grid) < epsr ) CYCLE
 
      q_low = 1
      q_hi  = Nqs
      grad2 = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 )
 
-     if ( grad2 == 0.0_dp ) cycle
+     IF ( grad2 == 0.0_dp ) CYCLE
+
      ! -----------------------------------------------------------------
      ! Figure out which bin our value of q0 is in the q_mesh.
+     DO WHILE ( (q_hi - q_low) > 1)
 
-     do while ( (q_hi - q_low) > 1)
+        q = INT((q_hi + q_low)/2)
 
-        q = int((q_hi + q_low)/2)
-
-        if (q_mesh(q) > q0(i_grid)) then
+        IF (q_mesh(q) > q0(i_grid)) THEN
             q_hi = q
-        else
+        ELSE
             q_low = q
-        end if
+        END IF
 
-     end do
+     END DO
 
-     if (q_hi == q_low) call errore('stress_vdW_gradient','qhi == qlow',1)
+     IF (q_hi == q_low) call errore('stress_vdW_gradient','qhi == qlow', 1)
 
      dq = q_mesh(q_hi) - q_mesh(q_low)
+     a  = (q_mesh(q_hi) - q0(i_grid))/dq
+     b  = (q0(i_grid) - q_mesh(q_low))/dq
+     c  = (a**3 - a)*dq**2/6.0D0
+     d  = (b**3 - b)*dq**2/6.0D0
+     e  = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
+     f  = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
 
-     a = (q_mesh(q_hi) - q0(i_grid))/dq
-     b = (q0(i_grid) - q_mesh(q_low))/dq
-     c = (a**3 - a)*dq**2/6.0D0
-     d = (b**3 - b)*dq**2/6.0D0
-     e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
-     f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
-
-     do q_i = 1, Nqs
+     DO q_i = 1, Nqs
 
         y(:)   = 0.0D0
         y(q_i) = 1.0D0
@@ -1758,24 +1832,25 @@ CONTAINS
 
         prefactor = u_vdW(i_grid,q_i) * dP_dq0 * dq0_dgradrho(i_grid) / grad2
 
-        do l = 1, 3
-            do m = 1, l
+        DO l = 1, 3
+            DO m = 1, l
 
                 sigma (l, m) = sigma (l, m) -  e2 * prefactor * &
                                (grad_rho(l,i_grid) * grad_rho(m,i_grid))
-            end do
-        end do
+            END DO
+        END DO
 
-     end do
+     END DO
 
-  end do
-  call mp_sum(  sigma, intra_bgrp_comm )
+  END DO
 
-  call dscal (9, 1.d0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
+  CALL mp_sum(  sigma, intra_bgrp_comm )
 
-  deallocate( d2y_dx2, u_vdW )
+  CALL dscal (9, 1.0D0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
 
-  END SUBROUTINE stress_vdW_DF_gradient
+  DEALLOCATE( d2y_dx2, u_vdW )
+
+  END SUBROUTINE vdW_DF_stress_gradient
 
 
 
@@ -1785,32 +1860,32 @@ CONTAINS
 
 
   ! ####################################################################
-  !                      |                          |
-  !                      |  STRESS_VDW_DF_KERNEL    |
-  !                      |__________________________|
+  !                      |                        |
+  !                      |  VDW_DF_STRESS_KERNEL  |
+  !                      |________________________|
 
-  SUBROUTINE stress_vdW_DF_kernel (total_rho, q0, thetas, sigma)
+  SUBROUTINE vdW_DF_stress_kernel (total_rho, q0, thetas, sigma)
 
   USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
   USE cell_base,             ONLY : omega, tpiba, tpiba2
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(IN)    :: q0(:)
-  real(dp), intent(IN)    :: total_rho(:)
-  real(dp), intent(inout) :: sigma(3,3)
-  complex(dp), intent(IN) :: thetas(:,:)
+  REAL(DP), INTENT(IN)    :: q0(:)
+  REAL(DP), INTENT(IN)    :: total_rho(:)
+  REAL(DP), INTENT(INOUT) :: sigma(3,3)
+  COMPLEX(DP), INTENT(IN) :: thetas(:,:)
 
-  real(dp), allocatable   :: dkernel_of_dk(:,:)
+  REAL(DP), ALLOCATABLE   :: dkernel_of_dk(:,:)
 
-  integer                 :: l, m, q1_i, q2_i , g_i
-  real(dp)                :: g2, ngmod2, g_kernel, G_multiplier
-  integer                 :: last_g, theta_i
-
-
+  INTEGER                 :: l, m, q1_i, q2_i , g_i
+  INTEGER                 :: last_g, theta_i
+  REAL(DP)                :: g2, ngmod2, g_kernel, G_multiplier
 
 
-  allocate( dkernel_of_dk(Nqs, Nqs) )
+
+
+  ALLOCATE( dkernel_of_dk(Nqs, Nqs) )
 
   sigma(:,:) = 0.0_DP
 
@@ -1821,41 +1896,42 @@ CONTAINS
 
   G_multiplier = 1.0D0
 
-  if (gamma_only) G_multiplier = 2.0D0
+  IF ( gamma_only ) G_multiplier = 2.0D0
 
-  do g_i = gstart, ngm
+  DO g_i = gstart, ngm
 
      g2 = gg (g_i) * tpiba2
-     g_kernel = sqrt(g2)
+     g_kernel = SQRT(g2)
 
-     if ( igtongl(g_i) .ne. last_g) then
+     IF ( igtongl(g_i) .NE. last_g) THEN
 
-        call interpolate_Dkernel_Dk(g_kernel, dkernel_of_dk)  ! Gets the derivatives.
+        CALL interpolate_Dkernel_Dk(g_kernel, dkernel_of_dk)  ! Gets the derivatives.
         last_g = igtongl(g_i)
 
-     end if
+     END IF
 
-     do q2_i = 1, Nqs
-        do q1_i = 1, Nqs
-           do l = 1, 3
-              do m = 1, l
+     DO q2_i = 1, Nqs
+        DO q1_i = 1, Nqs
+           DO l = 1, 3
+              DO m = 1, l
 
               sigma (l, m) = sigma (l, m) - G_multiplier * 0.5 * e2 * thetas(dfftp%nl(g_i),q1_i) * &
                              dkernel_of_dk(q1_i,q2_i)*conjg(thetas(dfftp%nl(g_i),q2_i))* &
                              (g (l, g_i) * g (m, g_i) * tpiba2) / g_kernel
-              end do
-           end do
-        enddo
-     end do
+              END DO
+           END DO
+        END DO
+     END DO
 
-     if (g_i < gstart ) sigma(:,:) = sigma(:,:) / G_multiplier
+     IF ( g_i < gstart ) sigma(:,:) = sigma(:,:) / G_multiplier
 
-  enddo
-  call mp_sum(  sigma, intra_bgrp_comm )
+  END DO
 
-  deallocate( dkernel_of_dk )
+  CALL mp_sum( sigma, intra_bgrp_comm )
 
-  END SUBROUTINE stress_vdW_DF_kernel
+  DEALLOCATE( dkernel_of_dk )
+
+  END SUBROUTINE vdW_DF_stress_kernel
 
 
 
@@ -1869,57 +1945,62 @@ CONTAINS
   !                        | INTERPOLATE_DKERNEL_DK |
   !                        |________________________|
 
-
   SUBROUTINE interpolate_Dkernel_Dk (k, dkernel_of_dk)
 
-  implicit none
+  IMPLICIT NONE
 
-  real(dp), intent(in) :: k                         ! Input value, the magnitude of the g-vector
+  REAL(DP), INTENT(IN)    :: k                      ! Input value, the magnitude of the g-vector
                                                     ! for the current point.
 
-  real(dp), intent(inout) :: dkernel_of_dk(Nqs,Nqs) ! An output array (allocated outside this
+  REAL(DP), INTENT(INOUT) :: dkernel_of_dk(Nqs,Nqs) ! An output array (allocated outside this
                                                     ! routine) that holds the interpolated value of
                                                     ! the kernel for each pair of q points (i.e. the
                                                     ! phi_alpha_beta of the Soler method.
 
-  integer :: q1_i, q2_i, k_i                        ! Indexing variables.
+  INTEGER :: q1_i, q2_i, k_i                        ! Indexing variables.
 
-  real(dp) :: A, B, dAdk, dBdk, dCdk, dDdk          ! Intermediate values for the interpolation.
-
-
+  REAL(DP) :: A, B, dAdk, dBdk, dCdk, dDdk          ! Intermediate values for the interpolation.
 
 
-  if ( k >= Nr_points*dk ) then
 
-     write(*,'(A,F10.5,A,F10.5)') "k =  ", k, "     k_max =  ",Nr_points*dk
-     call errore('interpolate kernel', 'k value requested is out of range',1)
 
-  end if
+  IF ( k >= Nr_points*dk ) THEN
+
+     WRITE(*,'(A,F10.5,A,F10.5)') "k =  ", k, "     k_max =  ", Nr_points*dk
+     CALL errore('interpolate kernel', 'k value requested is out of range',1)
+
+  END IF
 
   dkernel_of_dk = 0.0D0
 
-  k_i = int(k/dk)
+  k_i  = INT(k/dk)
 
-  A = (dk*(k_i+1.0D0) - k)/dk
-  B = (k - dk*k_i)/dk
+  A    = (dk*(k_i+1.0D0) - k)/dk
+  B    = (k - dk*k_i)/dk
 
   dAdk = -1.0D0/dk
   dBdk = 1.0D0/dk
   dCdk = -((3*A**2 -1.0D0)/6.0D0)*dk
   dDdk = ((3*B**2 -1.0D0)/6.0D0)*dk
 
-  do q1_i = 1, Nqs
-     do q2_i = 1, q1_i
+  DO q1_i = 1, Nqs
+     DO q2_i = 1, q1_i
 
         dkernel_of_dk(q1_i, q2_i) = dAdk*kernel(k_i, q1_i, q2_i) + dBdk*kernel(k_i+1, q1_i, q2_i) &
-             + dCdk*d2phi_dk2(k_i, q1_i, q2_i) + dDdk*d2phi_dk2(k_i+1, q1_i, q2_i)
+                            + dCdk*d2phi_dk2(k_i, q1_i, q2_i) + dDdk*d2phi_dk2(k_i+1, q1_i, q2_i)
 
         dkernel_of_dk(q2_i, q1_i) = dkernel_of_dk(q1_i, q2_i)
 
-     end do
-  end do
+     END DO
+  END DO
 
   END SUBROUTINE interpolate_Dkernel_Dk
+
+
+
+
+
+
 
 
   ! ####################################################################
@@ -1933,57 +2014,773 @@ CONTAINS
   USE gvect,           ONLY : gg, ngm, igtongl, gl, ngl, gstart
   USE cell_base,       ONLY : tpiba, omega
 
-  implicit none
+  IMPLICIT NONE
 
-  complex(dp), intent(in)  :: thetas(:,:)       ! On input this variable holds the theta functions
+  COMPLEX(DP), INTENT(IN)  :: thetas(:,:)       ! On input this variable holds the theta functions
                                                 ! (equation 8, SOLER) in the format
                                                 ! thetas(grid_point, theta_i).
-  complex(dp), intent(out) :: u_vdW(:,:)        ! On output this array holds u_alpha(k) =
+  COMPLEX(DP), INTENT(OUT) :: u_vdW(:,:)        ! On output this array holds u_alpha(k) =
                                                 ! Sum_j[theta_beta(k)phi_alpha_beta(k)].
 
-  real(dp), allocatable    :: kernel_of_k(:,:)  ! This array will hold the interpolated kernel
+  REAL(DP), ALLOCATABLE    :: kernel_of_k(:,:)  ! This array will hold the interpolated kernel
                                                 ! values for each pair of q values in the q_mesh.
 
-  real(dp) :: g
-  integer :: last_g, g_i, q1_i, q2_i, i_grid    ! Index variables.
+  REAL(DP) :: g
+  INTEGER  :: last_g, g_i, q1_i, q2_i, i_grid   ! Index variables.
 
-  complex(dp) :: theta(Nqs)                     ! Temporary storage vector used since we are
+  COMPLEX(DP) :: theta(Nqs)                     ! Temporary storage vector used since we are
                                                 ! overwriting the thetas array here.
 
 
 
 
-  allocate( kernel_of_k(Nqs, Nqs) )
+  ALLOCATE( kernel_of_k(Nqs, Nqs) )
 
-  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP,kind=dp)
+  u_vdW(:,:) = CMPLX(0.0_DP, 0.0_DP, kind=dp)
 
   last_g = -1
 
-  do g_i = 1, ngm
+  DO g_i = 1, ngm
 
-     if ( igtongl(g_i) .ne. last_g) then
+     IF ( igtongl(g_i) .ne. last_g) THEN
 
-        g = sqrt(gl(igtongl(g_i))) * tpiba
-        call interpolate_kernel(g, kernel_of_k)
+        g = SQRT(gl(igtongl(g_i))) * tpiba
+        CALL interpolate_kernel(g, kernel_of_k)
         last_g = igtongl(g_i)
 
-     end if
+     END IF
 
      theta = thetas(dfftp%nl(g_i),:)
 
-     do q2_i = 1, Nqs
-        do q1_i = 1, Nqs
+     DO q2_i = 1, Nqs
+        DO q1_i = 1, Nqs
            u_vdW(dfftp%nl(g_i),q2_i) = u_vdW(dfftp%nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
-        end do
-     end do
+        END DO
+     END DO
 
-  end do
+  END Do
 
-  if (gamma_only) u_vdW(dfftp%nlm(:),:) = CONJG(u_vdW(dfftp%nl(:),:))
+  IF ( gamma_only ) u_vdW(dfftp%nlm(:),:) = CONJG(u_vdW(dfftp%nl(:),:))
 
-  deallocate( kernel_of_k )
+  DEALLOCATE( kernel_of_k )
 
   END SUBROUTINE thetas_to_uk
+
+
+
+
+
+
+
+
+  ! ####################################################################
+  !                           |                 |
+  !                           | GENERATE_KERNEL |
+  !                           |_________________|
+  !
+  ! The original definition of the kernel function is given in DION
+  ! equations 14-16. The Soler method makes the kernel function a
+  ! function of only 1 variable (r) by first putting it in the form
+  ! phi(q1*r, q2*r). Then, the q-dependence is removed by expanding the
+  ! function in a special way (see SOLER equation 3). This yields a
+  ! separate function for each pair of q points that is a function of r
+  ! alone. There are (Nqs^2+Nqs)/2 unique functions, where Nqs is the
+  ! number of q points used. In the Soler method, the kernel is first
+  ! made in the form phi(d1, d2) but this is not done here. It was found
+  ! that, with q's chosen judiciously ahead of time, the kernel and the
+  ! second derivatives required for interpolation could be tabulated
+  ! ahead of time for faster use of the vdW-DF functional. Through
+  ! testing we found no need to soften the kernel and correct for this
+  ! later (see SOLER eqations 6-7).
+  !
+  ! The algorithm employed here is "embarrassingly parallel," meaning
+  ! that it parallelizes very well up to (Nqs^2+Nqs)/2 processors,
+  ! where, again, Nqs is the number of q points chosen. However,
+  ! parallelization on this scale is unnecessary. In testing the code
+  ! runs in under a minute on 16 Intel Xeon processors.
+  !
+  ! IMPORTANT NOTICE: Results are very sensitive to compilation details.
+  ! In particular, the usage of FMA (Fused Multiply-and-Add)
+  ! instructions used by modern CPUs such as AMD Interlagos (Bulldozer)
+  ! and Intel Ivy Bridge may affect quite heavily some components of the
+  ! kernel (communication by Ake Sandberg, Umea University). In practice
+  ! this should not be a problem, since most affected elements are the
+  ! less relevant ones.
+  !
+  ! Some of the algorithms here are somewhat modified versions of those
+  ! found in:
+  !
+  !    Numerical Recipes in C; William H. Press, Brian P. Flannery, Saul
+  !    A. Teukolsky, and William T. Vetterling. Cambridge University
+  !    Press (1988).
+  !
+  ! hereafter referred to as NUMERICAL_RECIPES. The routines were
+  ! translated to Fortran, of course and variable names are generally
+  ! different.
+  !
+  ! For the calculation of the kernel we have benefited from access to
+  ! earlier vdW-DF implementation into PWscf and ABINIT, written by Timo
+  ! Thonhauser, Valentino Cooper, and David Langreth. These codes, in
+  ! turn, benefited from earlier codes written by Maxime Dion and Henrik
+  ! Rydberg.
+
+  SUBROUTINE generate_kernel
+
+  IMPLICIT NONE
+
+  INTEGER  :: a_i, b_i, q1_i, q2_i, r_i
+  ! Indexing variables.
+
+  REAL(DP) :: weights( Nintegration_points )
+  ! Array to hold dx values for the Gaussian-Legendre integration of the kernel.
+
+  REAL(DP) :: a_points2( Nintegration_points )
+  ! The square of the "a" points (DION equation 14).
+
+  REAL(DP) :: sin_a( Nintegration_points ), cos_a( Nintegration_points )
+  ! Sine and cosine values of the aforementioned points a.
+
+  REAL(DP) :: d1, d2, d, integral
+  ! Intermediate values.
+
+  ! --------------------------------------------------------------------
+  ! The following variables control the parallel environment.
+
+  INTEGER :: my_start_q, my_end_q, Ntotal
+  ! Starting and ending q value for each  processor, also the total
+  ! number of calculations to do, i.e. (Nqs^2 + Nqs)/2.
+
+  REAL(DP), ALLOCATABLE :: phi(:,:), phi_deriv(:,:)
+  ! Arrays to store the kernel functions and their second derivatives.
+  ! They are stored as phi(radial_point, idx).
+
+  INTEGER, ALLOCATABLE  :: indices(:,:), proc_indices(:,:)
+  ! Indices holds the values of q1 and q2 as partitioned out to the
+  ! processors. It is an Ntotal x 2 array stored as indices(index of
+  ! point number, q1:q2). Proc_indices holds the section of the indices
+  ! array that is assigned to each processor. This is a Nproc x 2
+  ! array, stored as proc_indices(processor_number,
+  ! starting_index:ending_index)
+
+  INTEGER :: Nper, Nextra, start_q, end_q
+  ! Baseline number of jobs per processor, number of processors that
+  ! get an extra job in case the number of jobs doesn't split evenly
+  ! over the number of processors, starting index into the indices
+  ! array, ending index into the indices array.
+
+  INTEGER :: nproc, mpime
+  ! Number or procs, rank of current processor.
+
+  INTEGER :: proc_i, my_Nqs
+
+
+
+
+  ! --------------------------------------------------------------------
+  ! Start the timer.
+
+  CALL start_clock ( 'vdW_kernel' )
+
+
+  ! --------------------------------------------------------------------
+  ! The total number of phi_alpha_beta functions that have to be
+  ! calculated.
+
+  Ntotal = (Nqs**2 + Nqs)/2
+  ALLOCATE ( indices(Ntotal, 2) )
+
+
+  ! --------------------------------------------------------------------
+  ! This part fills in the indices array. It just loops through the q1
+  ! and q2 values and stores them. Sections of this array will be
+  ! assigned to each of the processors later.
+
+  idx = 1
+
+  DO q1_i = 1, Nqs
+     DO q2_i = 1, q1_i
+        indices(idx, 1) = q1_i
+        indices(idx, 2) = q2_i
+        idx = idx + 1
+     END DO
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! Figure out the baseline number of functions to be calculated by each
+  ! processor and how many processors get one extra job.
+
+  nproc  = mp_size( intra_image_comm )
+  mpime  = mp_rank( intra_image_comm )
+  Nper   = Ntotal/nproc
+  Nextra = MOD(Ntotal, nproc)
+
+  ALLOCATE( proc_indices(nproc, 2) )
+
+  start_q = 0
+  end_q   = 0
+
+
+  ! --------------------------------------------------------------------
+  ! Loop over all the processors and figure out which section of the
+  ! indices array each processor should do. All processors figure this
+  ! out for every processor so there is no need to communicate results.
+
+  DO proc_i = 1, nproc
+
+     start_q = end_q + 1
+     end_q   = start_q + (Nper - 1)
+     IF (proc_i <= Nextra) end_q = end_q + 1
+
+     ! This is to prevent trouble if number of processors exceeds Ntotal.
+     IF ( proc_i > Ntotal ) THEN
+        start_q    = Ntotal
+        end_q      = Ntotal
+     END IF
+
+     IF ( proc_i == (mpime+1) ) THEN
+        my_start_q = start_q
+        my_end_q   = end_q
+     END IF
+
+     proc_indices(proc_i, 1) = start_q
+     proc_indices(proc_i, 2) = end_q
+
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! Store how many jobs are assigned to me.
+
+  my_Nqs    = my_end_q - my_start_q + 1
+  ALLOCATE( phi( 0:Nr_points, my_Nqs ), phi_deriv( 0:Nr_points, my_Nqs ) )
+
+  phi       = 0.0D0
+  phi_deriv = 0.0D0
+  kernel    = 0.0D0
+  d2phi_dk2 = 0.0D0
+
+
+  ! --------------------------------------------------------------------
+  ! Find the integration points we are going to use in the
+  ! Gaussian-Legendre integration.
+
+  CALL prep_gaussian_quadrature( weights )
+
+
+  ! --------------------------------------------------------------------
+  ! Get a, a^2, sin(a), cos(a) and the weights for the Gaussian-Legendre
+  ! integration.
+
+  DO a_i=1, Nintegration_points
+     a_points (a_i) = TAN( a_points(a_i) )
+     a_points2(a_i) = a_points(a_i)**2
+     weights(a_i)   = weights(a_i)*( 1 + a_points2(a_i) )
+     cos_a(a_i)     = COS( a_points(a_i) )
+     sin_a(a_i)     = SIN( a_points(a_i) )
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! Calculate the value of the W function defined in DION equation 16
+  ! for each value of a and b.
+
+  DO a_i = 1, Nintegration_points
+  DO b_i = 1, Nintegration_points
+     W_ab(a_i, b_i) = 2.0D0 * weights(a_i)*weights(b_i) * (           &
+        (3.0D0-a_points2(a_i))*a_points(b_i) *sin_a(a_i)*cos_a(b_i) + &
+        (3.0D0-a_points2(b_i))*a_points(a_i) *cos_a(a_i)*sin_a(b_i) + &
+        (a_points2(a_i)+a_points2(b_i)-3.0D0)*sin_a(a_i)*sin_a(b_i) - &
+        3.0D0*a_points(a_i)*a_points(b_i)*cos_a(a_i)*cos_a(b_i) )   / &
+        (a_points(a_i)*a_points(b_i) )
+  END DO
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! vdW-DF analysis tool as described in PRB 97, 085115 (2018).
+
+  IF      ( vdW_DF_analysis == 1 ) THEN
+
+     DO a_i = 1, Nintegration_points
+     DO b_i = 1, Nintegration_points
+        W_ab(a_i, b_i) = weights(a_i)*weights(b_i) *                  &
+           a_points(a_i)*a_points(b_i)*sin_a(a_i)*sin_a(b_i)
+     END DO
+     END DO
+
+  ELSE IF ( vdW_DF_analysis == 2 ) THEN
+
+     DO a_i = 1, Nintegration_points
+     DO b_i = 1, Nintegration_points
+        W_ab(a_i, b_i) = W_ab(a_i, b_i) - weights(a_i)*weights(b_i) *  &
+           a_points(a_i)*a_points(b_i)*sin_a(a_i)*sin_a(b_i)
+     END DO
+     END DO
+
+  END IF
+
+
+  ! --------------------------------------------------------------------
+  ! Now, we loop over all the pairs (q1,q2) that are assigned to us and
+  ! perform our calculations.
+
+  DO idx = 1, my_Nqs
+
+     ! -----------------------------------------------------------------
+     ! First, get the value of phi(q1*r, q2*r) for each r and the
+     ! particular values of q1 and q2 we are using.
+
+     DO r_i = 1, Nr_points
+        d1  = q_mesh( indices(idx+my_start_q-1, 1) ) * dr * r_i
+        d2  = q_mesh( indices(idx+my_start_q-1, 2) ) * dr * r_i
+        phi(r_i, idx) = phi_value(d1, d2)
+     END DO
+
+
+     ! -----------------------------------------------------------------
+     ! Now, perform a radial FFT to turn our phi_alpha_beta(r) into
+     ! phi_alpha_beta(k) needed for SOLER equation 8.
+
+     CALL radial_fft( phi(:,idx) )
+
+
+     ! -----------------------------------------------------------------
+     ! Determine the spline interpolation coefficients for the Fourier
+     ! transformed kernel function.
+
+     CALL set_up_splines( phi(:, idx), phi_deriv(:, idx) )
+
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! Finally, we collect the results after letting everybody catch up.
+
+  CALL mp_barrier( intra_image_comm )
+
+  DO proc_i = 0, nproc-1
+
+     IF ( proc_i >= Ntotal ) EXIT
+
+     CALL mp_get ( phi      , phi      , mpime, 0, proc_i, 0, intra_image_comm )
+     CALL mp_get ( phi_deriv, phi_deriv, mpime, 0, proc_i, 0, intra_image_comm )
+
+     IF ( mpime == 0 ) THEN
+
+        DO idx = proc_indices(proc_i+1,1), proc_indices(proc_i+1,2)
+           q1_i = indices(idx, 1)
+           q2_i = indices(idx, 2)
+           kernel    (:, q1_i, q2_i) = phi       (:, idx - proc_indices(proc_i+1,1) + 1)
+           d2phi_dk2 (:, q1_i, q2_i) = phi_deriv (:, idx - proc_indices(proc_i+1,1) + 1)
+           kernel    (:, q2_i, q1_i) = kernel    (:, q1_i, q2_i)
+           d2phi_dk2 (:, q2_i, q1_i) = d2phi_dk2 (:, q1_i, q2_i)
+        END DO
+
+     END IF
+
+  END DO
+
+  CALL mp_bcast ( kernel   , 0, intra_image_comm )
+  CALL mp_bcast ( d2phi_dk2, 0, intra_image_comm )
+
+
+  ! --------------------------------------------------------------------
+  ! Keep the lines below for testing and combatibility with the old
+  ! kernel file reading/writing method.
+  !
+  ! Writing the calculated kernel.
+  !
+  ! IF ( ionode ) THEN
+  !    WRITE(stdout,'(/ / A)') "     vdW-DF kernel table calculated and written to file."
+  !    OPEN(UNIT=21, FILE='kernel_table', STATUS='replace', FORM='formatted', ACTION='write')
+  !    WRITE(21, '(2i5,f13.8)') Nqs, Nr_points
+  !    WRITE(21, '(1p4e23.14)') r_max
+  !    WRITE(21, '(1p4e23.14)') q_mesh
+  !    DO q1_i = 1, Nqs
+  !       DO q2_i = 1, q1_i
+  !          WRITE(21, '(1p4e23.14)') kernel(:, q1_i, q2_i)
+  !       END DO
+  !    END DO
+  !    DO q1_i = 1, Nqs
+  !       DO q2_i = 1, q1_i
+  !          WRITE(21, '(1p4e23.14)') d2phi_dk2(:, q1_i, q2_i)
+  !       END DO
+  !    END DO
+  !    CLOSE (21)
+  ! END IF
+  !
+  !
+  ! Reading the kernel from an old kernel file.
+  !
+  ! IF (ionode) WRITE(stdout,'(/ / A)') "     vdW-DF kernel read from file."
+  ! OPEN(UNIT=21, FILE='vdW_kernel_table', STATUS='old', FORM='formatted', ACTION='read')
+  ! read(21, '(/ / / / / /)')
+  ! DO q1_i = 1, Nqs
+  !    DO q2_i = 1, q1_i
+  !       READ(21, '(1p4e23.14)') kernel(:, q1_i, q2_i)
+  !       kernel(:, q2_i, q1_i) = kernel(:, q1_i, q2_i)
+  !    END DO
+  ! END DO
+  ! DO q1_i = 1, Nqs
+  !    DO q2_i = 1, q1_i
+  !       READ(21, '(1p4e23.14)')    d2phi_dk2(:, q1_i, q2_i)
+  !       d2phi_dk2(:, q2_i, q1_i) = d2phi_dk2(:, q1_i, q2_i)
+  !    END DO
+  ! END DO
+  ! CLOSE (21)
+
+
+  DEALLOCATE( indices, proc_indices, phi, phi_deriv )
+
+
+  ! --------------------------------------------------------------------
+  ! Stop the timer.
+
+  CALL stop_clock ( 'vdW_kernel' )
+
+  END SUBROUTINE generate_kernel
+
+
+
+
+
+
+
+
+  ! ####################################################################
+  !                    |                            |
+  !                    |  PREP_GAUSSIAN_QUADRATURE  |
+  !                    |____________________________|
+  !
+  ! Routine to calculate the points and weights for the
+  ! Gaussian-Legendre integration. This routine is modeled after the
+  ! routine GAULEG from NUMERICAL_RECIPES.
+
+  SUBROUTINE prep_gaussian_quadrature( weights )
+
+  REAL(DP), INTENT(INOUT) :: weights(:)
+  ! The points and weights for the Gaussian-Legendre integration.
+
+  INTEGER  :: Npoints
+  ! The number of points we actually have to calculate. The rest will
+  ! be obtained from symmetry.
+
+  REAL(DP) :: poly_1, poly_2, poly_3
+  ! Temporary storage for Legendre polynomials.
+
+  INTEGER  :: i_point, i_poly
+  ! Indexing variables.
+
+  REAL(DP) :: root, dp_dx, last_root
+  ! The value of the root of a given Legendre polynomial, the derivative
+  ! of the polynomial at that root and the value of the root in the last
+  ! iteration (to check for convergence of Newton's method).
+
+  real(dp) :: midpoint, length
+  ! The middle of the x-range and the length to that point.
+
+
+
+
+  Npoints  = (Nintegration_points + 1)/2
+  midpoint = 0.5D0 * ( ATAN(a_min) + ATAN(a_max) )
+  length   = 0.5D0 * ( ATAN(a_max) - ATAN(a_min) )
+
+  DO i_point = 1, Npoints
+     ! -----------------------------------------------------------------
+     ! Make an initial guess for the root.
+
+     root = COS(DBLE(pi*(i_point - 0.25D0)/(Nintegration_points + 0.5D0)))
+
+     DO
+        ! --------------------------------------------------------------
+        ! Use the recurrence relations to find the desired polynomial,
+        ! evaluated at the approximate root. See NUMERICAL_RECIPES.
+
+        poly_1 = 1.0D0
+        poly_2 = 0.0D0
+
+        DO i_poly = 1, Nintegration_points
+
+           poly_3 = poly_2
+           poly_2 = poly_1
+           poly_1 = ((2.0D0 * i_poly - 1.0D0)*root*poly_2 - (i_poly-1.0D0)*poly_3)/i_poly
+
+        END DO
+
+
+        ! --------------------------------------------------------------
+        ! Use the recurrence relations to find the desired polynomial.
+        ! Find the derivative of the polynomial and use it in Newton's
+        ! method to refine our guess for the root.
+
+        dp_dx = Nintegration_points * (root*poly_1 - poly_2)/(root**2 - 1.0D0)
+
+        last_root = root
+        root      = last_root - poly_1/dp_dx
+
+
+        ! --------------------------------------------------------------
+        ! Check for convergence.
+
+        IF (abs(root - last_root) <= 1.0D-14) EXIT
+
+     END DO
+
+
+     ! -----------------------------------------------------------------
+     ! Fill in the array of evaluation points.
+
+     a_points(i_point) = midpoint - length*root
+     a_points(Nintegration_points + 1 - i_point) = midpoint + length*root
+
+
+     ! -----------------------------------------------------------------
+     ! Fill in the array of weights.
+
+     weights(i_point) = 2.0D0 * length/((1.0D0 - root**2)*dp_dx**2)
+     weights(Nintegration_points + 1 - i_point) = weights(i_point)
+
+  END DO
+
+  END SUBROUTINE prep_gaussian_quadrature
+
+
+
+
+
+
+
+
+  ! ####################################################################
+  !                            |             |
+  !                            |  PHI_VALUE  |
+  !                            |_____________|
+  !
+  ! This function returns the value of the kernel calculated via DION
+  ! equation 14.
+
+  REAL(DP) FUNCTION phi_value(d1, d2)
+
+  REAL(DP), INTENT(IN) :: d1, d2
+  ! The point at which to evaluate the kernel. d1 = q1*r and d2 = q2*r.
+
+  REAL(DP), PARAMETER  :: gamma = 4.0D0*pi/9.0D0
+  ! Multiplicative factor for exponent in the h-function in DION.
+
+  REAL(DP), PARAMETER  :: small = 1.0D-15
+  ! Number at which to employ special algorithms to avoid numerical
+  ! problems. This is probably not needed but I like to be careful.
+
+  REAL(DP) :: w, x, y, z, T
+  ! Intermediate values.
+
+  REAL(DP) :: nu(Nintegration_points), nu1(Nintegration_points)
+  ! Defined in the discussio below equation 16 of DION.
+
+  INTEGER  :: a_i, b_i
+  ! Indexing variables.
+
+
+
+
+  phi_value = 0.0D0
+  IF ( d1==0.0D0 .AND. d2==0.0D0 ) THEN
+     phi_value = 0.0D0
+     RETURN
+  END IF
+
+
+  ! --------------------------------------------------------------------
+  ! Loop over all integration points and calculate the value of the nu
+  ! functions defined in the discussion below equation 16 in DION.
+  ! There are a number of checks here to ensure that we don't run into
+  ! numerical problems for very small d values. They are probably
+  ! unnecessary but I wanted to be careful.
+
+  DO a_i = 1, Nintegration_points
+
+     IF ( a_points(a_i) <= small .AND. d1 > small) THEN
+        nu(a_i) = 9.0D0/8.0D0*d1**2/pi
+     ELSE IF (d1 <= small) THEN
+        nu(a_i) = a_points(a_i)**2/2.0D0
+     ELSE
+        nu(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d1**2) + 1.0D0)*2.0D0)
+     END IF
+
+     IF ( a_points(a_i) <= small .AND. d2 > small) THEN
+        nu1(a_i) = 9.0D0/8.0D0*d2**2/pi
+     ELSE IF (d2 < small) THEN
+        nu1(a_i) = a_points(a_i)**2/2.0D0
+     ELSE
+        nu1(a_i) = a_points(a_i)**2/((-EXP(-(a_points(a_i)**2*gamma)/d2**2) + 1.0D0)*2.0D0)
+     END IF
+
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! Carry out the integration of DION equation 13.
+
+  DO a_i = 1, Nintegration_points
+  DO b_i = 1, Nintegration_points
+     w = nu(a_i)
+     x = nu(b_i)
+     y = nu1(a_i)
+     z = nu1(b_i)
+
+     ! --------------------------------------------------------------
+     ! Again, watch out for possible numerical problems
+
+     IF (w < small .or. x<small .OR. y<small .OR. z<small) CYCLE
+     T = (1.0D0/(w+x) + 1.0D0/(y+z))*(1.0D0/((w+y)*(x+z)) + 1.0D0/((w+z)*(y+x)))
+     phi_value = phi_value + T * W_ab(a_i, b_i)
+  END DO
+  END DO
+
+  phi_value = 1.0D0/pi**2*phi_value
+
+  END FUNCTION phi_value
+
+
+
+
+
+
+
+
+  ! ####################################################################
+  !                            |              |
+  !                            |  RADIAL_FFT  |
+  !                            |______________|
+  !
+  ! This subroutine performs a radial Fourier transform on the
+  ! real-space kernel functions. Basically, this is just
+  ! int(4*pi*r^2*phi*sin(k*r)/(k*r))dr integrated from 0 to r_max. That
+  ! is, it is the kernel function phi integrated with the 0^th spherical
+  ! Bessel function radially, with a 4*pi assumed from angular
+  ! integration since we have spherical symmetry. The spherical symmetry
+  ! comes in because the kernel function depends only on the magnitude
+  ! of the vector between two points. The integration is done using the
+  ! trapezoid rule.
+
+  SUBROUTINE radial_fft(phi)
+
+  REAL(DP), INTENT(INOUT) :: phi(0:Nr_points)
+  ! On input holds the real-space function phi_q1_q2(r).
+  ! On output hold the reciprocal-space function phi_q1_q2(k).
+
+  REAL(DP) :: phi_k(0:Nr_points)
+  ! Temporary storage for phi_q1_q2(k).
+
+  INTEGER  :: k_i, r_i
+  ! Indexing variables.
+
+  REAL(DP) :: r, k
+  ! The real and reciprocal space points.
+
+
+
+
+  phi_k = 0.0D0
+
+  ! --------------------------------------------------------------------
+  ! Handle the k=0 point separately.
+
+  DO r_i = 1, Nr_points
+     r        = r_i * dr
+     phi_k(0) = phi_k(0) + phi(r_i)*r**2
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! Subtract half of the last value off because of the trapezoid rule.
+
+  phi_k(0) = phi_k(0) - 0.5D0 * (Nr_points*dr)**2 * phi(Nr_points)
+
+
+  ! --------------------------------------------------------------------
+  ! Integration for the rest of the k-points.
+
+  DO k_i = 1, Nr_points
+     k = k_i * dk
+     DO r_i = 1, Nr_points
+        r          = r_i * dr
+        phi_k(k_i) = phi_k(k_i) + phi(r_i) * r * SIN(k*r) / k
+     END DO
+     phi_k(k_i) = phi_k(k_i) - 0.5D0 * phi(Nr_points) * r * SIN(k*r) / k
+  END DO
+
+
+  ! --------------------------------------------------------------------
+  ! Add in the 4*pi and the dr factor for the integration.
+
+  phi = 4.0D0 * pi * phi_k * dr
+
+  END SUBROUTINE radial_fft
+
+
+
+
+
+
+
+
+  ! ####################################################################
+  !                          |                  |
+  !                          |  SET UP SPLINES  |
+  !                          |__________________|
+  !
+  ! This subroutine accepts a function (phi) and finds at each point the
+  ! second derivative (D2) for use with spline interpolation. This
+  ! function assumes we are using the expansion described in SOLER
+  ! equation 3. That is, the derivatives are those needed to interpolate
+  ! Kronecker delta functions at each of the q values. Other than some
+  ! special modification to speed up the algorithm in our particular
+  ! case, this algorithm is taken directly from NUMERICAL_RECIPES.
+
+  SUBROUTINE set_up_splines(phi, D2)
+
+  REAL(DP), INTENT(IN)    :: phi(0:Nr_points)
+  ! The k-space kernel function for a particular q1 and q2.
+
+  REAL(DP), INTENT(INOUT) :: D2(0:Nr_points)
+  ! The second derivatives to be used in the interpolation expansion
+  ! (SOLER equation 3).
+
+  REAL(DP), ALLOCATABLE   :: temp_array(:)         ! Temporary storage.
+  REAL(DP)                :: temp_1, temp_2
+
+  INTEGER  :: r_i
+  ! Indexing variable.
+
+
+
+
+  ALLOCATE( temp_array(0:Nr_points) )
+
+  D2         = 0
+  temp_array = 0
+
+  DO r_i = 1, Nr_points - 1
+     temp_1  = DBLE(r_i - (r_i - 1))/DBLE( (r_i + 1) - (r_i - 1) )
+     temp_2  = temp_1 * D2(r_i-1) + 2.0D0
+     D2(r_i) = (temp_1 - 1.0D0)/temp_2
+     temp_array(r_i) = ( phi(r_i+1) - phi(r_i))/DBLE( dk*((r_i+1) - r_i) ) - &
+          ( phi(r_i) - phi(r_i-1))/DBLE( dk*(r_i - (r_i-1)) )
+     temp_array(r_i) = (6.0D0*temp_array(r_i)/DBLE( dk*((r_i+1) - (r_i-1)) )-&
+          temp_1*temp_array(r_i-1))/temp_2
+  END DO
+
+  D2(Nr_points) = 0.0D0
+  DO  r_i = Nr_points-1, 0, -1
+     D2(r_i) = D2(r_i)*D2(r_i+1) + temp_array(r_i)
+  END DO
+
+  DEALLOCATE( temp_array )
+
+  END SUBROUTINE set_up_splines
 
 
 
@@ -1999,18 +2796,10 @@ CONTAINS
 
   SUBROUTINE vdW_info
 
-  implicit none
-
-  integer :: I
+  IMPLICIT NONE
 
 
 
-
-  ! --------------------------------------------------------------------
-  ! Here we output some of the parameters being used in the run. This is
-  ! important because these parameters are read from the
-  ! vdW_kernel_table file. The user should ensure that these are the
-  ! parameters they were intending to use on each run.
 
   WRITE(stdout,'(/)')
   WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
@@ -2032,14 +2821,17 @@ CONTAINS
   WRITE(stdout,'(5x,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")')
   WRITE(stdout,'(/)')
 
-  if (iverbosity > 0) then
-  WRITE(stdout,'(5x,"Carrying out vdW-DF run using the following parameters:")')
-  WRITE(stdout,'(5X,A,I3,A,I5,A,F8.3)' ) "Nqs    = ",Nqs,"  Npoints = ",Nr_points,"  r_max = ",r_max
-  WRITE(stdout,'(5X,"q_mesh =",4F12.8)') (q_mesh(I), I=1, 4)
-  WRITE(stdout,'(13X,4F12.8)') (q_mesh(I), I=5, Nqs)
-  end if
+  IF ( iverbosity > 0 ) THEN
+     WRITE(stdout,'(5x,"Carrying out vdW-DF run using the following parameters:")')
+     WRITE(stdout,'(5X,A,I3,A,I5,A,F8.3)' ) "Nqs    = ", Nqs, "  Npoints = ", Nr_points, &
+                  "  r_max = ", r_max
+     WRITE(stdout,'(5X,"q_mesh =",4F12.8)') (q_mesh(idx), idx=1, 4)
+     WRITE(stdout,'(13X,4F12.8)') (q_mesh(idx), idx=5, Nqs)
+  END IF
 
   END SUBROUTINE
+
+
 
 
 END MODULE vdW_DF
