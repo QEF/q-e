@@ -25,8 +25,6 @@ SUBROUTINE iosys()
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
   !
-  USE kernel_table,  ONLY : initialize_kernel_table
-  !
   USE bp,            ONLY : nppstr_    => nppstr, &
                             gdir_      => gdir, &
                             lberry_    => lberry, &
@@ -141,8 +139,6 @@ SUBROUTINE iosys()
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
                             lsda
-  !
-  USE kernel_table,  ONLY : vdw_table_name_ => vdw_table_name
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
@@ -1536,12 +1532,6 @@ SUBROUTINE iosys()
   !
   IF (screening_parameter >= 0.0_DP) &
         & CALL set_screening_parameter (screening_parameter)
-  !
-  ! ... read the vdw kernel table if needed
-  !
-  vdw_table_name_  = vdw_table_name
-  inlc = get_inlc()
-  IF (inlc > 0) CALL initialize_kernel_table(inlc)
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !

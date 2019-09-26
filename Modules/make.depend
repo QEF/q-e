@@ -167,10 +167,6 @@ ions_base.o : io_global.o
 ions_base.o : kind.o
 ions_base.o : parameters.o
 ions_base.o : random_numbers.o
-kernel_table.o : constants.o
-kernel_table.o : io_files.o
-kernel_table.o : kind.o
-kernel_table.o : wrappers.o
 latgen.o : constants.o
 latgen.o : io_global.o
 latgen.o : kind.o
@@ -474,7 +470,6 @@ xc_rVV10.o : constants.o
 xc_rVV10.o : control_flags.o
 xc_rVV10.o : fft_base.o
 xc_rVV10.o : io_global.o
-xc_rVV10.o : kernel_table.o
 xc_rVV10.o : kind.o
 xc_rVV10.o : mp_bands.o
 xc_rVV10.o : recvec.o
@@ -485,9 +480,9 @@ xc_vdW_DF.o : constants.o
 xc_vdW_DF.o : control_flags.o
 xc_vdW_DF.o : fft_base.o
 xc_vdW_DF.o : io_global.o
-xc_vdW_DF.o : kernel_table.o
 xc_vdW_DF.o : kind.o
 xc_vdW_DF.o : mp_bands.o
+xc_vdW_DF.o : mp_images.o
 xc_vdW_DF.o : recvec.o
 xsf.o : constants.o
 xsf.o : kind.o

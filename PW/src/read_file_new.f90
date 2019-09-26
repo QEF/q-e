@@ -125,7 +125,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
                               start_exx, dft_is_hybrid
   USE london_module,   ONLY : scal6, lon_rcut, in_C6
   USE tsvdw_module,    ONLY : vdw_isolated
-  USE kernel_table,    ONLY : vdw_table_name
   USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                               exxdiv_treatment, yukawa, ecutvcut
   USE exx,             ONLY : ecutfock, local_thr
@@ -236,7 +235,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
        Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-       vdw_corr, vdw_table_name, scal6, lon_rcut, vdw_isolated )
+       vdw_corr, scal6, lon_rcut, vdw_isolated )
   !! More DFT initializations
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
   CALL enforce_input_dft ( dft_name, .TRUE. )
@@ -343,7 +342,6 @@ SUBROUTINE post_xml_init (  )
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
   USE funct,                ONLY : get_inlc, get_dft_name
-  USE kernel_table,         ONLY : initialize_kernel_table
   USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
@@ -386,11 +384,6 @@ SUBROUTINE post_xml_init (  )
   !
   dft_name = get_dft_name ()
   CALL readpp ( dft_name )
-  !
-  ! ... read the vdw kernel table if needed
-  !
-  inlc = get_inlc()
-  IF (inlc > 0 ) CALL initialize_kernel_table(inlc)
   !
   ! ... misc PP initialization (from setup.f90)
   !

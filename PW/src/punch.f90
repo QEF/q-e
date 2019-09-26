@@ -33,7 +33,6 @@ SUBROUTINE punch( what )
   USE lsda_mod,             ONLY : nspin
   USE ions_base,            ONLY : nsp
   USE funct,                ONLY : get_inlc
-  USE kernel_table,         ONLY : vdw_table_name, kernel_file_name
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
   USE qexsd_module,         ONLY : qexsd_reset_steps
   USE io_rho_xml,           ONLY : write_scf
@@ -80,8 +79,7 @@ SUBROUTINE punch( what )
   IF (TRIM(what) == 'all') THEN 
      !
      ! ... copy xml file one level up (FIXME: why?),
-     ! ... copy pseudopotential files and the kernel table
-     ! ... (if needed) into the .save directory
+     ! ... copy pseudopotential files into the .save directory
      !
      IF (ionode) THEN
         !
@@ -96,14 +94,6 @@ SUBROUTINE punch( what )
                 cp_status = f_copy(cp_source, cp_dest)
         END DO
         !
-        inlc = get_inlc()
-        IF ( inlc > 0 ) THEN 
-           cp_source = TRIM(kernel_file_name)
-           cp_dest = TRIM(restart_dir () ) // TRIM(vdw_table_name)
-           IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
-              cp_status = f_copy(cp_source, cp_dest)
-        END IF  
-
         ! write XDM dispersion data (coefficients and vdw radii) to xdm.dat
         IF (lxdm) THEN
            CALL write_xdmdat()
