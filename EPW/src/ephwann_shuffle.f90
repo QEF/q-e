@@ -75,7 +75,7 @@
   USE division,      ONLY : fkbounds
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, npool
+  USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,      ONLY : mpime, world_comm
   USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,        &
                             sumkg_seq, efermig_seq, mem_size, broadening
@@ -242,14 +242,12 @@
   !! Second Fermi level for the temperature itemp  
   REAL(KIND = DP) :: dummy(3)
   !! Dummy variable
-  REAL(KIND = DP) :: val
-  !! Temporary broadening value
-  !REAL(KIND = DP), EXTERNAL :: fermicarrier
-  !! Function that returns the Fermi level so that n=p (if int_mob = .TRUE.)  
+  REAL(KIND = DP) :: valmin(npool)
+  !! Temporary broadening min value 
+  REAL(KIND = DP) :: valmax(npool)
+  !! Temporary broadening max value 
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
-  !REAL(KIND = DP), EXTERNAL :: efermig_seq
-  !! Same but in sequential
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(KIND = DP), ALLOCATABLE :: w2(:)
@@ -1330,16 +1328,25 @@
       !   
       IF (MOD(iqq, restart_freq) == 0 .AND. adapt_smearing) THEN
        ! Min non-zero value
-       val = 10000d0
+       valmin(:) = zero
+       valmin(my_pool_id + 1) = 100d0
+       valmax(:) = zero
        DO ik = 1, nkf
          DO ibnd = 1, nbndfst
            DO imode = 1, nmodes
-             IF (eta(imode, ibnd, ik) < val .AND. ABS(eta(imode, ibnd, ik)) > eps16 ) val = eta(imode, ibnd, ik)
+             IF (eta(imode, ibnd, ik) < valmin(my_pool_id + 1) .AND. ABS(eta(imode, ibnd, ik)) > eps16) THEN
+               valmin(my_pool_id + 1) = eta(imode, ibnd, ik)
+             ENDIF
+             IF (eta(imode, ibnd, ik) > valmax(my_pool_id + 1)) THEN
+               valmax(my_pool_id + 1) = eta(imode, ibnd, ik)
+             ENDIF
            ENDDO
          ENDDO
        ENDDO 
-       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', SQRT(2.0d0) * val * ryd2mev,' meV'
-       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', SQRT(2.0d0) * MAXVAL(eta) * ryd2mev,' meV'
+       CALL mp_sum(valmin, inter_pool_comm)
+       CALL mp_sum(valmax, inter_pool_comm)
+       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', SQRT(2.0d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', SQRT(2.0d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
       !
       IF (prtgkk    ) CALL print_gkk(iq)

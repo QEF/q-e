@@ -33,6 +33,7 @@
   restart_freq = 50
   selecqread   = .false.
 
+  lpolar      = .true.
   etf_mem     = 1
   vme         = .true.
 
