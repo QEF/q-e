@@ -1778,7 +1778,7 @@ MODULE exx
   !-----------------------------------------------------------------------
   FUNCTION exxenergy2()
     !-----------------------------------------------------------------------
-    !! Wrapper to \(\textrm{exxenergy2_gamma}\) and \(\textrm{exxenergy2_k}\).
+    !! Wrapper to \(\texttt{exxenergy2_gamma}\) and \(\texttt{exxenergy2_k}\).
     !
     IMPLICIT NONE
     !
@@ -2957,7 +2957,7 @@ MODULE exx
   !-----------------------------------------------------------------------------
   SUBROUTINE aceinit( DoLoc, exex )
     !----------------------------------------------------------------------------
-    !!
+    !! ACE Initialization
     !
     USE wvfct,            ONLY : nbnd, npwx, current_k
     USE klist,            ONLY : nks, xk, ngk, igk_k
@@ -3580,8 +3580,8 @@ MODULE exx
     !-------------------------------------------------------------------------------------------
     !! Manipulate density: get pair density, center, spread, absolute overlap.  
     !! Shift:  
-    !! * if .FALSE. refer the centers to the cell -L/2 ... +L/2;
-    !! * if .TRUE.  shift the centers to the cell 0 ... L (presumably the one given in input).
+    !! .FALSE. refer the centers to the cell -L/2 ... +L/2;  
+    !! .TRUE.  shift the centers to the cell 0 ... L (presumably the one given in input).
     !
     USE constants,        ONLY : pi, bohr_radius_angs 
     USE cell_base,        ONLY : alat, omega
@@ -3596,21 +3596,13 @@ MODULE exx
     !! .FALSE. Centers with respect to the minimum image cell convention;  
     !! .TRUE.  Centers shifted to the input cell.
     REAL(DP), INTENT(OUT) :: CenterPBC(3)
-    !! 
     REAL(DP), INTENT(OUT) :: SpreadPBC(3)
-    !! 
     REAL(DP), INTENT(OUT) :: Overlap
-    !!
     INTEGER,  INTENT(IN) :: NQR
-    !! 
     REAL(DP), INTENT(IN) :: PsiI(NQR)
-    !! 
     REAL(DP), INTENT(IN) :: PsiJ(NQR) 
-    !! 
     INTEGER, INTENT(IN) :: ibnd
-    !!
     INTEGER, INTENT(IN) :: jbnd
-    !! 
     !
     ! ... local variables
     !
@@ -3712,17 +3704,11 @@ MODULE exx
     REAL(DP), INTENT(OUT) :: CenterPBC(3)
     !! Coordinates of the center
     REAL(DP), INTENT(OUT) :: SpreadPBC(3)
-    !! 
     REAL(DP), INTENT(OUT) :: Overlap
-    !! 
     INTEGER,  INTENT(IN) :: NQR
-    !!
     COMPLEX(DP), INTENT(IN) :: PsiI(NQR)
-    !! 
     COMPLEX(DP), INTENT(IN) :: PsiJ(NQR) 
-    !! 
     INTEGER,  INTENT(IN) :: ibnd
-    !!
     INTEGER,  INTENT(IN) :: jbnd
     !
     ! ... local variables
@@ -3803,7 +3789,7 @@ MODULE exx
   !------------------------------------------------------------------------
   SUBROUTINE vexx_loc_k( npw, NBands, hpsi, mexx, exxe )
     !-----------------------------------------------------------------------
-    !! Generic, k-point version of \(\textrm{vexx}\).
+    !! Generic, k-point version of \(\texttt{vexx}\).
     !
     USE cell_base,       ONLY : omega
     USE gvect,           ONLY : ngm, g
