@@ -44,6 +44,9 @@ SUBROUTINE punch( what )
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
+  !! see main comment
+  !
+  ! ... local variables
   !
   LOGICAL :: exst, only_init, wf_collect
   CHARACTER(LEN=320) :: cp_source, cp_dest
@@ -75,7 +78,7 @@ SUBROUTINE punch( what )
   !
   IF (TRIM(what) == 'all' .OR. TRIM(what) == 'config' ) THEN
      IF ( lscf .OR. lforcet ) CALL write_scf( rho, nspin )
-  END IF
+  ENDIF
   !
   IF (TRIM(what) == 'all') THEN 
      !
@@ -93,13 +96,13 @@ SUBROUTINE punch( what )
            cp_dest   = TRIM(restart_dir ( ) ) //psfile(nt)
            IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
                 cp_status = f_copy(cp_source, cp_dest)
-        END DO
+        ENDDO
         !
         ! write XDM dispersion data (coefficients and vdw radii) to xdm.dat
         IF (lxdm) THEN
            CALL write_xdmdat()
         ENDIF
-     END IF
+     ENDIF
      !
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
@@ -109,7 +112,7 @@ SUBROUTINE punch( what )
      ! 
      CALL qexsd_reset_steps()
      !
-  ELSE IF ( TRIM(what) == 'config' .AND.  nks == 1 ) THEN
+  ELSEIF ( TRIM(what) == 'config' .AND.  nks == 1 ) THEN
      !
      ! ... here we are stopping an incomplete calculations - wavefunctions are 
      ! ... stored in buffers and saved when buffers are closed. For 1 k-point 
@@ -120,7 +123,7 @@ SUBROUTINE punch( what )
      IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      CALL infomsg('punch','wavefunctions written to file')
      !
-  END IF
+  ENDIF
   !
   ! ... FIXME: for electron-phonon calculations - data should be read from xml file!
   ! 

@@ -15,16 +15,16 @@ SUBROUTINE init_q_aeps()
    !! * q_ae = integral of the AE wfc up to r_core ;
    !! * q_ps = integral of the PS wfc up to r_core (not used at the moment).
    !
-   USE kinds,           ONLY : DP
-   USE ions_base,       ONLY : ntyp => nsp, ityp, nat
-   USE atom,            ONLY : rgrid, msh
-   USE lsda_mod,        ONLY : nspin
-   USE ldaU,            ONLY : q_ae, q_ps, Hubbard_l, &
-                               U_projection, is_hubbard, nwfcU, offsetU
-   USE uspp_param,      ONLY : nbetam, nh, nhm, upf
-   USE uspp,            ONLY : indv, nhtol, nhtolm, nkb
-   USE control_flags,   ONLY : iverbosity
-   USE io_global,       ONLY : ionode
+   USE kinds,         ONLY : DP
+   USE ions_base,     ONLY : ntyp => nsp, ityp, nat
+   USE atom,          ONLY : rgrid, msh
+   USE lsda_mod,      ONLY : nspin
+   USE ldaU,          ONLY : q_ae, q_ps, Hubbard_l, &
+                             U_projection, is_hubbard, nwfcU, offsetU
+   USE uspp_param,    ONLY : nbetam, nh, nhm, upf
+   USE uspp,          ONLY : indv, nhtol, nhtolm, nkb
+   USE control_flags, ONLY : iverbosity
+   USE io_global,     ONLY : ionode
    !
    IMPLICIT NONE
    !
