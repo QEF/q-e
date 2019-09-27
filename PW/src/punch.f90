@@ -8,22 +8,23 @@
 !----------------------------------------------------------------------------
 SUBROUTINE punch( what )
   !----------------------------------------------------------------------------
+  !! This routine is called at the end of the run to save on a file
+  !! the information needed for further processing (phonon etc.).
   !
-  ! ... This routine is called at the end of the run to save to a file
-  ! ... the information needed for further processing (phonon etc.)
-  ! ... what = 'all'          write xml data file, charge density, wavefunctions
-  ! ...                       (for final data)
-  ! ... what = 'config'       write xml data file and charge density; also,
-  !                           for nks=1, wavefunctions in plain binary format
-  !                           (see why in comments below)
-  ! ...                       (for intermediate or incomplete results)
-  ! ... what = 'config-nowf'  write xml data file iand charge density only
-  ! ... what = 'config-init'  write xml data file only excluding final results
-  ! ...                       (for dry run, can be called at early stages)
+  !! * what = 'all' : write xml data file, charge density, wavefunctions
+  !!                  (for final data);
+  !! * what = 'config' : write xml data file and charge density; also,
+  !!                     for nks=1, wavefunctions in plain binary format
+  !!                     (see why in comments below). For intermediate 
+  !!                     or incomplete results;
+  !! * what = 'config-nowf' : write xml data file iand charge density only
+  !! * what = 'config-init' : write xml data file only excluding final results
+  !!                          (for dry run, can be called at early stages).
   !
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
-       tmp_dir, prefix, restart_dir, xmlfile, create_directory
+  USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn,      &
+                                   tmp_dir, prefix, restart_dir, xmlfile, &
+                                   create_directory
   USE control_flags,        ONLY : io_level, lscf, lxdm
   USE klist,                ONLY : nks
   USE io_files,             ONLY : psfile, pseudo_dir
@@ -37,7 +38,7 @@ SUBROUTINE punch( what )
   USE qexsd_module,         ONLY : qexsd_reset_steps
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE xdm_module,           ONLY : write_xdmdat
   !
   IMPLICIT NONE
@@ -59,7 +60,7 @@ SUBROUTINE punch( what )
   !
   ! ... create the main restart directory (if needed)
   !
-  CALL create_directory( restart_dir ( ) )
+  CALL create_directory( restart_dir( ) )
   !
   ! ... wf_collect keeps track whether wfcs are written in portable format
   !
