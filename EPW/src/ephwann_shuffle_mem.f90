@@ -789,7 +789,7 @@
   ! get the size of the matrix elements stored in each pool
   ! for informational purposes.  Not necessary
   !
-  CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
+  CALL mem_size(nmodes, nkf)
   !
   ALLOCATE(etf_all(nbndfst, nktotf), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating etf_all', 1)

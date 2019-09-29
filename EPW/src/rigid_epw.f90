@@ -269,8 +269,6 @@
     ! Local variables
     INTEGER :: na
     !! Atom index 1 
-    INTEGER :: nb
-    !! Atom index 2
     INTEGER :: ipol
     !! Polarison
     INTEGER :: m1, m2, m3
@@ -418,8 +416,6 @@
     ! Local variables
     INTEGER :: na
     !! Atom index 1 
-    INTEGER :: nb
-    !! Atom index 2
     INTEGER :: ipol
     !! Polarison
     INTEGER :: m1, m2, m3
@@ -798,8 +794,6 @@
     !! Index to sum the different component of the derivative
     REAL(KIND = DP):: geg                    
     !! <q+G| epsil | q+G>
-    REAL(KIND = DP):: geg2                    
-    !! <q+G| epsil | q+G>**2
     REAL(KIND = DP) :: alph  
     !! Missing definition
     REAL(KIND = DP) :: fac
@@ -817,10 +811,6 @@
     REAL(KIND = DP) :: zag(3)
     !! Missing definition
     REAL(KIND = DP) :: zbg(3) 
-    !! Missing definition
-    REAL(KIND = DP) :: zcg(3)
-    !! Missing definition
-    REAL(KIND = DP) :: fnat(3)
     !! Missing definition
     REAL(KIND = DP) :: zbg_der(3, 3)
     !! Missing definition
@@ -969,8 +959,6 @@
     ! Local variables
     INTEGER :: na
     !! Atom index 1 
-    INTEGER :: nb
-    !! Atom index 2
     INTEGER :: ipol
     !! Polarison
     INTEGER :: m1, m2, m3

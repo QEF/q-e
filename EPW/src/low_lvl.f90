@@ -906,12 +906,15 @@
     repeat_list(:) = 0
     ! 
     DO j = 1, sizes - 1
-      IF ((ABS(input_array(j) - input_array(j + 1)) / (ABS(input_array(j)) + ABS(input_array(j + 1))) / 2d0) < eps8) THEN
+      IF (0.5d0 * (ABS(input_array(j) - input_array(j + 1)) /&
+          (ABS(input_array(j)) + ABS(input_array(j + 1)) + eps8)) < eps8) THEN
         IF (j == 1) THEN
           degen_label = 1
         ELSE
-          IF ((ABS(input_array(j) - input_array(j - 1)) / (ABS(input_array(j)) + ABS(input_array(j - 1))) / 2d0) > eps8) &
-          & degen_label = degen_label + 1
+          IF (0.5d0 * (ABS(input_array(j) - input_array(j - 1)) /&
+              (ABS(input_array(j)) + ABS(input_array(j - 1)) + eps8)) > eps8) THEN
+            degen_label = degen_label + 1
+          ENDIF
         ENDIF
         repeat_list(j)     = degen_label
         repeat_list(j + 1) = degen_label
@@ -1186,7 +1189,7 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : etf, nkf, wkf, efnew
-    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero
+    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero, eps80
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
     USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
@@ -1312,7 +1315,11 @@
         ikk = 2 * ik - 1
         ! Because the number are so large. It does lead to instabilities
         ! Therefore we rescale everything to the VBM
-        arg = (etf(ibnd, ikk) - evbm) / etemp 
+        IF (ABS(etemp) < eps80) THEN
+          CALL errore('fermicarrier', 'etemp cannot be 0', 1)
+        ELSE
+          arg = (etf(ibnd, ikk) - evbm) / etemp 
+        ENDIF
         !
         IF (arg < - maxarg) THEN
           ks_exp(ibnd, ik) = 0.0d0
@@ -1385,7 +1392,11 @@
         ! 
         ! WRITE(stdout,*),'hole_density ',hole_density * (1.0d0/omega) * ( bohr2ang * ang2cm  )**(-3)
         ! WRITE(stdout,*),'electron_density ',electron_density * (1.0d0/omega) * (bohr2ang * ang2cm  )**(-3)
-        rel_err = (hole_density - electron_density) / hole_density
+        IF (ABS(hole_density) < eps80) THEN
+          CALL errore('fermicarrier', 'hole_density cannot be 0', 1)
+        ELSE
+          rel_err = (hole_density - electron_density) / hole_density
+        ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
@@ -1431,7 +1442,11 @@
         CALL mp_sum(hole_density, inter_pool_comm)
         !
         ! In this case ncarrier is a negative number
-        rel_err = (hole_density - ABS(ncarrier)) / hole_density
+        IF (ABS(hole_density) < eps80) THEN
+          CALL errore('fermicarrier', 'hole_density cannot be 0', 1)
+        ELSE
+          rel_err = (hole_density - ABS(ncarrier)) / hole_density
+        ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
@@ -1717,7 +1732,7 @@
     !--------------------------------------------------------------------------
     ! 
     !--------------------------------------------------------------------------
-    SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf)
+    SUBROUTINE mem_size(nmodes, nkf)
     !--------------------------------------------------------------------------
     !!
     !! This routine estimates the amount of memory taken up by 
@@ -1730,10 +1745,6 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: ibndmin
-    !! Min band
-    INTEGER, INTENT(in) :: ibndmax
-    !! Min band
     INTEGER, INTENT(in) :: nmodes
     !! Number of modes
     INTEGER, INTENT(in) :: nkf
@@ -1775,7 +1786,6 @@
     !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
     !! Samuel Ponce & Francesco Macheda
     !!
-    USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : alat, bg
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : nbndfst, nkf, dmef, vmef, ibndmin, etf
@@ -1807,8 +1817,6 @@
     !! Mode index
     INTEGER :: n_av
     !! To average eta_av
-    REAL(KIND = DP) :: rmelt
-    !! Size in byte
     REAL(KIND = DP) :: vel_diff(3)
     !! Velocity difference when computed adaptative broadening
     REAL(KIND = DP) :: eta_tmp(3)

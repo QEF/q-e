@@ -127,7 +127,6 @@
     USE noncollin_module, ONLY : noncolin              
     USE io_files,  ONLY : prefix, diropn
     USE mp,        ONLY : mp_barrier
-    USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id, stdout
     !
@@ -244,7 +243,7 @@
     !--------------------------------------------------------------------------------
     SUBROUTINE epw_read(nrr_k, nrr_q, nrr_g)
     !--------------------------------------------------------------------------------
-    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc, nqc1, nqc2, nqc3
+    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc 
     USE pwcom,     ONLY : ef
     USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
     USE ions_base, ONLY : nat
@@ -258,7 +257,7 @@
 #endif
     USE io_global, ONLY : ionode_id
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : inter_pool_comm, world_comm
+    USE mp_global, ONLY : world_comm
     USE mp_world,  ONLY : mpime
     !
     IMPLICIT NONE
@@ -437,7 +436,6 @@
                             iotk_scan_attr, iotk_free_unit, iotk_close_read, &
                             iotk_scan_empty
     USE kinds,       ONLY : DP
-    USE mp_images,   ONLY : intra_image_comm
     USE io_global,   ONLY : meta_ionode
     USE io_var,      ONLY : iudyn
     !
@@ -495,7 +493,6 @@
                             iotk_scan_attr, iotk_free_unit, iotk_close_read, &
                             iotk_scan_empty
     USE kinds,       ONLY : DP
-    USE mp_images,   ONLY : intra_image_comm
     USE io_global,   ONLY : meta_ionode
     USE io_var,      ONLY : iudyn
     !
@@ -636,7 +633,6 @@
                             iotk_scan_attr, iotk_free_unit, iotk_close_read, &
                             iotk_scan_empty
     USE kinds,       ONLY : DP
-    USE mp_images,   ONLY : intra_image_comm
     USE io_global,   ONLY : meta_ionode
     USE io_var,      ONLY : iudyn
     !
@@ -682,7 +678,6 @@
     USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
                             iotk_attlenx, iotk_scan_dat, iotk_scan_end
     USE kinds,       ONLY : DP
-    USE mp_images,   ONLY : intra_image_comm
     USE io_global,   ONLY : meta_ionode
     USE io_var,      ONLY : iudyn
     !
@@ -718,7 +713,6 @@
                             iotk_scan_attr, iotk_free_unit, iotk_close_read, &
                             iotk_scan_empty
     USE kinds,       ONLY : DP
-    USE mp_images,   ONLY : intra_image_comm
     USE io_global,   ONLY : meta_ionode
     USE io_var,      ONLY : iudyn 
     !
@@ -803,8 +797,6 @@
     !! Polar flag
     LOGICAL :: has_zstar
     !! Does it has Born effective charges
-    LOGICAL :: is_plain_text_file
-    !! Is the file txt
     LOGICAL :: is_xml_file
     !! Is the file XML
     CHARACTER(LEN = 80) :: line
@@ -1673,7 +1665,7 @@
       ENDDO
     ENDDO
     !
-    return
+    RETURN
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE sp3
@@ -1683,7 +1675,7 @@
     SUBROUTINE check_is_xml_file(filename, is_xml_file)
     !-------------------------------------------------------------------------------
     !!
-    !! This SUBROUTINE checks if a file is formatted in XML. It does so by
+    !! This routine checks if a file is formatted in XML. It does so by
     !! checking if the file exists and if the file + '.xml' in its name exists.
     !! If both of them or none of them exists, an error is raised. If only one of
     !! them exists, it sets the 'is_xml_file' to .TRUE. of .FALSE. depending of
@@ -1700,10 +1692,10 @@
     ! Local variables
     CHARACTER(LEN = 256) :: filename_xml
     !! File name
-    CHARACTER(LEN = 256) :: errmsg
+    CHARACTER(LEN = 1024) :: errmsg
     !! Error message 
     LOGICAL :: is_plain_text_file
-    !! Plain tex  t
+    !! Plain tex 
     ! 
     filename_xml = TRIM(filename) // '.xml'
     filename_xml = TRIM(filename_xml)
