@@ -54,7 +54,7 @@
     !
     REAL(KIND = DP) :: s
 
-    s = 1.d0 / SQRT(fpi)
+    s = 1.d0 / DSQRT(fpi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -83,8 +83,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    px =  SQRT(3.d0 / fpi) * sint * cos(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    px =  DSQRT(3.d0 / fpi) * sint * cos(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -113,8 +113,8 @@
     REAL(KIND = DP) :: sint
     !! Sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    py =  SQRT(3.d0 / fpi) * sint * sin(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    py =  DSQRT(3.d0 / fpi) * sint * sin(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -137,7 +137,7 @@
     REAL(KIND = DP) :: p_z
     !! Output
     !
-    p_z =  SQRT(3.d0 / fpi) * cost
+    p_z =  DSQRT(3.d0 / fpi) * cost
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -160,7 +160,7 @@
     REAL(KIND = DP) :: dz2
     !! Output
     !
-    dz2 =  SQRT(1.25d0 / fpi) * (3.d0 * cost * cost - 1.d0)
+    dz2 =  DSQRT(1.25d0 / fpi) * (3.d0 * cost * cost - 1.d0)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -187,8 +187,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dxz =  SQRT(15.d0 / fpi) * sint * cost * COS(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dxz =  DSQRT(15.d0 / fpi) * sint * cost * COS(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -217,8 +217,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dyz =  SQRT(15.d0 / fpi) * sint * cost * SIN(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dyz =  DSQRT(15.d0 / fpi) * sint * cost * SIN(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -247,8 +247,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dx2my2 =  SQRT(3.75d0 / fpi) * sint * sint * COS(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dx2my2 =  DSQRT(3.75d0 / fpi) * sint * sint * COS(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -277,8 +277,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dxy =  SQRT(3.75d0 / fpi) * sint * sint * SIN(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dxy =  DSQRT(3.75d0 / fpi) * sint * sint * SIN(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -301,7 +301,7 @@
     REAL(KIND = DP) :: fz3
     !! Output
     !
-    fz3 = 0.25d0 * SQRT(7.d0 / pi) * (5.d0 * cost * cost - 3.d0) * cost
+    fz3 = 0.25d0 * DSQRT(7.d0 / pi) * (5.d0 * cost * cost - 3.d0) * cost
     ! 
     RETURN
     !-----------------------------------------------------------------------
@@ -330,8 +330,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fxz2 = 0.25d0 * SQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * COS(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fxz2 = 0.25d0 * DSQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * COS(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -360,8 +360,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fyz2 = 0.25d0 * SQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * SIN(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fyz2 = 0.25d0 * DSQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * SIN(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -390,8 +390,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fzx2my2 = 0.25d0 * SQRT(105d0/pi) * sint * sint * cost * COS(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fzx2my2 = 0.25d0 * DSQRT(105d0/pi) * sint * sint * cost * COS(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -420,8 +420,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fxyz = 0.25d0 * SQRT(105d0 / pi) * sint * sint * cost * SIN(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fxyz = 0.25d0 * DSQRT(105d0 / pi) * sint * sint * cost * SIN(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -450,8 +450,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fxx2m3y2 = 0.25d0 * SQRT(17.5d0 / pi) * sint * sint * sint * COS(3.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fxx2m3y2 = 0.25d0 * DSQRT(17.5d0 / pi) * sint * sint * sint * COS(3.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -479,8 +479,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fy3x2my2 = 0.25d0 * SQRT(17.5d0 / pi) * sint * sint * sint * SIN(3.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fy3x2my2 = 0.25d0 * DSQRT(17.5d0 / pi) * sint * sint * sint * SIN(3.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -1355,7 +1355,7 @@
         !
         !WRITE(stdout,*),'Iteration ',i
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = SQRT(Eup) * SQRT(Elw)     
+        Ef = DSQRT(Eup) * DSQRT(Elw)     
         ! 
         !WRITE(stdout,*),'Ef ', - log (Ef) * etemp * ryd2ev
         hole_density = 0.0
@@ -1420,7 +1420,7 @@
       ! Use bisection method
       DO i = 1, maxiter
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = SQRT(Eup) * SQRT(Elw)
+        Ef = DSQRT(Eup) * DSQRT(Elw)
         ! 
         hole_density = 0.0
         DO ik = 1, nkf
@@ -1468,7 +1468,7 @@
       ! Use bisection method
       DO i = 1, maxiter
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = SQRT(Eup) * SQRT(Elw)
+        Ef = DSQRT(Eup) * DSQRT(Elw)
         ! 
         electron_density = 0.0
         DO ik = 1, nkf
@@ -1837,21 +1837,21 @@
         IF (w2(imode) > 0) THEN
           IF (vme) THEN
             vel_diff(:) = REAL(vmefp(:, imode, imode) / &
-                              (2d0 * SQRT(w2(imode))) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
+                              (2d0 * DSQRT(w2(imode))) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
           ELSE
             vel_diff(:) = REAL(vmefp(:, imode ,imode) / &
-                              (2d0 * SQRT(w2(imode))) - dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
+                              (2d0 * DSQRT(w2(imode))) - dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
           ENDIF
-          IF (SQRT(DOT_PRODUCT(vel_diff, vel_diff)) < eps40) THEN
+          IF (DSQRT(DOT_PRODUCT(vel_diff, vel_diff)) < eps40) THEN
             eta(imode, ibnd, ik) = 1.0d0 / ryd2mev
           ELSE
             eta_tmp(1) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 1)) / DBLE(nqf1))
             eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 2)) / DBLE(nqf2))
             eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 3)) / DBLE(nqf3))
             !eta(imode, ibnd, ik) = MAXVAL(eta_tmp) !Eq. (24) of PRB 97 075405 (2015)
-            !eta(imode, ibnd, ik) = SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/SQRT(12d0) !Eq. (18) of Computer Physics Communications 185 (2014) 1747–1758
+            !eta(imode, ibnd, ik) = DSQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/DSQRT(12d0) !Eq. (18) of Computer Physics Communications 185 (2014) 1747–1758
             ! The prefactor 0.5 is arbitrary and is to speedup convergence
-            eta(imode, ibnd, ik) = 0.5d0 * SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2) / SQRT(12d0)
+            eta(imode, ibnd, ik) = 0.5d0 * DSQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2) / DSQRT(12d0)
           ENDIF
         ELSE
           ! Fixed value 1 meV

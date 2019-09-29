@@ -1213,7 +1213,7 @@
     !
     zeu_new(:, :, :) = zeu_new(:, :, :) - zeu_w(:, :, :)
     CALL sp_zeu(zeu_w, zeu_w, nat, norm2)
-    WRITE(stdout, '(5x,"Norm of the difference between old and new effective charges: ", 1f12.7)') SQRT(norm2)
+    WRITE(stdout, '(5x,"Norm of the difference between old and new effective charges: ", 1f12.7)') DSQRT(norm2)
     !
     DO i = 1, 3
       DO j = 1, 3
@@ -1450,7 +1450,7 @@
     frc_new(:, :, :, :, :, :, :) = frc_new(:, :, :, :, :, :, :) - w(:, :, :, :, :, :, :)
     CALL sp1(w, w, nr1, nr2, nr3, nat, norm2)
     ! 
-    WRITE(stdout, '(5x,"Norm of the difference between old and new force-constants: ", 1f12.7)') SQRT(norm2)
+    WRITE(stdout, '(5x,"Norm of the difference between old and new force-constants: ", 1f12.7)') DSQRT(norm2)
     !
     DO i = 1, 3
       DO j = 1, 3

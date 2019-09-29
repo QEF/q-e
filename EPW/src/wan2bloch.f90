@@ -426,7 +426,7 @@
     !
     DO na = 1, nat
       DO nb = 1, nat
-        massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)) )
+        massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)) )
         !
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac
@@ -684,7 +684,7 @@
     !
     DO na = 1, nat
       DO nb = 1, nat
-        massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)))
+        massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)))
         !
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
            chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac

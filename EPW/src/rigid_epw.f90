@@ -341,7 +341,7 @@
     ENDDO ! m1 
     !
     ! In case we want only the short-range we do
-    ! g_s = SQRT(g*g - g_l*g_l)
+    ! g_s = DSQRT(g*g - g_l*g_l)
     ! 
     ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
     ! case the sqrt will give an pure imaginary number. If it is positive we 
@@ -491,7 +491,7 @@
     ENDDO ! m1
     !
     ! In case we want only the short-range we do
-    ! g_s = SQRT(g*g - g_l*g_l)
+    ! g_s = DSQRT(g*g - g_l*g_l)
     ! 
     ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
     ! case the sqrt will give an pure imaginary number. If it is positive we 
@@ -578,7 +578,7 @@
     !
     CALL cryst_to_cart(1, q, bg, 1)
     q2 = q(1)**2 + q(2)**2 + q(3)**2
-    qm = SQRT(q2) * (twopi / alat) / kF / 2.d0 ! internal units for Hedin's formula
+    qm = DSQRT(q2) * (twopi / alat) / kF / 2.d0 ! internal units for Hedin's formula
     !
     IF (ABS(qm) > eps10) THEN
       DO im = 1, nmodes
@@ -655,7 +655,7 @@
     !
     CALL cryst_to_cart(1, q, bg, 1)
     q2 = q(1)**2 + q(2)**2 + q(3)**2
-    qm = SQRT(q2) ! in tpiba
+    qm = DSQRT(q2) ! in tpiba
     IF (ABS(qm) > eps10) THEN
       eps_tf = 1.d0 + qtfc**2 / q2
     ELSE
@@ -1029,7 +1029,7 @@
     ENDDO ! m1
     !
     ! In case we want only the short-range we do
-    ! g_s = SQRT(g*g - g_l*g_l)
+    ! g_s = DSQRT(g*g - g_l*g_l)
     ! 
     ! Important notice: It is possible that (g*g - g_l*g_l) < 0, in which 
     ! case the sqrt will give an pure imaginary number. If it is positive we 

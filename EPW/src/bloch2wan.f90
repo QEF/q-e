@@ -1298,8 +1298,8 @@
           rvec2 = DBLE(irvec_g(1, ir)) * at(: ,1) + &
                   DBLE(irvec_g(2, ir)) * at(: ,2) + &
                   DBLE(irvec_g(3, ir)) * at(: ,3)
-          len1 = SQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
-          len2 = SQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+          len1 = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
+          len2 = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
           tmp =  MAXVAL(ABS(epmatwp(:, :, ire, :, ir)))
           !
           ! rvec1 : electron-electron0 distance
@@ -1436,8 +1436,8 @@
           rvec2 = DBLE(irvec_g(1, ir)) * at(:, 1) + &
                   DBLE(irvec_g(2, ir)) * at(:, 2) + &
                   DBLE(irvec_g(3, ir)) * at(:, 3)
-          len1 = SQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
-          len2 = SQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+          len1 = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
+          len2 = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
           tmp =  MAXVAL(ABS(epmatwp_mem(:, :, ire, :)))
           !
           ! rvec1 : electron-electron0 distance

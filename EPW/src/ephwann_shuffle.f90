@@ -1133,14 +1133,14 @@
         ! (omega on fine grid)
         !
         IF (w2(nu) > zero) THEN
-          wf(nu, iq) =  SQRT(ABS(w2(nu)))
+          wf(nu, iq) =  DSQRT(ABS(w2(nu)))
         ELSE 
-          wf(nu, iq) = -SQRT(ABS(w2(nu)))
+          wf(nu, iq) = -DSQRT(ABS(w2(nu)))
         ENDIF
         !
         DO mu = 1, nmodes
           na = (mu - 1) / 3 + 1
-          uf(mu, nu) = uf(mu, nu) / SQRT(amass(ityp(na)))
+          uf(mu, nu) = uf(mu, nu) / DSQRT(amass(ityp(na)))
         ENDDO
       ENDDO
       !
@@ -1345,8 +1345,8 @@
        ENDDO 
        CALL mp_sum(valmin, inter_pool_comm)
        CALL mp_sum(valmax, inter_pool_comm)
-       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', SQRT(2.0d0) * MINVAL(valmin) * ryd2mev,' meV'
-       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', SQRT(2.0d0) * MAXVAL(valmax) * ryd2mev,' meV'
+       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', DSQRT(2.0d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', DSQRT(2.0d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
       !
       IF (prtgkk    ) CALL print_gkk(iq)

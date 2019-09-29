@@ -528,9 +528,9 @@
       DO iw = 1, n_proj
         READ(iunnkp, *) (center_w(ipol, iw), ipol = 1, 3), l_w(iw), mr_w(iw), r_w(iw)
         READ(iunnkp, *) (zaxis(ipol, iw), ipol = 1, 3), (xaxis(ipol, iw), ipol = 1, 3), alpha_w(iw)
-        xnorm = SQRT(SUM(xaxis(:, iw) * xaxis(:, iw)))
+        xnorm = DSQRT(SUM(xaxis(:, iw) * xaxis(:, iw)))
         IF (xnorm < eps6) CALL errore('setup_nnkp', '|xaxis| < eps', 1)
-        znorm = SQRT(SUM(zaxis(:, iw) * zaxis(:, iw)))
+        znorm = DSQRT(SUM(zaxis(:, iw) * zaxis(:, iw)))
         IF (znorm < eps6) CALL errore('setup_nnkp', '|zaxis| < eps', 1)
         coseno = SUM(xaxis(:, iw) * zaxis(:, iw)) / xnorm / znorm
         IF (ABS(coseno) > eps6) CALL errore('setup_nnkp', 'xaxis and zaxis are not orthogonal!', 1)
@@ -539,7 +539,7 @@
         CALL cryst_to_cart(1, center_w(:, iw), at, 1)
         IF (noncolin) THEN
           READ(iunnkp, *) spin_eig(iw), (spin_qaxis(ipol, iw), ipol = 1, 3)
-          xnorm = SQRT(SUM(spin_qaxis(:, iw) * spin_qaxis(:, iw)))
+          xnorm = DSQRT(SUM(spin_qaxis(:, iw) * spin_qaxis(:, iw)))
           IF (xnorm < eps6) CALL errore('setup_nnkp', '|xaxis| < eps', 1)
           spin_qaxis(:, iw) = spin_qaxis(:, iw) / xnorm
         ENDIF
@@ -1043,17 +1043,17 @@
             ENDDO
           ELSE
             ! general routine for quantisation axis (a,b,c) 
-            ! 'up'    eigenvector is 1/SQRT(1+c) [c+1,a+ib]
-            ! 'down'  eigenvector is 1/SQRT(1-c) [c-1,a+ib]
+            ! 'up'    eigenvector is 1/DSQRT(1+c) [c+1,a+ib]
+            ! 'down'  eigenvector is 1/DSQRT(1-c) [c-1,a+ib]
             IF (spin_eig(iw) == 1) THEN
-              fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) & 
+              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
                      * (spin_qaxis(3, iw) + 1) * cone
-              fac(2) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) & 
+              fac(2) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
                      * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
             ELSE
-              fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) & 
+              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
                      * (spin_qaxis(3, iw)) * cone
-              fac(2) = (1.0d0 / SQRT(1 - spin_qaxis(3, iw))) & 
+              fac(2) = (1.0d0 / DSQRT(1 - spin_qaxis(3, iw))) & 
                      * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
             ENDIF
             !
@@ -1427,13 +1427,13 @@
         CALL gather_grid(dffts, psic_nc(:, 2), psic_nc_all(:, 2))
         pnorm = REAL(SUM(psic_nc_all(1:nrtot, 1) * CONJG(psic_nc_all(1:nrtot, 1))), KIND = DP) + &
                 REAL(SUM(psic_nc_all(1:nrtot, 2) * CONJG(psic_nc_all(1:nrtot, 2))), KIND = DP)
-        norm_psi = SQRT(pnorm)
+        norm_psi = DSQRT(pnorm)
         psi_gamma(        1:nrtot,     ibnd1) = psic_nc_all(1:nrtot, 1) * f_gamma / norm_psi
         psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = psic_nc_all(1:nrtot, 2) * f_gamma / norm_psi
 #else
         pnorm = REAL(SUM(psic_nc(1:nrtot, 1) * CONJG(psic_nc(1:nrtot, 1))), KIND = DP) + &
                 REAL(SUM(psic_nc(1:nrtot, 2) * CONJG(psic_nc(1:nrtot, 2))), KIND = DP)
-        norm_psi = SQRT(pnorm) 
+        norm_psi = DSQRT(pnorm) 
         psi_gamma(        1:nrtot,     ibnd1) = psic_nc(1:nrtot, 1) * f_gamma / norm_psi
         psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = psic_nc(1:nrtot, 2) * f_gamma / norm_psi
 #endif
@@ -1467,11 +1467,11 @@
 #if defined(__MPI)
         CALL gather_grid(dffts, psic, psic_all)
         pnorm = REAL(SUM(psic_all(1:nrtot) * CONJG(psic_all(1:nrtot))), KIND = DP)
-        norm_psi = SQRT(pnorm)
+        norm_psi = DSQRT(pnorm)
         psi_gamma(1:nrtot, ibnd1) = psic_all(1:nrtot) * f_gamma / norm_psi
 #else
         pnorm = REAL(SUM(psic(1:nrtot) * CONJG(psic(1:nrtot))), KIND = DP)
-        norm_psi = SQRT(pnorm)
+        norm_psi = DSQRT(pnorm)
         psi_gamma(1:nrtot, ibnd1) = psic(1:nrtot) * f_gamma / norm_psi
 #endif
       ENDDO ! ibnd
@@ -1642,7 +1642,7 @@
           norm_psi = REAL(SUM(evc(       1:npw,        ibnd) * CONJG(evc(       1:npw,        ibnd)))) + &
                      REAL(SUM(evc(1 + npwx:npw + npwx, ibnd) * CONJG(evc(1 + npwx:npw + npwx, ibnd)) ))
           CALL mp_sum(norm_psi, intra_pool_comm)
-          norm_psi = SQRT(norm_psi)
+          norm_psi = DSQRT(norm_psi)
           !
           ! jml: nowfc = sum_G (psi(G) * exp(i*G*r)) * focc  * phase(iw) / norm_psi
           !
@@ -1672,7 +1672,7 @@
           !
           norm_psi = REAL(SUM(evc(1:npw, ibnd) * CONJG(evc(1:npw, ibnd))))
           CALL mp_sum(norm_psi, intra_pool_comm)
-          norm_psi = SQRT(norm_psi)
+          norm_psi = DSQRT(norm_psi)
           !
           ! jml: nowfc = sum_G (psi(G) * exp(i*G*r)) * focc  * phase(iw) / norm_psi
           !
@@ -1852,14 +1852,14 @@
         gf_spinor(istart:iend, iw) = gf(1:npw, iw)
       ELSE
         IF (spin_eig(iw) == 1) THEN
-          fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) &
+          fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                  * (spin_qaxis(3, iw) + 1 ) * cone
-          fac(2) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) &
+          fac(2) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                  * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
         ELSE
-          fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) &
+          fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                  * ( spin_qaxis(3, iw) ) * cone
-          fac(2) = (1.0d0 / SQRT(1 - spin_qaxis(3, iw))) &
+          fac(2) = (1.0d0 / DSQRT(1 - spin_qaxis(3, iw))) &
                  * CMPLX(spin_qaxis(1, iw), spin_qaxis(2,iw), KIND = DP)
         ENDIF
         gf_spinor(1:npw, iw) = gf(1:npw, iw) * fac(1)
@@ -2085,7 +2085,7 @@
       !
       ! get spherical harmonics ylm 
       CALL ylmr2(lmaxq * lmaxq, nbt, dxk, qg, ylm)
-      qg(:) = SQRT(qg(:)) * tpiba
+      qg(:) = DSQRT(qg(:)) * tpiba
       !
       DO nt = 1, ntyp
         IF (upf(nt)%tvanp) THEN
@@ -2981,7 +2981,7 @@
     ! get spherical harmonics ylm up to lmax
     CALL ylmr2(lmax2, npw, gk, qg, ylm)
     ! define qg as the norm of (k+g) in a.u.
-    qg(:) = SQRT(qg(:)) * tpiba
+    qg(:) = DSQRT(qg(:)) * tpiba
     !
     ! RM changed according to QE4.0.3/PP/pw2wannier90 
     DO iw = 1, n_proj
@@ -2992,7 +2992,7 @@
       !
       DO lm = 1, lmax2
         IF (ABS(csph(lm, iw)) < eps8) CYCLE
-        l = INT(SQRT(lm - 1.d0))
+        l = INT(DSQRT(lm - 1.d0))
         lphase = (- ci)**l
         !
         DO ig = 1, npw
@@ -3009,7 +3009,7 @@
       ENDDO
       anorm = REAL(ZDOTC(npw, gf(1, iw), 1, gf(1, iw), 1))
       CALL mp_sum(anorm, intra_pool_comm)
-      gf(:, iw) = gf(:, iw) / SQRT(anorm)
+      gf(:, iw) = gf(:, iw) / DSQRT(anorm)
     ENDDO
     !
     DEALLOCATE(gk, STAT = ierr)
@@ -3590,10 +3590,10 @@
     REAL(KIND = DP) :: y(3)
     !!
     !
-    xx = SQRT(SUM(x(:) * x(:)))
+    xx = DSQRT(SUM(x(:) * x(:)))
     IF (xx < eps8) CALL errore('set_u_matrix', '|xaxis| < eps8', 1)
     !
-    zz = SQRT(SUM(z(:) * z(:)))
+    zz = DSQRT(SUM(z(:) * z(:)))
     IF (zz < eps8) CALL errore ('set_u_matrix', '|zaxis| < eps8', 1)
     !
     coseno = SUM(x(:) * z(:)) / xx / zz
@@ -3657,12 +3657,12 @@
     REAL(KIND = DP) :: phi
     !!
     REAL(KIND = DP) :: bs2, bs3, bs6, bs12
-    !! Inverse SQRT of 2, 3, 6, and 12
+    !! Inverse DSQRT of 2, 3, 6, and 12
     !
-    bs2  = 1.d0 / SQRT(2.d0)
-    bs3  = 1.d0 / SQRT(3.d0)
-    bs6  = 1.d0 / SQRT(6.d0)
-    bs12 = 1.d0 / SQRT(12.d0)
+    bs2  = 1.d0 / DSQRT(2.d0)
+    bs3  = 1.d0 / DSQRT(3.d0)
+    bs6  = 1.d0 / DSQRT(6.d0)
+    bs12 = 1.d0 / DSQRT(12.d0)
     !
     IF (l > 3 .OR. l < -5) CALL errore('ylm_wannier', 'l out of range ', 1)
     IF (l >= 0) THEN
@@ -3672,7 +3672,7 @@
     ENDIF
     !
     DO ir  = 1, nr
-      rr = SQRT(SUM(r(:, ir) * r(:, ir)))
+      rr = DSQRT(SUM(r(:, ir) * r(:, ir)))
       IF (rr < eps8) CALL errore('ylm_wannier', 'rr too small', 1)
       !
       cost =  r(3, ir) / rr
@@ -3841,13 +3841,13 @@
     ENDDO
     !
     IF (rvalue == 1) func_r(:) = 2.d0 * alfa**(3.d0 / 2.d0) * EXP(-alfa * r(:))
-    IF (rvalue == 2) func_r(:) = 1.d0 / SQRT(8.d0) * alfa**(3.d0 / 2.d0) * & 
+    IF (rvalue == 2) func_r(:) = 1.d0 / DSQRT(8.d0) * alfa**(3.d0 / 2.d0) * & 
                                 (2.0d0 - alfa * r(:)) * EXP(-alfa * r(:) * 0.5d0)
-    IF (rvalue == 3) func_r(:) = SQRT(4.d0 / 27.d0) * alfa**(2.0d0 / 3.0d0) * &
+    IF (rvalue == 3) func_r(:) = DSQRT(4.d0 / 27.d0) * alfa**(2.0d0 / 3.0d0) * &
                                 (1.d0 - 1.5d0 * alfa * r(:) + & 
                                 2.d0 * (alfa * r(:))**2 / 27.d0) * & 
                                 EXP(-alfa * r(:) / 3.0d0)
-    pref = fpi / SQRT(omega)
+    pref = fpi / DSQRT(omega)
     !
     DO l = 0, lmax
       DO ig = 1, ng

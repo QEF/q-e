@@ -117,7 +117,7 @@
             ELSE
               gamma = 0.d0
             ENDIF
-            gamma = SQRT(gamma)
+            gamma = DSQRT(gamma)
             ! gamma = |g| [Ry]
             epc(ibnd, jbnd, nu, ik + lower_bnd - 1) = gamma
           ENDDO ! jbnd
@@ -142,7 +142,7 @@
               ENDIF
             ENDDO
             g2 = g2 / FLOAT(n)
-            epc_sym(ibnd, jbnd, nu) = SQRT(g2)
+            epc_sym(ibnd, jbnd, nu) = DSQRT(g2)
           ENDDO
         ENDDO
       ENDDO
@@ -162,7 +162,7 @@
               ENDIF
             ENDDO
             g2 = g2 / FLOAT(n)
-            epc_sym(jbnd, ibnd, nu) = SQRT(g2)
+            epc_sym(jbnd, ibnd, nu) = DSQRT(g2)
           ENDDO
         ENDDO
       ENDDO
@@ -183,7 +183,7 @@
               ENDIF
             ENDDO
             g2 = g2 / FLOAT(n)
-            epc_sym(ibnd, jbnd, nu) = SQRT(g2)
+            epc_sym(ibnd, jbnd, nu) = DSQRT(g2)
           ENDDO
         ENDDO
       ENDDO

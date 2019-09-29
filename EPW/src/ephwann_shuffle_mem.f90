@@ -1128,14 +1128,14 @@
         ! (omega on fine grid)
         !
         IF (w2(nu) > zero) THEN
-          wf(nu, iq) =  SQRT(ABS(w2(nu)))
+          wf(nu, iq) =  DSQRT(ABS(w2(nu)))
         ELSE 
-          wf(nu, iq) = -SQRT(ABS(w2(nu)))
+          wf(nu, iq) = -DSQRT(ABS(w2(nu)))
         ENDIF
         !
         DO mu = 1, nmodes
           na = (mu - 1) / 3 + 1
-          uf(mu, nu) = uf(mu, nu) / SQRT(amass(ityp(na)))
+          uf(mu, nu) = uf(mu, nu) / DSQRT(amass(ityp(na)))
         ENDDO
       ENDDO
       !

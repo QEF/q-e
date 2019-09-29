@@ -140,7 +140,7 @@
     !
     DO na = 1, nat
       DO nb = 1, nat
-        massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)))
+        massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)))
         dyn1(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
         dynq(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb, iq_first) * massfac
       ENDDO
@@ -160,9 +160,9 @@
       ! check the frequencies
       DO nu = 1, nmodes
         IF (w1(nu) > 0.d0) THEN
-          wtmp(nu) =  SQRT(ABS(w1(nu)))
+          wtmp(nu) =  DSQRT(ABS(w1(nu)))
         ELSE
-          wtmp(nu) = -SQRT(ABS(w1(nu)))
+          wtmp(nu) = -DSQRT(ABS(w1(nu)))
         ENDIF
       ENDDO
       WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (cm^{-1})")') 
@@ -232,9 +232,9 @@
       !
       DO nu = 1, nmodes
         IF (w2(nu) > 0.d0) THEN
-          wtmp(nu) =  SQRT(ABS(w2(nu)))
+          wtmp(nu) =  DSQRT(ABS(w2(nu)))
         ELSE
-          wtmp(nu) = -SQRT(ABS(w2(nu)))
+          wtmp(nu) = -DSQRT(ABS(w2(nu)))
         ENDIF
       ENDDO
       WRITE(stdout, '(5x,"Frequencies of the matrix for the first q in the star (meV)")') 
@@ -254,7 +254,7 @@
     !
     DO na = 1, nat
       DO nb = 1, nat
-        massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)))
+        massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)))
         dyn2(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
           dynq(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb, nqc) * massfac
       ENDDO
@@ -282,9 +282,9 @@
       !
       DO nu = 1, nmodes
         IF (w2(nu) > 0.d0 ) then
-          wtmp(nu) =  SQRT(ABS(w2(nu)))
+          wtmp(nu) =  DSQRT(ABS(w2(nu)))
         ELSE
-          wtmp(nu) = -SQRT(ABS(w2(nu)))
+          wtmp(nu) = -DSQRT(ABS(w2(nu)))
         ENDIF
       ENDDO
       WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^{-1})")') 
@@ -367,7 +367,7 @@
     !
     ! the mass factors: 
     !  1/sqrt(M) for the  direct transform
-    !  SQRT(M)   for the inverse transform 
+    !  DSQRT(M)   for the inverse transform 
     !
     ! if we set cz1 = cz2 here and we calculate below
     ! cz1 * cz2 we find the identity
@@ -376,7 +376,7 @@
     !
     DO mu = 1, nmodes
       na = (mu - 1) / 3 + 1
-      massfac = SQRT(amass(ityp(na)))
+      massfac = DSQRT(amass(ityp(na)))
       cz1(mu, :) = cz1(mu, :) / massfac
       cz2(mu, :) = cz2(mu, :) * massfac
       cz2t(mu, :) = cz2t(mu, :) / massfac
