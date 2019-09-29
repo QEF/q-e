@@ -1392,8 +1392,9 @@
         ! 
         ! WRITE(stdout,*),'hole_density ',hole_density * (1.0d0/omega) * ( bohr2ang * ang2cm  )**(-3)
         ! WRITE(stdout,*),'electron_density ',electron_density * (1.0d0/omega) * (bohr2ang * ang2cm  )**(-3)
-        IF (ABS(hole_density) < eps80) THEN
-          CALL errore('fermicarrier', 'hole_density cannot be 0', 1)
+        ! CALL FLUSH(stdout)
+        IF (ABS(hole_density) < eps80) THEN 
+          rel_err = -1000d0
         ELSE
           rel_err = (hole_density - electron_density) / hole_density
         ENDIF
@@ -1441,10 +1442,12 @@
         !
         CALL mp_sum(hole_density, inter_pool_comm)
         !
-        ! In this case ncarrier is a negative number
+        ! WRITE(stdout,*),'hole_density ',hole_density * (1.0d0/omega) * ( bohr2ang * ang2cm  )**(-3)
+        ! CALL FLUSH(stdout)
         IF (ABS(hole_density) < eps80) THEN
-          CALL errore('fermicarrier', 'hole_density cannot be 0', 1)
+          rel_err = -1000.0d0
         ELSE
+          ! In this case ncarrier is a negative number
           rel_err = (hole_density - ABS(ncarrier)) / hole_density
         ENDIF
         !
@@ -1489,7 +1492,12 @@
         !
         CALL mp_sum(electron_density, inter_pool_comm)
         ! 
-        rel_err = (electron_density - ncarrier) / electron_density
+        IF (ABS(electron_density) < eps80) THEN
+          rel_err = 1000.0d0
+        ELSE
+          ! In this case ncarrier is a negative number
+          rel_err = (electron_density - ncarrier) / electron_density
+        ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
