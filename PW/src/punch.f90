@@ -8,22 +8,23 @@
 !----------------------------------------------------------------------------
 SUBROUTINE punch( what )
   !----------------------------------------------------------------------------
+  !! This routine is called at the end of the run to save on a file
+  !! the information needed for further processing (phonon etc.).
   !
-  ! ... This routine is called at the end of the run to save to a file
-  ! ... the information needed for further processing (phonon etc.)
-  ! ... what = 'all'          write xml data file, charge density, wavefunctions
-  ! ...                       (for final data)
-  ! ... what = 'config'       write xml data file and charge density; also,
-  !                           for nks=1, wavefunctions in plain binary format
-  !                           (see why in comments below)
-  ! ...                       (for intermediate or incomplete results)
-  ! ... what = 'config-nowf'  write xml data file iand charge density only
-  ! ... what = 'config-init'  write xml data file only excluding final results
-  ! ...                       (for dry run, can be called at early stages)
+  !! * what = 'all' : write xml data file, charge density, wavefunctions
+  !!                  (for final data);
+  !! * what = 'config' : write xml data file and charge density; also,
+  !!                     for nks=1, wavefunctions in plain binary format
+  !!                     (see why in comments below). For intermediate 
+  !!                     or incomplete results;
+  !! * what = 'config-nowf' : write xml data file iand charge density only
+  !! * what = 'config-init' : write xml data file only excluding final results
+  !!                          (for dry run, can be called at early stages).
   !
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
-       tmp_dir, prefix, restart_dir, xmlfile, create_directory
+  USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn,      &
+                                   tmp_dir, prefix, restart_dir, xmlfile, &
+                                   create_directory
   USE control_flags,        ONLY : io_level, lscf, lxdm
   USE klist,                ONLY : nks
   USE io_files,             ONLY : psfile, pseudo_dir
@@ -37,12 +38,15 @@ SUBROUTINE punch( what )
   USE qexsd_module,         ONLY : qexsd_reset_steps
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE xdm_module,           ONLY : write_xdmdat
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
+  !! see main comment
+  !
+  ! ... local variables
   !
   LOGICAL :: exst, only_init, wf_collect
   CHARACTER(LEN=320) :: cp_source, cp_dest
@@ -59,7 +63,7 @@ SUBROUTINE punch( what )
   !
   ! ... create the main restart directory (if needed)
   !
-  CALL create_directory( restart_dir ( ) )
+  CALL create_directory( restart_dir( ) )
   !
   ! ... wf_collect keeps track whether wfcs are written in portable format
   !
@@ -74,7 +78,7 @@ SUBROUTINE punch( what )
   !
   IF (TRIM(what) == 'all' .OR. TRIM(what) == 'config' ) THEN
      IF ( lscf .OR. lforcet ) CALL write_scf( rho, nspin )
-  END IF
+  ENDIF
   !
   IF (TRIM(what) == 'all') THEN 
      !
@@ -92,13 +96,13 @@ SUBROUTINE punch( what )
            cp_dest   = TRIM(restart_dir ( ) ) //psfile(nt)
            IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
                 cp_status = f_copy(cp_source, cp_dest)
-        END DO
+        ENDDO
         !
         ! write XDM dispersion data (coefficients and vdw radii) to xdm.dat
         IF (lxdm) THEN
            CALL write_xdmdat()
         ENDIF
-     END IF
+     ENDIF
      !
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
@@ -108,7 +112,7 @@ SUBROUTINE punch( what )
      ! 
      CALL qexsd_reset_steps()
      !
-  ELSE IF ( TRIM(what) == 'config' .AND.  nks == 1 ) THEN
+  ELSEIF ( TRIM(what) == 'config' .AND.  nks == 1 ) THEN
      !
      ! ... here we are stopping an incomplete calculations - wavefunctions are 
      ! ... stored in buffers and saved when buffers are closed. For 1 k-point 
@@ -119,7 +123,7 @@ SUBROUTINE punch( what )
      IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      CALL infomsg('punch','wavefunctions written to file')
      !
-  END IF
+  ENDIF
   !
   ! ... FIXME: for electron-phonon calculations - data should be read from xml file!
   ! 

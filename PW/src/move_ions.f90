@@ -103,7 +103,7 @@ SUBROUTINE move_ions( idone, ions_status )
            at_old = at
            omega_old = omega
            etot = etot + press * omega
-           CALL cell_force( fcell, - TRANSPOSE(bg)/alat, sigma, omega, press )
+           CALL cell_force( fcell, - transpose(bg)/alat, sigma, omega, press )
            epsp1 = epsp / ry_kbar
         ENDIF
         !
@@ -128,15 +128,15 @@ SUBROUTINE move_ions( idone, ions_status )
            ! changes needed only if cell moves
            IF (fix_volume) CALL impose_deviatoric_strain( alat*at, h )
            IF (fix_area)   CALL impose_deviatoric_strain_2d( alat*at, h )
-           at = h /alat
-           IF (enforce_ibrav) CALL remake_cell( ibrav, alat, at(1,1),at(1,2),at(1,3) )
+           at = h / alat
+           IF(enforce_ibrav) CALL remake_cell( ibrav, alat, at(1,1),at(1,2),at(1,3) )
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
-           CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-  
+           CALL volume( alat, at(1,1),at(1,2),at(1,3), omega )
+           !
         ENDIF
         !
         CALL cryst_to_cart( nat, pos,  at, 1 )
-        tau   =   RESHAPE( pos,  (/ 3, nat /) )
+        tau    =  RESHAPE( pos,  (/ 3, nat /) )
         CALL cryst_to_cart( nat, grad, bg, 1 )
         force = - RESHAPE( grad, (/ 3, nat /) )
         !
@@ -291,7 +291,7 @@ SUBROUTINE move_ions( idone, ions_status )
                    '(/,5X,"The maximum number of steps has been reached.")' )
               WRITE( UNIT = stdout, &
                    FMT = '(/,5X,"End of molecular dynamics calculation")' )
-              conv_ions = .TRUE.
+              conv_ions = .true.
            ENDIF
            !
         ELSEIF ( calc == 'vd' ) THEN
@@ -303,7 +303,7 @@ SUBROUTINE move_ions( idone, ions_status )
            IF ( lfcpdyn ) CALL fcp_verlet()
            IF ( idone >= nstep) THEN
               CALL terminate_verlet()
-              conv_ions = .TRUE.
+              conv_ions = .true.
            ENDIF
            !
         ELSE
@@ -329,7 +329,7 @@ SUBROUTINE move_ions( idone, ions_status )
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
      !
-     CALL checkallsym( nat, tau, ityp )
+     CALL checkallsym( nat, tau, ityp)
      !
   ENDIF
   !
