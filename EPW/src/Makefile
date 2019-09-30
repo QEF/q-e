@@ -68,7 +68,6 @@ epw_readin.o \
 epw_setup.o \
 epw_summary.o \
 loadumat.o \
-openfilepw.o \
 stop_epw.o \
 wannierEPW.o
 

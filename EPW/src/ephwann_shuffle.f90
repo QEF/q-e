@@ -18,9 +18,9 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP, i4b
-  USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
+  USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
-  USE cell_base,     ONLY : at, bg, omega, alat
+  USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
@@ -31,8 +31,8 @@
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
-                            nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl, lindabs, mob_maxiter, use_ws, epbread,  &
+                            nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
+                            specfun_pl, lindabs, use_ws, epbread,               &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
                             nqc1, nqc2, nqc3, nkc1, nkc2, nkc3
   USE control_flags, ONLY : iverbosity
@@ -42,18 +42,18 @@
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, crystal, iunepmatwp2, iunrestart,       &
-                            iuntau, iuntaucb
+                            iunepmatwp, iunepmatwp2, iunrestart, iuntau,        &
+                            iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
-                            epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
+                            epmatwp, epmatq, wf, etf, etf_ks, xqf, xkf,         &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all, eta, nbndfst,    &
-                            inv_tau_allcb, zi_allcb, exband, xkfd, gamma_v_all, &
-                            esigmar_all, esigmai_all, lower_bnd, upper_bnd, ifc,&
+                            inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
+                            esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf, transp_temp, xkq
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
@@ -167,16 +167,12 @@
   !! Counter on bands when use_ws == .TRUE.
   INTEGER :: iw2
   !! Counter on bands when use_ws == .TRUE.
-  INTEGER :: iter
-  !! Current iteration number
   INTEGER :: itemp
   !! Temperature index
   INTEGER :: icbm
   !! Index of the CBM
   INTEGER :: totq
   !! Total number of q-points within the fsthick window. 
-  INTEGER :: icounter
-  !! Integer counter for displaced points
   INTEGER :: ipool
   !! Cpu index.
   INTEGER :: npool_tmp
@@ -210,18 +206,12 @@
   !! Total number of points store on file 
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
-  !! Offset to tell where to start reading the file
 #else
   INTEGER :: ind_tot
   !! Total number of points store on file 
   INTEGER :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER :: lsize
-  !! Offset to tell where to start reading the file
 #endif
-  REAL(KIND = DP) :: rdotk_scal
-  !! Real (instead of array) for $r\cdot k$
   REAL(KIND = DP) :: xxq(3)
   !! Current q-point 
   REAL(KIND = DP) :: xxk(3)

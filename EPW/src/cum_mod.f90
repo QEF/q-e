@@ -38,7 +38,7 @@
     USE constants_epw, ONLY : pi, two, zero, ryd2ev, ryd2mev, ci
     USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iospectral_sup, iospectral_cum
-    USE epwcom,        ONLY : degaussw, eptemp, wmin_specfun, wmax_specfun, nw_specfun, &
+    USE epwcom,        ONLY : eptemp, wmin_specfun, wmax_specfun, nw_specfun, &
                               bnd_cum
     USE elph2,         ONLY : ibndmin, ibndmax
     !
@@ -268,7 +268,6 @@
     !
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : pi, two, zero, ci, ryd2ev
-    USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : degaussw, wmin_specfun, wmax_specfun, nw_specfun
     !
     IMPLICIT NONE
@@ -400,7 +399,6 @@
     !
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : pi, two, zero, czero, ci, ryd2ev
-    USE io_global,     ONLY : stdout
     USE fft_scalar,    ONLY : cfft3d
     USE epwcom,        ONLY : degaussw, wmin_specfun, wmax_specfun, nw_specfun
     !

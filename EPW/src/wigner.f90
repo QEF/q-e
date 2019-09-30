@@ -692,12 +692,10 @@
     !! Minimum position
     INTEGER, PARAMETER :: nn = 3 
     !! number of neighbours
-    ! 
-    REAL(KIND = DP) :: minvalore
-    !! Minimal value
     REAL(KIND = DP) :: dist
     !! Distance
     REAL(KIND = DP) :: distances(nrws)
+    !! Dsitance array
     ! 
     ws(:) = zero
     distances(:) = zero

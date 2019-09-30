@@ -43,7 +43,7 @@
     USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
     USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, two, zero, kelvin2Ry, pi
     USE mp,        ONLY : mp_barrier, mp_sum
-    USE mp_world,  ONLY : mpime, world_comm
+    USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iua2ffil, iudosfil, iua2ftrfil, iures
@@ -368,9 +368,8 @@
                           nsmear, delta_smear, efermi_read, fermi_energy
     USE pwcom,     ONLY : nelec, ef
     USE klist_epw, ONLY : isk_dummy
-    USE elph2,     ONLY : ibndmax, ibndmin, etf, &
-                          wkf, xqf, wqf, nkqf, nktotf, &
-                          nkf, nkqtotf, xqf, nbndfst
+    USE elph2,     ONLY : ibndmin, etf, wkf, xqf, wqf, nkqf, nktotf, &
+                          nkf, xqf, nbndfst
     USE constants_epw, ONLY : ryd2ev, two
     USE mp,        ONLY : mp_barrier,mp_sum
     USE mp_global, ONLY : inter_pool_comm
