@@ -1165,7 +1165,7 @@
       ! -------------------------------------------------------------
       ! 
       IF (adapt_smearing) THEN
-        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), dims, wf(:, iq), rws, nrws) 
+        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), wf(:, iq), rws, nrws) 
       ENDIF 
       ! 
       ! This is a loop over k blocks in the pool (size of the local k-set)

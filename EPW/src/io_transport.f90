@@ -29,24 +29,20 @@
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, nkf1, nkf2, nkf3,   &  
-                              nstemp, scattering_serta, scattering_0rta, shortrange, nqf1, &
-                              restart, restart_freq, restart_filq, vme, ncarrier, nqf2, nqf3
+    USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier
     USE pwcom,         ONLY : ef
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf,      & 
-                              epf17, nkqtotf, inv_tau_all, inv_tau_allcb, adapt_smearing, &
-                              xqf, xkf, wkf, dmef, vmef, nqf, eta, transp_temp, lower_bnd,&
+    USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             & 
+                              epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
+                              wkf, dmef, vmef, eta, transp_temp, lower_bnd,  &
                               nbndfst, nktotf
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
                               eps6, eps10, bohr2ang, ang2cm
-    USE io_files,      ONLY : prefix, diropn, tmp_dir
+    USE io_files,      ONLY : diropn 
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : world_comm, my_pool_id, npool
     USE io_global,     ONLY : ionode_id
     USE io_var,        ONLY : iunepmat, iunepmatcb, iufilibtev_sup, iunrestart, iuntau,   &
-                              iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, &
-                              iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb,     &
-                              iunsparsetcb, iuntaucb
+                              iunsparseq, iunsparseqcb, iuntaucb
     USE elph2,         ONLY : lrepmatw2_merge, lrepmatw5_merge, threshold
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, MPI_INTEGER8, &
@@ -87,8 +83,6 @@
     !! Second Fermi level for the temperature itemp. Could be unused (0).
     !
     ! Local variables
-    CHARACTER(LEN = 256) :: filint
-    !! Name of the file
     INTEGER :: n
     !! Integer for the degenerate average over eigenstates  
     INTEGER :: ik
@@ -107,7 +101,7 @@
     !! Index over temperature range
     INTEGER :: ifil
     !! Index over the files
-    INTEGER :: nu, mu
+    INTEGER :: nu
     !! Index for modes
     INTEGER :: pbnd
     !! Index for bands
@@ -145,8 +139,6 @@
     !! Temporary variable
     REAL(KIND = DP) :: dfnk
     !! Derivative of f_nk with respect to \varepsilon_nk
-    REAL(KIND = DP) :: ekk2
-    !! Temporary variable to the eigenenergies for the degenerate average  
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
     REAL(KIND = DP) :: ekq
@@ -170,12 +162,8 @@
     !! Phonon frequency $$\omega_{q\nu}$$ on the fine grid.  
     REAL(KIND = DP) :: wgq(nmodes)
     !! Bose-Einstein occupation function $$n_{q\nu}$$
-    REAL(KIND = DP) :: weight
-    !! Self-energy factor 
     REAL(KIND = DP) :: fmkq
     !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
-    REAL(KIND = DP) :: vkk(3, nbndfst)
-    !! Electronic velocity $$v_{n\mathbf{k}}$$
     REAL(KIND = DP) :: trans_prob(nbndfst * nbndfst * nstemp * nkf)
     !! Temporary array to store the scattering rates
     REAL(KIND = DP) :: trans_probcb(nbndfst * nbndfst * nstemp * nkf)
@@ -386,7 +374,7 @@
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     ! Note that epf17 has already been squared above during averaging. 
-                    g2 = epf17(jbnd, ibnd, imode, ik) * inv_wq(imode) * g2_tmp(imode)
+                    g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
                     !
                     ! delta[E_k - E_k+q + w_q] 
                     w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
@@ -449,7 +437,7 @@
                   tmp2 = zero
                   DO imode = 1, nmodes
                     ! Same as above but for conduction bands (electrons)
-                    g2 = epf17(jbnd, ibnd, imode, ik) * inv_wq(imode) * g2_tmp(imode)
+                    g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
                     w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
                     w0g2 = w0gauss((ekk - ekq - wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
                     tmp = tmp  + two * pi * wqf(iq) * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
@@ -692,7 +680,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE elph2,         ONLY : ibndmax, ibndmin, nkqtotf, nktotf, nbndfst
+    USE elph2,         ONLY : nktotf, nbndfst
     USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
@@ -779,7 +767,7 @@
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
-    USE elph2,     ONLY : ibndmax, ibndmin, nkqtotf, nbndfst, nktotf
+    USE elph2,     ONLY : nbndfst, nktotf
     !
     IMPLICIT NONE
     !
@@ -917,7 +905,6 @@
     USE mp_global,        ONLY : my_pool_id, npool, world_comm 
     USE io_files,         ONLY : tmp_dir, prefix 
     USE mp,               ONLY : mp_sum, mp_barrier
-    USE io_global,        ONLY : stdout
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
     USE epwcom,           ONLY : int_mob, carrier, ncarrier
 #if defined(__MPI)
@@ -938,10 +925,8 @@
     !! Name of the files to merge files
     CHARACTER(LEN = 256) :: path_to_files(2)
     !! Name of the path to files
-    INTEGER :: i2, i4, i5, i6
+    INTEGER :: i2
     !! Indexes to loop over file sizes
-    INTEGER :: ipool
-    !! Process index
     INTEGER :: lrepmatw2_tot(npool)
     !! Lenght of each file
     INTEGER :: lrepmatw5_tot(npool)
@@ -1135,11 +1120,9 @@
     ! This routine opens all the files needed to save scattering rates for the IBTE.
     ! 
     USE kinds,            ONLY : DP
-    USE io_files,         ONLY : tmp_dir, prefix, create_directory, delete_if_present
-    USE io_var,           ONLY : iunepmat, iunsparseq, iunsparsek,                 &
-                                 iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
-                                 iunsparsekcb, iunsparseicb, iunsparsejcb,         &
-                                 iunsparsetcb, iunepmatcb, iunrestart
+    USE io_files,         ONLY : prefix, create_directory, delete_if_present
+    USE io_var,           ONLY : iunepmat, iunsparseq,              &
+                                 iunsparseqcb, iunepmatcb, iunrestart
     USE mp_global,        ONLY : world_comm, my_pool_id, npool
     USE mp,               ONLY : mp_barrier, mp_bcast
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
@@ -1180,10 +1163,6 @@
     !! Logical for existence of files
     LOGICAL :: exst2
     !! Logical for existence of files
-    INTEGER :: ierr
-    !! Error index
-    INTEGER :: ilrep
-    !! index to loop over the reading elements
     INTEGER :: dummy_int
     !! Dummy INTEGER for reading
     INTEGER :: ipool
@@ -1383,12 +1362,11 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iufilscatt_rate
-    USE elph2,     ONLY : ibndmax, ibndmin, nkqtotf, inv_tau_all, nbndfst, nktotf
+    USE elph2,     ONLY : ibndmin, nkqtotf, inv_tau_all, nbndfst, nktotf
     USE epwcom,    ONLY : nbndsub, nstemp
     USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
                               meV2invps, eps4
     USE mp,        ONLY : mp_barrier
-    USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id
     !
@@ -1472,7 +1450,7 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iufilscatt_rate
-    USE elph2,     ONLY : ibndmax, ibndmin, nkqtotf, nktotf, nbndfst
+    USE elph2,     ONLY : ibndmin, nktotf, nbndfst
     USE epwcom,    ONLY : nbndsub, nstemp
     USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
                               meV2invps, eps4
@@ -1565,7 +1543,7 @@
     !! Write self-energy
     !! 
     USE kinds,     ONLY : DP
-    USE elph2,     ONLY : ibndmax, ibndmin, lower_bnd, upper_bnd, nbndfst
+    USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufilsigma_all
     USE io_files,  ONLY : diropn
     USE constants_epw, ONLY : zero
@@ -1658,7 +1636,7 @@
     !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : ibndmax, ibndmin, lower_bnd, upper_bnd, nbndfst
+    USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufilsigma_all
     USE io_files,  ONLY : prefix, tmp_dir, diropn
     USE constants_epw, ONLY :  zero
@@ -1778,7 +1756,7 @@
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : nstemp
     USE io_global, ONLY : meta_ionode_id
-    USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
+    USE elph2,     ONLY : inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
                           lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufiltau_all
     USE io_files,  ONLY : diropn
@@ -1900,7 +1878,7 @@
     !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, meta_ionode_id
-    USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
+    USE elph2,     ONLY : inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
                           lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufiltau_all
     USE io_files,  ONLY : prefix, tmp_dir, diropn
@@ -2069,7 +2047,7 @@
     !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : ibndmax, ibndmin, nbndfst
+    USE elph2,     ONLY : nbndfst
     USE io_var,    ONLY : iufiltau_all
     USE io_files,  ONLY : tmp_dir, diropn
     USE epwcom,    ONLY : nstemp, restart_filq
