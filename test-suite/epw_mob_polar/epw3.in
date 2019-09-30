@@ -36,11 +36,11 @@
   lpolar      = .true.
   etf_mem     = 1
   vme         = .true.
+  use_ws      = .true
+  lphase      = .true.
 
   lifc        = .false.
   asr_typ     = 'simple'
-
-  use_ws      = .true.
 
   nbndsub     =  14
   nbndskip    =  12

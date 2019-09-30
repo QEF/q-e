@@ -219,7 +219,7 @@
         !CALL random_number(rand2)
         rand1 = 0.25644832 + 0.01 * ibnd
         rand2 = 0.11584272 + 0.025 * jbnd
-        P(jbnd, ibnd) = CMPLX(rand1, rand2) 
+        P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP) 
       ENDDO
     ENDDO
     ! 
@@ -1328,7 +1328,7 @@
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, cuf, vmefp, dims, wf, rws, nrws)
+    SUBROUTINE vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, cuf, vmefp, wf, rws, nrws)
     !--------------------------------------------------------------------------
     !! 
     !! This routine computes the phonon velocity by computing the q derivative of 
@@ -1341,7 +1341,7 @@
     USE cell_base,     ONLY : at, alat, bg
     USE epwcom,        ONLY : eig_read, use_ws, lpolar, lifc, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one, eps8
-    USE ions_base,     ONLY : amass, tau, nat, ityp
+    USE ions_base,     ONLY : tau, nat, ityp
     USE io_global,     ONLY : stdout
     USE low_lvl,       ONLY : degen_sort
     USE rigid_epw,     ONLY : rgd_blk_der
@@ -1356,9 +1356,6 @@
     !! number of WS points
     INTEGER, INTENT(in) :: irvec_q(3, nrr_q)
     !! coordinates of WS points
-    INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .TRUE.
-    !! Is equal to 1 otherwise.
     INTEGER, INTENT(in) :: ndegen_q(nrr_q, nat, nat)
     !! degeneracy of WS points
     INTEGER, INTENT(in) :: nrws
@@ -2236,7 +2233,6 @@
     USE io_files,         ONLY : prefix, tmp_dir
     USE mp,               ONLY : mp_sum
     USE mp_world,         ONLY : world_comm
-    USE io_global,        ONLY : stdout
     USE epwcom,           ONLY : use_ws
     USE mp_world,         ONLY : mpime
     USE division,         ONLY : para_bounds

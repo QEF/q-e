@@ -20,8 +20,8 @@
   lpolar      = .true.
   lifc        = .false.
   asr_typ     = 'simple'
-
   use_ws      = .true.
+  lphase      = .true.
 
   nbndsub     =  14
   nbndskip    =  12

@@ -13,6 +13,7 @@
   epwread     = .false.
 
   vme         = .false.
+  lphase      = .true.
 
   nbndsub     =  8
   nbndskip    =  10
