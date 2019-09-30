@@ -1295,6 +1295,7 @@
               ijbndc = ijbndc + 1
               jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
               ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
+!DBSP
               vmef(:, ibnd, jbnd) = vmef_deg(:, ibndc, jbndc)
             ENDIF
           ENDDO

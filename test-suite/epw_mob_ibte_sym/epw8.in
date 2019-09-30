@@ -12,6 +12,7 @@
   epbread     = .false.
   epwwrite    = .false.
   epwread     = .true.
+  use_ws      = .false.
 
   scattering  = .true.
   scattering_serta = .true.
@@ -35,6 +36,7 @@
   etf_mem     = 1
   lpolar      = .false.
   vme         = .true.
+  lphase      = .true.
 
   nbndsub     =  8
   nbndskip    =  0

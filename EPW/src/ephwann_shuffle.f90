@@ -1132,7 +1132,7 @@
         ! wf are the interpolated eigenfrequencies
         ! (omega on fine grid)
         !
-        IF (w2(nu) > zero) THEN
+        IF (w2(nu) > -eps8) THEN
           wf(nu, iq) =  DSQRT(ABS(w2(nu)))
         ELSE 
           wf(nu, iq) = -DSQRT(ABS(w2(nu)))
@@ -1270,7 +1270,7 @@
             ! 
             IF (adapt_smearing) THEN
               ! Return the value of the adaptative broadening eta
-              CALL broadening(ik, ikk, ikq, w2, vmefp, eta)
+              CALL broadening(ik, ikk, ikq, wf(:, iq), vmefp, eta)
               !
             ENDIF ! adapt_smearing
             !
