@@ -378,7 +378,7 @@
                             !
                             ! this step is performed at each iter step only for iw=1 
                             IF (iw == 1) THEN
-                               esqrt = 1.d0 / SQRT( wsi(iwp)**2.d0 + ADeltaip(jbnd,ixkqf(ik,iq0),iwp)**2.d0 )
+                               esqrt = 1.d0 / DSQRT( wsi(iwp)**2.d0 + ADeltaip(jbnd,ixkqf(ik,iq0),iwp)**2.d0 )
                                wesqrt(jbnd,ixkqf(ik,iq0),iwp) = wsi(iwp) * esqrt 
                                desqrt(jbnd,ixkqf(ik,iq0),iwp) = ADeltaip(jbnd,ixkqf(ik,iq0),iwp) * esqrt 
                             ENDIF
@@ -660,7 +660,7 @@
                             !
                             i = iw + iwp - 1
                             IF (i <= nsw) THEN
-                               root = SQRT(   AZnormp(jbnd,ixkqf(ik,iq0),i)**2.d0 & 
+                               root = SQRT(AZnormp(jbnd,ixkqf(ik,iq0),i)**2.d0 & 
                                             * ( ws(i)**2.d0 - ADeltap(jbnd,ixkqf(ik,iq0),i)**2.d0 ) )
                                IF (aimag(root) < zero) THEN 
                                   esqrt = AZnormp(jbnd,ixkqf(ik,iq0),i) / CONJG(root)
@@ -1210,7 +1210,7 @@
                             kernelp = 2.d0 * REAL(lambda_eph)
                             kernelm = 2.d0 * aimag(lambda_eph)
                             IF (iw == 1) THEN
-                               esqrt = 1.d0 / SQRT( wsi(iwp)**2.d0 + ADeltai(jbnd,ixkqf(ik,iq0),iwp)**2.d0 )
+                               esqrt = 1.d0 / DSQRT( wsi(iwp)**2.d0 + ADeltai(jbnd,ixkqf(ik,iq0),iwp)**2.d0 )
                                wesqrt(jbnd,ixkqf(ik,iq0),iwp) =  wsi(iwp) * esqrt
                                desqrt(jbnd,ixkqf(ik,iq0),iwp) =  ADeltai(jbnd,ixkqf(ik,iq0),iwp) * esqrt
                             ENDIF

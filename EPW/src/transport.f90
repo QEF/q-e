@@ -247,7 +247,7 @@
                   ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0(itemp)
                   fmkq = wgauss(-ekq * inv_etemp, -99)
                   !
-                  ! here we take into account the zero-point SQRT(hbar/2M\omega)
+                  ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                   ! with hbar = 1 and M already contained in the eigenmodes
                   ! g2 is Ry^2, wkf must already account for the spin factor
                   !
@@ -312,7 +312,7 @@
                     ekq = etf(ibndmin - 1 + jbnd, ikq) - efcb(itemp)
                     fmkq = wgauss(-ekq * inv_etemp, -99)
                     !
-                    ! here we take into account the zero-point SQRT(hbar/2M\omega)
+                    ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     !

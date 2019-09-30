@@ -223,10 +223,10 @@
 #if defined(__MPI)
     !
     ! Local variables
-    INTEGER :: nkl
-    !! ADD
-    INTEGER :: nkr
-    !! ADD
+    INTEGER(KIND = MPI_OFFSET_KIND) :: nkl
+    !! Number of k-point block
+    INTEGER(KIND = MPI_OFFSET_KIND) :: nkr
+    !! Reminder
     !
     ! find the bounds of k-dependent arrays in the parallel case
     ! number of kpoint blocks, kpoints per pool and reminder

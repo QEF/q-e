@@ -1413,7 +1413,7 @@
                 DO jbnd = 1, nbndfst
                   IF (ABS(ekfs(jbnd,ixkqf(ixkf(lower_bnd+ik-1),iq)) - ef0 ) < fsthick) THEN
                     !
-                    ! here we take into account the zero-point SQRT(hbar/2M\omega)
+                    ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     !

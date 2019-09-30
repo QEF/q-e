@@ -412,7 +412,7 @@
                 IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
                    weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik)
                    dos_qp(iw) = dos_qp(iw) + weight & 
-                              * REAL( omega / SQRT( omega*omega - ADelta(ibnd,ik,iw)*ADelta(ibnd,ik,iw) ) ) 
+                              * REAL(omega / SQRT(omega * omega - ADelta(ibnd,ik,iw)*ADelta(ibnd,ik,iw))) 
                 ENDIF
              ENDDO
           ENDDO
@@ -422,7 +422,7 @@
        WRITE(iuqdos,'(5a20)') 'w [eV]', 'N_S/N_F'
        DO iw = 1, nsw
           omega = ws(iw) + ci*degaussw0
-          dos_qp(iw) = dos_qp(iw) + REAL( omega / SQRT( omega*omega - Delta(iw)*Delta(iw) ) ) 
+          dos_qp(iw) = dos_qp(iw) + REAL( omega / SQRT(omega * omega - Delta(iw) * Delta(iw))) 
           WRITE(iuqdos,'(2ES20.10)') ws(iw), dos_qp(iw)
        ENDDO
     ENDIF
@@ -478,7 +478,7 @@
              DO ibnd = 1, nbndfs
                 IF (ABS(ekfs(ibnd,ik) - ef0 ) < fsthick) THEN
                    weight = 0.5d0 * wkfs(ik) * w0g(ibnd,ik)
-                   omega = SQRT( wsi(iw)*wsi(iw) + ADeltai(ibnd,ik,iw)*ADeltai(ibnd,ik,iw) )
+                   omega = DSQRT( wsi(iw)*wsi(iw) + ADeltai(ibnd,ik,iw)*ADeltai(ibnd,ik,iw) )
                    dFE = dFE - weight * ( omega - wsi(iw) ) & 
                        * ( AZnormi(ibnd,ik,iw) - NAZnormi(ibnd,ik,iw) * wsi(iw) / omega )
                 ENDIF
@@ -487,7 +487,7 @@
        ENDDO
     ELSEIF (liso) THEN
        DO iw = 1, nsiw(itemp) 
-          omega = SQRT( wsi(iw)*wsi(iw) + Deltai(iw)*Deltai(iw) )
+          omega = DSQRT( wsi(iw)*wsi(iw) + Deltai(iw)*Deltai(iw) )
           dFE = dFE - ( omega - wsi(iw) ) &
               * ( Znormi(iw) - NZnormi(iw) * wsi(iw) / omega )
        ENDDO

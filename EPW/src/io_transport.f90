@@ -248,7 +248,7 @@
         DO ik = 1, nkf
           DO ibnd = 1, nbndfst
             DO imode = 1, nmodes
-              inv_eta(imode, ibnd, ik) = 1.0d0 / (SQRT(2d0) * eta(imode, ibnd, ik))
+              inv_eta(imode, ibnd, ik) = 1.0d0 / (DSQRT(2d0) * eta(imode, ibnd, ik))
             ENDDO
           ENDDO
         ENDDO
@@ -284,7 +284,7 @@
                   g2 = g2 + ABS(epf17(jbnd, pbnd, nu, ik))**two
                 ENDIF
               ENDDO
-              epf2_deg(jbnd, ibnd, nu) = SQRT(g2 / FLOAT(n))
+              epf2_deg(jbnd, ibnd, nu) = DSQRT(g2 / FLOAT(n))
             ENDDO
           ENDDO
         ENDDO
@@ -382,7 +382,7 @@
                   tmp2 = zero
                   DO imode = 1, nmodes
                     !
-                    ! Here we take into account the zero-point SQRT(hbar/2M\omega)
+                    ! Here we take into account the zero-point DSQRT(hbar/2M\omega)
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     ! Note that epf17 has already been squared above during averaging. 

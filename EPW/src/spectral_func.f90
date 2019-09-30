@@ -222,7 +222,7 @@
               ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
               wgkq = wgauss(-ekq / eptemp, -99)  
               !
-              ! here we take into account the zero-point SQRT(hbar/2M\omega)
+              ! here we take into account the zero-point DSQRT(hbar/2M\omega)
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
@@ -606,7 +606,7 @@
               ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
               wgkq = wgauss(-ekq * inv_eptemp, -99)  
               !
-              ! here we take into account the zero-point SQRT(hbar/2M\omega)
+              ! here we take into account the zero-point DSQRT(hbar/2M\omega)
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
@@ -927,12 +927,12 @@
     vF        = (1.d0 / meff) * (3.d0 * (pi**2) * nel / omega / degen)**(1.d0 / 3.d0)
     fermiHEG  = 1.d0 / (2.d0 * meff) * (3.d0 * (pi**2) * nel / omega / degen)**(2.d0 / 3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
     qTF       = (6.d0 * pi * nel / omega / degen / (fermiHEG / 2.d0))**(1.d0 / 2.d0)    ! [a.u.]
-    wpl0      = SQRT(4.d0 * pi * nel / omega / meff / epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
+    wpl0      = DSQRT(4.d0 * pi * nel / omega / meff / epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
     wq        = wpl0 ! [Ryd] 
     q(:)      = xqf(:, iq) 
     CALL cryst_to_cart(1, q, bg, 1)
     qsquared  =  (q(1)**2 + q(2)**2 + q(3)**2)
-    qin       =  SQRT(qsquared) * tpiba_new
+    qin       =  DSQRT(qsquared) * tpiba_new
     qcut      =  wpl0 / vF  / tpiba_new / 2.d0 ! 1/2 converts from Ryd to Ha
     ! 
     CALL get_eps_mahan(qin, rs, kF, eps0) ! qin should be in atomic units for Mahan formula
@@ -953,7 +953,7 @@
       WRITE(stdout, '(12x," deltaeps  = ", E15.10)') deltaeps
     ENDIF
     !
-    IF (SQRT(qsquared) < qcut) THEN
+    IF (DSQRT(qsquared) < qcut) THEN
       !
       ! loop over all k points of the fine mesh
       !
@@ -988,7 +988,7 @@
               !
               ! Computation of the dipole
               IF (ibnd == jbnd) THEN
-                IF (SQRT(qsquared) > eps6) THEN
+                IF (DSQRT(qsquared) > eps6) THEN
                   dipole = 1.0d0 / (qsquared * tpiba_new * tpiba_new)
                 ELSE
                   dipole = 0.d0 

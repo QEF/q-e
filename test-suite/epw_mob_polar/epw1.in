@@ -17,6 +17,7 @@
   etf_mem     = 1
   vme         = .true.
 
+  lpolar      = .true.
   lifc        = .false.
   asr_typ     = 'simple'
 
