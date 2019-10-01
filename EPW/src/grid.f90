@@ -600,7 +600,7 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP, sgl
-    USE epwcom,    ONLY : filqf, nkf1, nkf2, nkf3
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3
     ! 
     IMPLICIT NONE
     ! 
@@ -632,7 +632,7 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE kpoint_grid_epw(nrot, time_reversal, skip_equivalence, s, t_rev, &
-                               bg, nkc1, nkc2, nkc3, BZtoIBZ, s_BZtoIBZ)
+                               nkc1, nkc2, nkc3, BZtoIBZ, s_BZtoIBZ)
     !-----------------------------------------------------------------------
     !!
     !!  Automatic generation of a uniform grid of k-points with symmetry. 
@@ -643,9 +643,7 @@
     USE kinds,            ONLY : DP
     USE division,         ONLY : fkbounds
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
-    USE mp_world,         ONLY : mpime
     USE mp_global,        ONLY : world_comm, my_pool_id, npool, inter_pool_comm
-    USE io_global,        ONLY : ionode_id, stdout
     USE kinds_epw,        ONLY : SIK2
     USE constants_epw,    ONLY : eps6
 #if defined(__MPI)
@@ -670,8 +668,6 @@
     !! True if time reversal
     LOGICAL, INTENT(in) :: skip_equivalence
     !! True if equivalent point
-    REAL(KIND = DP), INTENT(in) :: bg(3, 3)
-    !! Reciprocal space vectors
     !
     ! Local variables
     LOGICAL :: in_the_list
@@ -682,7 +678,7 @@
     !! Total number of points
     INTEGER :: i, j, k
     !! Index on grid size
-    INTEGER :: ns
+    INTEGER(SIK2) :: ns
     !! Index on symmetry operations
     INTEGER :: n
     !! Global k-point index
@@ -1284,11 +1280,11 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
+    USE elph2,         ONLY : nqf, xqf, xkf, chw, nkf, nqtotf, nkqtotf, &
                               map_rebal, nktotf
     USE io_global,     ONLY : ionode_id, stdout
     USE io_var,        ONLY : iunselecq
-    USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
+    USE mp_global,     ONLY : npool, world_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
@@ -1331,7 +1327,7 @@
     !! INTEGER variable for I/O control
     INTEGER :: iq
     !! Counter on coarse q-point grid    
-    INTEGER :: ik, ikk, ikq, ikl
+    INTEGER :: ik, ikk, ikl
     !! Counter on coarse k-point grid
     INTEGER :: icbm
     !! Index for the CBM
@@ -1351,8 +1347,6 @@
     !! Index of the k point from the full grid.
     INTEGER :: ind2
     !! Index of the k+q point from the full grid. 
-    INTEGER :: nkqtotf_tmp
-    !! Temporary k-q points.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
     INTEGER :: ierr
@@ -1385,10 +1379,6 @@
     !! Eigen-energies all full k-grid.
     REAL(KIND = DP) :: etf_tmp(nbndsub)
     !! Temporary Eigen-energies at a give k-point
-    REAL(KIND = DP) :: xkf_tmp (3, nkqtotf)
-    !! Temporary k-point coordinate (dummy variable)
-    REAL(KIND = DP) :: wkf_tmp(nkqtotf)
-    !! Temporary k-weights (dummy variable)
     COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k}$ exponential 
     COMPLEX(KIND = DP) :: cfacq(nrr_k, dims, dims)
@@ -1680,7 +1670,6 @@
     !-----------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
     USE elph2,         ONLY : etf, nkf, nkqtotf, xkf, wkf, etf, map_rebal, map_rebal_inv, &
                               lower_bnd, nktotf
     USE epwcom,        ONLY : fsthick, nbndsub, mp_mesh_k
@@ -1693,8 +1682,6 @@
     !
     IMPLICIT NONE
     !  
-    INTEGER :: pool_index(npool) 
-    !! Index of the current pool
     INTEGER :: ipool
     !! Pool loop
     INTEGER :: ik
@@ -1717,11 +1704,8 @@
     !! K-points that are within the fshick windows
     INTEGER :: kpt_out(nkqtotf)
     !! K-points that are outside of the fshick windows
-    INTEGER :: map_rebal_tmp(nktotf)
-    !! Temporary map between the initial ordering of k-point and the rebalanced one
     INTEGER :: map_rebal_inv_tmp(nktotf)
     !! Temporary inverse map between the initial ordering of k-point and the rebalanced one
-    !
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
     REAL(KIND = DP) :: wkf_all(nkqtotf)
@@ -1841,17 +1825,14 @@
     !! 
     !-----------------------------------------------------------------------  
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : alat, at, omega, bg
-    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE cell_base,     ONLY : at, bg
+    USE symm_base,     ONLY : s, nrot
     USE elph2,         ONLY : nkf, nktotf
     USE constants_epw, ONLY : eps6, zero
     USE wigner,        ONLY : backtoWS
     USE mp,            ONLY : mp_sum
     USE mp_global,     ONLY : world_comm
     USE division,      ONLY : fkbounds
-    USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : ionode_id
     !
     IMPLICIT NONE
     !
@@ -2000,7 +1981,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : nstemp
-    USE elph2,         ONLY : nkqtotf, ibndmax, ibndmin, nkf, nbndfst, nktotf
+    USE elph2,         ONLY : nkf, nbndfst, nktotf
     USE cell_base,     ONLY : bg, at
     USE constants_epw, ONLY : eps6, zero
     USE symm_base,     ONLY : s, nrot
@@ -2036,18 +2017,10 @@
     !! Local index
     INTEGER ::nb
     !! Local index
-    LOGICAL :: special
-    !! Local logical
     INTEGER :: counter_average
     !! Local counter
     INTEGER :: index_sp(nkf)
     !! Index of special points
-    REAL(KIND = DP) :: xkk_cart(3)
-    !! k-point coordinate in Cartesian unit
-    REAL(KIND = DP) :: mean(nbndfst)
-    !! Mean of the velocities
-    REAL(KIND = DP) :: mean_pop(nbndfst)
-    !! Mean of the populations
     REAL(KIND = DP) :: sa(3, 3)
     !! Symmetry matrix in crystal
     REAL(KIND = DP) :: sb(3, 3)

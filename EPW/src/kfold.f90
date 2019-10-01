@@ -393,8 +393,6 @@
     IMPLICIT NONE
     !
     ! Local variables
-    LOGICAL :: in_the_list
-    !! Variable in the list
     LOGICAL :: is_local
     !! Local variable
     INTEGER :: ik

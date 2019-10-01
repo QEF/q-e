@@ -41,7 +41,7 @@
     !
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : czero, cone, zero, one, eps12, eps16
-    USE epwcom,        ONLY : lphase, use_ws
+    USE epwcom,        ONLY : use_ws
     USE low_lvl,       ONLY : utility_zdotu, degen_sort
     !
     IMPLICIT NONE
@@ -76,12 +76,8 @@
     !! Counter on band index
     INTEGER :: jbnd
     !! Counter on band index
-    INTEGER :: neig
-    !! Number of eigenenergies
     INTEGER :: info
     !! Infor for lapack ZHPEVX 
-    INTEGER :: ifail(nbnd)
-    !! LIWORK 
     INTEGER :: list_dup(nbnd)
     !! List of degenerate eigenvalues
     INTEGER :: ndeg
@@ -112,8 +108,6 @@
     !! RWORK(1) returns the optimal LRWORK.
     COMPLEX(KIND = DP) :: chf(nbnd, nbnd)
     !! Hamiltonian in Bloch basis, fine mesh
-    !COMPLEX(KIND = DP) :: zdotu
-    !! Dot product between the two phonon eigenvectors.
     COMPLEX(KIND = DP) :: cz(nbnd, nbnd)
     !! Eigenvectors from diag of Hamiltonian
     COMPLEX(KIND = DP) :: P(nbnd, nbnd)
@@ -122,8 +116,6 @@
     !! Complex work variable
     COMPLEX(KIND = DP), ALLOCATABLE :: P_prime(:, :)
     !! Perturbation matrix on the subspace
-    COMPLEX(KIND = DP), ALLOCATABLE :: Uk_prime(:, :)
-    !! Rotation matrix on the degenerate subspace
     COMPLEX(KIND = DP), ALLOCATABLE :: Uk(:, :)
     !! Rotation matrix on the full space
     !
@@ -333,14 +325,6 @@
     !! Rotation matrix, fine mesh 
     !
     ! Local variables
-    INTEGER :: neig
-    !! The total number of eigenvalues found
-    INTEGER :: info
-    !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
-    INTEGER :: ifail(nmodes)
-    !! Contains the indices of the eigenvectors that failed to converge
-    INTEGER :: iwork(5 * nmodes)
-    !! Integer work array
     INTEGER :: imode
     !! Counter on modes
     INTEGER :: jmode
@@ -351,8 +335,6 @@
     !! Counter on atoms
     INTEGER :: nb
     !! Counter on atoms
-    REAL(KIND = DP) :: rwork(7 * nmodes)
-    !! Real work array
     REAL(KIND = DP) :: w(nmodes)
     !! Eigenvalues
     REAL(KIND = DP) :: xq(3)
@@ -363,16 +345,12 @@
     !! inverse square root of masses
     COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
     !! Complex Hamiltonian packed in upper triangle
-    COMPLEX(KIND = DP) :: cwork(2 * nmodes)
-    !! Complex work array
     COMPLEX(KIND = DP) :: cz(nmodes, nmodes)
     !! Eigenvectors
     COMPLEX(KIND = DP) :: chf(nmodes, nmodes)
     ! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(KIND = DP) :: cfac
     !! Complex prefactor for Fourier transform. 
-    COMPLEX(KIND = DP) :: zdotu
-    !! Dot product between the two phonon eigenvectors. 
     !
     CALL start_clock ('DynW2B')
     !----------------------------------------------------------
@@ -540,8 +518,6 @@
     !! Counter on modes
     INTEGER :: jmode
     !! Counter on modes
-    INTEGER :: ir
-    !! Counter on real-space index
     INTEGER :: na
     !! Counter on atoms
     INTEGER :: nb
@@ -1339,9 +1315,9 @@
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : rdw, epsi, zstar, wscache, ifc
     USE cell_base,     ONLY : at, alat, bg
-    USE epwcom,        ONLY : eig_read, use_ws, lpolar, lifc, nqc1, nqc2, nqc3
+    USE epwcom,        ONLY : use_ws, lpolar, lifc, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one, eps8
-    USE ions_base,     ONLY : tau, nat, ityp
+    USE ions_base,     ONLY : tau, nat
     USE io_global,     ONLY : stdout
     USE low_lvl,       ONLY : degen_sort
     USE rigid_epw,     ONLY : rgd_blk_der
@@ -1380,10 +1356,6 @@
     !! Returns if the modes contains degeneracices for that q-point.
     INTEGER :: ir
     !! Counter on real-space index
-    INTEGER :: iw
-    !! Counter on the number of Wannier functions
-    INTEGER :: iw2
-    !! Counter on the number of Wannier functions
     INTEGER :: imode
     !! Counter on band index
     INTEGER :: jmode

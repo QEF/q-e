@@ -835,7 +835,7 @@
     USE io_var,        ONLY : iufilker
     USE io_global,     ONLY : stdout
     USE io_files,      ONLY : prefix
-    USE epwcom,        ONLY : nswfc, nqstep, nsiter, muc, conv_thr_raxis, &
+    USE epwcom,        ONLY : nswfc, nsiter, muc, conv_thr_raxis, &
                               kerwrite, kerread, nstemp
     USE eliashbergcom, ONLY : nsw, estemp, ws, dws, gap0, gap, fdwp, Kp, Km, & 
                               Delta, Deltap, Znorm

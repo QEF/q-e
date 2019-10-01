@@ -39,7 +39,7 @@
     USE fft_base,              ONLY : dfftp, dffts
     USE fft_interfaces,        ONLY : fwfft, invfft
     USE gvect,                 ONLY : eigts1, eigts2, eigts3, mill, g, ngm
-    USE gvecs,                 ONLY : ngms, doublegrid
+    USE gvecs,                 ONLY : ngms
     USE lsda_mod,              ONLY : lsda
     USE scf,                   ONLY : rho, rho_core
     USE noncollin_module,      ONLY : nspin_lsda, nspin_gga, npol
@@ -50,7 +50,6 @@
     USE uspp,                  ONLY : nlcc_any
     USE eqv,                   ONLY : dvpsi, dmuxc, vlocq
     USE qpoint,                ONLY : eigqts
-    USE klist,                 ONLY : ngk
     USE klist_epw,             ONLY : isk_loc
     USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
     USE funct,                 ONLY : dft_is_gradient, dft_is_nonlocc
@@ -939,9 +938,9 @@
     USE cell_base,            ONLY : omega
     USE fft_base,             ONLY : dfftp
     USE fft_interfaces,       ONLY : fwfft
-    USE gvect,                ONLY : g, gg, ngm, mill, eigts1, eigts2, eigts3
+    USE gvect,                ONLY : g, ngm, mill, eigts1, eigts2, eigts3
     USE uspp,                 ONLY : okvan
-    USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
+    USE uspp_param,           ONLY : upf, lmaxq, nh
     USE mp_global,            ONLY : intra_pool_comm
     USE mp,                   ONLY : mp_sum
     USE lrus,                 ONLY : int3

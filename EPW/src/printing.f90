@@ -27,9 +27,8 @@
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub
-    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, nbndfst,    &
-                              nkf, epf17, xkf, nkqtotf, wf, adapt_smearing, &
-                              nktotf
+    USE elph2,         ONLY : etf, ibndmin, nkqf, xqf, nbndfst,    &
+                              nkf, epf17, xkf, nkqtotf, wf, nktotf
     USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
@@ -252,29 +251,24 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_serta_sym(F_SERTA, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0) 
+    SUBROUTINE print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0) 
     !-----------------------------------------------------------------------
     !!
     !! This routine prints the SERTA mobility using k-point symmetry.
     !!
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : at, omega, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, lower_bnd, transp_temp, & 
-                              nktotf 
+    USE cell_base,     ONLY : at, bg
+    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : s, nrot
     USE noncollin_module, ONLY : noncolin
-    USE mp_global,     ONLY : world_comm, my_pool_id
     USE mp,            ONLY : mp_sum
     USE kinds_epw,     ONLY : SIK2
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: BZtoIBZ(nkf1 * nkf2 * nkf3)
-    !! BZ to IBZ mapping
     INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
     INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
@@ -301,8 +295,6 @@
     !! Number of points equivalent by sym from BZ to IBTZ
     INTEGER :: ikbz
     !! Index of full BZ points
-    INTEGER :: ij  
-    !! Combined x,y,z index
     INTEGER :: i,j
     !! Cartesian index
     REAL(KIND = DP) :: etemp
@@ -329,20 +321,6 @@
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND = DP) :: fnk
     !! Fermi-Dirac occupation function
-    REAL(KIND = DP) :: mobility
-    !! Sum of the diagonal mobilities [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_od
-    !! Sum of the off-diagonal mobilities [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_xx
-    !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_yy
-    !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_zz
-    !! Mobility along the zz axis after diagonalization [cm^2/Vs]
-    REAL(KIND = DP) :: sigma_eig(3)
-    !! Eigenvalues from the diagonalized conductivity matrix
-    REAL(KIND = DP) :: sigma_vect(3, 3)
-    !! Eigenvectors from the diagonalized conductivity matrix
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND = DP), EXTERNAL :: w0gauss
@@ -512,15 +490,11 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : at, omega, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, &
-                              lower_bnd, transp_temp, nktotf 
+    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
-                               electron_SI, bohr2ang, ang2cm, hbarJ
+                              electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
-    USE mp_global,     ONLY : world_comm, my_pool_id
     USE mp,            ONLY : mp_sum
     !
     IMPLICIT NONE
@@ -543,8 +517,6 @@
     !! k-point index
     INTEGER :: ibnd
     !! band index
-    INTEGER :: ij  
-    !! Combined x,y,z index
     INTEGER :: i, j
     !! Cartesian index
     REAL(KIND = DP) :: etemp
@@ -557,20 +529,6 @@
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND = DP) :: fnk
     !! Fermi-Dirac occupation function
-    REAL(KIND = DP) :: mobility
-    !! Sum of the diagonal mobilities [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_od
-    !! Sum of the off-diagonal mobilities [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_xx
-    !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_yy
-    !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_zz
-    !! Mobility along the zz axis after diagonalization [cm^2/Vs]
-    REAL(KIND = DP) :: sigma_eig(3)
-    !! Eigenvalues from the diagonalized conductivity matrix
-    REAL(KIND = DP) :: sigma_vect(3, 3)
-    !! Eigenvectors from the diagonalized conductivity matrix
     REAL(KIND = DP) :: Fi_check(3, nstemp)
     !! Sum rule on population
     REAL(KIND = DP), EXTERNAL :: wgauss
@@ -684,30 +642,25 @@
     !-----------------------------------------------------------------------
     !  
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob) 
+    SUBROUTINE print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob) 
     !-----------------------------------------------------------------------
     !!
     !!  This routine prints the iterative mobility using k-point symmetry ( electron or hole )
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : at, bg
-    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, &
-                              lower_bnd, transp_temp, nktotf 
+    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ, eps80
     USE symm_base,     ONLY : s, nrot
     USE noncollin_module, ONLY : noncolin
-    USE mp_global,     ONLY : world_comm
     USE mp,            ONLY : mp_sum
     USE kinds_epw,     ONLY : SIK2
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: BZtoIBZ(nkf1 * nkf2 * nkf3)
-    !! BZ to IBZ mapping
     INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
     INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
@@ -735,9 +688,7 @@
     !! Number of points equivalent by sym from BZ to IBTZ
     INTEGER :: ikbz
     !! Index of full BZ points
-    INTEGER :: ij  
-    !! Combined x,y,z index
-    INTEGER :: i,j
+    INTEGER :: i, j
     !! Cartesian index
     REAL(KIND = DP) :: etemp
     !! Temperature in Ry (this includes division by kb)
@@ -765,20 +716,6 @@
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND = DP) :: fnk
     !! Fermi-Dirac occupation function
-    REAL(KIND = DP) :: mobility
-    !! Sum of the diagonal mobilities [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_od
-    !! Sum of the off-diagonal mobilities [cm^2/Vs]
-    REAL(KIND = DP) :: mobility_xx
-    !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_yy
-    !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_zz
-    !! Mobility along the zz axis after diagonalization [cm^2/Vs]
-    REAL(KIND = DP) :: sigma_eig(3)
-    !! Eigenvalues from the diagonalized conductivity matrix
-    REAL(KIND = DP) :: sigma_vect(3, 3)
-    !! Eigenvectors from the diagonalized conductivity matrix
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND = DP), EXTERNAL :: w0gauss
@@ -945,15 +882,11 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : omega 
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nbndfst, transp_temp, &
-                              nktotf 
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ, eps80
     USE noncollin_module, ONLY : noncolin
-    USE mp_global,     ONLY : world_comm
     USE mp,            ONLY : mp_sum
     !
     IMPLICIT NONE
@@ -977,10 +910,6 @@
     !! k-point index
     INTEGER :: ibnd
     !! band index
-    INTEGER :: nb 
-    !! Number of points equivalent by sym from BZ to IBTZ
-    INTEGER :: ij  
-    !! Combined x,y,z index
     INTEGER :: i,j
     !! Cartesian index
     REAL(KIND = DP) :: etemp
@@ -995,20 +924,6 @@
     !! Fermi-Dirac occupation function
     REAL(KIND = DP) :: Fi_check(3, nstemp)
     !! Check that \Sum_k Fi = (0,0,0)
-    REAL(KIND = DP) :: mobility
-    !! Sum of the diagonal mobilities [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_od
-    !! Sum of the off-diagonal mobilities [cm^2/Vs]
-    REAL(KIND = DP) :: mobility_xx
-    !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_yy
-    !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
-    REAL(KIND = DP) :: mobility_zz
-    !! Mobility along the zz axis after diagonalization [cm^2/Vs]
-    REAL(KIND = DP) :: sigma_eig(3)
-    !! Eigenvalues from the diagonalized conductivity matrix
-    REAL(KIND = DP) :: sigma_vect(3, 3)
-    !! Eigenvectors from the diagonalized conductivity matrix
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND = DP), EXTERNAL :: w0gauss

@@ -36,7 +36,7 @@
     USE klist,            ONLY : nkstot
     USE io_files,         ONLY : prefix
     USE epwcom,           ONLY : write_wfn, scdm_proj, scdm_entanglement, & 
-                                 scdm_mu, scdm_sigma
+                                 scdm_sigma
     USE wannierEPW,       ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
                                  ikstart, ikstop, iknum
     USE constants_epw,    ONLY : zero, one
@@ -449,14 +449,20 @@
        n_proj = n_wannier
     !ENDIF
     !
-    WRITE(stdout, *)
-    WRITE(stdout, *) '    Initial Wannier projections'
-    WRITE(stdout, *)
-    !
-    DO iw = 1, n_proj
-      WRITE(stdout, '(5x, "(", 3f10.5, ") :  l = ", i3, " mr = ", i3)') & 
+    IF (scdm_proj) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, *) '    Initial Wannier auto_projections'
+      WRITE(stdout, *)
+    ELSE
+      WRITE(stdout, *)
+      WRITE(stdout, *) '    Initial Wannier projections'
+      WRITE(stdout, *)
+      !
+      DO iw = 1, n_proj
+        WRITE(stdout, '(5x, "(", 3f10.5, ") :  l = ", i3, " mr = ", i3)') & 
                        center_w(:, iw), l_w(iw), mr_w(iw)
-    ENDDO
+      ENDDO
+    ENDIF
     !
     excluded_band(1:nbnd) = .FALSE.
     nexband = 0
@@ -481,8 +487,8 @@
                     &" bands are excluded from wannier projection")') nbndskip, nexband
     ENDIF
     !
-    IF ((nbnd-nexband) /= num_bands ) &
-        CALL errore('setup_nnkp', ' something wrong with num_bands', 1)
+    IF ((nbnd - nexband) /= num_bands ) &
+      CALL errore('setup_nnkp', ' something wrong with num_bands', 1)
     ! 
     ! Now we read the .nnkp file 
     !
@@ -713,8 +719,6 @@
     ! Local variables
     CHARACTER(LEN = 80) :: line1, line2
     !!
-    INTEGER :: ierr
-    !! Error status
     !
     ! Uncommenting the following line the file scan restarts every time
     ! from the beginning thus making the reading independent on the order
@@ -764,8 +768,6 @@
     !! Counter on wannier functions
     INTEGER :: ik
     !! Counter of k-point index
-    INTEGER :: ibnd
-    !! Counter on band index
     INTEGER :: ios
     !! Integer variable for I/O control
     INTEGER :: ierr
@@ -876,7 +878,6 @@
     USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
     USE mp,              ONLY : mp_sum
     USE kfold,           ONLY : ktokpmq
-    USE mp_world,        ONLY : mpime
     USE io_epw,          ONLY : readwfc
     ! 
     IMPLICIT NONE
@@ -1158,7 +1159,6 @@
     USE mp_world,        ONLY : world_comm
     USE mp_pools,        ONLY : intra_pool_comm
     USE mp_global,       ONLY : my_pool_id, npool, inter_pool_comm
-    USE ions_base,       ONLY : ntyp => nsp
     USE constants_epw,   ONLY : zero, czero, one, twopi
     USE kfold,           ONLY : ktokpmq
     USE epwcom,          ONLY : scdm_entanglement, scdm_mu, scdm_sigma
@@ -1187,8 +1187,6 @@
     !!
     INTEGER :: ipt, jpt, kpt, lpt
     !! Counter over FFT grid
-    INTEGER :: ispin
-    !! Spin index
     INTEGER :: count_piv_spin
     !!
     INTEGER :: minmn
@@ -1219,7 +1217,6 @@
     !! jml: Position of piv
     INTEGER, ALLOCATABLE :: piv_spin(:)
     !! jml: Spin index of piv
-    !
     REAL(KIND = DP):: pnorm
     !! 
     REAL(KIND = DP):: norm_psi
@@ -1268,8 +1265,6 @@
     COMPLEX(KIND = DP), ALLOCATABLE :: qr_tau(:)
     !!
     COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
-    !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: cwork2(:)
     !!
     COMPLEX(KIND = DP), ALLOCATABLE :: Umat(:, :)
     !!
@@ -1408,7 +1403,7 @@
         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
           f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-          f_gamma = EXP(- 1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+          f_gamma = EXP(-1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
         ELSE
           CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
         ENDIF
@@ -1428,14 +1423,14 @@
         pnorm = REAL(SUM(psic_nc_all(1:nrtot, 1) * CONJG(psic_nc_all(1:nrtot, 1))), KIND = DP) + &
                 REAL(SUM(psic_nc_all(1:nrtot, 2) * CONJG(psic_nc_all(1:nrtot, 2))), KIND = DP)
         norm_psi = DSQRT(pnorm)
-        psi_gamma(        1:nrtot,     ibnd1) = psic_nc_all(1:nrtot, 1) * f_gamma / norm_psi
-        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = psic_nc_all(1:nrtot, 2) * f_gamma / norm_psi
+        psi_gamma(        1:nrtot,     ibnd1) = (psic_nc_all(1:nrtot, 1) / norm_psi) * f_gamma
+        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc_all(1:nrtot, 2) / norm_psi) * f_gamma
 #else
         pnorm = REAL(SUM(psic_nc(1:nrtot, 1) * CONJG(psic_nc(1:nrtot, 1))), KIND = DP) + &
                 REAL(SUM(psic_nc(1:nrtot, 2) * CONJG(psic_nc(1:nrtot, 2))), KIND = DP)
         norm_psi = DSQRT(pnorm) 
-        psi_gamma(        1:nrtot,     ibnd1) = psic_nc(1:nrtot, 1) * f_gamma / norm_psi
-        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = psic_nc(1:nrtot, 2) * f_gamma / norm_psi
+        psi_gamma(        1:nrtot,     ibnd1) = (psic_nc(1:nrtot, 1) / norm_psi) * f_gamma
+        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc(1:nrtot, 2) / norm_psi) * f_gamma
 #endif
       ENDDO ! ibnd
     ELSE
@@ -1445,13 +1440,13 @@
         !
         ! check ibnd1 <= numbands
         IF (ibnd1 > numbands) CALL errore('compute_amn_with_scdm', &
-                                          &'Something wrong with the number of bands. Check exclude_bands.', 1)
+           'Something wrong with the number of bands. Check exclude_bands.', 1)
         IF (TRIM(scdm_entanglement) == 'isolated') THEN
           f_gamma = 1.0d0
         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
           f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-          f_gamma = EXP(- 1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+          f_gamma = EXP(-1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
         ELSE
           CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
         ENDIF
@@ -1463,16 +1458,15 @@
         CALL invfft('Wave', psic, dffts)
         !
         ! vv: Build Psi_k = Unk * focc at G-point only
-        psi_gamma(:, :) = czero
 #if defined(__MPI)
         CALL gather_grid(dffts, psic, psic_all)
         pnorm = REAL(SUM(psic_all(1:nrtot) * CONJG(psic_all(1:nrtot))), KIND = DP)
         norm_psi = DSQRT(pnorm)
-        psi_gamma(1:nrtot, ibnd1) = psic_all(1:nrtot) * f_gamma / norm_psi
+        psi_gamma(1:nrtot, ibnd1) = (psic_all(1:nrtot) / norm_psi) * f_gamma
 #else
         pnorm = REAL(SUM(psic(1:nrtot) * CONJG(psic(1:nrtot))), KIND = DP)
         norm_psi = DSQRT(pnorm)
-        psi_gamma(1:nrtot, ibnd1) = psic(1:nrtot) * f_gamma / norm_psi
+        psi_gamma(1:nrtot, ibnd1) = (psic(1:nrtot) / norm_psi) * f_gamma
 #endif
       ENDDO ! ibnd
     ENDIF !noncolin
@@ -1634,7 +1628,7 @@
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
             focc(ibnd1) = 0.5d0 * ERFC((et(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc(ibnd1) = EXP( - 1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            focc(ibnd1) = EXP(-1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
@@ -1665,7 +1659,7 @@
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
             focc(ibnd1) = 0.5d0 * ERFC((et(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc(ibnd1) = EXP( - 1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            focc(ibnd1) = EXP(-1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
@@ -1801,7 +1795,6 @@
     !! 
     USE kinds,            ONLY : DP
     USE constants_epw,    ONLY : czero, cone, eps6
-    USE noncollin_module, ONLY : npol
     USE wvfct,            ONLY : npwx
     USE wannierEPW,       ONLY : gf, n_proj, spin_qaxis, spin_eig, gf_spinor
     ! 
@@ -1810,22 +1803,19 @@
     INTEGER, INTENT(in) :: npw
     !! Number of plane waves 
     !
+    ! Local variables
     LOGICAL :: spin_z_pos
     !! Detect if spin quantisation axis is along +z
     LOGICAL :: spin_z_neg
     !! Detect if spin quantisation axis is along -z
-    !
     INTEGER :: iw
     !! Counter on number of projections
     INTEGER  :: ipol
     !! Index of spin-up/spin-down polarizations
     INTEGER ::  istart, iend
     !! Starting/ending index on plane waves
-    INTEGER :: ierr
-    !! Error status
-    !
     COMPLEX(KIND = DP) :: fac(2)
-    !!
+    !! Factor
     !
     gf_spinor(:, :) = czero
     DO iw = 1, n_proj
@@ -1891,7 +1881,7 @@
     USE fft_interfaces,  ONLY : fwfft, invfft
     USE klist,           ONLY : nkstot, nks, igk_k
     USE klist_epw,       ONLY : xk_all, xk_loc
-    USE gvect,           ONLY : g, ngm, gstart
+    USE gvect,           ONLY : g, ngm
     USE gvecw,           ONLY : gcutw
     USE cell_base,       ONLY : omega, tpiba, bg
     USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -1910,7 +1900,6 @@
 #endif
     USE mp,              ONLY : mp_sum
     USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
-    USE mp_world,        ONLY : mpime
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
     ! 
@@ -2016,7 +2005,7 @@
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating phase', 1)
     ALLOCATE(igkq(npwx), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating igkq', 1)
-    ALLOCATE(evcq(npol*npwx, nbnd), STAT = ierr)
+    ALLOCATE(evcq(npol * npwx, nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating evcq', 1)
     !
     IF (noncolin) THEN
@@ -2154,7 +2143,7 @@
         CALL readwfc(ipool, nkq, evcq)
         !
         ! sorts k+G vectors in order of increasing magnitude, up to ecut
-        CALL gk_sort(xk_all(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin)
+        CALL gk_sort(xk_all(1, ikp), ngm, g, gcutw, npwq, igkq, g2kin)
         !
         ! compute the phase
         IF (.NOT. zerophase(ik_g, ib)) THEN
@@ -2230,7 +2219,7 @@
               ENDDO  !nat 
             ELSE  !tvanp
               DO na = 1, nat
-                IF (ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
+                IF (ityp(na) == nt) ijkb0 = ijkb0 + nh(nt)
               ENDDO
             ENDIF !tvanp
           ENDDO !ntyp
@@ -2417,7 +2406,6 @@
     USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
     USE gvecw,           ONLY : gcutw
     USE wavefunctions,   ONLY : evc
-    USE units_lr,        ONLY : lrwfc, iuwfc
     USE gvect,           ONLY : g, ngm
     USE cell_base,       ONLY : tpiba
     USE noncollin_module,ONLY : noncolin
@@ -2484,7 +2472,7 @@
           !
           IF (ibnd == jbnd) CYCLE
           !
-          ! taken from PP/epsilon.f90 SUBROUTINE dipole_calc
+          ! taken from PP/epsilon.f90 subroutine dipole_calc
           DO ig = 1, npw
             IF (igk_k(ig, ik) > SIZE(g, 2) .OR. igk_k(ig, ik) < 1) CYCLE
             !
@@ -2700,11 +2688,10 @@
     USE kinds,           ONLY : DP
     USE mp_global,       ONLY : inter_pool_comm
     USE mp,              ONLY : mp_sum
-    USE io_global,       ONLY : meta_ionode
     USE klist,           ONLY : nkstot, nks
     USE klist_epw,       ONLY : xk_loc
     USE wvfct,           ONLY : nbnd
-    USE wannierEPW,      ONLY : a_mat, m_mat, num_bands, n_wannier, n_proj, & 
+    USE wannierEPW,      ONLY : a_mat, m_mat, n_wannier, n_proj, & 
                                 nnb, kpb, iknum, excluded_band
     USE elph2,           ONLY : umat, umat_all
     USE constants_epw,   ONLY : czero, cone, zero

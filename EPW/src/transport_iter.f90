@@ -27,33 +27,24 @@
     !!
     USE kinds,            ONLY : DP, sgl
     USE io_global,        ONLY : stdout
-    USE cell_base,        ONLY : alat, at, omega, bg
-    USE phcom,            ONLY : nmodes
-    USE epwcom,           ONLY : fsthick, mob_maxiter, eps_acustic, degaussw, nstemp, & 
-                                 system_2d, int_mob, ncarrier, restart, restart_freq, &
-                                 mp_mesh_k, nkf1, nkf2, nkf3, vme, broyden_beta
-    USE pwcom,            ONLY : ef 
-    USE elph2,            ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef,   & 
-                                 wf, xkf, epf17, nqtotf, nkqtotf, nbndfst, nktotf,    & 
-                                 map_rebal, xqf, wqf, nqf, transp_temp,               &
-                                 mobilityel_save, lower_bnd, ixkqf_tr, s_BZtoIBZ_full,&
-                                 mobilityh_save
-    USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,        & 
-                                 electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8,    &
+    USE cell_base,        ONLY : at, bg
+    USE epwcom,           ONLY : mob_maxiter, nstemp, broyden_beta,            & 
+                                 mp_mesh_k, nkf1, nkf2, nkf3
+    USE elph2,            ONLY : nkqf, wkf, xkf, nkqtotf, nbndfst,             &   
+                                 nktotf, map_rebal, xqf, transp_temp,          &
+                                 ixkqf_tr, s_BZtoIBZ_full                      
+    USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,     & 
+                                 electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8, &
                                  eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
-    USE mp_global,        ONLY : inter_pool_comm, world_comm, my_pool_id
-    USE mp_world,         ONLY : mpime
-    USE io_global,        ONLY : ionode_id
+    USE mp_global,        ONLY : world_comm 
     USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_eliashberg,    ONLY : kpmq_map
     USE printing,         ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
     USE grid,             ONLY : k_avg
     USE io_transport,     ONLY : fin_write, fin_read 
-    USE noncollin_module, ONLY : noncolin
     USE io_files,         ONLY : diropn
     USE control_flags,    ONLY : iverbosity
-    USE io_var,           ONLY : iufilibtev_sup
     USE kinds_epw,        ONLY : SIK2
     USE wigner,           ONLY : backtoWS
     USE grid,             ONLY : special_points, kpoint_grid_epw
@@ -87,8 +78,6 @@
     !! inv_tau (either inv_tau_all or inv_tau_allcb)
     ! 
     ! Local variables
-    LOGICAL :: exst
-    !! Local variable
     INTEGER :: ind
     !! Index for sparse matrix
     INTEGER :: iter
@@ -97,28 +86,16 @@
     !! q-point
     INTEGER :: ik
     !! K-point index
-    INTEGER :: ikk
-    !! Odd index to read etf
-    INTEGER :: ikq
-    !! Even k+q index to read etf
     INTEGER :: ibnd
     !! Local band index
     INTEGER :: jbnd
     !! Local band index
-    INTEGER :: imode
-    !! Local mode index
     INTEGER :: itemp
     !! Temperature index
-    INTEGER :: ipool
-    !! Index of the pool
-    INTEGER :: nkq
-    !! Index of the pool the the k+q point is
     INTEGER :: nkq_abs
     !! Index of the k+q point from the full grid. 
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
-    INTEGER :: nb
-    !! Number of points in the BZ corresponding to a point in IBZ 
     INTEGER :: BZtoIBZ_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
     INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
@@ -141,14 +118,8 @@
     !! Variable for WS folding
     INTEGER, ALLOCATABLE :: xkf_sp(:, :)
     !! Special k-points
-    REAL(KIND = DP) :: tau
-    !! Relaxation time
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
-    REAL(KIND = DP) :: ekq
-    !! Energy relative to Fermi level: $$\varepsilon_{m\mathbf{k+q}}-\varepsilon_F$$
-    REAL(KIND = DP) :: vkk(3, nbndfst)
-    !! Electronic velocity $$v_{n\mathbf{k}}$$
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
     REAL(KIND = DP) :: f_serta(3, nbndfst, nktotf, nstemp)
@@ -171,14 +142,10 @@
     !! Local variable
     REAL(KIND = DP) :: xkk(3) 
     !! K-point index for printing
-    REAL(KIND = DP) :: ws(3)
-    !! Wigner-Seitz vector
     REAL(KIND = DP) :: rws(4, nrwsx)
     !! Real WS vectors 
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
-    REAL(KIND = DP), ALLOCATABLE :: xkf_bz(:, :)
-    !! K-points on the full BZ 
     ! 
     xkf_all(:, :) = zero
 #if defined(__MPI)
@@ -220,7 +187,7 @@
       wkf(:) = 0d0
       ! What we get from this call is BZtoIBZ
       CALL start_clock('kpoint_paral')
-      CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+      CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
       CALL stop_clock('kpoint_paral')
       ! 
       BZtoIBZ_tmp(:) = 0
@@ -286,7 +253,7 @@
       ! Averages points which leaves the k-point unchanged by symmetry in F and v. 
       ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
       CALL k_avg(F_SERTA, vkk_all, nb_sp, xkf_sp)
-      CALL print_serta_sym(F_SERTA, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
     ELSE  
       CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
     ENDIF
@@ -379,7 +346,7 @@
       !  
       IF (mp_mesh_k) THEN
         CALL k_avg(F_out, vkk_all, nb_sp, xkf_sp)
-        CALL print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
+        CALL print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
       ELSE
         CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob)
       ENDIF
@@ -436,8 +403,7 @@
     !!  
     ! ----------------------------------------------------------------------------
     USE kinds,            ONLY : DP, i4b
-    USE elph2,            ONLY : nkqtotf, ibndmin, ibndmax, inv_tau_all, inv_tau_allcb, &
-                                 nbndfst, nktotf
+    USE elph2,            ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf
     USE mp_world,         ONLY : mpime, world_comm
     USE io_global,        ONLY : ionode_id, stdout
     USE io_files,         ONLY : tmp_dir, prefix
@@ -445,7 +411,7 @@
     USE constants_epw,    ONLY : zero
     USE io_var,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
-                                 iunsparsekcb, iunrestart, iunsparseicb, iunsparsejcb,&
+                                 iunsparsekcb, iunsparseicb, iunsparsejcb,&
                                  iunsparsetcb, iunepmatcb
     USE mp,               ONLY : mp_bcast
     USE division,         ONLY : fkbounds2
@@ -498,7 +464,7 @@
     !! Dummy counter for k-points
     INTEGER :: ibtmp
     !! Dummy counter for bands
-    INTEGER :: nind
+    INTEGER(KIND = 8) :: nind
     !! Number of local elements per cores. 
     INTEGER(KIND = i4b), ALLOCATABLE :: sparse_q(:)
     !! Index mapping for q-points
