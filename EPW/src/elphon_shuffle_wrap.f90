@@ -20,7 +20,7 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
-  USE mp_global,     ONLY : my_pool_id, pool, world_comm  
+  USE mp_global,     ONLY : my_pool_id, world_comm, npool  
   USE mp_images,     ONLY : my_image_id, nimage
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast

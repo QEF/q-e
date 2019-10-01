@@ -52,7 +52,7 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: nind
+    INTEGER(KIND = 8), INTENT(in) :: nind
     !! Total number of elements per cpu
     INTEGER, INTENT(in) :: sparse_q(nind)
     !! Q-point mapping index
