@@ -956,18 +956,18 @@
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
           !
-          ALLOCATE(xqf_ (3, nqf1 * nqf2 * nqf3), STAT = ierr)
+          ALLOCATE(xqf_(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
           ALLOCATE(wqf_(nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           DEALLOCATE(xqf_, wqf_, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating xqf_, wqf_', 1)
           ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ (3, nqtotf), wqf_', 1)
-          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           !  
           ! bring the k point to crystal coordinates       
@@ -1448,7 +1448,7 @@
           CALL set_sym_bl()
           !
           ! What we get from this call is BZtoIBZ
-          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
           ! 
           IF (iterative_bte) THEN
             BZtoIBZ_tmp(:) = 0

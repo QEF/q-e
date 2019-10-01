@@ -24,7 +24,7 @@
   USE kinds,         ONLY : DP, i4b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
-  USE cell_base,     ONLY : at, bg, omega, alat
+  USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
@@ -35,8 +35,8 @@
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
-                            nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl, lindabs, mob_maxiter, use_ws,           &
+                            nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
+                            specfun_pl, lindabs, use_ws,                        &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3
   USE control_flags, ONLY : iverbosity
@@ -46,8 +46,8 @@
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, crystal, iunepmatwp2, iunrestart,       &
-                            iuntau, iuntaucb
+                            iunepmatwp, iunepmatwp2, iunrestart, iuntau,        &
+                            iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
                             epmatq, wf, etf, etf_ks, xqf, xkf,                  &
@@ -56,7 +56,7 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all, eta, nbndfst,    &
-                            inv_tau_allcb, zi_allcb, exband, xkfd,              &
+                            inv_tau_allcb, zi_allcb, exband,                    &
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  transp_temp, xkq, lower_bnd, upper_bnd 
@@ -79,7 +79,7 @@
   USE division,      ONLY : fkbounds
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, npool
+  USE mp_global,     ONLY : npool
   USE mp_world,      ONLY : mpime, world_comm
   USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,       &
                             sumkg_seq, efermig_seq, mem_size
@@ -176,8 +176,6 @@
   !! Index of the CBM
   INTEGER :: totq
   !! Total number of q-points within the fsthick window. 
-  INTEGER :: icounter
-  !! Integer counter for displaced points
   INTEGER :: ipool
   !! Cpu index.
   INTEGER :: npool_tmp
@@ -206,25 +204,17 @@
   !! To restart opening files
   INTEGER :: ctype
   !! Calculation type: -1 = hole, +1 = electron and 0 = both.
-  INTEGER :: n_av
-  !! To average eta_av
 #if defined(__MPI)
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_tot
   !! Total number of points store on file 
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
-  !! Offset to tell where to start reading the file
 #else
   INTEGER :: ind_tot
   !! Total number of points store on file 
   INTEGER :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER :: lsize
-  !! Offset to tell where to start reading the file
 #endif
-  REAL(KIND = DP) :: rdotk_scal
-  !! Real (instead of array) for $r\cdot k$
   REAL(KIND = DP) :: xxq(3)
   !! Current q-point 
   REAL(KIND = DP) :: xxk(3)
@@ -245,14 +235,6 @@
   !! Second Fermi level for the temperature itemp  
   REAL(KIND = DP) :: dummy(3)
   !! Dummy variable
-  REAL(KIND = DP) :: vel_diff(3)
-  !! Velocity difference when computed adaptative broadening
-  REAL(KIND = DP) :: eta_tmp(3)
-  !! Temporary adaptative broadening
-  REAL(KIND = DP) :: val
-  !! Temporary broadening value
-  !REAL(KIND = DP), EXTERNAL :: fermicarrier
-  !! Function that returns the Fermi level so that n=p (if int_mob = .TRUE.)  
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
   !REAL(KIND = DP), EXTERNAL :: efermig_seq
@@ -277,14 +259,8 @@
   !! velocity from all the k-point
   REAL(KIND = DP), ALLOCATABLE :: wkf_all(:)
   !! k-point weights for all the k-points
-  REAL(KIND = DP) :: eta_av
-  !! Average eta over degenerate states
   REAL(KIND = DP), ALLOCATABLE :: eta_deg(:, :)
   !! Average eta over degenerate states
-  REAL(KIND = DP) :: e_1
-  !! Eigenvalue 1 for deg. testing
-  REAL(KIND = DP) :: e_2
-  !! Eigenvalue 2 for deg. testing
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwe_mem(:, :, :, :)
   !! e-p matrix  in wannier basis - electrons (written on disk)
   COMPLEX(KIND = DP), ALLOCATABLE :: epmatwef(:, :, :)
