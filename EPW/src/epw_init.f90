@@ -7,15 +7,15 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   ! Adapted from the code PH/phq_init - Quantum-ESPRESSO group                 
-  !--------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   SUBROUTINE epw_init(first_run)
   !----------------------------------------------------------------------------
   !
-  !!     This initialization is done nqc_irr times from elphon_shuffle_wrap
-  !!     not all of the following code is necessary.  More adaptation from
-  !!     phq_init is needed   
+  !! This initialization is done nqc_irr times from elphon_shuffle_wrap
+  !! not all of the following code is necessary.  More adaptation from
+  !! phq_init is needed   
   !!
-  !!     Roxana Margine - Dec 2018: Updated based on QE 6.3
+  !! Roxana Margine - Dec 2018: Updated based on QE 6.3
   !!
   !
   USE kinds,            ONLY : DP
@@ -44,16 +44,17 @@
   USE mp_global,        ONLY : inter_pool_comm, my_pool_id
   USE spin_orb,         ONLY : lspinorb
   USE lsda_mod,         ONLY : nspin, lsda, current_spin
-  USE phus,             ONLY : int1, int1_nc, int2, int2_so, &
-                               int4, int4_nc, int5, int5_so, &
-                               alphap
+  USE phus,             ONLY : int1, int1_nc, int2, int2_so,        &
+                               int4, int4_nc, int5, int5_so, alphap
+  USE poolgathering,    ONLY : poolgather_int, poolgather_int1
+  USE io_epw,           ONLY : readwfc
+  USE dvqpsi,           ONLY : dvanqq2
   !
   IMPLICIT NONE
   !
-  LOGICAL :: first_run
+  LOGICAL, INTENT(in) :: first_run
   !
-  ! ... Local variables
-  !
+  ! Local variables
   INTEGER :: nt
   !! counter on atom types
   INTEGER :: ik
@@ -66,36 +67,47 @@
   !! counter on atoms
   INTEGER :: ig
   !! counter on G vectors
-  !
-  REAL(DP) :: arg
+  INTEGER :: ierr
+  !! Error status
+  REAL(KIND = DP) :: arg
   !! the argument of the phase
-  !
-  COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:, :)
   !! used to compute alphap
   !
-  !
-  CALL start_clock( 'epw_init' )
+  CALL start_clock('epw_init')
   ! 
   IF (first_run) THEN
-    ALLOCATE (vlocq(ngm, ntyp))
-    ALLOCATE (eigqts(nat))
+    ALLOCATE(vlocq(ngm, ntyp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating vlocq', 1)
+    ALLOCATE(eigqts(nat), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating eigqts', 1)
     IF (okvan) THEN
-      ALLOCATE (int1(nhm, nhm, 3, nat, nspin_mag))
-      ALLOCATE (int2(nhm, nhm, 3, nat, nat))
-      ALLOCATE (int4(nhm * (nhm + 1)/2, 3, 3, nat, nspin_mag))
-      ALLOCATE (int5(nhm * (nhm + 1)/2, 3, 3, nat , nat))
+      ALLOCATE(int1(nhm, nhm, 3, nat, nspin_mag), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int1', 1)
+      ALLOCATE(int2(nhm, nhm, 3, nat, nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int2', 1)
+      ALLOCATE(int4(nhm * (nhm + 1) / 2, 3, 3, nat, nspin_mag), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int4(nhm * ', 1)
+      ALLOCATE(int5(nhm * (nhm + 1) / 2, 3, 3, nat , nat), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int5(nhm * ', 1)
       IF (noncolin) THEN
-        ALLOCATE (int1_nc(nhm, nhm, 3, nat, nspin))
-        ALLOCATE (int4_nc(nhm, nhm, 3, 3, nat, nspin))
+        ALLOCATE(int1_nc(nhm, nhm, 3, nat, nspin), STAT = ierr)
+        IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int1_nc', 1)
+        ALLOCATE(int4_nc(nhm, nhm, 3, 3, nat, nspin), STAT = ierr)
+        IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int4_nc', 1)
         IF (lspinorb) THEN
-          ALLOCATE (int2_so(nhm, nhm, 3, nat, nat, nspin))
-          ALLOCATE (int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
+          ALLOCATE(int2_so(nhm, nhm, 3, nat, nat, nspin), STAT = ierr)
+          IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int2_so', 1)
+          ALLOCATE(int5_so(nhm, nhm, 3, 3, nat, nat, nspin), STAT = ierr)
+          IF (ierr /= 0) CALL errore('epw_init', 'Error allocating int5_so', 1)
         ENDIF
       ENDIF ! noncolin
     ENDIF ! okvan
     !  
-    ALLOCATE (becp1(nks))
-    ALLOCATE (alphap(3, nks))
+    ALLOCATE(becp1(nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating becp1', 1)
+    ALLOCATE(alphap(3, nks), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating alphap', 1)
     ! 
     DO ik = 1, nks
       CALL allocate_bec_type(nkb, nbnd, becp1(ik))
@@ -113,32 +125,31 @@
            xq(2) * tau(2, na) + &
            xq(3) * tau(3, na)) * tpi
     !        
-    eigqts(na) = CMPLX( COS( arg ), - SIN( arg ), kind=DP )
+    eigqts(na) = CMPLX(COS(arg), - SIN(arg), KIND = DP)
     !
   END DO
   !
   ! ... a0) compute rhocore for each atomic-type if needed for nlcc
   !
-  IF ( nlcc_any ) CALL set_drhoc( xq, drc )
+  IF (nlcc_any) CALL set_drhoc(xq, drc)
   !
   ! ... b) the fourier components of the local potential at q+G
   !
-  vlocq(:,:) = zero
+  vlocq(:, :) = zero
   !
   DO nt = 1, ntyp
     !
-    IF (upf(nt)%is_gth) then
-      CALL setlocq_gth( nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1,nt) )
+    IF (upf(nt)%is_gth) THEN
+      CALL setlocq_gth(nt, xq, upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1, nt))
     ELSE
-      CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
-                    upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
-                    vlocq(1,nt) )
+      CALL setlocq(xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, &
+                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, vlocq(1, nt))
     ENDIF
     !
   END DO
   !
-  ALLOCATE (aux1(npwx*npol, nbnd))
-  !ALLOCATE (evc(npwx*npol, nbnd))
+  ALLOCATE(aux1(npwx * npol, nbnd), STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_init', 'Error allocating aux1', 1)
   ! 
   DO ik = 1, nks
     !
@@ -147,17 +158,16 @@
     !
     ! ... d) The functions vkb(k+G)
     !
-    CALL init_us_2( ngk(ik), igk_k(1,ik), xk_loc(1,ik), vkb )
+    CALL init_us_2(ngk(ik), igk_k(1, ik), xk_loc(1, ik), vkb)
     !
     ! ... read the wavefunctions at k
     !
     CALL readwfc(my_pool_id + 1, ik, evc)
-    !CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
     !
     ! ... e) we compute the becp terms which are used in the rest of
     ! ...    the code
     !
-    CALL calbec( ngk(ik), vkb, evc, becp1(ik) )
+    CALL calbec(ngk(ik), vkb, evc, becp1(ik))
     !
     ! we compute the derivative of the becp term with respect to an
     !   atomic displacement
@@ -166,31 +176,36 @@
       aux1 = czero
       DO ibnd = 1, nbnd
         DO ig = 1, ngk(ik)
-          aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * cone * & 
-                          ( xk_loc(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+          aux1(ig, ibnd) = evc(ig, ibnd) * tpiba * cone * & 
+                          (xk_loc(ipol, ik) + g(ipol, igk_k(ig, ik)))
         ENDDO
         IF (noncolin) THEN
           DO ig = 1, ngk(ik)
-            aux1(ig+npwx,ibnd) = evc(ig+npwx,ibnd) * tpiba *cone *& 
-                      ( xk_loc(ipol,ik) + g(ipol,igk_k(ig,ik)) )
+            aux1(ig + npwx, ibnd) = evc(ig + npwx, ibnd) * tpiba *cone *& 
+                      (xk_loc(ipol, ik) + g(ipol, igk_k(ig, ik)) )
           ENDDO
         ENDIF
       ENDDO
-      CALL calbec( ngk(ik), vkb, aux1, alphap(ipol,ik) )      
+      CALL calbec(ngk(ik), vkb, aux1, alphap(ipol, ik)) 
     ENDDO
     !
   ENDDO
   !
-  DEALLOCATE (aux1)
+  DEALLOCATE(aux1, STAT = ierr)
+  IF (ierr /= 0) CALL errore('epw_init', 'Error deallocating aux1', 1)
   !
-  IF( .NOT. ALLOCATED(igk_k_all) ) ALLOCATE (igk_k_all(npwx,nkstot))
-  IF( .NOT. ALLOCATED(ngk_all) )   ALLOCATE (ngk_all(nkstot))
+  IF (first_run) THEN
+    ALLOCATE(igk_k_all(npwx, nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating igk_k_all', 1)
+    ALLOCATE(ngk_all(nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('epw_init', 'Error allocating ngk_all', 1)
+  ENDIF
   !
 #if defined(__MPI)
   !
-  CALL poolgather_int(npwx, nkstot, nks, igk_k(:,1:nks), igk_k_all) 
+  CALL poolgather_int(npwx, nkstot, nks, igk_k(:, 1:nks), igk_k_all) 
   CALL poolgather_int1(nkstot, nks, ngk(1:nks), ngk_all) 
-  CALL mp_barrier(inter_pool_comm)
+  !CALL mp_barrier(inter_pool_comm)
   !
 #else
   !
@@ -199,8 +214,12 @@
   !
 #endif
   !
-  IF ( .NOT. first_run ) CALL dvanqq2()
+  IF (.NOT. first_run) THEN
+    CALL dvanqq2()
+  ENDIF
   !
-  CALL stop_clock( 'epw_init' )
+  CALL stop_clock('epw_init')
   !
+  !----------------------------------------------------------------------------
   END SUBROUTINE epw_init
+  !----------------------------------------------------------------------------

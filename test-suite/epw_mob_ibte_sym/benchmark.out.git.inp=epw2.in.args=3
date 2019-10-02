@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.1.0 starts on 25Mar2019 at 11:28:42 
+     Program EPW v.5.2.0 starts on 16Sep2019 at 11:35:55 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -57,7 +57,8 @@
      number of atomic types    =            0
      kinetic-energy cut-off    =       0.0000  Ry
      charge density cut-off    =       0.0000  Ry
-     Exchange-correlation      = not set (-1 -1 -1 -1-1-1)
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
 
 
      celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -102,13 +103,13 @@
      Do not need to read .epb files; read .fmt files
 
 
-     Band disentanglement is used:  nbndsub =    8
+     Band disentanglement is used: nbndsub =    8
      Use zone-centred Wigner-Seitz cells 
      Number of WS vectors for electrons      279
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
      Maximum number of cores for efficient parallelization      114
-     Results may improve by using use_ws == .true. 
+     Results may improve by using use_ws == .TRUE. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
 
@@ -116,9 +117,9 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026119
+     IFC last   -0.0026121
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000020
+     Norm of the difference between old and new force-constants:    0.0000015
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -128,7 +129,7 @@
 
      ===================================================================
      Memory usage:  VmHWM =        12Mb
-                   VmPeak =       272Mb
+                   VmPeak =       273Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
@@ -144,7 +145,7 @@
      Warning: check if difference with Fermi level fine grid makes sense
 
      ===================================================================
-     Applying a scissor shift of   0.70000 eV to the conduction states
+     Applying a scissor shift of   0.70000 eV to the CB      5
 
               ibndmin =     2  ebndmin =     0.190
               ibndmax =     7  ebndmax =     0.757
@@ -152,43 +153,39 @@
 
      Number of ep-matrix elements per pool :         4320 ~=   33.75 Kb (@ 8 bytes/ DP)
       
-     A selecq.fmt file was found but re-created because selecqread == .false. 
-     Number selected, total      50      50
-     Number selected, total     100     100
-     Number selected, total     150     150
-     Number selected, total     200     200
-     Number selected, total     250     250
-     Number selected, total     300     300
+     A selecq.fmt file was found but re-created because selecqread == .FALSE. 
+     Number selected, total             50             50
+     Number selected, total            100            100
+     Number selected, total            150            150
+     Number selected, total            200            200
+     Number selected, total            250            250
+     Number selected, total            300            300
      We only need to compute      343 q-points
       
+     Valence band maximum    =   6.255486 eV
+     Conduction band minimum =   7.660801 eV
 
      Temperature  400.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660801 eV
-     Mobility VB Fermi level   6.861901 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660801 eV
-     Mobility CB Fermi level   7.030497 eV
+     Mobility VB Fermi level =   6.861901 eV
+     Mobility CB Fermi level =   7.030497 eV
 
      Temperature  500.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660801 eV
-     Mobility VB Fermi level   7.013560 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660801 eV
-     Mobility CB Fermi level   6.872904 eV
+     Mobility VB Fermi level =   7.013560 eV
+     Mobility CB Fermi level =   6.872903 eV
 
      ===================================================================
      Scattering rate for IBTE
      ===================================================================
 
-     restart and restart_freq inputs deactivated (restart point at every q-points).
+     Restart and restart_freq inputs deactivated (restart point at every q-points).
      No intermediate mobility will be shown.
 
      Fermi Surface thickness =   4.000000 eV
      This is computed with respect to the fine Fermi level   6.339674 eV
      Only states between   2.339674 eV and  10.339674 eV will be included
 
+     Save matrix elements larger than threshold:   0.236107215342E-22
+      
      Progression iq (fine) =         50/       343
      Progression iq (fine) =        100/       343
      Progression iq (fine) =        150/       343
@@ -198,101 +195,89 @@
       400.000      7.0305       0.100001E+14
       500.000      6.8729       0.100000E+14
       
-     epmatkqread automatically changed to .true. as all scattering have been computed.
+     epmatkqread automatically changed to .TRUE. as all scattering have been computed.
       
-     Number of elements per core       1842
+     ===================================================================
+     Memory usage:  VmHWM =        20Mb
+                   VmPeak =       298Mb
+     ===================================================================
+
+     Number of elements per core       1060
      Symmetry mapping finished
-     Average over degenerate eigenstates is performed
 
-     =======================================================================
-       Temp     Fermi   Elec density  Population SR      Elec mobility 
-        [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+        [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   7.0305   0.10000E+14   0.22404E-27    0.503288E+02    x-axis
-                                                      0.503288E+02    y-axis
-                                                      0.503288E+02    z-axis
-                                                      0.503288E+02       avg
-                                                      0.270987E+01  off-diag
-      500.000   6.8729   0.10000E+14  -0.21175E-21    0.341850E+02    x-axis
-                                                      0.341850E+02    y-axis
-                                                      0.341850E+02    z-axis
-                                                      0.341850E+02       avg
-                                                      0.183954E+01  off-diag
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.496020E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.496020E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.496020E+02
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.336916E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.336916E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.336916E+02
       
-     ===================================================================
+     =============================================================================================
      Start solving iterative Boltzmann Transport Equation
-     ===================================================================
+     =============================================================================================
 
 
      Iteration number:         1 
 
 
-     =======================================================================
-       Temp     Fermi   Elec density  Population SR      Elec mobility 
-        [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+        [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   7.0305   0.10000E+14  -0.10588E-21    0.425064E+02    x-axis
-                                                      0.425064E+02    y-axis
-                                                      0.425065E+02    z-axis
-                                                      0.425064E+02       avg
-                                                      0.197415E+01  off-diag
-      500.000   6.8729   0.10000E+14  -0.13235E-21    0.289431E+02    x-axis
-                                                      0.289431E+02    y-axis
-                                                      0.289432E+02    z-axis
-                                                      0.289431E+02       avg
-                                                      0.133852E+01  off-diag
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.422742E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.422742E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.422742E+02
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.287903E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.287903E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.287903E+02
 
-                                                   0.425064E+02     Err
+                                                      0.422742E+02    Max error
 
      Iteration number:         2 
 
 
-     =======================================================================
-       Temp     Fermi   Elec density  Population SR      Elec mobility 
-        [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+        [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   7.0305   0.10000E+14  -0.21176E-21    0.437673E+02    x-axis
-                                                      0.437673E+02    y-axis
-                                                      0.437673E+02    z-axis
-                                                      0.437673E+02       avg
-                                                      0.212746E+01  off-diag
-      500.000   6.8729   0.10000E+14  -0.26470E-22    0.297793E+02    x-axis
-                                                      0.297793E+02    y-axis
-                                                      0.297793E+02    z-axis
-                                                      0.297793E+02       avg
-                                                      0.144185E+01  off-diag
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.433567E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.433567E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.433567E+02
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.295035E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.295035E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.295035E+02
 
-                                                   0.126088E+01     Err
+                                                      0.108258E+01    Max error
 
      Iteration number:         3 
 
 
-     =======================================================================
-       Temp     Fermi   Elec density  Population SR      Elec mobility 
-        [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Elec density  Population SR                  Elec mobility 
+        [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   7.0305   0.10000E+14  -0.18529E-21    0.435590E+02    x-axis
-                                                      0.435591E+02    y-axis
-                                                      0.435591E+02    z-axis
-                                                      0.435591E+02       avg
-                                                      0.209844E+01  off-diag
-      500.000   6.8729   0.10000E+14  -0.26470E-22    0.296424E+02    x-axis
-                                                      0.296425E+02    y-axis
-                                                      0.296425E+02    z-axis
-                                                      0.296425E+02       avg
-                                                      0.142253E+01  off-diag
+      400.000   7.0305   0.10000E+14   0.00000E+00    0.431968E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.431968E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.431968E+02
+      500.000   6.8729   0.10000E+14   0.00000E+00    0.293997E+02    0.000000E+00    0.000000E+00
+                                                      0.000000E+00    0.293997E+02    0.000000E+00
+                                                      0.000000E+00    0.000000E+00    0.293997E+02
 
-                                                   0.208206E+00     Err
+                                                      0.159936E+00    Max error
 
      Iteration number:         4 
 
-     ===================================================================
+     =============================================================================================
      The iteration reached the maximum but did not converge.
-     ===================================================================
+     =============================================================================================
 
 
      Unfolding on the coarse grid
@@ -302,23 +287,27 @@
 
 
 
+
      Electron-Phonon interpolation
-     ephwann      :      2.42s CPU      3.56s WALL (       1 calls)
-     ep-interp    :      2.24s CPU      3.37s WALL (     343 calls)
+     ephwann      :      2.55s CPU      3.90s WALL (       1 calls)
+     ep-interp    :      2.28s CPU      3.63s WALL (     343 calls)
 
      DynW2B       :      0.01s CPU      0.01s WALL (     343 calls)
-     HamW2B       :      0.26s CPU      0.32s WALL (   13780 calls)
-     ephW2Bp      :      0.89s CPU      1.81s WALL (     343 calls)
+     HamW2B       :      0.28s CPU      0.36s WALL (   13780 calls)
+     ephW2Bp      :      0.95s CPU      2.03s WALL (     343 calls)
+     ephW2B       :      0.29s CPU      0.35s WALL (    6860 calls)
+     print_ibte   :      0.25s CPU      0.27s WALL (     343 calls)
+     kpoint_paral :      0.00s CPU      0.00s WALL (       1 calls)
 
 
      Total program execution
-     EPW          :      2.42s CPU      3.56s WALL
+     EPW          :      2.55s CPU      3.90s WALL
 
                                                                                           
  Please consider citing:                                                                  
  S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
                                                                                           
- In addition, if you used anisotropic Eliashberg superconductivity please cite:           
-              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
-              if you used transport properties (scattering rates, mobility) please cite:  
-              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+ In addition, since you have used the following functionalities, please cite:             
+   scattering :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+   iterative_bte :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)  
+   iterative_bte :: F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                 

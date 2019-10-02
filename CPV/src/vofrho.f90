@@ -44,7 +44,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE mp_global,        ONLY: intra_bgrp_comm
       USE funct,            ONLY: dft_is_meta, dft_is_nonlocc, nlc, get_inlc,&
                                   dft_is_hybrid, exx_is_active
-      USE vdW_DF,           ONLY: stress_vdW_DF
+      USE vdW_DF,           ONLY: vdW_DF_stress
       use rVV10,            ONLY: stress_rVV10 
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
@@ -402,7 +402,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
              !^^.......................
              !   
              if (inlc==1 .or. inlc==2) then
-               CALL stress_vdW_DF(rhosave(:,1), rhocsave, nspin, denlc )
+               CALL vdW_DF_stress(rhosave(:,1), rhocsave, nspin, denlc )
              elseif (inlc == 3) then
                CALL stress_rVV10(rhosave(:,1), rhocsave, nspin, denlc )
              end if

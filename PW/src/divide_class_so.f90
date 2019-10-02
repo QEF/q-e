@@ -7,50 +7,59 @@
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE divide_class_so(code_group,nrot,smat,d_spin,has_e,nclass, &
-                           nelem,elem, which_irr)
+SUBROUTINE divide_class_so( code_group, nrot, smat,d_spin, has_e, nclass, &
+                           nelem,elem, which_irr )
 !-----------------------------------------------------------------------------
-!
-! This subroutine receives as input a set of nrot 3x3 matrices smat, 
-! and nrot complex 2x2 matrices d_spin, which  are assumed to be the 
-! operations of the point group given by code_group. Only the operations
-! that do not contain the 2\pi rotation (-E) are given in input.
-! smat are in cartesian coordinates.
-! This routine divides the double group in classes and find:
-!
-! nclass         the number of classes of the double group
-! nelem(iclass)  for each class, the number of elements of the class
-! elem(i,iclass) 1<i<nelem(iclass) for each class tells which matrices 
-!                smat belong to that class
-! has_e(i,iclass) =-1 if the operation is multiplied by -E, 1 otherwise
-! which_irr(iclass) for each class gives the position of that class in the
-!                character table associated with the group and provided
-!                by the routine set_irr_rap_so. NB: changing the order of
-!                the elements in the character table must reflect in 
-!                a change to which_irr. Presently the character tables 
-!                are those given by G.F. Koster, Space Group and their
-!                representations.
-!                Several equivalent names for the irreducible representation
-!                are given. D, G, L, S are used for Delta, Gamma, Lambda 
-!                and Sigma.
-!
+!! This subroutine receives as input a set of nrot 3x3 matrices smat, 
+!! and nrot complex 2x2 matrices d_spin, which  are assumed to be the 
+!! operations of the point group given by code_group. Only the operations
+!! that do not contain the 2\pi rotation (-E) are given in input.
+!! smat are in cartesian coordinates.
+!! This routine divides the double group in classes and find:
 
+!! * nclass:         the number of classes of the double group;
+!! * nelem(iclass):  for each class, the number of elements of the class;
+!! * elem(i,iclass): 1<i<nelem(iclass) for each class tells which matrices 
+!!                   smat belong to that class;
+!! * has_e(i,iclass):   equal to -1 if the operation is multiplied by -E, 1 otherwise;
+!! * which_irr(iclass): for each class gives the position of that class in the
+!!                      character table associated with the group and provided
+!!                      by the routine set_irr_rap_so.
+
+!! NB: changing the order of
+!! the elements in the character table must reflect in 
+!! a change to which_irr. Presently the character tables 
+!! are those given by G.F. Koster, Space Group and their
+!! representations. 
+!! Several equivalent names for the irreducible representation
+!! are given. D, G, L, S are used for Delta, Gamma, Lambda 
+!! and Sigma.
+!
 USE kinds, ONLY : DP
+!
 IMPLICIT NONE
-
-INTEGER :: & 
-          code_group,   &  ! The code of the point group
-          nrot,         &  ! The number of symmetry operation
-          nclass,       &  ! The number of classes
-          nelem(24),    &  ! The elements of each class 
-          elem(12,24),  &  ! Which elements in the smat list for each class
-          has_e(12,24), &  ! if -1 the element is multiplied by -E
-          which_irr(24)    ! See above 
-
+!
+INTEGER :: code_group
+!! The code of the point group
+INTEGER :: nrot
+!! The number of symmetry operation
+INTEGER :: nclass
+!! The number of classes
+INTEGER :: nelem(24)
+!! The elements of each class 
+INTEGER :: elem(12,24)
+!! Which elements in the smat list for each class
+INTEGER :: has_e(12,24)
+!! If -1 the element is multiplied by -E
+INTEGER :: which_irr(24)
+!! See main description 
+!
+! ... local variables
+!
 REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), bx(3), cx(3)
 REAL(DP) :: smate(3,3,2*nrot)
 COMPLEX(DP) :: d_spin(2,2,48), d_spine(2,2,96), c_spin(2,2)
-
+!
 INTEGER :: done(96), irot, jrot, krot, iclass, i, other, other1
 INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts, nused, iaxis(4), &
            iax, ibx, icx, aclass, bclass, cclass,  &
@@ -74,7 +83,7 @@ END DO
 !
 !CALL check_tgroup(2*nrot,d_spine,smate)
 !
-
+!
 nclass=0
 nelem=0
 done=0
@@ -986,85 +995,96 @@ ELSEIF (code_group==32) THEN
 ELSE
  CALL errore('divide_class_so','code_group not correct',1)
 ENDIF
-
+!
 RETURN
+!
 END SUBROUTINE divide_class_so
 
+
 !-----------------------------------------------------------------------------
-SUBROUTINE coniug_mat_so(a,a_spin,b,b_spin,c,c_spin)
+SUBROUTINE coniug_mat_so( a, a_spin, b, b_spin, c, c_spin )
 !-----------------------------------------------------------------------------
 USE kinds, ONLY : DP
-
+!
 IMPLICIT NONE
+!
 REAL(DP) :: a(3,3), b(3,3), c(3,3)
 COMPLEX(DP) :: a_spin(2,2), b_spin(2,2), c_spin(2,2)
-
-c=MATMUL(a,MATMUL(b,TRANSPOSE(a)))
-c_spin=MATMUL(a_spin,MATMUL(b_spin,TRANSPOSE(CONJG(a_spin))))
-
+!
+ c=MATMUL(a,MATMUL(b,TRANSPOSE(a)))
+ c_spin=MATMUL(a_spin,MATMUL(b_spin,TRANSPOSE(CONJG(a_spin))))
+!
 RETURN
+!
 END SUBROUTINE coniug_mat_so
 !
-!-----------------------------------------------------------------------------
-FUNCTION compare_mat_so(a,a_spin,b,b_spin)
-!-----------------------------------------------------------------------------
 !
-!  This function compare two 3x3 matrices and two 2x2 matrices 
-!  and returns .true. if they coincide.
+!-----------------------------------------------------------------------------
+FUNCTION compare_mat_so( a, a_spin, b, b_spin )
+!-----------------------------------------------------------------------------
+!!  This function compare two 3x3 matrices and two 2x2 matrices 
+!!  and returns .true. if they coincide.
 !
 USE kinds, ONLY : DP
+!
 IMPLICIT NONE
-
+!
 REAL(DP) :: a(3,3), b(3,3), csum
 REAL(DP), PARAMETER :: eps=1.d-7
 COMPLEX(DP) :: a_spin(2,2), b_spin(2,2)
 LOGICAL :: compare_mat_so
 INTEGER :: i, j
-
-csum=0.d0
+!
+ csum=0.d0
 DO i=1,2
    DO j=1,2
       csum=csum+ABS(a_spin(i,j)-b_spin(i,j))
    END DO
 END DO
-compare_mat_so=((ABS(MAXVAL(a-b))<eps).AND.             &
-                (ABS(MINVAL(a-b))<eps).AND. (csum < eps ))
-
+ compare_mat_so=((ABS(MAXVAL(a-b))<eps).AND.             &
+                 (ABS(MINVAL(a-b))<eps).AND. (csum < eps ))
+!
 RETURN
 END FUNCTION compare_mat_so
-
-!-----------------------------------------------------------------------------
-SUBROUTINE set_irr_rap_so(code_group,nclass_ref,nrap_ref,char_mat,& 
-                          name_rap,name_class,name_class1)
-!-----------------------------------------------------------------------------
 !
-!  This subroutine collects the character tables of the 32 crystallographic
-!  double point groups. Various names have been used in the litterature 
-!  to identify D, G, L, S are used for Delta, Gamma, Lambda and Sigma.
+!-----------------------------------------------------------------------------
+SUBROUTINE set_irr_rap_so( code_group, nclass_ref, nrap_ref, char_mat, & 
+                          name_rap, name_class, name_class1 )
+!-----------------------------------------------------------------------------
+!! This subroutine collects the character tables of the 32 crystallographic
+!! double point groups. Various names have been used in the litterature 
+!! to identify D, G, L, S are used for Delta, Gamma, Lambda and Sigma.
 !   
-!
 USE kinds, ONLY : DP
+!
 IMPLICIT NONE
-
-INTEGER :: nclass_ref, &    ! Output: number of classes
-           nrap_ref,   &    ! Output: number of irreducible representation
-           code_group       ! Input: code of the group 
-
-CHARACTER(LEN=15) :: name_rap(12)   ! Output: name of the representations
-CHARACTER(LEN=5) :: name_class(24), & ! Output: name of the classes
-                    name_class1(24) ! Output: name of the classes
-
-COMPLEX(DP) :: char_mat(12,24) ! Output: character matrix
-
+!
+INTEGER :: nclass_ref
+!! Output: number of classes
+INTEGER :: nrap_ref
+!! Output: number of irreducible representation
+INTEGER :: code_group
+!! Input: code of the group 
+CHARACTER(LEN=15) :: name_rap(12)
+!! Output: name of the representations
+CHARACTER(LEN=5) :: name_class(24)
+!! Output: name of the classes
+CHARACTER(LEN=5) :: name_class1(24)
+!! Output: name of the classes
+COMPLEX(DP) :: char_mat(12,24)
+!! Output: character matrix
+!
+! ... local variables
+!
 REAL(DP) :: sqr3d2, sqrt2, sqrt3, dsq2
-
+!
 sqrt2 =SQRT(2.d0)
 sqrt3 =SQRT(3.d0)
 sqr3d2=sqrt3*0.5d0
 dsq2  =sqrt2*0.5d0
 
-char_mat=(1.d0,0.d0)
-char_mat(:,2)=(-1.d0,0.d0)
+ char_mat=(1.d0,0.d0)
+ char_mat(:,2)=(-1.d0,0.d0)
 
 name_class1="     "
 name_class(1)="E   "
@@ -3303,37 +3323,47 @@ ELSEIF (code_group==32) THEN
 ELSE
    CALL errore('set_irr_rap_so','code number not allowed',1)
 END IF
-
+!
 RETURN
+!
 END SUBROUTINE set_irr_rap_so
 
+
 !--------------------------------------------------------------------------
-FUNCTION is_complex_so(code)
+FUNCTION is_complex_so( code )
 !--------------------------------------------------------------------------
-! This function receives a code of the group and provide .true. or 
-! .false. if the double group HAS or HAS NOT complex irreducible 
-! representations.
-! The order is the following:
+!! This function receives a code of the group and provide .true. or 
+!! .false. if the double group HAS or HAS NOT complex irreducible 
+!! representations. The order is the following:
 !
-!   1  "C_1 " F    11 "D_6 " F    21 "D_3h" F    31 "O   " F
-!   2  "C_i " F    12 "C_2v" F    22 "D_4h" F    32 "O_h " F 
-!   3  "C_s " T    13 "C_3v" T    23 "D_6h" F 
-!   4  "C_2 " T    14 "C_4v" F    24 "D_2d" F  
-!   5  "C_3 " T    15 "C_6v" F    25 "D_3d" T
-!   6  "C_4 " T    16 "C_2h" T    26 "S_4 " T
-!   7  "C_6 " T    17 "C_3h" T    27 "S_6 " T
-!   8  "D_2 " F    18 "C_4h" T    28 "T   " T
-!   9  "D_3 " T    19 "C_6h" T    29 "T_h " T
-!   10 "D_4 " F    20 "D_2h" F    30 "T_d " F
+!!   1  "C_1 " F    11 "D_6 " F    21 "D_3h" F    31 "O   " F
+
+!!   2  "C_i " F    12 "C_2v" F    22 "D_4h" F    32 "O_h " F 
+
+!!   3  "C_s " T    13 "C_3v" T    23 "D_6h" F 
+
+!!   4  "C_2 " T    14 "C_4v" F    24 "D_2d" F  
+
+!!   5  "C_3 " T    15 "C_6v" F    25 "D_3d" T
+
+!!   6  "C_4 " T    16 "C_2h" T    26 "S_4 " T
+
+!!   7  "C_6 " T    17 "C_3h" T    27 "S_6 " T
+
+!!   8  "D_2 " F    18 "C_4h" T    28 "T   " T
+
+!!   9  "D_3 " T    19 "C_6h" T    29 "T_h " T
+
+!!   10 "D_4 " F    20 "D_2h" F    30 "T_d " F
 !
 IMPLICIT NONE
-
+!
 INTEGER :: code
 LOGICAL :: is_complex_so
 
 LOGICAL :: complex_aux(32)
 
-data complex_aux  / .FALSE., .FALSE., .TRUE.,  .TRUE.,  .TRUE. , &
+DATA complex_aux  / .FALSE., .FALSE., .TRUE.,  .TRUE.,  .TRUE. , &
                     .TRUE. , .TRUE. , .FALSE., .TRUE.,  .FALSE., &
                     .FALSE., .FALSE., .TRUE.,  .FALSE., .FALSE., &
                     .TRUE.,  .TRUE. , .TRUE.,  .TRUE.,  .FALSE., &
@@ -3343,22 +3373,20 @@ data complex_aux  / .FALSE., .FALSE., .TRUE.,  .TRUE.,  .TRUE. , &
 
 IF (code < 1 .OR. code > 32 ) CALL errore('is_complex', &
                                           'code is out of range',1)
-
+!
 is_complex_so= complex_aux(code)
-
+!
 RETURN
+!
 END FUNCTION is_complex_so
 
 
-!
 !----------------------------------------------------------------------------
-SUBROUTINE write_group_info(flag)
+SUBROUTINE write_group_info( flag )
 !----------------------------------------------------------------------------
-!
-! This routine writes on output the main information on the point group
-! If flag is .false. writes only the character table. If flag is .true.
-! writes also the elements of each class.
-!
+!! This routine writes on output the main information on the point group
+!! If flag is .false. writes only the character table. If flag is .true.
+!! writes also the elements of each class.
 !
 USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
                                  char_mat, name_rap, name_class, gname,      &
@@ -3371,12 +3399,12 @@ USE rap_point_group_is,   ONLY : code_group_is, gname_is
 USE spin_orb,             ONLY : domag
 USE noncollin_module,     ONLY : noncolin
 USE io_global,            ONLY : stdout
-
+!
 IMPLICIT NONE
-
+!
 INTEGER :: iclass, irot, i, idx, irap
 LOGICAL :: is_complex, is_complex_so, flag
-
+!
 IF (noncolin) THEN
    IF (domag) THEN
       WRITE(stdout,'(/,5x,"the magnetic double point group is ", &
@@ -3485,23 +3513,24 @@ END IF
 RETURN
 END SUBROUTINE write_group_info
 
+
 !---------------------------------------------------------------------------
-SUBROUTINE find_u(s,u)
+SUBROUTINE find_u( s, u )
 !---------------------------------------------------------------------------
+!!  This subroutine receives as input a 3x3 rotation matrix s, and gives
+!!  as output the matrix u which represents the same rotation in the spin
+!!  space. Only one of the two u matrices is given. See below for the
+!!  definition of the sign.
 !
-!  This subroutine receives as input a 3x3 rotation matrix s, and gives
-!  as output the matrix u which represents the same rotation in the spin
-!  space. Only one of the two u matrices is given. See below for the
-!  definition of the sign.
-!
-USE kinds,   ONLY : DP
+USE kinds,     ONLY : DP
 USE constants, ONLY : pi
-
+!
 IMPLICIT NONE
+!
 REAL(DP) :: s(3,3)
-
+!
 COMPLEX(DP) :: u(2,2)
-
+!
 REAL(DP), PARAMETER :: eps=1.d-8
 REAL(DP)  :: det, saux(3,3), ax(3), angle, cosa, sina, angle_rot
 !
@@ -3625,35 +3654,41 @@ IF (cosa < -eps ) u=-u
 !write(6,'(4f15.5)') u(2,1),u(2,2)
 !
 RETURN
+!
 END SUBROUTINE find_u
 
+
 !-----------------------------------------------------------------------------
-FUNCTION set_e(hase,ind)
+FUNCTION set_e( hase, ind )
 !-----------------------------------------------------------------------------
 IMPLICIT NONE
+!
 INTEGER :: set_e, hase, ind
-
+!
 IF (hase==-1) THEN
    set_e=ind+1
 ELSE
    set_e=ind
 ENDIF
-
+!
 RETURN
+!
 END FUNCTION set_e
 
+
 !-----------------------------------------------------------------------------
-SUBROUTINE check_tgroup(nsym,a,b)
+SUBROUTINE check_tgroup( nsym, a, b )
 !-----------------------------------------------------------------------------
-!
-!  This subroutine receives a set of 2x2 and 3x3 rotation matrices and 
-!  checks if they are a group. 
+!! This subroutine receives a set of 2x2 and 3x3 rotation matrices and 
+!! checks if they are a group. 
 !
 USE kinds, ONLY : DP
+!
 IMPLICIT NONE
-INTEGER, INTENT(IN) :: nsym
+!
+INTEGER,     INTENT(IN) :: nsym
 COMPLEX(DP), INTENT(IN) :: a(2,2,96)
-REAL(DP), INTENT(IN) :: b(3,3,nsym)
+REAL(DP),    INTENT(IN) :: b(3,3,nsym)
 REAL(DP) ::   d(3,3), b1(3,3), b2(3,3), b3(3,3)
 COMPLEX(dp):: c(2,2), a1(2,2), a2(2,2), a3(2,2)
 INTEGER :: done
@@ -3683,17 +3718,19 @@ END DO
 RETURN
 END SUBROUTINE check_tgroup
 
-SUBROUTINE set_class_el_name_so(nsym,sname,has_e,nclass,&
-                                     nelem_so,elem_so,elem_name_so)
 
+SUBROUTINE set_class_el_name_so( nsym, sname, has_e, nclass, &
+                                     nelem_so, elem_so, elem_name_so )
+!
 IMPLICIT NONE
+!
 INTEGER :: nsym
 CHARACTER(LEN=45) :: sname(nsym)
 CHARACTER(LEN=55) :: elem_name_so(12,24)
 INTEGER :: nclass, nelem_so(24), elem_so(12,24), has_e(12,24)
-
+!
 INTEGER :: iclass, ielem
-
+!
 DO iclass=1,nclass
    DO ielem=1,nelem_so(iclass)
       elem_name_so(ielem,iclass)=sname(elem_so(ielem,iclass))
@@ -3701,6 +3738,7 @@ DO iclass=1,nclass
                           TRIM(elem_name_so(ielem,iclass)) // ' E'
    ENDDO
 ENDDO
-
+!
 RETURN
+!
 END SUBROUTINE set_class_el_name_so

@@ -58,7 +58,10 @@ correlation_lda_lsda.o : kind.o
 cryst_to_car.o : kind.o
 deviatoric.o : io_global.o
 deviatoric.o : kind.o
+dgcxc_drivers.o : constants.o
+dgcxc_drivers.o : funct.o
 dgcxc_drivers.o : kind.o
+dgcxc_drivers.o : libxc.o
 dgcxc_drivers.o : xc_gga_drivers.o
 dist.o : cell_base.o
 dist.o : constants.o
@@ -164,10 +167,6 @@ ions_base.o : io_global.o
 ions_base.o : kind.o
 ions_base.o : parameters.o
 ions_base.o : random_numbers.o
-kernel_table.o : constants.o
-kernel_table.o : io_files.o
-kernel_table.o : kind.o
-kernel_table.o : wrappers.o
 latgen.o : constants.o
 latgen.o : io_global.o
 latgen.o : kind.o
@@ -347,6 +346,11 @@ read_pseudo.o : upf.o
 read_pseudo.o : upf_to_internal.o
 read_pseudo.o : uspp.o
 read_pseudo.o : wrappers.o
+read_upf.o : pseudo_types.o
+read_upf.o : radial_grids.o
+read_upf.o : read_upf_schema.o
+read_upf.o : read_upf_v1.o
+read_upf.o : read_upf_v2.o
 read_upf_schema.o : kind.o
 read_upf_schema.o : parser.o
 read_upf_schema.o : pseudo_types.o
@@ -466,7 +470,6 @@ xc_rVV10.o : constants.o
 xc_rVV10.o : control_flags.o
 xc_rVV10.o : fft_base.o
 xc_rVV10.o : io_global.o
-xc_rVV10.o : kernel_table.o
 xc_rVV10.o : kind.o
 xc_rVV10.o : mp_bands.o
 xc_rVV10.o : recvec.o
@@ -477,9 +480,9 @@ xc_vdW_DF.o : constants.o
 xc_vdW_DF.o : control_flags.o
 xc_vdW_DF.o : fft_base.o
 xc_vdW_DF.o : io_global.o
-xc_vdW_DF.o : kernel_table.o
 xc_vdW_DF.o : kind.o
 xc_vdW_DF.o : mp_bands.o
+xc_vdW_DF.o : mp_images.o
 xc_vdW_DF.o : recvec.o
 xsf.o : constants.o
 xsf.o : kind.o

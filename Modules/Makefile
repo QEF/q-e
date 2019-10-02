@@ -49,7 +49,6 @@ invmat.o \
 io_files.o \
 io_global.o  \
 ions_base.o \
-kernel_table.o \
 kind.o \
 libxc.o \
 mdiis.o \

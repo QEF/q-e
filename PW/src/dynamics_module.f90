@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 ! TB
-! included test if relaxz=.true. to allow for movement of the center of mass
+! included test if relaxz=.TRUE. to allow for movement of the center of mass
 ! search for 'TB' 
 !----------------------------------------------------------------------------
 !
@@ -20,15 +20,18 @@
 !----------------------------------------------------------------------------
 MODULE dynamics_module
    !----------------------------------------------------------------------------
+   !! It includes all the quantities and procedures related to the molecular
+   !! dynamics.
    !
-   USE kinds,     ONLY : DP
-   USE ions_base, ONLY : amass
-   USE io_global, ONLY : stdout
-   USE io_files,  ONLY : prefix, tmp_dir, seqopn
-   USE constants, ONLY : tpi, fpi
-   USE constants, ONLY : amu_ry, ry_to_kelvin, au_ps, bohr_radius_cm, ry_kbar
-   USE constants, ONLY : eps8
-   USE control_flags, ONLY : tolp
+   USE kinds,           ONLY : DP
+   USE ions_base,       ONLY : amass
+   USE io_global,       ONLY : stdout
+   USE io_files,        ONLY : prefix, tmp_dir, seqopn
+   USE constants,       ONLY : tpi, fpi
+   USE constants,       ONLY : amu_ry, ry_to_kelvin, au_ps, bohr_radius_cm, &
+                               ry_kbar
+   USE constants,       ONLY : eps8
+   USE control_flags,   ONLY : tolp
    !
    USE basic_algebra_routines
    !
@@ -41,31 +44,57 @@ MODULE dynamics_module
    PUBLIC :: temperature, refold_pos, vel
    PUBLIC :: dt, delta_t, nraise, control_temp, thermostat
    !
-   REAL(DP) :: &
-         dt,          &! time step
-         temperature, &! starting temperature
-         virial,      &! virial (used for the pressure)
-         delta_t       ! parameter used in thermalization
-   INTEGER :: &
-         nraise,      &! parameter used in thermalization
-         ndof,        &! the number of degrees of freedom
-         num_accept=0  ! Number of the accepted proposal in Smart_MC
-   LOGICAL :: &
-         vel_defined,  &! if true, vel is used rather than tau_old to do the next step
-         control_temp, &! if true a thermostat is used to control the temperature
-         refold_pos,   &! if true the positions are refolded into the supercell
-         first_iter=.true. ! if this is the first ionic iteration
-   CHARACTER(len=10) &
-         thermostat    ! the thermostat used to control the temperature
-   ! tau_smart and force_smart is used for smart Monte Carlo to store the atomic position of the
-   ! previous step.
-   REAL(DP), ALLOCATABLE :: tau_smart(:,:), force_smart(:,:)
-   real(dp) :: etot_smart
-   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
-   REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:), chi(:,:)
+   !
+   REAL(DP) :: dt
+   !! time step
+   REAL(DP) :: temperature
+   !! starting temperature
+   REAL(DP) :: virial
+   !! virial (used for the pressure)
+   REAL(DP) :: delta_t
+   !! parameter used in thermalization
+   INTEGER :: nraise
+   !! parameter used in thermalization
+   INTEGER :: ndof
+   !! the number of degrees of freedom
+   INTEGER :: num_accept=0
+   !! Number of the accepted proposal in Smart_MC
+   LOGICAL :: vel_defined
+   !! if true, vel is used rather than tau_old to do the next step
+   LOGICAL :: control_temp
+   !! if true a thermostat is used to control the temperature
+   LOGICAL :: refold_pos
+   !! if true the positions are refolded into the supercell
+   LOGICAL :: first_iter=.TRUE.
+   !! true if this is the first ionic iteration
+   CHARACTER(len=10) :: thermostat
+   !! the thermostat used to control the temperature
+   REAL(DP), ALLOCATABLE :: tau_smart(:,:)
+   !! used for smart Monte Carlo to store the atomic position of the
+   !! previous step.
+   REAL(DP), ALLOCATABLE :: force_smart(:,:)
+   !! used for smart Monte Carlo to store the force of the
+   !! previous step.
+   REAL(DP) :: etot_smart
+   !! used to keep the energy of the previous iteration
+   REAL(DP), ALLOCATABLE :: tau_old(:,:)
+   !! the atomic positions at the previous iteration
+   REAL(DP), ALLOCATABLE :: tau_new(:,:)
+   !! the atomic positions at the new iteration
+   REAL(DP), ALLOCATABLE :: tau_ref(:,:)
+   !! reference atomic positions
+   REAL(DP), ALLOCATABLE :: vel(:,:)
+   !! velocities
+   REAL(DP), ALLOCATABLE :: acc(:,:)
+   !! accelerations
+   REAL(DP), ALLOCATABLE :: chi(:,:)
+   !! chi
    REAL(DP), ALLOCATABLE :: mass(:)
+   !! atomic masses
    REAL(DP), ALLOCATABLE :: diff_coeff(:)
+   !! diffusion coefficients
    REAL(DP), ALLOCATABLE :: radial_distr(:,:)
+   !! radial distribution
    !
    INTEGER, PARAMETER :: hist_len = 1000
    !
@@ -79,67 +108,71 @@ CONTAINS
       !
       USE ions_base, ONLY : nat
       !
-      IF ( .not.allocated( mass ) ) ALLOCATE( mass( nat ) )
+      IF ( .NOT.ALLOCATED( mass ) ) ALLOCATE( mass( nat ) )
       !
-      IF ( .not.allocated( tau_old ) ) ALLOCATE( tau_old( 3, nat ) )
-      IF ( .not.allocated( tau_new ) ) ALLOCATE( tau_new( 3, nat ) )
-      IF ( .not.allocated( tau_ref ) ) ALLOCATE( tau_ref( 3, nat ) )
+      IF ( .NOT.ALLOCATED( tau_old ) ) ALLOCATE( tau_old( 3, nat ) )
+      IF ( .NOT.ALLOCATED( tau_new ) ) ALLOCATE( tau_new( 3, nat ) )
+      IF ( .NOT.ALLOCATED( tau_ref ) ) ALLOCATE( tau_ref( 3, nat ) )
       !
-      IF ( .not.allocated( vel ) ) ALLOCATE( vel( 3, nat ) )
-      IF ( .not.allocated( acc ) ) ALLOCATE( acc( 3, nat ) )
-      IF ( .not.allocated( chi ) ) ALLOCATE( chi( 3, nat ) )
+      IF ( .NOT.ALLOCATED( vel ) ) ALLOCATE( vel( 3, nat ) )
+      IF ( .NOT.ALLOCATED( acc ) ) ALLOCATE( acc( 3, nat ) )
+      IF ( .NOT.ALLOCATED( chi ) ) ALLOCATE( chi( 3, nat ) )
       !
-      IF ( .not.allocated( diff_coeff ) ) ALLOCATE( diff_coeff( nat ) )
+      IF ( .NOT.ALLOCATED( diff_coeff ) ) ALLOCATE( diff_coeff( nat ) )
       !
-      IF ( .not.allocated( radial_distr ) ) &
+      IF ( .NOT.ALLOCATED( radial_distr ) ) &
          ALLOCATE( radial_distr( hist_len , nat ) )
       !
    END SUBROUTINE allocate_dyn_vars
+   !
    !
    !------------------------------------------------------------------------
    SUBROUTINE deallocate_dyn_vars()
       !------------------------------------------------------------------------
       !
-      IF ( allocated( mass ) )          DEALLOCATE( mass )
-      IF ( allocated( tau_old ) )       DEALLOCATE( tau_old )
-      IF ( allocated( tau_new ) )       DEALLOCATE( tau_new )
-      IF ( allocated( tau_ref ) )       DEALLOCATE( tau_ref )
-      IF ( allocated( vel )  )          DEALLOCATE( vel )
-      IF ( allocated( acc )  )          DEALLOCATE( acc )
-      IF ( allocated( chi )  )          DEALLOCATE( chi )
-      IF ( allocated( diff_coeff ) )    DEALLOCATE( diff_coeff )
-      IF ( allocated( radial_distr ) )  DEALLOCATE( radial_distr )
+      IF ( ALLOCATED( mass ) )          DEALLOCATE( mass )
+      IF ( ALLOCATED( tau_old ) )       DEALLOCATE( tau_old )
+      IF ( ALLOCATED( tau_new ) )       DEALLOCATE( tau_new )
+      IF ( ALLOCATED( tau_ref ) )       DEALLOCATE( tau_ref )
+      IF ( ALLOCATED( vel )  )          DEALLOCATE( vel )
+      IF ( ALLOCATED( acc )  )          DEALLOCATE( acc )
+      IF ( ALLOCATED( chi )  )          DEALLOCATE( chi )
+      IF ( ALLOCATED( diff_coeff ) )    DEALLOCATE( diff_coeff )
+      IF ( ALLOCATED( radial_distr ) )  DEALLOCATE( radial_distr )
       !
    END SUBROUTINE deallocate_dyn_vars
+    !
     !
     !------------------------------------------------------------------------
    SUBROUTINE verlet()
       !------------------------------------------------------------------------
+      !! This routine performs one step of molecular dynamics evolution
+      !! using the Verlet algorithm.  
+      !! The parameters:
       !
-      ! ... This routine performs one step of molecular dynamics evolution
-      ! ... using the Verlet algorithm.
+      !! * mass: mass of the atoms;
+      !! * dt: time step;
+      !! * temperature: starting temperature.
       !
-      ! ... Parameters:
-      ! ... mass         mass of the atoms
-      ! ... dt           time step
-      ! ... temperature  starting temperature
-      ! ...              The starting velocities of atoms are set accordingly
-      ! ...              to the starting temperature, in random directions.
-      ! ...              The initial velocity distribution is therefore a
-      ! ...              constant.
+      !! The starting velocities of atoms are set accordingly
+      !! to the starting temperature, in random directions. 
+      !! The initial velocity distribution is therefore a
+      !! constant.
       !
-      ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006
+      !! Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006.
       !
-      USE ions_base,      ONLY : nat, nsp, ityp, tau, if_pos, atm
-      USE cell_base,      ONLY : alat, omega
-      USE ener,           ONLY : etot
-      USE force_mod,      ONLY : force, lstres
-      USE control_flags,  ONLY : istep, lconstrain, tv0rd
+      USE ions_base,          ONLY : nat, nsp, ityp, tau, if_pos, atm
+      USE cell_base,          ONLY : alat, omega
+      USE ener,               ONLY : etot
+      USE force_mod,          ONLY : force, lstres
+      USE control_flags,      ONLY : istep, lconstrain, tv0rd
       !
       USE constraints_module, ONLY : nconstr, check_constraint
       USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
       !
       IMPLICIT NONE
+      !
+      ! ... local variables
       !
       REAL(DP) :: ekin, etotold
       REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
@@ -156,9 +189,9 @@ CONTAINS
       !
       ! ... the number of degrees of freedom
       !
-      IF ( any( if_pos(:,:) == 0 ) ) THEN
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
          !
-         ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
+         ndof = 3*nat - COUNT( if_pos(:,:) == 0 ) - nconstr
          !
       ELSE
          !
@@ -166,7 +199,7 @@ CONTAINS
          !
       ENDIF
       !
-      vel_defined  = .true.
+      vel_defined  = .TRUE.
       temp_av      = 0.D0
       !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
@@ -185,7 +218,7 @@ CONTAINS
             !
          ELSE
             !
-            vel_defined = .false.
+            vel_defined = .FALSE.
             !
             READ( UNIT = 4, FMT = * ) &
                temp_new, temp_av, mass(:), total_mass, elapsed_time, &
@@ -248,7 +281,7 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
@@ -286,7 +319,7 @@ CONTAINS
             !
             WRITE( stdout, &
                    '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
-                na, ityp(na), force(:,na)
+                   na, ityp(na), force(:,na)
             !
          ENDDO
          !
@@ -303,7 +336,7 @@ CONTAINS
       !
       ! ... the linear momentum and the kinetic energy are computed here
       !
-      vel = ( tau_new - tau_old ) / ( 2.D0*dt ) * dble( if_pos )
+      vel = ( tau_new - tau_old ) / ( 2.D0*dt ) * DBLE( if_pos )
       !
       ml   = 0.D0
       ekin = 0.D0
@@ -327,7 +360,7 @@ CONTAINS
       !
       ! ... find the new temperature and update the average
       !
-      temp_new = 2.D0 / dble( ndof ) * ekin * ry_to_kelvin
+      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
       !
       temp_av = temp_av + temp_new
       !
@@ -351,7 +384,7 @@ CONTAINS
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
-      leof = .false.
+      leof = .FALSE.
       WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
       !
       WRITE( UNIT = 4, FMT = * ) &
@@ -365,7 +398,7 @@ CONTAINS
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
-      CALL output_tau( .false., .false. )
+      CALL output_tau( .FALSE., .FALSE. )
       !
 #endif
       !
@@ -374,13 +407,14 @@ CONTAINS
       WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F20.8," Ry",/,  &
                      & 5X,"temperature           = ",F20.8," K ",/,  &
                      & 5X,"Ekin + Etot (const)   = ",F20.8," Ry")' ) &
-          ekin, temp_new, ( ekin  + etot )
+             ekin, temp_new, ( ekin  + etot )
+      !
       IF (lstres) WRITE ( stdout, &
       '(5X,"Ions kinetic stress = ",F15.2," (kbar)",/3(27X,3F15.2/)/)') &
               ((kstress(1,1)+kstress(2,2)+kstress(3,3))/3.d0*ry_kbar), &
               (kstress(i,1)*ry_kbar,kstress(i,2)*ry_kbar,kstress(i,3)*ry_kbar, i=1,3)
       !
-      IF ( .not.( lconstrain .or. any( if_pos(:,:) == 0 ) ) ) THEN
+      IF ( .NOT.( lconstrain .or. ANY( if_pos(:,:) == 0 ) ) ) THEN
          !
          ! ... total linear momentum must be zero if all atoms move
          !
@@ -424,7 +458,7 @@ CONTAINS
                   '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
                temperature
             !
-            SELECT CASE( trim( thermostat ) )
+            SELECT CASE( TRIM( thermostat ) )
                !
             CASE( 'andersen', 'Andersen' )
                !
@@ -441,6 +475,13 @@ CONTAINS
                             &     "Characteristic time =",i3,"*timestep")') &
                                nraise
                !
+            CASE( 'svr', 'Svr', 'SVR' )
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is controlled by ", &
+                            &     "stochastic velocity rescaling",/,5x,&
+                            &     "Characteristic time   =",i3,"*timestep")') &
+                               nraise
             CASE( 'initial', 'Initial' )
                !
                WRITE( UNIT = stdout, &
@@ -451,7 +492,7 @@ CONTAINS
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"temperature is controlled by ", &
                               &     "velocity rescaling (",A,")"/)' )&
-                              trim( thermostat )
+                              TRIM( thermostat )
                !
             END SELECT
             !
@@ -489,7 +530,7 @@ CONTAINS
             ! ... initial thermalization. N.B. tau is in units of alat
             !
             CALL start_therm()
-            vel_defined = .true.
+            vel_defined = .TRUE.
             !
             temp_new = temperature
             !
@@ -498,7 +539,7 @@ CONTAINS
          ELSE
             !
             vel(:,:) = 0.0_DP
-            vel_defined = .true.
+            vel_defined = .TRUE.
             !
          ENDIF
          !
@@ -510,32 +551,33 @@ CONTAINS
       SUBROUTINE apply_thermostat()
          !--------------------------------------------------------------------
          !
-         USE random_numbers, ONLY : randy, gauss_dist
+         USE random_numbers,    ONLY : randy, gauss_dist
          !
          IMPLICIT NONE
          !
          INTEGER :: nat_moved
          REAL(DP) :: sigma, kt
          !
-         IF(.not.vel_defined)THEN
+         IF (.NOT. vel_defined) THEN
             vel(:,:) = (tau(:,:) - tau_old(:,:)) / dt
          ENDIF
          !
-         SELECT CASE( trim( thermostat ) )
+         SELECT CASE( TRIM( thermostat ) )
          CASE( 'rescaling' )
-            IF ( abs (temp_new-temperature) > tolp ) THEN
-               !
+            !
+            IF ( ABS(temp_new-temperature) > tolp ) THEN
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"Velocity rescaling: T (",F6.1,"K) ", &
                                  & "out of range, reset to " ,F6.1)' ) &
                            temp_new, temperature
                CALL thermalize( 0, temp_new, temperature )
-               !
             ENDIF
+            !
          CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
-            IF ( mod( istep, nraise ) == 0 ) THEN
+            !
+            IF ( MOD( istep, nraise ) == 0 ) THEN
                !
-               temp_av = temp_av / dble( nraise )
+               temp_av = temp_av / DBLE( nraise )
                !
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"Velocity rescaling: average T on ",i3, &
@@ -543,14 +585,16 @@ CONTAINS
                            nraise, temp_av, temperature
                !
                CALL thermalize( 0, temp_new, temperature )
-               !
                temp_av = 0.D0
-               !
             ENDIF
+            !
          CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
+            ! Clearly it makes sense to check for positive delta_t
+            ! If a negative delta_t is given, I suggest to have a message
+            ! printed, that delta_t is ignored (TODO)
             IF ( delta_t > 0 ) THEN
                !
-               temperature = temp_new*delta_t
+               temperature = temperature*delta_t
                !
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"Thermalization: T (",F6.1,"K) rescaled ",&
@@ -560,13 +604,25 @@ CONTAINS
                !
             ENDIF
          CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
-            IF ( mod( istep, nraise ) == 0 .and. delta_t < 0 ) THEN
+            IF ( mod( istep, nraise ) == 0 ) THEN
                !
-               temperature = temp_new + delta_t
+               ! First printing message, than reduce target temperature:
                !
-               WRITE( UNIT = stdout, &
+               IF ( delta_t > 0 ) THEN
+                 WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) augmented ",&
+                                 & "by ",F6.3)' ) temperature, delta_t
+
+               ELSE
+                 WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
-                                 & "by ",F6.3)' ) temp_new, -delta_t
+                                 & "by ",F6.3)' ) temperature, -delta_t
+               ENDIF
+               ! I check whether the temperature is negative, so that I avoid
+               ! nonsensical behavior:
+               IF (temperature < 0.0D0 ) CALL errore('apply_thermostat','Negative target temperature',1)
+               !
+               temperature = temperature + delta_t
                !
                CALL thermalize( 0, temp_new, temperature )
                !
@@ -579,6 +635,13 @@ CONTAINS
             !
             CALL thermalize( nraise, temp_new, temperature )
             !
+         CASE( 'svr', 'Svr', 'SVR' )
+            !
+            WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Canonical sampling velocity rescaling")' )
+            !
+            CALL thermalize_resamp_vscaling( nraise, temp_new, temperature )
+            !
          CASE( 'andersen', 'Andersen' )
             !
             kt = temperature / ry_to_kelvin
@@ -586,15 +649,15 @@ CONTAINS
             !
             DO na = 1, nat
                !
-               IF ( randy() < 1.D0 / dble( nraise ) ) THEN
+               IF ( randy() < 1.D0 / DBLE( nraise ) ) THEN
                   !
                   nat_moved = nat_moved + 1
-                  sigma = sqrt( kt / mass(na) )
+                  sigma = SQRT( kt / mass(na) )
                   !
                   ! ... N.B. velocities must in a.u. units of alat and are zero
                   ! ...      for fixed ions
                   !
-                  vel(:,na) = dble( if_pos(:,na) ) * &
+                  vel(:,na) = DBLE( if_pos(:,na) ) * &
                               gauss_dist( 0.D0, sigma, 3 ) / alat
                   !
                ENDIF
@@ -613,7 +676,7 @@ CONTAINS
          !
          ! ... the old positions are updated to reflect the new velocities
          !
-         IF(.not.vel_defined)THEN
+         IF (.NOT. vel_defined) THEN
             tau_old(:,:) = tau(:,:) - vel(:,:) * dt
          ENDIF
          !
@@ -622,8 +685,7 @@ CONTAINS
       !-----------------------------------------------------------------------
       SUBROUTINE start_therm()
          !-----------------------------------------------------------------------
-         !
-         ! ... Starting thermalization of the system
+         !! Starting thermalization of the system.
          !
          USE symm_base,      ONLY : invsym, nsym, irt
          USE cell_base,      ONLY : alat
@@ -638,14 +700,14 @@ CONTAINS
          ! ... next command prevents different MD runs to start
          ! ... with exactly the same "random" velocities
          !
-         CALL set_random_seed ( )
+         CALL set_random_seed( )
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution
          !
          DO na = 1, nat
             !
-            sigma = sqrt( kt / mass(na) )
+            sigma = SQRT( kt / mass(na) )
             !
             ! ... N.B. velocities must in a.u. units of alat
             !
@@ -655,7 +717,7 @@ CONTAINS
          !
          ! ... the velocity of fixed ions must be zero
          !
-         vel = vel * dble( if_pos )
+         vel = vel * DBLE( if_pos )
          !
          IF ( lconstrain ) THEN
             !
@@ -690,9 +752,9 @@ CONTAINS
             !
             ml(:) = 0.D0
             !
-            IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
+            IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
                !
-               total_mass = sum ( mass(1:nat) )
+               total_mass = SUM( mass(1:nat) )
                DO na = 1, nat
                   ml(:) = ml(:) + mass(na)*vel(:,na)
                ENDDO
@@ -717,13 +779,14 @@ CONTAINS
          ! ... temperature is usually changed. Set again the temperature to the
          ! ... right value.
          !
-         system_temp = 2.D0 / dble( ndof ) * ek * alat**2 * ry_to_kelvin
+         system_temp = 2.D0 / DBLE( ndof ) * ek * alat**2 * ry_to_kelvin
          !
          CALL thermalize( 0, system_temp, temperature )
          !
       END SUBROUTINE start_therm
       !
    END SUBROUTINE verlet
+   !
    !
    !------------------------------------------------------------------------
    SUBROUTINE terminate_verlet
@@ -740,26 +803,26 @@ CONTAINS
      !
    END SUBROUTINE terminate_verlet
    !
+   !
    !------------------------------------------------------------------------
    SUBROUTINE proj_verlet( conv_ions )
       !------------------------------------------------------------------------
+      !! This routine performs one step of structural relaxation using
+      !! the preconditioned-projected-Verlet algorithm. 
       !
-      ! ... This routine performs one step of structural relaxation using
-      ! ... the preconditioned-projected-Verlet algorithm.
-      !
-      USE ions_base,     ONLY : nat, ityp, tau, if_pos
-      USE cell_base,     ONLY : alat
-      USE ener,          ONLY : etot
-      USE force_mod,     ONLY : force
-      USE relax,         ONLY : epse, epsf
-      USE control_flags, ONLY : istep, lconstrain
+      USE ions_base,          ONLY : nat, ityp, tau, if_pos
+      USE cell_base,          ONLY : alat
+      USE ener,               ONLY : etot
+      USE force_mod,          ONLY : force
+      USE relax,              ONLY : epse, epsf
+      USE control_flags,      ONLY : istep, lconstrain
       !
       USE constraints_module, ONLY : remove_constr_force, check_constraint
-      !
       ! TB
-      USE extfield,      ONLY : relaxz
+      USE extfield,           ONLY : relaxz
       !
       IMPLICIT NONE
+      !
       LOGICAL, INTENT(OUT) :: conv_ions
       !
       REAL(DP), ALLOCATABLE :: step(:,:)
@@ -836,7 +899,7 @@ CONTAINS
       ! ... check if convergence for structural minimization is achieved
       !
       conv_ions = ( etotold - etot ) < epse
-      conv_ions = conv_ions .and. ( maxval( abs( force ) ) < epsf )
+      conv_ions = conv_ions .and. ( MAXVAL( ABS( force ) ) < epsf )
       !
       IF ( conv_ions ) THEN
          !
@@ -848,7 +911,7 @@ CONTAINS
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Final energy = ",F18.10," Ry"/)' ) etot
          !
-         CALL output_tau( .true., .true. )
+         CALL output_tau( .TRUE., .TRUE. )
          !
          RETURN
          !
@@ -874,14 +937,14 @@ CONTAINS
       !
       step(:,:) = step(:,:) / norm_step
       !
-      tau_new(:,:) = tau(:,:) + step(:,:)*min( norm_step, step_max / alat )
+      tau_new(:,:) = tau(:,:) + step(:,:)*MIN( norm_step, step_max / alat )
       !
       ! TB
-      !IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
-      IF ( .not. any( if_pos(:,:) == 0 ) .AND. (relaxz) ) THEN
-         WRITE( stdout, '("relaxz = .true. => displacement of the center of mass is not subtracted")')
+      !IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) .AND. (relaxz) ) THEN
+         WRITE( stdout, '("relaxz = .TRUE. => displacement of the center of mass is not subtracted")')
       ENDIF
-      IF ( (.not. any( if_pos(:,:) == 0 )) .AND. (.not. relaxz) ) THEN
+      IF ( (.NOT. ANY( if_pos(:,:) == 0 )) .AND. (.NOT. relaxz) ) THEN
          !
          ! ... if no atom has been fixed  we compute the displacement of the
          ! ... center of mass and we subtract it from the displaced positions
@@ -894,7 +957,7 @@ CONTAINS
             !
          ENDDO
          !
-         delta(:) = delta(:) / dble( nat )
+         delta(:) = delta(:) / DBLE( nat )
          !
          FORALL( na = 1:nat ) tau_new(:,na) = tau_new(:,na) - delta(:)
          !
@@ -913,7 +976,7 @@ CONTAINS
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
-      leof = .true.
+      leof = .TRUE.
       WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
@@ -924,18 +987,19 @@ CONTAINS
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
-      CALL output_tau( .false., .false. )
+      CALL output_tau( .FALSE., .FALSE. )
       !
 #endif
       !
       DEALLOCATE( step )
       !
    END SUBROUTINE proj_verlet
+   !
+   !
    !------------------------------------------------------------------------
    SUBROUTINE langevin_md()
       !------------------------------------------------------------------------
-      !
-      ! ...
+      !! Langevin dynamics.
       !
       USE ions_base,      ONLY : nat, ityp, tau, if_pos
       USE cell_base,      ONLY : alat
@@ -1005,19 +1069,19 @@ CONTAINS
       !
       kt = temperature / ry_to_kelvin
       !
-      sigma = sqrt( 2.D0*dt*kt )
+      sigma = SQRT( 2.D0*dt*kt )
       !
       delta(:) = 0.D0
       !
       DO na = 1, nat
          !
-         chi(:,na) = gauss_dist( 0.D0, sigma, 3 )*dble( if_pos(:,na) )
+         chi(:,na) = gauss_dist( 0.D0, sigma, 3 )*DBLE( if_pos(:,na) )
          !
          delta(:) = delta(:) + chi(:,na)
          !
       ENDDO
       !
-      FORALL( na = 1:nat ) chi(:,na) = chi(:,na) - delta(:) / dble( nat )
+      FORALL( na = 1:nat ) chi(:,na) = chi(:,na) - delta(:) / DBLE( nat )
       !
       PRINT *, "|F|   = ", dt*dnrm2( 3*nat, force, 1 )
       PRINT *, "|CHI| = ", dnrm2( 3*nat, chi, 1 )
@@ -1026,7 +1090,7 @@ CONTAINS
       !
       tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
       !
-      IF ( .not. any( if_pos(:,:) == 0 ) ) THEN
+      IF ( .NOT. ANY( if_pos(:,:) == 0 ) ) THEN
          !
          ! ... here we compute the displacement of the center of mass and we
          ! ... subtract it from the displaced positions
@@ -1082,11 +1146,12 @@ CONTAINS
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
-      CALL output_tau( .false., .false. )
+      CALL output_tau( .FALSE., .FALSE. )
       !
 #endif
       !
    END SUBROUTINE langevin_md
+   !
    !
    !-----------------------------------------------------------------------
    SUBROUTINE refold_tau()
@@ -1108,6 +1173,7 @@ CONTAINS
       ENDDO
       !
    END SUBROUTINE refold_tau
+   !
    !
    !-----------------------------------------------------------------------
    SUBROUTINE compute_averages( istep )
@@ -1137,8 +1203,8 @@ CONTAINS
          !
          radial_distr(:,:) = 0.D0
          !
-         CALL delete_if_present( trim( tmp_dir ) // &
-                               & trim( prefix ) // ".msd.dat" )
+         CALL delete_if_present( TRIM( tmp_dir ) // &
+                               & TRIM( prefix ) // ".msd.dat" )
          !
       ENDIF
       !
@@ -1152,17 +1218,17 @@ CONTAINS
          !
       ENDDO
       !
-      diff_coeff(:) = msd(:) / ( 6.D0*dble( istep )*dt )
+      diff_coeff(:) = msd(:) / ( 6.D0*DBLE( istep )*dt )
       !
       ! ... conversion from Rydberg atomic units to cm^2/sec
       !
       diff_coeff(:) = diff_coeff(:) * bohr_radius_cm**2 / ( 2.D-12*au_ps )
       !
       OPEN( UNIT = 4, POSITION = 'APPEND', &
-            FILE = trim( tmp_dir ) // trim( prefix ) // ".msd.dat" )
+            FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".msd.dat" )
       !
       WRITE( 4, '(2(2X,F16.8))' ) &
-          ( istep*dt*2.D0*au_ps ), sum( msd(:) ) / dble( nat-fixatom )
+          ( istep*dt*2.D0*au_ps ), SUM( msd(:) ) / DBLE( nat-fixatom )
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -1170,7 +1236,7 @@ CONTAINS
       !
       ! ... radial distribution function g(r)
       !
-      inv_dmax = 1.D0 / ( norm( matmul( at(:,:), max_dist(:) ) ) * alat )
+      inv_dmax = 1.D0 / ( norm( MATMUL( at(:,:), max_dist(:) ) ) * alat )
       !
       DO i = 1, nat
          !
@@ -1180,9 +1246,9 @@ CONTAINS
             !
             dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * alat )
             !
-            idx = anint( norm( dtau(:) ) * inv_dmax * dble( hist_len ) )
+            idx = ANINT( norm( dtau(:) ) * inv_dmax * DBLE( hist_len ) )
             !
-            IF( idx > 0 .and. idx <= size( radial_distr, 1 ) ) &
+            IF( idx > 0 .and. idx <= SIZE( radial_distr, 1 ) ) &
                radial_distr(idx,i) = radial_distr(idx,i) + 1.D0
             !
          ENDDO
@@ -1190,6 +1256,7 @@ CONTAINS
       ENDDO
       !
    END SUBROUTINE compute_averages
+   !
    !
    !-----------------------------------------------------------------------
    SUBROUTINE print_averages()
@@ -1219,30 +1286,30 @@ CONTAINS
       ENDDO
       !
       WRITE( UNIT = stdout, FMT = '(/,5X,"< D > = ",F16.8," cm^2/s")' ) &
-          sum( diff_coeff(:) ) / dble( nat-fixatom )
+          sum( diff_coeff(:) ) / DBLE( nat-fixatom )
       !
       ! ... radial distribution function g(r)
       !
       dmax = norm( matmul( at(:,:), max_dist(:) ) ) * alat
       !
-      radial_distr(:,:) = radial_distr(:,:) * omega / dble( nat ) / fpi
+      radial_distr(:,:) = radial_distr(:,:) * omega / DBLE( nat ) / fpi
       !
-      radial_distr(:,:) = radial_distr(:,:) / ( dmax / dble( hist_len ) )
+      radial_distr(:,:) = radial_distr(:,:) / ( dmax / DBLE( hist_len ) )
       !
-      radial_distr(:,:) = radial_distr(:,:) / dble( nstep )
+      radial_distr(:,:) = radial_distr(:,:) / DBLE( nstep )
       !
-      OPEN( UNIT = 4, FILE = trim( tmp_dir ) // trim( prefix ) // ".rdf.dat" )
+      OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".rdf.dat" )
       !
       DO idx = 1, hist_len
          !
-         dist = dble( idx ) / dble( hist_len ) * dmax
+         dist = DBLE( idx ) / DBLE( hist_len ) * dmax
          !
-         IF ( dist > dmax / sqrt( 3.0d0 ) ) CYCLE
+         IF ( dist > dmax / SQRT( 3.0d0 ) ) CYCLE
          !
          radial_distr(idx,:) = radial_distr(idx,:) / dist**2
          !
          WRITE( 4, '(2(2X,F16.8))' ) &
-             dist, sum( radial_distr(idx,:) ) / dble( nat )
+             dist, SUM( radial_distr(idx,:) ) / DBLE( nat )
          !
       ENDDO
       !
@@ -1250,24 +1317,24 @@ CONTAINS
       !
    END SUBROUTINE print_averages
    !
+   !
    !-----------------------------------------------------------------------
    SUBROUTINE force_precond( istep, force, etotold )
       !-----------------------------------------------------------------------
+      !! This routine computes an estimate of H^-1 by using the BFGS
+      !! algorithm and the preconditioned gradient /( \text{pg} = H^{-1} g /)
+      !! (it works in atomic units).
       !
-      ! ... this routine computes an estimate of H^-1 by using the BFGS
-      ! ... algorithm and the preconditioned gradient  pg = H^-1 * g
-      ! ... ( it works in atomic units )
-      !
-      USE ener,      ONLY : etot
-      USE cell_base, ONLY : alat
-      USE ions_base, ONLY : nat, tau
-      USE io_files,  ONLY : iunbfgs, tmp_dir
+      USE ener,        ONLY : etot
+      USE cell_base,   ONLY : alat
+      USE ions_base,   ONLY : nat, tau
+      USE io_files,    ONLY : iunbfgs, tmp_dir
       !
       IMPLICIT NONE
       !
-      INTEGER,  INTENT(in)    :: istep
-      REAL(DP), INTENT(inout) :: force(:,:)
-      REAL(DP), INTENT(in)    :: etotold
+      INTEGER,  INTENT(IN)    :: istep
+      REAL(DP), INTENT(INOUT) :: force(:,:)
+      REAL(DP), INTENT(IN)    :: etotold
       !
       REAL(DP), ALLOCATABLE :: pos(:), pos_p(:)
       REAL(DP), ALLOCATABLE :: grad(:), grad_p(:), precond_grad(:)
@@ -1276,7 +1343,7 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
       REAL(DP)              :: sdoty, pg_norm
       INTEGER               :: dim
-      CHARACTER(len=256)    :: bfgs_file
+      CHARACTER(LEN=256)    :: bfgs_file
       LOGICAL               :: file_exists
       !
       INTEGER,  PARAMETER   :: nrefresh    = 25
@@ -1291,17 +1358,17 @@ CONTAINS
       ALLOCATE( inv_hess( dim, dim ) )
       ALLOCATE( Hy( dim ), yH( dim ) )
       !
-      pos(:)  =   reshape( tau,   (/ dim /) ) * alat
-      grad(:) = - reshape( force, (/ dim /) )
+      pos(:)  =   RESHAPE( tau,   (/ dim /) ) * alat
+      grad(:) = - RESHAPE( force, (/ dim /) )
       !
-      bfgs_file = trim( tmp_dir ) // trim( prefix ) // '.bfgs'
+      bfgs_file = TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs'
       !
-      INQUIRE( FILE = trim( bfgs_file ) , EXIST = file_exists )
+      INQUIRE( FILE = TRIM( bfgs_file ) , EXIST = file_exists )
       !
       IF ( file_exists ) THEN
          !
          OPEN( UNIT = iunbfgs, &
-               FILE = trim( bfgs_file ), STATUS = 'OLD', ACTION = 'READ' )
+               FILE = TRIM( bfgs_file ), STATUS = 'OLD', ACTION = 'READ' )
          !
          READ( iunbfgs, * ) pos_p
          READ( iunbfgs, * ) grad_p
@@ -1313,7 +1380,7 @@ CONTAINS
          ! ... iterations: this is one to clean-up the memory of the starting
          ! ... configuration
          !
-         IF ( mod( istep, nrefresh ) == 0 ) inv_hess(:,:) = identity( dim )
+         IF ( MOD( istep, nrefresh ) == 0 ) inv_hess(:,:) = identity( dim )
          !
          IF ( etot < etotold ) THEN
             !
@@ -1322,15 +1389,15 @@ CONTAINS
             s(:) = pos(:)  - pos_p(:)
             y(:) = grad(:) - grad_p(:)
             !
-            sdoty = ( s(:) .dot. y(:) )
+            sdoty = ( s(:) .DOT. y(:) )
             !
             IF ( sdoty > eps8 ) THEN
                !
-               Hy(:) = ( inv_hess(:,:) .times. y(:) )
-               yH(:) = ( y(:) .times. inv_hess(:,:) )
+               Hy(:) = ( inv_hess(:,:) .TIMES. y(:) )
+               yH(:) = ( y(:) .TIMES. inv_hess(:,:) )
                !
                inv_hess = inv_hess + 1.D0 / sdoty * &
-                        ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
+                        ( ( 1.D0 + ( y .DOT. Hy ) / sdoty ) * matrix( s, s ) - &
                           ( matrix( s, yH ) +  matrix( Hy, s ) ) )
                !
             ENDIF
@@ -1343,9 +1410,9 @@ CONTAINS
          !
       ENDIF
       !
-      precond_grad(:) = ( inv_hess(:,:) .times. grad(:) )
+      precond_grad(:) = ( inv_hess(:,:) .TIMES. grad(:) )
       !
-      IF ( ( precond_grad(:) .dot. grad(:) ) < 0.D0 ) THEN
+      IF ( ( precond_grad(:) .DOT. grad(:) ) < 0.D0 ) THEN
          !
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"uphill step: resetting bfgs history",/)' )
@@ -1357,7 +1424,7 @@ CONTAINS
       ENDIF
       !
       OPEN( UNIT = iunbfgs, &
-            FILE = trim( bfgs_file ), STATUS = 'UNKNOWN', ACTION = 'WRITE' )
+            FILE = TRIM( bfgs_file ), STATUS = 'UNKNOWN', ACTION = 'WRITE' )
       !
       WRITE( iunbfgs, * ) pos(:)
       WRITE( iunbfgs, * ) grad(:)
@@ -1370,9 +1437,9 @@ CONTAINS
       pg_norm = norm( precond_grad(:) )
       !
       precond_grad(:) = precond_grad(:) / pg_norm
-      precond_grad(:) = precond_grad(:) * min( pg_norm, max_pg_norm )
+      precond_grad(:) = precond_grad(:) * MIN( pg_norm, max_pg_norm )
       !
-      force(:,:) = - reshape( precond_grad(:), (/ 3, nat /) )
+      force(:,:) = - RESHAPE( precond_grad(:), (/ 3, nat /) )
       !
       DEALLOCATE( pos, pos_p )
       DEALLOCATE( grad, grad_p, precond_grad )
@@ -1385,8 +1452,7 @@ CONTAINS
    !-----------------------------------------------------------------------
    SUBROUTINE project_velocity()
       !-----------------------------------------------------------------------
-      !
-      ! ... quick-min algorithm
+      !! Quick-min algorithm.
       !
       USE control_flags, ONLY : istep
       USE ions_base,     ONLY : nat
@@ -1412,7 +1478,7 @@ CONTAINS
       WRITE( UNIT = stdout, FMT = '(/,5X,"<vel(dt)|acc(dt)> = ",F12.8)' ) &
           projection / dnrm2( 3*nat, vel, 1 )
       !
-      vel(:,:) = acc_versor(:,:) * max( 0.D0, projection )
+      vel(:,:) = acc_versor(:,:) * MAX( 0.D0, projection )
       !
       DEALLOCATE( acc_versor )
       !
@@ -1424,8 +1490,8 @@ CONTAINS
       !
       IMPLICIT NONE
       !
-      REAL(DP), INTENT(in) :: system_temp, required_temp
-      INTEGER, INTENT(in) :: nraise
+      REAL(DP), INTENT(IN) :: system_temp, required_temp
+      INTEGER, INTENT(IN) :: nraise
       !
       REAL(DP) :: aux
       !
@@ -1435,29 +1501,21 @@ CONTAINS
          ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
          ! ... Equivalent to traditional rescaling if nraise=1
          !
-         IF ( system_temp > 0.D0 .and. required_temp > 0.D0 ) THEN
-            !
-            aux = sqrt( 1.d0 + (required_temp / system_temp - 1.d0) * &
-                                (1.D0/dble (nraise) ) )
-            !
+         IF ( system_temp > 0.D0 .AND. required_temp > 0.D0 ) THEN
+            aux = SQRT( 1.d0 + (required_temp / system_temp - 1.d0) * &
+                                (1.D0/DBLE(nraise) ) )
          ELSE
-            !
             aux = 0.d0
-            !
          ENDIF
          !
       ELSE
          !
          ! ... rescale the velocities by a factor 3 / 2KT / Ek
          !
-         IF ( system_temp > 0.D0 .and. required_temp > 0.D0 ) THEN
-            !
-            aux = sqrt( required_temp / system_temp )
-            !
+         IF ( system_temp > 0.D0 .AND. required_temp > 0.D0 ) THEN
+            aux = SQRT( required_temp / system_temp )
          ELSE
-            !
             aux = 0.d0
-            !
          ENDIF
          !
       ENDIF
@@ -1466,111 +1524,184 @@ CONTAINS
       !
    END SUBROUTINE thermalize
    !
-
+   !
    !-----------------------------------------------------------------------
    SUBROUTINE smart_MC()
-      !-----------------------------------------------------------------------
-      ! Routine to apply smart_MC
-      ! Implemented by Xiaochuan Ge, Jul., 2013
-      !
-      ! At this moment works only with langevin dynamics !!
-      ! For the formula see R.J.Rossky, JCP, 69, 4628(1978)
-
-     USE ions_base,      ONLY : nat, ityp, tau, if_pos,atm
-     USE cell_base,      ONLY : alat
-     USE ener,           ONLY : etot
-     USE force_mod,      ONLY : force
-     USE control_flags,  ONLY : istep, lconstrain
-     USE constraints_module, ONLY : remove_constr_force, check_constraint
-     USE random_numbers, ONLY : randy
-     USE io_files,      ONLY : prefix
-     USE io_global,      ONLY : ionode
-     USE constants, ONLY : bohr_radius_angs
-
+     !-----------------------------------------------------------------------
+     !! Routine to apply smart_MC.  
+     !! Implemented by Xiaochuan Ge, Jul., 2013
+     !
+     !! At this moment works only with Langevin dynamics.  
+     !! For the formula see R.J.Rossky, JCP, 69, 4628(1978).
+     ! 
+     USE ions_base,           ONLY : nat, ityp, tau, if_pos,atm
+     USE cell_base,           ONLY : alat
+     USE ener,                ONLY : etot
+     USE force_mod,           ONLY : force
+     USE control_flags,       ONLY : istep, lconstrain
+     USE constraints_module,  ONLY : remove_constr_force, check_constraint
+     USE random_numbers,      ONLY : randy
+     USE io_files,            ONLY : prefix
+     USE io_global,           ONLY : ionode
+     USE constants,           ONLY : bohr_radius_angs
+     !
      IMPLICIT NONE
-
+     !
      LOGICAL :: accept
-     real(dp) :: kt,sigma2,&
-                 T_ij,T_ji,boltzman_ji,& ! boltzman_ji=exp[-(etot_new-etot_old)/kt]
-                 temp,p_smc                  ! *_smart means *_old, the quantity of the
-                                        ! previous step
-
+     REAL(DP) :: kt,sigma2,             &
+                 T_ij,T_ji,boltzman_ji, &   ! boltzman_ji=exp[-(etot_new-etot_old)/kt]
+                 temp,p_smc                 ! *_smart means *_old, the quantity of the
+                                            ! previous step
+     !
      INTEGER :: ia, ip
-
-      IF ( lconstrain ) THEN
-         ! ... we first remove the component of the force along the
-         ! ... constraint gradient ( this constitutes the initial
-         ! ... guess for the calculation of the lagrange multipliers )
-         CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
-      ENDIF
-
-     IF(first_iter) THEN ! For the first iteration
-       ALLOCATE(tau_smart(3,nat))
-       ALLOCATE(force_smart(3,nat))
-       tau_smart=tau
-       etot_smart=etot
-       force_smart=force
-       first_iter=.false.
-       RETURN
+     !
+     IF ( lconstrain ) THEN
+        ! ... we first remove the component of the force along the
+        ! ... constraint gradient ( this constitutes the initial
+        ! ... guess for the calculation of the lagrange multipliers )
+        CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
      ENDIF
-
+     !
+     IF (first_iter) THEN ! For the first iteration
+        ALLOCATE( tau_smart(3,nat) )
+        ALLOCATE( force_smart(3,nat) )
+        tau_smart = tau
+        etot_smart = etot
+        force_smart = force
+        first_iter = .FALSE.
+        RETURN
+     ENDIF
+     !
      kt = temperature / ry_to_kelvin
      sigma2 =  2.D0*dt*kt
-
+     !
      T_ij=0.0d0
      T_ji=0.0d0
-     DO ia=1,nat
-       DO ip = 1, 3
-         T_ij=T_ij+((tau(ip,ia)-tau_smart(ip,ia))*alat-dt*force_smart(ip,ia))**2
-         T_ji=T_ji+((tau_smart(ip,ia)-tau(ip,ia))*alat-dt*force(ip,ia))**2
-       ENDDO
+     DO ia = 1, nat
+        DO ip = 1, 3
+           T_ij = T_ij + ( (tau(ip,ia)-tau_smart(ip,ia))*alat-dt*force_smart(ip,ia) )**2
+           T_ji = T_ji + ( (tau_smart(ip,ia)-tau(ip,ia))*alat-dt*force(ip,ia) )**2
+        ENDDO
      ENDDO
-     T_ij=exp(-T_ij/(2*sigma2))
-     T_ji=exp(-T_ji/(2*sigma2))
-
-     boltzman_ji=exp(-(etot-etot_smart)/kt)
-
-     p_smc=T_ji*boltzman_ji/T_ij
-
+     T_ij = EXP(-T_ij/(2*sigma2))
+     T_ji = EXP(-T_ji/(2*sigma2))
+     !
+     boltzman_ji = EXP(-(etot-etot_smart)/kt)
+     !
+     p_smc = T_ji*boltzman_ji/T_ij
+     !
      WRITE(stdout, '(5x,"The old energy is:",3x,F17.8," Ry")') etot_smart
      WRITE(stdout, '(5x,"The new energy is:",3x,F17.8," Ry")') etot
      WRITE(stdout, '(5x,"The possibility to accept this step is:",3x,F10.7/)') p_smc
      WRITE(stdout, '(5x,"Nervously waiting for the fate ..."/)')
-
+     !
      ! Decide if accept the new config
      temp = randy()
      WRITE(stdout, '(5x,"The fate says:",5x,F10.7)') temp
      IF(temp <= p_smc) THEN
-       WRITE(stdout, '(5x,"The new config is accepted")')
-       num_accept=num_accept+1
-       tau_smart=tau
-       etot_smart=etot
-       force_smart=force
+        WRITE(stdout, '(5x,"The new config is accepted")')
+        num_accept=num_accept+1
+        tau_smart=tau
+        etot_smart=etot
+        force_smart=force
      ELSE
-       WRITE(stdout, '(5x,"The new config is not accepted")')
-       tau=tau_smart
-       etot=etot_smart
-       force=force_smart
+        WRITE(stdout, '(5x,"The new config is not accepted")')
+        tau=tau_smart
+        etot=etot_smart
+        force=force_smart
      ENDIF
-
-     WRITE (stdout, '(5x,"The current acceptance is :",3x,F10.6)') dble(num_accept)/istep
-
+     !
+     WRITE (stdout, '(5x,"The current acceptance is :",3x,F10.6)') DBLE(num_accept)/istep
+     !
      ! Print the trajectory
 #if defined(__MPI)
      IF(ionode) THEN
 #endif
-     OPEN(117,file="trajectory-"//trim(prefix)//".xyz",status="unknown",position='APPEND')
+     OPEN(117,file="trajectory-"//TRIM(prefix)//".xyz", STATUS="unknown", POSITION='APPEND')
      WRITE(117,'(I5)') nat
      WRITE(117,'("# Step: ",I5,5x,"Total energy: ",F17.8,5x,"Ry")') istep-1, etot
      DO ia = 1, nat
-       WRITE( 117, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
+        WRITE( 117, '(A3,3X,3F14.9)') atm(ityp(ia)),tau(:,ia)*alat*bohr_radius_angs
      ENDDO
      CLOSE(117)
 #if defined(__MPI)
      ENDIF
 #endif
-
+     !
      RETURN
+     !
    END SUBROUTINE smart_MC
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE thermalize_resamp_vscaling (nraise, system_temp, required_temp)
+      !-----------------------------------------------------------------------
+      !
+      ! Sample velocities using stochastic velocity rescaling, based on
+      ! Bussi, Donadio, Parrinello, J. Chem. Phys. 126, 014101 (2007),
+      ! doi: 10.1063/1.2408420
+      !
+      ! Implemented (2019) by Leonid Kahle and Ngoc Linh Nguyen,
+      ! Theory and Simulations of Materials Laboratory, EPFL.
+      !
+      USE ions_base,          ONLY : nat, if_pos
+      USE constraints_module, ONLY : nconstr
+      USE cell_base,          ONLY : alat
+      USE random_numbers,     ONLY : gauss_dist, sum_of_gaussians2
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(in) :: system_temp, required_temp
+      INTEGER,  INTENT(in) :: nraise
+      !
+      INTEGER  :: i, ndof
+      REAL(DP) :: factor, rr
+      REAL(DP) :: aux, aux2
+      real(DP), external :: gasdev, sumnoises
+      INTEGER  :: na
+      !
+      ! ... the number of degrees of freedom
+      !
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
+         !
+         ndof = 3*nat - count( if_pos(:,:) == 0 ) - nconstr
+         !
+      ELSE
+         !
+         ndof = 3*nat - 3 - nconstr
+         !
+      ENDIF
+      !
+      IF ( nraise > 0 ) THEN
+         !
+         ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
+         ! ... Equivalent to traditional rescaling if nraise=1
+         !
+         factor = exp(-1.0/nraise)
+      ELSE
+         !
+         factor = 0.0
+         !
+      ENDIF
+      !
+      IF ( system_temp > 0.D0 .and. required_temp > 0.D0 ) THEN
+         !
+         ! Applying Eq. (A7) from J. Chem. Phys. 126, 014101 (2007)
+         !
+         rr = gauss_dist(0.0D0, 1.0D0)
+         aux2 = factor + (1.0D0-factor)*( sum_of_gaussians2(ndof-1) +rr**2) &
+                * required_temp/(ndof*system_temp) &
+                + 2*rr*sqrt((factor*(1.0D0-factor)*required_temp)/(ndof*system_temp))
+         !
+         aux  = sqrt(aux2)
 
+      ELSE
+         !
+         aux = 0.d0
+         !
+      ENDIF
+      !
+      ! Global rescaling applied to velocities
+      vel(:,:) = vel(:,:) * aux
+      !
+   END SUBROUTINE thermalize_resamp_vscaling
 END MODULE dynamics_module

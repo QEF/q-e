@@ -78,7 +78,6 @@ MODULE cp_restart_new
       USE fft_base,                 ONLY : dfftp, dffts, dfftb
       USE fft_rho,                  ONLY : rho_r2g
       USE uspp_param,               ONLY : n_atom_wfc, upf
-      USE kernel_table,             ONLY : vdw_table_name, kernel_file_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
       USE wrappers,                 ONLY : f_copy
@@ -344,6 +343,9 @@ MODULE cp_restart_new
                     ts_vdw_econv_thr_ = vdw_econv_thr
                     ts_thr_opt => ts_vdw_econv_thr_
               END SELECT 
+           ELSE
+              vdw_corr_ = 'none'
+              vdw_corr_opt => vdw_corr_ 
            END IF 
            IF ( dft_is_nonlocc() ) THEN 
               non_locc_ = TRIM ( get_nonlocc_name()) 
@@ -505,12 +507,6 @@ MODULE cp_restart_new
            IF ( TRIM(sourcefile) /= TRIM(filename) ) &
                 ierr = f_copy(sourcefile, filename)
         END DO
-        IF ( get_inlc() > 0 ) THEN 
-           sourcefile= TRIM(kernel_file_name)
-           filename = TRIM(dirname)//TRIM(vdw_table_name)
-           IF ( TRIM(sourcefile) /= TRIM(filename) ) & 
-              ierr = f_copy(sourcefile, filename)
-        END IF  
      END IF
      !
 !-------------------------------------------------------------------------------
@@ -592,7 +588,6 @@ MODULE cp_restart_new
       USE qes_types_module,         ONLY : output_type, parallel_info_type, &
                                            general_info_type
       USE qes_read_module,          ONLY : qes_read
-      USE kernel_table,             ONLY : vdw_table_name
       USE london_module,            ONLY : scal6, lon_rcut, in_c6
       USE tsvdw_module,             ONLY : vdw_isolated, vdw_econv_thr
       USE qexsd_copy, ONLY:  qexsd_copy_geninfo, qexsd_copy_parallel_info, &
@@ -792,7 +787,7 @@ MODULE cp_restart_new
            lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax,&
            Hubbard_U, Hubbard_dum(1,:), Hubbard_dum(2,:), Hubbard_dum(3,:), &
            Hubbard_dum, &
-           vdw_corr, vdw_table_name, scal6, lon_rcut, vdw_isolated)
+           vdw_corr, scal6, lon_rcut, vdw_isolated)
       CALL set_vdw_corr (vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
       IF ( ldftd3 ) CALL errore('cp_readfile','DFT-D3 not implemented',1)
       !

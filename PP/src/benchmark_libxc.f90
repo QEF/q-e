@@ -10,11 +10,12 @@ PROGRAM benchmark_libxc
   !--------------------------------------------------------------------------------
   !! This program compares the output results (energies and potentials) from the libxc 
   !! routines with the ones from q-e xc internal library.  
-  !! Available options:  
+  !! Available options:
+  !
   !! * LDA ;
-  !! * derivative of LDA pot. (dmxc) ;
+  !! * derivative of LDA (dmxc) ;
   !! * GGA ;
-  !! * derivative of GGA pot. (dgcxc, the polarized case is not yet complete) ;
+  !! * derivative of GGA (dgcxc) ;
   !! * metaGGA (some discrepancies with the m06_L functional only for correlation potential).
   !
   !------------------------------------------------------------------------------------!
@@ -65,6 +66,7 @@ PROGRAM benchmark_libxc
   CHARACTER(LEN=120) :: name1, name2
   INTEGER :: iexch_lxc, icorr_lxc
   INTEGER :: pol_unpol
+  REAL(DP) :: dvc_rr_qe(3)
   REAL(DP), ALLOCATABLE :: rho_lxc(:)
   REAL(DP), ALLOCATABLE :: tau_lxc(:), lapl_rho(:)
   REAL(DP), ALLOCATABLE :: sigma(:)
@@ -87,7 +89,7 @@ PROGRAM benchmark_libxc
   ! *        https://tddft.org/programs/libxc/functionals/                        *
   ! *                                                                             *
   ! * and then use the function: xc_functional_get_number( 'XC_name' ).           *
-  ! * NOTE: the prefix XC_ is necessary.                                          *
+  ! * NOTE: the prefix XC_ is always necessary.                                   *
   ! * For q-e indexes see the comments in Modules/funct.f90                       *
   ! *-----------------------------------------------------------------------------*
   ! *                                                                             *
@@ -107,14 +109,16 @@ PROGRAM benchmark_libxc
   ! *******************************************************************************
   !
   !
-  !*******************
-  !  compatibility for GGA:
+  ! *******************************************************************************
+  ! * Compatibility for GGA with lyp:                                             *
+  ! *                                                                             *
+  ! *  qe:     ec = ec_lyp*rho + ec_glyp  / vc = vc_lyp + v1c_glyp                *
+  ! *  libxc:  ec = ec_glyp (icorr=131)   / vc = vc_glyp (131)                    *
+  ! *         ... same for polarized case                                         *
+  ! *******************************************************************************
   !
-  !  - lyp =>    qe:     ec = ec_lyp*rho + ec_glyp  / vc = vc_lyp + v1c_glyp
-  !              libxc:  ec = ec_glyp (icorr=131)   / vc = vc_glyp (131)
-  !                     ... same for polarized case
   !
-  PRINT *, CHAR(10)//" --- BENCHMARK TEST BETWEEN QE AND LIBXC ---"//CHAR(10)//" "
+  PRINT *, CHAR(10)//" --- COMPARISON TEST BETWEEN QE AND LIBXC ---"//CHAR(10)//" "
   !
   WRITE (*,'(/,1x,a)', ADVANCE='no') "Derivative of xc?(y/n) "
   READ(*,*) f_q
@@ -196,12 +200,12 @@ PROGRAM benchmark_libxc
   ! *******************************************************************************
   ! *                     Polarized case:                                         *
   ! *                                                                             *
-  ! *  qe =>  rho_qe(:,1) = up    |      libxc     =>        rho_lxc(2n+1) = up   *
-  ! *         rho_qe(:,2) = down  |            (dim=2*nnr)   rho_lxc(2n+2) = down *
-  ! *                             |                                               *
-  ! *         grho(:,1)  = uu     |            (dim=3*nnr)   sigma(3n+1) = uu     *
-  ! *         grho(:,2)  = dd     |                          sigma(3n+2) = ud     *
-  ! *         grho_ud(:) = ud     |                          sigma(3n+3) = dd     *
+  ! *  qe =>  rho_qe(n,1) -> up    |      libxc     =>      rho_lxc(2n+1) -> up   *
+  ! *         rho_qe(n,2) -> down  |            (dim=2*nnr) rho_lxc(2n+2) -> down *
+  ! *                              |                                              *
+  ! *         grho(n,1)  -> uu     |            (dim=3*nnr) sigma(3n+1) -> uu     *
+  ! *         grho(n,2)  -> dd     |                        sigma(3n+2) -> ud     *
+  ! *         grho_ud(n) -> ud     |                        sigma(3n+3) -> dd     *
   ! *                                                                             *
   ! *******************************************************************************
   !
@@ -444,9 +448,7 @@ PROGRAM benchmark_libxc
       IF ( DF_OK ) CALL xc_f90_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
      CALL xc_f90_func_end( xc_func )
      !
-     IF (DF_OK) THEN
-       v2rho2_x = v2rho2_x - dex_lxc
-     ENDIF
+     IF ( DF_OK ) v2rho2_x = v2rho2_x - dex_lxc
      !
      !
      DO ii = 1, nnr
@@ -477,9 +479,7 @@ PROGRAM benchmark_libxc
          IF ( DF_OK ) CALL xc_f90_lda_fxc( xc_func, nnr, rho_lxc(1), dex_lxc(1) )
         CALL xc_f90_func_end( xc_func )
         !
-        IF (DF_OK) THEN
-          v2rho2_c = v2rho2_c - dex_lxc
-        ENDIF
+        IF ( DF_OK ) v2rho2_c = v2rho2_c - dex_lxc
         !
      ENDIF
      !
@@ -799,17 +799,26 @@ PROGRAM benchmark_libxc
             WRITE (*,202) v2rho2_x(3*ii-2), v2rho2_x(3*ii)
             PRINT *, " --- "
             WRITE (*,302) vrrx(ii,1)-v2rho2_x(3*ii-2), vrrx(ii,2)-v2rho2_x(3*ii)
+            !
             PRINT *, 'vsrx'
             WRITE (*,102) vsrx(ii,1), vsrx(ii,2)
             WRITE (*,202) v2rhosigma_x(6*ii-5)*2.d0, v2rhosigma_x(6*ii)*2.d0
+            !
+            PRINT *, '|||'
+            WRITE (*,203) v2rhosigma_x(6*ii-5)*2, v2rhosigma_x(6*ii-4), v2rhosigma_x(6*ii-3)
+            WRITE (*,203) v2rhosigma_x(6*ii-2), v2rhosigma_x(6*ii-1), v2rhosigma_x(6*ii)*2
+            PRINT *, '|||'
+            !
             PRINT *, " --- "
             WRITE (*,303) vsrx(ii,1)-v2rhosigma_x(6*ii-5)*2, vsrx(ii,2)-v2rhosigma_x(6*ii)*2.d0
+            !
             PRINT *, 'vssx'
             WRITE (*,102) vssx(ii,1), vssx(ii,2)
-            !
             WRITE (*,202) v2sigma2_x(6*ii-5)*4, v2sigma2_x(6*ii)*2
-            !WRITE (*,203) v2sigma2_x(6*ii-5)*2, v2sigma2_x(6*ii-4), v2sigma2_x(6*ii-3)
-            !WRITE (*,203) v2sigma2_x(6*ii-2), v2sigma2_x(6*ii-1), v2sigma2_x(6*ii)
+            PRINT *, '|||'
+            WRITE (*,203) v2sigma2_x(6*ii-5)*2, v2sigma2_x(6*ii-4), v2sigma2_x(6*ii-3)
+            WRITE (*,203) v2sigma2_x(6*ii-2), v2sigma2_x(6*ii-1), v2sigma2_x(6*ii)
+            PRINT *, '|||'
             PRINT *, " --- "
             WRITE (*,302) vssx(ii,1)-v2sigma2_x(6*ii-5)*4, vssx(ii,2)-v2sigma2_x(6*ii)*4
           ENDIF
@@ -824,25 +833,52 @@ PROGRAM benchmark_libxc
             WRITE (*,303) vrrc(ii,1)-v2rho2_c(ii), vsrc(ii,1)-v2rhosigma_c(ii)*2.d0, vssc(ii)-v2sigma2_c(ii)*4.d0
           ELSE
             PRINT *, 'vrrc'
-            WRITE (*,102) vrrc(ii,1), vrrc(ii,2)
-            WRITE (*,203) v2rho2_c(3*ii-1), v2rho2_c(3*ii-2), v2rho2_c(3*ii)
-            PRINT *, " --- "
-            !WRITE (*,302) vrrc(ii,1)-v2rho2_c(3*ii-2), vrrc(ii,2)-v2rho2_c(3*ii)
-            PRINT *, 'vsrc'
-            WRITE (*,102) vsrc(ii,1)+4.d0*vsrc(ii,2), vsrc(ii,2)
-            WRITE (*,202) v2rhosigma_c(6*ii-5)*2.d0, v2rhosigma_c(6*ii)*2.d0
-            !WRITE (*,203) v2rhosigma_c(6*ii-5), v2rhosigma_c(6*ii-4), v2rhosigma_c(6*ii-3)
-            !WRITE (*,203) v2rhosigma_c(6*ii-2), v2rhosigma_c(6*ii-1), v2rhosigma_c(6*ii)
-            PRINT *, " --- "
-            WRITE (*,303) vsrc(ii,1)-v2rhosigma_c(6*ii-5)*2, vsrc(ii,2)-v2rhosigma_c(6*ii)*2.d0
-            PRINT *, 'vssc'
-            WRITE (*,103) vssc(ii), vrzc(ii,1), vrzc(ii,2)
-            !WRITE (*,202) v2sigma2_c(6*ii-5)*4, v2sigma2_c(6*ii)*2
             !
-            WRITE (*,203) v2sigma2_c(6*ii-5), v2sigma2_c(6*ii-4), v2sigma2_c(6*ii-3)
-            WRITE (*,203) v2sigma2_c(6*ii-2), v2sigma2_c(6*ii-1), v2sigma2_c(6*ii)
+            ! - in libxc: v2rho2_c  --> ( d^2/drho_up^2
+            !                             d^2/(drho_up drho_dw)
+            !                             d^2/drho_up^2 )
+            !
+            ! - in qe:    vrrc(:,1) --> d^2/(drho_up drho_tot)
+            !             vrrc(:,2) --> d^2/(drho_dw drho_tot)
+            !             vrzc(:,1) --> d^2/(drho_up dzeta)
+            !             vrzc(:,2) --> d^2/(drho_dw dzeta)
+            !
+            dvc_rr_qe(1) = vrrc(ii,1) + vrzc(ii,1) * (1.d0 - zeta(ii)) / rho_tot(ii)
+            dvc_rr_qe(2) = vrrc(ii,1) - vrzc(ii,1) * (1.d0 + zeta(ii)) / rho_tot(ii)
+            dvc_rr_qe(3) = vrrc(ii,2) - vrzc(ii,2) * (1.d0 + zeta(ii)) / rho_tot(ii)
+            WRITE (*,103) dvc_rr_qe(1), dvc_rr_qe(2), dvc_rr_qe(3)
+            WRITE (*,203) v2rho2_c(3*ii-2), v2rho2_c(3*ii-1), v2rho2_c(3*ii)
             PRINT *, " --- "
-            !WRITE (*,302) vssc(ii,1)-v2sigma2_c(6*ii-5)*4, vssc(ii,2)-v2sigma2_c(6*ii)*4
+            WRITE (*,303) v2rho2_c(3*ii-2)-dvc_rr_qe(1), v2rho2_c(3*ii-1)-dvc_rr_qe(2), v2rho2_c(3*ii)-dvc_rr_qe(3)
+            !
+            PRINT *, 'vsrc'
+            WRITE (*,102) vsrc(ii,1), vsrc(ii,2)
+            WRITE (*,202) v2rhosigma_c(6*ii-5)*2.d0, v2rhosigma_c(6*ii)*2.d0
+            ! 
+            ! - in libxc: v2rhosigma_c(6*ii-5) --> d/drho_up d/dsigma_uu
+            !             v2rhosigma_c(6*ii-4) --> d/drho_up d/dsigma_ud
+            !             v2rhosigma_c(6*ii-3) --> d/drho_up d/dsigma_dd
+            !             v2rhosigma_c(6*ii-2) --> d/drho_dw d/dsigma_uu
+            !                   ...                       ...
+            ! - in q-e:   vsrc(:,1) --> d/drho_up d/dsigma_tot
+            !             vsrc(:,2) --> d/drho_dw d/dsigma_tot
+            !             [ sigma_tot= sigma_uu+2*sigma_ud+sigma_dd ]
+            !
+            PRINT *, " --- "
+            WRITE (*,302) vsrc(ii,1)-v2rhosigma_c(6*ii-5)*2.d0, vsrc(ii,2)-v2rhosigma_c(6*ii)*2.d0
+            !
+            PRINT *, 'vssc'
+            WRITE (*,101) vssc(ii)
+            WRITE (*,201) v2sigma2_c(6*ii-2)
+            ! 
+            ! - in libxc: v2sigma2_c(6*ii-5) --> d^2/dsigma_uu^2
+            !             v2sigma2_c(6*ii-4) --> d^2/(dsigma_uu dsigma_ud)
+            !                   ...                      ...
+            !
+            ! - in q-e:   vssc(:,1) --> d^2/dsigma_tot^2
+            !
+            PRINT *, " --- "
+            WRITE (*,301) vssc(ii)-v2sigma2_c(6*ii-2)
             !
           ENDIF
           !
@@ -852,7 +888,7 @@ PROGRAM benchmark_libxc
      !
   ELSEIF ( MGGA ) THEN
      !
-     DO ii = 1, nnr !, nnr-1
+     DO ii = 1, nnr
         WRITE(*,*) ' '
         WRITE(*,*) ' '
         WRITE(*,909) ii, nnr

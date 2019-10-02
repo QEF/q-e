@@ -578,10 +578,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
               -13          Monoclinic base-centered        celldm(2)=b/a
                            (unique axis b)                 celldm(3)=c/a,
                                                            celldm(5)=cos(beta)
-                    v1 = (  a/2,      -b/2,             0),
-                    v2 = (  a/2,       b/2,             0),
+                    v1 = (  a/2,       b/2,             0),
+                    v2 = ( -a/2,       b/2,             0),
                     v3 = (c*cos(beta),   0,   c*sin(beta)),
                     where beta=angle between axis a and c projected on xz plane
+               IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a 
+               different definition: v1(old) = v2(now), v2(old) = -v1(now)
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,
@@ -2328,12 +2330,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                         (second method) see parameters @ref tempw and @ref nraise
                     }
                     opt -val 'rescale-T' {
-                        control ionic temperature via velocity rescaling
-                        (third method) see parameter @ref delta_t
+                        scale temperature of the thermostat every @ref nraise steps
+                        by @ref delta_t, starting from @ref tempw.
+                        The temperature is controlled via velocitiy rescaling.
                     }
                     opt -val 'reduce-T' {
-                        reduce ionic temperature every @ref nraise steps
-                        by the (negative) value @ref delta_t
+                        reduce temperature of the thermostat every @ref nraise steps
+                        by the (negative) value @ref delta_t, starting from @ref tempw.
+                        If  @ref delta_t is positive, the target temperature is augmented.
+                        The temperature is controlled via velocitiy rescaling.
                     }
                     opt -val 'berendsen' {
                         control ionic temperature using "soft" velocity
@@ -2342,6 +2347,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     opt -val 'andersen' {
                         control ionic temperature using Andersen thermostat
                         see parameters @ref tempw and @ref nraise
+                    }
+                    opt -val 'svr' {
+                        control ionic temperature using stochastic-velocity rescaling
+                        (Donadio, Bussi, Parrinello, J. Chem. Phys. 126, 014101, 2007),
+                        with parameters @ref tempw and @ref nraise.
                     }
                     opt -val 'initial' {
                         initialize ion velocities to temperature @ref tempw
@@ -2413,6 +2423,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     if @ref ion_temperature == 'andersen' :
                            the "collision frequency" parameter is given as nu=1/tau
                            defined above, so nu*dt = 1/nraise
+
+                    if @ref ion_temperature == 'svr' :
+                           the "characteristic time" of the thermostat is set to
+                           tau = nraise*dt
                 }
             }
 

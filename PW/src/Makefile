@@ -254,7 +254,7 @@ QEMODS=../../Modules/libqemod.a \
 
 TLDEPS= bindir libs mods libks_solvers dftd3
 
-all : tldeps pw.x generate_vdW_kernel_table.x generate_rVV10_kernel_table.x
+all : tldeps pw.x
 
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -273,17 +273,6 @@ tldeps :
 
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
-
-generate_vdW_kernel_table.x : libpw.a generate_vdW_kernel_table.o
-	$(LD) $(LDFLAGS) -o $@ \
-		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
-
-generate_rVV10_kernel_table.x : libpw.a generate_rVV10_kernel_table.o
-	$(LD) $(LDFLAGS) -o $@ \
-		generate_rVV10_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
-
 
 include make.depend
 
