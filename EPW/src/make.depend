@@ -28,12 +28,10 @@ broyden.o : ../../Modules/kind.o
 broyden.o : eliashbergcom.o
 broyden.o : epwcom.o
 close_epw.o : ../../LR_Modules/lrcom.o
-close_epw.o : ../../Modules/io_files.o
 close_epw.o : ../../Modules/kind.o
 close_epw.o : ../../Modules/mp_global.o
 close_epw.o : ../../Modules/noncol.o
 close_epw.o : ../../PHonon/PH/phcom.o
-close_epw.o : ../../PW/src/pwcom.o
 close_epw.o : ../../UtilXlib/parallel_include.o
 close_epw.o : elph2.o
 close_epw.o : epwcom.o
@@ -165,6 +163,7 @@ elphon_shuffle_wrap.o : io_var.o
 elphon_shuffle_wrap.o : kfold.o
 elphon_shuffle_wrap.o : low_lvl.o
 elphon_shuffle_wrap.o : poolgathering.o
+elphon_shuffle_wrap.o : pw2wan2epw.o
 elphon_shuffle_wrap.o : rigid_epw.o
 elphon_shuffle_wrap.o : rotate.o
 ephwann_shuffle.o : ../../Modules/cell_base.o
@@ -193,6 +192,7 @@ ephwann_shuffle.o : io_epw.o
 ephwann_shuffle.o : io_transport.o
 ephwann_shuffle.o : io_var.o
 ephwann_shuffle.o : low_lvl.o
+ephwann_shuffle.o : plot.o
 ephwann_shuffle.o : printing.o
 ephwann_shuffle.o : rigid_epw.o
 ephwann_shuffle.o : selfen.o
@@ -227,6 +227,7 @@ ephwann_shuffle_mem.o : io_epw.o
 ephwann_shuffle_mem.o : io_transport.o
 ephwann_shuffle_mem.o : io_var.o
 ephwann_shuffle_mem.o : low_lvl.o
+ephwann_shuffle_mem.o : plot.o
 ephwann_shuffle_mem.o : printing.o
 ephwann_shuffle_mem.o : rigid_epw.o
 ephwann_shuffle_mem.o : selfen.o
@@ -246,6 +247,7 @@ epw.o : close_epw.o
 epw.o : cum_mod.o
 epw.o : elph2.o
 epw.o : epwcom.o
+epw.o : io_epw.o
 epw.o : wannierization.o
 epw_init.o : ../../LR_Modules/lrcom.o
 epw_init.o : ../../Modules/atom.o
@@ -384,7 +386,6 @@ io_epw.o : ../../Modules/io_global.o
 io_epw.o : ../../Modules/ions_base.o
 io_epw.o : ../../Modules/kind.o
 io_epw.o : ../../Modules/mp_global.o
-io_epw.o : ../../Modules/mp_images.o
 io_epw.o : ../../Modules/mp_world.o
 io_epw.o : ../../Modules/noncol.o
 io_epw.o : ../../PHonon/PH/phcom.o
@@ -421,7 +422,6 @@ kfold.o : ../../Modules/io_global.o
 kfold.o : ../../Modules/kind.o
 kfold.o : ../../Modules/mp_global.o
 kfold.o : ../../Modules/mp_images.o
-kfold.o : ../../Modules/mp_world.o
 kfold.o : ../../Modules/recvec.o
 kfold.o : ../../PW/src/pwcom.o
 kfold.o : ../../UtilXlib/mp.o
@@ -454,13 +454,6 @@ low_lvl.o : constants_epw.o
 low_lvl.o : elph2.o
 low_lvl.o : epwcom.o
 low_lvl.o : io_var.o
-openfilepw.o : ../../LR_Modules/lrcom.o
-openfilepw.o : ../../Modules/fft_base.o
-openfilepw.o : ../../Modules/io_files.o
-openfilepw.o : ../../Modules/noncol.o
-openfilepw.o : ../../Modules/uspp.o
-openfilepw.o : ../../PHonon/PH/phcom.o
-openfilepw.o : ../../PW/src/pwcom.o
 plot.o : ../../Modules/cell_base.o
 plot.o : ../../Modules/io_files.o
 plot.o : ../../Modules/io_global.o
@@ -523,6 +516,7 @@ pw2wan2epw.o : epwcom.o
 pw2wan2epw.o : io_epw.o
 pw2wan2epw.o : io_var.o
 pw2wan2epw.o : kfold.o
+pw2wan2epw.o : low_lvl.o
 pw2wan2epw.o : wannierEPW.o
 rigid_epw.o : ../../Modules/cell_base.o
 rigid_epw.o : ../../Modules/io_global.o
@@ -650,9 +644,6 @@ transport_iter.o : ../../Modules/io_global.o
 transport_iter.o : ../../Modules/kind.o
 transport_iter.o : ../../Modules/mp_global.o
 transport_iter.o : ../../Modules/mp_world.o
-transport_iter.o : ../../Modules/noncol.o
-transport_iter.o : ../../PHonon/PH/phcom.o
-transport_iter.o : ../../PW/src/pwcom.o
 transport_iter.o : ../../PW/src/symm_base.o
 transport_iter.o : ../../UtilXlib/mp.o
 transport_iter.o : ../../UtilXlib/parallel_include.o

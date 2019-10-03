@@ -768,23 +768,24 @@ END PROGRAM q2trans
 SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : DP
+  USE kinds,      ONLY : DP
   USE fft_scalar, ONLY : cfft3d
-  USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE io_global,  ONLY : ionode, ionode_id, stdout
+  USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
+  USE el_phon,    ONLY : el_ph_nsigma
   !
   IMPLICIT NONE
-  INTEGER, INTENT(in) :: nqtot, nat, nr1, nr2, nr3
+  INTEGER, INTENT(in)  :: nqtot, nat, nr1, nr2, nr3
   REAL(DP), INTENT(in) :: at(3,3)
   !
   INTEGER, ALLOCATABLE :: nc(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: gaminp(:,:,:,:,:), gamout(:,:,:,:,:)
   !
   REAL(DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
-  INTEGER  :: nsig = 10, isig, filea2F, nstar, count_q, nq, nq_log, iq, &
-       icar, ipol, m1,m2,m3, m(3), nr(3), j1,j2, na1, na2, nn
-  LOGICAL :: lq
+  INTEGER  :: isig, filea2F, nstar, count_q, nq, nq_log, iq, &
+              icar, ipol, m1,m2,m3, m(3), nr(3), j1,j2, na1, na2, nn
+  LOGICAL  :: lq
   REAL(DP) :: deg, ef, dosscf
   REAL(DP) :: q(3,48), xq, resi
   CHARACTER(len=14) :: name
@@ -800,7 +801,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   nr(2) = nr2
   nr(3) = nr3
   !
-  DO isig=1, nsig
+  DO isig=1, el_ph_nsigma
      filea2F = 50 + isig
      WRITE(name,"(A7,I2)") 'a2Fq2r.',filea2F
      IF (ionode) OPEN(filea2F, file=name, STATUS = 'old', FORM = 'formatted')
