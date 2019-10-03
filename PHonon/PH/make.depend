@@ -467,6 +467,7 @@ do_q2r.o : ../../Modules/mp_global.o
 do_q2r.o : ../../Modules/mp_images.o
 do_q2r.o : ../../Modules/mp_world.o
 do_q2r.o : ../../UtilXlib/mp.o
+do_q2r.o : elph.o
 do_q2r.o : io_dyn_mat.o
 do_q2r.o : io_dyn_mat_old.o
 do_q2r.o : rigid.o
@@ -1002,6 +1003,7 @@ matdyn.o : ../../PW/src/pwcom.o
 matdyn.o : ../../PW/src/symm_base.o
 matdyn.o : ../../PW/src/tetra.o
 matdyn.o : ../../UtilXlib/mp.o
+matdyn.o : elph.o
 matdyn.o : io_dyn_mat.o
 matdyn.o : rigid.o
 obsolete.o : ../../LR_Modules/lrcom.o
@@ -1322,6 +1324,7 @@ q2r.o : ../../Modules/kind.o
 q2r.o : ../../Modules/mp_global.o
 q2r.o : ../../Modules/mp_world.o
 q2r.o : ../../UtilXlib/mp.o
+q2r.o : elph.o
 q2trans.o : ../../FFTXlib/fft_scalar.o
 q2trans.o : ../../Modules/constants.o
 q2trans.o : ../../Modules/environment.o
@@ -1331,6 +1334,7 @@ q2trans.o : ../../Modules/mp_global.o
 q2trans.o : ../../Modules/mp_world.o
 q2trans.o : ../../UtilXlib/mp.o
 q2trans.o : ../../iotk/src/iotk_module.o
+q2trans.o : elph.o
 q2trans.o : io_dyn_mat.o
 q2trans.o : io_dyn_mat_old.o
 q2trans.o : rigid.o
