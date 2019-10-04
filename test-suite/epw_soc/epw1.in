@@ -43,7 +43,7 @@
   phonselfen  = .true.
   a2f         = .true.
 
-
+  assume_insulator = .TRUE.
   fsthick     = 20 ! eV
   eptemp      = 500 ! K
   degaussw    = 0.2  ! eV

@@ -37,6 +37,7 @@
   wmax_specfun = 20
   nw_specfun   = 20
 
+  assume_insulator = .TRUE.
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K 
   degaussw    = 1.0 ! eV
