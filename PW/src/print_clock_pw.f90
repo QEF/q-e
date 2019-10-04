@@ -66,6 +66,7 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'vdW_energy' )
    CALL print_clock( 'vdW_ffts' )
    CALL print_clock( 'vdW_v' )
+   CALL print_clock( 'vdW_kernel' ) 
    
    IF (lxdm) THEN
       CALL print_clock('energy_xdm')
@@ -162,13 +163,12 @@ SUBROUTINE print_clock_pw()
    END IF
    !
    WRITE( stdout, '(/5x,"Called by h_psi:")' )
-!   IF ( iverbosity > 0 )  THEN
-      CALL print_clock( 'h_psi:init' )
-      CALL print_clock( 'h_psi:pot' )
-      CALL print_clock( 'h_psi:calbec' )
-!  END IF
-   CALL print_clock( 'vloc_psi' )   ; CALL print_clock ( 'vloc_psi:tg_gather' ) ;  CALL print_clock ( 'v_loc_psir' )
-   CALL print_clock( 'add_vuspsi' ) ; CALL print_clock ( 'add_vuspsir' )
+   CALL print_clock( 'h_psi:calbec' )
+   CALL print_clock( 'vloc_psi' )
+   CALL print_clock( 'vloc_psi:tg_gather' )
+   CALL print_clock( 'v_loc_psir' )
+   CALL print_clock( 'add_vuspsi' )
+   CALL print_clock( 'add_vuspsir' )
    CALL print_clock( 'vhpsi' )
    CALL print_clock( 'h_psi_meta' )
    CALL print_clock( 'hs_1psi' )

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2018 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -82,23 +82,19 @@ MODULE gc_lr
   SAVE
   !
   REAL (DP), ALLOCATABLE :: &
-       grho(:,:,:),              &! 3, nrxx, nspin)
-       gmag(:,:,:),              &! 3, nrxx, nspin)
-       vsgga(:),                 &! nrxx)
-       segni(:),                 &! nrxx)
-       dvxc_rr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_sr(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_ss(:,:,:),           &! nrxx, nspin, nspin)
-       dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
+       grho(:,:,:),    &! gradient of the unperturbed density  (3,nrxx,nspin)
+       gmag(:,:,:),    &! 3, nrxx, nspin)
+       vsgga(:),       &! nrxx)
+       segni(:),       &! nrxx)
+       dvxc_rr(:,:,:), &! derivatives of the E_xc functional w.r.t. r and s  
+       dvxc_sr(:,:,:), &! r=rho and s=|grad(rho)|
+       dvxc_ss(:,:,:), &! dimensions: (nrxx, nspin, nspin)
+       dvxc_s(:,:,:)
   !
   ! in the noncollinear case gmag contains the gradient of the magnetization
   ! grho the gradient of rho+ and of rho-, the eigenvalues of the spin density
   ! vsgga= 0.5* (V_up-V_down) to be used in the calculation of the change
   ! of the exchange and correlation magnetic field.
-  ! gradient of the unpert. density
-  !
-  ! derivatives of the E_xc functiona
-  ! r=rho and s=|grad(rho)|
   !
 END MODULE gc_lr
 !
@@ -153,7 +149,7 @@ MODULE lrus
   ! for gamma_only     
   COMPLEX (DP), ALLOCATABLE :: bbk(:,:,:)    ! nkb, nkb, nks)
   ! for k points
-  COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:,:) ! nkb, nkb, nspin_mag, nks)
+  COMPLEX (DP), ALLOCATABLE :: bbnc(:,:,:) ! nkb*npol, nkb*npol, nks)
   ! for the noncollinear case
   ! bbg = < beta^N_i | beta^P_j > 
   ! bbg/bbk/bbnc are the scalar products of beta functions 

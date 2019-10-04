@@ -414,6 +414,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
             }
         }
 
+        var diagonalization -type CHARACTER {
+            default { 'david' }
+            options {
+	        info {
+                  Diagonalization method for the non-SCF calculations.
+ 	        }
+                opt -val 'david' {
+                    Davidson iterative diagonalization with overlap matrix
+                    (default). Fast, may in some rare cases fail.
+                }
+
+                opt -val 'cg' {
+                    Conjugate-gradient-like band-by-band diagonalization.
+                    Slower than 'david' but uses less memory and is 
+                    (a little bit) more robust.
+                }
+            }
+        }
+
         var read_dns_bare -type LOGICAL {
             default { .false. }
             info {

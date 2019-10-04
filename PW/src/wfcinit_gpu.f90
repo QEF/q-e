@@ -23,13 +23,14 @@ SUBROUTINE wfcinit_gpu()
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, tmp_dir, prefix, postfix
+                                   diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
-  USE uspp,                 ONLY : nkb
+  USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-  USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc
+  USE pw_restart_new,       ONLY : read_collected_to_evc 
+  USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
   !
@@ -40,8 +41,9 @@ SUBROUTINE wfcinit_gpu()
   !
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
-  CHARACTER (LEN=256)                     :: dirname
-  TYPE ( output_type )                    :: output_obj
+  CHARACTER (LEN=256)  :: dirname
+  CHARACTER (LEN=320)  :: filename
+  TYPE ( output_type ) :: output_obj
   !
   CALL start_clock( 'wfcinit' )
   !
@@ -56,10 +58,11 @@ SUBROUTINE wfcinit_gpu()
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
-     CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
-     IF ( ierr == 0 ) THEN
-        twfcollect_file = output_obj%band_structure%wf_collected
-        dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+     dirname = restart_dir ( ) 
+     filename= xmlfile ( ) 
+     ierr = qexsd_readschema( filename, output_obj )
+     IF ( ierr <= 0 ) THEN 
+        twfcollect_file = output_obj%band_structure%wf_collected   
         IF ( twfcollect_file ) THEN
            CALL read_collected_to_evc(dirname )
         ELSE IF ( .NOT. exst_file) THEN
@@ -80,8 +83,8 @@ SUBROUTINE wfcinit_gpu()
              if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
            END IF
         END IF
-     END IF
-     CALL qes_reset ( output_obj ) 
+     END IF 
+     CALL qes_reset  ( output_obj )
   END IF
   !
   ! ... state what will happen

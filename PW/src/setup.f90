@@ -36,8 +36,8 @@ SUBROUTINE setup()
   USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
-  USE io_files,           ONLY : tmp_dir, prefix
-  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
+  USE io_files,           ONLY : xmlfile
+  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm, ecutrho
@@ -47,9 +47,7 @@ SUBROUTINE setup()
                                  ltetra, lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &
                                  tot_charge, tot_magnetization
-  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
-                                 starting_magnetization
-  USE ener,               ONLY : ef
+  USE ener,               ONLY : ef, ef_up, ef_dw
   USE electrons_base,     ONLY : set_nelup_neldw
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
@@ -70,16 +68,18 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
-  USE funct,              ONLY : set_dft_from_name
   USE mp_pools,           ONLY : kunit
   USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
+  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
+                                 starting_magnetization
   USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-  USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
+  USE qexsd_module,       ONLY : qexsd_readschema
+  USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
-  USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
+  USE qes_types_module,   ONLY : output_type
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
@@ -95,9 +95,7 @@ SUBROUTINE setup()
   !
   LOGICAL, EXTERNAL  :: check_para_diag, check_gpu_support
   !
-  TYPE(output_type)                         :: output_obj 
-  TYPE(parallel_info_type)                  :: parinfo_obj
-  TYPE(general_info_type)                   :: geninfo_obj
+  TYPE(output_type)  :: output_obj 
   !  
 #if defined(__MPI)
   LOGICAL :: lpara = .true.
@@ -125,6 +123,8 @@ SUBROUTINE setup()
   END IF
 
   IF ( dft_is_hybrid() ) THEN
+     IF ( lberry ) CALL errore( 'setup ', &
+                         'hybrid XC not allowed in Berry-phase calculations',1 )
      IF ( allfrac ) CALL errore( 'setup ', &
                          'option use_all_frac incompatible with hybrid XC', 1 )
      IF (.NOT. lscf) CALL errore( 'setup ', &
@@ -135,7 +135,7 @@ SUBROUTINE setup()
         IF (ecutfock /= 4*ecutwfc) CALL infomsg &
            ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
         IF ( lmd .OR. lbfgs ) CALL errore &
-           ('setup','forces for hybrid functionals + US/PAW not implemented')
+           ('setup','forces for hybrid functionals + US/PAW not implemented',1)
         IF ( noncolin ) CALL errore &
            ('setup','Noncolinear hybrid XC for USPP not implemented',1)
      END IF
@@ -160,43 +160,47 @@ SUBROUTINE setup()
   nelec = ionic_charge - tot_charge
   !
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
-     CALL pw_readschema_file( ierr , output_obj, parinfo_obj, geninfo_obj )
-  END IF
-  !
-  ! 
+     !
+     ! ... in these cases, we need to read the Fermi energy
+     !
+     ierr = qexsd_readschema( xmlfile() , output_obj )
+     IF (ierr > 0) CALL errore( 'setup ', 'problem reading ef from file ' // &
+             & TRIM(xmlfile()), ierr )
+     CALL qexsd_copy_efermi ( output_obj%band_structure, &
+          nelec, ef, two_fermi_energies, ef_up, ef_dw )
+     CALL qes_reset  ( output_obj )
+     !
+  END IF 
   IF ( (lfcpopt .OR. lfcpdyn) .AND. restart ) THEN  
-     CALL init_vars_from_schema( 'ef', ierr,  output_obj, parinfo_obj, geninfo_obj)
      tot_charge = ionic_charge - nelec
   END IF 
   !
   ! ... magnetism-related quantities
   !
-  ALLOCATE( m_loc( 3, nat ) )
+  ! ... Set the domag variable to make a spin-orbit calculation with zero
+  ! ... magnetization
+  !
+  IF ( lspinorb ) THEN
+     domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
+  ELSE
+     domag = .TRUE.
+  END IF
+  !
+  !  Set the different spin indices
+  !
+  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+         npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
+  !
+  ALLOCATE( m_loc( 3, nat ) )
   IF ( noncolin ) THEN
      !
      ! gamma_only and noncollinear not allowed
      !
      if (gamma_only) call errore('setup', &
                                  'gamma_only and noncolin not allowed',1)
-     !
-     ! ... wavefunctions are spinors with 2 components
-     !
-     npol = 2
-     !
-     ! ... Set the domag variable to make a spin-orbit calculation with zero
-     ! ... magnetization
-     !
-     IF ( lspinorb ) THEN
-        !
-        domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
-        !
-     ELSE
-        !
-        domag = .TRUE.
-        !
-     END IF
      !
      DO na = 1, nat
         !
@@ -215,46 +219,30 @@ SUBROUTINE setup()
      !
   ELSE
      !
-     ! ... wavefunctions are scalars
-     !
      IF (lspinorb)  CALL errore( 'setup ',  &
          'spin orbit requires a non collinear calculation', 1 )
-     npol = 1
-     !
      !
      IF ( i_cons == 1) then
         do na=1,nat
            m_loc(1,na) = starting_magnetization(ityp(na))
         end do
      end if
-     IF ( i_cons /= 0 .AND. nspin ==1) &
+     IF ( i_cons /= 0 .AND. nspin==1 ) &
         CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )
      IF ( i_cons /= 0 .AND. i_cons /= 1 ) &
-        CALL errore( 'setup', 'this i_cons requires a non colinear run', 1 )
+          CALL errore( 'setup', 'this i_cons requires a non colinear run', 1 )
+     !
   END IF
-  !
-  !  Set the different spin indices
-  !
-  nspin_mag  = nspin
-  nspin_lsda = nspin
-  nspin_gga  = nspin
-  IF (nspin==4) THEN
-     nspin_lsda=1
-     IF (domag) THEN
-        nspin_gga=2
-     ELSE
-        nspin_gga=1
-        nspin_mag=1
-     ENDIF
-  ENDIF    
   !
   ! ... if this is not a spin-orbit calculation, all spin-orbit pseudopotentials
   ! ... are transformed into standard pseudopotentials
   !
-  IF ( lspinorb .AND. ALL ( .NOT. upf(:)%has_so ) ) &
-        CALL infomsg ('setup','At least one non s.o. pseudo')
-  !
-  IF ( .NOT. lspinorb ) CALL average_pp ( ntyp )
+  IF ( lspinorb ) THEN
+     IF ( ALL ( .NOT. upf(:)%has_so ) ) &
+          CALL infomsg ('setup','At least one non s.o. pseudo')
+  ELSE
+     CALL average_pp ( ntyp )
+  END IF
   !
   ! ... If the occupations are from input, check the consistency with the
   ! ... number of electrons
@@ -299,7 +287,7 @@ SUBROUTINE setup()
             .AND. .NOT. tfixed_occ .AND. .NOT. two_fermi_energies ) &
       CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
   !
-  ! ... setting nelup/neldw 
+  ! ... setting the number of up and down electrons
   !
   call set_nelup_neldw ( tot_magnetization, nelec, nelup, neldw )
   !
@@ -346,7 +334,9 @@ SUBROUTINE setup()
   ! ... for subsequent steps ethr is automatically updated in electrons
   !
   IF ( nat==0 ) THEN
+     !
      ethr=1.0D-8
+     !
   ELSE IF ( .NOT. lscf ) THEN
      !
      IF ( ethr == 0.D0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
@@ -518,7 +508,14 @@ SUBROUTINE setup()
   !
   ! ... nosym: do not use any point-group symmetry (s(:,:,1) is the identity)
   !
-  IF ( nosym ) nsym = 1
+  IF ( nosym ) THEN
+     nsym = 1
+     invsym = .FALSE.
+     fft_fact(:) = 1
+  END IF
+  !
+  IF ( nsym > 1 .AND. ibrav == 0 ) CALL infomsg('setup', &
+       'using ibrav=0 with symmetry is DISCOURAGED, use correct ibrav instead')
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
@@ -540,15 +537,7 @@ SUBROUTINE setup()
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
        CALL infomsg( 'setup', 'Dynamics, you should have no symmetries' )
   !
-  IF ( lbands ) THEN
-     !
-     ! ... if calculating bands, we read the Fermi energy
-     !
-     CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
-     CALL errore( 'setup ', 'problem reading ef from file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-     !
-  ELSE IF ( ltetra ) THEN
+  IF ( ltetra ) THEN
      !
      ! ... Calculate quantities used in tetrahedra method
      !
@@ -563,12 +552,6 @@ SUBROUTINE setup()
      END IF
      !
   END IF
-  IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
-     CALL qes_reset  ( output_obj )
-     CALL qes_reset  ( parinfo_obj )
-     CALL qes_reset  ( geninfo_obj )
-  END IF 
-  !
   !
   IF ( lsda ) THEN
      !

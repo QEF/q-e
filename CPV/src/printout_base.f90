@@ -17,38 +17,21 @@ MODULE printout_base
   CHARACTER(LEN=256) :: fort_unit(30:44)
   ! ...  fort_unit = fortran units for saving physical quantity
 
-  CHARACTER(LEN=256) :: pprefix
-  ! ...  prefix combined with the output path
-
 CONTAINS
 
 
-  SUBROUTINE printout_base_init( outdir, prefix )
+  SUBROUTINE printout_base_init( )
 
+     USE io_files,  ONLY: tmp_dir, prefix
      USE io_global, ONLY: ionode, ionode_id
      USE mp_global, ONLY: intra_image_comm 
-! KNK_nimage
-! USE mp_global, ONLY: my_image_id
      USE mp, ONLY: mp_bcast
 
-     INTEGER :: iunit, ierr
-     CHARACTER(LEN=*), INTENT(IN) :: outdir
-     CHARACTER(LEN=*), INTENT(IN) :: prefix
-     ! KNK_nimage
-     ! CHARACTER(LEN=6), EXTERNAL :: int_to_char
+     INTEGER :: iunit, ierr, ios
+     CHARACTER(LEN=256) :: pprefix
+     ! ...  prefix combined with the output path
 
-
-     IF( prefix /= ' ' ) THEN
-        pprefix = TRIM( prefix )
-     ELSE
-        pprefix = 'fpmd'
-     END IF
-     ! KNK_nimage
-     ! if (my_image_id > 0) pprefix = TRIM(pprefix) // '_' // TRIM(int_to_char( my_image_id ))
-!
-     IF( outdir /= ' ' ) THEN
-        pprefix = TRIM( outdir ) // '/' // TRIM( pprefix )
-     END IF
+     pprefix = TRIM( tmp_dir ) // TRIM( prefix )
 
      ierr = 0
 
@@ -70,15 +53,16 @@ CONTAINS
         fort_unit(44) = trim(pprefix)//'.ncg'  ! number of cgsteps
         DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
            OPEN(UNIT=iunit, FILE=fort_unit(iunit), &
-               STATUS='unknown', POSITION='append', IOSTAT = ierr )
+               STATUS='unknown', POSITION='append', IOSTAT = ios )
            CLOSE( iunit )
+           ierr = ierr + ABS(ios)
         END DO
      END IF
 
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF( ierr /= 0 ) THEN
         CALL errore(' printout_base_init ', &
-              ' error in opening unit, check outdir = '//TRIM(outdir),iunit)
+              ' error in opening files '//TRIM(pprefix)//'.XXX',ierr)
      END IF
 
     RETURN
@@ -369,7 +353,7 @@ CONTAINS
     RETURN
   END SUBROUTINE printout_wfc
     !------------------------------------------------------------------------
-    SUBROUTINE save_print_counter( iter, outdir, wunit )
+    SUBROUTINE save_print_counter( iter, wunit )
       !------------------------------------------------------------------------
       !
       ! ... a counter indicating the last successful printout iteration is saved
@@ -382,14 +366,13 @@ CONTAINS
       IMPLICIT NONE
       !
       INTEGER,          INTENT(IN) :: iter
-      CHARACTER(LEN=*), INTENT(IN) :: outdir
       INTEGER,          INTENT(IN) :: wunit
       !
       INTEGER            :: ierr
       CHARACTER(LEN=256) :: filename, dirname
       !
       !
-      dirname = restart_dir( outdir, wunit )
+      dirname = restart_dir( wunit )
       !
       CALL create_directory( TRIM( dirname ) )
       !
@@ -420,7 +403,7 @@ CONTAINS
     END SUBROUTINE save_print_counter
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_print_counter( nprint_nfi, outdir, runit )
+    SUBROUTINE read_print_counter( nprint_nfi, runit )
       !------------------------------------------------------------------------
       !
       ! ... the counter indicating the last successful printout iteration 
@@ -434,14 +417,13 @@ CONTAINS
       IMPLICIT NONE
       !
       INTEGER,          INTENT(OUT) :: nprint_nfi
-      CHARACTER(LEN=*), INTENT(IN)  :: outdir
       INTEGER,          INTENT(IN)  :: runit
       !
       INTEGER            :: ierr
       CHARACTER(LEN=256) :: filename, dirname
       !
       !
-      dirname = restart_dir( outdir, runit )
+      dirname = restart_dir( runit )
       !
       IF ( ionode ) THEN
          !

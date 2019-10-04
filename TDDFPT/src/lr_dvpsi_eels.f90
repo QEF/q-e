@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -118,7 +118,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      ! Calculate beta-functions vkb at point k+q
      CALL init_us_2(npwq, igk_k(1,ikq), xk(1,ikq), vkb)
      !
-     CALL lr_addus_dvpsi (ik, npwx, npwq, nbnd_occ(ikk), dvpsi1, dpsi)
+     CALL lr_addus_dvpsi (npwq, ik, dvpsi1, dpsi)
      !
      dvpsi1 = dpsi
      dpsi(:,:) = (0.d0, 0.d0)
@@ -139,7 +139,8 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      !
      dpsi(:,:) = (0.0d0, 0.0d0)
      !
-     CALL lr_sm1_psiq (.TRUE., ik, npwx, npwq, nbnd_occ(ikk), dvpsi1, dpsi)
+     CALL lr_sm1_initialize()
+     CALL lr_sm1_psi(ik, npwx, npwq, nbnd_occ(ikk), dvpsi1, dpsi)
      !
      dvpsi1 = dpsi
      !

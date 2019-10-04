@@ -40,11 +40,12 @@ d3q_clean:
 #d3q_veryclean: d3q_clean
 d3q_veryclean: d3q_clean
 	# delete unpacked directory and its links, keep the archive
+	test -a ../D3Q/protect || \
 	(cd ..; \
 		i=D3Q; \
 		while j=$$(readlink $$i);do rm -rf $$i; i=$$j;done;\
 		rm -rf $$i\
-	); \
+	);
 
 d3q_distclean: d3q_veryclean
 	# also delete the tgz archive
@@ -97,7 +98,7 @@ uncompress-w90:
 
 configure-w90: 
 	cd ../W90 ; \
-	if (test -e ../install/make_wannier90.sys) || (test -d ../W90); then \
+	if (test -e ../install/make_wannier90.inc) || (test -d ../W90); then \
 	(cp ../install/make_wannier90.inc ../W90/make.inc); fi 
 	touch ./configure-w90
 

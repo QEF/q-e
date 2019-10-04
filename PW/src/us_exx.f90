@@ -567,8 +567,6 @@ MODULE us_exx
     USE cell_base,        ONLY : omega
     USE uspp,             ONLY : okvan, nkb, ijtoh, indv_ijkb0
     USE uspp_param,       ONLY : upf, nh
-    USE spin_orb,         ONLY : domag
-    !
     USE realus,           ONLY : tabxx
     !
     USE uspp_gpum,           ONLY : using_indv_ijkb0

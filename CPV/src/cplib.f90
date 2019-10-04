@@ -1729,12 +1729,12 @@ END SUBROUTINE print_lambda_x
 !
       INTEGER :: k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic, nr, nc, ibgrp_i
       INTEGER :: n1, n2, m1, m2, nrcx
-      REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
+      INTEGER :: nrr(nspin), irr, nrrx
+      REAL(DP), EXTERNAL :: ddot
+      REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:), tmplam(:,:,:)
       REAL(DP), ALLOCATABLE :: fion_tmp(:,:)
       REAL(DP), ALLOCATABLE :: bec(:,:,:)
-      REAL(DP), ALLOCATABLE :: becdr(:,:,:,:)
-      REAL(DP), ALLOCATABLE :: bec_g(:,:)
-      REAL(DP), ALLOCATABLE :: becdr_g(:,:,:)
+      INTEGER, ALLOCATABLE :: ibgrp_l2g(:,:)
       !
       CALL start_clock( 'nlfl' )
       !
@@ -1744,77 +1744,65 @@ END SUBROUTINE print_lambda_x
       !
       nrcx = MAXVAL( descla( : )%nrcx )
       !
-      ALLOCATE( temp( nrcx, nrcx ), tmpbec( nhm, nrcx ), tmpdr( nrcx, nhm ) )
-      ALLOCATE( bec( nhsa, nrcx, nspin ), becdr( nhsa, nrcx, nspin, 3 ) )
 
       ! redistribute bec, becdr according to the ortho subgroup
       ! this is required because they are combined with "lambda" matrixes
-      
-      DO iss = 1, nspin
-         IF( descla( iss )%active_node > 0 ) THEN
-            nss = nupdwn( iss )
-            istart = iupdwn( iss )
-            ic = descla( iss )%ic
-            nc = descla( iss )%nc
-            DO i=1,nc
-               ibgrp_i = ibgrp_g2l( i+istart-1+ic-1 )
-               IF( ibgrp_i > 0 ) THEN
-                  bec( :, i, iss ) = bec_bgrp( :, ibgrp_i )
-               ELSE
-                  bec( :, i, iss ) = 0.0d0
-               END IF
-            END DO
-            ir = descla( iss )%ir
-            nr = descla( iss )%nr
-            DO i=1,nr
-               ibgrp_i = ibgrp_g2l( i+istart-1+ir-1 )
-               IF( ibgrp_i > 0 ) THEN
-                  becdr(:,i,iss,1) = becdr_bgrp( :, ibgrp_i, 1 )
-                  becdr(:,i,iss,2) = becdr_bgrp( :, ibgrp_i, 2 )
-                  becdr(:,i,iss,3) = becdr_bgrp( :, ibgrp_i, 3 )
-               ELSE
-                  becdr(:,i,iss,1) = 0.0d0
-                  becdr(:,i,iss,2) = 0.0d0
-                  becdr(:,i,iss,3) = 0.0d0
-               END IF
-            END DO
-         ELSE
-            bec(:,:,iss)   = 0.0d0
-            becdr(:,:,iss,1) = 0.0d0
-            becdr(:,:,iss,2) = 0.0d0
-            becdr(:,:,iss,3) = 0.0d0
-         END IF
-      END DO
 
-      CALL mp_sum( bec, inter_bgrp_comm )
-      CALL mp_sum( becdr, inter_bgrp_comm )
+      CALL compute_nrr( nrr )
+      nrrx = MAXVAL(nrr)
+
+      IF( nrrx > 0 ) THEN
+         ALLOCATE( tmplam( nrrx, nrcx, nspin ) )
+         ALLOCATE( ibgrp_l2g( nrrx, nspin ) )
+      END IF
+
+      CALL get_local_bec()
+      CALL get_local_lambda()
+
       !
+!$omp parallel default(none), &
+!$omp shared(nrrx,nhm,nrcx,nvb,na,nspin,nrr,nupdwn,iupdwn,descla,nh,ish,qq_nt,bec,becdr_bgrp,ibgrp_l2g,tmplam,fion_tmp), &
+!$omp private(tmpdr,temp,tmpbec,is,k,ia,isa,i,iss,nss,istart,ic,nc,jv,iv,inl,ir,nr)
+
+      IF( nrrx > 0 ) THEN
+         ALLOCATE( tmpdr( nrrx, nhm ) )
+         ALLOCATE( temp( nrrx, nrcx ) )
+      END IF
+      ALLOCATE( tmpbec( nhm, nrcx ) )
+
       DO k=1,3
-         isa = 0
          DO is=1,nvb
+!$omp do
             DO ia=1,na(is)
-               isa = isa + 1
+
+               isa = 0
+               DO i = 1, is - 1
+                  isa = isa + na(i)
+               END DO
+               isa = isa + ia
+
                !
                DO iss = 1, nspin
+                  !
+                  IF( nrr(iss) == 0 ) CYCLE
                   !
                   nss = nupdwn( iss )
                   istart = iupdwn( iss )
                   !
                   tmpbec = 0.d0
-                  tmpdr  = 0.d0
                   !
                   IF( descla( iss )%active_node > 0 ) THEN
                      ! tmpbec distributed by columns
                      ic = descla( iss )%ic
                      nc = descla( iss )%nc
-                     DO iv=1,nh(is)
-                        DO jv=1,nh(is)
-                           inl=ish(is)+(jv-1)*na(is)+ia
+                     DO jv=1,nh(is)
+                        inl=ish(is)+(jv-1)*na(is)+ia
+                        DO iv=1,nh(is)
                            IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
                               DO i=1,nc
                                  tmpbec(iv,i)=tmpbec(iv,i) + qq_nt(iv,jv,is)*bec(inl,i,iss)
                               END DO
-                           ENDIF
+                           END IF
                         END DO
                      END DO
                      ! tmpdr distributed by rows
@@ -1822,38 +1810,42 @@ END SUBROUTINE print_lambda_x
                      nr = descla( iss )%nr
                      DO iv=1,nh(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
-                        DO i=1,nr
-                           tmpdr(i,iv) = becdr( inl, i, iss, k )
+                        DO i=1,nrr(iss)
+                           tmpdr(i,iv) = becdr_bgrp( inl, ibgrp_l2g(i,iss), k )
                         END DO
                      END DO
                   END IF
                   !
-                  IF(nh(is).GT.0)THEN
-                     !
+                  IF( nh(is) > 0 )THEN
                      IF( descla( iss )%active_node > 0 ) THEN
-                        ir = descla( iss )%ir
-                        ic = descla( iss )%ic
-                        nr = descla( iss )%nr
                         nc = descla( iss )%nc
-                        CALL dgemm( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nrcx, tmpbec, nhm, 0.0d0, temp, nrcx )
+                        CALL dgemm( 'N', 'N', nrr(iss), nc, nh(is), 1.0d0, tmpdr, nrrx, tmpbec, nhm, 0.0d0, temp, nrrx )
                         DO j = 1, nc
-                           DO i = 1, nr
-                              fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * lambda( i, j, iss )
+                           DO i = 1, nrr(iss)
+                              fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * tmplam( i, j, iss )
                            END DO
                         END DO
-                     END IF
-!
-                  ENDIF
 
+                     END IF
+                  ENDIF
                END DO
-!
             END DO
+!$omp end do
          END DO
       END DO
       !
-      DEALLOCATE( bec, becdr )
-      DEALLOCATE( temp, tmpbec, tmpdr )
+      DEALLOCATE( tmpbec )
       !
+      IF(ALLOCATED(temp)) DEALLOCATE( temp )
+      IF(ALLOCATED(tmpdr))  DEALLOCATE( tmpdr )
+
+!$omp end parallel
+
+      DEALLOCATE( bec )
+      IF(ALLOCATED(tmplam)) DEALLOCATE( tmplam )
+      IF(ALLOCATED(ibgrp_l2g))  DEALLOCATE( ibgrp_l2g )
+      !
+      CALL mp_sum( fion_tmp, inter_bgrp_comm )
       CALL mp_sum( fion_tmp, intra_bgrp_comm )
       !
       fion = fion + fion_tmp
@@ -1864,9 +1856,73 @@ END SUBROUTINE print_lambda_x
       !
       RETURN
 
+      CONTAINS
+
+      SUBROUTINE compute_nrr( nrr ) 
+        INTEGER, INTENT(OUT) :: nrr(:)
+        nrr = 0 
+        DO iss = 1, nspin
+          nss = nupdwn( iss )
+          istart = iupdwn( iss )
+          IF( descla( iss )%active_node > 0 ) THEN
+            ir = descla( iss )%ir
+            nr = descla( iss )%nr
+            DO i=1,nr
+               ibgrp_i = ibgrp_g2l( i+istart-1+ir-1 )
+               IF( ibgrp_i > 0 ) THEN
+                  nrr(iss) = nrr(iss) + 1
+               END IF
+            END DO
+          END IF
+        END DO
+      END SUBROUTINE compute_nrr
+
+      SUBROUTINE get_local_bec
+      ALLOCATE( bec( nhsa, nrcx, nspin ) )
+      DO iss = 1, nspin
+         nss = nupdwn( iss )
+         istart = iupdwn( iss )
+         IF( descla( iss )%active_node > 0 ) THEN
+            ic = descla( iss )%ic
+            nc = descla( iss )%nc
+            DO i=1,nc
+               ibgrp_i = ibgrp_g2l( i+istart-1+ic-1 )
+               IF( ibgrp_i > 0 ) THEN
+                  bec( :, i, iss ) = bec_bgrp( :, ibgrp_i )
+               ELSE
+                  bec( :, i, iss ) = 0.0d0
+               END IF
+            END DO
+         ELSE
+            bec(:,:,iss)   = 0.0d0
+         END IF
+      END DO
+      CALL mp_sum( bec, inter_bgrp_comm )
+      END SUBROUTINE get_local_bec
+
+      SUBROUTINE get_local_lambda
+      DO iss = 1, nspin
+         nss = nupdwn( iss )
+         istart = iupdwn( iss )
+         IF( descla( iss )%active_node > 0 ) THEN
+            ir = descla( iss )%ir
+            nr = descla( iss )%nr
+            irr = 0
+            DO i=1,nr
+               ibgrp_i = ibgrp_g2l( i+istart-1+ir-1 )
+               IF( ibgrp_i > 0 ) THEN
+                  irr = irr + 1
+                  tmplam(irr,:,iss) = lambda(i,:,iss)
+                  ibgrp_l2g(irr,iss) = ibgrp_i
+               END IF
+            END DO
+            tmplam( irr + 1 : nrrx , :, iss ) = 0.0d0 
+            tmplam( 1 : nrrx , descla( iss )%nc + 1 : nrcx, iss ) = 0.0d0 
+         END IF
+      END DO
+      END SUBROUTINE get_local_lambda
+
       END SUBROUTINE nlfl_bgrp_x
-
-
 !
 !-----------------------------------------------------------------------
       SUBROUTINE pbc(rin,a1,a2,a3,ainv,rout)

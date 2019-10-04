@@ -1,0 +1,36 @@
+!
+! Copyright (C) 2003-2013 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!----------------------------------------------------------------------------
+INTERFACE
+SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+  !----------------------------------------------------------------------------
+  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  ! ... LAPACK version - uses both DSYGV and DSYGVX
+  !
+  USE la_param
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: n, m, ldh
+    ! dimension of the matrix to be diagonalized
+    ! number of eigenstates to be calculated
+    ! leading dimension of h, as declared in the calling pgm unit
+  REAL(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
+    ! matrix to be diagonalized
+    ! overlap matrix
+  REAL(DP), INTENT(OUT) :: e(n)
+    ! eigenvalues
+  REAL(DP), INTENT(OUT) :: v(ldh,m)
+    ! eigenvectors (column-wise)
+  INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
+  !
+END SUBROUTINE
+END INTERFACE

@@ -14,6 +14,7 @@
   epbread     = .false.
 
   etf_mem     = 0
+  vme         = .false.
 
   epwwrite    = .false.
   epwread     = .true.
@@ -37,7 +38,6 @@
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
 
   filkf       = 'path.dat'
   filqf       = 'path.dat'

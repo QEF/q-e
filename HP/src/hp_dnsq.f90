@@ -33,7 +33,6 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   USE buffers,              ONLY : get_buffer
   USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm       
   USE mp,                   ONLY : mp_sum
-  USE io_files,             ONLY : seqopn
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : rytoev
   USE control_flags,        ONLY : iverbosity

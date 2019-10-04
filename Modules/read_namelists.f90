@@ -30,12 +30,11 @@ MODULE read_namelists_module
   REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
   !
   PUBLIC :: read_namelists, sm_not_set
-  !
-  ! ... modules needed by read_xml.f90
-  !
+  PUBLIC :: check_namelist_read ! made public upon request of A.Jay
+  ! FIXME: should the following ones be public?
   PUBLIC :: control_defaults, system_defaults, &
        electrons_defaults, wannier_ac_defaults, ions_defaults, &
-       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast, &
+       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast,&
        system_bcast, electrons_bcast, ions_bcast, cell_bcast, &
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
@@ -60,6 +59,7 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) ::    temp_string 
        !
        !
        IF ( prog == 'PW' ) THEN
@@ -105,6 +105,10 @@ MODULE read_namelists_module
           pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
        END IF
        !
+       ! ... max number of md steps added to the xml file. Needs to be limited for very long 
+       !     md simulations 
+       CALL get_environment_variable('MAX_XML_STEPS', temp_string) 
+            IF ( TRIM(temp_string) .NE.  ' ')  READ(temp_string, *) max_xml_steps 
        refg          = 0.05_DP
        max_seconds   = 1.E+7_DP
        ekin_conv_thr = 1.E-6_DP

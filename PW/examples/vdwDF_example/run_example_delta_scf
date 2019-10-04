@@ -20,9 +20,8 @@ $ECHO "of an Argon dimer, not activated by default in the distribution."
 . ../../../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x generate_vdW_kernel_table.x"
+BIN_LIST="pw.x"
 PSEUDO_LIST="C.pbe-rrkjus.UPF O.pbe-rrkjus.UPF H.pbe-rrkjus.UPF"
-VDW_TABLE="vdW_kernel_table"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -76,28 +75,6 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
-GEN_COMMAND="$PARA_PREFIX $BIN_DIR/generate_vdW_kernel_table.x $PARA_POSTFIX"
-
-# check for vdw kernel table
-if test ! -r $PSEUDO_DIR/$VDW_TABLE ; then
-	$ECHO " "
-        $ECHO " "
-	$ECHO "  WARNING: $PSEUDO_DIR/$VDW_TABLE not existent or not readable"
-	$ECHO "  WARNING: a new table will be generated, this process will"
-	$ECHO "  WARNING: probably take about 20 mins (depending on your cpu"
-	$ECHO "  WARNING: power and configuration)."
-	$ECHO
-	$ECHO "  Generating $VDW_TABLE...\c"
-	if $GEN_COMMAND ; then
-		if test ! -r $VDW_TABLE ; then
-			$ECHO "  ERROR: cannot generate vdW_kernel_table !!"
-			exit 1
-		fi
-		$ECHO "done ! Table moved to $PSEUDO_DIR"	
-		mv $VDW_TABLE $PSEUDO_DIR
-	fi
-fi 
-$ECHO " done"
 
 # Print how we run executables
 $ECHO

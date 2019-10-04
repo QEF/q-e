@@ -111,6 +111,7 @@ PROGRAM neb
   !
   CALL search_mep()
   !
+  CALL laxlib_free_ortho_group()
   CALL stop_run_path( conv_path )
   !
   STOP

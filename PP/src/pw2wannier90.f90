@@ -14,6 +14,9 @@
 ! please send bugs and comments to 
 ! Jonathan Yates and Arash Mostofi
 ! Takashi Koretsune and Florian Thoele -- noncollinear and USPPs
+! Valerio Vitale - Selected columns of density matrix (SCDM)
+! Jae-Mo Lihm - SCDM with noncollinear
+!
 !
 ! NOTE: old_spinor_proj is still available for compatibility with old
 !       nnkp files but should be removed soon.
@@ -50,7 +53,7 @@ module wannier
    ! end change Lopez, Thonhauser, Souza
    ! vv: Begin SCDM keywords
                             scdm_proj
-   integer               :: scdm_entanglement
+   character(LEN=15)     :: scdm_entanglement
    real(DP)              :: scdm_mu, scdm_sigma
    ! vv: End SCDM keywords
    ! run check for regular mesh
@@ -122,7 +125,10 @@ PROGRAM pw2wannier90
        write_dmn, read_sym, & !YN:
        write_uIu, spn_formatted, uHu_formatted, uIu_formatted,& !ivo
    ! end change Lopez, Thonhauser, Souza
-       regular_mesh !gresch
+       regular_mesh,& !gresch
+   ! begin change Vitale
+       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
+   ! end change Vitale
   !
   ! initialise environment
   !
@@ -168,6 +174,10 @@ PROGRAM pw2wannier90
      write_unkg= .false.
      write_dmn = .false. !YN:
      read_sym  = .false. !YN:
+     scdm_proj = .false.
+     scdm_entanglement = 'isolated'
+     scdm_mu = 0.0_dp
+     scdm_sigma = 1.0_dp
      !
      !     reading the namelist inputpp
      !
@@ -204,6 +214,10 @@ PROGRAM pw2wannier90
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
   CALL mp_bcast(write_dmn,ionode_id, world_comm)
   CALL mp_bcast(read_sym,ionode_id, world_comm)
+  CALL mp_bcast(scdm_proj,ionode_id, world_comm)
+  CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
+  CALL mp_bcast(scdm_mu,ionode_id, world_comm)
+  CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -219,6 +233,19 @@ PROGRAM pw2wannier90
   !
   IF (noncolin.and.gamma_only) CALL errore('pw2wannier90',&
        'Non-collinear and gamma_only not implemented',1)
+  IF (gamma_only.and.scdm_proj) CALL errore('pw2wannier90',&
+       'Gamma_only and SCDM not implemented',1)
+  IF (scdm_proj) then
+    IF ((trim(scdm_entanglement) /= 'isolated') .AND. &
+        (trim(scdm_entanglement) /= 'erfc') .AND. &
+        (trim(scdm_entanglement) /= 'gaussian')) then
+        call errore('pw2wannier90', &
+             'Can not recognize the choice for scdm_entanglement. ' &
+                    //'Valid options are: isolated, erfc and gaussian')
+    ENDIF
+  ENDIF
+  IF (scdm_sigma <= 0._dp) &
+    call errore('pw2wannier90','Sigma in the SCDM method must be positive.')
   !
   SELECT CASE ( trim( spin_component ) )
   CASE ( 'up' )
@@ -277,7 +304,11 @@ PROGRAM pw2wannier90
            WRITE(stdout,*) ' *** Compute  A with SCDM-k'
            WRITE(stdout,*) ' --------------------------'
            WRITE(stdout,*)
-           CALL compute_amn_with_scdm
+           if (noncolin) then
+             CALL compute_amn_with_scdm_spinor
+           else
+             CALL compute_amn_with_scdm
+           end if
         ELSE
            WRITE(stdout,*) ' --------------------------'
            WRITE(stdout,*) ' *** Compute  A projections'
@@ -762,8 +793,7 @@ SUBROUTINE read_nnkp
   INTEGER, ALLOCATABLE :: ig_check(:,:)
   real(DP) :: xx(3), xnorm, znorm, coseno
   LOGICAL :: have_nnkp,found
-  ! vv: tmp integer for reading in SCDM info 
-  INTEGER :: scdm_proj_tmp 
+  INTEGER :: tmp_auto ! vv: Needed for the selection of projections with SCDM
 
   IF (ionode) THEN  ! Read nnkp file on ionode only
 
@@ -895,7 +925,7 @@ SUBROUTINE read_nnkp
 
   IF(old_spinor_proj)THEN
   WRITE(stdout,'(//," ****** begin WARNING ****** ",/)') 
-  WRITE(stdout,'(" The pw.x calculation wa done with non-collinear spin ")') 
+  WRITE(stdout,'(" The pw.x calculation was done with non-collinear spin ")') 
   WRITE(stdout,'(" but spinor = T was not specified in the wannier90 .win file!")') 
   WRITE(stdout,'(" Please set spinor = T and rerun wannier90.x -pp  ")') 
 !  WRITE(stdout,'(/," If you are trying to reuse an old nnkp file, you can remove  ")') 
@@ -912,16 +942,12 @@ SUBROUTINE read_nnkp
      n_wannier=n_proj
   ENDIF
 
-
-
   ALLOCATE( center_w(3,n_proj), alpha_w(n_proj), gf(npwx,n_proj), &
        l_w(n_proj), mr_w(n_proj), r_w(n_proj), &
        zaxis(3,n_proj), xaxis(3,n_proj), csph(16,n_proj) )
   if(noncolin.and..not.old_spinor_proj) then
      ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) ) 
   endif
-
-  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
 
   IF (ionode) THEN   ! read from ionode only
      DO iw=1,n_proj
@@ -951,9 +977,41 @@ SUBROUTINE read_nnkp
      ENDDO
   ENDIF
 
-  WRITE(stdout,*) ' - All guiding functions are given '
+  ! automatic projections
+  IF (ionode) THEN
+     CALL scan_file_to('auto_projections',found)
+     IF (found) THEN
+        READ (iun_nnkp, *) n_wannier
+        READ (iun_nnkp, *) tmp_auto
+
+        IF (scdm_proj) THEN
+           IF (n_proj > 0) THEN
+              WRITE(stdout,'(//, " ****** begin Error message ******",/)')
+              WRITE(stdout,'(/," Found a projection block, an auto_projections block",/)')
+              WRITE(stdout,'(/," and scdm_proj = T in the input file. These three options are inconsistent.",/)') 
+              WRITE(stdout,'(/," Please refer to the Wannier90 User guide for correct use of these flags.",/)')
+              WRITE(stdout,'(/, " ****** end Error message ******",//)')
+              CALL errore( 'pw2wannier90', 'Inconsistent options for projections.', 1 )
+           ELSE
+              IF (tmp_auto /= 0) CALL errore( 'pw2wannier90', 'Second entry in auto_projections block is not 0. ' // &
+              'See Wannier90 User Guide in the auto_projections section for clarifications.', 1 )
+           ENDIF
+        ELSE
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = F but found an auto_projections block in '&
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ELSE
+        IF (scdm_proj) THEN
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = T but cannot find an auto_projections block in '& 
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ENDIF
+  ENDIF
 
   ! Broadcast
+  CALL mp_bcast(n_wannier,ionode_id, world_comm)
   CALL mp_bcast(center_w,ionode_id, world_comm)
   CALL mp_bcast(l_w,ionode_id, world_comm)
   CALL mp_bcast(mr_w,ionode_id, world_comm)
@@ -965,6 +1023,10 @@ SUBROUTINE read_nnkp
      CALL mp_bcast(spin_eig,ionode_id, world_comm)
      CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
   end if
+
+  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
+
+  IF (.not. scdm_proj) WRITE(stdout,*) ' - All guiding functions are given '
   !
   WRITE(stdout,*)
   WRITE(stdout,*) 'Projections:'
@@ -972,40 +1034,6 @@ SUBROUTINE read_nnkp
      WRITE(stdout,'(3f12.6,3i3,f12.6)') &
           center_w(1:3,iw),l_w(iw),mr_w(iw),r_w(iw),alpha_w(iw)
   ENDDO
-
-  ! vv: Read SCDM block
-  scdm_proj_tmp = 0
-  scdm_proj = .false.
-  scdm_entanglement = 0
-  scdm_mu = 0.0_DP
-  scdm_sigma = 1.0_DP
-  IF (ionode) THEN
-     CALL scan_file_to('scdm_info',found)
-     !IF(.NOT. found) THEN
-     !   CALL errore( 'pw2wannier90', 'Could not find scdm info block in'&
-     !        &//trim(seedname)//'.nnkp',1)
-     !ENDIF
-     IF (found) THEN
-        READ (iun_nnkp,*) scdm_proj_tmp
-        IF(scdm_proj_tmp==1) THEN
-           scdm_proj = .true. 
-           READ (iun_nnkp,*) n_wannier
-           READ (iun_nnkp,*) scdm_entanglement
-           READ (iun_nnkp,*) scdm_mu, scdm_sigma
-        ENDIF
-     ENDIF
-  ENDIF
-
-  ! vv: Broadcast
-  CALL mp_bcast(n_wannier,ionode_id, world_comm)
-  CALL mp_bcast(scdm_proj,ionode_id, world_comm)
-  CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
-  CALL mp_bcast(scdm_mu,ionode_id, world_comm)
-  CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
-
-  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
-
-  WRITE(stdout,*) ' - All guiding functions are given '
 
   IF (ionode) THEN   ! read from ionode only
      CALL scan_file_to('nnkpts',found)
@@ -1137,7 +1165,7 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    !
    ! Uses nkqs and index_sym from module pw2wan, computes rir
    !
-   USE symm_base,       ONLY : s, ftau, allfrac
+   USE symm_base,       ONLY : s, ft, allfrac
    USE fft_base,        ONLY : dffts
    USE cell_base,       ONLY : at, bg
    USE wannier,         ONLY : rir, read_sym
@@ -1149,8 +1177,8 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    INTEGER  , intent(in) :: nsym
    REAL(DP) , intent(in) :: sr(3,3,nsym), tvec(3,nsym)
    REAL(DP) :: st(3,3), v(3)
-   INTEGER, allocatable :: s_in(:,:,:), ftau_in(:,:)
-   !REAL(DP), allocatable:: ftau_in(:,:)
+   INTEGER, allocatable :: s_in(:,:,:)
+   REAL(DP), allocatable:: ft_in(:,:)
    INTEGER :: nxxs, nr1,nr2,nr3, nr1x,nr2x,nr3x
    INTEGER :: ikq, isym, i,j,k, ri,rj,rk, ir
    LOGICAL :: ispresent(nsym)
@@ -1164,7 +1192,7 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    nxxs = nr1x*nr2x*nr3x
    !
    !  sr -> s
-   ALLOCATE(s_in(3,3,nsym), ftau_in(3,nsym))
+   ALLOCATE(s_in(3,3,nsym), ft_in(3,nsym))
    IF(read_sym ) THEN
       IF(allfrac) THEN
          call errore("pw2wan_set_symm", "use_all_frac = .true. + read_sym = .true. not supported", 1)
@@ -1174,17 +1202,17 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
          st = transpose( matmul(transpose(bg), transpose(sr(:,:,isym))) )
          s_in(:,:,isym) = nint( matmul(transpose(at), st) )
          v = matmul(transpose(bg), tvec(:,isym))
-         ftau_in(1,isym) = nint(v(1)*nr1)
-         ftau_in(2,isym) = nint(v(2)*nr2)
-         ftau_in(3,isym) = nint(v(3)*nr3)
+         ft_in(1,isym) = v(1)
+         ft_in(2,isym) = v(2)
+         ft_in(3,isym) = v(3)
       END DO
-      IF( any(s(:,:,1:nsym) /= s_in(:,:,1:nsym)) .or. any(ftau_in(:,1:nsym) /= ftau(:,1:nsym)) ) THEN
+      IF( any(s(:,:,1:nsym) /= s_in(:,:,1:nsym)) .or. any(ft_in(:,1:nsym) /= ft(:,1:nsym)) ) THEN
          write(stdout,*) " Input symmetry is different from crystal symmetry"
          write(stdout,*)
       END IF
    ELSE
       s_in = s(:,:,1:nsym)
-      ftau_in = ftau(:,1:nsym)
+      ft_in = ft(:,1:nsym)
    END IF
    !
    IF(.not. allocated(rir)) ALLOCATE(rir(nxxs,nsym))
@@ -1215,7 +1243,7 @@ SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
             ENDDO
          ENDDO
    ENDDO
-   DEALLOCATE(s_in, ftau_in)
+   DEALLOCATE(s_in, ft_in)
 END SUBROUTINE pw2wan_set_symm
 
 !-----------------------------------------------------------------------
@@ -1644,7 +1672,6 @@ SUBROUTINE compute_dmn
    !
    !
    IF(any_uspp) THEN
-      CALL init_us_1
       CALL allocate_bec_type ( nkb, nbnd, becp )
       IF (gamma_only) THEN
          call errore("compute_dmn", "gamma-only mode not implemented", 1)
@@ -1989,7 +2016,6 @@ SUBROUTINE compute_mmn
    !
    !
    IF(any_uspp) THEN
-      CALL init_us_1
       CALL allocate_bec_type ( nkb, nbnd, becp )
       IF (gamma_only) THEN
          ALLOCATE ( rbecp2(nkb,nbnd))
@@ -2363,7 +2389,6 @@ SUBROUTINE compute_spin
    any_uspp = any(upf(1:ntyp)%tvanp)
 
    if (any_uspp) then
-      CALL init_us_1
       CALL allocate_bec_type ( nkb, nbnd, becp )
       ALLOCATE(be_n(nhm,2))
       ALLOCATE(be_m(nhm,2))
@@ -3034,7 +3059,6 @@ SUBROUTINE compute_amn
    !
    IF (any_uspp) THEN
       CALL allocate_bec_type ( nkb, n_wannier, becp)
-      CALL init_us_1
    ENDIF
    !
 
@@ -3247,13 +3271,14 @@ SUBROUTINE compute_amn_with_scdm
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
-   USE gvect,           ONLY : g, ngm
+   USE gvect,           ONLY : g, ngm, mill
    USE fft_base,        ONLY : dffts !vv: unk for the SCDM-k algorithm
    USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft !vv: inverse fft transform for computing the unk's on a grid
    USE noncollin_module,ONLY : noncolin, npol
-   USE mp,              ONLY : mp_bcast, mp_barrier
+   USE mp,              ONLY : mp_bcast, mp_barrier, mp_sum
    USE mp_world,        ONLY : world_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE cell_base,       ONLY : at
    USE ions_base,       ONLY : ntyp => nsp, tau
    USE uspp_param,      ONLY : upf
@@ -3263,12 +3288,15 @@ SUBROUTINE compute_amn_with_scdm
    INTEGER, EXTERNAL :: find_free_unit
    COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc1(:,:), nowfc(:,:), psi_gamma(:,:), &  
        qr_tau(:), cwork(:), cwork2(:), Umat(:,:), VTmat(:,:), Amat(:,:) ! vv: complex arrays for the SVD factorization
+   COMPLEX(DP), ALLOCATABLE :: phase_g(:,:) ! jml
    REAL(DP), ALLOCATABLE :: focc(:), rwork(:), rwork2(:), singval(:), rpos(:,:), cpos(:,:) ! vv: Real array for the QR factorization and SVD
    INTEGER, ALLOCATABLE :: piv(:) ! vv: Pivot array in the QR factorization 
    COMPLEX(DP) :: tmp_cwork(2)  
-   REAL(DP):: ddot, sumk, norm_psi, f_gamma
+   COMPLEX(DP) :: nowfc_tmp ! jml
+   REAL(DP):: ddot, sumk, norm_psi, f_gamma, tpi_r_dot_g
    INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, ipt, info, lcwork, locibnd, &
-              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, nbtot
+              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, nbtot, &
+              ig, ig_local ! jml
    CHARACTER (len=9)  :: cdate,ctime
    CHARACTER (len=60) :: header
    LOGICAL            :: any_uspp, found_gamma
@@ -3280,14 +3308,18 @@ SUBROUTINE compute_amn_with_scdm
    ALLOCATE(psic_all(nxxs) )
 #endif
 
+   ! vv: Write info about SCDM in output
+   IF (TRIM(scdm_entanglement) == 'isolated') THEN
+      WRITE(stdout,'(1x,a,a/)') 'Case  : ',trim(scdm_entanglement)
+   ELSEIF (TRIM(scdm_entanglement) == 'erfc' .OR. &
+        TRIM(scdm_entanglement) == 'gaussian') THEN
+      WRITE(stdout,'(1x,a,a)') 'Case  : ',trim(scdm_entanglement)
+      WRITE(stdout,'(1x,a,f10.3,a/,1x,a,f10.3,a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
+   ENDIF
+
    CALL start_clock( 'compute_amn' )
 
    any_uspp =any (upf(1:ntyp)%tvanp)
-
-   ! vv: Error for using SCDM with non-collinear spin calculations
-   IF (noncolin) THEN
-      call errore('pw2wannier90','The SCDM method is not compatible with non-collinear spin yet.',1)
-   ENDIF
 
    ! vv: Error for using SCDM with Ultrasoft pseudopotentials
    !IF (any_uspp) THEN
@@ -3302,7 +3334,7 @@ SUBROUTINE compute_amn_with_scdm
    !     1)For the QR decomposition 
    !     2)For the unk's on the real grid
    !     3)For the SVD 
-   IF(scdm_entanglement==0) THEN
+   IF(TRIM(scdm_entanglement) == 'isolated') THEN
       numbands=n_wannier
       nbtot=n_wannier + nexband
    ELSE 
@@ -3346,10 +3378,10 @@ SUBROUTINE compute_amn_with_scdm
    !
    IF (wan_mode=='standalone') THEN
       CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime
+      header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
          WRITE (iun_amn,*) header
-         WRITE (iun_amn,*) numbands,  iknum, n_wannier
+         WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
       ENDIF
    ENDIF
 
@@ -3373,21 +3405,21 @@ SUBROUTINE compute_amn_with_scdm
    f_gamma = 0.0_DP
    ik = gamma_idx
    locibnd = 0
+   CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
    DO ibnd=1,nbtot
       IF(excluded_band(ibnd)) CYCLE
       locibnd = locibnd + 1
       ! check locibnd <= numbands
       IF (locibnd > numbands) call errore('compute_amn','Something wrong with the number of bands. Check exclude_bands.')
-      IF(scdm_entanglement == 0) THEN
+      IF(TRIM(scdm_entanglement) == 'isolated') THEN
          f_gamma = 1.0_DP
-      ELSEIF (scdm_entanglement == 1) THEN
+      ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
          f_gamma = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
-      ELSEIF (scdm_entanglement == 2) THEN
+      ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
          f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
       ELSE
          call errore('compute_amn','scdm_entanglement value not recognized.',1)
       END IF
-      CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
       npw = ngk(ik)
       ! vv: Compute unk's on a real grid (the fft grid)
       psic(:) = (0.D0,0.D0)
@@ -3441,9 +3473,9 @@ SUBROUTINE compute_amn_with_scdm
       DO jpt = 0,dffts%nr2-1 
          DO ipt = 0,dffts%nr1-1
             lpt = lpt + 1
-            rpos(lpt,1) = REAL(ipt)/dffts%nr1 
-            rpos(lpt,2) = REAL(jpt)/dffts%nr2 
-            rpos(lpt,3) = REAL(kpt)/dffts%nr3 
+            rpos(lpt,1) = REAL(ipt, DP) / REAL(dffts%nr1, DP)
+            rpos(lpt,2) = REAL(jpt, DP) / REAL(dffts%nr2, DP)
+            rpos(lpt,3) = REAL(kpt, DP) / REAL(dffts%nr3, DP)
          ENDDO
       ENDDO
    ENDDO
@@ -3457,12 +3489,11 @@ SUBROUTINE compute_amn_with_scdm
       IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
       FLUSH(stdout)
       ikevc = ik + ikstart - 1
-!      if(noncolin) then
-!         call davcio (evc_nc, 2*nwordwfc, iunwfc, ikevc, -1 )
-!      else
-!      end if
 
       ! vv: SCDM method for generating the Amn matrix
+      ! jml: calculate of psi_nk at pivot points using slow FT
+      !      This is faster than using invfft because the number of pivot
+      !      points is much smaller than the number of FFT grid points.
       phase(:) = (0.0_DP,0.0_DP)
       nowfc1(:,:) = (0.0_DP,0.0_DP)
       nowfc(:,:) = (0.0_DP,0.0_DP)
@@ -3471,50 +3502,55 @@ SUBROUTINE compute_amn_with_scdm
       Amat(:,:) = (0.0_DP,0.0_DP)
       singval(:) = 0.0_DP
       rwork2(:) = 0.0_DP
+
+      ! jml: calculate phase factors before the loop over bands
+      npw = ngk(ik)
+      ALLOCATE(phase_g(npw, n_wannier))
+      DO iw = 1, n_wannier
+        phase(iw) = cmplx(COS(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + & 
+                   &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))), &    !*ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)),& 
+                   &SIN(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + &
+                   &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))),kind=DP) !ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)))
+
+        DO ig_local = 1, npw
+          ig = igk_k(ig_local,ik)
+          tpi_r_dot_g = 2.0_DP * pi * ( cpos(iw,1) * REAL(mill(1,ig), DP) & 
+                                    & + cpos(iw,2) * REAL(mill(2,ig), DP) &
+                                    & + cpos(iw,3) * REAL(mill(3,ig), DP) )
+          phase_g(ig_local, iw) = cmplx(COS(tpi_r_dot_g), SIN(tpi_r_dot_g), kind=DP)
+        END DO
+      END DO
+
       locibnd = 0
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
       ! vv: Generate the occupation numbers matrix according to scdm_entanglement
       DO ibnd=1,nbtot
          IF (excluded_band(ibnd)) CYCLE
          locibnd = locibnd + 1
          ! vv: Define the occupation numbers matrix according to scdm_entanglement
-         IF(scdm_entanglement == 0) THEN
+         IF(TRIM(scdm_entanglement) == 'isolated') THEN
             focc(locibnd) = 1.0_DP
-         ELSEIF (scdm_entanglement == 1) THEN
+         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
             focc(locibnd) = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
-         ELSEIF (scdm_entanglement == 2) THEN
+         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
             focc(locibnd) = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
          ELSE
             call errore('compute_amn','scdm_entanglement value not recognized.',1)
          END IF
-         CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
-         npw = ngk(ik)
-         psic(:) = (0.D0,0.D0)
-         psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw,ibnd)
-         CALL invfft ('Wave', psic, dffts)
-#if defined(__MPI)
-         CALL gather_grid(dffts,psic,psic_all)
-         norm_psi = sqrt(real(sum(psic_all(1:nrtot)*conjg(psic_all(1:nrtot))),kind=DP))
-         psic_all(1:nrtot) = psic_all(1:nrtot)/ norm_psi 
-         DO iw = 1,n_wannier
-            phase(iw) = cmplx(COS(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + & 
-                  &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))), &    !*ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)),& 
-                  &SIN(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + &
-                  &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))),kind=DP) !ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)))
-            nowfc(iw,locibnd) = phase(iw)*psic_all(piv(iw))*focc(locibnd)
-         ENDDO
-#else
-         norm_psi = sqrt(real(sum(psic(1:nrtot)*conjg(psic(1:nrtot))),kind=DP))
-         psic(1:nrtot) = psic(1:nrtot)/ norm_psi 
-         DO iw = 1,n_wannier
-            phase(iw) = cmplx(COS(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + & 
-                  &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))), &    !*ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)),& 
-                  &SIN(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + &
-                  &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))),kind=DP) !ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)))
-            nowfc(iw,locibnd) = phase(iw)*psic(piv(iw))*focc(locibnd)
 
+         norm_psi = REAL(SUM( evc(1:npw, ibnd) * CONJG(evc(1:npw, ibnd)) ))
+         CALL mp_sum(norm_psi, intra_pool_comm)
+         norm_psi = SQRT(norm_psi)
+
+         ! jml: nowfc = sum_G (psi(G) * exp(i*G*r)) * focc  * phase(iw) / norm_psi
+         DO iw = 1, n_wannier
+            nowfc_tmp = SUM( evc(1:npw, ibnd) * phase_g(1:npw, iw) )
+            nowfc(iw,locibnd) = nowfc_tmp * phase(iw) * focc(locibnd) / norm_psi
          ENDDO
-#endif
+
       ENDDO
+      CALL mp_sum(nowfc, intra_pool_comm) ! jml
+      DEALLOCATE(phase_g) ! jml
 
       CALL ZGESVD('S','S',numbands,n_wannier,TRANSPOSE(CONJG(nowfc)),numbands,&
            &singval,Umat,numbands,VTmat,n_wannier,tmp_cwork,-1,rwork2,info)
@@ -3577,6 +3613,396 @@ SUBROUTINE compute_amn_with_scdm
 
    RETURN
 END SUBROUTINE compute_amn_with_scdm
+
+
+SUBROUTINE compute_amn_with_scdm_spinor
+   !
+   ! jml: scdm for noncollinear case
+   !
+   USE constants,       ONLY : rytoev, pi
+   USE io_global,       ONLY : stdout, ionode, ionode_id
+   USE wvfct,           ONLY : nbnd, et, npwx
+   USE gvecw,           ONLY : gcutw
+   USE control_flags,   ONLY : gamma_only
+   USE wavefunctions,   ONLY : evc, psic_nc
+   USE io_files,        ONLY : nwordwfc, iunwfc
+   USE wannier
+   USE klist,           ONLY : nkstot, xk, ngk, igk_k
+   USE gvect,           ONLY : g, ngm, mill
+   USE fft_base,        ONLY : dffts !vv: unk for the SCDM-k algorithm
+   USE scatter_mod,     ONLY : gather_grid
+   USE fft_interfaces,  ONLY : invfft !vv: inverse fft transform for computing the unk's on a grid
+   USE noncollin_module,ONLY : noncolin, npol
+   USE mp,              ONLY : mp_bcast, mp_barrier, mp_sum
+   USE mp_world,        ONLY : world_comm
+   USE mp_pools,        ONLY : intra_pool_comm
+   USE cell_base,       ONLY : at
+   USE ions_base,       ONLY : ntyp => nsp, tau
+   USE uspp_param,      ONLY : upf
+
+   IMPLICIT NONE
+
+   INTEGER, EXTERNAL :: find_free_unit
+   COMPLEX(DP), ALLOCATABLE :: phase(:), nowfc1(:,:), nowfc(:,:), psi_gamma(:,:), &  
+       qr_tau(:), cwork(:), cwork2(:), Umat(:,:), VTmat(:,:), Amat(:,:) ! vv: complex arrays for the SVD factorization
+   COMPLEX(DP), ALLOCATABLE :: phase_g(:,:) ! jml
+   REAL(DP), ALLOCATABLE :: focc(:), rwork(:), rwork2(:), singval(:), rpos(:,:), cpos(:,:) ! vv: Real array for the QR factorization and SVD
+   INTEGER, ALLOCATABLE :: piv(:) ! vv: Pivot array in the QR factorization 
+   INTEGER, ALLOCATABLE :: piv_pos(:), piv_spin(:) ! jml: position and spin index of piv
+   COMPLEX(DP) :: tmp_cwork(2)  
+   COMPLEX(DP) :: nowfc_tmp ! jml
+   REAL(DP):: ddot, sumk, norm_psi, f_gamma, tpi_r_dot_g
+   INTEGER :: ik, npw, ibnd, iw, ikevc, nrtot, ipt, info, lcwork, locibnd, &
+              jpt,kpt,lpt, ib, istart, gamma_idx, minmn, minmn2, maxmn2, numbands, nbtot, &
+              ig, ig_local, count_piv_spin, ispin ! jml
+   CHARACTER (len=9)  :: cdate,ctime
+   CHARACTER (len=60) :: header
+   LOGICAL            :: any_uspp, found_gamma
+
+#if defined(__MPI)
+   INTEGER :: nxxs
+   COMPLEX(DP),ALLOCATABLE :: psic_all(:,:)
+   nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
+   ALLOCATE(psic_all(nxxs, 2) )
+#endif
+
+   ! vv: Write info about SCDM in output
+   IF (TRIM(scdm_entanglement) == 'isolated') THEN
+      WRITE(stdout,'(1x,a,a/)') 'Case  : ',trim(scdm_entanglement)
+   ELSEIF (TRIM(scdm_entanglement) == 'erfc' .OR. &
+        TRIM(scdm_entanglement) == 'gaussian') THEN
+      WRITE(stdout,'(1x,a,a)') 'Case  : ',trim(scdm_entanglement)
+      WRITE(stdout,'(1x,a,f10.3,a/,1x,a,f10.3,a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
+   ENDIF
+
+   CALL start_clock( 'compute_amn' )
+
+   any_uspp =any (upf(1:ntyp)%tvanp)
+
+   ! vv: Error for using SCDM with Ultrasoft pseudopotentials
+   !IF (any_uspp) THEN
+   !   call errore('pw2wannier90','The SCDM method does not work with Ultrasoft pseudopotential yet.',1)
+   !ENDIF
+
+   ! vv: Error for using SCDM with gamma_only
+   IF (gamma_only) THEN
+      call errore('pw2wannier90','The SCDM method does not work with gamma_only calculations.',1)
+   ENDIF
+   ! vv: Allocate all the variables for the SCDM method:
+   !     1)For the QR decomposition 
+   !     2)For the unk's on the real grid
+   !     3)For the SVD 
+   IF(TRIM(scdm_entanglement) == 'isolated') THEN
+      numbands=n_wannier
+      nbtot=n_wannier + nexband
+   ELSE 
+      numbands=nbnd-nexband
+      nbtot=nbnd
+   ENDIF
+   nrtot = dffts%nr1*dffts%nr2*dffts%nr3
+   info = 0
+   minmn = MIN(numbands,nrtot*2) ! jml: spinor
+   ALLOCATE(qr_tau(2*minmn))
+   ALLOCATE(piv(nrtot*2)) ! jml: spinor
+   ALLOCATE(piv_pos(n_wannier)) ! jml: spinor
+   ALLOCATE(piv_spin(n_wannier)) ! jml: spinor
+   piv(:) = 0
+   ALLOCATE(rwork(2*nrtot*2)) ! jml: spinor
+   rwork(:) = 0.0_DP
+
+   ALLOCATE(kpt_latt(3,iknum))
+   ALLOCATE(nowfc1(n_wannier,numbands))
+   ALLOCATE(nowfc(n_wannier,numbands))
+   ALLOCATE(psi_gamma(nrtot*2,numbands)) ! jml: spinor
+   ALLOCATE(focc(numbands))
+   minmn2 = MIN(numbands,n_wannier)
+   maxmn2 = MAX(numbands,n_wannier)
+   ALLOCATE(rwork2(5*minmn2))
+
+   ALLOCATE(rpos(nrtot,3)) ! jml: spinor
+   ALLOCATE(cpos(n_wannier,3))
+   ALLOCATE(phase(n_wannier))
+   ALLOCATE(singval(n_wannier))
+   ALLOCATE(Umat(numbands,n_wannier))
+   ALLOCATE(VTmat(n_wannier,n_wannier))
+   ALLOCATE(Amat(numbands,n_wannier))
+
+   IF (wan_mode=='library') ALLOCATE(a_mat(num_bands,n_wannier,iknum))
+
+   IF (wan_mode=='standalone') THEN
+      iun_amn = find_free_unit()
+      IF (ionode) OPEN (unit=iun_amn, file=trim(seedname)//".amn",form='formatted')
+   ENDIF
+
+   WRITE(stdout,'(a,i8)') '  AMN: iknum = ',iknum
+   !
+   IF (wan_mode=='standalone') THEN
+      CALL date_and_tim( cdate, ctime )
+      header='Created on '//cdate//' at '//ctime//' with SCDM '
+      IF (ionode) THEN
+         WRITE (iun_amn,*) header
+         WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
+      ENDIF
+   ENDIF
+
+   !vv: Find Gamma-point index in the list of k-vectors
+   ik  = 0
+   gamma_idx = 1
+   sumk = -1.0_DP
+   found_gamma = .false.
+   kpt_latt(:,1:iknum)=xk(:,1:iknum)
+   CALL cryst_to_cart(iknum,kpt_latt,at,-1)
+   DO WHILE(sumk/=0.0_DP .and. ik < iknum)
+      ik = ik + 1
+      sumk = ABS(kpt_latt(1,ik)**2 + kpt_latt(2,ik)**2 + kpt_latt(3,ik)**2)
+      IF (sumk==0.0_DP) THEN 
+         found_gamma = .true.
+         gamma_idx = ik
+      ENDIF
+   END DO
+   IF (.not. found_gamma) call errore('compute_amn','No Gamma point found.',1)
+
+   f_gamma = 0.0_DP
+   ik = gamma_idx
+   locibnd = 0
+   CALL davcio (evc, 2*nwordwfc, iunwfc, ik, -1 )
+   DO ibnd=1,nbtot
+      IF(excluded_band(ibnd)) CYCLE
+      locibnd = locibnd + 1
+      ! check locibnd <= numbands
+      IF (locibnd > numbands) call errore('compute_amn','Something wrong with the number of bands. Check exclude_bands.')
+      IF(TRIM(scdm_entanglement) == 'isolated') THEN
+         f_gamma = 1.0_DP
+      ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
+         f_gamma = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
+      ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
+         f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
+      ELSE
+         call errore('compute_amn','scdm_entanglement value not recognized.',1)
+      END IF
+      npw = ngk(ik)
+      ! vv: Compute unk's on a real grid (the fft grid)
+      psic_nc(:,:) = (0.D0,0.D0)
+      psic_nc(dffts%nl (igk_k (1:npw,ik) ), 1) = evc (1:npw,ibnd)
+      psic_nc(dffts%nl (igk_k (1:npw,ik) ), 2) = evc (1+npwx:npw+npwx,ibnd)
+      CALL invfft ('Wave', psic_nc(:,1), dffts)
+      CALL invfft ('Wave', psic_nc(:,2), dffts)
+
+#if defined(__MPI)
+      CALL gather_grid(dffts, psic_nc(:,1), psic_all(:,1))
+      CALL gather_grid(dffts, psic_nc(:,2), psic_all(:,2))
+      norm_psi = sqrt( real(sum(psic_all(1:nrtot, 1)*conjg(psic_all(1:nrtot, 1))),kind=DP) &
+                      +real(sum(psic_all(1:nrtot, 2)*conjg(psic_all(1:nrtot, 2))),kind=DP) )
+      ! vv: Gamma only
+      ! vv: Build Psi_k = Unk * focc
+      psi_gamma(1:nrtot,        locibnd) = psic_all(1:nrtot, 1) * f_gamma / norm_psi
+      psi_gamma(1+nrtot:2*nrtot,locibnd) = psic_all(1:nrtot, 2) * f_gamma / norm_psi
+#else
+      norm_psi = sqrt( real(sum(psic_nc(1:nrtot, 1)*conjg(psic_nc(1:nrtot, 1))),kind=DP) &
+                      +real(sum(psic_nc(1:nrtot, 2)*conjg(psic_nc(1:nrtot, 2))),kind=DP) )
+      psi_gamma(1:nrtot,        locibnd) = psic_nc(1:nrtot, 1) * f_gamma / norm_psi
+      psi_gamma(1+nrtot:2*nrtot,locibnd) = psic_nc(1:nrtot, 2) * f_gamma / norm_psi
+#endif
+   ENDDO
+
+   ! vv: Perform QR factorization with pivoting on Psi_Gamma
+   ! vv: Preliminary call to define optimal values for lwork and cwork size
+   CALL ZGEQP3(numbands,nrtot*2,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,tmp_cwork,-1,rwork,info)
+   IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
+   lcwork = AINT(REAL(tmp_cwork(1)))
+   tmp_cwork(:) = (0.0_DP,0.0_DP)
+   piv(:) = 0
+   rwork(:) = 0.0_DP
+   ALLOCATE(cwork(lcwork))
+   cwork(:) = (0.0_DP,0.0_DP)
+#if defined(__MPI)
+   IF(ionode) THEN
+      CALL ZGEQP3(numbands,nrtot*2,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,cwork,lcwork,rwork,info)
+      IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
+   ENDIF
+   CALL mp_bcast(piv,ionode_id,world_comm)
+#else
+   ! vv: Perform QR factorization with pivoting on Psi_Gamma
+   CALL ZGEQP3(numbands,nrtot*2,TRANSPOSE(CONJG(psi_gamma)),numbands,piv,qr_tau,cwork,lcwork,rwork,info)
+   IF(info/=0) call errore('compute_amn','Error in computing the QR factorization',1)
+#endif
+   DEALLOCATE(cwork)
+   tmp_cwork(:) = (0.0_DP,0.0_DP)
+
+   ! jml: calculate position and spin part of piv
+   count_piv_spin = 0
+   DO iw = 1, n_wannier
+     IF (piv(iw) .le. nrtot) then
+       piv_pos(iw) = piv(iw)
+       piv_spin(iw) = 1
+       count_piv_spin = count_piv_spin + 1
+     else
+       piv_pos(iw) = piv(iw) - nrtot
+       piv_spin(iw) = 2
+     end if
+   END DO
+   WRITE(stdout, '(a,I5)') " Number of pivot points with spin up  : ", count_piv_spin
+   WRITE(stdout, '(a,I5)') " Number of pivot points with spin down: ", n_wannier - count_piv_spin
+
+   ! vv: Compute the points
+   lpt = 0
+   rpos(:,:) = 0.0_DP
+   cpos(:,:) = 0.0_DP
+   DO kpt = 0,dffts%nr3-1
+      DO jpt = 0,dffts%nr2-1 
+         DO ipt = 0,dffts%nr1-1
+            lpt = lpt + 1
+            rpos(lpt,1) = DBLE(ipt)/DBLE(dffts%nr1)
+            rpos(lpt,2) = DBLE(jpt)/DBLE(dffts%nr2)
+            rpos(lpt,3) = DBLE(kpt)/DBLE(dffts%nr3)
+         ENDDO
+      ENDDO
+   ENDDO
+   DO iw=1,n_wannier
+      cpos(iw,:) = rpos(piv_pos(iw),:)
+      cpos(iw,:) = cpos(iw,:) - ANINT(cpos(iw,:))
+   ENDDO
+
+   DO ik=1,iknum
+      WRITE (stdout,'(i8)',advance='no') ik
+      IF( MOD(ik,10) == 0 ) WRITE (stdout,*)
+      FLUSH(stdout)
+      ikevc = ik + ikstart - 1
+
+      ! vv: SCDM method for generating the Amn matrix
+      ! jml: calculate of psi_nk at pivot points using slow FT
+      !      This is faster than using invfft because the number of pivot
+      !      points is much smaller than the number of FFT grid points.
+      phase(:) = (0.0_DP,0.0_DP)
+      nowfc1(:,:) = (0.0_DP,0.0_DP)
+      nowfc(:,:) = (0.0_DP,0.0_DP)
+      Umat(:,:) = (0.0_DP,0.0_DP)
+      VTmat(:,:) = (0.0_DP,0.0_DP)
+      Amat(:,:) = (0.0_DP,0.0_DP)
+      singval(:) = 0.0_DP
+      rwork2(:) = 0.0_DP
+
+      ! jml: calculate phase factors before the loop over bands
+      npw = ngk(ik)
+      ALLOCATE(phase_g(npw, n_wannier))
+      DO iw = 1, n_wannier
+        phase(iw) = cmplx(COS(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + & 
+                   &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))), &    !*ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)),& 
+                   &SIN(2.0_DP*pi*(cpos(iw,1)*kpt_latt(1,ik) + &
+                   &cpos(iw,2)*kpt_latt(2,ik) + cpos(iw,3)*kpt_latt(3,ik))),kind=DP) !ddot(3,cpos(iw,:),1,kpt_latt(:,ik),1)))
+
+        DO ig_local = 1, npw
+          ig = igk_k(ig_local,ik)
+          tpi_r_dot_g = 2.0_DP * pi * ( cpos(iw,1) * REAL(mill(1,ig), DP) & 
+                                    & + cpos(iw,2) * REAL(mill(2,ig), DP) &
+                                    & + cpos(iw,3) * REAL(mill(3,ig), DP) )
+          phase_g(ig_local, iw) = cmplx(COS(tpi_r_dot_g), SIN(tpi_r_dot_g), kind=DP)
+        END DO
+      END DO
+
+      locibnd = 0
+      CALL davcio (evc, 2*nwordwfc, iunwfc, ikevc, -1 )
+      DO ibnd=1,nbtot
+         IF (excluded_band(ibnd)) CYCLE
+         locibnd = locibnd + 1
+         ! vv: Define the occupation numbers matrix according to scdm_entanglement
+         IF(TRIM(scdm_entanglement) == 'isolated') THEN
+            focc(locibnd) = 1.0_DP
+         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
+            focc(locibnd) = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
+         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
+            focc(locibnd) = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
+         ELSE
+            call errore('compute_amn','scdm_entanglement value not recognized.',1)
+         END IF
+         
+         norm_psi= REAL(SUM( evc(1:npw,ibnd) * CONJG(evc(1:npw,ibnd)) )) &
+              + REAL(SUM( evc(1+npwx:npw+npwx,ibnd) * CONJG(evc(1+npwx:npw+npwx,ibnd)) ))
+         CALL mp_sum(norm_psi, intra_pool_comm)
+         norm_psi= sqrt(norm_psi)
+
+         ! jml: nowfc = sum_G (psi(G) * exp(i*G*r)) * focc  * phase(iw) / norm_psi
+         DO iw = 1, n_wannier
+           if (piv_spin(iw) == 1) then ! spin up
+             nowfc_tmp = sum( evc(1:npw, ibnd) * phase_g(1:npw, iw) )
+           else ! spin down
+             nowfc_tmp = sum( evc(1+npwx:npw+npwx, ibnd) * phase_g(1:npw, iw) )
+           end if
+
+           nowfc(iw, locibnd) = nowfc_tmp * phase(iw) * focc(locibnd) / norm_psi
+         ENDDO
+
+       END DO ! ibnd
+       CALL mp_sum(nowfc, intra_pool_comm) ! jml
+       DEALLOCATE(phase_g) ! jml
+
+      CALL ZGESVD('S','S',numbands,n_wannier,TRANSPOSE(CONJG(nowfc)),numbands,&
+           &singval,Umat,numbands,VTmat,n_wannier,tmp_cwork,-1,rwork2,info)
+      lcwork = AINT(REAL(tmp_cwork(1)))
+      tmp_cwork(:) = (0.0_DP,0.0_DP)
+      ALLOCATE(cwork(lcwork))
+#if defined(__MPI)
+     IF(ionode) THEN
+     ! vv: SVD to generate orthogonal projections
+     CALL ZGESVD('S','S',numbands,n_wannier,TRANSPOSE(CONJG(nowfc)),numbands,&
+          &singval,Umat,numbands,VTmat,n_wannier,cwork,lcwork,rwork2,info)
+        IF(info/=0) CALL errore('compute_amn','Error in computing the SVD of the PSI matrix in the SCDM method',1)
+     ENDIF
+     CALL mp_bcast(Umat,ionode_id,world_comm)
+     CALL mp_bcast(VTmat,ionode_id,world_comm)
+#else
+      ! vv: SVD to generate orthogonal projections
+      CALL ZGESVD('S','S',numbands,n_wannier,TRANSPOSE(CONJG(nowfc)),numbands,&
+           &singval,Umat,numbands,VTmat,n_wannier,cwork,lcwork,rwork2,info)
+      IF(info/=0) CALL errore('compute_amn','Error in computing the SVD of the PSI matrix in the SCDM method',1)
+#endif
+      DEALLOCATE(cwork)
+      
+      Amat = MATMUL(Umat,VTmat)
+
+      CALL start_clock( 'scdm_write' )
+      DO iw = 1,n_wannier
+         locibnd = 0
+         DO ibnd = 1,nbtot
+            IF (excluded_band(ibnd)) CYCLE
+            locibnd = locibnd + 1
+            IF (ionode) WRITE(iun_amn,'(3i5,2f18.12)') locibnd, iw, ik, REAL(Amat(locibnd,iw)), AIMAG(Amat(locibnd,iw))
+         ENDDO
+      ENDDO
+      CALL stop_clock( 'scdm_write' )
+   ENDDO  ! k-points
+
+   ! vv: Deallocate all the variables for the SCDM method
+   DEALLOCATE(kpt_latt)
+   DEALLOCATE(psi_gamma)
+   DEALLOCATE(nowfc)
+   DEALLOCATE(nowfc1)
+   DEALLOCATE(focc)
+   DEALLOCATE(piv)
+   DEALLOCATE(piv_pos)
+   DEALLOCATE(piv_spin)
+   DEALLOCATE(qr_tau)
+   DEALLOCATE(rwork)
+   DEALLOCATE(rwork2)
+   DEALLOCATE(rpos)
+   DEALLOCATE(cpos)
+   DEALLOCATE(Umat)
+   DEALLOCATE(VTmat)
+   DEALLOCATE(Amat)
+   DEALLOCATE(singval)
+
+#if defined(__MPI)
+   DEALLOCATE( psic_all )
+#endif
+
+   IF (ionode .and. wan_mode=='standalone') CLOSE (iun_amn)
+   WRITE(stdout,'(/)')
+   WRITE(stdout,*) ' AMN calculated'
+   CALL stop_clock( 'compute_amn' )
+
+   RETURN
+END SUBROUTINE compute_amn_with_scdm_spinor
+
 
 subroutine orient_gf_spinor(npw)
    use constants, only: eps6
@@ -4108,7 +4534,7 @@ SUBROUTINE write_parity
        ! 0-th Order
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! 1
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! 1
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
@@ -4116,21 +4542,21 @@ SUBROUTINE write_parity
        ! 1st Order
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! y
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! z
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
@@ -4138,63 +4564,63 @@ SUBROUTINE write_parity
        ! 2nd Order
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! xz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! xz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! y^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! yz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! yz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! yz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! yz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 2.d0 <= eps6) ) THEN ! z^2
+            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! z^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
@@ -4202,133 +4628,133 @@ SUBROUTINE write_parity
        ! 3rd Order
        IF ( (abs(g_abc(1,igv) - 3.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^3
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^2y
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! x^2y
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! x^2y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! x^2z
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! x^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 2.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! x^2z
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! x^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! xy^2
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! xy^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) + 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! xyz
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 2.d0 <= eps6) ) THEN ! xz^2
+            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! xz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 1.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 2.d0 <= eps6) ) THEN ! xz^2
+            (abs(g_abc(3,igv) + 2.d0) <= eps6) ) THEN ! xz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 3.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 0.d0 <= eps6) ) THEN ! y^3
+            (abs(g_abc(3,igv) - 0.d0) <= eps6) ) THEN ! y^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 1.d0 <= eps6) ) THEN ! y^2z
+            (abs(g_abc(3,igv) - 1.d0) <= eps6) ) THEN ! y^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 2.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 1.d0 <= eps6) ) THEN ! y^2z
+            (abs(g_abc(3,igv) + 1.d0) <= eps6) ) THEN ! y^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 2.d0 <= eps6) ) THEN ! yz^2
+            (abs(g_abc(3,igv) - 2.d0) <= eps6) ) THEN ! yz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and.&
             (abs(g_abc(2,igv) - 1.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) + 2.d0 <= eps6) ) THEN ! yz^2
+            (abs(g_abc(3,igv) + 2.d0) <= eps6) ) THEN ! yz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
        ENDIF
        IF ( (abs(g_abc(1,igv) - 0.d0) <= eps6) .and. &
             (abs(g_abc(2,igv) - 0.d0) <= eps6) .and. &
-            (abs(g_abc(3,igv)) - 3.d0 <= eps6) ) THEN ! z^3
+            (abs(g_abc(3,igv) - 3.d0) <= eps6) ) THEN ! z^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            CYCLE
@@ -4440,7 +4866,9 @@ SUBROUTINE wan2sic
   USE klist, ONLY : nkstot, xk, wk, ngk
   USE wannier
 
-  INTEGER :: npw, i, j, nn, ik, ibnd, iw, ikevc
+  IMPLICIT NONE
+
+  INTEGER :: i, j, nn, ik, ibnd, iw, ikevc, npw
   COMPLEX(DP), ALLOCATABLE :: orbital(:,:), u_matrix(:,:,:)
   INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
 
@@ -4917,5 +5345,3 @@ SUBROUTINE radialpart(ng, q, alfa, rvalue, lmax, radial)
   DEALLOCATE (bes, func_r, r, rij, aux )
   RETURN
 END SUBROUTINE radialpart
-
-

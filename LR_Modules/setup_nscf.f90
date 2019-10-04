@@ -66,9 +66,14 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   ethr = ethr_nscf
   !
   ! ... variables for iterative diagonalization
-  ! ... Davdson: isolve=0, david=4 ; CG: isolve=1, david=1
-  isolve = 0
-  david  = 4
+  ! ... Davidson: isolve=0, david=4 ; CG: isolve=1, david=1
+  IF (isolve == 0) THEN
+     david = 4
+  ELSE IF (isolve == 1) THEN
+     david = 1
+  ELSE
+     call errore('setup_nscf','erroneous value for diagonalization method. Should be isolve=0 (david) or 1 (cg)',1)
+  END IF
   nbndx = david*nbnd
   max_cg_iter=20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )

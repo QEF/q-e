@@ -8,12 +8,13 @@
 !----------------------------------------------------------------------------
 SUBROUTINE stop_run( exit_status )
   !----------------------------------------------------------------------------
+  !! Close all files and synchronize processes before stopping:
   !
-  ! ... Close all files and synchronize processes before stopping.
-  ! ... If exit_status = 0, successfull execution, remove temporary files
-  ! ... If exit_status =-1, code stopped by user request, or
-  !        exit_status = 1, convergence not achieved :
-  ! ... do not remove temporary files needed for restart. 
+  !! * exit_status = 0: successfull execution, remove temporary files;
+  !! * exit_status =-1: code stopped by user request;
+  !! * exit_status = 1: convergence not achieved.
+  !
+  !! Do not remove temporary files needed for restart.
   !
   USE io_global,          ONLY : ionode
   USE mp_global,          ONLY : mp_global_end
@@ -38,11 +39,11 @@ SUBROUTINE stop_run( exit_status )
         CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
         CALL seqopn( iuntmp, 'para', 'FORMATTED', exst )
         CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
-     END IF
+     ENDIF
      !
-  END IF
+  ENDIF
   !
-  CALL close_files(lflag)
+  CALL close_files( lflag )
   !
   CALL print_clock_pw()
   !
@@ -50,12 +51,14 @@ SUBROUTINE stop_run( exit_status )
   !
   CALL environment_end( 'PWSCF' )
   !
-  CALL unset_mpi_comm_4_solvers()
-  CALL mp_global_end ()
+  CALL mp_global_end()
   !
 END SUBROUTINE stop_run
-
+!
+!-----------------------------------------
 SUBROUTINE do_stop( exit_status )
+  !---------------------------------------
+  !! Stop the run.
   !
   IMPLICIT NONE
   !
@@ -65,35 +68,34 @@ SUBROUTINE do_stop( exit_status )
      ! -1 is not an acceptable value for stop in fortran;
      ! convert it to 255
      STOP 255
-  ELSE IF ( exit_status == 0 ) THEN
+  ELSEIF ( exit_status == 0 ) THEN
      STOP
-  ELSE IF ( exit_status == 1 ) THEN
+  ELSEIF ( exit_status == 1 ) THEN
      STOP 1
-  ELSE IF ( exit_status == 2 ) THEN
+  ELSEIF ( exit_status == 2 ) THEN
      STOP 2
-  ELSE IF ( exit_status == 3 ) THEN
+  ELSEIF ( exit_status == 3 ) THEN
      STOP 3
-  ELSE IF ( exit_status == 4 ) THEN
+  ELSEIF ( exit_status == 4 ) THEN
      STOP 4
-  ELSE IF ( exit_status == 255 ) THEN
+  ELSEIF ( exit_status == 255 ) THEN
      STOP 255
-  ELSE IF ( exit_status == 254 ) THEN
+  ELSEIF ( exit_status == 254 ) THEN
      STOP 254
   ELSE
      ! unimplemented value
      STOP 128
-  END IF
+  ENDIF
   !
 END SUBROUTINE do_stop
 !
 !----------------------------------------------------------------------------
 SUBROUTINE closefile()
   !----------------------------------------------------------------------------
+  !! Close all files and synchronize processes before stopping.  
+  !! Called by "sigcatch" when it receives a signal.
   !
   USE io_global,  ONLY :  stdout
-  !
-  ! ... Close all files and synchronize processes before stopping
-  ! ... Called by "sigcatch" when it receives a signal
   !
   WRITE( stdout,'(5X,"Signal Received, stopping ... ")')
   !

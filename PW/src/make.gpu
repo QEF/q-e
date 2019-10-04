@@ -39,6 +39,7 @@ addusdens_gpu.o : realus.o
 allocate_fft.o : scf_mod_gpu.o
 allocate_nlpot.o : pwcom_gpu.o
 allocate_nlpot.o : pwcom_gpu.o
+allocate_wfc.o : pwcom_gpu.o
 atomic_wfc.o : pwcom_gpu.o
 c_bands.o : g_psi_mod_gpu.o
 c_bands.o : pwcom_gpu.o

@@ -52,7 +52,8 @@ subroutine dvex(nu,dvy)
 !      write (*,*) mu, oc(mu), ocs
       if ( mu == nu ) then
          doc = 0.d0
-         if(AND((l1 /= 0), (ocs > 0.d0))) then
+         !if(AND((l1 /= 0), (ocs > 0.d0))) then
+         if((l1 /= 0).AND.(ocs > 0.d0)) then
            i = int(ocs)
            doc = (i*(2.d0*ocs-i-1.d0)/(half-1.d0) - ocs*ocs/half) * half/ocs
          end if

@@ -88,29 +88,28 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = (raux(:) + rho%of_r(:,nspin))/2.0_dp
         ELSE IF ( spin_component == 2 ) THEN
            raux(:) = (raux(:) - rho%of_r(:,nspin))/2.0_dp
-        !ELSE
-        !   CALL errore('punch_plot','spin_component not allowed',1)
         END IF
      ENDIF
      !
   ELSEIF (plot_num == 1) THEN
      !
-     !       The total self-consistent potential V_H+V_xc on output
+     !       The total self-consistent potential V_loc+V_H+V_xc
      !
-     raux(:) = v%of_r(:,1)
      IF ( lsda ) THEN
         IF ( spin_component == 0 ) THEN
-           raux(:) = raux(:) + v%of_r(:,nspin)
+           raux(:) = (v%of_r(:,1) + v%of_r(:,2))/2.0_dp + vltot(:)
         ELSE
-           raux(:) = v%of_r(:,spin_component)
+           raux(:) = v%of_r(:,spin_component) + vltot(:)
         END IF
+     ELSE
+        raux(:) = v%of_r(:,1) + vltot(:)
      END IF
      !
   ELSEIF (plot_num == 2) THEN
      !
      !       The local pseudopotential on output
      !
-     CALL dcopy (dfftp%nnr, vltot, 1, raux, 1)
+     raux(:) = vltot(:)
      !
   ELSEIF (plot_num == 3) THEN
      !
@@ -184,8 +183,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = (raux(:) + rho%of_r(:,nspin))/2.0_dp
         ELSE IF ( spin_component == 2 ) THEN
            raux(:) = (raux(:) - rho%of_r(:,nspin))/2.0_dp
-        !ELSE
-        !   CALL errore('punch_plot','spin_component not allowed',1)
         END IF
      ENDIF
 
@@ -195,15 +192,21 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 11) THEN
 
-     raux(:) = vltot(:)
-     CALL v_h (rho%of_g(:,1), ehart, charge, raux)
-     IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
+     ALLOCATE( raux2(dfftp%nnr,nspin) )
+     raux2(:,1) = vltot(:)
+     
+     CALL v_h( rho%of_g(:,1), ehart, charge, raux2 )
+
+     raux(:) = raux2(:,1)
+     IF (tefield.and.dipfield) CALL add_efield(raux, dummy, rho%of_r(:,1),.true.)
+     
+     DEALLOCATE( raux2 )
 
   ELSEIF (plot_num == 12) THEN
 
      raux=0.d0
      IF (tefield) THEN
-         CALL add_efield(raux,dummy,rho%of_r,.true.)
+         CALL add_efield(raux,dummy,rho%of_r(:,1),.true.)
      ELSE
          CALL infomsg ('punch_plot','e_field is not calculated')
      ENDIF
@@ -231,7 +234,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 17 .or. plot_num == 21) THEN
      WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
      ! code partially duplicate from plot_num=0, should be unified
-     CALL init_us_1()
      !
      CALL PAW_make_ae_charge(rho,(plot_num==21))
      !
@@ -241,8 +243,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
            raux(:) = ( raux(:) + rho%of_r(:,nspin) )/2.0_dp
         ELSE IF ( spin_component==2 ) THEN
            raux(:) = ( raux(:) - rho%of_r(:,nspin) )/2.0_dp
-        ELSE
-           CALL errore('punch_plot','spin_component not allowed',3)
         ENDIF
      END IF
      !
@@ -278,18 +278,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !      plot of the kinetic energy density
      !
-     IF (noncolin) THEN
-        CALL dcopy (dfftp%nnr, rho%kin_r, 1, raux, 1)
-     ELSE
+     IF ( lsda ) THEN
         IF (spin_component == 0) THEN
-           CALL dcopy (dfftp%nnr, rho%kin_r (1, 1), 1, raux, 1)
-           DO is = 2, nspin
-              CALL daxpy (dfftp%nnr, 1.d0, rho%kin_r (1, is), 1, raux, 1)
-           ENDDO
+           raux(:) = rho%kin_r(:,1)+rho%kin_r(:,2)
         ELSE
-           CALL dcopy (dfftp%nnr, rho%kin_r (1, spin_component), 1, raux, 1)
-           CALL dscal (dfftp%nnr, 0.5d0 * nspin, raux, 1)
+           raux(:) = rho%kin_r(:, spin_component)
         ENDIF
+     ELSE
+        raux(:) = rho%kin_r(:,1)
      ENDIF
 
   ELSE

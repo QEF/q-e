@@ -117,6 +117,7 @@ compute_vsgga.o : ../Modules/funct.o
 compute_vsgga.o : ../Modules/kind.o
 compute_vsgga.o : ../Modules/noncol.o
 compute_vsgga.o : ../Modules/recvec.o
+compute_vsgga.o : ../Modules/xc_gga_drivers.o
 compute_vsgga.o : ../PW/src/pwcom.o
 dfpt_tetra_mod.o : ../Modules/cell_base.o
 dfpt_tetra_mod.o : ../Modules/io_global.o
@@ -161,7 +162,6 @@ dv_rVV10.o : ../Modules/constants.o
 dv_rVV10.o : ../Modules/control_flags.o
 dv_rVV10.o : ../Modules/fft_base.o
 dv_rVV10.o : ../Modules/io_global.o
-dv_rVV10.o : ../Modules/kernel_table.o
 dv_rVV10.o : ../Modules/kind.o
 dv_rVV10.o : ../Modules/mp_pools.o
 dv_rVV10.o : ../Modules/recvec.o
@@ -174,7 +174,6 @@ dv_vdW_DF.o : ../Modules/constants.o
 dv_vdW_DF.o : ../Modules/control_flags.o
 dv_vdW_DF.o : ../Modules/fft_base.o
 dv_vdW_DF.o : ../Modules/io_global.o
-dv_vdW_DF.o : ../Modules/kernel_table.o
 dv_vdW_DF.o : ../Modules/kind.o
 dv_vdW_DF.o : ../Modules/mp_pools.o
 dv_vdW_DF.o : ../Modules/recvec.o
@@ -216,6 +215,8 @@ incdrhoscf_nc.o : ../Modules/wavefunctions.o
 incdrhoscf_nc.o : ../PW/src/pwcom.o
 incdrhoscf_nc.o : ../UtilXlib/mp.o
 incdrhoscf_nc.o : lrcom.o
+lanczos_nonhermitian.o : ../Modules/kind.o
+lanczos_pseudohermitian.o : ../Modules/kind.o
 localdos.o : ../FFTXlib/fft_interfaces.o
 localdos.o : ../Modules/becmod.o
 localdos.o : ../Modules/cell_base.o
@@ -242,6 +243,18 @@ lr_addusddens.o : ../Modules/recvec.o
 lr_addusddens.o : ../Modules/uspp.o
 lr_addusddens.o : ../Modules/wavefunctions.o
 lr_addusddens.o : lrcom.o
+lr_dot.o : ../Modules/cell_base.o
+lr_dot.o : ../Modules/control_flags.o
+lr_dot.o : ../Modules/fft_base.o
+lr_dot.o : ../Modules/gvecw.o
+lr_dot.o : ../Modules/io_global.o
+lr_dot.o : ../Modules/kind.o
+lr_dot.o : ../Modules/mp_global.o
+lr_dot.o : ../Modules/noncol.o
+lr_dot.o : ../Modules/recvec.o
+lr_dot.o : ../PW/src/pwcom.o
+lr_dot.o : ../UtilXlib/mp.o
+lr_dot.o : lrcom.o
 lr_orthoUwfc.o : ../Modules/becmod.o
 lr_orthoUwfc.o : ../Modules/control_flags.o
 lr_orthoUwfc.o : ../Modules/io_files.o
@@ -261,7 +274,7 @@ lr_sm1_psi.o : ../Modules/control_flags.o
 lr_sm1_psi.o : ../Modules/invmat.o
 lr_sm1_psi.o : ../Modules/ions_base.o
 lr_sm1_psi.o : ../Modules/kind.o
-lr_sm1_psi.o : ../Modules/mp_bands.o
+lr_sm1_psi.o : ../Modules/mp_global.o
 lr_sm1_psi.o : ../Modules/noncol.o
 lr_sm1_psi.o : ../Modules/uspp.o
 lr_sm1_psi.o : ../PW/src/pwcom.o
@@ -341,11 +354,11 @@ setup_dgc.o : ../Modules/noncol.o
 setup_dgc.o : ../Modules/recvec.o
 setup_dgc.o : ../Modules/uspp.o
 setup_dgc.o : ../Modules/wavefunctions.o
+setup_dgc.o : ../Modules/xc_gga_drivers.o
 setup_dgc.o : ../PW/src/pwcom.o
 setup_dgc.o : ../PW/src/scf_mod.o
 setup_dgc.o : lrcom.o
 setup_dmuxc.o : ../Modules/fft_base.o
-setup_dmuxc.o : ../Modules/funct.o
 setup_dmuxc.o : ../Modules/kind.o
 setup_dmuxc.o : ../Modules/noncol.o
 setup_dmuxc.o : ../PW/src/pwcom.o

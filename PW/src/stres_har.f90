@@ -7,68 +7,78 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine stres_har (sigmahar)
-  !----------------------------------------------------------------------
+SUBROUTINE stres_har( sigmahar )
+  !--------------------------------------------------------------------
+  !! Calculates the Hartree contribution to the stress
   !
-  USE kinds, ONLY : DP
-  USE constants, ONLY : e2, fpi
-  USE cell_base, ONLY: omega, tpiba2
-  USE ener,      ONLY: ehart
-  USE fft_base,  ONLY : dfftp
-  USE fft_interfaces,ONLY : fwfft
-  USE gvect,     ONLY: ngm, gstart, g, gg
-  USE scf,       ONLY: rho
-  USE control_flags,        ONLY: gamma_only
-  USE wavefunctions, ONLY : psic
-  USE mp_bands,  ONLY: intra_bgrp_comm
-  USE mp,        ONLY: mp_sum
-  USE Coul_cut_2D,  ONLY: do_cutoff_2D, cutoff_stres_sigmahar
-
-  implicit none
+  USE kinds,           ONLY: DP
+  USE constants,       ONLY: e2, fpi
+  USE cell_base,       ONLY: omega, tpiba2
+  USE ener,            ONLY: ehart
+  USE fft_base,        ONLY: dfftp
+  USE fft_interfaces,  ONLY: fwfft
+  USE gvect,           ONLY: ngm, gstart, g, gg
+  USE scf,             ONLY: rho
+  USE control_flags,   ONLY: gamma_only
+  USE wavefunctions,   ONLY: psic
+  USE mp_bands,        ONLY: intra_bgrp_comm
+  USE mp,              ONLY: mp_sum
+  USE Coul_cut_2D,     ONLY: do_cutoff_2D, cutoff_stres_sigmahar
   !
-  real(DP) :: sigmahar (3, 3), shart, g2
-  real(DP), parameter :: eps = 1.d-8
-  integer :: ig, l, m
-
-  sigmahar(:,:) = 0.d0
-  psic (:) = CMPLX (rho%of_r(:,1), KIND=dp)
-
-  CALL fwfft ('Rho', psic, dfftp)
+  IMPLICIT NONE
+  !
+  REAL(DP) :: sigmahar(3,3)
+  !! Hartree term of the stress tensor
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: shart, g2
+  REAL(DP), PARAMETER :: eps = 1.d-8
+  INTEGER :: ig, l, m
+  !
+  sigmahar(:,:) = 0.0_DP
+  psic(:) = CMPLX( rho%of_r(:,1), KIND=DP )
+  !
+  CALL fwfft('Rho', psic, dfftp)
   ! psic contains now the charge density in G space
   ! the  G=0 component is not computed
   IF (do_cutoff_2D) THEN  
-    call cutoff_stres_sigmahar(psic, sigmahar)
+     CALL cutoff_stres_sigmahar( psic, sigmahar )
   ELSE
-  do ig = gstart, ngm
-     g2 = gg (ig) * tpiba2
-     shart = psic (dfftp%nl (ig) ) * CONJG(psic (dfftp%nl (ig) ) ) / g2
-     do l = 1, 3
-        do m = 1, l
-           sigmahar (l, m) = sigmahar (l, m) + shart * tpiba2 * 2 * &
-                g (l, ig) * g (m, ig) / g2
-        enddo
-     enddo
-  enddo
+     DO ig = gstart, ngm
+        g2 = gg(ig) * tpiba2
+        shart = psic(dfftp%nl(ig)) * CONJG(psic(dfftp%nl(ig))) / g2
+        DO l = 1, 3
+           DO m = 1, l
+              sigmahar(l,m) = sigmahar(l,m) + shart * tpiba2 * 2 * &
+                              g(l,ig) * g(m,ig) / g2
+           ENDDO
+        ENDDO
+     ENDDO
   ENDIF 
   !
-  call mp_sum(  sigmahar, intra_bgrp_comm )
+  CALL mp_sum( sigmahar, intra_bgrp_comm )
   !
-  if (gamma_only) then
-     sigmahar(:,:) =       fpi * e2 * sigmahar(:,:)
-  else
-     sigmahar(:,:) = 0.5d0 * fpi * e2 * sigmahar(:,:)
-  end if
-  do l = 1, 3
-     sigmahar (l, l) = sigmahar (l, l) - ehart / omega
-  enddo
-  do l = 1, 3
-     do m = 1, l - 1
-        sigmahar (m, l) = sigmahar (l, m)
-     enddo
-  enddo
-
+  IF (gamma_only) THEN
+     sigmahar(:,:) = fpi * e2 * sigmahar(:,:)
+  ELSE
+     sigmahar(:,:) = fpi * e2 * sigmahar(:,:) * 0.5_DP
+  ENDIF
+  !
+  DO l = 1, 3
+     sigmahar(l,l) = sigmahar(l,l) - ehart / omega
+  ENDDO
+  !
+  DO l = 1, 3
+     DO m = 1, l-1
+        sigmahar(m,l) = sigmahar(l,m)
+     ENDDO
+  ENDDO
+  !
   sigmahar(:,:) = -sigmahar(:,:)
-
-  return
-end subroutine stres_har
+  !
+  !
+  RETURN
+  !
+END SUBROUTINE stres_har
 

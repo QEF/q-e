@@ -251,9 +251,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
        IF (ierr/=0) CALL errore( ' read_export ',' Unable to allocate SEVC ', ABS(ierr) )
 
-       CALL init_us_1
-       CALL init_at_1
-
        CALL allocate_bec_type (nkb,nbnd,becp)
 
        do ik = 1, nkstot

@@ -34,7 +34,7 @@ PROGRAM lr_eels_main
                                     ntask_groups
   USE mp_bands_TDDFPT,       ONLY : ibnd_start, ibnd_end
   USE mp_diag,               ONLY : mp_start_diag
-  USE command_line_options,  ONLY : input_file_, ndiag_
+  USE command_line_options,  ONLY : ndiag_
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions,         ONLY : psic
   USE check_stop,            ONLY : check_stop_now, check_stop_init
@@ -223,6 +223,7 @@ PROGRAM lr_eels_main
   !
   CALL print_clock_lr()
   !
+  CALL laxlib_free_ortho_group()
   CALL stop_lr( .TRUE. )
   !
   IF (lr_verbosity > 5) THEN

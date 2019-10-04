@@ -26,8 +26,8 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   use cublas
   USE LAXlib,        ONLY : diaghg
   USE david_param,   ONLY : DP
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
-          nbgrp, my_bgrp_id
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
+          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart
   USE mp,            ONLY : mp_sum, mp_bcast
   !
@@ -224,7 +224,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hr_d, sr_d, nvecx, ew_d, vr_d )
+        CALL diaghg( nbase, nvec, hr_d, sr_d, nvecx, ew_d, vr_d, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr_d, root_bgrp_id, inter_bgrp_comm )
@@ -415,7 +415,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hr_d, sr_d, nvecx, ew_d, vr_d )
+        CALL diaghg( nbase, nvec, hr_d, sr_d, nvecx, ew_d, vr_d, me_bgrp, root_bgrp, intra_bgrp_comm )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr_d, root_bgrp_id, inter_bgrp_comm )

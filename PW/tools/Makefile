@@ -7,8 +7,9 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../src
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../UtilXlib/libutil.a \
+         ../../UtilXlib/libutil.a ../../LAXlib/libqela.a \
          ../../GScratch/libgscratch.a
+# libqela required by xlf for obscure reasons
 
 PWOBJS = ../src/libpw.a
 

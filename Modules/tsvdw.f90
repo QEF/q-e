@@ -256,7 +256,7 @@ PRIVATE :: GetVdWParam
     ! Determine whether radial grid is logarithmic/exponential or equispaced/uniform...
     !
     drab=atgrdrab(NrgpA)-atgrdrab(1)
-    IF (DABS(drab).LT.(1.0E-6_DP)) uniform_grid=.TRUE.
+    uniform_grid = (DABS(drab).LT.(1.0E-6_DP))
     IF (uniform_grid) WRITE(stdout,'(5X,"Equispaced/Uniform radial atomic grid detected...")')
     !
     ! ----------------------------------------------------------------
@@ -549,7 +549,7 @@ PRIVATE :: GetVdWParam
     !
     ! Populate reference free atom quantities...
     !
-    CALL GetVdWParam(atm(is),C6AAfree(is),dpfree(is),R0free(is))
+    CALL GetVdWParam(upf(is)%psd,C6AAfree(is),dpfree(is),R0free(is))
     !
     WRITE(stdout,'(5X,"The free atom static dipole polarizability is ",F13.6," bohr^3.")') dpfree(is)
     WRITE(stdout,'(5X,"The free atom homonuclear C6 coefficient is ",F13.6," Hartree bohr^6.")') C6AAfree(is)
@@ -2444,7 +2444,7 @@ PRIVATE :: GetVdWParam
   !
   ! I/O variables
   !
-  CHARACTER(LEN=3) :: atom
+  CHARACTER(LEN=2) :: atom
   REAL(DP) :: C6,alpha,R0
   !
   SELECT CASE (atom) 

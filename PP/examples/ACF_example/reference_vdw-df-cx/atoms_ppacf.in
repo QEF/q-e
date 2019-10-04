@@ -1,0 +1,9 @@
+&ppacf
+    outdir = './'
+    pseudo_dir = '/c3se/users/hyldgaar/Vera/CODE/ESPRESSO/PseudoLibrary/ONCVpbe_sg15/'
+    prefix = 'atomns'
+    n_lambda = 1
+    lfock = .false.
+    lplot = .false.
+/
+

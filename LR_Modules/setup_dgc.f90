@@ -6,14 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine setup_dgc
+SUBROUTINE setup_dgc
   !-----------------------------------------------------------------------
+  !! Allocate and set up all variable needed in the gradient correction case.
   !
-  ! Allocate and setup all variable needed in the gradient correction case
-  !
-  ! GGA+LSDA is allowed. ADC (September 1999).
-  ! GGA+LSDA+NLCC is allowed. ADC (November 1999).
-  ! GGA+noncollinear+NLCC is allowed. ADC (June 2007).
+  !! GGA+LSDA is allowed. ADC (September 1999);  
+  !! GGA+LSDA+NLCC is allowed. ADC (November 1999);  
+  !! GGA+noncollinear+NLCC is allowed. ADC (June 2007).
   !
   USE constants,            ONLY : e2
   USE fft_base,             ONLY : dfftp
@@ -24,167 +23,153 @@ subroutine setup_dgc
   USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
   USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
-  USE funct,                ONLY : dft_is_gradient, gcxc, gcx_spin, &
-                                   gcc_spin, dgcxc, dgcxc_spin
+  USE funct,                ONLY : dft_is_gradient, is_libxc
+  USE xc_gga,               ONLY : xc_gcx !gcxc, gcx_spin, gcc_spin
   USE uspp,                 ONLY : nlcc_any
   USE gc_lr,                ONLY : grho, gmag, dvxc_rr, dvxc_sr, &
                                    dvxc_ss, dvxc_s, vsgga, segni
-
-  implicit none
-  integer :: k, is, ipol, jpol, ir
-  real(DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &
-       v1x, v2x, v1c, v2c, vrrx, vsrx, vssx, vrrc, vsrc, vssc, v1xup, &
-       v1xdw, v2xup, v2xdw, v1cup, v1cdw, vrrxup, vrrxdw, vrsxup, vrsxdw, &
-       vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vrzcup, vrzcdw,   &
-       amag, seg, seg0, sgn(2)
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: k, is, ipol, jpol, ir
+  !
+  REAL(DP), ALLOCATABLE :: grh(:,:,:)
+  REAL(DP) :: fac, sgn(2)
+  !
+  REAL(DP), ALLOCATABLE :: v1x(:,:), v2x(:,:), v1c(:,:), v2c(:,:)
+  REAL(DP), ALLOCATABLE :: v2c_ud(:)
+  REAL(DP), ALLOCATABLE :: sc(:), sx(:)
+  !
+  REAL(DP), ALLOCATABLE :: rhoout(:,:)
   COMPLEX(DP), ALLOCATABLE :: rhogout(:,:)
-  real(DP), allocatable :: rhoout(:,:)
-  real (DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
-
+  !
+  REAL(DP), PARAMETER :: epsr=1.0d-6, epsg=1.0d-10
+  !
   IF ( .NOT. dft_is_gradient() ) RETURN
- 
-  CALL start_clock ('setup_dgc')
- 
-  IF (noncolin.AND.domag) THEN
-     allocate (segni (dfftp%nnr))
-     allocate (vsgga (dfftp%nnr))
-     allocate (gmag (3, dfftp%nnr, nspin_mag))
-     gmag=0.0_dp
+  !
+  CALL start_clock( 'setup_dgc' )
+  !
+  IF (noncolin .AND. domag) THEN
+     ALLOCATE( segni(dfftp%nnr) )
+     ALLOCATE( vsgga(dfftp%nnr) )
+     ALLOCATE( gmag(3,dfftp%nnr,nspin_mag) )
+     gmag = 0.0_dp
   ENDIF
-
-  IF(.NOT.ALLOCATED(dvxc_rr)) ALLOCATE (dvxc_rr(dfftp%nnr, nspin_gga , nspin_gga))
-  IF(.NOT.ALLOCATED(dvxc_sr)) ALLOCATE (dvxc_sr(dfftp%nnr, nspin_gga , nspin_gga))
-  IF(.NOT.ALLOCATED(dvxc_ss)) ALLOCATE (dvxc_ss(dfftp%nnr, nspin_gga , nspin_gga))
-  IF(.NOT.ALLOCATED(dvxc_s))  ALLOCATE (dvxc_s (dfftp%nnr, nspin_gga , nspin_gga))
-  IF(.NOT.ALLOCATED(grho))    ALLOCATE (grho   (  3    , dfftp%nnr, nspin_gga))
-  IF(.NOT.ALLOCATED(rhoout))  ALLOCATE (rhoout ( dfftp%nnr, nspin_gga))
-
+  !
+  IF (.NOT.ALLOCATED(dvxc_rr)) ALLOCATE( dvxc_rr(dfftp%nnr,nspin_gga,nspin_gga) )
+  IF (.NOT.ALLOCATED(dvxc_sr)) ALLOCATE( dvxc_sr(dfftp%nnr,nspin_gga,nspin_gga) )
+  IF (.NOT.ALLOCATED(dvxc_ss)) ALLOCATE( dvxc_ss(dfftp%nnr,nspin_gga,nspin_gga) )
+  IF (.NOT.ALLOCATED(dvxc_s) ) ALLOCATE( dvxc_s(dfftp%nnr,nspin_gga,nspin_gga)  )
+  IF (.NOT.ALLOCATED(grho)   ) ALLOCATE( grho(3,dfftp%nnr,nspin_gga) )
+  IF (.NOT.ALLOCATED(rhoout) ) ALLOCATE( rhoout(dfftp%nnr,nspin_gga) )
+  !
+  ALLOCATE( v1x(dfftp%nnr,nspin_gga), v2x(dfftp%nnr,nspin_gga) )
+  ALLOCATE( v1c(dfftp%nnr,nspin_gga), v2c(dfftp%nnr,nspin_gga) )
+  IF (nspin_gga == 2) ALLOCATE( v2c_ud(dfftp%nnr) )
+  ALLOCATE( sx(dfftp%nnr), sc(dfftp%nnr) )
+  ALLOCATE( grh(dfftp%nnr,3,nspin_gga) )
+  !
   dvxc_rr(:,:,:) = 0.d0
   dvxc_sr(:,:,:) = 0.d0
   dvxc_ss(:,:,:) = 0.d0
-  dvxc_s (:,:,:) = 0.d0
-  grho   (:,:,:) = 0.d0
+  dvxc_s(:,:,:)  = 0.d0
+  grho(:,:,:) = 0.d0
+  !
   sgn(1)=1.d0  ;   sgn(2)=-1.d0
+  fac = 1.d0/DBLE(nspin_gga)
   !
-  !    add rho_core
-  !
-  fac = 1.d0 / DBLE (nspin_gga)
-  IF (noncolin.and.domag) THEN
-     allocate(rhogout(ngm,nspin_mag))
-     call compute_rho(rho%of_r,rhoout,segni,dfftp%nnr)
+  IF (noncolin .AND. domag) THEN
+     !
+     ALLOCATE( rhogout(ngm,nspin_mag) )
+     !
+     CALL compute_rho( rho%of_r, rhoout, segni, dfftp%nnr )
+     !
      DO is = 1, nspin_gga
-        !
-        if (nlcc_any) rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
-
+        IF (nlcc_any) rhoout(:,is) = fac*rho_core(:) + rhoout(:,is)
         psic(:) = rhoout(:,is)
-        !
-        CALL fwfft ('Rho', psic, dfftp)
-        !
+        CALL fwfft( 'Rho', psic, dfftp )
         rhogout(:,is) = psic(dfftp%nl(:))
-        !
-        CALL fft_gradient_g2r(dfftp, rhogout(1,is), g, grho(1,1,is) )
-        !
-     END DO
-     DEALLOCATE(rhogout)
+        CALL fft_gradient_g2r( dfftp, rhogout(1,is), g, grho(1,1,is) )
+     ENDDO
+     !
+     DEALLOCATE( rhogout )
+     !
+  ELSE
+     ! ... for convenience, if LSDA, rhoout is kept in (up,down) format
+     DO is = 1, nspin_gga
+        rhoout(:,is) = ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin_gga) )*0.5d0
+     ENDDO
+     !
+     ! ... if LSDA rho%of_g is temporarily converted in (up,down) format
+     CALL rhoz_or_updw( rho, 'only_g', '->updw' )
+     !
+     IF (nlcc_any) THEN
+        DO is = 1, nspin_gga
+           rhoout(:,is) = fac * rho_core(:)  + rhoout(:,is)
+           rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
+        ENDDO
+     ENDIF
+     !
+     DO is = 1, nspin_gga
+        CALL fft_gradient_g2r( dfftp, rho%of_g(1,is), g, grho(1,1,is) )
+     ENDDO
+     !
+  ENDIF
+  !
+  ! ... swap grho indices to match xc_gcx input (waiting for a better fix)
+  DO k = 1, dfftp%nnr
+     grh(k,1:3,1) = grho(1:3,k,1)
+     IF (nspin_gga==2) grh(k,1:3,2) = grho(1:3,k,2)
+  ENDDO
+  !
+  !
+  IF (nspin_gga == 1) THEN
+     !
+     CALL dgcxc( dfftp%nnr, 1, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss )
+     !
+     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c )
+     !
+     dvxc_s(:,1,1)  = e2 * (v2x(:,1) + v2c(:,1))
+     !
   ELSE
      !
-     ! for convenience, if LSDA, rhoout is kept in (up,down) format
+     CALL dgcxc( dfftp%nnr, nspin_gga, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss )
      !
-     do is = 1, nspin_gga
-        rhoout(:,is) = ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin_gga) )*0.5d0
-     enddo
+     CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
      !
-     ! if LSDA rho%of_g is temporarily converted in (up,down) format
+     DO k = 1, dfftp%nnr
+        IF ( rhoout(k,1)+rhoout(k,2) > epsr) THEN
+           dvxc_s(k,1,1) = e2 * (v2x(k,1) + v2c(k,1))
+           dvxc_s(k,1,2) = e2 * v2c(k,1)
+           dvxc_s(k,2,1) = e2 * v2c(k,1)
+           dvxc_s(k,2,2) = e2 * (v2x(k,2) + v2c(k,1))
+        ENDIF
+     ENDDO
      !
-     call rhoz_or_updw(rho, 'only_g', '->updw')
+  ENDIF
+  !
+  !
+  IF (noncolin .AND. domag) THEN
+     CALL compute_vsgga( rhoout, grho, vsgga )
+  ELSE
+     IF (nlcc_any) THEN
+        DO is = 1, nspin_gga
+           rho%of_g(:,is) = rho%of_g(:,is) - fac*rhog_core(:)
+        ENDDO
+     ENDIF
      !
-     if (nlcc_any) then
-        do is = 1, nspin_gga
-           rhoout(:,is)   = fac * rho_core(:)  + rhoout(:,is)
-           rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
-        enddo
-     endif
+     CALL rhoz_or_updw( rho, 'only_g', '->rhoz' )
      !
-     do is = 1, nspin_gga
-        call fft_gradient_g2r (dfftp, rho%of_g (1, is), g, grho (1, 1, is) )
-     enddo
-  END IF
-
-  do k = 1, dfftp%nnr
-     grho2 (1) = grho (1, k, 1) **2 + grho (2, k, 1) **2 + grho (3, k, 1) **2
-     if (nspin_gga == 1) then
-        if (abs (rhoout (k, 1) ) > epsr .and. grho2 (1) > epsg) then
-           call gcxc (rhoout (k, 1), grho2(1), sx, sc, v1x, v2x, v1c, v2c)
-           call dgcxc (rhoout (k, 1), grho2(1), vrrx, vsrx, vssx, vrrc, &
-                vsrc, vssc)
-           dvxc_rr (k, 1, 1) = e2 * (vrrx + vrrc)
-           dvxc_sr (k, 1, 1) = e2 * (vsrx + vsrc)
-           dvxc_ss (k, 1, 1) = e2 * (vssx + vssc)
-           dvxc_s (k, 1, 1) = e2 * (v2x + v2c)
-        endif
-     else
-        grho2 (2) = grho(1, k, 2) **2 + grho(2, k, 2) **2 + grho(3, k, 2) **2
-        rh = rhoout (k, 1) + rhoout (k, 2)
-
-        grh2 = (grho (1, k, 1) + grho (1, k, 2) ) **2 + (grho (2, k, 1) &
-             + grho (2, k, 2) ) **2 + (grho (3, k, 1) + grho (3, k, 2) ) ** 2
-
-        call gcx_spin (rhoout (k, 1), rhoout (k, 2), grho2 (1), grho2 (2), &
-             sx, v1xup, v1xdw, v2xup, v2xdw)
-
-        call dgcxc_spin (rhoout (k, 1), rhoout (k, 2), grho (1, k, 1), &
-             grho (1, k, 2), vrrxup, vrrxdw, vrsxup, vrsxdw, vssxup, vssxdw, &
-             vrrcup, vrrcdw, vrscup, vrscdw, vssc, vrzcup, vrzcdw)
-        if (rh > epsr) then
-           zeta = (rhoout (k, 1) - rhoout (k, 2) ) / rh
-           call gcc_spin (rh, zeta, grh2, sc, v1cup, v1cdw, v2c)
-           dvxc_rr (k, 1, 1) = e2 * (vrrxup + vrrcup + vrzcup * &
-                (1.d0 - zeta) / rh)
-           dvxc_rr (k, 1, 2) = e2 * (vrrcup - vrzcup * (1.d0 + zeta) / rh)
-           dvxc_rr (k, 2, 1) = e2 * (vrrcdw + vrzcdw * (1.d0 - zeta) / rh)
-           dvxc_rr (k, 2, 2) = e2 * (vrrxdw + vrrcdw - vrzcdw * &
-                (1.d0 + zeta) / rh)
-           dvxc_s (k, 1, 1) = e2 * (v2xup + v2c)
-           dvxc_s (k, 1, 2) = e2 * v2c
-           dvxc_s (k, 2, 1) = e2 * v2c
-           dvxc_s (k, 2, 2) = e2 * (v2xdw + v2c)
-        else
-           dvxc_rr (k, 1, 1) = 0.d0
-           dvxc_rr (k, 1, 2) = 0.d0
-           dvxc_rr (k, 2, 1) = 0.d0
-           dvxc_rr (k, 2, 2) = 0.d0
-           dvxc_s (k, 1, 1) = 0.d0
-           dvxc_s (k, 1, 2) = 0.d0
-           dvxc_s (k, 2, 1) = 0.d0
-           dvxc_s (k, 2, 2) = 0.d0
-        endif
-        dvxc_sr (k, 1, 1) = e2 * (vrsxup + vrscup)
-        dvxc_sr (k, 1, 2) = e2 * vrscup
-        dvxc_sr (k, 2, 1) = e2 * vrscdw
-        dvxc_sr (k, 2, 2) = e2 * (vrsxdw + vrscdw)
-        dvxc_ss (k, 1, 1) = e2 * (vssxup + vssc)
-        dvxc_ss (k, 1, 2) = e2 * vssc
-        dvxc_ss (k, 2, 1) = e2 * vssc
-        dvxc_ss (k, 2, 2) = e2 * (vssxdw + vssc)
-     endif
-  enddo
-  if (noncolin.and.domag) then
-     call compute_vsgga(rhoout, grho, vsgga)
-  else
-     if (nlcc_any) then
-        do is = 1, nspin_gga
-           rho%of_g(:,is) = rho%of_g(:,is) - fac * rhog_core(:)
-        enddo
-     endif
-     !
-     CALL rhoz_or_updw(rho, 'only_g', '->rhoz')
-     !
-  endif
-
-  DEALLOCATE(rhoout)
-
-  CALL stop_clock ('setup_dgc')
-
+  ENDIF
+  !
+  DEALLOCATE( v1x, v2x, v1c, v2c )
+  IF (nspin_gga == 2) DEALLOCATE( v2c_ud )
+  DEALLOCATE( sx, sc )
+  DEALLOCATE( grh )
+  DEALLOCATE( rhoout )
+  !
+  CALL stop_clock( 'setup_dgc' )
+  !
   RETURN
-
-end subroutine setup_dgc
+  !
+END SUBROUTINE setup_dgc

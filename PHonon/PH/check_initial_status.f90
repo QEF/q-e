@@ -39,7 +39,7 @@ SUBROUTINE check_initial_status(auxdyn)
   ! nsymq_iq : the order of the small group of q for each q
   !
   ! The following variables are set by this routine on the basis of
-  ! start_irr, last_irr, start_iq, last_iq, OR of modenum, OR of ifat and 
+  ! start_irr, last_irr, start_q, last_q, OR of modenum, OR of ifat and 
   ! atomo:
   !
   ! comp_iq : =.TRUE. if the q point is calculated in this run
@@ -306,10 +306,14 @@ SUBROUTINE check_initial_status(auxdyn)
      ! ... each q /= gamma works on a different directory. We create them
      ! here and copy the charge density inside
      !
-     IF ((.NOT.lgamma.OR. newgrid).AND.lqdir) THEN
+     IF ((.NOT.lgamma.OR. newgrid .OR. (qplot .AND. iq /=1)) .AND.lqdir) THEN
         tmp_dir_phq= trimcheck ( TRIM (tmp_dir_ph) // TRIM(prefix) // &
                                 & '.q_' // int_to_char(iq) ) 
+#if defined(__HDF5)
+        filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'charge-density.hdf5' 
+#else
         filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'charge-density.dat'
+#endif 
         IF (ionode) inquire (file =TRIM(filename), exist = exst)
         !
         CALL mp_bcast( exst, ionode_id, intra_image_comm )

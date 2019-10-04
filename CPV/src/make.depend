@@ -132,7 +132,6 @@ cp_restart_new.o : ../../Modules/io_base.o
 cp_restart_new.o : ../../Modules/io_files.o
 cp_restart_new.o : ../../Modules/io_global.o
 cp_restart_new.o : ../../Modules/ions_base.o
-cp_restart_new.o : ../../Modules/kernel_table.o
 cp_restart_new.o : ../../Modules/kind.o
 cp_restart_new.o : ../../Modules/mm_dispersion.o
 cp_restart_new.o : ../../Modules/mp_bands.o
@@ -144,6 +143,8 @@ cp_restart_new.o : ../../Modules/qes_libs_module.o
 cp_restart_new.o : ../../Modules/qes_read_module.o
 cp_restart_new.o : ../../Modules/qes_types_module.o
 cp_restart_new.o : ../../Modules/qexsd.o
+cp_restart_new.o : ../../Modules/qexsd_copy.o
+cp_restart_new.o : ../../Modules/qexsd_init.o
 cp_restart_new.o : ../../Modules/qexsd_input.o
 cp_restart_new.o : ../../Modules/recvec.o
 cp_restart_new.o : ../../Modules/run_info.o
@@ -202,6 +203,14 @@ cplib_meta.o : ../../UtilXlib/mp.o
 cplib_meta.o : energies.o
 cplib_meta.o : modules.o
 cplib_meta.o : smallbox_gvec.o
+cppp.o : ../../Modules/constants.o
+cppp.o : ../../Modules/invmat.o
+cppp.o : ../../Modules/io_files.o
+cppp.o : ../../Modules/kind.o
+cppp.o : ../../Modules/mp_global.o
+cppp.o : ../../Modules/qes_types_module.o
+cppp.o : ../../Modules/qexsd.o
+cppp.o : ../../Modules/qexsd_copy.o
 cpr.o : ../../Modules/autopilot.o
 cpr.o : ../../Modules/cell_base.o
 cpr.o : ../../Modules/check_stop.o
@@ -347,6 +356,8 @@ exch_corr.o : ../../Modules/kind.o
 exch_corr.o : ../../Modules/mp_global.o
 exch_corr.o : ../../Modules/recvec.o
 exch_corr.o : ../../Modules/uspp.o
+exch_corr.o : ../../Modules/xc_gga_drivers.o
+exch_corr.o : ../../Modules/xc_lda_lsda_drivers.o
 exch_corr.o : ../../UtilXlib/mp.o
 exch_corr.o : cp_interfaces.o
 exch_corr.o : mainvar.o
@@ -434,9 +445,6 @@ exx_vofr.o : ../../Modules/kind.o
 exx_vofr.o : ../../Modules/mp_global.o
 exx_vofr.o : ../../UtilXlib/parallel_include.o
 exx_vofr.o : exx_module.o
-fft.o : ../../Modules/fft_base.o
-fft.o : ../../Modules/kind.o
-fft.o : ../../Modules/mp_global.o
 forces.o : ../../FFTXlib/fft_helper_subroutines.o
 forces.o : ../../FFTXlib/fft_interfaces.o
 forces.o : ../../Modules/cell_base.o
@@ -511,7 +519,6 @@ init.o : ../../Modules/fft_base.o
 init.o : ../../Modules/gvecw.o
 init.o : ../../Modules/input_parameters.o
 init.o : ../../Modules/invmat.o
-init.o : ../../Modules/io_files.o
 init.o : ../../Modules/io_global.o
 init.o : ../../Modules/ions_base.o
 init.o : ../../Modules/kind.o
@@ -605,7 +612,6 @@ input.o : ../../Modules/input_parameters.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
 input.o : ../../Modules/ions_base.o
-input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/read_input.o
@@ -702,17 +708,22 @@ makov_payne.o : ../../UtilXlib/mp.o
 makov_payne.o : ../../UtilXlib/parallel_include.o
 makov_payne.o : ions_positions.o
 makov_payne.o : mainvar.o
+manycp.o : ../../LAXlib/mp_diag.o
 manycp.o : ../../Modules/check_stop.o
 manycp.o : ../../Modules/command_line_options.o
 manycp.o : ../../Modules/environment.o
 manycp.o : ../../Modules/input_parameters.o
 manycp.o : ../../Modules/io_global.o
+manycp.o : ../../Modules/mp_bands.o
 manycp.o : ../../Modules/mp_global.o
 manycp.o : ../../Modules/mp_images.o
+manycp.o : ../../Modules/mp_pools.o
+manycp.o : ../../Modules/mp_world.o
 manycp.o : ../../Modules/read_input.o
 manycp.o : input.o
 metaxc.o : ../../Modules/funct.o
 metaxc.o : ../../Modules/kind.o
+metaxc.o : ../../Modules/xc_mgga_drivers.o
 modules.o : ../../Modules/kind.o
 modules.o : ../../Modules/uspp.o
 move_electrons.o : ../../Modules/cell_base.o
@@ -914,7 +925,6 @@ print_out.o : ../../Modules/control_flags.o
 print_out.o : ../../Modules/electrons_base.o
 print_out.o : ../../Modules/funct.o
 print_out.o : ../../Modules/input_parameters.o
-print_out.o : ../../Modules/io_files.o
 print_out.o : ../../Modules/io_global.o
 print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
@@ -1004,7 +1014,6 @@ restart.o : ../../Modules/cell_base.o
 restart.o : ../../Modules/control_flags.o
 restart.o : ../../Modules/electrons_base.o
 restart.o : ../../Modules/gvecw.o
-restart.o : ../../Modules/io_files.o
 restart.o : ../../Modules/ions_base.o
 restart.o : ../../Modules/kind.o
 restart.o : ../../UtilXlib/mp.o
@@ -1076,6 +1085,7 @@ smallbox_lib.o : smallbox_gvec.o
 smallbox_subs.o : ../../Modules/fft_base.o
 smallbox_subs.o : ../../Modules/io_global.o
 smallbox_subs.o : ../../Modules/kind.o
+smallbox_subs.o : ../../Modules/mp_global.o
 smallbox_subs.o : smallbox.o
 smallbox_subs.o : smallbox_gvec.o
 spinsq.o : ../../Modules/cell_base.o

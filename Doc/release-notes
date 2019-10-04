@@ -1,4 +1,90 @@
-New in development version:
+New in development branch:
+  * For non-local functionals of the vdW-DF and rVV10 families the kernel is
+    now calculated on-the-fly rather than read from file. Thus, the kernel
+    files vdW_kernel_table and rVV10_kernel_table are no longer needed for
+    calculations and the kernel generation programs generate_vdW_kernel_table.x
+    and generate_rVV10_kernel_table.x have been removed. The on-the-fly vdW-DF
+    kernel calculation does not take long, e.g. ~100 seconds on a single Intel
+    Xeon 2.20GHz core and ~12 seconds on 8 cores (Intel 2018 compilers); the
+    rVV10 kernel computes in seconds. Detailed information is available in the
+    git log commit notes. This work was performed by T. Thonhauser and is
+    supported by NSF Grant No. 1712425.
+  * turbo_eels code of TDDFPT module now works with ultrasoft pseudopotentials
+    and spin-orbit coupling together (Oleksandr Motornyi, Andrea Dal Corso,
+    Nathalie Vast). lr_sm1_psi.f90 of LR_Modules is rewritten and simplified.
+  * Stochastic-velocity rescaling as a new thermostat for constant-cell MD as
+    implemented in dynamics_module (Leonid Kahle, Ngoc Linh Nguyen)
+Problems fixed in development branch :
+  * at2celldm wasn't properly converting vectors into celldm parameters
+    in the ibtrav=91 case (Tone)
+  * PP: plot_num=1 wasn't working any longer as expected due to forgotten 
+    local potential term (noticed by Manoar Hossain, NISER)
+  * DOS calculation wasn't honoring "bz_sum='smearing'" if the nscf 
+    calculation was performed with tetrahedra, contrary to what stated
+    in the documentation (noticed by Mohammedreza Hosseini, Modares Univ.)
+  * Time reversal symmetry in tetrahedron routine incorrectly detected
+    after a restart in phonon (reported by T. Tadano)
+  * pp.x with plot_num=11 in spin-polarized case was issuing a segmentation
+    fault error (noticed by Mauricio Chagas da Silva)
+  * pp.x with plot_num=17 in spin-polarized case was issuing a bogus 
+    error (noticed by Shoaib Muhammad, Sungkyunkwan U.)
+  * vc-relax with cell_dofree='z' wasn't working exactly as expected
+    (noticed by Daniel Marchand, fixed by Lorenzo Paulatto)
+  * Incorrect link to wannier90 package (thanks to Nikolas Garofil)
+  * Bug in spin-polarized meta-GGA (noticed by Shoaib Muhammad, 
+    Sungkyunkwan U.)
+  * Unphysical fractional translations (tau/n with n/=2,3,4,6) were not 
+    explicitly discarded, thus leading in unfortunate cases to strange
+    values for FFT factors and grids. Also: if "nosym" is true, inversion
+    symmetry flag (invsym) and info on FFT factors (fft_fact) must also
+    be reset (problem spotted by Thomas Brumme, Leipzig)
+  * PPACF wasn't working any longer in v.6.4 and 6.4.1 for nspin=2 and
+    for hybrid functionals (fixed by Yang Jiao, Chalmers)
+  * option "write_unkg" of pw2wannier90.f90 wasn't working as expected
+  * Input parameters (for restarting DFPT+U calculations) read_dns_bare 
+    and d2ns_type were missing in the PH input namelist, and moreover
+    they were not broadcasted.
+  * Option rescale-T and reduce-T now update the target temperature based on
+    the previous target temperature, not based on instantaneous temperature
+    as before.
+
+Incompatible changes in development branch :
+  * ibrav=-13 crystal axis converted to a more standard orientation.
+    Atomic positions in crystal axis for the previous convention can
+    be converted by applying the transformation (x,y,z) => (y,-x,z)
+  * Initialization has been reorganized, so some initialization routines
+    do not perform exactly the same operations as before - should have no
+    consequences for codes calling "read_file" to start the calculation,
+    but codes separately calling initialization routines may be affected
+  * fractional translations "ftau" in FFT grid units no longer existing as
+    global variables: replaced by "ft", in crystal axis, computed locally
+    where needed (in real-space symmetrization only)
+
+New in 6.4.1 branch :
+  * A warning is issued if the lattice parameter seems to be a conversion
+    factor instead of a true lattice parameter. Conversion should be achieved
+    with the appropriate options, not with dirty tricks. In the future this
+    will no longer be allowed
+  * A warning is issued if ibrav=0 is used for systems having symmetry. If not
+    properly done this may lead to strange problems with symmetry detection
+    and symmetrization. Lattice information should be used if available.
+
+Problems fixed in 6.4.1 branch :
+  * Two bugs fixed in HP: 1) the code was not working correctly when fractional
+    translations were present, 2) there was a bug in the case when either there
+    is only one k point, or when k pools are used and some of the pools have
+    only one k point.
+  * Restart of ph.x with 2D boundary conditions has been fixed (see gitlab
+    issue #102)
+  * XML file correctly written if tetrahedra are used (see gitlab issue #103)
+
+New in version 6.4:
+  * Experimental version of SCDM localization with k-points, activated like for
+    k=0 by specifying in &system namelist a value > 0 for "localization_thr".
+  * It is now possible to limit the number of xml step elements printed out
+    for relaxation or molecular dynamics simulation, by setting the environment
+    variable MAX_XML_STEPS. Useful in case of very long trajectories to avoid 
+    issues due to too large file size.  
   * EPW works with ultrasoft pseudopotentials (F. Giustino, S. Poncé, R. Margine)
   * New code hp.x to compute Hubbard parameters using density-functional
     perturbation theory (experimental stage) (I. Timrov, N. Marzari, and M. Cococcioni, 
@@ -10,7 +96,9 @@ New in development version:
     and M. Cococcioni, in preparation)
   * XDM now works also for USPP and norm-conserving PP
 
-Problems fixed in development version (+ = in qe-6.3-backports as well) :
+Problems fixed in version 6.4 (+ = in qe-6.3-backports as well) :
+  + Codes reading scf data recomputed celldm parameters also if ibrav=0
+    This produced confusing output and had the potential to break some codes
   + index not correctly initialized in LSDA phonon with core corrections 
   + GTH pseudopotentials in analytical form wrongly computed in some cases
   + projwfc.x not working with new xml format in noncolinear/spinorbit case 
@@ -31,7 +119,7 @@ Problems fixed in development version (+ = in qe-6.3-backports as well) :
     pseudopotentials was not working.
   + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
-Incompatible changes in development version:
+Incompatible changes in version 6.4 version:
   * Charge density in the LSDA case is stored as (up+down, up-down) and no longer 
     as (up,down). Output data format is unchanged to (up+down, up-down)
   * Non-symmorphic operations are always allowed and the FFT grid is made
@@ -47,8 +135,10 @@ Incompatible changes in development version:
     variables of turbo_lanczos.x and turbo_davidson.x. Instead, they are read 
     from the XML file produced by pw.x. The variable real_space_debug was removed.
 
-Known problems in development version:
+Known problems in version 6.4:
   * Frequent "dexx is negative" errors with hybrid functionals
+  * restart of ph.x when using 2D boundary conditions fails see issue#102 on gitLab 
+  * the band_structure element is printed incompletely if tetrahedra are used for sums in the IBZ, see issue #103.  
 
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Seitz 

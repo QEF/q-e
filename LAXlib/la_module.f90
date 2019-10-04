@@ -21,7 +21,7 @@ MODULE LAXlib
   CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE cdiaghg_cpu_( n, m, h, s, ldh, e, v, offload )
+  SUBROUTINE cdiaghg_cpu_( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, offload )
     !----------------------------------------------------------------------------
     !
     ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -49,6 +49,8 @@ MODULE LAXlib
       ! eigenvalues
     COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
       ! eigenvectors (column-wise)
+    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+      !
     LOGICAL, OPTIONAL ::  offload
       ! optionally solve the eigenvalue problem on the GPU
     LOGICAL :: loffload
@@ -74,7 +76,7 @@ MODULE LAXlib
       ALLOCATE(s_d, source=s); ALLOCATE(h_d, source=h)
       ALLOCATE(e_d(n), v_d(ldh,n))
       !
-      CALL cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d)
+      CALL cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e = e_d
       v(1:ldh,1:m) = v_d(1:ldh,1:m)
@@ -91,7 +93,7 @@ MODULE LAXlib
   !
 #if defined(__CUDA)
   !----------------------------------------------------------------------------
-  SUBROUTINE cdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, onhost )
+  SUBROUTINE cdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, onhost )
     !----------------------------------------------------------------------------
     !
     ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -117,6 +119,8 @@ MODULE LAXlib
       ! eigenvalues
     COMPLEX(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
       ! eigenvectors (column-wise)
+    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+      ! communicators
     LOGICAL, OPTIONAL ::  onhost
       ! optionally solve the eigenvalue problem on the CPU
     LOGICAL :: lonhost
@@ -136,14 +140,14 @@ MODULE LAXlib
       ALLOCATE(s, source=s_d); ALLOCATE(h, source=h_d)
       ALLOCATE(e(n), v(ldh,m))
       !
-      CALL cdiaghg(n, m, h, s, ldh, e, v)
+      CALL cdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e_d = e
       v_d(1:ldh,1:m) = v(1:ldh,1:m)
       !
       DEALLOCATE(h, s, e, v)
     ELSE
-      CALL cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d)
+      CALL cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN
@@ -152,7 +156,7 @@ MODULE LAXlib
 #endif
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE rdiaghg_cpu_( n, m, h, s, ldh, e, v, offload )
+  SUBROUTINE rdiaghg_cpu_( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm, offload )
     !----------------------------------------------------------------------------
     !
     ! ... general interface for rdiaghg
@@ -176,6 +180,8 @@ MODULE LAXlib
       ! eigenvalues
     REAL(DP), INTENT(OUT) :: v(ldh,m)
       ! eigenvectors (column-wise)
+    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+      ! communicators
     LOGICAL, OPTIONAL ::  offload
       ! optionally solve the eigenvalue problem on the GPU
     LOGICAL :: loffload
@@ -201,7 +207,7 @@ MODULE LAXlib
       ALLOCATE(s_d, source=s); ALLOCATE(h_d, source=h)
       ALLOCATE(e_d(n), v_d(ldh,n))
       !
-      CALL rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d)
+      CALL rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e = e_d
       v(1:ldh,1:m) = v_d(1:ldh,1:m)
@@ -209,7 +215,7 @@ MODULE LAXlib
       DEALLOCATE(h_d, s_d, e_d, v_d)
 #endif
     ELSE
-      CALL rdiaghg(n, m, h, s, ldh, e, v)
+      CALL rdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN
@@ -218,7 +224,7 @@ MODULE LAXlib
   !
 #if defined(__CUDA)
   !----------------------------------------------------------------------------
-  SUBROUTINE rdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, onhost )
+  SUBROUTINE rdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm, onhost )
     !----------------------------------------------------------------------------
     !
     ! ... General interface to rdiaghg_gpu
@@ -240,6 +246,8 @@ MODULE LAXlib
       ! eigenvalues
     REAL(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
       ! eigenvectors (column-wise)
+    INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+      ! communicators
     LOGICAL, OPTIONAL ::  onhost
       ! optionally solve the eigenvalue problem on the CPU
     LOGICAL :: lonhost
@@ -259,14 +267,14 @@ MODULE LAXlib
       ALLOCATE(s, source=s_d); ALLOCATE(h, source=h_d)
       ALLOCATE(e(n), v(ldh,m))
       !
-      CALL rdiaghg(n, m, h, s, ldh, e, v)
+      CALL rdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e_d = e
       v_d(1:ldh,1:m) = v(1:ldh,1:m)
       !
       DEALLOCATE(h, s, e, v)
     ELSE
-      CALL rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d)
+      CALL rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN

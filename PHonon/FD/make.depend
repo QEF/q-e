@@ -11,7 +11,6 @@ fd.o : ../../Modules/mp_global.o
 fd.o : ../../Modules/mp_world.o
 fd.o : ../../Modules/recvec.o
 fd.o : ../../Modules/wrappers.o
-fd.o : ../../PW/src/pwcom.o
 fd.o : ../../PW/src/symm_base.o
 fd.o : ../../PW/src/symme.o
 fd.o : ../../UtilXlib/mp.o
@@ -26,7 +25,6 @@ fd_ef.o : ../../Modules/ions_base.o
 fd_ef.o : ../../Modules/kind.o
 fd_ef.o : ../../Modules/mp_global.o
 fd_ef.o : ../../Modules/parser.o
-fd_ef.o : ../../PW/src/pwcom.o
 fd_ef.o : ../../PW/src/symm_base.o
 fd_ef.o : ../../PW/src/symme.o
 fd_ef.o : ../../UtilXlib/mp.o
@@ -41,7 +39,6 @@ fd_ifc.o : ../../Modules/io_global.o
 fd_ifc.o : ../../Modules/ions_base.o
 fd_ifc.o : ../../Modules/kind.o
 fd_ifc.o : ../../Modules/mp_global.o
-fd_ifc.o : ../../PW/src/pwcom.o
 fd_ifc.o : ../../PW/src/symm_base.o
 fd_ifc.o : ../../PW/src/symme.o
 fd_ifc.o : ../../UtilXlib/mp.o

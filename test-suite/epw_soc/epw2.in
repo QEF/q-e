@@ -12,6 +12,9 @@
   epwwrite    = .true.
   epwread     = .false.
 
+  vme         = .false.
+  lphase      = .true.
+
   nbndsub     =  8
   nbndskip    =  10
 
@@ -43,14 +46,12 @@
   phonselfen  = .true.
   a2f         = .true.
 
-
   fsthick     = 20 ! eV
   eptemp      = 500 ! K
   degaussw    = 0.2  ! eV
   degaussq    = 0.1 ! meV
 
   dvscf_dir   = './save'
-  filukk      = './SiC.ukk'
 
   nkf1        = 6
   nkf2        = 6

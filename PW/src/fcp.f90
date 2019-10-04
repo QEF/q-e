@@ -5,33 +5,34 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Original version by Minoru Otani (AIST) and Nicephore Bonnet (AIST).
-!
-! This module controls the Fictitious Charge Particle (FCP) for constant-mu
-! method developed by N. Bonnet, T. Morishita, O. Sugino, and M. Otani
-! (see PRL 109, 266101 [2012]).
-!
-! Constant-mu scheme with the boundary condition 'bc2' and 'bc3' enables
-! description of the system connected to a potentiostat which preserves
-! the Fermi energy of the system as the target Fermi energy (mu).
-!
-! MDIIS algorithm is implemented for relax-calculation
-! by Satomichi Nishihara (2016)
-!
 !----------------------------------------------------------------------------
 MODULE fcp
    !----------------------------------------------------------------------------
+   !! Original version by Minoru Otani (AIST) and Nicephore Bonnet (AIST).
    !
-   USE kinds,     ONLY : DP
-   USE io_global, ONLY : stdout
-   USE io_files,  ONLY : seqopn
-   USE constants, ONLY : amu_ry, ry_to_kelvin, au_ps, rytoev, e2, fpi
-   USE control_flags, ONLY : tolp
-   USE dynamics_module, ONLY : dt, delta_t, nraise, &
-      control_temp, thermostat
-   USE fcp_variables, ONLY : fcp_mu, fcp_mass, fcp_temperature, &
-      fcp_relax, fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, fcp_mdiis_step
-   USE mdiis,     ONLY : mdiis_type, allocate_mdiis, deallocate_mdiis, update_by_mdiis
+   !! This module controls the Fictitious Charge Particle (FCP) for constant-mu
+   !! method developed by N. Bonnet, T. Morishita, O. Sugino, and M. Otani
+   !! (see PRL 109, 266101 [2012]).
+   !
+   !! Constant-mu scheme with the boundary condition 'bc2' and 'bc3' enables
+   !! description of the system connected to a potentiostat which preserves
+   !! the Fermi energy of the system as the target Fermi energy (mu).
+   !
+   !! MDIIS algorithm is implemented for relax-calculation by
+   !! Satomichi Nishihara (2016).
+   !
+   USE kinds,             ONLY: DP
+   USE io_global,         ONLY: stdout
+   USE io_files,          ONLY: seqopn
+   USE constants,         ONLY: amu_ry, ry_to_kelvin, au_ps, rytoev, e2, fpi
+   USE control_flags,     ONLY: tolp
+   USE dynamics_module,   ONLY: dt, delta_t, nraise, &
+                                control_temp, thermostat
+   USE fcp_variables,     ONLY: fcp_mu, fcp_mass, fcp_temperature, fcp_relax,   &
+                                fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, &
+                                fcp_mdiis_step
+   USE mdiis,             ONLY: mdiis_type, allocate_mdiis, deallocate_mdiis,   &
+                                update_by_mdiis
    !
    IMPLICIT NONE
    !
@@ -39,45 +40,53 @@ MODULE fcp
    !
    PRIVATE 
    ! 
-   LOGICAL  :: vel_defined
-   ! if true, vel is used rather than tau_old to do the next step
-   REAL(DP) :: tau, tau_old, tau_new
-   REAL(DP) :: vel, acc
+   LOGICAL :: vel_defined
+   !! if .TRUE., vel is used rather than tau_old to do the next step
+   REAL(DP) :: tau
+   !! present position
+   REAL(DP) :: tau_old
+   !! previous step position
+   REAL(DP) :: tau_new
+   !! next step position
+   REAL(DP) :: vel
+   !! velocity
+   REAL(DP) :: acc
+   !! acceleration
    !
    ! ... data of MDIIS
    LOGICAL          :: init_mdiis = .FALSE.
+   !! 
    TYPE(mdiis_type) :: mdiist
+   !! 
    !
    PUBLIC :: fcp_line_minimisation, fcp_verlet, fcp_summary
    PUBLIC :: fcp_mdiis_update, fcp_mdiis_end
    !
-CONTAINS
+ CONTAINS
    !
    ! ... public methods
    !
-   !------------------------------------------------------------------------
+   !------------------------------------------------------------------------------
    SUBROUTINE fcp_verlet()
-      !------------------------------------------------------------------------
+      !-----------------------------------------------------------------------------
+      !! This routine performs one step of molecular dynamics evolution by
+      !! using the Verlet algorithm.
       !
-      ! ... This routine performs one step of molecular dynamics evolution
-      ! ... using the Verlet algorithm.
+      !! Parameters (in \(\textrm{dynamics_module}\) and \(\textrm{fcp_variables}\)):
       !
-      ! ... Parameters:
-      ! ... mass         mass of the atoms
-      ! ... dt           time step
-      ! ... temperature  starting temperature
-      ! ...              The starting velocities of atoms are set accordingly
-      ! ...              to the starting temperature, in random directions.
-      ! ...              The initial velocity distribution is therefore a
-      ! ...              constant.
+      !! * mass: mass of the atoms;
+      !! * dt: time step;
+      !! * temperature: starting temperature. The starting velocities of atoms
+      !!   are set accordingly to the starting temperature, in random directions.
+      !!   Therefore the initial velocity distribution is a constant.
       !
-      ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006
+      !! Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006
       !
-      USE cell_base,      ONLY : alat
-      USE control_flags,  ONLY : istep
-      USE ener,           ONLY : ef
-      USE klist,          ONLY : nelec, tot_charge
-      USE ions_base,      ONLY : nat, ityp, zv
+      USE cell_base,      ONLY: alat
+      USE control_flags,  ONLY: istep
+      USE ener,           ONLY: ef
+      USE klist,          ONLY: nelec, tot_charge
+      USE ions_base,      ONLY: nat, ityp, zv
       !
       IMPLICIT NONE
       !
@@ -85,24 +94,23 @@ CONTAINS
       REAL(DP) :: temp_new, temp_av, elapsed_time, force
       ! istep counts all MD steps, including those of previous runs
       LOGICAL  :: file_exists
-
+      !
       tau = nelec
-
-      vel_defined  = .true.
-      temp_av      = 0.D0
+      !
+      vel_defined  = .TRUE.
+      temp_av = 0.0_DP
       !
       CALL seqopn( 4, 'fcp_md', 'FORMATTED', file_exists )
       !
       IF ( file_exists ) THEN
          !
-         ! ... the file is read :  simulation is continuing
+         ! ... the file is read:  simulation is continuing
          !
          READ( UNIT = 4, FMT = * ) istep, tau_old
          !
-         vel_defined = .false.
+         vel_defined = .FALSE.
          !
-         READ( UNIT = 4, FMT = * ) &
-           temp_new, temp_av, fcp_mass, elapsed_time
+         READ( UNIT = 4, FMT = * ) temp_new, temp_av, fcp_mass, elapsed_time
          !
          CLOSE( UNIT = 4, STATUS = 'KEEP' )
          !
@@ -110,7 +118,7 @@ CONTAINS
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
-         ! ... the file is absent :  simulation is starting from scratch
+         ! ... the file is absent:  simulation is starting from scratch
          !
          CALL md_init()
          !
@@ -118,7 +126,7 @@ CONTAINS
       !
       ! ... elapsed_time is in picoseconds
       !
-      elapsed_time = elapsed_time + dt*2.D0*au_ps
+      elapsed_time = elapsed_time + dt*2.0_DP*au_ps
       istep = istep + 1
       !
       IF ( control_temp ) CALL apply_thermostat()
@@ -139,21 +147,21 @@ CONTAINS
          !
       ELSE
          !
-         tau_new = 2.D0*tau - tau_old + acc * dt**2
+         tau_new = 2.0_DP*tau - tau_old + acc * dt**2
          !
       ENDIF
       !
       ! ... the linear momentum and the kinetic energy are computed here
       !
-      vel = ( tau_new - tau_old ) / ( 2.D0*dt )
+      vel = ( tau_new - tau_old ) / ( 2.0_DP*dt )
       !
-      ekin = 0.5D0 * fcp_mass * vel**2 
+      ekin = 0.5_DP * fcp_mass * vel**2 
       !
       ekin = ekin*alat**2
       !
       ! ... find the new temperature and update the average
       !
-      temp_new = 2.D0 * ekin * ry_to_kelvin
+      temp_new = 2.0_DP * ekin * ry_to_kelvin
       !
       temp_av = temp_av + temp_new
       !
@@ -196,8 +204,7 @@ CONTAINS
                   '(/,5X,"Starting fcp temperature",T27," = ",F8.2," K")' ) &
                fcp_temperature
             !
-            SELECT CASE( trim( thermostat ) )
-               !
+            SELECT CASE( TRIM( thermostat ) )
             CASE( 'andersen', 'Andersen' )
                !
                WRITE( UNIT = stdout, &
@@ -223,17 +230,16 @@ CONTAINS
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"fcp temperature is controlled by ", &
                               &     "velocity rescaling (",A,")"/)' )&
-                              trim( thermostat )
+                              TRIM( thermostat )
                !
             END SELECT
             !
          ENDIF
          !
-         WRITE( UNIT = stdout, &
-           FMT = '(5X,"fcp_mass = ",F8.2)' ) fcp_mass
+         WRITE( UNIT = stdout, FMT = '(5X,"fcp_mass = ",F8.2)' ) fcp_mass
          !
          WRITE( UNIT = stdout, &
-               FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
+                FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
                         & " femto-seconds")' ) dt, dt*2.D+3*au_ps
          !
          ! ... masses in rydberg atomic units
@@ -243,89 +249,109 @@ CONTAINS
             ! ... initial thermalization. N.B. tau is in units of alat
             !
             CALL start_therm()
-            vel_defined = .true.
+            vel_defined = .TRUE.
             !
             temp_new = fcp_temperature
             !
-            temp_av = 0.D0
+            temp_av = 0.0_DP
             !
          ELSE
             !
             vel = 0.0_DP
-            vel_defined = .true.
+            vel_defined = .TRUE.
             !
          ENDIF
          !
-         elapsed_time = 0.D0
+         elapsed_time = 0.0_DP
          !
       END SUBROUTINE md_init
+      !
       !
       !--------------------------------------------------------------------
       SUBROUTINE apply_thermostat()
          !--------------------------------------------------------------------
          !
-         USE random_numbers, ONLY : randy, gauss_dist
+         USE random_numbers,   ONLY: randy, gauss_dist
          !
          IMPLICIT NONE
          !
          INTEGER :: nat_moved
          REAL(DP) :: sigma, kt
          !
-         IF(.not.vel_defined)THEN
+         IF (.NOT. vel_defined) THEN
             vel = (tau - tau_old) / dt
          ENDIF
          !
-         SELECT CASE( trim( thermostat ) )
+         SELECT CASE( TRIM( thermostat ) )
          CASE( 'rescaling' )
-            IF ( abs (temp_new-fcp_temperature) > tolp ) THEN
+            !
+            IF ( ABS(temp_new-fcp_temperature) > tolp ) THEN
                !
                WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"FCP Velocity rescaling: T (",F6.1,"K) ", &
+                      FMT = '(/,5X,"FCP Velocity rescaling: T (",F6.1,"K) ", &
                                  & "out of range, reset to " ,F6.1)' ) &
-                           temp_new, fcp_temperature
+                                   temp_new, fcp_temperature
                CALL thermalize( 0, temp_new, fcp_temperature )
                !
             ENDIF
+            !
          CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
-            IF ( mod( istep, nraise ) == 0 ) THEN
+            !
+            IF ( MOD(istep, nraise) == 0 ) THEN
                !
-               temp_av = temp_av / dble( nraise )
+               temp_av = temp_av / DBLE( nraise )
                !
                WRITE( UNIT = stdout, &
                      FMT = '(/,5X,"FCP Velocity rescaling: average T on ",i3, &
                                  &" steps (",F6.1,"K) reset to ",F6.1)' )  &
                            nraise, temp_av, fcp_temperature
-               !
                CALL thermalize( 0, temp_new, fcp_temperature )
                !
-               temp_av = 0.D0
+               temp_av = 0.0_DP
                !
             ENDIF
+            !
          CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
+            ! Clearly it makes sense to check for positive delta_t
+            ! If a negative delta_t is given, I suggest to have a message
+            ! printed, that delta_t is ignored (TODO)
             IF ( delta_t > 0 ) THEN
                !
-               fcp_temperature = temp_new*delta_t
+               fcp_temperature = fcp_temperature*delta_t
                !
                WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"FCP Thermalization: T (",F6.1,"K) rescaled ",&
+                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) rescaled ",&
                                  & "by a factor ",F6.3)' ) temp_new, delta_t
                !
                CALL thermalize( 0, temp_new, fcp_temperature )
                !
             ENDIF
          CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
-            IF ( mod( istep, nraise ) == 0 .and. delta_t < 0 ) THEN
+            IF ( mod( istep, nraise ) == 0 ) THEN
                !
-               fcp_temperature = temp_new + delta_t
+               ! First printing message, than reduce target temperature:
                !
-               WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"FCP Thermalization: T (",F6.1,"K) reduced ",&
-                                 & "by ",F6.3)' ) temp_new, -delta_t
+               IF ( delta_t > 0 ) THEN
+                 WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) augmented ",&
+                                 & "by ",F6.3)' ) fcp_temperature, delta_t
+
+               ELSE
+                 WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
+                                 & "by ",F6.3)' ) fcp_temperature, -delta_t
+               ENDIF
+               ! I check whether the temperature is negative, so that I avoid
+               ! nonsensical behavior:
+               IF (fcp_temperature < 0.0D0 ) CALL errore('apply_thermostat','Negative target temperature',1)
+               !
+               fcp_temperature = fcp_temperature + delta_t
                !
                CALL thermalize( 0, temp_new, fcp_temperature )
                !
             ENDIF
             !
+
          CASE( 'berendsen', 'Berendsen' )
             !
             WRITE( UNIT = stdout, &
@@ -338,15 +364,16 @@ CONTAINS
             kt = fcp_temperature / ry_to_kelvin
             nat_moved = 0
             !
-            IF ( randy() < 1.D0 / dble( nraise ) ) THEN
+            IF ( randy() < 1.D0 / DBLE( nraise ) ) THEN
                !
                nat_moved = nat_moved + 1
-               sigma = sqrt( kt / fcp_mass )
+               sigma = SQRT( kt / fcp_mass )
                !
                ! ... N.B. velocities must in a.u. units of alat and are zero
                ! ...      for fixed ions
                !
                vel = gauss_dist( 0.D0, sigma ) / alat
+               !
             ENDIF
             !
             IF ( nat_moved > 0) WRITE( UNIT = stdout, &
@@ -361,17 +388,17 @@ CONTAINS
          !
          ! ... the old positions are updated to reflect the new velocities
          !
-         IF(.not.vel_defined)THEN
+         IF (.NOT. vel_defined) THEN
             tau_old = tau - vel * dt
          ENDIF
          !
       END SUBROUTINE apply_thermostat
       !
+      !
       !-----------------------------------------------------------------------
       SUBROUTINE start_therm()
          !-----------------------------------------------------------------------
-         !
-         ! ... Starting thermalization of the system
+         !! Starting thermalization of the system.
          !
          USE symm_base,      ONLY : invsym, nsym, irt
          USE cell_base,      ONLY : alat
@@ -384,12 +411,13 @@ CONTAINS
          ! ... next command prevents different MD runs to start
          ! ... with exactly the same "random" velocities
          !
-         call set_random_seed ( )
+         CALL set_random_seed()
+         !
          kt = fcp_temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution
          !
-         sigma = sqrt( kt / fcp_mass )
+         sigma = SQRT( kt / fcp_mass )
          !
          ! ... N.B. velocities must in a.u. units of alat
          !
@@ -417,8 +445,14 @@ CONTAINS
       !
       IMPLICIT NONE
       !
-      REAL(DP), INTENT(in) :: system_temp, required_temp
-      INTEGER, INTENT(in) :: nraise
+      REAL(DP), INTENT(IN) :: system_temp
+      !! Temperature of the system
+      REAL(DP), INTENT(IN) :: required_temp
+      !! Required temperature
+      INTEGER, INTENT(IN) :: nraise
+      !! number of steps
+      !
+      ! ... local variables
       !
       REAL(DP) :: aux
       !
@@ -428,10 +462,10 @@ CONTAINS
          ! ... the "rise time" is tau=nraise*dt so dt/tau=1/nraise
          ! ... Equivalent to traditional rescaling if nraise=1
          !
-         IF ( system_temp > 0.D0 .and. required_temp > 0.D0 ) THEN
+         IF ( system_temp > 0.D0 .AND. required_temp > 0.D0 ) THEN
             !
-            aux = sqrt( 1.d0 + (required_temp / system_temp - 1.d0) * &
-                                (1.D0/dble (nraise) ) )
+            aux = SQRT( 1.d0 + (required_temp / system_temp - 1.d0) * &
+                                ( 1.D0/DBLE(nraise) ) )
             !
          ELSE
             !
@@ -443,9 +477,9 @@ CONTAINS
          !
          ! ... rescale the velocities by a factor 3 / 2KT / Ek
          !
-         IF ( system_temp > 0.D0 .and. required_temp > 0.D0 ) THEN
+         IF ( system_temp > 0.D0 .AND. required_temp > 0.D0 ) THEN
             !
-            aux = sqrt( required_temp / system_temp )
+            aux = SQRT( required_temp / system_temp )
             !
          ELSE
             !
@@ -462,9 +496,8 @@ CONTAINS
    !------------------------------------------------------------------------
    SUBROUTINE fcp_line_minimisation( conv_fcp )
       !------------------------------------------------------------------------
-      !
-      ! ... This routine performs one step of relaxation
-      ! ... using the steepest descent algorithm.
+      !! This routine performs one step of relaxation by using the
+      !! steepest descent algorithm.
       !
       USE control_flags,  ONLY : iverbosity
       USE ener,           ONLY : ef
@@ -473,9 +506,14 @@ CONTAINS
       USE cell_base,      ONLY : at, alat
       !
       IMPLICIT NONE
+      !
       LOGICAL, INTENT(OUT) :: conv_fcp
-      REAL(DP)             :: force, n_tmp, max_tot_charge, capacitance, &
-        ionic_charge
+      !!
+      !
+      ! ... local variables
+      !
+      REAL(DP) :: force, n_tmp, max_tot_charge, capacitance, &
+                  ionic_charge
       !
       LOGICAL , SAVE :: firstcall = .TRUE.
       REAL(DP), SAVE :: force0 = 0.0_DP
@@ -488,7 +526,9 @@ CONTAINS
       !
       capacitance = (at(1,1) * at(2,2) - at(2,1) * at(1,2)) * alat**2 &
                     / (alat * at(3,3) / 2._DP ) / fpi
-      max_tot_charge = abs( capacitance * force / e2 )
+      !
+      max_tot_charge = ABS( capacitance * force / e2 )
+      !
       IF ( firstcall .OR. ABS( force0 - force ) < 1.0D-20 ) THEN
          firstcall = .FALSE.
          nelec0 = nelec
@@ -499,30 +539,31 @@ CONTAINS
          nelec = ( nelec * force0 - nelec0 * force ) / ( force0 - force )
          nelec0 = n_tmp
          force0 = force
-      END IF
+      ENDIF
+      !
       ionic_charge = SUM( zv(ityp(1:nat)) )
+      !
       IF ( iverbosity > 1 ) THEN
-         write( stdout,'(/,5X,"Upper bound for tot_charge:",F12.6)') &
+         WRITE( stdout,'(/,5X,"Upper bound for tot_charge:",F12.6)') &
                  max_tot_charge
-         write( stdout,'(5X,"Original:",F12.6," Expected:",F12.6)') &
+         WRITE( stdout,'(5X,"Original:",F12.6," Expected:",F12.6)') &
                  ionic_charge - nelec0, ionic_charge - nelec
-      END IF
-      if( nelec-nelec0 < -max_tot_charge ) nelec= nelec0 - max_tot_charge
-      if( nelec-nelec0 >  max_tot_charge ) nelec= nelec0 + max_tot_charge
+      ENDIF
+      !
+      IF ( nelec-nelec0 < -max_tot_charge ) nelec = nelec0 - max_tot_charge
+      IF ( nelec-nelec0 >  max_tot_charge ) nelec = nelec0 + max_tot_charge
       tot_charge = ionic_charge - nelec
       IF ( iverbosity > 1 ) THEN
-         write( stdout,'(5X,"Next tot_charge:",F12.6)') tot_charge
-      END IF
+         WRITE( stdout,'(5X,"Next tot_charge:",F12.6)') tot_charge
+      ENDIF
       !
       conv_fcp = .FALSE.
       !
-      IF( abs( force ) < fcp_relax_crit ) THEN
-         !
+      IF( ABS( force ) < fcp_relax_crit ) THEN
          conv_fcp = .TRUE.
          nelec = nelec0
          tot_charge = ionic_charge - nelec
-         !
-      END IF
+      ENDIF
       !
       WRITE( stdout, FMT = 9001 ) force
       !
@@ -530,12 +571,12 @@ CONTAINS
       !
    END SUBROUTINE fcp_line_minimisation
    !
+   !
    !------------------------------------------------------------------------
    SUBROUTINE fcp_mdiis_update( conv_fcp )
       !------------------------------------------------------------------------
-      !
-      ! ... This routine performs one step of relaxation
-      ! ... using the MDIIS algorithm.
+      !! This routine performs one step of relaxation by
+      !! using the MDIIS algorithm.
       !
       USE control_flags,  ONLY : iverbosity
       USE ener,           ONLY : ef
@@ -543,35 +584,43 @@ CONTAINS
       USE ions_base,      ONLY : nat, ityp, zv
       !
       IMPLICIT NONE
+      !
       LOGICAL, INTENT(OUT) :: conv_fcp
-      REAL(DP)             :: ionic_charge
-      REAL(DP)             :: nelec0
-      REAL(DP)             :: nelec1(1)
-      REAL(DP)             :: force
-      REAL(DP)             :: force1(1)
+      !! .TRUE. if converged
+      !
+      ! ... local variables
+      !
+      REAL(DP) :: ionic_charge
+      REAL(DP) :: nelec0
+      REAL(DP) :: nelec1(1)
+      REAL(DP) :: force
+      REAL(DP) :: force1(1)
       !
       IF ( .NOT. init_mdiis ) THEN
          init_mdiis = .TRUE.
-         CALL allocate_mdiis(mdiist, fcp_mdiis_size, 1, fcp_mdiis_step, 1)
-      END IF
+         CALL allocate_mdiis( mdiist, fcp_mdiis_size, 1, fcp_mdiis_step, 1 )
+      ENDIF
       !
       nelec0    = nelec
       nelec1(1) = nelec
       force     = fcp_mu - ef
       force1(1) = force
-      CALL update_by_mdiis(mdiist, nelec1, force1)
+      !
+      CALL update_by_mdiis( mdiist, nelec1, force1 )
+      !
       nelec = nelec1(1)
       !
       ionic_charge = SUM( zv(ityp(1:nat)) )
+      !
       IF ( iverbosity > 1 ) THEN
          write( stdout,'(5X,"Original:",F12.6," Expected:",F12.6)') &
                  ionic_charge - nelec0, ionic_charge - nelec
-      END IF
+      ENDIF
       !
       tot_charge = ionic_charge - nelec
       IF ( iverbosity > 1 ) THEN
          write( stdout,'(5X,"Next tot_charge:",F12.6)') tot_charge
-      END IF
+      ENDIF
       !
       conv_fcp = .FALSE.
       !
@@ -581,7 +630,7 @@ CONTAINS
          nelec = nelec0
          tot_charge = ionic_charge - nelec
          !
-      END IF
+      ENDIF
       !
       WRITE( stdout, FMT = 9002 ) force
       !
@@ -596,12 +645,15 @@ CONTAINS
       IMPLICIT NONE
       !
       IF ( init_mdiis ) THEN
-         CALL deallocate_mdiis(mdiist)
-      END IF
+         CALL deallocate_mdiis( mdiist )
+      ENDIF
       !
    END SUBROUTINE fcp_mdiis_end
    !
-   SUBROUTINE fcp_summary ()
+   !
+   !------------------------------------------------------------------------
+   SUBROUTINE fcp_summary()
+      !------------------------------------------------------------------------
       !
       USE io_global,        ONLY : stdout, ionode
       USE constants,        ONLY : rytoev, BOHR_RADIUS_ANGS
@@ -619,18 +671,18 @@ CONTAINS
          IF ( TRIM(fcp_relax) == 'lm' ) THEN
             WRITE( UNIT = stdout, FMT = 9058 )
             WRITE( UNIT = stdout, FMT = 9059 ) fcp_relax_step
-         ELSE IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+         ELSEIF ( TRIM(fcp_relax) == 'mdiis' ) THEN
             WRITE( UNIT = stdout, FMT = 9060 )
             WRITE( UNIT = stdout, FMT = 9061 ) fcp_mdiis_size
             WRITE( UNIT = stdout, FMT = 9062 ) fcp_mdiis_step
-         END IF
+         ENDIF
          WRITE( UNIT = stdout, FMT = 9063 ) fcp_relax_crit*rytoev, &
-                                         fcp_relax_crit
-      ELSE IF ( lfcpdyn ) THEN
+                                            fcp_relax_crit
+      ELSEIF ( lfcpdyn ) THEN
          WRITE( UNIT = stdout, FMT  = '(5x,"-->FCP optimiser activated<--")' )
          WRITE( UNIT = stdout, FMT = 9064 ) fcp_mu*rytoev, fcp_mu
          WRITE( UNIT = stdout, FMT = 9065 ) tot_charge
-      END IF
+      ENDIF
 9056  FORMAT( '     Target Fermi energy              = ', F9.4,' eV' &
              /'                                      = ', F9.4,' Ry')
 9057  FORMAT( '     Initial tot_charge               = ', F9.6)
@@ -645,5 +697,6 @@ CONTAINS
 9065  FORMAT( '     FCP mass                         = ', F9.6)
       !
    END SUBROUTINE fcp_summary
+   !
    !
 END MODULE fcp

@@ -6,8 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 SUBROUTINE add_vhub_to_deeq_gpu(deeq_d)
-  !
-  ! Add Hubbard contributions to deeq when U_projection is pseudo
+!-----------------------------------------------------------------
+  !! Add Hubbard contributions to the integral of V_eff and Q_{nm} when 
+  !! U_projection is pseudo.
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
@@ -15,18 +16,24 @@ SUBROUTINE add_vhub_to_deeq_gpu(deeq_d)
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : v
   USE ldaU,          ONLY : is_hubbard, Hubbard_l, offsetU, q_ae
+  !
   IMPLICIT NONE
   REAL(KIND=DP), INTENT(INOUT) :: deeq_d( nhm, nhm, nat, nspin )
+  !! integral of V_eff and Q_{nm}
+  !
 #if defined(__CUDA)
   attributes(DEVICE) :: deeq_d
 #endif
-  ! Local variables
+  !
+  !  ... local variables
+  !
   REAL(KIND=DP), ALLOCATABLE :: deeq_aux_h( :, :, : )
   REAL(KIND=DP), ALLOCATABLE :: deeq_aux_d( :, :, : )
 #if defined(__CUDA)
   attributes(DEVICE) :: deeq_aux_d
 #endif
   INTEGER :: na, nt, ih, jh, ijh, m1, m2, ow1, ow2, is, nhnt
+  !
   !
   ! (maybe) OPTIMIZE here ... reorder the loop ?
   !

@@ -7,8 +7,6 @@ AC_DEFUN([X_AC_QE_AR], [
   arflags=$ARFLAGS
   
   try_ar="ar"
-  try_arflags="ruv"
-    
   AC_MSG_CHECKING([setting AR... ])
   if test "$arch" = "necsx"; then
     try_ar="sxar"
@@ -17,16 +15,11 @@ AC_DEFUN([X_AC_QE_AR], [
   AC_MSG_RESULT(${ar})
   AC_SUBST(ar)
   
+  try_arflags="ruv"
   AC_MSG_CHECKING([setting ARFLAGS... ])
-  case $arch in
-  necsx )
+  if test "$arch" = "necsx"; then
         try_arflags="rv"
-        ;;
-  ppc64 | ppc64-mn | ppc64-bg | ppc64-bgq  )
-        # PowerPC, PowerPC MareNostrum, BG/P, BQ/Q
-        try_arflags="ruv"
-        ;;
-  esac
+  fi
   if test "$arflags" = "" ; then arflags="$try_arflags" ; fi
   AC_MSG_RESULT(${arflags})  
   AC_SUBST(arflags)

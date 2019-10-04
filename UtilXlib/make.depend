@@ -5,6 +5,7 @@ data_buffer.o : util_param.o
 divide.o : mp.o
 error_handler.o : mp.o
 error_handler.o : util_param.o
+export_gstart_2_solvers.o : mp_bands_util.o
 fletcher32_mod.o : util_param.o
 hash.o : fletcher32_mod.o
 mp.o : parallel_include.o
@@ -17,5 +18,6 @@ mp_base.o : util_param.o
 mp_base_gpu.o : data_buffer.o
 mp_base_gpu.o : parallel_include.o
 mp_base_gpu.o : util_param.o
+set_mpi_comm_4_solvers.o : mp_bands_util.o
 thread_util.o : util_param.o
 util_param.o : parallel_include.o

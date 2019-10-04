@@ -16,7 +16,7 @@ SUBROUTINE hp_symdvscf (dvtosym)
   USE constants,        ONLY : tpi
   USE fft_base,         ONLY : dfftp
   USE cell_base,        ONLY : at
-  USE symm_base,        ONLY : s, ftau
+  USE symm_base,        ONLY : s, ft
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE ions_base,        ONLY : tau
   USE qpoint,           ONLY : xq
@@ -27,9 +27,10 @@ SUBROUTINE hp_symdvscf (dvtosym)
 
   complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag)
   ! the potential to be symmetrized
+  integer :: ftau(3,48)
   integer :: is, ri, rj, rk, i, j, k, ipol, isym, irot
   !  counters
-  real(DP) :: gf(3), gf2, n(3), ft(3)
+  real(DP) :: gf(3), gf2, n(3)
   !  temp variables
   complex(DP), allocatable :: dvsym (:,:,:)
   ! the symmetrized potential
@@ -47,6 +48,10 @@ SUBROUTINE hp_symdvscf (dvtosym)
   n(1) = tpi / DBLE(dfftp%nr1)
   n(2) = tpi / DBLE(dfftp%nr2)
   n(3) = tpi / DBLE(dfftp%nr3)
+  !
+  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 )
+  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 )
+  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 )
   !
   ! Symmetrize with -q if present (Sq = -q + G)
   !

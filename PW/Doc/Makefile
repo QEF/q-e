@@ -1,4 +1,4 @@
-VERSION = svn
+VERSION = git
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
@@ -11,7 +11,7 @@ TOCS = $(PDFS:.pdf=.toc)
 
 
 doc:  all
-all:  pdf html defs
+all:  defs pdf html 
 pdf: $(PDFS)
 html: user_guide
 
@@ -28,7 +28,7 @@ clean:
 
 
 user_guide: user_guide.pdf
-	rm -rf user_guide/
+	- rm -rf user_guide/
 	latex2html \
                 -t "User's Guide for the PWscf package" \
                 -html_version 3.2,math \

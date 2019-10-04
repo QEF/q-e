@@ -149,6 +149,7 @@ SUBROUTINE extract (plot_files,plot_num)
      CALL openfil_pp ( )
   ELSE
      CALL read_xml_file ( dummy )
+     CALL post_xml_init ( )
   END IF
   !
   IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &

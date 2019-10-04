@@ -19,7 +19,7 @@ SUBROUTINE hp_bcast_input ( )
   USE mp_world,         ONLY : world_comm
   USE io_files,         ONLY : tmp_dir, prefix
   USE control_flags,    ONLY : iverbosity
-  USE input_parameters, ONLY : max_seconds
+  USE check_stop,       ONLY : max_seconds
   USE io_global,        ONLY : meta_ionode_id
   USE control_lr,       ONLY : lrpa, ethr_nscf
   USE ldaU_hp,          ONLY : conv_thr_chi, thresh_init, find_atpert, skip_atom,      &

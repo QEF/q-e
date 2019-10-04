@@ -31,7 +31,6 @@ SUBROUTINE hp_ef_shift (drhoscf, ldos, ldoss, dos_ef, dbecsum, becsum1)
   USE gvect,                ONLY : gg
   USE buffers,              ONLY : get_buffer, save_buffer
   USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : npw, npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, nspin_lsda
   USE mp_bands,             ONLY : intra_bgrp_comm

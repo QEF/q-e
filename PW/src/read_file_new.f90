@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016 Quantum ESPRESSO group
+! Copyright (C) 2016-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,31 +12,22 @@ SUBROUTINE read_file()
   ! Read data produced by pw.x or cp.x - new xml file and binary files
   ! Wrapper routine for backwards compatibility
   !
-  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, tmp_dir, wfc_dir
-  USE io_global,            ONLY : stdout, ionode
+  USE io_global,            ONLY : stdout
+  USE io_files,             ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer
   USE wvfct,                ONLY : nbnd, npwx
   USE noncollin_module,     ONLY : npol
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
-  USE paw_onecenter,        ONLY : paw_potential
-  USE uspp,                 ONLY : becsum
-  USE scf,                  ONLY : rho
-  USE realus,               ONLY : betapointlist, &
-                                   init_realspace_vars,real_space
-  USE dfunct,               ONLY : newd
-  USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart_new,       ONLY : read_collected_to_evc
-  USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
-  USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-  USE qes_types_module,     ONLY : output_type
+  USE klist,                ONLY : nkstot, nks, xk, wk
+  USE lsda_mod,             ONLY : isk
+  USE wvfct,                ONLY : nbnd, et, wg
   !
-  USE uspp_gpum,            ONLY : using_becsum
+  USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
   !
   IMPLICIT NONE 
-  TYPE ( output_type) :: output_obj 
   INTEGER :: ierr
   LOGICAL :: exst, wfc_is_collected
   CHARACTER( LEN=256 )  :: dirname
@@ -46,11 +37,37 @@ SUBROUTINE read_file()
   !
   ! ... Read the contents of the xml data file
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-  IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
+  dirname = restart_dir( )
+  WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
   CALL read_xml_file ( wfc_is_collected )
+  !
+  ! ... more initializations: pseudopotentials / G-vectors / FFT arrays /
+  ! ... charge density / potential / ... , but not KS orbitals
+  !
+  CALL post_xml_init ( )
+  !
+  ! ... initialization of KS orbitals
+  !
+  ! ... distribute across pools k-points and related variables.
+  ! ... nks is defined by the following routine as the number 
+  ! ... of k-points in the current pool
+  !
+  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+  CALL using_et(1)
+  CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL using_wg(1)
+  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+#if defined(__CUDA)
+  ! Updating wg here. Should not be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
+  !
+  ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
+  ! ... FIXME: the latter should be read from file, not recomputed
+  !
+  CALL allocate_wfc_k()
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -61,34 +78,10 @@ SUBROUTINE read_file()
   io_level = 1
   CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
   !
-  ! ... Allocate and compute k+G indices and number of plane waves
-  ! ... FIXME: should be read from file, not re-computed
-  !
-  CALL init_igk ( npwx, ngm, g, gcutw ) 
-  !
-  ! ... FIXME: this should be taken out from here
+  ! ... read wavefunctions in collected format, writes them to file
+  ! ... FIXME: likely not a great idea
   !
   IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
-  !
-  ! ... Assorted initialization: pseudopotentials, PAW
-  ! ... Not sure which ones (if any) should be done here
-  !
-  CALL init_us_1()
-  !
-  IF (lda_plus_u .AND. (U_projection == 'pseudo')) CALL init_q_aeps()
-  !
-  IF (okpaw) THEN
-     CALL using_becsum(2)
-     becsum = rho%bec
-     CALL PAW_potential(rho%bec, ddd_PAW)
-  ENDIF 
-  !
-  IF ( real_space ) THEN
-    CALL betapointlist()
-    CALL init_realspace_vars()
-    IF( ionode ) WRITE(stdout,'(5x,"Real space initialisation completed")')
-  ENDIF
-  CALL newd()
   !
   CALL close_buffer  ( iunwfc, 'KEEP' )
   !
@@ -103,208 +96,323 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ! ... All quantities that are initialized in subroutine "setup" when
   ! ... starting from scratch should be initialized here when restarting
   !
-  USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, nsp, ityp, tau, extfor
-  USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav, &
-                                   set_h_ainv
-  USE force_mod,            ONLY : force
-  USE klist,                ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, nbndx, et, wg
-  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym, nsym
-  USE extfield,             ONLY : forcefield, tefield, gate, forcegate
-  USE cellmd,               ONLY : cell_factor, lmovecell
-  USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
-  USE fft_types,            ONLY : fft_type_allocate
-  USE recvec_subs,          ONLY : ggen, ggens
-  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
-                                   eigts1, eigts2, eigts3, gstart, gshells
-  USE fft_base,             ONLY : dfftp, dffts
-  USE gvecs,                ONLY : ngms, gcutms 
-  USE spin_orb,             ONLY : lspinorb, domag
-  USE scf,                  ONLY : rho, rho_core, rhog_core, v
-  USE wavefunctions, ONLY : psic
-  USE vlocal,               ONLY : strf
-  USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
-  USE pw_restart_new,       ONLY : pw_readschema_file, init_vars_from_schema 
-  USE qes_types_module,     ONLY : output_type, parallel_info_type, general_info_type, input_type
-  USE qes_libs_module,      ONLY : qes_reset
-  USE io_rho_xml,           ONLY : read_scf
-  USE fft_rho,              ONLY : rho_g2r
-  USE read_pseudo_mod,      ONLY : readpp
-  USE uspp,                 ONLY : becsum
-  USE uspp_param,           ONLY : upf
-  USE paw_variables,        ONLY : okpaw, ddd_PAW
-  USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
-  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u
-  USE control_flags,        ONLY : gamma_only, ts_vdw
-  USE funct,                ONLY : get_inlc, get_dft_name
-  USE kernel_table,         ONLY : initialize_kernel_table
-  USE esm,                  ONLY : do_comp_esm, esm_init
-  USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
-  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
-  USE tsvdw_module,         ONLY : tsvdw_initialize
+  USE kinds,           ONLY : dp
+  USE constants,       ONLY : e2
+  USE gvect,           ONLY : ngm_g, ecutrho
+  USE gvecs,           ONLY : ngms_g, dual
+  USE gvecw,           ONLY : ecutwfc
+  USE fft_base,        ONLY : dfftp, dffts
+  USE io_global,       ONLY : stdout, ionode, ionode_id
+  USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur, &
+                              restart_dir, xmlfile
+  USE mp_global,       ONLY : nproc_file, nproc_pool_file, &
+                              nproc_image_file, ntask_groups_file, &
+                              nproc_bgrp_file, nproc_ortho_file
+  USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
+  USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
+  USE force_mod,       ONLY : force
+  USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
+       nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra
+  USE ktetra,          ONLY : ntetra, tetra_type
+  USE start_k,         ONLY : nks_start, xk_start, wk_start, &
+       nk1, nk2, nk3, k1, k2, k3
+  USE ener,            ONLY : ef, ef_up, ef_dw
+  USE electrons_base,  ONLY : nupdwn, set_nelup_neldw
+  USE wvfct,           ONLY : npwx, nbnd, et, wg
+  USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
+       edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
+       relaxz, block, block_1, block_2, block_height
+  USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
+                              sname, inverse_s, s_axis_to_cart, &
+                              time_reversal, no_t_rev, nosym, checkallsym
+  USE ldaU,            ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_lmax, &
+                              Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_alpha, &
+                              Hubbard_J0, Hubbard_beta, U_projection
+  USE funct,           ONLY : set_exx_fraction, set_screening_parameter, &
+                              set_gau_parameter, enforce_input_dft,  &
+                              start_exx, dft_is_hybrid
+  USE london_module,   ONLY : scal6, lon_rcut, in_C6
+  USE tsvdw_module,    ONLY : vdw_isolated
+  USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                              exxdiv_treatment, yukawa, ecutvcut
+  USE exx,             ONLY : ecutfock, local_thr
+  USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
+       lxdm, ts_vdw
+  USE Coul_cut_2D,     ONLY : do_cutoff_2D
+  USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
+       nspin_lsda, nspin_gga, nspin_mag
+  USE spin_orb,        ONLY : domag, lspinorb
+  USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
+       current_spin
+  USE realus,          ONLY : real_space
+  USE basis,           ONLY : natomwfc
+  USE uspp,            ONLY : okvan
+  USE paw_variables,   ONLY : okpaw
+  !
+  USE qes_types_module,ONLY : output_type, parallel_info_type, &
+       general_info_type, input_type
+  USE qes_libs_module, ONLY : qes_reset
+  USE qexsd_module,    ONLY : qexsd_readschema
+  USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
+       qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
+       qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
+       qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
+       qexsd_copy_band_structure, qexsd_copy_magnetization, &
+       qexsd_copy_kpoints
 #if defined(__BEOWULF)
-  USE io_global,             ONLY : ionode, ionode_id
-  USE qes_bcast_module       ONLY : qes_bcast
-  USE mp_images,             ONLY : intra_image_comm
+  USE qes_bcast_module,ONLY : qes_bcast
+  USE mp_images,       ONLY : intra_image_comm
+  USE mp,              ONLY : mp_bcast
 #endif
   !
   USE wvfct_gpum,            ONLY : using_et, using_wg, using_wg_d
+  !
+  IMPLICIT NONE
+  LOGICAL, INTENT(OUT) :: wfc_is_collected
+  !
+  INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
+  LOGICAL  :: magnetic_sym, lvalid_input, lfixed
+  CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
+  CHARACTER(LEN=320):: filename
+  REAL(dp) :: exx_fraction, screening_parameter
+  TYPE (output_type)        :: output_obj 
+  TYPE (parallel_info_type) :: parinfo_obj
+  TYPE (general_info_type ) :: geninfo_obj
+  TYPE (input_type)         :: input_obj
+  !
+  !
+  filename = xmlfile ( )
+  !
+#if defined(__BEOWULF)
+   IF (ionode) THEN
+      ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
+   END IF
+   CALL mp_bcast(ierr,intra_image_comm)
+   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
+   CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
+   CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
+   CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
+   CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
+#else
+   ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
+   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
+#endif
+  !
+  ! ... Now read all needed variables from xml objects
+  !
+  wfc_is_collected = output_obj%band_structure%wf_collected
+  lvalid_input = (TRIM(input_obj%tagname) == "input")
+  !
+  CALL qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
+       nproc_pool_file, nproc_image_file, ntask_groups_file, &
+       nproc_bgrp_file, nproc_ortho_file)
+  !
+  pseudo_dir_cur = restart_dir ( )
+  CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
+       nsp, atm, amass, angle1, angle2, starting_magnetization, &
+       psfile, pseudo_dir ) 
+  IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
+  !! Atomic structure section
+  !! tau and ityp are allocated inside qexsd_copy_atomic_structure
+  !
+  CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
+       atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
+  !
+  !! More initializations needed for atomic structure:
+  !! bring atomic positions and crystal axis into "alat" units;
+  !! recalculate celldm; compute cell volume, reciprocal lattice vectors
+  !
+  at = at / alat
+  tau(:,1:nat) = tau(:,1:nat)/alat  
+  CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
+  CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
+  !!
+  !! Basis set section
+  CALL qexsd_copy_basis_set ( output_obj%basis_set, gamma_only, ecutwfc,&
+       ecutrho, dffts%nr1,dffts%nr2,dffts%nr3, dfftp%nr1,dfftp%nr2,dfftp%nr3, &
+       dum1,dum2,dum3, ngm_g, ngms_g, npwx, bg(:,1), bg(:,2), bg(:,3) )
+  ecutwfc = ecutwfc*e2
+  ecutrho = ecutrho*e2
+  dual = ecutrho/ecutwfc
+  ! FIXME: next line ensures exact consistency between reciprocal and
+  ! direct lattice vectors, preventing weird phonon symmetry errors
+  ! (due to lousy algorithms, extraordinarily sensitive to tiny errors)
+  CALL recips ( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  !!
+  !! DFT section
+  CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
+       dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
+       exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
+       lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
+       Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
+       vdw_corr, scal6, lon_rcut, vdw_isolated )
+  !! More DFT initializations
+  CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
+  CALL enforce_input_dft ( dft_name, .TRUE. )
+  IF ( dft_is_hybrid() ) THEN
+     ecutvcut=ecutvcut*e2
+     ecutfock=ecutfock*e2
+     CALL set_exx_fraction( exx_fraction ) 
+     CALL set_screening_parameter ( screening_parameter )
+     CALL start_exx ()
+  END IF
+  !! Band structure section
+  !! et and wg are allocated inside qexsd_copy_band_structure
+  CALL using_et(2); CALL using_wg(2)
+  CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
+       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, xk, &
+       wk, wg, ef, ef_up, ef_dw, et )
+  ! convert to Ry
+  ef = ef*e2
+  ef_up = ef_up*e2
+  ef_dw = ef_dw*e2
+  et(:,:) = et(:,:)*e2
+  !
+  ! ... until pools are activated, the local number of k-points nks
+  ! ... should be equal to the global number nkstot - k-points are replicated
+  !
+  nks = nkstot
+  !!
+  !! Magnetization section
+  CALL qexsd_copy_magnetization ( output_obj%magnetization, lsda, noncolin,&
+       lspinorb, domag, tot_magnetization )
+  !
+  bfield = 0.d0
+  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+         npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  !! Information for generating k-points and occupations
+  CALL qexsd_copy_kpoints( output_obj%band_structure, &
+       nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
+       occupations, smearing, degauss )
+  !
+  CALL set_occupations( occupations, smearing, degauss, &
+       lfixed, ltetra, tetra_type, lgauss, ngauss )
+  IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
+  IF (lfixed) CALL errore('read_file','bad occupancies',1)
+  ! FIXME: is this really needed? do we use nelup and neldw?
+  IF ( lfixed .AND. lsda ) &
+       CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
+  !! Symmetry section
+  ALLOCATE ( irt(48,nat) )
+  IF ( lvalid_input ) THEN 
+     CALL qexsd_copy_symmetry ( output_obj%symmetries, &
+          nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
+          noinv, nosym, no_t_rev, input_obj%symmetry_flags )
+
+     CALL qexsd_copy_efield ( input_obj%electric_field, &
+          tefield, dipfield, edir, emaxpos, eopreg, eamp, &
+          gate, zgate, block, block_1, block_2, block_height, relaxz )
+
+  ELSE 
+     CALL qexsd_copy_symmetry ( output_obj%symmetries, &
+          nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
+          noinv, nosym, no_t_rev )
+  ENDIF
+  !! More initialization needed for symmetry
+  magnetic_sym = noncolin .AND. domag
+  time_reversal = (.NOT.magnetic_sym) .AND. (.NOT.noinv) 
+  CALL inverse_s()
+  CALL s_axis_to_cart()
+  !! symmetry check - FIXME: is this needed?
+  IF (nat > 0) CALL checkallsym( nat, tau, ityp)
+  !! Algorithmic info
+  do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
+  CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
+       real_space, tqr, okvan, okpaw )
+  !
+  ! ... xml data no longer needed, can be discarded
+  !
+  CALL qes_reset  ( output_obj )
+  CALL qes_reset  ( geninfo_obj )
+  CALL qes_reset  ( parinfo_obj )
+  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
+  !
+  ! END OF READING VARIABLES FROM XML DATA FILE
+  !
+  ALLOCATE( force ( 3, nat ) )
+  ALLOCATE( extfor( 3, nat ) )
+  IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
+  IF ( gate ) ALLOCATE( forcegate( 3, nat ) )
+  !
+END SUBROUTINE read_xml_file
+!
+!----------------------------------------------------------------------------
+SUBROUTINE post_xml_init (  )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Various initializations needed to start a calculation:
+  ! ... pseudopotentials, G vectors, FFT arrays, rho, potential
+  !
+  USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
+  USE uspp_param,           ONLY : upf
+  USE read_pseudo_mod,      ONLY : readpp
+  USE uspp,                 ONLY : becsum
+  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
+  USE paw_onecenter,        ONLY : paw_potential
+  USE dfunct,               ONLY : newd
+  USE funct,                ONLY : get_inlc, get_dft_name
+  USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
+  USE esm,                  ONLY : do_comp_esm, esm_init
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
+  USE ions_base,            ONLY : nat, nsp, tau, ityp
+  USE recvec_subs,          ONLY : ggen, ggens
+  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
+                                   eigts1, eigts2, eigts3, gstart, gshells
+  USE gvecs,                ONLY : ngms, gcutms 
+  USE fft_rho,              ONLY : rho_g2r
+  USE fft_base,             ONLY : dfftp, dffts
+  USE scf,                  ONLY : rho, rho_core, rhog_core, v
+  USE io_rho_xml,           ONLY : read_scf
+  USE vlocal,               ONLY : strf
+  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : ts_vdw, tqr, tq_smoothing, tbeta_smoothing
+  USE cellmd,               ONLY : cell_factor, lmovecell
+  USE wvfct,                ONLY : nbnd, nbndx, et, wg
+  USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : noncolin
+  USE spin_orb,             ONLY : lspinorb
+  USE cell_base,            ONLY : at, bg, set_h_ainv
+  USE symm_base,            ONLY : d1, d2, d3
+  USE realus,               ONLY : betapointlist, generate_qpointlist, &
+                                   init_realspace_vars,real_space
+  USE uspp_gpum,            ONLY : using_becsum
+  !
   USE gvect_gpum,            ONLY : using_g, using_gg, using_g_d, using_gg_d, &
                                     using_mill, using_mill_d, &
                                     using_eigts1, using_eigts2, using_eigts3, &
                                     using_eigts1_d, using_eigts2_d, using_eigts3_d
   !
   IMPLICIT NONE
-  LOGICAL, INTENT(OUT) :: wfc_is_collected
-
-  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
-  REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
-  REAL(DP) :: sr(3,3,48)
-  CHARACTER(LEN=20) dft_name
-  TYPE ( output_type)                   :: output_obj 
-  TYPE (parallel_info_type)             :: parinfo_obj
-  TYPE (general_info_type )             :: geninfo_obj
-  TYPE (input_type)                     :: input_obj
   !
+  INTEGER  :: inlc
+  REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
+  CHARACTER(LEN=20) :: dft_name
   !
-#if defined(__BEOWULF)
-   IF (ionode) THEN
-      CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
-      IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
-   END IF
-   CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
-   CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
-   CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
-   CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
-#else
-  CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
-  IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
-#endif
-  wfc_is_collected = output_obj%band_structure%wf_collected
-  ! ... first we get the version of the qexml file
-  !     if not already read
+  ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
-  ! ... here we read the variables that dimension the system
-  !
-  CALL init_vars_from_schema( 'dim',   ierr , output_obj, parinfo_obj, geninfo_obj )
-  CALL errore( 'read_xml_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-  !
-  CALL init_vars_from_schema( 'boundary_conditions',   ierr , output_obj, parinfo_obj, geninfo_obj )
-  CALL errore( 'read_xml_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-  ! ... allocate space for atomic positions, symmetries, forces
-  !
-  IF ( nat < 0 ) CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
-  !
-  ! ... allocation
-  !
-  ALLOCATE( ityp( nat ) )
-  ALLOCATE( tau(    3, nat ) )
-  ALLOCATE( force(  3, nat ) )
-  ALLOCATE( extfor(  3, nat ) )
-  !
-  IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
-  IF ( gate ) ALLOCATE( forcegate( 3, nat ) ) ! TB
-  !
-  ALLOCATE( irt( 48, nat ) )
-  !
-  CALL set_dimensions()
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft )
-  !
-  ! ... check whether LSDA
-  !
-  IF ( lsda ) THEN
-     !
-     nspin = 2
-     npol  = 1
-     !
-  ELSE IF ( noncolin ) THEN
-     !
-     nspin        = 4
-     npol         = 2
-     current_spin = 1
-     !
-  ELSE
-     !
-     nspin        = 1
-     npol         = 1
-     current_spin = 1
-     !
-  END IF
-  !
+  CALL set_gcut()
   if (cell_factor == 0.d0) cell_factor = 1.D0
-  !
-  ! ... allocate memory for eigenvalues and weights (read from file)
-  !
   nbndx = nbnd
-  ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
-  CALL using_et(1); CALL using_wg(1)
-  !
-  ! ... here we read all the variables defining the system
-  !
-  CALL init_vars_from_schema ( 'nowave', ierr, output_obj, parinfo_obj, geninfo_obj, input_obj )
-  !
-  ! ... distribute across pools k-points and related variables.
-  ! ... nks is defined by the following routine as the number 
-  ! ... of k-points in the current pool
-  !
-  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-  !
-  CALL using_et(1)
-  CALL poolscatter( nbnd, nkstot, et, nks, et )
-  CALL using_wg(1)
-  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-#if defined(__CUDA)
-  ! Updating wg here. Should not be done and will be removed ASAP.
-  CALL using_wg_d(0)
-#endif
-  !
-  ! ... check on symmetry
-  !
-  IF (nat > 0) CALL checkallsym( nat, tau, ityp)
-  !
-  !  Set the different spin indices
-  !
-  nspin_mag  = nspin
-  nspin_lsda = nspin
-  nspin_gga  = nspin
-  IF (nspin==4) THEN
-     nspin_lsda=1
-     IF (domag) THEN
-        nspin_gga=2
-     ELSE
-        nspin_gga=1
-        nspin_mag=1
-     ENDIF
-  ENDIF
   !
   ! ... read pseudopotentials
+  ! ... the following call prevents readpp from setting dft from PP files
   !
-  CALL init_vars_from_schema ( 'pseudo', ierr, output_obj, parinfo_obj, geninfo_obj ) 
-  !
-  dft_name = get_dft_name () ! already set, should not be set again
+  dft_name = get_dft_name ()
   CALL readpp ( dft_name )
   !
-  ! ... read the vdw kernel table if needed
-  !
-  inlc = get_inlc()
-  if (inlc > 0 ) then
-      call initialize_kernel_table(inlc)
-  endif
+  ! ... misc PP initialization (from setup.f90)
   !
   okpaw = ANY ( upf(1:nsp)%tpawp )
-  !
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
+  !! average_pp must be called before init_lda_plus_u
+  IF ( lda_plus_u ) CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
   !
-  ! ... allocate memory for G- and R-space fft arrays
+  ! ... allocate memory for G- and R-space fft arrays (from init_run.f90)
   !
   CALL pre_init()
+  ! NB: data_structure uses k-points to compute gkcut
   CALL data_structure ( gamma_only )
   CALL allocate_fft()
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
@@ -319,13 +427,13 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
                                             ! This is a trick to avoid checking for sync everywhere.
 #endif
-  IF (do_comp_esm) THEN
-     CALL init_vars_from_schema ( 'esm', ierr, output_obj, parinfo_obj, geninfo_obj ) 
-     CALL esm_init()
-  END IF
+  !
   CALL gshells ( lmovecell ) 
   !
-  ! ... allocate the potential and wavefunctions
+  IF (do_comp_esm) CALL esm_init()
+  IF (do_cutoff_2D) CALL cutoff_fact()
+  !
+  ! ... allocate the potentials
   !
   CALL allocate_locpot()
   CALL allocate_nlpot()
@@ -335,29 +443,25 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      CALL d_matrix(d1,d2,d3)
   ENDIF
   !
-  IF ( lda_plus_u ) THEN
-     CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
-     CALL init_at_1()
-  ENDIF
-  !
-  CALL allocate_wfc()
-  !
-  ! ... read the charge density
+  ! ... read the charge density in G-space
   !
   CALL read_scf( rho, nspin, gamma_only )
-  ! FIXME: for compatibility. rho was previously read and written in real space
-  ! FIXME: now it is in G space - to be removed together with old format
+  !
+  ! ... bring the charge density to real space
+  !
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
   !
-  ! ... re-calculate the local part of the pseudopotential vltot
-  ! ... and the core correction charge (if any) - This is done here
-  ! ... for compatibility with the previous version of read_file
-  !
-  !2D calculations: re-initialize cutoff fact before calculating potentials
-  IF(do_cutoff_2D) CALL cutoff_fact()
+  ! ... re-compute the local part of the pseudopotential vltot and
+  ! ... the core correction charge (if any) - from hinit0.f90
   !
   CALL init_vloc()
-  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, &
+  IF (tbeta_smoothing) CALL init_us_b0()
+  IF (tq_smoothing) CALL init_us_0()
+  CALL init_us_1()
+  IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
+  CALL init_at_1()
+  !
+  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2,&
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
 #if defined(__CUDA)
   CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
@@ -367,17 +471,16 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL setlocal()
   CALL set_rhoc()
   !
-  ! ... bring rho to G-space
+  ! ... for real-space PP's
   !
-  DO is = 1, nspin
-     !
-     psic(:) = rho%of_r(:,is)
-     CALL fwfft ('Rho', psic, dfftp)
-     rho%of_g(:,is) = psic(dfftp%nl(:))
-     !
-  END DO
+  IF ( tqr ) CALL generate_qpointlist()
+  IF (real_space ) THEN
+     CALL betapointlist()
+     CALL init_realspace_vars()
+     WRITE (stdout,'(5X,"Real space initialisation completed")')    
+  ENDIF
   !
-  ! ... recalculate the potential
+  ! ... recalculate the potential - FIXME: couldn't make ts-vdw work
   !
   IF ( ts_vdw) THEN
      ! CALL tsvdw_initialize()
@@ -387,19 +490,23 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   END IF
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
-                 ehart, etxc, vtxc, eth, etotefield, charge, v )
+       ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
-  CALL qes_reset  ( output_obj )
-  CALL qes_reset  ( geninfo_obj )
-  CALL qes_reset  ( parinfo_obj )
-  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
-  ! 
+  ! ... More PAW and USPP initializations
+  !
+  IF (okpaw) THEN
+     CALL using_becsum(2)
+     becsum = rho%bec
+     CALL PAW_potential(rho%bec, ddd_PAW)
+  ENDIF 
+  CALL newd()
+  !
   RETURN
   !
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE set_dimensions()
+    SUBROUTINE set_gcut()
       !------------------------------------------------------------------------
       !
       USE constants, ONLY : pi, eps8
@@ -427,6 +534,6 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
          gcutms = gcutm
       END IF
       !
-    END SUBROUTINE set_dimensions
+    END SUBROUTINE set_gcut
     !
-  END SUBROUTINE read_xml_file
+  END SUBROUTINE post_xml_init

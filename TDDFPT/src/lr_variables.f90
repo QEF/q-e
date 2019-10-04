@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -75,7 +75,12 @@ MODULE lr_variables
   COMPLEX(kind=dp), ALLOCATABLE :: R(:,:,:) ! The oscillator strength from valence state (first index)
                                             ! to conduction  state (second index), for each polarization
                                             ! direction (third index).
-  !
+
+
+
+  COMPLEX (DP), ALLOCATABLE ::      &
+                  intq(:,:,:),      &! nhm, nhm, nat),        integral of e^iqr Q 
+                  intq_nc(:,:,:,:)   ! nhm, nhm, nat, nspin), integral of e^iqr Q in the noncollinear case
   ! Lanczos Matrix
   !
   !

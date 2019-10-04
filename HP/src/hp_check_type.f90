@@ -25,7 +25,7 @@ subroutine hp_check_type(na)
   ! 
   USE ions_base,          ONLY : ityp, nat, ntyp => nsp, tau
   USE io_global,          ONLY : stdout
-  USE symm_base,          ONLY : nsym, set_sym
+  USE symm_base,          ONLY : nsym, set_sym, ft
   USE noncollin_module,   ONLY : nspin_mag, m_loc
   USE fft_base,           ONLY : dfftp
   USE ldaU_hp,            ONLY : recalc_sym
@@ -35,7 +35,7 @@ subroutine hp_check_type(na)
   INTEGER, INTENT(IN) :: na ! the atom under consideration
   !
   INTEGER :: nt, ityp_save, nsym_old
-  INTEGER :: na_, nt_
+  INTEGER :: na_, nt_, isym
   !
   IF (nsym==1) RETURN
   !
