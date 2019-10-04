@@ -251,7 +251,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0) 
+    SUBROUTINE print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, is_metal) 
     !-----------------------------------------------------------------------
     !!
     !! This routine prints the SERTA mobility using k-point symmetry.
@@ -269,6 +269,8 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL, INTENT(IN) :: is_metal
+    !! .TRUE. for metals and .FALSE. otherwise.
     INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
     INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
@@ -341,7 +343,7 @@
     Fi_check(:, :) = zero
     ! 
     ! Hole
-    IF (ncarrier < -1E5) THEN
+    IF (ncarrier < -1E5 .AND. .NOT. is_metal) THEN
       sigma(:, :, :) = zero
       ! 
       CALL prtheader(-1)
@@ -403,14 +405,14 @@
         ENDDO
         ! 
         ! Print the resulting mobility
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal)
         ! 
       ENDDO
       ! 
     ENDIF
     ! 
     ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
+    IF (ncarrier > 1E5 .AND. .NOT. is_metal) THEN
       ! Needed because of residual values from the hole above
       sigma(:, :, :)    = zero
       ! 
@@ -470,10 +472,72 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal) 
         !
       ENDDO
       ! 
+    ENDIF
+    !
+    If (is_metal) THEN
+      ! Needed because of residual values from the hole above
+      sigma(:, :, :)    = zero
+      ! 
+      CALL prtheader(2)
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik = 1,  nktotf
+          DO ibnd = 1, nbndfst
+            ! just sum on all bands for metals
+            vk_cart(:) = vkk_all(:, ibnd, ik)
+            Fi_cart(:) = f_serta(:, ibnd, ik, itemp) 
+            ! 
+            ! Loop on the point equivalent by symmetry in the full BZ
+            DO nb = 1, nrot
+              IF (BZtoIBZ_mat(nb, ik) > 0) THEN
+                ikbz = BZtoIBZ_mat(nb, ik)
+                ! Transform the symmetry matrix from Crystal to
+                ! cartesian
+                sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                sb       = MATMUL(bg, sa)
+                sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+                sr       = TRANSPOSE(sr)
+                CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
+                CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1)
+                !
+                DO j = 1, 3
+                  DO i = 1, 3
+                    ! The factor two in the weight at the end is to
+                    ! account for spin
+                    sigma(i, j, itemp) = sigma(i, j, itemp) - (v_rot(j) * Fi_rot(i)) * sfac / (nkf1 * nkf2 * nkf3)
+                  ENDDO
+                ENDDO
+                !
+                Fi_check(:, itemp) = Fi_check(:, itemp) + Fi_rot(:) * sfac / (nkf1 * nkf2 * nkf3)
+              ENDIF ! BZ
+            ENDDO ! ikb
+            !
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      ! 
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            ! sum on all bands for metals
+            !  energy at k (relative to Ef)
+            ekk = etf_all(ibnd, ik) - ef0(itemp)
+            fnk = wgauss(-ekk / etemp, -99)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ENDDO
+        ENDDO
+        ! 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal) 
+        !
+      ENDDO
     ENDIF
     !  
     RETURN
@@ -483,7 +547,7 @@
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0) 
+    SUBROUTINE print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0, is_metal) 
     !-----------------------------------------------------------------------
     !!
     !! This routine prints the SERTA mobility without k-point symmetry
@@ -499,6 +563,8 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL, INTENT(IN)       :: is_metal
+    !! .TRUE. for metals, .FALSE. otherwise.
     REAL(KIND = DP), INTENT(in) :: f_serta(3, nbndfst, nktotf, nstemp)  
     !! SERTA solution 
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
@@ -549,7 +615,7 @@
     ENDIF
     ! 
     ! Hole
-    IF (ncarrier < -1E5) THEN
+    IF (ncarrier < -1E5 .AND. .NOT. is_metal) THEN
       sigma(:, :, :) = zero
       ! 
       CALL prtheader(-1)
@@ -585,14 +651,14 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal) 
         !  
       ENDDO
       ! 
     ENDIF
     ! 
     ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
+    IF (ncarrier > 1E5 .AND. .NOT. is_metal) THEN
       ! Needed because of residual values from the hole above
       sigma(:, :, :) = zero
       ! 
@@ -631,7 +697,48 @@
           ENDDO
         ENDDO
         !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal)
+        ! 
+      ENDDO
+      ! 
+    ENDIF
+    IF (is_metal) THEN
+      ! Needed because of residual values from the hole above
+      sigma(:, :, :) = zero
+      ! 
+      CALL prtheader(2)
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik = 1,  nktotf
+          DO ibnd = 1, nbndfst
+            ! sum on all bands for metals
+            DO j = 1, 3
+              DO i = 1, 3
+                sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_serta(i, ibnd, ik, itemp) * wkf_all(ik)
+              ENDDO
+            ENDDO
+            Fi_check(:, itemp) = Fi_check(:, itemp) + f_serta(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
+            ! 
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      ! 
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            ! sum on all bands for metals
+            !  energy at k (relative to Ef)
+            ekk = etf_all(ibnd, ik) - ef0(itemp)
+            fnk = wgauss(-ekk / etemp, -99)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ENDDO
+        ENDDO
+        !
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal)
         ! 
       ENDDO
       ! 
@@ -642,7 +749,7 @@
     !-----------------------------------------------------------------------
     !  
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob) 
+    SUBROUTINE print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob, is_metal) 
     !-----------------------------------------------------------------------
     !!
     !!  This routine prints the iterative mobility using k-point symmetry ( electron or hole )
@@ -661,6 +768,8 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL, INTENT(IN) :: is_metal
+    !! .TRUE. for metals and .FALSE. otherwise.
     INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
     INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
@@ -731,7 +840,7 @@
       sfac = 2.0
     ENDIF
     ! 
-    IF (ncarrier < -1E5) THEN ! If true print hole
+    IF (ncarrier < -1E5 .AND. .NOT. is_metal) THEN ! If true print hole
       sigma(:, :, :) = zero
       ! 
       CALL prtheader(-1)
@@ -793,13 +902,13 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal)
         ! 
       ENDDO
       ! 
     ENDIF
     ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
+    IF (ncarrier > 1E5 .AND. .NOT. is_metal) THEN
       ! Needed because of residual values from the hole above
       sigma(:, :, :) = zero
       ! 
@@ -862,12 +971,78 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal) 
         ! 
       ENDDO
       ! 
     ENDIF 
     !
+    IF (is_metal) THEN
+      ! Needed because of residual values from above
+      sigma(:, :, :) = zero
+      ! 
+      CALL prtheader(+2)
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik = 1,  nktotf
+          DO ibnd = 1, nbndfst
+            ! for metals sum on all bands
+            vk_cart(:) = vkk_all(:, ibnd, ik)
+            Fi_cart(:) = f_out(:, ibnd, ik, itemp)
+            ! 
+            ! Loop on the point equivalent by symmetry in the full BZ
+            DO nb = 1, nrot
+              IF (BZtoIBZ_mat(nb, ik) > 0) THEN
+                ikbz = BZtoIBZ_mat(nb, ik)
+                ! 
+                ! Transform the symmetry matrix from Crystal to
+                ! cartesian
+                sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                sb       = MATMUL(bg, sa)
+                sr(:, :) = MATMUL(at, TRANSPOSE (sb))
+                sr       = TRANSPOSE(sr)
+                ! 
+                CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0 ,v_rot(:), 1 )
+                ! 
+                CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1, 0.d0, Fi_rot(:), 1 )
+                !
+                DO j = 1, 3
+                  DO i = 1, 3
+                    ! The factor two in the weight at the end is to
+                    ! account for spin
+                    sigma(i, j, itemp) = sigma(i, j, itemp) - (v_rot(j) * Fi_rot(i)) * sfac / (nkf1 * nkf2 * nkf3)  
+                  ENDDO
+                ENDDO 
+                !
+                Fi_check(:, itemp) = Fi_check(:, itemp) + Fi_rot(:) * sfac / (nkf1 * nkf2 * nkf3) 
+              ENDIF ! BZ
+            ENDDO ! ikb
+            ! 
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      ! 
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            ! for metals sum on all bands
+            !  energy at k (relative to Ef)
+            ekk = etf_all(ibnd, ik) - ef0(itemp)
+            fnk = wgauss(-ekk / etemp, -99)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ENDDO
+        ENDDO
+        ! 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal) 
+        ! 
+      ENDDO
+      ! 
+    ENDIF 
+
     RETURN
     !
     !-----------------------------------------------------------------------
@@ -875,7 +1050,7 @@
     !-----------------------------------------------------------------------
     !  
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob) 
+    SUBROUTINE print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob, is_metal) 
     !-----------------------------------------------------------------------
     !!
     !!  This routine prints the iterative mobility without k-point symmetry ( electron or hole )
@@ -891,6 +1066,8 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL, INTENT(IN)       :: is_metal
+    !! .TRUE. for metals, .FALSE. otherwise.
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)  
     !! SERTA solution 
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
@@ -939,7 +1116,7 @@
       sfac = 2.0
     ENDIF
     !
-    IF (ncarrier < -1E5) THEN ! If true print hole
+    IF (ncarrier < -1E5 .AND. .NOT. is_metal) THEN ! If true print hole
       sigma(:, :, :)    = zero
       ! 
       ! Print header where -1 means hole
@@ -978,13 +1155,13 @@
           ENDDO
         ENDDO
         ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal)
         ! 
       ENDDO
       ! 
     ENDIF
     ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
+    IF (ncarrier > 1E5 .AND. .NOT. is_metal) THEN
       ! Needed because of residual values from the hole above
       sigma(:, :, :)    = zero
       ! 
@@ -1023,12 +1200,54 @@
           ENDDO
         ENDDO
         !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal) 
         ! 
       ENDDO
       ! 
     ENDIF 
     !
+    ! Now metals conductivity
+    IF (is_metal) THEN
+      ! Needed because of residual values from above
+      sigma(:, :, :)    = zero
+      ! 
+      CALL prtheader(+2)
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik = 1,  nktotf
+          DO ibnd = 1, nbndfst
+            ! sum on all bands for metals
+            DO j = 1, 3
+              DO i = 1, 3
+                sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_out(i, ibnd, ik, itemp) * wkf_all(ik)
+              ENDDO
+            ENDDO
+            Fi_check(:, itemp) = Fi_check(:, itemp) + f_out(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3) 
+            ! 
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      ! 
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nktotf
+          DO ibnd = 1, nbndfst
+            ! sum on all bands for metals
+            !  energy at k (relative to Ef)
+            ekk = etf_all(ibnd, ik) - ef0(itemp)
+            fnk = wgauss(-ekk / etemp, -99)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ENDDO
+        ENDDO
+        !
+        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp), is_metal) 
+        ! 
+      ENDDO
+      ! 
+    ENDIF 
     RETURN
     !
     !-----------------------------------------------------------------------
@@ -1036,10 +1255,11 @@
     !-----------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, etemp, max_mob) 
+    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, etemp, max_mob, is_metal) 
     !-----------------------------------------------------------------------
     !! 
-    !! This routine print the mobility in a nice format and in proper units.
+    !! This routine print the mobility (or conducrtivity for metals) in a 
+    !! nice format and in proper units.
     !! 
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
@@ -1049,6 +1269,8 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL :: is_metal
+    !! .TRUE. for metals. .FALSE. otherwise.
     REAL(KIND = DP), INTENT(in) :: sigma(3, 3)
     !! Conductivity tensor
     REAL(KIND = DP), INTENT(in) :: carrier_density
@@ -1073,15 +1295,21 @@
     inv_cell = 1.0d0 / omega
     ! carrier_density in cm^-1
     nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-    IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
-    ! 
-    mobility(:, :) = (sigma(:, :) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-    ! 
-    WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
+    mobility(:, :) = (sigma(:, :) * electron_SI * (bohr2ang * ang2cm)**2) / hbarJ
+    IF (.NOT. is_metal) THEN
+      ! for insulators print mobility so just divide by carrier density
+      IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
+      mobility(:, :) = mobility(:, :) / carrier_density
+      WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
            nden, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
-    WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
-    WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
-    ! 
+      WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
+      WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+    ELSE
+      WRITE(stdout, '(5x, 1f8.3, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
+           SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+      WRITE(stdout, '(41x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
+      WRITE(stdout, '(41x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+    ENDIF
     max_mob = MAXVAL(mobility(:,:))
     ! 
     !-----------------------------------------------------------------------
@@ -1098,17 +1326,21 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: cal_type
-    !! +1 means electron and -1 means hole. 
+    !! +1 means electron and -1 means hole, +2 means for metals
     IF (cal_type == -1) THEN 
       WRITE(stdout, '(/5x, a)') REPEAT('=',93)
       WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
       WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',93)
-    ENDIF
-    IF (cal_type == 1) THEN
+    ELSEIF (cal_type == 1) THEN
       WRITE(stdout, '(/5x, a)') REPEAT('=',93)
       WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
       WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=',93)
+    ELSEIF (cal_type == 2) THEN
+      WRITE(stdout, '(/5x, a)') REPEAT('=',93)
+      WRITE(stdout, '(5x, "  Temp     Fermi    Population SR                  Conductivity ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]  [carriers per cell]              [V.s.cm]^-1 ")')
       WRITE(stdout, '(5x, a/)') REPEAT('=',93)
     ENDIF
     !-----------------------------------------------------------------------

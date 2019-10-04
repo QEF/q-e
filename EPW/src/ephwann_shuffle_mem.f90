@@ -803,7 +803,8 @@
     ALLOCATE(wkf_all(nktotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating wkf_all', 1)
     !
-    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+    ! not implemented for metals in mem mode
+    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb, .FALSE.)
     ! 
     DEALLOCATE(vkk_all, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating vkk_all', 1)
@@ -817,7 +818,8 @@
   ELSE ! (iterative_bte .AND. epmatkqread)   
     IF (iterative_bte) THEN
       ! Open the required files
-      CALL iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart)
+      ! not implemented for metals in mem mode
+      CALL iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart, .FALSE.)
     ENDIF
     ! 
     IF (lifc) THEN
@@ -1355,7 +1357,7 @@
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
-              CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+              CALL fermicarrier(itemp, etemp, ef0, efcb, ctype, .FALSE.)
             ENDDO
           ENDIF ! iqq=0
           !   
@@ -1368,7 +1370,7 @@
           IF (iterative_bte) THEN
             CALL start_clock('print_ibte')
             CALL print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
-                            lrepmatw2_restart, lrepmatw5_restart, ctype)
+                            lrepmatw2_restart, lrepmatw5_restart, ctype, .FALSE.)
             CALL stop_clock('print_ibte')
             !  
             ! Finished, now compute SERTA and IBTE mobilities
@@ -1380,7 +1382,7 @@
               CALL iter_close()
               ! Merge files
 #if defined(__MPI)
-              CALL iter_merge_parallel()
+              CALL iter_merge_parallel(.FALSE.)
 #endif
               !   
             ENDIF  
@@ -1467,7 +1469,7 @@
         IF (int_mob .OR. carrier) THEN
           ! SP: Determination of the Fermi level for intrinsic or doped carrier 
           !     One also need to apply scissor before calling it.
-          CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+          CALL fermicarrier(itemp, etemp, ef0, efcb, ctype, .FALSE.)
         ELSE
           IF (efermi_read) THEN
             ef0(itemp) = fermi_energy
@@ -1540,7 +1542,7 @@
       vkk_all(:, :, :) = zero
       wkf_all(:) = zero
       !
-      CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+      CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb, .FALSE.)
       ! 
       DEALLOCATE(vkk_all, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating vkk_all', 1)

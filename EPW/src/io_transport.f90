@@ -19,7 +19,7 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
-                          lrepmatw2_restart, lrepmatw5_restart, ctype) 
+                          lrepmatw2_restart, lrepmatw5_restart, ctype, is_metal) 
     !-----------------------------------------------------------------------
     !!
     !! This subroutine computes the transition probability and the scattering rates.
@@ -52,6 +52,8 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL, INTENT(IN)     :: is_metal
+    !! Should be set to .TRUE. for metals and .FALSE. otherwise.
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart 
     INTEGER, INTENT(in) :: iqq
@@ -622,44 +624,47 @@
       ENDIF ! master
       ! 
       ! Now print the carrier density for checking
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        IF (ncarrier < 0.0) THEN ! VB
-          DO ik = 1, nkf
-            DO ibnd = 1, nbndfst
-              ! This selects only valence bands for hole conduction
-              IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
-                ! Energy at k (relative to Ef)
-                ekk = etf_all(ibnd, ik + lower_bnd - 1 ) - ef0(itemp)
-                fnk = wgauss(-ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
-              ENDIF
+      ! only for non-metals
+      IF (.NOT. is_metal) THEN
+        DO itemp = 1, nstemp
+          etemp = transp_temp(itemp)
+          carrier_density = 0.0
+          ! 
+          IF (ncarrier < 0.0) THEN ! VB
+            DO ik = 1, nkf
+              DO ibnd = 1, nbndfst
+                ! This selects only valence bands for hole conduction
+                IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
+                  ! Energy at k (relative to Ef)
+                  ekk = etf_all(ibnd, ik + lower_bnd - 1 ) - ef0(itemp)
+                  fnk = wgauss(-ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
+                ENDIF
+              ENDDO
             ENDDO
-          ENDDO
-          CALL mp_sum(carrier_density, world_comm)
-          carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
-        ELSE ! CB
-          DO ik = 1, nkf
-            DO ibnd = 1, nbndfst
-              ! This selects only valence bands for hole conduction
-              IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
-                !  energy at k (relative to Ef)
-                ekk = etf_all(ibnd, ik + lower_bnd - 1) - efcb(itemp)
-                fnk = wgauss(-ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
-              ENDIF
+            CALL mp_sum(carrier_density, world_comm)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
+          ELSE ! CB
+            DO ik = 1, nkf
+              DO ibnd = 1, nbndfst
+                ! This selects only valence bands for hole conduction
+                IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
+                  !  energy at k (relative to Ef)
+                  ekk = etf_all(ibnd, ik + lower_bnd - 1) - efcb(itemp)
+                  fnk = wgauss(-ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
+                ENDIF
+              ENDDO
             ENDDO
-          ENDDO
-          CALL mp_sum(carrier_density, world_comm)
-          carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density
-        ENDIF ! ncarrier
-      ENDDO
+            CALL mp_sum(carrier_density, world_comm)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density
+          ENDIF ! ncarrier
+        ENDDO
+      ENDIF
     ENDIF ! iqq
     !
     RETURN
@@ -894,7 +899,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_merge_parallel()
+    SUBROUTINE iter_merge_parallel(is_metal)
     !----------------------------------------------------------------------------
     USE kinds,            ONLY : DP
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
@@ -915,6 +920,13 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL :: is_metal
+    !! .TRUE. for metals .FALSE. otherwise.
+    !
+    ! Local variables
+    !
+    LOGICAL :: itsopen
+    !! Flag to tell if a file has been open or not
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
     CHARACTER(LEN = 256) :: my_pool_id_ch
@@ -953,7 +965,8 @@
     INTEGER (KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset while writing scattering to files
     !
-    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
+    ! for metals merge like it's for holes
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. is_metal) THEN
       !
       ALLOCATE(trans_prob(lrepmatw2_merge), STAT = ierr)
       IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_prob', 1)
@@ -992,6 +1005,12 @@
         ! Read files per processor
         WRITE(my_pool_id_ch, "(I0)") my_pool_id
         filint = TRIM(path_to_files(ich)) // TRIM(my_pool_id_ch)
+        ! check if file is open. if not open it
+        INQUIRE(UNIT = iunepmat, OPENED = itsopen)
+        IF (itsopen) THEN
+          ! close file (it was forgotten to be closed somewhere)
+          CLOSE(UNIT = iunepmat)
+        ENDIF
         OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACTION = 'read', ACCESS = 'stream')
         IF (ich == 1) THEN
           DO i2 = 1, lrepmatw2_merge
@@ -1114,7 +1133,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart)
+    SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart, is_metal)
     !----------------------------------------------------------------------------
     ! 
     ! This routine opens all the files needed to save scattering rates for the IBTE.
@@ -1135,6 +1154,8 @@
     ! 
     IMPLICIT NONE
     !  
+    LOGICAL, INTENT(IN) :: is_metal
+    !! .TRUE. for metals. .FALSE. otherwise.
     INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
     !! To restart opening files
     INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
@@ -1203,8 +1224,9 @@
     !
     ! The restart_ibte.fmt exist - we try to restart
     IF (exst) THEN
-      ! Hole
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+      ! Hole (or metals)
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
+              .OR. is_metal) THEN
         !
         filint = './' // ADJUSTL(TRIM(dirname(1))) // '/'//TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
@@ -1273,8 +1295,9 @@
       lrepmatw5_merge = lrepmatw5_restart(my_pool_id + 1)
       !  
     ELSE ! no restart file present
-      ! Hole
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+      ! Hole or metals
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
+              .OR. is_metal) THEN
         ! 
         CALL create_directory(ADJUSTL(TRIM(dirname(1))))
         CALL create_directory(ADJUSTL(TRIM(dirname(2))))

@@ -18,7 +18,8 @@
     ! 
     !-----------------------------------------------------------------------
     SUBROUTINE ibte(nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, &
-                    sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, inv_tau) 
+                    sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, &
+                    inv_tau, is_metal) 
     !-----------------------------------------------------------------------
     !!
     !! This routine computes the scattering rate with the iterative BTE (inv_tau).
@@ -52,6 +53,8 @@
     !
     IMPLICIT NONE
     !
+    LOGICAL, INTENT(IN) :: is_metal
+    !! .TRUE. for metals. .FALSE. otherwise.
     INTEGER(KIND = 8), INTENT(in) :: nind
     !! Total number of elements per cpu
     INTEGER, INTENT(in) :: sparse_q(nind)
@@ -257,9 +260,9 @@
       ! Averages points which leaves the k-point unchanged by symmetry in F and v. 
       ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
       CALL k_avg(F_SERTA, vkk_all, nb_sp, xkf_sp)
-      CALL print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, is_metal)
     ELSE  
-      CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0, is_metal)
     ENDIF
     ! 
     ! Possibily read from file
@@ -350,9 +353,9 @@
       !  
       IF (mp_mesh_k) THEN
         CALL k_avg(F_out, vkk_all, nb_sp, xkf_sp)
-        CALL print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
+        CALL print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob, is_metal)
       ELSE
-        CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob)
+        CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob, is_metal)
       ENDIF
       ! 
       ! Computes the error
@@ -398,7 +401,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+    SUBROUTINE iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb, is_metal)
     !----------------------------------------------------------------------------
     !!  
     !! This routines opens all the required files to restart an IBTE calculation
@@ -428,6 +431,8 @@
     !
     IMPLICIT NONE
     ! 
+    LOGICAL, INTENT(IN)          :: is_metal
+    !! Is .TRUE. for metals and .FALSE. otherwise.
 #if defined(__MPI)
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
@@ -585,8 +590,8 @@
     CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
     ! 
     ! Now choose hole or electron (the implementation does not support both)
-    ! hole
-    IF (ncarrier < -1E5) THEN    
+    ! hole (or metals)
+    IF (ncarrier < -1E5 .OR. is_metal) THEN    
       ! 
       ! Split all the matrix elements across all cores. 
       CALL fkbounds2(ind_tot, lower_bnd, upper_bnd)
@@ -667,7 +672,7 @@
       ! 
       ! Now call the ibte to solve the BTE iteratively until convergence
       CALL ibte(nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, sparse_q, sparse_k, &
-                sparse_i, sparse_j, sparse_t, inv_tau_all)
+                sparse_i, sparse_j, sparse_t, inv_tau_all, is_metal)
       ! 
       CALL MPI_FILE_CLOSE(iunepmat, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
@@ -774,7 +779,7 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunsparsetcb', 1)
       !
       CALL ibte(nind, etf_all, vkk_all, wkf_all, trans_probcb, efcb, &
-                sparsecb_q, sparsecb_k, sparsecb_i, sparsecb_j, sparsecb_t, inv_tau_allcb)
+                sparsecb_q, sparsecb_k, sparsecb_i, sparsecb_j, sparsecb_t, inv_tau_allcb, is_metal)
       ! 
       CALL MPI_FILE_CLOSE(iunepmatcb, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)

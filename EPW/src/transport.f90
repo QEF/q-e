@@ -17,7 +17,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle) 
+    SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle, is_metal) 
     !-----------------------------------------------------------------------
     !!
     !! This routine computes the scattering rate (inv_tau)
@@ -45,6 +45,8 @@
     !
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart 
+    LOGICAL, INTENT(IN), OPTIONAL :: is_metal
+    !! .TRUE. for metals and .FALSE. for non-metals. If not present assumed .FALSE.
     INTEGER, INTENT(in) :: iqq
     !! Q-point index from the selected q
     INTEGER, INTENT(in) :: iq
@@ -137,6 +139,11 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function  
     ! 
+    IF (PRESENT(is_metal)) THEN
+      IF (is_metal) THEN
+        CALL errore("scattering_rate_q", "metals not implemented.", 1)
+      ENDIF
+    ENDIF
     CALL start_clock('SCAT')
     ! 
     IF (iqq == 1) THEN
@@ -550,7 +557,7 @@
     !-----------------------------------------------------------------------
     !       
     !-----------------------------------------------------------------------
-    SUBROUTINE transport_coeffs(ef0, efcb)
+    SUBROUTINE transport_coeffs(ef0, efcb, is_metal)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the transport coefficients
@@ -590,6 +597,8 @@
     !
     IMPLICIT NONE
     ! 
+    LOGICAL, INTENT(IN), OPTIONAL :: is_metal
+    !! .TRUE. for metals. .FALSE. for non-metals. If not present assumed .FALSE.
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(in) :: efcb(nstemp)
@@ -700,6 +709,11 @@
     REAL(KIND = DP) :: sr(3, 3)
     !! Rotation matrix
     ! 
+    IF (PRESENT(is_metal)) THEN
+      IF (is_metal) THEN
+        CALL errore("transport_coeffs", "metals not implemented.", 1)
+      ENDIF
+    ENDIF
     CALL start_clock('MOB')
     !
     inv_cell = 1.0d0 / omega
