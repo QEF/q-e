@@ -151,11 +151,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
        qexsd_copy_band_structure, qexsd_copy_magnetization, &
        qexsd_copy_kpoints
-#if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
   USE mp_images,       ONLY : intra_image_comm
   USE mp,              ONLY : mp_bcast
-#endif
   !
   IMPLICIT NONE
   LOGICAL, INTENT(OUT) :: wfc_is_collected
@@ -173,20 +171,15 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   filename = xmlfile ( )
   !
-#if defined(__BEOWULF)
-   IF (ionode) THEN
-      ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
-   END IF
-   CALL mp_bcast(ierr,intra_image_comm)
-   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
-   CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
-   CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
-   CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
-   CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
-#else
-   ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
-   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
-#endif
+  IF (ionode) THEN
+     ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
+  END IF
+  CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+  IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
+  CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
+  CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
+  CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
+  CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
   !
   ! ... Now read all needed variables from xml objects
   !
