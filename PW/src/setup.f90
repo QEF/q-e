@@ -82,7 +82,6 @@ SUBROUTINE setup()
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type
-  USE qes_bcast_module,   ONLY : qes_bcast
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
@@ -170,9 +169,13 @@ SUBROUTINE setup()
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr > 0 ) CALL errore ( 'setup', 'problem reading ef from file ' //&
           & TRIM(xmlfile()), ierr )
-     CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
-     CALL qexsd_copy_efermi ( output_obj%band_structure, &
+     IF (ionode) CALL qexsd_copy_efermi ( output_obj%band_structure, &
           nelec, ef, two_fermi_energies, ef_up, ef_dw )
+     CALL mp_bcast(nelec, ionode_id, intra_image_comm)
+     CALL mp_bcast(ef, ionode_id, intra_image_comm)
+     CALL mp_bcast(two_fermi_energies, ionode_id, intra_image_comm)
+     CALL mp_bcast(ef_up, ionode_id, intra_image_comm)
+     CALL mp_bcast(ef_dw, ionode_id, intra_image_comm)
      CALL qes_reset  ( output_obj )
      !
   END IF 

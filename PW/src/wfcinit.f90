@@ -35,7 +35,6 @@ SUBROUTINE wfcinit()
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
-  USE qes_bcast_module,     ONLY : qes_bcast
   !
   IMPLICIT NONE
   !
@@ -62,8 +61,8 @@ SUBROUTINE wfcinit()
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN 
-        CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
-        twfcollect_file = output_obj%band_structure%wf_collected   
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         IF ( twfcollect_file ) THEN
            CALL read_collected_to_evc(dirname )
         ELSE IF ( .NOT. exst_file) THEN
