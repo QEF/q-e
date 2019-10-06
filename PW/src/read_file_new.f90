@@ -171,9 +171,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   filename = xmlfile ( )
   !
-  IF (ionode) THEN
-     ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
-  END IF
+  IF (ionode) CALL qexsd_readschema ( filename, &
+       ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   CALL mp_bcast(ierr, ionode_id, intra_image_comm)
   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
   CALL qes_bcast(output_obj, ionode_id, intra_image_comm)

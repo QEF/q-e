@@ -35,7 +35,7 @@ SUBROUTINE setup()
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
   USE parameters,         ONLY : npk
-  USE io_global,          ONLY : stdout
+  USE io_global,          ONLY : stdout, ionode, ionode_id
   USE io_files,           ONLY : xmlfile
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
@@ -68,8 +68,10 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, lorbm, nx_el,&
                                  nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
+  USE mp_images,          ONLY : intra_image_comm
   USE mp_pools,           ONLY : kunit
   USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
+  USE mp,                 ONLY : mp_bcast
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE spin_orb,           ONLY : lspinorb, domag
@@ -80,6 +82,7 @@ SUBROUTINE setup()
   USE qexsd_copy,         ONLY : qexsd_copy_efermi
   USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type
+  USE qes_bcast_module,   ONLY : qes_bcast
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
@@ -163,9 +166,11 @@ SUBROUTINE setup()
      !
      ! ... in these cases, we need to read the Fermi energy
      !
-     ierr = qexsd_readschema( xmlfile() , output_obj )
-     IF (ierr > 0) CALL errore( 'setup ', 'problem reading ef from file ' // &
-             & TRIM(xmlfile()), ierr )
+     IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
+     CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+     IF ( ierr > 0 ) CALL errore ( 'setup', 'problem reading ef from file ' //&
+          & TRIM(xmlfile()), ierr )
+     CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
      CALL qexsd_copy_efermi ( output_obj%band_structure, &
           nelec, ef, two_fermi_energies, ef_up, ef_dw )
      CALL qes_reset  ( output_obj )

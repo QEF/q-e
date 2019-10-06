@@ -13,16 +13,19 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   ! FIXME: this routines does two different things
   !
   USE kinds,           ONLY : DP
-  USE io_global,       ONLY : stdout
+  USE io_global,       ONLY : stdout, ionode, ionode_id
   USE io_files,        ONLY : restart_dir, xmlfile, &
                               psfile, pseudo_dir, pseudo_dir_cur
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau
   USE cell_base,       ONLY : alat, ibrav, at, bg, omega
+  USE mp,              ONLY : mp_bcast
+  USE mp_images,       ONLY : intra_image_comm
   USE qexsd_module,    ONLY : qexsd_readschema
   USE qexsd_copy,      ONLY : qexsd_copy_atomic_species, &
                               qexsd_copy_atomic_structure
   USE qes_types_module,ONLY : output_type
   USE qes_libs_module, ONLY : qes_reset
+  USE qes_bcast_module,ONLY : qes_bcast
   !
   IMPLICIT NONE
   !
@@ -38,7 +41,11 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !
   ! ... check if restart file is present, if so read config parameters
   !
-  ierr = qexsd_readschema ( xmlfile(), output_obj )
+  IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
+  CALL mp_bcast(ierr, ionode_id, intra_image_comm)
+  IF ( ierr > 0 ) CALL errore ( 'read_conf_from_file', &
+       'fatal error reading xml file', ierr ) 
+  CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
   !
   IF (ierr == 0 ) THEN
      !
