@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
+SUBROUTINE read_conf_from_file( lmovecell, at_old, omega_old, ierr)
   !-----------------------------------------------------------------------
   ! FIXME: half of the variables are passed as arguments, half in modules
   ! FIXME: this routines does two different things
@@ -31,9 +31,10 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !
   LOGICAL,INTENT(in)     :: lmovecell
   REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
-  INTEGER :: ierr, nat_
+  INTEGER, INTENT(out)   :: ierr
   !
-  TYPE ( output_type)                   :: output_obj
+  TYPE ( output_type) :: output_obj
+  INTEGER :: nat_
   !
   pseudo_dir_cur = restart_dir () 
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
@@ -89,4 +90,4 @@ FUNCTION read_config_from_file( lmovecell, at_old, omega_old ) RESULT (ierr)
   !
   RETURN
   !
-END FUNCTION read_config_from_file
+END SUBROUTINE read_conf_from_file
