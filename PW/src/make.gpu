@@ -22,7 +22,9 @@ PWLIBS += \
   s_1psi_gpu.o \
   force_lc_gpu.o \
   force_us_gpu.o \
-  force_cc_gpu.o
+  force_cc_gpu.o \
+  drhoc_gpu.o \
+  simpsn_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../../GScratch

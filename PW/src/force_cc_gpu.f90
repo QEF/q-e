@@ -18,7 +18,7 @@ subroutine force_cc_gpu (forcecc)
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl, igtongl, igtongl_d
+  USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl, gl_d, igtongl, igtongl_d
   USE gvect_gpum,           ONLY : g_d
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
@@ -51,13 +51,14 @@ subroutine force_cc_gpu (forcecc)
   ! radial fourier transform of rho core
   real(DP)  ::  prod, arg, fact
   !
-  real(DP), pointer :: rhocg_d (:)
+  real(DP), pointer :: rhocg_d (:),r_d(:), rab_d(:), rhoc_d(:) 
   complex(DP), pointer :: psic_d(:)
   integer, pointer :: nl_d(:)
   real(DP):: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
   integer           :: ierr
+  integer           :: maxmesh
 #if defined(__CUDA)
-  attributes(DEVICE) :: rhocg_d, psic_d, nl_d
+  attributes(DEVICE) :: rhocg_d, psic_d, nl_d, r_d, rab_d, rhoc_d 
 #endif
   !
   nl_d => dfftp%nl_d
@@ -97,18 +98,22 @@ subroutine force_cc_gpu (forcecc)
   ! psic contains now Vxc(G)
   !
   allocate ( rhocg(ngl) )
+  maxmesh = MAXVAL(msh(1:ntyp)) 
   CALL dev_buf%lock_buffer(rhocg_d, ngl, ierr )
+  CALL dev_buf%lock_buffer(r_d, maxmesh, ierr)
+  CALL dev_buf%lock_buffer(rab_d, maxmesh, ierr )
+  CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierr )   
   !
   ! core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
   ! g = 0 term gives no contribution
   !
   do nt = 1, ntyp
      if ( upf(nt)%nlcc ) then
+        r_d(1:msh(nt)) = rgrid(nt)%r(1:msh(nt)) 
+        rab_d(1:msh(nt)) = rgrid(nt)%rab(1:msh(nt))
+        rhoc_d(1:msh(nt)) = upf(nt)%rho_atc 
+        call drhoc_gpu  (ngl, gl_d, omega, tpiba2, msh(nt), r_d, rab_d, rhoc_d, rhocg_d)
 
-        call drhoc (ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r,&
-             rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
-
-        rhocg_d = rhocg
         do na = 1, nat
            if (nt.eq.ityp (na) ) then
 
@@ -144,9 +149,11 @@ subroutine force_cc_gpu (forcecc)
   !
   call mp_sum(  forcecc, intra_bgrp_comm )
   !
-  deallocate (rhocg)
   CALL dev_buf%release_buffer(rhocg_d, ierr )
   CALL dev_buf%release_buffer(psic_d, ierr )
+  CALL dev_buf%release_buffer(r_d, ierr) 
+  CALL dev_buf%release_buffer(rab_d, ierr)
+  CALL dev_buf%release_buffer(rhoc_d, ierr) 
   !
   return
 end subroutine force_cc_gpu
