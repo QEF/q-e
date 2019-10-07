@@ -247,6 +247,10 @@
     ENDDO
     ! 
     ! We now do SERTA with and without k-point symmetries
+    WRITE(stdout, '(5x,a)') ' '
+    WRITE(stdout, '(5x,a)') REPEAT('=',93)
+    WRITE(stdout, '(5x,"BTE in the self-energy relaxation time approximation (SERTA)")')
+    WRITE(stdout, '(5x,a)') REPEAT('=',93)
     max_mob(:) = zero 
     ! K-point symmetry. 
     IF (mp_mesh_k) THEN
@@ -283,7 +287,7 @@
     WRITE(stdout, '(5x,a/)') REPEAT('=',93)
     !  
     DO WHILE(MAXVAL(error) > eps6)
-      WRITE(stdout, '(/5x,"Iteration number:", i10," "/)') iter
+      WRITE(stdout, '(5x,"Iteration number:", i10)') iter
       ! 
       IF (iter > mob_maxiter) THEN
         WRITE(stdout, '(5x,a)') REPEAT('=',93)
