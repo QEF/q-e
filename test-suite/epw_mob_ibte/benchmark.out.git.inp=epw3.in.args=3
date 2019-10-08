@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.1.0 starts on 25Mar2019 at 11:26:32 
+     Program EPW v.5.2.0 starts on 14Sep2019 at 16:34:56 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -57,7 +57,8 @@
      number of atomic types    =            0
      kinetic-energy cut-off    =       0.0000  Ry
      charge density cut-off    =       0.0000  Ry
-     Exchange-correlation      = not set (-1 -1 -1 -1-1-1)
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
 
 
      celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
@@ -102,13 +103,13 @@
      Do not need to read .epb files; read .fmt files
 
 
-     Band disentanglement is used:  nbndsub =    8
+     Band disentanglement is used: nbndsub =    8
      Use zone-centred Wigner-Seitz cells 
      Number of WS vectors for electrons      279
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
      Maximum number of cores for efficient parallelization      114
-     Results may improve by using use_ws == .true. 
+     Results may improve by using use_ws == .TRUE. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
 
@@ -116,9 +117,9 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026119
+     IFC last   -0.0026121
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000020
+     Norm of the difference between old and new force-constants:    0.0000015
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -128,7 +129,7 @@
 
      ===================================================================
      Memory usage:  VmHWM =        12Mb
-                   VmPeak =       272Mb
+                   VmPeak =       273Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
@@ -151,119 +152,98 @@
 
 
      Number of ep-matrix elements per pool :        74088 ~=  578.81 Kb (@ 8 bytes/ DP)
-     Number of elements per core      12956
-     Average over degenerate eigenstates is performed
+     Number of elements per core       7210
 
-     =======================================================================
-       Temp     Fermi   Hole density  Population SR      Hole mobility 
-        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   6.8619   0.10000E+14   0.15569E-12    0.661782E-02    x-axis
-                                                      0.646817E-02    y-axis
-                                                      0.604498E-02    z-axis
-                                                      0.637699E-02       avg
-                                                      0.120281E-02  off-diag
-      500.000   7.0136   0.10000E+14   0.10402E-12    0.378762E-01    x-axis
-                                                      0.369935E-01    y-axis
-                                                      0.344973E-01    z-axis
-                                                      0.364557E-01       avg
-                                                      0.668127E-02  off-diag
+      400.000   6.8619   0.10000E+14  -0.30785E-12    0.620708E-02    0.127834E-02    0.129722E-02
+                                                      0.127834E-02    0.608800E-02    0.141631E-02
+                                                      0.129722E-02    0.141631E-02    0.606911E-02
+      500.000   7.0136   0.10000E+14  -0.20884E-12    0.354535E-01    0.712676E-02    0.723817E-02
+                                                      0.712676E-02    0.347510E-01    0.794061E-02
+                                                      0.723817E-02    0.794061E-02    0.346396E-01
       
-     ===================================================================
+     =============================================================================================
      Start solving iterative Boltzmann Transport Equation
-     ===================================================================
+     =============================================================================================
 
 
      Iteration number:         1 
 
 
-     =======================================================================
-       Temp     Fermi   Hole density  Population SR      Hole mobility 
-        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   6.8619   0.10000E+14   0.31031E-12    0.744691E-02    x-axis
-                                                      0.720537E-02    y-axis
-                                                      0.652235E-02    z-axis
-                                                      0.705821E-02       avg
-                                                      0.119852E-02  off-diag
-      500.000   7.0136   0.10000E+14   0.20141E-12    0.427570E-01    x-axis
-                                                      0.413398E-01    y-axis
-                                                      0.373320E-01    z-axis
-                                                      0.404763E-01       avg
-                                                      0.662355E-02  off-diag
+      400.000   6.8619   0.10000E+14  -0.61461E-12    0.667672E-02    0.137671E-02    0.139559E-02
+                                                      0.137671E-02    0.655763E-02    0.151468E-02
+                                                      0.139559E-02    0.151468E-02    0.653874E-02
+      500.000   7.0136   0.10000E+14  -0.41099E-12    0.382443E-01    0.767103E-02    0.778243E-02
+                                                      0.767103E-02    0.375418E-01    0.848488E-02
+                                                      0.778243E-02    0.848488E-02    0.374304E-01
 
-                                                   0.404763E-01     Err
+                                                      0.382443E-01    Max error
 
      Iteration number:         2 
 
 
-     =======================================================================
-       Temp     Fermi   Hole density  Population SR      Hole mobility 
-        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   6.8619   0.10000E+14   0.46470E-12    0.766468E-02    x-axis
-                                                      0.740205E-02    y-axis
-                                                      0.665937E-02    z-axis
-                                                      0.724203E-02       avg
-                                                      0.122535E-02  off-diag
-      500.000   7.0136   0.10000E+14   0.29770E-12    0.440643E-01    x-axis
-                                                      0.425235E-01    y-axis
-                                                      0.381661E-01    z-axis
-                                                      0.415846E-01       avg
-                                                      0.679623E-02  off-diag
+      400.000   6.8619   0.10000E+14  -0.92112E-12    0.681584E-02    0.142797E-02    0.144685E-02
+                                                      0.142797E-02    0.669675E-02    0.156594E-02
+                                                      0.144685E-02    0.156594E-02    0.667786E-02
+      500.000   7.0136   0.10000E+14  -0.61208E-12    0.390861E-01    0.798699E-02    0.809840E-02
+                                                      0.798699E-02    0.383837E-01    0.880084E-02
+                                                      0.809840E-02    0.880084E-02    0.382723E-01
 
-                                                   0.110837E-02     Err
+                                                      0.841856E-03    Max error
 
      Iteration number:         3 
 
 
-     =======================================================================
-       Temp     Fermi   Hole density  Population SR      Hole mobility 
-        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   6.8619   0.10000E+14   0.61889E-12    0.770987E-02    x-axis
-                                                      0.744399E-02    y-axis
-                                                      0.669211E-02    z-axis
-                                                      0.728199E-02       avg
-                                                      0.123902E-02  off-diag
-      500.000   7.0136   0.10000E+14   0.39270E-12    0.443331E-01    x-axis
-                                                      0.427728E-01    y-axis
-                                                      0.383604E-01    z-axis
-                                                      0.418221E-01       avg
-                                                      0.687135E-02  off-diag
+      400.000   6.8619   0.10000E+14  -0.12274E-11    0.684875E-02    0.144542E-02    0.146431E-02
+                                                      0.144542E-02    0.672966E-02    0.158340E-02
+                                                      0.146431E-02    0.158340E-02    0.671077E-02
+      500.000   7.0136   0.10000E+14  -0.81184E-12    0.392809E-01    0.808486E-02    0.819626E-02
+                                                      0.808486E-02    0.385785E-01    0.889871E-02
+                                                      0.819626E-02    0.889871E-02    0.384671E-01
 
-                                                   0.237433E-03     Err
+                                                      0.194788E-03    Max error
 
      Iteration number:         4 
 
 
-     =======================================================================
-       Temp     Fermi   Hole density  Population SR      Hole mobility 
-        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
-     =======================================================================
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR                  Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
 
-      400.000   6.8619   0.10000E+14   0.77307E-12    0.772017E-02    x-axis
-                                                      0.745374E-02    y-axis
-                                                      0.670031E-02    z-axis
-                                                      0.729140E-02       avg
-                                                      0.124278E-02  off-diag
-      500.000   7.0136   0.10000E+14   0.48781E-12    0.443987E-01    x-axis
-                                                      0.428351E-01    y-axis
-                                                      0.384131E-01    z-axis
-                                                      0.418823E-01       avg
-                                                      0.689645E-02  off-diag
+      400.000   6.8619   0.10000E+14  -0.15337E-11    0.685729E-02    0.145001E-02    0.146890E-02
+                                                      0.145001E-02    0.673821E-02    0.158799E-02
+                                                      0.146890E-02    0.158799E-02    0.671932E-02
+      500.000   7.0136   0.10000E+14  -0.10117E-11    0.393353E-01    0.811484E-02    0.822624E-02
+                                                      0.811484E-02    0.386329E-01    0.892869E-02
+                                                      0.822624E-02    0.892869E-02    0.385215E-01
 
-                                                   0.602412E-04     Err
+                                                      0.544223E-04    Max error
 
      Iteration number:         5 
 
-     ===================================================================
+     =============================================================================================
      The iteration reached the maximum but did not converge.
-     ===================================================================
+     =============================================================================================
 
 
      Unfolding on the coarse grid
@@ -273,20 +253,21 @@
 
 
 
+
      Electron-Phonon interpolation
-     ephwann      :      0.22s CPU      0.23s WALL (       1 calls)
+     ephwann      :      0.25s CPU      0.25s WALL (       1 calls)
 
      HamW2B       :      0.02s CPU      0.02s WALL (     686 calls)
 
 
      Total program execution
-     EPW          :      0.22s CPU      0.23s WALL
+     EPW          :      0.25s CPU      0.26s WALL
 
                                                                                           
  Please consider citing:                                                                  
  S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
                                                                                           
- In addition, if you used anisotropic Eliashberg superconductivity please cite:           
-              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
-              if you used transport properties (scattering rates, mobility) please cite:  
-              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+ In addition, since you have used the following functionalities, please cite:             
+   scattering :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+   iterative_bte :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)  
+   iterative_bte :: F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                 

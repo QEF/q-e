@@ -22,11 +22,10 @@ SUBROUTINE phq_readin()
   USE mp_world,      ONLY : world_comm
   USE ions_base,     ONLY : amass, atm
   USE check_stop,    ONLY : max_seconds
-  USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, io_level, &
-                            ts_vdw, ldftd3, lxdm
+                            ts_vdw, ldftd3, lxdm, isolve
   USE funct,         ONLY : dft_is_meta, dft_is_hybrid
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -43,8 +42,7 @@ SUBROUTINE phq_readin()
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
                             rec_code_read, qplot, only_init, only_wfc, &
-                            low_directory_check
-
+                            low_directory_check, nk1, nk2, nk3, k1, k2, k3
   USE save_ph,       ONLY : tmp_dir_save, save_ph_input_variables
   USE gamma_gamma,   ONLY : asr
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
@@ -105,6 +103,7 @@ SUBROUTINE phq_readin()
   REAL(DP), ALLOCATABLE :: xqaux(:,:)
   INTEGER, ALLOCATABLE :: wqaux(:)
   INTEGER :: nqaux, iq
+  CHARACTER(len=80) :: diagonalization='david'
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, verbosity, iverbosity, outdir, epsil,  &
@@ -119,7 +118,7 @@ SUBROUTINE phq_readin()
                        elph_nbnd_min, elph_nbnd_max, el_ph_ngauss, &
                        el_ph_nsigma, el_ph_sigma,  electron_phonon, &
                        q_in_band_form, q2d, qplot, low_directory_check, &
-                       lshift_q, read_dns_bare, d2ns_type
+                       lshift_q, read_dns_bare, d2ns_type, diagonalization
 
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -159,9 +158,9 @@ SUBROUTINE phq_readin()
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! lqdir        : if .true. each q writes in its own directory
   ! search_sym   : if .true. analyze symmetry if possible
-  ! nk1,nk2,nk3,
-  ! ik1, ik2, ik3: when specified in input it uses for the phonon run
-  !                a different mesh than that used for the charge density.
+  ! nk1,nk2,nk3, k1,k2,k3 : 
+  !              when specified in input, the phonon run uses a different
+  !              k-point mesh from that used for the charge density.
   !
   ! dvscf_star%open : if .true. write in dvscf_star%dir the dvscf_q
   !                   'for all q' in the star of q with suffix dvscf_star%ext. 
@@ -193,6 +192,7 @@ SUBROUTINE phq_readin()
   !                 d2ns_type='diag': if okvan=.true. the matrix is calculated retaining only
   !                                     for <\beta_J|\phi_I> products where for J==I.   
   !                 d2ns_type='dmmp': same as 'diag', but also assuming a m <=> m'.
+  ! diagonalization : diagonalization method used in the nscf calc
   ! 
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
@@ -338,6 +338,16 @@ SUBROUTINE phq_readin()
   ELSE IF ( ABS(ios) /= 0 ) THEN
      CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   END IF
+  ! diagonalization option
+  SELECT CASE(TRIM(diagonalization))
+  CASE ('david','davidson')
+     isolve = 0
+  CASE ('cg')
+     isolve = 1
+  CASE DEFAULT
+     CALL errore('phq_readin','diagonalization '//trim(diagonalization)//' not implemented',1)
+  END SELECT
+
   !
   ! ...  broadcast all input variables
   !
@@ -666,8 +676,8 @@ SUBROUTINE phq_readin()
   magnetic_sym=noncolin .AND. domag
   !
   ! init_start_grid returns .true. if a new k-point grid is set from values
-  ! read from input (this happens if nk1*nk2*nk3, else it returns .false.,
-  ! leaves the current values, as read in read_file, unchanged)
+  ! read from input (this happens if nk1*nk2*nk3 > 0; otherwise reset_grid
+  ! returns .false., leaves the current values, read in read_file, unchanged)
   !
   newgrid = reset_grid (nk1, nk2, nk3, k1, k2, k3) 
   !
@@ -697,9 +707,6 @@ SUBROUTINE phq_readin()
 
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
-  
-  IF (lxdm) CALL errore('phq_readin',&
-     'The phonon code with XDM is not yet available',1)
   
   IF (ldftd3) CALL errore('phq_readin',&
      'The phonon code with Grimme''s DFT-D3 is not yet available',1)
@@ -807,13 +814,14 @@ SUBROUTINE phq_readin()
      ENDIF
   ENDIF
   IF (lgamma_gamma.AND.ldiag) CALL errore('phq_readin','incompatible flags',1)
+  IF (lgamma_gamma.AND.elph ) CALL errore('phq_readin','lgamma_gamma and electron-phonon are incompatible',1)
   !
   IF (tfixed_occ) &
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
   !
   !YAMBO >
-  IF (elph.AND..NOT.(lgauss .or. ltetra).and..NOT.elph_yambo) CALL errore ('phq_readin', 'Electron-&
-       &phonon only for metals', 1)
+  IF (elph.AND..NOT.(lgauss .or. ltetra).and..NOT.elph_yambo) &
+          CALL errore ('phq_readin', 'Electron-phonon only for metals', 1)
   !YAMBO <
   IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
        &a DeltaVscf file', 1)

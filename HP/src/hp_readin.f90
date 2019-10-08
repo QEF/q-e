@@ -17,7 +17,7 @@ SUBROUTINE hp_readin()
   USE io_global,        ONLY : meta_ionode, meta_ionode_id
   USE mp,               ONLY : mp_bcast
   USE mp_world,         ONLY : world_comm
-  USE input_parameters, ONLY : max_seconds
+  USE check_stop,       ONLY : max_seconds
   USE io_files,         ONLY : tmp_dir, prefix, create_directory
   USE control_flags,    ONLY : iverbosity
   USE control_lr,       ONLY : ethr_nscf, lrpa

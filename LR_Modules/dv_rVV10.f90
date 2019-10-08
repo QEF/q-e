@@ -11,7 +11,6 @@ MODULE ph_rVV10
   
   USE kinds,             ONLY : dp
   USE constants,         ONLY : pi, e2
-  USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
   USE mp_pools,          ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
   USE io_global,         ONLY : ionode
@@ -20,7 +19,7 @@ MODULE ph_rVV10
   USE control_flags,     ONLY : iverbosity, gamma_only
   USE io_global,         ONLY : stdout
   USE rVV10,             ONLY : b_value, initialize_spline_interpolation, &
-                                interpolate_kernel
+                                interpolate_kernel, q_mesh, Nr_points, Nqs, r_max
   USE gc_lr,             ONLY : grho
   
 
@@ -346,8 +345,6 @@ end subroutine get_delta_v
 
   SUBROUTINE get_abcdef (q0, i_grid, q_hi, q_low, dq, a,b,c,d,e,f )
 
-    USE kernel_table,    ONLY : q_cut, q_min
-
     real(dp),  intent(IN)    :: q0(:)
     integer, INTENT(IN)      :: i_grid
     integer, INTENT(OUT)     :: q_hi, q_low
@@ -468,7 +465,7 @@ end subroutine get_delta_v
   !!     dq_dgradrho = total_rho / |gradient_rho| * d q / d |gradient_rho|
   !!
     
-  USE kernel_table,    ONLY : q_cut, q_min
+  USE rVV10,           ONLY : q_cut, q_min
     
   !                                                                  
   !                                                                        _

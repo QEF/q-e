@@ -3,7 +3,7 @@
 ! nvtx
 ! ----
 
-module nvtx_fft
+module nvtx
   use iso_c_binding
 #ifdef __CUDA
   use cudafor
@@ -107,4 +107,4 @@ contains
 #endif
   end subroutine nvtxEndRangeAsync
 
-end module nvtx_fft
+end module nvtx

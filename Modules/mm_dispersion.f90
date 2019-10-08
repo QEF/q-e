@@ -72,10 +72,8 @@ MODULE london_module
       !
       USE io_global,           ONLY : ionode, ionode_id, stdout
       !
-#if defined __MPI
       USE mp,                  ONLY : mp_bcast
       USE mp_images,           ONLY : intra_image_comm
-#endif
       !
       IMPLICIT NONE
       !
@@ -280,15 +278,12 @@ MODULE london_module
          !
       END IF
       !
-#if defined __MPI
       ! broadcast data to all processors
       !
       CALL mp_bcast ( C6_ij,  ionode_id, intra_image_comm )
       CALL mp_bcast ( R_sum,  ionode_id, intra_image_comm )
       CALL mp_bcast ( r_cut,  ionode_id, intra_image_comm )
       CALL mp_bcast ( mxr  ,  ionode_id, intra_image_comm )
-      !
-#endif
       !
       ALLOCATE ( r ( 3 , mxr ) , dist2 ( mxr ) )
       !
@@ -312,10 +307,8 @@ MODULE london_module
     !
     ! and scal6 is a global scaling factor
     !
-#if defined __MPI
     USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
-#endif
     !
     IMPLICIT NONE
     !
@@ -325,7 +318,7 @@ MODULE london_module
     ! nrm :       actual number of vectors computed by rgen
     ! nr :        counter
     !
-    INTEGER :: first , last , resto , divid
+    INTEGER :: na_s, na_e, mykey
     ! locals :    parallelization stuff
     !
     INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
@@ -351,78 +344,58 @@ MODULE london_module
     !
     energy_london = 0.d0
     !
-#if defined __MPI
-      !
-      ! parallelization: divide atoms across processors of this image
-      ! (different images have different atomic positions)
-      !
-      resto = MOD ( nat , nproc_image ) 
-      divid = nat / nproc_image
-      !
-      IF ( me_image + 1 <= resto ) THEN
-         !
-         first = ( divid  + 1 ) * me_image + 1
-         last  = ( divid  + 1 ) * ( me_image + 1 )
-         !
-      ELSE
-         !
-         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( me_image-resto ) + 1
-         last  = ( divid  + 1 ) * resto + ( divid ) * ( me_image - resto + 1 )
-         !
-      END IF
-      !
-#else
-      !
-      first = 1
-      last  = nat
-#endif
-      !
-      ! ... the dispersion energy
-      !
-      DO ata = first , last
-        !
-        DO atb = 1 , nat
+    ! poor-man parallelization over atoms
+    ! - if nproc_image=1   : na_s=1, na_e=nat, mykey=0
+    ! - if nproc_image<=nat: each proc. calculates atoms na_s to na_e; mykey=0
+    ! - if nproc_image>nat : each processor takes care of atom na_s=na_e;
+    !   mykey labels how many times each atom appears (mykey=0 first time etc.)
+    !
+    CALL block_distribute( nat, me_image, nproc_image, na_s, na_e, mykey )
+    !
+    ! ... the dispersion energy
+    !
+    IF ( mykey == 0 ) THEN
+       !
+       DO ata = na_s, na_e
           !
-          dtau ( : ) = tau ( : , ata ) - tau ( : , atb )
-          !
-          CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
-          !
-#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
-!$omp parallel do private(nr,dist,dist6,f_damp) default(shared), reduction(-:energy_london)
-#endif
-          DO nr = 1 , nrm
-            !
-            dist  = alat * sqrt ( dist2 ( nr ) )
-            dist6 = beta*( dist / ( R_sum( ityp(atb), ityp(ata) ) ) - 1.0_dp )
-            !
-            ! dist6 is used here as temporary variable to avoid computing
-            ! e^-x for too large x (for x=40, e^-x=4*10^-18)
-            !
-            IF ( dist6 < 40.0_dp ) THEN
-               f_damp = 1.0_dp / ( 1.d0 + exp ( -dist6 ) )
-            ELSE
-               f_damp = 1.0_dp
-            END IF
-            !
-            dist6 = dist**6
-            energy_london = energy_london - &
-                  ( C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6 ) * &
-                  f_damp
-            !
-          END DO
-#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
+          DO atb = 1 , nat
+             !
+             dtau ( : ) = tau ( : , ata ) - tau ( : , atb )
+             !
+             CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
+             !
+ !$omp parallel do private(nr,dist,dist6,f_damp) default(shared), reduction(-:energy_london)
+             DO nr = 1 , nrm
+                !
+                dist  = alat * sqrt ( dist2 ( nr ) )
+                dist6 = beta*( dist / ( R_sum( ityp(atb), ityp(ata) ) ) - 1.0_dp )
+                !
+                ! dist6 is used here as temporary variable to avoid computing
+                ! e^-x for too large x (for x=40, e^-x=4*10^-18)
+                !
+                IF ( dist6 < 40.0_dp ) THEN
+                   f_damp = 1.0_dp / ( 1.d0 + exp ( -dist6 ) )
+                ELSE
+                   f_damp = 1.0_dp
+                END IF
+                !
+                dist6 = dist**6
+                energy_london = energy_london - &
+                     ( C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6 ) * &
+                     f_damp
+                !
+             END DO
 !$omp end parallel do
-#endif
+             !
+          END DO
           !
-        END DO
-        !
-      END DO
-      !
-      energy_london = scal6 * 0.5d0 * energy_london
-      !
-#if defined (__MPI)
+       END DO
+       !
+       energy_london = scal6 * 0.5d0 * energy_london
+       !
+    ENDIF
+    !
     CALL mp_sum ( energy_london , intra_image_comm )
-#endif
     !
     RETURN
     !
@@ -434,11 +407,8 @@ MODULE london_module
    !
    FUNCTION force_london ( alat , nat , ityp , at , bg , tau )
     !
-    !
-#if defined __MPI
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
-#endif
     !
     IMPLICIT NONE
     !
@@ -449,10 +419,8 @@ MODULE london_module
     ! nr        : counter on neighbours shells
     ! ipol      : counter on coords
     !
-    INTEGER :: first , last , resto, divid
-    ! locals :
-    ! first  : lower bound on processor
-    ! last   : upper
+    INTEGER :: na_s, na_e, mykey
+    ! locals :    parallelization stuff
     !
     INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
     ! input:    
@@ -478,95 +446,72 @@ MODULE london_module
     ! at   : direct lattice vectors
     ! bg   : reciprocal lattice vectors
     !
+    ! parallelization: divide atoms across processors of this image
+    ! (different images have different atomic positions)
+    ! see energy_london for explanations
+    !
+    CALL block_distribute( nat, me_image, nproc_image, na_s, na_e, mykey )
+    !
+    ! ... the dispersion forces
     !
     force_london ( : , : ) = 0.d0
     !
-#if defined __MPI
-      !
-      ! parallelization: divide atoms across processors of this image
-      ! (different images have different atomic positions)
-      !
-      resto = MOD ( nat , nproc_image )
-      divid = nat / nproc_image
-      !
-      IF ( me_image + 1 <= resto ) THEN
-         !
-         first = ( divid  + 1 ) * me_image + 1
-         last  = ( divid  + 1 ) * ( me_image + 1 )
-         !
-      ELSE
-         !
-         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( me_image-resto ) + 1
-         last  = ( divid  + 1 ) * resto + ( divid ) * ( me_image - resto + 1 )
-         !
-      END IF
-      !
-#else
-      !
-      first = 1
-      last  = nat
-#endif
-      !
-      ! ... the dispersion forces
-      !
-      DO ata = first , last
-        !
-        DO atb = 1 , nat
-         !
-         IF ( ata /= atb ) THEN
-           !
-           dtau ( : ) = tau ( : , ata ) - tau ( : , atb )
-           !
-           ! generate neighbours shells
-           !
-           CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
-           !
-           ! compute forces
-           !
-           par = beta / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) )
-           !
-           aux(:) = 0.d0
-#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
+    IF ( mykey == 0 ) THEN
+       !
+       DO ata = na_s, na_e
+          !
+          DO atb = 1 , nat
+             !
+             IF ( ata /= atb ) THEN
+                !
+                dtau ( : ) = tau ( : , ata ) - tau ( : , atb )
+                !
+                ! generate neighbours shells
+                !
+                CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
+                !
+                ! compute forces
+                !
+                par = beta / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) )
+                !
+                aux(:) = 0.d0
 !$omp parallel do private(nr,dist,dist6,dist7,exparg,expval,fac,add,ipol) default(shared), reduction(+:aux)
-#endif
-           DO nr = 1 , nrm
-            !
-            dist  = alat * sqrt ( dist2 ( nr ) )
-            dist6 = dist ** 6
-            dist7 = dist6 * dist
-            !
-            exparg = - beta * ( dist / ( R_sum ( ityp(atb) , ityp(ata) ) ) - 1 )
-            expval = exp ( exparg )
-            !
-            fac = C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6
-            add = 6.d0 / dist
-            !
-            DO ipol = 1 , 3
-              ! workaround for OpenMP on Intel compilers
-              aux(ipol) = aux(ipol) + &
+                DO nr = 1 , nrm
+                   !
+                   dist  = alat * sqrt ( dist2 ( nr ) )
+                   dist6 = dist ** 6
+                   dist7 = dist6 * dist
+                   !
+                   exparg = - beta * ( dist / ( R_sum ( ityp(atb) , ityp(ata) ) ) - 1 )
+                   expval = exp ( exparg )
+                   !
+                   fac = C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6
+                   add = 6.d0 / dist
+                   !
+                   DO ipol = 1 , 3
+                      ! workaround for OpenMP on Intel compilers
+                      aux(ipol) = aux(ipol) + &
                            ( scal6 / ( 1 + expval ) * fac * &
                            ( - par * expval / ( 1.d0 + expval ) + add ) * &
                            r ( ipol , nr ) * alat / dist )
-              !
-            END DO
-            !
-           END DO
-#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1600)
+                      !
+                   END DO
+                   !
+                END DO
 !$omp end parallel do 
-#endif
-           DO ipol = 1 , 3
-              force_london ( ipol , ata ) = force_london ( ipol , ata ) + aux(ipol)
-           ENDDO
-           !
-         END IF
-         !
-        END DO
-        !
-      END DO
-      !
-#if defined (__MPI)
+                DO ipol = 1 , 3
+                   force_london ( ipol , ata ) = force_london ( ipol , ata ) + aux(ipol)
+                ENDDO
+                !
+             END IF
+             !
+          END DO
+          !
+       END DO
+       !
+    END IF
+    !
     CALL mp_sum ( force_london , intra_image_comm )
-#endif
     !
     RETURN
     !
@@ -580,10 +525,8 @@ MODULE london_module
    FUNCTION stres_london ( alat , nat , ityp , at , bg , tau , omega )
     !
     !
-#if defined __MPI
     USE mp_images,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
-#endif
     !
     IMPLICIT NONE
     !
@@ -594,8 +537,8 @@ MODULE london_module
     ! nr        : counter on neighbours shells
     ! xpol      : coords counters ipol lpol spol
     !
-    INTEGER ::  first , last , resto, divid
-    ! locals : parallelization
+    INTEGER :: na_s, na_e, mykey
+    ! locals :    parallelization stuff
     !
     INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
     ! input:
@@ -623,103 +566,81 @@ MODULE london_module
     ! bg    : reciprocal lattice vectors
     !
     !
+    ! parallelization: divide atoms across processors of this image
+    ! (different images have different atomic positions)
+    ! see energy_london for explanations
+    !
+    CALL block_distribute( nat, me_image, nproc_image, na_s, na_e, mykey )
+    !
+    ! ... the dispersion stress tensor
     !
     stres_london ( : , : ) = 0.d0
     !
-    first=0
-    last=0
-    !
-#if defined __MPI
-      !
-      ! parallelization: divide atoms across processors of this image
-      ! (different images have different atomic positions)
-      !
-      resto = MOD ( nat , nproc_image )
-      divid = nat / nproc_image
-      !
-      IF ( me_image + 1 <= resto ) THEN
-         !
-         first = ( divid  + 1 ) * me_image + 1
-         last  = ( divid  + 1 ) * ( me_image + 1 )
-         !
-      ELSE
-         !
-         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( me_image-resto ) + 1
-         last  = ( divid  + 1 ) * resto + ( divid ) * ( me_image - resto + 1 )
-         !
-      END IF
-      !
-#else
-      !
-      first = 1
-      last  = nat
-#endif
-      !
-      ! ... the dispersion stress tensor
-      !
-      DO ata = first , last
-        !
-        DO atb = 1 , nat
-           !
-           dtau ( : ) = tau ( : , ata ) - tau ( : , atb )
-           !
-           ! generate neighbours shells
-           !
-           CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
-           !
-           ! compute stress
-           !
-           par = beta / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) )
-           !
-           DO nr = 1 , nrm
-            !
-            dist  = alat * sqrt ( dist2 ( nr ) )
-            dist6 = dist ** 6
-            dist7 = dist6 * dist
-            !
-            exparg = - beta * ( dist / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) ) - 1 )
-            !
-            expval = exp ( exparg )
-            !
-            fac = C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6
-            !
-            add = 6.d0 / dist
-            !
-            DO ipol = 1 , 3
-              !
-              DO lpol = 1 , ipol
+    IF ( mykey == 0 ) THEN
+       !
+       DO ata = na_s, na_e
+          !
+          DO atb = 1 , nat
+             !
+             dtau ( : ) = tau ( : , ata ) - tau ( : , atb )
+             !
+             ! generate neighbours shells
+             !
+             CALL rgen ( dtau, r_cut, mxr, at, bg, r, dist2, nrm )
+             !
+             ! compute stress
+             !
+             par = beta / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) )
+             !
+             DO nr = 1 , nrm
                 !
-                stres_london ( lpol , ipol ) = stres_london ( lpol , ipol ) + &
+                dist  = alat * sqrt ( dist2 ( nr ) )
+                dist6 = dist ** 6
+                dist7 = dist6 * dist
+                !
+                exparg = - beta * ( dist / ( R_sum ( ityp ( atb ) , ityp ( ata ) ) ) - 1 )
+                !
+                expval = exp ( exparg )
+                !
+                fac = C6_ij ( ityp ( atb ) , ityp ( ata ) ) / dist6
+                !
+                add = 6.d0 / dist
+                !
+                DO ipol = 1 , 3
+                   !
+                   DO lpol = 1 , ipol
+                      !
+                      stres_london ( lpol , ipol ) = stres_london ( lpol , ipol ) + &
                            ( scal6 / ( 1 + expval ) * fac * &
                            ( - par * expval / ( 1.d0 + expval ) + add ) * &
                            r ( ipol , nr ) * alat / dist ) * &
                            r ( lpol , nr ) * alat
+                      !
+                   END DO
+                   !
+                END DO
                 !
-              END DO
-              !
-            END DO
-            !
-           END DO
-           !
-        END DO
-        !
-      END DO
-      !
-      DO ipol = 1 , 3
-         !
-         DO lpol = ipol + 1 , 3
-            !
-            stres_london ( lpol , ipol ) = stres_london ( ipol , lpol )
-            !
-         END DO
-         !
-      END DO
-      !
-      stres_london ( : , : ) = - stres_london ( : , : ) / ( 2.d0 * omega )
-      !
-#if defined (__MPI)
+             END DO
+             !
+          END DO
+          !
+       END DO
+       !
+    END IF
+    !
+    DO ipol = 1 , 3
+       !
+       DO lpol = ipol + 1 , 3
+          !
+          stres_london ( lpol , ipol ) = stres_london ( ipol , lpol )
+          !
+       END DO
+       !
+    END DO
+    !
+    stres_london ( : , : ) = - stres_london ( : , : ) / ( 2.d0 * omega )
+    !
     CALL mp_sum ( stres_london , intra_image_comm )
-#endif
     !
     RETURN
     !

@@ -49,7 +49,6 @@ invmat.o \
 io_files.o \
 io_global.o  \
 ions_base.o \
-kernel_table.o \
 kind.o \
 libxc.o \
 mdiis.o \
@@ -111,6 +110,7 @@ xc_vdW_DF.o \
 xc_rVV10.o \
 xc_lda_lsda_drivers.o \
 xc_gga_drivers.o \
+xc_mgga_drivers.o \
 io_base.o \
 qes_types_module.o \
 qes_libs_module.o  \
@@ -122,6 +122,7 @@ qes_read_module.o \
 qes_bcast_module.o \
 qexsd.o   \
 qexsd_copy.o   \
+qexsd_init.o   \
 qexsd_input.o \
 hdf5_qe.o\
 qeh5_module.o\

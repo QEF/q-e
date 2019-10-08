@@ -91,12 +91,20 @@ then
                                  echo "MKL not found",
                                  -lmkl_sequential -lmkl_core -ldl)
                         else
+                              # Detect (again) PGI version
+                              pgf_version=`$mpif90 -V 2>&1 | sed '/^$/d' | grep "^pgf" | cut -d ' ' -f2`
+                              # From version 19.1, the new llvm backend requires linking to mkl_intel_thread
+                              ompimp=""
+                              AS_VERSION_COMPARE([$pgf_version], [19.1], [ ompimp="pgi" ], [ ompimp="intel" ], [ ompimp="intel" ] )
+
+                              lib_string="-lmkl_${ompimp}_thread -lmkl_core -ldl -lpthread -lm"
+
                               AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
                                  have_blas=1 have_mkl=1
-                                 blas_libs="$try_loption $LIBS -lmkl_core -lmkl_pgi_thread"
+                                 blas_libs="$try_loption $LIBS -lmkl_core -lmkl_${ompimp}_thread"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
-                                 -lmkl_pgi_thread -lmkl_core -ldl -lpthread -lm)
+                                 $lib_string)
                         fi
 
                         if test "$ac_cv_search_dgemm" != "no"

@@ -1,4 +1,3 @@
-
 # Makefile for  simple
 
 include ../../make.inc
@@ -6,7 +5,7 @@ LIBMIN = ../minpack/minpacklib.a
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww 
 
 SIMPLEOBJS = \
   stop_pp.o \
@@ -20,12 +19,14 @@ SIMPLEOBJS = \
   gk_sort_limit.o \
   khamiltonian.o \
   init_us_2_max.o \
-  commutator.o
+  commutator.o 
 
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
         ../../KS_Solvers/libks_solvers.a \
-	../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
+	../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+        ../../dft-d3/libdftd3qe.a
+# dft-d3 required by xlf for obscure reasons
 
 PWOBJS = ../../PW/src/libpw.a
 GWWOBJ = ../gww/libgww.a
@@ -52,3 +53,4 @@ clean :
 
 include make.depend
 # DO NOT DELETE
+

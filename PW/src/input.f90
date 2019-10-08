@@ -25,8 +25,6 @@ SUBROUTINE iosys()
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
   !
-  USE kernel_table,  ONLY : initialize_kernel_table
-  !
   USE bp,            ONLY : nppstr_    => nppstr, &
                             gdir_      => gdir, &
                             lberry_    => lberry, &
@@ -141,8 +139,6 @@ SUBROUTINE iosys()
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
                             lsda
-  !
-  USE kernel_table,  ONLY : vdw_table_name_ => vdw_table_name
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
@@ -312,7 +308,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters,      ONLY : deallocate_input_parameters
   USE wyckoff,               ONLY : nattot, sup_spacegroup
-  USE qexsd_module,          ONLY : qexsd_input_obj
+  USE qexsd_input,           ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
   !
   USE vlocal,        ONLY : starting_charge_ => starting_charge
@@ -549,72 +545,11 @@ SUBROUTINE iosys()
   !
   smallmem = ( TRIM( memory ) == 'small' )
   !
-  ! ... Set Values for electron and bands
+  ! ... Set occupancies
   !
-  tfixed_occ = .false.
-  ltetra     = .false.
-  lgauss     = .false.
-  ngauss     = 0
-  !
-  SELECT CASE( trim( occupations ) )
-  CASE( 'fixed' )
-     !
-     IF ( degauss /= 0.D0 ) THEN
-        CALL errore( ' iosys ', &
-                   & ' fixed occupations, gauss. broadening ignored', -1 )
-        degauss = 0.D0
-     ENDIF
-     !
-  CASE( 'smearing' )
-     !
-     lgauss = ( degauss > 0.0_dp ) 
-     IF ( .NOT. lgauss ) &
-        CALL errore( ' iosys ', &
-                   & ' smearing requires gaussian broadening', 1 )
-     !
-     SELECT CASE ( trim( smearing ) )
-     CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
-        ngauss = 0
-        smearing_ = 'gaussian'
-     CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
-        ngauss = 1
-        smearing_ = 'Methfessel-Paxton'
-     CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
-        ngauss = -1
-        smearing_ = 'Marzari-Vanderbilt'
-     CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
-        ngauss = -99
-        smearing_ = 'Fermi-Dirac'
-     CASE DEFAULT
-        CALL errore( ' iosys ', ' smearing '//trim(smearing)//' unknown', 1 )
-     END SELECT
-     !
-  CASE( 'tetrahedra' )
-     !
-     ltetra = .true.
-     tetra_type = 0
-     !
-  CASE( 'tetrahedra_lin', 'tetrahedra-lin')
-     !
-     ltetra = .true.
-     tetra_type = 1
-     !
-  CASE('tetrahedra_opt', 'tetrahedra-opt')
-     !
-     ltetra = .true.
-     tetra_type = 2
-     !
-  CASE( 'from_input' )
-     !
-     ngauss     = 0
-     tfixed_occ = .true.
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'iosys','occupations ' // trim( occupations ) // &
-                & ' not implemented', 1 )
-     !
-  END SELECT
+  CALL set_occupations( occupations, smearing, degauss, &
+       tfixed_occ, ltetra, tetra_type, lgauss, ngauss ) 
+  smearing_ = smearing
   !
   IF( ltetra ) THEN
      IF( lforce ) CALL infomsg( 'iosys', &
@@ -622,6 +557,7 @@ SUBROUTINE iosys()
      IF( lstres ) CALL infomsg( 'iosys', &
        'BEWARE: stress calculation with tetrahedra (not recommanded)')
   END IF
+  !
   IF( nbnd < 1 ) &
      CALL errore( 'iosys', 'nbnd less than 1', nbnd )
   !
@@ -1068,6 +1004,13 @@ SUBROUTINE iosys()
      temperature  = tempw
      nraise_      = nraise
      !
+   CASE( 'svr', 'Svr', 'SVR' )
+     !
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
+     temperature  = tempw
+     nraise_      = nraise
+     !
   CASE( 'andersen', 'Andersen' )
      !
      control_temp = .true.
@@ -1250,8 +1193,9 @@ SUBROUTINE iosys()
   !
   !  ... initialize variables for vdW (dispersions) corrections
   !
+
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
-  !
+
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
      vdw_corr='grimme-d2'
@@ -1447,13 +1391,12 @@ SUBROUTINE iosys()
   !
   ! ... Read atomic positions and unit cell from data file, if needed,
   ! ... overwriting what has just been read before from input
+  ! ... read_config_from_file returns 0 if structure successfully read
   !
   ierr = 1
   IF ( startingconfig == 'file' .AND. .NOT. lforcet ) &
-     ierr = read_config_from_file(nat, at_old, omega_old, lmovecell, &
-                                       at, bg, omega, tau)
+     ierr = read_config_from_file( lmovecell, at_old, omega_old)
   !
-  ! ... read_config_from_file returns 0 if structure successfully read
   ! ... Atomic positions (tau) must be converted to internal units
   ! ... only if they were read from input, not from file
   !
@@ -1589,12 +1532,6 @@ SUBROUTINE iosys()
   !
   IF (screening_parameter >= 0.0_DP) &
         & CALL set_screening_parameter (screening_parameter)
-  !
-  ! ... read the vdw kernel table if needed
-  !
-  vdw_table_name_  = vdw_table_name
-  inlc = get_inlc()
-  IF (inlc > 0) CALL initialize_kernel_table(inlc)
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !

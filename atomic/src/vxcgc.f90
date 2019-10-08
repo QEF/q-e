@@ -175,8 +175,8 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
         CALL xc_gcx( mesh, nspin, rhoaux, grho_v, sx_v, sc_v, v1x_v, v2x_v, v1c_v, v2c_v )
         !
         egc(1:mesh) = sx_v + sc_v
-        vgc(:,1) = v1x_v(:,1) + v1c_v(:,1) 
-        h(:,1) = ( v2x_v(:,1) + v2c_v(:,1) ) * grho(:,1)*r2(:)
+        vgc(1:mesh,1) = v1x_v(1:mesh,1) + v1c_v(1:mesh,1) 
+        h(1:mesh,1) = ( v2x_v(1:mesh,1) + v2c_v(1:mesh,1) ) * grho(1:mesh,1)*r2(1:mesh)
         !
      END IF
      !

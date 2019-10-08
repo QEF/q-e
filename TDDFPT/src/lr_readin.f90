@@ -30,7 +30,7 @@ SUBROUTINE lr_readin
   USE io_global,           ONLY : ionode, ionode_id, stdout
   USE klist,               ONLY : nks, wk, nelec, lgauss, ltetra
   USE fixed_occ,           ONLY : tfixed_occ
-  USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir
+  USE symm_base,           ONLY : nosym
   USE check_stop,          ONLY : max_seconds
   USE realus,              ONLY : real_space, init_realspace_vars, generate_qpointlist, &
                                   betapointlist
@@ -54,6 +54,7 @@ SUBROUTINE lr_readin
 
   IMPLICIT NONE
   !
+  CHARACTER(LEN=256) :: wfcdir = 'undefined', outdir
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(LEN=256) :: beta_gamma_z_prefix
@@ -436,6 +437,11 @@ CONTAINS
        IF ( project .AND. charge_response /= 1) &
            & CALL errore ('lr_readin', &
            & 'projection is possible only in charge response mode 1', 1 )
+       !
+       IF (gamma_only) THEN
+          nosym=.true.
+          WRITE(stdout,*) "Symmetries are disabled for the gamma_only case"
+       ENDIF
        !
     ENDIF
     !

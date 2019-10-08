@@ -12,6 +12,9 @@
   epwwrite    = .true.
   epwread     = .false.
 
+  vme         = .false.
+  lphase      = .true.
+
   nbndsub     =  8
   nbndskip    =  10
 
@@ -42,7 +45,6 @@
   elecselfen  = .true.
   phonselfen  = .true.
   a2f         = .true.
-
 
   fsthick     = 20 ! eV
   eptemp      = 500 ! K

@@ -88,9 +88,11 @@ bands.o : ../../Modules/uspp.o
 bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
 bands.o : ../../UtilXlib/mp.o
+benchmark_libxc.o : ../../Modules/funct.o
 benchmark_libxc.o : ../../Modules/libxc.o
 benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
 benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
+benchmark_libxc.o : ../../Modules/xc_mgga_drivers.o
 chdens_bspline.o : ../../Modules/bspline.o
 chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o
@@ -334,7 +336,6 @@ open_grid.o : ../../Modules/environment.o
 open_grid.o : ../../Modules/fft_base.o
 open_grid.o : ../../Modules/funct.o
 open_grid.o : ../../Modules/gvecw.o
-open_grid.o : ../../Modules/input_parameters.o
 open_grid.o : ../../Modules/io_files.o
 open_grid.o : ../../Modules/io_global.o
 open_grid.o : ../../Modules/ions_base.o
@@ -344,8 +345,6 @@ open_grid.o : ../../Modules/mp_images.o
 open_grid.o : ../../Modules/mp_pools.o
 open_grid.o : ../../Modules/noncol.o
 open_grid.o : ../../Modules/parameters.o
-open_grid.o : ../../Modules/qes_types_module.o
-open_grid.o : ../../Modules/qexsd.o
 open_grid.o : ../../Modules/recvec.o
 open_grid.o : ../../Modules/wavefunctions.o
 open_grid.o : ../../PW/src/buffers.o
@@ -472,7 +471,6 @@ ppacf.o : ../../Modules/funct.o
 ppacf.o : ../../Modules/gvecw.o
 ppacf.o : ../../Modules/io_files.o
 ppacf.o : ../../Modules/io_global.o
-ppacf.o : ../../Modules/kernel_table.o
 ppacf.o : ../../Modules/kind.o
 ppacf.o : ../../Modules/mp_bands.o
 ppacf.o : ../../Modules/mp_global.o
@@ -780,14 +778,11 @@ vasp_xml_module.o : ../../Modules/gvecw.o
 vasp_xml_module.o : ../../Modules/io_files.o
 vasp_xml_module.o : ../../Modules/io_global.o
 vasp_xml_module.o : ../../Modules/ions_base.o
-vasp_xml_module.o : ../../Modules/kernel_table.o
 vasp_xml_module.o : ../../Modules/kind.o
 vasp_xml_module.o : ../../Modules/mp_bands.o
 vasp_xml_module.o : ../../Modules/mp_global.o
 vasp_xml_module.o : ../../Modules/noncol.o
 vasp_xml_module.o : ../../Modules/paw_variables.o
-vasp_xml_module.o : ../../Modules/qes_libs_module.o
-vasp_xml_module.o : ../../Modules/qes_types_module.o
 vasp_xml_module.o : ../../Modules/recvec.o
 vasp_xml_module.o : ../../Modules/recvec_subs.o
 vasp_xml_module.o : ../../Modules/uspp.o
@@ -861,10 +856,10 @@ work_function.o : ../../PW/src/scf_mod.o
 work_function.o : ../../UtilXlib/mp.o
 write_hamiltonians.o : ../../Modules/cell_base.o
 write_hamiltonians.o : ../../Modules/constants.o
-write_hamiltonians.o : ../../Modules/input_parameters.o
 write_hamiltonians.o : ../../Modules/io_global.o
 write_hamiltonians.o : ../../Modules/ions_base.o
 write_hamiltonians.o : ../../Modules/kind.o
+write_hamiltonians.o : ../../Modules/run_info.o
 write_hamiltonians.o : ../../Modules/version.o
 write_hamiltonians.o : ../../Modules/wannier_new.o
 write_hamiltonians.o : ../../PW/src/pwcom.o
@@ -901,7 +896,6 @@ xc_vdW_scale_mod.o : ../../Modules/constants.o
 xc_vdW_scale_mod.o : ../../Modules/control_flags.o
 xc_vdW_scale_mod.o : ../../Modules/fft_base.o
 xc_vdW_scale_mod.o : ../../Modules/io_global.o
-xc_vdW_scale_mod.o : ../../Modules/kernel_table.o
 xc_vdW_scale_mod.o : ../../Modules/kind.o
 xc_vdW_scale_mod.o : ../../Modules/mp_bands.o
 xc_vdW_scale_mod.o : ../../Modules/recvec.o

@@ -72,7 +72,7 @@ SUBROUTINE write_hamiltonian_amulet(nwan,hamk,hash,iunhamilt)
   USE constants,  ONLY : rytoev
   USE klist, ONLY: nks, wk, xk
   USE lsda_mod, ONLY : nspin
-  USE input_parameters, ONLY : title
+  USE run_info, ONLY : title
   USE global_version, ONLY : version_number
   
   IMPLICIT NONE
@@ -161,7 +161,7 @@ SUBROUTINE write_systemdata_amulet(hash,nelec,iunsystem)
   USE constants,  ONLY : rytoev
   USE klist, ONLY: nks, wk, xk
   USE lsda_mod, ONLY : nspin
-  USE input_parameters, ONLY : title
+  USE run_info, ONLY : title
   USE ions_base, ONLY : nat, atm, tau, ityp
   USE cell_base, ONLY : alat, at
   USE ener, ONLY : ef

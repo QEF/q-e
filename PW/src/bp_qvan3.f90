@@ -7,71 +7,93 @@
 !
 ! Modified by PG - Oct.2007: removed obsolete comments
 !--------------------------------------------------------------------------
-      subroutine qvan3(iv,jv,is,qg,ylm_k,qr)
-!--------------------------------------------------------------------------
-!
-!     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
-      USE kinds, ONLY: DP
-      USE ions_base,  ONLY : ntyp => nsp
-      USE us, ONLY: dq, qrad
-      USE uspp_param, ONLY: lmaxq, nbetam
-      USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
-
-      implicit none
-      integer :: iv,jv,is
-      complex(DP) :: qg,sig
-      real(DP) :: ylm_k(lmaxq*lmaxq)
-      real(DP) :: qr(nbetam,nbetam,lmaxq,ntyp)
-      
-      integer ivs,jvs,ivl,jvl,lp,l,i
+SUBROUTINE qvan3( iv, jv, is, qg, ylm_k, qr )
+      !---------------------------------------------------------------------
+      !! It calculates:
+      !! \[ \text{qg} = \sum_{LM} (-I)^L \text{AP}(LM,\text{iv},
+      !!                \text{jv}) \text{YR}_{LM} \text{QRAD}(\text{iv},
+      !!                \text{jv},L,\text{is}) \]
+      !
+      ! It calculates: qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
+      !
+      USE kinds,       ONLY: DP
+      USE ions_base,   ONLY: ntyp => nsp
+      USE us,          ONLY: dq, qrad
+      USE uspp_param,  ONLY: lmaxq, nbetam
+      USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: iv
+      !! beta function index
+      INTEGER :: jv
+      !! beta function index
+      INTEGER :: is
+      !! atomic type
+      COMPLEX(DP) :: qg
+      !! output: see routine comments
+      REAL(DP) :: ylm_k(lmaxq*lmaxq)
+      !! q-space real spherical harmonics at dk [\(Y_{LM}\)]
+      REAL(DP) :: qr(nbetam,nbetam,lmaxq,ntyp)
+      !! Bessel transform of \(Q_{ij}(|r|)\) at dk [\(Q_{ij}^L(|r|)\)]
+      !
+      ! ... local variables
+      !
+      COMPLEX(DP) :: sig
+      INTEGER :: ivs, jvs, ivl, jvl, lp, l, i
+      !
+      !
       ivs = indv(iv,is)
       jvs = indv(jv,is)
       ivl = nhtolm(iv,is)
       jvl = nhtolm(jv,is)
-
-      if (ivs > nbetam .OR. jvs > nbetam) &
-           call errore (' qvan3 ', ' wrong dimensions (1)', MAX(ivs,jvs))
-      if (ivl > nlx .OR. jvl > nlx) &
-       call errore (' qvan3 ', ' wrong dimensions (2)', MAX(ivl,jvl))
- 
-      qg = (0.0d0,0.0d0)
-
+      !
+      IF (ivs > nbetam .OR. jvs > nbetam) &
+           CALL errore( ' qvan3 ', ' wrong dimensions (1)', MAX(ivs,jvs) )
+      IF (ivl > nlx .OR. jvl > nlx) &
+           CALL errore( ' qvan3 ', ' wrong dimensions (2)', MAX(ivl,jvl) )
+      !
+      qg = (0.0_DP,0.0_DP)
+      !
 !odl                  Write(*,*) 'QVAN3  --  ivs jvs = ',ivs,jvs
 !odl                  Write(*,*) 'QVAN3  --  ivl jvl = ',ivl,jvl
-      do i=1,lpx(ivl,jvl)
+      DO i = 1, lpx(ivl,jvl)
 !odl                  Write(*,*) 'QVAN3  --  i = ',i
         lp = lpl(ivl,jvl,i)
 !odl                  Write(*,*) 'QVAN3  --  lp = ',lp
-
-!     EXTRACTION OF ANGULAR MOMENT L FROM LP:
-
-        if (lp.eq.1) then
+        !
+        ! ... EXTRACTION OF ANGULAR MOMENT L FROM LP:
+        !
+        IF (lp == 1) THEN
           l = 1
-        else if ((lp.ge.2) .and. (lp.le.4)) then
+        ELSEIF ((lp >=  2).AND.(lp <=  4)) THEN
           l = 2
-        else if ((lp.ge.5) .and. (lp.le.9)) then
+        ELSEIF ((lp >=  5).AND.(lp <=  9)) THEN
           l = 3
-        else if ((lp.ge.10).and.(lp.le.16)) then
+        ELSEIF ((lp >= 10).AND.(lp <= 16)) THEN
           l = 4
-        else if ((lp.ge.17).and.(lp.le.25)) then
+        ELSEIF ((lp >= 17).AND.(lp <= 25)) THEN
           l = 5
-        else if ((lp.ge.26).and.(lp.le.36)) then
+        ELSEIF ((lp >= 26).AND.(lp <= 36)) THEN
           l = 6
-        else if ((lp.ge.37).and.(lp.le.49)) then
+        ELSEIF ((lp >= 37).AND.(lp <= 49)) THEN
           l = 7
-        else if (lp.gt.49) then
-          call errore(' qvan3 ',' l not programmed ',lp)
-        end if
-
-        sig = (0.d0,-1.d0)**(l-1)
+        ELSEIF (lp > 49) THEN
+          CALL errore( ' qvan3 ',' l not programmed ', lp )
+        ENDIF
+        !
+        sig = (0.0_DP,-1.0_DP)**(l-1)
         sig = sig * ap(lp,ivl,jvl)
-
+        !
 !odl                  Write(*,*) 'QVAN3  --  sig = ',sig
-
-!        WRITE( stdout,*) 'qvan3',ng1,LP,L,ivs,jvs
-
-          qg = qg + sig * ylm_k(lp) * qr(ivs,jvs,l,is)
-
-      end do
-      return
-      end subroutine qvan3
+        !
+        ! WRITE( stdout,*) 'qvan3',ng1,LP,L,ivs,jvs
+        !
+        qg = qg + sig * ylm_k(lp) * qr(ivs,jvs,l,is)
+        !
+      ENDDO
+      !
+      !
+      RETURN
+      !
+END SUBROUTINE qvan3

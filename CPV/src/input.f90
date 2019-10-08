@@ -728,7 +728,7 @@ MODULE input
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
-           outdir, prefix, nkstot, xk, vdw_table_name,                        &
+           outdir, prefix, nkstot, xk,                                        &
            occupations, n_inner, fermi_energy, rotmass, occmass,              &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
@@ -794,8 +794,6 @@ MODULE input
      USE wannier_base,     ONLY : wannier_init
      USE efield_module,    ONLY : tefield
      USE funct,            ONLY : dft_is_nonlocc, get_inlc
-     USE kernel_table,     ONLY : vdw_table_name_ => vdw_table_name, &
-                                  initialize_kernel_table
      USE control_flags,    ONLY : llondon, ts_vdw_ => ts_vdw
      USE london_module,    ONLY : init_london, scal6, lon_rcut
      USE tsvdw_module,     ONLY : vdw_isolated, vdw_econv_thr
@@ -977,14 +975,6 @@ MODULE input
         vdw_isolated = ts_vdw_isolated
         vdw_econv_thr= ts_vdw_econv_thr
      END IF
-     !
-     ! ... initialize kernel table for nonlocal functionals
-     !
-     IF ( dft_is_nonlocc( ) ) THEN
-        vdw_table_name_ = vdw_table_name
-        inlc = get_inlc()
-        call initialize_kernel_table(inlc)
-     ENDIF
      !
      RETURN
      !

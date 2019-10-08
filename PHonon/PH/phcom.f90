@@ -214,8 +214,8 @@ MODULE control_ph
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
-  INTEGER :: rec_code=-1000,    &! code for recover
-             rec_code_read=-1000 ! code for recover. Not changed during the run
+  INTEGER :: rec_code=-1000,    & ! code for recover
+             rec_code_read=-1000  ! code for recover. Not changed during the run
   LOGICAL :: lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
              convt,       &! if .TRUE. the phonon has converged
              epsil,       &! if .TRUE. computes dielec. const and eff. charges
@@ -255,8 +255,10 @@ MODULE control_ph
              lqdir=.FALSE.,        & ! if true each q writes in its directory
              qplot=.FALSE.,        & ! if true the q are read from input
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
-             all_done, &      ! if .TRUE. all representations have been done
-             newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
+             all_done      ! if .TRUE. all representations have been done
+  !
+  LOGICAL :: newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
+  INTEGER :: nk1,nk2,nk3, k1,k2,k3  ! new Monkhorst-Pack k-point grid
   !
 END MODULE control_ph
 !

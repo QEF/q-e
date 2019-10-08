@@ -13,8 +13,7 @@ SUBROUTINE read_file()
   ! Wrapper routine for backwards compatibility
   !
   USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, postfix, &
-       tmp_dir, wfc_dir
+  USE io_files,             ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
   USE buffers,              ONLY : open_buffer, close_buffer
   USE wvfct,                ONLY : nbnd, npwx
   USE noncollin_module,     ONLY : npol
@@ -26,6 +25,8 @@ SUBROUTINE read_file()
   USE lsda_mod,             ONLY : isk
   USE wvfct,                ONLY : nbnd, et, wg
   !
+  USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
+  !
   IMPLICIT NONE 
   INTEGER :: ierr
   LOGICAL :: exst, wfc_is_collected
@@ -36,7 +37,7 @@ SUBROUTINE read_file()
   !
   ! ... Read the contents of the xml data file
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  dirname = restart_dir( )
   WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
@@ -102,21 +103,25 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE gvecw,           ONLY : ecutwfc
   USE fft_base,        ONLY : dfftp, dffts
   USE io_global,       ONLY : stdout, ionode, ionode_id
-  USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur
+  USE io_files,        ONLY : psfile, pseudo_dir, pseudo_dir_cur, &
+                              restart_dir, xmlfile
   USE mp_global,       ONLY : nproc_file, nproc_pool_file, &
                               nproc_image_file, ntask_groups_file, &
                               nproc_bgrp_file, nproc_ortho_file
   USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau, extfor
   USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
   USE force_mod,       ONLY : force
-  USE klist,           ONLY : nks, nkstot, nelec, wk
+  USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
+       nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra
+  USE ktetra,          ONLY : ntetra, tetra_type
+  USE start_k,         ONLY : nks_start, xk_start, wk_start, &
+       nk1, nk2, nk3, k1, k2, k3
   USE ener,            ONLY : ef, ef_up, ef_dw
-  USE electrons_base,  ONLY : nupdwn 
+  USE electrons_base,  ONLY : nupdwn, set_nelup_neldw
   USE wvfct,           ONLY : npwx, nbnd, et, wg
   USE extfield,        ONLY : forcefield, forcegate, tefield, dipfield, &
        edir, emaxpos, eopreg, eamp, el_dipole, ion_dipole, gate, zgate, &
        relaxz, block, block_1, block_2, block_height
-  USE io_files,        ONLY : tmp_dir, prefix, postfix
   USE symm_base,       ONLY : nrot, nsym, invsym, s, ft, irt, t_rev, &
                               sname, inverse_s, s_axis_to_cart, &
                               time_reversal, no_t_rev, nosym, checkallsym
@@ -128,33 +133,32 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
                               start_exx, dft_is_hybrid
   USE london_module,   ONLY : scal6, lon_rcut, in_C6
   USE tsvdw_module,    ONLY : vdw_isolated
-  USE kernel_table,    ONLY : vdw_table_name
   USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                               exxdiv_treatment, yukawa, ecutvcut
   USE exx,             ONLY : ecutfock, local_thr
   USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
        lxdm, ts_vdw
   USE Coul_cut_2D,     ONLY : do_cutoff_2D
-  USE noncollin_module,ONLY : noncolin, angle1, angle2
-  USE spin_orb,        ONLY : domag
-  USE lsda_mod,        ONLY : isk, lsda, starting_magnetization
+  USE noncollin_module,ONLY : noncolin, npol, angle1, angle2, bfield, &
+       nspin_lsda, nspin_gga, nspin_mag
+  USE spin_orb,        ONLY : domag, lspinorb
+  USE lsda_mod,        ONLY : nspin, isk, lsda, starting_magnetization,&
+       current_spin
   USE realus,          ONLY : real_space
   USE basis,           ONLY : natomwfc
   USE uspp,            ONLY : okvan
   USE paw_variables,   ONLY : okpaw
   !
-  USE pw_restart_new,  ONLY : pw_read_schema, &
-       readschema_magnetization, &
-       readschema_occupations, readschema_brillouin_zone
   USE qes_types_module,ONLY : output_type, parallel_info_type, &
        general_info_type, input_type
   USE qes_libs_module, ONLY : qes_reset
+  USE qexsd_module,    ONLY : qexsd_readschema
   USE qexsd_copy,      ONLY : qexsd_copy_parallel_info, &
-       qexsd_copy_dim, qexsd_copy_atomic_species, &
+       qexsd_copy_algorithmic_info, qexsd_copy_atomic_species, &
        qexsd_copy_atomic_structure, qexsd_copy_symmetry, &
-       qexsd_copy_basis_set, qexsd_copy_algorithmic_info,&
-       qexsd_copy_dft, qexsd_copy_efield, qexsd_copy_band_structure
-       
+       qexsd_copy_basis_set, qexsd_copy_dft, qexsd_copy_efield, &
+       qexsd_copy_band_structure, qexsd_copy_magnetization, &
+       qexsd_copy_kpoints
 #if defined(__BEOWULF)
   USE qes_bcast_module,ONLY : qes_bcast
   USE mp_images,       ONLY : intra_image_comm
@@ -162,81 +166,55 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
 #endif
   !
   USE wvfct_gpum,            ONLY : using_et, using_wg, using_wg_d
-  USE gvect_gpum,            ONLY : using_g, using_gg, using_g_d, using_gg_d, &
-                                    using_mill, using_mill_d, &
-                                    using_eigts1, using_eigts2, using_eigts3, &
-                                    using_eigts1_d, using_eigts2_d, using_eigts3_d
   !
   IMPLICIT NONE
   LOGICAL, INTENT(OUT) :: wfc_is_collected
   !
   INTEGER  :: i, is, ik, ierr, dum1,dum2,dum3
-  LOGICAL  :: magnetic_sym, lvalid_input
-  CHARACTER(LEN=20) :: dft_name, vdw_corr
+  LOGICAL  :: magnetic_sym, lvalid_input, lfixed
+  CHARACTER(LEN=20) :: dft_name, vdw_corr, occupations
+  CHARACTER(LEN=320):: filename
   REAL(dp) :: exx_fraction, screening_parameter
-  TYPE (output_type)      :: output_obj 
+  TYPE (output_type)        :: output_obj 
   TYPE (parallel_info_type) :: parinfo_obj
   TYPE (general_info_type ) :: geninfo_obj
   TYPE (input_type)         :: input_obj
   !
   !
+  filename = xmlfile ( )
+  !
 #if defined(__BEOWULF)
    IF (ionode) THEN
-      CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
+      ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
    END IF
    CALL mp_bcast(ierr,intra_image_comm)
-   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', abs(ierr) ) 
+   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
    CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
    CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
    CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
    CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
 #else
-  CALL pw_read_schema ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
-  IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', abs(ierr) ) 
+   ierr = qexsd_readschema ( filename, output_obj, parinfo_obj, geninfo_obj, input_obj)
+   IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
 #endif
-  wfc_is_collected = output_obj%band_structure%wf_collected
   !
-  ! ... here we read the variables that dimension the system
+  ! ... Now read all needed variables from xml objects
+  !
+  wfc_is_collected = output_obj%band_structure%wf_collected
+  lvalid_input = (TRIM(input_obj%tagname) == "input")
   !
   CALL qexsd_copy_parallel_info (parinfo_obj, nproc_file, &
        nproc_pool_file, nproc_image_file, ntask_groups_file, &
        nproc_bgrp_file, nproc_ortho_file)
-  CALL qexsd_copy_dim ( output_obj%atomic_structure, &
-        output_obj%band_structure, nat, nkstot, nbnd ) 
   !
-  ! ... until pools are activated, the local number of k-points nks
-  ! ... should be equal to the global number nkstot - k-points are replicated
-  !
-  nks = nkstot
-  !
-  ! ... allocate space for arrays to be read in this routine
-  !
-  ! ... atomic positions, forces, symmetries
-  !
-  IF ( nat < 0 ) CALL errore( 'read_xml_file', 'wrong number of atoms', 1 )
-  ALLOCATE( ityp( nat ) )
-  ALLOCATE( tau( 3, nat ) )
-  ALLOCATE( force ( 3, nat ) )
-  ALLOCATE( extfor( 3, nat ) )
-  IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
-  IF ( gate ) ALLOCATE( forcegate( 3, nat ) )
-  ALLOCATE( irt( 48, nat ) )
-  !
-  ! ... eigenvalues, weights
-  !
-  ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
-  CALL using_et(1); CALL using_wg(1)
-  !
-  ! ... here we read all the variables defining the system
-  !
-  lvalid_input = (TRIM(input_obj%tagname) == "input")
-  !
-  pseudo_dir_cur = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+  pseudo_dir_cur = restart_dir ( )
   CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
        nsp, atm, amass, angle1, angle2, starting_magnetization, &
        psfile, pseudo_dir ) 
   IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
   !! Atomic structure section
+  !! tau and ityp are allocated inside qexsd_copy_atomic_structure
+  !
   CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
        atm, nat, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
   !
@@ -256,6 +234,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   ecutwfc = ecutwfc*e2
   ecutrho = ecutrho*e2
   dual = ecutrho/ecutwfc
+  ! FIXME: next line ensures exact consistency between reciprocal and
+  ! direct lattice vectors, preventing weird phonon symmetry errors
+  ! (due to lousy algorithms, extraordinarily sensitive to tiny errors)
+  CALL recips ( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !!
   !! DFT section
   CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
@@ -263,7 +245,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
        Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-       vdw_corr, vdw_table_name, scal6, lon_rcut, vdw_isolated )
+       vdw_corr, scal6, lon_rcut, vdw_isolated )
   !! More DFT initializations
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw, lxdm )
   CALL enforce_input_dft ( dft_name, .TRUE. )
@@ -275,20 +257,43 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
      CALL start_exx ()
   END IF
   !! Band structure section
+  !! et and wg are allocated inside qexsd_copy_band_structure
+  CALL using_et(2); CALL using_wg(2)
   CALL qexsd_copy_band_structure( output_obj%band_structure, lsda, &
-       nkstot, isk, natomwfc, nupdwn(1), nupdwn(2), nelec, wk, wg, &
-       ef, ef_up, ef_dw, et )
+       nkstot, isk, natomwfc, nbnd, nupdwn(1), nupdwn(2), nelec, xk, &
+       wk, wg, ef, ef_up, ef_dw, et )
   ! convert to Ry
   ef = ef*e2
   ef_up = ef_up*e2
   ef_dw = ef_dw*e2
   et(:,:) = et(:,:)*e2
+  !
+  ! ... until pools are activated, the local number of k-points nks
+  ! ... should be equal to the global number nkstot - k-points are replicated
+  !
+  nks = nkstot
   !!
-  CALL readschema_magnetization (  output_obj%band_structure,  &
-       output_obj%magnetization )
-  CALL readschema_occupations( output_obj%band_structure )
-  CALL readschema_brillouin_zone( output_obj%band_structure )
+  !! Magnetization section
+  CALL qexsd_copy_magnetization ( output_obj%magnetization, lsda, noncolin,&
+       lspinorb, domag, tot_magnetization )
+  !
+  bfield = 0.d0
+  CALL set_spin_vars( lsda, noncolin, lspinorb, domag, &
+         npol, nspin, nspin_lsda, nspin_mag, nspin_gga, current_spin )
+  !! Information for generating k-points and occupations
+  CALL qexsd_copy_kpoints( output_obj%band_structure, &
+       nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
+       occupations, smearing, degauss )
+  !
+  CALL set_occupations( occupations, smearing, degauss, &
+       lfixed, ltetra, tetra_type, lgauss, ngauss )
+  IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
+  IF (lfixed) CALL errore('read_file','bad occupancies',1)
+  ! FIXME: is this really needed? do we use nelup and neldw?
+  IF ( lfixed .AND. lsda ) &
+       CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
   !! Symmetry section
+  ALLOCATE ( irt(48,nat) )
   IF ( lvalid_input ) THEN 
      CALL qexsd_copy_symmetry ( output_obj%symmetries, &
           nsym, nrot, s, ft, sname, t_rev, invsym, irt, &
@@ -310,7 +315,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL s_axis_to_cart()
   !! symmetry check - FIXME: is this needed?
   IF (nat > 0) CALL checkallsym( nat, tau, ityp)
-  !
+  !! Algorithmic info
   do_cutoff_2D = (output_obj%boundary_conditions%assume_isolated == "2D")
   CALL qexsd_copy_algorithmic_info ( output_obj%algorithmic_info, &
        real_space, tqr, okvan, okpaw )
@@ -323,6 +328,11 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
   !
   ! END OF READING VARIABLES FROM XML DATA FILE
+  !
+  ALLOCATE( force ( 3, nat ) )
+  ALLOCATE( extfor( 3, nat ) )
+  IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
+  IF ( gate ) ALLOCATE( forcegate( 3, nat ) )
   !
 END SUBROUTINE read_xml_file
 !
@@ -342,10 +352,7 @@ SUBROUTINE post_xml_init (  )
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE paw_onecenter,        ONLY : paw_potential
   USE dfunct,               ONLY : newd
-  USE noncollin_module,     ONLY : noncolin
-  USE spin_orb,             ONLY : lspinorb
   USE funct,                ONLY : get_inlc, get_dft_name
-  USE kernel_table,         ONLY : initialize_kernel_table
   USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u, U_projection
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
@@ -364,11 +371,18 @@ SUBROUTINE post_xml_init (  )
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE wvfct,                ONLY : nbnd, nbndx, et, wg
   USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : noncolin
+  USE spin_orb,             ONLY : lspinorb
   USE cell_base,            ONLY : at, bg, set_h_ainv
   USE symm_base,            ONLY : d1, d2, d3
   USE realus,               ONLY : betapointlist, generate_qpointlist, &
                                    init_realspace_vars,real_space
   USE uspp_gpum,            ONLY : using_becsum
+  !
+  USE gvect_gpum,            ONLY : using_g, using_gg, using_g_d, using_gg_d, &
+                                    using_mill, using_mill_d, &
+                                    using_eigts1, using_eigts2, using_eigts3, &
+                                    using_eigts1_d, using_eigts2_d, using_eigts3_d
   !
   IMPLICIT NONE
   !
@@ -376,11 +390,10 @@ SUBROUTINE post_xml_init (  )
   REAL(DP) :: ehart, etxc, vtxc, etotefield, charge
   CHARACTER(LEN=20) :: dft_name
   !
-  ! ... set spin variables, G cutoffs, cell factor (FIXME: from setup.f90?)
+  ! ... set G cutoffs and cell factor (FIXME: from setup.f90?)
   !
   CALL set_gcut()
   if (cell_factor == 0.d0) cell_factor = 1.D0
-  CALL set_spin_vars ( )
   nbndx = nbnd
   !
   ! ... read pseudopotentials
@@ -388,11 +401,6 @@ SUBROUTINE post_xml_init (  )
   !
   dft_name = get_dft_name ()
   CALL readpp ( dft_name )
-  !
-  ! ... read the vdw kernel table if needed
-  !
-  inlc = get_inlc()
-  IF (inlc > 0 ) CALL initialize_kernel_table(inlc)
   !
   ! ... misc PP initialization (from setup.f90)
   !
@@ -527,32 +535,5 @@ SUBROUTINE post_xml_init (  )
       END IF
       !
     END SUBROUTINE set_gcut
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE set_spin_vars( )
-      !------------------------------------------------------------------------
-      !
-      !  Set various spin-related variables
-      !
-      USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
-      USE spin_orb,  ONLY : domag
-      USE lsda_mod, ONLY : nspin, current_spin
-      !
-      IF (nspin /= 2) current_spin = 1
-      !
-      nspin_mag  = nspin
-      nspin_lsda = nspin
-      nspin_gga  = nspin
-      IF (nspin==4) THEN
-        nspin_lsda=1
-        IF (domag) THEN
-           nspin_gga=2
-        ELSE
-           nspin_gga=1
-           nspin_mag=1
-        ENDIF
-      ENDIF
-      !
-    END SUBROUTINE set_spin_vars
     !
   END SUBROUTINE post_xml_init

@@ -83,9 +83,6 @@ Warning: card  / ignored
                 l(3) =   1
                 l(4) =   1
 
-     vdW kernel table read from file vdW_kernel_table
-     MD5 check sum: 5b6fc2752928c2352bbfa3193b2074bd
-
      atomic species   valence    mass     pseudopotential
         C              4.00    10.80000     C ( 1.00)
 

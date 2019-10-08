@@ -10,162 +10,170 @@
 !
 !                        META-GGA FUNCTIONALS
 !
-!  Available functionals : 
+!  Available functionals :
 !           - TPSS (Tao, Perdew, Staroverov & Scuseria)
-!           - TB09 (via libxc)
-!           - SCAN (via libxc)
 !           - M06L
+!  Other options are available through libxc library (must be specified
+!  in input).
 !
 !=========================================================================
-!   
-!-------------------------------------------------------------------------
 !
 !                             TPSS
 !
 !-------------------------------------------------------------------------
-!-------------------------------------------------------------------------
-subroutine tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   !-----------------------------------------------------------------------
-  !     TPSS metaGGA corrections for exchange and correlation - Hartree a.u.
+  !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.
   !
-  !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
-  !               definition:  E_x = \int E_x(rho,grho) dr
-  !               output: sx = E_x(rho,grho)
-  !                       v1x= D(E_x)/D(rho)
-  !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !                       sc, v1c, v2c as above for correlation
-  !                       v3x= D(E_x)/D(tau)
+  !! Definition:  E_x = \int E_x(rho,grho) dr
   !
   USE kinds,            ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none  
-  real(DP), intent(in) :: rho, grho, tau
-  real(dp), intent(out):: sx, sc, v1x, v2x, v3x, v1c, v2c, v3c
-#if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-  integer :: size = 1
-  integer :: func_id = 202  !
-  real(dp) :: lapl_rho, vlapl_rho ! not used in TPSS
- 
-  lapl_rho = grho
-
-  ! exchange  
-  func_id = 202
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau,&
-                               sx, v1x, v2x, vlapl_rho, v3x)  
-  call xc_f90_func_end(xc_func)
-  
-  sx  = sx * rho
-  v2x = v2x*2.0_dp
-
-  ! correlation
-  func_id = 231  ! Perdew, Tao, Staroverov & Scuseria correlation  
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func,size , rho, grho, lapl_rho, tau,&
-                               sc, v1c, v2c, vlapl_rho, v3c)  
-  call xc_f90_func_end(xc_func)
-
-  sc  = sc * rho
-  v2c = v2c*2.0_dp
-
-#else
-  real(DP), parameter :: small = 1.E-10_DP
-
-  if (rho.le.small) then  
-     sx = 0.0_DP  
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! the charge density
+  REAL(DP), INTENT(IN) :: grho
+  !! grho = |\nabla rho|^2
+  REAL(DP), INTENT(IN) :: tau
+  !! kinetic energy density
+  REAL(DP), INTENT(OUT) :: sx
+  !! sx = E_x(rho,grho)
+  REAL(DP), INTENT(OUT) :: sc
+  !! sc = E_c(rho,grho)
+  REAL(DP), INTENT(OUT) :: v1x
+  !! v1x = D(E_x)/D(rho)
+  REAL(DP), INTENT(OUT) :: v2x
+  !! v2x = D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  REAL(DP), INTENT(OUT) :: v3x
+  !! v3x = D(E_x)/D(tau)
+  REAL(DP), INTENT(OUT) :: v1c
+  !! v1c = D(E_c)/D(rho)
+  REAL(DP), INTENT(OUT) :: v2c
+  !! v2c = D(E_c)/D( D rho/D r_alpha ) / |\nabla rho|
+  REAL(DP), INTENT(OUT) :: v3c
+  !! v3c = D(E_c)/D(tau)
+  !
+  ! ... local variables
+  !
+  REAL(DP), PARAMETER :: small = 1.E-10_DP
+  !
+  IF (rho <= small) THEN
+     sx  = 0.0_DP  
      v1x = 0.0_DP  
      v2x = 0.0_DP 
-     sc = 0.0_DP
+     sc  = 0.0_DP
      v1c = 0.0_DP
      v2c = 0.0_DP
      v3x = 0.0_DP
-     v3c=0.0_DP
-     return
-  end if
+     v3c = 0.0_DP
+     RETURN
+  ENDIF
+  !
   ! exchange
-  call metax(rho,grho,tau,sx,v1x,v2x,v3x)
+  CALL metax( rho, grho, tau, sx, v1x, v2x, v3x )
   ! correlation
-  call metac(rho,grho,tau,sc,v1c,v2c,v3c)
+  CALL metac( rho, grho, tau, sc, v1c, v2c, v3c )
   !
-#endif
+  RETURN
   !
-  return  
-end subroutine tpsscxc
+END SUBROUTINE tpsscxc
+!
+!
 !-------------------------------------------------------------------------
-subroutine metax(rho,grho2,tau,ex,v1x,v2x,v3x)
-  !    --------------------------------------------------------------==
-  !     ==  TPSS meta-GGA exchange potential and energy                    
-  !  ==                                                              ==
-  !  ==--------------------------------------------------------------==
-  
-  USE kinds,            ONLY : DP
-
-  !  NOTA BENE:            E_x(rho,grho)=rho\epsilon_x(rho,grho)
-  !  ex = E_x(rho,grho)    NOT \epsilon_x(rho,grho)
-  !  v1x= D(E_x)/D(rho)
-  !  v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !  v3x= D(E_x)/D( tau )
-  !  tau is the kinetic energy density
-  !  the same applies to correlation terms
-  !  input grho2 is |\nabla rho|^2
-  implicit none
-  !  INPUT
-  real(DP) :: rho,grho2,tau
-  !  OUTPUT
-  real(DP) :: ex,v1x,v2x,v3x
-  !  LOCAL
-  real(DP) :: rs, vx_unif, ex_unif
+SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )
+  !--------------------------------------------------------------------
+  !! TPSS meta-GGA exchange potential and energy.
+  !
+  !! NOTE: E_x(rho,grho) = rho\epsilon_x(rho,grho) ;  
+  !! ex = E_x(rho,grho)    NOT \epsilon_x(rho,grho) ;  
+  !! v1x= D(E_x)/D(rho) ;  
+  !! v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho| ;  
+  !! v3x= D(E_x)/D( tau ) ;  
+  !! tau is the kinetic energy density ;  
+  !! the same applies to correlation terms ;  
+  !! input grho2 is |\nabla rho|^2 .
+  !
+  USE kinds,       ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! the charge density
+  REAL(DP), INTENT(IN) :: grho2
+  !! grho2 = |\nabla rho|^2
+  REAL(DP), INTENT(IN) :: tau
+  !! kinetic energy density
+  REAL(DP), INTENT(OUT) :: ex
+  !! ex = E_x(rho,grho)
+  REAL(DP), INTENT(OUT) :: v1x
+  !! v1x = D(E_x)/D(rho)
+  REAL(DP), INTENT(OUT) :: v2x
+  !! v2x = D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  REAL(DP), INTENT(OUT) :: v3x
+  !! v3x = D(E_x)/D(tau)
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: rs, vx_unif, ex_unif
   !  ex_unif:   lda \epsilon_x(rho)
   !  ec_unif:   lda \epsilon_c(rho)
-  real(DP) :: small, pi34, third
-  parameter (small=1.E-10_DP)
-  parameter (pi34 = 0.6203504908994_DP, third = 1.0_DP / 3.0_DP)
+  REAL(DP), PARAMETER :: small=1.E-10_DP
+  REAL(DP), PARAMETER :: pi34=0.6203504908994_DP, third=1.0_DP/3.0_DP
   !  fx=Fx(p,z)
   !  fxp=d Fx / d p
   !  fxz=d Fx / d z
-  real(DP) fx,f1x,f2x,f3x
- 
-  !  ==--------------------------------------------------------------==
-  if(abs(tau).lt.small) then
-    ex=0.0_DP
-    v1x=0.0_DP
-    v2x=0.0_DP
-    v3x=0.0_DP
-    return
-  endif
+  REAL(DP) :: fx, f1x, f2x, f3x
+  !
+  IF (ABS(tau) < small) THEN
+    ex  = 0.0_DP
+    v1x = 0.0_DP
+    v2x = 0.0_DP
+    v3x = 0.0_DP
+    RETURN
+  ENDIF
+  !
   rs = pi34/rho**third
-  call slater( rs, ex_unif, vx_unif )
-  call metaFX(rho,grho2,tau,fx,f1x,f2x,f3x)
-  ex =rho*ex_unif
-  v1x=vx_unif*fx + ex*f1x
-  v2x=ex*f2x
-  v3x=ex*f3x
-  ex =ex*fx
-  
-  !  ==--------------------------------------------------------------==
-  return
-end subroutine metax
+  CALL slater( rs, ex_unif, vx_unif )
+  CALL metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
+  !
+  ex = rho*ex_unif
+  v1x = vx_unif*fx + ex*f1x
+  v2x = ex*f2x
+  v3x = ex*f3x
+  ex  = ex*fx
+  !
+  RETURN
+  !
+END SUBROUTINE metax
 !
 !
 !------------------------------------------------------------------
 SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
-  !------------------------------------------------------------------
+  !--------------------------------------------------------------
   !! TPSS meta-GGA correlation energy and potentials.
   !
   USE kinds,  ONLY : DP
-  !
+  !  
   IMPLICIT NONE
   !
-  !  INPUT
-  REAL(DP) :: rho, grho2, tau
-  !  OUTPUT
-  REAL(DP) :: ec, v1c, v2c, v3c
-  !  LOCAL
+  REAL(DP), INTENT(IN) :: rho
+  !! the charge density
+  REAL(DP), INTENT(IN) :: grho2
+  !! grho2 = |\nabla rho|^2
+  REAL(DP), INTENT(IN) :: tau
+  !! kinetic energy density
+  REAL(DP), INTENT(OUT) :: ec
+  !! ec = E_c(rho,grho)
+  REAL(DP), INTENT(OUT) :: v1c
+  !! v1c = D(E_c)/D(rho)
+  REAL(DP), INTENT(OUT) :: v2c
+  !! v2c = D(E_c)/D( D rho/D r_alpha ) / |\nabla rho|
+  REAL(DP), INTENT(OUT) :: v3c
+  !! v3c = D(E_c)/D(tau)
+  !
+  ! ... local variables
+  !
   REAL(DP) :: z, z2, tauw, ec_rev
   REAL(DP) :: d1rev, d2rev, d3rev
   !  d1ec=  D ec_rev / D rho
@@ -195,7 +203,7 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
      RETURN
   ENDIF
   !
-  rhoup  = 0.5_DP*rho
+  rhoup = 0.5_DP*rho
   grhoup = 0.5_DP*SQRT(grho2)
   !
   IF (rhoup > small) THEN
@@ -235,9 +243,9 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
   v2c_pbe = v2c_pbe/rho
   !
   IF (ec_sum < ec_pbe) THEN
-     ec_sum     = ec_pbe
+     ec_sum = ec_pbe
      v1c_sum(1) = v1c_pbe
-     v2c_sum    = v2c_pbe
+     v2c_sum = v2c_pbe
   ENDIF
   !
   tauw = 0.1250_DP * grho2/rho
@@ -245,13 +253,14 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
   z2 = z*z
   !  
   ec_rev = ec_pbe*(1+cab*z2)-cabone*z2*ec_sum
+  !
   d1rev  = v1c_pbe + (cab*v1c_pbe-cabone*v1c_sum(1))*z2  &
-            -(ec_pbe*cab - ec_sum*cabone)*2.0_DP*z2/rho
-  d2rev  = v2c_pbe + (cab*v2c_pbe-cabone*v2c_sum)*z2    &
-            +(ec_pbe*cab - ec_sum*cabone)*4.0_DP*z2/grho2
+                   - (ec_pbe*cab - ec_sum*cabone)*2.0_DP*z2/rho
+  d2rev  = v2c_pbe + (cab*v2c_pbe-cabone*v2c_sum)*z2     &
+                   + (ec_pbe*cab - ec_sum*cabone)*4.0_DP*z2/grho2
   d3rev  = -(ec_pbe*cab - ec_sum*cabone)*2.0_DP*z2/tau
   !
-  cf1 = 1.0_DP+dd*ec_rev*z2*z
+  cf1 = 1.0_DP + dd*ec_rev*z2*z
   cf2 = rho*(1.0_DP+2.0_DP*z2*z*dd*ec_rev)
   cf3 = ec_rev*ec_rev*3.0_DP*dd*z2*z
   v1c = ec_rev*cf1 + cf2*d1rev-cf3
@@ -269,225 +278,277 @@ END SUBROUTINE metac
 !
 !
 !-------------------------------------------------------------------------
-subroutine metaFX(rho,grho2,tau,fx,f1x,f2x,f3x)
+SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
   !-------------------------------------------------------------------------
-  USE kinds,            ONLY : DP
-  implicit none
-  !  INPUT
-  !  charge density, square of gradient of rho, and kinetic energy density
-  real(DP) rho, grho2, tau
-  !  OUTPUT
-  !  fx = Fx(p,z)
-  !  f1x=D (Fx) / D rho
-  !  f2x=D (Fx) / D ( D rho/D r_alpha) /|nabla rho|
-  !  f3x=D (Fx) / D tau
-  real(DP) fx, f1x, f2x, f3x
-  !  LOCAL
-  real(DP) x, p, z, qb, al, localdp, dz
-  real(DP) dfdx, dxdp, dxdz, dqbdp, daldp, dqbdz, daldz
-  real(DP) fxp, fxz  ! fxp =D fx /D p
-  real(DP) tauw, tau_unif
-  !  work variables
-  real(DP) xf1,xf2
-  real(DP) xfac1, xfac2, xfac3,xfac4,xfac5,xfac6,xfac7,z2
   !
-  real(DP) pi, THRD, ee, cc, kk, bb,miu,fac1,small
-  parameter(pi=3.141592653589793_DP)
-  parameter(THRD=0.3333333333333333_DP)
-  parameter(ee=1.537_DP)
-  parameter(cc=1.59096_DP)
-  parameter(kk=0.804_DP)
-  parameter(bb=0.40_DP)
-  parameter(miu=0.21951_DP)
-  parameter(fac1=9.57078000062731_DP) !fac1=(3*pi^2)^(2/3)
-  parameter(small=1.0E-6_DP)
-  !==------------------------------------------------------------- 
-  tauw=0.125_DP*grho2/rho
-  z=tauw/tau
-  
-  p=sqrt(grho2)/rho**THRD/rho
-  p=p*p/(fac1*4.0_DP)
-  tau_unif=0.3_DP*fac1*rho**(5.0_DP/3.0_DP)
-  al=(tau-tauw)/tau_unif
-  al=abs(al)  !make sure al is always .gt. 0.0_DP
-  qb=0.45_DP*(al-1.0_DP)/sqrt(1.0_DP+bb*al*(al-1.0_DP))
-  qb=qb+2.0_DP*THRD*p
-  
+  USE kinds,           ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! charge density
+  REAL(DP), INTENT(IN) :: grho2
+  !! square of gradient of rho
+  REAL(DP), INTENT(IN) :: tau
+  !! kinetic energy density
+  REAL(DP), INTENT(OUT) :: fx
+  !! fx = Fx(p,z)
+  REAL(DP), INTENT(OUT) :: f1x
+  !! f1x=D (Fx) / D rho
+  REAL(DP), INTENT(OUT) :: f2x
+  !! f2x=D (Fx) / D ( D rho/D r_alpha) /|nabla rho|
+  REAL(DP), INTENT(OUT) :: f3x
+  !! f3x=D (Fx) / D tau
+  !
+  ! ... local variables
+  !
+  REAL(DP) x, p, z, qb, al, localdp, dz
+  REAL(DP) dfdx, dxdp, dxdz, dqbdp, daldp, dqbdz, daldz
+  REAL(DP) fxp, fxz  ! fxp =D fx /D p
+  REAL(DP) tauw, tau_unif
+  !  work variables
+  REAL(DP) xf1, xf2
+  REAL(DP) xfac1, xfac2, xfac3, xfac4, xfac5, xfac6, xfac7, z2
+  !
+  REAL(DP), PARAMETER :: pi=3.141592653589793_DP
+  REAL(DP), PARAMETER :: THRD=0.3333333333333333_DP
+  REAL(DP), PARAMETER :: ee=1.537_DP
+  REAL(DP), PARAMETER :: cc=1.59096_DP
+  REAL(DP), PARAMETER :: kk=0.804_DP
+  REAL(DP), PARAMETER :: bb=0.40_DP
+  REAL(DP), PARAMETER :: miu=0.21951_DP
+  REAL(DP), PARAMETER :: fac1=9.57078000062731_DP !fac1=(3*pi^2)^(2/3)
+  REAL(DP), PARAMETER :: small=1.0E-6_DP
+  !
+  tauw = 0.125_DP*grho2/rho
+  z = tauw/tau
+  !
+  p = SQRT(grho2)/rho**THRD/rho
+  p = p*p/(fac1*4.0_DP)
+  tau_unif = 0.3_DP*fac1*rho**(5.0_DP/3.0_DP)
+  al = (tau-tauw)/tau_unif
+  al = ABS(al)  !make sure al is always .gt. 0.0_DP
+  qb = 0.45_DP*(al-1.0_DP)/SQRT(1.0_DP+bb*al*(al-1.0_DP))
+  qb = qb+2.0_DP*THRD*p
+  !
   !  calculate x(p,z) and fx
-  z2=z*z
-  xf1=10.0_DP/81.0_DP
-  xfac1=xf1+cc*z2/(1+z2)**2.0_DP
-  xfac2=146.0_DP/2025.0_DP
-  xfac3=sqrt(0.5_DP*(0.36_DP*z2+p*p))
-  xfac4=xf1*xf1/kk
-  xfac5=2.0_DP*sqrt(ee)*xf1*0.36_DP
-  xfac6=xfac1*p+xfac2*qb**2.0_DP-73.0_DP/405.0_DP*qb*xfac3
-  xfac6=xfac6+xfac4*p**2.0_DP+xfac5*z2+ee*miu*p**3.0_DP
-  xfac7=(1+sqrt(ee)*p)
-  x=xfac6/(xfac7*xfac7)
+  z2 = z*z
+  xf1 = 10.0_DP/81.0_DP
+  xfac1 = xf1+cc*z2/(1+z2)**2.0_DP
+  xfac2 = 146.0_DP/2025.0_DP
+  xfac3 = SQRT(0.5_DP*(0.36_DP*z2+p*p))
+  xfac4 = xf1*xf1/kk
+  xfac5 = 2.0_DP*SQRT(ee)*xf1*0.36_DP
+  xfac6 = xfac1*p+xfac2*qb**2.0_DP-73.0_DP/405.0_DP*qb*xfac3
+  xfac6 = xfac6+xfac4*p**2.0_DP+xfac5*z2+ee*miu*p**3.0_DP
+  xfac7 = (1+SQRT(ee)*p)
+  x = xfac6/(xfac7*xfac7)
   !  fx=kk-kk/(1.0_DP+x/kk)
-  fx=1.0_DP + kk-kk/(1.0_DP+x/kk)
-  
+  fx = 1.0_DP + kk-kk/(1.0_DP+x/kk)
+  !
   !  calculate the derivatives of fx w.r.t p and z
-  dfdx=(kk/(kk+x))**2.0_DP
-  daldp=5.0_DP*THRD*(tau/tauw-1.0_DP)
+  dfdx = (kk/(kk+x))**2.0_DP
+  daldp = 5.0_DP*THRD*(tau/tauw-1.0_DP)
+  !
   !   daldz=-0.50_DP*THRD*
   !  * (tau/(2.0_DP*fac1*rho**THRD*0.1250_DP*sqrt(grho2)))**2.0_DP
-  daldz=-5.0_DP*THRD*p/z2
-  dqbdz=0.45_DP*(0.50_DP*bb*(al-1.0_DP)+1.0_DP)
-  dqbdz=dqbdz/(1.0_DP+bb*al*(al-1.0_DP))**1.5_DP
-  
-  dqbdp=dqbdz*daldp+2.0_DP*THRD
-  dqbdz=dqbdz*daldz
-  !  calculate d x /d p
-  xf1=73.0_DP/405.0_DP/xfac3*0.50_DP*qb
-  xf2=2.0_DP*xfac2*qb-73.0_DP/405.0_DP*xfac3
-  
-  dxdp=-xf1*p
-  dxdp=dxdp+xfac1+xf2*dqbdp
-  dxdp=dxdp+2.0_DP*xfac4*p
-  dxdp=dxdp+3.0_DP*ee*miu*p*p
-  dxdp=dxdp/(xfac7*xfac7)-2.0_DP*x*sqrt(ee)/xfac7
-  !  d x/ dz
-  dxdz=-xf1*0.36_DP*z
-  xfac1=cc*2.0_DP*z*(1-z2)/(1+z2)**3.0_DP
-  dxdz=dxdz+xfac1*p+xf2*dqbdz
-  dxdz=dxdz+xfac5*2.0_DP*z
-  dxdz=dxdz/(xfac7*xfac7)
-  
-  fxp=dfdx*dxdp
-  fxz=dfdx*dxdz
+  daldz = -5.0_DP*THRD*p/z2
+  dqbdz = 0.45_DP*(0.50_DP*bb*(al-1.0_DP)+1.0_DP)
+  dqbdz = dqbdz/(1.0_DP+bb*al*(al-1.0_DP))**1.5_DP
+  !
+  dqbdp = dqbdz*daldp+2.0_DP*THRD
+  dqbdz = dqbdz*daldz
+  !
+  !  calculate dx/dp
+  xf1 = 73.0_DP/405.0_DP/xfac3*0.50_DP*qb
+  xf2 = 2.0_DP*xfac2*qb-73.0_DP/405.0_DP*xfac3
+  !
+  dxdp = -xf1*p
+  dxdp = dxdp+xfac1+xf2*dqbdp
+  dxdp = dxdp+2.0_DP*xfac4*p
+  dxdp = dxdp+3.0_DP*ee*miu*p*p
+  dxdp = dxdp/(xfac7*xfac7)-2.0_DP*x*SQRT(ee)/xfac7
+  !
+  !  dx/dz
+  dxdz = -xf1*0.36_DP*z
+  xfac1 = cc*2.0_DP*z*(1-z2)/(1+z2)**3.0_DP
+  dxdz = dxdz+xfac1*p+xf2*dqbdz
+  dxdz = dxdz+xfac5*2.0_DP*z
+  dxdz = dxdz/(xfac7*xfac7)
+  !
+  fxp = dfdx*dxdp
+  fxz = dfdx*dxdz
+  !
   !  calculate f1x
-  localdp=-8.0_DP*THRD*p/rho  ! D p /D rho
-  dz=-z/rho             ! D z /D rho
-  f1x=fxp*localdp+fxz*dz
+  localdp = -8.0_DP*THRD*p/rho  ! D p /D rho
+  dz = -z/rho                   ! D z /D rho
+  f1x = fxp*localdp+fxz*dz
+  !
   !  f2x
-  localdp=2.0_DP/(fac1*4.0_DP*rho**(8.0_DP/3.0_DP))
-  dz=2.0_DP*0.125_DP/(rho*tau)
-  f2x=fxp*localdp + fxz*dz
-  !   f3x
-  localdp=0.0_DP
-  dz=-z/tau
-  f3x=fxz*dz
-  
-
-  return
-end subroutine metaFX
-
-!-------------------------------------------------------------------
-subroutine tpsscx_spin(rhoup,rhodw,grhoup2,grhodw2,tauup,taudw,sx,&
-     v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw)
-  !-----------------------------------------------------------------
-  !     TPSS metaGGA for exchange - Hartree a.u.
+  localdp = 2.0_DP/(fac1*4.0_DP*rho**(8.0_DP/3.0_DP))
+  dz = 2.0_DP*0.125_DP/(rho*tau)
+  f2x = fxp*localdp + fxz*dz
+  !
+  !  f3x
+  localdp = 0.0_DP
+  dz = -z/tau
+  f3x = fxz*dz
+  !
+  RETURN
+  !
+END SUBROUTINE metaFX
+!
+!
+!---------------------------------------------------------------------------
+SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
+                        v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw )
+  !-----------------------------------------------------------------------
+  !! TPSS metaGGA for exchange - Hartree a.u.
   !
   USE kinds,            ONLY : DP
-  implicit none  
   !
-  !     dummy arguments
+  IMPLICIT NONE  
   !
-  real(DP) :: rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, v1xdw, &
-       v2xup, v2xdw
-  ! up and down charge
-  ! up and down gradient of the charge
-  ! exchange and correlation energies
-  ! derivatives of exchange wr. rho
-  ! derivatives of exchange wr. grho
+  REAL(DP), INTENT(IN) :: rhoup
+  !! up charge
+  REAL(DP), INTENT(IN) :: rhodw
+  !! down charge
+  REAL(DP), INTENT(IN) :: grhoup2
+  !! up gradient of the charge
+  REAL(DP), INTENT(IN) :: grhodw2
+  !! down gradient of the charge
+  REAL(DP), INTENT(OUT) :: sx
+  !! exchange energy
+  REAL(DP), INTENT(OUT) :: v1xup
+  !! derivatives of exchange wr. rho - up
+  REAL(DP), INTENT(OUT) :: v1xdw
+  !! derivatives of exchange wr. rho - down
+  REAL(DP), INTENT(OUT) :: v2xup
+  !! derivatives of exchange wr. grho - up
+  REAL(DP), INTENT(OUT) :: v2xdw
+  !! derivatives of exchange wr. grho - down
+  REAL(DP), INTENT(OUT) :: tauup
+  !! up kinetic energy density
+  REAL(DP), INTENT(OUT) :: taudw
+  !! down kinetic energy density
+  REAL(DP), INTENT(OUT) :: v3xup
+  !! derivatives of exchange wr. tau - up
+  REAL(DP), INTENT(OUT) :: v3xdw
+  !! derivatives of exchange wr. tau - down
   !
-  real(DP):: tauup,taudw, &! up and down kinetic energy density 
-       v3xup,v3xdw         ! derivatives of exchange wr. tau
-  real(DP) :: small  
-  parameter (small = 1.E-10_DP)  
-  real(DP) :: rho, sxup, sxdw  
+  ! ... local variables
+  !
+  REAL(DP), PARAMETER :: small = 1.E-10_DP
+  REAL(DP) :: rho, sxup, sxdw  
   !
   ! exchange
   rho = rhoup + rhodw  
-  if (rhoup.gt.small.and.sqrt(abs(grhoup2)).gt.small &
-       .and. abs(tauup).gt.small) then
-     call metax(2.0_DP*rhoup,4.0_DP*grhoup2, &
-          2.0_DP*tauup,sxup,v1xup,v2xup,v3xup)
-  else
-     sxup=0.0_DP
-     v1xup=0.0_DP
-     v2xup=0.0_DP
-     v3xup=0.0_DP
-  endif
-  if (rhodw.gt.small.and.sqrt(abs(grhodw2)).gt.small &
-       .and. abs(taudw).gt.small) then
-     call metax(2.0_DP*rhodw,4.0_DP*grhodw2,  &
-          2.0_DP*taudw,sxdw,v1xdw,v2xdw,v3xdw)
-  else
-     sxdw=0.0_DP
-     v1xdw=0.0_DP
-     v2xdw=0.0_DP
-     v3xdw=0.0_DP
-  endif
-  sx=0.5_DP*(sxup+sxdw)
-  v2xup=2.0_DP*v2xup
-  v2xdw=2.0_DP*v2xdw
+  IF (rhoup>small .AND. SQRT(ABS(grhoup2))>small &
+       .AND. ABS(tauup) > small) THEN
+     CALL metax( 2.0_DP*rhoup, 4.0_DP*grhoup2, &
+                 2.0_DP*tauup, sxup, v1xup, v2xup, v3xup )
+  ELSE
+     sxup = 0.0_DP
+     v1xup = 0.0_DP
+     v2xup = 0.0_DP
+     v3xup = 0.0_DP
+  ENDIF
   !
-  return  
-end subroutine tpsscx_spin
-!
-!-----------------------------------------------------------------------
-subroutine tpsscc_spin(rho,zeta,grhoup,grhodw, &
-     atau,sc,v1cup,v1cdw,v2cup,v2cdw,v3cup, v3cdw)
-!-----------------------------------------------------------------------
-!     tpss metaGGA for correlations - Hartree a.u.
-!
-  USE kinds,            ONLY : DP
-  implicit none  
-!
-!     dummy arguments
-!
-  real(DP) :: rho, zeta, grhoup(3),grhodw(3), sc, v1cup, v1cdw, v3c  
-  ! the total charge
-  ! the magnetization
-  ! the gradient of the charge
-  ! exchange and correlation energies
-  ! derivatives of correlation wr. rho
-  ! derivatives of correlation wr. grho
-  
-  real(DP), dimension(3) :: v2cup, v2cdw, grho_vec
-  real(DP) :: atau,v3cup, v3cdw, grho !grho=grho2
-  real(DP) :: small  
-  integer :: ipol
-  parameter (small = 1.E-10_DP)  
+  IF (rhodw > small .AND. SQRT(ABS(grhodw2)) > small &
+       .AND. ABS(taudw) > small) THEN
+     CALL metax( 2.0_DP*rhodw, 4.0_DP*grhodw2, &
+                 2.0_DP*taudw, sxdw, v1xdw, v2xdw, v3xdw )
+  ELSE
+     sxdw = 0.0_DP
+     v1xdw = 0.0_DP
+     v2xdw = 0.0_DP
+     v3xdw = 0.0_DP
+  ENDIF
   !
+  sx = 0.5_DP*(sxup+sxdw)
+  v2xup = 2.0_DP*v2xup
+  v2xdw = 2.0_DP*v2xdw
   !
-! vector
-  grho_vec=grhoup+grhodw
-  grho=0.0_DP
-  do ipol=1,3
-     grho    = grho    + grho_vec(ipol)**2
-  end do
+  RETURN
+  !
+END SUBROUTINE tpsscx_spin
 !
 !
-  if (rho.le.small.or.abs (zeta) .gt.1.0_DP.or.sqrt (abs (grho) ) &
-       .le.small.or.abs(atau).lt.small) then
-     
-     sc    = 0.0_DP
+!---------------------------------------------------------------------------
+SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &
+                        atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
+  !--------------------------------------------------------------------------
+  !! TPSS metaGGA for correlations - Hartree a.u.
+  !
+  USE kinds,       ONLY : DP
+  !
+  IMPLICIT NONE  
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! the total charge
+  REAL(DP), INTENT(IN) :: zeta
+  !! the magnetization
+  REAL(DP), INTENT(IN) :: atau
+  !! the total kinetic energy density
+  REAL(DP), INTENT(IN) :: grhoup(3)
+  !! the gradient of the charge - up
+  REAL(DP), INTENT(IN) :: grhodw(3)
+  !! the gradient of the charge - down
+  REAL(DP), INTENT(OUT) :: sc
+  !! correlation energy
+  REAL(DP), INTENT(OUT) :: v1cup
+  !! derivatives of correlation wr. rho - up
+  REAL(DP), INTENT(OUT) :: v1cdw
+  !! derivatives of correlation wr. rho - down
+  REAL(DP), INTENT(OUT) :: v2cup(3)
+  !! derivatives of correlation wr. grho - up
+  REAL(DP), INTENT(OUT) :: v2cdw(3)
+  !! derivatives of correlation wr. grho - down
+  REAL(DP), INTENT(OUT) :: v3cup
+  !! derivatives of correlation wr. tau - up
+  REAL(DP), INTENT(OUT) :: v3cdw
+  !! derivatives of correlation wr. tau - down
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: grho_vec(3)
+  REAL(DP) :: v3c, grho !grho=grho2
+  INTEGER :: ipol
+  REAL(DP), PARAMETER :: small = 1.E-10_DP
+  !
+  ! vector
+  grho_vec = grhoup + grhodw
+  grho = 0.0_DP
+  !
+  DO ipol = 1, 3
+     grho = grho + grho_vec(ipol)**2
+  ENDDO
+  !
+  IF (rho <= small .OR. ABS(zeta) > 1.0_DP .OR. SQRT(ABS(grho)) <= small &
+       .OR. ABS(atau) < small )  THEN
+     !
+     sc = 0.0_DP
      v1cup = 0.0_DP
      v1cdw = 0.0_DP
- 
+     !
      v2cup(:) = 0.0_DP
      v2cdw(:) = 0.0_DP
-
+     !
      v3cup = 0.0_DP
      v3cdw = 0.0_DP
-
+     !
      v3c = 0.0_DP
-     
-  else
-     call metac_spin(rho,zeta,grhoup,grhodw, &
-          atau,sc,v1cup,v1cdw,v2cup,v2cdw,v3c)
-  end if
-  !
+  ELSE
+     CALL metac_spin( rho, zeta, grhoup, grhodw, &
+                      atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3c )
+  ENDIF
   !
   v3cup = v3c
   v3cdw = v3c
   !
-  return  
-end subroutine tpsscc_spin
+  RETURN
+  !
+END SUBROUTINE tpsscc_spin
 !
 !
 !---------------------------------------------------------------
@@ -498,11 +559,31 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
   !
   IMPLICIT NONE
   !
-  ! input
-  REAL(DP) :: rho, zeta, grhoup(3), grhodw(3), tau
-  ! output
-  REAL(DP) :: sc, v1up, v1dw, v2up(3), v2dw(3), v3
-  ! local
+  REAL(DP), INTENT(IN) :: rho
+  !! the total charge
+  REAL(DP), INTENT(IN) :: zeta
+  !! the magnetization
+  REAL(DP), INTENT(IN) :: grhoup(3)
+  !! the gradient of the charge - up
+  REAL(DP), INTENT(IN) :: grhodw(3)
+  !! the gradient of the charge - down
+  REAL(DP), INTENT(IN) :: tau
+  !! the total kinetic energy density
+  REAL(DP), INTENT(OUT) :: sc
+  !! correlation energy
+  REAL(DP), INTENT(OUT) :: v1up
+  !! derivatives of correlation wr. rho - up
+  REAL(DP), INTENT(OUT) :: v1dw
+  !! derivatives of correlation wr. rho - down
+  REAL(DP), INTENT(OUT) :: v2up(3)
+  !! derivatives of correlation wr. grho - up
+  REAL(DP), INTENT(OUT) :: v2dw(3)
+  !! derivatives of correlation wr. grho - down
+  REAL(DP), INTENT(OUT) :: v3
+  !! derivatives of correlation wr. tau
+  !
+  ! ... local variables
+  !
   REAL(DP) :: rhoup, rhodw, tauw, grhovec(3), grho2, grho, &
               grhoup2, grhodw2
   !
@@ -635,11 +716,11 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
      !
      IF (SQRT(grhodw2) > small) THEN
         !
-        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup2, 1, &
-                        ecup_0, v1_pbe, v2_tmp )
+        CALL pbec_spin( rhodw, -1.0_DP+small, grhodw2, 1, &
+                        ecdw_0, v1_0v, v2_tmp )
         !
-        v1up_0 = v1_pbe(1)
-        v1dw_0 = v1_pbe(2)
+        v1up_0 = v1_0v(1)
+        v1dw_0 = v1_0v(2)
         !
      ELSE
         ecdw_0 = 0.0_DP
@@ -778,17 +859,10 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
   !
 END SUBROUTINE metac_spin
 !
-!-------------------------------------------------------------------------
-!
 !                          END TPSSS
-!-------------------------------------------------------------------------
-!
 !=========================================================================
 !
-!-------------------------------------------------------------------------
-!
-!                             M06L
-!
+!                           --- M06L ---
 !
 !           input:  - rho
 !                   - grho2=|\nabla rho|^2
@@ -806,137 +880,154 @@ END SUBROUTINE metac_spin
 !                       ec, v1c, v2c, v3c as above for correlation
 !
 !-------------------------------------------------------------------------
-!
-subroutine m06lxc (rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-
+SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !-----------------------------------------------------------------------
-  !    
   !
-  USE kinds,        ONLY : dp
-
-  implicit none  
-
-  real(dp), intent(in)  :: rho, grho2, tau
-  real(dp), intent(out) :: ex, ec, v1x, v2x,v3x,v1c,v2c,v3c
+  USE kinds,        ONLY : DP
   !
-  real(dp)              :: rhoa, rhob, grho2a, grho2b, taua, taub, v1cb, v2cb, v3cb
-  real(dp), parameter   :: zero = 0.0_dp, two = 2.0_dp, four = 4.0_dp
+  IMPLICIT NONE  
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! the total charge
+  REAL(DP), INTENT(IN) :: grho2
+  !! square of gradient of rho
+  REAL(DP), INTENT(IN) :: tau
+  !! the total kinetic energy density
+  REAL(DP), INTENT(OUT) :: ex
+  !! exchange energy
+  REAL(DP), INTENT(OUT) :: ec
+  !! correlation energy
+  REAL(DP), INTENT(OUT) :: v1x
+  !! derivatives of exchange wr. rho
+  REAL(DP), INTENT(OUT) :: v2x
+  !! derivatives of exchange wr. grho
+  REAL(DP), INTENT(OUT) :: v3x
+  !! derivatives of exchange wr. tau
+  REAL(DP), INTENT(OUT) :: v1c
+  !! derivatives of correlation wr. rho
+  REAL(DP), INTENT(OUT) :: v2c
+  !! derivatives of correlation wr. grho
+  REAL(DP), INTENT(OUT) :: v3c
+  !! derivatives of correlation wr. tau
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: rhoa, rhob, grho2a, grho2b, taua, taub, v1cb, v2cb, v3cb
+  REAL(DP), PARAMETER :: zero = 0.0_dp, two = 2.0_dp, four = 4.0_dp
   !
   !
-  rhoa   = rho   / two   ! one component only
-  rhob   = rhoa
+  rhoa = rho / two   ! one component only
+  rhob = rhoa
   !
   grho2a = grho2 / four
   grho2b = grho2a
   !
-  taua   = tau * two * 0.5_dp ! Taua, which is Tau_sigma is half Tau
-  taub   = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 ) 
+  taua = tau * two * 0.5_dp ! Taua, which is Tau_sigma is half Tau
+  taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 ) 
                               ! in the M06L routine
   !
-  call m06lx (rhoa, grho2a, taua, ex, v1x, v2x, v3x)
+  CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )
   !
-  ex  = two * ex  ! Add the two components up + dw
+  ex = two * ex  ! Add the two components up + dw
   !
   v2x = 0.5_dp * v2x
   !
-  call m06lc (rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &
-  &           v1cb, v2cb, v3cb)
-  !
+  CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &
+              v1cb, v2cb, v3cb )
   !
   v2c = 0.5_dp * v2c
   !
-end subroutine m06lxc
-
-!-------------------------------------------------------------------------
+END SUBROUTINE m06lxc
 !
-subroutine m06lxc_spin (rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
-          &             ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-          &             v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw)
-
+!
+!-------------------------------------------------------------------------
+SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
+                        ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
+                        v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
   !-----------------------------------------------------------------------
   !    
+  USE kinds,        ONLY : DP
   !
-  USE kinds,        ONLY : dp
-
-  implicit none  
-
-  real(dp), intent(in)  :: rhoup, rhodw, grhoup2, grhodw2, tauup, taudw
-  real(dp), intent(out) :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-   &                       v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw
+  IMPLICIT NONE  
   !
-  real(dp)              :: exup, exdw, taua, taub
-  real(dp), parameter   :: zero = 0.0_dp, two = 2.0_dp
+  REAL(DP), INTENT(IN)  :: rhoup, rhodw, grhoup2, grhodw2, tauup, taudw
+  REAL(DP), INTENT(OUT) :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
+                           v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw
   !
+  REAL(DP) :: exup, exdw, taua, taub
+  REAL(DP), PARAMETER :: zero = 0.0_dp, two = 2.0_dp
   !
+  taua = tauup * two       ! Tau is defined as summ_i( |nabla phi_i|**2 ) 
+  taub = taudw * two       ! in the rest of the routine
   !
-  taua   = tauup * two       ! Tau is defined as summ_i( |nabla phi_i|**2 ) 
-  taub   = taudw * two       ! in the rest of the routine
-  !
-  call m06lx (rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup)
-  call m06lx (rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw)
+  CALL m06lx( rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup )
+  CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )
   !
   ex = exup + exdw
   !
+  CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &
+              ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw )
   !
-  call m06lc (rhoup, rhodw, grhoup2, grhodw2, taua, taub,     &
-  &           ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw)
-  !
-  !
-  !
-end subroutine m06lxc_spin
-
-
+END SUBROUTINE m06lxc_spin
+!
+!
 !===============================  M06L exchange ==========================
-
-
-subroutine m06lx (rho, grho2, tau, ex, v1x, v2x, v3x)
-
-!_________________________________________________________________________
-  
-  use kinds, ONLY  : dp
-  use constants, ONLY : pi
-  
-  implicit none
-
-  real(dp), intent(in)   :: rho, grho2, tau 
-  real(dp), intent(out)  :: ex, v1x, v2x, v3x
-  
-  real(dp)               :: v1x_unif,ex_unif, ex_pbe, &
-  &                         sx_pbe, v1x_pbe, v2x_pbe
+!
+!-------------------------------------------------------------------------------
+SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
+  !---------------------------------------------------------------------------
+  !! M06L exchange.
   !
-  !  ex_unif:   lda \epsilon_x(rho)
+  USE kinds,       ONLY : DP
+  USE constants,   ONLY : pi
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! the total charge
+  REAL(DP), INTENT(IN) :: grho2
+  !! square of gradient of rho
+  REAL(DP), INTENT(IN) :: tau
+  !! the total kinetic energy density
+  REAL(DP), INTENT(OUT) :: ex
+  !! exchange energy
+  REAL(DP), INTENT(OUT) :: v1x
+  !! derivatives of exchange wr. rho
+  REAL(DP), INTENT(OUT) :: v2x
+  !! derivatives of exchange wr. grho
+  REAL(DP), INTENT(OUT) :: v3x
+  !! derivatives of exchange wr. tau
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: v1x_unif, ex_unif, ex_pbe, sx_pbe, v1x_pbe, v2x_pbe
+  ! ex_unif:   lda \epsilon_x(rho)
   ! v2x = 1/|grho| * dsx / d|grho| = 2 *  dsx / dgrho2
   !
-  real(dp), parameter     :: zero = 0._dp, one = 1.0_dp, two=2.0_dp, three = 3.0_dp,  &
-  &                          four = 4.0_dp, five = 5.0_dp, six = 6.0_dp,              &
-  &                          eight = 8.0_dp,                                          &
-  &                          f12 = one/two, f13 = one/three, f23 = two/three,         &
-  &                          f53 = five/three, f83 = eight/three, f43 = four/three,   &
-  &                          pi34 = pi*three/four, pi2 = pi*pi,                       &
-  &                          small=1.d-10
-  
-  real(dp)                :: d0, d1, d2, d3, d4, d5, CF, CT, CX, alpha
-  real(dp), dimension(0:11)   &
-  &                       :: at
-  integer                 :: i
+  REAL(DP), PARAMETER :: zero = 0._dp,  one  = 1.0_dp, two = 2.0_dp, three = 3.0_dp,  &
+                         four = 4.0_dp, five = 5.0_dp, six = 6.0_dp, eight = 8.0_dp,  &
+                         f12 = one/two,    f13 = one/three,   f23 = two/three,  &
+                         f53 = five/three, f83 = eight/three, f43 = four/three, &
+                         pi34 = pi*three/four, pi2 = pi*pi, small = 1.d-10
   !
-  ! 
+  REAL(DP) :: d0, d1, d2, d3, d4, d5, CF, CT, CX, alpha
+  REAL(DP), DIMENSION(0:11) :: at
+  INTEGER :: i
+  !
   ! VSXC98 variables (LDA part)
   !
-  real(dp)                :: xs, xs2, grho, rhom83, rho13, rho43, zs, gh
-  real(dp)                :: hg, dhg_dxs2, dhg_dzs
-  real(dp)                :: dxs2_drho, dxs2_dgrho2, dzs_drho, dzs_dtau
-  real(dp)                :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98, v2x_vs98_g   
+  REAL(DP) :: xs, xs2, grho, rhom83, rho13, rho43, zs, gh
+  REAL(DP) :: hg, dhg_dxs2, dhg_dzs
+  REAL(DP) :: dxs2_drho, dxs2_dgrho2, dzs_drho, dzs_dtau
+  REAL(DP) :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98, v2x_vs98_g   
   !
   ! GGA and MGGA variables
   !  
-  real(dp)                :: tau_unif, ts, ws, fws, dfws, dfws_drho, dfws_dtau,     &
-  &                          dws_dts, dts_dtau, dts_drho
+  REAL(DP) :: tau_unif, ts, ws, fws, dfws, dfws_drho, dfws_dtau, &
+              dws_dts, dts_dtau, dts_drho
   !
-  ! _________________________________________________________________________________________ 
-    
   ! set parameters
-  
+  !
   at(0)  =    3.987756d-01
   at(1)  =    2.548219d-01
   at(2)  =    3.923994d-01 
@@ -949,161 +1040,159 @@ subroutine m06lx (rho, grho2, tau, ex, v1x, v2x, v3x)
   at(9)  =    2.160364d+01
   at(10) =    3.421814d+01
   at(11) =   -9.049762d+00
-  
+  !
   d0     =    6.012244d-01
   d1     =    4.748822d-03
   d2     =   -8.635108d-03
   d3     =   -9.308062d-06
   d4     =    4.482811d-05
   d5     =    zero
-  
+  !
   alpha = 1.86726d-03
-!___________________________________________________
-
-  if (rho < small .and. tau < small) then
-    ex = zero
-       v1x = zero
-       v2x = zero
-       v3x = zero
-       return
-       
-  end if
-  
-! _________VSXC98 functional (LDA part)_____________
-!
-! set variables 
-  
-  
-  CF  =   (three/five) * (six*pi2)**f23
-  CT  =   CF / two
-  CX  =  -(three/two) * (three/(four*pi))**f13  ! Cx LSDA
-  
-!  if (rho >= small .and. grho>=small) then
-
-  grho = sqrt(grho2) 
+  !
+  IF (rho < small .AND. tau < small) THEN
+     ex = zero
+     v1x = zero
+     v2x = zero
+     v3x = zero
+     RETURN       
+  ENDIF
+  !
+  ! ... VSXC98 functional (LDA part)
+  !
+  ! set variables 
+  !
+  CF =  (three/five) * (six*pi2)**f23
+  CT =  CF / two
+  CX = -(three/two) * (three/(four*pi))**f13  ! Cx LSDA
+  !
+  !  IF (rho >= small .AND. grho>=small) THEN
+  !
+  grho = SQRT(grho2)
   rho43 = rho**f43
   rho13 = rho**f13
-  rhom83 = one/rho**f83
+  rhom83 = one / rho**f83
+  !
   xs  = grho / rho43
   xs2 = xs * xs  
-  zs  = tau/rho**f53 - CF
+  zs  = tau / rho**f53 - CF
   gh  = one + alpha * (xs2 + zs)
-
-   
-  if (gh >= small) then
-    call gvt4 (xs2, zs, d0, d1, d2, d3, d4, d5, alpha, hg, dhg_dxs2, dhg_dzs)
-  else 
-    hg        = zero
-    dhg_dxs2  = zero
-    dhg_dzs   = zero
-  end if
-  
+  !
+  IF (gh >= small) THEN
+    CALL gvt4( xs2, zs, d0, d1, d2, d3, d4, d5, alpha, hg, dhg_dxs2, dhg_dzs )
+  ELSE 
+    hg = zero
+    dhg_dxs2 = zero
+    dhg_dzs  = zero
+  ENDIF
+  !
   dxs2_drho   = -f83*xs2/rho
   dxs2_dgrho2 =  rhom83
-  dzs_drho    = -f53*tau*rhom83
-  dzs_dtau    =  one/rho**f53
-  
-  ex_unif     =  CX * rho43
-  ex_vs98     =  ex_unif * hg
-  v1x_vs98    =  CX * ( f43 * hg * rho**f13 ) +         &
-&                ex_unif * ( dhg_dxs2*dxs2_drho + dhg_dzs*dzs_drho ) 
-  v2x_vs98    =  two * ex_unif * dhg_dxs2 * dxs2_dgrho2
-  v3x_vs98    =  ex_unif * dhg_dzs * dzs_dtau
-  
-!____________________mo6lx functional____________________________
-
-  tau_unif  = CF * rho**f53  ! Tau is define as summ_i( |nabla phi_i|**2 )
-  ts        = tau_unif / tau
-  ws        = (ts - one)/(ts + one)
-  
-  fws       = zero
-  dfws      = zero
-  
-  do i = 0, 11
+  dzs_drho = -f53*tau*rhom83
+  dzs_dtau =  one/rho**f53
+  !
+  ex_unif  =  CX * rho43
+  ex_vs98  =  ex_unif * hg
+  v1x_vs98 =  CX * ( f43 * hg * rho**f13 ) + &
+              ex_unif * ( dhg_dxs2*dxs2_drho + dhg_dzs*dzs_drho ) 
+  v2x_vs98 =  two * ex_unif * dhg_dxs2 * dxs2_dgrho2
+  v3x_vs98 =  ex_unif * dhg_dzs * dzs_dtau
+  !
+  ! ... mo6lx functional
+  !
+  tau_unif = CF * rho**f53  ! Tau is define as summ_i( |nabla phi_i|**2 )
+  ts = tau_unif / tau
+  ws = (ts - one)/(ts + one)
+  !
+  fws  = zero
+  dfws = zero
+  !
+  DO i = 0, 11
     fws  =  fws + at(i)*ws**i
     dfws = dfws + i*at(i)*ws**(i-1)
-  end do
-  
-  dws_dts   = two/((ts+1)**2)
-  dts_drho  = ( (six*pi*pi*rho)**f23 )/tau
-  dts_dtau  = -ts/tau
+  ENDDO
+  !
+  dws_dts  = two/((ts+1)**2)
+  dts_drho = ( (six*pi*pi*rho)**f23 )/tau
+  dts_dtau = -ts/tau
   dfws_drho = dfws*dws_dts*dts_drho
   dfws_dtau = dfws*dws_dts*dts_dtau
-
-  call pbex_m06l (two*rho, four*grho2, sx_pbe, v1x_pbe, v2x_pbe)
-  
+  !
+  CALL pbex_m06l( two*rho, four*grho2, sx_pbe, v1x_pbe, v2x_pbe )
+  !
   v1x_unif = f43 * CX * rho13
-  
-  sx_pbe   = f12 * sx_pbe 
-  v1x_pbe  = v1x_pbe  + v1x_unif 
-  v2x_pbe  = two * v2x_pbe
-  
-
-  ex_pbe   = sx_pbe + ex_unif 
-  
-!________energy and potential_____________________________  
-   
-  ex  = ex_vs98  + ex_pbe*fws  
-                        
+  !
+  sx_pbe  = f12 * sx_pbe 
+  v1x_pbe = v1x_pbe  + v1x_unif 
+  v2x_pbe = two * v2x_pbe
+  !
+  ex_pbe  = sx_pbe + ex_unif 
+  !
+  ! ... energy and potential
+  ! 
+  ex = ex_vs98  + ex_pbe*fws  
+  !
   v1x = v1x_vs98 + v1x_pbe*fws + ex_pbe*dfws_drho 
   v2x = v2x_vs98 + v2x_pbe*fws               
   v3X = v3x_vs98 + ex_pbe*dfws_dtau    
-               
-!__________________________________________________________
-
-end subroutine m06lx
-
-!__________________________________________________________
-
-subroutine pbex_m06l (rho, grho2, sx, v1x, v2x)
-
+  !
+END SUBROUTINE m06lx
+!
+!
+!-------------------------------------------------------------------
+SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )
   !---------------------------------------------------------------
+  !! PBE exchange (without Slater exchange):  
+  !! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
   !
-  ! PBE exchange (without Slater exchange):
-  ! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
-  !
-  ! v2x = 1/|grho| * dsx / d|grho| = 2 *  dsx / dgrho2
+  !! v2x = 1/|grho| * dsx / d|grho| = 2 *  dsx / dgrho2
   !
   USE kinds
-  USE constants, ONLY : pi
-
-  implicit none
-  
-  real(dp)      :: rho, grho2, sx, v1x, v2x
-  ! input: charge and squared gradient
-  ! output: energy
-  ! output: potential
-  integer       :: iflag
-  
-  ! local variables
-  real(dp)      :: grho, rho43, xs, xs2, dxs2_drho, dxs2_dgrho2
-  real(dp)      :: CX, denom, C1, C2, ex, Fx, dFx_dxs2, dex_drho
-  
-  real(dp), parameter ::     mu=0.21951_dp, ka=0.804_dp, one = 1.0_dp, two=2.0_dp, three = 3.0_dp,   &
-  &                          four = 4.0_dp, six = 6.0_dp, eight = 8.0_dp,              &
-  &                          f13 = one/three, f23 = two/three, f43 = four/three,       &
-  &                          f34=three/four, f83 = eight/three
-  
-!_____________________________________________________________________
-
+  USE constants,   ONLY : pi
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: rho
+  !! charge density
+  REAL(DP), INTENT(IN) :: grho2
+  !! squared gradient
+  REAL(DP), INTENT(OUT) :: sx
+  !! energy
+  REAL(DP), INTENT(OUT) :: v1x
+  !! potential w.r. rho
+  REAL(DP), INTENT(OUT) :: v2x
+  !! potential w.r. grho
+  !
+  ! ... local variables
+  !
+  INTEGER :: iflag
+  REAL(DP) :: grho, rho43, xs, xs2, dxs2_drho, dxs2_dgrho2
+  REAL(DP) :: CX, denom, C1, C2, ex, Fx, dFx_dxs2, dex_drho
+  !
+  REAL(DP), PARAMETER :: mu = 0.21951_dp, ka = 0.804_dp, &
+                         one  = 1.0_dp, two = 2.0_dp, three = 3.0_dp, &
+                         four = 4.0_dp, six = 6.0_dp, eight = 8.0_dp, &
+                         f13 = one/three,  f23 = two/three,  f43 = four/three, &
+                         f34 = three/four, f83 = eight/three
+  !
   CX    =  f34 * (three/pi)**f13            ! Cx LDA
   denom =  four * (three*pi**two)**f23
   C1    =  mu / denom
   C2    =  mu / (ka * denom)
-
-  grho  = sqrt(grho2) 
+  !
+  grho  = SQRT(grho2) 
   rho43 = rho**f43
   xs    = grho / rho43
   xs2   = xs * xs  
-  
-  dxs2_drho  = -f83 * xs2 / rho
+  !
+  dxs2_drho = -f83 * xs2 / rho
   dxs2_dgrho2 = one /rho**f83
-  
-  ex        = - CX * rho43
-  dex_drho  = - f43 * CX * rho**f13
-  
-  Fx        =   C1*xs2 / (one + C2*xs2)
-  dFx_dxs2  =   C1 / (one + C2*xs2)**2
+  !
+  ex = - CX * rho43
+  dex_drho = - f43 * CX * rho**f13
+  !
+  Fx = C1*xs2 / (one + C2*xs2)
+  dFx_dxs2 = C1 / (one + C2*xs2)**2
   !
   !   Energy
   !
@@ -1114,120 +1203,140 @@ subroutine pbex_m06l (rho, grho2, sx, v1x, v2x)
   v1x = dex_drho * Fx  +  ex * dFx_dxs2 * dxs2_drho
   v2x = two * ex * dFx_dxs2* dxs2_dgrho2
   !
-  !
-end subroutine pbex_m06l
-
-
+END SUBROUTINE pbex_m06l
+!  
+!
 !===============================  M06L correlation ==========================
 !
-!-------------------------------------------------------------------------
-!
-subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c_up,   &
-&                 v1c_dw, v2c_dw, v3c_dw)
-!-------------------------------------------------------------------------
-!
-  
-  use kinds, only     : dp
-  use constants, only : pi
-  implicit none
-!-------------------------------------------------------------------------
-  
-  real(dp), intent(in)  :: rhoa, rhob, grho2a, grho2b, taua, taub
-  real(dp), intent(out) :: ec, v1c_up, v2c_up, v3c_up, v1c_dw, v2c_dw, v3c_dw
+!---------------------------------------------------------------------------------
+SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
+                  v3c_up, v1c_dw, v2c_dw, v3c_dw )
+  !-------------------------------------------------------------------------------
+  !! M06L correlation.
   !
-  real(DP) :: rs, zeta
-  real(DP) :: vc_v(2)
+  USE kinds,        ONLY : DP
+  USE constants,    ONLY : pi
   !
+  IMPLICIT NONE
   !
-  real(dp), parameter     :: zero = 0._dp, one = 1.0_dp, two=2.0_dp, three = 3.0_dp,    &
-  &                          four = 4.0_dp, five = 5.0_dp, six = 6.0_dp,                &
-  &                          eight = 8.0_dp,                                            &
-  &                          f12 = one/two, f13 = one/three, f23 = two/three,           &
-  &                          f53 = five/three, f83 = eight/three, f43 = four/three,     &
-  &                          pi34 = three/(four*pi), pi2 = pi*pi, f35 = three/five,     &
-  &                          small=1.d-10
+  REAL(DP), INTENT(IN) :: rhoa
+  !! charge density up
+  REAL(DP), INTENT(IN) :: rhob
+  !! charge density down
+  REAL(DP), INTENT(IN) :: grho2a
+  !! squared gradient up
+  REAL(DP), INTENT(IN) :: grho2b
+  !! squared gradient down
+  REAL(DP), INTENT(IN) :: taua
+  !! kinetic energy density up
+  REAL(DP), INTENT(IN) :: taub
+  !! kinetic energyt density down
+  REAL(DP), INTENT(OUT) :: ec
+  !! correlation energy
+  REAL(DP), INTENT(OUT) :: v1c_up
+  !! corr. potential w.r. rho - up
+  REAL(DP), INTENT(OUT) :: v2c_up
+  !! corr. potential w.r. rho - up
+  REAL(DP), INTENT(OUT) :: v3c_up
+  !! corr. potential w.r. rho - up
+  REAL(DP), INTENT(OUT) :: v1c_dw
+  !! corr. potential w.r. rho - down
+  REAL(DP), INTENT(OUT) :: v2c_dw
+  !! corr. potential w.r. grho - down
+  REAL(DP), INTENT(OUT) :: v3c_dw
+  !! corr. potential w.r. tau - down
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: rs, zeta
+  REAL(DP) :: vc_v(2)
+  !
+  REAL(DP), PARAMETER :: zero = 0._dp,  one  = 1.0_dp, two = 2.0_dp, three = 3.0_dp, &
+                         four = 4.0_dp, five = 5.0_dp, six = 6.0_dp, eight = 0.0_dp, &
+                         f12 = one/two, f13 = one/three, f23 = two/three,            &
+                         f53 = five/three, f83 = eight/three, f43 = four/three,      &
+                         pi34 = three/(four*pi), pi2 = pi*pi, f35 = three/five,      &
+                         small = 1.d-10
   !
   ! parameters of the MO6Lc functional
   !
-  real(dp), dimension(0:4):: cs, cab
+  REAL(DP), DIMENSION(0:4):: cs, cab
   ! 
-  real(dp)                :: ds0, ds1, ds2, ds3, ds4, ds5, CF, alpha, Ds,                &
-  &                          dab0, dab1, dab2, dab3, dab4, dab5, gama_ab, gama_s,        &
-  &                          alpha_s, alpha_ab 
+  REAL(DP) :: ds0, ds1, ds2, ds3, ds4, ds5, CF, alpha, Ds,         &
+              dab0, dab1, dab2, dab3, dab4, dab5, gama_ab, gama_s, &
+              alpha_s, alpha_ab 
   !
   ! functions and variables
   !
-  real(dp)                   :: ec_pw_a, ec_pw_b, ec_pw_ab
+  REAL(DP) :: ec_pw_a, ec_pw_b, ec_pw_ab
   !
-  real(dp)                   :: vv, vc_pw_a, vc_pw_b, vc_pw_ab, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
-  &                             Ec_UEG_ab, Ec_UEG_aa, Ec_UEG_bb, decab_drhoa, decab_drhob,  &
-  &                             v1_ab_up, v1_ab_dw, v2_ab_up, v2_ab_dw, v3_ab_up, v3_ab_dw, &
-  &                             v1_aa_up, v2_aa_up, v3_aa_up, v1_bb_dw, v2_bb_dw, v3_bb_dw            
+  REAL(DP) :: vv, vc_pw_a, vc_pw_b, vc_pw_ab, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
+              Ec_UEG_ab, Ec_UEG_aa, Ec_UEG_bb, decab_drhoa, decab_drhob,            &
+              v1_ab_up, v1_ab_dw, v2_ab_up, v2_ab_dw, v3_ab_up, v3_ab_dw,           &
+              v1_aa_up, v2_aa_up, v3_aa_up, v1_bb_dw, v2_bb_dw, v3_bb_dw            
+  !
+  REAL(DP) :: xsa, xs2a, rsa, grhoa, xsb, xs2b, grhob, rsb, zsa, zsb, &
+              xs2ab, zsab, rho,                                       &
+              dxs2a_drhoa, dxs2b_drhob, dxs2a_dgrhoa2, dxs2b_dgrhob2, &
+              dzsa_drhoa, dzsb_drhob, dzsa_dtaua, dzsb_dtaub
+  !
+  REAL(DP) :: hga, dhga_dxs2a, dhga_dzsa, hgb, dhgb_dxs2b, dhgb_dzsb,   &
+              hgab, dhgab_dxs2ab, dhgab_dzsab,                          &
+              Dsa, Dsb, dDsa_dxs2a, dDsa_dzsa, dDsb_dxs2b, dDsb_dzsb,   &
+              gsa, gsb, gsab, dgsa_dxs2a, dgsb_dxs2b, dgsab_dxs2ab, num
+  !
+  INTEGER :: ifunc
+  !
+  !
+  dab0 =  3.957626d-01
+  dab1 = -5.614546d-01
+  dab2 =  1.403963d-02
+  dab3 =  9.831442d-04
+  dab4 = -3.577176d-03
+  dab5 =  zero
+  !
+  cab(0) =  6.042374d-01
+  cab(1) =  1.776783d+02
+  cab(2) = -2.513252d+02
+  cab(3) =  7.635173d+01
+  cab(4) = -1.255699d+01   
+  !
+  gama_ab  = 0.0031_dp
+  alpha_ab = 0.00304966_dp
+  !
+  ds0 =  4.650534d-01
+  ds1 =  1.617589d-01
+  ds2 =  1.833657d-01
+  ds3 =  4.692100d-04
+  ds4 = -4.990573d-03
+  ds5 =  zero
+  !
+  cs(0) =  5.349466d-01
+  cs(1) =  5.396620d-01
+  cs(2) = -3.161217d+01
+  cs(3) =  5.149592d+01
+  cs(4) = -2.919613d+01
+  !
+  gama_s  = 0.06_dp
+  alpha_s = 0.00515088_dp
+  !
+  CF = f35 * (six*pi2)**f23
   !  
-  real(dp)                   :: xsa, xs2a, rsa, grhoa, xsb, xs2b, grhob, rsb, zsa, zsb,     &
-  &                             xs2ab, zsab, rho,                                           &
-  &                             dxs2a_drhoa, dxs2b_drhob, dxs2a_dgrhoa2, dxs2b_dgrhob2,     &
-  &                             dzsa_drhoa, dzsb_drhob, dzsa_dtaua, dzsb_dtaub
-  !
-  real(dp)                   :: hga, dhga_dxs2a, dhga_dzsa, hgb, dhgb_dxs2b, dhgb_dzsb,     &
-  &                             hgab, dhgab_dxs2ab, dhgab_dzsab,                            &
-  &                             Dsa, Dsb, dDsa_dxs2a, dDsa_dzsa, dDsb_dxs2b, dDsb_dzsb,     &
-  &                             gsa, gsb, gsab, dgsa_dxs2a, dgsb_dxs2b, dgsab_dxs2ab, num
-
-  integer                    :: ifunc
-
-!_____________________________________________________________________________________
- 
-  dab0     =   3.957626d-01
-  dab1     =  -5.614546d-01
-  dab2     =   1.403963d-02
-  dab3     =   9.831442d-04
-  dab4     =  -3.577176d-03
-  dab5     =   zero
-
-  cab(0)   =   6.042374d-01
-  cab(1)   =   1.776783d+02
-  cab(2)   =  -2.513252d+02
-  cab(3)   =   7.635173d+01
-  cab(4)   =  -1.255699d+01   
-
-  gama_ab  =   0.0031_dp
-  alpha_ab =   0.00304966_dp
-
-  
-  ds0      =   4.650534d-01
-  ds1      =   1.617589d-01
-  ds2      =   1.833657d-01
-  ds3      =   4.692100d-04
-  ds4      =  -4.990573d-03
-  ds5      =   zero
-
-  cs(0)    =   5.349466d-01
-  cs(1)    =   5.396620d-01
-  cs(2)    =  -3.161217d+01
-  cs(3)    =   5.149592d+01
-  cs(4)    =  -2.919613d+01
-
-  gama_s   =   0.06_dp
-  alpha_s  =   0.00515088_dp
-  
-  CF  =   f35 * (six*pi2)**f23
-  
   ifunc = 1     ! iflag=1  J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
- 
-!______________Ecaa_____________________________________________________
-   
-  if (rhoa < small .and. taua < small ) then
+  !
+  ! ... Ecaa
+  !
+  IF (rhoa < small .AND. taua < small) THEN
     !
-    Ecaa     = zero
+    Ecaa = zero
     v1_aa_up = zero
     v2_aa_up = zero
     v3_aa_up = zero
     !
-  else
+  ELSE
     !
     rsa   = (pi34/rhoa)**f13
-    grhoa = sqrt(grho2a)
+    grhoa = SQRT(grho2a)
     xsa   = grhoa / rhoa**f43
     xs2a  = xsa * xsa
     zsa   = taua/rhoa**f53 - CF
@@ -1247,42 +1356,42 @@ subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c
     !
     rs   = rsa
     zeta = one
-    call pw_spin( rs, zeta, ec_pw_a, vc_v )
+    CALL pw_spin( rs, zeta, ec_pw_a, vc_v )
     vc_pw_a = vc_v(1)
     vv      = vc_v(2)
     !
-    call gvt4  (xs2a, zsa, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hga, dhga_dxs2a, dhga_dzsa)
-    call gfunc (cs, gama_s, xs2a, gsa, dgsa_dxs2a)
+    CALL gvt4( xs2a, zsa, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hga, dhga_dxs2a, dhga_dzsa )
+    CALL gfunc( cs, gama_s, xs2a, gsa, dgsa_dxs2a )
     !
-    Ec_UEG_aa  = rhoa*ec_pw_a
-    num        = (dgsa_dxs2a + dhga_dxs2a)*Dsa + (gsa + hga)*dDsa_dxs2a 
+    Ec_UEG_aa = rhoa*ec_pw_a
+    num = (dgsa_dxs2a + dhga_dxs2a)*Dsa + (gsa + hga)*dDsa_dxs2a 
     !
     !
-    Ecaa       = Ec_UEG_aa * (gsa + hga) * Dsa
-   
-    v1_aa_up   = vc_pw_a * (gsa + hga) * Dsa                            &
-    &          + Ec_UEG_aa * num * dxs2a_drhoa                          &
-    &          + Ec_UEG_aa * (dhga_dzsa*Dsa + (gsa + hga)*dDsa_dzsa) * dzsa_drhoa
-
-    v2_aa_up   = two * Ec_UEG_aa * num * dxs2a_dgrhoa2
-
-    v3_aa_up   = Ec_UEG_aa * (dhga_dzsa*Dsa + (gsa + hga)*dDsa_dzsa) * dzsa_dtaua
+    Ecaa = Ec_UEG_aa * (gsa + hga) * Dsa
     !
-  end if
-!
-!______________Ecbb_____________________________________________________
-  
-  if (rhob < small .and. taub < small) then
-  
-    Ecbb     = zero
+    v1_aa_up = vc_pw_a * (gsa + hga) * Dsa +                          &
+               Ec_UEG_aa * num * dxs2a_drhoa +                        &
+               Ec_UEG_aa * (dhga_dzsa*Dsa + (gsa + hga)*dDsa_dzsa) * dzsa_drhoa
+    !
+    v2_aa_up = two * Ec_UEG_aa * num * dxs2a_dgrhoa2
+    !
+    v3_aa_up = Ec_UEG_aa * (dhga_dzsa*Dsa + (gsa + hga)*dDsa_dzsa) * dzsa_dtaua
+    !
+  ENDIF
+  !
+  ! ... Ecbb
+  !
+  IF (rhob < small .AND. taub < small) THEN
+    !
+    Ecbb = zero
     v1_bb_dw = zero
     v2_bb_dw = zero
     v3_bb_dw = zero
-    
-  else
-  
+    !
+  ELSE
+    !
     rsb   = (pi34/rhob)**f13
-    grhob = sqrt(grho2b)
+    grhob = SQRT(grho2b)
     xsb   = grhob / rhob**f43
     xs2b  = xsb * xsb
     zsb   = taub/rhob**f53 - CF
@@ -1290,492 +1399,160 @@ subroutine m06lc(rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, v3c
     dxs2b_drhob   = -f83*xs2b/rhob
     dxs2b_dgrhob2 =  one /rhob**f83
   
-    dzsb_drhob   = -f53*taub/(rhob**f83)
-    dzsb_dtaub   =  one/rhob**f53
+    dzsb_drhob = -f53*taub/(rhob**f83)
+    dzsb_dtaub =  one/rhob**f53
   
     Dsb        = one - xs2b/(four * (zsb + CF))
     dDsb_dxs2b = - one/(four * (zsb + CF))
     dDsb_dzsb  =  xs2b/(four * (zsb + CF)**2)
     !
-    zeta  = one
-    rs    = rsb
-    call pw_spin( rs, zeta, ec_pw_b, vc_v )
+    zeta = one
+    rs   = rsb
+    CALL pw_spin( rs, zeta, ec_pw_b, vc_v )
     vc_pw_b = vc_v(1)
     vv      = vc_v(2)
     !
-    call gvt4  (xs2b, zsb, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hgb, dhgb_dxs2b, dhgb_dzsb)
-    call gfunc (cs, gama_s, xs2b, gsb, dgsb_dxs2b)
-  
-    Ec_UEG_bb  = rhob*ec_pw_b
-    num        = (dgsb_dxs2b + dhgb_dxs2b)*Dsb + (gsb + hgb)*dDsb_dxs2b
+    CALL gvt4( xs2b, zsb, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hgb, dhgb_dxs2b, dhgb_dzsb )
+    CALL gfunc( cs, gama_s, xs2b, gsb, dgsb_dxs2b )
     !
-    !  
-    Ecbb       = Ec_UEG_bb * (gsb + hgb) * Dsb
-
-    v1_bb_dw   = vc_pw_b * (gsb + hgb) * Dsb                             &
-    &          + Ec_UEG_bb * num * dxs2b_drhob                           &
-    &          + Ec_UEG_bb * (dhgb_dzsb*Dsb + (gsb + hgb)*dDsb_dzsb)*dzsb_drhob
-  
-    v2_bb_dw   = two * Ec_UEG_bb * num * dxs2b_dgrhob2
-  
-    v3_bb_dw   = Ec_UEG_bb * (dhgb_dzsb*Dsb + (gsb + hgb)*dDsb_dzsb)*dzsb_dtaub
+    Ec_UEG_bb = rhob*ec_pw_b
+    num = (dgsb_dxs2b + dhgb_dxs2b)*Dsb + (gsb + hgb)*dDsb_dxs2b
     !
-  end if
-!
-!________________Ecab____________________________________________
-
-  if (rhoa < small .and. rhob < small) then
-  
-    Ecab     = zero
+    Ecbb = Ec_UEG_bb * (gsb + hgb) * Dsb
+    !
+    v1_bb_dw = vc_pw_b * (gsb + hgb) * Dsb +    &
+               Ec_UEG_bb * num * dxs2b_drhob +  &
+               Ec_UEG_bb * (dhgb_dzsb*Dsb + (gsb + hgb)*dDsb_dzsb)*dzsb_drhob
+    !
+    v2_bb_dw = two * Ec_UEG_bb * num * dxs2b_dgrhob2
+    !
+    v3_bb_dw = Ec_UEG_bb * (dhgb_dzsb*Dsb + (gsb + hgb)*dDsb_dzsb)*dzsb_dtaub
+    !
+  ENDIF
+  !
+  ! ... Ecab
+  !
+  IF (rhoa < small .AND. rhob < small) THEN
+    !
+    Ecab = zero
     v1_ab_up = zero
     v1_ab_dw = zero
     v2_ab_up = zero
     v2_ab_dw = zero
     v3_ab_up = zero
     v3_ab_dw = zero
-
-  else
-
+    !
+  ELSE
+    !
     xs2ab = xs2a + xs2b
     zsab  = zsa + zsb
     rho   = rhoa + rhob
     zeta  = (rhoa - rhob)/rho
     rs    = (pi34/rho)**f13
-  
-    call gvt4(xs2ab, zsab, dab0, dab1, dab2, dab3, dab4, dab5, alpha_ab, hgab, dhgab_dxs2ab, dhgab_dzsab)
     !
-    call pw_spin( rs, zeta, ec_pw_ab, vc_v )
-    vc_pw_up = vc_v(1) ; vc_pw_dw=vc_v(2)
+    CALL gvt4( xs2ab, zsab, dab0, dab1, dab2, dab3, dab4, dab5, alpha_ab, hgab, &
+               dhgab_dxs2ab, dhgab_dzsab )
     !
-    call gfunc(cab, gama_ab, xs2ab, gsab, dgsab_dxs2ab)
+    CALL pw_spin( rs, zeta, ec_pw_ab, vc_v )
+    vc_pw_up=vc_v(1) ; vc_pw_dw=vc_v(2)
     !
-    decab_drhoa  =  vc_pw_up - vc_pw_a
-    decab_drhob  =  vc_pw_dw - vc_pw_b
-  
-    Ec_UEG_ab    = ec_pw_ab*rho - ec_pw_a*rhoa - ec_pw_b*rhob
+    CALL gfunc( cab, gama_ab, xs2ab, gsab, dgsab_dxs2ab )
     !
+    decab_drhoa = vc_pw_up - vc_pw_a
+    decab_drhob = vc_pw_dw - vc_pw_b
     !
-    Ecab         = Ec_UEG_ab * (gsab + hgab)
+    Ec_UEG_ab = ec_pw_ab*rho - ec_pw_a*rhoa - ec_pw_b*rhob
+    !
+    Ecab = Ec_UEG_ab * (gsab + hgab)
  
-    v1_ab_up = decab_drhoa * (gsab + hgab)                               &
-    &        + Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2a_drhoa   &
-    &        + Ec_UEG_ab * dhgab_dzsab * dzsa_drhoa
-  
-    v1_ab_dw = decab_drhob * (gsab + hgab)                               &
-    &        + Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2b_drhob   &
-    &        + Ec_UEG_ab * dhgab_dzsab * dzsb_drhob
-  
+    v1_ab_up = decab_drhoa * (gsab + hgab) +                             &
+               Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2a_drhoa + &
+               Ec_UEG_ab * dhgab_dzsab * dzsa_drhoa
+    !
+    v1_ab_dw = decab_drhob * (gsab + hgab) +                             &
+               Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2b_drhob + &
+               Ec_UEG_ab * dhgab_dzsab * dzsb_drhob
+    !
     v2_ab_up = two * Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2a_dgrhoa2
     v2_ab_dw = two * Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2b_dgrhob2
   
     v3_ab_up = Ec_UEG_ab * dhgab_dzsab * dzsa_dtaua
     v3_ab_dw = Ec_UEG_ab * dhgab_dzsab * dzsb_dtaub
     !
-  end if
-!
-!___________________ec and vc_____________________________________________
-
-  ec     = Ecaa + Ecbb + Ecab 
- 
+  ENDIF
+  !
+  ! ... ec and vc
+  !
+  ec = Ecaa + Ecbb + Ecab 
+  !
   v1c_up = v1_aa_up + v1_ab_up
   v2c_up = v2_aa_up + v2_ab_up
   v3c_up = v3_aa_up + v3_ab_up
-  
+  !
   v1c_dw = v1_bb_dw + v1_ab_dw
   v2c_dw = v2_bb_dw + v2_ab_dw
   v3c_dw = v3_bb_dw + v3_ab_dw
-  
-!__________________________________________________________________________
-  
-  contains
-!__________________________________________________________________________  
-  
-  subroutine gfunc (cspin, gama, xspin, gs, dgs_dx)
-  
-    implicit none
-    real(dp), dimension (0:4), intent(in) :: cspin
-    real(dp), intent(in)                  :: xspin, gama
-    real(dp), intent(out)                 :: gs, dgs_dx
+  !
+  CONTAINS
+  !
+  !-------------------------------------------------------------------
+  SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )
+    !-----------------------------------------------------------------
     !
-    real(dp)               :: de, d2, x1, x2, x3, x4
-    real(dp), parameter    :: one=1.0d0, two=2.0d0, three=3.0d0, four=4.0d0
-    
-    !__________________
-    
-    de  = one/(one + gama*xspin)
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(IN)  :: cspin(0:4)
+    REAL(DP), INTENT(IN)  :: xspin, gama
+    REAL(DP), INTENT(OUT) :: gs, dgs_dx
+    !
+    REAL(DP) :: de, d2, x1, x2, x3, x4
+    REAL(DP), PARAMETER :: one=1.0d0, two=2.0d0, &
+                           three=3.0d0, four=4.0d0
+    !
+    de = one/(one + gama*xspin)
     d2 = de**2
     x1 = gama * xspin * de
     x2 = x1**2
     x3 = x1**3
     x4 = x1**4
-    
-    gs     = cspin(0) + cspin(1)*x1 + cspin(2)*x2 + cspin(3)*x3 + cspin(4)*x4
-    dgs_dx = gama*d2* (cspin(1) + two*cspin(2)*x1 + three*cspin(3)*x2 + four*cspin(4)*x3)
-       
-  end subroutine gfunc
-
- !___________________________________________________________________
-  
-end subroutine m06lc
-
-!___________________________________________________________________
-
-
-subroutine gvt4 (x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz)
-  
-  use kinds, only  : dp
-  
-  implicit none
-  
-  real(dp), intent(in)   :: X, z, a, b, c, d, e, f, alpha
-  real(dp), intent(out) :: hg, dh_dx, dh_dz
-  
-  real(dp)              :: gamma, gamma2, gamma3
-  real(dp), parameter   :: one=1.0_dp, two=2.0_dp, three=3.0_dp
-  
+    !
+    gs = cspin(0) + cspin(1)*x1 + cspin(2)*x2 + cspin(3)*x3 + cspin(4)*x4
+    dgs_dx = gama*d2*(cspin(1) + two*cspin(2)*x1 + three*cspin(3)*x2 + four*cspin(4)*x3)
+    !
+  END SUBROUTINE gfunc
+  !
+END SUBROUTINE m06lc
+!
+!
+!-------------------------------------------------------------------------
+SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )
+  !----------------------------------------------------------------------
+  !
+  USE kinds,    ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: X, z, a, b, c, d, e, f, alpha
+  REAL(DP), INTENT(OUT) :: hg, dh_dx, dh_dz
+  !
+  REAL(DP) :: gamma, gamma2, gamma3
+  REAL(DP), PARAMETER :: one=1.0_dp, two=2.0_dp, three=3.0_dp
+  !
   gamma  = one + alpha*(x+z)
   gamma2 = gamma*gamma
   gamma3 = gamma2*gamma
-  
+  !
   hg = a/gamma + (b*x + c*z)/gamma2 + (d*x*x + e*x*z + f*z*z)/gamma3
-  
-  dh_dx = ( -alpha*a + b + (two*x*(d - alpha*b) + z*(e - two*alpha*c))/ gamma  &
-&         - three*alpha*(d*x*x + e*x*z + f*z*z)/gamma2  )/gamma2
-
+  !
+  dh_dx = ( -alpha*a + b + (two*x*(d - alpha*b) + z*(e - two*alpha*c))/ gamma &
+          - three*alpha*(d*x*x + e*x*z + f*z*z)/gamma2  )/gamma2
+  !
   dh_dz = ( -alpha*a + c + (two*z*(f - alpha*c) + x*(e -two*alpha*b))/ gamma  &
-&         - three*alpha*(d*x*x + e*x*z + f*z*z)/gamma2  )/gamma2
-  
-  return
-  
-end subroutine gvt4
-
-!-------------------------------------------------------------------------
+          - three*alpha*(d*x*x + e*x*z + f*z*z)/gamma2  )/gamma2
+  !
+  RETURN
+  !  
+END SUBROUTINE gvt4
 !
 !                          END M06L
-!
 !=========================================================================
-!
-!                          TB09
-!-----------------------------------------------------------------------
-
-subroutine tb09cxc(rho, grho, tau, sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
-
-  USE kinds,            ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none  
-  real(DP), intent(in) :: rho, grho, tau
-  real(dp), intent(out):: sx, sc, v1x, v2x, v3x, v1c, v2c, v3c
-#if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-  integer :: size = 1
-  integer :: func_id = 208  !Tran & Blaha correction to Becke & Johnson
-  real(dp) :: lapl_rho, vlapl_rho ! not used in TB09
-  
-  lapl_rho = grho
-  
-  ! ---------------------------- Exchange
-  
-  func_id = 208  !Tran & Blaha correction to Becke & Johnson  -- TB09 
- 
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_mgga_vxc(xc_func, size, rho, grho, lapl_rho, tau, &
-      v1x, v2x, vlapl_rho, v3x)  
-  call xc_f90_func_end(xc_func)
-  
-  sx = sx * rho
-  v2x = v2x*2.0_dp
-
-  ! ---------------------------- Correlation  
-  
-  func_id = 231  ! Perdew, Tao, Staroverov & Scuseria correlation  -- TPSS
-  
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau, &
-     sc, v1c, v2c, vlapl_rho, v3c)  
-  call xc_f90_func_end(xc_func)
-
-  sc = sc * rho      
-  v2c = v2c*2.0_dp
-#else
-  sx=0.0_dp; sc=0.0_dp; v1x=0.0_dp; v2x=0.0_dp; v3x=0.0_dp; v1c=0.0_dp; v2c=0.0_dp; v3c=0.0_dp
-  call errore('tb09','need libxc',1)
-#endif
-end subroutine tb09cxc
-
-!c     ==================================================================
-
-
-
-
-!======================================================================
-! SCAN meta-GGA
-!======================================================================
-subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
-  USE kinds,            ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none  
-  real(DP), intent(in) :: rho, grho, tau
-  real(dp), intent(out):: sx, sc, v1x, v2x, v3x, v1c, v2c, v3c
-
-#if defined(__LIBXC)
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-  integer :: size = 1
-  integer :: func_id
-  real(dp) :: lapl_rho, vlapl_rho ! not used?
-
-  lapl_rho = grho
-
-  ! exchange
-  func_id = 263  ! XC_MGGA_X_SCAN
- 
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau,&
-                           sx, v1x, v2x, vlapl_rho, v3x)  
-  call xc_f90_func_end(xc_func)
-
-  sx = sx * rho
-  v2x = v2x*2.0_dp
-
-  ! correlation  
-  func_id = 267  ! XC_MGGA_C_SCAN
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau, &
-                           sc, v1c, v2c, vlapl_rho, v3c)  
-  call xc_f90_func_end(xc_func)
-
-  sc = sc * rho
-  v2c = v2c*2.0_dp
-
-#else
-  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
-#endif
-
-end subroutine SCANcxc
-
-subroutine scanxc_spin( rhoup, rhodw, grhoup, grhodw, tauup, taudw, &
-                     &  sx, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw,    &
-                     &  sc, v1cup,v1cdw,v2cup,v2cdw,v3cup,v3cdw )
-  !-----------------------------------------------------------------------
-  !     SCAN metaGGA corrections for exchange and correlation - Hartree a.u.
-  !
-  !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
-  !               definition:  E_x = \int E_x(rho,grho) dr
-  !               output: sx = E_x(rho,grho)
-  !                       v1x= D(E_x)/D(rho)
-  !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !                       sc, v1c, v2c as above for correlation
-  !                       v3x= D(E_x)/D(tau)
-  !
-  USE kinds,            ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none  
-  real(DP), intent(in) :: rhoup, rhodw, grhoup(3), grhodw(3), tauup, taudw
-  real(dp), intent(out):: sx, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, &
-                        & sc, v1cup, v1cdw, v2cup(3), v2cdw(3), v3cup, v3cdw
-#if defined(__LIBXC)
-  ! 
-  ! Internal Variables
-  !
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-  integer :: size = 1, ipol
-  integer :: func_id
-  ! 
-  ! Format compatible with Libxc
-  !
-  real(dp) :: rho(2), grho2(3), tau(2), v1x(2), v2x(3), v3x(2), &
-           &  v1c(2), v2c(3), v3c(2), lapl_rho(6), vlapl_rho(6) 
-  !
-  rho(1) = rhoup
-  rho(2) = rhodw
-  !
-  ! Contracted gradients of density
-  !
-  grho2 = 0_DP
-  do ipol = 1,3
-  ! 
-    grho2(1) = grho2(1) + grhoup(ipol)**2
-    grho2(2) = grho2(2) + grhoup(ipol) * grhodw(ipol)
-    grho2(3) = grho2(3) + grhodw(ipol)**2
-  !
-  enddo
-  !
-  tau(1) = tauup
-  tau(2) = taudw
-  !
-  ! exchange  
-  !
-  func_id = 263
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)    
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho(1), grho2(1), lapl_rho(1), tau(1),&
-                               sx, v1x(1), v2x(1), vlapl_rho(1), v3x(1))  
-  call xc_f90_func_end(xc_func)
-  !
-  ! correlation
-  !
-  func_id = 267     
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func,size , rho(1), grho2(1), lapl_rho(1), tau(1),&
-                               sc, v1c(1), v2c(1), vlapl_rho(1), v3c(1))  
-  call xc_f90_func_end(xc_func)
-  !
-  ! from libxc to QE format
-  !
-  sx  = sx * ( rho(1) + rho(2) )
-  v1xup = v1x(1)
-  v2xup = v2x(1) * 2.D0
-  v3xup = v3x(1)
-  v1xdw = v1x(2)
-  v2xdw = v2x(3) * 2.D0
-  v3xdw = v3x(2)
-  !
-  sc  = sc * ( rho(1) + rho(2) )
-  v1cup = v1c(1)
-  v3cup = v3c(1)
-  v1cdw = v1c(2)
-  v3cdw = v3c(2)
-  !
-  ! cross terms of v2c(2). v2x(2) is always zero.
-  !
-  do ipol = 1,3
-     !
-     v2cup(ipol) = v2c(1)*grhoup(ipol) * 2.D0 + v2c(2)*grhodw(ipol) 
-     v2cdw(ipol) = v2c(3)*grhodw(ipol) * 2.D0 + v2c(2)*grhoup(ipol) 
-     !
-  enddo
-  !
-#else
-  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
-#endif
-  return  
-  !
-end subroutine scanxc_spin
-
-subroutine scancxc_array(nnr, rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
-  !-----------------------------------------------------------------------
-  !     SCAN metaGGA corrections for exchange and correlation - Hartree a.u.
-  !
-  !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
-  !               definition:  E_x = \int E_x(rho,grho) dr
-  !               output: sx = E_x(rho,grho)
-  !                       v1x= D(E_x)/D(rho)
-  !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !                       sc, v1c, v2c as above for correlation
-  !                       v3x= D(E_x)/D(tau)
-  !
-  USE kinds,            ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none  
-  integer,  intent(in) :: nnr
-  real(dp), intent(in) :: rho(nnr), grho(nnr), tau(nnr)
-  real(dp), intent(out):: sx(nnr), sc(nnr), v1x(nnr), v2x(nnr), v3x(nnr)
-  real(dp), intent(out):: v1c(nnr), v2c(nnr), v3c(nnr)
-#if defined(__LIBXC)
-  !
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-  integer :: func_id
-  real(dp) :: lapl_rho(nnr), vlapl_rho(nnr) ! not used in TPSS
-
-  lapl_rho = grho
-
-  ! exchange  
-  func_id = 263
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1), grho(1), lapl_rho(1), tau(1),&
-       sx(1), v1x(1), v2x(1), vlapl_rho(1), v3x(1))  
-  call xc_f90_func_end(xc_func)
-
-  sx  = sx * rho
-  v2x = v2x * 2.D0 ! MCA/HK: for libxc compatibility
-
-  ! correlation
-  func_id = 267
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1), grho(1), lapl_rho(1), tau(1),&
-    &                      sc(1), v1c(1), v2c(1), vlapl_rho(1), v3c(1))  
-  call xc_f90_func_end(xc_func)
- 
-  sc  = sc * rho
-  v2c = v2c * 2.D0
- 
-#else
-  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
-#endif
-  !
-  return  
-end subroutine scancxc_array
-
-subroutine scancxc_array_spin(nnr, rho, grho2, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
-  !-----------------------------------------------------------------------
-  !     SCAN metaGGA corrections for exchange and correlation - Hartree a.u.
-  !
-  !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
-  !               definition:  E_x = \int E_x(rho,grho) dr
-  !               output: sx = E_x(rho,grho)
-  !                       v1x= D(E_x)/D(rho)
-  !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !                       sc, v1c, v2c as above for correlation
-  !                       v3x= D(E_x)/D(tau)
-  !
-  USE kinds,            ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none  
-  integer,  intent(in) :: nnr
-  real(dp), intent(in) :: rho(2,nnr), grho2(3,nnr), tau(2,nnr)
-  real(dp), intent(out):: sx(nnr), sc(nnr), v1x(2,nnr), v2x(3,nnr), v3x(2,nnr)
-  real(dp), intent(out):: v1c(2,nnr), v2c(3,nnr), v3c(2,nnr)
-#if defined(__LIBXC)
-  !
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-  integer :: func_id
-  real(dp) :: lapl_rho(nnr,3,2), vlapl_rho(nnr,3,2) ! not used in SCAN
-
-  lapl_rho = 0.D0 ! not used in SCAN
- 
-  ! exchange  
-  !
-  func_id = 263
-  !
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)    
-  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1,1), grho2(1,1), lapl_rho(1,1,1),&
-       tau(1,1), sx(1), v1x(1,1), v2x(1,1), vlapl_rho(1,1,1), v3x(1,1))  
-  call xc_f90_func_end(xc_func)
-  ! 
-  sx  = sx * ( rho(1,:) + rho(2,:) )
-  v2x = v2x * 2.D0 ! MCA/HK: for libxc compatibility 
-  !
-  ! correlation
-  func_id = 267
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1,1), grho2(1,1), lapl_rho(1,1,1),&
-       tau(1,1), sc(1), v1c(1,1), v2c(1,1), vlapl_rho(1,1,1), v3c(1,1))  
-  call xc_f90_func_end(xc_func)
-  !
-  sc  = sc * ( rho(1,:) + rho(2,:) )
-  v2c = v2c * 2.D0 ! MCA/HK: for libxc compatibility
-  !
-#else
-  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
-#endif
-  !
-  return  
-end subroutine scancxc_array_spin

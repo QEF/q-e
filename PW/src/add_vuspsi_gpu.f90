@@ -9,17 +9,10 @@
 !----------------------------------------------------------------------------
 SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   !----------------------------------------------------------------------------
-  !
-  !    This routine applies the Ultra-Soft Hamiltonian to a
-  !    vector psi and puts the result in hpsi.
-  !    Requires the products of psi with all beta functions
-  !    in array becp(nkb,m) (calculated by calbec)
-  ! input:
-  !     lda   leading dimension of arrays psi, spsi
-  !     n     true dimension of psi, spsi
-  !     m     number of states psi
-  ! output:
-  !     hpsi  V_US|psi> is added to hpsi
+  !! This routine applies the Ultra-Soft Hamiltonian to a
+  !! vector psi and puts the result in hpsi. 
+  !! It requires the products of psi with all beta functions
+  !! in array becp(nkb,m) (calculated by calbec).
   !
   USE kinds,         ONLY: DP
   USE ions_base,     ONLY: nat, ntyp => nsp, ityp
@@ -37,8 +30,14 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   !
   ! ... I/O variables
   !
-  INTEGER, INTENT(IN)  :: lda, n, m
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, spsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, spsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
   COMPLEX(DP), INTENT(INOUT) :: hpsi_d(lda*npol,m)
+  !! V_US|psi> is added to hpsi
   !
   ! ... here the local variables
   !
@@ -72,6 +71,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_gamma_gpu()
        !-----------------------------------------------------------------------
+       !! See comments inside
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
        USE gbuffers, ONLY : dev_buf
@@ -175,7 +175,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
              IF( m_loc > 0 ) THEN
                 CALL DGEMM( 'N', 'N', ( 2 * n ), m_loc, nkb, 1.D0, vkb_d, &
                    ( 2 * lda ), ps_d, nkb, 1.D0, hpsi_d( 1, m_begin ), ( 2 * lda ) )
-             END IF
+             ENDIF
 
              ! block rotation
              !
@@ -184,8 +184,8 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
              icur_blk = icur_blk + 1
              IF( icur_blk == nproc ) icur_blk = 0
 
-          END DO
-       END IF
+          ENDDO
+       ENDIF
        !
        CALL dev_buf%release_buffer(ps_d, ierr) ! DEALLOCATE (ps_d)
        !
@@ -196,6 +196,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_k_gpu()
        !-----------------------------------------------------------------------
+       !! See add_vuspsi_gamma for comments
        !
        ! see add_vuspsi_gamma for comments
        !

@@ -12,6 +12,7 @@
   epbread     = .false.
 
   etf_mem     = 0
+  vme         = .false. 
 
   epwwrite    = .false.
   epwread     = .true.
@@ -35,7 +36,6 @@
   wmin_specfun = 0
   wmax_specfun = 20
   nw_specfun   = 20
-
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K 

@@ -43,7 +43,6 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   USE mp_pools,      ONLY : inter_pool_comm 
   USE mp_bands,      ONLY : intra_bgrp_comm   
   USE mp,            ONLY : mp_sum
-  USE io_files,      ONLY : seqopn
   USE io_global,     ONLY : stdout
   USE buffers,       ONLY : get_buffer
   USE efermi_shift,  ONLY : def

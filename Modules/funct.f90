@@ -50,31 +50,30 @@ MODULE funct
   PUBLIC  :: enforce_input_dft, write_dft_name
   PUBLIC  :: get_dft_name, get_dft_short, get_dft_long,&
              get_nonlocc_name
-  PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_inlc
+  PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_metac, get_inlc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
   PUBLIC  :: set_auxiliary_flags
   !
   ! additional subroutines/functions for hybrid functionals
-  PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
+  PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active, scan_exx
   PUBLIC  :: set_exx_fraction, dft_force_hybrid
   PUBLIC  :: set_screening_parameter, get_screening_parameter
   PUBLIC  :: set_gau_parameter, get_gau_parameter
   !
   ! additional subroutines/functions for finite size corrections
   PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
+  PUBLIC  :: get_finite_size_cell_volume
   ! rpa specific
   PUBLIC  :: init_dft_exxrpa, enforce_dft_exxrpa
   !
   ! driver subroutines computing XC
-  PUBLIC  :: init_xc, is_libxc
-  PUBLIC  :: tau_xc , tau_xc_spin
-  PUBLIC  :: tau_xc_array, tau_xc_array_spin
+  PUBLIC  :: is_libxc
   PUBLIC  :: nlc
   !
   ! PRIVATE variables defining the DFT functional
   !
-  PRIVATE :: dft, iexch, icorr, igcx, igcc, imeta, inlc
-  PRIVATE :: discard_input_dft
+  PRIVATE :: iexch, icorr, igcx, igcc, imeta, imetac, inlc
+  PRIVATE :: dft, discard_input_dft
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
   PRIVATE :: has_finite_size_correction, &
@@ -311,6 +310,13 @@ MODULE funct
   !          J. Chem. Phys. 131, 044108 (2009) ]
   ! These two modifications accounts only for a 1e-5 Ha difference for a
   ! single He atom. Info by Fabien Bruneval.
+  !
+  ! NOTE FOR LIBXC USERS: to use libxc functionals you must enforce them from input (use
+  ! 'input_dft' in &system) and write their names in the input string. The order is not
+  ! relevant, neither the separation between one name and the other. The 'XC_' prefix
+  ! is not necessary.
+  ! You can use combinations of qe and libxc functionals, when they are compatible.
+  !
   ! ------------------------------------------------------------------------
   !
   INTEGER, PARAMETER :: notset = -1
@@ -327,10 +333,11 @@ MODULE funct
   INTEGER :: igcx  = notset
   INTEGER :: igcc  = notset
   INTEGER :: imeta = notset
+  INTEGER :: imetac= notset
   INTEGER :: inlc  = notset
   !
   ! is_libxc(i)==.TRUE. if the the i-th term of xc is from libxc
-  LOGICAL :: is_libxc(6)
+  LOGICAL :: is_libxc(7)
   !
   REAL(DP):: exx_fraction = 0.0_DP
   REAL(DP):: screening_parameter = 0.0_DP
@@ -341,6 +348,7 @@ MODULE funct
   LOGICAL :: ishybrid    = .FALSE.
   LOGICAL :: isnonlocc   = .FALSE.
   LOGICAL :: exx_started = .FALSE.
+  LOGICAL :: scan_exx    = .FALSE.
   LOGICAL :: has_finite_size_correction = .FALSE.
   LOGICAL :: finite_size_cell_volume_set = .FALSE.
   REAL(DP):: finite_size_cell_volume = notset
@@ -387,14 +395,12 @@ CONTAINS
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
     INTEGER :: len, l, i
-    CHARACTER(len=50):: dftout
+    CHARACTER(len=150):: dftout
     LOGICAL :: dft_defined = .FALSE.
+    LOGICAL :: check_libxc
     CHARACTER(LEN=1), EXTERNAL :: capital
-    INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, save_inlc
-#if defined(__LIBXC)
-    INTEGER :: fkind
-    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
-#endif
+    INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
+                save_metac, save_inlc
     !
     ! Exit if set to discard further input dft
     !
@@ -407,6 +413,7 @@ CONTAINS
     save_igcx  = igcx
     save_igcc  = igcc
     save_meta  = imeta
+    save_metac = imetac
     save_inlc  = inlc
     !
     ! convert to uppercase
@@ -419,7 +426,7 @@ CONTAINS
     ENDDO
     !
     ! ----------------------------------------------
-    ! FIRST WE CHECK ALL THE SHORT NAMES
+    ! NOW WE CHECK ALL THE SHORT NAMES
     ! Note: comparison is done via exact matching
     ! ----------------------------------------------
     !
@@ -618,8 +625,55 @@ CONTAINS
               dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
               &//gradc (igcc) //'-'// nonlocc(inlc)
        ENDIF
+       !
+       ! ----------------------------------------------------------------------
+       ! CHECK LIBXC FUNCTIONALS BY INDEX NOTATION, IF PRESENT (USED in PHonon)
+       ! ----------------------------------------------------------------------
+       !
+       IF (dftout(1:3) .EQ. 'XC-') THEN
+#if defined(__LIBXC)
+          is_libxc = .FALSE.
+          !
+          READ( dftout(4:6),   * ) iexch
+          READ( dftout(8:10),  * ) icorr
+          READ( dftout(12:14), * ) igcx
+          READ( dftout(16:18), * ) igcc
+          imeta  = 0
+          imetac = 0 
+          inlc   = 0
+          !
+          IF (iexch /= 0) is_libxc(1) = .TRUE.
+          IF (icorr /= 0) is_libxc(2) = .TRUE.
+          IF (igcx  /= 0) is_libxc(3) = .TRUE.
+          IF (igcc  /= 0) is_libxc(4) = .TRUE.
+          !
+          dft_defined = .TRUE.
+#else
+          CALL errore( 'set_dft_from_name', 'libxc functionals needed, but &
+                                            &libxc is not active', 1 )
+#endif
+       ENDIF
+       !
     END SELECT
     !
+    !
+    ! ... A temporary fix to keep the q-e input notation for SCAN-functionals
+    !     valid.
+#if defined(__LIBXC)
+    IF (imeta==5 .OR. imeta==6) THEN
+       IF (imeta==6) scan_exx = .TRUE.
+       imeta  = 263 
+       imetac = 267
+       is_libxc(5:6) = .TRUE.
+    ELSEIF (imeta==3) THEN
+       imeta  = 208
+       imetac = 231
+       is_libxc(5:6) = .TRUE.
+    ENDIF
+#else
+    IF (imeta==3 .OR. imeta==5 .OR. imeta==6) &
+          CALL errore( 'set_dft_from_name', 'libxc needed for this functional', 2 )
+#endif
     !
     !----------------------------------------------------------------
     ! If the DFT was not yet defined, check every part of the string
@@ -627,39 +681,18 @@ CONTAINS
     !
     IF (.NOT. dft_defined) THEN
        !
-       iexch = matching( 1, dftout, nxc,   exc,     is_libxc(1) )
-       icorr = matching( 2, dftout, ncc,   corr,    is_libxc(2) )
-       igcx  = matching( 3, dftout, ngcx,  gradx,   is_libxc(3) )
-       igcc  = matching( 4, dftout, ngcc,  gradc,   is_libxc(4) )       
-       imeta = matching( 5, dftout, nmeta, meta,    is_libxc(5) )
-       inlc  = matching( 6, dftout, ncnl,  nonlocc, is_libxc(6) )       
+       is_libxc(:) = .FALSE.
+       !
+       iexch = matching( dftout, nxc,   exc   )
+       icorr = matching( dftout, ncc,   corr  )
+       igcx  = matching( dftout, ngcx,  gradx )
+       igcc  = matching( dftout, ngcc,  gradc )
+       imeta = matching( dftout, nmeta, meta  )
+       imetac = 0
+       inlc  = matching( dftout, ncnl, nonlocc )
        !
 #if defined(__LIBXC)
-       fkind = -100
-       IF (is_libxc(1)) THEN
-         CALL xc_f90_func_init( xc_func, xc_info, iexch, 1 )
-         fkind = xc_f90_info_kind( xc_info )
-         CALL xc_f90_func_end( xc_func )
-       ENDIF
-       !
-       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
-          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
-                       &been found together with a correlation one', 2 )
-       !
-       fkind = -100
-       IF (is_libxc(3)) THEN
-         CALL xc_f90_func_init( xc_func, xc_info, igcx, 1 )
-         fkind = xc_f90_info_kind( xc_info )
-         CALL xc_f90_func_end( xc_func )
-       ENDIF
-       !
-       IF (icorr/=0 .AND. fkind==XC_EXCHANGE_CORRELATION)  &
-          CALL errore( 'set_dft_from_name', 'An EXCHANGE+CORRELATION functional has &
-                       &been found together with a correlation one', 3 )
-       !
-       IF (ANY(is_libxc(1:2)) .AND. ANY(is_libxc(3:4))) &
-          CALL errore( 'set_dft_from_name', 'An LDA functional has been found, but &
-                       &libxc GGA functionals already include the LDA part)', 4 )
+       CALL matching_libxc( dftout )
 #endif
        !
     ENDIF
@@ -718,89 +751,45 @@ CONTAINS
        WRITE (stdout,*) inlc, save_meta
        CALL errore( 'set_dft_from_name', ' conflicting values for imeta', 1 )
     ENDIF
+    IF (save_metac /= notset  .AND. save_metac /= imetac)  THEN
+       WRITE (stdout,*) imetac, save_metac
+       CALL errore( 'set_dft_from_name', ' conflicting values for imetac', 1 )
+    ENDIF
     IF (save_inlc /= notset  .AND. save_inlc /= inlc)   THEN
        WRITE (stdout,*) inlc, save_inlc
-       CALL errore( 'set_dft_from_name', ' conflicting values for inlc',  1 )
+       CALL errore( 'set_dft_from_name', ' conflicting values for inlc', 1 )
     ENDIF
-    !
-    CALL init_xc( 'ALL' )
     !
     RETURN
     !
   END SUBROUTINE set_dft_from_name
   !
-  !
   !-----------------------------------------------------------------
-  FUNCTION matching( fslot, dft, n, name, its_libxc )
-    !------------------------------------------------------------
+  INTEGER FUNCTION matching( dft, n, name )
+    !-----------------------------------------------------------------
+    !! Looks for matches between the names of each single term of the 
+    !! xc-functional and the input dft string.
     !
     IMPLICIT NONE
     !
-    INTEGER :: matching
-    INTEGER, INTENT(IN) :: fslot
     INTEGER, INTENT(IN):: n
-    LOGICAL, INTENT(OUT) :: its_libxc
     CHARACTER(LEN=*), INTENT(IN):: name(0:n)
     CHARACTER(LEN=*), INTENT(IN):: dft
+    INTEGER :: i
     LOGICAL, EXTERNAL :: matches
-    INTEGER :: i, ii, j, length
-    INTEGER :: family, fkind
-#if defined(__LIBXC)
-    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
-#endif
     !
-    its_libxc = .FALSE.
     matching = notset
-    !
-    IF (matching == notset) THEN
-       !
-       length = LEN( dft )
-       !
-       ii = 0
-       !
-       DO i = 1, length
-          ii = ii+1
-          IF (ii == length-1) EXIT
-          !
-          IF (dft(ii:ii+2) .EQ. 'XC_') THEN
-             DO j = 1, length-ii-2
-               IF (dft(ii+2+j:ii+2+j) .EQ. ' ') EXIT
-             ENDDO
-             !
-#if defined(__LIBXC)
-             matching = xc_f90_functional_get_number( dft(ii:ii+1+j) )
-             !
-             CALL xc_f90_func_init( xc_func, xc_info, matching, 1 )
-             family = xc_f90_info_family( xc_info )
-             fkind  = xc_f90_info_kind( xc_info )
-             CALL xc_f90_func_end( xc_func )
-             !
-             IF ( slot_match_libxc( fslot, family, fkind ) ) THEN
-               its_libxc = .TRUE.
-               RETURN
-             ENDIF
-#else
-             CALL errore( 'matching', 'A libxc functional has been found, &
-                                      &but libxc library is not active', 1 )
-#endif
-             ii = ii+2+j
-          ENDIF
-          !
-       ENDDO
-       !
-       matching = notset
-       !
-    ENDIF
     !
     DO i = n, 0, -1
        IF ( matches(name(i), TRIM(dft)) ) THEN
+          !
           IF ( matching == notset ) THEN
-             ! write(*, '("matches",i2,2X,A,2X,A)') i, name(i), trim(dft)
-             matching = i
+           !WRITE(*, '("matches",i2,2X,A,2X,A)') i, name(i), TRIM(dft)
+           matching = i
           ELSE
              WRITE(*, '(2(2X,i2,2X,A))') i, TRIM(name(i)), &
-                                     matching, TRIM(name(matching))
-             CALL errore( 'set_dft', 'two conflicting matching values', 2 )
+                                  matching, TRIM(name(matching))
+             CALL errore( 'set_dft', 'two conflicting matching values', 1 )
           ENDIF
        ENDIF
     ENDDO
@@ -810,39 +799,191 @@ CONTAINS
   END FUNCTION matching
   !
   !
-  !----------------------------------------------------------------------------
-  FUNCTION slot_match_libxc( fslot, family, fkind )
-    !-------------------------------------------------------------------------
+#if defined(__LIBXC)
+  !--------------------------------------------------------------------------------
+  SUBROUTINE matching_libxc( dft )
+    !------------------------------------------------------------------------------
+    !! It spans the libxc functionals and looks for matches with the input dft
+    !! string. Then stores the corresponding indices.  
+    !! It also makes some compatibility checks.
     !
     IMPLICIT NONE
-    ! 
-    LOGICAL :: slot_match_libxc
-    INTEGER, INTENT(IN) :: fslot, family, fkind
     !
-#if defined(__LIBXC)
-    slot_match_libxc=.TRUE.
+    CHARACTER(LEN=*), INTENT(IN) :: dft
     !
-    SELECT CASE( fslot )
-    CASE( 1 )
-       IF (family==XC_FAMILY_LDA .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_LDA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-    CASE( 2 )
-       IF (family==XC_FAMILY_LDA .AND. fkind==XC_CORRELATION) RETURN
-    CASE( 3 )
-       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_GGA     .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE) RETURN
-       IF (family==XC_FAMILY_HYB_GGA .AND. fkind==XC_EXCHANGE_CORRELATION) RETURN
-    CASE( 4 )
-       IF (family==XC_FAMILY_GGA .AND. fkind==XC_CORRELATION) RETURN
-    END SELECT
+    CHARACTER(LEN=256) :: name
+    INTEGER :: i, l, fkind, fkind_v(3), family
+    INTEGER, PARAMETER :: ID_MAX_LIBXC=600
+    TYPE(xc_f90_pointer_t) :: xc_func, xc_info
+    LOGICAL, EXTERNAL :: matches
+    CHARACTER(LEN=1), EXTERNAL :: capital
     !
+    DO i = 1, ID_MAX_LIBXC
+       !
+       CALL xc_f90_functional_get_name( i, name )
+       !
+       DO l = 1, LEN_TRIM(name)
+          name(l:l) = capital( name(l:l) )
+       ENDDO
+       !
+       IF ( TRIM(name) .EQ. 'UNKNOWN' ) CYCLE
+       !
+       IF ( matches(TRIM(name), TRIM(dft)) ) THEN
+          !
+          !WRITE(*, '("matches libxc",i2,2X,A,2X,A)') i, TRIM(name), TRIM(dft)
+          !
+          fkind=-100 ; family=-100
+          CALL xc_f90_func_init( xc_func, xc_info, i, 1 )
+          fkind = xc_f90_info_kind( xc_info )
+          family = xc_f90_info_family( xc_info )
+          CALL xc_f90_func_end( xc_func )
+          !   
+          SELECT CASE( family )
+          CASE( XC_FAMILY_LDA )
+             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+                iexch = i
+                is_libxc(1) = .TRUE.
+             ELSEIF (fkind==XC_CORRELATION) THEN
+                icorr = i
+                is_libxc(2) = .TRUE.
+             ENDIF
+             fkind_v(1) = fkind
+             !   
+          CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
+             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+                igcx = i
+                is_libxc(3) = .TRUE.
+             ELSEIF (fkind==XC_CORRELATION) THEN
+                igcc = i
+                is_libxc(4) = .TRUE.
+             ENDIF
+             fkind_v(2) = fkind
+             !
+          CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
+             IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
+                imeta = i
+                is_libxc(5) = .TRUE.
+             ELSEIF (fkind==XC_CORRELATION) THEN
+                imetac = i
+                is_libxc(6) = .TRUE.
+             ENDIF
+             fkind_v(3) = fkind
+             !
+          END SELECT
+          !
+       ENDIF
+       !
+    ENDDO
+    !
+    ! ... overlaps check (between qe and libxc)
+    !
+    IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc( dft )
+    !
+    ! ... some compatibility checks
+    !   
+    IF (icorr/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &   
+       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
+                    &been found together with a correlation one', 2 )   
+    !     
+    IF (igcc/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)  &   
+       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
+                    &been found together with a correlation one', 3 )   
+    !   
+    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) THEN   
+       CALL errore( 'matching_libxc', 'An LDA functional has been found, but &   
+                    &libxc GGA functionals already include the LDA part', 4 )   
+    ENDIF   
+    !   
+    ! ... for q-e functionals imeta defines both exchange and    
+    !     correlation part.   
+    IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0) &   
+       CALL errore( 'matching_libxc', 'Two conflicting metaGGA functionals &   
+                    &have been found', 5 )   
+    !   
+    IF (imetac/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
+       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
+                    &been found together with a correlation one', 6 )   
+    !   
+  END SUBROUTINE matching_libxc
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE check_overlaps_qe_libxc( dft )
+    !------------------------------------------------------------------------
+    !! It fixes eventual overlap issues between qe and libxc names when qe and
+    !! libxc functionals are used together.
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: dft
+    !
+    CHARACTER(LEN=4) :: qe_name
+    CHARACTER(LEN=256) :: lxc_name
+    INTEGER :: i, l, ch, qedft, nlxc
+    INTEGER :: id_vec(6)
+    LOGICAL, EXTERNAL :: matches
+    CHARACTER(LEN=1), EXTERNAL :: capital
+    !
+    id_vec(1)=iexch ; id_vec(2)=icorr
+    id_vec(3)=igcx  ; id_vec(4)=igcc
+    id_vec(5)=imeta ; id_vec(6)=imetac
+    !
+    DO ch = 1, 5
+       IF (.NOT.is_libxc(ch)) THEN
+          !
+          SELECT CASE( ch )
+          CASE( 1 )
+             qe_name = exc(iexch)
+          CASE( 2 )
+             qe_name = corr(icorr)
+          CASE( 3 )
+             qe_name = gradx(igcx)
+          CASE( 4 )
+             qe_name = gradc(igcc)
+          CASE( 5 )
+             qe_name = meta(imeta)
+          END SELECT
+          !
+          qedft = 0
+          i = 0
+          DO WHILE ( i < LEN_TRIM(dft) )
+            i = i + 1
+            IF ( matches( TRIM(qe_name), TRIM(dft(i:i+3)) ) ) THEN
+               qedft = qedft + 1
+               i = i + LEN_TRIM(qe_name)-1
+            ENDIF
+          ENDDO
+          !
+          nlxc = 0
+          DO i = 1, 6
+            IF (is_libxc(i)) THEN
+              CALL xc_f90_functional_get_name( id_vec(i), lxc_name )
+              DO l = 1, LEN_TRIM(lxc_name)
+                 lxc_name(l:l) = capital( lxc_name(l:l) )
+              ENDDO
+              IF (matches( TRIM(qe_name), TRIM(lxc_name))) nlxc = nlxc + 1
+            ENDIF
+          ENDDO
+          !
+          IF (qedft == nlxc) THEN
+             SELECT CASE( ch )
+             CASE( 1 )
+                iexch = 0
+             CASE( 2 )
+                icorr = 0
+             CASE( 3 )
+                igcx  = 0
+             CASE( 4 )
+                igcc  = 0
+             CASE( 5 )
+                imeta = 0
+             END SELECT
+          ENDIF  
+          !
+       ENDIF
+    ENDDO
+    !
+  END SUBROUTINE
 #endif
-    slot_match_libxc=.FALSE.
-    !
-    RETURN
-    !
-  END FUNCTION
   !
   !
   !-----------------------------------------------------------------------
@@ -903,6 +1044,7 @@ CONTAINS
     igcc  = i4
     inlc  = i5
     imeta = i6
+    imetac= 0
     !
     set_dft_values = .TRUE.
     !
@@ -986,14 +1128,12 @@ CONTAINS
      IF (.NOT. ishybrid) &
         CALL errore( 'start_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .TRUE.
-     CALL init_xc( 'ALL' )
   END SUBROUTINE start_exx
   !-----------------------------------------------------------------------
   SUBROUTINE stop_exx
      IF (.NOT. ishybrid) &
         CALL errore( 'stop_exx', 'dft is not hybrid, wrong call', 1 )
      exx_started = .FALSE.
-     CALL init_xc( 'ALL' )
   END SUBROUTINE stop_exx
   !-----------------------------------------------------------------------
   SUBROUTINE dft_force_hybrid( request )
@@ -1077,6 +1217,12 @@ CONTAINS
      get_meta = imeta
      RETURN
   END FUNCTION get_meta
+  !
+  FUNCTION get_metac()
+    INTEGER get_metac
+    get_metac = imetac
+    RETURN
+  END FUNCTION get_metac
   !-----------------------------------------------------------------------
   FUNCTION get_inlc()
      INTEGER get_inlc
@@ -1171,8 +1317,8 @@ CONTAINS
   END SUBROUTINE get_finite_size_cell_volume
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE set_dft_from_indices( iexch_, icorr_, igcx_, igcc_, inlc_ )
-     INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
+  SUBROUTINE set_dft_from_indices( iexch_, icorr_, igcx_, igcc_, imeta_, inlc_ )
+     INTEGER :: iexch_, icorr_, igcx_, igcc_, imeta_, inlc_
      IF ( discard_input_dft ) RETURN
      IF (iexch == notset) iexch = iexch_
      IF (iexch /= iexch_) THEN
@@ -1194,6 +1340,11 @@ CONTAINS
         write (stdout,*) igcc, igcc_
         CALL errore( 'set_dft', ' conflicting values for igcc', 1 )
      ENDIF
+     IF (imeta  == notset) imeta = imeta_
+     IF (imeta /= imeta_) THEN
+        write (stdout,*) imeta, imeta_
+        CALL errore( 'set_dft', ' conflicting values for imeta', 1 )
+     ENDIF     
      IF (inlc  == notset) inlc = inlc_
      IF (inlc /= inlc_) THEN
         write (stdout,*) inlc, inlc_
@@ -1211,30 +1362,30 @@ CONTAINS
   FUNCTION get_dft_short()
     !---------------------------------------------------------------------
     !
-    CHARACTER(LEN=12) :: get_dft_short
-    CHARACTER(LEN=12) :: shortname
+    CHARACTER(LEN=18) :: get_dft_short
+    CHARACTER(LEN=18) :: shortname
     !
     shortname = 'no shortname'
     !
     IF ( iexch==1 .AND. igcx==0 .AND. igcc==0) THEN
        shortname = TRIM(corr(icorr))
-    ELSEIF (iexch==4 .AND. icorr== 0 .AND. igcx==0 .AND. igcc== 0) THEN
+    ELSEIF (iexch==4 .AND. icorr==0  .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'OEP'
     ELSEIF (iexch==1 .AND. icorr==11 .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'VWN-RPA'
-    ELSEIF (iexch==1 .AND. icorr== 3 .AND. igcx==1 .AND. igcc== 3) THEN
+    ELSEIF (iexch==1 .AND. icorr==3  .AND. igcx==1 .AND. igcc== 3) THEN
        shortname = 'BLYP'
-    ELSEIF (iexch==1 .AND. icorr== 1 .AND. igcx==1 .AND. igcc== 0) THEN
+    ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1 .AND. igcc== 0) THEN
        shortname = 'B88'
-    ELSEIF (iexch==1 .AND. icorr== 1 .AND. igcx==1 .AND. igcc== 1) THEN
+    ELSEIF (iexch==1 .AND. icorr==1  .AND. igcx==1 .AND. igcc== 1) THEN
        shortname = 'BP'
-    ELSEIF (iexch==1 .AND. icorr== 4 .AND. igcx==2 .AND. igcc== 2) THEN
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==2 .AND. igcc== 2) THEN
        shortname = 'PW91'
-    ELSEIF (iexch==1 .AND. icorr== 4 .AND. igcx==3 .AND. igcc== 4) THEN
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==3 .AND. igcc== 4) THEN
        shortname = 'PBE'
-    ELSEIF (iexch==6 .AND. icorr== 4 .AND. igcx==8 .AND. igcc== 4) THEN
+    ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==8 .AND. igcc== 4) THEN
        shortname = 'PBE0'
-    ELSEIF (iexch==6 .AND. icorr== 4 .AND. igcx==41.AND. igcc== 4) THEN
+    ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==41.AND. igcc== 4) THEN
        shortname = 'B86BPBEX'
     ELSEIF (iexch==6 .AND. icorr==4  .AND. igcx==42.AND. igcc== 3) THEN
        shortname = 'BHANDHLYP'
@@ -1326,6 +1477,16 @@ CONTAINS
        shortname = 'RVV10'
     ENDIF
     !
+#if defined(__LIBXC)
+    IF ( ANY(is_libxc(:)) ) THEN
+       shortname = 'XC-000-000-000-000'
+       WRITE( shortname(4:6),   '(i3.3)' ) iexch
+       WRITE( shortname(8:10),  '(i3.3)' ) icorr
+       WRITE( shortname(12:14), '(i3.3)' ) igcx
+       WRITE( shortname(16:18), '(i3.3)' ) igcc
+    ENDIF
+#endif
+    !
     get_dft_short = shortname
     !
   END FUNCTION get_dft_short
@@ -1354,78 +1515,12 @@ CONTAINS
 !-----------------------------------------------------------------------
 SUBROUTINE write_dft_name
 !-----------------------------------------------------------------------
-   WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
-        &  " (",I2,3I3,2I2,")")') TRIM( dft ), iexch,icorr,igcx,igcc,inlc,imeta
+   WRITE( stdout, '(5X,"Exchange-correlation= ",A)') TRIM( dft )
+   WRITE( stdout, '(27X,"(",I4,3I4,3I4,")")' ) iexch, icorr, igcx, igcc, inlc, imeta, imetac
    IF ( get_exx_fraction() > 0.0_dp ) WRITE( stdout, &
         '(5X,"EXX-fraction              =",F12.2)') get_exx_fraction()
    RETURN
 END SUBROUTINE write_dft_name
-!
-!
-!-----------------------------------------------------------------------
-SUBROUTINE init_xc( family )
-   !-------------------------------------------------------------------
-   !! Gets from inside parameters needed to initialize lda xc-drivers.
-   !
-   USE kinds,          ONLY: DP
-   USE xc_lda_lsda,    ONLY: libxc_switches_lda, iexch_l, icorr_l,     &
-                             exx_started_l, is_there_finite_size_corr, &
-                             exx_fraction_l, finite_size_cell_volume_l
-   USE xc_gga,         ONLY: libxc_switches_gga, igcx_l, igcc_l, &
-                             exx_started_g, exx_fraction_g,      &
-                             screening_parameter_l, gau_parameter_l
-   !
-   IMPLICIT NONE
-   !
-   CHARACTER(LEN=*), INTENT(IN) :: family
-   !
-   IF (family.EQ.'LDA' .OR. family.EQ.'ALL') THEN
-     ! =1 if libxc active, =0 otherwise
-     IF (is_libxc(1)) libxc_switches_lda(1) = 1
-     IF (is_libxc(2)) libxc_switches_lda(2) = 1
-     ! exchange-correlation indexes
-     iexch_l = get_iexch()
-     icorr_l = get_icorr()
-     !
-     IF (iexch_l==-1 .OR. icorr_l==-1) CALL errore( 'init_xc', 'LDA functional &
-                                                   & indexes not well defined', 1 )
-     !
-     ! hybrid exchange vars
-     exx_started_l  = exx_started !is_active()
-     exx_fraction_l = 0._DP
-     IF ( exx_started_l ) exx_fraction_l = get_exx_fraction()
-     !
-     ! finite size correction vars
-     CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
-                                       finite_size_cell_volume_l )
-   ENDIF
-   !
-   IF (family.EQ.'GGA' .OR. family.EQ.'ALL') THEN
-     ! =1 if libxc active, =0 otherwise
-     IF (is_libxc(3)) libxc_switches_gga(1) = 1
-     IF (is_libxc(4)) libxc_switches_gga(2) = 1
-     ! exchange-correlation indexes
-     igcx_l = get_igcx()
-     igcc_l = get_igcc()
-     !
-     IF (igcx_l==-1 .OR. igcc_l==-1)  CALL errore( 'init_xc', 'GGA functional &
-                                                  & indexes not well defined', 2 )     
-     !
-     ! hybrid exchange vars
-     exx_started_g  = exx_started !is_active()
-     exx_fraction_g = 0._DP
-     IF ( exx_started_g ) exx_fraction_g = get_exx_fraction()
-     !
-     screening_parameter_l = get_screening_parameter()
-     gau_parameter_l = get_gau_parameter()
-   ENDIF
-   !
-   IF (family.NE.'LDA' .AND. family.NE.'GGA' .AND. family.NE.'ALL') &
-     CALL errore( 'init_xc', 'family not found', 3 )
-   !
-   RETURN
-   !
-END SUBROUTINE init_xc
 !
 !
 !-----------------------------------------------------------------------
@@ -1435,313 +1530,52 @@ END SUBROUTINE init_xc
 !-----------------------------------------------------------------------
 SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
   !-----------------------------------------------------------------------
-  !     non local correction for the correlation
+  !     non-local contribution to the correlation energy
   !
-  !     input:  rho_valence, rho_core
-  !     definition:  E_nl = \int E_nl(rho',grho',rho'',grho'',|r'-r''|) dr
-  !     output: enl = E_nl
-  !             vnl= D(E_x)/D(rho)
-  !             v  = Correction to the potential
+  !     input      :  rho_valence, rho_core
+  !     definition :  E_nl = \int E_nl(rho',grho',rho'',grho'',|r'-r''|) dr
+  !     output     :  enl = E^nl_c
+  !                   vnl = D(E^nl_c)/D(rho)
+  !                   v   = non-local contribution to the potential
   !
-
-  USE vdW_DF, ONLY: xc_vdW_DF, xc_vdW_DF_spin, vdw_type
+  !
+  USE vdW_DF, ONLY: xc_vdW_DF, xc_vdW_DF_spin, inlc_ => inlc
   USE rVV10,  ONLY: xc_rVV10
-
+  !
   IMPLICIT NONE
-
-  REAL(DP), INTENT(IN) :: rho_valence(:,:), rho_core(:)
-  INTEGER, INTENT(IN)  :: nspin
+  !
+  REAL(DP), INTENT(IN)    :: rho_valence(:,:), rho_core(:)
+  INTEGER,  INTENT(IN)    :: nspin
   REAL(DP), INTENT(INOUT) :: v(:,:)
   REAL(DP), INTENT(INOUT) :: enl, vnl
-
-  if ( inlc == 1 .or. inlc == 2 .or. inlc == 4 .or. inlc == 5 .or. inlc == 6 ) then
-
-     vdw_type = inlc
-     if( nspin == 1 ) then
+  !
+  IF ( inlc == 1 .OR. inlc == 2) THEN
+     !
+     inlc_ = inlc
+     IF ( nspin == 1 ) THEN
         CALL xc_vdW_DF      (rho_valence, rho_core, enl, vnl, v)
-     else if( nspin == 2 ) then
+     ELSE IF ( nspin == 2 ) THEN
         CALL xc_vdW_DF_spin (rho_valence, rho_core, enl, vnl, v)
-     else
-        CALL errore ('nlc','vdW-DF not available for noncollinear spin case',1)
-     end if
-
-  elseif (inlc == 3) then
-      if(imeta == 0) then
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
-      else
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
-      endif
-  else
-     enl = 0.0_DP
-     vnl = 0.0_DP
-     v = 0.0_DP
-  endif
+     ELSE
+        CALL errore ('nlc', 'vdW-DF not available for noncollinear spin case',1)
+     END If
+     !
+  ELSE IF ( inlc == 3 ) THEN
+     !
+     IF ( imeta == 0 ) THEN
+       CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
+     ELSE
+       CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
+     END IF
+     !
+  ELSE
+     !
+     CALL errore ('nlc', 'inlc choice for E^nl_c not implemented',1)
+     !
+  END IF
   !
   RETURN
 END SUBROUTINE nlc
-
-!
-!-----------------------------------------------------------------------
-!------- META CORRECTIONS DRIVERS ----------------------------------
-!-----------------------------------------------------------------------
-!
-!-----------------------------------------------------------------------
-SUBROUTINE tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  !-----------------------------------------------------------------------
-  !     gradient corrections for exchange and correlation - Hartree a.u.
-  !     See comments at the beginning of module for implemented cases
-  !
-  !     input:  rho, grho=|\nabla rho|^2
-  !
-  !     definition:  E_x = \int e_x(rho,grho) dr
-  !
-  !     output: sx = e_x(rho,grho) = grad corr
-  !             v1x= D(E_x)/D(rho)
-  !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !             v3x= D(E_x)/D(tau)
-  !
-  !             sc, v1c, v2c as above for correlation
-  !
-  IMPLICIT NONE
-
-  REAL(DP) :: rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
-
-  !_________________________________________________________________________
-
-  if     (imeta == 1) then
-     CALL tpsscxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 2) then
-     CALL   m06lxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 3) then
-     CALL  tb09cxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 4) then
-     ! do nothing
-  elseif (imeta == 5) then
-     CALL  SCANcxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  else
-    CALL errore('tau_xc','wrong igcx and/or igcc',1)
-  end if
-
-  RETURN
-
-END SUBROUTINE tau_xc
-
-SUBROUTINE tau_xc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  ! HK/MCA : the xc_func_init is slow and is called too many times
-  ! HK/MCA : we modify this subroutine so that the overhead could be minimized
-  !-----------------------------------------------------------------------
-  !     gradient corrections for exchange and correlation - Hartree a.u.
-  !     See comments at the beginning of module for implemented cases
-  !
-  !     input:  rho, grho=|\nabla rho|^2
-  !
-  !     definition:  E_x = \int e_x(rho,grho) dr
-  !
-  !     output: sx = e_x(rho,grho) = grad corr
-  !             v1x= D(E_x)/D(rho)
-  !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-  !             v3x= D(E_x)/D(tau)
-  !
-  !             sc, v1c, v2c as above for correlation
-  !
-  IMPLICIT NONE
-
-  INTEGER, intent(in) :: nnr
-  REAL(DP) :: rho(nnr), grho(nnr), tau(nnr), ex(nnr), ec(nnr)
-  REAL(DP) :: v1x(nnr), v2x(nnr), v3x(nnr), v1c(nnr), v2c(nnr), v3c(nnr)
-  !_________________________________________________________________________
-
-  if (imeta == 5) then
-     CALL  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 6 ) then ! HK/MCA: SCAN0
-     CALL  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-     if (exx_started) then
-        ex  = (1.0_DP - exx_fraction) * ex
-        v1x = (1.0_DP - exx_fraction) * v1x
-        v2x = (1.0_DP - exx_fraction) * v2x
-        v3x = (1.0_DP - exx_fraction) * v3x
-     end if
-  else
-     CALL errore('v_xc_meta_array','(CP only) array mode only works for SCAN',1)
-  end if
-
-  RETURN
-
-END SUBROUTINE tau_xc_array
-!
-!
-!-----------------------------------------------------------------------
-SUBROUTINE tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
-           &            v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, v1cup, v1cdw,&
-           &            v2cup, v2cdw, v3cup, v3cdw)
-
-!-----------------------------------------------------------------------
-  !
-  !
-
-  IMPLICIT NONE
-
-  real(dp), intent(in)                :: rhoup, rhodw, tauup, taudw
-  real(dp), dimension (3), intent(in) :: grhoup, grhodw
-
-  real(dp), intent(out)               :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-                                      &  v1cup, v1cdw, v3cup, v3cdw
-  real(dp), dimension(3), intent(out) :: v2cup, v2cdw
-
-  !
-  !  Local variables
-  !
-  INTEGER                 :: ipol
-  real(dp)                :: rh, zeta, atau, grhoup2, grhodw2
-  real(dp), parameter     :: epsr=1.0d-08, zero=0._dp
-  !
-  !_____________________________
-
-  grhoup2 = zero
-  grhodw2 = zero
-
-  v2cup         = zero
-  v2cdw         = zero
-
-  ! FIXME: for SCAN, this will be calculated later
-  if (imeta /= 4) then
-
-      do ipol=1,3
-        grhoup2 = grhoup2 + grhoup(ipol)**2
-        grhodw2 = grhodw2 + grhodw(ipol)**2
-      end do
-
-  end if
-
-  if (imeta == 1) then
-
-     CALL tpsscx_spin(rhoup, rhodw, grhoup2, grhodw2, tauup,   &
-              &  taudw, ex, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw)
-
-     rh   =  rhoup + rhodw
-
-     zeta = (rhoup - rhodw) / rh
-     atau =  tauup + taudw    ! KE-density in Hartree
-
-     CALL tpsscc_spin(rh,zeta,grhoup,grhodw, atau,ec,              &
-     &                v1cup,v1cdw,v2cup,v2cdw,v3cup, v3cdw)
-
-
-  elseif (imeta == 2) then
-
-     CALL   m06lxc_spin (rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
-            &            ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
-            &            v1cup, v1cdw, v2cup(1), v2cdw(1), v3cup, v3cdw)
-
-  elseif (imeta == 5) then
-
-            ! FIXME: not the most efficient use of libxc
-
-            CALL scanxc_spin(rhoup, rhodw, grhoup, grhodw, tauup, taudw,  &
-                     &  ex, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw,          &
-                     &  ec, v1cup,v1cdw,v2cup,v2cdw,v3cup,v3cdw )
-
-  else
-
-    CALL errore('tau_xc_spin','This case not implemented',imeta)
-
-  end if
-
-END SUBROUTINE tau_xc_spin
-
-SUBROUTINE tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
-  & v1c, v2c, v3c)
-! HK/MCA : the xc_func_init (LIBXC) is slow and is called too many times
-! HK/MCA : we modify this SUBROUTINE so that the overhead could be minimized
-!-----------------------------------------------------------------------
-!     gradient corrections for exchange and correlation - Hartree a.u.
-!     See comments at the beginning of module for implemented cases
-!
-!     input:  rho,rho, grho=\nabla rho
-!
-!     definition:  E_x = \int e_x(rho,grho) dr
-!
-!     output: sx = e_x(rho,grho) = grad corr
-!             v1x= D(E_x)/D(rho)
-!             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
-!             v3x= D(E_x)/D(tau)
-!
-!             sc, v1cup, v2cup as above for correlation
-!
-IMPLICIT NONE
-
-INTEGER, intent(in) :: nnr
-REAL(DP) :: rho(nnr,2), grho(3,nnr,2), tau(nnr,2), ex(nnr), ec(nnr)
-REAL(DP) :: v1x(nnr,2), v2x(nnr,3), v3x(nnr,2), v1c(nnr,2), v2c(nnr,3), v3c(nnr,2)
-
-!Local variables
-
-INTEGER  :: ipol, k, is
-REAL(DP) :: grho2(3,nnr)
-!MCA: Libxc format
-REAL(DP) :: rho_(2,nnr), tau_(2,nnr)
-REAL(DP) :: v1x_(2,nnr), v2x_(3,nnr), v3x_(2,nnr), v1c_(2,nnr), v2c_(3,nnr), v3c_(2,nnr)
-
-!_________________________________________________________________________
-
-grho2 = 0.0
-
-!MCA/HK: contracted gradient of density, same format as in libxc
-do k=1,nnr
-
-do ipol=1,3
-grho2(1,k) = grho2(1,k) + grho(ipol,k,1)**2
-grho2(2,k) = grho2(2,k) + grho(ipol,k,1) * grho(ipol,k,2)
-grho2(3,k) = grho2(3,k) + grho(ipol,k,2)**2
-end do
-
-!MCA: transforming to libxc format (DIRTY HACK)
-do is=1,2
-rho_(is,k) = rho(k,is)
-tau_(is,k) = tau(k,is)
-enddo
-
-end do
-
-if (imeta == 5) then
-
-!MCA/HK: using the arrays in libxc format
-CALL  scancxc_array_spin (nnr, rho_, grho2, tau_, ex, ec, &
-&                   v1x_, v2x_, v3x_,  &
-&                   v1c_, v2c_, v3c_ )
-
-do k=1,nnr
-
-!MCA: from libxc to QE format (DIRTY HACK)
-do is=1,2
-v1x(k,is) = v1x_(is,k)
-v2x(k,is) = v2x_(is,k) !MCA/HK: v2x(:,2) contains the cross terms
-v3x(k,is) = v3x_(is,k)
-v1c(k,is) = v1c_(is,k)
-v2c(k,is) = v2c_(is,k) !MCA/HK: same as v2x
-v3c(k,is) = v3c_(is,k)
-enddo
-
-v2c(k,3) = v2c_(3,k)
-v2x(k,3) = v2x_(3,k)
-
-end do
-
-elseif (imeta == 6 ) then ! HK/MCA: SCAN0
-CALL  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-if (exx_started) then
-ex  = (1.0_DP - exx_fraction) * ex
-v1x = (1.0_DP - exx_fraction) * v1x
-v2x = (1.0_DP - exx_fraction) * v2x
-v3x = (1.0_DP - exx_fraction) * v3x
-end if
-else
-CALL errore('v_xc_meta_array','(CP only) array mode only works for SCAN',1)
-end if
-
-RETURN
-
-END SUBROUTINE tau_xc_array_spin
 !
 !
 #if defined(__LIBXC)

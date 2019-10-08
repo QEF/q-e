@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine plugin_clock()
+SUBROUTINE plugin_clock()
 !
 ! This routine is used for printing plugins clocks
 ! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
@@ -16,7 +16,7 @@ USE io_global, ONLY : stdout
 ! ***Environ MODULES BEGIN***
 ! ***Environ MODULES END***
 !
-implicit none
+IMPLICIT NONE
 !
 ! ***Environ VARIABLES BEGIN***
 ! ***Environ VARIABLES END***
@@ -24,4 +24,4 @@ implicit none
 ! ***Environ CALLS BEGIN***
 ! ***Environ CALLS END***
 !
-end subroutine plugin_clock
+END SUBROUTINE plugin_clock

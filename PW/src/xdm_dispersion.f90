@@ -14,12 +14,13 @@ module xdm_module
   IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: a1i, a2i    ! the damping function coefficients (real_dp)
-  PUBLIC :: init_xdm    ! initialize XDM: calculate atomic volumes, radial densities,...
-  PUBLIC :: energy_xdm  ! compute the XDM dispersion energy and derivatives 
-  PUBLIC :: force_xdm   ! fetch the forces calculated by energy_xdm
-  PUBLIC :: stress_xdm  ! fetch the stresses calculated by energy_xdm
-  PUBLIC :: cleanup_xdm ! deallocate arrays
+  PUBLIC :: a1i, a2i     ! the damping function coefficients (real_dp)
+  PUBLIC :: init_xdm     ! initialize XDM: calculate atomic volumes, radial densities,...
+  PUBLIC :: energy_xdm   ! compute the XDM dispersion energy and derivatives 
+  PUBLIC :: force_xdm    ! fetch the forces calculated by energy_xdm
+  PUBLIC :: stress_xdm   ! fetch the stresses calculated by energy_xdm
+  PUBLIC :: write_xdmdat ! write the xdm.dat file
+  PUBLIC :: cleanup_xdm  ! deallocate arrays
 
   ! is this a PAW calculation?
   LOGICAL :: ispaw
@@ -29,11 +30,13 @@ module xdm_module
   REAL(DP), ALLOCATABLE :: xenv(:,:)
   INTEGER, ALLOCATABLE :: ienv(:), lvec(:,:)
   INTEGER :: nvec
+  INTEGER :: lmax(3)
 
   ! moments, polarizabilities, radii, dispersion coefficients
   REAL(DP), ALLOCATABLE :: alpha(:), ml(:,:)
   REAL(DP), ALLOCATABLE :: cx(:,:,:), rvdw(:,:)
   REAL(DP) :: maxc6
+  REAL(DP) :: rmax2
 
   ! energies, forces and stresses
   REAL(DP) :: esave = 0._DP
@@ -211,16 +214,17 @@ CONTAINS
     REAL(DP) :: x(3), wei, weic, db, ri, atb(3,3), taub(3)
     REAL(DP) :: xij(3), ehadd(6:10), eat, ee
     INTEGER :: l1, l2, ll, m1, m2
-    LOGICAL :: docalc
-    REAL(DP) :: a1, a2, rmax, rmax2, den, den2
+    LOGICAL :: docalc, lexist
+    REAL(DP) :: a1, a2, rmax, den, den2
     REAL(DP) :: dij2
     REAL(DP) :: rvdwx, dijx, dijxm2, fxx, cn0
     INTEGER :: i3, nn
     REAL(DP) :: for(3,nat), sigma(3,3), sat(3,3)
     INTEGER :: resto, divid, first, last, it
     INTEGER :: idx, ispin
-    INTEGER, EXTERNAL :: atomic_number
     REAL(DP) :: iix, iiy, iiz
+
+    INTEGER, EXTERNAL :: atomic_number
 
     CALL start_clock('energy_xdm')
 
@@ -259,7 +263,7 @@ CONTAINS
 
        ! set up the atomic environment for densities
        rmax = SQRT(MAXVAL(rmaxg2))
-       CALL set_environ(rmax)
+       CALL set_environ(rmax,lmax(1),lmax(2),lmax(3))
 
        ! total and core promolecular density
        ALLOCATE(rhoat(dfftp%nnr),rhocor(dfftp%nnr),STAT=ialloc)
@@ -366,9 +370,7 @@ CONTAINS
 
              iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
              DO n = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
-                !
-                ! ... three dimensional indexes
-                !
+                ! three dimensional indexes
                 idx = n -1
                 iz  = idx / (dfftp%nr1x*dfftp%my_nr2p)
                 idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
@@ -489,7 +491,7 @@ CONTAINS
     ! in the international tables for crystallography.
     rmax = (maxc6/ecut)**(1._DP/6._DP)
     rmax2 = rmax*rmax
-    CALL set_environ(rmax)
+    CALL set_environ(rmax,lmax(1),lmax(2),lmax(3))
 
     ! parallelize over atoms
 #if defined __MPI
@@ -562,10 +564,10 @@ CONTAINS
     DO nn = 6, 10
        CALL mp_sum(ehadd(nn),intra_image_comm)
     ENDDO
-    !
+
     IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
-    !
-    ! Convert to Ry
+
+    ! convert to Ry
     evdw = evdw * 2
     for = for * 2
     sigma = sigma * 2
@@ -578,6 +580,7 @@ CONTAINS
     ssave = sigma
 
     IF (ionode) THEN
+       ! write to output
        WRITE (stdout,'("  Evdw(total,Ry)   = ",1p,E20.12)') evdw
        WRITE (stdout,'("  Evdw(C6,Ry)      = ",1p,E20.12)') ehadd(6)
        WRITE (stdout,'("  Evdw(C8,Ry)      = ",1p,E20.12)') ehadd(8)
@@ -614,9 +617,34 @@ CONTAINS
     svdw = ssave
 
   END FUNCTION stress_xdm
+  
+  SUBROUTINE write_xdmdat()
+    ! save the XDM coefficients and vdw radii to the xdm.dat file for ph.x
+    USE io_files, ONLY: restart_dir
+    USE io_global, ONLY: ionode
+    USE ions_base, ONLY: nat
+    INTEGER :: iunxdm, ierr
+    LOGICAL :: lexist
+
+    INTEGER, EXTERNAL :: find_free_unit
+
+    IF (ionode) THEN
+       iunxdm = find_free_unit ()
+       OPEN ( UNIT=iunxdm, FILE = TRIM(restart_dir() ) // 'xdm.dat', &
+            FORM='unformatted', STATUS='unknown' )
+       WRITE (iunxdm,iostat=ierr) 1 ! version
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',1)
+       WRITE (iunxdm,iostat=ierr) lmax, rmax2
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',2)
+       WRITE (iunxdm,iostat=ierr) 2d0 * cx(1:nat,1:nat,2:4), rvdw(1:nat,1:nat)
+       IF (ierr /= 0) CALL errore('energy_xdm','writing xdm.dat',3)
+       CLOSE (UNIT=iunxdm, STATUS='KEEP')
+    ENDIF
+
+  END SUBROUTINE write_xdmdat
 
   ! --- private ---
-  SUBROUTINE set_environ (rcut)
+  SUBROUTINE set_environ(rcut,imax,jmax,kmax)
     ! Calculate an atomic environemnt of the entire unit cell up to a distance rcut. 
     ! This environment is saved in the host module arrays ienv, xenv and lvec.
     USE cell_base, ONLY: at, bg, alat, omega, tpiba2
@@ -624,32 +652,13 @@ CONTAINS
     USE io_global, ONLY: stdout, ionode
 
     REAL(DP), INTENT(IN) :: rcut
+    INTEGER, INTENT(OUT) :: imax, jmax, kmax
 
-    INTEGER :: nadd, imax, jmax, kmax, ialloc
+    INTEGER :: nadd, ialloc
     REAL(DP) :: rmat(3,3), gtensor(3,3), alp, bet, gam, aa, bb, cc, xx(3)
-    INTEGER :: ii, jj, kk, m, nsize, lsize
-    INTEGER, ALLOCATABLE :: ienvaux(:), lvecaux(:,:)
-    REAL(DP), ALLOCATABLE :: xenvaux(:,:)
-    INTEGER, PARAMETER :: menv = 1000, lenv=100
+    INTEGER :: ii, jj, kk, m
 
     CALL start_clock('exdm:environ')
-
-    ! allocate the initial environment
-    nenv = 0
-    IF (ALLOCATED(ienv)) DEALLOCATE(ienv)
-    IF (ALLOCATED(xenv)) DEALLOCATE(xenv)
-    ALLOCATE(ienv(menv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("ienv")
-    ALLOCATE(xenv(3,menv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("xenv")
-    nsize = menv
-
-    ! allocate the array of lattice vectors
-    nvec = 0
-    IF (ALLOCATED(lvec)) DEALLOCATE(lvec)
-    ALLOCATE(lvec(3,lenv),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("lenv")
-    lsize = lenv
 
     ! determine number of cells (adapted from gulp, by J. Gale)
     rmat = at * alat
@@ -673,59 +682,35 @@ CONTAINS
     jmax = NINT(rcut / bb) + nadd
     kmax = NINT(rcut / cc) + nadd
 
+    ! pre-allocate the environment arrays
+    nvec = (2*imax+1)*(2*jmax+1)*(2*kmax+1)
+    nenv = (2*imax+1)*(2*jmax+1)*(2*kmax+1) * nat
+    IF (ALLOCATED(xenv)) DEALLOCATE(xenv)
+    IF (ALLOCATED(ienv)) DEALLOCATE(ienv)
+    IF (ALLOCATED(lvec)) DEALLOCATE(lvec)
+    ALLOCATE(xenv(3,nenv),ienv(nenv),lvec(3,nvec))
+
     ! build the environment arrays
+    nenv = 0
+    nvec = 0
     DO ii = -imax, imax
        DO jj = -jmax, jmax
           DO kk = -kmax, kmax
 
              ! run over the ions in the (i,j,k) cell:
              DO m = 1, nat
-                xx = tau(:,m) + ii*at(:,1) + jj*at(:,2) + kk*at(:,3)
-
-                ! dynamically increase the array size
                 nenv = nenv + 1
-                IF (nenv > nsize) THEN
-                   ALLOCATE(ienvaux(NINT(1.5*nsize)),STAT=ialloc)
-                   IF (ialloc /= 0) CALL alloc_failed("ienvaux")
-                   ALLOCATE(xenvaux(3,NINT(1.5*nsize)),STAT=ialloc)
-                   IF (ialloc /= 0) CALL alloc_failed("xenvaux")
-                   ienvaux(1:nsize) = ienv
-                   xenvaux(:,1:nsize) = xenv
-                   CALL move_alloc(ienvaux,ienv)
-                   CALL move_alloc(xenvaux,xenv)
-                   nsize = NINT(1.5*nsize)
-                END IF
+                xx = tau(:,m) + ii*at(:,1) + jj*at(:,2) + kk*at(:,3)
                 xenv(:,nenv) = xx * alat
                 ienv(nenv) = m
              ENDDO  ! m
 
              ! one more lattice vector
              nvec = nvec + 1
-             IF (nvec > lsize) THEN
-                ALLOCATE(lvecaux(3,NINT(1.5*lsize)),STAT=ialloc)
-                IF (ialloc /= 0) CALL alloc_failed("lvecaux")
-                lvecaux(:,1:lsize) = lvec
-                CALL move_alloc(lvecaux,lvec)
-                lsize = NINT(1.5*lsize)
-             END IF
              lvec(:,nvec) = (/ii,jj,kk/)
           END DO ! kk
        END DO ! jj
     END DO ! ii
-
-    ! fit memory snugly
-    ALLOCATE(ienvaux(nsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("ienvaux")
-    ienvaux(1:nsize) = ienv
-    CALL move_alloc(ienvaux,ienv)
-    ALLOCATE(xenvaux(3,nsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("xenvaux")
-    xenvaux(:,1:nsize) = xenv
-    CALL move_alloc(xenvaux,xenv)
-    ALLOCATE(lvecaux(3,lsize),STAT=ialloc)
-    IF (ialloc /= 0) CALL alloc_failed("lvecaux")
-    lvecaux(:,1:lsize) = lvec
-    CALL move_alloc(lvecaux,lvec)
 
     CALL stop_clock('exdm:environ')
 
