@@ -104,90 +104,80 @@ MODULE compute_rhocg_gpu_m
 
 END MODULE compute_rhocg_gpu_m 
 !-----------------------------------------------------------------------
-SUBROUTINE drhoc_gpu( ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_d )
+subroutine drhoc_gpu (ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_d)
   !-----------------------------------------------------------------------
-  !! Calculates the Fourier transform of the core charge.
   !
   USE kinds
-  USE constants,   ONLY: pi, fpi, eps14 
-  USE cudafor  
-  USE compute_rhocg_gpu_m  
+  USE constants, ONLY : pi, fpi, eps14
+  use cudafor
+  use compute_rhocg_gpu_m
+  implicit none
   !
-  IMPLICIT NONE
+  !    first the dummy variables
   !
-  INTEGER :: ngl
-  !! input: the number of g shell
-  INTEGER :: mesh
-  !! input: the number of radial mesh points
-  REAL(DP),DEVICE :: gl_d(ngl)
-  !! input: the number of G shells
-  REAL(DP),DEVICE :: r_d(mesh)
-  !! input: the radial mesh
-  REAL(DP),DEVICE  :: rab_d(mesh)
-  !! input: the derivative of the radial mesh
-  REAL(DP),DEVICE :: rhoc_d(mesh)
-  !! input: the radial core charge
-  REAL(DP) :: omega
-  !! input: the volume of the unit cell
-  REAL(DP) :: tpiba2
-  !! input: 2 times pi / alat
-  REAL(DP), DEVICE :: rhocg_d(ngl)
-  !! output: the Fourier transform of the core charge
+  integer :: ngl, mesh
+  ! input: the number of g shell
+  ! input: the number of radial mesh points
+
+  real(DP) ::  omega, tpiba2
+  real(DP), device :: gl_d(ngl), r_d(mesh), rab_d(mesh), rhoc_d(mesh), rhocg_d(ngl)
+  ! input: the number of G shells
+  ! input: the radial mesh
+  ! input: the derivative of the radial mesh
+  ! input: the radial core charge
+  ! input: the volume of the unit cell
+  ! input: 2 times pi / alat
+  ! output: the fourier transform of the core charge
   !
-  ! ... local variables
+  !     here the local variables
   !
-  REAL(DP)         :: gl1, rhocg1
-  REAL(DP),DEVICE  :: func_d(3) 
+  real(DP) :: rhocg1, gl1
+  real(DP), device :: func_d(3)
   ! the modulus of g for a given shell
-  ! the Fourier transform
-  REAL(DP), ALLOCATABLE,DEVICE  ::  aux_d(:)
+  ! the fourier transform
+  real(DP), allocatable, device ::  aux_d (:)
   ! auxiliary memory for integration
-  INTEGER :: ir, igl, igl0, ir0, blocks 
-  TYPE(dim3) :: threads 
-  INTEGER    :: n_
+
+  integer :: ir, igl, igl0, ir0, blocks
+  type(dim3) :: threads
   ! counter on radial mesh points
   ! counter on g shells
   ! lower limit for loop on ngl
-  !
-  !
-  CALL start_clock('drhoc') 
-  !
-  ALLOCATE( aux_d(mesh) )
+  CALL start_clock( 'drhoc' )
+
+  allocate (aux_d( mesh))     
   !
   ! G=0 term
   !
-  gl1 = gl_d(1) 
-  IF ( gl1 < 1.0d-8 ) THEN
-     !$cuf kernel do(1) <<<*,*>>> 
-     DO ir = 1, mesh
-        aux_d(ir) = r_d(ir)**2 * rhoc_d(ir)
-     END DO
-     CALL simpson_gpu( mesh, aux_d, rab_d, rhocg1 )
+  gl1 = gl_d(1)
+  if (gl1 < 1.0d-8) then
+     !$cuf kernel do(1) <<<*, *>>>
+     do ir = 1, mesh
+        aux_d (ir) = r_d (ir) **2 * rhoc_d (ir)
+     enddo
+
+     call simpson_gpu (mesh, aux_d, rab_d, rhocg1)
      rhocg1 = fpi * rhocg1 / omega
-     rhocg_d(1) = rhocg1 
+     rhocg_d(1) = rhocg1 ! copy result to device
+
      igl0 = 2
-  ELSE
+  else
      igl0 = 1
-  ENDIF
+  endif
   !
   ! G <> 0 term
   !
-  blocks = ceiling(REAL((ngl-igl0+1)/8))
-  threads = rhocg_threads 
-  n_ = ngl-igl0+1
+  threads = dim3(32, 8, 1)
+  blocks = ceiling(real(ngl - igl0 + 1)/8)
+  call compute_rhocg_gpu<<<blocks, threads>>>(ngl - igl0 + 1, tpiba2, omega, gl_d(igl0), r_d, rhoc_d, & 
+                                              rab_d, mesh, rhocg_d(igl0))
+
+  deallocate(aux_d)
   !
-  
-  !
-  CALL compute_rhocg_gpu<<<blocks, threads>>>(n_, tpiba2, omega, gl_d(igl0), r_d, rhoc_d, &
-                                             rab_d, mesh, rhocg_d(igl0))  
-     
-  DEALLOCATE(aux_d) 
-     ! 
-     CALL stop_clock('drhoc') 
-  !
-  RETURN
-  !
-END SUBROUTINE drhoc_gpu 
+  CALL stop_clock( 'drhoc' )
+  return
+end subroutine drhoc_gpu
+
 #else 
 SUBROUTINE drhoc_gpu()
 END SUBROUTINE drhoc_gpu 
