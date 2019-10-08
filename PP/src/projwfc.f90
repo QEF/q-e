@@ -34,7 +34,6 @@ PROGRAM do_projwfc
   USE command_line_options, ONLY : ndiag_
   USE spin_orb,   ONLY : lforcet
   USE wvfct,      ONLY : et, nbnd
-  USE basis,      ONLY : natomwfc
   USE paw_variables, ONLY : okpaw
   ! following modules needed for generation of tetrahedra
   USE ktetra,     ONLY : tetra, tetra_type, opt_tetra_init
@@ -216,8 +215,6 @@ PROGRAM do_projwfc
   ELSE IF ( pawproj ) THEN
      CALL projwave_paw (filproj)
   ELSE
-     IF ( natomwfc <= 0 ) CALL errore &
-        ('do_projwfc', 'Cannot project on zero atomic wavefunctions!', 1)
      IF ( lforcet .OR. noncolin ) THEN
         CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data,ef_0)
      ELSE
@@ -411,9 +408,9 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE gvecw,   ONLY: ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
-  USE lsda_mod, ONLY: nspin, isk, current_spin
+  USE lsda_mod, ONLY: nspin
   USE symm_base, ONLY: nsym, irt, d1, d2, d3
-  USE wvfct, ONLY: npwx, nbnd, et, wg
+  USE wvfct, ONLY: npwx, nbnd, et
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -435,29 +432,18 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   ! Some workspace for k-point calculation ...
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
   ! ... or for gamma-point.
-  REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:), proj1 (:)
   REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
   CHARACTER(len=256) :: filename
-  INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
   !
   !
-  INTERFACE 
-      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
-           IMPORT  :: DP
-           CHARACTER (len=*), INTENT(in) :: filproj
-           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
-           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
-           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
-      END SUBROUTINE write_lowdin
-  END INTERFACE
-
+  IF ( natomwfc <= 0 ) CALL errore &
+        ('projwave', 'Cannot project on zero atomic wavefunctions!', 1)
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
-  IF ( gamma_only ) THEN
-     WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
-  ENDIF
+  IF ( gamma_only ) &
+       WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
   ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
   !
@@ -733,105 +719,141 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
            CLOSE(iunproj)
         ENDDO
      ENDIF
-
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj", lbinary, proj_aux, lwrite_ovp, ovps_aux )
+     CALL write_proj_iotk( "atomic_proj", lbinary, proj_aux, lwrite_ovp, &
+          ovps_aux )
      !
      DEALLOCATE( proj_aux, ovps_aux )
-
      !
-     ! write on the standard output file
+     ! write to standard output
      !
-     WRITE( stdout,'(/5x,"Atomic states used for projection")')
-     WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)')
-     DO nwfc = 1, natomwfc
-        WRITE(stdout,1000) &
-             nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-             nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
-     ENDDO
-1000 FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
-                " (l=",i1," m=",i2,")")
-     !
-     ALLOCATE(idx(natomwfc), proj1 (natomwfc) )
-     DO ik = 1, nkstot
-        WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
-        DO ibnd = 1, nbnd
-           WRITE( stdout, '("==== e(",i4,") = ",f11.5," eV ==== ")') &
-              ibnd, et (ibnd, ik) * rytoev
-           !
-           ! sort projections by magnitude, in decreasing order
-           !
-           DO nwfc = 1, natomwfc
-              idx (nwfc) = 0
-              proj1 (nwfc) = - proj (nwfc, ibnd, ik)
-           ENDDO
-           !
-           ! projections differing by less than 1.d-4 are considered equal
-           !
-           CALL hpsort_eps (natomwfc, proj1, idx, eps4)
-           !
-           !  only projections that are larger than 0.001 are written
-           !
-           DO nwfc = 1, natomwfc
-              proj1 (nwfc) = - proj1(nwfc)
-              IF ( abs (proj1(nwfc)) < 0.001d0 ) GOTO 20
-           ENDDO
-           nwfc = natomwfc + 1
-20         nwfc = nwfc -1
-           !
-           ! fancy (?!?) formatting
-           !
-           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i4,"]+"))') &
-                (proj1 (i), idx(i), i = 1, min(5,nwfc))
-           DO j = 1, (nwfc-1)/5
-              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') &
-                   (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
-           ENDDO
-           psum = SUM ( proj(1:natomwfc, ibnd, ik) )
-           WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
-           !
-        ENDDO
-     ENDDO
-     DEALLOCATE (idx, proj1)
-     !
-     ! estimate partial charges (Loewdin) on each atom
-     !
-     ALLOCATE ( charges (nat, 0:lmax_wfc, nspin ) )
-     ALLOCATE ( charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin ) )
-     charges = 0.0d0
-     charges_lm = 0.d0
-     DO ik = 1, nkstot
-        IF ( nspin == 1 ) THEN
-           current_spin = 1
-        ELSEIF ( nspin == 2 ) THEN
-           current_spin = isk ( ik )
-        ELSE
-           CALL errore ('projave',' called in the wrong case ',1)
-        ENDIF
-        DO ibnd = 1, nbnd
-           DO nwfc = 1, natomwfc
-              na= nlmchi(nwfc)%na
-              l = nlmchi(nwfc)%l
-              m = nlmchi(nwfc)%m
-              charges(na,l,current_spin) = charges(na,l,current_spin) + &
-                   wg (ibnd,ik) * proj (nwfc, ibnd, ik)
-              charges_lm(na,l,m,current_spin) = charges_lm(na,l,m,current_spin) + &
-                   wg (ibnd,ik) * proj (nwfc, ibnd, ik)
-           ENDDO
-        ENDDO
-     ENDDO
-     !
-     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
-     !
-     DEALLOCATE (charges, charges_lm)
+     CALL write_proj( lmax_wfc, filproj ) 
      !
   ENDIF
   !
   RETURN
   !
 END SUBROUTINE projwave
+!
+!-----------------------------------------------------------------------
+SUBROUTINE write_proj ( lmax_wfc, filproj )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,      ONLY : DP
+  USE io_global,  ONLY : stdout
+  USE constants,  ONLY : rytoev
+  USE basis,      ONLY : natomwfc
+  USE lsda_mod,   ONLY : nspin, isk, current_spin
+  USE klist,      ONLY : nkstot, xk
+  USE ions_base,  ONLY : ityp, atm
+  USE wvfct,      ONLY : et, wg, nbnd
+  USE projections,ONLY : nlmchi, proj
+  !
+  INTEGER, INTENT(in) :: lmax_wfc
+  CHARACTER (len=*), INTENT(in) :: filproj
+  INTEGER :: nwfc, ibnd, ik, na, l, m
+  INTEGER, ALLOCATABLE :: idx(:)
+  REAL(DP) :: psum
+  REAL(DP), ALLOCATABLE :: proj1 (:)
+  REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:)
+  !
+  INTERFACE 
+     SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+       IMPORT  :: DP
+       CHARACTER (len=*), INTENT(in) :: filproj
+       INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+       REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+       REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+     END SUBROUTINE write_lowdin
+  END INTERFACE
+  !
+  !
+  WRITE( stdout,'(/5x,"Atomic states used for projection")')
+  WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)')
+  DO nwfc = 1, natomwfc
+     WRITE(stdout,1000) &
+          nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+          nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
+  ENDDO
+1000 FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
+          " (l=",i1," m=",i2,")")
+  !
+  ALLOCATE(idx(natomwfc), proj1 (natomwfc) )
+  DO ik = 1, nkstot
+     WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
+     DO ibnd = 1, nbnd
+        WRITE( stdout, '("==== e(",i4,") = ",f11.5," eV ==== ")') &
+             ibnd, et (ibnd, ik) * rytoev
+        !
+        ! sort projections by magnitude, in decreasing order
+        !
+        DO nwfc = 1, natomwfc
+           idx (nwfc) = 0
+           proj1 (nwfc) = - proj (nwfc, ibnd, ik)
+        ENDDO
+        !
+        ! projections differing by less than 1.d-4 are considered equal
+        !
+        CALL hpsort_eps (natomwfc, proj1, idx, eps4)
+        !
+        !  only projections that are larger than 0.001 are written
+        !
+        DO nwfc = 1, natomwfc
+           proj1 (nwfc) = - proj1(nwfc)
+           IF ( abs (proj1(nwfc)) < 0.001d0 ) GOTO 20
+        ENDDO
+        nwfc = natomwfc + 1
+20      nwfc = nwfc -1
+        !
+        ! fancy (?!?) formatting
+        !
+        WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i4,"]+"))') &
+             (proj1 (i), idx(i), i = 1, min(5,nwfc))
+        DO j = 1, (nwfc-1)/5
+           WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') &
+                (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
+        ENDDO
+        psum = SUM ( proj(1:natomwfc, ibnd, ik) )
+        WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
+        !
+     ENDDO
+  ENDDO
+  DEALLOCATE (idx, proj1)
+  !
+  ! estimate partial charges (Loewdin) on each atom
+  !
+  ALLOCATE ( charges (nat, 0:lmax_wfc, nspin ) )
+  ALLOCATE ( charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin ) )
+  charges = 0.0d0
+  charges_lm = 0.d0
+  DO ik = 1, nkstot
+     IF ( nspin == 1 ) THEN
+        current_spin = 1
+     ELSEIF ( nspin == 2 ) THEN
+        current_spin = isk ( ik )
+     ELSE
+        CALL errore ('projave',' called in the wrong case ',1)
+     ENDIF
+     DO ibnd = 1, nbnd
+        DO nwfc = 1, natomwfc
+           na= nlmchi(nwfc)%na
+           l = nlmchi(nwfc)%l
+           m = nlmchi(nwfc)%m
+           charges(na,l,current_spin) = charges(na,l,current_spin) + &
+                wg (ibnd,ik) * proj (nwfc, ibnd, ik)
+           charges_lm(na,l,m,current_spin) = charges_lm(na,l,m,current_spin) + &
+                wg (ibnd,ik) * proj (nwfc, ibnd, ik)
+        ENDDO
+     ENDDO
+  ENDDO
+  !
+  CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+  !
+  DEALLOCATE (charges, charges_lm)
+  !
+END SUBROUTINE write_proj
 !
 !-----------------------------------------------------------------------
 SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
@@ -899,9 +921,14 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
            REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
            REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
       END SUBROUTINE write_lowdin
-  END INTERFACE
+   END INTERFACE
+   !
   IF (.not.noncolin) CALL errore('projwave_nc','called in the wrong case',1)
   IF (gamma_only) CALL errore('projwave_nc','gamma_only not yet implemented',1)
+  WRITE( stdout, '(/5x,"Calling projwave .... ")')
+  IF ( natomwfc <= 0 ) CALL errore &
+       ('projwave_nc', 'Cannot project on zero atomic wavefunctions!', 1)
+  !
   WRITE( stdout, '(/5x,"Calling projwave_nc .... ")')
   !
   ! fill structure nlmchi
@@ -1308,7 +1335,7 @@ ENDIF
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj", lbinary, proj_aux, lwrite_ovp, ovps_aux )
+     CALL write_proj_iotk( "atomic_proj", lbinary, proj_aux, lwrite_ovp, ovps_aux )
      !
      DEALLOCATE( proj_aux, ovps_aux )
 
@@ -1467,10 +1494,7 @@ SUBROUTINE projwave_paw( filproj)
   ! Some workspace for k-point calculation ...
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
   ! ... or for gamma-point.
-  REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:), proj1 (:)
-  REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
-  INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
   !
@@ -1603,7 +1627,7 @@ FUNCTION compute_mj(j,l,m)
 END FUNCTION compute_mj
 !
 !-----------------------------------------------------------------------
-SUBROUTINE  write_proj (filename, lbinary, projs, lwrite_ovp, ovps )
+SUBROUTINE  write_proj_iotk (filename, lbinary, projs, lwrite_ovp, ovps )
   !-----------------------------------------------------------------------
   !
   USE kinds
@@ -1768,7 +1792,7 @@ SUBROUTINE  write_proj (filename, lbinary, projs, lwrite_ovp, ovps )
   !
   CALL iotk_close_write(iun)
 
-END SUBROUTINE write_proj
+END SUBROUTINE write_proj_iotk
 !
 !  projwave with distributed matrixes
 !
@@ -1827,12 +1851,9 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   REAL   (DP), ALLOCATABLE ::rwork1(:),rproj0(:,:)
   REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
   ! ... or for gamma-point.
-  REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
-  REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
   CHARACTER(len=256) :: filename
   CHARACTER(len=256) :: auxname
-  INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
   TYPE(la_descriptor) :: desc
@@ -1846,21 +1867,11 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
-  !
-  INTERFACE 
-      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
-           IMPORT  :: DP
-           CHARACTER (len=*), INTENT(in) :: filproj
-           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
-           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
-           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
-      END SUBROUTINE write_lowdin
-  END INTERFACE
-  !
+  IF ( natomwfc <= 0 ) CALL errore &
+        ('pprojwave', 'Cannot project on zero atomic wavefunctions!', 1)
   WRITE( stdout, '(/5x,"Calling pprojwave .... ")')
-  IF ( gamma_only ) THEN
-     WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
-  ENDIF
+  IF ( gamma_only ) &
+       WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
   ! Open file as temporary storage
   !
@@ -2219,95 +2230,16 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
            CLOSE(iunproj)
         ENDDO
      ENDIF
-
      !
      ! write projections to file using iotk
      !
-     CALL write_proj( "atomic_proj", lbinary, proj_aux, .FALSE., ovps_aux )
+     CALL write_proj_iotk( "atomic_proj", lbinary, proj_aux, .FALSE., ovps_aux )
      !
      DEALLOCATE( proj_aux, ovps_aux )
-
      !
      ! write on the standard output file
      !
-     WRITE( stdout,'(/5x,"Atomic states used for projection")')
-     WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)')
-     DO nwfc = 1, natomwfc
-        WRITE(stdout,1000) &
-             nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-             nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
-     ENDDO
-1000 FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
-                " (l=",i1," m=",i2,")")
-     !
-     ALLOCATE(idx(natomwfc), proj1 (natomwfc) )
-     !
-     DO ik = 1, nkstot
-        WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
-        DO ibnd = 1, nbnd
-           WRITE( stdout, '(5x,"e = ",f11.5," eV")') et (ibnd, ik) * rytoev
-           !
-           ! sort projections by magnitude, in decreasing order
-           !
-           DO nwfc = 1, natomwfc
-              idx (nwfc) = 0
-              proj1 (nwfc) = - proj (nwfc, ibnd, ik)
-           ENDDO
-           !
-           ! projections differing by less than 1.d-4 are considered equal
-           !
-           CALL hpsort_eps (natomwfc, proj1, idx, eps4)
-           !
-           !  only projections that are larger than 0.001 are written
-           !
-           DO nwfc = 1, natomwfc
-              proj1 (nwfc) = - proj1(nwfc)
-              IF ( abs (proj1(nwfc)) < 0.001d0 ) GOTO 20
-           ENDDO
-           nwfc = natomwfc + 1
-20         nwfc = nwfc -1
-           !
-           ! fancy (?!?) formatting
-           !
-           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i4,"]+"))') &
-                (proj1 (i), idx(i), i = 1, min(5,nwfc))
-           DO j = 1, (nwfc-1)/5
-              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') &
-                   (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
-           ENDDO
-           psum = SUM (proj (1:natomwfc, ibnd, ik) )
-           WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
-           !
-        ENDDO
-     ENDDO
-     !
-     DEALLOCATE (idx, proj1)
-     !
-     ! estimate partial charges (Loewdin) on each atom
-     !
-     ALLOCATE ( charges (nat, 0:lmax_wfc, nspin ) )
-     charges = 0.0d0
-     DO ik = 1, nkstot
-        IF ( nspin == 1 ) THEN
-           current_spin = 1
-        ELSEIF ( nspin == 2 ) THEN
-           current_spin = isk ( ik )
-        ELSE
-           CALL errore ('pprojwave',' called in the wrong case ',1)
-        ENDIF
-        DO ibnd = 1, nbnd
-           DO nwfc = 1, natomwfc
-              na= nlmchi(nwfc)%na
-              l = nlmchi(nwfc)%l
-              charges(na,l,current_spin) = charges(na,l,current_spin) + &
-                   wg (ibnd,ik) * proj (nwfc, ibnd, ik)
-           ENDDO
-        ENDDO
-     ENDDO
-     !
-     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges)
-     !
-     DEALLOCATE (charges)
+     CALL write_proj( lmax_wfc, filproj )
      !
   ENDIF
   !
