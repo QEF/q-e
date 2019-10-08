@@ -84,7 +84,7 @@ MODULE LAXlib
       DEALLOCATE(h_d, s_d, e_d, v_d)
 #endif
     ELSE
-      CALL cdiaghg(n, m, h, s, ldh, e, v)
+      CALL cdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN
