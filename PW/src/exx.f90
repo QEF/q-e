@@ -20,7 +20,7 @@ MODULE exx
   USE noncollin_module,     ONLY : noncolin, npol
   USE io_global,            ONLY : ionode, stdout
   !
-  USE control_flags,        ONLY : gamma_only, tqr
+  USE control_flags,        ONLY : gamma_only, tqr, use_gpu, many_fft
   USE fft_types,            ONLY : fft_type_descriptor
   USE stick_base,           ONLY : sticks_map, sticks_map_deallocate
   !
@@ -373,7 +373,7 @@ MODULE exx
     !
     ! ... local variables
     !
-    INTEGER :: ik, ibnd, i, j, k, ir, isym, ikq, ig
+    INTEGER :: ik, ibnd, i, j, k, ir, isym, ikq, ig, ierr
     INTEGER :: ibnd_loop_start
     INTEGER :: ipol, jpol
     REAL(DP), ALLOCATABLE :: occ(:,:)
