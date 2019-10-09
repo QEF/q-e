@@ -362,7 +362,7 @@ MODULE exx
     !
     USE wavefunctions_gpum,   ONLY : using_evc
     USE uspp_gpum,            ONLY : using_vkb ! is this needed?
-    USE cuda_util,            ONLY : cuf_memset
+    USE device_util_m,        ONLY : dev_memset
     USE gbuffers,             ONLY : dev_buf
     !
     IMPLICIT NONE
@@ -560,10 +560,10 @@ MODULE exx
          ! See https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/269311
          !
          ! NB: TO BE CORRECTED WITH THE NEW DeviceXlib LIBRARY that dues internal slicing right!
-         CALL cuf_memset(exxbuff_d, (0.0_DP,0.0_DP), &
-                                   (/1,nrxxs*npol/), &
-                                   (/1, ibnd_buff_end-ibnd_buff_start+1/), &
-                                   (/1,SIZE(exxbuff_d,3)/))
+         CALL dev_memset(exxbuff_d, (0.0_DP,0.0_DP), &
+                                   (/ 1,nrxxs*npol/), 1, &
+                                   (/ ibnd_buff_start, ibnd_buff_end /), ibnd_buff_start, &
+                                   (/ 1,SIZE(exxbuff_d,3)/), 1)
        ELSE
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs, &
 !$omp                ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
@@ -1322,7 +1322,7 @@ MODULE exx
     USE exx_base,       ONLY : nqs, index_xkq, index_xk, xkq_collect, &
          coulomb_fac, g2_convolution_all
     USE exx_band,       ONLY : result_sum, igk_exx
-    USE cuda_util,      ONLY : cuf_memset
+    USE device_util_m, ONLY : dev_memset
     !
     !
     IMPLICIT NONE
@@ -1445,7 +1445,7 @@ MODULE exx
              !
              IF ( mod(ii,2)==1 ) THEN
                 !
-                CALL cuf_memset(psi_rhoc_work_d, (0.0_DP,0.0_DP), (/ 1, nrxxs /) )
+                CALL dev_memset(psi_rhoc_work_d, (0.0_DP,0.0_DP), (/ 1, nrxxs /), 1 )
                 !
                 IF ( (ii+1)<=min(m,nibands(my_egrp_id+1)) ) THEN
                    ! deal with double bands
