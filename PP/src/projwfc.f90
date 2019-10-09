@@ -402,14 +402,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
   USE cell_base
-  USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
   USE gvecw,   ONLY: ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin
-  USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct, ONLY: npwx, nbnd, et
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
@@ -428,9 +426,9 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
        nwfc1, lmax_wfc, is, iunproj
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
-  COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
+  COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), proj0(:,:)
   ! Some workspace for k-point calculation ...
-  REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
+  REAL   (DP), ALLOCATABLE ::roverlap(:,:), rproj0(:,:)
   ! ... or for gamma-point.
   REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
@@ -445,18 +443,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   IF ( gamma_only ) &
        WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
-  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
-  !
-  CALL d_matrix (d1, d2, d3)
-  !
   ! fill structure nlmchi
   !
   CALL fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
   !
   ALLOCATE( proj (natomwfc, nbnd, nkstot) )
   ALLOCATE( proj_aux (natomwfc, nbnd, nkstot) )
-  proj      = 0.d0
-  proj_aux  = (0.d0, 0.d0)
   !
   IF ( lwrite_ovp ) THEN
       ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
@@ -551,116 +543,33 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      IF ( gamma_only ) THEN
         !
-        ALLOCATE(rproj0(natomwfc,nbnd), rwork1 (nbnd) )
+        ALLOCATE(rproj0(natomwfc,nbnd) )
         CALL calbec ( npw, wfcatom, evc, rproj0)
-        !
         proj_aux(:,:,ik) = cmplx( rproj0(:,:), 0.0_dp, kind=dp )
+        DEALLOCATE (rproj0)
         !
      ELSE
         !
-        ALLOCATE(proj0(natomwfc,nbnd), work1 (nbnd) )
+        ALLOCATE(proj0(natomwfc,nbnd) )
         CALL calbec ( npw, wfcatom, evc, proj0)
-        !
         proj_aux(:,:,ik) = proj0(:,:)
+        DEALLOCATE (proj0)
         !
      ENDIF
      !
-     ! symmetrize the projections
+     ! symmetrize the projections - in order to simplify the code,
+     ! a complex array is used also for the gamma_only case
      !
      IF (lsym) THEN
-        DO nwfc = 1, natomwfc
-           !
-           !  atomic wavefunction nwfc is on atom na
-           !
-           na= nlmchi(nwfc)%na
-           n = nlmchi(nwfc)%n
-           l = nlmchi(nwfc)%l
-           m = nlmchi(nwfc)%m
-           !
-           DO isym = 1, nsym
-              nb = irt (isym, na)
-              DO nwfc1 =1, natomwfc
-                 IF (nlmchi(nwfc1)%na == nb             .and. &
-                      nlmchi(nwfc1)%n == nlmchi(nwfc)%n .and. &
-                      nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
-                      nlmchi(nwfc1)%m == 1 ) GOTO 10
-              ENDDO
-              CALL errore('projwave','cannot symmetrize',1)
-10            nwfc1=nwfc1-1
-              !
-              !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
-              !
-              IF ( gamma_only ) THEN
-                 IF (l == 0) THEN
-                    rwork1(:) = rproj0 (nwfc1 + 1,:)
-                 ELSEIF (l == 1) THEN
-                    rwork1(:) = 0.d0
-                    DO m1 = 1, 3
-                       rwork1(:)=rwork1(:)+d1(m1,m,isym)*rproj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 2) THEN
-                    rwork1(:) = 0.d0
-                    DO m1 = 1, 5
-                       rwork1(:)=rwork1(:)+d2(m1,m,isym)*rproj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 3) THEN
-                    rwork1(:) = 0.d0
-                    DO m1 = 1, 7
-                       rwork1(:)=rwork1(:)+d3(m1,m,isym)*rproj0(nwfc1+m1,:)
-                    ENDDO
-                 ENDIF
-                 DO ibnd = 1, nbnd
-                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
-                         rwork1(ibnd) * rwork1(ibnd) / nsym
-                 ENDDO
-              ELSE
-                 IF (l == 0) THEN
-                    work1(:) = proj0 (nwfc1 + 1,:)
-                 ELSEIF (l == 1) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 3
-                       work1(:)=work1(:)+d1(m1,m,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 2) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 5
-                       work1(:)=work1(:)+d2(m1,m,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 3) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 7
-                       work1(:)=work1(:)+d3(m1,m,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ENDIF
-                 DO ibnd = 1, nbnd
-                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
-                         work1(ibnd) * conjg (work1(ibnd)) / nsym
-                 ENDDO
-              ENDIF
+        CALL sym_proj (gamma_only, proj_aux(:,:,ik), proj(:,:,ik))
+     ELSE
+        DO nwfc=1,natomwfc
+           DO ibnd=1,nbnd
+              proj(nwfc,ibnd,ik)=abs(proj_aux(nwfc,ibnd,ik))**2
            ENDDO
         ENDDO
-     ELSE
-        IF ( gamma_only ) THEN
-           DO nwfc=1,natomwfc
-              DO ibnd=1,nbnd
-                 proj(nwfc,ibnd,ik)=abs(rproj0(nwfc,ibnd))**2
-              ENDDO
-           ENDDO
-        ELSE
-           DO nwfc=1,natomwfc
-              DO ibnd=1,nbnd
-                 proj(nwfc,ibnd,ik)=abs(proj0(nwfc,ibnd))**2
-              ENDDO
-           ENDDO
-        ENDIF
      ENDIF
-     IF ( gamma_only ) THEN
-        DEALLOCATE (rwork1)
-        DEALLOCATE (rproj0)
-     ELSE
-        DEALLOCATE (work1)
-        DEALLOCATE (proj0)
-     ENDIF
+     !
      ! on k-points
   ENDDO
   !
@@ -738,22 +647,133 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
 END SUBROUTINE projwave
 !
 !-----------------------------------------------------------------------
+SUBROUTINE sym_proj (gamma_only, proj_in, proj_out)
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,      ONLY : DP
+  USE basis,      ONLY : natomwfc
+  USE wvfct,      ONLY : nbnd
+  USE symm_base,  ONLY : nsym, irt, t_rev, d1, d2, d3
+  USE projections,ONLY : nlmchi
+  !
+  IMPLICIT NONE
+  LOGICAL, INTENT(IN)     :: gamma_only
+  COMPLEX(DP), INTENT(IN) :: proj_in (natomwfc, nbnd)
+  REAL   (DP), INTENT(OUT):: proj_out(natomwfc, nbnd)
+  !
+  INTEGER :: na, nb, n, l, m, m1, isym, nwfc, nwfc1, ibnd
+  REAL   (DP), ALLOCATABLE :: rwork1(:)
+  COMPLEX(DP), ALLOCATABLE ::  work1(:)
+  !
+  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
+  !
+  CALL d_matrix (d1, d2, d3)
+  proj_out(:,:) = 0.d0
+  !
+  IF ( gamma_only ) THEN
+     ALLOCATE(rwork1 (nbnd) )
+  ELSE
+     ALLOCATE(work1 (nbnd) )
+  ENDIF
+  !
+  DO nwfc = 1, natomwfc
+     !
+     !  atomic wavefunction nwfc is on atom na
+     !
+     na= nlmchi(nwfc)%na
+     n = nlmchi(nwfc)%n
+     l = nlmchi(nwfc)%l
+     m = nlmchi(nwfc)%m
+     !
+     DO isym = 1, nsym
+        nb = irt (isym, na)
+        DO nwfc1 =1, natomwfc
+           IF (nlmchi(nwfc1)%na == nb             .and. &
+                nlmchi(nwfc1)%n == nlmchi(nwfc)%n .and. &
+                nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
+                nlmchi(nwfc1)%m == 1 ) GOTO 10
+        ENDDO
+        CALL errore('projwave','cannot symmetrize',1)
+10      nwfc1=nwfc1-1
+        !
+        !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
+        !
+        IF ( gamma_only ) THEN
+           IF (l == 0) THEN
+              rwork1(:) = proj_in (nwfc1 + 1,:)
+           ELSEIF (l == 1) THEN
+              rwork1(:) = 0.d0
+              DO m1 = 1, 3
+                 rwork1(:)=rwork1(:)+d1(m1,m,isym)*proj_in(nwfc1+m1,:)
+              ENDDO
+           ELSEIF (l == 2) THEN
+              rwork1(:) = 0.d0
+              DO m1 = 1, 5
+                 rwork1(:)=rwork1(:)+d2(m1,m,isym)*proj_in(nwfc1+m1,:)
+              ENDDO
+           ELSEIF (l == 3) THEN
+              rwork1(:) = 0.d0
+              DO m1 = 1, 7
+                 rwork1(:)=rwork1(:)+d3(m1,m,isym)*proj_in(nwfc1+m1,:)
+              ENDDO
+           ENDIF
+           DO ibnd = 1, nbnd
+              proj_out (nwfc, ibnd ) = proj_out (nwfc, ibnd ) + &
+                   rwork1(ibnd) * rwork1(ibnd) / nsym
+           ENDDO
+        ELSE
+           IF (l == 0) THEN
+              work1(:) = proj_in (nwfc1 + 1,:)
+           ELSEIF (l == 1) THEN
+              work1(:) = 0.d0
+              DO m1 = 1, 3
+                 work1(:)=work1(:)+d1(m1,m,isym)*proj_in(nwfc1+m1,:)
+              ENDDO
+           ELSEIF (l == 2) THEN
+              work1(:) = 0.d0
+              DO m1 = 1, 5
+                 work1(:)=work1(:)+d2(m1,m,isym)*proj_in(nwfc1+m1,:)
+              ENDDO
+           ELSEIF (l == 3) THEN
+              work1(:) = 0.d0
+              DO m1 = 1, 7
+                 work1(:)=work1(:)+d3(m1,m,isym)*proj_in(nwfc1+m1,:)
+              ENDDO
+           ENDIF
+           DO ibnd = 1, nbnd
+              proj_out (nwfc, ibnd) = proj_out (nwfc, ibnd) + &
+                   work1(ibnd) * conjg (work1(ibnd)) / nsym
+           ENDDO
+        ENDIF
+     ENDDO
+  ENDDO
+  !
+  IF ( gamma_only ) THEN
+     DEALLOCATE(rwork1 )
+  ELSE
+     DEALLOCATE(work1 )
+  ENDIF
+  !  
+END SUBROUTINE sym_proj
+!
+!-----------------------------------------------------------------------
 SUBROUTINE write_proj ( lmax_wfc, filproj )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE constants,  ONLY : rytoev
+  USE constants,  ONLY : rytoev, eps4
   USE basis,      ONLY : natomwfc
   USE lsda_mod,   ONLY : nspin, isk, current_spin
   USE klist,      ONLY : nkstot, xk
-  USE ions_base,  ONLY : ityp, atm
+  USE ions_base,  ONLY : nat, ityp, atm
   USE wvfct,      ONLY : et, wg, nbnd
   USE projections,ONLY : nlmchi, proj
   !
+  IMPLICIT NONE
   INTEGER, INTENT(in) :: lmax_wfc
   CHARACTER (len=*), INTENT(in) :: filproj
-  INTEGER :: nwfc, ibnd, ik, na, l, m
+  INTEGER :: nwfc, ibnd, i, j, ik, na, l, m
   INTEGER, ALLOCATABLE :: idx(:)
   REAL(DP) :: psum
   REAL(DP), ALLOCATABLE :: proj1 (:)
@@ -834,7 +854,7 @@ SUBROUTINE write_proj ( lmax_wfc, filproj )
      ELSEIF ( nspin == 2 ) THEN
         current_spin = isk ( ik )
      ELSE
-        CALL errore ('projave',' called in the wrong case ',1)
+        CALL errore ('write_proj',' called in the wrong case ',1)
      ENDIF
      DO ibnd = 1, nbnd
         DO nwfc = 1, natomwfc
@@ -1463,7 +1483,7 @@ SUBROUTINE projwave_paw( filproj)
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
   USE cell_base
-  USE constants, ONLY: rytoev, eps4
+  USE constants, ONLY: rytoev
   USE gvect
   USE gvecs,   ONLY: dual
   USE gvecw,   ONLY: ecutwfc
@@ -1805,14 +1825,13 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
   USE cell_base
-  USE constants, ONLY: rytoev, eps4
+  USE constants, ONLY: rytoev
   USE gvect
   USE gvecs,   ONLY: dual
   USE gvecw,   ONLY: ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin, isk, current_spin
-  USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct, ONLY: npwx, nbnd, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
@@ -1887,10 +1906,6 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   CALL desc_init( natomwfc, desc, desc_ip )
   !
-  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
-  !
-  CALL d_matrix (d1, d2, d3)
-  !
   ! fill structure nlmchi
   !
   CALL fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
@@ -1907,12 +1922,6 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   ENDIF
   !
   ALLOCATE( proj (natomwfc, nbnd, nkstot) )
-  proj      = 0.d0
-
-  !
-  ! this allocation is left written as fake
-  ! because the overlap matrix should be collected
-  ! in order to be proerly written
   !
   IF ( lwrite_ovp .AND. .FALSE. ) THEN
        ALLOCATE( ovps_aux (natomwfc, natomwfc, nkstot) )
@@ -2036,124 +2045,37 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>
      !
+     ALLOCATE( proj_aux (natomwfc, nbnd, 1) )
      IF ( gamma_only ) THEN
         !
-        ALLOCATE( rproj0(natomwfc,nbnd), rwork1 (nbnd) )
+        ALLOCATE( rproj0(natomwfc,nbnd) )
         CALL calbec ( npw, wfcatom, evc, rproj0)
-        !
+        proj_aux(:,:,1) = cmplx( rproj0(:,:), 0.0_dp, kind=dp )
         WRITE( iunaux ) rproj0
+        DEALLOCATE (rproj0)
         !
      ELSE
         !
-        ALLOCATE( proj0(natomwfc,nbnd), work1 (nbnd) )
+        ALLOCATE( proj0(natomwfc,nbnd) )
         CALL calbec ( npw, wfcatom, evc, proj0)
-        !
+        proj_aux(:,:,1) = proj0(:,:)
         WRITE( iunaux ) proj0
+        DEALLOCATE (proj0)
         !
      ENDIF
      !
      ! symmetrize the projections
      !
      IF (lsym) THEN
-        !
-        DO nwfc = 1, natomwfc
-           !
-           !  atomic wavefunction nwfc is on atom na
-           !
-           na= nlmchi(nwfc)%na
-           n = nlmchi(nwfc)%n
-           l = nlmchi(nwfc)%l
-           m = nlmchi(nwfc)%m
-           !
-           DO isym = 1, nsym
-              !
-              nb = irt (isym, na)
-              DO nwfc1 =1, natomwfc
-                 IF (nlmchi(nwfc1)%na == nb             .and. &
-                      nlmchi(nwfc1)%n == nlmchi(nwfc)%n .and. &
-                      nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
-                      nlmchi(nwfc1)%m == 1 ) GOTO 10
-              ENDDO
-              CALL errore('pprojwave','cannot symmetrize',1)
-10            nwfc1=nwfc1-1
-              !
-              !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
-              !
-              IF ( gamma_only ) THEN
-                 IF (l == 0) THEN
-                    rwork1(:) = rproj0 (nwfc1 + 1,:)
-                 ELSEIF (l == 1) THEN
-                    rwork1(:) = 0.d0
-                    DO m1 = 1, 3
-                       rwork1(:)=rwork1(:)+d1(m1,m,isym)*rproj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 2) THEN
-                    rwork1(:) = 0.d0
-                    DO m1 = 1, 5
-                       rwork1(:)=rwork1(:)+d2(m1,m,isym)*rproj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 3) THEN
-                    rwork1(:) = 0.d0
-                    DO m1 = 1, 7
-                       rwork1(:)=rwork1(:)+d3(m1,m,isym)*rproj0(nwfc1+m1,:)
-                    ENDDO
-                 ENDIF
-                 DO ibnd = 1, nbnd
-                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
-                         rwork1(ibnd) * rwork1(ibnd) / nsym
-                 ENDDO
-              ELSE
-                 IF (l == 0) THEN
-                    work1(:) = proj0 (nwfc1 + 1,:)
-                 ELSEIF (l == 1) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 3
-                       work1(:)=work1(:)+d1(m1,m,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 2) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 5
-                       work1(:)=work1(:)+d2(m1,m,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (l == 3) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 7
-                       work1(:)=work1(:)+d3(m1,m,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ENDIF
-                 DO ibnd = 1, nbnd
-                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
-                         work1(ibnd) * conjg (work1(ibnd)) / nsym
-                 ENDDO
-              ENDIF
+        CALL sym_proj (gamma_only, proj_aux(:,:,1), proj(:,:,ik))
+     ELSE
+        DO nwfc=1,natomwfc
+           DO ibnd=1,nbnd
+              proj(nwfc,ibnd,ik)=abs(proj_aux(nwfc,ibnd,1))**2
            ENDDO
         ENDDO
-        !
-     ELSE
-        !
-        IF ( gamma_only ) THEN
-           DO nwfc=1,natomwfc
-              DO ibnd=1,nbnd
-                 proj(nwfc,ibnd,ik)=abs(rproj0(nwfc,ibnd))**2
-              ENDDO
-           ENDDO
-        ELSE
-           DO nwfc=1,natomwfc
-              DO ibnd=1,nbnd
-                 proj(nwfc,ibnd,ik)=abs(proj0(nwfc,ibnd))**2
-              ENDDO
-           ENDDO
-        ENDIF
-        !
      ENDIF
-     !
-     IF ( gamma_only ) THEN
-        DEALLOCATE (rwork1)
-        DEALLOCATE (rproj0)
-     ELSE
-        DEALLOCATE (work1)
-        DEALLOCATE (proj0)
-     ENDIF
+     DEALLOCATE (proj_aux)
      !
   ENDDO
   !
