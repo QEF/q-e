@@ -45,6 +45,7 @@ SUBROUTINE force_us_gpu( forcenl )
   USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
                                     synchronize_bec_type_gpu
   USE gbuffers,             ONLY : dev_buf
+  USE control_flags,        ONLY : use_gpu
   !
   IMPLICIT NONE
   !
@@ -63,6 +64,7 @@ SUBROUTINE force_us_gpu( forcenl )
   !
   forcenl(:,:) = 0.D0
   !
+  call start_clock('fus_allbec') 
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
   CALL using_becp_auto(2)
   CALL allocate_bec_type ( nkb, nbnd, dbecp, intra_bgrp_comm )
@@ -78,6 +80,7 @@ SUBROUTINE force_us_gpu( forcenl )
   ! ... the forces are a sum over the K points and over the bands
   !
   CALL using_evc_d(0)
+  call stop_clock('fus_allbec') 
   !
   DO ik = 1, nks
      !
@@ -88,8 +91,10 @@ SUBROUTINE force_us_gpu( forcenl )
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
         IF ( nkb > 0 ) CALL using_vkb_d(1)
+        call start_clock('us_in') 
         IF ( nkb > 0 ) &
              CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
+        call stop_clock('us_in') 
      END IF
      !
      CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
@@ -107,6 +112,7 @@ SUBROUTINE force_us_gpu( forcenl )
         CALL calbec_gpu ( npw, vkb1_d, evc_d, dbecp_d )
         CALL synchronize_bec_type_gpu(dbecp_d, dbecp, 'h')
         !
+        call start_clock('fus_gpu') 
         IF ( gamma_only ) THEN
            !
            CALL force_us_gamma_gpu( forcenl )
@@ -116,6 +122,7 @@ SUBROUTINE force_us_gpu( forcenl )
            CALL force_us_k_gpu( forcenl )
            !
         END IF
+        call stop_clock('fus_gpu') 
      END DO
   END DO
   !
@@ -143,12 +150,17 @@ SUBROUTINE force_us_gpu( forcenl )
   ! ... augmentation part \int V_eff Q dr, the term deriving from the 
   ! ... derivative of Q is added in the routine addusforce
   !
-  CALL addusforce( forcenl )
+  call start_clock('addus') 
+  IF (use_gpu) CALL addusforce_gpu(forcenl)  
+  IF (.NOT. use_gpu) CALL addusforce( forcenl )
+  call stop_clock('addus') 
   !
   ! ... Since our summation over k points was only on the irreducible 
   ! ... BZ we have to symmetrize the forces.
   !
+  call start_clock('symv') 
   CALL symvector ( nat, forcenl )
+  call stop_clock('symv')   
   !
   RETURN
   !

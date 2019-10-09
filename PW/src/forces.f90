@@ -40,7 +40,7 @@ SUBROUTINE forces()
   USE ions_base,         ONLY : if_pos
   USE ldaU,              ONLY : lda_plus_u, U_projection
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
-  USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor,  &
+  USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
                                 iverbosity, llondon, ldftd3, lxdm, ts_vdw
   USE plugin_flags
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
@@ -109,11 +109,14 @@ SUBROUTINE forces()
   !
   ! ... The nonlocal contribution is computed here
   !
+  call start_clock('frc_us') 
   IF (.not. use_gpu) CALL force_us( forcenl )
   IF (      use_gpu) CALL force_us_gpu( forcenl )
+  call stop_clock('frc_us') 
   !
   ! ... The local contribution
   !
+  call start_clock('frc_lc') 
   IF (.not. use_gpu) & ! On the CPU
      CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
@@ -127,12 +130,16 @@ SUBROUTINE forces()
                    forcelc )
      CALL dev_buf%release_buffer(vloc_d, ierr)
   END IF
+  call stop_clock('frc_lc') 
   !
   ! ... The NLCC contribution
   !
+  call start_clock('frc_cc') 
   IF (.not. use_gpu) CALL force_cc( forcecc )
   IF (      use_gpu) CALL force_cc_gpu( forcecc )
   !
+  call stop_clock('frc_cc') 
+
   ! ... The Hubbard contribution
   !     (included by force_us if using beta as local projectors)
   !
@@ -182,7 +189,9 @@ SUBROUTINE forces()
   !
   ! ... The SCF contribution
   !
+  call start_clock('frc_scc') 
   CALL force_corr( forcescc )
+  call stop_clock('frc_scc') 
   !
   IF (do_comp_mt) THEN
     !
