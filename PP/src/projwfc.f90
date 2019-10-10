@@ -422,7 +422,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   CHARACTER (len=*) :: filproj
   LOGICAL           :: lwrite_ovp, lbinary
   !
-  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
+  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
@@ -644,7 +644,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
 END SUBROUTINE projwave
 !
 !-----------------------------------------------------------------------
-SUBROUTINE sym_proj_g (rproj_in, proj_out)
+SUBROUTINE sym_proj_g (rproj0, proj_out)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -654,7 +654,7 @@ SUBROUTINE sym_proj_g (rproj_in, proj_out)
   USE projections,ONLY : nlmchi
   !
   IMPLICIT NONE
-  REAL(DP),    INTENT(IN) ::rproj_in (natomwfc, nbnd)
+  REAL(DP),    INTENT(IN) ::rproj0 (natomwfc, nbnd)
   REAL   (DP), INTENT(OUT):: proj_out(natomwfc, nbnd)
   !
   INTEGER :: na, nb, n, l, m, m1, isym, nwfc, nwfc1, ibnd
@@ -690,21 +690,21 @@ SUBROUTINE sym_proj_g (rproj_in, proj_out)
         !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
         !
         IF (l == 0) THEN
-           rwork1(:) = rproj_in (nwfc1 + 1,:)
+           rwork1(:) = rproj0 (nwfc1 + 1,:)
         ELSEIF (l == 1) THEN
            rwork1(:) = 0.d0
            DO m1 = 1, 3
-              rwork1(:)=rwork1(:)+d1(m1,m,isym)*rproj_in(nwfc1+m1,:)
+              rwork1(:)=rwork1(:)+d1(m1,m,isym)*rproj0(nwfc1+m1,:)
            ENDDO
         ELSEIF (l == 2) THEN
            rwork1(:) = 0.d0
            DO m1 = 1, 5
-              rwork1(:)=rwork1(:)+d2(m1,m,isym)*rproj_in(nwfc1+m1,:)
+              rwork1(:)=rwork1(:)+d2(m1,m,isym)*rproj0(nwfc1+m1,:)
            ENDDO
         ELSEIF (l == 3) THEN
            rwork1(:) = 0.d0
            DO m1 = 1, 7
-              rwork1(:)=rwork1(:)+d3(m1,m,isym)*rproj_in(nwfc1+m1,:)
+              rwork1(:)=rwork1(:)+d3(m1,m,isym)*rproj0(nwfc1+m1,:)
            ENDDO
         ENDIF
         DO ibnd = 1, nbnd
@@ -719,7 +719,7 @@ SUBROUTINE sym_proj_g (rproj_in, proj_out)
 END SUBROUTINE sym_proj_g
 !
 !-----------------------------------------------------------------------
-SUBROUTINE sym_proj_k (proj_in, proj_out)
+SUBROUTINE sym_proj_k (proj0, proj_out)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -729,7 +729,7 @@ SUBROUTINE sym_proj_k (proj_in, proj_out)
   USE projections,ONLY : nlmchi
   !
   IMPLICIT NONE
-  COMPLEX(DP), INTENT(IN) :: proj_in (natomwfc, nbnd)
+  COMPLEX(DP), INTENT(IN) :: proj0 (natomwfc, nbnd)
   REAL   (DP), INTENT(OUT):: proj_out(natomwfc, nbnd)
   !
   INTEGER :: na, nb, n, l, m, m1, isym, nwfc, nwfc1, ibnd
@@ -765,21 +765,21 @@ SUBROUTINE sym_proj_k (proj_in, proj_out)
         !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
         !
         IF (l == 0) THEN
-           work1(:) = proj_in (nwfc1 + 1,:)
+           work1(:) = proj0 (nwfc1 + 1,:)
         ELSEIF (l == 1) THEN
            work1(:) = 0.d0
            DO m1 = 1, 3
-              work1(:)=work1(:)+d1(m1,m,isym)*proj_in(nwfc1+m1,:)
+              work1(:)=work1(:)+d1(m1,m,isym)*proj0(nwfc1+m1,:)
            ENDDO
         ELSEIF (l == 2) THEN
            work1(:) = 0.d0
            DO m1 = 1, 5
-              work1(:)=work1(:)+d2(m1,m,isym)*proj_in(nwfc1+m1,:)
+              work1(:)=work1(:)+d2(m1,m,isym)*proj0(nwfc1+m1,:)
            ENDDO
         ELSEIF (l == 3) THEN
            work1(:) = 0.d0
            DO m1 = 1, 7
-              work1(:)=work1(:)+d3(m1,m,isym)*proj_in(nwfc1+m1,:)
+              work1(:)=work1(:)+d3(m1,m,isym)*proj0(nwfc1+m1,:)
            ENDDO
         ENDIF
         DO ibnd = 1, nbnd
@@ -793,6 +793,199 @@ SUBROUTINE sym_proj_k (proj_in, proj_out)
   !  
 END SUBROUTINE sym_proj_k
 !
+!-----------------------------------------------------------------------
+SUBROUTINE sym_proj_so (domag, proj0, proj_out  )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,      ONLY : DP
+  USE basis,      ONLY : natomwfc
+  USE wvfct,      ONLY : nbnd
+  USE symm_base,  ONLY : nsym, irt, t_rev
+  USE projections,ONLY : nlmchi
+  !
+  IMPLICIT NONE
+  LOGICAL, INTENT(IN) :: domag
+  COMPLEX(DP), INTENT(IN) :: proj0 (natomwfc, nbnd)
+  REAL   (DP), INTENT(OUT):: proj_out(natomwfc, nbnd)
+  !
+  INTEGER :: na, nb, n, l, m, m1, ind, ind0, jj, isym, nwfc, nwfc1, ibnd
+  COMPLEX(DP), ALLOCATABLE ::  work1(:)
+  COMPLEX(DP) :: d12(2, 2, 48), d32(4, 4, 48), d52(6, 6, 48), &
+                 d72(8, 8, 48)
+  !
+  ! initialize D_Sj for j=1/2, j=3/2, j=5/2 and j=7/2
+  !
+  CALL d_matrix_so (d12, d32, d52, d72)
+  !
+  proj_out(:,:) = 0.d0
+  !
+  ALLOCATE(work1 (nbnd) )
+  !
+  DO nwfc = 1, natomwfc
+     !
+     !  atomic wavefunction nwfc is on atom na
+     !
+     na= nlmchi(nwfc)%na
+     n = nlmchi(nwfc)%n
+     l = nlmchi(nwfc)%l
+     m = nlmchi(nwfc)%m
+     ind0 = nlmchi(nwfc)%ind
+     jj = nlmchi(nwfc)%jj
+     !
+     DO isym = 1, nsym
+        !-- check for the time reversal
+        IF (t_rev(isym) == 1) THEN
+           ind = 2*jj + 2 - ind0
+        ELSE
+           ind = ind0
+        ENDIF
+        !--
+        nb = irt (isym, na)
+        DO nwfc1 =1, natomwfc
+           IF (nlmchi(nwfc1)%na == nb             .and. &
+                nlmchi(nwfc1)%n == nlmchi(nwfc)%n .and. &
+                nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
+                nlmchi(nwfc1)%jj == nlmchi(nwfc)%jj .and. &
+                nlmchi(nwfc1)%ind == 1 ) GOTO 10
+        ENDDO
+        CALL errore('projwave_nc','cannot symmetrize',1)
+10      nwfc1=nwfc1-1
+        !
+        !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
+        !
+        IF (abs(jj-0.5d0)<1.d-8) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 2
+              work1(:)=work1(:)+d12(m1,ind,isym)*proj0(nwfc1+m1,:)
+           ENDDO
+        ELSEIF (abs(jj-1.5d0)<1.d-8) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 4
+              work1(:)=work1(:)+d32(m1,ind,isym)*proj0(nwfc1 + m1,:)
+           ENDDO
+        ELSEIF (abs(jj-2.5d0)<1.d-8) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 6
+              work1(:)=work1(:)+d52(m1,ind,isym)*proj0(nwfc1+m1,:)
+           ENDDO
+        ELSEIF (abs(jj-3.5d0)<1.d-8) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 8
+              work1(:)=work1(:)+d72(m1,ind,isym)*proj0(nwfc1+m1,:)
+           ENDDO
+        ENDIF
+        DO ibnd = 1, nbnd
+           proj_out (nwfc, ibnd) = proj_out (nwfc, ibnd) + &
+                work1(ibnd) * conjg (work1(ibnd)) / nsym
+        ENDDO
+        ! on symmetries
+        !--  in a nonmagnetic case - another loop with the time reversal
+        IF ( .not.domag .and. ind==ind0 ) THEN
+           ind = 2*jj + 2 - ind0
+           nwfc1 = nwfc1 + 1
+           GOTO 10
+        ENDIF
+     ENDDO
+     !--  in a nonmagnetic case - rescale
+     IF (.not.domag) THEN
+        DO ibnd = 1, nbnd
+           proj_out(nwfc,ibnd) = 0.5_dp*proj_out(nwfc,ibnd)
+        ENDDO
+     ENDIF
+     ! on atomic wavefunctions
+  END DO
+  !
+  DEALLOCATE (work1)
+  !
+END SUBROUTINE sym_proj_so
+!-----------------------------------------------------------------------
+SUBROUTINE sym_proj_nc ( proj0, proj_out  )
+  !
+  USE kinds,      ONLY : DP
+  USE basis,      ONLY : natomwfc
+  USE wvfct,      ONLY : nbnd
+  USE symm_base,  ONLY : nsym, irt, t_rev
+  USE projections,ONLY : nlmchi
+  !
+  IMPLICIT NONE
+  COMPLEX(DP), INTENT(IN) :: proj0 (natomwfc, nbnd)
+  REAL   (DP), INTENT(OUT):: proj_out(natomwfc, nbnd)
+  !
+  INTEGER :: na, nb, n, l, m, m1, ind, ind0, jj, isym, nwfc, nwfc1, ibnd
+  COMPLEX(DP), ALLOCATABLE ::  work1(:)
+  COMPLEX(DP) :: d012(2, 2, 48), d112(6, 6, 48), d212(10, 10, 48), &
+       d312(14, 14, 48)
+  !
+  ! initialize D_Sl for l=0, l=1, l=2 and l=3
+  !
+  CALL d_matrix_nc (d012, d112, d212, d312)
+  !
+  proj_out(:,:) = 0.d0
+  !
+  ALLOCATE(work1 (nbnd) )
+  !
+  DO nwfc = 1, natomwfc
+     na= nlmchi(nwfc)%na
+     n = nlmchi(nwfc)%n
+     l = nlmchi(nwfc)%l
+     m = nlmchi(nwfc)%m
+     ind0 = nlmchi(nwfc)%ind
+     !
+     DO isym = 1, nsym
+        !-- check for the time reversal
+        IF (t_rev(isym) == 1) THEN
+           ind = 2*m - ind0 + 2*l + 1
+        ELSE
+           ind = ind0
+        ENDIF
+        !--
+        nb = irt (isym, na)
+        DO nwfc1 =1, natomwfc
+           IF (nlmchi(nwfc1)%na == nb             .and. &
+                nlmchi(nwfc1)%n == nlmchi(nwfc)%n .and. &
+                nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
+                nlmchi(nwfc1)%m == 1 .and. &
+                nlmchi(nwfc1)%ind == 1) GOTO 15
+        ENDDO
+        CALL errore('projwave_nc','cannot symmetrize',1)
+15      nwfc1=nwfc1-1
+        IF (l == 0) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 2
+              work1(:) = work1(:) + d012 (m1, ind, isym) * &
+                   proj0 (nwfc1 + m1,:)
+           ENDDO
+        ELSEIF (l == 1) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 6
+              work1(:) = work1(:) + d112 (m1, ind, isym) * &
+                   proj0 (nwfc1 + m1,:)
+           ENDDO
+        ELSEIF (l == 2) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 10
+              work1(:) = work1(:) + d212 (m1, ind, isym) * &
+                   proj0 (nwfc1 + m1,:)
+           ENDDO
+        ELSEIF (l == 3) THEN
+           work1(:) = 0.d0
+           DO m1 = 1, 14
+              work1(:) = work1(:) + d312 (m1, ind, isym) * &
+                   proj0 (nwfc1 + m1,:)
+           ENDDO
+        ENDIF
+        DO ibnd = 1, nbnd
+           proj_out (nwfc, ibnd) = proj_out (nwfc, ibnd) + &
+                work1(ibnd) * conjg (work1(ibnd)) / nsym
+        ENDDO
+        ! on symmetries
+     ENDDO
+     ! on atomic wavefunctions
+  END DO
+  !
+  DEALLOCATE (work1)
+  !
+END SUBROUTINE sym_proj_nc
 !-----------------------------------------------------------------------
 SUBROUTINE write_proj ( lmax_wfc, filproj )
   !-----------------------------------------------------------------------
@@ -957,17 +1150,11 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   REAL(DP) :: jj, ef_0, eband_proj_tot, eband_tot
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
-  COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), work1(:), proj0(:,:)
+  COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), proj0(:,:)
   ! Some workspace for k-point calculation ...
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:), eband_proj(:)
   REAL(DP) :: psum, fact(2), compute_mj
   INTEGER, ALLOCATABLE :: idx(:)
-  !
-  COMPLEX(DP) :: d12(2, 2, 48), d32(4, 4, 48), d52(6, 6, 48), &
-                      d72(8, 8, 48)
-  COMPLEX(DP) :: d012(2, 2, 48), d112(6, 6, 48), d212(10, 10, 48), &
-                      d312(14, 14, 48)
-  !
   !
   !
   INTERFACE 
@@ -1004,7 +1191,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   ALLOCATE(work (natomwfc, natomwfc) )
   !
   ALLOCATE(overlap (natomwfc, natomwfc) )
-  ALLOCATE(proj0(natomwfc,nbnd), work1 (nbnd) )
+  ALLOCATE(proj0(natomwfc,nbnd) )
   ALLOCATE(proj (natomwfc, nbnd, nkstot) )
   ALLOCATE(proj_aux (natomwfc, nbnd, nkstot) )
   overlap  = (0.d0,0.d0)
@@ -1019,19 +1206,6 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   ENDIF
   ovps_aux  = (0.d0, 0.d0)
   !
-  IF (lspinorb) THEN
-     !
-     ! initialize D_Sj for j=1/2, j=3/2, j=5/2 and j=7/2
-     !
-     CALL d_matrix_so (d12, d32, d52, d72)
-     !
-  ELSE
-     !
-     ! initialize D_Sl for l=0, l=1, l=2 and l=3
-     !
-     CALL d_matrix_nc (d012, d112, d212, d312)
-     !
-  ENDIF
   !
   !---- Force Theorem -- (AlexS)
   IF ( lforcet ) THEN
@@ -1114,148 +1288,15 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
      CALL mp_sum ( proj0( :, 1:nbnd ), intra_pool_comm )
      !
      proj_aux(:,:,ik) = proj0(:,:)
-
      !
      IF (lsym) THEN
-        DO nwfc = 1, natomwfc
-           !
-           !  atomic wavefunction nwfc is on atom na
-           !
-           IF (lspinorb) THEN
-              na= nlmchi(nwfc)%na
-              n = nlmchi(nwfc)%n
-              l = nlmchi(nwfc)%l
-              m = nlmchi(nwfc)%m
-              ind0 = nlmchi(nwfc)%ind
-              jj = nlmchi(nwfc)%jj
-              !
-              DO isym = 1, nsym
-!-- check for the time reversal
-                 IF (t_rev(isym) == 1) THEN
-                   ind = 2*jj + 2 - ind0
-                 ELSE
-                   ind = ind0
-                 ENDIF
-!--
-                 nb = irt (isym, na)
-                 DO nwfc1 =1, natomwfc
-                    IF (nlmchi(nwfc1)%na == nb             .and. &
-                         nlmchi(nwfc1)%n == nlmchi(nwfc)%n .and. &
-                         nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
-                         nlmchi(nwfc1)%jj == nlmchi(nwfc)%jj .and. &
-                         nlmchi(nwfc1)%ind == 1 ) GOTO 10
-                 ENDDO
-                 CALL errore('projwave_nc','cannot symmetrize',1)
-10               nwfc1=nwfc1-1
-                 !
-                 !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
-                 !
-                 IF (abs(jj-0.5d0)<1.d-8) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 2
-                       work1(:)=work1(:)+d12(m1,ind,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (abs(jj-1.5d0)<1.d-8) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 4
-                       work1(:)=work1(:)+d32(m1,ind,isym)*proj0(nwfc1 + m1,:)
-                    ENDDO
-                 ELSEIF (abs(jj-2.5d0)<1.d-8) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 6
-                       work1(:)=work1(:)+d52(m1,ind,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ELSEIF (abs(jj-3.5d0)<1.d-8) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 8
-                       work1(:)=work1(:)+d72(m1,ind,isym)*proj0(nwfc1+m1,:)
-                    ENDDO
-                 ENDIF
-                 DO ibnd = 1, nbnd
-                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
-                         work1(ibnd) * conjg (work1(ibnd)) / nsym
-                 ENDDO
-                 ! on symmetries
-!--  in a nonmagnetic case - another loop with the time reversal
-                 IF (.not.domag.and.ind==ind0) THEN
-                   ind = 2*jj + 2 - ind0
-                   nwfc1 = nwfc1 + 1
-                   GOTO 10
-                 ENDIF
-!--
-              ENDDO
-!--  in a nonmagnetic case - rescale
-              IF (.not.domag) THEN
-                DO ibnd = 1, nbnd
-                  proj(nwfc,ibnd,ik) = 0.5d0*proj(nwfc,ibnd,ik)
-                ENDDO
-              ENDIF
-!--
-           ELSE
-              na= nlmchi(nwfc)%na
-              n = nlmchi(nwfc)%n
-              l = nlmchi(nwfc)%l
-              m = nlmchi(nwfc)%m
-              ind0 = nlmchi(nwfc)%ind
-              !
-              DO isym = 1, nsym
-!-- check for the time reversal
-                 IF (t_rev(isym) == 1) THEN
-                   ind = 2*m - ind0 + 2*l + 1
-                 ELSE
-                   ind = ind0
-                 ENDIF
-!--
-                 nb = irt (isym, na)
-                 DO nwfc1 =1, natomwfc
-                    IF (nlmchi(nwfc1)%na == nb             .and. &
-                        nlmchi(nwfc1)%n == nlmchi(nwfc)%n .and. &
-                        nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
-                        nlmchi(nwfc1)%m == 1 .and. &
-                        nlmchi(nwfc1)%ind == 1) GOTO 15
-                 ENDDO
-                 CALL errore('projwave_nc','cannot symmetrize',1)
-15               nwfc1=nwfc1-1
-                 IF (l == 0) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 2
-                       work1(:) = work1(:) + d012 (m1, ind, isym) * &
-                                  proj0 (nwfc1 + m1,:)
-                    ENDDO
-                 ELSEIF (l == 1) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 6
-                       work1(:) = work1(:) + d112 (m1, ind, isym) * &
-                                  proj0 (nwfc1 + m1,:)
-                    ENDDO
-                 ELSEIF (l == 2) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 10
-                       work1(:) = work1(:) + d212 (m1, ind, isym) * &
-                                  proj0 (nwfc1 + m1,:)
-                    ENDDO
-                 ELSEIF (l == 3) THEN
-                    work1(:) = 0.d0
-                    DO m1 = 1, 14
-                       work1(:) = work1(:) + d312 (m1, ind, isym) * &
-                                  proj0 (nwfc1 + m1,:)
-                    ENDDO
-                 ENDIF
-                 DO ibnd = 1, nbnd
-                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + &
-                         work1(ibnd) * conjg (work1(ibnd)) / nsym
-                 ENDDO
-                 ! on symmetries
-              ENDDO
-           ENDIF
-           ! on atomic wavefunctions
-        ENDDO
+        IF ( lspinorb ) THEN 
+           CALL sym_proj_so ( domag, proj0, proj(:,:,ik) )
+        ELSE
+           CALL sym_proj_nc ( proj0, proj(:,:,ik) )
+        END IF
      ELSE
-        DO nwfc=1,natomwfc
-           DO ibnd=1,nbnd
-              proj(nwfc,ibnd,ik)=abs(proj0(nwfc,ibnd))**2
-           ENDDO
-        ENDDO
+        proj(:,:,ik)=abs(proj0(:,:))**2
      ENDIF
 
 !-- AlexS
@@ -1336,7 +1377,6 @@ ENDIF
 !--
 
   DEALLOCATE (work)
-  DEALLOCATE (work1)
   DEALLOCATE (proj0)
   DEALLOCATE (e)
   CALL deallocate_bec_type (becp)
@@ -1395,7 +1435,6 @@ ENDIF
      CALL write_proj_iotk( "atomic_proj", lbinary, proj_aux, lwrite_ovp, ovps_aux )
      !
      DEALLOCATE( proj_aux, ovps_aux )
-
      !
      ! write on the standard output file
      !
@@ -1543,7 +1582,7 @@ SUBROUTINE projwave_paw( filproj)
   CHARACTER (len=*) :: filproj
   LOGICAL           :: lwrite_ovp, lbinary
   !
-  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
+  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj, ndm, mr,nbp
   REAL(DP), ALLOCATABLE :: e (:), aux(:), pcharge(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
@@ -1609,9 +1648,7 @@ SUBROUTINE projwave_paw( filproj)
  enddo
 
   ALLOCATE( proj (nkb, nbnd, nkstot),proj0(nkb,nbnd) )
-  ALLOCATE( proj_aux (nkb, nbnd, nkstot) )
   proj      = 0.d0
-  proj_aux  = (0.d0, 0.d0)
   !
   CALL allocate_bec_type (nkb, nbnd, becp )
   !
@@ -1624,8 +1661,6 @@ SUBROUTINE projwave_paw( filproj)
 
      proj0=0; 
      CALL calbec ( npw, vkb, evc, proj0)
-
-     proj_aux(:,:,ik)=proj0(:,:)
 
      do nwfc=1,nkb
         na=nlmchi(nwfc)%na
@@ -1646,20 +1681,9 @@ SUBROUTINE projwave_paw( filproj)
  ENDDO
  DEALLOCATE(proj0,pcharge)
 
-  CALL deallocate_bec_type (becp)
+ CALL deallocate_bec_type (becp)
   !
-  !   vectors et and proj are distributed across the pools
-  !   collect data for all k-points to the first pool
-
-  !
-  CALL poolrecover (et,       nbnd, nkstot, nks)
-  !!!CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks)
-  CALL poolrecover (proj,     nbnd * nkb, nkstot, nks)
-  !!!CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
-  CALL poolrecover (proj_aux, 2 * nbnd * nkb, nkstot, nks)
-  !
-  !
-  RETURN
+   RETURN
   !
 END SUBROUTINE projwave_paw
 !
@@ -1896,15 +1920,15 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   CHARACTER (len=*) :: filproj
   LOGICAL :: lwrite_ovp, lbinary
   !
-  INTEGER :: npw, ik, ibnd, i, j, na, nb, nt, isym, n,  m, m1, l, nwfc,&
+  INTEGER :: npw, ik, ibnd, i, j, na, nb, nt, isym, n,  m, l, nwfc,&
        nwfc1, lmax_wfc, is, iunproj, iunaux
   REAL(DP),    ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
-  COMPLEX(DP), ALLOCATABLE :: work1(:), proj0(:,:)
+  COMPLEX(DP), ALLOCATABLE :: proj0(:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap_d(:,:), work_d(:,:), diag(:,:), vv(:,:)
   COMPLEX(DP), ALLOCATABLE :: e_work_d(:,:)
   ! Some workspace for k-point calculation ...
-  REAL   (DP), ALLOCATABLE ::rwork1(:),rproj0(:,:)
+  REAL   (DP), ALLOCATABLE :: rproj0(:,:)
   REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
   ! ... or for gamma-point.
   INTEGER  :: nksinit, nkslast
