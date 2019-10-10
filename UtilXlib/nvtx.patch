@@ -13,7 +13,7 @@ index 09fb815c7..8a855badb 100644
  all : libutil.a
  
 diff --git a/UtilXlib/clocks_handler.f90 b/UtilXlib/clocks_handler.f90
-index ede18aa57..fc318873a 100644
+index 4716e0c..33552aa 100644
 --- a/UtilXlib/clocks_handler.f90
 +++ b/UtilXlib/clocks_handler.f90
 @@ -145,6 +145,7 @@ SUBROUTINE start_clock( label )
@@ -33,7 +33,15 @@ index ede18aa57..fc318873a 100644
          ENDIF
          !
          RETURN
-@@ -216,6 +219,7 @@ SUBROUTINE stop_clock( label )
+@@ -199,6 +202,7 @@ SUBROUTINE start_clock( label )
+      clock_label(nclock) = label_
+      t0cpu(nclock)       = f_tcpu()
+      t0wall(nclock)      = f_wall()
++     call nvtxStartRange(label_, n)
+      !
+   ENDIF
+   !
+@@ -216,6 +220,7 @@ SUBROUTINE stop_clock( label )
  #endif
    USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                          notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
@@ -41,7 +49,7 @@ index ede18aa57..fc318873a 100644
    !
    IMPLICIT NONE
    !
-@@ -255,6 +259,8 @@ SUBROUTINE stop_clock( label )
+@@ -255,6 +260,8 @@ SUBROUTINE stop_clock( label )
             t0cpu(n)     = notrunning
             t0wall(n)    = notrunning
             called(n)    = called(n) + 1
