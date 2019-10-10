@@ -1347,13 +1347,11 @@ MODULE exx
     attributes(DEVICE)   :: temppsic_dble_d, temppsic_aimag_d
 #endif
     !
-    COMPLEX(DP),ALLOCATABLE :: vc(:,:), deexx(:,:)
-    COMPLEX(DP),ALLOCATABLE :: vc_d(:,:)
-    REAL(DP),   ALLOCATABLE :: coulomb_fac_d(:,:,:)
-#if defined(__CUDA)
-    attributes(DEVICE) :: vc_d, coulomb_fac_d
-#endif
+    COMPLEX(DP),ALLOCATABLE :: vc(:,:), deexx(:,:), vc_d(:,:)
     REAL(DP),   ALLOCATABLE :: fac(:)
+#if defined(__CUDA)
+    attributes(DEVICE)   :: vc_d, fac
+#endif
     INTEGER          :: ibnd, ik, im , ikq, iq, ipol
     INTEGER          :: ir, ig
     INTEGER          :: current_ik
@@ -1389,7 +1387,6 @@ MODULE exx
     dfftt__nlm=>dfftt%nlm_d
     ALLOCATE(psi_d, source=psi)
     ALLOCATE(hpsi_d, source=hpsi)
-    ALLOCATE(coulomb_fac_d, source=coulomb_fac)
     !initial copy of exxbuff
     exxbuff_d = exxbuff
     !
@@ -1408,7 +1405,7 @@ MODULE exx
     ALLOCATE( psi_rhoc_work_d(nrxxs) )
     !
     ALLOCATE( vc(nrxxs,ialloc))
-    ALLOCATE( vc_d(nrxxs,ialloc))
+    ALLOCATE( vc_d(nrxxs,ialloc)) 
     IF(okvan) ALLOCATE(deexx(nkb,ialloc))
     !
     current_ik = global_kpoint_index ( nkstot, current_k )
@@ -1571,26 +1568,27 @@ MODULE exx
                 ENDIF
                 !   >>>> charge density done
                 !
+                vc(:,ii) = 0._DP
                 vc_d(:,ii) = 0._DP
+                fac(:) = coulomb_fac(:,iq,current_k)
                 !
 !$cuf kernel do
                 DO ig = 1, dfftt%ngm
                    !
-                   vc_d(dfftt__nl(ig),ii)  = coulomb_fac_d(ig,iq,current_k) * psi_rhoc_work_d(dfftt__nl(ig))
-                   vc_d(dfftt__nlm(ig),ii) = coulomb_fac_d(ig,iq,current_k) * psi_rhoc_work_d(dfftt__nlm(ig))
+                   vc_d(dfftt__nl(ig),ii)  = fac(ig) * psi_rhoc_work_d(dfftt__nl(ig))
+                   vc_d(dfftt__nlm(ig),ii) = fac(ig) * psi_rhoc_work_d(dfftt__nlm(ig))
                    !
                 ENDDO
+                vc(:,ii) = vc_d(:,ii)
                 !
                 !   >>>>  compute <psi|H_fock G SPACE here
                 IF(okvan .and. .not. tqr) THEN
-                   vc(:,ii) = vc_d(:,ii)
                    IF(jbnd>=jstart) &
                         CALL newdxx_g(dfftt, vc(:,ii), xkq, xkp, 'r', deexx(:,ii), &
                            becphi_r=x1*becxx(ikq)%r(:,jbnd))
                    IF(jbnd<jend) &
                         CALL newdxx_g(dfftt, vc(:,ii), xkq, xkp, 'i', deexx(:,ii), &
                             becphi_r=x2*becxx(ikq)%r(:,jbnd+1))
-                   vc_d(:,ii) = vc(:,ii)
                 ENDIF
                 !
                 !brings back v in real space
@@ -1682,9 +1680,9 @@ MODULE exx
     DEALLOCATE( result, temppsic_dble, temppsic_aimag)
     DEALLOCATE( temppsic_dble_d, temppsic_aimag_d)
     DEALLOCATE( psi_rhoc_work_d)
-    DEALLOCATE(psi_d, hpsi_d, coulomb_fac_d)
+    DEALLOCATE(psi_d, hpsi_d)
 
-    DEALLOCATE( vc, fac, vc_d )
+    DEALLOCATE( vc, vc_d, fac )
     IF(okvan) DEALLOCATE( deexx )
     !
     !-----------------------------------------------------------------------
