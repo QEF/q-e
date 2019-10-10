@@ -25,6 +25,7 @@ PWLIBS += \
   force_cc_gpu.o \
   drhoc_gpu.o \
   addusforce_gpu.o \
+  force_corr_gpu.o \
   simpsn_gpu.o
 
 MODFLAGS += \
