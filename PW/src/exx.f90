@@ -1339,6 +1339,10 @@ MODULE exx
     attributes(DEVICE)       :: psi_d, hpsi_d
 #endif
     COMPLEX(DP),ALLOCATABLE :: result(:,:)
+    COMPLEX(DP),ALLOCATABLE :: result_d(:,:)
+#if defined(__CUDA)
+    attributes(DEVICE)       :: result_d
+#endif
     REAL(DP),ALLOCATABLE :: temppsic_dble (:)
     REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
     REAL(DP),ALLOCATABLE :: temppsic_dble_d (:)
@@ -1397,6 +1401,7 @@ MODULE exx
     !
     !ALLOCATE( result(nrxxs), temppsic_dble(nrxxs), temppsic_aimag(nrxxs) )
     ALLOCATE( result(nrxxs,ialloc), temppsic_dble(nrxxs) )
+    ALLOCATE( result_d(nrxxs,ialloc))
     ALLOCATE( temppsic_dble_d(nrxxs) )
     ALLOCATE( temppsic_aimag(nrxxs) )
     ALLOCATE( temppsic_aimag_d(nrxxs) )
@@ -1579,10 +1584,10 @@ MODULE exx
                    vc_d(dfftt__nlm(ig),ii) = fac(ig) * psi_rhoc_work_d(dfftt__nlm(ig))
                    !
                 ENDDO
-                vc(:,ii) = vc_d(:,ii)
                 !
                 !   >>>>  compute <psi|H_fock G SPACE here
                 IF(okvan .and. .not. tqr) THEN
+                   vc(:,ii) = vc_d(:,ii)
                    IF(jbnd>=jstart) &
                         CALL newdxx_g(dfftt, vc(:,ii), xkq, xkp, 'r', deexx(:,ii), &
                            becphi_r=x1*becxx(ikq)%r(:,jbnd))
@@ -1593,10 +1598,10 @@ MODULE exx
                 !
                 !brings back v in real space
                 CALL invfft ('Rho', vc_d(:,ii), dfftt)
-                vc(:,ii) = vc_d(:,ii)
                 !
                 !   >>>>  compute <psi|H_fock REAL SPACE here
                 IF(okvan .and. tqr) THEN
+                   vc(:,ii) = vc_d(:,ii)
                    IF(jbnd>=jstart) &
                         CALL newdxx_r(dfftt,vc(:,ii), _CX(x1*becxx(ikq)%r(:,jbnd)), deexx(:,ii))
                    IF(jbnd<jend) &
@@ -1614,13 +1619,13 @@ MODULE exx
                 !
                 ! accumulates over bands and k points
                 !
-!$omp parallel do default(shared), private(ir)
+!$cuf kernel do
                 DO ir = 1, nrxxs
-                   result(ir,ii) = result(ir,ii) &
-                                 + x1* dble(vc(ir,ii))* dble(exxbuff(ir,exxbuff_index,ikq)) &
-                                 + x2*aimag(vc(ir,ii))*aimag(exxbuff(ir,exxbuff_index,ikq))
+                   result_d(ir,ii) = result_d(ir,ii) &
+                                 + x1* dble(vc_d(ir,ii))* dble(exxbuff_d(ir,exxbuff_index,ikq)) &
+                                 + x2*aimag(vc_d(ir,ii))*aimag(exxbuff_d(ir,exxbuff_index,ikq))
                 ENDDO
-!$omp end parallel do
+                !result(:,ii) = result_d(:,ii)
                 !
              ENDDO &
              IBND_LOOP_GAM
@@ -1629,7 +1634,7 @@ MODULE exx
           LOOP_ON_PSI_BANDS
           !
           ! get the next nbnd/negrp data
-          IF (negrp>1) call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          IF (negrp>1) call mp_circular_shift_left( exxbuff_d(:,:,ikq), me_egrp, inter_egrp_comm )
           !
        ENDDO ! iegrp
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
@@ -1649,7 +1654,8 @@ MODULE exx
        !
        ! brings back result in G-space
        !
-       CALL fwfft( 'Wave' , result(:,ii), dfftt )
+       CALL fwfft( 'Wave' , result_d(:,ii), dfftt )
+       result(:,ii) = result_d(:,ii)
        !communicate result
        DO ig = 1, n
           big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(dfftt%nl(igk_exx(ig,current_k)),ii)
@@ -1677,7 +1683,7 @@ MODULE exx
     END IF
     !
     DEALLOCATE(big_result)
-    DEALLOCATE( result, temppsic_dble, temppsic_aimag)
+    DEALLOCATE( result, result_d, temppsic_dble, temppsic_aimag)
     DEALLOCATE( temppsic_dble_d, temppsic_aimag_d)
     DEALLOCATE( psi_rhoc_work_d)
     DEALLOCATE(psi_d, hpsi_d)
