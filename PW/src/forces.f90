@@ -190,7 +190,8 @@ SUBROUTINE forces()
   ! ... The SCF contribution
   !
   call start_clock('frc_scc') 
-  CALL force_corr( forcescc )
+  IF ( .not. use_gpu ) CALL force_corr( forcescc )
+  IF (       use_gpu ) CALL force_corr_gpu( forcescc )
   call stop_clock('frc_scc') 
   !
   IF (do_comp_mt) THEN
