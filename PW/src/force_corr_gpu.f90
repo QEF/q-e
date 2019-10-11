@@ -33,6 +33,8 @@ subroutine force_corr_gpu (forcescc)
   USE mp,                   ONLY : mp_sum
   USE gbuffers,             ONLY : dev_buf 
   USE gvect_gpum,           ONLY : g_d
+  !
+  USE simpsn_gpum,          ONLY : simpsn_gpu_dev
 #if defined(__CUDA) 
   USE cudafor 
   USE cublas
@@ -42,7 +44,7 @@ subroutine force_corr_gpu (forcescc)
   !
   real(DP) :: forcescc (3, nat)  
   !
-  real(DP), pointer ::   rhocgnt_d(:),  aux_d (:,:), r_d(:), rab_d(:), rhoat_d(:), tau_d(:,:) 
+  real(DP), pointer, contiguous ::   rhocgnt_d(:),  aux_d (:,:), r_d(:), rab_d(:), rhoat_d(:), tau_d(:,:) 
   complex(DP),pointer      ::   psic_d(:) 
   integer, pointer      :: nl_d (:) 
   real(DP), allocatable :: tmp(:)
@@ -102,15 +104,8 @@ subroutine force_corr_gpu (forcescc)
              endif
           enddo
            
-          !call simpson_gpu_dev<<<*,*>>>(msh_nt, aux_d, rab_d, rhocgnt_d(ig) )
+          call simpsn_gpu_dev(msh_nt, aux_d(:,ig), rab_d, rhocgnt_d(ig) )
                
-          rhocgnt_d(ig)  = 0.d0 
-          do ir =2, msh_nt -1, 2 
-             rhocgnt_d(ig) = rhocgnt_d(ig) +    aux_d(ir-1,ig)*rab_d(ir-1) + &
-                                       4.d0*aux_d(ir,ig)*rab_d(ir)  + & 
-                                            aux_d(ir+1,ig)*rab_d(ir+1) 
-          end do 
-            rhocgnt_d(ig) = rhocgnt_d(ig)/3.d0 
        enddo
       
      !

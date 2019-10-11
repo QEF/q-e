@@ -112,7 +112,9 @@ subroutine force_cc_gpu (forcecc)
         r_d(1:msh(nt)) = rgrid(nt)%r(1:msh(nt)) 
         rab_d(1:msh(nt)) = rgrid(nt)%rab(1:msh(nt))
         rhoc_d(1:msh(nt)) = upf(nt)%rho_atc 
+  call start_clock('drhoc')
         call drhoc_gpu  (ngl, gl_d, omega, tpiba2, msh(nt), r_d, rab_d, rhoc_d, rhocg_d)
+  call stop_clock('drhoc')
 
         do na = 1, nat
            if (nt.eq.ityp (na) ) then
