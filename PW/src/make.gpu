@@ -40,6 +40,7 @@ add_vhub_to_deeq_gpu.o : pwcom.o
 add_vhub_to_deeq_gpu.o : scf_mod.o
 add_vuspsi_gpu.o : pwcom.o
 addusdens_gpu.o : realus.o
+addusforce_gpu.o : realus.o
 allocate_fft.o : scf_mod_gpu.o
 allocate_nlpot.o : pwcom_gpu.o
 allocate_nlpot.o : pwcom_gpu.o
@@ -59,6 +60,7 @@ exx.o : pwcom_gpu.o
 force_cc_gpu.o : pwcom.o
 force_cc_gpu.o : pwcom.o
 force_cc_gpu.o : scf_mod.o
+force_corr_gpu.o : scf_mod.o
 force_lc_gpu.o : Coul_cut_2D.o
 force_lc_gpu.o : esm.o
 force_us.o : pwcom_gpu.o
