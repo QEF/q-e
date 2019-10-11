@@ -59,7 +59,7 @@ SUBROUTINE addusforce_g_gpu( forcenl )
   USE cudafor 
   USE cublas
 #else
-#define cublasDgemm Dgemm
+#define cublasDGEMM Dgemm
 #endif
  
   !
