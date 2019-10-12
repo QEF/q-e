@@ -20,7 +20,7 @@ PROGRAM do_projwfc
   USE constants,  ONLY : rytoev
   USE kinds,      ONLY : DP
   USE klist,      ONLY : nks, nkstot, xk, degauss, ngauss, lgauss, ltetra
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
+  USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE environment,ONLY : environment_start, environment_end
@@ -398,21 +398,16 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  USE run_info, ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
-  USE cell_base
-  USE gvect
-  USE gvecs,   ONLY: dual
-  USE gvecw,   ONLY: ecutwfc
-  USE fft_base, ONLY : dfftp
-  USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
-  USE lsda_mod, ONLY: nspin
-  USE wvfct, ONLY: npwx, nbnd, et
+  USE fft_base,  ONLY : dfftp
+  USE klist,     ONLY: xk, nks, nkstot, nelec, ngk, igk_k
+  USE lsda_mod,  ONLY: nspin
+  USE wvfct,     ONLY: npwx, nbnd, et
+  USE uspp,      ONLY: nkb, vkb
+  USE becmod,    ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
+  USE io_files,  ONLY: prefix, tmp_dir, nwordwfc, iunwfc
   USE control_flags, ONLY: gamma_only
-  USE uspp, ONLY: nkb, vkb
-  USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
   USE wavefunctions, ONLY: evc
   !
   USE projections
@@ -423,7 +418,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
-       nwfc1, lmax_wfc, is, iunproj
+       nwfc1, lmax_wfc, is
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), proj0(:,:)
@@ -432,7 +427,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   ! ... or for gamma-point.
   REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
-  CHARACTER(len=256) :: filename
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
   !
@@ -595,36 +589,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      ! write on the file filproj
      !
-     IF (filproj/=' ') THEN
-        DO is=1,nspin
-           IF (nspin==2) THEN
-              IF (is==1) filename=trim(filproj)//'.projwfc_up'
-              IF (is==2) filename=trim(filproj)//'.projwfc_down'
-              nksinit=(nkstot/2)*(is-1)+1
-              nkslast=(nkstot/2)*is
-           ELSE
-              filename=trim(filproj)//'.projwfc_up'
-              nksinit=1
-              nkslast=nkstot
-           ENDIF
-           iunproj=33
-           CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
-                dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual,   &
-                ecutwfc, nkstot/nspin, nbnd, natomwfc)
-           DO nwfc = 1, natomwfc
-              WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5)') &
-                  nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-                  nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
-              DO ik=nksinit,nkslast
-                 DO ibnd=1,nbnd
-                   WRITE(iunproj,'(2i8,f20.10)') ik,ibnd, &
-                                                 abs(proj(nwfc,ibnd,ik))
-                 ENDDO
-              ENDDO
-           ENDDO
-           CLOSE(iunproj)
-        ENDDO
-     ENDIF
+     CALL write_proj_file ( filproj, proj )
      !
      ! write projections to file using iotk
      !
@@ -684,7 +649,7 @@ SUBROUTINE sym_proj_g (rproj0, proj_out)
                 nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
                 nlmchi(nwfc1)%m == 1 ) GOTO 10
         ENDDO
-        CALL errore('projwave','cannot symmetrize',1)
+        CALL errore('sym_proj_g','cannot symmetrize',1)
 10      nwfc1=nwfc1-1
         !
         !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
@@ -759,7 +724,7 @@ SUBROUTINE sym_proj_k (proj0, proj_out)
                 nlmchi(nwfc1)%l == nlmchi(nwfc)%l .and. &
                 nlmchi(nwfc1)%m == 1 ) GOTO 10
         ENDDO
-        CALL errore('projwave','cannot symmetrize',1)
+        CALL errore('sym_proj_k','cannot symmetrize',1)
 10      nwfc1=nwfc1-1
         !
         !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
@@ -848,7 +813,7 @@ SUBROUTINE sym_proj_so (domag, proj0, proj_out  )
                 nlmchi(nwfc1)%jj == nlmchi(nwfc)%jj .and. &
                 nlmchi(nwfc1)%ind == 1 ) GOTO 10
         ENDDO
-        CALL errore('projwave_nc','cannot symmetrize',1)
+        CALL errore('sym_proj_so','cannot symmetrize',1)
 10      nwfc1=nwfc1-1
         !
         !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
@@ -947,7 +912,7 @@ SUBROUTINE sym_proj_nc ( proj0, proj_out  )
                 nlmchi(nwfc1)%m == 1 .and. &
                 nlmchi(nwfc1)%ind == 1) GOTO 15
         ENDDO
-        CALL errore('projwave_nc','cannot symmetrize',1)
+        CALL errore('sym_proj_nc','cannot symmetrize',1)
 15      nwfc1=nwfc1-1
         IF (l == 0) THEN
            work1(:) = 0.d0
@@ -1112,12 +1077,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   USE io_global,  ONLY : stdout, ionode
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
-  USE run_info, ONLY: title
-  USE cell_base
   USE constants, ONLY: rytoev, eps4
-  USE gvect
-  USE gvecs,   ONLY: dual
-  USE gvecw,   ONLY: ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin
@@ -1128,7 +1088,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
+  USE io_files, ONLY: prefix, tmp_dir, nwordwfc, iunwfc
   USE wavefunctions, ONLY: evc
   USE mp,        ONLY : mp_sum
   USE mp_pools,  ONLY : inter_pool_comm, intra_pool_comm
@@ -1145,8 +1105,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   LOGICAL :: freeswfcatom
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
-             n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj, npw, &
-             ind0
+             n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, npw, ind0
   REAL(DP) :: jj, ef_0, eband_proj_tot, eband_tot
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
@@ -1400,35 +1359,7 @@ ENDIF
      !
      ! write on the file filproj
      !
-     IF (filproj/=' ') THEN
-        filename = trim(filproj)//'.projwfc_up'
-        iunproj=33
-        CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
-           dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-           nkstot,nbnd,natomwfc)
-        DO nwfc = 1, natomwfc
-           IF (lspinorb) THEN
-              WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,2i5,f5.1,1x,f5.1)') &
-                   nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-                   nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
-                   nlmchi(nwfc)%jj, &
-                   compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l, nlmchi(nwfc)%m)
-           ELSE
-              WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5,1x,f4.1)') &
-                   nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-                   nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
-                   nlmchi(nwfc)%m, &
-                   0.5d0-int(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l+2))
-           ENDIF
-           DO ik=1,nkstot
-              DO ibnd=1,nbnd
-                 WRITE(iunproj,'(2i8,f20.10)') ik,ibnd,abs(proj(nwfc,ibnd,ik))
-              ENDDO
-           ENDDO
-        ENDDO
-        CLOSE(iunproj)
-     ENDIF
-
+     CALL write_proj_file ( filproj, proj )
      !
      ! write projections to file using iotk
      !
@@ -1555,24 +1486,18 @@ SUBROUTINE projwave_paw( filproj)
   !
   USE atom,       ONLY : rgrid, msh
   USE io_global, ONLY : stdout, ionode
-  USE run_info, ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
-  USE cell_base
   USE constants, ONLY: rytoev
-  USE gvect
-  USE gvecs,   ONLY: dual
-  USE gvecw,   ONLY: ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec, igk_k, ngk
   USE lsda_mod, ONLY: nspin, isk, current_spin
-  USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct, ONLY: npwx, nbnd, et, wg
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY : upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
+  USE io_files, ONLY: prefix, tmp_dir, nwordwfc, iunwfc
   USE wavefunctions, ONLY: evc
   !
   USE projections
@@ -1583,7 +1508,7 @@ SUBROUTINE projwave_paw( filproj)
   LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
-       nwfc1, lmax_wfc, is, iunproj, ndm, mr,nbp
+       nwfc1, lmax_wfc, is, ndm, mr,nbp
   REAL(DP), ALLOCATABLE :: e (:), aux(:), pcharge(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
@@ -1626,26 +1551,7 @@ SUBROUTINE projwave_paw( filproj)
      
   DEALLOCATE(aux)
 
-  ALLOCATE (nlmchi(nkb))
-  nwfc=0
-  do nt=1,ntyp
-     do na=1,nat
-     if (ityp(na)==nt) then
-        do nb=1,upf(nt)%nbeta
-           l=upf(nt)%lll(nb)
-             DO m = 1, 2 * l + 1
-               nwfc=nwfc+1
-               nlmchi(nwfc)%na = na
-               nlmchi(nwfc)%n =  nb
-               nlmchi(nwfc)%l = l
-               nlmchi(nwfc)%m = m
-               nlmchi(nwfc)%ind = m
-               nlmchi(nwfc)%jj  =  0.d0
-             ENDDO  
-        enddo
-     endif
-  enddo
- enddo
+  CALL fill_nlmbeta ( nkb, nwfc ) 
 
   ALLOCATE( proj (nkb, nbnd, nkstot),proj0(nkb,nbnd) )
   proj      = 0.d0
@@ -1682,9 +1588,9 @@ SUBROUTINE projwave_paw( filproj)
  DEALLOCATE(proj0,pcharge)
 
  CALL deallocate_bec_type (becp)
-  !
-   RETURN
-  !
+ !
+ RETURN
+ !
 END SUBROUTINE projwave_paw
 !
 !-----------------------------------------------------------------------
@@ -1714,7 +1620,6 @@ SUBROUTINE  write_proj_iotk (filename, lbinary, projs, lwrite_ovp, ovps )
   USE kinds
   USE io_files,         ONLY : iun => iunsat, prefix, tmp_dir, postfix
   USE basis,            ONLY : natomwfc
-  USE cell_base
   USE klist,            ONLY : wk, xk, nkstot, nelec
   USE noncollin_module, ONLY : noncolin
   USE lsda_mod,         ONLY : nspin, isk
@@ -1875,6 +1780,80 @@ SUBROUTINE  write_proj_iotk (filename, lbinary, projs, lwrite_ovp, ovps )
 
 END SUBROUTINE write_proj_iotk
 !
+!-----------------------------------------------------------------------
+SUBROUTINE write_proj_file ( filproj, proj )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,     ONLY : DP
+  USE lsda_mod,  ONLY : nspin
+  USE spin_orb,  ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin
+  USE fft_base,  ONLY : dfftp
+  USE klist,     ONLY : xk, nkstot
+  USE run_info,  ONLY : title
+  USE cell_base, ONLY : at, ibrav, celldm
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, atm
+  USE wvfct,     ONLY : nbnd
+  USE basis,     ONLY : natomwfc
+  USE gvect,     ONLY : gcutm 
+  USE gvecs,     ONLY : dual
+  USE gvecw,     ONLY : ecutwfc
+  USE projections, ONLY : nlmchi
+  !
+  IMPLICIT NONE
+  CHARACTER (len=*), INTENT(in) :: filproj
+  REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
+  !
+  CHARACTER(256) :: filename
+  REAL (DP), EXTERNAL :: compute_mj
+  INTEGER :: is, ik, nwfc, ibnd, nksinit, nkslast, iunproj=33
+  !
+  IF ( TRIM(filproj) == ' ' ) RETURN
+  !
+  DO is=1,nspin
+     IF (nspin==2) THEN
+        IF (is==1) filename=trim(filproj)//'.projwfc_up'
+        IF (is==2) filename=trim(filproj)//'.projwfc_down'
+        nksinit=(nkstot/2)*(is-1)+1
+        nkslast=(nkstot/2)*is
+     ELSE
+        filename=trim(filproj)//'.projwfc_up'
+        nksinit=1
+        nkslast=nkstot
+     ENDIF
+     CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, &
+          dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, &
+          celldm, at, gcutm, dual, ecutwfc, nkstot/nspin, nbnd, natomwfc)
+     DO nwfc = 1, natomwfc
+        IF (lspinorb) THEN
+           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,2i5,f5.1,1x,f5.1)') &
+                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
+                nlmchi(nwfc)%jj, &
+                compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l, nlmchi(nwfc)%m)
+        ELSE IF (noncolin) THEN
+           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5,1x,f4.1)') &
+                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
+                nlmchi(nwfc)%m, &
+                0.5d0-int(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l+2))
+        ELSE
+           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5)') &
+                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l,  &
+                nlmchi(nwfc)%m
+        END IF
+        DO ik=nksinit,nkslast
+           DO ibnd=1,nbnd
+              WRITE(iunproj,'(2i8,f20.10)') ik,ibnd, abs(proj(nwfc,ibnd,ik))
+           ENDDO
+        ENDDO
+     ENDDO
+     CLOSE(iunproj)
+  ENDDO
+  !
+END SUBROUTINE write_proj_file
+!
 !  projwave with distributed matrixes
 !
 !-----------------------------------------------------------------------
@@ -1882,14 +1861,10 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  USE run_info,  ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc, swfcatom
   USE cell_base
   USE constants, ONLY: rytoev
-  USE gvect
-  USE gvecs,   ONLY: dual
-  USE gvecw,   ONLY: ecutwfc
   USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin, isk, current_spin
@@ -1932,7 +1907,6 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
   ! ... or for gamma-point.
   INTEGER  :: nksinit, nkslast
-  CHARACTER(len=256) :: filename
   CHARACTER(len=256) :: auxname
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
@@ -2178,36 +2152,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      ! write on the file filproj
      !
-     IF (filproj/=' ') THEN
-        DO is=1,nspin
-           IF (nspin==2) THEN
-              IF (is==1) filename=trim(filproj)//'.projwfc_up'
-              IF (is==2) filename=trim(filproj)//'.projwfc_down'
-              nksinit=(nkstot/2)*(is-1)+1
-              nkslast=(nkstot/2)*is
-           ELSE
-              filename=trim(filproj)//'.projwfc_up'
-              nksinit=1
-              nkslast=nkstot
-           ENDIF
-           iunproj=33
-           CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
-                dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
-                ecutwfc, nkstot/nspin,nbnd,natomwfc)
-           DO nwfc = 1, natomwfc
-              WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5)') &
-                  nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-                  nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
-              DO ik=nksinit,nkslast
-                 DO ibnd=1,nbnd
-                   WRITE(iunproj,'(2i8,f20.10)') ik,ibnd, &
-                                                 abs(proj(nwfc,ibnd,ik))
-                 ENDDO
-              ENDDO
-           ENDDO
-           CLOSE(iunproj)
-        ENDDO
-     ENDIF
+     CALL write_proj_file ( filproj, proj )
      !
      ! write projections to file using iotk
      !
