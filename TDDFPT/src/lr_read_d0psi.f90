@@ -18,7 +18,8 @@ SUBROUTINE lr_read_d0psi()
   USE klist,                ONLY : nks,degauss
   USE io_files,             ONLY : prefix, diropn, tmp_dir, wfc_dir
   USE lr_variables,         ONLY : d0psi, d0psi2, n_ipol, LR_polarization, &
-                                   & lr_verbosity, nwordd0psi, iund0psi, eels
+                                   & lr_verbosity, nwordd0psi, iund0psi, eels, &
+                                   & magnons, V0psi, O_psi, b_pol, n_op
   USE wvfct,                ONLY : nbnd, npwx, et
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : nksq
@@ -38,6 +39,9 @@ SUBROUTINE lr_read_d0psi()
   endif
   !
   nwordd0psi = 2 * nbnd * npwx * npol * nksq
+  !  
+  IF (magnons) nwordd0psi = nwordd0psi * 2
+  !
   !
   ! This is a parallel read, done in wfc_dir
   !
@@ -45,51 +49,133 @@ SUBROUTINE lr_read_d0psi()
   !
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   !
-  DO ip=1,n_ipol
+  IF (magnons) THEN
      !
-     IF (n_ipol==1) THEN
-        !
-        CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
-        !
-        IF (.not.exst .and. wfc_dir /= 'undefined') THEN
+     ! read V0psi
+     !
+     DO ip=1,n_ipol
+        !        
+        IF (n_ipol==1) THEN
            !
-           WRITE( stdout, '(/5x,"Attempting to read d0psi from outdir instead of wfcdir")' )
-           CLOSE( UNIT = iund0psi)
-           tmp_dir = tmp_dir_saved 
+           CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(b_pol)), nwordd0psi, exst)
            !
-           CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
-           !
-           IF (.not.exst) CALL errore('lr_read_d0psi', &
-                  & trim( prefix )//'.d0psi.'//trim(int_to_char(LR_polarization))//' not found',1)
+           IF (.not.exst .and. wfc_dir /= 'undefined') THEN
+              !
+              WRITE( stdout, '(/5x,"Attempting to read V0psi from outdir instead of wfcdir")' )
+              CLOSE( UNIT = iund0psi)
+              tmp_dir = tmp_dir_saved 
+              !
+              CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(b_pol)), nwordd0psi, exst)
+              !
+              IF (.not.exst) CALL errore('lr_read_d0psi', &
+                     & trim( prefix )//'.V0psi.'//trim(int_to_char(b_pol))//' not found',1)
+              !
+           ENDIF
            !
         ENDIF
         !
-     ENDIF
-     !
-     IF (n_ipol==3 .and. .not.eels) THEN
-        !
-        CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
-        !
-        IF (.not.exst .and. wfc_dir /= 'undefined') THEN
-           ! 
-           WRITE( stdout, '(/5x,"Attempting to read d0psi from outdir instead of wfcdir")' )
-           CLOSE( UNIT = iund0psi)
-           tmp_dir = tmp_dir_saved
+        IF (n_ipol==3 ) THEN
            !
-           CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+           CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
            !
-           IF (.not.exst) CALL errore('lr_read_d0psi', &
-                  & trim( prefix )//'.d0psi.'//trim(int_to_char(ip))//' not found',1)
+           IF (.not.exst .and. wfc_dir /= 'undefined') THEN
+              ! 
+              WRITE( stdout, '(/5x,"Attempting to read V0psi from outdir instead of wfcdir")' )
+              CLOSE( UNIT = iund0psi)
+              tmp_dir = tmp_dir_saved
+              !
+              CALL diropn ( iund0psi, 'V0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
+              !
+              IF (.not.exst) CALL errore('lr_read_d0psi', &
+                     & trim( prefix )//'.V0psi.'//trim(int_to_char(ip))//' not found',1)
+              !
+           ENDIF
            !
         ENDIF
         !
-     ENDIF
+        V0psi = (0.0d0, 0.0d0)
+        CALL davcio(V0psi(:,:,:,:,ip),nwordd0psi,iund0psi,1,-1)
+        !
+        CLOSE( UNIT = iund0psi)
+        !
+     ENDDO
      !
-     CALL davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,-1)
+     ! read O_psi
      !
-     CLOSE( UNIT = iund0psi)
+     DO ip=1,n_op
+        !
+        IF (n_op==3) THEN
+           !
+           CALL diropn ( iund0psi, 'O_psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
+           !
+           IF (.not.exst .and. wfc_dir /= 'undefined') THEN
+              ! 
+              WRITE( stdout, '(/5x,"Attempting to read O_psi from outdir instead of wfcdir")' )
+              CLOSE( UNIT = iund0psi)
+              tmp_dir = tmp_dir_saved
+              !
+              CALL diropn ( iund0psi, 'O_psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
+              !
+              IF (.not.exst) CALL errore('lr_read_d0psi', &
+                     & trim( prefix )//'.O_psi.'//trim(int_to_char(ip))//' not found',1)
+              !
+           ENDIF
+           !
+        ENDIF
+        !
+        CALL davcio(O_psi(:,:,:,:,ip),nwordd0psi,iund0psi,1,-1)
+        !
+        CLOSE( UNIT = iund0psi)
+        !
+     ENDDO
+  ELSE 
+     DO ip=1,n_ipol
+        !
+        IF (n_ipol==1) THEN
+           !
+           CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+           !
+           IF (.not.exst .and. wfc_dir /= 'undefined') THEN
+              !
+              WRITE( stdout, '(/5x,"Attempting to read d0psi from outdir instead of wfcdir")' )
+              CLOSE( UNIT = iund0psi)
+              tmp_dir = tmp_dir_saved 
+              !
+              CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+              !
+              IF (.not.exst) CALL errore('lr_read_d0psi', &
+                     & trim( prefix )//'.d0psi.'//trim(int_to_char(LR_polarization))//' not found',1)
+              !
+           ENDIF
+           !
+        ENDIF
+        !
+        IF (n_ipol==3 .and. .not.eels) THEN
+           !
+           CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
+           !
+           IF (.not.exst .and. wfc_dir /= 'undefined') THEN
+              ! 
+              WRITE( stdout, '(/5x,"Attempting to read d0psi from outdir instead of wfcdir")' )
+              CLOSE( UNIT = iund0psi)
+              tmp_dir = tmp_dir_saved
+              !
+              CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+              !
+              IF (.not.exst) CALL errore('lr_read_d0psi', &
+                     & trim( prefix )//'.d0psi.'//trim(int_to_char(ip))//' not found',1)
+              !
+           ENDIF
+           !
+        ENDIF
+        !
+        CALL davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,-1)
+        !
+        CLOSE( UNIT = iund0psi)
+        !
+     ENDDO
      !
-  ENDDO
+  ENDIF
   !
   ! EELS: Reading of d0psi2 (n_ipol=1)
   !

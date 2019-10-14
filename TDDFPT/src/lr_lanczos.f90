@@ -47,7 +47,10 @@ SUBROUTINE one_lanczos_step()
                                          evc1, evc1_new, evc1_old, sevc1_new, sevc1, &
                                          evc0, sevc0, d0psi, d0psi2, eels, test_case_no, lr_verbosity, &
                                          alpha_store, beta_store, gamma_store, zeta_store,     &
-                                         charge_response, size_evc, LR_polarization, LR_iteration
+                                         charge_response, size_evc, LR_polarization, LR_iteration, &
+                                         magnons, evc1_rgt, evc1_lft, evc1_rgt_new, evc1_lft_new, &
+                                         alpha_magnons_store, gamma_magnons_store, evc1_rgt_old, &
+                                         evc1_lft_old, O_psi, n_op
     USE uspp,                     ONLY : vkb, nkb, okvan
     USE wvfct,                    ONLY : nbnd, npwx
     USE control_flags,            ONLY : gamma_only
@@ -71,7 +74,8 @@ SUBROUTINE one_lanczos_step()
     !
     ! Local variables
     !
-    REAL(kind=dp) :: alpha, beta, gamma, angle
+    REAL(kind=dp) :: alpha, beta, gamma
+    COMPLEX(kind=dp) :: alphac, gammac
     COMPLEX(kind=dp) :: zeta(n_ipol)
     INTEGER(kind=c_int) :: kilobytes
     !
@@ -88,6 +92,7 @@ SUBROUTINE one_lanczos_step()
     !ENDIF
     !
     CALL start_clock('one_step')
+    !
     !
     pol_index = 1
     !
@@ -112,6 +117,12 @@ SUBROUTINE one_lanczos_step()
           CALL lr_apply_liouvillian_eels(evc1(1,1,1,2),evc1_new(1,1,1,2),.true.)
           !
        ENDIF
+       !
+    ELSEIF (magnons) THEN
+       !
+       CALL lr_apply_liouvillian_magnons(evc1_rgt(:,:,:,:), evc1_rgt_new(:,:,:,:),.false.)
+       ! 
+       CALL lr_apply_liouvillian_magnons(evc1_lft(:,:,:,:), evc1_lft_new(:,:,:,:),.true.)
        !
     ELSE
        !
@@ -162,7 +173,13 @@ SUBROUTINE one_lanczos_step()
     ! call general lanczos iteration routines
     ! O. Baseggio (2019)
     !
-    IF (pseudo_hermitian) THEN
+    IF (magnons) THEN
+       ! 
+       call lanczos_nonhermitian_c(LR_iteration,size(evc1_rgt,1), size(evc1_rgt,2), size(evc1_rgt,3),&
+                                  &evc1_rgt, evc1_rgt_new, evc1_rgt_old, evc1_lft, evc1_lft_new, &
+                                  &evc1_lft_old, n_op, O_psi, alphac, beta, gammac, zeta)
+       !
+    ELSEIF (pseudo_hermitian) THEN
        IF (eels) THEN
           CALL lanczos_pseudohermitian(LR_iteration,size(evc1,1), size(evc1,2), size(evc1,3),&
                                       &evc1(:,:,:,1), evc1_new(:,:,:,1), sevc1_new(:,:,:), &
@@ -186,12 +203,17 @@ SUBROUTINE one_lanczos_step()
                                    &evc1_old(:,:,:,1), n_ipol, d0psi, alpha, beta, &
                                    &gamma, zeta)
        ENDIF
-    ENDIF    
-    !
-    alpha_store(pol_index,LR_iteration) = alpha
-    WRITE(stdout,'(5X,"alpha(",i8.8,")=",f10.6)') LR_iteration, alpha
+    ENDIF 
     !
     ! beta<0 is a serious error for the pseudo-Hermitian algorithm
+    !
+    IF (magnons) THEN
+       alpha_magnons_store(pol_index,LR_iteration) = alphac
+       WRITE(stdout,'(5X,"alpha(",i8.8,")=",2(f21.14))') LR_iteration,dble(alphac), aimag(alphac)
+    ELSE
+       alpha_store(pol_index,LR_iteration) = alpha
+       WRITE(stdout,'(5X,"alpha(",i8.8,")=",f10.6)') LR_iteration, alpha
+    ENDIF
     !
     IF ( beta < 0.0d0 .and. pseudo_hermitian) CALL error_beta()
     !
@@ -202,12 +224,17 @@ SUBROUTINE one_lanczos_step()
        !
     ENDIF
     !
-    beta_store (pol_index,LR_iteration) = beta
-    gamma_store(pol_index,LR_iteration) = gamma
-    WRITE(stdout,'(5X,"beta (",i8.8,")=",f10.6)') LR_iteration, beta
-    WRITE(stdout,'(5X,"gamma(",i8.8,")=",f10.6)') LR_iteration, gamma
-    !
-    !IF (LR_iteration==1) WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') beta
+    IF (magnons) THEN
+       beta_store (pol_index,LR_iteration) = beta
+       WRITE(stdout,'(5X,"beta (",i8.8,")=",f21.14)') LR_iteration, beta
+       gamma_magnons_store(pol_index,LR_iteration) = gammac
+       WRITE(stdout,'(5X,"gamma(",i8.8,")=",2(f21.14))') LR_iteration, dble(gammac), aimag(gammac) 
+    ELSE
+        beta_store (pol_index,LR_iteration) = beta
+       WRITE(stdout,'(5X,"beta (",i8.8,")=",f10.6)') LR_iteration, beta
+       gamma_store(pol_index,LR_iteration) = gamma
+       WRITE(stdout,'(5X,"gamma(",i8.8,")=",f10.6)') LR_iteration, gamma
+    ENDIF
     !
     ! Analysis of the evolution of the beta coefficients.
     !
@@ -229,7 +256,14 @@ SUBROUTINE one_lanczos_step()
        !
     ENDIF
     !
-    IF (mod(LR_iteration,2)==0) THEN
+    IF (magnons) THEN
+       !
+       DO ip = 1, n_op
+          zeta_store (pol_index,ip,LR_iteration) = zeta(ip)
+          WRITE(stdout,'(5x,"z1= ",1x,i6,2(1x,e22.15))') ip,real(zeta(ip)),aimag(zeta(ip))
+       ENDDO
+       !
+    ELSEIF (mod(LR_iteration,2)==0) THEN
        !
        DO ip = 1, n_ipol
           !
@@ -241,7 +275,7 @@ SUBROUTINE one_lanczos_step()
        ! OBM: evc1(:,:,:,1) contains the q of x for even steps, 
        ! lets calculate the response related observables.
        ! 
-       IF (charge_response == 1 .and. .not.eels) THEN
+       IF (charge_response == 1 .and. .not.eels .and. .not. magnons) THEN
           CALL lr_calc_dens(evc1_old(:,:,:,1), .true.)
           CALL lr_calc_F(evc1_old(:,:,:,1))
        ENDIF
@@ -264,7 +298,7 @@ SUBROUTINE one_lanczos_step()
     ! the response charge density does not some to zero, i.e. the non-zero 
     ! value of the integral increases during the Lanczos chain.
     !
-    IF (.not.eels) THEN
+    IF (.not.eels .and. .not. magnons) THEN
        !
        DO ik=1, nks
           CALL lr_ortho(evc1(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
