@@ -35,8 +35,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
                             specfun_pl, lindabs, use_ws, epbread,               &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
-                            assume_insulator
+                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -117,12 +116,6 @@
   !! Check wheter this is the first timeafter a restart. 
   LOGICAL :: homogeneous
   !! Check if the k and q grids are homogenous and commensurate.
-  LOGICAL :: is_metal = .FALSE.
-  !! .TRUE. if the material is detected to be a metal; .FALSE. otherwise
-  LOGICAL :: is_metal_coarse_ef = .FALSE.
-  !! Samething as above but check is done on the coarse grid.
-  LOGICAL :: wrong_coarse_ef = .FALSE.
-  !! Will be set to .TRUE. if needed. If .TRUE. the metal state is computed only from the fine fermi level.
   INTEGER :: ios
   !! INTEGER variable for I/O control
   INTEGER :: iq 
@@ -667,16 +660,6 @@
   ENDDO
   !
   WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
-  WRITE(stdout,'(/5x,a)') 'Checking if material is a metal using coarse grid ef.'
-  ! Use fine grid but with coarse_grid e_Fermi, unless e_Fermi is set to 0 (probably the default
-  ! if epw can't read it from the input files.)
-  CALL check_if_metal(is_metal_coarse_ef, ef, etf, nbndsub, nkqf)
-  IF (ABS(ef) < eps4) THEN
-    ! force to compute metarial state only using fine fermi level
-    ! because EPW was (maybe) not able to get the fermi level of the
-    ! coarse grid.
-    wrong_coarse_ef = .TRUE.
-  ENDIF
   !
   IF (efermi_read) THEN
     !
@@ -740,51 +723,16 @@
     ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
     ! with the wannier functions, or 'coarse' Fermi level is inaccurate
     IF (ABS(efnew - ef) * ryd2eV > 0.250d0 .AND. (.NOT. eig_read)) &
-       WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
+      WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ef = efnew
   ENDIF
-  ! Check if the material is a metal or not based on the fermi energy (on fine grid!)
-  WRITE(stdout,*) 'Rechecking if material is a metal with fermi level on fine grid.'
-  is_metal = .FALSE.
-  CALL check_if_metal(is_metal, ef, etf, nbndsub, nkqf)
-  IF (wrong_coarse_ef .AND. is_metal /= is_metal_coarse_ef) THEN
-    ! we don't care about the first evaluation using the coarse ef since it is
-    ! most likely to be wrong.
-    WRITE(stdout,*) 'Discarding metallic check from the E_Fermi from coarse grid.'
-    is_metal_coarse_ef = is_metal
-  ENDIF
-  IF ((is_metal /= is_metal_coarse_ef) .OR. &
-      (is_metal .AND. assume_insulator) .OR. &
-      (.NOT. is_metal .AND. assume_metal)) THEN
-    ! cannot detect automatically what is the material type. Perhaps there is an error
-    ! with the interpolation / smearing / k grid sizes
-    IF (.NOT. assume_metal .AND. .NOT. assume_insulator) THEN
-      WRITE(stdout,*) 'An error occured while computing the Fermi level on fine grid.'
-      IF (is_metal) THEN
-        WRITE(stdout,*) 'EPW detected that the material is a metal on the fine grid but not on the coarse grid.'
-      ELSE
-        WRITE(stdout,*) 'EPW detected that the material is a metal on the coarse grid but not on the fine grid.'
-      ENDIF
-      WRITE(stdout,*) 'Try increasing the fine grid / coarse grid to see if results matches.'
-      CALL errore('ephwann_shuffle', 'Error while computing material type.', 1)
-    ELSEIF (assume_metal) THEN
-      WRITE(stdout, *) 'WARNING: EPW detected an insulator/semi-conductor but assume_metal is TRUE => assume metallic state'
-      WRITE(stdout, *) 'WARNING: Check if the interpolation is good / well converged'
-      is_metal = .TRUE.
-    ELSEIF (assume_insulator) THEN
-      WRITE(stdout, *) 'WARNING: EPW detected a metal but assume_insulator is TRUE => assume insulating/semi-conducting state'
-      WRITE(stdout, *) 'WARNING: Check if the interpolation is good / well converged'
-      is_metal = .FALSE.
-    ENDIF
-  ENDIF
-  !
   ! ------------------------------------------------------------
   ! Apply a possible shift to eigenenergies (applied later)
   icbm = 1
   IF (ABS(scissor) > eps6) THEN
-    IF (is_metal) THEN
+    IF (assume_metal) THEN
       CALL errore("ephwann_shuffle", "A scissor shift is applied but the material is a metal...", 1)
     ENDIF
     IF (noncolin) THEN
@@ -885,7 +833,7 @@
     ALLOCATE(wkf_all(nktotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating wkf_all', 1)
     !
-    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb, is_metal)
+    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     ! 
     DEALLOCATE(vkk_all, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating vkk_all', 1)
@@ -899,7 +847,7 @@
   ELSE ! (iterative_bte .AND. epmatkqread)   
     IF (iterative_bte) THEN
       ! Open the required files
-      CALL iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart, is_metal)
+      CALL iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart)
     ENDIF
     ! 
     IF (lifc) THEN
@@ -1432,20 +1380,20 @@
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
-              CALL fermicarrier(itemp, etemp, ef0, efcb, ctype, is_metal)
+              CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
             ENDDO 
           ENDIF
           !   
           IF (.NOT. iterative_bte) THEN
-            CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle, is_metal)
+            CALL scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle)
             ! Computes the SERTA mobility
-            IF (iqq == totq) CALL transport_coeffs(ef0, efcb, is_metal)
+            IF (iqq == totq) CALL transport_coeffs(ef0, efcb)
           ENDIF
           ! 
           IF (iterative_bte) THEN
             CALL start_clock('print_ibte')
             CALL print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
-                            lrepmatw2_restart, lrepmatw5_restart, ctype, is_metal)
+                            lrepmatw2_restart, lrepmatw5_restart, ctype)
             CALL stop_clock('print_ibte')
             !  
             ! Finished, now compute SERTA and IBTE mobilities
@@ -1457,7 +1405,7 @@
               CALL iter_close()
               ! Merge files
 #if defined(__MPI)
-              CALL iter_merge_parallel(is_metal)
+              CALL iter_merge_parallel()
 #endif
               !   
             ENDIF  
@@ -1528,7 +1476,7 @@
     ! if scattering is read then Fermi level and scissor have not been computed.
     IF (scatread) THEN
       IF (ABS(scissor) > 0.000001) THEN
-        IF (is_metal) THEN
+        IF (assume_metal) THEN
           CALL errore("ephwann_shuffle", "Cannot apply scissor shift for metals.", 1)
         ENDIF
         icbm = FLOOR(nelec / 2.0d0) + nbndskip + 1
@@ -1547,7 +1495,7 @@
         IF (int_mob .OR. carrier) THEN
           ! SP: Determination of the Fermi level for intrinsic or doped carrier 
           !     One also need to apply scissor before calling it.
-          CALL fermicarrier(itemp, etemp, ef0, efcb, ctype, is_metal)
+          CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
         ELSE
           IF (efermi_read) THEN
             ef0(itemp) = fermi_energy
@@ -1556,7 +1504,7 @@
           ENDIF
         ENDIF
       ENDDO ! itemp
-      IF (.NOT. iterative_bte) CALL transport_coeffs(ef0, efcb, is_metal)
+      IF (.NOT. iterative_bte) CALL transport_coeffs(ef0, efcb)
     ENDIF ! if scattering 
     ! 
     ! Now deallocate 
@@ -1624,7 +1572,7 @@
       vkk_all(:, :, :) = zero
       wkf_all(:) = zero
       !
-      CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb, is_metal)
+      CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
       ! 
       DEALLOCATE(vkk_all, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating vkk_all', 1)
@@ -1827,85 +1775,3 @@
   !         cfacq(:) = EXP(ci*rdotk(:) ) / ndegen_k(:)
   !       ENDIF
   !       !
-
-!-------------------------------------------------------------------------------
-SUBROUTINE check_if_metal(is_metal, ef, etf, nbndsub, nkqf)
-!-------------------------------------------------------------------------------
-!!
-!!  Sets the variables 'is_metal' to .TRUE. if the material is a metal.
-!!  This is done by checking if the fermi level lies inside a band.
-!!
-!-------------------------------------------------------------------------------
-  USE kinds,         ONLY : DP
-  USE io_global,     ONLY : stdout
-  USE constants_epw, ONLY : eps6, ryd2ev
-  USE control_flags, ONLY : iverbosity
-  USE mp,            ONLY : mp_max, mp_min
-  USE mp_global,     ONLY : world_comm
-  !
-  IMPLICIT NONE
-  !
-  !  Input variables
-  !
-  LOGICAL, INTENT(OUT)      :: is_metal
-  !! .TRUE. if material is a metal. .FALSE. otherwise
-  INTEGER, INTENT(IN)       :: nbndsub
-  !! number of bands in Wannier subspace
-  INTEGER, INTENT(IN)       :: nkqf
-  !! number of kpts on this pool
-  REAL(KIND=DP), INTENT(IN) :: etf(nbndsub, nkqf)
-  !! Band structure on fine grid
-  REAL(KIND=DP), INTENT(IN) :: ef
-  !! Fermi energy calculated for fine grid
-  !
-  !  Local variables
-  !
-  INTEGER        :: ibnd
-  !! loop index over bands/kpts
-  REAL(KIND=DP)  :: min_this_band, max_this_band
-  !! The band energies boundaries
-
-  ! First start by setting the band boundaries
-  IF (iverbosity >= 1) THEN
-    WRITE(stdout,'(5x,"Checking if material is a metal with E_Fermi = ",f10.6," eV")') ef*ryd2ev
-    WRITE(stdout,'(5x,"nb of bands = ",I2," nb of kpts = ",I4)') nbndsub, nkqf
-  ENDIF
-  DO ibnd=1, nbndsub
-    ! unreasonably large initial values for each bands
-    ! WRITE(stdout,'(5x,"Band = ",I2)') ibnd
-    ! loop over kpt to determine maximum and minimum value of bands
-    min_this_band = MINVAL(etf(ibnd, :))
-    max_this_band = MAXVAL(etf(ibnd, :))
-    !
-    ! Find max and min across cpus
-    !
-    CALL mp_max(max_this_band, world_comm)
-    CALL mp_min(min_this_band, world_comm)
-    IF (iverbosity >= 1) THEN
-      WRITE(stdout,'(5x,"For band #",I2,", Max = ",f10.6," eV Min = ",f10.6," eV")') ibnd, max_this_band*ryd2ev,min_this_band*ryd2ev
-    ENDIF
-    IF (ABS((ef - min_this_band) / min_this_band) <= eps6 .OR. &
-        ABS((ef - max_this_band) / max_this_band) <= eps6) THEN
-      ! Make this check first to make sure no numerical rounding errors
-      ! makes it a metal while it should be an insulator
-      is_metal = .FALSE.
-      WRITE(stdout, '(5x,"E_Fermi lies within 1e-6 of a band edge => &
-              &we assume it is not a metal due to numerical precision.")')
-      EXIT
-    ENDIF
-    ! check if fermi level lies within the band now
-    IF (ef > min_this_band .AND. ef < max_this_band) THEN
-      ! material is a metal
-      is_metal = .TRUE.
-      WRITE(stdout, '(5x,"E_Fermi lies within a band => metal detected")')
-      EXIT  ! break the loop
-    ENDIF
-  ENDDO
-  
-  IF (.NOT. is_metal) THEN
-    WRITE(stdout, '(5x,"E_Fermi lies outside all bands => insulator or &
-            &semi-conductor detected")')
-  ENDIF
-!-------------------------------------------------------------------------------
-END SUBROUTINE check_if_metal
-!-------------------------------------------------------------------------------

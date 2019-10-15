@@ -17,7 +17,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle, is_metal) 
+    SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle) 
     !-----------------------------------------------------------------------
     !!
     !! This routine computes the scattering rate (inv_tau)
@@ -28,7 +28,7 @@
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, restart,      & 
                               nstemp, scattering_serta, scattering_0rta, shortrange, &
-                              restart_freq, restart_filq, vme
+                              restart_freq, restart_filq, vme, assume_metal
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
                               epf17, nkqtotf, inv_tau_all, inv_tau_allcb,    &
@@ -45,8 +45,6 @@
     !
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart 
-    LOGICAL, INTENT(IN), OPTIONAL :: is_metal
-    !! .TRUE. for metals and .FALSE. for non-metals. If not present assumed .FALSE.
     INTEGER, INTENT(in) :: iqq
     !! Q-point index from the selected q
     INTEGER, INTENT(in) :: iq
@@ -139,10 +137,8 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function  
     ! 
-    IF (PRESENT(is_metal)) THEN
-      IF (is_metal) THEN
-        CALL errore("scattering_rate_q", "metals not implemented.", 1)
-      ENDIF
+    IF (assume_metal) THEN
+      CALL errore("scattering_rate_q", "metals not implemented.", 1)
     ENDIF
     CALL start_clock('SCAT')
     ! 
@@ -557,7 +553,7 @@
     !-----------------------------------------------------------------------
     !       
     !-----------------------------------------------------------------------
-    SUBROUTINE transport_coeffs(ef0, efcb, is_metal)
+    SUBROUTINE transport_coeffs(ef0, efcb)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the transport coefficients
@@ -573,7 +569,7 @@
     USE io_files,         ONLY : prefix 
     USE io_var,           ONLY : iufilsigma 
     USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp,              &
-                                 int_mob, ncarrier, scatread, iterative_bte, vme
+                                 int_mob, ncarrier, scatread, iterative_bte, vme, assume_metal
     USE pwcom,            ONLY : ef 
     USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef,      & 
                                  inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
@@ -597,8 +593,6 @@
     !
     IMPLICIT NONE
     ! 
-    LOGICAL, INTENT(IN), OPTIONAL :: is_metal
-    !! .TRUE. for metals. .FALSE. for non-metals. If not present assumed .FALSE.
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(in) :: efcb(nstemp)
@@ -709,10 +703,8 @@
     REAL(KIND = DP) :: sr(3, 3)
     !! Rotation matrix
     ! 
-    IF (PRESENT(is_metal)) THEN
-      IF (is_metal) THEN
-        CALL errore("transport_coeffs", "metals not implemented.", 1)
-      ENDIF
+    IF (assume_metal) THEN
+      CALL errore("transport_coeffs", "metals not implemented.", 1)
     ENDIF
     CALL start_clock('MOB')
     !

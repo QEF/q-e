@@ -19,7 +19,7 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
-                          lrepmatw2_restart, lrepmatw5_restart, ctype, is_metal) 
+                          lrepmatw2_restart, lrepmatw5_restart, ctype) 
     !-----------------------------------------------------------------------
     !!
     !! This subroutine computes the transition probability and the scattering rates.
@@ -29,7 +29,8 @@
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier
+    USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier, &
+                              assume_metal
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             & 
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
@@ -52,8 +53,6 @@
     !
     IMPLICIT NONE
     !
-    LOGICAL, INTENT(IN)     :: is_metal
-    !! Should be set to .TRUE. for metals and .FALSE. otherwise.
     LOGICAL, INTENT(inout) :: first_cycle
     !! Use to determine weather this is the first cycle after restart 
     INTEGER, INTENT(in) :: iqq
@@ -625,7 +624,7 @@
       ! 
       ! Now print the carrier density for checking
       ! only for non-metals
-      IF (.NOT. is_metal) THEN
+      IF (.NOT. assume_metal) THEN
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)
           carrier_density = 0.0
@@ -899,7 +898,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_merge_parallel(is_metal)
+    SUBROUTINE iter_merge_parallel()
     !----------------------------------------------------------------------------
     USE kinds,            ONLY : DP
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
@@ -911,7 +910,7 @@
     USE io_files,         ONLY : tmp_dir, prefix 
     USE mp,               ONLY : mp_sum, mp_barrier
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
-    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier, assume_metal
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE,MPI_INFO_NULL, &
                                  MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION,          &
@@ -919,9 +918,6 @@
 #endif
     !
     IMPLICIT NONE
-    !
-    LOGICAL :: is_metal
-    !! .TRUE. for metals .FALSE. otherwise.
     !
     ! Local variables
     !
@@ -966,7 +962,7 @@
     !! Offset while writing scattering to files
     !
     ! for metals merge like it's for holes
-    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. is_metal) THEN
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. assume_metal) THEN
       !
       ALLOCATE(trans_prob(lrepmatw2_merge), STAT = ierr)
       IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_prob', 1)
@@ -1133,7 +1129,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart, is_metal)
+    SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart)
     !----------------------------------------------------------------------------
     ! 
     ! This routine opens all the files needed to save scattering rates for the IBTE.
@@ -1145,7 +1141,7 @@
     USE mp_global,        ONLY : world_comm, my_pool_id, npool
     USE mp,               ONLY : mp_barrier, mp_bcast
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
-    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier, assume_metal
     USE io_global,        ONLY : ionode_id
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
@@ -1154,8 +1150,6 @@
     ! 
     IMPLICIT NONE
     !  
-    LOGICAL, INTENT(IN) :: is_metal
-    !! .TRUE. for metals. .FALSE. otherwise.
     INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
     !! To restart opening files
     INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
@@ -1226,7 +1220,7 @@
     IF (exst) THEN
       ! Hole (or metals)
       IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
-              .OR. is_metal) THEN
+              .OR. assume_metal) THEN
         !
         filint = './' // ADJUSTL(TRIM(dirname(1))) // '/'//TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
@@ -1297,7 +1291,7 @@
     ELSE ! no restart file present
       ! Hole or metals
       IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
-              .OR. is_metal) THEN
+              .OR. assume_metal) THEN
         ! 
         CALL create_directory(ADJUSTL(TRIM(dirname(1))))
         CALL create_directory(ADJUSTL(TRIM(dirname(2))))

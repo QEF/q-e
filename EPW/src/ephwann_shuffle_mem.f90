@@ -38,7 +38,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
                             specfun_pl, lindabs, use_ws,                        &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &
@@ -702,11 +702,13 @@
     !
     ef = efnew
   ENDIF
-  !
   ! ------------------------------------------------------------
   ! Apply a possible shift to eigenenergies (applied later)
   icbm = 1
   IF (ABS(scissor) > eps6) THEN
+    IF (assume_metal) THEN
+      CALL errore("ephwann_shuffle", "A scissor shift is applied but the material is a metal...", 1)
+    ENDIF
     IF (noncolin) THEN
       icbm = FLOOR(nelec / 1.0d0) + 1
     ELSE
@@ -803,8 +805,7 @@
     ALLOCATE(wkf_all(nktotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating wkf_all', 1)
     !
-    ! not implemented for metals in mem mode
-    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb, .FALSE.)
+    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
     ! 
     DEALLOCATE(vkk_all, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating vkk_all', 1)
@@ -818,8 +819,7 @@
   ELSE ! (iterative_bte .AND. epmatkqread)   
     IF (iterative_bte) THEN
       ! Open the required files
-      ! not implemented for metals in mem mode
-      CALL iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart, .FALSE.)
+      CALL iter_open(ind_tot, ind_totcb, lrepmatw2_restart, lrepmatw5_restart)
     ENDIF
     ! 
     IF (lifc) THEN
@@ -1357,7 +1357,7 @@
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
-              CALL fermicarrier(itemp, etemp, ef0, efcb, ctype, .FALSE.)
+              CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
             ENDDO
           ENDIF ! iqq=0
           !   
@@ -1370,7 +1370,7 @@
           IF (iterative_bte) THEN
             CALL start_clock('print_ibte')
             CALL print_ibte(iqq, iq, totq, ef0, efcb, first_cycle, ind_tot, ind_totcb, &
-                            lrepmatw2_restart, lrepmatw5_restart, ctype, .FALSE.)
+                            lrepmatw2_restart, lrepmatw5_restart, ctype)
             CALL stop_clock('print_ibte')
             !  
             ! Finished, now compute SERTA and IBTE mobilities
@@ -1382,7 +1382,7 @@
               CALL iter_close()
               ! Merge files
 #if defined(__MPI)
-              CALL iter_merge_parallel(.FALSE.)
+              CALL iter_merge_parallel()
 #endif
               !   
             ENDIF  
@@ -1469,7 +1469,7 @@
         IF (int_mob .OR. carrier) THEN
           ! SP: Determination of the Fermi level for intrinsic or doped carrier 
           !     One also need to apply scissor before calling it.
-          CALL fermicarrier(itemp, etemp, ef0, efcb, ctype, .FALSE.)
+          CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
         ELSE
           IF (efermi_read) THEN
             ef0(itemp) = fermi_energy
@@ -1542,7 +1542,7 @@
       vkk_all(:, :, :) = zero
       wkf_all(:) = zero
       !
-      CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb, .FALSE.)
+      CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
       ! 
       DEALLOCATE(vkk_all, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating vkk_all', 1)

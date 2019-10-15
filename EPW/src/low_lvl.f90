@@ -1178,7 +1178,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype, is_metal)
+    SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the Fermi energy associated with a given 
@@ -1194,15 +1194,13 @@
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
     USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
-                          system_2d, carrier, efermi_read 
+                          system_2d, carrier, efermi_read, assume_metal, ngaussw
     USE klist_epw, ONLY : isk_dummy
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global, ONLY : inter_pool_comm
     !
     IMPLICIT NONE
     !
-    LOGICAL, INTENT(IN) :: is_metal
-    !! .TRUE. for metals. .FALSE. otherwise.
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
     INTEGER, INTENT(out) :: ctype
@@ -1269,11 +1267,11 @@
     REAL(KIND = DP), PARAMETER :: maxarg = 200.d0
     !! Maximum value for the argument of the exponential
     !
-    IF (is_metal) THEN
+    IF (assume_metal) THEN
       !! set conduction band chemical potential to 0 since it is irrelevent
       ctype = -1  ! act like it's for holes
       efcb(itemp) = 0.0
-      ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, -99, 0, isk_dummy)
+      ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
       RETURN
     ENDIF
     Ef      = zero
