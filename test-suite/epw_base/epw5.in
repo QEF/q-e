@@ -31,7 +31,6 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  assume_insulator = .TRUE.
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV

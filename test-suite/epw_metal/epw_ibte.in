@@ -49,7 +49,9 @@
   eptemp      = 300 ! K
   degaussw    = 0.0  ! eV (adaptative smearing)
   degaussq    = 0.05 ! meV
-  
+  assume_metal = .TRUE.
+  ngaussw     = -99  ! we want F-D distribution for metals
+
   int_mob     = .true.
   iterative_bte = .true.
   scattering  = .true.

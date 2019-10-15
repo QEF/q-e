@@ -71,7 +71,6 @@
 
   dvscf_dir   = './save/'
 
-  assume_insulator = .TRUE.
   efermi_read  = .true
   fermi_energy = 7.560801 ! 7.660801
   
