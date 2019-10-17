@@ -381,6 +381,7 @@ MODULE funct
 #if defined(__LIBXC)
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
+  PUBLIC :: get_libxc_flags_exc
 #endif
   !
 CONTAINS
@@ -993,7 +994,7 @@ CONTAINS
     !! define the fraction of exact exchange used by hybrid fuctionals.
     !
     isnonlocc = (inlc > 0)
-    ismeta    = (imeta > 0)
+    ismeta    = (imeta+imetac > 0)
     isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta .OR. isnonlocc
     islda     = (iexch> 0) .AND. (icorr > 0) .AND. .NOT. isgradient
     ! PBE0/DF0
@@ -1315,6 +1316,25 @@ CONTAINS
      volume = -1.d0
      IF (is_present) volume = finite_size_cell_volume
   END SUBROUTINE get_finite_size_cell_volume
+  !
+  !------------------------------------------------------------------------
+#if defined(__LIBXC)
+  SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
+     ! Checks whether Exc is present or not in the output of a libxc 
+     ! functional (e.g. TB09)
+     TYPE(xc_f90_pointer_t) :: xc_info
+     INTEGER :: ii, flags_tot
+     INTEGER, INTENT(OUT) :: eflag
+     flags_tot = xc_f90_info_flags(xc_info)
+     eflag = 0
+     DO ii = 15, 0, -1
+       IF ( flags_tot-2**ii<0 ) CYCLE
+       flags_tot = flags_tot-2**ii
+       IF ( ii==0 ) eflag = 1
+     ENDDO
+     RETURN
+  END SUBROUTINE
+#endif
   !
   !-----------------------------------------------------------------------
   SUBROUTINE set_dft_from_indices( iexch_, icorr_, igcx_, igcc_, imeta_, inlc_ )
