@@ -119,6 +119,8 @@
   !! if .TRUE. restart and IBTE calculation from the scattering rates written to files.
   LOGICAL :: selecqread
   !! if .TRUE. restart from the selecq.fmt file
+  LOGICAL :: assume_metal
+  !! if .TRUE. we are dealing with a metal.
   !
   ! Superconductivity
   LOGICAL :: ephwrite

@@ -12,11 +12,10 @@
   epwwrite    = .true.
   epwread     = .false.
 
-  vme         = .false.
-  lphase      = .true.
+  vme         = .false. 
 
-  nbndsub     =  8
-  nbndskip    =  10
+  nbndsub     =  4
+  nbndskip    =  5
 
   wannierize  = .true.
   num_iter    = 300
@@ -39,15 +38,29 @@
 
   iverbosity  = 0
 
-  elecselfen  = .true.
-  phonselfen  = .true.
-  a2f         = .true.
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
 
-  fsthick     = 20 ! eV
-  eptemp      = 500 ! K
-  degaussw    = 0.2  ! eV
-  degaussq    = 0.1 ! meV
+  lifc        = .true.
+  asr_typ     = 'crystal'
 
+  fsthick     = 6 ! eV
+  eptemp      = 300 ! K
+  degaussw    = 0.0  ! eV (adaptative smearing)
+  degaussq    = 0.05 ! meV
+  assume_metal = .TRUE.
+  ngaussw     = -99  ! we want F-D distribution for metals
+
+  int_mob     = .true.
+  iterative_bte = .true.
+  scattering  = .true.
+  scattering_serta = .true.
+  carrier     = .false.
+  mp_mesh_k   = .true.
+  tempsmin    = 100
+  tempsmax    = 300
+  nstemp      = 2
   dvscf_dir   = './save'
 
   nkf1        = 6

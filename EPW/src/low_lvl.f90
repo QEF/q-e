@@ -1176,24 +1176,26 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE rotate_cart
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the Fermi energy associated with a given 
-    !!  carrier concentration using bissection
+    !!  carrier concentration using bissection for insulators or
+    !!  semi-conductors.
     !!
     !-----------------------------------------------------------------------
     USE cell_base, ONLY : omega, alat, at
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : etf, nkf, wkf, efnew
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf
     USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero, eps80
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
     USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
-                          system_2d, carrier, efermi_read 
+                          system_2d, carrier, efermi_read, assume_metal, ngaussw
+    USE klist_epw, ONLY : isk_dummy
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global, ONLY : inter_pool_comm
     !
@@ -1209,6 +1211,8 @@
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
     !! Second fermi level for the temperature itemp
+    REAL(KIND = DP), EXTERNAL :: efermig
+    !! External function to calculate the fermi energy
     ! 
     ! Local variables 
     INTEGER :: i
@@ -1262,7 +1266,14 @@
     !! Electron carrier density
     REAL(KIND = DP), PARAMETER :: maxarg = 200.d0
     !! Maximum value for the argument of the exponential
-    ! 
+    !
+    IF (assume_metal) THEN
+      !! set conduction band chemical potential to 0 since it is irrelevent
+      ctype = -1  ! act like it's for holes
+      efcb(itemp) = 0.0
+      ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
+      RETURN
+    ENDIF
     Ef      = zero
     fermi   = zero
     fermicb = zero

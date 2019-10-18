@@ -20,6 +20,7 @@
   USE kinds,         ONLY : DP, i4b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
+  USE constants_epw, ONLY : eps4
   USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nmodes
@@ -34,7 +35,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
                             specfun_pl, lindabs, use_ws, epbread,               &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3
+                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -722,16 +723,18 @@
     ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
     ! with the wannier functions, or 'coarse' Fermi level is inaccurate
     IF (ABS(efnew - ef) * ryd2eV > 0.250d0 .AND. (.NOT. eig_read)) &
-       WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
+      WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ef = efnew
   ENDIF
-  !
   ! ------------------------------------------------------------
   ! Apply a possible shift to eigenenergies (applied later)
   icbm = 1
   IF (ABS(scissor) > eps6) THEN
+    IF (assume_metal) THEN
+      CALL errore("ephwann_shuffle", "A scissor shift is applied but the material is a metal...", 1)
+    ENDIF
     IF (noncolin) THEN
       icbm = FLOOR(nelec / 1.0d0) + 1
     ELSE
@@ -1473,6 +1476,9 @@
     ! if scattering is read then Fermi level and scissor have not been computed.
     IF (scatread) THEN
       IF (ABS(scissor) > 0.000001) THEN
+        IF (assume_metal) THEN
+          CALL errore("ephwann_shuffle", "Cannot apply scissor shift for metals.", 1)
+        ENDIF
         icbm = FLOOR(nelec / 2.0d0) + nbndskip + 1
         DO ik = 1, nkf
           ikk = 2 * ik - 1

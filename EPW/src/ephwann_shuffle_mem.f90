@@ -38,7 +38,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
                             specfun_pl, lindabs, use_ws,                        &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       &
@@ -702,11 +702,13 @@
     !
     ef = efnew
   ENDIF
-  !
   ! ------------------------------------------------------------
   ! Apply a possible shift to eigenenergies (applied later)
   icbm = 1
   IF (ABS(scissor) > eps6) THEN
+    IF (assume_metal) THEN
+      CALL errore("ephwann_shuffle", "A scissor shift is applied but the material is a metal...", 1)
+    ENDIF
     IF (noncolin) THEN
       icbm = FLOOR(nelec / 1.0d0) + 1
     ELSE
