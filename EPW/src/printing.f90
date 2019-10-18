@@ -323,8 +323,8 @@
         DO ik = 1,  nktotf
           DO ibnd = 1, nbndfst
             IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ(:), BZtoIBZ_mat(:, :), vkk_all(:, :, :), sigma(:, :), &
-                fi_check(:), ibnd, ik)
+              CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+                fi_check, ibnd, ik)
               !  energy at k (relative to Ef)
               ekk = etf_all(ibnd, ik) - ef0(itemp)
               fnk = wgauss(-ekk / etemp, -99)
@@ -335,7 +335,7 @@
         ENDDO ! ik
         ! 
         ! Print the resulting mobility
-        CALL prtmob(sigma(:, :), carrier_density, fi_check(:), ef0(itemp), etemp, max_mob(itemp))
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
       ENDDO ! temp
     ENDIF
     ! 
@@ -350,8 +350,8 @@
         DO ik = 1,  nktotf
           DO ibnd = 1, nbndfst
             IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ(:), BZtoIBZ_mat(:, :), vkk_all(:, :, :), sigma(:, :), &
-                fi_check(:), ibnd, ik)
+              CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+                fi_check, ibnd, ik)
               !  energy at k (relative to Ef)
               ekk = etf_all(ibnd, ik) - ef0(itemp)
               fnk = wgauss(-ekk / etemp, -99)
@@ -361,7 +361,7 @@
           ENDDO ! ibnd
         ENDDO ! ik
         ! Print the resulting mobility
-        CALL prtmob(sigma(:, :), carrier_density, fi_check(:), ef0(itemp), etemp, max_mob(itemp))
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
       ENDDO ! temp
     ENDIF
     !
@@ -376,8 +376,8 @@
         DO ik = 1,  nktotf
           DO ibnd = 1, nbndfst
             ! just sum on all bands for metals
-            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ(:), BZtoIBZ_mat(:, :), vkk_all(:, :, :), sigma(:, :), &
-              fi_check(:), ibnd, ik)
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+              fi_check, ibnd, ik)
             !  energy at k (relative to Ef)
             ekk = etf_all(ibnd, ik) - ef0(itemp)
             fnk = wgauss(-ekk / etemp, -99)
@@ -386,7 +386,7 @@
           ENDDO ! ibnd
         ENDDO ! ik
         ! Print the resulting mobility
-        CALL prtmob(sigma(:, :), carrier_density, fi_check(:), ef0(itemp), etemp, max_mob(itemp))
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
       ENDDO ! itemp      
     ENDIF
     !
@@ -412,13 +412,13 @@
     !
     IMPLICIT NONE
     !
-    INTEGER(SIK2), INTENT(IN) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
-    INTEGER, INTENT(IN) :: BZtoIBZ_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
-    INTEGER, INTENT(IN) :: ik 
+    INTEGER, INTENT(in) :: ik 
     !! k-point index
-    INTEGER, INTENT(IN) :: ibnd
+    INTEGER, INTENT(in) :: ibnd
     !! band index
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf)  
     !! Occupation function produced by SERTA or IBTE
@@ -564,7 +564,7 @@
         DO ik = 1,  nktotf
           DO ibnd = 1, nbndfst
             IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              CALL compute_sigma(f_out(:, :, :, itemp), vkk_all(:, :, :), wkf_all(:) , sigma(:, :), fi_check(:), ibnd, ik)
+              CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all , sigma, fi_check, ibnd, ik)
               !  energy at k (relative to Ef)
               ekk = etf_all(ibnd, ik) - ef0(itemp)
               fnk = wgauss(-ekk / etemp, -99)
@@ -573,7 +573,7 @@
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
         ENDDO ! ik
-        CALL prtmob(sigma(:, :), carrier_density, fi_check(:), ef0(itemp), etemp, max_mob(itemp)) 
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
       ENDDO ! itemp      
       ! 
     ENDIF
@@ -589,7 +589,7 @@
         DO ik = 1,  nktotf
           DO ibnd = 1, nbndfst
             IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              CALL compute_sigma(f_out(:, :, :, itemp), vkk_all(:, :, :), wkf_all(:) , sigma(:, :), fi_check(:), ibnd, ik)
+              CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
               !  energy at k (relative to Ef)
               ekk = etf_all(ibnd, ik) - ef0(itemp)
               fnk = wgauss(-ekk / etemp, -99)
@@ -598,7 +598,7 @@
             ENDIF ! if below Fermi level
           ENDDO ! ibnd
         ENDDO ! ik
-        CALL prtmob(sigma(:, :), carrier_density, fi_check(:), ef0(itemp), etemp, max_mob(itemp)) 
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
       ENDDO
       ! 
     ENDIF
@@ -612,7 +612,7 @@
         DO ik = 1,  nktotf
           DO ibnd = 1, nbndfst
             ! sum on all bands for metals
-            call compute_sigma(f_out(:, :, :, itemp), vkk_all(:, :, :), wkf_all(:) , sigma(:, :), fi_check(:), ibnd, ik)
+            call compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
             !  energy at k (relative to Ef)
             ekk = etf_all(ibnd, ik) - ef0(itemp)
             fnk = wgauss(-ekk / etemp, -99)
@@ -636,9 +636,9 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: ik 
+    INTEGER, INTENT(in) :: ik 
     !! k-point index
-    INTEGER, INTENT(IN) :: ibnd
+    INTEGER, INTENT(in) :: ibnd
     !! band index
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf)  
     !! Occupation function produced by SERTA or IBTE
@@ -745,7 +745,7 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN), OPTIONAL :: cal_type
+    INTEGER, INTENT(in), OPTIONAL :: cal_type
     !! +1 means electron and -1 means hole,
     !! If assume_metal is True then nothing is considered
     WRITE(stdout, '(/5x, a)') REPEAT('=',93)
