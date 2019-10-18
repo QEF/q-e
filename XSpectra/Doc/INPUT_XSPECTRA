@@ -168,6 +168,9 @@ x_save_file      character (len=256)                          DEFAULT=xanes.sav
                  to get the Lanczos parameters calculated in a previous run
                  Current version number is 2
 
+xanes_file       character (len=256)                          DEFAULT=xanes.dat
+                 save file where output spectrum is written
+
 ef_r             (obsolete use xe0)
                  The Fermi energy is determined from the SCF save directory.
                  For an insulator, it is set to the energy of the highest occupied level.
