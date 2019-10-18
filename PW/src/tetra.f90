@@ -25,7 +25,7 @@ MODULE ktetra
   !! 0 for Bloechl's correction,  
   !! 1 for Linear tetrahedron method,  
   !! 2 for Optimized tetrahedron method.
-  INTEGER :: ntetra
+  INTEGER :: ntetra = 0 
   !! number of tetrahedra
   INTEGER :: nntetra
   !! k-points per tetrahedron used to compute weights.  
@@ -36,8 +36,8 @@ MODULE ktetra
   !! Weights for the optimized tetrahedron method
   !
   PUBLIC :: tetra, ntetra, nntetra
-  PUBLIC :: tetra_init, tetra_weights, tetra_weights_only, tetra_dos_t
-  PUBLIC :: opt_tetra_init, opt_tetra_weights, opt_tetra_weights_only, &
+  PUBLIC :: tetra_init, tetra_weights, tetra_weights_only,  tetra_dos_t
+  PUBLIC :: opt_tetra_init, opt_tetra_weights, opt_tetra_weights_only,  &
             opt_tetra_dos_t, opt_tetra_partialdos, tetra_type, wlsm
   PUBLIC :: deallocate_tetra
   !
@@ -524,11 +524,13 @@ CONTAINS
 END SUBROUTINE opt_tetra_init
 !
 !--------------------------------------------------------------------
-SUBROUTINE tetra_weights( nks, nspin, nbnd, nelec, ntetra, tetra, et, &
+SUBROUTINE tetra_weights( nks, nspin, nbnd, nelec, et, &
                           ef, wg, is, isk )
   !--------------------------------------------------------------------
   !! Calculates Ef and weights with the tetrahedron method (P.E.Bloechl).  
-  !! Wrapper routine: computes first Ef, then the weights.
+  !! Wrapper routine: computes first Ef, then the weights. 
+  !! Needs to be called only after tetrahedra have been initialized, otherwise 
+  !! it will stop with an error call 
   !
   USE kinds
   !
@@ -544,10 +546,6 @@ SUBROUTINE tetra_weights( nks, nspin, nbnd, nelec, ntetra, tetra, et, &
   !! for each k-point: 1=spin up, 2=spin down
   INTEGER, INTENT(IN) :: nbnd
   !! number of bands
-  INTEGER, INTENT(IN) :: ntetra
-  !! number of tetrahedra
-  INTEGER, INTENT(IN) :: tetra(4,ntetra)
-  !! index of k-points in a given tetrahedron shape (nntetra,ntetra)
   REAL(DP), INTENT(IN) :: et(nbnd,nks)
   !! eigenvalues of the hamiltonian
   REAL(DP), INTENT(IN) :: nelec
@@ -565,14 +563,16 @@ SUBROUTINE tetra_weights( nks, nspin, nbnd, nelec, ntetra, tetra, et, &
   !
   ! Calculate the Fermi energy ef
   !
+  IF ( ntetra == 0 ) &
+     CALL errore('tetra weigths', 'called without initialization', 1) 
+
   ef = efermit( et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk )
   !
   ! if efermit cannot find a sensible value for Ef it returns Ef=1d10
   !
   IF (ABS(ef) > 1.0d8) CALL errore( 'tetra_weights', 'bad Fermi energy ', 1 )
   !
-  CALL tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, ntetra, &
-                           tetra, et, ef, wg )
+  CALL tetra_weights_only( nks, nspin, is, isk, nbnd, nelec,  et, ef, wg )
   !
   RETURN
   !
@@ -580,12 +580,14 @@ END SUBROUTINE tetra_weights
 !
 !
 !--------------------------------------------------------------------
-SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, ntetra, &
-                               tetra, et, ef, wg )
+SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
   !--------------------------------------------------------------------
   !! Calculates weights with the tetrahedron method (P.E.Bloechl).  
   !! Fermi energy has to be calculated in previous step.  
   !! Generalization to noncollinear case courtesy of Iurii Timrov.
+  !! @Note (P. Delugas 8/10/2019) Needs to be called only after initializations,  
+  !!       stops the program with an error call otherwise. 
+  !!       
   !
   USE kinds
   !
@@ -601,10 +603,6 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, ntetra, &
   !! for each k-point: 1=spin up, 2=spin down
   INTEGER, INTENT(IN) :: nbnd
   !! number of bands
-  INTEGER, INTENT(IN) :: ntetra
-  !! number of tetrahedra
-  INTEGER, INTENT(IN) :: tetra(4,ntetra)
-  !! index of k-points in a given tetrahedron shape (nntetra,ntetra)
   REAL(DP), INTENT(IN) :: et(nbnd,nks)
   !! eigenvalues of the hamiltonian
   REAL(DP), INTENT(IN) :: nelec
@@ -622,6 +620,8 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, ntetra, &
   INTEGER :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra(4)
   INTEGER :: nspin_lsda
   !
+  IF ( ntetra == 0 ) &
+     CALL errore('tetra_weights_only: ', 'called before initialization', 1)  
   DO ik = 1, nks
      IF (is /= 0) THEN
         IF (isk(ik) /= is) CYCLE
@@ -757,10 +757,12 @@ END SUBROUTINE tetra_weights_only
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE opt_tetra_weights( nks, nspin, nbnd, nelec, ntetra, tetra, et, ef, &
+SUBROUTINE opt_tetra_weights( nks, nspin, nbnd, nelec, et, ef, &
                               wg, is, isk )
   !----------------------------------------------------------------------------
   !! Calculate Fermi energy by using bisection method.
+  !! To be called only after tetrahedra initialization. Stops the program
+  !! with an error call otherwise
   !
   INTEGER, INTENT(IN) :: nks
   !! The total # of k in irr-BZ
@@ -768,14 +770,10 @@ SUBROUTINE opt_tetra_weights( nks, nspin, nbnd, nelec, ntetra, tetra, et, ef, &
   !! The # of spin components
   INTEGER, INTENT(IN) :: nbnd
   !! The # of bands
-  INTEGER, INTENT(IN) :: ntetra
-  !! Total # of k in whole BZ
   INTEGER, INTENT(IN) :: is
   !! spin index (up/down)
   INTEGER, INTENT(IN) :: isk(nks)
   !! which k is up/down
-  INTEGER, INTENT(IN) :: tetra(nntetra,ntetra)
-  !! index of k in each tetrahedra
   REAL(DP), INTENT(IN) :: et(nbnd,nks)
   !! Kohn Sham energy [Ry]
   REAL(DP), INTENT(IN) :: nelec
@@ -792,6 +790,8 @@ SUBROUTINE opt_tetra_weights( nks, nspin, nbnd, nelec, ntetra, tetra, et, ef, &
   !
   ! find bounds for the Fermi energy.
   !
+  IF (ntetra == 0 ) &
+     CALL errore('opt_tetra_weights:', 'called before initialization', 1) 
   elw = MINVAL(et(1:nbnd,1:nks))
   eup = MAXVAL(et(1:nbnd,1:nks))
   !
@@ -803,7 +803,7 @@ SUBROUTINE opt_tetra_weights( nks, nspin, nbnd, nelec, ntetra, tetra, et, ef, &
      !
      ! Calc. # of electrons 
      !
-     CALL opt_tetra_weights_only( nks, nspin, nbnd, ntetra, tetra, et, ef, &
+     CALL opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
                                   wg, is, isk )
      !
      IF (is == 0) THEN
@@ -832,10 +832,12 @@ END SUBROUTINE opt_tetra_weights
 !
 !
 !--------------------------------------------------------------------------------------
-SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, ntetra, tetra, et, ef, &
+SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
                                    wg, is, isk )
   !------------------------------------------------------------------------------------
-  !! Calculate Occupation with given Fermi energy.
+  !! Calculate Occupation with given Fermi energy. 
+  !! @Note ( P. Delugas 8/10/2019) Needs to be called only after initialization, otherwise
+  !!       stops the program with an error call.
   !
   INTEGER, INTENT(IN) :: nks
   !! The total # of k in irr-BZ
@@ -843,14 +845,10 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, ntetra, tetra, et, ef, &
   !! The # of spin components
   INTEGER, INTENT(IN) :: nbnd
   !! The # of bands
-  INTEGER, INTENT(IN) :: ntetra
-  !! Total # of k in whole BZ
   INTEGER, INTENT(IN) :: is
   !! spin index (up/down)
   INTEGER, INTENT(IN) :: isk(nks)
   !! which k is up/down
-  INTEGER, INTENT(IN) :: tetra(nntetra,ntetra)
-  !! index of k in each tetrahedra
   REAL(DP), INTENT(IN) :: et(nbnd,nks)
   !! Kohn Sham energy [Ry]
   REAL(DP), INTENT(INOUT) :: wg(nbnd,nks)
