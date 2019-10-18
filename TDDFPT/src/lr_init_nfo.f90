@@ -49,6 +49,7 @@ SUBROUTINE lr_init_nfo()
   USE gvecw,                ONLY : ecutwfc
   USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_max
+  use mp_world, only : mpime
   !
   IMPLICIT NONE
   !
@@ -288,6 +289,12 @@ SUBROUTINE lr_init_nfo()
   if ( allocated(Tevc) ) deallocate( Tevc )
   !
   IF(magnons) nbnd_occx = MAXVAL( nbnd_occ )
+  IF(magnons) THEN
+   do ik = 1, nks
+     write(*,*) mpime, ik, nbnd_occ(ik), nbnd_occx
+   enddo
+  ENDIF
+
   !
 #if defined(__MPI)
   ! find the maximum across pools

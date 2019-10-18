@@ -19,7 +19,7 @@ SUBROUTINE lr_read_d0psi()
   USE io_files,             ONLY : prefix, diropn, tmp_dir, wfc_dir
   USE lr_variables,         ONLY : d0psi, d0psi2, n_ipol, LR_polarization, &
                                    & lr_verbosity, nwordd0psi, iund0psi, eels, &
-                                   & magnons, V0psi, O_psi, b_pol, n_op
+                                   & magnons, V0psi, O_psi, b_pol, n_op, nbnd_occx
   USE wvfct,                ONLY : nbnd, npwx, et
   USE io_global,            ONLY : stdout
   USE qpoint,               ONLY : nksq
@@ -40,7 +40,7 @@ SUBROUTINE lr_read_d0psi()
   !
   nwordd0psi = 2 * nbnd * npwx * npol * nksq
   !  
-  IF (magnons) nwordd0psi = nwordd0psi * 2
+  IF (magnons) nwordd0psi = 4 * nbnd_occx * npwx * npol * nksq
   !
   !
   ! This is a parallel read, done in wfc_dir

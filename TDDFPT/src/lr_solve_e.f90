@@ -27,8 +27,8 @@ SUBROUTINE lr_solve_e
   USE klist,                ONLY : nks, xk, ngk, igk_k, degauss
   USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no, &
                                    & n_ipol, evc0, d0psi, d0psi2, evc1, lr_verbosity, &
-                                   & d0psi_rs, eels, lr_exx, magnons, &
-                                   & V0psi, b_pol, O_psi, n_op
+                                   & d0psi_rs, eels, lr_exx,  magnons, &
+                                   & V0psi, b_pol, O_psi, n_op, nbnd_occx
   USE lsda_mod,             ONLY : lsda, isk, current_spin,nspin
   USE uspp,                 ONLY : vkb, okvan
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
@@ -198,7 +198,7 @@ SUBROUTINE lr_solve_e
      !
      ! MAGNONS: Writing of V0psi and O_psi to the files
      !
-     nwordd0psi = nwordd0psi * 2
+     nwordd0psi = 4 * nbnd_occx * npwx * npol * nksq
      !
      DO ip = 1, n_ipol
         !

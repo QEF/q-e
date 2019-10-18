@@ -19,7 +19,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE kinds,                ONLY : DP
   USE fft_base,             ONLY : dfftp, dffts
   USE klist,                ONLY : xk, igk_k, ngk
-  USE lr_variables,         ONLY : no_hxc, iunTwfc
+  USE lr_variables,         ONLY : no_hxc, iunTwfc, nbnd_occx
   USE lsda_mod,             ONLY : current_spin
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE uspp,                 ONLY : vkb
@@ -42,8 +42,8 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
 
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN)  :: evc1(npwx*npol,nbnd,nksq,2)
-  COMPLEX(DP), INTENT(OUT) :: evc1_new(npwx*npol,nbnd,nksq,2)
+  COMPLEX(DP), INTENT(IN)  :: evc1(npwx*npol,nbnd_occx,nksq,2)
+  COMPLEX(DP), INTENT(OUT) :: evc1_new(npwx*npol,nbnd_occx,nksq,2)
   LOGICAL,     INTENT(IN)  :: L_dag
   !
   ! Local variables
@@ -72,7 +72,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   !
   ALLOCATE (hpsi(npwx*npol,nbnd))
   ALLOCATE (spsi(npwx*npol,nbnd))
-  ALLOCATE (sevc1_new(npwx*npol,nbnd,nksq,2))
+  ALLOCATE (sevc1_new(npwx*npol,nbnd_occx,nksq,2))
   ALLOCATE (revc(dffts%nnr,npol))
   ALLOCATE (dvrsc(dfftp%nnr,nspin_mag))
   ALLOCATE (dvrssc(dffts%nnr,nspin_mag))
