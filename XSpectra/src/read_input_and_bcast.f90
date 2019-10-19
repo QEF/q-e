@@ -52,7 +52,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
        xonly_plot,&
        xread_wf,&
        x_save_file,&
-       xanes_file,&
        xniter,&
        xerror,&
        xcheck_conv, &
@@ -187,7 +186,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   CALL mp_bcast( r_paw,  ionode_id, world_comm )
   CALL mp_bcast( xread_wf,  ionode_id, world_comm )
   CALL mp_bcast( x_save_file,  ionode_id, world_comm )
-  CALL mp_bcast( xanes_file,  ionode_id, world_comm )
   CALL mp_bcast( xcoordcrys,  ionode_id, world_comm )
   CALL mp_bcast( ef_r,  ionode_id, world_comm )
   CALL mp_bcast( xe0,  ionode_id, world_comm )
