@@ -315,7 +315,6 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
      !
      DO na = 1, nat
         DO is = 1, nspin
-          WRITE(stdout, *) is, nspin, charges(na,0:lmax_wfc,is)
           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
         ENDDO
         IF ( nspin == 1) THEN
@@ -418,7 +417,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
-       nwfc1, lmax_wfc, is
+       lmax_wfc, is
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), proj0(:,:)
@@ -600,7 +599,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      ! write to standard output
      !
-     CALL write_proj( lmax_wfc, filproj ) 
+     CALL write_proj( lmax_wfc, filproj, proj ) 
      !
   ENDIF
   !
@@ -952,7 +951,7 @@ SUBROUTINE sym_proj_nc ( proj0, proj_out  )
   !
 END SUBROUTINE sym_proj_nc
 !-----------------------------------------------------------------------
-SUBROUTINE write_proj ( lmax_wfc, filproj )
+SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -960,19 +959,24 @@ SUBROUTINE write_proj ( lmax_wfc, filproj )
   USE constants,  ONLY : rytoev, eps4
   USE basis,      ONLY : natomwfc
   USE lsda_mod,   ONLY : nspin, isk, current_spin
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,   ONLY : lspinorb
   USE klist,      ONLY : nkstot, xk
   USE ions_base,  ONLY : nat, ityp, atm
   USE wvfct,      ONLY : et, wg, nbnd
-  USE projections,ONLY : nlmchi, proj
+  USE projections,ONLY : nlmchi
   !
   IMPLICIT NONE
   INTEGER, INTENT(in) :: lmax_wfc
   CHARACTER (len=*), INTENT(in) :: filproj
-  INTEGER :: nwfc, ibnd, i, j, ik, na, l, m
+  REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
+  !
+  INTEGER :: nspin0, nwfc, ibnd, i, j, ik, na, l, m
   INTEGER, ALLOCATABLE :: idx(:)
   REAL(DP) :: psum
   REAL(DP), ALLOCATABLE :: proj1 (:)
   REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:)
+  REAL (DP), EXTERNAL :: compute_mj
   !
   INTERFACE 
      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
@@ -988,12 +992,22 @@ SUBROUTINE write_proj ( lmax_wfc, filproj )
   WRITE( stdout,'(/5x,"Atomic states used for projection")')
   WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)')
   DO nwfc = 1, natomwfc
-     WRITE(stdout,1000) &
+     WRITE(stdout,1000, ADVANCE="no" ) &
           nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-          nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m
+          nlmchi(nwfc)%n, nlmchi(nwfc)%l
+     IF ( lspinorb ) THEN
+        WRITE(stdout,1001) compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l,nlmchi(nwfc)%m)
+     ELSE IF ( noncolin ) THEN
+        WRITE(stdout,1002) 0.5d0-int(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l+2))
+     ELSE
+        WRITE(stdout,1003) nlmchi(nwfc)%m
+     END IF
   ENDDO
 1000 FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
-          " (l=",i1," m=",i2,")")
+          " (l=",i1)
+1001 FORMAT (" m_j=",f4.1,")")
+1002 FORMAT (" s_z=",f4.1,")")
+1003 FORMAT (" m=",i2,")")
   !
   ALLOCATE(idx(natomwfc), proj1 (natomwfc) )
   DO ik = 1, nkstot
@@ -1039,34 +1053,54 @@ SUBROUTINE write_proj ( lmax_wfc, filproj )
   !
   ! estimate partial charges (Loewdin) on each atom
   !
-  ALLOCATE ( charges (nat, 0:lmax_wfc, nspin ) )
-  ALLOCATE ( charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin ) )
+  IF ( lspinorb ) THEN
+     nspin0 = 1
+  ELSE IF ( noncolin ) THEN
+     nspin0 = 2
+  ELSE
+     nspin0 = nspin
+  END IF
+  ALLOCATE ( charges (nat, 0:lmax_wfc, nspin0 ) )
   charges = 0.0d0
-  charges_lm = 0.d0
+  IF ( nspin /= 4 ) THEN
+     ALLOCATE ( charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin ) )
+     charges_lm = 0.d0
+  END IF
   DO ik = 1, nkstot
-     IF ( nspin == 1 ) THEN
-        current_spin = 1
-     ELSEIF ( nspin == 2 ) THEN
+     IF ( nspin == 2 ) THEN
         current_spin = isk ( ik )
      ELSE
-        CALL errore ('write_proj',' called in the wrong case ',1)
+        current_spin = 1
      ENDIF
      DO ibnd = 1, nbnd
         DO nwfc = 1, natomwfc
            na= nlmchi(nwfc)%na
            l = nlmchi(nwfc)%l
-           m = nlmchi(nwfc)%m
+	   IF ( noncolin .AND. .NOT. lspinorb ) THEN
+	      IF (nlmchi(nwfc)%ind<=(2*l+1)) THEN
+	         current_spin = 1
+              ELSE
+	         current_spin = 2
+              ENDIF
+	   END IF
            charges(na,l,current_spin) = charges(na,l,current_spin) + &
                 wg (ibnd,ik) * proj (nwfc, ibnd, ik)
-           charges_lm(na,l,m,current_spin) = charges_lm(na,l,m,current_spin) + &
+           IF ( nspin /= 4 ) THEN
+              m = nlmchi(nwfc)%m
+              charges_lm(na,l,m,current_spin) = charges_lm(na,l,m,current_spin) + &
                 wg (ibnd,ik) * proj (nwfc, ibnd, ik)
+           END IF
         ENDDO
      ENDDO
   ENDDO
   !
-  CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
-  !
-  DEALLOCATE (charges, charges_lm)
+  IF ( nspin /= 4 ) THEN
+     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+     DEALLOCATE (charges_lm)
+  ELSE
+     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin0, charges )
+  END IF
+  DEALLOCATE (charges)
   !
 END SUBROUTINE write_proj
 !
@@ -1105,27 +1139,16 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   LOGICAL :: freeswfcatom
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
-             n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, npw, ind0
+             n2, l, nwfc, lmax_wfc, is, npw
   REAL(DP) :: jj, ef_0, eband_proj_tot, eband_tot
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), proj0(:,:)
   ! Some workspace for k-point calculation ...
-  REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:), eband_proj(:)
-  REAL(DP) :: psum, fact(2), compute_mj
-  INTEGER, ALLOCATABLE :: idx(:)
+  REAL(DP), ALLOCATABLE :: eband_proj(:)
+  REAL(DP) :: psum
+
   !
-  !
-  INTERFACE 
-      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
-           IMPORT  :: DP
-           CHARACTER (len=*), INTENT(in) :: filproj
-           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
-           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
-           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
-      END SUBROUTINE write_lowdin
-   END INTERFACE
-   !
   IF (.not.noncolin) CALL errore('projwave_nc','called in the wrong case',1)
   IF (gamma_only) CALL errore('projwave_nc','gamma_only not yet implemented',1)
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
@@ -1369,108 +1392,7 @@ ENDIF
      !
      ! write on the standard output file
      !
-     WRITE( stdout,'(/5x,"Atomic states used for projection")')
-     WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)')
-     IF (lspinorb) THEN
-        DO nwfc = 1, natomwfc
-           WRITE(stdout,1000) &
-             nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-             nlmchi(nwfc)%n, nlmchi(nwfc)%jj, nlmchi(nwfc)%l,   &
-             compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l,nlmchi(nwfc)%m)
-        ENDDO
-1000    FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
-                   " (j=",f3.1," l=",i1," m_j=",f4.1,")")
-     ELSE
-        DO nwfc = 1, natomwfc
-           WRITE(stdout,1500) &
-             nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-             nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m, &
-             0.5d0-int(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l+2))
-        ENDDO
-1500    FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
-                   " (l=",i1," m=",i2," s_z=",f4.1,")")
-     ENDIF
-     !
-     ALLOCATE(idx (natomwfc), proj1 (natomwfc) )
-     DO ik = 1, nkstot
-        WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3)
-        DO ibnd = 1, nbnd
-           WRITE( stdout, '("==== e(",i4,") = ",f11.5," eV ==== ")') &
-              ibnd, et (ibnd, ik) * rytoev
-           !
-           ! sort projections by magnitude, in decreasing order
-           !
-           DO nwfc = 1, natomwfc
-              idx (nwfc) = 0
-              proj1 (nwfc) = - proj (nwfc, ibnd, ik)
-           ENDDO
-           CALL hpsort_eps (natomwfc, proj1, idx, eps4)
-           !
-           !  only projections that are larger than 0.001 are written
-           !
-           DO nwfc = 1, natomwfc
-              proj1 (nwfc) = - proj1(nwfc)
-              IF ( abs (proj1(nwfc)) < 0.001d0 ) GOTO 20
-           ENDDO
-           nwfc = natomwfc + 1
-20         nwfc = nwfc -1
-           !
-           ! fancy (?!?) formatting
-           !
-           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i4,"]+"))') &
-                (proj1 (i), idx(i), i = 1, min(5,nwfc))
-           DO j = 1, (nwfc-1)/5
-              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') &
-                   (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
-           ENDDO
-           psum = SUM ( proj(1:natomwfc, ibnd, ik) )
-           WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
-           !
-        ENDDO
-     ENDDO
-     DEALLOCATE (idx, proj1)
-     !
-     ! estimate partial charges (Loewdin) on each atom
-     !
-     IF (lspinorb) THEN
-        nspin0 = 1
-     ELSE
-        nspin0 = 2
-     ENDIF
-     ALLOCATE ( charges (nat, 0:lmax_wfc, nspin0 ) )
-     charges = 0.0d0
-     IF (lspinorb) THEN
-        DO ik = 1, nkstot
-           DO ibnd = 1, nbnd
-              DO nwfc = 1, natomwfc
-                 na= nlmchi(nwfc)%na
-                 l = nlmchi(nwfc)%l
-                 charges(na,l,1) = charges(na,l,1) + &
-                      wg (ibnd,ik) * proj (nwfc, ibnd, ik)
-              ENDDO
-           ENDDO
-        ENDDO
-     ELSE
-        DO ik = 1, nkstot
-           DO ibnd = 1, nbnd
-              DO nwfc = 1, natomwfc
-                 na= nlmchi(nwfc)%na
-                 l = nlmchi(nwfc)%l
-                 IF ( nlmchi(nwfc)%ind<=(2*l+1)) THEN
-                    charges(na,l,1) = charges(na,l,1) + &
-                         wg (ibnd,ik) * proj (nwfc, ibnd, ik)
-                 ELSE
-                    charges(na,l,2) = charges(na,l,2) + &
-                         wg (ibnd,ik) * proj (nwfc, ibnd, ik)
-                 ENDIF
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDIF
-     !
-     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin0, charges )
-     !
-     DEALLOCATE (charges)
+     CALL write_proj( lmax_wfc, filproj, proj ) 
      !
   ENDIF
   !
@@ -1508,7 +1430,7 @@ SUBROUTINE projwave_paw( filproj)
   LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
-       nwfc1, lmax_wfc, is, ndm, mr,nbp
+       nwfc1, is, ndm, mr,nbp
   REAL(DP), ALLOCATABLE :: e (:), aux(:), pcharge(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
@@ -1896,7 +1818,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   LOGICAL :: lwrite_ovp, lbinary
   !
   INTEGER :: npw, ik, ibnd, i, j, na, nb, nt, isym, n,  m, l, nwfc,&
-       nwfc1, lmax_wfc, is, iunproj, iunaux
+       lmax_wfc, is, iunproj, iunaux
   REAL(DP),    ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: proj0(:,:)
@@ -2162,7 +2084,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      ! write on the standard output file
      !
-     CALL write_proj( lmax_wfc, filproj )
+     CALL write_proj( lmax_wfc, filproj, proj )
      !
   ENDIF
   !
