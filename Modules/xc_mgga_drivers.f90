@@ -355,6 +355,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   !
   INTEGER :: k, ipol, imeta
   REAL(DP) :: rh, zeta, atau, grho2(2), ggrho2
+  REAL(DP) :: v2cup, v2cdw
   !
   imeta = get_meta()
   !
@@ -387,8 +388,11 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
      CASE( 2 )
         !
         CALL m06lxc_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), tau(k,2), ex(k), ec(k), &
-                          v1x(k,1), v1x(k,2), v2x(k,1),   v2x(k,2),   v3x(k,1), v3x(k,2), &
-                          v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2), v3c(k,1), v3c(k,2)  )
+                          v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2), &
+                          v1c(k,1), v1c(k,2), v2cup   , v2cdw   , v3c(k,1), v3c(k,2)  )
+        !
+        v2c(:,k,1) = v2cup*grho(:,k,1)
+        v2c(:,k,2) = v2cdw*grho(:,k,2)
         !
      CASE DEFAULT
         !
