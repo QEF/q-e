@@ -40,9 +40,6 @@ SUBROUTINE lr_read_d0psi()
   !
   nwordd0psi = 2 * nbnd * npwx * npol * nksq
   !  
-  IF (magnons) nwordd0psi = 4 * nbnd_occx * npwx * npol * nksq
-  !
-  !
   ! This is a parallel read, done in wfc_dir
   !
   tmp_dir_saved = tmp_dir
@@ -51,7 +48,11 @@ SUBROUTINE lr_read_d0psi()
   !
   IF (magnons) THEN
      !
+     nwordd0psi = 4 * nbnd_occx * npwx * npol * nksq
+     !
      ! read V0psi
+     !
+     V0psi = (0.0d0, 0.0d0)
      !
      DO ip=1,n_ipol
         !        
@@ -93,7 +94,6 @@ SUBROUTINE lr_read_d0psi()
            !
         ENDIF
         !
-        V0psi = (0.0d0, 0.0d0)
         CALL davcio(V0psi(:,:,:,:,ip),nwordd0psi,iund0psi,1,-1)
         !
         CLOSE( UNIT = iund0psi)
@@ -101,6 +101,8 @@ SUBROUTINE lr_read_d0psi()
      ENDDO
      !
      ! read O_psi
+     !
+     O_psi = (0.0d0, 0.0d0)
      !
      DO ip=1,n_op
         !

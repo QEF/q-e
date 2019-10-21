@@ -90,7 +90,7 @@ subroutine lanczos_nonhermitian_c(j, npwx_npol, nbnd_occ, nksq, qj_r, Aqj_r, qjo
       ! applied to d0psi, so we have <S*d0psi|evc1>.
       !
       zeta(ip) = (0.0d0,0.0d0)
-      zeta(ip) = lr_dot_magnons(u(:,:,:,:,ip), qj_r)
+      zeta(ip) = lr_dot_magnons(qj_r, u(:,:,:,:,ip))
       !
    ENDDO
    !

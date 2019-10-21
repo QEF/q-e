@@ -294,7 +294,6 @@ SUBROUTINE lr_init_nfo()
      write(*,*) mpime, ik, nbnd_occ(ik), nbnd_occx
    enddo
   ENDIF
-
   !
 #if defined(__MPI)
   ! find the maximum across pools
