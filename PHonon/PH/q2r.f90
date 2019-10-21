@@ -59,12 +59,13 @@ PROGRAM q2r
   !     filin      :  name of file containing C(q_n)
   !  The name and order of files is not important as long as q=0 is the first
   !
-  USE kinds,      ONLY : DP
-  USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm
-  USE mp_global,  ONLY : mp_startup, mp_global_end
-  USE io_global, ONLY : ionode_id, ionode, stdout
+  USE kinds,       ONLY : DP
+  USE mp,          ONLY : mp_bcast
+  USE mp_world,    ONLY : world_comm
+  USE mp_global,   ONLY : mp_startup, mp_global_end
+  USE io_global,   ONLY : ionode_id, ionode, stdout
   USE environment, ONLY : environment_start, environment_end
+  USE el_phon,     ONLY : el_ph_nsigma
   !
   IMPLICIT NONE
   !
@@ -73,7 +74,7 @@ PROGRAM q2r
   LOGICAL            :: la2F, loto_2d
   INTEGER            :: ios
   !
-  NAMELIST / input / fildyn, flfrc, prefix, zasr, la2F, loto_2d
+  NAMELIST / input / fildyn, flfrc, prefix, zasr, la2F, loto_2d, el_ph_nsigma
   !
   CALL mp_startup()
   CALL environment_start('Q2R')
@@ -87,6 +88,7 @@ PROGRAM q2r
   zasr = 'no'
      !
   la2F=.false.
+  el_ph_nsigma=10
      !
      !
   IF (ionode)  READ ( 5, input, IOSTAT =ios )
@@ -100,6 +102,7 @@ PROGRAM q2r
   CALL mp_bcast(zasr, ionode_id, world_comm)
   CALL mp_bcast(loto_2d, ionode_id, world_comm)
   CALL mp_bcast(la2F, ionode_id, world_comm)
+  CALL mp_bcast(el_ph_nsigma, ionode_id, world_comm)
   !
   CALL do_q2r(fildyn, flfrc, prefix, zasr, la2F, loto_2d)
   !

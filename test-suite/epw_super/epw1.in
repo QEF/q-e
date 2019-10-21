@@ -15,6 +15,7 @@
   epwread  = .false.
 
   etf_mem     = 0
+  vme         = .false.
 
   nbndsub     =  5,
   nbndskip    =  0
@@ -28,7 +29,6 @@
   proj(4)     = 'f=0.5,0.5,0.5:s'
 
   iverbosity  = 0
-
 
   eps_acustic = 5.0    ! Lowest boundary for the 
   ephwrite    = .true. ! Writes .ephmat files used when wliasberg = .true.

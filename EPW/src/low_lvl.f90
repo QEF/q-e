@@ -54,7 +54,7 @@
     !
     REAL(KIND = DP) :: s
 
-    s = 1.d0 / SQRT(fpi)
+    s = 1.d0 / DSQRT(fpi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -83,8 +83,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    px =  SQRT(3.d0 / fpi) * sint * cos(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    px =  DSQRT(3.d0 / fpi) * sint * cos(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -113,8 +113,8 @@
     REAL(KIND = DP) :: sint
     !! Sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    py =  SQRT(3.d0 / fpi) * sint * sin(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    py =  DSQRT(3.d0 / fpi) * sint * sin(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -137,7 +137,7 @@
     REAL(KIND = DP) :: p_z
     !! Output
     !
-    p_z =  SQRT(3.d0 / fpi) * cost
+    p_z =  DSQRT(3.d0 / fpi) * cost
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -160,7 +160,7 @@
     REAL(KIND = DP) :: dz2
     !! Output
     !
-    dz2 =  SQRT(1.25d0 / fpi) * (3.d0 * cost * cost - 1.d0)
+    dz2 =  DSQRT(1.25d0 / fpi) * (3.d0 * cost * cost - 1.d0)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -187,8 +187,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dxz =  SQRT(15.d0 / fpi) * sint * cost * COS(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dxz =  DSQRT(15.d0 / fpi) * sint * cost * COS(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -217,8 +217,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dyz =  SQRT(15.d0 / fpi) * sint * cost * SIN(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dyz =  DSQRT(15.d0 / fpi) * sint * cost * SIN(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -247,8 +247,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dx2my2 =  SQRT(3.75d0 / fpi) * sint * sint * COS(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dx2my2 =  DSQRT(3.75d0 / fpi) * sint * sint * COS(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -277,8 +277,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    dxy =  SQRT(3.75d0 / fpi) * sint * sint * SIN(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    dxy =  DSQRT(3.75d0 / fpi) * sint * sint * SIN(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -301,7 +301,7 @@
     REAL(KIND = DP) :: fz3
     !! Output
     !
-    fz3 = 0.25d0 * SQRT(7.d0 / pi) * (5.d0 * cost * cost - 3.d0) * cost
+    fz3 = 0.25d0 * DSQRT(7.d0 / pi) * (5.d0 * cost * cost - 3.d0) * cost
     ! 
     RETURN
     !-----------------------------------------------------------------------
@@ -330,8 +330,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fxz2 = 0.25d0 * SQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * COS(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fxz2 = 0.25d0 * DSQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * COS(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -360,8 +360,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fyz2 = 0.25d0 * SQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * SIN(phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fyz2 = 0.25d0 * DSQRT(10.5d0 / pi) * (5.d0 * cost * cost - 1.d0) * sint * SIN(phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -390,8 +390,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fzx2my2 = 0.25d0 * SQRT(105d0/pi) * sint * sint * cost * COS(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fzx2my2 = 0.25d0 * DSQRT(105d0/pi) * sint * sint * cost * COS(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -420,8 +420,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fxyz = 0.25d0 * SQRT(105d0 / pi) * sint * sint * cost * SIN(2.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fxyz = 0.25d0 * DSQRT(105d0 / pi) * sint * sint * cost * SIN(2.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -450,8 +450,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fxx2m3y2 = 0.25d0 * SQRT(17.5d0 / pi) * sint * sint * sint * COS(3.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fxx2m3y2 = 0.25d0 * DSQRT(17.5d0 / pi) * sint * sint * sint * COS(3.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -479,8 +479,8 @@
     REAL(KIND = DP) :: sint
     !! sin(t)
     !
-    sint = SQRT(ABS(1.d0 - cost * cost))
-    fy3x2my2 = 0.25d0 * SQRT(17.5d0 / pi) * sint * sint * sint * SIN(3.d0 * phi)
+    sint = DSQRT(ABS(1.d0 - cost * cost))
+    fy3x2my2 = 0.25d0 * DSQRT(17.5d0 / pi) * sint * sint * sint * SIN(3.d0 * phi)
     !
     RETURN
     !-----------------------------------------------------------------------
@@ -882,7 +882,7 @@
     !!          gives repeat_list = [0,1,1,1,0,2,2]
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : eps8
+    USE constants_epw, ONLY : eps8, eps20, eps6
     !
     IMPLICIT NONE
     ! 
@@ -906,12 +906,15 @@
     repeat_list(:) = 0
     ! 
     DO j = 1, sizes - 1
-      IF ((ABS(input_array(j) - input_array(j + 1)) / (ABS(input_array(j)) + ABS(input_array(j + 1))) / 2d0) < eps8) THEN
+      IF (0.5d0 * (ABS(input_array(j) - input_array(j + 1)) /&
+          (ABS(input_array(j)) + ABS(input_array(j + 1)) + eps20)) < eps6) THEN
         IF (j == 1) THEN
           degen_label = 1
         ELSE
-          IF ((ABS(input_array(j) - input_array(j - 1)) / (ABS(input_array(j)) + ABS(input_array(j - 1))) / 2d0) > eps8) &
-          & degen_label = degen_label + 1
+          IF (0.5d0 * (ABS(input_array(j) - input_array(j - 1)) /&
+              (ABS(input_array(j)) + ABS(input_array(j - 1)) + eps20)) > eps6) THEN
+            degen_label = degen_label + 1
+          ENDIF
         ENDIF
         repeat_list(j)     = degen_label
         repeat_list(j + 1) = degen_label
@@ -1186,7 +1189,7 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : etf, nkf, wkf, efnew
-    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero
+    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero, eps80
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
     USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
@@ -1312,7 +1315,11 @@
         ikk = 2 * ik - 1
         ! Because the number are so large. It does lead to instabilities
         ! Therefore we rescale everything to the VBM
-        arg = (etf(ibnd, ikk) - evbm) / etemp 
+        IF (ABS(etemp) < eps80) THEN
+          CALL errore('fermicarrier', 'etemp cannot be 0', 1)
+        ELSE
+          arg = (etf(ibnd, ikk) - evbm) / etemp 
+        ENDIF
         !
         IF (arg < - maxarg) THEN
           ks_exp(ibnd, ik) = 0.0d0
@@ -1348,7 +1355,7 @@
         !
         !WRITE(stdout,*),'Iteration ',i
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = SQRT(Eup) * SQRT(Elw)     
+        Ef = DSQRT(Eup) * DSQRT(Elw)     
         ! 
         !WRITE(stdout,*),'Ef ', - log (Ef) * etemp * ryd2ev
         hole_density = 0.0
@@ -1385,7 +1392,12 @@
         ! 
         ! WRITE(stdout,*),'hole_density ',hole_density * (1.0d0/omega) * ( bohr2ang * ang2cm  )**(-3)
         ! WRITE(stdout,*),'electron_density ',electron_density * (1.0d0/omega) * (bohr2ang * ang2cm  )**(-3)
-        rel_err = (hole_density - electron_density) / hole_density
+        ! CALL FLUSH(stdout)
+        IF (ABS(hole_density) < eps80) THEN 
+          rel_err = -1000d0
+        ELSE
+          rel_err = (hole_density - electron_density) / hole_density
+        ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
@@ -1409,7 +1421,7 @@
       ! Use bisection method
       DO i = 1, maxiter
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = SQRT(Eup) * SQRT(Elw)
+        Ef = DSQRT(Eup) * DSQRT(Elw)
         ! 
         hole_density = 0.0
         DO ik = 1, nkf
@@ -1430,8 +1442,14 @@
         !
         CALL mp_sum(hole_density, inter_pool_comm)
         !
-        ! In this case ncarrier is a negative number
-        rel_err = (hole_density - ABS(ncarrier)) / hole_density
+        ! WRITE(stdout,*),'hole_density ',hole_density * (1.0d0/omega) * ( bohr2ang * ang2cm  )**(-3)
+        ! CALL FLUSH(stdout)
+        IF (ABS(hole_density) < eps80) THEN
+          rel_err = -1000.0d0
+        ELSE
+          ! In this case ncarrier is a negative number
+          rel_err = (hole_density - ABS(ncarrier)) / hole_density
+        ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
@@ -1453,7 +1471,7 @@
       ! Use bisection method
       DO i = 1, maxiter
         ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = SQRT(Eup) * SQRT(Elw)
+        Ef = DSQRT(Eup) * DSQRT(Elw)
         ! 
         electron_density = 0.0
         DO ik = 1, nkf
@@ -1474,7 +1492,12 @@
         !
         CALL mp_sum(electron_density, inter_pool_comm)
         ! 
-        rel_err = (electron_density - ncarrier) / electron_density
+        IF (ABS(electron_density) < eps80) THEN
+          rel_err = 1000.0d0
+        ELSE
+          ! In this case ncarrier is a negative number
+          rel_err = (electron_density - ncarrier) / electron_density
+        ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
           fermi_exp = Ef
@@ -1717,7 +1740,7 @@
     !--------------------------------------------------------------------------
     ! 
     !--------------------------------------------------------------------------
-    SUBROUTINE mem_size(ibndmin, ibndmax, nmodes, nkf)
+    SUBROUTINE mem_size(nmodes, nkf)
     !--------------------------------------------------------------------------
     !!
     !! This routine estimates the amount of memory taken up by 
@@ -1730,10 +1753,6 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: ibndmin
-    !! Min band
-    INTEGER, INTENT(in) :: ibndmax
-    !! Min band
     INTEGER, INTENT(in) :: nmodes
     !! Number of modes
     INTEGER, INTENT(in) :: nkf
@@ -1767,7 +1786,7 @@
     !--------------------------------------------------------------------------
     ! 
     !--------------------------------------------------------------------------
-    SUBROUTINE broadening(ik, ikk, ikq, w2, vmefp, eta)
+    SUBROUTINE broadening(ik, ikk, ikq, w, vmefp, eta)
     !--------------------------------------------------------------------------
     !!
     !! This routine computes the adaptative broadening
@@ -1775,13 +1794,12 @@
     !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
     !! Samuel Ponce & Francesco Macheda
     !!
-    USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : alat, bg
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : nbndfst, nkf, dmef, vmef, ibndmin, etf
     USE epwcom,        ONLY : vme, nqf1, nqf2, nqf3
     USE phcom,         ONLY : nmodes
-    USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, eps6
+    USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, eps6, eps8, eps4
     !
     IMPLICIT NONE
     !
@@ -1791,7 +1809,7 @@
     !! Current k point on that core (ikk = 2 * ik + 1)
     INTEGER, INTENT(in) :: ikq
     !! k+q point on that core
-    REAL(KIND = DP), INTENT(in) :: w2(nmodes)
+    REAL(KIND = DP), INTENT(in) :: w(nmodes)
     !! Phonon frequencies
     REAL(KIND = DP), INTENT(out) :: eta(nmodes, nbndfst, nkf)
     !! Adaptative smearing value
@@ -1803,37 +1821,85 @@
     !! Band index
     INTEGER :: jbnd
     !! Band index
-    INTEGER :: imode
+    INTEGER :: imode, jmode
     !! Mode index
     INTEGER :: n_av
     !! To average eta_av
-    REAL(KIND = DP) :: rmelt
-    !! Size in byte
     REAL(KIND = DP) :: vel_diff(3)
     !! Velocity difference when computed adaptative broadening
     REAL(KIND = DP) :: eta_tmp(3)
     !! Temporary adaptative broadening
-    REAL(KIND = DP) :: eta_av
-    !! Average eta over degenerate states
     REAL(KIND = DP) :: eta_deg(nmodes, nbndfst)
     !! Average eta over degenerate states
     REAL(KIND = DP) :: e_1
     !! Eigenvalue 1 for deg. testing
     REAL(KIND = DP) :: e_2
     !! Eigenvalue 2 for deg. testing
+    REAL(KIND = DP) :: w_1
+    !! Phonon frequency for degeneracy checking
+    REAL(KIND = DP) :: w_2
+    !! Phonon frequency for degeneracy checking
+    REAL(KIND = DP) :: vmeq(3, nmodes)
+    !! Local phonon velocity
+    REAL(KIND = DP) :: vmek(3, nbndfst)
+    !! Local electron velocity
+    REAL(KIND = DP) :: vmeq_av(3)
+    !! Average phonon velocity
+    REAL(KIND = DP) :: vmek_av(3)
+    !! Average phonon velocity
     !
     eta_deg(:, :) = zero
+    vmeq(:, :) = zero 
+    vmek(:, :) = zero 
+    ! 
+    ! First average the phonon velocities
+    DO imode = 1, nmodes
+      w_1 = w(imode)
+      vmeq_av(:) = zero 
+      n_av = 0
+      DO jmode = 1, nmodes
+        w_2 = w(jmode)
+        IF (ABS(w_2 - w_1) < eps6) THEN
+          n_av   = n_av + 1
+          vmeq_av(:) = vmeq_av(:) + REAL(vmefp(:, jmode, jmode), KIND = DP) 
+        ENDIF
+      ENDDO
+      vmeq(:, imode) = vmeq_av(:) / FLOAT(n_av) 
+    ENDDO
+    ! 
+    ! Average electron velocity
+    DO ibnd = 1, nbndfst
+      e_1 = etf(ibndmin - 1 + ibnd, ikk)
+      vmek_av(:) = zero
+      n_av   = 0
+      DO jbnd = 1, nbndfst
+        e_2 = etf(ibndmin - 1 + jbnd, ikk)
+        IF (ABS(e_2 - e_1) < eps4) THEN
+          n_av = n_av + 1
+          IF (vme) THEN
+            vmek_av(:) = vmek_av(:) + REAL(vmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP)
+          ELSE 
+            vmek_av(:) = vmek_av(:) + REAL(dmef(:, ibndmin - 1 + jbnd, ibndmin - 1 + jbnd, ikq), KIND = DP) 
+          ENDIF 
+        ENDIF
+      ENDDO
+      vmek(:, ibnd) = vmek_av(:) / FLOAT(n_av)      
+    ENDDO  
+  
+
+    ! 
     ! vmefp and vmef are obtained using irvec, which are without alat; therefore I multiply them to bg without alat
     DO ibnd = 1, nbndfst
       DO imode = 1, nmodes
-        IF (w2(imode) > 0) THEN
-          IF (vme) THEN
-            vel_diff(:) = REAL(vmefp(:, imode, imode) / &
-                              (2d0 * SQRT(w2(imode))) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
-          ELSE
-            vel_diff(:) = REAL(vmefp(:, imode ,imode) / &
-                              (2d0 * SQRT(w2(imode))) - dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
-          ENDIF
+        IF (w(imode) > 0) THEN
+          vel_diff(:) = vmeq(:, imode) / (2d0 * w(imode)) - vmek(:, ibnd)
+          !IF (vme) THEN
+          !  vel_diff(:) = REAL(vmefp(:, imode, imode) / &
+          !                    (2d0 * w(imode)) - vmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
+          !ELSE
+          !  vel_diff(:) = REAL(vmefp(:, imode ,imode) / &
+          !                    (2d0 * w(imode)) - dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + ibnd, ikq))
+          !ENDIF
           IF (SQRT(DOT_PRODUCT(vel_diff, vel_diff)) < eps40) THEN
             eta(imode, ibnd, ik) = 1.0d0 / ryd2mev
           ELSE
@@ -1841,9 +1907,14 @@
             eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 2)) / DBLE(nqf2))
             eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 3)) / DBLE(nqf3))
             !eta(imode, ibnd, ik) = MAXVAL(eta_tmp) !Eq. (24) of PRB 97 075405 (2015)
-            !eta(imode, ibnd, ik) = SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/SQRT(12d0) !Eq. (18) of Computer Physics Communications 185 (2014) 1747–1758
+            !eta(imode, ibnd, ik) = DSQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/DSQRT(12d0) !Eq. (18) of Computer Physics Communications 185 (2014) 1747–1758
             ! The prefactor 0.5 is arbitrary and is to speedup convergence
-            eta(imode, ibnd, ik) = 0.5d0 * SQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2) / SQRT(12d0)
+            eta(imode, ibnd, ik) = 0.5d0 * DSQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2) / SQRT(12d0)
+          ENDIF
+          ! 
+          ! If the smearing is too small, set 1 meV. Too small value are numerically unstable. 
+          IF (eta(imode, ibnd, ik) * ryd2mev < 1.0d0) THEN
+            eta(imode, ibnd, ik) = 1.0d0 / ryd2mev
           ENDIF
         ELSE
           ! Fixed value 1 meV
@@ -1851,23 +1922,6 @@
         ENDIF
       ENDDO
     ENDDO
-    ! Average eta over the degenerate electronic states electrons
-    DO imode = 1, nmodes
-      DO ibnd = 1, nbndfst
-        e_1    = etf(ibndmin - 1 + ibnd, ikk)
-        eta_av = zero
-        n_av   = 0
-        DO jbnd = 1, nbndfst
-          e_2 = etf(ibndmin - 1 + jbnd, ikk)
-          IF (ABS(e_2 - e_1) < eps6) THEN
-           n_av   = n_av + 1
-           eta_av = eta_av + eta(imode, jbnd, ik)
-          ENDIF
-        ENDDO
-        eta_deg(imode, ibnd) = eta_av / FLOAT(n_av)
-      ENDDO
-    ENDDO
-    eta(:, :, ik) = eta_deg(:, :)
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE broadening

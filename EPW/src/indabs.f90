@@ -26,18 +26,16 @@
     !! Main routine for phonon assisted absorption
     !!
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout, ionode_id
+    USE io_global,     ONLY : stdout
     USE io_var,        ONLY : iuindabs
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub, shortrange, &
-                              fsthick, eptemp, ngaussw, degaussw, &
+    USE epwcom,        ONLY : fsthick, eptemp, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
-                              vme, omegamin, omegamax, omegastep, n_r, scissor, eig_read
-    USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
-                              nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
-                              sigmar_all, sigmai_all, sigmai_mode, efnew, &
+                              vme, omegamin, omegamax, omegastep 
+    USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
+                              sigmar_all, efnew, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
-                              etf_ks, lower_bnd, upper_bnd, nbndfst, nktotf
+                              nbndfst, nktotf
     USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
@@ -56,12 +54,6 @@
     CHARACTER(LEN = 256) :: format_string
     !! Format string
     ! Local variables
-    LOGICAL :: opnd
-    !! Check whether the file is open. 
-    INTEGER :: ios
-    !! INTEGER variable for I/O control
-    INTEGER :: n
-    !! Integer for the degenerate average over eigenstates
     INTEGER :: ik
     !! Counter on the k-point index 
     INTEGER :: ikk
@@ -74,14 +66,8 @@
     !! Counter on bands
     INTEGER :: imode
     !! Counter on mode
-    INTEGER :: nrec
-    !! Record index for reading the e-f matrix
-    INTEGER :: fermicount
-    !! Number of states on the Fermi surface
     INTEGER :: nksqtotf
     !! Total number of k+q points 
-    INTEGER :: i
-    !! Index for reading files
     INTEGER :: iw
     !! Index for frequency
     INTEGER :: nomega
@@ -96,22 +82,6 @@
     !! Error status 
     INTEGER, PARAMETER :: neta = 9
     !! Broadening parameter
-    REAL(KIND = DP) :: tmp
-    !! Temporary variable to store real part of Sigma for the degenerate average
-    REAL(KIND = DP) :: tmp2
-    !! Temporary variable to store imag part of Sigma for the degenerate average
-    REAL(KIND = DP) :: tmp3
-    !! Temporary variable to store Z for the degenerate average
-    REAL(KIND = DP) :: ekk2
-    !! Temporary variable to the eigenenergies for the degenerate average
-    REAL(KIND = DP) :: sigmar_tmp(nbndfst)
-    !! Temporary array to store the real-part of Sigma 
-    REAL(KIND = DP) :: sigmai_tmp(nbndfst)
-    !! Temporary array to store the imag-part of Sigma 
-    REAL(KIND = DP) :: zi_tmp(nbndfst)
-    !! Temporary array to store the Z
-    REAL(KIND = DP) :: g2
-    !! Electron-phonon matrix elements squared in Ry^2
     REAL(KIND = DP) :: ekk
     !! Eigen energy on the fine grid relative to the Fermi level
     REAL(KIND = DP) :: ekq
@@ -124,22 +94,12 @@
     !! Phonon frequencies and phonon occupations on the fine grid
     REAL(KIND = DP) :: ef0
     !! Fermi energy level
-    REAL(KIND = DP) :: wgq
-    !! Bose occupation factor $n_{q\nu}(T)$
     REAL(KIND = DP) :: wgkk, wgkq
     !! Fermi-Dirac occupation factor $f_{nk+q}(T)$, $f_{nk}(T)$
     REAL(KIND = DP) :: weighta, weighte
     !!- delta function for absorption, emission
-    REAL(KIND = DP) :: w0g1
-    !! Dirac delta for the imaginary part of $\Sigma$
-    REAL(KIND = DP) :: w0g2
-    !! Dirac delta for the imaginary part of $\Sigma$
-    REAL(KIND = DP) :: inv_wq
-    !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons
     REAL(KIND = DP) :: inv_eptemp0
     !! Inverse of temperature define for efficiency reasons
-    REAL(KIND = DP) :: g2_tmp
-    !! If the phonon frequency is too small discart g
     REAL(KIND = DP) :: inv_degaussw
     !! Inverse of the smearing for efficiency reasons
     REAL(KIND = DP) :: pfac
@@ -157,10 +117,6 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! This function computes the derivative of the Fermi-Dirac function
     !! It is therefore an approximation for a delta function
-    REAL(KIND = DP), ALLOCATABLE :: xkf_all(:, :)
-    !! Collect k-point coordinate from all pools in parallel case
-    REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
-    !! Collect eigenenergies from all pools in parallel case
     COMPLEX(KIND = DP) :: vkk(3, nbndfst, nbndfst)
     !!- Velocity matrix elements at k, k+q
     COMPLEX(KIND = DP) :: vkq(3, nbndfst, nbndfst)
@@ -404,8 +360,6 @@
     !! The implementation follows Eq. 30 of  Phys. Rev. B 62, 4927 (2000)
     !! Samuel Ponce, Kyle and Emmanouil Kioupakis
     !!
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : alat, bg
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : xkfd, chw, chw_ks, etf_ks, etf, vmef, nkqf
     USE epwcom,        ONLY : use_ws, nbndsub

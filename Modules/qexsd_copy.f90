@@ -311,7 +311,7 @@ CONTAINS
        exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
        lda_plus_U, lda_plus_U_kind, U_projection, Hubbard_l, Hubbard_lmax, &
        Hubbard_U, Hubbard_J0, Hubbard_alpha, Hubbard_beta, Hubbard_J, &
-       vdw_corr, vdw_table_name, scal6, lon_rcut, vdw_isolated )
+       vdw_corr, scal6, lon_rcut, vdw_isolated )
     !-------------------------------------------------------------------
     ! 
     USE qes_types_module, ONLY : dft_type
@@ -337,7 +337,6 @@ CONTAINS
     REAL(dp), INTENT(inout) :: Hubbard_U(:), Hubbard_J0(:), Hubbard_J(:,:), &
          Hubbard_alpha(:), Hubbard_beta(:)
     !
-    CHARACTER(LEN=256), INTENT(inout) :: vdw_table_name
     CHARACTER(LEN=*), INTENT(out) :: vdw_corr
     REAL(dp), INTENT(inout) :: scal6, lon_rcut
     LOGICAL, INTENT(inout) :: vdw_isolated
@@ -448,18 +447,7 @@ CONTAINS
          vdw_corr = ''
       END IF
       
-      ! the following lines set vdw_table_name, if not already set before
-      ! (the latter option, added by Yang Jiao, is useful for postprocessing)
       IF ( dft_obj%vdW_ispresent ) THEN 
-         IF ( vdw_table_name == ' ' ) THEN 
-            IF ( TRIM (dft_obj%vdW%non_local_term) == 'vv10') THEN
-               vdw_table_name = 'rVV10_kernel_table'
-            ELSE IF ( dft_obj%vdW%non_local_term(1:3) == 'vdw') THEN
-               vdw_table_name = 'vdW_kernel_table'
-            ELSE
-               vdw_table_name = ''
-            END IF
-         END IF
          IF (dft_obj%vdW%london_s6_ispresent ) THEN 
             scal6 = dft_obj%vdW%london_s6
          END IF

@@ -132,7 +132,6 @@ cp_restart_new.o : ../../Modules/io_base.o
 cp_restart_new.o : ../../Modules/io_files.o
 cp_restart_new.o : ../../Modules/io_global.o
 cp_restart_new.o : ../../Modules/ions_base.o
-cp_restart_new.o : ../../Modules/kernel_table.o
 cp_restart_new.o : ../../Modules/kind.o
 cp_restart_new.o : ../../Modules/mm_dispersion.o
 cp_restart_new.o : ../../Modules/mp_bands.o
@@ -613,7 +612,6 @@ input.o : ../../Modules/input_parameters.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
 input.o : ../../Modules/ions_base.o
-input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/read_input.o

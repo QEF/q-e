@@ -25,8 +25,6 @@ SUBROUTINE iosys()
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
   !
-  USE kernel_table,  ONLY : initialize_kernel_table
-  !
   USE bp,            ONLY : nppstr_    => nppstr, &
                             gdir_      => gdir, &
                             lberry_    => lberry, &
@@ -141,8 +139,6 @@ SUBROUTINE iosys()
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
                             lsda
-  !
-  USE kernel_table,  ONLY : vdw_table_name_ => vdw_table_name
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
@@ -329,8 +325,6 @@ SUBROUTINE iosys()
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
-  !
-  INTEGER, EXTERNAL :: read_config_from_file
   !
   INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
@@ -1379,7 +1373,7 @@ SUBROUTINE iosys()
   CALL plugin_read_input("PW")
   !
   ! ... Files (for compatibility) and directories
-  !     This stuff must be done before calling read_config_from_file!
+  !     This stuff must be done before calling read_conf_from_file!
   !
   input_drho  = ' '
   output_drho = ' '
@@ -1395,11 +1389,11 @@ SUBROUTINE iosys()
   !
   ! ... Read atomic positions and unit cell from data file, if needed,
   ! ... overwriting what has just been read before from input
-  ! ... read_config_from_file returns 0 if structure successfully read
+  ! ... read_conf_from_file returns 0 if structure successfully read
   !
   ierr = 1
   IF ( startingconfig == 'file' .AND. .NOT. lforcet ) &
-     ierr = read_config_from_file( lmovecell, at_old, omega_old)
+     CALL read_conf_from_file( lmovecell, at_old, omega_old, ierr )
   !
   ! ... Atomic positions (tau) must be converted to internal units
   ! ... only if they were read from input, not from file
@@ -1537,12 +1531,6 @@ SUBROUTINE iosys()
   IF (screening_parameter >= 0.0_DP) &
         & CALL set_screening_parameter (screening_parameter)
   !
-  ! ... read the vdw kernel table if needed
-  !
-  vdw_table_name_  = vdw_table_name
-  inlc = get_inlc()
-  IF (inlc > 0) CALL initialize_kernel_table(inlc)
-  !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !
   IF (dft_has_finite_size_correction()) &
@@ -1552,7 +1540,7 @@ SUBROUTINE iosys()
   ! ... and initialize a few other variables
   !
   IF ( lmovecell ) THEN
-     ! The next two lines have been moved before the call to read_config_from_file:
+     ! The next two lines have been moved before the call to read_conf_from_file:
      !      at_old    = at
      !      omega_old = omega
      IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp

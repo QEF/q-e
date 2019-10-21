@@ -36,7 +36,7 @@
     USE klist,            ONLY : nkstot
     USE io_files,         ONLY : prefix
     USE epwcom,           ONLY : write_wfn, scdm_proj, scdm_entanglement, & 
-                                 scdm_mu, scdm_sigma
+                                 scdm_sigma
     USE wannierEPW,       ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
                                  ikstart, ikstop, iknum
     USE constants_epw,    ONLY : zero, one
@@ -449,14 +449,20 @@
        n_proj = n_wannier
     !ENDIF
     !
-    WRITE(stdout, *)
-    WRITE(stdout, *) '    Initial Wannier projections'
-    WRITE(stdout, *)
-    !
-    DO iw = 1, n_proj
-      WRITE(stdout, '(5x, "(", 3f10.5, ") :  l = ", i3, " mr = ", i3)') & 
+    IF (scdm_proj) THEN
+      WRITE(stdout, *)
+      WRITE(stdout, *) '    Initial Wannier auto_projections'
+      WRITE(stdout, *)
+    ELSE
+      WRITE(stdout, *)
+      WRITE(stdout, *) '    Initial Wannier projections'
+      WRITE(stdout, *)
+      !
+      DO iw = 1, n_proj
+        WRITE(stdout, '(5x, "(", 3f10.5, ") :  l = ", i3, " mr = ", i3)') & 
                        center_w(:, iw), l_w(iw), mr_w(iw)
-    ENDDO
+      ENDDO
+    ENDIF
     !
     excluded_band(1:nbnd) = .FALSE.
     nexband = 0
@@ -481,8 +487,8 @@
                     &" bands are excluded from wannier projection")') nbndskip, nexband
     ENDIF
     !
-    IF ((nbnd-nexband) /= num_bands ) &
-        CALL errore('setup_nnkp', ' something wrong with num_bands', 1)
+    IF ((nbnd - nexband) /= num_bands ) &
+      CALL errore('setup_nnkp', ' something wrong with num_bands', 1)
     ! 
     ! Now we read the .nnkp file 
     !
@@ -528,9 +534,9 @@
       DO iw = 1, n_proj
         READ(iunnkp, *) (center_w(ipol, iw), ipol = 1, 3), l_w(iw), mr_w(iw), r_w(iw)
         READ(iunnkp, *) (zaxis(ipol, iw), ipol = 1, 3), (xaxis(ipol, iw), ipol = 1, 3), alpha_w(iw)
-        xnorm = SQRT(SUM(xaxis(:, iw) * xaxis(:, iw)))
+        xnorm = DSQRT(SUM(xaxis(:, iw) * xaxis(:, iw)))
         IF (xnorm < eps6) CALL errore('setup_nnkp', '|xaxis| < eps', 1)
-        znorm = SQRT(SUM(zaxis(:, iw) * zaxis(:, iw)))
+        znorm = DSQRT(SUM(zaxis(:, iw) * zaxis(:, iw)))
         IF (znorm < eps6) CALL errore('setup_nnkp', '|zaxis| < eps', 1)
         coseno = SUM(xaxis(:, iw) * zaxis(:, iw)) / xnorm / znorm
         IF (ABS(coseno) > eps6) CALL errore('setup_nnkp', 'xaxis and zaxis are not orthogonal!', 1)
@@ -539,7 +545,7 @@
         CALL cryst_to_cart(1, center_w(:, iw), at, 1)
         IF (noncolin) THEN
           READ(iunnkp, *) spin_eig(iw), (spin_qaxis(ipol, iw), ipol = 1, 3)
-          xnorm = SQRT(SUM(spin_qaxis(:, iw) * spin_qaxis(:, iw)))
+          xnorm = DSQRT(SUM(spin_qaxis(:, iw) * spin_qaxis(:, iw)))
           IF (xnorm < eps6) CALL errore('setup_nnkp', '|xaxis| < eps', 1)
           spin_qaxis(:, iw) = spin_qaxis(:, iw) / xnorm
         ENDIF
@@ -713,8 +719,6 @@
     ! Local variables
     CHARACTER(LEN = 80) :: line1, line2
     !!
-    INTEGER :: ierr
-    !! Error status
     !
     ! Uncommenting the following line the file scan restarts every time
     ! from the beginning thus making the reading independent on the order
@@ -764,8 +768,6 @@
     !! Counter on wannier functions
     INTEGER :: ik
     !! Counter of k-point index
-    INTEGER :: ibnd
-    !! Counter on band index
     INTEGER :: ios
     !! Integer variable for I/O control
     INTEGER :: ierr
@@ -806,7 +808,7 @@
       ENDIF
   
   ! SP : This file is not used for now. Only required to build the UNK file
-  !      tempFILE = TRIM(prefix)//'.mmn'
+  !      tempfile = TRIM(prefix)//'.mmn'
   !      OPEN(iummn, FILE = tempfile, IOSTAT = ios, FORM = 'unformatted')
   !      WRITE(iummn) m_mat
   !      CLOSE(iummn)
@@ -876,7 +878,6 @@
     USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
     USE mp,              ONLY : mp_sum
     USE kfold,           ONLY : ktokpmq
-    USE mp_world,        ONLY : mpime
     USE io_epw,          ONLY : readwfc
     ! 
     IMPLICIT NONE
@@ -945,7 +946,7 @@
       sgf_spinor(:, :) = czero
     ENDIF
     !
-    WRITE(stdout,'(5x, a)') 'AMN'
+    WRITE(stdout, '(5x, a)') 'AMN'
     !
     IF (any_uspp) THEN
       CALL deallocate_bec_type(becp)
@@ -1043,17 +1044,17 @@
             ENDDO
           ELSE
             ! general routine for quantisation axis (a,b,c) 
-            ! 'up'    eigenvector is 1/SQRT(1+c) [c+1,a+ib]
-            ! 'down'  eigenvector is 1/SQRT(1-c) [c-1,a+ib]
+            ! 'up'    eigenvector is 1/DSQRT(1+c) [c+1,a+ib]
+            ! 'down'  eigenvector is 1/DSQRT(1-c) [c-1,a+ib]
             IF (spin_eig(iw) == 1) THEN
-              fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) & 
+              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
                      * (spin_qaxis(3, iw) + 1) * cone
-              fac(2) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) & 
+              fac(2) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
                      * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
             ELSE
-              fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) & 
+              fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) & 
                      * (spin_qaxis(3, iw)) * cone
-              fac(2) = (1.0d0 / SQRT(1 - spin_qaxis(3, iw))) & 
+              fac(2) = (1.0d0 / DSQRT(1 - spin_qaxis(3, iw))) & 
                      * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
             ENDIF
             !
@@ -1158,7 +1159,6 @@
     USE mp_world,        ONLY : world_comm
     USE mp_pools,        ONLY : intra_pool_comm
     USE mp_global,       ONLY : my_pool_id, npool, inter_pool_comm
-    USE ions_base,       ONLY : ntyp => nsp
     USE constants_epw,   ONLY : zero, czero, one, twopi
     USE kfold,           ONLY : ktokpmq
     USE epwcom,          ONLY : scdm_entanglement, scdm_mu, scdm_sigma
@@ -1187,8 +1187,6 @@
     !!
     INTEGER :: ipt, jpt, kpt, lpt
     !! Counter over FFT grid
-    INTEGER :: ispin
-    !! Spin index
     INTEGER :: count_piv_spin
     !!
     INTEGER :: minmn
@@ -1219,7 +1217,6 @@
     !! jml: Position of piv
     INTEGER, ALLOCATABLE :: piv_spin(:)
     !! jml: Spin index of piv
-    !
     REAL(KIND = DP):: pnorm
     !! 
     REAL(KIND = DP):: norm_psi
@@ -1269,8 +1266,6 @@
     !!
     COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
     !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: cwork2(:)
-    !!
     COMPLEX(KIND = DP), ALLOCATABLE :: Umat(:, :)
     !!
     COMPLEX(KIND = DP), ALLOCATABLE :: VTmat(:, :)
@@ -1299,11 +1294,11 @@
     !
     ! vv: Write info about SCDM in output
     IF (TRIM(scdm_entanglement) == 'isolated') THEN
-      WRITE(stdout,'(1x, a, a/)') 'Case  : ', TRIM(scdm_entanglement)
+      WRITE(stdout, '(1x, a, a/)') 'Case  : ', TRIM(scdm_entanglement)
     ELSEIF ((TRIM(scdm_entanglement) == 'erfc') .OR. &
             (TRIM(scdm_entanglement) == 'gaussian')) THEN
-      WRITE(stdout,'(1x, a, a)') 'Case  : ',trim(scdm_entanglement)
-      WRITE(stdout,'(1x, a, f10.3, a/, 1x, a, f10.3, a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
+      WRITE(stdout, '(1x, a, a)') 'Case  : ', TRIM(scdm_entanglement)
+      WRITE(stdout, '(1x, a, f10.3, a/, 1x, a, f10.3, a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
     ENDIF
     !
     ! vv: Allocate all the variables for the SCDM method:
@@ -1332,6 +1327,8 @@
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv_spin', 1)
       ALLOCATE(rwork(2 * 2 * nrtot), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
+      ALLOCATE(psi_gamma(2 * nrtot, numbands), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
     ELSE
       minmn = MIN(numbands, nrtot)
       ALLOCATE(qr_tau(2 * minmn), STAT = ierr)
@@ -1340,17 +1337,12 @@
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv', 1)
       ALLOCATE(rwork(2 * nrtot), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
+      ALLOCATE(psi_gamma(nrtot, numbands), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
     ENDIF
     !
     ALLOCATE(nowfc(n_wannier, numbands), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating nowfc', 1)
-    IF (noncolin) THEN
-      ALLOCATE(psi_gamma(2 * nrtot, numbands), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating pis_gamma', 1)
-    ELSE
-      ALLOCATE(psi_gamma(nrtot, numbands), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating pis_gamma', 1)
-    ENDIF
     ALLOCATE(focc(numbands), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating focc', 1)
     minmn2 = MIN(numbands, n_wannier)
@@ -1378,7 +1370,7 @@
     a_mat(:, :, :) = czero
     zero_vect(:) = zero
     !
-    WRITE (stdout,'(5x,a)') 'AMN'
+    WRITE(stdout, '(5x, a)') 'AMN'
     !
     ! Check that Gamma-point is first in the list of k-vectors
     !
@@ -1397,6 +1389,7 @@
     !
     ibnd1 = 0
     f_gamma = zero
+    psi_gamma(:, :) = czero
     IF (noncolin) THEN
       DO ibnd = 1, nbtot
         IF (excluded_band(ibnd)) CYCLE
@@ -1410,7 +1403,7 @@
         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
           f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-          f_gamma = EXP(- 1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+          f_gamma = EXP(-1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
         ELSE
           CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
         ENDIF
@@ -1424,21 +1417,20 @@
         CALL invfft('Wave', psic_nc(:, 2), dffts)
         !
         ! vv: Build Psi_k = Unk * focc at G-point only
-        psi_gamma(:, :) = czero
 #if defined(__MPI)
         CALL gather_grid(dffts, psic_nc(:, 1), psic_nc_all(:, 1))
         CALL gather_grid(dffts, psic_nc(:, 2), psic_nc_all(:, 2))
         pnorm = REAL(SUM(psic_nc_all(1:nrtot, 1) * CONJG(psic_nc_all(1:nrtot, 1))), KIND = DP) + &
                 REAL(SUM(psic_nc_all(1:nrtot, 2) * CONJG(psic_nc_all(1:nrtot, 2))), KIND = DP)
-        norm_psi = SQRT(pnorm)
-        psi_gamma(        1:nrtot,     ibnd1) = psic_nc_all(1:nrtot, 1) * f_gamma / norm_psi
-        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = psic_nc_all(1:nrtot, 2) * f_gamma / norm_psi
+        norm_psi = DSQRT(pnorm)
+        psi_gamma(        1:nrtot,     ibnd1) = (psic_nc_all(1:nrtot, 1) / norm_psi) * f_gamma
+        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc_all(1:nrtot, 2) / norm_psi) * f_gamma
 #else
         pnorm = REAL(SUM(psic_nc(1:nrtot, 1) * CONJG(psic_nc(1:nrtot, 1))), KIND = DP) + &
                 REAL(SUM(psic_nc(1:nrtot, 2) * CONJG(psic_nc(1:nrtot, 2))), KIND = DP)
-        norm_psi = SQRT(pnorm) 
-        psi_gamma(        1:nrtot,     ibnd1) = psic_nc(1:nrtot, 1) * f_gamma / norm_psi
-        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = psic_nc(1:nrtot, 2) * f_gamma / norm_psi
+        norm_psi = DSQRT(pnorm) 
+        psi_gamma(        1:nrtot,     ibnd1) = (psic_nc(1:nrtot, 1) / norm_psi) * f_gamma
+        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc(1:nrtot, 2) / norm_psi) * f_gamma
 #endif
       ENDDO ! ibnd
     ELSE
@@ -1448,13 +1440,13 @@
         !
         ! check ibnd1 <= numbands
         IF (ibnd1 > numbands) CALL errore('compute_amn_with_scdm', &
-                                          &'Something wrong with the number of bands. Check exclude_bands.', 1)
+           'Something wrong with the number of bands. Check exclude_bands.', 1)
         IF (TRIM(scdm_entanglement) == 'isolated') THEN
           f_gamma = 1.0d0
         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
           f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-          f_gamma = EXP(- 1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+          f_gamma = EXP(-1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
         ELSE
           CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
         ENDIF
@@ -1466,19 +1458,18 @@
         CALL invfft('Wave', psic, dffts)
         !
         ! vv: Build Psi_k = Unk * focc at G-point only
-        psi_gamma(:, :) = czero
 #if defined(__MPI)
         CALL gather_grid(dffts, psic, psic_all)
         pnorm = REAL(SUM(psic_all(1:nrtot) * CONJG(psic_all(1:nrtot))), KIND = DP)
-        norm_psi = SQRT(pnorm)
-        psi_gamma(1:nrtot, ibnd1) = psic_all(1:nrtot) * f_gamma / norm_psi
+        norm_psi = DSQRT(pnorm)
+        psi_gamma(1:nrtot, ibnd1) = (psic_all(1:nrtot) / norm_psi) * f_gamma
 #else
         pnorm = REAL(SUM(psic(1:nrtot) * CONJG(psic(1:nrtot))), KIND = DP)
-        norm_psi = SQRT(pnorm)
-        psi_gamma(1:nrtot, ibnd1) = psic(1:nrtot) * f_gamma / norm_psi
+        norm_psi = DSQRT(pnorm)
+        psi_gamma(1:nrtot, ibnd1) = (psic(1:nrtot) / norm_psi) * f_gamma
 #endif
       ENDDO ! ibnd
-    ENDIF
+    ENDIF !noncolin
     !
     ! vv: Perform QR factorization with pivoting on Psi_Gamma
     ! vv: Preliminary call to define optimal values for lwork and cwork size
@@ -1487,8 +1478,13 @@
     qr_tau(:)    = czero
     tmp_cwork(:) = czero
     rwork(:)     = zero
-    CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                piv, qr_tau, tmp_cwork, -1, rwork, info)
+    IF (noncolin) THEN
+      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, tmp_cwork, -1, rwork, info)
+    ELSE
+      CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, tmp_cwork, -1, rwork, info)
+    ENDIF
     IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
     !
     lcwork = AINT(REAL(tmp_cwork(1)))
@@ -1501,14 +1497,24 @@
     !
 #if defined(__MPI)
     IF (meta_ionode) THEN
-      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                  piv, qr_tau, cwork, lcwork, rwork, info)
+      IF (noncolin) THEN 
+        CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                    piv, qr_tau, cwork, lcwork, rwork, info)
+      ELSE
+        CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                    piv, qr_tau, cwork, lcwork, rwork, info)
+      ENDIF
       IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
     ENDIF
     CALL mp_bcast(piv, meta_ionode_id, world_comm)
 #else
-    CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                piv, qr_tau, cwork, lcwork, rwork, info)
+    IF (noncolin) THEN 
+      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, cwork, lcwork, rwork, info)
+    ELSE
+      CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                  piv, qr_tau, cwork, lcwork, rwork, info)
+    ENDIF
     IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
 #endif
     !
@@ -1549,10 +1555,17 @@
     ENDDO
     !
     cpos(:, :) = zero
-    DO iw = 1, n_wannier
-      cpos(iw, :) = rpos(piv_pos(iw), :)
-      cpos(iw, :) = cpos(iw, :) - ANINT(cpos(iw, :))
-    ENDDO
+    IF (noncolin) THEN 
+      DO iw = 1, n_wannier
+        cpos(iw, :) = rpos(piv_pos(iw), :)
+        cpos(iw, :) = cpos(iw, :) - ANINT(cpos(iw, :))
+      ENDDO
+    ELSE
+      DO iw = 1, n_wannier
+        cpos(iw, :) = rpos(piv(iw), :)
+        cpos(iw, :) = cpos(iw, :) - ANINT(cpos(iw, :))
+      ENDDO
+    ENDIF
     !
 #if defined(__MPI)
     WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
@@ -1615,7 +1628,7 @@
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
             focc(ibnd1) = 0.5d0 * ERFC((et(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc(ibnd1) = EXP( - 1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            focc(ibnd1) = EXP(-1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
@@ -1623,7 +1636,7 @@
           norm_psi = REAL(SUM(evc(       1:npw,        ibnd) * CONJG(evc(       1:npw,        ibnd)))) + &
                      REAL(SUM(evc(1 + npwx:npw + npwx, ibnd) * CONJG(evc(1 + npwx:npw + npwx, ibnd)) ))
           CALL mp_sum(norm_psi, intra_pool_comm)
-          norm_psi = SQRT(norm_psi)
+          norm_psi = DSQRT(norm_psi)
           !
           ! jml: nowfc = sum_G (psi(G) * exp(i*G*r)) * focc  * phase(iw) / norm_psi
           !
@@ -1640,19 +1653,20 @@
         DO ibnd = 1, nbtot
           IF (excluded_band(ibnd)) CYCLE
           ibnd1 = ibnd1 + 1
+          !
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
             focc(ibnd1) = 1.0d0
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
             focc(ibnd1) = 0.5d0 * ERFC((et(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc(ibnd1) = EXP( - 1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            focc(ibnd1) = EXP(-1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
           !
           norm_psi = REAL(SUM(evc(1:npw, ibnd) * CONJG(evc(1:npw, ibnd))))
           CALL mp_sum(norm_psi, intra_pool_comm)
-          norm_psi = SQRT(norm_psi)
+          norm_psi = DSQRT(norm_psi)
           !
           ! jml: nowfc = sum_G (psi(G) * exp(i*G*r)) * focc  * phase(iw) / norm_psi
           !
@@ -1709,6 +1723,7 @@
         DO ibnd = 1, nbtot
           IF (excluded_band(ibnd)) CYCLE
           ibnd1 = ibnd1 + 1
+          !
           a_mat(ibnd1, iw, ik_g) = Amat(ibnd1, iw)
         ENDDO ! bands
       ENDDO ! wannier fns
@@ -1763,11 +1778,12 @@
     ENDIF
 #endif
     !
-    WRITE(stdout,*)
-    WRITE(stdout,'(5x,a)') 'AMN calculated'
+    WRITE(stdout, *)
+    WRITE(stdout, '(5x, a)') 'AMN calculated'
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE compute_amn_with_scdm
     !-----------------------------------------------------------------------
     !
@@ -1779,7 +1795,6 @@
     !! 
     USE kinds,            ONLY : DP
     USE constants_epw,    ONLY : czero, cone, eps6
-    USE noncollin_module, ONLY : npol
     USE wvfct,            ONLY : npwx
     USE wannierEPW,       ONLY : gf, n_proj, spin_qaxis, spin_eig, gf_spinor
     ! 
@@ -1788,22 +1803,19 @@
     INTEGER, INTENT(in) :: npw
     !! Number of plane waves 
     !
+    ! Local variables
     LOGICAL :: spin_z_pos
     !! Detect if spin quantisation axis is along +z
     LOGICAL :: spin_z_neg
     !! Detect if spin quantisation axis is along -z
-    !
     INTEGER :: iw
     !! Counter on number of projections
     INTEGER  :: ipol
     !! Index of spin-up/spin-down polarizations
     INTEGER ::  istart, iend
     !! Starting/ending index on plane waves
-    INTEGER :: ierr
-    !! Error status
-    !
     COMPLEX(KIND = DP) :: fac(2)
-    !!
+    !! Factor
     !
     gf_spinor(:, :) = czero
     DO iw = 1, n_proj
@@ -1830,14 +1842,14 @@
         gf_spinor(istart:iend, iw) = gf(1:npw, iw)
       ELSE
         IF (spin_eig(iw) == 1) THEN
-          fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) &
+          fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                  * (spin_qaxis(3, iw) + 1 ) * cone
-          fac(2) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) &
+          fac(2) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                  * CMPLX(spin_qaxis(1, iw), spin_qaxis(2, iw), KIND = DP)
         ELSE
-          fac(1) = (1.0d0 / SQRT(1 + spin_qaxis(3, iw))) &
+          fac(1) = (1.0d0 / DSQRT(1 + spin_qaxis(3, iw))) &
                  * ( spin_qaxis(3, iw) ) * cone
-          fac(2) = (1.0d0 / SQRT(1 - spin_qaxis(3, iw))) &
+          fac(2) = (1.0d0 / DSQRT(1 - spin_qaxis(3, iw))) &
                  * CMPLX(spin_qaxis(1, iw), spin_qaxis(2,iw), KIND = DP)
         ENDIF
         gf_spinor(1:npw, iw) = gf(1:npw, iw) * fac(1)
@@ -1869,7 +1881,7 @@
     USE fft_interfaces,  ONLY : fwfft, invfft
     USE klist,           ONLY : nkstot, nks, igk_k
     USE klist_epw,       ONLY : xk_all, xk_loc
-    USE gvect,           ONLY : g, ngm, gstart
+    USE gvect,           ONLY : g, ngm
     USE gvecw,           ONLY : gcutw
     USE cell_base,       ONLY : omega, tpiba, bg
     USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -1888,7 +1900,6 @@
 #endif
     USE mp,              ONLY : mp_sum
     USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
-    USE mp_world,        ONLY : mpime
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
     ! 
@@ -1994,7 +2005,7 @@
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating phase', 1)
     ALLOCATE(igkq(npwx), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating igkq', 1)
-    ALLOCATE(evcq(npol*npwx, nbnd), STAT = ierr)
+    ALLOCATE(evcq(npol * npwx, nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating evcq', 1)
     !
     IF (noncolin) THEN
@@ -2063,7 +2074,7 @@
       !
       ! get spherical harmonics ylm 
       CALL ylmr2(lmaxq * lmaxq, nbt, dxk, qg, ylm)
-      qg(:) = SQRT(qg(:)) * tpiba
+      qg(:) = DSQRT(qg(:)) * tpiba
       !
       DO nt = 1, ntyp
         IF (upf(nt)%tvanp) THEN
@@ -2132,7 +2143,7 @@
         CALL readwfc(ipool, nkq, evcq)
         !
         ! sorts k+G vectors in order of increasing magnitude, up to ecut
-        CALL gk_sort(xk_all(1,ikp), ngm, g, gcutw, npwq, igkq, g2kin)
+        CALL gk_sort(xk_all(1, ikp), ngm, g, gcutw, npwq, igkq, g2kin)
         !
         ! compute the phase
         IF (.NOT. zerophase(ik_g, ib)) THEN
@@ -2208,7 +2219,7 @@
               ENDDO  !nat 
             ELSE  !tvanp
               DO na = 1, nat
-                IF (ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
+                IF (ityp(na) == nt) ijkb0 = ijkb0 + nh(nt)
               ENDDO
             ENDIF !tvanp
           ENDDO !ntyp
@@ -2395,7 +2406,6 @@
     USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
     USE gvecw,           ONLY : gcutw
     USE wavefunctions,   ONLY : evc
-    USE units_lr,        ONLY : lrwfc, iuwfc
     USE gvect,           ONLY : g, ngm
     USE cell_base,       ONLY : tpiba
     USE noncollin_module,ONLY : noncolin
@@ -2462,7 +2472,7 @@
           !
           IF (ibnd == jbnd) CYCLE
           !
-          ! taken from PP/epsilon.f90 SUBROUTINE dipole_calc
+          ! taken from PP/epsilon.f90 subroutine dipole_calc
           DO ig = 1, npw
             IF (igk_k(ig, ik) > SIZE(g, 2) .OR. igk_k(ig, ik) < 1) CYCLE
             !
@@ -2678,11 +2688,10 @@
     USE kinds,           ONLY : DP
     USE mp_global,       ONLY : inter_pool_comm
     USE mp,              ONLY : mp_sum
-    USE io_global,       ONLY : meta_ionode
     USE klist,           ONLY : nkstot, nks
     USE klist_epw,       ONLY : xk_loc
     USE wvfct,           ONLY : nbnd
-    USE wannierEPW,      ONLY : a_mat, m_mat, num_bands, n_wannier, n_proj, & 
+    USE wannierEPW,      ONLY : a_mat, m_mat, n_wannier, n_proj, & 
                                 nnb, kpb, iknum, excluded_band
     USE elph2,           ONLY : umat, umat_all
     USE constants_epw,   ONLY : czero, cone, zero
@@ -2959,7 +2968,7 @@
     ! get spherical harmonics ylm up to lmax
     CALL ylmr2(lmax2, npw, gk, qg, ylm)
     ! define qg as the norm of (k+g) in a.u.
-    qg(:) = SQRT(qg(:)) * tpiba
+    qg(:) = DSQRT(qg(:)) * tpiba
     !
     ! RM changed according to QE4.0.3/PP/pw2wannier90 
     DO iw = 1, n_proj
@@ -2970,7 +2979,7 @@
       !
       DO lm = 1, lmax2
         IF (ABS(csph(lm, iw)) < eps8) CYCLE
-        l = INT(SQRT(lm - 1.d0))
+        l = INT(DSQRT(lm - 1.d0))
         lphase = (- ci)**l
         !
         DO ig = 1, npw
@@ -2987,7 +2996,7 @@
       ENDDO
       anorm = REAL(ZDOTC(npw, gf(1, iw), 1, gf(1, iw), 1))
       CALL mp_sum(anorm, intra_pool_comm)
-      gf(:, iw) = gf(:, iw) / SQRT(anorm)
+      gf(:, iw) = gf(:, iw) / DSQRT(anorm)
     ENDDO
     !
     DEALLOCATE(gk, STAT = ierr)
@@ -3568,10 +3577,10 @@
     REAL(KIND = DP) :: y(3)
     !!
     !
-    xx = SQRT(SUM(x(:) * x(:)))
+    xx = DSQRT(SUM(x(:) * x(:)))
     IF (xx < eps8) CALL errore('set_u_matrix', '|xaxis| < eps8', 1)
     !
-    zz = SQRT(SUM(z(:) * z(:)))
+    zz = DSQRT(SUM(z(:) * z(:)))
     IF (zz < eps8) CALL errore ('set_u_matrix', '|zaxis| < eps8', 1)
     !
     coseno = SUM(x(:) * z(:)) / xx / zz
@@ -3635,12 +3644,12 @@
     REAL(KIND = DP) :: phi
     !!
     REAL(KIND = DP) :: bs2, bs3, bs6, bs12
-    !! Inverse SQRT of 2, 3, 6, and 12
+    !! Inverse DSQRT of 2, 3, 6, and 12
     !
-    bs2  = 1.d0 / SQRT(2.d0)
-    bs3  = 1.d0 / SQRT(3.d0)
-    bs6  = 1.d0 / SQRT(6.d0)
-    bs12 = 1.d0 / SQRT(12.d0)
+    bs2  = 1.d0 / DSQRT(2.d0)
+    bs3  = 1.d0 / DSQRT(3.d0)
+    bs6  = 1.d0 / DSQRT(6.d0)
+    bs12 = 1.d0 / DSQRT(12.d0)
     !
     IF (l > 3 .OR. l < -5) CALL errore('ylm_wannier', 'l out of range ', 1)
     IF (l >= 0) THEN
@@ -3650,7 +3659,7 @@
     ENDIF
     !
     DO ir  = 1, nr
-      rr = SQRT(SUM(r(:, ir) * r(:, ir)))
+      rr = DSQRT(SUM(r(:, ir) * r(:, ir)))
       IF (rr < eps8) CALL errore('ylm_wannier', 'rr too small', 1)
       !
       cost =  r(3, ir) / rr
@@ -3819,13 +3828,13 @@
     ENDDO
     !
     IF (rvalue == 1) func_r(:) = 2.d0 * alfa**(3.d0 / 2.d0) * EXP(-alfa * r(:))
-    IF (rvalue == 2) func_r(:) = 1.d0 / SQRT(8.d0) * alfa**(3.d0 / 2.d0) * & 
+    IF (rvalue == 2) func_r(:) = 1.d0 / DSQRT(8.d0) * alfa**(3.d0 / 2.d0) * & 
                                 (2.0d0 - alfa * r(:)) * EXP(-alfa * r(:) * 0.5d0)
-    IF (rvalue == 3) func_r(:) = SQRT(4.d0 / 27.d0) * alfa**(2.0d0 / 3.0d0) * &
+    IF (rvalue == 3) func_r(:) = DSQRT(4.d0 / 27.d0) * alfa**(2.0d0 / 3.0d0) * &
                                 (1.d0 - 1.5d0 * alfa * r(:) + & 
                                 2.d0 * (alfa * r(:))**2 / 27.d0) * & 
                                 EXP(-alfa * r(:) / 3.0d0)
-    pref = fpi / SQRT(omega)
+    pref = fpi / DSQRT(omega)
     !
     DO l = 0, lmax
       DO ig = 1, ng

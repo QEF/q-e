@@ -38,24 +38,19 @@ subroutine symm(phi, u, xq, s, isym, rtau, irt, at, bg, nat)
   ! counters
   real(DP) :: arg
   !
-  complex(DP) :: fase, work, phi1(3,3,nat,nat), phi2(3,3,nat,nat)
+  complex(DP) :: fase, work, phi0(3*nat,3*nat), phi1(3,3,nat,nat), phi2(3,3,nat,nat)
   ! workspace
   !
   ! First we transform to cartesian coordinates
   !
+  phi0 = matmul(u, matmul(phi, conjg(transpose(u))))
   do i = 1, 3 * nat
      na = (i - 1) / 3 + 1
      icart = i - 3 * (na - 1)
      do j = 1, 3 * nat
         nb = (j - 1) / 3 + 1
         jcart = j - 3 * (nb - 1)
-        work = (0.d0, 0.d0)
-        do mu = 1, 3 * nat
-           do nu = 1, 3 * nat
-              work = work + u(i,mu) * phi(mu,nu) * conjg(u(j,nu))
-           enddo
-        enddo
-        phi1(icart,jcart,na,nb) = work
+        phi1(icart,jcart,na,nb) = phi0(i,j)
      enddo
   enddo
   !

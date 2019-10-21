@@ -100,63 +100,21 @@ then
 
 fi
 
-# Check MKL dfti first, fftw v3 then (both native and MKL interfaces)
 if test "$have_fft" -eq 0 
 then
+   # if MKL have been found, select dfti (no need to recheck)
+   if test "$have_mkl" -eq 1
+   then
+      try_dflags="$try_dflags -D__DFTI"
+      # If not set on input, MKLROOT was set when checking blas
+      try_iflags="$try_iflags -I$MKLROOT/include"
+      have_fft=1
+   fi
 
-        AC_LANG_POP(Fortran 77)
-        AC_LANG_PUSH(C)
-        unset ac_cv_lib_mkl_intel_lp64_DftiComputeForward
+   # Check fftw v3 (both native and MKL interfaces)
 
-        CFLAGS="$test_cflags"
-        CPPFLAGS="$test_cppflags"
-        LDFLAGS=" $test_ldflags"
-        LIBS="$fft_libs"
-        # here we check if dfti explicit calls work
-        # it should work with blas flags
-        AC_CHECK_LIB([mkl_intel_lp64],DftiComputeForward,have_fft=1,
-        ,$blas_libs -lm )
-
-        if test "$have_fft" == "1" 
-        then
-              if test "$MKLROOT" == ""
-              then
-                 try_incdir="/opt/intel/mkl/include"
-              else
-                 try_incdir="$MKLROOT/include"
-              fi
-              # 
-              for inc in $try_incdir
-              do
-                 if test "$cross_compiling" == "no"
-                 then
-                    # when cross-compilation is disabled I can check file paths... 
-                    AC_CHECK_FILE( $inc/mkl_dfti.f90, 
-                                have_fft_include=1, have_fft_include=0) 
-                 else
-                    # when cross-compilation is enabled I need to rely on header 
-                    # checking (bit it complains...
-                    AC_CHECK_HEADER($inc/mkl_dfti.f90,
-                                have_fft_include=1,have_fft_include=0)
-                 fi
-                 if test "$have_fft_include" == "1"
-                 then
-                   try_iflags="$try_iflags -I$inc"
-                   try_dflags="$try_dflags -D__DFTI"
-                   have_fft=1
-                   break
-                 else
-                   # continue the search
-                   have_fft=0
-                 fi
-              done
-        fi
-
-        AC_LANG_POP(C)
-        AC_LANG_PUSH(Fortran 77)
-
-        if test "$have_fft" -eq 0
-        then
+   if test "$have_fft" -eq 0
+   then
 	  try_libdirs="/usr/local/lib"
           try_libdirs="$libdirs $try_libdirs $ld_library_path "
           for dir in none $try_libdirs
@@ -208,7 +166,7 @@ then
                   fi
 
           done
-        fi
+   fi
 fi
 
   AC_MSG_RESULT(${fft_libs})
@@ -216,7 +174,6 @@ fi
 fft_line="FFT_LIBS=$fft_libs"
 
 # if no valid FFT library was found, use the local copy
-# (This happens also if OpenMP is enabled...)
 if test "$have_fft" -eq 0
 then
         case "$arch" in
@@ -224,7 +181,7 @@ then
             try_dflags="$try_dflags -D__LINUX_ESSL"
             ;;
         * )
-		    try_dflags="$try_dflags -D__FFTW"
+	    try_dflags="$try_dflags -D__FFTW"
             ;;
         esac
 fi

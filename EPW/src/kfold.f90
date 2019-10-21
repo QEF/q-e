@@ -50,7 +50,6 @@
     USE klist_epw,     ONLY : kmap
     USE io_global,     ONLY : meta_ionode
     USE mp,            ONLY : mp_barrier
-    USE mp_world,      ONLY : world_comm
     USE elph2,         ONLY : xkq
     USE constants_epw, ONLY : eps5, zero
     !
@@ -394,8 +393,6 @@
     IMPLICIT NONE
     !
     ! Local variables
-    LOGICAL :: in_the_list
-    !! Variable in the list
     LOGICAL :: is_local
     !! Local variable
     INTEGER :: ik

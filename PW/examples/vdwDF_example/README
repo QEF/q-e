@@ -1,15 +1,9 @@
+This example shows how to use the vdw-DF functional in pw.x. It
+calculates the non-local correlation contribution to the energy and
+potential according to
 
-This example shows how to use the vdw-DF functional in pw.x, a
-method based on the one proposed by Guillermo Roman-Perez and 
-Jose M. Soler in:
-
-   G. Roman-Perez and J. M. Soler, PRL 103, 096102 (2009)
-
-henceforth referred to as SOLER. That method is a new implementation
-of the method found in:
-
-   M. Dion, H. Rydberg, E. Schroeder, D. C. Langreth, and
-   B. I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).
+   M. Dion, H. Rydberg, E. Schroeder, D.C. Langreth, and
+   B.I. Lundqvist, Phys. Rev. Lett. 92, 246401 (2004).
 
 henceforth referred to as DION. Further information about the
 functional and its corresponding potential can be found in:
@@ -17,27 +11,35 @@ functional and its corresponding potential can be found in:
    T. Thonhauser, V.R. Cooper, S. Li, A. Puzder, P. Hyldgaard,
    and D.C. Langreth, Phys. Rev. B 76, 125112 (2007).
 
-A review article that shows many of the applications vdW-DF has been
-applied to so far can be found at:
+The proper spin extension of vdW-DF, i.e. svdW-DF, is derived in
 
-   D. C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009). 
+   T. Thonhauser, S. Zuluaga, C.A. Arter, K. Berland, E. Schroder,
+   and P. Hyldgaard, Phys. Rev. Lett. 115, 136402 (2015).
+
+henceforth referred to as THONHAUSER.
+
+
+Two review articles show many of the vdW-DF applications:
+
+   D.C. Langreth et al., J. Phys.: Condens. Matter 21, 084203 (2009).
+
+   K. Berland et al., Rep. Prog. Phys. 78, 066501 (2015).
+
+
+The method implemented is based on the method of G. Roman-Perez and
+J.M. Soler described in:
+
+   G. Roman-Perez and J.M. Soler, Phys. Rev. Lett. 103, 096102 (2009).
+
+henceforth referred to as SOLER.
+
 
 ---------------------------------------------------------------------
 
-The example will first check if all the necessary files are present, 
-and then run the simulations. 
-As for this particular kind of implementation, the
-vdw-DF need a so called "vdW_kernel_table", a universal file that has to be
-generated once and used for all other calculations.
 
-This table, stored in ASCII format, usually ships with the QE distribution,
-in case the file is not present the example will launch the routine needed 
-to generate it. It can be a long process, up to 30 mins in basic single CPU
-machine, but once generated can be used in any other machine and for any 
-other calculation.
-
-After the check, and the possible generation, the example will proceed
-with two simulations, in particular
+The example will first check if all the necessary files are present, and
+then run the simulations. After the check, the example will proceed with
+two simulations, in particular
 
 1) A variable cell relaxation of a simple 1x1 graphite. The parameters
 used (such as k-point mesh and energy cutoffs) are not converged, use them

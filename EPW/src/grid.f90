@@ -600,7 +600,7 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP, sgl
-    USE epwcom,    ONLY : filqf, nkf1, nkf2, nkf3
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3
     ! 
     IMPLICIT NONE
     ! 
@@ -632,7 +632,7 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE kpoint_grid_epw(nrot, time_reversal, skip_equivalence, s, t_rev, &
-                               bg, nkc1, nkc2, nkc3, BZtoIBZ, s_BZtoIBZ)
+                               nkc1, nkc2, nkc3, BZtoIBZ, s_BZtoIBZ)
     !-----------------------------------------------------------------------
     !!
     !!  Automatic generation of a uniform grid of k-points with symmetry. 
@@ -643,9 +643,7 @@
     USE kinds,            ONLY : DP
     USE division,         ONLY : fkbounds
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
-    USE mp_world,         ONLY : mpime
     USE mp_global,        ONLY : world_comm, my_pool_id, npool, inter_pool_comm
-    USE io_global,        ONLY : ionode_id, stdout
     USE kinds_epw,        ONLY : SIK2
     USE constants_epw,    ONLY : eps6
 #if defined(__MPI)
@@ -670,8 +668,6 @@
     !! True if time reversal
     LOGICAL, INTENT(in) :: skip_equivalence
     !! True if equivalent point
-    REAL(KIND = DP), INTENT(in) :: bg(3, 3)
-    !! Reciprocal space vectors
     !
     ! Local variables
     LOGICAL :: in_the_list
@@ -682,7 +678,7 @@
     !! Total number of points
     INTEGER :: i, j, k
     !! Index on grid size
-    INTEGER :: ns
+    INTEGER(SIK2) :: ns
     !! Index on symmetry operations
     INTEGER :: n
     !! Global k-point index
@@ -960,18 +956,18 @@
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
           !
-          ALLOCATE(xqf_ (3, nqf1 * nqf2 * nqf3), STAT = ierr)
+          ALLOCATE(xqf_(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
           ALLOCATE(wqf_(nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           DEALLOCATE(xqf_, wqf_, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating xqf_, wqf_', 1)
           ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ (3, nqtotf), wqf_', 1)
-          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           !  
           ! bring the k point to crystal coordinates       
@@ -1284,11 +1280,11 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
+    USE elph2,         ONLY : nqf, xqf, xkf, chw, nkf, nqtotf, nkqtotf, &
                               map_rebal, nktotf
     USE io_global,     ONLY : ionode_id, stdout
     USE io_var,        ONLY : iunselecq
-    USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
+    USE mp_global,     ONLY : npool, world_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
@@ -1331,7 +1327,7 @@
     !! INTEGER variable for I/O control
     INTEGER :: iq
     !! Counter on coarse q-point grid    
-    INTEGER :: ik, ikk, ikq, ikl
+    INTEGER :: ik, ikk, ikl
     !! Counter on coarse k-point grid
     INTEGER :: icbm
     !! Index for the CBM
@@ -1351,8 +1347,6 @@
     !! Index of the k point from the full grid.
     INTEGER :: ind2
     !! Index of the k+q point from the full grid. 
-    INTEGER :: nkqtotf_tmp
-    !! Temporary k-q points.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
     INTEGER :: ierr
@@ -1385,10 +1379,6 @@
     !! Eigen-energies all full k-grid.
     REAL(KIND = DP) :: etf_tmp(nbndsub)
     !! Temporary Eigen-energies at a give k-point
-    REAL(KIND = DP) :: xkf_tmp (3, nkqtotf)
-    !! Temporary k-point coordinate (dummy variable)
-    REAL(KIND = DP) :: wkf_tmp(nkqtotf)
-    !! Temporary k-weights (dummy variable)
     COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k}$ exponential 
     COMPLEX(KIND = DP) :: cfacq(nrr_k, dims, dims)
@@ -1432,7 +1422,7 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           xkk = xkf(:, ikk)
-          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
           IF (use_ws) THEN
             DO iw = 1, dims
               DO iw2 = 1, dims
@@ -1455,11 +1445,10 @@
           BZtoIBZ(:) = 0
           s_BZtoIBZ(:) = 0
           ! 
-          ! 
           CALL set_sym_bl()
           !
           ! What we get from this call is BZtoIBZ
-          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
           ! 
           IF (iterative_bte) THEN
             BZtoIBZ_tmp(:) = 0
@@ -1681,7 +1670,6 @@
     !-----------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
     USE elph2,         ONLY : etf, nkf, nkqtotf, xkf, wkf, etf, map_rebal, map_rebal_inv, &
                               lower_bnd, nktotf
     USE epwcom,        ONLY : fsthick, nbndsub, mp_mesh_k
@@ -1694,8 +1682,6 @@
     !
     IMPLICIT NONE
     !  
-    INTEGER :: pool_index(npool) 
-    !! Index of the current pool
     INTEGER :: ipool
     !! Pool loop
     INTEGER :: ik
@@ -1718,11 +1704,8 @@
     !! K-points that are within the fshick windows
     INTEGER :: kpt_out(nkqtotf)
     !! K-points that are outside of the fshick windows
-    INTEGER :: map_rebal_tmp(nktotf)
-    !! Temporary map between the initial ordering of k-point and the rebalanced one
     INTEGER :: map_rebal_inv_tmp(nktotf)
     !! Temporary inverse map between the initial ordering of k-point and the rebalanced one
-    !
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
     REAL(KIND = DP) :: wkf_all(nkqtotf)
@@ -1842,17 +1825,14 @@
     !! 
     !-----------------------------------------------------------------------  
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : alat, at, omega, bg
-    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE cell_base,     ONLY : at, bg
+    USE symm_base,     ONLY : s, nrot
     USE elph2,         ONLY : nkf, nktotf
     USE constants_epw, ONLY : eps6, zero
     USE wigner,        ONLY : backtoWS
     USE mp,            ONLY : mp_sum
     USE mp_global,     ONLY : world_comm
     USE division,      ONLY : fkbounds
-    USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : ionode_id
     !
     IMPLICIT NONE
     !
@@ -1900,13 +1880,13 @@
     !! Symmetry matrix in cartesian coordinate 
     REAL(KIND = DP) :: xk(3)
     !! Current k-point coordinate
-    REAL(KIND = DP) :: S_xk(3)
+    REAL(KIND = DP) :: s_xk(3)
     !! Rotated k-point
     REAL(KIND = DP) :: ws(3)
     !! Wigner-Seitz vector
     REAL(KIND = DP) :: rws(4, nrwsx) 
     !! Real WS vectors 
-    REAL(KIND = DP) :: S_xk_border(3, 27)
+    REAL(KIND = DP) :: s_xk_border(3, 27)
     !! Look for special points on the border
     ! 
     ! Split the k-point across cores
@@ -1927,7 +1907,7 @@
         sr       = TRANSPOSE(sr)
         xk = xkf_all(:, ik + lower_bnd - 1)
         CALL cryst_to_cart(1, xk, bg, 1)
-        CALL backtoWS(xk, ws, rws, nrwsx, nrws)
+        CALL backtows(xk, ws, rws, nrwsx, nrws)
         xk = ws
         CALL DGEMV('n', 3, 3, 1.d0, sr, 3, xk, 1 ,0.d0 , S_xk, 1)     
         ! 
@@ -1937,7 +1917,7 @@
           DO m = -1, 1
             DO l = -1, 1
               counter_n = counter_n + 1
-              S_xk_border(:, counter_n) = S_xk(:) + REAL(n, KIND = DP) * bg(:, 1) &
+              s_xk_border(:, counter_n) = s_xk(:) + REAL(n, KIND = DP) * bg(:, 1) &
                          + REAL(m, KIND = DP) * bg (:, 2) + REAL(l, KIND = DP) * bg (:, 3)
             ENDDO
           ENDDO
@@ -1952,7 +1932,7 @@
         ! Now check if the symmetry was not found because the point is on border
         IF (.NOT. sym_found) THEN
           DO counter_n = 1, 27
-            IF (DOT_PRODUCT(xk(:) - S_xk_border(:, counter_n), xk(:) - S_xk_border(:, counter_n)) < eps6) THEN
+            IF (DOT_PRODUCT(xk(:) - s_xk_border(:, counter_n), xk(:) - s_xk_border(:, counter_n)) < eps6) THEN
               counter = counter + 1
               xkt_sp(counter, ik + lower_bnd - 1) = nb
             ENDIF
@@ -2001,7 +1981,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : nstemp
-    USE elph2,         ONLY : nkqtotf, ibndmax, ibndmin, nkf, nbndfst, nktotf
+    USE elph2,         ONLY : nkf, nbndfst, nktotf
     USE cell_base,     ONLY : bg, at
     USE constants_epw, ONLY : eps6, zero
     USE symm_base,     ONLY : s, nrot
@@ -2015,7 +1995,7 @@
     !! Lenght of xkf_sp
     INTEGER, INTENT(in) :: xkf_sp(49, nb_sp)
     !! Special points indexes and symmetries
-    REAL(KIND = DP), INTENT(inout) :: F_out(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP), INTENT(inout) :: f_out(3, nbndfst, nktotf, nstemp)
     !! In solution for iteration i
     REAL(KIND = DP), INTENT(inout) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity of k
@@ -2037,33 +2017,25 @@
     !! Local index
     INTEGER ::nb
     !! Local index
-    LOGICAL :: special
-    !! Local logical
     INTEGER :: counter_average
     !! Local counter
     INTEGER :: index_sp(nkf)
     !! Index of special points
-    REAL(KIND = DP) :: xkk_cart(3)
-    !! k-point coordinate in Cartesian unit
-    REAL(KIND = DP) :: mean(nbndfst)
-    !! Mean of the velocities
-    REAL(KIND = DP) :: mean_pop(nbndfst)
-    !! Mean of the populations
     REAL(KIND = DP) :: sa(3, 3)
     !! Symmetry matrix in crystal
     REAL(KIND = DP) :: sb(3, 3)
     !! Symmetry matrix in crystal
     REAL(KIND = DP) :: sr(3, 3)
     !! Symmetry matrix in crystal
-    REAL(KIND = DP) :: S_vkk(3, nbndfst)
+    REAL(KIND = DP) :: s_vkk(3, nbndfst)
     !! Rotated vector
-    REAL(KIND = DP) :: S_F_out(3, nbndfst)
+    REAL(KIND = DP) :: s_f_out(3, nbndfst)
     !! Rotated vector
     REAL(KIND = DP) :: tmp_vkk(3, nbndfst)
     !! Temporary vector
-    REAL(KIND = DP) :: tmp_F_out(3, nbndfst)
+    REAL(KIND = DP) :: tmp_f_out(3, nbndfst)
     !! Temporary vector
-    REAL(KIND = DP) :: F_out_loc(3, nbndfst, nktotf, nstemp)
+    REAL(KIND = DP) :: f_out_loc(3, nbndfst, nktotf, nstemp)
     !! Local F_out where the k-points have been spread
     REAL(KIND = DP) :: vkk_all_loc(3, nbndfst, nktotf)
     !! Local velocity where the k-points have been spread
@@ -2071,7 +2043,7 @@
     ! Split the k-point across cores
     CALL fkbounds(nktotf, lower_bnd, upper_bnd)
     ! 
-    F_out_loc(:, :, :, :) = zero
+    f_out_loc(:, :, :, :) = zero
     vkk_all_loc(:, :, :) = zero
     special_map(:) = .FALSE. 
     index_sp(:) = 0
@@ -2099,23 +2071,23 @@
                 sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                 sr       = TRANSPOSE(sr)
                 DO ibnd = 1, nbndfst
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vkk_all(:, ibnd, ik + lower_bnd - 1), 1, 0.d0, S_vkk(:, ibnd), 1)
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, F_out(:, ibnd, ik + lower_bnd - 1, itemp), 1, 0.d0, S_F_out(:, ibnd), 1)
-                  tmp_vkk(:, ibnd) = tmp_vkk(:, ibnd) + S_vkk(:, ibnd)
-                  tmp_F_out(:, ibnd) = tmp_F_out(:, ibnd) + S_F_out(:, ibnd)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vkk_all(:, ibnd, ik + lower_bnd - 1), 1, 0.d0, s_vkk(:, ibnd), 1)
+                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, f_out(:, ibnd, ik + lower_bnd - 1, itemp), 1, 0.d0, s_f_out(:, ibnd), 1)
+                  tmp_vkk(:, ibnd) = tmp_vkk(:, ibnd) + s_vkk(:, ibnd)
+                  tmp_f_out(:, ibnd) = tmp_f_out(:, ibnd) + s_f_out(:, ibnd)
                 ENDDO ! ibnd
               ENDIF
             ENDIF
           ENDDO ! sp
           DO ibnd = 1, nbndfst
             vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = tmp_vkk(:, ibnd) / DBLE(counter_average)
-            F_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = tmp_F_out(:, ibnd) / DBLE(counter_average)
+            f_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = tmp_f_out(:, ibnd) / DBLE(counter_average)
           ENDDO
           ! 
         ELSE ! not a special point 
           DO ibnd = 1, nbndfst
             vkk_all_loc(:, ibnd, ik + lower_bnd - 1) = vkk_all(:, ibnd, ik + lower_bnd - 1)
-            F_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = F_out(:, ibnd, ik + lower_bnd - 1, itemp) 
+            f_out_loc(:, ibnd, ik + lower_bnd - 1, itemp) = f_out(:, ibnd, ik + lower_bnd - 1, itemp) 
           ENDDO 
         ENDIF ! special
       ENDDO! ik

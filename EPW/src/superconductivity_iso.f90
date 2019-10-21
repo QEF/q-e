@@ -249,7 +249,7 @@
       DO iwp = 1, nsiw(itemp) ! loop over omega_prime
         ! this step is performed at each iter step only for iw=1 since it is independ of wsi(iw)
         IF (iw == 1) THEN
-          esqrt = 1.d0 / SQRT( wsi(iwp)**2.d0 + Deltaip(iwp)**2.d0 )
+          esqrt = 1.d0 / DSQRT( wsi(iwp)**2.d0 + Deltaip(iwp)**2.d0 )
           wesqrt(iwp) =  wsi(iwp) * esqrt 
           desqrt(iwp) =  Deltaip(iwp) * esqrt 
         ENDIF
@@ -376,7 +376,7 @@
         !
         i = iw + iwp - 1
         IF (i <= nsw) THEN
-          root = SQRT( Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0 ) )
+          root = SQRT(Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0))
           IF (aimag(root) < zero) THEN 
              esqrt = Znormp(i) / CONJG(root)
           ELSE  
@@ -388,7 +388,7 @@
         ENDIF
         ! 
         i = ABS(iw - iwp) + 1
-        root = SQRT( Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0 ) )
+        root = SQRT(Znormp(i)**2.d0 * ( ws(i)**2.d0 - Deltap(i)**2.d0))
         IF (aimag(root) < zero) THEN 
            esqrt = Znormp(i) / CONJG(root)
         ELSE  
@@ -645,7 +645,7 @@
           kernelp = 2.d0 * REAL(lambda_eph)
           kernelm = 2.d0 * aimag(lambda_eph) 
           IF (iw == 1) THEN
-             esqrt = 1.d0 / SQRT( wsi(iwp)**2.d0 + Deltai(iwp)**2.d0 )
+             esqrt = 1.d0 / DSQRT( wsi(iwp)**2.d0 + Deltai(iwp)**2.d0 )
              wesqrt(iwp) =  wsi(iwp) * esqrt
              desqrt(iwp) =  Deltai(iwp) * esqrt
           ENDIF
@@ -835,7 +835,7 @@
     USE io_var,        ONLY : iufilker
     USE io_global,     ONLY : stdout
     USE io_files,      ONLY : prefix
-    USE epwcom,        ONLY : nswfc, nqstep, nsiter, muc, conv_thr_raxis, &
+    USE epwcom,        ONLY : nswfc, nsiter, muc, conv_thr_raxis, &
                               kerwrite, kerread, nstemp
     USE eliashbergcom, ONLY : nsw, estemp, ws, dws, gap0, gap, fdwp, Kp, Km, & 
                               Delta, Deltap, Znorm
@@ -941,9 +941,9 @@
         !
         ! this step is performed at each iter step only for iw=1 since it is independent of w(iw)
         IF (iw == 1) THEN
-           esqrt = 1.d0 / SQRT( ws(iwp)**2.d0 - Deltap(iwp)**2.d0 )
-           wesqrt(iwp) =  REAL( ws(iwp) * esqrt )
-           desqrt(iwp) =  REAL( Deltap(iwp) * esqrt )
+           esqrt = 1.d0 / SQRT(ws(iwp)**2.d0 - Deltap(iwp)**2.d0)
+           wesqrt(iwp) =  REAL(ws(iwp) * esqrt)
+           desqrt(iwp) =  REAL(Deltap(iwp) * esqrt)
         ENDIF
         !
         ! end points contribute only half ( trapezoidal integration rule )

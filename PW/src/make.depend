@@ -727,18 +727,6 @@ gen_us_dy.o : ../../Modules/recvec.o
 gen_us_dy.o : ../../Modules/splinelib.o
 gen_us_dy.o : ../../Modules/uspp.o
 gen_us_dy.o : pwcom.o
-generate_rVV10_kernel_table.o : ../../Modules/constants.o
-generate_rVV10_kernel_table.o : ../../Modules/io_global.o
-generate_rVV10_kernel_table.o : ../../Modules/kind.o
-generate_rVV10_kernel_table.o : ../../Modules/mp_global.o
-generate_rVV10_kernel_table.o : ../../Modules/mp_world.o
-generate_rVV10_kernel_table.o : ../../UtilXlib/mp.o
-generate_vdW_kernel_table.o : ../../Modules/constants.o
-generate_vdW_kernel_table.o : ../../Modules/io_global.o
-generate_vdW_kernel_table.o : ../../Modules/kind.o
-generate_vdW_kernel_table.o : ../../Modules/mp_global.o
-generate_vdW_kernel_table.o : ../../Modules/mp_world.o
-generate_vdW_kernel_table.o : ../../UtilXlib/mp.o
 get_locals.o : ../../Modules/cell_base.o
 get_locals.o : ../../Modules/fft_base.o
 get_locals.o : ../../Modules/ions_base.o
@@ -794,6 +782,7 @@ h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : ldaU.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o
+h_psi.o : ../../FFTXlib/fft_helper_subroutines.o
 h_psi.o : ../../Modules/becmod.o
 h_psi.o : ../../Modules/control_flags.o
 h_psi.o : ../../Modules/fft_base.o
@@ -959,7 +948,6 @@ input.o : ../../Modules/input_parameters.o
 input.o : ../../Modules/io_files.o
 input.o : ../../Modules/io_global.o
 input.o : ../../Modules/ions_base.o
-input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/mp_pools.o
@@ -1450,7 +1438,6 @@ punch.o : ../../Modules/funct.o
 punch.o : ../../Modules/io_files.o
 punch.o : ../../Modules/io_global.o
 punch.o : ../../Modules/ions_base.o
-punch.o : ../../Modules/kernel_table.o
 punch.o : ../../Modules/qexsd.o
 punch.o : ../../Modules/wavefunctions.o
 punch.o : ../../Modules/wrappers.o
@@ -1601,7 +1588,6 @@ read_file_new.o : ../../Modules/gvecw.o
 read_file_new.o : ../../Modules/io_files.o
 read_file_new.o : ../../Modules/io_global.o
 read_file_new.o : ../../Modules/ions_base.o
-read_file_new.o : ../../Modules/kernel_table.o
 read_file_new.o : ../../Modules/kind.o
 read_file_new.o : ../../Modules/mm_dispersion.o
 read_file_new.o : ../../Modules/mp_global.o
@@ -2053,7 +2039,6 @@ summary.o : ../../Modules/gvecw.o
 summary.o : ../../Modules/io_files.o
 summary.o : ../../Modules/io_global.o
 summary.o : ../../Modules/ions_base.o
-summary.o : ../../Modules/kernel_table.o
 summary.o : ../../Modules/kind.o
 summary.o : ../../Modules/mp_bands.o
 summary.o : ../../Modules/noncol.o

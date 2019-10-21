@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------
-  SUBROUTINE ephwann_shuffle(nqc, xqc)
+  SUBROUTINE ephwann_shuffle(nqc, xqc, w_centers)
   !---------------------------------------------------------------------
   !!
   !! Wannier interpolation of electron-phonon vertex
@@ -18,9 +18,9 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP, i4b
-  USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
+  USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
-  USE cell_base,     ONLY : at, bg, omega, alat
+  USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
@@ -31,8 +31,8 @@
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
-                            nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl, lindabs, mob_maxiter, use_ws, epbread,  &
+                            nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
+                            specfun_pl, lindabs, use_ws, epbread,               &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
                             nqc1, nqc2, nqc3, nkc1, nkc2, nkc3
   USE control_flags, ONLY : iverbosity
@@ -42,18 +42,18 @@
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, crystal, iunepmatwp2, iunrestart,       &
-                            iuntau, iuntaucb
+                            iunepmatwp, iunepmatwp2, iunrestart, iuntau,        &
+                            iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
-                            epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
+                            epmatwp, epmatq, wf, etf, etf_ks, xqf, xkf,         &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all, eta, nbndfst,    &
-                            inv_tau_allcb, zi_allcb, exband, xkfd, gamma_v_all, &
-                            esigmar_all, esigmai_all, lower_bnd, upper_bnd, ifc,&
+                            inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
+                            esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf, transp_temp, xkq
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
@@ -75,7 +75,7 @@
   USE division,      ONLY : fkbounds
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, npool
+  USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,      ONLY : mpime, world_comm
   USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,        &
                             sumkg_seq, efermig_seq, mem_size, broadening
@@ -97,6 +97,8 @@
   !! number of qpoints in the coarse grid
   REAL(KIND = DP), INTENT(in) :: xqc(3, nqc)
   !! qpoint list, coarse mesh
+  REAL(KIND = DP), INTENT(in) :: w_centers(3, nbndsub)
+  !! Wannier centers 
   ! 
   ! Local  variables
   CHARACTER(LEN = 256) :: filint
@@ -165,16 +167,12 @@
   !! Counter on bands when use_ws == .TRUE.
   INTEGER :: iw2
   !! Counter on bands when use_ws == .TRUE.
-  INTEGER :: iter
-  !! Current iteration number
   INTEGER :: itemp
   !! Temperature index
   INTEGER :: icbm
   !! Index of the CBM
   INTEGER :: totq
   !! Total number of q-points within the fsthick window. 
-  INTEGER :: icounter
-  !! Integer counter for displaced points
   INTEGER :: ipool
   !! Cpu index.
   INTEGER :: npool_tmp
@@ -208,18 +206,12 @@
   !! Total number of points store on file 
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
-  !! Offset to tell where to start reading the file
 #else
   INTEGER :: ind_tot
   !! Total number of points store on file 
   INTEGER :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER :: lsize
-  !! Offset to tell where to start reading the file
 #endif
-  REAL(KIND = DP) :: rdotk_scal
-  !! Real (instead of array) for $r\cdot k$
   REAL(KIND = DP) :: xxq(3)
   !! Current q-point 
   REAL(KIND = DP) :: xxk(3)
@@ -232,8 +224,6 @@
   !! Real-space wigner-Seitz vectors
   REAL(KIND = DP) :: atws(3, 3)
   !! Maximum vector: at*nq
-  REAL(KIND = DP) :: w_centers(3, nbndsub)
-  !! Wannier centers  
   REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
   REAL(KIND = DP) :: ef0(nstemp)
@@ -242,14 +232,12 @@
   !! Second Fermi level for the temperature itemp  
   REAL(KIND = DP) :: dummy(3)
   !! Dummy variable
-  REAL(KIND = DP) :: val
-  !! Temporary broadening value
-  !REAL(KIND = DP), EXTERNAL :: fermicarrier
-  !! Function that returns the Fermi level so that n=p (if int_mob = .TRUE.)  
+  REAL(KIND = DP) :: valmin(npool)
+  !! Temporary broadening min value 
+  REAL(KIND = DP) :: valmax(npool)
+  !! Temporary broadening max value 
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
-  !REAL(KIND = DP), EXTERNAL :: efermig_seq
-  !! Same but in sequential
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(KIND = DP), ALLOCATABLE :: w2(:)
@@ -804,7 +792,7 @@
   ! get the size of the matrix elements stored in each pool
   ! for informational purposes.  Not necessary
   !
-  CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
+  CALL mem_size(nmodes, nkf)
   !
   ALLOCATE(etf_all(nbndfst, nktotf), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf_all', 1)
@@ -1134,15 +1122,15 @@
         ! wf are the interpolated eigenfrequencies
         ! (omega on fine grid)
         !
-        IF (w2(nu) > zero) THEN
-          wf(nu, iq) =  SQRT(ABS(w2(nu)))
+        IF (w2(nu) > -eps8) THEN
+          wf(nu, iq) =  DSQRT(ABS(w2(nu)))
         ELSE 
-          wf(nu, iq) = -SQRT(ABS(w2(nu)))
+          wf(nu, iq) = -DSQRT(ABS(w2(nu)))
         ENDIF
         !
         DO mu = 1, nmodes
           na = (mu - 1) / 3 + 1
-          uf(mu, nu) = uf(mu, nu) / SQRT(amass(ityp(na)))
+          uf(mu, nu) = uf(mu, nu) / DSQRT(amass(ityp(na)))
         ENDDO
       ENDDO
       !
@@ -1167,7 +1155,7 @@
       ! -------------------------------------------------------------
       ! 
       IF (adapt_smearing) THEN
-        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), dims, wf(:, iq), rws, nrws) 
+        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), wf(:, iq), rws, nrws) 
       ENDIF 
       ! 
       ! This is a loop over k blocks in the pool (size of the local k-set)
@@ -1272,7 +1260,7 @@
             ! 
             IF (adapt_smearing) THEN
               ! Return the value of the adaptative broadening eta
-              CALL broadening(ik, ikk, ikq, w2, vmefp, eta)
+              CALL broadening(ik, ikk, ikq, wf(:, iq), vmefp, eta)
               !
             ENDIF ! adapt_smearing
             !
@@ -1330,16 +1318,25 @@
       !   
       IF (MOD(iqq, restart_freq) == 0 .AND. adapt_smearing) THEN
        ! Min non-zero value
-       val = 10000d0
+       valmin(:) = zero
+       valmin(my_pool_id + 1) = 100d0
+       valmax(:) = zero
        DO ik = 1, nkf
          DO ibnd = 1, nbndfst
            DO imode = 1, nmodes
-             IF (eta(imode, ibnd, ik) < val .AND. ABS(eta(imode, ibnd, ik)) > eps16 ) val = eta(imode, ibnd, ik)
+             IF (eta(imode, ibnd, ik) < valmin(my_pool_id + 1) .AND. ABS(eta(imode, ibnd, ik)) > eps16) THEN
+               valmin(my_pool_id + 1) = eta(imode, ibnd, ik)
+             ENDIF
+             IF (eta(imode, ibnd, ik) > valmax(my_pool_id + 1)) THEN
+               valmax(my_pool_id + 1) = eta(imode, ibnd, ik)
+             ENDIF
            ENDDO
          ENDDO
        ENDDO 
-       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', SQRT(2.0d0) * val * ryd2mev,' meV'
-       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', SQRT(2.0d0) * MAXVAL(eta) * ryd2mev,' meV'
+       CALL mp_sum(valmin, inter_pool_comm)
+       CALL mp_sum(valmax, inter_pool_comm)
+       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', DSQRT(2.0d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', DSQRT(2.0d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
       !
       IF (prtgkk    ) CALL print_gkk(iq)

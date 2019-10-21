@@ -30,6 +30,7 @@
   USE close_epw,       ONLY : close_final, deallocate_epw
   USE cum_mod,         ONLY : spectral_cumulant
   USE wannierization,  ONLY : setphases_wrap, wann_run
+  USE io_epw,          ONLY : openfilepw
   !
   IMPLICIT NONE
   !

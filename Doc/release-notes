@@ -1,4 +1,14 @@
 New in development branch:
+  * For non-local functionals of the vdW-DF and rVV10 families the kernel is
+    now calculated on-the-fly rather than read from file. Thus, the kernel
+    files vdW_kernel_table and rVV10_kernel_table are no longer needed for
+    calculations and the kernel generation programs generate_vdW_kernel_table.x
+    and generate_rVV10_kernel_table.x have been removed. The on-the-fly vdW-DF
+    kernel calculation does not take long, e.g. ~100 seconds on a single Intel
+    Xeon 2.20GHz core and ~12 seconds on 8 cores (Intel 2018 compilers); the
+    rVV10 kernel computes in seconds. Detailed information is available in the
+    git log commit notes. This work was performed by T. Thonhauser and is
+    supported by NSF Grant No. 1712425.
   * turbo_eels code of TDDFPT module now works with ultrasoft pseudopotentials
     and spin-orbit coupling together (Oleksandr Motornyi, Andrea Dal Corso,
     Nathalie Vast). lr_sm1_psi.f90 of LR_Modules is rewritten and simplified.

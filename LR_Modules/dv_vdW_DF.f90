@@ -11,7 +11,6 @@ MODULE ph_vdW_DF
   
   USE kinds,             ONLY : dp
   USE constants,         ONLY : pi, e2
-  USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
   USE mp_pools,          ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
   USE io_global,         ONLY : ionode
@@ -19,8 +18,8 @@ MODULE ph_vdW_DF
   USE fft_interfaces,    ONLY : fwfft, invfft 
   USE control_flags,     ONLY : iverbosity, gamma_only
   USE io_global,         ONLY : stdout
-  USE vdW_DF,            ONLY : vdw_type, initialize_spline_interpolation, &
-                                interpolate_kernel
+  USE vdW_DF,            ONLY : inlc, initialize_spline_interpolation, &
+                                interpolate_kernel, q_mesh, Nr_points, Nqs, r_max
   USE gc_lr,             ONLY : grho
   
 
@@ -337,8 +336,6 @@ end subroutine get_delta_v
 
   SUBROUTINE get_abcdef (q0, i_grid, q_hi, q_low, dq, a,b,c,d,e,f )
 
-    USE kernel_table,    ONLY : q_cut, q_min
-
     real(dp),  intent(IN)    :: q0(:)
     integer, INTENT(IN)      :: i_grid
     integer, INTENT(OUT)     :: q_hi, q_low
@@ -449,7 +446,7 @@ end subroutine get_delta_v
   !!     dq_dgradrho = total_rho / |gradient_rho| * d q / d |gradient_rho|
   !!
     
-  USE kernel_table,    ONLY : q_cut, q_min
+  USE vdW_DF,          ONLY : q_cut, q_min
     
   !                                                                  
   !                                                                        _
@@ -472,8 +469,8 @@ end subroutine get_delta_v
   
   integer                    :: i_grid, index, count=0                    !! Indexing variables
  
-  if (vdw_type==1) Z_ab = -0.8491D0
-  if (vdw_type==2) Z_ab = -1.887D0
+  if (inlc==1) Z_ab = -0.8491D0
+  if (inlc==2) Z_ab = -1.887D0
   
  
   ! initialize q0-related arrays ... 

@@ -127,7 +127,7 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
-  USE kernel_table,         ONLY : initialize_kernel_table
+  USE vdW_DF,               ONLY : generate_kernel
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE vasp_read_chgcar,     ONLY : vaspread_rho
   !
@@ -182,10 +182,10 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   WRITE( stdout, '(5X,"Exchange-correlation      = ", &
         &  " (",I2,3I3,2I2,")")') iexch,icorr,igcx,igcc,inlc,imeta
   !
-  ! ... read the vdw kernel table if needed
+  ! ... generate the vdw kernel table if needed
   !
   IF (inlc > 0 ) THEN
-     call initialize_kernel_table(inlc) 
+     call generate_kernel
   END IF
   !
   !
@@ -759,7 +759,7 @@ END SUBROUTINE vasp_readschema_file
 SUBROUTINE vasp_init_xc(vasp_parameters,vasp_atominfo,iexch,icorr,igcx,igcc,inlc,ierr)
   !---------------------------------------------------------
   USE constants,            ONLY : eps4
-  USE vdW_DF,               ONLY : vdw_type
+  USE vdW_DF,               ONLY : inlc_ => inlc
   IMPLICIT NONE
   !
   TYPE(vasp_parameters_type), INTENT(IN)      :: vasp_parameters
@@ -829,11 +829,11 @@ SUBROUTINE vasp_init_xc(vasp_parameters,vasp_atominfo,iexch,icorr,igcx,igcc,inlc
   !
   IF(vasp_parameters%luse_vdw) THEN
      IF(ABS(vasp_parameters%zab_vdw-(-0.8491))<eps4) THEN
-        vdw_type=1
-        inlc = 1
+        inlc_ = 1
+        inlc  = 1
      ELSEIF(ABS(vasp_parameters%zab_vdw-(-1.887))<eps4) THEN
-        vdw_type=2
-        inlc = 2
+        inlc_ = 2
+        inlc  = 2
      ELSE
         CALL errore ('vasp_init_xc', 'Zab_vdW not implemented', vasp_parameters%zab_vdw)
      END IF

@@ -41,7 +41,7 @@
     !
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : czero, cone, zero, one, eps12, eps16
-    USE epwcom,        ONLY : lphase, use_ws
+    USE epwcom,        ONLY : use_ws
     USE low_lvl,       ONLY : utility_zdotu, degen_sort
     !
     IMPLICIT NONE
@@ -76,12 +76,8 @@
     !! Counter on band index
     INTEGER :: jbnd
     !! Counter on band index
-    INTEGER :: neig
-    !! Number of eigenenergies
     INTEGER :: info
     !! Infor for lapack ZHPEVX 
-    INTEGER :: ifail(nbnd)
-    !! LIWORK 
     INTEGER :: list_dup(nbnd)
     !! List of degenerate eigenvalues
     INTEGER :: ndeg
@@ -112,8 +108,6 @@
     !! RWORK(1) returns the optimal LRWORK.
     COMPLEX(KIND = DP) :: chf(nbnd, nbnd)
     !! Hamiltonian in Bloch basis, fine mesh
-    !COMPLEX(KIND = DP) :: zdotu
-    !! Dot product between the two phonon eigenvectors.
     COMPLEX(KIND = DP) :: cz(nbnd, nbnd)
     !! Eigenvectors from diag of Hamiltonian
     COMPLEX(KIND = DP) :: P(nbnd, nbnd)
@@ -122,8 +116,6 @@
     !! Complex work variable
     COMPLEX(KIND = DP), ALLOCATABLE :: P_prime(:, :)
     !! Perturbation matrix on the subspace
-    COMPLEX(KIND = DP), ALLOCATABLE :: Uk_prime(:, :)
-    !! Rotation matrix on the degenerate subspace
     COMPLEX(KIND = DP), ALLOCATABLE :: Uk(:, :)
     !! Rotation matrix on the full space
     !
@@ -219,7 +211,7 @@
         !CALL random_number(rand2)
         rand1 = 0.25644832 + 0.01 * ibnd
         rand2 = 0.11584272 + 0.025 * jbnd
-        P(jbnd, ibnd) = CMPLX(rand1, rand2) 
+        P(jbnd, ibnd) = CMPLX(rand1, rand2, KIND = DP) 
       ENDDO
     ENDDO
     ! 
@@ -333,14 +325,6 @@
     !! Rotation matrix, fine mesh 
     !
     ! Local variables
-    INTEGER :: neig
-    !! The total number of eigenvalues found
-    INTEGER :: info
-    !! "0" successful exit, "<0" i-th argument had an illegal value, ">0" i eigenvectors failed to converge.
-    INTEGER :: ifail(nmodes)
-    !! Contains the indices of the eigenvectors that failed to converge
-    INTEGER :: iwork(5 * nmodes)
-    !! Integer work array
     INTEGER :: imode
     !! Counter on modes
     INTEGER :: jmode
@@ -351,8 +335,6 @@
     !! Counter on atoms
     INTEGER :: nb
     !! Counter on atoms
-    REAL(KIND = DP) :: rwork(7 * nmodes)
-    !! Real work array
     REAL(KIND = DP) :: w(nmodes)
     !! Eigenvalues
     REAL(KIND = DP) :: xq(3)
@@ -363,16 +345,12 @@
     !! inverse square root of masses
     COMPLEX(KIND = DP) :: champ(nmodes * (nmodes + 1) / 2)
     !! Complex Hamiltonian packed in upper triangle
-    COMPLEX(KIND = DP) :: cwork(2 * nmodes)
-    !! Complex work array
     COMPLEX(KIND = DP) :: cz(nmodes, nmodes)
     !! Eigenvectors
     COMPLEX(KIND = DP) :: chf(nmodes, nmodes)
     ! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(KIND = DP) :: cfac
     !! Complex prefactor for Fourier transform. 
-    COMPLEX(KIND = DP) :: zdotu
-    !! Dot product between the two phonon eigenvectors. 
     !
     CALL start_clock ('DynW2B')
     !----------------------------------------------------------
@@ -426,7 +404,7 @@
     !
     DO na = 1, nat
       DO nb = 1, nat
-        massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)) )
+        massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)) )
         !
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac
@@ -540,8 +518,6 @@
     !! Counter on modes
     INTEGER :: jmode
     !! Counter on modes
-    INTEGER :: ir
-    !! Counter on real-space index
     INTEGER :: na
     !! Counter on atoms
     INTEGER :: nb
@@ -684,7 +660,7 @@
     !
     DO na = 1, nat
       DO nb = 1, nat
-        massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)))
+        massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)))
         !
         chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
            chf(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) * massfac
@@ -1295,6 +1271,7 @@
               ijbndc = ijbndc + 1
               jbndc = deg_dim(ideg) - MOD(ijbndc, deg_dim(ideg))
               ibndc = INT((ijbndc - 1) / deg_dim(ideg)) + 1
+!DBSP
               vmef(:, ibnd, jbnd) = vmef_deg(:, ibndc, jbndc)
             ENDIF
           ENDDO
@@ -1327,7 +1304,7 @@
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, cuf, vmefp, dims, wf, rws, nrws)
+    SUBROUTINE vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, cuf, vmefp, wf, rws, nrws)
     !--------------------------------------------------------------------------
     !! 
     !! This routine computes the phonon velocity by computing the q derivative of 
@@ -1338,9 +1315,9 @@
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : rdw, epsi, zstar, wscache, ifc
     USE cell_base,     ONLY : at, alat, bg
-    USE epwcom,        ONLY : eig_read, use_ws, lpolar, lifc, nqc1, nqc2, nqc3
+    USE epwcom,        ONLY : use_ws, lpolar, lifc, nqc1, nqc2, nqc3
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang, one, eps8
-    USE ions_base,     ONLY : amass, tau, nat, ityp
+    USE ions_base,     ONLY : tau, nat
     USE io_global,     ONLY : stdout
     USE low_lvl,       ONLY : degen_sort
     USE rigid_epw,     ONLY : rgd_blk_der
@@ -1355,9 +1332,6 @@
     !! number of WS points
     INTEGER, INTENT(in) :: irvec_q(3, nrr_q)
     !! coordinates of WS points
-    INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier function if use_ws == .TRUE.
-    !! Is equal to 1 otherwise.
     INTEGER, INTENT(in) :: ndegen_q(nrr_q, nat, nat)
     !! degeneracy of WS points
     INTEGER, INTENT(in) :: nrws
@@ -1382,10 +1356,6 @@
     !! Returns if the modes contains degeneracices for that q-point.
     INTEGER :: ir
     !! Counter on real-space index
-    INTEGER :: iw
-    !! Counter on the number of Wannier functions
-    INTEGER :: iw2
-    !! Counter on the number of Wannier functions
     INTEGER :: imode
     !! Counter on band index
     INTEGER :: jmode
@@ -2235,7 +2205,6 @@
     USE io_files,         ONLY : prefix, tmp_dir
     USE mp,               ONLY : mp_sum
     USE mp_world,         ONLY : world_comm
-    USE io_global,        ONLY : stdout
     USE epwcom,           ONLY : use_ws
     USE mp_world,         ONLY : mpime
     USE division,         ONLY : para_bounds

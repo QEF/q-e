@@ -22,7 +22,6 @@
     diagonalization='david'
     mixing_beta=0.7
     conv_thr=1.0d-10
-    diago_thr_init = 1.0e-4
     diago_full_acc = .true.
  /
 ATOMIC_SPECIES
@@ -43,4 +42,3 @@ K_POINTS crystal
 0.5   0.0   0.5   0.125
 0.5   0.5   0.0   0.125
 0.5   0.5   0.5   0.125
-

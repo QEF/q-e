@@ -67,11 +67,11 @@ pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
 mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
 density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
-mobx=`grep " x-axis" $fname | awk '{print $5}'`
-mobav=`grep "   avg" $fname | awk '{print $1}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
 indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'` 
-### mobnew=`grep "       Temp     " $fname -A4 | grep -v "Temp" | grep -v "[K]" | grep -v "===" | awk '{print $1; print $2; print $5}'`
+mobnewx=`sed -n -e "/       Temp    / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
+mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $2}'`
+mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $3}'`
 
 if test "$efm" != ""; then
         echo efm
@@ -114,20 +114,20 @@ if test "$mobcb" != ""; then
         for x in $mobcb; do echo $x; done
 fi
 
-if test "$mobx" != ""; then
-        echo mobx
-        for x in $mobx; do echo $x; done
+if test "$mobnewx" != ""; then
+        echo mobnewx
+        for x in $mobnewx; do echo $x; done
 fi
 
-if test "$mobav" != ""; then
-        echo mobav
-        for x in $mobav; do echo $x; done
+if test "$mobnewy" != ""; then
+        echo mobnewy
+        for x in $mobnewy; do echo $x; done
 fi
 
-## if test "$mobnew" != ""; then
-##         echo mobnew
-##         for x in $mobnew; do echo $x; done
-## fi
+if test "$mobnewz" != ""; then
+        echo mobnewz
+        for x in $mobnewz; do echo $x; done
+fi
 
 if test "$density" != ""; then
         echo density

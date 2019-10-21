@@ -618,7 +618,7 @@
     IF (iverbosity == 1) THEN
       DO na = 1, nat
         DO nb = 1, nat
-          massfac = 1.d0 / SQRT(amass(ityp(na)) * amass(ityp(nb)))
+          massfac = 1.d0 / DSQRT(amass(ityp(na)) * amass(ityp(nb)))
           dynq_tmp(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb) = &
           dynq(3 * (na - 1) + 1:3 * na, 3 * (nb - 1) + 1:3 * nb, current_iq) * massfac
         END DO
@@ -636,9 +636,9 @@
       ! 
       DO nu = 1, nmodes
         IF (w1(nu) > 0.d0) THEN
-          wtmp(nu) =  SQRT(ABS(w1(nu)))
+          wtmp(nu) =  DSQRT(ABS(w1(nu)))
         ELSE
-          wtmp(nu) = -SQRT(ABS(w1(nu)))
+          wtmp(nu) = -DSQRT(ABS(w1(nu)))
         ENDIF
       ENDDO
       WRITE(stdout, '(5x,"Frequencies of the matrix for the current q in the star (cm^-1)")')
