@@ -16,7 +16,7 @@ PROGRAM benchmark_libxc
   !! * derivative of LDA (dmxc) ;
   !! * GGA ;
   !! * derivative of GGA (dgcxc) ;
-  !! * metaGGA (some discrepancies with the m06_L functional only for correlation potential).
+  !! * metaGGA.
   !
   !------------------------------------------------------------------------------------!
   !  To be run on a single processor
