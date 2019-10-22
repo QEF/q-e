@@ -27,7 +27,7 @@
     USE kinds,         ONLY : DP
     USE io_var,        ONLY : iunepmat, iunsparseq,  &
                               iunsparseqcb, iunepmatcb, iunepmatwp2
-    USE epwcom,        ONLY : iterative_bte, int_mob, carrier, etf_mem
+    USE epwcom,        ONLY : iterative_bte, int_mob, carrier, etf_mem, assume_metal
     USE epwcom,        ONLY : int_mob, carrier, ncarrier
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL
@@ -47,11 +47,11 @@
 #endif
     ! 
     IF (iterative_bte) THEN
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. assume_metal) THEN
         CLOSE(iunepmat)
         CLOSE(iunsparseq)
       ENDIF
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0)) .AND. .NOT. assume_metal) THEN
         CLOSE(iunepmatcb)
         CLOSE(iunsparseqcb)
       ENDIF  ! in all other cases it is still to decide which files to open
