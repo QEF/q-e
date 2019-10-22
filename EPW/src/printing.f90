@@ -311,84 +311,42 @@
     IF (PRESENT(max_mob)) THEN
       max_mob(:) = zero
     ENDIF
-    ! 
-    ! Hole
-    IF (ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
-      CALL prtheader(-1)
-      DO itemp = 1, nstemp
-        carrier_density = 0.0
-        etemp = transp_temp(itemp)
-        sigma(:, :) = zero
-        fi_check(:) = zero
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
-                fi_check, ibnd, ik)
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-        ! 
-        ! Print the resulting mobility
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
-      ENDDO ! temp
-    ENDIF
-    ! 
-    ! Now electron mobility
-    IF (ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
-      CALL prtheader(1)
-      DO itemp = 1, nstemp
-        carrier_density = 0.0
-        etemp = transp_temp(itemp)
-        sigma(:, :) = zero
-        fi_check(:) = zero
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
-                fi_check, ibnd, ik)
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * fnk
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-        ! Print the resulting mobility
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
-      ENDDO ! temp
-    ENDIF
-    !
-    ! do metals now
-    If (assume_metal) THEN
-      CALL prtheader()
-      DO itemp = 1, nstemp
-        carrier_density = 0.0
-        etemp = transp_temp(itemp)
-        sigma(:, :) = zero
-        fi_check(:) = zero
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
+    CALL prtheader()
+    ! compute conductivity
+    DO itemp = 1, nstemp
+      carrier_density = 0.0
+      etemp = transp_temp(itemp)
+      sigma(:, :) = zero
+      fi_check(:) = zero
+      DO ik = 1,  nktotf
+        DO ibnd = 1, nbndfst
+          !  energy at k (relative to Ef)
+          ekk = etf_all(ibnd, ik) - ef0(itemp)
+          fnk = wgauss(-ekk / etemp, -99)
+          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+              fi_check, ibnd, ik)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
+          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5.AND. .NOT. assume_metal) THEN
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+              fi_check, ibnd, ik)
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ELSE IF (assume_metal) THEN
             ! just sum on all bands for metals
             CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
               fi_check, ibnd, ik)
-            !  energy at k (relative to Ef)
-            ekk = etf_all(ibnd, ik) - ef0(itemp)
-            fnk = wgauss(-ekk / etemp, -99)
-            ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * fnk
-          ENDDO ! ibnd
-        ENDDO ! ik
-        ! Print the resulting mobility
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! ik
+      ! Print the resulting mobility
+      IF (PRESENT(max_mob)) THEN
         CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
-      ENDDO ! itemp      
-    ENDIF
+      ELSE
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp)
+      ENDIF
+    ENDDO ! temp
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE print_mob_sym
@@ -552,76 +510,38 @@
     IF (PRESENT(max_mob)) THEN
       max_mob(:) = zero
     ENDIF
-    ! Hole
-    IF (ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
-      ! 
-      CALL prtheader(-1)
-      DO itemp = 1, nstemp
-        carrier_density = 0.0
-        etemp = transp_temp(itemp)
-        sigma(:, :) = zero
-        fi_check(:) = zero
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all , sigma, fi_check, ibnd, ik)
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
-      ENDDO ! itemp      
-      ! 
-    ENDIF
-    ! 
-    ! Now electron mobility
-    IF (ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
-      CALL prtheader(+1)
-      DO itemp = 1, nstemp
-        carrier_density = 0.0
-        etemp = transp_temp(itemp)
-        sigma(:, :) = zero
-        fi_check(:) = zero
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * fnk
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
-      ENDDO
-      ! 
-    ENDIF
-    IF (assume_metal) THEN
-      CALL prtheader()
-      DO itemp = 1, nstemp
-        carrier_density = 0.0
-        etemp = transp_temp(itemp)
-        sigma(:, :) = zero
-        fi_check(:) = zero
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            ! sum on all bands for metals
-            call compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
-            !  energy at k (relative to Ef)
-            ekk = etf_all(ibnd, ik) - ef0(itemp)
-            fnk = wgauss(-ekk / etemp, -99)
+    CALL prtheader()
+    DO itemp = 1, nstemp
+      carrier_density = 0.0
+      etemp = transp_temp(itemp)
+      sigma(:, :) = zero
+      fi_check(:) = zero
+      DO ik = 1,  nktotf
+        DO ibnd = 1, nbndfst
+          !  energy at k (relative to Ef)
+          ekk = etf_all(ibnd, ik) - ef0(itemp)
+          fnk = wgauss(-ekk / etemp, -99)
+          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all , sigma, fi_check, ibnd, ik)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
+          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all , sigma, fi_check, ibnd, ik)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * fnk
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO
-    ENDIF
+          ELSE IF (assume_metal) THEN 
+            ! sum on all bands for metals
+            CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! ik
+      IF (PRESENT(max_mob)) THEN
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
+      ELSE
+        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp) 
+      ENDIF
+    ENDDO ! itemp      
     !-----------------------------------------------------------------------
     END SUBROUTINE print_mob
     !-----------------------------------------------------------------------
@@ -724,8 +644,8 @@
     ELSE
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
            SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
-      WRITE(stdout, '(37x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
-      WRITE(stdout, '(37x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+      WRITE(stdout, '(36x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
+      WRITE(stdout, '(36x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
     ENDIF
     IF (PRESENT(max_mob)) THEN
       max_mob = MAXVAL(mobility(:,:))
@@ -735,28 +655,22 @@
     END SUBROUTINE prtmob
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE prtheader(cal_type)
+    SUBROUTINE prtheader()
     !-----------------------------------------------------------------------
     !! 
     !! This routine print a header for mobility calculation
     !! 
     USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : assume_metal
+    USE epwcom,        ONLY : assume_metal, ncarrier
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in), OPTIONAL :: cal_type
-    !! +1 means electron and -1 means hole,
-    !! If assume_metal is True then nothing is considered
     WRITE(stdout, '(/5x, a)') REPEAT('=',93)
     IF (.NOT. assume_metal) THEN
-      IF (.NOT. PRESENT(cal_type)) THEN
-        CALL errore("prtheader", "DEV ERROR: Must specify cal_type", 1)
-      ENDIF
-      IF (cal_type == -1) THEN 
+      IF (ncarrier < -1E5) THEN 
         WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
         WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
-      ELSEIF (cal_type == 1) THEN
+      ELSE
         WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
         WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
       ENDIF

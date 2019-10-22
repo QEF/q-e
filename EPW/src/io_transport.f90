@@ -921,8 +921,6 @@
     !
     ! Local variables
     !
-    LOGICAL :: itsopen
-    !! Flag to tell if a file has been open or not
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
     CHARACTER(LEN = 256) :: my_pool_id_ch
@@ -1001,12 +999,6 @@
         ! Read files per processor
         WRITE(my_pool_id_ch, "(I0)") my_pool_id
         filint = TRIM(path_to_files(ich)) // TRIM(my_pool_id_ch)
-        ! check if file is open. if not open it
-        INQUIRE(UNIT = iunepmat, OPENED = itsopen)
-        IF (itsopen) THEN
-          ! close file (it was forgotten to be closed somewhere)
-          CLOSE(UNIT = iunepmat)
-        ENDIF
         OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'old', FORM = 'unformatted', ACTION = 'read', ACCESS = 'stream')
         IF (ich == 1) THEN
           DO i2 = 1, lrepmatw2_merge
@@ -1045,7 +1037,7 @@
       IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparse', 1)
       !
     ENDIF
-    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0)) .AND. .NOT. assume_metal) THEN
       !
       ALLOCATE(trans_probcb(lrepmatw5_merge), STAT = ierr)
       IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_probcb', 1)
