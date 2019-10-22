@@ -258,7 +258,7 @@
     !!
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf, dos
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : nrot
@@ -342,9 +342,9 @@
       ENDDO ! ik
       ! Print the resulting mobility
       IF (PRESENT(max_mob)) THEN
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
+              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp, max_mob(itemp))
       ELSE
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp)
+              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp)
       ENDIF
     ENDDO ! temp
     !
@@ -458,7 +458,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf, dos
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
@@ -537,9 +537,9 @@
         ENDDO ! ibnd
       ENDDO ! ik
       IF (PRESENT(max_mob)) THEN
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
+              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp, max_mob(itemp)) 
       ELSE
-        CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), etemp) 
+              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp) 
       ENDIF
     ENDDO ! itemp      
     !-----------------------------------------------------------------------
@@ -549,6 +549,10 @@
     !-----------------------------------------------------------------------
     SUBROUTINE compute_sigma(f_out, vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
     !-----------------------------------------------------------------------
+    !!
+    !!  Computes the conductivity tensor without using symetries
+    !!
+    !----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : nkf1, nkf2, nkf3
     USE elph2,         ONLY : nbndfst, nktotf 
@@ -593,7 +597,7 @@
     END SUBROUTINE compute_sigma
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, etemp, max_mob) 
+    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, dos, etemp, max_mob) 
     !-----------------------------------------------------------------------
     !! 
     !! This routine print the mobility (or conducrtivity for metals) in a 
@@ -616,6 +620,8 @@
     !! Integrated population vector
     REAL(KIND = DP), INTENT(in) :: ef0
     !! Fermi-level 
+    REAL(KIND = DP), INTENT(in) :: dos
+    !! Density of States at ef0 (only used for metals)
     REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in Ry (this includes division by kb)
     REAL(KIND = DP), INTENT(inout), OPTIONAL :: max_mob
@@ -639,14 +645,12 @@
       mobility(:, :) = mobility(:, :) / (electron_SI * carrier_density * inv_cell) * (bohr2ang * ang2cm) ** 3
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
            nden, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
-      WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
-      WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
     ELSE
-      WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
-           SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
-      WRITE(stdout, '(36x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
-      WRITE(stdout, '(36x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
+      WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
+           dos, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ENDIF
+    WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
+    WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
     IF (PRESENT(max_mob)) THEN
       max_mob = MAXVAL(mobility(:,:))
     ENDIF
@@ -675,8 +679,8 @@
         WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
       ENDIF
     ELSE
-      WRITE(stdout, '(5x, "  Temp     Fermi    Population SR                  Conductivity ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]  [carriers per cell]              [Ohm.cm]^-1 ")')
+      WRITE(stdout, '(5x, "  Temp     Fermi        DOS        Population SR                 Conductivity ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 ")')
     ENDIF
     WRITE(stdout, '(5x, a/)') REPEAT('=',93)
     !-----------------------------------------------------------------------

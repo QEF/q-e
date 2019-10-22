@@ -56,7 +56,7 @@
                             inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
                             esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf, transp_temp, xkq
+                            nktotf, transp_temp, xkq, dos
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -79,7 +79,7 @@
   USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,      ONLY : mpime, world_comm
   USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,        &
-                            sumkg_seq, efermig_seq, mem_size, broadening
+                            sumkg_seq, efermig_seq, mem_size, broadening, compute_dos
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
@@ -1376,11 +1376,15 @@
         IF (scattering) THEN
           !   
           ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
-          ! This is only done once for the first iq. 
+          ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
               CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+              ! compute dos for metals
+              IF (assume_metal) THEN
+                CALL compute_dos(itemp, ef0, dos)
+              ENDIF
             ENDDO 
           ENDIF
           !   
@@ -1493,9 +1497,13 @@
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)      
         IF (int_mob .OR. carrier) THEN
-          ! SP: Determination of the Fermi level for intrinsic or doped carrier 
+          ! SP: Determination of the Fermi level and dos for intrinsic or doped carrier 
           !     One also need to apply scissor before calling it.
           CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+          ! only compute dos for metals
+          IF (assume_metal) THEN
+            CALL compute_dos(itemp, ef0, dos)
+          ENDIF
         ELSE
           IF (efermi_read) THEN
             ef0(itemp) = fermi_energy
@@ -1676,6 +1684,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating transp_temp', 1)
   DEALLOCATE(et_ks, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating et_ks', 1)
+  IF (assume_metal) THEN
+    DEALLOCATE(dos, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dos', 1)
+  ENDIF
   !
   CALL stop_clock('ephwann')
   !
