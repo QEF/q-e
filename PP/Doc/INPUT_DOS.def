@@ -74,7 +74,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 		
 		    =  1  Methfessel-Paxton of order 1
 		    
-		    = -1  Marzari-Vanderbilt "cold smearing"
+		    = -1  "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
 		    
 		    =-99  Fermi-Dirac function
 	    }
