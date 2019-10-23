@@ -34,7 +34,7 @@
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             & 
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
-                              wkf, dmef, vmef, eta, transp_temp, lower_bnd,  &
+                              wkf, dmef, vmef, eta, transp_temp, lower_bnd, dos,  &
                               nbndfst, nktotf
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
                               eps6, eps10, bohr2ang, ang2cm
@@ -592,6 +592,11 @@
             WRITE(iufilibtev_sup, '(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
           ENDDO
         ENDDO
+        IF (assume_metal) THEN
+          DO itemp = 1, nstemp
+            WRITE(iufilibtev_sup, '(i8,1E22.12)') itemp, dos(itemp)
+          ENDDO
+        ENDIF
         CLOSE(iufilibtev_sup)
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
@@ -622,8 +627,7 @@
         ! 
       ENDIF ! master
       ! 
-      ! Now print the carrier density for checking
-      ! only for non-metals
+      ! Now print the carrier density for checking (for non-metals)
       IF (.NOT. assume_metal) THEN
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)

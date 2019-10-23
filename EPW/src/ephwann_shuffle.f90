@@ -827,6 +827,12 @@
                          INT((nbndfst), KIND = 8) * INT((nbndfst), KIND = 8)) 
   ENDIF
   ! 
+  ! Allocate dos we do metals
+  IF (assume_metal) THEN
+    ALLOCATE(dos(nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore("ephwann_shuffle", "Error allocating dos", 1)
+  ENDIF
+  ! 
   IF (iterative_bte .AND. epmatkqread) THEN
     ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vkk_all', 1)

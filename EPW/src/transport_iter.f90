@@ -408,7 +408,7 @@
     !!  
     ! ----------------------------------------------------------------------------
     USE kinds,            ONLY : DP, i4b
-    USE elph2,            ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf
+    USE elph2,            ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf, dos
     USE mp_world,         ONLY : mpime, world_comm
     USE io_global,        ONLY : ionode_id, stdout
     USE io_files,         ONLY : tmp_dir, prefix
@@ -544,6 +544,12 @@
           READ(iufilibtev_sup, *) iktmp, ibtmp, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
         ENDDO
       ENDDO
+      ! 
+      IF (assume_metal) THEN
+        DO itemp = 1, nstemp
+          READ(iufilibtev_sup, *) dum1, dos(itemp)
+        ENDDO
+      ENDIF
       ! 
       CLOSE(iufilibtev_sup)
       !

@@ -42,11 +42,11 @@
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
   USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, &
-                            nkc1, nkc2, nkc3, assume_metal
+                            nkc1, nkc2, nkc3 
   USE klist_epw,     ONLY : xk_cryst
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
-  USE elph2,         ONLY : transp_temp, dos
+  USE elph2,         ONLY : transp_temp 
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   !
   IMPLICIT NONE
@@ -223,12 +223,6 @@
   ! We have to bcast here because before it has not been allocated
   CALL mp_bcast(transp_temp, ionode_id, world_comm)  
   ! 
-  ! allocate dos we do metals
-  IF (assume_metal) THEN
-    ALLOCATE(dos(nstemp), STAT = ierr)
-    IF (ierr /= 0) CALL errore("epw_setup", "Error allocating dos", 1)
-    CALL mp_bcast(dos, ionode_id, world_comm)
-  ENDIF
   CALL stop_clock('epw_setup')
   RETURN
   !
@@ -247,8 +241,8 @@
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : world_comm
   USE mp,            ONLY : mp_bcast
-  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps, assume_metal
-  USE elph2,         ONLY : transp_temp, dos
+  USE epwcom,        ONLY : scattering, nstemp, tempsmin, tempsmax, temps
+  USE elph2,         ONLY : transp_temp 
   !
   IMPLICIT NONE
   !
@@ -281,13 +275,6 @@
   ! We have to bcast here because before it has not been allocated
   CALL mp_bcast(transp_temp, ionode_id, world_comm)
   ! 
-  ! allocate dos in case of metals
-  IF (assume_metal) THEN
-    ALLOCATE(dos(nstemp), STAT = ierr)
-    IF (ierr /= 0) CALL errore("epw_setup_restart", "Error allocarting dos", 1)
-    CALL mp_bcast(dos, ionode_id, world_comm)
-  ENDIF
-  !
   CALL stop_clock('epw_setup')
   !
   RETURN
