@@ -417,6 +417,10 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
   !! up gradient of the charge
   REAL(DP), INTENT(IN) :: grhodw2
   !! down gradient of the charge
+  REAL(DP), INTENT(IN) :: tauup
+  !! up kinetic energy density
+  REAL(DP), INTENT(IN) :: taudw
+  !! down kinetic energy density
   REAL(DP), INTENT(OUT) :: sx
   !! exchange energy
   REAL(DP), INTENT(OUT) :: v1xup
@@ -427,10 +431,6 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
   !! derivatives of exchange wr. grho - up
   REAL(DP), INTENT(OUT) :: v2xdw
   !! derivatives of exchange wr. grho - down
-  REAL(DP), INTENT(OUT) :: tauup
-  !! up kinetic energy density
-  REAL(DP), INTENT(OUT) :: taudw
-  !! down kinetic energy density
   REAL(DP), INTENT(OUT) :: v3xup
   !! derivatives of exchange wr. tau - up
   REAL(DP), INTENT(OUT) :: v3xdw
