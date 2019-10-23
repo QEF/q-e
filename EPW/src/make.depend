@@ -447,6 +447,7 @@ low_lvl.o : ../../Modules/mp_global.o
 low_lvl.o : ../../Modules/noncol.o
 low_lvl.o : ../../Modules/recvec.o
 low_lvl.o : ../../PHonon/PH/phcom.o
+low_lvl.o : ../../PHonon/PH/elphon.o
 low_lvl.o : ../../PW/src/pwcom.o
 low_lvl.o : ../../UtilXlib/mp.o
 low_lvl.o : ../../iotk/src/iotk_module.o
