@@ -1001,7 +1001,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
 
                 opt -val {'marzari-vanderbilt', 'cold', 'm-v', 'mv'} {
-                    Marzari-Vanderbilt cold smearing
+                    Marzari-Vanderbilt-DeVita-Payne cold smearing
                     (see PRL 82, 3296 (1999))
                 }
                     
