@@ -1184,14 +1184,12 @@
     !! This routine computes the density of states at a given fermi level.
     !!
     !-----------------------------------------------------------------------
-    USE constants_epw, ONLY : two, eps16, ryd2mev
     USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : two, eps16, ryd2mev
     USE epwcom,        ONLY : ngaussw, nstemp, nbndsub, degaussw
     USE elph2,         ONLY : etf, nkqf, wkf
     !
     IMPLICIT NONE
-    !
-    ! Input variables
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
@@ -1201,8 +1199,8 @@
     !! DOS to compute for the temperature itemp.
     !
     ! Local variables
-    !
-    REAL(DP), EXTERNAL :: dos_ef
+    REAL(KIND = DP), EXTERNAL :: dos_ef
+    ! 
     ! divide by two to have DOS/spin
     IF (ABS(degaussw) < eps16) THEN
       ! use 1 meV instead

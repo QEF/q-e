@@ -258,7 +258,7 @@
     !!
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf, dos
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : nrot
@@ -342,9 +342,9 @@
       ENDDO ! ik
       ! Print the resulting mobility
       IF (PRESENT(max_mob)) THEN
-              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp, max_mob(itemp))
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
       ELSE
-              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp)
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp)
       ENDIF
     ENDDO ! temp
     !
@@ -458,7 +458,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf, dos
+    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
@@ -476,7 +476,7 @@
     !! Weight of k
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
-    REAL(KIND = DP), INTENT(INOUT), OPTIONAL :: max_mob(nstemp)
+    REAL(KIND = DP), INTENT(inout), OPTIONAL :: max_mob(nstemp)
     !! The maximum mobility computed by thr prtmob routine.
     ! 
     ! Local variables
@@ -537,9 +537,9 @@
         ENDDO ! ibnd
       ENDDO ! ik
       IF (PRESENT(max_mob)) THEN
-              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp, max_mob(itemp)) 
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
       ELSE
-              CALL prtmob(sigma, carrier_density, fi_check, ef0(itemp), dos(itemp), etemp) 
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp) 
       ENDIF
     ENDDO ! itemp      
     !-----------------------------------------------------------------------
@@ -597,7 +597,7 @@
     END SUBROUTINE compute_sigma
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, dos, etemp, max_mob) 
+    SUBROUTINE prtmob(itemp, sigma, carrier_density, Fi_check, ef0, etemp, max_mob) 
     !-----------------------------------------------------------------------
     !! 
     !! This routine print the mobility (or conducrtivity for metals) in a 
@@ -607,11 +607,14 @@
     USE epwcom,        ONLY : assume_metal
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : omega
+    USE elph2,         ONLY : dos
     USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(in) :: itemp
+    !! Temperature index
     REAL(KIND = DP), INTENT(in) :: sigma(3, 3)
     !! Conductivity tensor
     REAL(KIND = DP), INTENT(in) :: carrier_density
@@ -620,8 +623,6 @@
     !! Integrated population vector
     REAL(KIND = DP), INTENT(in) :: ef0
     !! Fermi-level 
-    REAL(KIND = DP), INTENT(in) :: dos
-    !! Density of States at ef0 (only used for metals)
     REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in Ry (this includes division by kb)
     REAL(KIND = DP), INTENT(inout), OPTIONAL :: max_mob
@@ -647,7 +648,7 @@
            nden, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ELSE
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
-           dos, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+           dos(itemp), SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ENDIF
     WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
     WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
