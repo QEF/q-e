@@ -56,7 +56,7 @@
   tempsmax = 20.00
 
   nsiter   = 500
-
+  assume_metal = .TRUE.
   muc     = 0.16
 
   dvscf_dir   = './save'

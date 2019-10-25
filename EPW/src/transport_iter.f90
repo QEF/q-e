@@ -18,7 +18,8 @@
     ! 
     !-----------------------------------------------------------------------
     SUBROUTINE ibte(nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, &
-                    sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, inv_tau) 
+                    sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, &
+                    inv_tau) 
     !-----------------------------------------------------------------------
     !!
     !! This routine computes the scattering rate with the iterative BTE (inv_tau).
@@ -40,7 +41,7 @@
     USE mp_global,        ONLY : world_comm 
     USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_eliashberg,    ONLY : kpmq_map
-    USE printing,         ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
+    USE printing,         ONLY : print_mob, print_mob_sym
     USE grid,             ONLY : k_avg
     USE io_transport,     ONLY : fin_write, fin_read 
     USE io_files,         ONLY : diropn
@@ -247,15 +248,19 @@
     ENDDO
     ! 
     ! We now do SERTA with and without k-point symmetries
+    WRITE(stdout, '(5x,a)') ' '
+    WRITE(stdout, '(5x,a)') REPEAT('=',93)
+    WRITE(stdout, '(5x,"BTE in the self-energy relaxation time approximation (SERTA)")')
+    WRITE(stdout, '(5x,a)') REPEAT('=',93)
     max_mob(:) = zero 
     ! K-point symmetry. 
     IF (mp_mesh_k) THEN
       ! Averages points which leaves the k-point unchanged by symmetry in F and v. 
       ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
       CALL k_avg(F_SERTA, vkk_all, nb_sp, xkf_sp)
-      CALL print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_mob_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
     ELSE  
-      CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_mob(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
     ENDIF
     ! 
     ! Possibily read from file
@@ -283,7 +288,7 @@
     WRITE(stdout, '(5x,a/)') REPEAT('=',93)
     !  
     DO WHILE(MAXVAL(error) > eps6)
-      WRITE(stdout, '(/5x,"Iteration number:", i10," "/)') iter
+      WRITE(stdout, '(5x,"Iteration number:", i10)') iter
       ! 
       IF (iter > mob_maxiter) THEN
         WRITE(stdout, '(5x,a)') REPEAT('=',93)
@@ -403,11 +408,11 @@
     !!  
     ! ----------------------------------------------------------------------------
     USE kinds,            ONLY : DP, i4b
-    USE elph2,            ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf
+    USE elph2,            ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf, dos
     USE mp_world,         ONLY : mpime, world_comm
     USE io_global,        ONLY : ionode_id, stdout
     USE io_files,         ONLY : tmp_dir, prefix
-    USE epwcom,           ONLY : nstemp, ncarrier
+    USE epwcom,           ONLY : nstemp, ncarrier, assume_metal
     USE constants_epw,    ONLY : zero
     USE io_var,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
@@ -540,6 +545,12 @@
         ENDDO
       ENDDO
       ! 
+      IF (assume_metal) THEN
+        DO itemp = 1, nstemp
+          READ(iufilibtev_sup, *) dum1, dos(itemp)
+        ENDDO
+      ENDIF
+      ! 
       CLOSE(iufilibtev_sup)
       !
       inv_tau_all(:, :, :) = zero
@@ -581,8 +592,8 @@
     CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
     ! 
     ! Now choose hole or electron (the implementation does not support both)
-    ! hole
-    IF (ncarrier < -1E5) THEN    
+    ! hole (or metals)
+    IF (ncarrier < -1E5 .OR. assume_metal) THEN    
       ! 
       ! Split all the matrix elements across all cores. 
       CALL fkbounds2(ind_tot, lower_bnd, upper_bnd)

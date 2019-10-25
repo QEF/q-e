@@ -8,11 +8,10 @@
   kmaps       = .true.
   epbwrite    = .false.
   epbread     = .false.
-
   epwwrite    = .false.
   epwread     = .true.
 
-  vme         = .false.
+  vme         = .false. 
 
   nbndsub     =  4
   nbndskip    =  5
@@ -24,7 +23,6 @@
   dis_froz_min= -3
   dis_froz_max= 13.5
   proj(1)     = 'Pb:sp3'
-
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
   wdata(3) = 'G 0.00 0.00 0.00 X 0.00 0.50 0.50'
@@ -34,21 +32,37 @@
   wdata(7) = 'K 0.375 0.375 0.75 G 0.00 0.00 0.00'
   wdata(8) = 'G 0.00 0.00 0.00 L 0.50 0.50 0.50'
   wdata(9) = 'end kpoint_path'
-  wdata(10) = 'bands_plot_format = gnuplot'
-
+  wdata(10)= 'bands_plot_format = gnuplot'
   iverbosity  = 0
 
   elecselfen  = .false.
-  phonselfen  = .true.
+  phonselfen  = .false.
   a2f         = .false.
 
   lifc        = .true.
   asr_typ     = 'crystal'
 
-  fsthick     = 6 ! eV
-  eptemp      = 300 ! K
-  degaussw    = 0.1  ! eV
-  degaussq    = 0.05 ! meV
+  fsthick      = 1 ! eV
+  eptemp       = 1 ! K
+  degaussw     = 0.0  ! eV (adaptative smearing)
+  degaussq     = 0.05 ! meV
+  assume_metal = .true.
+  ngaussw      = -99  ! we want F-D distribution for metals
+
+  int_mob       = .true.
+  iterative_bte = .true.
+  scattering    = .true.
+  carrier       = .false.
+  mp_mesh_k     = .true.
+  epmatkqread   = .false.
+  mob_maxiter   = 30
+  broyden_beta  = 1.0
+  restart       = .true.
+  restart_freq  = 50
+  selecqread    = .false.
+  nstemp        = 2
+  tempsmin      = 100
+  tempsmax      = 300
 
   dvscf_dir   = './save'
 

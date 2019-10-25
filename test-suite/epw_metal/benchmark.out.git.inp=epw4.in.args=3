@@ -1,0 +1,416 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.2.0 starts on 23Oct2019 at 22:46:26 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     EPW          :      0.00s CPU      0.00s WALL
+
+     EPW          :      0.00s CPU      0.00s WALL
+
+     No wavefunction gauge setting applied
+
+     -------------------------------------------------------------------
+     Using pb.ukk from disk
+     -------------------------------------------------------------------
+
+
+     Using kmap and kgmap from disk
+
+     Do not need to read .epb files; read .fmt files
+
+
+     Band disentanglement is used: nbndsub =    4
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       43
+     Number of WS vectors for phonons       43
+     Number of WS vectors for electron-phonon       43
+     Maximum number of cores for efficient parallelization      129
+     Results may improve by using use_ws == .TRUE. 
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Reading interatomic force constants
+
+     IFC last    0.0000313
+     Norm of the difference between old and new effective charges:    0.0000000
+     Norm of the difference between old and new force-constants:    0.0010986
+     Imposed crystal ASR
+
+     Finished reading ifcs
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =        11Mb
+                   VmPeak =       285Mb
+     ===================================================================
+     
+     Using uniform q-mesh:    6   6   6
+     Size of q point mesh for interpolation:        216
+     Using uniform MP k-mesh:    6   6   6
+     Size of k point mesh for interpolation:         32
+     Max number of k points per pool:               32
+
+     Fermi energy coarse grid =   9.797928 eV
+
+     Skipping the first    5 bands:
+
+     The Fermi level will be determined with   4.00000 electrons
+
+     Fermi energy is calculated from the fine k-mesh: Ef =  11.808161 eV
+
+     Warning: check if difference with Fermi level fine grid makes sense
+
+     ===================================================================
+
+              ibndmin =     2  ebndmin =     0.819
+              ibndmax =     4  ebndmax =     0.941
+
+
+     Number of ep-matrix elements per pool :          432 ~=    3.38 Kb (@ 8 bytes/ DP)
+     Number of elements per core        742
+     Symmetry mapping finished
+      
+     =============================================================================================
+     BTE in the self-energy relaxation time approximation (SERTA)
+     =============================================================================================
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.79581E-12    0.331387E+07   -0.787763E-10    0.105035E-09
+                                                     -0.525175E-10    0.331387E+07   -0.525175E-10
+                                                      0.787763E-10   -0.262588E-10    0.331387E+07
+      300.000  11.7600   0.00000E+00  -0.14211E-13    0.388516E+06    0.000000E+00    0.656469E-11
+                                                      0.000000E+00    0.388516E+06    0.000000E+00
+                                                      0.656469E-11    0.000000E+00    0.388516E+06
+      
+     =============================================================================================
+     Start solving iterative Boltzmann Transport Equation
+     =============================================================================================
+
+     Iteration number:         1
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04  -0.45475E-12    0.346746E+07   -0.262588E-10    0.105035E-09
+                                                      0.000000E+00    0.346746E+07    0.000000E+00
+                                                      0.131294E-09    0.262588E-10    0.346746E+07
+      300.000  11.7600   0.00000E+00   0.14211E-13    0.413795E+06   -0.164117E-11    0.131294E-10
+                                                     -0.164117E-11    0.413795E+06    0.000000E+00
+                                                      0.131294E-10    0.000000E+00    0.413795E+06
+
+                                                      0.346746E+07    Max error
+     Iteration number:         2
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04  -0.68212E-12    0.348534E+07   -0.262588E-10   -0.262588E-10
+                                                      0.262588E-10    0.348534E+07   -0.262588E-10
+                                                      0.262588E-10    0.262588E-10    0.348534E+07
+      300.000  11.7600   0.00000E+00  -0.14211E-13    0.416767E+06   -0.984704E-11    0.328235E-11
+                                                      0.984704E-11    0.416767E+06    0.328235E-11
+                                                     -0.164117E-10   -0.328235E-11    0.416767E+06
+
+                                                      0.178758E+05    Max error
+     Iteration number:         3
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.45475E-12    0.348591E+07   -0.262588E-10    0.210070E-09
+                                                      0.000000E+00    0.348591E+07    0.000000E+00
+                                                      0.131294E-09    0.262588E-10    0.348591E+07
+      300.000  11.7600   0.00000E+00   0.42633E-13    0.416983E+06   -0.328235E-11   -0.164117E-10
+                                                      0.328235E-11    0.416983E+06   -0.328235E-11
+                                                     -0.984704E-11    0.328235E-11    0.416983E+06
+
+                                                      0.569942E+03    Max error
+     Iteration number:         4
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.00000E+00    0.348601E+07    0.787763E-10   -0.105035E-09
+                                                      0.525175E-10    0.348601E+07    0.525175E-10
+                                                     -0.787763E-10    0.262588E-10    0.348601E+07
+      300.000  11.7600   0.00000E+00   0.42633E-13    0.417003E+06   -0.984704E-11   -0.984704E-11
+                                                     -0.984704E-11    0.417003E+06   -0.328235E-11
+                                                     -0.984704E-11   -0.328235E-11    0.417003E+06
+
+                                                      0.103728E+03    Max error
+     Iteration number:         5
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04  -0.45475E-12    0.348602E+07   -0.525175E-10   -0.131294E-09
+                                                      0.262588E-10    0.348602E+07   -0.262588E-10
+                                                     -0.105035E-09   -0.525175E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00   0.99476E-13    0.417005E+06    0.000000E+00    0.656469E-11
+                                                      0.000000E+00    0.417005E+06    0.000000E+00
+                                                      0.656469E-11    0.000000E+00    0.417005E+06
+
+                                                      0.256639E+01    Max error
+     Iteration number:         6
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.00000E+00    0.348602E+07   -0.787763E-10   -0.787763E-10
+                                                     -0.787763E-10    0.348602E+07   -0.262588E-10
+                                                      0.131294E-09   -0.262588E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00   0.25580E-12    0.417005E+06    0.984704E-11    0.984704E-11
+                                                      0.984704E-11    0.417005E+06    0.328235E-11
+                                                     -0.164117E-10    0.328235E-11    0.417005E+06
+
+                                                      0.653833E+00    Max error
+     Iteration number:         7
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.45475E-12    0.348602E+07    0.000000E+00    0.105035E-09
+                                                      0.000000E+00    0.348602E+07    0.000000E+00
+                                                      0.105035E-09    0.000000E+00    0.348602E+07
+      300.000  11.7600   0.00000E+00  -0.85265E-13    0.417005E+06    0.000000E+00    0.656469E-11
+                                                      0.000000E+00    0.417005E+06    0.000000E+00
+                                                      0.656469E-11    0.000000E+00    0.417005E+06
+
+                                                      0.496370E-01    Max error
+     Iteration number:         8
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.45475E-12    0.348602E+07    0.787763E-10   -0.131294E-09
+                                                      0.787763E-10    0.348602E+07    0.262588E-10
+                                                     -0.131294E-09    0.262588E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00   0.56843E-13    0.417005E+06    0.984704E-11    0.000000E+00
+                                                      0.656469E-11    0.417005E+06    0.656469E-11
+                                                     -0.984704E-11    0.328235E-11    0.417005E+06
+
+                                                      0.507005E-02    Max error
+     Iteration number:         9
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.45475E-12    0.348602E+07    0.525175E-10   -0.787763E-10
+                                                      0.787763E-10    0.348602E+07    0.262588E-10
+                                                     -0.105035E-09    0.525175E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00  -0.14211E-13    0.417005E+06    0.328235E-11    0.000000E+00
+                                                      0.000000E+00    0.417005E+06    0.000000E+00
+                                                     -0.328235E-11   -0.328235E-11    0.417005E+06
+
+                                                      0.136636E-02    Max error
+     Iteration number:        10
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.00000E+00    0.348602E+07   -0.787763E-10    0.000000E+00
+                                                     -0.525175E-10    0.348602E+07   -0.525175E-10
+                                                      0.787763E-10   -0.262588E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00   0.71054E-13    0.417005E+06    0.656469E-11   -0.984704E-11
+                                                     -0.328235E-11    0.417005E+06    0.328235E-11
+                                                      0.131294E-10    0.656469E-11    0.417005E+06
+
+                                                      0.215691E-03    Max error
+     Iteration number:        11
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.68212E-12    0.348602E+07    0.525175E-10    0.236329E-09
+                                                     -0.262588E-10    0.348602E+07    0.262588E-10
+                                                      0.000000E+00    0.525175E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00  -0.12790E-12    0.417005E+06    0.000000E+00    0.656469E-11
+                                                      0.000000E+00    0.417005E+06    0.000000E+00
+                                                      0.656469E-11    0.000000E+00    0.417005E+06
+
+                                                      0.431178E-04    Max error
+     Iteration number:        12
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.27285E-11    0.348602E+07   -0.787763E-10    0.262588E-10
+                                                      0.787763E-10    0.348602E+07    0.262588E-10
+                                                     -0.262588E-10   -0.262588E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00   0.12790E-12    0.417005E+06    0.000000E+00   -0.656469E-11
+                                                      0.000000E+00    0.417005E+06    0.000000E+00
+                                                     -0.656469E-11    0.000000E+00    0.417005E+06
+
+                                                      0.757759E-05    Max error
+     Iteration number:        13
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04  -0.22737E-12    0.348602E+07    0.000000E+00    0.183811E-09
+                                                      0.262588E-10    0.348602E+07   -0.262588E-10
+                                                      0.105035E-09    0.000000E+00    0.348602E+07
+      300.000  11.7600   0.00000E+00  -0.12790E-12    0.417005E+06    0.000000E+00   -0.656469E-11
+                                                      0.000000E+00    0.417005E+06    0.000000E+00
+                                                     -0.656469E-11    0.000000E+00    0.417005E+06
+
+                                                      0.141386E-05    Max error
+     Iteration number:        14
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      100.000  11.7933   0.78882E-04   0.45475E-12    0.348602E+07   -0.787763E-10    0.131294E-09
+                                                     -0.787763E-10    0.348602E+07   -0.262588E-10
+                                                      0.131294E-09   -0.262588E-10    0.348602E+07
+      300.000  11.7600   0.00000E+00   0.14211E-13    0.417005E+06   -0.328235E-11    0.984704E-11
+                                                      0.328235E-11    0.417005E+06   -0.328235E-11
+                                                      0.164117E-10    0.328235E-11    0.417005E+06
+
+                                                      0.255124E-06    Max error
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+     ephwann      :      0.09s CPU      0.09s WALL (       1 calls)
+
+     HamW2B       :      0.00s CPU      0.00s WALL (      32 calls)
+     kpoint_paral :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+     Total program execution
+     EPW          :      0.09s CPU      0.09s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          
+ In addition, since you have used the following functionalities, please cite:             
+   scattering :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     
+   iterative_bte :: S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)  
+   iterative_bte :: F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                 
