@@ -53,7 +53,7 @@ function w0gauss (x, n)
      return
 
   endif
-  ! cold smearing  (Marzari-Vanderbilt)
+  ! cold smearing  (Marzari-Vanderbilt-DeVita-Payne)
   if (n.eq. - 1) then
      arg = min (200.d0, (x - 1.0d0 / sqrt (2.0d0) ) **2)
      w0gauss = sqrtpm1 * exp ( - arg) * (2.0d0 - sqrt ( 2.0d0) * x)

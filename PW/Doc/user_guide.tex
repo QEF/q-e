@@ -340,7 +340,9 @@ the working directory  is the directory where the executable is!
 The advantage of this procedure is that all files are properly closed, 
 whereas  just killing the process may leave data and output files in 
 an unusable state. If you start the execution with the EXIT file already
-in place, the code will stop after initialization. This is useful to have a quick check of the correctness of the input.
+in place, the code will stop after initialization. Alternatively:
+set \texttt{nstep} to 0 in input. This is useful to have
+a quick check of the correctness of the input. 
 
 \subsection{Electronic structure calculations}
 \paragraph{Single-point (fixed-ion) SCF calculation} 
@@ -1276,7 +1278,7 @@ Possible reasons:
   is not guaranteed for Methfessel-Paxton smearing of order 1 and can
   give problems when very few k-points are used. Use some other
   smearing function: simple Gaussian broadening or, better,
-  Marzari-Vanderbilt 'cold smearing'. 
+  Marzari-Vanderbilt-DeVita-Payne 'cold smearing'. 
 \end{itemize}
 
 \paragraph{pw.x yields {\em internal error: cannot bracket Ef} message 

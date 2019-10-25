@@ -109,7 +109,7 @@ SUBROUTINE run_pwscf( exit_status )
   ! ... dry run: code will stop here if called with exit file present
   ! ... useful for a quick and automated way to check input data
   !
-  IF ( check_stop_now() ) THEN
+  IF ( nstep == 0 .OR. check_stop_now() ) THEN
      CALL pre_init()
      CALL data_structure( gamma_only )
      CALL summary()
