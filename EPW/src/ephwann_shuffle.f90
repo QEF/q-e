@@ -20,7 +20,6 @@
   USE kinds,         ONLY : DP, i4b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
-  USE constants_epw, ONLY : eps4
   USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nmodes
@@ -759,11 +758,7 @@
     CALL load_rebal
   ENDIF
   !
-  !  xqf must be in crystal coordinates
-  !
-  ! this loops over the fine mesh of q points.
-  ! ---------------------------------------------------------------------------------------
-  ! ---------------------------------------------------------------------------------------
+  ! In the case of crystal ASR
   IF (lifc) THEN
     !
     ! build the WS cell corresponding to the force constant grid
@@ -1094,14 +1089,14 @@
     ENDIF
     ! 
     DO iqq = iq_restart, totq
-      ! This needs to be uncommented. 
+      CALL start_clock ('ep-interp')
+      !  
       epf17(:, :, :, :) = czero
       cufkk(:, :) = czero
       cufkq(:, :) = czero
       ! 
       iq = selecq(iqq)
       !   
-      CALL start_clock ('ep-interp')
       !
       ! In case of big calculation, show progression of iq (especially usefull when
       ! elecselfen = true as nothing happen during the calculation otherwise. 
@@ -1494,8 +1489,8 @@
           ikk = 2 * ik - 1
           ikq = ikk + 1
           DO ibnd = icbm, nbndsub
-            etf (ibnd, ikk) = etf(ibnd, ikk) + scissor
-            etf (ibnd, ikq) = etf(ibnd, ikq) + scissor
+            etf(ibnd, ikk) = etf(ibnd, ikk) + scissor
+            etf(ibnd, ikq) = etf(ibnd, ikq) + scissor
           ENDDO
         ENDDO
         WRITE( stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev

@@ -1930,8 +1930,6 @@
       ENDDO
       vmek(:, ibnd) = vmek_av(:) / FLOAT(n_av)      
     ENDDO  
-  
-
     ! 
     ! vmefp and vmef are obtained using irvec, which are without alat; therefore I multiply them to bg without alat
     DO ibnd = 1, nbndfst

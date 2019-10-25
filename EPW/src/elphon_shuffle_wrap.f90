@@ -909,9 +909,7 @@
   !  ENDDO
   !END
   !
-  ! the electron-phonon wannier interpolation
-  !
-  IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle(nqc, xqc, w_centers)
+  ! The electron-phonon wannier interpolation
   IF(etf_mem == 2) THEN
 #if defined(__MPI)         
     CALL ephwann_shuffle_mem(nqc, xqc, w_centers)
@@ -921,7 +919,10 @@
     etf_mem = 1
     CALL ephwann_shuffle(nqc, xqc, w_centers)
 #endif
+  ELSE ! etf_mem == 0, 1 or 4
+    CALL ephwann_shuffle(nqc, xqc, w_centers)
   ENDIF        
+  ! 
   DEALLOCATE(xqc, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc', 1)
   IF (lifc) THEN

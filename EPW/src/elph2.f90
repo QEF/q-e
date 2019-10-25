@@ -51,7 +51,7 @@
     shift(:),                &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
     gmap(:),                 &!  the map G -> G-G_0 in the large (density) G vectors set, for every G_0
     ixkqf_tr(:),             &!  Mapping matrix from k+q (where q is full BZ) to IBZ
-    s_BZtoIBZ_full(:)         !  Rotation that brink that k-point from BZ to IBZ
+    s_bztoibz_full(:)         !  Rotation that brink that k-point from BZ to IBZ
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason 
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
