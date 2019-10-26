@@ -632,12 +632,12 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE kpoint_grid_epw(nrot, time_reversal, skip_equivalence, s, t_rev, &
-                               nkc1, nkc2, nkc3, BZtoIBZ, s_BZtoIBZ)
+                               nkc1, nkc2, nkc3, bztoibz, s_bztoibz)
     !-----------------------------------------------------------------------
     !!
     !!  Automatic generation of a uniform grid of k-points with symmetry. 
     !!  Routine copied from PW/src/kpoint_grid.f90.
-    !!  We had to duplicate because the BZtoIBZ array was deallocated and is needed in
+    !!  We had to duplicate because the bztoibz array was deallocated and is needed in
     !!  EPW 
     !!
     USE kinds,            ONLY : DP
@@ -660,9 +660,9 @@
     !! Time-reversal sym
     INTEGER, INTENT(in) :: s(3, 3, 48)
     !! Symmetry matrice. 
-    INTEGER(SIK2), INTENT(inout) :: s_BZtoIBZ(nkc1 * nkc2 * nkc3)
+    INTEGER(SIK2), INTENT(inout) :: s_bztoibz(nkc1 * nkc2 * nkc3)
     !! Symeetry matrix that links an point to its IBZ friend.
-    INTEGER, INTENT(inout) :: BZtoIBZ(nkc1 * nkc2 * nkc3)
+    INTEGER, INTENT(inout) :: bztoibz(nkc1 * nkc2 * nkc3)
     !! Number of rotation
     LOGICAL, INTENT(in) :: time_reversal
     !! True if time reversal
@@ -694,8 +694,8 @@
     !! K-point paralelization (upper-bound index) 
     INTEGER :: cumul_nks
     !! Sum of points
-    INTEGER :: BZtoIBZ_tmp(nkc1 * nkc2 * nkc3)
-    !! Temporrary BZtoIBZ map
+    INTEGER :: bztoibz_tmp(nkc1 * nkc2 * nkc3)
+    !! Temporrary bztoibz map
     INTEGER :: ierr
     !! Error status
     INTEGER, ALLOCATABLE :: nkspar(:)
@@ -805,7 +805,7 @@
     !  count irreducible points and order them
     nkspar(:) = 0
     DO nk = 1, nkr
-      BZtoIBZ(nk) = equiv(nk)
+      bztoibz(nk) = equiv(nk)
     ENDDO
     !
     CALL fkbounds(nkr, lower_bnd, upper_bnd)
@@ -813,11 +813,11 @@
       IF (equiv(nk) == nk) THEN
         nkspar(my_pool_id + 1) = nkspar(my_pool_id + 1) + 1
         IF (nkspar(my_pool_id + 1) > nkr) CALL errore('kpoint_grid_epw', 'Too many k-points', 1)
-        BZtoIBZ(nk) = nkspar(my_pool_id + 1)
+        bztoibz(nk) = nkspar(my_pool_id + 1)
         ! Change all the one above
         DO ik = nk, nkr
           IF (equiv(ik) == nk) THEN
-            BZtoIBZ(ik) = nkspar(my_pool_id + 1)
+            bztoibz(ik) = nkspar(my_pool_id + 1)
           ENDIF
         ENDDO
       ENDIF
@@ -831,34 +831,34 @@
       ENDDO
     ENDIF
     DO ik = 1, nkr
-      IF((BZtoIBZ(ik) > nkspar(my_pool_id + 1)) .OR. (ik < lower_bnd)) THEN
-        BZtoIBZ (ik) = 0
+      IF((bztoibz(ik) > nkspar(my_pool_id + 1)) .OR. (ik < lower_bnd)) THEN
+        bztoibz (ik) = 0
       ELSE
-        BZtoIBZ(ik) = BZtoIBZ(ik) + cumul_nks
+        bztoibz(ik) = bztoibz(ik) + cumul_nks
       ENDIF
     ENDDO
-    BZtoIBZ_tmp(:) = 0
+    bztoibz_tmp(:) = 0
     DO i = 1, npool
       IF (my_pool_id + 1 == i) THEN
         DO ik = 1, nkr
-          IF (BZtoIBZ_tmp(ik) == 0) THEN
-            BZtoIBZ_tmp(ik) = BZtoIBZ(ik)
+          IF (bztoibz_tmp(ik) == 0) THEN
+            bztoibz_tmp(ik) = bztoibz(ik)
           ENDIF
         ENDDO
       ENDIF
-      CALL mp_bcast(BZtoIBZ_tmp, i - 1, inter_pool_comm)
+      CALL mp_bcast(bztoibz_tmp, i - 1, inter_pool_comm)
     ENDDO
     !
-    BZtoIBZ = BZtoIBZ_tmp
+    bztoibz = bztoibz_tmp
     !
     ! Now do the symmetry mapping. 
     DO nk = 1, nkr
       ! If its an irreducible point 
       IF (equiv(nk) == nk) THEN
         ! Then you have the identity matrix
-        s_BZtoIBZ(nk) = 1
+        s_bztoibz(nk) = 1
       ELSE
-        s_BZtoIBZ(nk) = s_save(nk)  
+        s_bztoibz(nk) = s_save(nk)  
       ENDIF
     ENDDO
     ! 
@@ -1351,11 +1351,11 @@
     !! k-point index that run on the full BZ
     INTEGER :: ierr
     !! Error status
-    INTEGER :: BZtoIBZ_tmp(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
-    INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! symmetry 
     INTEGER :: nkloc
     !! number of k-point selected on that cpu 
@@ -1442,20 +1442,20 @@
         ! 
         ! In case of k-point symmetry
         IF (mp_mesh_k) THEN
-          BZtoIBZ(:) = 0
-          s_BZtoIBZ(:) = 0
+          bztoibz(:) = 0
+          s_bztoibz(:) = 0
           ! 
           CALL set_sym_bl()
           !
-          ! What we get from this call is BZtoIBZ
-          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+          ! What we get from this call is bztoibz
+          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
           ! 
           IF (iterative_bte) THEN
-            BZtoIBZ_tmp(:) = 0
+            bztoibz_tmp(:) = 0
             DO ikbz = 1, nkf1 * nkf2 * nkf3
-              BZtoIBZ_tmp(ikbz) = map_rebal(BZtoIBZ(ikbz))
+              bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
             ENDDO
-            BZtoIBZ(:) = BZtoIBZ_tmp(:)
+            bztoibz(:) = bztoibz_tmp(:)
           ENDIF
           ! 
           ! 
@@ -1491,8 +1491,8 @@
             ! 
             ! Use k-point symmetry
             IF (mp_mesh_k) THEN
-              IF (((MINVAL(ABS(etf_all(:, BZtoIBZ(ind1)) - ef)) < fsthick) .AND. &
-                    (MINVAL(ABS(etf_all(:, BZtoIBZ(ind2)) - ef)) < fsthick))) THEN
+              IF (((MINVAL(ABS(etf_all(:, bztoibz(ind1)) - ef)) < fsthick) .AND. &
+                    (MINVAL(ABS(etf_all(:, bztoibz(ind2)) - ef)) < fsthick))) THEN
                 found(my_pool_id + 1) = 1
                 EXIT ! exit the loop 
               ENDIF

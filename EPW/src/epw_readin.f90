@@ -811,7 +811,6 @@
   CALL mp_bcast(nk1, meta_ionode_id, world_comm)
   CALL mp_bcast(nk2, meta_ionode_id, world_comm)
   CALL mp_bcast(nk3, meta_ionode_id, world_comm)
-  CALL mp_bcast(assume_metal, meta_ionode_id, world_comm)
   !
   amass = AMU_RY * amass
   !

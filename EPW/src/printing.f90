@@ -251,7 +251,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob_sym(f_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
+    SUBROUTINE print_mob_sym(f_out, s_bztoibz, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
     !-----------------------------------------------------------------------
     !!
     !! This routine prints the mobility using k-point symmetry.
@@ -267,9 +267,9 @@
     !
     IMPLICIT NONE
     !
-    INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2), INTENT(in) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
-    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)  
     !! occupations factor produced by SERTA or IBTE
@@ -324,17 +324,17 @@
           ekk = etf_all(ibnd, ik) - ef0(itemp)
           fnk = wgauss(-ekk / etemp, -99)
           IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
-            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_bztoibz, bztoibz_mat, vkk_all, sigma, &
               fi_check, ibnd, ik)
             ! The wkf(ikk) already include a factor 2
             carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
           ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5.AND. .NOT. assume_metal) THEN
-            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_bztoibz, bztoibz_mat, vkk_all, sigma, &
               fi_check, ibnd, ik)
             carrier_density = carrier_density + wkf_all(ik) * fnk
           ELSE IF (assume_metal) THEN
             ! just sum on all bands for metals
-            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_BZtoIBZ, BZtoIBZ_mat, vkk_all, sigma, &
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_bztoibz, bztoibz_mat, vkk_all, sigma, &
               fi_check, ibnd, ik)
             carrier_density = carrier_density + wkf_all(ik) * fnk
           ENDIF
@@ -353,7 +353,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE compute_sigma_sym(f_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, &
+    SUBROUTINE compute_sigma_sym(f_out, s_bztoibz, bztoibz_mat, vkk_all, &
                     sigma, fi_check, ibnd, ik)
     !-----------------------------------------------------------------------
     !!
@@ -370,9 +370,9 @@
     !
     IMPLICIT NONE
     !
-    INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2), INTENT(in) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
-    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     INTEGER, INTENT(in) :: ik 
     !! k-point index
@@ -421,11 +421,11 @@
     !
     ! Loop on the point equivalent by symmetry in the full BZ
     DO nb = 1, nrot
-      IF (BZtoIBZ_mat(nb, ik) > 0) THEN 
-        ikbz = BZtoIBZ_mat(nb, ik)
+      IF (bztoibz_mat(nb, ik) > 0) THEN 
+        ikbz = bztoibz_mat(nb, ik)
         ! 
         ! Transform the symmetry matrix from Crystal to cartesian
-        sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+        sa(:, :) = DBLE(s(:, :, s_bztoibz(ikbz)))
         sb       = MATMUL(bg, sa)
         sr(:, :) = MATMUL(at, TRANSPOSE(sb))
         sr       = TRANSPOSE(sr) 
