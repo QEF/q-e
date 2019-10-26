@@ -25,6 +25,7 @@
  /
  &CELL
    cell_dynamics = 'damp-w' ,
+   press_conv_thr = 0.01 ,
    press = 0.00 ,
    wmass =  0.00700000 
  /
