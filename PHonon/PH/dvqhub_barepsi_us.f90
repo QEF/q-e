@@ -11,19 +11,24 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   !-----------------------------------------------------------------------
   !
   ! DFPT+U 
-  ! This routines calculates the bare derivative of the Hubbard potential times psi.
-  ! |Delta V_(k+q) psi> = 
-  !     +{\sum_(I,m1,m2,is) Hubbard_U(I) * [0.5\delta_m1m2-ns(m1, m2, is, I)] *
-  !                         |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)| psi(ibnd,k,is> + 
-  !                         |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)| psi(ibnd,k,is> } 
-  !     -{\sum_(I,m1,m2,is) Hubbard_U(I) * dnsbare(m2, m1, is, I,imode)
+  ! This routines calculates the BARE derivative of the Hubbard potential times psi.
+  ! is  = current_spin
+  ! isi = opposite of the current_spin 
   !
-  ! J terms
+  ! |Delta V_BARE_(k+q,is) psi(ibnd,k,is)> = 
+  !     + \sum_(I,m1,m2) Hubbard_U(I) * [0.5\delta_(m1,m2) - ns(m1,m2,is,I)] *
+  !                         { |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)> + 
+  !                           |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)|psi(ibnd,k,is)> } 
+  !     - \sum_(I,m1,m2) Hubbard_U(I) * dnsbare(m1,m2,is,I,imode) *
+  !                           |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
   !
-  !     +{\sum_(I,m1,m2,is) Hubbard_J0(I) * ns(m1, m2, isi, I) *
-  !                         |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)| psi(ibnd,k,is> + 
-  !                         |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)| psi(ibnd,k,is> } 
-  !     -{\sum_(I,m1,m2,is) Hubbard_U(I) * dnsbare(m2, m1, is, I,imode)
+  ! Addition of the J0 terms:
+  !
+  !     + \sum_(I,m1,m2) Hubbard_J0(I) * ns(m1,m2,isi,I) *
+  !                         { |dqsphi(imode,I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)> + 
+  !                           |S\phi(I,k+q,m1)><dmqsphi(imode,I,k,m2)|psi(ibnd,k,is)> } 
+  !     + \sum_(I,m1,m2) Hubbard_J0(I) * dnsbare(m1,m2,isi,I,imode) *
+  !                           |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
   !
   ! Important: in this routine vkb is a beta function at k+q, and vkb_ is beta at k.
   ! This is done so because vkb is calculated at k+q in solve_linter (i.e. before calling

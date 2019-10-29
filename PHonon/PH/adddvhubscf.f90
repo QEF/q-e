@@ -10,18 +10,20 @@
 SUBROUTINE adddvhubscf (ipert, ik)
   !--------------------------------------------------------------------------------------
   ! 
-  ! DFPT+U : This routine calculates the change of the Hubbard potential due to 
-  ! the scf change of psi (dpsi). The result is in the variable:
+  ! DFPT+U 
+  ! This routine calculates the SCF derivative of the Hubbard potential times psi.
+  ! is  = current_spin
+  ! isi = opposite of the current_spin
   !
-  ! dvhubscf (ig, ibnd) = - \sum_I U_I * \sum_{m1,m2} dnsscf(m1,m2,current_spin,I,ipert) * 
-  !                             |S_{k+q}\phi_(k+q,I,m1)><S_{k}\phi_(k,I,m2)| psi(ibnd,k)>
+  ! |Delta V_SCF_(k+q,is) psi(ibnd,k,is)> = 
+  !           - \sum_(I,m1,m2) Hubbard_U(I) * dnsscf(m1,m2,is,I,imode) * 
+  !                             |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
   !
-  ! Addition of the J0 term:
+  ! Addition of the J0 terms:
   !
-  ! + \sum_I J0_I * \sum_{m1,m2} dnsscf(m1,m2,op_spin,I,ipert) * 
-  !         |S_{k+q}\phi_(k+q,I,m1)><S_{k}\phi_(k,I,m2)| psi(ibnd,k)>
+  ! + \sum_(I,m1,m2) Hubbard_J0(I) * dnsscf(m1,m2,isi,I,imode) * 
+  !         |S\phi(I,k+q,m1)><S\phi(I,k,m2)|psi(ibnd,k,is)>
   !
-  ! where op_spin is the opposite of current_spin
   !
   ! Written by A. Floris
   ! Modified by I. Timrov (01.10.2018)
