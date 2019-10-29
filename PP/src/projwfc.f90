@@ -975,6 +975,7 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
   REAL(DP), ALLOCATABLE :: proj1 (:)
   REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:)
   REAL (DP), EXTERNAL :: compute_mj
+  CHARACTER (len=1) :: plus
   !
   INTERFACE 
      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
@@ -1038,14 +1039,18 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
         !
         ! fancy (?!?) formatting
         !
-        WRITE( stdout,'(5x,"psi = ",f5.3,"*[#",i4,"]"))',advance='no') &
-             proj1 (1), idx(1)
-        WRITE( stdout, '("+",5(f5.3,"*[#",i4,"]"))') &
-             (proj1 (i), idx(i), i = 2, min(5,nwfc))
-        DO j = 1, (nwfc-1)/5
-           WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]"))') &
-                (proj1 (i), idx(i), i = 5*j+1, min(5*(j+1),nwfc))
+        plus='+'
+        DO i = 1, nwfc
+           IF ( i == 1 ) THEN
+              WRITE( stdout,'(5X,"psi = ",f5.3,"*[#",i4,"]")',advance='no') &
+                 proj1 (i), idx(i)
+           ELSE
+              IF ( MOD(i,5) == 0 ) WRITE( stdout,'(/,10X)', advance='no' )
+              WRITE( stdout,'(A,f5.3,"*[#",i4,"]")',advance='no') &
+                 plus, proj1 (i), idx(i)
+           END IF
         ENDDO
+        WRITE( stdout, * )
         psum = SUM ( proj(1:natomwfc, ibnd, ik) )
         WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum
         !
@@ -2276,18 +2281,18 @@ CONTAINS
               !  this proc sends his block
               !
               CALL mp_bcast( ovr, root, intra_pool_comm )
-              CALL ZGEMM( 'N', 'N', npw, nc, nr, (1.0_dp,1.0_dp), &
+              CALL ZGEMM( 'N', 'N', npw, nc, nr, (1.0_dp,0.0_dp), &
                           swfc(1,ir), npwx, ovr, nx, beta, wfc(1,ic), npwx )
            ELSE
               !
               !  all other procs receive
               !
               CALL mp_bcast( vtmp, root, intra_pool_comm )
-              CALL ZGEMM( 'N', 'N', npw, nc, nr, (1.0_dp,1.0_dp), &
+              CALL ZGEMM( 'N', 'N', npw, nc, nr, (1.0_dp,0.0_dp), &
                        swfc(1,ir), npwx, vtmp, nx, beta, wfc(1,ic), npwx )
            ENDIF
            !
-           beta = (1.0_dp,1.0_dp)
+           beta = (1.0_dp,0.0_dp)
 
         ENDDO
         !
