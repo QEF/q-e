@@ -257,6 +257,7 @@ fermisurface.o : ../../PW/src/start_k.o
 fermisurface.o : ../../PW/src/symm_base.o
 fermisurface.o : ../../UtilXlib/mp.o
 fermisurfer_common.o : ../../Modules/cell_base.o
+fermisurfer_common.o : ../../Modules/constants.o
 fermisurfer_common.o : ../../Modules/io_global.o
 fermisurfer_common.o : ../../Modules/kind.o
 fermisurfer_common.o : ../../PW/src/pwcom.o

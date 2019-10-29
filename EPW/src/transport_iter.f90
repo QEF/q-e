@@ -18,7 +18,8 @@
     ! 
     !-----------------------------------------------------------------------
     SUBROUTINE ibte(nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, &
-                    sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, inv_tau) 
+                    sparse_q, sparse_k, sparse_i, sparse_j, sparse_t, &
+                    inv_tau) 
     !-----------------------------------------------------------------------
     !!
     !! This routine computes the scattering rate with the iterative BTE (inv_tau).
@@ -32,7 +33,7 @@
                                  mp_mesh_k, nkf1, nkf2, nkf3
     USE elph2,            ONLY : nkqf, wkf, xkf, nkqtotf, nbndfst,             &   
                                  nktotf, map_rebal, xqf, transp_temp,          &
-                                 ixkqf_tr, s_BZtoIBZ_full                      
+                                 ixkqf_tr, s_bztoibz_full                      
     USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,     & 
                                  electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8, &
                                  eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
@@ -40,7 +41,7 @@
     USE mp_global,        ONLY : world_comm 
     USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_eliashberg,    ONLY : kpmq_map
-    USE printing,         ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
+    USE printing,         ONLY : print_mob, print_mob_sym
     USE grid,             ONLY : k_avg
     USE io_transport,     ONLY : fin_write, fin_read 
     USE io_files,         ONLY : diropn
@@ -96,13 +97,13 @@
     !! Index of the k+q point from the full grid. 
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
-    INTEGER :: BZtoIBZ_tmp(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
-    INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! symmetry matrix for each k-point from the full BZ
-    INTEGER :: BZtoIBZ_mat(nrot, nktotf)
+    INTEGER :: bztoibz_mat(nrot, nktotf)
     !! For a given k-point in the IBZ gives the k-point index of all the
     !! k-point in the full BZ that are connected to the current one by symmetry. 
     !! nrot is the max number of symmetry 
@@ -158,10 +159,10 @@
       ! Array size reporting
       WRITE(stdout, '(5x,a)') 'Big array size reporting [Mb]'
       WRITE(stdout, '(5x,a)') '-- ibte --'
-      WRITE(stdout, '(5x,a,f12.6)') 'BZtoIBZ : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
-      WRITE(stdout, '(5x,a,f12.6)') 's_BZtoIBZ : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 / 4 !INTEGER(SIK2)
+      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 !INTEGER(4)
+      WRITE(stdout, '(5x,a,f12.6)') 's_bztoibz : ',  nkf1 * nkf2 * nkf3 * byte2Mb / 2 / 4 !INTEGER(SIK2)
       WRITE(stdout, '(5x,a,f12.6)') 'F_SERTA : ',  (3 * (nbndfst) * (nktotf) * nstemp) * byte2Mb!REAL(8)
-      WRITE(stdout, '(5x,a,f12.6)') 'BZtoIBZ_mat : ',  nrot * (nktotf) * byte2Mb / 2 !INTEGER(4) 
+      WRITE(stdout, '(5x,a,f12.6)') 'bztoibz_mat : ',  nrot * (nktotf) * byte2Mb / 2 !INTEGER(4) 
       WRITE(stdout, '(5x,a,f12.6)') 'xkf_bz : ', 3 * nkf1 * nkf2 * nkf3 * byte2Mb / 2 !REAL(4)
       rws(:, :) = zero
       CALL wsinit(rws, nrwsx, nrws, bg)
@@ -171,36 +172,36 @@
     IF (mp_mesh_k) THEN
       ALLOCATE(ixkqf_tr(nind), STAT = ierr)
       IF (ierr /= 0) CALL errore('ibte', 'Error allocating ixkqf_tr', 1)
-      ALLOCATE(s_BZtoIBZ_full(nind), STAT = ierr)
-      IF (ierr /= 0) CALL errore('ibte', 'Error allocating s_BZtoIBZ_full', 1)
+      ALLOCATE(s_bztoibz_full(nind), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error allocating s_bztoibz_full', 1)
       ! For a given k-point in the IBZ gives the k-point index
       ! of all the k-point in the full BZ that are connected to the current 
       ! one by symmetry. nrot is the max number of symmetry 
-      BZtoIBZ(:)   = 0
-      s_BZtoIBZ(:) = 0
+      bztoibz(:)   = 0
+      s_bztoibz(:) = 0
       ixkqf_tr(:)  = 0
-      s_BZtoIBZ_full(:) = 0
-      BZtoIBZ_mat(:, :) = 0 
+      s_bztoibz_full(:) = 0
+      bztoibz_mat(:, :) = 0 
       nsym(:) = 0
       !
       CALL set_sym_bl()
       wkf(:) = 0d0
-      ! What we get from this call is BZtoIBZ
+      ! What we get from this call is bztoibz
       CALL start_clock('kpoint_paral')
-      CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+      CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
       CALL stop_clock('kpoint_paral')
       ! 
-      BZtoIBZ_tmp(:) = 0
+      bztoibz_tmp(:) = 0
       DO ikbz = 1, nkf1 * nkf2 * nkf3
-        BZtoIBZ_tmp(ikbz) = map_rebal(BZtoIBZ(ikbz))
+        bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
       ENDDO
-      BZtoIBZ(:) = BZtoIBZ_tmp(:)
+      bztoibz(:) = bztoibz_tmp(:)
       ! 
       ! Now create the mapping matrix
       DO ikbz = 1, nkf1 * nkf2 * nkf3
-        ik = BZtoIBZ(ikbz)
+        ik = bztoibz(ikbz)
         nsym(ik) = nsym(ik) + 1 
-        BZtoIBZ_mat(nsym(ik), ik) = ikbz
+        bztoibz_mat(nsym(ik), ik) = ikbz
       ENDDO  
       !
       WRITE(stdout, '(5x,"Symmetry mapping finished")')
@@ -210,8 +211,8 @@
         ik = sparse_k(ind)
         ! 
         CALL kpmq_map(xkf_all(:, 2 * ik - 1), xqf(:, iq), +1, nkq_abs)
-        s_BZtoIBZ_full(ind) = s_BZtoIBZ(nkq_abs)
-        ixkqf_tr(ind) = BZtoIBZ(nkq_abs)
+        s_bztoibz_full(ind) = s_bztoibz(nkq_abs)
+        ixkqf_tr(ind) = bztoibz(nkq_abs)
       ENDDO
       ! 
       ! Determines the special k-points are k-points that are sent to themselves via a non-identity  symmetry operation.
@@ -229,8 +230,8 @@
       DO ik = 1, nktotf
         DO ibnd = 1, nbndfst
           IF (ABS(inv_tau(ibnd, ik, itemp)) > eps160) THEN
-            ekk = etf_all (ibnd, ik) - ef0(itemp)
-            dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+            ekk = etf_all(ibnd, ik) - ef0(itemp)
+            dfnk = w0gauss(ekk / etemp, -99) / etemp
             ! (-) sign is because w0gauss is - df/de
             f_serta(:, ibnd, ik, itemp) = - dfnk * vkk_all(:, ibnd, ik) / (inv_tau(ibnd, ik, itemp))
             !   
@@ -247,15 +248,19 @@
     ENDDO
     ! 
     ! We now do SERTA with and without k-point symmetries
+    WRITE(stdout, '(5x,a)') ' '
+    WRITE(stdout, '(5x,a)') REPEAT('=',93)
+    WRITE(stdout, '(5x,"BTE in the self-energy relaxation time approximation (SERTA)")')
+    WRITE(stdout, '(5x,a)') REPEAT('=',93)
     max_mob(:) = zero 
     ! K-point symmetry. 
     IF (mp_mesh_k) THEN
       ! Averages points which leaves the k-point unchanged by symmetry in F and v. 
       ! e.g. k=[1,1,1] and q=[1,0,0] with the symmetry that change x and y gives k=[1,1,1] and q=[0,1,0].
       CALL k_avg(F_SERTA, vkk_all, nb_sp, xkf_sp)
-      CALL print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_mob_sym(F_SERTA, s_bztoibz, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0)
     ELSE  
-      CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_mob(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
     ENDIF
     ! 
     ! Possibily read from file
@@ -283,7 +288,7 @@
     WRITE(stdout, '(5x,a/)') REPEAT('=',93)
     !  
     DO WHILE(MAXVAL(error) > eps6)
-      WRITE(stdout, '(/5x,"Iteration number:", i10," "/)') iter
+      WRITE(stdout, '(5x,"Iteration number:", i10)') iter
       ! 
       IF (iter > mob_maxiter) THEN
         WRITE(stdout, '(5x,a)') REPEAT('=',93)
@@ -307,7 +312,7 @@
           itemp = sparse_t(ind)
           ! 
           CALL cryst_to_cart(1, f_in(:, jbnd, ixkqf_tr(ind), itemp), at, -1)
-          CALL DGEMV('n', 3, 3, 1.d0, REAL(s(:, :, s_BZtoIBZ_full(ind)), KIND = DP), &
+          CALL DGEMV('n', 3, 3, 1.d0, REAL(s(:, :, s_bztoibz_full(ind)), KIND = DP), &
                      3, f_in(:, jbnd, ixkqf_tr(ind), itemp), 1, 0.d0, f_rot(:), 1)
           CALL cryst_to_cart(1, f_in(:, jbnd, ixkqf_tr(ind), itemp), bg, 1)
           CALL cryst_to_cart(1, F_rot, bg, 1)
@@ -346,7 +351,7 @@
       !  
       IF (mp_mesh_k) THEN
         CALL k_avg(F_out, vkk_all, nb_sp, xkf_sp)
-        CALL print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
+        CALL print_mob_sym(F_out, s_bztoibz, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
       ELSE
         CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob)
       ENDIF
@@ -383,8 +388,8 @@
       IF (ierr /= 0) CALL errore('ibte', 'Error deallocating xkf_sp', 1)      
       DEALLOCATE(ixkqf_tr, STAT = ierr)
       IF (ierr /= 0) CALL errore('ibte', 'Error deallocating ixkqf_tr', 1)
-      DEALLOCATE(s_BZtoIBZ_full, STAT = ierr)
-      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating s_BZtoIBZ_full', 1)
+      DEALLOCATE(s_bztoibz_full, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ibte', 'Error deallocating s_bztoibz_full', 1)
     ENDIF 
     ! 
     RETURN
@@ -403,11 +408,11 @@
     !!  
     ! ----------------------------------------------------------------------------
     USE kinds,            ONLY : DP, i4b
-    USE elph2,            ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf
+    USE elph2,            ONLY : inv_tau_all, inv_tau_allcb, nbndfst, nktotf, dos
     USE mp_world,         ONLY : mpime, world_comm
     USE io_global,        ONLY : ionode_id, stdout
     USE io_files,         ONLY : tmp_dir, prefix
-    USE epwcom,           ONLY : nstemp, ncarrier
+    USE epwcom,           ONLY : nstemp, ncarrier, assume_metal
     USE constants_epw,    ONLY : zero
     USE io_var,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
@@ -540,6 +545,12 @@
         ENDDO
       ENDDO
       ! 
+      IF (assume_metal) THEN
+        DO itemp = 1, nstemp
+          READ(iufilibtev_sup, *) dum1, dos(itemp)
+        ENDDO
+      ENDIF
+      ! 
       CLOSE(iufilibtev_sup)
       !
       inv_tau_all(:, :, :) = zero
@@ -581,8 +592,8 @@
     CALL mp_bcast(inv_tau_allcb, ionode_id, world_comm)
     ! 
     ! Now choose hole or electron (the implementation does not support both)
-    ! hole
-    IF (ncarrier < -1E5) THEN    
+    ! hole (or metals)
+    IF (ncarrier < -1E5 .OR. assume_metal) THEN    
       ! 
       ! Split all the matrix elements across all cores. 
       CALL fkbounds2(ind_tot, lower_bnd, upper_bnd)

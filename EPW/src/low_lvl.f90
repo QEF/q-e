@@ -1176,24 +1176,60 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE rotate_cart
     !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE compute_dos(itemp, ef0, dos)
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine computes the density of states at a given fermi level.
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : two, eps16, ryd2mev
+    USE epwcom,        ONLY : ngaussw, nstemp, nbndsub, degaussw
+    USE elph2,         ONLY : etf, nkqf, wkf
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: itemp
+    !! Temperature index
+    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
+    !! Fermi level for the temperature itemp
+    REAL(KIND = DP), INTENT(inout) :: dos(nstemp)
+    !! DOS to compute for the temperature itemp.
+    !
+    ! Local variables
+    REAL(KIND = DP), EXTERNAL :: dos_ef
     ! 
+    ! divide by two to have DOS/spin
+    IF (ABS(degaussw) < eps16) THEN
+      ! use 1 meV instead
+      dos(itemp) = dos_ef(ngaussw, 1.0d0 / ryd2mev, ef0(itemp), etf, wkf, nkqf, nbndsub) / two
+    ELSE
+      dos(itemp) = dos_ef(ngaussw, degaussw, ef0(itemp), etf, wkf, nkqf, nbndsub) / two
+    ENDIF
+    !-----------------------------------------------------------------------
+    END SUBROUTINE compute_dos
+    !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
     SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the Fermi energy associated with a given 
-    !!  carrier concentration using bissection
+    !!  carrier concentration using bissection for insulators or
+    !!  semi-conductors.
     !!
     !-----------------------------------------------------------------------
     USE cell_base, ONLY : omega, alat, at
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : etf, nkf, wkf, efnew
+    USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf
     USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero, eps80
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
     USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
-                          system_2d, carrier, efermi_read 
+                          system_2d, carrier, efermi_read, assume_metal, ngaussw
+    USE klist_epw, ONLY : isk_dummy
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global, ONLY : inter_pool_comm
     !
@@ -1209,6 +1245,8 @@
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
     !! Second fermi level for the temperature itemp
+    REAL(KIND = DP), EXTERNAL :: efermig
+    !! External function to calculate the fermi energy
     ! 
     ! Local variables 
     INTEGER :: i
@@ -1262,7 +1300,14 @@
     !! Electron carrier density
     REAL(KIND = DP), PARAMETER :: maxarg = 200.d0
     !! Maximum value for the argument of the exponential
-    ! 
+    !
+    IF (assume_metal) THEN
+      !! set conduction band chemical potential to 0 since it is irrelevent
+      ctype = -1  ! act like it's for holes
+      efcb(itemp) = 0.0
+      ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
+      RETURN
+    ENDIF
     Ef      = zero
     fermi   = zero
     fermicb = zero
@@ -1885,8 +1930,6 @@
       ENDDO
       vmek(:, ibnd) = vmek_av(:) / FLOAT(n_av)      
     ENDDO  
-  
-
     ! 
     ! vmefp and vmef are obtained using irvec, which are without alat; therefore I multiply them to bg without alat
     DO ibnd = 1, nbndfst

@@ -47,7 +47,7 @@ SUBROUTINE elph_tetra_lambda()
   USE wvfct, ONLY: et, nbnd
   USE qpoint, ONLY : xq, nksq, ikks
   USE dynmat, ONLY : dyn, w2
-  USE el_phon, ONLY : el_ph_mat, elph_nbnd_min, elph_nbnd_max, done_elph, gamma_disp
+  USE el_phon, ONLY : el_ph_mat, elph_nbnd_min, elph_nbnd_max, done_elph, gamma_disp, el_ph_nsigma
   USE control_lr,  ONLY : lgamma
   USE control_ph, ONLY : current_iq, qplot, xmldyn
   USE modes, ONLY : u, nirr
@@ -233,7 +233,7 @@ SUBROUTINE elph_tetra_lambda()
   !
   call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
   !
-  DO isig = 1, 10 !=nsig in elphsum
+  DO isig = 1, el_ph_nsigma !=nsig in elphsum
      filelph = TRIM(elph_dir)//'a2Fq2r.'// TRIM(int_to_char(50 + isig)) &
                                   //'.'//TRIM(int_to_char(current_iq))
      IF (ionode) THEN
@@ -509,7 +509,7 @@ SUBROUTINE elph_tetra_gamma()
   USE wvfct, ONLY: et, nbnd
   USE qpoint, ONLY : xq, nksq, ikks
   USE dynmat, ONLY : dyn, w2
-  USE el_phon, ONLY : el_ph_mat, elph_nbnd_min, elph_nbnd_max, done_elph, gamma_disp
+  USE el_phon, ONLY : el_ph_mat, elph_nbnd_min, elph_nbnd_max, done_elph, gamma_disp, el_ph_nsigma
   USE control_lr,  ONLY : lgamma
   USE control_ph, ONLY : current_iq, qplot, xmldyn
   USE modes, ONLY : u, nirr
@@ -695,7 +695,7 @@ SUBROUTINE elph_tetra_gamma()
   !
   call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
   !
-  DO isig = 1, 10 !=nsig in elphsum
+  DO isig = 1, el_ph_nsigma !=nsig in elphsum
      filelph = TRIM(elph_dir)//'a2Fq2r.'// TRIM(int_to_char(50 + isig)) &
                                   //'.'//TRIM(int_to_char(current_iq))
      IF (ionode) THEN

@@ -286,6 +286,9 @@ gamma_file     character (LEN=256)			    DEFAULT='gamma.dat'
 	       where at energy1 the broadening parameter is gamma1.
                used if gamma_mode='file'
 
+xanes_file       character (len=256)                          DEFAULT=xanes.dat
+                 save file where output spectrum is written
+
 ==============================================================================
 NAMELIST / pseudos /
 

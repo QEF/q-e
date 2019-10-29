@@ -34,7 +34,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
                             specfun_pl, lindabs, use_ws, epbread,               &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3
+                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -55,7 +55,7 @@
                             inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
                             esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf, transp_temp, xkq
+                            nktotf, transp_temp, xkq, dos
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -78,7 +78,7 @@
   USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,      ONLY : mpime, world_comm
   USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,        &
-                            sumkg_seq, efermig_seq, mem_size, broadening
+                            sumkg_seq, efermig_seq, mem_size, broadening, compute_dos
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
@@ -722,16 +722,18 @@
     ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
     ! with the wannier functions, or 'coarse' Fermi level is inaccurate
     IF (ABS(efnew - ef) * ryd2eV > 0.250d0 .AND. (.NOT. eig_read)) &
-       WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
+      WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ef = efnew
   ENDIF
-  !
   ! ------------------------------------------------------------
   ! Apply a possible shift to eigenenergies (applied later)
   icbm = 1
   IF (ABS(scissor) > eps6) THEN
+    IF (assume_metal) THEN
+      CALL errore("ephwann_shuffle", "A scissor shift is applied but the material is a metal...", 1)
+    ENDIF
     IF (noncolin) THEN
       icbm = FLOOR(nelec / 1.0d0) + 1
     ELSE
@@ -756,11 +758,7 @@
     CALL load_rebal
   ENDIF
   !
-  !  xqf must be in crystal coordinates
-  !
-  ! this loops over the fine mesh of q points.
-  ! ---------------------------------------------------------------------------------------
-  ! ---------------------------------------------------------------------------------------
+  ! In the case of crystal ASR
   IF (lifc) THEN
     !
     ! build the WS cell corresponding to the force constant grid
@@ -824,6 +822,12 @@
                          INT((nbndfst), KIND = 8) * INT((nbndfst), KIND = 8)) 
   ENDIF
   ! 
+  ! Allocate dos we do metals
+  IF (assume_metal) THEN
+    ALLOCATE(dos(nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore("ephwann_shuffle", "Error allocating dos", 1)
+  ENDIF
+  ! 
   IF (iterative_bte .AND. epmatkqread) THEN
     ALLOCATE(vkk_all(3, nbndfst, nktotf), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating vkk_all', 1)
@@ -861,10 +865,12 @@
     ! 
     ! Check if the grids are homogeneous and commensurate
     homogeneous = .FALSE.
-    IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
-        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
-        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
-      homogeneous = .TRUE.
+    IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+       (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) ) THEN
+      IF ( (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. &
+           (MOD(nkf3,nqf3) == 0) ) THEN
+        homogeneous = .TRUE.
+      END IF
     ELSE
       homogeneous = .FALSE.
     ENDIF
@@ -1085,14 +1091,14 @@
     ENDIF
     ! 
     DO iqq = iq_restart, totq
-      ! This needs to be uncommented. 
+      CALL start_clock ('ep-interp')
+      !  
       epf17(:, :, :, :) = czero
       cufkk(:, :) = czero
       cufkq(:, :) = czero
       ! 
       iq = selecq(iqq)
       !   
-      CALL start_clock ('ep-interp')
       !
       ! In case of big calculation, show progression of iq (especially usefull when
       ! elecselfen = true as nothing happen during the calculation otherwise. 
@@ -1373,11 +1379,15 @@
         IF (scattering) THEN
           !   
           ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
-          ! This is only done once for the first iq. 
+          ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
               CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+              ! compute dos for metals
+              IF (assume_metal) THEN
+                CALL compute_dos(itemp, ef0, dos)
+              ENDIF
             ENDDO 
           ENDIF
           !   
@@ -1473,13 +1483,16 @@
     ! if scattering is read then Fermi level and scissor have not been computed.
     IF (scatread) THEN
       IF (ABS(scissor) > 0.000001) THEN
+        IF (assume_metal) THEN
+          CALL errore("ephwann_shuffle", "Cannot apply scissor shift for metals.", 1)
+        ENDIF
         icbm = FLOOR(nelec / 2.0d0) + nbndskip + 1
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ikq = ikk + 1
           DO ibnd = icbm, nbndsub
-            etf (ibnd, ikk) = etf(ibnd, ikk) + scissor
-            etf (ibnd, ikq) = etf(ibnd, ikq) + scissor
+            etf(ibnd, ikk) = etf(ibnd, ikk) + scissor
+            etf(ibnd, ikq) = etf(ibnd, ikq) + scissor
           ENDDO
         ENDDO
         WRITE( stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
@@ -1487,9 +1500,13 @@
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)      
         IF (int_mob .OR. carrier) THEN
-          ! SP: Determination of the Fermi level for intrinsic or doped carrier 
+          ! SP: Determination of the Fermi level and dos for intrinsic or doped carrier 
           !     One also need to apply scissor before calling it.
           CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+          ! only compute dos for metals
+          IF (assume_metal) THEN
+            CALL compute_dos(itemp, ef0, dos)
+          ENDIF
         ELSE
           IF (efermi_read) THEN
             ef0(itemp) = fermi_energy
@@ -1670,6 +1687,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating transp_temp', 1)
   DEALLOCATE(et_ks, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating et_ks', 1)
+  IF (assume_metal) THEN
+    DEALLOCATE(dos, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dos', 1)
+  ENDIF
   !
   CALL stop_clock('ephwann')
   !

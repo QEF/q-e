@@ -15,12 +15,11 @@
   epwread     = .true.
  
   scattering  = .true.
-  scattering_serta = .true.
+  iterative_bte = .true.
   int_mob     = .false.
   carrier     = .true.
   ncarrier    =  1E13
   mp_mesh_k   = .true.
-  iterative_bte = .true.
   epmatkqread = .false.
   mob_maxiter = 200
   broyden_beta= 1.0
@@ -72,7 +71,6 @@
   a2f         = .false.
 
   fsthick     = 0.4 ! eV 
-  eptemp      = 1 ! K 
   degaussw    = 0.00 ! eV
 
   efermi_read  = .true

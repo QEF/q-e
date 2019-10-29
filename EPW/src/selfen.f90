@@ -686,7 +686,7 @@
         ef0 = efnew
       ENDIF
       !
-      dosef = dos_ef (ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
+      dosef = dos_ef(ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
       !  N(Ef) in the equation for lambda is the DOS per spin
       dosef = dosef / two
       !

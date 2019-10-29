@@ -66,7 +66,7 @@ MODULE cp_restart_new
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
-                                           amass, iforce, ind_bck
+                                           amass, iforce, ind_bck, ityp_ib => ityp 
       USE funct,                    ONLY : get_dft_name, get_inlc, &
            dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
            dft_is_nonlocc, get_nonlocc_name
@@ -292,7 +292,7 @@ MODULE cp_restart_new
 ! ... ATOMIC_STRUCTURE
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp, &
+         CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp_ib, &
               nat, tau(:,ind_bck(:)), alat, alat*a1(:), alat*a2(:), alat*a3(:), ibrav)
          !
 !-------------------------------------------------------------------------------

@@ -23,7 +23,8 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
                          read_dyn_mat, read_dyn_mat_tail, &
                          write_dyn_mat_header, write_ifc
   USE environment, ONLY : environment_start, environment_end
-  USE rigid, ONLY: rgd_blk
+  USE rigid,       ONLY : rgd_blk
+  USE el_phon,     ONLY : el_ph_nsigma
   !
   IMPLICIT NONE
   !
@@ -312,12 +313,13 @@ END SUBROUTINE do_q2r
 SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : DP
+  USE kinds,      ONLY : DP
   USE fft_scalar, ONLY : cfft3d
-  USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp_images, ONLY : intra_image_comm
-  USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE io_global,  ONLY : ionode, ionode_id, stdout
+  USE mp_images,  ONLY : intra_image_comm
+  USE mp,         ONLY : mp_bcast
+  USE mp_world,   ONLY : world_comm
+  USE el_phon,    ONLY : el_ph_nsigma
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nqtot, nat, nr1, nr2, nr3
@@ -327,9 +329,9 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   COMPLEX(DP), ALLOCATABLE :: gaminp(:,:,:,:,:), gamout(:,:,:,:,:)
   !
   REAL(DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
-  INTEGER  :: nsig = 10, isig, filea2F, nstar, count_q, nq, nq_log, iq, &
-       icar, ipol, m1,m2,m3, m(3), nr(3), j1,j2, na1, na2, nn
-  LOGICAL :: lq
+  INTEGER  :: isig, filea2F, nstar, count_q, nq, nq_log, iq, &
+              icar, ipol, m1,m2,m3, m(3), nr(3), j1,j2, na1, na2, nn
+  LOGICAL  :: lq
   REAL(DP) :: deg, ef, dosscf
   REAL(DP) :: q(3,48), xq, resi
   character(len=256) :: name
@@ -353,7 +355,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
 !  CALL mp_bcast(exst, ionode_id, intra_image_comm)
 !  IF (.NOT. exst) CALL errore('gammaq2r','elph_dir directory not exists',1)
   !
-  DO isig=1, nsig
+  DO isig=1, el_ph_nsigma
      filea2F = 50 + isig
      nc = 0
      DO count_q=1,nqtot

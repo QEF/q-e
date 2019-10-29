@@ -251,422 +251,28 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_serta_sym(F_SERTA, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0) 
+    SUBROUTINE print_mob_sym(f_out, s_bztoibz, bztoibz_mat, vkk_all, etf_all, wkf_all, ef0, max_mob)
     !-----------------------------------------------------------------------
     !!
-    !! This routine prints the SERTA mobility using k-point symmetry.
+    !! This routine prints the mobility using k-point symmetry.
     !!
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg
-    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
+    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
     USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
-    USE symm_base,     ONLY : s, nrot
-    USE noncollin_module, ONLY : noncolin
+    USE symm_base,     ONLY : nrot
     USE mp,            ONLY : mp_sum
     USE kinds_epw,     ONLY : SIK2
     !
     IMPLICIT NONE
     !
-    INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2), INTENT(in) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! Corresponding symmetry matrix
-    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
-    !! For a given k-point from the IBZ, given the index of all k from full BZ
-    REAL(KIND = DP), INTENT(in) :: f_serta(3, nbndfst, nktotf, nstemp)  
-    !! SERTA solution 
-    REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
-    !! Velocity
-    REAL(KIND = DP), INTENT(in) :: etf_all(nbndfst, nktotf)
-    !! Eigenenergies of k
-    REAL(KIND = DP), INTENT(in) :: wkf_all(nktotf)
-    !! Weight of k
-    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
-    !! The Fermi level 
-    ! 
-    ! Local variables
-    INTEGER :: itemp
-    !! temperature index
-    INTEGER :: ik 
-    !! k-point index
-    INTEGER :: ibnd
-    !! band index
-    INTEGER :: nb 
-    !! Number of points equivalent by sym from BZ to IBTZ
-    INTEGER :: ikbz
-    !! Index of full BZ points
-    INTEGER :: i,j
-    !! Cartesian index
-    REAL(KIND = DP) :: etemp
-    !! Temperature in Ry (this includes division by kb)
-    REAL(KIND = DP) :: sigma(3, 3, nstemp)
-    !! Electrical conductivity
-    REAL(KIND = DP) :: Fi_cart(3)
-    !! Cartesian Fi_all 
-    REAL(KIND = DP) :: Fi_rot(3)
-    !! Rotated Fi_all by the symmetry operation
-    REAL(KIND = DP) :: v_rot(3)
-    !! Rotated velocity by the symmetry operation
-    REAL(KIND = DP) :: vk_cart(3)
-    !! veloctiy in cartesian coordinate
-    REAL(KIND = DP) :: sa(3, 3)
-    !! Symmetry matrix in crystal
-    REAL(KIND = DP) :: sb(3, 3)
-    !! Symmetry matrix (intermediate step)
-    REAL(KIND = DP) :: sr(3, 3)
-    !! Symmetry matrix in cartesian coordinate 
-    REAL(KIND = DP) :: ekk
-    !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND = DP) :: carrier_density
-    !! Carrier density [nb of carrier per unit cell]
-    REAL(KIND = DP) :: fnk
-    !! Fermi-Dirac occupation function
-    REAL(KIND = DP), EXTERNAL :: wgauss
-    !! Compute the approximate theta function. Here computes Fermi-Dirac 
-    REAL(KIND = DP), EXTERNAL :: w0gauss
-    !! The derivative of wgauss:  an approximation to the delta function 
-    REAL(KIND = DP) :: Fi_check(3, nstemp)
-    !! Sum rule on population
-    REAL(KIND = DP) :: sfac
-    !! Spin factor
-    REAL(KIND = DP) :: max_mob(nstemp)
-    !! Maximum mobility
-    ! 
-    IF (noncolin) THEN
-      sfac = 1.0
-    ELSE
-      sfac = 2.0
-    ENDIF
-    max_mob(:) = zero
-    Fi_check(:, :) = zero
-    ! 
-    ! Hole
-    IF (ncarrier < -1E5) THEN
-      sigma(:, :, :) = zero
-      ! 
-      CALL prtheader(-1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              !
-              vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = f_serta(:, ibnd, ik, itemp)
-              !
-              ! Loop on the point equivalent by symmetry in the full BZ
-              DO nb = 1, nrot
-                IF (BZtoIBZ_mat(nb, ik) > 0) THEN 
-                  ikbz = BZtoIBZ_mat(nb, ik)
-                  ! 
-                  ! Transform the symmetry matrix from Crystal to cartesian
-                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb       = MATMUL(bg, sa)
-                  sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-                  sr       = TRANSPOSE(sr) 
-                  !
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1)
-                  !
-                  DO j = 1, 3
-                    DO i = 1, 3
-                      ! The factor two in the weight at the end is to
-                      ! account for spin
-                      sigma(i, j, itemp) = sigma(i, j, itemp) - (v_rot(j) * Fi_rot(i)) * sfac / (nkf1 * nkf2 * nkf3)
-                    ENDDO
-                  ENDDO
-                  !
-                  Fi_check(:, itemp) = Fi_check(:, itemp) + Fi_rot(:) * sfac / (nkf1 * nkf2 * nkf3)
-                ENDIF ! BZ 
-              ENDDO ! ikb
-              ! 
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for hole conduction
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-            ENDIF
-          ENDDO
-        ENDDO
-        ! 
-        ! Print the resulting mobility
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
-        ! 
-      ENDDO
-      ! 
-    ENDIF
-    ! 
-    ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
-      ! Needed because of residual values from the hole above
-      sigma(:, :, :)    = zero
-      ! 
-      CALL prtheader(1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = f_serta(:, ibnd, ik, itemp) 
-              ! 
-              ! Loop on the point equivalent by symmetry in the full BZ
-              DO nb = 1, nrot
-                IF (BZtoIBZ_mat(nb, ik) > 0) THEN
-                  ikbz = BZtoIBZ_mat(nb, ik)
-                  ! Transform the symmetry matrix from Crystal to
-                  ! cartesian
-                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb       = MATMUL(bg, sa)
-                  sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-                  sr       = TRANSPOSE(sr)
-                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
-                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1 ,0.d0 , Fi_rot(:), 1)
-                  !
-                  DO j = 1, 3
-                    DO i = 1, 3
-                      ! The factor two in the weight at the end is to
-                      ! account for spin
-                      sigma(i, j, itemp) = sigma(i, j, itemp) - (v_rot(j) * Fi_rot(i)) * sfac / (nkf1 * nkf2 * nkf3)
-                    ENDDO
-                  ENDDO
-                  !
-                  Fi_check(:, itemp) = Fi_check(:, itemp) + Fi_rot(:) * sfac / (nkf1 * nkf2 * nkf3)
-                ENDIF ! BZ
-              ENDDO ! ikb
-              !
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for electron conduction
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * fnk
-            ENDIF
-          ENDDO
-        ENDDO
-        ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
-        !
-      ENDDO
-      ! 
-    ENDIF
-    !  
-    RETURN
-    !
-    !-----------------------------------------------------------------------
-    END SUBROUTINE print_serta_sym
-    !-----------------------------------------------------------------------
-    ! 
-    !-----------------------------------------------------------------------
-    SUBROUTINE print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0) 
-    !-----------------------------------------------------------------------
-    !!
-    !! This routine prints the SERTA mobility without k-point symmetry
-    !!
-    !-----------------------------------------------------------------------
-    USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
-                              electron_SI, bohr2ang, ang2cm, hbarJ
-    USE noncollin_module, ONLY : noncolin
-    USE mp,            ONLY : mp_sum
-    !
-    IMPLICIT NONE
-    !
-    REAL(KIND = DP), INTENT(in) :: f_serta(3, nbndfst, nktotf, nstemp)  
-    !! SERTA solution 
-    REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
-    !! Velocity
-    REAL(KIND = DP), INTENT(in) :: etf_all(nbndfst, nktotf)
-    !! Eigenenergies of k
-    REAL(KIND = DP), INTENT(in) :: wkf_all(nktotf)
-    !! Weight of k
-    REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
-    !! The Fermi level 
-    ! 
-    ! Local variables
-    INTEGER :: itemp
-    !! temperature index
-    INTEGER :: ik 
-    !! k-point index
-    INTEGER :: ibnd
-    !! band index
-    INTEGER :: i, j
-    !! Cartesian index
-    REAL(KIND = DP) :: etemp
-    !! Temperature in Ry (this includes division by kb)
-    REAL(KIND = DP) :: sigma(3, 3, nstemp)
-    !! Electrical conductivity
-    REAL(KIND = DP) :: ekk
-    !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
-    REAL(KIND = DP) :: carrier_density
-    !! Carrier density [nb of carrier per unit cell]
-    REAL(KIND = DP) :: fnk
-    !! Fermi-Dirac occupation function
-    REAL(KIND = DP) :: Fi_check(3, nstemp)
-    !! Sum rule on population
-    REAL(KIND = DP), EXTERNAL :: wgauss
-    !! Compute the approximate theta function. Here computes Fermi-Dirac 
-    REAL(KIND = DP), EXTERNAL :: w0gauss
-    !! The derivative of wgauss:  an approximation to the delta function 
-    REAL(KIND = DP) :: sfac
-    !! Spin factor
-    REAL(KIND = DP) :: max_mob(nstemp)
-    !! Maximum mobility 
-    !
-    Fi_check(:, :) = zero
-    max_mob(:) = zero
-    IF (noncolin) THEN
-      sfac = 1.0
-    ELSE
-      sfac = 2.0
-    ENDIF
-    ! 
-    ! Hole
-    IF (ncarrier < -1E5) THEN
-      sigma(:, :, :) = zero
-      ! 
-      CALL prtheader(-1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              DO j = 1, 3
-                DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_serta(i, ibnd, ik, itemp) * wkf_all(ik)
-                ENDDO
-              ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + f_serta(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for hole conduction
-            IF (etf_all(ibnd, ik ) < ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
-            ENDIF
-          ENDDO
-        ENDDO
-        ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
-        !  
-      ENDDO
-      ! 
-    ENDIF
-    ! 
-    ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
-      ! Needed because of residual values from the hole above
-      sigma(:, :, :) = zero
-      ! 
-      CALL prtheader(+1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              DO j = 1, 3
-                DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_serta(i, ibnd, ik, itemp) * wkf_all(ik)
-                ENDDO
-              ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + f_serta(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
-              ! 
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for electron conduction
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * fnk
-            ENDIF
-          ENDDO
-        ENDDO
-        !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
-        ! 
-      ENDDO
-      ! 
-    ENDIF
-    RETURN
-    !
-    END SUBROUTINE print_serta
-    !-----------------------------------------------------------------------
-    !  
-    !-----------------------------------------------------------------------
-    SUBROUTINE print_mob_sym(F_out, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, max_mob) 
-    !-----------------------------------------------------------------------
-    !!
-    !!  This routine prints the iterative mobility using k-point symmetry ( electron or hole )
-    !!
-    !-----------------------------------------------------------------------
-    USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg
-    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
-    USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
-                              electron_SI, bohr2ang, ang2cm, hbarJ, eps80
-    USE symm_base,     ONLY : s, nrot
-    USE noncollin_module, ONLY : noncolin
-    USE mp,            ONLY : mp_sum
-    USE kinds_epw,     ONLY : SIK2
-    !
-    IMPLICIT NONE
-    !
-    INTEGER(SIK2), INTENT(in) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
-    !! Corresponding symmetry matrix
-    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot, nktotf)
+    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
     !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)  
-    !! SERTA solution 
+    !! occupations factor produced by SERTA or IBTE
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity
     REAL(KIND = DP), INTENT(in) :: etf_all(nbndfst, nktotf)
@@ -675,8 +281,9 @@
     !! Weight of k
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
-    REAL(KIND = DP), INTENT(inout) :: max_mob(nstemp)
-    !! Maximum error for all temperature
+    REAL(KIND = DP), INTENT(INOUT), OPTIONAL :: max_mob(nstemp)
+    !! Maximum mobility
+    ! 
     ! Local variables
     INTEGER :: itemp
     !! temperature index
@@ -684,32 +291,10 @@
     !! k-point index
     INTEGER :: ibnd
     !! band index
-    INTEGER :: nb 
-    !! Number of points equivalent by sym from BZ to IBTZ
-    INTEGER :: ikbz
-    !! Index of full BZ points
-    INTEGER :: i, j
-    !! Cartesian index
     REAL(KIND = DP) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND = DP) :: sigma(3, 3, nstemp)
+    REAL(KIND = DP) :: sigma(3, 3)
     !! Electrical conductivity
-    REAL(KIND = DP) :: Fi_cart(3)
-    !! Cartesian Fi_all 
-    REAL(KIND = DP) :: Fi_check(3, nstemp)
-    !! Check that \Sum_k Fi = (0,0,0)
-    REAL(KIND = DP) :: Fi_rot(3)
-    !! Rotated Fi_all by the symmetry operation
-    REAL(KIND = DP) :: v_rot(3)
-    !! Rotated velocity by the symmetry operation
-    REAL(KIND = DP) :: vk_cart(3)
-    !! veloctiy in cartesian coordinate
-    REAL(KIND = DP) :: sa(3, 3)
-    !! Symmetry matrix in crystal
-    REAL(KIND = DP) :: sb(3, 3)
-    !! Symmetry matrix (intermediate step)
-    REAL(KIND = DP) :: sr(3, 3)
-    !! Symmetry matrix in cartesian coordinate 
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
     REAL(KIND = DP) :: carrier_density
@@ -720,179 +305,169 @@
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
-    REAL(KIND = DP) :: sfac
-    !! Spin factor
-    ! 
-    Fi_check(:, :) = zero
-    ! 
-    IF (noncolin) THEN
-      sfac = 1.0
-    ELSE
-      sfac = 2.0
-    ENDIF
-    ! 
-    IF (ncarrier < -1E5) THEN ! If true print hole
-      sigma(:, :, :) = zero
-      ! 
-      CALL prtheader(-1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all (ibnd, ik) < ef0(itemp)) THEN
-              vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = f_out(:, ibnd, ik, itemp)
-              ! 
-              ! Loop on the point equivalent by symmetry in the full BZ
-              DO nb = 1, nrot
-                IF (BZtoIBZ_mat(nb, ik) > 0) THEN
-                  ikbz = BZtoIBZ_mat(nb, ik)
-                  ! 
-                  ! Transform the symmetry matrix from Crystal to
-                  ! cartesian
-                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb       = MATMUL(bg, sa)
-                  sr(:, :) = MATMUL(at, TRANSPOSE(sb))
-                  sr       = TRANSPOSE(sr)
-                  ! 
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
-                  ! 
-                  CALL DGEMV('n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1, 0.d0, Fi_rot(:), 1)
-                  !
-                  DO j = 1, 3
-                    DO i = 1, 3
-                      ! The factor two in the weight at the end is to
-                      ! account for spin
-                      sigma(i, j, itemp) = sigma(i, j, itemp) - (v_rot(j) * Fi_rot(i)) * sfac / (nkf1 * nkf2 * nkf3)
-                    ENDDO
-                  ENDDO
-                  !
-                  Fi_check(:, itemp) = Fi_check(:, itemp) + Fi_rot(:) * sfac / (nkf1 * nkf2 * nkf3) 
-                ENDIF ! BZ
-              ENDDO ! ikb
-              ! 
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for hole conduction
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk )
-            ENDIF
-          ENDDO
-        ENDDO
-        ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
-        ! 
-      ENDDO
-      ! 
-    ENDIF
-    ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
-      ! Needed because of residual values from the hole above
-      sigma(:, :, :) = zero
-      ! 
-      CALL prtheader(+1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              vk_cart(:) = vkk_all(:, ibnd, ik)
-              Fi_cart(:) = f_out(:, ibnd, ik, itemp)
-              ! 
-              ! Loop on the point equivalent by symmetry in the full BZ
-              DO nb = 1, nrot
-                IF (BZtoIBZ_mat(nb, ik) > 0) THEN
-                  ikbz = BZtoIBZ_mat(nb, ik)
-                  ! 
-                  ! Transform the symmetry matrix from Crystal to
-                  ! cartesian
-                  sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
-                  sb       = MATMUL(bg, sa)
-                  sr(:, :) = MATMUL(at, TRANSPOSE (sb))
-                  sr       = TRANSPOSE(sr)
-                  ! 
-                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0 ,v_rot(:), 1 )
-                  ! 
-                  CALL DGEMV( 'n', 3, 3, 1.d0, sr, 3, Fi_cart(:), 1, 0.d0, Fi_rot(:), 1 )
-                  !
-                  DO j = 1, 3
-                    DO i = 1, 3
-                      ! The factor two in the weight at the end is to
-                      ! account for spin
-                      sigma(i, j, itemp) = sigma(i, j, itemp) - (v_rot(j) * Fi_rot(i)) * sfac / (nkf1 * nkf2 * nkf3)  
-                    ENDDO
-                  ENDDO 
-                  !
-                  Fi_check(:, itemp) = Fi_check(:, itemp) + Fi_rot(:) * sfac / (nkf1 * nkf2 * nkf3) 
-                ENDIF ! BZ
-              ENDDO ! ikb
-              ! 
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for electron conduction
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * fnk
-            ENDIF
-          ENDDO
-        ENDDO
-        ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
-        ! 
-      ENDDO
-      ! 
-    ENDIF 
+    REAL(KIND = DP) :: fi_check(3)
+    !! Sum rule on population
     !
-    RETURN
+    IF (PRESENT(max_mob)) THEN
+      max_mob(:) = zero
+    ENDIF
+    CALL prtheader()
+    ! compute conductivity
+    DO itemp = 1, nstemp
+      carrier_density = 0.0
+      etemp = transp_temp(itemp)
+      sigma(:, :) = zero
+      fi_check(:) = zero
+      DO ik = 1,  nktotf
+        DO ibnd = 1, nbndfst
+          !  energy at k (relative to Ef)
+          ekk = etf_all(ibnd, ik) - ef0(itemp)
+          fnk = wgauss(-ekk / etemp, -99)
+          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_bztoibz, bztoibz_mat, vkk_all, sigma, &
+              fi_check, ibnd, ik)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
+          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5.AND. .NOT. assume_metal) THEN
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_bztoibz, bztoibz_mat, vkk_all, sigma, &
+              fi_check, ibnd, ik)
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ELSE IF (assume_metal) THEN
+            ! just sum on all bands for metals
+            CALL compute_sigma_sym(f_out(:, :, :, itemp), s_bztoibz, bztoibz_mat, vkk_all, sigma, &
+              fi_check, ibnd, ik)
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! ik
+      ! Print the resulting mobility
+      IF (PRESENT(max_mob)) THEN
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp))
+      ELSE
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp)
+      ENDIF
+    ENDDO ! temp
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE print_mob_sym
     !-----------------------------------------------------------------------
-    !  
+    !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, max_mob) 
+    SUBROUTINE compute_sigma_sym(f_out, s_bztoibz, bztoibz_mat, vkk_all, &
+                    sigma, fi_check, ibnd, ik)
     !-----------------------------------------------------------------------
     !!
-    !!  This routine prints the iterative mobility without k-point symmetry ( electron or hole )
+    !!  Computes one element of the sigma tensor when using symmetries.
+    !!
+    !----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : at, bg
+    USE epwcom,        ONLY : nkf1, nkf2, nkf3
+    USE elph2,         ONLY : nbndfst, nktotf 
+    USE symm_base,     ONLY : s, nrot
+    USE noncollin_module, ONLY : noncolin
+    USE kinds_epw,     ONLY : SIK2
+    !
+    IMPLICIT NONE
+    !
+    INTEGER(SIK2), INTENT(in) :: s_bztoibz(nkf1 * nkf2 * nkf3)
+    !! Corresponding symmetry matrix
+    INTEGER, INTENT(in) :: bztoibz_mat(nrot, nktotf)
+    !! For a given k-point from the IBZ, given the index of all k from full BZ
+    INTEGER, INTENT(in) :: ik 
+    !! k-point index
+    INTEGER, INTENT(in) :: ibnd
+    !! band index
+    REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf)  
+    !! Occupation function produced by SERTA or IBTE
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
+    !! Velocity
+    REAL(KIND = DP), INTENT(INOUT) :: sigma(3, 3)
+    !! Electrical conductivity
+    REAL(KIND = DP), INTENT(INOUT) :: fi_check(3)
+    !! Sum rule on population
+    !
+    ! Local variables
+    !
+    INTEGER :: nb 
+    !! Number of points equivalent by sym from BZ to IBTZ
+    INTEGER :: ikbz
+    !! Index of full BZ points
+    INTEGER :: i,j
+    !! Cartesian index
+    REAL(KIND = DP) :: vk_cart(3)
+    !! veloctiy in cartesian coordinate
+    REAL(KIND = DP) :: fi_cart(3)
+    !! Cartesian Fi_all 
+    REAL(KIND = DP) :: fi_rot(3)
+    !! Rotated Fi_all by the symmetry operation
+    REAL(KIND = DP) :: v_rot(3)
+    !! Rotated velocity by the symmetry operation
+    REAL(KIND = DP) :: sa(3, 3)
+    !! Symmetry matrix in crystal
+    REAL(KIND = DP) :: sb(3, 3)
+    !! Symmetry matrix (intermediate step)
+    REAL(KIND = DP) :: sr(3, 3)
+    !! Symmetry matrix in cartesian coordinate 
+    REAL(KIND = DP) :: sfac
+    !! Spin factor
+    IF (noncolin) THEN
+      sfac = 1.0
+    ELSE
+      sfac = 2.0
+    ENDIF
+    vk_cart(:) = vkk_all(:, ibnd, ik)
+    fi_cart(:) = f_out(:, ibnd, ik)
+    !
+    ! Loop on the point equivalent by symmetry in the full BZ
+    DO nb = 1, nrot
+      IF (bztoibz_mat(nb, ik) > 0) THEN 
+        ikbz = bztoibz_mat(nb, ik)
+        ! 
+        ! Transform the symmetry matrix from Crystal to cartesian
+        sa(:, :) = DBLE(s(:, :, s_bztoibz(ikbz)))
+        sb       = MATMUL(bg, sa)
+        sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+        sr       = TRANSPOSE(sr) 
+        !
+        CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1 ,0.d0 , v_rot(:), 1)
+        CALL DGEMV('n', 3, 3, 1.d0, sr, 3, fi_cart(:), 1 ,0.d0 , fi_rot(:), 1)
+        !
+        DO j = 1, 3
+          DO i = 1, 3
+            ! The factor two in the weight at the end is to
+            ! account for spin
+            sigma(i, j) = sigma(i, j) - (v_rot(j) * fi_rot(i)) * sfac / (nkf1 * nkf2 * nkf3)
+          ENDDO
+        ENDDO
+        !
+        fi_check(:) = fi_check(:) + fi_rot(:) * sfac / (nkf1 * nkf2 * nkf3)
+      ENDIF ! BZ 
+    ENDDO ! ikb
+    ! 
+    !-----------------------------------------------------------------------
+    END SUBROUTINE compute_sigma_sym
+    !-----------------------------------------------------------------------
+    ! 
+    !-----------------------------------------------------------------------
+    SUBROUTINE print_mob(f_out, vkk_all, etf_all, wkf_all, ef0, max_mob) 
+    !-----------------------------------------------------------------------
+    !!
+    !! This routine prints the mobility without k-point symmetry
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3
+    USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
     USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
-                              electron_SI, bohr2ang, ang2cm, hbarJ, eps80
+                              electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
     USE mp,            ONLY : mp_sum
     !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf, nstemp)  
-    !! SERTA solution 
+    !! Occupation function produced by SERTA or IBTE
     REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
     !! Velocity
     REAL(KIND = DP), INTENT(in) :: etf_all(nbndfst, nktotf)
@@ -901,8 +476,9 @@
     !! Weight of k
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! The Fermi level 
-    REAL(KIND = DP), INTENT(inout) :: max_mob(nstemp)
-    !! Maximum error for all temperature
+    REAL(KIND = DP), INTENT(inout), OPTIONAL :: max_mob(nstemp)
+    !! The maximum mobility computed by thr prtmob routine.
+    ! 
     ! Local variables
     INTEGER :: itemp
     !! temperature index
@@ -910,11 +486,11 @@
     !! k-point index
     INTEGER :: ibnd
     !! band index
-    INTEGER :: i,j
+    INTEGER :: i, j
     !! Cartesian index
     REAL(KIND = DP) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND = DP) :: sigma(3, 3, nstemp)
+    REAL(KIND = DP) :: sigma(3, 3)
     !! Electrical conductivity
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
@@ -922,133 +498,123 @@
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND = DP) :: fnk
     !! Fermi-Dirac occupation function
-    REAL(KIND = DP) :: Fi_check(3, nstemp)
-    !! Check that \Sum_k Fi = (0,0,0)
+    REAL(KIND = DP) :: Fi_check(3)
+    !! Sum rule on population
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
     REAL(KIND = DP) :: sfac
-    !! Spin factor    
-    ! 
-    Fi_check(:, :) = zero
-    ! 
+    !! Spin factor
+    !
+    IF (PRESENT(max_mob)) THEN
+      max_mob(:) = zero
+    ENDIF
+    CALL prtheader()
+    DO itemp = 1, nstemp
+      carrier_density = 0.0
+      etemp = transp_temp(itemp)
+      sigma(:, :) = zero
+      fi_check(:) = zero
+      DO ik = 1,  nktotf
+        DO ibnd = 1, nbndfst
+          !  energy at k (relative to Ef)
+          ekk = etf_all(ibnd, ik) - ef0(itemp)
+          fnk = wgauss(-ekk / etemp, -99)
+          IF (etf_all(ibnd, ik) < ef0(itemp) .AND. ncarrier < -1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all , sigma, fi_check, ibnd, ik)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk)
+          ELSE IF (etf_all(ibnd, ik) > ef0(itemp) .AND. ncarrier > 1E5 .AND. .NOT. assume_metal) THEN
+            CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all , sigma, fi_check, ibnd, ik)
+            ! The wkf(ikk) already include a factor 2
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ELSE IF (assume_metal) THEN 
+            ! sum on all bands for metals
+            CALL compute_sigma(f_out(:, :, :, itemp), vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
+            carrier_density = carrier_density + wkf_all(ik) * fnk
+          ENDIF
+        ENDDO ! ibnd
+      ENDDO ! ik
+      IF (PRESENT(max_mob)) THEN
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp, max_mob(itemp)) 
+      ELSE
+        CALL prtmob(itemp, sigma, carrier_density, fi_check, ef0(itemp), etemp) 
+      ENDIF
+    ENDDO ! itemp      
+    !-----------------------------------------------------------------------
+    END SUBROUTINE print_mob
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE compute_sigma(f_out, vkk_all, wkf_all, sigma, fi_check, ibnd, ik)
+    !-----------------------------------------------------------------------
+    !!
+    !!  Computes the conductivity tensor without using symetries
+    !!
+    !----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : nkf1, nkf2, nkf3
+    USE elph2,         ONLY : nbndfst, nktotf 
+    USE noncollin_module, ONLY : noncolin
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: ik 
+    !! k-point index
+    INTEGER, INTENT(in) :: ibnd
+    !! band index
+    REAL(KIND = DP), INTENT(in) :: f_out(3, nbndfst, nktotf)  
+    !! Occupation function produced by SERTA or IBTE
+    REAL(KIND = DP), INTENT(INOUT) :: sigma(3, 3)
+    !! Electrical conductivity
+    REAL(KIND = DP), INTENT(INOUT) :: fi_check(3)
+    !! Sum rule on population
+    REAL(KIND = DP), INTENT(in) :: vkk_all(3, nbndfst, nktotf)
+    !! Velocity
+    REAL(KIND = DP), INTENT(in) :: wkf_all(nktotf)
+    !! Weight of k
+    !
+    ! Local variables
+    !
+    INTEGER :: i, j
+    !! Dimension loop indices
+    REAL(KIND = DP) :: sfac
+    !! Spin factor
     IF (noncolin) THEN
       sfac = 1.0
     ELSE
       sfac = 2.0
     ENDIF
-    !
-    IF (ncarrier < -1E5) THEN ! If true print hole
-      sigma(:, :, :)    = zero
-      ! 
-      ! Print header where -1 means hole
-      CALL prtheader(-1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              DO j = 1, 3
-                DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_out(i, ibnd, ik, itemp) * wkf_all(ik)
-                ENDDO
-              ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + f_out(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3)
-              ! 
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for hole conduction
-            IF (etf_all(ibnd, ik) < ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk )
-            ENDIF
-          ENDDO
-        ENDDO
-        ! 
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp))
-        ! 
+
+    DO j = 1, 3
+      DO i = 1, 3
+        sigma(i, j) = sigma(i, j) - vkk_all(j, ibnd, ik) * f_out(i, ibnd, ik) * wkf_all(ik)
       ENDDO
-      ! 
-    ENDIF
-    ! Now electron mobility
-    IF (ncarrier > 1E5) THEN
-      ! Needed because of residual values from the hole above
-      sigma(:, :, :)    = zero
-      ! 
-      CALL prtheader(+1)
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        DO ik = 1,  nktotf
-          DO ibnd = 1, nbndfst
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              DO j = 1, 3
-                DO i = 1, 3
-                  sigma(i, j, itemp) = sigma(i, j, itemp) - vkk_all(j, ibnd, ik) * f_out(i, ibnd, ik, itemp) * wkf_all(ik)
-                ENDDO
-              ENDDO
-              Fi_check(:, itemp) = Fi_check(:, itemp) + f_out(:, ibnd, ik, itemp) * sfac / (nkf1 * nkf2 * nkf3) 
-              ! 
-            ENDIF ! if below Fermi level
-          ENDDO ! ibnd
-        ENDDO ! ik
-      ENDDO ! itemp      
-      ! 
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            ! This selects only valence bands for electron conduction
-            IF (etf_all(ibnd, ik) > ef0(itemp)) THEN
-              !  energy at k (relative to Ef)
-              ekk = etf_all(ibnd, ik) - ef0(itemp)
-              fnk = wgauss(-ekk / etemp, -99)
-              ! The wkf(ikk) already include a factor 2
-              carrier_density = carrier_density + wkf_all(ik) * fnk
-            ENDIF
-          ENDDO
-        ENDDO
-        !
-        CALL prtmob(sigma(:, :, itemp), carrier_density, Fi_check(:, itemp), ef0(itemp), etemp, max_mob(itemp)) 
-        ! 
-      ENDDO
-      ! 
-    ENDIF 
-    !
-    RETURN
-    !
+    ENDDO
+    fi_check(:) = fi_check(:) + f_out(:, ibnd, ik) * sfac / (nkf1 * nkf2 * nkf3)
     !-----------------------------------------------------------------------
-    END SUBROUTINE print_mob
+    END SUBROUTINE compute_sigma
     !-----------------------------------------------------------------------
-    ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE prtmob(sigma, carrier_density, Fi_check, ef0, etemp, max_mob) 
+    SUBROUTINE prtmob(itemp, sigma, carrier_density, Fi_check, ef0, etemp, max_mob) 
     !-----------------------------------------------------------------------
     !! 
-    !! This routine print the mobility in a nice format and in proper units.
+    !! This routine print the mobility (or conducrtivity for metals) in a 
+    !! nice format and in proper units.
     !! 
     USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : assume_metal
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : omega
+    USE elph2,         ONLY : dos
     USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, &
                               electron_SI, bohr2ang, ang2cm, hbarJ
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(in) :: itemp
+    !! Temperature index
     REAL(KIND = DP), INTENT(in) :: sigma(3, 3)
     !! Conductivity tensor
     REAL(KIND = DP), INTENT(in) :: carrier_density
@@ -1059,7 +625,7 @@
     !! Fermi-level 
     REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in Ry (this includes division by kb)
-    REAL(KIND = DP), INTENT(inout) :: max_mob
+    REAL(KIND = DP), INTENT(inout), OPTIONAL :: max_mob
     !! Maximum error for all temperature
     ! 
     ! Local variables
@@ -1073,44 +639,51 @@
     inv_cell = 1.0d0 / omega
     ! carrier_density in cm^-1
     nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-    IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
-    ! 
-    mobility(:, :) = (sigma(:, :) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-    ! 
-    WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
+    mobility(:, :) = (sigma(:, :) * electron_SI ** 2 * inv_cell) / (hbarJ * bohr2ang * ang2cm)
+    IF (.NOT. assume_metal) THEN
+      ! for insulators print mobility so just divide by carrier density
+      IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
+      mobility(:, :) = mobility(:, :) / (electron_SI * carrier_density * inv_cell) * (bohr2ang * ang2cm) ** 3
+      WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
            nden, SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+    ELSE
+      WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
+           dos(itemp), SUM(Fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
+    ENDIF
     WRITE(stdout, '(50x, 3E16.6)') mobility(2, 1), mobility(2, 2), mobility(2, 3) 
     WRITE(stdout, '(50x, 3E16.6)') mobility(3, 1), mobility(3, 2), mobility(3, 3)
-    ! 
-    max_mob = MAXVAL(mobility(:,:))
+    IF (PRESENT(max_mob)) THEN
+      max_mob = MAXVAL(mobility(:,:))
+    ENDIF
     ! 
     !-----------------------------------------------------------------------
     END SUBROUTINE prtmob
     !-----------------------------------------------------------------------
     !-----------------------------------------------------------------------
-    SUBROUTINE prtheader(cal_type)
+    SUBROUTINE prtheader()
     !-----------------------------------------------------------------------
     !! 
     !! This routine print a header for mobility calculation
     !! 
     USE io_global,     ONLY : stdout
+    USE epwcom,        ONLY : assume_metal, ncarrier
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: cal_type
-    !! +1 means electron and -1 means hole. 
-    IF (cal_type == -1) THEN 
-      WRITE(stdout, '(/5x, a)') REPEAT('=',93)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',93)
+    WRITE(stdout, '(/5x, a)') REPEAT('=',93)
+    IF (.NOT. assume_metal) THEN
+      IF (ncarrier < -1E5) THEN 
+        WRITE(stdout, '(5x, "  Temp     Fermi   Hole density  Population SR                  Hole mobility ")')
+        WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]")')
+      ELSE
+        WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
+        WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
+      ENDIF
+    ELSE
+      WRITE(stdout, '(5x, "  Temp     Fermi        DOS        Population SR                 Conductivity ")')
+      WRITE(stdout, '(5x, "   [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 ")')
     ENDIF
-    IF (cal_type == 1) THEN
-      WRITE(stdout, '(/5x, a)') REPEAT('=',93)
-      WRITE(stdout, '(5x, "  Temp     Fermi   Elec density  Population SR                  Elec mobility ")')
-      WRITE(stdout, '(5x, "   [K]      [eV]     [cm^-3]      [e per cell]                    [cm^2/Vs]")')
-      WRITE(stdout, '(5x, a/)') REPEAT('=',93)
-    ENDIF
+    WRITE(stdout, '(5x, a/)') REPEAT('=',93)
     !-----------------------------------------------------------------------
     END SUBROUTINE prtheader
     !-----------------------------------------------------------------------
