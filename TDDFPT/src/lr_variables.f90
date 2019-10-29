@@ -125,9 +125,6 @@ MODULE lr_variables
        evc1_rgt_new(:,:,:,:), &   
        evc1_lft_new(:,:,:,:), &   
                                 !
-       sevc1_rgt_new(:,:,:,:), &   
-       sevc1_lft_new(:,:,:,:), &   
-                                !
        V0psi(:,:,:,:,:), &      ! magnons equivalent of d0psi, batch
                                 ! representation of the external potential,
                                 ! contains P_C V_ext psi

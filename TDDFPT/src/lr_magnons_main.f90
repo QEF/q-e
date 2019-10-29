@@ -165,7 +165,7 @@ PROGRAM lr_magnons_main
         !
         ! The two starting Lanczos vectors are equal.
         !
-        evc1_rgt(:,:,:,:) = V0psi(:,:,:,:,pol_index)
+        evc1_rgt(:,:,:,:) = V0psi(:,:,:,:,ip)
         evc1_lft(:,:,:,:) = evc1_rgt(:,:,:,:)
         !
         ! The new structure of the Lanczos algorithm
