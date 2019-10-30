@@ -291,7 +291,7 @@ SUBROUTINE lr_init_nfo()
   IF(magnons) nbnd_occx = MAXVAL( nbnd_occ )
   IF(magnons) THEN
    do ik = 1, nks
-     write(*,*) mpime, ik, nbnd_occ(ik), nbnd_occx
+     write(stdout,*) mpime, ik, nbnd_occ(ik), nbnd_occx
    enddo
   ENDIF
   !
