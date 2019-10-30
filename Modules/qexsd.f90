@@ -251,8 +251,8 @@ CONTAINS
 !-------------------------------------------
 !
 !------------------------------------------------------------------------
-    FUNCTION qexsd_readschema (filename, output_obj, parinfo_obj, &
-         geninfo_obj, input_obj) RESULT(ierr)
+    SUBROUTINE qexsd_readschema (filename, ierr, output_obj, parinfo_obj, &
+         geninfo_obj, input_obj)
 !------------------------------------------------------------------------
       !
       USE qes_read_module, ONLY : qes_read
@@ -262,6 +262,7 @@ CONTAINS
       IMPLICIT NONE 
       ! 
       CHARACTER(LEN=*), INTENT(IN) :: filename
+      INTEGER, INTENT(OUT)         :: ierr
       TYPE( output_type ), OPTIONAL,       INTENT(OUT)   :: output_obj
       TYPE(parallel_info_type), OPTIONAL,  INTENT(OUT)   :: parinfo_obj
       TYPE(general_info_type ), OPTIONAL,  INTENT(OUT)   :: geninfo_obj
@@ -272,7 +273,6 @@ CONTAINS
       LOGICAL                 :: found
       CHARACTER(LEN=80)       :: errmsg = ' '
       CHARACTER(len=17)       :: subname = 'qexsd_readschema'
-      INTEGER                 :: ierr
       ! 
       ierr = 0
       ! 
@@ -349,7 +349,7 @@ CONTAINS
       !
  100  IF ( ierr /= 0 ) CALL infomsg(subname,TRIM(errmsg))
       !
-    END FUNCTION qexsd_readschema
+    END SUBROUTINE qexsd_readschema
 !
 !-------------------------------------------
 ! ... utilities

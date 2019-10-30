@@ -110,7 +110,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
 #endif
-  REAL(DP) :: dr2_paw, norm
+  REAL(DP) :: norm
   INTEGER, PARAMETER :: read_ = -1, write_ = +1
   !
   !

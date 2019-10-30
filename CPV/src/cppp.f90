@@ -135,7 +135,7 @@ PROGRAM cp_postproc
   !
 
   filepp = xmlfile( ndr )
-  ierr = qexsd_readschema ( filepp, output_obj )
+  CALL qexsd_readschema ( filepp, ierr, output_obj )
   IF( ierr > 0 ) CALL errore(' cppp ', ' Cannot open file '//TRIM(filepp), ierr)
   !
   !   End of reading from data file - now copy to variables

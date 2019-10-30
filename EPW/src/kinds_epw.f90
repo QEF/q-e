@@ -17,7 +17,9 @@
   ! Useful to reduce memory. 
   !
   INTEGER, PARAMETER :: SIK1 = SELECTED_INT_KIND(1)
+  !! 1 byte integer
   INTEGER, PARAMETER :: SIK2 = SELECTED_INT_KIND(2)
+  !! 2 byte integer
   !
   !-----------------------------------------------------------------------
   END MODULE kinds_epw

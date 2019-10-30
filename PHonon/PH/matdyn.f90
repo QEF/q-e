@@ -144,7 +144,8 @@ PROGRAM matdyn
   USE rap_point_group,  ONLY : code_group
   USE bz_form,    ONLY : transform_label_coord
   USE parser,     ONLY : read_line
-  USE rigid,       ONLY: dyndiag, nonanal, nonanal_ifc
+  USE rigid,      ONLY : dyndiag, nonanal, nonanal_ifc
+  USE el_phon,    ONLY : el_ph_nsigma
 
   USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
   !
@@ -216,7 +217,7 @@ PROGRAM matdyn
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
        &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
        &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, &
-       &           nosym, loto_2d, fildyn, fildyn_prefix
+       &           nosym, loto_2d, fildyn, fildyn_prefix, el_ph_nsigma
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -260,6 +261,7 @@ PROGRAM matdyn
      point_label_type='SC'
      nosym = .false.
      loto_2d=.false.
+     el_ph_nsigma=10
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -297,7 +299,7 @@ PROGRAM matdyn
      CALL mp_bcast(q_in_cryst_coord,ionode_id, world_comm)
      CALL mp_bcast(point_label_type,ionode_id, world_comm)
      CALL mp_bcast(loto_2d,ionode_id, world_comm) 
-
+     CALL mp_bcast(el_ph_nsigma,ionode_id, world_comm)
      !
      ! read force constants
      !
@@ -768,7 +770,7 @@ PROGRAM matdyn
      IF(la2F) THEN
          !
          IF (.NOT. dos) THEN
-            DO isig=1,10
+            DO isig=1,el_ph_nsigma
                OPEN (unit=200+isig,file='elph.gamma.'//&
                   TRIM(int_to_char(isig)), status='unknown',form='formatted')
                WRITE(200+isig, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
@@ -787,7 +789,7 @@ PROGRAM matdyn
                            asr, q, freq,fd, wq)
          !
          IF (.NOT.dos) THEN
-            DO isig=1,10
+            DO isig=1,el_ph_nsigma
                CLOSE(UNIT=200+isig)
             ENDDO
          ENDIF
@@ -2057,14 +2059,15 @@ SUBROUTINE a2Fdos &
      dos, Emin, DeltaE, ndos, asr, q, freq,fd, wq )
   !-----------------------------------------------------------------------
   !
-  USE kinds,      ONLY : DP
+  USE kinds,       ONLY : DP
   USE io_global,   ONLY : ionode, ionode_id
   USE mp,          ONLY : mp_bcast
   USE mp_world,    ONLY : world_comm
   USE mp_images,   ONLY : intra_image_comm
   USE ifconstants, ONLY : zeu, tau_blk
-  USE constants,  ONLY : pi, RY_TO_THZ
-  USE constants, ONLY : K_BOLTZMANN_RY
+  USE constants,   ONLY : pi, RY_TO_THZ
+  USE constants,   ONLY : K_BOLTZMANN_RY
+  USE el_phon,     ONLY : el_ph_nsigma
   !
   IMPLICIT NONE
   !
@@ -2074,28 +2077,26 @@ SUBROUTINE a2Fdos &
   REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), wq(nq), at(3,3), bg(3,3), &
        tau(3,nat), alat, Emin, DeltaE
   !
-  INTEGER, INTENT(in) :: nsc, nat_blk, itau_blk(nat), nrws
+  INTEGER, INTENT(in)  :: nsc, nat_blk, itau_blk(nat), nrws
   REAL(DP), INTENT(in) :: rws(0:3,nrws), at_blk(3,3), bg_blk(3,3), omega_blk
   !
   REAL(DP), ALLOCATABLE    :: gamma(:,:), frcg(:,:,:,:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: gam(:,:,:,:), gam_blk(:,:,:,:), z(:,:)
 
-  real(DP)                 :: lambda, dos_a2F(50), temp, dos_ee(10), dos_tot, &
-                              deg(10), fermi(10), E
+  real(DP)                 :: lambda, dos_a2F(3*nat), temp, dos_ee(el_ph_nsigma), dos_tot, &
+                              deg(el_ph_nsigma), fermi(el_ph_nsigma), E
   real(DP), parameter      :: eps_w2 = 0.0000001d0
   integer                  :: isig, ifn, n, m, na, nb, nc, nu, nmodes, &
                               i,j,k, ngauss, jsig, p1, p2, p3, filea2F, ios
-  character(len=256)        :: name
-  character(len=256)        :: elph_dir
+  character(len=256)       :: name
   real(DP), external       :: dos_gam
   CHARACTER(LEN=6)         :: int_to_char
   !
   !
   nmodes = 3*nat
-  elph_dir='elph_dir/'
-  do isig=1,10
+  do isig=1,el_ph_nsigma
      filea2F = 60 + isig
-     name= TRIM(elph_dir) // 'a2Fmatdyn.' // TRIM(int_to_char(filea2F))
+     name= 'elph_dir/a2Fmatdyn.' // TRIM(int_to_char(filea2F))
      IF (ionode) open(unit=filea2F, file=TRIM(name), &
                                 STATUS = 'unknown', IOSTAT=ios)
       CALL mp_bcast(ios, ionode_id, intra_image_comm)
@@ -2129,7 +2130,7 @@ SUBROUTINE a2Fdos &
   ALLOCATE ( z(3*nat,3*nat) )
   !
   frcg(:,:,:,:,:,:,:) = 0.d0
-  DO isig = 1, 10
+  DO isig = 1, el_ph_nsigma
      filea2F = 60 + isig
      CALL readfg ( filea2F, nr1, nr2, nr3, nat, frcg )
      !
