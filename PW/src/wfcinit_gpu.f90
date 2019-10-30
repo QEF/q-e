@@ -14,7 +14,7 @@ SUBROUTINE wfcinit_gpu()
   ! ... from superposition of atomic wavefunctions and/or random wavefunctions.
   ! ... It also open needed files or memory buffers
   !
-  USE io_global,            ONLY : stdout
+  USE io_global,            ONLY : stdout, ionode, ionode_id
   USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k_d
@@ -30,6 +30,8 @@ SUBROUTINE wfcinit_gpu()
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : read_collected_to_evc 
+  USE mp,                   ONLY : mp_bcast
+  USE mp_images,            ONLY : intra_image_comm
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset
@@ -42,7 +44,6 @@ SUBROUTINE wfcinit_gpu()
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (LEN=256)  :: dirname
-  CHARACTER (LEN=320)  :: filename
   TYPE ( output_type ) :: output_obj
   !
   CALL start_clock( 'wfcinit' )
@@ -59,10 +60,11 @@ SUBROUTINE wfcinit_gpu()
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
      dirname = restart_dir ( ) 
-     filename= xmlfile ( ) 
-     ierr = qexsd_readschema( filename, output_obj )
+     IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
+     CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN 
-        twfcollect_file = output_obj%band_structure%wf_collected   
+        IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
+        CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
         IF ( twfcollect_file ) THEN
            CALL read_collected_to_evc(dirname )
         ELSE IF ( .NOT. exst_file) THEN

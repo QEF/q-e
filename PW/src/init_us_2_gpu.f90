@@ -7,30 +7,24 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
+SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   !----------------------------------------------------------------------
+  !! Calculates beta functions (Kleinman-Bylander projectors), with
+  !! structure factor, for all atoms, in reciprocal space.
   !
-  !   Calculates beta functions (Kleinman-Bylander projectors), with
-  !   structure factor, for all atoms, in reciprocal space. On input:
-  !      npw_       : number of PWs 
-  !      igk_(npw_) : indices of G in the list of q+G vectors
-  !      q_(3)      : q vector (2pi/a units)
-  !  On output:
-  !      vkb_(npwx,nkb) : beta functions (npw_ <= npwx)
-  !
-  USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
-  USE cell_base,  ONLY : tpiba
-  USE constants,  ONLY : tpi
-  USE gvect_gpum, ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
-  USE wvfct,      ONLY : npwx
-  USE us,         ONLY : nqx, dq, spline_ps
-  USE us_gpum,    ONLY : tab_d, tab_d2y_d
-  USE m_gth,      ONLY : mk_ffnl_gth
+  USE kinds,        ONLY : DP
+  USE ions_base,    ONLY : nat, ntyp => nsp, ityp, tau
+  USE cell_base,    ONLY : tpiba
+  USE constants,    ONLY : tpi
+  USE gvect_gpum,   ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
+  USE wvfct,        ONLY : npwx
+  USE us,           ONLY : nqx, dq, spline_ps
+  USE us_gpum,      ONLY : tab_d, tab_d2y_d
+  USE m_gth,        ONLY : mk_ffnl_gth
   USE splinelib_gpum, ONLY : splint_eq_gpu
-  USE uspp,       ONLY : nkb, nhtol, nhtolm, indv
-  USE uspp_param, ONLY : upf, lmaxkb, nhm, nh
-!  USE ylmr2_gpum, ONLY : ylmr2_gpu
+  USE uspp,         ONLY : nkb, nhtol, nhtolm, indv
+  USE uspp_param,   ONLY : upf, lmaxkb, nhm, nh
+!  USE ylmr2_gpum,  ONLY : ylmr2_gpu
   !
   USE us_gpum,    ONLY : using_tab_d, using_tab_d2y_d
   USE gbuffers,   ONLY : dev_buf

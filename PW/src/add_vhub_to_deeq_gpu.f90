@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE add_vhub_to_deeq_gpu(deeq_d)
+SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
 !-----------------------------------------------------------------
   !! Add Hubbard contributions to the integral of V_eff and Q_{nm} when 
   !! U_projection is pseudo.
