@@ -30,7 +30,7 @@ PROGRAM do_projwfc
   USE mp_images,  ONLY : intra_image_comm
   USE mp_pools,   ONLY : intra_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm, inter_bgrp_comm
-  USE mp_diag,    ONLY : mp_start_diag, nproc_ortho
+  USE mp_diag,    ONLY : mp_start_diag
   USE command_line_options, ONLY : ndiag_
   USE spin_orb,   ONLY : lforcet
   USE wvfct,      ONLY : et, nbnd
@@ -218,11 +218,7 @@ PROGRAM do_projwfc
      IF ( lforcet .OR. noncolin ) THEN
         CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data,ef_0)
      ELSE
-        IF( nproc_ortho > 1 ) THEN
-           CALL pprojwave (filproj, lsym, lwrite_overlaps, lbinary_data )
-        ELSE
-           CALL projwave (filproj, lsym, lwrite_overlaps, lbinary_data)
-        ENDIF
+        CALL pprojwave (filproj, lsym, lwrite_overlaps, lbinary_data )
      ENDIF
   ENDIF
   !
@@ -305,8 +301,12 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
     'z2     ','xz     ','yz     ','x2-y2  ','xy     ','       ','       ', &
     'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
   !
-  filename = trim(filproj)//'.lowdin'
-
+  IF ( TRIM(filproj) == ' ') THEN
+     filename='lowdin.txt'
+  ELSE
+     filename = trim(filproj)//'.lowdin'
+  END IF
+  !
   IF ( ionode ) THEN
      unit = find_free_unit()
      OPEN( unit=unit, file=trim(filename), status='unknown', form='formatted')
@@ -1799,7 +1799,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   USE mp,        ONLY: mp_bcast
   USE mp_pools,  ONLY: root_pool, intra_pool_comm
   USE mp_diag,   ONLY: ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
-                       leg_ortho, ortho_cntx
+                       leg_ortho, ortho_cntx, nproc_ortho
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst, zsqmcll, dsqmsym
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor, descla_init
@@ -1821,6 +1821,8 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   INTEGER  :: nksinit, nkslast
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
+  LOGICAL :: la_para
+  ! flag for parallel linear algebra
   !
   INTEGER :: iunaux
   INTEGER, EXTERNAL :: find_free_unit
@@ -1833,14 +1835,15 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   INTEGER :: nx, nrl, nrlx
     ! maximum local block dimension
   LOGICAL :: la_proc
-    ! flag to distinguish procs involved in linear algebra
-  INTEGER, ALLOCATABLE :: notcnv_ip( : )
-  INTEGER, ALLOCATABLE :: ic_notcnv( : )
+    ! distinguishes active procs in parallel linear algebra
   !
   !
   IF ( natomwfc <= 0 ) CALL errore &
         ('projwave', 'Cannot project on zero atomic wavefunctions!', 1)
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
+  la_para = ( nproc_ortho > 1 )
+  IF ( la_para ) WRITE( stdout, &
+       '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
   IF ( gamma_only ) &
        WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
@@ -1850,14 +1853,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   ALLOCATE( proj (natomwfc, nbnd, nkstot) )
   !
-  IF ( lwrite_ovp ) lwrite_ovp = .FALSE. ! not implemented?
-  !
-  IF ( lwrite_ovp ) THEN
-     ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
-  ELSE
-     ALLOCATE( ovps_aux(1, 1, 1) )
-  ENDIF
-  ovps_aux  = (0.d0, 0.d0)
+  IF( la_para ) lwrite_ovp = .FALSE. ! not implemented
   !
   IF (.not. ALLOCATED(swfcatom)) THEN
      ALLOCATE(swfcatom (npwx , natomwfc ) )
@@ -1874,17 +1870,18 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   auxname = TRIM(tmp_dir) // TRIM(ADJUSTL(prefix)) // '.AUX' // TRIM(nd_nmbr)
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
-  ALLOCATE( ic_notcnv( np_ortho(2) ) )
-  ALLOCATE( notcnv_ip( np_ortho(2) ) )
   ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
   CALL desc_init( natomwfc, desc, desc_ip )
+  la_proc = ( desc%active_node > 0 )
+  nx = desc%nrcx
   !
   IF( ionode ) THEN
      WRITE( stdout, * )
      WRITE( stdout, * ) ' Problem Sizes '
      WRITE( stdout, * ) ' natomwfc = ', natomwfc
+     IF ( la_para ) WRITE( stdout, * ) ' nx       = ', nx
      WRITE( stdout, * ) ' nbnd     = ', nbnd
      WRITE( stdout, * ) ' nkstot   = ', nkstot
      WRITE( stdout, * ) ' npwx     = ', npwx
@@ -1932,9 +1929,13 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
         CALL calbec_zdistmat( npw, wfcatom, swfcatom, natomwfc, nx, overlap_d )
      ENDIF
      !
+     ! save overlap matrix if required
+     !
+     IF ( lwrite_ovp ) WRITE( iunaux ) overlap_d
+     !
      ! calculate O^{-1/2}
      !
-     IF ( desc%active_node > 0 ) THEN
+     IF ( la_proc ) THEN
         !
         !  Compute local dimension of the cyclically distributed matrix
         !
@@ -1966,7 +1967,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
         e (i) = 1.d0 / dsqrt (e (i) )
      ENDDO
 
-     IF ( desc%active_node > 0 ) THEN
+     IF ( la_proc ) THEN
         ALLOCATE(e_work_d (nx, nx) )
         DO j = 1, desc%nc
            DO i = 1, desc%nr
@@ -1986,12 +1987,12 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      IF ( gamma_only ) THEN
         ! TEMP: diagonalization routine for real matrix should be used instead
         roverlap_d(:,:)=REAL(overlap_d(:,:),DP)
-        CALL wf_times_roverlap( swfcatom, roverlap_d, wfcatom )
+        CALL wf_times_roverlap( nx, swfcatom, roverlap_d, wfcatom )
         DEALLOCATE( roverlap_d )
      ELSE
-        CALL wf_times_overlap( swfcatom, overlap_d, wfcatom )
+        CALL wf_times_overlap( nx, swfcatom, overlap_d, wfcatom )
      ENDIF
-     IF( ALLOCATED( overlap_d ) ) DEALLOCATE( overlap_d )
+     DEALLOCATE( overlap_d )
      !
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>,
      ! symmetrize the projections if required
@@ -2028,22 +2029,42 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   DEALLOCATE (wfcatom)
   IF (freeswfcatom) DEALLOCATE (swfcatom)
   !
-  CLOSE( unit=iunaux )
+  ! closing the file will cause a lot of I/O
+  !!! CLOSE( unit=iunaux )
   !
   !   vectors et and proj are distributed across the pools
   !   collect data for all k-points to the first pool
+  !   (I think it is not actually needed for et)
   !
   CALL poolrecover (et,       nbnd, nkstot, nks)
   CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks)
   !
-  !  Recover proj_aux
+  ! write to standard output and to file filproj (if required)
   !
-  OPEN( unit=iunaux, file=trim(auxname), status='old', form='unformatted')
+  IF ( ionode) THEN
+     !
+     CALL write_proj( lmax_wfc, filproj, proj )
+     CALL write_proj_file ( filproj, proj )
+     !
+  END IF
+  !
+  !  Recover proj_aux and (if required) overlap matrices for all k-points
+  !
+  !  See above: no reason to close and re-open the file
+  !!! OPEN( unit=iunaux, file=trim(auxname), status='old', form='unformatted')
+  REWIND (unit=iunaux)
+  !
+  IF ( lwrite_ovp ) THEN
+     ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
+  ELSE
+     ALLOCATE( ovps_aux(1, 1, 1) )
+  ENDIF
   ALLOCATE( proj_aux (natomwfc, nbnd, nkstot) )
-  proj_aux  = (0.d0, 0.d0)
+  proj_aux = (0.d0, 0.d0)
   !
   DO ik = 1, nks
      !
+     IF ( lwrite_ovp ) READ( iunaux)  ovps_aux(:,:,ik)
      IF( gamma_only ) THEN
         ALLOCATE( rproj0( natomwfc, nbnd ) )
         READ( iunaux ) rproj0(:,:)
@@ -2055,28 +2076,22 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
      !
   ENDDO
   !
-  CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
-  !
   CLOSE( unit=iunaux, status='delete' )
   !
+  CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
+  IF ( lwrite_ovp ) &
+      CALL poolrecover (ovps_aux, 2 * natomwfc * natomwfc, nkstot, nks)
+  !
   IF ( ionode ) THEN
-     !
-     ! write on the file filproj
-     !
-     CALL write_proj_file ( filproj, proj )
      !
      ! write projections to file using iotk
      !
      CALL write_proj_iotk( "atomic_proj", lbinary, proj_aux, lwrite_ovp, &
           ovps_aux )
      !
-     DEALLOCATE( proj_aux, ovps_aux )
-     !
-     ! write to standard output
-     !
-     CALL write_proj( lmax_wfc, filproj, proj )
-     !
   ENDIF
+  !
+  DEALLOCATE( proj_aux, ovps_aux )
   !
   RETURN
   !
@@ -2092,8 +2107,6 @@ CONTAINS
      !
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
      !
-     nx = desc%nrcx
-     !
      DO j = 0, desc%npc - 1
         DO i = 0, desc%npr - 1
            coor_ip( 1 ) = i
@@ -2103,9 +2116,6 @@ CONTAINS
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         ENDDO
      ENDDO
-     !
-     la_proc = .false.
-     IF( desc%active_node > 0 ) la_proc = .true.
      !
      RETURN
   END SUBROUTINE desc_init
@@ -2243,8 +2253,9 @@ CONTAINS
   !
   !
   !
-  SUBROUTINE wf_times_overlap( swfc, ovr, wfc )
-
+  SUBROUTINE wf_times_overlap( nx, swfc, ovr, wfc )
+    !
+     INTEGER, INTENT(in) :: nx
      COMPLEX(DP) :: swfc( :, : ), ovr( :, : ), wfc( :, : )
      !
      INTEGER :: ipc, ipr
@@ -2297,10 +2308,11 @@ CONTAINS
   END SUBROUTINE wf_times_overlap
 
   !
-  SUBROUTINE wf_times_roverlap( swfc, ovr, wfc )
+  SUBROUTINE wf_times_roverlap( nx, swfc, ovr, wfc )
 
      USE gvect, ONLY : gstart
 
+     INTEGER, INTENT(in) :: nx
      COMPLEX(DP) :: swfc( :, : ), wfc( :, : )
      REAL(DP)    :: ovr( :, : )
      !
