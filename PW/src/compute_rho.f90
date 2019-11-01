@@ -27,18 +27,14 @@
    REAL(DP) :: amag
    INTEGER :: ir           ! counter on mesh points
 
-   segni=1.0_DP
-   IF (lsign) THEN
-      DO ir=1,nrxx
-         segni(ir)=SIGN(1.0_DP,rho(ir,2)*ux(1)+rho(ir,3)*ux(2)+rho(ir,4)*ux(3))
-      ENDDO
-   ENDIF
-
-   DO ir=1,nrxx
+   !$omp parallel do default(shared) private(ir, amag) 
+   DO ir = 1, nrxx 
+      segni(ir) =1.0_DP
+      IF (lsign) segni(ir)=SIGN(1.0_DP,rho(ir,2)*ux(1)+rho(ir,3)*ux(2)+rho(ir,4)*ux(3))
       amag=SQRT(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
       rhoout(ir,1)=0.5d0*(rho(ir,1)+segni(ir)*amag)
       rhoout(ir,2)=0.5d0*(rho(ir,1)-segni(ir)*amag)
    ENDDO
-
+   !$omp end parallel do 
    RETURN
 END SUBROUTINE compute_rho
