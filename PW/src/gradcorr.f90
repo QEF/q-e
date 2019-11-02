@@ -148,37 +148,9 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      ! ... spin-polarised case
      !
      ALLOCATE( v2c_ud(dfftp%nnr) )
+     !   
      !
-     IF ( .NOT. igcc_is_lyp() .AND. (nspin==4 .AND. domag) ) THEN
-        !
-        ALLOCATE( rh(dfftp%nnr), zeta(dfftp%nnr) )
-        !
-        rh = rhoaux(:,1) + rhoaux(:,2)
-        !
-        DO is = 1, 2
-           grho2(:,is) = grho(1,:,is)**2 + grho(2,:,is)**2 + grho(3,:,is)**2
-        ENDDO
-        !
-        CALL gcx_spin( dfftp%nnr, rhoaux, grho2, sx, v1x, v2x )
-        !
-        zeta = ABS(zeta) * segni(:)
-        !
-        grho2(:,1) = ( grho(1,:,1) + grho(1,:,2) )**2 + &
-                     ( grho(2,:,1) + grho(2,:,2) )**2 + &
-                     ( grho(3,:,1) + grho(3,:,2) )**2
-        !
-        CALL gcc_spin( dfftp%nnr, rh, zeta, grho2(:,1), sc, v1c, v2c(:,1) )
-        !
-        v2c(:,2)  = v2c(:,1)
-        v2c_ud(:) = v2c(:,1)
-        !
-        DEALLOCATE( rh, zeta )
-        !
-     ELSE   
-        !
-        CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
-        !
-     ENDIF
+     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
      !
      v = v + e2*( v1x + v1c )
      !
