@@ -19,7 +19,7 @@ SUBROUTINE read_file()
   USE noncollin_module, ONLY : npol
   USE klist,            ONLY : nks
   USE wavefunctions,    ONLY : evc
-  USE pw_restart_new,   ONLY : read_this_wfc
+  USE pw_restart_new,   ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   !
@@ -47,7 +47,7 @@ SUBROUTINE read_file()
      !
      DO ik = 1, nks
         !
-        CALL read_this_wfc ( dirname, ik, evc )
+        CALL read_collected_wfc ( dirname, ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         !
      END DO

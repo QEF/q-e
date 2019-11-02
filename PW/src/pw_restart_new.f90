@@ -38,7 +38,7 @@ MODULE pw_restart_new
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   PRIVATE
   PUBLIC :: pw_write_schema, pw_write_binaries
-  PUBLIC :: read_this_wfc
+  PUBLIC :: read_collected_wfc
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -890,11 +890,11 @@ MODULE pw_restart_new
     END SUBROUTINE gk_l2gmap_kdip
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_this_wfc ( dirname, ik, evc )
+    SUBROUTINE read_collected_wfc ( dirname, ik, evc )
       !------------------------------------------------------------------------
       !
       ! ... reads from directory "dirname" (new file format) for k-point "ik"
-      ! ... the wavefunctions into array "evc"
+      ! ... wavefunctions from collected format into distributed array "evc"
       !
       USE control_flags,        ONLY : gamma_only
       USE lsda_mod,             ONLY : nspin, isk
@@ -999,12 +999,12 @@ MODULE pw_restart_new
       IF ( nbnd_ < nbnd ) THEN
          WRITE (msg,'("The number of bands for this run is",I6,", but only",&
               & I6," bands were read from file")')  nbnd, nbnd_  
-         CALL errore ('pw_restart - read_this_wfc', msg, 1 )
+         CALL errore ('pw_restart - read_collected_wfc', msg, 1 )
       END IF
       !
       RETURN
       !
-    END SUBROUTINE read_this_wfc
+    END SUBROUTINE read_collected_wfc
     !
     !------------------------------------------------------------------------
   END MODULE pw_restart_new

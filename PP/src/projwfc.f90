@@ -915,7 +915,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,  ONLY : restart_dir
-  USE pw_restart_new,ONLY : read_this_wfc
+  USE pw_restart_new,ONLY : read_collected_wfc
   USE wavefunctions, ONLY: evc
   USE mp,        ONLY : mp_sum
   USE mp_pools,  ONLY : inter_pool_comm, intra_pool_comm
@@ -1001,7 +1001,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
      swfcatom= (0.d0,0.d0)
      npw = ngk(ik)
 
-     CALL read_this_wfc ( restart_dir() , ik, evc )
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
 
 !---- AlexS
 !    To project on real harmonics, not on spinors.  
@@ -1212,7 +1212,7 @@ SUBROUTINE projwave_paw( filproj)
   USE uspp_param, ONLY : upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,  ONLY : restart_dir
-  USE pw_restart_new,ONLY : read_this_wfc
+  USE pw_restart_new,ONLY : read_collected_wfc
   USE wavefunctions, ONLY: evc
   !
   USE projections
@@ -1276,7 +1276,7 @@ SUBROUTINE projwave_paw( filproj)
   !    loop on k points
   !
   DO ik = 1, nks
-     CALL read_this_wfc ( restart_dir() , ik, evc )
+     CALL read_collected_wfc ( restart_dir() , ik, evc )
      npw = ngk(ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
@@ -1586,7 +1586,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE becmod,    ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,  ONLY : prefix, restart_dir, tmp_dir
   USE control_flags, ONLY : gamma_only
-  USE pw_restart_new,ONLY : read_this_wfc
+  USE pw_restart_new,ONLY : read_collected_wfc
   USE wavefunctions, ONLY : evc
   !
   USE projections
@@ -1690,7 +1690,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   DO ik = 1, nks
      !
      npw = ngk(ik)
-     CALL read_this_wfc ( restart_dir() , ik, evc )
+     CALL read_collected_wfc ( restart_dir() , ik, evc )
 
      CALL atomic_wfc (ik, wfcatom)
 

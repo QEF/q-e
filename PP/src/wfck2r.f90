@@ -37,7 +37,7 @@ PROGRAM wfck2r
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE io_files,  ONLY : prefix, tmp_dir, diropn
+  USE io_files,  ONLY : prefix, tmp_dir, diropn, restart_dir
   USE wvfct,     ONLY : nbnd, npwx, et, wg
   USE klist,     ONLY : xk, nks, ngk, igk_k, wk
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -54,6 +54,7 @@ PROGRAM wfck2r
   USE scatter_mod,  only : gather_grid
   USE fft_interfaces, ONLY : invfft
   USE ener, ONLY: efermi => ef
+  USE pw_restart_new,ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   CHARACTER (len=256) :: outdir
@@ -113,8 +114,9 @@ PROGRAM wfck2r
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file
-  call openfil_pp
+  CALL read_file_new ( exst )
+  IF ( .NOT. exst ) &
+       CALL errore ('wfck2r','wavefunctions not available?!?',1)
 
   exst=.false.
 
@@ -193,7 +195,7 @@ PROGRAM wfck2r
   DO ik = first_k, last_k
      
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
 
      do ibnd = first_band, last_band
         !

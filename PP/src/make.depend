@@ -29,6 +29,7 @@ add_shift_us.o : ../../Modules/mp_pools.o
 add_shift_us.o : ../../Modules/recvec.o
 add_shift_us.o : ../../Modules/uspp.o
 add_shift_us.o : ../../Modules/wavefunctions.o
+add_shift_us.o : ../../PW/src/pw_restart_new.o
 add_shift_us.o : ../../PW/src/pwcom.o
 add_shift_us.o : ../../PW/src/symme.o
 add_shift_us.o : ../../UtilXlib/mp.o
@@ -201,6 +202,7 @@ elf.o : ../../Modules/kind.o
 elf.o : ../../Modules/mp_pools.o
 elf.o : ../../Modules/recvec.o
 elf.o : ../../Modules/wavefunctions.o
+elf.o : ../../PW/src/pw_restart_new.o
 elf.o : ../../PW/src/pwcom.o
 elf.o : ../../PW/src/scf_mod.o
 elf.o : ../../PW/src/symme.o
@@ -218,6 +220,7 @@ epsilon.o : ../../Modules/mp_pools.o
 epsilon.o : ../../Modules/recvec.o
 epsilon.o : ../../Modules/uspp.o
 epsilon.o : ../../Modules/wavefunctions.o
+epsilon.o : ../../PW/src/pw_restart_new.o
 epsilon.o : ../../PW/src/pwcom.o
 epsilon.o : ../../UtilXlib/mp.o
 fermi_proj.o : ../../Modules/environment.o
@@ -292,6 +295,7 @@ local_dos.o : ../../Modules/noncol.o
 local_dos.o : ../../Modules/recvec.o
 local_dos.o : ../../Modules/uspp.o
 local_dos.o : ../../Modules/wavefunctions.o
+local_dos.o : ../../PW/src/pw_restart_new.o
 local_dos.o : ../../PW/src/pwcom.o
 local_dos.o : ../../PW/src/scf_mod.o
 local_dos.o : ../../PW/src/symme.o
@@ -319,6 +323,7 @@ local_dos_mag.o : ../../Modules/noncol.o
 local_dos_mag.o : ../../Modules/recvec.o
 local_dos_mag.o : ../../Modules/uspp.o
 local_dos_mag.o : ../../Modules/wavefunctions.o
+local_dos_mag.o : ../../PW/src/pw_restart_new.o
 local_dos_mag.o : ../../PW/src/pwcom.o
 local_dos_mag.o : ../../PW/src/scf_mod.o
 local_dos_mag.o : ../../UtilXlib/mp.o
@@ -422,6 +427,7 @@ plan_avg.o : ../../Modules/recvec.o
 plan_avg.o : ../../Modules/run_info.o
 plan_avg.o : ../../Modules/uspp.o
 plan_avg.o : ../../Modules/wavefunctions.o
+plan_avg.o : ../../PW/src/pw_restart_new.o
 plan_avg.o : ../../PW/src/pwcom.o
 plan_avg.o : ../../UtilXlib/mp.o
 plotband.o : ../../Modules/kind.o
@@ -443,6 +449,7 @@ poormanwannier.o : ../../Modules/uspp.o
 poormanwannier.o : ../../Modules/wavefunctions.o
 poormanwannier.o : ../../PW/src/atomic_wfc_mod.o
 poormanwannier.o : ../../PW/src/ldaU.o
+poormanwannier.o : ../../PW/src/pw_restart_new.o
 poormanwannier.o : ../../PW/src/pwcom.o
 poormanwannier.o : ../../PW/src/symm_base.o
 poormanwannier.o : ../../UtilXlib/mp.o
@@ -550,6 +557,7 @@ projwfc_box.o : ../../Modules/run_info.o
 projwfc_box.o : ../../Modules/uspp.o
 projwfc_box.o : ../../Modules/wavefunctions.o
 projwfc_box.o : ../../PW/src/atomic_wfc_mod.o
+projwfc_box.o : ../../PW/src/pw_restart_new.o
 projwfc_box.o : ../../PW/src/pwcom.o
 projwfc_box.o : ../../PW/src/scf_mod.o
 projwfc_box.o : ../../UtilXlib/mp.o
@@ -702,6 +710,7 @@ stm.o : ../../Modules/kind.o
 stm.o : ../../Modules/mp_pools.o
 stm.o : ../../Modules/recvec.o
 stm.o : ../../Modules/wavefunctions.o
+stm.o : ../../PW/src/pw_restart_new.o
 stm.o : ../../PW/src/pwcom.o
 stm.o : ../../PW/src/scf_mod.o
 stm.o : ../../PW/src/symme.o
@@ -843,6 +852,7 @@ wfck2r.o : ../../Modules/mp_pools.o
 wfck2r.o : ../../Modules/noncol.o
 wfck2r.o : ../../Modules/recvec.o
 wfck2r.o : ../../Modules/wavefunctions.o
+wfck2r.o : ../../PW/src/pw_restart_new.o
 wfck2r.o : ../../PW/src/pwcom.o
 wfck2r.o : ../../UtilXlib/mp.o
 work_function.o : ../../FFTXlib/scatter_mod.o

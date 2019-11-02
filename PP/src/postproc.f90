@@ -145,8 +145,8 @@ SUBROUTINE extract (plot_files,plot_num)
   needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
          (plot_num==8).or.(plot_num==10)
   IF ( needwf ) THEN
-     CALL read_file ( )
-     CALL openfil_pp ( )
+     CALL read_file_new ( dummy )
+     IF (.not.dummy) CALL errore('postproc','Wavefunctions not available?!?',1)
   ELSE
      CALL read_xml_file ( dummy )
      CALL post_xml_init ( )

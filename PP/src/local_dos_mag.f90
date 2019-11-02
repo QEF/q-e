@@ -23,7 +23,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, xk, ngk, igk_k, nkstot
   USE scf,                  ONLY : rho
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE io_files,             ONLY : restart_dir
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions, ONLY : evc, psic_nc
@@ -33,6 +33,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE becmod,               ONLY : calbec
   USE mp_pools,             ONLY : my_pool_id, npool, inter_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE pw_restart_new,       ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   !
@@ -79,7 +80,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   IF ( ik > 0 ) THEN
   !
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      IF (nkb > 0) CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec ( npw, vkb, evc, becp_nc)
      !

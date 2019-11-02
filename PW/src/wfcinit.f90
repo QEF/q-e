@@ -29,7 +29,7 @@ SUBROUTINE wfcinit()
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-  USE pw_restart_new,       ONLY : read_this_wfc
+  USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp,                   ONLY : mp_bcast
   USE mp_images,            ONLY : intra_image_comm
   USE qexsd_module,         ONLY : qexsd_readschema
@@ -68,7 +68,7 @@ SUBROUTINE wfcinit()
         IF ( twfcollect_file ) THEN
            !
            DO ik = 1, nks
-              CALL read_this_wfc ( dirname, ik, evc )
+              CALL read_collected_wfc ( dirname, ik, evc )
               CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
            END DO
            !
