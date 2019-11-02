@@ -1573,10 +1573,13 @@ read_conf_from_file.o : ../../Modules/io_files.o
 read_conf_from_file.o : ../../Modules/io_global.o
 read_conf_from_file.o : ../../Modules/ions_base.o
 read_conf_from_file.o : ../../Modules/kind.o
+read_conf_from_file.o : ../../Modules/mp_images.o
+read_conf_from_file.o : ../../Modules/qes_bcast_module.o
 read_conf_from_file.o : ../../Modules/qes_libs_module.o
 read_conf_from_file.o : ../../Modules/qes_types_module.o
 read_conf_from_file.o : ../../Modules/qexsd.o
 read_conf_from_file.o : ../../Modules/qexsd_copy.o
+read_conf_from_file.o : ../../UtilXlib/mp.o
 read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
 read_file_new.o : ../../Modules/control_flags.o
@@ -1604,6 +1607,7 @@ read_file_new.o : ../../Modules/recvec.o
 read_file_new.o : ../../Modules/recvec_subs.o
 read_file_new.o : ../../Modules/tsvdw.o
 read_file_new.o : ../../Modules/uspp.o
+read_file_new.o : ../../Modules/wavefunctions.o
 read_file_new.o : ../../UtilXlib/mp.o
 read_file_new.o : Coul_cut_2D.o
 read_file_new.o : atomic_wfc_mod.o
@@ -1821,6 +1825,7 @@ setup.o : ../../Modules/io_global.o
 setup.o : ../../Modules/ions_base.o
 setup.o : ../../Modules/kind.o
 setup.o : ../../Modules/mp_bands.o
+setup.o : ../../Modules/mp_images.o
 setup.o : ../../Modules/mp_pools.o
 setup.o : ../../Modules/noncol.o
 setup.o : ../../Modules/parameters.o
@@ -1831,6 +1836,7 @@ setup.o : ../../Modules/qexsd.o
 setup.o : ../../Modules/qexsd_copy.o
 setup.o : ../../Modules/recvec.o
 setup.o : ../../Modules/uspp.o
+setup.o : ../../UtilXlib/mp.o
 setup.o : atomic_wfc_mod.o
 setup.o : bp_mod.o
 setup.o : extfield.o
@@ -2270,6 +2276,7 @@ wfcinit.o : ../../Modules/io_files.o
 wfcinit.o : ../../Modules/io_global.o
 wfcinit.o : ../../Modules/kind.o
 wfcinit.o : ../../Modules/mp_bands.o
+wfcinit.o : ../../Modules/mp_images.o
 wfcinit.o : ../../Modules/noncol.o
 wfcinit.o : ../../Modules/qes_libs_module.o
 wfcinit.o : ../../Modules/qes_types_module.o

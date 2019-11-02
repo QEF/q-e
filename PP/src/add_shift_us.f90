@@ -24,9 +24,10 @@ SUBROUTINE add_shift_us( shift_nl )
   USE wvfct,                ONLY : nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, isk
   USE symme,                ONLY : symscalar
-  USE wavefunctions, ONLY : evc
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE wavefunctions,        ONLY : evc
+  USE io_files,             ONLY : restart_dir
   USE becmod,               ONLY : calbec
+  USE pw_restart_new,       ONLY : read_collected_wfc
   !
   IMPLICIT NONE
   !
@@ -79,10 +80,8 @@ SUBROUTINE add_shift_us( shift_nl )
           !
           is = isk(ik)
           npw = ngk(ik)
-          IF ( nks > 1 ) THEN
-             CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-             IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-          ENDIF
+          CALL read_collected_wfc ( restart_dir(), ik, evc )
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
           CALL calbec ( npw, vkb, evc, rbecp )
           !
@@ -169,10 +168,8 @@ SUBROUTINE add_shift_us( shift_nl )
           !
           is = isk(ik)
           npw = ngk(ik)
-          IF ( nks > 1 ) THEN
-             CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
-             IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-          ENDIF
+          CALL read_collected_wfc( restart_dir(), ik, evc )
+          IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
           CALL calbec( npw, vkb, evc, becp )
           !

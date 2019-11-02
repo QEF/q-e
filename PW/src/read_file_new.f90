@@ -9,35 +9,78 @@
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
   !
-  ! Read data produced by pw.x or cp.x - new xml file and binary files
-  ! Wrapper routine for backwards compatibility
+  ! Wrapper routine, for backwards compatibility
   !
-  USE io_global,            ONLY : stdout
-  USE io_files,             ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
-  USE buffers,              ONLY : open_buffer, close_buffer
-  USE wvfct,                ONLY : nbnd, npwx
-  USE noncollin_module,     ONLY : npol
-  USE pw_restart_new,       ONLY : read_collected_to_evc
-  USE control_flags,        ONLY : io_level
+  USE io_global,        ONLY : stdout
+  USE control_flags,    ONLY : io_level
+  USE buffers,          ONLY : open_buffer, close_buffer, save_buffer
+  USE io_files,         ONLY : nwordwfc, iunwfc, restart_dir
+  USE wvfct,            ONLY : nbnd, npwx
+  USE noncollin_module, ONLY : npol
+  USE klist,            ONLY : nks
+  USE wavefunctions,    ONLY : evc
+  USE pw_restart_new,   ONLY : read_collected_wfc
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ik
+  LOGICAL :: exst, wfc_is_collected
+  CHARACTER( LEN=256 )  :: dirname
+  !
+  dirname = restart_dir( )
+  WRITE( stdout, '(/,5x,A,/,5x,A)') &
+       'Reading data from directory:', TRIM( dirname )
+  !
+  CALL read_file_new( wfc_is_collected )
+  !
+  ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
+  ! ... have been written to tmp_dir, not to a different directory!
+  ! ... io_level = 1 so that a real file is opened
+  !
+  nwordwfc = nbnd*npwx*npol
+  io_level = 1
+  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
+  !
+  ! ... read wavefunctions in collected format, write them to file
+  !
+  IF ( wfc_is_collected ) THEN
+     !
+     DO ik = 1, nks
+        !
+        CALL read_collected_wfc ( dirname, ik, evc )
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+        !
+     END DO
+     !
+  END IF
+  !
+  CALL close_buffer  ( iunwfc, 'KEEP' )
+  !
+END SUBROUTINE read_file
+!
+!----------------------------------------------------------------------------
+SUBROUTINE read_file_new ( wfc_is_collected )
+  !----------------------------------------------------------------------------
+  !
+  ! Read xml data file produced by pw.x or cp.x, performs some initialization
+  ! DOes not read wfcs but returns in "wfc_is_collected" info on the wfc file
+  !
+  USE io_files,             ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : isk
   USE wvfct,                ONLY : nbnd, et, wg
   !
-  IMPLICIT NONE 
-  INTEGER :: ierr
-  LOGICAL :: exst, wfc_is_collected
-  CHARACTER( LEN=256 )  :: dirname
+  IMPLICIT NONE
   !
+  LOGICAL, INTENT(OUT) :: wfc_is_collected
+  !
+  INTEGER :: ierr
   !
   ierr = 0 
   !
   ! ... Read the contents of the xml data file
-  !
-  dirname = restart_dir( )
-  WRITE( stdout, '(/,5x,A,/,5x,A)') &
-     'Reading data from directory:', TRIM( dirname )
   !
   CALL read_xml_file ( wfc_is_collected )
   !
@@ -47,6 +90,8 @@ SUBROUTINE read_file()
   CALL post_xml_init ( )
   !
   ! ... initialization of KS orbitals
+  !
+  wfc_dir = tmp_dir ! this is likely obsolete and no longer used
   !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
@@ -61,23 +106,7 @@ SUBROUTINE read_file()
   !
   CALL allocate_wfc_k()
   !
-  ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
-  ! ... have been written to tmp_dir, not to a different directory!
-  ! ... io_level = 1 so that a real file is opened
-  !
-  wfc_dir = tmp_dir
-  nwordwfc = nbnd*npwx*npol
-  io_level = 1
-  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst )
-  !
-  ! ... read wavefunctions in collected format, writes them to file
-  ! ... FIXME: likely not a great idea
-  !
-  IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
-  !
-  CALL close_buffer  ( iunwfc, 'KEEP' )
-  !
-END SUBROUTINE read_file
+END SUBROUTINE read_file_new
 !
 !----------------------------------------------------------------------------
 SUBROUTINE read_xml_file ( wfc_is_collected )

@@ -168,7 +168,7 @@ PROGRAM epsilon
   INTEGER                 :: nw,nbndmin,nbndmax
   REAL(DP)                :: intersmear,intrasmear,wmax,wmin,shift
   CHARACTER(10)           :: calculation,smeartype
-  LOGICAL                 :: metalcalc
+  LOGICAL                 :: metalcalc, wfc_is_collected
   !
   NAMELIST / inputpp / prefix, outdir, calculation
   NAMELIST / energy_grid / smeartype, intersmear, intrasmear, nw, wmax, wmin, &
@@ -255,9 +255,7 @@ PROGRAM epsilon
   !
   IF (ionode) WRITE( stdout, "( 5x, 'Reading PW restart file...' ) " )
 
-  CALL read_file
-  CALL openfil_pp
-
+  CALL read_file_new( wfc_is_collected )
   !
   ! few conversions
   !
@@ -1064,10 +1062,11 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : nbnd, npwx
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE klist,                ONLY : xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
-  USE io_files,             ONLY : nwordwfc, iunwfc
+  USE io_files,             ONLY : restart_dir
+  USE pw_restart_new,       ONLY : read_collected_wfc
   USE grid_module,          ONLY : focc, full_occ
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
@@ -1091,7 +1090,7 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !
   ! read wfc for the given kpt
   !
-  CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+  CALL read_collected_wfc ( restart_dir(), ik, evc )
   !
   ! compute matrix elements
   !
