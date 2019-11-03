@@ -31,6 +31,7 @@ PROGRAM fermi_velocity
   USE klist,                ONLY : nks, two_fermi_energies
   USE fermisurfer_common,   ONLY : b_low, b_high, rotate_k_fs, write_fermisurfer
   USE constants,            ONLY : tpi
+  USE pw_restart_new,       ONLY : read_xml_file
   !
   IMPLICIT NONE
   !

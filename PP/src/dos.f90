@@ -30,6 +30,7 @@ PROGRAM do_dos
   USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start, environment_end
+  USE pw_restart_new,ONLY : read_xml_file
   ! following modules needed for generation of tetrahedra
   USE ktetra,     ONLY : tetra, tetra_type, tetra_init, tetra_dos_t, &
        opt_tetra_init, opt_tetra_dos_t

@@ -186,6 +186,7 @@ dos.o : ../../Modules/kind.o
 dos.o : ../../Modules/mp_global.o
 dos.o : ../../Modules/mp_world.o
 dos.o : ../../Modules/noncol.o
+dos.o : ../../PW/src/pw_restart_new.o
 dos.o : ../../PW/src/pwcom.o
 dos.o : ../../PW/src/start_k.o
 dos.o : ../../PW/src/symm_base.o
@@ -230,6 +231,7 @@ fermi_proj.o : ../../Modules/kind.o
 fermi_proj.o : ../../Modules/mp_global.o
 fermi_proj.o : ../../Modules/mp_world.o
 fermi_proj.o : ../../PW/src/atomic_wfc_mod.o
+fermi_proj.o : ../../PW/src/pw_restart_new.o
 fermi_proj.o : ../../PW/src/pwcom.o
 fermi_proj.o : ../../PW/src/start_k.o
 fermi_proj.o : ../../UtilXlib/mp.o
@@ -244,6 +246,7 @@ fermi_velocity.o : ../../Modules/io_files.o
 fermi_velocity.o : ../../Modules/kind.o
 fermi_velocity.o : ../../Modules/mp_global.o
 fermi_velocity.o : ../../Modules/read_input.o
+fermi_velocity.o : ../../PW/src/pw_restart_new.o
 fermi_velocity.o : ../../PW/src/pwcom.o
 fermi_velocity.o : ../../PW/src/start_k.o
 fermi_velocity.o : fermisurfer_common.o
@@ -255,6 +258,7 @@ fermisurface.o : ../../Modules/io_global.o
 fermisurface.o : ../../Modules/kind.o
 fermisurface.o : ../../Modules/mp_global.o
 fermisurface.o : ../../Modules/mp_world.o
+fermisurface.o : ../../PW/src/pw_restart_new.o
 fermisurface.o : ../../PW/src/pwcom.o
 fermisurface.o : ../../PW/src/start_k.o
 fermisurface.o : ../../PW/src/symm_base.o
@@ -467,6 +471,7 @@ postproc.o : ../../Modules/noncol.o
 postproc.o : ../../Modules/parameters.o
 postproc.o : ../../Modules/paw_variables.o
 postproc.o : ../../Modules/recvec.o
+postproc.o : ../../PW/src/pw_restart_new.o
 postproc.o : ../../PW/src/pwcom.o
 postproc.o : ../../UtilXlib/mp.o
 postproc.o : chdens_module.o

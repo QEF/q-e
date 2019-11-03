@@ -38,7 +38,8 @@ SUBROUTINE extract (plot_files,plot_num)
   USE constants, ONLY : rytoev
   USE parameters, ONLY : npk
   USE io_global, ONLY : stdout
-
+  USE pw_restart_new,ONLY : read_xml_file
+  !
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
