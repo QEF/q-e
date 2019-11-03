@@ -187,9 +187,10 @@ MODULE pw_restart_new
 
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr) 
       NULLIFY( gate_info_ptr, dipol_ptr, bp_obj_ptr, hybrid_obj, vdw_obj, dftU_obj, lumo_energy, ef_point)  
-      NULLIFY ( optimization_has_converged, non_local_term_pt, vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt,  &
-                xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, dftd3_threebody_pt, ts_vdw_isolated_pt,     & 
-                dftd3_version_pt )
+      NULLIFY ( optimization_has_converged, non_local_term_pt, &
+           vdw_corr_pt, vdw_term_pt, ts_thr_pt, london_s6_pt, london_rcut_pt, &
+           xdm_a1_pt, xdm_a2_pt, ts_vdw_econv_thr_pt, ts_isol_pt, &
+           dftd3_threebody_pt, ts_vdw_isolated_pt, dftd3_version_pt )
       NULLIFY ( ectuvcut_opt, scr_par_opt, loc_thr_p, h_energy_ptr, smear_obj_ptr) 
 
       !
@@ -367,10 +368,6 @@ MODULE pw_restart_new
                 vdw_term_pt => dispersion_energy_term
                 vdw_corr_ = TRIM(vdw_corr)
                 vdw_corr_pt => vdw_corr_
-                NULLIFY (london_rcut_pt, london_s6_pt)
-                NULLIFY (xdm_a1_pt, xdm_a2_pt)
-                NULLIFY (dftd3_version_pt, dftd3_threebody_pt)
-                NULLIFY (ts_vdw_isolated_pt, ts_vdw_econv_thr_pt)
                 IF (llondon ) THEN
                     dispersion_energy_term = elondon/e2
                     lond_s6_ = scal6
