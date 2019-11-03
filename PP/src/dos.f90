@@ -30,7 +30,6 @@ PROGRAM do_dos
   USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start, environment_end
-  USE pw_restart_new,ONLY : read_xml_file
   ! following modules needed for generation of tetrahedra
   USE ktetra,     ONLY : tetra, tetra_type, tetra_init, tetra_dos_t, &
        opt_tetra_init, opt_tetra_dos_t
@@ -48,7 +47,7 @@ PROGRAM do_dos
   REAL(DP) :: E, DOSofE (2), DOSint (2), DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: nks2, n, ndos, ngauss1, ios
-  LOGICAL :: dummy
+  LOGICAL :: needwf = .FALSE.
 
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE, bz_sum
@@ -96,7 +95,7 @@ PROGRAM do_dos
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
   !
-  CALL read_xml_file( dummy )
+  CALL read_file_new ( needwf )
   !
   IF ( ionode ) THEN
      !

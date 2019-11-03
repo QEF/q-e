@@ -34,7 +34,7 @@ PROGRAM initial_state
   !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios, ik, excite(ntypx)
-  LOGICAL :: dummy
+  LOGICAL :: needwf = .TRUE.
   NAMELIST / inputpp / outdir, prefix, excite
   !
   ! initialise environment
@@ -74,7 +74,7 @@ PROGRAM initial_state
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file_new( dummy )
+  CALL read_file_new( needwf )
   !
   CALL do_initial_state (excite)
   !

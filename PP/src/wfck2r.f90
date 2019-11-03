@@ -61,7 +61,7 @@ PROGRAM wfck2r
   CHARACTER(LEN=256), external :: trimcheck
   character(len=256) :: filename
   INTEGER            :: npw, iunitout,ios,ik,i,iuwfcr,lrwfcr,ibnd, ig, is
-  LOGICAL            :: exst
+  LOGICAL            :: needwf= .TRUE., exst
   COMPLEX(DP), ALLOCATABLE :: evc_r(:,:), dist_evc_r(:,:)
   INTEGER :: first_k, last_k, first_band, last_band
   LOGICAL :: loctave
@@ -114,11 +114,7 @@ PROGRAM wfck2r
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file_new ( exst )
-  IF ( .NOT. exst ) &
-       CALL errore ('wfck2r','wavefunctions not available?!?',1)
-
-  exst=.false.
+  CALL read_file_new ( needwf )
 
   filename='wfc_r'
   write(6,*) 'filename              = ', trim(filename)
@@ -141,6 +137,7 @@ PROGRAM wfck2r
 !
 !define lrwfcr
 !
+  exst=.false.
   IF (ionode) CALL diropn (iuwfcr, filename, lrwfcr, exst)
   IF (loctave .and. ionode) then
      open(unit=iuwfcr+1, file='wfck2r.mat', status='unknown', form='formatted')

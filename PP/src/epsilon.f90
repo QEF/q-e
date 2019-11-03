@@ -168,7 +168,7 @@ PROGRAM epsilon
   INTEGER                 :: nw,nbndmin,nbndmax
   REAL(DP)                :: intersmear,intrasmear,wmax,wmin,shift
   CHARACTER(10)           :: calculation,smeartype
-  LOGICAL                 :: metalcalc, wfc_is_collected
+  LOGICAL                 :: metalcalc
   !
   NAMELIST / inputpp / prefix, outdir, calculation
   NAMELIST / energy_grid / smeartype, intersmear, intrasmear, nw, wmax, wmin, &
@@ -177,6 +177,7 @@ PROGRAM epsilon
   ! local variables
   !
   INTEGER :: ios
+  LOGICAL :: needwf = .TRUE.
 
 !---------------------------------------------
 ! program body
@@ -255,7 +256,7 @@ PROGRAM epsilon
   !
   IF (ionode) WRITE( stdout, "( 5x, 'Reading PW restart file...' ) " )
 
-  CALL read_file_new( wfc_is_collected )
+  CALL read_file_new( needwf )
   !
   ! few conversions
   !

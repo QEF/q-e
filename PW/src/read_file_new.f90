@@ -25,12 +25,8 @@ SUBROUTINE read_file()
   !
   INTEGER :: ik
   LOGICAL :: exst, wfc_is_collected
-  CHARACTER( LEN=256 )  :: dirname
   !
-  dirname = restart_dir( )
-  WRITE( stdout, '(/,5x,A,/,5x,A)') &
-       'Reading data from directory:', TRIM( dirname )
-  !
+  wfc_is_collected = .true.
   CALL read_file_new( wfc_is_collected )
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
@@ -45,13 +41,16 @@ SUBROUTINE read_file()
   !
   IF ( wfc_is_collected ) THEN
      !
+     WRITE( stdout, '(5x,A)') &
+          'Reading collected, re-writing distributed wavefunctions'
      DO ik = 1, nks
-        !
-        CALL read_collected_wfc ( dirname, ik, evc )
+        CALL read_collected_wfc ( restart_dir(), ik, evc )
         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
-        !
      END DO
      !
+  ELSE
+     WRITE( stdout, '(5x,A)') &
+          'read_file: Wavefunctions in collected format not available'
   END IF
   !
   CALL close_buffer  ( iunwfc, 'KEEP' )
@@ -59,13 +58,16 @@ SUBROUTINE read_file()
 END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_file_new ( wfc_is_collected )
+SUBROUTINE read_file_new ( needwf )
   !----------------------------------------------------------------------------
   !
-  ! Read xml data file produced by pw.x or cp.x, performs some initialization
-  ! DOes not read wfcs but returns in "wfc_is_collected" info on the wfc file
+  ! Reads xml data file produced by pw.x or cp.x, performs initializations
+  ! related to the contents of the xml file
+  ! If needwf=.t. performs wavefunction-related initialization as well
+  ! Does not read wfcs but returns in "wfc_is_collected" info on the wfc file
   !
-  USE io_files,       ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir
+  USE io_global,      ONLY : stdout
+  USE io_files,       ONLY : nwordwfc, iunwfc, wfc_dir, tmp_dir, restart_dir
   USE gvect,          ONLY : ngm, g
   USE gvecw,          ONLY : gcutw
   USE klist,          ONLY : nkstot, nks, xk, wk
@@ -75,11 +77,13 @@ SUBROUTINE read_file_new ( wfc_is_collected )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(OUT) :: wfc_is_collected
+  LOGICAL, INTENT(INOUT) :: needwf
   !
-  INTEGER :: ierr
+  LOGICAL :: wfc_is_collected
+  CHARACTER( LEN=256 )  :: dirname
   !
-  ierr = 0 
+  WRITE( stdout, '(/,5x,A,/,5x,A)') &
+       'Reading xml data from directory:', TRIM( dirname )
   !
   ! ... Read the contents of the xml data file
   !
@@ -90,22 +94,29 @@ SUBROUTINE read_file_new ( wfc_is_collected )
   !
   CALL post_xml_init ( )
   !
-  ! ... initialization of KS orbitals
-  !
-  wfc_dir = tmp_dir ! this is likely obsolete and no longer used
-  !
-  ! ... distribute across pools k-points and related variables.
-  ! ... nks is defined by the following routine as the number 
-  ! ... of k-points in the current pool
-  !
-  CALL divide_et_impera( nkstot, xk, wk, isk, nks )
-  CALL poolscatter( nbnd, nkstot, et, nks, et )
-  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-  !
-  ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
-  ! ... FIXME: the latter should be read from file, not recomputed
-  !
-  CALL allocate_wfc_k()
+  IF ( needwf ) THEN
+     IF ( .NOT. wfc_is_collected ) WRITE( stdout, '(5x,A)') &
+          'read_file_new: Wavefunctions not in collected format?!?'
+     !
+     ! ... initialization of KS orbitals
+     !
+     wfc_dir = tmp_dir ! this is likely obsolete and no longer used
+     !
+     ! ... distribute across pools k-points and related variables.
+     ! ... nks is defined by the following routine as the number 
+     ! ... of k-points in the current pool
+     !
+     CALL divide_et_impera( nkstot, xk, wk, isk, nks )
+     CALL poolscatter( nbnd, nkstot, et, nks, et )
+     CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+     !
+     ! ... allocate_wfc_k also computes no. of plane waves and k+G indices
+     ! ... FIXME: the latter should be read from file, not recomputed
+     !
+     CALL allocate_wfc_k()
+     !
+  END IF
+  needwf = wfc_is_collected
   !
 END SUBROUTINE read_file_new
 !----------------------------------------------------------------------------

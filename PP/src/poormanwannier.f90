@@ -37,7 +37,7 @@ PROGRAM pmw
   INTEGER :: ios
   INTEGER :: first_band, last_band
   REAL(DP) :: min_energy, max_energy, sigma
-  LOGICAL :: writepp, wfc_is_collected
+  LOGICAL :: writepp, needwf = .TRUE.
   NAMELIST / inputpp / outdir, prefix, first_band, last_band, writepp, &
                       min_energy, max_energy, sigma
   !
@@ -86,7 +86,7 @@ PROGRAM pmw
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file_new ( wfc_is_collected )
+  CALL read_file_new ( needwf )
   !
   ! Check on correctness and consistency of the input
   !
