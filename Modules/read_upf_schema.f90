@@ -334,7 +334,7 @@ SUBROUTINE read_upf_nonlocal( u, upf)
       END IF 
       IF ( upf%has_so) THEN 
          CALL extractDataAttribute( locNode, 'tot_ang_mom', upf%jjj(index), IOSTAT = ierr)
-         CALL errore ( 'upf_read_schema', 'error reading tot_ang_mom attribute', ierr) 
+         CALL errore ( 'read_upf_schema', 'error reading tot_ang_mom attribute', ierr) 
       END IF
    ENDDO
    !
@@ -503,36 +503,36 @@ SUBROUTINE read_upf_pswfc(u, upf)
       locNode => item( locList, nw_ -1) 
       CALL extractDataAttribute ( locNode, "index", nw) 
       CALL extractDataContent (  locNode, upf%chi(:,nw), IOSTAT = ierr )
-      CALL errore ('upf_read_schema', 'error reading chi function', ierr )
+      CALL errore ('read_upf_schema', 'error reading chi function', ierr )
       IF (upf%has_so)  THEN 
          CALL extractDataAttribute( locNode, "nn", upf%nn(nw), IOSTAT = ierr) 
-         CALL errore ('upf_read_schema', 'error reading nn value', ierr) 
+         CALL errore ('read_upf_schema', 'error reading nn value', ierr) 
          CALL extractDataAttribute( locNode, "jchi", upf%jchi(nw), IOSTAT = ierr) 
-         CALL errore ('upf_read_schema', 'error reading jchi value', ierr) 
+         CALL errore ('read_upf_schema', 'error reading jchi value', ierr) 
       END IF
       IF ( hasAttribute (locNode, 'label')) THEN 
          CALL extractDataAttribute( locNode, 'label',  upf%els(nw) , IOSTAT = ierr )
-         CALL errore ( 'upf_read_schema', 'error reading label value in ps_pswfc', ABS(ierr) )
+         CALL errore ( 'read_upf_schema', 'error reading label value in ps_pswfc', ABS(ierr) )
       END IF 
       CALL extractDataAttribute( locNode, 'l',  upf%lchi(nw) , IOSTAT = ierr )
-      CALL errore ('upf_read_schema', 'error reading chi angular momentum l', ierr )
+      CALL errore ('read_upf_schema', 'error reading chi angular momentum l', ierr )
       CALL extractDataAttribute( locNode, 'occupation',  upf%oc(nw) , IOSTAT = ierr )
-      CALL errore ('upf_read_schema', 'error reading chi occupation', ierr )
+      CALL errore ('read_upf_schema', 'error reading chi occupation', ierr )
       IF (hasAttribute( locNode, 'n')) THEN 
          CALL extractDataAttribute( locNode, 'n',  upf%nchi(nw) , IOSTAT = ierr )
-         CALL errore ( 'upf_read_schema', 'error reading n value in ps_pswfc', ABS(ierr) )
+         CALL errore ( 'read_upf_schema', 'error reading n value in ps_pswfc', ABS(ierr) )
       END IF 
       IF ( hasAttribute (locNode, 'pseudo_energy') ) THEN 
          CALL extractDataAttribute( locNode, 'pseudo_energy',  upf%epseu(nw) , IOSTAT = ierr )
-         CALL errore ( 'upf_read_schema', 'error reading pseudo_energy value in ps_pswfc', ABS(ierr) )
+         CALL errore ( 'read_upf_schema', 'error reading pseudo_energy value in ps_pswfc', ABS(ierr) )
       END IF 
       IF ( hasAttribute (locNode, 'cutoff_radius') ) THEN 
          CALL extractDataAttribute( locNode, 'cutoff_radius',  upf%rcut_chi(nw) , IOSTAT = ierr )
-         CALL errore ( 'upf_read_schema', 'error reading cutoff_radius value in ps_pswfc', ABS(ierr) )
+         CALL errore ( 'read_upf_schema', 'error reading cutoff_radius value in ps_pswfc', ABS(ierr) )
       END IF 
       IF (hasAttribute( locNode, 'ultrasoft_cutoff_radius')) THEN 
          CALL extractDataAttribute( locNode, 'ultrasoft_cutoff_radius',  upf%rcutus_chi(nw) , IOSTAT = ierr )
-         CALL errore ('upf_read_schema', 'error reading ultrasoft_cutoff_radius in ps_pswfc', ABS(ierr) )
+         CALL errore ('read_upf_schema', 'error reading ultrasoft_cutoff_radius in ps_pswfc', ABS(ierr) )
       END IF
    END DO
    !
@@ -652,23 +652,23 @@ SUBROUTINE read_upf_paw(u, upf)
    ! Full occupation (not only > 0 ones)
    ALLOCATE( upf%paw%oc(upf%nbeta) )
    locNode => item ( getElementsByTagname(u, 'pp_occupations'),0) 
-   IF (.NOT. ASSOCIATED(locNode)) CALL errore ('read_schema_upf', 'pp_occupations not found '//upf%psd, -1)
+   IF (.NOT. ASSOCIATED(locNode)) CALL errore ('read_upf_schema', 'pp_occupations not found '//upf%psd, -1)
    CALL extractDataContent ( locNode, upf%paw%oc, IOSTAT = ierr ) 
-   IF (ierr /= 0 ) CALL errore ('read_schema_upf', 'error reading pp_occupations '//upf%psd, ierr)  
+   IF (ierr /= 0 ) CALL errore ('read_upf_schema', 'error reading pp_occupations '//upf%psd, ierr)  
    !
    ! All-electron core charge
    ALLOCATE( upf%paw%ae_rho_atc(upf%mesh) )
    locNode => item ( getElementsByTagname(u, 'pp_ae_nlcc'), 0) 
-   IF (.NOT. ASSOCIATED(locNode)) CALL errore ('read_schema_upf', 'pp_ae_nlcc not found '//upf%psd, -1)
+   IF (.NOT. ASSOCIATED(locNode)) CALL errore ('read_upf_schema', 'pp_ae_nlcc not found '//upf%psd, -1)
    CALL extractDataContent(locNode, upf%paw%ae_rho_atc, IOSTAT = ierr)
-   IF (ierr /= 0 ) CALL errore ('read_schema_upf', 'error reading pp_ae_nlcc '//upf%psd, ierr)
+   IF (ierr /= 0 ) CALL errore ('read_upf_schema', 'error reading pp_ae_nlcc '//upf%psd, ierr)
    !
    ! All-electron local potential
    ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
    locNode => item (getElementsByTagname(u, 'pp_ae_vloc'), 0)
-   IF (.NOT. ASSOCIATED(locNode)) CALL errore ('read_schema_upf', 'pp_ae_vloc not found '//upf%psd, -1)
+   IF (.NOT. ASSOCIATED(locNode)) CALL errore ('read_upf_schema', 'pp_ae_vloc not found '//upf%psd, -1)
    CALL extractDataContent(locNode, upf%paw%ae_vloc, IOSTAT = ierr)
-   IF (ierr /= 0 ) CALL errore ('read_schema_upf', 'error reading pp_ae_nlcc '//upf%psd, ierr)
+   IF (ierr /= 0 ) CALL errore ('read_upf_schema', 'error reading pp_ae_nlcc '//upf%psd, ierr)
    !
    ALLOCATE(upf%paw%pfunc(upf%mesh, upf%nbeta,upf%nbeta) )
    upf%paw%pfunc(:,:,:) = 0._dp
