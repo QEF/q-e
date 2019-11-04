@@ -30,6 +30,7 @@ PROGRAM wannier_plot
   !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios,nc(3),n0(3)
+  LOGICAL :: needwf = .TRUE.
   NAMELIST /inputpp/ outdir, prefix, nwan, plot_wan_num, plot_wan_spin, nc, n0
   !
   ! initialise environment
@@ -67,8 +68,7 @@ PROGRAM wannier_plot
   !
   CALL mp_bcast( ios, ionode_id, world_comm )
   IF ( ios /= 0 ) CALL errore('wannier_ham','reading inputpp namelist',abs(ios))
-  CALL read_file
-  CALL openfil_pp
+  CALL read_file_new ( needwf )
 
   CALL wannier_init(.true.)
 

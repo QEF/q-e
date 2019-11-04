@@ -80,8 +80,8 @@ program fd_raman
   endif
   if (filemodes .eq. ' ') lalpha=.false.
 
-  !reading the xml file
-  call read_file
+  !reading the xml file - WILL CRASH, input variable needed
+  call read_file_new ( )
 
   if (ionode) then
     write(6,*) '**************************************************'

@@ -37,7 +37,7 @@ PROGRAM plan_avg
   INTEGER :: ninter
   CHARACTER(len=256) :: filplot, outdir
   REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
-  !
+  LOGICAL :: needwf = .TRUE.
   INTEGER :: iunplot = 4, ios, ibnd, ik, ir, nt, na, i
   !
   NAMELIST / inputpp / outdir, prefix, filplot
@@ -81,12 +81,10 @@ PROGRAM plan_avg
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file ( )
+  CALL read_file_new ( needwf )
   !
   IF (gamma_only) CALL errore ('plan_avg', &
        ' planar average with gamma tricks not yet implemented',2)
-  !
-  CALL openfil_pp ( )
   !
   ALLOCATE (averag( nat, nbnd, nkstot))
   ALLOCATE (plan(dfftp%nr3, nbnd, nkstot))
@@ -163,9 +161,10 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   USE wvfct, ONLY: npwx, nbnd, wg
   USE wavefunctions,  ONLY: evc
   USE noncollin_module, ONLY : noncolin, npol
-  USE io_files, ONLY: iunwfc, nwordwfc
+  USE io_files, ONLY: restart_dir
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-
+  USE pw_restart_new, ONLY: read_collected_wfc
+  !
   IMPLICIT NONE
   INTEGER :: ninter
   ! output: the number of planes
@@ -256,7 +255,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   DO ik = 1, nks
      IF (lsda) current_spin = isk (ik)
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 
      CALL calbec ( npw, vkb, evc, becp)

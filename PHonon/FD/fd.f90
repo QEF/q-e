@@ -65,7 +65,7 @@ program fd
   REAL (dp) :: ft1, ft2, ft3
   REAL (dp) :: d(3,3),rd(3,3),dhex(3,3), dcub(3,3)
   REAL (dp) :: accep=1.0d-5
-  LOGICAL :: nodispsym, noatsym,hex
+  LOGICAL :: nodispsym, noatsym, hex
   LOGICAL, ALLOCATABLE :: move_sl(:,:)
   real(DP), PARAMETER :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
                         msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
@@ -102,8 +102,8 @@ program fd
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
 
-  !reading the xml file
-  call read_xml_file
+  !reading the xml file - WILL CRASH, input variable needed
+  call read_file_new ( )
 
   if (ionode) then
     write(6,*) '**************************************************'

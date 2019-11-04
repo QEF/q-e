@@ -34,7 +34,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE uspp,      ONLY: okvan
   USE noncollin_module, ONLY: noncolin, npol
   USE wavefunctions, ONLY: evc,    psic, psic_nc
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE io_files,             ONLY : restart_dir
   USE scf,                  ONLY : rho
   USE projections_ldos,     ONLY : proj
   USE fft_base,             ONLY : dfftp
@@ -42,6 +42,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE fft_interfaces,       ONLY : invfft
   USE mp_pools,             ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE pw_restart_new,       ONLY : read_collected_wfc
 !
   !
   IMPLICIT NONE
@@ -222,7 +223,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      !
      IF ( lsda ) current_spin = isk(ik)
      npw = ngk(ik)
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      !
      bnd_loop: DO ibnd = 1, nbnd
         !

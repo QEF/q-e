@@ -239,12 +239,10 @@ write_ns.o \
 wsweight.o \
 weights.o \
 ortho_wfc.o \
-wannier_proj.o \
 wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
-wannier_occ.o \
-wannier_enrg.o
+wannier_occ.o
 
 QEMODS=../../Modules/libqemod.a \
        ../../KS_Solvers/libks_solvers.a \
