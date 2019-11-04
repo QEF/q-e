@@ -47,7 +47,7 @@ PROGRAM do_dos
   REAL(DP) :: E, DOSofE (2), DOSint (2), DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: nks2, n, ndos, ngauss1, ios
-  LOGICAL :: dummy
+  LOGICAL :: needwf = .FALSE.
 
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE, bz_sum
@@ -95,7 +95,7 @@ PROGRAM do_dos
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
   !
-  CALL read_xml_file( dummy )
+  CALL read_file_new ( needwf )
   !
   IF ( ionode ) THEN
      !

@@ -37,7 +37,7 @@ PROGRAM plan_avg
   INTEGER :: ninter
   CHARACTER(len=256) :: filplot, outdir
   REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
-  LOGICAL :: wfc_is_collected
+  LOGICAL :: needwf = .TRUE.
   INTEGER :: iunplot = 4, ios, ibnd, ik, ir, nt, na, i
   !
   NAMELIST / inputpp / outdir, prefix, filplot
@@ -81,9 +81,7 @@ PROGRAM plan_avg
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file_new ( wfc_is_collected )
-  IF ( .NOT. wfc_is_collected ) CALL errore ('plan_avg', &
-       ' wavefunctiosn not available?!?',1)
+  CALL read_file_new ( needwf )
   !
   IF (gamma_only) CALL errore ('plan_avg', &
        ' planar average with gamma tricks not yet implemented',2)

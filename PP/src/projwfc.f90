@@ -50,7 +50,7 @@ PROGRAM do_projwfc
   REAL (DP), allocatable :: xk_collect(:,:)
   REAL (DP) :: Emin, Emax, DeltaE, degauss1, ef_0
   INTEGER :: nks2, ngauss1, ios
-  LOGICAL :: lwrite_overlaps, lbinary_data, wfc_is_collected
+  LOGICAL :: lwrite_overlaps, lbinary_data, needwf = .TRUE.
   LOGICAL :: lsym, kresolveddos, tdosinboxes, plotboxes, pawproj
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
   INTEGER :: n_proj_boxes, irmin(3,N_MAX_BOXES), irmax(3,N_MAX_BOXES)
@@ -139,9 +139,7 @@ PROGRAM do_projwfc
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file_new ( wfc_is_collected )
-  IF ( .NOT. wfc_is_collected ) &
-       CALL errore ('projwfc','wavefunctions not available?!?',1)
+  CALL read_file_new ( needwf )
   !
   IF(lgww) CALL get_et_from_gww ( nbnd, et )
   !

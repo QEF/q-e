@@ -79,7 +79,7 @@ PROGRAM do_ppacf
   ! counter on nspin
   INTEGER :: iexch, icorr, igcx, igcc, inlc
   INTEGER :: ierr, ios
-  LOGICAL :: dummy
+  LOGICAL :: needwf = .FALSE.
   REAL(DP) :: cc, dcc, ccp, ccm, ccp2, ccm2, ccp3, ccm3, ccp4, ccm4, ccp8, ccm8, cc3
   ! coupling constant
   ! local exchange energy, local correlation energy
@@ -223,7 +223,7 @@ PROGRAM do_ppacf
   IF (code_num == 1) THEN
      !
      tmp_dir = TRIM(outdir) 
-     CALL read_file_new (dummy)
+     CALL read_file_new ( needwf )
      !
      ! Check exchange correlation functional
      iexch = get_iexch()
