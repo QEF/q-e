@@ -152,6 +152,7 @@ PROGRAM do_projwfc
     IF ( tdosinboxes ) CALL errore ('projwfc','incompatible options',2)
   END IF
   IF ( lforcet .AND. tdosinboxes ) CALL errore ('projwfc','incompatible options',3)
+  IF ( lforcet .AND. lsym ) CALL errore ('projwfc','incompatible options',4)
   !
   !   Tetrahedron method
   !
@@ -899,15 +900,13 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode
-  USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
-  USE basis,     ONLY : natomwfc, swfcatom
-  USE constants, ONLY: rytoev, eps4
-  USE fft_base, ONLY : dfftp
+  USE ions_base,  ONLY : tau, nat
+  USE basis,      ONLY : natomwfc, swfcatom
   USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
   USE symm_base, ONLY: nsym, irt, t_rev
-  USE wvfct, ONLY: npwx, nbnd, et, wg
+  USE wvfct, ONLY: npwx, nbnd, et
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
@@ -915,8 +914,8 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   USE io_files,  ONLY : restart_dir
   USE pw_restart_new,ONLY : read_collected_wfc
   USE wavefunctions, ONLY: evc
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
-  USE mp_pools,  ONLY : inter_pool_comm, intra_pool_comm
   !
   USE spin_orb,   ONLY: lspinorb, domag, lforcet
   USE projections
@@ -924,21 +923,18 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: filproj
-  CHARACTER(256) :: filename
   LOGICAL :: lwrite_ovp, lbinary
   LOGICAL :: lsym
-  LOGICAL :: freeswfcatom
+  REAL(DP) :: ef_0
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
              n2, l, nwfc, lmax_wfc, is, npw
-  REAL(DP) :: jj, ef_0, eband_proj_tot, eband_tot
+  REAL(DP) :: jj
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), proj0(:,:)
-  ! Some workspace for k-point calculation ...
-  REAL(DP), ALLOCATABLE :: eband_proj(:)
-  REAL(DP) :: psum
-
+  CHARACTER(256) :: filename
+  LOGICAL :: freeswfcatom
   !
   IF (.not.noncolin) CALL errore('projwave_nc','called in the wrong case',1)
   IF (gamma_only) CALL errore('projwave_nc','gamma_only not yet implemented',1)
@@ -977,20 +973,6 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
       ALLOCATE( ovps_aux(1,1,1) )
   ENDIF
   ovps_aux  = (0.d0, 0.d0)
-  !
-  !
-  !---- Force Theorem -- (AlexS)
-  IF ( lforcet ) THEN
-     IF ( lsym ) call errore('projwave_nc','Force Theorem   &
-                     & implemented only with lsym=.false.',1) 
-      CALL weights()
-!   write(6,*) 'ef_0 = ', ef_0
-!   write(6,*) wg
-      ef_0 = ef_0 / rytoev
-      eband_tot = 0.d0
-      ALLOCATE (eband_proj(natomwfc))
-      eband_proj = 0.d0
-  ENDIF
   !
   !    loop on k points
   !
@@ -1071,83 +1053,13 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
         proj(:,:,ik)=abs(proj0(:,:))**2
      ENDIF
 
-!-- AlexS
-   IF ( lforcet ) THEN
-     DO i = 1, nbnd
-         psum = wg(i,ik) * (et(i,ik)-ef_0)
-         eband_tot = eband_tot + psum
-         DO nwfc = 1, natomwfc
-           eband_proj(nwfc) = eband_proj(nwfc) + psum*proj(nwfc,i,ik)
-         ENDDO
-     ENDDO 
-   ENDIF
-!-- 
-
-
      ! on k-points
   ENDDO
   !
-
-!-- Output for the Force Theorem (AlexS)
-!
-IF ( lforcet ) THEN
-
- CALL mp_sum( eband_tot,  inter_pool_comm )
- CALL mp_sum( eband_proj, inter_pool_comm )
-IF ( ionode ) THEN
-
-       filename = trim(filproj)
-       OPEN (4,file=filename,form='formatted', status='unknown')
-
-       eband_proj_tot = 0.d0
-       DO na = 1, nat
-
-        psum  = 0.d0
-        WRITE(4,*) 'Atom   ', na, atm(ityp(na))
-        nwfc = 1
-        DO WHILE (nwfc.LE.natomwfc)
-           IF (nlmchi(nwfc)%na.eq.na) THEN
-             l = nlmchi(nwfc)%l
-             IF (l.eq.0)  THEN 
-                write(4,*) '... s_up, s_down'
-             ELSEIF (l.eq.1) THEN 
-                write(4,*) '... {p_up}, {p_down}'
-             ELSEIF (l.eq.2) THEN 
-                write(4,*) '... {d_up}, {d_down}'
-             ELSEIF (l.eq.3) THEN 
-                write(4,*) '... {f_up}, {f_down}'
-             ELSE
-              call errore('projwave_nc','Force Theorem not implemented for l > 2',1)
-             ENDIF
-             DO i = 1, 2*l + 1
-                WRITE(4,'(2e30.10)') eband_proj(nwfc-1+i)*rytoev, &
-                   eband_proj(nwfc+i+2*l)*rytoev
-                psum  = psum+eband_proj(nwfc-1+i) +  &
-                         eband_proj(nwfc+i+2*l)
-             ENDDO
-             nwfc = nwfc + 2*(2*l+1)
-           ELSE
-             nwfc = nwfc + 1
-           ENDIF
-        ENDDO
-        eband_proj_tot = eband_proj_tot + psum
-        WRITE(4,'("eband_atom (eV) = ",i5,e30.10)') na, psum*rytoev
-
-        WRITE(4,*)
-
-       ENDDO
-       eband_tot = eband_tot*rytoev
-       eband_proj_tot = eband_proj_tot*rytoev
-       WRITE( 4,'(''eband_tot, eband_proj_tot (eV) = '',2e30.10)') eband_tot, eband_proj_tot
-
-       CLOSE(4)
-
- ENDIF
- DEALLOCATE (eband_proj)
- RETURN
-ENDIF
-!--
-
+  !-- Output for the Force Theorem (AlexS)
+  !
+  IF ( lforcet ) CALL force_theorem ( proj, ef_0, filproj )
+  !
   DEALLOCATE (work)
   DEALLOCATE (proj0)
   DEALLOCATE (e)
@@ -1190,6 +1102,108 @@ ENDIF
   !
 END SUBROUTINE projwave_nc
 !
+SUBROUTINE force_theorem ( proj, ef_0, filproj )
+  !
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : rytoev
+  USE io_global,  ONLY : ionode
+  USE ions_base,  ONLY : nat, ityp, atm
+  USE klist,      ONLY : nks, nkstot, xk
+  USE basis,      ONLY : natomwfc
+  USE wvfct,      ONLY : wg, et, nbnd
+  USE mp,         ONLY : mp_sum
+  USE mp_pools,   ONLY : inter_pool_comm, intra_pool_comm
+  USE projections,ONLY : nlmchi
+  !
+  !---- Force Theorem -- (AlexS)
+  !
+  IMPLICIT NONE
+  REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
+  CHARACTER (len=*), INTENT(in) :: filproj
+  REAL(DP), INTENT(IN) :: ef_0
+  INTEGER :: ik, i, nwfc, na, l
+  REAL(DP) :: eband_proj_tot, eband_tot, psum
+  REAL(DP), ALLOCATABLE :: eband_proj(:)
+  CHARACTER(len=256) :: filename
+  !
+  !    loop on k points
+  !
+  CALL weights()
+  !   write(6,*) 'ef_0 = ', ef_0
+  !   write(6,*) wg
+  eband_tot = 0.d0
+  ALLOCATE (eband_proj(natomwfc))
+  eband_proj = 0.d0
+  !
+  DO ik = 1, nks
+     !
+     DO i = 1, nbnd
+        psum = wg(i,ik) * (et(i,ik)-ef_0/rytoev)
+        eband_tot = eband_tot + psum
+        DO nwfc = 1, natomwfc
+           eband_proj(nwfc) = eband_proj(nwfc) + psum*proj(nwfc,i,ik)
+        ENDDO
+     ENDDO
+     !
+  ENDDO
+  !   
+  CALL mp_sum( eband_tot,  inter_pool_comm )
+  CALL mp_sum( eband_proj, inter_pool_comm )
+  !
+  IF ( ionode ) THEN
+     
+     filename = trim(filproj)
+     OPEN (4,file=filename,form='formatted', status='unknown')
+     
+     eband_proj_tot = 0.d0
+     DO na = 1, nat
+        
+        psum  = 0.d0
+        WRITE(4,*) 'Atom   ', na, atm(ityp(na))
+        nwfc = 1
+        DO WHILE (nwfc.LE.natomwfc)
+           IF (nlmchi(nwfc)%na.eq.na) THEN
+              l = nlmchi(nwfc)%l
+              IF (l.eq.0)  THEN 
+                 write(4,*) '... s_up, s_down'
+              ELSEIF (l.eq.1) THEN 
+                 write(4,*) '... {p_up}, {p_down}'
+              ELSEIF (l.eq.2) THEN 
+                 write(4,*) '... {d_up}, {d_down}'
+              ELSEIF (l.eq.3) THEN 
+                 write(4,*) '... {f_up}, {f_down}'
+              ELSE
+                 call errore('projwave_nc','Force Theorem not implemented for l > 2',1)
+              ENDIF
+              DO i = 1, 2*l + 1
+                 WRITE(4,'(2e30.10)') eband_proj(nwfc-1+i)*rytoev, &
+                      eband_proj(nwfc+i+2*l)*rytoev
+                 psum  = psum+eband_proj(nwfc-1+i) +  &
+                      eband_proj(nwfc+i+2*l)
+              ENDDO
+              nwfc = nwfc + 2*(2*l+1)
+           ELSE
+              nwfc = nwfc + 1
+           ENDIF
+        ENDDO
+        eband_proj_tot = eband_proj_tot + psum
+        WRITE(4,'("eband_atom (eV) = ",i5,e30.10)') na, psum*rytoev
+        
+        WRITE(4,*)
+        
+     ENDDO
+     eband_tot = eband_tot*rytoev
+     eband_proj_tot = eband_proj_tot*rytoev
+     WRITE( 4,'(''eband_tot, eband_proj_tot (eV) = '',2e30.10)') eband_tot, eband_proj_tot
+     
+     CLOSE(4)
+        
+     DEALLOCATE (eband_proj)
+     !
+  ENDIF
+  !
+END SUBROUTINE FORCE_THEOREM
+!--
 !-----------------------------------------------------------------------
 SUBROUTINE projwave_paw( filproj)
 !    8/12/2014 N. A. W. Holzwarth -- attempt to calculate
@@ -1198,13 +1212,12 @@ SUBROUTINE projwave_paw( filproj)
   !
   USE atom,       ONLY : rgrid, msh
   USE io_global, ONLY : stdout, ionode
-  USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE basis,     ONLY : natomwfc, swfcatom
   USE constants, ONLY: rytoev
-  USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec, igk_k, ngk
   USE lsda_mod, ONLY: nspin, isk, current_spin
-  USE wvfct, ONLY: npwx, nbnd, et, wg
+  USE wvfct, ONLY: npwx, nbnd
   USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY : upf
@@ -1574,9 +1587,8 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
+  USE ions_base, ONLY : nat
   USE basis,     ONLY : natomwfc, swfcatom
-  USE fft_base,  ONLY : dfftp
   USE klist,     ONLY : xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod,  ONLY : nspin
   USE wvfct,     ONLY : npwx, nbnd, et
