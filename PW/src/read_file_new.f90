@@ -80,10 +80,9 @@ SUBROUTINE read_file_new ( needwf )
   LOGICAL, INTENT(INOUT) :: needwf
   !
   LOGICAL :: wfc_is_collected
-  CHARACTER( LEN=256 )  :: dirname
   !
-  WRITE( stdout, '(/,5x,A,/,5x,A)') &
-       'Reading xml data from directory:', TRIM( dirname )
+  WRITE( stdout, '(/,5x,A)') &
+       'Reading xml data from directory:', TRIM( restart_dir() )
   !
   ! ... Read the contents of the xml data file
   !
