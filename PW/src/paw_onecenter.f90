@@ -1934,8 +1934,6 @@ MODULE paw_onecenter
        !
        ! \sigma-GGA case - spin polarization
        !
-       ALLOCATE( r(i%m,2) )
-       !
        IF ( nspin_mag==4 ) THEN
           CALL compute_drho_spin_lm( i, rho_lm, drho_lm, rhoout_lm, &
                                      drhoout_lm, segni_rad )
