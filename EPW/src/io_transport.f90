@@ -71,9 +71,9 @@
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of element written to file 
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #endif   
     INTEGER, INTENT(in) :: ctype
@@ -1207,9 +1207,9 @@
     INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of component for conduction band
 #endif  
     ! 
