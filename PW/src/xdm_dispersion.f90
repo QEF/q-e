@@ -30,13 +30,13 @@ module xdm_module
   REAL(DP), ALLOCATABLE :: xenv(:,:)
   INTEGER, ALLOCATABLE :: ienv(:), lvec(:,:)
   INTEGER :: nvec
-  INTEGER :: lmax(3)
+  INTEGER :: lmax(3) = 0
 
   ! moments, polarizabilities, radii, dispersion coefficients
   REAL(DP), ALLOCATABLE :: alpha(:), ml(:,:)
   REAL(DP), ALLOCATABLE :: cx(:,:,:), rvdw(:,:)
   REAL(DP) :: maxc6
-  REAL(DP) :: rmax2
+  REAL(DP) :: rmax2 = 0d0
 
   ! energies, forces and stresses
   REAL(DP) :: esave = 0._DP
@@ -628,7 +628,7 @@ CONTAINS
 
     INTEGER, EXTERNAL :: find_free_unit
 
-    IF (ionode) THEN
+    IF (ionode .AND.ALLOCATED(cx).AND.ALLOCATED(rvdw)) THEN
        iunxdm = find_free_unit ()
        OPEN ( UNIT=iunxdm, FILE = TRIM(restart_dir() ) // 'xdm.dat', &
             FORM='unformatted', STATUS='unknown' )
