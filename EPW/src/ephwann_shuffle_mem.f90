@@ -73,7 +73,7 @@
   USE printing,      ONLY : print_gkk
   USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,  ONLY : electron_read, tau_read, iter_open, print_ibte,     &
-                            iter_merge_parallel
+                            iter_merge
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
@@ -1385,9 +1385,7 @@
               ! Close files
               CALL iter_close()
               ! Merge files
-#if defined(__MPI)
-              CALL iter_merge_parallel()
-#endif
+              CALL iter_merge
               !   
             ENDIF  
           ENDIF
