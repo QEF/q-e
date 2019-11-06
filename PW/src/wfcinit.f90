@@ -26,10 +26,10 @@ SUBROUTINE wfcinit()
                                    diropn, xmlfile, restart_dir
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-  USE pw_restart_new,       ONLY : read_collected_to_evc 
+  USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp,                   ONLY : mp_bcast
   USE mp_images,            ONLY : intra_image_comm
   USE qexsd_module,         ONLY : qexsd_readschema
@@ -61,13 +61,22 @@ SUBROUTINE wfcinit()
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF ( ierr <= 0 ) THEN 
+        !
         IF (ionode) twfcollect_file = output_obj%band_structure%wf_collected   
         CALL mp_bcast(twfcollect_file, ionode_id, intra_image_comm)
+        !
         IF ( twfcollect_file ) THEN
-           CALL read_collected_to_evc(dirname )
+           !
+           DO ik = 1, nks
+              CALL read_collected_wfc ( dirname, ik, evc )
+              CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+           END DO
+           !
         ELSE IF ( .NOT. exst_file) THEN
+           !              !
            WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
            starting_wfc = 'atomic+random'
+           !
         ELSE
         !
         ! ... wavefunctions are read from file (or buffer) not here but

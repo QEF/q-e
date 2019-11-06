@@ -119,8 +119,8 @@ READ(5,input,IOSTAT=ios)
 IF (ios /= 0) CALL errore ('FD_IFC', 'reading input namelist', ABS(ios) )
 tmp_dir = trimcheck( outdir )
 
-!reading the xml file
-call read_xml_file
+!reading the xml file - WILL CRASH; input variable needed
+call read_file_new ( )
 
     if (verbose) then
     write(6,*) '**************************************************'

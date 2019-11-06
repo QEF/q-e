@@ -13,7 +13,9 @@ subroutine wannier_proj(ik, wan_func)
 
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout 
-  USE io_files
+  USE io_files,         ONLY : restart_dir, iunsat, nwordatwfc, &
+       iunwf, nwordwf, iunwpp, nwordwpp
+  USE pw_restart_new,   ONLY : read_collected_wfc
   USE wannier_new,      ONLY : wan_in, nwan, use_energy_int
   USE ions_base,        ONLY : nat, ityp
   USE wvfct,            ONLY : nbnd, npwx, et
@@ -49,12 +51,11 @@ subroutine wannier_proj(ik, wan_func)
   IF (lsda) current_spin  = isk(ik)
   npw = ngk(ik)
   
-  ! Read current wavefunctions
+  ! Read current wavefunctions DIRECTLY FROM FINAL WFC FILES
+  ! (this routine must be called from PP/src/, not from PW/src)
   !
-  evc = ZERO
-  ! See comment in PP/src/openfil.f90 why davcio and not get_buffer
-  ! call get_buffer ( evc, nwordwfc, iunwfc, ik )  
-  call davcio ( evc, 2*nwordwfc, iunwfc, ik, -1 )  
+  evc = ZERO  
+  call read_collected_wfc ( restart_dir(), ik, evc )  
   ! Reads ortho-atomic wfc
   ! You should prepare data using orthoatwfc.f90
   swfcatom = ZERO
