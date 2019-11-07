@@ -73,7 +73,7 @@
   USE printing,      ONLY : print_gkk
   USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,  ONLY : electron_read, tau_read, iter_open, print_ibte,     &
-                            iter_merge_parallel
+                            iter_merge
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
@@ -210,9 +210,9 @@
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_totcb
   !! Total number of points store on file (CB)
 #else
-  INTEGER :: ind_tot
+  INTEGER(KIND = 8) :: ind_tot
   !! Total number of points store on file 
-  INTEGER :: ind_totcb
+  INTEGER(KIND = 8) :: ind_totcb
   !! Total number of points store on file (CB)
 #endif
   REAL(KIND = DP) :: xxq(3)
@@ -1038,9 +1038,6 @@
 #if defined(__MPI)
         CALL MPI_BCAST(ind_tot,   1, MPI_OFFSET, ionode_id, world_comm, ierr)
         CALL MPI_BCAST(ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
-#else
-        CALL mp_bcast(ind_tot,   ionode_id, world_comm)
-        CALL mp_bcast(ind_totcb, ionode_id, world_comm)
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         ! 
@@ -1385,9 +1382,7 @@
               ! Close files
               CALL iter_close()
               ! Merge files
-#if defined(__MPI)
-              CALL iter_merge_parallel()
-#endif
+              CALL iter_merge
               !   
             ENDIF  
           ENDIF
