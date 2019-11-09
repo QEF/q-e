@@ -56,7 +56,7 @@
                             restart_filq, prtgkk, nel, meff, epsiHEG, lphase,          &
                             omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  & 
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   & 
-                            scdm_sigma 
+                            scdm_sigma, assume_metal
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, electron_SI, ang2m
@@ -133,7 +133,7 @@
        scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
        epsiHEG, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           & 
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   & 
-       scdm_sigma
+       scdm_sigma, assume_metal
   ! tphases, fildvscf0
   !
   ! amass    : atomic masses
@@ -307,6 +307,8 @@
   ! n_r       :  constant refractive index
   ! lindabs   : do phonon-assisted absorption
   ! 
+  ! Added by Felix Goudreault
+  ! assume_metal     : If set to .TRUE. => we are dealing with a metal
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
@@ -501,6 +503,7 @@
   epmatkqread = .FALSE.
   selecqread = .FALSE.
   nc         = 4.0d0
+  assume_metal = .FALSE.  ! default is we deal with an insulator
   !
   !     reading the namelist inputepw
   !
@@ -622,7 +625,6 @@
       'Cannot specify both auto_projections and projections block', 1)
   IF ((auto_projections .AND. .NOT. scdm_proj) .OR. (.NOT. auto_projections .AND. scdm_proj)) & 
     CALL errore('epw_readin', 'auto_projections require both scdm_proj=.true. and auto_projections=.true.', 1)
-  !
   ! thickness and smearing width of the Fermi surface  
   ! from eV to Ryd
   fsthick     = fsthick / ryd2ev 

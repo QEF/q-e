@@ -50,6 +50,10 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   USE input,         ONLY : iosys_pseudo, iosys
   USE read_input,    ONLY : read_input_file
   USE mp_global,     ONLY : mp_startup
+  USE mp_pools,      ONLY : intra_pool_comm 
+  USE mp_world,      ONLY : world_comm 
+  USE mp_bands,      ONLY : inter_bgrp_comm, intra_bgrp_comm 
+  USE mp_diag,       ONLY : mp_start_diag
   USE io_global,     ONLY : ionode, ionode_id
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
@@ -62,6 +66,8 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
   INTEGER, INTENT(INOUT) :: retval
   CHARACTER(LEN=80)      :: infile
   !
+  INTEGER                :: ndiag_
+  LOGICAL                :: diag_in_band_group_ = .true.
 #if defined(DEBUG_QECOUPLE)
   INTEGER :: me, num, ierr
   CALL MPI_COMM_SIZE(lib_comm,num,ierr)
@@ -88,6 +94,10 @@ SUBROUTINE f2libcpv(lib_comm,nim,npt,npl,nta,nbn,ndg,retval,infile)
       nband=nbn, ndiag=ndg )
   !
   CALL mp_startup ( my_world_comm=lib_comm )
+  ndiag_ = ndg 
+  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+                       do_distr_diag_inside_bgrp_ = diag_in_band_group_) 
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm) 
   CALL environment_start ( 'CP' )
   !
   IF(ionode) CALL plugin_arguments()

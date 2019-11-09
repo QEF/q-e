@@ -36,6 +36,8 @@
   etf_mem     = 1
   lpolar      = .false.
   vme         = .true.
+  use_ws      = .false. 
+  lphase      = .true.
 
   nbndsub     =  8
   nbndskip    =  0

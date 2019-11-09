@@ -416,8 +416,8 @@ END SUBROUTINE hcth
       !
       IMPLICIT NONE
       !
-      REAL(DP), INTENT(IN)  :: r
-      REAL(DP), INTENT(OUT) :: g, dg, c(6)
+      REAL(DP), INTENT(IN)  :: r, c(6)
+      REAL(DP), INTENT(OUT) :: g, dg
       !
       ! ... local variables
       !

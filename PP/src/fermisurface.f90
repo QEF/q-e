@@ -365,8 +365,9 @@ PROGRAM fermisurface
   USE io_global,  ONLY : ionode
   USE mp_global,  ONLY : mp_startup
   USE environment,ONLY : environment_start, environment_end
+  USE pw_restart_new,ONLY : read_xml_file
   !
-  LOGICAL :: dummy
+  LOGICAL :: needwf = .false.
   !
   ! initialise environment
   !
@@ -374,7 +375,7 @@ PROGRAM fermisurface
   CALL environment_start ( 'FERMI' )
   !
   CALL read_input_fs ( )
-  CALL read_xml_file ( dummy )
+  CALL read_file_new ( needwf )
   CALL fill_fs_grid ( )
   IF ( ionode ) CALL write_xcrysden_fs ( )
   !

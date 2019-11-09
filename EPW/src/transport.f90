@@ -28,10 +28,10 @@
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, restart,      & 
                               nstemp, scattering_serta, scattering_0rta, shortrange, &
-                              restart_freq, restart_filq, vme
+                              restart_freq, restart_filq, vme, assume_metal
     USE pwcom,         ONLY : ef
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
-                              epf17, nqtotf, nkqtotf, inv_tau_all, inv_tau_allcb,    &
+    USE elph2,         ONLY : ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
+                              epf17, nkqtotf, inv_tau_all, inv_tau_allcb,    &
                               xqf, zi_allvb, zi_allcb, nbndfst, nktotf, transp_temp, &
                               lower_bnd
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev,        & 
@@ -137,6 +137,9 @@
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function  
     ! 
+    IF (assume_metal) THEN
+      CALL errore("scattering_rate_q", "metals not implemented.", 1)
+    ENDIF
     CALL start_clock('SCAT')
     ! 
     IF (iqq == 1) THEN
@@ -247,7 +250,7 @@
                   ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0(itemp)
                   fmkq = wgauss(-ekq * inv_etemp, -99)
                   !
-                  ! here we take into account the zero-point SQRT(hbar/2M\omega)
+                  ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                   ! with hbar = 1 and M already contained in the eigenmodes
                   ! g2 is Ry^2, wkf must already account for the spin factor
                   !
@@ -312,7 +315,7 @@
                     ekq = etf(ibndmin - 1 + jbnd, ikq) - efcb(itemp)
                     fmkq = wgauss(-ekq * inv_etemp, -99)
                     !
-                    ! here we take into account the zero-point SQRT(hbar/2M\omega)
+                    ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     !
@@ -566,9 +569,9 @@
     USE io_files,         ONLY : prefix 
     USE io_var,           ONLY : iufilsigma 
     USE epwcom,           ONLY : nbndsub, fsthick, system_2d, nstemp,              &
-                                 int_mob, ncarrier, scatread, iterative_bte, vme
+                                 int_mob, ncarrier, scatread, iterative_bte, vme, assume_metal
     USE pwcom,            ONLY : ef 
-    USE elph2,            ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef,      & 
+    USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef,      & 
                                  inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
                                  zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
     USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev, electron_SI,         &
@@ -577,10 +580,8 @@
     USE mp_global,        ONLY : world_comm
     USE mp_world,         ONLY : mpime
     USE symm_base,        ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE io_global,        ONLY : ionode_id
     USE cell_base,        ONLY : bg
     USE mp,               ONLY : mp_bcast
-    USE mp_global,        ONLY : inter_pool_comm
     USE epwcom,           ONLY : mp_mesh_k, nkf1, nkf2, nkf3
     USE constants_epw,    ONLY : eps6, eps4
     USE io_transport,     ONLY : scattering_read
@@ -616,8 +617,6 @@
     !! Lower bounds index after k or q paral
     INTEGER :: upper_bnd
     !! Upper bounds index after k or q paral
-    INTEGER :: nkqtotf_tmp
-    !! Temporary k-q points.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
     INTEGER :: nb
@@ -693,10 +692,6 @@
     REAL(KIND = DP), ALLOCATABLE :: wkf_all(:)
     !! k-point weight on the full grid across all pools
     !  SP - Uncomment to use symmetries on velocities
-    REAL(KIND = DP) :: xkf_tmp (3, nkqtotf)
-    !! Temporary k-point coordinate (dummy variable)
-    REAL(KIND = DP) :: wkf_tmp(nkqtotf)
-    !! Temporary k-weights (dummy variable)
     REAL(KIND = DP) :: v_rot(3)
     !! Rotated velocity by the symmetry operation
     REAL(KIND = DP) :: vk_cart(3)
@@ -708,6 +703,9 @@
     REAL(KIND = DP) :: sr(3, 3)
     !! Rotation matrix
     ! 
+    IF (assume_metal) THEN
+      CALL errore("transport_coeffs", "metals not implemented.", 1)
+    ENDIF
     CALL start_clock('MOB')
     !
     inv_cell = 1.0d0 / omega
@@ -933,7 +931,7 @@
         ! 
         CALL set_sym_bl()
         ! What we get from this call is BZtoIBZ
-        CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+        CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
         ! 
         IF (iterative_bte) THEN
           ! Now we have to remap the points because the IBZ k-points have been

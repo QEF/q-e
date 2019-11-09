@@ -49,6 +49,7 @@
   eptemp      = 300 ! K
   degaussw    = 0.1  ! eV
   degaussq    = 0.05 ! meV
+  assume_metal = .TRUE.
 
   dvscf_dir   = './save'
 

@@ -20,7 +20,7 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
-  USE mp_global,     ONLY : my_pool_id, inter_pool_comm, npool, inter_image_comm, world_comm  
+  USE mp_global,     ONLY : my_pool_id, world_comm, npool  
   USE mp_images,     ONLY : my_image_id, nimage
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast
@@ -49,9 +49,9 @@
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       & 
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
-                            zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
-                            ngk_all, exband, wscache
-  USE klist_epw,     ONLY : xk_all, et_loc, et_all
+                            zstar, epsi, cu, cuq, lwin, lwinq, bmat,            &
+                            exband, wscache
+  USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, czero, eps6
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
@@ -113,16 +113,10 @@
   !! Temporary INTEGER for max value
   INTEGER :: nqxq_tmp
   !! Maximum G+q length  
-  INTEGER :: ibnd
-  !! Band index
   INTEGER :: ik
   !! Total k-point index
   INTEGER :: ios
   !! Contains the state of the opened file 
-  INTEGER :: dummy1
-  !! Dummy variable
-  INTEGER :: dummy2
-  !! Dummy variable
   INTEGER :: ik_start
   !! Lower bound for the k-point of the coarse grid in parallel 
   INTEGER :: ik_stop
@@ -229,17 +223,19 @@
   !
   maxvalue = nqxq
   DO iq_irr = 1, nqc_irr
-    qnorm_tmp = SQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
-    nqxq_tmp = INT(((SQRT(gcutm) + qnorm_tmp) / dq + 4) * cell_factor)
+    qnorm_tmp = DSQRT(xqc_irr(1, iq_irr)**2 + xqc_irr(2, iq_irr)**2 + xqc_irr(3, iq_irr)**2)
+    nqxq_tmp = INT(((DSQRT(gcutm) + qnorm_tmp) / dq + 4) * cell_factor)
     IF (nqxq_tmp > maxvalue)  maxvalue = nqxq_tmp
   ENDDO
   !
   IF (maxvalue > nqxq) THEN
-    !IF (ALLOCATED(qrad)) DEALLOCATE(qrad)
-    IF (epwread) THEN
-      ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad(maxvalue, nbetam * ', 1)
+    IF (.NOT. epwread) THEN
+      DEALLOCATE(qrad, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1) 
     ENDIF
+    ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
+    ! 
     qrad(:, :, :, :) = zero
     ! RM - need to call init_us_1 to re-calculate qrad 
     CALL init_us_1()
@@ -915,19 +911,20 @@
   !  ENDDO
   !END
   !
-  ! the electron-phonon wannier interpolation
-  !
-  IF(etf_mem == 0 .OR. etf_mem == 1 ) CALL ephwann_shuffle(nqc, xqc)
+  ! The electron-phonon wannier interpolation
   IF(etf_mem == 2) THEN
 #if defined(__MPI)         
-    CALL ephwann_shuffle_mem(nqc, xqc)
+    CALL ephwann_shuffle_mem(nqc, xqc, w_centers)
 #else
     WRITE(stdout,'(/5x,a)') 'WARNING: etf_mem==2 only works with MPI'
     WRITE(stdout,'(5x,a)')  '         Changing to etf_mem == 1 and continue ...'
     etf_mem = 1
-    CALL ephwann_shuffle(nqc, xqc)
+    CALL ephwann_shuffle(nqc, xqc, w_centers)
 #endif
+  ELSE ! etf_mem == 0, 1 or 4
+    CALL ephwann_shuffle(nqc, xqc, w_centers)
   ENDIF        
+  ! 
   DEALLOCATE(xqc, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc', 1)
   IF (lifc) THEN

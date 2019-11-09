@@ -6,7 +6,7 @@ run_cmd_template = tc.program tc.input tc.output tc.error
 tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
               (5.0e+0, 1.0e+1, 'n1'),
               (1.0e-3, 1.5e+0, 'f1'),
-              (9.0e-1, 5.0e-2, 'p1'),
+              (9.0e-1, None,   'p1'),
               (1.0e-2, 1.0e-2, 'ef1'),
               (1.0e-2, 1.0e-2, 'eh1'),
               (1.0e-2, 2.0e-2, 'ehl1'),
@@ -72,7 +72,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.5   , 5.0e-1, 'isig'),
               (1.0e-2, 1.0e-2, 'rpi'), # epw_base3 on desktop 0.054364
               (1.0e-2, 1.0e-2, 'ipi'),
-              (5.0e-1, 1.0e-1, 'z1'),  # epw_soc on desktop
+              (100.0 , 1.0e-1, 'z1'),  # unstable
               (1.0e-2, None  , 'lam'), # epw_base3 on desktop 7e-06
               (1.0e-5, 1.0e-5, 'lambda'),
               (7.0e-1, None  , 'lambda_tr'),  #epw_trev on desktop -0.004794
@@ -91,9 +91,9 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-4, 5.0e-4, 'bcsgap'),
               (1.0e-4, 5.0e-4, 'mobvb'),
               (9.0e-4, 5.0e-4, 'mobcb'),
-              (10.0  , 4.0e-1, 'mobx'),  # Needs to be tightened up
-              (9.0   , 1.5e-1, 'mobav'),  # Needs to be tightened up
-              (1.0e-3, 1.0e-3, 'mobnew'),
+              (3.0e+1, 1.0e-1, 'mobnewx'),
+              (3.0e+1, 1.0e-1, 'mobnewy'),
+              (3.0e+1, 1.0e-1, 'mobnewz'),
               (1.0e+10, 1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
               (1.5e+3, None  , 'indabs'))

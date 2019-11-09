@@ -14,6 +14,7 @@
 !
 ! <<^V^\\=========================================//-//-//========//O\\//
 MODULE buiol
+  !! BUffer Input/Output Library
   !
   USE kinds, ONLY : DP
   !
@@ -488,6 +489,8 @@ END MODULE buiol
 ! <<^V^\\=========================================//-//-//========//O\\//
 !
 MODULE buffers
+  !
+  !! It includes QE interfaces to BUIOL module.
   !
   USE kinds, ONLY: DP
   USE buiol, ONLY: init_buiol, buiol_open_unit, buiol_close_unit, &

@@ -377,10 +377,11 @@ MODULE funct
   DATA meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' /
   !
   DATA nonlocc/'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' /
-
+  !
 #if defined(__LIBXC)
   INTEGER :: libxc_major=0, libxc_minor=0, libxc_micro=0
   PUBLIC :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
+  PUBLIC :: get_libxc_flags_exc
 #endif
   !
 CONTAINS
@@ -391,6 +392,10 @@ CONTAINS
     !! Translates a string containing the exchange-correlation name
     !! into internal indices iexch, icorr, igcx, igcc, inlc, imeta.
     !
+#if defined(__LIBXC)
+    USE xc_f03_lib_m
+#endif
+    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*), INTENT(IN) :: dft_
@@ -398,6 +403,11 @@ CONTAINS
     CHARACTER(len=150):: dftout
     LOGICAL :: dft_defined = .FALSE.
     LOGICAL :: check_libxc
+#if defined(__LIBXC)
+    INTEGER :: ii, id_vec(6), n_ext_params
+    TYPE(xc_f03_func_t) :: xc_func03
+    TYPE(xc_f03_func_info_t) :: xc_info03
+#endif
     CHARACTER(LEN=1), EXTERNAL :: capital
     INTEGER ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
                 save_metac, save_inlc
@@ -691,11 +701,35 @@ CONTAINS
        imetac = 0
        inlc  = matching( dftout, ncnl, nonlocc )
        !
-#if defined(__LIBXC)
-       CALL matching_libxc( dftout )
-#endif
-       !
     ENDIF
+    !
+#if defined(__LIBXC)
+    IF (.NOT. dft_defined) CALL matching_libxc( dftout )
+    !
+    !------------------------------------------------------------------
+    ! Checks whether external parameters are required by the libxc
+    ! functionals (if present)
+    !------------------------------------------------------------------
+    !
+    id_vec(1) = iexch  ;  id_vec(2) = icorr
+    id_vec(3) = igcx   ;  id_vec(4) = igcc
+    id_vec(5) = imeta  ;  id_vec(6) = imetac
+    !
+    n_ext_params = 0
+    DO ii = 1, 6
+      IF (is_libxc(ii)) THEN
+        CALL xc_f03_func_init( xc_func03, id_vec(ii), 1 )
+        xc_info03 = xc_f03_func_get_info(xc_func03)
+        n_ext_params = n_ext_params + xc_f03_func_info_get_n_ext_params(xc_info03)
+        CALL xc_f03_func_end( xc_func03 )
+      ENDIF
+    ENDDO
+    !
+    IF ( n_ext_params/=0 ) THEN
+       WRITE( stdout, '(/5X,"WARNING: one or more of the chosen libxc functionals depend",&
+                       &/5X," on external parameters: their correct operation is not guaranteed.")' )
+    ENDIF
+#endif
     !
     !----------------------------------------------------------------
     ! Last check
@@ -875,34 +909,33 @@ CONTAINS
        !
     ENDDO
     !
-    ! ... overlaps check (between qe and libxc)
+    ! ... overlaps check (between qe and libxc names)
     !
     IF (ANY(.NOT.is_libxc(:)).AND.ANY(is_libxc(:))) CALL check_overlaps_qe_libxc( dft )
     !
-    ! ... some compatibility checks
-    !   
-    IF (icorr/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &   
-       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
-                    &been found together with a correlation one', 2 )   
-    !     
-    IF (igcc/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)  &   
-       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
-                    &been found together with a correlation one', 3 )   
-    !   
-    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) ) THEN   
-       CALL errore( 'matching_libxc', 'An LDA functional has been found, but &   
-                    &libxc GGA functionals already include the LDA part', 4 )   
-    ENDIF   
-    !   
-    ! ... for q-e functionals imeta defines both exchange and    
-    !     correlation part.   
-    IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0) &   
-       CALL errore( 'matching_libxc', 'Two conflicting metaGGA functionals &   
-                    &have been found', 5 )   
-    !   
+    ! ... Compatibility checks
+    !
+    ! LDA:
+    IF (icorr/=0 .AND. fkind_v(1)==XC_EXCHANGE_CORRELATION)  &
+       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
+                    &been found together with a correlation one (LDA)' )
+    ! GGA:
+    IF (igcc/=0 .AND. fkind_v(2)==XC_EXCHANGE_CORRELATION)   &
+       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &
+                    &been found together with a correlation one (GGA)' )
+    !
+    IF ( (is_libxc(3).AND.iexch/=0) .OR. (is_libxc(4).AND. icorr/=0) )    &
+       CALL infomsg( 'matching_libxc', 'WARNING: an LDA functional has been found, but  &
+                    &libxc GGA functionals already include the LDA part' )
+    ! mGGA:
+    ! (imeta defines both exchange and correlation term for q-e mGGA functionals)
+    IF (imeta/=0 .AND. (.NOT. is_libxc(5)) .AND. imetac/=0)   &
+       CALL errore( 'matching_libxc', 'Two conflicting metaGGA functionals &
+                    &have been found', 1 )
+    !
     IF (imetac/=0 .AND. fkind_v(3)==XC_EXCHANGE_CORRELATION)  &   
-       CALL errore( 'matching_libxc', 'An EXCHANGE+CORRELATION functional has &   
-                    &been found together with a correlation one', 6 )   
+       CALL infomsg( 'matching_libxc', 'WARNING: an EXCHANGE+CORRELATION functional has &   
+                     &been found together with a correlation one (mGGA)' )
     !   
   END SUBROUTINE matching_libxc
   !
@@ -993,7 +1026,7 @@ CONTAINS
     !! define the fraction of exact exchange used by hybrid fuctionals.
     !
     isnonlocc = (inlc > 0)
-    ismeta    = (imeta > 0)
+    ismeta    = (imeta+imetac > 0)
     isgradient= (igcx > 0) .OR.  (igcc > 0)  .OR. ismeta .OR. isnonlocc
     islda     = (iexch> 0) .AND. (icorr > 0) .AND. .NOT. isgradient
     ! PBE0/DF0
@@ -1316,6 +1349,25 @@ CONTAINS
      IF (is_present) volume = finite_size_cell_volume
   END SUBROUTINE get_finite_size_cell_volume
   !
+  !------------------------------------------------------------------------
+#if defined(__LIBXC)
+  SUBROUTINE get_libxc_flags_exc( xc_info, eflag )
+     ! Checks whether Exc is present or not in the output of a libxc 
+     ! functional (e.g. TB09)
+     TYPE(xc_f90_pointer_t) :: xc_info
+     INTEGER :: ii, flags_tot
+     INTEGER, INTENT(OUT) :: eflag
+     flags_tot = xc_f90_info_flags(xc_info)
+     eflag = 0
+     DO ii = 15, 0, -1
+       IF ( flags_tot-2**ii<0 ) CYCLE
+       flags_tot = flags_tot-2**ii
+       IF ( ii==0 ) eflag = 1
+     ENDDO
+     RETURN
+  END SUBROUTINE
+#endif
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE set_dft_from_indices( iexch_, icorr_, igcx_, igcc_, imeta_, inlc_ )
      INTEGER :: iexch_, icorr_, igcx_, igcc_, imeta_, inlc_
@@ -1530,47 +1582,49 @@ END SUBROUTINE write_dft_name
 !-----------------------------------------------------------------------
 SUBROUTINE nlc (rho_valence, rho_core, nspin, enl, vnl, v)
   !-----------------------------------------------------------------------
-  !     non local correction for the correlation
+  !     non-local contribution to the correlation energy
   !
-  !     input:  rho_valence, rho_core
-  !     definition:  E_nl = \int E_nl(rho',grho',rho'',grho'',|r'-r''|) dr
-  !     output: enl = E_nl
-  !             vnl= D(E_x)/D(rho)
-  !             v  = Correction to the potential
+  !     input      :  rho_valence, rho_core
+  !     definition :  E_nl = \int E_nl(rho',grho',rho'',grho'',|r'-r''|) dr
+  !     output     :  enl = E^nl_c
+  !                   vnl = D(E^nl_c)/D(rho)
+  !                   v   = non-local contribution to the potential
   !
-
-  USE vdW_DF, ONLY: xc_vdW_DF, xc_vdW_DF_spin, vdw_type
+  !
+  USE vdW_DF, ONLY: xc_vdW_DF, xc_vdW_DF_spin, inlc_ => inlc
   USE rVV10,  ONLY: xc_rVV10
-
+  !
   IMPLICIT NONE
-
-  REAL(DP), INTENT(IN) :: rho_valence(:,:), rho_core(:)
-  INTEGER, INTENT(IN)  :: nspin
+  !
+  REAL(DP), INTENT(IN)    :: rho_valence(:,:), rho_core(:)
+  INTEGER,  INTENT(IN)    :: nspin
   REAL(DP), INTENT(INOUT) :: v(:,:)
   REAL(DP), INTENT(INOUT) :: enl, vnl
-
-  if ( inlc == 1 .or. inlc == 2 .or. inlc == 4 .or. inlc == 5 .or. inlc == 6 ) then
-
-     vdw_type = inlc
-     if( nspin == 1 ) then
+  !
+  IF ( inlc == 1 .OR. inlc == 2) THEN
+     !
+     inlc_ = inlc
+     IF ( nspin == 1 ) THEN
         CALL xc_vdW_DF      (rho_valence, rho_core, enl, vnl, v)
-     else if( nspin == 2 ) then
+     ELSE IF ( nspin == 2 ) THEN
         CALL xc_vdW_DF_spin (rho_valence, rho_core, enl, vnl, v)
-     else
-        CALL errore ('nlc','vdW-DF not available for noncollinear spin case',1)
-     end if
-
-  elseif (inlc == 3) then
-      if(imeta == 0) then
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
-      else
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
-      endif
-  else
-     enl = 0.0_DP
-     vnl = 0.0_DP
-     v = 0.0_DP
-  endif
+     ELSE
+        CALL errore ('nlc', 'vdW-DF not available for noncollinear spin case',1)
+     END If
+     !
+  ELSE IF ( inlc == 3 ) THEN
+     !
+     IF ( imeta == 0 ) THEN
+       CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
+     ELSE
+       CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
+     END IF
+     !
+  ELSE
+     !
+     CALL errore ('nlc', 'inlc choice for E^nl_c not implemented',1)
+     !
+  END IF
   !
   RETURN
 END SUBROUTINE nlc

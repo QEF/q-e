@@ -1221,8 +1221,8 @@
     USE epwcom,     ONLY : nbndsub, fsthick, ngaussw, degaussw, shortrange, & 
                            nkf1, nkf2, nkf3, efermi_read, fermi_energy
     USE pwcom,      ONLY : ef 
-    USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
-                           nqtotf, wf, xqf, nkqtotf, efnew, nbndfst, nktotf 
+    USE elph2,      ONLY : etf, nkqf, epf17, wkf, nkf, &
+                           nqtotf, wf, xqf, efnew, nbndfst, nktotf 
     USE eliashbergcom, ONLY : nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
     USE superconductivity, ONLY : mem_size_eliashberg, mem_integer_size_eliashberg
     USE constants_epw, ONLY : ryd2ev, ryd2mev, two, eps8
@@ -1413,7 +1413,7 @@
                 DO jbnd = 1, nbndfst
                   IF (ABS(ekfs(jbnd,ixkqf(ixkf(lower_bnd+ik-1),iq)) - ef0 ) < fsthick) THEN
                     !
-                    ! here we take into account the zero-point SQRT(hbar/2M\omega)
+                    ! here we take into account the zero-point DSQRT(hbar/2M\omega)
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     !
@@ -1482,7 +1482,7 @@
                           efermi_read, fermi_energy, mp_mesh_k
     USE pwcom,     ONLY : nelec, ef
     USE klist_epw, ONLY : isk_dummy
-    USE elph2,     ONLY : etf, nkqf, wkf, nkf, nkqtotf, nktotf
+    USE elph2,     ONLY : etf, nkqf, wkf, nkf, nktotf
     USE constants_epw, ONLY : two
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_global, ONLY : inter_pool_comm
@@ -1557,7 +1557,9 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
     END SUBROUTINE count_kpoints
+    !-----------------------------------------------------------------------
     !                                                                            
     !-----------------------------------------------------------------------
     SUBROUTINE kmesh_fine
@@ -1572,7 +1574,7 @@
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, fsthick, mp_mesh_k
     USE pwcom,     ONLY : ef
     USE io_var,    ONLY : iufilikmap
-    USE elph2,     ONLY : xkf, wkf, etf, nkf, nkqtotf, ibndmin, ibndmax, nktotf, nbndfst
+    USE elph2,     ONLY : xkf, wkf, etf, nkf, ibndmin, ibndmax, nktotf, nbndfst
     USE eliashbergcom, ONLY : nkfs, ixkf, xkfs, wkfs, ekfs, nbndfs, memlt_pool
     USE superconductivity, ONLY : mem_size_eliashberg, mem_integer_size_eliashberg
     USE constants_epw, ONLY : zero

@@ -116,7 +116,7 @@
           dv(n,ipos) = deltain(n)  - dv(n,ipos)
        ENDDO
        norm = ( DNRM2( ndim, df(1,ipos), 1 ) )**2.d0
-       norm = SQRT(norm)
+       norm = DSQRT(norm)
        CALL DSCAL( ndim, 1.d0/norm, df(1,ipos), 1 )
        CALL DSCAL( ndim, 1.d0/norm, dv(1,ipos), 1 )
     ENDIF
@@ -258,7 +258,7 @@
           dv2(n,ipos) = deltain(n)  - dv2(n,ipos)
        ENDDO
        norm = ( DNRM2( ndim, df2(1,ipos), 1 ) )**2.d0
-       norm = SQRT(norm)
+       norm = DSQRT(norm)
        CALL DSCAL( ndim, 1.d0/norm, df2(1,ipos), 1 )
        CALL DSCAL( ndim, 1.d0/norm, dv2(1,ipos), 1 )
     ENDIF
@@ -408,7 +408,7 @@
        df_(:, :) = df(ibnd,ik,:,:)
        dv_(:, :) = dv(ibnd,ik,:,:)
        norm = ( DNRM2( ndim, df_(1,ipos), 1 ) )**2.d0
-       norm = SQRT(norm)
+       norm = DSQRT(norm)
        CALL DSCAL( ndim, 1.d0/norm, df_(1,ipos), 1 )
        CALL DSCAL( ndim, 1.d0/norm, dv_(1,ipos), 1 )
     ENDIF
@@ -557,7 +557,7 @@
        df_(:, :) = df2(ibnd,ik,:,:)
        dv_(:, :) = dv2(ibnd,ik,:,:)
        norm = ( DNRM2( ndim, df_(1,ipos), 1 ) )**2.d0
-       norm = SQRT(norm)
+       norm = DSQRT(norm)
        CALL DSCAL( ndim, 1.d0/norm, df_(1,ipos), 1 )
        CALL DSCAL( ndim, 1.d0/norm, dv_(1,ipos), 1 )
     ENDIF

@@ -1,6 +1,6 @@
 ---
  &inputph
-  tr2_ph=1.0d-10,
+  tr2_ph=1.0d-14,
   prefix='gan',
   amass(1)=69.723,
   amass(2)=14.007,

@@ -13,15 +13,15 @@ PROGRAM wannier_ham
 !
 ! This program generates Hamiltonian matrix on Wannier-functions basis
 
-  USE io_global, ONLY: stdout, ionode, ionode_id
-  USE kinds, ONLY: DP
-  USE io_files,   ONLY : prefix, tmp_dir
-  USE wannier_new, ONLY: nwan, use_energy_int
-  USE mp,         ONLY : mp_bcast
-  USE mp_world,         ONLY : world_comm
+  USE kinds,       ONLY : DP
+  USE io_global,   ONLY : stdout, ionode, ionode_id
+  USE io_files,    ONLY : prefix, tmp_dir
+  USE wannier_new, ONLY : nwan, use_energy_int
+  USE mp,          ONLY : mp_bcast
+  USE mp_world,    ONLY : world_comm
+  USE mp_global,   ONLY : mp_startup
+  USE environment, ONLY : environment_start, environment_end
   USE read_cards_module, ONLY : read_cards
-  USE mp_global,     ONLY : mp_startup
-  USE environment,   ONLY : environment_start, environment_end
 
   IMPLICIT NONE
   !
@@ -29,14 +29,12 @@ PROGRAM wannier_ham
   !
   CHARACTER(len=256) :: outdir, form
   INTEGER :: ios
-  LOGICAL :: plot_bands
+  LOGICAL :: plot_bands, needwf = .TRUE.
   NAMELIST /inputpp/ outdir, prefix, nwan, plot_bands, use_energy_int, form
 
   ! initialise environment
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
   CALL environment_start ( 'WANNIER_HAM')
   !
   ios = 0
@@ -64,8 +62,7 @@ PROGRAM wannier_ham
   !
   CALL mp_bcast( ios, ionode_id, world_comm )
   IF ( ios /= 0 ) CALL errore('wannier_ham','reading inputpp namelist',abs(ios))
-  CALL read_file
-  CALL openfil_pp
+  CALL read_file_new ( needwf )
 
   CALL wannier_init(.false.)
 

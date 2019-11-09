@@ -600,7 +600,7 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP, sgl
-    USE epwcom,    ONLY : filqf, nkf1, nkf2, nkf3
+    USE epwcom,    ONLY : nkf1, nkf2, nkf3
     ! 
     IMPLICIT NONE
     ! 
@@ -632,20 +632,18 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE kpoint_grid_epw(nrot, time_reversal, skip_equivalence, s, t_rev, &
-                               bg, nkc1, nkc2, nkc3, BZtoIBZ, s_BZtoIBZ)
+                               nkc1, nkc2, nkc3, bztoibz, s_bztoibz)
     !-----------------------------------------------------------------------
     !!
     !!  Automatic generation of a uniform grid of k-points with symmetry. 
     !!  Routine copied from PW/src/kpoint_grid.f90.
-    !!  We had to duplicate because the BZtoIBZ array was deallocated and is needed in
+    !!  We had to duplicate because the bztoibz array was deallocated and is needed in
     !!  EPW 
     !!
     USE kinds,            ONLY : DP
     USE division,         ONLY : fkbounds
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
-    USE mp_world,         ONLY : mpime
     USE mp_global,        ONLY : world_comm, my_pool_id, npool, inter_pool_comm
-    USE io_global,        ONLY : ionode_id, stdout
     USE kinds_epw,        ONLY : SIK2
     USE constants_epw,    ONLY : eps6
 #if defined(__MPI)
@@ -662,16 +660,14 @@
     !! Time-reversal sym
     INTEGER, INTENT(in) :: s(3, 3, 48)
     !! Symmetry matrice. 
-    INTEGER(SIK2), INTENT(inout) :: s_BZtoIBZ(nkc1 * nkc2 * nkc3)
+    INTEGER(SIK2), INTENT(inout) :: s_bztoibz(nkc1 * nkc2 * nkc3)
     !! Symeetry matrix that links an point to its IBZ friend.
-    INTEGER, INTENT(inout) :: BZtoIBZ(nkc1 * nkc2 * nkc3)
+    INTEGER, INTENT(inout) :: bztoibz(nkc1 * nkc2 * nkc3)
     !! Number of rotation
     LOGICAL, INTENT(in) :: time_reversal
     !! True if time reversal
     LOGICAL, INTENT(in) :: skip_equivalence
     !! True if equivalent point
-    REAL(KIND = DP), INTENT(in) :: bg(3, 3)
-    !! Reciprocal space vectors
     !
     ! Local variables
     LOGICAL :: in_the_list
@@ -682,7 +678,7 @@
     !! Total number of points
     INTEGER :: i, j, k
     !! Index on grid size
-    INTEGER :: ns
+    INTEGER(SIK2) :: ns
     !! Index on symmetry operations
     INTEGER :: n
     !! Global k-point index
@@ -698,8 +694,8 @@
     !! K-point paralelization (upper-bound index) 
     INTEGER :: cumul_nks
     !! Sum of points
-    INTEGER :: BZtoIBZ_tmp(nkc1 * nkc2 * nkc3)
-    !! Temporrary BZtoIBZ map
+    INTEGER :: bztoibz_tmp(nkc1 * nkc2 * nkc3)
+    !! Temporrary bztoibz map
     INTEGER :: ierr
     !! Error status
     INTEGER, ALLOCATABLE :: nkspar(:)
@@ -809,7 +805,7 @@
     !  count irreducible points and order them
     nkspar(:) = 0
     DO nk = 1, nkr
-      BZtoIBZ(nk) = equiv(nk)
+      bztoibz(nk) = equiv(nk)
     ENDDO
     !
     CALL fkbounds(nkr, lower_bnd, upper_bnd)
@@ -817,11 +813,11 @@
       IF (equiv(nk) == nk) THEN
         nkspar(my_pool_id + 1) = nkspar(my_pool_id + 1) + 1
         IF (nkspar(my_pool_id + 1) > nkr) CALL errore('kpoint_grid_epw', 'Too many k-points', 1)
-        BZtoIBZ(nk) = nkspar(my_pool_id + 1)
+        bztoibz(nk) = nkspar(my_pool_id + 1)
         ! Change all the one above
         DO ik = nk, nkr
           IF (equiv(ik) == nk) THEN
-            BZtoIBZ(ik) = nkspar(my_pool_id + 1)
+            bztoibz(ik) = nkspar(my_pool_id + 1)
           ENDIF
         ENDDO
       ENDIF
@@ -835,34 +831,34 @@
       ENDDO
     ENDIF
     DO ik = 1, nkr
-      IF((BZtoIBZ(ik) > nkspar(my_pool_id + 1)) .OR. (ik < lower_bnd)) THEN
-        BZtoIBZ (ik) = 0
+      IF((bztoibz(ik) > nkspar(my_pool_id + 1)) .OR. (ik < lower_bnd)) THEN
+        bztoibz (ik) = 0
       ELSE
-        BZtoIBZ(ik) = BZtoIBZ(ik) + cumul_nks
+        bztoibz(ik) = bztoibz(ik) + cumul_nks
       ENDIF
     ENDDO
-    BZtoIBZ_tmp(:) = 0
+    bztoibz_tmp(:) = 0
     DO i = 1, npool
       IF (my_pool_id + 1 == i) THEN
         DO ik = 1, nkr
-          IF (BZtoIBZ_tmp(ik) == 0) THEN
-            BZtoIBZ_tmp(ik) = BZtoIBZ(ik)
+          IF (bztoibz_tmp(ik) == 0) THEN
+            bztoibz_tmp(ik) = bztoibz(ik)
           ENDIF
         ENDDO
       ENDIF
-      CALL mp_bcast(BZtoIBZ_tmp, i - 1, inter_pool_comm)
+      CALL mp_bcast(bztoibz_tmp, i - 1, inter_pool_comm)
     ENDDO
     !
-    BZtoIBZ = BZtoIBZ_tmp
+    bztoibz = bztoibz_tmp
     !
     ! Now do the symmetry mapping. 
     DO nk = 1, nkr
       ! If its an irreducible point 
       IF (equiv(nk) == nk) THEN
         ! Then you have the identity matrix
-        s_BZtoIBZ(nk) = 1
+        s_bztoibz(nk) = 1
       ELSE
-        s_BZtoIBZ(nk) = s_save(nk)  
+        s_bztoibz(nk) = s_save(nk)  
       ENDIF
     ENDDO
     ! 
@@ -960,18 +956,18 @@
           WRITE(stdout, '(a,3i4)') '     Using uniform MP q-mesh: ', nqf1, nqf2, nqf3
           call set_sym_bl()
           !
-          ALLOCATE(xqf_ (3, nqf1 * nqf2 * nqf3), STAT = ierr)
+          ALLOCATE(xqf_(3, nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ ', 1)
           ALLOCATE(wqf_(nqf1 * nqf2 * nqf3), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating wqf_', 1)
           ! the result of this call is just nkqtotf
-          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           DEALLOCATE(xqf_, wqf_, STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error deallocating xqf_, wqf_', 1)
           ALLOCATE(xqf_ (3, nqtotf), wqf_(nqtotf), STAT = ierr)
           IF (ierr /= 0) CALL errore('loadqmesh_para', 'Error allocating xqf_ (3, nqtotf), wqf_', 1)
-          CALL kpoint_grid ( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
+          CALL kpoint_grid( nrot, time_reversal, .FALSE., s, t_rev, bg, nqf1*nqf2*nqf3, &
                0,0,0, nqf1,nqf2,nqf3, nqtotf, xqf_, wqf_)
           !  
           ! bring the k point to crystal coordinates       
@@ -1284,11 +1280,11 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
+    USE elph2,         ONLY : nqf, xqf, xkf, chw, nkf, nqtotf, nkqtotf, &
                               map_rebal, nktotf
     USE io_global,     ONLY : ionode_id, stdout
     USE io_var,        ONLY : iunselecq
-    USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
+    USE mp_global,     ONLY : npool, world_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
@@ -1331,7 +1327,7 @@
     !! INTEGER variable for I/O control
     INTEGER :: iq
     !! Counter on coarse q-point grid    
-    INTEGER :: ik, ikk, ikq, ikl
+    INTEGER :: ik, ikk, ikl
     !! Counter on coarse k-point grid
     INTEGER :: icbm
     !! Index for the CBM
@@ -1351,17 +1347,15 @@
     !! Index of the k point from the full grid.
     INTEGER :: ind2
     !! Index of the k+q point from the full grid. 
-    INTEGER :: nkqtotf_tmp
-    !! Temporary k-q points.
     INTEGER :: ikbz
     !! k-point index that run on the full BZ
     INTEGER :: ierr
     !! Error status
-    INTEGER :: BZtoIBZ_tmp(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
-    INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! symmetry 
     INTEGER :: nkloc
     !! number of k-point selected on that cpu 
@@ -1385,10 +1379,6 @@
     !! Eigen-energies all full k-grid.
     REAL(KIND = DP) :: etf_tmp(nbndsub)
     !! Temporary Eigen-energies at a give k-point
-    REAL(KIND = DP) :: xkf_tmp (3, nkqtotf)
-    !! Temporary k-point coordinate (dummy variable)
-    REAL(KIND = DP) :: wkf_tmp(nkqtotf)
-    !! Temporary k-weights (dummy variable)
     COMPLEX(KIND = DP) :: cfac(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k}$ exponential 
     COMPLEX(KIND = DP) :: cfacq(nrr_k, dims, dims)
@@ -1432,7 +1422,7 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           xkk = xkf(:, ikk)
-          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1)
           IF (use_ws) THEN
             DO iw = 1, dims
               DO iw2 = 1, dims
@@ -1452,21 +1442,20 @@
         ! 
         ! In case of k-point symmetry
         IF (mp_mesh_k) THEN
-          BZtoIBZ(:) = 0
-          s_BZtoIBZ(:) = 0
-          ! 
+          bztoibz(:) = 0
+          s_bztoibz(:) = 0
           ! 
           CALL set_sym_bl()
           !
-          ! What we get from this call is BZtoIBZ
-          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, bg, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+          ! What we get from this call is bztoibz
+          CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
           ! 
           IF (iterative_bte) THEN
-            BZtoIBZ_tmp(:) = 0
+            bztoibz_tmp(:) = 0
             DO ikbz = 1, nkf1 * nkf2 * nkf3
-              BZtoIBZ_tmp(ikbz) = map_rebal(BZtoIBZ(ikbz))
+              bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
             ENDDO
-            BZtoIBZ(:) = BZtoIBZ_tmp(:)
+            bztoibz(:) = bztoibz_tmp(:)
           ENDIF
           ! 
           ! 
@@ -1502,8 +1491,8 @@
             ! 
             ! Use k-point symmetry
             IF (mp_mesh_k) THEN
-              IF (((MINVAL(ABS(etf_all(:, BZtoIBZ(ind1)) - ef)) < fsthick) .AND. &
-                    (MINVAL(ABS(etf_all(:, BZtoIBZ(ind2)) - ef)) < fsthick))) THEN
+              IF (((MINVAL(ABS(etf_all(:, bztoibz(ind1)) - ef)) < fsthick) .AND. &
+                    (MINVAL(ABS(etf_all(:, bztoibz(ind2)) - ef)) < fsthick))) THEN
                 found(my_pool_id + 1) = 1
                 EXIT ! exit the loop 
               ENDIF
@@ -1681,7 +1670,6 @@
     !-----------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
     USE elph2,         ONLY : etf, nkf, nkqtotf, xkf, wkf, etf, map_rebal, map_rebal_inv, &
                               lower_bnd, nktotf
     USE epwcom,        ONLY : fsthick, nbndsub, mp_mesh_k
@@ -1694,8 +1682,6 @@
     !
     IMPLICIT NONE
     !  
-    INTEGER :: pool_index(npool) 
-    !! Index of the current pool
     INTEGER :: ipool
     !! Pool loop
     INTEGER :: ik
@@ -1718,11 +1704,8 @@
     !! K-points that are within the fshick windows
     INTEGER :: kpt_out(nkqtotf)
     !! K-points that are outside of the fshick windows
-    INTEGER :: map_rebal_tmp(nktotf)
-    !! Temporary map between the initial ordering of k-point and the rebalanced one
     INTEGER :: map_rebal_inv_tmp(nktotf)
     !! Temporary inverse map between the initial ordering of k-point and the rebalanced one
-    !
     REAL(KIND = DP) :: xkf_all(3, nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
     REAL(KIND = DP) :: wkf_all(nkqtotf)
@@ -1842,17 +1825,14 @@
     !! 
     !-----------------------------------------------------------------------  
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE cell_base,     ONLY : alat, at, omega, bg
-    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+    USE cell_base,     ONLY : at, bg
+    USE symm_base,     ONLY : s, nrot
     USE elph2,         ONLY : nkf, nktotf
     USE constants_epw, ONLY : eps6, zero
     USE wigner,        ONLY : backtoWS
     USE mp,            ONLY : mp_sum
     USE mp_global,     ONLY : world_comm
     USE division,      ONLY : fkbounds
-    USE mp_world,      ONLY : mpime
-    USE io_global,     ONLY : ionode_id
     !
     IMPLICIT NONE
     !
@@ -2001,7 +1981,7 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : nstemp
-    USE elph2,         ONLY : nkqtotf, ibndmax, ibndmin, nkf, nbndfst, nktotf
+    USE elph2,         ONLY : nkf, nbndfst, nktotf
     USE cell_base,     ONLY : bg, at
     USE constants_epw, ONLY : eps6, zero
     USE symm_base,     ONLY : s, nrot
@@ -2037,18 +2017,10 @@
     !! Local index
     INTEGER ::nb
     !! Local index
-    LOGICAL :: special
-    !! Local logical
     INTEGER :: counter_average
     !! Local counter
     INTEGER :: index_sp(nkf)
     !! Index of special points
-    REAL(KIND = DP) :: xkk_cart(3)
-    !! k-point coordinate in Cartesian unit
-    REAL(KIND = DP) :: mean(nbndfst)
-    !! Mean of the velocities
-    REAL(KIND = DP) :: mean_pop(nbndfst)
-    !! Mean of the populations
     REAL(KIND = DP) :: sa(3, 3)
     !! Symmetry matrix in crystal
     REAL(KIND = DP) :: sb(3, 3)

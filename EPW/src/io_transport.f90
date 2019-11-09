@@ -29,24 +29,21 @@
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, nkf1, nkf2, nkf3,   &  
-                              nstemp, scattering_serta, scattering_0rta, shortrange, nqf1, &
-                              restart, restart_freq, restart_filq, vme, ncarrier, nqf2, nqf3
+    USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier, &
+                              assume_metal
     USE pwcom,         ONLY : ef
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf,      & 
-                              epf17, nkqtotf, inv_tau_all, inv_tau_allcb, adapt_smearing, &
-                              xqf, xkf, wkf, dmef, vmef, nqf, eta, transp_temp, lower_bnd,&
+    USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             & 
+                              epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
+                              wkf, dmef, vmef, eta, transp_temp, lower_bnd, dos,  &
                               nbndfst, nktotf
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
                               eps6, eps10, bohr2ang, ang2cm
-    USE io_files,      ONLY : prefix, diropn, tmp_dir
+    USE io_files,      ONLY : diropn 
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : world_comm, my_pool_id, npool
     USE io_global,     ONLY : ionode_id
     USE io_var,        ONLY : iunepmat, iunepmatcb, iufilibtev_sup, iunrestart, iuntau,   &
-                              iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, &
-                              iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb,     &
-                              iunsparsetcb, iuntaucb
+                              iunsparseq, iunsparseqcb, iuntaucb
     USE elph2,         ONLY : lrepmatw2_merge, lrepmatw5_merge, threshold
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, MPI_INTEGER8, &
@@ -74,9 +71,9 @@
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of element written to file 
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #endif   
     INTEGER, INTENT(in) :: ctype
@@ -87,8 +84,6 @@
     !! Second Fermi level for the temperature itemp. Could be unused (0).
     !
     ! Local variables
-    CHARACTER(LEN = 256) :: filint
-    !! Name of the file
     INTEGER :: n
     !! Integer for the degenerate average over eigenstates  
     INTEGER :: ik
@@ -107,7 +102,7 @@
     !! Index over temperature range
     INTEGER :: ifil
     !! Index over the files
-    INTEGER :: nu, mu
+    INTEGER :: nu
     !! Index for modes
     INTEGER :: pbnd
     !! Index for bands
@@ -145,8 +140,6 @@
     !! Temporary variable
     REAL(KIND = DP) :: dfnk
     !! Derivative of f_nk with respect to \varepsilon_nk
-    REAL(KIND = DP) :: ekk2
-    !! Temporary variable to the eigenenergies for the degenerate average  
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
     REAL(KIND = DP) :: ekq
@@ -170,12 +163,8 @@
     !! Phonon frequency $$\omega_{q\nu}$$ on the fine grid.  
     REAL(KIND = DP) :: wgq(nmodes)
     !! Bose-Einstein occupation function $$n_{q\nu}$$
-    REAL(KIND = DP) :: weight
-    !! Self-energy factor 
     REAL(KIND = DP) :: fmkq
     !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
-    REAL(KIND = DP) :: vkk(3, nbndfst)
-    !! Electronic velocity $$v_{n\mathbf{k}}$$
     REAL(KIND = DP) :: trans_prob(nbndfst * nbndfst * nstemp * nkf)
     !! Temporary array to store the scattering rates
     REAL(KIND = DP) :: trans_probcb(nbndfst * nbndfst * nstemp * nkf)
@@ -248,7 +237,7 @@
         DO ik = 1, nkf
           DO ibnd = 1, nbndfst
             DO imode = 1, nmodes
-              inv_eta(imode, ibnd, ik) = 1.0d0 / (SQRT(2d0) * eta(imode, ibnd, ik))
+              inv_eta(imode, ibnd, ik) = 1.0d0 / (DSQRT(2d0) * eta(imode, ibnd, ik))
             ENDDO
           ENDDO
         ENDDO
@@ -284,7 +273,7 @@
                   g2 = g2 + ABS(epf17(jbnd, pbnd, nu, ik))**two
                 ENDIF
               ENDDO
-              epf2_deg(jbnd, ibnd, nu) = SQRT(g2 / FLOAT(n))
+              epf2_deg(jbnd, ibnd, nu) = DSQRT(g2 / FLOAT(n))
             ENDDO
           ENDDO
         ENDDO
@@ -382,11 +371,11 @@
                   tmp2 = zero
                   DO imode = 1, nmodes
                     !
-                    ! Here we take into account the zero-point SQRT(hbar/2M\omega)
+                    ! Here we take into account the zero-point DSQRT(hbar/2M\omega)
                     ! with hbar = 1 and M already contained in the eigenmodes
                     ! g2 is Ry^2, wkf must already account for the spin factor
                     ! Note that epf17 has already been squared above during averaging. 
-                    g2 = epf17(jbnd, ibnd, imode, ik) * inv_wq(imode) * g2_tmp(imode)
+                    g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
                     !
                     ! delta[E_k - E_k+q + w_q] 
                     w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
@@ -449,7 +438,7 @@
                   tmp2 = zero
                   DO imode = 1, nmodes
                     ! Same as above but for conduction bands (electrons)
-                    g2 = epf17(jbnd, ibnd, imode, ik) * inv_wq(imode) * g2_tmp(imode)
+                    g2 = REAL(epf17(jbnd, ibnd, imode, ik)) * inv_wq(imode) * g2_tmp(imode)
                     w0g1 = w0gauss((ekk - ekq + wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
                     w0g2 = w0gauss((ekk - ekq - wq(imode)) * inv_eta(imode, ibnd, ik), 0) * inv_eta(imode, ibnd, ik)
                     tmp = tmp  + two * pi * wqf(iq) * g2 * ((fnk + wgq(imode)) * w0g2 + (one - fnk + wgq(imode)) * w0g1)
@@ -603,6 +592,11 @@
             WRITE(iufilibtev_sup, '(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
           ENDDO
         ENDDO
+        IF (assume_metal) THEN
+          DO itemp = 1, nstemp
+            WRITE(iufilibtev_sup, '(i8,1E22.12)') itemp, dos(itemp)
+          ENDDO
+        ENDIF
         CLOSE(iufilibtev_sup)
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
@@ -633,45 +627,47 @@
         ! 
       ENDIF ! master
       ! 
-      ! Now print the carrier density for checking
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        IF (ncarrier < 0.0) THEN ! VB
-          DO ik = 1, nkf
-            DO ibnd = 1, nbndfst
-              ! This selects only valence bands for hole conduction
-              IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
-                ! Energy at k (relative to Ef)
-                ekk = etf_all(ibnd, ik + lower_bnd - 1 ) - ef0(itemp)
-                fnk = wgauss(-ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
-              ENDIF
+      ! Now print the carrier density for checking (for non-metals)
+      IF (.NOT. assume_metal) THEN
+        DO itemp = 1, nstemp
+          etemp = transp_temp(itemp)
+          carrier_density = 0.0
+          ! 
+          IF (ncarrier < 0.0) THEN ! VB
+            DO ik = 1, nkf
+              DO ibnd = 1, nbndfst
+                ! This selects only valence bands for hole conduction
+                IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
+                  ! Energy at k (relative to Ef)
+                  ekk = etf_all(ibnd, ik + lower_bnd - 1 ) - ef0(itemp)
+                  fnk = wgauss(-ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
+                ENDIF
+              ENDDO
             ENDDO
-          ENDDO
-          CALL mp_sum(carrier_density, world_comm)
-          carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
-        ELSE ! CB
-          DO ik = 1, nkf
-            DO ibnd = 1, nbndfst
-              ! This selects only valence bands for hole conduction
-              IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
-                !  energy at k (relative to Ef)
-                ekk = etf_all(ibnd, ik + lower_bnd - 1) - efcb(itemp)
-                fnk = wgauss(-ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
-              ENDIF
+            CALL mp_sum(carrier_density, world_comm)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
+          ELSE ! CB
+            DO ik = 1, nkf
+              DO ibnd = 1, nbndfst
+                ! This selects only valence bands for hole conduction
+                IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
+                  !  energy at k (relative to Ef)
+                  ekk = etf_all(ibnd, ik + lower_bnd - 1) - efcb(itemp)
+                  fnk = wgauss(-ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
+                ENDIF
+              ENDDO
             ENDDO
-          ENDDO
-          CALL mp_sum(carrier_density, world_comm)
-          carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density
-        ENDIF ! ncarrier
-      ENDDO
+            CALL mp_sum(carrier_density, world_comm)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density
+          ENDIF ! ncarrier
+        ENDDO
+      ENDIF
     ENDIF ! iqq
     !
     RETURN
@@ -692,7 +688,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE elph2,         ONLY : ibndmax, ibndmin, nkqtotf, nktotf, nbndfst
+    USE elph2,         ONLY : nktotf, nbndfst
     USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
@@ -779,7 +775,7 @@
     USE mp,        ONLY : mp_barrier, mp_bcast
     USE mp_world,  ONLY : mpime, world_comm
     USE io_global, ONLY : ionode_id
-    USE elph2,     ONLY : ibndmax, ibndmin, nkqtotf, nbndfst, nktotf
+    USE elph2,     ONLY : nbndfst, nktotf
     !
     IMPLICIT NONE
     !
@@ -906,7 +902,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_merge_parallel()
+    SUBROUTINE iter_merge()
     !----------------------------------------------------------------------------
     USE kinds,            ONLY : DP
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
@@ -917,9 +913,8 @@
     USE mp_global,        ONLY : my_pool_id, npool, world_comm 
     USE io_files,         ONLY : tmp_dir, prefix 
     USE mp,               ONLY : mp_sum, mp_barrier
-    USE io_global,        ONLY : stdout
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
-    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier, assume_metal
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE,MPI_INFO_NULL, &
                                  MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION,          &
@@ -927,6 +922,8 @@
 #endif
     !
     IMPLICIT NONE
+    !
+    ! Local variables
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
@@ -938,10 +935,8 @@
     !! Name of the files to merge files
     CHARACTER(LEN = 256) :: path_to_files(2)
     !! Name of the path to files
-    INTEGER :: i2, i4, i5, i6
+    INTEGER :: i2
     !! Indexes to loop over file sizes
-    INTEGER :: ipool
-    !! Process index
     INTEGER :: lrepmatw2_tot(npool)
     !! Lenght of each file
     INTEGER :: lrepmatw5_tot(npool)
@@ -954,6 +949,17 @@
     !! Input output units
     INTEGER :: ierr
     !! Error status
+#if defined(__MPI)
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
+    !! Size of what we write
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
+    !! Offset while writing scattering to files
+#else
+    INTEGER(KIND = 8) :: lsize
+    !! Size of what we write
+    INTEGER(KIND = 8) :: lrepmatw
+    !! Offset while writing scattering to files
+#endif
     INTEGER, ALLOCATABLE :: sparse(:, :)
     !! Vaariable for reading and writing the files
     INTEGER, ALLOCATABLE :: sparsecb(:, :)
@@ -962,18 +968,14 @@
     !! Variable for reading and writing trans_prob
     REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
     !! Variable for reading and writing trans_prob
-#if defined(__MPI)
-    INTEGER (KIND = MPI_OFFSET_KIND) :: lsize
-    !! Size of what we write
-    INTEGER (KIND = MPI_OFFSET_KIND) :: lrepmatw
-    !! Offset while writing scattering to files
     !
-    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
+    ! for metals merge like it's for holes
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. assume_metal) THEN
       !
       ALLOCATE(trans_prob(lrepmatw2_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating trans_prob', 1)
       ALLOCATE(sparse(5, lrepmatw2_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparse', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating sparse', 1)
       !
       io_u(1) = iunepmat_merge
       io_u(2) = iunsparseq_merge
@@ -998,10 +1000,20 @@
       lrepmatw2_tot = 0
       lrepmatw2_tot(my_pool_id + 1) = lrepmatw2_merge
       CALL mp_sum(lrepmatw2_tot, world_comm)
+#if defined(__MPI)
       DO ich = 1, 6
-        CALL mp_barrier(world_comm)
-        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL,io_u(ich), ierr)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, io_u(ich), ierr)
       ENDDO
+#else
+      OPEN(UNIT = io_u(1), FILE = filename(1), IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw2_merge * 8)
+      DO ich = 2, 6
+        OPEN(UNIT = io_u(ich), FILE = filename(ich), IOSTAT = ierr, FORM = 'unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw2_merge * 4)
+      ENDDO
+#endif
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error in opening .epmatkq1 or .sparseX file', 1)
+
       !
       DO ich = 1, 2 
         ! Read files per processor
@@ -1021,36 +1033,50 @@
         ENDIF
         CLOSE(iunepmat, STATUS = 'delete')
         IF (ich == 1) THEN
+#if defined(__MPI)
           lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
           & 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else 
+          WRITE(UNIT = io_u(1), REC = 1, IOSTAT = ierr) trans_prob
+#endif
+          IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .epmatkq1 file', 1)
         ELSE
           DO ifil = 1, 5
+#if defined(__MPI)
             lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
-            CALL MPI_FILE_WRITE_AT(io_u(ifil+1), lrepmatw, sparse(ifil,:), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+            CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparse(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+#else
+            WRITE(UNIT = io_u(ifil + 1), REC = 1, IOSTAT = ierr) sparse(ifil, :)
+#endif
+            IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .sparseX file', 1)
           ENDDO
         ENDIF
       ENDDO
       !
       DO ich = 1, 6
+#if defined(__MPI)
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+#else
+        CLOSE(io_u(ich), STATUS = 'keep')
+#endif
       ENDDO
       !
       DEALLOCATE(trans_prob, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating trans_prob', 1)
       DEALLOCATE(sparse, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparse', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating sparse', 1)
       !
     ENDIF
-    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0)) .AND. .NOT. assume_metal) THEN
       !
       ALLOCATE(trans_probcb(lrepmatw5_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating trans_probcb', 1)
       ALLOCATE(sparsecb(5, lrepmatw5_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparsecb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating sparsecb', 1)
       !
       io_u(1) = iunepmatcb_merge
       io_u(2) = iunsparseqcb_merge
@@ -1075,10 +1101,18 @@
       lrepmatw5_tot = 0
       lrepmatw5_tot(my_pool_id + 1) = lrepmatw5_merge
       CALL mp_sum(lrepmatw5_tot, world_comm)
+#if defined(__MPI)
       DO ich = 1, 6
-        CALL mp_barrier(world_comm)
-        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL, io_u(ich), ierr)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, io_u(ich), ierr)
       ENDDO
+#else
+      OPEN(UNIT = io_u(1), FILE = filename(1), IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw5_merge * 8)
+      DO ich = 2, 6
+        OPEN(UNIT = io_u(ich), FILE = filename(ich), IOSTAT = ierr, FORM = 'unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw5_merge * 4)
+      ENDDO
+#endif
       !
       DO ich = 1, 2
         ! Read files per processor
@@ -1098,34 +1132,47 @@
         ENDIF
         CLOSE(iunepmatcb, STATUS = 'delete')
         IF (ich == 1) THEN
+#if defined(__MPI)
           lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
           & 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else 
+          WRITE(UNIT = io_u(1), REC = 1, IOSTAT = ierr) trans_probcb
+#endif
+          IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .epmatkqcb1 file', 1)
         ELSE
           DO ifil = 1, 5
+#if defined(__MPI)
             lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+#else
+            WRITE(UNIT = io_u(ifil + 1), REC = 1, IOSTAT = ierr) sparsecb(ifil, :)
+#endif
+            IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .sparsecbX file', 1)
           ENDDO
         ENDIF
       ENDDO
       !
       DO ich = 1, 6
+#if defined(__MPI)
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+#else
+        CLOSE(io_u(ich), STATUS = 'keep')
+#endif
       ENDDO
       ! 
       DEALLOCATE(trans_probcb, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating trans_probcb', 1)
       DEALLOCATE(sparsecb, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparsecb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating sparsecb', 1)
       !
     ENDIF ! in all other cases it is still to decide which files to open
     ! 
-#endif
     !----------------------------------------------------------------------------
-    END SUBROUTINE iter_merge_parallel
+    END SUBROUTINE iter_merge
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
@@ -1135,15 +1182,13 @@
     ! This routine opens all the files needed to save scattering rates for the IBTE.
     ! 
     USE kinds,            ONLY : DP
-    USE io_files,         ONLY : tmp_dir, prefix, create_directory, delete_if_present
-    USE io_var,           ONLY : iunepmat, iunsparseq, iunsparsek,                 &
-                                 iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
-                                 iunsparsekcb, iunsparseicb, iunsparsejcb,         &
-                                 iunsparsetcb, iunepmatcb, iunrestart
+    USE io_files,         ONLY : prefix, create_directory, delete_if_present
+    USE io_var,           ONLY : iunepmat, iunsparseq,              &
+                                 iunsparseqcb, iunepmatcb, iunrestart
     USE mp_global,        ONLY : world_comm, my_pool_id, npool
     USE mp,               ONLY : mp_barrier, mp_bcast
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
-    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier, assume_metal
     USE io_global,        ONLY : ionode_id
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
@@ -1162,9 +1207,9 @@
     INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of component for conduction band
 #endif  
     ! 
@@ -1180,10 +1225,6 @@
     !! Logical for existence of files
     LOGICAL :: exst2
     !! Logical for existence of files
-    INTEGER :: ierr
-    !! Error index
-    INTEGER :: ilrep
-    !! index to loop over the reading elements
     INTEGER :: dummy_int
     !! Dummy INTEGER for reading
     INTEGER :: ipool
@@ -1224,8 +1265,9 @@
     !
     ! The restart_ibte.fmt exist - we try to restart
     IF (exst) THEN
-      ! Hole
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+      ! Hole (or metals)
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
+              .OR. assume_metal) THEN
         !
         filint = './' // ADJUSTL(TRIM(dirname(1))) // '/'//TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
@@ -1294,8 +1336,9 @@
       lrepmatw5_merge = lrepmatw5_restart(my_pool_id + 1)
       !  
     ELSE ! no restart file present
-      ! Hole
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+      ! Hole or metals
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
+              .OR. assume_metal) THEN
         ! 
         CALL create_directory(ADJUSTL(TRIM(dirname(1))))
         CALL create_directory(ADJUSTL(TRIM(dirname(2))))
@@ -1383,12 +1426,11 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iufilscatt_rate
-    USE elph2,     ONLY : ibndmax, ibndmin, nkqtotf, inv_tau_all, nbndfst, nktotf
+    USE elph2,     ONLY : ibndmin, nkqtotf, inv_tau_all, nbndfst, nktotf
     USE epwcom,    ONLY : nbndsub, nstemp
     USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
                               meV2invps, eps4
     USE mp,        ONLY : mp_barrier
-    USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id
     !
@@ -1472,7 +1514,7 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE io_var,    ONLY : iufilscatt_rate
-    USE elph2,     ONLY : ibndmax, ibndmin, nkqtotf, nktotf, nbndfst
+    USE elph2,     ONLY : ibndmin, nktotf, nbndfst
     USE epwcom,    ONLY : nbndsub, nstemp
     USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
                               meV2invps, eps4
@@ -1565,7 +1607,7 @@
     !! Write self-energy
     !! 
     USE kinds,     ONLY : DP
-    USE elph2,     ONLY : ibndmax, ibndmin, lower_bnd, upper_bnd, nbndfst
+    USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufilsigma_all
     USE io_files,  ONLY : diropn
     USE constants_epw, ONLY : zero
@@ -1658,7 +1700,7 @@
     !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : ibndmax, ibndmin, lower_bnd, upper_bnd, nbndfst
+    USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufilsigma_all
     USE io_files,  ONLY : prefix, tmp_dir, diropn
     USE constants_epw, ONLY :  zero
@@ -1778,7 +1820,7 @@
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : nstemp
     USE io_global, ONLY : meta_ionode_id
-    USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
+    USE elph2,     ONLY : inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
                           lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufiltau_all
     USE io_files,  ONLY : diropn
@@ -1892,6 +1934,7 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE tau_write
     !----------------------------------------------------------------------------
+    ! 
     !----------------------------------------------------------------------------
     SUBROUTINE tau_read(iqq, totq, nktotf, second)
     !----------------------------------------------------------------------------
@@ -1900,7 +1943,7 @@
     !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, meta_ionode_id
-    USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
+    USE elph2,     ONLY : inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb, &
                           lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufiltau_all
     USE io_files,  ONLY : prefix, tmp_dir, diropn
@@ -2069,7 +2112,7 @@
     !! 
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE elph2,     ONLY : ibndmax, ibndmin, nbndfst
+    USE elph2,     ONLY : nbndfst
     USE io_var,    ONLY : iufiltau_all
     USE io_files,  ONLY : tmp_dir, diropn
     USE epwcom,    ONLY : nstemp, restart_filq

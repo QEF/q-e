@@ -79,8 +79,6 @@
     !! Counter on real-space index
     INTEGER :: mbnd
     !! Counter on band index
-    INTEGER :: ibnd_m
-    !! Counter on band index
     INTEGER :: i
     !! Counter on band index
     INTEGER :: nexband_tmp
@@ -310,10 +308,6 @@
     INTEGER :: ibnd
     !! Counter on band index
     INTEGER :: jbnd
-    !! Counter on band index
-    INTEGER :: ibnd_i
-    !! Counter on band index
-    INTEGER :: ibnd_j
     !! Counter on band index
     INTEGER :: nexband_tmp
     !! Number of excluded bands
@@ -615,7 +609,7 @@
     USE io_var,    ONLY : iummn, iubvec, iudecayv
     USE io_files,  ONLY : prefix
     USE io_global, ONLY : ionode_id, stdout
-    USE mp_global, ONLY : inter_pool_comm, my_pool_id, world_comm
+    USE mp_global, ONLY : inter_pool_comm, world_comm
     USE mp,        ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_world,  ONLY : mpime
     USE division,  ONLY : fkbounds
@@ -667,10 +661,6 @@
     INTEGER :: i
     !! Counter on band index
     INTEGER :: j
-    !! Counter on band index
-    INTEGER :: ibnd_i
-    !! Counter on band index
-    INTEGER :: ibnd_j
     !! Counter on band index
     INTEGER :: nnb
     !! total number of neighbours for each k-point
@@ -724,8 +714,6 @@
     !! M_mn in smooth Bloch basis, coarse k-mesh
     COMPLEX(KIND = DP) :: M_mn_utmp(nbnd, nbndsub)
     !! M_mn after multiplication with the Wannier rotation matrix cu.
-    COMPLEX(KIND = DP) :: ctmp
-    !! Temporary variable to store M_mn
     !
     ! setup rotation matrix - we need access to all for the k+b
     cu_big = czero
@@ -1093,8 +1081,6 @@
     !! Counter on k-point
     INTEGER :: ir
     !! Counter on WS points
-    INTEGER :: ibnd, jbnd
-    !
     REAL(KIND = DP) :: rdotk
     !! $$ mathbf{r}\cdot\mathbf{k} $$
     REAL(KIND = DP) :: tmp
@@ -1298,8 +1284,8 @@
           rvec2 = DBLE(irvec_g(1, ir)) * at(: ,1) + &
                   DBLE(irvec_g(2, ir)) * at(: ,2) + &
                   DBLE(irvec_g(3, ir)) * at(: ,3)
-          len1 = SQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
-          len2 = SQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+          len1 = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
+          len2 = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
           tmp =  MAXVAL(ABS(epmatwp(:, :, ire, :, ir)))
           !
           ! rvec1 : electron-electron0 distance
@@ -1436,8 +1422,8 @@
           rvec2 = DBLE(irvec_g(1, ir)) * at(:, 1) + &
                   DBLE(irvec_g(2, ir)) * at(:, 2) + &
                   DBLE(irvec_g(3, ir)) * at(:, 3)
-          len1 = SQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
-          len2 = SQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+          len1 = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
+          len2 = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
           tmp =  MAXVAL(ABS(epmatwp_mem(:, :, ire, :)))
           !
           ! rvec1 : electron-electron0 distance

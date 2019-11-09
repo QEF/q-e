@@ -394,7 +394,7 @@
           wslen(i) = wslen(i) + DBLE(irvec(ipol, i)) * adot(ipol, jpol) * DBLE(irvec(jpol, i))
         ENDDO
       ENDDO
-      wslen(i) = SQRT(wslen(i))
+      wslen(i) = DSQRT(wslen(i))
     ENDDO
     !
     CALL cryst_to_cart(dims, shift(:, :), at, 1)
@@ -645,7 +645,7 @@
           wslen(i) = wslen(i) + DBLE(irvec(ipol, i)) * adot(ipol, jpol) * DBLE(irvec(jpol, i))
         ENDDO
       ENDDO
-      wslen(i) = SQRT(wslen(i))
+      wslen(i) = DSQRT(wslen(i))
     ENDDO
     !
     CALL cryst_to_cart(dims2, tau(:, :), at, 1)
@@ -692,12 +692,10 @@
     !! Minimum position
     INTEGER, PARAMETER :: nn = 3 
     !! number of neighbours
-    ! 
-    REAL(KIND = DP) :: minvalore
-    !! Minimal value
     REAL(KIND = DP) :: dist
     !! Distance
     REAL(KIND = DP) :: distances(nrws)
+    !! Dsitance array
     ! 
     ws(:) = zero
     distances(:) = zero
@@ -707,10 +705,10 @@
         DO N = -nn, nn
           ws(:) = v(:) + L * bg(:, 1) + M * bg(:, 2) + N * bg(:, 3)
           DO i = 1, nrws
-            distances(i) = SQRT((ws(1) - rws(2, i))**2 + (ws(2) - rws(3, i))**2 + (ws(3) - rws(4, i))**2)
+            distances(i) = DSQRT((ws(1) - rws(2, i))**2 + (ws(2) - rws(3, i))**2 + (ws(3) - rws(4, i))**2)
           ENDDO
           minpos = find_minimum(distances, nrws)
-          dist = SQRT(ws(1)**2 + ws(2)**2 + ws(3)**2)
+          dist = DSQRT(ws(1)**2 + ws(2)**2 + ws(3)**2)
           IF (dist < distances(minpos) + eps8) EXIT alpha
         ENDDO ! N
       ENDDO ! M

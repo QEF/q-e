@@ -179,7 +179,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var nstep -type INTEGER {
             info {
                 number of molecular-dynamics or structural optimization steps 
-                performed in this run
+                performed in this run. If set to 0, the code performs a quick
+                "dry run", stopping just after initialization. This is useful
+                to check for input correctness and to have the summary printed.
             }
             default {
                 1  if @ref calculation == 'scf', 'nscf', 'bands';
@@ -999,7 +1001,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 }
 
                 opt -val {'marzari-vanderbilt', 'cold', 'm-v', 'mv'} {
-                    Marzari-Vanderbilt cold smearing
+                    Marzari-Vanderbilt-DeVita-Payne cold smearing
                     (see PRL 82, 3296 (1999))
                 }
                     

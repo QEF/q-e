@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------
-  SUBROUTINE ephwann_shuffle(nqc, xqc)
+  SUBROUTINE ephwann_shuffle(nqc, xqc, w_centers)
   !---------------------------------------------------------------------
   !!
   !! Wannier interpolation of electron-phonon vertex
@@ -18,9 +18,9 @@
   !-----------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP, i4b
-  USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
+  USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
-  USE cell_base,     ONLY : at, bg, omega, alat
+  USE cell_base,     ONLY : at, bg
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
@@ -31,10 +31,10 @@
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
-                            nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl, lindabs, mob_maxiter, use_ws, epbread,  &
+                            nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
+                            specfun_pl, lindabs, use_ws, epbread,               &
                             epmatkqread, selecqread, restart_freq, nsmear,      &
-                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3
+                            nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -42,20 +42,20 @@
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_var,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, crystal, iunepmatwp2, iunrestart,       &
-                            iuntau, iuntaucb
+                            iunepmatwp, iunepmatwp2, iunrestart, iuntau,        &
+                            iuntaucb
   USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
                             chw, chw_ks, cvmew, cdmew, rdw, adapt_smearing,     &
-                            epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
+                            epmatwp, epmatq, wf, etf, etf_ks, xqf, xkf,         &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all, eta, nbndfst,    &
-                            inv_tau_allcb, zi_allcb, exband, xkfd, gamma_v_all, &
-                            esigmar_all, esigmai_all, lower_bnd, upper_bnd, ifc,&
+                            inv_tau_allcb, zi_allcb, exband, gamma_v_all,       &
+                            esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf, transp_temp, xkq
+                            nktotf, transp_temp, xkq, dos
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -69,16 +69,16 @@
   USE printing,      ONLY : print_gkk
   USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,  ONLY : electron_read, tau_read, iter_open, print_ibte,     &
-                            iter_merge_parallel
+                            iter_merge
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : inter_pool_comm, npool
+  USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,      ONLY : mpime, world_comm
   USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,        &
-                            sumkg_seq, efermig_seq, mem_size, broadening
+                            sumkg_seq, efermig_seq, mem_size, broadening, compute_dos
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
@@ -97,6 +97,8 @@
   !! number of qpoints in the coarse grid
   REAL(KIND = DP), INTENT(in) :: xqc(3, nqc)
   !! qpoint list, coarse mesh
+  REAL(KIND = DP), INTENT(in) :: w_centers(3, nbndsub)
+  !! Wannier centers 
   ! 
   ! Local  variables
   CHARACTER(LEN = 256) :: filint
@@ -165,16 +167,12 @@
   !! Counter on bands when use_ws == .TRUE.
   INTEGER :: iw2
   !! Counter on bands when use_ws == .TRUE.
-  INTEGER :: iter
-  !! Current iteration number
   INTEGER :: itemp
   !! Temperature index
   INTEGER :: icbm
   !! Index of the CBM
   INTEGER :: totq
   !! Total number of q-points within the fsthick window. 
-  INTEGER :: icounter
-  !! Integer counter for displaced points
   INTEGER :: ipool
   !! Cpu index.
   INTEGER :: npool_tmp
@@ -208,18 +206,12 @@
   !! Total number of points store on file 
   INTEGER(KIND = MPI_OFFSET_KIND) :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
-  !! Offset to tell where to start reading the file
 #else
-  INTEGER :: ind_tot
+  INTEGER(KIND = 8) :: ind_tot
   !! Total number of points store on file 
-  INTEGER :: ind_totcb
+  INTEGER(KIND = 8) :: ind_totcb
   !! Total number of points store on file (CB)
-  INTEGER :: lsize
-  !! Offset to tell where to start reading the file
 #endif
-  REAL(KIND = DP) :: rdotk_scal
-  !! Real (instead of array) for $r\cdot k$
   REAL(KIND = DP) :: xxq(3)
   !! Current q-point 
   REAL(KIND = DP) :: xxk(3)
@@ -232,8 +224,6 @@
   !! Real-space wigner-Seitz vectors
   REAL(KIND = DP) :: atws(3, 3)
   !! Maximum vector: at*nq
-  REAL(KIND = DP) :: w_centers(3, nbndsub)
-  !! Wannier centers  
   REAL(KIND = DP) :: etemp
   !! Temperature in Ry (this includes division by kb)
   REAL(KIND = DP) :: ef0(nstemp)
@@ -242,14 +232,12 @@
   !! Second Fermi level for the temperature itemp  
   REAL(KIND = DP) :: dummy(3)
   !! Dummy variable
-  REAL(KIND = DP) :: val
-  !! Temporary broadening value
-  !REAL(KIND = DP), EXTERNAL :: fermicarrier
-  !! Function that returns the Fermi level so that n=p (if int_mob = .TRUE.)  
+  REAL(KIND = DP) :: valmin(npool)
+  !! Temporary broadening min value 
+  REAL(KIND = DP) :: valmax(npool)
+  !! Temporary broadening max value 
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
-  !REAL(KIND = DP), EXTERNAL :: efermig_seq
-  !! Same but in sequential
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(KIND = DP), ALLOCATABLE :: w2(:)
@@ -734,16 +722,18 @@
     ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
     ! with the wannier functions, or 'coarse' Fermi level is inaccurate
     IF (ABS(efnew - ef) * ryd2eV > 0.250d0 .AND. (.NOT. eig_read)) &
-       WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
+      WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ef = efnew
   ENDIF
-  !
   ! ------------------------------------------------------------
   ! Apply a possible shift to eigenenergies (applied later)
   icbm = 1
   IF (ABS(scissor) > eps6) THEN
+    IF (assume_metal) THEN
+      CALL errore("ephwann_shuffle", "A scissor shift is applied but the material is a metal...", 1)
+    ENDIF
     IF (noncolin) THEN
       icbm = FLOOR(nelec / 1.0d0) + 1
     ELSE
@@ -768,11 +758,7 @@
     CALL load_rebal
   ENDIF
   !
-  !  xqf must be in crystal coordinates
-  !
-  ! this loops over the fine mesh of q points.
-  ! ---------------------------------------------------------------------------------------
-  ! ---------------------------------------------------------------------------------------
+  ! In the case of crystal ASR
   IF (lifc) THEN
     !
     ! build the WS cell corresponding to the force constant grid
@@ -804,7 +790,7 @@
   ! get the size of the matrix elements stored in each pool
   ! for informational purposes.  Not necessary
   !
-  CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
+  CALL mem_size(nmodes, nkf)
   !
   ALLOCATE(etf_all(nbndfst, nktotf), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating etf_all', 1)
@@ -834,6 +820,12 @@
     threshold = 1d-16 / (INT(nkf1, KIND = 8) * INT(nkf2, KIND = 8) * INT(nkf3, KIND = 8) * &
                          INT(nqf1, KIND = 8) * INT(nqf2, KIND = 8) * INT(nqf3, KIND = 8) * &
                          INT((nbndfst), KIND = 8) * INT((nbndfst), KIND = 8)) 
+  ENDIF
+  ! 
+  ! Allocate dos we do metals
+  IF (assume_metal) THEN
+    ALLOCATE(dos(nstemp), STAT = ierr)
+    IF (ierr /= 0) CALL errore("ephwann_shuffle", "Error allocating dos", 1)
   ENDIF
   ! 
   IF (iterative_bte .AND. epmatkqread) THEN
@@ -873,10 +865,12 @@
     ! 
     ! Check if the grids are homogeneous and commensurate
     homogeneous = .FALSE.
-    IF ((nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
-        (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
-        (MOD(nkf1, nqf1) == 0) .AND. (MOD(nkf2, nqf2) == 0) .AND. (MOD(nkf3, nqf3) == 0)) THEN
-      homogeneous = .TRUE.
+    IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+       (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) ) THEN
+      IF ( (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. &
+           (MOD(nkf3,nqf3) == 0) ) THEN
+        homogeneous = .TRUE.
+      END IF
     ELSE
       homogeneous = .FALSE.
     ENDIF
@@ -1071,9 +1065,6 @@
 #if defined(__MPI)
         CALL MPI_BCAST(ind_tot,   1, MPI_OFFSET, ionode_id, world_comm, ierr)
         CALL MPI_BCAST(ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
-#else
-        CALL mp_bcast(ind_tot,   ionode_id, world_comm)
-        CALL mp_bcast(ind_totcb, ionode_id, world_comm)
 #endif
         IF (ierr /= 0) CALL errore('ephwann_shuffle', 'error in MPI_BCAST', 1)
         ! 
@@ -1097,14 +1088,14 @@
     ENDIF
     ! 
     DO iqq = iq_restart, totq
-      ! This needs to be uncommented. 
+      CALL start_clock ('ep-interp')
+      !  
       epf17(:, :, :, :) = czero
       cufkk(:, :) = czero
       cufkq(:, :) = czero
       ! 
       iq = selecq(iqq)
       !   
-      CALL start_clock ('ep-interp')
       !
       ! In case of big calculation, show progression of iq (especially usefull when
       ! elecselfen = true as nothing happen during the calculation otherwise. 
@@ -1134,15 +1125,15 @@
         ! wf are the interpolated eigenfrequencies
         ! (omega on fine grid)
         !
-        IF (w2(nu) > zero) THEN
-          wf(nu, iq) =  SQRT(ABS(w2(nu)))
+        IF (w2(nu) > -eps8) THEN
+          wf(nu, iq) =  DSQRT(ABS(w2(nu)))
         ELSE 
-          wf(nu, iq) = -SQRT(ABS(w2(nu)))
+          wf(nu, iq) = -DSQRT(ABS(w2(nu)))
         ENDIF
         !
         DO mu = 1, nmodes
           na = (mu - 1) / 3 + 1
-          uf(mu, nu) = uf(mu, nu) / SQRT(amass(ityp(na)))
+          uf(mu, nu) = uf(mu, nu) / DSQRT(amass(ityp(na)))
         ENDDO
       ENDDO
       !
@@ -1167,7 +1158,7 @@
       ! -------------------------------------------------------------
       ! 
       IF (adapt_smearing) THEN
-        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), dims, wf(:, iq), rws, nrws) 
+        CALL vmewan2blochp(xxq, nmodes, nrr_q, irvec_q, ndegen_q, uf, vmefp(:, :, :), wf(:, iq), rws, nrws) 
       ENDIF 
       ! 
       ! This is a loop over k blocks in the pool (size of the local k-set)
@@ -1272,7 +1263,7 @@
             ! 
             IF (adapt_smearing) THEN
               ! Return the value of the adaptative broadening eta
-              CALL broadening(ik, ikk, ikq, w2, vmefp, eta)
+              CALL broadening(ik, ikk, ikq, wf(:, iq), vmefp, eta)
               !
             ENDIF ! adapt_smearing
             !
@@ -1330,16 +1321,25 @@
       !   
       IF (MOD(iqq, restart_freq) == 0 .AND. adapt_smearing) THEN
        ! Min non-zero value
-       val = 10000d0
+       valmin(:) = zero
+       valmin(my_pool_id + 1) = 100d0
+       valmax(:) = zero
        DO ik = 1, nkf
          DO ibnd = 1, nbndfst
            DO imode = 1, nmodes
-             IF (eta(imode, ibnd, ik) < val .AND. ABS(eta(imode, ibnd, ik)) > eps16 ) val = eta(imode, ibnd, ik)
+             IF (eta(imode, ibnd, ik) < valmin(my_pool_id + 1) .AND. ABS(eta(imode, ibnd, ik)) > eps16) THEN
+               valmin(my_pool_id + 1) = eta(imode, ibnd, ik)
+             ENDIF
+             IF (eta(imode, ibnd, ik) > valmax(my_pool_id + 1)) THEN
+               valmax(my_pool_id + 1) = eta(imode, ibnd, ik)
+             ENDIF
            ENDDO
          ENDDO
        ENDDO 
-       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', SQRT(2.0d0) * val * ryd2mev,' meV'
-       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', SQRT(2.0d0) * MAXVAL(eta) * ryd2mev,' meV'
+       CALL mp_sum(valmin, inter_pool_comm)
+       CALL mp_sum(valmax, inter_pool_comm)
+       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', DSQRT(2.0d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', DSQRT(2.0d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
       !
       IF (prtgkk    ) CALL print_gkk(iq)
@@ -1376,11 +1376,15 @@
         IF (scattering) THEN
           !   
           ! If we want to compute intrinsic mobilities, call fermicarrier to  correctly positionned the ef0 level.
-          ! This is only done once for the first iq. 
+          ! This is only done once for the first iq. Also compute the dos at the same time
           IF (iqq == iq_restart) THEN
             DO itemp = 1, nstemp
               etemp = transp_temp(itemp)
               CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+              ! compute dos for metals
+              IF (assume_metal) THEN
+                CALL compute_dos(itemp, ef0, dos)
+              ENDIF
             ENDDO 
           ENDIF
           !   
@@ -1404,9 +1408,7 @@
               ! Close files
               CALL iter_close()
               ! Merge files
-#if defined(__MPI)
-              CALL iter_merge_parallel()
-#endif
+              CALL iter_merge()
               !   
             ENDIF  
           ENDIF
@@ -1476,13 +1478,16 @@
     ! if scattering is read then Fermi level and scissor have not been computed.
     IF (scatread) THEN
       IF (ABS(scissor) > 0.000001) THEN
+        IF (assume_metal) THEN
+          CALL errore("ephwann_shuffle", "Cannot apply scissor shift for metals.", 1)
+        ENDIF
         icbm = FLOOR(nelec / 2.0d0) + nbndskip + 1
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ikq = ikk + 1
           DO ibnd = icbm, nbndsub
-            etf (ibnd, ikk) = etf(ibnd, ikk) + scissor
-            etf (ibnd, ikq) = etf(ibnd, ikq) + scissor
+            etf(ibnd, ikk) = etf(ibnd, ikk) + scissor
+            etf(ibnd, ikq) = etf(ibnd, ikq) + scissor
           ENDDO
         ENDDO
         WRITE( stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
@@ -1490,9 +1495,13 @@
       DO itemp = 1, nstemp
         etemp = transp_temp(itemp)      
         IF (int_mob .OR. carrier) THEN
-          ! SP: Determination of the Fermi level for intrinsic or doped carrier 
+          ! SP: Determination of the Fermi level and dos for intrinsic or doped carrier 
           !     One also need to apply scissor before calling it.
           CALL fermicarrier(itemp, etemp, ef0, efcb, ctype)
+          ! only compute dos for metals
+          IF (assume_metal) THEN
+            CALL compute_dos(itemp, ef0, dos)
+          ENDIF
         ELSE
           IF (efermi_read) THEN
             ef0(itemp) = fermi_energy
@@ -1673,6 +1682,10 @@
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating transp_temp', 1)
   DEALLOCATE(et_ks, STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating et_ks', 1)
+  IF (assume_metal) THEN
+    DEALLOCATE(dos, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating dos', 1)
+  ENDIF
   !
   CALL stop_clock('ephwann')
   !

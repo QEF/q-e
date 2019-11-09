@@ -553,7 +553,7 @@ Makefiles must be set to the same dependencies of the intended target
 (e.g. pw.x in the following example) in the top-level Makefile.
 }
 \begin{verbatim}
-all : tldeps pw.x generate_vdW_kernel_table.x ...
+all : tldeps pw.x ...
 \end{verbatim}
 {\em Targets that will be build - add here new executables}
 \begin{verbatim}
@@ -2078,8 +2078,6 @@ First-level tags:
         <HUBBARD_ALPHA>
         <HUBBARD_BETA>
      endif
-     if <NON_LOCAL_DF>
-          <VDW_KERNEL_NAME>
      if <DFT_D2>
           <SCALING_FACTOR>
           <CUTOFF_RADIUS>
