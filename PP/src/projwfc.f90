@@ -1612,11 +1612,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   include 'laxlib.fh'
   !
-  INTEGER, EXTERNAL :: find_free_unit
-  !
-  COMPLEX(DP), PARAMETER :: zero = ( 0.0d0, 0.0d0 )
-  COMPLEX(DP), PARAMETER :: one  = ( 1.0d0, 0.0d0 )
-
   CHARACTER (len=*) :: filproj
   LOGICAL           :: lwrite_ovp, lbinary
   INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
@@ -1649,8 +1644,10 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
     ! flag to distinguish procs involved in linear algebra
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
-  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, ortho_cntx
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, ortho_cntx, nproc_ortho
   !
+  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx, nproc_ortho = nproc_ortho )
   !
   IF ( natomwfc <= 0 ) CALL errore &
         ('projwave', 'Cannot project on zero atomic wavefunctions!', 1)
@@ -1684,23 +1681,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   auxname = TRIM( restart_dir() ) // 'AUX' // TRIM(nd_nmbr)
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
-  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
-  !
   ALLOCATE( ic_notcnv( np_ortho(2) ) )
   ALLOCATE( notcnv_ip( np_ortho(2) ) )
   ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
   CALL desc_init( natomwfc, idesc, idesc_ip )
-  !
-  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1
-  !
-  CALL d_matrix (d1, d2, d3)
-  !
-  ! fill structure nlmchi
-  !
-  CALL fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
   !
   IF( ionode ) THEN
      WRITE( stdout, * )
