@@ -213,7 +213,8 @@ PROGRAM do_projwfc
      CALL projwave_paw (filproj)
   ELSE
      IF ( lforcet .OR. noncolin ) THEN
-        CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data,ef_0)
+        CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data )
+        IF ( lforcet ) CALL force_theorem ( ef_0, filproj )
      ELSE
         CALL projwave (filproj, lsym, lwrite_overlaps, lbinary_data )
      ENDIF
@@ -896,9 +897,10 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
 END SUBROUTINE write_proj
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
+SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
+  USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout, ionode
   USE ions_base,  ONLY : tau, nat
   USE basis,      ONLY : natomwfc, swfcatom
@@ -918,14 +920,13 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   USE mp,        ONLY : mp_sum
   !
   USE spin_orb,   ONLY: lspinorb, domag, lforcet
-  USE projections
+  USE projections, ONLY: proj, nlmchi, fill_nlmchi, proj_aux, ovps_aux
   !
   IMPLICIT NONE
   !
   CHARACTER(len=*) :: filproj
   LOGICAL :: lwrite_ovp, lbinary
   LOGICAL :: lsym
-  REAL(DP) :: ef_0
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
              n2, l, nwfc, lmax_wfc, is, npw
@@ -1056,10 +1057,6 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
      ! on k-points
   ENDDO
   !
-  !-- Output for the Force Theorem (AlexS)
-  !
-  IF ( lforcet ) CALL force_theorem ( proj, ef_0, filproj )
-  !
   DEALLOCATE (work)
   DEALLOCATE (proj0)
   DEALLOCATE (e)
@@ -1102,7 +1099,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   !
 END SUBROUTINE projwave_nc
 !
-SUBROUTINE force_theorem ( proj, ef_0, filproj )
+SUBROUTINE force_theorem ( ef_0, filproj )
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : rytoev
@@ -1113,20 +1110,18 @@ SUBROUTINE force_theorem ( proj, ef_0, filproj )
   USE wvfct,      ONLY : wg, et, nbnd
   USE mp,         ONLY : mp_sum
   USE mp_pools,   ONLY : inter_pool_comm, intra_pool_comm
-  USE projections,ONLY : nlmchi
+  USE projections,ONLY : proj, nlmchi
   !
   !---- Force Theorem -- (AlexS)
   !
   IMPLICIT NONE
-  REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
   CHARACTER (len=*), INTENT(in) :: filproj
   REAL(DP), INTENT(IN) :: ef_0
+  !
   INTEGER :: ik, i, nwfc, na, l
   REAL(DP) :: eband_proj_tot, eband_tot, psum
   REAL(DP), ALLOCATABLE :: eband_proj(:)
   CHARACTER(len=256) :: filename
-  !
-  !    loop on k points
   !
   CALL weights()
   !   write(6,*) 'ef_0 = ', ef_0
@@ -1134,6 +1129,8 @@ SUBROUTINE force_theorem ( proj, ef_0, filproj )
   eband_tot = 0.d0
   ALLOCATE (eband_proj(natomwfc))
   eband_proj = 0.d0
+  !
+  !    loop on k points
   !
   DO ik = 1, nks
      !
@@ -1151,7 +1148,9 @@ SUBROUTINE force_theorem ( proj, ef_0, filproj )
   CALL mp_sum( eband_proj, inter_pool_comm )
   !
   IF ( ionode ) THEN
-     
+     !
+     !-- Output for the Force Theorem (AlexS)
+     !
      filename = trim(filproj)
      OPEN (4,file=filename,form='formatted', status='unknown')
      
@@ -1213,12 +1212,10 @@ SUBROUTINE projwave_paw( filproj)
   USE atom,       ONLY : rgrid, msh
   USE io_global, ONLY : stdout, ionode
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE basis,     ONLY : natomwfc, swfcatom
   USE constants, ONLY: rytoev
   USE klist, ONLY: xk, nks, nkstot, nelec, igk_k, ngk
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE wvfct, ONLY: npwx, nbnd
-  USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY : upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -1240,10 +1237,6 @@ SUBROUTINE projwave_paw( filproj)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ...
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
-  ! ... or for gamma-point.
-  INTEGER  :: nksinit, nkslast
-  LOGICAL :: lsym
-  LOGICAL :: freeswfcatom
   !
   !
   WRITE( stdout, '(/5x,"Calling projwave_paw .... ")')
