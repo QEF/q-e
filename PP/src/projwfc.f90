@@ -965,7 +965,7 @@ SUBROUTINE force_theorem ( ef_0, filproj )
               ELSEIF (l.eq.3) THEN 
                  write(4,*) '... {f_up}, {f_down}'
               ELSE
-                 call errore('projwave_nc','Force Theorem not implemented for l > 2',1)
+                 call errore('force_theorem','Force Theorem not implemented for l > 2',1)
               ENDIF
               DO i = 1, 2*l + 1
                  WRITE(4,'(2e30.10)') eband_proj(nwfc-1+i)*rytoev, &
@@ -1391,7 +1391,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE projections, ONLY: nlmchi, fill_nlmchi, proj, proj_aux, ovps_aux
   !
   USE io_files,  ONLY: nd_nmbr
-  USE mp,        ONLY: mp_bcast, mp_sum
+  USE mp,        ONLY: mp_bcast
   USE mp_pools,  ONLY: root_pool, intra_pool_comm
   USE mp_diag,   ONLY: ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
                        leg_ortho, ortho_cntx, nproc_ortho
@@ -1406,7 +1406,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   LOGICAL, INTENT(IN)    :: lbinary
   LOGICAL, INTENT(INOUT) :: lwrite_ovp
   !
-  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
+  INTEGER :: npw, npw_, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
        lmax_wfc, is
   REAL(DP),    ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:), proj0(:,:)
@@ -1520,6 +1520,8 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         ALLOCATE(overlap_d (1, 1) )
      ENDIF
      overlap_d = (0.d0,0.d0)
+     npw_=npw
+     IF ( noncolin ) npw_=npol*npwx
      IF ( gamma_only ) THEN
         !
         ! in the Gamma-only case the overlap matrix (real) is copied 
@@ -1533,11 +1535,8 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         roverlap_d = 0.d0
         CALL calbec_ddistmat( npw, wfcatom, swfcatom, natomwfc, nx, roverlap_d )
         overlap_d(:,:)=cmplx(roverlap_d(:,:),0.0_dp, kind=dp)
-     ELSE IF ( noncolin ) THEN
-        CALL calbec_zdistmat( npwx*npol, wfcatom, swfcatom, natomwfc, nx, &
-             overlap_d )
-     ELSE
-        CALL calbec_zdistmat( npw, wfcatom, swfcatom, natomwfc, nx, overlap_d )
+     ELSE 
+        CALL calbec_zdistmat( npw_, wfcatom, swfcatom, natomwfc, nx, overlap_d )
      ENDIF
      !
      ! save overlap matrix if required
@@ -1605,10 +1604,8 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         roverlap_d(:,:)=REAL(overlap_d(:,:),DP)
         CALL wf_times_roverlap( nx, npw, swfcatom, roverlap_d, wfcatom )
         DEALLOCATE( roverlap_d )
-     ELSE IF ( noncolin) THEN
-        CALL wf_times_overlap( nx, npwx*npol, swfcatom, overlap_d, wfcatom )
      ELSE
-        CALL wf_times_overlap( nx, npw, swfcatom, overlap_d, wfcatom )
+        CALL wf_times_overlap( nx, npw_, swfcatom, overlap_d, wfcatom )
      ENDIF
      DEALLOCATE( overlap_d )
      !
@@ -1627,35 +1624,22 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         ENDIF
         DEALLOCATE (rproj0)
         !
-     ELSE IF (noncolin) THEN
+     ELSE
         !
         ALLOCATE( proj0(natomwfc,nbnd) )
-        CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, &
-             npwx*npol, evc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
-        CALL mp_sum ( proj0( :, 1:nbnd ), intra_pool_comm )
+        CALL calbec ( npw_, wfcatom, evc, proj0)
         WRITE( iunaux ) proj0
-        !
         IF (lsym) THEN
            IF ( lspinorb ) THEN 
               CALL sym_proj_so ( domag, proj0, proj(:,:,ik) )
-           ELSE
+           ELSE IF (noncolin) THEN
               CALL sym_proj_nc ( proj0, proj(:,:,ik) )
+           ELSE
+              CALL sym_proj_k (proj0, proj(:,:,ik))
            END IF
         ELSE
            proj(:,:,ik)=abs(proj0(:,:))**2
         END IF
-        DEALLOCATE (proj0)
-        !
-     ELSE
-        !
-        ALLOCATE( proj0(natomwfc,nbnd) )
-        CALL calbec ( npw, wfcatom, evc, proj0)
-        WRITE( iunaux ) proj0
-        IF (lsym) THEN
-           CALL sym_proj_k (proj0, proj(:,:,ik))
-        ELSE
-           proj(:,:,ik)=abs(proj0(:,:))**2
-        ENDIF
         DEALLOCATE (proj0)
         !
      ENDIF
