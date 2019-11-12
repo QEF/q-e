@@ -156,7 +156,7 @@ PROGRAM do_projwfc
   !
   !   Tetrahedron method
   !
-  IF ( ltetra ) THEN
+  IF ( ltetra .AND. degauss1==0.d0 ) THEN
      !
      ! info on tetrahedra is no longer saved to file and must be rebuilt
      !
@@ -185,6 +185,7 @@ PROGRAM do_projwfc
           &              nk1, nk2, nk3, nks2, xk_collect, 1)
      !
      DEALLOCATE(xk_collect)
+     lgauss = .FALSE.
      !
   ELSE IF (degauss1/=0.d0) THEN
      degauss=degauss1
@@ -192,15 +193,18 @@ PROGRAM do_projwfc
      WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
      lgauss=.true.
+     ltetra=.false.
   ELSE IF (lgauss) THEN
      WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+     ltetra=.false.
   ELSE
      degauss=DeltaE/rytoev
      ngauss =0
      WRITE( stdout,'(/5x,"Gaussian broadening (default values): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
      lgauss=.true.
+     ltetra=.false.
   ENDIF
   !
   IF ( filpdos == ' ') filpdos = prefix
