@@ -830,9 +830,9 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
               WRITE( stdout,'(5X,"psi = ",f5.3,"*[#",i4,"]")',advance='no') &
                  proj1 (i), idx(i)
            ELSE
-              IF ( MOD(i,5) == 0 ) WRITE( stdout,'(/,10X)', advance='no' )
               WRITE( stdout,'(A,f5.3,"*[#",i4,"]")',advance='no') &
                  plus, proj1 (i), idx(i)
+              IF ( MOD(i,5) == 0 ) WRITE( stdout,'(/,10X)', advance='no' )
            END IF
         ENDDO
         WRITE( stdout, * )
