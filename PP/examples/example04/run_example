@@ -11,8 +11,8 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use bands.x to check the band symmetry"
-$ECHO "of fcc-Pt with a fully relativistic "
-$ECHO "pseudo-potential including spin-orbit coupling."
+$ECHO "of fcc-Pt with a fully relativistic pseudo-potential including "
+$ECHO "spin-orbit coupling. Also computes the projected DOS."
 
 # set the needed environment variables
 . ../../../environment_variables
@@ -73,9 +73,11 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
+PDOS_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running bands.x as: $BANDS_COMMAND"
+$ECHO "  running projwfc.x as: $PDOS_COMMAND"
 $ECHO
 
 # self-consistent calculation
@@ -176,7 +178,22 @@ EOF
 
 $ECHO "  running the symmetry analysis for Pt bands...\c"
 $BANDS_COMMAND < pt.bands.in > pt.bands.out
+check_failure $?
 $ECHO " done"
+
+cat > pt.pdos.in << EOF
+ &projwfc
+    prefix='Pt',
+    outdir='$TMP_DIR/'
+    filpdos='pt',
+    emin=10, emax=25
+ /
+EOF
+
+$ECHO "  running projuected DOS for Pt with spin-orbit ...\c"
+$PDOS_COMMAND -in pt.pdos.in > pt.pdos.out
+check_failure $?
+$ECHO " done\c"
 
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/Pt.*

@@ -1,5 +1,6 @@
 This example shows how to use bands.x to check the band symmetry of
 fcc-Pt with a fully relativistic US-PP which includes spin-orbit effects.
+It also computes the DOS and wavefunctions projected on atomic states.
 
 The calculation proceeds as follows:
 
@@ -11,3 +12,6 @@ The calculation proceeds as follows:
 
 3) use the bands.x program to check the band symmetry (input=pt.bands.in,
    output=pt.bands.out).
+
+4) use the projwfc.x program to compute the DOS projected on atomic states
+  (input=pt.pdos.in, output=pt.pdos.out).
