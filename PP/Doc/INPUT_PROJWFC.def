@@ -269,9 +269,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 
 	subsection -title {Important notices} {
 	    text {
-		* The tetrahedron method is presently not implemented.
+		The tetrahedron method is used if
+
+		    - the input data file has been produced by pw.x using the option
+		      occupations='tetrahedra', AND
+
+		    - a value for degauss is not given as input to namelist &projwfc
 		
-		* Gaussian broadening is used in all cases:
+		* Gaussian broadening is used in all other cases:
 
 		    - if @ref degauss is set to some value in namelist &PROJWFC, that value
 		      (and the optional value for ngauss) is used

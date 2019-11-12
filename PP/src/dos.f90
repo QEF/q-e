@@ -105,27 +105,25 @@ PROGRAM do_dos
      SELECT CASE (TRIM(bz_sum)) 
         CASE ('tetrahedra', 'TETRAHEDRA') 
            ltetra = .TRUE. 
+           lgauss = .FALSE.
            tetra_type = 0 
-        CASE ('tetrahedra_lin' ) 
+        CASE ('tetrahedra_lin', 'TETRAHEDRA_LIN' ) 
            ltetra = .TRUE. 
+           lgauss = .FALSE.
            tetra_type = 1 
         CASE ('tetrahedra_opt' , 'TETRAHEDRA_OPT') 
            ltetra = .TRUE. 
+           lgauss = .FALSE.
            tetra_type = 2 
-        CASE default 
-           tetra_type = -5 
+        CASE ('smearing')
+           ltetra = .FALSE.
+           lgauss = .TRUE. 
      END SELECT 
-     IF ( ltetra .and. nk1*nk2*nk3 .eq. 0 ) &
-        CALL errore ('dos:', 'tetrahedra integration selected on input can only be used with automatic ' //&
-                              'uniform k_point meshes.', tetra_type + 1) 
-     IF (degauss1/=0.d0 .and. tetra_type < 0 ) THEN
-        degauss=degauss1
-        ngauss =ngauss1
-        WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
-             &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
-        ltetra=.false.
-        lgauss=.true.
-     ELSEIF (ltetra) THEN
+     !
+     IF ( ltetra .AND. degauss1==0.d0 ) THEN
+        !
+        IF ( nk1*nk2*nk3 .eq. 0 ) CALL errore ('dos:', 'tetrahedra integration only with automatic ' // &
+                            & 'uniform k_point meshes.', tetra_type + 1) 
         !
         ! info on tetrahedra is no longer saved to file and must be rebuilt
         !
@@ -152,17 +150,26 @@ PROGRAM do_dos
                 &                k1, k2, k3, nk1, nk2, nk3, nks2, xk, 1)
            !
         END IF
+        lgauss = .FALSE.
         !
-     ELSEIF (lgauss) THEN
+     ELSE IF ( degauss1/=0.d0 ) THEN
+        degauss=degauss1
+        ngauss =ngauss1
+        WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
+             &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+        lgauss=.true.
+        ltetra=.false.
+     ELSEIF ( lgauss ) THEN
         WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+        ltetra=.false.
      ELSE
         degauss=DeltaE/rytoev
         ngauss =0
         WRITE( stdout,'(/5x,"Gaussian broadening (default values): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
-        ltetra=.false.
         lgauss=.true.
+        ltetra=.false.
      ENDIF
      !
      ! find min and max energy for plot (band extrema if not set)

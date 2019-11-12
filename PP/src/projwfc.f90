@@ -156,7 +156,7 @@ PROGRAM do_projwfc
   !
   !   Tetrahedron method
   !
-  IF ( ltetra ) THEN
+  IF ( ltetra .AND. degauss1==0.d0 ) THEN
      !
      ! info on tetrahedra is no longer saved to file and must be rebuilt
      !
@@ -185,6 +185,7 @@ PROGRAM do_projwfc
           &              nk1, nk2, nk3, nks2, xk_collect, 1)
      !
      DEALLOCATE(xk_collect)
+     lgauss = .FALSE.
      !
   ELSE IF (degauss1/=0.d0) THEN
      degauss=degauss1
@@ -192,15 +193,18 @@ PROGRAM do_projwfc
      WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
      lgauss=.true.
+     ltetra=.false.
   ELSE IF (lgauss) THEN
      WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+     ltetra=.false.
   ELSE
      degauss=DeltaE/rytoev
      ngauss =0
      WRITE( stdout,'(/5x,"Gaussian broadening (default values): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
      lgauss=.true.
+     ltetra=.false.
   ENDIF
   !
   IF ( filpdos == ' ') filpdos = prefix
@@ -212,11 +216,8 @@ PROGRAM do_projwfc
   ELSE IF ( pawproj ) THEN
      CALL projwave_paw (filproj)
   ELSE
-     IF ( lforcet .OR. noncolin ) THEN
-        CALL projwave_nc(filproj, lsym, lwrite_overlaps, lbinary_data,ef_0)
-     ELSE
-        CALL projwave (filproj, lsym, lwrite_overlaps, lbinary_data )
-     ENDIF
+     CALL projwave(filproj, lsym, lwrite_overlaps, lbinary_data )
+     IF ( lforcet ) CALL force_theorem ( ef_0, filproj )
   ENDIF
   !
   IF ( ionode .AND. .NOT. lforcet ) THEN
@@ -829,9 +830,9 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
               WRITE( stdout,'(5X,"psi = ",f5.3,"*[#",i4,"]")',advance='no') &
                  proj1 (i), idx(i)
            ELSE
-              IF ( MOD(i,5) == 0 ) WRITE( stdout,'(/,10X)', advance='no' )
               WRITE( stdout,'(A,f5.3,"*[#",i4,"]")',advance='no') &
                  plus, proj1 (i), idx(i)
+              IF ( MOD(i,5) == 0 ) WRITE( stdout,'(/,10X)', advance='no' )
            END IF
         ENDDO
         WRITE( stdout, * )
@@ -895,214 +896,7 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
   !
 END SUBROUTINE write_proj
 !
-!-----------------------------------------------------------------------
-SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
-  !-----------------------------------------------------------------------
-  !
-  USE io_global,  ONLY : stdout, ionode
-  USE ions_base,  ONLY : tau, nat
-  USE basis,      ONLY : natomwfc, swfcatom
-  USE klist, ONLY: xk, nks, nkstot, nelec, ngk, igk_k
-  USE lsda_mod, ONLY: nspin
-  USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
-  USE symm_base, ONLY: nsym, irt, t_rev
-  USE wvfct, ONLY: npwx, nbnd, et
-  USE control_flags, ONLY: gamma_only
-  USE uspp, ONLY: nkb, vkb
-  USE uspp_param, ONLY: upf
-  USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files,  ONLY : restart_dir
-  USE pw_restart_new,ONLY : read_collected_wfc
-  USE wavefunctions, ONLY: evc
-  USE mp_pools,   ONLY : intra_pool_comm
-  USE mp,        ONLY : mp_sum
-  !
-  USE spin_orb,   ONLY: lspinorb, domag, lforcet
-  USE projections
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(len=*) :: filproj
-  LOGICAL :: lwrite_ovp, lbinary
-  LOGICAL :: lsym
-  REAL(DP) :: ef_0
-  !
-  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
-             n2, l, nwfc, lmax_wfc, is, npw
-  REAL(DP) :: jj
-  REAL(DP), ALLOCATABLE :: e (:)
-  COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
-  COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), proj0(:,:)
-  CHARACTER(256) :: filename
-  LOGICAL :: freeswfcatom
-  !
-  IF (.not.noncolin) CALL errore('projwave_nc','called in the wrong case',1)
-  IF (gamma_only) CALL errore('projwave_nc','gamma_only not yet implemented',1)
-  IF ( natomwfc <= 0 ) CALL errore &
-       ('projwave_nc', 'Cannot project on zero atomic wavefunctions!', 1)
-  !
-  WRITE( stdout, '(/5x,"Calling projwave_nc .... ")')
-  !
-  ! fill structure nlmchi
-  !
-  CALL fill_nlmchi ( natomwfc, nwfc, lmax_wfc )
-  !
-  ALLOCATE(wfcatom (npwx*npol,natomwfc) )
-  IF (.not. ALLOCATED(swfcatom)) THEN
-     ALLOCATE(swfcatom (npwx*npol, natomwfc ) )
-     freeswfcatom = .true.
-  ELSE
-     freeswfcatom = .false.
-  ENDIF
-  CALL allocate_bec_type (nkb, natomwfc, becp )
-  ALLOCATE(e (natomwfc) )
-  ALLOCATE(work (natomwfc, natomwfc) )
-  !
-  ALLOCATE(overlap (natomwfc, natomwfc) )
-  ALLOCATE(proj0(natomwfc,nbnd) )
-  ALLOCATE(proj (natomwfc, nbnd, nkstot) )
-  ALLOCATE(proj_aux (natomwfc, nbnd, nkstot) )
-  overlap  = (0.d0,0.d0)
-  proj0    = (0.d0,0.d0)
-  proj     = 0.d0
-  proj_aux = (0.d0,0.d0)
-  !
-  IF ( lwrite_ovp ) THEN
-      ALLOCATE( ovps_aux(natomwfc, natomwfc, nkstot) )
-  ELSE
-      ALLOCATE( ovps_aux(1,1,1) )
-  ENDIF
-  ovps_aux  = (0.d0, 0.d0)
-  !
-  !    loop on k points
-  !
-  DO ik = 1, nks
-     wfcatom = (0.d0,0.d0)
-     swfcatom= (0.d0,0.d0)
-     npw = ngk(ik)
-
-     CALL read_collected_wfc ( restart_dir(), ik, evc )
-
-!---- AlexS
-!    To project on real harmonics, not on spinors.  
-     IF (lforcet) THEN
-        CALL atomic_wfc_nc_updown(ik, wfcatom)
-     ELSE
-        CALL atomic_wfc_nc_proj (ik, wfcatom)
-     ENDIF
-!----
-     !
-     CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
-
-     CALL calbec ( npw, vkb, wfcatom, becp )
-
-     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-     !
-     ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i>
-     ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j>
-     !
-     CALL ZGEMM ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, &
-                 npwx*npol, swfcatom, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
-     CALL mp_sum ( overlap, intra_pool_comm )
-     !
-     ! save the overlap matrix
-     !
-     IF ( lwrite_ovp ) THEN
-         !
-         ovps_aux(:,:,ik) = overlap(:,:)
-         !
-     ENDIF
-
-     !
-     ! calculate O^{-1/2}
-     !
-     CALL cdiagh (natomwfc, overlap, natomwfc, e, work)
-     DO i = 1, natomwfc
-        e (i) = 1.d0 / dsqrt (e (i) )
-     ENDDO
-     DO i = 1, natomwfc
-        DO j = i, natomwfc
-          overlap (i, j) = (0.d0, 0.d0)
-          DO k = 1, natomwfc
-            overlap(i, j) = overlap(i, j) + e(k) * work(j, k) * conjg(work (i, k) )
-          ENDDO
-          IF (j /= i) overlap (j, i) = conjg (overlap (i, j))
-        ENDDO
-     ENDDO
-     !
-     ! calculate wfcatom = O^{-1/2} \hat S | phi>
-     !
-     CALL ZGEMM ('n', 't', npwx*npol, natomwfc, natomwfc, (1.d0, 0.d0) , &
-     swfcatom, npwx*npol,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx*npol)
-     !
-     ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>
-     !
-     CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, &
-                 npwx*npol, evc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
-     CALL mp_sum ( proj0( :, 1:nbnd ), intra_pool_comm )
-     !
-     proj_aux(:,:,ik) = proj0(:,:)
-     !
-     IF (lsym) THEN
-        IF ( lspinorb ) THEN 
-           CALL sym_proj_so ( domag, proj0, proj(:,:,ik) )
-        ELSE
-           CALL sym_proj_nc ( proj0, proj(:,:,ik) )
-        END IF
-     ELSE
-        proj(:,:,ik)=abs(proj0(:,:))**2
-     ENDIF
-
-     ! on k-points
-  ENDDO
-  !
-  !-- Output for the Force Theorem (AlexS)
-  !
-  IF ( lforcet ) CALL force_theorem ( proj, ef_0, filproj )
-  !
-  DEALLOCATE (work)
-  DEALLOCATE (proj0)
-  DEALLOCATE (e)
-  CALL deallocate_bec_type (becp)
-  DEALLOCATE (overlap)
-  DEALLOCATE (wfcatom)
-  IF (freeswfcatom) DEALLOCATE (swfcatom)
-  !
-  !   vectors et and proj are distributed across the pools
-  !   collect data for all k-points to the first pool
-  !
-  CALL poolrecover (et,       nbnd, nkstot, nks)
-  CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks)
-  CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
-  !
-  IF ( lwrite_ovp ) THEN
-      CALL poolrecover (ovps_aux, 2 * natomwfc * natomwfc, nkstot, nks)
-  ENDIF
-  !
-
-  IF ( ionode ) THEN
-     !
-     ! write on the file filproj
-     !
-     CALL write_proj_file ( filproj, proj )
-     !
-     ! write projections to file using iotk
-     !
-     CALL write_proj_iotk( "atomic_proj", lbinary, proj_aux, lwrite_ovp, ovps_aux )
-     !
-     DEALLOCATE( proj_aux, ovps_aux )
-     !
-     ! write on the standard output file
-     !
-     CALL write_proj( lmax_wfc, filproj, proj ) 
-     !
-  ENDIF
-  !
-  RETURN
-  !
-END SUBROUTINE projwave_nc
-!
-SUBROUTINE force_theorem ( proj, ef_0, filproj )
+SUBROUTINE force_theorem ( ef_0, filproj )
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : rytoev
@@ -1113,20 +907,18 @@ SUBROUTINE force_theorem ( proj, ef_0, filproj )
   USE wvfct,      ONLY : wg, et, nbnd
   USE mp,         ONLY : mp_sum
   USE mp_pools,   ONLY : inter_pool_comm, intra_pool_comm
-  USE projections,ONLY : nlmchi
+  USE projections,ONLY : proj, nlmchi
   !
   !---- Force Theorem -- (AlexS)
   !
   IMPLICIT NONE
-  REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
   CHARACTER (len=*), INTENT(in) :: filproj
   REAL(DP), INTENT(IN) :: ef_0
+  !
   INTEGER :: ik, i, nwfc, na, l
   REAL(DP) :: eband_proj_tot, eband_tot, psum
   REAL(DP), ALLOCATABLE :: eband_proj(:)
   CHARACTER(len=256) :: filename
-  !
-  !    loop on k points
   !
   CALL weights()
   !   write(6,*) 'ef_0 = ', ef_0
@@ -1134,6 +926,8 @@ SUBROUTINE force_theorem ( proj, ef_0, filproj )
   eband_tot = 0.d0
   ALLOCATE (eband_proj(natomwfc))
   eband_proj = 0.d0
+  !
+  !    loop on k points
   !
   DO ik = 1, nks
      !
@@ -1151,7 +945,9 @@ SUBROUTINE force_theorem ( proj, ef_0, filproj )
   CALL mp_sum( eband_proj, inter_pool_comm )
   !
   IF ( ionode ) THEN
-     
+     !
+     !-- Output for the Force Theorem (AlexS)
+     !
      filename = trim(filproj)
      OPEN (4,file=filename,form='formatted', status='unknown')
      
@@ -1173,7 +969,7 @@ SUBROUTINE force_theorem ( proj, ef_0, filproj )
               ELSEIF (l.eq.3) THEN 
                  write(4,*) '... {f_up}, {f_down}'
               ELSE
-                 call errore('projwave_nc','Force Theorem not implemented for l > 2',1)
+                 call errore('force_theorem','Force Theorem not implemented for l > 2',1)
               ENDIF
               DO i = 1, 2*l + 1
                  WRITE(4,'(2e30.10)') eband_proj(nwfc-1+i)*rytoev, &
@@ -1213,12 +1009,10 @@ SUBROUTINE projwave_paw( filproj)
   USE atom,       ONLY : rgrid, msh
   USE io_global, ONLY : stdout, ionode
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE basis,     ONLY : natomwfc, swfcatom
   USE constants, ONLY: rytoev
   USE klist, ONLY: xk, nks, nkstot, nelec, igk_k, ngk
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE wvfct, ONLY: npwx, nbnd
-  USE control_flags, ONLY: gamma_only
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY : upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -1240,10 +1034,6 @@ SUBROUTINE projwave_paw( filproj)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ...
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
-  ! ... or for gamma-point.
-  INTEGER  :: nksinit, nkslast
-  LOGICAL :: lsym
-  LOGICAL :: freeswfcatom
   !
   !
   WRITE( stdout, '(/5x,"Calling projwave_paw .... ")')
@@ -1586,11 +1376,14 @@ END SUBROUTINE write_proj_file
 SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
   !
+  USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout, ionode
   USE ions_base, ONLY : nat
   USE basis,     ONLY : natomwfc, swfcatom
   USE klist,     ONLY : xk, nks, nkstot, nelec, ngk, igk_k
   USE lsda_mod,  ONLY : nspin
+  USE noncollin_module, ONLY: noncolin, npol
+  USE spin_orb,  ONLY : lspinorb, domag, lforcet
   USE wvfct,     ONLY : npwx, nbnd, et
   USE uspp,      ONLY : nkb, vkb
   USE becmod,    ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
@@ -1599,7 +1392,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE pw_restart_new,ONLY : read_collected_wfc
   USE wavefunctions, ONLY : evc
   !
-  USE projections
+  USE projections, ONLY: nlmchi, fill_nlmchi, proj, proj_aux, ovps_aux
   !
   USE io_files,  ONLY: nd_nmbr
   USE mp,        ONLY: mp_bcast
@@ -1612,9 +1405,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=*) :: filproj
-  LOGICAL           :: lwrite_ovp, lbinary
-  INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
+  CHARACTER (len=*), INTENT(IN) :: filproj
+  LOGICAL, INTENT(IN)    :: lsym
+  LOGICAL, INTENT(IN)    :: lbinary
+  LOGICAL, INTENT(INOUT) :: lwrite_ovp
+  !
+  INTEGER :: npw, npw_, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
        lmax_wfc, is
   REAL(DP),    ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:), proj0(:,:)
@@ -1625,10 +1421,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
   !
   INTEGER  :: nksinit, nkslast
-  LOGICAL :: lsym
   LOGICAL :: freeswfcatom
-  LOGICAL :: la_para
-  ! flag for parallel linear algebra
   !
   INTEGER :: iunaux
   INTEGER, EXTERNAL :: find_free_unit
@@ -1637,11 +1430,13 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   TYPE(la_descriptor) :: desc
   TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
-    ! matrix distribution descriptors
+  ! matrix distribution descriptors
   INTEGER :: nx, nrl, nrlx
-    ! maximum local block dimension
+  ! maximum local block dimension
+  LOGICAL :: la_para
+  ! flag for parallel linear algebra
   LOGICAL :: la_proc
-    ! distinguishes active procs in parallel linear algebra
+  ! distinguishes active procs in parallel linear algebra
   !
   !
   IF ( natomwfc <= 0 ) CALL errore &
@@ -1662,12 +1457,12 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   IF( la_para ) lwrite_ovp = .FALSE. ! not implemented
   !
   IF (.not. ALLOCATED(swfcatom)) THEN
-     ALLOCATE(swfcatom (npwx , natomwfc ) )
+     ALLOCATE(swfcatom (npwx*npol , natomwfc ) )
      freeswfcatom = .true.
   ELSE
      freeswfcatom = .false.
   ENDIF
-  ALLOCATE(wfcatom (npwx, natomwfc) )
+  ALLOCATE(wfcatom (npwx*npol, natomwfc) )
   ALLOCATE(e (natomwfc) )
   !
   ! Open file as temporary storage
@@ -1701,9 +1496,17 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      !
      npw = ngk(ik)
      CALL read_collected_wfc ( restart_dir() , ik, evc )
-
-     CALL atomic_wfc (ik, wfcatom)
-
+     !
+     wfcatom(:,:) = (0.0_dp, 0.0_dp)
+     IF (lforcet) THEN
+        !    AlexS - To project on real harmonics, not on spinors.  
+        CALL atomic_wfc_nc_updown(ik, wfcatom)
+     ELSE IF ( noncolin ) THEN
+        CALL atomic_wfc_nc_proj (ik, wfcatom)
+     ELSE
+        CALL atomic_wfc (ik, wfcatom)
+     ENDIF
+     !
      CALL allocate_bec_type (nkb, natomwfc, becp )
      !
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
@@ -1721,7 +1524,13 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         ALLOCATE(overlap_d (1, 1) )
      ENDIF
      overlap_d = (0.d0,0.d0)
+     npw_=npw
+     IF ( noncolin ) npw_=npol*npwx
      IF ( gamma_only ) THEN
+        !
+        ! in the Gamma-only case the overlap matrix (real) is copied 
+        ! to a complex one as for the general case - easy but wasteful
+        !
         IF( la_proc ) THEN
            ALLOCATE(roverlap_d (nx, nx) )
         ELSE
@@ -1730,20 +1539,17 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         roverlap_d = 0.d0
         CALL calbec_ddistmat( npw, wfcatom, swfcatom, natomwfc, nx, roverlap_d )
         overlap_d(:,:)=cmplx(roverlap_d(:,:),0.0_dp, kind=dp)
-        ! TEMP: diagonalization routine for real matrix should be used instead
-     ELSE
-        CALL calbec_zdistmat( npw, wfcatom, swfcatom, natomwfc, nx, overlap_d )
+     ELSE 
+        CALL calbec_zdistmat( npw_, wfcatom, swfcatom, natomwfc, nx, overlap_d )
      ENDIF
      !
      ! save overlap matrix if required
      !
      IF ( lwrite_ovp ) WRITE( iunaux ) overlap_d
      !
-     ! calculate O^{-1/2}
+     ! diagonalize the overlap matrix
      !
      IF ( la_proc ) THEN
-        !
-        !  Compute local dimension of the cyclically distributed matrix
         !
         ALLOCATE(work_d (nx, nx) )
 
@@ -1753,10 +1559,16 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         ALLOCATE( diag( nrlx, natomwfc ) )
         ALLOCATE( vv( nrlx, natomwfc ) )
         !
+        !  re-distribute the overlap matrix for parallel diagonalization
+        !
         CALL blk2cyc_zredist( natomwfc, diag, nrlx, natomwfc, overlap_d, nx, nx, desc )
+        !
+        ! parallel diagonalization
         !
         CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, &
            desc%npc * desc%npr, desc%mype, desc%comm )
+        !
+        !  bring distributed eigenvectors back to original distribution
         !
         CALL cyc2blk_zredist( natomwfc, vv, nrlx, natomwfc, work_d, nx, nx, desc )
         !
@@ -1768,6 +1580,8 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      ENDIF
 
      CALL mp_bcast( e, root_pool, intra_pool_comm )
+
+     ! calculate O^{-1/2} (actually, its transpose)
 
      DO i = 1, natomwfc
         e (i) = 1.d0 / dsqrt (e (i) )
@@ -1791,12 +1605,11 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      ! calculate wfcatom = O^{-1/2} \hat S | phi>
      !
      IF ( gamma_only ) THEN
-        ! TEMP: diagonalization routine for real matrix should be used instead
         roverlap_d(:,:)=REAL(overlap_d(:,:),DP)
-        CALL wf_times_roverlap( nx, swfcatom, roverlap_d, wfcatom )
+        CALL wf_times_roverlap( nx, npw, swfcatom, roverlap_d, wfcatom )
         DEALLOCATE( roverlap_d )
      ELSE
-        CALL wf_times_overlap( nx, swfcatom, overlap_d, wfcatom )
+        CALL wf_times_overlap( nx, npw_, swfcatom, overlap_d, wfcatom )
      ENDIF
      DEALLOCATE( overlap_d )
      !
@@ -1818,13 +1631,19 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
      ELSE
         !
         ALLOCATE( proj0(natomwfc,nbnd) )
-        CALL calbec ( npw, wfcatom, evc, proj0)
+        CALL calbec ( npw_, wfcatom, evc, proj0)
         WRITE( iunaux ) proj0
         IF (lsym) THEN
-           CALL sym_proj_k (proj0, proj(:,:,ik))
+           IF ( lspinorb ) THEN 
+              CALL sym_proj_so ( domag, proj0, proj(:,:,ik) )
+           ELSE IF (noncolin) THEN
+              CALL sym_proj_nc ( proj0, proj(:,:,ik) )
+           ELSE
+              CALL sym_proj_k (proj0, proj(:,:,ik))
+           END IF
         ELSE
            proj(:,:,ik)=abs(proj0(:,:))**2
-        ENDIF
+        END IF
         DEALLOCATE (proj0)
         !
      ENDIF
@@ -2059,11 +1878,12 @@ CONTAINS
   !
   !
   !
-  SUBROUTINE wf_times_overlap( nx, swfc, ovr, wfc )
+  SUBROUTINE wf_times_overlap( nx, npw, swfc, ovr, wfc )
     !
-     INTEGER, INTENT(in) :: nx
+     INTEGER, INTENT(in) :: nx, npw
      COMPLEX(DP) :: swfc( :, : ), ovr( :, : ), wfc( :, : )
      !
+     INTEGER :: npwx
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
@@ -2071,6 +1891,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
+     npwx = SIZE(swfc,1)
      DO ipc = 1, desc%npc
         !
         nc = desc_ip( 1, ipc )%nc
@@ -2114,11 +1935,11 @@ CONTAINS
   END SUBROUTINE wf_times_overlap
 
   !
-  SUBROUTINE wf_times_roverlap( nx, swfc, ovr, wfc )
+  SUBROUTINE wf_times_roverlap( nx, npw, swfc, ovr, wfc )
 
      USE gvect, ONLY : gstart
 
-     INTEGER, INTENT(in) :: nx
+     INTEGER, INTENT(in) :: nx, npw
      COMPLEX(DP) :: swfc( :, : ), wfc( :, : )
      REAL(DP)    :: ovr( :, : )
      !
@@ -2128,7 +1949,7 @@ CONTAINS
      REAL(DP) :: beta
 
      npw2  = 2*npw
-     npwx2 = 2*npwx
+     npwx2 = 2*SIZE(swfc,1)
 
      ALLOCATE( vtmp( nx, nx ) )
      !
