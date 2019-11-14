@@ -248,7 +248,6 @@ SUBROUTINE c_phase
    REAL(DP) :: gpar(3)
    REAL(DP) :: gtr(3)
    REAL(DP) :: gvec
-!unused   REAL(DP), ALLOCATABLE :: loc_k(:)
    REAL(DP), ALLOCATABLE :: pdl_elec(:)
    REAL(DP), ALLOCATABLE :: phik(:)
    REAL(DP) :: phik_ave
@@ -347,7 +346,6 @@ SUBROUTINE c_phase
 
 !  --- Allocate memory for arrays ---
    ALLOCATE(phik(nstring))
-!unused   ALLOCATE(loc_k(nstring))
    ALLOCATE(cphik(nstring))
    ALLOCATE(wstring(nstring))
    ALLOCATE(pdl_elec(nstring))
@@ -717,7 +715,6 @@ SUBROUTINE c_phase
             phik(istring)=0d0
             cphik(istring)=cmplx(1d0,0d0)
          endif
-!unused         loc_k(istring)= - (nppstr-1) / gvec**2 / nbnd_occ *log(zeta_mod)
 
 !     --- End loop over orthogonal k-points ---
       END DO !kort
@@ -758,8 +755,8 @@ SUBROUTINE c_phase
         dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
         phik(istring)=theta0+dtheta
      end do
-!REC First you need to multiply phase by two if only summed over 1 set of bands for non-spin-polarized case
-     if(nspin_lsda.eq.1)phik(1:istring)=2d0*phik(1:istring)        
+!REC First you need to multiply phase by two if only summed over 1 set of bands for non-spin-polarized case NO--summed below
+!     if(nspin_lsda.eq.1)phik(1:istring)=2d0*phik(1:istring)        
 !REC Second you need to take mod so phase is -Pi to Pi
       DO kort=1,nkort
         istring=kort+(is-1)*nkort
@@ -793,15 +790,10 @@ SUBROUTINE c_phase
 
 !  -------------------------------------------------------------------------   !
 !  -------------------------------------------------------------------------   !
-   pdl_elec=phik/tpi
    pdl_elec_up=phiup/tpi
    pdl_elec_dw=phidw/tpi
 
-   IF (nspin == 1) THEN
-      pdl_elec_tot=sum(pdl_elec)
-   ELSE IF (nspin == 2 .OR. nspin == 4) THEN
-      pdl_elec_tot=pdl_elec_up+pdl_elec_dw
-   END IF
+   pdl_elec_tot=pdl_elec_up+pdl_elec_dw
 !  you need to do mod again!
    pdl_elec_tot=pdl_elec_tot-nint(pdl_elec_tot)
    pdl_elec_up=pdl_elec_up-nint(pdl_elec_up)
@@ -828,9 +820,9 @@ SUBROUTINE c_phase
          pdl_ion(na)=pdl_ion(na)+zv(ityp(na))*tau(i,na)*gpar(i)
       ENDDO
       IF (mod_ion(na) == 1) THEN
-         pdl_ion(na)=pdl_ion(na)-0.5_dp*nint(pdl_ion(na)/0.5_dp)
-      ELSE IF (mod_ion(na) == 2) THEN
          pdl_ion(na)=pdl_ion(na)-1.0_dp*nint(pdl_ion(na)/1.0_dp)
+      ELSE IF (mod_ion(na) == 2) THEN
+         pdl_ion(na)=pdl_ion(na)-2.0_dp*nint(pdl_ion(na)/2.0_dp)
       END IF
    ENDDO
 !  --- Add up the phases modulo 2 iff the ionic charges are even numbers ---
@@ -839,10 +831,10 @@ SUBROUTINE c_phase
    ! This doesn't do anything since there is not an average but a sum
    pdl_ion_tot=SUM(pdl_ion(1:nat))
    IF (lodd) THEN
-      pdl_ion_tot=pdl_ion_tot-0.5d0*nint(pdl_ion_tot/0.5d0)
+      pdl_ion_tot=pdl_ion_tot-1.0d0*nint(pdl_ion_tot/1.0d0)
       mod_ion_tot=1
    else
-      pdl_ion_tot=pdl_ion_tot-1.d0*nint(pdl_ion_tot/1.d0)
+      pdl_ion_tot=pdl_ion_tot-2.d0*nint(pdl_ion_tot/2.d0)
       mod_ion_tot=2
    endif
    
@@ -1007,7 +999,6 @@ SUBROUTINE c_phase
    DEALLOCATE(pdl_elec)
    DEALLOCATE(wstring)
    DEALLOCATE(cphik)
-!unused   DEALLOCATE(loc_k)
    DEALLOCATE(phik)
    DEALLOCATE(ln)
    DEALLOCATE(aux)
