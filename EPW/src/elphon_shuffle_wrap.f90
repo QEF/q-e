@@ -229,11 +229,13 @@
   ENDDO
   !
   IF (maxvalue > nqxq) THEN
-    !IF (ALLOCATED(qrad)) DEALLOCATE(qrad)
-    IF (epwread) THEN
-      ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
-      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad(maxvalue, nbetam * ', 1)
+    IF (.NOT. epwread) THEN
+      DEALLOCATE(qrad, STAT = ierr)
+      IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating qrad', 1) 
     ENDIF
+    ALLOCATE(qrad(maxvalue, nbetam * (nbetam + 1) / 2, lmaxq, nsp), STAT = ierr)
+    IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating qrad ', 1)
+    ! 
     qrad(:, :, :, :) = zero
     ! RM - need to call init_us_1 to re-calculate qrad 
     CALL init_us_1()

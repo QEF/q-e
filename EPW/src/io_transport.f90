@@ -71,9 +71,9 @@
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of element written to file 
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #endif   
     INTEGER, INTENT(in) :: ctype
@@ -902,7 +902,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_merge_parallel()
+    SUBROUTINE iter_merge()
     !----------------------------------------------------------------------------
     USE kinds,            ONLY : DP
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
@@ -949,6 +949,17 @@
     !! Input output units
     INTEGER :: ierr
     !! Error status
+#if defined(__MPI)
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
+    !! Size of what we write
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
+    !! Offset while writing scattering to files
+#else
+    INTEGER(KIND = 8) :: lsize
+    !! Size of what we write
+    INTEGER(KIND = 8) :: lrepmatw
+    !! Offset while writing scattering to files
+#endif
     INTEGER, ALLOCATABLE :: sparse(:, :)
     !! Vaariable for reading and writing the files
     INTEGER, ALLOCATABLE :: sparsecb(:, :)
@@ -957,19 +968,14 @@
     !! Variable for reading and writing trans_prob
     REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
     !! Variable for reading and writing trans_prob
-#if defined(__MPI)
-    INTEGER (KIND = MPI_OFFSET_KIND) :: lsize
-    !! Size of what we write
-    INTEGER (KIND = MPI_OFFSET_KIND) :: lrepmatw
-    !! Offset while writing scattering to files
     !
     ! for metals merge like it's for holes
     IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. assume_metal) THEN
       !
       ALLOCATE(trans_prob(lrepmatw2_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating trans_prob', 1)
       ALLOCATE(sparse(5, lrepmatw2_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparse', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating sparse', 1)
       !
       io_u(1) = iunepmat_merge
       io_u(2) = iunsparseq_merge
@@ -994,10 +1000,20 @@
       lrepmatw2_tot = 0
       lrepmatw2_tot(my_pool_id + 1) = lrepmatw2_merge
       CALL mp_sum(lrepmatw2_tot, world_comm)
+#if defined(__MPI)
       DO ich = 1, 6
-        CALL mp_barrier(world_comm)
-        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL,io_u(ich), ierr)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, io_u(ich), ierr)
       ENDDO
+#else
+      OPEN(UNIT = io_u(1), FILE = filename(1), IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw2_merge * 8)
+      DO ich = 2, 6
+        OPEN(UNIT = io_u(ich), FILE = filename(ich), IOSTAT = ierr, FORM = 'unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw2_merge * 4)
+      ENDDO
+#endif
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error in opening .epmatkq1 or .sparseX file', 1)
+
       !
       DO ich = 1, 2 
         ! Read files per processor
@@ -1017,36 +1033,50 @@
         ENDIF
         CLOSE(iunepmat, STATUS = 'delete')
         IF (ich == 1) THEN
+#if defined(__MPI)
           lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
           & 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else 
+          WRITE(UNIT = io_u(1), REC = 1, IOSTAT = ierr) trans_prob
+#endif
+          IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .epmatkq1 file', 1)
         ELSE
           DO ifil = 1, 5
+#if defined(__MPI)
             lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
-            CALL MPI_FILE_WRITE_AT(io_u(ifil+1), lrepmatw, sparse(ifil,:), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+            CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparse(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+#else
+            WRITE(UNIT = io_u(ifil + 1), REC = 1, IOSTAT = ierr) sparse(ifil, :)
+#endif
+            IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .sparseX file', 1)
           ENDDO
         ENDIF
       ENDDO
       !
       DO ich = 1, 6
+#if defined(__MPI)
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+#else
+        CLOSE(io_u(ich), STATUS = 'keep')
+#endif
       ENDDO
       !
       DEALLOCATE(trans_prob, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating trans_prob', 1)
       DEALLOCATE(sparse, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparse', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating sparse', 1)
       !
     ENDIF
     IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0)) .AND. .NOT. assume_metal) THEN
       !
       ALLOCATE(trans_probcb(lrepmatw5_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating trans_probcb', 1)
       ALLOCATE(sparsecb(5, lrepmatw5_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparsecb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating sparsecb', 1)
       !
       io_u(1) = iunepmatcb_merge
       io_u(2) = iunsparseqcb_merge
@@ -1071,10 +1101,18 @@
       lrepmatw5_tot = 0
       lrepmatw5_tot(my_pool_id + 1) = lrepmatw5_merge
       CALL mp_sum(lrepmatw5_tot, world_comm)
+#if defined(__MPI)
       DO ich = 1, 6
-        CALL mp_barrier(world_comm)
-        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL, io_u(ich), ierr)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, io_u(ich), ierr)
       ENDDO
+#else
+      OPEN(UNIT = io_u(1), FILE = filename(1), IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw5_merge * 8)
+      DO ich = 2, 6
+        OPEN(UNIT = io_u(ich), FILE = filename(ich), IOSTAT = ierr, FORM = 'unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw5_merge * 4)
+      ENDDO
+#endif
       !
       DO ich = 1, 2
         ! Read files per processor
@@ -1094,34 +1132,47 @@
         ENDIF
         CLOSE(iunepmatcb, STATUS = 'delete')
         IF (ich == 1) THEN
+#if defined(__MPI)
           lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
           & 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else 
+          WRITE(UNIT = io_u(1), REC = 1, IOSTAT = ierr) trans_probcb
+#endif
+          IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .epmatkqcb1 file', 1)
         ELSE
           DO ifil = 1, 5
+#if defined(__MPI)
             lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+#else
+            WRITE(UNIT = io_u(ifil + 1), REC = 1, IOSTAT = ierr) sparsecb(ifil, :)
+#endif
+            IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .sparsecbX file', 1)
           ENDDO
         ENDIF
       ENDDO
       !
       DO ich = 1, 6
+#if defined(__MPI)
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+#else
+        CLOSE(io_u(ich), STATUS = 'keep')
+#endif
       ENDDO
       ! 
       DEALLOCATE(trans_probcb, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating trans_probcb', 1)
       DEALLOCATE(sparsecb, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparsecb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating sparsecb', 1)
       !
     ENDIF ! in all other cases it is still to decide which files to open
     ! 
-#endif
     !----------------------------------------------------------------------------
-    END SUBROUTINE iter_merge_parallel
+    END SUBROUTINE iter_merge
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
@@ -1156,9 +1207,9 @@
     INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of component for conduction band
 #endif  
     ! 

@@ -435,9 +435,9 @@
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Tota number of component for valence band
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of component for conduction band
 #endif    
     !
@@ -469,8 +469,14 @@
     !! Dummy counter for k-points
     INTEGER :: ibtmp
     !! Dummy counter for bands
+    INTEGER :: direct_io_factor
+    !! Direct IO
+    INTEGER(KIND = i4b) :: dum_int
+    !! Dummy integer
     INTEGER(KIND = 8) :: nind
     !! Number of local elements per cores. 
+    INTEGER(KIND = 8) :: unf_recl
+    !! double precision to prevent integer overflow
     INTEGER(KIND = i4b), ALLOCATABLE :: sparse_q(:)
     !! Index mapping for q-points
     INTEGER(KIND = i4b), ALLOCATABLE :: sparse_k(:)
@@ -519,14 +525,15 @@
     REAL(KIND = DP), ALLOCATABLE :: trans_prob(:)
     !! Transition probabilities
     REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
-    !! Transition probabilities for cb    
+    !! Transition probabilities for cb   
+    LOGICAL :: tmp
+ 
     ! 
     etf_all(:, :)    = zero
     wkf_all(:)       = zero
     vkk_all(:, :, :) = zero
     ! 
     ! SP - The implementation only works with MPI so far
-#if defined(__MPI)
     ! Read velocities
     IF (mpime == ionode_id) THEN
       !
@@ -580,8 +587,10 @@
       CLOSE(iufilibtev_sup) 
     ENDIF
     ! 
+#if defined(__MPI)
     CALL MPI_BCAST(ind_tot, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
     CALL MPI_BCAST(ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
+#endif
     CALL mp_bcast(ef0, ionode_id, world_comm)
     CALL mp_bcast(efcb, ionode_id, world_comm)
     CALL mp_bcast(vkk_all, ionode_id, world_comm)
@@ -607,21 +616,32 @@
       ! 
       ! Open file containing trans_prob 
       filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkq1'
+#if defined(__MPI)
       CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmat, ierr)
+#else
+      ! Note : For unformatted RECL, the size must be expressed as an even multiple of four  
+      INQUIRE(IOLENGTH = direct_io_factor) dum1
+      unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
+      !INQUIRE(FILE = 'si.epmatkq1', SIZE = unf_recl)
+      !print*,'The read record length is ',unf_recl
+      OPEN(UNIT = iunepmat, FILE = filint, IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'old', ACCESS = 'direct', RECL = unf_recl)
+#endif
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1', 1)
       !
+#if defined(__MPI)
       ! Offset depending on CPU
       lrepmatw2 = INT(lower_bnd - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND
       ! 
       ! Size of what we read
-      lsize = INT(nind , KIND = MPI_OFFSET_KIND)
+      lsize = INT(nind, KIND = MPI_OFFSET_KIND)
       !
       CALL MPI_FILE_SEEK(iunepmat, lrepmatw2, MPI_SEEK_SET, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunepmat, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
       !      
-      ! Now read the sparse matrix mapping
+      ! Now open the sparse matrix mapping
       CALL MPI_FILE_OPEN(world_comm, 'sparseq', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseq, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparseq', 1)
       CALL MPI_FILE_OPEN(world_comm, 'sparsek', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsek, ierr)
@@ -632,6 +652,29 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsej', 1)
       CALL MPI_FILE_OPEN(world_comm, 'sparset', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparset, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparset', 1)
+#else
+      READ(UNIT = iunepmat, REC = 1, IOSTAT = ierr) trans_prob 
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading X.epmatkq1', 1)
+      ! 
+      ! Now open the sparse matrix mapping
+      INQUIRE(IOLENGTH = direct_io_factor) dum_int
+      unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
+      OPEN(UNIT = iunsparseq, FILE = 'sparseq', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparseq', 1)       
+      OPEN(UNIT = iunsparsek, FILE = 'sparsek', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsek', 1)       
+      OPEN(UNIT = iunsparsei, FILE = 'sparsei', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsei', 1)       
+      OPEN(UNIT = iunsparsej, FILE = 'sparsej', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsej', 1)       
+      OPEN(UNIT = iunsparset, FILE = 'sparset', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparset', 1)       
+#endif
       ! 
       ALLOCATE(sparse_q(nind), STAT = ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparse_q', 1)
@@ -649,6 +692,7 @@
       sparse_j(:) = 0.0d0
       sparse_t(:) = 0.0d0
       !        
+#if defined(__MPI)
       lrepmatw4 = INT(lower_bnd - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       !
       CALL MPI_FILE_SEEK(iunsparseq, lrepmatw4, MPI_SEEK_SET, ierr)
@@ -671,11 +715,24 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK', 1)
       CALL MPI_FILE_READ(iunsparset, sparse_t(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ', 1)
+#else
+      READ(iunsparseq, REC = 1, IOSTAT = ierr) sparse_q
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_q', 1)      
+      READ(iunsparsek, REC = 1, IOSTAT = ierr) sparse_k
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_k', 1)      
+      READ(iunsparsei, REC = 1, IOSTAT = ierr) sparse_i
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_i', 1)      
+      READ(iunsparsej, REC = 1, IOSTAT = ierr) sparse_j
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_j', 1)      
+      READ(iunsparset, REC = 1, IOSTAT = ierr) sparse_t
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparse_t', 1)      
+#endif
       ! 
       ! Now call the ibte to solve the BTE iteratively until convergence
       CALL ibte(nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, sparse_q, sparse_k, &
                 sparse_i, sparse_j, sparse_t, inv_tau_all)
       ! 
+#if defined(__MPI)
       CALL MPI_FILE_CLOSE(iunepmat, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparseq, ierr)
@@ -687,6 +744,21 @@
       CALL MPI_FILE_CLOSE(iunsparsej, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparset, ierr)
+#else
+      CLOSE(iunepmat, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing X.epmatkq1', 1)
+      CLOSE(iunsparseq, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparseq', 1)
+      CLOSE(iunsparsek, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsek', 1)
+      CLOSE(iunsparsei, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsei', 1)
+      CLOSE(iunsparsej, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsej', 1)
+      CLOSE(iunsparset, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparset', 1)
+#endif
+      ! 
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
       DEALLOCATE(trans_prob, STAT = ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating trans_prob', 1)
@@ -702,6 +774,7 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparse_t', 1)
       ! 
     ENDIF
+    ! 
     ! Electrons
     IF (ncarrier > 1E5) THEN
       ! 
@@ -715,9 +788,17 @@
       ! 
       ! Open file containing trans_prob 
       filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkqcb1'
+#if defined(__MPI)
       CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatcb, ierr)
-      IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN X.epmatkqcb1', 1)
+#else
+      INQUIRE(IOLENGTH = direct_io_factor) dum1
+      unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
+      OPEN(UNIT = iunepmatcb, FILE = filint, IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'old', ACCESS = 'direct', RECL = unf_recl)
+#endif
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in opening X.epmatkqcb1', 1)
       !
+#if defined(__MPI)
       ! Offset depending on CPU
       lrepmatw2 = INT(lower_bnd - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND
       ! 
@@ -740,6 +821,29 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsejcb', 1)
       CALL MPI_FILE_OPEN(world_comm, 'sparsetcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsetcb, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_OPEN sparsetcb', 1)    
+#else
+      READ(UNIT = iunepmatcb, REC = 1, IOSTAT = ierr) trans_probcb
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading X.epmatkq1', 1)
+      ! 
+      ! Now open the sparse matrix mapping
+      INQUIRE(IOLENGTH = direct_io_factor) dum_int
+      unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
+      OPEN(UNIT = iunsparseqcb, FILE = 'sparseqcb', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparseqcb', 1)
+      OPEN(UNIT = iunsparsekcb, FILE = 'sparsekcb', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsekcb', 1)
+      OPEN(UNIT = iunsparseicb, FILE = 'sparseicb', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparseicb', 1)
+      OPEN(UNIT = iunsparsejcb, FILE = 'sparsejcb', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsejcb', 1)
+      OPEN(UNIT = iunsparsetcb, FILE = 'sparsetcb', IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('iter_restart', 'Error in reading sparsetcb', 1)
+#endif
       ! 
       ALLOCATE(sparsecb_q(nind), STAT = ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'Error allocating sparsecb_q', 1)
@@ -757,6 +861,7 @@
       sparsecb_j(:) = 0.0d0
       sparsecb_t(:) = 0.0d0
       !        
+#if defined(__MPI)
       lrepmatw4 = INT(lower_bnd - 1_MPI_OFFSET_KIND, KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND
       !
       CALL MPI_FILE_SEEK(iunsparseqcb, lrepmatw4, MPI_SEEK_SET, ierr)
@@ -779,10 +884,23 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_SEEK iunsparsetcb', 1)
       CALL MPI_FILE_READ(iunsparsetcb, sparsecb_t(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_READ iunsparsetcb', 1)
+#else
+      READ(iunsparseqcb, REC = 1, IOSTAT = ierr) sparsecb_q
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_q', 1)
+      READ(iunsparsekcb, REC = 1, IOSTAT = ierr) sparsecb_k
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_k', 1)
+      READ(iunsparseicb, REC = 1, IOSTAT = ierr) sparsecb_i
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_i', 1)
+      READ(iunsparsejcb, REC = 1, IOSTAT = ierr) sparsecb_j
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_j', 1)
+      READ(iunsparsetcb, REC = 1, IOSTAT = ierr) sparsecb_t
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in reading sparsecb_t', 1)
+#endif
       !
       CALL ibte(nind, etf_all, vkk_all, wkf_all, trans_probcb, efcb, &
                 sparsecb_q, sparsecb_k, sparsecb_i, sparsecb_j, sparsecb_t, inv_tau_allcb)
       ! 
+#if defined(__MPI)
       CALL MPI_FILE_CLOSE(iunepmatcb, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparseqcb, ierr)
@@ -795,6 +913,20 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
       CALL MPI_FILE_CLOSE(iunsparsetcb, ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'error in MPI_FILE_CLOSE', 1)
+#else
+      CLOSE(iunepmatcb, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing X.epmatkqcb1', 1)
+      CLOSE(iunsparseqcb, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparseqcb', 1)
+      CLOSE(iunsparsekcb, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsekcb', 1)
+      CLOSE(iunsparseicb, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparseicb', 1)
+      CLOSE(iunsparsejcb, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsejcb', 1)
+      CLOSE(iunsparsetcb, STATUS = 'keep', IOSTAT = ierr)
+      IF (ierr /= 0) CALL errore('iter_restart', 'error in closing sparsetcb', 1)
+#endif
       DEALLOCATE(trans_probcb, STAT = ierr)
       IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating trans_probcb', 1)
       DEALLOCATE(sparsecb_q, STAT = ierr)
@@ -809,7 +941,6 @@
       IF (ierr /= 0) CALL errore('iter_restart', 'Error deallocating sparsecb_t', 1)
       ! 
     ENDIF
-#endif  
     ! 
     !----------------------------------------------------------------------------
     END SUBROUTINE iter_restart
