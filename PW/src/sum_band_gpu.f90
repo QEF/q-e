@@ -1047,7 +1047,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   COMPLEX(DP), ALLOCATABLE :: auxk1_d(:,:), auxk2_d(:,:), aux_nc_d(:,:)
   REAL(DP), ALLOCATABLE    :: auxg_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: becsum_nc_d, auxk1_d, auxk2_d, aux_nc_d
+  attributes(DEVICE) :: auxk1_d, auxk2_d, aux_nc_d
   attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
 #endif
   INTEGER :: ibnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
