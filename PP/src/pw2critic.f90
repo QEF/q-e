@@ -100,11 +100,11 @@ PROGRAM pw2critic
   OPEN(unit=lu1,file=trim(seedname)//".pwc",form='unformatted')
 
   ! header and structural info
-  WRITE (lu1) 1 ! version number
-  WRITE (lu1) nsp, nat
+  WRITE (lu1) 2 ! version number
+  WRITE (lu1) nsp, nat, alat
   WRITE (lu1) atm(1:nsp)
   WRITE (lu1) ityp(1:nat)
-  WRITE (lu1) tau(:,1:nat) * alat
+  WRITE (lu1) tau(:,1:nat)
   WRITE (lu1) at(1:3,1:3)
 
   ! global info for the wavefunction
