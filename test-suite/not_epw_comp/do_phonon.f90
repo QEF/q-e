@@ -112,24 +112,24 @@ SUBROUTINE do_phonon(auxdyn)
            !
         END IF
         !
-        IF ( elph_mat ) THEN
-           CALL elphsum_wannier(iq)
-        ELSEIF( elph_simple ) THEN
-           CALL elphsum_simple()
-        ELSEIF( elph_epa ) THEN
-           CALL elphfil_epa(iq)
-        ELSEIF( elph_yambo ) THEN
-           CALL elph_yambo_eval_and_IO()
-        ELSEIF(elph_tetra == 1) THEN
-           CALL elph_tetra_lambda()
-        ELSEIF(elph_tetra == 2) THEN
-           CALL elph_tetra_gamma()
-        ELSEIF(elph_tetra == 3) THEN
-           CALL elph_scdft()
-        ELSE 
+        !IF ( elph_mat ) THEN
+        !   CALL elphsum_wannier(iq)
+        !ELSEIF( elph_simple ) THEN
+        !   CALL elphsum_simple()
+        !ELSEIF( elph_epa ) THEN
+        !   CALL elphfil_epa(iq)
+        !ELSEIF( elph_yambo ) THEN
+        !   CALL elph_yambo_eval_and_IO()
+        !ELSEIF(elph_tetra == 1) THEN
+        !   CALL elph_tetra_lambda()
+        !ELSEIF(elph_tetra == 2) THEN
+        !   CALL elph_tetra_gamma()
+        !ELSEIF(elph_tetra == 3) THEN
+        !   CALL elph_scdft()
+        !ELSE 
            !CALL elphsum()
            CALL elphsum2()
-        END IF
+        !END IF
         !
      END IF
      !
