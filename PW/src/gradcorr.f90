@@ -152,7 +152,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
      !
-     v = v + e2*( v1x + v1c )
+     v(:,1) = v(:,1) + e2 * ( v1x(:,1) + v1c(:,1) )
+     v(:,2) = v(:,2) + e2 * ( v1x(:,2) + v1c(:,2) )
      !
      ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
      !
