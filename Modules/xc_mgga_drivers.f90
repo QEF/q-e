@@ -301,6 +301,8 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
   !
   !          sc, v1c, v2c as above for correlation
   !
+  USE metagga
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
@@ -340,6 +342,8 @@ END SUBROUTINE tau_xc
 !----------------------------------------------------------------------------------------
 SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !------------------------------------------------------------------------------------
+  !
+  USE metagga
   !
   IMPLICIT NONE
   !
