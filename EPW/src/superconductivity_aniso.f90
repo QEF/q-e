@@ -279,7 +279,7 @@
       ENDIF
       ! 
       tcpu = get_clock('aniso_iaxis')
-      WRITE(stdout, '(\5x, a, i3, a, f18.2, a\)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
+      WRITE(stdout, '(5x, a, i3, a, f18.2, a)') 'itemp = ', itemp, '   total cpu time :', tcpu, ' secs'
       WRITE(stdout,'(a)') ' '
       !
     ENDDO ! itemp

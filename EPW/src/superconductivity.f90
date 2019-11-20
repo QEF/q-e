@@ -93,7 +93,8 @@
     IF (eliashberg .AND. (rand_k .OR. rand_q) .AND. (fila2f == ' ')) &
       CALL errore('eliashberg_init', 'eliashberg requires a uniform grid when fila2f is not used', 1)
     IF (eliashberg .AND. (MOD(nkf1, nqf1) /= 0 .OR. MOD(nkf2, nqf2) /= 0 .OR. MOD(nkf3, nqf3) /= 0 ) .AND. (fila2f == ' ')) &
-      CALL errore('eliashberg_init', 'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used', 1)
+      CALL errore('eliashberg_init', &
+                  'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used', 1)
     !
     DO itemp = 1, ntempxx
       IF (temps(itemp) > 0.d0) THEN
