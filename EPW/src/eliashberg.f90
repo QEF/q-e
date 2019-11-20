@@ -15,13 +15,13 @@
   USE io_global,         ONLY : stdout 
   USE epwcom,            ONLY : liso, fila2f, gap_edge, lreal, limag, laniso 
   USE eliashbergcom,     ONLY : gap0
-  USE superconductivity, ONLY : eliashberg_init, evaluate_a2f_lambda, & 
+  USE supercond, ONLY : eliashberg_init, evaluate_a2f_lambda, & 
                                 estimate_tc_gap, deallocate_eliashberg_aniso, & 
                                 deallocate_eliashberg_elphon
   USE io_eliashberg,     ONLY : read_a2f, read_frequencies, read_eigenvalues, & 
                                 read_ephmat, read_kqmap  
-  USE superconductivity_iso,   ONLY : eliashberg_iso_iaxis, eliashberg_iso_raxis
-  USE superconductivity_aniso, ONLY : eliashberg_aniso_iaxis
+  USE supercond_iso,     ONLY : eliashberg_iso_iaxis, eliashberg_iso_raxis
+  USE supercond_aniso,   ONLY : eliashberg_aniso_iaxis
   !
   IMPLICIT NONE
   !

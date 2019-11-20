@@ -5,11 +5,8 @@
   ! License. See the file `LICENSE' in the root directory of the               
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .         
   !                                                                            
-  ! Adapted from QE  
-  !
-  !
   !----------------------------------------------------------------------
-  MODULE broyden
+  MODULE utilities
   !----------------------------------------------------------------------
   !! 
   !! This module contains the routines associated with Broyden's method 
@@ -27,8 +24,8 @@
     !!             D.D.Johnson, PRB 38, 12807 (1988)
     !!
     !
-    USE kinds, ONLY : DP
-    USE epwcom, ONLY : nsiter
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : nsiter
     USE eliashbergcom, ONLY : nkfs, nbndfs
     USE constants_epw, ONLY : eps2, zero, one, two
     !
@@ -349,5 +346,5 @@
     !-----------------------------------------------------------------------
     !
   !-----------------------------------------------------------------------------
-  END MODULE broyden
+  END MODULE utilities
   !-----------------------------------------------------------------------------

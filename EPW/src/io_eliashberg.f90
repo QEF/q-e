@@ -40,7 +40,7 @@
     USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
-    USE superconductivity, ONLY : free_energy
+    USE supercond, ONLY : free_energy
     USE low_lvl,   ONLY : mem_size_eliashberg
     ! 
     IMPLICIT NONE

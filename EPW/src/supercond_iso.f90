@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
-  MODULE superconductivity_iso
+  MODULE supercond_iso
   !----------------------------------------------------------------------
   !! 
   !! This module contains all the subroutines linked with superconductivity 
@@ -33,10 +33,10 @@
     USE eliashbergcom,     ONLY : nsw, nsiw, deltai, deltaip, delta, deltap, estemp
     USE constants_epw,     ONLY : kelvin2eV, ci, zero
     USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
-    USE superconductivity, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, & 
+    USE supercond, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, & 
                                   deallocate_eliashberg_iaxis, deallocate_eliashberg_raxis, &
                                   deallocate_eliashberg_iso, eliashberg_grid
-    USE broyden,           ONLY : mix_broyden
+    USE utilities,           ONLY : mix_broyden
     USE printing,          ONLY : prtheader_supercond
     ! 
     IMPLICIT NONE
@@ -389,7 +389,7 @@
                               delta, deltap, znorm, znormp, gp, gm
     USE constants_epw, ONLY : pi, ci, zero, czero, cone
     USE io_eliashberg, ONLY : eliashberg_write_raxis
-    USE superconductivity, ONLY : gamma_acont
+    USE supercond, ONLY : gamma_acont
     ! 
     IMPLICIT NONE
     !
@@ -543,7 +543,7 @@
     USE io_global,     ONLY : stdout
     USE eliashbergcom, ONLY : nsw, ws, wsi, gap, delta, znorm, deltai, znormi
     USE constants_epw, ONLY : cone, ci, zero, czero
-    USE broyden,       ONLY : pade_coeff, pade_eval
+    USE utilities,       ONLY : pade_coeff, pade_eval
     USE io_eliashberg, ONLY : eliashberg_write_raxis
     ! 
     IMPLICIT NONE
@@ -830,8 +830,8 @@
     USE eliashbergcom,     ONLY : nsw, delta, deltap, gap, estemp
     USE constants_epw,     ONLY : kelvin2eV, ci, zero
     USE mp,                ONLY : mp_bcast, mp_barrier, mp_sum
-    USE superconductivity, ONLY : gen_freqgrid_raxis, eliashberg_grid
-    USE broyden,           ONLY : mix_broyden
+    USE supercond, ONLY : gen_freqgrid_raxis, eliashberg_grid
+    USE utilities,           ONLY : mix_broyden
     USE printing,          ONLY : prtheader_supercond
     ! 
     IMPLICIT NONE
@@ -1268,5 +1268,6 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE kernel_raxis
     !-----------------------------------------------------------------------
-    ! 
-  END MODULE superconductivity_iso
+  !-----------------------------------------------------------------------
+  END MODULE supercond_iso
+  !-----------------------------------------------------------------------

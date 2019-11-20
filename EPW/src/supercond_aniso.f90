@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
-  MODULE superconductivity_aniso
+  MODULE supercond_aniso
   !----------------------------------------------------------------------
   !! 
   !! This module contains all the subroutines linked with superconductivity using  
@@ -31,7 +31,7 @@
                                   limag, lpade, lacon, fsthick, imag_read, wscut
     USE eliashbergcom,     ONLY : nsw, nsiw, adelta, adeltap, adeltai, adeltaip, &
                                   estemp, nkfs, nbndfs, ekfs, ef0
-    USE superconductivity, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
+    USE supercond, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
                                   deallocate_eliashberg_iaxis, deallocate_eliashberg_raxis, & 
                                   deallocate_eliashberg_aniso, eliashberg_grid
     USE constants_epw,     ONLY : kelvin2eV, ci, pi, zero
@@ -40,7 +40,7 @@
     USE mp,                ONLY : mp_bcast, mp_barrier
     USE mp_world,          ONLY : mpime
     USE io_eliashberg,     ONLY : eliashberg_read_aniso_iaxis
-    USE broyden,           ONLY : mix_broyden
+    USE utilities,           ONLY : mix_broyden
     USE low_lvl,           ONLY : mem_size_eliashberg
     USE printing,          ONLY : prtheader_supercond
     ! 
@@ -601,7 +601,7 @@
     USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, wsph, gap, agap, gp, gm, adsumi, azsumi, &                           
                               delta, znorm, adelta, adeltap, aznorm, aznormp, g2, lacon_fly, & 
                               a2fij, wkfs, dosef, ixkqf, ixqfs, nqfs, w0g, nkfs, nbndfs, ef0, ekfs
-    USE superconductivity, ONLY : gamma_acont
+    USE supercond, ONLY : gamma_acont
     USE constants_epw, ONLY : pi, ci, zero, one, czero, cone
     USE io_global,     ONLY : stdout, ionode_id
     USE mp_global,     ONLY : inter_pool_comm
@@ -916,7 +916,7 @@
     USE eliashbergcom, ONLY : nsw, ws, nsiw, wsi, delta, znorm, & 
                               adelta, aznorm, adeltai, aznormi, &              
                               wkfs, dosef, w0g, nkfs, nbndfs, ef0, ekfs
-    USE broyden,       ONLY : pade_coeff, pade_eval
+    USE utilities,       ONLY : pade_coeff, pade_eval
     USE constants_epw, ONLY : cone, ci, zero, czero
     USE io_global,     ONLY : stdout, ionode_id
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
@@ -1566,5 +1566,6 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE evaluate_a2fij
     !-----------------------------------------------------------------------
-    ! 
-  END MODULE superconductivity_aniso
+  !-----------------------------------------------------------------------
+  END MODULE supercond_aniso
+  !-----------------------------------------------------------------------
