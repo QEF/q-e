@@ -45,7 +45,7 @@
                             tempsmin, tempsmax, temps, delta_approx, title,   &
                             scattering, scattering_serta, scattering_0rta,    &
                             int_mob, scissor, carrier, ncarrier,              &
-                            restart, restart_freq, prtgkk, nel, meff, epsiHEG,&
+                            restart, restart_freq, prtgkk, nel, meff, epsiheg,&
                             scatread, restart, restart_freq, restart_filq,    &
                             lphase, omegamin, omegamax, omegastep, n_r,       &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
@@ -205,7 +205,7 @@
   CALL mp_bcast(ncarrier      , meta_ionode_id, world_comm)      
   CALL mp_bcast(nel           , meta_ionode_id, world_comm)      
   CALL mp_bcast(meff          , meta_ionode_id, world_comm)      
-  CALL mp_bcast(epsiHEG       , meta_ionode_id, world_comm)      
+  CALL mp_bcast(epsiheg       , meta_ionode_id, world_comm)      
   CALL mp_bcast(fermi_diff    , meta_ionode_id, world_comm)
   CALL mp_bcast(smear_rpa     , meta_ionode_id, world_comm)
   CALL mp_bcast(omegamin      , meta_ionode_id, world_comm)

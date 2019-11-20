@@ -1220,11 +1220,12 @@
     !!  semi-conductors.
     !!
     !-----------------------------------------------------------------------
-    USE cell_base, ONLY : omega, alat, at
     USE kinds,     ONLY : DP
+    USE cell_base, ONLY : omega, alat, at
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : etf, nkf, wkf, efnew, nkqf
-    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, zero, eps80
+    USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, & 
+                              zero, eps80
     USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
     USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
@@ -1288,11 +1289,11 @@
     !! Energy of the VBM
     REAL(KIND = DP) :: ecbm
     !! Energy of the CBM
-    REAL(KIND = DP) :: Ef
+    REAL(KIND = DP) :: ef
     !! Energy of the current Fermi level for the bisection method
-    REAL(KIND = DP) :: Elw
+    REAL(KIND = DP) :: elw
     !! Energy lower bound for the bisection method
-    REAL(KIND = DP) :: Eup
+    REAL(KIND = DP) :: eup
     !! Energy upper bound for the bisection method
     REAL(KIND = DP) :: hole_density
     !! Hole carrier density
@@ -1304,11 +1305,11 @@
     IF (assume_metal) THEN
       !! set conduction band chemical potential to 0 since it is irrelevent
       ctype = -1  ! act like it's for holes
-      efcb(itemp) = 0.0
+      efcb(itemp) = zero
       ef0(itemp) = efermig(etf, nbndsub, nkqf, nelec, wkf, etemp, ngaussw, 0, isk_dummy)
       RETURN
     ENDIF
-    Ef      = zero
+    ef      = zero
     fermi   = zero
     fermicb = zero
     inv_cell = 1.0d0 / omega
@@ -1324,8 +1325,8 @@
     icbm = ivbm + 1 ! Nb of bands
     !
     ! Initialization value. Should be large enough ...
-    evbm = -10000
-    ecbm = 10000 ! In Ry
+    evbm = -10000d0
+    ecbm = 10000d0 ! In Ry
     ! 
     DO ik = 1, nkf
       ikk = 2 * ik - 1
@@ -1338,7 +1339,7 @@
         ! Find cbm index 
         IF (ibnd > ivbm) THEN
           IF (etf(ibnd, ikk) < ecbm) THEN
-            ecbm = etf (ibnd, ikk)
+            ecbm = etf(ibnd, ikk)
           ENDIF
         ENDIF
       ENDDO
@@ -1350,8 +1351,8 @@
     CALL mp_min(ecbm, inter_pool_comm)
     !    
     IF (itemp == 1) THEN
-      WRITE(stdout, '(5x,"Valence band maximum    = ",f10.6," eV")') evbm * ryd2ev
-      WRITE(stdout, '(5x,"Conduction band minimum = ",f10.6," eV")') ecbm * ryd2ev
+      WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
+      WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
     ENDIF
     ! 
     ! Store e^(e_nk/kbT) on each core
@@ -1367,7 +1368,7 @@
         ENDIF
         !
         IF (arg < - maxarg) THEN
-          ks_exp(ibnd, ik) = 0.0d0
+          ks_exp(ibnd, ik) = zero
         ELSE
           ks_exp(ibnd, ik) = EXP(arg)
         ENDIF
@@ -1392,28 +1393,28 @@
     !
     ! Case 1 : Intrinsic mobilities (electron and hole concentration are the same)   
     ! Starting bounds energy for the biscection method. The energies are rescaled to the VBM
-    Elw = 1.0d0  ! This is e^0 = 1.0 
-    Eup = 1d-160 ! This is e^(-large) = 0.0 (small)
+    elw = 1.0d0  ! This is e^0 = 1.0 
+    eup = 1d-160 ! This is e^(-large) = 0.0 (small)
     IF (int_mob .AND. .NOT. carrier) THEN
       ! Use bisection method
       DO i = 1, maxiter
         !
         !WRITE(stdout,*),'Iteration ',i
-        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = DSQRT(Eup) * DSQRT(Elw)     
+        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef = DSQRT(eup) * DSQRT(elw)     
         ! 
-        !WRITE(stdout,*),'Ef ', - log (Ef) * etemp * ryd2ev
-        hole_density = 0.0
-        electron_density = 0.0
+        !WRITE(stdout,*),'ef ', - log (ef) * etemp * ryd2ev
+        hole_density = zero
+        electron_density = zero
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ! Compute hole carrier concentration
           DO ibnd = 1, ivbm 
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
-              fnk = 0.0d0
+            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+              fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * Ef  + 1.0d0)  
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)  
             ENDIF
             ! The wkf(ikk) already include a factor 2
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk)
@@ -1421,10 +1422,10 @@
           ! Compute electron carrier concentration
           DO ibnd = icbm, nbndsub            
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
-              fnk = 0.0d0
+            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
+              fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * Ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk
@@ -1445,39 +1446,39 @@
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = Ef
+          fermi_exp = ef
           fermi = evbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          Elw = Ef                           
+          elw = ef                           
         ELSE                                   
-          Eup = Ef 
+          eup = ef 
         ENDIF
       ENDDO ! iteration
     ENDIF 
     ! 
     ! Case 2 :
     ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
-    factor = inv_cell * (bohr2ang * ang2cm)**(-3)
-    Eup = 1d-160 ! e^(-large) = 0.0 (small)
-    Elw = 1.0d0 ! e^0 = 1
+    factor = inv_cell * (bohr2ang * ang2cm)**(-3.d0)
+    eup = 1d-160 ! e^(-large) = 0.0 (small)
+    elw = 1.0d0 ! e^0 = 1
     IF (ncarrier < -1E5 .OR. (int_mob .AND. carrier)) THEN
-      IF (int_mob .AND. carrier) ncarrier = - ABS(ncarrier)
+      IF (int_mob .AND. carrier) ncarrier = -ABS(ncarrier)
       ! Use bisection method
       DO i = 1, maxiter
-        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = DSQRT(Eup) * DSQRT(Elw)
+        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef = DSQRT(eup) * DSQRT(elw)
         ! 
-        hole_density = 0.0
+        hole_density = zero
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ! Compute hole carrier concentration
           DO ibnd = 1, ivbm
             ! Discard very large numbers
-            IF (ks_exp(ibnd, ik) * Ef > 1d60) THEN
+            IF (ks_exp(ibnd, ik) * ef > 1d60) THEN
               fnk = 0.0d0
             ELSE
-              fnk = 1.0d0 / (ks_exp(ibnd, ik) * Ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_exp(ibnd, ik) * ef  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
@@ -1497,37 +1498,37 @@
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = Ef
+          fermi_exp = ef
           fermi = evbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          Elw = Ef
+          elw = ef
         ELSE
-          Eup = Ef
+          eup = ef
         ENDIF
       ENDDO ! iteration
     ENDIF
     ! 
     ! Case 3 : Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
-    Eup = 1.0d0 ! e^(0) =1
-    Elw = 1.0d80 ! e^large yields fnk = 1
+    eup = 1.0d0 ! e^(0) =1
+    elw = 1.0d80 ! e^large yields fnk = 1
     IF (ncarrier > 1E5 .OR. (int_mob .AND. carrier)) THEN
       IF (int_mob .AND. carrier) ncarrier = ABS(ncarrier)
       ! Use bisection method
       DO i = 1, maxiter
-        ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
-        Ef = DSQRT(Eup) * DSQRT(Elw)
+        ! We want ef = (eup + elw) / 2.d0 but the variables are exp therefore:
+        ef = DSQRT(eup) * DSQRT(elw)
         ! 
-        electron_density = 0.0
+        electron_density = zero
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ! Compute electron carrier concentration
           DO ibnd = icbm, nbndsub
             ! Discard very large numbers
-            IF (ks_expcb(ibnd, ik) * Ef > 1d60) THEN
-              fnk = 0.0d0
+            IF (ks_expcb(ibnd, ik) * ef > 1d60) THEN
+              fnk = zero
             ELSE
-              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * Ef  + 1.0d0)
+              fnk = 1.0d0 / (ks_expcb(ibnd, ik) * ef  + 1.0d0)
             ENDIF
             ! The wkf(ikk) already include a factor 2
             electron_density = electron_density + wkf(ikk) * fnk * factor
@@ -1545,32 +1546,32 @@
         ENDIF
         !
         IF (ABS(rel_err) < eps5) THEN
-          fermi_exp = Ef
+          fermi_exp = ef
           fermicb = ecbm - (LOG(fermi_exp) * etemp)
           EXIT
         ELSEIF ((rel_err) > eps5) THEN
-          Eup = Ef
+          eup = ef
         ELSE
-          Elw = Ef
+          elw = ef
         ENDIF
       ENDDO ! iteration
     ENDIF
     ! 
     IF (i == maxiter) THEN
-      WRITE(stdout, '(5x,"Warning: too many iterations in bisection"/ &
-           &      5x,"Ef = ",f10.6)' ) fermi * ryd2ev
+      WRITE(stdout, '(5x, "Warning: too many iterations in bisection"/ &
+                    5x, "ef = ", f10.6)' ) fermi * ryd2ev
     ENDIF
     ! 
     ! Print results
     !  
-    WRITE(stdout, '(/5x,"Temperature ",f8.3," K")' ) etemp * ryd2ev / kelvin2eV
+    WRITE(stdout, '(/5x, "Temperature ", f8.3, " K")' ) etemp * ryd2ev / kelvin2eV
     ! 
     ! Small gap semiconductor. Computes intrinsic mobility by placing 
     ! the Fermi level such that carrier density is equal for electron and holes
     IF (int_mob .AND. .NOT. carrier) THEN
       !
       ef0(itemp) = fermi
-      WRITE(stdout, '(5x,"Mobility Fermi level = ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+      WRITE(stdout, '(5x, "Mobility Fermi level = ", f10.6, " eV")' )  ef0(itemp) * ryd2ev
       ! We only compute 1 Fermi level so we do not need the other
       efcb(itemp) = 0
       ctype = -1
@@ -1582,10 +1583,10 @@
     IF (int_mob .AND. carrier) THEN
       ! 
       ef0(itemp) = fermi
-      WRITE(stdout, '(5x,"Mobility VB Fermi level = ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+      WRITE(stdout, '(5x, "Mobility VB Fermi level = ", f10.6, " eV")' )  ef0(itemp) * ryd2ev
       ! 
       efcb(itemp) = fermicb
-      WRITE(stdout, '(5x,"Mobility CB Fermi level = ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+      WRITE(stdout, '(5x, "Mobility CB Fermi level = ", f10.6, " eV")' )  efcb(itemp) * ryd2ev
       ctype = 0
       !  
     ENDIF
@@ -1594,15 +1595,15 @@
     IF (.NOT. int_mob .AND. carrier) THEN
       ! 
       ! VB only
-      IF (ncarrier < 0.0) THEN
+      IF (ncarrier < 0.0d0) THEN
         ef0(itemp) = fermi
-        WRITE(stdout, '(5x,"Mobility VB Fermi level = ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+        WRITE(stdout, '(5x, "Mobility VB Fermi level = ", f10.6, " eV")' )  ef0(itemp) * ryd2ev
         ! We only compute 1 Fermi level so we do not need the other
         efcb(itemp) = 0
         ctype = -1
       ELSE ! CB 
         efcb(itemp) = fermicb
-        WRITE(stdout, '(5x,"Mobility CB Fermi level = ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+        WRITE(stdout, '(5x, "Mobility CB Fermi level = ", f10.6, " eV")' )  efcb(itemp) * ryd2ev
         ! We only compute 1 Fermi level so we do not need the other
         ef0(itemp) = 0
         ctype = 1
@@ -1637,6 +1638,7 @@
     !!
     USE kinds, ONLY : DP
     USE mp,    ONLY : mp_sum
+    USE constants_epw, ONLY : zero
     ! 
     IMPLICIT NONE
     ! 
@@ -1650,9 +1652,9 @@
     !!
     INTEGER, INTENT(in) :: isk(nks)
     !!
-    REAL(KIND = DP), INTENT(in) :: wk (nks)
+    REAL(KIND = DP), INTENT(in) :: wk(nks)
     !! the weight of the k points
-    REAL(KIND = DP), INTENT(in) :: et (nbnd, nks)
+    REAL(KIND = DP), INTENT(in) :: et(nbnd, nks)
     !! the energy eigenvalues
     REAL(KIND = DP), INTENT(in) :: degauss
     !! gaussian broadening
@@ -1671,9 +1673,9 @@
     REAL(KIND = DP), EXTERNAL :: wgauss
     !! Function which compute the smearing 
     !
-    sumkg_seq = 0.d0
+    sumkg_seq = zero
     DO ik = 1, nks
-      sum1 = 0.d0
+      sum1 = zero
       IF (is /= 0) THEN
         IF (isk(ik) /= is) CYCLE
       ENDIF
@@ -1690,14 +1692,14 @@
     !--------------------------------------------------------------------------
     ! 
     !--------------------------------------------------------------------
-    FUNCTION efermig_seq(et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
+    FUNCTION efermig_seq(et, nbnd, nks, nelec, wk, degauss, ngauss, is, isk)
     !--------------------------------------------------------------------
     !!
     !! Finds the Fermi energy - Gaussian Broadening
     !! (see Methfessel and Paxton, PRB 40, 3616 (1989 )
     !!
-    USE io_global,     ONLY : stdout
     USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout
     USE constants_epw, ONLY : ryd2ev, eps10
     !
     IMPLICIT NONE
@@ -1706,7 +1708,7 @@
     !! Number of k-points per pool
     INTEGER, INTENT(in) :: nbnd
     !! Number of band
-    INTEGER, INTENT(in) :: Ngauss
+    INTEGER, INTENT(in) :: ngauss
     !! 
     INTEGER, INTENT(in) :: is
     !! 
@@ -1716,7 +1718,7 @@
     !!
     REAL(KIND = DP), INTENT(in) :: et(nbnd, nks)
     !!
-    REAL(KIND = DP), INTENT(in) :: Degauss
+    REAL(KIND = DP), INTENT(in) :: degauss
     !!
     REAL(KIND = DP), INTENT(in) :: nelec
     !! Number of electron (charge)
@@ -1730,11 +1732,11 @@
     !! Maximum iteration number 
     REAL(KIND = DP) :: efermig_seq 
     !! Fermi energy (seq)
-    REAL(KIND = DP) :: Ef
+    REAL(KIND = DP) :: ef
     !! Fermi energy
-    REAL (KIND = DP) :: Eup
+    REAL (KIND = DP) :: eup
     !! Upper bound
-    REAL (KIND = DP) :: Elw
+    REAL (KIND = DP) :: elw
     !! Lower bound 
     REAL (KIND = DP) :: sumkup 
     !! Sum upper one
@@ -1745,39 +1747,39 @@
     !
     ! Find bounds for the Fermi energy. Very safe choice!
     !
-    Elw = et(1, 1)
-    Eup = et(nbnd, 1)
+    elw = et(1, 1)
+    eup = et(nbnd, 1)
     DO kpoint = 2, nks
-      Elw = MIN(Elw, et(1, kpoint))
-      Eup = MAX(Eup, et(nbnd, kpoint))
+      elw = MIN(elw, et(1, kpoint))
+      eup = MAX(eup, et(nbnd, kpoint))
     ENDDO
-    Eup = Eup + 2 * Degauss
-    Elw = Elw - 2 * Degauss
+    eup = eup + 2 * degauss
+    elw = elw - 2 * degauss
     !
     ! Bisection method
     !
-    sumkup = sumkg_seq(et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
-    sumklw = sumkg_seq(et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
+    sumkup = sumkg_seq(et, nbnd, nks, wk, degauss, ngauss, eup, is, isk)
+    sumklw = sumkg_seq(et, nbnd, nks, wk, degauss, ngauss, elw, is, isk)
     IF ((sumkup - nelec) < -eps10 .OR. (sumklw - nelec) > eps10) THEN
-      CALL errore ('efermig_seq', 'internal error, cannot bracket Ef', 1)
+      CALL errore ('efermig_seq', 'internal error, cannot bracket eEff', 1)
     ENDIF
     DO i = 1, maxiter
-      Ef = (Eup + Elw) / 2.d0
-      sumkmid = sumkg_seq(et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
-      IF (ABS(sumkmid-nelec) < eps10) THEN
-        efermig_seq = Ef
+      ef = (eup + elw) / 2.d0
+      sumkmid = sumkg_seq(et, nbnd, nks, wk, degauss, ngauss, ef, is, isk)
+      IF (ABS(sumkmid - nelec) < eps10) THEN
+        efermig_seq = ef
         RETURN
       ELSEIF ((sumkmid - nelec) < -eps10) THEN
-        Elw = Ef
+        elw = ef
       ELSE
-        Eup = Ef
+        eup = ef
       ENDIF
     ENDDO
     IF (is /= 0) WRITE(stdout, '(5x, "Spin Component #", i3)') is
-    WRITE(stdout, '(5x,"Warning: too many iterations in bisection"/ &
-         &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) Ef * ryd2ev, sumkmid
+    WRITE(stdout, '(5x, "Warning: too many iterations in bisection"/ &
+         &      5x, "ef = ", f10.6, " sumk = ", f10.6, " electrons")' ) ef * ryd2ev, sumkmid
     !
-    efermig_seq = Ef
+    efermig_seq = ef
     RETURN
     !
     !--------------------------------------------------------------------------
@@ -1823,13 +1825,160 @@
       rmelt = rmelt / 1024.d0
       chunit = ' Gb '
     ENDIF
-    WRITE(stdout, '(/,5x,a, i13, a,f7.2,a,a)') "Number of ep-matrix elements per pool :", &
+    WRITE(stdout, '(/, 5x, a, i13, a, f7.2, a, a)') "Number of ep-matrix elements per pool :", &
          imelt, " ~= ", rmelt, TRIM(chunit), " (@ 8 bytes/ DP)"
     !
     !--------------------------------------------------------------------------
     END SUBROUTINE mem_size
     !--------------------------------------------------------------------------
     ! 
+    !-----------------------------------------------------------------------
+    SUBROUTINE mem_size_eliashberg(vmelt, imelt)
+    !-----------------------------------------------------------------------
+    !
+    !  This routine estimates the amount of memory taken up or
+    !  released by different arrays
+    !
+    USE io_global,     ONLY : stdout
+    USE kinds,         ONLY : DP
+    USE epwcom,        ONLY : max_memlt
+    USE eliashbergcom, ONLY : memlt_pool
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE constants_epw, ONLY : zero
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: vmelt
+    !! 1 for integer variables and 2 for real variables
+    INTEGER, INTENT(in) :: imelt
+    !! > 0 memory added or < 0 memory subtracted
+    !
+    REAL(KIND = DP) :: rmelt
+    !! change in memory
+    !
+    ! This is only a quick fix since the routine was written for parallel
+    ! execution - FG June 2014
+#if ! defined(__MPI)
+    my_pool_id = 0
+#endif
+    !
+    rmelt = zero
+    rmelt = DBLE(imelt) * 4.d0 / 1073741824.d0 ! 4 bytes per number, value in Gb
+    IF (vmelt == 2) &
+      rmelt = 2.d0 * rmelt ! 8 bytes per number, value in Gb
+    rmelt = rmelt + memlt_pool(my_pool_id + 1)
+    !
+    memlt_pool(:) = zero
+    memlt_pool(my_pool_id + 1) = rmelt
+    !
+    ! collect contributions from all pools
+    CALL mp_sum(memlt_pool, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+    !
+    IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
+      WRITE(stdout, '(/, 5x, a, a, f9.4, a)') "Size of required memory per pool:", &
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
+      CALL errore('mem_size_eliashberg', 'Size of required memory exceeds max_memlt', 1)
+    ELSEIF(MAXVAL(memlt_pool(:)) > 0.5d0 * max_memlt) THEN
+      WRITE(stdout, '(/, 5x, a, a, f9.4, a)') "Size of allocated memory per pool:", &
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE mem_size_eliashberg
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE memlt_eliashberg(itemp, cname)
+    !-----------------------------------------------------------------------
+    !!
+    !! Estimate the memory requirements for anisotropic Eliashberg equations
+    !! on imaginary axis or real axis (analytic continuation)
+    !!
+    USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout
+    USE epwcom,        ONLY : max_memlt, nqstep
+    USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, nqfs, limag_fly, &
+                              lacon_fly, memlt_pool
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE division,      ONLY : fkbounds
+    USE constants_epw, ONLY : zero
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: itemp
+    !! Counter on temperature
+    CHARACTER(LEN = 4), INTENT(in) :: cname
+    !! calculation type
+    !
+    !Local variables
+    INTEGER :: imelt
+    !! size array
+    INTEGER :: lower_bnd, upper_bnd
+    !! Lower/upper bound index after k parallelization
+    !
+    REAL(KIND = DP) :: rmelt
+    !! change in memory
+    !
+    ! This is only a quick fix since the routine was written for parallel
+    ! execution - FG June 2014
+#if ! defined(__MPI)
+    my_pool_id = 0
+#endif
+    !
+    limag_fly = .FALSE.
+    lacon_fly = .FALSE.
+    !
+    CALL fkbounds(nkfs, lower_bnd, upper_bnd)
+    !
+    imelt = (upper_bnd - lower_bnd + 1) * MAXVAL(nqfs(:)) * nbndfs**2
+    IF (cname == 'imag') THEN
+      ! get the size of the akeri that needa to be stored in each pool
+      imelt = imelt * (2 * nsiw(itemp))
+    ELSEIF (cname == 'acon') THEN
+      ! get the size of a2fij that needs to be stored in each pool
+      imelt = imelt * nqstep
+    ENDIF
+    rmelt = DBLE(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+    rmelt = rmelt + memlt_pool(my_pool_id + 1)
+    !
+    memlt_pool(:) = zero
+    memlt_pool(my_pool_id + 1) = rmelt
+    !
+    ! collect contributions from all pools
+    CALL mp_sum(memlt_pool, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+    !
+    IF (MAXVAL(memlt_pool(:)) > max_memlt) THEN
+      WRITE(stdout, '(/, 5x, a, a, f9.4, a)') "Size of required memory per pool:", &
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
+      IF (cname == 'imag') limag_fly = .TRUE.
+      IF (cname == 'acon') lacon_fly = .TRUE.
+      !
+      ! remove memory required for akeri or a2fij
+      CALL mem_size_eliashberg(2, -imelt)
+      !
+    ENDIF
+    !
+    IF (limag_fly) THEN
+      WRITE(stdout, '(/, 5x, a/)') "akeri is calculated on the fly since its size exceedes max_memlt"
+    ELSEIF (lacon_fly) THEN
+      WRITE(stdout, '(/, 5x, a/)') "a2fij is calculated on the fly since its size exceedes max_memlt"
+    ELSE
+      WRITE(stdout, '(/, 5x, a, a, f9.4, a)') "Size of allocated memory per pool:", &
+            " ~= ", MAXVAL(memlt_pool(:)), " Gb"
+    ENDIF
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE memlt_eliashberg
+    !-----------------------------------------------------------------------
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE broadening(ik, ikk, ikq, w, vmefp, eta)
     !--------------------------------------------------------------------------
@@ -1839,12 +1988,12 @@
     !! The implemented equation is Eq. 18 of Computer Physics Communications 185, 1747 (2014)
     !! Samuel Ponce & Francesco Macheda
     !!
-    USE cell_base,     ONLY : alat, bg
     USE kinds,         ONLY : DP
+    USE cell_base,     ONLY : alat, bg
     USE elph2,         ONLY : nbndfst, nkf, dmef, vmef, ibndmin, etf
     USE epwcom,        ONLY : vme, nqf1, nqf2, nqf3
     USE phcom,         ONLY : nmodes
-    USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, eps6, eps8, eps4
+    USE constants_epw, ONLY : eps40, ryd2mev, twopi, zero, two, eps6, eps8, eps4
     !
     IMPLICIT NONE
     !
@@ -1950,9 +2099,10 @@
             eta_tmp(2) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 2)) / DBLE(nqf2))
             eta_tmp(3) = (twopi / alat) * ABS(DOT_PRODUCT(vel_diff(:), bg(:, 3)) / DBLE(nqf3))
             !eta(imode, ibnd, ik) = MAXVAL(eta_tmp) !Eq. (24) of PRB 97 075405 (2015)
-            !eta(imode, ibnd, ik) = DSQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/DSQRT(12d0) !Eq. (18) of Computer Physics Communications 185 (2014) 1747–1758
+            !eta(imode, ibnd, ik) = DSQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2)/DSQRT(12d0) 
+            ! Eq. (18) of Computer Physics Communications 185 (2014), 1747-1758
             ! The prefactor 0.5 is arbitrary and is to speedup convergence
-            eta(imode, ibnd, ik) = 0.5d0 * DSQRT(eta_tmp(1)**2+eta_tmp(2)**2+eta_tmp(3)**2) / SQRT(12d0)
+            eta(imode, ibnd, ik) = 0.5d0 * DSQRT(eta_tmp(1)**two + eta_tmp(2)**two + eta_tmp(3)**two) / SQRT(12.0d0)
           ENDIF
           ! 
           ! If the smearing is too small, set 1 meV. Too small value are numerically unstable. 

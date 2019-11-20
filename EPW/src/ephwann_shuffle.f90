@@ -69,7 +69,7 @@
   USE printing,      ONLY : print_gkk
   USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,  ONLY : electron_read, tau_read, iter_open, print_ibte,     &
-                            iter_merge
+                            iter_merge, spectral_read
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
@@ -81,7 +81,7 @@
                             sumkg_seq, efermig_seq, mem_size, broadening, compute_dos
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
-  USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
+  USE spectral_func, ONLY : spectral_func_el_q, spectral_func_ph_q, spectral_func_pl_q
   USE io_epw,        ONLY : read_ifc
   USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine
   USE indabs,        ONLY : indabs_main, renorm_eig
@@ -991,10 +991,13 @@
       ENDIF
     ENDIF ! elecselfen
     ! 
-    ! Restart in SERTA case or self-energy case
+    ! Restart in SERTA case or self-energy (electron or plasmon) case
     IF (restart) THEN
-      IF (elecselfen) THEN
+      IF (elecselfen .OR. plselfen) THEN
         CALL electron_read(iq_restart, totq, nktotf, sigmar_all, sigmai_all, zi_all)
+      ENDIF
+      IF (specfun_el .OR. specfun_pl) THEN
+        CALL spectral_read(iq_restart, totq, nktotf, esigmar_all, esigmai_all)
       ENDIF
       IF (scattering) THEN
         IF (int_mob .AND. carrier) THEN
@@ -1014,7 +1017,7 @@
     ! 
     ! Scatread assumes that you alread have done the full q-integration
     ! We just do one loop to get interpolated eigenenergies.  
-    IF(scatread) iq_restart = totq -1
+    IF(scatread) iq_restart = totq - 1
     ! 
     ! Restart in IBTE case
     IF (iterative_bte) THEN
@@ -1102,7 +1105,7 @@
       !
       IF (.NOT. phonselfen) THEN 
         IF (MOD(iqq, restart_freq) == 0) THEN
-          WRITE(stdout, '(5x,a,i10,a,i10)' ) 'Progression iq (fine) = ', iqq, '/', totq
+          WRITE(stdout, '(5x, a, i10, a, i10)' ) 'Progression iq (fine) = ', iqq, '/', totq
         ENDIF
       ENDIF
       !
@@ -1240,8 +1243,8 @@
           ! interpolate only when (k,k+q) both have at least one band 
           ! within a Fermi shell of size fsthick 
           !
-          IF (((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. & 
-               (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick))) THEN
+          IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. & 
+              (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
             !
             ! Compute velocities
             !
@@ -1322,7 +1325,7 @@
       IF (MOD(iqq, restart_freq) == 0 .AND. adapt_smearing) THEN
        ! Min non-zero value
        valmin(:) = zero
-       valmin(my_pool_id + 1) = 100d0
+       valmin(my_pool_id + 1) = 100.0d0
        valmax(:) = zero
        DO ik = 1, nkf
          DO ibnd = 1, nbndfst
@@ -1338,18 +1341,18 @@
        ENDDO 
        CALL mp_sum(valmin, inter_pool_comm)
        CALL mp_sum(valmax, inter_pool_comm)
-       WRITE(stdout, '(7x,a,f12.6,a)' ) 'Adaptative smearing = Min: ', DSQRT(2.0d0) * MINVAL(valmin) * ryd2mev,' meV'
-       WRITE(stdout, '(7x,a,f12.6,a)' ) '                      Max: ', DSQRT(2.0d0) * MAXVAL(valmax) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
+       WRITE(stdout, '(7x, a, f12.6, a)' ) '                      Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
       !
       IF (prtgkk    ) CALL print_gkk(iq)
       IF (phonselfen) CALL selfen_phon_q(iqq, iq, totq)
       IF (elecselfen) CALL selfen_elec_q(iqq, iq, totq, first_cycle)
-      IF (plselfen .AND. .NOT. vme) CALL selfen_pl_q(iqq, iq, totq)
+      IF (plselfen .AND. .NOT. vme) CALL selfen_pl_q(iqq, iq, totq, first_cycle)
       IF (nest_fn   ) CALL nesting_fn_q(iqq, iq)
-      IF (specfun_el) CALL spectral_func_q(iqq, iq, totq)
-      IF (specfun_ph) CALL spectral_func_ph(iqq, iq, totq)
-      IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq)
+      IF (specfun_el) CALL spectral_func_el_q(iqq, iq, totq, first_cycle)
+      IF (specfun_ph) CALL spectral_func_ph_q(iqq, iq, totq)
+      IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
       IF (ephwrite) THEN
         IF (iq == 1) THEN 
            CALL kmesh_fine

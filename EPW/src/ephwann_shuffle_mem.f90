@@ -73,7 +73,7 @@
   USE printing,      ONLY : print_gkk
   USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,  ONLY : electron_read, tau_read, iter_open, print_ibte,     &
-                            iter_merge
+                            iter_merge, spectral_read
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
@@ -85,7 +85,7 @@
                             sumkg_seq, efermig_seq, mem_size, compute_dos
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
-  USE spectral_func, ONLY : spectral_func_q, spectral_func_ph, spectral_func_pl_q
+  USE spectral_func, ONLY : spectral_func_el_q, spectral_func_ph_q, spectral_func_pl_q
   USE rigid_epw,     ONLY : rpa_epsilon, tf_epsilon, compute_umn_f, rgd_blk_epw_fine_mem
   USE indabs,        ONLY : indabs_main, renorm_eig
   USE plot,          ONLY : nesting_fn_q, a2f_main, plot_band
@@ -964,10 +964,13 @@
       ENDIF
     ENDIF ! elecselfen
     ! 
-    ! Restart in SERTA case or self-energy case
+    ! Restart in SERTA case or self-energy (electron or plasmon) case
     IF (restart) THEN
-      IF (elecselfen) THEN
+      IF (elecselfen .OR. plselfen) THEN
         CALL electron_read(iq_restart, totq, nktotf, sigmar_all, sigmai_all, zi_all)
+      ENDIF
+      IF (specfun_el .OR. specfun_pl) THEN
+        CALL spectral_read(iq_restart, totq, nktotf, esigmar_all, esigmai_all)
       ENDIF
       IF (scattering) THEN
         IF (int_mob .AND. carrier) THEN
@@ -1223,8 +1226,8 @@
             ! interpolate only when (k,k+q) both have at least one band 
             ! within a Fermi shell of size fsthick 
             !
-            IF (((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. & 
-                 (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick))) THEN
+            IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. & 
+                (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
               ! 
               ! Compute velocities
               !
@@ -1299,9 +1302,8 @@
       ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
       !
       DO ik = 1, nkf
-        CALL ZGEMM( 'n', 'n', (nbndfst) * (nbndfst), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
-              (nbndfst) * (nbndfst), uf, nmodes, czero, &
-              epf17(:,:,:,ik), (nbndfst) * (nbndfst) )
+        CALL ZGEMM('n', 'n', nbndfst * nbndfst, nmodes, nmodes, cone, eptmp(:, :, :, ik), &
+                   nbndfst * nbndfst, uf, nmodes, czero, epf17(:, :, :, ik), nbndfst * nbndfst)
         ! 
       ENDDO
       ! 
@@ -1309,7 +1311,7 @@
       DO jbnd = ibndmin, ibndmax
         DO ibnd = ibndmin, ibndmax
           epf17(ibnd - ibndmin+1, jbnd - ibndmin + 1, :, :) = epf17(ibnd-ibndmin+1, jbnd - ibndmin + 1, :, :) &
-                                                               + epmatlrT(ibnd, jbnd, :, :)
+                                                            + epmatlrT(ibnd, jbnd, :, :)
         ENDDO
       ENDDO
       !
@@ -1318,11 +1320,11 @@
       IF (prtgkk    ) CALL print_gkk(iq)
       IF (phonselfen) CALL selfen_phon_q(iqq, iq, totq)
       IF (elecselfen) CALL selfen_elec_q(iqq, iq, totq, first_cycle)
-      IF (plselfen .AND. .NOT. vme) CALL selfen_pl_q(iqq, iq, totq)
+      IF (plselfen .AND. .NOT. vme) CALL selfen_pl_q(iqq, iq, totq, first_cycle)
       IF (nest_fn   ) CALL nesting_fn_q(iqq, iq)
-      IF (specfun_el) CALL spectral_func_q(iqq, iq, totq)
-      IF (specfun_ph) CALL spectral_func_ph(iqq, iq, totq)
-      IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq)
+      IF (specfun_el) CALL spectral_func_el_q(iqq, iq, totq, first_cycle)
+      IF (specfun_ph) CALL spectral_func_ph_q(iqq, iq, totq)
+      IF (specfun_pl .AND. .NOT. vme) CALL spectral_func_pl_q(iqq, iq, totq, first_cycle)
       IF (ephwrite) THEN
         IF (iq == 1) THEN 
            CALL kmesh_fine

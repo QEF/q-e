@@ -1415,7 +1415,7 @@
       selecq(:) = 0 
       etf_loc(:, :)  = zero
       etf_locq(:, :) = zero
-      etf_all(:, :) = zero
+      etf_all(:, :)  = zero
       ! 
       IF (homogeneous) THEN
         ! First store eigen energies on full grid.  
@@ -1491,14 +1491,14 @@
             ! 
             ! Use k-point symmetry
             IF (mp_mesh_k) THEN
-              IF (((MINVAL(ABS(etf_all(:, bztoibz(ind1)) - ef)) < fsthick) .AND. &
-                    (MINVAL(ABS(etf_all(:, bztoibz(ind2)) - ef)) < fsthick))) THEN
+              IF ((MINVAL(ABS(etf_all(:, bztoibz(ind1)) - ef)) < fsthick) .AND. &
+                  (MINVAL(ABS(etf_all(:, bztoibz(ind2)) - ef)) < fsthick)) THEN
                 found(my_pool_id + 1) = 1
                 EXIT ! exit the loop 
               ENDIF
             ELSE
-              IF (((MINVAL(ABS(etf_all(:, ind1) - ef)) < fsthick) .AND. &
-                    (MINVAL(ABS(etf_all(:, ind2) - ef)) < fsthick))) THEN
+              IF ((MINVAL(ABS(etf_all(:, ind1) - ef)) < fsthick) .AND. &
+                  (MINVAL(ABS(etf_all(:, ind2) - ef)) < fsthick)) THEN
                 found(my_pool_id + 1) = 1
                 EXIT ! exit the loop 
               ENDIF

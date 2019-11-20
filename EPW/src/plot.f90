@@ -41,7 +41,7 @@
     USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, & 
                           delta_smear, degaussw, fsthick, nc
     USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, two, zero, kelvin2Ry, pi
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, one, two, zero, kelvin2Ry, pi
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id
@@ -51,131 +51,138 @@
     ! 
     IMPLICIT NONE
     !
-    CHARACTER(LEN = 256) :: fila2f_suffix
-    !! FIXME
+    CHARACTER(LEN = 256) :: fila2f
+    !! File name for Eliashberg spectral function
     CHARACTER(LEN = 256) :: fila2ftr
-    !! FIXME
+    !! File name for transport Eliashberg spectral function
     CHARACTER(LEN = 256) :: fildos
-    !! FIXME
+    !! File name for phonon density of states
     CHARACTER(LEN = 256) :: filres
-    !! FIXME
+    !! File name for resistivity
+    !
     INTEGER :: imode
-    !! FIXME
+    !! Counter on mode
     INTEGER :: iq
-    !! FIXME
+    !! Counter on the q-point index
     INTEGER :: iw
-    !! FIXME
+    !! Counter on the frequency
     INTEGER :: ismear
-    !! FIXME
+    !! Counter on smearing values (phonons)
     INTEGER :: isig
-    !! FIXME
+    !! Counter on smearing values (electrons)
     INTEGER :: i
-    !! FIXME
+    !! Counter on mu
     INTEGER :: itemp
-    !! FIXME
+    !! Counter on temperature
     INTEGER :: ierr
     !! Error status
+    !
     REAL(KIND = DP) :: weight
-    !! FIXME  
+    !! Factor in a2f
     REAL(KIND = DP) :: temp
-    !! FIXME  
+    !! Temperature 
     REAL(KIND = DP) :: n
-    !! FIXME  
+    !! Carrier density
     REAL(KIND = DP) :: be
-    !! FIXME  
+    !! Bose-Einstein distribution 
     REAL(KIND = DP) :: prefact
-    !! FIXME  
+    !! Prefactor in resistivity 
     REAL(KIND = DP) :: lambda_tot
-    !! FIXME  
+    !! Total e-ph coupling strength (summation) 
     REAL(KIND = DP) :: lambda_tr_tot
-    !! FIXME  
-    REAL(KIND = DP) :: iomega
-    !!
-    REAL(KIND = DP) :: sigma
-    !! 
+    !! Total transport e-ph coupling strength (summation)
+    REAL(KIND = DP) :: degaussq0
+    !! Phonon smearing 
+    REAL(KIND = DP) :: inv_degaussq0
+    !! Inverse of the smearing for efficiency reasons
     REAL(KIND = DP) :: a2f_tmp
-    !! 
+    !! Temporary variable for Eliashberg spectral function
     REAL(KIND = DP) :: a2f_tr_tmp
-    !! 
+    !! Temporary variable for transport Eliashberg spectral function
     REAL(KIND = DP) :: om_max
-    !! 
+    !! max phonon frequency increased by 10%
     REAL(KIND = DP) :: dw
-    !! 
+    !! Frequency intervals
     REAL(KIND = DP) :: w0
-    !! 
+    !! Current frequency w(imode, iq)
     REAL(KIND = DP) :: l
-    !! 
+    !! Temporary variable for e-ph coupling strength
     REAL(KIND = DP) :: l_tr
-    !! 
+    !! Temporary variable for transport e-ph coupling strength
     REAL(KIND = DP) :: tc
-    !! 
+    !! Critical temperature
     REAL(KIND = DP) :: mu
-    !! 
-    REAL(KIND = DP), ALLOCATABLE :: a2fct(:, :), a2f_tr(:, :), l_a2f(:), l_a2f_tr(:), dosph(:, :), logavg(:), rho(:, :)
-    !! 
+    !! Coulomb pseudopotential 
     REAL(KIND = DP), EXTERNAL :: w0gauss
-    !! 
+    !! The derivative of wgauss:  an approximation to the delta function
+    REAL(KIND = DP) :: ww(nqstep)
+    !! Current frequency
+    REAL(KIND = DP), ALLOCATABLE :: a2f_(:, :)
+    !! Eliashberg spectral function for different ismear
+    REAL(KIND = DP), ALLOCATABLE :: a2f_tr(:, :)
+    !! Transport Eliashberg spectral function for different ismear
+    REAL(KIND = DP), ALLOCATABLE :: l_a2f(:)
+    !! total e-ph coupling strength (a2f_ integration) for different ismear
+    REAL(KIND = DP), ALLOCATABLE :: l_a2f_tr(:)
+    !! total transport e-ph coupling strength (a2f_tr integration) for different ismear
+    REAL(KIND = DP), ALLOCATABLE :: dosph(:, :) 
+    !! Phonon density of states for different for different ismear
+    REAL(KIND = DP), ALLOCATABLE :: logavg(:)
+    !! logavg phonon frequency for different ismear
+    REAL(KIND = DP), ALLOCATABLE :: rho(:, :)
+    !! Resistivity for different for different ismear
     !
     CALL start_clock('a2F')
     IF (mpime == ionode_id) THEN
       !
-      ALLOCATE(a2fct(nqstep, nqsmear), STAT = ierr)
-      IF (ierr /= 0) CALL errore('a2f', 'Error allocating a2fct', 1)
-      ALLOCATE(a2F_tr(nqstep, nqsmear), STAT = ierr)
-      IF (ierr /= 0) CALL errore('a2f', 'Error allocating a2f_tr', 1)
+      ALLOCATE(a2f_(nqstep, nqsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating a2f_', 1)
+      ALLOCATE(a2f_tr(nqstep, nqsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating a2f_tr', 1)
       ALLOCATE(dosph(nqstep, nqsmear), STAT = ierr)
-      IF (ierr /= 0) CALL errore('a2f', 'Error allocating dosph', 1)
-      ALLOCATE(l_a2F(nqsmear), STAT = ierr)
-      IF (ierr /= 0) CALL errore('a2f', 'Error allocating l_a2f', 1)
-      ALLOCATE(l_a2F_tr(nqsmear), STAT = ierr)
-      IF (ierr /= 0) CALL errore('a2f', 'Error allocating l_a2f_tr', 1)
+      IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating dosph', 1)
+      ALLOCATE(l_a2f(nqsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating l_a2f', 1)
+      ALLOCATE(l_a2f_tr(nqsmear), STAT = ierr)
+      IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating l_a2f_tr', 1)
       ALLOCATE(logavg(nqsmear), STAT = ierr)
-      IF (ierr /= 0) CALL errore('a2f', 'Error allocating logavg', 1)
+      IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating logavg', 1)
       ! The resitivity is computed for temperature between 0K-1000K by step of 10
       ! This is hardcoded and needs to be changed here if one wants to modify it
       ALLOCATE(rho(100, nqsmear), STAT = ierr)
-      IF (ierr /= 0) CALL errore('a2f', 'Error allocating rho', 1)
+      IF (ierr /= 0) CALL errore('a2f_main', 'Error allocating rho', 1)
       !  
       DO isig = 1, nsmear
         !
         IF (isig < 10) THEN
-          WRITE(fila2f_suffix, '(a,a6,i1)') TRIM(prefix), '.a2f.0', isig
+          WRITE(fila2f,   '(a, a6, i1)') TRIM(prefix), '.a2f.0', isig
+          WRITE(fila2ftr, '(a, a9, i1)') TRIM(prefix), '.a2f_tr.0', isig
+          WRITE(filres,   '(a, a6, i1)') TRIM(prefix), '.res.0', isig
+          WRITE(fildos,   '(a, a8, i1)') TRIM(prefix), '.phdos.0', isig
         ELSE 
-          WRITE(fila2f_suffix, '(a,a5,i2)') TRIM(prefix), '.a2f.', isig
+          WRITE(fila2f,   '(a, a5, i2)') TRIM(prefix), '.a2f.', isig
+          WRITE(fila2ftr, '(a, a8, i2)') TRIM(prefix), '.a2f_tr.', isig
+          WRITE(filres,   '(a, a5, i2)') TRIM(prefix), '.res.', isig
+          WRITE(fildos,   '(a, a7, i2)') TRIM(prefix), '.phdos.', isig
         ENDIF
-        OPEN(UNIT = iua2ffil, FILE = fila2f_suffix, FORM = 'formatted')
-        !
-        IF (isig < 10) THEN
-          WRITE(fila2ftr, '(a,a9,i1)') TRIM(prefix),'.a2f_tr.0', isig
-        ELSE
-          WRITE(fila2ftr, '(a,a8,i2)') TRIM(prefix),'.a2f_tr.', isig
-        ENDIF
+        OPEN(UNIT = iua2ffil, FILE = fila2f, FORM = 'formatted')
         OPEN(UNIT = iua2ftrfil, FILE = fila2ftr, FORM = 'formatted')
-        !
-        IF (isig < 10) THEN
-          WRITE(filres, '(a,a6,i1)') TRIM(prefix), '.res.0', isig
-        ELSE
-          WRITE(filres, '(a,a5,i2)') TRIM(prefix), '.res.', isig
-        ENDIF
         OPEN(UNIT = iures, FILE = filres, FORM = 'formatted')
-        !
-        IF (isig < 10) THEN
-          WRITE(fildos, '(a,a8,i1)') TRIM(prefix), '.phdos.0', isig
-        ELSE
-          WRITE(fildos, '(a,a7,i2)') TRIM(prefix), '.phdos.', isig
-        ENDIF
         OPEN(UNIT = iudosfil, FILE = fildos, FORM = 'formatted')
         !
-        WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-        WRITE(stdout, '(5x,"Eliashberg Spectral Function in the Migdal Approximation")') 
-        WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+        WRITE(stdout, '(/5x, a)') REPEAT('=',67)
+        WRITE(stdout, '(5x, "Eliashberg Spectral Function in the Migdal Approximation")') 
+        WRITE(stdout, '(5x, a/)') REPEAT('=',67)
         !
         om_max = 1.1d0 * MAXVAL(wf(:, :)) ! increase by 10%
         dw = om_max / DBLE(nqstep)
+        DO iw = 1, nqstep  ! 
+          ww(iw) = DBLE(iw) * dw 
+        ENDDO
         !
         lambda_tot    = zero
         l_a2f(:)      = zero
-        a2fct(:, :)     = zero
+        a2f_(:, :)    = zero
         lambda_tr_tot = zero
         l_a2f_tr(:)   = zero
         a2f_tr(:, :)  = zero
@@ -184,11 +191,10 @@
         !
         DO ismear = 1, nqsmear
           !
-          sigma = degaussq + (ismear - 1) * delta_qsmear
+          degaussq0 = degaussq + (ismear - 1) * delta_qsmear
+          inv_degaussq0 = one / degaussq0
           !
           DO iw = 1, nqstep  ! loop over points on the a2F(w) graph
-            !
-            iomega = DBLE(iw) * dw ! step through the frequncies we wish to plot
             !
             DO iq = 1, nqtotf ! loop over q-points 
               DO imode = 1, nmodes ! loop over modes
@@ -196,17 +202,17 @@
                 !
                 IF (w0 > eps_acustic) THEN 
                   !
-                  l  = lambda_all(imode, iq, isig)
-                  IF (lambda_all(imode, iq, isig) < 0.d0)  l = 0.d0 ! sanity check
+                  l = lambda_all(imode, iq, isig)
+                  IF (lambda_all(imode, iq, isig) < 0.d0) l = zero ! sanity check
                   ! 
-                  a2f_tmp    = wqf(iq) * w0 * l / two
+                  a2f_tmp = wqf(iq) * w0 * l / two
                   !
-                  weight = w0gauss((iomega - w0) / sigma, 0) / sigma
-                  a2fct(iw, ismear) = a2fct(iw, ismear) + a2f_tmp * weight
-                  dosph(iw, ismear)  = dosph(iw, ismear) + wqf(iq) * weight
+                  weight = w0gauss((ww(iw) - w0) * inv_degaussq0, 0) * inv_degaussq0
+                  a2f_(iw, ismear) = a2f_(iw, ismear) + a2f_tmp * weight
+                  dosph(iw, ismear) = dosph(iw, ismear) + wqf(iq) * weight
                   !
                   l_tr = lambda_v_all(imode, iq, isig)
-                  IF (lambda_v_all(imode, iq, isig) < 0.d0)  l_tr = 0.d0 !sanity check
+                  IF (lambda_v_all(imode, iq, isig) < 0.d0) l_tr = zero !sanity check
                   ! 
                   a2f_tr_tmp = wqf(iq) * w0 * l_tr / two
                   !
@@ -216,17 +222,17 @@
               ENDDO
             ENDDO
             !
-            ! output a2F
+            ! output a2f
             !
-            IF (ismear == nqsmear) WRITE(iua2ffil,   '(f12.7, 15f12.7)') iomega * ryd2mev, a2fct(iw, :)
-            IF (ismear == nqsmear) WRITE(iua2ftrfil, '(f12.7, 15f12.7)') iomega * ryd2mev, a2f_tr(iw, :)
-            IF (ismear == nqsmear) WRITE(iudosfil,   '(f12.7, 15f12.7)') iomega * ryd2mev, dosph(iw, :) / ryd2mev
+            IF (ismear == nqsmear) WRITE(iua2ffil,   '(f12.7, 15f12.7)') ww(iw) * ryd2mev, a2f_(iw, :)
+            IF (ismear == nqsmear) WRITE(iua2ftrfil, '(f12.7, 15f12.7)') ww(iw) * ryd2mev, a2f_tr(iw, :)
+            IF (ismear == nqsmear) WRITE(iudosfil,   '(f12.7, 15f12.7)') ww(iw) * ryd2mev, dosph(iw, :) / ryd2mev
             !
             ! do the integral 2 int (a2F(w)/w dw)
             !
-            l_a2f(ismear) = l_a2f(ismear) + two * a2fct(iw, ismear) / iomega * dw
-            l_a2f_tr(ismear) = l_a2f_tr(ismear) + two * a2f_tr(iw, ismear) / iomega * dw
-            logavg(ismear) = logavg(ismear) + two *  a2fct(iw, ismear) * LOG(iomega) / iomega * dw
+            l_a2f(ismear) = l_a2f(ismear) + two * a2f_(iw, ismear) / ww(iw) * dw
+            l_a2f_tr(ismear) = l_a2f_tr(ismear) + two * a2f_tr(iw, ismear) / ww(iw) * dw
+            logavg(ismear) = logavg(ismear) + two *  a2f_(iw, ismear) * LOG(ww(iw)) / ww(iw) * dw
             !
           ENDDO
           !
@@ -237,31 +243,31 @@
         DO iq = 1, nqtotf ! loop over q-points 
           DO imode = 1, nmodes ! loop over modes
             IF (lambda_all(imode, iq, isig) > 0.d0 .AND. wf(imode, iq) > eps_acustic ) & 
-               lambda_tot = lambda_tot + wqf(iq) * lambda_all(imode, iq, isig)
+              lambda_tot = lambda_tot + wqf(iq) * lambda_all(imode, iq, isig)
             IF (lambda_v_all(imode, iq, isig) > 0.d0 .AND. wf(imode, iq) > eps_acustic) &
-               lambda_tr_tot = lambda_tr_tot + wqf(iq) * lambda_v_all(imode, iq, isig)
+              lambda_tr_tot = lambda_tr_tot + wqf(iq) * lambda_v_all(imode, iq, isig)
           ENDDO
         ENDDO
-        WRITE(stdout, '(5x,a,f12.7)') "lambda : ", lambda_tot
-        WRITE(stdout, '(5x,a,f12.7)') "lambda_tr : ", lambda_tr_tot
+        WRITE(stdout, '(5x, a, f12.7)') "lambda : ", lambda_tot
+        WRITE(stdout, '(5x, a, f12.7)') "lambda_tr : ", lambda_tr_tot
         WRITE(stdout, '(a)') " "
         !
         !
         ! Allen-Dynes estimate of Tc for ismear = 1
         !
-        WRITE(stdout, '(5x,a,f12.7,a)') "Estimated Allen-Dynes Tc"
+        WRITE(stdout, '(5x, a, f12.7, a)') "Estimated Allen-Dynes Tc"
         WRITE(stdout, '(a)') " "
-        WRITE(stdout, '(5x,a,f12.7,a,f12.7)') "logavg = ", logavg(1), " l_a2F = ", l_a2f(1)
+        WRITE(stdout, '(5x, a, f12.7, a, f12.7)') "logavg = ", logavg(1), " l_a2f = ", l_a2f(1)
         DO i = 1, 6
           !
           mu = 0.1d0 + 0.02d0 * DBLE(i - 1)
-          tc = logavg(1) / 1.2d0 * EXP(-1.04d0 * (1.d0 + l_a2F(1)) / (l_a2f(1) - mu * ( 1.d0 + 0.62d0 * l_a2f(1))))
+          tc = logavg(1) / 1.2d0 * EXP(-1.04d0 * (1.d0 + l_a2f(1)) / (l_a2f(1) - mu * ( 1.d0 + 0.62d0 * l_a2f(1))))
           ! tc in K
           !
           tc = tc * ryd2ev / kelvin2eV
           !SP: IF Tc is too big, it is not physical
           IF (tc < 1000.0) THEN
-            WRITE(stdout, '(5x,a,f6.2,a,f22.12,a)') "mu = ", mu, " Tc = ", tc, " K"
+            WRITE(stdout, '(5x, a, f6.2, a, f22.12, a)') "mu = ", mu, " Tc = ", tc, " K"
           ENDIF 
           !
         ENDDO
@@ -275,20 +281,19 @@
         ! 
         n = nc / omega
         WRITE(iures, '(a)') '# Temperature [K]                &
-                            &Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '  
-        WRITE(iures, '("#     ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1,nqsmear)
+                            Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '  
+        WRITE(iures, '("#     ", 15f12.7)') ((degaussq + (ismear - 1) * delta_qsmear) * ryd2mev, ismear = 1, nqsmear)
         DO ismear = 1, nqsmear
           DO itemp = 1, 100 ! Per step of 10K
-            temp = itemp * 10 * kelvin2Ry
+            temp = itemp * 10.d0 * kelvin2Ry
             ! omega is the volume of the primitive cell in a.u.  
             ! 
-            prefact = 4.0 * pi / ( temp * n )
+            prefact = 4.d0 * pi / (temp * n)
             DO iw = 1, nqstep  ! loop over points on the a2F(w)
               ! 
-              iomega = DBLE(iw) * dw
-              be = 1.0 / (EXP(iomega / temp) - 1); 
+              be = one / (EXP(ww(iw) / temp) - one) 
               ! Perform the integral with rectangle. 
-              rho(itemp, ismear) = rho(itemp, ismear) + prefact * iomega * a2f_tr(iw, ismear) * be * (1.0 + be) * dw  
+              rho(itemp, ismear) = rho(itemp, ismear) + prefact * ww(iw) * a2f_tr(iw, ismear) * be * (1.d0 + be) * dw  
               ! 
             ENDDO
             ! From a.u. to micro Ohm cm
@@ -323,13 +328,13 @@
       ENDDO ! isig
       ! 
       DEALLOCATE(l_a2f, STAT = ierr)
-      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating l_a2F', 1)
+      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating l_a2f', 1)
       DEALLOCATE(l_a2f_tr, STAT = ierr)
-      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating l_a2F_tr', 1)
-      DEALLOCATE(a2fct, STAT = ierr)
-      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating a2F', 1)
+      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating l_a2f_tr', 1)
+      DEALLOCATE(a2f_, STAT = ierr)
+      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating a2f', 1)
       DEALLOCATE(a2f_tr, STAT = ierr)
-      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating a2F_tr', 1)
+      IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating a2f_tr', 1)
       DEALLOCATE(rho, STAT = ierr)
       IF (ierr /= 0) CALL errore('eliashberg_a2f', 'Error deallocating rho', 1)
       DEALLOCATE(dosph, STAT = ierr)
@@ -363,15 +368,13 @@
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE epwcom,    ONLY : nbndsub, fsthick, &
-                          eptemp, ngaussw, degaussw,     &
+    USE epwcom,    ONLY : nbndsub, fsthick, eptemp, ngaussw, degaussw, &
                           nsmear, delta_smear, efermi_read, fermi_energy
-    USE pwcom,     ONLY : nelec, ef
-    USE klist_epw, ONLY : isk_dummy
+    USE pwcom,     ONLY : ef
     USE elph2,     ONLY : ibndmin, etf, wkf, xqf, wqf, nkqf, nktotf, &
-                          nkf, xqf, nbndfst
-    USE constants_epw, ONLY : ryd2ev, two
-    USE mp,        ONLY : mp_barrier,mp_sum
+                          nkf, xqf, nbndfst, efnew
+    USE constants_epw, ONLY : ryd2ev, zero, one, two
+    USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_global, ONLY : inter_pool_comm
     !
     IMPLICIT NONE
@@ -395,7 +398,8 @@
     INTEGER :: fermicount
     !! Number of states on the Fermi surface
     INTEGER :: ismear
-    !! Smearing for the Gaussian function 
+    !! Counter on smearing values
+    !
     REAL(KIND = DP) :: ekk
     !! Eigen energy on the fine grid relative to the Fermi level
     REAL(KIND = DP) :: ekq
@@ -403,41 +407,43 @@
     REAL(KIND = DP) :: ef0
     !! Fermi energy level
     REAL(KIND = DP) :: weight
-    !! Imaginary part of the phonhon self-energy factor 
+    !! Imaginary part of the phonhon self-energy factor, sans e-ph matrix elements 
     REAL(KIND = DP) :: dosef
     !! Density of state N(Ef)
     REAL(KIND = DP) :: w0g1
-    !! Dirac delta for the imaginary part of $\Sigma$
+    !! Dirac delta at k for the imaginary part of $\Sigma$
     REAL(KIND = DP) :: w0g2
-    !! Dirac delta for the imaginary part of $\Sigma$
-    REAL(KIND = DP) :: w0gauss
-    !! 
-    REAL(KIND = DP) :: dos_ef
-    !! 
-    REAL(KIND = DP) :: gamma
-    !! 
+    !! Dirac delta at k+q for the imaginary part of $\Sigma$
     REAL(KIND = DP) :: degaussw0
-    !! 
-    REAL(KIND = DP), EXTERNAL :: efermig
-    !! 
+    !! degaussw0 = (ismear-1) * delta_smear + degaussw
+    REAL(KIND = DP) :: inv_degaussw0
+    !! Inverse degaussw0 for efficiency reasons
+    REAL(KIND = DP) :: gamma
+    !! Nesting function
+    REAL(KIND = DP) :: dos_ef
+    !! Function returning the density of states at the Fermi level
+    REAL(KIND = DP) :: w0gauss
+    !! This function computes the derivative of the Fermi-Dirac function
+    !! It is therefore an approximation for a delta function
     !
     IF (iqq == 1) THEN
-      WRITE(stdout, '(/5x,a)') REPEAT('=',67)
-      WRITE(stdout, '(5x,"Nesting Function in the double delta approx")')
-      WRITE(stdout, '(5x,a/)') REPEAT('=',67)
+      WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
+      WRITE(stdout, '(5x, "Nesting Function in the double delta approx")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
       !
-      IF (fsthick < 1.d3 ) WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+      IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a, f10.6, a)' ) &
         'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-      WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
+      WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
     ENDIF
     !
     ! SP: The Gamma function needs to be put to 0 for each q
-    gamma = 0.0
+    gamma = zero
     ! 
     ! Here we loop on smearing values
     DO ismear = 1, nsmear
       !
       degaussw0 = (ismear - 1) * delta_smear + degaussw
+      inv_degaussw0 = one / degaussw0
       !
       ! Fermi level and corresponding DOS
       !
@@ -446,7 +452,7 @@
       IF (efermi_read) THEN
         ef0 = fermi_energy 
       ELSE
-        ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_dummy)
+        ef0 = efnew
       ENDIF
       !
       dosef = dos_ef(ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
@@ -462,7 +468,6 @@
       CALL start_clock('nesting')
       !
       fermicount = 0
-      !
       DO ik = 1, nkf
         !
         ikk = 2 * ik - 1
@@ -477,12 +482,12 @@
           DO ibnd = 1, nbndfst
             !
             ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
-            w0g1 = w0gauss(ekk / degaussw0, 0) / degaussw0
+            w0g1 = w0gauss(ekk * inv_degaussw0, 0) * inv_degaussw0
             !
             DO jbnd = 1, nbndfst
               !
               ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
-              w0g2 = w0gauss(ekq / degaussw0, 0) / degaussw0
+              w0g2 = w0gauss(ekq *inv_degaussw0, 0) * inv_degaussw0
               !
               ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q +id]
               ! This is the imaginary part of the phonon self-energy, sans the matrix elements
@@ -498,10 +503,8 @@
               gamma  = gamma  + weight  
               !
             ENDDO ! jbnd
-          ENDDO   ! ibnd
-          !
+          ENDDO ! ibnd
         ENDIF ! endif fsthick
-        !
       ENDDO ! loop on k
       !
       ! collect contributions from all pools (sum over k-points)
@@ -509,22 +512,23 @@
       !
       CALL mp_sum(gamma, inter_pool_comm) 
       CALL mp_sum(fermicount, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
       !
-      WRITE(stdout, '(/5x,"iq = ",i5," coord.: ", 3f9.5, " wt: ", f9.5)') iq, xqf(:, iq) , wqf(iq)
-      WRITE(stdout, '(5x,a)') REPEAT('-',67)
-         ! 
+      WRITE(stdout, '(/5x, "iq = ",i5," coord.: ", 3f9.5, " wt: ", f9.5)') iq, xqf(:, iq) , wqf(iq)
+      WRITE(stdout, '(5x, a)') REPEAT('-', 67)
+      ! 
       WRITE(stdout, 102) gamma
-      WRITE(stdout, '(5x,a/)') REPEAT('-',67)
+      WRITE(stdout, '(5x,a/)') REPEAT('-', 67)
       !
-      WRITE(stdout, '(/5x,a,i8,a,i8/)') &
+      WRITE(stdout, '(/5x, a, i8, a, i8/)') &
         'Number of (k,k+q) pairs on the Fermi surface: ', fermicount, ' out of ', nktotf
       !
       CALL stop_clock('nesting')
     ENDDO !smears
     !
-100 FORMAT(5x, 'Gaussian Broadening: ',f7.3,' eV, ngauss=', i4)
+100 FORMAT(5x, 'Gaussian Broadening: ', f7.3,' eV, ngauss=', i4)
 101 FORMAT(5x, 'DOS =', f10.6, ' states/spin/eV/Unit Cell at Ef=', f10.6, ' eV')
-102 FORMAT(5x, 'Nesting function (q)=', e15.6, ' [Adimensional]')
+102 FORMAT(5x, 'Nesting function (q)=', E15.6, ' [Adimensional]')
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE nesting_fn_q
@@ -542,7 +546,7 @@
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, filqf, filkf
     USE elph2,         ONLY : etf, nkf, nqtotf, wf, xkf, xqf, nkqtotf, nktotf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, zero
     USE io_var,        ONLY : iufilfreq, iufileig
     USE elph2,         ONLY : nkqf
     USE io_global,     ONLY : ionode_id
@@ -568,7 +572,7 @@
     INTEGER :: ierr
     !! Error status
     REAL(KIND = DP) :: dist
-    !! Distance from Gamma
+    !! Distance from G-point
     REAL(KIND = DP) :: dprev
     !! Previous distance
     REAL(KIND = DP) :: dcurr
@@ -583,26 +587,26 @@
       IF (my_pool_id == ionode_id) THEN
         !
         OPEN(iufilfreq, FILE = "phband.freq", FORM = 'formatted')
-        WRITE(iufilfreq, '(" &plot nbnd=",i4,", nks=",i6," /")') nmodes, nqtotf
+        WRITE(iufilfreq, '(" &plot nbnd=", i4, ", nks=", i6, " /")') nmodes, nqtotf
         !
         ! crystal to cartesian coordinates
         CALL cryst_to_cart(nqtotf, xqf, bg, 1)
         !
-        dist = 0.d0
-        dprev = 0.d0
-        dcurr = 0.d0
+        dist  = zero
+        dprev = zero
+        dcurr = zero
         DO iq = 1, nqtotf
           !
           IF (iq /= 1) THEN  
             dist = DSQRT((xqf(1, iq) - xqf(1, iq - 1)) * (xqf(1, iq) - xqf(1, iq - 1)) & 
-                      + (xqf(2, iq) - xqf(2, iq - 1)) * (xqf(2, iq) - xqf(2, iq - 1)) & 
-                      + (xqf(3, iq) - xqf(3, iq - 1)) * (xqf(3, iq) - xqf(3, iq - 1)))
+                       + (xqf(2, iq) - xqf(2, iq - 1)) * (xqf(2, iq) - xqf(2, iq - 1)) & 
+                       + (xqf(3, iq) - xqf(3, iq - 1)) * (xqf(3, iq) - xqf(3, iq - 1)))
           ELSE 
-            dist = 0.d0
+            dist = zero
           ENDIF
           dcurr = dprev + dist
           dprev = dcurr
-          WRITE(iufilfreq, '(10x,3f10.6)') xqf(:, iq)
+          WRITE(iufilfreq, '(10x, 3f10.6)') xqf(:, iq)
           WRITE(iufilfreq, '(1000f14.4)') (wf(imode, iq) * ryd2mev, imode = 1, nmodes)
           !
         ENDDO
@@ -641,14 +645,14 @@
       IF (my_pool_id == ionode_id) THEN
         !
         OPEN(iufileig, FILE = "band.eig", FORM = 'formatted')
-        WRITE(iufileig, '(" &plot nbnd=",i4,", nks=",i6," /")') nbndsub, nktotf
+        WRITE(iufileig, '(" &plot nbnd=", i4, ", nks=", i6, " /")') nbndsub, nktotf
         !
         ! crystal to cartesian coordinates
         CALL cryst_to_cart(nkqtotf, xkf_all, bg, 1)
         !
-        dist = 0.d0
-        dprev = 0.d0
-        dcurr = 0.d0
+        dist  = zero
+        dprev = zero
+        dcurr = zero
         DO ik = 1, nktotf
           !
           ikk = 2 * ik - 1
@@ -656,14 +660,14 @@
           !
           IF (ikk /= 1) THEN
             dist = DSQRT((xkf_all(1, ikk) - xkf_all(1, ikk - 2)) * (xkf_all(1, ikk) - xkf_all(1, ikk - 2)) &
-                      + (xkf_all(2, ikk) - xkf_all(2, ikk - 2)) * (xkf_all(2, ikk) - xkf_all(2, ikk - 2)) &
-                      + (xkf_all(3, ikk) - xkf_all(3, ikk - 2)) * (xkf_all(3, ikk) - xkf_all(3, ikk - 2)))
+                       + (xkf_all(2, ikk) - xkf_all(2, ikk - 2)) * (xkf_all(2, ikk) - xkf_all(2, ikk - 2)) &
+                       + (xkf_all(3, ikk) - xkf_all(3, ikk - 2)) * (xkf_all(3, ikk) - xkf_all(3, ikk - 2)))
           ELSE
             dist = 0.d0
           ENDIF
           dcurr = dprev + dist
           dprev = dcurr
-          WRITE(iufileig, '(10x,3f10.6)') xkf_all(:, ikk)
+          WRITE(iufileig, '(10x, 3f10.6)') xkf_all(:, ikk)
           WRITE(iufileig, '(1000f20.12)') (etf_all(ibnd, ikk) * ryd2ev, ibnd = 1, nbndsub)
           !
         ENDDO
