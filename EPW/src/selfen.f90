@@ -43,7 +43,7 @@
     USE io_var,        ONLY : linewidth_elself
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, shortrange, fsthick, eptemp, ngaussw, degaussw, &
-                              eps_acustic, efermi_read, fermi_energy, restart, restart_freq
+                              eps_acustic, efermi_read, fermi_energy, restart, restart_step
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, eta, nbndfst, &
                               nkf, epf17, wf, wqf, xkf, nkqtotf, adapt_smearing, &
@@ -55,7 +55,7 @@
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE io_transport,  ONLY : electron_write
+    USE io_selfen,     ONLY : selfen_el_write
     USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
@@ -346,14 +346,14 @@
       !
       ! Creation of a restart point
       IF (restart) THEN
-        IF (MOD(iqq, restart_freq) == 0) THEN
+        IF (MOD(iqq, restart_step) == 0) THEN
           WRITE(stdout, '(5x, a, i10)' ) 'Creation of a restart point at ', iqq
           CALL mp_sum(sigmar_all, inter_pool_comm)
           CALL mp_sum(sigmai_all, inter_pool_comm)
           CALL mp_sum(zi_all, inter_pool_comm)
           CALL mp_sum(fermicount, inter_pool_comm)
           CALL mp_barrier(inter_pool_comm)
-          CALL electron_write(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
+          CALL selfen_el_write(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
         ENDIF
       ENDIF 
     ENDIF ! in case of restart, do not do the first one
@@ -941,7 +941,7 @@
     USE io_var,        ONLY : linewidth_elself
     USE epwcom,        ONLY : nbndsub, fsthick, eptemp, ngaussw, efermi_read, & 
                               fermi_energy, degaussw, nel, meff, epsiheg, &
-                              restart, restart_freq 
+                              restart, restart_step 
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, dmef, adapt_smearing, &
                               nkf, wqf, xkf, nkqtotf, efnew, nbndfst, nktotf,  &
@@ -952,7 +952,7 @@
     USE cell_base,     ONLY : omega, alat, bg
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE io_transport,  ONLY : electron_write
+    USE io_selfen,     ONLY : selfen_el_write
     USE poolgathering, ONLY : poolgather2
     ! 
     IMPLICIT NONE
@@ -1278,14 +1278,14 @@
       !
       ! Creation of a restart point
       IF (restart) THEN
-        IF (MOD(iqq, restart_freq) == 0) THEN
+        IF (MOD(iqq, restart_step) == 0) THEN
           WRITE(stdout, '(5x, a, i10)' ) 'Creation of a restart point at ', iqq
           CALL mp_sum(sigmar_all, inter_pool_comm)
           CALL mp_sum(sigmai_all, inter_pool_comm)
           CALL mp_sum(zi_all, inter_pool_comm)
           CALL mp_sum(fermicount, inter_pool_comm)
           CALL mp_barrier(inter_pool_comm)
-          CALL electron_write(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
+          CALL selfen_el_write(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
         ENDIF
       ENDIF
     ENDIF ! in case of restart, do not do the first one
@@ -1501,6 +1501,187 @@
     END FUNCTION dos_ef_seq
     !-----------------------------------------------------------------------
     ! 
+    !-----------------------------------------------------------------------
+    SUBROUTINE nesting_fn_q(iqq, iq)
+    !-----------------------------------------------------------------------
+    !!
+    !! Compute the imaginary part of the phonon self energy due to electron-
+    !! phonon interaction in the Migdal approximation. This corresponds to 
+    !! the phonon linewidth (half width). The phonon frequency is taken into
+    !! account in the energy selection rule.
+    !!
+    !! Use matrix elements, electronic eigenvalues and phonon frequencies
+    !! from ep-wannier interpolation. 
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,     ONLY : DP
+    USE io_global, ONLY : stdout
+    USE epwcom,    ONLY : nbndsub, fsthick, eptemp, ngaussw, degaussw, &
+                          nsmear, delta_smear, efermi_read, fermi_energy
+    USE pwcom,     ONLY : ef
+    USE elph2,     ONLY : ibndmin, etf, wkf, xqf, wqf, nkqf, nktotf, &
+                          nkf, xqf, nbndfst, efnew
+    USE constants_epw, ONLY : ryd2ev, zero, one, two
+    USE mp,        ONLY : mp_barrier, mp_sum
+    USE mp_global, ONLY : inter_pool_comm
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: iqq
+    !! Current q-point index from selecq
+    INTEGER, INTENT(in) :: iq
+    !! Current q-point index
+    ! 
+    ! Local variables
+    INTEGER :: ik
+    !! Counter on the k-point index 
+    INTEGER :: ikk
+    !! k-point index
+    INTEGER :: ikq
+    !! q-point index 
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: jbnd
+    !! Counter on bands
+    INTEGER :: fermicount
+    !! Number of states on the Fermi surface
+    INTEGER :: ismear
+    !! Counter on smearing values
+    !
+    REAL(KIND = DP) :: ekk
+    !! Eigen energy on the fine grid relative to the Fermi level
+    REAL(KIND = DP) :: ekq
+    !! Eigen energy of k+q on the fine grid relative to the Fermi level
+    REAL(KIND = DP) :: ef0
+    !! Fermi energy level
+    REAL(KIND = DP) :: weight
+    !! Imaginary part of the phonhon self-energy factor, sans e-ph matrix elements 
+    REAL(KIND = DP) :: dosef
+    !! Density of state N(Ef)
+    REAL(KIND = DP) :: w0g1
+    !! Dirac delta at k for the imaginary part of $\Sigma$
+    REAL(KIND = DP) :: w0g2
+    !! Dirac delta at k+q for the imaginary part of $\Sigma$
+    REAL(KIND = DP) :: degaussw0
+    !! degaussw0 = (ismear-1) * delta_smear + degaussw
+    REAL(KIND = DP) :: inv_degaussw0
+    !! Inverse degaussw0 for efficiency reasons
+    REAL(KIND = DP) :: gamma
+    !! Nesting function
+    REAL(KIND = DP) :: dos_ef
+    !! Function returning the density of states at the Fermi level
+    REAL(KIND = DP) :: w0gauss
+    !! This function computes the derivative of the Fermi-Dirac function
+    !! It is therefore an approximation for a delta function
+    !
+    IF (iqq == 1) THEN
+      WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
+      WRITE(stdout, '(5x, "Nesting Function in the double delta approx")')
+      WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
+      !
+      IF (fsthick < 1.d3) WRITE(stdout, '(/5x, a, f10.6, a)' ) &
+        'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+      WRITE(stdout, '(/5x, a, f10.6, a)' ) 'Golden Rule strictly enforced with T = ', eptemp * ryd2ev, ' eV'
+    ENDIF
+    !
+    ! SP: The Gamma function needs to be put to 0 for each q
+    gamma = zero
+    ! 
+    ! Here we loop on smearing values
+    DO ismear = 1, nsmear
+      !
+      degaussw0 = (ismear - 1) * delta_smear + degaussw
+      inv_degaussw0 = one / degaussw0
+      !
+      ! Fermi level and corresponding DOS
+      !
+      !   Note that the weights of k+q points must be set to zero here
+      !   no spin-polarized calculation here
+      IF (efermi_read) THEN
+        ef0 = fermi_energy 
+      ELSE
+        ef0 = efnew
+      ENDIF
+      !
+      dosef = dos_ef(ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
+      !  N(Ef) in the equation for lambda is the DOS per spin
+      dosef = dosef / two
+      !
+      IF (iqq == 1) THEN
+        WRITE(stdout, 100) degaussw0 * ryd2ev, ngaussw
+        WRITE(stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
+      ENDIF
+      !
+      !
+      CALL start_clock('nesting')
+      !
+      fermicount = 0
+      DO ik = 1, nkf
+        !
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
+        ! 
+        ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
+        IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
+            (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) then
+          !
+          fermicount = fermicount + 1
+          !
+          DO ibnd = 1, nbndfst
+            !
+            ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
+            w0g1 = w0gauss(ekk * inv_degaussw0, 0) * inv_degaussw0
+            !
+            DO jbnd = 1, nbndfst
+              !
+              ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
+              w0g2 = w0gauss(ekq *inv_degaussw0, 0) * inv_degaussw0
+              !
+              ! = k-point weight * [f(E_k) - f(E_k+q)]/ [E_k+q - E_k -w_q +id]
+              ! This is the imaginary part of the phonon self-energy, sans the matrix elements
+              !
+              ! weight = wkf (ikk) * (wgkk - wgkq) * &
+              !      aimag ( cone / ( ekq - ekk  - ci * degaussw ) ) 
+              !
+              ! the below expression is positive-definite, but also an approximation
+              ! which neglects some fine features
+              !
+              weight = wkf(ikk) * w0g1 * w0g2
+              !
+              gamma  = gamma  + weight  
+              !
+            ENDDO ! jbnd
+          ENDDO ! ibnd
+        ENDIF ! endif fsthick
+      ENDDO ! loop on k
+      !
+      ! collect contributions from all pools (sum over k-points)
+      ! this finishes the integral over the BZ  (k)
+      !
+      CALL mp_sum(gamma, inter_pool_comm) 
+      CALL mp_sum(fermicount, inter_pool_comm)
+      CALL mp_barrier(inter_pool_comm)
+      !
+      WRITE(stdout, '(/5x, "iq = ",i5," coord.: ", 3f9.5, " wt: ", f9.5)') iq, xqf(:, iq) , wqf(iq)
+      WRITE(stdout, '(5x, a)') REPEAT('-', 67)
+      ! 
+      WRITE(stdout, 102) gamma
+      WRITE(stdout, '(5x,a/)') REPEAT('-', 67)
+      !
+      WRITE(stdout, '(/5x, a, i8, a, i8/)') &
+        'Number of (k,k+q) pairs on the Fermi surface: ', fermicount, ' out of ', nktotf
+      !
+      CALL stop_clock('nesting')
+    ENDDO !smears
+    !
+100 FORMAT(5x, 'Gaussian Broadening: ', f7.3,' eV, ngauss=', i4)
+101 FORMAT(5x, 'DOS =', f10.6, ' states/spin/eV/Unit Cell at Ef=', f10.6, ' eV')
+102 FORMAT(5x, 'Nesting function (q)=', E15.6, ' [Adimensional]')
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE nesting_fn_q
+    !-----------------------------------------------------------------------
+
   !-----------------------------------------------------------------------
   END MODULE selfen
   !-----------------------------------------------------------------------

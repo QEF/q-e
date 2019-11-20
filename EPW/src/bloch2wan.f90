@@ -224,13 +224,13 @@
       ENDDO
       !
       ! RMDB
-      DO ir = 1, nrr
-        DO jbnd = 1, nbndsub
-          DO ibnd = 1, nbndsub
-            WRITE(iudecayH, '(5I5,6F12.6)') irvec(:, ir), ibnd, jbnd, chw(ibnd, jbnd, ir) * ryd2ev
-          ENDDO
-        ENDDO
-      ENDDO
+      !DO ir = 1, nrr
+      !  DO jbnd = 1, nbndsub
+      !    DO ibnd = 1, nbndsub
+      !      WRITE(iudecayH, '(5I5,6F12.6)') irvec(:, ir), ibnd, jbnd, chw(ibnd, jbnd, ir) * ryd2ev
+      !    ENDDO
+      !  ENDDO
+      !ENDDO
       !
       CLOSE(iudecayH)
       !

@@ -956,7 +956,7 @@
     !----------------------------------------------------------------------
     !
     !---------------------------------------------------------------------------
-    SUBROUTINE read_modes(iunpun, current_iq, ierr)
+    SUBROUTINE read_disp_pattern(iunpun, current_iq, ierr)
     !---------------------------------------------------------------------------
     !!
     !! This routine reads the displacement patterns.
@@ -995,7 +995,7 @@
       CALL iotk_scan_dat(iunpun, "QPOINT_NUMBER", iq)
     ENDIF
     CALL mp_bcast(iq,  meta_ionode_id, world_comm)
-    IF (iq /= current_iq) CALL errore('read_modes', ' Problems with current_iq', 1)
+    IF (iq /= current_iq) CALL errore('read_disp_pattern', ' Problems with current_iq', 1)
     ! 
     IF (meta_ionode) THEN
       !
@@ -1029,7 +1029,7 @@
     RETURN
     ! 
     !---------------------------------------------------------------------------
-    END SUBROUTINE read_modes
+    END SUBROUTINE read_disp_pattern
     !---------------------------------------------------------------------------
     ! 
     !------------------------------------------------------------
@@ -1183,7 +1183,7 @@
     !
     ! This is only a quick fix since the routine was written for parallel
     ! execution - FG June 2014
-#if ! defined(__MPI)
+#if defined(__MPI)
     my_pool_id = 0
 #endif
     !
@@ -1250,7 +1250,7 @@
     !
     ! This is only a quick fix since the routine was written for parallel
     ! execution - FG June 2014
-#if ! defined(__MPI)
+#if defined(__MPI)
     my_pool_id = 0
 #endif
     !

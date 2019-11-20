@@ -230,8 +230,8 @@
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
   !! nr. of bins for frequency in electron spectral function due to e-p interaction 
-  INTEGER :: restart_freq
-  !! Create a restart point during the interpolation part every restart_freq q/k-points. 
+  INTEGER :: restart_step
+  !! Create a restart point during the interpolation part every restart_step q/k-points. 
   !
   REAL(KIND = DP) :: degaussw
   !! smearing width for Fermi surface average in e-ph coupling after wann interp

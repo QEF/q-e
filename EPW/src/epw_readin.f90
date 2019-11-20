@@ -51,7 +51,7 @@
                             nsiter, conv_thr_racon, specfun_el, specfun_ph, nbndskip,  &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &  
-                            ncarrier, carrier, scattering_serta, restart, restart_freq,&
+                            ncarrier, carrier, scattering_serta, restart, restart_step,&
                             scattering_0rta, longrange, shortrange, scatread, use_ws,  &
                             restart_filq, prtgkk, nel, meff, epsiheg, lphase,          &
                             omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  & 
@@ -130,7 +130,7 @@
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
+       scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
        epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           & 
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   & 
        scdm_sigma, assume_metal
@@ -266,7 +266,7 @@
   ! specfun_ph      : if .TRUE. calculate phonon spectral function due to e-p interaction
   ! specfun_pl      : if .TRUE. calculate plason spectral function 
   ! restart         : if .TRUE. a run can be restarted from the interpolation level
-  ! restart_freq    : Create a restart point every restart_freq q/k-points
+  ! restart_step    : Create a restart point every restart_step q/k-points
   ! restart_filq    : Use to merge different q-grid scattering rates (name of the file)
   ! scattering      : if .TRUE. scattering rates are calculated
   ! scattering_serta: if .TRUE. scattering rates are calculated using self-energy relaxation-time-approx
@@ -355,7 +355,7 @@
   epwread      = .FALSE.
   epwwrite     = .TRUE.
   restart      = .FALSE.
-  restart_freq = 100
+  restart_step = 100
   wannierize   = .FALSE.
   write_wfn    = .FALSE.
   kmaps        = .FALSE.

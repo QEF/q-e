@@ -28,7 +28,7 @@
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, restart,      & 
                               nstemp, scattering_serta, scattering_0rta, shortrange, &
-                              restart_freq, restart_filq, vme, assume_metal
+                              restart_step, restart_filq, vme, assume_metal
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
                               epf17, nkqtotf, inv_tau_all, inv_tau_allcb,    &
@@ -373,7 +373,7 @@
       !
       ! Creation of a restart point
       IF (restart) THEN
-        IF (MOD(iqq, restart_freq) == 0) THEN
+        IF (MOD(iqq, restart_step) == 0) THEN
           WRITE(stdout, '(a)' ) '     Creation of a restart point'
           ! 
           ! The mp_sum will aggreage the results on each k-points. 
@@ -623,11 +623,11 @@
     !! Number of points in the BZ corresponding to a point in IBZ    
     INTEGER :: ierr
     !! Error status
-    INTEGER :: BZtoIBZ_tmp(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz_tmp(nkf1 * nkf2 * nkf3)
     !! Temporary mapping
-    INTEGER :: BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER :: bztoibz(nkf1 * nkf2 * nkf3)
     !! BZ to IBZ mapping
-    INTEGER(SIK2) :: s_BZtoIBZ(nkf1 * nkf2 * nkf3)
+    INTEGER(SIK2) :: s_bztoibz(nkf1 * nkf2 * nkf3)
     !! symmetry 
     REAL(KIND = DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
@@ -657,11 +657,11 @@
     !! Mobility along the zz axis after diagonalization [cm^2/Vs] 
     REAL(KIND = DP) :: vkk(3, nbndfst)
     !! Electron velocity vector for a band. 
-    REAL(KIND = DP) :: Sigma(9, nstemp)
+    REAL(KIND = DP) :: sigma(9, nstemp)
     !! Conductivity matrix in vector form
-    REAL(KIND = DP) :: SigmaZ(9, nstemp)
+    REAL(KIND = DP) :: sigmaZ(9, nstemp)
     !! Conductivity matrix in vector form with Znk
-    REAL(KIND = DP) :: Sigma_m(3, 3, nstemp)
+    REAL(KIND = DP) :: sigma_m(3, 3, nstemp)
     !! Conductivity matrix
     REAL(KIND = DP) :: sigma_up(3, 3)
     !! Conductivity matrix in upper-triangle
@@ -669,7 +669,7 @@
     !! Eigenvalues from the diagonalized conductivity matrix
     REAL(KIND = DP) :: sigma_vect(3, 3)
     !! Eigenvectors from the diagonalized conductivity matrix
-    REAL(KIND = DP) :: Znk
+    REAL(KIND = DP) :: znk
     !! Real Znk from \lambda_nk (called zi_allvb or zi_allcb)
     REAL(KIND = DP) :: tdf_sigma(9)
     !! Temporary file
@@ -926,21 +926,21 @@
       !
       !  SP - Uncomment to use symmetries on velocities
       IF (mp_mesh_k) THEN
-        BZtoIBZ(:) = 0
-        s_BZtoIBZ(:) = 0
+        bztoibz(:) = 0
+        s_bztoibz(:) = 0
         ! 
         CALL set_sym_bl()
-        ! What we get from this call is BZtoIBZ
-        CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, BZtoIBZ, s_BZtoIBZ)
+        ! What we get from this call is bztoibz
+        CALL kpoint_grid_epw(nrot, time_reversal, .FALSE., s, t_rev, nkf1, nkf2, nkf3, bztoibz, s_bztoibz)
         ! 
         IF (iterative_bte) THEN
           ! Now we have to remap the points because the IBZ k-points have been
           ! changed to to load balancing. 
-          BZtoIBZ_tmp(:) = 0
+          bztoibz_tmp(:) = 0
           DO ikbz = 1, nkf1 * nkf2 * nkf3
-            BZtoIBZ_tmp(ikbz) = map_rebal(BZtoIBZ(ikbz))
+            bztoibz_tmp(ikbz) = map_rebal(bztoibz(ikbz))
           ENDDO
-          BZtoIBZ(:) = BZtoIBZ_tmp(:) 
+          bztoibz(:) = bztoibz_tmp(:) 
         ENDIF
         !
       ENDIF
@@ -967,8 +967,8 @@
             ! 7 = (3,1) = zx, 8 = (3,2) = zy, 9 = (3,3) = zz
             ! this can be reduced to 6 if we take into account symmetry xy=yx, ...
             tdf_sigma(:) = zero
-            Sigma(:, :)  = zero
-            SigmaZ(:, :) = zero
+            sigma(:, :)  = zero
+            sigmaZ(:, :) = zero
             !
           ENDIF
           !
@@ -1006,10 +1006,10 @@
                     DO ikbz = 1, nkf1 * nkf2 * nkf3
                       ! If the k-point from the full BZ is related by a symmetry operation 
                       ! to the current k-point, then take it.  
-                      IF (BZtoIBZ(ikbz) == ik + lower_bnd - 1) THEN
+                      IF (bztoibz(ikbz) == ik + lower_bnd - 1) THEN
                         nb = nb + 1
                         ! Transform the symmetry matrix from Crystal to cartesian
-                        sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                        sa(:, :) = DBLE(s(:, :, s_bztoibz(ikbz)))
                         sb       = MATMUL(bg, sa)
                         sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                         CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
@@ -1055,13 +1055,13 @@
                   ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
                   dfnk = w0gauss(ekk / etemp, -99) / etemp
                   ! electrical conductivity
-                  Sigma(:, itemp) = Sigma(:, itemp) + dfnk * tdf_sigma(:) * tau
+                  sigma(:, itemp) = Sigma(:, itemp) + dfnk * tdf_sigma(:) * tau
                   !
                   ! Now do the same but with Znk multiplied
                   ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
-                  Znk = one / (one + zi_allvb(itemp, ibnd, ik + lower_bnd - 1))
+                  znk = one / (one + zi_allvb(itemp, ibnd, ik + lower_bnd - 1))
                   tau = one / (Znk * inv_tau_all(itemp, ibnd, ik + lower_bnd - 1))
-                  SigmaZ(:, itemp) = SigmaZ(:, itemp) + dfnk * tdf_sigma(:) * tau
+                  sigmaz(:, itemp) = sigmaz(:, itemp) + dfnk * tdf_sigma(:) * tau
                   !
                 ENDIF
               ENDDO ! ibnd
@@ -1070,8 +1070,8 @@
           !
           ! The k points are distributed among pools: here we collect them
           !
-          CALL mp_sum(Sigma(:, itemp), world_comm)
-          CALL mp_sum(SigmaZ(:, itemp), world_comm)
+          CALL mp_sum(sigma(:, itemp), world_comm)
+          CALL mp_sum(sigmaz(:, itemp), world_comm)
           !
         ENDDO ! nstemp
         !
@@ -1092,10 +1092,10 @@
         ! 
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)
-          ! Sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
+          ! sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
           IF (mpime ==  meta_ionode_id) THEN
             WRITE(iufilsigma, '(11E16.8)') ef0(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
-                                          conv_factor1 * Sigma(:, itemp) * inv_cell
+                                          conv_factor1 * sigma(:, itemp) * inv_cell
           ENDIF
           carrier_density = 0.0
           ! 
@@ -1120,15 +1120,15 @@
           ! 4 = (2,1) = yx, 5 = (2,2) = yy, 6 = (2,3) = yz
           ! 7 = (3,1) = zx, 8 = (3,2) = zy, 9 = (3,3) = zz
           sigma_up(:, :) = zero
-          sigma_up(1, 1) = Sigma(1, itemp)
-          sigma_up(1, 2) = Sigma(2, itemp)
-          sigma_up(1, 3) = Sigma(3, itemp)
-          sigma_up(2, 1) = Sigma(4, itemp)
-          sigma_up(2, 2) = Sigma(5, itemp)
-          sigma_up(2, 3) = Sigma(6, itemp)
-          sigma_up(3, 1) = Sigma(7, itemp)
-          sigma_up(3, 2) = Sigma(8, itemp)
-          sigma_up(3, 3) = Sigma(9, itemp)
+          sigma_up(1, 1) = sigma(1, itemp)
+          sigma_up(1, 2) = sigma(2, itemp)
+          sigma_up(1, 3) = sigma(3, itemp)
+          sigma_up(2, 1) = sigma(4, itemp)
+          sigma_up(2, 2) = sigma(5, itemp)
+          sigma_up(2, 3) = sigma(6, itemp)
+          sigma_up(3, 1) = sigma(7, itemp)
+          sigma_up(3, 2) = sigma(8, itemp)
+          sigma_up(3, 3) = sigma(9, itemp)
           ! 
           CALL rdiagh(3, sigma_up, 3, sigma_eig, sigma_vect)
           ! 
@@ -1184,8 +1184,8 @@
           etemp = transp_temp(itemp)
           IF (itemp == 1) THEN
             tdf_sigma(:) = zero
-            Sigma(:, :)  = zero
-            SigmaZ(:, :) = zero
+            sigma(:, :)  = zero
+            sigmaZ(:, :) = zero
           ENDIF
           DO ik = 1, nkf
             ikk = 2 * ik - 1
@@ -1214,10 +1214,10 @@
                       DO ikbz = 1, nkf1 * nkf2 * nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 
                         ! to the current k-point, then take it.  
-                        IF (BZtoIBZ(ikbz) == ik + lower_bnd - 1) THEN
+                        IF (bztoibz(ikbz) == ik + lower_bnd - 1) THEN
                           nb = nb + 1
                           ! Transform the symmetry matrix from Crystal to cartesian
-                          sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                          sa(:, :) = DBLE(s(:, :, s_bztoibz(ikbz)))
                           sb       = MATMUL(bg, sa)
                           sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                           CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
@@ -1259,13 +1259,13 @@
                     ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0(itemp)
                     tau = one / inv_tau_all(itemp, ibnd, ik + lower_bnd - 1)
                     dfnk = w0gauss(ekk / etemp, -99) / etemp
-                    Sigma(:, itemp) = Sigma(:, itemp) + dfnk * tdf_sigma(:) * tau
+                    sigma(:, itemp) = Sigma(:, itemp) + dfnk * tdf_sigma(:) * tau
                     !
                     ! Now do the same but with Znk multiplied
                     ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
-                    Znk = one / (one + zi_allvb(itemp, ibnd, ik + lower_bnd - 1))
+                    znk = one / (one + zi_allvb(itemp, ibnd, ik + lower_bnd - 1))
                     tau = one / (Znk * inv_tau_all(itemp, ibnd, ik + lower_bnd - 1))
-                    SigmaZ(:, itemp) = SigmaZ(:, itemp) + dfnk * tdf_sigma(:) * tau
+                    sigmaz(:, itemp) = sigmaz(:, itemp) + dfnk * tdf_sigma(:) * tau
                   ENDIF
                 ENDDO 
               ELSE ! In this case we have 2 Fermi levels
@@ -1290,10 +1290,10 @@
                       DO ikbz = 1, nkf1 * nkf2 * nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 
                         ! to the current k-point, then take it.  
-                        IF (BZtoIBZ(ikbz) == ik + lower_bnd - 1) THEN
+                        IF (bztoibz(ikbz) == ik + lower_bnd - 1) THEN
                           nb = nb + 1
                           ! Transform the symmetry matrix from Crystal to cartesian
-                          sa(:, :) = DBLE(s(:, :, s_BZtoIBZ(ikbz)))
+                          sa(:, :) = DBLE(s(:, :, s_bztoibz(ikbz)))
                           sb       = MATMUL(bg, sa)
                           sr(:, :) = MATMUL(at, TRANSPOSE(sb))
                           CALL DGEMV('n', 3, 3, 1.d0, sr, 3, vk_cart(:), 1, 0.d0, v_rot(:), 1)
@@ -1335,11 +1335,11 @@
                     ekk = etf(ibndmin - 1 + ibnd, ikk) - efcb(itemp)
                     tau = one / inv_tau_allcb(itemp, ibnd, ik + lower_bnd - 1)
                     dfnk = w0gauss(ekk / etemp, -99) / etemp
-                    Sigma(:, itemp) = Sigma(:, itemp) +  dfnk * tdf_sigma(:) * tau                      
+                    sigma(:, itemp) = sigma(:, itemp) +  dfnk * tdf_sigma(:) * tau                      
                     ! 
                     ! calculate Z = 1 / ( 1 -\frac{\partial\Sigma}{\partial\omega} )
-                    Znk = one / (one + zi_allcb(itemp, ibnd, ik + lower_bnd - 1))
-                    tau = one / (Znk * inv_tau_allcb(itemp, ibnd, ik + lower_bnd - 1))
+                    znk = one / (one + zi_allcb(itemp, ibnd, ik + lower_bnd - 1))
+                    tau = one / (znk * inv_tau_allcb(itemp, ibnd, ik + lower_bnd - 1))
                     ij = 0
                     DO j = 1, 3
                       DO i = 1, 3
@@ -1347,14 +1347,14 @@
                         tdf_sigma(ij) = vkk(i, ibnd) * vkk(j, ibnd) * tau
                       ENDDO
                     ENDDO
-                    SigmaZ(:, itemp) = SigmaZ(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)                  
+                    sigmaZ(:, itemp) = sigmaZ(:, itemp) + wkf(ikk) * dfnk * tdf_sigma(:)                  
                   ENDIF 
                 ENDDO ! ibnd
               ENDIF ! etcb
             ENDIF ! endif  fsthick
           ENDDO ! end loop on k
-          CALL mp_sum(Sigma(:, itemp), world_comm)
-          CALL mp_sum(SigmaZ(:, itemp), world_comm)
+          CALL mp_sum(sigma(:, itemp), world_comm)
+          CALL mp_sum(sigmaZ(:, itemp), world_comm)
           ! 
         ENDDO ! nstemp
         IF (mpime == meta_ionode_id) THEN
@@ -1373,13 +1373,13 @@
         DO itemp = 1, nstemp
           etemp = transp_temp(itemp)
           IF (mpime == meta_ionode_id) THEN
-            ! Sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
+            ! sigma in units of 1/(a.u.) is converted to 1/(Ohm * m)
             IF (ABS(efcb(itemp)) < eps4) THEN 
               WRITE(iufilsigma, '(11E16.8)') ef0(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
-                                             conv_factor1 * Sigma(:, itemp) * inv_cell
+                                             conv_factor1 * sigma(:, itemp) * inv_cell
             ELSE
               WRITE(iufilsigma, '(11E16.8)') efcb(itemp) * ryd2ev, etemp * ryd2ev / kelvin2eV, &
-                                             conv_factor1 * Sigma(:, itemp) * inv_cell
+                                             conv_factor1 * sigma(:, itemp) * inv_cell
             ENDIF
           ENDIF
           carrier_density = 0.0
@@ -1411,15 +1411,15 @@
           ! 4 = (2,1) = yx, 5 = (2,2) = yy, 6 = (2,3) = yz
           ! 7 = (3,1) = zx, 8 = (3,2) = zy, 9 = (3,3) = zz
           sigma_up(:, :) = zero
-          sigma_up(1, 1) = Sigma(1, itemp)
-          sigma_up(1, 2) = Sigma(2, itemp)
-          sigma_up(1, 3) = Sigma(3, itemp)
-          sigma_up(2, 1) = Sigma(4, itemp)
-          sigma_up(2, 2) = Sigma(5, itemp)
-          sigma_up(2, 3) = Sigma(6, itemp)
-          sigma_up(3, 1) = Sigma(7, itemp)
-          sigma_up(3, 2) = Sigma(8, itemp)
-          sigma_up(3, 3) = Sigma(9, itemp)
+          sigma_up(1, 1) = sigma(1, itemp)
+          sigma_up(1, 2) = sigma(2, itemp)
+          sigma_up(1, 3) = sigma(3, itemp)
+          sigma_up(2, 1) = sigma(4, itemp)
+          sigma_up(2, 2) = sigma(5, itemp)
+          sigma_up(2, 3) = sigma(6, itemp)
+          sigma_up(3, 1) = sigma(7, itemp)
+          sigma_up(3, 2) = sigma(8, itemp)
+          sigma_up(3, 3) = sigma(9, itemp)
           ! 
           CALL rdiagh(3, sigma_up, 3, sigma_eig, sigma_vect)
           ! 
@@ -1446,15 +1446,15 @@
          ! ENDIF
           ! Now do the mobility with Znk factor ----------------------------------------------------------
           sigma_up(:, :) = zero
-          sigma_up(1, 1) = SigmaZ(1, itemp)
-          sigma_up(1, 2) = SigmaZ(2, itemp)
-          sigma_up(1, 3) = SigmaZ(3, itemp)
-          sigma_up(2, 1) = SigmaZ(4, itemp)
-          sigma_up(2, 2) = SigmaZ(5, itemp)
-          sigma_up(2, 3) = SigmaZ(6, itemp)
-          sigma_up(3, 1) = SigmaZ(7, itemp)
-          sigma_up(3, 2) = SigmaZ(8, itemp)
-          sigma_up(3, 3) = SigmaZ(9, itemp)
+          sigma_up(1, 1) = sigmaZ(1, itemp)
+          sigma_up(1, 2) = sigmaZ(2, itemp)
+          sigma_up(1, 3) = sigmaZ(3, itemp)
+          sigma_up(2, 1) = sigmaZ(4, itemp)
+          sigma_up(2, 2) = sigmaZ(5, itemp)
+          sigma_up(2, 3) = sigmaZ(6, itemp)
+          sigma_up(3, 1) = sigmaZ(7, itemp)
+          sigma_up(3, 2) = sigmaZ(8, itemp)
+          sigma_up(3, 3) = sigmaZ(9, itemp)
           CALL rdiagh(3, sigma_up, 3, sigma_eig, sigma_vect)
           mobility_xx = (sigma_eig(1) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility_yy = (sigma_eig(2) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)

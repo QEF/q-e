@@ -66,7 +66,7 @@
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, int5,  &
                             int5_so, alphap
   USE kfold,         ONLY : shift, createkmap_pw2, createkmap
-  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_modes
+  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern
   USE io_epw,        ONLY : read_ifc, readdvscf
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
@@ -465,7 +465,7 @@
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
          CALL iotk_open_read(iunpun, FILE = TRIM(filename), binary = .FALSE., ierr = ierr)
-         CALL read_modes(iunpun, iq_irr, ierr)
+         CALL read_disp_pattern(iunpun, iq_irr, ierr)
          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
          IF (meta_ionode) CALL iotk_close_read(iunpun)
       ENDIF
