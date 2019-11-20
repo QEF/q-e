@@ -48,7 +48,7 @@
     USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : me_pool, inter_pool_comm
-    USE io_transport,  ONLY : spectral_write
+    USE io_selfen,     ONLY : spectral_write
     USE poolgathering, ONLY : poolgather2
     !
     IMPLICIT NONE
@@ -817,7 +817,7 @@
     USE mp_global,     ONLY : me_pool, inter_pool_comm 
     USE cell_base,     ONLY : omega, alat, bg
     USE selfen,        ONLY : get_eps_mahan
-    USE io_transport,  ONLY : spectral_write
+    USE io_selfen,     ONLY : spectral_write
     USE poolgathering, ONLY : poolgather2
     ! 
     IMPLICIT NONE

@@ -73,7 +73,7 @@
   USE printing,      ONLY : print_gkk, plot_band
   USE io_epw,        ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,  ONLY : tau_read, iter_open, print_ibte, iter_merge
-  USE io_selfen,     ONLY : selen_el_read, spectral_read
+  USE io_selfen,     ONLY : selfen_el_read, spectral_read
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
