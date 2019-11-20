@@ -652,10 +652,12 @@
     !
     DEALLOCATE(lambda_k, STAT = ierr)
     IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error deallocating lambda_k', 1)
-    DEALLOCATE(lambda_pairs, STAT = ierr)
-    IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error deallocating lambda_pairs', 1)
     DEALLOCATE(lambda_k_bin, STAT = ierr)
     IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error deallocating lambda_k_bin', 1)
+    IF (iverbosity == 2) THEN
+      DEALLOCATE(lambda_pairs, STAT = ierr)
+      IF (ierr /= 0) CALL errore('evaluate_a2f_lambda', 'Error deallocating lambda_pairs', 1)
+    ENDIF
     !
     RETURN
     !
