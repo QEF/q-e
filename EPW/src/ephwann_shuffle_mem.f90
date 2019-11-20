@@ -81,8 +81,8 @@
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : npool
   USE mp_world,      ONLY : mpime, world_comm
-  USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,       &
-                            sumkg_seq, efermig_seq, mem_size, compute_dos
+  USE low_lvl,       ONLY : system_mem_usage, mem_size
+  USE utilities,     ONLY : compute_dos, fermicarrier, fermiwindow
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_el_q, spectral_func_ph_q, spectral_func_pl_q
@@ -237,8 +237,6 @@
   !! Dummy variable
   REAL(KIND = DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
-  !REAL(KIND = DP), EXTERNAL :: efermig_seq
-  !! Same but in sequential
   REAL(KIND = DP), ALLOCATABLE :: etf_all(:, :)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(KIND = DP), ALLOCATABLE :: w2(:)

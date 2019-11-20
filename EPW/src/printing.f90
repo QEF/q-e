@@ -230,7 +230,7 @@
           DO jbnd = 1, nbndfst
             ekq = etf_all(ibndmin - 1 + jbnd, ikq) 
             DO nu = 1, nmodes
-              WRITE(stdout, '(3i9, 3f12.4, E20.10)') ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, & 
+              WRITE(stdout, '(3i9, 3f12.4, 1E20.10)') ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, & 
                    nu, ryd2ev * ekk, ryd2ev * ekq, ryd2mev * wf(nu, iq), ryd2mev * epc(ibnd, jbnd, nu, ik)
             ENDDO
           ENDDO  

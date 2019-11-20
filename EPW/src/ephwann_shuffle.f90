@@ -77,8 +77,8 @@
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, npool, my_pool_id
   USE mp_world,      ONLY : mpime, world_comm
-  USE low_lvl,       ONLY : system_mem_usage, fermiwindow, fermicarrier,        &
-                            sumkg_seq, efermig_seq, mem_size, broadening, compute_dos
+  USE low_lvl,       ONLY : system_mem_usage, mem_size
+  USE utilities,     ONLY : compute_dos, broadening, fermicarrier, fermiwindow
   USE grid,          ONLY : loadqmesh_serial, loadkmesh_para, load_rebal
   USE selfen,        ONLY : selfen_phon_q, selfen_elec_q, selfen_pl_q
   USE spectral_func, ONLY : spectral_func_el_q, spectral_func_ph_q, spectral_func_pl_q
