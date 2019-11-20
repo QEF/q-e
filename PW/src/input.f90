@@ -1375,8 +1375,6 @@ SUBROUTINE iosys()
   ! ... Files (for compatibility) and directories
   !     This stuff must be done before calling read_conf_from_file!
   !
-  input_drho  = ' '
-  output_drho = ' '
   tmp_dir = trimcheck ( outdir )
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      wfc_dir = trimcheck ( wfcdir )
