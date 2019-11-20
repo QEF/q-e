@@ -56,7 +56,7 @@ omega=`grep " omega=" $fname | awk '{print $9}'`
 lam_tot=`grep " lambda :" $fname | awk '{print $3}'`
 lam_tr=`grep " lambda_tr :" $fname | awk '{print $3}'`
 logavg=`grep " logavg =" $fname | awk '{print $3}'`
-l_a2F=`grep "l_a2F =" $fname | awk '{print $6}'`
+l_a2f=`grep "l_a2f =" $fname | awk '{print $6}'`
 efm=`grep "at Ef=" $fname | awk '{print $8}'`
 lam_max=`grep "lambda_max =" $fname | awk '{print $3}'`
 lam_kmax=`grep "lambda_k_max =" $fname | awk '{print $6}'`
@@ -230,9 +230,9 @@ if test "$logavg" != ""; then
         echo $logavg
 fi
 
-if test "$l_a2F" != ""; then
-        echo l_a2F
-        echo $l_a2F
+if test "$l_a2f" != ""; then
+        echo l_a2f
+        echo $l_a2f
 fi
 
 if test "$e1" != ""; then
