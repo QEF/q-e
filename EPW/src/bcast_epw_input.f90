@@ -45,8 +45,8 @@
                             tempsmin, tempsmax, temps, delta_approx, title,   &
                             scattering, scattering_serta, scattering_0rta,    &
                             int_mob, scissor, carrier, ncarrier,              &
-                            restart, restart_freq, prtgkk, nel, meff, epsiHEG,&
-                            scatread, restart, restart_freq, restart_filq,    &
+                            restart, restart_step, prtgkk, nel, meff, epsiheg,&
+                            scatread, restart, restart_step, restart_filq,    &
                             lphase, omegamin, omegamax, omegastep, n_r,       &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_sigma, assume_metal 
@@ -170,7 +170,7 @@
   CALL mp_bcast(nstemp      , meta_ionode_id, world_comm)
   CALL mp_bcast(nsiter      , meta_ionode_id, world_comm)
   CALL mp_bcast(nw_specfun  , meta_ionode_id, world_comm) 
-  CALL mp_bcast(restart_freq, meta_ionode_id, world_comm)
+  CALL mp_bcast(restart_step, meta_ionode_id, world_comm)
   CALL mp_bcast(scr_typ     , meta_ionode_id, world_comm)
   CALL mp_bcast(bnd_cum     , meta_ionode_id, world_comm)
   CALL mp_bcast(mob_maxiter , meta_ionode_id, world_comm)
@@ -205,7 +205,7 @@
   CALL mp_bcast(ncarrier      , meta_ionode_id, world_comm)      
   CALL mp_bcast(nel           , meta_ionode_id, world_comm)      
   CALL mp_bcast(meff          , meta_ionode_id, world_comm)      
-  CALL mp_bcast(epsiHEG       , meta_ionode_id, world_comm)      
+  CALL mp_bcast(epsiheg       , meta_ionode_id, world_comm)      
   CALL mp_bcast(fermi_diff    , meta_ionode_id, world_comm)
   CALL mp_bcast(smear_rpa     , meta_ionode_id, world_comm)
   CALL mp_bcast(omegamin      , meta_ionode_id, world_comm)

@@ -32,8 +32,8 @@
     nktotf,                  &!  total number of k points (fine grid)
     nqtotf,                  &!  total number of q points (fine grid)
     nrr,                     &!  number of wigner-seitz points (elec interp only)
-    ibndmin,                 &!  band bounds for slimming down electron-phonon matrix 
-    ibndmax,                 &!
+    ibndmin,                 &!  Lower band bound for slimming down electron-phonon matrix 
+    ibndmax,                 &!  Upper band bound for slimming down electron-phonon matrix
     lower_band,              &!  Lower band index for image (band) parallelization
     upper_band,              &!  Upper band index for image (band) parallelization
     lower_bnd,               &!  Lower bound for the k-depend index among the mpi pools
@@ -64,7 +64,7 @@
     xkq(:, :),               &!  local k+q grid, coarse (3, nks)
     etq(:, :),               &!  eigenvalues of k+q wavefunctions
     xkf(:, :),               &!  fine k point grid (3, nkqf)
-    xkfd(:, :, :),           &!  fine k point grid , displaced along each cartesian direction +/delta_q (3, nkqf, 6)
+    xkfd(:, :, :),           &!  fine k point grid, displaced along each cartesian direction +/delta_q (3, nkqf, 6)
     wkf(:),                  &!  weights on the fine grid (nkqf)
     xqf(:, :),               &!  fine q point grid 
     wqf(:),                  &!  weights on the fine q grid 

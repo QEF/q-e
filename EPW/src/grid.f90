@@ -1289,7 +1289,7 @@
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
-                              nkf3, iterative_bte, restart_freq, scissor
+                              nkf3, iterative_bte, restart_step, scissor
     USE noncollin_module, ONLY : noncolin
     USE pwcom,         ONLY : ef, nelec 
     USE cell_base,     ONLY : bg
@@ -1415,7 +1415,7 @@
       selecq(:) = 0 
       etf_loc(:, :)  = zero
       etf_locq(:, :) = zero
-      etf_all(:, :) = zero
+      etf_all(:, :)  = zero
       ! 
       IF (homogeneous) THEN
         ! First store eigen energies on full grid.  
@@ -1491,14 +1491,14 @@
             ! 
             ! Use k-point symmetry
             IF (mp_mesh_k) THEN
-              IF (((MINVAL(ABS(etf_all(:, bztoibz(ind1)) - ef)) < fsthick) .AND. &
-                    (MINVAL(ABS(etf_all(:, bztoibz(ind2)) - ef)) < fsthick))) THEN
+              IF ((MINVAL(ABS(etf_all(:, bztoibz(ind1)) - ef)) < fsthick) .AND. &
+                  (MINVAL(ABS(etf_all(:, bztoibz(ind2)) - ef)) < fsthick)) THEN
                 found(my_pool_id + 1) = 1
                 EXIT ! exit the loop 
               ENDIF
             ELSE
-              IF (((MINVAL(ABS(etf_all(:, ind1) - ef)) < fsthick) .AND. &
-                    (MINVAL(ABS(etf_all(:, ind2) - ef)) < fsthick))) THEN
+              IF ((MINVAL(ABS(etf_all(:, ind1) - ef)) < fsthick) .AND. &
+                  (MINVAL(ABS(etf_all(:, ind2) - ef)) < fsthick)) THEN
                 found(my_pool_id + 1) = 1
                 EXIT ! exit the loop 
               ENDIF
@@ -1512,7 +1512,7 @@
             totq = totq + 1
             selecq(totq) = iq
             ! 
-            IF (MOD(totq, restart_freq) == 0) THEN
+            IF (MOD(totq, restart_step) == 0) THEN
               WRITE(stdout, '(5x,a,i15,i15)')'Number selected, total', totq, iq
             ENDIF
           ENDIF
@@ -1602,7 +1602,7 @@
             IF (SUM(found(:)) > 0) THEN
               totq = totq + 1
               selecq(totq) = iq
-              IF (MOD(totq, restart_freq) == 0) THEN
+              IF (MOD(totq, restart_step) == 0) THEN
                 WRITE(stdout, '(5x,a,i12,i12)') 'Number selected, total', totq, iq
               ENDIF
             ENDIF
@@ -1637,7 +1637,7 @@
             IF (SUM(found(:)) > 0) THEN
               totq = totq + 1
               selecq(totq) = iq
-              IF (MOD(totq, restart_freq) == 0) THEN
+              IF (MOD(totq, restart_step) == 0) THEN
                 WRITE(stdout, '(5x,a,i12,i12)')'Number selected, total', totq, iq
               ENDIF
             ENDIF

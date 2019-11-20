@@ -52,7 +52,7 @@
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat,            &
                             exband, wscache
   USE klist_epw,     ONLY : et_loc, et_all
-  USE constants_epw, ONLY : ryd2ev, zero, czero, eps6
+  USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
   USE noncollin_module, ONLY : m_loc, npol, noncolin
@@ -66,7 +66,7 @@
   USE phus,          ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, int5,  &
                             int5_so, alphap
   USE kfold,         ONLY : shift, createkmap_pw2, createkmap
-  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_modes
+  USE low_lvl,       ONLY : set_ndnmbr, eqvect_strict, read_disp_pattern
   USE io_epw,        ONLY : read_ifc, readdvscf
   USE poolgathering, ONLY : poolgather
   USE rigid_epw,     ONLY : compute_umn_c
@@ -255,11 +255,11 @@
   et_ks(:, :) = zero
   IF (eig_read) THEN
     IF (meta_ionode) THEN
-      WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
-           nbnd, ",", nkstot,")"
-      tempfile = TRIM(prefix)//'.eig'
+      WRITE(stdout, '(5x, a, i5, a, i5, a)') "Reading external electronic eigenvalues (", &
+            nbnd, ",", nkstot,")"
+      tempfile = TRIM(prefix) // '.eig'
       OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', ACTION = 'read', IOSTAT = ios)
-      IF (ios /= 0) CALL errore('elphon_shuffle_wrap','error opening' // tempfile, 1)
+      IF (ios /= 0) CALL errore('elphon_shuffle_wrap', 'error opening' // tempfile, 1)
       READ(iuqpeig, '(a)') line
       DO ik = 1, nkstot
         ! We do not save the k-point for the moment ==> should be read and
@@ -304,7 +304,7 @@
     ! if we do not have epmatq already on file then epbread=.FALSE.
     ! .kgmap is used from disk and .kmap is regenerated for each q-point 
     ! 
-    WRITE(stdout,'(/5x,a)') 'Using kmap and kgmap from disk'
+    WRITE(stdout, '(/5x, a)') 'Using kmap and kgmap from disk'
   ENDIF
   ! 
   IF (epwread) THEN
@@ -313,22 +313,22 @@
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = crystal, FILE = 'crystal.fmt', STATUS = 'old', IOSTAT = ios)
-      READ(crystal,*) nat
-      READ(crystal,*) nmodes
-      READ(crystal,*) nelec
-      READ(crystal,*) at
-      READ(crystal,*) bg
-      READ(crystal,*) omega
-      READ(crystal,*) alat
+      READ(crystal, *) nat
+      READ(crystal, *) nmodes
+      READ(crystal, *) nelec
+      READ(crystal, *) at
+      READ(crystal, *) bg
+      READ(crystal, *) omega
+      READ(crystal, *) alat
       ALLOCATE(tau(3, nat), STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating tau', 1)
-      READ(crystal,*) tau
-      READ(crystal,*) amass
+      READ(crystal, *) tau
+      READ(crystal, *) amass
       ALLOCATE(ityp(nat), STAT = ierr)
       IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating ityp', 1)
-      READ(crystal,*) ityp
-      READ(crystal,*) noncolin
-      READ(crystal,*) w_centers
+      READ(crystal, *) ityp
+      READ(crystal, *) noncolin
+      READ(crystal, *) w_centers
       ! 
     ENDIF ! mpime == ionode_id
     CALL mp_bcast(nat      , ionode_id, world_comm)
@@ -339,7 +339,7 @@
     CALL mp_bcast(bg       , ionode_id, world_comm)
     CALL mp_bcast(omega    , ionode_id, world_comm)
     CALL mp_bcast(alat     , ionode_id, world_comm)
-    IF (mpime /= ionode_id) ALLOCATE(tau(3, nat) )
+    IF (mpime /= ionode_id) ALLOCATE(tau(3, nat))
     CALL mp_bcast(tau      , ionode_id, world_comm)
     CALL mp_bcast(amass    , ionode_id, world_comm)
     CALL mp_bcast(ityp     , ionode_id, world_comm)
@@ -403,12 +403,12 @@
     ! 
     ! ~~~~~~~~ setup Bravais lattice symmetry ~~~~~~~~
     CALL set_sym_bl() ! This should define the s matrix
-    WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
+    WRITE(stdout, '(5x, a, i3)') "Symmetries of Bravais lattice: ", nrot
     !
     ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
     CALL find_sym(nat, tau, ityp, .FALSE., m_loc)
     IF (.NOT. allfrac) CALL remove_sym(dfftp%nr1, dfftp%nr2, dfftp%nr3)
-    WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
+    WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
     !   
     ! The following loop is required to propertly set up the symmetry matrix s. 
     ! We here copy the calls made in PHonon/PH/init_representations.f90 to have the same s as in QE 5.
@@ -439,9 +439,9 @@
       IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating wscache', 1)
       wscache(:, :, :, :, :) = zero      
     ENDIF
-    evq(:,:)   = zero
-    xkq(:, :)  = zero
-    shift(:)   = 0
+    evq(:, :) = zero
+    xkq(:, :) = zero
+    shift(:)  = 0
     ! 
     ! In the loop over irr q-point, we need to read the pattern that
     ! corresponds to the dvscf file computed with QE 5.
@@ -461,18 +461,18 @@
          IF (meta_ionode) CALL iotk_free_unit(iunpun, ierr)
          dirname = TRIM(dvscf_dir) // TRIM(prefix) // '.phsave'
          filename = TRIM(dirname) // '/patterns.' // TRIM(int_to_char(iq_irr)) // '.xml'
-         INQUIRE(FILE = TRIM(filename), EXIST = exst )
+         INQUIRE(FILE = TRIM(filename), EXIST = exst)
          IF (.NOT. exst) CALL errore('elphon_shuffle_wrap', &
                    'cannot open file for reading or writing', ierr)
          CALL iotk_open_read(iunpun, FILE = TRIM(filename), binary = .FALSE., ierr = ierr)
-         CALL read_modes(iunpun, iq_irr, ierr)
+         CALL read_disp_pattern(iunpun, iq_irr, ierr)
          IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', ' Problem with modes file', 1)
          IF (meta_ionode) CALL iotk_close_read(iunpun)
       ENDIF
       !  
-      WRITE(stdout, '(//5x,a)') REPEAT('=',67) 
-      WRITE(stdout, '(5x,"irreducible q point # ",i4)') iq_irr
-      WRITE(stdout, '(5x,a/)') REPEAT('=',67) 
+      WRITE(stdout, '(//5x, a)') REPEAT('=', 67) 
+      WRITE(stdout, '(5x, "irreducible q point # ", i4)') iq_irr
+      WRITE(stdout, '(5x, a/)') REPEAT('=', 67) 
       FLUSH(stdout)
       !
       xq = xqc_irr(:, iq_irr)
@@ -496,8 +496,8 @@
       !
       ! This computes gi, gimq
       CALL set_giq(xq, s, nsymq, nsym, irotmq, minus_q, gi, gimq)
-      WRITE(stdout,'(5x,a,i3)') "Symmetries of small group of q:", nsymq
-      IF(minus_q) WRITE(stdout,'(10x,a)') "in addition sym. q -> -q+G:"
+      WRITE(stdout, '(5x, a, i3)') "Symmetries of small group of q:", nsymq
+      IF(minus_q) WRITE(stdout, '(10x, a)') "in addition sym. q -> -q+G:"
       ! 
       ! Finally this does some of the above again and also computes rtau...
       CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
@@ -564,37 +564,37 @@
           !
           ! Description of symmetries
           !
-          WRITE(stdout, '(36x,"s",24x,"frac. trans.")')
+          WRITE(stdout, '(36x, "s", 24x, "frac. trans.")')
           CALL s_axis_to_cart() ! give sr(:,:, isym)
           DO isym = 1, nsym
-            WRITE(stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
-            IF (ft(1,isym)**2 + ft(2,isym)**2 + ft(3,isym)**2 > 1.0d-8) THEN
-                ft1 = at(1,1)*ft(1,isym) + at(1,2)*ft(2,isym) + at(1,3)*ft(3,isym)
-                ft2 = at(2,1)*ft(1,isym) + at(2,2)*ft(2,isym) + at(2,3)*ft(3,isym)
-                ft3 = at(3,1)*ft(1,isym) + at(3,2)*ft(2,isym) + at(3,3)*ft(3,isym)
-                WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
-                      &        " )    f =( ",f10.7," )")') &
-                      isym, (s(1,ipol,isym),ipol = 1,3), ft(1,isym)
-                WRITE(stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                            (s(2,ipol,isym),ipol = 1,3), ft(2,isym)
-                WRITE(stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                            (s(3,ipol,isym),ipol = 1,3), ft(3,isym)
-                WRITE(stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
-                      &        " )    f =( ",f10.7," )")') &
-                      isym, (sr(1,ipol,isym),ipol = 1,3), ft1
-                WRITE(stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
-                            (sr(2,ipol,isym),ipol = 1,3), ft2
-                WRITE(stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
-                            (sr(3,ipol,isym),ipol = 1,3), ft3
+            WRITE(stdout, '(/6x, "isym = ", i2, 5x, a45/)') isym, sname(isym)
+            IF (ft(1, isym)**two + ft(2, isym)**two + ft(3, isym)**two > eps8) THEN
+              ft1 = at(1, 1) * ft(1, isym) + at(1, 2) * ft(2, isym) + at(1, 3) * ft(3, isym)
+              ft2 = at(2, 1) * ft(1, isym) + at(2, 2) * ft(2, isym) + at(2, 3) * ft(3, isym)
+              ft3 = at(3, 1) * ft(1, isym) + at(3, 2) * ft(2, isym) + at(3, 3) * ft(3, isym)
+              WRITE(stdout, '(1x, "cryst.", 3x, "s(", i2, ") = (", 3(i6, 5x), &
+                            " )    f =( ", f10.7, " )")') & 
+                            isym, (s(1, ipol, isym), ipol = 1, 3), ft(1, isym)
+              WRITE(stdout, '(17x, " (", 3(i6, 5x), " )       ( ", f10.7, " )")') &
+                                  (s(2, ipol, isym), ipol = 1, 3), ft(2, isym)
+              WRITE(stdout, '(17x, " (", 3(i6, 5x), " )       ( ", f10.7, " )"/)') &
+                                  (s(3, ipol, isym), ipol = 1, 3), ft(3, isym)
+              WRITE(stdout, '(1x, "cart. ", 3x, "s(", i2, ") = (", 3f11.7, &
+                            " )    f =( ", f10.7, " )")') & 
+                            isym, (sr(1, ipol, isym), ipol = 1, 3), ft1
+              WRITE(stdout, '(17x, " (", 3f11.7, " )       ( ", f10.7, " )")') &
+                                  (sr(2, ipol, isym), ipol = 1, 3), ft2
+              WRITE(stdout, '(17x, " (", 3f11.7, " )       ( ", f10.7, " )"/)') &
+                                  (sr(3, ipol, isym), ipol = 1, 3), ft3
             ELSE
-                WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), " )")') &
-                                       isym,  (s (1, ipol, isym) , ipol = 1,3)
-                WRITE(stdout, '(17x," (",3(i6,5x)," )")')  (s(2,ipol,isym), ipol = 1,3)
-                WRITE(stdout, '(17x," (",3(i6,5x)," )"/)') (s(3,ipol,isym), ipol = 1,3)
-                WRITE(stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7," )")') &
-                                                   isym, (sr(1,ipol,isym), ipol = 1, 3)
-                WRITE(stdout, '(17x," (",3f11.7," )")')  (sr(2,ipol,isym), ipol = 1, 3)
-                WRITE(stdout, '(17x," (",3f11.7," )"/)') (sr(3,ipol,isym), ipol = 1, 3)
+              WRITE(stdout, '(1x, "cryst.", 3x, "s(", i2, ") = (", 3(i6, 5x), " )")') &
+                                                      isym,  (s (1, ipol, isym) , ipol = 1,3)
+              WRITE(stdout, '(17x, " (", 3(i6, 5x), " )")')  (s(2, ipol, isym), ipol = 1, 3)
+              WRITE(stdout, '(17x, " (", 3(i6, 5x), " )"/)') (s(3, ipol, isym), ipol = 1, 3)
+              WRITE(stdout, '(1x, "cart. ", 3x, "s(", i2,") = (", 3f11.7, " )")') &
+                                                    isym, (sr(1, ipol, isym), ipol = 1, 3)
+              WRITE(stdout, '(17x, " (", 3f11.7, " )")')  (sr(2, ipol, isym), ipol = 1, 3)
+              WRITE(stdout, '(17x, " (", 3f11.7, " )"/)') (sr(3, ipol, isym), ipol = 1, 3)
             ENDIF
             ! 
           ENDDO
@@ -646,7 +646,7 @@
             !symmo = (ft(1, isym)**2 + ft(2, isym)**2 + ft(3, isym)**2 > 1.0d-8)
             non_symmorphic = (ft(1, isym) /= 0.0d0 .OR. ft(2, isym) /= 0.0d0 .OR. ft(3, isym) /= 0.0d0)
             !
-            WRITE(stdout,'(3i5,L3,L3)') iq, i, isym, nog, non_symmorphic
+            WRITE(stdout, '(3i5, L3, L3)') iq, i, isym, nog, non_symmorphic
             !
           ENDDO  
           !
@@ -658,7 +658,7 @@
         ! 
         aq = xq0
         saq = xq
-        CALL cryst_to_cart(1, aq, at, - 1)
+        CALL cryst_to_cart(1, aq,  at, -1)
         CALL cryst_to_cart(1, saq, at, -1)
         DO jsym = 1, nsq
           ism1 = invs(sym_sgq(jsym))
@@ -834,27 +834,27 @@
         INQUIRE(FILE = tempfile, EXIST = exst)
         IF (.NOT.  exst) CALL errore('elphon_shuffle_wrap', 'epb files not found ', 1)
         OPEN(iuepb, FILE = tempfile, FORM = 'unformatted')
-        WRITE(stdout,'(/5x,"Reading epmatq from .epb files"/)') 
+        WRITE(stdout, '(/5x, "Reading epmatq from .epb files"/)') 
         READ(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
         CLOSE(iuepb)
-        WRITE(stdout,'(/5x,"The .epb files have been correctly read"/)')
+        WRITE(stdout, '(/5x, "The .epb files have been correctly read"/)')
       ENDIF
       !
       IF (epbwrite) THEN
         OPEN(iuepb, FILE = tempfile, FORM = 'unformatted')
-        WRITE(stdout, '(/5x,"Writing epmatq on .epb files"/)') 
+        WRITE(stdout, '(/5x, "Writing epmatq on .epb files"/)') 
         WRITE(iuepb) nqc, xqc, et_loc, dynq, epmatq, zstar, epsi
         CLOSE(iuepb)
-        WRITE(stdout, '(/5x,"The .epb files have been correctly written"/)')
+        WRITE(stdout, '(/5x, "The .epb files have been correctly written"/)')
       ENDIF
     ENDIF
   ENDIF
   !
   ! In case of image parallelization we want to stop after writing the .epb file
   IF (nimage > 1) THEN
-    WRITE(stdout, '(/5x,"Image parallelization. The code will stop now. "/)')
-    WRITE(stdout, '(/5x,"You need to restart a calculation by reading the .epb "/)')
-    WRITE(stdout, '(/5x,"                       with pool parallelization only. "/)')
+    WRITE(stdout, '(/5x, "Image parallelization. The code will stop now. "/)')
+    WRITE(stdout, '(/5x, "You need to restart a calculation by reading the .epb "/)')
+    WRITE(stdout, '(/5x, "                       with pool parallelization only. "/)')
     CALL stop_epw()
   ENDIF
   !
@@ -862,7 +862,7 @@
     ! CV: need dummy nqc, xqc for the ephwann_shuffle call
     nqc = 1
     xqc = zero
-    WRITE(stdout, '(/5x,"Do not need to read .epb files; read .fmt files"/)')
+    WRITE(stdout, '(/5x, "Do not need to read .epb files; read .fmt files"/)')
     !
   ENDIF
   !
@@ -916,8 +916,8 @@
 #if defined(__MPI)         
     CALL ephwann_shuffle_mem(nqc, xqc, w_centers)
 #else
-    WRITE(stdout,'(/5x,a)') 'WARNING: etf_mem==2 only works with MPI'
-    WRITE(stdout,'(5x,a)')  '         Changing to etf_mem == 1 and continue ...'
+    WRITE(stdout, '(/5x, a)') 'WARNING: etf_mem==2 only works with MPI'
+    WRITE(stdout, '(5x, a)')  '         Changing to etf_mem == 1 and continue ...'
     etf_mem = 1
     CALL ephwann_shuffle(nqc, xqc, w_centers)
 #endif
@@ -939,7 +939,7 @@
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating ityp', 1)
   ENDIF ! epwread
   !
-5 FORMAT (8x,"q(",i5," ) = (",3f12.7," )") 
+5 FORMAT (8x, "q(", i5, " ) = (", 3f12.7, " )") 
   !
   RETURN
   !---------------------------------------------------------------------------

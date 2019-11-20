@@ -224,13 +224,13 @@
       ENDDO
       !
       ! RMDB
-      DO ir = 1, nrr
-        DO jbnd = 1, nbndsub
-          DO ibnd = 1, nbndsub
-            WRITE(iudecayH, '(5I5,6F12.6)') irvec(:, ir), ibnd, jbnd, chw(ibnd, jbnd, ir) * ryd2ev
-          ENDDO
-        ENDDO
-      ENDDO
+      !DO ir = 1, nrr
+      !  DO jbnd = 1, nbndsub
+      !    DO ibnd = 1, nbndsub
+      !      WRITE(iudecayH, '(5I5,6F12.6)') irvec(:, ir), ibnd, jbnd, chw(ibnd, jbnd, ir) * ryd2ev
+      !    ENDDO
+      !  ENDDO
+      !ENDDO
       !
       CLOSE(iudecayH)
       !
@@ -1027,8 +1027,9 @@
          cu, cuq, epmatk, nrr, irvec, wslen, epmatw)
     !-----------------------------------------------------------------------
     !!
-    !!  From the electron-phonon matrix elements in Bloch representation (coarse 
-    !!  mesh), find the corresponding matrix elements in Wannier representation
+    !!  From the EP matrix elements in Bloch representation (coarse 
+    !!  mesh), find the corresponding matrix elements in electron-Wannier 
+    !!  representation and phonon-Bloch representation
     !!
     !-----------------------------------------------------------------------
     !
@@ -1073,7 +1074,7 @@
     ! output variables
     !
     COMPLEX(KIND = DP), INTENT(out) :: epmatw(nbndsub, nbndsub, nrr)
-    !!  e-p matrix  in Wannier basis
+    ! EP vertex (Wannier el and Bloch ph)
     !
     ! Work variables
     !
@@ -1121,7 +1122,7 @@
     CALL stop_clock ('ep: step 1')
     !
     !----------------------------------------------------------------------
-    !  STEP 2: Fourier transform to obtain matrix elements in wannier basis
+    !  STEP 2: Fourier transform to obtain matrix elements in electron wannier basis
     !----------------------------------------------------------------------
     !
     ! [Eqn. 24 of PRB 76, 165108 (2007)]
@@ -1153,13 +1154,13 @@
     CALL cryst_to_cart(nks, xk, bg, 1)
     !
     !
-    !  Check spatial decay of matrix elements in Wannier basis
+    !  Check spatial decay of EP matrix elements in electron-Wannier basis
     !  the unit in r-space is angstrom, and I am plotting 
     !  the matrix for the first mode only
     !
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iuwane, FILE = 'decay.epwane')
-      WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in Wannier basis'
+      WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in electron Wannier basis'
       DO ir = 1, nrr
         ! 
         tmp = MAXVAL(ABS(epmatw(:, :, ir))) 
@@ -1180,8 +1181,9 @@
     SUBROUTINE ephbloch2wanp(nbnd, nmodes, xk, nq, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
     !--------------------------------------------------------------------------
     !!
-    !!  From the EP Matrix in Electron Bloch representation (coarse mesh), 
-    !!  find the corresponding matrix in Phonon Wannier representation 
+    !!  From the EP matrix in electron-Wannier representation and 
+    !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix 
+    !!  electron-Wannier representation and phonon-Wannier representation 
     !!
     !
     USE kinds,         ONLY : DP
@@ -1216,10 +1218,8 @@
     !! Kpoint coordinates (cartesian in units of 2piba) 
     ! 
     COMPLEX(KIND = DP), INTENT(in) :: epmatwe(nbnd, nbnd, nrr_k, nmodes, nq)
-    !! EP matrix in electron-wannier representation and phonon bloch representation
+    !! EP matrix in electron-Wannier representation and phonon-Bloch representation
     !!   (Cartesian coordinates)
-    !
-    ! EP matrix in electron-wannier representation and phonon-Wannier  representation
     !
     ! Work variables
     !
@@ -1268,8 +1268,7 @@
         !
       ENDDO
       !
-      !  check spatial decay of e-p matrix elements in wannier basis - electrons
-      !  + phonons
+      !  check spatial decay of EP matrix elements in wannier basis - electrons + phonons
       !
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
@@ -1310,8 +1309,9 @@
     SUBROUTINE ephbloch2wanp_mem(nbnd, nmodes, xk, nq, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
     !--------------------------------------------------------------------------
     !
-    !  From the EP Matrix in Electron Bloch representation (coarse mesh), 
-    !  find the corresponding matrix in Phonon Wannier representation 
+    !!  From the EP matrix in electron-Wannier representation and 
+    !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix 
+    !!  electron-Wannier representation and phonon-Wannier representation 
     !
     !
     USE kinds,         ONLY : DP
@@ -1343,10 +1343,8 @@
     REAL(KIND = DP), INTENT(in) :: xk(3, nq)
     !! K-point coordinates (cartesian in units of 2piba) 
     COMPLEX(KIND = DP), INTENT(inout) :: epmatwe(nbnd, nbnd, nrr_k, nmodes)
-    !! EP matrix in electron-wannier representation and phonon bloch representation
+    !! EP matrix in electron-Wannier representation and phonon-Bloch representation
     !!   (Cartesian coordinates)
-    !
-    ! EP matrix in electron-wannier representation and phonon-Wannier representation
     !
     ! work variables
     !
@@ -1406,8 +1404,7 @@
       !
       ! direct write of epmatwp_mem for this ir 
       CALL rwepmatw(epmatwp_mem, nbnd, nrr_k, nmodes, ir, iunepmatwp, +1)
-      !  check spatial decay of e-p matrix elements in wannier basis - electrons
-      !  + phonons
+      !  check spatial decay of EP matrix elements in wannier basis - electrons + phonons
       !
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
