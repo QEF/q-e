@@ -134,8 +134,11 @@ SUBROUTINE setup()
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
      IF (okvan) THEN
-        IF (ecutfock /= 4*ecutwfc) CALL infomsg &
-           ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
+        IF (ecutfock /= 4.0_dp*ecutwfc) THEN
+           ecutfock = MIN(4.0_dp*ecutwfc,ecutrho)
+           CALL infomsg ('setup', &
+                    'Warning: ecutfock not valid for US/PAW, ignored')
+        END IF
         IF ( lmd .OR. lbfgs ) CALL errore &
            ('setup','forces for hybrid functionals + US/PAW not implemented',1)
         IF ( noncolin ) CALL errore &

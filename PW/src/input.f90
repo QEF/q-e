@@ -1510,7 +1510,7 @@ SUBROUTINE iosys()
   !
   IF(ecutfock <= 0.0_DP) THEN
      ! default case
-     ecutfock_ = 4.0_DP*ecutwfc
+     ecutfock_ = MIN ( ecutrho, 4.0_DP*ecutwfc)
   ELSE
      IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
@@ -1603,6 +1603,7 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   USE gvecs, ONLY : dual
   USE gvect, ONLY : ecutrho
   USE gvecw, ONLY : ecutwfc
+  USE constants, ONLY : eps8
   !
   IMPLICIT NONE
   REAL(dp), INTENT(INOUT) :: ecutwfc_in, ecutrho_in
@@ -1632,6 +1633,8 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   ecutrho_in = ecutrho
   dual = ecutrho / ecutwfc
   IF ( dual <= 1.0_dp ) CALL errore( 'set_cutoff', 'ecutrho <= ecutwfc?!?', 1 )
+  IF ( dual < 4.0_dp - eps8 ) CALL infomsg( 'set_cutoff', &
+          'ecutrho < 4*ecutwfc, are you sure?' )
   !
 END SUBROUTINE set_cutoff
 !
