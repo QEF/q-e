@@ -1321,7 +1321,7 @@
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
-    USE io_epw, ONLY : rwepmatw
+    USE io_epw,        ONLY : rwepmatw
     !
     IMPLICIT NONE
     !

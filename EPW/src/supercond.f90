@@ -287,7 +287,7 @@
     !! anisotropic e-ph coupling strength 
     ! 
     ! This is only a quick fix since the routine was written for parallel execution - FG June 2014
-#if defined(__MPI)
+#if !defined(__MPI)
     npool = 1
     my_pool_id = 0
 #endif

@@ -47,10 +47,10 @@
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
   USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme,     &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir,       & 
-                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar
+                            nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat,            &
-                            exband, wscache
+                            exband, wscache, area
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -349,6 +349,8 @@
       CLOSE(crystal)
     ENDIF
   ENDIF ! epwread
+  ! 
+  IF (system_2d) area = omega * alat / bg(3, 3) 
   ! 
   IF (lifc) THEN
     ALLOCATE(ifc(nqc1, nqc2, nqc3, 3, 3, nat, nat), STAT = ierr)
