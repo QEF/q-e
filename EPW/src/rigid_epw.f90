@@ -251,19 +251,19 @@
     !! Coarse q-point grid 
     INTEGER, INTENT(in) :: nmodes
     !! Max number of modes
-    REAL (KIND = DP), INTENT(in) :: q(3)
+    REAL(KIND = DP), INTENT(in) :: q(3)
     !! q-vector from the full coarse or fine grid.
-    REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
+    REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
     !! dielectric constant tensor
-    REAL (KIND = DP), INTENT(in) :: zeu(3, 3, nat)
+    REAL(KIND = DP), INTENT(in) :: zeu(3, 3, nat)
     !! effective charges tensor
-    REAL (KIND = DP), INTENT(in) :: signe
+    REAL(KIND = DP), INTENT(in) :: signe
     !! signe=+/-1.0 ==> add/subtract long range term
-    COMPLEX (KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
+    COMPLEX(KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
     !! phonon eigenvec associated with q
-    COMPLEX (KIND = DP), INTENT(inout) :: epmat(nmodes)
+    COMPLEX(KIND = DP), INTENT(inout) :: epmat(nmodes)
     !! e-ph matrix elements 
-    COMPLEX (KIND = DP), INTENT(in) :: bmat 
+    COMPLEX(KIND = DP), INTENT(in) :: bmat 
     !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
     !
     ! Local variables
