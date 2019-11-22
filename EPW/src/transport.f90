@@ -710,7 +710,7 @@
     !
     inv_cell = 1.0d0 / omega
     ! for 2d system need to divide by area (vacuum in z-direction)
-    IF (system_2d ) inv_cell = inv_cell * at(3, 3) * alat
+    IF (system_2d) inv_cell = inv_cell * at(3, 3) * alat
     ! 
     ! We can read the scattering rate from files. 
     IF (scatread) THEN
