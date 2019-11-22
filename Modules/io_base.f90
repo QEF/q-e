@@ -859,7 +859,7 @@ MODULE io_base
                   ig = ig + 1 
                endif
                IF ( ig .GE. ngm_g ) EXIT  
-            END DO
+               END DO
          ELSE ! this run uses full fft mesh 
             ig = 1 
             DO jg = 1, ngm_g
@@ -890,7 +890,7 @@ MODULE io_base
                        if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
                        if (jg == new_startjg) new_startjg = new_startjg+1 
                   end if 
-                  if (out_of_shell(jg, ig )) exit   
+                  !!!if (out_of_shell(jg, ig )) exit   
                   if ( ig .GT. ngm_g_file ) EXIT igloop
                END DO 
                startjg =  new_startjg    
