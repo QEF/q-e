@@ -37,6 +37,8 @@ pseudo :
 	@./check_pseudo.sh pw_
 	@./check_pseudo.sh cp_
 	@./check_pseudo.sh epw_
+	@./check_pseudo.sh tddfpt_
+	@./check_pseudo.sh hp_
 
 run-tests : run-tests-serial
 

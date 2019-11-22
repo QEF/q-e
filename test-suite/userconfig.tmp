@@ -48,6 +48,20 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
 skip_program = grep
 skip_args = 'not present in this version'
 
+[HP]
+exe = XXXXXX/test-suite/run-hp.sh
+extract_program = XXXXXX/test-suite/extract-hp.x
+inputs_args = ('*.in', '')
+run_cmd_template = tc.program tc.args tc.input tc.output tc.error
+tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
+              (3.0e+0, 5.0e-1, 'n1'),
+              (1.0e-3, 1.0e-5, 'f1'),
+              (1.0e-1, 1.0e-3, 'p1'),
+              (1.0e-3, 1.0e-4, 'u'))
+skip_program = grep
+skip_args = 'not present in this version'
+
+
 [EPW]
 exe = XXXXXX/test-suite/run-epw.sh
 extract_program = XXXXXX/test-suite/extract-epw.x
