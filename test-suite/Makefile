@@ -73,6 +73,12 @@ run-tests-epw-serial : prolog pseudo
 run-tests-epw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
 
+run-tests-hp-serial : prolog pseudo
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
+
+run-tests-hp-parallel : prolog pseudo
+	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=hp_all
+
 run-travis : clean prolog pseudo
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_base
 
@@ -124,11 +130,13 @@ clean:
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find ph_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
+	@for x in `find hp_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find epw_* -name "test*"`; do rm -rf $$x; done
 # error files
 	@for x in `find pw_* -name "CRASH"`; do rm -rf $$x; done
 	@for x in `find ph_* -name "CRASH*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "CRASH"`; do rm -rf $$x; done
+	@for x in `find hp_* -name "CRASH"`; do rm -rf $$x; done
 	@for x in `find epw_* -name "CRASH"`; do rm -rf $$x; done
 # pwscf data files
 	@rm -rf pw_*/pwscf.* ph_*/pwscf.* epw_*/pwscf.*
@@ -146,6 +154,8 @@ clean:
 		ph_*/dyna2F ph_*/elph.gamma* ph_*/gam.lines ph_*/lambda ph_*/lambda.dat \
 		ph_*/elph_dir ph_*/Al444.* ph_*/matdyn.modes ph_*/phonon.dos
 	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/silicon.*
+# Cleaning HP final files
+	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.save hp_*/*Hubbard_parameters*
 # Cleaning EPW final files
 	@rm -rf epw_*/_ph0 epw_*/*.save epw_*/*.wfc* epw_*/*.dyn* \
 		epw_*/*.qdos_25.00 epw_*/*.P epw_*/*.freq epw_*/*.wout \
