@@ -17,9 +17,9 @@
 
   wannierize  = .true.
 
-  auto_projections = .true.
-  scdm_proj = .true.
-  scdm_entanglement = erfc
+  auto_projections  = .true.
+  scdm_proj         = .true.
+  scdm_entanglement = 'erfc'
   scdm_mu           = 10.0
   scdm_sigma        =  4.0
 

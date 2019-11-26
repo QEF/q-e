@@ -17,9 +17,9 @@
 
   wannierize  = .true.
 
-  auto_projections = .true.
-  scdm_proj = .true.
-  scdm_entanglement = gaussian
+  auto_projections  = .true.
+  scdm_proj         = .true.
+  scdm_entanglement = 'gaussian'
   scdm_mu           = 12.5
   scdm_sigma        =  2.0
 
