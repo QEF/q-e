@@ -890,7 +890,6 @@ MODULE io_base
                        if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
                        if (jg == new_startjg) new_startjg = new_startjg+1 
                   end if 
-                  !!!if (out_of_shell(jg, ig )) exit   
                   if ( ig .GT. ngm_g_file ) EXIT igloop
                END DO 
                startjg =  new_startjg    
@@ -916,55 +915,6 @@ MODULE io_base
             minus_mill = - mill_g_file(:,imill) 
          end function minus_g 
  
-         function out_of_shell(jg_, ig_) result(res)
-            USE cell_base, ONLY: bg 
-            implicit none 
-            LOGICAL :: res 
-            integer :: ig_, jg_ 
-            real(dp) :: g_ig(3), g_jg(3) 
-            g_ig = bg(:,1)*mill_g_file(1,ig_) + bg(:,2) * mill_g_file(2,ig_) + bg(:,3) * mill_g_file(:,jg_) 
-            g_jg = bg(:,1)*mill_g(1,jg_)      + bg(:,2) * mill_g(2,jg_)      + bg(:,3) * mill_g_file(:,jg_) 
-            res = dot_product(g_jg,g_jg) - dot_product (g_ig, g_ig) > 0.1_dp 
-         end function out_of_shell 
-
-         function norm(ig) result(res)
-            use cell_base, only: bg 
-            real(dp)  :: res
-            integer   :: ig 
-            real(dp) :: g_jg(3)
-            g_jg = bg(:,1)*mill_g(1,ig)      + bg(:,2) * mill_g(2,ig)      + bg(:,3) * mill_g_file(3,ig)
-            res=  dot_product(g_jg,g_jg)
-         end function norm  
-
-         function  update_startjg(igsearching, startigl)  result(start) 
-            USE cell_base,   ONLY: bg, tpiba2  
-            implicit none
-            integer               :: start
-            integer,intent(in)    :: igsearching, startigl 
-            integer                 :: igl
-            real(8)                 :: g(3), gg 
-            
-            g = bg(:,1)*mill_g_file(1,igsearching)+bg(:,2)*mill_g_file(2,igsearching) &
-              + bg(:,3)*mill_g_file(3,igsearching) 
-            gg = tpiba2 * (g(1)*g(1)+g(2)*g(2)+g(3)*g(3)) 
-            do igl = 1, ngl 
-               write(stdout, *) igl, gl(igl), gg 
-               if ( gg > gl(igl))  exit 
-            end do 
-            IF (igl >= ngl) THEN 
-               start = 1 
-               RETURN
-            END IF
-            igl = igl -1 
-            do  start = 1, ngm 
-               if ( igtongl(start) == igl) exit 
-            end do 
-            IF (start == ngm ) THEN 
-               start = 1 
-            ELSE
-               start =  start - 1
-            END IF 
-         end function  update_startjg
     END SUBROUTINE charge_k_to_g
     !
   END MODULE io_base
