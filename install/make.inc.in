@@ -149,7 +149,7 @@ SCALAPACK_LIBS = @scalapack_libs@
 FFT_LIBS       = @fft_libs@
 
 # HDF5
-HDF5_LIB = @hdf5_libs@
+HDF5_LIBS = @hdf5_libs@
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
             -lFoX_utils -lFoX_fsys 
 FOX_FLAGS = @foxflags@
@@ -182,7 +182,7 @@ FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
 LIBXC_LIBS     = @LIBS_LIBXC@
-QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(LIBXC_LIBS) $(LD_LIBS)
+QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LIBXC_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

@@ -8335,11 +8335,14 @@ fi
 
       fi
       if test "$have_hdf5" -eq 1; then
-        version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
-        version_ok=`echo $version_num | awk -F '.' '{print (($2 >= 10) || ( ($2 == 8) && ($3 >= 16)))}'`
-	if test $version_ok -le 0; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
-$as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
+        version=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | cut -d: -f2`
+        major=`echo $version | cut -d. -f2`
+        minor=`echo $version | cut -d. -f3`
+	if test "$major" -lt 8 || (test "$major" -eq 8 && test "$minor" -lt 16); then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:  HDF5 version: 1.$major.$minor" >&5
+$as_echo "$as_me: WARNING:  HDF5 version: 1.$major.$minor" >&2;};
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be 1.8.16 or later" >&5
+$as_echo "$as_me: WARNING: *** HDF5 version must be 1.8.16 or later" >&2;};
                 have_hdf5=0;
         fi
       fi
@@ -8515,11 +8518,14 @@ fi
 
       fi
       if test "$have_hdf5" -eq 1; then
-        version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
-        version_ok=`echo $version_num | awk -F '.' '{print (($2 >= 10) || ( ($2 == 8) && ($3 >= 16)))}'`
-	if test $version_ok -le 0; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
-$as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
+        version=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | cut -d: -f2`
+        major=`echo $version | cut -d. -f2`
+        minor=`echo $version | cut -d. -f3`
+	if test "$major" -lt 8 || (test "$major" -eq 8 && test "$minor" -lt 16); then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:  HDF5 version: 1.$major.$minor" >&5
+$as_echo "$as_me: WARNING:  HDF5 version: 1.$major.$minor" >&2;};
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be 1.8.16 or later" >&5
+$as_echo "$as_me: WARNING: *** HDF5 version must be 1.8.16 or later" >&2;};
                 have_hdf5=0;
         fi
       fi

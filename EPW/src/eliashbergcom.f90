@@ -21,12 +21,13 @@
   !! Nr. of grid points between (0,wscut) for real-axis, analytical continuation and Pade approximants
   INTEGER, ALLOCATABLE :: nsiw(:)
   !! Nr of grid points at each temperature on imag-axis, nsiw(nstemp)
+  !
   REAL(KIND = DP) :: wsphmax
   !! maximum phonon frequency for evaluation of the integral over Omega (0, wsphmax)
   REAL(KIND = DP) :: dwsph
   !! frequency step for Eliashberg spectral function
   REAL(KIND = DP) :: gap0
-  !! initial guess for Delta
+  !! initial guess for delta
   REAL(KIND = DP), ALLOCATABLE :: dws(:)
   !! grid size at each bin dws(nsw)
   REAL(KIND = DP), ALLOCATABLE :: ws(:)
@@ -48,7 +49,7 @@
   !! 
   !! Global variables for real and imag-axis isotropic equations Eliashberg equations
   !! 
-  USE kinds, ONLY :  DP
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -60,36 +61,37 @@
   !! Fermi-Dirac distribution at frequency wp, fdwp(nsw)
   REAL(KIND = DP), ALLOCATABLE :: bewph(:)
   !! Bose-Einstein distribution at frequency wph, bewph(nqstep)
-  REAL(KIND = DP), ALLOCATABLE :: Deltai(:)
-  !! gap function on imag-axis at iw, Deltai(nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: Deltaip(:)
-  !! gap function on imag-axis at iwp, Deltaip(nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: Znormi(:)
-  !! renormalization function on the imag-axis at iw, Znormi(nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: NZnormi(:)
-  !! normal state renormalization function on the imag-axis at iw, NZnormi(nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: Keri(:)
-  !! phonon kernel on imag-axis, Keri(2*nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: Dsumi(:)
-  !! contribution to Delta eqn from the imaginary-axis in the analytic continuation Dsumi(nsw)
-  REAL(KIND = DP), ALLOCATABLE :: Zsumi(:)
-  !! contribution to Znorm eqn from the imaginary-axis in the analytic continuation Zsumi(nsw)
-  REAL(KIND = DP), ALLOCATABLE :: Gp(:, :)
-  !! -bose(omegap)-fermi( omega+omegap) (eqn for Delta and Znorm analytic continuation) 
-  REAL(KIND = DP), ALLOCATABLE :: Gm(:, :) 
-  !! bose(omegap)+fermi(-omega+omegap) (eqn for Delta and Znorm analytic continuation) 
-  COMPLEX(KIND = DP), ALLOCATABLE :: Delta(:)
+  REAL(KIND = DP), ALLOCATABLE :: deltai(:)
+  !! gap function on imag-axis at iw, deltai(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: deltaip(:)
+  !! gap function on imag-axis at iwp, deltaip(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: znormi(:)
+  !! renormalization function on the imag-axis at iw, znormi(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: nznormi(:)
+  !! normal state renormalization function on the imag-axis at iw, nznormi(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: keri(:)
+  !! phonon kernel on imag-axis, keri(2*nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: dsumi(:)
+  !! contribution to delta eqn from the imaginary-axis in the analytic continuation dsumi(nsw)
+  REAL(KIND = DP), ALLOCATABLE :: zsumi(:)
+  !! contribution to znorm eqn from the imaginary-axis in the analytic continuation zsumi(nsw)
+  REAL(KIND = DP), ALLOCATABLE :: gp(:, :)
+  !! -bose(omegap)-fermi( omega+omegap) (eqn for delta and znorm analytic continuation) 
+  REAL(KIND = DP), ALLOCATABLE :: gm(:, :) 
+  !! bose(omegap)+fermi(-omega+omegap) (eqn for delta and znorm analytic continuation) 
+  ! 
+  COMPLEX(KIND = DP), ALLOCATABLE :: delta(:)
   !! gap function on real-axis at iw
-  COMPLEX(KIND = DP), ALLOCATABLE :: Deltap(:) 
+  COMPLEX(KIND = DP), ALLOCATABLE :: deltap(:) 
   !! gap function on real-axis at iw
-  COMPLEX(KIND = DP), ALLOCATABLE :: Znorm(:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: znorm(:)
   !! renormalization function on real-axis at iw
-  COMPLEX(KIND = DP), ALLOCATABLE :: Znormp(:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: znormp(:)
   !! renormalization function on real-axis at iw
-  COMPLEX(KIND = DP), ALLOCATABLE :: Kp(:, :)
-  !! phonon kernel on real-axis (eqn for Delta)
-  COMPLEX(KIND = DP), ALLOCATABLE :: Km(:, :)
-  !! phonon kernel on real-axis (eqn for Znorm)
+  COMPLEX(KIND = DP), ALLOCATABLE :: kp(:, :)
+  !! phonon kernel on real-axis (eqn for delta)
+  COMPLEX(KIND = DP), ALLOCATABLE :: km(:, :)
+  !! phonon kernel on real-axis (eqn for znorm)
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common_iso
@@ -107,9 +109,10 @@
   SAVE
   !
   LOGICAL :: limag_fly
-  !! FIXME
+  !! .TRUE. if anisotropic Eliashberg eqns on imag-axis are solved on the fly
   LOGICAL :: lacon_fly
-  !! FIXME
+  !! .TRUE. if anisotropic Eliashberg eqns on real-axis are solved on the fly
+  !
   INTEGER :: nkfs
   !! nr. of irreducible k-points within the Fermi shell on the fine mesh
   INTEGER :: nbndfs
@@ -124,11 +127,11 @@
   !! index of q-point on the full q-mesh for which k+sign*q is within the Fermi shell ixqfs(nkfs,nqfs(ik))
   INTEGER, ALLOCATABLE :: nqfs(:)
   !! nr of q-points at each k-point for which k+sign*q is within the Fermi shell nqfs(nkfs)
+  !
   REAL(KIND = DP) :: ef0
   !! Fermi energy
   REAL(KIND = DP) :: dosef
   !! density of states at the Fermi energy
-  !
   REAL(KIND = DP), ALLOCATABLE :: g2(:, :, :, :, :)
   !! e-ph matrix element squared |g_ji^nu(k,q)|^2, g2(nkfs_pool,nqftot,nbndfs,nbndfs,nmodes) 
   REAL(KIND = DP), ALLOCATABLE :: ekfs(:, :)
@@ -143,32 +146,33 @@
   !! spectral function a2fij(nkfs_pool,nqftot,nbndfs,nbndfs,nqstep)
   REAL(KIND = DP), ALLOCATABLE :: w0g(:, :)
   !! approximation for delta function w0g(nbndfs,nkfs)
-  REAL(KIND = DP), ALLOCATABLE :: Agap(:, :, :)
-  !! superconducting gap edge Agap(nkfs,nbndfs,nstemp)
-  REAL(KIND = DP), ALLOCATABLE :: ADeltai(:, :, :)
-  !! gap function on imag-axis at iw, ADeltai(nbndfs,nkfs,nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: ADeltaip(:, :, :)
-  !! gap function on imag-axis at iwp, ADeltaip(nbndfs,nkfs,nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: AZnormi(:, :, :)
-  !! renormalization function on imag-axis at iw, AZnormi(nbndfs,nkfs,nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: NAZnormi(:, :, :)
-  !! normal state renormalization function on imag-axis at iw, NAZnormi(nbndfs,nkfs,nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: AKeri(:, :, :, :, :)
-  !! phonon kernel on imag-axis, AKeri(nkfs,nqftot,nbndfs,nbndfs,2*nsiw(nstemp))
-  REAL(KIND = DP), ALLOCATABLE :: ADsumi(:, :, :)
-  !! contribution to Delta eqn from the imaginary-axis in the analytic continuation ADsumi(nbndfs,nkfs,nsw)
-  REAL(KIND = DP), ALLOCATABLE :: AZsumi(:, :, :)
-  !! contribution to Znorm eqn from the imaginary-axis in the analytic continuation AZsumi(nbndfs,nkfs,nsw)
+  REAL(KIND = DP), ALLOCATABLE :: agap(:, :, :)
+  !! superconducting gap edge agap(nkfs,nbndfs,nstemp)
+  REAL(KIND = DP), ALLOCATABLE :: adeltai(:, :, :)
+  !! gap function on imag-axis at iw, adeltai(nbndfs,nkfs,nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: adeltaip(:, :, :)
+  !! gap function on imag-axis at iwp, adeltaip(nbndfs,nkfs,nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: aznormi(:, :, :)
+  !! renormalization function on imag-axis at iw, aznormi(nbndfs,nkfs,nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: naznormi(:, :, :)
+  !! normal state renormalization function on imag-axis at iw, naznormi(nbndfs,nkfs,nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: akeri(:, :, :, :, :)
+  !! phonon kernel on imag-axis, akeri(nkfs,nqftot,nbndfs,nbndfs,2*nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: adsumi(:, :, :)
+  !! contribution to delta eqn from the imaginary-axis in the analytic continuation adsumi(nbndfs,nkfs,nsw)
+  REAL(KIND = DP), ALLOCATABLE :: azsumi(:, :, :)
+  !! contribution to znorm eqn from the imaginary-axis in the analytic continuation azsumi(nbndfs,nkfs,nsw)
   REAL(KIND = DP), ALLOCATABLE :: memlt_pool(:)
   !! maximum allocatable memory per pool
-  COMPLEX(KIND = DP), ALLOCATABLE :: AZnorm(:, :, :)
-  !! renormalization function on real-axis AZnorm(nbndfs,nkfs,nsw)
-  COMPLEX(KIND = DP), ALLOCATABLE :: AZnormp(:, :, :)
-  !! renormalization function on real-axis AZnormkq(nbndfs,nkfs,nsw)
-  COMPLEX(KIND = DP), ALLOCATABLE :: ADelta(:, :, :)
-  !! gap function on real-axis ADelta(nbndfs,nkfs,nsw)
-  COMPLEX(KIND = DP), ALLOCATABLE :: ADeltap(:, :, :)
-  !! gap function on real-axis ADeltap(nbndfs,nkfs,nsw)
+  !
+  COMPLEX(KIND = DP), ALLOCATABLE :: aznorm(:, :, :)
+  !! renormalization function on real-axis aznorm(nbndfs,nkfs,nsw)
+  COMPLEX(KIND = DP), ALLOCATABLE :: aznormp(:, :, :)
+  !! renormalization function on real-axis aznormkq(nbndfs,nkfs,nsw)
+  COMPLEX(KIND = DP), ALLOCATABLE :: adelta(:, :, :)
+  !! gap function on real-axis adelta(nbndfs,nkfs,nsw)
+  COMPLEX(KIND = DP), ALLOCATABLE :: adeltap(:, :, :)
+  !! gap function on real-axis adeltap(nbndfs,nkfs,nsw)
   !
   !--------------------------------------------------------------------------
   END MODULE eliashberg_common_aniso

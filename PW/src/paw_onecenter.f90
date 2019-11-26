@@ -1907,6 +1907,10 @@ MODULE paw_onecenter
           !
           CALL dgcxc( i%m, nspin_mag, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
           !
+          dsvxc_rr = dsvxc_rr / e2
+          dsvxc_sr = dsvxc_sr / e2
+          dsvxc_ss = dsvxc_ss / e2
+          !
           CALL xc_gcx( i%m, nspin_mag, r, gradsw, sx, sc, v1x, v2x, v1c, v2c )
           !
           DO k = 1, i%m
@@ -1916,8 +1920,8 @@ MODULE paw_onecenter
              !
              dsvxc_s = v2x(k,1) + v2c(k,1)
              !
-             gc_rad(k,ix,1)  = dsvxc_rr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) &
-                               + dsvxc_sr(k,1,1) * s1 * sign_v(k)
+             gc_rad(k,ix,1)  = ( dsvxc_rr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) &
+                               + dsvxc_sr(k,1,1) * s1 ) * sign_v(k)
              !
              h_rad(k,:,ix,1) = ( (dsvxc_sr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) + &
                                   dsvxc_ss(k,1,1)*s1) * grad(k,:,1) + &
@@ -1933,8 +1937,6 @@ MODULE paw_onecenter
     ELSEIF ( nspin_mag==2 .OR. nspin_mag==4 ) THEN
        !
        ! \sigma-GGA case - spin polarization
-       !
-       ALLOCATE( r(i%m,2) )
        !
        IF ( nspin_mag==4 ) THEN
           CALL compute_drho_spin_lm( i, rho_lm, drho_lm, rhoout_lm, &
@@ -1964,6 +1966,10 @@ MODULE paw_onecenter
           ENDDO
           !
           CALL dgcxc( i%m, nspin_gga, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
+          !
+          dsvxc_rr = dsvxc_rr / e2
+          dsvxc_sr = dsvxc_sr / e2
+          dsvxc_ss = dsvxc_ss / e2
           !
           CALL xc_gcx( i%m, nspin_gga, r, gradsw, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
           !

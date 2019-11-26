@@ -126,6 +126,7 @@ cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/per.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/per.save/
+$ECHO " done"
 
 
 # NSCF run with SOC for parallel configuration 

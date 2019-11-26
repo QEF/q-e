@@ -32,8 +32,8 @@
     nktotf,                  &!  total number of k points (fine grid)
     nqtotf,                  &!  total number of q points (fine grid)
     nrr,                     &!  number of wigner-seitz points (elec interp only)
-    ibndmin,                 &!  band bounds for slimming down electron-phonon matrix 
-    ibndmax,                 &!
+    ibndmin,                 &!  Lower band bound for slimming down electron-phonon matrix 
+    ibndmax,                 &!  Upper band bound for slimming down electron-phonon matrix
     lower_band,              &!  Lower band index for image (band) parallelization
     upper_band,              &!  Upper band index for image (band) parallelization
     lower_bnd,               &!  Lower bound for the k-depend index among the mpi pools
@@ -51,19 +51,21 @@
     shift(:),                &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
     gmap(:),                 &!  the map G -> G-G_0 in the large (density) G vectors set, for every G_0
     ixkqf_tr(:),             &!  Mapping matrix from k+q (where q is full BZ) to IBZ
-    s_BZtoIBZ_full(:)         !  Rotation that brink that k-point from BZ to IBZ
+    s_bztoibz_full(:)         !  Rotation that brink that k-point from BZ to IBZ
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason 
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
-    threshold                 !  Threshold below which the transition probabilities are not written to file in transport. 
+    threshold,               &!  Threshold below which the transition probabilities are not written to file in transport. 
+    area                      !  Area of the 2D unit cell.  
   REAL(KIND = DP), ALLOCATABLE ::&
     a_all(:, :),             &!  electronic spectral function du to electron-phonon interaction
     a_all_ph(:, :),          &!  phononic spectral function du to electron-phonon interaction
+    dos(:),                  &!  Density of states at the chemical potential.
     et_ks(:, :),             &!  lda eigenvalues
     xkq(:, :),               &!  local k+q grid, coarse (3, nks)
     etq(:, :),               &!  eigenvalues of k+q wavefunctions
     xkf(:, :),               &!  fine k point grid (3, nkqf)
-    xkfd(:, :, :),           &!  fine k point grid , displaced along each cartesian direction +/delta_q (3, nkqf, 6)
+    xkfd(:, :, :),           &!  fine k point grid, displaced along each cartesian direction +/delta_q (3, nkqf, 6)
     wkf(:),                  &!  weights on the fine grid (nkqf)
     xqf(:, :),               &!  fine q point grid 
     wqf(:),                  &!  weights on the fine q grid 

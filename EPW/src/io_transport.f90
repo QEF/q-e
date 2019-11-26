@@ -29,11 +29,12 @@
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier
+    USE epwcom,        ONLY : fsthick, eps_acustic, degaussw, nstemp, vme, ncarrier, &
+                              assume_metal
     USE pwcom,         ONLY : ef
     USE elph2,         ONLY : ibndmin, etf, nkf, dmef, vmef, wf, wqf,             & 
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
-                              wkf, dmef, vmef, eta, transp_temp, lower_bnd,  &
+                              wkf, dmef, vmef, eta, transp_temp, lower_bnd, dos,  &
                               nbndfst, nktotf
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
                               eps6, eps10, bohr2ang, ang2cm
@@ -70,9 +71,9 @@
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of element written to file 
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of element written to file 
 #endif   
     INTEGER, INTENT(in) :: ctype
@@ -208,7 +209,7 @@
       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
       WRITE(stdout, '(5x,"Scattering rate for IBTE")')
       WRITE(stdout, '(5x,a/)') REPEAT('=',67)
-      WRITE(stdout, '(5x,"Restart and restart_freq inputs deactivated (restart point at every q-points).")')
+      WRITE(stdout, '(5x,"Restart and restart_step inputs deactivated (restart point at every q-points).")')
       WRITE(stdout, '(5x,"No intermediate mobility will be shown.")')
       !
       IF (fsthick < 1.d3) THEN
@@ -591,6 +592,11 @@
             WRITE(iufilibtev_sup, '(i8,i6,5E22.12)') ik, ibnd, vkk_all(:, ibnd, ik), etf_all(ibnd, ik), wkf_all(ik)
           ENDDO
         ENDDO
+        IF (assume_metal) THEN
+          DO itemp = 1, nstemp
+            WRITE(iufilibtev_sup, '(i8,1E22.12)') itemp, dos(itemp)
+          ENDDO
+        ENDIF
         CLOSE(iufilibtev_sup)
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
@@ -621,45 +627,47 @@
         ! 
       ENDIF ! master
       ! 
-      ! Now print the carrier density for checking
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        carrier_density = 0.0
-        ! 
-        IF (ncarrier < 0.0) THEN ! VB
-          DO ik = 1, nkf
-            DO ibnd = 1, nbndfst
-              ! This selects only valence bands for hole conduction
-              IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
-                ! Energy at k (relative to Ef)
-                ekk = etf_all(ibnd, ik + lower_bnd - 1 ) - ef0(itemp)
-                fnk = wgauss(-ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
-              ENDIF
+      ! Now print the carrier density for checking (for non-metals)
+      IF (.NOT. assume_metal) THEN
+        DO itemp = 1, nstemp
+          etemp = transp_temp(itemp)
+          carrier_density = 0.0
+          ! 
+          IF (ncarrier < 0.0) THEN ! VB
+            DO ik = 1, nkf
+              DO ibnd = 1, nbndfst
+                ! This selects only valence bands for hole conduction
+                IF (etf_all(ibnd, ik + lower_bnd - 1 ) < ef0(itemp)) THEN
+                  ! Energy at k (relative to Ef)
+                  ekk = etf_all(ibnd, ik + lower_bnd - 1 ) - ef0(itemp)
+                  fnk = wgauss(-ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) * (1.0d0 - fnk)
+                ENDIF
+              ENDDO
             ENDDO
-          ENDDO
-          CALL mp_sum(carrier_density, world_comm)
-          carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
-        ELSE ! CB
-          DO ik = 1, nkf
-            DO ibnd = 1, nbndfst
-              ! This selects only valence bands for hole conduction
-              IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
-                !  energy at k (relative to Ef)
-                ekk = etf_all(ibnd, ik + lower_bnd - 1) - efcb(itemp)
-                fnk = wgauss(-ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
-              ENDIF
+            CALL mp_sum(carrier_density, world_comm)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, ef0(itemp) * ryd2ev,  carrier_density
+          ELSE ! CB
+            DO ik = 1, nkf
+              DO ibnd = 1, nbndfst
+                ! This selects only valence bands for hole conduction
+                IF (etf_all (ibnd, ik + lower_bnd - 1) > efcb(itemp)) THEN
+                  !  energy at k (relative to Ef)
+                  ekk = etf_all(ibnd, ik + lower_bnd - 1) - efcb(itemp)
+                  fnk = wgauss(-ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf_all(ik + lower_bnd - 1) *  fnk
+                ENDIF
+              ENDDO
             ENDDO
-          ENDDO
-          CALL mp_sum(carrier_density, world_comm)
-          carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density
-        ENDIF ! ncarrier
-      ENDDO
+            CALL mp_sum(carrier_density, world_comm)
+            carrier_density = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
+            WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp * ryd2ev / kelvin2eV, efcb(itemp) * ryd2ev,  carrier_density
+          ENDIF ! ncarrier
+        ENDDO
+      ENDIF
     ENDIF ! iqq
     !
     RETURN
@@ -894,7 +902,7 @@
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
-    SUBROUTINE iter_merge_parallel()
+    SUBROUTINE iter_merge()
     !----------------------------------------------------------------------------
     USE kinds,            ONLY : DP
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
@@ -906,7 +914,7 @@
     USE io_files,         ONLY : tmp_dir, prefix 
     USE mp,               ONLY : mp_sum, mp_barrier
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
-    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier, assume_metal
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE,MPI_INFO_NULL, &
                                  MPI_OFFSET_KIND, MPI_DOUBLE_PRECISION,          &
@@ -914,6 +922,8 @@
 #endif
     !
     IMPLICIT NONE
+    !
+    ! Local variables
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
@@ -939,6 +949,17 @@
     !! Input output units
     INTEGER :: ierr
     !! Error status
+#if defined(__MPI)
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lsize
+    !! Size of what we write
+    INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
+    !! Offset while writing scattering to files
+#else
+    INTEGER(KIND = 8) :: lsize
+    !! Size of what we write
+    INTEGER(KIND = 8) :: lrepmatw
+    !! Offset while writing scattering to files
+#endif
     INTEGER, ALLOCATABLE :: sparse(:, :)
     !! Vaariable for reading and writing the files
     INTEGER, ALLOCATABLE :: sparsecb(:, :)
@@ -947,18 +968,14 @@
     !! Variable for reading and writing trans_prob
     REAL(KIND = DP), ALLOCATABLE :: trans_probcb(:)
     !! Variable for reading and writing trans_prob
-#if defined(__MPI)
-    INTEGER (KIND = MPI_OFFSET_KIND) :: lsize
-    !! Size of what we write
-    INTEGER (KIND = MPI_OFFSET_KIND) :: lrepmatw
-    !! Offset while writing scattering to files
     !
-    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0))) THEN
+    ! for metals merge like it's for holes
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 0.0)) .OR. assume_metal) THEN
       !
       ALLOCATE(trans_prob(lrepmatw2_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating trans_prob', 1)
       ALLOCATE(sparse(5, lrepmatw2_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparse', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating sparse', 1)
       !
       io_u(1) = iunepmat_merge
       io_u(2) = iunsparseq_merge
@@ -983,10 +1000,20 @@
       lrepmatw2_tot = 0
       lrepmatw2_tot(my_pool_id + 1) = lrepmatw2_merge
       CALL mp_sum(lrepmatw2_tot, world_comm)
+#if defined(__MPI)
       DO ich = 1, 6
-        CALL mp_barrier(world_comm)
-        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL,io_u(ich), ierr)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, io_u(ich), ierr)
       ENDDO
+#else
+      OPEN(UNIT = io_u(1), FILE = filename(1), IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw2_merge * 8)
+      DO ich = 2, 6
+        OPEN(UNIT = io_u(ich), FILE = filename(ich), IOSTAT = ierr, FORM = 'unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw2_merge * 4)
+      ENDDO
+#endif
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error in opening .epmatkq1 or .sparseX file', 1)
+
       !
       DO ich = 1, 2 
         ! Read files per processor
@@ -1006,36 +1033,50 @@
         ENDIF
         CLOSE(iunepmat, STATUS = 'delete')
         IF (ich == 1) THEN
+#if defined(__MPI)
           lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
           & 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else 
+          WRITE(UNIT = io_u(1), REC = 1, IOSTAT = ierr) trans_prob
+#endif
+          IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .epmatkq1 file', 1)
         ELSE
           DO ifil = 1, 5
+#if defined(__MPI)
             lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
-            CALL MPI_FILE_WRITE_AT(io_u(ifil+1), lrepmatw, sparse(ifil,:), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+            CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparse(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+#else
+            WRITE(UNIT = io_u(ifil + 1), REC = 1, IOSTAT = ierr) sparse(ifil, :)
+#endif
+            IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .sparseX file', 1)
           ENDDO
         ENDIF
       ENDDO
       !
       DO ich = 1, 6
+#if defined(__MPI)
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+#else
+        CLOSE(io_u(ich), STATUS = 'keep')
+#endif
       ENDDO
       !
       DEALLOCATE(trans_prob, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_prob', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating trans_prob', 1)
       DEALLOCATE(sparse, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparse', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating sparse', 1)
       !
     ENDIF
-    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0))) THEN
+    IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier > 0.0)) .AND. .NOT. assume_metal) THEN
       !
       ALLOCATE(trans_probcb(lrepmatw5_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating trans_probcb', 1)
       ALLOCATE(sparsecb(5, lrepmatw5_merge), STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error allocating sparsecb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error allocating sparsecb', 1)
       !
       io_u(1) = iunepmatcb_merge
       io_u(2) = iunsparseqcb_merge
@@ -1060,10 +1101,18 @@
       lrepmatw5_tot = 0
       lrepmatw5_tot(my_pool_id + 1) = lrepmatw5_merge
       CALL mp_sum(lrepmatw5_tot, world_comm)
+#if defined(__MPI)
       DO ich = 1, 6
-        CALL mp_barrier(world_comm)
-        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL, io_u(ich), ierr)
+        CALL MPI_FILE_OPEN(world_comm, filename(ich), MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, io_u(ich), ierr)
       ENDDO
+#else
+      OPEN(UNIT = io_u(1), FILE = filename(1), IOSTAT = ierr, FORM = 'unformatted', &
+           STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw5_merge * 8)
+      DO ich = 2, 6
+        OPEN(UNIT = io_u(ich), FILE = filename(ich), IOSTAT = ierr, FORM = 'unformatted', &
+             STATUS = 'unknown', ACCESS = 'direct', RECL = lrepmatw5_merge * 4)
+      ENDDO
+#endif
       !
       DO ich = 1, 2
         ! Read files per processor
@@ -1083,34 +1132,47 @@
         ENDIF
         CLOSE(iunepmatcb, STATUS = 'delete')
         IF (ich == 1) THEN
+#if defined(__MPI)
           lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
           & 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+#else 
+          WRITE(UNIT = io_u(1), REC = 1, IOSTAT = ierr) trans_probcb
+#endif
+          IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .epmatkqcb1 file', 1)
         ELSE
           DO ifil = 1, 5
+#if defined(__MPI)
             lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
+#else
+            WRITE(UNIT = io_u(ifil + 1), REC = 1, IOSTAT = ierr) sparsecb(ifil, :)
+#endif
+            IF (ierr /= 0) CALL errore('iter_merge', 'Error in writing .sparsecbX file', 1)
           ENDDO
         ENDIF
       ENDDO
       !
       DO ich = 1, 6
+#if defined(__MPI)
         CALL MPI_FILE_CLOSE(io_u(ich), ierr)
+#else
+        CLOSE(io_u(ich), STATUS = 'keep')
+#endif
       ENDDO
       ! 
       DEALLOCATE(trans_probcb, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating trans_probcb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating trans_probcb', 1)
       DEALLOCATE(sparsecb, STAT = ierr)
-      IF (ierr /= 0) CALL errore('iter_merge_parallel', 'Error deallocating sparsecb', 1)
+      IF (ierr /= 0) CALL errore('iter_merge', 'Error deallocating sparsecb', 1)
       !
     ENDIF ! in all other cases it is still to decide which files to open
     ! 
-#endif
     !----------------------------------------------------------------------------
-    END SUBROUTINE iter_merge_parallel
+    END SUBROUTINE iter_merge
     !----------------------------------------------------------------------------
     !
     !----------------------------------------------------------------------------
@@ -1126,7 +1188,7 @@
     USE mp_global,        ONLY : world_comm, my_pool_id, npool
     USE mp,               ONLY : mp_barrier, mp_bcast
     USE elph2,            ONLY : lrepmatw2_merge, lrepmatw5_merge
-    USE epwcom,           ONLY : int_mob, carrier, ncarrier
+    USE epwcom,           ONLY : int_mob, carrier, ncarrier, assume_metal
     USE io_global,        ONLY : ionode_id
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
@@ -1145,9 +1207,9 @@
     INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
-    INTEGER, INTENT(inout) :: ind_tot
+    INTEGER(KIND = 8), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER, INTENT(inout) :: ind_totcb
+    INTEGER(KIND = 8), INTENT(inout) :: ind_totcb
     !! Total number of component for conduction band
 #endif  
     ! 
@@ -1203,8 +1265,9 @@
     !
     ! The restart_ibte.fmt exist - we try to restart
     IF (exst) THEN
-      ! Hole
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+      ! Hole (or metals)
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
+              .OR. assume_metal) THEN
         !
         filint = './' // ADJUSTL(TRIM(dirname(1))) // '/'//TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_pool_id_ch)
         INQUIRE(FILE = filint, EXIST = exst2)
@@ -1273,8 +1336,9 @@
       lrepmatw5_merge = lrepmatw5_restart(my_pool_id + 1)
       !  
     ELSE ! no restart file present
-      ! Hole
-      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5))) THEN
+      ! Hole or metals
+      IF ((int_mob .AND. carrier) .OR. ((.NOT. int_mob .AND. carrier) .AND. (ncarrier < 1E5)) &
+              .OR. assume_metal) THEN
         ! 
         CALL create_directory(ADJUSTL(TRIM(dirname(1))))
         CALL create_directory(ADJUSTL(TRIM(dirname(2))))
@@ -1536,220 +1600,7 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE scattering_read
     !----------------------------------------------------------------------------
-    !----------------------------------------------------------------------------
-    SUBROUTINE electron_write(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
-    !----------------------------------------------------------------------------
-    !!
-    !! Write self-energy
-    !! 
-    USE kinds,     ONLY : DP
-    USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
-    USE io_var,    ONLY : iufilsigma_all
-    USE io_files,  ONLY : diropn
-    USE constants_epw, ONLY : zero
-    USE mp,        ONLY : mp_barrier
-    USE mp_world,  ONLY : mpime
-    USE io_global, ONLY : ionode_id
     !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: iqq
-    !! Current q-point
-    INTEGER, INTENT(in) :: totq
-    !! Total number of q-points
-    INTEGER, INTENT(in) :: nktotf
-    !! Total number of k-points
-    REAL(KIND = DP), INTENT(inout) :: sigmar_all(nbndfst, nktotf)
-    !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(inout) :: sigmai_all(nbndfst, nktotf)
-    !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(inout) :: zi_all(nbndfst, nktotf)
-    !! Z parameter of electron-phonon self-energy accross all pools
-    ! 
-    ! Local variables
-    LOGICAL :: exst
-    !! Does the file exist
-    INTEGER :: i
-    !! Iterative index
-    INTEGER :: ik
-    !! K-point index
-    INTEGER :: ibnd
-    !! Local band index
-    INTEGER :: lsigma_all
-    !! Length of the vector
-    REAL(KIND = DP) :: aux(3 * nbndfst * nktotf + 2)
-    !! Vector to store the array
-    !
-    IF (mpime == ionode_id) THEN
-      !
-      lsigma_all = 3 * nbndfst * nktotf + 2
-      ! First element is the current q-point
-      aux(1) = REAL(iqq - 1, KIND = DP) ! we need to start at the next q
-      ! Second element is the total number of q-points
-      aux(2) = REAL(totq, KIND = DP)
-      !
-      i = 2
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          i = i + 1
-          aux(i) = sigmar_all(ibnd, ik)
-        ENDDO
-      ENDDO
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          i = i + 1
-          aux(i) = sigmai_all(ibnd, ik)
-        ENDDO
-      ENDDO
-      DO ik = 1, nktotf
-        DO ibnd = 1, nbndfst
-          i = i + 1
-          aux(i) = zi_all(ibnd, ik)
-        ENDDO
-      ENDDO
-      CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
-      CALL davcio(aux, lsigma_all, iufilsigma_all, 1, +1)
-      CLOSE(iufilsigma_all)
-    ENDIF
-    ! 
-    ! Make everythin 0 except the range of k-points we are working on
-    IF (lower_bnd > 1) THEN 
-      sigmar_all(:, 1:lower_bnd - 1) = zero
-      sigmai_all(:, 1:lower_bnd - 1) = zero
-      zi_all(:, 1:lower_bnd - 1) = zero
-    ENDIF
-    IF (upper_bnd < nktotf) THEN
-      sigmar_all(:, upper_bnd + 1:nktotf) = zero
-      sigmai_all(:, upper_bnd + 1:nktotf) = zero
-      zi_all(:, upper_bnd + 1:nktotf) = zero
-    ENDIF
-    ! 
-    !----------------------------------------------------------------------------
-    END SUBROUTINE electron_write
-    !----------------------------------------------------------------------------
-    ! 
-    !----------------------------------------------------------------------------
-    SUBROUTINE electron_read(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
-    !----------------------------------------------------------------------------
-    !! 
-    !! Self-energy reading
-    !! 
-    USE kinds,     ONLY : DP
-    USE io_global, ONLY : stdout
-    USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
-    USE io_var,    ONLY : iufilsigma_all
-    USE io_files,  ONLY : prefix, tmp_dir, diropn
-    USE constants_epw, ONLY :  zero
-    USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_world,  ONLY : mpime, world_comm
-    USE io_global, ONLY : ionode_id
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(inout) :: iqq
-    !! Current q-point
-    INTEGER, INTENT(in) :: totq
-    !! Total number of q-points
-    INTEGER, INTENT(in) :: nktotf
-    !! Total number of k-points
-    REAL(KIND = DP), INTENT(out) :: sigmar_all(nbndfst, nktotf)
-    !! Real part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(out) :: sigmai_all(nbndfst, nktotf)
-    !! Imaginary part of the electron-phonon self-energy accross all pools
-    REAL(KIND = DP), INTENT(out) :: zi_all(nbndfst, nktotf)
-    !! Z parameter of electron-phonon self-energy accross all pools
-    ! 
-    ! Local variables
-    LOGICAL :: exst
-    !! Does the file exist
-    INTEGER :: i
-    !! Iterative index
-    INTEGER :: ik
-    !! K-point index
-    INTEGER :: ibnd
-    !! Local band index
-    INTEGER :: lsigma_all
-    !! Length of the vector
-    INTEGER :: nqtotf_read
-    !! Total number of q-point read
-    REAL(KIND = DP) :: aux(3 * nbndfst * nktotf + 2)
-    !! Vector to store the array
-    ! 
-    CHARACTER(LEN = 256) :: name1
-    !
-    IF (mpime == ionode_id) THEN
-      !
-      ! First inquire if the file exists
-#if defined(__MPI)
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart1'
-#else
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart'
-#endif    
-      INQUIRE(FILE = name1, EXIST = exst)
-      ! 
-      IF (exst) THEN ! read the file
-        !
-        lsigma_all = 3 * nbndfst * nktotf + 2
-        CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
-        CALL davcio(aux, lsigma_all, iufilsigma_all, 1, -1)
-        !
-        ! First element is the iteration number
-        iqq = INT(aux(1))
-        iqq = iqq + 1 ! we need to start at the next q
-        nqtotf_read = INT(aux(2))
-        IF (nqtotf_read /= totq) CALL errore('electron_read',&
-          &'Error: The current total number of q-point is not the same as the read one. ', 1)
-        ! 
-        i = 2
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            i = i + 1
-            sigmar_all(ibnd, ik) = aux(i)
-          ENDDO
-        ENDDO
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            i = i + 1
-            sigmai_all(ibnd, ik) = aux(i)
-          ENDDO
-        ENDDO
-        DO ik = 1, nktotf
-          DO ibnd = 1, nbndfst
-            i = i + 1
-            zi_all(ibnd, ik) = aux(i)
-          ENDDO
-        ENDDO
-        CLOSE(iufilsigma_all)
-      ENDIF
-    ENDIF
-    ! 
-    CALL mp_bcast(exst, ionode_id, world_comm)
-    !
-    IF (exst) THEN
-      CALL mp_bcast(iqq, ionode_id, world_comm)
-      CALL mp_bcast(sigmar_all, ionode_id, world_comm)
-      CALL mp_bcast(sigmai_all, ionode_id, world_comm)
-      CALL mp_bcast(zi_all, ionode_id, world_comm)
-      ! 
-      ! Make everythin 0 except the range of k-points we are working on
-      IF (lower_bnd > 1) THEN
-        sigmar_all(:, 1:lower_bnd - 1) = zero
-        sigmai_all(:, 1:lower_bnd - 1) = zero
-        zi_all(:, 1:lower_bnd - 1) = zero
-      ENDIF
-      IF (upper_bnd < nktotf) THEN
-        sigmar_all(:, upper_bnd + 1:nktotf) = zero
-        sigmai_all(:, upper_bnd + 1:nktotf) = zero
-        zi_all(:, upper_bnd + 1:nktotf) = zero
-      ENDIF
-      ! 
-      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iqq,'/', totq
-    ENDIF
-    ! 
-    !----------------------------------------------------------------------------
-    END SUBROUTINE electron_read
-    !----------------------------------------------------------------------------
-    ! 
     !----------------------------------------------------------------------------
     SUBROUTINE tau_write(iqq, totq, nktotf, second)
     !----------------------------------------------------------------------------
@@ -1870,6 +1721,7 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE tau_write
     !----------------------------------------------------------------------------
+    ! 
     !----------------------------------------------------------------------------
     SUBROUTINE tau_read(iqq, totq, nktotf, second)
     !----------------------------------------------------------------------------

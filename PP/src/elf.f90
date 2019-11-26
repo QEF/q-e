@@ -30,7 +30,7 @@ SUBROUTINE do_elf (elf)
   USE fft_interfaces, ONLY : fwfft, invfft, fft_interpolate
   USE gvect, ONLY: gcutm, g, ngm
   USE gvecs, ONLY : ngms, doublegrid, dual
-  USE io_files, ONLY: iunwfc, nwordwfc
+  USE io_files, ONLY: restart_dir
   USE klist, ONLY: nks, xk, ngk, igk_k
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
@@ -40,6 +40,7 @@ SUBROUTINE do_elf (elf)
   USE wavefunctions,  ONLY: evc
   USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm
   USE mp, ONLY: mp_sum
+  USE pw_restart_new, ONLY : read_collected_wfc
   !
   ! I/O variables
   !
@@ -66,7 +67,7 @@ SUBROUTINE do_elf (elf)
      !
      !   reads the eigenfunctions
      !
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
      !
      DO ibnd = 1, nbnd
         DO j = 1, 3

@@ -37,16 +37,14 @@ PROGRAM pmw
   INTEGER :: ios
   INTEGER :: first_band, last_band
   REAL(DP) :: min_energy, max_energy, sigma
-  LOGICAL :: writepp
+  LOGICAL :: writepp, needwf = .TRUE.
   NAMELIST / inputpp / outdir, prefix, first_band, last_band, writepp, &
                       min_energy, max_energy, sigma
   !
 
   ! initialise environment
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
   CALL environment_start ( 'PMW' )
   IF ( ionode )  CALL input_from_file ( )
   !
@@ -88,7 +86,7 @@ PROGRAM pmw
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file ( )
+  CALL read_file_new ( needwf )
   !
   ! Check on correctness and consistency of the input
   !
@@ -104,8 +102,6 @@ PROGRAM pmw
   IF ( noncolin ) CALL errore('pmw','non-colinear not implemented / not tested', 1)
   ! Currently, WF projectors are built for Hubbard species only
   IF ( .NOT.lda_plus_U ) CALL errore('pmw','Hubbard U calculation required', 1)
-  !
-  CALL openfil_pp ( )
   !
   CALL projection( first_band, last_band, min_energy, max_energy, sigma, writepp)
   !
@@ -135,9 +131,10 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
   USE becmod,     ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
+  USE io_files,   ONLY: prefix, restart_dir, &
                         iunhub, nwordwfcU, nwordatwfc, diropn
   USE wavefunctions, ONLY: evc
+  USE pw_restart_new,ONLY: read_collected_wfc
 
   IMPLICIT NONE
   !
@@ -247,7 +244,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
      !
      npw = ngk(ik)
 
-     CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+     CALL read_collected_wfc ( restart_dir(), ik, evc )
 
      CALL atomic_wfc (ik, wfcatom)
 
