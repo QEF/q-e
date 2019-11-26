@@ -29,7 +29,7 @@ subroutine force_cc_gpu (forcecc)
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE gbuffers,             ONLY : dev_buf
-  USE device_util_m,        ONLY : dev_memsync  
+  USE device_util_m,        ONLY : dev_memcpy  
   !
   implicit none
   !
@@ -92,7 +92,7 @@ subroutine force_cc_gpu (forcecc)
   endif
   deallocate (vxc)
   CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierr)
-  CALL dev_memsync( psic_d, psic, (/ 1, dfftp%nnr, dfftp%nnr /) )
+  CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr, dfftp%nnr /) )
   CALL fwfft ('Rho', psic_d, dfftp)
   !
   ! psic contains now Vxc(G)
