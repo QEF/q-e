@@ -30,13 +30,13 @@ module xdm_module
   REAL(DP), ALLOCATABLE :: xenv(:,:)
   INTEGER, ALLOCATABLE :: ienv(:), lvec(:,:)
   INTEGER :: nvec
-  INTEGER :: lmax(3)
+  INTEGER :: lmax(3) = 0
 
   ! moments, polarizabilities, radii, dispersion coefficients
   REAL(DP), ALLOCATABLE :: alpha(:), ml(:,:)
   REAL(DP), ALLOCATABLE :: cx(:,:,:), rvdw(:,:)
   REAL(DP) :: maxc6
-  REAL(DP) :: rmax2
+  REAL(DP) :: rmax2 = 0d0
 
   ! energies, forces and stresses
   REAL(DP) :: esave = 0._DP
@@ -276,11 +276,6 @@ CONTAINS
        IF (ispaw) THEN
           CALL PAW_make_ae_charge_xdm(rho,rhoae)
           rhoae = (rhoae + rhocor) / REAL(nspin,DP)
-       ELSE
-          rhoae = 0._DP
-          DO i = 1, nspin
-             rhoae = rho%of_r(:,i)
-          END DO
        ENDIF
 
        ! don't need the core anymore
@@ -301,6 +296,10 @@ CONTAINS
 
        ! loop over spins
        DO ispin = 1, nspin
+          ! spin-contribution to rhoae; this is used in the calculation of the volume
+          IF (.NOT.ispaw) THEN
+             rhoae = rho%of_r(:,ispin)
+          END IF
           ALLOCATE(gaux(3,dfftp%nnr),ggaux(3,3,dfftp%nnr),STAT=ialloc)
           IF (ialloc /= 0) CALL alloc_failed("gaux, ggaux")
 
@@ -628,7 +627,7 @@ CONTAINS
 
     INTEGER, EXTERNAL :: find_free_unit
 
-    IF (ionode) THEN
+    IF (ionode .AND.ALLOCATED(cx).AND.ALLOCATED(rvdw)) THEN
        iunxdm = find_free_unit ()
        OPEN ( UNIT=iunxdm, FILE = TRIM(restart_dir() ) // 'xdm.dat', &
             FORM='unformatted', STATUS='unknown' )

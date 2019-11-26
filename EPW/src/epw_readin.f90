@@ -51,9 +51,9 @@
                             nsiter, conv_thr_racon, specfun_el, specfun_ph, nbndskip,  &
                             system_2d, delta_approx, title, int_mob, scissor,          &
                             iterative_bte, scattering, selecqread, epmatkqread,        &  
-                            ncarrier, carrier, scattering_serta, restart, restart_freq,&
+                            ncarrier, carrier, scattering_serta, restart, restart_step,&
                             scattering_0rta, longrange, shortrange, scatread, use_ws,  &
-                            restart_filq, prtgkk, nel, meff, epsiHEG, lphase,          &
+                            restart_filq, prtgkk, nel, meff, epsiheg, lphase,          &
                             omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  & 
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   & 
                             scdm_sigma, assume_metal
@@ -130,8 +130,8 @@
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
-       epsiHEG, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           & 
+       scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
+       epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           & 
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   & 
        scdm_sigma, assume_metal
   ! tphases, fildvscf0
@@ -231,8 +231,8 @@
   ! liso    : if .TRUE. solve isotropic case
   ! laniso  : if .TRUE. solve anisotropic case
   ! lunif   : if .TRUE. a uniform grid is defined between wsfc and wscut for real-axis calculations
-  ! kerwrite: if .TRUE. write Kp and Km to files .ker for real-axis calculations
-  ! kerread : if .TRUE. read Kp and Km from files .ker for real-axis calculations
+  ! kerwrite: if .TRUE. write kp and km to files .ker for real-axis calculations
+  ! kerread : if .TRUE. read kp and km from files .ker for real-axis calculations
   ! imag_read    : if .TRUE. read from files Delta and Znorm on the imaginary-axis
   ! eliashberg   : if .TRUE. solve the Eliashberg equations
   ! ep_coupling  : if .TRUE. run e-p coupling calculation
@@ -266,7 +266,7 @@
   ! specfun_ph      : if .TRUE. calculate phonon spectral function due to e-p interaction
   ! specfun_pl      : if .TRUE. calculate plason spectral function 
   ! restart         : if .TRUE. a run can be restarted from the interpolation level
-  ! restart_freq    : Create a restart point every restart_freq q/k-points
+  ! restart_step    : Create a restart point every restart_step q/k-points
   ! restart_filq    : Use to merge different q-grid scattering rates (name of the file)
   ! scattering      : if .TRUE. scattering rates are calculated
   ! scattering_serta: if .TRUE. scattering rates are calculated using self-energy relaxation-time-approx
@@ -292,7 +292,7 @@
   ! plselfen        : Calculate the electron-plasmon self-energy.
   ! nel             : Fractional number of electrons in the unit cell
   ! meff            : Density of state effective mass (in unit of the electron mass)
-  ! epsiHEG         : Dielectric constant at zero doping
+  ! epsiheg         : Dielectric constant at zero doping
   ! lphase          : If .TRUE., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
   ! mob_maxiter     : Maximum number of iteration for the IBTE. 
   ! use_ws          : If .TRUE., use the Wannier-center to create the Wigner-Seitz cell. 
@@ -301,14 +301,14 @@
   ! nc              : Number of carrier for the Ziman resistivity formula (can be fractional)
   !  
   ! Added by Manos Kioupakis
-  ! omegamin  : Photon energy minimum
-  ! omegamax  : Photon energy maximum
-  ! omegastep : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
-  ! n_r       :  constant refractive index
-  ! lindabs   : do phonon-assisted absorption
+  ! omegamin        : Photon energy minimum
+  ! omegamax        : Photon energy maximum
+  ! omegastep       : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
+  ! n_r             : Constant refractive index
+  ! lindabs         : If .TRUE., do phonon-assisted absorption
   ! 
   ! Added by Felix Goudreault
-  ! assume_metal     : If set to .TRUE. => we are dealing with a metal
+  ! assume_metal     : If .TRUE. => we are dealing with a metal
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
@@ -355,7 +355,7 @@
   epwread      = .FALSE.
   epwwrite     = .TRUE.
   restart      = .FALSE.
-  restart_freq = 100
+  restart_step = 100
   wannierize   = .FALSE.
   write_wfn    = .FALSE.
   kmaps        = .FALSE.
@@ -491,7 +491,7 @@
   prtgkk     = .FALSE.
   nel        = 0.0d0
   meff       = 1.d0
-  epsiHEG    = 1.d0 
+  epsiheg    = 1.d0 
   lphase     = .FALSE. 
   omegamin   = 0.d0  ! eV
   omegamax   = 10.d0 ! eV

@@ -972,8 +972,9 @@ SUBROUTINE force_theorem ( ef_0, filproj )
                  call errore('force_theorem','Force Theorem not implemented for l > 2',1)
               ENDIF
               DO i = 1, 2*l + 1
-                 WRITE(4,'(2e30.10)') eband_proj(nwfc-1+i)*rytoev, &
-                      eband_proj(nwfc+i+2*l)*rytoev
+                 WRITE(4,'("eband_l_m_atom ",3i5,2e23.10)') l, i, na, &
+                         eband_proj(nwfc-1+i)*rytoev, &
+                         eband_proj(nwfc+i+2*l)*rytoev
                  psum  = psum+eband_proj(nwfc-1+i) +  &
                       eband_proj(nwfc+i+2*l)
               ENDDO

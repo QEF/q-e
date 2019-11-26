@@ -1,12 +1,18 @@
 #!/bin/sh
 
-echo "Deprecated: use extract_core.x from upftools instead"
-exit 1
+## CHANGELOG
+#
+# 11/20/2019 AU - Compatibility with QE6.4.1
+# * edit mesh_size string manipulation
+#   - E1,E2 : new regex pattern to detect
+# * edit PP pattern search 
+#   - E3 : "/PP_R /" -> "<PP_R>"
+#   - E4 : "<PP_R"  -> "<PP_R>"
+
 
 LANG=C
 
 cat $1 | awk '
-
 
 #<UPF v1>
 
@@ -51,12 +57,13 @@ cat $1 | awk '
 
 /mesh_size=/ {
   nris = $0
-  gsub ( "[ ]*mesh_size=\"", "", nris )
-  gsub ( "\"[ ]*$", "", nris )
+  gsub ( /.*mesh_size="/, "", nris ) #E1
+  gsub ( /[^0-9]*".*/, "", nris )    #E2
+  nris = int ( nris + 1e-5 )
 }
 
-/<PP_R /,/<\/PP_R>/ {
-  if ( $1 != "<PP_R" && $1 != "</PP_R>" ) {
+/<PP_R>/,/<\/PP_R>/ { #E3
+  if ( $1 != "<PP_R>" && $1 != "</PP_R>" ) { #E4
     for ( i = 1; i <= NF; i++ ) {
       r[++val] = 1*$i
     }

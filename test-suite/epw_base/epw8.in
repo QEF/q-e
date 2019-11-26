@@ -15,7 +15,7 @@
   vme         = .false.
 
   restart      = .true.
-  restart_freq = 50      ! We test the restart feature
+  restart_step = 50      ! We test the restart feature
 
   epwwrite    = .false.
   epwread     = .true.

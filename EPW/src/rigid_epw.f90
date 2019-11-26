@@ -59,10 +59,13 @@
     !! This implements Eq. 98 of Rev. Mod. Phys., 73, 515 (2001)
     !! SP: April 2019 - Using nrx1 is overkill. 
     !!
+    !! SP - 11/2019 - Addition of system_2d (we assume z is the vacuum direction).  
+    !!
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : pi, fpi, e2
     USE cell_base,     ONLY : bg, omega
     USE constants_epw, ONLY : eps6
+    USE epwcom,        ONLY : system_2d
     !
     IMPLICIT NONE
     !
@@ -129,11 +132,27 @@
     ! (exp (-14) = 10^-6)
     !
     IF (ABS(ABS(signe) - 1.0) > eps6) CALL errore('rgd_blk', ' wrong value for signe ', 1)
+    ! 
+    IF (system_2d) THEN
+      !fac = (signe * e2 * fpi) / omega*0.5d0*alat/bg(3,3)
+      !reff=0.0d0
+      !DO i=1,2
+      !   DO j=1,2
+      !      reff(i,j)=epsil(i,j)*0.5d0*tpi/bg(3,3) ! (eps)*c/2 in 2pi/a units
+      !   ENDDO
+      !ENDDO
+      !DO i=1,2
+      !   reff(i,i)=reff(i,i)-0.5d0*tpi/bg(3,3) ! (-1)*c/2 in 2pi/a units
+      !ENDDO
+    ELSE 
+      ! (e^2 * 4\pi) / Volume
+      fac = (signe * e2 * fpi) / omega
+    ENDIF
+    ! 
     gmax = 14.d0
     alph = 1.0d0
     geg = gmax * alph * 4.0d0
     !
-    fac = signe * e2 * fpi / omega
     !  DO m1 = -nrx1, nrx1
     !    DO m2 = -nrx2, nrx2
     !      DO m3 = -nrx3, nrx3
@@ -251,19 +270,19 @@
     !! Coarse q-point grid 
     INTEGER, INTENT(in) :: nmodes
     !! Max number of modes
-    REAL (KIND = DP), INTENT(in) :: q(3)
+    REAL(KIND = DP), INTENT(in) :: q(3)
     !! q-vector from the full coarse or fine grid.
-    REAL (KIND = DP), INTENT(in) :: epsil(3, 3)
+    REAL(KIND = DP), INTENT(in) :: epsil(3, 3)
     !! dielectric constant tensor
-    REAL (KIND = DP), INTENT(in) :: zeu(3, 3, nat)
+    REAL(KIND = DP), INTENT(in) :: zeu(3, 3, nat)
     !! effective charges tensor
-    REAL (KIND = DP), INTENT(in) :: signe
+    REAL(KIND = DP), INTENT(in) :: signe
     !! signe=+/-1.0 ==> add/subtract long range term
-    COMPLEX (KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
+    COMPLEX(KIND = DP), INTENT(in) :: uq(nmodes, nmodes)
     !! phonon eigenvec associated with q
-    COMPLEX (KIND = DP), INTENT(inout) :: epmat(nmodes)
+    COMPLEX(KIND = DP), INTENT(inout) :: epmat(nmodes)
     !! e-ph matrix elements 
-    COMPLEX (KIND = DP), INTENT(in) :: bmat 
+    COMPLEX(KIND = DP), INTENT(in) :: bmat 
     !! Overlap matrix elements $$<U_{mk+q}|U_{nk}>$$
     !
     ! Local variables

@@ -1841,6 +1841,7 @@
     !
     ! Open the wfc file, read and close
     CALL set_ndnmbr(ipool, me_pool, nproc_pool, npool, nd_nmbr0)
+    !print*,'nd_nmbr0 ',nd_nmbr0
     !
 #if defined(__MPI)
     tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // nd_nmbr0
