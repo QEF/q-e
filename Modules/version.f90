@@ -13,6 +13,5 @@ MODULE global_version
   SAVE
   !
   CHARACTER (LEN=6) :: version_number = '6.4.1'
-  CHARACTER (LEN=12) :: svn_revision = 'unknown'
   !
 END MODULE global_version

@@ -723,6 +723,9 @@ SUBROUTINE phq_readin()
   IF (okpaw.and.noncolin.and.domag) CALL errore('phq_readin',&
      'The phonon code with paw and domag is not available yet',1)
 
+  IF (magnetic_sym) CALL errore('phq_readin',&
+     'Non-colinear phonon code with domag is buggy: temporarily disabled',1)
+
   IF (okvan.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with US-PP and raman or elop not yet available',1)
 
