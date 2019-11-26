@@ -24,7 +24,7 @@
   mp_mesh_k   = .true.
 
   restart      = .true.
-  restart_freq = 50
+  restart_step = 50
   selecqread   = .false.
   epmatkqread  = .false.
 

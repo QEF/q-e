@@ -30,7 +30,7 @@
   tempsmax    = 200
 
   restart      = .true.
-  restart_freq = 5
+  restart_step = 5
   selecqread   = .false.
 
   etf_mem     = 1

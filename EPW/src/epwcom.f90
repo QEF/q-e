@@ -142,9 +142,9 @@
   LOGICAL :: lunif
   !! if .TRUE. a uniform grid is defined between wsfc and wc for real-axis calculations
   LOGICAL :: kerwrite
-  !! if .TRUE. write Kp and Km to files .ker for real-axis calculations
+  !! if .TRUE. write kp and km to files .ker for real-axis calculations
   LOGICAL :: kerread
-  !! if .TRUE. read Kp and Km from files .ker for real-axis calculations
+  !! if .TRUE. read kp and km from files .ker for real-axis calculations
   LOGICAL :: imag_read
   !! if .TRUE. read from file Delta and Znorm on the imaginary-axis
   LOGICAL :: eliashberg
@@ -230,8 +230,8 @@
   !! nr. of iterations used in broyden mixing scheme
   INTEGER :: nw_specfun
   !! nr. of bins for frequency in electron spectral function due to e-p interaction 
-  INTEGER :: restart_freq
-  !! Create a restart point during the interpolation part every restart_freq q/k-points. 
+  INTEGER :: restart_step
+  !! Create a restart point during the interpolation part every restart_step q/k-points. 
   !
   REAL(KIND = DP) :: degaussw
   !! smearing width for Fermi surface average in e-ph coupling after wann interp
@@ -314,7 +314,7 @@
   !! fractional number of electrons in the unit cell
   REAL(KIND = DP) :: meff
   !! Density-of-state effective mass (in unit of the electron mass)
-  REAL(KIND = DP) :: epsiHEG
+  REAL(KIND = DP) :: epsiheg
   !! Dielectric constant at zero doping. 
   REAL(KIND = DP) :: fermi_diff
   !! difference between Fermi energy and band edge (in eV)

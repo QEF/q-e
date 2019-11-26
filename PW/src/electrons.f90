@@ -684,9 +684,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
            ! ... For LDA+U, ns and ns_nc are also broadcast inside each pool
            ! ... to ensure consistency on all processors of all pools
            IF (noncolin) THEN
-              CALL mp_bcast( rhoin%ns_nc, my_pool_id, intra_pool_comm )
+              CALL mp_bcast( rhoin%ns_nc, root_pool, intra_pool_comm )
            ELSE
-              CALL mp_bcast( rhoin%ns, my_pool_id, intra_pool_comm )
+              CALL mp_bcast( rhoin%ns, root_pool, intra_pool_comm )
            ENDIF
         ENDIF
         !
