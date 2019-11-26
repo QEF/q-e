@@ -9,7 +9,8 @@
 
 
 MODULE exch_lda  !<GPU:exch_lda=>exch_lda_gpu>
-!! Module for the gpu version of the lda functionals.
+!
+!! Module containing LDA functionals.
 !
 CONTAINS
 !-----------------------------------------------------------------------
@@ -227,13 +228,13 @@ SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )                 !<GPU:DEV
   !
   IMPLICIT NONE
   !
-  REAL(8), INTENT(IN) :: rho
+  REAL(DP), INTENT(IN) :: rho
   !! total charge density
-  REAL(8), INTENT(IN) :: z
+  REAL(DP), INTENT(IN) :: z
   !! z = (rho_up - rho_dw) / rho_tot
-  REAL(8), INTENT(OUT) :: ex
+  REAL(DP), INTENT(OUT) :: ex
   !! exchange energy
-  REAL(8), INTENT(OUT) :: vx_up, vx_dw
+  REAL(DP), INTENT(OUT) :: vx_up, vx_dw
   !! exchange potential (up, down)
   !
   ! ... local variables

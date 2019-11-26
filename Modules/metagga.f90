@@ -1471,7 +1471,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, & 
     Ec_UEG_ab = ec_pw_ab*rho - ec_pw_a*rhoa - ec_pw_b*rhob
     !
     Ecab = Ec_UEG_ab * (gsab + hgab)
-
+    !
     v1_ab_up = decab_drhoa * (gsab + hgab) +                             &
                Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2a_drhoa + &
                Ec_UEG_ab * dhgab_dzsab * dzsa_drhoa

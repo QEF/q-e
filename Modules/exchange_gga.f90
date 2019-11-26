@@ -1,9 +1,8 @@
 !
 MODULE exch_gga !<GPU:exch_gga=>exch_gga_gpu>
- !
- CONTAINS
- !
-
+!
+CONTAINS
+!
 !-----------------------------------------------------------------------
 SUBROUTINE becke88( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
@@ -1821,8 +1820,8 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )  
       ENDIF
 
 END SUBROUTINE wpbe_analy_erfc_approx_grad
-      !
-      !---------------------------------------------------------------------
+!
+!---------------------------------------------------------------------
 function qe_erf(x)                      !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !     Error function - computed from the rational approximations of
@@ -1997,7 +1996,6 @@ FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
          IF (i > maxit) STOP !CALL errore('expint','series failed',1)
       END IF
 END FUNCTION EXPINT
-
-END MODULE
 !
+END MODULE
 
