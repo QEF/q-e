@@ -156,7 +156,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
      !
      DO k = 1, dfftp%nnr
-        v(:,1:nspin0) = v(:,1:nspin0) + e2*( v1x(:,1:nspin0) + v1c(:,1:nspin0)) 
+        v(k,1:nspin0) = v(k,1:nspin0) + e2*( v1x(k,1:nspin0) + v1c(k,1:nspin0)) 
         DO ipol = 1, 3
            !
            grup = grho(ipol,k,1)
