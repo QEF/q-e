@@ -25,7 +25,6 @@ SUBROUTINE lr_addusddens (drhoscf, dbecsum)
   USE uspp,                 ONLY : okvan
   USE wavefunctions, ONLY : psic
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE paw_variables,        ONLY : okpaw
   USE qpoint,               ONLY : xq, eigqts
   USE noncollin_module,     ONLY : nspin_mag
   !
