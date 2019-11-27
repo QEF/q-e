@@ -39,6 +39,7 @@ pseudo :
 	@./check_pseudo.sh epw_
 	@./check_pseudo.sh tddfpt_
 	@./check_pseudo.sh hp_
+	@./check_pseudo.sh ph_
 
 run-tests : run-tests-serial
 
@@ -153,7 +154,7 @@ clean:
 	@rm -rf ph_*/_ph0 ph_*/*.save ph_*/*.xml ph_*/a2F.* ph_*/*.dyn? ph_*/alpha2F.dat \
 		ph_*/dyna2F ph_*/elph.gamma* ph_*/gam.lines ph_*/lambda ph_*/lambda.dat \
 		ph_*/elph_dir ph_*/Al444.* ph_*/matdyn.modes ph_*/phonon.dos
-	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/silicon.*
+	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/nickelpaw.* ph_base/silicon.*
 # Cleaning HP final files
 	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.save hp_*/*Hubbard_parameters*
 # Cleaning EPW final files

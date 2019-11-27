@@ -30,6 +30,7 @@
     !! 12/2009  works with USPP 
     !! 12/2014  RM: Imported the noncolinear case implemented by xlzhang
     !! 06/2016  SP: Debug of SOC + print/reading of nnkp file
+    !! 11/2019  RM: Imported and adapted the SCDM method from pw2wannier
     !!
     !------------------------------------------------------------------------
     USE io_global,        ONLY : stdout
@@ -469,7 +470,7 @@
     band_loop: DO ibnd = 1, nbnd
       indexb = exclude_bands(ibnd)
       IF (indexb > nbnd .OR. indexb < 0) THEN
-        CALL errore('setup_nnkp', ' wrong excluded band index ', 1)
+        CALL errore('setup_nnkp', 'wrong excluded band index ', 1)
       ELSEIF (indexb == 0) THEN
         EXIT band_loop
       ELSE
@@ -484,7 +485,7 @@
     WRITE(stdout, '("      - Number of wannier functions is (", i3, ")")') n_wannier
     IF ((nexband > 0) .AND. (nbndskip /= nexband)) THEN
       WRITE(stdout, '(/5x, "Warning: check if nbndskip = ", i3 " makes sense since ", i3, &
-                    &" bands are excluded from wannier projection")') nbndskip, nexband
+                    " bands are excluded from wannier projection")') nbndskip, nexband
     ENDIF
     !
     IF ((nbnd - nexband) /= num_bands ) &
@@ -495,8 +496,8 @@
     IF (meta_ionode) THEN  ! Read nnkp file on ionode only
       INQUIRE(FILE = TRIM(seedname2)//".nnkp", EXIST = have_nnkp)
       IF (.NOT. have_nnkp) THEN
-         CALL errore('setup_nnkp', 'Could not find the file '&
-            &//TRIM(seedname2)//'.nnkp', 1 )
+         CALL errore('setup_nnkp', 'Could not find the file ' &
+                      //TRIM(seedname2)//'.nnkp', 1 )
       ENDIF
       OPEN(UNIT = iunnkp, FILE = TRIM(seedname2)//".nnkp", FORM = 'formatted')
     ENDIF
@@ -505,14 +506,14 @@
       IF (noncolin) THEN
         CALL scan_file_to(iunnkp, 'spinor_projections', found)
         IF (.NOT. found) THEN
-          CALL errore('setup_nnkp', 'Could not find projections block in '&
-             &//TRIM(seedname2)//'.nnkp', 1)
+          CALL errore('setup_nnkp', 'Could not find projections block in ' &
+                      //TRIM(seedname2)//'.nnkp', 1)
         ENDIF
       ELSE
         CALL scan_file_to(iunnkp, 'projections', found)
         IF (.NOT. found) THEN
-          CALL errore('setup_nnkp', 'Could not find projections block in '&
-             &//TRIM(seedname2)//'.nnkp', 1)
+          CALL errore('setup_nnkp', 'Could not find projections block in ' &
+                      //TRIM(seedname2)//'.nnkp', 1)
         ENDIF
       ENDIF
       READ(iunnkp, *) n_proj
@@ -568,24 +569,25 @@
             WRITE(stdout, '(/, " ****** end Error message ******",//)')
             CALL errore('setup_nnkp', 'Inconsistent options for projections.', 1)
           ELSE
-            IF (tmp_auto /= 0) CALL errore('setup_nnkp', 'Second entry in auto_projections block is not 0. ' // &
-               'See Wannier90 User Guide in the auto_projections section for clarifications.', 1)
+            IF (tmp_auto /= 0) & 
+              CALL errore('setup_nnkp', 'Second entry in auto_projections block is not 0. ' // &
+                          'See Wannier90 User Guide in the auto_projections section for clarifications.', 1)
           ENDIF
         ELSE
           ! Fire an error whether or not a projections block is found
-          CALL errore('setup_nnkp', 'scdm_proj = F but found an auto_projections block in '&
-                 &//trim(seedname2)//'.nnkp', 1)
+          CALL errore('setup_nnkp', 'scdm_proj = F but found an auto_projections block in ' &
+                      //TRIM(seedname2)//'.nnkp', 1)
         ENDIF
       ELSE
         IF (scdm_proj) THEN
           ! Fire an error whether or not a projections block is found
-          CALL errore('setup_nnkp', 'scdm_proj = T but cannot find an auto_projections block in '&
-                 &//trim(seedname2)//'.nnkp', 1)
+          CALL errore('setup_nnkp', 'scdm_proj = T but cannot find an auto_projections block in ' &
+                      //TRIM(seedname2)//'.nnkp', 1)
         ENDIF
       ENDIF
     ENDIF
     !
-    IF (.NOT. scdm_proj) WRITE(stdout,*) '     - All guiding functions are given '
+    IF (.NOT. scdm_proj) WRITE(stdout, *) '     - All guiding functions are given '
     ! 
     ! Broadcast
     CALL mp_bcast(center_w, meta_ionode_id, world_comm)
@@ -603,8 +605,8 @@
     IF (meta_ionode) THEN   ! read from ionode only
       CALL scan_file_to(iunnkp, 'nnkpts', found)
       IF (.NOT. found) THEN
-         CALL errore('setup_nnkp', 'Could not find nnkpts block in '&
-            &//TRIM(seedname2)//'.nnkp', 1)
+         CALL errore('setup_nnkp', 'Could not find nnkpts block in ' &
+                     //TRIM(seedname2)//'.nnkp', 1)
       ENDIF
       READ(iunnkp, *) nnb
     ENDIF
@@ -674,8 +676,8 @@
     IF (meta_ionode) THEN 
       CALL scan_file_to(iunnkp, 'exclude_bands', found)
       IF (.NOT. found) THEN
-        CALL errore('setup_nnkp', 'Could not find exclude_bands block in '&
-           &//TRIM(seedname2)//'.nnkp', 1)
+        CALL errore('setup_nnkp', 'Could not find exclude_bands block in ' &
+                    //TRIM(seedname2)//'.nnkp', 1)
       ENDIF
       READ(iunnkp, *) nexband
       excluded_band(1:nbnd) = .FALSE.
@@ -684,9 +686,9 @@
         IF (indexb < 1 .OR. indexb > nbnd) &
           CALL errore('setup_nnkp', ' wrong excluded band index ', 1)
         excluded_band(indexb) = .TRUE.
-      ENDDO
+      ENDDO 
+      num_bands = nbnd - nexband
     ENDIF
-    num_bands = nbnd - nexband
     !
     ! Broadcast
     CALL mp_bcast(nexband,       meta_ionode_id, world_comm)
@@ -859,7 +861,7 @@
     !!  01/2018 Roxana Margine updated 
     !!
     USE kinds,           ONLY : DP
-    USE io_global,       ONLY : stdout 
+    USE io_global,       ONLY : stdout, meta_ionode 
     USE klist,           ONLY : nks, igk_k
     USE klist_epw,       ONLY : xk_loc
     USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
@@ -1041,8 +1043,8 @@
               ! changed since n_proj is now read from .nnkp file (n_proj=n_wannier) 
               ! a_mat(ibnd1, iw + n_proj * (ipol - 1), ik_g) = amn
               a_mat(ibnd1, iw, ik_g) = amn
-            ENDDO
-          ELSE
+            ENDDO ! ibnd
+          ELSE 
             ! general routine for quantisation axis (a,b,c) 
             ! 'up'    eigenvector is 1/DSQRT(1+c) [c+1,a+ib]
             ! 'down'  eigenvector is 1/DSQRT(1-c) [c-1,a+ib]
@@ -1076,14 +1078,14 @@
                   CALL mp_sum(amn_tmp, intra_pool_comm)
                   amn = amn + fac(ipol) * amn_tmp
                 ENDIF
-              ENDDO
+              ENDDO ! ipol
               !
               ! changed since n_proj is now read from .nnkp file (n_proj=n_wannier)
               !a_mat(ibnd1, iw + n_proj * (ipol - 1), ik_g) = amn
               a_mat(ibnd1, iw, ik_g) = amn
-            ENDDO
+            ENDDO ! ibnd
           ENDIF ! spin_z_pos
-        ENDDO
+        ENDDO ! iw (wannier fns)
       ELSE ! scalar wavefunction
         DO iw = 1, n_proj
           !
@@ -1097,9 +1099,9 @@
             CALL mp_sum(amn, intra_pool_comm)
             ! 
             a_mat(ibnd1, iw, ik_g) = amn
-          ENDDO !bands
-        ENDDO !wannier fns
-      ENDIF
+          ENDDO ! ibnd
+        ENDDO ! iw (wannier fns)
+      ENDIF ! scalar wavefunction
     ENDDO  ! k-points
     !
     DEALLOCATE(csph, STAT = ierr)
@@ -1117,13 +1119,34 @@
     !
     CALL mp_sum(a_mat, inter_pool_comm)
     !
-    !IF (mpime == 0) WRITE(900,*) a_mat
-    !IF (mpime == 0) FLUSH(900)
-    !IF (mpime == 1) WRITE(901,*) a_mat
-    !IF (mpime == 1) FLUSH(901)
-  
-    WRITE(stdout,*)
-    WRITE(stdout,'(5x,a)') 'AMN calculated'
+    ! RMDB
+    !IF (meta_ionode) THEN
+    !  ALLOCATE(a_mat_tmp(nbnd, n_wannier, iknum), STAT = ierr)
+    !  IF (ierr /= 0) CALL errore('compute_amn_para', 'Error allocating a_mat_tmp', 1)
+    !  a_mat_tmp(:, :, :) = czero
+    !  !
+    !  DO ik = 1, iknum
+    !    DO iw = 1, n_proj
+    !      !
+    !      ibnd1 = 0
+    !      DO ibnd = 1, nbnd
+    !        IF (excluded_band(ibnd)) CYCLE
+    !        ibnd1 = ibnd1 + 1
+    !        !
+    !        a_mat_tmp(ibnd, iw, ik) =  a_mat(ibnd1, iw, ik)
+    !      ENDDO ! ibnd
+    !      !
+    !      DO ibnd = 1, nbnd
+    !        WRITE(501, '(3i5, 2f18.12)') ibnd, iw, ik, a_mat_tmp(ibnd, iw, ik)
+    !      ENDDO ! ibnd
+    !    ENDDO ! iw
+    !  ENDDO ! ik
+    !  DEALLOCATE(a_mat_tmp, STAT = ierr)
+    !  IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating a_mat_tmp', 1)
+    !ENDIF
+    !
+    WRITE(stdout, *)
+    WRITE(stdout, '(5x, a)') 'AMN calculated'
     !
     RETURN
     !
@@ -1157,8 +1180,7 @@
     USE fft_interfaces,  ONLY : invfft
     USE mp,              ONLY : mp_bcast, mp_sum
     USE mp_world,        ONLY : world_comm
-    USE mp_pools,        ONLY : intra_pool_comm
-    USE mp_global,       ONLY : my_pool_id, npool, inter_pool_comm
+    USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
     USE constants_epw,   ONLY : zero, czero, one, twopi
     USE kfold,           ONLY : ktokpmq
     USE epwcom,          ONLY : scdm_entanglement, scdm_mu, scdm_sigma
@@ -1266,31 +1288,14 @@
     !!
     COMPLEX(KIND = DP), ALLOCATABLE :: cwork(:)
     !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: Umat(:, :)
+    COMPLEX(KIND = DP), ALLOCATABLE :: umat(:, :)
     !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: VTmat(:, :)
+    COMPLEX(KIND = DP), ALLOCATABLE :: vtmat(:, :)
     !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: Amat(:, :)
+    COMPLEX(KIND = DP), ALLOCATABLE :: amat(:, :)
     !! Elements of A_mn matrix
-    !
-#if defined(__MPI)
-    INTEGER nxxs
-    !!
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_all(:)
-    !! 
-    COMPLEX(KIND = DP), ALLOCATABLE :: psic_nc_all(:, :)
-    !!
-    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
-    IF (noncolin) THEN
-      ALLOCATE(psic_nc_all(nxxs, 2), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psic_nc_all', 1)
-      psic_nc_all(:, :) = czero
-    ELSE
-      ALLOCATE(psic_all(nxxs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psic_all', 1)
-      psic_all(:) = czero
-    ENDIF
-#endif
+    !COMPLEX(KIND = DP), ALLOCATABLE :: a_mat_tmp(:, :, :)
+    !! Temprary variable to store a_mat (used for debugging)
     !
     ! vv: Write info about SCDM in output
     IF (TRIM(scdm_entanglement) == 'isolated') THEN
@@ -1317,28 +1322,32 @@
     nrtot = dffts%nr1 * dffts%nr2 * dffts%nr3
     IF (noncolin) THEN
       minmn = MIN(numbands, 2 * nrtot)
-      ALLOCATE(qr_tau(2 * minmn), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating qr_tau', 1)
       ALLOCATE(piv(2 * nrtot), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv', 1)
       ALLOCATE(piv_pos(n_wannier), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv_pos', 1)
       ALLOCATE(piv_spin(n_wannier), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv_spin', 1)
-      ALLOCATE(rwork(2 * 2 * nrtot), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
-      ALLOCATE(psi_gamma(2 * nrtot, numbands), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
+      IF (meta_ionode) THEN 
+        ALLOCATE(qr_tau(2 * minmn), STAT = ierr)
+        IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating qr_tau', 1)
+        ALLOCATE(rwork(2 * 2 * nrtot), STAT = ierr)
+        IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
+        ALLOCATE(psi_gamma(2 * nrtot, numbands), STAT = ierr)
+        IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
+      ENDIF
     ELSE
       minmn = MIN(numbands, nrtot)
-      ALLOCATE(qr_tau(2 * minmn), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating qr_tau', 1)
       ALLOCATE(piv(nrtot), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating piv', 1)
-      ALLOCATE(rwork(2 * nrtot), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
-      ALLOCATE(psi_gamma(nrtot, numbands), STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
+      IF (meta_ionode) THEN
+        ALLOCATE(qr_tau(2 * minmn), STAT = ierr)
+        IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating qr_tau', 1)
+        ALLOCATE(rwork(2 * nrtot), STAT = ierr)
+        IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating rwork', 1)
+        ALLOCATE(psi_gamma(nrtot, numbands), STAT = ierr)
+        IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating psi_gamma', 1)
+      ENDIF
     ENDIF
     !
     ALLOCATE(nowfc(n_wannier, numbands), STAT = ierr)
@@ -1358,19 +1367,19 @@
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating phase', 1)
     ALLOCATE(singval(n_wannier), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating singval', 1)
-    ALLOCATE(Umat(numbands, n_wannier), STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating Umat', 1)
-    ALLOCATE(VTmat(n_wannier, n_wannier), STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating VTmat', 1)
-    ALLOCATE(Amat(numbands, n_wannier), STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating Amat', 1)
+    ALLOCATE(umat(numbands, n_wannier), STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating umat', 1)
+    ALLOCATE(vtmat(n_wannier, n_wannier), STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating vtmat', 1)
+    ALLOCATE(amat(numbands, n_wannier), STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating amat', 1)
     !
-    ALLOCATE(a_mat(num_bands, n_wannier, iknum), STAT = ierr)
+    ALLOCATE(a_mat(numbands, n_wannier, iknum), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating a_mat', 1)
     a_mat(:, :, :) = czero
     zero_vect(:) = zero
     !
-    WRITE(stdout, '(5x, a)') 'AMN'
+    WRITE(stdout, '(5x, a)') 'AMN with SCDM'
     !
     ! Check that Gamma-point is first in the list of k-vectors
     !
@@ -1380,123 +1389,107 @@
                   kpt_latt(3, 1) == 0.0d0
     IF (.NOT. found_gamma) CALL errore('compute_amn_with_scdm', 'No Gamma point found.', 1)
     !
-    ! read wfc at G-point
-    ik = 1
-    CALL readwfc(my_pool_id + 1, ik, evc)
-    !
-    ! sorts k+G vectors in order of increasing magnitude, up to ecut
-    CALL gk_sort(xk_all(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
-    !
-    ibnd1 = 0
-    f_gamma = zero
-    psi_gamma(:, :) = czero
-    IF (noncolin) THEN
-      DO ibnd = 1, nbtot
-        IF (excluded_band(ibnd)) CYCLE
-        ibnd1 = ibnd1 + 1
-        !
-        ! check ibnd1 <= numbands
-        IF (ibnd1 > numbands) CALL errore('compute_amn_with_scdm', &
-                                         &'Something wrong with the number of bands. Check exclude_bands.', 1)
-        IF (TRIM(scdm_entanglement) == 'isolated') THEN
-          f_gamma = 1.0d0
-        ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-          f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
-        ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-          f_gamma = EXP(-1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
-        ELSE
-          CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
-        ENDIF
-        !
-        ! vv: Compute unk's on a real grid (the fft grid)
-        !
-        psic_nc(:, :) = czero
-        psic_nc(dffts%nl(igk_k(1:npw, ik)), 1) = evc(       1:npw,        ibnd)
-        psic_nc(dffts%nl(igk_k(1:npw, ik)), 2) = evc(1 + npwx:npw + npwx, ibnd)
-        CALL invfft('Wave', psic_nc(:, 1), dffts)
-        CALL invfft('Wave', psic_nc(:, 2), dffts)
-        !
-        ! vv: Build Psi_k = Unk * focc at G-point only
-#if defined(__MPI)
-        CALL gather_grid(dffts, psic_nc(:, 1), psic_nc_all(:, 1))
-        CALL gather_grid(dffts, psic_nc(:, 2), psic_nc_all(:, 2))
-        pnorm = REAL(SUM(psic_nc_all(1:nrtot, 1) * CONJG(psic_nc_all(1:nrtot, 1))), KIND = DP) + &
-                REAL(SUM(psic_nc_all(1:nrtot, 2) * CONJG(psic_nc_all(1:nrtot, 2))), KIND = DP)
-        norm_psi = DSQRT(pnorm)
-        psi_gamma(        1:nrtot,     ibnd1) = (psic_nc_all(1:nrtot, 1) / norm_psi) * f_gamma
-        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc_all(1:nrtot, 2) / norm_psi) * f_gamma
-#else
-        pnorm = REAL(SUM(psic_nc(1:nrtot, 1) * CONJG(psic_nc(1:nrtot, 1))), KIND = DP) + &
-                REAL(SUM(psic_nc(1:nrtot, 2) * CONJG(psic_nc(1:nrtot, 2))), KIND = DP)
-        norm_psi = DSQRT(pnorm) 
-        psi_gamma(        1:nrtot,     ibnd1) = (psic_nc(1:nrtot, 1) / norm_psi) * f_gamma
-        psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc(1:nrtot, 2) / norm_psi) * f_gamma
-#endif
-      ENDDO ! ibnd
-    ELSE
-      DO ibnd = 1, nbtot
-        IF (excluded_band(ibnd)) CYCLE
-        ibnd1 = ibnd1 + 1
-        !
-        ! check ibnd1 <= numbands
-        IF (ibnd1 > numbands) CALL errore('compute_amn_with_scdm', &
-           'Something wrong with the number of bands. Check exclude_bands.', 1)
-        IF (TRIM(scdm_entanglement) == 'isolated') THEN
-          f_gamma = 1.0d0
-        ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-          f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
-        ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-          f_gamma = EXP(-1.0d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
-        ELSE
-          CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
-        ENDIF
-        !
-        ! vv: Compute unk's on a real grid (the fft grid)
-        !
-        psic(:) = czero
-        psic(dffts%nl(igk_k(1:npw, ik))) = evc(1:npw, ibnd)
-        CALL invfft('Wave', psic, dffts)
-        !
-        ! vv: Build Psi_k = Unk * focc at G-point only
-#if defined(__MPI)
-        CALL gather_grid(dffts, psic, psic_all)
-        pnorm = REAL(SUM(psic_all(1:nrtot) * CONJG(psic_all(1:nrtot))), KIND = DP)
-        norm_psi = DSQRT(pnorm)
-        psi_gamma(1:nrtot, ibnd1) = (psic_all(1:nrtot) / norm_psi) * f_gamma
-#else
-        pnorm = REAL(SUM(psic(1:nrtot) * CONJG(psic(1:nrtot))), KIND = DP)
-        norm_psi = DSQRT(pnorm)
-        psi_gamma(1:nrtot, ibnd1) = (psic(1:nrtot) / norm_psi) * f_gamma
-#endif
-      ENDDO ! ibnd
-    ENDIF !noncolin
-    !
-    ! vv: Perform QR factorization with pivoting on Psi_Gamma
-    ! vv: Preliminary call to define optimal values for lwork and cwork size
-    !
-    piv(:)       = 0
-    qr_tau(:)    = czero
-    tmp_cwork(:) = czero
-    rwork(:)     = zero
-    IF (noncolin) THEN
-      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                  piv, qr_tau, tmp_cwork, -1, rwork, info)
-    ELSE
-      CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                  piv, qr_tau, tmp_cwork, -1, rwork, info)
-    ENDIF
-    IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
-    !
-    lcwork = AINT(REAL(tmp_cwork(1)))
-    ALLOCATE(cwork(lcwork), STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating cwork', 1)
-    piv(:)    = 0
-    qr_tau(:) = czero
-    cwork(:)  = czero
-    rwork(:)  = zero
-    !
-#if defined(__MPI)
     IF (meta_ionode) THEN
+      ! read wfc at G-point
+      ik = 1
+      CALL readwfc(my_pool_id + 1, ik, evc)
+      !
+      ! sorts k+G vectors in order of increasing magnitude, up to ecut
+      CALL gk_sort(xk_all(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
+      !
+      ibnd1 = 0
+      f_gamma = zero
+      psi_gamma(:, :) = czero
+      IF (noncolin) THEN
+        DO ibnd = 1, nbtot
+          IF (excluded_band(ibnd)) CYCLE
+          ibnd1 = ibnd1 + 1
+          !
+          ! check ibnd1 <= numbands
+          IF (ibnd1 > numbands) & 
+            CALL errore('compute_amn_with_scdm', &
+                        'Something wrong with the number of bands. Check exclude_bands.', 1)
+          IF (TRIM(scdm_entanglement) == 'isolated') THEN
+            f_gamma = 1.d0
+          ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
+            f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
+          ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
+            f_gamma = EXP(-1.d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+          ELSE
+            CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
+          ENDIF
+          !
+          ! vv: Compute unk's on a real grid (the fft grid)
+          !
+          psic_nc(:, :) = czero
+          psic_nc(dffts%nl(igk_k(1:npw, ik)), 1) = evc(       1:npw,        ibnd)
+          psic_nc(dffts%nl(igk_k(1:npw, ik)), 2) = evc(1 + npwx:npw + npwx, ibnd)
+          CALL invfft('Wave', psic_nc(:, 1), dffts)
+          CALL invfft('Wave', psic_nc(:, 2), dffts)
+          !
+          ! vv: Build Psi_k = Unk * focc at G-point only
+          pnorm = REAL(SUM(psic_nc(1:nrtot, 1) * CONJG(psic_nc(1:nrtot, 1))), KIND = DP) + &
+                  REAL(SUM(psic_nc(1:nrtot, 2) * CONJG(psic_nc(1:nrtot, 2))), KIND = DP)
+          norm_psi = DSQRT(pnorm) 
+          psi_gamma(        1:nrtot,     ibnd1) = (psic_nc(1:nrtot, 1) / norm_psi) * f_gamma
+          psi_gamma(1 + nrtot:2 * nrtot, ibnd1) = (psic_nc(1:nrtot, 2) / norm_psi) * f_gamma
+        ENDDO ! ibnd
+      ELSE ! scalar
+        DO ibnd = 1, nbtot
+          IF (excluded_band(ibnd)) CYCLE
+          ibnd1 = ibnd1 + 1
+          !
+          ! check ibnd1 <= numbands
+          IF (ibnd1 > numbands) & 
+            CALL errore('compute_amn_with_scdm', &
+                        'Something wrong with the number of bands. Check exclude_bands.', 1)
+          IF (TRIM(scdm_entanglement) == 'isolated') THEN
+            f_gamma = 1.d0
+          ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
+            f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
+          ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
+            f_gamma = EXP(-1.d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+          ELSE
+            CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
+          ENDIF
+          !
+          ! vv: Compute unk's on a real grid (the fft grid)
+          !
+          psic(:) = czero
+          psic(dffts%nl(igk_k(1:npw, ik))) = evc(1:npw, ibnd)
+          CALL invfft('Wave', psic, dffts)
+          !
+          ! vv: Build Psi_k = Unk * focc at G-point only
+          pnorm = REAL(SUM(psic(1:nrtot) * CONJG(psic(1:nrtot))), KIND = DP)
+          norm_psi = DSQRT(pnorm)
+          psi_gamma(1:nrtot, ibnd1) = (psic(1:nrtot) / norm_psi) * f_gamma
+        ENDDO ! ibnd
+      ENDIF ! noncolin
+      !
+      ! vv: Perform QR factorization with pivoting on Psi_Gamma
+      ! vv: Preliminary call to define optimal values for lwork and cwork size
+      !
+      piv(:)       = 0
+      qr_tau(:)    = czero
+      tmp_cwork(:) = czero
+      rwork(:)     = zero
+      IF (noncolin) THEN
+        CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                    piv, qr_tau, tmp_cwork, -1, rwork, info)
+      ELSE
+        CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
+                    piv, qr_tau, tmp_cwork, -1, rwork, info)
+      ENDIF
+      IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
+      !
+      lcwork = AINT(REAL(tmp_cwork(1)))
+      ALLOCATE(cwork(lcwork), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating cwork', 1)
+      piv(:)    = 0
+      qr_tau(:) = czero
+      cwork(:)  = czero
+      rwork(:)  = zero
+      !
       IF (noncolin) THEN 
         CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
                     piv, qr_tau, cwork, lcwork, rwork, info)
@@ -1505,21 +1498,18 @@
                     piv, qr_tau, cwork, lcwork, rwork, info)
       ENDIF
       IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
-    ENDIF
-    CALL mp_bcast(piv, meta_ionode_id, world_comm)
-#else
-    IF (noncolin) THEN 
-      CALL ZGEQP3(numbands, 2 * nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                  piv, qr_tau, cwork, lcwork, rwork, info)
-    ELSE
-      CALL ZGEQP3(numbands, nrtot, TRANSPOSE(CONJG(psi_gamma)), numbands, &
-                  piv, qr_tau, cwork, lcwork, rwork, info)
-    ENDIF
-    IF (info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the QR factorization', 1)
-#endif
+      !
+      DEALLOCATE(qr_tau, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating qr_tau', 1)
+      DEALLOCATE(rwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating rwork', 1)
+      DEALLOCATE(psi_gamma, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating psi_gamma', 1)
+      DEALLOCATE(cwork, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating cwork', 1)
+    ENDIF ! meta_ionode
     !
-    DEALLOCATE(cwork, STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating cwork', 1)
+    CALL mp_bcast(piv, meta_ionode_id, world_comm)
     !
     ! jml: calculate position and spin part of piv
     IF (noncolin) THEN
@@ -1568,7 +1558,7 @@
     ENDIF
     !
 #if defined(__MPI)
-    WRITE(stdout,'(6x,a,i5,a,i4,a)') 'k points = ',iknum, ' in ', npool, ' pools'
+    WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ', iknum, ' in ', npool, ' pools'
 #endif
     !
     DO ik = 1, nks
@@ -1577,7 +1567,7 @@
       CALL ktokpmq(xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs)
       ik_g = nkq_abs
       !
-      WRITE(stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
+      WRITE(stdout, '(5x, i8, " of ", i4, a)') ik , nks, ' on ionode'
       FLUSH(stdout)
       !
       ! read wfc at k
@@ -1647,9 +1637,9 @@
               nowfc_tmp = SUM(evc(1 + npwx:npw + npwx, ibnd) * phase_g(1:npw, iw) )
             ENDIF
             nowfc(iw, ibnd1) = nowfc_tmp * phase(iw) * focc(ibnd1) / norm_psi
-          ENDDO
+          ENDDO ! iw (wannier fns)
         ENDDO ! ibnd
-      ELSE
+      ELSE ! scalar wavefunction
         DO ibnd = 1, nbtot
           IF (excluded_band(ibnd)) CYCLE
           ibnd1 = ibnd1 + 1
@@ -1673,75 +1663,86 @@
           DO iw = 1, n_wannier
             nowfc_tmp = SUM(evc(1:npw, ibnd) * phase_g(1:npw, iw))
             nowfc(iw, ibnd1) = nowfc_tmp * phase(iw) * focc(ibnd1) / norm_psi
-          ENDDO 
+          ENDDO ! iw (wannier fns)
         ENDDO ! ibnd
-      ENDIF
+      ENDIF ! noncollinear
       CALL mp_sum(nowfc, intra_pool_comm) 
       !
       DEALLOCATE(phase_g, STAT = ierr) 
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating phase_g', 1) 
       !
       singval(:)   = zero
-      Umat(:, :)   = czero
-      VTmat(:, :)  = czero
+      umat(:, :)   = czero
+      vtmat(:, :)  = czero
       tmp_cwork(:) = czero
       rwork2(:)    = zero
       !
       CALL ZGESVD('s', 's', numbands, n_wannier, TRANSPOSE(CONJG(nowfc)), numbands, &
-                  singval, Umat, numbands, VTmat, n_wannier, tmp_cwork, -1, rwork2, info)
+                  singval, umat, numbands, vtmat, n_wannier, tmp_cwork, -1, rwork2, info)
       !
       lcwork = AINT(REAL(tmp_cwork(1)))
       ALLOCATE(cwork(lcwork), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating cwork', 1)
       singval(:)  = zero
-      Umat(:, :)  = czero
-      VTmat(:, :) = czero
+      umat(:, :)  = czero
+      vtmat(:, :) = czero
       cwork(:)    = czero
       rwork2(:)   = zero
       !
       ! vv: SVD to generate orthogonal projections
-#if defined(__MPI)
-      IF (meta_ionode) THEN
-        CALL ZGESVD('s', 's', numbands, n_wannier, TRANSPOSE(CONJG(nowfc)), numbands, &
-                    singval, Umat, numbands, VTmat, n_wannier, cwork, lcwork, rwork2, info)
-        IF(info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the SVD of the PSI matrix in the SCDM method', 1)
-      ENDIF
-      CALL mp_bcast(Umat,  meta_ionode_id, world_comm)
-      CALL mp_bcast(VTmat, meta_ionode_id, world_comm)
-#else
       CALL ZGESVD('s', 's', numbands, n_wannier, TRANSPOSE(CONJG(nowfc)), numbands, &
-                  singval, Umat, numbands, VTmat, n_wannier, cwork, lcwork, rwork2, info)
+                  singval, umat, numbands, vtmat, n_wannier, cwork, lcwork, rwork2, info)
       IF(info /= 0) CALL errore('compute_amn_with_scdm', 'Error in computing the SVD of the PSI matrix in the SCDM method', 1)
-#endif
       DEALLOCATE(cwork, STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating cwork', 1)
       !
-      Amat(:, :) = czero
-      Amat = MATMUL(Umat, VTmat)
+      amat(:, :) = czero
+      amat = MATMUL(umat, vtmat)
       DO iw = 1, n_wannier
         ibnd1 = 0
         DO ibnd = 1, nbtot
           IF (excluded_band(ibnd)) CYCLE
           ibnd1 = ibnd1 + 1
           !
-          a_mat(ibnd1, iw, ik_g) = Amat(ibnd1, iw)
-        ENDDO ! bands
-      ENDDO ! wannier fns
+          a_mat(ibnd1, iw, ik_g) = amat(ibnd1, iw)
+        ENDDO ! ibnd
+      ENDDO ! iw (wannier fns)
       !
     ENDDO ! k-points
     !
     CALL mp_sum(a_mat, inter_pool_comm)
     !
+    ! RMDB
+    !IF (meta_ionode) THEN
+    !  ALLOCATE(a_mat_tmp(nbtot, n_wannier, iknum), STAT = ierr)
+    !  IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error allocating a_mat_tmp', 1)
+    !  a_mat_tmp(:, :, :) = czero
+    !  !
+    !  DO ik = 1, iknum
+    !    DO iw = 1, n_wannier
+    !      !
+    !      ibnd1 = 0
+    !      DO ibnd = 1, nbtot
+    !        IF (excluded_band(ibnd)) CYCLE
+    !        ibnd1 = ibnd1 + 1
+    !        !
+    !        a_mat_tmp(ibnd, iw, ik) =  a_mat(ibnd1, iw, ik)
+    !      ENDDO ! ibnd
+    !      !
+    !      DO ibnd = 1, nbtot
+    !        WRITE(501, '(3i5, 2f18.12)') ibnd, iw, ik, a_mat_tmp(ibnd, iw, ik)
+    !      ENDDO ! ibnd
+    !    ENDDO ! iw
+    !  ENDDO ! ik
+    !  DEALLOCATE(a_mat_tmp, STAT = ierr)
+    !  IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating a_mat_tmp', 1)
+    !ENDIF
+    ! RMDB
+    !
     DEALLOCATE(piv, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating piv', 1)
-    DEALLOCATE(qr_tau, STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating qr_tau', 1)
-    DEALLOCATE(rwork, STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating rwork', 1)
     DEALLOCATE(nowfc, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating nowfc', 1)
-    DEALLOCATE(psi_gamma, STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating psi_gamma', 1)
     DEALLOCATE(focc, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating focc', 1)
     DEALLOCATE(rwork2, STAT = ierr)
@@ -1754,12 +1755,12 @@
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating phase', 1)
     DEALLOCATE(singval, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating singval', 1)
-    DEALLOCATE(Umat, STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating Umat', 1)
-    DEALLOCATE(VTmat, STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating VTmat', 1)
-    DEALLOCATE(Amat, STAT = ierr)
-    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating Amat', 1)
+    DEALLOCATE(umat, STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating umat', 1)
+    DEALLOCATE(vtmat, STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating vtmat', 1)
+    DEALLOCATE(amat, STAT = ierr)
+    IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating amat', 1)
     !
     IF (noncolin) THEN 
       DEALLOCATE(piv_pos, STAT = ierr)
@@ -1768,18 +1769,8 @@
       IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating piv_spin', 1)
     ENDIF
     !
-#if defined(__MPI)
-    IF (noncolin) THEN
-      DEALLOCATE(psic_nc_all, STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating psic_nc_all', 1)
-    ELSE
-      DEALLOCATE(psic_all, STAT = ierr)
-      IF (ierr /= 0) CALL errore('compute_amn_with_scdm', 'Error deallocating psic_all', 1)
-    ENDIF
-#endif
-    !
     WRITE(stdout, *)
-    WRITE(stdout, '(5x, a)') 'AMN calculated'
+    WRITE(stdout, '(5x, a)') 'AMN calculated with SCDM'
     !
     RETURN
     !
@@ -2100,7 +2091,7 @@
     IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating Mkb', 1)
     !
 #if defined(__MPI)
-    WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ',iknum, ' in ', npool, ' pools'
+    WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ', iknum, ' in ', npool, ' pools'
 #endif
     !
     ! returns in-pool index nkq and absolute index nkq_abs of first k-point in this pool 
@@ -2212,17 +2203,17 @@
                           ENDDO
                         ENDIF
                       ENDDO ! m
-                    ENDDO !ih
-                  ENDDO !jh
+                    ENDDO ! ih
+                  ENDDO ! jh
                   ijkb0 = ijkb0 + nh(nt)
-                ENDIF  !ityp
-              ENDDO  !nat 
-            ELSE  !tvanp
+                ENDIF  ! ityp
+              ENDDO  ! nat 
+            ELSE  ! tvanp
               DO na = 1, nat
                 IF (ityp(na) == nt) ijkb0 = ijkb0 + nh(nt)
               ENDDO
-            ENDIF !tvanp
-          ENDDO !ntyp
+            ENDIF ! tvanp
+          ENDDO ! ntyp
         ENDIF ! any_uspp
         !
         DO m = 1, nbnd  ! loop on band m
@@ -2266,16 +2257,16 @@
               CALL mp_sum(mmn, intra_pool_comm)
               Mkb(m, n) = mmn + Mkb(m, n)
               !  aa = aa + ABS(mmn)**2
-            ENDDO
-          ELSE
+            ENDDO ! n
+          ELSE ! scalar wavefunction
             DO n = 1, nbnd
               IF (excluded_band(n)) CYCLE
               mmn = ZDOTC(npwq, aux, 1, evcq(1, n), 1)
               CALL mp_sum(mmn, intra_pool_comm)
               Mkb(m, n) = mmn + Mkb(m, n)
               !  aa = aa + ABS(mmn)**2
-            ENDDO
-          ENDIF
+            ENDDO ! n
+          ENDIF ! scalar wavefunction
         ENDDO   ! m
         !
         ibnd_n = 0
@@ -2289,11 +2280,11 @@
             ibnd_m = ibnd_m + 1
             !
             m_mat(ibnd_m, ibnd_n, ib, ik_g) = Mkb(m, n)
-          ENDDO
-        ENDDO
+          ENDDO ! m
+        ENDDO ! n
         !
-      ENDDO !ib
-    ENDDO !ik
+      ENDDO ! ib
+    ENDDO ! ik
     !
     CALL mp_sum(m_mat, inter_pool_comm)
     !
@@ -2321,22 +2312,22 @@
                 ibnd_m = ibnd_m + 1
                 !   
                 m_mat_tmp(m, n, ib, ik) =  m_mat(ibnd_m, ibnd_n, ib, ik)
-              ENDDO
-            ENDDO
+              ENDDO ! m
+            ENDDO ! n
             !
             DO n = 1, nbnd
               DO m = 1, nbnd
                 WRITE(iummn,*) m_mat_tmp(m, n, ib, ik)
-              ENDDO
-            ENDDO
+              ENDDO ! m
+            ENDDO ! n
             !
-          ENDDO
-        ENDDO
+          ENDDO ! ib
+        ENDDO ! ik
         !
         CLOSE(iummn)
         DEALLOCATE(m_mat_tmp, STAT = ierr)
         IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating m_mat_tmp', 1)
-      ENDIF
+      ENDIF !write_mmn
     ENDIF
     !
     DEALLOCATE(Mkb, STAT = ierr) 
@@ -3144,11 +3135,11 @@
     nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
     IF (noncolin) THEN
       ALLOCATE(psic_nc_all(nxxs, 2), STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_band', 'Error allocating psic_nc_all', 1)
+      IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_nc_all', 1)
       psic_nc_all(:, :) = czero
     ELSE
       ALLOCATE(psic_all(nxxs), STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_band', 'Error allocating psic_all', 1)
+      IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_all', 1)
       psic_all(:) = czero
     ENDIF
 #endif
@@ -3166,11 +3157,11 @@
       WRITE(stdout, '(3(a, i5))') 'n1by2 =', n1by2, 'n2by2 =', n2by2, 'n3by2 =', n3by2
       IF (noncolin) THEN                                                               
         ALLOCATE(psic_nc_small(n1by2 * n2by2 * n3by2, 2), STAT = ierr)                                            
-        IF (ierr /= 0) CALL errore('write_band', 'Error allocating psic_nc_small', 1)
+        IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_nc_small', 1)
         psic_nc_small(:, :) = czero                                                      
       ELSE                                                                                  
         ALLOCATE(psic_small(n1by2 * n2by2 * n3by2), STAT = ierr)      
-        IF (ierr /= 0) CALL errore('write_band', 'Error allocating psic_small', 1)                              
+        IF (ierr /= 0) CALL errore('write_plot', 'Error allocating psic_small', 1)                              
         psic_small(:) = czero                                                   
       ENDIF 
     ENDIF
@@ -3364,20 +3355,20 @@
     IF (reduce_unk) THEN
       IF (noncolin) THEN
         DEALLOCATE(psic_nc_small, STAT = ierr)
-        IF (ierr /= 0) CALL errore('write_band', 'Error deallocating psic_nc_small', 1)
+        IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_nc_small', 1)
       ELSE
         DEALLOCATE(psic_small, STAT = ierr)
-        IF (ierr /= 0) CALL errore('write_band', 'Error deallocating psic_small', 1)
+        IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_small', 1)
       ENDIF
     ENDIF
     !
 #if defined(__MPI)
     IF (noncolin) THEN
       DEALLOCATE(psic_nc_all, STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_band', 'Error deallocating psic_nc_all', 1)
+      IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_nc_all', 1)
     ELSE
       DEALLOCATE(psic_all, STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_band', 'Error deallocating psic_all', 1)
+      IF (ierr /= 0) CALL errore('write_plot', 'Error deallocating psic_all', 1)
     ENDIF
 #endif
     !
