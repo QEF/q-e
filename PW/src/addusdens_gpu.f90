@@ -60,6 +60,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   USE uspp_gpum,            ONLY : becsum_d, using_becsum_d
   USE gbuffers,             ONLY : dev_buf, pin_buf
+  USE device_util_m,        ONLY : dev_memcpy, dev_memset
   !
   IMPLICIT NONE
   !
@@ -95,7 +96,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   CALL dev_buf%lock_buffer(aux_d, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_d (ngm, nspin_mag) )
   CALL pin_buf%lock_buffer(aux_h, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_h (ngm, nspin_mag) )
   !
-  aux_d (:,:) = (0.d0, 0.d0)
+  CALL dev_memset(aux_d, (0.d0, 0.d0), [ 1, ngm ], 1, [ 1, nspin_mag ], 1)
   !
   ! With k-point parallelization, distribute G-vectors across processors
   ! ngm_s = index of first G-vector for this processor
@@ -201,6 +202,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   10 CONTINUE
   !
   aux_h = aux_d
+  !CALL dev_memcpy(aux_h, aux_d, [ 1, ngm ], 1, [ 1, nspin_mag ])
   CALL mp_sum( aux_h, inter_pool_comm )
   !
   !     add aux to the charge density in reciprocal space

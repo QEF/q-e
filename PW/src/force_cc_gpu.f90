@@ -92,7 +92,7 @@ subroutine force_cc_gpu (forcecc)
   endif
   deallocate (vxc)
   CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierr)
-  CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr, dfftp%nnr /) )
+  CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr /) )
   CALL fwfft ('Rho', psic_d, dfftp)
   !
   ! psic contains now Vxc(G)
