@@ -1092,8 +1092,6 @@ subroutine elphsum2
   !
   ! consider only initial state k=0
   ik = 2
-  WRITE(6,'(a,3f10.6)') 'xk ', (xk(n,ik),n=1,3)
-  !
   !
   if (lgamma) then
      ikk = ik
@@ -1103,6 +1101,7 @@ subroutine elphsum2
      ikq = ikk + 1
   endif
   !
+  WRITE(6,'(a,3f10.6)') 'xk ', (xk(n,ikk),n=1,3)
   do ibnd = 1, nbnd
      do jbnd = 1, nbnd
         !
