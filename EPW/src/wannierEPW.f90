@@ -48,21 +48,21 @@
   INTEGER :: nnb          
   !! number of b-vectors
   INTEGER :: iun_nnkp
-  !! 
+  !! unit to write nnkp
   INTEGER :: iun_mmn
-  !!
+  !! unit to write mmn matrices
   INTEGER :: iun_amn
-  !!
+  !! unit to write amn matrices
   INTEGER :: iun_band
-  !!
+  !! unit to write eigenvalues
   INTEGER :: iun_spn
-  !!
+  !! unit to write spinors for noncollinear calculations
   INTEGER :: iun_plot
-  !!
+  !! unit to write wave functions
   INTEGER :: nnbx
-  !!
+  !! max number of b-vectors
   INTEGER :: nexband
-  !!
+  !! number of excluded bands
   INTEGER :: mp_grid(3) 
   !! dimensions of MP k-point grid
   INTEGER :: n_wannier 

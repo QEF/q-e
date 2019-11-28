@@ -117,12 +117,12 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   pol_unpol = ns
   !
-  ALLOCATE( rho_lxc(length*ns), sigma(length*ns), tau_lxc(length*ns) )
+  ALLOCATE( rho_lxc(length*ns), sigma(length*np), tau_lxc(length*ns) )
   ALLOCATE( lapl_rho(length*ns) )
   !
   ALLOCATE( ex_lxc(length)    , ec_lxc(length) )
-  ALLOCATE( vx_rho(length*ns) , vx_sigma(length*ns), vx_tau(length*ns) )
-  ALLOCATE( vc_rho(length*ns) , vc_sigma(length*ns), vc_tau(length*ns) )
+  ALLOCATE( vx_rho(length*ns) , vx_sigma(length*np), vx_tau(length*ns) )
+  ALLOCATE( vc_rho(length*ns) , vc_sigma(length*np), vc_tau(length*ns) )
   ALLOCATE( vlapl_rho(length*ns) )
   !
   !
@@ -138,8 +138,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   ELSE
     !
     DO k = 1, length
-       rho_lxc(2*k-1) = rho(k,1)
-       rho_lxc(2*k)   = rho(k,2)
+       rho_lxc(2*k-1) = ABS( rho(k,1) )
+       rho_lxc(2*k)   = ABS( rho(k,2) )
        !
        sigma(3*k-2) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
        sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
@@ -175,7 +175,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   ! META EXCHANGE
   !
   IF ( is_libxc(5) ) THEN
-    CALL xc_f90_func_init( xc_func, xc_info1, imeta, pol_unpol )
+     CALL xc_f90_func_init( xc_func, xc_info1, imeta, pol_unpol )
+     CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
      CALL get_libxc_flags_exc( xc_info1, eflag )
      IF (eflag==1) THEN
        CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
@@ -223,13 +224,14 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( is_libxc(6) ) THEN
     !
     CALL xc_f90_func_init( xc_func, xc_info1, imetac, pol_unpol )
-     CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+    CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
+    CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
                                ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
     CALL xc_f90_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
        DO k = 1, length
-          ec(k) = ec_lxc(k) * rho_lxc(k) !* SIGN(1.0_DP, rho(k,1))
+          ec(k) = ec_lxc(k) * rho_lxc(k) 
           v1c(k,1) = vc_rho(k)
           v2c(1,k,1) = vc_sigma(k) * 2.0_DP
           v3c(k,1) = vc_tau(k)

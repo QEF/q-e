@@ -13,7 +13,7 @@ MODULE write_upf_schema_module
   USE kinds,        ONLY: DP
   USE pseudo_types, ONLY: pseudo_upf, pseudo_config, deallocate_pseudo_config
   USE radial_grids, ONLY: radial_grid_type
-  USE global_version, ONLY: version_number, svn_revision 
+  USE global_version, ONLY: version_number
   USE Fox_wxml
   !
   IMPLICIT NONE
@@ -130,7 +130,7 @@ CONTAINS
         ! 
         CALL xml_NewElement(u,"creator")
           CALL xml_addAttribute(u,name="NAME",value="QE Atomic Code")
-          CALL xml_addAttribute(u,name= "VERSION", value = version_number // ':'//svn_revision) 
+          CALL xml_addAttribute(u,name= "VERSION", value = version_number ) 
           CALL xml_addCharacters(u,TRIM(upf%author))
         CALL xml_EndElement(u, 'creator')
         !

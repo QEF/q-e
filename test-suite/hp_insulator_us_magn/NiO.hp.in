@@ -1,0 +1,8 @@
+ &inputhp
+   prefix       = 'NiO',
+   outdir       = './',
+   nq1          = 2, 
+   nq2          = 2, 
+   nq3          = 2,
+   conv_thr_chi = 1.0d-5,
+ /

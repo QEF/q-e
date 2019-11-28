@@ -30,6 +30,7 @@ division.o \
 rigid_epw.o \
 io_epw.o \
 io_transport.o \
+io_selfen.o \
 wigner.o \
 wan2bloch.o \
 cum_mod.o \
@@ -39,12 +40,11 @@ printing.o \
 kfold.o \
 dynmat_asr.o \
 io_eliashberg.o \
-broyden.o \
-plot.o \
+utilities.o \
 eliashbergcom.o \
-superconductivity.o \
-superconductivity_iso.o \
-superconductivity_aniso.o \
+supercond.o \
+supercond_iso.o \
+supercond_aniso.o \
 grid.o \
 rotate.o \
 transport.o \

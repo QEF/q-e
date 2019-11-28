@@ -650,15 +650,15 @@ SUBROUTINE elphsum ( )
   ! workspace used for symmetrisation
   !
   COMPLEX(DP), allocatable :: g1(:,:,:), g2(:,:,:), g0(:,:), gf(:,:,:)
-  COMPLEX(DP), allocatable :: point(:), noint(:), ctemp(:)
-  COMPLEX(DP) :: dyn22(3*nat,3*nat)
+  COMPLEX(DP), allocatable :: point(:), noint(:)
+  COMPLEX(DP) :: dyn22(3*nat,3*nat), ctemp
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
        vu, ngauss1, iuelph, ios, i,k,j, ii, jj
   INTEGER :: nkBZ, nti, ntj, ntk, nkr, itemp1, itemp2, nn, &
        qx,qy,qz,iq,jq,kq
   INTEGER, ALLOCATABLE :: eqBZ(:), sBZ(:)
-  REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, dosef, &
+  REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, effit1, dosef, &
        ef1, lambda, gamma
   REAL(DP), ALLOCATABLE :: deg(:), effit(:), dosfit(:)
   REAL(DP) :: etk, etq
@@ -896,7 +896,7 @@ SUBROUTINE elphsum ( )
         deallocate (g0)
         deallocate (g1)
         !
-        allocate ( point(nkBZ), noint(nkfit), ctemp(nkfit) )
+        allocate ( point(nkBZ), noint(nkfit) )
         do jpert = 1, 3 * nat
            do ipert = 1, 3 * nat
               do ispin=1,nspin_lsda
@@ -906,24 +906,23 @@ SUBROUTINE elphsum ( )
               !
               CALL clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
               !
-              do isig = 1, el_ph_nsigma
+              do isig = 1,el_ph_nsigma
                  degauss1 = deg(isig)
+                 effit1   = effit(isig)
+                 ctemp    = 0
                  do ik=1,nkfit
-                    etk = etfit(ibnd,eqkfit(ik)+nksfit*(ispin-1)/2)
-                    etq = etfit(jbnd,eqqfit(ik)+nksfit*(ispin-1)/2)
-                    w0g1 = w0gauss( (effit(isig)-etk) &
-                                   / degauss1,ngauss1) / degauss1
-                    w0g2 = w0gauss( (effit(isig)-etq) &
-                                   / degauss1,ngauss1) / degauss1
-                    ctemp(ik) = noint(ik)* wqa * w0g1 * w0g2
+                    etk   = etfit(ibnd,eqkfit(ik)+nksfit*(ispin-1)/2)
+                    etq   = etfit(jbnd,eqqfit(ik)+nksfit*(ispin-1)/2)
+                    ctemp = ctemp &
+                          + exp(-((effit1-etk)**2 + (effit1-etq)**2)/degauss1**2)*noint(ik)
                  enddo
                  gf(ipert,jpert,isig) = gf(ipert,jpert,isig) + &
-                      SUM (ctemp)
+                      ctemp * wqa / (degauss1**2) / pi 
               enddo ! isig
               enddo ! ispin
            enddo    ! ipert
         enddo    !jpert
-        deallocate (point, noint, ctemp)
+        deallocate (point, noint)
         deallocate (g2)
         !
      enddo    ! ibnd
