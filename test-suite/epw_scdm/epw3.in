@@ -13,9 +13,9 @@
   epwwrite    = .true.
   epwread     = .false.
 
+  etf_mem     = 1
   vme         = .false. 
 
-  wannierize  = .true.
 
   auto_projections  = .true.
   scdm_proj         = .true.
@@ -26,6 +26,7 @@
   nbndsub     =  8
   nbndskip    =  0
 
+  wannierize  = .true.
   num_iter    = 1500
   iprint      = 2
   dis_win_max = 18.0
@@ -53,18 +54,19 @@
 
   dvscf_dir   = './save/'
 
-  filqf       = 'path.dat'
-  filkf       = 'path.dat'
+  filkf       = './LGX.txt'
+  filqf       = './LGX.txt'
  
-  nk1         = 4 
-  nk2         = 4
-  nk3         = 4
+  nk1         = 3 
+  nk2         = 3
+  nk3         = 3
 
-  nq1         = 2
-  nq2         = 2
-  nq3         = 2
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
  /
-      3 cartesian
- 0.000000000   0.000000000   0.000000000
- 0.500000000  -0.500000000   0.500000000
- 0.000000000  -1.000000000   0.000000000
+      4 cartesian
+  0.000000000000   0.000000000000   0.000000000000
+ -0.333333333333   0.333333333333  -0.333333333333
+  0.000000000000   0.666666666667   0.000000000000
+  0.666666666667   0.000000000000   0.666666666667
