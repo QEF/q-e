@@ -49,7 +49,8 @@
                             scatread, restart, restart_step, restart_filq,    &
                             lphase, omegamin, omegamax, omegastep, n_r,       &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
-                            scdm_sigma, assume_metal 
+                            scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
+                            assume_metal 
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -135,6 +136,7 @@
   CALL mp_bcast(use_ws          , meta_ionode_id, world_comm)
   CALL mp_bcast(epmatkqread     , meta_ionode_id, world_comm)
   CALL mp_bcast(selecqread      , meta_ionode_id, world_comm)
+  CALL mp_bcast(scdm_proj       , meta_ionode_id, world_comm)
   CALL mp_bcast(assume_metal    , meta_ionode_id, world_comm) 
   !
   ! integers
@@ -213,22 +215,24 @@
   CALL mp_bcast(omegastep     , meta_ionode_id, world_comm)
   CALL mp_bcast(n_r           , meta_ionode_id, world_comm)
   CALL mp_bcast(nc            , meta_ionode_id, world_comm)
+  CALL mp_bcast(scdm_mu       , meta_ionode_id, world_comm)
   CALL mp_bcast(scdm_sigma    , meta_ionode_id, world_comm)
   !
   ! characters
   !
-  CALL mp_bcast(title       , meta_ionode_id, world_comm)
-  CALL mp_bcast(fildvscf    , meta_ionode_id, world_comm)
-  CALL mp_bcast(fildrho     , meta_ionode_id, world_comm)
-  CALL mp_bcast(tmp_dir     , meta_ionode_id, world_comm)
-  CALL mp_bcast(prefix      , meta_ionode_id, world_comm)
-  CALL mp_bcast(filkf       , meta_ionode_id, world_comm)     
-  CALL mp_bcast(filqf       , meta_ionode_id, world_comm)     
-  CALL mp_bcast(fileig      , meta_ionode_id, world_comm)    
-  CALL mp_bcast(dvscf_dir   , meta_ionode_id, world_comm)
-  CALL mp_bcast(fila2f      , meta_ionode_id, world_comm)     
-  CALL mp_bcast(restart_filq, meta_ionode_id, world_comm)  
-  CALL mp_bcast(asr_typ     , meta_ionode_id, world_comm) 
+  CALL mp_bcast(title            , meta_ionode_id, world_comm)
+  CALL mp_bcast(fildvscf         , meta_ionode_id, world_comm)
+  CALL mp_bcast(fildrho          , meta_ionode_id, world_comm)
+  CALL mp_bcast(tmp_dir          , meta_ionode_id, world_comm)
+  CALL mp_bcast(prefix           , meta_ionode_id, world_comm)
+  CALL mp_bcast(filkf            , meta_ionode_id, world_comm)     
+  CALL mp_bcast(filqf            , meta_ionode_id, world_comm)     
+  CALL mp_bcast(fileig           , meta_ionode_id, world_comm)    
+  CALL mp_bcast(dvscf_dir        , meta_ionode_id, world_comm)
+  CALL mp_bcast(fila2f           , meta_ionode_id, world_comm)     
+  CALL mp_bcast(restart_filq     , meta_ionode_id, world_comm)  
+  CALL mp_bcast(asr_typ          , meta_ionode_id, world_comm) 
+  CALL mp_bcast(scdm_entanglement, meta_ionode_id, world_comm)
 #endif
   !
   !-----------------------------------------------------------------------

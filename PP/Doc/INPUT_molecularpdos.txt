@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: molecularpdos.x / PWscf / Quantum Espresso (version: svn)
+Program: molecularpdos.x / PWscf / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -130,7 +130,7 @@ NAMELIST: &INPUTMOPDOS
    Description:    Type of gaussian broadening:
                        0 ... Simple Gaussian (default)
                        1 ... Methfessel-Paxton of order 1
-                      -1 ... Marzari-Vanderbilt "cold smearing"
+                      -1 ... "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
                      -99 ... Fermi-Dirac function
    +--------------------------------------------------------------------
    
@@ -223,4 +223,4 @@ NAMELIST: &INPUTMOPDOS
       
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:37 CEST 2018
+This file has been created by helpdoc utility on Thu Nov 28 10:42:25 CET 2019
