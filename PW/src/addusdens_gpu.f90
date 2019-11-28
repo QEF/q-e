@@ -201,8 +201,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   10 CONTINUE
   !
-  aux_h = aux_d
-  !CALL dev_memcpy(aux_h, aux_d, [ 1, ngm ], 1, [ 1, nspin_mag ])
+  CALL dev_memcpy(aux_h, aux_d)
   CALL mp_sum( aux_h, inter_pool_comm )
   !
   !     add aux to the charge density in reciprocal space
