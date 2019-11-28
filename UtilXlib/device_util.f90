@@ -5400,7 +5400,7 @@ subroutine dp_memcpy_h2d_r1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5418,6 +5418,7 @@ subroutine dp_memcpy_h2d_r1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyHostToDevice )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -5440,7 +5441,7 @@ subroutine dp_memcpy_h2d_r2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5468,7 +5469,8 @@ subroutine dp_memcpy_h2d_r2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -5492,7 +5494,7 @@ subroutine dp_memcpy_h2d_r3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5534,6 +5536,7 @@ subroutine dp_memcpy_h2d_r3d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','3D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -5558,7 +5561,7 @@ subroutine dp_memcpy_h2d_r4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5611,6 +5614,7 @@ subroutine dp_memcpy_h2d_r4d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','4D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -5632,7 +5636,7 @@ subroutine dp_memcpy_h2d_c1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5650,6 +5654,7 @@ subroutine dp_memcpy_h2d_c1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyHostToDevice )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -5672,7 +5677,7 @@ subroutine dp_memcpy_h2d_c2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5700,7 +5705,8 @@ subroutine dp_memcpy_h2d_c2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -5724,7 +5730,7 @@ subroutine dp_memcpy_h2d_c3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5766,6 +5772,7 @@ subroutine dp_memcpy_h2d_c3d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','3D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -5790,7 +5797,7 @@ subroutine dp_memcpy_h2d_c4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5843,6 +5850,7 @@ subroutine dp_memcpy_h2d_c4d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','4D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -5864,7 +5872,7 @@ subroutine sp_memcpy_h2d_r1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5882,6 +5890,7 @@ subroutine sp_memcpy_h2d_r1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyHostToDevice )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -5904,7 +5913,7 @@ subroutine sp_memcpy_h2d_r2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5932,7 +5941,8 @@ subroutine sp_memcpy_h2d_r2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -5956,7 +5966,7 @@ subroutine sp_memcpy_h2d_r3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -5998,6 +6008,7 @@ subroutine sp_memcpy_h2d_r3d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','3D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -6022,7 +6033,7 @@ subroutine sp_memcpy_h2d_r4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6075,6 +6086,7 @@ subroutine sp_memcpy_h2d_r4d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','4D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -6096,7 +6108,7 @@ subroutine sp_memcpy_h2d_c1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6114,6 +6126,7 @@ subroutine sp_memcpy_h2d_c1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyHostToDevice )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -6136,7 +6149,7 @@ subroutine sp_memcpy_h2d_c2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6164,7 +6177,8 @@ subroutine sp_memcpy_h2d_c2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -6188,7 +6202,7 @@ subroutine sp_memcpy_h2d_c3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6230,6 +6244,7 @@ subroutine sp_memcpy_h2d_c3d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','3D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -6254,7 +6269,7 @@ subroutine sp_memcpy_h2d_c4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6307,6 +6322,7 @@ subroutine sp_memcpy_h2d_c4d(array_out, array_in, &
     !call dxlib_errore('cu_memsync_','4D arrays not implemented yet',1)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -6331,7 +6347,7 @@ subroutine dp_memcpy_d2h_r1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6349,6 +6365,7 @@ subroutine dp_memcpy_d2h_r1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyDeviceToHost )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -6371,7 +6388,7 @@ subroutine dp_memcpy_d2h_r2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6399,7 +6416,8 @@ subroutine dp_memcpy_d2h_r2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -6423,7 +6441,7 @@ subroutine dp_memcpy_d2h_r3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6464,6 +6482,7 @@ subroutine dp_memcpy_d2h_r3d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -6488,7 +6507,7 @@ subroutine dp_memcpy_d2h_r4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6540,6 +6559,7 @@ subroutine dp_memcpy_d2h_r4d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -6561,7 +6581,7 @@ subroutine dp_memcpy_d2h_c1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6579,6 +6599,7 @@ subroutine dp_memcpy_d2h_c1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyDeviceToHost )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -6601,7 +6622,7 @@ subroutine dp_memcpy_d2h_c2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6629,7 +6650,8 @@ subroutine dp_memcpy_d2h_c2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -6653,7 +6675,7 @@ subroutine dp_memcpy_d2h_c3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6694,6 +6716,7 @@ subroutine dp_memcpy_d2h_c3d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -6718,7 +6741,7 @@ subroutine dp_memcpy_d2h_c4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6770,6 +6793,7 @@ subroutine dp_memcpy_d2h_c4d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -6791,7 +6815,7 @@ subroutine sp_memcpy_d2h_r1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6809,6 +6833,7 @@ subroutine sp_memcpy_d2h_r1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyDeviceToHost )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -6831,7 +6856,7 @@ subroutine sp_memcpy_d2h_r2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6859,7 +6884,8 @@ subroutine sp_memcpy_d2h_r2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -6883,7 +6909,7 @@ subroutine sp_memcpy_d2h_r3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -6924,6 +6950,7 @@ subroutine sp_memcpy_d2h_r3d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -6948,7 +6975,7 @@ subroutine sp_memcpy_d2h_r4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7000,6 +7027,7 @@ subroutine sp_memcpy_d2h_r4d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -7021,7 +7049,7 @@ subroutine sp_memcpy_d2h_c1d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7039,6 +7067,7 @@ subroutine sp_memcpy_d2h_c1d(array_out, array_in, &
     !
 #if defined(__CUDA)
     ierr = cudaMemcpy( array_out(d1_start), array_in(d1_start), d1_size, cudaMemcpyDeviceToHost )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -7061,7 +7090,7 @@ subroutine sp_memcpy_d2h_c2d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7089,7 +7118,8 @@ subroutine sp_memcpy_d2h_c2d(array_out, array_in, &
     d2_ld    = size(array_out, 2)
     !
 #if defined(__CUDA)
-    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d2_ld, d1_size, d2_size )
+    ierr = cudaMemcpy2D( array_out(d1_start, d2_start) , d1_ld, array_in(d1_start, d2_start), d1_ld, d1_size, d2_size )
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -7113,7 +7143,7 @@ subroutine sp_memcpy_d2h_c3d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7154,6 +7184,7 @@ subroutine sp_memcpy_d2h_c3d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -7178,7 +7209,7 @@ subroutine sp_memcpy_d2h_c4d(array_out, array_in, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7230,6 +7261,7 @@ subroutine sp_memcpy_d2h_c4d(array_out, array_in, &
 #if defined(__CUDA)
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -7259,7 +7291,7 @@ subroutine dp_memcpy_h2d_async_r1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7279,6 +7311,7 @@ subroutine dp_memcpy_h2d_async_r1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -7306,7 +7339,7 @@ subroutine dp_memcpy_h2d_async_r2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7337,6 +7370,7 @@ subroutine dp_memcpy_h2d_async_r2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -7365,7 +7399,7 @@ subroutine dp_memcpy_h2d_async_r3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7407,6 +7441,7 @@ subroutine dp_memcpy_h2d_async_r3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -7436,7 +7471,7 @@ subroutine dp_memcpy_h2d_async_r4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7489,6 +7524,7 @@ subroutine dp_memcpy_h2d_async_r4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -7515,7 +7551,7 @@ subroutine dp_memcpy_h2d_async_c1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7535,6 +7571,7 @@ subroutine dp_memcpy_h2d_async_c1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -7562,7 +7599,7 @@ subroutine dp_memcpy_h2d_async_c2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7593,6 +7630,7 @@ subroutine dp_memcpy_h2d_async_c2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -7621,7 +7659,7 @@ subroutine dp_memcpy_h2d_async_c3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7663,6 +7701,7 @@ subroutine dp_memcpy_h2d_async_c3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -7692,7 +7731,7 @@ subroutine dp_memcpy_h2d_async_c4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7745,6 +7784,7 @@ subroutine dp_memcpy_h2d_async_c4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_h2d_async_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -7771,7 +7811,7 @@ subroutine sp_memcpy_h2d_async_r1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7791,6 +7831,7 @@ subroutine sp_memcpy_h2d_async_r1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -7818,7 +7859,7 @@ subroutine sp_memcpy_h2d_async_r2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7849,6 +7890,7 @@ subroutine sp_memcpy_h2d_async_r2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -7877,7 +7919,7 @@ subroutine sp_memcpy_h2d_async_r3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -7919,6 +7961,7 @@ subroutine sp_memcpy_h2d_async_r3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -7948,7 +7991,7 @@ subroutine sp_memcpy_h2d_async_r4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8001,6 +8044,7 @@ subroutine sp_memcpy_h2d_async_r4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -8027,7 +8071,7 @@ subroutine sp_memcpy_h2d_async_c1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8047,6 +8091,7 @@ subroutine sp_memcpy_h2d_async_c1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -8074,7 +8119,7 @@ subroutine sp_memcpy_h2d_async_c2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8105,6 +8150,7 @@ subroutine sp_memcpy_h2d_async_c2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -8133,7 +8179,7 @@ subroutine sp_memcpy_h2d_async_c3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8175,6 +8221,7 @@ subroutine sp_memcpy_h2d_async_c3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -8204,7 +8251,7 @@ subroutine sp_memcpy_h2d_async_c4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_out
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8257,6 +8304,7 @@ subroutine sp_memcpy_h2d_async_c4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyDeviceToHost,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_h2d_async_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -8303,7 +8351,7 @@ subroutine dp_memcpy_d2h_async_r1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8327,6 +8375,7 @@ subroutine dp_memcpy_d2h_async_r1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -8354,7 +8403,7 @@ subroutine dp_memcpy_d2h_async_r2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8389,6 +8438,7 @@ subroutine dp_memcpy_d2h_async_r2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -8417,7 +8467,7 @@ subroutine dp_memcpy_d2h_async_r3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8463,6 +8513,7 @@ subroutine dp_memcpy_d2h_async_r3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -8492,7 +8543,7 @@ subroutine dp_memcpy_d2h_async_r4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8549,6 +8600,7 @@ subroutine dp_memcpy_d2h_async_r4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -8575,7 +8627,7 @@ subroutine dp_memcpy_d2h_async_c1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8599,6 +8651,7 @@ subroutine dp_memcpy_d2h_async_c1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -8626,7 +8679,7 @@ subroutine dp_memcpy_d2h_async_c2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8661,6 +8714,7 @@ subroutine dp_memcpy_d2h_async_c2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -8689,7 +8743,7 @@ subroutine dp_memcpy_d2h_async_c3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8735,6 +8789,7 @@ subroutine dp_memcpy_d2h_async_c3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -8764,7 +8819,7 @@ subroutine dp_memcpy_d2h_async_c4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8821,6 +8876,7 @@ subroutine dp_memcpy_d2h_async_c4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("dp_memcpy_d2h_async_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -8847,7 +8903,7 @@ subroutine sp_memcpy_d2h_async_r1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8871,6 +8927,7 @@ subroutine sp_memcpy_d2h_async_r1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_r1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -8898,7 +8955,7 @@ subroutine sp_memcpy_d2h_async_r2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -8933,6 +8990,7 @@ subroutine sp_memcpy_d2h_async_r2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_r2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -8961,7 +9019,7 @@ subroutine sp_memcpy_d2h_async_r3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -9007,6 +9065,7 @@ subroutine sp_memcpy_d2h_async_r3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_r3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -9036,7 +9095,7 @@ subroutine sp_memcpy_d2h_async_r4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -9093,6 +9152,7 @@ subroutine sp_memcpy_d2h_async_r4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_r4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
@@ -9119,7 +9179,7 @@ subroutine sp_memcpy_d2h_async_c1d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -9143,6 +9203,7 @@ subroutine sp_memcpy_d2h_async_c1d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_c1d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end) = &
               array_in(d1_start:d1_end)
@@ -9170,7 +9231,7 @@ subroutine sp_memcpy_d2h_async_c2d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -9205,6 +9266,7 @@ subroutine sp_memcpy_d2h_async_c2d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_c2d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end)
@@ -9233,7 +9295,7 @@ subroutine sp_memcpy_d2h_async_c3d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -9279,6 +9341,7 @@ subroutine sp_memcpy_d2h_async_c3d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_c3d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end)
@@ -9308,7 +9371,7 @@ subroutine sp_memcpy_d2h_async_c4d(array_out, array_in, stream, &
     integer, optional, intent(in) ::  lbound1, lbound2, lbound3, lbound4
 #if defined(__CUDA)
     attributes(device) :: array_in
-    integer :: ierr
+    integer :: ierr = 0
 #endif
     !
     integer :: d1_start, d1_end, d1_size, d1_ld
@@ -9365,6 +9428,7 @@ subroutine sp_memcpy_d2h_async_c4d(array_out, array_in, stream, &
     ierr = CudaMemcpyAsync(array_out, array_in, &
                            count=d1_size*d2_size*d3_size*d4_size,&
                            kdir=cudaMemcpyHostToDevice,stream=stream)
+    if ( ierr /= 0) call dxlib_errore("sp_memcpy_d2h_async_c4d",cudaGetErrorString(ierr),ierr)
 #else
     array_out(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end) = &
               array_in(d1_start:d1_end,d2_start:d2_end,d3_start:d3_end,d4_start:d4_end)
