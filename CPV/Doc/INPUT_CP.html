@@ -738,10 +738,12 @@ ibrav      structure                   celldm(2)-celldm(6)
 -13          Monoclinic base-centered        celldm(2)=b/a
              (unique axis b)                 celldm(3)=c/a,
                                              celldm(5)=cos(beta)
-      v1 = (  a/2,      -b/2,             0),
-      v2 = (  a/2,       b/2,             0),
+      v1 = (  a/2,       b/2,             0),
+      v2 = ( -a/2,       b/2,             0),
       v3 = (c*cos(beta),   0,   c*sin(beta)),
       where beta=angle between axis a and c projected on xz plane
+ IMPORTANT NOTICE: until QE v.6.4.1, axis for ibrav=-13 had a
+ different definition: v1(old) = v2(now), v2(old) = -v1(now)
 
  14          Triclinic                       celldm(2)= b/a,
                                              celldm(3)= c/a,
@@ -3939,7 +3941,7 @@ ENDRULES
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Fri Mar 01 17:56:47 CET 2019.
+	  This file has been created by helpdoc utility on Thu Nov 28 10:41:55 CET 2019.
 	</small>
 </body>
 </html>
