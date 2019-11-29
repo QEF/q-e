@@ -1,0 +1,41 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='iron'
+    pseudo_dir = '../../pseudo/'
+    outdir='./'
+    verbosity='high'
+    tprnfor = .true.
+    tstress = .true.
+ /
+ &system
+    ibrav = 0,
+    nat = 2,
+    ntyp = 1,
+    ecutwfc = 45.0,
+    ecutrho = 360.0,
+    occupations = 'smearing',
+    smearing = 'gauss',
+    degauss = 0.01,
+    nspin = 2,
+    starting_magnetization(1) = 0.5
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'atomic',
+    Hubbard_U(1) = 2.0
+ /
+ &electrons
+    conv_thr =  1.d-14
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+ Fe  55.845  Fe.pbe-spn-rrkjus_psl.0.2.1.UPF
+ATOMIC_POSITIONS {crystal}
+ Fe   0.0000000000000000  0.0000000000000000  0.0000000000000000
+ Fe   0.5000000000000000  0.5000000000000000  0.5000000000000000
+CELL_PARAMETERS {bohr}
+ 5.2170000000000000   0.0000000000000000  0.0000000000000000
+ 0.0000000000000000   5.2170000000000000  0.0000000000000000
+ 0.0000000000000000   0.0000000000000000  5.2170000000000000
+K_POINTS automatic
+3 3 3 0 0 0
