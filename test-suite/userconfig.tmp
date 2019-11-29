@@ -82,15 +82,15 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-5, 1.0e-5, 'q1'),
               (1.0e-5, 1.0e-5, 'dos1'),
               (1.0e-3, 5.0e-3, 'e2'),
-              (1.0   , 2.0e-1, 'rsig'), # epw_base3 on desktop 0.054364
+              (1.0   , 2.0e-1, 'rsig'), 
               (1.5   , 5.0e-1, 'isig'),
-              (1.0e-2, 1.0e-2, 'rpi'), # epw_base3 on desktop 0.054364
+              (1.0e-2, 1.0e-2, 'rpi'), 
               (1.0e-2, 1.0e-2, 'ipi'),
-              (100.0 , 1.2e-1, 'z1'),  # unstable
-              (1.0e-2, None  , 'lam'), # epw_base3 on desktop 7e-06
+              (   100,   None, 'z1'),    # Unstable on unconverged grids. 
+              (1.0e-2,   None, 'lam'), 
               (1.0e-5, 1.0e-5, 'lambda'),
-              (7.0e-1, None  , 'lambda_tr'),  #epw_trev on desktop -0.004794
-              (1.0e-2, None  , 'gamma'),
+              (7.0e-1,   None, 'lambda_tr'), 
+              (1.0e-2,   None, 'gamma'),
               (1.1e-2, 5.0e-4, 'omega'),
               (1.0e-4, 2.0e-4, 'lam_tot'),
               (3.0e+1, 1.0e+0, 'lam_tr'),
@@ -108,9 +108,9 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (3.0e+1, 1.0e-1, 'mobnewx'),
               (3.0e+1, 1.0e-1, 'mobnewy'),
               (3.0e+1, 1.0e-1, 'mobnewz'),
-              (1.0e+10, 1.0e+2, 'density'),
+              (1.0e+10,1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
-              (1.5e+3, None  , 'indabs'))
+              (1.5e+3,   None, 'indabs'))
 
 skip_program = grep
 skip_args = 'not present in this version'
