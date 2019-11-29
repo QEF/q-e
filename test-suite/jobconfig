@@ -58,6 +58,10 @@ inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX
 program = PH
 inputs_args = ('al.scf.fit.in', '1'), ('al.scf.in', '1'), ('al.elph.in', '2'), ('q2r.in', '3'), ('matdyn.in.freq', '4'), ('matdyn.in.dos', '4'), ('lambda.in', '5')
 
+[ph_metal_us_U/]
+program = PH
+inputs_args = ('Fe.scf.in', '1'), ('Fe.ph.in', '2')
+
 [epw_base/]
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3'), ('epw5.in', '3'), ('epw6.in', '3'), ('epw7.in', '3'), ('epw8.in', '3'), ('epw9.in', '3'), ('epw10.in', '3')
@@ -125,6 +129,10 @@ inputs_args = ('LiCoO2.scf.in', '1'), ('LiCoO2.hp.in', '3'), ('LiCoO2.scf.in', '
 [hp_insulator_us_magn/]
 program = HP
 inputs_args = ('NiO.scf.1.in', '1'), ('NiO.scf.2.in', '1'), ('NiO.hp.in', '3'), ('NiO.scf.1.in', '2'), ('NiO.scf.2.in', '2'), ('NiO.hp.in', '4')
+
+[hp_insulator_paw/]
+program = HP
+inputs_args = ('BN.scf.in', '1'), ('BN.hp.in', '3'), ('BN.scf.in', '2'), ('BN.hp.in', '4')
 
 [hp_metal_us_magn/]
 program = HP
