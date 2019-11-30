@@ -238,7 +238,6 @@ lr_addusddens.o : ../Modules/fft_base.o
 lr_addusddens.o : ../Modules/ions_base.o
 lr_addusddens.o : ../Modules/kind.o
 lr_addusddens.o : ../Modules/noncol.o
-lr_addusddens.o : ../Modules/paw_variables.o
 lr_addusddens.o : ../Modules/recvec.o
 lr_addusddens.o : ../Modules/uspp.o
 lr_addusddens.o : ../Modules/wavefunctions.o
@@ -380,7 +379,6 @@ setup_nscf.o : ../Modules/kind.o
 setup_nscf.o : ../Modules/mp_pools.o
 setup_nscf.o : ../Modules/noncol.o
 setup_nscf.o : ../Modules/parameters.o
-setup_nscf.o : ../Modules/paw_variables.o
 setup_nscf.o : ../Modules/uspp.o
 setup_nscf.o : ../PW/src/atomic_wfc_mod.o
 setup_nscf.o : ../PW/src/pwcom.o

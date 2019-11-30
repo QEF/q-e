@@ -977,7 +977,6 @@ SUBROUTINE c_phase
        &  F8.5,' ,',F8.5,' ,',F8.5,' )')") upol(1),upol(2),upol(3)
 
 !  --- End of information relative to polarization calculation ---
-      WRITE( stdout,"(' nspin:',i5,'nspin_lsda:',i5)")nspin,nspin_lsda
    WRITE( stdout,"(/,/,15X,50('=')/,/)")
 
    !------------------------------------------------------------------------------
