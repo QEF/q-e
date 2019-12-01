@@ -342,11 +342,23 @@ The following features of the code are tested:
 The following features of the code are tested:
 - Calculation of U for a 2D nonmagnetic insulator, with PAW, with fractional translations
 
+################################
+# hp_insulator_paw_magn : CrI3 #
+###############################
+The following features of the code are tested:
+- Calculation of U for a 2D ferromagnetic insulator, with PAW
+
 #########################
 # hp_metal_us_magn : Ni #
 #########################
 The following features of the code are tested:
 - Calculation of U for a ferromagnetic metal, with USPP
+
+##########################
+# hp_metal_paw_magn : Fe #
+##########################
+The following features of the code are tested:
+- Calculation of U for a ferromagnetic metal, with PAW
 
 #################################################################################################
 # EPW tests
