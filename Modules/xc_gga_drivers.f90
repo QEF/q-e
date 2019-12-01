@@ -388,6 +388,9 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !         v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
   !         sc, v1c, v2c as above for correlation
   !
+  USE exch_gga
+  USE corr_gga
+  !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
@@ -716,6 +719,8 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !-----------------------------------------------------------------------
   !! Gradient corrections for exchange - Hartree a.u.
   !
+  USE exch_gga
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
@@ -798,7 +803,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 1 )
         !
-        CALL becke88_spin( rho, grho2, sx, v1x, v2x )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -866,7 +871,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 9 )                    ! B3LYP
         !
-        CALL becke88_spin( rho, grho2, sx, v1x, v2x )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -955,7 +960,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 28 )                   ! X3LYP
         !
-        CALL becke88_spin( rho, grho2, sx, v1x, v2x )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
@@ -1102,7 +1107,9 @@ END SUBROUTINE gcx_spin
 SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
   !-------------------------------------------------------------------------------
   !! Gradient corrections for correlations - Hartree a.u.  
-  !! Implemented:  Perdew86, GGA (PW91), PBE
+  !! Implemented: Perdew86, GGA (PW91), PBE
+  !
+  USE corr_gga
   !
   IMPLICIT NONE
   !
@@ -1162,19 +1169,19 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
     CASE( 1 )
        !
-       CALL perdew86_spin( rho, zeta, grho, sc, v1c, v2c )
+       CALL perdew86_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 2 )
        !
-       CALL ggac_spin( rho, zeta, grho, sc, v1c, v2c )
+       CALL ggac_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 4 )
        !
-       CALL pbec_spin( rho, zeta, grho, 1, sc, v1c, v2c )
+       CALL pbec_spin( rho, zeta, grho, 1, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 8 )
        !
-       CALL pbec_spin( rho, zeta, grho, 2, sc, v1c, v2c )
+       CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
        !
     CASE DEFAULT
        !
@@ -1208,6 +1215,8 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   !!    * Perdew86;
   !!    * Lee, Yang & Parr;
   !!    * GGAC.
+  !
+  USE corr_gga
   !
   IMPLICIT NONE
   !
@@ -1265,7 +1274,9 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        CYCLE
     ENDIF
     !
-    CALL lsd_glyp( rho, grho, grho_ud, sc(ir), v1c(ir,:), v2c(ir,:), v2c_ud(ir) )
+    CALL lsd_glyp( rho(1), rho(2), grho(1), grho(2), grho_ud, &
+                   sc(ir), v1c(ir,1), v1c(ir,2), v2c(ir,1),   &
+                   v2c(ir,2), v2c_ud(ir) )
     !
     SELECT CASE( igcc )
     CASE( 3 )

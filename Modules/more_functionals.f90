@@ -1626,6 +1626,7 @@
 
       SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c )
         USE kinds, ONLY: DP
+        USE corr_gga, ONLY: lsd_glyp
         IMPLICIT NONE
         REAL(DP) :: rho, grho, sc, v1c, v2c
         REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB

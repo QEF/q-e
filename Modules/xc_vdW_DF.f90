@@ -669,6 +669,8 @@ CONTAINS
 
   SUBROUTINE get_q0_on_grid (total_rho, grad_rho, q0, dq0_drho, dq0_dgradrho, thetas)
 
+  USE corr_lda,  ONLY: pw
+  
   IMPLICIT NONE
 
   REAL(DP), INTENT(IN)      :: total_rho(:), grad_rho(:,:)         ! Input variables needed.
@@ -811,6 +813,8 @@ CONTAINS
              grad_rho_up, grad_rho_down, q0, dq0_drho_up, dq0_drho_down, &
              dq0_dgradrho_up, dq0_dgradrho_down, thetas)
 
+  USE corr_lda,  ONLY: pw_spin
+             
   IMPLICIT NONE
 
   REAL(DP),  INTENT(IN)      :: total_rho(:), grad_rho(:,:)              ! Input variables.
@@ -907,7 +911,7 @@ CONTAINS
      r_s  = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
      zeta = (up - down) / rho
      IF ( ABS(zeta) > 1.0D0 ) zeta = SIGN(1.0D0, zeta)
-     call pw_spin( r_s, zeta, ec, vc )
+     call pw_spin( r_s, zeta, ec, vc(1), vc(2) )
      dqc_drho_up   = vc(1)
      dqc_drho_down = vc(2)
 

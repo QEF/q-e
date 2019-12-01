@@ -174,6 +174,7 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !! local density.
   !
   USE xc_lda_lsda,  ONLY: xc_lda
+  USE exch_lda,     ONLY: slater
   USE funct,        ONLY: get_iexch, get_icorr
   USE kinds,        ONLY: DP
   !
@@ -297,6 +298,8 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   USE kinds,          ONLY: DP
   USE funct,          ONLY: get_iexch, get_icorr
   USE xc_lda_lsda,    ONLY: xc_lsda
+  USE exch_lda,       ONLY: slater
+  USE corr_lda,       ONLY: pz, pz_polarized
   !
   IMPLICIT NONE
   !
