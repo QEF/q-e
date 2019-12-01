@@ -1,0 +1,10 @@
+ &inputhp
+   prefix = 'iron',
+   outdir = './',
+   nq1    = 2,  
+   nq2    = 2, 
+   nq3    = 2,
+   conv_thr_chi = 5.0d-5,
+   iverbosity   = 2
+   find_atpert  = 2
+ /
