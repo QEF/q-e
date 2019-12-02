@@ -24,6 +24,8 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE spin_orb, ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
   !
+  USE device_util_m,    ONLY : dev_memset
+  !
   USE uspp_gpum, ONLY : using_vkb_d, using_indv_ijkb0, using_deeq_d, using_deeq_nc_d, &
                         using_qq_at_d, using_qq_so_d
   !
@@ -50,7 +52,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   !
   ! initialise s_diag
   !
-  s_diag_d = 1.d0
+  CALL dev_memset( s_diag_d, 1.d0 )
   !
   IF (lspinorb) THEN
      CALL usnldiag_spinorb()

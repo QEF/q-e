@@ -58,7 +58,8 @@ SUBROUTINE forces()
   !
   USE control_flags,     ONLY : use_gpu
   USE gbuffers,          ONLY : dev_buf
-  USE gvect_gpum,        ONLY : g_d 
+  USE gvect_gpum,        ONLY : g_d
+  USE device_util_m,     ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -124,7 +125,7 @@ SUBROUTINE forces()
   IF (      use_gpu) THEN ! On the GPU
      ! move these data to the GPU
      CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
-     vloc_d = vloc
+     CALL dev_memcpy(vloc_d, vloc)
      CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
                    g_d, rho%of_r(:,1), dfftp%nl_d, gstart, gamma_only, vloc_d, &
                    forcelc )
