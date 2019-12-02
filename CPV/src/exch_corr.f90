@@ -23,7 +23,7 @@
       use gvect,           only : g
       use uspp,            only : nlcc_any
       use mp,              only : mp_sum
-      use metagga,         ONLY : kedtaur
+      use metagga_cp,      ONLY : kedtaur
       USE io_global,       ONLY : stdout
       USE mp_global,       ONLY : intra_bgrp_comm
       use kinds,           ONLY : DP

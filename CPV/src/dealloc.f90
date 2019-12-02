@@ -36,7 +36,7 @@ SUBROUTINE deallocate_modules_var()
   USE cp_main_variables,    ONLY : deallocate_mainvar
   USE pseudopotential,      ONLY : deallocate_pseudopotential
   USE ions_nose,            ONLY : ions_nose_deallocate
-  USE metagga,              ONLY : deallocate_metagga
+  USE metagga_cp,           ONLY : deallocate_metagga
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldaU_cp,              ONLY : deallocate_lda_plus_u

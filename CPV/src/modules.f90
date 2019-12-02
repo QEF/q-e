@@ -61,7 +61,7 @@ contains
 end module qgb_mod
 
 
-MODULE metagga  !metagga
+MODULE metagga_cp  !metagga
   USE kinds, ONLY: DP
   implicit none
   !the variables needed for meta-GGA
@@ -79,7 +79,7 @@ contains
       IF( ALLOCATED(dkedtaus)) DEALLOCATE(dkedtaus)
       IF( ALLOCATED(gradwfc))  DEALLOCATE(gradwfc)
   end subroutine deallocate_metagga
-END MODULE metagga  !end metagga
+END MODULE metagga_cp  !end metagga
 
 MODULE dener
   USE kinds, ONLY: DP
