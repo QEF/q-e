@@ -33,7 +33,7 @@ SUBROUTINE do_phonon(auxdyn)
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, qplot, only_init, &
                               only_wfc, rec_code, where_rec
-  USE el_phon,         ONLY : elph, elph_mat, elph_simple
+  USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa
   !
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo
@@ -112,22 +112,24 @@ SUBROUTINE do_phonon(auxdyn)
            !
         END IF
         !
-        IF ( elph_mat ) THEN
-           CALL elphsum_wannier(iq)
-        ELSEIF( elph_simple ) THEN
-           CALL elphsum_simple()
-        ELSEIF( elph_yambo ) THEN
-           CALL elph_yambo_eval_and_IO()
-        ELSEIF(elph_tetra == 1) THEN
-           CALL elph_tetra_lambda()
-        ELSEIF(elph_tetra == 2) THEN
-           CALL elph_tetra_gamma()
-        ELSEIF(elph_tetra == 3) THEN
-           CALL elph_scdft()
-        ELSE 
+        !IF ( elph_mat ) THEN
+        !   CALL elphsum_wannier(iq)
+        !ELSEIF( elph_simple ) THEN
+        !   CALL elphsum_simple()
+        !ELSEIF( elph_epa ) THEN
+        !   CALL elphfil_epa(iq)
+        !ELSEIF( elph_yambo ) THEN
+        !   CALL elph_yambo_eval_and_IO()
+        !ELSEIF(elph_tetra == 1) THEN
+        !   CALL elph_tetra_lambda()
+        !ELSEIF(elph_tetra == 2) THEN
+        !   CALL elph_tetra_gamma()
+        !ELSEIF(elph_tetra == 3) THEN
+        !   CALL elph_scdft()
+        !ELSE 
            !CALL elphsum()
            CALL elphsum2()
-        END IF
+        !END IF
         !
      END IF
      !

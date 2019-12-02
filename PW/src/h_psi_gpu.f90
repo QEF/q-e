@@ -1,14 +1,4 @@
-
-! Copyright (C) 2002-2016 Quantum ESPRESSO group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------------
-
-
-
 ! Copyright (C) 2002-2016 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -18,21 +8,12 @@
 !----------------------------------------------------------------------------
 SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   !----------------------------------------------------------------------------
+  !! This routine computes the product of the Hamiltonian matrix with m 
+  !! wavefunctions contained in psi.
   !
-  ! ... This routine computes the product of the Hamiltonian
-  ! ... matrix with m wavefunctions contained in psi
-  !
-  ! ... input:
-  ! ...    lda   leading dimension of arrays psi, spsi, hpsi
-  ! ...    n     true dimension of psi, spsi, hpsi
-  ! ...    m     number of states psi
-  ! ...    psi
-  !
-  ! ... output:
-  ! ...    hpsi  H*psi
-  !
-  ! --- Wrapper routine: performs bgrp parallelization on non-distributed bands
-  ! --- if suitable and required, calls old H\psi routine h_psi_
+  !! \(\textit{Wrapper routine}\): performs bgrp parallelization on 
+  !! non-distributed bands. If suitable and required, calls old H\psi 
+  !! routine h_psi_ .
   !
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
@@ -43,19 +24,29 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)      :: lda, n, m
-  COMPLEX(DP), INTENT(IN)  :: psi_d(lda*npol,m)
+  INTEGER, INTENT(IN) :: lda
+  !! leading dimension of arrays psi, spsi, hpsi
+  INTEGER, INTENT(IN) :: n
+  !! true dimension of psi, spsi, hpsi
+  INTEGER, INTENT(IN) :: m
+  !! number of states psi
+  COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
+  !! the wavefunction
   COMPLEX(DP), INTENT(OUT) :: hpsi_d(lda*npol,m)
+  !! Hamiltonian dot psi
 #if defined(__CUDA)
   attributes(DEVICE) :: psi_d, hpsi_d
 #endif
+  !
+  ! ... local variables
   !
   INTEGER :: m_start, m_end
   INTEGER :: column_type
   INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
   !
+  !
   CALL start_clock( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
-
+  !
   ! band parallelization with non-distributed bands is performed if
   ! 1. enabled (variable use_bgrp_in_hpsi must be set to .T.)
   ! 2. exact exchange is not active (if it is, band parallelization is already
@@ -63,22 +54,25 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   ! 3. there is more than one band, otherwise there is nothing to parallelize
   !
   IF (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) THEN
+     !
      ! use band parallelization here
      ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
-     CALL divide_all(inter_bgrp_comm,m,m_start,m_end,recv_counts,displs)
-     CALL mp_type_create_column_section(hpsi_d(1,1), 0, lda*npol, lda*npol, column_type)
+     CALL divide_all( inter_bgrp_comm, m, m_start, m_end, recv_counts,displs )
+     CALL mp_type_create_column_section( hpsi_d(1,1), 0, lda*npol, lda*npol, column_type )
      !
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
         CALL h_psi__gpu( lda, n, m_end-m_start+1, psi_d(1,m_start), hpsi_d(1,m_start) )
-     CALL mp_allgather(hpsi_d, column_type, recv_counts, displs, inter_bgrp_comm)
+     CALL mp_allgather( hpsi_d, column_type, recv_counts, displs, inter_bgrp_comm)
      !
      CALL mp_type_free( column_type )
      DEALLOCATE( recv_counts )
      DEALLOCATE( displs )
+     !
   ELSE
      ! don't use band parallelization here
      CALL h_psi__gpu( lda, n, m, psi_d, hpsi_d )
+     !
   END IF
 
   CALL stop_clock( 'h_psi_bgrp' )
@@ -89,42 +83,34 @@ END SUBROUTINE h_psi_gpu
 !----------------------------------------------------------------------------
 SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine computes the product of the Hamiltonian
-  ! ... matrix with m wavefunctions contained in psi
-  !
-  ! ... input:
-  ! ...    lda   leading dimension of arrays psi, spsi, hpsi
-  ! ...    n     true dimension of psi, spsi, hpsi
-  ! ...    m     number of states psi
-  ! ...    psi
-  !
-  ! ... output:
-  ! ...    hpsi  H*psi
+  !----------------------------------------------------------------------------
+  !! This routine computes the product of the Hamiltonian matrix with m 
+  !! wavefunctions contained in psi.
   !
 #if defined(__CUDA)
   USE cudafor
 #endif
-  USE kinds,    ONLY : DP
-  USE bp,       ONLY : lelfield,l3dstring,gdir, efield, efield_cry
-  USE becmod,   ONLY : bec_type, becp, calbec
-  USE becmod_gpum, ONLY : becp_d
-  USE lsda_mod, ONLY : current_spin
-  USE scf_gpum, ONLY : vrs_d, using_vrs_d
-  USE uspp,     ONLY : nkb
-  USE ldaU,     ONLY : lda_plus_u, U_projection
-  USE gvect,    ONLY : gstart
-  USE funct,    ONLY : dft_is_meta
-  USE control_flags,    ONLY : gamma_only
-  USE noncollin_module, ONLY: npol, noncolin
-  USE realus,   ONLY : real_space, &
-                       invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, & 
-                       invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, add_vuspsir_k, & 
-                       v_loc_psir_inplace
-  USE fft_base, ONLY : dffts
-  USE exx,      ONLY : use_ace, vexx, vexxace_gamma, vexxace_k
-  USE funct,    ONLY : exx_is_active
+  USE kinds,                   ONLY: DP
+  USE bp,                      ONLY: lelfield, l3dstring, gdir, efield, efield_cry
+  USE becmod,                  ONLY: bec_type, becp, calbec
+  USE becmod_gpum,             ONLY: becp_d
+  USE lsda_mod,                ONLY: current_spin
+  USE scf_gpum,                ONLY: vrs_d, using_vrs_d
+  USE uspp,                    ONLY: nkb
+  USE ldaU,                    ONLY: lda_plus_u, U_projection
+  USE gvect,                   ONLY: gstart
+  USE funct,                   ONLY: dft_is_meta
+  USE control_flags,           ONLY: gamma_only
+  USE noncollin_module,        ONLY: npol, noncolin
+  USE realus,                  ONLY: real_space, invfft_orbital_gamma, fwfft_orbital_gamma, &
+                                     calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,  &
+                                     fwfft_orbital_k, calbec_rs_k, add_vuspsir_k,           & 
+                                     v_loc_psir_inplace
+  USE fft_base,                ONLY: dffts
+  USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
+  USE funct,                   ONLY: exx_is_active
   USE fft_helper_subroutines
+  USE device_util_m,           ONLY: dev_memcpy
   !
   USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
   USE uspp_gpum,     ONLY : vkb_d, using_vkb_d
@@ -183,8 +169,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
 
   if (need_host_copy) then
       ALLOCATE(psi_host(lda*npol,m) , hpsi_host(lda*npol,m) )
-      psi_host = psi_d
-      hpsi_host = hpsi_d
+      CALL dev_memcpy(psi_host, psi_d)    ! psi_host = psi_d
+      CALL dev_memcpy(hpsi_host, hpsi_d)  ! hpsi_host = hpsi_d
   end if
 
   CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
@@ -216,7 +202,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psic back in reciprocal space and assign it to hpsi
            CALL fwfft_orbital_gamma(hpsi_host,ibnd,m) 
         END DO
-        hpsi_d = hpsi_host
+        CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
         !
      ELSE
         ! ... usual reciprocal-space algorithm
@@ -252,7 +238,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psic back in reciprocal space and assign it to hpsi
            CALL fwfft_orbital_k(hpsi_host,ibnd,m) 
         END DO
-        IF (need_host_copy) hpsi_d = hpsi_host
+        IF (need_host_copy)      CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
         !
      ELSE
         !
@@ -279,9 +265,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   CALL stop_clock( 'h_psi:pot' )
   !
   if (dft_is_meta()) then
-     hpsi_host = hpsi_d
+     CALL dev_memcpy(hpsi_host, hpsi_d) ! hpsi_host = hpsi_d
      call h_psi_meta (lda, n, m, psi_host, hpsi_host)
-     hpsi_d = hpsi_host
+     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
   end if
   !
   ! ... Here we add the Hubbard potential times psi
@@ -289,12 +275,12 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
      !
      hpsi_host = hpsi_d
-     IF (noncolin) THEN
+     IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
      ELSE
-        call vhpsi( lda, n, m, psi_host, hpsi_host )
+        CALL vhpsi( lda, n, m, psi_host, hpsi_host )
      ENDIF
-     hpsi_d = hpsi_host
+     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      !
   ENDIF
   !
@@ -312,7 +298,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
      END IF
-     hpsi_d = hpsi_host
+     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
   END IF
   !
   ! ... electric enthalpy if required
@@ -327,7 +313,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,ipol,efield_cry(ipol) )
         END DO
      END IF
-     hpsi_d = hpsi_host
+     CALL dev_memcpy(hpsi_d, hpsi_host) ! hpsi_d = hpsi_host
      !
   END IF
   !

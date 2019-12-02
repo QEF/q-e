@@ -43,6 +43,8 @@ sum_band_kin.o \
 sym_band.o \
 vasp_read_chgcar_mod.o \
 vasp_xml_module.o \
+wannier_proj.o \
+wannier_enrg.o \
 work_function.o \
 write_p_avg.o \
 write_proj.o \

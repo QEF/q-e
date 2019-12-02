@@ -15,7 +15,7 @@ function w1gauss (x, n)
   !
   ! --> (n>=0) : Methfessel-Paxton case
   !
-  ! --> (n=-1): Cold smearing (Marzari-Vanderbilt)
+  ! --> (n=-1): Cold smearing (Marzari-Vanderbilt-DeVita-Payne)
   !     w1gauss = 1/sqrt(2*pi)*(x-1/sqrt(2))*exp(-(x-1/sqrt(2))**2)
   !
   ! --> (n=-99): Fermi-Dirac case. In this case w1gauss corresponds

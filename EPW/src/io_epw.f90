@@ -302,15 +302,15 @@
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = epwdata, FILE = 'epwdata.fmt', STATUS = 'old', IOSTAT = ios)
-      IF (ios /= 0) CALL errore ('ephwann_shuffle', 'error opening epwdata.fmt', epwdata)
+      IF (ios /= 0) CALL errore ('epw_read', 'error opening epwdata.fmt', epwdata)
       IF (eig_read) OPEN(UNIT = iunksdata, FILE = 'ksdata.fmt', STATUS = 'old', IOSTAT = ios)
-      IF (eig_read .AND. ios /= 0) CALL errore ('ephwann_shuffle', 'error opening ksdata.fmt', iunksdata)
+      IF (eig_read .AND. ios /= 0) CALL errore ('epw_read', 'error opening ksdata.fmt', iunksdata)
       IF (vme) THEN 
         OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt', STATUS = 'old', IOSTAT = ios)
-        IF (ios /= 0) CALL errore ('ephwann_shuffle', 'error opening vmedata.fmt', iunvmedata)
+        IF (ios /= 0) CALL errore ('epw_read', 'error opening vmedata.fmt', iunvmedata)
       ELSE
         OPEN(UNIT = iundmedata, FILE = 'dmedata.fmt', STATUS = 'old', IOSTAT = ios)
-        IF (ios /= 0) CALL errore ('ephwann_shuffle', 'error opening dmedata.fmt', iundmedata)
+        IF (ios /= 0) CALL errore ('epw_read', 'error opening dmedata.fmt', iundmedata)
       ENDIF
       READ(epwdata,*) ef
       READ(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
@@ -1841,6 +1841,7 @@
     !
     ! Open the wfc file, read and close
     CALL set_ndnmbr(ipool, me_pool, nproc_pool, npool, nd_nmbr0)
+    !print*,'nd_nmbr0 ',nd_nmbr0
     !
 #if defined(__MPI)
     tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // nd_nmbr0

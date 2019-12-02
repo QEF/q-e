@@ -8,21 +8,19 @@
 !----------------------------------------------------------------------------
 SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine applies the Hamiltonian and the S matrix
-  ! ... to a vector psi and puts the result in hpsi and spsi
-  ! ... Wrapper routine - calls h_psi and s_psi
+  !! This routine applies the Hamiltonian and the S matrix
+  !! to a vector psi and puts the result in hpsi and spsi.  
+  !! Wrapper routine - calls h_psi and s_psi.
   !
   ! ... No bgrp parallelization here !
   !
-  USE kinds,  ONLY: DP
-  USE control_flags, ONLY : gamma_only
-  USE bp,     ONLY: lelfield
-  USE noncollin_module, &
-              ONLY: npol 
-  USE realus, ONLY : real_space, &
-                     invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
-                     invfft_orbital_k, fwfft_orbital_k, s_psir_k
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : gamma_only
+  USE bp,               ONLY : lelfield
+  USE noncollin_module, ONLY : npol 
+  USE realus,           ONLY : real_space, &
+                               invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
+                               invfft_orbital_k,     fwfft_orbital_k,     s_psir_k
   !
   IMPLICIT NONE
   !

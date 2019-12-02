@@ -7,12 +7,12 @@
 !
 !
 MODULE dfunct_gpum
-
-CONTAINS
-!---------------------------------------
 !
+CONTAINS
+!
+!-------------------------------------------------------------------------
 SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
-  !
+  !----------------------------------------------------------------------
   !! This routine computes the integral of the perturbed potential with
   !! the Q function
   !
@@ -89,7 +89,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
      fact = 2.0_dp
   ELSE
      fact = 1.0_dp
-  END IF
+  ENDIF
   !
   deeq_d(:,:,:,:) = 0.D0
   !
@@ -230,10 +230,9 @@ END SUBROUTINE newq_gpu
 !----------------------------------------------------------------------------
 SUBROUTINE newd_gpu( ) 
   !----------------------------------------------------------------------------
-  !
-  ! ... This routine computes the integral of the effective potential with
-  ! ... the Q function and adds it to the bare ionic D term which is used
-  ! ... to compute the non-local term in the US scheme.
+  !! This routine computes the integral of the effective potential with
+  !! the Q function and adds it to the bare ionic D term which is used
+  !! to compute the non-local term in the US scheme.
   !
 #if defined(__CUDA)
   use cudafor

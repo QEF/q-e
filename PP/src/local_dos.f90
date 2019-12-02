@@ -43,7 +43,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE io_files,             ONLY : restart_dir
+  USE pw_restart_new,       ONLY : read_collected_wfc
   USE mp_pools,             ONLY : me_pool, nproc_pool, my_pool_id, npool, &
                                    inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -150,7 +151,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   DO ik = 1, nks
      IF ( iflag /= 0 .or. ik == kpoint_pool) THEN
         IF (lsda) current_spin = isk (ik)
-        CALL davcio (evc, 2*nwordwfc, iunwfc, ik, - 1)
+        CALL read_collected_wfc ( restart_dir(), ik, evc )
         npw = ngk(ik)
         CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
 

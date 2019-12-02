@@ -417,6 +417,10 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
   !! up gradient of the charge
   REAL(DP), INTENT(IN) :: grhodw2
   !! down gradient of the charge
+  REAL(DP), INTENT(IN) :: tauup
+  !! up kinetic energy density
+  REAL(DP), INTENT(IN) :: taudw
+  !! down kinetic energy density
   REAL(DP), INTENT(OUT) :: sx
   !! exchange energy
   REAL(DP), INTENT(OUT) :: v1xup
@@ -427,10 +431,6 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
   !! derivatives of exchange wr. grho - up
   REAL(DP), INTENT(OUT) :: v2xdw
   !! derivatives of exchange wr. grho - down
-  REAL(DP), INTENT(OUT) :: tauup
-  !! up kinetic energy density
-  REAL(DP), INTENT(OUT) :: taudw
-  !! down kinetic energy density
   REAL(DP), INTENT(OUT) :: v3xup
   !! derivatives of exchange wr. tau - up
   REAL(DP), INTENT(OUT) :: v3xdw
@@ -1252,7 +1252,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   REAL(DP) :: vc_v(2)
   !
   REAL(DP), PARAMETER :: zero = 0._dp,  one  = 1.0_dp, two = 2.0_dp, three = 3.0_dp, &
-                         four = 4.0_dp, five = 5.0_dp, six = 6.0_dp, eight = 0.0_dp, &
+                         four = 4.0_dp, five = 5.0_dp, six = 6.0_dp, eight = 8.0_dp, &
                          f12 = one/two, f13 = one/three, f23 = two/three,            &
                          f53 = five/three, f83 = eight/three, f43 = four/three,      &
                          pi34 = three/(four*pi), pi2 = pi*pi, f35 = three/five,      &

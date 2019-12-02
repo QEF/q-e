@@ -64,6 +64,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
 #if defined(__VERBOSE)
   USE cg_param,     ONLY : stdout
 #endif
+  USE device_util_m,  ONLY : dev_memset, dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -175,14 +176,14 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
      END IF
      !
-     spsi_d     = ZERO
-     scg_d      = ZERO
-     hpsi_d     = ZERO
-     g_d        = ZERO
-     cg_d       = ZERO
-     g0_d       = ZERO
-     ppsi_d     = ZERO
-     lagrange_d = ZERO
+     CALL dev_memset( spsi_d     , ZERO )
+     CALL dev_memset( scg_d      , ZERO )
+     CALL dev_memset( hpsi_d     , ZERO )
+     CALL dev_memset( g_d        , ZERO )
+     CALL dev_memset( cg_d       , ZERO )
+     CALL dev_memset( g0_d       , ZERO )
+     CALL dev_memset( ppsi_d     , ZERO )
+     CALL dev_memset( lagrange_d , ZERO )
      !
      ! ... calculate S|psi>
      !
@@ -505,7 +506,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
   avg_iter = avg_iter / DBLE( nbnd )
   !
   ! STORING e in e_d since eigenvalues are always on the host
-  e_d = e
+  CALL dev_memcpy(e_d, e)
   !
   DEALLOCATE( lagrange )
   DEALLOCATE( e )

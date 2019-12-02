@@ -8063,7 +8063,7 @@ Possibly too few bands at point   27  -0.66667   0.66667   0.66667
  
      Estimated Allen-Dynes Tc
  
-     logavg =    0.0057997 l_a2F =    0.0843982
+     logavg =    0.0057997 l_a2f =    0.0843982
      a2F          :      0.08s CPU      0.08s WALL (       1 calls)
 
      Unfolding on the coarse grid

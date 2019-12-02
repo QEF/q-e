@@ -7,7 +7,9 @@ MODULES += \
   cuda_subroutines.o \
   ylmr2_gpu.o \
   splinelib_gpu.o \
-  random_numbers_gpu.o
+  random_numbers_gpu.o \
+  simpsn_gpu.o \
+  sph_bes_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../GScratch
@@ -29,6 +31,8 @@ recvec.o : control_flags.o
 recvec_gpu.o : control_flags.o
 recvec_gpu.o : kind.o
 recvec_gpu.o : recvec.o
+sph_bes_gpu.o : constants.o
+sph_bes_gpu.o : kind.o
 splinelib_gpu.o : kind.o
 uspp_gpu.o : control_flags.o
 uspp_gpu.o : kind.o

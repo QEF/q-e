@@ -25,7 +25,7 @@ MODULE qexsd_init
   USE mp_images,        ONLY : nimage,nproc_image
   USE mp_pools,         ONLY : npool
   USE mp_bands,         ONLY : ntask_groups, nproc_bgrp, nbgrp
-  USE global_version,   ONLY:  version_number, svn_revision
+  USE global_version,   ONLY:  version_number
   !
   IMPLICIT NONE
   !

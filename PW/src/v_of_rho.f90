@@ -58,7 +58,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate exchange-correlation potential
   !
-  IF (dft_is_meta() .and. (get_meta() /= 4)) then
+  IF (dft_is_meta()) then
      CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   ELSE
      CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
@@ -118,7 +118,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE gvect,            ONLY : g, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
-  USE funct,            ONLY : get_meta, dft_is_nonlocc, nlc
+  USE funct,            ONLY : get_meta, dft_is_nonlocc, nlc, is_libxc
   USE xc_mgga,          ONLY : xc_metagcx
   USE scf,              ONLY : scf_type, rhoz_or_updw
   USE mp,               ONLY : mp_sum
@@ -229,7 +229,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        !
        ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
        !
-       IF ( get_meta()==1 .OR. get_meta()==5 ) THEN  ! tpss, scan
+       IF ( get_meta()==1 .OR. get_meta()==5 .OR. is_libxc(6) ) THEN  ! tpss, scan
           !
           h(:,k,1) = (v2x(k,1) * grho(:,k,1) + v2c(:,k,1)) * e2
           h(:,k,2) = (v2x(k,2) * grho(:,k,2) + v2c(:,k,2)) * e2
@@ -245,7 +245,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        kedtaur(k,2) = (v3x(k,2) + v3c(k,2)) * 0.5d0 * e2
        !
        etxc = etxc + (ex(k)+ec(k)) * e2
-       vtxc = vtxc + (v1x(k,1)+v1c(k,1)+v1x(k,2)+v1c(k,2)) * e2 * (rho%of_r(k,1)+rho%of_r(k,2))
+       vtxc = vtxc + (v1x(k,1)+v1c(k,1)) * ABS(rho%of_r(k,1)) * e2
+       vtxc = vtxc + (v1x(k,2)+v1c(k,2)) * ABS(rho%of_r(k,2)) * e2
        !
        IF ( rho%of_r(k,1) < 0.d0 ) rhoneg(1) = rhoneg(1) - rho%of_r(k,1)
        IF ( rho%of_r(k,2) < 0.d0 ) rhoneg(2) = rhoneg(2) - rho%of_r(k,2)

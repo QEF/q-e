@@ -249,8 +249,8 @@ SUBROUTINE phq_readin()
   electron_phonon=' '
   elph_nbnd_min = 1
   elph_nbnd_max = 0
-  el_ph_sigma = 0.02
-  el_ph_nsigma = 30
+  el_ph_sigma  = 0.02
+  el_ph_nsigma = 10
   el_ph_ngauss = 1
   lraman       = .FALSE.
   elop         = .FALSE.
@@ -722,6 +722,9 @@ SUBROUTINE phq_readin()
 
   IF (okpaw.and.noncolin.and.domag) CALL errore('phq_readin',&
      'The phonon code with paw and domag is not available yet',1)
+
+  IF (magnetic_sym) CALL errore('phq_readin',&
+     'Non-colinear phonon code with domag is buggy: temporarily disabled',1)
 
   IF (okvan.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with US-PP and raman or elop not yet available',1)

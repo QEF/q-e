@@ -32,7 +32,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   USE mp,            ONLY : mp_sum, mp_gather, mp_bcast, mp_size,&
                             mp_type_create_column_section, mp_type_free
   USE gbuffers,      ONLY : gbuf => pin_buf
-  USE device_util_m, ONLY : dev_memcpy, dev_memset, dev_memsync
+  USE device_util_m, ONLY : dev_memcpy, dev_memset, dev_memcpy
   !
   IMPLICIT NONE
   !
@@ -214,11 +214,11 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      !pinned_buffer(1:nbase, n_start:n_end) = hc_d( 1:nbase, n_start:n_end )
      !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, hc_d( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memsync( pinned_buffer, hc_d, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( pinned_buffer, hc_d, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      CALL mp_sum( pinned_buffer(1:nbase, n_start:n_end), intra_bgrp_comm )
      !hc_d( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
      !ierr = cudaMemcpy2D( hc_d(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memsync( hc_d, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( hc_d, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      !
   end if
   CALL mp_gather( hc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
@@ -240,11 +240,11 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
      !pinned_buffer(1:nbase, n_start:n_end) = sc_d( 1:nbase, n_start:n_end )
      !ierr = cudaMemcpy2D( pinned_buffer(1, n_start) , nvecx, sc_d( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memsync( pinned_buffer, sc_d, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( pinned_buffer, sc_d, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
      CALL mp_sum( pinned_buffer( 1:nbase, n_start:n_end ), intra_bgrp_comm )
      !sc_d( 1:nbase, n_start:n_end ) = pinned_buffer(1:nbase, n_start:n_end)
      !ierr = cudaMemcpy2D( sc_d(1, n_start) , nvecx, pinned_buffer( 1, n_start ), nvecx, nbase, n_end-n_start+1 )
-     CALL dev_memsync( sc_d, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
+     CALL dev_memcpy( sc_d, pinned_buffer, (/ 1, nbase /), 1, (/ n_start, n_end /), 1 )
   end if
   CALL mp_gather( sc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
@@ -438,11 +438,11 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
         !pinned_buffer(nb1:nbase+notcnv, n_start:n_end) = hc_d( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, hc_d( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memsync( pinned_buffer, hc_d, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( pinned_buffer, hc_d, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
         CALL mp_sum( pinned_buffer( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
         !hc_d( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer(nb1:nbase+notcnv, n_start:)
         !ierr = cudaMemcpy2D(  hc_d( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memsync( hc_d, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( hc_d, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
      end if
      CALL mp_gather( hc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !
@@ -463,11 +463,11 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      if ( (n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 ) ) then
         !pinned_buffer( nb1:nbase+notcnv, n_start:n_end ) = sc_d( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D( pinned_buffer(nb1, n_start) , nvecx, sc_d( nb1, n_start ), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memsync( pinned_buffer, sc_d, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( pinned_buffer, sc_d, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
         CALL mp_sum( pinned_buffer( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
         !sc_d( nb1:nbase+notcnv, n_start:n_end ) = pinned_buffer( nb1:nbase+notcnv, n_start:n_end )
         !ierr = cudaMemcpy2D(  sc_d( nb1, n_start ), nvecx, pinned_buffer(nb1,n_start), nvecx, notcnv, n_end-n_start+1 )
-        CALL dev_memsync( sc_d, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
+        CALL dev_memcpy( sc_d, pinned_buffer, (/ nb1, nbase + notcnv /), 1, (/ n_start, n_end /), 1 )
      end if
      CALL mp_gather( sc_d, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !

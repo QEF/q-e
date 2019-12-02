@@ -650,15 +650,15 @@ SUBROUTINE elphsum ( )
   ! workspace used for symmetrisation
   !
   COMPLEX(DP), allocatable :: g1(:,:,:), g2(:,:,:), g0(:,:), gf(:,:,:)
-  COMPLEX(DP), allocatable :: point(:), noint(:), ctemp(:)
-  COMPLEX(DP) :: dyn22(3*nat,3*nat)
+  COMPLEX(DP), allocatable :: point(:), noint(:)
+  COMPLEX(DP) :: dyn22(3*nat,3*nat), ctemp
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
-       vu, ngauss1, nsig, iuelph, ios, i,k,j, ii, jj
+       vu, ngauss1, iuelph, ios, i,k,j, ii, jj
   INTEGER :: nkBZ, nti, ntj, ntk, nkr, itemp1, itemp2, nn, &
        qx,qy,qz,iq,jq,kq
   INTEGER, ALLOCATABLE :: eqBZ(:), sBZ(:)
-  REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, dosef, &
+  REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, effit1, dosef, &
        ef1, lambda, gamma
   REAL(DP), ALLOCATABLE :: deg(:), effit(:), dosfit(:)
   REAL(DP) :: etk, etq
@@ -690,13 +690,12 @@ SUBROUTINE elphsum ( )
   IF (.NOT.exst) CALL create_directory( elph_dir )
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
   ngauss1 = 0
-  nsig =el_ph_nsigma
 
   ALLOCATE(xk_collect(3,nkstot))
 
-  ALLOCATE(deg(nsig))
-  ALLOCATE(effit(nsig))
-  ALLOCATE(dosfit(nsig))
+  ALLOCATE(deg(el_ph_nsigma))
+  ALLOCATE(effit(el_ph_nsigma))
+  ALLOCATE(dosfit(el_ph_nsigma))
 
   IF (npool==1) THEN
 !
@@ -776,7 +775,7 @@ SUBROUTINE elphsum ( )
    etfit_dist => etfit
 #endif
   !
-  do isig=1,nsig
+  do isig=1,el_ph_nsigma
      !
      ! recalculate Ef = effit and DOS at Ef N(Ef) = dosfit using dense grid
      ! for value "deg" of gaussian broadening
@@ -857,7 +856,7 @@ SUBROUTINE elphsum ( )
           nk1,nk2,nk3, nks_real, xk_collect, 2, nkBZ, eqBZ, sBZ)
   END IF
   !
-  allocate (gf(3*nat,3*nat,nsig))
+  allocate (gf(3*nat,3*nat,el_ph_nsigma))
   gf = (0.0d0,0.0d0)
   !
   wqa  = 1.0d0/nkfit
@@ -897,7 +896,7 @@ SUBROUTINE elphsum ( )
         deallocate (g0)
         deallocate (g1)
         !
-        allocate ( point(nkBZ), noint(nkfit), ctemp(nkfit) )
+        allocate ( point(nkBZ), noint(nkfit) )
         do jpert = 1, 3 * nat
            do ipert = 1, 3 * nat
               do ispin=1,nspin_lsda
@@ -907,24 +906,23 @@ SUBROUTINE elphsum ( )
               !
               CALL clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
               !
-              do isig = 1, nsig
+              do isig = 1,el_ph_nsigma
                  degauss1 = deg(isig)
+                 effit1   = effit(isig)
+                 ctemp    = 0
                  do ik=1,nkfit
-                    etk = etfit(ibnd,eqkfit(ik)+nksfit*(ispin-1)/2)
-                    etq = etfit(jbnd,eqqfit(ik)+nksfit*(ispin-1)/2)
-                    w0g1 = w0gauss( (effit(isig)-etk) &
-                                   / degauss1,ngauss1) / degauss1
-                    w0g2 = w0gauss( (effit(isig)-etq) &
-                                   / degauss1,ngauss1) / degauss1
-                    ctemp(ik) = noint(ik)* wqa * w0g1 * w0g2
+                    etk   = etfit(ibnd,eqkfit(ik)+nksfit*(ispin-1)/2)
+                    etq   = etfit(jbnd,eqqfit(ik)+nksfit*(ispin-1)/2)
+                    ctemp = ctemp &
+                          + exp(-((effit1-etk)**2 + (effit1-etq)**2)/degauss1**2)*noint(ik)
                  enddo
                  gf(ipert,jpert,isig) = gf(ipert,jpert,isig) + &
-                      SUM (ctemp)
+                      ctemp * wqa / (degauss1**2) / pi 
               enddo ! isig
               enddo ! ispin
            enddo    ! ipert
         enddo    !jpert
-        deallocate (point, noint, ctemp)
+        deallocate (point, noint)
         deallocate (g2)
         !
      enddo    ! ibnd
@@ -934,10 +932,10 @@ SUBROUTINE elphsum ( )
   deallocate (etfit)
   deallocate (eqBZ, sBZ)
 !
-  allocate (gam(3*nat,nsig), lamb(3*nat,nsig))
+  allocate (gam(3*nat,el_ph_nsigma), lamb(3*nat,el_ph_nsigma))
   lamb(:,:) = 0.0d0
   gam (:,:) = 0.0d0
-  do isig= 1,nsig
+  do isig= 1, el_ph_nsigma
      do nu = 1,3*nat
         gam(nu,isig) = 0.0d0
         do mu = 1, 3 * nat
@@ -972,7 +970,7 @@ SUBROUTINE elphsum ( )
      enddo  !nu
   enddo  ! isig
   !
-  do isig= 1,nsig
+  do isig= 1,el_ph_nsigma
      WRITE (6, 9000) deg(isig), ngauss1
      WRITE (6, 9005) dosfit(isig), effit(isig) * rytoev
      do nu=1,3*nat
@@ -986,10 +984,10 @@ SUBROUTINE elphsum ( )
      open(unit=12, file=TRIM(name), form='formatted', status='unknown', &
                                     iostat=ios)
 
-     write(12, "(5x,3f14.6,2i6)") xq(1),xq(2),xq(3), nsig, 3*nat
+     write(12, "(5x,3f14.6,2i6)") xq(1),xq(2),xq(3), el_ph_nsigma, 3*nat
      write(12, "(6e14.6)") (w2(i), i=1,3*nat)
 
-     do isig= 1,nsig
+     do isig= 1, el_ph_nsigma
         WRITE (12, 9000) deg(isig), ngauss1
         WRITE (12, 9005) dosfit(isig), effit(isig) * rytoev
         do nu=1,3*nat
@@ -1009,7 +1007,7 @@ SUBROUTINE elphsum ( )
   !
   call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
   !
-  do isig=1,nsig
+  do isig=1,el_ph_nsigma
      name=TRIM(elph_dir)//'a2Fq2r.'// TRIM(int_to_char(50 + isig)) &
                                   //'.'//TRIM(int_to_char(current_iq))
      if (ionode) then
@@ -1089,7 +1087,7 @@ SUBROUTINE elphsum_simple
   REAL(DP), PARAMETER :: eps = 20_dp/ry_to_cmm1 ! eps = 20 cm^-1, in Ry
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
-       vu, ngauss1, nsig, iuelph, ios, irr
+       vu, ngauss1, iuelph, ios, irr
   INTEGER :: nmodes
   REAL(DP) :: weight, w0g1, w0g2, w0gauss, wgauss, degauss1, dosef, &
        ef1, phase_space, lambda, gamma
@@ -1127,7 +1125,7 @@ SUBROUTINE elphsum_simple
   CALL errore ('elphsum_simple', 'opening file '//filelph, ABS (ios) )
 
   IF (ionode) THEN
-     WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3 * nat
+     WRITE (iuelph, '(3f15.8,2i8)') xq, el_ph_nsigma, 3 * nat
      WRITE (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
   ENDIF
   

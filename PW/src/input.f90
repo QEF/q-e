@@ -326,8 +326,6 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER, EXTERNAL :: read_config_from_file
-  !
   INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
@@ -1375,10 +1373,8 @@ SUBROUTINE iosys()
   CALL plugin_read_input("PW")
   !
   ! ... Files (for compatibility) and directories
-  !     This stuff must be done before calling read_config_from_file!
+  !     This stuff must be done before calling read_conf_from_file!
   !
-  input_drho  = ' '
-  output_drho = ' '
   tmp_dir = trimcheck ( outdir )
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      wfc_dir = trimcheck ( wfcdir )
@@ -1391,11 +1387,11 @@ SUBROUTINE iosys()
   !
   ! ... Read atomic positions and unit cell from data file, if needed,
   ! ... overwriting what has just been read before from input
-  ! ... read_config_from_file returns 0 if structure successfully read
+  ! ... read_conf_from_file returns 0 if structure successfully read
   !
   ierr = 1
   IF ( startingconfig == 'file' .AND. .NOT. lforcet ) &
-     ierr = read_config_from_file( lmovecell, at_old, omega_old)
+     CALL read_conf_from_file( lmovecell, at_old, omega_old, ierr )
   !
   ! ... Atomic positions (tau) must be converted to internal units
   ! ... only if they were read from input, not from file
@@ -1514,7 +1510,7 @@ SUBROUTINE iosys()
   !
   IF(ecutfock <= 0.0_DP) THEN
      ! default case
-     ecutfock_ = 4.0_DP*ecutwfc
+     ecutfock_ = MIN ( ecutrho, 4.0_DP*ecutwfc)
   ELSE
      IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
@@ -1542,7 +1538,7 @@ SUBROUTINE iosys()
   ! ... and initialize a few other variables
   !
   IF ( lmovecell ) THEN
-     ! The next two lines have been moved before the call to read_config_from_file:
+     ! The next two lines have been moved before the call to read_conf_from_file:
      !      at_old    = at
      !      omega_old = omega
      IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp
@@ -1607,6 +1603,7 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   USE gvecs, ONLY : dual
   USE gvect, ONLY : ecutrho
   USE gvecw, ONLY : ecutwfc
+  USE constants, ONLY : eps8
   !
   IMPLICIT NONE
   REAL(dp), INTENT(INOUT) :: ecutwfc_in, ecutrho_in
@@ -1636,6 +1633,8 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   ecutrho_in = ecutrho
   dual = ecutrho / ecutwfc
   IF ( dual <= 1.0_dp ) CALL errore( 'set_cutoff', 'ecutrho <= ecutwfc?!?', 1 )
+  IF ( dual < 4.0_dp - eps8 ) CALL infomsg( 'set_cutoff', &
+          'ecutrho < 4*ecutwfc, are you sure?' )
   !
 END SUBROUTINE set_cutoff
 !

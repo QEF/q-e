@@ -49,6 +49,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !! of q-e or from the external libxc, depending on the input choice.
   !
 #if defined(__LIBXC)
+  USE funct,            ONLY : get_libxc_flags_exc
   USE xc_f90_types_m
   USE xc_f90_lib_m
 #endif 
@@ -100,7 +101,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   REAL(DP), ALLOCATABLE :: lapl_rho(:), vlapl_rho(:) ! not used in TPSS
   !
   REAL(DP) :: exx_fraction
-  INTEGER :: k, ipol, pol_unpol
+  INTEGER :: k, ipol, pol_unpol, eflag
   LOGICAL :: POLARIZED
   !
   imeta  = get_meta()
@@ -116,12 +117,12 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   !
   pol_unpol = ns
   !
-  ALLOCATE( rho_lxc(length*ns), sigma(length*ns), tau_lxc(length*ns) )
+  ALLOCATE( rho_lxc(length*ns), sigma(length*np), tau_lxc(length*ns) )
   ALLOCATE( lapl_rho(length*ns) )
   !
   ALLOCATE( ex_lxc(length)    , ec_lxc(length) )
-  ALLOCATE( vx_rho(length*ns) , vx_sigma(length*ns), vx_tau(length*ns) )
-  ALLOCATE( vc_rho(length*ns) , vc_sigma(length*ns), vc_tau(length*ns) )
+  ALLOCATE( vx_rho(length*ns) , vx_sigma(length*np), vx_tau(length*ns) )
+  ALLOCATE( vc_rho(length*ns) , vc_sigma(length*np), vc_tau(length*ns) )
   ALLOCATE( vlapl_rho(length*ns) )
   !
   !
@@ -137,8 +138,8 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   ELSE
     !
     DO k = 1, length
-       rho_lxc(2*k-1) = rho(k,1)
-       rho_lxc(2*k)   = rho(k,2)
+       rho_lxc(2*k-1) = ABS( rho(k,1) )
+       rho_lxc(2*k)   = ABS( rho(k,2) )
        !
        sigma(3*k-2) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
        sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
@@ -151,7 +152,7 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
   ENDIF
   !
-  IF ( ANY(.NOT.is_libxc(5:6)) )  THEN
+  IF ( .NOT.is_libxc(5) .AND. imetac==0 ) THEN
     !
     ALLOCATE( grho2(length,ns) )
     !
@@ -174,9 +175,16 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   ! META EXCHANGE
   !
   IF ( is_libxc(5) ) THEN
-    CALL xc_f90_func_init( xc_func, xc_info1, imeta, pol_unpol )
-    CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
-                              ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+     CALL xc_f90_func_init( xc_func, xc_info1, imeta, pol_unpol )
+     CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
+     CALL get_libxc_flags_exc( xc_info1, eflag )
+     IF (eflag==1) THEN
+       CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+                                 ex_lxc(1), vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+     ELSE
+       CALL xc_f90_mgga_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
+                             vx_rho(1), vx_sigma(1), vlapl_rho(1), vx_tau(1) )
+     ENDIF
     CALL xc_f90_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
@@ -216,13 +224,14 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
   IF ( is_libxc(6) ) THEN
     !
     CALL xc_f90_func_init( xc_func, xc_info1, imetac, pol_unpol )
+    CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
     CALL xc_f90_mgga_exc_vxc( xc_func, length, rho_lxc(1), sigma(1), lapl_rho(1), tau_lxc(1), &
-                              ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
+                               ec_lxc(1), vc_rho(1), vc_sigma(1), vlapl_rho(1), vc_tau(1) )
     CALL xc_f90_func_end( xc_func )
     !
     IF (.NOT. POLARIZED) THEN
        DO k = 1, length
-          ec(k) = ec_lxc(k) * rho_lxc(k) !* SIGN(1.0_DP, rho(k,1))
+          ec(k) = ec_lxc(k) * rho_lxc(k) 
           v1c(k,1) = vc_rho(k)
           v2c(1,k,1) = vc_sigma(k) * 2.0_DP
           v3c(k,1) = vc_tau(k)
@@ -319,10 +328,8 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
        CALL tpsscxc( arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
     CASE( 2 )
        CALL m06lxc(  arho, grho2(k), tau(k), ex(k), ec(k), v1x(k), v2x(k), v3x(k), v1c(k), v2c(k), v3c(k) )
-    CASE( 4 ) 
-       ! do nothing
     CASE DEFAULT
-       CALL errore( 'tau_xc', 'wrong igcx and/or igcc', 1 )
+       CALL errore( 'tau_xc', 'This case is not implemented', imeta )
     END SELECT
     !
   ENDDO
@@ -350,6 +357,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
   !
   INTEGER :: k, ipol, imeta
   REAL(DP) :: rh, zeta, atau, grho2(2), ggrho2
+  REAL(DP) :: v2cup, v2cdw
   !
   imeta = get_meta()
   !
@@ -374,7 +382,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
         CALL tpsscx_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), &
                           tau(k,2), ex(k), v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2) )
         !
-        zeta = (rho(k,1) - rho(k,2)) / rh        
+        zeta = (rho(k,1) - rho(k,2)) / rh
         !
         CALL tpsscc_spin( rh, zeta, grho(:,k,1), grho(:,k,2), atau, ec(k), &
                           v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2), v3c(k,1), v3c(k,2) )
@@ -382,8 +390,11 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
      CASE( 2 )
         !
         CALL m06lxc_spin( rho(k,1), rho(k,2), grho2(1), grho2(2), tau(k,1), tau(k,2), ex(k), ec(k), &
-                          v1x(k,1), v1x(k,2), v2x(k,1),   v2x(k,2),   v3x(k,1), v3x(k,2), &
-                          v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2), v3c(k,1), v3c(k,2)  )
+                          v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2), &
+                          v1c(k,1), v1c(k,2), v2cup   , v2cdw   , v3c(k,1), v3c(k,2)  )
+        !
+        v2c(:,k,1) = v2cup*grho(:,k,1)
+        v2c(:,k,2) = v2cdw*grho(:,k,2)
         !
      CASE DEFAULT
         !

@@ -82,7 +82,7 @@ example03:
 example04:
     This example shows how to use bands.x to check the band symmetry
     of fcc-Pt with a fully relativistic pseudo-potential including 
-    spin-orbit coupling.
+    spin-orbit coupling, and to compute the projected DOS.
 
 example05:
     This example shows how to use pmw.x to generate better projectors for

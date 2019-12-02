@@ -43,7 +43,6 @@
   phonselfen  = .true.
   a2f         = .true.
 
-
   fsthick     = 20 ! eV
   eptemp      = 500 ! K
   degaussw    = 0.2  ! eV
