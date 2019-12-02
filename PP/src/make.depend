@@ -476,6 +476,7 @@ ppacf.o : ../../FFTXlib/fft_interfaces.o
 ppacf.o : ../../Modules/cell_base.o
 ppacf.o : ../../Modules/constants.o
 ppacf.o : ../../Modules/environment.o
+ppacf.o : ../../Modules/exchange_lda_lsda.o
 ppacf.o : ../../Modules/fft_base.o
 ppacf.o : ../../Modules/funct.o
 ppacf.o : ../../Modules/gvecw.o
@@ -929,6 +930,7 @@ xc_vdW_scale_mod.o : ../../FFTXlib/fft_interfaces.o
 xc_vdW_scale_mod.o : ../../Modules/cell_base.o
 xc_vdW_scale_mod.o : ../../Modules/constants.o
 xc_vdW_scale_mod.o : ../../Modules/control_flags.o
+xc_vdW_scale_mod.o : ../../Modules/correlation_lda_lsda.o
 xc_vdW_scale_mod.o : ../../Modules/fft_base.o
 xc_vdW_scale_mod.o : ../../Modules/io_global.o
 xc_vdW_scale_mod.o : ../../Modules/kind.o
