@@ -197,7 +197,6 @@ cplib_meta.o : ../../Modules/gvecw.o
 cplib_meta.o : ../../Modules/io_global.o
 cplib_meta.o : ../../Modules/ions_base.o
 cplib_meta.o : ../../Modules/kind.o
-cplib_meta.o : ../../Modules/metagga.o
 cplib_meta.o : ../../Modules/mp_global.o
 cplib_meta.o : ../../Modules/recvec.o
 cplib_meta.o : ../../UtilXlib/mp.o
@@ -277,7 +276,6 @@ dealloc.o : ../../Modules/electrons_base.o
 dealloc.o : ../../Modules/fft_base.o
 dealloc.o : ../../Modules/gvecw.o
 dealloc.o : ../../Modules/ions_base.o
-dealloc.o : ../../Modules/metagga.o
 dealloc.o : ../../Modules/recvec.o
 dealloc.o : ../../Modules/uspp.o
 dealloc.o : ../../Modules/wavefunctions.o
@@ -355,7 +353,6 @@ exch_corr.o : ../../Modules/funct.o
 exch_corr.o : ../../Modules/io_global.o
 exch_corr.o : ../../Modules/ions_base.o
 exch_corr.o : ../../Modules/kind.o
-exch_corr.o : ../../Modules/metagga.o
 exch_corr.o : ../../Modules/mp_global.o
 exch_corr.o : ../../Modules/recvec.o
 exch_corr.o : ../../Modules/uspp.o
@@ -551,7 +548,6 @@ init_run.o : ../../Modules/io_files.o
 init_run.o : ../../Modules/io_global.o
 init_run.o : ../../Modules/ions_base.o
 init_run.o : ../../Modules/kind.o
-init_run.o : ../../Modules/metagga.o
 init_run.o : ../../Modules/mp_bands.o
 init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/timestep.o
@@ -692,10 +688,10 @@ mainvar.o : ../../LAXlib/mp_diag.o
 mainvar.o : ../../Modules/cell_base.o
 mainvar.o : ../../Modules/funct.o
 mainvar.o : ../../Modules/kind.o
-mainvar.o : ../../Modules/metagga.o
 mainvar.o : ../../Modules/mp_bands.o
 mainvar.o : ../../UtilXlib/mp.o
 mainvar.o : energies.o
+mainvar.o : modules.o
 mainvar.o : pres_ai_mod.o
 mainvar.o : wave_types.o
 makov_payne.o : ../../Modules/cell_base.o
