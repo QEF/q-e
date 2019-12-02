@@ -80,6 +80,7 @@ subroutine vxcgc( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   use constants, only : fpi, e2
   use funct,     only : dft_is_meta
   use xc_gga,    only : xc_gcx
+  use metagga,   only : tpsscxc
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)

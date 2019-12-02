@@ -345,6 +345,7 @@ vpack.o : ../../Modules/kind.o
 vxcgc.o : ../../Modules/constants.o
 vxcgc.o : ../../Modules/funct.o
 vxcgc.o : ../../Modules/kind.o
+vxcgc.o : ../../Modules/metagga.o
 vxcgc.o : ../../Modules/xc_gga_drivers.o
 vxcgc.o : ../../Modules/xc_lda_lsda_drivers.o
 write_ae_pseudo.o : ../../Modules/io_global.o
