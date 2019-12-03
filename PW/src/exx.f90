@@ -1321,7 +1321,7 @@ MODULE exx
     USE paw_exx,        ONLY : PAW_newdxx
     USE exx_base,       ONLY : nqs, index_xkq, index_xk, xkq_collect, &
          coulomb_fac, g2_convolution_all
-    USE exx_band,       ONLY : result_sum, igk_exx
+    USE exx_band,       ONLY : result_sum, igk_exx, igk_exx_d
     USE device_util_m, ONLY : dev_memset
     !
     !
@@ -1342,6 +1342,7 @@ MODULE exx
     COMPLEX(DP),ALLOCATABLE :: result_d(:,:)
 #if defined(__CUDA)
     attributes(DEVICE)       :: result_d
+    attributes(PINNED)       :: result
 #endif
     REAL(DP),ALLOCATABLE :: temppsic_dble (:)
     REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
@@ -1366,6 +1367,11 @@ MODULE exx
     INTEGER, EXTERNAL :: global_kpoint_index
     INTEGER :: ialloc
     COMPLEX(DP), ALLOCATABLE :: big_result(:,:)
+    COMPLEX(DP), ALLOCATABLE :: big_result_d(:,:)
+#if defined(__CUDA)
+    attributes(DEVICE) :: big_result_d
+    attributes(PINNED) :: big_result
+#endif
     INTEGER :: iproc, nproc_egrp, ii, ipair
     INTEGER :: jbnd, jstart, jend
     ! scratch space for fft of psi and rho
@@ -1417,8 +1423,11 @@ MODULE exx
     xkp = xk(:,current_k)
     !
     allocate(big_result(n,m))
+    allocate(big_result_d(n,m))
     big_result = 0.0_DP
     result = 0.0_DP
+    CALL dev_memset(big_result_d,  (0.0_DP, 0.0_DP))
+    CALL dev_memset(result_d,  (0.0_DP, 0.0_DP))
     !
     DO ii=1, nibands(my_egrp_id+1)
        IF(okvan) deexx(:,ii) = 0.0_DP
@@ -1655,11 +1664,13 @@ MODULE exx
        ! brings back result in G-space
        !
        CALL fwfft( 'Wave' , result_d(:,ii), dfftt )
-       result(:,ii) = result_d(:,ii)
+       !result(:,ii) = result_d(:,ii)
        !communicate result
+       !$cuf kernel do
        DO ig = 1, n
-          big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(dfftt%nl(igk_exx(ig,current_k)),ii)
+          big_result_d(ig,ibnd) = big_result_d(ig,ibnd) - exxalfa*result_d(dfftt__nl(igk_exx_d(ig,current_k)),ii)
        END DO
+       big_result(:,ibnd) = big_result_d(:,ibnd)
        !
        ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
        IF(okvan) CALL add_nlxx_pot (lda, big_result(:,ibnd), xkp, n, &
@@ -1683,6 +1694,7 @@ MODULE exx
     END IF
     !
     DEALLOCATE(big_result)
+    DEALLOCATE(big_result_d)
     DEALLOCATE( result, result_d, temppsic_dble, temppsic_aimag)
     DEALLOCATE( temppsic_dble_d, temppsic_aimag_d)
     DEALLOCATE( psi_rhoc_work_d)
