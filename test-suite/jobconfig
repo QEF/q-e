@@ -58,9 +58,13 @@ inputs_args = ('c.scf.in', '1'), ('c.phG.in', '2'), ('ni.scf.in', '1'), ('ni.phX
 program = PH
 inputs_args = ('al.scf.fit.in', '1'), ('al.scf.in', '1'), ('al.elph.in', '2'), ('q2r.in', '3'), ('matdyn.in.freq', '4'), ('matdyn.in.dos', '4'), ('lambda.in', '5')
 
-[ph_metal_us_U/]
+[ph_U_metal_us/]
 program = PH
 inputs_args = ('Fe.scf.in', '1'), ('Fe.ph.in', '2')
+
+[ph_U_insulator_us/]
+program = PH
+inputs_args = ('BN.scf.in', '1'), ('BN.phG.in', '2'), ('BN.phq.in', '2')
 
 [epw_base/]
 program = EPW
