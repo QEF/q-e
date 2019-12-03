@@ -792,7 +792,7 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
    pdl_elec_up=phiup/tpi
    pdl_elec_dw=phidw/tpi
-
+   pdl_elec(:) = 0.0_dp
    pdl_elec_tot=pdl_elec_up+pdl_elec_dw
 !  you need to do mod again!
    pdl_elec_tot=pdl_elec_tot-nint(pdl_elec_tot)
