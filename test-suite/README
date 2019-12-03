@@ -315,11 +315,16 @@ The following features of the code are tested:
 - Calculation of phonon frequencies, phonon DOS, el-ph for a nonmagnetic metals, using NCPP
 
 ######################
-# ph_metal_us_U : Fe #
+# ph_U_metal_us : Fe #
 ######################
 The following features of the code are tested:
 - Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U
 
+##########################
+# ph_U_insulator_us : BN #
+##########################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, with Hubbard U
 
 #################################################################################################
 # HP tests
