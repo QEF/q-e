@@ -365,7 +365,6 @@ PROGRAM fermisurface
   USE io_global,  ONLY : ionode
   USE mp_global,  ONLY : mp_startup
   USE environment,ONLY : environment_start, environment_end
-  USE pw_restart_new,ONLY : read_xml_file
   !
   LOGICAL :: needwf = .false.
   !

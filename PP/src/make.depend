@@ -230,7 +230,6 @@ fermi_proj.o : ../../Modules/kind.o
 fermi_proj.o : ../../Modules/mp_global.o
 fermi_proj.o : ../../Modules/mp_world.o
 fermi_proj.o : ../../PW/src/atomic_wfc_mod.o
-fermi_proj.o : ../../PW/src/pw_restart_new.o
 fermi_proj.o : ../../PW/src/pwcom.o
 fermi_proj.o : ../../PW/src/start_k.o
 fermi_proj.o : ../../UtilXlib/mp.o
@@ -256,7 +255,6 @@ fermisurface.o : ../../Modules/io_global.o
 fermisurface.o : ../../Modules/kind.o
 fermisurface.o : ../../Modules/mp_global.o
 fermisurface.o : ../../Modules/mp_world.o
-fermisurface.o : ../../PW/src/pw_restart_new.o
 fermisurface.o : ../../PW/src/pwcom.o
 fermisurface.o : ../../PW/src/start_k.o
 fermisurface.o : ../../PW/src/symm_base.o
