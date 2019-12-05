@@ -688,8 +688,7 @@
                 gammar_all(iw, imode) = gammar_all(iw, imode) + weight * g2
                 !
                 ! Normal implementation 
-                !weight = wkf (ikk) * (wgkq - wgkk) * &
-                !   aimag ( cone / ( ekq - ekk - ww + ci * degaussw0 ) ) 
+                !weight = wkf (ikk) * fact * AIMAG(cone / (etmp2 + ci * degaussw)) 
                 !  
                 ! More stable:
                 ! Analytical im. part 
