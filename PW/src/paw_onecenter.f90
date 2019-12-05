@@ -1805,7 +1805,7 @@ MODULE paw_onecenter
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : is_libxc
-    USE xc_gga,                 ONLY : xc_gcx
+    USE xc_gga,                 ONLY : xc_gcx, change_threshold_gga
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1905,6 +1905,8 @@ MODULE paw_onecenter
              gradsw(1:3,k,1) = grad(k,1:3,1)
           ENDDO
           !
+          CALL change_threshold_gga( 1.E-10_DP )
+          !
           CALL dgcxc( i%m, nspin_mag, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
           !
           dsvxc_rr = dsvxc_rr / e2
@@ -1912,6 +1914,8 @@ MODULE paw_onecenter
           dsvxc_ss = dsvxc_ss / e2
           !
           CALL xc_gcx( i%m, nspin_mag, r, gradsw, sx, sc, v1x, v2x, v1c, v2c )
+          !
+          CALL change_threshold_gga( 1.D-6 )
           !
           DO k = 1, i%m
              s1 = grad(k,1,1) * dgrad(k,1,1) + &

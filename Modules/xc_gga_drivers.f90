@@ -93,7 +93,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:)
   !
   INTEGER :: fkind_x, np
-  REAL(DP) :: rs, rtot, zet, sgn(2), vc_2(2)
+  REAL(DP) :: rs, rtot, zet, vc_2(2)
   REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
   !
   LOGICAL :: POLARIZED
@@ -105,6 +105,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   INTEGER :: igcx, igcc
   INTEGER :: k, is
+  REAL(DP) :: sgn(2)
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
@@ -162,8 +163,17 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
   ENDIF
   !
-  IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) &
-              CALL gcxc( length, rho(:,1), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
+  IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
+     !
+     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
+     !
+     DO k = 1, length
+        sgn(1) = SIGN(1._DP, rho(k,1))
+        ex(k) = ex(k) * sgn(1)
+        ec(k) = ec(k) * sgn(1)
+     ENDDO
+     !
+  ENDIF
   !
   ! --- GGA EXCHANGE
   !
@@ -313,7 +323,13 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
      ENDDO
      !
-     CALL gcxc( length, rho(:,1), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     CALL gcxc( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     !
+     DO k = 1, length
+        sgn(1) = SIGN(1._DP, rho(k,1))
+        ex(k) = ex(k) * sgn(1)
+        ec(k) = ec(k) * sgn(1)
+     ENDDO
      !
   ELSE
      !
@@ -401,7 +417,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ! ... local variables
   !
   INTEGER :: ir, igcx, igcc
-  REAL(DP) :: rho, grho, sgn
+  REAL(DP) :: rho, grho
   REAL(DP) :: sx, v1x, v2x
   REAL(DP) :: sx_, v1x_, v2x_
   REAL(DP) :: sxsr, v1xsr, v2xsr
@@ -425,21 +441,20 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   IF (igcx == 20) gau_parameter = get_gau_parameter()
   !
 !$omp parallel if(ntids==1)
-!$omp do private( rho, grho, sgn, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
+!$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp             v2x, v2x_, v2xsr, sc, v1c, v2c )
   DO ir = 1, length  
      !
-     rho  = ABS(rho_in(ir))
      grho = grho_in(ir)
      !
-     IF ( rho <= rho_threshold .OR. grho <= grho_threshold ) THEN
+     IF ( rho_in(ir) <= rho_threshold .OR. grho <= grho_threshold ) THEN
         sx_out(ir)  = 0.0_DP ;   sc_out(ir)  = 0.0_DP
         v1x_out(ir) = 0.0_DP ;   v1c_out(ir) = 0.0_DP
         v2x_out(ir) = 0.0_DP ;   v2c_out(ir) = 0.0_DP
         CYCLE
      ENDIF
      !
-     sgn = SIGN(1._DP, rho_in(ir))
+     rho  = ABS(rho_in(ir))
      !
      ! ... EXCHANGE
      !  
@@ -698,9 +713,9 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      END SELECT
      !
-     sx_out(ir)  = sx*sgn  ;  sc_out(ir)  = sc*sgn
-     v1x_out(ir) = v1x     ;  v1c_out(ir) = v1c
-     v2x_out(ir) = v2x     ;  v2c_out(ir) = v2c
+     sx_out(ir)  = sx    ;  sc_out(ir)  = sc
+     v1x_out(ir) = v1x   ;  v1c_out(ir) = v1c
+     v2x_out(ir) = v2x   ;  v2c_out(ir) = v2c
      !
   ENDDO 
 !$omp end do

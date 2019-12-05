@@ -28,6 +28,7 @@ PROGRAM benchmark_libxc
   USE xc_f90_lib_m
   !
   USE funct,          ONLY: set_dft_from_indices, set_exx_fraction
+  USE corr_lda,       ONLY: lyp, lsd_lyp
   USE xc_lda_lsda,    ONLY: xc_lda, xc_lsda
   USE xc_gga,         ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more
   USE xc_mgga,        ONLY: tau_xc, tau_xc_spin
@@ -528,7 +529,9 @@ PROGRAM benchmark_libxc
           !
           IF ( icorr_qe == 3 ) THEN     ! LDA part of Lee-Yang-Parr is not available in libxc.
             rs(:) = pi34 / rho_qe(:,1)**(1.d0/3.d0)
-            CALL lyp( nnr, rs, ec_qe2, vc_qe2(:,1) )
+            DO ii = 1, nnr
+               CALL lyp( rs(ii), ec_qe2(ii), vc_qe2(ii,1) )
+            ENDDO
             ec_qe(:) = ec_qe(:) + ec_qe2(:)*rho_qe(:,1)
             v1c(:,1) = v1c(:,1) + vc_qe2(:,1)
           ENDIF
@@ -544,7 +547,9 @@ PROGRAM benchmark_libxc
            !
          ELSE
            CALL gcc_spin_more( nnr, rho_qe, grho2, grho_ud, ec_qe, v1c, v2c, v2c_ud )
-           CALL lsd_lyp( nnr, rho_tot, zeta, ec_qe2, vc_qe2 )
+           DO ii = 1, nnr
+              CALL lsd_lyp( rho_tot(ii), zeta(ii), ec_qe2(ii), vc_qe2(ii,1), vc_qe2(ii,2) )
+           ENDDO
            ec_qe(:) = ec_qe(:) + ec_qe2(:)*rho_tot(:)
            v1c(:,1) = v1c(:,1) + vc_qe2(:,1)
            v1c(:,2) = v1c(:,2) + vc_qe2(:,2)
