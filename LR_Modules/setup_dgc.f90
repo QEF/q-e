@@ -127,6 +127,8 @@ SUBROUTINE setup_dgc
      !
      CALL dgcxc( dfftp%nnr, 1, rhoout, grh, dvxc_rr, dvxc_sr, dvxc_ss )
      !
+     WHERE( rhoout(:,1)<0.d0 ) rhoout(:,1)=0.d0
+     !
      CALL xc_gcx( dfftp%nnr, nspin_gga, rhoout, grho, sx, sc, v1x, v2x, v1c, v2c )
      !
      dvxc_s(:,1,1)  = e2 * (v2x(:,1) + v2c(:,1))
