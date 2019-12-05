@@ -17,7 +17,7 @@ MODULE exx_band
   USE noncollin_module,     ONLY : npol
   USE io_global,            ONLY : ionode, stdout
   !
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, use_gpu
   USE fft_types,            ONLY : fft_type_descriptor
   USE stick_base,           ONLY : sticks_map
   !
@@ -118,11 +118,9 @@ MODULE exx_band
           ALLOCATE( igk_exx( npwx, nks ) )
           igk_exx = igk_k
        END IF
-#if defined(__CUDA)
-       IF(.not.allocated(igk_exx_d)) THEN
+       IF(use_gpu .and. ( .not. allocated(igk_exx_d) ) ) THEN
           ALLOCATE( igk_exx_d, source=igk_exx )
        END IF
-#endif
 
        !
        ! get the wfc buffer is used
@@ -1211,9 +1209,9 @@ MODULE exx_band
           !
        END IF
        DEALLOCATE( work_space )
-#if defined(__CUDA)
-       ALLOCATE(igk_exx_d, source=igk_exx)
-#endif
+
+       IF(use_gpu) ALLOCATE(igk_exx_d, source=igk_exx)
+
     END IF
     !
     ! generate ngl and igtongl
