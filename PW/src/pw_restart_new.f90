@@ -932,7 +932,8 @@ MODULE pw_restart_new
       USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
       USE force_mod,       ONLY : force
       USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
-           nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra
+           nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra,&
+           two_fermi_energies
       USE ktetra,          ONLY : ntetra, tetra_type
       USE start_k,         ONLY : nks_start, xk_start, wk_start, &
            nk1, nk2, nk3, k1, k2, k3
@@ -1064,6 +1065,7 @@ MODULE pw_restart_new
       ef = ef*e2
       ef_up = ef_up*e2
       ef_dw = ef_dw*e2
+      two_fermi_energies = ( ef_up /= 0.0_dp ) .AND. ( ef_dw /= 0.0_dp )
       et(:,:) = et(:,:)*e2
       !
       ! ... until pools are activated, the local number of k-points nks
@@ -1087,8 +1089,7 @@ MODULE pw_restart_new
            lfixed, ltetra, tetra_type, lgauss, ngauss )
       IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
       IF (lfixed) CALL errore('read_file','bad occupancies',1)
-      ! FIXME: is this really needed? do we use nelup and neldw?
-      IF ( lfixed .AND. lsda ) &
+      IF ( lsda ) &
            CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
       !! Symmetry section
       ALLOCATE ( irt(48,nat) )

@@ -6,8 +6,8 @@
   fildyn   = 'si.dyn',
   ldisp    = .true.
   fildvscf = 'dvscf'
-  nq1=2,
-  nq2=2,
-  nq3=2,
-  tr2_ph   =  1.0d-14,
+  nq1=3,
+  nq2=3,
+  nq3=3,
+  tr2_ph   =  1.0d-13,
  /

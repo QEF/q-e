@@ -423,6 +423,9 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
            ! smaller zeta
            zeta_eff(ir) = SIGN( MIN( ABS(zeta_s), (1.0_DP-2.0_DP*dz(ir)) ), zeta_s )
            dr(ir) = MIN( 1.E-6_DP, 1.E-4_DP * rhotot(ir) )
+           IF (ABS(zeta_s) > 1.0_DP) THEN  
+             rhotot(ir) = 0.d0 ;  dr(ir) = 0.d0 ! e.g. vx=vc=0.0
+           ENDIF
         ENDIF
      ENDDO
      !

@@ -13,16 +13,15 @@
     celldm(1)       = 10.262
     nat             = 2
     ntyp            = 1
-    ecutwfc         = 40
-    nbnd            = 12
+    ecutwfc         = 60
  /
  &electrons
     diagonalization = 'david'
     mixing_beta     = 0.7
-    conv_thr        = 1.0d-14
+    conv_thr        = 1.0d-13
  /
 ATOMIC_SPECIES
-  Si  28.0855  Si.pz-vbc.UPF
+  Si  28.0855  Si_r.upf
 ATOMIC_POSITIONS alat
   Si   0.00  0.00  0.00
   Si   0.25  0.25  0.25
