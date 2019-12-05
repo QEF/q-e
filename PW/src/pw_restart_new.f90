@@ -535,7 +535,7 @@ MODULE pw_restart_new
                smear_obj = qexsd_input_obj%bands%smearing
             ELSE
                smearing_loc = schema_smearing( smearing )
-               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss)
+               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss/e2)
             END IF  
             smear_obj_ptr => smear_obj  
          END IF 
@@ -1071,6 +1071,7 @@ MODULE pw_restart_new
       CALL qexsd_copy_kpoints( output_obj%band_structure, &
            nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
            occupations, smearing, degauss )
+      degauss = degauss * e2 
       !
       CALL set_occupations( occupations, smearing, degauss, &
            lfixed, ltetra, tetra_type, lgauss, ngauss )
