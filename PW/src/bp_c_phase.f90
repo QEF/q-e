@@ -769,12 +769,14 @@ SUBROUTINE c_phase
         t=phik(istring)/tpi
         if(abs(t+1d0-t1).lt.abs(t-t1))phik(istring)=phik(istring)+tpi
         if(abs(t-1d0-t1).lt.abs(t-t1))phik(istring)=phik(istring)-tpi
+        pdl_elec(istring) = phik(istring)/tpi 
         phik_ave=phik_ave+wstring(istring)*phik(istring)
      enddo
 !     --- Assign this angle to the corresponding spin phase average ---
      IF (nspin == 1) THEN
          phiup=phik_ave !theta0+dtheta
          phidw=phik_ave !theta0+dtheta
+         pdl_elec = pdl_elec*2._DP 
       ELSE IF (nspin == 2) THEN
          IF (is == 1) THEN
             phiup=phik_ave !theta0+dtheta
@@ -792,7 +794,6 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
    pdl_elec_up=phiup/tpi
    pdl_elec_dw=phidw/tpi
-   pdl_elec(:) = 0.0_dp
    pdl_elec_tot=pdl_elec_up+pdl_elec_dw
 !  you need to do mod again!
    pdl_elec_tot=pdl_elec_tot-nint(pdl_elec_tot)
