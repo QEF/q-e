@@ -390,10 +390,10 @@ tar-qe-modes :
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) VERSION=6.4 TLDEPS= all ) ; fi
+	( cd Doc ; $(MAKE) VERSION=6.5 TLDEPS= all ) ; fi
 	for dir in */Doc; do \
 	( if test -f $$dir/Makefile ; then \
-	( cd $$dir; $(MAKE) VERSION=6.4 TLDEPS= all ) ; fi ) ;  done
+	( cd $$dir; $(MAKE) VERSION=6.5 TLDEPS= all ) ; fi ) ;  done
 
 doc_clean :
 	if test -d Doc ; then \
