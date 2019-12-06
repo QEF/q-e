@@ -155,7 +155,7 @@ clean:
 		ph_*/dyna2F ph_*/elph.gamma* ph_*/gam.lines ph_*/lambda ph_*/lambda.dat \
 		ph_*/elph_dir ph_*/Al444.* ph_*/matdyn.modes ph_*/phonon.dos
 	@rm -rf ph_metal/aluminum.* ph_base/carbon.* ph_base/nickel.* ph_base/nickelpaw.* ph_base/silicon.* \
-	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.*
+	        ph_U_metal_us/iron.* ph_U_insulator_us/bn.* ph_U_metal_paw/nickel.* ph_U_insulator_paw/bn.*
 # Cleaning HP final files
 	@rm -rf hp_*/HP hp_*/*hub* hp_*/*.xml hp_*/*.wfc* hp_*/*.save hp_*/*Hubbard_parameters*
 # Cleaning EPW final files
