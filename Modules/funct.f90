@@ -846,11 +846,13 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: dft
     !
     CHARACTER(LEN=256) :: name
-    INTEGER :: i, l, fkind, fkind_v(3), family
+    INTEGER :: i, l, prev_len(6), fkind, fkind_v(3), family
     INTEGER, PARAMETER :: ID_MAX_LIBXC=600
     TYPE(xc_f90_pointer_t) :: xc_func, xc_info
     LOGICAL, EXTERNAL :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
+    !
+    prev_len(:) = 1
     !
     DO i = 1, ID_MAX_LIBXC
        !
@@ -875,31 +877,37 @@ CONTAINS
           SELECT CASE( family )
           CASE( XC_FAMILY_LDA )
              IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                iexch = i
+                IF ( LEN(TRIM(name)) > prev_len(1) ) iexch = i
                 is_libxc(1) = .TRUE.
+                prev_len(1) = LEN(TRIM(name))
              ELSEIF (fkind==XC_CORRELATION) THEN
-                icorr = i
+                IF ( LEN(TRIM(name)) > prev_len(2) ) icorr = i
                 is_libxc(2) = .TRUE.
+                prev_len(2) = LEN(TRIM(name))
              ENDIF
              fkind_v(1) = fkind
-             !   
+             !
           CASE( XC_FAMILY_GGA, XC_FAMILY_HYB_GGA )
              IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                igcx = i
+                IF ( LEN(TRIM(name)) > prev_len(3) ) igcx = i
                 is_libxc(3) = .TRUE.
+                prev_len(3) = LEN(TRIM(name))
              ELSEIF (fkind==XC_CORRELATION) THEN
-                igcc = i
+                IF ( LEN(TRIM(name)) > prev_len(4) ) igcc = i
                 is_libxc(4) = .TRUE.
+                prev_len(4) = LEN(TRIM(name))
              ENDIF
              fkind_v(2) = fkind
              !
           CASE( XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA )
              IF (fkind==XC_EXCHANGE .OR. fkind==XC_EXCHANGE_CORRELATION) THEN
-                imeta = i
+                IF ( LEN(TRIM(name)) > prev_len(5) ) imeta = i
                 is_libxc(5) = .TRUE.
+                prev_len(5) = LEN(TRIM(name))
              ELSEIF (fkind==XC_CORRELATION) THEN
-                imetac = i
+                IF ( LEN(TRIM(name)) > prev_len(6) ) imetac = i
                 is_libxc(6) = .TRUE.
+                prev_len(6) = LEN(TRIM(name))
              ENDIF
              fkind_v(3) = fkind
              !
