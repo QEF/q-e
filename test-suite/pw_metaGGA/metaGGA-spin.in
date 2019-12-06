@@ -1,0 +1,21 @@
+ &control
+    calculation='scf',
+ /
+ &system
+    ibrav=  3, celldm(1)=5.406, nat=  1, ntyp= 1,
+    ecutwfc = 40.0d0, ecutrho = 400.0d0,
+    occupations='smearing', smearing='mv', degauss=0.01d0,
+    nspin=2, 
+    input_dft = 'M06L'
+    starting_magnetization(1)= 0.3
+ /
+ &electrons
+ conv_thr = 1.D-7,
+ mixing_beta = 0.3,
+ /
+ATOMIC_SPECIES
+ Fe  1.  Fe.pbe-mt_fhi.UPF
+ATOMIC_POSITIONS crystal
+ Fe 0.0  0.0  0.0 
+K_POINTS automatic
+13 13 13 0 0 0
