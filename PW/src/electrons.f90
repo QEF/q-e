@@ -888,6 +888,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( do_comp_esm ) CALL esm_printpot( rho%of_g )
         !
+        CALL print_energies ( 1 )
         WRITE( stdout, 9110 ) iter
         !
         ! ... jump to the end
@@ -1360,7 +1361,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+9081 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
 9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
