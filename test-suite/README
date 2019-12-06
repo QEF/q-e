@@ -318,13 +318,27 @@ The following features of the code are tested:
 # ph_U_metal_us : Fe #
 ######################
 The following features of the code are tested:
-- Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U
+- Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U, using USPP
 
 ##########################
 # ph_U_insulator_us : BN #
 ##########################
 The following features of the code are tested:
-- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, with Hubbard U
+- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, 
+  with Hubbard U, using USPP
+
+#######################
+# ph_U_metal_paw : Ni #
+#######################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U, using PAW
+
+###########################
+# ph_U_insulator_paw : BN #
+###########################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, 
+  with Hubbard U, using PAW
 
 #################################################################################################
 # HP tests

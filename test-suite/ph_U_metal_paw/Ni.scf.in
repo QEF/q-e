@@ -1,0 +1,37 @@
+ &control
+    calculation  = 'scf'
+    restart_mode = 'from_scratch',
+    prefix       = 'nickel',
+    pseudo_dir = '../../pseudo/',
+    outdir='./'
+    verbosity='high'
+    tprnfor = .true.
+    tstress = .true.
+ /
+ &system
+    ibrav     = 2, 
+    celldm(1) = 6.65, 
+    nat       = 1, 
+    ntyp      = 1,
+    nspin     = 2,
+    starting_magnetization(1) = 0.5,
+    occupations = 'smearing',
+    smearing    = 'mv',
+    degauss     = 0.02,
+    ecutwfc     = 30.0
+    ecutrho     = 240.0
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'atomic',
+    Hubbard_U(1) = 2.0
+ /
+ &electrons
+    conv_thr    = 1.0d-14
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Ni  58.6934  Ni.pbe-spn-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS {alat}
+ Ni 0.00 0.00 0.00
+K_POINTS {automatic}
+4 4 4 1 1 1
