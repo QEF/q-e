@@ -804,9 +804,13 @@ SUBROUTINE iosys()
      !
      io_level = 0
      !
-  CASE ( 'none' )
+  CASE ( 'nowf' )
      !
      io_level = -1
+     !
+  CASE ( 'none' )
+     !
+     io_level = -2
      !
   CASE DEFAULT
      !
