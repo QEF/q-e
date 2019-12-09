@@ -219,8 +219,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   IF (iexch == 1 .AND. icorr == 1) THEN
   !
-!$omp parallel if(ntids==1)
-!$omp do private( rs, rho, ex_s, vx_s , iflg)
+!!$omp parallel if(ntids==1)
+!!$omp do private( rs, rho, ex_s, vx_s , iflg)
      DO ir = 1, length
         !
         rho = rho_in(ir)
@@ -242,8 +242,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
         dmuxc(ir) = dmuxc(ir) * SIGN(1.0_DP,rho_in(ir))
         !
      ENDDO
-!$omp end do
-!$omp end parallel
+!!$omp end do
+!!$omp end parallel
      !
   ELSE
      !
@@ -312,7 +312,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   !
   ! ... local variables
   !
-  REAL(DP), DIMENSION(length) :: rhotot, zeta, zeta_eff
+  REAL(DP), ALLOCATABLE :: rhotot(:), zeta(:), zeta_eff(:)
   !
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: aux1, aux2, dr, dz
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: rhoaux, zetaux
@@ -339,13 +339,14 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
   icorr = get_icorr()
   !
   dmuxc = 0.0_DP
+  ALLOCATE(rhotot(length)) 
   rhotot(:) = rho_in(:,1) + rho_in(:,2)
   !
   IF (iexch == 1 .AND. icorr == 1) THEN
      !
      ! ... first case: analytical derivative available
      !
-!$omp parallel do default(private) shared(rhotot, rho_in, dmuxc )   
+!!$omp parallel do default(private) shared(rhotot, rho_in, dmuxc )   
      DO ir = 1, length
         !
         IF (rhotot(ir) < small) CYCLE
@@ -396,7 +397,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
                                              (1.0_DP + zeta_s)**2 * cc
      ENDDO
-!$omp end parallel do
+!!$omp end parallel do
      !
   ELSE
      !
@@ -405,6 +406,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      ALLOCATE( rhoaux(4*length), zetaux(4*length) )
      ALLOCATE( aux1(4*length) , aux2(4*length) )
      ALLOCATE( dr(length), dz(length) )
+     ALLOCATE( zeta(length), zeta_eff(length)) 
      !
      i1 = 1     ;   f1 = length          !  four blocks:  [ rho+dr , zeta    ]
      i2 = f1+1  ;   f2 = 2*length        !                [ rho-dr , zeta    ]
