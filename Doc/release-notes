@@ -55,6 +55,8 @@ Problems fixed in 6.5 branch :
     as before.
 
 Incompatible changes in 6.5 branch :
+  * Major changes inside the exchange-correlation code; XC routines moved
+    inside modules but no other changes are needed for calling routines
   * ibrav=-13 crystal axis converted to a more standard orientation.
     Atomic positions in crystal axis for the previous convention can
     be converted by applying the transformation (x,y,z) => (y,-x,z)
