@@ -1250,34 +1250,33 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
    
        IF ( printout == 0 ) RETURN
-       IF ( ( conv_elec .AND. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
+       IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
           !
-          IF ( dr2 > eps8 ) THEN
-             WRITE( stdout, 9081 ) etot, hwf_energy, dr2
-             IF ( lgauss ) then
-                WRITE( stdout, 9070 ) demet
-                WRITE( stdout, 9170 ) etot-demet
-             ENDIF
-          ELSE
-             WRITE( stdout, 9083 ) etot, hwf_energy, dr2
-             IF ( lgauss ) then
-                WRITE( stdout, 9070 ) demet
-                WRITE( stdout, 9170 ) etot-demet
-             ENDIF
-          ENDIF
+          WRITE( stdout, 9081 ) etot
           IF ( only_paw ) WRITE( stdout, 9085 ) etot+total_core_energy
-          !
-          WRITE( stdout, 9060 ) &
-               ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+          IF ( iverbosity > 1 ) WRITE( stdout, 9082 ) hwf_energy
+          IF ( dr2 > eps8 ) THEN
+             WRITE( stdout, 9083 ) dr2
+          ELSE
+             WRITE( stdout, 9084 ) dr2
+          END IF
+          IF ( lgauss ) then
+             WRITE( stdout, 9070 ) demet
+             WRITE( stdout, 9170 ) etot-demet
+             WRITE( stdout, 9061 )
+          ELSE
+             WRITE( stdout, 9060 )
+          END IF
+          WRITE( stdout, 9062 ) (eband + deband), ehart, ( etxc - etxcc ), ewld
           !
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
           IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
           IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
           IF ( textfor)  WRITE ( stdout , 9077 ) eext
-          IF ( tefield )            WRITE( stdout, 9061 ) etotefield
-          IF ( gate )               WRITE( stdout, 9062 ) etotgatefield ! TB
-          IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
+          IF ( tefield )            WRITE( stdout, 9064 ) etotefield
+          IF ( gate )               WRITE( stdout, 9065 ) etotgatefield
+          IF ( lda_plus_u )         WRITE( stdout, 9066 ) eth
           IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
           IF ( okpaw ) THEN
             WRITE( stdout, 9067 ) epaw
@@ -1304,30 +1303,30 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
        ELSE IF ( conv_elec ) THEN
           !
+          WRITE( stdout, 9081 ) etot
+          IF ( iverbosity > 1 ) WRITE( stdout, 9082 ) hwf_energy
           IF ( dr2 > eps8 ) THEN
-             WRITE( stdout, 9081 ) etot, hwf_energy, dr2
-             IF ( lgauss ) then
-                WRITE( stdout, 9070 ) demet
-                WRITE( stdout, 9170 ) etot-demet
-             ENDIF
+             WRITE( stdout, 9083 ) dr2
           ELSE
-             WRITE( stdout, 9083 ) etot, hwf_energy, dr2
-             IF ( lgauss ) then
-                WRITE( stdout, 9070 ) demet
-                WRITE( stdout, 9170 ) etot-demet
-             ENDIF
+             WRITE( stdout, 9084 ) dr2
+          END IF
+          IF ( lgauss ) then
+             WRITE( stdout, 9070 ) demet
+             WRITE( stdout, 9170 ) etot-demet
           ENDIF
           !
        ELSE
           !
+          WRITE( stdout, 9080 ) etot
+          IF ( iverbosity > 1 ) WRITE( stdout, 9082 ) hwf_energy
           IF ( dr2 > eps8 ) THEN
-             WRITE( stdout, 9080 ) etot, hwf_energy, dr2
+             WRITE( stdout, 9083 ) dr2
           ELSE
-             WRITE( stdout, 9082 ) etot, hwf_energy, dr2
-          ENDIF
+             WRITE( stdout, 9084 ) dr2
+          END IF
        ENDIF
        !
-      CALL plugin_print_energies()
+       CALL plugin_print_energies()
        !
        IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
        !
@@ -1347,14 +1346,15 @@ SUBROUTINE electrons_scf ( printout, exxen )
             /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9018 FORMAT(/'     total magnetization       =',3F9.2,' Bohr mag/cell' &
        &   ,/'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
-9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
-            /'     one-electron contribution =',F17.8,' Ry' &
+9060 FORMAT(/'     The total energy is the sum of the following terms:' )
+9061 FORMAT(/'     The total energy is F=E-TS. E is the sum of the following terms:' )
+9062 FORMAT( '     one-electron contribution =',F17.8,' Ry' &
             /'     hartree contribution      =',F17.8,' Ry' &
             /'     xc contribution           =',F17.8,' Ry' &
             /'     ewald contribution        =',F17.8,' Ry' )
-9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
-9062 FORMAT( '     gate field correction     =',F17.8,' Ry' ) ! TB
-9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
+9064 FORMAT( '     electric field correction =',F17.8,' Ry' )
+9065 FORMAT( '     gate field correction     =',F17.8,' Ry' ) ! TB
+9066 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
 9068 FORMAT( '      -> PAW hartree energy AE =',F17.8,' Ry' &
             /'      -> PAW hartree energy PS =',F17.8,' Ry' &
@@ -1372,21 +1372,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9076 FORMAT( '     Dispersion T-S Correction =',F17.8,' Ry' )
 9077 FORMAT( '     External forces energy    =',F17.8,' Ry' )
 9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
-9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
-9083 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
+9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' )
+9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' )
+9082 FORMAT( '     Harris-Foulkes estimate   =',0PF17.8,' Ry' )
+9083 FORMAT( '     estimated scf accuracy    <',0PF17.8,' Ry' )
+9084 FORMAT( '     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
-9170 FORMAT('!!   U (internal energy = total energy, above is &
-electronic free energy ) =',0PF17.8,' Ry' )
+9170 FORMAT( '     internal energy E=F+TS    =',0PF17.8,' Ry' )
   END SUBROUTINE print_energies
   !
 END SUBROUTINE electrons_scf
