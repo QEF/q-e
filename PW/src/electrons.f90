@@ -888,7 +888,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( do_comp_esm ) CALL esm_printpot( rho%of_g )
         !
-        CALL print_energies ( 1 )
         WRITE( stdout, 9110 ) iter
         !
         ! ... jump to the end
@@ -1251,10 +1250,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
    
        IF ( printout == 0 ) RETURN
-       IF ( ( conv_elec .OR. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
+       IF ( ( conv_elec .AND. MOD(iter,iprint) == 0 ) .AND. printout > 1 ) THEN
           !
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9081 ) etot, hwf_energy, dr2
+             IF ( lgauss ) WRITE( stdout, 9070 ) demet
           ELSE
              WRITE( stdout, 9083 ) etot, hwf_energy, dr2
           ENDIF
@@ -1288,7 +1288,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ! ... With Fermi-Dirac population factor, etot is the electronic
           ! ... free energy F = E - TS , demet is the -TS contribution
           !
-          IF ( lgauss ) WRITE( stdout, 9070 ) demet
           !
           ! ... With Fictitious charge particle (FCP), etot is the grand
           ! ... potential energy Omega = E - muN, -muN is the potentiostat
@@ -1300,6 +1299,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9081 ) etot, hwf_energy, dr2
+             IF ( lgauss ) WRITE( stdout, 9070 ) demet
           ELSE
              WRITE( stdout, 9083 ) etot, hwf_energy, dr2
           ENDIF
@@ -1313,7 +1313,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
           ENDIF
        ENDIF
        !
-       CALL plugin_print_energies()
+      CALL plugin_print_energies()
        !
        IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
        !
@@ -1361,13 +1361,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9081 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
+9081 FORMAT(/'!     total energy (Fel)             =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
+9082 FORMAT(/'     total energy  (Fel)            =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',1PE17.1,' Ry' )
-9083 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+9083 FORMAT(/'!    total energy  (Fel)            =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
