@@ -301,26 +301,39 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             options {
                 info {
                     Specifies the amount of disk I/O activity:
+                    (only for binary files and xml data file in data directory;
+                    other files printed at each molecular dynamics / structural
+                    optimization step are not controlled by this option )
                 }
 
                 opt -val 'high' {
-                    save all data to disk at each SCF step
+                    save charge to disk at each SCF step,
+                    keep wavefunctions on disk (in "distributed" format),
+                    save mixing data as well.
+                    Do not use this option unless you have a good reason to
                 }
 
                 opt -val 'medium' {
-                    save wavefunctions at each SCF step unless
-                    there is a single k-point per process (in which
-                    case the behavior is the same as 'low')
+                    save charge to disk at each SCF step,
+                    keep wavefunctions on disk only if more than one k-point,
+                    per process is present, otherwise keep them in memory;
+                    save them to disk only at the end (in "portable" format)
                 }
 
                 opt -val 'low' {
-                    store wfc in memory, save only at the end
+                    save charge to disk at each SCF step,
+                    keep wavefunctions in memory (for all k-points),
+                    save them to disk only at the end (in "portable" format).
+                    Reduces I/O but increases memory wrt the previous cases
+                }
+
+                opt -val 'nowf' {
+                    save to disk only the xml data file,
+                    never save wavefunctions and charge density
                 }
 
                 opt -val 'none' {
-                    do not save anything, not even at the end
-                    ('scf', 'nscf', 'bands' calculations; some data
-                    may be written anyway for other calculations)
+                    do not save anything to disk
                 }
             
                 info {
@@ -328,7 +341,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     Note that the needed RAM increases as disk I/O decreases!
                     It is no longer needed to specify 'high' in order to be able
                     to restart from an interrupted calculation (see @ref restart_mode)
-                    but you cannot restart in @ref disk_io=='none'
+                    but you cannot restart in @ref disk_io=='nowf' or 'none'
                 }
             }
         }
