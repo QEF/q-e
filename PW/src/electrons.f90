@@ -1254,9 +1254,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9081 ) etot, hwf_energy, dr2
-             IF ( lgauss ) WRITE( stdout, 9070 ) demet
+             IF ( lgauss ) then
+                WRITE( stdout, 9070 ) demet
+                WRITE( stdout, 9170 ) etot-demet
+             ENDIF
           ELSE
              WRITE( stdout, 9083 ) etot, hwf_energy, dr2
+             IF ( lgauss ) then
+                WRITE( stdout, 9070 ) demet
+                WRITE( stdout, 9170 ) etot-demet
+             ENDIF
           ENDIF
           IF ( only_paw ) WRITE( stdout, 9085 ) etot+total_core_energy
           !
@@ -1299,9 +1306,16 @@ SUBROUTINE electrons_scf ( printout, exxen )
           !
           IF ( dr2 > eps8 ) THEN
              WRITE( stdout, 9081 ) etot, hwf_energy, dr2
-             IF ( lgauss ) WRITE( stdout, 9070 ) demet
+             IF ( lgauss ) then
+                WRITE( stdout, 9070 ) demet
+                WRITE( stdout, 9170 ) etot-demet
+             ENDIF
           ELSE
              WRITE( stdout, 9083 ) etot, hwf_energy, dr2
+             IF ( lgauss ) then
+                WRITE( stdout, 9070 ) demet
+                WRITE( stdout, 9170 ) etot-demet
+             ENDIF
           ENDIF
           !
        ELSE
@@ -1361,17 +1375,18 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9081 FORMAT(/'!     total energy (Fel)             =',0PF17.8,' Ry' &
+9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
-9082 FORMAT(/'     total energy  (Fel)            =',0PF17.8,' Ry' &
+9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',1PE17.1,' Ry' )
-9083 FORMAT(/'!    total energy  (Fel)            =',0PF17.8,' Ry' &
+9083 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',1PE17.1,' Ry' )
 9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
-
+9170 FORMAT('!!   U (internal energy = total energy, above is &
+electronic free energy ) =',0PF17.8,' Ry' )
   END SUBROUTINE print_energies
   !
 END SUBROUTINE electrons_scf
