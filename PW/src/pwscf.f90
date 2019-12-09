@@ -45,7 +45,7 @@ PROGRAM pwscf
   USE mp_diag,              ONLY : mp_start_diag
   USE mp_exx,               ONLY : negrp
   USE read_input,           ONLY : read_input_file
-  USE command_line_options, ONLY : input_file_, command_line, ndiag_
+  USE command_line_options, ONLY : input_file_, command_line, ndiag_, nimage_
   !
   IMPLICIT NONE
   !
@@ -99,10 +99,13 @@ PROGRAM pwscf
        !
      ELSE
        ! as pw.x
+       IF ( nimage_ > 1 ) CALL errore('run_pwscf', &
+                          'image parallelization not allowed',1)
        CALL read_input_file( 'PW', input_file_ )
        CALL run_pwscf( exit_status )
        !
     ENDIF
+    !
   ELSE
      ! When running as library
      !
