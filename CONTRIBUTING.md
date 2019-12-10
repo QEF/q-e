@@ -4,7 +4,7 @@ You can contribute to this project in many ways:
 * [contributing new features or improving existing ones;](#development)
 * [subscribing and partecipating to the users mailing list;](https://lists.quantum-espresso.org/mailman/listinfo/users)
 * [reporting bugs and proposing changes in the Issue section of the gitlab repository;](https://gitlab.com/QEF/q-e/blob/develop/CONTRIBUTING.md#creating-issues)
-* [preparing new tests for the test suite](#adding tests)
+* [preparing new tests for the test suite](https://gitlab.com/QEF/q-e/wikis/Quantum-Espresso-test-suite)
 
 ## Development
 If you want to contribute serious and non-trivial stuff ( or even simple and trivial  stuff ) you just have  to *fork* this repository; keep it updated;
