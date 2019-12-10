@@ -3,7 +3,7 @@ You can contribute to this project in by:
 
 * [implementing new features or improving existing ones;](#development)
 * [subscribing and partecipating to the users mailing list;](https://lists.quantum-espresso.org/mailman/listinfo/users)
-* [reporting bugs and proposing changes in the Issue section of the gitlab repository;](#creating-issues)
+* [reporting bugs and proposing changes in the Issue section of the gitlab repository;](https://gitlab.com/QEF/q-e/blob/develop/CONTRIBUTING.md#creating-issues)
 * [preparing new tests for the test suite](#adding tests)
 
 ## Development
