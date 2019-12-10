@@ -214,7 +214,7 @@ PROGRAM do_projwfc
   IF ( tdosinboxes ) THEN
      CALL projwave_boxes (filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes)
   ELSE IF ( pawproj ) THEN
-     CALL projwave_paw (filproj)
+     CALL projwave_paw ( )
   ELSE
      CALL projwave(filproj, lsym, lwrite_overlaps, lbinary_data )
      IF ( lforcet ) CALL force_theorem ( ef_0, filproj )
@@ -1002,7 +1002,7 @@ SUBROUTINE force_theorem ( ef_0, filproj )
 END SUBROUTINE FORCE_THEOREM
 !--
 !-----------------------------------------------------------------------
-SUBROUTINE projwave_paw( filproj)
+SUBROUTINE projwave_paw( )
 !    8/12/2014 N. A. W. Holzwarth -- attempt to calculate
 !      charge within augmentation sphere for pdos
   !-----------------------------------------------------------------------
@@ -1024,9 +1024,6 @@ SUBROUTINE projwave_paw( filproj)
   USE projections
   !
   IMPLICIT NONE
-  !
-  CHARACTER (len=*) :: filproj
-  LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
        nwfc1, is, ndm, mr,nbp
