@@ -153,8 +153,7 @@ subroutine drhoc_gpu (ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_
   ! counter on radial mesh points
   ! counter on g shells
   ! lower limit for loop on ngl
-  CALL start_clock( 'drhoc' )
-
+  !
   allocate (aux_d( mesh))     
   !
   ! G=0 term
@@ -184,7 +183,6 @@ subroutine drhoc_gpu (ngl, gl_d, omega, tpiba2, mesh, r_d, rab_d, rhoc_d, rhocg_
 
   deallocate(aux_d)
   !
-  CALL stop_clock( 'drhoc' )
   return
 end subroutine drhoc_gpu
 !
