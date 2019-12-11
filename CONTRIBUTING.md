@@ -23,6 +23,7 @@ A basic guide on how to work with `git` can be found [here](https://docs.gitlab.
    - [create a local copy of __your__ repository on your workstation(s)](https://docs.gitlab.com/ce/gitlab-basics/command-line-commands.html#clone-your-project);
    - [once your contribution is ready push it into __your__ repository](https://docs.gitlab.com/ce/gitlab-basics/start-using-git.html#send-changes-to-gitlab-com);
    - [create a  merge request to the `develop` branch of QEF/q-e](https://docs.gitlab.com/ce/gitlab-basics/add-merge-request.html#how-to-create-a-merge-request)
+   - for more details and suggestions you can have a look to the wiki pages 
 
 
 ## Development tools

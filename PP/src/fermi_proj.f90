@@ -222,7 +222,6 @@ PROGRAM fermi_proj
   USE basis,                ONLY : natomwfc
   USE fermisurfer_common,   ONLY : b_low, b_high, rotate_k_fs, write_fermisurfer
   USE fermi_proj_routines,  ONLY : read_projwfc, read_atomic_proj
-  USE pw_restart_new,       ONLY : read_xml_file
   !
   IMPLICIT NONE
   !

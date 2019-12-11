@@ -16,9 +16,9 @@ PUBLIC :: change_threshold_mgga
 !
 !
 !  input thresholds (default values)
-REAL(DP) :: rho_threshold   = 1.0E-8_DP
-REAL(DP) :: grho2_threshold = 1.0E-12_DP
-REAL(DP) :: tau_threshold   = 1.0E-8_DP
+REAL(DP) :: rho_threshold   = 1.0E-12_DP
+REAL(DP) :: grho2_threshold = 1.0E-24_DP
+REAL(DP) :: tau_threshold   = 1.0E-12_DP
 !
 !
  CONTAINS
@@ -130,9 +130,9 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
     !
     DO k = 1, length
       rho_lxc(k) = ABS( rho(k,1) )
-      IF ( rho_lxc(k) > rho_threshold ) &
-         sigma(k) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
-      tau_lxc(k) = tau(k,1)
+      sigma(k) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
+                      grho2_threshold )
+      tau_lxc(k) = MAX( tau(k,1), tau_threshold )
     ENDDO
     !
   ELSE
@@ -141,13 +141,15 @@ SUBROUTINE xc_metagcx( length, ns, np, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1
        rho_lxc(2*k-1) = ABS( rho(k,1) )
        rho_lxc(2*k)   = ABS( rho(k,2) )
        !
-       sigma(3*k-2) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
+       sigma(3*k-2) = MAX( grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2, &
+                           grho2_threshold )
        sigma(3*k-1) = grho(1,k,1) * grho(1,k,2) + grho(2,k,1) * grho(2,k,2) + &
                       grho(3,k,1) * grho(3,k,2)
-       sigma(3*k)   = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
+       sigma(3*k)   = MAX( grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2, &
+                           grho2_threshold )
        !
-       tau_lxc(2*k-1) = tau(k,1)
-       tau_lxc(2*k)   = tau(k,2)
+       tau_lxc(2*k-1) = MAX( tau(k,1), tau_threshold )
+       tau_lxc(2*k)   = MAX( tau(k,2), tau_threshold )
     ENDDO
     !
   ENDIF
@@ -303,6 +305,8 @@ SUBROUTINE tau_xc( length, rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c
   !
   !          sc, v1c, v2c as above for correlation
   !
+  USE metagga
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: length
@@ -342,6 +346,8 @@ END SUBROUTINE tau_xc
 !----------------------------------------------------------------------------------------
 SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   !------------------------------------------------------------------------------------
+  !
+  USE metagga
   !
   IMPLICIT NONE
   !
@@ -383,6 +389,7 @@ SUBROUTINE tau_xc_spin( length, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c,
                           tau(k,2), ex(k), v1x(k,1), v1x(k,2), v2x(k,1), v2x(k,2), v3x(k,1), v3x(k,2) )
         !
         zeta = (rho(k,1) - rho(k,2)) / rh
+        zeta = MAX( MIN( 0.99999999_DP, zeta ), -0.99999999_DP )
         !
         CALL tpsscc_spin( rh, zeta, grho(:,k,1), grho(:,k,2), atau, ec(k), &
                           v1c(k,1), v1c(k,2), v2c(:,k,1), v2c(:,k,2), v3c(k,1), v3c(k,2) )

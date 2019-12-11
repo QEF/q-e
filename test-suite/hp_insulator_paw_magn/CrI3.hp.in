@@ -1,0 +1,8 @@
+ &inputhp
+   prefix       = 'CrI3',
+   outdir       = './',
+   nq1          = 1, 
+   nq2          = 1, 
+   nq3          = 1,
+   conv_thr_chi = 8.0d-3,
+ /

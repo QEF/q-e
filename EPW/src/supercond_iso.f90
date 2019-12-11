@@ -1179,7 +1179,7 @@
     ! reference M. J. Holcomb, PRB 54, 6648 (1996)   
     !
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, ci, eps6, zero, czero
+    USE constants_epw, ONLY : pi, ci, eps6, zero, czero, one
     USE epwcom,        ONLY : nqstep
     USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph, ws, bewph, fdwp
     ! 
@@ -1202,7 +1202,9 @@
     !
     REAL(KIND = DP) :: degaussw0
     !! smearing
-    REAL(KIND = DP) :: f1, f2, f3, f4, var1, var2
+    REAL(KIND = DP) :: inv_degaussw0
+    !! define inverse smearing for efficiency 
+    REAL(KIND = DP) :: f1, f2, f3, f4, w1, w2, w3, w4, var1, var2
     !! Temporaty variables
     REAL(KIND = DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function
@@ -1210,7 +1212,8 @@
     COMPLEX(KIND = DP) :: e1, e2, e3, e4, g1, g2, g3, g4
     !! Temporary variables
     !
-    degaussw0 = 1.d0 * dwsph
+    degaussw0 = dwsph
+    inv_degaussw0 = one / degaussw0
     !
     f1 = zero
     f2 = zero
@@ -1240,22 +1243,27 @@
       ! subtract the imaginary part coming from e1 to e4 and add instead the imaginary part 
       ! coming from f1 to f4
       !
-      e1 = 1.d0 / (wsph(iwph) + ws(iwp) + ws(iw) + ci * degaussw0) 
-      e2 = 1.d0 / (wsph(iwph) + ws(iwp) - ws(iw) - ci * degaussw0) 
-      e3 = 1.d0 / (wsph(iwph) - ws(iwp) + ws(iw) + ci * degaussw0) 
-      e4 = 1.d0 / (wsph(iwph) - ws(iwp) - ws(iw) - ci * degaussw0) 
+      w1 = wsph(iwph) + ws(iwp) + ws(iw)
+      w2 = wsph(iwph) + ws(iwp) - ws(iw)
+      w3 = wsph(iwph) - ws(iwp) + ws(iw)
+      w4 = wsph(iwph) - ws(iwp) - ws(iw)
+      !
+      e1 = one / (w1 + ci * degaussw0) 
+      e2 = one / (w2 - ci * degaussw0) 
+      e3 = one / (w3 + ci * degaussw0) 
+      e4 = one / (w4 - ci * degaussw0) 
       !
       ! estimate of the imaginary part using delta function
-      f1 = w0gauss((wsph(iwph) + ws(iwp) + ws(iw)) / degaussw0, 0) / degaussw0
-      f2 = w0gauss((wsph(iwph) + ws(iwp) - ws(iw)) / degaussw0, 0) / degaussw0
-      f3 = w0gauss((wsph(iwph) - ws(iwp) + ws(iw)) / degaussw0, 0) / degaussw0
-      f4 = w0gauss((wsph(iwph) - ws(iwp) - ws(iw)) / degaussw0, 0) / degaussw0
+      f1 = w0gauss(w1 * inv_degaussw0, 0) * inv_degaussw0
+      f2 = w0gauss(w2 * inv_degaussw0, 0) * inv_degaussw0
+      f3 = w0gauss(w3 * inv_degaussw0, 0) * inv_degaussw0
+      f4 = w0gauss(w4 * inv_degaussw0, 0) * inv_degaussw0
       !
       g1 = e1 - ci * AIMAG(e1) - ci * pi * f1 
       g2 = e2 - ci * AIMAG(e2) + ci * pi * f2
       g3 = e3 - ci * AIMAG(e3) - ci * pi * f3
       g4 = e4 - ci * AIMAG(e4) + ci * pi * f4
-      var1 = 1.d0 - fdwp(iwp) + bewph(iwph)
+      var1 = one - fdwp(iwp) + bewph(iwph)
       var2 = fdwp(iwp) + bewph(iwph) 
       kernelp = kernelp + a2f_iso(iwph) * (var1 * (g1 + g2) - var2 * (g3 + g4))
       kernelm = kernelm + a2f_iso(iwph) * (var1 * (g1 - g2) + var2 * (g3 - g4))

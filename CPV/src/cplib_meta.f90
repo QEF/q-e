@@ -16,7 +16,7 @@
       use gvect,     only : g
       use gvecw,                  only : ngw
       use cell_base,              only : tpiba2
-      USE metagga,                ONLY : kedtaus
+      USE metagga_cp,             ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
       USE fft_base,               ONLY : dffts
       USE fft_helper_subroutines, ONLY : c2psi_gamma, fftx_psi2c_gamma
@@ -77,8 +77,8 @@
       use constants, only: pi, fpi
 !
       use dener
-      use metagga, ONLY : kedtaur, kedtaus, kedtaug, crosstaus, gradwfc, &
-                          dkedtaus
+      use metagga_cp, ONLY : kedtaur, kedtaus, kedtaug, crosstaus, gradwfc, &
+                             dkedtaus
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dffts, dfftp
       USE fft_helper_subroutines, ONLY : c2psi_gamma
@@ -226,7 +226,7 @@
       use dener
       use mp,      ONLY : mp_sum
       use mp_global, ONLY : intra_bgrp_comm
-      use metagga, ONLY : kedtaur, kedtaug, kedtaus, dkedtaus
+      use metagga_cp, ONLY : kedtaur, kedtaug, kedtaus, dkedtaus
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dffts, dfftp
       USE fft_rho
