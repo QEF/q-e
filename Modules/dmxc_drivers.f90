@@ -219,8 +219,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
   !
   IF (iexch == 1 .AND. icorr == 1) THEN
   !
-!!$omp parallel if(ntids==1)
-!!$omp do private( rs, rho, ex_s, vx_s , iflg)
+!$omp parallel if(ntids==1)
+!$omp do private( rs, rho, ex_s, vx_s , iflg)
      DO ir = 1, length
         !
         rho = rho_in(ir)
@@ -242,8 +242,8 @@ SUBROUTINE dmxc_lda( length, rho_in, dmuxc )
         dmuxc(ir) = dmuxc(ir) * SIGN(1.0_DP,rho_in(ir))
         !
      ENDDO
-!!$omp end do
-!!$omp end parallel
+!$omp end do
+!$omp end parallel
      !
   ELSE
      !
@@ -346,7 +346,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
      ! ... first case: analytical derivative available
      !
-!!$omp parallel do default(private) shared(rhotot, rho_in, dmuxc )   
+     !$omp parallel do default(private) shared(length,rhotot, rho_in, dmuxc )   
      DO ir = 1, length
         !
         IF (rhotot(ir) < small) CYCLE
@@ -397,7 +397,6 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
                                              (1.0_DP + zeta_s)**2 * cc
      ENDDO
-!!$omp end parallel do
      !
   ELSE
      !
