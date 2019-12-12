@@ -429,7 +429,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              END IF
              ! CALL using_evc(1) done above
           ELSE
-#if defined(__CUDA)
              CALL using_evc_d(1); CALL using_et_d(1);
              IF ( use_para_diag ) THEN
                 CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
@@ -443,9 +442,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                          et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
              END IF
              ! CALL using_evc_d(1) ! done above
-#else
-             CALL errore( ' diag_bands ', ' Called GPU version of c_bands which is not available!', 1)
-#endif
           END IF
           !
           avg_iter = avg_iter + dav_iter
@@ -641,7 +637,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
              END IF
           ELSE
-#if defined(__CUDA)
              CALL using_evc_d(1) ; CALL using_et_d(1) 
              IF ( use_para_diag ) then
                 !
@@ -656,9 +651,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
                                et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter )
              END IF
-#else
-             CALL errore( ' diag_bands ', ' Called GPU version of c_bands which is not available!', 1)
-#endif
           END IF
           !
           avg_iter = avg_iter + dav_iter

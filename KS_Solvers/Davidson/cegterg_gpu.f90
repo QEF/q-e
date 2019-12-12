@@ -707,7 +707,7 @@ SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
    DEALLOCATE(conv_idx)
 END SUBROUTINE reorder_evals_cevecs
 
-#if defined(__CUDA)
+
 !
 !  Wrapper for subroutine with distributed matrixes (written by Carlo Cavazzoni)
 !
@@ -745,7 +745,10 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER, PARAMETER :: blocksize = 256
   INTEGER :: numblock
     ! chunking parameters
-  COMPLEX(DP), DEVICE, INTENT(INOUT) :: evc_d(npwx,npol,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx,npol,nvec)
+#if defined(__CUDA)
+   attributes(DEVICE)   :: evc_d
+#endif
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -756,7 +759,10 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! band type ( 1 = occupied, 0 = empty )
   LOGICAL, INTENT(IN) :: lrot
     ! .TRUE. if the wfc have already been rotated
-  REAL(DP), DEVICE, INTENT(OUT) :: e_d(nvec)
+  REAL(DP), INTENT(OUT) :: e_d(nvec)
+#if defined(__CUDA)
+   attributes(DEVICE)   :: e_d
+#endif
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
@@ -777,14 +783,20 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! do-loop counters
   INTEGER :: i, j, k, ierr
   REAL(DP), ALLOCATABLE :: ew(:)
-  REAL(DP), DEVICE, POINTER :: ew_d(:)
+  REAL(DP), POINTER :: ew_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: ew_d
+#endif
   COMPLEX(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi(:,:,:), hpsi(:,:,:), spsi(:,:,:)
-  COMPLEX(DP), DEVICE, POINTER :: psi_d(:,:,:), hpsi_d(:,:,:), spsi_d(:,:,:)
+  COMPLEX(DP), POINTER :: psi_d(:,:,:), hpsi_d(:,:,:), spsi_d(:,:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) ::  psi_d, hpsi_d, spsi_d
+#endif
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -1792,5 +1804,3 @@ CONTAINS
   END SUBROUTINE set_h_from_e
   !
 END SUBROUTINE pcegterg_gpu
-
-#endif

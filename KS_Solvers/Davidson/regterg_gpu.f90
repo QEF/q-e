@@ -7,7 +7,9 @@
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
-#if defined(__CUDA)
+#if !defined(__CUDA)
+#define cublasDgemm dgemm
+#endif
 !----------------------------------------------------------------------------
 SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
                     npw, npwx, nvec, nvecx, evc_d, ethr, &
@@ -22,8 +24,10 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   !
+#if defined(__CUDA)
   use cudafor
   use cublas
+#endif
   USE LAXlib,        ONLY : diaghg
   USE david_param,   ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
@@ -39,7 +43,10 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX(DP), DEVICE, INTENT(INOUT) :: evc_d(npwx,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx,nvec)
+#if defined(__CUDA)
+  attributes(DEVICE) :: evc_d
+#endif
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -50,7 +57,10 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! band type ( 1 = occupied, 0 = empty )
   LOGICAL, INTENT(IN) :: lrot
     ! .TRUE. if the wfc have already been rotated
-  REAL(DP), DEVICE, INTENT(OUT) :: e_d(nvec)
+  REAL(DP), INTENT(OUT) :: e_d(nvec)
+#if defined(__CUDA)
+  attributes(DEVICE) :: e_d
+#endif
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
@@ -70,12 +80,18 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! counter on the bands
   INTEGER :: n_start, n_end, my_n
   INTEGER :: ierr
-  REAL(DP), DEVICE, ALLOCATABLE :: hr_d(:,:), sr_d(:,:), vr_d(:,:), ew_d(:)
+  REAL(DP), ALLOCATABLE :: hr_d(:,:), sr_d(:,:), vr_d(:,:), ew_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: hr_d, sr_d, vr_d, ew_d
+#endif
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
     ! eigenvalues of the reduced hamiltonian
-  COMPLEX(DP), DEVICE, ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, hpsi_d, spsi_d
+#endif
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -365,8 +381,10 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      END DO
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
-     CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, hpsi_d(1,nb1), npwx2, 0.D0, hr_d(n_start,nb1), nvecx )
-     IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, hpsi_d(1,nb1), npwx2, hr_d(n_start,nb1), nvecx )
+     CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, &
+                       hpsi_d(1,nb1), npwx2, 0.D0, hr_d(n_start,nb1), nvecx )
+     IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, &
+                                         hpsi_d(1,nb1), npwx2, hr_d(n_start,nb1), nvecx )
      CALL mp_sum( hr_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
      CALL mp_sum( hr_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
@@ -381,13 +399,17 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, spsi_d(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
-        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, spsi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
+        CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, &
+                           spsi_d(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
+        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, &
+                                            spsi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
         !
      ELSE
         !
-        CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, psi_d(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
-        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, psi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
+        CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, &
+                          psi_d(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
+        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, &
+                                            psi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
 
         !
      END IF
@@ -465,7 +487,8 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         END DO
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-        CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, psi_d(1,n_start), npwx2, vr_d(n_start,1), nvecx, 0.D0, evc_d, npwx2 )
+        CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, psi_d(1,n_start), npwx2, &
+                          vr_d(n_start,1), nvecx, 0.D0, evc_d, npwx2 )
         CALL mp_sum( evc_d, inter_bgrp_comm )
         !
         IF ( notcnv == 0 ) THEN
@@ -501,7 +524,8 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         IF ( uspp ) THEN
            !
            psi_d(:,nvec+1:nvec+nvec) = ZERO
-           CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, spsi_d(1,n_start), npwx2, vr_d(n_start,1), nvecx, 0.D0, psi_d(1,nvec+1), npwx2 )
+           CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, spsi_d(1,n_start), npwx2, &
+                             vr_d(n_start,1), nvecx, 0.D0, psi_d(1,nvec+1), npwx2 )
            CALL mp_sum( psi_d(:,nvec+1:nvec+nvec), inter_bgrp_comm )
            !
            !$cuf kernel do(2) <<<*,*>>>
@@ -514,7 +538,8 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         END IF
         !
         psi_d(:,nvec+1:nvec+nvec) = ZERO
-        CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, hpsi_d(1,n_start), npwx2, vr_d(n_start,1), nvecx, 0.D0, psi_d(1,nvec+1), npwx2 )
+        CALL cublasDgemm( 'N','N', npw2, nvec, my_n, 1.D0, hpsi_d(1,n_start), npwx2, &
+                          vr_d(n_start,1), nvecx, 0.D0, psi_d(1,nvec+1), npwx2 )
         CALL mp_sum( psi_d(:,nvec+1:nvec+nvec), inter_bgrp_comm )
         !
         !hpsi_d(:,1:nvec) = psi_d(:,nvec+1:nvec+nvec)
@@ -577,13 +602,19 @@ SUBROUTINE reorder_evals_revecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
   implicit none
   INTEGER, INTENT(IN) :: nbase, nvec, nvecx
   LOGICAL, INTENT(IN) :: conv(nvec)
-  REAL(DP), DEVICE :: e_d(nvecx), ew_d(nvecx)
-  REAL(DP), DEVICE :: v_d(nvecx,nvecx)
+  REAL(DP) :: e_d(nvecx), ew_d(nvecx)
+  REAL(DP) :: v_d(nvecx,nvecx)
+#if defined(__CUDA)
+  attributes(DEVICE) :: e_d, ew_d, v_d
+#endif
   !
   INTEGER :: j, k, n, np, info
   INTEGER, ALLOCATABLE :: conv_idx(:)
-  INTEGER, DEVICE, POINTER :: conv_idx_d(:)
-  REAL(DP), DEVICE, POINTER :: vtmp_d(:,:)
+  INTEGER, POINTER :: conv_idx_d(:)
+  REAL(DP), POINTER :: vtmp_d(:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: conv_idx_d, vtmp_d
+#endif
   !
   np = 0
   ALLOCATE(conv_idx(nvec))
@@ -659,7 +690,10 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX(DP), DEVICE, INTENT(INOUT) :: evc_d(npwx,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx,nvec)
+#if defined(__CUDA)
+  attributes(DEVICE) :: evc_d
+#endif
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -670,7 +704,10 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! band type ( 1 = occupied, 0 = empty )
   LOGICAL, INTENT(IN) :: lrot
     ! .TRUE. if the wfc have already been rotated
-  REAL(DP), DEVICE, INTENT(OUT) :: e_d(nvec)
+  REAL(DP), INTENT(OUT) :: e_d(nvec)
+#if defined(__CUDA)
+  attributes(DEVICE) :: e_d
+#endif
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
@@ -691,14 +728,20 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! do-loop counters
   INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: ew(:)
-  REAL(DP), DEVICE, POINTER :: ew_d(:)
+  REAL(DP), POINTER :: ew_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: ew_d
+#endif
   REAL(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
     ! eigenvalues of the reduced hamiltonian
   COMPLEX(DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
-  COMPLEX(DP), DEVICE, POINTER :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+  COMPLEX(DP), POINTER :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, hpsi_d, spsi_d
+#endif
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -1688,16 +1731,20 @@ END SUBROUTINE pregterg_gpu
 
 ! In principle this can go away .......
 SUBROUTINE KScudaDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#if defined(__CUDA)
     use cudafor
     use cublas
+#endif
 !     .. Scalar Arguments ..
     DOUBLE PRECISION ::  ALPHA
     INTEGER          ::   INCX, INCY, LDA, M, N
 !     .. Array Arguments ..
     DOUBLE PRECISION :: A( LDA, * ), X( * ), Y( * )
+#if defined(__CUDA)
     attributes(device) :: A, X, Y
+#endif
     CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 
 END SUBROUTINE KScudaDGER
 
-#endif
+
