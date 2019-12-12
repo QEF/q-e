@@ -274,7 +274,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   IF ( lda_plus_u .AND. U_projection.NE."pseudo" ) THEN
      !
-     hpsi_host = hpsi_d
+     CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
      IF ( noncolin ) THEN
         CALL vhpsi_nc( lda, n, m, psi_host, hpsi_host )
      ELSE
@@ -287,7 +287,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ! ... Here the exact-exchange term Vxx psi
   !
   IF ( exx_is_active() ) THEN
-     hpsi_host = hpsi_d
+     CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
      IF ( use_ace) THEN
         IF (gamma_only) THEN
            CALL vexxace_gamma(lda,m,psi_host,ee,hpsi_host)
@@ -305,7 +305,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   IF ( lelfield ) THEN
      !
-     hpsi_host = hpsi_d
+     CALL dev_memcpy(hpsi_host, hpsi_d ) ! hpsi_host = hpsi_d
      IF ( .NOT.l3dstring ) THEN
         CALL h_epsi_her_apply( lda, n, m, psi_host, hpsi_host,gdir, efield )
      ELSE
