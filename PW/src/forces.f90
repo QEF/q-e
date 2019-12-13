@@ -101,6 +101,9 @@ SUBROUTINE forces()
   !
   CALL start_clock( 'forces' )
   !
+  ! Cleanup scratch space used in previous SCF iterations. This will reduce memory footprint.
+  CALL dev_buf%reinit()
+  !
   ALLOCATE( forcenl( 3, nat ), forcelc( 3, nat ), forcecc( 3, nat ), &
             forceh( 3, nat ), forceion( 3, nat ), forcescc( 3, nat ) )
   !    
