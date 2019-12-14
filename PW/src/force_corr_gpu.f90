@@ -82,7 +82,7 @@ subroutine force_corr_gpu (forcescc)
   else
      fact = 1.d0
   end if
-  CALL dev_buf%lock_buffer(aux_d, [ndm, ngl],ierr )
+  CALL dev_buf%lock_buffer(aux_d, [ndm, ngl], ierr )
   !
   do nt = 1, ntyp
      !
@@ -136,18 +136,17 @@ subroutine force_corr_gpu (forcescc)
            forcescc(3, na) = forcesccz  
         endif
      enddo
+     call dev_buf%release_buffer ( tau_d, ierr )
   enddo
   call dev_buf%release_buffer ( aux_d, ierr )
-  call dev_buf%release_buffer ( tau_d, ierr )
-  call dev_buf%release_buffer ( psic_d, ierr) 
-  call dev_buf%release_buffer ( r_d, ierr ) 
-  call dev_buf%release_buffer ( rab_d, ierr ) 
-  call dev_buf%release_buffer (rhoat_d, ierr )  
+  call dev_buf%release_buffer ( psic_d, ierr )
+  call dev_buf%release_buffer ( r_d, ierr )
+  call dev_buf%release_buffer ( rab_d, ierr )
+  call dev_buf%release_buffer ( rhoat_d, ierr )
+  call dev_buf%release_buffer ( rhocgnt_d, ierr )
   !
   call mp_sum(  forcescc, intra_bgrp_comm )
   !
-  call dev_buf%release_buffer  ( rhocgnt_d, ierr )
-
   return
 end subroutine force_corr_gpu
 
