@@ -76,7 +76,7 @@ subroutine force_corr_gpu (forcescc)
   CALL dev_buf%lock_buffer ( r_d, ndm, ierr)
   CALL dev_buf%lock_buffer ( rab_d, ndm, ierr )
   CALL dev_buf%lock_buffer ( rhoat_d, ndm, ierr)
-  CALL dev_buf%lock_buffer( aux_d, [ndm, ngl], ierr )
+  CALL dev_buf%lock_buffer ( aux_d, [ndm, ngl], ierr )
   !
   CALL dev_buf%lock_buffer ( tau_d, [3,nat], ierr)
   tau_d(1:3,1:nat)=tau(1:3,1:nat)
