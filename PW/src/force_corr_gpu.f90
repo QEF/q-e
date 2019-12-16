@@ -52,7 +52,7 @@ subroutine force_corr_gpu (forcescc)
   ! work space
   real(DP) ::  gx, arg, fact, forcesccx, forcesccy, forcesccz
   ! temp factors
-  integer :: ir, isup, isdw, ig, nt, na, ndm, ierr, msh_nt, igg, glblock,igl
+  integer :: ir, isup, isdw, ig, nt, na, ndm, ierr, msh_nt, igg, glblock,igl, ierrs(7)
 #if defined(__CUDA)
   ATTRIBUTES(DEVICE)  :: rhocgnt_d, aux_d, psic_d,r_d, rab_d, rhoat_d, nl_d, tau_d
 #endif
@@ -62,7 +62,7 @@ subroutine force_corr_gpu (forcescc)
   ! vnew is V_out - V_in, psic is the temp space
   !
   nl_d => dfftp%nl_d
-  CALL dev_buf%lock_buffer(psic_d, size(vnew%of_r,1), ierr )
+  CALL dev_buf%lock_buffer(psic_d, size(vnew%of_r,1), ierrs(1) )
   if (nspin == 1 .or. nspin == 4) then
      psic_d(:) = vnew%of_r (:, 1)
   else
@@ -72,15 +72,18 @@ subroutine force_corr_gpu (forcescc)
   end if
   !
   ndm = MAXVAL ( msh(1:ntyp) )
-  CALL dev_buf%lock_buffer ( rhocgnt_d, ngl, ierr )
-  CALL dev_buf%lock_buffer ( r_d, ndm, ierr)
-  CALL dev_buf%lock_buffer ( rab_d, ndm, ierr )
-  CALL dev_buf%lock_buffer ( rhoat_d, ndm, ierr)
-  CALL dev_buf%lock_buffer ( aux_d, [ndm, ngl], ierr )
+  CALL dev_buf%lock_buffer ( rhocgnt_d, ngl, ierrs(2) )
+  CALL dev_buf%lock_buffer ( r_d, ndm, ierrs(3))
+  CALL dev_buf%lock_buffer ( rab_d, ndm, ierrs(4) )
+  CALL dev_buf%lock_buffer ( rhoat_d, ndm, ierrs(5))
+  CALL dev_buf%lock_buffer ( aux_d, [ndm, ngl], ierrs(6) )
   !
-  CALL dev_buf%lock_buffer ( tau_d, [3,nat], ierr)
+  CALL dev_buf%lock_buffer ( tau_d, [3,nat], ierrs(7))
+  !
+  IF (ANY(ierrs /= 0)) CALL errore('force_corr_gpu', 'cannot allocate buffers', -1)
+  !
   tau_d(1:3,1:nat)=tau(1:3,1:nat)
-
+  !
   CALL fwfft ('Rho', psic_d, dfftp)
   if (gamma_only) then
      fact = 2.d0
