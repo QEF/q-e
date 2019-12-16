@@ -39,7 +39,8 @@ module tb_dev
      procedure :: init                     !< Initialize the class selecting buffers dimension and number per type.\
      final :: clean
 
-     procedure :: reinit, dealloc
+     procedure :: reinit
+     procedure :: dealloc
 
      generic, public :: lock_buffer => &
                         lock_buffer_iv, &           !< Releases a integer vector buffer
@@ -1558,7 +1559,8 @@ module tb_pin
      procedure :: init                     !< Initialize the class selecting buffers dimension and number per type.\
      final :: clean
 
-     procedure :: reinit, dealloc
+     procedure :: reinit
+     procedure :: dealloc
 
      generic, public :: lock_buffer => &
                         lock_buffer_iv, &           !< Releases a integer vector buffer
