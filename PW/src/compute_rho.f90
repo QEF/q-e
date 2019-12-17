@@ -5,25 +5,31 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-   SUBROUTINE compute_rho(rho,rhoout,segni,nrxx)
-!
-!   This subroutine diagonalizes the spin density matrix and gives as output
-!   the spin up and spin down components of the charge
-!   If lsign is true up and dw are with respect to the fixed quantization
-!   axis ux, otherwise rho+|m| is always rhoup and rho-|m| is always
-!   rhodw
-!
-   USE kinds, ONLY : dp
+!------------------------------------------------------------------------------
+   SUBROUTINE compute_rho( rho, rhoout, segni, nrxx )
+   !--------------------------------------------------------------------------
+   !! This subroutine diagonalizes the spin density matrix and gives as output
+   !! the spin-up and spin-down components of the charge.  
+   !! If \(\text{lsign}\) is .TRUE. up and down are with respect to the fixed 
+   !! quantization axis ux, otherwise \(\text{rho}+|m|\) is always rho-up and
+   !! \(\text{rho}-|m|\) is always rho-down.
+   !
+   USE kinds,            ONLY : dp
    USE noncollin_module, ONLY : lsign, ux
+   !
    IMPLICIT NONE
-   INTEGER :: nrxx  ! input: the dimension of the mesh
-         
-   REAL(DP), INTENT(IN) ::  rho(nrxx,4)
+   !
+   INTEGER :: nrxx
+   !! input: the dimension of the mesh
+   REAL(DP), INTENT(IN) :: rho(nrxx,4)
+   !! the four components of the charge 
    REAL(DP), INTENT(OUT) :: rhoout(nrxx,2)
+   !! the spin up and spin down charge
    REAL(DP), INTENT(OUT) :: segni(nrxx)
-                 ! input: the four components of the charge 
-                 ! output: the spin up and spin down charge
-                 ! output: the orientation when needed
+   !! the orientation when needed
+   !
+   ! ... local variables
+   !
    REAL(DP) :: amag
    INTEGER :: ir           ! counter on mesh points
    IF (lsign) THEN 

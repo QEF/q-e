@@ -149,14 +149,12 @@
 
 !======================================================================!
 
+!---------------------------------------------------------------------
 SUBROUTINE c_phase
-
-!----------------------------------------------------------------------!
-
-!   Geometric phase calculation along a strip of nppstr k-points
-!   averaged over a 2D grid of nkort k-points orthogonal to nppstr 
-
-!  --- Make use of the module with common information ---
+   !----------------------------------------------------------------------
+   !! Geometric phase calculation along a strip of \(\text{nppstr}\) k-points
+   !! averaged over a 2D grid of \(\text{nkort}\) orthogonal k-points.
+   !
    USE kinds,                ONLY : DP
    USE io_global,            ONLY : stdout
    USE io_files,             ONLY : iunwfc, nwordwfc
@@ -171,7 +169,7 @@ SUBROUTINE c_phase
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
    USE wvfct,                ONLY : npwx, nbnd, wg
-   USE wavefunctions, ONLY : evc
+   USE wavefunctions,        ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global, pdl_tot
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                     deallocate_bec_type
