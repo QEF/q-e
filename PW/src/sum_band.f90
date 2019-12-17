@@ -9,9 +9,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE sum_band()
   !----------------------------------------------------------------------------
-  !
-  ! ... Calculates the symmetrized charge density and related quantities
-  ! ... Also computes the occupations and the sum of occupied eigenvalues.
+  !! Calculates the symmetrized charge density and related quantities.  
+  !! Also computes the occupations and the sum of occupied eigenvalues.
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
@@ -229,8 +228,7 @@ SUBROUTINE sum_band()
      !-----------------------------------------------------------------------
      SUBROUTINE sum_band_gamma()
        !-----------------------------------------------------------------------
-       !
-       ! ... gamma version
+       !! \(\texttt{sum_band}\) - part for gamma version.
        !
        USE becmod,        ONLY : becp
        USE mp_bands,      ONLY : me_bgrp
@@ -469,8 +467,7 @@ SUBROUTINE sum_band()
      !-----------------------------------------------------------------------
      SUBROUTINE sum_band_k()
        !-----------------------------------------------------------------------
-       !
-       ! ... k-points version
+       !! \(\texttt{sum_band}\) - part for k-points version
        !
        USE mp_bands,     ONLY : me_bgrp
        USE mp,           ONLY : mp_sum, mp_get_comm_null
@@ -848,14 +845,15 @@ END SUBROUTINE sum_band
 !----------------------------------------------------------------------------
 SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd ) 
   !----------------------------------------------------------------------------
+  !! This routine computes the sum over bands:
   !
-  ! This routine computes the sum over bands
-  !     \sum_i <\psi_i|\beta_l>w_i<\beta_m|\psi_i>
-  ! for point "ik" and, for LSDA, spin "current_spin" 
-  ! Calls calbec to compute "becp"=<beta_m|psi_i> 
-  ! Output is accumulated (unsymmetrized) into "becsum", module "uspp"
+  !! \[ \sum_i \langle\psi_i|\beta_l\rangle w_i \langle\beta_m|\psi_i\rangle \]
   !
-  ! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw)
+  !! for point "ik" and, for LSDA, spin "current_spin".  
+  !! Calls calbec to compute \(\text{"becp"}=\langle \beta_m|\psi_i \rangle\).  
+  !! Output is accumulated (unsymmetrized) into "becsum", module "uspp".
+  !
+  !! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw).
   !
   USE kinds,         ONLY : DP
   USE becmod,        ONLY : becp, calbec, allocate_bec_type
@@ -875,10 +873,22 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
-  COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
-  REAL(dp), ALLOCATABLE :: auxg(:,:), aux_gk(:,:), aux_egk(:,:)
+  INTEGER, INTENT(IN) :: ik
+  !! the point the sum is computed for
+  INTEGER, INTENT(IN) :: current_spin
+  !! the input spin
+  INTEGER, INTENT(IN) :: ibnd_start
+  !! first band of the parallel block
+  INTEGER, INTENT(IN) :: ibnd_end
+  !! last band of the parallel block
+  INTEGER, INTENT(IN) :: this_bgrp_nbnd
+  !! number of bands of the parallel block
+  !
+  ! ... local variables
+  !
+  COMPLEX(DP), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
+  REAL(DP), ALLOCATABLE :: auxg(:,:), aux_gk(:,:), aux_egk(:,:)
   INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
@@ -1084,11 +1094,10 @@ END SUBROUTINE sum_bec
 !
 !----------------------------------------------------------------------------
 SUBROUTINE add_becsum_nc ( na, np, becsum_nc, becsum )
-!----------------------------------------------------------------------------
-  !
-  ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
-  ! saves it in becsum for the calculation of augmentation charge and
-  ! magnetization.
+  !----------------------------------------------------------------------------
+  !! This routine multiplies \(\text{becsum_nc}\) by the identity and the
+  !! Pauli matrices, saves it in \(\text{becsum}\) for the calculation of 
+  !! augmentation charge and magnetization.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -1135,10 +1144,9 @@ END SUBROUTINE add_becsum_nc
 !----------------------------------------------------------------------------
 SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
   !----------------------------------------------------------------------------
-  !
-  ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
-  ! rotates it as appropriate for the spin-orbit case, saves it in becsum
-  ! for the calculation of augmentation charge and magnetization.
+  !! This routine multiplies \(\text{becsum_nc}\) by the identity and the Pauli
+  !! matrices, rotates it as appropriate for the spin-orbit case, saves it in 
+  !! \(\text{becsum}\) for the calculation of augmentation charge and magnetization.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -1148,16 +1156,21 @@ SUBROUTINE add_becsum_so( na, np, becsum_nc, becsum )
   USE spin_orb,             ONLY : fcoef, domag
   !
   IMPLICIT NONE
-  
-  INTEGER, INTENT(IN) :: na, np
+  !
+  INTEGER, INTENT(IN) :: na
+  !! atom index
+  INTEGER, INTENT(IN) :: np
+  !! atomic type
   COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
+  !! becsum - noncolin
   REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
+  !! sum over bands
   !
   ! ... local variables
   !
   INTEGER :: ih, jh, lh, kh, ijh, is1, is2
   COMPLEX(DP) :: fac
-  
+  !
   DO ih = 1, nh(np)
      DO jh = 1, nh(np)
         ijh=ijtoh(ih,jh,np)

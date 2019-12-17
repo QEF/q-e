@@ -5,26 +5,41 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-----------------------------------------------------------------------
-subroutine symmetrize_at(nsym, s, invs, ft, irt, nat, tau, at, bg, alat, omega)
-  !-----------------------------------------------------------------------
-  !
-  !     force atomic coordinates to have the symmetry of a given point group
-  !     do the same for 
+!---------------------------------------------------------------------------------
+SUBROUTINE symmetrize_at( nsym, s, invs, ft, irt, nat, tau, at, bg, alat, omega )
+  !-------------------------------------------------------------------------------
+  !! Forces atomic coordinates to have the symmetry of a given point group.
   !
   USE io_global,  ONLY : stdout
-  USE cellmd, ONLY: at_old, lmovecell
+  USE cellmd,     ONLY : at_old, lmovecell
   USE kinds
-  implicit none
   !
-  !     input variables
+  IMPLICIT NONE
   !
-  integer, intent(in) :: nsym, s(3,3,48), invs(48), nat, irt (48, nat) 
-  real(DP), intent(in) :: ft (3, 48)
-  real(DP), intent(inout) :: tau (3, nat), at (3, 3), bg (3, 3), alat, omega
+  INTEGER, INTENT(IN) :: nsym
+  !! total number of crystal symmetries
+  INTEGER, INTENT(IN) :: s(3,3,48)
+  !! symmetry matrices, in crystal axis
+  INTEGER, INTENT(IN) :: invs(48)
+  !! index of inverse operation: \(S^{-1}_i=S(\text{invs}(i))\)
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms
+  INTEGER, INTENT(IN) :: irt(48,nat)
+  !! symmetric atom for each atom and sym.op.
+  REAL(DP), INTENT(IN) :: ft(3,48)
+  !! fractional translations, in crystal axis
+  REAL(DP), INTENT(INOUT) :: tau(3,nat)
+  !! atomic positions
+  REAL(DP), INTENT(INOUT) :: at(3,3)
+  !! lattice vectors of the simulation cell
+  REAL(DP), INTENT(INOUT) :: bg(3,3)
+  !! reciprocal lattice vectors
+  REAL(DP), INTENT(INOUT) :: alat
+  !! lattice parameter
+  REAL(DP), INTENT(INOUT) :: omega
+  !! volume of the simulation cell
   !
-  !    local variables
+  ! ... local variables
   !
   integer :: na, icar, ipol, jpol, kpol, lpol, irot
   real(DP) , allocatable :: xau (:,:)
@@ -112,5 +127,6 @@ subroutine symmetrize_at(nsym, s, invs, ft, irt, nat, tau, at, bg, alat, omega)
   call output_tau(lmovecell, .FALSE.)
   !
   return
-end subroutine symmetrize_at
+  !
+END SUBROUTINE symmetrize_at
 

@@ -6,16 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-!
 MODULE symme
-  
+  !------------------------------------------------------------------------
+  !! This module contains routines used for symmetrization.
+  !
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
   USE symm_base,  ONLY : s, sname, ft, nrot, nsym, t_rev, time_reversal, &
                          irt, invs, invsym
   !
-  ! ... Routines used for symmetrization 
-  ! 
   SAVE
   PRIVATE
   !
@@ -41,25 +40,32 @@ MODULE symme
   !
 CONTAINS
    !
-   LOGICAL FUNCTION rho_sym_needed ( )
+   !-------------------------------------------------------------------------
+   LOGICAL FUNCTION rho_sym_needed( )
       !-----------------------------------------------------------------------
+      !! TRUE if rho symmetrization is needed.
+      !
       rho_sym_needed = .NOT. no_rho_sym
+      !
    END FUNCTION rho_sym_needed
    !
-   SUBROUTINE symscalar (nat, scalar)
+   !-------------------------------------------------------------------------
+   SUBROUTINE symscalar( nat, scalar )
      !-----------------------------------------------------------------------
-     ! Symmetrize a function f(na), na=atom index
+     !! Symmetrize a scalar function \(f(na)\), where na is the atom index.
      !
      IMPLICIT NONE
      !
      INTEGER, INTENT(IN) :: nat
-     REAL(DP), intent(INOUT) :: scalar(nat)
+     !! number of atoms
+     REAL(DP), INTENT(INOUT) :: scalar(nat)
+     !! function to symmetrize
      !
      INTEGER :: isym
      REAL(DP), ALLOCATABLE :: work (:)
-
+     !
      IF (nsym == 1) RETURN
-
+     !
      ALLOCATE (work(nat))
      work(:) = 0.0_dp
      DO isym = 1, nsym
@@ -67,21 +73,26 @@ CONTAINS
      END DO
      scalar(:) = work(:) / DBLE(nsym)
      DEALLOCATE (work)
-   
+     !
    END SUBROUTINE symscalar
    !
-   SUBROUTINE symvector (nat, vect)
+   !--------------------------------------------------------------------------
+   SUBROUTINE symvector( nat, vect )
      !-----------------------------------------------------------------------
-     ! Symmetrize a function f(i,na), i=cartesian component, na=atom index
-     ! e.g. : forces (in cartesian axis) 
+     !! Symmetrize a function \(f(i,na)\) (e.g. the forces in cartesian axis),
+     !! where \(i\) is the cartesian component, \(na\) the atom index.
      !
      IMPLICIT NONE
      !
      INTEGER, INTENT(IN) :: nat
-     REAL(DP), intent(INOUT) :: vect(3,nat)
+     !! number of atoms
+     REAL(DP), INTENT(INOUT) :: vect(3,nat)
+     !! vector function to symmetrize
+     !
+     ! ... local variables
      !
      INTEGER :: na, isym, nar
-     REAL(DP), ALLOCATABLE :: work (:,:)
+     REAL(DP), ALLOCATABLE :: work(:,:)
      !
      IF (nsym == 1) RETURN
      !
@@ -121,15 +132,21 @@ CONTAINS
      !
    END SUBROUTINE symvector
    !
-   SUBROUTINE symtensor (nat, tens)
+   !--------------------------------------------------------------------------
+   SUBROUTINE symtensor( nat, tens )
      !-----------------------------------------------------------------------
-     ! Symmetrize a function f(i,j,na), i,j=cartesian components, na=atom index
-     ! e.g. : effective charges (in cartesian axis) 
+     !! Symmetrize a function \(f(i,j,na)\) (e.g. the effective charges in 
+     !! cartesian axis), where \(i,j\) are the cartesian components and \(na\)
+     !! is the atom index.
      !
      IMPLICIT NONE
      !
      INTEGER, INTENT(IN) :: nat
-     REAL(DP), intent(INOUT) :: tens(3,3,nat)
+     !! number of atoms
+     REAL(DP), INTENT(INOUT) :: tens(3,3,nat)
+     !! tensor function to symmetrize
+     !
+     ! ... local variables
      !
      INTEGER :: na, isym, nar, i,j,k,l
      REAL(DP), ALLOCATABLE :: work (:,:,:)
@@ -174,20 +191,22 @@ CONTAINS
    END SUBROUTINE symtensor
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE symv ( vect)
-   !--------------------------------------------------------------------
-     !
-     ! Symmetrize a vector f(i), i=cartesian components
-     ! The vector is supposed to be axial: inversion does not change it. 
-     ! Time reversal changes its sign. Note that only groups compatible with 
-     ! a finite magnetization give a nonzero output vector. 
+   SUBROUTINE symv( vect )
+     !--------------------------------------------------------------------
+     !! Symmetrize a vector \(f(i)\), i=cartesian components
+     !! The vector is supposed to be axial: inversion does not change it. 
+     !! Time reversal changes its sign. Note that only groups compatible with 
+     !! a finite magnetization give a nonzero output vector. 
      !
      IMPLICIT NONE
      !
-     REAL (DP), INTENT(inout) :: vect(3)  ! the vector to rotate
+     REAL (DP), INTENT(inout) :: vect(3)
+     !! the vector to rotate
      !
-     integer :: isym 
-     real(DP) :: work (3), segno
+     ! ... local variables
+     !
+     INTEGER :: isym 
+     REAL(DP) :: work(3), segno
      !
      IF (nsym == 1) RETURN
      !
@@ -213,14 +232,18 @@ CONTAINS
    !
    end subroutine symv
    !
-   SUBROUTINE symmatrix ( matr )
+   !-------------------------------------------------------------------------
+   SUBROUTINE symmatrix( matr )
      !-----------------------------------------------------------------------
-     ! Symmetrize a function f(i,j), i,j=cartesian components
-     ! e.g. : stress, dielectric tensor (in cartesian axis) 
+     !! Symmetrize a function \(f(i,j)\) (e.g. stress, dielectric tensor in
+     !! cartesian axis), where \(i,j\) are the cartesian components.
      !
      IMPLICIT NONE
      !
-     REAL(DP), intent(INOUT) :: matr(3,3)
+     REAL(DP), INTENT(INOUT) :: matr(3,3)
+     !! the function \(f(i,j)\) to symmetrize
+     !
+     ! ... local variables
      !
      INTEGER :: isym, i,j,k,l
      REAL(DP) :: work (3,3)
@@ -254,19 +277,22 @@ CONTAINS
      !
    END SUBROUTINE symmatrix
    !
-   SUBROUTINE symmatrix3 ( mat3 )
+   !------------------------------------------------------------------------
+   SUBROUTINE symmatrix3( mat3 )
      !-----------------------------------------------------------------------
-     !
-     ! Symmetrize a function f(i,j,k), i,j,k=cartesian components
-     ! e.g. : nonlinear susceptibility
-     ! BEWARE: input in crystal axis, output in cartesian axis
+     !! Symmetrize a function \(f(i,j,k)\) (e.g. nonlinear susceptibility),
+     !! where \(i,j,k\) are the cartesian components.  
+     !! BEWARE: input in crystal axis, output in cartesian axis.
      !
      IMPLICIT NONE
      !
-     REAL(DP), intent(INOUT) :: mat3(3,3,3)
+     REAL(DP), INTENT(INOUT) :: mat3(3,3,3)
+     !! function f(i,j,k) to symmetrize
+     !
+     ! ... local variables
      !
      INTEGER :: isym, i,j,k,l,m,n
-     REAL(DP) :: work (3,3,3)
+     REAL(DP) :: work(3,3,3)
      !
      IF (nsym > 1) THEN
         !
@@ -298,17 +324,21 @@ CONTAINS
      !
    END SUBROUTINE symmatrix3
    !
-   !
-   SUBROUTINE symtensor3 (nat, tens3 )
+   !-------------------------------------------------------------------------
+   SUBROUTINE symtensor3( nat, tens3 )
      !-----------------------------------------------------------------------
-     ! Symmetrize a function f(i,j,k, na), i,j,k=cartesian, na=atom index
-     ! e.g. : raman tensor
-     ! BEWARE: input in crystal axis, output in cartesian axis
+     !! Symmetrize a function \(f(i,j,k, na)\) (e.g. the Raman tensor), where
+     !! \(i,j,k\) are the cartesian axes, \(na\) is the atom index.  
+     !! BEWARE: input in crystal axis, output in cartesian axis
      !
      IMPLICIT NONE
      !
      INTEGER, INTENT(IN) :: nat
-     REAL(DP), intent(INOUT) :: tens3(3,3,3,nat)
+     !! number of atoms
+     REAL(DP), INTENT(INOUT) :: tens3(3,3,3,nat)
+     !! the function f(i,j,k, na) to symmetrize
+     !
+     ! ... local variables
      !
      INTEGER :: na, isym, nar, i,j,k,l,n,m
      REAL(DP), ALLOCATABLE :: work (:,:,:,:)
@@ -361,12 +391,17 @@ CONTAINS
    !  MODULE PROCEDURE crys_to_cart
    !END INTERFACE
    !
-   SUBROUTINE cart_to_crys ( matr )
+   !-------------------------------------------------------------------------
+   SUBROUTINE cart_to_crys( matr )
      !-----------------------------------------------------------------------
-     !     
+     !! Cartesian to crystal axis conversion.
+     !
      IMPLICIT NONE
      !
-     REAL(DP), intent(INOUT) :: matr(3,3)
+     REAL(DP), INTENT(INOUT) :: matr(3,3)
+     !! Axis conversion matrix
+     !
+     ! ... local variables
      !
      REAL(DP) :: work(3,3)
      INTEGER :: i,j,k,l
@@ -386,12 +421,17 @@ CONTAINS
      !
    END SUBROUTINE cart_to_crys
    !
-   SUBROUTINE crys_to_cart ( matr )
+   !-------------------------------------------------------------------------
+   SUBROUTINE crys_to_cart( matr )
      !-----------------------------------------------------------------------
+     !! Crystal to cartesian axis conversion.
      !
      IMPLICIT NONE
      !
-     REAL(DP), intent(INOUT) :: matr(3,3)
+     REAL(DP), INTENT(INOUT) :: matr(3,3)
+     !! Axis conversion matrix
+     !
+     ! ... local variables
      !
      REAL(DP) :: work(3,3)
      INTEGER :: i,j,k,l
@@ -411,15 +451,20 @@ CONTAINS
      !
    END SUBROUTINE crys_to_cart
    !
-   SUBROUTINE crys_to_cart_mat3 ( mat3 )
+   !------------------------------------------------------------------------
+   SUBROUTINE crys_to_cart_mat3( mat3 )
      !-----------------------------------------------------------------------
+     !! Crystal to cartesian axis conversion for \(f(i,j,k)\) objects.
      !
      IMPLICIT NONE
      !
-     REAL(DP), intent(INOUT) :: mat3(3,3,3)
+     REAL(DP), INTENT(INOUT) :: mat3(3,3,3)
+     !! Axis conversion tensor
      !
      REAL(DP) :: work(3,3,3)
      INTEGER :: i,j,k,l,m,n
+     !
+     ! ... local variables
      !
      work(:,:,:) = 0.0_dp
      DO i = 1, 3
@@ -442,10 +487,10 @@ CONTAINS
    !
    ! G-space symmetrization
    !
-   SUBROUTINE sym_rho_init ( gamma_only )
+   !------------------------------------------------------------------------
+   SUBROUTINE sym_rho_init( gamma_only )
     !-----------------------------------------------------------------------
-    !
-    !  Initialize arrays needed for symmetrization in reciprocal space
+    !! Initialize arrays needed for symmetrization in reciprocal space.
     ! 
     USE gvect, ONLY : ngm, g
     !
@@ -463,10 +508,10 @@ CONTAINS
    !
 #if defined(__MPI)
   !
-  SUBROUTINE sym_rho_init_para ( )
+  !------------------------------------------------------------------------
+  SUBROUTINE sym_rho_init_para( )
     !-----------------------------------------------------------------------
-    !
-    !  Initialize arrays needed for parallel symmetrization
+    !! Initialize arrays needed for parallel symmetrization
     ! 
     USE parallel_include
     USE mp_bands, ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
@@ -478,9 +523,9 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: gcut_(:), g_(:,:)
     INTEGER :: np, ig, ngloc, ngpos, ierr, ngm_
     !
-    ALLOCATE ( sendcnt(nproc_bgrp), recvcnt(nproc_bgrp), &
-               sdispls(nproc_bgrp), rdispls(nproc_bgrp) )
-    ALLOCATE ( gcut_(nproc_bgrp) )
+    ALLOCATE( sendcnt(nproc_bgrp), recvcnt(nproc_bgrp), &
+              sdispls(nproc_bgrp), rdispls(nproc_bgrp) )
+    ALLOCATE( gcut_(nproc_bgrp) )
     !
     ! the gcut_ cutoffs are estimated in such a way that there is an similar
     ! number of G-vectors in each shell gcut_(i) < G^2 < gcut_(i+1)
@@ -554,17 +599,22 @@ CONTAINS
   !
 #endif
   !
-  SUBROUTINE sym_rho_init_shells ( ngm_, g_ )
+  !--------------------------------------------------------------------------
+  SUBROUTINE sym_rho_init_shells( ngm_, g_ )
     !-----------------------------------------------------------------------
-    !
-    !  Initialize G-vector shells needed for symmetrization
+    !! Initialize G-vector shells needed for symmetrization.
     ! 
     USE constants, ONLY : eps8
     USE mp_bands,  ONLY : nproc_bgrp
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: ngm_
+    !! number of g-points
     REAL(DP), INTENT(IN) :: g_(3,ngm_)
+    !! G-vectors
+    !
+    ! ... local variables
     !
     LOGICAL, ALLOCATABLE :: done(:)
     INTEGER, ALLOCATABLE :: n(:,:), igsort(:)
@@ -575,9 +625,9 @@ CONTAINS
     ngs = 0
     ! shell should be allocated to the number of symmetry shells
     ! since this is unknown, we use the number of all G-vectors
-    ALLOCATE ( shell(ngm_) )
-    ALLOCATE ( done(ngm_), n(3,ngm_) )
-    ALLOCATE ( igsort (ngm_))
+    ALLOCATE( shell(ngm_) )
+    ALLOCATE( done(ngm_), n(3,ngm_) )
+    ALLOCATE( igsort (ngm_) )
     DO ig=1,ngm_
        !
        done(ig) = .false.
@@ -661,14 +711,11 @@ gloop:    DO jg=iig,ngm_
   !-----------------------------------------------------------------------
   SUBROUTINE sym_rho (nspin, rhog)
     !-----------------------------------------------------------------------
+    !! Symmetrize the charge density rho in reciprocal space.
     !
-    !     Symmetrize the charge density rho in reciprocal space
-    !     Distributed parallel algorithm: collects entire shells of G-vectors
-    !     and corresponding rho(G), calls sym_rho_serial to perform the
-    !     symmetrization, re-distributed rho(G) into original ordering
-    !     rhog(ngm,nspin) components of rho: rhog(ig) = rho(G(:,ig))
-    !                     unsymmetrized on input, symmetrized on output
-    !     nspin=1,2,4     unpolarized, LSDA, non-colinear magnetism     
+    !! Distributed parallel algorithm: collects entire shells of G-vectors
+    !! and corresponding rho(G), calls sym_rho_serial to perform the
+    !! symmetrization, re-distributed rho(G) into original ordering.  
     !
     USE constants,            ONLY : eps8, eps6
     USE gvect,                ONLY : ngm, g
@@ -678,11 +725,17 @@ gloop:    DO jg=iig,ngm_
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nspin
+    !! nspin=1,2,4 \(\rightarrow\) unpolarized, LSDA,
+    !! non-colinear magnetism
     COMPLEX(DP), INTENT(INOUT) :: rhog(ngm,nspin)
+    !! components of rho: rhog(ig) = rho(G(:,ig)). 
+    !! Unsymmetrized on input, symmetrized on output
     !
-    REAL(DP), allocatable :: g0(:,:), g_(:,:), gg_(:) 
+    ! ... local variables
+    !
+    REAL(DP), ALLOCATABLE :: g0(:,:), g_(:,:), gg_(:) 
     REAL(DP) :: gg0_, gg1_
-    COMPLEX(DP), allocatable :: rhog_(:,:)
+    COMPLEX(DP), ALLOCATABLE :: rhog_(:,:)
     INTEGER :: is, ig, igl, np, ierr, ngm_
     !
     IF ( no_rho_sym) RETURN
@@ -736,22 +789,24 @@ gloop:    DO jg=iig,ngm_
   !-----------------------------------------------------------------------
   SUBROUTINE sym_rho_serial ( ngm_, g_, nspin_, rhog_ )
     !-----------------------------------------------------------------------
-    !
-    !     symmetrize the charge density rho in reciprocal space 
-    !     Serial algorithm - requires in input: 
-    !     g_(3,ngm_)      list of G-vectors
-    !     nspin_          number of spin components to be symmetrized
-    !     rhog_(ngm_,nspin_) rho in reciprocal space: rhog_(ig) = rho(G(:,ig))
-    !                      unsymmetrized on input, symmetrized on output
+    !! Symmetrize the charge density rho in reciprocal space.    
     !
     USE kinds
-    USE constants,            ONLY : tpi
+    USE constants,   ONLY : tpi
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT (IN) :: ngm_, nspin_
-    REAL(DP) , INTENT (IN) :: g_( 3, ngm_ )
-    COMPLEX(DP) , INTENT (INOUT) :: rhog_( ngm_, nspin_ )
+    INTEGER, INTENT(IN) :: ngm_
+    !! number of g points
+    INTEGER, INTENT(IN) :: nspin_
+    !! number of spin components to be symmetrized
+    REAL(DP), INTENT(IN) :: g_( 3, ngm_ )
+    !! list of G-vectors
+    COMPLEX(DP), INTENT(INOUT) :: rhog_( ngm_, nspin_ )
+    !! rho in reciprocal space: rhog_(ig) = rho(G(:,ig)). 
+    !! Unsymmetrized on input, symmetrized on output
+    !
+    ! ... local variables
     !
     REAL(DP), ALLOCATABLE :: g0(:,:)
     REAL(DP) :: sg(3), ft_(3,48), arg
@@ -914,11 +969,16 @@ gloop:    DO jg=iig,ngm_
     !
     RETURN
   END SUBROUTINE sym_rho_serial
-
-  SUBROUTINE sym_rho_deallocate ( )
+  !
+  !---------------------------------------------------------------------
+  SUBROUTINE sym_rho_deallocate( )
+    !-------------------------------------------------------------------
+    !! Deallocates symmetrization objects.
     !
     IMPLICIT NONE
+    !
     INTEGER :: i
+    !
     IF ( ALLOCATED (rdispls) ) DEALLOCATE (rdispls) 
     IF ( ALLOCATED (recvcnt) ) DEALLOCATE (recvcnt) 
     IF ( ALLOCATED (sdispls) ) DEALLOCATE (sdispls) 
