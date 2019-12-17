@@ -721,6 +721,8 @@ with_elpa_include
 with_elpa_lib
 with_elpa_version
 with_hdf5
+with_hdf5_libs
+with_hdf5_include
 enable_signals
 '
       ac_precious_vars='build_alias
@@ -1393,8 +1395,20 @@ Optional Packages:
                           (default: no)
   --with-elpa-version     Specify ELPA version, only year (2015 or 2016,
                           default: 2016)
-  --with-hdf5             (no|<path>) Use HDF5, a valid <path> must be
-                          specified (default: no)
+  --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
+                          that a valid installation with version >= 1.8.16 is
+                          available, and h5cc and h5fc are in the default
+                          executable search path; <path> must be the root
+                          folder of a standalone hdf5 installation. (default:
+                          no)
+  --with-hdf5-libs        Specify the linker options needed by HDF5 when
+                          configure fails to detect them by itself. As value
+                          to specify here is usually composed by many
+                          substrings it should be enclosed by quotes so to
+                          prevent configure failures. (default: no)
+  --with-hdf5-include     Specify full path the HDF5 include folder containing
+                          module and headers files. Use it if configure fails
+                          to detect the path by itself. (default: no)
 
 Some influential environment variables:
   EXTLIB_FLAGS
@@ -8159,18 +8173,52 @@ $as_echo "${elpa_libs}" >&6; }
 # Setting HDF5...
 
 
-
 # Check whether --with-hdf5 was given.
 if test "${with_hdf5+set}" = set; then :
   withval=$with_hdf5; if  test "$withval" = "no" ; then
       with_hdf5=0
+   elif test $withval = "yes" ; then
+      with_hdf5=1
+      skip_hdf5_module_check=1
    else
       with_hdf5_path="$withval"
+      skip_hdf5_module_chek=0
       with_hdf5=1
    fi
 else
   with_hdf5=0
 fi
+
+
+
+# Check whether --with-hdf5-libs was given.
+if test "${with_hdf5_libs+set}" = set; then :
+  withval=$with_hdf5_libs; if  test "$withval" = "no" ; then
+      with_hdf5_libs=0
+   else
+      with_hdf5_libline="$withval"
+      with_hdf5_libs=1
+   fi
+else
+  with_hdf5_libs=0
+fi
+
+
+
+# Check whether --with-hdf5-include was given.
+if test "${with_hdf5_include+set}" = set; then :
+  withval=$with_hdf5_include; if  test "$withval" = "no" ; then
+      with_hdf5_include=0
+   else
+      with_hdf5_include_line="$withval"
+      with_hdf5_include=1
+   fi
+else
+  with_hdf5_include=0
+fi
+
+
+
 
 
 hdf5_libs=""
@@ -8210,6 +8258,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
           h5cc=$with_hdf5_path/bin/h5pcc;
        elif test -e $with_hdf5_path/bin/h5cc ; then
            h5cc=$with_hdf5_path/bin/h5cc;
+       elif command -v h5pcc > /dev/null; then
+           h5cc=$(command -v h5pcc)
+       elif command -v h5cci > /dev/null; then
+           h5cc=$(command -v h5cc)
        else
           h5cc=$CC;
        fi
@@ -8307,7 +8359,35 @@ ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 
 
       if test "$have_hdf5" -eq 1 ; then
-          as_ac_File=`$as_echo "ac_cv_file_$with_hdf5_path/include/hdf5.mod" | $as_tr_sh`
+          if test "$with_hdf5_include" -eq 1 ; then
+              as_ac_File=`$as_echo "ac_cv_file_$with_hdf5_include_line/hdf5.mod" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $with_hdf5_include_line/hdf5.mod" >&5
+$as_echo_n "checking for $with_hdf5_include_line/hdf5.mod... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "$with_hdf5_include_line/hdf5.mod"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
+
+else
+
+                  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ***HDF5 Fortran extensions not found" >&5
+$as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
+                  have_hdf5=0
+fi
+
+          elif skip_hdf5_module_chek -eq 0; then
+              as_ac_File=`$as_echo "ac_cv_file_$with_hdf5_path/include/hdf5.mod" | $as_tr_sh`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $with_hdf5_path/include/hdf5.mod" >&5
 $as_echo_n "checking for $with_hdf5_path/include/hdf5.mod... " >&6; }
 if eval \${$as_ac_File+:} false; then :
@@ -8328,11 +8408,12 @@ if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
 
 else
 
-              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ***HDF5 Fortran extensions not found" >&5
+                  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ***HDF5 Fortran extensions not found" >&5
 $as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
-              have_hdf5=0
+                  have_hdf5=0
 fi
 
+          fi
       fi
       if test "$have_hdf5" -eq 1; then
         version=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | cut -d: -f2`
@@ -8349,14 +8430,45 @@ $as_echo "$as_me: WARNING: *** HDF5 version must be 1.8.16 or later" >&2;};
 
       if test "$have_hdf5" -eq 1 ; then
          if test -e $with_hdf5_path/bin/h5pfc; then
-             hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
+             if test $with_hdf5_libs -eq 1; then
+                hdf5_libs=$with_hdf5_libline
+             else
+                hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
+             fi
+         elif command -v h5pfc >/dev/null; then
+             if test $with_hdf5_libs -eq 1; then
+                hdf5_libs=$with_hdf5_libline
+             else
+                hdf5_libs=`h5pfc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
+             fi
+
          elif test -e $with_hdf5_path/bin/h5fc; then
-             hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
+             if test $with_hdf5_libs -eq 1; then
+                hdf5_libs=$with_hdf5_libline
+             else
+                hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
+             fi
              try_dflags="$try_dflags -D__HDF5_SERIAL"
+         elif command -v h5fc>/dev/null; then
+             if test $with_hdf5_libs -eq 1; then
+                hdf5_libs=$with_hdf5_libline
+             else
+                hdf5_libs=`h5fc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
+             fi
+             try_dflags="$try_dflags -D__HDF5_SERIAL"
+
          else
-          hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
+             if test $with_hdf5_libs -eq 1; then
+                hdf5_libs=$with_hdf5_libline
+             else
+                hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
+             fi
          fi
-         try_iflags="$try_iflags -I$with_hdf5_path/include"
+         if test $with_hdf5_include -eq 1; then
+            try_iflags="$try_iflags -I$with_hdf5_include_line"
+         else
+            try_iflags="$try_iflags -I$with_hdf5_path/include"
+         fi
          try_dflags="$try_dflags -D__HDF5"
       fi
 
