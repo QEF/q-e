@@ -10,11 +10,11 @@
 SUBROUTINE force_hub( forceh )
    !----------------------------------------------------------------------
    !! This routine computes the Hubbard contribution to the force. It gives
-   !! in output the product:
-   !! $$ (dE_\text{hub}/dn_{ij}^\text{alpha})(dn_{ij}^\text{alpha} 
-   !! /du(\text{alpha},ipol)) \ ,$$
-   !! which is the force acting on the atom at tau_{alpha}
-   !! (in the unit cell) along the direction ipol.
+   !! as output the product:
+   !! $$ \frac{dE_\text{hub}}{dn_{ij}^\alpha}\cdot\frac{dn_{ij}^\alpha} 
+   !! {du}(\alpha,\text{ipol}) \ ,$$
+   !! which is the force acting on the atom at \(\text{tau_alpha}\)
+   !! (in the unit cell) along the direction \(\text{ipol}\).
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -44,7 +44,7 @@ SUBROUTINE force_hub( forceh )
    IMPLICIT NONE
    !
    REAL(DP) :: forceh(3,nat)
-   !! output: the Hubbard forces
+   !! the Hubbard forces
    !
    ! ... local variables
    !
@@ -169,8 +169,8 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
                      nb_e, mykey, dns )
    !---------------------------------------------------------------------------
    !! This routine computes the derivative of the ns with respect to the ionic
-   !! displacement u(alpha,ipol) used to obtain the Hubbard contribution to the
-   !! atomic forces.
+   !! displacement \(u(\text{alpha,ipol})\) used to obtain the Hubbard 
+   !! contribution to the atomic forces.
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ityp
@@ -202,7 +202,7 @@ SUBROUTINE dndtau_k( ldim, proj, spsi, alpha, jkb0, ipol, ik, nb_s, &
    COMPLEX (DP), INTENT(IN) :: proj(nwfcU,nbnd)
    !! projection
    COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
-   !! S|evc>
+   !! \(S|\ \text{evc}\rangle\)
    REAL(DP), INTENT(OUT) :: dns(ldim,ldim,nspin,nat)
    !! the derivative of the atomic occupations
    !
@@ -276,9 +276,9 @@ END SUBROUTINE dndtau_k
 SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
                          nb_s, nb_e, mykey, dns )
    !-----------------------------------------------------------------------
-   !! This routine computes the derivative of the ns with respect to the ionic
-   !! displacement u(alpha,ipol) used to obtain the Hubbard contribution to the
-   !! atomic forces.
+   !! This routine computes the derivative of the ns with respect to the
+   !! ionic displacement \(u(\text{alpha,ipol})\) used to obtain the Hubbard
+   !! contribution to the atomic forces.
    !
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ityp
@@ -301,7 +301,7 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    INTEGER, INTENT(IN) :: ldim
    !! ldim = 2*Hubbard_lmax+1
    COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
-   !! S|evc>
+   !! \(S\ |\text{evc}\rangle\)
    REAL(DP), INTENT(IN) ::  rproj(nwfcU,nbnd)
    !! projection
    REAL(DP), INTENT(OUT) :: dns(ldim,ldim,nspin,nat)
@@ -311,8 +311,9 @@ SUBROUTINE dndtau_gamma( ldim, rproj, spsi, alpha, jkb0, ipol, ik, &
    INTEGER, INTENT(IN) :: nb_e
    !! ending band number (for band parallelization)
    INTEGER, INTENT(IN) :: mykey
-   !! If each band appears more than once
-   !! compute its contribution only once (i.e. when mykey=0)
+   !! If each band appears more than once compute
+   !! its contribution only once (i.e. when
+   !! \(\text{mykey}=0)\)
    !
    ! ... local variables
    !
@@ -384,7 +385,7 @@ SUBROUTINE dprojdtau_k( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    !-----------------------------------------------------------------------------
    !! This routine computes the first derivative of the projection
    !! \(\langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to 
-   !! the atomic displacement u(alpha,ipol). We remember that:
+   !! the atomic displacement \(u(\text{alpha,ipol})\). We remember that:
    !! $$ \text{ns}_{I,s,m1,m2} = \sum_{k,v}
    !!    f_{kv} \langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle
    !!           \langle\psi_{k,v,s}|S|\phi^{at}_{I,m2}\rangle $$
@@ -418,10 +419,11 @@ SUBROUTINE dprojdtau_k( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj )
    INTEGER, INTENT(IN) :: nb_e
    !! ending band number (for band parallelization)
    INTEGER, INTENT(IN) :: mykey
-   !! If each band appears more than once
-   !! compute its contribution only once (i.e. when mykey=0)
+   !! If each band appears more than once compute
+   !! its contribution only once (i.e. when
+   !! \(\text{mykey}=0)\)
    COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
-   !! S|evc>
+   !! \(S\ |\text{evc}\rangle\)
    COMPLEX(DP), INTENT(OUT) :: dproj(nwfcU,nb_s:nb_e)
    !! derivative of projection
    !
@@ -561,7 +563,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !! This routine is the gamma version of \(\texttt{dprojdtau_k}\).
    !! It computes the first derivative of the projection
    !! \(\langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle\) with respect to 
-   !! the atomic displacement u(alpha,ipol). We remember that:
+   !! the atomic displacement \(u(\text{alpha,ipol})\). We remember that:
    !! $$ \text{ns}_{I,s,m1,m2} = \sum_{k,v}
    !!    f_{kv} \langle\phi^{at}_{I,m1}|S|\psi_{k,v,s}\rangle
    !!           \langle\psi_{k,v,s}|S|\phi^{at}_{I,m2}\rangle $$
@@ -599,7 +601,7 @@ SUBROUTINE dprojdtau_gamma( spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, &
    !! If each band appears more than once
    !! compute its contribution only once (i.e. when mykey=0)
    COMPLEX(DP), INTENT(IN) :: spsi(npwx,nbnd)
-   !! S|evc>
+   !! \(S\ |\text{evc}\rangle\)
    REAL(DP), INTENT(OUT) :: dproj(nwfcU,nb_s:nb_e)
    !! derivative of projection
    !

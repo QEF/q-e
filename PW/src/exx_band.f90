@@ -4,14 +4,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------
+!----------------------------------------------------------------------------
 MODULE exx_band
-  !--------------------------------------
+  !---------------------------------------------------------------------------
+  !! Variables and subroutines for band parallelization over pairs of bands.
   !
-  ! Variables and subroutines for band parallelization over pairs of bands:
-  ! see T. Barnes, T. Kurth, P. Carrier, N. Wichmann, D. Prendergast,
-  ! P.R.C. Kent, J. Deslippe, Computer Physics Communications 2017,
-  ! dx.doi.org/10.1016/j.cpc.2017.01.008
+  !! See:  
+  !! T. Barnes, T. Kurth, P. Carrier, N. Wichmann, D. Prendergast,
+  !! P.R.C. Kent, J. Deslippe, Comp. Phys. Comm. (2017),  
+  !! dx.doi.org/10.1016/j.cpc.2017.01.008
   !
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : npol
@@ -22,8 +23,9 @@ MODULE exx_band
   USE stick_base,           ONLY : sticks_map
   !
   IMPLICIT NONE
+  !
   SAVE
-  !!
+  !
   COMPLEX(DP), ALLOCATABLE :: evc_exx(:,:)
   COMPLEX(DP), ALLOCATABLE :: psi_exx(:,:), hpsi_exx(:,:)
   INTEGER :: lda_original, n_original
@@ -73,26 +75,26 @@ MODULE exx_band
  CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE transform_evc_to_exx(type)
-  !-----------------------------------------------------------------------
+  SUBROUTINE transform_evc_to_exx( type )
+    !-----------------------------------------------------------------------
+    !! Transform evc to the EXX data structure.
     !
     USE wvfct,                ONLY : npwx, nbnd
     USE io_files,             ONLY : nwordwfc, iunwfc, iunwfc_exx
     USE klist,                ONLY : nks, ngk, igk_k
     USE uspp,                 ONLY : nkb, vkb
-    USE wavefunctions, ONLY : evc
+    USE wavefunctions,        ONLY : evc
     USE control_flags,        ONLY : io_level
     USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
     USE mp_exx,               ONLY : max_ibands, negrp
     !
-    !
     IMPLICIT NONE
     !
-    INTEGER, intent(in) :: type
+    INTEGER, INTENT(IN) :: type
     INTEGER :: lda, n, ik
     LOGICAL :: exst_mem, exst_file
     !
-    IF (negrp.eq.1) THEN
+    IF (negrp == 1) THEN
        !
        ! no change in data structure is necessary
        ! just copy all of the required data
@@ -174,23 +176,23 @@ MODULE exx_band
        IF ( nks > 1 ) CALL save_buffer ( evc_exx, nwordwfc_exx, iunwfc_exx, ik )
     END DO
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE transform_evc_to_exx
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE transform_psi_to_exx(lda, n, m, psi)
-  !-----------------------------------------------------------------------
+  SUBROUTINE transform_psi_to_exx( lda, n, m, psi )
+    !-----------------------------------------------------------------------
+    !! Transform psi to EXX data structure.
+    !
     USE wvfct,        ONLY : current_k, npwx, nbnd
     USE mp_exx,       ONLY : negrp, nibands, my_egrp_id, max_ibands
     !
-    !
     IMPLICIT NONE
     !
-    Integer, INTENT(in) :: lda
-    INTEGER, INTENT(in) :: m
-    INTEGER, INTENT(inout) :: n
-    COMPLEX(DP), INTENT(in) :: psi(lda*npol,m) 
+    INTEGER, INTENT(IN) :: lda
+    INTEGER, INTENT(IN) :: m
+    INTEGER, INTENT(INOUT) :: n
+    COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m) 
     !
     ! change to the EXX data strucutre
     !
@@ -223,21 +225,23 @@ MODULE exx_band
     !
     hpsi_exx = 0.d0
     !
-    !-----------------------------------------------------------------------
+    !
   END SUBROUTINE transform_psi_to_exx
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE transform_hpsi_to_local(lda, n, m, hpsi)
-  !-----------------------------------------------------------------------
+  SUBROUTINE transform_hpsi_to_local( lda, n, m, hpsi )
+    !-----------------------------------------------------------------------
+    !! Transform hpsi_exx to the local data structure.
+    !
     USE mp_exx,         ONLY : iexx_istart, iexx_iend, my_egrp_id
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(in) :: lda
-    INTEGER, INTENT(in) :: m
-    INTEGER, INTENT(inout) :: n
-    COMPLEX(DP), INTENT(out) :: hpsi(lda_original*npol,m)
+    INTEGER, INTENT(IN) :: lda
+    INTEGER, INTENT(IN) :: m
+    INTEGER, INTENT(INOUT) :: n
+    COMPLEX(DP), INTENT(OUT) :: hpsi(lda_original*npol,m)
     INTEGER :: m_exx
     !
     ! change to the local data structure
@@ -254,27 +258,24 @@ MODULE exx_band
     m_exx = iexx_iend(my_egrp_id+1) - iexx_istart(my_egrp_id+1) + 1
     CALL transform_to_local(m,m_exx,hpsi_exx,hpsi)
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE transform_hpsi_to_local
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE initialize_local_to_exact_map(lda, m)
-  !-----------------------------------------------------------------------
-    !
-    ! determine the mapping between the local and EXX data structures
+  SUBROUTINE initialize_local_to_exact_map( lda, m )
+    !-----------------------------------------------------------------------
+    !! Determine the mapping between the local and EXX data structures.
     !
     USE wvfct,          ONLY : npwx, nbnd
     USE klist,          ONLY : nks, igk_k
     USE mp_exx,         ONLY : nproc_egrp, negrp, my_egrp_id, me_egrp, &
-                               intra_egrp_comm, inter_egrp_comm, &
-                               ibands, nibands, init_index_over_band, &
+                               intra_egrp_comm, inter_egrp_comm,       &
+                               ibands, nibands, init_index_over_band,  &
                                iexx_istart, iexx_iend, max_ibands
     USE mp_pools,       ONLY : nproc_pool, me_pool, intra_pool_comm
     USE mp,             ONLY : mp_sum
     USE gvect,          ONLY : ig_l2g
     USE uspp,           ONLY : nkb
-    !
     !
     IMPLICIT NONE
     !
@@ -626,24 +627,23 @@ MODULE exx_band
     DEALLOCATE( l2e_map, e2l_map )
     DEALLOCATE( psi_source, psi_source_exx )
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE initialize_local_to_exact_map
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE transform_to_exx(lda, n, m, m_out, ik, psi, psi_out, type)
-  !-----------------------------------------------------------------------
-    !
-    ! transform psi into the EXX data structure, and place the result in psi_out
+  SUBROUTINE transform_to_exx( lda, n, m, m_out, ik, psi, psi_out, type )
+    !-----------------------------------------------------------------------
+    !! Transform psi into the EXX data structure, and place the result 
+    !! in psi_out.
     !
     USE wvfct,        ONLY : nbnd
     USE mp,           ONLY : mp_sum
     USE mp_pools,     ONLY : nproc_pool, me_pool
-    USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm, &
-         nproc_egrp, me_egrp, negrp, my_egrp_id, nibands, ibands, &
-         max_ibands, all_start, all_end
+    USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm,       &
+                             nproc_egrp, me_egrp, negrp, my_egrp_id, &
+                             nibands, ibands, max_ibands, all_start, &
+                             all_end
     USE parallel_include
-    !
     !
     IMPLICIT NONE
     !
@@ -927,17 +927,16 @@ MODULE exx_band
     !
     DEALLOCATE( psi_work, psi_gather )
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE transform_to_exx
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE change_data_structure(is_exx)
-  !-----------------------------------------------------------------------
+  SUBROUTINE change_data_structure( is_exx )
+    !-----------------------------------------------------------------------
+    !! Change between the local and EXX data structures:
     !
-    ! change between the local and EXX data structures
-    ! is_exx = .TRUE. - change to the EXX data structure
-    ! is_exx = .FALSE. - change to the local data strucutre
+    !! * is_exx = .TRUE. - change to the EXX data structure;
+    !! * is_exx = .FALSE. - change to the local data strucutre.
     !
     USE cell_base,      ONLY : at, bg, tpiba2
     USE cellmd,         ONLY : lmovecell
@@ -1141,20 +1140,19 @@ MODULE exx_band
     !
     CALL gshells( lmovecell )
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE change_data_structure
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE update_igk(is_exx)
-  !-----------------------------------------------------------------------
+  SUBROUTINE update_igk( is_exx )
+    !-----------------------------------------------------------------------
+    !
     USE cell_base,      ONLY : tpiba2
     USE gvect,          ONLY : ngm, g
     USE gvecw,          ONLY : ecutwfc
     USE wvfct,          ONLY : npwx, current_k
     USE klist,          ONLY : xk, igk_k
     USE mp_exx,         ONLY : negrp
-    !
     !
     IMPLICIT NONE
     !
@@ -1180,13 +1178,13 @@ MODULE exx_band
     !
     DEALLOCATE( work_space )
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE update_igk
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
   SUBROUTINE result_sum (n, m, data)
-  !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !
     USE parallel_include
     USE mp_exx,       ONLY : iexx_start, iexx_end, inter_egrp_comm, &
                                intra_egrp_comm, my_egrp_id, negrp, &
@@ -1283,20 +1281,22 @@ MODULE exx_band
     END DO
 #endif
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE result_sum
-  !-----------------------------------------------------------------------
+  !
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE transform_to_local(m, m_exx, psi, psi_out)
-  !-----------------------------------------------------------------------
+  SUBROUTINE transform_to_local( m, m_exx, psi, psi_out )
+    !-----------------------------------------------------------------------
+    !! Transform psi into the local data structure, and place the result 
+    !! in psi_out.
+    !
     USE mp,           ONLY : mp_sum
     USE mp_pools,     ONLY : nproc_pool, me_pool, intra_pool_comm
-    USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm, &
-         nproc_egrp, me_egrp, negrp, my_egrp_id, iexx_istart, iexx_iend
+    USE mp_exx,       ONLY : intra_egrp_comm, inter_egrp_comm,       &
+                             nproc_egrp, me_egrp, negrp, my_egrp_id, &
+                             iexx_istart, iexx_iend
     USE parallel_include
     USE wvfct,        ONLY : current_k
-    !
     !
     IMPLICIT NONE
     !
@@ -1427,9 +1427,7 @@ MODULE exx_band
     END IF
 #endif
     !
-    !-----------------------------------------------------------------------
   END SUBROUTINE transform_to_local
-  !-----------------------------------------------------------------------
 
 END MODULE exx_band
 !-----------------------------------------------------------------------
