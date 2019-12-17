@@ -13,8 +13,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
-  !! General self-consistency loop, also for hybrid functionals
-  !! For non-hybrid functionals it just calls "electron_scf"
+  !! General self-consistency loop, also for hybrid functionals.  
+  !! For non-hybrid functionals it just calls \(\texttt{electron_scf}\).
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -344,11 +344,11 @@ END SUBROUTINE electrons
 !----------------------------------------------------------------------------
 SUBROUTINE electrons_scf ( printout, exxen )
   !----------------------------------------------------------------------------
-  !! This routine is a driver of the self-consistent cycle.
-  !! It uses the routine c_bands for computing the bands at fixed
-  !! Hamiltonian, the routine sum_band to compute the charge density,
-  !! the routine v_of_rho to compute the new potential and the routine
-  !! mix_rho to mix input and output charge densities.
+  !! This routine is a driver of the self-consistent cycle.  
+  !! It uses the routine \(\texttt{c_bands}\) for computing the bands at fixed
+  !! Hamiltonian, the routine \(\texttt{sum_band}\) to compute the charge density,
+  !! the routine \(\texttt{v_of_rho}\) to compute the new potential and the routine
+  !! \(\text{mix_rho}\) to mix input and output charge densities.
   !
   USE kinds,                ONLY : DP
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
@@ -1020,16 +1020,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !-----------------------------------------------------------------------
      FUNCTION delta_e()
        !-----------------------------------------------------------------------
-       !! This function computes \(\textrm{delta_e}\), where:
-       !
-       !! $$\begin{alignat*}{2} \text{delta}\_\text{e} &= - \int\text{rho}\%\text{of}\_\text{r(r)}\cdot 
-       !!                                                           \text{v}\%\text{of}\_\text{r(r)} && \\
-       !!                          &= - \int \text{rho}\%\text{kin}\_\text{r(r)}\cdot \text{v}\%\text{kin}\_
-       !!                                                           \text{r(r)} && \text{[for Meta-GGA]} \\
-       !!                          &= - \sum \text{rho}\%\text{ns}\cdot \text{v}\%\text{ns} && 
-       !!                                                                               \text{[for LDA+U]}\\
-       !!                          &= - \sum \text{becsum}\cdot \text{D1}\_\text{Hxc} && \text{[for PAW]}
-       !!                                                                                  \end{alignat*} $$
+       ! This function computes delta_e, where:
        !
        ! ... delta_e =  - \int rho%of_r(r)  v%of_r(r)
        !                - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
@@ -1084,16 +1075,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !-----------------------------------------------------------------------
      FUNCTION delta_escf()
        !-----------------------------------------------------------------------
-       !! This function calculates the difference between the Hartree and XC energy
-       !! at first order in the charge density difference \(\textrm{delta_rho(r)}\):
-       !
-       !! $$\begin{alignat*}{2} \text{delta}\_\text{escf} &= - \int\text{rho}\%\text{of}\_\text{r(r)}\cdot
-       !!                                                              \text{v}\%\text{of}\_\text{r(r)} && \\
-       !!                          &= - \int \text{rho}\%\text{kin}\_\text{r(r)}\cdot \text{v}\%\text{kin}\_
-       !!                                                              \text{r(r)} && \text{[for Meta-GGA]} \\
-       !!                          &= - \sum \text{rho}\%\text{ns}\cdot \text{v}\%\text{ns} && 
-       !!                                                                                \text{[for LDA+U]} \\
-       !!                          &= - \sum \text{becsum}\cdot \text{D1} && \text{[for PAW]} \end{alignat*} $$
+       ! This function calculates the difference between the Hartree and XC energy
+       ! at first order in the charge density difference delta_rho(r).
        !
        ! ... delta_escf = - \int \delta rho%of_r(r)  v%of_r(r)
        !                  - \int \delta rho%kin_r(r) v%kin_r(r) [for Meta-GGA]

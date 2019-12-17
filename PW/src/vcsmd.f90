@@ -9,48 +9,49 @@
 !----------------------------------------------------------------------------
 SUBROUTINE vcsmd( conv_ions )
   !----------------------------------------------------------------------------
+  !! Main (interface) routine between PWSCF and the variable-cell shape
+  !! molecular dynamics code by R.M. Wentzcovitch, PRB 44, 2358 (1991).
   !
-  ! Main (interface) routine between PWSCF and the variable-cell shape
-  ! molecular dynamics code by R.M. Wentzcovitch, PRB 44, 2358 (1991).
+  !! Molecular and/or cell dynamics is performed according to the value of
+  !! the switch variable calc:
   !
-  ! Molecular and/or cell dynamics is performed according to the value of
-  ! the switch variable calc:
+  !! * calc  = 'md'   : standard molecular dynamics;
+  !! * calc  = 'mm'   : structural minimization by damped dynamics;
+  !! * calc  = 'cd'   : Parrinello-Rahman cell dynamics;
+  !! * calc  = 'cm'   : Parrinello-Rahman cell minimization by damped dynamics;
+  !! * calc  = 'nd'   : Wentzcovitch's new cell dynamics;
+  !! * calc  = 'nm'   : Wentzcovitch's new cell minimization by damped dynamics.
   !
-  !  calc  = 'md'   : standard molecular dynamics
-  !  calc  = 'mm'   : structural minimization by damped dynamics
-  !  calc  = 'cd'   : Parrinello-Rahman cell dynamics
-  !  calc  = 'cm'   : Parrinello-Rahman cell minimization by damped dynamics
-  !  calc  = 'nd'   : Wentzcovitch's new cell dynamics
-  !  calc  = 'nm'   : Wentzcovitch's new cell minimization by damped dynamics
+  !! Dynamics performed using Beeman algorithm, J. Comp. Phys. 20, 130 (1976).
   !
-  ! Dynamics performed using Beeman algorithm, J. Comp. Phys. 20, 130 (1976))
+  !! Contraints with vcsmd have been implemented by Vivek Ranjan in 2012
+  !! from the Department of Physics, North Carolina State University
+  !! Raleigh, North Carolina, USA.
   !
-  ! Contraints with vcsmd have been implemented by Vivek Ranjan in 2012
-  ! from the Department of Physics, North Carolina State University
-  ! Raleigh, North Carolina, USA
+  USE kinds,               ONLY : DP
+  USE io_global,           ONLY : stdout
+  USE constants,           ONLY : e2, ry_kbar, amu_ry
+  USE cell_base,           ONLY : omega, alat, at, bg, iforceh, fix_volume, fix_area
+  USE ions_base,           ONLY : tau, nat, ntyp => nsp, ityp, atm, if_pos
+  USE cellmd,              ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
+                                  cmass, ntcheck, lmovecell
+  USE dynamics_module,     ONLY : dt, temperature
+  USE ions_base,           ONLY : amass, if_pos 
+  USE relax,               ONLY : epse, epsf, epsp
+  USE force_mod,           ONLY : force, sigma
+  USE control_flags,       ONLY : nstep, istep, tolp, lconstrain
+  USE parameters,          ONLY : ntypx
+  USE ener,                ONLY : etot
+  USE io_files,            ONLY : prefix, delete_if_present, seqopn
   !
-  USE kinds,           ONLY : DP
-  USE io_global,       ONLY : stdout
-  USE constants,       ONLY : e2, ry_kbar, amu_ry
-  USE cell_base,       ONLY : omega, alat, at, bg, iforceh, fix_volume, fix_area
-  USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm, if_pos
-  USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
-                              cmass, ntcheck, lmovecell
-  USE dynamics_module, ONLY : dt, temperature
-  USE ions_base,       ONLY : amass, if_pos 
-  USE relax,           ONLY : epse, epsf, epsp
-  USE force_mod,       ONLY : force, sigma
-  USE control_flags,   ONLY : nstep, istep, tolp, lconstrain
-  USE parameters,      ONLY : ntypx
-  USE ener,            ONLY : etot
-  USE io_files,        ONLY : prefix, delete_if_present, seqopn
-
-  USE constraints_module, ONLY : nconstr
-  USE constraints_module, ONLY : remove_constr_force, check_constraint  
+  USE constraints_module,  ONLY : nconstr
+  USE constraints_module,  ONLY : remove_constr_force, check_constraint  
   !
   !
   IMPLICIT NONE
-  LOGICAL, INTENT (OUT) :: conv_ions
+  !
+  LOGICAL, INTENT(OUT) :: conv_ions
+  !! .TRUE. if convergence is achieved
   !
   ! ... I/O variable first
   !

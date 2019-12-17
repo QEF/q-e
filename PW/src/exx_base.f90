@@ -8,7 +8,7 @@
 !--------------------------------------
 MODULE exx_base
   !--------------------------------------
-  !! Basic variables and subroutines for calculation of exact exchange.
+  !! Basic variables and subroutines for calculation of exact exchange (EXX).
   !
   USE kinds,                ONLY : DP
   USE coulomb_vcut_module,  ONLY : vcut_init, vcut_type, vcut_info, &
@@ -95,19 +95,22 @@ MODULE exx_base
   !! the Coulomb factor is reused between iterations
   !
   LOGICAL, ALLOCATABLE :: coulomb_done(:,:)
-  !! list of which coulomb factors have been calculated already
+  !! list of which Coulomb factors have been calculated already
   !
  CONTAINS
   !
   !------------------------------------------------------------------------
   SUBROUTINE exx_mp_init()
     !------------------------------------------------------------------------
-    !! * setup the orthopool communicators, which include the (n-1)th CPU of
-    !!   each pool (i.e. orthopool 0, contains CPU 0 of each pool);
-    !! * setup global variable "working_pool" which contains the index of the
-    !!   pool which has the local copy prior to rotation of the ikq-th pool;
-    !! * working_pool(ikq) is also index of the CPU in each orthopool which has
-    !!   to broadcast the wavefunction at k-point ikq.
+    !! 1) Setup the orthopool communicators, which include the (n-1)-th CPU of
+    !!    each pool (i.e. orthopool 0, contains CPU 0 of each pool).
+    !
+    !! 2) Setup global variable \(\text{working_pool}\) which contains the index of the
+    !!    pool which has the local copy prior to rotation of the \(\text{ikq}\)-th
+    !!    pool.  
+    !
+    !! 3) \(\text{working_pool(ikq)}\) is also index of the CPU in each orthopool
+    !!    which has to broadcast the wavefunction at k-point \(\text{ikq}\).
     !
     USE mp_images,      ONLY : intra_image_comm
     USE mp_pools,       ONLY : my_pool_id
@@ -413,7 +416,7 @@ MODULE exx_base
   !------------------------------------------------------------------------
   SUBROUTINE exx_div_check()
     !------------------------------------------------------------------------
-    !!
+    !! EXX singularity treatment.
     !
     USE cell_base,  ONLY : at, alat
     USE funct,      ONLY : get_screening_parameter
@@ -422,8 +425,6 @@ MODULE exx_base
     !
     REAL(DP) :: atws(3,3)
     CHARACTER(13) :: sub_name='exx_div_check'
-    !
-    ! EXX singularity treatment
     !
     SELECT CASE ( TRIM(exxdiv_treatment) )
     CASE ( "gygi-baldereschi", "gygi-bald", "g-b", "gb" )
@@ -480,7 +481,6 @@ MODULE exx_base
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_check( xk_collect )
     !------------------------------------------------------------------------
-    !!
     !
     USE symm_base,  ONLY : s
     USE cell_base,  ONLY : at
@@ -550,7 +550,8 @@ MODULE exx_base
   !-----------------------------------------------------------------------
   SUBROUTINE exx_set_symm( nr1, nr2, nr3, nr1x, nr2x, nr3x )
     !-----------------------------------------------------------------------
-    !! Uses nkqs and index_sym from module exx, computes rir.
+    !! Uses \(\text{nkqs}\) and \(\text{index_sym}\) from module \(\texttt{exx}\),
+    !! computes \(\text{rir}\).
     !
     USE symm_base,  ONLY : nsym, s, sr, ft
     !
@@ -789,7 +790,6 @@ MODULE exx_base
   !-----------------------------------------------------------------------
   FUNCTION exx_divergence()
      !-----------------------------------------------------------------------
-     !! 
      !
      USE constants,      ONLY : fpi, e2, pi
      USE cell_base,      ONLY : bg, at, alat, omega

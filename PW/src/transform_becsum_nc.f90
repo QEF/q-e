@@ -7,30 +7,32 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE transform_becsum_nc(becsum_nc,becsum,na)
-!----------------------------------------------------------------------------
-!
-! This routine multiply becsum_nc by the identity and the Pauli
-! matrices and saves it in becsum for the calculation of 
-! augmentation charge and magnetization.
-!
-USE kinds,                ONLY : DP
-USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-USE uspp_param,           ONLY : nh, nhm
-USE lsda_mod,             ONLY : nspin
-USE noncollin_module,     ONLY : npol, nspin_mag
-USE spin_orb,             ONLY : domag
-!
-IMPLICIT NONE
-
-COMPLEX(DP) :: becsum_nc(nhm*(nhm+1)/2,nat,npol,npol)
-REAL(DP) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
-INTEGER :: na
-!
-! ... local variables
-!
-INTEGER :: ih, jh, ijh, np
-
+SUBROUTINE transform_becsum_nc( becsum_nc, becsum, na )
+  !----------------------------------------------------------------------------
+  !! This routine multiply becsum_nc by the identity and the Pauli
+  !! matrices and saves it in becsum for the calculation of 
+  !! augmentation charge and magnetization.
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE uspp_param,           ONLY : nh, nhm
+  USE lsda_mod,             ONLY : nspin
+  USE noncollin_module,     ONLY : npol, nspin_mag
+  USE spin_orb,             ONLY : domag
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: becsum_nc(nhm*(nhm+1)/2,nat,npol,npol)
+  !! input: becsum contains \sum_i <\psi_i | \beta_n><\beta_m| \psi_i > + (m-n)
+  REAL(DP) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
+  !! output: see routine comments.
+  INTEGER :: na
+  !! input: number of atoms
+  !
+  ! ... local variables
+  !
+  INTEGER :: ih, jh, ijh, np
+  !
 np=ityp(na)
 ijh=1
 DO ih = 1, nh(np)

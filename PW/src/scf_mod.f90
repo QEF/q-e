@@ -43,6 +43,7 @@ MODULE scf
   !
   !
   TYPE scf_type
+     !! Used for two different quantities: density and potential
      REAL(DP),    ALLOCATABLE :: of_r(:,:)
      !! the charge density in R-space
      COMPLEX(DP), ALLOCATABLE :: of_g(:,:)
@@ -60,6 +61,7 @@ MODULE scf
   END TYPE scf_type
   !
   TYPE mix_type
+     !! For quantities directly involved in the mixing
      COMPLEX(DP), ALLOCATABLE :: of_g(:,:)
      !! the charge density in G-space
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:)
@@ -108,7 +110,7 @@ CONTAINS
  !----------------------------------------------------------
  SUBROUTINE create_scf_type( rho, do_not_allocate_becsum )
    !----------------------------------------------------------
-   !! Creates an scf_type object by allocating all the 
+   !! Creates an \(\text{scf_type}\) object by allocating all the 
    !! different terms.
    !
    IMPLICIT NONE
@@ -220,6 +222,7 @@ CONTAINS
  !------------------------------------------------------
  SUBROUTINE destroy_mix_type( rho )
    !----------------------------------------------------
+   !! Deallocates a \(\text{mix_type}\) object.
    !
    IMPLICIT NONE
    !
@@ -239,11 +242,14 @@ CONTAINS
  !-----------------------------------------------------
  SUBROUTINE assign_scf_to_mix_type( rho_s, rho_m )
    !----------------------------------------------------
+   !! It fills a \(\text{mix_type}\) object starting from a
+   !! \(\text{scf_type}\) one.
    !
    IMPLICIT NONE
    !
    TYPE(scf_type), INTENT(IN)  :: rho_s
    TYPE(mix_type), INTENT(INOUT) :: rho_m
+   !
    REAL(DP) :: e_dipole
    !
    rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
@@ -266,6 +272,8 @@ CONTAINS
  !-----------------------------------------------------------------
  SUBROUTINE assign_mix_to_scf_type( rho_m, rho_s )
    !----------------------------------------------------------------
+   !! It fills a \(\text{scf_type}\) object starting from a 
+   !! \(\text{mix_type}\) one.
    !
    USE wavefunctions,        ONLY : psic
    USE control_flags,        ONLY : gamma_only
@@ -273,11 +281,7 @@ CONTAINS
    IMPLICIT NONE
    !
    TYPE(mix_type), INTENT(IN) :: rho_m
-   !! input: mix object
    TYPE(scf_type), INTENT(INOUT) :: rho_s
-   !! I/O: scf object
-   !
-   ! ... local variable
    !
    INTEGER :: is
    !   
@@ -314,9 +318,9 @@ CONTAINS
  !
  !
  !----------------------------------------------------------------------------
- SUBROUTINE scf_type_COPY (X,Y)
+ SUBROUTINE scf_type_COPY( X, Y )
   !----------------------------------------------------------------------------
-  !! works like DCOPY for scf_type copy variables :  Y = X 
+  !! Works like DCOPY for \(\text{scf_type}\) copy variables: \(Y = X\).
   !
   USE kinds,  ONLY : DP
   !
@@ -345,7 +349,7 @@ CONTAINS
  !----------------------------------------------------------------------------
  SUBROUTINE mix_type_AXPY( A, X, Y )
   !----------------------------------------------------------------------------
-  !! Works like daxpy for scf_type variables :  Y = A * X + Y
+  !! Works like daxpy for \(\text{scf_type}\) variables: \(Y = A\cdot X + Y\)
   ! NB: A is a REAL(DP) number
   !
   USE kinds, ONLY : DP
@@ -372,7 +376,7 @@ CONTAINS
  !----------------------------------------------------------------------------
  SUBROUTINE mix_type_COPY( X, Y )
   !----------------------------------------------------------------------------
-  !! Works like DCOPY for mix_type copy variables :  Y = X 
+  !! Works like DCOPY for \(\text{mix_type}\) copy variables: \(Y = X\).
   !
   USE kinds, ONLY : DP
   !
@@ -397,7 +401,7 @@ CONTAINS
  !----------------------------------------------------------------------------
  SUBROUTINE mix_type_SCAL( A, X )
   !----------------------------------------------------------------------------
-  !! Works like DSCAL for mix_type copy variables :  \(X = A * X\)  
+  !! Works like DSCAL for \(\text{mix_type}\) copy variables: \(X = A \cdot X\)  
   !! NB: A is a REAL(DP) number
   !
   USE kinds, ONLY : DP
@@ -515,7 +519,7 @@ CONTAINS
    ! define total record length, in complex numbers
    record_length = start_dipole + rlen_dip - 1
    !
-   ! open file and ALLOCATE io_buffer
+   ! open file and allocate io_buffer
    CALL open_buffer( iunit, extension, record_length, io_level, exst )
    !
    ALLOCATE( io_buffer(record_length) )

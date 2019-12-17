@@ -5,31 +5,58 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-SUBROUTINE kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, &
-                         bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
-!-----------------------------------------------------------------------
-!
-!  Automatic generation of a uniform grid of k-points
-!
+!--------------------------------------------------------------------------
+SUBROUTINE kpoint_grid( nrot, time_reversal, skip_equivalence, s, t_rev, &
+                        bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk )
+  !-----------------------------------------------------------------------
+  !!  Automatic generation of a uniform grid of k-points.
+  !
   USE kinds, ONLY: DP
+  !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in):: nrot, npk, k1, k2, k3, nk1, nk2, nk3, &
-                        t_rev(48), s(3,3,48)
-  LOGICAL, INTENT(in):: time_reversal, skip_equivalence
-  real(DP), INTENT(in):: bg(3,3)
+  INTEGER, INTENT(IN) :: nrot
+  !! number of bravais lattice symmetries
+  INTEGER, INTENT(IN) :: npk
+  !! max number of k-points
+  INTEGER, INTENT(IN) :: k1
+  !! the offset from the origin, direction 1
+  INTEGER, INTENT(IN) :: k2
+  !! the offset from the origin, direction 2
+  INTEGER, INTENT(IN) :: k3
+  !! the offset from the origin, direction 3
+  INTEGER, INTENT(IN) :: nk1
+  !! the special-point grid, direction 1
+  INTEGER, INTENT(IN) :: nk2
+  !! the special-point grid, direction 2
+  INTEGER, INTENT(IN) :: nk3
+  !! the special-point grid, direction 3
+  INTEGER, INTENT(IN) :: t_rev(48)
+  !! time reversal flag, for noncolinear magnetism
+  INTEGER, INTENT(IN) :: s(3,3,48)
+  !! symmetry matrices, in crystal axis
+  LOGICAL, INTENT(IN) :: time_reversal
+  !! if .TRUE. the system has time reversal symmetry
+  LOGICAL, INTENT(IN) :: skip_equivalence
+  !! if .TRUE. skip check of k-points equivalence
+  REAL(DP), INTENT(IN) :: bg(3,3)
+  !! bg(:,i) are the reciprocal lattice vectors, b_i,
+  !! in tpiba=2pi/alat units: b_i(:) = bg(:,i)/tpiba
+  INTEGER,  INTENT(out) :: nks
+  !! number of k points
+  REAL(DP), INTENT(out) :: xk(3,npk)
+  !! coordinates of k points
+  REAL(DP), INTENT(out) :: wk(npk)
+  !! weight of k points
   !
-  INTEGER, INTENT(out) :: nks
-  real(DP), INTENT(out):: xk(3,npk)
-  real(DP), INTENT(out):: wk(npk)
-  ! LOCAL:
-  real(DP), PARAMETER :: eps=1.0d-5
-  real(DP) :: xkr(3), fact, xx, yy, zz
-  real(DP), ALLOCATABLE:: xkg(:,:), wkk(:)
-  INTEGER :: nkr, i,j,k, ns, n, nk
+  ! ... local variables
+  !
+  REAL(DP) :: xkr(3), fact, xx, yy, zz
+  REAL(DP), ALLOCATABLE :: xkg(:,:), wkk(:)
+  INTEGER :: nkr, i, j, k, ns, n, nk
   INTEGER, ALLOCATABLE :: equiv(:)
   LOGICAL :: in_the_list
+  REAL(DP), PARAMETER :: eps=1.0d-5
   !
   nkr=nk1*nk2*nk3
   ALLOCATE (xkg( 3,nkr),wkk(nkr))
@@ -146,35 +173,60 @@ SUBROUTINE kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, &
 
   RETURN
 END SUBROUTINE kpoint_grid
-!-----------------------------------------------------------------------
-SUBROUTINE kpoint_grid_efield (at, bg, npk, &
-                         k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, nspin)
-!-----------------------------------------------------------------------
 !
-!  Automatic generation of a uniform grid of k-points
-! for Berry's phase electric field
 !
-  USE kinds, ONLY : DP
-  USE bp,    ONLY : nppstr_3d, nx_el, l3dstring, efield_cart, efield_cry,&
-                    transform_el
-  USE io_global,  ONLY : stdout
-  USE noncollin_module,   ONLY : noncolin
+!-----------------------------------------------------------------------
+SUBROUTINE kpoint_grid_efield( at, bg, npk, k1,k2,k3, nk1,nk2,nk3, &
+                               nks, xk, wk, nspin )
+  !-----------------------------------------------------------------------
+  !! Automatic generation of a uniform grid of k-points for Berry's
+  !! phase electric field.
+  !
+  USE kinds,             ONLY : DP
+  USE bp,                ONLY : nppstr_3d, nx_el, l3dstring, &
+                                efield_cart, efield_cry, transform_el
+  USE io_global,         ONLY : stdout
+  USE noncollin_module,  ONLY : noncolin
   USE matrix_inversion
-
+  !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(in):: npk, k1, k2, k3, nk1, nk2, nk3,nspin
-  real(DP), INTENT(in):: bg(3,3), at(3,3)
+  INTEGER, INTENT(IN) :: npk
+  !! max number of k-points
+  INTEGER, INTENT(IN) :: k1
+  !! the offset from the origin, direction 1
+  INTEGER, INTENT(IN) :: k2
+  !! the offset from the origin, direction 2
+  INTEGER, INTENT(IN) :: k3
+  !! the offset from the origin, direction 3
+  INTEGER, INTENT(IN) :: nk1
+  !! the special-point grid, direction 1
+  INTEGER, INTENT(IN) :: nk2
+  !! the special-point grid, direction 2
+  INTEGER, INTENT(IN) :: nk3
+  !! the special-point grid, direction 3
+  INTEGER, INTENT(IN) :: nspin
+  !! number of spin components
+  REAL(DP), INTENT(IN) :: bg(3,3)
+  !! bg(:,i) are the reciprocal lattice vectors, b_i,
+  !! in tpiba=2pi/alat units: b_i(:) = bg(:,i)/tpiba
+  REAL(DP), INTENT(IN) :: at(3,3)
+  !! at(:,i) are the lattice vectors of the simulation cell, a_i,
+  !! in alat units: a_i(:) = at(:,i)/alat
+  INTEGER,  INTENT(out) :: nks
+  !! number of k points
+  REAL(DP), INTENT(out) :: xk(3,npk)
+  !! coordinates of k points
+  REAL(DP), INTENT(out) :: wk(npk)
+  !! weight of k points
   !
-  INTEGER, INTENT(out) :: nks
-  real(DP), INTENT(out):: xk(3,npk)
-  real(DP), INTENT(out):: wk(npk)
-
+  ! ... local variables
+  !
   INTEGER :: i,j,k,n,nk,m
   INTEGER :: nppstr_max
-  real(DP) :: fact, sca
-  real(DP) :: cry_to_cart(3,3)
-  real(DP) :: bg_n(3,3)
+  REAL(DP) :: fact, sca
+  REAL(DP) :: cry_to_cart(3,3)
+  REAL(DP) :: bg_n(3,3)
   !
   !
   DO i=1,nk1

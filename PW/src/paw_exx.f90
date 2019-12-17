@@ -11,6 +11,11 @@
 !=----------------------------------------------------------------------------=!
 MODULE paw_exx
   !=----------------------------------------------------------------------------=!
+  !! Module for Projector-Augmented-Wave method with EXX.
+  !
+  !! Written by Lorenzo Paulatto, October 2012  
+  !! [1] J. Chem. Phys. 122, 234102 (2005)
+  !
   USE kinds, ONLY : DP
   TYPE paw_fockrnl_type
     REAL(DP),POINTER :: k(:,:,:,:)
@@ -21,25 +26,30 @@ MODULE paw_exx
   CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE PAW_newdxx(weight, becphi, becpsi, deexx)
+  SUBROUTINE PAW_newdxx( weight, becphi, becpsi, deexx )
     !-----------------------------------------------------------------------
-    ! This subroutine computes some sort of EXX contribution to the non-local 
-    ! part of the hamiltonian. PAW one-center terms are computed here.
+    !! This subroutine computes some sort of EXX contribution to the non-local 
+    !! part of the hamiltonian. PAW one-center terms are computed here.
+    !
     USE ions_base,      ONLY : nat, ntyp => nsp, ityp
     USE uspp_param,     ONLY : upf, nh
     USE uspp,           ONLY : nkb
     USE paw_variables,  ONLY : okpaw
     USE uspp,           ONLY : indv_ijkb0
     USE io_global,      ONLY : ionode, ionode_id
+    !
     IMPLICIT NONE
     !
-    ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
-    COMPLEX(DP),INTENT(in)    :: becphi(nkb)
-    COMPLEX(DP),INTENT(in)    :: becpsi(nkb) 
-    COMPLEX(DP),INTENT(inout) :: deexx(nkb)
-    REAL(DP)                  :: weight
+    COMPLEX(DP),INTENT(IN) :: becphi(nkb)
+    !! \(\langle\beta|\phi\rangle\) only for this kpoint and this band
+    COMPLEX(DP),INTENT(IN) :: becpsi(nkb)
+    !! \(\langle\beta|\psi\rangle\) only for this kpoint and this band
+    COMPLEX(DP),INTENT(INOUT) :: deexx(nkb)
+    !! see main comment
+    REAL(DP) :: weight
     !
     ! ... local variables
+    !
     INTEGER :: ijkb0, ih, jh, na, np, ikb, jkb, oh,uh,okb,ukb
     !
     !RETURN
@@ -92,18 +102,28 @@ MODULE paw_exx
   !-----------------------------------------------------------------------
   !
   !=----------------------------------------------------------------------------=!
-  FUNCTION PAW_xx_energy(becphi, becpsi)
+  FUNCTION PAW_xx_energy( becphi, becpsi )
     !=----------------------------------------------------------------------------=!
-    ! Compute the energy: 2-electron 4-wavefunctions integral and sum with weights and <beta|psi>
-    ! Integral over bands and kpoints is done outside (doing it here would not fit properly with exx.f90)
+    !! Compute the energy: 2-electron 4-wavefunctions integral and sum with weights
+    !! and <beta|psi>.  
+    !! Integral over bands and kpoints is done outside (doing it here would not fit
+    !! properly with exx.f90)
+    !
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE uspp_param,         ONLY : nh, upf
     USE uspp,               ONLY : nkb, indv_ijkb0
     USE io_global,          ONLY : ionode
-    IMPLICIT NONE
-    COMPLEX(DP),INTENT(in) :: becphi(nkb), becpsi(nkb)
     !
+    IMPLICIT NONE
+    !
+    COMPLEX(DP),INTENT(IN) :: becphi(nkb)
+    !! \(\langle\beta|\phi\rangle\) only for this kpoint and this band
+    COMPLEX(DP),INTENT(IN) :: becpsi(nkb)
+    !! \(\langle\beta|\psi\rangle\) only for this kpoint and this band
     REAL(DP) :: PAW_xx_energy
+    !! see main comment
+    !
+    ! ... local variables
     !
     INTEGER :: np, na
     INTEGER :: ih, jh, oh, uh
@@ -158,15 +178,18 @@ MODULE paw_exx
   !=----------------------------------------------------------------------------=!
   SUBROUTINE PAW_init_fock_kernel()
     !=----------------------------------------------------------------------------=!
-    ! Driver to compute the 2-electron 4-wavefunctions integrals that constitue
-    ! the kernel of the Fock operator
+    !! Driver to compute the 2-electron 4-wavefunctions integrals that constitute
+    !! the kernel of the Fock operator.
+    !
     USE kinds,             ONLY : DP
     USE ions_base,         ONLY : ntyp => nsp
     USE uspp_param,        ONLY : nh
+    !
     IMPLICIT NONE
+    !
     INTEGER :: ns !, ih,jh,oh,uh
-    REAL(DP),ALLOCATABLE :: k_ae(:,:,:,:), k_ps(:,:,:,:)
-
+    REAL(DP), ALLOCATABLE :: k_ae(:,:,:,:), k_ps(:,:,:,:)
+    !
     IF(paw_has_init_paw_fockrnl) RETURN !CALL errore("PAW_init_fock_kernel", "already init paw paw_fockrnl", 1)
     paw_has_init_paw_fockrnl = .true.
     !
@@ -213,14 +236,17 @@ MODULE paw_exx
   !=----------------------------------------------------------------------------=!
   SUBROUTINE PAW_clean_fock_kernel()
     !=----------------------------------------------------------------------------=!
-    ! ke_ae and ke_ps for later use
+    !! ke_ae and ke_ps for later use
+    !
     USE ions_base,         ONLY : ityp, ntyp => nsp
+    !
     IMPLICIT NONE
-
+    !
     IF(.not.paw_has_init_paw_fockrnl) RETURN
     paw_has_init_paw_fockrnl = .false.
     !
-    ! We have one matrix for the all electron and one for the pseudo part for each atomic specie
+    ! We have one matrix for the all electron and one for the pseudo part for each 
+    ! atomic species
     CALL deallocate_paw_fockrnl(ntyp, ke)
     DEALLOCATE(ke)
     !
@@ -231,7 +257,9 @@ MODULE paw_exx
   !=----------------------------------------------------------------------------=!
   SUBROUTINE allocate_paw_fockrnl(ntp, nh, paw_fockrnl)
     !=----------------------------------------------------------------------------=!
+    !
     IMPLICIT NONE
+    !
     INTEGER,INTENT(in) :: ntp
     INTEGER,INTENT(in) :: nh(ntp)
     TYPE(paw_fockrnl_type),INTENT(inout) :: paw_fockrnl(ntp)
@@ -244,10 +272,13 @@ MODULE paw_exx
     !=----------------------------------------------------------------------------=!
   END SUBROUTINE allocate_paw_fockrnl
   !=----------------------------------------------------------------------------=!
+  !
   !=----------------------------------------------------------------------------=!
-  SUBROUTINE deallocate_paw_fockrnl(ntp, paw_fockrnl)
+  SUBROUTINE deallocate_paw_fockrnl( ntp, paw_fockrnl )
     !=----------------------------------------------------------------------------=!
+    !
     IMPLICIT NONE
+    !
     INTEGER,INTENT(in) :: ntp
     TYPE(paw_fockrnl_type),INTENT(inout) :: paw_fockrnl(ntp)
     INTEGER :: i
@@ -264,20 +295,28 @@ MODULE paw_exx
   !=----------------------------------------------------------------------------=!
   SUBROUTINE PAW_fock_onecenter(what, np, paw_fockrnl)
     !=----------------------------------------------------------------------------=!
-    ! Compute the 2-electron 4-wavefunctions integrals i.e. the exchange integral
-    ! for one atomic species (either pseudo or all-electron) 
-    ! Includes augmentation in the pseudo case.
+    !! Compute the 2-electron 4-wavefunctions integrals i.e. the exchange integral
+    !! for one atomic species (either pseudo or all-electron).  
+    !! Includes augmentation in the pseudo case.
+    !
     USE constants,         ONLY : e2
     USE atom,              ONLY : g => rgrid
     USE ions_base,         ONLY : nat, ityp, ntyp => nsp
     USE uspp_param,        ONLY : nh, nhm, upf
     USE paw_variables,     ONLY : paw_info
     USE paw_onecenter,     ONLY : PAW_h_potential
-    USE lsda_mod,  ONLY : nspin
+    USE lsda_mod,          ONLY : nspin
+    !
     IMPLICIT NONE
-    INTEGER, INTENT(in)  :: np ! atomic type
-    REAL(DP),INTENT(out) :: paw_fockrnl(nh(np),nh(np),nh(np),nh(np))
-    CHARACTER(len=2),INTENT(in) :: what ! "AE"= all-electron or "PS"=pseudo
+    !
+    INTEGER, INTENT(IN)  :: np
+    !! atomic type
+    REAL(DP),INTENT(OUT) :: paw_fockrnl(nh(np),nh(np),nh(np),nh(np))
+    !! see Eq. 33 Ref. 1
+    CHARACTER(LEN=2), INTENT(IN) :: what
+    !! "AE"= all-electron or "PS"=pseudo
+    !
+    ! ... local variables
     !
     TYPE(paw_info) :: i
     REAL(DP), ALLOCATABLE   :: v_lm(:,:)        ! workspace: potential
@@ -363,21 +402,30 @@ MODULE paw_exx
   !=----------------------------------------------------------------------------=!
   SUBROUTINE PAW_rho_lm_ij(i, ih_, jh_, pfunc, rho_lm, aug)
     !=----------------------------------------------------------------------------=!
-    ! Computes the fake two-wavefunctions density i.e. phi_i(r)phi_j(r)^*, 
-    ! Represent it as spherical harmonics. Details: this is a generalized version of PAW_rho_lm.
+    !! Computes the fake two-wavefunctions density i.e. \(\phi_i(r)\phi_j(r)^*\), 
+    !! Represent it as spherical harmonics. Details: this is a generalized version
+    !! of \(\texttt{PAW_rho_lm}\).
+    !
     USE uspp_param,        ONLY : upf
     USE uspp,              ONLY : indv, ap, nhtolm,lpl,lpx
     USE atom,              ONLY : g => rgrid
     USE paw_variables,     ONLY : paw_info
+    !
     IMPLICIT NONE
-    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
+    !
+    TYPE(paw_info), INTENT(IN) :: i
+    !! atom's minimal info
     INTEGER,INTENT(in) :: ih_, jh_
     INTEGER :: ih, jh
-    REAL(DP), INTENT(IN)  :: pfunc(i%m,i%b,i%b)             ! psi_i * psi_j
-    REAL(DP), INTENT(OUT) :: rho_lm(i%m,i%l**2)       ! AE charge density on rad. grid
-    REAL(DP), OPTIONAL,INTENT(IN) :: &
-                            aug(i%m,(i%b*(i%b+1))/2,0:2*upf(i%t)%lmax) ! augmentation functions (only for PS part)
-
+    REAL(DP), INTENT(IN)  :: pfunc(i%m,i%b,i%b)
+    !! psi_i * psi_j
+    REAL(DP), INTENT(OUT) :: rho_lm(i%m,i%l**2)
+    !! AE charge density on rad. grid
+    REAL(DP), OPTIONAL,INTENT(IN) :: aug(i%m,(i%b*(i%b+1))/2,0:2*upf(i%t)%lmax)
+    !! augmentation functions (only for PS part)
+    !
+    ! ... local variables
+    !
     INTEGER                 :: nb_, mb_
     INTEGER                 :: nb, mb, &
                                nmb, &    ! composite "triangular" index for pfunc nmb = 1,nh*(nh+1)/2
@@ -385,7 +433,7 @@ MODULE paw_exx
     REAL(DP) :: pref
     ! initialize density
     rho_lm(:,:) = 0._dp
-    
+    !
     ! nb has to be less or equal mb for nmb to be compute correctly
     ! the matrix is symmetric, hence the order does not matter
     nb_ = indv(ih_,i%t)

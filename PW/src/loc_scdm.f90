@@ -5,15 +5,16 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------
+!---------------------------------------------------------------------
 MODULE loc_scdm 
-  !--------------------------------------
+  !------------------------------------------------------------------
+  !! Variables and subroutines for localizing molecular orbitals based
+  !! on a modified SCDM approach.
   !
-  ! Variables and subroutines for localizing molecular orbitals based
-  ! on a modified SCDM approach. Original SCDM method:
-  ! A. Damle, L. Lin, L. Ying: J. Chem. Theory Comput. 2015, 11, 1463
-  ! Ivan Carnimeo: SCDM has been implemented with a parallel prescreening algorithm 
-  !                in order to save CPU time and memory for large grids 
+  !! Original SCDM (Selected Columns of the Density Matrix) method:  
+  !! A. Damle, L. Lin, L. Ying: J. Chem. Theory Comput. 2015, 11, 1463.  
+  !! Ivan Carnimeo: SCDM has been implemented with a parallel prescreening
+  !! algorithm in order to save CPU time and memory for large grids.
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
@@ -21,31 +22,39 @@ MODULE loc_scdm
   USE exx_base,             ONLY : nkqs
 
   IMPLICIT NONE
+  !
   SAVE
-  LOGICAL ::  use_scdm=.false. ! if .true. enable Lin Lin's SCDM localization
-                               ! currently implemented only within ACE formalism
-  INTEGER, ALLOCATABLE :: fragments(:) ! fragment list for dipole moments 
-  REAL(DP) :: scdm_den, scdm_grd 
+  !
+  LOGICAL :: use_scdm = .FALSE.
+  !! if .TRUE. enable Lin Lin's SCDM localization. 
+  !! Currently implemented only within ACE formalism.
+  INTEGER, ALLOCATABLE :: fragments(:)
+  !! fragment list for dipole moments.
+  REAL(DP) :: scdm_den
+  !! scdm density
+  REAL(DP) :: scdm_grd
+  !! scdm gradient
+  INTEGER :: n_scdm
+  !! number of scdm
+  INTEGER :: iscdm=0
+  !! counter for QRCP/SVD 
+  COMPLEX(DP), ALLOCATABLE :: locbuff_G(:,:,:)
+  !! buffer for localized orbitals in G-space (MD only).
   REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Three=3.0d0
-  integer :: n_scdm
-  integer :: iscdm=0 ! counter for QRCP/SVD 
-  complex(DP), allocatable :: locbuff_G(:,:,:) ! buffer for localized orbitals in G-space
-                                               ! (MD only)
-
+  !
  CONTAINS
   !
   !------------------------------------------------------------------------
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE localize_orbitals( )
-  !
-  ! Driver for SCDM orbital localization 
-  !         iscdm/nscdm ... control whether the localization is done via SCDM
-  !                         (QR decomposition) or with orbital alignment (SVD)
-  !         SCDM_PGG ... perform SCDM localization using the parallel
-  !                      prescreening algorithm
-  !         measure_localization ... compute the absolute overlap integrals 
-  !                                  required by vexx_loc in exx.f90 
-  !                                  and put them in locmat 
+SUBROUTINE localize_orbitals()
+  !-----------------------------------------------------------------------
+  !! Driver for SCDM orbital localization:  
+  !! * iscdm/nscdm: control whether the localization is done via SCDM
+  !!   (QR decomposition) or with orbital alignment (SVD);
+  !! * SCDM_PGG: perform SCDM localization using the parallel
+  !!   prescreening algorithm;
+  !! * measure_localization: compute the absolute overlap integrals 
+  !!   required by \texttt{vexx_loc} in \texttt{exx.f90} and put them
+  !!   in locmat.
   !
   USE noncollin_module,     ONLY : npol
   USE wvfct,                ONLY : nbnd, npwx, current_k
@@ -134,23 +143,33 @@ SUBROUTINE localize_orbitals( )
   call stop_clock('localization')
 
 END SUBROUTINE localize_orbitals
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE AbsOv_histogram(iik,n,filename) 
 !
-!  Print the distribution of absolute overlap integrals (as an histogram)
-!  in the range [0,1] with NHist intervals
-!  WARNING: HUGE amount of integrals, use only for VERY small systems
-!
-implicit none
-  character(len=*), INTENT(IN) :: filename
-  INTEGER, INTENT(IN) :: n, iik
+!------------------------------------------------------------------------
+SUBROUTINE AbsOv_histogram( iik, n, filename )
+  !------------------------------------------------------------------------
+  !! Print the distribution of absolute overlap integrals (as an histogram)
+  !! in the range [0,1] with NHist intervals.
+  !
+  !! WARNING: HUGE amount of integrals, use only for VERY small systems.
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=*), INTENT(IN) :: filename
+  !! file where the distribution is printed
+  INTEGER, INTENT(IN) :: n
+  !! dimension of the absolute overlap matrix
+  INTEGER, INTENT(IN) :: iik
+  !! k+q point index (see \texttt{exx_base})
+  !
+  ! ... local variables
+  !
   INTEGER :: i,j,k, NHist
-  INTEGER,  ALLOCATABLE :: histogram(:)
+  INTEGER, ALLOCATABLE :: histogram(:)
   REAL(DP), ALLOCATABLE :: XHist(:)
   REAL(DP) :: xstart, xstep, integral
-  integer :: io_histogram
-  integer, external :: find_free_unit
-
+  INTEGER :: io_histogram
+  INTEGER, EXTERNAL :: find_free_unit
+  !
   NHist = 1000
   xstep = One/float(NHist)
   xstart = One/float(NHist)/Two
@@ -181,26 +200,37 @@ implicit none
   end do 
   close(io_histogram)
   DEALLOCATE(histogram,XHist)
-
+  !
 END SUBROUTINE AbsOv_histogram
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE measure_localization(CFlag, NBands, IKK) 
-USE noncollin_module,  ONLY : npol
-USE cell_base,         ONLY : alat, omega, at, bg
-USE exx,               ONLY : compute_density
-USE constants,         ONLY : bohr_radius_angs 
-implicit none
 !
-! Analyze various localization criteria for the wavefunctions in orbt
-! Calculation of absolute overlap: 
-!              CFlag = 'R' real space integral (exact but slow) 
-!                      'G' via FFT (fast but less accurate) 
-!
-  INTEGER :: NBands, jbnd, kbnd, IKK
+!--------------------------------------------------------------------
+SUBROUTINE measure_localization( CFlag, NBands, IKK )
+  !---------------------------------------------------------------------
+  !! Analyze various localization criteria for the wavefunctions in orbt.
+  !
+  USE noncollin_module,  ONLY : npol
+  USE cell_base,         ONLY : alat, omega, at, bg
+  USE exx,               ONLY : compute_density
+  USE constants,         ONLY : bohr_radius_angs 
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=1) :: CFlag
+  !! Calculation of absolute overlap:
+  !! * CFlag = 'R' real space integral (exact but slow);
+  !! * CFlag = 'G' via FFT (fast but less accurate).
+  INTEGER :: NBands
+  !! number of bands
+  INTEGER :: IKK
+  !! k+q point index (see \texttt{exx_base})
+  !
+  ! ... local variables
+  !
+  INTEGER :: jbnd, kbnd
   REAL(DP) :: loc_diag, loc_off, tmp, DistMax
   REAL(DP) :: RDist(3),  SpreadPBC(3), TotSpread
   REAL(DP), ALLOCATABLE :: CenterPBC(:,:), Mat(:,:)
-  CHARACTER(LEN=1) :: CFlag
+  
   REAL(DP), PARAMETER :: epss=0.0010d0
 
   ALLOCATE( Mat(NBands,NBands), CenterPBC(3,NBands) )
@@ -245,18 +275,30 @@ implicit none
   DEALLOCATE( CenterPBC, Mat ) 
 
 END SUBROUTINE measure_localization
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE AbsOvG(NBands, IKK, Mat) 
-USE noncollin_module,  ONLY : npol
-USE fft_interfaces,    ONLY : fwfft
-USE wvfct,             ONLY : npwx
-implicit none
 !
-! Compute the Absolute Overlap in G-space 
-! (cutoff might not be accurate for the moduli of the wavefunctions)
-!
-  INTEGER :: NBands, jbnd, ig, IKK
-  REAL(DP) :: Mat(NBands,NBands), tmp
+!--------------------------------------------------------------------------
+SUBROUTINE AbsOvG( NBands, IKK, Mat )
+  !----------------------------------------------------------------------
+  !! Compute the Absolute Overlap in G-space (cutoff might not be accurate
+  !! for the moduli of the wavefunctions).
+  !
+  USE noncollin_module,  ONLY : npol
+  USE fft_interfaces,    ONLY : fwfft
+  USE wvfct,             ONLY : npwx
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: NBands
+  !! Number of bands
+  INTEGER :: IKK
+  !! k+q point index (see \texttt{exx_base})
+  REAL(DP) :: Mat(NBands,NBands)
+  !! Absolute overlap matrix
+  !
+  ! ... local variables
+  !
+  INTEGER :: jbnd, ig
+  REAL(DP) :: tmp
   COMPLEX(DP), ALLOCATABLE :: buffer(:), Gorbt(:,:)
 
   call start_clock('measure')
@@ -283,17 +325,27 @@ implicit none
   call stop_clock('measure')
 
 END SUBROUTINE AbsOvG 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE AbsOvR(NBands, IKK, Mat) 
-USE mp,                ONLY : mp_sum
-USE mp_bands,          ONLY : intra_bgrp_comm
-implicit none
 !
-! Compute the Absolute Overlap in R-space 
-! (Exact but slow)
-!
-  INTEGER :: NBands, nxxs, ir, jbnd, kbnd, IKK
+!----------------------------------------------------------------------
+SUBROUTINE AbsOvR( NBands, IKK, Mat )
+  !-------------------------------------------------------------------
+  !! Compute the Absolute Overlap in R-space (Exact but slow).
+  !
+  USE mp,                ONLY : mp_sum
+  USE mp_bands,          ONLY : intra_bgrp_comm
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: NBands
+  !! Number of bands
+  INTEGER :: IKK
+  !! k+q point index (see \texttt{exx_base})
   REAL(DP) :: Mat(NBands,NBands)
+  !! Absolute overlap matrix
+  !
+  ! ... local variables
+  !
+  INTEGER :: nxxs, ir, jbnd, kbnd
   REAL(DP) ::  cost, tmp
 
   call start_clock('measure')
@@ -317,17 +369,25 @@ implicit none
   call stop_clock('measure')
 
 END SUBROUTINE AbsOvR 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE SCDM_PGG(psi, NGrid, NBands)
-USE mp_bands,          ONLY : nproc_bgrp
 !
-! density matrix localization (I/O in psi)
-! (Gamma version)
-!
-IMPLICIT NONE
-  INTEGER,  INTENT(IN)    :: NGrid, NBands
+!-----------------------------------------------------------------
+SUBROUTINE SCDM_PGG( psi, NGrid, NBands )
+  !-------------------------------------------------------------
+  !! Density matrix localization (I/O in psi) - Gamma version.
+  !
+  USE mp_bands,          ONLY : nproc_bgrp
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: NGrid
+  !! grid points
+  INTEGER, INTENT(IN) :: NBands
+  !! Number of bands
   REAL(DP), INTENT(INOUT) :: psi(NGrid,NBands)
-
+  !! localized functions as output
+  !
+  ! ... local variables
+  !
   REAL(DP), ALLOCATABLE :: QRbuff(:,:), mat(:,:)
   INTEGER,  ALLOCATABLE :: pivot(:), list(:), cpu_npt(:)
   REAL(DP), ALLOCATABLE :: den(:), grad_den(:,:)
@@ -380,25 +440,39 @@ IMPLICIT NONE
   write(stdout,'(7X,A)') 'SCDM-PGG done ' 
 
 END SUBROUTINE SCDM_PGG
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+!---------------------------------------------------------------
 SUBROUTINE scdm_thresholds( den, grad_den, ThrDen, ThrGrd )
-USE cell_base,         ONLY : omega
-USE fft_base,          ONLY : dfftp
-USE fft_interfaces,    ONLY : fft_interpolate
-USE scf,               ONLY : rho
-USE lsda_mod,          ONLY : nspin
-USE mp,                ONLY : mp_sum, mp_max
-USE mp_bands,          ONLY : intra_bgrp_comm
-USE exx,               ONLY : gt
-IMPLICIT NONE
-  REAL(DP), INTENT(OUT) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
-  REAL(DP), INTENT(OUT) :: ThrDen, ThrGrd 
-
-  REAL(DP), ALLOCATABLE :: temp(:) 
+  !-----------------------------------------------------------------
+  !! Interpolate density to the exx grid.
+  !
+  USE cell_base,         ONLY : omega
+  USE fft_base,          ONLY : dfftp
+  USE fft_interfaces,    ONLY : fft_interpolate
+  USE scf,               ONLY : rho
+  USE lsda_mod,          ONLY : nspin
+  USE mp,                ONLY : mp_sum, mp_max
+  USE mp_bands,          ONLY : intra_bgrp_comm
+  USE exx,               ONLY : gt
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(OUT) :: den(dfftt%nnr)
+  !! density
+  REAL(DP), INTENT(OUT) :: grad_den(3,dfftt%nnr)
+  !! gradient of the density
+  REAL(DP), INTENT(OUT) :: ThrDen
+  !! Density Threshold
+  REAL(DP), INTENT(OUT) :: ThrGrd
+  !! Gradient Threshold
+  !
+  ! ... local variables
+  !
+  REAL(DP), ALLOCATABLE :: temp(:)
   REAL(DP) :: charge, grad, DenAve, GrdAve, DenMax, GrdMax
   INTEGER :: ir, ir_end, nxxs, nxtot
-
-! interpolate density to the exx grid
+  !
+  ! interpolate density to the exx grid
   allocate( temp(dfftp%nnr))
   temp(:) = rho%of_r(:,1)
   Call fft_interpolate(dfftp, temp, dfftt, den)
@@ -453,19 +527,33 @@ IMPLICIT NONE
 ! write(stdout,'(7x,2(A,f12.6))') 'ThrDen   = ', ThrDen,   ' ThrGrd   = ',ThrGrd  
 
 END SUBROUTINE scdm_thresholds
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE scdm_fill( nptot, NGrid, NBands, CPUPts, Pivot, List, Vect, Mat)
-USE mp,                ONLY : mp_sum
-USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
-!
-! Fill the matrix Mat with the elements of Vect
-! mapped by CPUPts, Pivot and List 
-!
-IMPLICIT NONE
-  INTEGER,  INTENT(IN)  :: NBands, NGrid, nptot
-  INTEGER,  INTENT(IN)  :: CPUPts(0:nproc_bgrp-1), Pivot(nptot), List(nptot)
-  REAL(DP), INTENT(IN)  :: Vect(NGrid, NBands)
+
+!---------------------------------------------------------------------------
+SUBROUTINE scdm_fill( nptot, NGrid, NBands, CPUPts, Pivot, List, Vect, Mat )
+  !-------------------------------------------------------------------------
+  !! Fill the matrix Mat with the elements of Vect mapped by CPUPts, 
+  !! Pivot and List.
+  !
+  USE mp,                ONLY : mp_sum
+  USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: NBands
+  ! number of bands
+  INTEGER, INTENT(IN) :: NGrid
+  ! grid points
+  INTEGER, INTENT(IN) :: nptot
+  ! total number of relevant points
+  INTEGER, INTENT(IN) :: CPUPts(0:nproc_bgrp-1)
+  ! relevant points per CPU
+  INTEGER, INTENT(IN) :: Pivot(nptot)
+  INTEGER, INTENT(IN) :: List(nptot)
+  REAL(DP), INTENT(IN) :: Vect(NGrid,NBands)
   REAL(DP), INTENT(OUT) :: Mat(NBands,NBands)
+  !
+  ! ... local variables
+  !
   INTEGER :: i, NStart, NEnd
 
   Mat = Zero 
@@ -473,22 +561,36 @@ IMPLICIT NONE
     NStart = sum(CPUPts(0:me_bgrp-1))
     NEnd   = sum(CPUPts(0:me_bgrp))
     if(Pivot(i).le.NEnd.and.Pivot(i).ge.NStart+1) Mat(:,i) = Vect(List(pivot(i)),:)
-  end do 
+  end do
   call mp_sum(Mat,intra_bgrp_comm)
 
 END SUBROUTINE scdm_fill
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE scdm_points ( den, grad_den, ThrDen, ThrGrd, cpu_npt, nptot  ) 
-USE mp,                ONLY : mp_sum 
-USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
 !
-! find the relevant points for the allocation
-!
-IMPLICIT NONE
-  INTEGER, INTENT(OUT) :: cpu_npt(0:nproc_bgrp-1), nptot
-  REAL(DP), INTENT(IN) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
-  REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
-
+!-------------------------------------------------------------------------
+SUBROUTINE scdm_points( den, grad_den, ThrDen, ThrGrd, cpu_npt, nptot )
+  !------------------------------------------------------------------------
+  !! Find the relevant points for the allocation.
+  !
+  USE mp,                ONLY : mp_sum 
+  USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: den(dfftt%nnr)
+  !! density
+  REAL(DP), INTENT(IN) :: grad_den(3,dfftt%nnr)
+  !! density gradient
+  REAL(DP), INTENT(IN) :: ThrDen
+  !! density threshold
+  REAL(DP), INTENT(IN) :: ThrGrd 
+  !! gradient threshold
+  INTEGER, INTENT(OUT) :: cpu_npt(0:nproc_bgrp-1)
+  !! number of relevant points per cpu
+  INTEGER, INTENT(OUT) :: nptot
+  !! total number of relevant points
+  !
+  ! ... local variables
+  !
   INTEGER :: npt, ir, ir_end
   REAL(DP) :: grad
 
@@ -515,36 +617,39 @@ IMPLICIT NONE
   call mp_sum(cpu_npt,intra_bgrp_comm)
 ! write(stdout,'(7X,2(A,I8))')  'Max npt = ', maxval(cpu_npt(:)), ' Min npt = ', minval(cpu_npt(:))
 ! write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', dfftt%nr1x *dfftt%nr2x *dfftt%nr3x
-
+!
 END SUBROUTINE scdm_points
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE scdm_prescreening ( NGrid, NBands, psi, den, grad_den, ThrDen, ThrGrd, cpu_npt, nptot, &
-                                                                                       list, pivot  ) 
-USE mp,                ONLY : mp_sum 
-USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
 !
-!  Get List from ThrDen and ThrGrd, and Pivot from the QRCP of small
-!
-IMPLICIT NONE
-  INTEGER, INTENT(IN)  :: cpu_npt(0:nproc_bgrp-1), nptot
-  INTEGER, INTENT(IN)  :: NGrid, NBands
+!-----------------------------------------------------------------------------
+SUBROUTINE scdm_prescreening( NGrid, NBands, psi, den, grad_den, ThrDen, &
+                              ThrGrd, cpu_npt, nptot, list, pivot  ) 
+  !--------------------------------------------------------------------------
+  !! Get List from ThrDen and ThrGrd, and Pivot from the QRCP of small.
+  !
+  USE mp,                ONLY : mp_sum 
+  USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: cpu_npt(0:nproc_bgrp-1), nptot
+  INTEGER, INTENT(IN) :: NGrid, NBands
   INTEGER, INTENT(OUT) :: list(nptot), pivot(nptot)
   REAL(DP), INTENT(IN) :: psi(NGrid,NBands) 
   REAL(DP), INTENT(IN) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
   REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
-
+  !
   INTEGER :: ir, ir_end, INFO, lwork
-  integer :: n, npt, ncpu_start
+  INTEGER :: n, npt, ncpu_start
   REAL(DP) :: grad
   REAL(DP), ALLOCATABLE :: small(:,:), tau(:), work(:)
-
+  !
 #if defined (__MPI)
   ir_end = dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
 #else
   ir_end = dfftt%nnr
 #endif
-
-! find the map of the indeces
+  !
+  ! find the map of the indeces
   allocate( small(NBands,nptot) )
   small = Zero
   list = 0
@@ -576,24 +681,38 @@ IMPLICIT NONE
   deallocate( tau, work, small )
 
 END SUBROUTINE scdm_prescreening
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE wave_to_R(psiG, psiR, NGrid, NBands) 
-USE cell_base,         ONLY : omega 
-USE kinds,             ONLY : DP
-USE fft_interfaces,    ONLY : fwfft, invfft
-USE wvfct,             ONLY : npwx
-USE exx,               ONLY : npwt
-implicit none
-  integer :: NGrid, NBands, ir, jbnd, ig
-  real(DP), intent(out) :: psiR(NGrid, NBands)
-  real(DP) :: tmp
-  complex(DP), intent(in) :: psiG(npwx, NBands)
-  complex(DP), allocatable :: buffer(:)
-  real(DP), allocatable :: Mat(:,:)
-
+!
+!--------------------------------------------------------------------------
+SUBROUTINE wave_to_R( psiG, psiR, NGrid, NBands )
+  !----------------------------------------------------------------------
+  !! psi functions from G- to R-space.
+  !
+  USE cell_base,         ONLY : omega 
+  USE kinds,             ONLY : DP
+  USE fft_interfaces,    ONLY : fwfft, invfft
+  USE wvfct,             ONLY : npwx
+  USE exx,               ONLY : npwt
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN) :: psiG(npwx,NBands)
+  !! G-space psi
+  REAL(DP), INTENT(OUT) :: psiR(NGrid,NBands)
+  !! R-space psi
+  INTEGER :: NGrid
+  !! grid points
+  INTEGER :: NBands
+  !! number of bands
+  !
+  ! ... local variables
+  !
+  INTEGER :: ir, jbnd, ig
+  REAL(DP) :: tmp
+  COMPLEX(DP), ALLOCATABLE :: buffer(:)
+  REAL(DP), ALLOCATABLE :: Mat(:,:)
+  !
   write(stdout,'(A)') 'Wave to R '
-
-! psiG functions to R-space 
+  !
   allocate( buffer(NGrid) )
   psiR = Zero
   DO jbnd = 1, NBands 
@@ -611,25 +730,39 @@ implicit none
 ! CALL DGEMM( 'T' , 'N' , NBands, NBands, NGrid, tmp, PsiR, NGrid, PsiR, NGrid, Zero, Mat, NBands) 
 ! Call MatPrt('check',NBands,NBands,MAt)
 ! deallocate ( Mat )
-
-END SUBROUTINE wave_to_R 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE wave_to_G(psiR, psiG, NGrid, NBands) 
-USE noncollin_module,     ONLY : npol
-USE kinds,                ONLY : DP
-USE fft_interfaces,       ONLY : fwfft, invfft
-USE wvfct,                ONLY : npwx
-implicit none
-  integer :: NGrid, NBands, jbnd, ig
-  real(DP), intent(in) :: psiR(NGrid, NBands)
-  real(DP) :: tmp
-  complex(DP), intent(out) :: psiG(npwx*npol, NBands)
-  complex(DP), allocatable :: buffer(:)
-  real(DP), allocatable :: Mat(:,:)
+!
+END SUBROUTINE wave_to_R
+!
+!-------------------------------------------------------------------------
+SUBROUTINE wave_to_G( psiR, psiG, NGrid, NBands )
+  !----------------------------------------------------------------------
+  !! psi functions from R- to G-space.
+  !
+  USE noncollin_module,     ONLY : npol
+  USE kinds,                ONLY : DP
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE wvfct,                ONLY : npwx
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: NGrid
+  !! grid points
+  INTEGER :: NBands
+  !! number of bands
+  REAL(DP), INTENT(IN) :: psiR(NGrid,NBands)
+  !! R-space psi
+  COMPLEX(DP), INTENT(OUT) :: psiG(npwx*npol,NBands)
+  !! G-space psi
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: tmp
+  INTEGER :: jbnd, ig
+  COMPLEX(DP), ALLOCATABLE :: buffer(:)
+  REAL(DP), ALLOCATABLE :: Mat(:,:)
 
   write(stdout,'(A)') 'Wave to G '
 
-! psiR functions to G-space 
   allocate( buffer(NGrid) )
   buffer = (Zero,Zero)
   psiG = (Zero,Zero) 
@@ -646,6 +779,6 @@ implicit none
   deallocate ( Mat )
 
 END SUBROUTINE wave_to_G 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+!
 END MODULE loc_scdm 
-!-----------------------------------------------------------------------

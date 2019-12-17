@@ -8,6 +8,7 @@
 !----------------------------------------------------------------------
 SUBROUTINE addusforce( forcenl )
   !----------------------------------------------------------------------
+  !! Wrapper to \(\texttt{addusforce_g}\) or \(\texttt{addusforce_r}\).
   !
   USE kinds,         ONLY : dp
   USE ions_base,     ONLY : nat
@@ -16,25 +17,28 @@ SUBROUTINE addusforce( forcenl )
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(INOUT) :: forcenl(3, nat)
+  REAL(DP), INTENT(INOUT) :: forcenl(3,nat)
   !! the non-local contribution to the force
   !
   IF ( tqr ) THEN
      CALL addusforce_r( forcenl )
   ELSE
      CALL addusforce_g( forcenl )
-  END IF
+  ENDIF
   !
 END SUBROUTINE addusforce
 !
 !----------------------------------------------------------------------
 SUBROUTINE addusforce_g( forcenl )
   !----------------------------------------------------------------------
-  !!   This routine computes the contribution to atomic forces due
-  !!   to the dependence of the Q function on the atomic position.
-  !!   F_j,at= sum_G sum_lm iG_j exp(-iG*R_at) V^*(G) Q_lm(G) becsum(lm,at)
-  !!   where becsum(lm,at) = sum_i <psi_i|beta_l>w_i<beta_m|psi_i>
-  !!   On output: the contribution is added to forcenl
+  !! This routine computes the contribution to atomic forces due
+  !! to the dependence of the Q function on the atomic position.
+  !! \[ F_{j,\text{at}} = \sum_G \sum_{lm} iG_j\ \text{exp}(-iG*R_\text{at})
+  !!    V^*(G)\ Q_{lm}(G)\ \text{becsum}(lm,\text{at}) \]
+  !! where:
+  !! \[ \text{becsum}(lm,\text{at}) = \sum_i \langle \psi_i|\beta_l\rangle
+  !!    w_i\langle \beta_m|\psi_i\rangle \]
+  !! On output: the contribution is added to \(\text{forcenl}\).
   !
   USE kinds,              ONLY : DP
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp

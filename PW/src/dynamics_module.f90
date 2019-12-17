@@ -105,6 +105,7 @@ CONTAINS
    !------------------------------------------------------------------------
    SUBROUTINE allocate_dyn_vars()
       !------------------------------------------------------------------------
+      !! Allocates dynamics variables
       !
       USE ions_base, ONLY : nat
       !
@@ -129,6 +130,7 @@ CONTAINS
    !------------------------------------------------------------------------
    SUBROUTINE deallocate_dyn_vars()
       !------------------------------------------------------------------------
+      !! Deallocates dynamics variables.
       !
       IF ( ALLOCATED( mass ) )          DEALLOCATE( mass )
       IF ( ALLOCATED( tau_old ) )       DEALLOCATE( tau_old )
@@ -791,6 +793,7 @@ CONTAINS
    !------------------------------------------------------------------------
    SUBROUTINE terminate_verlet
      !------------------------------------------------------------------------
+     !! Terminate Verlet molecular dynamics calculation.
      !
      USE io_global, ONLY : stdout
      !
@@ -999,7 +1002,7 @@ CONTAINS
    !------------------------------------------------------------------------
    SUBROUTINE langevin_md()
       !------------------------------------------------------------------------
-      !! Langevin dynamics.
+      !! Langevin molecular dynamics.
       !
       USE ions_base,      ONLY : nat, ityp, tau, if_pos
       USE cell_base,      ONLY : alat
@@ -1156,6 +1159,7 @@ CONTAINS
    !-----------------------------------------------------------------------
    SUBROUTINE refold_tau()
       !-----------------------------------------------------------------------
+      !! Refold atomic positions.
       !
       USE ions_base,          ONLY : nat, tau
       USE cell_base,          ONLY : alat
@@ -1178,6 +1182,7 @@ CONTAINS
    !-----------------------------------------------------------------------
    SUBROUTINE compute_averages( istep )
       !-----------------------------------------------------------------------
+      !! Molecular dynamics - compute averages.
       !
       USE ions_base,          ONLY : nat, tau, fixatom
       USE cell_base,          ONLY : alat, at
@@ -1187,6 +1192,9 @@ CONTAINS
       IMPLICIT NONE
       !
       INTEGER, INTENT(in) :: istep
+      !! md step
+      !
+      ! ... local variables
       !
       INTEGER               :: i, j, idx
       REAL(DP)              :: dx, dy, dz
@@ -1261,6 +1269,7 @@ CONTAINS
    !-----------------------------------------------------------------------
    SUBROUTINE print_averages()
       !-----------------------------------------------------------------------
+      !! Molecular dynamics - print averages.
       !
       USE control_flags, ONLY : nstep
       USE cell_base,     ONLY : omega, at, alat
@@ -1321,9 +1330,9 @@ CONTAINS
    !-----------------------------------------------------------------------
    SUBROUTINE force_precond( istep, force, etotold )
       !-----------------------------------------------------------------------
-      !! This routine computes an estimate of H^-1 by using the BFGS
-      !! algorithm and the preconditioned gradient /( \text{pg} = H^{-1} g /)
-      !! (it works in atomic units).
+      !! This routine computes an estimate of \(H^{-1}\) by using the BFGS
+      !! algorithm and the preconditioned gradient \(\text{pg} = H^{-1} g\).
+      !! It works in atomic units.
       !
       USE ener,        ONLY : etot
       USE cell_base,   ONLY : alat
@@ -1487,6 +1496,8 @@ CONTAINS
    !-----------------------------------------------------------------------
    SUBROUTINE thermalize( nraise, system_temp, required_temp )
       !-----------------------------------------------------------------------
+      !! * Berendsen rescaling (Eq. 7.59 of Allen & Tildesley);
+      !! * rescale the velocities by a factor 3 / 2KT / Ek.
       !
       IMPLICIT NONE
       !
@@ -1633,15 +1644,14 @@ CONTAINS
    END SUBROUTINE smart_MC
    !
    !-----------------------------------------------------------------------
-   SUBROUTINE thermalize_resamp_vscaling (nraise, system_temp, required_temp)
+   SUBROUTINE thermalize_resamp_vscaling( nraise, system_temp, required_temp )
       !-----------------------------------------------------------------------
+      !! Sample velocities using stochastic velocity rescaling, based on:
+      !! Bussi, Donadio, Parrinello, J. Chem. Phys. 126, 014101 (2007),
+      !! doi: 10.1063/1.2408420
       !
-      ! Sample velocities using stochastic velocity rescaling, based on
-      ! Bussi, Donadio, Parrinello, J. Chem. Phys. 126, 014101 (2007),
-      ! doi: 10.1063/1.2408420
-      !
-      ! Implemented (2019) by Leonid Kahle and Ngoc Linh Nguyen,
-      ! Theory and Simulations of Materials Laboratory, EPFL.
+      !! Implemented (2019) by Leonid Kahle and Ngoc Linh Nguyen,
+      !! Theory and Simulations of Materials Laboratory, EPFL.
       !
       USE ions_base,          ONLY : nat, if_pos
       USE constraints_module, ONLY : nconstr
@@ -1704,4 +1714,5 @@ CONTAINS
       vel(:,:) = vel(:,:) * aux
       !
    END SUBROUTINE thermalize_resamp_vscaling
+   !
 END MODULE dynamics_module
