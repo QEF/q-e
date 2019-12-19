@@ -1,17 +1,17 @@
 set(sources
-    la_types.f90
-    la_error.f90
-    cdiaghg.f90
-    rdiaghg.f90
-    dspev_drv.f90
-    ptoolkit.f90
-    transto.f90
     distools.f90
-    zhpev_drv.f90
-    mp_diag.f90
-    set_mpi_comm_4_solvers.f90
-    export_gstart_2_solvers.f90
+    dspev_drv.f90
+    la_error.f90
+    la_helper.f90
     la_param.f90
+    la_types.f90
+    mp_diag.f90
+    ptoolkit.f90
+    rdiaghg.f90
+    test.f90
+    transto.f90
+    zhpev_drv.f90
+    cdiaghg.f90
 )
 
 # TODO rename all sources *.f90 -> *.F90
