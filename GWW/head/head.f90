@@ -104,7 +104,6 @@ PROGRAM head
      !
      !  If necessary the bands are recalculated
      !
-     !IF (setup_pw) CALL run_pwscf(do_band)
      IF (setup_pw) CALL run_nscf(do_band, iq)
      !
      !  Initialize the quantities which do not depend on
