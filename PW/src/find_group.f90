@@ -8,11 +8,12 @@
 !---------------------------------------------------------------------------
 SUBROUTINE find_group( nrot, smat, gname, code_group )
   !--------------------------------------------------------------------------
-  !! Given a group of nrot rotation matrices smat (in cartesian coordinates)
-  !! this routine finds the name of the point group. It assumes but does not
-  !! check that:  
-  !! * the nrot matrices smat are actually a group;
-  !! * the group is one of the thirty-two point groups.
+  !! Given a group of \(\text{nrot}\) rotation matrices \(\text{smat}\) (in 
+  !! cartesian coordinates) this routine finds the name of the point group.
+  !! It assumes but does not check that:
+  !
+  !! * the \(\text{nrot}\) matrices \(\text{smat}\) are actually a group;
+  !! * the group is one of the 32 point groups.
   !
   USE kinds, ONLY : DP
   !

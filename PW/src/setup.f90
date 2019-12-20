@@ -9,28 +9,33 @@
 !----------------------------------------------------------------------------
 SUBROUTINE setup()
   !----------------------------------------------------------------------------
+  !! This routine is called at the beginning of the calculation and:
   !
-  ! ... This routine is called at the beginning of the calculation and
-  ! ... 1) determines various parameters of the calculation:
-  ! ...    zv        charge of each atomic type
-  ! ...    nelec     total number of electrons (if not given in input)
-  ! ...    nbnd      total number of bands (if not given in input)
-  ! ...    nbndx     max number of bands used in iterative diagonalization
-  ! ...    tpiba     2 pi / a (a = lattice parameter)
-  ! ...    tpiba2    square of tpiba
-  ! ...    gcutm     cut-off in g space for charge/potentials
-  ! ...    gcutms    cut-off in g space for smooth charge
-  ! ...    ethr      convergence threshold for iterative diagonalization
-  ! ... 2) finds actual crystal symmetry:
-  ! ...    s         symmetry matrices in the direct lattice vectors basis
-  ! ...    nsym      number of crystal symmetry operations
-  ! ...    nrot      number of lattice symmetry operations
-  ! ...    ft        fractionary translations
-  ! ...    irt       for each atom gives the corresponding symmetric
-  ! ...    invsym    if true the system has inversion symmetry
-  ! ... 3) generates k-points corresponding to the actual crystal symmetry
-  ! ... 4) calculates various quantities used in magnetic, spin-orbit, PAW
-  ! ...    electric-field, LDA+U calculations, and for parallelism
+  !! 1) determines various parameters of the calculation:
+  !
+  !!  * zv:        charge of each atomic type;
+  !!  * nelec:     total number of electrons (if not given in input);
+  !!  * nbnd:      total number of bands (if not given in input);
+  !!  * nbndx:     max number of bands used in iterative diagonalization;
+  !!  * tpiba:     2 pi / a (a = lattice parameter);
+  !!  * tpiba2:    square of tpiba;
+  !!  * gcutm:     cut-off in g space for charge/potentials;
+  !!  * gcutms:    cut-off in g space for smooth charge;
+  !!  * ethr:      convergence threshold for iterative diagonalization;
+  !
+  !! 2) finds actual crystal symmetry:
+  !
+  !!  * s:         symmetry matrices in the direct lattice vectors basis;
+  !!  * nsym:      number of crystal symmetry operations;
+  !!  * nrot:      number of lattice symmetry operations;
+  !!  * ft:        fractionary translations;
+  !!  * irt:       for each atom gives the corresponding symmetric;
+  !!  * invsym:    if true the system has inversion symmetry;
+  !
+  !! 3) generates k-points corresponding to the actual crystal symmetry;
+  !
+  !! 4) calculates various quantities used in magnetic, spin-orbit, PAW
+  !!    electric-field, LDA+U calculations, and for parallelism.
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
@@ -629,6 +634,8 @@ END SUBROUTINE setup
 !
 !----------------------------------------------------------------------------
 LOGICAL FUNCTION check_para_diag( nbnd )
+  !-----------------------------------------------------------------------------
+  !! Some checks for parallel diagonalization.
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_diag,          ONLY : np_ortho, ortho_parent_comm 
@@ -639,6 +646,8 @@ LOGICAL FUNCTION check_para_diag( nbnd )
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: nbnd
+  !! number of bands
+  !
   LOGICAL, SAVE :: first = .TRUE.
   LOGICAL, SAVE :: saved_value = .FALSE.
 

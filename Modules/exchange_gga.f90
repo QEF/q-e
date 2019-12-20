@@ -1,5 +1,10 @@
+!
+MODULE exch_gga !<GPU:exch_gga=>exch_gga_gpu>
+!
+CONTAINS
+!
 !-----------------------------------------------------------------------
-SUBROUTINE becke88( rho, grho, sx, v1x, v2x )
+SUBROUTINE becke88( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   !! only gradient-corrected part, no Slater term included
@@ -20,21 +25,21 @@ SUBROUTINE becke88( rho, grho, sx, v1x, v2x )
   !
   rho13 = rho**third
   rho43 = rho13**4
-  !   
+  !
   xs = two13 * SQRT(grho)/rho43
   xs2 = xs * xs
-  !   
-  sa2b8 = SQRT(1.0_DP + xs2)   
-  shm1 = LOG(xs + sa2b8)   
-  !   
-  dd = 1.0_DP + 6.0_DP * beta * xs * shm1   
-  dd2 = dd * dd   
-  !   
-  ee = 6.0_DP * beta * xs2 / sa2b8 - 1._DP   
-  sx = two13 * grho / rho43 * ( - beta / dd)   
-  !   
-  v1x = - (4._DP/3._DP) / two13 * xs2 * beta * rho13 * ee / dd2   
-  v2x = two13 * beta * (ee-dd) / (rho43 * dd2)   
+  !
+  sa2b8 = SQRT(1.0_DP + xs2)
+  shm1 = LOG(xs + sa2b8)
+  !
+  dd = 1.0_DP + 6.0_DP * beta * xs * shm1
+  dd2 = dd * dd
+  !
+  ee = 6.0_DP * beta * xs2 / sa2b8 - 1._DP
+  sx = two13 * grho / rho43 * ( - beta / dd)
+  !
+  v1x = - (4._DP/3._DP) / two13 * xs2 * beta * rho13 * ee / dd2
+  v2x = two13 * beta * (ee-dd) / (rho43 * dd2)
   !
   RETURN
   !
@@ -42,7 +47,7 @@ END SUBROUTINE becke88
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ggax( rho, grho, sx, v1x, v2x )
+SUBROUTINE ggax( rho, grho, sx, v1x, v2x ) !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew-Wang GGA (PW91), exchange part:
   !! J.P. Perdew et al.,PRB 46, 6671 (1992)
@@ -64,25 +69,25 @@ SUBROUTINE ggax( rho, grho, sx, v1x, v2x )
                        ! fp1= -3/(16 pi)*(3 pi^2)^(-1/3)
                        ! fp2= (1/2)(3 pi^2)**(-1/3)
   !
-  rhom43 = rho**(-4.d0/3.d0)   
-  s  = fp2 * SQRT(grho) * rhom43   
-  s2 = s * s   
-  s3 = s2 * s   
-  s4 = s2 * s2   
-  !   
-  exps  = f4 * EXP( - 100.d0 * s2)   
-  as    = f3 - exps - f5 * s2   
-  sa2b8 = SQRT(1.0d0 + f2 * f2 * s2)   
-  shm1  = LOG(f2 * s + sa2b8)   
-  bs    = 1.d0 + f1 * s * shm1 + f5 * s4   
-  !   
-  das = (200.d0 * exps - 2.d0 * f5) * s   
-  dbs = f1 * (shm1 + f2 * s / sa2b8) + 4.d0 * f5 * s3   
-  dls = (das / as - dbs / bs)   
-  !   
-  sx  = fp1 * grho * rhom43 * as / bs   
-  v1x = - 4.d0 / 3.d0 * sx / rho * (1.d0 + s * dls)   
-  v2x = fp1 * rhom43 * as / bs * (2.d0 + s * dls)   
+  rhom43 = rho**(-4.d0/3.d0)
+  s  = fp2 * SQRT(grho) * rhom43
+  s2 = s * s
+  s3 = s2 * s
+  s4 = s2 * s2
+  !
+  exps  = f4 * EXP( - 100.d0 * s2)
+  as    = f3 - exps - f5 * s2
+  sa2b8 = SQRT(1.0d0 + f2 * f2 * s2)
+  shm1  = LOG(f2 * s + sa2b8)
+  bs    = 1.d0 + f1 * s * shm1 + f5 * s4
+  !
+  das = (200.d0 * exps - 2.d0 * f5) * s
+  dbs = f1 * (shm1 + f2 * s / sa2b8) + 4.d0 * f5 * s3
+  dls = (das / as - dbs / bs)
+  !
+  sx  = fp1 * grho * rhom43 * as / bs
+  v1x = - 4.d0 / 3.d0 * sx / rho * (1.d0 + s * dls)
+  v2x = fp1 * rhom43 * as / bs * (2.d0 + s * dls)
   !
   RETURN
   !
@@ -90,23 +95,22 @@ END SUBROUTINE ggax
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
+SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
-  !! PBE exchange (without Slater exchange):  
-  !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996);  
-  !! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998);  
-  !! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008);  
-  !! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012);  
-  !! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010);  
-  !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011);  
-  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991).  
+  !! PBE exchange (without Slater exchange):
+  !! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996);
+  !! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998);
+  !! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008);
+  !! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012);
+  !! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010);
+  !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011);
+  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991).
   !
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : pi
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN) :: iflag
+  INTEGER, INTENT(IN) :: iflag               !<GPU:VALUE>
   REAL(DP), INTENT(IN) :: rho, grho
   ! input: charge and squared gradient
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
@@ -127,6 +131,7 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
   REAL(DP) :: dxunif, dfx, f1, f2, f3, dfx1
   REAL(DP) :: p, amu, ab, c, dfxdp, dfxds, upbe, uge, s, ak, aa
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi,        &
                          c2=3.093667726280136_DP, c5=4._DP*third, &
                          c6=c2*2.51984210_DP, c7=5._DP/6._DP, c8=0.8_DP
@@ -143,136 +148,136 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )
   SELECT CASE( iflag )
   CASE( 4 )
      !
-     agrho = SQRT(grho)   
-     kf = c2 * rho**third   
-     dsg = 0.5_DP / kf   
+     agrho = SQRT(grho)
+     kf = c2 * rho**third
+     dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
-     p = s1*s1   
-     s = s1   
-     ak = 0.804_DP   
-     amu = 10._DP/81._DP   
-     ab = 0.5217_DP   
-     c = 2._DP   
-     fx =  ak - ak / (1.0_DP + amu * p / ak)  + p**2 * (1.0_DP + p)/       &   
-            (10**c + p**3) * ( -1.0_DP - ak + ak / (1.0_DP + amu * p / ak) &   
-           + ab * p ** (-0.1D1/ 0.4D1) )   
-     !   
-     exunif = - c1 * kf   
-     sx_s = exunif * fx   
-     !   
-     dxunif = exunif * third   
-     !   
-     dfxdp = DBLE(1 / (1 + amu * p / ak) ** 2 * amu) + DBLE(2 * p * (1   &   
-     + p) / (10 ** c + p ** 3) * (-1 - ak + ak / (1 + amu * p / ak) + ab &   
-     * p ** (-0.1d1 / 0.4D1))) + DBLE(p ** 2 / (10 ** c + p ** 3) * (    &   
-     -1 - ak + ak / (1 + amu * p / ak) + ab * p ** (-0.1d1 / 0.4D1))) -  &   
-     DBLE(3 * p ** 4 * (1 + p) / (10 ** c + p ** 3) ** 2 * (-1 - ak +    &   
-     ak / (1 + amu * p / ak) + ab * p ** (-0.1d1 / 0.4D1))) + DBLE(p **  &   
-     2) * DBLE(1 + p) / DBLE(10 ** c + p ** 3) * (-DBLE(1 / (1 + amu *   &   
-     p / ak) ** 2 * amu) - DBLE(ab * p ** (-0.5d1 / 0.4D1)) / 0.4D1)   
-     !   
-     dfxds = dfxdp*2._DP*s   
-     dfx = dfxds   
-     ds = - c5 * s1   
-     !   
-     v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-     v2x = exunif * dfx * dsg / agrho   
+     p = s1*s1
+     s = s1
+     ak = 0.804_DP
+     amu = 10._DP/81._DP
+     ab = 0.5217_DP
+     c = 2._DP
+     fx =  ak - ak / (1.0_DP + amu * p / ak)  + p**2 * (1.0_DP + p)/       &
+            (10**c + p**3) * ( -1.0_DP - ak + ak / (1.0_DP + amu * p / ak) &
+           + ab * p ** (-0.1D1/ 0.4D1) )
+     !
+     exunif = - c1 * kf
+     sx_s = exunif * fx
+     !
+     dxunif = exunif * third
+     !
+     dfxdp = DBLE(1 / (1 + amu * p / ak) ** 2 * amu) + DBLE(2 * p * (1   &
+     + p) / (10 ** c + p ** 3) * (-1 - ak + ak / (1 + amu * p / ak) + ab &
+     * p ** (-0.1d1 / 0.4D1))) + DBLE(p ** 2 / (10 ** c + p ** 3) * (    &
+     -1 - ak + ak / (1 + amu * p / ak) + ab * p ** (-0.1d1 / 0.4D1))) -  &
+     DBLE(3 * p ** 4 * (1 + p) / (10 ** c + p ** 3) ** 2 * (-1 - ak +    &
+     ak / (1 + amu * p / ak) + ab * p ** (-0.1d1 / 0.4D1))) + DBLE(p **  &
+     2) * DBLE(1 + p) / DBLE(10 ** c + p ** 3) * (-DBLE(1 / (1 + amu *   &
+     p / ak) ** 2 * amu) - DBLE(ab * p ** (-0.5d1 / 0.4D1)) / 0.4D1)
+     !
+     dfxds = dfxdp*2._DP*s
+     dfx = dfxds
+     ds = - c5 * s1
+     !
+     v1x = sx_s + dxunif * fx + exunif * dfx * ds
+     v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
   CASE( 5 )
      !
-     agrho = SQRT(grho)   
-     kf = c2 * rho**third   
-     dsg = 0.5_DP / kf   
+     agrho = SQRT(grho)
+     kf = c2 * rho**third
+     dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
-     ab = mu(iflag)*c7 ! mu/ab=1.2   
-     p = s1*c6   
-     c = LOG(p + SQRT(p*p+1)) ! asinh(p)   
-     dfx1 = 1 + ab*s1*c   
-     fx = mu(iflag)*s1*s1/dfx1   
-     !   
-     exunif = - c1 * kf   
-     sx_s = exunif * fx   
-     !   
-     dxunif = exunif * third   
-     !   
-     dfx = 2*fx/s1-fx/dfx1*(ab*c+ab*s1/SQRT(p*p+1)*c6)   
-     ds  = - c5 * s1   
-     !   
-     v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-     v2x = exunif * dfx * dsg / agrho   
+     ab = mu(iflag)*c7 ! mu/ab=1.2
+     p = s1*c6
+     c = LOG(p + SQRT(p*p+1)) ! asinh(p)
+     dfx1 = 1 + ab*s1*c
+     fx = mu(iflag)*s1*s1/dfx1
+     !
+     exunif = - c1 * kf
+     sx_s = exunif * fx
+     !
+     dxunif = exunif * third
+     !
+     dfx = 2*fx/s1-fx/dfx1*(ab*c+ab*s1/SQRT(p*p+1)*c6)
+     ds  = - c5 * s1
+     !
+     v1x = sx_s + dxunif * fx + exunif * dfx * ds
+     v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
   CASE( 6 )
      !
-     agrho = SQRT(grho)   
-     kf = c2 * rho**third   
-     dsg = 0.5_DP / kf   
-     s1 = agrho * dsg / rho   
-     p = mu(iflag)*s1*s1   
-     fx =  p / ( 1._DP + p )**c8   
-     !   
-     exunif = - c1 * kf   
-     sx_s = exunif * fx   
-     !   
-     dxunif = exunif * third   
-     !   
-     dfx = 2*mu(iflag)*s1*fx*(1+(1-c8)*p)/(p*(1+p))   
-     ds = - c5 * s1   
-     !   
-     v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-     v2x = exunif * dfx * dsg / agrho   
-     sx  = sx_s * rho   
+     agrho = SQRT(grho)
+     kf = c2 * rho**third
+     dsg = 0.5_DP / kf
+     s1 = agrho * dsg / rho
+     p = mu(iflag)*s1*s1
+     fx =  p / ( 1._DP + p )**c8
+     !
+     exunif = - c1 * kf
+     sx_s = exunif * fx
+     !
+     dxunif = exunif * third
+     !
+     dfx = 2*mu(iflag)*s1*fx*(1+(1-c8)*p)/(p*(1+p))
+     ds = - c5 * s1
+     !
+     v1x = sx_s + dxunif * fx + exunif * dfx * ds
+     v2x = exunif * dfx * dsg / agrho
+     sx  = sx_s * rho
      !
   CASE( 7 )
      !
      agrho = SQRT(grho)
-     kf = c2 * rho**third   
-     dsg = 0.5_DP / kf   
+     kf = c2 * rho**third
+     dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
-     s2 = s1 * s1   
-     s = s2*s2   
-     f1 =  1._DP + ev(1)*s2 + ev(2)*s + ev(3)*s*s2   
-     f2 =  1._DP + ev(4)*s2 + ev(5)*s + ev(6)*s*s2   
-     fx = f1 / f2 - 1._DP   
-     !   
-     exunif = - c1 * kf   
-     sx_s = exunif * fx   
-     !   
-     dxunif = exunif * third   
-     ds = - c5 * s1   
-     !   
-     dfx  =  ev(1) + 2*ev(2)*s2 + 3*ev(3)*s     
-     dfx1 =  ev(4) + 2*ev(5)*s2 + 3*ev(6)*s    
-     dfx  = 2 * s1 * ( dfx - f1*dfx1/f2 ) / f2   
-     !   
-     v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-     v2x = exunif * dfx * dsg / agrho   
+     s2 = s1 * s1
+     s = s2*s2
+     f1 =  1._DP + ev(1)*s2 + ev(2)*s + ev(3)*s*s2
+     f2 =  1._DP + ev(4)*s2 + ev(5)*s + ev(6)*s*s2
+     fx = f1 / f2 - 1._DP
+     !
+     exunif = - c1 * kf
+     sx_s = exunif * fx
+     !
+     dxunif = exunif * third
+     ds = - c5 * s1
+     !
+     dfx  =  ev(1) + 2*ev(2)*s2 + 3*ev(3)*s
+     dfx1 =  ev(4) + 2*ev(5)*s2 + 3*ev(6)*s
+     dfx  = 2 * s1 * ( dfx - f1*dfx1/f2 ) / f2
+     !
+     v1x = sx_s + dxunif * fx + exunif * dfx * ds
+     v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
   CASE DEFAULT
      !
-     agrho = SQRT(grho)   
-     kf = c2 * rho**third   
-     dsg = 0.5_DP / kf   
+     agrho = SQRT(grho)
+     kf = c2 * rho**third
+     dsg = 0.5_DP / kf
      s1 = agrho * dsg / rho
-     s2 = s1 * s1   
-     f1 = s2 * mu(iflag) / k(iflag)   
-     f2 = 1._DP + f1   
-     f3 = k(iflag) / f2   
-     fx = k(iflag) - f3   
-     !   
-     exunif = - c1 * kf   
-     sx_s = exunif * fx   
-     !   
-     dxunif = exunif * third   
-     ds = - c5 * s1   
-     !   
-     dfx1 = f2 * f2   
-     dfx = 2._DP * mu(iflag) * s1 / dfx1   
-     !   
-     v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-     v2x = exunif * dfx * dsg / agrho   
+     s2 = s1 * s1
+     f1 = s2 * mu(iflag) / k(iflag)
+     f2 = 1._DP + f1
+     f3 = k(iflag) / f2
+     fx = k(iflag) - f3
+     !
+     exunif = - c1 * kf
+     sx_s = exunif * fx
+     !
+     dxunif = exunif * third
+     ds = - c5 * s1
+     !
+     dfx1 = f2 * f2
+     dfx = 2._DP * mu(iflag) * s1 / dfx1
+     !
+     v1x = sx_s + dxunif * fx + exunif * dfx * ds
+     v2x = exunif * dfx * dsg / agrho
      sx  = sx_s * rho
      !
   END SELECT
@@ -284,7 +289,7 @@ END SUBROUTINE pbex
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
+SUBROUTINE hcth( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !--------------------------------------------------------------------------
   !! HCTH/120, JCP 109, p. 6264 (1998)
   !! Parameters set-up after N.L. Doltsisnis & M. Sprik (1999)
@@ -297,7 +302,6 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
   !! * v2x : 1/gr*d(sx)/d(gr) (eq. 0.5 * dfdza = 0.5 * dfdzb in original)
   !
   USE kinds,      ONLY: DP
-  USE constants,  ONLY: pi
   !
   IMPLICIT NONE
   !
@@ -306,6 +310,7 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
   !
   ! ... local variables
   !
+  REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: o3 = 1.0d0/3.0d0, o34 = 4.0d0/3.0d0, fr83 = 8.d0/3.d0
   REAL(DP) :: cg0(6), cg1(6), caa(6), cab(6), cx(6)
   REAL(DP) :: r3q2, r3pi, gr, rho_o3, rho_o34, xa, xa2, ra, rab,        &
@@ -350,69 +355,70 @@ SUBROUTINE hcth( rho, grho, sx, v1x, v2x )
   cx(6)  =  0.004000d+00
   !  ... ... ... ... ...
   !
-  gr = DSQRT(grho)   
-  rho_o3  = rho**(o3)   
-  rho_o34 = rho**(o34)   
-  xa = 1.25992105d0*gr/rho_o34   
-  xa2 = xa*xa   
-  ra = 0.781592642d0/rho_o3   
-  rab = r3q2*ra   
-  dra_drho = -0.260530881d0/rho_o34   
-  drab_drho = r3q2*dra_drho   
-  CALL pwcorr( ra, cg1, g, dg )   
-  era1 = g   
-  dera1_dra = dg   
-  CALL pwcorr( rab, cg0, g, dg )   
-  erab0 = g   
-  derab0_drab = dg   
-  ex = -0.75d0*r3pi*rho_o34   
-  dex_drho = -r3pi*rho_o3   
-  uaa = caa(6)*xa2   
-  uaa = uaa/(1.0d0+uaa)   
-  uab = cab(6)*xa2   
-  uab = uab/(1.0d0+uab)   
-  ux = cx(6)*xa2   
-  ux = ux/(1.0d0+ux)   
-  ffaa = rho*era1   
-  ffab = rho*erab0-ffaa   
-  dffaa_drho = era1 + rho*dera1_dra*dra_drho   
-  dffab_drho = erab0 + rho*derab0_drab*drab_drho - dffaa_drho   
-  ! mb-> i-loop removed   
-  denaa = 1.d0 / (1.0d0+caa(6)*xa2)   
-  denab = 1.d0 / (1.0d0+cab(6)*xa2)   
-  denx  = 1.d0 / (1.0d0+cx(6)*xa2)   
-  f83rho = fr83 / rho  
-  bygr = 2.0d0/gr   
-  gaa = caa(1)+uaa*(caa(2)+uaa*(caa(3)+uaa*(caa(4)+uaa*caa(5))))   
-  gab = cab(1)+uab*(cab(2)+uab*(cab(3)+uab*(cab(4)+uab*cab(5))))   
-  gx  = cx(1)+ux*(cx(2)+ux*(cx(3)+ux*(cx(4)+ux*cx(5))))   
-  taa = denaa*uaa*(caa(2)+uaa*(2.d0*caa(3)+uaa &   
-        *(3.d0*caa(4)+uaa*4.d0*caa(5))))   
-  tab = denab*uab*(cab(2)+uab*(2.d0*cab(3)+uab &   
-        *(3.d0*cab(4)+uab*4.d0*cab(5))))   
-  txx = denx*ux*(cx(2)+ux*(2.d0*cx(3)+ux &   
-        *(3.d0*cx(4)+ux*4.d0*cx(5))))   
-  dgaa_drho = -f83rho*taa   
-  dgab_drho = -f83rho*tab   
-  dgx_drho  = -f83rho*txx   
-  dgaa_dgr  =  bygr*taa   
-  dgab_dgr  =  bygr*tab   
-  dgx_dgr   =  bygr*txx   
-  ! mb   
-  sx  = ex*gx + ffaa*gaa + ffab*gab   
-  v1x = dex_drho*gx + ex*dgx_drho          &   
-             + dffaa_drho*gaa + ffaa*dgaa_drho &   
-             + dffab_drho*gab + ffab*dgab_drho   
-  v2x = (ex*dgx_dgr + ffaa*dgaa_dgr + ffab*dgab_dgr) / gr   
+  gr = DSQRT(grho)
+  rho_o3  = rho**(o3)
+  rho_o34 = rho**(o34)
+  xa = 1.25992105d0*gr/rho_o34
+  xa2 = xa*xa
+  ra = 0.781592642d0/rho_o3
+  rab = r3q2*ra
+  dra_drho = -0.260530881d0/rho_o34
+  drab_drho = r3q2*dra_drho
+  CALL pwcorr( ra, cg1, g, dg )                           !<GPU:pwcorr=>pwcorr_d>
+  era1 = g
+  dera1_dra = dg
+  CALL pwcorr( rab, cg0, g, dg )                          !<GPU:pwcorr=>pwcorr_d>
+  erab0 = g
+  derab0_drab = dg
+  ex = -0.75d0*r3pi*rho_o34
+  dex_drho = -r3pi*rho_o3
+  uaa = caa(6)*xa2
+  uaa = uaa/(1.0d0+uaa)
+  uab = cab(6)*xa2
+  uab = uab/(1.0d0+uab)
+  ux = cx(6)*xa2
+  ux = ux/(1.0d0+ux)
+  ffaa = rho*era1
+  ffab = rho*erab0-ffaa
+  dffaa_drho = era1 + rho*dera1_dra*dra_drho
+  dffab_drho = erab0 + rho*derab0_drab*drab_drho - dffaa_drho
+  ! mb-> i-loop removed
+  denaa = 1.d0 / (1.0d0+caa(6)*xa2)
+  denab = 1.d0 / (1.0d0+cab(6)*xa2)
+  denx  = 1.d0 / (1.0d0+cx(6)*xa2)
+  f83rho = fr83 / rho
+  bygr = 2.0d0/gr
+  gaa = caa(1)+uaa*(caa(2)+uaa*(caa(3)+uaa*(caa(4)+uaa*caa(5))))
+  gab = cab(1)+uab*(cab(2)+uab*(cab(3)+uab*(cab(4)+uab*cab(5))))
+  gx  = cx(1)+ux*(cx(2)+ux*(cx(3)+ux*(cx(4)+ux*cx(5))))
+  taa = denaa*uaa*(caa(2)+uaa*(2.d0*caa(3)+uaa &
+        *(3.d0*caa(4)+uaa*4.d0*caa(5))))
+  tab = denab*uab*(cab(2)+uab*(2.d0*cab(3)+uab &
+        *(3.d0*cab(4)+uab*4.d0*cab(5))))
+  txx = denx*ux*(cx(2)+ux*(2.d0*cx(3)+ux &
+        *(3.d0*cx(4)+ux*4.d0*cx(5))))
+  dgaa_drho = -f83rho*taa
+  dgab_drho = -f83rho*tab
+  dgx_drho  = -f83rho*txx
+  dgaa_dgr  =  bygr*taa
+  dgab_dgr  =  bygr*tab
+  dgx_dgr   =  bygr*txx
+  ! mb
+  sx  = ex*gx + ffaa*gaa + ffab*gab
+  v1x = dex_drho*gx + ex*dgx_drho          &
+             + dffaa_drho*gaa + ffaa*dgaa_drho &
+             + dffab_drho*gab + ffab*dgab_drho
+  v2x = (ex*dgx_dgr + ffaa*dgaa_dgr + ffab*dgab_dgr) / gr
   !
   RETURN
   !
 END SUBROUTINE hcth
     !
     !-------------------------------------------------------
-    SUBROUTINE pwcorr( r, c, g, dg )
+    SUBROUTINE pwcorr( r, c, g, dg )                    !<GPU:DEVICE>
       !-----------------------------------------------------
-      USE kinds, ONLY : DP
+      !
+      USE kinds,   ONLY: DP
       !
       IMPLICIT NONE
       !
@@ -438,7 +444,7 @@ END SUBROUTINE hcth
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE optx( rho, grho, sx, v1x, v2x )
+SUBROUTINE optx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------------
   !! OPTX, Handy et al. JCP 116, p. 5411 (2002) and refs. therein
   !! Present release: Mauro Boero, Tsukuba, 10/9/2002
@@ -462,19 +468,19 @@ SUBROUTINE optx( rho, grho, sx, v1x, v2x )
   ! ... coefficients and exponents
   REAL(DP), PARAMETER :: o43=4.0d0/3.0d0, two13=1.259921049894873D0,      &
        two53=3.174802103936399D0, gam=0.006D0, a1cx=0.9784571170284421D0, &
-       a2=1.43169D0 
+       a2=1.43169D0
   REAL(DP) :: gr, rho43, xa, gamx2, uden, uu
   !
   ! ... OPTX in compact form
-  !   
-  gr = MAX(grho,smal2)   
-  rho43 = rho**o43   
-  xa = two13*DSQRT(gr)/rho43   
-  gamx2 = gam*xa*xa   
-  uden = 1.d+00/(1.d+00+gamx2)   
-  uu = a2*gamx2*gamx2*uden*uden   
-  uden = rho43*uu*uden   
-  sx  = -rho43*(a1cx+uu)/two13   
+  !
+  gr = MAX(grho,smal2)
+  rho43 = rho**o43
+  xa = two13*DSQRT(gr)/rho43
+  gamx2 = gam*xa*xa
+  uden = 1.d+00/(1.d+00+gamx2)
+  uu = a2*gamx2*gamx2*uden*uden
+  uden = rho43*uu*uden
+  sx  = -rho43*(a1cx+uu)/two13
   v1x = o43*(sx+two53*uden)/rho
   v2x = -two53*uden/gr
   !
@@ -484,13 +490,12 @@ END SUBROUTINE optx
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
+SUBROUTINE wcx( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !!  Wu-Cohen exchange (without Slater exchange):
   !!  Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
   !
-  USE kinds,     ONLY: DP
-  USE constants, ONLY: pi
+  USE kinds,   ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -511,6 +516,7 @@ SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
   REAL(DP) :: dxunif, dfx, f1, f2, f3, dfx1, x1, x2, x3, &
               dxds1, dxds2, dxds3, sx_s
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1.d0 / 3.d0, c1=0.75d0/pi ,      &
                          c2=3.093667726280136d0, c5=4.d0*third, &
                          teneightyone = 0.123456790123d0
@@ -518,36 +524,36 @@ SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
   REAL(DP), PARAMETER :: k=0.804d0, mu=0.2195149727645171d0, &
                          cwc=0.00793746933516d0
   !
-  agrho = SQRT(grho)   
-  kf  = c2 * rho**third   
-  dsg = 0.5d0 / kf   
+  agrho = SQRT(grho)
+  kf  = c2 * rho**third
+  dsg = 0.5d0 / kf
   s1  = agrho * dsg / rho
-  s2  = s1 * s1   
-  es2 = EXP(-s2)   
-  ds  = - c5 * s1   
-  !   
-  !   Energy   
-  ! x = 10/81 s^2 + (mu - 10/81) s^2 e^-s^2 + ln (1 + c s^4)   
-  x1 = teneightyone * s2    
-  x2 = (mu - teneightyone) * s2 * es2   
-  x3 = LOG(1.d0 + cwc * s2 * s2)   
-  f1 = (x1 + x2 + x3) / k   
-  f2 = 1.d0 + f1   
-  f3 = k / f2   
-  fx = k - f3   
-  exunif = - c1 * kf   
-  sx_s = exunif * fx   
-  !   
-  !   Potential   
-  dxunif = exunif * third   
-  dfx1 = f2 * f2   
-  dxds1 = teneightyone   
-  dxds2 = (mu - teneightyone) * es2 * (1.d0 - s2)   
-  dxds3 = 2.d0 * cwc * s2 / (1.d0 + cwc * s2 *s2)   
-  dfx = 2.d0 * s1 * (dxds1 + dxds2 + dxds3) / dfx1   
-  !   
-  v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-  v2x = exunif * dfx * dsg / agrho   
+  s2  = s1 * s1
+  es2 = EXP(-s2)
+  ds  = - c5 * s1
+  !
+  !   Energy
+  ! x = 10/81 s^2 + (mu - 10/81) s^2 e^-s^2 + ln (1 + c s^4)
+  x1 = teneightyone * s2
+  x2 = (mu - teneightyone) * s2 * es2
+  x3 = LOG(1.d0 + cwc * s2 * s2)
+  f1 = (x1 + x2 + x3) / k
+  f2 = 1.d0 + f1
+  f3 = k / f2
+  fx = k - f3
+  exunif = - c1 * kf
+  sx_s = exunif * fx
+  !
+  !   Potential
+  dxunif = exunif * third
+  dfx1 = f2 * f2
+  dxds1 = teneightyone
+  dxds2 = (mu - teneightyone) * es2 * (1.d0 - s2)
+  dxds3 = 2.d0 * cwc * s2 / (1.d0 + cwc * s2 *s2)
+  dfx = 2.d0 * s1 * (dxds1 + dxds2 + dxds3) / dfx1
+  !
+  v1x = sx_s + dxunif * fx + exunif * dfx * ds
+  v2x = exunif * dfx * dsg / agrho
   sx  = sx_s * rho
   !
   RETURN
@@ -555,15 +561,15 @@ SUBROUTINE wcx( rho, grho, sx, v1x, v2x )
 END SUBROUTINE wcx
 !
 !
-!-----------------------------------------------------------------------     
-SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
+!-----------------------------------------------------------------------
+SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   ! INCLUDE 'cnst.inc'
   USE kinds,      ONLY: DP
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: omega
+  REAL(DP), INTENT(IN) :: omega                !<GPU:VALUE>
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sxsr, v1xsr, v2xsr
   !
@@ -577,32 +583,32 @@ SUBROUTINE pbexsr( rho, grho, sxsr, v1xsr, v2xsr, omega )
   !
   ! CALL XC(RHO,EX,EC,VX,VC)
   !
-  rs = rho**(1.0_DP/3.0_DP)   
-  vx = (4.0_DP/3.0_DP)*f1*alpha*rs   
-  !   
-  ! aa = dmax1(grho,smal2)   
+  rs = rho**(1.0_DP/3.0_DP)
+  vx = (4.0_DP/3.0_DP)*f1*alpha*rs
+  !
+  ! aa = dmax1(grho,smal2)
   aa = grho
-  ! rr = rho**(-4.0_DP/3.0_DP)   
-  rr = 1.0_DP/(rho*rs)   
-  ex = ax/rr   
-  s2 = aa*rr*rr*us*us   
-  !   
-  s = SQRT(s2)   
-  IF (s > 8.3D0) THEN   
-     s = 8.572844D0 - 18.796223D0/s2   
-  ENDIF   
-  !   
-  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x )   
-  !   
-  sxsr  = ex*fx                        ! - ex   
-  dsdn  = -4.D0/3.D0*s/rho   
-  v1xsr = vx*fx + (dsdn*d2x+d1x)*ex    ! - VX   
-  dsdg  = us*rr   
-  v2xsr = ex*1.D0/SQRT(aa)*dsdg*d2x   
-  !   
-  ! NOTE, here sx is the total energy density,   
-  ! not just the gradient correction energy density as e.g. in pbex()   
-  ! And the same goes for the potentials V1X, V2X   
+  ! rr = rho**(-4.0_DP/3.0_DP)
+  rr = 1.0_DP/(rho*rs)
+  ex = ax/rr
+  s2 = aa*rr*rr*us*us
+  !
+  s = SQRT(s2)
+  IF (s > 8.3D0) THEN
+     s = 8.572844D0 - 18.796223D0/s2
+  ENDIF
+  !
+  CALL wpbe_analy_erfc_approx_grad( rho, s, omega, fx, d1x, d2x ) !<GPU:wpbe_analy_erfc_approx_grad=>wpbe_analy_erfc_approx_grad_d>
+  !
+  sxsr  = ex*fx                        ! - ex
+  dsdn  = -4.D0/3.D0*s/rho
+  v1xsr = vx*fx + (dsdn*d2x+d1x)*ex    ! - VX
+  dsdg  = us*rr
+  v2xsr = ex*1.D0/SQRT(aa)*dsdg*d2x
+  !
+  ! NOTE, here sx is the total energy density,
+  ! not just the gradient correction energy density as e.g. in pbex()
+  ! And the same goes for the potentials V1X, V2X
   !
   RETURN
   !
@@ -610,11 +616,11 @@ END SUBROUTINE pbexsr
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )
+SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009).
   !
-  USE kinds
+  USE kinds,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -628,43 +634,42 @@ SUBROUTINE rPW86( rho, grho, sx, v1x, v2x )
                          s_prefactor=6.18733545256027_DP,    &
                          Ax=-0.738558766382022_DP, four_thirds=4._DP/3._DP
   !
-  grad_rho = SQRT(grho)   
-  !   
-  s = grad_rho/(s_prefactor*rho**(four_thirds))   
-  !   
-  s_2 = s**2   
-  s_3 = s_2 * s   
-  s_4 = s_2**2   
-  s_5 = s_3 * s_2   
-  s_6 = s_2 * s_4   
-  !   
-  ! Calculation of energy   
-  fs = (1 + a*s_2 + b*s_4 + c*s_6)**(1._DP/15._DP)   
-  sx = Ax * rho**(four_thirds) * (fs -1.0_DP)   
-  !   
-  ! Calculation of the potential   
-  df_ds = (1._DP/(15._DP*fs**(14.0_DP)))*(2*a*s + 4*b*s_3 + 6*c*s_5)   
-  !   
-  v1x = Ax*(four_thirds)*(rho**(1._DP/3._DP)*(fs -1.0_DP) &   
-        -grad_rho/(s_prefactor * rho)*df_ds)   
-  !  
-  v2x = Ax * df_ds/(s_prefactor*grad_rho)   
+  grad_rho = SQRT(grho)
+  !
+  s = grad_rho/(s_prefactor*rho**(four_thirds))
+  !
+  s_2 = s**2
+  s_3 = s_2 * s
+  s_4 = s_2**2
+  s_5 = s_3 * s_2
+  s_6 = s_2 * s_4
+  !
+  ! Calculation of energy
+  fs = (1 + a*s_2 + b*s_4 + c*s_6)**(1._DP/15._DP)
+  sx = Ax * rho**(four_thirds) * (fs -1.0_DP)
+  !
+  ! Calculation of the potential
+  df_ds = (1._DP/(15._DP*fs**(14.0_DP)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
+  !
+  v1x = Ax*(four_thirds)*(rho**(1._DP/3._DP)*(fs -1.0_DP) &
+        -grad_rho/(s_prefactor * rho)*df_ds)
+  !
+  v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
 END SUBROUTINE rPW86
 !
 !
 !-----------------------------------------------------------------
-SUBROUTINE c09x( rho, grho, sx, v1x, v2x )  
+SUBROUTINE c09x( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !---------------------------------------------------------------
   !! Cooper '09 exchange for vdW-DF (without Slater exchange):
   !! V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !
-  !! Developed thanks to the contribution of 
+  !! Developed thanks to the contribution of
   !! Ikutaro Hamada - ikutaro@wpi-aimr.tohoku.ac.jp
-  !! WPI-Advanced Institute of Materials Research, Tohoku University  
+  !! WPI-Advanced Institute of Materials Research, Tohoku University
   !
   USE kinds,      ONLY: DP
-  USE constants,  ONLY: pi
   !
   IMPLICIT NONE
   !
@@ -684,6 +689,7 @@ SUBROUTINE c09x( rho, grho, sx, v1x, v2x )
   ! exchange energy gradient part
   REAL(DP) :: dxunif, dfx, f1, f2, f3, dfx1, dfx2
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi, &
                          c2=3.093667726280136_DP, c5=4._DP*third
   ! parameters of the functional
@@ -692,31 +698,31 @@ SUBROUTINE c09x( rho, grho, sx, v1x, v2x )
        mu    / 0.0617_DP /, &
        alpha / 0.0483_DP /
   !
-  agrho = SQRT(grho)   
-  kf = c2 * rho**third   
-  dsg = 0.5_DP / kf   
+  agrho = SQRT(grho)
+  kf = c2 * rho**third
+  dsg = 0.5_DP / kf
   s1 = agrho * dsg / rho
-  s2 = s1 * s1   
-  ds = - c5 * s1   
-  !   
-  ! ... Energy   
-  !   
-  f1 = EXP( - alpha * s2 )   
-  f2 = EXP( - alpha * s2 / 2.0_DP )   
-  f3 = mu * s2 * f1   
-  fx = f3 + kappa * ( 1.0_DP - f2 )   
-  exunif = - c1 * kf   
-  sx_s = exunif * fx   
-  !   
-  ! ... Potential   
-  !   
-  dxunif = exunif * third   
-  dfx1 = 2.0_DP * mu * s1 * ( 1.0_DP - alpha * s2 ) * f1   
-  dfx2 = kappa * alpha * s1 * f2    
-  dfx = dfx1 + dfx2    
-  v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-  v2x = exunif * dfx * dsg / agrho   
-  !   
+  s2 = s1 * s1
+  ds = - c5 * s1
+  !
+  ! ... Energy
+  !
+  f1 = EXP( - alpha * s2 )
+  f2 = EXP( - alpha * s2 / 2.0_DP )
+  f3 = mu * s2 * f1
+  fx = f3 + kappa * ( 1.0_DP - f2 )
+  exunif = - c1 * kf
+  sx_s = exunif * fx
+  !
+  ! ... Potential
+  !
+  dxunif = exunif * third
+  dfx1 = 2.0_DP * mu * s1 * ( 1.0_DP - alpha * s2 ) * f1
+  dfx2 = kappa * alpha * s1 * f2
+  dfx = dfx1 + dfx2
+  v1x = sx_s + dxunif * fx + exunif * dfx * ds
+  v2x = exunif * dfx * dsg / agrho
+  !
   sx  = sx_s * rho
   !
   RETURN
@@ -725,12 +731,11 @@ END SUBROUTINE c09x
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE sogga( rho, grho, sx, v1x, v2x )
+SUBROUTINE sogga( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------
   !! SOGGA exchange
-  ! 
-  USE kinds
-  USE constants,  ONLY: pi
+  !
+  USE kinds,      ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -750,6 +755,7 @@ SUBROUTINE sogga( rho, grho, sx, v1x, v2x )
   &                      f34 = three/four,f83 = eight/three, f12 = one/two
   !
   REAL(DP), PARAMETER :: mu=0.12346_DP, kapa=0.552_DP
+  REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   !
   ! Cx LDA
   CX    =  f34 * (three/pi)**f13
@@ -757,41 +763,41 @@ SUBROUTINE sogga( rho, grho, sx, v1x, v2x )
   C1    =  mu / denom
   C2    =  mu / (kapa * denom)
   !
-  rho43 = rho**f43   
-  xs  = grho / rho43   
-  xs2 = xs * xs   
-  !   
-  dxs2_drho   = -f83 * xs2 / rho   
-  dxs2_dgrho2 = one /rho**f83   
-  !   
-  ex       = - CX * rho43   
-  dex_drho = - f43 * CX * rho**f13   
-  !   
-  Fso  = kapa * (one - EXP(-C2*xs2))   
-  Fpbe = C1 * xs2 / (one + C2*xs2)   
-  !   
-  Fx       = f12 * (Fpbe + Fso)   
-  dFx_dxs2 = f12 * (C1 / ((one + C2*xs2)**2) + C1*EXP(-C2*xs2))   
-  !   
-  !   Energy   
-  sx = Fx * ex   
-  !   
-  !   Potential   
-  v1x = dex_drho * Fx  +  ex * dFx_dxs2 * dxs2_drho   
-  v2x = two * ex * dFx_dxs2 * dxs2_dgrho2   
+  rho43 = rho**f43
+  xs  = grho / rho43
+  xs2 = xs * xs
+  !
+  dxs2_drho   = -f83 * xs2 / rho
+  dxs2_dgrho2 = one /rho**f83
+  !
+  ex       = - CX * rho43
+  dex_drho = - f43 * CX * rho**f13
+  !
+  Fso  = kapa * (one - EXP(-C2*xs2))
+  Fpbe = C1 * xs2 / (one + C2*xs2)
+  !
+  Fx       = f12 * (Fpbe + Fso)
+  dFx_dxs2 = f12 * (C1 / ((one + C2*xs2)**2) + C1*EXP(-C2*xs2))
+  !
+  !   Energy
+  sx = Fx * ex
+  !
+  !   Potential
+  v1x = dex_drho * Fx  +  ex * dFx_dxs2 * dxs2_drho
+  v2x = two * ex * dFx_dxs2 * dxs2_dgrho2
   !
 END SUBROUTINE sogga
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )
+SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !
   USE kinds,  ONLY: DP
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: alpha_gau
+  REAL(DP), INTENT(IN) :: alpha_gau              !<GPU:VALUE>
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sxsr, v1xsr, v2xsr
   !
@@ -804,34 +810,34 @@ SUBROUTINE pbexgau( rho, grho, sxsr, v1xsr, v2xsr, alpha_gau )
                          um=0.2195149727645171D0, uk=0.8040D0, ul=um/uk
   REAL(DP), PARAMETER :: f1 = -1.10783814957303361_DP, alpha = 2.0_DP/3.0_DP
   !
-  rs = rho**(1.0_DP/3.0_DP)   
-  vx = (4.0_DP/3.0_DP)*f1*alpha*rs   
+  rs = rho**(1.0_DP/3.0_DP)
+  vx = (4.0_DP/3.0_DP)*f1*alpha*rs
   aa = grho
-  rr = 1.0_DP/(rho*rs)   
-  ex = ax/rr   
-  ! AX is 3/4/PI*(3*PI*PI)**(1/3). This is the same as -c1*c2 in pbex().   
-  s2 = aa*rr*rr*us*us   
-  s = SQRT(s2)   
-  IF (s > 10.D0) THEN   
-     s = 10.D0   
-  ENDIF   
-  CALL pbe_gauscheme( rho, s, alpha_gau, fx, d1x, d2x )   
-  sxsr = ex*fx                        ! - EX   
-  dsdn = -4.D0/3.D0*s/rho   
-  v1xsr = vx*fx + (dsdn*d2x+d1x)*ex   ! - VX   
-  dsdg = us*rr   
-  v2xsr = ex*1.D0/SQRT(aa)*dsdg*d2x   
-  !   
-  ! NOTE, here sx is the total energy density,   
-  ! not just the gradient correction energy density as e.g. in pbex()   
-  ! And the same goes for the potentials V1X, V2X   
+  rr = 1.0_DP/(rho*rs)
+  ex = ax/rr
+  ! AX is 3/4/PI*(3*PI*PI)**(1/3). This is the same as -c1*c2 in pbex().
+  s2 = aa*rr*rr*us*us
+  s = SQRT(s2)
+  IF (s > 10.D0) THEN
+     s = 10.D0
+  ENDIF
+  CALL pbe_gauscheme( rho, s, alpha_gau, fx, d1x, d2x )   !<GPU:pbe_gauscheme=>pbe_gauscheme_d>
+  sxsr = ex*fx                        ! - EX
+  dsdn = -4.D0/3.D0*s/rho
+  v1xsr = vx*fx + (dsdn*d2x+d1x)*ex   ! - VX
+  dsdg = us*rr
+  v2xsr = ex*1.D0/SQRT(aa)*dsdg*d2x
+  !
+  ! NOTE, here sx is the total energy density,
+  ! not just the gradient correction energy density as e.g. in pbex()
+  ! And the same goes for the potentials V1X, V2X
   !
   RETURN
   !
 END SUBROUTINE pbexgau
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )
+SUBROUTINE pbe_gauscheme( rho, s, alpha_gau, Fx, dFxdr, dFxds )                    !<GPU:DEVICE>
        !--------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -848,8 +854,6 @@ END SUBROUTINE pbexgau
        REAL*8 bx, cx, PI, sqrtpial, Prefac, term_PBE, Third, KsF
        REAL*8 d1sdr, d1Kxds, d1Kxdr, d1bxdr, d1bxds, d1bxdKx, &
               d1Nxdbx,d1Nxdr, d1Nxds
-       !
-       REAL*8, EXTERNAL :: qe_erf, TayExp
        !
        REAL*8 Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
        !
@@ -876,12 +880,12 @@ END SUBROUTINE pbexgau
        !
        ! cx = exp(-One/Four/bx/bx) - One
        IF (ABS(One/bx/bx) < 1.0D-4) THEN
-          cx = TayExp(-One/bx/bx)
+          cx = TayExp(-One/bx/bx)                               !<GPU:TayExp=>TayExp_d>
        ELSE
           cx = EXP(-One/bx/bx) - One
        ENDIF
        !
-       Nx = bx * Prefac * ( SQRT(PI) * qe_erf(One/bx) + &
+       Nx = bx * Prefac * ( SQRT(PI) * qe_erf(One/bx) + &       !<GPU:qe_erf=>qe_erf_d>
         (bx - Two*bx*bx*bx)*cx - Two*bx )
        !
        ! for convergency
@@ -915,41 +919,45 @@ END SUBROUTINE pbexgau
        !
        dFxdr = d1Kxdr * Nx + Kx * d1Nxdr
        dFxds = d1Kxds * Nx + Kx * d1Nxds
-       ! 
+       !
        RETURN
        !
-      END SUBROUTINE pbe_gauscheme
-         !
-         !------------------------------------------------- 
-               FUNCTION TayExp(X)
-                !-------------------------------------------
-                REAL*8 TAYEXP,X
-                INTEGER NTERM,I
-                REAL*8 SUMVAL,IVAL,COEF
-                PARAMETER (NTERM=16)
-                !
-                SUMVAL = X
-                IVAL = X
-                COEF = 1.0D0
-                DO 10 I = 2, NTERM
-                   COEF = COEF * I
-                   IVAL = IVAL * (X / COEF)
-                   SUMVAL = SUMVAL + IVAL
-              10     CONTINUE
-                TAYEXP = SUMVAL
-                !
-                RETURN
-                !
-               END FUNCTION TayExp
+END SUBROUTINE pbe_gauscheme
+!
+!
+!-------------------------------------------------
+FUNCTION TayExp(X)                         !<GPU:DEVICE>
+  !-------------------------------------------
+  USE kinds,   ONLY: DP
+  IMPLICIT NONE
+  REAL(DP), INTENT(IN) :: X
+  REAL(DP) :: TAYEXP                        !<GPU:TAYEXP=>TAYEXP_d>
+  INTEGER :: NTERM,I
+  REAL(DP) :: SUMVAL,IVAL,COEF
+  PARAMETER (NTERM=16)
+  !
+  SUMVAL = X
+  IVAL = X
+  COEF = 1.0D0
+  DO 10 I = 2, NTERM
+     COEF = COEF * I
+     IVAL = IVAL * (X / COEF)
+     SUMVAL = SUMVAL + IVAL
+10     CONTINUE
+  TAYEXP = SUMVAL                      !<GPU:TAYEXP=>TAYEXP_d>
+  !
+  RETURN
+  !
+END FUNCTION TayExp
 !
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE PW86( rho, grho, sx, v1x, v2x )
+SUBROUTINE PW86( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
-  !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986) 
-  ! 
-  USE kinds
+  !! Perdew-Wang 1986 exchange gradient correction: PRB 33, 8800 (1986)
+  !
+  USE kinds,  ONLY: DP
   !
   IMPLICIT NONE
   !
@@ -963,33 +971,33 @@ SUBROUTINE PW86( rho, grho, sx, v1x, v2x )
                          s_prefactor=6.18733545256027_DP, &
                          Ax=-0.738558766382022_DP, four_thirds=4._DP/3._DP
   !
-  grad_rho = SQRT(grho)   
-  !   
-  s = grad_rho / ( s_prefactor*rho**(four_thirds) )   
-  !   
-  s_2 = s**2   
-  s_3 = s_2 * s   
-  s_4 = s_2**2   
-  s_5 = s_3 * s_2   
-  s_6 = s_2 * s_4   
-  !   
-  ! Calculation of energy   
-  fs = (1 + a*s_2 + b*s_4 + c*s_6)**(1._DP/15._DP)   
-  sx = Ax * rho**(four_thirds) * (fs-1._DP)   
-  !   
-  ! Calculation of the potential   
-  df_ds = (1._DP/(15._DP*fs**(14._DP)))*(2*a*s + 4*b*s_3 + 6*c*s_5)   
-  !   
-  v1x = Ax*(four_thirds)*( rho**(1._DP/3._DP)*(fs-1._DP) &   
-            -grad_rho/(s_prefactor * rho)*df_ds )   
-  !   
-  v2x = Ax * df_ds/(s_prefactor*grad_rho)   
+  grad_rho = SQRT(grho)
+  !
+  s = grad_rho / ( s_prefactor*rho**(four_thirds) )
+  !
+  s_2 = s**2
+  s_3 = s_2 * s
+  s_4 = s_2**2
+  s_5 = s_3 * s_2
+  s_6 = s_2 * s_4
+  !
+  ! Calculation of energy
+  fs = (1 + a*s_2 + b*s_4 + c*s_6)**(1._DP/15._DP)
+  sx = Ax * rho**(four_thirds) * (fs-1._DP)
+  !
+  ! Calculation of the potential
+  df_ds = (1._DP/(15._DP*fs**(14._DP)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
+  !
+  v1x = Ax*(four_thirds)*( rho**(1._DP/3._DP)*(fs-1._DP) &
+            -grad_rho/(s_prefactor * rho)*df_ds )
+  !
+  v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
 END SUBROUTINE PW86
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )
+SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke 1986 gradient correction to exchange
   !! A.D. Becke, J. Chem. Phys. 85 (1986) 7184
@@ -1010,26 +1018,26 @@ SUBROUTINE becke86b( rho, grho, sx, v1x, v2x )
   !
   arho  = 0.5_DP  * rho
   agrho = 0.25_DP * grho
-  !   
-  rdg2_43 = agrho / arho**(4d0/3d0)   
-  rdg2_73 = rdg2_43 / arho   
-  rdg2_83 = rdg2_43 * rdg2_43 / agrho   
-  rdg2_4 = rdg2_43 * rdg2_83 / agrho   
-  rdg4_5 = rdg2_73 * rdg2_83   
-  !   
-  sgp1 = 1d0 + gamma * rdg2_83   
-  sgp1_45 = sgp1**(-4d0/5d0)   
-  sgp1_95 = sgp1_45 / sgp1   
-  !   
-  sx  = -2d0 * beta * agrho / arho**(4d0/3d0) * sgp1_45   
-  v1x = -beta * (-4d0/3d0*rdg2_73*sgp1_45 + 32d0/15d0*gamma*rdg4_5*sgp1_95)   
-  v2x = -beta * (sgp1_45*rdg2_43/agrho - 4d0/5d0 *gamma*rdg2_4*sgp1_95)   
-  !   
+  !
+  rdg2_43 = agrho / arho**(4d0/3d0)
+  rdg2_73 = rdg2_43 / arho
+  rdg2_83 = rdg2_43 * rdg2_43 / agrho
+  rdg2_4 = rdg2_43 * rdg2_83 / agrho
+  rdg4_5 = rdg2_73 * rdg2_83
+  !
+  sgp1 = 1d0 + gamma * rdg2_83
+  sgp1_45 = sgp1**(-4d0/5d0)
+  sgp1_95 = sgp1_45 / sgp1
+  !
+  sx  = -2d0 * beta * agrho / arho**(4d0/3d0) * sgp1_45
+  v1x = -beta * (-4d0/3d0*rdg2_73*sgp1_45 + 32d0/15d0*gamma*rdg4_5*sgp1_95)
+  v2x = -beta * (sgp1_45*rdg2_43/agrho - 4d0/5d0 *gamma*rdg2_4*sgp1_95)
+  !
 END SUBROUTINE becke86b
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
+SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------
   !! Becke exchange (without Slater exchange):
   !! iflag=1: A. D. Becke, J. Chem. Phys. 85, 7184 (1986) (B86b)
@@ -1040,11 +1048,9 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
   !! National Institute for Materials Science
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : pi
-  !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN) :: iflag
+  INTEGER, INTENT(IN) :: iflag                  !<GPU:VALUE>
   REAL(DP), INTENT(IN) :: rho, grho
   REAL(DP), INTENT(OUT) :: sx, v1x, v2x
   !
@@ -1061,6 +1067,7 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
   ! exchange energy gradient part
   REAL(DP) :: dxunif, dfx, f1, f2, f3, dfx1
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  REAL(DP), PARAMETER :: pi=3.14159265358979323846d0
   REAL(DP), PARAMETER :: third=1._DP/3._DP, c1=0.75_DP/pi, &
                          c2=3.093667726280136_DP, c5=4._DP*third
   ! parameters of the functional
@@ -1068,29 +1075,29 @@ SUBROUTINE b86b( rho, grho, iflag, sx, v1x, v2x )
   DATA k / 0.5757_DP, 1.0000_DP, 0.711357_DP/, &
        mu/ 0.2449_DP, 0.1234_DP, 0.1234_DP  /
   !
-  agrho = SQRT(grho)   
-  kf = c2 * rho**third   
-  dsg = 0.5_DP / kf   
+  agrho = SQRT(grho)
+  kf = c2 * rho**third
+  dsg = 0.5_DP / kf
   s1 = agrho * dsg / rho
-  s2 = s1 * s1   
-  ds = - c5 * s1   
-  !   
-  ! ... Energy   
-  !   
-  f1 = mu(iflag)*s2   
-  f2 = 1._DP + mu(iflag)*s2/k(iflag)   
-  f3 = f2**(4._DP/5._DP)   
-  fx = f1/f3   
-  exunif = - c1 * kf   
-  sx_s = exunif * fx   
-  !   
-  ! ... Potential   
-  !   
-  dxunif = exunif * third   
-  dfx1 = 1._DP + (1._DP/5._DP)*mu(iflag)*s2 / k(iflag)   
-  dfx  = 2._DP * mu(iflag) * s1 * dfx1 / (f2 * f3)   
-  v1x = sx_s + dxunif * fx + exunif * dfx * ds   
-  v2x = exunif * dfx * dsg / agrho   
+  s2 = s1 * s1
+  ds = - c5 * s1
+  !
+  ! ... Energy
+  !
+  f1 = mu(iflag)*s2
+  f2 = 1._DP + mu(iflag)*s2/k(iflag)
+  f3 = f2**(4._DP/5._DP)
+  fx = f1/f3
+  exunif = - c1 * kf
+  sx_s = exunif * fx
+  !
+  ! ... Potential
+  !
+  dxunif = exunif * third
+  dfx1 = 1._DP + (1._DP/5._DP)*mu(iflag)*s2 / k(iflag)
+  dfx  = 2._DP * mu(iflag) * s1 * dfx1 / (f2 * f3)
+  v1x = sx_s + dxunif * fx + exunif * dfx * ds
+  v2x = exunif * dfx * dsg / agrho
   sx = sx_s * rho
   !
   RETURN
@@ -1099,13 +1106,13 @@ END SUBROUTINE b86b
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
+SUBROUTINE cx13( rho, grho, sx, v1x, v2x )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! The new exchange partner for a vdW-DF1-cx suggested
-  !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014), 
+  !! by K. Berland and P. Hyldgaard, see PRB 89, 035412 (2014),
   !! to test the plasmon nature of the vdW-DF1 inner functional.
   !
-  USE kinds
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -1120,34 +1127,34 @@ SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
                          s_prefactor=6.18733545256027_DP, &
                          Ax = -0.738558766382022_DP, four_thirds = 4._DP/3._DP
   !
-  grad_rho = SQRT(grho)   
-  !   
-  s = grad_rho/(s_prefactor*rho**(four_thirds))   
-  !   
-  s_2 = s*s   
-  s_3 = s_2 * s   
-  s_4 = s_2 * s_2   
-  s_5 = s_3 * s_2   
-  s_6 = s_2 * s_2 *s_2   
-  !   
-  ! ... Energy   
-  fs_rPW86 = (1._DP + a*s_2 + b*s_4 + c*s_6)**(1._DP/15._DP)   
-  fs = 1._DP/(1._DP + alp*s_6) * (1._DP + mu_LM *s_2) &   
-       + alp*s_6/(beta+alp*s_6)*fs_rPW86   
-  !   
-  sx = Ax * rho**(four_thirds) * (fs-1._DP)   
-  !   
-  ! ... Potential   
-  df_rPW86_ds = (1._DP/(15._DP*fs_rPW86**(14._DP)))*(2*a*s + 4*b*s_3 + 6*c*s_5)   
-  !   
-  df_ds = 1._DP/(1._DP+alp*s_6)**2*( 2._DP*mu_LM*s*(1._DP+alp*s_6) &   
-            - 6._DP*alp*s_5*( 1._DP+mu_LM*s_2) )                   &   
-          + alp*s_6/(beta+alp*s_6)*df_rPW86_ds                     &   
-          + 6._DP*alp*s_5*fs_rPW86/(beta+alp*s_6)*(1._DP-alp*s_6/(beta + alp*s_6))   
-  !   
-  v1x = Ax*(four_thirds)*(rho**(1._DP/3._DP)*(fs-1._DP) &   
-        -grad_rho/(s_prefactor * rho)*df_ds)   
-  v2x = Ax * df_ds/(s_prefactor*grad_rho)   
+  grad_rho = SQRT(grho)
+  !
+  s = grad_rho/(s_prefactor*rho**(four_thirds))
+  !
+  s_2 = s*s
+  s_3 = s_2 * s
+  s_4 = s_2 * s_2
+  s_5 = s_3 * s_2
+  s_6 = s_2 * s_2 *s_2
+  !
+  ! ... Energy
+  fs_rPW86 = (1._DP + a*s_2 + b*s_4 + c*s_6)**(1._DP/15._DP)
+  fs = 1._DP/(1._DP + alp*s_6) * (1._DP + mu_LM *s_2) &
+       + alp*s_6/(beta+alp*s_6)*fs_rPW86
+  !
+  sx = Ax * rho**(four_thirds) * (fs-1._DP)
+  !
+  ! ... Potential
+  df_rPW86_ds = (1._DP/(15._DP*fs_rPW86**(14._DP)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
+  !
+  df_ds = 1._DP/(1._DP+alp*s_6)**2*( 2._DP*mu_LM*s*(1._DP+alp*s_6) &
+            - 6._DP*alp*s_5*( 1._DP+mu_LM*s_2) )                   &
+          + alp*s_6/(beta+alp*s_6)*df_rPW86_ds                     &
+          + 6._DP*alp*s_5*fs_rPW86/(beta+alp*s_6)*(1._DP-alp*s_6/(beta + alp*s_6))
+  !
+  v1x = Ax*(four_thirds)*(rho**(1._DP/3._DP)*(fs-1._DP) &
+        -grad_rho/(s_prefactor * rho)*df_ds)
+  v2x = Ax * df_ds/(s_prefactor*grad_rho)
   !
 END SUBROUTINE cx13
 !
@@ -1156,7 +1163,7 @@ END SUBROUTINE cx13
 ! ===========> SPIN <===========
 !
 !-----------------------------------------------------------------------
-SUBROUTINE becke88_spin( rho, grho, sx, v1x, v2x )
+SUBROUTINE becke88_spin( rho_up, rho_dw, grho_up, grho_dw, sx_up, sx_dw, v1x_up, v1x_dw, v2x_up, v2x_dw )                     !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
@@ -1164,15 +1171,15 @@ SUBROUTINE becke88_spin( rho, grho, sx, v1x, v2x )
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho(2)
+  REAL(DP), INTENT(IN) :: rho_up, rho_dw
   !! charge
-  REAL(DP), INTENT(IN) :: grho(2)
+  REAL(DP), INTENT(IN) :: grho_up, grho_dw
   !! gradient
-  REAL(DP), INTENT(OUT) :: sx(2)
+  REAL(DP), INTENT(OUT) :: sx_up, sx_dw
   !! the up and down energies
-  REAL(DP), INTENT(OUT) :: v1x(2)
+  REAL(DP), INTENT(OUT) :: v1x_up, v1x_dw
   !! first part of the potential
-  REAL(DP), INTENT(OUT) :: v2x(2)
+  REAL(DP), INTENT(OUT) :: v2x_up, v2x_dw
   !! second part of the potential
   !
   ! ... local variables
@@ -1182,20 +1189,33 @@ SUBROUTINE becke88_spin( rho, grho, sx, v1x, v2x )
   REAL(DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
   !
   !
-  DO is = 1, 2   
-     rho13 = rho(is)**third   
-     rho43 = rho13**4   
-     xs  = SQRT(grho(is)) / rho43   
-     xs2 = xs * xs   
-     sa2b8 = SQRT(1.0_DP + xs2)   
-     shm1  = LOG(xs + sa2b8)   
-     dd  = 1.0_DP + 6.0_DP * beta * xs * shm1   
-     dd2 = dd * dd   
-     ee = 6.0_DP * beta * xs2 / sa2b8 - 1._DP   
-     sx(is)  = grho(is) / rho43 * (-beta/dd)   
-     v1x(is) = -(4._DP/3._DP) * xs2 * beta * rho13 * ee / dd2   
-     v2x(is) = beta * (ee-dd) / (rho43*dd2)   
-  ENDDO   
+  !DO is = 1, 2
+     rho13 = rho_up**third
+     rho43 = rho13**4
+     xs  = SQRT(grho_up) / rho43
+     xs2 = xs * xs
+     sa2b8 = SQRT(1.0d0 + xs2)
+     shm1  = LOG(xs + sa2b8)
+     dd  = 1.0d0 + 6.0d0 * beta * xs * shm1
+     dd2 = dd * dd
+     ee = 6.0d0 * beta * xs2 / sa2b8 - 1.d0
+     sx_up  = grho_up / rho43 * (-beta/dd)
+     v1x_up = -(4.d0/3.d0) * xs2 * beta * rho13 * ee / dd2
+     v2x_up = beta * (ee-dd) / (rho43*dd2)
+
+     rho13 = rho_dw**third
+     rho43 = rho13**4
+     xs  = SQRT(grho_dw) / rho43
+     xs2 = xs * xs
+     sa2b8 = SQRT(1.0d0 + xs2)
+     shm1  = LOG(xs + sa2b8)
+     dd  = 1.0d0 + 6.0d0 * beta * xs * shm1
+     dd2 = dd * dd
+     ee = 6.0d0 * beta * xs2 / sa2b8 - 1.d0
+     sx_dw  = grho_dw / rho43 * (-beta/dd)
+     v1x_dw = -(4.d0/3.d0) * xs2 * beta * rho13 * ee / dd2
+     v2x_dw = beta * (ee-dd) / (rho43*dd2)
+  !ENDDO
   !
   RETURN
   !
@@ -1203,89 +1223,88 @@ END SUBROUTINE becke88_spin
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
+SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )                     !<GPU:DEVICE>
       !-----------------------------------------------------------------------
       !
       !     wPBE Enhancement Factor (erfc approx.,analytical, gradients)
       !
       !--------------------------------------------------------------------
       !
+      USE kinds,    ONLY: DP
       IMPLICIT NONE
       !
-      REAL*8 rho,s,omega,Fx_wpbe,d1sfx,d1rfx
+      REAL(DP) rho,s,omega,Fx_wpbe,d1sfx,d1rfx
       !
-      REAL*8 f12,f13,f14,f18,f23,f43,f32,f72,f34,f94,f1516,f98
-      REAL*8 pi,pi2,pi_23,srpi
-      REAL*8 Three_13
+      REAL(DP) f12,f13,f14,f18,f23,f43,f32,f72,f34,f94,f1516,f98
+      REAL(DP) pi,pi2,pi_23,srpi
+      REAL(DP) Three_13
       !
-      REAL*8 ea1,ea2,ea3,ea4,ea5,ea6,ea7,ea8
-      REAL*8 eb1
-      REAL*8 A,B,C,D,E
-      REAL*8 Ha1,Ha2,Ha3,Ha4,Ha5
-      REAL*8 Fc1,Fc2
-      REAL*8 EGa1,EGa2,EGa3
-      REAL*8 EGscut,wcutoff,expfcutoff
+      REAL(DP) ea1,ea2,ea3,ea4,ea5,ea6,ea7,ea8
+      REAL(DP) eb1
+      REAL(DP) A,B,C,D,E
+      REAL(DP) Ha1,Ha2,Ha3,Ha4,Ha5
+      REAL(DP) Fc1,Fc2
+      REAL(DP) EGa1,EGa2,EGa3
+      REAL(DP) EGscut,wcutoff,expfcutoff
       !
-      REAL*8 xkf, xkfrho
-      REAL*8 w,w2,w3,w4,w5,w6,w7,w8
-      REAL*8 d1rw
-      REAL*8 A2,A3,A4,A12,A32,A52,A72
-      REAL*8 X
-      REAL*8 s2,s3,s4,s5,s6
+      REAL(DP) xkf, xkfrho
+      REAL(DP) w,w2,w3,w4,w5,w6,w7,w8
+      REAL(DP) d1rw
+      REAL(DP) A2,A3,A4,A12,A32,A52,A72
+      REAL(DP) X
+      REAL(DP) s2,s3,s4,s5,s6
       !
-      REAL*8 H,F
-      REAL*8 Hnum,Hden,d1sHnum,d1sHden
-      REAL*8 d1sH,d1sF
-      REAL*8 G_a,G_b,EG
-      REAL*8 d1sG_a,d1sG_b,d1sEG
+      REAL(DP) H,F
+      REAL(DP) Hnum,Hden,d1sHnum,d1sHden
+      REAL(DP) d1sH,d1sF
+      REAL(DP) G_a,G_b,EG
+      REAL(DP) d1sG_a,d1sG_b,d1sEG
       !
-      REAL*8 Hsbw,Hsbw2,Hsbw3,Hsbw4,Hsbw12,Hsbw32,Hsbw52,Hsbw72
-      REAL*8 DHsbw,DHsbw2,DHsbw3,DHsbw4,DHsbw5
-      REAL*8 DHsbw12,DHsbw32,DHsbw52,DHsbw72,DHsbw92
-      REAL*8 d1sHsbw,d1rHsbw
-      REAL*8 d1sDHsbw,d1rDHsbw
-      REAL*8 HsbwA94,HsbwA9412
-      REAL*8 HsbwA942,HsbwA943,HsbwA945
-      REAL*8 piexperf,expei
-      REAL*8 piexperfd1,expeid1
-      REAL*8 d1spiexperf,d1sexpei
-      REAL*8 d1rpiexperf,d1rexpei
-      REAL*8 expei1,expei2,expei3,expei4
+      REAL(DP) Hsbw,Hsbw2,Hsbw3,Hsbw4,Hsbw12,Hsbw32,Hsbw52,Hsbw72
+      REAL(DP) DHsbw,DHsbw2,DHsbw3,DHsbw4,DHsbw5
+      REAL(DP) DHsbw12,DHsbw32,DHsbw52,DHsbw72,DHsbw92
+      REAL(DP) d1sHsbw,d1rHsbw
+      REAL(DP) d1sDHsbw,d1rDHsbw
+      REAL(DP) HsbwA94,HsbwA9412
+      REAL(DP) HsbwA942,HsbwA943,HsbwA945
+      REAL(DP) piexperf,expei
+      REAL(DP) piexperfd1,expeid1
+      REAL(DP) d1spiexperf,d1sexpei
+      REAL(DP) d1rpiexperf,d1rexpei
+      REAL(DP) expei1,expei2,expei3,expei4
       !
-      REAL*8 DHs,DHs2,DHs3,DHs4,DHs72,DHs92,DHsw,DHsw2,DHsw52,DHsw72
-      REAL*8 d1sDHs,d1rDHsw
+      REAL(DP) DHs,DHs2,DHs3,DHs4,DHs72,DHs92,DHsw,DHsw2,DHsw52,DHsw72
+      REAL(DP) d1sDHs,d1rDHsw
       !
-      REAL*8 np1,np2
-      REAL*8 d1rnp1,d1rnp2
-      REAL*8 t1,t2t9,t10,t10d1
-      REAL*8 f2,f3,f4,f5,f6,f7,f8,f9
-      REAL*8 f2d1,f3d1,f4d1,f5d1,f6d1,f8d1,f9d1
-      REAL*8 d1sf2,d1sf3,d1sf4,d1sf5,d1sf6,d1sf7,d1sf8,d1sf9
-      REAL*8 d1rf2,d1rf3,d1rf4,d1rf5,d1rf6,d1rf7,d1rf8,d1rf9
-      REAL*8 d1st1,d1rt1
-      REAL*8 d1st2t9,d1rt2t9
-      REAL*8 d1st10,d1rt10
-      REAL*8 d1sterm1,d1rterm1,term1d1
-      REAL*8 d1sterm2
-      REAL*8 d1sterm3,d1rterm3
-      REAL*8 d1sterm4,d1rterm4
-      REAL*8 d1sterm5,d1rterm5
+      REAL(DP) np1,np2
+      REAL(DP) d1rnp1,d1rnp2
+      REAL(DP) t1,t2t9,t10,t10d1
+      REAL(DP) f2,f3,f4,f5,f6,f7,f8,f9
+      REAL(DP) f2d1,f3d1,f4d1,f5d1,f6d1,f8d1,f9d1
+      REAL(DP) d1sf2,d1sf3,d1sf4,d1sf5,d1sf6,d1sf7,d1sf8,d1sf9
+      REAL(DP) d1rf2,d1rf3,d1rf4,d1rf5,d1rf6,d1rf7,d1rf8,d1rf9
+      REAL(DP) d1st1,d1rt1
+      REAL(DP) d1st2t9,d1rt2t9
+      REAL(DP) d1st10,d1rt10
+      REAL(DP) d1sterm1,d1rterm1,term1d1
+      REAL(DP) d1sterm2
+      REAL(DP) d1sterm3,d1rterm3
+      REAL(DP) d1sterm4,d1rterm4
+      REAL(DP) d1sterm5,d1rterm5
       !
-      REAL*8 term1,term2,term3,term4,term5
+      REAL(DP) term1,term2,term3,term4,term5
       !
-      REAL*8 ax,um,uk,ul
-      REAL*8 gc1,gc2
+      REAL(DP) ax,um,uk,ul
+      REAL(DP) gc1,gc2
       !
-      REAL*8, EXTERNAL :: qe_erf, qe_erfc
-      ! REAL*8 ei
-      REAL*8, EXTERNAL :: expint
+      ! REAL(DP) ei
       !
-      REAL*8 Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
-      REAL*8 Fifteen,Sixteen
-      REAL*8 r12,r64,r36,r81,r256,r384,r864,r1944,r4374
-      REAL*8 r20,r25,r27,r48,r120,r128,r144,r288,r324,r512,r729
-      REAL*8 r30,r32,r75,r243,r2187,r6561,r40,r105,r54,r135
-      REAL*8 r1215,r15309
+      REAL(DP) Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
+      REAL(DP) Fifteen,Sixteen
+      REAL(DP) r12,r64,r36,r81,r256,r384,r864,r1944,r4374
+      REAL(DP) r20,r25,r27,r48,r120,r128,r144,r288,r324,r512,r729
+      REAL(DP) r30,r32,r75,r243,r2187,r6561,r40,r105,r54,r135
+      REAL(DP) r1215,r15309
       !
       SAVE Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
       DATA Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten &
@@ -1487,7 +1506,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
                          Four*B*(DHs2) + Eight*A*(DHs3))    &
                       * (One / (Sixteen * DHs72))           &
                        - f34*pi*SQRT(A) * EXP(f94*H*s2/A) * &
-                         (One - qe_erf(f32*s*SQRT(H/A)))
+                         (One - qe_erf(f32*s*SQRT(H/A)))                    !<GPU:qe_erf=>qe_erf_d>
         !
         d1sG_a = (One/r32)*srpi *                           &
                  ((r36*(Two*H + d1sH*s) / (A12*SQRT(H/A)))  &
@@ -1496,7 +1515,7 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
                       -r30*C*d1sDHs*DHs*(One+s2*F)          &
                       +r12*DHs2*(-B*d1sDHs + C*s*(d1sF*s + Two*F)))  &
                   - ((r54*EXP(f94*H*s2/A)*srpi*s*(Two*H+d1sH*s)*     &
-                     qe_erfc(f32*SQRT(H/A)*s))                       &
+                     qe_erfc(f32*SQRT(H/A)*s))                       &      !<GPU:qe_erfc=>qe_erfc_d>
                      / A12))
         !
         G_b    = (f1516 * srpi * s2) / DHs72
@@ -1594,9 +1613,9 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
       !
       IF (HsbwA94 < expfcutoff) THEN
         !
-        piexperf = pi*EXP(HsbwA94)*qe_erfc(HsbwA9412)
+        piexperf = pi*EXP(HsbwA94)*qe_erfc(HsbwA9412)                   !<GPU:qe_erfc=>qe_erfc_d>
         ! expei    = Exp(HsbwA94)*Ei(-HsbwA94)
-        expei    = EXP(HsbwA94)*(-expint(1,HsbwA94))
+        expei    = EXP(HsbwA94)*(-expint(1,HsbwA94))                   !<GPU:expint=>expint_d>
 
       ELSE
         !
@@ -1799,5 +1818,184 @@ SUBROUTINE wpbe_analy_erfc_approx_grad( rho, s, omega, Fx_wpbe, d1rfx, d1sfx )
         d1rfx = X * (d1rterm1 + d1rterm3 + d1rterm4 + d1rterm5)
         !
       ENDIF
-      !
+
 END SUBROUTINE wpbe_analy_erfc_approx_grad
+!
+!---------------------------------------------------------------------
+function qe_erf(x)                      !<GPU:DEVICE>
+  !---------------------------------------------------------------------
+  !     Error function - computed from the rational approximations of
+  !     W. J. Cody, Math. Comp. 22 (1969), pages 631-637.
+  !
+  !     for abs(x) le 0.47 erf is calculated directly
+  !     for abs(x) gt 0.47 erf is calculated via erf(x)=1-erfc(x)
+  USE kinds,   ONLY: DP
+  implicit none
+  REAL(DP), intent(in) :: x
+  REAL(DP) :: x2, p1 (4), q1 (4)
+  REAL(DP) :: qe_erf    !<GPU:qe_erf=>qe_erf_d>
+  data p1 / 2.426679552305318E2, 2.197926161829415E1, &
+            6.996383488619136d0,  -3.560984370181538E-2 /
+  data q1 / 2.150588758698612E2, 9.116490540451490E1, &
+            1.508279763040779E1, 1.000000000000000d0 /
+  !
+  if (abs (x) > 6.0d0) then
+     !
+     !  erf(6)=1-10^(-17) cannot be distinguished from 1
+     !
+     qe_erf = sign (1.0d0, x)                                                  !<GPU:qe_erf=>qe_erf_d>
+  else
+     if (abs (x)  <= 0.47d0) then
+        x2 = x**2
+        qe_erf=x *(p1 (1) + x2 * (p1 (2) + x2 * (p1 (3) + x2 * p1 (4) ) ) ) &  !<GPU:qe_erf=>qe_erf_d>
+                / (q1 (1) + x2 * (q1 (2) + x2 * (q1 (3) + x2 * q1 (4) ) ) )
+     else
+        qe_erf = 1.0d0 - qe_erfc(x)                                            !<GPU:qe_erf=>qe_erf_d,qe_erfc=>qe_erfc_d>
+     endif
+  endif
+  !
+  return
+end function qe_erf
+!
+!---------------------------------------------------------------------
+function qe_erfc(x)                      !<GPU:DEVICE>
+  !---------------------------------------------------------------------
+  !
+  !     erfc(x) = 1-erf(x)  - See comments in erf
+  !
+  USE kinds,   ONLY: DP
+  implicit none
+  !
+  REAL(DP),intent(in) :: x
+  REAL(DP)            :: qe_erfc                                         !<GPU:qe_erfc=>qe_erfc_d>
+  REAL(DP) :: ax, x2, xm2, p2 (8), q2 (8), p3 (5), q3 (5), pim1
+  !
+  data p2 / 3.004592610201616E2,  4.519189537118719E2, &
+            3.393208167343437E2,  1.529892850469404E2, &
+            4.316222722205674E1,  7.211758250883094d0,   &
+            5.641955174789740E-1,-1.368648573827167E-7 /
+  data q2 / 3.004592609569833E2,  7.909509253278980E2, &
+            9.313540948506096E2,  6.389802644656312E2, &
+            2.775854447439876E2,  7.700015293522947E1, &
+            1.278272731962942E1,  1.000000000000000d0 /
+  data p3 /-2.996107077035422E-3,-4.947309106232507E-2, &
+           -2.269565935396869E-1,-2.786613086096478E-1, &
+           -2.231924597341847E-2 /
+  data q3 / 1.062092305284679E-2, 1.913089261078298E-1, &
+            1.051675107067932d0,    1.987332018171353d0,    &
+            1.000000000000000d0 /
+
+  data pim1 / 0.56418958354775629d0 /
+  !        ( pim1= sqrt(1/pi) )
+  ax = abs (x)
+  if (ax > 26.0d0) then
+     !
+     !  erfc(26.0)=10^(-296); erfc( 9.0)=10^(-37);
+     !
+     qe_erfc = 0.0d0                                                            !<GPU:qe_erfc=>qe_erfc_d>
+  elseif (ax > 4.0d0) then
+     x2 = x**2
+     xm2 = (1.0d0 / ax) **2
+     qe_erfc = (1.0d0 / ax) * exp ( - x2) * (pim1 + xm2 * (p3 (1) &             !<GPU:qe_erfc=>qe_erfc_d>
+          + xm2 * (p3 (2) + xm2 * (p3 (3) + xm2 * (p3 (4) + xm2 * p3 (5) &
+          ) ) ) ) / (q3 (1) + xm2 * (q3 (2) + xm2 * (q3 (3) + xm2 * &
+          (q3 (4) + xm2 * q3 (5) ) ) ) ) )
+  elseif (ax > 0.47d0) then
+     x2 = x**2
+     qe_erfc = exp ( - x2) * (p2 (1) + ax * (p2 (2) + ax * (p2 (3) &            !<GPU:qe_erfc=>qe_erfc_d>
+          + ax * (p2 (4) + ax * (p2 (5) + ax * (p2 (6) + ax * (p2 (7) &
+          + ax * p2 (8) ) ) ) ) ) ) ) / (q2 (1) + ax * (q2 (2) + ax * &
+          (q2 (3) + ax * (q2 (4) + ax * (q2 (5) + ax * (q2 (6) + ax * &
+          (q2 (7) + ax * q2 (8) ) ) ) ) ) ) )
+  else
+     qe_erfc = 1.0d0 - qe_erf(ax)                          !<GPU:qe_erfc=>qe_erfc_d, qe_erf=>qe_erf_d>
+  endif
+  !
+  ! erf(-x)=-erf(x)  =>  erfc(-x) = 2-erfc(x)
+  !
+  if (x < 0.0d0) qe_erfc = 2.0d0 - qe_erfc                                      !<GPU:qe_erfc=>qe_erfc_d>
+  !
+  return
+end function qe_erfc
+!
+
+!------------------------------------------------------------------
+FUNCTION EXPINT(n, x)                     !<GPU:DEVICE>
+!-----------------------------------------------------------------------
+! Evaluates the exponential integral E_n(x)
+! Parameters: maxit is the maximum allowed number of iterations,
+! eps is the desired relative error, not smaller than the machine precision,
+! big is a number near the largest representable floating-point number,
+! Inspired from Numerical Recipes
+!
+      USE kinds,   ONLY: DP
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: n
+      REAL(DP), INTENT(IN) :: x
+      REAL(DP) :: expint                             !<GPU:expint=>expint_d>
+      INTEGER, parameter :: maxit=200
+      REAL(DP), parameter :: eps=1E-12, big=huge(x)*eps
+      REAL(DP), parameter :: euler = 0.577215664901532860606512d0
+!     EPS=1E-9, FPMIN=1E-30
+
+      INTEGER :: i, nm1, k
+      REAL(DP) :: a,b,c,d,del,fact,h,iarsum
+
+      IF (.NOT. ((n >= 0).AND.(x >= 0.0).AND.((x > 0.0).OR.(n > 1)))) THEN
+         !CALL errore('expint','bad arguments', 1)
+         STOP
+      END IF
+
+      IF (n == 0) THEN
+         expint = exp(-x)/x                                             !<GPU:expint=>expint_d>
+         RETURN
+      END IF
+      nm1 = n-1
+      IF (x == 0.0d0) THEN
+         expint = 1.0d0/nm1                                             !<GPU:expint=>expint_d>
+      ELSE IF (x > 1.0d0) THEN
+         b = x+n
+         c = big
+         d = 1.0d0/b
+         h = d
+         DO i=1,maxit
+            a = -i*(nm1+i)
+            b = b+2.0d0
+            d = 1.0d0/(a*d+b)
+            c = b+a/c
+            del = c*d
+            h = h*del
+            IF (ABS(del-1.0d0) <= EPS) EXIT
+         END DO
+         IF (i > maxit) STOP !CALL errore('expint','continued fraction failed',1)
+         expint = h*EXP(-x)                                             !<GPU:expint=>expint_d>
+      ELSE
+         IF (nm1 /= 0) THEN
+            expint = 1.0d0/nm1                                          !<GPU:expint=>expint_d>
+         ELSE
+            expint = -LOG(x)-euler                                      !<GPU:expint=>expint_d>
+         END IF
+         fact = 1.0d0
+         do i=1,maxit
+            fact = -fact*x/i
+            IF (i /= nm1) THEN
+               del = -fact/(i-nm1)
+            ELSE
+
+               iarsum = 0.0d0
+               do k=1,nm1
+                  iarsum = iarsum + 1.0d0/k
+               end do
+
+               del = fact*(-LOG(x)-euler+iarsum)
+!               del = fact*(-LOG(x)-euler+sum(1.0d0/arth(1,1,nm1)))
+            END IF
+            expint = expint + del                                       !<GPU:expint=>expint_d>
+            IF (ABS(del) < ABS(expint)*eps) EXIT                        !<GPU:expint=>expint_d>
+         END DO
+         IF (i > maxit) STOP !CALL errore('expint','series failed',1)
+      END IF
+END FUNCTION EXPINT
+!
+END MODULE
+

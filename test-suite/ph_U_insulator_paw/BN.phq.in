@@ -1,0 +1,8 @@
+phonons of BN at finite q
+ &inputph
+  tr2_ph    = 1.0d-14,
+  prefix    = 'bn',
+  fildyn    = 'bn.dynq',
+  verbosity = 'medium'
+ /
+0.000000000   0.000000000  -0.116279070

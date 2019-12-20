@@ -38,8 +38,7 @@ subroutine write_dyn_on_file (xq, phi, nat, iudyn)
      do nb = 1, nat
         write (iudyn, '(2i5)') na, nb
         do icar = 1, 3
-!           write (iudyn, '(3e24.12)') (phi(icar,jcar,na,nb), jcar=1,3)
-           write (iudyn, '(3(2f12.8,2x))') (phi(icar,jcar,na,nb), jcar=1,3)
+           write (iudyn, '(3(2(f12.8,1x),2x))') (phi(icar,jcar,na,nb), jcar=1,3)
         enddo
      enddo
   enddo

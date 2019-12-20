@@ -1,4 +1,4 @@
-New in development branch:
+New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is
     now calculated on-the-fly rather than read from file. Thus, the kernel
     files vdW_kernel_table and rVV10_kernel_table are no longer needed for
@@ -14,7 +14,13 @@ New in development branch:
     Nathalie Vast). lr_sm1_psi.f90 of LR_Modules is rewritten and simplified.
   * Stochastic-velocity rescaling as a new thermostat for constant-cell MD as
     implemented in dynamics_module (Leonid Kahle, Ngoc Linh Nguyen)
-Problems fixed in development branch :
+
+Known problems in 6.5 branch:
+  * The phonon code in the noncolinear case with the "domag" option does 
+    not work properly: there is a problem with time reversal symmmetry.
+    Such calculation is currently disabled until a fix is found.
+
+Problems fixed in 6.5 branch :
   * at2celldm wasn't properly converting vectors into celldm parameters
     in the ibtrav=91 case (Tone)
   * PP: plot_num=1 wasn't working any longer as expected due to forgotten 
@@ -48,7 +54,9 @@ Problems fixed in development branch :
     the previous target temperature, not based on instantaneous temperature
     as before.
 
-Incompatible changes in development branch :
+Incompatible changes in 6.5 branch :
+  * Major changes inside the exchange-correlation code; XC routines moved
+    inside modules but no other changes are needed for calling routines
   * ibrav=-13 crystal axis converted to a more standard orientation.
     Atomic positions in crystal axis for the previous convention can
     be converted by applying the transformation (x,y,z) => (y,-x,z)

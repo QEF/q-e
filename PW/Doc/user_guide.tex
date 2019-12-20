@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.4}
+\def\version{6.5MaX}
 \def\PWscf{\texttt{PWscf}}
 \def\qe{{\sc Quantum ESPRESSO}}
 
@@ -23,7 +23,7 @@
 \def\CP{\texttt{CP}}
 \def\PostProc{\texttt{PostProc}}
 \def\make{\texttt{make}}
-
+\def\ttquote{\textsf{'}}
 \begin{document} 
 \author{}
 \date{}
@@ -328,7 +328,14 @@ to all file names, whose default value is \texttt{prefix='pwscf'}).
 still possible but {\em deprecated}. The \texttt{FoX} library is used
 to write a ``head'' data file in a XML format. This file has a ``schema''
 that can be found on \texttt{http://www.quantum-espresso.org/ns/qes/qes-1.0}.
-See the Developer Manual for its contents. The data directory contains
+
+In case of multi-step calculations such as: {\ttfamily \ttquote md\ttquote, \ttquote relax\ttquote, 
+\ttquote vc-md \ttquote, \ttquote vc-relax\ttquote} the XML files contains also elements reporting the intermediate 
+configurations. By default includes a maximum of 250 intermediate elements uniformly distributed along the trajectory 
+and including first and last step. If one want to change the maximum number of intermediate steps described in the 
+XML file it is sufficient to set the \texttt{MAX\_XML\_STEPS} variable to the desired  value.  
+
+For more information about the XML file contents see  the Developer Manual. The data directory contains
 binary files that are not guaranteed to be readable on different machines.
 If you need file portability, compile the code with HDF5 (see the general
 User Guide).

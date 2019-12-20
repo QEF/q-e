@@ -8,11 +8,10 @@
 !----------------------------------------------------------------------------
 SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
-  !
-  ! ...  Copy data read from input file (in subroutine "read_input_file") and
-  ! ...  stored in modules input_parameters into internal modules
-  ! ...  Note that many variables in internal modules, having the same name as
-  ! ...  those in input_parameters, are locally renamed by adding a "_"
+  !! Copy data read from input file (in subroutine \(\texttt{read_input_file}\) and
+  !! stored in modules input_parameters into internal modules.  
+  !! Note that many variables in internal modules, having the same name as
+  !! those in input_parameters, are locally renamed by adding an underscore "_".
   !
   USE kinds,         ONLY : DP
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
@@ -804,9 +803,13 @@ SUBROUTINE iosys()
      !
      io_level = 0
      !
-  CASE ( 'none' )
+  CASE ( 'nowf' )
      !
      io_level = -1
+     !
+  CASE ( 'none' )
+     !
+     io_level = -2
      !
   CASE DEFAULT
      !
@@ -1594,10 +1597,13 @@ SUBROUTINE iosys()
   !
 END SUBROUTINE iosys
 !
-SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
-  !
-  ! Copy to modules the cutoffs, either read from input or from PP files
-  ! Values of ecutwfc and ecutrho are returned in ecutwfc_in, ecutrho_in
+!
+!-------------------------------------------------------------------------------
+SUBROUTINE set_cutoff( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
+  !-----------------------------------------------------------------------------
+  !! Copy to modules the cutoffs, either read from input or from PP files.  
+  !! Values of \(\text{ecutwfc}\) and \(\text{ecutrho}\) are returned in 
+  !! \(\text{ecutwfc_in}\), \(\text{ecutrho_in}\).
   !
   USE kinds, ONLY : dp
   USE gvecs, ONLY : dual
@@ -1606,6 +1612,7 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   USE constants, ONLY : eps8
   !
   IMPLICIT NONE
+  !
   REAL(dp), INTENT(INOUT) :: ecutwfc_in, ecutrho_in
   REAL(dp), INTENT(IN)    :: ecutwfc_pp, ecutrho_pp
   !
@@ -1740,19 +1747,20 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
 END SUBROUTINE read_cards_pw
 !
 !-----------------------------------------------------------------------
-SUBROUTINE convert_tau (tau_format, nat_, tau)
-!-----------------------------------------------------------------------
-  !
-  ! ... convert input atomic positions to internally used format:
-  ! ... tau in a0 units
+SUBROUTINE convert_tau( tau_format, nat_, tau )
+  !-----------------------------------------------------------------------
+  !! Convert input atomic positions to internally used format \(\text{tau}\)
+  !! in \(\text{a0}\) units.
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : bohr_radius_angs
   USE cell_base,     ONLY : at, alat
+  !
   IMPLICIT NONE
-  CHARACTER (len=*), INTENT(in)  :: tau_format
-  INTEGER, INTENT(in)  :: nat_
-  REAL (DP), INTENT(inout) :: tau(3,nat_)
+  !
+  CHARACTER(LEN=*), INTENT(IN) :: tau_format
+  INTEGER, INTENT(IN) :: nat_
+  REAL(DP), INTENT(INOUT) :: tau(3,nat_)
   !
   SELECT CASE( tau_format )
   CASE( 'alat' )

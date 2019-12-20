@@ -19,14 +19,14 @@
 ! included gate in the calculation of the dipole
 ! search for 'TB'
 !
-SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
-  !
-  !
+!------------------------------------------------------------------------------
+SUBROUTINE compute_ion_dip( emaxpos, eopreg, edir, ion_dipole )
   !---------------------------------------------------------------------------
+  !! Calculation of the dipole - ionic contribution.
   !
   USE io_global,  ONLY : stdout, ionode
   USE ions_base,  ONLY : nat, ityp, tau, zv
-  USE constants, ONLY : fpi
+  USE constants,  ONLY : fpi
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat
   USE klist,      ONLY : nelec !TB
@@ -34,9 +34,16 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN)  :: emaxpos, eopreg
+  REAL(DP), INTENT(IN) :: emaxpos
+  !! position of the maximum of the field (0<emaxpos<1)
+  REAL(DP), INTENT(IN) :: eopreg
+  !! amplitude of the inverse region (0<eopreg<1)
   INTEGER, INTENT(IN)  :: edir
+  !! direction of the field
   REAL(DP), INTENT(OUT) ::  ion_dipole
+  !! ionic dipole
+  !
+  ! ... local variables
   !
   REAL(DP) :: bmod
   INTEGER  :: na
@@ -85,10 +92,10 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   
 END SUBROUTINE compute_ion_dip
 !
-SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
-  !
-  !
+!------------------------------------------------------------------------------
+SUBROUTINE compute_el_dip( emaxpos, eopreg, edir, charge, e_dipole )
   !---------------------------------------------------------------------------
+  !! Calculation of the dipole - electronic contribution.
   !
   USE io_global,  ONLY : stdout, ionode
   USE lsda_mod,   ONLY : nspin
@@ -102,10 +109,18 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN)  :: emaxpos, eopreg
+  REAL(DP), INTENT(IN) :: emaxpos
+  !! position of the maximum of the field (0<emaxpos<1)
+  REAL(DP), INTENT(IN) :: eopreg
+  !! amplitude of the inverse region (0<eopreg<1)
   REAL(DP), INTENT(IN), DIMENSION(dfftp%nnr) :: charge
+  !! charge density
   INTEGER, INTENT(IN)  :: edir
+  !! direction of the field
   REAL(DP), INTENT(OUT) ::  e_dipole
+  !! electronic dipole
+  !
+  ! ... local variables
   !
   REAL(DP), ALLOCATABLE :: rho_all(:), aux(:)
   REAL(DP) :: rhoir,bmod

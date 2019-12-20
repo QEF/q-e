@@ -1,0 +1,72 @@
+--
+&inputepw
+  prefix      = 'si'
+  amass(1)    = 28.0855
+  outdir      = './'
+
+  iverbosity  = 0
+
+  elph        = .true.
+  kmaps       = .false.
+  epbwrite    = .true.
+  epbread     = .false.
+  epwwrite    = .true.
+  epwread     = .false.
+
+  etf_mem     = 1
+  vme         = .false. 
+
+
+  auto_projections  = .true.
+  scdm_proj         = .true.
+  scdm_entanglement = 'erfc'
+  scdm_mu           = 10.0
+  scdm_sigma        =  4.0
+
+  nbndsub     =  8
+  nbndskip    =  0
+
+  wannierize  = .true.
+  num_iter    = 1500
+  iprint      = 2
+  dis_win_max = 18.0
+  dis_froz_max=  8.5
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
+  wdata(4) = 'G 0.00 0.00 0.00 X 0.50 0.50 0.00'
+  wdata(5) = 'end kpoint_path'
+  wdata(6) = 'bands_plot_format = gnuplot'
+  wdata(7) = 'dis_num_iter      = 500'
+  wdata(8) = 'num_print_cycles  = 50'
+  wdata(9) = 'dis_mix_ratio     = 1.0'
+  wdata(10) = 'conv_tol = 1E-9'
+  wdata(11) = 'conv_window = 4'
+
+  elecselfen  = .true.
+  phonselfen  = .false.
+  a2f         = .false.
+  prtgkk      = .false.
+
+  fsthick     = 1.2 ! eV 
+  eptemp      = 1 ! K 
+  degaussw    = 0.01 ! eV
+
+  dvscf_dir   = './save/'
+
+  filkf       = './LGX.txt'
+  filqf       = './LGX.txt'
+ 
+  nk1         = 3 
+  nk2         = 3
+  nk3         = 3
+
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /
+      4 cartesian
+  0.000000000000   0.000000000000   0.000000000000
+ -0.333333333333   0.333333333333  -0.333333333333
+  0.000000000000   0.666666666667   0.000000000000
+  0.666666666667   0.000000000000   0.666666666667

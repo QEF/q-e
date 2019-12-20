@@ -48,6 +48,7 @@ PROGRAM do_ppacf
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction, set_auxiliary_flags, &
                                    enforce_input_dft
+  USE exch_lda,             ONLY : slater, slater_spin
   USE xc_gga,               ONLY : gcxc, gcx_spin, gcc_spin
   USE xc_lda_lsda,          ONLY : xc
   USE wvfct,                ONLY : npw, npwx
@@ -444,7 +445,7 @@ PROGRAM do_ppacf
              rhoupdw(1,2) = (rho%of_r(ir,1) - rho%of_r(ir,2) + rho_core(ir))*0.5_DP
              IF (ABS(zeta(1)) > 1.D0) zeta(1) = SIGN(1.D0, zeta(1))
              IF (iexch == 1) THEN
-                CALL slater_spin( arhox(1,1), zeta(1), ex(1), vx(1,:) )
+                CALL slater_spin( arhox(1,1), zeta(1), ex(1), vx(1,1), vx(1,2) )
              ELSE
                 CALL xc( 1, nspin, nspin, rhoupdw, ex, ec, vx, vc )
              ENDIF

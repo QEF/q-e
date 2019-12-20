@@ -214,7 +214,7 @@ PROGRAM do_projwfc
   IF ( tdosinboxes ) THEN
      CALL projwave_boxes (filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes)
   ELSE IF ( pawproj ) THEN
-     CALL projwave_paw (filproj)
+     CALL projwave_paw ( )
   ELSE
      CALL projwave(filproj, lsym, lwrite_overlaps, lbinary_data )
      IF ( lforcet ) CALL force_theorem ( ef_0, filproj )
@@ -276,7 +276,7 @@ SUBROUTINE get_et_from_gww ( nbnd, et )
   ENDIF
 END SUBROUTINE get_et_from_gww
 !
-SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
   !
   USE kinds, ONLY : dp
   USE io_global, ONLY : stdout, ionode
@@ -284,14 +284,11 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=*), INTENT(in) :: filproj
   INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
   REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
   REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
-  INTEGER, EXTERNAL :: find_free_unit
   !
-  CHARACTER(len=256) :: filename
-  INTEGER :: is, l, m, na, unit
+  INTEGER :: is, l, m, na
   REAL(DP) :: totcharge(2), psum
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   CHARACTER (len=7)  :: lm_label(1:7,1:3)=reshape( (/ &
@@ -299,17 +296,8 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
     'z2     ','xz     ','yz     ','x2-y2  ','xy     ','       ','       ', &
     'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
   !
-  IF ( TRIM(filproj) == ' ') THEN
-     filename='lowdin.txt'
-  ELSE
-     filename = trim(filproj)//'.lowdin'
-  END IF
-  !
   IF ( ionode ) THEN
-     unit = find_free_unit()
-     OPEN( unit=unit, file=trim(filename), status='unknown', form='formatted')
      WRITE( stdout, '(/"Lowdin Charges: "/)')
-     WRITE( unit, '(/"Lowdin Charges: "/)')
      !
      DO na = 1, nat
         DO is = 1, nspin
@@ -318,61 +306,44 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
         IF ( nspin == 1) THEN
            DO l = 0, lmax_wfc
               WRITE(stdout, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
-              WRITE(unit, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
                     WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
-                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
-                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
               WRITE(stdout,*)
-              WRITE(unit,*)
            ENDDO
         ELSEIF ( nspin == 2) THEN
            WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
                 ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
-          WRITE( unit, 2000) na, totcharge(1) + totcharge(2), &
-                ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
            DO l = 0, lmax_wfc
               WRITE(stdout,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
-              WRITE(unit,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
                     WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
-                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
-                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
                  ENDDO
               ENDIF
               WRITE(stdout,*)
-              WRITE(unit,*)
            ENDDO
            DO l = 0, lmax_wfc
               WRITE(stdout,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
-              WRITE(unit,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
               IF (l /= 0 .AND. present(charges_lm)) THEN
                  DO m = 1, 2*l+1
                     WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
                        l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
-                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
-                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
                  ENDDO
               ENDIF
               WRITE(stdout,*)
-              WRITE(unit,*)
            ENDDO
            WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
-                ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
-           WRITE( unit, 2003) totcharge(1) - totcharge(2), &
                 ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
         ENDIF
      ENDDO
      !
      psum = SUM(charges(:,:,:)) / nelec
      WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
-     WRITE( unit, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
      !
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
      ! The spilling parameter measures the ability of the basis provided by
@@ -380,7 +351,6 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
      ! by measuring how much of the subspace of the Hamiltonian
      ! eigenstates falls outside the subspace spanned by the atomic basis
      !
-     CLOSE(unit)
   END IF
 
 2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4,4(", ",a1," =",f8.4))
@@ -388,7 +358,7 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
 2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
 2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
 
-END SUBROUTINE
+END SUBROUTINE print_lowdin
 !
 !-----------------------------------------------------------------------
 SUBROUTINE sym_proj_g (rproj0, proj_out)
@@ -734,7 +704,7 @@ SUBROUTINE sym_proj_nc ( proj0, proj_out  )
   !
 END SUBROUTINE sym_proj_nc
 !-----------------------------------------------------------------------
-SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
+SUBROUTINE print_proj ( lmax_wfc, proj )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -751,7 +721,6 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
   !
   IMPLICIT NONE
   INTEGER, INTENT(in) :: lmax_wfc
-  CHARACTER (len=*), INTENT(in) :: filproj
   REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
   !
   INTEGER :: nspin0, nwfc, ibnd, i, j, ik, na, l, m
@@ -763,13 +732,12 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
   CHARACTER (len=1) :: plus
   !
   INTERFACE 
-     SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+     SUBROUTINE print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
        IMPORT  :: DP
-       CHARACTER (len=*), INTENT(in) :: filproj
        INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
        REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
        REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
-     END SUBROUTINE write_lowdin
+     END SUBROUTINE print_lowdin
   END INTERFACE
   !
   !
@@ -887,14 +855,14 @@ SUBROUTINE write_proj ( lmax_wfc, filproj, proj )
   ENDDO
   !
   IF ( nspin /= 4 ) THEN
-     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+     CALL print_lowdin ( nat, lmax_wfc, nspin, charges, charges_lm )
      DEALLOCATE (charges_lm)
   ELSE
-     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin0, charges )
+     CALL print_lowdin ( nat, lmax_wfc, nspin0, charges )
   END IF
   DEALLOCATE (charges)
   !
-END SUBROUTINE write_proj
+END SUBROUTINE print_proj
 !
 SUBROUTINE force_theorem ( ef_0, filproj )
   !
@@ -1002,7 +970,7 @@ SUBROUTINE force_theorem ( ef_0, filproj )
 END SUBROUTINE FORCE_THEOREM
 !--
 !-----------------------------------------------------------------------
-SUBROUTINE projwave_paw( filproj)
+SUBROUTINE projwave_paw( )
 !    8/12/2014 N. A. W. Holzwarth -- attempt to calculate
 !      charge within augmentation sphere for pdos
   !-----------------------------------------------------------------------
@@ -1024,9 +992,6 @@ SUBROUTINE projwave_paw( filproj)
   USE projections
   !
   IMPLICIT NONE
-  !
-  CHARACTER (len=*) :: filproj
-  LOGICAL           :: lwrite_ovp, lbinary
   !
   INTEGER :: npw, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
        nwfc1, is, ndm, mr,nbp
@@ -1130,246 +1095,6 @@ FUNCTION compute_mj(j,l,m)
    RETURN
 END FUNCTION compute_mj
 !
-!-----------------------------------------------------------------------
-SUBROUTINE  write_proj_iotk (filename, lbinary, projs, lwrite_ovp, ovps )
-  !-----------------------------------------------------------------------
-  !
-  USE kinds
-  USE io_files,         ONLY : iun => iunsat, prefix, tmp_dir, postfix
-  USE basis,            ONLY : natomwfc
-  USE klist,            ONLY : wk, xk, nkstot, nelec
-  USE noncollin_module, ONLY : noncolin
-  USE lsda_mod,         ONLY : nspin, isk
-  USE ener,             ONLY : ef
-  USE wvfct,            ONLY : et, nbnd
-  USE iotk_module
-  IMPLICIT NONE
-
-  CHARACTER(*),  INTENT(IN) :: filename
-  LOGICAL,       INTENT(IN) :: lbinary
-  COMPLEX(DP),   INTENT(IN) :: projs(natomwfc,nbnd,nkstot)
-  LOGICAL,       INTENT(IN) :: lwrite_ovp
-  COMPLEX(DP),   INTENT(IN) :: ovps(natomwfc,natomwfc,nkstot)
-  !
-  CHARACTER(256)          :: tmp
-  CHARACTER(iotk_attlenx) :: attr
-  INTEGER :: ik, ik_eff, isp, ia, ierr, num_k_points
-
-!
-! subroutine body
-!
-
-  tmp = trim( tmp_dir ) // trim( prefix ) // postfix //trim(filename)
-  !
-  IF ( lbinary ) THEN
-      tmp = TRIM(tmp) // ".dat"
-  ELSE
-      tmp = TRIM(tmp) // ".xml"
-  ENDIF
-  !
-  CALL iotk_open_write(iun, FILE=trim(tmp), ROOT="ATOMIC_PROJECTIONS", &
-                       BINARY=lbinary, IERR=ierr )
-  IF ( ierr /= 0 ) RETURN
-  !
-  !
-  num_k_points = nkstot
-  IF ( nspin == 2 ) num_k_points = nkstot / 2
-  !
-  CALL iotk_write_begin(iun, "HEADER")
-  !
-  CALL iotk_write_dat(iun, "NUMBER_OF_BANDS", nbnd)
-  CALL iotk_write_dat(iun, "NUMBER_OF_K-POINTS", num_k_points )
-  CALL iotk_write_dat(iun, "NUMBER_OF_SPIN_COMPONENTS", nspin)
-  CALL iotk_write_dat(iun, "NON-COLINEAR_CALCULATION",noncolin)
-  CALL iotk_write_dat(iun, "NUMBER_OF_ATOMIC_WFC", natomwfc)
-  CALL iotk_write_dat(iun, "NUMBER_OF_ELECTRONS", nelec )
-  CALL iotk_write_attr(attr, "UNITS", " 2 pi / a", FIRST=.true.  )
-  CALL iotk_write_empty (iun,  "UNITS_FOR_K-POINTS", ATTR=attr)
-  CALL iotk_write_attr(attr, "UNITS", "Rydberg", FIRST=.true.  )
-  CALL iotk_write_empty (iun,  "UNITS_FOR_ENERGY", ATTR=attr)
-  CALL iotk_write_dat(iun, "FERMI_ENERGY", ef )
-  !
-  CALL iotk_write_end(iun, "HEADER")
-  !
-  !
-  CALL iotk_write_dat(iun, "K-POINTS", xk(:,1:num_k_points) , COLUMNS=3 )
-  CALL iotk_write_dat(iun, "WEIGHT_OF_K-POINTS", wk(1:num_k_points), COLUMNS=8 )
-  !
-  CALL iotk_write_begin(iun, "EIGENVALUES")
-  !
-  DO ik=1,num_k_points
-     !
-     CALL iotk_write_begin( iun, "K-POINT"//trim(iotk_index(ik)) )
-     !
-     IF ( nspin == 2 ) THEN
-        !
-        ik_eff = ik + num_k_points
-        !
-        CALL iotk_write_dat( iun, "EIG.1", et(:,ik) )
-        CALL iotk_write_dat( iun, "EIG.2", et(:,ik_eff) )
-        !
-     ELSE
-        !
-        CALL iotk_write_dat( iun, "EIG", et(:,ik) )
-        !
-     ENDIF
-     !
-     CALL iotk_write_end( iun, "K-POINT"//trim(iotk_index(ik)) )
-     !
-  ENDDO
-  !
-  CALL iotk_write_end(iun, "EIGENVALUES")
-
-  !
-  ! main loop atomic wfc
-  !
-  CALL iotk_write_begin(iun, "PROJECTIONS")
-  !
-  DO ik=1,num_k_points
-     !
-     CALL iotk_write_begin( iun, "K-POINT"//trim(iotk_index(ik)) )
-     !
-     IF ( nspin == 2 ) THEN
-        !
-        CALL iotk_write_begin ( iun, "SPIN.1" )
-           !
-           DO ia = 1, natomwfc
-               CALL iotk_write_dat(iun, "ATMWFC"//trim(iotk_index(ia)), projs(ia,:,ik)  )
-           ENDDO
-           !
-        CALL iotk_write_end ( iun, "SPIN.1" )
-        !
-        ik_eff = ik + num_k_points
-        !
-        CALL iotk_write_begin ( iun, "SPIN.2" )
-           !
-           DO ia = 1, natomwfc
-               CALL iotk_write_dat(iun, "ATMWFC"//trim(iotk_index(ia)), projs(ia,:,ik_eff)  )
-           ENDDO
-           !
-        CALL iotk_write_end ( iun, "SPIN.2" )
-        !
-     ELSE
-        !
-        DO ia = 1,natomwfc
-            CALL iotk_write_dat(iun, "ATMWFC"//trim(iotk_index(ia)), projs(ia,:,ik)  )
-        ENDDO
-        !
-     ENDIF
-     !
-     CALL iotk_write_end( iun, "K-POINT"//trim(iotk_index(ik)) )
-     !
-  ENDDO
-  !
-  CALL iotk_write_end(iun, "PROJECTIONS")
-
-  !
-  ! overlaps
-  !
-  IF ( lwrite_ovp ) THEN
-      !
-      CALL iotk_write_begin(iun, "OVERLAPS")
-      !
-      DO ik=1,num_k_points
-          !
-          CALL iotk_write_begin( iun, "K-POINT"//trim(iotk_index(ik)) )
-          !
-          DO isp = 1, nspin
-              !
-              ik_eff = ik + num_k_points * ( isp -1 )
-              !
-              CALL iotk_write_dat(iun, "OVERLAP"//trim(iotk_index(isp)), ovps(:,:,ik_eff)  )
-              !
-              !
-          ENDDO
-          !
-          CALL iotk_write_end( iun, "K-POINT"//trim(iotk_index(ik)) )
-          !
-      ENDDO
-      !
-      CALL iotk_write_end(iun, "OVERLAPS")
-      !
-  ENDIF
-  !
-  ! closing the file
-  !
-  CALL iotk_close_write(iun)
-
-END SUBROUTINE write_proj_iotk
-!
-!-----------------------------------------------------------------------
-SUBROUTINE write_proj_file ( filproj, proj )
-  !-----------------------------------------------------------------------
-  !
-  USE kinds,     ONLY : DP
-  USE lsda_mod,  ONLY : nspin
-  USE spin_orb,  ONLY : lspinorb
-  USE noncollin_module, ONLY : noncolin
-  USE fft_base,  ONLY : dfftp
-  USE klist,     ONLY : xk, nkstot
-  USE run_info,  ONLY : title
-  USE cell_base, ONLY : at, ibrav, celldm
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, atm
-  USE wvfct,     ONLY : nbnd
-  USE basis,     ONLY : natomwfc
-  USE gvect,     ONLY : gcutm 
-  USE gvecs,     ONLY : dual
-  USE gvecw,     ONLY : ecutwfc
-  USE projections, ONLY : nlmchi
-  !
-  IMPLICIT NONE
-  CHARACTER (len=*), INTENT(in) :: filproj
-  REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
-  !
-  CHARACTER(256) :: filename
-  REAL (DP), EXTERNAL :: compute_mj
-  INTEGER :: is, ik, nwfc, ibnd, nksinit, nkslast, iunproj=33
-  !
-  IF ( TRIM(filproj) == ' ' ) RETURN
-  !
-  DO is=1,nspin
-     IF (nspin==2) THEN
-        IF (is==1) filename=trim(filproj)//'.projwfc_up'
-        IF (is==2) filename=trim(filproj)//'.projwfc_down'
-        nksinit=(nkstot/2)*(is-1)+1
-        nkslast=(nkstot/2)*is
-     ELSE
-        filename=trim(filproj)//'.projwfc_up'
-        nksinit=1
-        nkslast=nkstot
-     ENDIF
-     CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, &
-          dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, &
-          celldm, at, gcutm, dual, ecutwfc, nkstot/nspin, nbnd, natomwfc)
-     DO nwfc = 1, natomwfc
-        IF (lspinorb) THEN
-           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,2i5,f5.1,1x,f5.1)') &
-                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
-                nlmchi(nwfc)%jj, &
-                compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l, nlmchi(nwfc)%m)
-        ELSE IF (noncolin) THEN
-           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5,1x,f4.1)') &
-                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
-                nlmchi(nwfc)%m, &
-                0.5d0-int(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l+2))
-        ELSE
-           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5)') &
-                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
-                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l,  &
-                nlmchi(nwfc)%m
-        END IF
-        DO ik=nksinit,nkslast
-           DO ibnd=1,nbnd
-              WRITE(iunproj,'(2i8,f20.10)') ik,ibnd, abs(proj(nwfc,ibnd,ik))
-           ENDDO
-        ENDDO
-     ENDDO
-     CLOSE(iunproj)
-  ENDDO
-  !
-END SUBROUTINE write_proj_file
 !
 !  projwave with distributed matrixes
 !
@@ -1669,7 +1394,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   IF ( ionode) THEN
      !
-     CALL write_proj( lmax_wfc, filproj, proj )
+     CALL print_proj( lmax_wfc, proj )
      CALL write_proj_file ( filproj, proj )
      !
   END IF

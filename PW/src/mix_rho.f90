@@ -32,15 +32,14 @@ END MODULE mix_save
 SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
                     iunmix, conv )
   !----------------------------------------------------------------------------
-  !
-  ! ... Modified Broyden's method for charge density mixing
-  ! ...         D.D. Johnson PRB 38, 12807 (1988)
-  ! ... Thomas-Fermi preconditioning described in
-  ! ...         Raczkowski, Canning, Wang, PRB 64,121101 (2001)
-  ! ... Extended to mix also quantities needed for PAW, meta-GGA, DFT+U,
-  ! ... electric field (all these are included into mix_type)
-  ! ... On output: the mixed density is in rhoin
-  !                input_rhout is unchanged
+  !! * Modified Broyden's method for charge density mixing: D.D. Johnson,
+  !!   PRB 38, 12807 (1988) ;
+  !! * Thomas-Fermi preconditioning described in: Raczkowski, Canning, Wang,
+  !!   PRB 64,121101 (2001) ;
+  !! * Extended to mix also quantities needed for PAW, meta-GGA, DFT+U ;
+  !! * Electric field (all these are included into \(\text{mix_type}\)) ;
+  !! * On output: the mixed density is in \(\text{rhoin}\), 
+  !!   \(\text{input_rhout}\) is unchanged.
   !
   USE kinds,          ONLY : DP
   USE ions_base,      ONLY : nat
@@ -65,29 +64,32 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   !
   ! ... First the I/O variable
   !
-  INTEGER, INTENT(IN) :: &
-    iter,        &!  counter of the number of iterations
-    n_iter,      &!  number of iterations used in mixing
-    iunmix        !  I/O unit where data from previous iterations is stored
-  REAL(DP), INTENT(IN) :: &
-    alphamix,    &! mixing factor
-    tr2_min       ! estimated error in diagonalization. If the estimated
-                  ! scf error is smaller than this, exit: a more accurate 
-                  ! diagonalization is needed
-  REAL(DP), INTENT(OUT) :: &
-    dr2           ! the estimated error on the energy
-  LOGICAL, INTENT(OUT) :: &
-    conv          ! .true. if the convergence has been reached
-
-  type(scf_type), intent(inout) :: input_rhout
-  type(scf_type), intent(inout) :: rhoin
+  INTEGER, INTENT(IN) :: iter
+  !! counter of the number of iterations
+  INTEGER, INTENT(IN) :: n_iter
+  !! number of iterations used in mixing
+  INTEGER, INTENT(IN) :: iunmix
+  !! I/O unit where data from previous iterations is stored
+  REAL(DP), INTENT(IN) :: alphamix
+  !! mixing factor
+  REAL(DP), INTENT(IN) :: tr2_min
+  !! estimated error in diagonalization. If the estimated
+  !! scf error is smaller than this, exit: a more accurate 
+  !! diagonalization is needed
+  REAL(DP), INTENT(OUT) :: dr2
+  !! the estimated error on the energy
+  LOGICAL, INTENT(OUT) :: conv
+  !! .TRUE. if the convergence has been reached
   !
-  ! ... Here the local variables
+  TYPE(scf_type), INTENT(INOUT) :: input_rhout
+  TYPE(scf_type), INTENT(INOUT) :: rhoin
   !
-  type(mix_type) :: rhout_m, rhoin_m
+  ! ... local variables
+  !
+  TYPE(mix_type) :: rhout_m, rhoin_m
   INTEGER, PARAMETER :: &
-    maxmix = 25             ! max number of iterations for charge mixing
-  INTEGER ::    &
+    maxmix = 25     ! max number of iterations for charge mixing
+  INTEGER ::       &
     iter_used,     &! actual number of iterations used
     ipos,          &! index of the present iteration
     inext,         &! index of the next iteration
@@ -322,8 +324,7 @@ END SUBROUTINE mix_rho
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening( drho )
   !----------------------------------------------------------------------------
-  !
-  ! ... apply an average TF preconditioning to drho
+  !! Apply an average TF preconditioning to \(\text{drho}\).
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : e2, pi, fpi
@@ -334,7 +335,7 @@ SUBROUTINE approx_screening( drho )
   USE scf,           ONLY : mix_type
   USE wavefunctions, ONLY : psic
   !
-  IMPLICIT NONE  
+  IMPLICIT NONE
   !
   type (mix_type), intent(INOUT) :: drho ! (in/out)
   !
@@ -353,8 +354,7 @@ END SUBROUTINE approx_screening
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening2( drho, rhobest )
   !----------------------------------------------------------------------------
-  !
-  ! ... apply a local-density dependent TF preconditioning to drho
+  !! Apply a local-density dependent TF preconditioning to \(\text{drho}\).
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32

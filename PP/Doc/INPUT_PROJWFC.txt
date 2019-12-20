@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: projwfc.x / PWscf / Quantum Espresso (version: svn)
+Program: projwfc.x / PWscf / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -51,7 +51,7 @@ NAMELIST: &PROJWFC
    Description:    Type of gaussian broadening:
                        0 ... Simple Gaussian (default)
                        1 ... Methfessel-Paxton of order 1
-                      -1 ... Marzari-Vanderbilt "cold smearing"
+                      -1 ... "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
                      -99 ... Fermi-Dirac function
    +--------------------------------------------------------------------
    
@@ -301,9 +301,14 @@ NAMELIST: &PROJWFC
    
    ::: Important notices
    
-      * The tetrahedron method is presently not implemented.
+      The tetrahedron method is used if
       
-      * Gaussian broadening is used in all cases:
+          - the input data file has been produced by pw.x using the option
+            occupations='tetrahedra', AND
+      
+          - a value for degauss is not given as input to namelist &projwfc
+      
+      * Gaussian broadening is used in all other cases:
       
           - if "degauss" is set to some value in namelist &PROJWFC, that value
             (and the optional value for ngauss) is used
@@ -323,4 +328,4 @@ NAMELIST: &PROJWFC
       
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:35 CEST 2018
+This file has been created by helpdoc utility on Thu Nov 28 10:42:25 CET 2019

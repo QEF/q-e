@@ -269,6 +269,7 @@ CONTAINS
         !
       END IF      
       !
+      IF(fftx_ntgrp(dffts).GT.1) CALL errore('exx_module','EXX calculation error : taskgroup no longer supported for exx.',1)
       IF((nproc_image.LE.nbsp).AND.(fftx_ntgrp(dffts).GT.1)) CALL errore('exx_module','EXX calculation error :  &
           & use taskgroup (-ntg) = 1 when number of MPI tasks is less or equal to the number of electronic states',1)
       !

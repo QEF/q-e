@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -10,16 +10,16 @@
 SUBROUTINE init_us_0
   !---------------------------------------------------------------------------------
   !! This routine performs the following task: for each uspp or paw pseudopotential
-  !! the l-dependent aumentation charge \(textrm{ q_nb_mb_l}\)(r), stored in
-  !! \(\textrm{qfuncl}\)(ir,nmb,l), is:
+  !! the l-dependent aumentation charge \(\text{ q_nb_mb_l}\)(r), stored in
+  !! \(\text{qfuncl}\)(ir,nmb,l), is:
   !
   !! * transformed in reciprocal space by bessel transform up to qmax = sqrt(ecutrho);
   !! * smoothed by multiplying with a filter function \(\textrm{filter}\)(q/qmax,a,nn);
   !! * brought back in real space,
   !
   !! where it overwrites the original array. The filter function is:
-  !! \[ text{filter}(x,a,\text{nn}) = e^{-\text{axx}} \sum_{k=0,\text{nn}} 
-  !!                                  \frac{\text{axx}^k}{k!}\ . \]
+  !! \[ \text{filter}(x,a,\text{nn}) = e^{-\text{axx}} \sum_{k=0,\text{nn}} 
+  !!                                   \frac{\text{axx}^k}{k!}\ . \]
   !
   USE kinds,        ONLY: DP
   USE gvect,        ONLY: ecutrho
@@ -219,7 +219,7 @@ SUBROUTINE init_us_0
               !
               ! 3) back-fourier transform of the Qs to real space.
               !
-              DO ir = 1, upf(nt)%kkbeta
+              DO ir =1, upf(nt)%kkbeta
                  !
                  ! ... q_nb_mb_l(r) from the back fourier transform up to qmax of q_nb_mb_l(q)
                  !

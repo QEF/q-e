@@ -229,17 +229,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
        !
        ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
        !
-       IF ( get_meta()==1 .OR. get_meta()==5 .OR. is_libxc(6) ) THEN  ! tpss, scan
-          !
-          h(:,k,1) = (v2x(k,1) * grho(:,k,1) + v2c(:,k,1)) * e2
-          h(:,k,2) = (v2x(k,2) * grho(:,k,2) + v2c(:,k,2)) * e2
-          !
-       ELSE
-          !
-          h(:,k,1) = (v2x(k,1) + v2c(1,k,1)) * grho(:,k,1) * e2
-          h(:,k,2) = (v2x(k,2) + v2c(1,k,2)) * grho(:,k,2) * e2
-          !
-       ENDIF
+       h(:,k,1) = (v2x(k,1) * grho(:,k,1) + v2c(:,k,1)) * e2
+       h(:,k,2) = (v2x(k,2) * grho(:,k,2) + v2c(:,k,2)) * e2
        !
        kedtaur(k,1) = (v3x(k,1) + v3c(k,1)) * 0.5d0 * e2
        kedtaur(k,2) = (v3x(k,2) + v3c(k,2)) * 0.5d0 * e2

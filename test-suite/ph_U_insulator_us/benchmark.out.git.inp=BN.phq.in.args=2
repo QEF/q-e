@@ -1,0 +1,1902 @@
+
+     Program PHONON v.6.5Max starts on  3Dec2019 at 18: 6:36 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+
+     Reading xml data from directory:
+
+     ./bn.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file B.pbe-n-rrkjus_psl.1.0.0.UPF: wavefunction(s)  2S renormalized
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         367     187     61                24911     8849    1637
+ 
+
+     Check: negative core charge=   -0.000008
+
+     negative rho (up, down):  4.902E-04 0.000E+00
+ --- in v_hubbard ---
+Hubbard energy    0.0322
+ -------
+     Reading collected, re-writing distributed wavefunctions
+
+     Phonon calculation with DFPT+U; please cite
+     A. Floris et al., Phys. Rev. B 84, 161102(R) (2011)
+     in publications or presentations arising from this work.
+  autoval = -.1456E+00
+     Irreps are as follows:
+
+                     mode #   1
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (  -1.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+  autoval = 0.1382E-01
+     Irreps are as follows:
+
+                     mode #   2
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (  -1.00000   0.00000   ) 
+  autoval = 0.1711E+01
+     Irreps are as follows:
+
+                     mode #   3
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (  -0.00137   0.00000   ) 
+                     (  -1.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+  autoval = 0.1711E+01
+     Irreps are as follows:
+
+                     mode #   4
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (  -1.00000   0.00000   ) 
+                     (   0.00137   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+  autoval = 0.2106E+01
+     Irreps are as follows:
+
+                     mode #   5
+                     (  -0.00140   0.00000   ) 
+                     (  -1.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+  autoval = 0.2106E+01
+     Irreps are as follows:
+
+                     mode #   6
+                     (  -1.00000   0.00000   ) 
+                     (   0.00140   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+
+     Calculation of q =    0.0000000   0.0000000  -0.1162791
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         367     187     61                24911     8849    1649
+ 
+
+     Title: 
+     phonons of BN at finite q                                                  
+
+
+     bravais-lattice index     =            4
+     lattice parameter (alat)  =       4.7419  a.u.
+     unit-cell volume          =     397.0601 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     number of electrons       =         8.00
+     number of Kohn-Sham states=            4
+     kinetic-energy cutoff     =      30.0000  Ry
+     charge density cutoff     =     240.0000  Ry
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+
+     celldm(1)=   4.741900  celldm(2)=   0.000000  celldm(3)=   4.300000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (  -0.500000   0.866025   0.000000 )  
+               a(3) = (   0.000000   0.000000   4.300000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.577350  0.000000 )  
+               b(2) = (  0.000000  1.154701  0.000000 )  
+               b(3) = (  0.000000  0.000000  0.232558 )  
+
+
+     PseudoPot. # 1 for N  read from file:
+     ../../pseudo/N.pbe-n-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: ada94e3ed05223de5319d0572dc76806
+     Pseudo is Ultrasoft + core correction, Zval =  5.0
+     Generated using "atomic" code by A. Dal Corso v.6.3MaX
+     Using radial grid of 1085 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for B  read from file:
+     ../../pseudo/B.pbe-n-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: 21bc42b8719306ef1fe0545c7dabf1c6
+     Pseudo is Ultrasoft + core correction, Zval =  3.0
+     Generated using "atomic" code by A. Dal Corso v.6.3MaX
+     Using radial grid of 1059 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        N              5.00    14.00674     N ( 1.00)
+        B              3.00    10.81000     B ( 1.00)
+
+
+     Simplified LDA+U calculation (l_max = 1) with parameters (eV):
+     atomic species    L          U    alpha       J0     beta
+        N              1     2.0000   0.0000   0.0000   0.0000
+
+
+
+     12 Sym. Ops. (no inversion) found
+
+
+                                    s                        frac. trans.
+
+      isym =  1     identity                                     
+
+ cryst.   s( 1) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 1) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  2     180 deg rotation - cart. axis [0,1,0]        
+
+ cryst.   s( 2) = (    -1          0          0      )
+                  (     1          1          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 2) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  3     120 deg rotation - cryst. axis [0,0,1]       
+
+ cryst.   s( 3) = (     0          1          0      )    f =( -0.5000000 )
+                  (    -1         -1          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s( 3) = ( -0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+      isym =  4     120 deg rotation - cryst. axis [0,0,-1]      
+
+ cryst.   s( 4) = (    -1         -1          0      )    f =(  0.0000000 )
+                  (     1          0          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s( 4) = ( -0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+      isym =  5     180 deg rotation - cryst. axis [1,-1,0]      
+
+ cryst.   s( 5) = (     0         -1          0      )    f =( -0.5000000 )
+                  (    -1          0          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s( 5) = (  0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym =  6     180 deg rotation - cryst. axis [2,1,0]       
+
+ cryst.   s( 6) = (     1          1          0      )    f =(  0.0000000 )
+                  (     0         -1          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s( 6) = (  0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym =  7     inv. 180 deg rotation - cart. axis [0,0,1]   
+
+ cryst.   s( 7) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 7) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  8     inv. 180 deg rotation - cart. axis [1,0,0]   
+
+ cryst.   s( 8) = (    -1          0          0      )
+                  (     1          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 8) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  9     inv. 60 deg rotation - cryst. axis [0,0,1]   
+
+ cryst.   s( 9) = (    -1         -1          0      )    f =(  0.0000000 )
+                  (     1          0          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s( 9) = ( -0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym = 10     inv. 60 deg rotation - cryst. axis [0,0,-1]  
+
+ cryst.   s(10) = (     0          1          0      )    f =( -0.5000000 )
+                  (    -1         -1          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s(10) = ( -0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym = 11     inv. 180 deg rotation - cryst. axis [0,1,0]  
+
+ cryst.   s(11) = (     1          1          0      )    f =(  0.0000000 )
+                  (     0         -1          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s(11) = (  0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+      isym = 12     inv. 180 deg rotation - cryst. axis [1,1,0]  
+
+ cryst.   s(12) = (     0         -1          0      )    f =( -0.5000000 )
+                  (    -1          0          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s(12) = (  0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+     point group D_3h (-62m)
+     there are  6 classes
+     the character table:
+
+       E     2C3   3C2   s_h   2S3   3s_v 
+A'_1   1.00  1.00  1.00  1.00  1.00  1.00
+A'_2   1.00  1.00 -1.00  1.00  1.00 -1.00
+E'     2.00 -1.00  0.00  2.00 -1.00  0.00
+A''1   1.00  1.00  1.00 -1.00 -1.00 -1.00
+A''2   1.00  1.00 -1.00 -1.00 -1.00  1.00
+E''    2.00 -1.00  0.00 -2.00  1.00  0.00
+
+     the symmetry operations in each class and the name of the first element:
+
+     E        1
+          identity                                               
+     2C3      3    4
+          120 deg rotation - cryst. axis [0,0,1]                 
+     3C2      2    6    5
+          180 deg rotation - cart. axis [0,1,0]                  
+     s_h      7
+          inv. 180 deg rotation - cart. axis [0,0,1]             
+     2S3      9   10
+          inv. 60 deg rotation - cryst. axis [0,0,1]             
+     3s_v     8   11   12
+          inv. 180 deg rotation - cart. axis [1,0,0]             
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           N   tau(   1) = (   0.0000000  -0.2886751   0.0000000  )
+         2           B   tau(   2) = (   0.0000000   0.2886751   0.0000000  )
+
+   Crystallographic axes
+
+     site n.     atom                  positions (cryst. coord.)
+         1           N   tau(   1) = ( -0.1666667 -0.3333333  0.0000000  )
+         2           B   tau(   2) = (  0.1666667  0.3333333  0.0000000  )
+
+     number of k points=     8
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.0000000   0.0000000  -0.1162791), wk =   0.0000000
+        k(    3) = (   0.0000000   0.2886751   0.0000000), wk =   0.7500000
+        k(    4) = (   0.0000000   0.2886751  -0.1162791), wk =   0.0000000
+        k(    5) = (   0.0000000  -0.5773503   0.0000000), wk =   0.3750000
+        k(    6) = (   0.0000000  -0.5773503  -0.1162791), wk =   0.0000000
+        k(    7) = (   0.2500000   0.4330127   0.0000000), wk =   0.7500000
+        k(    8) = (   0.2500000   0.4330127  -0.1162791), wk =   0.0000000
+
+                       cryst. coord.
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.0000000   0.0000000  -0.5000000), wk =   0.0000000
+        k(    3) = (   0.0000000   0.2500000   0.0000000), wk =   0.7500000
+        k(    4) = (   0.0000000   0.2500000  -0.5000000), wk =   0.0000000
+        k(    5) = (   0.0000000  -0.5000000   0.0000000), wk =   0.3750000
+        k(    6) = (   0.0000000  -0.5000000  -0.5000000), wk =   0.0000000
+        k(    7) = (   0.2500000   0.2500000   0.0000000), wk =   0.7500000
+        k(    8) = (   0.2500000   0.2500000  -0.5000000), wk =   0.0000000
+
+     Dense  grid:    24911 G-vectors     FFT dimensions: (  24,  24, 108)
+
+     Smooth grid:     8849 G-vectors     FFT dimensions: (  18,  18,  72)
+
+     Dynamical RAM for                 wfc:       0.07 MB
+
+     Dynamical RAM for     wfc (w. buffer):       0.07 MB
+
+     Dynamical RAM for             U proj.:       0.05 MB
+
+     Dynamical RAM for  U proj. (w. buff.):       0.05 MB
+
+     Dynamical RAM for           str. fact:       0.76 MB
+
+     Dynamical RAM for           local pot:       0.02 MB
+
+     Dynamical RAM for          nlocal pot:       0.27 MB
+
+     Dynamical RAM for                qrad:       0.54 MB
+
+     Dynamical RAM for          rho,v,vnew:       2.56 MB
+
+     Dynamical RAM for           G-vectors:       1.49 MB
+
+     Dynamical RAM for          h,s,v(r/c):       0.01 MB
+
+     Dynamical RAM for          <psi|beta>:       0.00 MB
+
+     Dynamical RAM for                 psi:       0.27 MB
+
+     Dynamical RAM for                hpsi:       0.27 MB
+
+     Dynamical RAM for                spsi:       0.27 MB
+
+     Dynamical RAM for      wfcinit/wfcrot:       0.27 MB
+
+     Dynamical RAM for           addusdens:      16.72 MB
+
+     Estimated static dynamical RAM per process >       9.28 MB
+
+     Estimated max dynamical RAM per process >      26.00 MB
+
+     Check: negative core charge=   -0.000008
+
+     The potential is recalculated from file :
+     ./_ph0/bn.save/charge-density
+
+
+     negative rho (up, down):  4.902E-04 0.000E+00
+ --- in v_hubbard ---
+Hubbard energy    0.0322
+ -------
+     Number of +U iterations with fixed ns =  0
+     Starting occupations:
+ --- enter write_ns ---
+ LDA+U parameters:
+U( 1)     =  2.00000000
+alpha( 1) =  0.00000000
+atom    1   Tr[ns(na)] =   5.52275
+    eigenvalues: 
+  0.907  0.927  0.927
+    eigenvectors:
+  1.000  0.000  0.000
+  0.000  0.056  0.944
+  0.000  0.944  0.056
+    occupations:
+  0.907  0.000 -0.000
+  0.000  0.927  0.000
+ -0.000  0.000  0.927
+N of occupied +U levels =    5.522750
+ --- exit write_ns ---
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+     Starting wfcs are    8 atomic wfcs
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     Computing kpt #:     1  of     8
+     total cpu time spent up to now is        0.3 secs
+
+     Computing kpt #:     2  of     8
+     total cpu time spent up to now is        0.3 secs
+
+     Computing kpt #:     3  of     8
+     total cpu time spent up to now is        0.4 secs
+
+     Computing kpt #:     4  of     8
+     total cpu time spent up to now is        0.4 secs
+
+     Computing kpt #:     5  of     8
+     total cpu time spent up to now is        0.4 secs
+
+     Computing kpt #:     6  of     8
+     total cpu time spent up to now is        0.4 secs
+
+     Computing kpt #:     7  of     8
+     total cpu time spent up to now is        0.5 secs
+
+     Computing kpt #:     8  of     8
+     total cpu time spent up to now is        0.5 secs
+
+     ethr =  1.25E-10,  avg # of iterations =  9.8
+
+     total cpu time spent up to now is        0.5 secs
+
+     End of band structure calculation
+
+          k = 0.0000 0.0000 0.0000 (  1049 PWs)   bands (ev):
+
+   -20.1851  -8.7056  -4.2772  -4.2772
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000
+
+          k = 0.0000 0.0000-0.1163 (  1068 PWs)   bands (ev):
+
+   -20.1853  -8.7134  -4.2840  -4.2840
+
+     occupation numbers 
+     0.0000   0.0000   0.0000   0.0000
+
+          k = 0.0000 0.2887 0.0000 (  1103 PWs)   bands (ev):
+
+   -19.2726  -8.2972  -6.9437  -5.9763
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000
+
+          k = 0.0000 0.2887-0.1163 (  1104 PWs)   bands (ev):
+
+   -19.2727  -8.2972  -6.9465  -5.9747
+
+     occupation numbers 
+     0.0000   0.0000   0.0000   0.0000
+
+          k = 0.0000-0.5774 0.0000 (  1124 PWs)   bands (ev):
+
+   -17.1182 -12.5608  -7.2123  -4.0283
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000
+
+          k = 0.0000-0.5774-0.1163 (  1120 PWs)   bands (ev):
+
+   -17.1181 -12.5609  -7.2104  -4.0241
+
+     occupation numbers 
+     0.0000   0.0000   0.0000   0.0000
+
+          k = 0.2500 0.4330 0.0000 (  1106 PWs)   bands (ev):
+
+   -17.3656 -11.0055  -9.0842  -4.2264
+
+     occupation numbers 
+     1.0000   1.0000   1.0000   1.0000
+
+          k = 0.2500 0.4330-0.1163 (  1104 PWs)   bands (ev):
+
+   -17.3656 -11.0034  -9.0838  -4.2297
+
+     occupation numbers 
+     0.0000   0.0000   0.0000   0.0000
+
+     highest occupied level (ev):    -4.0283
+
+     Writing output data file ./_ph0/bn.save/
+
+     phonons of BN at finite q                                                  
+
+     bravais-lattice index     =            4
+     lattice parameter (alat)  =       4.7419  a.u.
+     unit-cell volume          =     397.0601 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      30.0000  Ry
+     charge density cut-off    =     240.0000  Ry
+     convergence threshold     =      1.0E-14
+     beta                      =       0.7000
+     number of iterations used =            4
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+      Hubbard parameters:
+      U ( 1)     =  2.00000000
+
+
+     celldm(1)=    4.74190  celldm(2)=    0.00000  celldm(3)=    4.30000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  1.0000  0.0000  0.0000 )  
+               a(2) = ( -0.5000  0.8660  0.0000 )  
+               a(3) = (  0.0000  0.0000  4.3000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.0000  0.5774  0.0000 )  
+               b(2) = (  0.0000  1.1547  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.2326 )  
+
+
+     Atoms inside the unit cell: 
+
+     Cartesian axes
+
+     site n.  atom      mass           positions (alat units)
+        1     N   14.0067   tau(    1) = (    0.00000   -0.28868    0.00000  )
+        2     B   10.8100   tau(    2) = (    0.00000    0.28868    0.00000  )
+
+     Computing dynamical matrix for 
+                    q = (   0.0000000   0.0000000  -0.1162791 )
+ 
+     13 Sym.Ops. (with q -> -q+G )
+
+                                    s                        frac. trans.
+
+      isym =  1     identity                                     
+
+ cryst.   s( 1) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 1) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  2     180 deg rotation - cart. axis [0,1,0]        
+
+ cryst.   s( 2) = (    -1          0          0      )
+                  (     1          1          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 2) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  3     120 deg rotation - cryst. axis [0,0,1]       
+
+ cryst.   s( 3) = (     0          1          0      )    f =( -0.5000000 )
+                  (    -1         -1          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s( 3) = ( -0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+      isym =  4     120 deg rotation - cryst. axis [0,0,-1]      
+
+ cryst.   s( 4) = (    -1         -1          0      )    f =(  0.0000000 )
+                  (     1          0          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s( 4) = ( -0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+      isym =  5     180 deg rotation - cryst. axis [1,-1,0]      
+
+ cryst.   s( 5) = (     0         -1          0      )    f =( -0.5000000 )
+                  (    -1          0          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s( 5) = (  0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym =  6     180 deg rotation - cryst. axis [2,1,0]       
+
+ cryst.   s( 6) = (     1          1          0      )    f =(  0.0000000 )
+                  (     0         -1          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s( 6) = (  0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym =  7     inv. 180 deg rotation - cart. axis [0,0,1]   
+
+ cryst.   s( 7) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0         -1      )
+
+ cart.    s( 7) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  8     inv. 180 deg rotation - cart. axis [1,0,0]   
+
+ cryst.   s( 8) = (    -1          0          0      )
+                  (     1          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 8) = ( -1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  9     inv. 60 deg rotation - cryst. axis [0,0,1]   
+
+ cryst.   s( 9) = (    -1         -1          0      )    f =(  0.0000000 )
+                  (     1          0          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s( 9) = ( -0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym = 10     inv. 60 deg rotation - cryst. axis [0,0,-1]  
+
+ cryst.   s(10) = (     0          1          0      )    f =( -0.5000000 )
+                  (    -1         -1          0      )       ( -0.5000000 )
+                  (     0          0         -1      )       (  0.0000000 )
+
+ cart.    s(10) = ( -0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000 -1.0000000 )       (  0.0000000 )
+
+
+      isym = 11     inv. 180 deg rotation - cryst. axis [0,1,0]  
+
+ cryst.   s(11) = (     1          1          0      )    f =(  0.0000000 )
+                  (     0         -1          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s(11) = (  0.5000000  0.8660254  0.0000000 )    f =(  0.2500000 )
+                  (  0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+      isym = 12     inv. 180 deg rotation - cryst. axis [1,1,0]  
+
+ cryst.   s(12) = (     0         -1          0      )    f =( -0.5000000 )
+                  (    -1          0          0      )       ( -0.5000000 )
+                  (     0          0          1      )       (  0.0000000 )
+
+ cart.    s(12) = (  0.5000000 -0.8660254  0.0000000 )    f =( -0.2500000 )
+                  ( -0.8660254 -0.5000000  0.0000000 )       ( -0.4330127 )
+                  (  0.0000000  0.0000000  1.0000000 )       (  0.0000000 )
+
+
+     This transformation sends q -> -q+G
+
+      isym = 13     identity                                     
+
+ cryst.   s(13) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0          1      )
+
+ cart.    s(13) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+     G cutoff =  136.6962  (  24911 G-vectors)     FFT grid: ( 24, 24,108)
+     G cutoff =   68.3481  (   8849 G-vectors)  smooth grid: ( 18, 18, 72)
+     number of k points=     8
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.0000000   0.0000000  -0.1162791), wk =   0.0000000
+        k(    3) = (   0.0000000   0.2886751   0.0000000), wk =   0.7500000
+        k(    4) = (   0.0000000   0.2886751  -0.1162791), wk =   0.0000000
+        k(    5) = (   0.0000000  -0.5773503   0.0000000), wk =   0.3750000
+        k(    6) = (   0.0000000  -0.5773503  -0.1162791), wk =   0.0000000
+        k(    7) = (   0.2500000   0.4330127   0.0000000), wk =   0.7500000
+        k(    8) = (   0.2500000   0.4330127  -0.1162791), wk =   0.0000000
+
+                       cryst. coord.
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1250000
+        k(    2) = (   0.0000000   0.0000000  -0.5000000), wk =   0.0000000
+        k(    3) = (   0.0000000   0.2500000   0.0000000), wk =   0.7500000
+        k(    4) = (   0.0000000   0.2500000  -0.5000000), wk =   0.0000000
+        k(    5) = (   0.0000000  -0.5000000   0.0000000), wk =   0.3750000
+        k(    6) = (   0.0000000  -0.5000000  -0.5000000), wk =   0.0000000
+        k(    7) = (   0.2500000   0.2500000   0.0000000), wk =   0.7500000
+        k(    8) = (   0.2500000   0.2500000  -0.5000000), wk =   0.0000000
+
+     PseudoPot. # 1 for N  read from file:
+     ../../pseudo/N.pbe-n-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: ada94e3ed05223de5319d0572dc76806
+     Pseudo is Ultrasoft + core correction, Zval =  5.0
+     Generated using "atomic" code by A. Dal Corso v.6.3MaX
+     Using radial grid of 1085 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for B  read from file:
+     ../../pseudo/B.pbe-n-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: 21bc42b8719306ef1fe0545c7dabf1c6
+     Pseudo is Ultrasoft + core correction, Zval =  3.0
+     Generated using "atomic" code by A. Dal Corso v.6.3MaX
+     Using radial grid of 1059 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     point group D_3h (-62m)
+     there are  6 classes
+     the character table:
+
+       E     2C3   3C2   s_h   2S3   3s_v 
+A'_1   1.00  1.00  1.00  1.00  1.00  1.00
+A'_2   1.00  1.00 -1.00  1.00  1.00 -1.00
+E'     2.00 -1.00  0.00  2.00 -1.00  0.00
+A''1   1.00  1.00  1.00 -1.00 -1.00 -1.00
+A''2   1.00  1.00 -1.00 -1.00 -1.00  1.00
+E''    2.00 -1.00  0.00 -2.00  1.00  0.00
+
+     the symmetry operations in each class and the name of the first element:
+
+     E        1
+          identity                                               
+     2C3      3    4
+          120 deg rotation - cryst. axis [0,0,1]                 
+     3C2      2    6    5
+          180 deg rotation - cart. axis [0,1,0]                  
+     s_h      7
+          inv. 180 deg rotation - cart. axis [0,0,1]             
+     2S3      9   10
+          inv. 60 deg rotation - cryst. axis [0,0,1]             
+     3s_v     8   11   12
+          inv. 180 deg rotation - cart. axis [1,0,0]             
+
+
+     Atomic displacements:
+     There are   4 irreducible representations
+
+     Representation     1      2 modes -E'  To be done
+     Irreps are as follows:
+
+           mode #   1                           mode #   2
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+           (  -0.00137   0.00000   )            (  -1.00000   0.00000   ) 
+           (  -1.00000   0.00000   )            (   0.00137   0.00000   ) 
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+
+     Representation     2      2 modes -E'  To be done
+     Irreps are as follows:
+
+           mode #   3                           mode #   4
+           (  -0.00140   0.00000   )            (  -1.00000   0.00000   ) 
+           (  -1.00000   0.00000   )            (   0.00140   0.00000   ) 
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+           (   0.00000   0.00000   )            (   0.00000   0.00000   ) 
+
+     Representation     3      1 modes -A''2  To be done
+     Irreps are as follows:
+
+                     mode #   5
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (  -1.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+
+     Representation     4      1 modes -A''2  To be done
+     Irreps are as follows:
+
+                     mode #   6
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (   0.00000   0.00000   ) 
+                     (  -1.00000   0.00000   ) 
+
+
+
+     Atomic wfc used for the DFT+U projector are NOT orthogonalized
+
+     Calculating the dnsbare matrix...
+ DNS_BARE SYMMETRIZED IN CARTESIAN COORDINATES
+displaced atom L =  1  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.1334534954   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.1334534954   -0.0000000000    0.0000000000    0.0000000000
+displaced atom L =  1  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000   -0.1334534954   -0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.1334534954    0.0000000000
+displaced atom L =  1  ipol=  3
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0171233355    0.0000000000
+  -0.0000000000    0.0000000000   -0.0171233355    0.0000000000    0.0000000000   -0.0000000000
+displaced atom L =  2  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000    0.0000000000   -0.0171233355    0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0171233355   -0.0000000000
+displaced atom L =  2  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+ 
+
+     Calculating the dnsorth_cart matrix...
+ DNS_ORTH SYMMETRIZED IN CARTESIAN COORDINATES
+displaced atom L =  1  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0054013961   -0.0000000000
+   0.0000000000   -0.0000000000    0.0054013961   -0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  1  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000    0.0054013961   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0054013961    0.0000000000
+displaced atom L =  1  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0115392657   -0.0000000000
+   0.0000000000   -0.0000000000    0.0115392657   -0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000    0.0115392657   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0115392657    0.0000000000
+displaced atom L =  2  ipol=  3
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+ 
+
+     Alpha used in Ewald sum =   2.5000
+
+     negative rho (up, down):  4.902E-04 0.000E+00
+
+     Calculating the d2ns_bare matrix. It might take a while!
+     k point #     1   out of     4
+     k point #     2   out of     4
+     k point #     3   out of     4
+     k point #     4   out of     4
+ 
+ d2ns_bare NOT SYMMETRIZED IN CARTESIAN COORDINATES
+displaced atom L =  1  ipol=  1  displaced atom Lp =  1  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.8482128368    0.0452488733    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -2.6218331307    0.0041575266   -0.0056991103    0.0032656716
+  -0.0000000000    0.0000000000   -0.0056991103    0.0032656716   -0.8848218765   -0.0221692675
+displaced atom L =  1  ipol=  1  displaced atom Lp =  1  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0358721851    0.0177270697   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0136495495   -0.0182670641   -0.5245377339    0.0198473912
+  -0.0000000000    0.0000000000   -0.5245377339    0.0198473912    0.0646200521   -0.0144431503
+displaced atom L =  1  ipol=  1  displaced atom Lp =  1  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.6137321837   -0.0294041586    0.0102653320   -0.0155593123
+   0.6137321837   -0.0294041586    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+   0.0102653320   -0.0155593123    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+displaced atom L =  1  ipol=  1  displaced atom Lp =  2  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0004127715   -0.0002068072   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0225118881    0.0005264238   -0.0005938437    0.0036424853
+  -0.0000000000   -0.0000000000   -0.0005938437    0.0036424853    0.0078287136   -0.0005331201
+displaced atom L =  1  ipol=  1  displaced atom Lp =  2  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000769178   -0.0000256028   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.0012930472   -0.0083708456   -0.0071576570    0.0042248068
+   0.0000000000   -0.0000000000   -0.0071576570    0.0042248068   -0.0027597896   -0.0012908859
+displaced atom L =  1  ipol=  1  displaced atom Lp =  2  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0085214459    0.0058257735   -0.0011552235    0.0017022463
+   0.0085214459    0.0058257735    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0011552235    0.0017022463    0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  1  ipol=  2  displaced atom Lp =  1  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0358721851    0.0177270697   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0136495495   -0.0182670641   -0.5245377339    0.0198473912
+  -0.0000000000    0.0000000000   -0.5245377339    0.0198473912    0.0646200521   -0.0144431503
+displaced atom L =  1  ipol=  2  displaced atom Lp =  1  ipol=  2
+ Hubbard atom  1  spin  1
+  -1.0184054330   -0.0477237210   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000    0.0000000000   -0.7875190334    0.0349761379    0.0452713921   -0.0000889127
+  -0.0000000000   -0.0000000000    0.0452713921   -0.0000889127   -2.0113741437   -0.0012160965
+displaced atom L =  1  ipol=  2  displaced atom Lp =  1  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000    0.0102653320    0.0011151225    0.6181123319    0.0283231487
+   0.0102653320    0.0011151225    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+   0.6181123319    0.0283231487    0.0000000000    0.0000000000    0.0000000000   -0.0000000000
+displaced atom L =  1  ipol=  2  displaced atom Lp =  2  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000769178   -0.0000770526    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0008478620    0.0035320307   -0.0044021396   -0.0053688683
+   0.0000000000   -0.0000000000   -0.0044021396   -0.0053688683   -0.0032049748    0.0070632459
+displaced atom L =  1  ipol=  2  displaced atom Lp =  2  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0001526472    0.0001819518   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0026506079    0.0007736534   -0.0025057712   -0.0024944043
+  -0.0000000000    0.0000000000   -0.0025057712   -0.0024944043   -0.0023624998   -0.0028078361
+displaced atom L =  1  ipol=  2  displaced atom Lp =  2  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0011552235    0.0013113763    0.0040527230   -0.0058259579
+  -0.0011552235    0.0013113763   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0040527230   -0.0058259579   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+displaced atom L =  1  ipol=  3  displaced atom Lp =  1  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.6137321837   -0.0294041586    0.0102653320   -0.0155593123
+   0.6137321837   -0.0294041586    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+   0.0102653320   -0.0155593123    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+displaced atom L =  1  ipol=  3  displaced atom Lp =  1  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000    0.0102653320    0.0011151225    0.6181123319    0.0283231487
+   0.0102653320    0.0011151225    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+   0.6181123319    0.0283231487    0.0000000000    0.0000000000    0.0000000000   -0.0000000000
+displaced atom L =  1  ipol=  3  displaced atom Lp =  1  ipol=  3
+ Hubbard atom  1  spin  1
+  -2.3167257201   -0.0035013913   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000   -1.0363577761    0.0060797020   -0.0278090792    0.0000780753
+  -0.0000000000    0.0000000000   -0.0278090792    0.0000780753   -1.1760959897   -0.0022018121
+displaced atom L =  1  ipol=  3  displaced atom Lp =  2  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0073520138   -0.0029496580    0.0004905446   -0.0019041791
+   0.0073520138   -0.0029496580    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+   0.0004905446   -0.0019041791    0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  1  ipol=  3  displaced atom Lp =  2  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000    0.0004905446    0.0007730848    0.0106311461    0.0033292329
+   0.0004905446    0.0007730848   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0106311461    0.0033292329   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+displaced atom L =  1  ipol=  3  displaced atom Lp =  2  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0116046152   -0.0000142571    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -0.0006155968   -0.0002041795   -0.0011959136   -0.0000979325
+   0.0000000000    0.0000000000   -0.0011959136   -0.0000979325   -0.0073714008    0.0005013346
+displaced atom L =  2  ipol=  1  displaced atom Lp =  1  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0004127715   -0.0002068072   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0225118881    0.0005264238   -0.0005938437    0.0036424853
+  -0.0000000000   -0.0000000000   -0.0005938437    0.0036424853    0.0078287136   -0.0005331201
+displaced atom L =  2  ipol=  1  displaced atom Lp =  1  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000769178   -0.0000770526    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0008478620    0.0035320307   -0.0044021396   -0.0053688683
+   0.0000000000   -0.0000000000   -0.0044021396   -0.0053688683   -0.0032049748    0.0070632459
+displaced atom L =  2  ipol=  1  displaced atom Lp =  1  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0073520138   -0.0029496580    0.0004905446   -0.0019041791
+   0.0073520138   -0.0029496580    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+   0.0004905446   -0.0019041791    0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  1  displaced atom Lp =  2  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0004652254    0.0003001853    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -0.0669699934    0.0011862139   -0.0041564163   -0.0008298723
+   0.0000000000    0.0000000000   -0.0041564163   -0.0008298723   -0.0350626805   -0.0037046738
+displaced atom L =  2  ipol=  1  displaced atom Lp =  2  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0000847037    0.0000651933   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.0009134990   -0.0005235131    0.0042580701   -0.0018415385
+  -0.0000000000   -0.0000000000    0.0042580701   -0.0018415385    0.0057506999   -0.0003027590
+displaced atom L =  2  ipol=  1  displaced atom Lp =  2  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000   -0.0150763724   -0.0029172095    0.0016048372   -0.0005436433
+  -0.0150763724   -0.0029172095   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0016048372   -0.0005436433   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  2  displaced atom Lp =  1  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000769178   -0.0000256028   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.0012930472   -0.0083708456   -0.0071576570    0.0042248068
+   0.0000000000   -0.0000000000   -0.0071576570    0.0042248068   -0.0027597896   -0.0012908859
+displaced atom L =  2  ipol=  2  displaced atom Lp =  1  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0001526472    0.0001819518   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0026506079    0.0007736534   -0.0025057712   -0.0024944043
+  -0.0000000000    0.0000000000   -0.0025057712   -0.0024944043   -0.0023624998   -0.0028078361
+displaced atom L =  2  ipol=  2  displaced atom Lp =  1  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000    0.0004905446    0.0007730848    0.0106311461    0.0033292329
+   0.0004905446    0.0007730848   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0106311461    0.0033292329   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+displaced atom L =  2  ipol=  2  displaced atom Lp =  2  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0000847037    0.0000651933   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.0009134990   -0.0005235131    0.0042580701   -0.0018415385
+  -0.0000000000   -0.0000000000    0.0042580701   -0.0018415385    0.0057506999   -0.0003027590
+displaced atom L =  2  ipol=  2  displaced atom Lp =  2  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0008537484   -0.0002590141   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000   -0.0143018331   -0.0000035174    0.0025077825    0.0007620446
+   0.0000000000    0.0000000000    0.0025077825    0.0007620446   -0.0544527650    0.0036365181
+displaced atom L =  2  ipol=  2  displaced atom Lp =  2  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0016048373   -0.0016367916   -0.0074965976    0.0030753454
+   0.0016048373   -0.0016367916    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+  -0.0074965976    0.0030753454    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  3  displaced atom Lp =  1  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0085214459    0.0058257735   -0.0011552235    0.0017022463
+   0.0085214459    0.0058257735    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0011552235    0.0017022463    0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  3  displaced atom Lp =  1  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0011552235    0.0013113763    0.0040527230   -0.0058259579
+  -0.0011552235    0.0013113763   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0040527230   -0.0058259579   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+displaced atom L =  2  ipol=  3  displaced atom Lp =  1  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0116046152   -0.0000142571    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+   0.0000000000   -0.0000000000   -0.0006155968   -0.0002041795   -0.0011959136   -0.0000979325
+   0.0000000000    0.0000000000   -0.0011959136   -0.0000979325   -0.0073714008    0.0005013346
+displaced atom L =  2  ipol=  3  displaced atom Lp =  2  ipol=  1
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000   -0.0150763724   -0.0029172095    0.0016048372   -0.0005436433
+  -0.0150763724   -0.0029172095   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0016048372   -0.0005436433   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  3  displaced atom Lp =  2  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000000000   -0.0000000000    0.0016048373   -0.0016367916   -0.0074965976    0.0030753454
+   0.0016048373   -0.0016367916    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+  -0.0074965976    0.0030753454    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  3  displaced atom Lp =  2  ipol=  3
+ Hubbard atom  1  spin  1
+  -0.0228478942   -0.0000642344   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000   -0.0050851052    0.0003780659   -0.0007881949    0.0001559869
+  -0.0000000000    0.0000000000   -0.0007881949    0.0001559869   -0.0095211243   -0.0007045537
+ 
+dyn_hub_bare NOT SYMMETRIZED
+   1   1
+   0.0085679  -0.0004253  -0.0005921   0.0000970  -0.0013602   0.0002338
+  -0.0005921   0.0000970   0.0127065   0.0002803   0.0004948  -0.0013225
+  -0.0013602   0.0002338   0.0004948  -0.0013225   0.4629408   0.0014668
+   1   2
+   0.0004950   0.0012169  -0.0000000  -0.0000000  -0.0000000   0.0000000
+  -0.0051084   0.0000257  -0.0000000  -0.0000000   0.0000000  -0.0000000
+  -0.0054523   0.0019854  -0.0000000  -0.0000000  -0.0000000  -0.0000000
+   2   1
+   0.0004950   0.0012169  -0.0051084   0.0000257  -0.0054523   0.0019854
+  -0.0000000  -0.0000000  -0.0000000  -0.0000000  -0.0000000  -0.0000000
+  -0.0000000   0.0000000   0.0000000  -0.0000000  -0.0000000  -0.0000000
+   2   2
+   0.5315708  -0.0031500  -0.0000000   0.0000000  -0.0000000  -0.0000000
+  -0.0000000   0.0000000   0.5548996  -0.0000688  -0.0003832  -0.0000356
+  -0.0000000  -0.0000000  -0.0003832  -0.0000356   0.0045661   0.0000487
+dyn_hub_bare SYMMETRIZED
+   1   1
+   0.4972558   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.4972558   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000   0.5548996   0.0000000
+   1   2
+  -0.0032343   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0032343   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -0.0000000   0.0000000  -0.0003832   0.0000000
+   2   1
+  -0.0032343   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0032343   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -0.0000000   0.0000000  -0.0003832   0.0000000
+   2   2
+   0.0106372   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0106372   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0045661   0.0000000
+     PHONON       :      4.53s CPU      4.61s WALL
+
+
+
+     Representation #  1 modes #   1  2
+
+     Self-consistent Calculation
+
+      iter #   1 total cpu time :     5.0 secs   av.it.:   4.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.031E-07
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000   -0.0318378542    0.0000000000   -0.0000435736    0.0000000000
+   0.0000000000    0.0000000000   -0.0000435736    0.0000000000    0.0318378542   -0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0000435736   -0.0000000000   -0.0318378542    0.0000000000
+  -0.0000000000    0.0000000000   -0.0318378542    0.0000000000   -0.0000435736    0.0000000000
+
+      iter #   2 total cpu time :     5.3 secs   av.it.:   7.8
+      thresh= 3.212E-05 alpha_mix =  0.700 |ddv_scf|^2 =  8.860E-09
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000   -0.0391512368    0.0000000000   -0.0000535828    0.0000000000
+   0.0000000000    0.0000000000   -0.0000535828    0.0000000000    0.0391512368   -0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0000535828   -0.0000000000   -0.0391512368    0.0000000000
+  -0.0000000000    0.0000000000   -0.0391512368    0.0000000000   -0.0000535828    0.0000000000
+
+      iter #   3 total cpu time :     5.6 secs   av.it.:   6.9
+      thresh= 9.413E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.046E-11
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000   -0.0387434398    0.0000000000   -0.0000530247    0.0000000000
+   0.0000000000    0.0000000000   -0.0000530247    0.0000000000    0.0387434398   -0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0000530247   -0.0000000000   -0.0387434398    0.0000000000
+  -0.0000000000    0.0000000000   -0.0387434398    0.0000000000   -0.0000530247    0.0000000000
+
+      iter #   4 total cpu time :     5.9 secs   av.it.:   8.1
+      thresh= 3.235E-07 alpha_mix =  0.700 |ddv_scf|^2 =  5.919E-14
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000   -0.0387349049    0.0000000000   -0.0000530130    0.0000000000
+   0.0000000000    0.0000000000   -0.0000530130    0.0000000000    0.0387349049   -0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000    0.0000000000    0.0000530130   -0.0000000000   -0.0387349049    0.0000000000
+  -0.0000000000    0.0000000000   -0.0387349049    0.0000000000   -0.0000530130    0.0000000000
+
+      iter #   5 total cpu time :     6.3 secs   av.it.:   8.8
+      thresh= 2.433E-08 alpha_mix =  0.700 |ddv_scf|^2 =  9.137E-16
+
+     End of self-consistent calculation
+dyn1 NOT SYMMETRIZED
+   1   1
+  -0.0069054  -0.0006085   0.0000863   0.0010340   0.0351913  -0.0154021
+   0.0000863  -0.0008669  -0.0074469   0.0002120   0.0066032  -0.0024357
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   1   2
+   0.0066023   0.0096035   0.0000001   0.0000001   0.0000000   0.0000001
+  -0.0073749   0.0132982  -0.0000000  -0.0000000  -0.0000000  -0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+dyn1 SYMMETRIZED
+   1   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   1   2
+   0.0069541   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0069541   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   1
+   0.0069541   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0069541   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   2
+  -0.0071761   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0071761   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+dyn
+   1   1
+  28.6012123   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  28.6012123   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  32.8806859   0.0000000
+   1   2
+  -1.8979733   0.0000000  -0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000  -1.8979733   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000   0.0000000   0.0000000   5.6290471   0.0000000
+   2   1
+  -1.8979733   0.0000000  -0.0000000   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -1.8979733   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   5.6290471   0.0000000
+   2   2
+   0.8736202   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.8736202   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000   0.0000000   0.0000000   9.7772918   0.0000000
+
+     Convergence has been achieved 
+
+
+     Representation #  2 modes #   3  4
+
+     Self-consistent Calculation
+
+      iter #   1 total cpu time :     6.8 secs   av.it.:   5.2
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.332E-06
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.1684327927   -0.0000000000   -0.0002358055   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0002358055   -0.0000000000    0.1684327927    0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0002358055    0.0000000000   -0.1684327927   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.1684327927   -0.0000000000   -0.0002358055   -0.0000000000
+
+      iter #   2 total cpu time :     7.1 secs   av.it.:   8.0
+      thresh= 1.154E-04 alpha_mix =  0.700 |ddv_scf|^2 =  1.049E-07
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.1130955831   -0.0000000000   -0.0001583335   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0001583335   -0.0000000000    0.1130955831    0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0001583335    0.0000000000   -0.1130955831   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.1130955831   -0.0000000000   -0.0001583335   -0.0000000000
+
+      iter #   3 total cpu time :     7.4 secs   av.it.:   6.4
+      thresh= 3.239E-05 alpha_mix =  0.700 |ddv_scf|^2 =  4.982E-10
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000    0.0000000000   -0.1117655928    0.0000000000   -0.0001564716    0.0000000000
+   0.0000000000   -0.0000000000   -0.0001564716    0.0000000000    0.1117655928   -0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+  -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0001564716   -0.0000000000   -0.1117655928    0.0000000000
+  -0.0000000000    0.0000000000   -0.1117655928    0.0000000000   -0.0001564716    0.0000000000
+
+      iter #   4 total cpu time :     7.7 secs   av.it.:   6.6
+      thresh= 2.232E-06 alpha_mix =  0.700 |ddv_scf|^2 =  5.843E-13
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.1117241555   -0.0000000000   -0.0001564135   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0001564135   -0.0000000000    0.1117241555    0.0000000000
+ partner #   2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0001564135    0.0000000000   -0.1117241555   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.1117241555   -0.0000000000   -0.0001564135   -0.0000000000
+
+      iter #   5 total cpu time :     8.0 secs   av.it.:   8.2
+      thresh= 7.644E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.565E-15
+
+     End of self-consistent calculation
+dyn1 NOT SYMMETRIZED
+   1   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0018381   0.0010632  -0.0001290  -0.0002098  -0.4609492   0.0076621
+   1   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0004812  -0.0082809   0.0000000   0.0000004  -0.0000000  -0.0000000
+   2   1
+  -0.0001289  -0.0001564  -0.0005051  -0.0011710   0.0004812   0.0054389
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   2
+  -0.4971847  -0.0066142  -0.0000000  -0.0000001  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+dyn1 SYMMETRIZED
+   1   1
+  -0.4790670   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.4790670   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   1   2
+  -0.0005858   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0005858   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   1
+  -0.0005858   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0005858   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+dyn
+   1   1
+   1.3462615   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   1.3462615   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  32.8806859   0.0000000
+   1   2
+  -0.8614370   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.8614370   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000   5.6290471   0.0000000
+   2   1
+  -0.8614370   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.8614370   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000   0.0000000   0.0000000   5.6290471   0.0000000
+   2   2
+   0.8664441   0.0000000  -0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000   0.8664441   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000   9.7772918   0.0000000
+
+     Convergence has been achieved 
+
+
+     Representation #  3 mode #   5
+
+     Self-consistent Calculation
+
+      iter #   1 total cpu time :     8.3 secs   av.it.:   5.5
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  4.434E-04
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+
+      iter #   2 total cpu time :     8.5 secs   av.it.:   6.8
+      thresh= 2.106E-03 alpha_mix =  0.700 |ddv_scf|^2 =  5.695E-04
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+   0.0000000000    0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+
+      iter #   3 total cpu time :     8.7 secs   av.it.:   6.2
+      thresh= 2.386E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.291E-06
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+
+      iter #   4 total cpu time :     8.9 secs   av.it.:   6.5
+      thresh= 1.136E-04 alpha_mix =  0.700 |ddv_scf|^2 =  5.888E-08
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+
+      iter #   5 total cpu time :     9.1 secs   av.it.:   6.5
+      thresh= 2.426E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.658E-10
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+
+      iter #   6 total cpu time :     9.2 secs   av.it.:   6.5
+      thresh= 1.288E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.681E-14
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+
+      iter #   7 total cpu time :     9.4 secs   av.it.:   6.8
+      thresh= 2.771E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.736E-15
+
+     End of self-consistent calculation
+dyn1 NOT SYMMETRIZED
+   1   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   1   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0000000  -0.0000000  -0.0000000   0.0000000   0.0000014   0.0000002
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000003  -0.0000001  -0.4308199  -0.0000646   0.0016098   0.0000935
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+dyn1 SYMMETRIZED
+   1   1
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -0.0000000   0.0000000  -0.4308199   0.0000000
+   1   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000   0.0000000   0.0000000   0.0008049   0.0000000
+   2   1
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0008049   0.0000000
+   2   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+dyn
+   1   1
+   0.8671946   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.8671946   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -0.0000000   0.0000000   0.7566099   0.0000000
+   1   2
+  -0.8620228   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.8620228   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   2.6425243   0.0000000
+   2   1
+  -0.8620228   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.8620228   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   2.6425243   0.0000000
+   2   2
+   0.8664441   0.0000000  -0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000   0.8664441   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000   9.7772918   0.0000000
+
+     Convergence has been achieved 
+
+
+     Representation #  4 mode #   6
+
+     Self-consistent Calculation
+
+      iter #   1 total cpu time :     9.7 secs   av.it.:   4.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  9.284E-05
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+
+      iter #   2 total cpu time :     9.9 secs   av.it.:   6.8
+      thresh= 9.635E-04 alpha_mix =  0.700 |ddv_scf|^2 =  1.050E-04
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+
+      iter #   3 total cpu time :    10.1 secs   av.it.:   6.2
+      thresh= 1.025E-03 alpha_mix =  0.700 |ddv_scf|^2 =  4.499E-08
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+
+      iter #   4 total cpu time :    10.3 secs   av.it.:   6.0
+      thresh= 2.121E-05 alpha_mix =  0.700 |ddv_scf|^2 =  7.563E-11
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+
+      iter #   5 total cpu time :    10.5 secs   av.it.:   6.5
+      thresh= 8.696E-07 alpha_mix =  0.700 |ddv_scf|^2 =  7.138E-12
+ DNSSCF SYMMETRIZED IN THE PATTERN BASIS
+ partner #   1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+
+      iter #   6 total cpu time :    10.6 secs   av.it.:   6.5
+      thresh= 2.672E-07 alpha_mix =  0.700 |ddv_scf|^2 =  6.227E-15
+
+     End of self-consistent calculation
+dyn1 NOT SYMMETRIZED
+   1   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   1   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   2   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0000000  -0.0000000  -0.0000000   0.0000000  -0.0000005   0.0000002
+   2   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+  -0.0000001  -0.0000001  -0.0951234  -0.0000151  -0.0055207  -0.0000480
+dyn1 SYMMETRIZED
+   1   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   1   2
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0475617   0.0000000
+   2   1
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000  -0.0475617   0.0000000
+   2   2
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -0.0000000   0.0000000  -0.0055207   0.0000000
+dyn
+   1   1
+   0.8671946   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.8671946   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.3257900   0.0000000
+   1   2
+  -0.8620228   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.8620228   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000  -0.2949611   0.0000000
+   2   1
+  -0.8620228   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.8620228   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.2949611   0.0000000
+   2   2
+   0.8664441   0.0000000  -0.0000000   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000   0.8664441   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -0.0000000   0.0000000   0.3506767   0.0000000
+
+     Convergence has been achieved 
+ 
+ DNS_SCF SYMMETRIZED IN CARTESIAN COORDINATES
+displaced atom L =  1  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000    0.0000000000
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.1117242650    0.0000000000
+   0.0000000000    0.0000000000    0.1117242650    0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  1  ipol=  2
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000    0.0000000000    0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000    0.0000000000    0.1117242650    0.0000000000    0.0000000000   -0.0000000000
+  -0.0000000000    0.0000000000    0.0000000000   -0.0000000000   -0.1117242650   -0.0000000000
+displaced atom L =  1  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000
+   0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  1
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0387349411   -0.0000000000
+   0.0000000000   -0.0000000000    0.0387349411   -0.0000000000   -0.0000000000    0.0000000000
+displaced atom L =  2  ipol=  2
+ Hubbard atom  1  spin  1
+  -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000   -0.0000000000   -0.0000000000
+   0.0000000000   -0.0000000000    0.0387349411   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000    0.0000000000   -0.0387349411    0.0000000000
+displaced atom L =  2  ipol=  3
+ Hubbard atom  1  spin  1
+   0.0000000000    0.0000000000   -0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+  -0.0000000000   -0.0000000000    0.0000000000   -0.0000000000    0.0000000000   -0.0000000000
+   0.0000000000    0.0000000000    0.0000000000   -0.0000000000    0.0000000000    0.0000000000
+ 
+dyn_hub_scf NOT SYMMETRIZED
+   1   1
+  -0.0069054  -0.0006085   0.0000863   0.0010340   0.0351913  -0.0154021
+   0.0000863  -0.0008669  -0.0074469   0.0002120   0.0066032  -0.0024357
+  -0.0018381   0.0010632  -0.0001290  -0.0002098  -0.4609492   0.0076621
+   1   2
+   0.0066023   0.0096035   0.0000001   0.0000001   0.0000000   0.0000001
+  -0.0073749   0.0132982  -0.0000000  -0.0000000  -0.0000000  -0.0000000
+   0.0004812  -0.0082809   0.0000000   0.0000004  -0.0000000  -0.0000000
+   2   1
+  -0.0001289  -0.0001564  -0.0005051  -0.0011710   0.0004812   0.0054389
+  -0.0000000  -0.0000000  -0.0000000   0.0000000   0.0000014   0.0000002
+  -0.0000000  -0.0000000  -0.0000000   0.0000000  -0.0000005   0.0000002
+   2   2
+  -0.4971847  -0.0066142  -0.0000000  -0.0000001  -0.0000000   0.0000000
+   0.0000003  -0.0000001  -0.4308199  -0.0000646   0.0016098   0.0000935
+  -0.0000001  -0.0000001  -0.0951234  -0.0000151  -0.0055207  -0.0000480
+dyn_hub_scf SYMMETRIZED
+   1   1
+  -0.4790670   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000  -0.4790670   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.4308199   0.0000000
+   1   2
+   0.0063683   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0063683   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0467568   0.0000000
+   2   1
+   0.0063683   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0063683   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000  -0.0467568   0.0000000
+   2   2
+  -0.0071761   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0071761   0.0000000   0.0000000   0.0000000
+  -0.0000000   0.0000000   0.0000000   0.0000000  -0.0055207   0.0000000
+dyn_hub_tot NOT SYMMETRIZED
+   1   1
+   0.0016625  -0.0010338  -0.0005057   0.0011310   0.0338310  -0.0151683
+  -0.0005057  -0.0007699   0.0052596   0.0004923   0.0070980  -0.0037582
+  -0.0031983   0.0012970   0.0003658  -0.0015323   0.0019916   0.0091288
+   1   2
+   0.0070973   0.0108204   0.0000001   0.0000001   0.0000000   0.0000001
+  -0.0124833   0.0133239  -0.0000000  -0.0000000  -0.0000000  -0.0000000
+  -0.0049712  -0.0062955   0.0000000   0.0000004  -0.0000000  -0.0000000
+   2   1
+   0.0003661   0.0010604  -0.0056135  -0.0011452  -0.0049712   0.0074243
+  -0.0000000  -0.0000000  -0.0000000   0.0000000   0.0000014   0.0000002
+  -0.0000000  -0.0000000  -0.0000000   0.0000000  -0.0000005   0.0000002
+   2   2
+   0.0343861  -0.0097642  -0.0000000  -0.0000001  -0.0000000   0.0000000
+   0.0000003  -0.0000001   0.1240798  -0.0001334   0.0012266   0.0000579
+  -0.0000001  -0.0000001  -0.0955066  -0.0000508  -0.0009546   0.0000007
+dyn_hub_tot SYMMETRIZED
+   1   1
+   0.0181888   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0181888   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0000000   0.0000000   0.1240798   0.0000000
+   1   2
+   0.0031340   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0031340   0.0000000  -0.0000000   0.0000000
+  -0.0000000   0.0000000  -0.0000000   0.0000000  -0.0471400   0.0000000
+   2   1
+   0.0031340   0.0000000   0.0000000   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000   0.0031340   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000  -0.0471400   0.0000000
+   2   2
+   0.0034611   0.0000000   0.0000000   0.0000000   0.0000000   0.0000000
+   0.0000000   0.0000000   0.0034611   0.0000000  -0.0000000   0.0000000
+   0.0000000   0.0000000  -0.0000000   0.0000000  -0.0009546   0.0000000
+ 
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000  -0.116279070
+
+     Diagonalizing the dynamical matrix
+
+     q = (    0.000000000   0.000000000  -0.116279070 ) 
+
+ **************************************************************************
+     freq (    1) =      -2.617963 [THz] =     -87.325833 [cm-1]
+     freq (    2) =       2.142480 [THz] =      71.465426 [cm-1]
+     freq (    3) =       2.142480 [THz] =      71.465426 [cm-1]
+     freq (    4) =      25.733260 [THz] =     858.369159 [cm-1]
+     freq (    5) =      41.016774 [THz] =    1368.172300 [cm-1]
+     freq (    6) =      41.016774 [THz] =    1368.172300 [cm-1]
+ **************************************************************************
+
+     Mode symmetry, D_3h (-62m) point group:
+
+     freq (  1 -  1) =        -87.3  [cm-1]   --> A''2               
+     freq (  2 -  3) =         71.5  [cm-1]   --> E'                 
+     freq (  4 -  4) =        858.4  [cm-1]   --> A''2               
+     freq (  5 -  6) =       1368.2  [cm-1]   --> E'                 
+ 
+     init_run     :      0.30s CPU      0.30s WALL (       1 calls)
+     electrons    :      0.18s CPU      0.19s WALL (       1 calls)
+
+     Called by init_run:
+     wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     wfcinit:atom :      0.00s CPU      0.00s WALL (       8 calls)
+     wfcinit:wfcr :      0.03s CPU      0.03s WALL (       8 calls)
+     potinit      :      0.02s CPU      0.02s WALL (       1 calls)
+     hinit0       :      0.25s CPU      0.25s WALL (       1 calls)
+
+     Called by electrons:
+     c_bands      :      0.18s CPU      0.19s WALL (       1 calls)
+     v_of_rho     :      0.05s CPU      0.05s WALL (       2 calls)
+     v_h          :      0.00s CPU      0.00s WALL (       2 calls)
+     v_xc         :      0.07s CPU      0.07s WALL (       3 calls)
+     newd         :      0.02s CPU      0.04s WALL (       2 calls)
+
+     Called by c_bands:
+     init_us_2    :      0.05s CPU      0.06s WALL (     228 calls)
+     cegterg      :      0.15s CPU      0.15s WALL (       8 calls)
+
+     Called by sum_band:
+
+     Called by *egterg:
+     h_psi        :      1.77s CPU      1.78s WALL (    1269 calls)
+     s_psi        :      0.07s CPU      0.11s WALL (    5940 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (      78 calls)
+     cdiaghg      :      0.00s CPU      0.00s WALL (      86 calls)
+     cegterg:over :      0.00s CPU      0.00s WALL (      78 calls)
+     cegterg:upda :      0.00s CPU      0.00s WALL (      78 calls)
+     cegterg:last :      0.00s CPU      0.00s WALL (      24 calls)
+
+     Called by h_psi:
+     h_psi:calbec :      0.07s CPU      0.04s WALL (    1269 calls)
+     vloc_psi     :      1.63s CPU      1.68s WALL (    1269 calls)
+     add_vuspsi   :      0.03s CPU      0.03s WALL (    1269 calls)
+     vhpsi        :      0.02s CPU      0.03s WALL (    1269 calls)
+
+     General routines
+     calbec       :      0.16s CPU      0.14s WALL (    7517 calls)
+     fft          :      0.29s CPU      0.34s WALL (     669 calls)
+     ffts         :      0.03s CPU      0.02s WALL (     128 calls)
+     fftw         :      1.79s CPU      1.89s WALL (   10456 calls)
+     interpolate  :      0.03s CPU      0.06s WALL (      74 calls)
+     davcio       :      0.06s CPU      0.09s WALL (    2842 calls)
+ 
+     Parallel routines
+
+     Hubbard U routines
+     vhpsi        :      0.02s CPU      0.03s WALL (    1269 calls)
+ 
+     PHONON       :     10.46s CPU     10.73s WALL
+
+     INITIALIZATION: 
+     phq_setup    :      0.07s CPU      0.07s WALL (       1 calls)
+     phq_init     :      3.23s CPU      3.28s WALL (       1 calls)
+ 
+     phq_init     :      3.23s CPU      3.28s WALL (       1 calls)
+     set_drhoc    :      1.58s CPU      1.58s WALL (       3 calls)
+     init_vloc    :      0.03s CPU      0.03s WALL (       2 calls)
+     init_us_1    :      0.36s CPU      0.36s WALL (       2 calls)
+     newd         :      0.02s CPU      0.04s WALL (       2 calls)
+     dvanqq       :      0.21s CPU      0.21s WALL (       1 calls)
+     drho         :      0.18s CPU      0.18s WALL (       1 calls)
+ 
+     DYNAMICAL MATRIX:
+     dynmat0      :      2.00s CPU      2.05s WALL (       1 calls)
+     phqscf       :      5.92s CPU      6.12s WALL (       1 calls)
+     dynmatrix    :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+     phqscf       :      5.92s CPU      6.12s WALL (       1 calls)
+     solve_linter :      5.60s CPU      5.79s WALL (       4 calls)
+     drhodv       :      0.02s CPU      0.02s WALL (       4 calls)
+ 
+     dynmat0      :      2.00s CPU      2.05s WALL (       1 calls)
+     dynmat_us    :      0.01s CPU      0.01s WALL (       1 calls)
+     d2ionq       :      0.00s CPU      0.01s WALL (       1 calls)
+     dynmatcc     :      1.08s CPU      1.08s WALL (       1 calls)
+ 
+     dynmat_us    :      0.01s CPU      0.01s WALL (       1 calls)
+     addusdynmat  :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+     phqscf       :      5.92s CPU      6.12s WALL (       1 calls)
+     solve_linter :      5.60s CPU      5.79s WALL (       4 calls)
+ 
+     solve_linter :      5.60s CPU      5.79s WALL (       4 calls)
+     dvqpsi_us    :      0.05s CPU      0.05s WALL (      24 calls)
+     ortho        :      0.02s CPU      0.01s WALL (     132 calls)
+     cgsolve      :      1.80s CPU      1.82s WALL (     132 calls)
+     incdrhoscf   :      0.22s CPU      0.25s WALL (     132 calls)
+     addusddens   :      0.88s CPU      0.87s WALL (      27 calls)
+     vpsifft      :      0.14s CPU      0.19s WALL (     108 calls)
+     dv_of_drho   :      0.32s CPU      0.32s WALL (      33 calls)
+     mix_pot      :      0.06s CPU      0.11s WALL (      23 calls)
+     psymdvscf    :      0.78s CPU      0.79s WALL (      23 calls)
+     newdq        :      0.95s CPU      0.95s WALL (      23 calls)
+     adddvscf     :      0.00s CPU      0.01s WALL (     108 calls)
+     drhodvus     :      0.00s CPU      0.01s WALL (       4 calls)
+ 
+     dvqpsi_us    :      0.05s CPU      0.05s WALL (      24 calls)
+     dvqpsi_us_on :      0.01s CPU      0.00s WALL (      24 calls)
+ 
+     cgsolve      :      1.80s CPU      1.82s WALL (     132 calls)
+     ch_psi       :      1.77s CPU      1.79s WALL (    1175 calls)
+ 
+     ch_psi       :      1.77s CPU      1.79s WALL (    1175 calls)
+     h_psi        :      1.77s CPU      1.78s WALL (    1269 calls)
+     last         :      0.12s CPU      0.11s WALL (    1175 calls)
+ 
+     h_psi        :      1.77s CPU      1.78s WALL (    1269 calls)
+     add_vuspsi   :      0.03s CPU      0.03s WALL (    1269 calls)
+ 
+     incdrhoscf   :      0.22s CPU      0.25s WALL (     132 calls)
+     addusdbec    :      0.00s CPU      0.01s WALL (     156 calls)
+ 
+     drhodvus     :      0.00s CPU      0.01s WALL (       4 calls)
+ 
+     dnsq_bare    :      0.02s CPU      0.02s WALL (       1 calls)
+     dwfc         :      0.07s CPU      0.08s WALL (   10740 calls)
+     swfc         :      0.22s CPU      0.28s WALL (    3348 calls)
+     delta_sphi   :      0.34s CPU      0.31s WALL (     792 calls)
+     dnsq_orth    :      0.02s CPU      0.03s WALL (       1 calls)
+     d2nsq_bare_k :      0.88s CPU      0.92s WALL (     504 calls)
+     dnsq_scf     :      0.00s CPU      0.01s WALL (      19 calls)
+     adddvhubscf  :      0.01s CPU      0.01s WALL (     108 calls)
+     dynmat_hub_b :      0.91s CPU      0.95s WALL (       1 calls)
+     dvqhub_barep :      0.21s CPU      0.21s WALL (      16 calls)
+     dvqhub_barep :      0.21s CPU      0.21s WALL (      16 calls)
+     dynmat_hub_s :      0.30s CPU      0.30s WALL (       4 calls)
+     doubleprojqq :      0.74s CPU      0.74s WALL (    8736 calls)
+     doubleprojqq :      0.74s CPU      0.74s WALL (    8736 calls)
+ 
+      General routines
+     calbec       :      0.16s CPU      0.14s WALL (    7517 calls)
+     fft          :      0.29s CPU      0.34s WALL (     669 calls)
+     ffts         :      0.03s CPU      0.02s WALL (     128 calls)
+     fftw         :      1.79s CPU      1.89s WALL (   10456 calls)
+     davcio       :      0.06s CPU      0.09s WALL (    2842 calls)
+     write_rec    :      0.04s CPU      0.05s WALL (      27 calls)
+ 
+ 
+     PHONON       :     10.46s CPU     10.73s WALL
+
+ 
+   This run was terminated on:  18: 6:47   3Dec2019            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

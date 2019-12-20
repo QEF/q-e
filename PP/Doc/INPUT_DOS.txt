@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: dos.x / PWscf / Quantum Espresso (version: svn)
+Program: dos.x / PWscf / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -69,7 +69,7 @@ NAMELIST: &DOS
                    'tetrahedra_opt' :
                         Optimized tetrahedron method:
                         see M. Kawamura, PRB 89, 094515 (2014).
-   Default:        'smearing' if degauss in given in input 'smearing',
+   Default:        'smearing' if degauss is given in input;
                                            options read from the xml data file otherwise.
    +--------------------------------------------------------------------
    
@@ -85,7 +85,7 @@ NAMELIST: &DOS
                    
                        =  1  Methfessel-Paxton of order 1
                    
-                       = -1  Marzari-Vanderbilt "cold smearing"
+                       = -1  "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
                    
                        =-99  Fermi-Dirac function
    +--------------------------------------------------------------------
@@ -161,4 +161,4 @@ NAMELIST: &DOS
       
 
 
-This file has been created by helpdoc utility on Tue Aug 14 10:43:55 CEST 2018
+This file has been created by helpdoc utility on Thu Nov 28 10:42:25 CET 2019

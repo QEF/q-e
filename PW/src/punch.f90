@@ -53,7 +53,7 @@ SUBROUTINE punch( what )
   INTEGER            :: cp_status, nt, inlc
   !
   !
-  IF (io_level < 0 ) RETURN
+  IF (io_level < -1 ) RETURN
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM ( restart_dir ( ) )
@@ -70,6 +70,8 @@ SUBROUTINE punch( what )
   wf_collect = ( TRIM(what) == 'all' )
   only_init  = ( TRIM(what) == 'config-init' )
   CALL pw_write_schema( only_init, wf_collect )
+  !
+  IF (io_level < 0 ) RETURN
   !
   ! ... charge density - also writes rho%ns if lda+U and rho%bec if PAW
   ! ... do not overwrite the scf charge density with a non-scf one

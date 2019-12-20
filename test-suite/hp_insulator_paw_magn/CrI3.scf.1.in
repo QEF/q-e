@@ -1,0 +1,48 @@
+ &control
+    calculation  = 'scf'
+    restart_mode = 'from_scratch',
+    prefix       = 'CrI3'
+    pseudo_dir   = '../../pseudo/'
+    outdir       = './'
+    tstress      = .true.
+    tprnfor      = .true.
+ /
+ &system
+    ibrav       = 0, 
+    celldm(1)   = 14.5533, 
+    nat         = 8, 
+    ntyp        = 2,
+    ecutwfc     = 30.0,
+    ecutrho     = 240.0,
+    occupations = 'smearing',
+    smearing    = 'gauss',
+    degauss     = 0.01,
+    nspin       = 2,
+    starting_magnetization(1) = 0.5,
+    lda_plus_u        = .true.,
+    lda_plus_u_kind   = 0,
+    U_projection_type = 'atomic',
+    Hubbard_U(1)      = 1.0
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.5
+ /
+ATOMIC_SPECIES
+Cr     51.996    Cr.pbe-spn-kjpaw_psl.1.0.0.UPF
+I     126.9045   I.pbe-n-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS {alat}
+Cr     0.4458363   0.2574037   1.7155805  
+Cr     0.0000000   0.0000000   1.7136430  
+I      0.5791904   0.5157057   1.9176218  
+I      0.6028554   0.0127646   1.9176218  
+I      0.1554631   0.2437407   1.9176218  
+I      0.3124822   0.5139090   1.5116017  
+I      0.7346535   0.2446390   1.5116017  
+I      0.2903732   0.0136630   1.5116017
+CELL_PARAMETERS {alat}
+ 0.8916725510     0.0000000000    0.0000000000
+-0.4458362755     0.7722110811    0.0000000000
+ 0.0000000000     0.0000000000    1.4000000000
+K_POINTS {automatic}
+ 2 2 1 0 0 0

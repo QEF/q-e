@@ -8,14 +8,16 @@
 !============================================================================!
 SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    !-------------------------------------------------------------------------!
-   !! Geometric phase calculation along a strip of nppstr_3d(pdir) k-points
-   !! averaged over a 2D grid of nkort k-points orthogonal to nppstr_3d(pdir).
+   !! Geometric phase calculation along a strip of \(\text{nppstr_3d(pdir)}\)
+   !! k-points averaged over a 2D grid of \(\text{nkort}\) k-points orthogonal
+   !! to \(\text{nppstr_3d(pdir)}\).
    !
-   !! This routine is used to calculate the electronic polarization
-   !! when a finite electric field, described through the modern
-   !! theory of the polarization, is applied. 
-   !! It is very similar to the routine c_phase in bp_c_phase
-   !! however the numbering of the k-points in the strings is different.
+   !! This routine is used to calculate the electronic polarization when a
+   !! finite electric field, described through the modern theory of the 
+   !! polarization, is applied.  
+   !! It is very similar to the routine \(\texttt{c_phase}\) in 
+   !! \(\texttt{bp_c_phase}\), however, the numbering of the k-points in the
+   !! strings is different.
    !
    USE kinds,                ONLY: DP
    USE io_global,            ONLY: stdout, ionode, ionode_id

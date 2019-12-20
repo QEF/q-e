@@ -1,0 +1,8 @@
+phonons of Fe
+ &inputph
+  prefix = 'iron',
+  outdir='./',
+  tr2_ph = 1.0d-14,
+  fildyn='Fe.dyn',
+ /
+0.500000000000000   0.000000000000000   0.000000000000000

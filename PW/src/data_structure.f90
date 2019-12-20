@@ -9,11 +9,12 @@
 !-----------------------------------------------------------------------
 SUBROUTINE data_structure( gamma_only )
   !-----------------------------------------------------------------------
-  ! this routine sets the data structure for the fft arrays
-  ! (both the smooth and the dense grid)
-  ! In the parallel case, it distributes columns to processes, too
-  ! BEWARE: to compute gkcut, nks and the list of k-points, or nks=0
-  !         and primitive lattice vectors bg, are needed
+  !! This routine sets the data structure for the FFT arrays (both the
+  !! smooth and the dense grid).  
+  !! In the parallel case, it distributes columns to processes too.  
+  !! BEWARE: to compute \(\text{gkcut}\), \(\text{nks}\) and the list of
+  !! k-points or \(\text{nks}=0\) and the primitive lattice vectors, 
+  !! \(\text{bg}\) are needed.
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_max
@@ -32,11 +33,15 @@ SUBROUTINE data_structure( gamma_only )
   USE symm_base,  ONLY : fft_fact
   !
   IMPLICIT NONE
-  LOGICAL, INTENT(in) :: gamma_only
+  !
+  LOGICAL, INTENT(IN) :: gamma_only
+  !
+  ! ... local variables
+  !
   INTEGER :: ik, ngm_, ngs_
   LOGICAL :: lpara
   !
-  lpara =  ( nproc_bgrp > 1 )
+  lpara = ( nproc_bgrp > 1 )
   !
   ! ... calculate gkcut = max |k+G|^2, in (2pi/a)^2 units
   !
@@ -45,49 +50,49 @@ SUBROUTINE data_structure( gamma_only )
      ! k-point list not available:
      ! use max(bg)/2 as an estimate of the largest k-point
      !
-     gkcut = 0.5d0 * max ( &
-        sqrt (sum(bg (1:3, 1)**2) ), &
-        sqrt (sum(bg (1:3, 2)**2) ), &
-        sqrt (sum(bg (1:3, 3)**2) ) )
+     gkcut = 0.5d0 * MAX( SQRT( SUM(bg(1:3,1)**2) ), &
+                          SQRT( SUM(bg(1:3,2)**2) ), &
+                          SQRT( SUM(bg(1:3,3)**2) )  )
   ELSE
      gkcut = 0.0d0
      DO ik = 1, nks
-        gkcut = max (gkcut, sqrt ( sum(xk (1:3, ik)**2) ) )
+        gkcut = MAX(gkcut, SQRT( SUM(xk(1:3,ik)**2) ) )
      ENDDO
   ENDIF
-  gkcut = (sqrt (gcutw) + gkcut)**2
+  gkcut = (SQRT(gcutw) + gkcut)**2
   !
   ! ... find maximum value among all the processors
   !
-  CALL mp_max (gkcut, inter_pool_comm )
+  CALL mp_max( gkcut, inter_pool_comm )
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
   ! task group are disabled if real_space calculation of calbec is used
-  dffts%has_task_groups = (ntask_groups >1) .and. .not. real_space
-  CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm,&
-       at, bg, gkcut, gcutms/gkcut, fft_fact=fft_fact, nyfft=nyfft )
-  CALL fft_type_init( dfftp, smap, "rho" , gamma_only, lpara, intra_bgrp_comm,&
-       at, bg, gcutm , 4.d0, fft_fact=fft_fact, nyfft=nyfft )
+  dffts%has_task_groups = (ntask_groups >1) .AND. .NOT. real_space
+  CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, &
+                      at, bg, gkcut, gcutms/gkcut, fft_fact=fft_fact, nyfft=nyfft )
+  CALL fft_type_init( dfftp, smap, "rho" , gamma_only, lpara, intra_bgrp_comm, &
+                      at, bg, gcutm , 4.d0, fft_fact=fft_fact, nyfft=nyfft )
   ! define the clock labels ( this enables the corresponding fft too ! )
-  dffts%rho_clock_label='ffts' ; dffts%wave_clock_label='fftw'
-  dfftp%rho_clock_label='fft'
-  if (.not.doublegrid) dfftp%grid_id = dffts%grid_id  ! this makes so that interpolation is just a copy.
-
+  dffts%rho_clock_label = 'ffts' ; dffts%wave_clock_label = 'fftw'
+  dfftp%rho_clock_label = 'fft'
+  ! this makes so that interpolation is just a copy.
+  IF (.NOT.doublegrid) dfftp%grid_id = dffts%grid_id
+  !
   CALL fft_base_info( ionode, stdout )
   ngs_ = dffts%ngl( dffts%mype + 1 )
   ngm_ = dfftp%ngl( dfftp%mype + 1 )
+  !
   IF( gamma_only ) THEN
      ngs_ = (ngs_ + 1)/2
      ngm_ = (ngm_ + 1)/2
-  END IF
+  ENDIF
   !
-  !     on output, ngm_ and ngs_ contain the local number of G-vectors
-  !     for the two grids. Initialize local and global number of G-vectors
+  ! ... on output, ngm_ and ngs_ contain the local number of G-vectors
+  ! for the two grids. Initialize local and global number of G-vectors
   !
-  call gvect_init ( ngm_ , intra_bgrp_comm )
-  call gvecs_init ( ngs_ , intra_bgrp_comm )
+  CALL gvect_init( ngm_, intra_bgrp_comm )
+  CALL gvecs_init( ngs_, intra_bgrp_comm )
   !
-
 END SUBROUTINE data_structure
 

@@ -5,8 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+
+MODULE corr_lda !<GPU:corr_lda=>corr_lda_gpu>
+
+CONTAINS
+
 !-------------------------------------------------------------------------
-SUBROUTINE pz( rs, iflag, ec, vc )
+SUBROUTINE pz( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -17,12 +22,12 @@ SUBROUTINE pz( rs, iflag, ec, vc )
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN) :: iflag
+  INTEGER, INTENT(IN) :: iflag                        !<GPU:VALUE>
   !! see routine comments
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -65,7 +70,7 @@ END SUBROUTINE pz
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pzKZK( rs, ec, vc, vol )
+SUBROUTINE pzKZK( rs, ec, vc, vol )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! LDA parametrization from Monte Carlo DATA:
   !
@@ -79,16 +84,16 @@ SUBROUTINE pzKZK( rs, ec, vc, vol )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
-  REAL(DP) :: vol
+  REAL(DP) :: vol                                        !<GPU:VALUE>
   !! volume element
   !
   ! ... local variables
   !
   INTEGER  :: iflag, kr
-  REAL(DP) :: ec0(2), vc0(2), ec0p 
+  REAL(DP) :: ec0(2), vc0(2), ec0p
   REAL(DP) :: a(2), b(2), c(2), d(2), gc(2), b1(2), b2(2)
   REAL(DP) :: lnrs, rs12, ox, dox, lnrsk, rsk
   REAL(DP) :: a1, grs, g1, g2, g3, g4, dL, gh, gl, grsp
@@ -180,7 +185,7 @@ END SUBROUTINE pzKZK
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vwn( rs, ec, vc )
+SUBROUTINE vwn( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
@@ -191,7 +196,7 @@ SUBROUTINE vwn( rs, ec, vc )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -226,7 +231,7 @@ END SUBROUTINE vwn
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE vwn1_rpa( rs, ec, vc )
+SUBROUTINE vwn1_rpa( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980).
   !
@@ -237,7 +242,7 @@ SUBROUTINE vwn1_rpa( rs, ec, vc )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -271,9 +276,9 @@ END SUBROUTINE vwn1_rpa
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE lyp( rs, ec, vc )
+SUBROUTINE lyp( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
-  !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988). 
+  !! C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988).
   !! LDA part only.
   !
   USE kinds,      ONLY: DP
@@ -283,7 +288,7 @@ SUBROUTINE lyp( rs, ec, vc )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -308,7 +313,7 @@ END SUBROUTINE lyp
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pw( rs, iflag, ec, vc )
+SUBROUTINE pw( rs, iflag, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! * iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !! * iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
@@ -319,10 +324,10 @@ SUBROUTINE pw( rs, iflag, ec, vc )
   !
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
-  INTEGER,  INTENT(IN)  :: iflag
+  INTEGER, INTENT(IN)  :: iflag                 !<GPU:VALUE>
   !! see routine comments
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -378,7 +383,7 @@ END SUBROUTINE pw
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE wignerc( rs, ec, vc )
+SUBROUTINE wignerc( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Wigner correlation.
   !
@@ -389,7 +394,7 @@ SUBROUTINE wignerc( rs, ec, vc )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -411,7 +416,7 @@ END SUBROUTINE wignerc
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE hl( rs, ec, vc )
+SUBROUTINE hl( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971).
   !
@@ -422,7 +427,7 @@ SUBROUTINE hl( rs, ec, vc )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -443,7 +448,7 @@ END SUBROUTINE hl
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE gl( rs, ec, vc )
+SUBROUTINE gl( rs, ec, vc )                    !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976).
   !
@@ -454,7 +459,7 @@ SUBROUTINE gl( rs, ec, vc )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -477,7 +482,7 @@ END SUBROUTINE gl
 ! ... LSDA
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pz_polarized( rs, ec, vc )
+SUBROUTINE pz_polarized( rs, ec, vc )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! J.P. Perdew and A. Zunger, PRB 23, 5048 (1981).
   !! spin-polarized energy and potential.
@@ -489,7 +494,7 @@ SUBROUTINE pz_polarized( rs, ec, vc )
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ec
-  !! correlation energy 
+  !! correlation energy
   REAL(DP), INTENT(OUT) :: vc
   !! correlation potential
   !
@@ -498,7 +503,7 @@ SUBROUTINE pz_polarized( rs, ec, vc )
   REAL(DP), PARAMETER :: a=0.01555d0, b=-0.0269d0, c=0.0007d0, &
                          d=-0.0048d0, gc=-0.0843d0, b1=1.3981d0, b2=0.2611d0
   REAL(DP) :: lnrs, rs12, ox, dox
-  REAL(DP), PARAMETER :: xcprefact=0.022575584d0, pi34=0.6203504908994d0 
+  REAL(DP), PARAMETER :: xcprefact=0.022575584d0, pi34=0.6203504908994d0
   ! REAL(DP) :: betha, etha, csi, prefact
   !
   !
@@ -532,7 +537,7 @@ END SUBROUTINE pz_polarized
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pz_spin( rs, zeta, ec, vc )
+SUBROUTINE pz_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Perdew and Zunger, PRB 23, 5048 (1981). Spin polarized case.
   !
@@ -544,9 +549,9 @@ SUBROUTINE pz_spin( rs, zeta, ec, vc )
   !! Wigner-Seitz radius
   REAL(DP), INTENT(IN) :: zeta
   !! zeta = (rho_up - rho_dw) / rho_tot
-  REAL(DP), INTENT(OUT) :: ec 
+  REAL(DP), INTENT(OUT) :: ec
   !! correlation energy
-  REAL(DP), INTENT(OUT) :: vc(2)
+  REAL(DP), INTENT(OUT) :: vc_up, vc_dw
   !! correlation potential (up, down)
   !
   ! ... local variables
@@ -556,10 +561,10 @@ SUBROUTINE pz_spin( rs, zeta, ec, vc )
   REAL(DP), PARAMETER :: p43=4.0d0/3.d0, third=1.d0/3.d0
   !
   ! unpolarized part (Perdew-Zunger formula)
-  CALL pz( rs, 1, ecu, vcu )
+  CALL pz( rs, 1, ecu, vcu )                                        !<GPU:pz=>pz_d>
   !
   ! polarization contribution
-  CALL pz_polarized( rs, ecp, vcp ) 
+  CALL pz_polarized( rs, ecp, vcp )                                 !<GPU:pz_polarized=>pz_polarized_d>
   !
   fz = ( (1.0d0 + zeta)**p43 + (1.d0 - zeta)**p43 - 2.d0) / &
          (2.d0**p43 - 2.d0)
@@ -567,15 +572,15 @@ SUBROUTINE pz_spin( rs, zeta, ec, vc )
           / (2.d0**p43 - 2.d0)
   !
   ec = ecu + fz * (ecp - ecu)
-  vc(1) = vcu + fz * (vcp - vcu) + (ecp - ecu) * dfz * ( 1.d0 - zeta)
-  vc(2) = vcu + fz * (vcp - vcu) + (ecp - ecu) * dfz * (-1.d0 - zeta)
+  vc_up = vcu + fz * (vcp - vcu) + (ecp - ecu) * dfz * ( 1.d0 - zeta)
+  vc_dw = vcu + fz * (vcp - vcu) + (ecp - ecu) * dfz * (-1.d0 - zeta)
   !
   RETURN
   !
 END SUBROUTINE pz_spin
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE vwn_spin( rs, zeta, ec, vc )
+SUBROUTINE vwn_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
    !------------------------------------------------------------------------------
    !! S.H. Vosko, L. Wilk, and M. Nusair.  Spin polarized case.
    !
@@ -587,9 +592,9 @@ SUBROUTINE vwn_spin( rs, zeta, ec, vc )
    !! Wigner-Seitz radius
    REAL(DP), INTENT(IN) :: zeta
    !! zeta = (rho_up - rho_dw) / rho_tot
-   REAL(DP), INTENT(OUT) :: ec 
+   REAL(DP), INTENT(OUT) :: ec
    !! correlation energy
-   REAL(DP), INTENT(OUT) :: vc(2)
+   REAL(DP), INTENT(OUT) :: vc_up, vc_dw
    !! correlation potential (up, down)
    !
    ! ... local variables
@@ -632,9 +637,9 @@ SUBROUTINE vwn_spin( rs, zeta, ec, vc )
    fz = cfz1 * (trup13*trup + trdw13*trdw - 2.0_DP) ! f(zeta)
    dfz = cfz2 * (trup13 - trdw13)                   ! df / dzeta
    !
-   CALL padefit( sqrtrs, 1, ecP, vcP )              ! ecF = e_c Paramagnetic
-   CALL padefit( sqrtrs, 2, ecF, vcF )              ! ecP = e_c Ferromagnetic
-   CALL padefit( sqrtrs, 3, ac,  dac )              ! ac = "spin stiffness"
+   CALL padefit_ParSet1( sqrtrs, 1, ecP, vcP )              ! ecF = e_c Paramagnetic     !<GPU:padefit_ParSet1=>padefit_ParSet1_d>
+   CALL padefit_ParSet1( sqrtrs, 2, ecF, vcF )              ! ecP = e_c Ferromagnetic    !<GPU:padefit_ParSet1=>padefit_ParSet1_d>
+   CALL padefit_ParSet1( sqrtrs, 3, ac,  dac )              ! ac = "spin stiffness"      !<GPU:padefit_ParSet1=>padefit_ParSet1_d>
    !
    ac = ac * iddfz0
    dac = dac * iddfz0
@@ -645,58 +650,117 @@ SUBROUTINE vwn_spin( rs, zeta, ec, vc )
    dec1 = vcP + dac*fz + (vcF - vcP - dac) * fzz4   ! e_c - (r_s/3)*(de_c/dr_s)
    dec2 = ac*dfz + De*(4.0_DP*zeta3*fz + zeta4*dfz) ! de_c/dzeta
    !
-   vc(1) = dec1 + (1.0_DP - zeta)*dec2              ! v_c[s] = e_c - (r_s/3)*(de_c/dr_s)
-   vc(2) = dec1 - (1.0_DP + zeta)*dec2              !          + [sign(s)-zeta]*(de_c/dzeta)
+   vc_up = dec1 + (1.0_DP - zeta)*dec2              ! v_c[s] = e_c - (r_s/3)*(de_c/dr_s)
+   vc_dw = dec1 - (1.0_DP + zeta)*dec2              !          + [sign(s)-zeta]*(de_c/dzeta)
    !
-   !
-  CONTAINS
+END SUBROUTINE
+!
+!
+!----
+SUBROUTINE padefit_ParSet1( x, i, fit, dfit )                           !<GPU:DEVICE>
    !----
-   SUBROUTINE padefit( x, i, fit, dfit )
-      !----
-      !! It implements formula [4.4] in:
-      !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
-      !
-      USE kinds, ONLY: DP
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP) :: x
-      !! input: x is SQRT(r_s) 
-      INTEGER :: i
-      !! input: i is the index of the fit
-      REAL(DP) :: fit
-      !! output: Pade fit calculated in x [eq. 4.4]
-      REAL(DP) :: dfit
-      !! output: dfit/drho = fit - (rs/3)*dfit/drs = ec - (x/6)*dfit/dx
-      !
-      ! ... local variables
-      !
-      REAL(DP) :: sqx, xx0, Qtxb, atg, fx
-      REAL(DP) :: txb, txbfx, itxbQ
-      !
-      sqx = x * x                          ! x^2 = r_s
-      xx0 = x - x0(i)                      ! x - x_0
-      Qtxb = Q(i) / (2.0_DP*x + b(i))      ! Q / (2x+b)
-      atg = ATAN(Qtxb)                     ! tan^-1(Q/(2x+b))
-      fx = sqx + b(i)*x + c(i)             ! X(x) = x^2 + b*x + c
-      !
-      fit = A(i) * (  LOG(sqx/fx) + tbQ(i)*atg - &
-            bx0fx0(i) * ( LOG(xx0*xx0/fx) + (tbQ(i) + 4.0_DP*x0(i)/Q(i)) * atg )  )
-      !
-      txb = 2.0_DP*x + b(i)
-      txbfx = txb / fx
-      itxbQ = 1.0_DP / (txb*txb + Q(i)*Q(i))
-      !
-      dfit = fit - A(i) / 3.0_DP + A(i)*x/6.0_DP * (  txbfx + 4.0_DP*b(i)*itxbQ + &
-              bx0fx0(i) * ( 2.0_DP/xx0 - txbfx - 4.0_DP*(b(i)+2.0_DP*x0(i))*itxbQ )  )
-      !
-   END SUBROUTINE
+   !! It implements formula [4.4] in:
+   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
+   !
+   USE kinds, ONLY: DP
+   !
+   IMPLICIT NONE
+   !
+   REAL(DP) :: x
+   !! input: x is SQRT(r_s)
+   INTEGER :: i
+   !! input: i is the index of the fit
+   REAL(DP) :: fit
+   !! output: Pade fit calculated in x [eq. 4.4]
+   REAL(DP) :: dfit
+   !! output: dfit/drho = fit - (rs/3)*dfit/drs = ec - (x/6)*dfit/dx
+   !
+   ! ... local variables
+   !
+   REAL(DP), PARAMETER :: &
+   A(3)  = (/ 0.0310907d0, 0.01554535d0, -0.01688686394039d0 /), &
+   x0(3) = (/ -0.10498d0, -0.32500d0, -0.0047584d0 /), &
+   b(3)  = (/3.72744d0, 7.06042d0, 1.13107d0 /), &
+   c(3)  = (/ 12.9352d0, 18.0578d0, 13.0045d0 /),&
+   Q(3)  = (/ 6.15199081975908d0, 4.73092690956011d0, 7.12310891781812d0 /), &
+   tbQ(3) = (/ 1.21178334272806d0, 2.98479352354082d0, 0.31757762321188d0 /), &
+   fx0(3) = (/ 12.5549141492d0, 15.8687885d0, 12.99914055888256d0 /), &
+   bx0fx0(3) = (/ -0.03116760867894d0, -0.14460061018521d0, -0.00041403379428d0 /)
+
+   REAL(DP) :: sqx, xx0, Qtxb, atg, fx
+   REAL(DP) :: txb, txbfx, itxbQ
+   !
+   sqx = x * x                          ! x^2 = r_s
+   xx0 = x - x0(i)                      ! x - x_0
+   Qtxb = Q(i) / (2.0_DP*x + b(i))      ! Q / (2x+b)
+   atg = ATAN(Qtxb)                     ! tan^-1(Q/(2x+b))
+   fx = sqx + b(i)*x + c(i)             ! X(x) = x^2 + b*x + c
+   !
+   fit = A(i) * (  LOG(sqx/fx) + tbQ(i)*atg - &
+       bx0fx0(i) * ( LOG(xx0*xx0/fx) + (tbQ(i) + 4.0_DP*x0(i)/Q(i)) * atg )  )
+   !
+   txb = 2.0_DP*x + b(i)
+   txbfx = txb / fx
+   itxbQ = 1.0_DP / (txb*txb + Q(i)*Q(i))
+   !
+   dfit = fit - A(i) / 3.0_DP + A(i)*x/6.0_DP * (  txbfx + 4.0_DP*b(i)*itxbQ + &
+           bx0fx0(i) * ( 2.0_DP/xx0 - txbfx - 4.0_DP*(b(i)+2.0_DP*x0(i))*itxbQ )  )
+   !
+END SUBROUTINE
+SUBROUTINE padefit_ParSet2( x, i, fit, dfit )                           !<GPU:DEVICE>
+   !----
+   !! It implements formula [4.4] in:
+   !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
+   !
+   USE kinds, ONLY: DP
+   !
+   IMPLICIT NONE
+   !
+   REAL(DP) :: x
+   !! input: x is SQRT(r_s)
+   INTEGER :: i
+   !! input: i is the index of the fit
+   REAL(DP) :: fit
+   !! output: Pade fit calculated in x [eq. 4.4]
+   REAL(DP) :: dfit
+   !! output: dfit/drho = fit - (rs/3)*dfit/drs = ec - (x/6)*dfit/dx
+   !
+   ! ... local variables
+   !
+   REAL(DP), PARAMETER :: &
+      A(3)  = (/  0.0310907_DP, 0.01554535_DP, -0.01688686394039_DP /), &
+      x0(3) = (/ -0.409286_DP, -0.743294_DP,   -0.228344_DP /), &
+      b(3)  = (/ 13.0720_DP,   20.1231_DP,      1.06835_DP  /), &
+      c(3)  = (/ 42.7198_DP,  101.578_DP,      11.4813_DP /),&
+      Q(3)  = (/  0.044899888641577_DP,      1.171685277708971_DP,  6.692072046645942_DP /), &
+      tbQ(3) = (/ 582.273159042780890_DP,   34.348984975465861_DP,  0.319288254087299_DP /), &
+      fx0(3) = (/ 37.537128437796000_DP,    87.173106479036008_DP, 11.289489669936000_DP /), &
+      bx0fx0(3) = (/ -0.142530524167984_DP, -0.171582499414508_DP, -0.021608710360898_DP /)
+
+   REAL(DP) :: sqx, xx0, Qtxb, atg, fx
+   REAL(DP) :: txb, txbfx, itxbQ
+   !
+   sqx = x * x                          ! x^2 = r_s
+   xx0 = x - x0(i)                      ! x - x_0
+   Qtxb = Q(i) / (2.0_DP*x + b(i))      ! Q / (2x+b)
+   atg = ATAN(Qtxb)                     ! tan^-1(Q/(2x+b))
+   fx = sqx + b(i)*x + c(i)             ! X(x) = x^2 + b*x + c
+   !
+   fit = A(i) * (  LOG(sqx/fx) + tbQ(i)*atg - &
+       bx0fx0(i) * ( LOG(xx0*xx0/fx) + (tbQ(i) + 4.0_DP*x0(i)/Q(i)) * atg )  )
+   !
+   txb = 2.0_DP*x + b(i)
+   txbfx = txb / fx
+   itxbQ = 1.0_DP / (txb*txb + Q(i)*Q(i))
+   !
+   dfit = fit - A(i) / 3.0_DP + A(i)*x/6.0_DP * (  txbfx + 4.0_DP*b(i)*itxbQ + &
+           bx0fx0(i) * ( 2.0_DP/xx0 - txbfx - 4.0_DP*(b(i)+2.0_DP*x0(i))*itxbQ )  )
    !
 END SUBROUTINE
 !
 !
 !-----------------------------------------------------------------------------------------
-SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc )
+SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
    !---------------------------------------------------------------------------------------
    !
    USE kinds, ONLY: DP
@@ -707,14 +771,14 @@ SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc )
    !! Wigner-Seitz radius
    REAL(DP), INTENT(IN) :: zeta
    !! zeta = (rho_up - rho_dw)/rho_tot
-   REAL(DP), INTENT(OUT) :: ec 
+   REAL(DP), INTENT(OUT) :: ec
    !! correlation energy
-   REAL(DP), INTENT(OUT) :: vc(2)
+   REAL(DP), INTENT(OUT) :: vc_up, vc_dw
    !! correlation potential (up, down)
    !
    ! ... local variables
    !
-   REAL(DP) :: zeta3, zeta4, trup, trdw, trup13, trdw13, fz, dfz, fzz4 
+   REAL(DP) :: zeta3, zeta4, trup, trdw, trup13, trdw13, fz, dfz, fzz4
    REAL(DP) :: SQRTrs, ecP, ecF, ac, De, vcP, vcF, dac, dec1, dec2
    REAL(DP) :: cfz, cfz1, cfz2, iddfz0
    !
@@ -751,9 +815,9 @@ SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc )
    fz = cfz1 * (trup13*trup + trdw13*trdw - 2.0_DP)     ! f(zeta)
    dfz = cfz2 * (trup13 - trdw13)                       ! df / dzeta
    !
-   CALL padefit( sqrtrs, 1, ecP, vcP )                  ! ecF = e_c Paramagnetic
-   CALL padefit( sqrtrs, 2, ecF, vcF )                  ! ecP = e_c Ferromagnetic
-   CALL padefit( sqrtrs, 3, ac,  dac )                  ! ac = "spin stiffness"
+   CALL padefit_ParSet2( sqrtrs, 1, ecP, vcP ) ! ecF = e_c Paramagnetic    !<GPU:padefit_ParSet2=>padefit_ParSet2_d>
+   CALL padefit_ParSet2( sqrtrs, 2, ecF, vcF ) ! ecP = e_c Ferromagnetic   !<GPU:padefit_ParSet2=>padefit_ParSet2_d>
+   CALL padefit_ParSet2( sqrtrs, 3, ac,  dac ) ! ac = "spin stiffness"     !<GPU:padefit_ParSet2=>padefit_ParSet2_d>
    !
    ac = ac * iddfz0
    dac = dac * iddfz0
@@ -764,58 +828,14 @@ SUBROUTINE vwn1_rpa_spin( rs, zeta, ec, vc )
    dec1 = vcP + dac*fz + (vcF - vcP - dac) * fzz4       ! e_c - (r_s/3)*(de_c/dr_s)
    dec2 = ac*dfz + De*(4.0_DP*zeta3*fz + zeta4*dfz)     ! de_c/dzeta
    !
-   vc(1) = dec1 + (1.0_DP - zeta)*dec2                  ! v_c[s] = e_c - (r_s/3)*(de_c/dr_s)
-   vc(2) = dec1 - (1.0_DP + zeta)*dec2                  !          +[sign(s)-zeta]*(de_c/dzeta)
-   !
-   !
-  CONTAINS
-   !---
-   SUBROUTINE padefit( x, i, fit, dfit )
-      !----
-      !! It implements formula [4.4] in:
-      !! S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
-      !
-      USE kinds, ONLY: DP
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP) :: x
-      !! input: x is SQRT(r_s) 
-      INTEGER :: i
-      !! input: i is the index of the fit
-      REAL(DP) :: fit
-      !! output: Pade fit calculated in x [eq. 4.4]
-      REAL(DP) :: dfit
-      !! output: dfit/drho = fit - (rs/3)*dfit/drs = ec - (x/6)*dfit/dx
-      !
-      ! ... local variables
-      !
-      REAL(DP) :: sqx, xx0, Qtxb, atg, fx
-      REAL(DP) :: txb, txbfx, itxbQ
-      !
-      sqx = x * x                          ! x^2 = r_s
-      xx0 = x - x0(i)                      ! x - x_0
-      Qtxb = Q(i) / (2.0_DP*x + b(i))      ! Q / (2x+b)
-      atg = ATAN(Qtxb)                     ! tan^-1(Q/(2x+b))
-      fx = sqx + b(i)*x + c(i)             ! X(x) = x^2 + b*x + c
-      !
-      fit = A(i) * (  LOG(sqx/fx) + tbQ(i)*atg - &
-            bx0fx0(i) * ( LOG(xx0*xx0/fx) + (tbQ(i) + 4.0_DP*x0(i)/Q(i)) * atg )  )
-      !
-      txb = 2.0_DP*x + b(i)
-      txbfx = txb / fx
-      itxbQ = 1.0_DP / (txb*txb + Q(i)*Q(i))
-      !
-      dfit = fit - A(i) / 3.0_DP + A(i)*x/6.0_DP * (  txbfx + 4.0_DP*b(i)*itxbQ + &
-              bx0fx0(i) * ( 2.0_DP/xx0 - txbfx - 4.0_DP*(b(i)+2.0_DP*x0(i))*itxbQ )  )
-      !
-   END SUBROUTINE
+   vc_up = dec1 + (1.0_DP - zeta)*dec2                  ! v_c[s] = e_c - (r_s/3)*(de_c/dr_s)
+   vc_dw = dec1 - (1.0_DP + zeta)*dec2                  !          +[sign(s)-zeta]*(de_c/dzeta)
    !
 END SUBROUTINE
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pw_spin( rs, zeta, ec, vc )
+SUBROUTINE pw_spin( rs, zeta, ec, vc_up, vc_dw )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! J.P. Perdew and Y. Wang, PRB 45, 13244 (1992).
   !
@@ -827,9 +847,9 @@ SUBROUTINE pw_spin( rs, zeta, ec, vc )
   !! Wigner-Seitz radius
   REAL(DP), INTENT(IN) :: zeta
   !! zeta = (rho_up - rho_dw)/rho_tot
-  REAL(DP), INTENT(OUT) :: ec 
+  REAL(DP), INTENT(OUT) :: ec
   !! correlation energy
-  REAL(DP), INTENT(OUT) :: vc(2)
+  REAL(DP), INTENT(OUT) :: vc_up, vc_dw
   !! correlation potential (up, down)
   !
   ! ... local variables
@@ -908,12 +928,12 @@ SUBROUTINE pw_spin( rs, zeta, ec, vc )
   ec = epwc + alpha * fz * (1.d0 - zeta4) / fz0 + (epwcp - epwc) &
               * fz * zeta4
   !
-  vc(1) = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+  vc_up = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
                  * fz * zeta4 + (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
                  zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
                  * (1.d0 - zeta)
   !
-  vc(2) = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+  vc_dw = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
                  * fz * zeta4 - (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
                  zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
                  * (1.d0 + zeta)
@@ -924,7 +944,7 @@ END SUBROUTINE pw_spin
 !
 !
 !-----------------------------------------------------------------------------
-SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp )
+SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp_up, vlyp_dw )                    !<GPU:DEVICE>
   !==--------------------------------------------------------------==
   !==  C. LEE, W. YANG, AND R.G. PARR, PRB 37, 785 (1988)          ==
   !==  THIS IS ONLY THE LDA PART                                   ==
@@ -938,9 +958,9 @@ SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp )
   !! total charge density
   REAL(DP), INTENT(IN) :: zeta
   !! zeta = (rho_up - rho_dw)/rho_tot
-  REAL(DP), INTENT(OUT) :: elyp 
+  REAL(DP), INTENT(OUT) :: elyp
   !! correlation energy
-  REAL(DP), INTENT(OUT) :: vlyp(2)
+  REAL(DP), INTENT(OUT) :: vlyp_up, vlyp_dw
   !! correlation potential (up, down)
   !
   ! ... local variables
@@ -973,10 +993,12 @@ SUBROUTINE lsd_lyp( rho, zeta, elyp, vlyp )
           rb**(8.d0/3.d0))+or*ra*(11.d0/3.d0*rb**(8.d0/3.d0)+ &
           ra**(8.d0/3.d0)))
   !
-  vlyp(1) = de1a + de2a
-  vlyp(2) = de1b + de2b
+  vlyp_up = de1a + de2a
+  vlyp_dw = de1b + de2b
   !==--------------------------------------------------------------==
   !
   RETURN
   !
 END SUBROUTINE lsd_lyp
+
+END MODULE
