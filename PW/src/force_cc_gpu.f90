@@ -55,7 +55,7 @@ subroutine force_cc_gpu (forcecc)
   complex(DP), pointer :: psic_d(:)
   integer, pointer :: nl_d(:)
   real(DP):: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
-  integer           :: ierr
+  integer           :: ierrs(5)
   integer           :: maxmesh
 #if defined(__CUDA)
   attributes(DEVICE) :: rhocg_d, psic_d, nl_d, r_d, rab_d, rhoc_d 
@@ -91,7 +91,7 @@ subroutine force_cc_gpu (forcecc)
      enddo
   endif
   deallocate (vxc)
-  CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierr)
+  CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierrs(1))
   CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr /) )
   CALL fwfft ('Rho', psic_d, dfftp)
   !
@@ -99,10 +99,11 @@ subroutine force_cc_gpu (forcecc)
   !
   allocate ( rhocg(ngl) )
   maxmesh = MAXVAL(msh(1:ntyp)) 
-  CALL dev_buf%lock_buffer(rhocg_d, ngl, ierr )
-  CALL dev_buf%lock_buffer(r_d, maxmesh, ierr)
-  CALL dev_buf%lock_buffer(rab_d, maxmesh, ierr )
-  CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierr )   
+  CALL dev_buf%lock_buffer(rhocg_d, ngl, ierrs(2) )
+  CALL dev_buf%lock_buffer(r_d, maxmesh, ierrs(3) )
+  CALL dev_buf%lock_buffer(rab_d, maxmesh, ierrs(4) )
+  CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierrs(5) )
+  IF (ANY(ierrs /= 0)) CALL errore('force_cc_gpu', 'cannot allocate buffers', -1)
   !
   ! core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
   ! g = 0 term gives no contribution
@@ -151,11 +152,11 @@ subroutine force_cc_gpu (forcecc)
   !
   call mp_sum(  forcecc, intra_bgrp_comm )
   !
-  CALL dev_buf%release_buffer(rhocg_d, ierr )
-  CALL dev_buf%release_buffer(psic_d, ierr )
-  CALL dev_buf%release_buffer(r_d, ierr) 
-  CALL dev_buf%release_buffer(rab_d, ierr)
-  CALL dev_buf%release_buffer(rhoc_d, ierr) 
+  CALL dev_buf%release_buffer(rhocg_d, ierrs(1) )
+  CALL dev_buf%release_buffer(psic_d, ierrs(2) )
+  CALL dev_buf%release_buffer(r_d, ierrs(3) )
+  CALL dev_buf%release_buffer(rab_d, ierrs(4) )
+  CALL dev_buf%release_buffer(rhoc_d, ierrs(5) )
   !
   return
 end subroutine force_cc_gpu
