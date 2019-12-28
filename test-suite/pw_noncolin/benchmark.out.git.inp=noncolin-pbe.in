@@ -1,16 +1,3 @@
---------------------------------------------------------------------------
-[[43295,1],2]: A high-performance Open MPI point-to-point messaging module
-was unable to find any relevant network interfaces:
-
-Module: OpenFabrics (openib)
-  Host: bionano2
-
-Another transport will be used instead, although this may result in
-lower performance.
-
-NOTE: You can disable this warning by setting the MCA parameter
-btl_base_warn_component_unused to 0.
---------------------------------------------------------------------------
 
      Program PWSCF v.6.5 starts on 26Dec2019 at 22:28:30 
 

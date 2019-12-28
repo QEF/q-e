@@ -188,13 +188,11 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   ENDIF
   !
   DEALLOCATE( sc, sx )
+  DEALLOCATE( v1c, v2c, v3c )
+  DEALLOCATE( v1x, v2x, v3x )
+  DEALLOCATE( grho2  )
   DEALLOCATE( rhoaux )
   DEALLOCATE( grho   )
-  DEALLOCATE( grho2  )
-  !
-  DEALLOCATE( v1x, v2x, v3x )
-  DEALLOCATE( v1c, v2c, v3c )
-  !
   !
   DO l = 1, 3
      DO m = 1, l - 1
