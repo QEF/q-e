@@ -206,6 +206,7 @@ CONTAINS
     USE scf,           ONLY : rho, rhoz_or_updw
     USE io_global,     ONLY : stdout, ionode
     USE fft_base,      ONLY : dfftp
+    USE fft_types,     ONLY : fft_index_to_3d
     USE cell_base,     ONLY : at, alat, omega
     USE ions_base,     ONLY : nat, tau, atm, ityp, ntyp => nsp
     USE constants,     ONLY : au_gpa
@@ -225,7 +226,7 @@ CONTAINS
     REAL(DP), PARAMETER :: ecut = 1e-11_DP
     !
     INTEGER :: ialloc
-    INTEGER :: i, iat, n, ix, iy, iz, j, jj, iy0, iz0
+    INTEGER :: i, iat, n, ix, iy, iz, j, jj
     REAL(DP), ALLOCATABLE :: gaux(:,:), ggaux(:,:,:), rhoat(:), rhocor(:), rhoae(:)
     REAL(DP), ALLOCATABLE :: lapr(:), gmod(:), avol(:), b(:)
     REAL(DP) :: taus, rhos, ds, qs, rhs, xroot, xshift, xold, expx, gx, fx, ffx
@@ -233,14 +234,14 @@ CONTAINS
     REAL(DP) :: x(3), wei, weic, db, ri, atb(3,3), taub(3)
     REAL(DP) :: xij(3), ehadd(6:10), eat, ee
     INTEGER :: l1, l2, ll, m1, m2
-    LOGICAL :: docalc, lexist
+    LOGICAL :: docalc, lexist, offrange
     REAL(DP) :: a1, a2, rmax, den, den2
     REAL(DP) :: dij2
     REAL(DP) :: rvdwx, dijx, dijxm2, fxx, cn0
     INTEGER :: i3, nn
     REAL(DP) :: for(3,nat), sigma(3,3), sat(3,3)
     INTEGER :: resto, divid, first, last, it
-    INTEGER :: idx, ispin
+    INTEGER :: ispin
     REAL(DP) :: iix, iiy, iiz
 
     INTEGER, EXTERNAL :: atomic_number
@@ -386,18 +387,11 @@ CONTAINS
              nn = msh(it)
              taub = tau(:,iat) * alat
 
-             iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
              DO n = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
                 ! three dimensional indexes
-                idx = n -1
-                iz  = idx / (dfftp%nr1x*dfftp%my_nr2p)
-                idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
-                iz  = iz + iz0
-                iy  = idx / dfftp%nr1x
-                idx = idx - dfftp%nr1x * iy
-                iy  = iy + iy0
-                ix  = idx
-
+                CALL fft_index_to_3d (n, dfftp, ix,iy,iz, offrange)
+                !IF ( offrange ) CYCLE ! NB this was absent before
+                !
                 iix = ix / REAL(dfftp%nr1,DP)
                 iiy = iy / REAL(dfftp%nr2,DP)
                 iiz = iz / REAL(dfftp%nr3,DP)
@@ -771,6 +765,7 @@ CONTAINS
     USE uspp_param,    ONLY : nh, nhm, upf
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
+    USE fft_types,     ONLY : fft_index_to_3d
     USE mp,            ONLY : mp_sum
     USE mp_images,     ONLY : intra_image_comm
     USE io_global,     ONLY : ionode_id
@@ -786,8 +781,9 @@ CONTAINS
     !
     TYPE(paw_info)          :: i
     INTEGER                 :: ipol, ir, is, it, lm
-    INTEGER                 :: j, k, l, j0, k0, idx
+    INTEGER                 :: j, k, l
     INTEGER                 :: ia, il, im, ml, mm
+    LOGICAL                 :: offrange
     REAL(DP),ALLOCATABLE    :: wsp_lm(:,:), ylm_posi(:,:), d1y(:,:), d2y(:,:)
     REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)
     REAL(DP)                :: posi(3), first, second
@@ -879,20 +875,11 @@ CONTAINS
        DEALLOCATE(d1y,d2y)
 
        ALLOCATE(ylm_posi(1,i%l**2))
-       j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+
        rsp_point : DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
           ! three dimensional indices (i,j,k)
-          idx = ir -1
-          k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-          idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-          k   = k + k0
-          j   = idx / dfftp%nr1x
-          idx = idx - dfftp%nr1x * j
-          j   = j + j0
-          l   = idx
-
-          ! ... do not include points outside the physical range!
-          IF ( l >=  dfftp%nr1 .OR. j >=  dfftp%nr2 .OR. k >=  dfftp%nr3 ) CYCLE rsp_point
+          CALL fft_index_to_3d (ir, dfftp, l,j,k, offrange)
+          IF ( offrange ) CYCLE
           !
           DO ipol = 1, 3
              posi(ipol) = DBLE( l )*inv_nr1*at(ipol,1) + &
@@ -949,6 +936,7 @@ CONTAINS
     USE ions_base,  ONLY : ityp, ntyp => nsp
     USE cell_base,  ONLY : at
     USE fft_base,   ONLY : dfftp
+    USE fft_types,  ONLY : fft_index_to_3d
     USE splinelib,  ONLY : splint
     USE cell_base,  ONLY : alat
     !
@@ -961,8 +949,8 @@ CONTAINS
     !
     ! ... local variables
     !
-    INTEGER :: i, it, nn
-    INTEGER :: n, idx, ix, iy, iz, iy0, iz0
+    INTEGER :: i, it, nn, n, ix, iy, iz
+    LOGICAL :: offrange
     REAL(DP) :: x(3), xx(3), r, r2, rrho
 
     CALL start_clock('exdm:rho')
@@ -970,18 +958,11 @@ CONTAINS
     rhot = 0._DP
     rhoc = 0._DP
 
-    iy0 = dfftp%my_i0r2p ; iz0 = dfftp%my_i0r3p
     ! run over the real-space density grid
     DO n = 1, dfftp%nnr
        ! three dimensional indices (i,j,k)
-       idx  = n -1
-       iz   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-       idx  = idx - (dfftp%nr1x*dfftp%my_nr2p)*iz
-       iz   = iz + iz0
-       iy   = idx / dfftp%nr1x
-       idx  = idx - dfftp%nr1x * iy
-       iy   = iy + iy0
-       ix   = idx
+       CALL fft_index_to_3d (n, dfftp, ix,iy,iz, offrange)
+       ! IF ( offrange ) CYCLE ! NB this was absent before
 
        x = ix / REAL(dfftp%nr1,DP) * at(:,1) + iy / REAL(dfftp%nr2,DP) * at(:,2) + &
           iz / REAL(dfftp%nr3,DP) * at(:,3)

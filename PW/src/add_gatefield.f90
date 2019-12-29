@@ -33,6 +33,7 @@ SUBROUTINE add_gatefield( vpoten,etotgatefield,linear,quadratic )
   USE mp_images,     ONLY : intra_image_comm
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dfftp
+  USE fft_types,     ONLY : fft_index_to_3d
   USE mp,            ONLY : mp_bcast, mp_sum
   USE control_flags, ONLY : iverbosity
   
@@ -51,13 +52,13 @@ SUBROUTINE add_gatefield( vpoten,etotgatefield,linear,quadratic )
   !
   ! ... local variables
   !
-  INTEGER :: idx,  i, j, k, j0, k0
+  INTEGER :: i, j, k
   INTEGER :: ir, na, ipol
   REAL(DP) :: value, gatearg, ion_dipole, gateamp, block_size
   REAL(DP) :: bmod, ionic_charge, area, sgn1, zvia, tvectb
   REAL(DP), ALLOCATABLE :: xau(:,:)
 
-  LOGICAL :: first=.TRUE.
+  LOGICAL :: offrange, first=.TRUE.
 
   SAVE first
   
@@ -198,25 +199,15 @@ SUBROUTINE add_gatefield( vpoten,etotgatefield,linear,quadratic )
 
   !
   ! Loop in the charge array
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  !
   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
      ! ... three dimensional indexes
      !     only need k, but compute j and i to check the physical range
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     idx = idx - (dfftp%nr1x*dfftp%nr2x)*k
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x*j
-     i   = idx
-
-     ! ... do not include points outside the physical range
-
-     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
-
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     IF ( offrange ) CYCLE
+     !
      gatearg = DBLE(k)/DBLE(dfftp%nr3)
 
      ! PRB 89, 245406 (2014)

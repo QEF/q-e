@@ -27,10 +27,12 @@ MODULE realus_scatt
    USE uspp,             ONLY : okvan
    USE uspp_param,       ONLY : upf
    USE fft_base,         ONLY : dfftp
+   USE fft_types,        ONLY : fft_index_to_3d
 
    IMPLICIT NONE
 
-   INTEGER  :: ia, ir, mbia, roughestimate, j0, k0, idx, i, j, k, i_lr, ipol
+   INTEGER  :: ia, ir, mbia, roughestimate, i, j, k, i_lr, ipol
+   LOGICAL  :: offrange
    REAL(DP) :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, distsq
    REAL(DP) :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia, posi(3)
 
@@ -60,24 +62,13 @@ MODULE realus_scatt
        IF ( .NOT. upf(ityp(ia))%tvanp ) CYCLE
        mbia = 0
        boxradsq_ia = boxrad(ityp(ia))**2
-       j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
        DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
          !
          ! ... three dimensional indices (i,j,k)
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         i   = idx
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
          !
-         ! ... do not include points outside the physical range 
-         !
-         IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
-
          DO ipol = 1, 3
            posi(ipol) = DBLE( i )*inv_nr1*at(ipol,1) + &
                         DBLE( j )*inv_nr2*at(ipol,2) + &

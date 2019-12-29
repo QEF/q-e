@@ -202,13 +202,15 @@ CONTAINS
     USE mp_bands,         ONLY : me_bgrp
     USE fft_base,         ONLY : dfftp
     USE fft_interfaces,   ONLY : fwfft, invfft
+    USE fft_types,        ONLY : fft_index_to_3d
     USE control_flags,    ONLY : gamma_only_ => gamma_only
     USE gvect,            ONLY : ngm, gg, gstart_ => gstart, ecutrho
     USE cell_base,        ONLY : at, alat, tpiba2, omega
     !
     ! ... local variables
     !
-    INTEGER :: idx, ir, i,j,k, j0, k0, ig, nt
+    INTEGER :: ir, i,j,k, ig, nt
+    LOGICAL :: offrange
     REAL(DP) :: r(3), rws, upperbound, rws2
     COMPLEX (DP), ALLOCATABLE :: aux(:)
     REAL(DP), EXTERNAL :: qe_erfc
@@ -243,23 +245,13 @@ CONTAINS
     !
     ALLOCATE( aux(dfftp%nnr) )
     aux = (0._dp,0._dp)
-    j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+    !
     DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
        !
        ! ... three dimensional indexes
        !
-       idx = ir -1
-       k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-       idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-       k   = k + k0
-       j   = idx / dfftp%nr1x
-       idx = idx - dfftp%nr1x * j
-       j   = j + j0
-       i   = idx
-       !
-       ! ... do not include points outside the physical range
-       !
-       IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
+       CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        r(:) = ( at(:,1)/dfftp%nr1*i + at(:,2)/dfftp%nr2*j + at(:,3)/dfftp%nr3*k )
        !

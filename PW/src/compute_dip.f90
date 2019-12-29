@@ -103,6 +103,7 @@ SUBROUTINE compute_el_dip( emaxpos, eopreg, edir, charge, e_dipole )
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat
   USE fft_base,   ONLY : dfftp
+  USE fft_types,  ONLY : fft_index_to_3d
   USE extfield,   ONLY : saw
   USE mp_bands,   ONLY : me_bgrp, intra_bgrp_comm
   USE mp,         ONLY : mp_sum
@@ -124,9 +125,9 @@ SUBROUTINE compute_el_dip( emaxpos, eopreg, edir, charge, e_dipole )
   !
   REAL(DP), ALLOCATABLE :: rho_all(:), aux(:)
   REAL(DP) :: rhoir,bmod
-  INTEGER  :: i, k, j, ip, ir, idx, j0, k0, na
   REAL(DP) :: sawarg, tvectb
-
+  INTEGER  :: i, k, j, ip, ir, na
+  LOGICAL  :: offrange
   !--------------------------
   !  Fix some values for later calculations
   !--------------------------
@@ -147,24 +148,13 @@ SUBROUTINE compute_el_dip( emaxpos, eopreg, edir, charge, e_dipole )
   e_dipole  = 0.D0
   !
   ! Loop in the charge array
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
+  !
   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     i   = idx
-
-     ! ... do not include points outside the physical range
-
-!     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
-
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     ! IF ( offrange ) CYCLE ! NB this was commented before
      !
      ! Define the argument for the saw function     
      !
