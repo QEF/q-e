@@ -18,9 +18,9 @@ SUBROUTINE summary()
   USE kinds,           ONLY : DP
   USE run_info,        ONLY : title
   USE constants,       ONLY : amu_ry, rytoev
-  USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
+  USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm, wmass
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
-  USE cellmd,          ONLY : calc, cmass
+  USE cellmd,          ONLY : calc
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
   USE gvecs,           ONLY : doublegrid, ngms, ngms_g, gcutms
@@ -204,10 +204,9 @@ SUBROUTINE summary()
   ENDDO
 
   IF (calc.EQ.'cd' .OR. calc.EQ.'cm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') cmass/amu_ry
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') wmass
   IF (calc.EQ.'nd' .OR. calc.EQ.'nm' ) &
-     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') cmass/amu_ry
-
+     WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') wmass
   IF (ANY(starting_charge(:) /= 0.D0)) THEN
      WRITE( stdout, '(/5x,"Starting charge structure ", &
           &      /5x,"atomic species   charge")')

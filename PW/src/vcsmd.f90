@@ -31,10 +31,11 @@ SUBROUTINE vcsmd( conv_ions )
   USE kinds,               ONLY : DP
   USE io_global,           ONLY : stdout
   USE constants,           ONLY : e2, ry_kbar, amu_ry
-  USE cell_base,           ONLY : omega, alat, at, bg, iforceh, fix_volume, fix_area
+  USE cell_base,           ONLY : wmass, omega, alat, at, bg, iforceh, &
+       press, fix_volume, fix_area
   USE ions_base,           ONLY : tau, nat, ntyp => nsp, ityp, atm, if_pos
-  USE cellmd,              ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
-                                  cmass, ntcheck, lmovecell
+  USE cellmd,              ONLY : nzero, ntimes, calc, at_old, omega_old, &
+                                  ntcheck, lmovecell
   USE dynamics_module,     ONLY : dt, temperature
   USE ions_base,           ONLY : amass, if_pos 
   USE relax,               ONLY : epse, epsf, epsp
@@ -63,7 +64,6 @@ SUBROUTINE vcsmd( conv_ions )
   !  at (icar,ivec) = direct Bravais lattice vectors
   !  bg (icar,ivec) = reciprocal lattice vectors
   !  amass_(nt) = mass (in atomic ryd units) for atom of nt-th type
-  !  cmass = cell mass in ryd units.
   !  press = target pressure in ryd/(a.u.)^3
   !
   ! ... local variables
@@ -74,6 +74,7 @@ SUBROUTINE vcsmd( conv_ions )
 #endif
   !
   REAL(DP) :: p,            & ! virial pressure
+                   cmass,   & !  cell mass in Ry units.
                    vcell,        & ! cell volume
                    avec(3,3),    & ! at(3,3) * alat
                    aveci(3,3),   & ! avec at t-dt
@@ -256,6 +257,8 @@ SUBROUTINE vcsmd( conv_ions )
      CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
      !
   END IF
+  !
+  cmass  = wmass * amu_ry
   !
   ! ... save cell shape of previous step
   !
