@@ -16,8 +16,8 @@ SUBROUTINE iosys()
   USE kinds,         ONLY : DP
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc, get_dft_short
-  USE funct,         ONLY: set_exx_fraction, set_screening_parameter
-  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi  
+  USE funct,         ONLY : set_exx_fraction, set_screening_parameter
+  USE control_flags, ONLY : adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
   USE mp_pools,      ONLY : npool
@@ -34,8 +34,9 @@ SUBROUTINE iosys()
                             efield_cart_ => efield_cart, &
                             phase_control
   !
-  USE cell_base,     ONLY : at, alat, omega, bg, &
-                            cell_base_init, init_dofree
+  USE cell_base,     ONLY : at, alat, omega, bg, cell_base_init, init_dofree, &
+                            press_       => press, &
+                            wmass_       => wmass
   !
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
                             ntyp_ => nsp, &
@@ -46,9 +47,8 @@ SUBROUTINE iosys()
   !
   USE run_info,      ONLY : title_ => title
   !
-  USE cellmd,        ONLY : cmass, omega_old, at_old, ntcheck, &
+  USE cellmd,        ONLY : omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &
-                            press_       => press, &
                             calc, lmovecell
   !
   USE dynamics_module, ONLY : control_temp, temperature, thermostat, &
@@ -495,8 +495,6 @@ SUBROUTINE iosys()
   !
   lstres = lmovecell .OR. ( tstress .and. lscf )
   !
-  ! TB
-  ! IF ( tefield .and. ( .not. nosym ) ) THEN
   IF ( tefield .and. ( .not. nosym ) .and. ( .not. gate )) THEN
      nosym = .true.
      WRITE( stdout, &
@@ -1406,8 +1404,6 @@ SUBROUTINE iosys()
   CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
   gamma_only = ( k_points == 'gamma' )
   !
-!  IF ( real_space .AND. .NOT. gamma_only ) &
-!     CALL errore ('iosys', 'Real space only with Gamma point', 1)
   IF ( lelfield .AND. gamma_only ) &
       CALL errore( 'iosys', 'electric fields not available for k=0 only', 1 )
   !
@@ -1422,23 +1418,14 @@ SUBROUTINE iosys()
 #else
      wmass = sum( amass(ityp(:)) )
 #endif
-     !
-     wmass = wmass * amu_ry
      IF ( calc == 'nd' .or. calc == 'nm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
      ELSEIF ( calc == 'cd' .or. calc == 'cm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi
      ENDIF
      !
-     cmass  = wmass
-     !
-  ELSE
-     !
-     ! ... wmass is given in amu, Renata's dynamics uses masses in atomic units
-     !
-     cmass  = wmass * amu_ry
-     !
   ENDIF
+  wmass_ = wmass
   !
   ! ... unit conversion for pressure
   !
@@ -1464,7 +1451,6 @@ SUBROUTINE iosys()
   IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
      CALL check_tempdir( wfc_dir, exst, parallelfs )
   !
-
   ! ... read pseudopotentials (also sets DFT and a few more variables)
   ! ... returns values read from PP files into ecutwfc_pp, ecutrho_pp
   !
@@ -1541,12 +1527,9 @@ SUBROUTINE iosys()
   ! ... and initialize a few other variables
   !
   IF ( lmovecell ) THEN
-     ! The next two lines have been moved before the call to read_conf_from_file:
-     !      at_old    = at
-     !      omega_old = omega
-     IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp
      !
-     IF ( cmass <= 0.D0 ) &
+     IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp
+     IF ( wmass <= 0.D0 ) &
         CALL errore( 'iosys', &
                    & 'vcsmd: a positive value for cell mass is required', 1 )
      !
