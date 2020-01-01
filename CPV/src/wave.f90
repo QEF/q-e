@@ -74,6 +74,7 @@
     use mp_global,          only : intra_bgrp_comm, nbgrp, inter_bgrp_comm
     use gvect, only : gstart
     use wave_base,          only : wave_speed2
+    use mp_world, only: mpime
     !
     IMPLICIT NONE
     !
@@ -88,21 +89,26 @@
     real(DP) :: ftmp
     integer  :: i
 
-    ALLOCATE( emainv( ngw ) )
-    emainv = 1.0d0 / ema0bg
-    ftmp = 1.0d0
-    if( gstart == 2 ) ftmp = 0.5d0
-
     ekincm=0.0d0
-    do i = noff, n + noff - 1
-      ekincm = ekincm + 2.0d0 * wave_speed2( c0(:,i), cm(:,i), emainv, ftmp )
-    end do
-    ekincm = ekincm * emass / ( delt * delt )
+
+    IF( ngw > 0 ) THEN
+
+       ALLOCATE( emainv( ngw ) )
+       emainv = 1.0d0 / ema0bg
+       ftmp = 1.0d0
+       if( gstart == 2 ) ftmp = 0.5d0
+
+       do i = noff, n + noff - 1
+         ekincm = ekincm + 2.0d0 * wave_speed2( c0(:,i), cm(:,i), emainv, ftmp )
+       end do
+       ekincm = ekincm * emass / ( delt * delt )
+       DEALLOCATE( emainv )
+
+    END IF
 
     CALL mp_sum( ekincm, intra_bgrp_comm )
     IF( nbgrp > 1 ) &
        CALL mp_sum( ekincm, inter_bgrp_comm )
-    DEALLOCATE( emainv )
 
     return
   end subroutine elec_fakekine_x
