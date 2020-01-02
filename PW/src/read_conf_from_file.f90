@@ -7,17 +7,14 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE read_conf_from_file( lmovecell, at_old, omega_old, ierr)
+SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, at )
   !-----------------------------------------------------------------------
-  ! FIXME: half of the variables are passed as arguments, half in modules
-  ! FIXME: this routines does two different things
   !
   USE kinds,           ONLY : DP
+  USE constants,       ONLY : eps8
   USE io_global,       ONLY : stdout, ionode, ionode_id
   USE io_files,        ONLY : restart_dir, xmlfile, &
                               psfile, pseudo_dir, pseudo_dir_cur
-  USE ions_base,       ONLY : nat, nsp, ityp, amass, atm, tau
-  USE cell_base,       ONLY : alat, ibrav, at, bg, omega
   USE mp,              ONLY : mp_bcast
   USE mp_images,       ONLY : intra_image_comm
   USE qexsd_module,    ONLY : qexsd_readschema
@@ -29,12 +26,22 @@ SUBROUTINE read_conf_from_file( lmovecell, at_old, omega_old, ierr)
   !
   IMPLICIT NONE
   !
-  LOGICAL,INTENT(in)     :: lmovecell
-  REAL(DP),INTENT(inout) :: at_old(3,3), omega_old
-  INTEGER, INTENT(out)   :: ierr
+  LOGICAL, INTENT(in)    :: stop_on_error
+  INTEGER, INTENT(in)    :: nat
+  INTEGER, INTENT(in)    :: nsp
+  REAL(DP),INTENT(out)   :: at(3,3)
+  REAL(DP),INTENT(inout) :: tau(3,nat)
   !
   TYPE ( output_type) :: output_obj
-  INTEGER :: nat_
+  !
+  INTEGER :: ierr  
+  REAL(dp) :: alat_
+  !
+  CHARACTER (LEN=3) :: atm_(nsp)
+  INTEGER, ALLOCATABLE :: ityp_(:)
+  REAL(dp), ALLOCATABLE :: tau_(:,:)
+  REAL(dp):: amass_(nsp)
+  INTEGER :: nat_, ibrav_
   !
   pseudo_dir_cur = restart_dir () 
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
@@ -44,23 +51,28 @@ SUBROUTINE read_conf_from_file( lmovecell, at_old, omega_old, ierr)
   !
   IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
   CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-  IF ( ierr > 0 ) CALL errore ( 'read_conf_from_file', &
-       'fatal error reading xml file', ierr ) 
+  IF ( ierr > 0 .OR. (ierr < 0 .AND. stop_on_error) ) &
+       CALL errore ( 'read_conf_from_file', &
+       'fatal error reading xml file', ABS(ierr) ) 
   CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
   !
   IF (ierr == 0 ) THEN
+     ! FIXME: what to do with the following data?
+     ! CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
+     !      nsp, atm, amass, PSFILE=psfile, PSEUDO_DIR=pseudo_dir )
+     !IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
      !
-     CALL qexsd_copy_atomic_species ( output_obj%atomic_species, &
-          nsp, atm, amass, PSFILE=psfile, PSEUDO_DIR=pseudo_dir )
-     IF ( pseudo_dir == ' ' ) pseudo_dir=pseudo_dir_cur
      CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
-          atm, nat_, tau, ityp, alat, at(:,1), at(:,2), at(:,3), ibrav )
+          atm_, nat_, tau_, ityp_, alat_, at(:,1), at(:,2), at(:,3), ibrav_ )
      CALL qes_reset (output_obj)
-     IF ( nat_ /= nat ) CALL errore('read_conf_from_file','bad atom number',1)
-     at(:,:) = at(:,:) / alat
-     tau(:,1:nat) = tau(:,1:nat)/alat  
-     CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
-     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+     IF ( nat_ /= nat ) CALL errore('read_conf_from_file','bad number of atoms',1)
+     at(:,:) = at(:,:) / alat_
+     tau_(:,1:nat) = tau_(:,1:nat)/alat_
+     IF ( SUM ( (tau_(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
+        WRITE( stdout, '(5X,"Atomic positions from file used, from input discarded")' )
+        tau(:,1:nat) = tau_(:,1:nat)
+     END IF
+     DEALLOCATE ( tau_, ityp_ )
      !
   ELSE
      !
@@ -71,22 +83,6 @@ SUBROUTINE read_conf_from_file( lmovecell, at_old, omega_old, ierr)
   END IF
   !
   WRITE( stdout, * )
-  !
-  IF ( lmovecell ) THEN
-     !
-     ! ... input value of at and omega (currently stored in xxx_old variables)
-     ! ... must be used to initialize G vectors and other things
-     ! ... swap xxx and xxx_old variables and scale the atomic position to the
-     ! ... input cell shape in order to check the symmetry.
-     !
-     CALL cryst_to_cart( nat, tau, bg, - 1 )
-     CALL dswap( 9, at, 1, at_old,1  )
-     CALL dswap( 1, omega, 1, omega_old, 1 )
-     CALL cryst_to_cart( nat, tau, at, + 1 )
-     !
-     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-     !
-  END IF
   !
   RETURN
   !

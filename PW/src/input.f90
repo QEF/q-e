@@ -47,9 +47,8 @@ SUBROUTINE iosys()
   !
   USE run_info,      ONLY : title_ => title
   !
-  USE cellmd,        ONLY : omega_old, at_old, ntcheck, &
-                            cell_factor_ => cell_factor , &
-                            calc, lmovecell
+  USE cellmd,        ONLY : ntcheck, calc, lmovecell, &
+                            cell_factor_ => cell_factor
   !
   USE dynamics_module, ONLY : control_temp, temperature, thermostat, &
                               dt_         => dt, &
@@ -325,7 +324,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
+  INTEGER  :: ia, nt, inlc, ibrav_sg
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
   !
@@ -758,7 +757,8 @@ SUBROUTINE iosys()
   CASE( 'from_scratch' )
      !
      restart        = .false.
-     IF ( lscf ) THEN
+     IF ( lscf .OR. lforcet ) THEN
+        ! FIXME: why the lforcet case is different?
         startingconfig = 'input'
      ELSE
         startingconfig = 'file'
@@ -1383,21 +1383,9 @@ SUBROUTINE iosys()
      wfc_dir = tmp_dir
   ENDIF
   !
-  at_old    = at
-  omega_old = omega
+  ! ... Convert atomic positions (tau) to internal units
   !
-  ! ... Read atomic positions and unit cell from data file, if needed,
-  ! ... overwriting what has just been read before from input
-  ! ... read_conf_from_file returns 0 if structure successfully read
-  !
-  ierr = 1
-  IF ( startingconfig == 'file' .AND. .NOT. lforcet ) &
-     CALL read_conf_from_file( lmovecell, at_old, omega_old, ierr )
-  !
-  ! ... Atomic positions (tau) must be converted to internal units
-  ! ... only if they were read from input, not from file
-  !
-  IF ( ierr /= 0 ) CALL convert_tau ( tau_format, nat_, tau)
+  CALL convert_tau ( tau_format, nat_, tau)
   !
   ! ... set up k-points
   !
