@@ -6,15 +6,22 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+
+
+MODULE exch_lda  !<GPU:exch_lda=>exch_lda_gpu>
+!
+!! Module containing LDA functionals.
+!
+CONTAINS
 !-----------------------------------------------------------------------
-SUBROUTINE slater( rs, ex, vx )
+SUBROUTINE slater( rs, ex, vx )                  !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3
   !
-  USE kinds,      ONLY: DP
+  USE kinds,  ONLY: DP
   !
   IMPLICIT NONE
-  !! 
+  !!
   REAL(DP), INTENT(IN) :: rs
   !! Wigner-Seitz radius
   REAL(DP), INTENT(OUT) :: ex
@@ -24,10 +31,10 @@ SUBROUTINE slater( rs, ex, vx )
   !
   ! ... local variables
   !
-  REAL(DP), PARAMETER   :: f = -0.687247939924714d0, alpha = 2.0d0/3.0d0
+  REAL(DP), PARAMETER   :: f = -0.687247939924714_DP, alpha = 2.0_DP/3.0_DP
   !                        f = -9/8*(3/2pi)^(2/3)
   ex = f * alpha / rs
-  vx = 4.d0 / 3.d0 * f * alpha / rs
+  vx = 4._DP / 3._DP * f * alpha / rs
   !
   RETURN
   !
@@ -35,9 +42,9 @@ END SUBROUTINE slater
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater1( rs, ex, vx )
+SUBROUTINE slater1( rs, ex, vx )                 !<GPU:DEVICE>
   !---------------------------------------------------------------------
-  !! Slater exchange with alpha=1, corresponding to -1.374/r_s Ry. 
+  !! Slater exchange with alpha=1, corresponding to -1.374/r_s Ry.
   !! Used to recover old results.
   !
   USE kinds,      ONLY: DP
@@ -64,7 +71,7 @@ END SUBROUTINE slater1
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_rxc( rs, ex, vx )
+SUBROUTINE slater_rxc( rs, ex, vx )                 !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3 and Relativistic exchange.
   !
@@ -117,7 +124,7 @@ END SUBROUTINE slater_rxc
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slaterKZK( rs, ex, vx, vol )
+SUBROUTINE slaterKZK( rs, ex, vx, vol )                 !<GPU:DEVICE>
   !---------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
   !! correction.
@@ -132,7 +139,7 @@ SUBROUTINE slaterKZK( rs, ex, vx, vol )
   !! Exchange energy (per unit volume)
   REAL(DP), INTENT(OUT) :: vx
   !! Exchange potential
-  REAL(DP) :: vol
+  REAL(DP) :: vol                                         !<GPU:VALUE>
   !! Finite size volume element
   !
   ! ... local variables
@@ -157,7 +164,7 @@ SUBROUTINE slaterKZK( rs, ex, vx, vol )
      ex = a0 / ga + a1 * ga / dL**2.d0 + a2 * ga**2.d0 / dL**3.d0 ! solids
      vx = ex
      ! ex = a3 * dL**5.d0 / rs**6.d0                           ! molecules
-     ! vx = 3.d0 * ex  
+     ! vx = 3.d0 * ex
   ENDIF
   !
   ex = ry2h * ex    ! Ry to Hartree
@@ -168,10 +175,10 @@ SUBROUTINE slaterKZK( rs, ex, vx, vol )
 END SUBROUTINE slaterKZK
 !
 !
-!  ... LSDA 
+!  ... LSDA
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_spin( rho, zeta, ex, vx )
+SUBROUTINE slater_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! Slater exchange with alpha=2/3, spin-polarized case.
   !
@@ -185,7 +192,7 @@ SUBROUTINE slater_spin( rho, zeta, ex, vx )
   !! zeta = (rho_up - rho_dw) / rho_tot
   REAL(DP), INTENT(OUT) :: ex
   !! exchange energy
-  REAL(DP), INTENT(OUT) :: vx(2)
+  REAL(DP), INTENT(OUT) :: vx_up, vx_dw
   !! exchange potential (up, down)
   !
   ! ... local variables
@@ -198,11 +205,11 @@ SUBROUTINE slater_spin( rho, zeta, ex, vx )
   !
   rho13 = ( (1.d0 + zeta)*rho )**third
   exup = f * alpha * rho13
-  vx(1) = p43 * f * alpha * rho13
+  vx_up = p43 * f * alpha * rho13
   !
   rho13 = ( (1.d0 - zeta)*rho )**third
   exdw = f * alpha * rho13
-  vx(2) = p43 * f * alpha * rho13
+  vx_dw = p43 * f * alpha * rho13
   !
   ex = 0.5d0 * ( (1.d0 + zeta)*exup + (1.d0 - zeta)*exdw)
   !
@@ -212,13 +219,12 @@ END SUBROUTINE slater_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater_rxc_spin( rho, z, ex, vx )
+SUBROUTINE slater_rxc_spin( rho, z, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
   !-----------------------------------------------------------------------
-  !! Slater exchange with alpha=2/3, relativistic exchange case. 
+  !! Slater exchange with alpha=2/3, relativistic exchange case.
   !! Spin-polarized case.
   !
   USE kinds,       ONLY: DP
-  USE constants,   ONLY: pi
   !
   IMPLICIT NONE
   !
@@ -226,15 +232,16 @@ SUBROUTINE slater_rxc_spin( rho, z, ex, vx )
   !! total charge density
   REAL(DP), INTENT(IN) :: z
   !! z = (rho_up - rho_dw) / rho_tot
-  REAL(DP), INTENT(OUT) :: ex 
+  REAL(DP), INTENT(OUT) :: ex
   !! exchange energy
-  REAL(DP), INTENT(OUT) :: vx(2)
+  REAL(DP), INTENT(OUT) :: vx_up, vx_dw
   !! exchange potential (up, down)
   !
   ! ... local variables
   !
   REAL(DP), PARAMETER :: zero=0.D0, one=1.D0, pfive=.5D0, &
-                         opf=1.5D0, C014=0.014D0
+                         opf=1.5D0, C014=0.014D0, &
+                         pi = 3.14159265358979323846D0
   REAL(DP) :: rs, trd, ftrd, tftm, a0, alp, fz, fzp, vxp, xp, &
               beta, sb, alb, vxf, exf
   !
@@ -249,7 +256,7 @@ SUBROUTINE slater_rxc_spin( rho, z, ex, vx )
   !
   IF ( rho <=  zero ) THEN
      ex = zero
-     vx = zero
+     vx_up = zero ; vx_dw=zero
      RETURN
   ELSE
      fz = ((1.d0+z)**ftrd+(1.d0-Z)**ftrd-2.d0)/tftm
@@ -265,20 +272,20 @@ SUBROUTINE slater_rxc_spin( rho, z, ex, vx )
   alb = LOG(beta+SB)
   vxp = vxp * (-pfive + opf * alb / (beta*SB))
   xp = xp * (one-opf*((beta*SB-alb)/beta**2)**2)
-  
+
   vxf = 2.d0**trd*vxp
   exf = 2.d0**trd*xp
-  vx(1) = vxp + fz*(vxf-vxp) + (1.d0-z)*fzp*(exf-xp)
-  vx(2) = vxp + fz*(vxf-vxp) - (1.d0+z)*fzp*(exf-xp)
+  vx_up = vxp + fz*(vxf-vxp) + (1.d0-z)*fzp*(exf-xp)
+  vx_dw = vxp + fz*(vxf-vxp) - (1.d0+z)*fzp*(exf-xp)
   ex    = xp  + fz*(exf-xp)
   !
   RETURN
-  !      
+  !
 END SUBROUTINE slater_rxc_spin
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE slater1_spin( rho, zeta, ex, vx )
+SUBROUTINE slater1_spin( rho, zeta, ex, vx_up, vx_dw )                 !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !     Slater exchange with alpha=2/3, spin-polarized case
   !
@@ -290,9 +297,9 @@ SUBROUTINE slater1_spin( rho, zeta, ex, vx )
   !! total charge density
   REAL(DP), INTENT(IN) :: zeta
   !! zeta = (rho_up - rho_dw) / rho_tot
-  REAL(DP), INTENT(OUT) :: ex 
+  REAL(DP), INTENT(OUT) :: ex
   !! exchange energy
-  REAL(DP), INTENT(OUT) :: vx(2)
+  REAL(DP), INTENT(OUT) :: vx_up, vx_dw
   !! exchange potential (up, down)
   !
   ! ... local variables
@@ -305,11 +312,11 @@ SUBROUTINE slater1_spin( rho, zeta, ex, vx )
   !
   rho13 = ( (1.d0 + zeta) * rho)**third
   exup = f * alpha * rho13
-  vx(1) = p43 * f * alpha * rho13
+  vx_up = p43 * f * alpha * rho13
   !
   rho13 = ( (1.d0 - zeta) * rho)**third
   exdw = f * alpha * rho13
-  vx(2) = p43 * f * alpha * rho13
+  vx_dw = p43 * f * alpha * rho13
   !
   ex = 0.5d0 * ( (1.d0 + zeta) * exup + (1.d0 - zeta) * exdw)
   !
@@ -317,3 +324,5 @@ SUBROUTINE slater1_spin( rho, zeta, ex, vx )
   RETURN
   !
 END SUBROUTINE slater1_spin
+
+END MODULE

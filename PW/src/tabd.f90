@@ -6,12 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-FUNCTION hubbard_occ ( psd )
+FUNCTION hubbard_occ( psd )
   !-----------------------------------------------------------------------
-  !
-  ! This routine is a table (far from being complete) for the total number
-  ! of localized electrons in transition metals or rare earths
-  ! (PPs usually are built on non physical configurations)
+  !! This routine is a table (far from being complete) for the total number
+  !! of localized electrons in transition metals or rare earths (PPs usually
+  !! are built on non physical configurations).
   !
   USE kinds, ONLY: DP
   !
@@ -120,8 +119,8 @@ FUNCTION hubbard_occ ( psd )
         call errore ('hubbard_occ', 'pseudopotential not yet inserted', 1)
      !
   END SELECT
-  
+  !
   RETURN
-
+  !
 END FUNCTION hubbard_occ
 

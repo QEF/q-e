@@ -300,6 +300,86 @@ The following features of the code are tested:
 
 
 #################################################################################################
+# PH tests
+#################################################################################################
+#######################
+# ph_base : Si, C, Ni #
+#######################
+The following features of the code are tested:
+- Calculation of phonon frequencies for insulators and metals, using USPP and PAW
+
+#################
+# ph_metal : Al #
+#################
+The following features of the code are tested:
+- Calculation of phonon frequencies, phonon DOS, el-ph for a nonmagnetic metals, using NCPP
+
+######################
+# ph_U_metal_us : Fe #
+######################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U, using USPP
+
+##########################
+# ph_U_insulator_us : BN #
+##########################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, 
+  with Hubbard U, using USPP
+
+#######################
+# ph_U_metal_paw : Ni #
+#######################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a ferromagnetic metal, with Hubbard U, using PAW
+
+###########################
+# ph_U_insulator_paw : BN #
+###########################
+The following features of the code are tested:
+- Calculation of phonon frequencies for a nonmagnetic insulator, with frac. translations, 
+  with Hubbard U, using PAW
+
+#################################################################################################
+# HP tests
+#################################################################################################
+############################
+# hp_insulator_us : LiCoO2 #
+############################
+The following features of the code are tested:
+- Calculation of U for a nonmagnetic insulator, with USPP
+
+##############################
+# hp_insulator_us_magn : NiO #
+##############################
+The following features of the code are tested:
+- Calculation of U for an antiferromagnetic insulator, with USPP
+
+##########################
+# hp_insulator_paw : BN #
+##########################
+The following features of the code are tested:
+- Calculation of U for a 2D nonmagnetic insulator, with PAW, with fractional translations
+
+################################
+# hp_insulator_paw_magn : CrI3 #
+###############################
+The following features of the code are tested:
+- Calculation of U for a 2D ferromagnetic insulator, with PAW
+
+#########################
+# hp_metal_us_magn : Ni #
+#########################
+The following features of the code are tested:
+- Calculation of U for a ferromagnetic metal, with USPP
+
+##########################
+# hp_metal_paw_magn : Fe #
+##########################
+The following features of the code are tested:
+- Calculation of U for a ferromagnetic metal, with PAW
+
+#################################################################################################
 # EPW tests
 #################################################################################################
 #############################

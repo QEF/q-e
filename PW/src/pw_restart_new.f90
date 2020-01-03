@@ -170,7 +170,7 @@ MODULE pw_restart_new
       !
       !
       !
-      TYPE(output_type) :: output
+      TYPE(output_type)   :: output_obj
       REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr,  gatefield_corr  
       LOGICAL, POINTER    :: optimization_has_converged 
       LOGICAL, TARGET     :: conv_opt  
@@ -228,9 +228,9 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         output%tagname="output"
-         output%lwrite = .TRUE.
-         output%lread  = .TRUE.
+         output_obj%tagname="output"
+         output_obj%lwrite = .TRUE.
+         output_obj%lread  = .TRUE.
          !
 !-------------------------------------------------------------------------------
 ! ... CONVERGENCE_INFO
@@ -256,19 +256,19 @@ MODULE pw_restart_new
                 n_scf_steps_ = n_scf_steps
          END SELECT
          ! 
-            call qexsd_init_convergence_info(output%convergence_info,   &
+            call qexsd_init_convergence_info(output_obj%convergence_info,   &
                         SCf_HAS_CONVERGED = scf_has_converged, &
                         OPTIMIZATION_HAS_CONVERGED = optimization_has_converged,& 
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error/e2,&
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
-            output%convergence_info_ispresent = .TRUE.
+            output_obj%convergence_info_ispresent = .TRUE.
          !
             
 !-------------------------------------------------------------------------------
 ! ... ALGORITHMIC_INFO
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_algorithmic_info(output%algorithmic_info, &
+         CALL qexsd_init_algorithmic_info(output_obj%algorithmic_info, &
               REAL_SPACE_BETA = real_space, REAL_SPACE_Q=tqr , USPP=okvan, PAW=okpaw)
          !
 !-------------------------------------------------------------------------------
@@ -279,24 +279,24 @@ MODULE pw_restart_new
          ! for nspin==1 or contrained magnetization calculations
          !
          IF (noncolin) THEN
-            CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
+            CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm, psfile, &
                  amass, STARTING_MAGNETIZATION = starting_magnetization, &
                  ANGLE1=angle1, ANGLE2=angle2)
          ELSE IF (nspin==2) THEN 
-            CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm, psfile, &
+            CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm, psfile, &
                  amass, STARTING_MAGNETIZATION=starting_magnetization)
          ELSE 
-            CALL qexsd_init_atomic_species(output%atomic_species, nsp, atm,psfile, &
+            CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm,psfile, &
                  amass)
          END IF
-         output%atomic_species%pseudo_dir = TRIM(pseudo_dir)
-         output%atomic_species%pseudo_dir_ispresent = .TRUE.
+         output_obj%atomic_species%pseudo_dir = TRIM(pseudo_dir)
+         output_obj%atomic_species%pseudo_dir_ispresent = .TRUE.
          !
 !-------------------------------------------------------------------------------
 ! ... ATOMIC_STRUCTURE
 !-------------------------------------------------------------------------------
          !         
-         CALL qexsd_init_atomic_structure(output%atomic_structure, nsp, atm, ityp, &
+         CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp, &
               nat, alat*tau, alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), ibrav)
          !
 !-------------------------------------------------------------------------------
@@ -330,16 +330,16 @@ MODULE pw_restart_new
                END DO symmetries_loop
             END IF
          END IF
-         CALL qexsd_init_symmetries(output%symmetries, nsym, nrot, spacegroup,&
+         CALL qexsd_init_symmetries(output_obj%symmetries, nsym, nrot, spacegroup,&
               s, ft, sname, t_rev, nat, irt,symop_2_class(1:nrot), verbosity, &
               noncolin)
-         output%symmetries_ispresent=.TRUE. 
+         output_obj%symmetries_ispresent=.TRUE. 
          !
 !-------------------------------------------------------------------------------
 ! ... BASIS SET
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_basis_set(output%basis_set, gamma_only, ecutwfc/e2, ecutwfc*dual/e2, &
+         CALL qexsd_init_basis_set(output_obj%basis_set, gamma_only, ecutwfc/e2, ecutwfc*dual/e2, &
               dfftp%nr1, dfftp%nr2, dfftp%nr3, dffts%nr1, dffts%nr2, dffts%nr3, &
               .FALSE., dfftp%nr1, dfftp%nr2, dfftp%nr3, ngm_g, ngms_g, npwx_g, &
               bg(:,1), bg(:,2), bg(:,3) )
@@ -440,7 +440,7 @@ MODULE pw_restart_new
          dft_name = get_dft_short()
          inlc = get_inlc()
          !
-         CALL qexsd_init_dft  (output%dft, dft_name, hybrid_obj, vdw_obj, dftU_obj)
+         CALL qexsd_init_dft  (output_obj%dft, dft_name, hybrid_obj, vdw_obj, dftU_obj)
          IF (ASSOCIATED (hybrid_obj)) THEN
             CALL qes_reset(hybrid_obj) 
             DEALLOCATE (hybrid_obj) 
@@ -459,7 +459,7 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------
          !
          IF (ANY([do_makov_payne, do_comp_mt, do_comp_esm, do_cutoff_2D]))  THEN
-            output%boundary_conditions_ispresent=.TRUE.
+            output_obj%boundary_conditions_ispresent=.TRUE.
             IF (do_makov_payne) THEN 
                pbc_label = 'makov_payne' 
             ELSE IF ( do_comp_mt) THEN 
@@ -471,14 +471,14 @@ MODULE pw_restart_new
             ELSE 
                CALL errore ('pw_restart_new.f90: ', 'internal error line 470', 1) 
             END IF 
-            CALL qexsd_init_outputPBC(output%boundary_conditions, TRIM(pbc_label) )  
+            CALL qexsd_init_outputPBC(output_obj%boundary_conditions, TRIM(pbc_label) )  
          ENDIF
          !
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_magnetization(output%magnetization, lsda, noncolin, lspinorb, &
+         CALL qexsd_init_magnetization(output_obj%magnetization, lsda, noncolin, lspinorb, &
               magtot, magtot_nc, absmag, domag )
          !
 
@@ -535,13 +535,13 @@ MODULE pw_restart_new
                smear_obj = qexsd_input_obj%bands%smearing
             ELSE
                smearing_loc = schema_smearing( smearing )
-               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss)
+               CALL qexsd_init_smearing(smear_obj, smearing_loc, degauss/e2)
             END IF  
             smear_obj_ptr => smear_obj  
          END IF 
          !  
             
-         CALL qexsd_init_band_structure(  output%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
+         CALL qexsd_init_band_structure(  output_obj%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
                                  et, wg, nkstot, xk, ngk_g, wk, SMEARING = smear_obj_ptr,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
                                  WF_COLLECTED = wf_collect, NBND = nbnd, FERMI_ENERGY = ef_point, EF_UPDW = ef_updw,& 
@@ -574,11 +574,11 @@ MODULE pw_restart_new
             itemp = itemp +1 
             temp(itemp) = ef * tot_charge/e2
             potstat_corr => temp(itemp) 
-            output%FCP_tot_charge_ispresent = .TRUE.
-            output%FCP_tot_charge = tot_charge
-            output%FCP_force_ispresent = .TRUE.
+            output_obj%FCP_tot_charge_ispresent = .TRUE.
+            output_obj%FCP_tot_charge = tot_charge
+            output_obj%FCP_force_ispresent = .TRUE.
             !FIXME ( decide what units to use here ) 
-            output%FCP_force = fcp_mu - ef 
+            output_obj%FCP_force = fcp_mu - ef 
          END IF 
          IF ( gate) THEN
             itemp = itemp + 1 
@@ -586,7 +586,7 @@ MODULE pw_restart_new
             gatefield_corr => temp(itemp)  
          END IF
 
-         CALL  qexsd_init_total_energy(output%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
+         CALL  qexsd_init_total_energy(output_obj%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
                                        etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
                                        gatefield_corr, DISPERSION_CONTRIBUTION = vdw_term_pt) 
          !
@@ -598,27 +598,27 @@ MODULE pw_restart_new
 !----------------------------------------------------------------------------------------------
          !
          IF ( lforce ) THEN 
-            output%forces_ispresent = .TRUE.
-            CALL qexsd_init_forces(output%forces,nat,force,lforce)
+            output_obj%forces_ispresent = .TRUE.
+            CALL qexsd_init_forces(output_obj%forces,nat,force,lforce)
          ELSE 
-            output%forces_ispresent = .FALSE.
-            output%forces%lwrite = .FALSE.  
+            output_obj%forces_ispresent = .FALSE.
+            output_obj%forces%lwrite = .FALSE.  
          END IF 
          !
 !------------------------------------------------------------------------------------------------
 ! ... STRESS 
 !------------------------------------------------------------------------------------------------
          IF ( lstres) THEN
-            output%stress_ispresent=.TRUE.
-            CALL qexsd_init_stress(output%stress, sigma, lstres ) 
+            output_obj%stress_ispresent=.TRUE.
+            CALL qexsd_init_stress(output_obj%stress, sigma, lstres ) 
          ELSE 
-            output%stress_ispresent=.FALSE.
-            output%stress%lwrite=.FALSE.
+            output_obj%stress_ispresent=.FALSE.
+            output_obj%stress%lwrite=.FALSE.
          END IF
 !-------------------------------------------------------------------------------------------------
 ! ... ELECTRIC FIELD
 !-------------------------------------------------------------------------------------------------
-         output%electric_field_ispresent = ( gate .OR. lelfield .OR. lberry .OR. tefield ) 
+         output_obj%electric_field_ispresent = ( gate .OR. lelfield .OR. lberry .OR. tefield ) 
 
          IF ( gate ) THEN 
             CALL qexsd_init_gate_info(gate_info_temp,"gateInfo", etotgatefield/e2, zgate, nelec, &
@@ -636,8 +636,8 @@ MODULE pw_restart_new
             dipol_ptr => dipol_obj
          END IF
          IF ( lberry ) bp_obj_ptr => qexsd_bp_obj
-         IF (output%electric_field_ispresent) &
-            CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
+         IF (output_obj%electric_field_ispresent) &
+            CALL qexsd_init_outputElectricField(output_obj%electric_field, lelfield, tefield, dipfield, &
                  lberry, BP_OBJ = bp_obj_ptr, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
                  GATEINFO = gate_info_ptr, DIPOLE_OBJ =  dipol_ptr) 
          ! 
@@ -656,8 +656,8 @@ MODULE pw_restart_new
  10      CONTINUE
          !
          CALL qexsd_openschema( xmlfile(), iunpun, 'PWSCF', title )
-         CALL qes_write (qexsd_xf,output)
-         CALL qes_reset (output) 
+         CALL qes_write (qexsd_xf,output_obj)
+         CALL qes_reset (output_obj) 
          CALL qexsd_closeschema()
          !
 !-------------------------------------------------------------------------------
@@ -919,7 +919,8 @@ MODULE pw_restart_new
       USE cell_base,       ONLY : alat, at, bg, ibrav, celldm, omega
       USE force_mod,       ONLY : force
       USE klist,           ONLY : nks, nkstot, xk, wk, tot_magnetization, &
-           nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra
+           nelec, nelup, neldw, smearing, degauss, ngauss, lgauss, ltetra,&
+           two_fermi_energies
       USE ktetra,          ONLY : ntetra, tetra_type
       USE start_k,         ONLY : nks_start, xk_start, wk_start, &
            nk1, nk2, nk3, k1, k2, k3
@@ -1051,6 +1052,7 @@ MODULE pw_restart_new
       ef = ef*e2
       ef_up = ef_up*e2
       ef_dw = ef_dw*e2
+      two_fermi_energies = ( ef_up /= 0.0_dp ) .AND. ( ef_dw /= 0.0_dp )
       et(:,:) = et(:,:)*e2
       !
       ! ... until pools are activated, the local number of k-points nks
@@ -1069,13 +1071,13 @@ MODULE pw_restart_new
       CALL qexsd_copy_kpoints( output_obj%band_structure, &
            nks_start, xk_start, wk_start, nk1, nk2, nk3, k1, k2, k3, &
            occupations, smearing, degauss )
+      degauss = degauss * e2 
       !
       CALL set_occupations( occupations, smearing, degauss, &
            lfixed, ltetra, tetra_type, lgauss, ngauss )
       IF (ltetra) ntetra = 6* nk1 * nk2 * nk3 
       IF (lfixed) CALL errore('read_file','bad occupancies',1)
-      ! FIXME: is this really needed? do we use nelup and neldw?
-      IF ( lfixed .AND. lsda ) &
+      IF ( lsda ) &
            CALL set_nelup_neldw(tot_magnetization, nelec, nelup, neldw) 
       !! Symmetry section
       ALLOCATE ( irt(48,nat) )

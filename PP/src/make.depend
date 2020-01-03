@@ -89,6 +89,7 @@ bands.o : ../../Modules/uspp.o
 bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
 bands.o : ../../UtilXlib/mp.o
+benchmark_libxc.o : ../../Modules/correlation_lda_lsda.o
 benchmark_libxc.o : ../../Modules/funct.o
 benchmark_libxc.o : ../../Modules/libxc.o
 benchmark_libxc.o : ../../Modules/xc_gga_drivers.o
@@ -230,7 +231,6 @@ fermi_proj.o : ../../Modules/kind.o
 fermi_proj.o : ../../Modules/mp_global.o
 fermi_proj.o : ../../Modules/mp_world.o
 fermi_proj.o : ../../PW/src/atomic_wfc_mod.o
-fermi_proj.o : ../../PW/src/pw_restart_new.o
 fermi_proj.o : ../../PW/src/pwcom.o
 fermi_proj.o : ../../PW/src/start_k.o
 fermi_proj.o : ../../UtilXlib/mp.o
@@ -256,7 +256,6 @@ fermisurface.o : ../../Modules/io_global.o
 fermisurface.o : ../../Modules/kind.o
 fermisurface.o : ../../Modules/mp_global.o
 fermisurface.o : ../../Modules/mp_world.o
-fermisurface.o : ../../PW/src/pw_restart_new.o
 fermisurface.o : ../../PW/src/pwcom.o
 fermisurface.o : ../../PW/src/start_k.o
 fermisurface.o : ../../PW/src/symm_base.o
@@ -476,6 +475,7 @@ ppacf.o : ../../FFTXlib/fft_interfaces.o
 ppacf.o : ../../Modules/cell_base.o
 ppacf.o : ../../Modules/constants.o
 ppacf.o : ../../Modules/environment.o
+ppacf.o : ../../Modules/exchange_lda_lsda.o
 ppacf.o : ../../Modules/fft_base.o
 ppacf.o : ../../Modules/funct.o
 ppacf.o : ../../Modules/gvecw.o
@@ -513,8 +513,6 @@ projwfc.o : ../../Modules/command_line_options.o
 projwfc.o : ../../Modules/constants.o
 projwfc.o : ../../Modules/control_flags.o
 projwfc.o : ../../Modules/environment.o
-projwfc.o : ../../Modules/fft_base.o
-projwfc.o : ../../Modules/gvecw.o
 projwfc.o : ../../Modules/io_files.o
 projwfc.o : ../../Modules/io_global.o
 projwfc.o : ../../Modules/ions_base.o
@@ -528,7 +526,6 @@ projwfc.o : ../../Modules/noncol.o
 projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/paw_variables.o
 projwfc.o : ../../Modules/recvec.o
-projwfc.o : ../../Modules/run_info.o
 projwfc.o : ../../Modules/uspp.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
@@ -538,7 +535,6 @@ projwfc.o : ../../PW/src/start_k.o
 projwfc.o : ../../PW/src/symm_base.o
 projwfc.o : ../../PW/src/tetra.o
 projwfc.o : ../../UtilXlib/mp.o
-projwfc.o : ../../iotk/src/iotk_module.o
 projwfc.o : projections_mod.o
 projwfc_box.o : ../../FFTXlib/fft_interfaces.o
 projwfc_box.o : ../../FFTXlib/scatter_mod.o
@@ -919,16 +915,23 @@ write_p_avg.o : ../../PW/src/ldaU.o
 write_p_avg.o : ../../PW/src/pwcom.o
 write_p_avg.o : ../../UtilXlib/mp.o
 write_proj.o : ../../Modules/cell_base.o
+write_proj.o : ../../Modules/fft_base.o
+write_proj.o : ../../Modules/gvecw.o
 write_proj.o : ../../Modules/io_files.o
+write_proj.o : ../../Modules/ions_base.o
 write_proj.o : ../../Modules/kind.o
 write_proj.o : ../../Modules/noncol.o
+write_proj.o : ../../Modules/recvec.o
+write_proj.o : ../../Modules/run_info.o
 write_proj.o : ../../PW/src/atomic_wfc_mod.o
 write_proj.o : ../../PW/src/pwcom.o
 write_proj.o : ../../iotk/src/iotk_module.o
+write_proj.o : projections_mod.o
 xc_vdW_scale_mod.o : ../../FFTXlib/fft_interfaces.o
 xc_vdW_scale_mod.o : ../../Modules/cell_base.o
 xc_vdW_scale_mod.o : ../../Modules/constants.o
 xc_vdW_scale_mod.o : ../../Modules/control_flags.o
+xc_vdW_scale_mod.o : ../../Modules/correlation_lda_lsda.o
 xc_vdW_scale_mod.o : ../../Modules/fft_base.o
 xc_vdW_scale_mod.o : ../../Modules/io_global.o
 xc_vdW_scale_mod.o : ../../Modules/kind.o

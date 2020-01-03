@@ -54,6 +54,7 @@ SUBROUTINE add_efield( vpoten, etotefield, rho, iflag )
   USE mp_images,     ONLY: intra_image_comm
   USE mp_bands,      ONLY: me_bgrp
   USE fft_base,      ONLY: dfftp
+  USE fft_types,     ONLY: fft_index_to_3d
   USE mp,            ONLY: mp_bcast, mp_sum
   USE control_flags, ONLY: iverbosity
   !
@@ -70,11 +71,11 @@ SUBROUTINE add_efield( vpoten, etotefield, rho, iflag )
   !
   ! ... local variables
   !
-  INTEGER :: idx,  i, j, k, j0, k0
+  INTEGER :: i, j, k
   INTEGER :: ir, na, ipol
   REAL(DP) :: length, vamp, value, sawarg, bmod
   !
-  LOGICAL :: first=.TRUE.
+  LOGICAL :: offrange, first=.TRUE.
   SAVE first
   !
   !---------------------
@@ -214,25 +215,13 @@ SUBROUTINE add_efield( vpoten, etotefield, rho, iflag )
   !
   ! Loop in the charge array
   !
-  j0 = dfftp%my_i0r2p
-  k0 = dfftp%my_i0r3p
   !
   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     i   = idx
-     !
-     ! ... do not include points outside the physical range
-     !
-     IF ( i >= dfftp%nr1 .OR. j >= dfftp%nr2 .OR. k >= dfftp%nr3 ) CYCLE
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     IF ( offrange ) CYCLE
      !
      IF (edir==1) sawarg = DBLE(i)/DBLE(dfftp%nr1)
      IF (edir==2) sawarg = DBLE(j)/DBLE(dfftp%nr2)

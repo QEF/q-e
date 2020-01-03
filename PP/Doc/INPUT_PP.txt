@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: pp.x / PWscf / Quantum Espresso (version: svn)
+Program: pp.x / PWscf / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -130,6 +130,8 @@ NAMELIST: &INPUTPP
                    
                       21 = all-electron charge density (valence+core).
                            For PAW calculations only; requires a very dense real-space grid.
+                   
+                      22 = kinetic energy density (for meta-GGA and XDM only)
    +--------------------------------------------------------------------
    
    ________________________________________________________________________
@@ -338,6 +340,22 @@ NAMELIST: &INPUTPP
       Description:    0 = total charge (default value),
                       1 = spin up charge,
                       2 = spin down charge.
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=22 : 
+   
+      OPTIONS FOR KINETIC ENERGY DENSITY (PLOT_NUM=22),
+      LSDA CASE ONLY:
+      
+      +--------------------------------------------------------------------
+      Variable:       spin_component
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    0 = total density (default value),
+                      1 = spin up density,
+                      2 = spin down density.
       +--------------------------------------------------------------------
       
        
@@ -583,4 +601,4 @@ NAMELIST: &PLOT
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Tue Jul 17 15:42:19 CEST 2018
+This file has been created by helpdoc utility on Thu Nov 28 10:42:25 CET 2019

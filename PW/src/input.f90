@@ -8,17 +8,16 @@
 !----------------------------------------------------------------------------
 SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
-  !
-  ! ...  Copy data read from input file (in subroutine "read_input_file") and
-  ! ...  stored in modules input_parameters into internal modules
-  ! ...  Note that many variables in internal modules, having the same name as
-  ! ...  those in input_parameters, are locally renamed by adding a "_"
+  !! Copy data read from input file (in subroutine \(\texttt{read_input_file}\) and
+  !! stored in modules input_parameters into internal modules.  
+  !! Note that many variables in internal modules, having the same name as
+  !! those in input_parameters, are locally renamed by adding an underscore "_".
   !
   USE kinds,         ONLY : DP
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc, get_dft_short
-  USE funct,         ONLY: set_exx_fraction, set_screening_parameter
-  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi  
+  USE funct,         ONLY : set_exx_fraction, set_screening_parameter
+  USE control_flags, ONLY : adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
   USE mp_pools,      ONLY : npool
@@ -35,8 +34,9 @@ SUBROUTINE iosys()
                             efield_cart_ => efield_cart, &
                             phase_control
   !
-  USE cell_base,     ONLY : at, alat, omega, bg, &
-                            cell_base_init, init_dofree
+  USE cell_base,     ONLY : at, alat, omega, bg, cell_base_init, init_dofree, &
+                            press_       => press, &
+                            wmass_       => wmass
   !
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
                             ntyp_ => nsp, &
@@ -47,9 +47,8 @@ SUBROUTINE iosys()
   !
   USE run_info,      ONLY : title_ => title
   !
-  USE cellmd,        ONLY : cmass, omega_old, at_old, ntcheck, &
+  USE cellmd,        ONLY : omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &
-                            press_       => press, &
                             calc, lmovecell
   !
   USE dynamics_module, ONLY : control_temp, temperature, thermostat, &
@@ -496,8 +495,6 @@ SUBROUTINE iosys()
   !
   lstres = lmovecell .OR. ( tstress .and. lscf )
   !
-  ! TB
-  ! IF ( tefield .and. ( .not. nosym ) ) THEN
   IF ( tefield .and. ( .not. nosym ) .and. ( .not. gate )) THEN
      nosym = .true.
      WRITE( stdout, &
@@ -804,9 +801,13 @@ SUBROUTINE iosys()
      !
      io_level = 0
      !
-  CASE ( 'none' )
+  CASE ( 'nowf' )
      !
      io_level = -1
+     !
+  CASE ( 'none' )
+     !
+     io_level = -2
      !
   CASE DEFAULT
      !
@@ -1375,8 +1376,6 @@ SUBROUTINE iosys()
   ! ... Files (for compatibility) and directories
   !     This stuff must be done before calling read_conf_from_file!
   !
-  input_drho  = ' '
-  output_drho = ' '
   tmp_dir = trimcheck ( outdir )
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      wfc_dir = trimcheck ( wfcdir )
@@ -1405,8 +1404,6 @@ SUBROUTINE iosys()
   CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
   gamma_only = ( k_points == 'gamma' )
   !
-!  IF ( real_space .AND. .NOT. gamma_only ) &
-!     CALL errore ('iosys', 'Real space only with Gamma point', 1)
   IF ( lelfield .AND. gamma_only ) &
       CALL errore( 'iosys', 'electric fields not available for k=0 only', 1 )
   !
@@ -1421,23 +1418,14 @@ SUBROUTINE iosys()
 #else
      wmass = sum( amass(ityp(:)) )
 #endif
-     !
-     wmass = wmass * amu_ry
      IF ( calc == 'nd' .or. calc == 'nm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
      ELSEIF ( calc == 'cd' .or. calc == 'cm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi
      ENDIF
      !
-     cmass  = wmass
-     !
-  ELSE
-     !
-     ! ... wmass is given in amu, Renata's dynamics uses masses in atomic units
-     !
-     cmass  = wmass * amu_ry
-     !
   ENDIF
+  wmass_ = wmass
   !
   ! ... unit conversion for pressure
   !
@@ -1463,7 +1451,6 @@ SUBROUTINE iosys()
   IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
      CALL check_tempdir( wfc_dir, exst, parallelfs )
   !
-
   ! ... read pseudopotentials (also sets DFT and a few more variables)
   ! ... returns values read from PP files into ecutwfc_pp, ecutrho_pp
   !
@@ -1512,7 +1499,7 @@ SUBROUTINE iosys()
   !
   IF(ecutfock <= 0.0_DP) THEN
      ! default case
-     ecutfock_ = 4.0_DP*ecutwfc
+     ecutfock_ = MIN ( ecutrho, 4.0_DP*ecutwfc)
   ELSE
      IF(ecutfock < ecutwfc .OR. ecutfock > ecutrho) CALL errore('iosys', &
           'ecutfock can not be < ecutwfc or > ecutrho!', 1) 
@@ -1540,12 +1527,9 @@ SUBROUTINE iosys()
   ! ... and initialize a few other variables
   !
   IF ( lmovecell ) THEN
-     ! The next two lines have been moved before the call to read_conf_from_file:
-     !      at_old    = at
-     !      omega_old = omega
-     IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp
      !
-     IF ( cmass <= 0.D0 ) &
+     IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp
+     IF ( wmass <= 0.D0 ) &
         CALL errore( 'iosys', &
                    & 'vcsmd: a positive value for cell mass is required', 1 )
      !
@@ -1596,17 +1580,22 @@ SUBROUTINE iosys()
   !
 END SUBROUTINE iosys
 !
-SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
-  !
-  ! Copy to modules the cutoffs, either read from input or from PP files
-  ! Values of ecutwfc and ecutrho are returned in ecutwfc_in, ecutrho_in
+!
+!-------------------------------------------------------------------------------
+SUBROUTINE set_cutoff( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
+  !-----------------------------------------------------------------------------
+  !! Copy to modules the cutoffs, either read from input or from PP files.  
+  !! Values of \(\text{ecutwfc}\) and \(\text{ecutrho}\) are returned in 
+  !! \(\text{ecutwfc_in}\), \(\text{ecutrho_in}\).
   !
   USE kinds, ONLY : dp
   USE gvecs, ONLY : dual
   USE gvect, ONLY : ecutrho
   USE gvecw, ONLY : ecutwfc
+  USE constants, ONLY : eps8
   !
   IMPLICIT NONE
+  !
   REAL(dp), INTENT(INOUT) :: ecutwfc_in, ecutrho_in
   REAL(dp), INTENT(IN)    :: ecutwfc_pp, ecutrho_pp
   !
@@ -1634,6 +1623,8 @@ SUBROUTINE set_cutoff ( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
   ecutrho_in = ecutrho
   dual = ecutrho / ecutwfc
   IF ( dual <= 1.0_dp ) CALL errore( 'set_cutoff', 'ecutrho <= ecutwfc?!?', 1 )
+  IF ( dual < 4.0_dp - eps8 ) CALL infomsg( 'set_cutoff', &
+          'ecutrho < 4*ecutwfc, are you sure?' )
   !
 END SUBROUTINE set_cutoff
 !
@@ -1739,19 +1730,20 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
 END SUBROUTINE read_cards_pw
 !
 !-----------------------------------------------------------------------
-SUBROUTINE convert_tau (tau_format, nat_, tau)
-!-----------------------------------------------------------------------
-  !
-  ! ... convert input atomic positions to internally used format:
-  ! ... tau in a0 units
+SUBROUTINE convert_tau( tau_format, nat_, tau )
+  !-----------------------------------------------------------------------
+  !! Convert input atomic positions to internally used format \(\text{tau}\)
+  !! in \(\text{a0}\) units.
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : bohr_radius_angs
   USE cell_base,     ONLY : at, alat
+  !
   IMPLICIT NONE
-  CHARACTER (len=*), INTENT(in)  :: tau_format
-  INTEGER, INTENT(in)  :: nat_
-  REAL (DP), INTENT(inout) :: tau(3,nat_)
+  !
+  CHARACTER(LEN=*), INTENT(IN) :: tau_format
+  INTEGER, INTENT(IN) :: nat_
+  REAL(DP), INTENT(INOUT) :: tau(3,nat_)
   !
   SELECT CASE( tau_format )
   CASE( 'alat' )

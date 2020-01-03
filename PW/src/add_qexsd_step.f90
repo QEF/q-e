@@ -5,14 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! This routine just calls the routint qexsd_step_addstep which adds a new xml
-! element to to the list of step run by pw. In this way the addstep routine in
-! the qexsd_step_addstep routine does not depend on global variables. 
-!  P.  Delugas April 2016
- 
 !----------------------------------------------------------------
 SUBROUTINE add_qexsd_step(i_step)
-!-----------------------------------------------------------------
+  !-----------------------------------------------------------------
+  !! This routine just calls the routine \(\texttt{qexsd_step_addstep}\)
+  !! which adds a new xml element to to the list of steps run by PW.
+  !! In this way the \(\texttt{addstep}\) routine in the 
+  !! \(\texttt{qexsd_step_addstep}\) routine does not depend on global
+  !! variables.  
+  !! P. Delugas, April 2016.
   !
   !------------------------------------------------------------------------
   !       START_GLOBAL_VARIABLES ( INTENT (IN) ) 

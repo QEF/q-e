@@ -93,7 +93,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   REAL(DP), ALLOCATABLE :: vc_rho(:), vc_sigma(:)
   !
   INTEGER :: fkind_x, np
-  REAL(DP) :: rs, rtot, zet, sgn(2), vc_2(2)
+  REAL(DP) :: rs, rtot, zet, vc_2(2)
   REAL(DP), PARAMETER :: pi34 = 0.6203504908994_DP
   !
   LOGICAL :: POLARIZED
@@ -105,6 +105,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
   INTEGER :: igcx, igcc
   INTEGER :: k, is
+  REAL(DP) :: sgn(2)
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   !
@@ -162,8 +163,17 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
     !
   ENDIF
   !
-  IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) &
-              CALL gcxc( length, rho(:,1), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
+  IF ( ns==1 .AND. ANY(.NOT.is_libxc(3:4)) ) THEN
+     !
+     CALL gcxc( length, ABS(rho(:,1)), sigma, ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )  
+     !
+     DO k = 1, length
+        sgn(1) = SIGN(1._DP, rho(k,1))
+        ex(k) = ex(k) * sgn(1)
+        ec(k) = ec(k) * sgn(1)
+     ENDDO
+     !
+  ENDIF
   !
   ! --- GGA EXCHANGE
   !
@@ -313,7 +323,13 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
           grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
      ENDDO
      !
-     CALL gcxc( length, rho(:,1), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     CALL gcxc( length, ABS(rho(:,1)), grho2(:,1), ex, ec, v1x(:,1), v2x(:,1), v1c(:,1), v2c(:,1) )
+     !
+     DO k = 1, length
+        sgn(1) = SIGN(1._DP, rho(k,1))
+        ex(k) = ex(k) * sgn(1)
+        ec(k) = ec(k) * sgn(1)
+     ENDDO
      !
   ELSE
      !
@@ -388,6 +404,9 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   !         v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
   !         sc, v1c, v2c as above for correlation
   !
+  USE exch_gga
+  USE corr_gga
+  !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: length
@@ -398,7 +417,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   ! ... local variables
   !
   INTEGER :: ir, igcx, igcc
-  REAL(DP) :: rho, grho, sgn
+  REAL(DP) :: rho, grho
   REAL(DP) :: sx, v1x, v2x
   REAL(DP) :: sx_, v1x_, v2x_
   REAL(DP) :: sxsr, v1xsr, v2xsr
@@ -422,21 +441,20 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
   IF (igcx == 20) gau_parameter = get_gau_parameter()
   !
 !$omp parallel if(ntids==1)
-!$omp do private( rho, grho, sgn, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
+!$omp do private( rho, grho, sx, sx_, sxsr, v1x, v1x_, v1xsr, &
 !$omp             v2x, v2x_, v2xsr, sc, v1c, v2c )
   DO ir = 1, length  
      !
-     rho  = ABS(rho_in(ir))
      grho = grho_in(ir)
      !
-     IF ( rho <= rho_threshold .OR. grho <= grho_threshold ) THEN
+     IF ( rho_in(ir) <= rho_threshold .OR. grho <= grho_threshold ) THEN
         sx_out(ir)  = 0.0_DP ;   sc_out(ir)  = 0.0_DP
         v1x_out(ir) = 0.0_DP ;   v1c_out(ir) = 0.0_DP
         v2x_out(ir) = 0.0_DP ;   v2c_out(ir) = 0.0_DP
         CYCLE
      ENDIF
      !
-     sgn = SIGN(1._DP, rho_in(ir))
+     rho  = ABS(rho_in(ir))
      !
      ! ... EXCHANGE
      !  
@@ -695,9 +713,9 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
      END SELECT
      !
-     sx_out(ir)  = sx*sgn  ;  sc_out(ir)  = sc*sgn
-     v1x_out(ir) = v1x     ;  v1c_out(ir) = v1c
-     v2x_out(ir) = v2x     ;  v2c_out(ir) = v2c
+     sx_out(ir)  = sx    ;  sc_out(ir)  = sc
+     v1x_out(ir) = v1x   ;  v1c_out(ir) = v1c
+     v2x_out(ir) = v2x   ;  v2c_out(ir) = v2c
      !
   ENDDO 
 !$omp end do
@@ -715,6 +733,8 @@ END SUBROUTINE gcxc
 SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
   !-----------------------------------------------------------------------
   !! Gradient corrections for exchange - Hartree a.u.
+  !
+  USE exch_gga
   !
   IMPLICIT NONE
   !
@@ -798,7 +818,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 1 )
         !
-        CALL becke88_spin( rho, grho2, sx, v1x, v2x )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -866,7 +886,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 9 )                    ! B3LYP
         !
-        CALL becke88_spin( rho, grho2, sx, v1x, v2x )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         sx_tot(ir) = sx(1)*rnull(1) + sx(2)*rnull(2)
         !
@@ -955,7 +975,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         !
      CASE( 28 )                   ! X3LYP
         !
-        CALL becke88_spin( rho, grho2, sx, v1x, v2x )
+        CALL becke88_spin( rho(1), rho(2), grho2(1), grho2(2), sx(1), sx(2), v1x(1), v1x(2), v2x(1), v2x(2) )
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
@@ -1102,7 +1122,9 @@ END SUBROUTINE gcx_spin
 SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out )
   !-------------------------------------------------------------------------------
   !! Gradient corrections for correlations - Hartree a.u.  
-  !! Implemented:  Perdew86, GGA (PW91), PBE
+  !! Implemented: Perdew86, GGA (PW91), PBE
+  !
+  USE corr_gga
   !
   IMPLICIT NONE
   !
@@ -1162,19 +1184,19 @@ SUBROUTINE gcc_spin( length, rho_in, zeta_io, grho_in, sc_out, v1c_out, v2c_out 
        !
     CASE( 1 )
        !
-       CALL perdew86_spin( rho, zeta, grho, sc, v1c, v2c )
+       CALL perdew86_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 2 )
        !
-       CALL ggac_spin( rho, zeta, grho, sc, v1c, v2c )
+       CALL ggac_spin( rho, zeta, grho, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 4 )
        !
-       CALL pbec_spin( rho, zeta, grho, 1, sc, v1c, v2c )
+       CALL pbec_spin( rho, zeta, grho, 1, sc, v1c(1), v1c(2), v2c )
        !
     CASE( 8 )
        !
-       CALL pbec_spin( rho, zeta, grho, 2, sc, v1c, v2c )
+       CALL pbec_spin( rho, zeta, grho, 2, sc, v1c(1), v1c(2), v2c )
        !
     CASE DEFAULT
        !
@@ -1208,6 +1230,8 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
   !!    * Perdew86;
   !!    * Lee, Yang & Parr;
   !!    * GGAC.
+  !
+  USE corr_gga
   !
   IMPLICIT NONE
   !
@@ -1265,7 +1289,9 @@ SUBROUTINE gcc_spin_more( length, rho_in, grho_in, grho_ud_in, &
        CYCLE
     ENDIF
     !
-    CALL lsd_glyp( rho, grho, grho_ud, sc(ir), v1c(ir,:), v2c(ir,:), v2c_ud(ir) )
+    CALL lsd_glyp( rho(1), rho(2), grho(1), grho(2), grho_ud, &
+                   sc(ir), v1c(ir,1), v1c(ir,2), v2c(ir,1),   &
+                   v2c(ir,2), v2c_ud(ir) )
     !
     SELECT CASE( igcc )
     CASE( 3 )

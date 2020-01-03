@@ -12,7 +12,7 @@ MODULE cp_main_variables
   !
   USE kinds,             ONLY : DP
   USE funct,             ONLY : dft_is_meta
-  USE metagga,           ONLY : kedtaur, kedtaus, kedtaug
+  USE metagga_cp,        ONLY : kedtaur, kedtaus, kedtaug
   USE cell_base,         ONLY : boxdimensions
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init
   USE energies,          ONLY : dft_energy_type

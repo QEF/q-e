@@ -1,18 +1,17 @@
 !
-! Copyright (C) 2001-2013 Quantum ESPRESSO group
+! Copyright (C) 2001-2019 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE  write_proj (filename, lbinary, projs, lwrite_ovp, ovps )
+SUBROUTINE  write_proj_iotk (filename, lbinary, projs, lwrite_ovp, ovps )
   !-----------------------------------------------------------------------
   !
   USE kinds
   USE io_files,         ONLY : iun => iunsat, prefix, tmp_dir, postfix
   USE basis,            ONLY : natomwfc
-  USE cell_base
   USE klist,            ONLY : wk, xk, nkstot, nelec
   USE noncollin_module, ONLY : noncolin
   USE lsda_mod,         ONLY : nspin, isk
@@ -171,4 +170,78 @@ SUBROUTINE  write_proj (filename, lbinary, projs, lwrite_ovp, ovps )
   !
   CALL iotk_close_write(iun)
 
-END SUBROUTINE write_proj
+END SUBROUTINE write_proj_iotk
+!
+!-----------------------------------------------------------------------
+SUBROUTINE write_proj_file ( filproj, proj )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,     ONLY : DP
+  USE lsda_mod,  ONLY : nspin
+  USE spin_orb,  ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin
+  USE fft_base,  ONLY : dfftp
+  USE klist,     ONLY : xk, nkstot
+  USE run_info,  ONLY : title
+  USE cell_base, ONLY : at, ibrav, celldm
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, atm
+  USE wvfct,     ONLY : nbnd
+  USE basis,     ONLY : natomwfc
+  USE gvect,     ONLY : gcutm 
+  USE gvecs,     ONLY : dual
+  USE gvecw,     ONLY : ecutwfc
+  USE projections, ONLY : nlmchi
+  !
+  IMPLICIT NONE
+  CHARACTER (len=*), INTENT(in) :: filproj
+  REAL(DP), INTENT(IN) :: proj(natomwfc,nbnd,nkstot)
+  !
+  CHARACTER(256) :: filename
+  REAL (DP), EXTERNAL :: compute_mj
+  INTEGER :: is, ik, nwfc, ibnd, nksinit, nkslast, iunproj=33
+  !
+  IF ( TRIM(filproj) == ' ' ) RETURN
+  !
+  DO is=1,nspin
+     IF (nspin==2) THEN
+        IF (is==1) filename=trim(filproj)//'.projwfc_up'
+        IF (is==2) filename=trim(filproj)//'.projwfc_down'
+        nksinit=(nkstot/2)*(is-1)+1
+        nkslast=(nkstot/2)*is
+     ELSE
+        filename=trim(filproj)//'.projwfc_up'
+        nksinit=1
+        nkslast=nkstot
+     ENDIF
+     CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, &
+          dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, &
+          celldm, at, gcutm, dual, ecutwfc, nkstot/nspin, nbnd, natomwfc)
+     DO nwfc = 1, natomwfc
+        IF (lspinorb) THEN
+           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,2i5,f5.1,1x,f5.1)') &
+                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
+                nlmchi(nwfc)%jj, &
+                compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l, nlmchi(nwfc)%m)
+        ELSE IF (noncolin) THEN
+           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5,1x,f4.1)') &
+                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l, &
+                nlmchi(nwfc)%m, &
+                0.5d0-int(nlmchi(nwfc)%ind/(2*nlmchi(nwfc)%l+2))
+        ELSE
+           WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,3i5)') &
+                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
+                nlmchi(nwfc)%els, nlmchi(nwfc)%n, nlmchi(nwfc)%l,  &
+                nlmchi(nwfc)%m
+        END IF
+        DO ik=nksinit,nkslast
+           DO ibnd=1,nbnd
+              WRITE(iunproj,'(2i8,f20.10)') ik,ibnd, abs(proj(nwfc,ibnd,ik))
+           ENDDO
+        ENDDO
+     ENDDO
+     CLOSE(iunproj)
+  ENDDO
+  !
+END SUBROUTINE write_proj_file

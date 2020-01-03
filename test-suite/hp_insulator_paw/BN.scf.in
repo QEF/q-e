@@ -1,0 +1,33 @@
+ &control
+    calculation ='scf'
+    restart_mode='from_scratch',
+    prefix      ='bn'
+    pseudo_dir  = '../../pseudo/'
+    outdir      ='./'
+    verbosity   ='high'
+ /
+ &system
+    ibrav     = 4,
+    celldm(1) = 4.7419,     
+    celldm(3) = 4.3,
+    nat       = 2, 
+    ntyp      = 2,
+    ecutwfc   = 25.0
+    ecutrho   = 200.0
+    lda_plus_u        = .true.,
+    lda_plus_u_kind   = 0,
+    U_projection_type = 'atomic',
+    Hubbard_U(1)      = 1.0
+ /
+ &electrons
+    conv_thr    = 1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+N 14.00674  N.pbe-n-kjpaw_psl.0.1.UPF
+B 10.81     B.pbe-n-kjpaw_psl.0.1.UPF 
+ATOMIC_POSITIONS {alat} 
+ N   0.000000000  -0.288675135   0.000000000
+ B   0.000000000   0.288675135   0.000000000 
+K_POINTS {automatic} 
+ 4 4 1 0 0 0

@@ -25,7 +25,7 @@
   tempsmax    = 500
 
   restart    = .true.
-  restart_freq = 1000
+  restart_step = 1000
   selecqread = .false.
 
   lifc        = .true.

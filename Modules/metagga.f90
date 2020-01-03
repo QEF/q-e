@@ -18,10 +18,17 @@
 !
 !=========================================================================
 !
+MODULE metagga                       !<GPU:metagga=>metagga_gpu>
+!
+USE exch_lda,  ONLY : slater   !<GPU:slater=>slater_d,exch_lda=>exch_lda_gpu>
+USE corr_lda,  ONLY : pw, pw_spin   !<GPU:pw=>pw_d,pw_spin=>pw_spin_d,corr_lda=>corr_lda_gpu>
+USE corr_gga,  ONLY : pbec, pbec_spin   !<GPU:pbec=>pbec_d,pbec_spin=>pbec_spin_d,corr_gga=>corr_gga_gpu>
+!
+ CONTAINS
 !                             TPSS
 !
 !-------------------------------------------------------------------------
-SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )                    !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !! TPSS metaGGA corrections for exchange and correlation - Hartree a.u.
   !
@@ -59,9 +66,9 @@ SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   REAL(DP), PARAMETER :: small = 1.E-10_DP
   !
   IF (rho <= small) THEN
-     sx  = 0.0_DP  
-     v1x = 0.0_DP  
-     v2x = 0.0_DP 
+     sx  = 0.0_DP
+     v1x = 0.0_DP
+     v2x = 0.0_DP
      sc  = 0.0_DP
      v1c = 0.0_DP
      v2c = 0.0_DP
@@ -71,9 +78,9 @@ SUBROUTINE tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   ENDIF
   !
   ! exchange
-  CALL metax( rho, grho, tau, sx, v1x, v2x, v3x )
+  CALL metax( rho, grho, tau, sx, v1x, v2x, v3x )                   !<GPU:metax=>metax_d>
   ! correlation
-  CALL metac( rho, grho, tau, sc, v1c, v2c, v3c )
+  CALL metac( rho, grho, tau, sc, v1c, v2c, v3c )                   !<GPU:metac=>metac_d>
   !
   RETURN
   !
@@ -81,17 +88,17 @@ END SUBROUTINE tpsscxc
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )
+SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )                    !<GPU:DEVICE>
   !--------------------------------------------------------------------
   !! TPSS meta-GGA exchange potential and energy.
   !
-  !! NOTE: E_x(rho,grho) = rho\epsilon_x(rho,grho) ;  
-  !! ex = E_x(rho,grho)    NOT \epsilon_x(rho,grho) ;  
-  !! v1x= D(E_x)/D(rho) ;  
-  !! v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho| ;  
-  !! v3x= D(E_x)/D( tau ) ;  
-  !! tau is the kinetic energy density ;  
-  !! the same applies to correlation terms ;  
+  !! NOTE: E_x(rho,grho) = rho\epsilon_x(rho,grho) ;
+  !! ex = E_x(rho,grho)    NOT \epsilon_x(rho,grho) ;
+  !! v1x= D(E_x)/D(rho) ;
+  !! v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho| ;
+  !! v3x= D(E_x)/D( tau ) ;
+  !! tau is the kinetic energy density ;
+  !! the same applies to correlation terms ;
   !! input grho2 is |\nabla rho|^2 .
   !
   USE kinds,       ONLY : DP
@@ -134,8 +141,8 @@ SUBROUTINE metax( rho, grho2, tau, ex, v1x, v2x, v3x )
   ENDIF
   !
   rs = pi34/rho**third
-  CALL slater( rs, ex_unif, vx_unif )
-  CALL metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
+  CALL slater( rs, ex_unif, vx_unif )                                  !<GPU:slater=>slater_d>
+  CALL metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )                    !<GPU:metaFX=>metaFX_d>
   !
   ex = rho*ex_unif
   v1x = vx_unif*fx + ex*f1x
@@ -149,12 +156,12 @@ END SUBROUTINE metax
 !
 !
 !------------------------------------------------------------------
-SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
+SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )                    !<GPU:DEVICE>
   !--------------------------------------------------------------
   !! TPSS meta-GGA correlation energy and potentials.
   !
   USE kinds,  ONLY : DP
-  !  
+  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: rho
@@ -209,12 +216,12 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
   IF (rhoup > small) THEN
      !
      rs = (pi34/rhoup)**third
-     CALL pw_spin( rs, 1.0_DP, ec_unif, vc_unif_s )
+     CALL pw_spin( rs, 1.0_DP, ec_unif, vc_unif_s(1), vc_unif_s(2) )                                  !<GPU:pw_spin=>pw_spin_d>
      !
      IF (ABS(grhoup) > small) THEN
         ! zeta=1.0_DP-small to avoid pow_e of 0 in pbec_spin
-        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup**2, 1, & 
-                        ec_sum, v1c_sum, v2c_sum )
+        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup**2, 1, &           !<GPU:pbec_spin=>pbec_spin_d>
+                        ec_sum, v1c_sum(1), v1c_sum(2), v2c_sum )
      ELSE
         ec_sum  = 0.0_DP
         v1c_sum = 0.0_DP
@@ -230,13 +237,13 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
   ENDIF
   !
   rs = (pi34/rho)**third
-  CALL pw( rs, 1, ec_unif, vc_unif )
+  CALL pw( rs, 1, ec_unif, vc_unif )                             !<GPU:pw=>pw_d>
   !
   !  ... PBE correlation energy and potential:
   !  ec_pbe=rho*H,  not rho*(epsion_c_uinf + H)
   !  v1c_pbe=D (rho*H) /D rho
-  !  v2c_pbe= for rho, 2 for 
-  CALL pbec( rho, grho2, 1, ec_pbe, v1c_pbe, v2c_pbe )
+  !  v2c_pbe= for rho, 2 for
+  CALL pbec( rho, grho2, 1, ec_pbe, v1c_pbe, v2c_pbe )           !<GPU:pbec=>pbec_d>
   !
   ec_pbe  = ec_pbe/rho+ec_unif
   v1c_pbe = (v1c_pbe+vc_unif-ec_pbe)/rho
@@ -251,7 +258,7 @@ SUBROUTINE metac( rho, grho2, tau, ec, v1c, v2c, v3c )
   tauw = 0.1250_DP * grho2/rho
   z = tauw/tau
   z2 = z*z
-  !  
+  !
   ec_rev = ec_pbe*(1+cab*z2)-cabone*z2*ec_sum
   !
   d1rev  = v1c_pbe + (cab*v1c_pbe-cabone*v1c_sum(1))*z2  &
@@ -278,7 +285,7 @@ END SUBROUTINE metac
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )
+SUBROUTINE metaFX( rho, grho2, tau, fx, f1x, f2x, f3x )                    !<GPU:DEVICE>
   !-------------------------------------------------------------------------
   !
   USE kinds,           ONLY : DP
@@ -400,14 +407,14 @@ END SUBROUTINE metaFX
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
+SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &       !<GPU:DEVICE>
                         v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw )
   !-----------------------------------------------------------------------
   !! TPSS metaGGA for exchange - Hartree a.u.
   !
   USE kinds,            ONLY : DP
   !
-  IMPLICIT NONE  
+  IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: rhoup
   !! up charge
@@ -439,13 +446,13 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
   ! ... local variables
   !
   REAL(DP), PARAMETER :: small = 1.E-10_DP
-  REAL(DP) :: rho, sxup, sxdw  
+  REAL(DP) :: rho, sxup, sxdw
   !
   ! exchange
-  rho = rhoup + rhodw  
+  rho = rhoup + rhodw
   IF (rhoup>small .AND. SQRT(ABS(grhoup2))>small &
        .AND. ABS(tauup) > small) THEN
-     CALL metax( 2.0_DP*rhoup, 4.0_DP*grhoup2, &
+     CALL metax( 2.0_DP*rhoup, 4.0_DP*grhoup2, &              !<GPU:metax=>metax_d>
                  2.0_DP*tauup, sxup, v1xup, v2xup, v3xup )
   ELSE
      sxup = 0.0_DP
@@ -456,7 +463,7 @@ SUBROUTINE tpsscx_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw, sx, &
   !
   IF (rhodw > small .AND. SQRT(ABS(grhodw2)) > small &
        .AND. ABS(taudw) > small) THEN
-     CALL metax( 2.0_DP*rhodw, 4.0_DP*grhodw2, &
+     CALL metax( 2.0_DP*rhodw, 4.0_DP*grhodw2, &              !<GPU:metax=>metax_d>
                  2.0_DP*taudw, sxdw, v1xdw, v2xdw, v3xdw )
   ELSE
      sxdw = 0.0_DP
@@ -475,14 +482,14 @@ END SUBROUTINE tpsscx_spin
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &
+SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
                         atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
   !--------------------------------------------------------------------------
   !! TPSS metaGGA for correlations - Hartree a.u.
   !
   USE kinds,       ONLY : DP
   !
-  IMPLICIT NONE  
+  IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge
@@ -539,8 +546,8 @@ SUBROUTINE tpsscc_spin( rho, zeta, grhoup, grhodw, &
      !
      v3c = 0.0_DP
   ELSE
-     CALL metac_spin( rho, zeta, grhoup, grhodw, &
-                      atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3c )
+     CALL metac_spin( rho, zeta, grhoup, grhodw, &              !<GPU:metac_spin=>metac_spin_d>
+                        atau, sc, v1cup, v1cdw, v2cup, v2cdw, v3c )
   ENDIF
   !
   v3cup = v3c
@@ -552,7 +559,7 @@ END SUBROUTINE tpsscc_spin
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
+SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &       !<GPU:DEVICE>
                        tau, sc, v1up, v1dw, v2up, v2dw, v3 )
   !---------------------------------------------------------------
   USE kinds,    ONLY : DP
@@ -588,10 +595,10 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
               grhoup2, grhodw2
   !
   REAL(DP) :: rs, ec_u, vc_u(2), v1_0v(2), v1_pbe(2)
-  !     
+  !
   !grhovec   vector gradient of rho
   !grho    mod of gradient of rho
-  !REAL(DP) :: ec_u, vcup_u, vcdw_u 
+  !REAL(DP) :: ec_u, vcup_u, vcdw_u
   REAL(DP) :: ec_pbe, v1up_pbe, v1dw_pbe, v2up_pbe(3), v2dw_pbe(3)
   REAL(DP) :: ecup_0, v1up_0, v2up_0(3), v2_tmp
   REAL(DP) :: ecdw_0, v1dw_0, v2dw_0(3)
@@ -632,15 +639,15 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
   ENDDO
   !
   grho = SQRT(grho2)
-  !     
+  !
   IF (rho > small) THEN
      !
      v2_tmp = 0.0_DP
      rs = (pi34/rho)**third
-     CALL pw_spin( rs, zeta, ec_u, vc_u )
+     CALL pw_spin( rs, zeta, ec_u, vc_u(1), vc_u(2) )             !<GPU:pw_spin=>pw_spin_d>
      !
      IF ((ABS(grho) > small) .AND. (zeta <= 1.0_DP)) THEN
-        CALL pbec_spin( rho, zeta, grho2, 1, ec_pbe, v1_pbe, v2_tmp )
+        CALL pbec_spin( rho, zeta, grho2, 1, ec_pbe, v1_pbe(1), v1_pbe(2), v2_tmp )             !<GPU:pbec_spin=>pbec_spin_d>
         v1up_pbe=v1_pbe(1)
         v1dw_pbe=v1_pbe(2)
      ELSE
@@ -671,11 +678,11 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
      v2_tmp = 0.0_DP
      !
      rs = (pi34/rhoup)**third
-     CALL pw_spin( rs, 1.0_DP, ec_u, vc_u )
+     CALL pw_spin( rs, 1.0_DP, ec_u, vc_u(1), vc_u(2) )     !<GPU:pw_spin=>pw_spin_d>
      !
      IF (SQRT(grhoup2) > small) THEN
-        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup2, 1, &
-                        ecup_0, v1_0v, v2_tmp )
+        CALL pbec_spin( rhoup, 1.0_DP-small, grhoup2, 1, &    !<GPU:pbec_spin=>pbec_spin_d>
+                        ecup_0, v1_0v(1), v1_0v(2), v2_tmp )
         v1up_0 = v1_0v(1)
         v1dw_0 = v1_0v(2)
      ELSE
@@ -712,12 +719,12 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
      v2_tmp = 0.0_DP
      !
      rs = (pi34/rhodw)**third
-     CALL pw_spin( rs, -1.0_DP, ec_u, vc_u )
+     CALL pw_spin( rs, -1.0_DP, ec_u, vc_u(1), vc_u(2) )     !<GPU:pw_spin=>pw_spin_d>
      !
      IF (SQRT(grhodw2) > small) THEN
         !
-        CALL pbec_spin( rhodw, -1.0_DP+small, grhodw2, 1, &
-                        ecdw_0, v1_0v, v2_tmp )
+        CALL pbec_spin( rhodw, -1.0_DP+small, grhodw2, 1, &   !<GPU:pbec_spin=>pbec_spin_d>
+                        ecdw_0, v1_0v(1), v1_0v(2), v2_tmp )
         !
         v1up_0 = v1_0v(1)
         v1dw_0 = v1_0v(2)
@@ -736,7 +743,7 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
      v1dw_0 = 0.0_DP
      v2dw_0 = 0.0_DP
   ENDIF
-  !     
+  !
   IF (ecdw_0 > ec_pbe) THEN
      ecdw_til = ecdw_0
      v1dw_dwtil = v1dw_0
@@ -756,7 +763,7 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
             + (rhoup*v1up_uptil + rhodw*v1dw_uptil)/rho
   dsum1dw = (ecdw_til-ecup_til)*rhoup/rho**2  &
             + (rhodw*v1dw_dwtil + rhoup*v1up_dwtil)/rho
-  ! vector  
+  ! vector
   dsum2up = (rhoup*v2up_uptil + rhodw*v2dw_uptil)/rho
   dsum2dw = (rhodw*v2dw_dwtil + rhoup*v2up_dwtil)/rho
   !ccccccccccccccccccccccccccccccccccccccccc---------checked
@@ -769,7 +776,7 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
      bb = bb + term(ipol)**2
   ENDDO
   ! vector
-  term = term/(fac*rho**(14.0_DP/3.0_DP))   
+  term = term/(fac*rho**(14.0_DP/3.0_DP))
   bb = bb/(fac*rho**(14.0_DP/3.0_DP))
   ! bb = (rhodw*grhoup-rhoup*grhodw)**2/fac*rho**(-14.0_DP/3.0_DP)
   aa2 = aa*aa
@@ -816,7 +823,7 @@ SUBROUTINE metac_spin( rho, zeta, grhoup, grhodw, &
   drev1up = v1up_pbe*term1 &
             + ec_pbe*(z2*dcab1up - 2.0_DP*cab*z2/rho) &
             + (2.0_DP*term2/rho - z2*dcab1up)*sum &
-            - term2*dsum1up 
+            - term2*dsum1up
   !
   drev1dw = v1dw_pbe*term1 &
             + ec_pbe*(z2*dcab1dw - 2.0_DP*cab*z2/rho)  &
@@ -867,7 +874,7 @@ END SUBROUTINE metac_spin
 !           input:  - rho
 !                   - grho2=|\nabla rho|^2
 !                   - tau = the kinetic energy density
-!                           It is defined as summ_i( |nabla phi_i|**2 ) 
+!                           It is defined as summ_i( |nabla phi_i|**2 )
 !
 !           definition:  E_x = \int ex dr
 !
@@ -876,16 +883,16 @@ END SUBROUTINE metac_spin
 !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
 !                            ( v2x = 1/|grho| * dsx / d|grho| = 2 *  dsx / dgrho2 )
 !                       v3x= D(E_x)/D(tau)
-!   
+!
 !                       ec, v1c, v2c, v3c as above for correlation
 !
 !-------------------------------------------------------------------------
-SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
+SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )       !<GPU:DEVICE>
   !-----------------------------------------------------------------------
   !
   USE kinds,        ONLY : DP
   !
-  IMPLICIT NONE  
+  IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: rho
   !! the total charge
@@ -923,16 +930,16 @@ SUBROUTINE m06lxc( rho, grho2, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c )
   grho2b = grho2a
   !
   taua = tau * two * 0.5_dp ! Taua, which is Tau_sigma is half Tau
-  taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 ) 
+  taub = taua               ! Tau is defined as summ_i( |nabla phi_i|**2 )
                               ! in the M06L routine
   !
-  CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )
+  CALL m06lx( rhoa, grho2a, taua, ex, v1x, v2x, v3x )   !<GPU:m06lx=>m06lx_d>
   !
   ex = two * ex  ! Add the two components up + dw
   !
   v2x = 0.5_dp * v2x
   !
-  CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &
+  CALL m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c, v2c, v3c, &   !<GPU:m06lc=>m06lc_d>
               v1cb, v2cb, v3cb )
   !
   v2c = 0.5_dp * v2c
@@ -941,14 +948,14 @@ END SUBROUTINE m06lxc
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
+SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &       !<GPU:DEVICE>
                         ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
                         v1cup, v1cdw, v2cup, v2cdw, v3cup, v3cdw )
   !-----------------------------------------------------------------------
-  !    
+  !
   USE kinds,        ONLY : DP
   !
-  IMPLICIT NONE  
+  IMPLICIT NONE
   !
   REAL(DP), INTENT(IN)  :: rhoup, rhodw, grhoup2, grhodw2, tauup, taudw
   REAL(DP), INTENT(OUT) :: ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
@@ -957,24 +964,24 @@ SUBROUTINE m06lxc_spin( rhoup, rhodw, grhoup2, grhodw2, tauup, taudw,      &
   REAL(DP) :: exup, exdw, taua, taub
   REAL(DP), PARAMETER :: zero = 0.0_dp, two = 2.0_dp
   !
-  taua = tauup * two       ! Tau is defined as summ_i( |nabla phi_i|**2 ) 
+  taua = tauup * two       ! Tau is defined as summ_i( |nabla phi_i|**2 )
   taub = taudw * two       ! in the rest of the routine
   !
-  CALL m06lx( rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup )
-  CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )
+  CALL m06lx( rhoup, grhoup2, taua, exup, v1xup, v2xup, v3xup )   !<GPU:m06lx=>m06lx_d>
+  CALL m06lx( rhodw, grhodw2, taub, exdw, v1xdw, v2xdw, v3xdw )   !<GPU:m06lx=>m06lx_d>
   !
   ex = exup + exdw
   !
-  CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &
+  CALL m06lc( rhoup, rhodw, grhoup2, grhodw2, taua, taub, &       !<GPU:m06lc=>m06lc_d>
               ec, v1cup, v2cup, v3cup, v1cdw, v2cdw, v3cdw )
   !
 END SUBROUTINE m06lxc_spin
-!
+! !
 !
 !===============================  M06L exchange ==========================
 !
 !-------------------------------------------------------------------------------
-SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
+SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )       !<GPU:DEVICE>
   !---------------------------------------------------------------------------
   !! M06L exchange.
   !
@@ -1019,10 +1026,10 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
   REAL(DP) :: xs, xs2, grho, rhom83, rho13, rho43, zs, gh
   REAL(DP) :: hg, dhg_dxs2, dhg_dzs
   REAL(DP) :: dxs2_drho, dxs2_dgrho2, dzs_drho, dzs_dtau
-  REAL(DP) :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98, v2x_vs98_g   
+  REAL(DP) :: ex_vs98, v1x_vs98, v2x_vs98, v3x_vs98, v2x_vs98_g
   !
   ! GGA and MGGA variables
-  !  
+  !
   REAL(DP) :: tau_unif, ts, ws, fws, dfws, dfws_drho, dfws_dtau, &
               dws_dts, dts_dtau, dts_drho
   !
@@ -1030,7 +1037,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
   !
   at(0)  =    3.987756d-01
   at(1)  =    2.548219d-01
-  at(2)  =    3.923994d-01 
+  at(2)  =    3.923994d-01
   at(3)  =   -2.103655d+00
   at(4)  =   -6.302147d+00
   at(5)  =    1.097615d+01
@@ -1055,12 +1062,12 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
      v1x = zero
      v2x = zero
      v3x = zero
-     RETURN       
+     RETURN
   ENDIF
   !
   ! ... VSXC98 functional (LDA part)
   !
-  ! set variables 
+  ! set variables
   !
   CF =  (three/five) * (six*pi2)**f23
   CT =  CF / two
@@ -1074,13 +1081,13 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
   rhom83 = one / rho**f83
   !
   xs  = grho / rho43
-  xs2 = xs * xs  
+  xs2 = xs * xs
   zs  = tau / rho**f53 - CF
   gh  = one + alpha * (xs2 + zs)
   !
   IF (gh >= small) THEN
-    CALL gvt4( xs2, zs, d0, d1, d2, d3, d4, d5, alpha, hg, dhg_dxs2, dhg_dzs )
-  ELSE 
+    CALL gvt4( xs2, zs, d0, d1, d2, d3, d4, d5, alpha, hg, dhg_dxs2, dhg_dzs )   !<GPU:gvt4=>gvt4_d>
+  ELSE
     hg = zero
     dhg_dxs2 = zero
     dhg_dzs  = zero
@@ -1094,7 +1101,7 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
   ex_unif  =  CX * rho43
   ex_vs98  =  ex_unif * hg
   v1x_vs98 =  CX * ( f43 * hg * rho**f13 ) + &
-              ex_unif * ( dhg_dxs2*dxs2_drho + dhg_dzs*dzs_drho ) 
+              ex_unif * ( dhg_dxs2*dxs2_drho + dhg_dzs*dzs_drho )
   v2x_vs98 =  two * ex_unif * dhg_dxs2 * dxs2_dgrho2
   v3x_vs98 =  ex_unif * dhg_dzs * dzs_dtau
   !
@@ -1118,31 +1125,31 @@ SUBROUTINE m06lx( rho, grho2, tau, ex, v1x, v2x, v3x )
   dfws_drho = dfws*dws_dts*dts_drho
   dfws_dtau = dfws*dws_dts*dts_dtau
   !
-  CALL pbex_m06l( two*rho, four*grho2, sx_pbe, v1x_pbe, v2x_pbe )
+  CALL pbex_m06l( two*rho, four*grho2, sx_pbe, v1x_pbe, v2x_pbe )   !<GPU:pbex_m06l=>pbex_m06l_d>
   !
   v1x_unif = f43 * CX * rho13
   !
-  sx_pbe  = f12 * sx_pbe 
-  v1x_pbe = v1x_pbe  + v1x_unif 
+  sx_pbe  = f12 * sx_pbe
+  v1x_pbe = v1x_pbe  + v1x_unif
   v2x_pbe = two * v2x_pbe
   !
-  ex_pbe  = sx_pbe + ex_unif 
+  ex_pbe  = sx_pbe + ex_unif
   !
   ! ... energy and potential
-  ! 
-  ex = ex_vs98  + ex_pbe*fws  
   !
-  v1x = v1x_vs98 + v1x_pbe*fws + ex_pbe*dfws_drho 
-  v2x = v2x_vs98 + v2x_pbe*fws               
-  v3X = v3x_vs98 + ex_pbe*dfws_dtau    
+  ex = ex_vs98  + ex_pbe*fws
+  !
+  v1x = v1x_vs98 + v1x_pbe*fws + ex_pbe*dfws_drho
+  v2x = v2x_vs98 + v2x_pbe*fws
+  v3X = v3x_vs98 + ex_pbe*dfws_dtau
   !
 END SUBROUTINE m06lx
 !
 !
 !-------------------------------------------------------------------
-SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )
+SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )       !<GPU:DEVICE>
   !---------------------------------------------------------------
-  !! PBE exchange (without Slater exchange):  
+  !! PBE exchange (without Slater exchange):
   !! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
   !
   !! v2x = 1/|grho| * dsx / d|grho| = 2 *  dsx / dgrho2
@@ -1180,10 +1187,10 @@ SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )
   C1    =  mu / denom
   C2    =  mu / (ka * denom)
   !
-  grho  = SQRT(grho2) 
+  grho  = SQRT(grho2)
   rho43 = rho**f43
   xs    = grho / rho43
-  xs2   = xs * xs  
+  xs2   = xs * xs
   !
   dxs2_drho = -f83 * xs2 / rho
   dxs2_dgrho2 = one /rho**f83
@@ -1204,12 +1211,12 @@ SUBROUTINE pbex_m06l( rho, grho2, sx, v1x, v2x )
   v2x = two * ex * dFx_dxs2* dxs2_dgrho2
   !
 END SUBROUTINE pbex_m06l
-!  
+!
 !
 !===============================  M06L correlation ==========================
 !
 !---------------------------------------------------------------------------------
-SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
+SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &       !<GPU:DEVICE>
                   v3c_up, v1c_dw, v2c_dw, v3c_dw )
   !-------------------------------------------------------------------------------
   !! M06L correlation.
@@ -1261,10 +1268,10 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   ! parameters of the MO6Lc functional
   !
   REAL(DP), DIMENSION(0:4):: cs, cab
-  ! 
+  !
   REAL(DP) :: ds0, ds1, ds2, ds3, ds4, ds5, CF, alpha, Ds,         &
               dab0, dab1, dab2, dab3, dab4, dab5, gama_ab, gama_s, &
-              alpha_s, alpha_ab 
+              alpha_s, alpha_ab
   !
   ! functions and variables
   !
@@ -1273,7 +1280,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   REAL(DP) :: vv, vc_pw_a, vc_pw_b, vc_pw_ab, vc_pw_up, vc_pw_dw, Ecaa, Ecbb, Ecab, &
               Ec_UEG_ab, Ec_UEG_aa, Ec_UEG_bb, decab_drhoa, decab_drhob,            &
               v1_ab_up, v1_ab_dw, v2_ab_up, v2_ab_dw, v3_ab_up, v3_ab_dw,           &
-              v1_aa_up, v2_aa_up, v3_aa_up, v1_bb_dw, v2_bb_dw, v3_bb_dw            
+              v1_aa_up, v2_aa_up, v3_aa_up, v1_bb_dw, v2_bb_dw, v3_bb_dw
   !
   REAL(DP) :: xsa, xs2a, rsa, grhoa, xsb, xs2b, grhob, rsb, zsa, zsb, &
               xs2ab, zsab, rho,                                       &
@@ -1299,7 +1306,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   cab(1) =  1.776783d+02
   cab(2) = -2.513252d+02
   cab(3) =  7.635173d+01
-  cab(4) = -1.255699d+01   
+  cab(4) = -1.255699d+01
   !
   gama_ab  = 0.0031_dp
   alpha_ab = 0.00304966_dp
@@ -1321,7 +1328,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   alpha_s = 0.00515088_dp
   !
   CF = f35 * (six*pi2)**f23
-  !  
+  !
   ifunc = 1     ! iflag=1  J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !
   ! ... Ecaa
@@ -1356,15 +1363,15 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
     !
     rs   = rsa
     zeta = one
-    CALL pw_spin( rs, zeta, ec_pw_a, vc_v )
+    CALL pw_spin( rs, zeta, ec_pw_a, vc_v(1), vc_v(2) )    !<GPU:pw_spin=>pw_spin_d>
     vc_pw_a = vc_v(1)
     vv      = vc_v(2)
     !
-    CALL gvt4( xs2a, zsa, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hga, dhga_dxs2a, dhga_dzsa )
-    CALL gfunc( cs, gama_s, xs2a, gsa, dgsa_dxs2a )
+    CALL gvt4( xs2a, zsa, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hga, dhga_dxs2a, dhga_dzsa )   !<GPU:gvt4=>gvt4_d>
+    CALL gfunc( cs, gama_s, xs2a, gsa, dgsa_dxs2a )   !<GPU:gfunc=>gfunc_d>
     !
     Ec_UEG_aa = rhoa*ec_pw_a
-    num = (dgsa_dxs2a + dhga_dxs2a)*Dsa + (gsa + hga)*dDsa_dxs2a 
+    num = (dgsa_dxs2a + dhga_dxs2a)*Dsa + (gsa + hga)*dDsa_dxs2a
     !
     !
     Ecaa = Ec_UEG_aa * (gsa + hga) * Dsa
@@ -1395,25 +1402,25 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
     xsb   = grhob / rhob**f43
     xs2b  = xsb * xsb
     zsb   = taub/rhob**f53 - CF
-  
+
     dxs2b_drhob   = -f83*xs2b/rhob
     dxs2b_dgrhob2 =  one /rhob**f83
-  
+
     dzsb_drhob = -f53*taub/(rhob**f83)
     dzsb_dtaub =  one/rhob**f53
-  
+
     Dsb        = one - xs2b/(four * (zsb + CF))
     dDsb_dxs2b = - one/(four * (zsb + CF))
     dDsb_dzsb  =  xs2b/(four * (zsb + CF)**2)
     !
     zeta = one
     rs   = rsb
-    CALL pw_spin( rs, zeta, ec_pw_b, vc_v )
+    CALL pw_spin( rs, zeta, ec_pw_b, vc_v(1), vc_v(2) )   !<GPU:pw_spin=>pw_spin_d>
     vc_pw_b = vc_v(1)
     vv      = vc_v(2)
     !
-    CALL gvt4( xs2b, zsb, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hgb, dhgb_dxs2b, dhgb_dzsb )
-    CALL gfunc( cs, gama_s, xs2b, gsb, dgsb_dxs2b )
+    CALL gvt4( xs2b, zsb, ds0, ds1, ds2, ds3, ds4, ds5, alpha_s, hgb, dhgb_dxs2b, dhgb_dzsb )   !<GPU:gvt4=>gvt4_d>
+    CALL gfunc( cs, gama_s, xs2b, gsb, dgsb_dxs2b )   !<GPU:gfunc=>gfunc_d>
     !
     Ec_UEG_bb = rhob*ec_pw_b
     num = (dgsb_dxs2b + dhgb_dxs2b)*Dsb + (gsb + hgb)*dDsb_dxs2b
@@ -1450,13 +1457,13 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
     zeta  = (rhoa - rhob)/rho
     rs    = (pi34/rho)**f13
     !
-    CALL gvt4( xs2ab, zsab, dab0, dab1, dab2, dab3, dab4, dab5, alpha_ab, hgab, &
+    CALL gvt4( xs2ab, zsab, dab0, dab1, dab2, dab3, dab4, dab5, alpha_ab, hgab, &   !<GPU:gvt4=>gvt4_d>
                dhgab_dxs2ab, dhgab_dzsab )
     !
-    CALL pw_spin( rs, zeta, ec_pw_ab, vc_v )
+    CALL pw_spin( rs, zeta, ec_pw_ab, vc_v(1), vc_v(2) )   !<GPU:pw_spin=>pw_spin_d>
     vc_pw_up=vc_v(1) ; vc_pw_dw=vc_v(2)
     !
-    CALL gfunc( cab, gama_ab, xs2ab, gsab, dgsab_dxs2ab )
+    CALL gfunc( cab, gama_ab, xs2ab, gsab, dgsab_dxs2ab )   !<GPU:gfunc=>gfunc_d>
     !
     decab_drhoa = vc_pw_up - vc_pw_a
     decab_drhob = vc_pw_dw - vc_pw_b
@@ -1464,7 +1471,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
     Ec_UEG_ab = ec_pw_ab*rho - ec_pw_a*rhoa - ec_pw_b*rhob
     !
     Ecab = Ec_UEG_ab * (gsab + hgab)
- 
+    !
     v1_ab_up = decab_drhoa * (gsab + hgab) +                             &
                Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2a_drhoa + &
                Ec_UEG_ab * dhgab_dzsab * dzsa_drhoa
@@ -1475,7 +1482,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
     !
     v2_ab_up = two * Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2a_dgrhoa2
     v2_ab_dw = two * Ec_UEG_ab * (dgsab_dxs2ab + dhgab_dxs2ab) * dxs2b_dgrhob2
-  
+
     v3_ab_up = Ec_UEG_ab * dhgab_dzsab * dzsa_dtaua
     v3_ab_dw = Ec_UEG_ab * dhgab_dzsab * dzsb_dtaub
     !
@@ -1483,7 +1490,7 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   !
   ! ... ec and vc
   !
-  ec = Ecaa + Ecbb + Ecab 
+  ec = Ecaa + Ecbb + Ecab
   !
   v1c_up = v1_aa_up + v1_ab_up
   v2c_up = v2_aa_up + v2_ab_up
@@ -1493,11 +1500,14 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
   v2c_dw = v2_bb_dw + v2_ab_dw
   v3c_dw = v3_bb_dw + v3_ab_dw
   !
-  CONTAINS
+END SUBROUTINE m06lc
+  !
   !
   !-------------------------------------------------------------------
-  SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )
+SUBROUTINE gfunc( cspin, gama, xspin, gs, dgs_dx )       !<GPU:DEVICE>
     !-----------------------------------------------------------------
+    !
+    USE kinds,   ONLY : DP
     !
     IMPLICIT NONE
     !
@@ -1521,11 +1531,10 @@ SUBROUTINE m06lc( rhoa, rhob, grho2a, grho2b, taua, taub, ec, v1c_up, v2c_up, &
     !
   END SUBROUTINE gfunc
   !
-END SUBROUTINE m06lc
 !
 !
 !-------------------------------------------------------------------------
-SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )
+SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )       !<GPU:DEVICE>
   !----------------------------------------------------------------------
   !
   USE kinds,    ONLY : DP
@@ -1551,8 +1560,9 @@ SUBROUTINE gvt4( x, z, a, b, c, d, e, f, alpha, hg, dh_dx, dh_dz )
           - three*alpha*(d*x*x + e*x*z + f*z*z)/gamma2  )/gamma2
   !
   RETURN
-  !  
+  !
 END SUBROUTINE gvt4
 !
 !                          END M06L
 !=========================================================================
+END MODULE

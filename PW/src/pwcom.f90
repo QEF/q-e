@@ -64,10 +64,12 @@ CONTAINS
   !--------------------------------------------------------------
   SUBROUTINE init_igk( npwx, ngm, g, gcutw )
     !--------------------------------------------------------------
-    !! Initialize indices igk_k and number of plane waves per k-point:  
-    !! * (k_ik + G)_i = k_ik + G_igk;
-    !! * i = 1, ngk(ik);
-    !! * igk = igk_k(i,ik).
+    !! Initialize indices \(\text{igk_k}\) and number of plane waves
+    !! per k-point:
+    !
+    !! * \((k_{ik} + G)_i = k_{ik} + G_\text{igk}\);
+    !! * i = 1, \text{ngk}(\text{ik});
+    !! * \text{igk} = \text{igk}_k(i,ik).
     !
     INTEGER, INTENT (IN) :: npwx, ngm
     REAL(DP), INTENT(IN) :: gcutw, g(3,ngm)
@@ -107,7 +109,7 @@ END MODULE klist
 !--------------------------------------------------------------
 MODULE lsda_mod
   !
-  !! It contains the variables needed for the lsda calculation.
+  !! It contains the variables needed for the LSDA calculation.
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : ntypx, npk
@@ -379,10 +381,6 @@ MODULE cellmd
   !
   SAVE
   !
-  REAL(DP) :: press
-  !! target pressure
-  REAL(DP) :: cmass
-  !! target cell mass
   REAL(DP) :: at_old(3,3)
   !! the lattice vectors at the previous step
   REAL(DP) :: omega_old

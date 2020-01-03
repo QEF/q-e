@@ -26,7 +26,7 @@ SUBROUTINE export_upf(filename, unit_loc)
                      nstoaets, pseudotype, enls, rhoc, vnl, vpsloc, &
                      lgipaw_reconstruction, use_paw_as_gipaw, use_xsd
   use funct, only: get_dft_name
-  use global_version, only: version_number, svn_revision
+  use global_version, only: version_number
   !
   use pseudo_types
   use write_upf_module, only: write_upf
@@ -55,8 +55,6 @@ SUBROUTINE export_upf(filename, unit_loc)
   IF (iswitch < 4 ) THEN
      upf%generated='Generated using "atomic" code by A. Dal Corso &
                   & v.' // TRIM (version_number)
-    IF ( TRIM (svn_revision) /= 'unknown' ) upf%generated = &
-         TRIM (upf%generated) // ' svn rev. ' // TRIM (svn_revision)
  
   ELSE IF (iswitch==4) THEN
      upf%generated='Generated using LDA-1/2 implemented by Leonardo&

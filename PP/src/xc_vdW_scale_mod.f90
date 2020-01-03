@@ -367,6 +367,7 @@ CONTAINS
   SUBROUTINE get_q0cc_on_grid (cc,lecnl_qx,total_rho, grad_rho, q0, thetas)
 
   USE vdW_DF,               ONLY : spline_interpolation
+  USE corr_lda,             ONLY : pw
 
   implicit none
 
@@ -492,6 +493,7 @@ CONTAINS
              grad_rho_up, grad_rho_down, q0, thetas)
 
   USE vdW_DF,               ONLY : spline_interpolation
+  USE corr_lda,             ONLY : pw_spin
 
   implicit none
 
@@ -590,7 +592,7 @@ CONTAINS
      zeta = (up - down) / rho
      IF (ABS(zeta) > 1.0D0 ) zeta = SIGN(1.0D0, zeta)
      !
-     call pw_spin( cc*r_s, zeta, ec, vc_v )
+     call pw_spin( cc*r_s, zeta, ec, vc_v(1), vc_v(2) )
      dqc_drho_up=vc_v(1) ;  dqc_drho_down=vc_v(2)
      !
      qx = ( up * q0x_up + down * q0x_down ) / rho / cc

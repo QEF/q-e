@@ -50,7 +50,7 @@ SUBROUTINE init_run()
   USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
   USE funct,                    ONLY : dft_is_meta, dft_is_hybrid
-  USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
+  USE metagga_cp,               ONLY : crosstaus, dkedtaus, gradwfc
   !
   USE efcalc,                   ONLY : clear_nbeg
   USE local_pseudo,             ONLY : allocate_local_pseudo

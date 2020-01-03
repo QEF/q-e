@@ -55,10 +55,9 @@ NAMELIST: &INPUTPP
    Type:           CHARACTER
    Default:        'xsf'
    Description:    a string describing the output format to be performed,
-                   allowed values: 'xsf', 'grd', 'xyz'
+                   allowed values: 'xsf', 'xyz'
                    
                        xsf     xcrysden format
-                       grd     GRD gaussian 3D grid format
                        xyz     XMOL format
    +--------------------------------------------------------------------
    
@@ -76,12 +75,7 @@ NAMELIST: &INPUTPP
    
    Type:           LOGICAL
    Default:        .false.
-   Description:    This logical flag control the processing of charge density.
-                   
-                      .TRUE.  generate output file containing charge density.
-                              The file format is controlled by the "output" parameter
-                   
-                      .FALSE. do not generate charge density file
+   Description:    OBSOLETE - no longer implemented. Use "pp.x" instead.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -94,14 +88,14 @@ NAMELIST: &INPUTPP
                        .TRUE.  extract forces from trajectory files and write
                                them to xcrysden file
                    
-                       .FALSE. do not proces forces
+                       .FALSE. do not process forces
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
    Variable:       ldynamics
    
    Type:           LOGICAL
-   Default:        .false.
+   Default:        .true.
    Description:    This logical flag control the processing of atoms trajectory.
                    
                        .TRUE.  process CP trajectory files and generate a trajectory
@@ -138,30 +132,18 @@ NAMELIST: &INPUTPP
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variables:      ns1, ns2, ns3
-   
-   Type:           INTEGER
-   Default:        0
-   Description:    Dimensions of the charge density 3D grid.
-                   
-                   If ns1, ns2, ns3 are 0 or not specified, the dimensions
-                   of the grid in the CP run are assumed; otherwise chargedensity
-                   is re-sampled on the GRID specified with ns1,ns2,ns3
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
    Variables:      np1, np2, np3
    
    Type:           INTEGER
    Default:        1
    Description:    Number of replicas of atomic positions along cell parameters.
                    
-                   If ns1, ns2, ns3 are 1 or not specified, cppp.x do not
-                   replicate atomi positions in space.
+                   If np1, np2, np3 are 1 or not specified, cppp.x does not
+                   replicate atomic positions in space.
                    
-                   If ns1 ns2 ns3 are > 1 cppp.x replicate the positions along
-                   a ns1 times, along b ns2 times and along c ns3 times.
-                   the atomic positions used in the simunation.
+                   If np1, np2, np3 are > 1 cppp.x replicates the atomic
+                   positions used in the simulation np1 times along "a",
+                   np2 times along "b", np3 times along "c".
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -170,6 +152,7 @@ NAMELIST: &INPUTPP
    Type:           INTEGER
    Default:        1
    Description:    number of MD step to be read to build the trajectory
+                   CURRENTLY MUST BE > 1
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -193,36 +176,7 @@ NAMELIST: &INPUTPP
                    ....
    +--------------------------------------------------------------------
    
-   +--------------------------------------------------------------------
-   Variable:       charge_density
-   
-   Type:           CHARACTER
-   Default:        'full'
-   Description:    specify the component of the charge density to plot,
-                   allowed values:
-                   
-                   'full'   print the full electronic charge
-                   'spin'   print the spin polarization (for LSD calculations)
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       state
-   
-   Type:           CHARACTER
-   Default:        ' '
-   Description:    specify the Kohn-Sham state to plot, example: 'KS_1'
-   +--------------------------------------------------------------------
-   
-   +--------------------------------------------------------------------
-   Variable:       lbinary
-   
-   Type:           LOGICAL
-   Default:        .TRUE.
-   Description:    specify the file format of the wave function files
-                   to be read and plotted
-   +--------------------------------------------------------------------
-   
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Mar 01 17:56:48 CET 2019
+This file has been created by helpdoc utility on Thu Nov 28 10:41:56 CET 2019

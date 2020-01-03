@@ -58,7 +58,7 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm4">&amp;INPUTPP</a></p>
 <blockquote>
-<a href="#idm5">prefix</a> | <a href="#idm8">fileout</a> | <a href="#idm11">output</a> | <a href="#idm14">outdir</a> | <a href="#idm17">lcharge</a> | <a href="#idm20">lforces</a> | <a href="#idm23">ldynamics</a> | <a href="#idm26">lpdb</a> | <a href="#idm29">lrotation</a> | <a href="#idm33">ns1</a> | <a href="#idm34">ns2</a> | <a href="#idm35">ns3</a> | <a href="#idm39">np1</a> | <a href="#idm40">np2</a> | <a href="#idm41">np3</a> | <a href="#idm44">nframes</a> | <a href="#idm47">ndr</a> | <a href="#idm50">atomic_number</a> | <a href="#idm53">charge_density</a> | <a href="#idm56">state</a> | <a href="#idm59">lbinary</a>
+<a href="#idm5">prefix</a> | <a href="#idm8">fileout</a> | <a href="#idm11">output</a> | <a href="#idm14">outdir</a> | <a href="#idm17">lcharge</a> | <a href="#idm20">lforces</a> | <a href="#idm23">ldynamics</a> | <a href="#idm26">lpdb</a> | <a href="#idm29">lrotation</a> | <a href="#idm33">np1</a> | <a href="#idm34">np2</a> | <a href="#idm35">np3</a> | <a href="#idm38">nframes</a> | <a href="#idm41">ndr</a> | <a href="#idm44">atomic_number</a>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -133,10 +133,9 @@ basename of the cppp.x output files
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 a string describing the output format to be performed,
-allowed values: 'xsf', 'grd', 'xyz'
+allowed values: 'xsf', 'xyz'
 
     xsf     xcrysden format
-    grd     GRD gaussian 3D grid format
     xyz     XMOL format
          </pre></blockquote></td></tr>
 </table>
@@ -168,12 +167,7 @@ and restart files ( .save ) to be processed
          </td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-This logical flag control the processing of charge density.
-
-   .TRUE.  generate output file containing charge density.
-           The file format is controlled by the "output" parameter
-
-   .FALSE. do not generate charge density file
+OBSOLETE - no longer implemented. Use "pp.x" instead.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -193,7 +187,7 @@ This logical flag control the processing of forces.
     .TRUE.  extract forces from trajectory files and write
             them to xcrysden file
 
-    .FALSE. do not proces forces
+    .FALSE. do not process forces
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
@@ -204,7 +198,7 @@ This logical flag control the processing of forces.
 </tr>
 <tr>
 <td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
-<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .true.
          </td>
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
@@ -261,27 +255,7 @@ This logical flag control the rotation of the cell
       <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
-<a name="idm33"></a><a name="ns1"></a>ns1, <a name="idm34"></a><a name="ns2"></a>ns2, <a name="idm35"></a><a name="ns3"></a>ns3</th>
-<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
-</tr>
-<tr>
-<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
-<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
-         </td>
-</tr>
-<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-Dimensions of the charge density 3D grid.
-
-If ns1, ns2, ns3 are 0 or not specified, the dimensions
-of the grid in the CP run are assumed; otherwise chargedensity
-is re-sampled on the GRID specified with ns1,ns2,ns3
-         </pre></blockquote></td></tr>
-</table>
-<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
-<tr>
-<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
-<a name="idm39"></a><a name="np1"></a>np1, <a name="idm40"></a><a name="np2"></a>np2, <a name="idm41"></a><a name="np3"></a>np3</th>
+<a name="idm33"></a><a name="np1"></a>np1, <a name="idm34"></a><a name="np2"></a>np2, <a name="idm35"></a><a name="np3"></a>np3</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
 </tr>
 <tr>
@@ -292,16 +266,16 @@ is re-sampled on the GRID specified with ns1,ns2,ns3
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 Number of replicas of atomic positions along cell parameters.
 
-If ns1, ns2, ns3 are 1 or not specified, cppp.x do not
-replicate atomi positions in space.
+If np1, np2, np3 are 1 or not specified, cppp.x does not
+replicate atomic positions in space.
 
-If ns1 ns2 ns3 are &gt; 1 cppp.x replicate the positions along
-a ns1 times, along b ns2 times and along c ns3 times.
-the atomic positions used in the simunation.
+If np1, np2, np3 are &gt; 1 cppp.x replicates the atomic
+positions used in the simulation np1 times along "a",
+np2 times along "b", np3 times along "c".
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm44"></a><a name="nframes"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm38"></a><a name="nframes"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nframes</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -313,10 +287,11 @@ the atomic positions used in the simunation.
 </tr>
 <tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
 number of MD step to be read to build the trajectory
+CURRENTLY MUST BE &gt; 1
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm47"></a><a name="ndr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm41"></a><a name="ndr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ndr</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -331,7 +306,7 @@ CP restart file number to post process
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm50"></a><a name="atomic_number"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm44"></a><a name="atomic_number"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">atomic_number(i), i=1,ntyp</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -351,62 +326,12 @@ atomic_number(2)  specify the atomic number of the second specie
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm53"></a><a name="charge_density"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
-<tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">charge_density</th>
-<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
-</tr>
-<tr>
-<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
-<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'full'
-         </td>
-</tr>
-<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-specify the component of the charge density to plot,
-allowed values:
-
-'full'   print the full electronic charge
-'spin'   print the spin polarization (for LSD calculations)
-         </pre></blockquote></td></tr>
-</table>
-<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm56"></a><a name="state"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
-<tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">state</th>
-<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
-</tr>
-<tr>
-<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
-<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
-         </td>
-</tr>
-<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-specify the Kohn-Sham state to plot, example: 'KS_1'
-         </pre></blockquote></td></tr>
-</table>
-<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm59"></a><a name="lbinary"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
-<tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lbinary</th>
-<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
-</tr>
-<tr>
-<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
-<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .TRUE.
-         </td>
-</tr>
-<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-specify the file format of the wave function files
-to be read and plotted
-         </pre></blockquote></td></tr>
-</table>
-<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
    </td></tr></tbody></table></td></tr>
 </table>
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Fri Mar 01 17:56:48 CET 2019.
+	  This file has been created by helpdoc utility on Thu Nov 28 10:41:56 CET 2019.
 	</small>
 </body>
 </html>

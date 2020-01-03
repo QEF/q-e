@@ -19,11 +19,13 @@ SUBROUTINE lr_set_boxes_density()
   USE kinds,                ONLY : dp
   USE lr_variables,         ONLY : cube_save
   USE fft_base,             ONLY : dfftp
+  USE fft_types,            ONLY : fft_index_to_3d
   USE lr_variables,         ONLY : lr_verbosity
   !
   IMPLICIT NONE
   !
-  INTEGER :: i, j, k, ir, nnr, ir_end, idx, j0, k0
+  INTEGER :: i, j, k, ir, ir_end
+  LOGICAL :: offrange
   !
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_set_boxes_density>")')
@@ -31,16 +33,12 @@ SUBROUTINE lr_set_boxes_density()
   !
   CALL start_clock( 'lr_set_boxes' )
   !
-  nnr = dfftp%nnr
-  !
-  ALLOCATE( cube_save(nnr,3) )
+  ALLOCATE( cube_save(dfftp%nnr,3) )
   cube_save = 0
   !
 #if defined (__MPI)
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
   ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
 #else
-  j0 = 0 ; k0 = 0
   ir_end = dfftp%nnr
 #endif  
   !
@@ -48,17 +46,8 @@ SUBROUTINE lr_set_boxes_density()
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     IF ( k .GE. dfftp%nr3 ) CYCLE
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     IF ( j .GE. dfftp%nr2 ) CYCLE
-     i   = idx
-     IF ( i .GE. dfftp%nr1 ) CYCLE
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     IF ( offrange ) CYCLE
      !
      cube_save(ir,1) = i
      cube_save(ir,2) = j

@@ -1805,7 +1805,7 @@ MODULE paw_onecenter
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : is_libxc
-    USE xc_gga,                 ONLY : xc_gcx
+    USE xc_gga,                 ONLY : xc_gcx, change_threshold_gga
     !
     TYPE(paw_info), INTENT(IN) :: i
     !! atom's minimal info
@@ -1905,9 +1905,17 @@ MODULE paw_onecenter
              gradsw(1:3,k,1) = grad(k,1:3,1)
           ENDDO
           !
+          CALL change_threshold_gga( 1.E-10_DP )
+          !
           CALL dgcxc( i%m, nspin_mag, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
           !
+          dsvxc_rr = dsvxc_rr / e2
+          dsvxc_sr = dsvxc_sr / e2
+          dsvxc_ss = dsvxc_ss / e2
+          !
           CALL xc_gcx( i%m, nspin_mag, r, gradsw, sx, sc, v1x, v2x, v1c, v2c )
+          !
+          CALL change_threshold_gga( 1.D-6 )
           !
           DO k = 1, i%m
              s1 = grad(k,1,1) * dgrad(k,1,1) + &
@@ -1916,8 +1924,8 @@ MODULE paw_onecenter
              !
              dsvxc_s = v2x(k,1) + v2c(k,1)
              !
-             gc_rad(k,ix,1)  = dsvxc_rr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) &
-                               + dsvxc_sr(k,1,1) * s1 * sign_v(k)
+             gc_rad(k,ix,1)  = ( dsvxc_rr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) &
+                               + dsvxc_sr(k,1,1) * s1 ) * sign_v(k)
              !
              h_rad(k,:,ix,1) = ( (dsvxc_sr(k,1,1) * drho_rad(k,1) * g(i%t)%rm2(k) + &
                                   dsvxc_ss(k,1,1)*s1) * grad(k,:,1) + &
@@ -1962,6 +1970,10 @@ MODULE paw_onecenter
           ENDDO
           !
           CALL dgcxc( i%m, nspin_gga, r, grad, dsvxc_rr, dsvxc_sr, dsvxc_ss )
+          !
+          dsvxc_rr = dsvxc_rr / e2
+          dsvxc_sr = dsvxc_sr / e2
+          dsvxc_ss = dsvxc_ss / e2
           !
           CALL xc_gcx( i%m, nspin_gga, r, gradsw, sx, sc, v1x, v2x, v1c, v2c, v2c_ud )
           !

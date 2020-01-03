@@ -822,8 +822,8 @@ MODULE io_base
       LOGICAL                  :: ionode_in_group
       INTEGER :: nproc_in_group
       INTEGER, ALLOCATABLE :: mill_g(:,:)
-      
-      INTEGER :: ig, jg, minus_g_file(3), startjg 
+      CHARACTER(len=256)   :: mesg
+      INTEGER :: ig, jg, minus_g_file(3), startjg, old_ig, new_startjg  
       IF ( .NOT. PRESENT (this_run_is_gamma_only) ) RETURN 
       IF ( this_run_is_gamma_only) THEN 
          call infomsg('read_rhog','Conversion: K charge Gamma charge') 
@@ -859,7 +859,7 @@ MODULE io_base
                   ig = ig + 1 
                endif
                IF ( ig .GE. ngm_g ) EXIT  
-            END DO
+               END DO
          ELSE ! this run uses full fft mesh 
             ig = 1 
             DO jg = 1, ngm_g
@@ -872,22 +872,34 @@ MODULE io_base
                end if 
                if ( ig .GE. ngm_g_file ) EXIT 
             END DO 
+            WRITE (stdout, *) " Plus vectors done"
+            WRITE (stdout, *) " Search of minus vectors is going to take a while" 
             ig = 1 
             minus_g_file = minus_g(ig) 
             startjg = 1 
+            new_startjg = 1 
             igloop: DO 
-            DO jg = startjg, ngm_g  
-                if ( mill_g (1,jg) == minus_g_file(1) .and. &
-                     mill_g (2,jg) == minus_g_file(2) .and. &
-                     mill_g (3,jg) == minus_g_file(3)  )  then 
-                  !
-                  rho_g(jg) = dconjg(rho_aux(ig))
-                  ig = ig + 1 
-                  if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
-               end if 
-               if ( ig .GT. ngm_g_file ) EXIT igloop               
-            END DO 
-            startjg = update_startjg(ig, igtongl(startjg))
+               old_ig = ig 
+               DO jg = startjg, ngm_g  
+                  if ( mill_g (1,jg) == minus_g_file(1) .and. &
+                       mill_g (2,jg) == minus_g_file(2) .and. &
+                       mill_g (3,jg) == minus_g_file(3)  )  then 
+                       !
+                       rho_g(jg) = dconjg(rho_aux(ig))
+                       ig = ig + 1 
+                       if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
+                       if (jg == new_startjg) new_startjg = new_startjg+1 
+                  end if 
+                  if ( ig .GT. ngm_g_file ) EXIT igloop
+               END DO 
+               startjg =  new_startjg    
+               IF ( ig == old_ig) THEN 
+                  WRITE(mesg,*)  "minus_g for ig = ", old_ig,":" , minus_g_file,  "-->", mill_g_file(:,ig), " not found" 
+                  CALL infomsg("read_rhog:" , TRIM(mesg)) 
+                  ig = ig +1 
+                  minus_g_file = minus_g(ig) 
+                  startjg = 1 
+               END IF
             END DO igloop 
          END IF
       ENDIF
@@ -900,36 +912,9 @@ MODULE io_base
             implicit none
             integer   :: minus_mill(3)  
             integer   :: ipol, imill 
-            if ( mill_g_file(1,imill) > 0  ) then 
-               minus_mill  = mill_g_file(:,imill)*[-1,1,1]
-            else if (mill_g_file(1,imill)   == 0 .and. mill_g_file(2,imill)  > 0 ) then 
-               minus_mill  = mill_g_file(:,imill) * [ 0, -1, 1]
-            else if ( mill_g_file(1,imill) == 0 .and. mill_g_file(2,imill) == 0 .and. mill_g_file(3,imill) > 0 ) then 
-               minus_mill  = mill_g_file(:,imill) * [0, 0, -1] 
-            else 
-               minus_mill = mill_g_file(:,imill) 
-            endif 
+            minus_mill = - mill_g_file(:,imill) 
          end function minus_g 
-
-
-         function  update_startjg(igsearching, startigl)  result(start) 
-            USE cell_base,   ONLY: bg 
-            implicit none
-            integer               :: start
-            integer,intent(in)    :: igsearching, startigl 
-            integer                 :: igl
-            real(8)                 :: g(3), gg 
-            
-            g = bg(:,1)*mill_g_file(1,igsearching)+bg(:,2)*mill_g_file(2,igsearching) &
-              + bg(:,3)*mill_g_file(3,igsearching) 
-            gg = (g(1)*g(1)+g(2)*g(2)+g(3)*g(3)) 
-            do igl = startigl, ngl 
-               if (abs(gg-gl(igl)) .lt. 1.d-6 ) exit 
-            end do 
-            do  start = startigl, ngm 
-               if ( igtongl(start) == igl) exit 
-            end do 
-         end function  update_startjg
+ 
     END SUBROUTINE charge_k_to_g
     !
   END MODULE io_base

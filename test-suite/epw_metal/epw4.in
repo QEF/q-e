@@ -58,7 +58,7 @@
   mob_maxiter   = 30
   broyden_beta  = 1.0
   restart       = .true.
-  restart_freq  = 50
+  restart_step  = 50
   selecqread    = .true.
   nstemp        = 2
   tempsmin      = 100
