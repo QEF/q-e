@@ -22,7 +22,7 @@ SUBROUTINE hinit0()
   USE realus,           ONLY : generate_qpointlist, betapointlist, &
                                init_realspace_vars, real_space
   USE ldaU,             ONLY : lda_plus_U, U_projection
-  USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing
+  USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
   !
   IMPLICIT NONE
@@ -41,7 +41,7 @@ SUBROUTINE hinit0()
   IF ( lda_plus_U .AND. ( U_projection == 'pseudo' ) ) CALL init_q_aeps()
   CALL init_at_1()
   !
-  IF ( startingconfig == 'file' ) THEN
+  IF ( restart .AND. startingconfig == 'file' ) THEN
      !
      IF ( lmovecell ) THEN
         !
@@ -54,8 +54,11 @@ SUBROUTINE hinit0()
         CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
         CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
         CALL scale_h( )
+        !
      ELSE
+        !
         CALL read_conf_from_file( lmovecell, nat, nsp, tau, at_old )
+        !
      END IF
      !
   ENDIF
