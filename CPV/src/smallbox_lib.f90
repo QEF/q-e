@@ -165,7 +165,7 @@
       ainvb(2,:) = bgb(:,2)/alatb
       ainvb(3,:) = bgb(:,3)/alatb
 
-      CALL r_to_s( taub, taus, na, nsp, ainvb )
+      CALL r_to_s( taub, taus, nat, ainvb )
       CALL phfacs( ei1b, ei2b, ei3b, eigrb, mill_b, taus, dfftb%nr1,dfftb%nr2,dfftb%nr3, nat )
 !
       if(iverbosity > 2) then

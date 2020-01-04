@@ -15,7 +15,7 @@
       use kinds,             only : DP
       use io_global,         only : stdout
       use constants,         only : autoev
-      use dspev_module,      only : dspev_drv, pdspev_drv
+      use dspev_module,      only : dspev_drv, pdspev_drv, pdsyevd_drv
       USE sic_module,        only : self_interaction
       USE descriptors,       ONLY : la_descriptor
       USE mp,                only : mp_sum, mp_bcast

@@ -375,24 +375,20 @@
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE r_to_s3 ( r, s, na, nsp, hinv )
+        SUBROUTINE r_to_s3 ( r, s, nat, hinv )
           REAL(DP), intent(out) ::  S(:,:)
-          INTEGER, intent(in) ::  na(:), nsp
+          INTEGER, intent(in) ::  nat
           REAL(DP), intent(in) :: R(:,:)
           REAL(DP), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
-          integer :: i, j, ia, is, isa
-          isa = 0
-          DO is = 1, nsp
-            DO ia = 1, na(is)
-              isa = isa + 1
-              DO I=1,3
-                S(I,isa) = 0.0_DP
-                DO J=1,3
-                  S(I,isa) = S(I,isa) + R(J,isa)*hinv(i,j)
+          integer :: i, j, ia
+            DO ia = 1, nat
+              DO i=1,3
+                S(i,ia) = 0.0_DP
+                DO j=1,3
+                  S(i,ia) = S(i,ia) + R(j,ia)*hinv(i,j)
                 END DO
               END DO
             END DO
-          END DO
           RETURN
         END SUBROUTINE r_to_s3
 
@@ -447,24 +443,20 @@
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE s_to_r3 ( S, R, na, nsp, h )
+        SUBROUTINE s_to_r3 ( S, R, nat, h )
           REAL(DP), intent(in) ::  S(:,:)
-          INTEGER, intent(in) ::  na(:), nsp
+          INTEGER, intent(in) ::  nat
           REAL(DP), intent(out) :: R(:,:)
           REAL(DP), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
-          integer :: i, j, ia, is, isa
-          isa = 0
-          DO is = 1, nsp
-            DO ia = 1, na(is)
-              isa = isa + 1
+          integer :: i, j, ia
+            DO ia = 1, nat
               DO I = 1, 3
-                R(I,isa) = 0.0_DP
+                R(I,ia) = 0.0_DP
                 DO J = 1, 3
-                  R(I,isa) = R(I,isa) + S(J,isa) * h(I,j)
+                  R(I,ia) = R(I,ia) + S(J,ia) * h(I,j)
                 END DO
               END DO
             END DO
-          END DO
           RETURN
         END SUBROUTINE s_to_r3
 

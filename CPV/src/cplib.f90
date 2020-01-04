@@ -280,7 +280,7 @@
          USE io_global,     ONLY: ionode, stdout
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
                                   tzerop, tv0rd, taurdr, nbeg, tcp, tcap
-         USE ions_base,     ONLY: tau_srt, if_pos, ind_srt, nsp, na, &
+         USE ions_base,     ONLY: if_pos, nsp, na, tau, &
                                   amass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
          USE constants,     ONLY: amu_au
@@ -323,7 +323,7 @@
            WRITE(stdout,1000) is, na(is), amass(is)*amu_au, amass(is), rcmax(is)
            DO IA = 1, na(is)
              isa = isa + 1
-             WRITE(stdout,1010) ( tau_srt(k,isa), K = 1,3 )
+             WRITE(stdout,1010) ( tau(k,isa), K = 1,3 )
            END DO
          END DO    
 
@@ -340,13 +340,12 @@
               WRITE(stdout,1020)
               WRITE(stdout,1022)
 
-              DO isa = 1, nat
-                ia = ind_srt( isa )
+              DO ia = 1, nat
                 ismb( 1 ) = ( if_pos(1,ia) /= 0 )
                 ismb( 2 ) = ( if_pos(2,ia) /= 0 )
                 ismb( 3 ) = ( if_pos(3,ia) /= 0 )
                 IF( .NOT. ALL( ismb ) ) THEN
-                  WRITE( stdout, 1023 ) isa, ( ismb(k), K = 1, 3 )
+                  WRITE( stdout, 1023 ) ia, ( ismb(k), K = 1, 3 )
                 END IF
               END DO
 
@@ -656,7 +655,6 @@ SUBROUTINE new_atomind_constraints()
    !
    USE kinds,              ONLY: DP
    USE constraints_module, ONLY: constr
-   USE ions_base,          ONLY: ind_bck
    !
    IMPLICIT NONE
    !
@@ -672,7 +670,7 @@ SUBROUTINE new_atomind_constraints()
       DO ia = 1, SIZE( constr, 1 )
          IF( constr( ia, ic ) > 0.0d0 ) THEN
             iaa = NINT( constr( ia, ic ) )
-            aa  = DBLE( ind_bck( iaa ) )
+            aa  = DBLE( iaa )
             constr( ia, ic ) = aa
          END IF
       END DO

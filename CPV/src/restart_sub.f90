@@ -20,7 +20,7 @@ SUBROUTINE from_restart( )
    USE io_global,             ONLY : ionode, ionode_id, stdout
    USE cell_base,             ONLY : ainv, h, hold, deth, r_to_s, s_to_r, &
                                      velh, at, alat
-   USE ions_base,             ONLY : na, nsp, iforce, vel_srt, nat, &
+   USE ions_base,             ONLY : na, nsp, iforce, vel, nat, ityp, &
                                      randpos, randvel, amass
    USE time_step,             ONLY : tps, delt
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities, velsm
@@ -60,7 +60,7 @@ SUBROUTINE from_restart( )
       ! ... Input positions read from input file and stored in tau0
       ! ... in readfile, only scaled positions are read
       !
-      CALL r_to_s( tau0, taus, na, nsp, ainv )
+      CALL r_to_s( tau0, taus, nat, ainv )
       !
    END IF
    !
@@ -73,7 +73,7 @@ SUBROUTINE from_restart( )
       ! ... to tausm=tau(t)-v*delta t so that the Verlet algorithm will 
       ! ... start with the correct velocity
       !
-      CALL r_to_s( vel_srt, vels, na, nsp, ainv )
+      CALL r_to_s( vel, vels, nat, ainv )
       tausm(:,:) =  taus(:,:) - vels(:,:)*delt
       velsm(:,:) =  vels(:,:)
       !
@@ -83,30 +83,29 @@ SUBROUTINE from_restart( )
       !
       ! ... Input positions are randomized
       !
-      CALL randpos( taus, na, nsp, tranp, amprp, ainv, iforce )
+      CALL randpos( taus, nat, ityp, tranp, amprp, ainv, iforce )
       !
    END IF
    !
    IF ( tzerop .AND. tfor ) THEN
       !
-      vel_srt(:,:) = 0.0_dp
+      vel(:,:) = 0.0_dp
       vels(:,:) = 0.0_dp
       CALL set_velocities( tausm, taus, vels, iforce, nat, delt )
       WRITE( stdout, '(" Ionic velocities set to zero")' )
       !
    END IF
    !
-   CALL s_to_r( taus,  tau0, na, nsp, h )
+   CALL s_to_r( taus,  tau0, nat, h )
    !
    !CALL s_to_r( tausm, taum, na, nsp, h )
    !BS: tausm to taum conversion should use hold in variable cell calculations...
-   CALL s_to_r( tausm, taum, na, nsp, hold )
+   CALL s_to_r( tausm, taum, nat, hold )
 
    IF ( tfor .AND. tcap ) THEN
         WRITE( stdout, '(" Randomizing ions velocities according to tempw (OLD VELOCITIES DISCARDED)")' )
-     CALL  randvel( tempw, tau0 , taum, &
-                    na, nsp, iforce, amass, delt )
-     CALL r_to_s( taum, tausm, na, nsp, ainv )  
+     CALL  randvel( tempw, tau0 , taum, nat, ityp, iforce, amass, delt )
+     CALL r_to_s( taum, tausm, nat, ainv )  
      vels(:,:) = (taus(:,:)-tausm(:,:))/delt
      velsm(:,:) = vels(:,:)
       

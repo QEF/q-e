@@ -44,7 +44,7 @@
          WRITE( stdout,*) ' phfac: tau0 '
          WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
       endif
-      CALL r_to_s( tau0, taus, na, nsp, ainv )
+      CALL r_to_s( tau0, taus, nat, ainv )
       CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )
 
       deallocate( taus )

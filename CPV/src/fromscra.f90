@@ -14,7 +14,7 @@ SUBROUTINE from_scratch( )
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, force_pairing
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm
-    USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel_srt
+    USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel, ityp
     USE ions_base,            ONLY : cdmi, nat, iforce
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
@@ -101,9 +101,9 @@ SUBROUTINE from_scratch( )
        !
        CALL invmat( 3, h, ainv, deth )
        !
-       CALL randpos( taus, na, nsp, tranp, amprp, ainv, iforce )
+       CALL randpos( taus, nat, ityp, tranp, amprp, ainv, iforce )
        !
-       CALL s_to_r( taus, tau0, na, nsp, h )
+       CALL s_to_r( taus, tau0, nat, h )
        !
     END IF
     !
@@ -156,7 +156,7 @@ SUBROUTINE from_scratch( )
        ! ... to tausm=tau(t)-v*delta t so that the Verlet algorithm will 
        ! ... start with the correct velocity
        !
-       CALL r_to_s( vel_srt, vels, na, nsp, ainv )
+       CALL r_to_s( vel, vels, nat, ainv )
        tausm(:,:) =  taus(:,:) - vels(:,:)*delt
        velsm(:,:) =  vels(:,:)
     ELSE
@@ -287,7 +287,7 @@ SUBROUTINE from_scratch( )
       vnhp  = 0.0d0
       fionm = 0.0d0
       !
-      CALL ions_vel( vels, taus, tausm, na, nsp, delt )
+      CALL ions_vel( vels, taus, tausm, delt )
       !
       xnhh0(:,:) = 0.0d0
       xnhhm(:,:) = 0.0d0
