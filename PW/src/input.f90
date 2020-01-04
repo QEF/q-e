@@ -47,9 +47,8 @@ SUBROUTINE iosys()
   !
   USE run_info,      ONLY : title_ => title
   !
-  USE cellmd,        ONLY : omega_old, at_old, ntcheck, &
-                            cell_factor_ => cell_factor , &
-                            calc, lmovecell
+  USE cellmd,        ONLY : ntcheck, calc, lmovecell, &
+                            cell_factor_ => cell_factor
   !
   USE dynamics_module, ONLY : control_temp, temperature, thermostat, &
                               dt_         => dt, &
@@ -325,9 +324,9 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
+  INTEGER  :: ia, nt, inlc, ibrav_sg
   LOGICAL  :: exst, parallelfs
-  REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
+  REAL(DP) :: at_(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
   !
   ! ... various initializations of control variables
   !
@@ -753,16 +752,18 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
-
   SELECT CASE( trim( restart_mode ) )
   CASE( 'from_scratch' )
      !
      restart        = .false.
-     IF ( lscf ) THEN
-        startingconfig = 'input'
-     ELSE
+     ! ... non-scf calculation: read atomic positions from file
+     ! ... so that they are consistent.  FIXME: lforcet?
+     IF ( trim( ion_positions ) == 'from_file' .OR. &
+          (.NOT. lscf .AND. .NOT. lforcet) ) THEN
         startingconfig = 'file'
-     ENDIF
+     ELSE
+        startingconfig = 'input'
+     END IF
      !
   CASE( 'restart' )
      !
@@ -829,8 +830,6 @@ SUBROUTINE iosys()
   Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
   Hubbard_beta(:) = Hubbard_beta(:) / rytoev
   !
-  ethr = diago_thr_init
-  !
   IF ( startingpot /= 'atomic' .and. startingpot /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
@@ -887,6 +886,7 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+  ethr = diago_thr_init
   tr2   = conv_thr
   niter = electron_maxstep
   adapt_thr = adaptive_thr
@@ -1374,7 +1374,7 @@ SUBROUTINE iosys()
   CALL plugin_read_input("PW")
   !
   ! ... Files (for compatibility) and directories
-  !     This stuff must be done before calling read_conf_from_file!
+  !     Must be set before calling read_conf_from_file
   !
   tmp_dir = trimcheck ( outdir )
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
@@ -1383,21 +1383,19 @@ SUBROUTINE iosys()
      wfc_dir = tmp_dir
   ENDIF
   !
-  at_old    = at
-  omega_old = omega
-  !
-  ! ... Read atomic positions and unit cell from data file, if needed,
-  ! ... overwriting what has just been read before from input
-  ! ... read_conf_from_file returns 0 if structure successfully read
-  !
-  ierr = 1
-  IF ( startingconfig == 'file' .AND. .NOT. lforcet ) &
-     CALL read_conf_from_file( lmovecell, at_old, omega_old, ierr )
-  !
-  ! ... Atomic positions (tau) must be converted to internal units
-  ! ... only if they were read from input, not from file
-  !
-  IF ( ierr /= 0 ) CALL convert_tau ( tau_format, nat_, tau)
+  IF ( .NOT. restart .AND. startingconfig=='file' ) THEN
+     !
+     ! ... Read atomic positions from file
+     !
+     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, at_ )
+     !
+  ELSE
+     !
+     ! ... Convert atomic positions (tau) to internal units
+     !
+     CALL convert_tau ( tau_format, nat_, tau)
+     !
+  END IF
   !
   ! ... set up k-points
   !
@@ -1434,7 +1432,6 @@ SUBROUTINE iosys()
   ! ... set constraints for cell dynamics/optimization
   !
   CALL init_dofree ( cell_dofree )
-  !
   !
   ! ... Initialize temporary directory(-ies)
   !
