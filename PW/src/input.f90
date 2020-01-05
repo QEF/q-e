@@ -88,6 +88,7 @@ SUBROUTINE iosys()
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
+                            pseudo_dir_cur, restart_dir, &
                             check_tempdir, clean_tempdir
   !
   USE force_mod,     ONLY : lforce, lstres, force
@@ -328,7 +329,12 @@ SUBROUTINE iosys()
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: at_(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
   !
-  ! ... various initializations of control variables
+  ! MAIN CONTROL VARIABLES, MD AND RELAX
+  !
+  title_      = title
+  prefix_     = trim( prefix )
+  pseudo_dir_ = trimcheck( pseudo_dir )
+  lecrpa_     = lecrpa  
   !
   lforce    = tprnfor
   !
@@ -492,14 +498,18 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+  dt_    = dt
+  nstep_ = nstep
   lstres = lmovecell .OR. ( tstress .and. lscf )
   !
-  IF ( tefield .and. ( .not. nosym ) .and. ( .not. gate )) THEN
+  ! ELECTRIC FIELDS (SAWTOOTH), GATE FIELDS
+  !
+  IF ( tefield .and. ( .not. nosym ) .and. ( .not. gate ) ) THEN
      nosym = .true.
      WRITE( stdout, &
             '(5x,"Presently no symmetry can be used with electric field",/)' )
   ENDIF
-  !TB begin some checks on input
+  !
   IF ( (gate) .AND. ( .NOT. nosym )) THEN
      WRITE( stdout,'(/,5x,"Presently symmetry can be used with gate field",/)' )
      WRITE( stdout,'(5x,"setting verbosity to high",/)' )
@@ -519,41 +529,35 @@ SUBROUTINE iosys()
   ENDIF
   IF ( (gate) .AND. (block) ) THEN
      IF ((block_1<0.0) .OR. (block_1>1.0) .OR. (block_2<0.0) .OR. (block_2>1.0)) &
-        CALL errore( 'iosys', 'Both block_1, block_2 have to be between wihtin ]0,1[' , 1 )
+        CALL errore( 'iosys', 'Both block_1, block_2 have to be between within ]0,1[' , 1 )
      IF (block_1>=block_2) &
-        CALL errore( 'iosys', 'Wrong order of block_1, block_2, should be block_1<block_2' , 1 )
+        CALL errore( 'iosys', 'Wrong order of block_1, block_2: should be block_1<block_2' , 1 )
      ENDIF
   ENDIF
-  !TB end
-  IF ( (tefield.or.gate) .and. tstress ) THEN !TB no stress with gate
+  !
+  IF ( (tefield.or.gate) .and. tstress ) THEN
      lstres = .false.
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field and gates",/)' )
   ENDIF
-  !TB Why no E-field with SOC?
-  IF ( (tefield .and. ( nspin > 2 )) .and. (.not.gate) ) THEN
+  ! FIXME: is the following check correct?
+  IF ( (tefield .and. ( nspin > 2 )) .and. (.not.gate) ) &
      CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
-  ENDIF
+  tefield_ = tefield
+  dipfield_= dipfield
+  edir_    = edir
+  emaxpos_ = emaxpos
+  eopreg_  = eopreg
+  eamp_    = eamp
+  gate_    = gate
+  zgate_   = zgate
+  relaxz_  = relaxz
+  block_   = block
+  block_1_ = block_1
+  block_2_ = block_2
+  block_height_ = block_height
   !
-  ! ... define memory- and disk-related internal switches
-  !
-  smallmem = ( TRIM( memory ) == 'small' )
-  !
-  ! ... Set occupancies
-  !
-  CALL set_occupations( occupations, smearing, degauss, &
-       tfixed_occ, ltetra, tetra_type, lgauss, ngauss ) 
-  smearing_ = smearing
-  !
-  IF( ltetra ) THEN
-     IF( lforce ) CALL infomsg( 'iosys', &
-       'BEWARE:  force calculation with tetrahedra (not recommanded)')
-     IF( lstres ) CALL infomsg( 'iosys', &
-       'BEWARE: stress calculation with tetrahedra (not recommanded)')
-  END IF
-  !
-  IF( nbnd < 1 ) &
-     CALL errore( 'iosys', 'nbnd less than 1', nbnd )
+  ! SPIN POLARIZATION
   !
   SELECT CASE( nspin )
   CASE( 1 )
@@ -578,10 +582,21 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
-     CALL errore('iosys', 'simplified LDA+U not implemented with &
-                          &noncol. magnetism, use lda_plus_u_kind = 1', 1)
+  ! OCCUPATIONS
+  !
+  CALL set_occupations( occupations, smearing, degauss, &
+       tfixed_occ, ltetra, tetra_type, lgauss, ngauss )
+  !
+  degauss_ = degauss
+  smearing_ = smearing
+  !
+  IF( ltetra ) THEN
+     IF( lforce ) CALL infomsg( 'iosys', &
+       'BEWARE:  force calculation with tetrahedra (not recommanded)')
+     IF( lstres ) CALL infomsg( 'iosys', &
+       'BEWARE: stress calculation with tetrahedra (not recommanded)')
   END IF
+  IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd )
   !
   two_fermi_energies = ( tot_magnetization /= -1._DP)
   IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
@@ -589,7 +604,7 @@ SUBROUTINE iosys()
   IF ( two_fermi_energies .and. .not. lsda ) &
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
-  IF ( occupations == 'fixed' .and. lsda  .and. lscf ) THEN
+  IF ( TRIM(occupations) == 'fixed' .and. lsda  .and. lscf ) THEN
      !
      IF ( two_fermi_energies ) THEN
         !
@@ -609,6 +624,21 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
+  tot_charge_        = tot_charge
+  tot_magnetization_ = tot_magnetization
+  !
+  IF ( one_atom_occupations .and. trim(occupations) /= 'from_input' ) THEN
+     CALL infomsg( 'iosys', 'one_atom_occupations requires occupations from input' )
+     one_atom_occupations =.false.
+  END IF
+  IF ( one_atom_occupations .and. startingwfc /= 'atomic' ) THEN
+     CALL infomsg( 'iosys', 'one_atom_occupations requires startingwfc atomic' )
+     startingwfc = 'atomic'
+  ENDIF
+  one_atom_occupations_ = one_atom_occupations
+  !
+  ! NONCOLLINEAR MAGNETISM, MAGNETIC CONSTRAINTS
+  !
   IF (noncolin) THEN
      DO nt = 1, ntyp
         !
@@ -620,6 +650,10 @@ SUBROUTINE iosys()
      angle1=0.d0
      angle2=0.d0
   ENDIF
+  !
+  noncolin_ = noncolin
+  lspinorb_ = lspinorb
+  lforcet_ = lforcet
   !
   SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
@@ -752,7 +786,16 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
+  starting_spin_angle_ = starting_spin_angle
+  angle1_   = angle1
+  angle2_   = angle2
+  report_   = report
+  lambda_   = lambda
+  !
+  ! STARTING AND RESTARTING
+  !
   SELECT CASE( trim( restart_mode ) )
+     !
   CASE( 'from_scratch' )
      !
      restart        = .false.
@@ -789,6 +832,38 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+  IF ( startingpot /= 'atomic' .and. startingpot /= 'file' ) THEN
+     !
+     CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
+     IF ( lscf ) THEN
+        startingpot = 'atomic'
+     ELSE 
+        startingpot = 'file'
+     END IF
+     !
+  ENDIF
+  !
+  IF ( .not. lscf .and. startingpot /= 'file' ) THEN
+     !
+     CALL infomsg( 'iosys', 'wrong startingpot: use default (2)' )
+     startingpot = 'file'
+     !
+  ENDIF
+  !
+  IF (      startingwfc /= 'atomic' .and. &
+            startingwfc /= 'random' .and. &
+            startingwfc /= 'atomic+random' .and. &
+            startingwfc /= 'file' ) THEN
+     !
+     CALL infomsg( 'iosys', 'wrong startingwfc: use default (atomic+random)' )
+     startingwfc = 'atomic+random'
+     !
+  ENDIF
+  !
+  ! MEMORY AND DISK USAGE, VERBOSITY
+  !
+  smallmem = ( TRIM( memory ) == 'small' )
+  !
   SELECT CASE( trim( disk_io ) )
   CASE( 'high' )
      !
@@ -824,44 +899,18 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  Hubbard_U(:)    = Hubbard_U(:) / rytoev
-  Hubbard_J0(:)   = Hubbard_J0(:) / rytoev
-  Hubbard_J(:,:)  = Hubbard_J(:,:) / rytoev
-  Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
-  Hubbard_beta(:) = Hubbard_beta(:) / rytoev
+  SELECT CASE( trim( verbosity ) )
+  CASE( 'debug', 'high', 'medium' )
+     iverbosity = 1
+  CASE( 'low', 'default', 'minimal' )
+     iverbosity = 0 
+  CASE DEFAULT
+     iverbosity = 0
+  END SELECT
+  iprint_ = iprint
+  max_xml_steps_ = max_xml_steps
   !
-  IF ( startingpot /= 'atomic' .and. startingpot /= 'file' ) THEN
-     !
-     CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
-     IF ( lscf ) THEN
-        startingpot = 'atomic'
-     ELSE 
-        startingpot = 'file'
-     END IF
-     !
-  ENDIF
-  !
-  IF ( .not. lscf .and. startingpot /= 'file' ) THEN
-     !
-     CALL infomsg( 'iosys', 'wrong startingpot: use default (2)' )
-     startingpot = 'file'
-     !
-  ENDIF
-  !
-  IF (      startingwfc /= 'atomic' .and. &
-            startingwfc /= 'random' .and. &
-            startingwfc /= 'atomic+random' .and. &
-            startingwfc /= 'file' ) THEN
-     !
-     CALL infomsg( 'iosys', 'wrong startingwfc: use default (atomic+random)' )
-     startingwfc = 'atomic+random'
-     !
-  ENDIF
-  ! 
-  IF (one_atom_occupations .and. startingwfc /= 'atomic' ) THEN
-     CALL infomsg( 'iosys', 'one_atom_occupations requires startingwfc atomic' )
-     startingwfc = 'atomic'
-  ENDIF
+  ! DIAGONALIZATION
   !
   SELECT CASE( trim( diagonalization ) )
   CASE ( 'david', 'davidson' )
@@ -892,6 +941,9 @@ SUBROUTINE iosys()
   adapt_thr = adaptive_thr
   tr2_init  = conv_thr_init
   tr2_multi = conv_thr_multi
+  diago_full_acc_ = diago_full_acc
+  !
+  ! EXTRAPOLATION
   !
   pot_order = 1
   SELECT CASE( trim( pot_extrapolation ) )
@@ -949,6 +1001,8 @@ SUBROUTINE iosys()
      ENDIF
      !
   END SELECT
+  !
+  ! TEMPERATURE AND THERMOSTATS
   !
   SELECT CASE( trim( ion_temperature ) )
   CASE( 'not_controlled', 'not-controlled', 'not controlled' )
@@ -1024,6 +1078,8 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+  ! SELF-CONSISTENCY
+  !
   SELECT CASE( trim( mixing_mode ) )
   CASE( 'plain' )
      imix = 0
@@ -1038,21 +1094,16 @@ SUBROUTINE iosys()
   END SELECT
   !
   starting_scf_threshold = tr2
-  nmix = mixing_ndim
-  niter_with_fixed_ns = mixing_fixed_ns
+  nmix                   = mixing_ndim
+  mixing_beta_           = mixing_beta
+  niter_with_fixed_ns    = mixing_fixed_ns
+  scf_must_converge_     = scf_must_converge
   !
   IF ( ion_dynamics == ' bfgs' .and. epse <= 20.D0 * ( tr2 / upscale ) ) &
        CALL errore( 'iosys', 'required etot_conv_thr is too small:' // &
                      & ' conv_thr must be reduced', 1 )
   !
-  SELECT CASE( trim( verbosity ) )
-  CASE( 'debug', 'high', 'medium' )
-     iverbosity = 1
-  CASE( 'low', 'default', 'minimal' )
-     iverbosity = 0 
-  CASE DEFAULT
-     iverbosity = 0
-  END SELECT
+  ! ELECTRIC FIELDS AND BERRY PHASE
   !
   IF ( lberry .OR. lelfield .OR. lorbm ) THEN
      IF ( npool > 1 ) CALL errore( 'iosys', &
@@ -1062,8 +1113,6 @@ SUBROUTINE iosys()
      IF ( lmovecell ) CALL errore( 'iosys', &
           'Berry Phase/electric fields not implemented with variable cell', 1 )
   END IF
-  !
-  ! ... Copy values from input module to PW internals
   !
   nppstr_     = nppstr
   gdir_       = gdir
@@ -1081,89 +1130,64 @@ SUBROUTINE iosys()
      CASE ('read')
         phase_control=2
      CASE DEFAULT
-        CALL errore( 'iosys', &
-          'Unknown efield_phase', 1 )
+        CALL errore( 'iosys', 'Unknown efield_phase', 1 )
   END SELECT
+  !
+  ! HUBBARD U
+  !
+  Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp) / rytoev
+  Hubbard_J_(1:3,1:ntyp)  = hubbard_j(1:3,1:ntyp) / rytoev
+  Hubbard_J0_(1:ntyp)     = hubbard_j0(1:ntyp) / rytoev
+  Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp) / rytoev
+  Hubbard_beta_(1:ntyp)   = hubbard_beta(1:ntyp) / rytoev
+  U_projection            = U_projection_type
+  starting_ns             = starting_ns_eigenvalue
+  !
+  IF ( lda_plus_u .AND. lda_plus_u_kind == 0 .AND. noncolin ) THEN
+     CALL errore('iosys', 'simplified LDA+U not implemented with &
+                          &noncol. magnetism, use lda_plus_u_kind = 1', 1)
+  END IF
+  lda_plus_u_             = lda_plus_u
+  lda_plus_u_kind_        = lda_plus_u_kind
+  !
+  ! REAL-SPACE TREATMENT
+  !
   tqr_        = tqr
   real_space_ = real_space
-  !
   tq_smoothing_ = tq_smoothing
   tbeta_smoothing_ = tbeta_smoothing
   !
-  title_      = title
-  dt_         = dt
-  tefield_    = tefield
-  dipfield_   = dipfield
-  !TB start
-  gate_   = gate
-  zgate_    = zgate
-  relaxz_  = relaxz
-  block_   = block
-  block_1_ = block_1
-  block_2_ = block_2
-  block_height_ = block_height
-  !TB end
-  prefix_     = trim( prefix )
-  pseudo_dir_ = trimcheck( pseudo_dir )
-  nstep_      = nstep
-  iprint_     = iprint
-  max_xml_steps_ = max_xml_steps
-  lecrpa_     = lecrpa
-  scf_must_converge_ = scf_must_converge
-  !
-  nat_     = nat
-  ntyp_    = ntyp
-  edir_    = edir
-  emaxpos_ = emaxpos
-  eopreg_  = eopreg
-  eamp_    = eamp
-  ecfixed_ = ecfixed
-  qcutz_   = qcutz
-  q2sigma_ = q2sigma
-  degauss_ = degauss
-  !
-  tot_charge_        = tot_charge
-  tot_magnetization_ = tot_magnetization
-  !
-  lspinorb_ = lspinorb
-  lforcet_ = lforcet
-  starting_spin_angle_ = starting_spin_angle
-  noncolin_ = noncolin
-  angle1_   = angle1
-  angle2_   = angle2
-  report_   = report
-  lambda_   = lambda
-  one_atom_occupations_ = one_atom_occupations
+  ! SYMMETRY
   !
   no_t_rev_ = no_t_rev
   allfrac   = use_all_frac
+  noinv_    = noinv
+  nosym_    = nosym
+  nosym_evc_= nosym_evc
+  nofrac    = force_symmorphic
+  !
+  ! MISCELLANEOUS VARIABLES
   !
   spline_ps_ = spline_ps
+  la2F_      = la2F
   !
-  Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
-  Hubbard_J_(1:3,1:ntyp)  = hubbard_j(1:3,1:ntyp)
-  Hubbard_J0_(1:ntyp)     = hubbard_j0(1:ntyp)
-  Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)
-  Hubbard_beta_(1:ntyp)   = hubbard_beta(1:ntyp)
-  lda_plus_u_             = lda_plus_u
-  lda_plus_u_kind_        = lda_plus_u_kind
-  la2F_                   = la2F
+  ! ... Copy values from input module to PW internals
+  !
+  nat_     = nat
+  ntyp_    = ntyp
+  ecfixed_ = ecfixed
+  qcutz_   = qcutz
+  q2sigma_ = q2sigma
+  !
   nspin_                  = nspin
   starting_charge_        = starting_charge
   starting_magnetization_ = starting_magnetization
-  starting_ns             = starting_ns_eigenvalue
-  U_projection            = U_projection_type
-  noinv_                  = noinv
-  nosym_                  = nosym
-  nosym_evc_              = nosym_evc
-  nofrac                  = force_symmorphic
   nbnd_                   = nbnd
   !
+  max_seconds_ = max_seconds
   !
-  diago_full_acc_ = diago_full_acc
   starting_wfc    = startingwfc
   starting_pot    = startingpot
-  mixing_beta_    = mixing_beta
   !
   remove_rigid_rot_ = remove_rigid_rot
   upscale_          = upscale
@@ -1188,13 +1212,10 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
-  IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
-  !
   !  ... initialize variables for vdW (dispersions) corrections
   !
-
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
-
+  !
   IF ( london ) THEN
      CALL infomsg("iosys","london is obsolete, use ""vdw_corr='grimme-d2'"" instead")
      vdw_corr='grimme-d2'
@@ -1388,6 +1409,7 @@ SUBROUTINE iosys()
      ! ... Read atomic positions from file
      !
      CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, at_ )
+     pseudo_dir_cur = restart_dir()
      !
   ELSE
      !
@@ -1570,8 +1592,6 @@ SUBROUTINE iosys()
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
 #endif
   CALL deallocate_input_parameters ()  
-  !
-  max_seconds_ = max_seconds
   !
   RETURN
   !
