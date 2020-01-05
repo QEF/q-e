@@ -67,7 +67,7 @@
       !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: cdm0( 3 )
-      REAL(DP) :: dis( nsp )
+      REAL(DP) :: dis( SIZE(na) )
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia, kilobytes
@@ -149,7 +149,7 @@
             IF(tstdout) &
                WRITE( stdout,1000) SUM( ( cdm0(:)-cdmi(:) )**2 ) 
             !
-            CALL ions_displacement( dis, tau0 )
+            CALL ions_displacement( dis, tau0, nsp, nat, ityp )
             !
             IF( print_stress ) THEN
                !

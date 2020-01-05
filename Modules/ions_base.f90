@@ -597,7 +597,7 @@
 !------------------------------------------------------------------------------!
 
 
-   SUBROUTINE ions_displacement( dis, tau )
+   SUBROUTINE ions_displacement( dis, tau, nsp, nat, ityp )
 
       !  Calculate the sum of the quadratic displacements of the atoms in the ref.
       !    of cdm respect to the initial positions.
@@ -611,6 +611,7 @@
 
       REAL (DP), INTENT(OUT) :: dis(:)
       REAL (DP), INTENT(IN)  :: tau(:,:)
+      INTEGER, INTENT(IN)  :: nsp, nat, ityp(:)
 
       REAL(DP) :: rdist(3), cdm(3)
       INTEGER  :: ia
@@ -624,7 +625,7 @@
          rdist = tau(:,ia) - cdm
          dis(ityp(ia)) = dis(ityp(ia)) + SUM( ( rdist(:) - taui(:,ia) )**2 )
       END DO
-      dis(:) = dis(:) / DBLE(na(:))
+      dis(1:nsp) = dis(1:nsp) / DBLE(na(1:nsp))
 
       RETURN
    END SUBROUTINE ions_displacement
