@@ -136,6 +136,7 @@ poten.o : condcom.o
 print_clock_pwcond.o : ../../Modules/io_global.o
 print_clock_pwcond.o : ../../Modules/mp_world.o
 print_clock_pwcond.o : condcom.o
+realus_scatt.o : ../../FFTXlib/fft_types.o
 realus_scatt.o : ../../Modules/cell_base.o
 realus_scatt.o : ../../Modules/constants.o
 realus_scatt.o : ../../Modules/fft_base.o
