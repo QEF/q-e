@@ -163,13 +163,13 @@
             ! ... write out a standard XYZ file in angstroms
             !
             IF(tstdout) &
-               CALL printout_pos( stdout, tau0, nat, what = 'pos', label = atm )
+               CALL printout_pos( stdout, tau0, nat, ityp, what = 'pos', label = atm )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
-                  CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
+                  CALL printout_pos( 35, tau0, nat, ityp, nfi = nfi, tps = tps )
                else
-                  CALL printout_pos( 35, tau0, nat, what = 'xyz', &
+                  CALL printout_pos( 35, tau0, nat, ityp, what = 'xyz', &
                                nfi = nfi, tps = tps, label = atm, &
                                fact= BOHR_RADIUS_ANGS )
                endif
@@ -193,14 +193,14 @@
             IF(tstdout) WRITE( stdout, * )
             !
             IF(tstdout) &
-               CALL printout_pos( stdout, tauw, nat, &
+               CALL printout_pos( stdout, tauw, nat, ityp, &
                                what = 'vel', label = atm )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
-                  CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps )
+                  CALL printout_pos( 34, tauw, nat, ityp, nfi = nfi, tps = tps )
                else
-                  CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps, &
+                  CALL printout_pos( 34, tauw, nat, ityp, nfi = nfi, tps = tps, &
                                what = 'vel', label = atm )
                endif
             END IF
@@ -210,14 +210,14 @@
                IF(tstdout) WRITE( stdout, * )
                !
                IF(tstdout) &
-                  CALL printout_pos( stdout, fion, nat, &
+                  CALL printout_pos( stdout, fion, nat, ityp, &
                                   what = 'for', label = atm )
                !
                IF( tfile ) then
                   if (.not.nice_output_files) then
-                     CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
+                     CALL printout_pos( 37, fion, nat, ityp, nfi = nfi, tps = tps )
                   else
-                     CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps, &
+                     CALL printout_pos( 37, fion, nat, ityp, nfi = nfi, tps = tps, &
                           what = 'for', label = atm )
                   endif
                END IF

@@ -217,7 +217,7 @@ SUBROUTINE from_scratch( )
       CALL compute_stress( stress, detot, h, omega )
 
       if( iverbosity > 1 ) &
-             CALL printout_pos( stdout, fion, nat, head = ' fion ' )
+             CALL printout_pos( stdout, fion, nat, ityp, head = ' fion ' )
 
       CALL newd( vpot, irb, eigrb, becsum, fion )
       !
