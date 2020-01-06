@@ -1578,7 +1578,7 @@ END SUBROUTINE print_lambda_x
 !     < beta | phi > is real. only the i lowest:
 !
 
-      CALL nlsm1( nbspx_bgrp, 1, nsp, eigr, cp, becp )
+      CALL nlsm1( nbspx_bgrp, 1, nsp, eigr, cp, becp, 2 )
 
       nnn = MIN( 12, n )
 

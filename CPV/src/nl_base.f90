@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-   subroutine nlsm1_x ( n, nspmn, nspmx, eigr, c, becp )
+   subroutine nlsm1_x ( n, nspmn, nspmx, eigr, c, becp, pptype_ )
 !-----------------------------------------------------------------------
 
       !     computes: the array becp
@@ -35,18 +35,32 @@
       integer,     intent(in)  :: n, nspmn, nspmx
       complex(DP), intent(in)  :: eigr( :, : ), c( :, : )
       real(DP), intent(out) :: becp( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
       !
       integer   :: ig, is, iv, ia, l, inl
       real(DP), allocatable :: becps( :, : )
       complex(DP), allocatable :: wrk2( :, : )
       complex(DP) :: cfact
+      integer :: pptype
       !
       call start_clock( 'nlsm1' )
 
+      IF( PRESENT( pptype_ ) ) THEN
+         pptype = pptype_
+      ELSE
+         pptype = 0
+      END IF
+
       allocate( wrk2( ngw, nhm ) ) 
+      allocate( becps( SIZE(becp,1), SIZE(becp,2) ) ) 
+      becps = 0.0d0
 
       do is = nspmn, nspmx
         !
+        IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
+        IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
+
           DO ia = 1, nat
 
             IF( ityp(ia) == is ) THEN
@@ -83,7 +97,7 @@
               !
               inl = indv_ijkb0(ia) + 1
               IF( ngw > 0 ) THEN
-                 CALL dgemm( 'T', 'N', nh(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
+                 CALL dgemm( 'T', 'N', nh(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nkb )
               END IF
             END IF
           end do
@@ -91,8 +105,23 @@
 
       DEALLOCATE( wrk2 )
       IF( nproc_bgrp > 1 ) THEN
-        CALL mp_sum( becp, intra_bgrp_comm )
+        CALL mp_sum( becps, intra_bgrp_comm )
       END IF
+      do is = nspmn, nspmx
+        IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
+        IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
+          DO ia = 1, nat
+            IF( ityp(ia) == is ) THEN
+              inl = indv_ijkb0(ia)
+              do iv = 1, nh( is )
+                becp(inl+iv,:) = becps( inl+iv, : )
+              end do
+            END IF
+          end do
+      end do
+              !
+      
+      DEALLOCATE( becps )
 
       call stop_clock( 'nlsm1' )
 
@@ -144,7 +173,7 @@
         !
         do is=1,nsp
           !
-          IF( upf(is)%tvanp ) THEN
+          !IF( upf(is)%tvanp ) THEN
             !
             DO ia = 1, nat
 
@@ -190,7 +219,7 @@
                 END IF
               END IF
             end do
-          END IF
+          !END IF
         end do
       end do
 
@@ -313,7 +342,7 @@
 
 
 !-----------------------------------------------------------------------
-   subroutine calbec_x ( nspmn, nspmx, eigr, c, bec )
+   subroutine calbec_x ( nspmn, nspmx, eigr, c, bec, pptype_ )
 !-----------------------------------------------------------------------
 
       !     this routine calculates array bec
@@ -333,12 +362,13 @@
       integer,     intent(in)  :: nspmn, nspmx
       real(DP),    intent(out) :: bec( :, : )
       complex(DP), intent(in)  :: c( :, : ), eigr( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
 
       ! local variables
 !
       call start_clock( 'calbec' )
       !
-      call nlsm1( nbsp, nspmn, nspmx, eigr, c, bec )
+      call nlsm1( nbsp, nspmn, nspmx, eigr, c, bec, pptype_ )
 !
       call stop_clock( 'calbec' )
 !
@@ -347,7 +377,7 @@
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-   subroutine calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+   subroutine calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp, pptype_ )
 !-----------------------------------------------------------------------
 
       !     this routine calculates array bec
@@ -367,10 +397,11 @@
       integer,     intent(in)  :: nspmn, nspmx
       real(DP),    intent(out) :: bec_bgrp( :, : )
       complex(DP), intent(in)  :: c_bgrp( :, : ), eigr( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
 !
       call start_clock( 'calbec' )
       !
-      call nlsm1( nbsp_bgrp, nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+      call nlsm1( nbsp_bgrp, nspmn, nspmx, eigr, c_bgrp, bec_bgrp, pptype_ )
       !
       call stop_clock( 'calbec' )
 !

@@ -276,7 +276,7 @@ SUBROUTINE from_scratch( )
       ENDIF
       !
       !
-      CALL calbec_bgrp ( nvb+1, nsp, eigr, c0_bgrp, bec_bgrp )
+      CALL calbec_bgrp ( 1, nsp, eigr, c0_bgrp, bec_bgrp, 1 )
       !
       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
 

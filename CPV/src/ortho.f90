@@ -331,12 +331,12 @@
          !
          becp_bgrp = 0.0d0
          !
-         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, phi_bgrp, becp_bgrp )
+         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, phi_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, descla )
          !
          becp_bgrp = 0.0d0
          !
-         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, cp_bgrp, becp_bgrp )
+         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, cp_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, descla )
          !
       END IF

@@ -577,7 +577,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !
-         CALL calbec_bgrp( nvb+1, nsp, eigr, cm_bgrp, bec_bgrp )
+         CALL calbec_bgrp( 1, nsp, eigr, cm_bgrp, bec_bgrp, 1 )
          !
          IF ( tpre ) THEN
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
