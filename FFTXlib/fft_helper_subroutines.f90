@@ -21,7 +21,7 @@ CONTAINS
      REAL(DP), INTENT(INOUT)  :: tg_rho_nc(:,:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
-     INTEGER :: ierr, ioff, idx, ir3, ir, ipol, ioff_tg, nxyp, npol_
+     INTEGER :: ierr, ioff, ir3, ir, ipol, ioff_tg, nxyp, npol_
 !     write (*,*) ' enter tg_reduce_rho_1'
 
 #if defined(__MPI)
@@ -71,7 +71,7 @@ CONTAINS
      REAL(DP), INTENT(INOUT)  :: tmp_rhos(:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
-     INTEGER :: ierr, ioff, idx, ir3, nxyp, ioff_tg
+     INTEGER :: ierr, ioff, ir3, nxyp, ioff_tg
 !     write (*,*) ' enter tg_reduce_rho_2'
 
      IF ( desc%nproc2 > 1 ) THEN

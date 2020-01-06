@@ -8,6 +8,8 @@
 !----------------------------------------------------------------------------
 SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
   !--------------------------------------------------------------------------
+  !! Calculates the Fourier transform of \(d\text{Rho}_c/dG\).
+  !
   USE kinds
   USE constants,  ONLY : pi, fpi
   !
@@ -30,7 +32,7 @@ SUBROUTINE deriv_drhoc( ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg )
   REAL(DP), INTENT(IN) :: tpiba2
   !! input: 2 times pi / alat
   REAL(DP), INTENT(OUT) :: drhocg(ngl)
-  !! output: fourier transform of d Rho_c/dG
+  !! Fourier transform of d Rho_c/dG
   !
   ! ... local variables
   !

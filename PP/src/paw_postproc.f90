@@ -21,6 +21,7 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
    USE uspp_param,        ONLY : nh, nhm, upf
    USE scf,               ONLY : scf_type
    USE fft_base,          ONLY : dfftp
+   USE fft_types,         ONLY : fft_index_to_3d
    USE splinelib,         ONLY : spline, splint
    USE cell_base,         ONLY : at, bg, alat
 
@@ -31,8 +32,9 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
    INTEGER                 :: ir                    ! counter on grid point
    INTEGER                 :: is                    ! spin index
    INTEGER                 :: lm                    ! counters on angmom and radial grid
-   INTEGER                 :: j,k,l, idx, idx0
+   INTEGER                 :: j,k,l
    INTEGER                 :: ia
+   LOGICAL                 :: offrange
    REAL(DP),ALLOCATABLE    :: wsp_lm(:,:,:), ylm_posi(:,:), d1y(:), d2y(:)
    REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)
    REAL(DP)                :: posi(3), first, second, rhoup, rhodw
@@ -109,18 +111,10 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
          !
          rsp_point : DO ir = 1, dfftp%nr1x * dfftp%my_nr2p * dfftp%my_nr3p
             !
-            ! three dimensional indices (i,j,k)
-            idx   = ir - 1
-            k     = idx / (dfftp%nr1x*dfftp%my_nr2p)
-            idx   = idx - (dfftp%nr1x*dfftp%my_nr2p) * k
-            k     = k + dfftp%my_i0r3p
-            j     = idx /  dfftp%nr1x
-            idx   = idx -  dfftp%nr1x*j
-            j     = j + dfftp%my_i0r2p
-            l     = idx
+            ! three dimensional indices (l,j,k)
             !
-            ! ... do not include points outside the physical range!
-            IF ( l >=  dfftp%nr1 .or. j >=  dfftp%nr2 .or. k >=  dfftp%nr3 ) CYCLE rsp_point
+            CALL fft_index_to_3d (ir, dfftp, l,j,k, offrange)
+            IF ( offrange ) CYCLE rsp_point
             !
             DO ipol = 1, 3
                posi(ipol) = dble( l )*inv_nr1*at(ipol,1) + &

@@ -40,7 +40,7 @@ inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.
 
 [pw_spinorbit/]
 program = PW
-inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,'')
+inputs_args = ('spinorbit.in' ,''), ('spinorbit-1.in' ,''), ('spinorbit-3.in' ,''), ('spinorbit-pbe.in' ,'')
 
 [pw_uspp/]
 program = PW

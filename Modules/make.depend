@@ -37,6 +37,7 @@ check_stop.o : set_signal.o
 command_line_options.o : ../UtilXlib/mp.o
 command_line_options.o : io_global.o
 command_line_options.o : mp_world.o
+compute_dipole.o : ../FFTXlib/fft_types.o
 compute_dipole.o : ../UtilXlib/mp.o
 compute_dipole.o : cell_base.o
 compute_dipole.o : fft_base.o
@@ -95,6 +96,7 @@ exchange_lda_lsda.o : constants.o
 exchange_lda_lsda.o : kind.o
 expint.o : kind.o
 fcp_variables.o : kind.o
+fd_gradient.o : ../FFTXlib/fft_types.o
 fd_gradient.o : ../FFTXlib/scatter_mod.o
 fd_gradient.o : ../UtilXlib/mp.o
 fd_gradient.o : cell_base.o
@@ -118,6 +120,7 @@ funct.o : kind.o
 funct.o : libxc.o
 funct.o : xc_rVV10.o
 funct.o : xc_vdW_DF.o
+generate_function.o : ../FFTXlib/fft_types.o
 generate_function.o : ../UtilXlib/mp.o
 generate_function.o : cell_base.o
 generate_function.o : constants.o

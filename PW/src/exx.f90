@@ -4582,6 +4582,7 @@ end associate
     USE cell_base,        ONLY : alat, omega
     USE mp,               ONLY : mp_sum
     USE mp_bands,         ONLY : intra_bgrp_comm
+    USE fft_types,        ONLY : fft_index_to_3d
     !
     IMPLICIT NONE
     !
@@ -4602,7 +4603,8 @@ end associate
     ! ... local variables
     !
     REAL(DP) :: vol, rbuff, TotSpread
-    INTEGER :: ir, i, j, k, idx, j0, k0
+    INTEGER :: ir, i, j, k
+    LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
     REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
     !
@@ -4614,22 +4616,12 @@ end associate
     cbuff = (Zero,Zero)
     rbuff = Zero
     !
-    j0 = dfftt%my_i0r2p ; k0 = dfftt%my_i0r3p
-    !
     DO ir = 1, dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
        !
        ! ... three dimensional indexes
-       idx = ir -1
-       k = idx / (dfftt%nr1x*dfftt%my_nr2p)
-       idx = idx - (dfftt%nr1x*dfftt%my_nr2p)*k
-       k = k + k0
-       IF (k >= dfftt%nr3) CYCLE
-       j = idx / dfftt%nr1x
-       idx = idx - dfftt%nr1x * j
-       j = j + j0
-       IF (j >= dfftt%nr2) CYCLE
-       i = idx
-       IF (i >= dfftt%nr1) CYCLE
+       !
+       CALL fft_index_to_3d (ir, dfftt, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        rbuff = PsiI(ir) * PsiJ(ir) / omega
        Overlap = Overlap + ABS(rbuff)*vol
@@ -4688,6 +4680,7 @@ end associate
     USE cell_base,        ONLY : alat, omega
     USE mp,               ONLY : mp_sum
     USE mp_bands,         ONLY : intra_bgrp_comm
+    USE fft_types,        ONLY : fft_index_to_3d
     !
     IMPLICIT NONE
     !
@@ -4709,7 +4702,8 @@ end associate
     ! ... local variables
     !
     REAL(DP) :: vol, TotSpread, rbuff
-    INTEGER :: ir, i, j, k , idx, j0, k0
+    INTEGER :: ir, i, j, k
+    LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
     REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
     !
@@ -4721,22 +4715,12 @@ end associate
     cbuff = (Zero, Zero) 
     rbuff = Zero
     !
-    j0 = dfftt%my_i0r2p ; k0 = dfftt%my_i0r3p
-    !
     DO ir = 1, dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
        !
        ! ... three dimensional indexes
-       idx = ir -1
-       k = idx / (dfftt%nr1x*dfftt%my_nr2p)
-       idx = idx - (dfftt%nr1x*dfftt%my_nr2p)*k
-       k = k + k0
-       IF (k >= dfftt%nr3) CYCLE
-       j = idx / dfftt%nr1x
-       idx = idx - dfftt%nr1x * j
-       j = j + j0
-       IF (j >= dfftt%nr2) CYCLE
-       i = idx
-       IF (i >= dfftt%nr1) CYCLE
+       !
+       CALL fft_index_to_3d (ir, dfftt, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        rbuff = ABS(PsiI(ir) * CONJG(PsiJ(ir)) / omega )
        Overlap = Overlap + rbuff*vol

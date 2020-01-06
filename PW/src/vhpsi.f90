@@ -7,33 +7,42 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine vhpsi (ldap, np, mps, psip, hpsi)
+SUBROUTINE vhpsi( ldap, np, mps, psip, hpsi )
   !-----------------------------------------------------------------------
+  !! This routine computes the Hubbard potential applied to the electronic
+  !! structure of the current k-point. The result is added to hpsi.
   !
-  ! This routine computes the Hubbard potential applied to the electronic
-  ! structure of the current k-point. The result is added to hpsi
+  USE kinds,         ONLY: DP
+  USE becmod,        ONLY: bec_type, calbec, allocate_bec_type, &
+                           deallocate_bec_type
+  USE ldaU,          ONLY: Hubbard_lmax, Hubbard_l, is_Hubbard, &
+                           nwfcU, wfcU, offsetU
+  USE lsda_mod,      ONLY: current_spin
+  USE scf,           ONLY: v
+  USE ions_base,     ONLY: nat, ntyp => nsp, ityp
+  USE control_flags, ONLY: gamma_only
+  USE mp,            ONLY: mp_sum
   !
-  USE kinds,     ONLY : DP
-  USE becmod,    ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
-  USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, is_Hubbard, nwfcU, wfcU, &
-                        offsetU
-  USE lsda_mod,  ONLY : current_spin
-  USE scf,       ONLY : v
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE control_flags, ONLY : gamma_only
-  USE mp,        ONLY: mp_sum
+  IMPLICIT NONE
   !
-  implicit none
+  INTEGER, INTENT(IN) :: ldap
+  !! leading dimension of arrays psip, hpsi
+  INTEGER, INTENT(IN) :: np
+  !! true dimension of psip, hpsi
+  INTEGER, INTENT(IN) :: mps
+  !! number of states psip
+  COMPLEX(DP), INTENT(IN) :: psip(ldap,mps)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(ldap,mps)
+  !! Hamiltonian dot psi
   !
-  integer, intent (in) :: ldap, np, mps
-  complex(DP), intent(in) :: psip (ldap, mps)
-  complex(DP), intent(inout) :: hpsi (ldap, mps)
+  ! ... local variables
   !
-  integer :: na, nt, ldim
+  INTEGER :: na, nt, ldim
   REAL(DP), ALLOCATABLE :: rtemp(:,:)
   COMPLEX(DP), ALLOCATABLE :: ctemp(:,:), vtemp(:,:)
-  type (bec_type) :: proj
-
+  TYPE(bec_type) :: proj
+  !
   CALL start_clock('vhpsi')
   !
   ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
@@ -83,35 +92,45 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
 
   RETURN
 
-END subroutine vhpsi
+END SUBROUTINE vhpsi
 
-subroutine vhpsi_nc (ldap, np, mps, psip, hpsi)
+!--------------------------------------------------------------------------
+SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   !-----------------------------------------------------------------------
+  !! Noncollinear version of \(\texttt{vhpsi} routine (A. Smogunov).
   !
-  ! Noncollinear version (A. Smogunov). 
+  USE kinds,            ONLY: DP
+  USE ldaU,             ONLY: Hubbard_lmax, Hubbard_l, is_Hubbard, nwfcU, &
+                              wfcU, offsetU
+  USE scf,              ONLY: v
+  USE ions_base,        ONLY: nat, ntyp => nsp, ityp
+  USE noncollin_module, ONLY: npol
+  USE mp_bands,         ONLY: intra_bgrp_comm
+  USE mp,               ONLY: mp_sum
   !
-  USE kinds,            ONLY : DP
-  USE ldaU,             ONLY : Hubbard_lmax, Hubbard_l, is_Hubbard, nwfcU, &
-                               wfcU, offsetU
-  USE scf,              ONLY : v
-  USE ions_base,        ONLY : nat, ntyp => nsp, ityp
-  USE noncollin_module, ONLY : npol
-  USE mp_bands,         ONLY : intra_bgrp_comm
-  USE mp,               ONLY : mp_sum
+  IMPLICIT NONE
   !
-  implicit none
+  INTEGER, INTENT(IN) :: ldap
+  !! leading dimension of arrays psip, hpsi
+  INTEGER, INTENT(IN) :: np
+  !! true dimension of psip, hpsi
+  INTEGER, INTENT(IN) :: mps
+  !! number of states psip
+  COMPLEX(DP), INTENT(IN) :: psip(ldap*npol,mps)
+  !! the wavefunction
+  COMPLEX(DP), INTENT(INOUT) :: hpsi(ldap*npol,mps)
+  !! Hamiltonian dot psi
   !
-  integer, intent (in) :: ldap, np, mps
-  complex(DP), intent(in) :: psip (ldap*npol, mps)
-  complex(DP), intent(inout) :: hpsi (ldap*npol, mps)
+  ! ... local variables
   !
-  integer :: ibnd, na, nwfc, is1, is2, nt, m1, m2
-  complex(DP) :: temp, zdotc 
-  complex(DP), allocatable :: proj(:,:)
-
+  INTEGER :: ibnd, na, nwfc, is1, is2, nt, m1, m2
+  COMPLEX(DP) :: temp, zdotc
+  COMPLEX(DP), ALLOCATABLE :: proj(:,:)
+  !
   CALL start_clock('vhpsi')
+  !
   ALLOCATE( proj(nwfcU, mps) )
-
+  !
 !-- FIXME: to be replaced with ZGEMM
 ! calculate <psi_at | phi_k> 
   DO ibnd = 1, mps
@@ -152,5 +171,6 @@ subroutine vhpsi_nc (ldap, np, mps, psip, hpsi)
   CALL stop_clock('vhpsi')
 
   return
-end subroutine vhpsi_nc
+  !
+END SUBROUTINE vhpsi_nc
 

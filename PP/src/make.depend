@@ -377,6 +377,7 @@ partialdos.o : ../../PW/src/atomic_wfc_mod.o
 partialdos.o : ../../PW/src/pwcom.o
 partialdos.o : ../../PW/src/tetra.o
 partialdos.o : projections_mod.o
+paw_postproc.o : ../../FFTXlib/fft_types.o
 paw_postproc.o : ../../Modules/atom.o
 paw_postproc.o : ../../Modules/cell_base.o
 paw_postproc.o : ../../Modules/constants.o
@@ -513,8 +514,6 @@ projwfc.o : ../../Modules/command_line_options.o
 projwfc.o : ../../Modules/constants.o
 projwfc.o : ../../Modules/control_flags.o
 projwfc.o : ../../Modules/environment.o
-projwfc.o : ../../Modules/fft_base.o
-projwfc.o : ../../Modules/gvecw.o
 projwfc.o : ../../Modules/io_files.o
 projwfc.o : ../../Modules/io_global.o
 projwfc.o : ../../Modules/ions_base.o
@@ -528,7 +527,6 @@ projwfc.o : ../../Modules/noncol.o
 projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/paw_variables.o
 projwfc.o : ../../Modules/recvec.o
-projwfc.o : ../../Modules/run_info.o
 projwfc.o : ../../Modules/uspp.o
 projwfc.o : ../../Modules/wavefunctions.o
 projwfc.o : ../../PW/src/atomic_wfc_mod.o
@@ -538,7 +536,6 @@ projwfc.o : ../../PW/src/start_k.o
 projwfc.o : ../../PW/src/symm_base.o
 projwfc.o : ../../PW/src/tetra.o
 projwfc.o : ../../UtilXlib/mp.o
-projwfc.o : ../../iotk/src/iotk_module.o
 projwfc.o : projections_mod.o
 projwfc_box.o : ../../FFTXlib/fft_interfaces.o
 projwfc_box.o : ../../FFTXlib/scatter_mod.o
@@ -919,12 +916,18 @@ write_p_avg.o : ../../PW/src/ldaU.o
 write_p_avg.o : ../../PW/src/pwcom.o
 write_p_avg.o : ../../UtilXlib/mp.o
 write_proj.o : ../../Modules/cell_base.o
+write_proj.o : ../../Modules/fft_base.o
+write_proj.o : ../../Modules/gvecw.o
 write_proj.o : ../../Modules/io_files.o
+write_proj.o : ../../Modules/ions_base.o
 write_proj.o : ../../Modules/kind.o
 write_proj.o : ../../Modules/noncol.o
+write_proj.o : ../../Modules/recvec.o
+write_proj.o : ../../Modules/run_info.o
 write_proj.o : ../../PW/src/atomic_wfc_mod.o
 write_proj.o : ../../PW/src/pwcom.o
 write_proj.o : ../../iotk/src/iotk_module.o
+write_proj.o : projections_mod.o
 xc_vdW_scale_mod.o : ../../FFTXlib/fft_interfaces.o
 xc_vdW_scale_mod.o : ../../Modules/cell_base.o
 xc_vdW_scale_mod.o : ../../Modules/constants.o

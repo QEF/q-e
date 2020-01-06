@@ -346,7 +346,7 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
      !
      ! ... first case: analytical derivative available
      !
-!!$omp parallel do default(private) shared(rhotot, rho_in, dmuxc )   
+     !$omp parallel do default(private) shared(length,rhotot, rho_in, dmuxc )   
      DO ir = 1, length
         !
         IF (rhotot(ir) < small) CYCLE
@@ -397,7 +397,6 @@ SUBROUTINE dmxc_lsda( length, rho_in, dmuxc )
         dmuxc(ir,2,2) = dmuxc(ir,2,2) + aa - (1.0_DP + zeta_s) * bb +  &
                                              (1.0_DP + zeta_s)**2 * cc
      ENDDO
-!!$omp end parallel do
      !
   ELSE
      !

@@ -40,7 +40,7 @@ CONTAINS
 SUBROUTINE cutoff_fact()
   !----------------------------------------------------------------------
   !! This routine calculates the cutoff factor in G-space and stores it in 
-  !! a vector called cutoff_2D(:), to be re-used in various routines.  
+  !! a vector called \(\text{cutoff_2D}(:)\), to be re-used in various routines.  
   !! See Eq.(24) of PRB 96, 075448
   !
   USE kinds
@@ -88,8 +88,9 @@ END SUBROUTINE cutoff_fact
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_lr_Vloc( )
   !----------------------------------------------------------------------
-  !! This routine calculates the long-range part of vloc(g) for 2D calculations.  
-  !! See Eq. (32) of PRB 96, 075448
+  !! This routine calculates the long-range part of \(\text{vloc}(g)\) for
+  !! 2D calculations.  
+  !! See Eq. (32) of PRB 96, 075448.
   !
   USE kinds
   USE constants,    ONLY : fpi, e2, eps8
@@ -133,8 +134,9 @@ END SUBROUTINE cutoff_lr_Vloc
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_local( aux )
   !----------------------------------------------------------------------
-  !! This subroutine is called to re-add the long-range part of the 
-  !! local part of the ionic potential, using lr_Vloc computed in above routine.  
+  !! This subroutine is called to re-add the long-range part of the local
+  !! part of the ionic potential, using \(\text{lr_Vloc}\) computed in
+  !! routine \(\texttt{cutoff_lr_Vloc}\).  
   !! See Eq. (33) of PRB 96, 075448
   !
   USE kinds
@@ -166,7 +168,7 @@ END SUBROUTINE cutoff_local
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   !----------------------------------------------------------------------
-  !! This subroutine cuts off the Hartree potential and defines hartree
+  !! This subroutine cuts off the Hartree potential and defines Hartree
   !! energy accordingly in G-space.  
   !! See Eq. (34) and (41) of PRB 96, 075448
   !
@@ -179,9 +181,9 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   COMPLEX(DP), INTENT(IN) :: rhog(ngm)
   !! local potential
   REAL(DP), INTENT(INOUT) :: aux1(2,ngm)
-  !! hartree potential
+  !! Hartree potential
   REAL(DP), INTENT(INOUT) :: ehart
-  !! hartree energy
+  !! Hartree energy
   !
   ! ... local variables
   !
@@ -212,7 +214,7 @@ END SUBROUTINE cutoff_hartree
 SUBROUTINE cutoff_ewald( alpha, ewaldg, omega )
   !----------------------------------------------------------------------
   !! This subroutine defines computes the cutoff version of the 
-  !! ewald sum in G space.
+  !! Ewald sum in G space.
   !! See Eq. (46) of PRB 96, 075448
   !
   USE kinds
@@ -225,7 +227,7 @@ SUBROUTINE cutoff_ewald( alpha, ewaldg, omega )
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: alpha
-  !! tuning parameter for ewald LR/SR separation
+  !! tuning parameter for Ewald LR/SR separation
   REAL(DP), INTENT(INOUT) :: ewaldg
   !! Ewald sum
   REAL(DP), INTENT(IN) :: omega
@@ -275,9 +277,9 @@ END SUBROUTINE cutoff_ewald
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_force_ew( aux, alpha )
   !----------------------------------------------------------------------
-  !! This subroutine cuts off the ewald contribution to the forces. More
+  !! This subroutine cuts off the Ewald contribution to the forces. More
   !! precisely, it cuts off the LR ion-ion potential that is then used to 
-  !! compute the ewald forces.  
+  !! compute the Ewald forces.  
   !! See Eq. (55) of PRB 96, 075448 (note that Eq. (56), derived from Eq. (55),
   !! looks somewhat different from what is implemented in the code, but it is
   !! equivalent).
@@ -312,7 +314,7 @@ SUBROUTINE cutoff_force_lc( aux, forcelc )
   !----------------------------------------------------------------------
   !! This subroutine re-adds the cutoff contribution from the long-range 
   !! local part of the ionic potential to the forces. In the 2D code, this 
-  !! ciontribution is missing from the vloc.  
+  !! contribution is missing from the \(\text{Vloc}\).  
   !! See Eq. (54) of PRB 96, 075448.
   !
   USE kinds
@@ -357,7 +359,7 @@ END SUBROUTINE cutoff_force_lc
 SUBROUTINE cutoff_stres_evloc( psic_G, evloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part
-  !! of the local part of the ionic potential to evloc.  
+  !! of the local part of the ionic potential to \(\text{evloc}\).  
   !! evloc corresponds to the delta term in Eq. (63) of PRB 96, 075448.
   !! It is the energy of the electrons in the local ionic potential.  
   !! Note that it is not calculated as such (by itself) in the standard code.
@@ -400,8 +402,8 @@ END SUBROUTINE cutoff_stres_evloc
 SUBROUTINE cutoff_stres_sigmaloc( psic_G, sigmaloc )
   !----------------------------------------------------------------------
   !! This subroutine adds the contribution from the cutoff long-range part 
-  !! of the local part of the ionic potential to the rest of the sigmaloc.
-  !! That is, the rest of Eq. (63) of PRB 96, 075448.
+  !! of the local part of the ionic potential to the rest of the 
+  !! \(\text{sigmaloc}\). That is, the rest of Eq. (63) of PRB 96, 075448.
   !
   USE kinds
   USE ions_base,   ONLY : ntyp => nsp
@@ -467,7 +469,7 @@ END SUBROUTINE cutoff_stres_sigmaloc
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmahar( psic_G, sigmahar )
   !----------------------------------------------------------------------
-  !! This subroutine cuts off the hartree part of the stress.  
+  !! This subroutine cuts off the Hartree part of the stress.  
   !! See Eq. (62) of PRB 96, 075448.
   !
   USE kinds
@@ -522,7 +524,7 @@ END SUBROUTINE cutoff_stres_sigmahar
 !----------------------------------------------------------------------
 SUBROUTINE cutoff_stres_sigmaewa( alpha, sdewald, sigmaewa )
   !----------------------------------------------------------------------
-  !! This subroutine cuts off the ewald part of the stress.  
+  !! This subroutine cuts off the Ewald part of the stress.  
   !! See Eq. (64) in PRB 96 075448
   !
   USE kinds

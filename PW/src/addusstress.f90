@@ -50,9 +50,10 @@ END SUBROUTINE addusstress
 SUBROUTINE addusstress_g( sigmanlc )
   !----------------------------------------------------------------------
   !! This routine computes the part of the crystal stress which is due
-  !! to the dependence of the Q function on the atomic position. 
-  !! Adds contribution to input sigmanlc, does not sum contributions
-  !! from various processors (sum is performed by calling routine).
+  !! to the dependence of the Q function on the atomic position.  
+  !! It adds contribution to input \(\text{sigmanlc}\), it does not sum 
+  !! contributions from various processors (sum is performed by calling
+  !! routine).
   !
   USE kinds,          ONLY : DP
   USE ions_base,      ONLY : nat, ntyp => nsp, ityp

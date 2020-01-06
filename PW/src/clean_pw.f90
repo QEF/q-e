@@ -11,9 +11,11 @@
 !----------------------------------------------------------------------
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
-  !! This routine deallocates dynamically allocated arrays.  
+  !! This routine deallocates dynamically allocated arrays.
+  !
   !! * If lflag=.TRUE.  all arrays are deallocated (end of calculation);
   !! * if lflag=.FALSE. ion-related variables and arrays allocated.
+  !
   !! At the very beginning of the calculation (routines iosys, read_file,
   !! setup, read_pseudo) are not deallocated; all others arrays are.
   !! This is used when a new calculation has to be performed (e.g. in neb,

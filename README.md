@@ -24,9 +24,12 @@ http://www.quantum-espresso.org/
 
 - PWscf: structural optimisation and molecular dynamics on the electronic ground state, with self-consistent solution of DFT equations;
 - CP: Car-Parrinello molecular dynamics;
-- PHonon: vibrational and dielectric properties from Density-Functional Perturbation Theory;
-- TD-DFPT: spectra from Time-dependent Density-Functional Perturbation Theory;
+- PHonon: vibrational and dielectric properties from DFPT (Density-Functional Perturbation Theory);
+- TD-DFPT: spectra from Time-dependent DFPT;
+- HP: calculation of Hubbard parameters from DFPT;
 - EPW: calculation of electron-phonon coefficients in metals;
+- PWCOND: ballistic transport;
+- XSpectra: calculation of X-ray absorption spectra;
 - PWneb: reaction pathways and transition states with the Nudged Elastic Band method;
 - GWL: many-body perturbation theory in the GW approach using ultra-localised Wannier functions and Lanczos chains.
 
