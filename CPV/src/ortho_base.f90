@@ -1026,7 +1026,7 @@ CONTAINS
       USE ions_base,         ONLY: nsp, na
       USE io_global,         ONLY: stdout
       USE uspp,              ONLY: nkb, nkbus
-      USE uspp_param,        ONLY: nh, nvb, ish
+      USE uspp_param,        ONLY: nh, nvb
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
@@ -1192,24 +1192,6 @@ CONTAINS
             DEALLOCATE( bephi_tmp )
          END IF
          !
-         IF ( iverbosity > 1 ) THEN
-            WRITE( stdout,*)
-            DO is = 1, nvb
-               IF( nvb > 1 ) THEN
-                  WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
-                  WRITE( stdout,'(8f9.4)')                                       &
-        &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
-               ELSE
-                  DO ia=1,na(is)
-                     WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
-                     WRITE( stdout,'(8f9.4)')                                    &
-        &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i+istart-1),iv=1,nh(is)),i=1,nss)
-                  END DO
-               END IF
-               WRITE( stdout,*)
-            END DO
-         ENDIF
-         !
          DEALLOCATE(xd)
          !
       END DO
@@ -1230,11 +1212,11 @@ CONTAINS
 !     where s'=s(r(t))  
 !
       USE kinds,          ONLY: DP
-      USE ions_base,      ONLY: na, nsp
+      USE ions_base,      ONLY: nat, ityp
       USE io_global,      ONLY: stdout
       USE mp_bands,       ONLY: intra_bgrp_comm, inter_bgrp_comm
-      USE uspp_param,     ONLY: nh, ish, nvb
-      USE uspp,           ONLY: nkbus, qq_nt
+      USE uspp_param,     ONLY: nh, nvb
+      USE uspp,           ONLY: nkbus, qq_nt, indv_ijkb0
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
@@ -1265,15 +1247,16 @@ CONTAINS
          ALLOCATE( qtemp( nkbus, nbspx_bgrp ) )
 
          qtemp (:,:) = 0.d0
-         DO is=1,nvb
+         DO ia = 1, nat
+            is = ityp(ia)
             DO iv=1,nh(is)
-               inl = ish(is)+(iv-1)*na(is)
+               inl = indv_ijkb0(ia) + iv 
                DO jv=1,nh(is)
-                  jnl = ish(is)+(jv-1)*na(is)
+                  jnl = indv_ijkb0(ia) + jv
                   IF(ABS(qq_nt(iv,jv,is)) > 1.d-5) THEN
                      qqf = qq_nt(iv,jv,is)
                      DO i=1,nbsp_bgrp
-                        CALL daxpy( na(is), qqf, bec_bgrp(jnl+1,i),1,qtemp(inl+1,i), 1 )
+                        qtemp(inl,i) = qtemp(inl,i) + qqf * bec_bgrp(jnl,i)
                      END DO
                   ENDIF
                END DO
@@ -1312,47 +1295,7 @@ CONTAINS
          END DO
 !$omp end parallel do
       END IF
-
       !   
-
-      IF(iverbosity > 1) THEN
-         emtot=0.0d0
-         IF( PRESENT( ema0bg ) ) THEN
-            DO j=1,nbsp_bgrp
-               DO i=1,ngw
-                  emtot=emtot +2.0d0*DBLE(phi_bgrp(i,j)*CONJG(c0_bgrp(i,j)))*ema0bg(i)**(-2.0d0)
-               END DO
-            END DO
-         ELSE
-            DO j=1,nbsp_bgrp
-               DO i=1,ngw
-                  emtot=emtot +2.0d0*DBLE(phi_bgrp(i,j)*CONJG(c0_bgrp(i,j)))
-               END DO
-            END DO
-         END IF
-         emtot=emtot/nbsp
-
-         CALL mp_sum( emtot, intra_bgrp_comm )
-         CALL mp_sum( emtot, inter_bgrp_comm )
-
-         WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
-         WRITE( stdout,*)
-         DO is = 1, nvb
-            IF( nvb > 1 ) THEN
-               WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,nbsp_bgrp)
-            ELSE
-               DO ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &               ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,nbsp_bgrp)
-               END DO
-            END IF
-         END DO
-      ENDIF
-
-
       CALL stop_clock( 'calphi' )
 !
       RETURN

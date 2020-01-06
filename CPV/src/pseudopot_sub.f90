@@ -126,6 +126,7 @@
       !     definition of indices nhtol, indv, nhtolm
       !     ------------------------------------------------------------------
       !
+      ijkb0 = 0
       do is = 1, nsp
          ind = 0
          do iv = 1,  upf(is)%nbeta

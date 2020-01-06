@@ -82,11 +82,11 @@ CONTAINS
 !     Compute the norm of the i-th electronic state = (<c|S|c>)^(1/2) 
 !     requires in input the updated bec(i)
 !
-      USE ions_base,          ONLY: na
+      USE ions_base,          ONLY: nat, ityp
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE uspp_param,         ONLY: nh, ish, nvb
-      USE uspp,               ONLY: qq_nt
+      USE uspp_param,         ONLY: nh
+      USE uspp,               ONLY: qq_nt, indv_ijkb0
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE kinds,              ONLY: DP
@@ -115,15 +115,14 @@ CONTAINS
 
       DEALLOCATE(temp)
 !
-      DO is=1,nvb
+      DO ia=1,nat
+         is = ityp(ia)
          DO iv=1,nh(is)
-            inl=ish(is)+(iv-1)*na(is)
+            inl=indv_ijkb0(ia) + iv
             DO jv=1,nh(is)
-               jnl=ish(is)+(jv-1)*na(is)
+               jnl=indv_ijkb0(ia) + jv
                IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
-                  DO ia=1,na(is)
-                     rsum = rsum + qq_nt(iv,jv,is)*bec(inl+ia,i)*bec(jnl+ia,i)
-                  END DO
+                 rsum = rsum + qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,i)
                ENDIF
             END DO
          END DO
@@ -141,9 +140,9 @@ CONTAINS
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
 !
-      USE ions_base,      ONLY: na
-      USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq_nt
-      USE uspp_param,     ONLY:  nh, nvb, ish
+      USE ions_base,      ONLY: na, nat, ityp
+      USE uspp,           ONLY: nkb, nhsavb=>nkbus, qq_nt, indv_ijkb0
+      USE uspp_param,     ONLY:  nh
       USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum
@@ -241,7 +240,7 @@ CONTAINS
       csc2    = 0.0d0
 
 !$omp parallel default(none), &
-!$omp shared(iupdwn,iss,kmax,nproc_bgrp,me_bgrp,ispin,i,ibgrp_g2l,nh,ish,qq_nt,na,bec_tmp,bec_bgrp,csc2,nvb), &
+!$omp shared(iupdwn,iss,kmax,nproc_bgrp,me_bgrp,ispin,i,ibgrp_g2l,nh,indv_ijkb0,qq_nt,na,bec_tmp,bec_bgrp,csc2,nat,ityp), &
 !$omp private( k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k, ntids, mytid )
 #if defined(_OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
@@ -258,15 +257,14 @@ CONTAINS
             rsum=0.d0
             ibgrp_k = ibgrp_g2l( k )
             IF( ibgrp_k > 0 ) THEN
-            DO is=1,nvb
+            DO ia = 1, nat
+               is=ityp(ia)
                DO iv=1,nh(is)
-                  inl=ish(is)+(iv-1)*na(is)
+                  inl=indv_ijkb0(ia)+iv
                   DO jv=1,nh(is)
-                     jnl=ish(is)+(jv-1)*na(is)
+                     jnl=indv_ijkb0(ia)+jv
                      IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
-                        DO ia=1,na(is)
-                           rsum = rsum + qq_nt(iv,jv,is)*bec_tmp(inl+ia)*bec_bgrp(jnl+ia,ibgrp_k)
-                        END DO
+                        rsum = rsum + qq_nt(iv,jv,is)*bec_tmp(inl)*bec_bgrp(jnl,ibgrp_k)
                      ENDIF
                   END DO
                END DO
