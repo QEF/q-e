@@ -9,7 +9,12 @@ MODULES += \
   splinelib_gpu.o \
   random_numbers_gpu.o \
   simpsn_gpu.o \
-  sph_bes_gpu.o
+  sph_bes_gpu.o \
+  correlation_lda_lsda_gpu.o \
+  correlation_gga_gpu.o \
+  exchange_lda_lsda_gpu.o \
+  exchange_gga_gpu.o \
+  metagga_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../GScratch
@@ -40,3 +45,8 @@ uspp_gpu.o : uspp.o
 wavefunctions_gpu.o : control_flags.o
 wavefunctions_gpu.o : kind.o
 wavefunctions_gpu.o : wavefunctions.o
+correlation_lda_lsda_gpu.o : kind.o
+correlation_gga_gpu.o : kind.o
+exchange_lda_lsda_gpu.o : kind.o
+exchange_gga_gpu.o : kind.o
+metagga_gpu.o : kind.o
