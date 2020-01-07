@@ -20,6 +20,7 @@ SAVE
 !
 !  LDA and LSDA exchange-correlation drivers
 PUBLIC :: xc, xc_lda, xc_lsda
+PRIVATE :: xc_lda_gpu, xc_lsda_gpu
 PUBLIC :: change_threshold_lda
 !
 !  density threshold (set to default value)
@@ -57,6 +58,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   USE xc_f90_types_m
   USE xc_f90_lib_m
 #endif
+  USE control_flags, ONLY: use_gpu
   !
   IMPLICIT NONE
   !
@@ -213,7 +215,11 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   SELECT CASE( sr_d )
   CASE( 1 )
      !
-     CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
+     IF (use_gpu) THEN
+        CALL xc_lda_gpu( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
+     ELSE
+        CALL xc_lda( length, ABS(rho_in(:,1)), ex_out, ec_out, vx_out(:,1), vc_out(:,1) )
+     END IF
      !
   CASE( 2 )
      !
@@ -222,7 +228,11 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      arho = ABS(rho_in(:,1))
      WHERE (arho > rho_threshold) zeta(:) = rho_in(:,2) / arho(:)
      !
-     CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     IF (use_gpu) THEN
+        CALL xc_lsda_gpu( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     ELSE
+        CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     END IF
      !
      DEALLOCATE( arho, zeta )
      ! 
@@ -234,7 +244,11 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
      WHERE (arho > rho_threshold) zeta(:) = SQRT( rho_in(:,2)**2 + rho_in(:,3)**2 + &
                                           rho_in(:,4)**2 ) / arho(:) ! amag/arho
      !
-     CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     IF (use_gpu) THEN
+        CALL xc_lsda_gpu( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     ELSE
+        CALL xc_lsda( length, arho, zeta, ex_out, ec_out, vx_out, vc_out )
+     END IF
      !
      DEALLOCATE( arho, zeta )
      !
@@ -494,6 +508,264 @@ SUBROUTINE xc_lda( length, rho_in, ex_out, ec_out, vx_out, vc_out )
 END SUBROUTINE xc_lda
 !
 !
+!
+!----------------------------------------------------------------------------
+SUBROUTINE xc_lda_gpu( length, rho_in, ex_out, ec_out, vx_out, vc_out )
+  !--------------------------------------------------------------------------
+  !! gpu version of xc_lda -- highly experimental --
+  !
+  USE exch_lda_gpu
+  USE corr_lda_gpu
+  !
+  IMPLICIT NONE
+  !
+  
+  INTEGER,  INTENT(IN) :: length
+  !! length of the I/O arrays
+  REAL(DP), INTENT(IN) :: rho_in(length)
+  !! Charge density
+  REAL(DP), INTENT(OUT) :: ex_out(length)
+  !! \(\epsilon_x(rho)\) ( NOT \(E_x(\text{rho})\) )
+  REAL(DP), INTENT(OUT) :: vx_out(length)
+  !! \(dE_x(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_x(\text{rho})/d\text{rho}\) )
+  REAL(DP), INTENT(OUT) :: ec_out(length)
+  !! \(\epsilon_c(rho)\) ( NOT \(E_c(\text{rho})\) )
+  REAL(DP), INTENT(OUT) :: vc_out(length)
+  !! \(dE_c(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_c(\text{rho})/d\text{rho}\) )
+  !
+  ! ... local variables
+  !
+  INTEGER :: ir
+  INTEGER :: iexch, icorr
+  REAL(DP) :: exx_fraction
+  REAL(DP) :: finite_size_cell_volume
+  LOGICAL  :: exx_started, is_there_finite_size_corr
+  REAL(DP), PARAMETER :: third = 1.0_DP/3.0_DP, &
+                         pi34 = 0.6203504908994_DP, e2 = 2.0_DP
+                               
+  !
+  !
+  ! .... GPU DEVICE VARIABLES ..........
+  !
+  REAL(DP), ALLOCATABLE :: rs_d(:)
+  REAL(DP), ALLOCATABLE :: ex_d(:)
+  REAL(DP), ALLOCATABLE :: vx_d(:)
+  REAL(DP), ALLOCATABLE :: ec_d(:), ec_d_(:)
+  REAL(DP), ALLOCATABLE :: vc_d(:), vc_d_(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: rs_d, ex_d, vx_d, ec_d, ec_d_, vc_d, vc_d_
+#endif
+  !
+  INTEGER :: iflag_ext 
+  REAL(DP) :: rho_threshold_d
+  !
+  !
+  ALLOCATE( rs_d(length) )
+  ALLOCATE( ex_d(length) )
+  ALLOCATE( vx_d(length) )
+  ALLOCATE( ec_d(length) )
+  ALLOCATE( vc_d(length) )
+  !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  !
+  IF ( icorr==12 .OR. icorr==13 .OR. icorr==14 ) THEN
+    ALLOCATE( ec_d_(length) )
+    ALLOCATE( vc_d_(length) )
+  ENDIF
+  !
+  exx_started = exx_is_active()
+  exx_fraction = get_exx_fraction()
+  IF (iexch==8 .OR. icorr==10) THEN
+    CALL get_finite_size_cell_volume( is_there_finite_size_corr, &
+                                      finite_size_cell_volume )
+    !
+    IF (.NOT. is_there_finite_size_corr) CALL errore( 'XC',&
+        'finite size corrected exchange used w/o initialization', 1 )
+  ENDIF
+  !
+  rs_d = rho_in
+  !
+  rho_threshold_d = rho_threshold
+  !
+!$cuf kernel do(1) <<<*,*>>>
+  DO ir = 1, length
+     !
+     !rho_d = ABS(rho_in_d(ir))
+     !
+     ! ... RHO THRESHOLD
+     !
+     IF ( rs_d(ir) > rho_threshold_d ) THEN
+        rs_d(ir) = pi34 / rs_d(ir)**third
+     ELSE
+        ex_d(ir) = 0.0d0  ;  ec_d(ir) = 0.0d0
+        vx_d(ir) = 0.0d0  ;  vc_d(ir) = 0.0d0
+        CYCLE
+     ENDIF
+     !
+     ! ... EXCHANGE
+     !
+     SELECT CASE( iexch )
+     CASE( 1 )                      ! 'sla'
+        !
+        CALL slater_d( rs_d(ir), ex_d(ir), vx_d(ir) )
+        !
+     CASE( 2 )                      ! 'sl1'
+        !
+        CALL slater1_d( rs_d(ir), ex_d(ir), vx_d(ir) )
+        !
+     CASE( 3 )                      ! 'rxc'
+        !
+        CALL slater_rxc_d( rs_d(ir), ex_d(ir), vx_d(ir) )
+        !
+     CASE( 4, 5 )                   ! 'oep','hf'
+        !
+        IF ( exx_started ) THEN
+           ex_d(ir) = 0.0d0
+           vx_d(ir) = 0.0d0
+        ELSE
+           CALL slater_d( rs_d(ir), ex_d(ir), vx_d(ir) )
+        ENDIF
+        !
+     CASE( 6, 7 )                   ! 'pb0x' or 'DF-cx-0', or 'DF2-0',
+        !                           ! 'B3LYP'
+        CALL slater_d( rs_d(ir), ex_d(ir), vx_d(ir) )
+        IF ( exx_started ) THEN
+           ex_d(ir) = (1.0d0 - exx_fraction) * ex_d(ir)
+           vx_d(ir) = (1.0d0 - exx_fraction) * vx_d(ir)
+        ENDIF
+        !
+     CASE( 8 )                      ! 'sla+kzk'
+        !
+        CALL slaterKZK_d( rs_d(ir), ex_d(ir), vx_d(ir), finite_size_cell_volume )
+        !
+     CASE( 9 )                      ! 'X3LYP'
+        !
+        CALL slater_d( rs_d(ir), ex_d(ir), vx_d(ir) )
+        IF ( exx_started ) THEN
+           ex_d(ir) = (1.0d0 - exx_fraction) * ex_d(ir)
+           vx_d(ir) = (1.0d0 - exx_fraction) * vx_d(ir)
+        ENDIF
+        !
+     CASE DEFAULT
+        !
+        ex_d(ir) = 0.0d0
+        vx_d(ir) = 0.0d0
+        !
+     END SELECT
+     !
+     !
+     ! ... CORRELATION
+     !
+     SELECT CASE( icorr )
+     CASE( 1 )
+        !
+        iflag_ext=1
+        CALL pz_d( rs_d(ir), iflag_ext, ec_d(ir), vc_d(ir) )
+        !
+     CASE( 2 )
+        !
+        CALL vwn_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        !
+     CASE( 3 )
+        !
+        CALL lyp_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        !
+     CASE( 4 )
+        !
+        iflag_ext=1
+        CALL pw_d( rs_d(ir), iflag_ext, ec_d(ir), vc_d(ir) )
+        !
+     CASE( 5 )
+        !
+        CALL wignerc_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        !
+     CASE( 6 )
+        !
+        CALL hl_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        !
+     CASE( 7 )
+        !
+        iflag_ext=2
+        CALL pz_d( rs_d(ir), iflag_ext, ec_d(ir), vc_d(ir) )
+        ! 
+     CASE( 8 )
+        !
+        iflag_ext=2
+        CALL pw_d( rs_d(ir), iflag_ext, ec_d(ir), vc_d(ir) )
+        !
+     CASE( 9 )
+        !
+        CALL gl_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        !
+     CASE( 10 )
+        !
+        CALL pzKZK_d( rs_d(ir), ec_d(ir), vc_d(ir), finite_size_cell_volume )
+        !
+     CASE( 11 )
+        !
+        CALL vwn1_rpa_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        !
+     CASE( 12 )                ! 'B3LYP'
+        !
+        CALL vwn_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        ec_d(ir) = 0.19d0 * ec_d(ir)
+        vc_d(ir) = 0.19d0 * vc_d(ir)
+        !
+        CALL lyp_d( rs_d(ir), ec_d_(ir), vc_d_(ir) )
+        ec_d(ir) = ec_d(ir) + 0.81d0 * ec_d_(ir)
+        vc_d(ir) = vc_d(ir) + 0.81d0 * vc_d_(ir)
+        !
+     CASE( 13 )                ! 'B3LYP-V1R'
+        !
+        CALL vwn1_rpa_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        ec_d(ir) = 0.19d0 * ec_d(ir)
+        vc_d(ir) = 0.19d0 * vc_d(ir)
+        !
+        CALL lyp_d( rs_d(ir), ec_d_(ir), vc_d_(ir) )
+        ec_d(ir) = ec_d(ir) + 0.81d0 * ec_d_(ir)
+        vc_d(ir) = vc_d(ir) + 0.81d0 * vc_d_(ir)
+        !
+     CASE( 14 )                ! 'X3LYP'
+        !
+        CALL vwn1_rpa_d( rs_d(ir), ec_d(ir), vc_d(ir) )
+        ec_d(ir) = 0.129d0 * ec_d(ir)
+        vc_d(ir) = 0.129d0 * vc_d(ir)
+        !
+        CALL lyp_d( rs_d(ir), ec_d_(ir), vc_d_(ir) )
+        ec_d(ir) = ec_d(ir) + 0.871d0 * ec_d_(ir)
+        vc_d(ir) = vc_d(ir) + 0.871d0 * vc_d_(ir)
+        !
+     CASE DEFAULT
+        !
+        ec_d(ir) = 0.0d0
+        vc_d(ir) = 0.0d0
+        !
+     END SELECT
+     !
+  ENDDO
+  !
+  ex_out = ex_d
+  vx_out = vx_d
+  ec_out = ec_d
+  vc_out = vc_d
+  !
+  !
+  DEALLOCATE( rs_d )
+  DEALLOCATE( ex_d )
+  DEALLOCATE( vx_d )
+  DEALLOCATE( ec_d )
+  DEALLOCATE( vc_d )
+  IF ( icorr==12 .OR. icorr==13 .OR. icorr==14 ) THEN
+    DEALLOCATE( ec_d_ )
+    DEALLOCATE( vc_d_ )
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE xc_lda_gpu
+!
+
 !-----------------------------------------------------------------------------
 SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   !-----------------------------------------------------------------------------
@@ -695,6 +967,253 @@ SUBROUTINE xc_lsda( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
   RETURN
   !
 END SUBROUTINE xc_lsda
+!
+!
+!-----------------------------------------------------------------------------
+SUBROUTINE xc_lsda_gpu( length, rho_in, zeta_in, ex_out, ec_out, vx_out, vc_out )
+  !-----------------------------------------------------------------------------
+  !! gpu version of xc_lsda -- highly experimental --
+  !
+  USE exch_lda_gpu
+  USE corr_lda_gpu
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN) :: length
+  !! length of the I/O arrays
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: rho_in
+  !! Total charge density
+  REAL(DP), INTENT(IN),  DIMENSION(length) :: zeta_in
+  !! zeta = mag / rho_tot
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: ex_out
+  !! \(\epsilon_x(rho)\) ( NOT \(E_x(\text{rho})\) )
+  REAL(DP), INTENT(OUT), DIMENSION(length) :: ec_out
+  !! \(\epsilon_c(rho)\) ( NOT \(E_c(\text{rho})\) )
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vx_out
+  !! \(dE_x(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_x(\text{rho})/d\text{rho}\) )
+  REAL(DP), INTENT(OUT), DIMENSION(length,2) :: vc_out
+  !! \(dE_c(\text{rho})/d\text{rho}\)  ( NOT \(d\epsilon_c(\text{rho})/d\text{rho}\) )
+  !
+  ! ...  local variables
+  !
+  INTEGER :: ir
+  !
+  INTEGER :: iexch, icorr
+  REAL(8) :: exx_fraction
+  LOGICAL :: exx_started
+  REAL(8), PARAMETER :: third = 1.0d0/3.0d0, &
+                        pi34 = 0.6203504908994d0
+  !                     pi34 = (3/4pi)^(1/3)
+  !
+  !
+  ! .... GPU DEVICE VARIABLES ..........
+  !
+  REAL(8), ALLOCATABLE :: rs_d(:)
+  REAL(8), ALLOCATABLE :: rho_d(:)
+  REAL(8), ALLOCATABLE :: zeta_d(:)
+  REAL(8), ALLOCATABLE :: ex_d(:)
+  REAL(8), ALLOCATABLE :: vx_d(:,:)
+  REAL(8), ALLOCATABLE :: ec_d(:),   ec_d_(:)
+  REAL(8), ALLOCATABLE :: vc_d(:,:), vc_d_(:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: rs_d, rho_d, zeta_d, ex_d, vx_d, ec_d, ec_d_, vc_d, vc_d_
+#endif
+  !
+  REAL(8) :: rho_threshold_d
+#if defined(__CUDA)
+  attributes(DEVICE) :: rho_threshold_d
+#endif
+  !
+  !
+  ALLOCATE( rho_d(length) )
+  ALLOCATE( rs_d(length)  )
+  ALLOCATE( zeta_d(length) )
+  ALLOCATE( ex_d(length) )
+  ALLOCATE( vx_d(length,2) )
+  ALLOCATE( ec_d(length) )
+  ALLOCATE( vc_d(length,2) )
+  !
+  iexch = get_iexch()
+  icorr = get_icorr()
+  !
+  IF ( icorr==12 .OR. icorr==13 .OR. icorr==14 ) THEN
+    ALLOCATE( ec_d_(length) )
+    ALLOCATE( vc_d_(length,2) )
+  ENDIF
+  !
+  exx_started = exx_is_active()
+  exx_fraction = get_exx_fraction()
+  !
+  rho_threshold_d = rho_threshold
+  !
+  rho_d = rho_in
+  rs_d  = rho_in
+  zeta_d = zeta_in
+  !
+  !
+!$cuf kernel do(1) <<<*,*>>>
+  DO ir = 1, length
+     !
+     IF (ABS(zeta_d(ir)) > 1.d0) zeta_d(ir) = SIGN( 1.d0, zeta_d(ir) )
+     !
+     IF ( rho_d(ir) > rho_threshold_d ) THEN
+        rs_d(ir) = pi34 / rho_d(ir)**third
+     ELSE
+        ex_d(ir)=0.0d0 ; vx_d(ir,:)=0.0d0 !; vx_d(ir,2)=0.0d0
+        ec_d(ir)=0.0d0 ; vc_d(ir,1)=0.0d0 ; vc_d(ir,2)=0.0d0
+        CYCLE
+     ENDIF
+     !
+     !
+     ! ... EXCHANGE
+     !
+     SELECT CASE( iexch )
+     CASE( 1 )                                      ! 'sla'
+        !
+        CALL slater_spin_d( rho_d(ir), zeta_d(ir), ex_d(ir), vx_d(ir,1), vx_d(ir,2)  )
+        !
+     CASE( 2 )                                      ! 'sl1'
+        !
+        CALL slater1_spin_d( rho_d(ir), zeta_d(ir), ex_d(ir), vx_d(ir,1), vx_d(ir,2) )
+        !
+     CASE( 3 )                                      ! 'rxc'
+        !
+        CALL slater_rxc_spin_d( rho_d(ir), zeta_d(ir), ex_d(ir), vx_d(ir,1), vx_d(ir,2) )
+        !
+     CASE( 4, 5 )                                   ! 'oep','hf'
+        !
+        IF ( exx_started ) THEN
+           ex_d(ir) = 0.0d0
+           vx_d(ir,1) = 0.0d0
+           vx_d(ir,2) = 0.0d0
+        ELSE
+           CALL slater_spin_d( rho_d(ir), zeta_d(ir), ex_d(ir), vx_d(ir,1), vx_d(ir,2) )
+        ENDIF
+        !
+     CASE( 6 )                                      ! 'pb0x'
+        !
+        CALL slater_spin_d( rho_d(ir), zeta_d(ir), ex_d(ir), vx_d(ir,1), vx_d(ir,2) )
+        IF ( exx_started ) THEN
+           ex_d(ir) = (1.0d0 - exx_fraction) * ex_d(ir)
+           vx_d(ir,1) = (1.0d0 - exx_fraction) * vx_d(ir,1)
+           vx_d(ir,2) = (1.0d0 - exx_fraction) * vx_d(ir,2)
+        ENDIF
+        !
+     CASE( 7 )                                      ! 'B3LYP'
+        !
+        CALL slater_spin_d( rho_d(ir), zeta_d(ir), ex_d(ir), vx_d(ir,1), vx_d(ir,2) )
+        IF ( exx_started ) THEN
+           ex_d(ir) = (1.0d0 - exx_fraction) * ex_d(ir)
+           vx_d(ir,1) = (1.0d0 - exx_fraction) * vx_d(ir,1)
+           vx_d(ir,2) = (1.0d0 - exx_fraction) * vx_d(ir,2)
+        ENDIF
+        !
+     CASE( 9 )                                      ! 'X3LYP'
+        !
+        CALL slater_spin_d( rho_d(ir), zeta_d(ir), ex_d(ir), vx_d(ir,1), vx_d(ir,2) )
+        IF ( exx_started ) THEN
+           ex_d(ir) = (1.0d0 - exx_fraction) * ex_d(ir)
+           vx_d(ir,1) = (1.0d0 - exx_fraction) * vx_d(ir,1)
+           vx_d(ir,2) = (1.0d0 - exx_fraction) * vx_d(ir,2)
+        ENDIF
+        !
+     CASE DEFAULT
+        !
+        ex_d(ir) = 0.0d0
+        vx_d(ir,1) = 0.0d0
+        vx_d(ir,2) = 0.0d0
+        !
+     END SELECT
+     !
+     !
+     ! ... CORRELATION
+     !
+     SELECT CASE( icorr )
+     CASE( 0 )
+        !
+        ec_d(ir) = 0.0d0
+        vc_d(ir,1) = 0.0d0
+        vc_d(ir,2) = 0.0d0
+        !
+     CASE( 1 )
+        !
+        CALL pz_spin_d( rs_d(ir), zeta_d(ir), ec_d(ir), vc_d(ir,1), vc_d(ir,2) )
+        !
+     CASE( 2 )
+        !
+        CALL vwn_spin_d( rs_d(ir), zeta_d(ir), ec_d(ir), vc_d(ir,1), vc_d(ir,2) )
+        !
+     CASE( 3 )
+        !
+        CALL lsd_lyp_d( rho_d(ir), zeta_d(ir), ec_d(ir), vc_d(ir,1), vc_d(ir,2) )     ! from CP/FPMD (more_functionals)
+        !
+     CASE( 4 )
+        !
+        CALL pw_spin_d( rs_d(ir), zeta_d(ir), ec_d(ir), vc_d(ir,1), vc_d(ir,2) )
+        !
+     CASE( 12 )                                           ! 'B3LYP'
+        !
+        CALL vwn_spin_d( rs_d(ir), zeta_d(ir), ec_d(ir), vc_d(ir,1), vc_d(ir,2) )
+        ec_d(ir) = 0.19d0 * ec_d(ir)
+        vc_d(ir,1) = 0.19d0 * vc_d(ir,1)
+        vc_d(ir,2) = 0.19d0 * vc_d(ir,2)
+        !
+        CALL lsd_lyp_d( rho_d(ir), zeta_d(ir), ec_d_(ir), vc_d_(ir,1), vc_d_(ir,2) )   ! from CP/FPMD (more_functionals)
+        ec_d(ir) = ec_d(ir) + 0.81d0 * ec_d_(ir)
+        vc_d(ir,1) = vc_d(ir,1) + 0.81d0 * vc_d_(ir,1)
+        vc_d(ir,2) = vc_d(ir,2) + 0.81d0 * vc_d_(ir,2)
+        !     
+     CASE( 13 )                                           ! 'B3LYP-V1R'
+        !
+        CALL vwn1_rpa_spin_d( rs_d(ir), zeta_d(ir), ec_d(ir), vc_d(ir,1), vc_d(ir,2) )
+        ec_d(ir) = 0.19d0 * ec_d(ir)
+        vc_d(ir,1) = 0.19d0 * vc_d(ir,1)
+        vc_d(ir,2) = 0.19d0 * vc_d(ir,2)
+        !
+        CALL lsd_lyp_d( rho_d(ir), zeta_d(ir), ec_d_(ir), vc_d_(ir,1), vc_d_(ir,2) )  ! from CP/FPMD (more_functionals)
+        ec_d(ir) = ec_d(ir) + 0.81d0 * ec_d_(ir)
+        vc_d(ir,1) = vc_d(ir,1) + 0.81d0 * vc_d_(ir,1)
+        vc_d(ir,2) = vc_d(ir,2) + 0.81d0 * vc_d_(ir,2)
+        !
+     CASE( 14 )                                           ! 'X3LYP
+        !
+        CALL vwn1_rpa_spin_d( rs_d(ir), zeta_d(ir), ec_d(ir), vc_d(ir,1), vc_d(ir,2) )
+        ec_d(ir) = 0.129d0 * ec_d(ir)
+        vc_d(ir,1) = 0.129d0 * vc_d(ir,1)
+        vc_d(ir,2) = 0.129d0 * vc_d(ir,2)
+        !
+        CALL lsd_lyp_d( rho_d(ir), zeta_d(ir), ec_d_(ir), vc_d_(ir,1), vc_d_(ir,2) )   ! from CP/FPMD (more_functionals)
+        ec_d(ir) = ec_d(ir) + 0.871d0 * ec_d_(ir)
+        vc_d(ir,1) = vc_d(ir,1) + 0.871d0 * vc_d_(ir,1)
+        vc_d(ir,2) = vc_d(ir,2) + 0.871d0 * vc_d_(ir,2)
+        !
+     CASE DEFAULT
+        !
+        !CALL errore( 'xc_lda_lsda_drivers (xc_lsda)', 'not implemented', icorr )
+        !
+     END SELECT
+     !
+     !
+  ENDDO
+  !
+  ex_out = ex_d  ;  vx_out = vx_d
+  ec_out = ec_d  ;  vc_out = vc_d
+  !
+  DEALLOCATE( rho_d )
+  DEALLOCATE( rs_d  )
+  DEALLOCATE( zeta_d )
+  DEALLOCATE( ex_d )
+  DEALLOCATE( vx_d )
+  DEALLOCATE( ec_d )
+  DEALLOCATE( vc_d )
+  IF ( icorr==12 .OR. icorr==13 .OR. icorr==14 ) THEN
+     DEALLOCATE( ec_d_ )
+     DEALLOCATE( vc_d_ )
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE xc_lsda_gpu
 !
 !
 END MODULE xc_lda_lsda
