@@ -172,5 +172,6 @@ target_link_libraries(qe_modules
         QE::UTILX
         QE::FFTX
         QE::FOX
+        QE::CLIB # this is needed only by wrappers.f90
         QE::MPI_Fortran)
 qe_install_target(qe_modules)
