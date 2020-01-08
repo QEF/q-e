@@ -242,11 +242,13 @@ target_link_libraries(qe_pw
     PUBLIC
         QE::LAX
         QE::UTILX  # TODO direct or transitive via QE::LAX?
-        QE::Solvers
+        # QE::Solvers # TODO
         QE::Modules
         QE::FFTX
-        QE::DFTD3
+        # QE::DFTD3 # TODO
         QE::MPI_Fortran)
+qe_install_target(qe_pw)
+
 
 ###########################################################
 # pw.x
@@ -255,14 +257,7 @@ set(sources src/pwscf.f90)
 # TODO rename all sources *.f90 -> *.F90
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_executable(qe_pw_exe ${sources})
-set_target_properties(qe_pw_exe PROPERTIES OUTPUT_NAME pw.x)
 add_executable(QE::PW_EXE ALIAS qe_pw_exe)
 target_link_libraries(qe_pw_exe
     PRIVATE
         QE::PW)
-
-###########################################################
-
-qe_install_targets(
-    qe_pw
-    qe_pw_exe)
