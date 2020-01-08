@@ -87,6 +87,7 @@ program test
   USE fft_helper_subroutines
   USE fft_interfaces, ONLY:fwfft, invfft
   USE timers
+  USE mpi
   IMPLICIT NONE
   !
   TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
