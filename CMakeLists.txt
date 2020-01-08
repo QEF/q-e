@@ -91,6 +91,10 @@ endif()
 # corresponding CMake builtin
 ###########################################################
 
+function(qe_add_executable EXE)
+    add_executable(${EXE} ${ARGN})
+endfunction(qe_add_executable)
+
 function(qe_add_library LIB)
     add_library(${LIB} ${ARGN})
     # Mandatory targets
@@ -180,39 +184,44 @@ endif(QE_ENABLE_TEST)
 # Components
 ###########################################################
 
+add_subdirectory(FFTXlib)
 add_subdirectory(UtilXlib)
+add_subdirectory(Modules)
 add_subdirectory(LAXlib)
+add_subdirectory(PW)
 
 ###########################################################
 # Exports
 ###########################################################
 
-# Install all internal interface targets to allow
-# proper targets export
-qe_install_target(qe_definitions)
-qe_install_target(qe_mpi_fortran)
-qe_install_target(qe_mpi_c)
+# # Install all internal interface targets to allow
+# # proper targets export
+# qe_install_target(qe_definitions)
+# qe_install_target(qe_mpi_fortran)
+# qe_install_target(qe_mpi_c)
+# # TODO check that everything is in good shape
+# qe_install_target(qe_fox)
 
-install(EXPORT qeTargets
-        FILE qeTargets.cmake
-        NAMESPACE qe::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
+# install(EXPORT qeTargets
+#         FILE qeTargets.cmake
+#         NAMESPACE qe::
+#         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
 
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-    qeConfigVersion.cmake
-    VERSION ${PACKAGE_VERSION}
-    COMPATIBILITY AnyNewerVersion)
+# include(CMakePackageConfigHelpers)
+# write_basic_package_version_file(
+#     qeConfigVersion.cmake
+#     VERSION ${PACKAGE_VERSION}
+#     COMPATIBILITY AnyNewerVersion)
 
-configure_file(
-    cmake/qeConfig.cmake.in 
-    ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake @ONLY)
+# configure_file(
+#     cmake/qeConfig.cmake.in 
+#     ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake @ONLY)
 
-install(FILES 
-            ${CMAKE_CURRENT_BINARY_DIR}/qeConfigVersion.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
-        DESTINATION
-            ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
+# install(FILES 
+#             ${CMAKE_CURRENT_BINARY_DIR}/qeConfigVersion.cmake
+#             ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
+#         DESTINATION
+#             ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
 
 ###########################################################
 # Dependency graph generation
