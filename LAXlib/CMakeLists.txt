@@ -17,14 +17,14 @@ set(sources
 # TODO rename all sources *.f90 -> *.F90
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 
-qe_add_library(qe_laxlib ${sources})
-add_library(QE::LAXlib ALIAS qe_laxlib)
-target_link_libraries(qe_laxlib
+qe_add_library(qe_lax ${sources})
+add_library(QE::LAX ALIAS qe_lax)
+target_link_libraries(qe_lax
     PUBLIC
         QE::MPI_Fortran
         QE::LAPACK
-        QE::UtilXlib)
-qe_install_target(qe_laxlib)
+        QE::UTILX)
+qe_install_target(qe_lax)
 
 ###########################################################
 # Tests
@@ -33,10 +33,10 @@ qe_install_target(qe_laxlib)
 if(QE_ENABLE_TEST)
     # TODO rename all sources *.f90 -> *.F90
     set_source_files_properties(test.f90 PROPERTIES COMPILE_FLAGS -cpp)
-    add_executable(qe_laxlib_test test.f90)
-    target_link_libraries(qe_laxlib_test
+    qe_add_executable(qe_lax_test test.f90)
+    target_link_libraries(qe_lax_test
         PRIVATE
             QE::MPI_Fortran
-            QE::LAXlib)
-    add_test(NAME test-laxlib COMMAND qe_laxlib_test)
+            QE::LAX)
+    add_test(NAME test-lax COMMAND qe_lax_test)
 endif(QE_ENABLE_TEST)
