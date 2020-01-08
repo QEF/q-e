@@ -93,6 +93,7 @@ endif()
 
 function(qe_add_executable EXE)
     add_executable(${EXE} ${ARGN})
+    target_link_libraries(${EXE} PUBLIC QE::Definitions)
 endfunction(qe_add_executable)
 
 function(qe_add_library LIB)
