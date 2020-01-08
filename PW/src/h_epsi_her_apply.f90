@@ -70,7 +70,6 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
   COMPLEX(kind=DP), ALLOCATABLE :: sca_mat(:,:),sca_mat1(:,:)
   COMPLEX(kind=DP) :: pref0(4)
   !
-  COMPLEX(DP), EXTERNAL :: zdotc
   !
   !  --- Define a small number ---
   eps = 0.000001d0
@@ -178,10 +177,10 @@ SUBROUTINE h_epsi_her_apply( lda, n, nbande, psi, hpsi, pdir, e_field )
      !
      DO nb = 1, nbande
         DO mb = 1, nbnd!index on states of evcel        
-           sca = zdotc(npw,evcelm(1,mb,pdir),1,psi(1,nb),1)
-           IF (noncolin) sca = sca+zdotc(npw,evcelm(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
-           sca1 = zdotc(npw,evcelp(1,mb,pdir),1,psi(1,nb),1)
-           IF (noncolin) sca1 = sca1 + zdotc(npw,evcelp(1+npwx,mb,pdir),1,psi(1+npwx,nb),1)
+           sca = dot_product(evcelm(1:npw,mb,pdir),psi(1:npw,nb))
+           IF (noncolin) sca = sca+dot_product(evcelm(1+npwx:npw+npwx,mb,pdir),psi(1+npwx:npw+npwx,nb))
+           sca1 = dot_product(evcelp(1:npw,mb,pdir),psi(1:npw,nb))
+           IF (noncolin) sca1 = sca1 + dot_product(evcelp(1+npwx:npw+npwx,mb,pdir),psi(1+npwx:npw+npwx,nb))
            CALL mp_sum( sca,  intra_bgrp_comm )
            CALL mp_sum( sca1, intra_bgrp_comm )
            !
