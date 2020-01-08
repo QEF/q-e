@@ -189,6 +189,7 @@ add_subdirectory(FFTXlib)
 add_subdirectory(UtilXlib)
 add_subdirectory(Modules)
 add_subdirectory(LAXlib)
+add_subdirectory(dft-d3)
 add_subdirectory(PW)
 
 ###########################################################
