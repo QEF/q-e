@@ -514,8 +514,8 @@
          !     qqq and beta are now indexed and taken in the same order
          !     as vanderbilts ppot-code prints them out
          !
-         WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
-     &        nh(is), ngb, is, upf(is)%kkbeta, upf(is)%nqlc
+         WRITE( stdout,'(A,5I5)') 'is, nh(is), ngb, kkbeta, lmaxq = ', &
+     &        is, nh(is), ngb, upf(is)%kkbeta, upf(is)%nqlc
          !
          nr = upf(is)%kkbeta
          !
