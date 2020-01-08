@@ -47,7 +47,8 @@ qe_install_target(qe_fftx)
 # Tests
 # TODO move all tests to a proper location
 ###########################################################
-if(QE_ENABLE_TEST)
+if(QE_ENABLE_TEST AND QE_ENABLE_MPI)
+    # TODO test.f90 seems to work only with MPI
     # TODO rename all sources *.f90 -> *.F90
     set_source_files_properties(test.f90 PROPERTIES COMPILE_FLAGS -cpp)
     qe_add_executable(qe_fftx_test test.f90)
@@ -56,4 +57,4 @@ if(QE_ENABLE_TEST)
             QE::FFTX
             QE::MPI_Fortran)
     add_test(NAME test-fftx COMMAND qe_fftx_test)
-endif(QE_ENABLE_TEST)
+endif(QE_ENABLE_TEST AND QE_ENABLE_MPI)
