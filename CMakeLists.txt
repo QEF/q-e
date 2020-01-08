@@ -185,6 +185,7 @@ endif(QE_ENABLE_TEST)
 # Components
 ###########################################################
 
+add_subdirectory(clib)
 add_subdirectory(FFTXlib)
 add_subdirectory(UtilXlib)
 add_subdirectory(Modules)
