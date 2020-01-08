@@ -152,7 +152,6 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
    COMPLEX(dp) :: pref
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(dp) :: struc(nat),struc_r(3,nat)
-   COMPLEX(dp) :: zdotc
    COMPLEX(dp) :: zeta
    !
    COMPLEX(dp), ALLOCATABLE :: psi(:,:)
@@ -528,10 +527,10 @@ SUBROUTINE forces_us_efield( forces_bp, pdir, e_field )
                               ENDDO
                            ENDIF
                            !
-                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                           mat(nb,mb) = dot_product(aux0(1:ngm),aux(1:ngm))
                            !
                            IF (noncolin) THEN
-                              mat(nb,mb) = mat(nb,mb) + zdotc(ngm,aux0_2,1,aux_2,1)
+                                   mat(nb,mb) = mat(nb,mb) + dot_product(aux0_2(1:ngm),aux_2(1:ngm))
                            ENDIF
                            !
                            CALL mp_sum( mat(nb,mb), intra_bgrp_comm )

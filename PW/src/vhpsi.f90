@@ -124,7 +124,7 @@ SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
   ! ... local variables
   !
   INTEGER :: ibnd, na, nwfc, is1, is2, nt, m1, m2
-  COMPLEX(DP) :: temp, zdotc
+  COMPLEX(DP) :: temp
   COMPLEX(DP), ALLOCATABLE :: proj(:,:)
   !
   CALL start_clock('vhpsi')
@@ -135,7 +135,7 @@ SUBROUTINE vhpsi_nc( ldap, np, mps, psip, hpsi )
 ! calculate <psi_at | phi_k> 
   DO ibnd = 1, mps
     DO na = 1, nwfcU
-      proj(na, ibnd) = zdotc (ldap*npol, wfcU(1, na), 1, psip(1, ibnd), 1)
+       proj(na, ibnd) = dot_product( wfcU(1:ldap*npol, na), psip(1:ldap*npol, ibnd))
     ENDDO
   ENDDO
 #if defined(__MPI)
