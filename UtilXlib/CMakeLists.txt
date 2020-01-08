@@ -19,9 +19,9 @@ set(sources
 # TODO rename all sources *.f90 -> *.F90
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 
-qe_add_library(qe_utilxlib ${sources})
-add_library(QE::UtilXlib ALIAS qe_utilxlib)
-target_link_libraries(qe_utilxlib
+qe_add_library(qe_utilx ${sources})
+add_library(QE::UTILX ALIAS qe_utilx)
+target_link_libraries(qe_utilx
     PUBLIC
         QE::MPI_Fortran)
-qe_install_target(qe_utilxlib)
+qe_install_target(qe_utilx)
