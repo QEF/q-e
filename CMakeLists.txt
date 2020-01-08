@@ -33,6 +33,7 @@ endif()
 
 include(external/external.cmake)
 
+include(CheckFunctionExists)
 # Must use GNUInstallDirs to install libraries into correct
 # locations on all platforms.
 include(GNUInstallDirs)
@@ -68,6 +69,11 @@ option(QE_ENABLE_MPI_MODULE
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
 
+# Disable all configuration headers used to be generated
+# by configure (see <qe>/include/)
+set_property(TARGET qe_definitions APPEND
+    PROPERTY INTERFACE_COMPILE_DEFINITIONS QE_NO_CONFIGURE_HEADERS)
+
 if(QE_ENABLE_TRACE)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __TRACE)
@@ -83,6 +89,14 @@ endif()
 if(QE_ENABLE_BARRIER)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __USE_BARRIER)
+endif()
+
+# Feature checks
+
+check_function_exists(mallinfo HAVE_MALLINFO)
+if(HAVE_MALLINFO)
+    set_property(TARGET qe_definitions APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS HAVE_MALLINFO)
 endif()
 
 ###########################################################

@@ -13,7 +13,9 @@
   Obsolete AIX case and F77-C binding removed by P. Giannozzi (2017)
 */
 
-#include "qe_cdefs.h"
+#if !defined(QE_NO_CONFIGURE_HEADERS)
+#include "c_defs.h"
+#endif
 
 #if defined (__SVR4) && defined (__sun)
 #define SUN_MALLINFO
