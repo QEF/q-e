@@ -245,7 +245,7 @@ target_link_libraries(qe_pw
         # QE::Solvers # TODO
         QE::Modules
         QE::FFTX
-        # QE::DFTD3 # TODO
+        QE::DFTD3
         QE::MPI_Fortran)
 qe_install_target(qe_pw)
 
