@@ -7,8 +7,13 @@ project(qe
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
-# Add our own custom CMake modules
+###########################################################
+# Build helpers
+###########################################################
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+set(QE_MANDATORY_TARGETS QE::Definitions CACHE STRING "" FORCE)
+include(cmake/qeHelpers.cmake)
 
 ###########################################################
 # Build Type
@@ -30,7 +35,6 @@ endif()
 ###########################################################
 # Modules
 ###########################################################
-
 include(CheckFunctionExists)
 # Must use GNUInstallDirs to install libraries into correct
 # locations on all platforms.
@@ -39,7 +43,6 @@ include(GNUInstallDirs)
 ###########################################################
 # Build Options
 ###########################################################
-
 option(QE_ENABLE_TEST
     "enable unit tests" ON)
 option(QE_ENABLE_MPI
@@ -51,6 +54,7 @@ option(QE_ENABLE_MPI
 # compile definition, no additional dependencies are needed
 add_library(qe_definitions INTERFACE)
 add_library(QE::Definitions ALIAS qe_definitions)
+qe_install_targets(qe_definitions)
 ###########################################################
 # TODO change all ifdefs throughout code base to match
 # cmake options
@@ -90,19 +94,11 @@ if(QE_ENABLE_BARRIER)
 endif()
 
 # Feature checks
-
 check_function_exists(mallinfo HAVE_MALLINFO)
 if(HAVE_MALLINFO)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS HAVE_MALLINFO)
 endif()
-
-###########################################################
-# Build helpers
-###########################################################
-
-set(QE_MANDATORY_TARGETS QE::Definitions CACHE STRING "" FORCE)
-include(cmake/qeHelpers.cmake)
 
 ###########################################################
 # MPI
@@ -111,8 +107,8 @@ add_library(qe_mpi_fortran INTERFACE)
 add_library(QE::MPI_Fortran ALIAS qe_mpi_fortran)
 add_library(qe_mpi_c INTERFACE)
 add_library(QE::MPI_C ALIAS qe_mpi_c)
+qe_install_targets(qe_mpi_fortran qe_mpi_c)
 ###########################################################
-
 if(QE_ENABLE_MPI)
     set(mpi_definitions
         # legacy macro used throughout qe
@@ -138,7 +134,6 @@ endif(QE_ENABLE_MPI)
 # Any executable target marked as test runner via
 # 'add_test()' will be run by the 'test' make target
 ###########################################################
-
 if(QE_ENABLE_TEST)
     enable_testing()
 endif(QE_ENABLE_TEST)
@@ -146,7 +141,6 @@ endif(QE_ENABLE_TEST)
 ###########################################################
 # Components
 ###########################################################
-
 add_subdirectory(external)
 add_subdirectory(clib)
 add_subdirectory(FFTXlib)
@@ -161,17 +155,6 @@ add_subdirectory(CPV)
 ###########################################################
 # Exports
 ###########################################################
-
-# Install all internal interface targets to allow
-# proper targets export
-qe_install_targets(
-    qe_definitions
-    qe_mpi_fortran
-    qe_mpi_c
-    # TODO check that everything is in good shape
-    qe_fox
-)
-
 install(EXPORT qeTargets
         FILE qeTargets.cmake
         NAMESPACE qe::
@@ -197,7 +180,6 @@ install(FILES
 # Dependency graph generation
 # Defines the custom target 'depgraph'
 ###########################################################
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CMakeGraphVizOptions.cmake
                ${CMAKE_CURRENT_BINARY_DIR}/CMakeGraphVizOptions.cmake COPYONLY)
 add_custom_target(depgraph
