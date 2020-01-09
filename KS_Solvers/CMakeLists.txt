@@ -23,4 +23,4 @@ target_link_libraries(qe_solvers
         QE::LAX
         QE::UTILX
         QE::MPI_Fortran)
-qe_install_targets(qe_solvers)
+qe_install_target(qe_solvers)

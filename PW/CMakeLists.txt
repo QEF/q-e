@@ -242,7 +242,7 @@ target_link_libraries(qe_pw
     PUBLIC
         QE::LAX
         QE::UTILX  # TODO direct or transitive via QE::LAX?
-        # QE::Solvers # TODO
+        QE::Solvers
         QE::Modules
         QE::FFTX
         QE::DFTD3
