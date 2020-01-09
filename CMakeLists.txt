@@ -28,10 +28,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 ###########################################################
-# External dependencies
+# Modules
 ###########################################################
-
-include(external/external.cmake)
 
 include(CheckFunctionExists)
 # Must use GNUInstallDirs to install libraries into correct
@@ -157,6 +155,12 @@ function(qe_install_target TGT)
 endfunction(qe_install_target)
 
 ###########################################################
+# External dependencies
+###########################################################
+
+include(external/external.cmake)
+
+###########################################################
 # MPI
 # The following targets will be defined:
 add_library(qe_mpi_fortran INTERFACE)
@@ -213,34 +217,34 @@ add_subdirectory(CPV)
 # Exports
 ###########################################################
 
-# # Install all internal interface targets to allow
-# # proper targets export
-# qe_install_target(qe_definitions)
-# qe_install_target(qe_mpi_fortran)
-# qe_install_target(qe_mpi_c)
-# # TODO check that everything is in good shape
-# qe_install_target(qe_fox)
+# Install all internal interface targets to allow
+# proper targets export
+qe_install_target(qe_definitions)
+qe_install_target(qe_mpi_fortran)
+qe_install_target(qe_mpi_c)
+# TODO check that everything is in good shape
+qe_install_target(qe_fox)
 
-# install(EXPORT qeTargets
-#         FILE qeTargets.cmake
-#         NAMESPACE qe::
-#         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
+install(EXPORT qeTargets
+        FILE qeTargets.cmake
+        NAMESPACE qe::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
 
-# include(CMakePackageConfigHelpers)
-# write_basic_package_version_file(
-#     qeConfigVersion.cmake
-#     VERSION ${PACKAGE_VERSION}
-#     COMPATIBILITY AnyNewerVersion)
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    qeConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY AnyNewerVersion)
 
-# configure_file(
-#     cmake/qeConfig.cmake.in 
-#     ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake @ONLY)
+configure_file(
+    cmake/qeConfig.cmake.in 
+    ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake @ONLY)
 
-# install(FILES 
-#             ${CMAKE_CURRENT_BINARY_DIR}/qeConfigVersion.cmake
-#             ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
-#         DESTINATION
-#             ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
+install(FILES 
+            ${CMAKE_CURRENT_BINARY_DIR}/qeConfigVersion.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
+        DESTINATION
+            ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
 
 ###########################################################
 # Dependency graph generation

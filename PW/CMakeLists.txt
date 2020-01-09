@@ -261,3 +261,4 @@ add_executable(QE::PW_EXE ALIAS qe_pw_exe)
 target_link_libraries(qe_pw_exe
     PRIVATE
         QE::PW)
+qe_install_target(qe_pw_exe)
