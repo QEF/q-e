@@ -116,34 +116,4 @@ target_link_libraries(qe_cpv
         QE::Modules
         QE::FFTX
         QE::MPI_Fortran)
-
-###########################################################
-# cp.x
-###########################################################
-set(sources src/cprstart.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
-qe_add_executable(qe_cpv_exe ${sources})
-set_target_properties(qe_cpv_exe PROPERTIES OUTPUT_NAME cp.x)
-target_link_libraries(qe_cpv_exe
-    PRIVATE
-        QE::CPV)
-
-###########################################################
-# manycp.x
-###########################################################
-set(sources src/manycp.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
-qe_add_executable(qe_cpv_manycp_exe ${sources})
-set_target_properties(qe_cpv_manycp_exe PROPERTIES OUTPUT_NAME manycp.x)
-target_link_libraries(qe_cpv_manycp_exe
-    PRIVATE
-        QE::CPV)
-
-###########################################################
-
-qe_install_targets(
-    qe_cpv
-    qe_cpv_exe
-    qe_cpv_manycp_exe)
+qe_install_target(qe_cpv)
