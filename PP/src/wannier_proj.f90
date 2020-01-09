@@ -41,8 +41,7 @@ subroutine wannier_proj(ik, wan_func)
   
   INTEGER :: current_spin, npw, i,j,k, ierr, ibnd, iwan
   
-  REAL(DP), EXTERNAL :: ddot
-  COMPLEX(DP) :: zdotc
+  COMPLEX(DP), EXTERNAL :: zdotc
 
   ALLOCATE(trialwf(npwx,nwan))
   ALLOCATE(pp(nwan, nbnd))

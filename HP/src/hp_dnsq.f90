@@ -65,7 +65,6 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   ! number of plane waves at k and k+q
   COMPLEX(DP), ALLOCATABLE :: dpsi(:, :), proj1(:,:), proj2(:,:)
   REAL(DP) :: weight, wdelta, w1
-  REAL(DP),    EXTERNAL :: DDOT
   COMPLEX(DP), EXTERNAL :: ZDOTC
   REAL(DP),    EXTERNAL :: w0gauss ! an approximation to the delta function
   COMPLEX(DP) :: trace_dns(2)
