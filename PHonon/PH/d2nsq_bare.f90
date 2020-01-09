@@ -347,7 +347,6 @@ SUBROUTINE term_one (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
                    resone_6_9
     COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), dpqq2(:), &
                                 dpqq3(:), dpqq4(:), d2vkb(:,:)
-    COMPLEX(DP), EXTERNAL :: ZDOTC  
     !
     res_one = 0.d0
     !
@@ -537,7 +536,6 @@ SUBROUTINE term_one_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), dpqq2(:), dpqq3(:), dpqq4(:), d2vkb(:,:)
     COMPLEX(DP) :: resone_1, resone_2,resone_3, resone_4, resone_5, &
                    resone_6_9
-    COMPLEX(DP), EXTERNAL :: ZDOTC  
     !
     res_one = 0.d0
     !
@@ -1116,7 +1114,6 @@ SUBROUTINE d2nsq_bare_k (ik, icart, jcart, na, nap, nah, &
     INTEGER  :: ikk, ikq, npw, npwq, icar, &
                 nt, ic, nti, ina, ih, ibeta, ibnd 
     COMPLEX(DP) :: res_one, res_two, res_three, res_four 
-    COMPLEX(DP), EXTERNAL :: ZDOTC 
     !
     CALL start_clock( 'd2nsq_bare_k' )
     !
@@ -1296,7 +1293,6 @@ SUBROUTINE d2nsq_bare_k_diag (ik, icart, jcart, na, nap, nah, &
     !
     INTEGER :: ikk, ikq, npw, npwq, icar, nt, ic, nti, ina, ih, ibeta, ibnd 
     COMPLEX(DP) :: res_one,res_two,res_three,res_four 
-    COMPLEX(DP), EXTERNAL :: ZDOTC 
     !
     CALL start_clock( 'd2nsq_bare_k_diag' )
     !
