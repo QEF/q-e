@@ -14,6 +14,8 @@ set(sources
     parallel_include.f90
     util_param.f90
     thread_util.f90
+    export_gstart_2_solvers.f90
+    set_mpi_comm_4_solvers.f90
 )
 
 # TODO rename all sources *.f90 -> *.F90
