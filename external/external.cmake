@@ -41,6 +41,7 @@ else(FoX_FOUND)
     else(TARGET QE::FOX)
         if(QE_ENABLE_VENDOR_DEPS)
             message(STATUS "Installing QE::FOX via submodule")
+            set(FoX_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
             execute_process(COMMAND git submodule update --init -- external/fox
                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/fox EXCLUDE_FROM_ALL)
