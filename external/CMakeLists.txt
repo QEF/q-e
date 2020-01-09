@@ -1,15 +1,9 @@
 option(QE_ENABLE_VENDOR_DEPS "enable fallback on vendored deps when none is found via find_package()" ON)
 
-function(qe_git_submodule_update PATH)
+if(QE_ENABLE_VENDOR_DEPS)
+    # Look for git to be able to update submodules:
     find_package(Git)
-    # Old versions of git aren't able to run init+update
-    # in one go (via 'git submodule update --init'), we need
-    # to call one command for each operation:
-    execute_process(COMMAND ${GIT_EXECUTABLE} submodule init -- ${PATH}
-                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update -- ${PATH}
-                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-endfunction(qe_git_submodule_update)
+endif(QE_ENABLE_VENDOR_DEPS)
 
 ###########################################################
 # QE::LAPACK
@@ -19,7 +13,6 @@ if(LAPACK_FOUND)
     add_library(qe_lapack INTERFACE)
     add_library(QE::LAPACK ALIAS qe_lapack)
     target_link_libraries(qe_lapack INTERFACE ${LAPACK_LIBRARIES})
-    qe_install_targets(qe_lapack)
 else(LAPACK_FOUND)
     if(TARGET QE::LAPACK)
         message(STATUS "Using inherited QE::LAPACK target")
@@ -28,13 +21,8 @@ else(LAPACK_FOUND)
             message(STATUS "Installing QE::LAPACK via submodule")
             execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- lapack
                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            qe_git_submodule_update(external/lapack)
-            add_subdirectory(lapack EXCLUDE_FROM_ALL)
-            add_library(qe_lapack INTERFACE)
-            add_library(QE::LAPACK ALIAS qe_lapack)
-            target_link_libraries(qe_lapack INTERFACE lapack)
-            qe_fix_fortran_module_libraries(lapack)
-            qe_install_targets(qe_lapack lapack)
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lapack EXCLUDE_FROM_ALL)
+            add_library(QE::LAPACK ALIAS lapack)
         else(QE_ENABLE_VENDOR_DEPS)
             # No dep has been found via find_package,
             # call it again with REQUIRED to make it fail
@@ -52,7 +40,6 @@ if(FoX_FOUND)
     add_library(qe_fox INTERFACE)
     add_library(QE::FOX ALIAS qe_fox)
     target_link_libraries(qe_fox INTERFACE ${FoX_LIBRARIES})
-    qe_install_targets(qe_fox)
 else(FoX_FOUND)
     if(TARGET QE::FOX)
         message(STATUS "Using inherited QE::FOX target")
@@ -67,13 +54,14 @@ else(FoX_FOUND)
                 FoX_sax
                 FoX_wxml)
             set(FoX_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
-            qe_git_submodule_update(external/fox)
-            add_subdirectory(fox EXCLUDE_FROM_ALL)
+            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- fox
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/fox EXCLUDE_FROM_ALL)
             add_library(qe_fox INTERFACE)
             add_library(QE::FOX ALIAS qe_fox)
             target_link_libraries(qe_fox INTERFACE ${fox_targets})
             qe_fix_fortran_module_libraries(${fox_targets})
-            qe_install_targets(qe_fox ${fox_targets})
+            qe_install_targets(${fox_targets})
         else(QE_ENABLE_VENDOR_DEPS)
             # No dep has been found via find_package,
             # call it again with REQUIRED to make it fail
