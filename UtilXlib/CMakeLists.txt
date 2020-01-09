@@ -26,4 +26,4 @@ add_library(QE::UTILX ALIAS qe_utilx)
 target_link_libraries(qe_utilx
     PUBLIC
         QE::MPI_Fortran)
-qe_install_target(qe_utilx)
+qe_install_targets(qe_utilx)

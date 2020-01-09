@@ -247,7 +247,6 @@ target_link_libraries(qe_pw
         QE::FFTX
         QE::DFTD3
         QE::MPI_Fortran)
-qe_install_target(qe_pw)
 
 ###########################################################
 # pw.x
@@ -261,4 +260,9 @@ add_executable(QE::PW_EXE ALIAS qe_pw_exe)
 target_link_libraries(qe_pw_exe
     PRIVATE
         QE::PW)
-qe_install_target(qe_pw_exe)
+
+###########################################################
+
+qe_install_targets(
+    qe_pw
+    qe_pw_exe)

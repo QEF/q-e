@@ -61,9 +61,7 @@ else(FoX_FOUND)
                     # TODO fix FoX module dir
                     # INTERFACE
                     #     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
-            foreach(tgt IN LISTS fox_targets)
-                qe_install_target(${tgt})
-            endforeach()
+            qe_install_targets(${fox_targets})
         else(QE_ENABLE_VENDOR_DEPS)
             # No dep has been found via find_package,
             # call it again with REQUIRED to make it fail

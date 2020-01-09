@@ -24,7 +24,7 @@ target_link_libraries(qe_lax
         QE::MPI_Fortran
         QE::LAPACK
         QE::UTILX)
-qe_install_target(qe_lax)
+qe_install_targets(qe_lax)
 
 ###########################################################
 # Tests

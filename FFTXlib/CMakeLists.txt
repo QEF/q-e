@@ -41,7 +41,7 @@ add_library(QE::FFTX ALIAS qe_fftx)
 target_link_libraries(qe_fftx
     PUBLIC
         QE::LAPACK)
-qe_install_target(qe_fftx)
+qe_install_targets(qe_fftx)
 
 ###########################################################
 # Tests

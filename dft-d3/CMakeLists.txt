@@ -15,5 +15,5 @@ target_link_libraries(qe_dftd3
     PUBLIC
         QE::UTILX 
         QE::Modules)
-qe_install_target(qe_dftd3)
+qe_install_targets(qe_dftd3)
 
