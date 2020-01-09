@@ -10,7 +10,8 @@
 export REFERENCE_VERSION=6.0
 
 # Edit this line _ONLY_ if you run test-code outside the QE main directory 
-export ESPRESSO_ROOT=${PWD}/../
+# export ESPRESSO_ROOT=${PWD}/../
+export ESPRESSO_ROOT=${shell pwd}/../
 
 # Edit this line to change the number of processors for parallel execution
 export TESTCODE_NPROCS=4
