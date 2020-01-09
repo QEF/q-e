@@ -19,9 +19,9 @@ else(LAPACK_FOUND)
     else(TARGET QE::LAPACK)
         if(QE_ENABLE_VENDOR_DEPS)
             message(STATUS "Installing QE::LAPACK via submodule")
-            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- external/lapack
+            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- lapack
                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/lapack EXCLUDE_FROM_ALL)
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lapack EXCLUDE_FROM_ALL)
             add_library(QE::LAPACK ALIAS lapack)
         else(QE_ENABLE_VENDOR_DEPS)
             # No dep has been found via find_package,
@@ -54,9 +54,9 @@ else(FoX_FOUND)
                 FoX_sax
                 FoX_wxml)
             set(FoX_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
-            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- external/fox
+            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- fox
                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/fox EXCLUDE_FROM_ALL)
+            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/fox EXCLUDE_FROM_ALL)
             add_library(qe_fox INTERFACE)
             add_library(QE::FOX ALIAS qe_fox)
             target_link_libraries(qe_fox INTERFACE ${fox_targets})

@@ -98,12 +98,11 @@ if(HAVE_MALLINFO)
 endif()
 
 ###########################################################
-# External dependencies
+# Build helpers
 ###########################################################
 
 set(QE_MANDATORY_TARGETS QE::Definitions CACHE STRING "" FORCE)
 include(cmake/qeHelpers.cmake)
-include(external/external.cmake)
 
 ###########################################################
 # MPI
@@ -148,6 +147,7 @@ endif(QE_ENABLE_TEST)
 # Components
 ###########################################################
 
+add_subdirectory(external)
 add_subdirectory(clib)
 add_subdirectory(FFTXlib)
 add_subdirectory(UtilXlib)
