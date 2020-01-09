@@ -131,8 +131,9 @@ function(qe_add_library LIB)
     endif()
 endfunction(qe_add_library)
 
-function(qe_install_target TGT)
-    install(TARGETS ${TGT}
+function(qe_install_targets TGT)
+    set(targets ${TGT} ${ARGN})
+    install(TARGETS ${targets}
         EXPORT qeTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -142,17 +143,19 @@ function(qe_install_target TGT)
     # error, let's skip the following section for interface
     # targets. See here for details:
     # https://gitlab.kitware.com/cmake/cmake/issues/17640
-    get_target_property(tgt_type ${TGT} TYPE)
-    if(NOT ${tgt_type} STREQUAL "INTERFACE_LIBRARY")
-        # If the target generates Fortran modules, make sure
-        # to install them as well to a proper location
-        get_target_property(tgt_module_dir ${TGT} Fortran_MODULE_DIRECTORY)
-        if(tgt_module_dir)
-            install(DIRECTORY ${tgt_module_dir}/
-                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
-        endif()
-    endif()
-endfunction(qe_install_target)
+    foreach(tgt IN LISTS targets)
+        get_target_property(tgt_type ${tgt} TYPE)
+        if(NOT ${tgt_type} STREQUAL "INTERFACE_LIBRARY")
+            # If the target generates Fortran modules, make sure
+            # to install them as well to a proper location
+            get_target_property(tgt_module_dir ${tgt} Fortran_MODULE_DIRECTORY)
+            if(tgt_module_dir)
+                install(DIRECTORY ${tgt_module_dir}/
+                    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
+            endif()
+        endif()        
+    endforeach()
+endfunction(qe_install_targets)
 
 ###########################################################
 # External dependencies
@@ -219,11 +222,13 @@ add_subdirectory(CPV)
 
 # Install all internal interface targets to allow
 # proper targets export
-qe_install_target(qe_definitions)
-qe_install_target(qe_mpi_fortran)
-qe_install_target(qe_mpi_c)
-# TODO check that everything is in good shape
-qe_install_target(qe_fox)
+qe_install_targets(
+    qe_definitions
+    qe_mpi_fortran
+    qe_mpi_c
+    # TODO check that everything is in good shape
+    qe_fox
+)
 
 install(EXPORT qeTargets
         FILE qeTargets.cmake

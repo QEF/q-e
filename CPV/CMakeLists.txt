@@ -116,7 +116,6 @@ target_link_libraries(qe_cpv
         QE::Modules
         QE::FFTX
         QE::MPI_Fortran)
-qe_install_target(qe_cpv)
 
 ###########################################################
 # cp.x
@@ -129,7 +128,6 @@ set_target_properties(qe_cpv_exe PROPERTIES OUTPUT_NAME cp.x)
 target_link_libraries(qe_cpv_exe
     PRIVATE
         QE::CPV)
-qe_install_target(qe_cpv_exe)
 
 ###########################################################
 # manycp.x
@@ -142,4 +140,10 @@ set_target_properties(qe_cpv_manycp_exe PROPERTIES OUTPUT_NAME manycp.x)
 target_link_libraries(qe_cpv_manycp_exe
     PRIVATE
         QE::CPV)
-qe_install_target(qe_cpv_manycp_exe)
+
+###########################################################
+
+qe_install_targets(
+    qe_cpv
+    qe_cpv_exe
+    qe_cpv_manycp_exe)
