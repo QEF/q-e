@@ -1,5 +1,10 @@
 option(QE_ENABLE_VENDOR_DEPS "enable fallback on vendored deps when none is found via find_package()" ON)
 
+if(QE_ENABLE_VENDOR_DEPS)
+    # Look for git to be able to update submodules:
+    find_package(Git)
+endif(QE_ENABLE_VENDOR_DEPS)
+
 ###########################################################
 # QE::LAPACK
 ###########################################################
@@ -14,7 +19,7 @@ else(LAPACK_FOUND)
     else(TARGET QE::LAPACK)
         if(QE_ENABLE_VENDOR_DEPS)
             message(STATUS "Installing QE::LAPACK via submodule")
-            execute_process(COMMAND git submodule update --init -- external/lapack
+            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- external/lapack
                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/lapack EXCLUDE_FROM_ALL)
             add_library(QE::LAPACK ALIAS lapack)
@@ -49,18 +54,13 @@ else(FoX_FOUND)
                 FoX_sax
                 FoX_wxml)
             set(FoX_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
-            execute_process(COMMAND git submodule update --init -- external/fox
+            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- external/fox
                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/fox EXCLUDE_FROM_ALL)
             add_library(qe_fox INTERFACE)
             add_library(QE::FOX ALIAS qe_fox)
             target_link_libraries(qe_fox INTERFACE ${fox_targets})
-            target_include_directories(qe_fox
-                INTERFACE
-                    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/external/fox/modules>)
-                    # TODO fix FoX module dir
-                    # INTERFACE
-                    #     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
+            qe_fix_fortran_module_libraries(${fox_targets})
             qe_install_targets(${fox_targets})
         else(QE_ENABLE_VENDOR_DEPS)
             # No dep has been found via find_package,
