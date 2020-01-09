@@ -193,8 +193,6 @@
     !! Auxiliary variables
     REAL(KIND = DP) :: inv_tau_allcb_MPI(nbndfst, nktotf, nstemp)
     !! Auxiliary variables
-    REAL(KIND = DP), EXTERNAL :: DDOT
-    !! Dot product function
     REAL(KIND = DP), EXTERNAL :: efermig
     !! Function that returns the Fermi energy
     REAL(KIND = DP), EXTERNAL :: wgauss

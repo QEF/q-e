@@ -1730,7 +1730,6 @@ END SUBROUTINE print_lambda_x
       INTEGER :: k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic, nr, nc, ibgrp_i
       INTEGER :: n1, n2, m1, m2, nrcx
       INTEGER :: nrr(nspin), irr, nrrx
-      REAL(DP), EXTERNAL :: ddot
       REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:), tmplam(:,:,:)
       REAL(DP), ALLOCATABLE :: fion_tmp(:,:)
       REAL(DP), ALLOCATABLE :: bec(:,:,:)

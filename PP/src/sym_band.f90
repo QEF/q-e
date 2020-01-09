@@ -48,7 +48,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   LOGICAL :: is_complex, is_complex_so, is_symmorphic, search_sym
   LOGICAL, ALLOCATABLE :: high_symmetry(:)
   REAL(DP), PARAMETER :: accuracy=1.d-4
-  COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), zdotc
+  COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48)
   COMPLEX(DP),ALLOCATABLE :: times(:,:,:)
   REAL(DP) :: dxk(3), dkmod, dkmod_save, modk1, modk2, k1(3), k2(3), ps
   INTEGER, ALLOCATABLE :: rap_et(:,:), code_group_k(:)
@@ -370,7 +370,7 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
        na, i, j, ig, dimen, nrxx, npw
   INTEGER ::  ftau(3)
 
-  COMPLEX(DP) :: zdotc
+  COMPLEX(DP), EXTERNAL :: zdotc
 
   REAL(DP), ALLOCATABLE ::  w1(:)
   COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), trace(:,:), psic(:,:)
