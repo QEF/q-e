@@ -323,9 +323,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
            endif
         enddo
      enddo
-     call stop_clock('c_nldynb2')
   enddo
-
+  call stop_clock('c_nldynb2')
   call mp_sum ( dynwrk, intra_bgrp_comm )
   allocate(auxdyn(3*nat,3*nat))
   call zgemm('C', 'N', 3*nat, 3*nat, 3*nat, cmplx(1.d0,0.d0,kind=dp),  u,     3*nat, dynwrk, 3*nat,& 

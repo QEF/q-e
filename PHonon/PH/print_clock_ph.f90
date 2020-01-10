@@ -37,7 +37,10 @@ subroutine print_clock_ph
   call print_clock ('dvanqq')
   call print_clock ('drho')
   call print_clock ('c_nldynb1')
+  call print_clock ('c_nldyn_loop1')
   call print_clock ('c_nldynb2') 
+  call print_clock ('nldyn_b21')
+   call print_clock ('nldyn_b22')
   if ((epsil.or.zue).and.okvan) call print_clock ('cmpt_qdipol')
 
   if(epsil) then
