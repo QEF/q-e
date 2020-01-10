@@ -1,4 +1,11 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+# CMake < 3.13 cannot install external targets:
+# https://gitlab.kitware.com/cmake/cmake/merge_requests/2152
+
+# CMake < 3.14 generates incorrect dependency graphs with
+# alias targets:
+# https://gitlab.kitware.com/cmake/cmake/merge_requests/2521
+
 # Policy CMP0048: The project() command manages VERSION variables
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
