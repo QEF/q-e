@@ -279,7 +279,6 @@ SUBROUTINE c_phase
    COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(DP) :: struc(nat)
    COMPLEX(DP) :: theta0
-   COMPLEX(DP) :: zdotc
    COMPLEX(DP) :: zeta
 
 !  -------------------------------------------------------------------------   !
@@ -618,7 +617,7 @@ SUBROUTINE c_phase
                                 aux0(igk0(ig)+ngm)=psi(ig+npwx,nb)
                               END DO
                            ENDIF
-                           mat(nb,mb) = zdotc (ngm*npol,aux0,1,aux,1)
+                           mat(nb,mb) = dot_product(aux0,aux)    
                         END IF
                      END DO
                   END IF

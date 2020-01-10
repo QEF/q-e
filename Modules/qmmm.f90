@@ -455,6 +455,7 @@ END SUBROUTINE qmmm_minimum_image
     USE constants,          ONLY : e2, eps8, bohr_radius_angs
     USE io_global,          ONLY : stdout,ionode
     USE fft_types,          ONLY : fft_type_descriptor
+    USE fft_types,          ONLY : fft_index_to_3d
     USE kinds,              ONLY : DP
     !
     USE constraints_module, ONLY : pbc
@@ -466,8 +467,8 @@ END SUBROUTINE qmmm_minimum_image
     !
     ! local variables
     !
-    INTEGER :: idx, i, j, k, j0, k0
-    INTEGER :: ir
+    INTEGER :: i, j, k, ir
+    LOGICAL :: offrange
     !
     INTEGER :: i_mm, i_qm, ipol, ii_qm
     ! r_nn is the cutoff for the nearest neighbour
@@ -484,24 +485,13 @@ END SUBROUTINE qmmm_minimum_image
     ALLOCATE(esfcontrib_all(dfftp%nnr))
     esfcontrib_all(:) = 0.D0
     !
-    j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
-    !
     r_nn = 50000.d0 ! cut-off for the nearest neighbour
     !
     r(:) = 0.d0
     ! 
     DO ir = 1, dfftp%nnr
-       idx = ir -1
-       k   = idx / (dfftp%nr1x * dfftp%my_nr2p )
-       idx = idx - (dfftp%nr1x * dfftp%my_nr2p ) * k
-       k   = k + k0
-       IF ( k .GE. dfftp%nr3 ) CYCLE
-       j   = idx / dfftp%nr1x
-       idx = idx - dfftp%nr1x*j
-       j   = j + j0
-       IF ( j .GE. dfftp%nr2 ) CYCLE
-       i   = idx
-       IF ( i .GE. dfftp%nr1 ) CYCLE
+       CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        s(1) = DBLE(i)/DBLE(dfftp%nr1)
        s(2) = DBLE(j)/DBLE(dfftp%nr2)
@@ -596,7 +586,7 @@ END SUBROUTINE qmmm_minimum_image
     !
     
     USE cell_base,          ONLY : alat, at, omega
-    USE fft_types,          ONLY : fft_type_descriptor
+    USE fft_types,          ONLY : fft_type_descriptor, fft_index_to_3d
     USE constants,          ONLY : e2, eps8
     USE io_global,          ONLY : stdout,ionode
     USE ions_base,          ONLY : zv, tau
@@ -610,8 +600,8 @@ END SUBROUTINE qmmm_minimum_image
     !
     ! local variables
     !
-    INTEGER :: idx, i, j, k, j0, k0
-    INTEGER :: ir
+    INTEGER :: i, j, k, ir
+    LOGICAL :: offrange
     !
     INTEGER :: i_mm, i_qm, ipol,is
     REAL(DP) :: s(3),r(3), dist, fder, r_nn
@@ -619,8 +609,6 @@ END SUBROUTINE qmmm_minimum_image
     IF( qmmm_mode /= 2 ) RETURN
     !
     ! Index for parallel summation
-    !
-    j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
     !
     r(:) = 0.d0
     r_nn = 5000000.d0 ! cut-off for nearest neighbor
@@ -638,17 +626,8 @@ END SUBROUTINE qmmm_minimum_image
              !
              ! ... three dimensional indexes
              !
-             idx = ir - 1
-             k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-             idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-             k   = k + k0
-             IF ( k .GE. dfftp%nr3 ) CYCLE
-             j   = idx / dfftp%nr1x
-             idx = idx - dfftp%nr1x*j
-             j   = j + j0
-             IF ( j .GE. dfftp%nr2 ) CYCLE
-             i   = idx
-             IF ( i .GE. dfftp%nr1 ) CYCLE
+             CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+             IF ( offrange ) CYCLE
              !
              s(1) = DBLE(i)/DBLE(dfftp%nr1)
              s(2) = DBLE(j)/DBLE(dfftp%nr2)

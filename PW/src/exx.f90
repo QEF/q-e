@@ -1717,7 +1717,6 @@ MODULE exx
     REAL(DP) :: exxenergy,  energy
     INTEGER :: npw, ibnd, ik
     COMPLEX(DP) :: vxpsi(npwx*npol,nbnd), psi(npwx*npol,nbnd)
-    COMPLEX(DP), EXTERNAL :: zdotc
     !
     exxenergy = 0._DP
     !
@@ -1749,9 +1748,9 @@ MODULE exx
        CALL vexx( npwx, npw, nbnd, psi, vxpsi, becpsi )
        !
        DO ibnd = 1, nbnd
-          energy = energy + DBLE(wg(ibnd,ik) * zdotc(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1))
+          energy = energy + DBLE(wg(ibnd,ik) * dot_product(psi(1:npw,ibnd),vxpsi(1:npw,ibnd)))
           IF (noncolin) energy = energy + &
-                            DBLE(wg(ibnd,ik) * zdotc(npw,psi(npwx+1,ibnd),1,vxpsi(npwx+1,ibnd),1))
+                  DBLE(wg(ibnd,ik) * dot_product(psi(npwx+1:npwx+npw,ibnd),vxpsi(npwx+1:npwx+npw,ibnd)))
           !
        ENDDO
        IF (gamma_only .AND. gstart == 2) THEN
@@ -3587,6 +3586,7 @@ MODULE exx
     USE cell_base,        ONLY : alat, omega
     USE mp,               ONLY : mp_sum
     USE mp_bands,         ONLY : intra_bgrp_comm
+    USE fft_types,        ONLY : fft_index_to_3d
     !
     IMPLICIT NONE
     !
@@ -3607,7 +3607,8 @@ MODULE exx
     ! ... local variables
     !
     REAL(DP) :: vol, rbuff, TotSpread
-    INTEGER :: ir, i, j, k, idx, j0, k0
+    INTEGER :: ir, i, j, k
+    LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
     REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
     !
@@ -3619,22 +3620,12 @@ MODULE exx
     cbuff = (Zero,Zero)
     rbuff = Zero
     !
-    j0 = dfftt%my_i0r2p ; k0 = dfftt%my_i0r3p
-    !
     DO ir = 1, dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
        !
        ! ... three dimensional indexes
-       idx = ir -1
-       k = idx / (dfftt%nr1x*dfftt%my_nr2p)
-       idx = idx - (dfftt%nr1x*dfftt%my_nr2p)*k
-       k = k + k0
-       IF (k >= dfftt%nr3) CYCLE
-       j = idx / dfftt%nr1x
-       idx = idx - dfftt%nr1x * j
-       j = j + j0
-       IF (j >= dfftt%nr2) CYCLE
-       i = idx
-       IF (i >= dfftt%nr1) CYCLE
+       !
+       CALL fft_index_to_3d (ir, dfftt, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        rbuff = PsiI(ir) * PsiJ(ir) / omega
        Overlap = Overlap + ABS(rbuff)*vol
@@ -3693,6 +3684,7 @@ MODULE exx
     USE cell_base,        ONLY : alat, omega
     USE mp,               ONLY : mp_sum
     USE mp_bands,         ONLY : intra_bgrp_comm
+    USE fft_types,        ONLY : fft_index_to_3d
     !
     IMPLICIT NONE
     !
@@ -3714,7 +3706,8 @@ MODULE exx
     ! ... local variables
     !
     REAL(DP) :: vol, TotSpread, rbuff
-    INTEGER :: ir, i, j, k , idx, j0, k0
+    INTEGER :: ir, i, j, k
+    LOGICAL :: offrange
     COMPLEX(DP) :: cbuff(3)
     REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
     !
@@ -3726,22 +3719,12 @@ MODULE exx
     cbuff = (Zero, Zero) 
     rbuff = Zero
     !
-    j0 = dfftt%my_i0r2p ; k0 = dfftt%my_i0r3p
-    !
     DO ir = 1, dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
        !
        ! ... three dimensional indexes
-       idx = ir -1
-       k = idx / (dfftt%nr1x*dfftt%my_nr2p)
-       idx = idx - (dfftt%nr1x*dfftt%my_nr2p)*k
-       k = k + k0
-       IF (k >= dfftt%nr3) CYCLE
-       j = idx / dfftt%nr1x
-       idx = idx - dfftt%nr1x * j
-       j = j + j0
-       IF (j >= dfftt%nr2) CYCLE
-       i = idx
-       IF (i >= dfftt%nr1) CYCLE
+       !
+       CALL fft_index_to_3d (ir, dfftt, i,j,k, offrange)
+       IF ( offrange ) CYCLE
        !
        rbuff = ABS(PsiI(ir) * CONJG(PsiJ(ir)) / omega )
        Overlap = Overlap + rbuff*vol

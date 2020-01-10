@@ -825,7 +825,6 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
   !
   INTEGER                  :: ibnd2, is, npw_, ngm_, nnr_
   INTEGER                  :: nrec
-  INTEGER                  :: idxvhartr, idxvharti
   !
   npw_=npwt
   ngm_=dfftt%ngm

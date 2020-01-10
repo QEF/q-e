@@ -29,8 +29,9 @@ SUBROUTINE move_ions( idone, ions_status )
   USE io_files,               ONLY : tmp_dir
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, &
-                                     fix_volume, fix_area, ibrav, enforce_ibrav
-  USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
+                                     fix_volume, fix_area, ibrav, press, &
+                                     enforce_ibrav
+  USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot, ef

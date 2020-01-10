@@ -39,13 +39,13 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: i, j, k, j0, k0, ir, ir_end
+      INTEGER                   :: i, j, k, ir, ir_end
       INTEGER                   :: idx, narea
-      !
-      ir_end = nnr
       !
 #if defined (__MPI)
       ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
+#else
+      ir_end = nnr
 #endif
       !
       narea = dfftp%nr1*dfftp%nr2*dfftp%nr3 / naxis
@@ -56,7 +56,6 @@ CONTAINS
         f1d = 0.D0
       END IF
       !
-      j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
       DO ir = 1, ir_end
          !
          ! ... find the index along the selected axis
@@ -64,12 +63,12 @@ CONTAINS
          idx = ir -1
          i   = idx / (dfftp%nr1x*dfftp%my_nr2p)
          idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*i
-         i   = i + k0
+         i   = i + dfftp%my_i0r3p
          IF ( idx .GE. dfftp%nr3 ) CYCLE
          IF ( axis .LT. 3 ) THEN
             i   = idx / dfftp%nr1x
             idx = idx - dfftp%nr1x * i
-            i   = i + j0
+            i   = i + dfftp%my_i0r2p
            IF ( idx .GE. dfftp%nr2 ) CYCLE
          END IF
          IF ( axis .EQ. 1 ) THEN
@@ -112,6 +111,7 @@ CONTAINS
       USE io_global,        ONLY : stdout
       USE cell_base,        ONLY : at, bg, alat, omega
       USE fft_base,         ONLY : dfftp
+      USE fft_types,        ONLY : fft_index_to_3d
       USE mp,               ONLY : mp_sum
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
@@ -126,7 +126,8 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: idx, i, j, k, j0, k0, ir, ir_end, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
+      LOGICAL                   :: offrange
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, spr2, dist, length
@@ -160,23 +161,13 @@ CONTAINS
       ALLOCATE( rholocal( nnr ) )
       rholocal = 0.D0
       !
-      j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
       DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         IF ( k .GE. dfftp%nr3 ) CYCLE
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         IF ( j .GE. dfftp%nr2 ) CYCLE
-         i   = idx
-         IF ( i .GE. dfftp%nr1 ) CYCLE
-
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
+         !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
                     DBLE( j )*inv_nr2*at(ip,2) + &
@@ -224,6 +215,7 @@ CONTAINS
       USE io_global,        ONLY : stdout
       USE cell_base,        ONLY : at, bg, alat, omega
       USE fft_base,         ONLY : dfftp
+      USE fft_types,        ONLY : fft_index_to_3d
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
@@ -237,7 +229,8 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: idx, i, j, k, j0, k0, ir, ir_end, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
+      LOGICAL                   :: offrange
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, spr2, dist, length
@@ -271,22 +264,12 @@ CONTAINS
       ALLOCATE( gradrholocal( 3, nnr ) )
       gradrholocal = 0.D0
       !
-      j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
       DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         IF ( k .GE. dfftp%nr3 ) CYCLE
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         IF ( j .GE. dfftp%nr2 ) CYCLE
-         i   = idx
-         IF ( i .GE. dfftp%nr1 ) CYCLE
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -333,6 +316,7 @@ CONTAINS
       USE kinds,            ONLY : DP
       USE cell_base,        ONLY : at, bg, alat
       USE fft_base,         ONLY : dfftp
+      USE fft_types,        ONLY : fft_index_to_3d
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
@@ -346,7 +330,8 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: idx, i, j, k, j0, k0, ir, ir_end, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
+      LOGICAL                   :: offrange
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: dist, arg
@@ -367,22 +352,12 @@ CONTAINS
       ALLOCATE( rholocal( nnr ) )
       rholocal = 0.D0
       !
-      j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
       DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         IF ( k .GE. dfftp%nr3 ) CYCLE
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         IF ( j .GE. dfftp%nr2 ) CYCLE
-         i   = idx
-         IF ( i .GE. dfftp%nr1 ) CYCLE
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -424,6 +399,7 @@ CONTAINS
       USE kinds,            ONLY : DP
       USE cell_base,        ONLY : at, bg, alat
       USE fft_base,         ONLY : dfftp
+      USE fft_types,        ONLY : fft_index_to_3d
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
       IMPLICIT NONE
@@ -437,7 +413,8 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: idx, i, j, k, j0, k0, ir, ir_end, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
+      LOGICAL                   :: offrange
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: dist, arg
@@ -458,22 +435,12 @@ CONTAINS
       ALLOCATE( gradrholocal( 3, nnr ) )
       gradrholocal = 0.D0
       !
-      j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
       DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         IF ( k .GE. dfftp%nr3 ) CYCLE
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         IF ( j .GE. dfftp%nr2 ) CYCLE
-         i   = idx
-         IF ( i .GE. dfftp%nr1 ) CYCLE
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -515,6 +482,7 @@ CONTAINS
       USE io_global,        ONLY : stdout
       USE cell_base,        ONLY : at, bg, alat, omega
       USE fft_base,         ONLY : dfftp
+      USE fft_types,        ONLY : fft_index_to_3d
       USE mp,               ONLY : mp_sum
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
@@ -529,8 +497,9 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: idx, i, j, k, j0, k0, ir, ir_end, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
       INTEGER                   :: ntot
+      LOGICAL                   :: offrange
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, dist, arg, chargeanalytic, chargelocal
@@ -542,10 +511,10 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      ir_end = nnr
-      !
 #if defined (__MPI)
       ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
+#else
+      ir_end = nnr
 #endif
       !
       ntot = dfftp%nr1 * dfftp%nr2 * dfftp%nr3
@@ -558,22 +527,12 @@ CONTAINS
       ALLOCATE( rholocal( nnr ) )
       rholocal = 0.D0
       !
-      j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
       DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         IF ( k .GE. dfftp%nr3 ) CYCLE
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         IF ( j .GE. dfftp%nr2 ) CYCLE
-         i   = idx
-         IF ( i .GE. dfftp%nr1 ) CYCLE
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -635,6 +594,7 @@ CONTAINS
       USE io_global,        ONLY : stdout
       USE cell_base,        ONLY : at, bg, alat, omega
       USE fft_base,         ONLY : dfftp
+      USE fft_types,        ONLY : fft_index_to_3d
       USE mp,               ONLY : mp_sum
       USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
       !
@@ -649,8 +609,9 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: idx, i, j, k, j0, k0, ir, ir_end, ip
+      INTEGER                   :: i, j, k, ir, ir_end, ip
       INTEGER                   :: ntot
+      LOGICAL                   :: offrange
       !
       REAL( DP )                :: inv_nr1, inv_nr2, inv_nr3
       REAL( DP )                :: scale, dist, arg, chargeanalytic, chargelocal
@@ -662,10 +623,10 @@ CONTAINS
       inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
       inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
       !
-      ir_end = nnr
-      !
 #if defined (__MPI)
       ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
+#else
+      ir_end = nnr
 #endif
       !
       ntot = dfftp%nr1 * dfftp%nr2 * dfftp%nr3
@@ -683,22 +644,12 @@ CONTAINS
       gradrholocal = 0.D0
       chargelocal = 0.D0
       !
-      j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
       DO ir = 1, ir_end
          !
          ! ... three dimensional indexes
          !
-         idx = ir -1
-         k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-         k   = k + k0
-         IF ( k .GE. dfftp%nr3 ) CYCLE
-         j   = idx / dfftp%nr1x
-         idx = idx - dfftp%nr1x * j
-         j   = j + j0
-         IF ( j .GE. dfftp%nr2 ) CYCLE
-         i   = idx
-         IF ( i .GE. dfftp%nr1 ) CYCLE
+         CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+         IF ( offrange ) CYCLE
          !
          DO ip = 1, 3
             r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -756,6 +707,7 @@ CONTAINS
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : at, bg, alat
    USE fft_base,         ONLY : dfftp
+   USE fft_types,        ONLY : fft_index_to_3d
    USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
   !
   INTEGER, INTENT(IN) :: nnr
@@ -763,7 +715,8 @@ CONTAINS
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: axis( dfftp%nnr )
   !
-  INTEGER  :: idx, i, j, k, j0, k0, ir, ir_end, ip
+  INTEGER  :: i, j, k, ir, ir_end, ip
+  LOGICAL  :: offrange
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3)
   !
@@ -777,22 +730,12 @@ CONTAINS
   ir_end = nnr
 #endif
   !
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
   DO ir = 1, ir_end
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     IF ( k .GE. dfftp%nr3 ) CYCLE
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     IF ( j .GE. dfftp%nr2 ) CYCLE
-     i   = idx
-     IF ( i .GE. dfftp%nr1 ) CYCLE
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     IF ( offrange ) CYCLE
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
@@ -827,13 +770,15 @@ CONTAINS
    USE kinds,            ONLY : DP
    USE cell_base,        ONLY : at, bg, alat
    USE fft_base,         ONLY : dfftp
+   USE fft_types,        ONLY : fft_index_to_3d
    USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
   !
   INTEGER, INTENT(IN) :: nnr
   REAL(DP), INTENT(IN) :: pos(3)
   REAL(DP), INTENT(OUT) :: distance( 3, dfftp%nnr )
   !
-  INTEGER  :: idx, i, j, k, j0, k0, ir, ir_end, ip
+  INTEGER  :: i, j, k, ir, ir_end, ip
+  LOGICAL  :: offrange
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   REAL(DP) :: r(3), s(3)
   !
@@ -847,22 +792,12 @@ CONTAINS
   ir_end = nnr
 #endif
   !
-  j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
   DO ir = 1, ir_end
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k
-     k   = k + k0
-     IF ( k .GE. dfftp%nr3 ) CYCLE
-     j   = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j
-     j   = j + j0
-     IF ( j .GE. dfftp%nr2 ) CYCLE
-     i   = idx
-     IF ( i .GE. dfftp%nr1 ) CYCLE
+     CALL fft_index_to_3d (ir, dfftp, i,j,k, offrange)
+     IF ( offrange ) CYCLE
      !
      DO ip = 1, 3
         r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &

@@ -641,7 +641,6 @@ LOGICAL FUNCTION check_para_diag( nbnd )
   USE mp_diag,          ONLY : np_ortho, ortho_parent_comm 
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp_pools,         ONLY : intra_pool_comm
-  USE control_flags,    ONLY : gamma_only
 
   IMPLICIT NONE
 

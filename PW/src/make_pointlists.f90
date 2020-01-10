@@ -92,13 +92,14 @@ SUBROUTINE make_pointlists
   USE cell_base,           ONLY : at, bg, alat
   USE mp_bands,            ONLY : me_bgrp
   USE fft_base,            ONLY : dfftp
+  USE fft_types,           ONLY : fft_index_to_3d
   USE noncollin_module,    ONLY : factlist, pointlist, r_m
   !
   IMPLICIT NONE
   !
-  INTEGER idx, indproc, iat, ir, iat1
-  INTEGER i, j, k, i0, j0, k0, jj0, kk0, ipol, nt, nt1
-  !
+  INTEGER :: indproc, iat, ir, iat1
+  INTEGER :: i, j, k, i0, j0, k0, ipol, nt, nt1
+  LOGICAL :: offrange
   REAL(DP) :: posi(3), WS_radius, dist
   REAL(DP), ALLOCATABLE :: tau0(:,:), tau_SoA(:,:), distmin(:), distances(:)
   !
@@ -166,8 +167,6 @@ SUBROUTINE make_pointlists
   !
   pointlist(:) = 0
   factlist(:) = 0.d0
-  jj0 = dfftp%my_i0r2p
-  kk0 = dfftp%my_i0r3p
   !
   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
      ! ... check result vector boundary
@@ -176,17 +175,8 @@ SUBROUTINE make_pointlists
      !
      ! ... three dimensional indexes
      !
-     idx = ir -1
-     k0  = idx / (dfftp%nr1x*dfftp%my_nr2p)
-     idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*k0
-     k0  = k0 + kk0
-     j0  = idx / dfftp%nr1x
-     idx = idx - dfftp%nr1x * j0
-     j0  = j0 + jj0
-     i0  = idx
-     !
-     ! ... do not include points outside the physical range
-     IF ( i0 >= dfftp%nr1 .OR. j0 >= dfftp%nr2 .OR. k0 >= dfftp%nr3 ) CYCLE
+     CALL fft_index_to_3d (ir, dfftp, i0,j0,k0, offrange)
+     IF ( offrange ) CYCLE
      !
      posi(1) = DBLE(i0)/DBLE(dfftp%nr1)
      posi(2) = DBLE(j0)/DBLE(dfftp%nr2)

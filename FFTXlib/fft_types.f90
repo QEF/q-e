@@ -140,7 +140,7 @@ MODULE fft_types
 
   PUBLIC :: fft_type_descriptor, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
-  PUBLIC :: fft_stick_index
+  PUBLIC :: fft_stick_index, fft_index_to_3d
 
 CONTAINS
 
@@ -993,6 +993,41 @@ CONTAINS
       mc = m1 + (m2 - 1) * desc%nr1x
       fft_stick_index = desc%isind ( mc ) 
    END FUNCTION
+
+   !
+   SUBROUTINE fft_index_to_3d (ir, dfft, i,j,k, offrange)
+     !
+     !! returns indices i,j,k yielding the position of grid point ir
+     !! in the real-space FFT grid described by descriptor dfft:
+     !!    r(:,ir)= i*tau(:,1)/n1 + j*tau(:,2)/n2 + k*tau(:,3)/n3
+     !
+     IMPLICIT NONE
+     INTEGER, INTENT(IN) :: ir
+     !! point in the FFT real-space grid
+     TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+     !! descriptor for the FFT grid
+     INTEGER, INTENT(OUT) :: i
+     !! (i,j,k) corresponding to grid point ir
+     INTEGER, INTENT(OUT) :: j
+     !! (i,j,k) corresponding to grid point ir
+     INTEGER, INTENT(OUT) :: k
+     !! (i,j,k) corresponding to grid point ir
+     LOGICAL, INTENT(OUT) :: offrange
+     !! true if computed i,j,k lie outside the physical range of values
+     !
+     i     = ir - 1
+     k     = i / (dfft%nr1x*dfft%my_nr2p)
+     i     = i - (dfft%nr1x*dfft%my_nr2p) * k
+     j     = i /  dfft%nr1x 
+     i     = i -  dfft%nr1x * j
+     j     = j + dfft%my_i0r2p
+     k     = k + dfft%my_i0r3p
+     !
+     offrange = (i < 0 .OR. i >= dfft%nr1 ) .OR. &
+          (j < 0 .OR. j >= dfft%nr2 ) .OR. &
+          (k < 0 .OR. k >= dfft%nr3 )
+     !
+   END SUBROUTINE fft_index_to_3d
 
 !=----------------------------------------------------------------------------=!
 END MODULE fft_types

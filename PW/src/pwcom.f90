@@ -381,10 +381,6 @@ MODULE cellmd
   !
   SAVE
   !
-  REAL(DP) :: press
-  !! target pressure
-  REAL(DP) :: cmass
-  !! target cell mass
   REAL(DP) :: at_old(3,3)
   !! the lattice vectors at the previous step
   REAL(DP) :: omega_old

@@ -84,7 +84,6 @@ SUBROUTINE orbm_kubo()
   COMPLEX(DP) :: cdet(2)
   COMPLEX(DP) :: cdwork(nbnd)
   REAL(DP) :: mlc(3),mic(3)     ! orbital magnetization (LC and IC terms)
-  COMPLEX(DP) :: zdotc
   INTEGER :: kpt_arr(3) ! k-point mesh
   INTEGER :: eps_i(3) ! these play role of the antisymmetric tensor e_ijk
   INTEGER :: eps_j(3)
@@ -273,7 +272,7 @@ SUBROUTINE orbm_kubo()
                   !
                 ENDDO
                 !
-                mat(nb,mb) = zdotc( ngm*npol, aux_k, 1, aux_kp, 1 )
+                mat(nb,mb) = dot_product( aux_k(1:ngm*npol), aux_kp(1:ngm*npol) )
                 !
               ENDDO
             ENDDO
@@ -348,7 +347,7 @@ SUBROUTINE orbm_kubo()
                     aux_kp(map_g(1:npw_kp)+ngm*(ipol-1))=evc_kp(istart:iend,mb)
                   ENDDO
                   !
-                  mat(nb,mb) = zdotc(ngm*npol,aux_k,1,aux_kp,1)
+                  mat(nb,mb) = dot_product(aux_k(1:ngm*npol),aux_kp(1:ngm*npol))
                   !
                 ENDDO
                 !
@@ -483,8 +482,7 @@ SUBROUTINE orbm_kubo()
               !
               DO nb = 1, nbnd ! loop over bands
                   mlc = mlc + DBLE(signum)*pref*gpar(:,l)/kpt_arr(l)*      &
-                              AIMAG( zdotc(npwx*npol,evcpm(:,nb,2*eps_i(l) &
-                              +sig-1),1,H_evc(:,nb),1) )
+                              AIMAG( dot_product(evcpm(1:npwx*npol,nb,2*eps_i(l) +sig-1),H_evc(1:npwx*npol,nb)))
               ENDDO
               !
             ENDDO
@@ -510,15 +508,14 @@ SUBROUTINE orbm_kubo()
               !
               DO nb = 1, nbnd ! loop over bands
                 DO mb = 1, nbnd ! loop over bands
-                  store1 = zdotc( npw_k, evc_k(1:npw_k,nb), 1, H_evc(1:npw_k,mb), 1 )
-                  store2 = zdotc( npw_k, evcpm(1:npw_k,mb, 2*eps_i(l)+sig-1), 1, &
-                                  evcpm(1:npw_k,nb,2*eps_j(l)+sigp-1), 1 )
+                  store1 = dot_product( evc_k(1:npw_k,nb), H_evc(1:npw_k,mb))
+                  store2 = dot_product( evcpm(1:npw_k,mb, 2*eps_i(l)+sig-1), &
+                                        evcpm(1:npw_k,nb, 2*eps_j(l)+sigp-1)  )
                   IF (noncolin) THEN
-                    store1 = store1 + zdotc( npw_k,evc_k(npwx+1:npwx+npw_k,nb), 1,   &
-                                             H_evc(npwx+1:npwx+npw_k,mb), 1 )
-                    store2 = store2 + zdotc( npw_k,evcpm(npwx+1:npwx+npw_k,mb,       &
-                                             2*eps_i(l)+sig-1),1, evcpm(npwx+1:npwx+ &
-                                             npw_k,nb,2*eps_j(l)+sigp-1), 1 )
+                     store1 = store1 + dot_product( evc_k(npwx+1:npwx+npw_k,nb),   &
+                                                    H_evc(npwx+1:npwx+npw_k,mb)  )
+                     store2 = store2 + dot_product( evcpm(npwx+1:npwx+npw_k,mb, 2*eps_i(l)+sig-1),&
+                                                    evcpm(npwx+1:npwx+npw_k,nb, 2*eps_j(l)+sigp-1) )
                   ENDIF
                   CALL mp_sum( store1, world_comm )
                   CALL mp_sum( store2, world_comm )

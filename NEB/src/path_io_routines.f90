@@ -410,7 +410,7 @@ MODULE path_io_routines
           CLOSE( iunrestart )
           !
           ! ... then, if pending_image == 0, it is also written on the
-          ! ... scratch direcoty (a backup copy at each iteration)
+          ! ... scratch directory (a backup copy at each iteration)
           !
           IF ( pending_image == 0 ) THEN
              !
