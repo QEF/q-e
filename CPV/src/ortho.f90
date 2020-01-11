@@ -281,7 +281,7 @@
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nat, nsp, ityp
       USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
-      USE uspp_param,     ONLY: nh, ish, nvb
+      USE uspp_param,     ONLY: nh, nvb, upf
       USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
@@ -363,18 +363,20 @@
          IF( descla( iss )%active_node > 0 ) THEN
             DO ia = 1, nat
                is = ityp(ia)
-               DO iv=1,nh(is)
-                  inl = indv_ijkb0(ia) + iv 
-                  DO jv=1,nh(is)
-                     jnl = indv_ijkb0(ia) + jv
-                     qqf = qq_nt(iv,jv,is)
-                     IF( ABS( qqf ) > 1.D-5 ) THEN
-                        DO i = 1, descla( iss )%nc
-                           qbephi(inl,i,iss) = qbephi(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
-                        END DO
-                     END IF
+               IF( upf(is)%tvanp ) THEN
+                  DO iv=1,nh(is)
+                     inl = indv_ijkb0(ia) + iv 
+                     DO jv=1,nh(is)
+                        jnl = indv_ijkb0(ia) + jv
+                        qqf = qq_nt(iv,jv,is)
+                        IF( ABS( qqf ) > 1.D-5 ) THEN
+                           DO i = 1, descla( iss )%nc
+                              qbephi(inl,i,iss) = qbephi(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
+                           END DO
+                        END IF
+                     END DO
                   END DO
-               END DO
+               END IF
             END DO
          ENDIF
       END DO
@@ -394,18 +396,20 @@
             IF( descla( iss )%active_node > 0 ) THEN
                DO ia = 1, nat
                   is = ityp(ia) 
-                  DO iv=1,nh(is)
-                     inl = indv_ijkb0(ia) + iv
-                     DO jv=1,nh(is)
-                        jnl = indv_ijkb0(ia) + jv
-                        qqf = qq_nt(iv,jv,is)
-                        IF( ABS( qqf ) > 1.D-5 ) THEN
-                           DO i = 1, descla( iss )%nc
-                              qbecp(inl,i,iss) = qbecp(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
-                           END DO
-                        ENDIF
+                  IF( upf(is)%tvanp ) THEN
+                     DO iv=1,nh(is)
+                        inl = indv_ijkb0(ia) + iv
+                        DO jv=1,nh(is)
+                           jnl = indv_ijkb0(ia) + jv
+                           qqf = qq_nt(iv,jv,is)
+                           IF( ABS( qqf ) > 1.D-5 ) THEN
+                              DO i = 1, descla( iss )%nc
+                                 qbecp(inl,i,iss) = qbecp(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
+                              END DO
+                           ENDIF
+                        END DO
                      END DO
-                  END DO
+                  END IF
                END DO
             END IF
          END DO
@@ -427,7 +431,6 @@
       DO iss = 1, nspin_sub
 
          IF( descla( iss )%active_node > 0 ) xloc = x0(:,:,iss) * ccc
-
          CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
                            qbephi(:,:,iss), xloc, nx0, descla(iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )

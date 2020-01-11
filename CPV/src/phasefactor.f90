@@ -192,7 +192,7 @@
 
 
       USE kinds,            ONLY: DP
-      USE ions_base,        ONLY: nat, na, nsp
+      USE ions_base,        ONLY: nat, na, nsp, ityp
       use fft_base,         only: dfftp
 
       IMPLICIT NONE
@@ -208,23 +208,20 @@
 
       ! ... declare other variables
       !
-      INTEGER :: is, ig, ia, ig1, ig2, ig3, isa
+      INTEGER :: is, ig, ia, ig1, ig2, ig3
 
       call start_clock( 'strucf' )
 
-!$omp parallel do default(shared), private(ig1,ig2,ig3,isa,is,ia)
-      DO ig = 1, ngm
-        ig1 = mill( 1, ig ) 
-        ig2 = mill( 2, ig ) 
-        ig3 = mill( 3, ig )
-        isa = 1
-        DO is = 1, nsp
-          sfac( ig, is ) = (0.0d0, 0.0d0)
-          DO ia = 1, na(is)
-            sfac( ig, is ) = sfac( ig, is ) + &
-              ei1( ig1, isa ) * ei2( ig2, isa ) * ei3( ig3, isa )
-            isa = isa + 1
-          END DO
+      sfac = (0.0d0, 0.0d0)
+
+!$omp parallel do default(shared), private(ig,ig1,ig2,ig3,is,ia)
+      DO ia = 1, nat
+        is = ityp(ia)
+        DO ig = 1, ngm
+           ig1 = mill( 1, ig ) 
+           ig2 = mill( 2, ig ) 
+           ig3 = mill( 3, ig )
+           sfac( ig, is ) = sfac( ig, is ) + ei1( ig1, ia ) * ei2( ig2, ia ) * ei3( ig3, ia )
         END DO
       END DO
 

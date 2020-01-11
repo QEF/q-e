@@ -594,7 +594,7 @@ CONTAINS
 !     routine makes use of c(-q)=c*(q)
 !
       USE kinds,              ONLY: DP
-      USE uspp,               ONLY: nkbus
+      USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nvb
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
@@ -706,7 +706,7 @@ CONTAINS
          END IF
          !
          IF( nvb > 0 ) THEN
-            CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp_dist( 1, 1 ), &
+            CALL dgemm( 'T', 'N', nr, nc, nkb, -1.0d0, becp_dist( 1, 1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
@@ -737,7 +737,7 @@ CONTAINS
 !
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE uspp,               ONLY: nkbus
+      USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nvb
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_sum
@@ -847,7 +847,7 @@ CONTAINS
             !
             ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
             !
-            CALL dgemm( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
+            CALL dgemm( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
 
          END IF
 
@@ -876,7 +876,7 @@ CONTAINS
 !
       USE kinds,              ONLY: DP
       USE uspp_param,         ONLY: nvb
-      USE uspp,               ONLY: nkbus
+      USE uspp,               ONLY: nkb
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
@@ -992,7 +992,7 @@ CONTAINS
          !
          IF( nvb > 0 ) THEN
             !
-            CALL dgemm( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
+            CALL dgemm( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
             !
          END IF
 
@@ -1025,7 +1025,7 @@ CONTAINS
       USE kinds,             ONLY: DP
       USE ions_base,         ONLY: nsp, na
       USE io_global,         ONLY: stdout
-      USE uspp,              ONLY: nkb, nkbus
+      USE uspp,              ONLY: nkb
       USE uspp_param,        ONLY: nh, nvb
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iverbosity
@@ -1178,7 +1178,7 @@ CONTAINS
                      END IF
                   END DO
                   IF( nbgrp_i > 0 ) THEN
-                     CALL dgemm( 'N', 'T', nkbus, nbgrp_i, nc, 1.0d0, &
+                     CALL dgemm( 'N', 'T', nkb, nbgrp_i, nc, 1.0d0, &
                             bephi_tmp, nkbx, xd(i_first,1), nrcx, 1.0d0, bec_bgrp( 1, ibgrp_i_first ), SIZE(bec_bgrp,1) )
                   END IF
                   !
@@ -1215,8 +1215,8 @@ CONTAINS
       USE ions_base,      ONLY: nat, ityp
       USE io_global,      ONLY: stdout
       USE mp_bands,       ONLY: intra_bgrp_comm, inter_bgrp_comm
-      USE uspp_param,     ONLY: nh, nvb
-      USE uspp,           ONLY: nkbus, qq_nt, indv_ijkb0
+      USE uspp_param,     ONLY: nh, nvb, upf
+      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
@@ -1244,28 +1244,30 @@ CONTAINS
       !
       IF ( nvb > 0 ) THEN
 
-         ALLOCATE( qtemp( nkbus, nbspx_bgrp ) )
+         ALLOCATE( qtemp( nkb, nbspx_bgrp ) )
 
          qtemp (:,:) = 0.d0
          DO ia = 1, nat
             is = ityp(ia)
-            DO iv=1,nh(is)
-               inl = indv_ijkb0(ia) + iv 
-               DO jv=1,nh(is)
-                  jnl = indv_ijkb0(ia) + jv
-                  IF(ABS(qq_nt(iv,jv,is)) > 1.d-5) THEN
-                     qqf = qq_nt(iv,jv,is)
-                     DO i=1,nbsp_bgrp
-                        qtemp(inl,i) = qtemp(inl,i) + qqf * bec_bgrp(jnl,i)
-                     END DO
-                  ENDIF
+            IF( upf(is)%tvanp ) THEN
+               DO iv=1,nh(is)
+                  inl = indv_ijkb0(ia) + iv 
+                  DO jv=1,nh(is)
+                     jnl = indv_ijkb0(ia) + jv
+                     IF(ABS(qq_nt(iv,jv,is)) > 1.d-5) THEN
+                        qqf = qq_nt(iv,jv,is)
+                        DO i=1,nbsp_bgrp
+                           qtemp(inl,i) = qtemp(inl,i) + qqf * bec_bgrp(jnl,i)
+                        END DO
+                     ENDIF
+                  END DO
                END DO
-            END DO
+            END IF
          END DO
 !
          IF( ngw > 0 ) THEN
-            CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkbus, 1.0d0, betae, &
-                       2*ngwx, qtemp, nkbus, 0.0d0, phi_bgrp, 2*ngwx )
+            CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae, &
+                       2*ngwx, qtemp, nkb, 0.0d0, phi_bgrp, 2*ngwx )
          ELSE
             phi_bgrp = 0.0d0
          END IF
@@ -1304,7 +1306,7 @@ CONTAINS
 
    SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nrcx, desc )
       USE kinds,             ONLY: DP
-      USE uspp,              ONLY: nkb, nkbus
+      USE uspp,              ONLY: nkb
       USE mp,                ONLY: mp_sum
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
       USE mp_diag,           ONLY: leg_ortho

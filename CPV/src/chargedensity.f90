@@ -500,8 +500,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !
       USE kinds,                    ONLY: DP
       USE control_flags,            ONLY: iprint
-      USE ions_base,                ONLY: na, nsp, nat
-      USE uspp_param,               ONLY: nhm, nh, nvb
+      USE ions_base,                ONLY: na, nsp, nat, ityp
+      USE uspp_param,               ONLY: nhm, nh, nvb, upf
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,            ONLY: ngb
       USE smallbox_subs,            ONLY: fft_oned2box, box2grid
@@ -524,8 +524,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       REAL(DP),    INTENT(OUT) :: drhor(dfftp%nnr,nspin,3,3)
       COMPLEX(DP), INTENT(OUT) :: drhog(dfftp%ngm,nspin,3,3)
 ! local
-      INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
-     &     isa, ia, ir, ijs
+      INTEGER i, j, isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, ijs
       REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci
 #if defined(__INTEL_COMPILER)
@@ -570,7 +569,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       END DO
 !$omp end parallel
 
-      IF ( nvb <= 0 ) RETURN
+      IF ( nvb <= 0 ) THEN
+         GO TO 1000
+      END IF
 
       ALLOCATE( v( dfftp%nnr ) )
 
@@ -586,9 +587,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                v(:) = (0.d0, 0.d0)
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, ngb, nh, eigrb, dfftb, irb, v, &
-!$omp                 ci, i, j, dqgb, qgb, nhm, rhovan, drhovan ) &
-!$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, ig, iss, isa, &
+!$omp          shared(nat, ityp, ngb, nh, eigrb, dfftb, irb, v, &
+!$omp                 ci, i, j, dqgb, qgb, nhm, rhovan, drhovan, upf ) &
+!$omp          private(mytid, ntids, is, ia, iv, jv, ijv, ig, iss, &
 !$omp                  qv, fg1, fg2, itid, dqgbt, dsumt, asumt )
 
                ALLOCATE( qv( dfftb%nnr ) )
@@ -603,28 +604,19 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 #endif
 
                iss=1
-               isa=1
 
-               DO is=1,nvb
+               DO ia=1,nat
+                  is=ityp(ia)
+                  IF( upf(is)%tvanp ) THEN
+
 #if defined(__MPI)
-                  DO ia=1,na(is)
-                     nfft=1
-                     IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( dfftb%np2( isa ) <= 0 ) ) THEN
-                        isa = isa + nfft
+                     IF ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) ) THEN
                         CYCLE
                      END IF
-#else
-                  DO ia=1,na(is),2
-                     !
-                     !  nfft=2 if two ffts at the same time are performed
-                     !
-                     nfft=2
-                     IF (ia.EQ.na(is)) nfft=1
 #endif
 
 #if defined(_OPENMP)
                      IF ( mytid /= itid ) THEN
-                        isa = isa + nfft
                         itid = MOD( itid + 1, ntids )
                         CYCLE
                      ELSE
@@ -633,49 +625,37 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 #endif
 
                      dqgbt(:,:) = (0.d0, 0.d0) 
-                     DO ifft=1,nfft
-                        DO iv=1,nh(is)
-                           DO jv=iv,nh(is)
-                              ijv = (jv-1)*jv/2 + iv
-                              IF(iv.NE.jv) THEN
-                                 asumt = 2.0d0 *  rhovan( ijv, isa+ifft-1, iss )
-                                 dsumt = 2.0d0 * drhovan( ijv, isa+ifft-1, iss, i, j )
-                              ELSE
-                                 asumt =  rhovan( ijv, isa+ifft-1, iss )
-                                 dsumt = drhovan( ijv, isa+ifft-1, iss, i, j )
-                              ENDIF
-                              DO ig=1,ngb
-                                 dqgbt(ig,ifft)=dqgbt(ig,ifft) + asumt*dqgb(ig,ijv,is,i,j)
-                                 dqgbt(ig,ifft)=dqgbt(ig,ifft) + dsumt*qgb(ig,ijv,is)
-                              END DO
+                     DO iv=1,nh(is)
+                        DO jv=iv,nh(is)
+                           ijv = (jv-1)*jv/2 + iv
+                           IF(iv.NE.jv) THEN
+                              asumt = 2.0d0 *  rhovan( ijv, ia, iss )
+                              dsumt = 2.0d0 * drhovan( ijv, ia, iss, i, j )
+                           ELSE
+                              asumt =  rhovan( ijv, ia, iss )
+                              dsumt = drhovan( ijv, ia, iss, i, j )
+                           ENDIF
+                           DO ig=1,ngb
+                              dqgbt(ig,1)=dqgbt(ig,1) + asumt*dqgb(ig,ijv,is,i,j)
+                              dqgbt(ig,1)=dqgbt(ig,1) + dsumt*qgb(ig,ijv,is)
                            END DO
                         END DO
                      END DO
                      !     
                      ! add structure factor
                      !
-                     IF(nfft.EQ.2) THEN
-                        fg1 = eigrb(1:ngb,isa   )*dqgbt(1:ngb,1)
-                        fg2 = eigrb(1:ngb,isa+1 )*dqgbt(1:ngb,2)
-                        CALL fft_oned2box( qv, fg1, fg2 )
-                     ELSE
-                        fg1 = eigrb(1:ngb,isa   )*dqgbt(1:ngb,1)
-                        CALL fft_oned2box( qv, fg1 )
-                     ENDIF
+                     fg1 = eigrb(1:ngb,ia   )*dqgbt(1:ngb,1)
+                     CALL fft_oned2box( qv, fg1 )
                      !
-                     CALL invfft( qv, dfftb, isa )
+                     CALL invfft( qv, dfftb, ia )
                      !
                      !  qv = US contribution in real space on box grid
                      !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
                      !
                      !  add qv(r) to v(r), in real space on the dense grid
                      !
-                     CALL box2grid( irb(:,isa), 1, qv, v )
-                     IF (nfft.EQ.2) CALL box2grid(irb(:,isa+1),2,qv,v)
-
-                     isa = isa + nfft
-!
-                  END DO
+                     CALL box2grid( irb(:,ia), 1, qv, v )
+                  END IF
                END DO
 
                DEALLOCATE( fg1 )
@@ -711,19 +691,19 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                ALLOCATE( dqgbt( ngb, 2 ) )
                ALLOCATE( fg1( ngb ) )
                ALLOCATE( fg2( ngb ) )
-               isa=1
-               DO is=1,nvb
-                  DO ia=1,na(is)
+               DO ia=1,nat
+                  is=ityp(ia)
+                  IF( upf(is)%tvanp ) THEN
 #if defined(__MPI)
-                     IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( dfftb%np2( isa ) <= 0 ) ) go to 25
+                     IF ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) ) CYCLE
 #endif
                      DO iss=1,2
                         dqgbt(:,iss) = (0.d0, 0.d0)
                         DO iv= 1,nh(is)
                            DO jv=iv,nh(is)
                               ijv = (jv-1)*jv/2 + iv
-                              asumt=rhovan(ijv,isa,iss)
-                              dsumt =drhovan(ijv,isa,iss,i,j)
+                              asumt=rhovan(ijv,ia,iss)
+                              dsumt =drhovan(ijv,ia,iss,i,j)
                               IF(iv.NE.jv) THEN
                                  asumt =2.d0*asumt
                                  dsumt=2.d0*dsumt
@@ -739,22 +719,20 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                      !     
                      ! add structure factor
                      !
-                     fg1 = eigrb(1:ngb,isa)*dqgbt(1:ngb,1)
-                     fg2 = eigrb(1:ngb,isa)*dqgbt(1:ngb,2)
+                     fg1 = eigrb(1:ngb,ia)*dqgbt(1:ngb,1)
+                     fg2 = eigrb(1:ngb,ia)*dqgbt(1:ngb,2)
                      CALL fft_oned2box( qv, fg1, fg2 )
 
-                     CALL invfft(qv, dfftb, isa )
+                     CALL invfft(qv, dfftb, ia )
                      !
                      !  qv is the now the US augmentation charge for atomic species is
                      !  and atom ia: real(qv)=spin up, imag(qv)=spin down
                      !
                      !  add qv(r) to v(r), in real space on the dense grid
                      !
-                     CALL box2grid(irb(:,isa),qv,v)
+                     CALL box2grid(irb(:,ia),qv,v)
                      !
-  25                 isa = isa + 1
-                     !
-                  END DO
+                  END IF
                END DO
 
                DEALLOCATE( dqgbt )
@@ -776,6 +754,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
       DEALLOCATE( v )
 !
+1000  CONTINUE
       RETURN
 END SUBROUTINE drhov
 
@@ -862,7 +841,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
+!$omp          shared(na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
 !$omp                 stdout, ci, rhor, dfftp, upf, nsp, ityp, nat ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
 !$omp                  qv, fg1, fg2, itid, ir )

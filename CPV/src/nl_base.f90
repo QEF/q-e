@@ -170,57 +170,50 @@
       becdr_bgrp = 0.d0
 !
       do k = 1, 3
-        !
-        do is=1,nsp
-          !
-          !IF( upf(is)%tvanp ) THEN
-            !
-            DO ia = 1, nat
+         !
+         DO ia = 1, nat
 
-              IF( ityp(ia) == is ) THEN
+            is = ityp(ia) 
 
-                do iv=1,nh(is)
-                  !
-                  !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
-                  !
-                  l=nhtol(iv,is)
+            do iv=1,nh(is)
+               !
+               !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
+               !
+               l=nhtol(iv,is)
 
-                  ! compute (-i)^(l+1)
-                  !
-                  if (l == 0) then
-                    cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  else if (l == 1) then
-                    cfact = - cmplx( 0.0_dp , 1.0_dp )
-                    cfact = cfact * cfact
-                  else if (l == 2) then
-                    cfact = - cmplx( 0.0_dp , 1.0_dp )
-                    cfact = cfact * cfact * cfact
-                  else if (l == 3) then
-                    cfact =   cmplx( 1.0_dp , 0.0_dp )
-                  endif
+               ! compute (-i)^(l+1)
+               !
+               if (l == 0) then
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
+               else if (l == 1) then
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
+                 cfact = cfact * cfact
+               else if (l == 2) then
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
+                 cfact = cfact * cfact * cfact
+               else if (l == 3) then
+                 cfact =   cmplx( 1.0_dp , 0.0_dp )
+               endif
 
-                  cfact = cfact * tpiba
+               cfact = cfact * tpiba
 
-                  !    q = 0   component (with weight 1.0)
-                  if (gstart == 2) then
-                     wrk2(1,iv) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
-                  end if
-                  !    q > 0   components (with weight 2.0)
-                  do ig=gstart,ngw
-                     wrk2(ig,iv) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
-                  end do
-                  !
-                end do
-
-                inl = indv_ijkb0(ia) + 1
-                IF( ngw > 0 ) THEN
-                  CALL dgemm( 'T', 'N', nh(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
-                           c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( inl, 1, k ), nkb )
-                END IF
-              END IF
+               !    q = 0   component (with weight 1.0)
+               if (gstart == 2) then
+                  wrk2(1,iv) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
+               end if
+               !    q > 0   components (with weight 2.0)
+               do ig=gstart,ngw
+                  wrk2(ig,iv) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
+               end do
+               !
             end do
-          !END IF
-        end do
+
+            inl = indv_ijkb0(ia) + 1
+            IF( ngw > 0 ) THEN
+               CALL dgemm( 'T', 'N', nh(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
+                        c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( inl, 1, k ), nkb )
+            END IF
+         end do
       end do
 
       deallocate( wrk2 )
