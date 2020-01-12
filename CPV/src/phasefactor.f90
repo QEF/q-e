@@ -214,7 +214,6 @@
 
       sfac = (0.0d0, 0.0d0)
 
-!$omp parallel do default(shared), private(ig,ig1,ig2,ig3,is,ia)
       DO ia = 1, nat
         is = ityp(ia)
         DO ig = 1, ngm
