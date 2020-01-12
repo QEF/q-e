@@ -1,5 +1,5 @@
 
-     Program PWSCF v.6.5 starts on 26Dec2019 at 22:28:30 
+     Program PWSCF v.6.5 starts on 12Jan2020 at 13:20:14 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -394,40 +394,40 @@
 
      Computing stress (Cartesian axis) and pressure
 
-          total   stress  (Ry/bohr**3)                   (kbar)     P=      511.15
-   0.00347473   0.00000000   0.00000000          511.15        0.00        0.00
-   0.00000000   0.00347472   0.00000000            0.00      511.15        0.00
-   0.00000000   0.00000000   0.00347472            0.00        0.00      511.15
+          total   stress  (Ry/bohr**3)                   (kbar)     P=      492.53
+   0.00334815   0.00000000   0.00000000          492.53        0.00        0.00
+   0.00000000   0.00334814   0.00000000            0.00      492.53        0.00
+   0.00000000   0.00000000   0.00334814            0.00        0.00      492.53
 
 
      Writing output data file ./pwscf.save/
  
      init_run     :      0.08s CPU      0.09s WALL (       1 calls)
-     electrons    :      1.40s CPU      1.52s WALL (       1 calls)
+     electrons    :      1.38s CPU      1.52s WALL (       1 calls)
      stress       :      0.03s CPU      0.03s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.03s CPU      0.04s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
-     hinit0       :      0.04s CPU      0.04s WALL (       1 calls)
+     hinit0       :      0.03s CPU      0.04s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.19s CPU      1.29s WALL (       9 calls)
-     sum_band     :      0.16s CPU      0.17s WALL (       9 calls)
+     c_bands      :      1.18s CPU      1.29s WALL (       9 calls)
+     sum_band     :      0.16s CPU      0.18s WALL (       9 calls)
      v_of_rho     :      0.03s CPU      0.03s WALL (      10 calls)
      newd         :      0.01s CPU      0.02s WALL (      10 calls)
-     mix_rho      :      0.01s CPU      0.01s WALL (       9 calls)
+     mix_rho      :      0.00s CPU      0.01s WALL (       9 calls)
 
      Called by c_bands:
-     init_us_2    :      0.01s CPU      0.01s WALL (     440 calls)
-     cegterg      :      1.17s CPU      1.26s WALL (     198 calls)
+     init_us_2    :      0.00s CPU      0.01s WALL (     440 calls)
+     cegterg      :      1.16s CPU      1.27s WALL (     198 calls)
 
      Called by sum_band:
      sum_band:bec :      0.00s CPU      0.00s WALL (     198 calls)
      addusdens    :      0.04s CPU      0.04s WALL (       9 calls)
 
      Called by *egterg:
-     h_psi        :      0.51s CPU      0.55s WALL (     802 calls)
+     h_psi        :      0.50s CPU      0.55s WALL (     802 calls)
      s_psi        :      0.01s CPU      0.01s WALL (     802 calls)
      g_psi        :      0.00s CPU      0.00s WALL (     582 calls)
      cdiaghg      :      0.54s CPU      0.59s WALL (     780 calls)
@@ -441,17 +441,17 @@
      calbec       :      0.03s CPU      0.04s WALL (    1022 calls)
      fft          :      0.02s CPU      0.02s WALL (     387 calls)
      ffts         :      0.00s CPU      0.00s WALL (      76 calls)
-     fftw         :      0.46s CPU      0.50s WALL (   38832 calls)
+     fftw         :      0.45s CPU      0.50s WALL (   38832 calls)
      interpolate  :      0.00s CPU      0.00s WALL (      40 calls)
  
      Parallel routines
      fft_scatt_xy :      0.07s CPU      0.08s WALL (   39295 calls)
      fft_scatt_yz :      0.21s CPU      0.23s WALL (   39295 calls)
  
-     PWSCF        :      1.70s CPU      1.84s WALL
+     PWSCF        :      1.68s CPU      1.86s WALL
 
  
-   This run was terminated on:  22:28:31  26Dec2019            
+   This run was terminated on:  13:20:16  12Jan2020            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

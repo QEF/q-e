@@ -44,8 +44,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   REAL(DP), ALLOCATABLE :: v1c(:,:), v2c(:,:,:), v3c(:,:), v2c_ud(:)
   !
   REAL(DP), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0
-  REAL(DP) :: rhoup, rhodw, sigma_gradcorr(3, 3)
-  COMPLEX(DP) :: rhogup, rhogdw
+  REAL(DP) :: sigma_gradcorr(3, 3)
   !
   !
   IF ( .NOT. dft_is_gradient() .AND. .NOT. dft_is_meta() ) RETURN
@@ -73,7 +72,7 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   ALLOCATE( rhogaux(ngm,nspin0) )
   !
   ! calculate the gradient of rho+rhocore in real space
-  ! in LSDA case rho is temporarily converted in (up,down) format
+  ! For convenience rhoaux is in (up,down) format
   !
   IF ( nspin0 == 1 ) THEN
      !
@@ -86,19 +85,9 @@ SUBROUTINE stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
         ALLOCATE( segni( nrxx ) )
         CALL compute_rho( rho, rhoaux, segni, nrxx )
         DEALLOCATE( segni )
+        rhoaux(:,1) = rhoaux(:,1) + rho_core(:) / 2.0_DP
+        rhoaux(:,2) = rhoaux(:,2) + rho_core(:) / 2.0_DP
         CALL rho_r2g ( dfft, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
-        DO ir = 1, nrxx
-           rhoup = ( rhoaux(ir,1) + rhoaux(ir,2) + rho_core(ir) ) / 2.0_DP
-           rhodw = ( rhoaux(ir,1) - rhoaux(ir,2) + rho_core(ir) ) / 2.0_DP
-           rhoaux(ir,1)  = rhoup
-           rhoaux(ir,2)  = rhodw
-        END DO
-        DO ig = 1, ngm
-           rhogup = ( rhogaux(ig,1) + rhogaux(ig,2) + rhog_core(ig) ) / 2.0_DP
-           rhogdw = ( rhogaux(ig,1) - rhogaux(ig,2) + rhog_core(ig) ) / 2.0_DP
-           rhogaux(ig,1)  = rhogup
-           rhogaux(ig,2)  = rhogdw
-        END DO
      ELSE
         rhoaux(:,1)  = ( rho(:,1) + rho(:,2) + rho_core(:) ) / 2.0_DP
         rhoaux(:,2)  = ( rho(:,1) - rho(:,2) + rho_core(:) ) / 2.0_DP
