@@ -17,7 +17,7 @@
   !! 2) Real-space Wannier to fine grid Bloch space interpolation 
   !-----------------------------------------------------------------------
   !
-  USE kinds,         ONLY : DP, i4b
+  USE kinds,         ONLY : DP, i4b, i8b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg
@@ -196,9 +196,9 @@
   !! Selected q-points within the fsthick window
   INTEGER, PARAMETER :: nrwsx = 200
   !! Maximum number of real-space Wigner-Seitz
-  INTEGER :: lrepmatw2_restart(npool)
+  INTEGER(KIND = i8b) :: lrepmatw2_restart(npool)
   !! To restart opening files
-  INTEGER :: lrepmatw5_restart(npool)
+  INTEGER(KIND = i8b) :: lrepmatw5_restart(npool)
   !! To restart opening files
   INTEGER :: ctype
   !! Calculation type: -1 = hole, +1 = electron and 0 = both.

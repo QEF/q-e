@@ -21,7 +21,7 @@
   !!
   !-----------------------------------------------------------------------
   !
-  USE kinds,         ONLY : DP, i4b
+  USE kinds,         ONLY : DP, i4b, i8b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg
@@ -199,9 +199,9 @@
   !! Selected q-points within the fsthick window
   INTEGER, PARAMETER :: nrwsx = 200
   !! Maximum number of real-space Wigner-Seitz
-  INTEGER :: lrepmatw2_restart(npool)
+  INTEGER(KIND = i8b) :: lrepmatw2_restart(npool)
   !! To restart opening files
-  INTEGER :: lrepmatw5_restart(npool)
+  INTEGER(KIND = i8b) :: lrepmatw5_restart(npool)
   !! To restart opening files
   INTEGER :: ctype
   !! Calculation type: -1 = hole, +1 = electron and 0 = both.
@@ -285,7 +285,7 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
   ! 
-  CALL start_clock ('ephwann')
+  CALL start_clock('ephwann')
   ! 
   IF (nbndsub /= nbnd) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
@@ -310,8 +310,8 @@
   w2(:) = zero
   ! 
   IF (lpolar) THEN
-    WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic long-range interaction for polar materials [lpolar]'
-    WRITE(stdout, '(5x,a)' )   ' '
+    WRITE(stdout, '(/,5x,a)') 'Computes the analytic long-range interaction for polar materials [lpolar]'
+    WRITE(stdout, '(5x,a)')   ' '
   ENDIF
   !
   ! Determine Wigner-Seitz points

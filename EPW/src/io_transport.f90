@@ -25,7 +25,7 @@
     !! This subroutine computes the transition probability and the scattering rates.
     !! Only the elements larger than threshold are saved on file. 
     !!
-    USE kinds,         ONLY : DP, i4b
+    USE kinds,         ONLY : DP, i4b, i8b
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
@@ -61,9 +61,9 @@
     !! Q-point index
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points in selecq
-    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw2_restart(npool)
     !! Current position inside the file during writing
-    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw5_restart(npool)
     !! Current position inside the file during writing (electron)
 #if defined(__MPI)  
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
@@ -1179,7 +1179,7 @@
     ! 
     ! This routine opens all the files needed to save scattering rates for the IBTE.
     ! 
-    USE kinds,            ONLY : DP
+    USE kinds,            ONLY : DP, i8b
     USE io_files,         ONLY : prefix, create_directory, delete_if_present
     USE io_var,           ONLY : iunepmat, iunsparseq,              &
                                  iunsparseqcb, iunepmatcb, iunrestart
@@ -1195,14 +1195,14 @@
     ! 
     IMPLICIT NONE
     !  
-    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw2_restart(npool)
     !! To restart opening files
-    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw5_restart(npool)
     !! To restart opening files
 #if defined(__MPI)
-    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
     INTEGER(KIND = 8), INTENT(inout) :: ind_tot
@@ -1227,9 +1227,9 @@
     !! Dummy INTEGER for reading
     INTEGER :: ipool
     !! Pool index
-    INTEGER (KIND = 8) :: position_byte
+    INTEGER(KIND = 8) :: position_byte
     !! Position in the file in byte
-    REAL (KIND = DP) :: dummy_real
+    REAL(KIND = DP) :: dummy_real
     !! Dummy variable for reading
     !
     WRITE(my_pool_id_ch, "(I0)") my_pool_id
