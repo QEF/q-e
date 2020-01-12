@@ -440,6 +440,7 @@ lr_run_nscf.o : ../../Modules/mp_bands.o
 lr_run_nscf.o : ../../Modules/recvec.o
 lr_run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 lr_run_nscf.o : lr_variables.o
+lr_set_boxes_density.o : ../../FFTXlib/fft_types.o
 lr_set_boxes_density.o : ../../Modules/fft_base.o
 lr_set_boxes_density.o : ../../Modules/io_global.o
 lr_set_boxes_density.o : ../../Modules/kind.o
@@ -470,6 +471,7 @@ lr_smallgq.o : ../../Modules/mp_global.o
 lr_smallgq.o : ../../Modules/noncol.o
 lr_smallgq.o : ../../PW/src/symm_base.o
 lr_smallgq.o : ../../UtilXlib/mp.o
+lr_solve_e.o : ../../FFTXlib/fft_types.o
 lr_solve_e.o : ../../LR_Modules/lrcom.o
 lr_solve_e.o : ../../Modules/cell_base.o
 lr_solve_e.o : ../../Modules/control_flags.o

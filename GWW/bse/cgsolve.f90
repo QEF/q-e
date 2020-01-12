@@ -33,11 +33,11 @@ SUBROUTINE cgsolve (npw,evc,npwx,nbnd,overlap,      &
   !
   INTEGER :: ibnd, jbnd, i, info
   real(DP) :: lagrange(nbnd,nbnd)
-  real(DP) :: lambda, u_u, uu0, u_A_h, alfa, eps, uu(nbnd), ddot
+  real(DP) :: lambda, u_u, uu0, u_A_h, alfa, eps, uu(nbnd)
   logical ::  debug
   real(kind=DP), allocatable :: omat(:,:)
   integer j
-  EXTERNAL ddot, H_h
+  EXTERNAL H_h
   !
   CALL start_clock('cgsolve')
   debug=.false.

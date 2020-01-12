@@ -334,7 +334,7 @@ SUBROUTINE new_ns_nc( ns )
   INTEGER :: ik, ibnd, is, js, i, j, sigmay2, na, nb, nt, isym,  &
              m1, m2, m3, m4, is1, is2, is3, is4, m0, m00, ldim, npw
   COMPLEX(DP) , ALLOCATABLE :: nr(:,:,:,:,:), nr1(:,:,:,:,:), proj(:,:)
-  COMPLEX(DP) :: z, zdotc
+  COMPLEX(DP) :: z  
   REAL(DP) :: psum
   !
   CALL start_clock( 'new_ns' )
@@ -362,7 +362,7 @@ SUBROUTINE new_ns_nc( ns )
      !
      DO ibnd = 1, nbnd
         DO i = 1, nwfcU
-          proj(i,ibnd) = zdotc(npwx*npol, wfcU(1,i), 1, evc(1,ibnd), 1)
+           proj(i,ibnd) = dot_product(wfcU(1:npwx*npol,i), evc(1:npwx*npol,ibnd))
         ENDDO
      ENDDO
      !

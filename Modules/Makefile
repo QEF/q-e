@@ -130,7 +130,6 @@ fox_init_module.o \
 xsf.o \
 wyckoff.o \
 wypos.o \
-zdotc_wrapper.o  \
 zvscal.o 
 
 # list of subroutines and functions (not modules) previously found in flib/

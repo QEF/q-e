@@ -125,7 +125,6 @@ SUBROUTINE c_phase_field( el_pola, ion_pola, fact_pola, pdir )
    COMPLEX(DP) :: pref
    COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(DP) :: struc(nat)
-   COMPLEX(DP) :: zdotc
    COMPLEX(DP) :: zeta
    !
    COMPLEX(DP), ALLOCATABLE :: psi(:,:)
