@@ -110,9 +110,9 @@
     !! Error
     INTEGER :: ipool
     !! Pool index
-    INTEGER :: ind(npool)
+    INTEGER(KIND = i8b) :: ind(npool)
     !! Nb of Matrix elements that are non-zero 
-    INTEGER :: indcb(npool)
+    INTEGER(KIND = i8b) :: indcb(npool)
     !! Nb of Matrix elements that are non-zero in the cb
     INTEGER(KIND = i4b) :: sparse_q(nbndfst * nbndfst * nstemp * nkf)
     !! Index of q-points for mapping 
