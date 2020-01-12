@@ -23,8 +23,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : pi, tpi
-  USE ions_base,                ONLY : nsp, na, nax, nat
-  USE uspp_param,               ONLY : nvb, ish
+  USE ions_base,                ONLY : nsp, na, nax, nat, ityp
+  USE uspp,                     ONLY : indv_ijkb0, nkbus
+  USE uspp_param,               ONLY : upf
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
   USE smallbox_gvec,            ONLY : ngb
@@ -76,7 +77,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   INTEGER,     ALLOCATABLE :: f3(:), f4(:)
   COMPLEX(DP), ALLOCATABLE :: U2(:,:)
   !
-  INTEGER           :: inl, jnl, iss, isa, is, ia, ijv, i, j, k, l, ig, &
+  INTEGER           :: inl, jnl, iss, is, ia, ijv, i, j, k, l, ig, &
                        ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, &
                        ibig3, ir1, ir2, ir3, ir, m,  &
                        ib, jb, total, nstat, jj, ngpww, irb3
@@ -125,7 +126,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ALLOCATE( O( nw, nbsp, nbsp ), X( nbsp, nbsp ), Oa( nw, nbsp, nbsp ) )
   !
-  IF ( nspin == 2 .AND. nvb > 0 ) THEN
+  IF ( nspin == 2 .AND. nkbus > 0 ) THEN
      !
      ALLOCATE( X2( nupdwn(1), nupdwn(1) ) )
      ALLOCATE( X3( nupdwn(2), nupdwn(2) ) )
@@ -314,22 +315,22 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
      X = ZERO
      !
-     isa = 1
-     DO is = 1, nvb
-        DO ia =1, na(is)
+     DO ia =1, nat
+        is = ityp(ia)
+        IF( upf(is)%tvanp ) THEN
            DO iv = 1, nh(is)
-              inl = ish(is) + (iv-1)*na(is) + ia
+              inl = indv_ijkb0(ia) + iv
               jv = iv 
               ijv=(jv-1)*jv/2 + iv
-              fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+              fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
               CALL fft_oned2box( qv, fg1 )
 #if defined(__MPI)
-              irb3=irb(3,isa)
+              irb3=irb(3,ia)
 #endif
-              CALL invfft(qv,dfftb,isa)
+              CALL invfft(qv,dfftb,ia)
               iqv=1
               qvt=(0.D0,0.D0)
-              qvt=boxdotgrid(irb(:,isa),qv,expo(:,inw))
+              qvt=boxdotgrid(irb(:,ia),qv,expo(:,inw))
 
 #if defined(__MPI)
               CALL mp_sum( qvt, intra_bgrp_comm )
@@ -360,14 +361,14 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  END DO
               END IF
               DO jv = iv+1, nh(is)
-                 jnl = ish(is) + (jv-1)*na(is) + ia
+                 jnl = indv_ijkb0(ia) + jv
                  ijv = (jv-1)*jv/2 + iv
-                 fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+                 fg1 = eigrb(1:ngb,ia)*qgb(1:ngb,ijv,is)
                  CALL fft_oned2box( qv, fg1 )
-                 CALL invfft(qv,dfftb,isa)
+                 CALL invfft(qv,dfftb,ia)
                  iqv=1
                  qvt=0.D0
-                 qvt=boxdotgrid(irb(:,isa),qv,expo(:,inw))
+                 qvt=boxdotgrid(irb(:,ia),qv,expo(:,inw))
 #if defined(__MPI)
                  CALL mp_sum( qvt, intra_bgrp_comm )
 #endif
@@ -404,8 +405,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  END IF
               END DO
            END DO
-           isa = isa + 1
-        END DO
+        END IF
      END DO
      t1=omega/DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
      X=X*t1
@@ -1007,7 +1007,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
                                  indexplusz, indexminusz, tag, tagp, &
                                  wfg, weight, nw
-  USE uspp_param,         ONLY : nvb
+  USE uspp,               ONLY : nkbus
   USE mp,                 ONLY : mp_barrier, mp_bcast, mp_gather, mp_set_displs, mp_sum
   USE mp_global,          ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
   USE fft_base,           ONLY : dfftp
@@ -1108,7 +1108,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   WRITE( stdout, * ) "ibrav selected:", ibrav
   !
-  IF(nvb.GT.0) CALL small_box_wf(i_1, j_1, k_1, nw1)
+  IF(nkbus > 0) CALL small_box_wf(i_1, j_1, k_1, nw1)
 
 #if defined(__MPI)
   !
@@ -2093,7 +2093,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
                                  shift, start, av0, av1
   USE cell_base,          ONLY : at, alat, tpiba, omega
-  USE ions_base,          ONLY : nsp, na, zv, nax
+  USE ions_base,          ONLY : nsp, na, zv, nax, nat, ityp
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast,  mp_gather, mp_set_displs
   USE fft_base,           ONLY : dfftp
@@ -2106,12 +2106,12 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   COMPLEX(DP) ,INTENT(in) :: rhog(dfftp%ngm,nspin)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
   COMPLEX(DP), ALLOCATABLE :: rhotmp_g(:)
-  INTEGER ntot, i, j, ngz, l, isa
+  INTEGER ntot, i, j, ngz, l
   INTEGER ,ALLOCATABLE :: g_red(:,:)
 #if defined(__MPI)
   INTEGER proc, ierr, ngdens(nproc_bgrp), displs( nproc_bgrp )
 #endif
-  REAL(DP) zlen,vtot, pos(3,nax,nsp), a_direct(3,3),a_trans(3,3), e_slp, e_int
+  REAL(DP) zlen,vtot, pos(3,nat), a_direct(3,3),a_trans(3,3), e_slp, e_int
   REAL(DP), INTENT(out) :: e_tuned(3)
   REAL(DP), INTENT(in) :: tau0(3,nax)
   REAL(DP),ALLOCATABLE :: v_mr(:), dz(:), gz(:), g_1(:,:), vbar(:), cd(:), v_final(:)
@@ -2245,12 +2245,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
      END IF
   END DO
 
-  isa = 0
-  DO i=1,nsp
-     DO j=1,na(i)
-        isa = isa + 1
-        pos(:,j,i)=tau0(:,isa)
-     END DO
+  DO i=1,nat
+     pos(:,i)=tau0(:,i)
   END DO
 
   !--- Construct the ionic Charge density in G-space
@@ -2258,10 +2254,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   rho_ion = ZERO
   !
   DO j=1,ngz
-     DO i=1,nsp
-        DO l=1,na(i)
-           rho_ion(j)=rho_ion(j)+zv(i)*EXP(-CI*gz(j)*pos(zdir,l,i))*EXP(-gz(j)**2/(4.D0*ONE))
-        END DO
+     DO l=1,nat
+        i = ityp(l)
+        rho_ion(j)=rho_ion(j)+zv(i)*EXP(-CI*gz(j)*pos(zdir,l))*EXP(-gz(j)**2/(4.D0*ONE))
      END DO
   END DO
 

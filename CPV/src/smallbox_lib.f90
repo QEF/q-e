@@ -138,7 +138,7 @@
       INTEGER, INTENT(IN) :: iverbosity
 ! local           
       REAL(DP)    :: ainvb(3,3)
-      integer :: i,j,k, is, ia, ig, isa
+      integer :: i, ia, ig
       complex(dp), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
       real(dp), allocatable :: taus(:,:)
 !
@@ -149,7 +149,7 @@
 !
       if(iverbosity > 2) then
          WRITE( stdout,*) ' phbox: taub '
-         WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, nat )
+         WRITE( stdout,*) ( (taub(i,ia), i=1, 3 ), ia=1, nat )
       endif
 
       ainvb(1,:) = bgb(:,1)/alatb
@@ -161,27 +161,13 @@
 !
       if(iverbosity > 2) then
          WRITE( stdout,*)
-         if(nsp.gt.1) then
-            isa = 0
-            do is=1,nsp
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (is)',is
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,1+isa),ei2b(ig,1+isa),ei3b(ig,1+isa)
-               end do
-               WRITE( stdout,*)
-               isa = isa + na(is)
+         do ia=1,nat
+            WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
+            do ig=1,4
+               WRITE( stdout,'(6f9.4)') ei1b(ig,ia),ei2b(ig,ia),ei3b(ig,ia)
             end do
-         else
-            do ia=1,na(1)
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,ia),ei2b(ig,ia),ei3b(ig,ia)
-               end do
-               WRITE( stdout,*)
-            end do
-         endif
+            WRITE( stdout,*)
+         end do
       endif
 !
       deallocate(ei3b)

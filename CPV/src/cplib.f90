@@ -280,14 +280,14 @@
          USE io_global,     ONLY: ionode, stdout
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
                                   tzerop, tv0rd, taurdr, nbeg, tcp, tcap
-         USE ions_base,     ONLY: if_pos, nsp, na, tau, &
+         USE ions_base,     ONLY: if_pos, nsp, na, tau, ityp, &
                                   amass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
          USE constants,     ONLY: amu_au
 
          IMPLICIT NONE
               
-         integer is, ia, k, ic, isa
+         integer is, ia, k, ic
          LOGICAL :: ismb( 3 ) 
                 
          WRITE( stdout, 50 ) 
@@ -318,12 +318,12 @@
          END DO
 
          WRITE(stdout,660) 
-         isa = 0
-         DO IS = 1, nsp
+         DO is = 1, nsp
            WRITE(stdout,1000) is, na(is), amass(is)*amu_au, amass(is), rcmax(is)
-           DO IA = 1, na(is)
-             isa = isa + 1
-             WRITE(stdout,1010) ( tau(k,isa), K = 1,3 )
+           DO ia = 1, nat
+             IF( ityp(ia) == is ) THEN
+                WRITE(stdout,1010) ( tau(k,ia), K = 1,3 )
+             END IF
            END DO
          END DO    
 

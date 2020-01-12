@@ -22,7 +22,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tfirst, tlast !moved here to make
                                                      !autopilot work
   USE core,                     ONLY : rhoc
-  USE uspp_param,               ONLY : nhm, nh, nvb, ish
+  USE uspp_param,               ONLY : nhm, nh, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
@@ -411,7 +411,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
 444  IF ( tfor ) THEN
         !
-        IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
+        IF ( lwf ) CALL ef_force( fion, ityp, nat, zv )
         !
         IF( textfor ) THEN 
            !
@@ -458,7 +458,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
-                        delt, na, nsp, fricp, hgamma, vels, tsdp, tnosep, &
+                        delt, ityp, nat, fricp, hgamma, vels, tsdp, tnosep, &
                         fionm, vnhp, velsp, velsm, nhpcl, nhpdim, atm2nhp )
         !
         IF ( lconstrain ) THEN

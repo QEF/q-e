@@ -169,7 +169,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
       USE gvect,              ONLY: mill, gstart, g, gg
-      USE ions_base,          ONLY: nat, nsp, na, rcmax, zv
+      USE ions_base,          ONLY: nat, nsp, na, rcmax, zv, ityp
       USE fft_base,           ONLY: dfftp, dffts
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
@@ -187,7 +187,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
 
       ! ... Locals
 
-      INTEGER     :: is, ia, isa, ig, ig1, ig2, ig3
+      INTEGER     :: is, ia, ig, ig1, ig2, ig3
       REAL(DP)    :: fpibg, rhops, r2new
       COMPLEX(DP) :: rho, gxc, gyc, gzc
       COMPLEX(DP) :: teigr, cnvg, tx, ty, tz
@@ -210,21 +210,18 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
         GXC  = CMPLX(0.D0,g(1,IG),kind=DP)
         GYC  = CMPLX(0.D0,g(2,IG),kind=DP)
         GZC  = CMPLX(0.D0,g(3,IG),kind=DP)
-        isa = 1
-        DO IS = 1, nsp
+        DO IA = 1, nat
+           is = ityp(ia) 
            r2new = 0.25d0 * tpiba2 * rcmax(is)**2
            RHOPS = - zv(is) * exp( -r2new * gg(ig) ) / omega
            CNVG  = RHOPS * FPIBG * CONJG(rho)
            TX = CNVG * GXC
            TY = CNVG * GYC
            TZ = CNVG * GZC
-           DO IA = 1, na(is)
-              TEIGR = ei1(IG1,ISA) * ei2(IG2,ISA) * ei3(IG3,ISA)
-              ftmp(1,ISA) = ftmp(1,ISA) + TEIGR*TX
-              ftmp(2,ISA) = ftmp(2,ISA) + TEIGR*TY
-              ftmp(3,ISA) = ftmp(3,ISA) + TEIGR*TZ
-              isa = isa + 1
-           END DO
+           TEIGR = ei1(IG1,ia) * ei2(IG2,ia) * ei3(IG3,ia)
+           ftmp(1,ia) = ftmp(1,ia) + TEIGR*TX
+           ftmp(2,ia) = ftmp(2,ia) + TEIGR*TY
+           ftmp(3,ia) = ftmp(3,ia) + TEIGR*TZ
         END DO
 
       END DO

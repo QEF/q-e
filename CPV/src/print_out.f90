@@ -177,16 +177,9 @@
             !
             ALLOCATE( tauw( 3, nat ) )
             !
-            isa = 0
-            !
-            DO is = 1, nsp
+            DO ia = 1, nat
                !
-               DO ia = 1, na(is)
-                  !
-                  isa = isa + 1
-                  CALL s_to_r( vels(:,isa), tauw(:,isa), h )
-                  !
-               END DO
+               CALL s_to_r( vels(:,ia), tauw(:,ia), h )
                !
             END DO
             !

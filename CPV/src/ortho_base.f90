@@ -594,8 +594,7 @@ CONTAINS
 !     routine makes use of c(-q)=c*(q)
 !
       USE kinds,              ONLY: DP
-      USE uspp,               ONLY: nkb
-      USE uspp_param,         ONLY: nvb
+      USE uspp,               ONLY: nkb, nkbus
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
@@ -705,7 +704,7 @@ CONTAINS
             END DO
          END IF
          !
-         IF( nvb > 0 ) THEN
+         IF( nkbus > 0 ) THEN
             CALL dgemm( 'T', 'N', nr, nc, nkb, -1.0d0, becp_dist( 1, 1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
@@ -737,8 +736,7 @@ CONTAINS
 !
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE uspp,               ONLY: nkb
-      USE uspp_param,         ONLY: nvb
+      USE uspp,               ONLY: nkb, nkbus
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE mp_bands,           ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, my_bgrp_id, nbgrp
@@ -843,7 +841,7 @@ CONTAINS
          !  tau is block distributed among the whole processor 2D grid
          !
          !
-         IF( nvb > 0 ) THEN
+         IF( nkbus > 0 ) THEN
             !
             ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
             !
@@ -875,8 +873,7 @@ CONTAINS
 !     routine makes use of c(-q)=c*(q)
 !
       USE kinds,              ONLY: DP
-      USE uspp_param,         ONLY: nvb
-      USE uspp,               ONLY: nkb
+      USE uspp,               ONLY: nkb, nkbus
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
@@ -990,7 +987,7 @@ CONTAINS
          !  qbephi is distributed among processor columns
          !  tau is block distributed among the whole processor 2D grid
          !
-         IF( nvb > 0 ) THEN
+         IF( nkbus > 0 ) THEN
             !
             CALL dgemm( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
             !
@@ -1025,8 +1022,8 @@ CONTAINS
       USE kinds,             ONLY: DP
       USE ions_base,         ONLY: nsp, na
       USE io_global,         ONLY: stdout
-      USE uspp,              ONLY: nkb
-      USE uspp_param,        ONLY: nh, nvb
+      USE uspp,              ONLY: nkb, nkbus
+      USE uspp_param,        ONLY: nh
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
@@ -1085,7 +1082,7 @@ CONTAINS
    
          ALLOCATE( xd( nrcx, nrcx ) )
    
-         IF( nvb > 0 )THEN
+         IF( nkbus > 0 )THEN
             DO i = 1, nss
                ibgrp_i = ibgrp_g2l( i + istart - 1 )
                IF( ibgrp_i > 0 ) THEN
@@ -1098,7 +1095,7 @@ CONTAINS
    
          DO ipc = 1, np(2)
             !
-            IF( nvb > 0 )THEN
+            IF( nkbus > 0 )THEN
                ! 
                ! For the inner loop we need the block of bebhi( :, ic : ic + nc - 1 )
                ! this is the same of block bephi( :, ir : ir + nr - 1 ) on processor
@@ -1165,7 +1162,7 @@ CONTAINS
                            xd(1,i_first), nrcx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
                END IF
    
-               IF( nvb > 0 )THEN
+               IF( nkbus > 0 )THEN
                   nbgrp_i = 0
                   DO i = 1, nr
                      ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
@@ -1188,7 +1185,7 @@ CONTAINS
             !    
          END DO
    
-         IF( nvb > 0 )THEN
+         IF( nkbus > 0 )THEN
             DEALLOCATE( bephi_tmp )
          END IF
          !
@@ -1215,8 +1212,8 @@ CONTAINS
       USE ions_base,      ONLY: nat, ityp
       USE io_global,      ONLY: stdout
       USE mp_bands,       ONLY: intra_bgrp_comm, inter_bgrp_comm
-      USE uspp_param,     ONLY: nh, nvb, upf
-      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
+      USE uspp_param,     ONLY: nh, upf
+      USE uspp,           ONLY: nkb, nkbus, qq_nt, indv_ijkb0
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
@@ -1242,7 +1239,7 @@ CONTAINS
       !
       ! Note that phi here is computed only for my band group
       !
-      IF ( nvb > 0 ) THEN
+      IF ( nkbus > 0 ) THEN
 
          ALLOCATE( qtemp( nkb, nbspx_bgrp ) )
 

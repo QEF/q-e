@@ -280,8 +280,8 @@
       !
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nat, nsp, ityp
-      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0
-      USE uspp_param,     ONLY: nh, nvb, upf
+      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0, nkbus
+      USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
@@ -327,7 +327,7 @@
       IF( info /= 0 ) &
          CALL errore( ' ortho ', ' allocating becp_dist ', ABS( info ) )
 
-      IF( nvb > 0 ) THEN
+      IF( nkbus > 0 ) THEN
          !
          becp_bgrp = 0.0d0
          !
@@ -347,7 +347,7 @@
       IF( info /= 0 ) &
          CALL errore( ' ortho ', ' allocating qbephi ', ABS( info ) )
       !
-      IF( nvb > 0 ) THEN
+      IF( nkbus > 0 ) THEN
          ALLOCATE( bec_col ( nkbx, nrcx*nspin ), STAT = info )
          IF( info /= 0 ) &
             CALL errore( ' ortho ', ' allocating bec_col ', ABS( info ) )
@@ -387,7 +387,7 @@
 
       qbecp  = 0.d0
 
-      IF( nvb > 0 ) THEN
+      IF( nkbus > 0 ) THEN
          CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nrcx, descla(1) )
          IF( nspin == 2 ) THEN
             CALL redist_row2col( nupdwn(2), becp_dist(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )

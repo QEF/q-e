@@ -501,7 +501,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE kinds,                    ONLY: DP
       USE control_flags,            ONLY: iprint
       USE ions_base,                ONLY: na, nsp, nat, ityp
-      USE uspp_param,               ONLY: nhm, nh, nvb, upf
+      USE uspp_param,               ONLY: nhm, nh, upf
+      USE uspp,                     ONLY: nkbus
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,            ONLY: ngb
       USE smallbox_subs,            ONLY: fft_oned2box, box2grid
@@ -569,7 +570,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       END DO
 !$omp end parallel
 
-      IF ( nvb <= 0 ) THEN
+      IF ( nkbus <= 0 ) THEN
          GO TO 1000
       END IF
 
@@ -773,8 +774,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE io_global,                ONLY: stdout
       USE mp_global,                ONLY: intra_bgrp_comm
       USE mp,                       ONLY: mp_sum
-      USE uspp_param,               ONLY: nh, nhm, nvb, upf
-      USE uspp,                     ONLY: deeq
+      USE uspp_param,               ONLY: nh, nhm, upf
+      USE uspp,                     ONLY: deeq, nkbus
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,            ONLY: ngb
       USE smallbox_subs,            ONLY: fft_oned2box, box2grid
@@ -816,7 +817,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
       !  Quick return if this sub is not needed
       !
-      IF ( nvb == 0 ) RETURN
+      IF ( nkbus <= 0 ) THEN
+         GO TO 1000
+      END IF
 
       CALL start_clock( 'rhov' )
       ci=(0.d0,1.d0)
@@ -1085,6 +1088,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       DEALLOCATE( v )
 
       CALL stop_clock( 'rhov' )
+
+1000  CONTINUE
 !
       RETURN
 END SUBROUTINE rhov
