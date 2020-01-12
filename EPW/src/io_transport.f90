@@ -902,7 +902,7 @@
     !----------------------------------------------------------------------------
     SUBROUTINE iter_merge()
     !----------------------------------------------------------------------------
-    USE kinds,            ONLY : DP
+    USE kinds,            ONLY : DP, i8b
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
                                  iunepmatcb, iunsparseq_merge, iunsparsek_merge,          &
                                  iunsparsej_merge,iunsparset_merge, iunepmatcb_merge,     &
@@ -952,11 +952,15 @@
     !! Size of what we write
     INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset while writing scattering to files
+    INTEGER(KIND = MPI_OFFSET_KIND) :: tmp_sum
+    !! Temporary sum
 #else
     INTEGER(KIND = 8) :: lsize
     !! Size of what we write
     INTEGER(KIND = 8) :: lrepmatw
     !! Offset while writing scattering to files
+   INTEGER(KIND = 8) :: tmp_sum
+    !! Temporary sum 
 #endif
     INTEGER, ALLOCATABLE :: sparse(:, :)
     !! Vaariable for reading and writing the files
@@ -1032,8 +1036,11 @@
         CLOSE(iunepmat, STATUS = 'delete')
         IF (ich == 1) THEN
 #if defined(__MPI)
-          lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-          & 8_MPI_OFFSET_KIND 
+          tmp_sum = 0
+          DO i2 = 1, my_pool_id + 1
+            tmp_sum = tmp_sum + lrepmatw2_tot(i2)
+          ENDDO
+          lrepmatw = INT(tmp_sum - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
 #else 
@@ -1043,8 +1050,11 @@
         ELSE
           DO ifil = 1, 5
 #if defined(__MPI)
-            lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-            & 4_MPI_OFFSET_KIND 
+            tmp_sum = 0
+            DO i2 = 1, my_pool_id + 1
+              tmp_sum = tmp_sum + lrepmatw2_tot(i2)
+            ENDDO
+            lrepmatw = INT(tmp_sum - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparse(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
 #else
@@ -1131,8 +1141,11 @@
         CLOSE(iunepmatcb, STATUS = 'delete')
         IF (ich == 1) THEN
 #if defined(__MPI)
-          lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-          & 8_MPI_OFFSET_KIND 
+          tmp_sum = 0
+          DO i2 = 1, my_pool_id + 1
+            tmp_sum = tmp_sum + lrepmatw5_tot(i2)
+          ENDDO
+          lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
 #else 
@@ -1142,7 +1155,11 @@
         ELSE
           DO ifil = 1, 5
 #if defined(__MPI)
-            lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
+            tmp_sum = 0 
+            DO i2 = 1, my_pool_id + 1 
+              tmp_sum = tmp_sum + lrepmatw5_tot(i2)
+            ENDDO
+            lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
