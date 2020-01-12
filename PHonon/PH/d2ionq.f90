@@ -21,7 +21,7 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE io_global,      ONLY : stdout
   USE kinds,          ONLY : DP
   USE constants,      ONLY : e2, tpi, fpi
-  USE mp_bands,       ONLY : intra_bgrp_comm
+  USE mp_bands,       ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
   USE mp,             ONLY : mp_sum
   USE Coul_cut_2D,    ONLY : do_cutoff_2D, cutoff_2D 
   USE Coul_cut_2D_ph, ONLY : cutoff_2D_qg
@@ -68,15 +68,16 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   integer, parameter :: mxr = 100
   ! the maximum number of r shells
 
-  integer :: nu_i, nu_j, na, nb, nta, ntb, ng, nrm, nr, icart, &
+  integer :: na, nb, nta, ntb, ng, nrm, nr, icart, &
        jcart, na_icart, na_jcart, nb_icart, nb_jcart
   ! counters
   real(DP) :: arg, argq, tpiba2, alpha, r (3, mxr), r2 (mxr), &
-       dtau (3), rmax, rr, upperbound, charge, fac(ngm), df, d2f, ar, &
-       gtq2, gt2, facq(ngm), qrg, zvab
+       dtau (3), rmax, rr, upperbound, charge, df, d2f, ar, &
+       gtq2, gt2, qrg, zvab
+  real(DP), allocatable :: fac(:), facq(:)
   ! auxiliary variables
 
-  complex(DP) ::  dy1(3,3), dy2 (3,3), facg, fnat, work
+  complex(DP) ::  dy1(3,3), dy2 (3,3), facg, fnat
   complex(DP), allocatable :: dy3 (: , :)
   ! work spaces, factors
   real(DP), external :: qe_erfc
@@ -88,7 +89,7 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !
   allocate(dy3(3*nat, nmodes) , stat = allocstat)
   call errore ("d2ionq:", "failed allocation of workspace", allocstat)
-
+  !
   tpiba2 = (tpi / alat) **2
   charge = 0.d0
   do na = 1, nat
@@ -115,7 +116,9 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !
   ! Prepare coefficients
   !
-!$omp parallel do private(gtq2, gt2) shared(facq, fac)
+  allocate(facq(ngm))
+  allocate(fac(ngm))
+!$omp parallel do private(gtq2, gt2) shared(facq, fac) if(ngm > 0)
   do ng = 1, ngm
      !
      !
@@ -141,8 +144,9 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! G-space sums here
   !
 !$omp parallel do &
-!$omp private(na_i, nta, dy2, nb, nb_i, ntb, zvab, dtau, argq, dy1) &
-!$omp private(ng, arg, fnat, facg, icart, jcart) reduction(+:dy3)
+!$omp private(na, na_i, nta, dy2, nb, nb_i, ntb, zvab, dtau, argq, dy1) &
+!$omp private(ng, arg, fnat, facg, icart, jcart) shared(dy3) &
+!$omp schedule(static) if(ngm > 0)
   do na = 1, nat
      na_i = 3 * (na - 1)
      nta = ityp (na)
@@ -154,7 +158,7 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
         zvab = zv (nta)  * zv (ntb)
         dtau = tau (:, na) - tau (:, nb)
 
-        argq = dot_product( q , dtau )
+        argq = tpi * dot_product( q , dtau )
 
         dy1 (:,:) = (0.d0, 0.d0)
 
@@ -179,6 +183,7 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
      dy3( na_i + 1: na_i+3,  na_i + 1:na_i+3) = dy3( na_i+1: na_i+3,  na_i+1:na_i+3) - dy2(1:3,1:3)
   enddo
 !$omp end parallel do
+  deallocate(facq, fac)
   !
   CALL block_distribute(nat, me_bgrp, nproc_bgrp, na_s, na_e, mykey )
   !  Then there is also a part in real space which is computed here.
@@ -236,7 +241,7 @@ subroutine d2ionq( nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 100 continue
   call mp_sum ( dy3, intra_bgrp_comm )
   !
-  !   The dynamical matrix was computed in cartesian axis and now we put
+  !   The dynamical matrix was computed in Cartesian axis and now we put
   !   it on the basis of the modes
   !
   dy3 = -dy3

@@ -230,6 +230,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                            dot_product(becq(ik)%k(ijkb0 + 1:ijkbnh,jbnd),ps2(ijkb0 + 1:ijkbnh,ibnd,ipol))
                         END IF
                      enddo
+                     call start_clock('nldyn_b21')
                      do ntb = 1, ntyp
                         do nb = 1, nat
                           if (ityp (nb) == ntb) then
@@ -274,9 +275,11 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                           endif
                        enddo
                     enddo
+                    call stop_clock('nldyn_b21')
                     !
                     !     here starts the second loop on the atoms
                     !
+                    call start_clock("nldyn_b22")
                     do ntb = 1, ntyp
                        do nb = 1, nat
                           if (ityp (nb) == ntb) then
@@ -318,6 +321,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                           endif
                        enddo
                     enddo
+                    call stop_clock('nldyn_b22')
                  enddo
               enddo
            endif

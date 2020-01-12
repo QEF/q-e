@@ -94,6 +94,7 @@ subroutine drho
   !
   !    then compute the weights
   !
+  call start_clock('compute_wgg')
   allocate (wgg (nbnd ,nbnd , nksq))
   if (lgamma) then
      becq => becp1
@@ -109,12 +110,15 @@ subroutine drho
      end do
   endif
   call compute_weight (wgg)
+  call stop_clock('compute_wgg')
   !
   !    becq and alpq are sufficient to compute the part of C^3 (See Eq. 37
   !    which does not contain the local potential
   !
   IF (.not.lgamma) call compute_becalp (becq, alpq)
+  call start_clock('nldyntot')
   call compute_nldyn (dyn00, wgg, becq, alpq)
+  call stop_clock('nldyntot')
   !
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
