@@ -400,7 +400,7 @@
     integer,        intent(in)  :: nsp, na(:), nat, ityp(:), ndega, nhpdim, atm2nhp(:)
     !
     integer        :: i, j, ia, ii
-    REAL(DP) :: cdmvel(3), eks, eks1
+    REAL(DP) :: cdmvel(3), eks1
     !
     call ions_cofmass( vels, pmass, nat, ityp, cdmvel )
     !
@@ -413,10 +413,9 @@
         do ii=1,3
           do ia=1,nat
             eks1 = pmass(ityp(ia))*h(j,i)*(vels(i,ia)-cdmvel(i))*h(j,ii)*(vels(ii,ia)-cdmvel(ii))
-            eks=eks+eks1
             ekin2nhp(atm2nhp(ia)) = ekin2nhp(atm2nhp(ia)) + eks1
-            ekinpr    = ekinpr    + eks
-            temps(ityp(ia)) = temps(ityp(ia)) + eks
+            ekinpr    = ekinpr    + eks1
+            temps(ityp(ia)) = temps(ityp(ia)) + eks1
           end do
         end do
       end do

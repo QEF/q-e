@@ -901,8 +901,8 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
   !
   USE kinds,             ONLY : DP
   use uspp,              ONLY : nkb, qq_nt, indv_ijkb0
-  use uspp_param,        ONLY : nh, nhm, ish, upf
-  use ions_base,         ONLY : na, nsp, nat, ityp
+  use uspp_param,        ONLY : nh, nhm, upf
+  use ions_base,         ONLY : nat, ityp
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
   use cell_base,         ONLY : omega, h
   use constants,         ONLY : pi, fpi, au_gpa
@@ -967,13 +967,10 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
 
      do jj=1,3
 
-        do is=1,nsp
+        do ia=1,nat
+           is = ityp(ia)
 
-           IF( .NOT. upf(is)%tvanp ) CYCLE
-
-           do ia=1,nat
-
-              IF( ityp(ia) /= is ) CYCLE
+           IF( upf(is)%tvanp ) THEN
 
               do iss = 1, nspin
                  !
@@ -1024,7 +1021,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
                  !
               end do
               !
-           end do
+           END IF
            !
         end do
         !

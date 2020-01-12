@@ -367,7 +367,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
         !
-        CALL ions_thermal_stress( stress, thstress, pmass, omega, h, vels, nsp, na )
+        CALL ions_thermal_stress( stress, thstress, pmass, omega, h, vels, nat, ityp )
         !
         IF (tstdout) THEN
           WRITE(stdout,'(5X,"Pressure of Nuclei (GPa)",F20.5,I7)') &
