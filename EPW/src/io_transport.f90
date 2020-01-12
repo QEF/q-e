@@ -25,7 +25,7 @@
     !! This subroutine computes the transition probability and the scattering rates.
     !! Only the elements larger than threshold are saved on file. 
     !!
-    USE kinds,         ONLY : DP, i4b
+    USE kinds,         ONLY : DP, i4b, i8b
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
@@ -61,9 +61,9 @@
     !! Q-point index
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points in selecq
-    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw2_restart(npool)
     !! Current position inside the file during writing
-    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw5_restart(npool)
     !! Current position inside the file during writing (electron)
 #if defined(__MPI)  
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
@@ -902,7 +902,7 @@
     !----------------------------------------------------------------------------
     SUBROUTINE iter_merge()
     !----------------------------------------------------------------------------
-    USE kinds,            ONLY : DP
+    USE kinds,            ONLY : DP, i8b
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
                                  iunepmatcb, iunsparseq_merge, iunsparsek_merge,          &
                                  iunsparsej_merge,iunsparset_merge, iunepmatcb_merge,     &
@@ -952,11 +952,15 @@
     !! Size of what we write
     INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset while writing scattering to files
+    INTEGER(KIND = MPI_OFFSET_KIND) :: tmp_sum
+    !! Temporary sum
 #else
     INTEGER(KIND = 8) :: lsize
     !! Size of what we write
     INTEGER(KIND = 8) :: lrepmatw
     !! Offset while writing scattering to files
+   INTEGER(KIND = 8) :: tmp_sum
+    !! Temporary sum 
 #endif
     INTEGER, ALLOCATABLE :: sparse(:, :)
     !! Vaariable for reading and writing the files
@@ -1032,8 +1036,11 @@
         CLOSE(iunepmat, STATUS = 'delete')
         IF (ich == 1) THEN
 #if defined(__MPI)
-          lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-          & 8_MPI_OFFSET_KIND 
+          tmp_sum = 0
+          DO i2 = 1, my_pool_id + 1
+            tmp_sum = tmp_sum + lrepmatw2_tot(i2)
+          ENDDO
+          lrepmatw = INT(tmp_sum - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
 #else 
@@ -1043,8 +1050,11 @@
         ELSE
           DO ifil = 1, 5
 #if defined(__MPI)
-            lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-            & 4_MPI_OFFSET_KIND 
+            tmp_sum = 0
+            DO i2 = 1, my_pool_id + 1
+              tmp_sum = tmp_sum + lrepmatw2_tot(i2)
+            ENDDO
+            lrepmatw = INT(tmp_sum - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparse(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
 #else
@@ -1131,8 +1141,11 @@
         CLOSE(iunepmatcb, STATUS = 'delete')
         IF (ich == 1) THEN
 #if defined(__MPI)
-          lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-          & 8_MPI_OFFSET_KIND 
+          tmp_sum = 0
+          DO i2 = 1, my_pool_id + 1
+            tmp_sum = tmp_sum + lrepmatw5_tot(i2)
+          ENDDO
+          lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
 #else 
@@ -1142,7 +1155,11 @@
         ELSE
           DO ifil = 1, 5
 #if defined(__MPI)
-            lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
+            tmp_sum = 0 
+            DO i2 = 1, my_pool_id + 1 
+              tmp_sum = tmp_sum + lrepmatw5_tot(i2)
+            ENDDO
+            lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
             & 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
@@ -1179,7 +1196,7 @@
     ! 
     ! This routine opens all the files needed to save scattering rates for the IBTE.
     ! 
-    USE kinds,            ONLY : DP
+    USE kinds,            ONLY : DP, i8b
     USE io_files,         ONLY : prefix, create_directory, delete_if_present
     USE io_var,           ONLY : iunepmat, iunsparseq,              &
                                  iunsparseqcb, iunepmatcb, iunrestart
@@ -1195,14 +1212,14 @@
     ! 
     IMPLICIT NONE
     !  
-    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw2_restart(npool)
     !! To restart opening files
-    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
+    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw5_restart(npool)
     !! To restart opening files
 #if defined(__MPI)
-    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
     INTEGER(KIND = 8), INTENT(inout) :: ind_tot
@@ -1227,9 +1244,9 @@
     !! Dummy INTEGER for reading
     INTEGER :: ipool
     !! Pool index
-    INTEGER (KIND = 8) :: position_byte
+    INTEGER(KIND = 8) :: position_byte
     !! Position in the file in byte
-    REAL (KIND = DP) :: dummy_real
+    REAL(KIND = DP) :: dummy_real
     !! Dummy variable for reading
     !
     WRITE(my_pool_id_ch, "(I0)") my_pool_id
