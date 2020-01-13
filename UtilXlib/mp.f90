@@ -20,6 +20,7 @@ MODULE mp
 #endif
   !
   IMPLICIT NONE
+  PRIVATE
   ! 
   PUBLIC :: mp_start, mp_abort, mp_stop, mp_end, &
     mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
