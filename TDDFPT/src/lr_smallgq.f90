@@ -22,7 +22,6 @@ SUBROUTINE lr_smallgq (xq)
   !
   USE kinds,              ONLY : DP
   USE cell_base,          ONLY : at, bg
-  USE noncollin_module,   ONLY : noncolin
   USE symm_base,          ONLY : s, nrot, nsym, sname, copy_sym, s_axis_to_cart
   USE control_flags,      ONLY : noinv
 

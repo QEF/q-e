@@ -25,7 +25,6 @@ PROGRAM do_dos
                          two_fermi_energies
   USE wvfct,      ONLY : nbnd, et
   USE lsda_mod,   ONLY : lsda, nspin
-  USE noncollin_module, ONLY: noncolin
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE mp_global,     ONLY : mp_startup
