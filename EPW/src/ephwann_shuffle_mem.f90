@@ -199,9 +199,9 @@
   !! Selected q-points within the fsthick window
   INTEGER, PARAMETER :: nrwsx = 200
   !! Maximum number of real-space Wigner-Seitz
-  INTEGER(KIND = i8b) :: lrepmatw2_restart(npool)
+  INTEGER :: lrepmatw2_restart(npool)
   !! To restart opening files
-  INTEGER(KIND = i8b) :: lrepmatw5_restart(npool)
+  INTEGER :: lrepmatw5_restart(npool)
   !! To restart opening files
   INTEGER :: ctype
   !! Calculation type: -1 = hole, +1 = electron and 0 = both.
@@ -1001,15 +1001,15 @@
       IF (exst) THEN
         IF (mpime == ionode_id) THEN
           OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old', IOSTAT = ios)
-          READ(iunrestart,*) iq_restart
-          READ(iunrestart,*) ind_tot
-          READ(iunrestart,*) ind_totcb
-          READ(iunrestart,*) npool_tmp
+          READ(iunrestart, *) iq_restart
+          READ(iunrestart, *) ind_tot
+          READ(iunrestart, *) ind_totcb
+          READ(iunrestart, *) npool_tmp
           DO ipool = 1, npool
-            READ(iunrestart,*) lrepmatw2_restart(ipool)
+            READ(iunrestart, *) lrepmatw2_restart(ipool)
           ENDDO
           DO ipool = 1, npool
-            READ(iunrestart,*) lrepmatw5_restart(ipool)
+            READ(iunrestart, *) lrepmatw5_restart(ipool)
           ENDDO
           CLOSE(iunrestart)
           ! 

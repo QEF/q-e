@@ -12,7 +12,7 @@
   !! 
   !! This module contains all global variables used in EPW. 
   !!  
-  USE kinds, ONLY : DP, i8b
+  USE kinds, ONLY : DP
   !
   SAVE
   !
@@ -38,10 +38,9 @@
     upper_band,              &!  Upper band index for image (band) parallelization
     lower_bnd,               &!  Lower bound for the k-depend index among the mpi pools
     upper_bnd,               &!  Upper bound for the k-depend index among the mpi pools
-    nbndfst                   !  Number of bands within the fsthick window.
-  INTEGER(KIND = i8b) ::     &!
     lrepmatw2_merge,         &!  File merging dimensions
-    lrepmatw5_merge           !  File merging dimensions   
+    lrepmatw5_merge,         &!  File merging dimensions 
+    nbndfst                   !  Number of bands within the fsthick window.
   INTEGER, ALLOCATABLE ::    &! 
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
