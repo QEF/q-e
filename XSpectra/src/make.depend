@@ -168,7 +168,6 @@ xanes_dipole.o : ../../Modules/ions_base.o
 xanes_dipole.o : ../../Modules/kind.o
 xanes_dipole.o : ../../Modules/mp_pools.o
 xanes_dipole.o : ../../Modules/mp_world.o
-xanes_dipole.o : ../../Modules/noncol.o
 xanes_dipole.o : ../../Modules/parameters.o
 xanes_dipole.o : ../../Modules/radial_grids.o
 xanes_dipole.o : ../../Modules/recvec.o
@@ -244,7 +243,6 @@ xspectra.o : ../../Modules/kind.o
 xspectra.o : ../../Modules/mp_global.o
 xspectra.o : ../../Modules/mp_pools.o
 xspectra.o : ../../Modules/mp_world.o
-xspectra.o : ../../Modules/noncol.o
 xspectra.o : ../../Modules/parameters.o
 xspectra.o : ../../Modules/radial_grids.o
 xspectra.o : ../../Modules/uspp.o

@@ -26,7 +26,6 @@ SUBROUTINE hp_init_q()
   USE io_global,            ONLY : stdout
   USE buffers,              ONLY : get_buffer
   USE wavefunctions,        ONLY : evc
-  USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : vkb, okvan
   USE eqv,                  ONLY : evq
   USE lrus,                 ONLY : becp1
