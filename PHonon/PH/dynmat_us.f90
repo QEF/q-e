@@ -30,7 +30,7 @@ SUBROUTINE dynmat_us()
   USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega, tpiba2
   USE uspp_param,           ONLY : nh, nhm
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
+  USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, beccopy

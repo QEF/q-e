@@ -30,7 +30,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE gvecs,     ONLY : ngms, doublegrid
   USE lsda_mod,  ONLY : nspin, lsda, isk
   USE scf,       ONLY : rho, rho_core
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag, npol
+  USE noncollin_module, ONLY : nspin_gga, npol
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npwx
   USE wavefunctions,  ONLY: evc
