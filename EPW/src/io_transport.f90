@@ -1196,7 +1196,7 @@
     ! This routine opens all the files needed to save scattering rates for the IBTE.
     ! 
     USE kinds,            ONLY : DP, i8b
-    USE io_files,         ONLY : prefix, create_directory, delete_if_present, delete_if_present_para
+    USE io_files,         ONLY : prefix, create_directory, delete_if_present_para
     USE io_var,           ONLY : iunepmat, iunsparseq,              &
                                  iunsparseqcb, iunepmatcb, iunrestart
     USE mp_global,        ONLY : world_comm, my_pool_id, npool
@@ -1395,7 +1395,7 @@
         !  
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present_para(filint)
+          CALL delete_if_present_para(filint, .TRUE.)
           OPEN(UNIT = iunepmatcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
@@ -1408,7 +1408,7 @@
         ! 
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present_para(filint)
+          CALL delete_if_present_para(filint, .TRUE.)
           OPEN(UNIT = iunsparseqcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
