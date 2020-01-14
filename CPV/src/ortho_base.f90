@@ -594,8 +594,7 @@ CONTAINS
 !     routine makes use of c(-q)=c*(q)
 !
       USE kinds,              ONLY: DP
-      USE uspp,               ONLY: nkbus
-      USE uspp_param,         ONLY: nvb
+      USE uspp,               ONLY: nkb, nkbus
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
@@ -705,8 +704,8 @@ CONTAINS
             END DO
          END IF
          !
-         IF( nvb > 0 ) THEN
-            CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp_dist( 1, 1 ), &
+         IF( nkbus > 0 ) THEN
+            CALL dgemm( 'T', 'N', nr, nc, nkb, -1.0d0, becp_dist( 1, 1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
@@ -737,8 +736,7 @@ CONTAINS
 !
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE uspp,               ONLY: nkbus
-      USE uspp_param,         ONLY: nvb
+      USE uspp,               ONLY: nkb, nkbus
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE mp_bands,           ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, my_bgrp_id, nbgrp
@@ -843,11 +841,11 @@ CONTAINS
          !  tau is block distributed among the whole processor 2D grid
          !
          !
-         IF( nvb > 0 ) THEN
+         IF( nkbus > 0 ) THEN
             !
             ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
             !
-            CALL dgemm( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
+            CALL dgemm( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
 
          END IF
 
@@ -875,8 +873,7 @@ CONTAINS
 !     routine makes use of c(-q)=c*(q)
 !
       USE kinds,              ONLY: DP
-      USE uspp_param,         ONLY: nvb
-      USE uspp,               ONLY: nkbus
+      USE uspp,               ONLY: nkb, nkbus
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
@@ -990,9 +987,9 @@ CONTAINS
          !  qbephi is distributed among processor columns
          !  tau is block distributed among the whole processor 2D grid
          !
-         IF( nvb > 0 ) THEN
+         IF( nkbus > 0 ) THEN
             !
-            CALL dgemm( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
+            CALL dgemm( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
             !
          END IF
 
@@ -1026,7 +1023,7 @@ CONTAINS
       USE ions_base,         ONLY: nsp, na
       USE io_global,         ONLY: stdout
       USE uspp,              ONLY: nkb, nkbus
-      USE uspp_param,        ONLY: nh, nvb, ish
+      USE uspp_param,        ONLY: nh
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
@@ -1085,7 +1082,7 @@ CONTAINS
    
          ALLOCATE( xd( nrcx, nrcx ) )
    
-         IF( nvb > 0 )THEN
+         IF( nkbus > 0 )THEN
             DO i = 1, nss
                ibgrp_i = ibgrp_g2l( i + istart - 1 )
                IF( ibgrp_i > 0 ) THEN
@@ -1098,7 +1095,7 @@ CONTAINS
    
          DO ipc = 1, np(2)
             !
-            IF( nvb > 0 )THEN
+            IF( nkbus > 0 )THEN
                ! 
                ! For the inner loop we need the block of bebhi( :, ic : ic + nc - 1 )
                ! this is the same of block bephi( :, ir : ir + nr - 1 ) on processor
@@ -1165,7 +1162,7 @@ CONTAINS
                            xd(1,i_first), nrcx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
                END IF
    
-               IF( nvb > 0 )THEN
+               IF( nkbus > 0 )THEN
                   nbgrp_i = 0
                   DO i = 1, nr
                      ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
@@ -1178,7 +1175,7 @@ CONTAINS
                      END IF
                   END DO
                   IF( nbgrp_i > 0 ) THEN
-                     CALL dgemm( 'N', 'T', nkbus, nbgrp_i, nc, 1.0d0, &
+                     CALL dgemm( 'N', 'T', nkb, nbgrp_i, nc, 1.0d0, &
                             bephi_tmp, nkbx, xd(i_first,1), nrcx, 1.0d0, bec_bgrp( 1, ibgrp_i_first ), SIZE(bec_bgrp,1) )
                   END IF
                   !
@@ -1188,27 +1185,9 @@ CONTAINS
             !    
          END DO
    
-         IF( nvb > 0 )THEN
+         IF( nkbus > 0 )THEN
             DEALLOCATE( bephi_tmp )
          END IF
-         !
-         IF ( iverbosity > 1 ) THEN
-            WRITE( stdout,*)
-            DO is = 1, nvb
-               IF( nvb > 1 ) THEN
-                  WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
-                  WRITE( stdout,'(8f9.4)')                                       &
-        &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
-               ELSE
-                  DO ia=1,na(is)
-                     WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
-                     WRITE( stdout,'(8f9.4)')                                    &
-        &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i+istart-1),iv=1,nh(is)),i=1,nss)
-                  END DO
-               END IF
-               WRITE( stdout,*)
-            END DO
-         ENDIF
          !
          DEALLOCATE(xd)
          !
@@ -1230,11 +1209,11 @@ CONTAINS
 !     where s'=s(r(t))  
 !
       USE kinds,          ONLY: DP
-      USE ions_base,      ONLY: na, nsp
+      USE ions_base,      ONLY: nat, ityp
       USE io_global,      ONLY: stdout
       USE mp_bands,       ONLY: intra_bgrp_comm, inter_bgrp_comm
-      USE uspp_param,     ONLY: nh, ish, nvb
-      USE uspp,           ONLY: nkbus, qq_nt
+      USE uspp_param,     ONLY: nh, upf
+      USE uspp,           ONLY: nkb, nkbus, qq_nt, indv_ijkb0
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
@@ -1260,29 +1239,32 @@ CONTAINS
       !
       ! Note that phi here is computed only for my band group
       !
-      IF ( nvb > 0 ) THEN
+      IF ( nkbus > 0 ) THEN
 
-         ALLOCATE( qtemp( nkbus, nbspx_bgrp ) )
+         ALLOCATE( qtemp( nkb, nbspx_bgrp ) )
 
          qtemp (:,:) = 0.d0
-         DO is=1,nvb
-            DO iv=1,nh(is)
-               inl = ish(is)+(iv-1)*na(is)
-               DO jv=1,nh(is)
-                  jnl = ish(is)+(jv-1)*na(is)
-                  IF(ABS(qq_nt(iv,jv,is)) > 1.d-5) THEN
-                     qqf = qq_nt(iv,jv,is)
-                     DO i=1,nbsp_bgrp
-                        CALL daxpy( na(is), qqf, bec_bgrp(jnl+1,i),1,qtemp(inl+1,i), 1 )
-                     END DO
-                  ENDIF
+         DO ia = 1, nat
+            is = ityp(ia)
+            IF( upf(is)%tvanp ) THEN
+               DO iv=1,nh(is)
+                  inl = indv_ijkb0(ia) + iv 
+                  DO jv=1,nh(is)
+                     jnl = indv_ijkb0(ia) + jv
+                     IF(ABS(qq_nt(iv,jv,is)) > 1.d-5) THEN
+                        qqf = qq_nt(iv,jv,is)
+                        DO i=1,nbsp_bgrp
+                           qtemp(inl,i) = qtemp(inl,i) + qqf * bec_bgrp(jnl,i)
+                        END DO
+                     ENDIF
+                  END DO
                END DO
-            END DO
+            END IF
          END DO
 !
          IF( ngw > 0 ) THEN
-            CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkbus, 1.0d0, betae, &
-                       2*ngwx, qtemp, nkbus, 0.0d0, phi_bgrp, 2*ngwx )
+            CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae, &
+                       2*ngwx, qtemp, nkb, 0.0d0, phi_bgrp, 2*ngwx )
          ELSE
             phi_bgrp = 0.0d0
          END IF
@@ -1312,47 +1294,7 @@ CONTAINS
          END DO
 !$omp end parallel do
       END IF
-
       !   
-
-      IF(iverbosity > 1) THEN
-         emtot=0.0d0
-         IF( PRESENT( ema0bg ) ) THEN
-            DO j=1,nbsp_bgrp
-               DO i=1,ngw
-                  emtot=emtot +2.0d0*DBLE(phi_bgrp(i,j)*CONJG(c0_bgrp(i,j)))*ema0bg(i)**(-2.0d0)
-               END DO
-            END DO
-         ELSE
-            DO j=1,nbsp_bgrp
-               DO i=1,ngw
-                  emtot=emtot +2.0d0*DBLE(phi_bgrp(i,j)*CONJG(c0_bgrp(i,j)))
-               END DO
-            END DO
-         END IF
-         emtot=emtot/nbsp
-
-         CALL mp_sum( emtot, intra_bgrp_comm )
-         CALL mp_sum( emtot, inter_bgrp_comm )
-
-         WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
-         WRITE( stdout,*)
-         DO is = 1, nvb
-            IF( nvb > 1 ) THEN
-               WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,nbsp_bgrp)
-            ELSE
-               DO ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &               ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,nbsp_bgrp)
-               END DO
-            END IF
-         END DO
-      ENDIF
-
-
       CALL stop_clock( 'calphi' )
 !
       RETURN
@@ -1361,7 +1303,7 @@ CONTAINS
 
    SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nrcx, desc )
       USE kinds,             ONLY: DP
-      USE uspp,              ONLY: nkb, nkbus
+      USE uspp,              ONLY: nkb
       USE mp,                ONLY: mp_sum
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
       USE mp_diag,           ONLY: leg_ortho

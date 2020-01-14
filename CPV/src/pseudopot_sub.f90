@@ -54,7 +54,9 @@
 
       use parameters, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
-                            na       !  number of atoms for each specie
+                            na, &    !  number of atoms for each specie
+                            nat, &   !  total number of atom
+                            ityp     !  the atomi specie for each atom
       use uspp,       only: nkb, &   !
                             nkbus    !
       use uspp_param, only: ish,    &!
@@ -66,12 +68,14 @@
                             lmaxq    !
       use uspp,       only: nhtol,  &!
                             nhtolm, &!
-                            indv     !
+                            indv,   &!
+                            ijtoh,  &!
+                            indv_ijkb0 !
 
       IMPLICIT NONE
      
       !
-      INTEGER :: is, iv, ind, il, lm
+      INTEGER :: is, iv, ind, il, lm, ih, jh, ijv, ijkb0, ia
       !     ------------------------------------------------------------------
       !     find  number of beta functions per species, max dimensions,
       !     total number of beta functions (all and Vanderbilt only)
@@ -102,21 +106,27 @@
       !
       do is=1,nsp
           upf(is)%nqlc = MIN (  upf(is)%nqlc, lmaxq )
+          IF ( upf(is)%nqlc < 0 )  upf(is)%nqlc = 0
       end do
       if (nkb <= 0) call errore(' pseudopotential_indexes ',' not implemented ?',nkb)
 
       if( allocated( nhtol ) ) deallocate( nhtol )
       if( allocated( indv  ) ) deallocate( indv )
       if( allocated( nhtolm  ) ) deallocate( nhtolm )
+      if( allocated( ijtoh  ) ) deallocate( ijtoh )
+      if( allocated( indv_ijkb0  ) ) deallocate( indv_ijkb0 )
       !
       allocate(nhtol(nhm,nsp))
       allocate(indv (nhm,nsp))
       allocate(nhtolm(nhm,nsp))
+      allocate(ijtoh(nhm,nhm,nsp))
+      allocate(indv_ijkb0(nat))
 
       !     ------------------------------------------------------------------
       !     definition of indices nhtol, indv, nhtolm
       !     ------------------------------------------------------------------
       !
+      ijkb0 = 0
       do is = 1, nsp
          ind = 0
          do iv = 1,  upf(is)%nbeta
@@ -129,6 +139,29 @@
                indv( ind, is ) = iv
             end do
          end do
+         !
+         ! ijtoh map augmentation channel indexes ih and jh to composite
+         ! "triangular" index ijh
+         ijtoh(:,:,is) = -1
+         ijv = 0
+         do ih = 1,nh(is)
+            do jh = ih,nh(is)
+               ijv = ijv+1
+               ijtoh(ih,jh,is) = ijv
+               ijtoh(jh,ih,is) = ijv
+            end do
+         end do
+         !
+         ! ijkb0 is just before the first beta "in the solid" for atom ia
+         ! i.e. ijkb0+1,.. ijkb0+nh(ityp(ia)) are the nh beta functions of
+         !      atom ia in the global list of beta functions
+         do ia = 1,nat
+            IF ( ityp(ia) == is ) THEN
+               indv_ijkb0(ia) = ijkb0
+               ijkb0 = ijkb0 + nh(is)
+           END IF
+        end do
+
       end do
 
       RETURN
@@ -443,7 +476,7 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, ish, nvb
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, ish
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
@@ -459,6 +492,7 @@
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
       REAL(DP) :: xg
 
+
       CALL start_clock('qradx')
 
       IF( .NOT. ALLOCATED( rgrid ) ) &
@@ -473,13 +507,15 @@
       !
       IF ( tpre ) ALLOCATE( dqradx( mmx, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
 
-      DO is = 1, nvb
+      DO is = 1, nsp
+         !
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     qqq and beta are now indexed and taken in the same order
          !     as vanderbilts ppot-code prints them out
          !
-         WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
-     &        nh(is), ngb, is, upf(is)%kkbeta, upf(is)%nqlc
+         WRITE( stdout,'(A,5I5)') 'is, nh(is), ngb, kkbeta, lmaxq = ', &
+     &        is, nh(is), ngb, upf(is)%kkbeta, upf(is)%nqlc
          !
          nr = upf(is)%kkbeta
          !
@@ -575,7 +611,7 @@
       use io_global,  only: stdout
       USE ions_base,  ONLY: nsp
       USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
-      use uspp_param, only: lmaxkb, ish, nvb
+      use uspp_param, only: lmaxkb, ish
       USE atom,       ONLY: rgrid
       USE uspp,       ONLY: indv
       use uspp,       only: qq_nt, beta
@@ -602,8 +638,13 @@
       REAL(DP), ALLOCATABLE :: qradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
       COMPLEX(DP), ALLOCATABLE :: dqgbs(:,:,:)
+      LOGICAL :: tvanp
 
-      IF( nvb < 1 ) &
+      tvanp = .FALSE.
+      DO is = 1, nsp
+         tvanp = tvanp .OR. upf(is)%tvanp
+      END DO
+      IF( .NOT. tvanp ) &
          return
 
       IF( .NOT. ALLOCATED( rgrid ) ) &
@@ -622,7 +663,9 @@
       qradb(:,:,:,:) = 0.d0
 
 
-      DO is = 1, nvb
+      DO is = 1, nsp
+
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     qqq and beta are now indexed and taken in the same order
          !     as vanderbilts ppot-code prints them out
@@ -711,7 +754,9 @@
 !
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
-      do is = 1, nvb
+      do is = 1, nsp
+
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     calculation of array qradb(igb,iv,jv,is)
          !
@@ -764,7 +809,9 @@
          !
          call dylmr2_(lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb)
          !
-         do is=1,nvb
+         do is=1,nsp
+            !
+            IF( .NOT. upf(is)%tvanp ) CYCLE
             !
             do iv= 1, upf(is)%nbeta
                do jv=iv, upf(is)%nbeta
@@ -994,7 +1041,7 @@
       use uspp, only: qq_nt, nhtolm, beta
       use constants, only: pi, fpi
       use ions_base, only: nsp
-      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh, nvb
+      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
       use qgb_mod, only: qgb, dqgb
       use smallbox_gvec, only: gb, gxb, ngb
       use small_box,  only: omegab, tpibab
@@ -1011,9 +1058,13 @@
       REAL(DP), ALLOCATABLE :: qradb( :, :, :, : )
       complex(dp), allocatable:: dqgbs(:,:,:)
       real(dp) xg, c, betagl, dbetagl, g2
-!
-      !
-      if( nvb < 1 ) &
+      LOGICAL :: tvanp
+
+      tvanp = .FALSE.
+      DO is = 1, nsp
+         tvanp = tvanp .OR. upf(is)%tvanp
+      END DO
+      IF( .NOT. tvanp ) &
          return
 
       allocate( qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ), STAT=ierr )
@@ -1028,7 +1079,9 @@
 !
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
-      do is = 1, nvb
+      do is = 1, nsp
+         !
+         IF( .NOT. upf(is)%tvanp ) CYCLE
          !
          !     calculation of array qradb(igb,iv,jv,is)
          !
@@ -1091,7 +1144,9 @@
          !
          call dylmr2_( lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb )
          !
-         do is=1,nvb
+         do is=1,nsp
+            !
+            IF( .NOT. upf(is)%tvanp ) CYCLE
             !
             do iv= 1, upf(is)%nbeta
                do jv=iv, upf(is)%nbeta

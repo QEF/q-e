@@ -150,7 +150,7 @@
 
 !=----------------------------------------------------------------------------=!
    SUBROUTINE protate_x ( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
-                        na, nsp, ish, nh, np_rot, me_rot, comm_rot  )
+                        ityp, nat, indv_ijkb0, nh, np_rot, me_rot, comm_rot  )
 !=----------------------------------------------------------------------------=!
 
       !  this routine rotates the wave functions using the matrix lambda
@@ -176,13 +176,14 @@
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE dspev_module,     ONLY: pdspev_drv, dspev_drv
+      USE uspp_param,       ONLY: upf
 
       IMPLICIT NONE
 
       ! ... declare subroutine arguments
 
       INTEGER, INTENT(IN) :: ngwl, nss, nrl, noff
-      INTEGER, INTENT(IN) :: na(:), nsp, ish(:), nh(:)
+      INTEGER, INTENT(IN) :: ityp(:), nat, indv_ijkb0(:), nh(:)
       INTEGER, INTENT(IN) :: np_rot, me_rot, comm_rot 
       COMPLEX(DP), INTENT(IN) :: c0(:,:)
       COMPLEX(DP), INTENT(OUT) :: c0rot(:,:)
@@ -230,15 +231,16 @@
                 CALL daxpy(2*ngwl,uu(jl,i),c0(1,j+noff-1),1,c0rot(1,i+noff-1),1)
               END DO
 
-              do is=1,nsp
-                 do jv=1,nh(is)
-                    do ia=1,na(is)
-                       jnl=ish(is)+(jv-1)*na(is)+ia
+              do ia=1,nat
+                 is=ityp(ia)
+                 IF( upf(is)%tvanp ) THEN
+                    do jv=1,nh(is)
+                       jnl = indv_ijkb0(ia) + jv
                        do i = 1, nss
                           becrot(jnl,i+noff-1) = becrot(jnl,i+noff-1)+ uu(jl, i) * bec( jnl, j+noff-1 )
                        end do
                     end do
-                 end do
+                 END IF
               end do
 
               j = j + np_rot

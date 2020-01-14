@@ -15,14 +15,14 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !   gqq output: as defined above
 
   use kinds,              only: dp
-  use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, nvb
-  use uspp,               only: indv, lpx, lpl, ap,nhtolm
+  use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm
+  use uspp,               only: indv, lpx, lpl, ap,nhtolm, nkbus, indv_ijkb0
   use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
   use gvect,              only: mill
   use constants,          only: fpi
-  use ions_base,          only: nax, na, nsp
+  use ions_base,          only: nax, na, nsp, nat, ityp
   use cell_base,          only: at, alat
   use gvect,              only: g, gg
   use mp,                 only: mp_sum
@@ -75,35 +75,37 @@ subroutine qqberry2( gqq,gqqm, ipol)
   gmes = g_mes ( ipol, at, alat )
 
   ! only for Vanderbilt species 
-  do is=1,nvb
-     c=fpi                 !/omegab
-     !
-     ALLOCATE ( qrl( upf(is)%kkbeta, upf(is)%nbeta*(upf(is)%nbeta+1)/2, &
+  do is=1,nsp
+     IF( upf(is)%tvanp ) THEN
+        c=fpi                 !/omegab
+        !
+        ALLOCATE ( qrl( upf(is)%kkbeta, upf(is)%nbeta*(upf(is)%nbeta+1)/2, &
                      upf(is)%nqlc ) )
-     !
-     call fill_qrl ( is, qrl )
-     ! now the radial part
-     do l=1,upf(is)%nqlc
-        xg= gmes !only orthorombic cells
-        !!!call bess(xg,l,upf(is)%kkbeta,rgrid(is)%r,jl)
-        call sph_bes ( upf(is)%kkbeta, rgrid(is)%r, xg, l-1, jl )
-        do iv= 1,upf(is)%nbeta
-           do jv=iv,upf(is)%nbeta
-              ijv = (jv-1)*jv/2 + iv
+        !
+        call fill_qrl ( is, qrl )
+        ! now the radial part
+        do l=1,upf(is)%nqlc
+           xg= gmes !only orthorombic cells
+           !!!call bess(xg,l,upf(is)%kkbeta,rgrid(is)%r,jl)
+           call sph_bes ( upf(is)%kkbeta, rgrid(is)%r, xg, l-1, jl )
+           do iv= 1,upf(is)%nbeta
+              do jv=iv,upf(is)%nbeta
+                 ijv = (jv-1)*jv/2 + iv
 !     
 !     note qrl(r)=r^2*q(r)
 !
-              do ir=1,upf(is)%kkbeta
-                 fint(ir)=qrl(ir,ijv,l)*jl(ir)
-              end do
-              call simpson ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
+                 do ir=1,upf(is)%kkbeta
+                    fint(ir)=qrl(ir,ijv,l)*jl(ir)
+                 end do
+                 call simpson ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
                                 qradb2(iv,jv,l,is) )
-              qradb2(iv,jv,l,is)=  c*qradb2(iv,jv,l,is)
-              if ( iv /= jv ) qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)
+                 qradb2(iv,jv,l,is)=  c*qradb2(iv,jv,l,is)
+                 if ( iv /= jv ) qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)
+              end do
            end do
         end do
-     end do
-     DEALLOCATE ( qrl )    
+        DEALLOCATE ( qrl )    
+     END IF
   enddo
 
   igi=-1
@@ -122,7 +124,9 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
 !setting array beigr
              
-     do is=1,nvb
+     do ia=1,nat
+        is=ityp(ia)
+        IF( .NOT. upf(is)%tvanp ) CYCLE
         do iv= 1,nh(is)
            do jv=iv,nh(is)
               ivs=indv(iv,is)
@@ -162,13 +166,11 @@ subroutine qqberry2( gqq,gqqm, ipol)
                 
               end do
               
-              do ia=1,na(is)
                      
-                 gqqm(iv,jv,ia,is)=qgbs
-                 gqqm(jv,iv,ia,is)=qgbs
-                 gqq(iv,jv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
-                 gqq(jv,iv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
-              end do
+              gqqm(iv,jv,ia,is)=qgbs
+              gqqm(jv,iv,ia,is)=qgbs
+              gqq(iv,jv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
+              gqq(jv,iv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
            end do
         enddo
      enddo
@@ -200,9 +202,9 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 
   use kinds, only : dp
   use gvecw, only: ngw
-  use ions_base, only : nax, nat, na, nsp
+  use ions_base, only : nax, nat, na, nsp, ityp
   use gvect, only: mill
-  use uspp_param, only: nh, nhm, nvb, ish
+  use uspp_param, only: upf, nh, nhm
   use mp, only: mp_sum
   use mp_global, only: intra_bgrp_comm
 
@@ -216,7 +218,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 
   integer ipol
   
-  integer igi,ig,is,iv,jv,ia,isa
+  integer igi,ig,is,iv,jv,ia
 
 
   do is=1,nsp
@@ -243,21 +245,18 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
      endif
   enddo
   if( igi.ne.-1) then
-
-  
-     isa = 1
-     do is=1,nvb
-        do ia=1,na(is)
+     do ia=1,nat
+        is=ityp(ia)
+        IF( upf(is)%tvanp ) THEN
            do iv= 1,nh(is)
               do jv=iv,nh(is)
-                 gqqm(iv,jv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,isa)
-                 gqqm(jv,iv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,isa)
+                 gqqm(iv,jv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,ia)
+                 gqqm(jv,iv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,ia)
                  gqq(iv,jv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
                  gqq(jv,iv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
               enddo
            enddo
-           isa = isa + 1
-        enddo
+        END IF
      enddo
   endif
   call mp_sum(gqq(:,:,:,:),intra_bgrp_comm)

@@ -821,11 +821,11 @@
 
    INTERFACE protate
       SUBROUTINE protate_x ( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
-                           na, nsp, ish, nh, np_rot, me_rot, comm_rot  )
+                           ityp, nat, indv_ijkb0, nh, np_rot, me_rot, comm_rot  )
          USE kinds,            ONLY: DP
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: ngwl, nss, nrl, noff
-         INTEGER, INTENT(IN) :: na(:), nsp, ish(:), nh(:)
+         INTEGER, INTENT(IN) :: ityp(:), nat, indv_ijkb0(:), nh(:)
          INTEGER, INTENT(IN) :: np_rot, me_rot, comm_rot  
          COMPLEX(DP), INTENT(IN) :: c0(:,:)
          COMPLEX(DP), INTENT(OUT) :: c0rot(:,:)
@@ -919,12 +919,13 @@
    END INTERFACE
 
    INTERFACE nlsm1
-      SUBROUTINE nlsm1_x ( n, nspmn, nspmx, eigr, c, becp )
+      SUBROUTINE nlsm1_x ( n, nspmn, nspmx, eigr, c, becp, pptype_ )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: n, nspmn, nspmx
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c( :, : )
          REAL(DP),    INTENT(OUT) :: becp( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE nlsm1_x 
    END INTERFACE
 
@@ -939,12 +940,13 @@
    END INTERFACE
 
    INTERFACE calbec_bgrp
-      SUBROUTINE calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+      SUBROUTINE calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp, pptype_ )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: nspmn, nspmx
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c_bgrp( :, : )
          REAL(DP),    INTENT(OUT) :: bec_bgrp( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_bgrp_x 
    END INTERFACE
 
@@ -969,12 +971,13 @@
    END INTERFACE
 
    INTERFACE calbec
-      SUBROUTINE calbec_x( nspmn, nspmx, eigr, c, bec )
+      SUBROUTINE calbec_x( nspmn, nspmx, eigr, c, bec, pptype_ )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  ::  nspmn, nspmx
          REAL(DP),    INTENT(OUT) ::  bec( :, : )
          COMPLEX(DP), INTENT(IN)  ::  c( :, : ), eigr( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_x
    END INTERFACE
 

@@ -23,10 +23,10 @@
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
-      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
-      USE uspp_param,             ONLY: nhm, nh, ish
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, indv_ijkb0
+      USE uspp_param,             ONLY: nhm, nh
       USE constants,              ONLY: pi, fpi
-      USE ions_base,              ONLY: nsp, na, nat
+      USE ions_base,              ONLY: nsp, na, nat, ityp
       USE gvecw,                  ONLY: ngw, g2kin
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
@@ -54,8 +54,8 @@
       !
       ! local variables
       !
-      INTEGER     :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
-      INTEGER     :: ivoff, jvoff, igoff, igno, igrp, ierr
+      INTEGER     :: iv, jv, ia, is, iss1, iss2, ir, ig, inl, jnl
+      INTEGER     :: igno, igrp, ierr
       INTEGER     :: idx, eig_offset, nogrp_ , inc, tg_nr3
       REAL(DP)    :: fi, fip, dd, dv
       COMPLEX(DP) :: fp, fm, ci
@@ -287,17 +287,9 @@
          af = 0.0d0
          aa = 0.0d0
          !
-!$omp parallel
-!$omp single
-         !
          igrp = 1
 
          DO idx = 1, 2*nogrp_ , 2
-
-!$omp task default(none) &
-!$omp          firstprivate(igrp,idx, nogrp_, ngw, i, n, nsp, na, nh, ish, iss1, iss2, tens ) &
-!$omp          private(iv,jv,ivoff,jvoff,dd,dv,inl,jnl,is,isa,ism,fi,fip) &
-!$omp          shared( f, deeq, bec, af, aa, dvan )
 
             IF( idx + i - 1 <= n ) THEN
 
@@ -309,47 +301,31 @@
                   fip= f(i+idx)
                END IF
                !
-               DO is = 1, nsp
+               DO ia = 1, nat
+                  is = ityp(ia)
                   DO iv = 1, nh(is)
-                        DO jv = 1, nh(is)
-                           isa = 0
-                           DO ism = 1, is-1
-                              isa = isa + na( ism )
-                           END DO
-                           dv = dvan(iv,jv,is)
-                           ivoff = ish(is)+(iv-1)*na(is)
-                           jvoff = ish(is)+(jv-1)*na(is)
-                           IF( i + idx - 1 /= n ) THEN
-                              DO ia=1,na(is)
-                                 inl = ivoff + ia
-                                 jnl = jvoff + ia
-                                 dd = deeq(iv,jv,isa+ia,iss1) + dv
-                                 af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
-                                 dd = deeq(iv,jv,isa+ia,iss2) + dv
-                                 aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
-                              END DO
-                           ELSE
-                              DO ia=1,na(is)
-                                 inl = ivoff + ia
-                                 jnl = jvoff + ia
-                                 dd = deeq(iv,jv,isa+ia,iss1) + dv
-                                 af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
-                              END DO
-                           END IF
-                        END DO
+                     DO jv = 1, nh(is)
+                        dv = dvan(iv,jv,is)
+                        inl = indv_ijkb0(ia) + iv
+                        jnl = indv_ijkb0(ia) + jv
+                        IF( i + idx - 1 /= n ) THEN
+                           dd = deeq(iv,jv,ia,iss1) + dv
+                           af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
+                           dd = deeq(iv,jv,ia,iss2) + dv
+                           aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
+                        ELSE
+                           dd = deeq(iv,jv,ia,iss1) + dv
+                           af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
+                        END IF
+                     END DO
                   END DO
                END DO
 
             END IF
 
-!$omp end task
-
             igrp = igrp + 1
 
          END DO
-
-!$omp end single
-!$omp end parallel
 
          IF( ngw > 0 ) THEN
            CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)

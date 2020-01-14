@@ -279,9 +279,9 @@
       !     for vanderbilt pseudo pot - kl & ap
       !
       USE kinds,          ONLY: DP
-      USE ions_base,      ONLY: na, nat
-      USE uspp,           ONLY: nkb, qq_nt
-      USE uspp_param,     ONLY: nh, ish, nvb
+      USE ions_base,      ONLY: na, nat, nsp, ityp
+      USE uspp,           ONLY: nkb, qq_nt, indv_ijkb0, nkbus
+      USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
@@ -327,16 +327,16 @@
       IF( info /= 0 ) &
          CALL errore( ' ortho ', ' allocating becp_dist ', ABS( info ) )
 
-      IF( nvb > 0 ) THEN
+      IF( nkbus > 0 ) THEN
          !
          becp_bgrp = 0.0d0
          !
-         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, phi_bgrp, becp_bgrp )
+         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, phi_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, descla )
          !
          becp_bgrp = 0.0d0
          !
-         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, cp_bgrp, becp_bgrp )
+         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, cp_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, descla )
          !
       END IF
@@ -347,7 +347,7 @@
       IF( info /= 0 ) &
          CALL errore( ' ortho ', ' allocating qbephi ', ABS( info ) )
       !
-      IF( nvb > 0 ) THEN
+      IF( nkbus > 0 ) THEN
          ALLOCATE( bec_col ( nkbx, nrcx*nspin ), STAT = info )
          IF( info /= 0 ) &
             CALL errore( ' ortho ', ' allocating bec_col ', ABS( info ) )
@@ -359,23 +359,26 @@
       !
       qbephi = 0.d0
       !
-      DO is=1,nvb
-         DO iv=1,nh(is)
-            inl = ish(is)+(iv-1)*na(is)
-            DO jv=1,nh(is)
-               jnl = ish(is)+(jv-1)*na(is)
-               qqf = qq_nt(iv,jv,is)
-               IF( ABS( qqf ) > 1.D-5 ) THEN
-                  DO iss = 1, nspin
-                     IF( descla( iss )%active_node > 0 ) THEN
-                        DO i = 1, descla( iss )%nc
-                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1,qbephi(inl+1,i,iss), 1 )
-                        END DO
-                     END IF
+      DO iss = 1, nspin
+         IF( descla( iss )%active_node > 0 ) THEN
+            DO ia = 1, nat
+               is = ityp(ia)
+               IF( upf(is)%tvanp ) THEN
+                  DO iv=1,nh(is)
+                     inl = indv_ijkb0(ia) + iv 
+                     DO jv=1,nh(is)
+                        jnl = indv_ijkb0(ia) + jv
+                        qqf = qq_nt(iv,jv,is)
+                        IF( ABS( qqf ) > 1.D-5 ) THEN
+                           DO i = 1, descla( iss )%nc
+                              qbephi(inl,i,iss) = qbephi(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
+                           END DO
+                        END IF
+                     END DO
                   END DO
-               ENDIF
+               END IF
             END DO
-         END DO
+         ENDIF
       END DO
       !
       ALLOCATE( qbecp ( nkbx, nx0, nspin ), STAT = info )
@@ -384,33 +387,34 @@
 
       qbecp  = 0.d0
 
-      IF( nvb > 0 ) THEN
+      IF( nkbus > 0 ) THEN
          CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nrcx, descla(1) )
          IF( nspin == 2 ) THEN
             CALL redist_row2col( nupdwn(2), becp_dist(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )
          END IF
-      END IF
-
-      DO is=1,nvb
-         DO iv=1,nh(is)
-            inl = ish(is)+(iv-1)*na(is)
-            DO jv=1,nh(is)
-               jnl = ish(is)+(jv-1)*na(is)
-               qqf = qq_nt(iv,jv,is)
-               IF( ABS( qqf ) > 1.D-5 ) THEN
-                  DO iss = 1, nspin
-                     IF( descla( iss )%active_node > 0 ) THEN
-                        DO i = 1, descla( iss )%nc
-                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1, qbecp(inl+1,i,iss), 1 )
+         DO iss = 1, nspin
+            IF( descla( iss )%active_node > 0 ) THEN
+               DO ia = 1, nat
+                  is = ityp(ia) 
+                  IF( upf(is)%tvanp ) THEN
+                     DO iv=1,nh(is)
+                        inl = indv_ijkb0(ia) + iv
+                        DO jv=1,nh(is)
+                           jnl = indv_ijkb0(ia) + jv
+                           qqf = qq_nt(iv,jv,is)
+                           IF( ABS( qqf ) > 1.D-5 ) THEN
+                              DO i = 1, descla( iss )%nc
+                                 qbecp(inl,i,iss) = qbecp(inl,i,iss) + qqf * bec_col(jnl,i+(iss-1)*nrcx)
+                              END DO
+                           ENDIF
                         END DO
-                     END IF
-                  END DO
-               ENDIF
-            END DO
+                     END DO
+                  END IF
+               END DO
+            END IF
          END DO
-      END DO
-      !
-      IF( nvb > 0 ) DEALLOCATE( bec_col )
+         DEALLOCATE( bec_col )
+      END IF
       !
       ! Expand cp and phi to contain all electronic band
       !
@@ -427,7 +431,6 @@
       DO iss = 1, nspin_sub
 
          IF( descla( iss )%active_node > 0 ) xloc = x0(:,:,iss) * ccc
-
          CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
                            qbephi(:,:,iss), xloc, nx0, descla(iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )

@@ -29,7 +29,7 @@
       use smallbox_gvec, only: ngb
       use gvecw, only: ngw
       use gvect, only: gstart
-      use ions_base, only: na, nat, nax, nsp, rcmax
+      use ions_base, only: na, nat, nax, nsp, rcmax, ityp
       use cell_base, only: omega, alat, tpiba2
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : stdout, ionode, ionode_id
@@ -37,10 +37,10 @@
       use dener
       use constants,                only : pi, au_gpa
       USE io_files,                 ONLY : tmp_dir, prefix
-      use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, &
+      use uspp,                     only : nkb, nkbus, &
                                            betae => vkb, rhovan => becsum, &
-                                           deeq, qq_nt, nlcc_any
-      use uspp_param,               only : nh, nvb, ish
+                                           deeq, qq_nt, nlcc_any, indv_ijkb0
+      use uspp_param,               only : nh, upf
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
                                            conv_thr, passop, enever, itercg,c0old
       use ions_positions,           only : tau0
@@ -71,8 +71,8 @@
       integer :: nfi, nlam
       logical :: tfirst , tlast
       complex(dp) :: eigr(ngw,nat)
-      real(dp) :: bec(nhsa,nbspx)
-      real(dp) :: becdr(nhsa,nbspx,3)
+      real(dp) :: bec(nkb,nbspx)
+      real(dp) :: becdr(nkb,nbspx,3)
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
       real(dp) :: rhor(dfftp%nnr,nspin)
@@ -91,7 +91,7 @@
       complex(dp) :: c0( ngw, nbspx )
       complex(dp) :: cm( ngw, nbspx )
       complex(dp) :: phi( ngw, nbspx )
-      real(dp) :: dbec(nhsa,nbspx,3,3)
+      real(dp) :: dbec(nkb,nbspx,3,3)
 !
 !
       integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip, nrlx
@@ -132,7 +132,7 @@
    
       nrlx = MAXVAL(descla(:)%nrlx)
 
-      allocate(bec0(nhsa,nbspx),becm(nhsa,nbspx), becdrdiag(nhsa,nbspx,3))
+      allocate(bec0(nkb,nbspx),becm(nkb,nbspx), becdrdiag(nkb,nbspx,3))
       allocate (ave_ene(nbspx))
       allocate(c2(ngw),c3(ngw))
 
@@ -177,16 +177,16 @@
       !orthonormalize c0
 
       call calbec(1,nsp,eigr,c0,bec)
-      CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
+      CALL gram_bgrp( betae, bec, nkb, c0, ngw )
 
       !calculates phi for pcdaga
 
-      CALL calphi_bgrp( c0, SIZE(c0,1), bec, nhsa, betae, phi, nbsp )
+      CALL calphi_bgrp( c0, SIZE(c0,1), bec, nkb, betae, phi, nbsp )
 
       !calculates the factors for S and K inversion in US case
-      if(nvb.gt.0) then
-         allocate( s_minus1(nhsavb,nhsavb))
-         allocate( k_minus1(nhsavb,nhsavb))
+      if(nkbus>0) then
+         allocate( s_minus1(nkb,nkb))
+         allocate( k_minus1(nkb,nkb))
         call  set_x_minus1(betae,s_minus1,dumm,.false.)
         call  set_x_minus1(betae,k_minus1,ema0bg,.true.)
       else
@@ -381,18 +381,19 @@
            
            call mp_sum( gamma, intra_bgrp_comm )
            
-           if (nvb.gt.0) then
+           if (nkbus.gt.0) then
               do i=1,nbsp
-                 do is=1,nvb
-                    do iv=1,nh(is)
-                       do jv=1,nh(is)
-                          do ia=1,na(is)
-                             inl=ish(is)+(iv-1)*na(is)+ia
-                             jnl=ish(is)+(jv-1)*na(is)+ia
+                 do ia=1,nat
+                    is=ityp(ia)
+                    IF(upf(is)%tvanp) THEN
+                       do iv=1,nh(is)
+                          do jv=1,nh(is)
+                             inl = indv_ijkb0(ia) + iv
+                             jnl = indv_ijkb0(ia) + jv
                              gamma=gamma+ qq_nt(iv,jv,is)*becm(inl,i)*bec0(jnl,i)
                           end do
                        end do
-                    end do
+                    END IF
                  end do
               enddo
            endif
@@ -426,7 +427,7 @@
               enddo
               deallocate( fmat_ )
            enddo
-           if(nvb.gt.0) then
+           if(nkbus.gt.0) then
               do iss=1,nspin
                  nss=nupdwn(iss)
                  istart=iupdwn(iss)
@@ -443,16 +444,17 @@
                     do i=1,nss
                        jj = ip 
                        do j=1,nrl
-                          do is=1,nvb
-                             do iv=1,nh(is)
-                                do jv=1,nh(is)
-                                   do ia=1,na(is)
-                                      inl=ish(is)+(iv-1)*na(is)+ia
-                                      jnl=ish(is)+(jv-1)*na(is)+ia
+                          do ia=1,nat
+                             is=ityp(ia)
+                             IF( upf(is)%tvanp ) THEN
+                                do iv=1,nh(is)
+                                   do jv=1,nh(is)
+                                      inl = indv_ijkb0(ia) + iv
+                                      jnl = indv_ijkb0(ia) + jv
                                       gamma=gamma+ qq_nt(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,jj+istart-1)*fmat_(j,i)
                                    end do
                                 end do
-                             end do
+                             END IF
                           enddo
                           jj = jj + np_rot
                        enddo
@@ -565,7 +567,7 @@
         !orthonormalize
 
         call calbec(1,nsp,eigr,cm,becm)
-        CALL gram_bgrp( betae, becm, nhsa, cm, ngw )
+        CALL gram_bgrp( betae, becm, nkb, cm, ngw )
                
         !calculate energy
         if(.not.tens) then
@@ -628,7 +630,7 @@
         endif
 
         call calbec(1,nsp,eigr,cm,becm)
-        CALL gram_bgrp( betae, becm, nhsa, cm, ngw )
+        CALL gram_bgrp( betae, becm, nkb, cm, ngw )
 
         !test on energy: check the energy has really diminished
 
@@ -699,7 +701,7 @@
           c0=c0+spasso*passov*hi
           restartcg=.true.
           call calbec(1,nsp,eigr,c0,bec)
-          CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
+          CALL gram_bgrp( betae, bec, nkb, c0, ngw )
           ene_ok=.false.
           !if  ene1 << energy <  ene0; go to  ene1
         else if( (enever.ge.ene0).and.(ene0.gt.ene1)) then
@@ -709,7 +711,7 @@
           c0=c0+spasso*passov*hi
           restartcg=.true.!ATTENZIONE
           call calbec(1,nsp,eigr,c0,bec)
-          CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
+          CALL gram_bgrp( betae, bec, nkb, c0, ngw )
           !if ene > ene0,en1 do a steepest descent step
           ene_ok=.false.
         else if((enever.ge.ene0).and.(ene0.le.ene1)) then
@@ -725,7 +727,7 @@
             ! chenge the searching direction
             spasso=spasso*(-1.d0)
             call calbec(1,nsp,eigr,cm,becm)
-            CALL gram_bgrp( betae, bec, nhsa, cm, ngw )
+            CALL gram_bgrp( betae, bec, nkb, cm, ngw )
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
               call rhoofr(nfi,cm(:,:),irb,eigrb,becm,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
@@ -778,7 +780,7 @@
         if(.not. ene_ok) call calbec (1,nsp,eigr,c0,bec)
 
         !calculates phi for pc_daga
-        CALL calphi_bgrp( c0, SIZE(c0,1), bec, nhsa, betae, phi, nbsp )
+        CALL calphi_bgrp( c0, SIZE(c0,1), bec, nkb, betae, phi, nbsp )
   
         !=======================================================================
         !
@@ -922,7 +924,7 @@
            !
         end do
         
-        if(l_cprestart .and. .not.tens .and. nspin==1 .and. nvb<1) then
+        if(l_cprestart .and. .not.tens .and. nspin==1 .and. nkbus<1) then
 
 !if required project c0 on previous manifold of occupied states                                                                                    
 !NOT IMPLEMENTED YET FOR ENSEMBLE DFT AND NSPIN==2
@@ -955,7 +957,7 @@
             enddo
           
             call calbec (1,nsp,eigr,c0,bec)
-            CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
+            CALL gram_bgrp( betae, bec, nkb, c0, ngw )
             call calbec(1,nsp,eigr,c0,bec)
           
 
@@ -1030,7 +1032,7 @@
            !
            DEALLOCATE( lambda_dist )
            !
-           call nlsm2_bgrp( ngw, nhsa, eigr, c0, becdr, nbspx, nbsp )
+           call nlsm2_bgrp( ngw, nkb, eigr, c0, becdr, nbspx, nbsp )
            !
         endif
         !

@@ -55,7 +55,7 @@ MODULE efcalc
   END SUBROUTINE clear_nbeg
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE ef_force( fion, na, nsp, zv )
+  SUBROUTINE ef_force( fion, ityp, nat, zv )
     !--------------------------------------------------------------------------
     !
     ! ... Electric Feild for ions here
@@ -63,24 +63,16 @@ MODULE efcalc
     IMPLICIT NONE
     !
     REAL(DP) :: fion(:,:), zv(:)
-    INTEGER        :: na(:), nsp
-    INTEGER        :: is, ia, isa
+    INTEGER        :: ityp(:), nat
+    INTEGER        :: ia
     !
     IF ( wf_efield ) THEN
        !
-       isa = 0
-       !
-       DO is =1, nsp
+       DO ia = 1, nat
           !
-          DO ia = 1, na(is)
-             !
-             isa = isa + 1
-             !
-             fion(1,isa) = fion(1,isa) + efx * zv(is)
-             fion(2,isa) = fion(2,isa) + efy * zv(is)
-             fion(3,isa) = fion(3,isa) + efz * zv(is)
-             !
-          END DO
+          fion(1,ia) = fion(1,ia) + efx * zv(ityp(ia))
+          fion(2,ia) = fion(2,ia) + efy * zv(ityp(ia))
+          fion(3,ia) = fion(3,ia) + efz * zv(ityp(ia))
           !
        END DO
        !
@@ -618,14 +610,14 @@ MODULE wannier_subroutines
     USE wannier_module,        ONLY : wfx, wfy, wfz, ionx, iony, ionz, wfc
     USE electrons_base,        ONLY : nbsp, f
     USE cell_base,             ONLY : ainv, alat, at
-    USE ions_base,             ONLY : na, nsp, zv
+    USE ions_base,             ONLY : nsp, zv, ityp, nat
     USE io_global,             ONLY : ionode
     !
     IMPLICIT NONE
     !
     REAL(DP) :: enthal, tau0(:,:)
     REAL(DP) :: a1(3), a2(3), a3(3)
-    INTEGER        :: i, is, ia, isa
+    INTEGER        :: i, is, ia
     !
     a1(:) = at(:,1)/alat ; a2(:) = at(:,2)/alat ; a3(:) = at(:,3)/alat
     IF(wf_efield) THEN
@@ -649,18 +641,15 @@ MODULE wannier_subroutines
        iony=0.d0
        ionz=0.d0
        efe_ion=0.d0
-       isa = 0
-       DO is=1,nsp
-          DO ia=1,na(is)
-             isa = isa + 1
-             tt(1)=tau0(1,isa)
-             tt(2)=tau0(2,isa)
-             tt(3)=tau0(3,isa)
-             CALL pbc(tt,a1,a2,a3,ainv,tt)
-             ionx=ionx+zv(is)*tt(1)
-             iony=iony+zv(is)*tt(2)
-             ionz=ionz+zv(is)*tt(3)
-          END DO
+       DO ia=1,nat
+          is = ityp(ia)
+          tt(1)=tau0(1,ia)
+          tt(2)=tau0(2,ia)
+          tt(3)=tau0(3,ia)
+          CALL pbc(tt,a1,a2,a3,ainv,tt)
+          ionx=ionx+zv(is)*tt(1)
+          iony=iony+zv(is)*tt(2)
+          ionz=ionz+zv(is)*tt(3)
        END DO
        efe_ion=efe_ion+efx*ionx+efy*iony+efz*ionz
        IF( ionode ) THEN
@@ -691,7 +680,7 @@ MODULE wannier_subroutines
     USE gvecw,          ONLY : ngw
     USE control_flags,  ONLY : ndw
     USE cell_base,      ONLY : h, hold
-    USE uspp_param,     ONLY : nvb
+    USE uspp,           ONLY : nkbus
     USE cp_interfaces,  ONLY : writefile
     USE descriptors,    ONLY : la_descriptor
     !
@@ -729,7 +718,7 @@ MODULE wannier_subroutines
        CALL wf( calwf, c0, bec, eigr, eigrb, taub, irb, &
                 b1, b2, b3, utwf, what1, wfc, jwf, ibrav )
        !
-       IF ( nvb == 0 ) THEN
+       IF ( nkbus <= 0 ) THEN
           !
           CALL wf( calwf, cm, bec, eigr, eigrb, taub, irb, &
                    b1, b2, b3, utwf, what1, wfc, jwf, ibrav )

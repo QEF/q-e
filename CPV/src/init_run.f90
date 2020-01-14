@@ -18,7 +18,7 @@ SUBROUTINE init_run()
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
                                        force_pairing
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
-  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms
+  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, g2kin, g2kin_init
@@ -353,7 +353,7 @@ SUBROUTINE init_run()
   !
   !  Set center of mass for scaled coordinates
   !
-  CALL ions_cofmass( taus, amass, na, nsp, cdms )
+  CALL ions_cofmass( taus, amass, nat, ityp, cdms )
   !
   IF ( nbeg <= 0 .OR. lwf ) THEN
      !
