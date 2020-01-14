@@ -186,7 +186,6 @@ dos.o : ../../Modules/io_global.o
 dos.o : ../../Modules/kind.o
 dos.o : ../../Modules/mp_global.o
 dos.o : ../../Modules/mp_world.o
-dos.o : ../../Modules/noncol.o
 dos.o : ../../PW/src/pwcom.o
 dos.o : ../../PW/src/start_k.o
 dos.o : ../../PW/src/symm_base.o
@@ -424,7 +423,6 @@ plan_avg.o : ../../Modules/ions_base.o
 plan_avg.o : ../../Modules/kind.o
 plan_avg.o : ../../Modules/mp_global.o
 plan_avg.o : ../../Modules/mp_world.o
-plan_avg.o : ../../Modules/noncol.o
 plan_avg.o : ../../Modules/recvec.o
 plan_avg.o : ../../Modules/run_info.o
 plan_avg.o : ../../Modules/uspp.o

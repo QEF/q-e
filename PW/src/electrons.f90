@@ -22,7 +22,7 @@ SUBROUTINE electrons()
   USE fft_base,             ONLY : dfftp
   USE gvecs,                ONLY : doublegrid
   USE gvect,                ONLY : ecutrho
-  USE lsda_mod,             ONLY : nspin, magtot, absmag
+  USE lsda_mod,             ONLY : nspin, absmag
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon, edftd3, ef_up, ef_dw
@@ -36,8 +36,6 @@ SUBROUTINE electrons()
   USE extfield,             ONLY : tefield, etotefield
   USE wvfct,                ONLY : nbnd, wg, et
   USE klist,                ONLY : nks
-  USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
-                                   lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxbuff, &
                                    fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 

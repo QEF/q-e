@@ -61,9 +61,9 @@
     !! Q-point index
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points in selecq
-    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw2_restart(npool)
+    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
     !! Current position inside the file during writing
-    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw5_restart(npool)
+    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
     !! Current position inside the file during writing (electron)
 #if defined(__MPI)  
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
@@ -518,8 +518,8 @@
       lrepmatw5_restart(:) = 0
       lrepmatw2_restart(my_pool_id + 1) = lrepmatw2_merge 
       lrepmatw5_restart(my_pool_id + 1) = lrepmatw5_merge 
-      call mp_sum(lrepmatw2_restart, world_comm)
-      call mp_sum(lrepmatw5_restart, world_comm)
+      CALL mp_sum(lrepmatw2_restart, world_comm)
+      CALL mp_sum(lrepmatw5_restart, world_comm)
       !
       inv_tau_all_MPI = inv_tau_all
       inv_tau_allcb_MPI = inv_tau_allcb
@@ -902,7 +902,7 @@
     !----------------------------------------------------------------------------
     SUBROUTINE iter_merge()
     !----------------------------------------------------------------------------
-    USE kinds,            ONLY : DP, i8b
+    USE kinds,            ONLY : DP
     USE io_var,           ONLY : iunepmat_merge, iunepmat, iunepmatcb_merge,              &
                                  iunepmatcb, iunsparseq_merge, iunsparsek_merge,          &
                                  iunsparsej_merge,iunsparset_merge, iunepmatcb_merge,     &
@@ -1033,7 +1033,7 @@
             ENDDO
           ENDDO
         ENDIF
-        CLOSE(iunepmat, STATUS = 'delete')
+        CLOSE(iunepmat, STATUS = 'keep')
         IF (ich == 1) THEN
 #if defined(__MPI)
           tmp_sum = 0
@@ -1138,7 +1138,7 @@
             ENDDO
           ENDDO
         ENDIF
-        CLOSE(iunepmatcb, STATUS = 'delete')
+        CLOSE(iunepmatcb, STATUS = 'keep')
         IF (ich == 1) THEN
 #if defined(__MPI)
           tmp_sum = 0
@@ -1159,8 +1159,7 @@
             DO i2 = 1, my_pool_id + 1 
               tmp_sum = tmp_sum + lrepmatw5_tot(i2)
             ENDDO
-            lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-            & 4_MPI_OFFSET_KIND 
+            lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
 #else
@@ -1212,9 +1211,9 @@
     ! 
     IMPLICIT NONE
     !  
-    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw2_restart(npool)
+    INTEGER, INTENT(inout) :: lrepmatw2_restart(npool)
     !! To restart opening files
-    INTEGER(KIND = i8b), INTENT(inout) :: lrepmatw5_restart(npool)
+    INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
     !! To restart opening files
 #if defined(__MPI)
     INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
@@ -1261,15 +1260,15 @@
     IF (my_pool_id == ionode_id) THEN
       IF (exst) THEN
         OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old')
-        READ (iunrestart,*) 
-        READ (iunrestart,*) 
-        READ (iunrestart,*) 
-        READ (iunrestart,*) 
+        READ(iunrestart, *) 
+        READ(iunrestart, *) 
+        READ(iunrestart, *) 
+        READ(iunrestart, *) 
         DO ipool = 1, npool
-          READ (iunrestart,*) lrepmatw2_restart(ipool)
+          READ(iunrestart, *) lrepmatw2_restart(ipool)
         ENDDO
         DO ipool = 1, npool
-          READ (iunrestart,*) lrepmatw5_restart(ipool)
+          READ(iunrestart, *) lrepmatw5_restart(ipool)
         ENDDO
         CLOSE(iunrestart)
       ENDIF

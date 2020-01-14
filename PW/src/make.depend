@@ -305,7 +305,6 @@ compute_becsum.o : ../../Modules/io_files.o
 compute_becsum.o : ../../Modules/kind.o
 compute_becsum.o : ../../Modules/mp_bands.o
 compute_becsum.o : ../../Modules/mp_pools.o
-compute_becsum.o : ../../Modules/noncol.o
 compute_becsum.o : ../../Modules/paw_variables.o
 compute_becsum.o : ../../Modules/uspp.o
 compute_becsum.o : ../../Modules/wavefunctions.o
@@ -1249,7 +1248,6 @@ orbm_kubo.o : start_k.o
 ortho_wfc.o : ../../Modules/io_global.o
 ortho_wfc.o : ../../Modules/kind.o
 ortho_wfc.o : ../../Modules/mp_bands.o
-ortho_wfc.o : ../../Modules/noncol.o
 ortho_wfc.o : ../../UtilXlib/mp.o
 orthoatwfc.o : ../../Modules/becmod.o
 orthoatwfc.o : ../../Modules/control_flags.o
@@ -2072,7 +2070,6 @@ tabd.o : ../../Modules/kind.o
 tetra.o : ../../Modules/constants.o
 tetra.o : ../../Modules/io_global.o
 tetra.o : ../../Modules/kind.o
-tetra.o : ../../Modules/noncol.o
 tetra.o : pwcom.o
 transform_becsum_nc.o : ../../Modules/ions_base.o
 transform_becsum_nc.o : ../../Modules/kind.o
