@@ -1362,7 +1362,7 @@
         ! 
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
@@ -1375,7 +1375,7 @@
         ! 
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunsparseq, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
@@ -1395,7 +1395,7 @@
         !  
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunepmatcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
@@ -1408,7 +1408,7 @@
         ! 
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunsparseqcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE

@@ -234,41 +234,54 @@ CONTAINS
   END FUNCTION check_file_exist
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE delete_if_present( filename, in_warning )
-    !--------------------------------------------------------------------------
+  SUBROUTINE delete_if_present(filename, para)
+  !--------------------------------------------------------------------------
+  !!
+  !! Same as the delete_if_present subroutine but allows for other cores to 
+  !! enters (SP - Jan 2020). Ideally, both could be merged. 
+  !!  
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(len = *), INTENT(in) :: filename
+  !! Name of the file 
+  LOGICAL, OPTIONAL, INTENT(in) :: para
+  !! Optionally, the remove can be done by all the cores. 
+  ! 
+  ! Local variables
+  LOGICAL :: exst
+  !! Check if the file exist
+  INTEGER :: iunit
+  !! UNit of the file 
+  INTEGER, EXTERNAL :: find_free_unit
+  !! Find a unallocated unit
+  ! 
+  IF (PRESENT(para)) THEN
+    IF (.NOT. para) THEN
+      IF (.NOT. ionode) RETURN
+    ENDIF
+  ELSE ! Default if not present
+    IF (.NOT. ionode) RETURN
+  ENDIF
+  !
+  INQUIRE(FILE = filename, EXIST = exst)
+  !
+  IF (exst) THEN
     !
-    IMPLICIT NONE
+    iunit = find_free_unit()
     !
-    CHARACTER(LEN=*),  INTENT(IN) :: filename
-    LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
-    LOGICAL                       :: exst, warning
-    INTEGER                       :: iunit
-    INTEGER, EXTERNAL :: find_free_unit
+    OPEN(UNIT = iunit, FILE = filename, STATUS = 'OLD')
+    CLOSE(UNIT = iunit, STATUS = 'DELETE')
     !
-    IF ( .NOT. ionode ) RETURN
+    WRITE(UNIT = stdout, FMT = '(/,5X,"WARNING: ", A, " file was present; old file deleted.")') TRIM(filename)
     !
-    INQUIRE( FILE = filename, EXIST = exst )
-    !
-    IF ( exst ) THEN
-       !
-       iunit = find_free_unit()
-       !
-       warning = .FALSE.
-       !
-       IF ( PRESENT( in_warning ) ) warning = in_warning
-       !
-       OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
-       CLOSE( UNIT = iunit, STATUS = 'DELETE' )
-       !
-       IF ( warning ) &
-          WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
-               & " file was present; old file deleted")' ) filename
-       !
-    END IF
-    !
-    RETURN
-    !
+  ENDIF
+  !
+  RETURN
+  ! 
+  !--------------------------------------------------------------------------
   END SUBROUTINE delete_if_present
+  !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
   FUNCTION check_writable ( file_path, process_id ) RESULT ( ios )
