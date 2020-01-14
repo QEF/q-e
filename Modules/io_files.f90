@@ -234,46 +234,7 @@ CONTAINS
   END FUNCTION check_file_exist
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE delete_if_present( filename, in_warning )
-    !--------------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    CHARACTER(LEN=*),  INTENT(IN) :: filename
-    LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
-    LOGICAL                       :: exst, warning
-    INTEGER                       :: iunit
-    INTEGER, EXTERNAL :: find_free_unit
-    !
-    IF ( .NOT. ionode ) RETURN
-    !
-    INQUIRE( FILE = filename, EXIST = exst )
-    !
-    IF ( exst ) THEN
-       !
-       iunit = find_free_unit()
-       !
-       warning = .FALSE.
-       !
-       IF ( PRESENT( in_warning ) ) warning = in_warning
-       !
-       OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
-       CLOSE( UNIT = iunit, STATUS = 'DELETE' )
-       !
-       IF ( warning ) &
-          WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
-               & " file was present; old file deleted")' ) filename
-       !
-    END IF
-    !
-    RETURN
-    !
-  !--------------------------------------------------------------------------
-  END SUBROUTINE delete_if_present
-  !--------------------------------------------------------------------------
-  ! 
-  !--------------------------------------------------------------------------
-  SUBROUTINE delete_if_present_para(filename, in_warning)
+  SUBROUTINE delete_if_present(filename, para)
   !--------------------------------------------------------------------------
   !!
   !! Same as the delete_if_present subroutine but allows for other cores to 
@@ -284,18 +245,24 @@ CONTAINS
   !
   CHARACTER(len = *), INTENT(in) :: filename
   !! Name of the file 
-  LOGICAL, OPTIONAL, INTENT(in) :: in_warning
-  !! Optionally, Issue to Warning to the user 
+  LOGICAL, OPTIONAL, INTENT(in) :: para
+  !! Optionally, the remove can be done by all the cores. 
   ! 
   ! Local variables
   LOGICAL :: exst
   !! Check if the file exist
-  LOGICAL :: warning
-  !! Possible warning
   INTEGER :: iunit
   !! UNit of the file 
   INTEGER, EXTERNAL :: find_free_unit
   !! Find a unallocated unit
+  ! 
+  IF (PRESENT(para)) THEN
+    IF (.NOT. para) THEN
+      IF (.NOT. ionode) RETURN
+    ENDIF
+  ELSE ! Default if not present
+    IF (.NOT. ionode) RETURN
+  ENDIF
   !
   INQUIRE(FILE = filename, EXIST = exst)
   !
@@ -303,23 +270,17 @@ CONTAINS
     !
     iunit = find_free_unit()
     !
-    warning = .FALSE.
-    !
-    IF (PRESENT(in_warning)) warning = in_warning
-    !
     OPEN(UNIT = iunit, FILE = filename, STATUS = 'OLD')
     CLOSE(UNIT = iunit, STATUS = 'DELETE')
     !
-    IF (warning) THEN
-      WRITE(UNIT = stdout, FMT = '(/,5X,"WARNING: ", A, " file was present; old file deleted.")') TRIM(filename)
-    ENDIF
+    WRITE(UNIT = stdout, FMT = '(/,5X,"WARNING: ", A, " file was present; old file deleted.")') TRIM(filename)
     !
   ENDIF
   !
   RETURN
   ! 
   !--------------------------------------------------------------------------
-  END SUBROUTINE delete_if_present_para
+  END SUBROUTINE delete_if_present
   !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
