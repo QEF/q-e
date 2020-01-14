@@ -268,7 +268,59 @@ CONTAINS
     !
     RETURN
     !
+  !--------------------------------------------------------------------------
   END SUBROUTINE delete_if_present
+  !--------------------------------------------------------------------------
+  ! 
+  !--------------------------------------------------------------------------
+  SUBROUTINE delete_if_present_para(filename, in_warning)
+  !--------------------------------------------------------------------------
+  !!
+  !! Same as the delete_if_present subroutine but allows for other cores to 
+  !! enters (SP - Jan 2020). Ideally, both could be merged. 
+  !!  
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(len = *), INTENT(in) :: filename
+  !! Name of the file 
+  LOGICAL, OPTIONAL, INTENT(in) :: in_warning
+  !! Optionally, Issue to Warning to the user 
+  ! 
+  ! Local variables
+  LOGICAL :: exst
+  !! Check if the file exist
+  LOGICAL :: warning
+  !! Possible warning
+  INTEGER :: iunit
+  !! UNit of the file 
+  INTEGER, EXTERNAL :: find_free_unit
+  !! Find a unallocated unit
+  !
+  INQUIRE(FILE = filename, EXIST = exst)
+  !
+  IF (exst) THEN
+    !
+    iunit = find_free_unit()
+    !
+    warning = .FALSE.
+    !
+    IF (PRESENT(in_warning)) warning = in_warning
+    !
+    OPEN(UNIT = iunit, FILE = filename, STATUS = 'OLD')
+    CLOSE(UNIT = iunit, STATUS = 'DELETE')
+    !
+    IF (warning) THEN
+      WRITE(UNIT = stdout, FMT = '(/,5X,"WARNING: ", A, " file was present; old file deleted.")') TRIM(filename)
+    ENDIF
+    !
+  ENDIF
+  !
+  RETURN
+  ! 
+  !--------------------------------------------------------------------------
+  END SUBROUTINE delete_if_present_para
+  !--------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------
   FUNCTION check_writable ( file_path, process_id ) RESULT ( ios )
