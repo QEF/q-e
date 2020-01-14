@@ -477,7 +477,7 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, descla )
                  wrk2(ig,iv) = 2.0d0*cfact*dbeta(ig,iv,is,i,j)*eigr(ig,ia)
               end do
            end do
-           IF( ngw > 0 ) THEN
+           IF( ngw > 0 .AND. nh(is) > 0 ) THEN
               CALL dgemm( 'T', 'N', nh(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
                              c_bgrp, 2*ngw, 0.0d0, dwrk_bgrp(1,1), nh(is) )
            END IF
