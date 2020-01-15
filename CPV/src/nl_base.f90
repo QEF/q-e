@@ -96,7 +96,7 @@
               end do
               !
               inl = indv_ijkb0(ia) + 1
-              IF( ngw > 0 ) THEN
+              IF( ngw > 0 .AND. nh(is) > 0 ) THEN
                  CALL dgemm( 'T', 'N', nh(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nkb )
               END IF
             END IF
@@ -209,7 +209,7 @@
             end do
 
             inl = indv_ijkb0(ia) + 1
-            IF( ngw > 0 ) THEN
+            IF( ngw > 0 .AND. nh(is) > 0 ) THEN
                CALL dgemm( 'T', 'N', nh(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
                         c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( inl, 1, k ), nkb )
             END IF
