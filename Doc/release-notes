@@ -1,3 +1,20 @@
+New in dev branch:
+  * More FORD documentation
+  * Stress for noncolinear case
+  
+Fixed in dev branch:
+  * PW: Restart from interrupted calculations  simplified. As a side effect,
+    NEB restart now works again
+  * A few LIBXC glitches
+
+Incompatible changes in dev branch:
+  * Conversion from 1D FFT real-space index to 3D positions moved into a
+    small routine for all cases where such conversion is used
+  * CP: atomic positions are now in array tau(1:3,1:nat), information on the
+    type of atom is in array ityp(:). The logic is now the same as for all
+    other codes and there is no need to re-order atoms or to put ultrasoft
+    pseudopotentials first, non-conserving second.
+
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is
     now calculated on-the-fly rather than read from file. Thus, the kernel
