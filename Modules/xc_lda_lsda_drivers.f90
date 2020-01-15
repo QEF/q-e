@@ -109,7 +109,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
     SELECT CASE( sr_d )
     CASE( 1 )
        !
-       rho_lxc(:) = rho_in(:,1)
+       rho_lxc(:) = ABS(rho_in(:,1))
        !
     CASE( 2 )
        !
@@ -138,6 +138,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ! ... EXCHANGE
   IF ( is_libxc(1) ) THEN
      CALL xc_f90_func_init( xc_func, xc_info1, iexch, sv_d )
+       CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
        fkind_x  = xc_f90_info_kind( xc_info1 )
        CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ex_out(1), vx_lxc(1) )
      CALL xc_f90_func_end( xc_func )
@@ -146,6 +147,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   ! ... CORRELATION
   IF ( is_libxc(2) ) THEN
      CALL xc_f90_func_init( xc_func, xc_info2, icorr, sv_d )
+      CALL xc_f90_func_set_dens_threshold( xc_func, rho_threshold )
       CALL xc_f90_lda_exc_vxc( xc_func, length, rho_lxc(1), ec_out(1), vc_lxc(1) )
      CALL xc_f90_func_end( xc_func )
   ENDIF

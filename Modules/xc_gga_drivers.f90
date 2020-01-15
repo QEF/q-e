@@ -189,7 +189,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       DO k = 1, length
         ex(k) = ex_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
         v1x(k,1) = vx_rho(k)
-        v2x(k,1) = vx_sigma(k)
+        v2x(k,1) = vx_sigma(k)*2.d0
       ENDDO
     ELSE
       DO k = 1, length
@@ -232,7 +232,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
       DO k = 1, length
         ec(k) = ec_lxc(k) * rho_lxc(k) * SIGN(1.0_DP, rho(k,1))
         v1c(k,1) = vc_rho(k)
-        v2c(k,1) = vc_sigma(k)
+        v2c(k,1) = vc_sigma(k)*2.d0
       ENDDO
     ELSE
       DO k = 1, length
