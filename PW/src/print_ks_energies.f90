@@ -14,13 +14,14 @@ SUBROUTINE print_ks_energies_nonscf ( ef_scf, ef_scf_up, ef_scf_dw )
   ! ... The input Fermi energy from scf is passed as argument and printed as well
   !
   USE kinds,                ONLY : dp
+  USE control_flags,        ONLY : lbands
   IMPLICIT NONE
   !
   REAL(dp), INTENT(in) :: ef_scf, ef_scf_up, ef_scf_dw
   !
   CALL print_ks_only ( )
   !
-  CALL print_ks_ef_homolumo ( ef_scf, ef_scf_up, ef_scf_dw )
+  IF ( .NOT. lbands) CALL print_ks_ef_homolumo ( .true., ef_scf, ef_scf_up, ef_scf_dw )
   !
 END SUBROUTINE print_ks_energies_nonscf
 !
@@ -31,10 +32,11 @@ SUBROUTINE print_ks_energies( )
   ! ... printout of Kohn-Sham eigenvalues, Fermi energies, HOMO, LUMO if available
   !
   USE kinds,                ONLY : dp
+  USE control_flags,        ONLY : lbands
   !
   CALL print_ks_only ( )
   !
-  CALL print_ks_ef_homolumo ( 0.0_dp, 0.0_dp, 0.0_dp )
+  IF ( .NOT. lbands) CALL print_ks_ef_homolumo ( .false., 0.0_dp, 0.0_dp, 0.0_dp )
   !
 END SUBROUTINE print_ks_energies
 !
@@ -142,50 +144,46 @@ SUBROUTINE print_ks_only( )
 END SUBROUTINE print_ks_only
 !
 !----------------------------------------------------------------------------
-SUBROUTINE print_ks_ef_homolumo ( ef_scf, ef_scf_up, ef_scf_dw )
+SUBROUTINE print_ks_ef_homolumo ( print_ef_scf, ef_scf, ef_scf_up, ef_scf_dw )
   !----------------------------------------------------------------------------
   !
   USE kinds,                ONLY : dp
   USE constants,            ONLY : rytoev
   USE io_global,            ONLY : stdout
-  USE control_flags,        ONLY : lbands, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
   USE klist,                ONLY : two_fermi_energies, lgauss, ltetra
   USE ener,                 ONLY : ef, ef_up, ef_dw
   !
   IMPLICIT NONE
+  LOGICAL, INTENT(in) :: print_ef_scf
   REAL(dp), INTENT(in) :: ef_scf, ef_scf_up, ef_scf_dw
   REAL(dp) :: ehomo, elumo ! highest occupied and lowest unoccupied levels
   !
   ! ... print HOMO/Top of the VB and LUMO/Bottom of the CB, or E_Fermi
   !
-  IF ( .NOT. lbands ) THEN
+  IF ( lgauss .OR. ltetra ) THEN
      !
-     IF ( lgauss .OR. ltetra ) THEN
-        !
-        ! ... presumably a metal: print Fermi energy
-        !
-        IF ( two_fermi_energies ) THEN
-           WRITE( stdout, 9041 ) ef_up*rytoev, ef_dw*rytoev
-           IF ( .NOT. lscf ) &
-                WRITE( stdout, 9051 ) ef_scf_up*rytoev, ef_scf_dw*rytoev
-        ELSE
-           WRITE( stdout, 9040 ) ef*rytoev
-           IF ( .NOT. lscf ) WRITE( stdout, 9050 ) ef_scf*rytoev
-        END IF
-        !
-     ELSE IF ( .NOT. one_atom_occupations ) THEN
-        !
-        ! ... presumably not a metal: print HOMO (and LUMO if available)
-        !
-        CALL get_homo_lumo (ehomo, elumo)
-        !
-        IF ( elumo < 1d+6) THEN
-           WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
-        ELSE
-           WRITE( stdout, 9043 ) ehomo*rytoev
-        END IF
-        !
+     ! ... presumably a metal: print Fermi energy
+     !
+     IF ( two_fermi_energies ) THEN
+        WRITE( stdout, 9041 ) ef_up*rytoev, ef_dw*rytoev
+        IF ( print_ef_scf ) &
+             WRITE( stdout, 9051 ) ef_scf_up*rytoev, ef_scf_dw*rytoev
+     ELSE
+        WRITE( stdout, 9040 ) ef*rytoev
+        IF ( print_ef_scf ) WRITE( stdout, 9050 ) ef_scf*rytoev
+     END IF
+     !
+  ELSE IF ( .NOT. one_atom_occupations ) THEN
+     !
+     ! ... presumably not a metal: print HOMO (and LUMO if available)
+     !
+     CALL get_homo_lumo (ehomo, elumo)
+     !
+     IF ( elumo < 1d+6) THEN
+        WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+     ELSE
+        WRITE( stdout, 9043 ) ehomo*rytoev
      END IF
      !
   END IF
