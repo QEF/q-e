@@ -273,7 +273,7 @@ CONTAINS
     OPEN(UNIT = iunit, FILE = filename, STATUS = 'OLD')
     CLOSE(UNIT = iunit, STATUS = 'DELETE')
     !
-    WRITE(UNIT = stdout, FMT = '(/,5X,"WARNING: ", A, " file was present; old file deleted.")') TRIM(filename)
+    WRITE(UNIT = stdout, FMT = '(/,5X,"File ", A, " deleted, as requested")') TRIM(filename)
     !
   ENDIF
   !

@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.5MaX}
+\def\version{6.5+}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -304,14 +304,19 @@ or the file License in the distribution).
 \label{SubSec:Download}
 
 \qe\ is distributed in source form, but selected binary packages
-are also available.
+and virtual machines are also available.
 Stable and development releases of the \qe\ source package
 (current version is \version), as well as available binary
 packages, can be downloaded from the links listed in the
 ``Download'' section of \texttt{www.quantum-espresso.org}.
 
-Uncompress and unpack compressed archives in the typical .tar.gz
-format using the command:
+The Quantum Mobile virtual machine for Windows/Mac/Linux/Solaris
+provides a complete Ubuntu Linux environment, containing \qe\ and
+more. Link and description in
+\texttt{https://www.materialscloud.org/work/quantum-mobile}.
+
+For source compilation, uncompress and unpack compressed archives
+in the typical .tar.gz format using the command:
 \begin{verbatim}
      tar zxvf qe-X.Y.Z.tar.gz
 \end{verbatim}
@@ -323,7 +328,7 @@ doesn't recognize the "z" flag:
 \end{verbatim}
 A directory \texttt{qe-X.Y.Z/} will be created.
 
-Additional packages that are not included in the base distribution
+A few additional packages that are not included in the base distribution
 will be downloaded on demand at compile time, using \texttt{make}
 (see Sec.\ref{SubSec:Compilation}).
 Note however that this will work only if the computer you are
@@ -557,7 +562,7 @@ for NEC SX6 on a PC). Currently supported architectures are:
 \texttt{ppc64}&   Linux PowerPC machines, 64 bits\\
 \texttt{ppc64-mn}&as above, with IBM xlf compiler\\
 \texttt{ppc64-bg}&IBM BlueGene\\
-\texttt{arm}     &ARM machines (with gfortran)
+\texttt{arm}     &ARM machines (with gfortran or armflang)
 \end{tabular}\\
 {\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1.
 Cray Unicos machines, SGI
@@ -615,8 +620,8 @@ The following options are available for the CUDA Fortran accelerated version
 \end{tabular}\\
 
 Please note that in order to compile the CUDA Fortran code you need ...
-the CUDA Fortran code (it is not yet available in the main distribution)! 
-you also need a recent version of the PGI Fortran compilers (at least 17.4).
+the CUDA Fortran code (it is still separated from the main distribution)! 
+you also need a recent version of the PGI Fortran compiler.
 OpenMP must be enabled,
 and you may want to use a CUDA-aware MPI distribution to optimize the data
 transfer between the processes.
@@ -1001,65 +1006,6 @@ and error files. A frequent source of trouble is complex function
 or replace \texttt{zdotc} with fortran intrinsic \texttt{dot\_product}.
 \end{itemize}
 
-\subsubsection{Intel Xeon Phi}
-For Intel Xeon CPUs with Phi coprocessor, there are three ways of compiling:
-\begin{itemize}
-\item {\em offload} mode, executed on main CPU and offloaded onto coprocessor
-"automagically";
-\item {\em native} mode, executed completely on coprocessor;
-\item {\em symmetric} mode, requiring creation of both binaries.
-\end{itemize}
-"You can take advantage of the offload mode using the \texttt{libxphi}
-library. This library offloads the BLAS/MKL functions on the Xeon Phi
-platform hiding the latency times due to the communication. You just
-need to compile this library and then to link it dynamically. The
-library works with any version of QE. Libxphi is available from
-\texttt{https://github.com/cdahnken/libxphi}. Some documentation is
-available therein.
-
-Instead, if you want to compile a native version of QE, you just need
-to add the \texttt{-mmic} flag and cross compile. If you want to use
-the symmetric mode, you need to compile twice: with and without the
-\texttt{-mmic} flag". "[...] everything, i.e. code+libraries, must be
-cross-compiled with the \texttt{-mmic} flag. In my opinion, it's pretty
-unlikely that native mode can outperform the execution on the standard
-Xeon cpu. I strongly suggest to use the Xeon Phi in offload mode, for now"
-(info by Fabio Affinito, March 2015).
-
-\subsubsection{Cray machines}
-
-(This section is likely obsolete)
-
-For Cray XE machines:
-\begin{verbatim}
-$ module swap PrgEnv-cray PrgEnv-pgi
-$ ./configure --enable-openmp --enable-parallel --with-scalapack
-$ vim make.inc
-\end{verbatim}
-then manually add \texttt{-D\_\_IOTK\_WORKAROUND1} at the end of \texttt{DFLAGS} line.
-
-''Now, despite what people can imagine, every CRAY machine deployed can
-have different environment. For example on the machine I usually use
-for tests [...] I do have to unload some modules to make QE running
-properly. On another CRAY [...] there is also Intel compiler as option
-and the system is slightly different compared to the other.
-So my recipe should work, 99\% of the cases.'' (info by Filippo Spiga)
-
-For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else
-\configure\ will not recognize the Cray-specific software environment.
-
-Older Cray machines: T3D, T3E, X1, are no longer supported.
-
-\subsubsection{IBM BlueGene}
-
-The current \configure\ was working on the machines at CINECA and at J\"ulich.
-For other machines, you may need something like
-\begin{verbatim}
-  ./configure ARCH=ppc64-bg BLAS_LIBS=...  LAPACK_LIBS=... \
-              SCALAPACK_DIR=... BLACS_DIR=..."
-\end{verbatim}
-where the various *\_LIBS and *\_DIR "suggest" where the various libraries
-are located.
 
 \subsubsection{Linux PC}
 
@@ -1235,6 +1181,70 @@ Gfortran information and binaries for Mac OS-X here:
 Mysterious crashes in \texttt{zdotc} are due to a known incompatibility of 
 complex functions with some optimized BLAS. See the "Linux PCs with gfortran" 
 paragraph.
+
+\subsection{Cray machines}
+
+For Cray XE machines:
+\begin{verbatim}
+$ module swap PrgEnv-cray PrgEnv-pgi
+$ ./configure --enable-openmp --enable-parallel --with-scalapack
+$ vim make.inc
+\end{verbatim}
+then manually add \texttt{-D\_\_IOTK\_WORKAROUND1} at the end of \texttt{DFLAGS} line.
+
+''Now, despite what people can imagine, every CRAY machine deployed can
+have different environment. For example on the machine I usually use
+for tests [...] I do have to unload some modules to make QE running
+properly. On another CRAY [...] there is also Intel compiler as option
+and the system is slightly different compared to the other.
+So my recipe should work, 99\% of the cases.'' (info by Filippo Spiga)
+
+For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else
+\configure\ will not recognize the Cray-specific software environment.
+
+Older Cray machines: T3D, T3E, X1, are no longer supported.
+
+\subsubsection{Obsolescent architectures}
+
+\paragraph{Intel Xeon Phi}
+
+For Intel Xeon CPUs with Phi coprocessor, see this link:\\
+\texttt{https://software.intel.com/en-us/articles/explicit-offload-for-quantum-espresso}.
+
+There are three ways of compiling:
+\begin{itemize}
+\item {\em offload} mode, executed on main CPU and offloaded onto coprocessor
+"automagically";
+\item {\em native} mode, executed completely on coprocessor;
+\item {\em symmetric} mode, requiring creation of both binaries.
+\end{itemize}
+"You can take advantage of the offload mode using the \texttt{libxphi}
+library. This library offloads the BLAS/MKL functions on the Xeon Phi
+platform hiding the latency times due to the communication. You just
+need to compile this library and then to link it dynamically. The
+library works with any version of QE. Libxphi is available from
+\texttt{https://github.com/cdahnken/libxphi}. Some documentation is
+available therein.
+
+Instead, if you want to compile a native version of QE, you just need
+to add the \texttt{-mmic} flag and cross compile. If you want to use
+the symmetric mode, you need to compile twice: with and without the
+\texttt{-mmic} flag". "[...] everything, i.e. code+libraries, must be
+cross-compiled with the \texttt{-mmic} flag. In my opinion, it's pretty
+unlikely that native mode can outperform the execution on the standard
+Xeon cpu. I strongly suggest to use the Xeon Phi in offload mode, for now"
+(info by Fabio Affinito, March 2015).
+
+\paragraph{IBM BlueGene}
+
+The current \configure\ was working on the machines at CINECA and at J\"ulich.
+For other machines, you may need something like
+\begin{verbatim}
+  ./configure ARCH=ppc64-bg BLAS_LIBS=...  LAPACK_LIBS=... \
+              SCALAPACK_DIR=... BLACS_DIR=..."
+\end{verbatim}
+where the various *\_LIBS and *\_DIR "suggest" where the various libraries
+are located.
 
 \newpage
 
