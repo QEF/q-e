@@ -7,7 +7,7 @@ Fixed in dev branch:
     NEB restart now works again
   * A few LIBXC glitches
   * Fermi energy incorrectly written to xml file in 'bands' calculation
-    (did not affect results, just band plottingxZZ)
+    (did not affect results, just Fermi energy position in band plotting)
 
 Incompatible changes in dev branch:
   * Conversion from 1D FFT real-space index to 3D positions moved into a
@@ -41,7 +41,7 @@ Known problems in 6.5 branch:
 
 Problems fixed in 6.5 branch :
   * at2celldm wasn't properly converting vectors into celldm parameters
-    in the ibtrav=91 case (Tone)
+    in the ibrav=91 case (Tone)
   * PP: plot_num=1 wasn't working any longer as expected due to forgotten 
     local potential term (noticed by Manoar Hossain, NISER)
   * DOS calculation wasn't honoring "bz_sum='smearing'" if the nscf 
