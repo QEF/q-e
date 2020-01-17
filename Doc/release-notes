@@ -6,6 +6,8 @@ Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
     NEB restart now works again
   * A few LIBXC glitches
+  * Fermi energy incorrectly written to xml file in 'bands' calculation
+    (did not affect results, just band plottingxZZ)
 
 Incompatible changes in dev branch:
   * Conversion from 1D FFT real-space index to 3D positions moved into a
