@@ -3,4 +3,4 @@
 	url = https://github.com/Reference-LAPACK/lapack.git
 [submodule "external/fox"]
 	path = external/fox
-	url = https://github.com/andreww/fox.git
+	url = https://github.com/pietrodelugas/fox.git
