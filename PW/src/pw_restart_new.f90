@@ -980,10 +980,11 @@ MODULE pw_restart_new
            ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
       CALL mp_bcast(ierr, ionode_id, intra_image_comm)
       IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
+      ! ierr = -1 means that input_obj was not read: do not broadcast it
+      IF ( ierr == 0 ) CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
       CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
       CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
       CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
-      CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
       !
       ! ... Now read all needed variables from xml objects
       !
