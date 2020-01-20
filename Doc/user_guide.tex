@@ -592,8 +592,20 @@ and the following optional packages:\\
 	                          (default: no)\\
 \texttt{--with-elpa-version}& Specify ELPA version, only year (2015 or 2016,
 	                          default: 2016)\\
-\texttt{--with-hdf5}&  (no $|$ \texttt{<path>}) Write portable binary files using HDF5.\\
-   & A valid \texttt{<path>} for HDF5 library must be specified (default: no)\\
+	\texttt{--with-hdf5}&  (no $|$ $|$ yes $|$ \texttt{<path>}) \\
+	                    & Use HDF5, if yes configure assumes    \\
+                            & that a valid installation with version >= 1.8.16 is \\
+                            & available, and h5cc and h5fc are in the default   \\ 
+                            & executable search path; <path> must be the root   \\ 
+                            & folder of a standalone hdf5 installation. (default: no). \\
+\texttt{--with-hdf5-libs=}  & Specify the linker options needed by HDF5 when  \\
+                            & configure fails to detect them by itself. As value \\ 
+                            & to specify here is usually composed by many \\ 
+                            & substrings it should be enclosed by quotes so to \\
+                            & prevent configure failures. (default: no)   \\
+\texttt{--with-hdf5-include}& Specify full path the HDF5 include folder containing \\
+                            & module and headers files. Use it if configure fails \\ 
+                            & to detect the path by itself. (default: no)\\ 
 \texttt{--with-libxc}        & Link the \libxc\ library (default:no) \\
 \texttt{--with-libxc-prefix} & directory where \libxc\ is installed \\
 \texttt{--with-libxc-include}& directory where \libxc\ Fortran headers reside\\
@@ -730,26 +742,26 @@ developed for \qe{} by NVidia and distributed at \texttt{https://github.com/NVID
 The HDF5 library (\texttt{https://www.hdfgroup.org/downloads/hdf5/})
 can be used to perform binary I/O using the  HDF5 format.  
 
-The user may need to install this library, compiling it
-with options \texttt{--enable-fortran}, \texttt{--enable-fortran2003},
+The user may need to install \texttt{HDF5}  library, in this case have care to compile it
+with the options \texttt{--enable-fortran}, \texttt{--enable-fortran2003},
 and \texttt{--enable-parallel} (see below). These options must be passed
 to the \configure\ script of the library, not of \qe. 
 
 One can use either the \texttt{1.10} or \texttt{1.8} version of the library. 
-For the latter the user has to download a version at least as new as \texttt{1.8.16}.    
+For the latter the user has to download a version at least as new as \texttt{1.8.16}.  
 
-The path to the root directory of the library (the one containing \texttt{bin/},
-\texttt{include/} and \texttt{lib/} directories) has to be passed to the
-\configure\ script of \qe\ via the \texttt{--with-hdf5=...} option.
+To use the \texttt{HDF5} is usually sufficient to specify the path to the fortran compiler wrapper for
+ \texttt{HDF5} (\texttt{h5fc} of \texttt{h5pfc} with the \texttt{--with-hdf5=} option of configure. If the wrapper is in the default path just use \texttt{--with-hdf5=yes}.  
+ The configure script is usually able to extract the 
+ linker options and the include directory path from the output of the wrapper. If it fails the user can
+ use configure options \texttt{--with-hdf5-libs=<options>} and \texttt{--with-hdf5-include=<path>} for the linker options and include path respectively. 
+These two latter options are often  needed when using the HDF5 packages 
+provided by many LINUX distributions. In this case you may first try  first the \texttt{--with-hdf5=yes} 
+option. If if it fails just type the command  \texttt{h5fc --show} ( or \texttt{h5pfc} if you are using paralel HDF5), the command will printout the linker and include options to be passed manually to the configure script.
 
-It is possible to use a library with disabled parallelism, 
-but one has to add manually the flag \texttt{-D\_\_HDF5\_SERIAL}
-to the \texttt{MANUAL\_DFLAGS} in the \texttt{make.inc} file. 
+The configure script is able to determine whether one is linking to a serial or parallel HDF5 library, and will  set the flag \texttt{-D\_\_HDF5\_SERIAL} in the \texttt{make.inc} accordingly. 
 
-The HDF5 packages provided by many LINUX distributions may also work,
-but the configure script fails if includes and libraries are not placed
-under the same root directory. In this case the user should manually set
-the correct paths in the \texttt{make.inc} file.
+
 
 \paragraph{LIBXC}
 \qe\ can use the \libxc\ library. You need to install \libxc\ first, then:
