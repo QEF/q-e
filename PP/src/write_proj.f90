@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2019 Quantum ESPRESSO group
+! Copyright (C) 2001-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,8 +13,7 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   USE io_files,         ONLY : iunpun, restart_dir
   USE basis,            ONLY : natomwfc
   USE klist,            ONLY : wk, xk, nkstot, nelec
-  USE noncollin_module, ONLY : noncolin, nspin_lsda
-  USE lsda_mod,         ONLY : nspin, isk
+  USE lsda_mod,         ONLY : nspin
   USE ener,             ONLY : ef
   USE wvfct,            ONLY : et, nbnd
   USE FoX_wxml,         ONLY : xmlf_t, xml_openfile, xml_close, &
@@ -24,9 +23,11 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   CHARACTER(*),  INTENT(IN) :: filename
   COMPLEX(DP),   INTENT(IN) :: projs(natomwfc,nbnd,nkstot)
   LOGICAL,       INTENT(IN) :: lwrite_ovp
-  COMPLEX(DP),   INTENT(IN) :: ovps(natomwfc,natomwfc,nkstot)
+  REAL(DP),      INTENT(IN) :: ovps(2*natomwfc,natomwfc,nkstot)
+  ! slightly dirty trick to make ovps a real array
   !
-  INTEGER :: ik, ik_eff, is, ia, ierr, num_k_points
+  INTEGER :: ik, ik_eff, is, nwfc, ibnd, ierr, nspin_lsda, num_k_points
+  REAL(DP):: proj_tmp(2*nbnd) 
   TYPE(xmlf_t) :: xf
   !
   !
@@ -36,6 +37,8 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   !
   IF ( ierr /= 0 ) RETURN
   !
+  nspin_lsda = 1
+  IF ( nspin == 2 ) nspin_lsda = 2
   num_k_points = nkstot / nspin_lsda
   !
   ! <PROJECTIONS>
@@ -46,12 +49,11 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   !
   CALL xml_newElement (xf, "HEADER")
   CALL xml_addAttribute (xf, "NUMBER_OF_BANDS", nbnd)
-  CALL xml_addAttribute (xf, "NUMBER_OF_K-POINTS", num_k_points )
+  CALL xml_addAttribute (xf, "NUMBER_OF_K-POINTS", num_k_points)
   CALL xml_addAttribute (xf, "NUMBER_OF_SPIN_COMPONENTS", nspin)
-  CALL xml_addAttribute (xf, "NON-COLINEAR_CALCULATION",noncolin)
   CALL xml_addAttribute (xf, "NUMBER_OF_ATOMIC_WFC", natomwfc)
-  CALL xml_addAttribute (xf, "NUMBER_OF_ELECTRONS", nelec )
-  CALL xml_addAttribute (xf, "FERMI_ENERGY", ef )
+  CALL xml_addAttribute (xf, "NUMBER_OF_ELECTRONS", nelec)
+  CALL xml_addAttribute (xf, "FERMI_ENERGY", ef)
   CALL xml_endElement (xf, "HEADER")
   !
   ! </HEADER>
@@ -71,11 +73,16 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
         CALL xml_endElement (xf, "E" )
         !
         CALL xml_newElement (xf, "PROJS")
-        DO ia = 1, natomwfc
+        DO nwfc = 1, natomwfc
            CALL xml_newElement (xf, "ATOMIC_WFC")
-           CALL xml_addAttribute (xf, "index", ia )
+           CALL xml_addAttribute (xf, "index", nwfc )
            CALL xml_addAttribute (xf, "spin", is )
-           CALL xml_addCharacters (xf, projs(ia,:,ik_eff) )
+           ! not-so-smart way of copying complex into double
+           DO ibnd = 1, nbnd
+              proj_tmp(2*ibnd-1) = DBLE( projs(nwfc,ibnd,ik_eff) )
+              proj_tmp(2*ibnd  ) =AIMAG( projs(nwfc,ibnd,ik_eff) )
+           END DO
+           CALL xml_addCharacters (xf, proj_tmp )
            CALL xml_endElement (xf, "ATOMIC_WFC" )
         ENDDO
         CALL xml_endElement (xf, "PROJS" )
