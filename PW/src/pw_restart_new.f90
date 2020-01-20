@@ -979,9 +979,14 @@ MODULE pw_restart_new
       IF (ionode) CALL qexsd_readschema ( filename, &
            ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
       CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-      IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
-      ! ierr = -1 means that input_obj was not read: do not broadcast it
-      IF ( ierr == 0 ) CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
+      IF ( ierr > 0 ) THEN
+         CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
+      ELSE IF ( ierr < 0 ) THEN
+         input_obj%tagname = "not_read"
+         ! ierr = -1 means that input_obj was not read: do not broadcast it
+      ELSE
+         CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
+      END IF
       CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
       CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
       CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
