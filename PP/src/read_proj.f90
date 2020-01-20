@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE read_proj_mod
+MODULE read_proj
   !-----------------------------------------------------------------------
 CONTAINS
   !
@@ -163,4 +163,4 @@ CONTAINS
   !
 END subroutine read_xml_proj
 
-END MODULE read_proj_mod
+END MODULE read_proj

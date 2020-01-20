@@ -53,7 +53,7 @@ PROGRAM molecularpdos
   USE mp_global,   ONLY : mp_startup
   USE environment, ONLY : environment_start, environment_end
   !
-  USE read_proj_mod, ONLY: read_xml_proj
+  USE read_proj,   ONLY: read_xml_proj
   !
   IMPLICIT NONE
   !
@@ -137,9 +137,11 @@ PROGRAM molecularpdos
      CALL read_xml_proj ( xmlfile_full, ios, natomwfc_full, nbnd_full, &
           nkstot_full, nspin_full, nelec_full, ef_full, xk_full, wk_full, &
           et_full,  projs_full)
+     IF (ios /= 0) CALL errore ('molecularpdos', 'reading xml file (full)', abs (ios) )
      CALL read_xml_proj ( xmlfile_part, ios, natomwfc_part, nbnd_part, &
           nkstot_part, nspin_part, nelec_part, ef_part, xk_part, wk_part, &
           et_part,  projs_part)
+     IF (ios /= 0) CALL errore ('molecularpdos', 'reading xml file (part)', abs (ios) )
      !
      ! Defaults ranges are maximum ones
      IF (i_atmwfc_end_full<1) i_atmwfc_end_full=natomwfc_full
