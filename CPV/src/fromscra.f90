@@ -149,7 +149,7 @@ SUBROUTINE from_scratch( )
     velh = 0.0d0
     fion = 0.0d0
     !
-    IF ( tv0rd .OR. tcap .AND. tfor .AND. .NOT. tcap ) THEN
+    IF ( tv0rd .AND. tfor .AND. .NOT. tcap ) THEN
        !
        ! ... vel_srt=starting velocities, read from input, are brough to
        ! ... scaled axis and copied into array vels. Since velocites are
