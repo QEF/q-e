@@ -374,8 +374,8 @@
                          //' compatible with random velocity initialization',1)
            ELSE IF(tcp) THEN
              WRITE( stdout,555) tempw,tolp
-           ELSE IF(tcap) THEN
-             WRITE( stdout,560) tempw,tolp
+           !ELSE IF(tcap) THEN  !tcap is random velocity initialization!
+           !  WRITE( stdout,560) tempw,tolp
            ELSE IF(tnosep) THEN
              WRITE( stdout,595)
            ELSE
