@@ -725,7 +725,7 @@ MODULE cp_restart_new
       !   
       CALL destroy (root) 
       !
-      ! objects filled, not get variables from objects
+      ! objects filled, now get variables from objects
       !
       CALL qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version) 
       !
