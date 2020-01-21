@@ -12,11 +12,13 @@ SUBROUTINE from_scratch( )
     USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
                                      tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
-                                     tsde, force_pairing
-    USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm
-    USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel, ityp
+                                     tsde, force_pairing, tcap
+    USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm, &
+                                     taum 
+    USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel, ityp, &
+                                     amass, randvel
     USE ions_base,            ONLY : cdmi, nat, iforce
-    USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
+    USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp, tempw
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
                                      cell_force, velh, at, alat
@@ -147,7 +149,7 @@ SUBROUTINE from_scratch( )
     velh = 0.0d0
     fion = 0.0d0
     !
-    IF ( tv0rd .AND. tfor ) THEN
+    IF ( tv0rd .AND. tfor .AND. .NOT. tcap ) THEN
        !
        ! ... vel_srt=starting velocities, read from input, are brough to
        ! ... scaled axis and copied into array vels. Since velocites are
@@ -155,9 +157,16 @@ SUBROUTINE from_scratch( )
        ! ... to tausm=tau(t)-v*delta t so that the Verlet algorithm will 
        ! ... start with the correct velocity
        !
+
        CALL r_to_s( vel, vels, nat, ainv )
        tausm(:,:) =  taus(:,:) - vels(:,:)*delt
        velsm(:,:) =  vels(:,:)
+    ELSE IF (tcap .AND. tfor ) THEN
+       WRITE( stdout, '(" Randomizing ions velocities according to tempw (INPUT VELOCITIES DISCARDED) ")')
+       CALL randvel( tempw, tau0 , taum, nat, ityp, iforce, amass, delt )
+       CALL r_to_s( taum, tausm, nat, ainv )
+       vels(:,:) = (taus(:,:)-tausm(:,:))/delt
+       velsm(:,:) = vels(:,:)
     ELSE
        vels = 0.D0
        tausm = taus
@@ -285,7 +294,8 @@ SUBROUTINE from_scratch( )
       xnhpm = 0.0d0
       vnhp  = 0.0d0
       fionm = 0.0d0
-      !
+
+      ! Is this call useless and wrong?
       CALL ions_vel( vels, taus, tausm, delt )
       !
       xnhh0(:,:) = 0.0d0
