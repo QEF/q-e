@@ -165,9 +165,9 @@ SUBROUTINE atomic_rho( rhoa, nspina )
   !
   ! ... local variables
   !
-  REAL(DP) :: rhoneg, rhoima
+  REAL(DP) :: rhoneg
   COMPLEX(DP), allocatable :: rhocg (:,:)
-  INTEGER :: ir, is, ig, igl, nt, ndm
+  INTEGER :: ir, is
   !
   ! allocate work space 
   !
@@ -183,24 +183,16 @@ SUBROUTINE atomic_rho( rhoa, nspina )
   !
   DO is = 1, nspina
      !
-     ! we check that everything is correct
+     ! check on negative charge
      !
      rhoneg = 0.0_dp
-     rhoima = 0.0_dp
      DO ir = 1, dfftp%nnr
         rhoneg = rhoneg + MIN (0.0_dp,  DBLE (rhoa (ir,is)) )
-        rhoima = rhoima + abs (AIMAG (rhoa (ir,is) ) )
      ENDDO
      rhoneg = omega * rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
-     rhoima = omega * rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
      !
      CALL mp_sum(  rhoneg, intra_bgrp_comm )
-     CALL mp_sum(  rhoima, intra_bgrp_comm )
      !
-     IF ( rhoima > 1.0d-4 ) THEN
-        WRITE( stdout,'(5x,"Check: imaginary charge or magnetization=",&
-          & f12.6," (component ",i1,") set to zero")') rhoima, is
-     END IF
      IF ( (is == 1) .OR. lsda ) THEN
         !
         IF ( (rhoneg < -1.0d-4) ) THEN
@@ -214,13 +206,8 @@ SUBROUTINE atomic_rho( rhoa, nspina )
         END IF
      END IF
      !
-     ! set imaginary terms to zero - negative terms are not set to zero
-     ! because it is basically useless to do it in real space: negative
-     ! charge will re-appear when Fourier-transformed back and forth
-     !
-     DO ir = 1, dfftp%nnr
-        rhoa (ir, is) =  CMPLX ( DBLE(rhoa(ir,is)), 0.0_dp )
-     END DO
+     ! it is useless to set negative terms to zero in real space: 
+     ! negative charge will re-appear when Fourier-transformed back and forth
      !
   ENDDO
 
