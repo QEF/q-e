@@ -132,6 +132,8 @@ SUBROUTINE setup()
   IF ( dft_is_hybrid() ) THEN
      IF ( lberry ) CALL errore( 'setup ', &
                          'hybrid XC not allowed in Berry-phase calculations',1 )
+     IF ( lelfield ) CALL errore( 'setup ', &
+                         'hybrid XC and electric fields untested',1 )
      IF ( allfrac ) CALL errore( 'setup ', &
                          'option use_all_frac incompatible with hybrid XC', 1 )
      IF (.NOT. lscf) CALL errore( 'setup ', &
