@@ -149,11 +149,10 @@ SUBROUTINE atomic_rho( rhoa, nspina )
   USE cell_base,            ONLY : tpiba, omega
   USE control_flags,        ONLY : gamma_only
   USE lsda_mod,             ONLY : lsda
-  USE wavefunctions,        ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : invfft
+  USE fft_rho,              ONLY : rho_g2r
   !
   IMPLICIT NONE
   !
@@ -170,7 +169,7 @@ SUBROUTINE atomic_rho( rhoa, nspina )
   COMPLEX(DP), allocatable :: rhocg (:,:)
   INTEGER :: ir, is, ig, igl, nt, ndm
   !
-  ! allocate work space (psic must already be allocated)
+  ! allocate work space 
   !
   ALLOCATE (rhocg(dfftp%ngm, nspina))
   !
@@ -179,21 +178,18 @@ SUBROUTINE atomic_rho( rhoa, nspina )
   ! bring to real space
   !
   rhoa(:,:) = 0.d0
+  CALL rho_g2r ( dfftp, rhocg, rhoa )
+  DEALLOCATE (rhocg)
   !
   DO is = 1, nspina
-     !
-     psic(:) = (0.0_dp,0.0_dp)
-     psic (dfftp%nl (:) ) = rhocg (:, is)
-     IF (gamma_only)  psic ( dfftp%nlm(:) ) = CONJG( rhocg (:, is) )
-     CALL invfft ('Rho', psic, dfftp)
      !
      ! we check that everything is correct
      !
      rhoneg = 0.0_dp
      rhoima = 0.0_dp
      DO ir = 1, dfftp%nnr
-        rhoneg = rhoneg + MIN (0.0_dp,  DBLE (psic (ir)) )
-        rhoima = rhoima + abs (AIMAG (psic (ir) ) )
+        rhoneg = rhoneg + MIN (0.0_dp,  DBLE (rhoa (ir,is)) )
+        rhoima = rhoima + abs (AIMAG (rhoa (ir,is) ) )
      ENDDO
      rhoneg = omega * rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
      rhoima = omega * rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
@@ -223,12 +219,10 @@ SUBROUTINE atomic_rho( rhoa, nspina )
      ! charge will re-appear when Fourier-transformed back and forth
      !
      DO ir = 1, dfftp%nnr
-        rhoa (ir, is) =  DBLE (psic (ir))
+        rhoa (ir, is) =  CMPLX ( DBLE(rhoa(ir,is)), 0.0_dp )
      END DO
      !
   ENDDO
-
-  DEALLOCATE (rhocg)
 
 END SUBROUTINE atomic_rho
 
