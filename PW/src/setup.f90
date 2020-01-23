@@ -612,7 +612,7 @@ SUBROUTINE setup()
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
   IF ( dft_is_hybrid() ) THEN
-     IF ( nks == 0 ) CALL errore('setup','0 k-points per pool not allowed for hybrid functionals',1)
+     IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
      CALL exx_grid_init()
      CALL exx_mp_init()
      CALL exx_div_check()

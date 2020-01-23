@@ -37,7 +37,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   !
   ! Internal variables
   !
-  INTEGER                   :: ix, iy, ir, iss, incr, ibnd, ik, npw, ipol
+  INTEGER                   :: ix, iy, ir, iss, ipol, incr, ibnd, ik, npw
   INTEGER                   :: ipol2xy(3,3) 
   !! ipol2xy(i,j) = ipol2x(j,i) is a collapsed symmetric index
   DATA ipol2xy / 1, 2, 3, 2, 4, 5, 3, 5, 6/
