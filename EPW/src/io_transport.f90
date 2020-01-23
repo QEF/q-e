@@ -599,8 +599,8 @@
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
         OPEN(iufilibtev_sup, FILE = 'inv_tau.fmt', FORM = 'formatted')
-        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
-        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [Ry]'
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
             DO ibnd = 1, nbndfst
@@ -612,8 +612,8 @@
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
         OPEN(iufilibtev_sup, FILE = 'inv_taucb.fmt', FORM = 'formatted')
-        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
-        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+        WRITE(iufilibtev_sup, '(a)') '# Electron relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [Ry]'
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
             DO ibnd = 1, nbndfst
