@@ -237,7 +237,8 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis
     USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, wsi, nznormi, znormi, deltai, deltaip, keri
-    USE constants_epw, ONLY : pi, zero
+    USE constants_epw, ONLY : zero
+    USE constants,     ONLY : pi
     USE io_eliashberg, ONLY : eliashberg_write_iaxis
     ! 
     IMPLICIT NONE
@@ -387,9 +388,10 @@
     USE epwcom,        ONLY : nqstep, nsiter, conv_thr_racon, lpade
     USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, gap, a2f_iso, dsumi, zsumi, & 
                               delta, deltap, znorm, znormp, gp, gm
-    USE constants_epw, ONLY : pi, ci, zero, czero, cone
+    USE constants_epw, ONLY : ci, zero, czero, cone
+    USE constants,     ONLY : pi
     USE io_eliashberg, ONLY : eliashberg_write_raxis
-    USE supercond, ONLY : gamma_acont
+    USE supercond,     ONLY : gamma_acont
     ! 
     IMPLICIT NONE
     !
@@ -627,8 +629,9 @@
     ! reference W. E. Pickett, PRB 26, 1186 (1982)
     !
     !
-    USE kinds, ONLY : DP
-    USE constants_epw, ONLY : pi, zero
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : zero
+    USE constants,     ONLY : pi
     USE eliashbergcom, ONLY : nsiw, estemp, keri
     ! 
     IMPLICIT NONE
@@ -1179,7 +1182,8 @@
     ! reference M. J. Holcomb, PRB 54, 6648 (1996)   
     !
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, ci, eps6, zero, czero, one
+    USE constants_epw, ONLY : ci, eps6, zero, czero, one
+    USE constants,     ONLY : pi
     USE epwcom,        ONLY : nqstep
     USE eliashbergcom, ONLY : a2f_iso, wsph, dwsph, ws, bewph, fdwp
     ! 
