@@ -50,7 +50,7 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   CALL xml_newElement (xf, "HEADER")
   CALL xml_addAttribute (xf, "NUMBER_OF_BANDS", nbnd)
   CALL xml_addAttribute (xf, "NUMBER_OF_K-POINTS", num_k_points)
-  CALL xml_addAttribute (xf, "NUMBER_OF_SPIN_COMPONENTS", nspin)
+  CALL xml_addAttribute (xf, "NUMBER_OF_SPIN_COMPONENTS", nspin_lsda)
   CALL xml_addAttribute (xf, "NUMBER_OF_ATOMIC_WFC", natomwfc)
   CALL xml_addAttribute (xf, "NUMBER_OF_ELECTRONS", nelec)
   CALL xml_addAttribute (xf, "FERMI_ENERGY", ef)
@@ -60,8 +60,8 @@ SUBROUTINE  write_xml_proj (filename, projs, lwrite_ovp, ovps )
   ! <EIGENSTATES>
   !
   CALL xml_newElement (xf, "EIGENSTATES")
-  DO ik = 1, num_k_points
-     DO is = 1, nspin_lsda
+  DO is = 1, nspin_lsda
+     DO ik = 1, num_k_points
         ik_eff = ik + (is-1)*num_k_points
         CALL xml_newElement(xf, "K-POINT")
         CALL xml_addAttribute (xf, "Weight", wk(ik_eff) )
