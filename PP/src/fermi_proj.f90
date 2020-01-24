@@ -36,7 +36,7 @@ SUBROUTINE read_projwfc(lbinary)
   ! ... Read projwfc.x input file and use prefix, outdir, lbinary_data only.
   !
   USE io_files,  ONLY : prefix, tmp_dir
-  USE io_global, ONLY : stdout, ionode, ionode_id
+  USE io_global, ONLY : ionode, ionode_id
   USE mp_world,  ONLY : world_comm
   USE spin_orb,  ONLY : lforcet
   USE mp,        ONLY : mp_bcast
@@ -50,7 +50,7 @@ SUBROUTINE read_projwfc(lbinary)
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER (len=256) :: filpdos, filproj, outdir
-  REAL (DP) :: Emin, Emax, DeltaE, degauss1, ef_0
+  REAL (DP) :: Emin, Emax, DeltaE, ef_0
   INTEGER :: ios
   LOGICAL :: lwrite_overlaps, lbinary_data
   LOGICAL :: lsym, kresolveddos, tdosinboxes, plotboxes, pawproj
@@ -202,13 +202,12 @@ PROGRAM fermi_proj
   USE lsda_mod,             ONLY : nspin
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE klist,                ONLY : nks, two_fermi_energies
-  USE basis,                ONLY : natomwfc
   USE fermisurfer_common,   ONLY : b_low, b_high, rotate_k_fs, write_fermisurfer
   USE fermi_proj_routines,  ONLY : read_projwfc, read_atomic_proj
   !
   IMPLICIT NONE
   !
-  INTEGER :: i1, i2, i3, ik, ibnd, ispin, ns, nk, ierr
+  INTEGER :: i1, i2, i3, ns, nk
   REAL(DP) :: ef1, ef2
   INTEGER,ALLOCATABLE :: equiv(:,:,:)
   REAL(DP),ALLOCATABLE :: eig(:,:,:,:,:), wfc(:,:,:,:,:), wt(:,:)
