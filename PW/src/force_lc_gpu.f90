@@ -7,88 +7,102 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine force_lc_gpu (nat, tau, ityp, alat, omega, ngm, ngl, &
-     igtongl_d, g_d, rho, nl_d, gstart, gamma_only, vloc_d, forcelc)
+SUBROUTINE force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, &
+                         igtongl_d, g_d, rho, nl_d, gstart, gamma_only, vloc_d, forcelc )
   !----------------------------------------------------------------------
+  !! It calculates the local-potential contribution to forces on atoms.
   !
   USE kinds
-  USE constants, ONLY : tpi
-  USE mp_bands,  ONLY : intra_bgrp_comm
-  USE mp,        ONLY : mp_sum
-  USE fft_base,  ONLY : dfftp
-  USE fft_interfaces, ONLY : fwfft
-  USE esm,       ONLY : esm_force_lc, do_comp_esm, esm_bc
-  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_force_lc
-  USE gbuffers,  ONLY : dev_buf
-  implicit none
+  USE constants,       ONLY : tpi
+  USE mp_bands,        ONLY : intra_bgrp_comm
+  USE mp,              ONLY : mp_sum
+  USE fft_base,        ONLY : dfftp
+  USE fft_interfaces,  ONLY : fwfft
+  USE esm,             ONLY : esm_force_lc, do_comp_esm, esm_bc
+  USE Coul_cut_2D,     ONLY : do_cutoff_2D, cutoff_force_lc
   !
-  !   first the dummy variables
+  USE gbuffers,        ONLY : dev_buf
+  USE device_util_m,   ONLY : dev_memcpy
   !
-  integer, intent(in) :: nat, ngm, ngl, gstart, &
-                         igtongl_d (ngm), nl_d (ngm), ityp (nat)
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: nat
+  !! number of atoms in the cell
+  INTEGER, INTENT(IN) :: ngm
+  !! number of G vectors
+  INTEGER, INTENT(IN) :: ngl
+  !! number of shells
+  INTEGER, INTENT(IN) :: gstart
+  !! index of the first G vector whose module is > 0 (see
+  !! module 'gvect' in Modules/recvec.f90)
+  INTEGER, INTENT(IN) :: igtongl_d(ngm)
+  !! correspondence G <-> shell of G
+  INTEGER, INTENT(IN) :: nl_d(ngm)
 #if defined(__CUDA)
   attributes(DEVICE) :: igtongl_d, nl_d
 #endif
-  ! nat:    number of atoms in the cell
-  ! ngm:    number of G vectors
-  ! ngl:    number of shells
-  ! igtongl correspondence G <-> shell of G
-  ! nl:     correspondence fft mesh <-> G vec
-  ! ityp:   types of atoms
-
-  logical, intent(in) :: gamma_only
-
-  real(DP), intent(in) :: tau (3, nat), g_d (3, ngm), vloc_d (ngl, * ), &
-       rho (dfftp%nnr), alat, omega
+  !! correspondence fft mesh <-> G vec
+  INTEGER, INTENT(IN) :: ityp(nat)
+  !! types of atoms
+  LOGICAL, INTENT(IN) :: gamma_only
+  !! gamma only
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  !! coordinates of the atoms
+  REAL(DP), INTENT(IN) :: g_d(3,ngm)
+  !! coordinates of G vectors
+  REAL(DP), INTENT(IN) :: vloc_d(ngl,*)
 #if defined(__CUDA)
   attributes(DEVICE) :: g_d, vloc_d
 #endif
-  ! tau:  coordinates of the atoms
-  ! g:    coordinates of G vectors
-  ! vloc: local potential
-  ! rho:  valence charge
-  ! alat: lattice parameter
-  ! omega: unit cell volume
-
-  real(DP), intent(out) :: forcelc (3, nat)
-  ! the local-potential contribution to forces on atoms
-
-  integer :: ipol, ig, na
+  !! local potential
+  REAL(DP), INTENT(IN) :: rho(dfftp%nnr)
+  !! valence charge
+  REAL(DP), INTENT(IN) :: alat
+  !! lattice parameter
+  REAL(DP), INTENT(IN) :: omega
+  !! unit cell volume
+  REAL(DP), INTENT(OUT) :: forcelc(3, nat)
+  !! the local-potential contribution to forces on atoms
+  !
+  ! ... local variables
+  !
+  INTEGER :: ipol, ig, na
   ! counter on polarizations
   ! counter on G vectors
   ! counter on atoms
 
-  complex(DP), allocatable :: aux (:)
-  complex(DP), pointer     :: aux_d(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:)
+  COMPLEX(DP), POINTER     :: aux_d(:)
 #if defined(__CUDA)
   attributes(DEVICE) :: aux_d
 #endif
   ! auxiliary space for FFT
-  real(DP) :: arg, fact
+  REAL(DP) :: arg, fact
   !
   ! auxiliary for cuf kernels and error checking
-  integer :: ityp_na, ierr
-  real(DP):: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
+  INTEGER :: ityp_na, ierr
+  REAL(DP):: forcelc_x, forcelc_y, forcelc_z, tau1, tau2, tau3
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
-  allocate (aux(dfftp%nnr))
+  ALLOCATE( aux(dfftp%nnr) )
   CALL dev_buf%lock_buffer(aux_d, dfftp%nnr, ierr)
   !
-  aux(:) = CMPLX( rho(:), 0.0_dp, kind=dp )
-  aux_d = aux
+  aux(:) = CMPLX( rho(:), 0.0_DP, KIND=DP )
+  CALL dev_memcpy( aux_d, aux )
   !
-  CALL fwfft ('Rho', aux_d, dfftp)
+  CALL fwfft( 'Rho', aux_d, dfftp )
   !
-  !    aux contains now  n(G)
+  ! aux contains now  n(G)
   !
-  if (gamma_only) then
+  IF (gamma_only) THEN
      fact = 2.d0
-  else
+  ELSE
      fact = 1.d0
-  end if
-  do na = 1, nat
+  ENDIF
+  !
+  DO na = 1, nat
      ! This is no longher needed
      !do ipol = 1, 3
      !   forcelc (ipol, na) = 0.d0
@@ -99,7 +113,7 @@ subroutine force_lc_gpu (nat, tau, ityp, alat, omega, ngm, ngl, &
      forcelc_x = 0.d0 ; forcelc_y = 0.d0 ; forcelc_z = 0.d0
      ! contribution from G=0 is zero
      !$cuf kernel do(1)
-     do ig = gstart, ngm
+     DO ig = gstart, ngm
         arg = (g_d (1, ig) * tau1 + g_d (2, ig) * tau2 + &
                g_d (3, ig) * tau3 ) * tpi
         !
@@ -111,13 +125,13 @@ subroutine force_lc_gpu (nat, tau, ityp, alat, omega, ngm, ngl, &
         forcelc_y = forcelc_y + g_d (2, ig) * arg
         forcelc_z = forcelc_z + g_d (3, ig) * arg
         !
-     enddo
+     ENDDO
      forcelc (1, na) = forcelc_x; forcelc (2, na) = forcelc_y; forcelc (3, na) = forcelc_z; 
-     do ipol = 1, 3
+     DO ipol = 1, 3
         forcelc (ipol, na) = fact * forcelc (ipol, na) * omega * tpi / alat
-     enddo
-  enddo
-  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
+     ENDDO
+  ENDDO
+  IF ( do_comp_esm .AND. (esm_bc .NE. 'pbc') ) THEN
      !
      ! ... Perform corrections for ESM method (add long-range part)
      !
@@ -126,15 +140,13 @@ subroutine force_lc_gpu (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   ! IN 2D calculations: re-add the erf/r contribution to the forces. It was substracted from
   ! vloc (in vloc_of_g) and readded to vltot only (in setlocal)
-  IF ( do_cutoff_2D ) THEN
-     !     !
-      CALL cutoff_force_lc (aux, forcelc )
-  ENDIF 
+  IF ( do_cutoff_2D ) CALL cutoff_force_lc( aux, forcelc )
   !
+  CALL mp_sum( forcelc, intra_bgrp_comm )
   !
-  call mp_sum(  forcelc, intra_bgrp_comm )
-  !
-  deallocate (aux)
+  DEALLOCATE( aux )
   CALL dev_buf%release_buffer(aux_d, ierr)
-  return
-end subroutine force_lc_gpu
+  !
+  RETURN
+  !
+END SUBROUTINE force_lc_gpu

@@ -14,17 +14,17 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
   !! It requires the products of psi with all beta functions
   !! in array becp(nkb,m) (calculated by calbec).
   !
-  USE kinds,         ONLY: DP
-  USE ions_base,     ONLY: nat, ntyp => nsp, ityp
-  USE lsda_mod,      ONLY: current_spin
-  USE control_flags, ONLY: gamma_only
+  USE kinds,           ONLY: DP
+  USE ions_base,       ONLY: nat, ntyp => nsp, ityp
+  USE lsda_mod,        ONLY: current_spin
+  USE control_flags,   ONLY: gamma_only
   USE noncollin_module
-  USE uspp,          ONLY: indv_ijkb0, nkb
-  USE uspp_param,    ONLY: nh, nhm
+  USE uspp,            ONLY: indv_ijkb0, nkb
+  USE uspp_param,      ONLY: nh, nhm
   !
-  USE uspp_gpum,     ONLY : vkb_d, deeq_d, deeq_nc_d
-  USE uspp_gpum,     ONLY : using_vkb_d, using_indv_ijkb0, using_deeq_d, using_deeq_nc_d
-  USE becmod_gpum,   ONLY : bec_type_d, becp_d, using_becp_r_d, using_becp_k_d, using_becp_nc_d
+  USE uspp_gpum,       ONLY : vkb_d, deeq_d, deeq_nc_d
+  USE uspp_gpum,       ONLY : using_vkb_d, using_indv_ijkb0, using_deeq_d, using_deeq_nc_d
+  USE becmod_gpum,     ONLY : bec_type_d, becp_d, using_becp_r_d, using_becp_k_d, using_becp_nc_d
   !
   IMPLICIT NONE
   !
@@ -198,8 +198,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        !-----------------------------------------------------------------------
        !! See add_vuspsi_gamma for comments
        !
-       ! see add_vuspsi_gamma for comments
-       !
 #if defined(__CUDA)
        USE cudafor
        USE cublas
@@ -276,7 +274,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_nc_gpu()
        !-----------------------------------------------------------------------
-       ! see add_vuspsi_k for comments
+       !! See add_vuspsi_k for comments
        !
 #if defined(__CUDA)
        USE cudafor

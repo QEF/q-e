@@ -17,7 +17,10 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
   USE scf,           ONLY : v
   USE ldaU,          ONLY : is_hubbard, Hubbard_l, offsetU, q_ae
   !
+  USE device_util_m, ONLY : dev_memcpy
+  !
   IMPLICIT NONE
+  !
   REAL(KIND=DP), INTENT(INOUT) :: deeq_d( nhm, nhm, nat, nspin )
   !! integral of V_eff and Q_{nm}
   !
@@ -65,7 +68,8 @@ SUBROUTINE add_vhub_to_deeq_gpu( deeq_d )
            !
         ENDDO
      ENDDO
-     deeq_aux_d = deeq_aux_h
+     CALL dev_memcpy(deeq_aux_d, deeq_aux_h)
+     ! HERE USE devXlib
      nhnt = nh(nt)
      !$cuf kernel do(3)
      DO is=1, nspin

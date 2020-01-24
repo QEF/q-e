@@ -7,8 +7,9 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine force_cc_gpu (forcecc)
+SUBROUTINE force_cc_gpu( forcecc )
   !----------------------------------------------------------------------
+  !! Calculates the NLCC contribution to the force.
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
@@ -31,25 +32,23 @@ subroutine force_cc_gpu (forcecc)
   USE gbuffers,             ONLY : dev_buf
   USE device_util_m,        ONLY : dev_memcpy  
   !
-  implicit none
+  IMPLICIT NONE
   !
-  !   first the dummy variable
+  REAL(DP) :: forcecc(3,nat)
+  !! output: the NLCC forces on atoms
   !
-  real(DP) :: forcecc (3, nat)
-  ! output: the local forces on atoms
-
-  integer :: ipol, ig, ir, nt, na
+  ! ... local variables
+  !
+  INTEGER :: ipol, ig, ir, nt, na
   ! counter on polarizations
   ! counter on G vectors
   ! counter on FFT grid points
   ! counter on types of atoms
   ! counter on atoms
-
-
-  real(DP), allocatable :: vxc (:,:), rhocg (:)
+  REAL(DP), ALLOCATABLE :: vxc(:,:), rhocg(:)
   ! exchange-correlation potential
   ! radial fourier transform of rho core
-  real(DP)  ::  prod, arg, fact
+  REAL(DP) ::  prod, arg, fact
   !
   real(DP), pointer :: rhocg_d (:),r_d(:), rab_d(:), rhoc_d(:) 
   complex(DP), pointer :: psic_d(:)
@@ -64,40 +63,47 @@ subroutine force_cc_gpu (forcecc)
   nl_d => dfftp%nl_d
   !
   forcecc(:,:) = 0.d0
-  if ( ANY ( upf(1:ntyp)%nlcc ) ) go to 15
-  return
   !
-15 continue
-  if (gamma_only) then
+  IF ( ANY( upf(1:ntyp)%nlcc ) ) GOTO 15
+  RETURN
+  !
+15 CONTINUE
+  IF (gamma_only) THEN
      fact = 2.d0
-  else
+  ELSE
      fact = 1.d0
-  end if
+  ENDIF
   !
-  ! recalculate the exchange-correlation potential
+  ! ... recalculate the exchange-correlation potential
   !
-  allocate ( vxc(dfftp%nnr,nspin) )
+  ALLOCATE( vxc(dfftp%nnr,nspin) )
   !
-  call v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
+  CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vxc )
   !
-  psic=(0.0_DP,0.0_DP)
-  if (nspin == 1 .or. nspin == 4) then
-     do ir = 1, dfftp%nnr
-        psic (ir) = vxc (ir, 1)
-     enddo
-  else
-     do ir = 1, dfftp%nnr
+  psic = (0.0_DP,0.0_DP)
+  IF (nspin == 1 .OR. nspin == 4) THEN
+     DO ir = 1, dfftp%nnr
+        psic(ir) = vxc (ir,1)
+     ENDDO
+  ELSE
+     DO ir = 1, dfftp%nnr
         psic (ir) = 0.5d0 * (vxc (ir, 1) + vxc (ir, 2) )
-     enddo
-  endif
-  deallocate (vxc)
+     ENDDO
+  ENDIF
+  !
+  DEALLOCATE( vxc )
+  !
   CALL dev_buf%lock_buffer(psic_d, dfftp%nnr, ierrs(1))
   CALL dev_memcpy( psic_d, psic, (/ 1, dfftp%nnr /) )
   CALL fwfft ('Rho', psic_d, dfftp)
   !
-  ! psic contains now Vxc(G)
+  ! ... psic contains now Vxc(G)
   !
-  allocate ( rhocg(ngl) )
+  ALLOCATE( rhocg(ngl) )
+  !
+  ! ... core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
+  ! g = 0 term gives no contribution
+  !
   maxmesh = MAXVAL(msh(1:ntyp)) 
   CALL dev_buf%lock_buffer(rhocg_d, ngl, ierrs(2) )
   CALL dev_buf%lock_buffer(r_d, maxmesh, ierrs(3) )
@@ -105,21 +111,19 @@ subroutine force_cc_gpu (forcecc)
   CALL dev_buf%lock_buffer(rhoc_d, maxmesh, ierrs(5) )
   IF (ANY(ierrs /= 0)) CALL errore('force_cc_gpu', 'cannot allocate buffers', -1)
   !
-  ! core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
+  ! ... core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
   ! g = 0 term gives no contribution
   !
-  do nt = 1, ntyp
-     if ( upf(nt)%nlcc ) then
+  DO nt = 1, ntyp
+     IF ( upf(nt)%nlcc ) THEN
         r_d(1:msh(nt)) = rgrid(nt)%r(1:msh(nt)) 
         rab_d(1:msh(nt)) = rgrid(nt)%rab(1:msh(nt))
         rhoc_d(1:msh(nt)) = upf(nt)%rho_atc 
-  call start_clock('drhoc')
-        call drhoc_gpu  (ngl, gl_d, omega, tpiba2, msh(nt), r_d, rab_d, rhoc_d, rhocg_d)
-  call stop_clock('drhoc')
-
-        do na = 1, nat
-           if (nt.eq.ityp (na) ) then
-
+        !
+        CALL drhoc_gpu( ngl, gl_d, omega, tpiba2, msh(nt), r_d, &
+                         rab_d, rhoc_d, rhocg_d)
+        DO na = 1, nat
+           IF (nt == ityp (na) ) THEN
               tau1 = tau(1, na)
               tau2 = tau(2, na)
               tau3 = tau(3, na)
@@ -139,18 +143,17 @@ subroutine force_cc_gpu (forcecc)
                  forcelc_x = forcelc_x + g_d (1, ig) * prod
                  forcelc_y = forcelc_y + g_d (2, ig) * prod
                  forcelc_z = forcelc_z + g_d (3, ig) * prod
-              enddo
+              ENDDO
 
               forcecc(1, na) = forcecc(1, na) + forcelc_x
               forcecc(2, na) = forcecc(2, na) + forcelc_y
               forcecc(3, na) = forcecc(3, na) + forcelc_z
-           endif
-        enddo
-     endif
-  enddo
-
+           ENDIF
+        ENDDO
+     ENDIF
+  ENDDO
   !
-  call mp_sum(  forcecc, intra_bgrp_comm )
+  CALL mp_sum( forcecc, intra_bgrp_comm )
   !
   CALL dev_buf%release_buffer(rhocg_d, ierrs(1) )
   CALL dev_buf%release_buffer(psic_d, ierrs(2) )
@@ -158,5 +161,6 @@ subroutine force_cc_gpu (forcecc)
   CALL dev_buf%release_buffer(rab_d, ierrs(4) )
   CALL dev_buf%release_buffer(rhoc_d, ierrs(5) )
   !
-  return
-end subroutine force_cc_gpu
+  RETURN
+  !
+END SUBROUTINE force_cc_gpu

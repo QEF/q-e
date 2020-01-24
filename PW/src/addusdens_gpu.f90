@@ -8,8 +8,7 @@
 !----------------------------------------------------------------------
 SUBROUTINE addusdens_gpu(rho)
   !----------------------------------------------------------------------
-  !
-  ! ... Add US contribution to the charge density to rho(G)
+  !! Add US contribution to the charge density to \(\text{rho}(G)\).
   !
   USE realus,               ONLY : addusdens_r
   USE control_flags,        ONLY : tqr
@@ -19,24 +18,25 @@ SUBROUTINE addusdens_gpu(rho)
   !
   IMPLICIT NONE
   !
-  COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
+  COMPLEX(DP), INTENT(INOUT) :: rho(dfftp%ngm,nspin_mag)
+  !! Charge density in G space
   !
   IF ( tqr ) THEN
-     CALL addusdens_r(rho)
+     CALL addusdens_r( rho )
   ELSE
-     CALL addusdens_g_gpu(rho)
+     CALL addusdens_g_gpu( rho )
   ENDIF
   !
   RETURN
   !
 END SUBROUTINE addusdens_gpu
 !
+!
 !----------------------------------------------------------------------
 SUBROUTINE addusdens_g_gpu(rho)
   !----------------------------------------------------------------------
-  !
-  !  This routine adds to the charge density rho(G) in reciprocal space
-  !  the part which is due to the US augmentation.
+  !! This routine adds to the charge density \(\text{rho}(G)\) in reciprocal space
+  !! the part which is due to the US augmentation.
   !
 #if defined(__CUDA)
   USE cudafor
@@ -64,9 +64,9 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   IMPLICIT NONE
   !
-  COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
+  COMPLEX(DP), INTENT(INOUT) :: rho(dfftp%ngm,nspin_mag)
   !
-  !     here the local variables
+  ! ... local variables
   !
   INTEGER :: ngm_s, ngm_e, ngm_l
   ! starting/ending indices, local number of G-vectors
@@ -212,7 +212,8 @@ SUBROUTINE addusdens_g_gpu(rho)
   CALL pin_buf%release_buffer(aux_h, ierr)
   CALL dev_buf%release_buffer(aux_d, ierr)
   !
-  CALL stop_clock ('addusdens')
+  CALL stop_clock( 'addusdens' )
+  !
   RETURN
 END SUBROUTINE addusdens_g_gpu
 

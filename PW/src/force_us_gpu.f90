@@ -9,8 +9,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE force_us_gpu( forcenl )
   !----------------------------------------------------------------------------
-  !
-  ! ... nonlocal potential contribution to forces
+  !! The nonlocal potential contribution to forces.
   !
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : gamma_only
@@ -49,7 +48,10 @@ SUBROUTINE force_us_gpu( forcenl )
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(OUT) :: forcenl(3,nat) ! the nonlocal contribution
+  REAL(DP), INTENT(OUT) :: forcenl(3,nat)
+  !! the nonlocal contribution
+  !
+  ! ... local variables
   !
   COMPLEX(DP), POINTER     :: vkb1_d(:,:)   ! contains g*|beta>
 #if defined(__CUDA)
@@ -71,9 +73,9 @@ SUBROUTINE force_us_gpu( forcenl )
   CALL allocate_bec_type_gpu ( nkb, nbnd, dbecp_d, intra_bgrp_comm )
   !
   CALL dev_buf%lock_buffer( vkb1_d, (/ npwx, nkb /), ierr )
-  IF (noncolin) then
+  IF (noncolin) THEN
      ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
-  ELSE IF (.NOT. gamma_only ) THEN
+  ELSEIF (.NOT. gamma_only ) THEN
      ALLOCATE( deff(nhm,nhm,nat) )
   ENDIF
   !
@@ -88,14 +90,12 @@ SUBROUTINE force_us_gpu( forcenl )
      npw = ngk (ik)
 
      IF ( nks > 1 ) THEN
-        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+        CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(1)
         IF ( nkb > 0 ) CALL using_vkb_d(1)
-        call start_clock('us_in') 
         IF ( nkb > 0 ) &
              CALL init_us_2_gpu( npw, igk_k_d(1,ik), xk(1,ik), vkb_d )
-        call stop_clock('us_in') 
-     END IF
+     ENDIF
      !
      CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
      CALL calbec_gpu ( npw, vkb_d, evc_d, becp_d )
@@ -106,13 +106,12 @@ SUBROUTINE force_us_gpu( forcenl )
         DO jkb = 1, nkb
            DO ig = 1, npw
               vkb1_d(ig,jkb) = vkb_d(ig,jkb) * (0.D0,-1.D0) * g_d(ipol,igk_k_d(ig,ik))
-           END DO
-        END DO
+           ENDDO
+        ENDDO
         !
         CALL calbec_gpu ( npw, vkb1_d, evc_d, dbecp_d )
         CALL synchronize_bec_type_gpu(dbecp_d, dbecp, 'h')
         !
-        call start_clock('fus_gpu') 
         IF ( gamma_only ) THEN
            !
            CALL force_us_gamma_gpu( forcenl )
@@ -121,19 +120,18 @@ SUBROUTINE force_us_gpu( forcenl )
            !
            CALL force_us_k_gpu( forcenl )
            !
-        END IF
-        call stop_clock('fus_gpu') 
-     END DO
-  END DO
+        ENDIF
+     ENDDO
+  ENDDO
   !
   ! ... if sums over bands are parallelized over the band group
   !
   CALL using_becp_auto(0)
-  IF( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
+  IF ( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
   !
   IF (noncolin) THEN
      DEALLOCATE( deff_nc )
-  ELSE IF ( .NOT. GAMMA_ONLY) THEN
+  ELSEIF ( .NOT. GAMMA_ONLY) THEN
      DEALLOCATE( deff )
   ENDIF
   CALL dev_buf%release_buffer( vkb1_d, ierr )
@@ -150,17 +148,13 @@ SUBROUTINE force_us_gpu( forcenl )
   ! ... augmentation part \int V_eff Q dr, the term deriving from the 
   ! ... derivative of Q is added in the routine addusforce
   !
-  call start_clock('addus') 
   IF (use_gpu) CALL addusforce_gpu(forcenl)  
   IF (.NOT. use_gpu) CALL addusforce( forcenl )
-  call stop_clock('addus') 
   !
   ! ... Since our summation over k points was only on the irreducible 
   ! ... BZ we have to symmetrize the forces.
   !
-  call start_clock('symv') 
   CALL symvector ( nat, forcenl )
-  call stop_clock('symv')   
   !
   RETURN
   !
@@ -169,8 +163,7 @@ SUBROUTINE force_us_gpu( forcenl )
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_gamma_gpu( forcenl )
        !-----------------------------------------------------------------------
-       !
-       ! ... calculation at gamma
+       !! Nonlocal contributiuon. Calculation at gamma.
        !
 #if defined(__CUDA)
        USE cublas
@@ -180,6 +173,10 @@ SUBROUTINE force_us_gpu( forcenl )
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
+       !! the nonlocal contribution
+       !
+       ! ... local variables
+       !
        REAL(DP), POINTER :: aux_d(:,:)
 #if defined(__CUDA)
        attributes(DEVICE) :: aux_d
@@ -249,24 +246,28 @@ SUBROUTINE force_us_gpu( forcenl )
                       forcenl_ipol = forcenl_ipol - &
                            2.0_dp * tpiba * aux_d(ih,ibnd_loc) * &
                            dbecp_d_r_d(ijkb0+ih,ibnd_loc) * wg_d(ibnd,ik)
-                   END DO
-                END DO
+                   ENDDO
+                ENDDO
                 forcenl(ipol,na) = forcenl(ipol,na) + forcenl_ipol
                 !
-             END IF
-          END DO
+             ENDIF
+          ENDDO
           CALL dev_buf%release_buffer(aux_d, ierr)
-       END DO
+       ENDDO
        !
      END SUBROUTINE force_us_gamma_gpu
      !     
      !-----------------------------------------------------------------------
      SUBROUTINE force_us_k_gpu( forcenl )
        !-----------------------------------------------------------------------
-       !  
+       !! Nonlocal contributiuon. Calculation for k-points.
+       !
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
+       !! the nonlocal contribution
+       !
+       ! ... local variables
        !
        REAL(DP) :: fac
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
@@ -276,11 +277,13 @@ SUBROUTINE force_us_gpu( forcenl )
        CALL using_becp_auto(0);
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
-             CALL compute_deff_nc(deff_nc,et(ibnd,ik))
+             CALL compute_deff_nc( deff_nc, et(ibnd,ik) )
           ELSE
-             CALL compute_deff(deff,et(ibnd,ik))
+             CALL compute_deff( deff, et(ibnd,ik) )
           ENDIF
-          fac=wg(ibnd,ik)*tpiba
+          !
+          fac = wg(ibnd,ik)*tpiba
+          !
           DO nt = 1, ntyp
              DO na = 1, nat
                 ijkb0 = indv_ijkb0(na)
@@ -289,24 +292,24 @@ SUBROUTINE force_us_gpu( forcenl )
                       ikb = ijkb0 + ih
                       IF (noncolin) THEN
                          ijs=0
-                         DO is=1,npol
-                            DO js=1,npol
+                         DO is = 1, npol
+                            DO js = 1, npol
                                ijs=ijs+1
                                forcenl(ipol,na) = forcenl(ipol,na)- &
-                                    deff_nc(ih,ih,na,ijs)*fac*( &
-                                    CONJG(dbecp%nc(ikb,is,ibnd))* &
-                                    becp%nc(ikb,js,ibnd)+ &
-                                    CONJG(becp%nc(ikb,is,ibnd))* &
+                                    deff_nc(ih,ih,na,ijs)*fac*(     &
+                                    CONJG(dbecp%nc(ikb,is,ibnd))*   &
+                                    becp%nc(ikb,js,ibnd)+           &
+                                    CONJG(becp%nc(ikb,is,ibnd))*    &
                                     dbecp%nc(ikb,js,ibnd) )
-                            END DO
-                         END DO
+                            ENDDO
+                         ENDDO
                       ELSE
-                         forcenl(ipol,na) = forcenl(ipol,na) - &
-                              2.D0 * fac * deff(ih,ih,na)*&
+                         forcenl(ipol,na) = forcenl(ipol,na) -   &
+                              2.D0 * fac * deff(ih,ih,na)*       &
                               DBLE( CONJG( dbecp%k(ikb,ibnd) ) * &
                               becp%k(ikb,ibnd) )
-                      END IF
-                   END DO
+                      ENDIF
+                   ENDDO
                    !
                    IF ( upf(nt)%tvanp .OR. upf(nt)%is_multiproj ) THEN
                       DO ih = 1, nh(nt)
@@ -320,39 +323,40 @@ SUBROUTINE force_us_gpu( forcenl )
                             jkb = ijkb0 + jh
                             IF (noncolin) THEN
                                ijs=0
-                               DO is=1,npol
-                                  DO js=1,npol
-                                     ijs=ijs+1
-                                     forcenl(ipol,na)=forcenl(ipol,na)- &
-                                          deff_nc(ih,jh,na,ijs)*fac*( &
-                                          CONJG(dbecp%nc(ikb,is,ibnd))* &
-                                          becp%nc(jkb,js,ibnd)+ &
-                                          CONJG(becp%nc(ikb,is,ibnd))* &
-                                          dbecp%nc(jkb,js,ibnd))- &
-                                          deff_nc(jh,ih,na,ijs)*fac*( &
-                                          CONJG(dbecp%nc(jkb,is,ibnd))* &
-                                          becp%nc(ikb,js,ibnd)+ &
-                                          CONJG(becp%nc(jkb,is,ibnd))* &
+                               DO is = 1, npol
+                                  DO js = 1, npol
+                                     ijs = ijs + 1
+                                     forcenl(ipol,na) = forcenl(ipol,na)- &
+                                          deff_nc(ih,jh,na,ijs)*fac*(     &
+                                          CONJG(dbecp%nc(ikb,is,ibnd))*   &
+                                          becp%nc(jkb,js,ibnd)+           &
+                                          CONJG(becp%nc(ikb,is,ibnd))*    &
+                                          dbecp%nc(jkb,js,ibnd))-         &
+                                          deff_nc(jh,ih,na,ijs)*fac*(     &
+                                          CONJG(dbecp%nc(jkb,is,ibnd))*   &
+                                          becp%nc(ikb,js,ibnd)+           &
+                                          CONJG(becp%nc(jkb,is,ibnd))*    &
                                           dbecp%nc(ikb,js,ibnd) )
-                                  END DO
-                               END DO
+                                  ENDDO
+                               ENDDO
                             ELSE
-                               forcenl(ipol,na) = forcenl (ipol,na) - &
-                                    2.D0 * fac * deff(ih,jh,na)* &
-                                    DBLE( CONJG( dbecp%k(ikb,ibnd) ) * &
-                                    becp%k(jkb,ibnd) +       &
-                                    dbecp%k(jkb,ibnd) * &
-                                    CONJG( becp%k(ikb,ibnd) ) )
-                            END IF
-                         END DO !jh
-                      END DO !ih
-                   END IF ! tvanp
-                END IF ! ityp(na) == nt
-             END DO ! nat
-          END DO ! ntyp
-       END DO ! nbnd
-
+                               forcenl(ipol,na) = forcenl(ipol,na) -     &
+                                    2.D0 * fac * deff(ih,jh,na) *        &
+                                    DBLE( CONJG( dbecp%k(ikb,ibnd) ) *   &
+                                    becp%k(jkb,ibnd) + dbecp%k(jkb,ibnd) &
+                                    * CONJG( becp%k(ikb,ibnd) ) )
+                            ENDIF
+                         ENDDO !jh
+                      ENDDO !ih
+                   ENDIF ! tvanp
+                   !
+                ENDIF ! ityp(na) == nt
+             ENDDO ! nat
+          ENDDO ! ntyp
+       ENDDO ! nbnd
+       !
        !
      END SUBROUTINE force_us_k_gpu
-     !     
+     !
+     !
 END SUBROUTINE force_us_gpu
