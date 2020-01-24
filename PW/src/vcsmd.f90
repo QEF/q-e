@@ -30,7 +30,7 @@ SUBROUTINE vcsmd( conv_ions )
   !
   USE kinds,               ONLY : DP
   USE io_global,           ONLY : stdout
-  USE constants,           ONLY : e2, ry_kbar, amu_ry
+  USE constants,           ONLY : e2, ry_kbar, amu_ry, au_ps
   USE cell_base,           ONLY : wmass, omega, alat, at, bg, iforceh, &
        press, fix_volume, fix_area
   USE ions_base,           ONLY : tau, nat, ntyp => nsp, ityp, atm, if_pos
@@ -102,7 +102,7 @@ SUBROUTINE vcsmd( conv_ions )
            sigmamet(3,3),        & ! sigma = avec^-1 * vcell = bg/alat*omega
            vx2(ntypx), vy2(ntypx), vz2(ntypx),     & ! work vectors
            vmean(ntypx), rms(ntypx), ekin(ntypx),  & ! work vectors
-           tempo, time_au
+           tempo
   CHARACTER(LEN=3) :: ios          ! status (old or new) for I/O files
   CHARACTER(LEN=6) :: ipos         ! status ('append' or 'asis') for I/O files
   CHARACTER(LEN=80):: calc_long    ! Verbose description of type of calculation
@@ -236,9 +236,7 @@ SUBROUTINE vcsmd( conv_ions )
   ! 
   tauold(:,:,1) = tau(:,:)
   !
-  time_au = 0.0000242d0 * e2
-  !
-  tempo = ( istep - 1 ) * dt * time_au
+  tempo = ( istep - 1 ) * dt * e2*au_ps
   !
   IF ( istep == 1 .AND. ( calc(2:2) == 'm' ) ) THEN
         WRITE( stdout,'(/5X,A,/,5x,"convergence thresholds EPSE =",ES9.2, &
