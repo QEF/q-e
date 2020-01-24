@@ -261,7 +261,7 @@
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
     USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : nrot
     USE mp,            ONLY : mp_sum
@@ -465,7 +465,7 @@
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
     USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
     USE mp,            ONLY : mp_sum
@@ -717,7 +717,8 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
     USE eliashbergcom, ONLY : nsiw, nsw, estemp
-    USE constants_epw,     ONLY : kelvin2eV, pi
+    USE constants_epw, ONLY : kelvin2eV
+    USE constants,     ONLY : pi
     !
     IMPLICIT NONE
     !

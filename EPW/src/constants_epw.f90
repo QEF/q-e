@@ -18,15 +18,15 @@
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : bohr_radius_si, ry_to_cmm1, rytoev, autoev, ev_to_kelvin, ry_to_ghz, &
-                         ry_to_kelvin, h_planck_si, electronvolt_si, k_boltzmann_si
+                         ry_to_kelvin, h_planck_si, electronvolt_si, k_boltzmann_si, pi
   !
   IMPLICIT NONE
   !
   SAVE
   !
   ! Mathematical constants
-  ! 
-  REAL(KIND = DP), PARAMETER :: pi     = 3.141592653589793238462643383279502884197169399375105820974944E0_DP
+  !  
+  ! pi = 3.141592653589793238462643383279502884197169399375105820974944E0_DP 
   REAL(KIND = DP), PARAMETER :: twopi  = 2.0E0_DP * pi
   REAL(KIND = DP), PARAMETER :: fpi    = 4.0E0_DP * pi
   REAL(KIND = DP), PARAMETER :: pibytwo= pi / 2.0E0_DP

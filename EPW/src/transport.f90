@@ -34,8 +34,9 @@
                               epf17, nkqtotf, inv_tau_all, inv_tau_allcb,    &
                               xqf, zi_allvb, zi_allcb, nbndfst, nktotf, transp_temp, &
                               lower_bnd
-    USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev,        & 
+    USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev,        & 
                               eps6, eps8, eps4
+    USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
     USE io_transport,  ONLY : scattering_write, tau_write, merge_read
