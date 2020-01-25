@@ -148,12 +148,12 @@ allocate_wfc.o : ../../Modules/wavefunctions.o
 allocate_wfc.o : atomic_wfc_mod.o
 allocate_wfc.o : ldaU.o
 allocate_wfc.o : pwcom.o
-atomic_rho.o : ../../FFTXlib/fft_interfaces.o
 atomic_rho.o : ../../Modules/atom.o
 atomic_rho.o : ../../Modules/cell_base.o
 atomic_rho.o : ../../Modules/constants.o
 atomic_rho.o : ../../Modules/control_flags.o
 atomic_rho.o : ../../Modules/fft_base.o
+atomic_rho.o : ../../Modules/fft_rho.o
 atomic_rho.o : ../../Modules/io_global.o
 atomic_rho.o : ../../Modules/ions_base.o
 atomic_rho.o : ../../Modules/kind.o
@@ -161,7 +161,6 @@ atomic_rho.o : ../../Modules/mp_bands.o
 atomic_rho.o : ../../Modules/noncol.o
 atomic_rho.o : ../../Modules/recvec.o
 atomic_rho.o : ../../Modules/uspp.o
-atomic_rho.o : ../../Modules/wavefunctions.o
 atomic_rho.o : ../../UtilXlib/mp.o
 atomic_rho.o : pwcom.o
 atomic_wfc.o : ../../Modules/cell_base.o
@@ -1394,7 +1393,6 @@ plus_u_full.o : atomic_wfc_mod.o
 plus_u_full.o : ldaU.o
 plus_u_full.o : pwcom.o
 plus_u_full.o : symm_base.o
-potinit.o : ../../FFTXlib/fft_interfaces.o
 potinit.o : ../../Modules/cell_base.o
 potinit.o : ../../Modules/constants.o
 potinit.o : ../../Modules/control_flags.o
