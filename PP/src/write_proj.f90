@@ -143,7 +143,7 @@ SUBROUTINE write_proj_file ( filproj, proj )
   !
   CHARACTER(256) :: filename
   REAL (DP), EXTERNAL :: compute_mj
-  INTEGER :: is, ik, nwfc, ibnd, nksinit, nkslast, iunproj=33
+  INTEGER :: is, ik, nwfc, ibnd, nk_, nksinit, nkslast, iunproj=33
   !
   IF ( TRIM(filproj) == ' ' ) RETURN
   !
@@ -153,14 +153,16 @@ SUBROUTINE write_proj_file ( filproj, proj )
         IF (is==2) filename=trim(filproj)//'.projwfc_down'
         nksinit=(nkstot/2)*(is-1)+1
         nkslast=(nkstot/2)*is
+        nk_ = nkstot/2
      ELSE
         filename=trim(filproj)//'.projwfc_up'
         nksinit=1
         nkslast=nkstot
+        nk_ = nkstot
      ENDIF
      CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, &
           dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, &
-          celldm, at, gcutm, dual, ecutwfc, nkstot/nspin, nbnd, natomwfc)
+          celldm, at, gcutm, dual, ecutwfc, nk_, nbnd, natomwfc)
      DO nwfc = 1, natomwfc
         IF (lspinorb) THEN
            WRITE(iunproj,'(2i5,1x,a4,1x,a2,1x,2i5,f5.1,1x,f5.1)') &

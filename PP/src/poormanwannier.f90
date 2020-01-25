@@ -219,6 +219,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
   !
   ! Delete .hub files (if present) to prevent size mismatch or other problems
+  nwordwfcU=npwx*nwfcU !*npol
   INQUIRE( UNIT=iunhub, OPENED=exst )
   IF ( .NOT. exst ) CALL diropn( iunhub, 'hub', 2*nwordwfcU, exst )
   IF ( ionode .AND. exst ) WRITE( stdout, '(5x,A)' ) '.hub files will be overwritten'

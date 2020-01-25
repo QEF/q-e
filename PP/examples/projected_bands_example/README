@@ -1,0 +1,8 @@
+This example shows how to produce "fat bands", that is, bands containing
+information on atomic projections, using three different approaches:
+1. As a color map of the k-resolved DOS. Magnetic Ni is used as example. 
+2. Using files containing the atomic projections produced by projwfc.x.
+   Relativistic Pt is used as example.
+3. Directly processing the standard output of projwfc.x: requires a script,
+  "projwfc_to_bands.awk", in this same directory. Example: silicene.
+Courtesy of Guido Fratesi, University of Milano-Bicocca

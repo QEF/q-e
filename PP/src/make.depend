@@ -233,8 +233,8 @@ fermi_proj.o : ../../PW/src/atomic_wfc_mod.o
 fermi_proj.o : ../../PW/src/pwcom.o
 fermi_proj.o : ../../PW/src/start_k.o
 fermi_proj.o : ../../UtilXlib/mp.o
-fermi_proj.o : ../../iotk/src/iotk_module.o
 fermi_proj.o : fermisurfer_common.o
+fermi_proj.o : read_proj.o
 fermi_velocity.o : ../../Modules/cell_base.o
 fermi_velocity.o : ../../Modules/command_line_options.o
 fermi_velocity.o : ../../Modules/constants.o
