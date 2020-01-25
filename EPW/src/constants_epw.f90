@@ -27,13 +27,13 @@
   ! Mathematical constants
   !  
   ! pi = 3.141592653589793238462643383279502884197169399375105820974944E0_DP 
-  REAL(KIND = DP), PARAMETER :: twopi  = 2.0E0_DP * pi
-  REAL(KIND = DP), PARAMETER :: fpi    = 4.0E0_DP * pi
-  REAL(KIND = DP), PARAMETER :: pibytwo= pi / 2.0E0_DP
-  REAL(KIND = DP), PARAMETER :: one    = 1.0E0_DP
-  REAL(KIND = DP), PARAMETER :: two    = 2.0E0_DP
-  REAL(KIND = DP), PARAMETER :: zero   = 0.0E0_DP
-  REAL(KIND = DP), PARAMETER :: e2     = 2.0E0_DP      ! the square of the electron charge
+  REAL(KIND = DP), PARAMETER :: twopi    = 2.0E0_DP * pi
+  REAL(KIND = DP), PARAMETER :: fpi      = 4.0E0_DP * pi
+  REAL(KIND = DP), PARAMETER :: pibytwo  = pi / 2.0E0_DP
+  REAL(KIND = DP), PARAMETER :: one      = 1.0E0_DP
+  REAL(KIND = DP), PARAMETER :: two      = 2.0E0_DP
+  REAL(KIND = DP), PARAMETER :: zero     = 0.0E0_DP
+  REAL(KIND = DP), PARAMETER :: e2       = 2.0E0_DP             ! the square of the electron charge
   COMPLEX(KIND = DP), PARAMETER :: ci    = (0.0E0_DP, 1.0E0_DP)
   COMPLEX(KIND = DP), PARAMETER :: cone  = (1.0E0_DP, 0.0E0_DP)
   COMPLEX(KIND = DP), PARAMETER :: czero = (0.0E0_DP, 0.0E0_DP)
@@ -48,7 +48,7 @@
   REAL(KIND = DP), PARAMETER :: ryd2mev  = ryd2ev * 1.0E3_DP          ! 13605.6981
   REAL(KIND = DP), PARAMETER :: ha2ev    = autoev                     ! 27.2113962
   REAL(KIND = DP), PARAMETER :: rydcm1   = ry_to_cmm1                 ! ryd2ev * 8065.541 = 109737.315859
-  REAL(KIND = DP), PARAMETER :: bohr2ang = bohr * 1.0E10_DP           ! 0.52917720859
+  REAL(KIND = DP), PARAMETER :: bohr2ang = bohr                       ! 0.52917720859
   REAL(KIND = DP), PARAMETER :: ev2cmm1  = rydcm1 / ryd2ev            ! 8065.541
   REAL(KIND = DP), PARAMETER :: mev2cmm1 = ev2cmm1 * 1E-3_DP          ! 8.065541
   REAL(KIND = DP), PARAMETER :: cmm12meV = 1.0E0_DP / mev2cmm1        ! 1.0 / 8.065541 = 0.12398424358
