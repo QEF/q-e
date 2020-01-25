@@ -280,14 +280,14 @@
          USE io_global,     ONLY: ionode, stdout
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
                                   tzerop, tv0rd, taurdr, nbeg, tcp, tcap
-         USE ions_base,     ONLY: tau_srt, if_pos, ind_srt, nsp, na, &
+         USE ions_base,     ONLY: if_pos, nsp, na, tau, ityp, &
                                   amass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
          USE constants,     ONLY: amu_au
 
          IMPLICIT NONE
               
-         integer is, ia, k, ic, isa
+         integer is, ia, k, ic
          LOGICAL :: ismb( 3 ) 
                 
          WRITE( stdout, 50 ) 
@@ -318,12 +318,12 @@
          END DO
 
          WRITE(stdout,660) 
-         isa = 0
-         DO IS = 1, nsp
+         DO is = 1, nsp
            WRITE(stdout,1000) is, na(is), amass(is)*amu_au, amass(is), rcmax(is)
-           DO IA = 1, na(is)
-             isa = isa + 1
-             WRITE(stdout,1010) ( tau_srt(k,isa), K = 1,3 )
+           DO ia = 1, nat
+             IF( ityp(ia) == is ) THEN
+                WRITE(stdout,1010) ( tau(k,ia), K = 1,3 )
+             END IF
            END DO
          END DO    
 
@@ -340,13 +340,12 @@
               WRITE(stdout,1020)
               WRITE(stdout,1022)
 
-              DO isa = 1, nat
-                ia = ind_srt( isa )
+              DO ia = 1, nat
                 ismb( 1 ) = ( if_pos(1,ia) /= 0 )
                 ismb( 2 ) = ( if_pos(2,ia) /= 0 )
                 ismb( 3 ) = ( if_pos(3,ia) /= 0 )
                 IF( .NOT. ALL( ismb ) ) THEN
-                  WRITE( stdout, 1023 ) isa, ( ismb(k), K = 1, 3 )
+                  WRITE( stdout, 1023 ) ia, ( ismb(k), K = 1, 3 )
                 END IF
               END DO
 
@@ -375,8 +374,8 @@
                          //' compatible with random velocity initialization',1)
            ELSE IF(tcp) THEN
              WRITE( stdout,555) tempw,tolp
-           ELSE IF(tcap) THEN
-             WRITE( stdout,560) tempw,tolp
+           !ELSE IF(tcap) THEN  !tcap is random velocity initialization!
+           !  WRITE( stdout,560) tempw,tolp
            ELSE IF(tnosep) THEN
              WRITE( stdout,595)
            ELSE
@@ -656,7 +655,6 @@ SUBROUTINE new_atomind_constraints()
    !
    USE kinds,              ONLY: DP
    USE constraints_module, ONLY: constr
-   USE ions_base,          ONLY: ind_bck
    !
    IMPLICIT NONE
    !
@@ -672,7 +670,7 @@ SUBROUTINE new_atomind_constraints()
       DO ia = 1, SIZE( constr, 1 )
          IF( constr( ia, ic ) > 0.0d0 ) THEN
             iaa = NINT( constr( ia, ic ) )
-            aa  = DBLE( ind_bck( iaa ) )
+            aa  = DBLE( iaa )
             constr( ia, ic ) = aa
          END IF
       END DO
@@ -902,9 +900,9 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
   !     contribution to the internal stress tensor due to the constraints
   !
   USE kinds,             ONLY : DP
-  use uspp,              ONLY : nkb, qq_nt
-  use uspp_param,        ONLY : nh, nhm, nvb, ish
-  use ions_base,         ONLY : na
+  use uspp,              ONLY : nkb, qq_nt, indv_ijkb0
+  use uspp_param,        ONLY : nh, nhm, upf
+  use ions_base,         ONLY : nat, ityp
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
   use cell_base,         ONLY : omega, h
   use constants,         ONLY : pi, fpi, au_gpa
@@ -970,9 +968,10 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
 
      do jj=1,3
 
-        do is=1,nvb
+        do ia=1,nat
+           is = ityp(ia)
 
-           do ia=1,na(is)
+           IF( upf(is)%tvanp ) THEN
 
               do iss = 1, nspin
                  !
@@ -991,7 +990,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
 !
                     do iv=1,nh(is)
                        do jv=1,nh(is)
-                          inl=ish(is)+(jv-1)*na(is)+ia
+                          inl=indv_ijkb0(ia) + jv
                           if(abs(qq_nt(iv,jv,is)).gt.1.e-5) then
                              do i = 1, nc
                                 tmpbec(iv,i) = tmpbec(iv,i) +  qq_nt(iv,jv,is) * bec( inl, i, iss  )
@@ -1001,7 +1000,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
                     end do
 
                     do iv=1,nh(is)
-                       inl=ish(is)+(iv-1)*na(is)+ia
+                       inl=indv_ijkb0(ia) + iv
                        do i = 1, nr
                           tmpdh(i,iv) = dbec( inl, i + (iss-1)*nrcx, ii, jj )
                        end do
@@ -1023,7 +1022,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
                  !
               end do
               !
-           end do
+           END IF
            !
         end do
         !
@@ -1092,7 +1091,7 @@ subroutine nlinit
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
                                   dbeta
-      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish, nvb
+      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb
@@ -1508,11 +1507,11 @@ end subroutine dylmr2_
 !-----------------------------------------------------------------------
 !
       USE kinds,              ONLY: DP
-      USE ions_base,          ONLY: na, nsp, nat
+      USE ions_base,          ONLY: na, nsp, nat, ityp
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: gstart
-      USE uspp,               ONLY: nkb, qq_nt
-      USE uspp_param,         ONLY: nh, ish, nvb
+      USE uspp,               ONLY: nkb, qq_nt, indv_ijkb0
+      USE uspp_param,         ONLY: nh, ish, upf
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
       USE cp_interfaces,      ONLY: nlsm1
@@ -1537,7 +1536,7 @@ end subroutine dylmr2_
 !     < beta | phi > is real. only the i lowest:
 !
 
-      CALL nlsm1( nbspx_bgrp, 1, nvb, eigr, cp, becp )
+      CALL nlsm1( nbspx_bgrp, 1, nsp, eigr, cp, becp, 2 )
 
       nnn = MIN( 12, n )
 
@@ -1581,12 +1580,14 @@ end subroutine dylmr2_
             rsum=0.d0
             ibgrp_k = ibgrp_g2l( k )
             IF( ibgrp_k > 0 ) THEN
-               DO is=1,nvb
-                  DO iv=1,nh(is)
-                     DO jv=1,nh(is)
-                        DO ia=1,na(is)
-                           inl=ish(is)+(iv-1)*na(is)+ia
-                           jnl=ish(is)+(jv-1)*na(is)+ia
+               DO is=1,nsp
+                  IF( .NOT. upf(is)%tvanp ) CYCLE
+                  DO ia=1,nat
+                     IF( ityp(ia) /= is ) CYCLE
+                     DO iv=1,nh(is)
+                        DO jv=1,nh(is)
+                           inl = indv_ijkb0(ia) + iv
+                           jnl = indv_ijkb0(ia) + jv
                            rsum = rsum + qq_nt(iv,jv,is)*becp_tmp(inl)*becp(jnl,ibgrp_k)
                         END DO
                      END DO
@@ -1671,9 +1672,9 @@ end subroutine dylmr2_
 !
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
-      USE ions_base,         ONLY: na, nsp, nat
-      USE uspp,              ONLY: nhsa=>nkb, qq_nt
-      USE uspp_param,        ONLY: nhm, nh, ish, nvb
+      USE ions_base,         ONLY: na, nsp, nat, ityp
+      USE uspp,              ONLY: nhsa=>nkb, qq_nt, indv_ijkb0
+      USE uspp_param,        ONLY: nhm, nh, upf
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
       USE constants,         ONLY: pi, fpi
@@ -1691,7 +1692,6 @@ end subroutine dylmr2_
       INTEGER :: k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic, nr, nc, ibgrp_i
       INTEGER :: n1, n2, m1, m2, nrcx
       INTEGER :: nrr(nspin), irr, nrrx
-      REAL(DP), EXTERNAL :: ddot
       REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:), tmplam(:,:,:)
       REAL(DP), ALLOCATABLE :: fion_tmp(:,:)
       REAL(DP), ALLOCATABLE :: bec(:,:,:)
@@ -1722,8 +1722,9 @@ end subroutine dylmr2_
 
       !
 !$omp parallel default(none), &
-!$omp shared(nrrx,nhm,nrcx,nvb,na,nspin,nrr,nupdwn,iupdwn,idesc,nh,ish,qq_nt,bec,becdr_bgrp,ibgrp_l2g,tmplam,fion_tmp), &
-!$omp private(tmpdr,temp,tmpbec,is,k,ia,isa,i,iss,nss,istart,ic,nc,jv,iv,inl,ir,nr)
+!$omp shared(nrrx,nhm,nrcx,nsp,na,nspin,nrr,nupdwn,iupdwn,idesc,nh,qq_nt,bec,becdr_bgrp,ibgrp_l2g,tmplam,fion_tmp), &
+!$omp shared(upf, ityp,nat,indv_ijkb0), &
+!$omp private(tmpdr,temp,tmpbec,is,k,ia,i,iss,nss,istart,ic,nc,jv,iv,inl,ir,nr)
 
       IF( nrrx > 0 ) THEN
          ALLOCATE( tmpdr( nrrx, nhm ) )
@@ -1732,16 +1733,12 @@ end subroutine dylmr2_
       ALLOCATE( tmpbec( nhm, nrcx ) )
 
       DO k=1,3
-         DO is=1,nvb
+         DO is=1,nsp
+            IF( .NOT. upf(is)%tvanp ) CYCLE
 !$omp do
-            DO ia=1,na(is)
+            DO ia=1,nat
 
-               isa = 0
-               DO i = 1, is - 1
-                  isa = isa + na(i)
-               END DO
-               isa = isa + ia
-
+               IF( ityp(ia) /= is ) CYCLE
                !
                DO iss = 1, nspin
                   !
@@ -1757,7 +1754,7 @@ end subroutine dylmr2_
                      ic = idesc( LAX_DESC_IC, iss )
                      nc = idesc( LAX_DESC_NC, iss )
                      DO jv=1,nh(is)
-                        inl=ish(is)+(jv-1)*na(is)+ia
+                        inl = indv_ijkb0(ia) + jv
                         DO iv=1,nh(is)
                            IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
                               DO i=1,nc
@@ -1770,7 +1767,7 @@ end subroutine dylmr2_
                      ir = idesc( LAX_DESC_IR, iss )
                      nr = idesc( LAX_DESC_NR, iss )
                      DO iv=1,nh(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
+                        inl = indv_ijkb0(ia) + iv
                         DO i=1,nrr(iss)
                            tmpdr(i,iv) = becdr_bgrp( inl, ibgrp_l2g(i,iss), k )
                         END DO
@@ -1783,7 +1780,7 @@ end subroutine dylmr2_
                         CALL dgemm( 'N', 'N', nrr(iss), nc, nh(is), 1.0d0, tmpdr, nrrx, tmpbec, nhm, 0.0d0, temp, nrrx )
                         DO j = 1, nc
                            DO i = 1, nrr(iss)
-                              fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * tmplam( i, j, iss )
+                              fion_tmp(k,ia) = fion_tmp(k,ia) + 2D0 * temp( i, j ) * tmplam( i, j, iss )
                            END DO
                         END DO
 
@@ -1931,10 +1928,10 @@ end subroutine dylmr2_
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
       USE kinds,      ONLY : DP
-      USE ions_base,  ONLY : nsp, na
+      USE ions_base,  ONLY : nat, ityp
       USE gvecw,      ONLY : ngw
-      USE uspp,       ONLY : beta, nhtol
-      USE uspp_param, ONLY : nh, ish
+      USE uspp,       ONLY : beta, nhtol, indv_ijkb0
+      USE uspp_param, ONLY : nh, upf
 !
       IMPLICIT NONE
       COMPLEX(DP), INTENT(IN) :: eigr( :, : )
@@ -1944,18 +1941,15 @@ end subroutine dylmr2_
       COMPLEX(DP) :: ci
 !
       CALL start_clock( 'prefor' )
-      isa = 0
-      DO is=1,nsp
+      DO ia=1,nat
+         is=ityp(ia)
          DO iv=1,nh(is)
             ci=(0.0d0,-1.0d0)**nhtol(iv,is)
-            DO ia=1,na(is)
-               inl=ish(is)+(iv-1)*na(is)+ia
-               DO ig=1,ngw
-                  betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia+isa)
-               END DO
+            inl = indv_ijkb0(ia) + iv
+            DO ig=1,ngw
+               betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia)
             END DO
          END DO
-         isa = isa + na(is)
       END DO
       CALL stop_clock( 'prefor' )
 !

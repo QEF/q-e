@@ -42,7 +42,6 @@ PROGRAM X_Spectra
        degauss,lgauss,ngauss,    &
        two_fermi_energies
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
-  USE noncollin_module,ONLY : noncolin
   USE mp,              ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_global,       ONLY : mp_startup, mp_global_end
   USE mp_pools,        ONLY : intra_pool_comm, npool

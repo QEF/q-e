@@ -32,7 +32,7 @@ SUBROUTINE hp_ef_shift (drhoscf, ldos, ldoss, dos_ef, dbecsum, becsum1)
   USE buffers,              ONLY : get_buffer, save_buffer
   USE lsda_mod,             ONLY : nspin
   USE klist,                ONLY : degauss, ngauss, ngk
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag, nspin_lsda
+  USE noncollin_module,     ONLY : nspin_mag, nspin_lsda
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE uspp_param,           ONLY : nhm

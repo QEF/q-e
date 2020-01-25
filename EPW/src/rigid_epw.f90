@@ -62,7 +62,8 @@
     !! SP - 11/2019 - Addition of system_2d (we assume z is the vacuum direction).  
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, fpi, e2
+    USE constants_epw, ONLY : fpi, e2
+    USE constants,     ONLY : pi
     USE cell_base,     ONLY : bg, omega
     USE constants_epw, ONLY : eps6
     USE epwcom,        ONLY : system_2d
@@ -533,7 +534,8 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, omega, alat
-    USE constants_epw, ONLY : pi, twopi, ha2ev, cone, ci, eps5, eps10
+    USE constants_epw, ONLY : twopi, ha2ev, cone, ci, eps5, eps10
+    USE constants,     ONLY : pi
     USE epwcom,        ONLY : meff, fermi_diff, nel, smear_rpa
     USE io_global,     ONLY : stdout
     !
@@ -623,7 +625,8 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, omega, alat
-    USE constants_epw, ONLY : pi, twopi, ha2ev, cone, eps5, eps10
+    USE constants_epw, ONLY : twopi, ha2ev, cone, eps5, eps10
+    USE constants,     ONLY : pi
     USE epwcom,        ONLY : fermi_diff, nel
     USE io_global,     ONLY : stdout
     !
@@ -769,7 +772,8 @@
     !! compute the rigid-ion (long-range) derivative term for q 
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, fpi, e2, ci, twopi
+    USE constants_epw, ONLY : fpi, e2, ci, twopi
+    USE constants,     ONLY : pi
     USE cell_base,     ONLY : bg, omega, alat
     USE constants_epw, ONLY : eps6
     !

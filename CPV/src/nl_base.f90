@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-   subroutine nlsm1_x ( n, nspmn, nspmx, eigr, c, becp )
+   subroutine nlsm1_x ( n, nspmn, nspmx, eigr, c, becp, pptype_ )
 !-----------------------------------------------------------------------
 
       !     computes: the array becp
@@ -23,10 +23,10 @@
       USE kinds,      ONLY : DP
       USE mp,         ONLY : mp_sum
       USE mp_global,  ONLY : nproc_bgrp, intra_bgrp_comm
-      USE ions_base,  only : na, nat
+      USE ions_base,  only : nat, nsp, ityp
       USE gvecw,      only : ngw
-      USE uspp,       only : nkb, nhtol, beta
-      USE uspp_param, only : nh, ish
+      USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
+      USE uspp_param, only : nh, upf, nhm
       !
       USE gvect, ONLY : gstart
 !
@@ -35,109 +35,93 @@
       integer,     intent(in)  :: n, nspmn, nspmx
       complex(DP), intent(in)  :: eigr( :, : ), c( :, : )
       real(DP), intent(out) :: becp( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
       !
-      integer   :: isa, ig, is, iv, ia, l, inl, i, nhx
+      integer   :: ig, is, iv, ia, l, inl
       real(DP), allocatable :: becps( :, : )
       complex(DP), allocatable :: wrk2( :, : )
       complex(DP) :: cfact
+      integer :: pptype
       !
       call start_clock( 'nlsm1' )
 
-      isa = 0
-      do is = 1, nspmn - 1
-        isa = isa + na(is)
-      end do
+      IF( PRESENT( pptype_ ) ) THEN
+         pptype = pptype_
+      ELSE
+         pptype = 0
+      END IF
+
+      allocate( wrk2( ngw, nhm ) ) 
+      allocate( becps( SIZE(becp,1), SIZE(becp,2) ) ) 
+      becps = 0.0d0
 
       do is = nspmn, nspmx
-         !
-         IF( nh( is ) < 1 ) THEN
-            isa = isa + na(is)
-            CYCLE
-         END IF
-         !
-         allocate( wrk2( ngw, na( is ) ) )
-         !
-         IF( nproc_bgrp > 1 ) THEN
-            nhx = nh( is ) * na( is )
-            IF( MOD( nhx, 2 ) == 0 ) nhx = nhx + 1
-            ALLOCATE( becps( nhx, n ) )
-            becps = 0.0d0
-         END IF
-         !
-         do iv = 1, nh( is )
-            !
-!$omp parallel default(shared), private(l,ig,ia,cfact)
-            l = nhtol( iv, is )
-            !
-            if (l == 0) then
-               cfact =   cmplx( 1.0_dp , 0.0_dp )
-            else if (l == 1) then
-               cfact = - cmplx( 0.0_dp , 1.0_dp )
-            else if (l == 2) then
-               cfact = - cmplx( 0.0_dp , 1.0_dp )
-               cfact = cfact * cfact
-            else if (l == 3) then
-               cfact = - cmplx( 0.0_dp , 1.0_dp )
-               cfact = cfact * cfact * cfact
-            endif
-!
-!$omp do
-            do ia=1,na(is)
-               !
-               !  q = 0   component (with weight 1.0)
-               !
-               if (gstart == 2) then
-                  wrk2( 1, ia ) = cfact * beta(1,iv,is) * eigr(1,ia+isa)
-               end if
-               !
-               !   q > 0   components (with weight 2.0)
-               !
-               do ig = gstart, ngw
-                  wrk2( ig, ia ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia+isa)
-               end do
-               !
-            end do
+        !
+        IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
+        IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
 
-!$omp end do
-            
-!$omp end parallel
-            !
-            IF( nproc_bgrp > 1 ) THEN
-               inl=(iv-1)*na(is)+1
-               IF( ngw > 0 ) THEN
-                  CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
-               END IF
-            ELSE
-               inl=ish(is)+(iv-1)*na(is)+1
-               IF( ngw > 0 ) THEN
-                  CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
-               END IF
+          DO ia = 1, nat
+
+            IF( ityp(ia) == is ) THEN
+              !
+              do iv = 1, nh( is )
+                !
+                l = nhtol( iv, is )
+                !
+                if (l == 0) then
+                  cfact =   cmplx( 1.0_dp , 0.0_dp )
+                else if (l == 1) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                else if (l == 2) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact
+                else if (l == 3) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact * cfact
+                endif
+                !
+                !  q = 0   component (with weight 1.0)
+                !
+                if (gstart == 2) then
+                  wrk2( 1, iv ) = cfact * beta(1,iv,is) * eigr(1,ia)
+                end if
+                !
+                !   q > 0   components (with weight 2.0)
+                !
+                do ig = gstart, ngw
+                  wrk2( ig, iv ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
+                end do
+                !
+              end do
+              !
+              inl = indv_ijkb0(ia) + 1
+              IF( ngw > 0 .AND. nh(is) > 0 ) THEN
+                 CALL dgemm( 'T', 'N', nh(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nkb )
+              END IF
             END IF
-
-         end do
-
-         deallocate( wrk2 )
-
-
-         IF( nproc_bgrp > 1 ) THEN
-            !
-            inl = ish(is) + 1
-            !
-            CALL mp_sum( becps, intra_bgrp_comm )
-
-            do i = 1, n
-               do iv = inl , ( inl + na(is) * nh(is) - 1 )
-                  becp( iv, i ) = becps( iv - inl + 1, i )
-               end do
-            end do
-
-            DEALLOCATE( becps )
-
-         END IF
-
-         isa = isa + na(is)
-
+          end do
       end do
+
+      DEALLOCATE( wrk2 )
+      IF( nproc_bgrp > 1 ) THEN
+        CALL mp_sum( becps, intra_bgrp_comm )
+      END IF
+      do is = nspmn, nspmx
+        IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
+        IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
+          DO ia = 1, nat
+            IF( ityp(ia) == is ) THEN
+              inl = indv_ijkb0(ia)
+              do iv = 1, nh( is )
+                becp(inl+iv,:) = becps( inl+iv, : )
+              end do
+            END IF
+          end do
+      end do
+              !
+      
+      DEALLOCATE( becps )
 
       call stop_clock( 'nlsm1' )
 
@@ -160,9 +144,9 @@
       !
  
       USE kinds,      ONLY : DP
-      use ions_base,  only : nsp, na, nat
-      use uspp,       only : nhtol, beta
-      use uspp_param, only : nh, ish
+      use ions_base,  only : nsp, ityp, nat
+      use uspp,       only : nhtol, beta, indv_ijkb0
+      use uspp_param, only : nh, upf
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
@@ -174,82 +158,65 @@
       complex(DP), intent(in)  :: eigr(:,:), c_bgrp(:,:)
       real(DP),    intent(out) :: becdr_bgrp(:,:,:)
       !
-      real(DP),    allocatable :: gk(:)
       complex(DP), allocatable :: wrk2(:,:)
       !
-      integer  :: ig, is, iv, ia, k, l, inl, isa, i
-      real(DP) :: arg
+      integer  :: ig, is, iv, ia, k, l, inl
       complex(DP) :: cfact
 !
       call start_clock( 'nlsm2' )
 
-      allocate( gk( ngw ) )
+      allocate( wrk2( ngw, MAXVAL( nh( : ) ) ) )
 
       becdr_bgrp = 0.d0
 !
       do k = 1, 3
+         !
+         DO ia = 1, nat
 
-         do ig=1,ngw
-            gk(ig)=g(k,ig)*tpiba
-         end do
-!
-         isa = 0
-
-         do is=1,nsp
-
-            allocate( wrk2( ngw, na( is ) ) )
+            is = ityp(ia) 
 
             do iv=1,nh(is)
                !
                !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
                !
-!$omp parallel default(none), shared(na,nhtol,gstart,wrk2,gk,beta,eigr,ngw,iv,is,isa), private(l,cfact,ig,arg,ia)
                l=nhtol(iv,is)
 
                ! compute (-i)^(l+1)
                !
                if (l == 0) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
                else if (l == 1) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
+                 cfact = cfact * cfact
                else if (l == 2) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact * cfact
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
+                 cfact = cfact * cfact * cfact
                else if (l == 3) then
-                  cfact =   cmplx( 1.0_dp , 0.0_dp )
+                 cfact =   cmplx( 1.0_dp , 0.0_dp )
                endif
 
-!$omp do
-               do ia=1,na(is)
-                  !    q = 0   component (with weight 1.0)
-                  if (gstart == 2) then
-                     wrk2(1,ia) = cfact*gk(1)*beta(1,iv,is)*eigr(1,ia+isa)
-                  end if
-                  !    q > 0   components (with weight 2.0)
-                  do ig=gstart,ngw
-                     arg = 2.0d0*gk(ig)*beta(ig,iv,is)
-                     wrk2(ig,ia) = cfact * arg * eigr(ig,ia+isa)
-                  end do
+               cfact = cfact * tpiba
+
+               !    q = 0   component (with weight 1.0)
+               if (gstart == 2) then
+                  wrk2(1,iv) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
+               end if
+               !    q > 0   components (with weight 2.0)
+               do ig=gstart,ngw
+                  wrk2(ig,iv) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
                end do
-!$omp end do
-!$omp end parallel 
-               inl=ish(is)+(iv-1)*na(is)+1
-               IF( ngw > 0 ) THEN
-                  CALL dgemm( 'T', 'N', na(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
-                           c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( inl, 1, k ), nkb )
-               END IF
+               !
             end do
 
-            deallocate( wrk2 )
-
-            isa = isa + na(is)
-
+            inl = indv_ijkb0(ia) + 1
+            IF( ngw > 0 .AND. nh(is) > 0 ) THEN
+               CALL dgemm( 'T', 'N', nh(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
+                        c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( inl, 1, k ), nkb )
+            END IF
          end do
-
       end do
 
-      deallocate( gk )
+      deallocate( wrk2 )
 
       IF( nproc_bgrp > 1 ) THEN
          CALL mp_sum( becdr_bgrp, intra_bgrp_comm )
@@ -270,10 +237,10 @@
       ! calculation of nonlocal potential energy term and array rhovan
       !
       use kinds,          only : DP
-      use uspp_param,     only : nh, ish
-      use uspp,           only : dvan
+      use uspp_param,     only : nh, upf
+      use uspp,           only : dvan, indv_ijkb0
       use electrons_base, only : nbsp_bgrp, nspin, ispin_bgrp, f_bgrp, nbspx_bgrp
-      use ions_base,      only : nsp, na
+      use ions_base,      only : nsp, nat, ityp
       !
       implicit none
       !
@@ -286,45 +253,35 @@
       ! local
       !
       real(DP) :: sumt, sums(2), ennl_t
-      integer  :: is, iv, jv, ijv, inl, jnl, isa, isat, ism, ia, iss, i
+      integer  :: is, iv, jv, ijv, inl, jnl, ia, iss, i
       !
       ennl_t = 0.d0  
       !
-      !  xlf does not like name of function used for OpenMP reduction
-      !
-!$omp parallel default(shared), &
-!$omp private(is,iv,jv,ijv,isa,isat,ism,ia,inl,jnl,sums,i,iss,sumt), reduction(+:ennl_t)
       do is = 1, nsp
          do iv = 1, nh(is)
             do jv = iv, nh(is)
                ijv = (jv-1)*jv/2 + iv
-               isa = 0
-               do ism = 1, is - 1
-                  isa = isa + na(ism)
+               do ia = 1, nat
+                  IF( ityp(ia) == is ) THEN
+                    inl = indv_ijkb0(ia) + iv
+                    jnl = indv_ijkb0(ia) + jv
+                    sums = 0.d0
+                    do i = 1, nbsp_bgrp
+                       iss = ispin_bgrp(i)
+                       sums(iss) = sums(iss) + f_bgrp(i) * bec_bgrp(inl,i) * bec_bgrp(jnl,i)
+                    end do
+                    sumt = 0.d0
+                    do iss = 1, nspin
+                       rhovan( ijv, ia, iss ) = sums( iss )
+                       sumt = sumt + sums( iss )
+                    end do
+                    if( iv .ne. jv ) sumt = 2.d0 * sumt
+                    ennl_t = ennl_t + sumt * dvan( jv, iv, is)
+                  END IF
                end do
-!$omp do
-               do ia = 1, na(is)
-                  inl = ish(is)+(iv-1)*na(is)+ia
-                  jnl = ish(is)+(jv-1)*na(is)+ia
-                  isat = isa+ia
-                  sums = 0.d0
-                  do i = 1, nbsp_bgrp
-                     iss = ispin_bgrp(i)
-                     sums(iss) = sums(iss) + f_bgrp(i) * bec_bgrp(inl,i) * bec_bgrp(jnl,i)
-                  end do
-                  sumt = 0.d0
-                  do iss = 1, nspin
-                     rhovan( ijv, isat, iss ) = sums( iss )
-                     sumt = sumt + sums( iss )
-                  end do
-                  if( iv .ne. jv ) sumt = 2.d0 * sumt
-                  ennl_t = ennl_t + sumt * dvan( jv, iv, is)
-               end do
-!$omp end do
             end do
          end do
       end do
-!$omp end parallel
       !
       ennl_val = ennl_t
       !
@@ -340,10 +297,10 @@
       ! calculation of rhovan relative to state iwf
       !
       use kinds,          only : DP
-      use uspp_param,     only : nhm, nh, ish
-      use uspp,           only : nkb, dvan
-      use electrons_base, only : n => nbsp, nspin, ispin, f
-      use ions_base,      only : nsp, nat, na
+      use uspp_param,     only : nh
+      use uspp,           only : indv_ijkb0
+      use electrons_base, only : ispin, f
+      use ions_base,      only : nat, ityp
       !
       implicit none
       !
@@ -355,23 +312,18 @@
       !
       ! local
       !
-      integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss
+      integer   :: is, iv, jv, ijv, inl, jnl, ia, iss
       !
-      do is = 1, nsp
+      iss = ispin(iwf)
+      !
+      do ia = 1, nat
+         is = ityp(is)
          do iv = 1, nh(is)
             do jv = iv, nh(is)
                ijv = (jv-1)*jv/2 + iv
-               isa = 0
-               do ism = 1, is - 1
-                  isa = isa + na(ism)
-               end do
-               do ia = 1, na(is)
-                  inl = ish(is)+(iv-1)*na(is)+ia
-                  jnl = ish(is)+(jv-1)*na(is)+ia
-                  isa = isa+1
-                  iss = ispin(iwf)
-                  rhovan( ijv, isa, iss ) = f(iwf) * bec(inl,iwf) * bec(jnl,iwf)
-               end do
+               inl = indv_ijkb0(ia) + iv
+               jnl = indv_ijkb0(ia) + jv
+               rhovan( ijv, ia, iss ) = f(iwf) * bec(inl,iwf) * bec(jnl,iwf)
             end do
          end do
       end do
@@ -383,7 +335,7 @@
 
 
 !-----------------------------------------------------------------------
-   subroutine calbec_x ( nspmn, nspmx, eigr, c, bec )
+   subroutine calbec_x ( nspmn, nspmx, eigr, c, bec, pptype_ )
 !-----------------------------------------------------------------------
 
       !     this routine calculates array bec
@@ -395,11 +347,7 @@
       !
       
       USE kinds,          ONLY : DP
-      use ions_base,      only : na
-      use io_global,      only : stdout
       use electrons_base, only : nbsp
-      use control_flags,  only : iverbosity
-      use uspp_param,     only : nh, ish
       use cp_interfaces,  only : nlsm1
 !
       implicit none
@@ -407,26 +355,14 @@
       integer,     intent(in)  :: nspmn, nspmx
       real(DP),    intent(out) :: bec( :, : )
       complex(DP), intent(in)  :: c( :, : ), eigr( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
 
       ! local variables
-
-      integer :: is, ia, i , iv
 !
       call start_clock( 'calbec' )
       !
-      call nlsm1( nbsp, nspmn, nspmx, eigr, c, bec )
+      call nlsm1( nbsp, nspmn, nspmx, eigr, c, bec, pptype_ )
 !
-      if ( iverbosity > 1 ) then
-         WRITE( stdout,*)
-         do is=1,nspmx
-            WRITE( stdout,'(33x,a,i4)') ' calbec: bec (is)',is
-            do ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' calbec: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &             ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,nbsp)
-            end do
-         end do
-      endif
       call stop_clock( 'calbec' )
 !
       return
@@ -434,7 +370,7 @@
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-   subroutine calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+   subroutine calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp, pptype_ )
 !-----------------------------------------------------------------------
 
       !     this routine calculates array bec
@@ -446,11 +382,7 @@
       !
 
       USE kinds,          ONLY : DP
-      use ions_base,      only : na, nat
-      use electrons_base, only : nbsp_bgrp, nbspx_bgrp
-      use gvecw,          only : ngw
-      use uspp_param,     only : nh, ish
-      use uspp,           only : nkb
+      use electrons_base, only : nbsp_bgrp
       use cp_interfaces,  only : nlsm1
 !
       implicit none
@@ -458,10 +390,11 @@
       integer,     intent(in)  :: nspmn, nspmx
       real(DP),    intent(out) :: bec_bgrp( :, : )
       complex(DP), intent(in)  :: c_bgrp( :, : ), eigr( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
 !
       call start_clock( 'calbec' )
       !
-      call nlsm1( nbsp_bgrp, nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+      call nlsm1( nbsp_bgrp, nspmn, nspmx, eigr, c_bgrp, bec_bgrp, pptype_ )
       !
       call stop_clock( 'calbec' )
 !
@@ -485,9 +418,9 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
   USE kinds,      ONLY : DP
   use mp,         only : mp_sum
   use mp_global,  only : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
-  use ions_base,  only : na, nat, nsp
-  use uspp,       only : nhtol, nkb, dbeta
-  use uspp_param, only : nh, nhm, ish
+  use ions_base,  only : nat, ityp
+  use uspp,       only : nhtol, nkb, dbeta, indv_ijkb0
+  use uspp_param, only : nh, nhm
   use gvect,      only : gstart
   use gvecw,      only : ngw
   use electrons_base,     only : nspin, iupdwn, nupdwn, nbspx_bgrp, iupdwn_bgrp, nupdwn_bgrp, &
@@ -505,7 +438,7 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
   complex(DP), allocatable :: wrk2(:,:)
   real(DP),    allocatable :: dwrk_bgrp(:,:)
   !
-  integer   :: ig, is, iv, ia, l, inl, i, j, ii, isa, nanh, iw, iss, nr, ir, istart, nss
+  integer   :: ig, is, iv, ia, l, inl, i, j, ii, iw, iss, nr, ir, istart, nss
   integer   :: n1, n2, m1, m2, ibgrp_i, nrcx
   complex(DP) :: cfact
   !
@@ -515,13 +448,11 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
   !
   do j=1,3
      do i=1,3
+        do ia = 1, nat
+           is = ityp(ia) 
+           allocate( wrk2( ngw, nh(is) ) )
+           allocate( dwrk_bgrp( nh(is), nbspx_bgrp ) )
 
-        isa = 0
-
-        do is=1,nsp
-           allocate( wrk2( ngw, na(is) ) )
-           nanh = na(is)*nh(is)
-           allocate( dwrk_bgrp( nanh, nbspx_bgrp ) )
            do iv=1,nh(is)
               l=nhtol(iv,is)
               if (l == 0) then
@@ -538,29 +469,24 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
                  CALL errore(' caldbec  ', ' l not implemented ', ABS( l ) )
               endif
               !
-              do ia=1,na(is)
-                 if (gstart == 2) then
-                    !     q = 0   component (with weight 1.0)
-                    wrk2(1,ia)= cfact*dbeta(1,iv,is,i,j)*eigr(1,ia+isa)
-                 end if
-                 !     q > 0   components (with weight 2.0)
-                 do ig = gstart, ngw
-                    wrk2(ig,ia) = 2.0d0*cfact*dbeta(ig,iv,is,i,j)*eigr(ig,ia+isa)
-                 end do
+              !     q = 0   component (with weight 1.0)
+              if (gstart == 2) then
+                 wrk2(1,iv)= cfact*dbeta(1,iv,is,i,j)*eigr(1,ia)
+              end if
+              !     q > 0   components (with weight 2.0)
+              do ig = gstart, ngw
+                 wrk2(ig,iv) = 2.0d0*cfact*dbeta(ig,iv,is,i,j)*eigr(ig,ia)
               end do
-              inl=(iv-1)*na(is)+1
-              IF( ngw > 0 ) THEN
-                 CALL dgemm( 'T', 'N', na(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
-                             c_bgrp, 2*ngw, 0.0d0, dwrk_bgrp(inl,1), nanh )
-              END IF
            end do
-           deallocate( wrk2 )
+           IF( ngw > 0 .AND. nh(is) > 0 ) THEN
+              CALL dgemm( 'T', 'N', nh(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
+                             c_bgrp, 2*ngw, 0.0d0, dwrk_bgrp(1,1), nh(is) )
+           END IF
 
            if( nproc_bgrp > 1 ) then
               call mp_sum( dwrk_bgrp, intra_bgrp_comm )
            end if
 
-           inl=ish(is)+1
            do iss=1,nspin
               IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
                  nr = idesc( LAX_DESC_NR, iss )
@@ -570,15 +496,16 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
                  do ii = 1, nr
                     ibgrp_i = ibgrp_g2l( ii + ir - 1 + istart - 1 )
                     IF( ibgrp_i > 0 ) THEN
-                       do iw = 1, nanh
-                          dbec( iw + inl - 1, ii + (iss-1)*nrcx, i, j ) = dwrk_bgrp( iw, ibgrp_i )
+                       do iw = 1, nh(is)
+                          dbec( indv_ijkb0(ia) + iw, ii + (iss-1)*nrcx, i, j ) = dwrk_bgrp( iw, ibgrp_i )
                        end do
                     END IF
                  end do
               END IF
            end do
+
+           deallocate( wrk2 )
            deallocate( dwrk_bgrp )
-           isa = isa + na(is)
         end do
      end do
   end do
@@ -600,9 +527,9 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
   !  pseudopotentials to the derivative of E with respect to h
   !
   USE kinds,      ONLY : DP
-  use uspp_param, only : nh, nhm, ish
-  use uspp,       only : nkb, dvan, deeq
-  use ions_base,  only : nsp, na, nat
+  use uspp_param, only : nh
+  use uspp,       only : nkb, dvan, deeq, indv_ijkb0
+  use ions_base,  only : nat, ityp
   use cell_base,  only : h
   use io_global,  only : stdout
   use mp,         only : mp_sum
@@ -621,7 +548,7 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
   INTEGER, intent(in) :: idesc( :, : )
 
   real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
-  integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i,j,k
+  integer   :: is, iv, jv, ijv, inl, jnl, ia, iss, i,j,k
   integer   :: istart, nss, ii, ir, nr, ibgrp, nrcx
   !
   nrcx = MAXVAL(idesc(LAX_DESC_NRCX,:))
@@ -629,50 +556,44 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
   denl=0.d0
   drhovan=0.0d0
 
-  do is=1,nsp
+  do ia=1,nat
+     is = ityp(ia) 
      do iv=1,nh(is)
         do jv=iv,nh(is)
            ijv = (jv-1)*jv/2 + iv
-           isa=0
-           do ism=1,is-1
-              isa=isa+na(ism)
-           end do
-           do ia=1,na(is)
-              inl=ish(is)+(iv-1)*na(is)+ia
-              jnl=ish(is)+(jv-1)*na(is)+ia
-              isa=isa+1
-              dsums=0.d0
-              do iss=1,nspin
-                 IF( ( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) .AND. &
-                     ( idesc( LAX_DESC_MYR, iss ) == idesc( LAX_DESC_MYC, iss ) ) ) THEN
-                    nr = idesc( LAX_DESC_NR, iss )
-                    ir = idesc( LAX_DESC_IR, iss )
-                    istart = iupdwn( iss )
-                    nss    = nupdwn( iss )
-                    do i=1,nr
-                       ii = i+istart-1+ir-1
-                       ibgrp = ibgrp_g2l( ii )
-                       IF( ibgrp > 0 ) THEN
-                          do k=1,3
-                             do j=1,3
-                                dsums(iss,k,j)=dsums(iss,k,j)+f_bgrp(ibgrp)*       &
- &                          (dbec(inl,i+(iss-1)*nrcx,k,j)*bec_bgrp(jnl,ibgrp)          &
- &                          + bec_bgrp(inl,ibgrp)*dbec(jnl,i+(iss-1)*nrcx,k,j))
-                             enddo
+           inl = indv_ijkb0(ia) + iv
+           jnl = indv_ijkb0(ia) + jv
+           dsums=0.d0
+           do iss=1,nspin
+              IF( ( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) .AND. &
+                  ( idesc( LAX_DESC_MYR, iss ) == idesc( LAX_DESC_MYC, iss ) ) ) THEN
+                 nr = idesc( LAX_DESC_NR, iss )
+                 ir = idesc( LAX_DESC_IR, iss )
+                 istart = iupdwn( iss )
+                 nss    = nupdwn( iss )
+                 do i=1,nr
+                    ii = i+istart-1+ir-1
+                    ibgrp = ibgrp_g2l( ii )
+                    IF( ibgrp > 0 ) THEN
+                       do k=1,3
+                          do j=1,3
+                             dsums(iss,k,j) = dsums(iss,k,j) + f_bgrp(ibgrp) *       &
+ &                          ( dbec(inl,i+(iss-1)*nrcx,k,j)*bec_bgrp(jnl,ibgrp)          &
+ &                          + bec_bgrp(inl,ibgrp)*dbec(jnl,i+(iss-1)*nrcx,k,j) )
                           enddo
-                       END IF
-                    end do
-                    dsum=0.d0
-                    do k=1,3
-                       do j=1,3
-                          drhovan(ijv,isa,iss,j,k)=dsums(iss,j,k)
-                          dsum(j,k)=dsum(j,k)+dsums(iss,j,k)
                        enddo
+                    END IF
+                 end do
+                 dsum=0.d0
+                 do k=1,3
+                    do j=1,3
+                       drhovan(ijv,ia,iss,j,k)=dsums(iss,j,k)
+                       dsum(j,k)=dsum(j,k)+dsums(iss,j,k)
                     enddo
-                    if(iv.ne.jv) dsum=2.d0*dsum
-                    denl = denl + dsum * dvan(jv,iv,is)
-                 END IF
-              end do
+                 enddo
+                 if(iv.ne.jv) dsum=2.d0*dsum
+                 denl = denl + dsum * dvan(jv,iv,is)
+              END IF
            end do
         end do
      end do
@@ -702,9 +623,9 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !     contribution to fion due to nonlocal part
   !
   USE kinds,          ONLY : DP
-  use uspp,           only : nkb, dvan, deeq
-  use uspp_param,     only : nhm, nh, ish, nvb
-  use ions_base,      only : nax, nat, nsp, na
+  use uspp,           only : nkb, dvan, deeq, indv_ijkb0
+  use uspp_param,     only : nhm, nh
+  use ions_base,      only : nax, nat, ityp
   use electrons_base, only : nbsp_bgrp, f_bgrp, nbspx_bgrp, ispin_bgrp
   use gvecw,          only : ngw
   use constants,      only : pi, fpi
@@ -720,7 +641,7 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   REAL(DP),    INTENT(OUT)  ::  becdr_bgrp( :, :, : )
   REAL(DP),    INTENT(OUT) ::  fion( :, : )
   !
-  integer  :: k, is, ia, isa, inl, iv, jv, i
+  integer  :: k, is, ia, inl, iv, jv, i
   real(DP) :: temp
   real(DP) :: sum_tmpdr
   !
@@ -741,9 +662,9 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   fion_loc = 0.0d0
   !
 !$omp parallel default(none), &
-!$omp shared(becdr_bgrp,bec_bgrp,fion_loc,f_bgrp,deeq,dvan,nbsp_bgrp,ish,nh,na, &
-!$omp        nat,nsp,nhm,nbspx_bgrp,ispin_bgrp,nproc_bgrp,me_bgrp), &
-!$omp private(tmpbec,tmpdr,isa,is,ia,iv,jv,k,inl,temp,i,mytid,ntids,sum_tmpdr)
+!$omp shared(becdr_bgrp,bec_bgrp,fion_loc,f_bgrp,deeq,dvan,nbsp_bgrp,indv_ijkb0,nh, &
+!$omp        nat,nhm,nbspx_bgrp,ispin_bgrp,nproc_bgrp,me_bgrp,ityp), &
+!$omp private(tmpbec,tmpdr,is,ia,iv,jv,k,inl,temp,i,mytid,ntids,sum_tmpdr)
 
 #if defined(_OPENMP)
   mytid = omp_get_thread_num()  ! take the thread ID
@@ -753,58 +674,51 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   allocate ( tmpbec( nhm, nbspx_bgrp ), tmpdr( nhm, nbspx_bgrp ) )
 
   DO k = 1, 3
-     DO is=1,nsp
-        DO ia=1,na(is)
+     DO ia=1,nat
+        is = ityp(ia)
 
-           isa = 0
-           DO i = 1, is - 1
-              isa = isa + na(i)
-           END DO
-           isa = isa + ia
-
-
-           ! better if we distribute to MPI tasks too!
-           !
-           IF( MOD( isa + (k-1)*nat, nproc_bgrp ) /= me_bgrp ) CYCLE
+        ! better if we distribute to MPI tasks too!
+        !
+        IF( MOD( ia + (k-1)*nat, nproc_bgrp ) /= me_bgrp ) CYCLE
 
 #if defined(_OPENMP)
-           ! distribute atoms round robin to threads
-           !
-           IF( MOD( ( isa + (k-1)*nat ) / nproc_bgrp, ntids ) /= mytid ) CYCLE
+        ! distribute atoms round robin to threads
+        !
+        IF( MOD( ( ia + (k-1)*nat ) / nproc_bgrp, ntids ) /= mytid ) CYCLE
 #endif  
-                 tmpbec = 0.d0
-                 tmpdr  = 0.d0
+        tmpbec = 0.d0
+        tmpdr  = 0.d0
 
-                 do iv=1,nh(is)
-                    do jv=1,nh(is)
-                       inl=ish(is)+(jv-1)*na(is)+ia
-                       do i = 1, nbsp_bgrp
-                          temp = dvan(iv,jv,is) + deeq(jv,iv,isa,ispin_bgrp( i ) )
-                          tmpbec(iv,i) = tmpbec(iv,i) + temp * bec_bgrp(inl,i)
-                       end do
-                    end do
-                 end do
+        do iv=1,nh(is)
+           do jv=1,nh(is)
+              inl = indv_ijkb0(ia) + jv
+              do i = 1, nbsp_bgrp
+                 temp = dvan(iv,jv,is) + deeq(jv,iv,ia,ispin_bgrp( i ) )
+                 tmpbec(iv,i) = tmpbec(iv,i) + temp * bec_bgrp(inl,i)
+              end do
+           end do
+        end do
 
-                 do iv=1,nh(is)
-                    inl=ish(is)+(iv-1)*na(is)+ia
-                    do i = 1, nbsp_bgrp
-                       tmpdr(iv,i) = f_bgrp( i ) * becdr_bgrp( inl, i, k )
-                    end do
-                 end do
+        do iv=1,nh(is)
+           inl = indv_ijkb0(ia) + iv
+           do i = 1, nbsp_bgrp
+              tmpdr(iv,i) = f_bgrp( i ) * becdr_bgrp( inl, i, k )
+           end do
+        end do
 
-                 sum_tmpdr = 0.0d0
-                 do i = 1, nbsp_bgrp
-                    do iv = 1, nh(is)
-                       sum_tmpdr = sum_tmpdr + tmpdr(iv,i)*tmpbec(iv,i)
-                    end do
-                 end do
+        sum_tmpdr = 0.0d0
+        do i = 1, nbsp_bgrp
+           do iv = 1, nh(is)
+              sum_tmpdr = sum_tmpdr + tmpdr(iv,i)*tmpbec(iv,i)
+           end do
+        end do
 
-                 fion_loc(k,isa) = fion_loc(k,isa)-2.d0*sum_tmpdr
+        fion_loc(k,ia) = fion_loc(k,ia)-2.d0*sum_tmpdr
 
-        END DO
      END DO
   END DO
   deallocate ( tmpbec, tmpdr )
+
 !$omp end parallel
 
   !

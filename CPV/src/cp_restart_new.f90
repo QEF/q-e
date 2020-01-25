@@ -65,7 +65,7 @@ MODULE cp_restart_new
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, tpiba, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
-                                           amass, iforce, ind_bck, ityp_ib => ityp 
+                                           amass, iforce, ityp 
       USE funct,                    ONLY : get_dft_name, get_inlc, &
            dft_is_hybrid, get_exx_fraction, get_screening_parameter, &
            dft_is_nonlocc, get_nonlocc_name
@@ -149,7 +149,6 @@ MODULE cp_restart_new
       INTEGER               :: nk1, nk2, nk3
       INTEGER               :: j, i, iss, ig, nspin_wfc, iss_wfc
       INTEGER               :: is, ia, isa, ik, ierr
-      INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: ftmp(:,:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
       COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
@@ -217,27 +216,13 @@ MODULE cp_restart_new
       !
       CALL recips( a1, a2, a3, b1, b2, b3 )
       !
-      ! ... Compute array ityp, and tau
+      ! ... Compute array tau
       !
-      ALLOCATE( ityp( nat ) )
       ALLOCATE( tau( 3, nat ) )
-      !
-      isa = 0
-      !
-      DO is = 1, nsp
-         !
-         DO ia = 1, na(is)
-            !
-            isa = isa + 1
-            ityp(isa) = is
-            !
-         END DO
-         !
-      END DO
       !
       natomwfc =  n_atom_wfc ( nat, ityp ) 
       !
-      CALL s_to_r( stau0, tau, na, nsp, h )
+      CALL s_to_r( stau0, tau, nat, h )
       !
       nbnd_    = nupdwn(1) 
       ALLOCATE( ftmp( nbnd_ , nspin ) )
@@ -291,8 +276,8 @@ MODULE cp_restart_new
 ! ... ATOMIC_STRUCTURE
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp_ib, &
-              nat, tau(:,ind_bck(:)), alat, alat*a1(:), alat*a2(:), alat*a3(:), ibrav)
+         CALL qexsd_init_atomic_structure(output_obj%atomic_structure, nsp, atm, ityp, &
+              nat, tau(:,:), alat, alat*a1(:), alat*a2(:), alat*a3(:), ibrav)
          !
 !-------------------------------------------------------------------------------
 ! ... BASIS SET
@@ -544,7 +529,6 @@ MODULE cp_restart_new
       !
       DEALLOCATE( ftmp )
       DEALLOCATE( tau  )
-      DEALLOCATE( ityp )
       !
       CALL stop_clock('restart')
       CALL print_clock('restart')
@@ -572,7 +556,7 @@ MODULE cp_restart_new
       USE electrons_base,           ONLY : nspin, nbnd, nupdwn, iupdwn, nudx
       USE cell_base,                ONLY : ibrav, alat, s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
-                                           sort_tau, ityp, ions_cofmass
+                                           ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi
       USE ldaU_cp,                  ONLY : lda_plus_U, ns, Hubbard_l, &
@@ -740,7 +724,7 @@ MODULE cp_restart_new
       !   
       CALL destroy (root) 
       !
-      ! objects filled, not get variables from objects
+      ! objects filled, now get variables from objects
       !
       CALL qexsd_copy_geninfo (geninfo_obj, qexsd_fmt, qexsd_version) 
       !
@@ -767,11 +751,9 @@ MODULE cp_restart_new
          CALL invmat( 3, ht, htm1, omega )
          hinv = TRANSPOSE( htm1 )
          ! atomic positions not read from CP section: use those from xml file
-         ! reorder atomic positions according to CP (il-)logic (output in taui)
-         CALL sort_tau( taui, isrt_ , tau_ , ityp_ , nat_ , nsp_ )
          ! stau0 contains "scaled" atomic positions (that is, in crystal axis)
-         CALL r_to_s( taui, stau0, na, nsp, hinv )
-         CALL ions_cofmass( taui, amass_ , na, nsp, cdmi )
+         CALL r_to_s( taui, stau0, nat_, hinv )
+         CALL ions_cofmass( taui, amass_ , nat_, ityp_, cdmi )
       END IF
       !
       DEALLOCATE ( tau_, ityp_, isrt_ )

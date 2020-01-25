@@ -648,14 +648,16 @@ CONTAINS
           READ( dftout(8:10),  * ) icorr
           READ( dftout(12:14), * ) igcx
           READ( dftout(16:18), * ) igcc
-          imeta  = 0
-          imetac = 0 
+          READ( dftout(20:22), * ) imeta
+          READ( dftout(24:26), * ) imetac
           inlc   = 0
           !
           IF (iexch /= 0) is_libxc(1) = .TRUE.
           IF (icorr /= 0) is_libxc(2) = .TRUE.
           IF (igcx  /= 0) is_libxc(3) = .TRUE.
           IF (igcc  /= 0) is_libxc(4) = .TRUE.
+          IF (imeta /= 0) is_libxc(5) = .TRUE.
+          IF (imetac/= 0) is_libxc(6) = .TRUE.
           !
           dft_defined = .TRUE.
 #else
@@ -1422,8 +1424,8 @@ CONTAINS
   FUNCTION get_dft_short()
     !---------------------------------------------------------------------
     !
-    CHARACTER(LEN=18) :: get_dft_short
-    CHARACTER(LEN=18) :: shortname
+    CHARACTER(LEN=26) :: get_dft_short
+    CHARACTER(LEN=26) :: shortname
     !
     shortname = 'no shortname'
     !
@@ -1489,18 +1491,12 @@ CONTAINS
        shortname = 'TPSS'
     ELSEIF (imeta == 2) THEN
        shortname = 'M06L'
-    ELSEIF (imeta == 3) THEN
-       shortname = 'TB09'
     ELSEIF (imeta == 4) THEN
        IF ( iexch == 1 .AND. icorr == 1) THEN
           shortname = 'PZ+META'
        ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
           shortname = 'PBE+META'
        ENDIF
-    ELSEIF (imeta == 5 ) THEN
-       shortname = 'SCAN'
-    ELSEIF (imeta == 6 ) THEN
-       shortname = 'SCAN0'
     ENDIF
     !
     IF (inlc==1) THEN
@@ -1539,11 +1535,20 @@ CONTAINS
     !
 #if defined(__LIBXC)
     IF ( ANY(is_libxc(:)) ) THEN
-       shortname = 'XC-000-000-000-000'
-       WRITE( shortname(4:6),   '(i3.3)' ) iexch
-       WRITE( shortname(8:10),  '(i3.3)' ) icorr
-       WRITE( shortname(12:14), '(i3.3)' ) igcx
-       WRITE( shortname(16:18), '(i3.3)' ) igcc
+       IF (imeta==263 .AND. imetac==267) THEN
+          shortname = 'SCAN'
+          IF (scan_exx) shortname = 'SCAN0'
+       ELSEIF (imeta == 208 .AND. imetac==231) THEN
+          shortname = 'TB09'
+       ELSE
+          shortname = 'XC-000-000-000-000-000-000'
+          WRITE( shortname(4:6),   '(i3.3)' ) iexch
+          WRITE( shortname(8:10),  '(i3.3)' ) icorr
+          WRITE( shortname(12:14), '(i3.3)' ) igcx
+          WRITE( shortname(16:18), '(i3.3)' ) igcc
+          WRITE( shortname(20:22), '(i3.3)' ) imeta
+          WRITE( shortname(24:26), '(i3.3)' ) imetac
+       ENDIF
     ENDIF
 #endif
     !

@@ -178,9 +178,9 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   !
   ! Print initial info ...
   IF (print_info >= 1)  THEN
-     WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , "   &
-              & "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", I10, ", trtol: ", 1pD9.2 )')  &
-                ethr, npw, nbnd, maxter, sbsize, nsb, nact, trtol
+     WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , ",  &
+              & "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", &
+              & I10, ", trtol: ", 1pD9.2 )')  ethr, npw, nbnd, maxter, sbsize, nsb, nact, trtol
      IF (print_info == 3) THEN
         CALL print_rnrm
         WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)

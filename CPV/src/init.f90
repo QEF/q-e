@@ -281,7 +281,7 @@
       use control_flags,    only: iprint, thdyn, ndr, nbeg, tbeg
       use io_global,        only: stdout, ionode
       use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
-      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos
+      use ions_base,        only: na, nsp, nat, tau, if_pos
       use cell_base,        only: at, alat, r_to_s, cell_init, deth
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: allocate_ions_positions, tau0, taus
@@ -322,8 +322,8 @@
       ! tau0 = initial positions, sorted wrt order read from input
       ! taus = initial positions, scaled with the cell read from input
       !
-      tau0(:,:) = tau_srt(:,:) 
-      CALL r_to_s( tau_srt, taus, na, nsp, ainv )
+      tau0(:,:) = tau(:,:) 
+      CALL r_to_s( tau, taus, nat, ainv )
       !
       !  Allocate box descriptor
       !

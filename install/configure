@@ -4157,7 +4157,11 @@ ppc64-bgq:*xlf* )
 	try_fflags_nomain="-Mnomain"
         try_fflags="-fast"
         try_fflags_openmp="-mp"
-        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        if test "$use_debug" -eq 1; then
+           try_f90flags="-g -C -Mcache_align -Mpreprocess -Mlarge_arrays"
+        else
+           try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        fi
         try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags=""

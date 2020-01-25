@@ -139,7 +139,8 @@
     USE io_global,       ONLY : stdout
     USE epwcom,          ONLY : nqstep, nswi, nswfc, nswc, nstemp, & 
                                 lreal, lpade, limag, lacon, wsfc, wscut
-    USE constants_epw,   ONLY : pi, eps6
+    USE constants_epw,   ONLY : eps6
+    USE constants,       ONLY : pi
     USE eliashbergcom,   ONLY : estemp, nsw, nsiw, wsphmax
     !
     IMPLICIT NONE
@@ -838,7 +839,8 @@
     !
     USE epwcom,        ONLY : nqstep, lpade, lacon, laniso
     USE eliashbergcom, ONLY : nsw, nsiw, ws, wsi, wsph, dwsph, estemp, wsphmax
-    USE constants_epw, ONLY : pi, zero
+    USE constants_epw, ONLY : zero
+    USE constants,     ONLY : pi
     USE low_lvl,       ONLY : mem_size_eliashberg
     ! 
     IMPLICIT NONE
@@ -1054,7 +1056,8 @@
     USE eliashbergcom, ONLY : estemp, wsi, nsiw, adeltai, aznormi, naznormi, &
                               deltai, znormi, nznormi, &
                               wkfs, w0g, nkfs, nbndfs, ef0, ekfs
-    USE constants_epw, ONLY : pi, kelvin2eV, zero
+    USE constants_epw, ONLY : kelvin2eV, zero
+    USE constants,     ONLY : pi
     !
     IMPLICIT NONE
     !

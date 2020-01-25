@@ -22,7 +22,7 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
   use kinds,      only : dp
   use constants,  only : pi
-  use ions_base,  ONLY : nsp, na, zv
+  use ions_base,  ONLY : nsp, nat, zv, ityp
   use cell_base,  only : alat, at
 
   implicit none
@@ -30,7 +30,7 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
   real(dp) tau0(3,*)
   real(dp) fion(3,*)
   real(dp) enbi, evalue
-  integer ipol, isa
+  integer ipol
   logical tfor
 
 !local variables
@@ -44,19 +44,14 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
   gmes = g_mes ( ipol, at, alat)
   pola=0.0_dp
-  isa = 0
-  do is=1,nsp
-     do ia=1,na(is)
-        isa = isa + 1
-
-!this force term is along ipol-direction
-        if( tfor) then
-           fion(ipol,isa)=fion(ipol,isa)+evalue*zv(is)
-        endif
-            
-        temp = temp - ci*gmes*tau0(ipol,isa)*zv(is)
-        pola=pola+evalue*zv(is)*tau0(ipol,isa)!this is just the center of ionic charge
-     enddo
+  do ia=1,nat
+     is = ityp(ia)
+     !this force term is along ipol-direction
+     if( tfor) then
+        fion(ipol,ia)=fion(ipol,ia)+evalue*zv(is)
+     endif
+     temp = temp - ci*gmes*tau0(ipol,ia)*zv(is)
+     pola=pola+evalue*zv(is)*tau0(ipol,ia)!this is just the center of ionic charge
   enddo
 
   enbi=AIMAG(log(exp(temp)))/gmes!this sounds stupid it's just a Riemann plane
@@ -70,27 +65,24 @@ end subroutine berryion
 !this subroutine gives the center of the ionic charge
 
       use kinds, only : dp
-      use ions_base, only: na, nsp, zv
+      use ions_base, only: na, nsp, zv, ityp, nat
 !
       implicit none
       real(dp) tau(3,*), cdz(3)
 ! local variables
       real(dp) zmas
-      integer is,i,ia,isa
+      integer is,i,ia
 !
       zmas=0.0d0
       do is=1,nsp
          zmas=zmas+na(is)*zv(is)
       end do
 !
-      isa = 0
       do i=1,3
          cdz(i)=0.0d0
-         do is=1,nsp
-            do ia=1,na(is)
-               isa = isa + 1
-               cdz(i)=cdz(i)+tau(i,isa)*zv(is)
-            end do
+         do ia=1,nat
+            is=ityp(ia)
+            cdz(i)=cdz(i)+tau(i,ia)*zv(is)
          end do
          cdz(i)=cdz(i)/zmas
       end do
@@ -111,7 +103,7 @@ end subroutine berryion
 ! field direction
 
           use kinds,     only : dp
-          use ions_base, ONLY : na, nsp, zv
+          use ions_base, ONLY : zv, nat, ityp
 
           implicit none
 
@@ -119,27 +111,19 @@ end subroutine berryion
           integer ipol!el. field polarization
 
 
-          integer i,ia,is,isa
+          integer i,ia
           real(dp) fcm!force appplied on center of mass
           real(dp) tch!total charge
 
           fcm=0.d0
           tch=0.d0
-          isa = 0
-          do is=1,nsp
-             do ia=1,na(is)
-                isa = isa + 1
-                fcm=fcm+fion(ipol,isa)     
-                tch=tch+zv(is)
-             enddo             
+          do ia=1,nat
+             fcm=fcm+fion(ipol,ia)     
+             tch=tch+zv(ityp(ia))
           enddo
           fcm=fcm/tch
-          isa = 0
-          do is=1,nsp
-             do ia=1,na(is)
-                isa = isa + 1
-                fion(ipol,isa)=fion(ipol,isa)-fcm*zv(is)
-             enddo
+          do ia=1,nat
+             fion(ipol,ia)=fion(ipol,ia)-fcm*zv(ityp(ia))
           enddo
    
           return

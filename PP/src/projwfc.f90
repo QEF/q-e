@@ -148,6 +148,7 @@ PROGRAM do_projwfc
   !
   ! Input checks 
   !
+  IF ( lbinary_data ) CALL infomsg ('projwfc','binary output disabled')
   IF (pawproj) THEN
     IF ( .NOT. okpaw ) CALL errore ('projwfc','option pawproj only for PAW',1)
     IF ( noncolin )  CALL errore ('projwfc','option pawproj and noncolinear spin not implemented',2)
@@ -219,7 +220,7 @@ PROGRAM do_projwfc
   ELSE IF ( pawproj ) THEN
      CALL projwave_paw ( )
   ELSE
-     CALL projwave(filproj, lsym, lwrite_overlaps, lbinary_data )
+     CALL projwave(filproj, lsym, lwrite_overlaps )
      IF ( lforcet ) CALL force_theorem ( ef_0, filproj )
   ENDIF
   !
@@ -1102,7 +1103,7 @@ END FUNCTION compute_mj
 !  projwave with distributed matrixes
 !
 !-----------------------------------------------------------------------
-SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
+SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !-----------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
@@ -1133,7 +1134,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   CHARACTER (len=*), INTENT(IN) :: filproj
   LOGICAL, INTENT(IN)    :: lsym
-  LOGICAL, INTENT(IN)    :: lbinary
   LOGICAL, INTENT(INOUT) :: lwrite_ovp
   !
   INTEGER :: npw, npw_, ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, l, nwfc,&
@@ -1441,9 +1441,9 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !
   IF ( ionode ) THEN
      !
-     ! write projections to file using iotk
+     ! write projections to xml file
      !
-     CALL write_proj_iotk( "atomic_proj", lbinary, proj_aux, lwrite_ovp, &
+     CALL write_xml_proj( "atomic_proj.xml", proj_aux, lwrite_ovp, &
           ovps_aux )
      !
   ENDIF

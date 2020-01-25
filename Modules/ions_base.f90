@@ -40,12 +40,7 @@
       INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)     !  initial positions read from stdin (in bohr)
       REAL(DP), ALLOCATABLE :: vel(:,:)     !  initial velocities read from stdin (in bohr)
-      REAL(DP), ALLOCATABLE :: tau_srt(:,:) !  tau sorted by specie in bohr
-      REAL(DP), ALLOCATABLE :: vel_srt(:,:) !  vel sorted by specie in bohr
-      INTEGER,  ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
-      INTEGER,  ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
       CHARACTER(LEN=3)      :: atm( ntypx )
-      CHARACTER(LEN=3), ALLOCATABLE :: label_srt( : ) 
       CHARACTER(LEN=80)     :: tau_format   ! format of input atomic positions:
                                             ! 'alat','crystal','bohr','angstrom'
 
@@ -84,66 +79,9 @@
       LOGICAL, PRIVATE :: tdebug = .FALSE.
 
       
-      INTERFACE ions_vel
-         MODULE PROCEDURE ions_vel3, ions_vel2
-      END INTERFACE
-
-
 !------------------------------------------------------------------------------!
   CONTAINS
 !------------------------------------------------------------------------------!
-
-    SUBROUTINE sort_tau( tausrt, isrt, tau, isp, nat, nsp )
-      IMPLICIT NONE
-      REAL(DP), INTENT(OUT) :: tausrt( :, : )
-      INTEGER, INTENT(OUT) :: isrt( : )
-      REAL(DP), INTENT(IN) :: tau( :, : )
-      INTEGER, INTENT(IN) :: nat, nsp, isp( : )
-      INTEGER :: ina( nsp ), na( nsp )
-      INTEGER :: is, ia
-
-      ! ... count the atoms for each specie
-      na  = 0
-      DO ia = 1, nat
-        is  =  isp( ia )
-        IF( is < 1 .OR. is > nsp ) &
-          CALL errore(' sorttau ', ' wrong species index for positions ', ia )
-        na( is ) = na( is ) + 1
-      END DO
-      IF ( ANY ( na(1:nsp) == 0 ) ) &
-         CALL errore ('sort_atoms', 'some atomic species have no atoms',1)
-      ! ... compute the index of the first atom in each specie
-      ina( 1 ) = 0
-      DO is = 2, nsp
-        ina( is ) = ina( is - 1 ) + na( is - 1 )
-      END DO
-
-      ! ... sort the position according to atomic specie
-      na  = 0
-      DO ia = 1, nat
-        is  =  isp( ia )
-        na( is ) = na( is ) + 1
-        tausrt( :, na(is) + ina(is) ) = tau(:, ia )
-        isrt  (    na(is) + ina(is) ) = ia
-      END DO
-      RETURN
-    END SUBROUTINE sort_tau
-
-!------------------------------------------------------------------------------!
-
-    SUBROUTINE unsort_tau( tau, tausrt, isrt, nat )
-      IMPLICIT NONE
-      REAL(DP), INTENT(IN) :: tausrt( :, : )
-      INTEGER, INTENT(IN) :: isrt( : )
-      REAL(DP), INTENT(OUT) :: tau( :, : )
-      INTEGER, INTENT(IN) :: nat
-      INTEGER :: isa, ia
-      DO isa = 1, nat
-        ia  =  isrt( isa )
-        tau( :, ia ) = tausrt( :, isa )
-      END DO
-      RETURN
-    END SUBROUTINE unsort_tau
 
     !-------------------------------------------------------------------------
     SUBROUTINE ions_base_init( nsp_, nat_, na_, ityp_, tau_, vel_, amass_,&
@@ -195,14 +133,9 @@
       ALLOCATE( ityp( nat ) )
       ALLOCATE( tau( 3, nat ) )
       ALLOCATE( vel( 3, nat ) )
-      ALLOCATE( tau_srt( 3, nat ) )
-      ALLOCATE( vel_srt( 3, nat ) )
-      ALLOCATE( ind_srt( nat ) )
-      ALLOCATE( ind_bck( nat ) )
       ALLOCATE( if_pos( 3, nat ) )
       ALLOCATE( iforce( 3, nat ) )
       ALLOCATE( taui( 3, nat ) )
-      ALLOCATE( label_srt( nat ) )
       ALLOCATE( extfor( 3, nat ) )
       !
       ityp(1:nat)     = ityp_(1:nat)
@@ -273,34 +206,7 @@
             !
       END SELECT
       !
-      ! ... tau_srt : atomic species are ordered according to
-      ! ... the ATOMIC_SPECIES input card. Within each specie atoms are ordered
-      ! ... according to the ATOMIC_POSITIONS input card.
-      ! ... ind_srt : can be used to restore the original position
-      !
-      CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
-      !
-      vel_srt(:,:) = vel(:,ind_srt(:))
-      !
-      DO ia = 1, nat
-         !
-         label_srt( ia ) = atm( ityp( ind_srt( ia ) ) )
-         !
-      END DO
-      !
-      ! ... generate ind_bck from ind_srt (reverse sort list)
-      !
-      DO ia = 1, nat
-         !
-         ind_bck(ind_srt(ia)) = ia
-         !
-      END DO
-      !
-      DO ia = 1, nat
-         !
-         extfor( :, ia ) = extfor_( :, ind_srt( ia ) )
-         !
-      END DO
+      extfor( :, 1:nat ) = extfor_( :, 1:nat )
       !
       IF( tdebug ) THEN
         WRITE( stdout, * ) 'ions_base_init: unsorted position and velocities'
@@ -311,7 +217,7 @@
         WRITE( stdout, * ) 'ions_base_init: sorted position and velocities'
         DO ia = 1, nat
           WRITE( stdout, fmt="(A3,3D12.4,3X,3D12.4)") &
-            atm( ityp( ind_srt( ia ) ) ), tau_srt(1:3, ia), vel_srt(1:3,ia)
+            atm( ityp( ia ) ), tau(1:3, ia), vel(1:3,ia)
         END DO
       END IF
       !
@@ -323,7 +229,7 @@
       if_pos(:,:) = if_pos_(:,1:nat)
       !
       iforce = 0
-      iforce(:,:) = if_pos(:,ind_srt(:))
+      iforce(:,:) = if_pos(:,:)
       !
       fixatom=COUNT( if_pos(1,:)==0 .AND. if_pos(2,:)==0 .AND. if_pos(3,:)==0 )
       ndofp = COUNT( iforce == 1 )
@@ -334,11 +240,11 @@
       IF ( ANY( amass(1:nsp) <= 0.0_DP ) ) &
          CALL errore( 'ions_base_init ', 'invalid  mass', 1 ) 
       !
-      CALL ions_cofmass( tau_srt, amass, na, nsp, cdmi )
+      CALL ions_cofmass( tau, amass, nat, ityp, cdmi )
       !
       DO ia = 1, nat
          !
-         taui(1:3,ia) = tau_srt(1:3,ia) - cdmi(1:3)
+         taui(1:3,ia) = tau(1:3,ia) - cdmi(1:3)
          !
       END DO
       !
@@ -357,14 +263,9 @@
       IF ( ALLOCATED( ityp ) )    DEALLOCATE( ityp )
       IF ( ALLOCATED( tau ) )     DEALLOCATE( tau )
       IF ( ALLOCATED( vel ) )     DEALLOCATE( vel )
-      IF ( ALLOCATED( tau_srt ) ) DEALLOCATE( tau_srt )
-      IF ( ALLOCATED( vel_srt ) ) DEALLOCATE( vel_srt )
-      IF ( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
-      IF ( ALLOCATED( ind_bck ) ) DEALLOCATE( ind_bck )
       IF ( ALLOCATED( if_pos ) )  DEALLOCATE( if_pos )
       IF ( ALLOCATED( iforce ) )  DEALLOCATE( iforce )
       IF ( ALLOCATED( taui ) )    DEALLOCATE( taui )
-      IF ( ALLOCATED( label_srt ) ) DEALLOCATE( label_srt )
       IF ( ALLOCATED( extfor ) )  DEALLOCATE( extfor )
       !
       tions_base_init = .FALSE.
@@ -374,89 +275,52 @@
     END SUBROUTINE deallocate_ions_base
     !
     !-------------------------------------------------------------------------
-    SUBROUTINE ions_vel3( vel, taup, taum, na, nsp, dt )
+    SUBROUTINE ions_vel( vel, taup, taum, dt )
       !-------------------------------------------------------------------------
       USE constants, ONLY : eps8
       IMPLICIT NONE
       REAL(DP) :: vel(:,:), taup(:,:), taum(:,:)
-      INTEGER :: na(:), nsp
       REAL(DP) :: dt
-      INTEGER :: ia, is, i, isa
       REAL(DP) :: fac
       IF( dt < eps8 ) &
-         CALL errore( ' ions_vel3 ', ' dt <= 0 ', 1 )
+         CALL errore( ' ions_vel ', ' dt <= 0 ', 1 )
       fac  = 1.0_DP / ( dt * 2.0_DP )
-      isa = 0
-      DO is = 1, nsp
-        DO ia = 1, na(is)
-          isa = isa + 1
-          DO i = 1, 3
-            vel(i,isa) = ( taup(i,isa) - taum(i,isa) ) * fac
-          END DO
-        END DO
-      END DO
+      vel(:,:) = ( taup(:,:) - taum(:,:) ) * fac
       RETURN
-    END SUBROUTINE ions_vel3
+    END SUBROUTINE ions_vel
 
 !------------------------------------------------------------------------------!
 
-    SUBROUTINE ions_vel2( vel, taup, taum, nat, dt )
-      USE constants, ONLY : eps8
-      IMPLICIT NONE
-      REAL(DP) :: vel(:,:), taup(:,:), taum(:,:)
-      INTEGER :: nat
-      REAL(DP) :: dt
-      INTEGER :: ia, i
-      REAL(DP) :: fac
-      IF( dt < eps8 ) &
-         CALL errore( ' ions_vel3 ', ' dt <= 0 ', 1 )
-      fac  = 1.0_DP / ( dt * 2.0_DP )
-      DO ia = 1, nat
-        DO i = 1, 3
-          vel(i,ia) = ( taup(i,ia) - taum(i,ia) ) * fac
-        END DO
-      END DO
-      RETURN
-    END SUBROUTINE ions_vel2
-
-!------------------------------------------------------------------------------!
-
-    SUBROUTINE ions_cofmass( tau, pmass, na, nsp, cdm )
+    SUBROUTINE ions_cofmass( tau, pmass, nat, ityp, cdm )
       USE constants, ONLY : eps8
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: tau(:,:), pmass(:)
       REAL(DP), INTENT(OUT) :: cdm(3)
-      INTEGER, INTENT(IN) :: na(:), nsp
+      INTEGER, INTENT(IN) :: nat, ityp(:)
 
       REAL(DP) :: tmas
       INTEGER :: is, i, ia, isa
 !
       tmas=0.0_DP
-      do is=1,nsp
-         tmas=tmas+na(is)*pmass(is)
+      cdm=0.0_DP
+      do ia=1,nat
+         do i=1,3
+            cdm(i)=cdm(i)+tau(i,ia)*pmass(ityp(ia))
+         end do
+         tmas=tmas+pmass(ityp(ia))
       end do
 
       if( tmas < eps8 ) &
          call errore(' ions_cofmass ', ' total mass <= 0 ', 1 )
 !
-      do i=1,3
-         cdm(i)=0.0_DP
-         isa = 0
-         do is=1,nsp
-            do ia=1,na(is)
-               isa = isa + 1
-               cdm(i)=cdm(i)+tau(i,isa)*pmass(is)
-            end do
-         end do
-         cdm(i)=cdm(i)/tmas
-      end do
+      cdm=cdm/tmas
 !
       RETURN
     END SUBROUTINE ions_cofmass
 
 !------------------------------------------------------------------------------!
 
-      SUBROUTINE randpos(tau, na, nsp, tranp, amprp, hinv, ifor )
+      SUBROUTINE randpos(tau, nat, ityp, tranp, amprp, hinv, ifor )
         
          USE cell_base, ONLY: r_to_s
          USE io_global, ONLY: stdout
@@ -465,40 +329,31 @@
          IMPLICIT NONE
          REAL(DP) :: hinv(3,3)
          REAL(DP) :: tau(:,:)
-         INTEGER, INTENT(IN) :: ifor(:,:), na(:), nsp
+         INTEGER, INTENT(IN) :: ifor(:,:), nat, ityp(:)
          LOGICAL, INTENT(IN) :: tranp(:)
          REAL(DP), INTENT(IN) :: amprp(:)
          REAL(DP) :: oldp(3), rand_disp(3), rdisp(3)
-         INTEGER :: k, is, isa, isa_s, isa_e, isat
+         INTEGER :: k, ia
 
          WRITE( stdout, 600 )
-
-         isat = 0
-         DO is = 1, nsp
-           isa_s = isat + 1
-           isa_e = isat + na(is)
-           IF( tranp(is) ) THEN
-             WRITE( stdout,610) is, na(is)
-             WRITE( stdout,615)
-             DO isa = isa_s, isa_e
-               oldp = tau(:,isa)
-               rand_disp(1) = randy ()
-               rand_disp(2) = randy ()
-               rand_disp(3) = randy ()
-               rand_disp = amprp(is) * ( rand_disp - 0.5_DP )
-               rdisp     = rand_disp
-               CALL r_to_s( rdisp(:), rand_disp(:), hinv )
-               DO k = 1, 3
-                 tau(k,isa) = tau(k,isa) + rand_disp(k) * ifor(k,isa)
-               END DO
-               WRITE( stdout,620) (oldp(k),k=1,3), (tau(k,isa),k=1,3)
+         WRITE( stdout,615)
+         DO ia = 1, nat
+           IF( tranp(ityp(ia)) ) THEN
+             oldp = tau(:,ia)
+             rand_disp(1) = randy ()
+             rand_disp(2) = randy ()
+             rand_disp(3) = randy ()
+             rand_disp = amprp(ityp(ia)) * ( rand_disp - 0.5_DP )
+             rdisp     = rand_disp
+             CALL r_to_s( rdisp(:), rand_disp(:), hinv )
+             DO k = 1, 3
+                tau(k,ia) = tau(k,ia) + rand_disp(k) * ifor(k,ia)
              END DO
+             WRITE( stdout,620) (oldp(k),k=1,3), (tau(k,ia),k=1,3)
            END IF
-           isat = isat + na(is)
          END DO
 
  600     FORMAT(//,3X,'Randomization of SCALED ionic coordinates')
- 610     FORMAT(   3X,'Species ',I3,' atoms = ',I4)
  615     FORMAT(   3X,'     Old Positions               New Positions')
  620     FORMAT(   3X,3F10.6,2X,3F10.6)
        RETURN
@@ -506,24 +361,20 @@
 
 !------------------------------------------------------------------------------!
 
-  SUBROUTINE ions_kinene( ekinp, vels, na, nsp, h, pmass )
+  SUBROUTINE ions_kinene( ekinp, vels, nat, ityp, h, pmass )
     IMPLICIT NONE
     REAL(DP), intent(out) :: ekinp     !  ionic kinetic energy
     REAL(DP), intent(in) :: vels(:,:)  !  scaled ionic velocities
     REAL(DP), intent(in) :: pmass(:)   !  ionic masses
     REAL(DP), intent(in) :: h(:,:)     !  simulation cell
-    integer, intent(in) :: na(:), nsp
-    integer :: i, j, is, ia, ii, isa
+    integer, intent(in) :: nat, ityp(:)
+    integer :: i, j, ia, ii
     ekinp = 0.0_DP
-    isa = 0
-    do is=1,nsp
-      do ia=1,na(is)
-        isa = isa + 1
-        do j=1,3
-          do i=1,3
-            do ii=1,3
-              ekinp=ekinp+pmass(is)* h(j,i)*vels(i,isa)* h(j,ii)*vels(ii,isa)
-            end do
+    do ia=1,nat
+      do j=1,3
+        do i=1,3
+          do ii=1,3
+            ekinp=ekinp+pmass(ityp(ia))* h(j,i)*vels(i,ia)* h(j,ii)*vels(ii,ia)
           end do
         end do
       end do
@@ -534,7 +385,7 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_temp( tempp, temps, ekinpr, vels, na, nsp, h, pmass, ndega, nhpdim, atm2nhp, ekin2nhp )
+  subroutine ions_temp( tempp, temps, ekinpr, vels, nsp, na, nat, ityp, h, pmass, ndega, nhpdim, atm2nhp, ekin2nhp )
     !
     use constants, only: k_boltzmann_au
     !
@@ -546,14 +397,12 @@
     REAL(DP), intent(in)  :: vels(:,:)
     REAL(DP), intent(in)  :: pmass(:)
     REAL(DP), intent(in)  :: h(:,:)
-    integer,        intent(in)  :: na(:), nsp, ndega, nhpdim, atm2nhp(:)
+    integer,        intent(in)  :: nsp, na(:), nat, ityp(:), ndega, nhpdim, atm2nhp(:)
     !
-    integer        :: nat, i, j, is, ia, ii, isa
-    REAL(DP) :: cdmvel(3), eks, eks1
+    integer        :: i, j, ia, ii
+    REAL(DP) :: cdmvel(3), eks1
     !
-    call ions_cofmass( vels, pmass, na, nsp, cdmvel )
-    !
-    nat = SUM( na(1:nsp) )
+    call ions_cofmass( vels, pmass, nat, ityp, cdmvel )
     !
     ekinpr             = 0.0_DP
     temps( 1:nsp )     = 0.0_DP
@@ -562,32 +411,20 @@
     do i=1,3
       do j=1,3
         do ii=1,3
-          isa = 0
-          do is=1,nsp
-            eks = 0.0_DP
-            do ia=1,na(is)
-              isa = isa + 1
-              eks1 = pmass(is)*h(j,i)*(vels(i,isa)-cdmvel(i))*h(j,ii)*(vels(ii,isa)-cdmvel(ii))
-              eks=eks+eks1
-              ekin2nhp(atm2nhp(isa)) = ekin2nhp(atm2nhp(isa)) + eks1
-            end do
-            ekinpr    = ekinpr    + eks
-            temps(is) = temps(is) + eks
+          do ia=1,nat
+            eks1 = pmass(ityp(ia))*h(j,i)*(vels(i,ia)-cdmvel(i))*h(j,ii)*(vels(ii,ia)-cdmvel(ii))
+            ekin2nhp(atm2nhp(ia)) = ekin2nhp(atm2nhp(ia)) + eks1
+            ekinpr    = ekinpr    + eks1
+            temps(ityp(ia)) = temps(ityp(ia)) + eks1
           end do
         end do
       end do
     end do
     !
-    do is = 1, nhpdim
-       ekin2nhp(is) = ekin2nhp(is) * 0.5_DP
-    enddo
+    ekin2nhp(1:nsp) = ekin2nhp(1:nsp) * 0.5_DP
     !
     !
-    do is = 1, nsp
-      if( na(is) < 1 ) call errore(' ions_temp ', ' 0 number of atoms ', 1 )
-      temps( is ) = temps( is ) * 0.5_DP
-      temps( is ) = temps( is ) / k_boltzmann_au / ( 1.5_DP * na(is) )
-    end do
+    temps( 1:nsp ) = 0.5_DP * temps( 1:nsp ) / k_boltzmann_au / ( 1.5_DP * na(1:nsp) )
     !
     ekinpr = 0.5_DP * ekinpr
     !
@@ -602,32 +439,28 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_thermal_stress( stress, nstress, pmass, omega, h, vels, nsp, na )
+  subroutine ions_thermal_stress( stress, nstress, pmass, omega, h, vels, nat, ityp )
     USE constants, ONLY : eps8
     REAL(DP), intent(inout) :: stress(3,3),nstress(3,3)
     REAL(DP), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
-    integer, intent(in) :: nsp, na(:)
-    integer :: i, j, is, ia, isa
+    integer, intent(in) :: nat, ityp(:)
+    integer :: i, j, ia
 
     nstress = 0.0_DP ! BS
-    isa    = 0
     if( omega < eps8 ) call errore(' ions_thermal_stress ', ' omega <= 0 ', 1 )
-    do is = 1, nsp
-      do ia = 1, na(is)
-        isa = isa + 1
-        do i = 1, 3
-          do j = 1, 3
-            stress(i,j) = stress(i,j) + pmass(is) / omega *           &
-     &        (  (h(i,1)*vels(1,isa)+h(i,2)*vels(2,isa)+h(i,3)*vels(3,isa)) *  &
-                 (h(j,1)*vels(1,isa)+h(j,2)*vels(2,isa)+h(j,3)*vels(3,isa))  )
+    do ia = 1, nat
+      do i = 1, 3
+        do j = 1, 3
+            stress(i,j) = stress(i,j) + pmass(ityp(ia)) / omega *           &
+     &        (  (h(i,1)*vels(1,ia)+h(i,2)*vels(2,ia)+h(i,3)*vels(3,ia)) *  &
+                 (h(j,1)*vels(1,ia)+h(j,2)*vels(2,ia)+h(j,3)*vels(3,ia))  )
 
      ! BS : to print Pressure of Nuclei at each step
-            nstress(i,j) = nstress(i,j) + pmass(is) / omega *           &
-     &        (  (h(i,1)*vels(1,isa)+h(i,2)*vels(2,isa)+h(i,3)*vels(3,isa)) *  &
-                 (h(j,1)*vels(1,isa)+h(j,2)*vels(2,isa)+h(j,3)*vels(3,isa))  )
+            nstress(i,j) = nstress(i,j) + pmass(ityp(ia)) / omega *           &
+     &        (  (h(i,1)*vels(1,ia)+h(i,2)*vels(2,ia)+h(i,3)*vels(3,ia)) *  &
+                 (h(j,1)*vels(1,ia)+h(j,2)*vels(2,ia)+h(j,3)*vels(3,ia))  )
      ! BS
 
-          enddo
         enddo
       enddo
     enddo
@@ -637,49 +470,38 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine randvel( tempw, tau0, taum, na, nsp, iforce, &
-                           amass, delt )
+  subroutine randvel( tempw, tau0, taum, nat, ityp, iforce, amass, delt )
     use constants, only: pi, k_boltzmann_au, amu_au
     USE random_numbers, ONLY : randy
     implicit none
     REAL(DP), intent(out) :: taum(:,:)
     REAL(DP), intent(in) :: tau0(:,:)
     REAL(DP), intent(in) :: delt, amass(:), tempw
-    integer, intent(in) :: na(:), nsp
+    integer, intent(in) :: nat, ityp(:)
     integer, intent(in) :: iforce(:,:)
 
     REAL(DP) :: alfap, qr(3), alfar, gausp
     REAL(DP) :: dt2by2
-    integer :: i, ia, is, nat, isa
+    integer :: i, ia
 
     dt2by2 = 0.5_DP * delt * delt
     gausp = delt * sqrt( tempw * k_boltzmann_au )
-    nat = SUM( na( 1:nsp ) )
 
       ! randomize velocities, calculate center of mass vel.
       do i=1,3
         qr(i)=0.0_DP
-        isa = 0
-        do is=1,nsp
-          do ia=1,na(is)
-            isa = isa + 1
-            alfar=gausp/sqrt(amass(is)*amu_au)*cos(2.0_DP*pi*randy())*sqrt(-2.0_DP*log(randy()))
-            taum(i,isa)=alfar
-            qr(i)=qr(i)+alfar
-          end do
+        do ia=1,nat
+          alfar=gausp/sqrt(amass(ityp(ia))*amu_au)*cos(2.0_DP*pi*randy())*sqrt(-2.0_DP*log(randy()))
+          taum(i,ia)=alfar
+          qr(i)=qr(i)+alfar
         end do
         qr(i)=qr(i)/nat
       end do
       !subtract center of mass velocity
-      isa = 0
-      do is=1,nsp
-        do ia=1,na(is)
-          isa = isa + 1
-          do i=1,3
-            alfar=taum(i,isa)-qr(i)
-            taum(i,isa)=tau0(i,isa)-iforce(i,isa)*     &
-     &                    alfar
-          end do
+      do ia=1,nat
+        do i=1,3
+            alfar=taum(i,ia)-qr(i)
+            taum(i,ia)=tau0(i,ia)-iforce(i,ia)*alfar
         end do
       end do
     return
@@ -687,8 +509,7 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, na, nsp, fion, iforce, &
-                           pmass, delt )
+  subroutine ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, nat, ityp, fion, iforce, pmass, delt )
     use constants, only: pi, k_boltzmann_au, eps8
     USE random_numbers, ONLY : randy
     implicit none
@@ -696,57 +517,43 @@
     REAL(DP), intent(inout) :: taup(:,:)
     REAL(DP), intent(in) :: tau0(:,:), taum(:,:), fion(:,:)
     REAL(DP), intent(in) :: delt, pmass(:), tempw, tempp
-    integer, intent(in) :: na(:), nsp
+    integer, intent(in) :: nat, ityp(:)
     integer, intent(in) :: iforce(:,:)
 
     REAL(DP) :: alfap, qr(3), alfar, gausp
     REAL(DP) :: dt2by2
-    integer :: i, ia, is, nat, isa
+    integer :: i, ia
 
     dt2by2 = 0.5_DP * delt * delt
     gausp = delt * sqrt( tempw * k_boltzmann_au )
-    nat = SUM( na( 1:nsp ) )
 
     if(.not.tcap) then
       if( tempp < eps8 ) call errore(' ions_vrescal ', ' tempp <= 0 ', 1 )
       alfap = 0.5_DP * sqrt(tempw/tempp)
-      isa = 0
-      do is=1,nsp
-        do ia=1,na(is)
-          isa = isa + 1
-          do i=1,3
-            taup(i,isa) = tau0(i,isa) +                 &
-     &                      alfap*(taup(i,isa)-taum(i,isa)) +      &
-     &                      dt2by2/pmass(is)*fion(i,isa)*iforce(i,isa)
-          end do
+      do ia=1,nat
+        do i=1,3
+            taup(i,ia) = tau0(i,ia) +                 &
+     &                      alfap*(taup(i,ia)-taum(i,ia)) +      &
+     &                      dt2by2/pmass(ityp(ia))*fion(i,ia)*iforce(i,ia)
         end do
       end do
     else
       ! randomize velocities, calculate center of mass vel.
       do i=1,3
         qr(i)=0.0_DP
-        isa = 0
-        do is=1,nsp
-          do ia=1,na(is)
-            isa = isa + 1
-            alfar=gausp/sqrt(pmass(is))*cos(2.0_DP*pi*randy())*sqrt(-2.0_DP*log(randy()))
-            taup(i,isa)=alfar
-            qr(i)=qr(i)+alfar
-          end do
+        do ia=1,nat
+           alfar=gausp/sqrt(pmass(ityp(ia)))*cos(2.0_DP*pi*randy())*sqrt(-2.0_DP*log(randy()))
+           taup(i,ia)=alfar
+           qr(i)=qr(i)+alfar
         end do
         qr(i)=qr(i)/nat
       end do
       !subtract center of mass velocity
-      isa = 0
-      do is=1,nsp
-        do ia=1,na(is)
-          isa = isa + 1
+      do ia=1,nat
           do i=1,3
-            alfar=taup(i,isa)-qr(i)
-            taup(i,isa)=tau0(i,isa)+iforce(i,isa)*     &
-     &                    (alfar+dt2by2/pmass(is)*fion(i,isa))
+            alfar=taup(i,ia)-qr(i)
+            taup(i,ia)=tau0(i,ia)+iforce(i,ia)*(alfar+dt2by2/pmass(ityp(ia))*fion(i,ia))
           end do
-        end do
       end do
     end if
     return
@@ -775,11 +582,11 @@
 
      REAL(DP) :: tau( :, : )
 
-     INTEGER  :: isa
+     INTEGER  :: ia
 
-     CALL ions_cofmass( tau, amass, na, nsp, cdmi )
-     DO isa = 1, nat
-        taui(:,isa) = tau(:,isa) - cdmi(:)
+     CALL ions_cofmass( tau, amass, nat, ityp, cdmi )
+     DO ia = 1, nat
+        taui(:,ia) = tau(:,ia) - cdmi(:)
      END DO
 
      RETURN
@@ -789,7 +596,7 @@
 !------------------------------------------------------------------------------!
 
 
-   SUBROUTINE ions_displacement( dis, tau )
+   SUBROUTINE ions_displacement( dis, tau, nsp, nat, ityp )
 
       !  Calculate the sum of the quadratic displacements of the atoms in the ref.
       !    of cdm respect to the initial positions.
@@ -803,27 +610,21 @@
 
       REAL (DP), INTENT(OUT) :: dis(:)
       REAL (DP), INTENT(IN)  :: tau(:,:)
+      INTEGER, INTENT(IN)  :: nsp, nat, ityp(:)
 
-      REAL(DP) :: rdist(3), r2, cdm(3)
-      INTEGER  :: is, ia, isa
+      REAL(DP) :: rdist(3), cdm(3)
+      INTEGER  :: ia
 
       ! ...   Compute the current value of cdm "Center of Mass"
       !
-      CALL ions_cofmass(tau, amass, na, nsp, cdm )
+      CALL ions_cofmass(tau, amass, nat, ityp, cdm )
       !
-      IF( SIZE( dis ) < nsp ) &
-          CALL errore(' displacement ',' size of dis too small ', 1)
-      isa = 0
-      DO is = 1, nsp
-         dis(is) = 0.0_DP
-         r2     = 0.0_DP
-         DO ia = 1, na(is)
-            isa = isa + 1
-            rdist = tau(:,isa) - cdm
-            r2 = r2 + SUM( ( rdist(:) - taui(:,isa) )**2 )
-         END DO
-         dis(is) = dis(is) + r2 / DBLE(na(is))
+      dis  = 0.0_DP
+      DO ia = 1, nat
+         rdist = tau(:,ia) - cdm
+         dis(ityp(ia)) = dis(ityp(ia)) + SUM( ( rdist(:) - taui(:,ia) )**2 )
       END DO
+      dis(1:nsp) = dis(1:nsp) / DBLE(na(1:nsp))
 
       RETURN
    END SUBROUTINE ions_displacement

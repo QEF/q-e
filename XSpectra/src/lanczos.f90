@@ -40,9 +40,7 @@ SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
   REAL(dp), ALLOCATABLE :: comp(:)
   COMPLEX (dp), ALLOCATABLE :: hpsi(:), u(:)
 
-  REAL (dp) :: ddot
-  COMPLEX (DP) :: zdotc
-  EXTERNAL :: zdotc,ddot
+  COMPLEX (DP), EXTERNAL :: zdotc
   EXTERNAL :: h_psi
 
 
@@ -241,9 +239,7 @@ SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
   COMPLEX(dp), ALLOCATABLE :: u(:), v1(:), v2(:), v3(:)
   COMPLEX(dp) :: vecteuraux1(npwx,1), vecteuraux2(npwx,1)
 
-  REAL (dp) :: ddot
-  COMPLEX(dp) :: zdotc
-  EXTERNAL :: zdotc,ddot
+  COMPLEX(dp), EXTERNAL :: zdotc
   EXTERNAL :: h_psi
 
   ALLOCATE(v1(npwx))

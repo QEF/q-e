@@ -383,7 +383,6 @@ MODULE us_exx
     !
     INTEGER :: ngms, ig, ikb, jkb, ijkb0, ih, jh, na, ina, nt, nij
     REAL(DP) :: fact
-    COMPLEX(DP), EXTERNAL :: zdotc
     !
     COMPLEX(DP),ALLOCATABLE :: auxvc(:), &  ! vc in order of |g|
                                eigqts(:), aux1(:), aux2(:)
@@ -491,7 +490,7 @@ MODULE us_exx
                    ENDIF
                 ENDDO
                 !
-                deexx(ikb) = deexx(ikb) + fact*zdotc( realblocksize, aux2, 1, aux1, 1 )
+                deexx(ikb) = deexx(ikb) + fact*dot_product( aux2(1:realblocksize),aux1(1:realblocksize))
                 IF( gamma_only .AND. gstart == 2 .AND. iblock == 1 ) &
                      deexx(ikb) =  deexx(ikb) - omega * CONJG(aux2(1))*aux1(1)
              ENDDO

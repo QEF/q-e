@@ -19,10 +19,9 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE funct,                ONLY : igcc_is_lyp, dft_is_gradient, get_igcc
   USE xc_gga,               ONLY : xc_gcx, gcx_spin, gcc_spin
   USE spin_orb,             ONLY : domag
-  USE noncollin_module,     ONLY : ux
-  USE wavefunctions,        ONLY : psic
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
+  USE fft_rho,              ONLY: rho_r2g
   !
   IMPLICIT NONE
   !
@@ -90,15 +89,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... bring starting rhoaux to G-space
      !
-     DO is = 1, nspin0
-        !
-        psic(:) = rhoaux(:,is)
-        !
-        CALL fwfft ('Rho', psic, dfftp)
-        !
-        rhogaux(:,is) = psic(dfftp%nl(:))
-        !
-     ENDDO
+     CALL rho_r2g ( dfftp, rhoaux(:,1:nspin0), rhogaux(:,1:nspin0) )
+     !
   ELSE
      !
      ! ... for convenience rhoaux and rhogaux are in (up,down) format, when LSDA

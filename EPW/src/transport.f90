@@ -34,8 +34,9 @@
                               epf17, nkqtotf, inv_tau_all, inv_tau_allcb,    &
                               xqf, zi_allvb, zi_allcb, nbndfst, nktotf, transp_temp, &
                               lower_bnd
-    USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev,        & 
+    USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev,        & 
                               eps6, eps8, eps4
+    USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
     USE io_transport,  ONLY : scattering_write, tau_write, merge_read
@@ -574,8 +575,9 @@
     USE elph2,            ONLY : ibndmin, etf, nkf, wkf, dmef, vmef,      & 
                                  inv_tau_all, nkqtotf, inv_tau_allcb, transp_temp, &
                                  zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf
-    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev, electron_SI,         &
+    USE constants_epw,    ONLY : zero, one, bohr2ang, ryd2ev,                   &
                                  kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
+    USE constants,        ONLY : electron_si
     USE mp,               ONLY : mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm
     USE mp_world,         ONLY : mpime
@@ -714,7 +716,7 @@
     ! 
     ! We can read the scattering rate from files. 
     IF (scatread) THEN
-      conv_factor1 = electron_SI / (hbar * bohr2ang * Ang2m)
+      conv_factor1 = electron_si / (hbar * bohr2ang * Ang2m)
       Sigma_m(:, :, :) = zero
       !
       ! Compute the Fermi level 
@@ -820,9 +822,9 @@
           ! Diagonalize the conductivity matrix
           CALL rdiagh(3, Sigma_m(:, :, itemp), 3, sigma_eig, sigma_vect)
           ! 
-          mobility_xx  = (sigma_eig(1) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_yy  = (sigma_eig(2) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_zz  = (sigma_eig(3) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_xx  = (sigma_eig(1) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_yy  = (sigma_eig(2) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_zz  = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
           carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
@@ -895,9 +897,9 @@
           ! Diagonalize the conductivity matrix
           CALL rdiagh(3, Sigma_m(:, :, itemp), 3, sigma_eig, sigma_vect)
           ! 
-          mobility_xx = (sigma_eig(1) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_yy = (sigma_eig(2) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_zz = (sigma_eig(3) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_xx = (sigma_eig(1) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_yy = (sigma_eig(2) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
           carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
@@ -1084,7 +1086,7 @@
                                                     "        Sigma_xz        Sigma_yz        Sigma_zz"
         ENDIF
         !
-        conv_factor1 = electron_SI / (hbar * bohr2ang * Ang2m)
+        conv_factor1 = electron_si / (hbar * bohr2ang * Ang2m)
         !
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
         WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
@@ -1135,9 +1137,9 @@
           !Sigma_diag = (Sigma(1,itemp)+Sigma(5,itemp)+Sigma(9,itemp))/3
           !Sigma_offdiag = (Sigma(2,itemp)+Sigma(3,itemp)+Sigma(4,itemp)+&
           !                 Sigma(6,itemp)+Sigma(7,itemp)+Sigma(8,itemp))/6
-          mobility_xx = (sigma_eig(1) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_yy = (sigma_eig(2) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_zz = (sigma_eig(3) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_xx = (sigma_eig(1) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_yy = (sigma_eig(2) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           ! carrier_density in cm^-1
           carrier_density_prt = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
@@ -1159,9 +1161,9 @@
   !        sigma_up(3,2) = SigmaZ(8,itemp)
   !        sigma_up(3,3) = SigmaZ(9,itemp)
   !        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
-  !        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-  !        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-  !        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
+  !        mobility_xx  = ( sigma_eig(1) * electron_si * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
+  !        mobility_yy  = ( sigma_eig(2) * electron_si * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
+  !        mobility_zz  = ( sigma_eig(3) * electron_si * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
   !        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
   !        ! carrier_density in cm^-1
   ! DBSP - Z-factor
@@ -1366,7 +1368,7 @@
                                                     "        Sigma_xz        Sigma_yz        Sigma_zz"
         ENDIF
         !
-        conv_factor1 = electron_SI / ( hbar * bohr2ang * Ang2m )
+        conv_factor1 = electron_si / ( hbar * bohr2ang * Ang2m )
         WRITE(stdout, '(/5x,a)') REPEAT('=',67)
         WRITE(stdout, '(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
         WRITE(stdout, '(5x,a/)') REPEAT('=',67)
@@ -1423,9 +1425,9 @@
           ! 
           CALL rdiagh(3, sigma_up, 3, sigma_eig, sigma_vect)
           ! 
-          mobility_xx = (sigma_eig(1) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_yy = (sigma_eig(2) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_zz = (sigma_eig(3) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_xx = (sigma_eig(1) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_yy = (sigma_eig(2) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           !
           ! Carrier_density in cm^-1
@@ -1456,9 +1458,9 @@
           sigma_up(3, 2) = sigmaZ(8, itemp)
           sigma_up(3, 3) = sigmaZ(9, itemp)
           CALL rdiagh(3, sigma_up, 3, sigma_eig, sigma_vect)
-          mobility_xx = (sigma_eig(1) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_yy = (sigma_eig(2) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
-          mobility_zz = (sigma_eig(3) * electron_SI * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_xx = (sigma_eig(1) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_yy = (sigma_eig(2) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
+          mobility_zz = (sigma_eig(3) * electron_si * (bohr2ang * ang2cm)**2) / (carrier_density * hbarJ)
           mobility = (mobility_xx + mobility_yy + mobility_zz) / 3
           !
   ! DBSP - Z-factor

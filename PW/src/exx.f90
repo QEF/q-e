@@ -1717,7 +1717,6 @@ MODULE exx
     REAL(DP) :: exxenergy,  energy
     INTEGER :: npw, ibnd, ik
     COMPLEX(DP) :: vxpsi(npwx*npol,nbnd), psi(npwx*npol,nbnd)
-    COMPLEX(DP), EXTERNAL :: zdotc
     !
     exxenergy = 0._DP
     !
@@ -1749,9 +1748,9 @@ MODULE exx
        CALL vexx( npwx, npw, nbnd, psi, vxpsi, becpsi )
        !
        DO ibnd = 1, nbnd
-          energy = energy + DBLE(wg(ibnd,ik) * zdotc(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1))
+          energy = energy + DBLE(wg(ibnd,ik) * dot_product(psi(1:npw,ibnd),vxpsi(1:npw,ibnd)))
           IF (noncolin) energy = energy + &
-                            DBLE(wg(ibnd,ik) * zdotc(npw,psi(npwx+1,ibnd),1,vxpsi(npwx+1,ibnd),1))
+                  DBLE(wg(ibnd,ik) * dot_product(psi(npwx+1:npwx+npw,ibnd),vxpsi(npwx+1:npwx+npw,ibnd)))
           !
        ENDDO
        IF (gamma_only .AND. gstart == 2) THEN

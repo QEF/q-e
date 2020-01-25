@@ -619,7 +619,6 @@ input.o : ../../Modules/read_pseudo.o
 input.o : ../../Modules/run_info.o
 input.o : ../../Modules/timestep.o
 input.o : ../../Modules/tsvdw.o
-input.o : ../../Modules/uspp.o
 input.o : ../../Modules/wave_base.o
 input.o : cell_nose.o
 input.o : cg.o
@@ -764,7 +763,6 @@ newd.o : smallbox_subs.o
 nl_base.o : ../../LAXlib/la_types.o
 nl_base.o : ../../Modules/cell_base.o
 nl_base.o : ../../Modules/constants.o
-nl_base.o : ../../Modules/control_flags.o
 nl_base.o : ../../Modules/electrons_base.o
 nl_base.o : ../../Modules/gvecw.o
 nl_base.o : ../../Modules/io_global.o
@@ -1189,6 +1187,7 @@ wave.o : ../../Modules/mp_global.o
 wave.o : ../../Modules/mp_wave.o
 wave.o : ../../Modules/random_numbers.o
 wave.o : ../../Modules/recvec.o
+wave.o : ../../Modules/uspp.o
 wave.o : ../../Modules/wave_base.o
 wave.o : ../../UtilXlib/mp.o
 wave.o : electrons.o

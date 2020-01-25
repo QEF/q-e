@@ -50,7 +50,8 @@
                               sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, &
                               nktotf, lower_bnd
     USE control_flags, ONLY : iverbosity
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, one, two, zero, pi, ci, eps6, eps8
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, one, two, zero, ci, eps6, eps8
+    USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
@@ -551,7 +552,8 @@
                            nktotf, adapt_smearing
     USE mp,         ONLY : mp_barrier, mp_sum
     USE mp_global,  ONLY : inter_pool_comm
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, one, two, zero, pi, eps4, eps6, eps8
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, one, two, zero, eps4, eps6, eps8
+    USE constants,  ONLY : pi
     !
     IMPLICIT NONE
     !
@@ -946,7 +948,8 @@
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, dmef, adapt_smearing, &
                               nkf, wqf, xkf, nkqtotf, efnew, nbndfst, nktotf,  &
                               sigmar_all, sigmai_all, zi_all, lower_bnd
-    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, eps8
+    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, ci, eps6, eps8
+    USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm 
     USE cell_base,     ONLY : omega, alat, bg
@@ -1416,7 +1419,8 @@
     !! Based on Eq. 5.166 of Mahan 2000. 
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, eps6, eps10
+    USE constants_epw, ONLY : eps6, eps10
+    USE constants,     ONLY : pi
     ! 
     IMPLICIT NONE
     ! 

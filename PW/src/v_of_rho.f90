@@ -376,7 +376,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
      ! ... spin-unpolarized case
      !
-     CALL xc( dfftp%nnr, 1, 1, rho%of_r(:,1), ex, ec, vx(:,1), vc(:,1) )
+     CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc )
      !
      DO ir = 1, dfftp%nnr
         v(ir,1) = e2*( vx(ir,1) + vc(ir,1) )

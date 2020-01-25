@@ -15,7 +15,6 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE wvfct,           ONLY : npwx, nbnd, et, current_k
   USE gvecw,           ONLY : gcutw
   USE symm_base,       ONLY : d1,d2,d3
-  USE noncollin_module,ONLY : noncolin
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
   USE cell_base,       ONLY : tpiba2, bg
   USE wavefunctions, ONLY: evc

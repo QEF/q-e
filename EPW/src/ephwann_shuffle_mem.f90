@@ -21,7 +21,7 @@
   !!
   !-----------------------------------------------------------------------
   !
-  USE kinds,         ONLY : DP, i4b
+  USE kinds,         ONLY : DP, i4b, i8b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef,  nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg
@@ -285,7 +285,7 @@
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
   ! 
-  CALL start_clock ('ephwann')
+  CALL start_clock('ephwann')
   ! 
   IF (nbndsub /= nbnd) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
@@ -310,8 +310,8 @@
   w2(:) = zero
   ! 
   IF (lpolar) THEN
-    WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic long-range interaction for polar materials [lpolar]'
-    WRITE(stdout, '(5x,a)' )   ' '
+    WRITE(stdout, '(/,5x,a)') 'Computes the analytic long-range interaction for polar materials [lpolar]'
+    WRITE(stdout, '(5x,a)')   ' '
   ENDIF
   !
   ! Determine Wigner-Seitz points
@@ -1001,15 +1001,15 @@
       IF (exst) THEN
         IF (mpime == ionode_id) THEN
           OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old', IOSTAT = ios)
-          READ(iunrestart,*) iq_restart
-          READ(iunrestart,*) ind_tot
-          READ(iunrestart,*) ind_totcb
-          READ(iunrestart,*) npool_tmp
+          READ(iunrestart, *) iq_restart
+          READ(iunrestart, *) ind_tot
+          READ(iunrestart, *) ind_totcb
+          READ(iunrestart, *) npool_tmp
           DO ipool = 1, npool
-            READ(iunrestart,*) lrepmatw2_restart(ipool)
+            READ(iunrestart, *) lrepmatw2_restart(ipool)
           ENDDO
           DO ipool = 1, npool
-            READ(iunrestart,*) lrepmatw5_restart(ipool)
+            READ(iunrestart, *) lrepmatw5_restart(ipool)
           ENDDO
           CLOSE(iunrestart)
           ! 

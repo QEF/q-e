@@ -67,7 +67,6 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   COMPLEX(DP), ALLOCATABLE :: dpsi(:,:)
   REAL(DP) :: weight, wdelta, w1
   REAL(DP), EXTERNAL :: w0gauss 
-  REAL(DP), EXTERNAL :: DDOT
   COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   CALL start_clock( 'dnsq_scf' )

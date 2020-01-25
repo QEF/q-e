@@ -25,7 +25,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                                   tprnfor, iesr, textfor
       USE io_global,        ONLY: stdout
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
-      USE ions_base,        ONLY: ind_srt, ind_bck
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
       USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
@@ -116,7 +115,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         !
         CALL start_clock( 'ts_vdw' )
         ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
-        stmp(:,:) = tau0(:,ind_bck(:))
+        stmp(:,:) = tau0(:,:)
         !
         IF ( nspin==2 ) THEN
            rhocsave(:) = rhor(:,1) + rhor(:,2) 
@@ -176,7 +175,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !
          ALLOCATE( stmp( 3, nat ) )
          !
-         CALL r_to_s( tau0, stmp, na, nsp, ainv )
+         CALL r_to_s( tau0, stmp, nat, ainv )
          !
          CALL vofesr( iesr, esr, dsr6, fion, stmp, tpre, h )
          !
@@ -470,7 +469,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
          !    Add TS-vdW ion forces to fion here... (RAD)
          !
          IF (ts_vdw) THEN
-            fion1(:,:) = FtsvdW(:,ind_srt(:))
+            fion1(:,:) = FtsvdW(:,:)
             fion = fion + fion1
             !fion=fion+FtsvdW
          END IF

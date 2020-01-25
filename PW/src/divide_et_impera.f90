@@ -48,7 +48,8 @@ SUBROUTINE divide_et_impera( nkstot, xk, wk, isk, nks )
   !
   nks    = kunit * ( nkstot / kunit / npool )
   !
-  IF (nks == 0) CALL errore('divide_et_impera','some nodes have no k-points', 1)
+  IF (nks == 0) CALL infomsg('divide_et_impera', &
+          'suboptimal parallelization: some nodes have no k-points')
   !
   rest = ( nkstot - nks * npool ) / kunit
   !
