@@ -9,7 +9,9 @@ have_acml=0
 have_atlas=0
 have_essl=0
 have_mkl=0
-  
+have_armpl=0 
+
+
 AC_ARG_WITH(netlib,
    [AS_HELP_STRING([--with-netlib],
        [compile with Netlib LAPACK and BLAS (default: no)])],
@@ -432,8 +434,26 @@ then
                         then break ; fi
       		done
 		;;
-
-
+        arm:armflang )
+                if test "$use_openmp" -eq 0; then 
+                   FFLAGS="-armpl"
+                else 
+                   FFLAGS="-fopenmp -armpl=parallel" 
+                fi 
+                AC_SEARCH_LIBS(dgemm, armpl_arm,
+                                       have_blas=1 have_armpl=1
+                                       blas_libs=""
+                                       ldflags="",
+                                       echo "armpl not found",
+                                       yes)
+                if test "$have_armpl" -eq 1; then 
+                   if test "$use_openmp" -eq 0; then 
+                      try_fflags="$try_fflags  -armpl"
+                   else 
+                      fflags="$fflags -armpl=parallel" 
+                   fi
+                fi 
+               ;;               
         esac
         # blas not (yet) found: look for more possibilities
         if test "$have_blas" -eq 0

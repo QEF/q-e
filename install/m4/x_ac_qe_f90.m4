@@ -63,6 +63,15 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
         fi
         pre_fdflags="-fpp "
         ;;
+arm:armflang )
+        try_fflags="-O3 -mcpu=native $try_fflags"
+        if test "$use_debug" -eq 1; then 
+           try_fflags="$try_fflags -g" 
+        fi   
+        try_ldflags="-mcpu=native"
+        try_fflags_openmp="-fopenmp"
+        try_ldfflags_openmp="-fopenmp" 
+        ;;
 x86_64:nagfor* )
         try_fflags="-O3 -kind=byte -dcfuns -mismatch"
         if test "$use_debug" -eq 1; then
