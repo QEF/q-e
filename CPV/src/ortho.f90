@@ -362,7 +362,7 @@
       qbephi = 0.d0
       !
       DO iss = 1, nspin
-         IF( desc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
             DO ia = 1, nat
                is = ityp(ia)
                IF( upf(is)%tvanp ) THEN
