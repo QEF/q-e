@@ -51,8 +51,6 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
 
   REAL(DP), ALLOCATABLE :: dpqq(:,:,:,:)
 
-  COMPLEX(DP), EXTERNAL :: zdotc
-  !
   ALLOCATE (work ( npwx, max(nkb,1)))
   ALLOCATE (gk ( 3, npwx))
   IF (nkb > 0) THEN
