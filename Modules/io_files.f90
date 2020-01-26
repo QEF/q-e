@@ -32,7 +32,11 @@ MODULE io_files
   CHARACTER(len=256) :: prefix  = 'os'
   ! ... postfix is appended to directory names
 #if defined (_WIN32)
+#if defined (__PGI)
+  CHARACTER(len=6) :: postfix  = '.save/'
+#else
   CHARACTER(len=6) :: postfix  = '.save\'
+#endif
 #else
   CHARACTER(len=6) :: postfix  = '.save/'
 #endif
@@ -116,7 +120,11 @@ CONTAINS
     length = LEN_TRIM(dirname)
 #if defined (_WIN32)
     ! Windows returns error if tmp_dir ends with a backslash
+#if defined (__PGI)
+    IF ( dirname(length:length) == '\\' ) length=length-1
+#else
     IF ( dirname(length:length) == '\' ) length=length-1
+#endif
 #endif
     IF ( ionode ) ierr = f_mkdir_safe( dirname(1:length ) )
     CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
@@ -168,7 +176,11 @@ CONTAINS
     length = LEN_TRIM(tmp_dir)
 #if defined (_WIN32)
     ! Windows returns error if tmp_dir ends with a backslash
+#if defined (__PGI)
+    IF ( tmp_dir(length:length) == '\\' ) length=length-1
+#else
     IF ( tmp_dir(length:length) == '\' ) length=length-1
+#endif
 #endif
     IF ( ionode ) ios = f_mkdir_safe( tmp_dir(1:length) )
     CALL mp_bcast ( ios, ionode_id, intra_image_comm )
