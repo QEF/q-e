@@ -303,7 +303,6 @@ CONTAINS
     LOGICAL :: skip
     !Solver:
     real(kind=dp), EXTERNAL :: ddot
-    COMPLEX(kind=dp), EXTERNAL :: zdotc
     !
     CALL start_clock( 'post-processing' )
     IF (lr_verbosity > 5) THEN
@@ -587,7 +586,7 @@ CONTAINS
     !
     ! normalize so that the final charge densities are normalized
     !
-    norm=zdotc(itermax_int,w_T(:),1,w_T(:),1)
+    norm = ddot (2*itermax,w_T(:),1,w_T(:),1)
     WRITE(stdout,'(5X,"Charge Response renormalization factor: ",2(E15.5,1x))') norm
     !w_T(:)=w_T(:)/norm
     !norm=sum(w_T(:))
@@ -599,7 +598,7 @@ CONTAINS
     IF (project) THEN
        DO ip=1,w_T_npol
           !
-          chi(LR_polarization,ip)=ZDOTC(itermax,w_T_zeta_store(ip,:),1,w_T(:),1)
+          chi(LR_polarization,ip)=dot_product(w_T_zeta_store(ip,:),w_T(:))
           chi(LR_polarization,ip)=chi(LR_polarization,ip)*cmplx(w_T_norm0_store,0.0d0,dp)
           !
           WRITE(stdout,'(5X,"Chi_",I1,"_",I1,"=",2(E15.5,1x))') LR_polarization,ip,chi(LR_polarization,ip)
@@ -655,12 +654,10 @@ CONTAINS
     INTEGER :: ibnd_occ,ibnd_virt,ipol
     real(kind=dp) :: w1,w2,scal
     INTEGER :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
-    !complex(kind=dp) :: SSUM
     real(kind=dp)     :: SSUM
     !
     !functions
-    real(kind=dp), EXTERNAL    :: DDOT
-    !complex(kind=dp), external    :: ZDOTC
+    real(kind=dp), EXTERNAL    :: ddot
     !
     scal=0.0d0
     !
@@ -757,7 +754,7 @@ CONTAINS
           ! US part finished
           !first part
           ! the dot  product <evc1|evc0> taken from lr_dot
-          SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*ngk(1),evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1))
+          SSUM=(2.D0*wg(ibnd_occ,1)*ddot(2*ngk(1),evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1))
           IF (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd_occ,1))*dble(evc0_virt(1,ibnd_virt,1)))
           !US contribution
           SSUM=SSUM+scal
@@ -799,13 +796,13 @@ CONTAINS
     real(kind=dp)     :: SSUM
     !
     !functions
-    real(kind=dp), EXTERNAL    :: DDOT
+    real(kind=dp), EXTERNAL    :: ddot
     !
     DO ipol=1,n_ipol
        DO ibnd_occ=1,nbnd
           DO ibnd_virt=1,(nbnd_total-nbnd)
              ! the dot  product <evc0|sd0psi> taken from lr_dot
-             SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*ngk(1),evc0_virt(:,ibnd_virt,1),1,d0psi(:,ibnd_occ,1,ipol),1))
+             SSUM=(2.D0*wg(ibnd_occ,1)*ddot(2*ngk(1),evc0_virt(:,ibnd_virt,1),1,d0psi(:,ibnd_occ,1,ipol),1))
              IF (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(d0psi(1,ibnd_occ,1,ipol))*dble(evc0_virt(1,ibnd_virt,1)))
 #if defined(__MPI)
              CALL mp_sum(SSUM, intra_bgrp_comm)
