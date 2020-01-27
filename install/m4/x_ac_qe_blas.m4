@@ -437,18 +437,20 @@ then
         arm:armflang )
                 if test "$use_openmp" -eq 0; then 
                    FFLAGS="-armpl"
+                   add_ld_flags="-armpl"
                 else 
                    FFLAGS="-fopenmp -armpl=parallel" 
+                   add_ld_flags="-armpl=parallel"
                 fi 
                 AC_SEARCH_LIBS(dgemm, armpl_arm,
                                        have_blas=1 have_armpl=1
                                        blas_libs=""
-                                       ldflags="",
+                                       ldflags="$ldflags \$(FFLAGS)",
                                        echo "armpl not found",
                                        yes)
                 if test "$have_armpl" -eq 1; then 
                    if test "$use_openmp" -eq 0; then 
-                      try_fflags="$try_fflags  -armpl"
+                      fflags="$fflags  -armpl"
                    else 
                       fflags="$fflags -armpl=parallel" 
                    fi
