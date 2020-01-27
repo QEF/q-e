@@ -456,6 +456,42 @@ then
                    fi
                 fi 
                ;;               
+        arm:gfortran )
+              try_libdirs="$libdirs $ARMPL_LIBRARIES  $ld_library_path" 
+              for dir in none $try_libdirs
+              do
+                        unset ac_cv_search_dgemm # clear cached value
+                        if test "$dir" = "none"
+                        then
+                                try_loption=" "
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$test_ldflags $try_loption"
+                        LIBS=""
+                        #
+                        if test "$use_openmp" -eq 0; then
+     			      AC_SEARCH_LIBS(dgemm, armpl, 
+                                 have_blas=1 have_armpl=1 
+                                 blas_libs="$try_loption $LIBS "
+                                 ldflags="$ldflags",
+                                 echo "armpl not found",
+                                 )
+			else
+     			      AC_SEARCH_LIBS(dgemm, armpl_mp, 
+                                 have_blas=1 have_armpl=1 
+                                 blas_libs="$try_loption $LIBS "
+                                 ldflags="$ldflags",
+                                 echo "armpl  not found",
+                                 )
+                        fi
+                        if test "$ac_cv_search_dgemm" != "no"
+                        then break ; fi
+              done 
+              
+              ;;
         esac
         # blas not (yet) found: look for more possibilities
         if test "$have_blas" -eq 0

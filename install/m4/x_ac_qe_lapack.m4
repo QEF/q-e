@@ -31,7 +31,7 @@ if test "$use_netlib" -eq 0
                         if test "$ac_lib" != "" ; then lapack_libs="-l$ac_lib"; fi
                 fi
                 ;;
-        arm:armflang | arm:gfortran )
+        arm:armflang )
                 if test "$have_armpl" -ne 0 
                 then 
                        unset ac_cv_search_dspev ac_lib 
@@ -41,7 +41,13 @@ if test "$use_netlib" -eq 0
                           FFLAGS="-armpl" 
                        fi 
                        AC_SEARCH_LIBS(dspev, armpl_arm, have_lapack=1) 
-                fi 
+                fi
+                ;;
+        arm:gfortran )
+                if test "$have_armpl" -ne 0 
+                then 
+                   have_lapack=1
+                fi  
                 ;;
         ppc64:* )
                 # check for essl
