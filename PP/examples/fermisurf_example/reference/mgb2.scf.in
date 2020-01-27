@@ -1,8 +1,8 @@
 &CONTROL
  calculation = 'scf',
-  pseudo_dir = '/mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/',
+  pseudo_dir = '/home/kawamura/program/qe/qe-dev/pseudo/',
       prefix = 'mgb2' ,
-      outdir = '/mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/'
+      outdir = '/home/kawamura/program/qe/qe-dev/tempdir/'
 /
 &SYSTEM
        ibrav = 4,

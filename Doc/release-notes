@@ -1,6 +1,8 @@
 New in dev branch:
   * More FORD documentation
   * Stress for noncolinear case
+  * QE can be compiled on Windows 10 using PGI v.19.10 Community Edition
+    configure works, except FoX: use script install/build_fox_with_pgi.sh
   
 Fixed in dev branch:
   * PW: Restart from interrupted calculations  simplified. As a side effect,
@@ -8,6 +10,7 @@ Fixed in dev branch:
   * A few LIBXC glitches
   * Fermi energy incorrectly written to xml file in 'bands' calculation
     (did not affect results, just Fermi energy position in band plotting)
+    Also: Fermi energy always written to xml file, also for insulators
 
 Incompatible changes in dev branch:
   * Conversion from 1D FFT real-space index to 3D positions moved into a

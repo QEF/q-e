@@ -36,8 +36,9 @@
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
                               wkf, dmef, vmef, eta, transp_temp, lower_bnd, dos,  &
                               nbndfst, nktotf
-    USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
+    USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
                               eps6, eps10, bohr2ang, ang2cm
+    USE constants,     ONLY : pi
     USE io_files,      ONLY : diropn 
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : world_comm, my_pool_id, npool
@@ -599,8 +600,8 @@
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
         OPEN(iufilibtev_sup, FILE = 'inv_tau.fmt', FORM = 'formatted')
-        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
-        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [Ry]'
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
             DO ibnd = 1, nbndfst
@@ -612,8 +613,8 @@
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
         OPEN(iufilibtev_sup, FILE = 'inv_taucb.fmt', FORM = 'formatted')
-        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
-        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+        WRITE(iufilibtev_sup, '(a)') '# Electron relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [Ry]'
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
             DO ibnd = 1, nbndfst

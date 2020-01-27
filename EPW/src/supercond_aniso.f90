@@ -31,16 +31,16 @@
                                   limag, lpade, lacon, fsthick, imag_read, wscut
     USE eliashbergcom,     ONLY : nsw, nsiw, adelta, adeltap, adeltai, adeltaip, &
                                   estemp, nkfs, nbndfs, ekfs, ef0
-    USE supercond, ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
+    USE supercond,         ONLY : free_energy, dos_quasiparticle, gen_freqgrid_iaxis, &
                                   deallocate_eliashberg_iaxis, deallocate_eliashberg_raxis, & 
                                   deallocate_eliashberg_aniso, eliashberg_grid
-    USE constants_epw,     ONLY : kelvin2eV, ci, pi, zero
+    USE constants_epw,     ONLY : kelvin2eV, ci, zero
     USE io_global,         ONLY : ionode_id
     USE mp_global,         ONLY : inter_pool_comm
     USE mp,                ONLY : mp_bcast, mp_barrier
     USE mp_world,          ONLY : mpime
     USE io_eliashberg,     ONLY : eliashberg_read_aniso_iaxis
-    USE utilities,           ONLY : mix_broyden
+    USE utilities,         ONLY : mix_broyden
     USE low_lvl,           ONLY : mem_size_eliashberg
     USE printing,          ONLY : prtheader_supercond
     ! 
@@ -307,7 +307,8 @@
                                   naznormi, aznormi, adeltai, adeltaip, nznormi, znormi, & 
                                   deltai, wsphmax, nkfs, nbndfs, dosef, ef0, ixkqf, ixqfs, & 
                                   nqfs, wkfs, w0g, ekfs
-    USE constants_epw,     ONLY : pi, zero, czero 
+    USE constants_epw,     ONLY : zero, czero 
+    USE constants,         ONLY : pi
     USE io_global,         ONLY : stdout, ionode_id
     USE mp_global,         ONLY : inter_pool_comm
     USE mp_world,          ONLY : mpime
@@ -601,8 +602,9 @@
     USE eliashbergcom, ONLY : nsw, estemp, dwsph, ws, wsph, gap, agap, gp, gm, adsumi, azsumi, &                           
                               delta, znorm, adelta, adeltap, aznorm, aznormp, g2, lacon_fly, & 
                               a2fij, wkfs, dosef, ixkqf, ixqfs, nqfs, w0g, nkfs, nbndfs, ef0, ekfs
-    USE supercond, ONLY : gamma_acont
-    USE constants_epw, ONLY : pi, ci, zero, one, czero, cone
+    USE supercond,     ONLY : gamma_acont
+    USE constants_epw, ONLY : ci, zero, one, czero, cone
+    USE constants,     ONLY : pi
     USE io_global,     ONLY : stdout, ionode_id
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
@@ -1091,7 +1093,8 @@
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : fsthick
     USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, estemp, akeri, ekfs, ef0, ixkqf, ixqfs, nqfs
-    USE constants_epw, ONLY : pi, zero 
+    USE constants_epw, ONLY : zero 
+    USE constants,     ONLY : pi
     USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE

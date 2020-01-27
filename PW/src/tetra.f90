@@ -611,7 +611,7 @@ SUBROUTINE tetra_weights_only( nks, nspin, is, isk, nbnd, nelec, et, ef, wg )
   !! the weight of each k point and band
   ! wg must be (inout) and not (out) because if is/=0 only terms for
   ! spin=is are initialized; the remaining terms should be kept, not lost.
-  REAL(DP), INTENT(OUT) :: ef
+  REAL(DP), INTENT(IN) :: ef
   !! Fermi energy
   !
   ! ... local variables
@@ -853,7 +853,7 @@ SUBROUTINE opt_tetra_weights_only( nks, nspin, nbnd, et, ef, &
   !! Kohn Sham energy [Ry]
   REAL(DP), INTENT(INOUT) :: wg(nbnd,nks)
   !! Intetration weight of each k
-  REAL(DP), INTENT(INOUT) :: ef
+  REAL(DP), INTENT(IN) :: ef
   !! The Fermi energy
   !
   ! ... local variables

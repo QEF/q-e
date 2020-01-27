@@ -18,7 +18,11 @@
     CHARACTER (LEN=*), INTENT(IN) :: directory
     CHARACTER (LEN=256) :: trimcheck
 #if defined (_WIN32)
+#if defined (__PGI)
+    CHARACTER (LEN=1) :: separator = '/'
+#else
     CHARACTER (LEN=1) :: separator = '\'
+#endif
 #else
     CHARACTER (LEN=1) :: separator = '/'
 #endif

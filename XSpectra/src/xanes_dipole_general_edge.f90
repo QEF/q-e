@@ -70,7 +70,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   REAL (dp) norm, mss, s, j, mj, dl, disg, CG
   REAL (dp), ALLOCATABLE :: aux(:)
   REAL (dp), ALLOCATABLE :: Mxanes(:,:)
-  COMPLEX(KIND=DP), EXTERNAL :: zdotc
+  REAL(KIND=DP), EXTERNAL :: ddot
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   LOGICAL :: terminator
   REAL(dp) :: normps
@@ -562,10 +562,10 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
            spsiwfc(:)=(0.d0,0.d0)
            recalc=.true.
            CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
-           xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
+           xnorm_partial=ddot(2*npw,psiwfc,1,spsiwfc,1)
            DEALLOCATE(spsiwfc)
         ELSE
-           xnorm_partial=zdotc(npw,psiwfc,1,psiwfc,1)
+           xnorm_partial=ddot(2*npw,psiwfc,1,psiwfc,1)
         ENDIF
         !</CG>
         

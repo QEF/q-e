@@ -31,7 +31,18 @@ if test "$use_netlib" -eq 0
                         if test "$ac_lib" != "" ; then lapack_libs="-l$ac_lib"; fi
                 fi
                 ;;
-
+        arm:armflang | arm:gfortran )
+                if test "$have_armpl" -ne 0 
+                then 
+                       unset ac_cv_search_dspev ac_lib 
+                       if test "$use_openmp" -eq 0; then 
+                          FFLAGS="-fopenmp -armpl=parallel"
+                        else 
+                          FFLAGS="-armpl" 
+                       fi 
+                       AC_SEARCH_LIBS(dspev, armpl_arm, have_lapack=1) 
+                fi 
+                ;;
         ppc64:* )
                 # check for essl
                 unset ac_cv_search_dspev # clear cached value
