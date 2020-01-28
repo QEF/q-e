@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-   MODULE descriptors
+   MODULE laxlib_descriptor
       !
       IMPLICIT NONE
       SAVE
@@ -39,40 +39,6 @@
       END TYPE
       !
    CONTAINS
-
-   !------------------------------------------------------------------------
-   !
-   SUBROUTINE descla_local_dims( i2g, nl, n, nx, np, me )
-      IMPLICIT NONE
-      INTEGER, INTENT(OUT) :: i2g  !  global index of the first local element
-      INTEGER, INTENT(OUT) :: nl   !  local number of elements
-      INTEGER, INTENT(IN)  :: n    !  number of actual element in the global array
-      INTEGER, INTENT(IN)  :: nx   !  dimension of the global array (nx>=n) to be distributed
-      INTEGER, INTENT(IN)  :: np   !  number of processors
-      INTEGER, INTENT(IN)  :: me   !  taskid for which i2g and nl are computed
-      !
-      !  note that we can distribute a global array larger than the
-      !  number of actual elements. This could be required for performance
-      !  reasons, and to have an equal partition of matrix having different size
-      !  like matrixes of spin-up and spin-down 
-      !
-#if __SCALAPACK
-      nl  = ldim_block_sca( nx, np, me )
-      i2g = gind_block_sca( 1, nx, np, me )
-#else
-      nl  = ldim_block( nx, np, me )
-      i2g = gind_block( 1, nx, np, me )
-#endif
-      ! This is to try to keep a matrix N * N into the same
-      ! distribution of a matrix NX * NX, useful to have 
-      ! the matrix of spin-up distributed in the same way
-      ! of the matrix of spin-down
-      !
-      IF( i2g + nl - 1 > n ) nl = n - i2g + 1
-      IF( nl < 0 ) nl = 0
-      RETURN
-      !
-   END SUBROUTINE descla_local_dims
    !
    !
    SUBROUTINE descla_init( descla, n, nx, np, me, comm, cntx, includeme )
@@ -178,4 +144,54 @@
       RETURN
    END SUBROUTINE descla_init
 
-   END MODULE descriptors
+
+   SUBROUTINE laxlib_desc_to_intarray( idesc, descla )
+      IMPLICIT NONE  
+      include 'laxlib_param.fh'
+      TYPE(la_descriptor), INTENT(IN) :: descla
+      INTEGER, INTENT(OUT)  :: idesc(LAX_DESC_SIZE)
+      idesc(LAX_DESC_IR) = descla%ir        !  globla index of the first row in the local block of the distributed matrix
+      idesc(LAX_DESC_NR) = descla%nr        !  number of row in the local block of the distributed matrix
+      idesc(LAX_DESC_IC) = descla%ic        !  global index of the first column in the local block of the distributed matrix
+      idesc(LAX_DESC_NC) = descla%nc        !  number of column in the local block of the distributed matrix
+      idesc(LAX_DESC_NRCX) = descla%nrcx      !  leading dimension of the distribute matrix (greather than nr and nc)
+      idesc(LAX_DESC_ACTIVE_NODE) = descla%active_node !  if > 0 the proc holds a block of the lambda matrix
+      idesc(LAX_DESC_N) = descla%n        !  global dimension of the matrix
+      idesc(LAX_DESC_NX) = descla%nx       !  global leading dimension ( >= n )
+      idesc(LAX_DESC_NPR) = descla%npr      !  number of row processors 
+      idesc(LAX_DESC_NPC) = descla%npc      !  number of column processors 
+      idesc(LAX_DESC_MYR) = descla%myr      !  processor row index
+      idesc(LAX_DESC_MYC) = descla%myc      !  processor column index
+      idesc(LAX_DESC_COMM) = descla%comm     !  communicator
+      idesc(LAX_DESC_CNTX) = descla%cntx     !  scalapack context
+      idesc(LAX_DESC_MYPE) = descla%mype     !  processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
+      idesc(LAX_DESC_NRL) = descla%nrl      !  number of local rows, when the matrix rows are cyclically distributed across proc
+      idesc(LAX_DESC_NRLX) = descla%nrlx     !  leading dimension, when the matrix is distributed by row
+      RETURN
+   END SUBROUTINE 
+   SUBROUTINE laxlib_intarray_to_desc( descla, idesc )
+      IMPLICIT NONE  
+      include 'laxlib_param.fh'
+      TYPE(la_descriptor), INTENT(OUT) :: descla
+      INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
+      descla%ir = idesc(LAX_DESC_IR) !  globla index of the first row in the local block of the distributed matrix
+      descla%nr = idesc(LAX_DESC_NR) !  number of row in the local block of the distributed matrix
+      descla%ic = idesc(LAX_DESC_IC) !  global index of the first column in the local block of the distributed matrix
+      descla%nc = idesc(LAX_DESC_NC) !  number of column in the local block of the distributed matrix
+      descla%nrcx = idesc(LAX_DESC_NRCX) !  leading dimension of the distribute matrix (greather than nr and nc)
+      descla%active_node = idesc(LAX_DESC_ACTIVE_NODE) !  if > 0 the proc holds a block of the lambda matrix
+      descla%n = idesc(LAX_DESC_N) !  global dimension of the matrix
+      descla%nx = idesc(LAX_DESC_NX) !  global leading dimension ( >= n )
+      descla%npr = idesc(LAX_DESC_NPR) !  number of row processors 
+      descla%npc = idesc(LAX_DESC_NPC) !  number of column processors 
+      descla%myr = idesc(LAX_DESC_MYR) !  processor row index
+      descla%myc = idesc(LAX_DESC_MYC) !  processor column index
+      descla%comm = idesc(LAX_DESC_COMM) !  communicator
+      descla%cntx = idesc(LAX_DESC_CNTX) !  scalapack context
+      descla%mype = idesc(LAX_DESC_MYPE) !  processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
+      descla%nrl = idesc(LAX_DESC_NRL) !  number of local rows, when the matrix rows are cyclically distributed across proc
+      descla%nrlx = idesc(LAX_DESC_NRLX) !  leading dimension, when the matrix is distributed by row
+      RETURN
+   END SUBROUTINE 
+
+   END MODULE laxlib_descriptor

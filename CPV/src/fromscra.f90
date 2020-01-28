@@ -24,7 +24,7 @@ SUBROUTINE from_scratch( )
                                      cell_force, velh, at, alat
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
-    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx
+    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx, nudx
     USE electrons_module,     ONLY : occn_info, distribute_c, collect_c, distribute_b, collect_b
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
@@ -44,14 +44,14 @@ SUBROUTINE from_scratch( )
                                      strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp
-    USE cp_interfaces,        ONLY : print_lambda, nlfq_bgrp, setval_lambda
+    USE cp_interfaces,        ONLY : nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : descla, bephi, becp_bgrp, nfi, &
+    USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
@@ -60,6 +60,8 @@ SUBROUTINE from_scratch( )
     USE matrix_inversion
     !
     IMPLICIT NONE
+    !
+    include 'laxlib.fh'
     !
     REAL(DP),    ALLOCATABLE :: emadt2(:), emaver(:)
     REAL(DP)                 :: verl1, verl2
@@ -188,7 +190,7 @@ SUBROUTINE from_scratch( )
        !
        CALL calbec_bgrp ( 1, nsp, eigr, cm_bgrp, bec_bgrp )
        !
-       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
+       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
        CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
@@ -234,7 +236,7 @@ SUBROUTINE from_scratch( )
          CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos,&
                     bec_bgrp, cm_bgrp, c0_bgrp, ei_unp, fromscra = .TRUE. )
          !
-         CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(1) )
+         CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, idesc(:,1) )
          !
       ELSE
          !
@@ -257,22 +259,23 @@ SUBROUTINE from_scratch( )
          &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
 
       if( tortho ) then
-         CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
+         CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
       else
          CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
       endif
       !
       IF ( ttforce ) THEN
-         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, descla, fion )
+         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
       END IF
 
-      if ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, ccc )
+      if ( iverbosity > 1 ) &
+         CALL laxlib_print_matrix( lambda, idesc, nbsp, 9, nudx, ccc, ionode, stdout )
 
       !
-      if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
+      if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )
       !
       IF ( tortho ) THEN
-         CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, descla )
+         CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
       END IF
       !
       IF( force_pairing ) THEN
@@ -286,7 +289,7 @@ SUBROUTINE from_scratch( )
       !
       CALL calbec_bgrp ( 1, nsp, eigr, c0_bgrp, bec_bgrp, 1 )
       !
-      if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
+      if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
 
       if ( iverbosity > 1 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
       !

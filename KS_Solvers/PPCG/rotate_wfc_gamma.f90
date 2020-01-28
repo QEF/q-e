@@ -22,6 +22,8 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   !
   IMPLICIT NONE
   !
+  include 'laxlib.fh'
+  !
   ! ... I/O variables
   !
   INTEGER :: npw, npwx, nstart, nbnd
@@ -111,7 +113,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('rotwfcg:diag'); !write(*,*) 'start rotwfcg:diag' ; FLUSH(6)
-  CALL rdiaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
+  CALL diaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
   call stop_clock('rotwfcg:diag'); !write(*,*) 'stop rotwfcg:diag' ; FLUSH(6)
   call start_clock('rotwfcg:evc'); !write(*,*) 'start rotwfcg:evc' ; FLUSH(6)
   !
@@ -157,14 +159,13 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   USE ppcg_param,         ONLY : DP, gamma_only
   USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_bands_util,    ONLY : gstart ! index of the first nonzero G 
-  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                               ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,      ONLY : la_descriptor, descla_init
   USE parallel_toolkit, ONLY : dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
-
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   ! ... I/O variables
   !
@@ -202,8 +203,15 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
     ! s_psi(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
+             ortho_parent_comm, ortho_cntx
+  LOGICAL :: do_distr_diag_inside_bgrp
 
   call start_clock('protwfcg'); !write(*,*) 'start protwfcg' ; FLUSH(6)
+  !
+  CALL laxlib_getval( dims = np_ortho, mycoords = me_ortho, comm = ortho_comm, &
+    leg = leg_ortho, comm_id = ortho_comm_id, parent_comm = ortho_parent_comm, &
+    blacs_context = ortho_cntx, distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
   !
   ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
@@ -254,15 +262,15 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('protwfcg:diag'); !write(*,*) 'start protwfcg:diag' ; FLUSH(6)
-  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of prdiaghg en and vr are the same across ortho_parent_comm
+  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg en and vr are the same across ortho_parent_comm
      ! only the first bgrp performs the diagonalization
-     IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+     IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nstart, hr, sr, nx, en, vr, desc )
      IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
        CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
        CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
      ENDIF
   ELSE
-     CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+     CALL pdiaghg( nstart, hr, sr, nx, en, vr, desc )
   END IF
   call stop_clock('protwfcg:diag'); !write(*,*) 'stop protwfcg:diag' ; FLUSH(6)
   !
