@@ -18,6 +18,7 @@ subroutine symdynph_gq_new (xq, phi, s, invs, rtau, irt, nsymq, &
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
+  USE symm_base, ONLY : t_rev
   implicit none
   !
   !    The dummy variables
@@ -128,9 +129,15 @@ subroutine symdynph_gq_new (xq, phi, s, invs, rtau, irt, nsymq, &
                  do jpol = 1, 3
                     do kpol = 1, 3
                        do lpol = 1, 3
-                          work (ipol, jpol) = work (ipol, jpol) + &
-                               s (ipol, kpol, irot) * s (jpol, lpol, irot) &
-                               * phi (kpol, lpol, sna, snb) * faseq (isymq)
+                          IF (t_rev(isymq)==1) THEN
+                             work (ipol, jpol) = work (ipol, jpol) + &
+                                  s (ipol, kpol, irot) * s (jpol, lpol, irot) &
+                           * CONJG(phi (kpol, lpol, sna, snb) * faseq (isymq))
+                          ELSE
+                             work (ipol, jpol) = work (ipol, jpol) + &
+                                  s (ipol, kpol, irot) * s (jpol, lpol, irot) &
+                                 * phi (kpol, lpol, sna, snb) * faseq (isymq)
+                          ENDIF
                        enddo
                     enddo
                  enddo
@@ -145,9 +152,15 @@ subroutine symdynph_gq_new (xq, phi, s, invs, rtau, irt, nsymq, &
                     phi (ipol, jpol, sna, snb) = (0.d0, 0.d0)
                     do kpol = 1, 3
                        do lpol = 1, 3
-                          phi (ipol, jpol, sna, snb) = phi (ipol, jpol, sna, snb) &
-                               + s (ipol, kpol, invs (irot) ) * s (jpol, lpol, invs (irot) ) &
+                          IF (t_rev(isymq)==1) THEN
+                             phi(ipol,jpol,sna,snb)=phi(ipol,jpol,sna,snb) &
+                             + s(ipol,kpol,invs(irot))*s(jpol,lpol,invs(irot))&
+                               * CONJG(work (kpol, lpol)*faseq (isymq))
+                          ELSE
+                             phi(ipol,jpol,sna,snb)=phi(ipol,jpol,sna,snb) &
+                             + s(ipol,kpol,invs(irot))*s(jpol,lpol,invs(irot))&
                                * work (kpol, lpol) * CONJG(faseq (isymq) )
+                          ENDIF
                        enddo
                     enddo
                  enddo

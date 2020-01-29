@@ -31,7 +31,6 @@ SUBROUTINE ep_matrix_element_wannier()
   USE paw_variables, ONLY : okpaw
   USE uspp_param, ONLY : nhm
   USE lsda_mod, ONLY : nspin
-
   USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq, nksq, ikks
   !
@@ -351,6 +350,8 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE eqv,        ONLY : dvpsi!, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_lr, ONLY : lgamma
+  USE lrus,       ONLY : becp1
+  USE phus,       ONLY : alphap
 
   IMPLICIT NONE
   !
@@ -438,7 +439,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
         ELSE
            mode = imode0 + ipert
            ! FIXME : .false. or .true. ???
-           CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
+           CALL dvqpsi_us (ik, u (1, mode), .FALSE., becp1, alphap)
         ENDIF
         !
         ! calculate dvscf_q*psi_k

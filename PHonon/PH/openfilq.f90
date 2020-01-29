@@ -12,16 +12,16 @@ SUBROUTINE openfilq()
   ! ... This subroutine opens all the files necessary for the phononq
   ! ... calculation.
   !
-  USE kinds,           ONLY : DP
-  USE control_flags,   ONLY : io_level, modenum
-  USE units_ph,        ONLY : iudwf, iubar, iucom, iudvkb3, &
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : io_level, modenum
+  USE units_ph,         ONLY : iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrdwf, lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
                               iundnsscf
-  USE units_lr,        ONLY : iuwfc, lrwfc
-  USE io_files,        ONLY : tmp_dir, diropn, seqopn, nwordwfcU
-  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
+  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE io_files,         ONLY : tmp_dir, diropn, seqopn, nwordwfcU
+  USE control_ph,       ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
                               all_done, newgrid
   USE save_ph,         ONLY : tmp_dir_save
@@ -82,6 +82,7 @@ SUBROUTINE openfilq()
   ELSE  
      ! this is the standard treatment
      IF (lgamma.AND.modenum==0.AND..NOT.newgrid ) tmp_dir=tmp_dir_save
+     IF ((noncolin.AND.domag).OR.lsda) tmp_dir=tmp_dir_phq
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20

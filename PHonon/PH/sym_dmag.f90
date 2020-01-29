@@ -141,10 +141,13 @@ subroutine sym_dmag (nper, irr, dmagtosym)
      g2 (isym) = 0.d0
      g3 (isym) = 0.d0
      do ipol = 1, 3
-        g1 (isym) = g1 (isym) + gi (ipol, isym) * in1 * at (ipol, 1)
-        g2 (isym) = g2 (isym) + gi (ipol, isym) * in2 * at (ipol, 2)
-        g3 (isym) = g3 (isym) + gi (ipol, isym) * in3 * at (ipol, 3)
+        g1 (isym) = g1 (isym) + gi (ipol, isym) * at (ipol, 1)
+        g2 (isym) = g2 (isym) + gi (ipol, isym) * at (ipol, 2)
+        g3 (isym) = g3 (isym) + gi (ipol, isym) * at (ipol, 3)
      enddo
+     g1 (isym) = NINT(g1(isym))*in1
+     g2 (isym) = NINT(g2(isym))*in2
+     g3 (isym) = NINT(g3(isym))*in3
      term (1, isym) = CMPLX(cos (g1 (isym) ), sin (g1 (isym) ) ,kind=DP)
      term (2, isym) = CMPLX(cos (g2 (isym) ), sin (g2 (isym) ) ,kind=DP)
      term (3, isym) = CMPLX(cos (g3 (isym) ), sin (g3 (isym) ) ,kind=DP)
@@ -189,6 +192,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
                               at(kpol,2)*magrot(2) + &
                               at(kpol,3)*magrot(3)
                  enddo
+                 if (t_rev(isym) == 1) then 
+                    mag(:) = conjg(mag(:))
+                 end if
                  dmagsym(i,j,k,1,ipert)=dmagsym(i,j,k,1,ipert)+mag(1)
                  dmagsym(i,j,k,2,ipert)=dmagsym(i,j,k,2,ipert)+mag(2)
                  dmagsym(i,j,k,3,ipert)=dmagsym(i,j,k,3,ipert)+mag(3)

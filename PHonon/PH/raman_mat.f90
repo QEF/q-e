@@ -155,7 +155,7 @@ subroutine raman_mat
      enddo
 
      do imod = 1, 3 * nat
-        call dvqpsi_us (ik, uact (1, imod),.false. )
+        call dvqpsi_us (ik, uact (1, imod),.false., becp1, alphap)
         do ipa = 1, 6
            tmp = 0.d0
            do ibnd = 1, nbnd_occ (ik)
@@ -198,7 +198,7 @@ subroutine raman_mat
               call calbec (npw, vkb, aux1, alphap (ipb,ik) )
            enddo
 
-           call dvqpsi_us (ik, uact (1, imod),.false. )
+           call dvqpsi_us (ik, uact (1, imod),.false., becp1, alphap )
            do ipb = 1, ipa
               tmp = 0.d0
               do ibnd = 1, nbnd_occ (ik)
