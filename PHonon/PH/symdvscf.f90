@@ -27,7 +27,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   integer :: nper, irr
   ! the number of perturbations
   ! the representation under conside
-  integer :: ft(3,48)
+  integer :: ftau(3,48)
 
   complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
   ! the potential to be symmetrized
@@ -55,9 +55,9 @@ subroutine symdvscf (nper, irr, dvtosym)
   n(1) = tpi / DBLE (dfftp%nr1)
   n(2) = tpi / DBLE (dfftp%nr2)
   n(3) = tpi / DBLE (dfftp%nr3)
-  ft(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 ) 
-  ft(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 ) 
-  ft(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 ) 
+  ftau(1,1:nsymq) = NINT ( ft(1,1:nsymq)*dfftp%nr1 ) 
+  ftau(2,1:nsymq) = NINT ( ft(2,1:nsymq)*dfftp%nr2 ) 
+  ftau(3,1:nsymq) = NINT ( ft(3,1:nsymq)*dfftp%nr3 ) 
   if (minus_q) then
      gf(:) =  gimq (1) * at (1, :) * n(:) + &
               gimq (2) * at (2, :) * n(:) + &
@@ -68,7 +68,7 @@ subroutine symdvscf (nper, irr, dvtosym)
         do k = 1, dfftp%nr3
            do j = 1, dfftp%nr2
               do i = 1, dfftp%nr1
-                 CALL ruotaijk (s(1,1,irotmq), ft(1,irotmq), i, j, k, &
+                 CALL ruotaijk (s(1,1,irotmq), ftau(1,irotmq), i, j, k, &
                  dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
 
                  do ipert = 1, nper
@@ -111,7 +111,7 @@ subroutine symdvscf (nper, irr, dvtosym)
            do i = 1, dfftp%nr1
               do isym = 1, nsymq
                  irot = isym
-                 CALL ruotaijk (s(1,1,irot), ft(1,irot), i, j, k, &
+                 CALL ruotaijk (s(1,1,irot), ftau(1,irot), i, j, k, &
                  dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
                  add_dvsym(:) = (0.d0, 0.d0)
                  do ipert = 1, nper

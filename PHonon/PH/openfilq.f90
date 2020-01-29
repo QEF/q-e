@@ -30,13 +30,14 @@ SUBROUTINE openfilq()
   USE output,          ONLY : fildyn, fildvscf
   USE wvfct,           ONLY : nbnd, npwx
   USE fft_base,        ONLY : dfftp, dffts
-  USE lsda_mod,        ONLY : nspin
+  USE lsda_mod,        ONLY : nspin, lsda
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
   USE io_files,        ONLY : prefix
-  USE noncollin_module,ONLY : npol, nspin_mag
+  USE noncollin_module,ONLY : npol, nspin_mag, noncolin
   USE paw_variables,   ONLY : okpaw
   USE mp_bands,        ONLY : me_bgrp
+  USE spin_orb,        ONLY : domag
   USE io_global,       ONLY : ionode,stdout
   USE buffers,         ONLY : open_buffer, close_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
