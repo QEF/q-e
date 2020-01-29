@@ -24,13 +24,13 @@ SUBROUTINE wfcinit()
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, xmlfile, restart_dir
-  USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
+  USE buffers,              ONLY : open_buffer, close_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions,        ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : read_collected_wfc
-  USE mp,                   ONLY : mp_bcast
+  USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_images,            ONLY : intra_image_comm
   USE qexsd_module,         ONLY : qexsd_readschema
   USE qes_types_module,     ONLY : output_type
@@ -38,7 +38,7 @@ SUBROUTINE wfcinit()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, ierr
+  INTEGER :: ik, ierr, exst_sum 
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
@@ -55,6 +55,20 @@ SUBROUTINE wfcinit()
   ! ... io_level > 1 : open file, otherwise: open buffer
   !
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
+  IF (exst_file) THEN 
+     exst_sum = 0 
+  ELSE 
+     exst_sum = 1
+  END IF 
+  CALL mp_sum (exst_sum, intra_image_comm)  
+  IF ( exst_sum .ne.  0 ) THEN 
+     CALL infomsg( "wfcinit:", "wfc files not found") 
+     IF (exst_file) THEN 
+        CALL close_buffer(iunwfc, 'delete') 
+        CALL open_buffer(iunwfc,'wfc', nwordwfc, io_level, exst_mem, exst_file) 
+     END IF 
+  END IF 
+  
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
      dirname = restart_dir ( ) 
