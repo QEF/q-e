@@ -19,7 +19,7 @@
       !  Remember here we use square matrixes block distributed on a square grid of processors
       !
       TYPE la_descriptor  
-         INTEGER :: ir        = 0 !  globla index of the first row in the local block of the distributed matrix
+         INTEGER :: ir        = 0 !  global index of the first row in the local block of the distributed matrix
          INTEGER :: nr        = 0 !  number of row in the local block of the distributed matrix
          INTEGER :: ic        = 0 !  global index of the first column in the local block of the distributed matrix
          INTEGER :: nc        = 0 !  number of column in the local block of the distributed matrix
@@ -96,7 +96,7 @@
          !
       END IF
 
-      descla%ir = ir    ! globla index of the first row in the local block of lambda
+      descla%ir = ir    ! global index of the first row in the local block of lambda
       descla%nr = nr    ! number of row in the local block of lambda ( the "2" accounts for spin)
       descla%ic = ic    ! global index of the first column in the local block of lambda
       descla%nc = nc    ! number of column in the local block of lambda
@@ -150,7 +150,7 @@
       include 'laxlib_param.fh'
       TYPE(la_descriptor), INTENT(IN) :: descla
       INTEGER, INTENT(OUT)  :: idesc(LAX_DESC_SIZE)
-      idesc(LAX_DESC_IR) = descla%ir        !  globla index of the first row in the local block of the distributed matrix
+      idesc(LAX_DESC_IR) = descla%ir        !  global index of the first row in the local block of the distributed matrix
       idesc(LAX_DESC_NR) = descla%nr        !  number of row in the local block of the distributed matrix
       idesc(LAX_DESC_IC) = descla%ic        !  global index of the first column in the local block of the distributed matrix
       idesc(LAX_DESC_NC) = descla%nc        !  number of column in the local block of the distributed matrix
@@ -174,7 +174,7 @@
       include 'laxlib_param.fh'
       TYPE(la_descriptor), INTENT(OUT) :: descla
       INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)
-      descla%ir = idesc(LAX_DESC_IR) !  globla index of the first row in the local block of the distributed matrix
+      descla%ir = idesc(LAX_DESC_IR) !  global index of the first row in the local block of the distributed matrix
       descla%nr = idesc(LAX_DESC_NR) !  number of row in the local block of the distributed matrix
       descla%ic = idesc(LAX_DESC_IC) !  global index of the first column in the local block of the distributed matrix
       descla%nc = idesc(LAX_DESC_NC) !  number of column in the local block of the distributed matrix
