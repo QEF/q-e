@@ -16,6 +16,7 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
   USE kinds, ONLY : DP
   USE cell_base, ONLY : bg, at
   USE control_lr, ONLY : lgamma
+  USE symm_base, ONLY : t_rev
   
   IMPLICIT NONE
 
@@ -73,10 +74,15 @@ subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
                 aq (jpol)
         enddo
      enddo
+     IF (t_rev(isym)==1) raq=-raq
      if (.NOT. eqvect (raq, aq, zero, accep) ) CALL errore('set_giq',&
                             'problems with the input group',1)
      do ipol = 1, 3
-        wrk (ipol) = raq (ipol) - aq (ipol)
+        IF (t_rev(isym)==1) THEN
+           wrk (ipol) = aq (ipol) - raq (ipol)
+        ELSE
+           wrk (ipol) = raq (ipol) - aq (ipol)
+        ENDIF
      enddo
      call cryst_to_cart (1, wrk, bg, 1)
      gi (:, isym) = wrk (:)

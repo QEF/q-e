@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
+subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign_in)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -27,6 +27,8 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE klist,                ONLY : ngk,igk_k
   USE qpoint,               ONLY : ikks, ikqs
   USE control_lr,           ONLY : nbnd_occ
+  USE qpoint_aux,           ONLY : becpt
+  USE lrus,                 ONLY : becp1
   USE mp_bands,             ONLY : me_bgrp, inter_bgrp_comm, ntask_groups
   USE mp,                   ONLY : mp_sum
   USE fft_helper_subroutines
@@ -37,6 +39,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   INTEGER, INTENT(IN) :: ik
   ! input: the k point
   REAL(DP), INTENT(IN) :: weight
+  REAL(DP), INTENT(IN), OPTIONAL:: rsign_in
   ! input: the weight of the k point
   COMPLEX(DP), INTENT(IN) :: dpsi(npwx*npol,nbnd)
   ! input: the perturbed wfcs at the given k point
@@ -45,6 +48,8 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   !
   !   here the local variable
   !
+  REAL(DP) :: rsign 
+  ! the sign in front of the response of the magnetization density
   REAL(DP) :: wgt
   ! the effective weight of the k point
   !
@@ -58,6 +63,14 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   INTEGER :: ibnd, jbnd, ir, ir3, ig, incr, v_siz, idx, ioff, ioff_tg, nxyp
   INTEGER :: ntgrp, right_inc
   ! counters
+  !
+  !
+  IF (PRESENT(rsign_in)) THEN 
+     rsign = rsign_in
+  ELSE
+     rsign = 1.
+  END IF
+  !
   !
   CALL start_clock ('incdrhoscf')
   !
@@ -130,11 +143,11 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         enddo
         IF (domag) THEN
            do ir = 1, dffts%nr1x * dffts%nr2x * dffts%my_nr3p
-              tg_drho(ir,2)= tg_drho(ir,2) + wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
+              tg_drho(ir,2)= tg_drho(ir,2) + rsign *wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
                                                   + CONJG(tg_psi(ir,2))*tg_dpsi(ir,1) )
-              tg_drho(ir,3)= tg_drho(ir,3) + wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
+              tg_drho(ir,3)= tg_drho(ir,3) + rsign *wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,2) &
                                                   - CONJG(tg_psi(ir,2))*tg_dpsi(ir,1) ) * (0.d0,-1.d0)
-              tg_drho(ir,4)= tg_drho(ir,4) + wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,1) &
+              tg_drho(ir,4)= tg_drho(ir,4) + rsign *wgt * (CONJG(tg_psi(ir,1))*tg_dpsi(ir,1) &
                                                   - CONJG(tg_psi(ir,2))*tg_dpsi(ir,2) )
            enddo
         ENDIF
@@ -176,11 +189,11 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         enddo
         IF (domag) THEN
            do ir = 1, dffts%nnr
-              drhoscf(ir,2)=drhoscf (ir,2) + wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
+              drhoscf(ir,2)=drhoscf (ir,2) + rsign *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
                                                   + CONJG(psi(ir,2))*dpsic(ir,1) )
-              drhoscf(ir,3)=drhoscf (ir,3) + wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
+              drhoscf(ir,3)=drhoscf (ir,3) + rsign *wgt * (CONJG(psi(ir,1))*dpsic(ir,2) &
                                                   - CONJG(psi(ir,2))*dpsic(ir,1) ) * (0.d0,-1.d0)
-              drhoscf(ir,4)=drhoscf (ir,4) + wgt * (CONJG(psi(ir,1))*dpsic(ir,1) &
+              drhoscf(ir,4)=drhoscf (ir,4) + rsign *wgt * (CONJG(psi(ir,1))*dpsic(ir,1) &
                                                   - CONJG(psi(ir,2))*dpsic(ir,2) )
            enddo
         END IF
@@ -192,7 +205,11 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   ! Ultrasoft contribution
   ! Calculate dbecsum_nc = <evc|vkb><vkb|dpsi>
   !
-  CALL addusdbec_nc (ik, weight, dpsi, dbecsum)
+  IF (rsign==1) THEN
+     CALL addusdbec_nc (ik, weight, dpsi, dbecsum, becp1)
+  ELSE
+     CALL addusdbec_nc (ik, weight, dpsi, dbecsum, becpt)
+  ENDIF
   !
   DEALLOCATE(psi)
   DEALLOCATE(dpsic)
