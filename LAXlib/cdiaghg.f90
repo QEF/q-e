@@ -390,7 +390,7 @@ CONTAINS
   !
   SUBROUTINE test_drv_begin()
      ALLOCATE( tt( n, n ) )
-     CALL laxlib_zsqmcll( n, hh, nx, tt, n, desc, desc%comm )
+     CALL laxlib_zsqmcll_x( n, hh, nx, tt, n, desc, desc%comm )
      RETURN
   END SUBROUTINE test_drv_begin
   !
@@ -429,7 +429,7 @@ CONTAINS
      IF ( info /= 0 ) &
         CALL lax_error__( 'test_drv_end', 'error broadcasting array e', ABS( info ) )
 #endif
-     CALL laxlib_zsqmdst( n, tt, n, hh, nx, desc )
+     CALL laxlib_zsqmdst_x( n, tt, n, hh, nx, desc )
      DEALLOCATE( tt )
      CALL lax_error__('cdiaghg','stop serial',1)
      RETURN
