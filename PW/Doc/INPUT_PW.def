@@ -145,8 +145,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 
                 opt -val 'restart' {
                     From previous interrupted run. Use this switch only if you want to
-                    continue an interrupted calculation, not to start a new one, or to
-                    perform non-scf calculations.  Works only if the calculation was
+                    continue, using the same number of processors and parallelization,
+                    an interrupted calculation. Do not use to start a new one, or to
+                    perform a non-scf calculations.  Works only if the calculation was
                     cleanly stopped using variable @ref max_seconds, or by user request
                     with an "exit file" (i.e.: create a file "prefix".EXIT, in directory
                     "outdir"; see variables @ref prefix, @ref outdir).  Overrides @ref startingwfc
