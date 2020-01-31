@@ -143,7 +143,7 @@ CONTAINS
     USE electrons_base,           ONLY : nspin, nbsp, nbspx, nudx
     USE gvecw,                    ONLY : ngw
     USE fft_base,                 ONLY : dffts
-    USE cp_main_variables,        ONLY : descla,lambdap, lambda, lambdam
+    USE cp_main_variables,        ONLY : idesc, lambdap, lambda, lambdam
     USE ions_base,                ONLY : nat_ions_base => nat 
     USE cell_base,                ONLY : tpiba2
     USE cp_main_variables,        ONLY : ema0bg
@@ -271,7 +271,7 @@ CONTAINS
               had_tcg_true=.true.
               if (.not. had_tens_true) then
                   CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, &
-                                 dffts%nnr, nat_ions_base, descla )
+                                 dffts%nnr, nat_ions_base, idesc )
               endif
               CALL allocate_cg( ngw, nbspx,nkbus )              
           endif

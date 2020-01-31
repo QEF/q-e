@@ -53,12 +53,13 @@ SUBROUTINE memory_report()
        lxdm, smallmem, tqr, iverbosity
   USE force_mod, ONLY : lforce, lstres
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE mp_diag,   ONLY : np_ortho
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_pools,  ONLY : npool
   USE mp_images, ONLY : nproc_image  
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   INTEGER, PARAMETER :: MB=1024*1024
   INTEGER, PARAMETER :: GB=1024*MB
@@ -72,6 +73,7 @@ SUBROUTINE memory_report()
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
   REAL(dp) :: ram, ram_, ram1, ram2, maxram, totram, add
+  INTEGER :: np_ortho(2)
   !
   IF ( gamma_only) THEN
      g_fact = 2  ! use half plane waves or G-vectors
@@ -262,6 +264,8 @@ SUBROUTINE memory_report()
   ! ram1:  scratch space allocated in iterative diagonalization 
   !        hpsi, spsi, hr and sr matrices, scalar products
   !        nbnd_l is the estimated dimension of distributed matrices
+  !
+  CALL laxlib_getval( np_ortho = np_ortho )
   !
   nbnd_l = nbndx/np_ortho(1)
   ram1 = complex_size/g_fact * ( 3*nbnd_l**2 ) ! hr,sr,vr/hc,sc,vc 

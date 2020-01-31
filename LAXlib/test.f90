@@ -1,8 +1,9 @@
 program lax_test
-  use descriptors
-  USE la_param
+  use laxlib_descriptor
+  USE laxlib_parallel_include
   use dspev_module
   IMPLICIT NONE
+  include 'laxlib_kinds.fh'
 #if defined(__MPI)
   INTEGER    STATUS(MPI_STATUS_SIZE)
 #else
