@@ -15,12 +15,15 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE ppcg_param,      ONLY : DP
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
-  USE mp_bands_util, ONLY : me_bgrp, root_bgrp, gstart ! index of the first nonzero G 
+  USE ppcg_param,    ONLY : DP
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
+          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
+  USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
   USE mp,            ONLY : mp_sum 
   !
   IMPLICIT NONE
+  !
+  INCLUDE 'laxlib.fh'
   !
   ! ... I/O variables
   !
@@ -79,7 +82,8 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   !
   call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
   hr=0.D0
-  CALL divide(inter_bgrp_comm,nstart,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
+  CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
+  my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
   CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
   IF ( gstart == 2 ) call DGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, hr(1,n_start), nstart )
@@ -111,7 +115,7 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('rotwfcg:diag'); !write(*,*) 'start rotwfcg:diag' ; FLUSH(6)
-  CALL rdiaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
+  CALL diaghg( nstart, nbnd, hr, sr, nstart, en, vr, me_bgrp, root_bgrp, intra_bgrp_comm )
   call stop_clock('rotwfcg:diag'); !write(*,*) 'stop rotwfcg:diag' ; FLUSH(6)
   call start_clock('rotwfcg:evc'); !write(*,*) 'start rotwfcg:evc' ; FLUSH(6)
   !
@@ -154,17 +158,15 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE ppcg_param,         ONLY : DP, gamma_only
-  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
+  USE ppcg_param,       ONLY : DP, gamma_only
+  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
+          nbgrp, my_bgrp_id
   USE mp_bands_util,    ONLY : gstart ! index of the first nonzero G 
-  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
-                               ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
-  USE descriptors,      ONLY : la_descriptor, descla_init
-  USE parallel_toolkit, ONLY : dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
-
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   ! ... I/O variables
   !
@@ -187,14 +189,17 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
-  TYPE(la_descriptor) :: desc
+  INTEGER :: idesc(LAX_DESC_SIZE)
     ! matrix distribution descriptors
   INTEGER :: nx
     ! maximum local block dimension
   LOGICAL :: la_proc
     ! flag to distinguish procs involved in linear algebra
-  TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
+  INTEGER, ALLOCATABLE :: idesc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
+             ortho_parent_comm, ortho_cntx
+  LOGICAL :: do_distr_diag_inside_bgrp
   !
   EXTERNAL  h_psi,    s_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -205,10 +210,15 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
 
   call start_clock('protwfcg'); !write(*,*) 'start protwfcg' ; FLUSH(6)
   !
-  ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
+  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
+    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
+    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+
+  !
+  ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
-  CALL desc_init( nstart, desc, desc_ip )
+  CALL desc_init( nstart, idesc, idesc_ip )
   !
 
   npw2  = 2 * npw
@@ -254,15 +264,15 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('protwfcg:diag'); !write(*,*) 'start protwfcg:diag' ; FLUSH(6)
-  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of prdiaghg en and vr are the same across ortho_parent_comm
+  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg en and vr are the same across ortho_parent_comm
      ! only the first bgrp performs the diagonalization
-     IF( my_bgrp_id == root_bgrp_id ) CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+     IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nstart, hr, sr, nx, en, vr, idesc )
      IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
        CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
        CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
      ENDIF
   ELSE
-     CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+     CALL pdiaghg( nstart, hr, sr, nx, en, vr, idesc )
   END IF
   call stop_clock('protwfcg:diag'); !write(*,*) 'stop protwfcg:diag' ; FLUSH(6)
   !
@@ -282,7 +292,7 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   DEALLOCATE( hr )
   DEALLOCATE( aux )
   !
-  DEALLOCATE( desc_ip )
+  DEALLOCATE( idesc_ip )
   DEALLOCATE( rank_ip )
   call stop_clock('protwfcg'); !write(*,*) 'stop protwfcg' ; FLUSH(6)
   !call print_clock('protwfcg')
@@ -296,30 +306,31 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   !
 CONTAINS
   !
-  SUBROUTINE desc_init( nsiz, desc, desc_ip )
+  SUBROUTINE desc_init( nsiz, idesc, idesc_ip )
      !
      INTEGER, INTENT(IN)  :: nsiz
-     TYPE(la_descriptor), INTENT(OUT) :: desc
-     TYPE(la_descriptor), INTENT(OUT) :: desc_ip(:,:)
+     INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
+     INTEGER, INTENT(OUT) :: idesc_ip(:,:,:)
      INTEGER :: i, j, rank
      INTEGER :: coor_ip( 2 )
      ! 
-     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
      ! 
-     nx = desc%nrcx
+     nx = idesc(LAX_DESC_NRCX)
      !
-     DO j = 0, desc%npc - 1
-        DO i = 0, desc%npr - 1
+     DO j = 0, idesc(LAX_DESC_NPC) - 1
+        DO i = 0, idesc(LAX_DESC_NPR) - 1
            coor_ip( 1 ) = i
            coor_ip( 2 ) = j
-           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
-           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
+           CALL laxlib_init_desc( idesc_ip(:,i+1,j+1), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
+                                  np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
+           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         END DO
      END DO
      !
      la_proc = .FALSE.
-     IF( desc%active_node > 0 ) la_proc = .TRUE.
+     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
      !
      RETURN
   END SUBROUTINE desc_init
@@ -340,15 +351,15 @@ CONTAINS
      !
      work = 0.0d0
      !
-     DO ipc = 1, desc%npc !  loop on column procs 
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs 
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip(LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip(LAX_DESC_IC, 1, ipc ) 
         !
         DO ipr = 1, ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( ipr, ipc )%nr
-           ir = desc_ip( ipr, ipc )%ir
+           nr = idesc_ip(LAX_DESC_NR, ipr, ipc ) 
+           ir = idesc_ip(LAX_DESC_IR, ipr, ipc )
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -371,7 +382,7 @@ CONTAINS
 
      if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
-     CALL dsqmsym( nstart, dm, nx, desc )
+     CALL laxlib_dsqmsym( nstart, dm, nx, idesc )
      !
      DEALLOCATE( work )
      !
@@ -388,10 +399,10 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs 
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip(LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip(LAX_DESC_IC, 1, ipc ) 
         !
         IF( ic <= nbnd ) THEN
            !
@@ -399,14 +410,14 @@ CONTAINS
            !
            beta = 0.0d0
 
-           DO ipr = 1, desc%npr
+           DO ipr = 1, idesc(LAX_DESC_NPR)
               !
-              nr = desc_ip( ipr, ipc )%nr
-              ir = desc_ip( ipr, ipc )%ir
+              nr = idesc_ip(LAX_DESC_NR, ipr, ipc ) 
+              ir = idesc_ip(LAX_DESC_IR, ipr, ipc )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
+              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 

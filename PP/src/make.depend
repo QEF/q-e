@@ -501,10 +501,6 @@ projections_mod.o : ../../Modules/kind.o
 projections_mod.o : ../../Modules/noncol.o
 projections_mod.o : ../../Modules/uspp.o
 projections_mod.o : ../../PW/src/pwcom.o
-projwfc.o : ../../LAXlib/la_types.o
-projwfc.o : ../../LAXlib/mp_diag.o
-projwfc.o : ../../LAXlib/ptoolkit.o
-projwfc.o : ../../LAXlib/zhpev_drv.o
 projwfc.o : ../../Modules/atom.o
 projwfc.o : ../../Modules/becmod.o
 projwfc.o : ../../Modules/cell_base.o
