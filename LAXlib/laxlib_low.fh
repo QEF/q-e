@@ -143,6 +143,15 @@ END INTERFACE
          INTEGER, INTENT(IN)  :: np(2), me(2), comm, cntx
          INTEGER, INTENT(IN)  :: includeme
       END SUBROUTINE
+      SUBROUTINE laxlib_multi_init_desc_x( idesc, idesc_ip, rank_ip, n, nx, np, me, comm, cntx, comm_id  )
+		IMPLICIT NONE
+		include 'laxlib_param.fh'
+		INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
+		INTEGER, INTENT(OUT) :: idesc_ip(:,:,:)
+		INTEGER, INTENT(OUT) :: rank_ip(:,:)
+		INTEGER, INTENT(IN)  :: n   !  the size of this matrix
+		INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing this descriptor or the same data distribution
+      END SUBROUTINE
    END INTERFACE
 
    INTERFACE laxlib_local_dims

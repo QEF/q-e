@@ -389,7 +389,7 @@ SUBROUTINE print_lambda_x( lambda, idesc, n, nshow, nudx, ccc, ionode, iunit )
 END SUBROUTINE print_lambda_x
 
 
-SUBROUTINE laxlib_init_desc_x( idesc, n, nx, np, me, comm, cntx, includeme )
+SUBROUTINE laxlib_init_desc_x( idesc, n, nx, np, me, comm, cntx, comm_id )
     USE laxlib_descriptor,       ONLY: la_descriptor, descla_init, laxlib_desc_to_intarray
     IMPLICIT NONE
     include 'laxlib_param.fh'
@@ -397,14 +397,52 @@ SUBROUTINE laxlib_init_desc_x( idesc, n, nx, np, me, comm, cntx, includeme )
     INTEGER, INTENT(IN)  :: n   !  the size of this matrix
     INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing this descriptor or the same data distribution
     INTEGER, INTENT(IN)  :: np(2), me(2), comm, cntx
-    INTEGER, INTENT(IN)  :: includeme
+    INTEGER, INTENT(IN)  :: comm_id
     !
     TYPE(la_descriptor) :: descla
     !
-    CALL descla_init( descla, n, nx, np, me, comm, cntx, includeme )
+    CALL descla_init( descla, n, nx, np, me, comm, cntx, comm_id )
     CALL laxlib_desc_to_intarray( idesc, descla )
     RETURN
 END SUBROUTINE laxlib_init_desc_x
+
+
+SUBROUTINE laxlib_multi_init_desc_x( idesc, idesc_ip, rank_ip, n, nx  )
+    USE laxlib_descriptor,       ONLY: la_descriptor, descla_init, laxlib_desc_to_intarray
+    use laxlib_processors_grid,  ONLY: leg_ortho, np_ortho, me_ortho, ortho_comm, ortho_comm_id, ortho_cntx
+    IMPLICIT NONE
+    include 'laxlib_param.fh'
+    INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
+    INTEGER, INTENT(OUT) :: idesc_ip(:,:,:)
+    INTEGER, INTENT(OUT) :: rank_ip(:,:)
+    INTEGER, INTENT(IN)  :: n   !  the size of this matrix
+    INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing this descriptor or the same data distribution
+
+    INTEGER :: i, j, rank, includeme
+    INTEGER :: coor_ip( 2 )
+    !
+    TYPE(la_descriptor) :: descla
+    !
+    CALL descla_init( descla, n, nx, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+    !
+    CALL laxlib_desc_to_intarray( idesc, descla )
+    !
+    includeme = 1
+    !
+	DO j = 0, idesc(LAX_DESC_NPC) - 1
+		DO i = 0, idesc(LAX_DESC_NPR) - 1
+			coor_ip( 1 ) = i
+			coor_ip( 2 ) = j
+			CALL descla_init( descla, idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
+			                  np_ortho, coor_ip, ortho_comm, ortho_cntx, includeme )
+			CALL laxlib_desc_to_intarray( idesc_ip(:,i+1,j+1), descla )
+			CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
+			rank_ip( i+1, j+1 ) = rank * leg_ortho
+		END DO
+	END DO
+    !
+    RETURN
+END SUBROUTINE laxlib_multi_init_desc_x
 
    SUBROUTINE descla_local_dims( i2g, nl, n, nx, np, me )
       IMPLICIT NONE
