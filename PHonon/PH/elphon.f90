@@ -1265,13 +1265,9 @@ END SUBROUTINE elphsum_simple
 SUBROUTINE elphfil_epa(iq)
   !-----------------------------------------------------------------------
   !
-  !      EPA (electron-phonon-averaged) approximation
   !      Writes electron-phonon matrix elements to a file
-  !      Written by Georgy Samsonidze on 2015-01-28
-  !
-  !      Adv. Energy Mater. 2018, 1800246
-  !      doi:10.1002/aenm.201800246
-  !      https://doi.org/10.1002/aenm.201800246
+  !      which is subsequently processed by the epa code
+  !      Original routine written by Georgy Samsonidze
   !
   !-----------------------------------------------------------------------
   USE cell_base, ONLY : ibrav, alat, omega, tpiba, at, bg

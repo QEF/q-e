@@ -202,7 +202,7 @@ SUBROUTINE setup()
   ! ... Set the domag variable to make a spin-orbit calculation with zero
   ! ... magnetization
   !
-  IF ( lspinorb ) THEN
+  IF ( noncolin  ) THEN
      domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
   ELSE
      domag = .TRUE.
@@ -645,17 +645,19 @@ LOGICAL FUNCTION check_para_diag( nbnd )
   !! Some checks for parallel diagonalization.
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_diag,          ONLY : np_ortho, ortho_parent_comm 
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp_pools,         ONLY : intra_pool_comm
 
   IMPLICIT NONE
+
+  include 'laxlib.fh'
 
   INTEGER, INTENT(IN) :: nbnd
   !! number of bands
   !
   LOGICAL, SAVE :: first = .TRUE.
   LOGICAL, SAVE :: saved_value = .FALSE.
+  INTEGER :: np_ortho(2), ortho_parent_comm 
 
 #if defined(__MPI)
   IF( .NOT. first ) THEN
@@ -663,6 +665,8 @@ LOGICAL FUNCTION check_para_diag( nbnd )
       RETURN
   END IF
   first = .FALSE.
+  !
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm )
   !
   IF( np_ortho(1) > nbnd ) &
      CALL errore ('check_para_diag', 'Too few bands for required ndiag',nbnd)

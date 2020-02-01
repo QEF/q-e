@@ -57,7 +57,6 @@ MODULE cp_restart_new
                                            nproc_image
       USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
                                            root_bgrp, root_bgrp_id
-      USE mp_diag,                  ONLY : nproc_ortho
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g, ecutrho
       USE gvecs,                    ONLY : ngms_g, ecuts
@@ -1569,14 +1568,15 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : collect_lambda
+    USE cp_main_variables, ONLY : idesc
     !
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(in) :: lambda(:,:)
     INTEGER, INTENT(out) :: ierr
+    !
+    include 'laxlib.fh'
     !
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     !
@@ -1586,7 +1586,7 @@ MODULE cp_restart_new
     IF ( ierr /= 0 ) RETURN
     !
     ALLOCATE( mrepl( nudx, nudx ) )
-    CALL collect_lambda( mrepl, lambda, descla(iss) )
+    CALL collect_lambda( mrepl, lambda, idesc(:,iss) )
     !
     IF ( ionode ) THEN
        WRITE (iunpun, iostat=ierr) mrepl
@@ -1608,10 +1608,12 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : distribute_lambda
+    USE cp_main_variables, ONLY : idesc
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     CHARACTER(LEN=*), INTENT(in) :: filename
     INTEGER, INTENT(in) :: iunpun, iss, nspin, nudx
     REAL(dp), INTENT(out) :: lambda(:,:)
@@ -1636,7 +1638,7 @@ MODULE cp_restart_new
        CLOSE( unit=iunpun, status='keep')
     END IF
     CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
-    CALL distribute_lambda( mrepl, lambda, descla(iss) )
+    CALL distribute_lambda( mrepl, lambda, idesc(:,iss) )
     DEALLOCATE( mrepl )
     !
   END SUBROUTINE cp_read_lambda
@@ -1651,11 +1653,13 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : collect_zmat
+    USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     REAL(dp), INTENT(in) :: mat_z(:,:,:)
     INTEGER, INTENT(in)  :: ndw
     INTEGER, INTENT(out) :: ierr
@@ -1672,7 +1676,7 @@ MODULE cp_restart_new
     !
     DO iss = 1, nspin
        !
-       CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
+       CALL collect_zmat( mrepl, mat_z(:,:,iss), idesc(:,iss) )
        !
        filename = TRIM(dirname) // 'mat_z' // TRIM(int_to_char(iss))
        !
@@ -1700,11 +1704,13 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE cp_main_variables, ONLY : descla
-    USE cp_interfaces, ONLY : distribute_zmat
+    USE cp_main_variables, ONLY : idesc
     USE electrons_base,ONLY: nspin, nudx
     !
     IMPLICIT NONE
+
+    include 'laxlib.fh'
+
     REAL(dp), INTENT(out) :: mat_z(:,:,:)
     INTEGER, INTENT(in)  :: ndr
     INTEGER, INTENT(out) :: ierr
@@ -1730,7 +1736,7 @@ MODULE cp_restart_new
        END IF
        CALL mp_bcast (ierr, ionode_id, intra_image_comm )
        !
-       CALL distribute_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
+       CALL distribute_zmat( mrepl, mat_z(:,:,iss), idesc(:,iss) )
        !
     END DO
     !
