@@ -79,6 +79,7 @@ PROGRAM lr_calculate_spectrum
   !
   ! Subroutines etc.
   !
+  COMPLEX(kind=dp), EXTERNAL :: zdotc
   CHARACTER(len=6), EXTERNAL :: int_to_char
   !
   ! User controlled variable initialisation
@@ -1289,7 +1290,7 @@ SUBROUTINE calc_chi(freq,broad,chi)
      ! 
      DO ip2 = 1,n_ipol
          !
-         chi(ip,ip2) = dot_product(zeta_store(ip,ip2,:),r(ip,:))
+         chi(ip,ip2) = ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
          !
          ! Multiplication with a norm
          !

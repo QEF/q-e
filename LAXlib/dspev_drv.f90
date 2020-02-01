@@ -9,8 +9,20 @@
 
 MODULE dspev_module
 
+    USE la_param
+
     IMPLICIT NONE
+
     SAVE
+
+    PRIVATE
+
+    PUBLIC :: pdspev_drv, dspev_drv
+    PUBLIC :: diagonalize_parallel, diagonalize_serial
+
+#if defined __SCALAPACK
+    PUBLIC :: pdsyevd_drv
+#endif
 
 
 CONTAINS
@@ -81,11 +93,8 @@ CONTAINS
 !              this vector is equal on all processors. 
 !
 !
-      USE laxlib_parallel_include
 
       IMPLICIT NONE
-
-      include 'laxlib_kinds.fh'
 
       LOGICAL, INTENT(IN) :: tv
       INTEGER, intent(in) :: N, NRL, LDA, LDV
@@ -408,11 +417,8 @@ CONTAINS
 !
 !
 !
-      USE laxlib_parallel_include
 
       IMPLICIT NONE
-
-      include 'laxlib_kinds.fh'
 
       LOGICAL, INTENT(IN)  :: tv
       INTEGER, INTENT(IN)  :: n, nrl, ldz, mpime, comm
@@ -537,7 +543,6 @@ CONTAINS
 !
 
       IMPLICIT NONE
-      include 'laxlib_kinds.fh'
       LOGICAL, INTENT(IN) :: tv
       INTEGER, INTENT (IN) :: n,ldv,nrl
       REAL(DP), INTENT(INOUT) :: d(n),v(ldv,n)
@@ -577,7 +582,6 @@ CONTAINS
    !-------------------------------------------------------------------------
    FUNCTION pythag(a,b)
       IMPLICIT NONE
-      include 'laxlib_kinds.fh'
       REAL(DP) :: a, b, pythag
       REAL(DP) :: absa, absb
       absa=abs(a)
@@ -596,6 +600,54 @@ CONTAINS
    !
 !==----------------------------------------------==!
 
+   SUBROUTINE pdspev_drv( jobz, ap, lda, w, z, ldz, &
+                          nrl, n, nproc, mpime, comm )
+     IMPLICIT NONE
+     CHARACTER, INTENT(IN) :: JOBZ
+     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, INTENT(IN) :: comm
+     REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
+     REAL(DP), ALLOCATABLE :: sd( : )
+     LOGICAL :: tv
+     !
+     IF( n < 1 ) RETURN
+     !
+     tv = .false.
+     IF( jobz == 'V' .OR. jobz == 'v' ) tv = .true.
+
+     ALLOCATE ( sd ( n ) )
+     CALL ptredv( tv, ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
+     CALL ptqliv( tv, w, sd, n, z, ldz, nrl, mpime, comm)
+     DEALLOCATE ( sd )
+     CALL peigsrtv( tv, w, z, ldz, n, nrl)
+
+     RETURN
+   END SUBROUTINE pdspev_drv
+ 
+!==----------------------------------------------==!
+
+      SUBROUTINE dspev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
+        IMPLICIT NONE
+        CHARACTER ::       JOBZ, UPLO
+        INTEGER   ::       IOPT, INFO, LDZ, N
+        REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
+        REAL(DP), ALLOCATABLE :: WORK(:)
+
+        IF( n < 1 ) RETURN
+
+        ALLOCATE( work( 3*n ) )
+
+        CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
+        IF( info .NE. 0 ) THEN
+           CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',info )
+        END IF
+
+        DEALLOCATE( work )
+ 
+        RETURN
+      END SUBROUTINE dspev_drv
+
+
 #if defined __SCALAPACK
 
   SUBROUTINE pdsyevd_drv( tv, n, nb, s, lds, w, ortho_cntx, ortho_comm )
@@ -604,8 +656,6 @@ CONTAINS
      use elpa1
 #endif
      IMPLICIT NONE
-     !
-     include 'laxlib_kinds.fh'
      !
      LOGICAL, INTENT(IN)  :: tv  
        ! if tv is true compute eigenvalues and eigenvectors (not used)
@@ -704,55 +754,89 @@ CONTAINS
 
 #endif
 
+
+!   ----------------------------------------------
+!   Simplified driver 
+
+SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
+
+      USE descriptors
+
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
+      REAL(DP)              :: rhod(:)   !  output eigenvalues
+      REAL(DP)              :: s(:,:)    !  output eigenvectors
+      INTEGER,   INTENT(IN) :: n         !  size of the global matrix
+      TYPE(la_descriptor), INTENT(IN) :: desc
+
+      IF( n < 1 ) RETURN
+
+      !  Matrix is distributed on the same processors group
+      !  used for parallel matrix multiplication
+      !
+      IF( SIZE(s,1) /= SIZE(rhos,1) .OR. SIZE(s,2) /= SIZE(rhos,2) ) &
+         CALL lax_error__( " diagonalize_parallel ", " inconsistent dimension for s and rhos ", 1 )
+
+      IF ( desc%active_node > 0 ) THEN
+         !
+         IF( SIZE(s,1) /= desc%nrcx ) &
+            CALL lax_error__( " diagonalize_parallel ", " inconsistent dimension ", 1)
+         !
+         !  Compute local dimension of the cyclically distributed matrix
+         !
+         s = rhos
+         !
+#if defined(__SCALAPACK)
+         CALL pdsyevd_drv( .true. , n, desc%nrcx, s, SIZE(s,1), rhod, desc%cntx, desc%comm )
+#else
+         CALL qe_pdsyevd( .true., n, desc, s, SIZE(s,1), rhod )
+#endif
+         !
+      END IF
+
+      RETURN
+
+END SUBROUTINE diagonalize_parallel
+
+
+SUBROUTINE diagonalize_serial( n, rhos, rhod )
+      IMPLICIT NONE
+      INTEGER,  INTENT(IN)  :: n
+      REAL(DP)              :: rhos(:,:)
+      REAL(DP)              :: rhod(:)
+      !
+      ! inputs:
+      ! n     size of the eigenproblem
+      ! rhos  the symmetric matrix
+      ! outputs:
+      ! rhos  eigenvectors
+      ! rhod  eigenvalues
+      !
+      REAL(DP), ALLOCATABLE :: aux(:)
+      INTEGER :: i, j, k
+
+      IF( n < 1 ) RETURN
+
+      ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
+
+      !  pack lower triangle of rho into aux
+      !
+      k = 0
+      DO j = 1, n
+         DO i = j, n
+            k = k + 1
+            aux( k ) = rhos( i, j )
+         END DO
+      END DO
+
+      CALL dspev_drv( 'V', 'L', n, aux, rhod, rhos, SIZE(rhos,1) )
+
+      DEALLOCATE( aux )
+
+      RETURN
+
+END SUBROUTINE diagonalize_serial
+
+
+
 END MODULE dspev_module
-
-!==----------------------------------------------==!
-
-
-   SUBROUTINE pdspev_drv_x ( jobz, ap, lda, w, z, ldz, nrl, n, nproc, mpime, comm )
-     use dspev_module
-     IMPLICIT NONE
-     include 'laxlib_kinds.fh'
-     CHARACTER, INTENT(IN) :: JOBZ
-     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
-     INTEGER, INTENT(IN) :: comm
-     REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
-     REAL(DP), ALLOCATABLE :: sd( : )
-     LOGICAL :: tv
-     !
-     IF( n < 1 ) RETURN
-     !
-     tv = .false.
-     IF( jobz == 'V' .OR. jobz == 'v' ) tv = .true.
-
-     ALLOCATE ( sd ( n ) )
-     CALL ptredv( tv, ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
-     CALL ptqliv( tv, w, sd, n, z, ldz, nrl, mpime, comm)
-     DEALLOCATE ( sd )
-     CALL peigsrtv( tv, w, z, ldz, n, nrl)
-     RETURN
-   END SUBROUTINE pdspev_drv_x
- 
-!==----------------------------------------------==!
-
-   SUBROUTINE dspev_drv_x( JOBZ, UPLO, N, AP, W, Z, LDZ )
-     use dspev_module
-     IMPLICIT NONE
-     include 'laxlib_kinds.fh'
-     CHARACTER ::       JOBZ, UPLO
-     INTEGER   ::       IOPT, INFO, LDZ, N
-     REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
-     REAL(DP), ALLOCATABLE :: WORK(:)
-
-     IF( n < 1 ) RETURN
-
-     ALLOCATE( work( 3*n ) )
-
-     CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
-     IF( info .NE. 0 ) THEN
-        CALL lax_error__( ' dspev_drv ', ' diagonalization failed ',info )
-     END IF
-     DEALLOCATE( work )
-     RETURN
-   END SUBROUTINE dspev_drv_x
-

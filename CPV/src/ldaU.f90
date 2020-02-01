@@ -315,11 +315,10 @@
       use gvecw,            only: ngw
       USE ldaU_cp,          ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,          ONLY: nwfcU, ns, e_hubbard
+      use dspev_module,     only: dspev_drv
       USE step_penalty,     ONLY: write_pen
 
       implicit none
-
-      include 'laxlib.fh'
 
   integer :: is, isp, ia, m1, m2, err, k
   real(DP), allocatable   :: ftemp1(:), ftemp2(:), f1 (:), vet (:,:)

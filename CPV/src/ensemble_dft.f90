@@ -105,21 +105,21 @@ CONTAINS
 
 
 
-  SUBROUTINE id_matrix_init( idesc, nspin )
+  SUBROUTINE id_matrix_init( descla, nspin )
     ! initialization of the matrix identity
+    USE descriptors
     IMPLICIT NONE
-    include 'laxlib.fh'
     INTEGER, INTENT(IN) :: nspin
-    INTEGER, INTENT(IN) :: idesc( LAX_DESC_SIZE, nspin )
+    TYPE(la_descriptor), INTENT(IN) :: descla( nspin )
     INTEGER :: is, i, ii
     INTEGER :: np, me
     z0t(:,:,:)=0.0d0
     do is = 1, nspin
-       np = idesc( LAX_DESC_NPC, is ) * idesc( LAX_DESC_NPR, is )
-       me = idesc( LAX_DESC_MYPE, is )
-       IF( idesc( LAX_DESC_ACTIVE_NODE, is ) > 0 ) THEN
+       np = descla( is )%npc * descla( is )%npr
+       me = descla( is )%mype
+       IF( descla( is )%active_node > 0 ) THEN
           ii = me + 1
-          DO i = 1, idesc( LAX_DESC_NRL, is )
+          DO i = 1, descla( is )%nrl
              z0t( i, ii , is ) = 1.d0
              ii = ii + np
           END DO
@@ -129,18 +129,18 @@ CONTAINS
   END SUBROUTINE id_matrix_init
 
 
-  SUBROUTINE h_matrix_init( idesc, nspin )
+  SUBROUTINE h_matrix_init( descla, nspin )
     ! initialization of the psihpsi matrix 
+    USE descriptors
     IMPLICIT NONE
-    include 'laxlib.fh'
     INTEGER, INTENT(IN) :: nspin
-    INTEGER, INTENT(IN) :: idesc( :, : )
+    TYPE(la_descriptor), INTENT(IN) :: descla( nspin )
     INTEGER :: is, i, nr
       psihpsi(:,:,:)=0.0d0
       do is = 1, nspin
-         IF( idesc( LAX_DESC_ACTIVE_NODE, is ) > 0 ) THEN
+         IF( descla( is )%active_node > 0 ) THEN
             !
-            nr = idesc( LAX_DESC_NR, is )
+            nr = descla( is )%nr
             !
 !            IF( descla( is )%la_myr == descla( is )%la_myc ) THEN
                DO i = 1, nr
@@ -253,14 +253,15 @@ CONTAINS
   END SUBROUTINE ensemble_dft_info
 
 
-  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat, idesc )
+  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat,&
+                                    descla )
+    USE descriptors
     IMPLICIT NONE
-    include 'laxlib.fh'
     INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat
-    INTEGER, INTENT(IN) :: idesc( :, : )
+    TYPE(la_descriptor), INTENT(IN) :: descla( nspin )
     
-    nrcx = MAXVAL (idesc(LAX_DESC_NRCX,:) )
-    nrlx = MAXVAL (idesc(LAX_DESC_NRLX,:) )
+    nrcx = MAXVAL (descla(:)%nrcx )
+    nrlx = MAXVAL (descla(:)%nrlx )
     
     allocate(c0diag(ngw,nx))
     allocate(z0t(nrlx,nudx,nspin))

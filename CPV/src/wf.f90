@@ -550,7 +550,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
         CLOSE(38)
      END IF
-     CALL stop_cp_run( )
+     CALL stop_run( .TRUE. )
   END IF
 
   IF(clwf.EQ.3.OR.clwf.EQ.4) THEN
@@ -2790,7 +2790,7 @@ SUBROUTINE write_psi( c, jw )
 
   IF( ionode ) WRITE( stdout, * ) "State Written", jw
   !
-  CALL stop_cp_run( )
+  CALL stop_run( .TRUE. )
   !
   RETURN
   !
@@ -3019,7 +3019,8 @@ END SUBROUTINE jacobi_rotation
        USE cell_base,        ONLY : alat
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
-       USE cp_main_variables, ONLY: idesc
+       USE cp_main_variables, ONLY: descla
+       USE cp_interfaces,     ONLY: distribute_lambda, collect_lambda
        USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
        USE cp_main_variables, ONLY : nfi, iprint_stdout
        USE time_step,         ONLY : tps
@@ -3029,8 +3030,6 @@ END SUBROUTINE jacobi_rotation
        USE io_global,         ONLY : ionode, stdout
 
        IMPLICIT NONE
-
-       include 'laxlib.fh'
    
        INTEGER ,      INTENT(in)    :: nbsp
        REAL(DP),      INTENT(out)   :: U(nbsp,nbsp)
@@ -3052,8 +3051,8 @@ END SUBROUTINE jacobi_rotation
        !   IF( ( descla(1)%active_node > 0 ) .OR. ( descla(2)%active_node > 0 ) ) &
        !      nlam = MAX( descla(1)%nrcx, descla(2)%nrcx )
        !END IF
-       IF ( idesc(LAX_DESC_ACTIVE_NODE,iss) > 0) &
-           nlam = idesc(LAX_DESC_NRCX,iss)
+       IF ( descla(iss)%active_node > 0) &
+           nlam = descla(iss)%nrcx
    
        ALLOCATE(Oc(nbsp,nbsp, nw), Ocold(nbsp,nbsp,nw), Ol(nlam,nlam,nw))
        ALLOCATE(Up(nlam,nlam), U0(nlam,nlam), Um(nlam,nlam), Ul(nlam,nlam),  X2(nbsp,nbsp), X3(nbsp,nbsp))
@@ -3065,17 +3064,17 @@ END SUBROUTINE jacobi_rotation
        fric=wf_friction
        oldt0=0.D0
       
-       nr = idesc(LAX_DESC_NR,iss)
-       nc = idesc(LAX_DESC_NC,iss)
-       ir = idesc(LAX_DESC_IR,iss)
-       ic = idesc(LAX_DESC_IC,iss)
+       nr = descla(iss)%nr
+       nc = descla(iss)%nc
+       ir = descla(iss)%ir
+       ic = descla(iss)%ic
 
        do inw = 1, nw
           X2(:,:) =  REAL(O(inw, :, :))
           X3(:,:) = AIMAG(O(inw, :, :))
      
-          call distribute_lambda(X2, tmpr, idesc(:,iss))
-          call distribute_lambda(X3, tmpi, idesc(:,iss))
+          call distribute_lambda(X2, tmpr, descla(iss))
+          call distribute_lambda(X3, tmpi, descla(iss))
       
           Oc(:,:,inw) = CMPLX(X2,X3, KIND=dp)
           Ol(:,:,inw) = CMPLX(tmpr,tmpi, KIND=dp)
@@ -3087,7 +3086,7 @@ END SUBROUTINE jacobi_rotation
        DO i=1,nbsp
           X2(i,i)=1.D0
        END DO
-       call distribute_lambda(X2, identy, idesc(:,iss))
+       call distribute_lambda(X2, identy, descla(iss))
     
        Ul = identy
     
@@ -3122,7 +3121,7 @@ END SUBROUTINE jacobi_rotation
           END DO
     
           CALL ortho_u(Up,U0,nlam,identy,eps,nmax,nbsp, iss)
-          CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, Ul, nlam, Up, nlam, 0.0d0, tmpr, nlam, idesc(:,iss))  
+          CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, Ul, nlam, Up, nlam, 0.0d0, tmpr, nlam, descla(iss))  
           Ul = tmpr
 
           Ocold = Oc
@@ -3130,13 +3129,13 @@ END SUBROUTINE jacobi_rotation
              tmpr(:,:)=REAL(Ol(:,:,inw))
              tmpi(:,:)=AIMAG(Ol(:,:,inw))
    
-             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpr, nlam, 0.0d0, tmpr2, nlam, idesc(:,iss)) 
-             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpi, nlam, 0.0d0, tmpi2, nlam, idesc(:,iss)) 
-             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpr2, nlam, Ul, nlam, 0.0d0, tmpr, nlam, idesc(:,iss)) 
-             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpi2, nlam, Ul, nlam, 0.0d0, tmpi, nlam, idesc(:,iss)) 
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpr, nlam, 0.0d0, tmpr2, nlam, descla(iss)) 
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpi, nlam, 0.0d0, tmpi2, nlam, descla(iss)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpr2, nlam, Ul, nlam, 0.0d0, tmpr, nlam, descla(iss)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpi2, nlam, Ul, nlam, 0.0d0, tmpi, nlam, descla(iss)) 
    
-             call collect_lambda(X2, tmpr, idesc(:,iss))
-             call collect_lambda(X3, tmpi, idesc(:,iss))
+             call collect_lambda(X2, tmpr, descla(iss) )
+             call collect_lambda(X3, tmpi, descla(iss))
    
              Oc(:,:,inw)=CMPLX(X2,X3,KIND=dp)
           ENDDO
@@ -3214,7 +3213,7 @@ END SUBROUTINE jacobi_rotation
      spread=spread/nbsp
     !IF(me_image.EQ.0) write(*,'(3X,"Average spread =",ES10.3)') spread ! BS
 
-     call collect_lambda(U,Ul,idesc(:,iss))
+     call collect_lambda(U,Ul,descla(iss))
 
      do inw = 1, nw
         O(inw,:,:) = Oc(:,:,inw)
@@ -3238,11 +3237,9 @@ END SUBROUTINE jacobi_rotation
       USE kinds,            ONLY : DP
       USE mp_global,        ONLY : me_image, intra_image_comm
       USE mp,               ONLY : mp_max
-      USE cp_main_variables,       ONLY  : idesc
+      USE cp_main_variables,       ONLY  : descla
  
       IMPLICIT NONE
-
-      include 'laxlib.fh'
 
       INTEGER, INTENT(IN)    :: nlam, nmax, nbsp, iss
       REAL(DP),INTENT(INOUT) :: up(nlam,nlam)
@@ -3255,11 +3252,11 @@ END SUBROUTINE jacobi_rotation
       ALLOCATE( tmp(nlam,nlam),tmp2(nlam,nlam),tmp2t(nlam,nlam) )
       ALLOCATE( amat(nlam,nlam),bmat(nlam,nlam))
 
-      nr = idesc(LAX_DESC_NR,iss)
-      nc = idesc(LAX_DESC_NC,iss)
+      nr = descla(iss)%nr
+      nc = descla(iss)%nc
 
-      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, up, nlam, 0.0d0, amat, nlam, idesc(:,iss))
-      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, u0, nlam, 0.0d0, bmat, nlam, idesc(:,iss))
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, up, nlam, 0.0d0, amat, nlam, descla(iss))
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, u0, nlam, 0.0d0, bmat, nlam, descla(iss))
 
       amat = identy-amat
       bmat = identy-bmat
@@ -3268,10 +3265,10 @@ END SUBROUTINE jacobi_rotation
       delta = 1.0E10_DP
       DO iter = 1,nmax
 
-         CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, bmat, nlam, xloc, nlam, 0.0d0, tmp2, nlam, idesc(:,iss))
-         CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, xloc, nlam, xloc, nlam, 0.0d0, tmp, nlam, idesc(:,iss))
+         CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, bmat, nlam, xloc, nlam, 0.0d0, tmp2, nlam, descla(iss))
+         CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, xloc, nlam, xloc, nlam, 0.0d0, tmp, nlam, descla(iss))
 
-         CALL sqr_tr_cannon( nbsp, tmp2, nlam, tmp2t, nlam, idesc(:,iss) )
+         CALL sqr_tr_cannon( nbsp, tmp2, nlam, tmp2t, nlam, descla(iss) )
 
          do j=1,nc
             do i=1,nr
@@ -3282,10 +3279,10 @@ END SUBROUTINE jacobi_rotation
          IF(iter .GE. 3) THEN
 
             tmp = up         ! upnew = up + u0*xloc
-            CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, u0, nlam, xloc, nlam, 1.0d0, tmp, nlam, idesc(:,iss))
+            CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, u0, nlam, xloc, nlam, 1.0d0, tmp, nlam, descla(iss))
 
             tmp2 = identy
-            CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, tmp, nlam, tmp, nlam, -1.0d0, tmp2, nlam, idesc(:,iss))
+            CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, tmp, nlam, tmp, nlam, -1.0d0, tmp2, nlam, descla(iss))
             delta = 0.d0
             do j=1,nc
             do i=1,nr

@@ -403,7 +403,7 @@
 
 
 !-----------------------------------------------------------------------
-SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
+SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, descla )
   !-----------------------------------------------------------------------
   !
   !     this routine calculates array dbec, derivative of bec:
@@ -423,17 +423,16 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
   use uspp_param, only : nh, nhm
   use gvect,      only : gstart
   use gvecw,      only : ngw
+  USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nspin, iupdwn, nupdwn, nbspx_bgrp, iupdwn_bgrp, nupdwn_bgrp, &
                                  ibgrp_g2l, i2gupdwn_bgrp, nbspx, nbsp_bgrp
   !
   implicit none
   !
-  include 'laxlib.fh'
-  !
   complex(DP), intent(in)  :: c_bgrp( :, : )
   complex(DP), intent(in)  :: eigr(:,:)
   real(DP),    intent(out) :: dbec( :, :, :, : )
-  integer, intent(in) :: idesc( :, : )
+  TYPE(la_descriptor), intent(in) :: descla( : )
   !
   complex(DP), allocatable :: wrk2(:,:)
   real(DP),    allocatable :: dwrk_bgrp(:,:)
@@ -442,7 +441,7 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
   integer   :: n1, n2, m1, m2, ibgrp_i, nrcx
   complex(DP) :: cfact
   !
-  nrcx = MAXVAL(idesc(LAX_DESC_NRCX,:))
+  nrcx = MAXVAL(descla(:)%nrcx)
   !
   dbec = 0.0d0
   !
@@ -488,9 +487,9 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, idesc )
            end if
 
            do iss=1,nspin
-              IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
-                 nr = idesc( LAX_DESC_NR, iss )
-                 ir = idesc( LAX_DESC_IR, iss )
+              IF( descla( iss )%active_node > 0 ) THEN
+                 nr = descla( iss )%nr
+                 ir = descla( iss )%ir
                  istart = iupdwn( iss )
                  nss    = nupdwn( iss )
                  do ii = 1, nr
@@ -520,7 +519,7 @@ end subroutine caldbec_bgrp_x
 
 
 !-----------------------------------------------------------------------
-subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
+subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, descla )
   !-----------------------------------------------------------------------
   !
   !  compute the contribution of the non local part of the
@@ -534,24 +533,23 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
   use io_global,  only : stdout
   use mp,         only : mp_sum
   use mp_global,  only : intra_bgrp_comm
+  USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nbspx_bgrp, nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, iupdwn, nupdwn, ibgrp_g2l
   use gvect, only : gstart
 
   implicit none
 
-  include 'laxlib.fh'
-
   real(DP), intent(in)  :: dbec( :, :, :, : )
   real(DP), intent(in)  :: bec_bgrp( :, : )
   real(DP), intent(out) :: drhovan( :, :, :, :, : )
   real(DP), intent(out) :: denl( 3, 3 )
-  INTEGER, intent(in) :: idesc( :, : )
+  TYPE(la_descriptor), intent(in) :: descla( : )
 
   real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
   integer   :: is, iv, jv, ijv, inl, jnl, ia, iss, i,j,k
   integer   :: istart, nss, ii, ir, nr, ibgrp, nrcx
   !
-  nrcx = MAXVAL(idesc(LAX_DESC_NRCX,:))
+  nrcx = MAXVAL(descla(:)%nrcx)
   !
   denl=0.d0
   drhovan=0.0d0
@@ -565,10 +563,9 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
            jnl = indv_ijkb0(ia) + jv
            dsums=0.d0
            do iss=1,nspin
-              IF( ( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) .AND. &
-                  ( idesc( LAX_DESC_MYR, iss ) == idesc( LAX_DESC_MYC, iss ) ) ) THEN
-                 nr = idesc( LAX_DESC_NR, iss )
-                 ir = idesc( LAX_DESC_IR, iss )
+              IF( ( descla( iss )%active_node > 0 ) .AND. ( descla( iss )%myr == descla( iss )%myc ) ) THEN
+                 nr = descla( iss )%nr
+                 ir = descla( iss )%ir
                  istart = iupdwn( iss )
                  nss    = nupdwn( iss )
                  do i=1,nr

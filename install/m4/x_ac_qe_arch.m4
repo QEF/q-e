@@ -27,7 +27,6 @@ then
                 ia64-*-linux-gnu )      arch=ia64   ;;
                 x86_64-*-linux-gnu )    arch=x86_64 ;;
                 arm-*linux* )           arch=arm    ;;
-                aarch64-*-linux-gnu )   arch=arm    ;;
                 *-pc-linux-gnu )        arch=ia32   ;;
                 *-apple-darwin* )       arch=mac686 ;;
                 *-pc-cygwin )           arch=cygwin ;;

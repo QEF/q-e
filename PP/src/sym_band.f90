@@ -370,6 +370,8 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
        na, i, j, ig, dimen, nrxx, npw
   INTEGER ::  ftau(3)
 
+  COMPLEX(DP), EXTERNAL :: zdotc
+
   REAL(DP), ALLOCATABLE ::  w1(:)
   COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), trace(:,:), psic(:,:)
   !
@@ -439,7 +441,7 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
         DO i=1,dim_rap
            ibnd=istart(igroup)+i-1
            trace(iclass,igroup)=trace(iclass,igroup) + &
-                DOT_PRODUCT (evc(1:npw,ibnd),evcr(1:npw,ibnd))
+                zdotc(npw,evc(1,ibnd),1,evcr(1,ibnd),1)
         ENDDO
         !      write(6,*) igroup, iclass, trace(iclass,igroup)
      ENDDO
@@ -734,6 +736,8 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
        iclass,    &
        na, i, j, ig, ipol, jpol, jrap, dimen, npw
 
+  COMPLEX(DP) :: zdotc          ! moltiplication factors
+
   REAL(DP), ALLOCATABLE ::  w1(:)      ! list of energy eigenvalues in eV
   COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), & ! the rotated of each wave function
        trace(:,:)   ! the trace of the symmetry matrix
@@ -791,7 +795,7 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
         DO i=1,dim_rap
            ibnd=istart(igroup)+i-1
            trace(iclass,igroup)=trace(iclass,igroup) +            &
-                DOT_PRODUCT (evc(:,ibnd),evcr(:,ibnd))
+                zdotc(2*npwx,evc(1,ibnd),1,evcr(1,ibnd),1)
         ENDDO
         !      write(6,*) igroup, iclass, dim_rap, trace(iclass,igroup)
      ENDDO

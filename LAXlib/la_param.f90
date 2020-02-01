@@ -23,3 +23,11 @@ MODULE laxlib_parallel_include
         INTEGER, PARAMETER :: MPI_COMM_SELF  = -2
 #endif
 END MODULE laxlib_parallel_include
+
+MODULE la_param
+
+  use laxlib_parallel_include
+  
+  INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
+
+END MODULE la_param

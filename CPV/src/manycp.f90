@@ -32,13 +32,12 @@ PROGRAM manycp
   USE mp_images,         ONLY : intra_image_comm, my_image_id
   USE mp_pools,          ONLY : intra_pool_comm
   USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_diag,           ONLY : mp_start_diag
   USE read_input,        ONLY : read_input_file
   USE check_stop,        ONLY : check_stop_init
   USE command_line_options, ONLY: input_file_, ndiag_
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   INTEGER :: i
   LOGICAL :: opnd, diag_in_band_group = .true.
@@ -48,7 +47,7 @@ PROGRAM manycp
   !
   !
   CALL mp_startup ( start_images=.true. )
-  CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
+  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
        do_distr_diag_inside_bgrp_ = diag_in_band_group )
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
@@ -109,7 +108,10 @@ PROGRAM manycp
   !
   CALL cpr_loop( 1 )
   !
-  CALL laxlib_end ()
-  CALL stop_cp_run(  )
+  CALL laxlib_free_ortho_group ()
+  CALL stop_run(  )
+  CALL do_stop( .TRUE. )
+  !
+  STOP
   !
 END PROGRAM manycp

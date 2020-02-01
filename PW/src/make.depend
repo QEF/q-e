@@ -1091,6 +1091,7 @@ martyna_tuckerman.o : ../../Modules/mp_bands.o
 martyna_tuckerman.o : ../../Modules/recvec.o
 martyna_tuckerman.o : ../../Modules/ws_base.o
 martyna_tuckerman.o : ../../UtilXlib/mp.o
+memory_report.o : ../../LAXlib/mp_diag.o
 memory_report.o : ../../Modules/atom.o
 memory_report.o : ../../Modules/cell_base.o
 memory_report.o : ../../Modules/constants.o
@@ -1558,6 +1559,7 @@ pw_restart_new.o : tetra.o
 pw_restart_new.o : xdm_dispersion.o
 pwcom.o : ../../Modules/kind.o
 pwcom.o : ../../Modules/parameters.o
+pwscf.o : ../../LAXlib/mp_diag.o
 pwscf.o : ../../Modules/command_line_options.o
 pwscf.o : ../../Modules/environment.o
 pwscf.o : ../../Modules/mp_bands.o
@@ -1798,6 +1800,7 @@ setlocal.o : extfield.o
 setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
+setup.o : ../../LAXlib/mp_diag.o
 setup.o : ../../Modules/cell_base.o
 setup.o : ../../Modules/constants.o
 setup.o : ../../Modules/control_flags.o

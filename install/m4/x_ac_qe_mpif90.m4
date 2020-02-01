@@ -23,7 +23,7 @@ ia32 | ia64 | x86_64 )
         try_f90="ifort pgf90 nagfor $try_f90"
         ;;
 arm )
-        try_f90="pgf90 armflang $try_f90"
+        try_f90="$try_f90"
         ;;
 crayxt* )
         try_f90="ftn"
@@ -125,7 +125,6 @@ case "$arch" in
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
         xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
-        armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
         #
         if test "$ifort_version" != ""
         then
@@ -158,13 +157,6 @@ case "$arch" in
                 echo "${ECHO_T}xlf (version unknonw)"
                 f90_in_mpif90="xlf"
                 try_dflags="-D__XLF"
-        elif test "$armflang_version" != "" 
-        then 
-                version=`echo $armflang_version | cut -d" " -f 5`
-                f90_major_version=`echo $version | cut -d. -f1` 
-                f90_minor_version=`echo $version | cut -d. -f2` 
-                f90_in_mpif90="armflang"
-                try_foxflags="-D__PGI"  
         else
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
