@@ -143,7 +143,7 @@ END INTERFACE
          INTEGER, INTENT(IN)  :: np(2), me(2), comm, cntx
          INTEGER, INTENT(IN)  :: includeme
       END SUBROUTINE
-      SUBROUTINE laxlib_multi_init_desc_x( idesc, idesc_ip, rank_ip, n, nx, np, me, comm, cntx, comm_id  )
+      SUBROUTINE laxlib_multi_init_desc_x( idesc, idesc_ip, rank_ip, n, nx  )
 		IMPLICIT NONE
 		include 'laxlib_param.fh'
 		INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
