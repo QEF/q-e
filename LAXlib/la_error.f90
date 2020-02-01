@@ -12,7 +12,7 @@ SUBROUTINE lax_error__( calling_routine, message, ierr )
   !
   ! ... This is a simple routine which writes an error message to output: 
   !
-  USE la_param
+  USE laxlib_parallel_include
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: calling_routine, message

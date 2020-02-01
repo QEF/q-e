@@ -22,8 +22,8 @@
 !     x  input matrix (n by m) to be trasposed
 !     y  output matrix (m by n), the transpose of x
 !
-        USE la_param
         IMPLICIT NONE
+        INCLUDE 'laxlib_kinds.fh'
 
         INTEGER :: ldx, ldy, n, m, what
         REAL(DP) :: x(ldx, m), y(ldy, n)
@@ -150,8 +150,8 @@
 !     y  output matrix (m by n), the transpose of x
 !
 
-        USE la_param
         IMPLICIT NONE
+        INCLUDE 'laxlib_kinds.fh'
 
 
         INTEGER :: ldx, ldy, n, m, what

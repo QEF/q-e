@@ -6,19 +6,18 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-
-
 !----------------------------------------------------------------------------
-SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
   !
   ! ... LAPACK version - uses both DSYGV and DSYGVX
   !
-  USE la_param
+  USE laxlib_parallel_include
   !
   IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
@@ -182,23 +181,24 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !
   RETURN
   !
-END SUBROUTINE rdiaghg
+END SUBROUTINE laxlib_rdiaghg
 
-
-#if defined(__CUDA)
 !----------------------------------------------------------------------------
-SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm )
+SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
   !
+
+  USE laxlib_parallel_include
+#if defined(__CUDA)
   USE cudafor
 #if defined(__USE_CUSOLVER)
   USE cusolverdn
 #else
   USE dsygvdx_gpu
 #endif
-  USE la_param
+#endif
   !
 #define __USE_GLOBAL_BUFFER
 #if defined(__USE_GLOBAL_BUFFER)
@@ -209,19 +209,23 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
 #endif
   !
   IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
     ! number of eigenstates to be calculated
     ! leading dimension of h, as declared in the calling pgm unit
-  REAL(DP), DEVICE, INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
+  REAL(DP), INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
     ! matrix to be diagonalized, allocated on the device
     ! overlap matrix, allocated on the device
   !
-  REAL(DP), DEVICE, INTENT(OUT) :: e_d(n)
+  REAL(DP), INTENT(OUT) :: e_d(n)
     ! eigenvalues, allocated on the device
-  REAL(DP), DEVICE, INTENT(OUT) :: v_d(ldh, n)
+  REAL(DP), INTENT(OUT) :: v_d(ldh, n)
     ! eigenvectors (column-wise), allocated on the device
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: h_d, s_d, e_d, v_d
+#endif
   INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
   !
   INTEGER               :: lwork, nb, mm, info, i, j
@@ -231,17 +235,26 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   REAL(DP), PARAMETER   :: zero = 0_DP
   INTEGER,  ALLOCATABLE :: iwork(:), ifail(:)
   REAL(DP), ALLOCATABLE :: work(:), sdiag(:), hdiag(:)
-
+#if defined(__CUDA)
   ATTRIBUTES( PINNED )          :: work, iwork
-  REAL(DP), ALLOCATABLE, PINNED :: v_h(:,:)
-  REAL(DP), ALLOCATABLE, PINNED :: e_h(:)
+#endif
+  REAL(DP), ALLOCATABLE :: v_h(:,:)
+  REAL(DP), ALLOCATABLE :: e_h(:)
+#if defined(__CUDA)
+  ATTRIBUTES( PINNED )  :: v_h, e_h
+#endif
   !
-  INTEGER                       :: lwork_d, liwork
-  REAL(DP), VARTYPE             :: work_d(:)
-  ATTRIBUTES( DEVICE )          :: work_d
-  !  
+  INTEGER               :: lwork_d, liwork
+  REAL(DP), VARTYPE     :: work_d(:)
+#if defined(__CUDA)
+  ATTRIBUTES( DEVICE )  :: work_d
+#endif
+  !
   ! Temp arrays to save H and S.
-  REAL(DP), ALLOCATABLE, DEVICE :: h_diag_d(:), s_diag_d(:)
+  REAL(DP), ALLOCATABLE :: h_diag_d(:), s_diag_d(:)
+#if defined(__CUDA)
+  ATTRIBUTES( DEVICE )  :: h_diag_d, s_diag_d
+#endif
   !
 #if defined(__USE_CUSOLVER)
   INTEGER :: devInfo_d, h_meig
@@ -258,7 +271,7 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   !
   IF ( me_bgrp == root_bgrp ) THEN
      !
-#if ! defined(__USE_CUSOLVER)
+#if (!defined(__USE_CUSOLVER)) && defined(__CUDA)
      ALLOCATE(e_h(n), v_h(ldh,n))
      !
      ALLOCATE(h_diag_d(n), s_diag_d(n))
@@ -301,16 +314,16 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
         END DO
      END DO
      DEALLOCATE(h_diag_d,s_diag_d)
-     ! 
+     !
      DEALLOCATE(work, iwork)
 #if ! defined(__USE_GLOBAL_BUFFER)
      DEALLOCATE(work_d)
 #else
      CALL dev%release_buffer( work_d,  info )
 #endif
-     
+     !
      DEALLOCATE(v_h, e_h)
-#else
+#elif defined(__USE_CUSOLVER) && defined(__CUDA)
 ! vvv __USE_CUSOLVER
 #if ! defined(__USE_GLOBAL_BUFFER)
       ALLOCATE(h_bkp_d(n,n), s_bkp_d(n,n), STAT = info)
@@ -368,6 +381,9 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
       CALL dev%release_buffer( h_bkp_d, info )
       CALL dev%release_buffer( s_bkp_d, info )
 #endif
+
+#else
+     CALL lax_error__( 'cdiaghg', 'Called GPU eigensolver without GPU support', 1 )
 #endif
      !
   END IF
@@ -408,11 +424,10 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   !
   RETURN
   !
-END SUBROUTINE rdiaghg_gpu
-#endif
+END SUBROUTINE laxlib_rdiaghg_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
+SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -421,16 +436,20 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version with full data distribution
   !
-  USE la_param
-  USE descriptors,       ONLY : la_descriptor
-  USE mp_diag,           ONLY : ortho_parent_comm
+  USE laxlib_parallel_include
+  USE laxlib_descriptor, ONLY : la_descriptor, laxlib_intarray_to_desc
+  USE laxlib_processors_grid, ONLY : ortho_parent_comm
 #if defined __SCALAPACK
-  USE mp_diag,           ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE laxlib_processors_grid, ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE dspev_module,      ONLY : pdsyevd_drv
 #endif
   !
-  !
   IMPLICIT NONE
+  !
+  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_param.fh'
+  include 'laxlib_low.fh'
+  include 'laxlib_mid.fh'
   !
   INTEGER, INTENT(IN) :: n, ldh
     ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
@@ -443,7 +462,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvalues
   REAL(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
-  TYPE(la_descriptor), INTENT(IN) :: desc
+  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
   !
   INTEGER, PARAMETER    :: root = 0
   INTEGER               :: nx, info
@@ -452,12 +471,15 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   REAL(DP), PARAMETER   :: zero = 0_DP
   REAL(DP), ALLOCATABLE :: hh(:,:)
   REAL(DP), ALLOCATABLE :: ss(:,:)
+  TYPE(la_descriptor) :: desc
 #if defined(__SCALAPACK)
   INTEGER     :: desch( 16 )
 #endif
   INTEGER               :: i
   !
   CALL start_clock( 'rdiaghg' )
+  !
+  CALL laxlib_intarray_to_desc(desc,idesc)
   !
   IF( desc%active_node > 0 ) THEN
      !
@@ -494,7 +516,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      CALL PDPOTRF( 'L', n, ss, 1, 1, desch, info )
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
-     CALL qe_pdpotrf( ss, nx, n, desc )
+     CALL laxlib_pdpotrf( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -509,13 +531,13 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
 #if defined(__SCALAPACK)
      ! 
-     CALL sqr_dsetmat( 'U', n, zero, ss, size(ss,1), desc )
+     CALL sqr_setmat( 'U', n, zero, ss, size(ss,1), idesc )
 
      CALL PDTRTRI( 'L', 'N', n, ss, 1, 1, desch, info )
      !
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
-     CALL qe_pdtrtri ( ss, nx, n, desc )
+     CALL laxlib_pdtrtri ( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -528,7 +550,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
   END IF
   !
@@ -536,7 +558,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_mm_cannon( 'N', 'T', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'T', n, ONE, v, nx, ss, nx, ZERO, hh, nx, idesc )
      !
   END IF
   !
@@ -549,7 +571,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
 #if defined(__SCALAPACK)
      CALL pdsyevd_drv( .true., n, desc%nrcx, hh, SIZE(hh,1), e, ortho_cntx, ortho_comm )
 #else
-     CALL qe_pdsyevd( .true., n, desc, hh, SIZE(hh,1), e )
+     CALL laxlib_pdsyevd( .true., n, idesc, hh, SIZE(hh,1), e )
 #endif
      !
   END IF
@@ -560,7 +582,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF ( desc%active_node > 0 ) THEN
      !
-     CALL sqr_mm_cannon( 'T', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'T', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
      DEALLOCATE( ss )
      DEALLOCATE( hh )
@@ -579,4 +601,4 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   RETURN
   !
-END SUBROUTINE prdiaghg
+END SUBROUTINE laxlib_prdiaghg

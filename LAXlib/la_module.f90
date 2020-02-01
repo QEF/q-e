@@ -30,12 +30,12 @@ MODULE LAXlib
     !
     ! ... LAPACK version - uses both ZHEGV and ZHEGVX
     !
-    USE la_param,          ONLY : DP
 #if defined (__CUDA)
     USE cudafor
 #endif
     !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
     !
     INTEGER, INTENT(IN) :: n, m, ldh
       ! dimension of the matrix to be diagonalized
@@ -76,7 +76,7 @@ MODULE LAXlib
       ALLOCATE(s_d, source=s); ALLOCATE(h_d, source=h)
       ALLOCATE(e_d(n), v_d(ldh,n))
       !
-      CALL cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e = e_d
       v(1:ldh,1:m) = v_d(1:ldh,1:m)
@@ -84,7 +84,7 @@ MODULE LAXlib
       DEALLOCATE(h_d, s_d, e_d, v_d)
 #endif
     ELSE
-      CALL cdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_cdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN
@@ -102,10 +102,10 @@ MODULE LAXlib
     !
     ! ... LAPACK version - uses both ZHEGV and ZHEGVX
     !
-    USE la_param,          ONLY : DP
     USE cudafor
     !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
     !
     INTEGER, INTENT(IN) :: n, m, ldh
       ! dimension of the matrix to be diagonalized
@@ -140,14 +140,14 @@ MODULE LAXlib
       ALLOCATE(s, source=s_d); ALLOCATE(h, source=h_d)
       ALLOCATE(e(n), v(ldh,m))
       !
-      CALL cdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_cdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e_d = e
       v_d(1:ldh,1:m) = v(1:ldh,1:m)
       !
       DEALLOCATE(h, s, e, v)
     ELSE
-      CALL cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN
@@ -161,12 +161,12 @@ MODULE LAXlib
     !
     ! ... general interface for rdiaghg
     !
-    USE la_param,          ONLY : DP
 #if defined(__CUDA)
     USE cudafor
 #endif
     !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
     !
     INTEGER, INTENT(IN) :: n, m, ldh
       ! dimension of the matrix to be diagonalized
@@ -207,7 +207,7 @@ MODULE LAXlib
       ALLOCATE(s_d, source=s); ALLOCATE(h_d, source=h)
       ALLOCATE(e_d(n), v_d(ldh,n))
       !
-      CALL rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e = e_d
       v(1:ldh,1:m) = v_d(1:ldh,1:m)
@@ -215,7 +215,7 @@ MODULE LAXlib
       DEALLOCATE(h_d, s_d, e_d, v_d)
 #endif
     ELSE
-      CALL rdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_rdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN
@@ -229,10 +229,10 @@ MODULE LAXlib
     !
     ! ... General interface to rdiaghg_gpu
     !
-    USE la_param,          ONLY : DP
     USE cudafor
     !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
     !
     INTEGER, INTENT(IN) :: n, m, ldh
       ! dimension of the matrix to be diagonalized
@@ -267,14 +267,14 @@ MODULE LAXlib
       ALLOCATE(s, source=s_d); ALLOCATE(h, source=h_d)
       ALLOCATE(e(n), v(ldh,m))
       !
-      CALL rdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_rdiaghg(n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm)
       !
       e_d = e
       v_d(1:ldh,1:m) = v(1:ldh,1:m)
       !
       DEALLOCATE(h, s, e, v)
     ELSE
-      CALL rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
+      CALL laxlib_rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
     END IF
     !
     RETURN
@@ -286,7 +286,7 @@ MODULE LAXlib
   !
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE prdiaghg_( n, h, s, ldh, e, v, desc, offload )
+  SUBROUTINE prdiaghg_( n, h, s, ldh, e, v, idesc, offload )
     !----------------------------------------------------------------------------
     !
     ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -295,10 +295,9 @@ MODULE LAXlib
     !
     ! ... Parallel version with full data distribution
     !
-    USE la_param,    ONLY : DP
-    USE descriptors, ONLY : la_descriptor
-    !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
     !
     INTEGER, INTENT(IN) :: n, ldh
       ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
@@ -311,17 +310,17 @@ MODULE LAXlib
       ! eigenvalues
     REAL(DP), INTENT(OUT) :: v(ldh,ldh)
       ! eigenvectors (column-wise)
-    TYPE(la_descriptor), INTENT(IN) :: desc
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
       !
     LOGICAL, OPTIONAL ::  offload
       ! place-holder, offloading on GPU not implemented yet
     LOGICAL :: loffload
 
-    CALL prdiaghg( n, h, s, ldh, e, v, desc)
+    CALL laxlib_prdiaghg( n, h, s, ldh, e, v, idesc)
       
   END SUBROUTINE
   !----------------------------------------------------------------------------
-  SUBROUTINE pcdiaghg_( n, h, s, ldh, e, v, desc, offload )
+  SUBROUTINE pcdiaghg_( n, h, s, ldh, e, v, idesc, offload )
     !----------------------------------------------------------------------------
     !
     ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -330,11 +329,10 @@ MODULE LAXlib
     !
     ! ... Parallel version with full data distribution
     !
-    USE la_param,    ONLY : DP
-    USE descriptors, ONLY : la_descriptor
-    !
     !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
     !
     INTEGER, INTENT(IN) :: n, ldh
       ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
@@ -347,19 +345,19 @@ MODULE LAXlib
       ! eigenvalues
     COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
       ! eigenvectors (column-wise)
-    TYPE(la_descriptor), INTENT(IN) :: desc
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
       !
     LOGICAL, OPTIONAL ::  offload
       ! place-holder, offloading on GPU not implemented yet
     LOGICAL :: loffload
 
-    CALL pcdiaghg( n, h, s, ldh, e, v, desc)
+    CALL laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc)
       
   END SUBROUTINE
   !
 #if defined(__CUDA)
   !----------------------------------------------------------------------------
-  SUBROUTINE prdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, desc, onhost )
+  SUBROUTINE prdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, idesc, onhost )
     !----------------------------------------------------------------------------
     !
     ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -368,10 +366,9 @@ MODULE LAXlib
     !
     ! ... Parallel version with full data distribution
     !
-    USE la_param,    ONLY : DP
-    USE descriptors, ONLY : la_descriptor    !
-    !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
     !
     INTEGER, INTENT(IN) :: n, ldh
       ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
@@ -384,7 +381,7 @@ MODULE LAXlib
       ! eigenvalues
     REAL(DP), INTENT(OUT), DEVICE :: v_d(ldh,ldh)
       ! eigenvectors (column-wise)
-    TYPE(la_descriptor), INTENT(IN) :: desc
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
       !
     LOGICAL, OPTIONAL ::  onhost
       ! place-holder, prdiaghg on GPU not implemented yet
@@ -395,13 +392,13 @@ MODULE LAXlib
     
     ALLOCATE(h(ldh,ldh), s(ldh,ldh), e(n), v(ldh,ldh))
     h = h_d; s = s_d;
-    CALL prdiaghg( n, h, s, ldh, e, v, desc)
+    CALL laxlib_prdiaghg( n, h, s, ldh, e, v, idesc)
     e_d = e; v_d = v
     DEALLOCATE(h,s,v,e)
     ! 
   END SUBROUTINE
   !----------------------------------------------------------------------------
-  SUBROUTINE pcdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, desc, onhost )
+  SUBROUTINE pcdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, idesc, onhost )
     !----------------------------------------------------------------------------
     !
     ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -410,10 +407,9 @@ MODULE LAXlib
     !
     ! ... Parallel version with full data distribution
     !
-    USE la_param,    ONLY : DP
-    USE descriptors, ONLY : la_descriptor    !
-    !
     IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
     !
     INTEGER, INTENT(IN) :: n, ldh
       ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
@@ -426,7 +422,7 @@ MODULE LAXlib
       ! eigenvalues
     COMPLEX(DP), INTENT(OUT), DEVICE :: v_d(ldh,ldh)
       ! eigenvectors (column-wise)
-    TYPE(la_descriptor), INTENT(IN) :: desc
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
       !
     LOGICAL, OPTIONAL ::  onhost
       ! place-holder, pcdiaghg on GPU not implemented yet
@@ -437,7 +433,7 @@ MODULE LAXlib
     
     ALLOCATE(h(ldh,ldh), s(ldh,ldh), e(n), v(ldh,ldh))
     h = h_d; s = s_d;
-    CALL pcdiaghg( n, h, s, ldh, e, v, desc)
+    CALL laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc)
     e_d = e; v_d = v
     DEALLOCATE(h,s,v,e)
     !

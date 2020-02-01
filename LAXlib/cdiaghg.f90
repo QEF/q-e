@@ -10,7 +10,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -19,9 +19,9 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
-  USE la_param
-  !
+  USE laxlib_parallel_include
   IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
@@ -192,11 +192,10 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !
   RETURN
   !
-END SUBROUTINE cdiaghg
+END SUBROUTINE laxlib_cdiaghg
 !
-#if defined(__CUDA)
 !----------------------------------------------------------------------------
-SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
+SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -204,6 +203,7 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   ! ... On output both matrix are unchanged
   !
   !
+#if defined(__CUDA)
   USE cudafor
   !
 #if defined(__USE_CUSOLVER)
@@ -211,8 +211,9 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
 #else
   USE zhegvdx_gpu
 #endif
+#endif
   !
-  USE la_param
+  USE laxlib_parallel_include
   !
 #define __USE_GLOBAL_BUFFER
 #if defined(__USE_GLOBAL_BUFFER)
@@ -223,20 +224,24 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
 #endif
   !
   IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
     ! number of eigenstates to be calculate
     ! leading dimension of h, as declared in the calling pgm unit
-  COMPLEX(DP), DEVICE, INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
+  COMPLEX(DP), INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
     ! actually intent(in) but compilers don't know and complain
     ! matrix to be diagonalized, allocated on the GPU
     ! overlap matrix, allocated on the GPU
-  REAL(DP), DEVICE, INTENT(OUT) :: e_d(n)
+  REAL(DP), INTENT(OUT) :: e_d(n)
     ! eigenvalues, , allocated on the GPU
-  COMPLEX(DP), DEVICE,  INTENT(OUT) :: v_d(ldh,n)
+  COMPLEX(DP),  INTENT(OUT) :: v_d(ldh,n)
     ! eigenvectors (column-wise), , allocated on the GPU
     ! NB: the dimension of v_d this is different from cdiaghg !!
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: h_d, s_d, e_d, v_d
+#endif
   INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
   !
   INTEGER              :: lwork, info
@@ -249,7 +254,7 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   !
   COMPLEX(DP), VARTYPE :: v_h(:,:)
   REAL(DP), VARTYPE    :: e_h(:)
-#if ! defined(__USE_GLOBAL_BUFFER)
+#if (! defined(__USE_GLOBAL_BUFFER)) && defined(__CUDA)
   ATTRIBUTES( PINNED ) :: work, iwork, rwork, v_h, e_h
 #endif
   !
@@ -260,7 +265,9 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   !
   ! Temp arrays to save H and S.
   REAL(DP), VARTYPE    :: h_diag_d(:), s_diag_d(:)
+#if defined(__CUDA)
   ATTRIBUTES( DEVICE ) :: work_d, rwork_d, h_diag_d, s_diag_d
+#endif
   INTEGER :: i, j
 #if defined( __USE_CUSOLVER )
   INTEGER                :: devInfo_d, h_meig
@@ -283,7 +290,7 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
       !
       ! Keeping compatibility for both CUSolver and CustomEigensolver, CUSolver below
       !
-#if defined(__USE_CUSOLVER)
+#if defined(__USE_CUSOLVER) && defined(__CUDA)
 !
 ! vvv __USE_CUSOLVER
 
@@ -343,7 +350,7 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
       !
       ! Keeping compatibility for both CUSolver and CustomEigensolver, CustomEigensolver below
       !
-#else
+#elif defined(__CUDA)
 ! vvv not __USE_CUSOLVER
 #if ! defined(__USE_GLOBAL_BUFFER)
       ! NB: dimension is different!
@@ -425,6 +432,8 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
       CALL pin%release_buffer(e_h, info)
 #endif
 ! ^^^ not __USE_CUSOLVER
+#else
+     CALL lax_error__( 'cdiaghg', 'Called GPU eigensolver without GPU support', 1 )
 #endif
      !
   END IF
@@ -465,11 +474,11 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra
   !
   RETURN
   !
-END SUBROUTINE cdiaghg_gpu
-#endif
+END SUBROUTINE laxlib_cdiaghg_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
+!----------------------------------------------------------------------------
+SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -478,18 +487,20 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Parallel version, with full data distribution
   !
-  USE la_param
-  USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
-  USE descriptors,      ONLY : la_descriptor
-  USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
-  USE mp_diag,          ONLY : ortho_parent_comm
+  USE laxlib_parallel_include
+  USE laxlib_descriptor,      ONLY : la_descriptor, laxlib_intarray_to_desc
+  USE laxlib_processors_grid, ONLY : ortho_parent_comm
 #if defined __SCALAPACK
-  USE mp_diag,          ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE laxlib_processors_grid, ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE zhpev_module,     ONLY : pzheevd_drv
 #endif
-
   !
   IMPLICIT NONE
+  !
+  INCLUDE 'laxlib_kinds.fh'
+  include 'laxlib_param.fh'
+  include 'laxlib_mid.fh'
+  include 'laxlib_low.fh'
   !
   INTEGER, INTENT(IN) :: n, ldh
     ! dimension of the matrix to be diagonalized
@@ -502,7 +513,9 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
-  TYPE(la_descriptor), INTENT(IN) :: desc
+  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+  !
+  TYPE(la_descriptor) :: desc
   !
   INTEGER, PARAMETER  :: root = 0
   INTEGER             :: nx, info
@@ -516,6 +529,8 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   ! ... input s and h are copied so that they are not destroyed
   !
   CALL start_clock( 'cdiaghg' )
+  !
+  CALL laxlib_intarray_to_desc(desc,idesc)
   !
   IF( desc%active_node > 0 ) THEN
      !
@@ -550,7 +565,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
 
      IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
-     CALL qe_pzpotrf( ss, nx, n, desc )
+     CALL laxlib_pzpotrf( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -567,13 +582,13 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !CALL clear_upper_tr( ss )
      ! set to zero the upper triangle of ss
      !
-     CALL sqr_zsetmat( 'U', n, ZERO, ss, size(ss,1), desc )
+     CALL sqr_setmat( 'U', n, ZERO, ss, size(ss,1), idesc )
      !
      CALL pztrtri( 'L', 'N', n, ss, 1, 1, descsca, info )
      !
      IF( info /= 0 ) CALL lax_error__( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
-     CALL qe_pztrtri( ss, nx, n, desc )
+     CALL laxlib_pztrtri( ss, nx, n, idesc )
 #endif
      !
   END IF
@@ -586,7 +601,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
   END IF
   !
@@ -594,12 +609,12 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
+     CALL sqr_mm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, idesc )
      !
      ! ensure that "hh" is really Hermitian, it is sufficient to set the diagonal
      ! properly, because only the lower triangle of hh will be used
      ! 
-     CALL sqr_zsetmat( 'H', n, ZERO, hh, size(hh,1), desc )
+     CALL sqr_setmat( 'H', n, ZERO, hh, size(hh,1), idesc )
      !
   END IF
   !
@@ -618,7 +633,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
 #else
      !
-     CALL qe_pzheevd( .true., n, desc, hh, SIZE( hh, 1 ), e )
+     CALL laxlib_pzheevd( .true., n, idesc, hh, SIZE( hh, 1 ), e )
      !
 #endif
      !
@@ -634,7 +649,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF ( desc%active_node > 0 ) THEN
      !
-     CALL sqr_zmm_cannon( 'C', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
+     CALL sqr_mm_cannon( 'C', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
      !
   END IF
   !
@@ -658,7 +673,7 @@ CONTAINS
   !
   SUBROUTINE test_drv_begin()
      ALLOCATE( tt( n, n ) )
-     CALL zsqmcll( n, hh, nx, tt, n, desc, desc%comm )
+     CALL laxlib_zsqmcll_x( n, hh, nx, tt, n, desc, desc%comm )
      RETURN
   END SUBROUTINE test_drv_begin
   !
@@ -697,11 +712,11 @@ CONTAINS
      IF ( info /= 0 ) &
         CALL lax_error__( 'test_drv_end', 'error broadcasting array e', ABS( info ) )
 #endif
-     CALL zsqmdst( n, tt, n, hh, nx, desc )
+     CALL laxlib_zsqmdst_x( n, tt, n, hh, nx, desc )
      DEALLOCATE( tt )
      CALL lax_error__('cdiaghg','stop serial',1)
      RETURN
   END SUBROUTINE test_drv_end
   !
-END SUBROUTINE pcdiaghg
+END SUBROUTINE laxlib_pcdiaghg
 !
