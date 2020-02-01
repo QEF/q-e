@@ -26,8 +26,6 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
-  !
   INTEGER :: npw, npwx, nstart, numwp
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
@@ -119,7 +117,7 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   write(stdout,*) 'Call rdiaghg'
   FLUSH(stdout)
 
-  CALL diaghg( nstart, numwp, hr(:,:,1), sr, nstart, en, hr(:,:,2), me_bgrp, root_bgrp, intra_bgrp_comm )
+  CALL rdiaghg( nstart, numwp, hr, sr, nstart, en, hr(1,1,2), me_bgrp, root_bgrp, intra_bgrp_comm )
   write(stdout,*) 'Done'
   FLUSH(stdout)
 

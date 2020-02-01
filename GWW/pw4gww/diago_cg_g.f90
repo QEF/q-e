@@ -25,8 +25,6 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   !
   IMPLICIT NONE
   !
-  include 'laxlib.fh'
-  !
   ! ... I/O variables
   !
 
@@ -149,7 +147,7 @@ SUBROUTINE diago_cg_g(ndim,omat,smat,maxter,max_state,e,ovec,cutoff,ethr,found_s
   write(stdout,*) 'Call rdiaghg'
   FLUSH(stdout)
 
-  CALL diaghg( max_state, max_state, hr(:,:,1), sr, max_state, en, hr(:,:,2), me_bgrp, root_bgrp, intra_bgrp_comm )
+  CALL rdiaghg( max_state, max_state, hr, sr, max_state, en, hr(1,1,2), me_bgrp, root_bgrp, intra_bgrp_comm )
   write(stdout,*) 'Done'
   FLUSH(stdout)
 

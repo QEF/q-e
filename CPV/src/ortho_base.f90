@@ -10,6 +10,7 @@
 MODULE orthogonalize_base
 
       USE kinds
+      USE dspev_module, ONLY: diagonalize_serial, diagonalize_parallel
       USE mytime, ONLY : f_wall
       
       IMPLICIT NONE
@@ -42,24 +43,20 @@ CONTAINS
    SUBROUTINE mesure_diag_perf( n )
       !
       USE mp_bands,    ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
+      USE mp_diag,     ONLY: nproc_ortho, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
+      USE descriptors, ONLY: la_descriptor, descla_init
       !
       IMPLICIT NONE
-      !
-      include 'laxlib.fh'
       !
       INTEGER, INTENT(IN) :: n
       REAL(DP), ALLOCATABLE :: s(:,:), a(:,:), d(:)
       REAL(DP) :: t1, tpar, tser
       INTEGER  :: nr, nc, ir, ic, nx
-      INTEGER :: idesc(LAX_DESC_SIZE)
+      TYPE(la_descriptor) :: desc
       INTEGER, PARAMETER :: paradim = 1000
-      INTEGER :: nproc_ortho, np_ortho(2), me_ortho(2), ortho_comm, ortho_comm_id, ortho_cntx
-      !
-      CALL laxlib_getval( nproc_ortho = nproc_ortho, np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-        ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
       !
       ! Check if number of PEs for orthogonalization/diagonalization is given from the input
       !
@@ -70,15 +67,15 @@ CONTAINS
 
       ALLOCATE( d( n ) )
       !
-      CALL laxlib_init_desc( idesc, n, n, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
 
       nx = 1
-      IF( idesc(LAX_DESC_ACTIVE_NODE)> 0 ) nx = idesc(LAX_DESC_NRCX)
+      IF( desc%active_node > 0 ) nx = desc%nrcx
 
-      nr = idesc(LAX_DESC_NR)
-      nc = idesc(LAX_DESC_NC)
-      ir = idesc(LAX_DESC_IR)
-      ic = idesc(LAX_DESC_IC)
+      nr = desc%nr
+      nc = desc%nc
+      ir = desc%ir
+      ic = desc%ic
 
       ALLOCATE( s( nx, nx ) )
       ALLOCATE( a( nx, nx ) )
@@ -88,21 +85,21 @@ CONTAINS
       ! some MPIs (OpenMPI) the first time they call a collective routine take too much
       ! time to perform initializations, then perform a dummy call to get meaningful time
       !
-      CALL laxlib_diagonalize( n, a, d, s, idesc )
+      CALL diagonalize_parallel( n, a, d, s, desc )
       !
       CALL set_a()
       !
       CALL mp_barrier( intra_bgrp_comm )
       t1 = f_wall()
       !
-      CALL laxlib_diagonalize( n, a, d, s, idesc )
+      CALL diagonalize_parallel( n, a, d, s, desc )
       !
       tpar = f_wall() - t1
       CALL mp_max( tpar, intra_bgrp_comm )
 
       DEALLOCATE( s, a )
       !
-      IF( idesc(LAX_DESC_MYC) == 0 .AND. idesc(LAX_DESC_MYR) == 0 .AND. idesc(LAX_DESC_ACTIVE_NODE)> 0  .AND. n < paradim ) THEN
+      IF( desc%myc == 0 .AND. desc%myr == 0 .AND. desc%active_node > 0  .AND. n < paradim ) THEN
 
          ! when n >= paradim do not mesure serial perf, go parallel
 
@@ -116,7 +113,7 @@ CONTAINS
 
          t1 = f_wall()
 
-         CALL laxlib_diagonalize( n, a, d )
+         CALL diagonalize_serial( n, a, d )
 
          tser = f_wall() - t1
 
@@ -163,7 +160,7 @@ CONTAINS
 
       SUBROUTINE set_a()
          INTEGER :: i, j, ii, jj
-         IF( idesc(LAX_DESC_ACTIVE_NODE)< 0 ) RETURN
+         IF( desc%active_node < 0 ) RETURN
          DO j = 1, nc
             DO i = 1, nr
                ii = i + ir - 1
@@ -189,29 +186,36 @@ CONTAINS
       USE mp_bands,    ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, &
                              root_bgrp, my_bgrp_id, nbgrp
       USE mp_images,   ONLY: nimage, my_image_id
+      USE mp_diag,     ONLY: ortho_comm, nproc_ortho, np_ortho, &
+                             me_ortho, init_ortho_group, ortho_comm_id, ortho_cntx
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
+      USE descriptors, ONLY: descla_init , la_descriptor
       !
       IMPLICIT NONE
-      !
-      include 'laxlib.fh'
       !
       INTEGER, INTENT(IN) :: n
       !
       REAL(DP), ALLOCATABLE :: c(:,:), a(:,:), b(:,:)
       REAL(DP) :: t1, tcan
-      INTEGER  :: nr, nc, ir, ic, lnode
-      INTEGER :: idesc(LAX_DESC_SIZE)
-      INTEGER :: nproc_ortho, np_ortho(2), me_ortho(2), ortho_comm, ortho_comm_id, ortho_cntx
+      INTEGER  :: nr, nc, ir, ic, np, lnode
+      TYPE(la_descriptor) :: desc
       !
-      CALL laxlib_getval( nproc_ortho = nproc_ortho, np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-        ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
+      np    = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 ) 
+      !
+      !  Make ortho group compatible with the number of electronic states
+      !
+      np    = MIN( np, n )
+      !
+      !  Now re-define the ortho group and test the performance
+      !
+      CALL init_ortho_group( np * np, world_comm, intra_bgrp_comm, nimage*nbgrp, my_bgrp_id + nbgrp * my_image_id )
 
-      CALL laxlib_init_desc( idesc, n, n, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
 
-      nr = idesc(LAX_DESC_NR)
-      nc = idesc(LAX_DESC_NC)
+      nr = desc%nr
+      nc = desc%nc
    
       ALLOCATE( a( nr, nc ), c( nr, nc ), b( nr, nc ) )
    
@@ -220,12 +224,12 @@ CONTAINS
    
       ! some MPIs (OpenMPI) the first time they call a collective routine take too much
       ! time to perform initializations, then perform a dummy call to get meaningful time
-      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, idesc) 
+      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc) 
 
       CALL mp_barrier( intra_bgrp_comm )
       t1 = f_wall()
 
-      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, idesc)
+      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc)
    
       tcan = f_wall() - t1
       CALL mp_max( tcan, intra_bgrp_comm )
@@ -238,12 +242,19 @@ CONTAINS
       IF( ionode ) THEN
          !
          WRITE( stdout, 90 )
-         WRITE( stdout, 120 ) tcan, nproc_ortho
+         WRITE( stdout, 120 ) tcan, np*np
  90      FORMAT(/,3X,'Matrix Multiplication Performances')
 120      FORMAT(3X,'ortho mmul, time for parallel driver      = ', 1F9.5, ' with ', I4, ' procs')
          !
       END IF
 
+#else
+
+      np = 1
+
+#endif
+
+#if defined __MPI
       IF( ionode ) THEN
          WRITE( stdout, '(/,3X,"Constraints matrixes will be distributed block like on")' )
          WRITE( stdout, '(3X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
@@ -261,7 +272,7 @@ CONTAINS
 
 
 
-   SUBROUTINE ortho_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, rhos, tau, nss, idesc )
+   SUBROUTINE ortho_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, rhos, tau, nss, desc )
 
       !  this iterative loop uses Cannon's parallel matrix multiplication
       !  matrix are distributed over a square processor grid: 1x1 2x2 3x3 ...
@@ -273,13 +284,12 @@ CONTAINS
       USE control_flags,     ONLY: ortho_eps, ortho_max
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
+      USE descriptors,       ONLY: la_descriptor
 
       IMPLICIT NONE
 
-      include 'laxlib.fh'
-
       INTEGER, INTENT(IN) :: nss, ldx, nx0
-      INTEGER, INTENT(IN) :: idesc(:)
+      TYPE(la_descriptor), INTENT(IN) :: desc
       REAL(DP) :: u   ( ldx, ldx )
       REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
@@ -305,7 +315,7 @@ CONTAINS
       IF( ldx/= nx0 ) &
          CALL errore( " ortho_iterate ", " inconsistent dimensions ldx, nx0 ", nx0 )
 
-      IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) then
+      IF( desc%active_node < 0 ) then
          xloc = 0.0d0
          iter = 0
          go to 100
@@ -313,12 +323,12 @@ CONTAINS
       !
       !  Compute the size of the local block
       !
-      nr = idesc(LAX_DESC_NR)
-      nc = idesc(LAX_DESC_NC)
-      ir = idesc(LAX_DESC_IR)
-      ic = idesc(LAX_DESC_IC)
+      nr = desc%nr
+      nc = desc%nc
+      ir = desc%ir
+      ic = desc%ic
 
-      IF( ldx/= idesc(LAX_DESC_NRCX) ) &
+      IF( ldx/= desc%nrcx ) &
          CALL errore( " ortho_iterate ", " inconsistent dimensions ldx ", ldx )
 
       ALLOCATE( tr1(ldx,ldx), tr2(ldx,ldx) )
@@ -345,13 +355,13 @@ CONTAINS
          !                       dd   = x0*tau*x0  (2nd and 3rd call)
          !                       tmp2 = x0*rhos    (4th call)
          !
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp1, ldx, idesc)
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp2, ldx, idesc)
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, tmp2, ldx, 0.0d0, dd, ldx, idesc)
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhos, ldx, 0.0d0, tmp2, ldx, idesc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp1, ldx, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp2, ldx, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, tmp2, ldx, 0.0d0, dd, ldx, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhos, ldx, 0.0d0, tmp2, ldx, desc)
          !
-         CALL sqr_tr_cannon( nss, tmp1, ldx, tr1, ldx, idesc )
-         CALL sqr_tr_cannon( nss, tmp2, ldx, tr2, ldx, idesc )
+         CALL sqr_tr_cannon( nss, tmp1, ldx, tr1, ldx, desc )
+         CALL sqr_tr_cannon( nss, tmp2, ldx, tr2, ldx, desc )
          !
 !$omp parallel do default(shared), private(j)
          DO i=1,nr
@@ -370,7 +380,7 @@ CONTAINS
             END DO
          END DO
 
-         CALL mp_max( diff, idesc(LAX_DESC_COMM) )
+         CALL mp_max( diff, desc%comm )
 
 
          IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
@@ -380,8 +390,8 @@ CONTAINS
          !                       tmp1 = x1*u
          !                       tmp2 = ut*x1*u
          !
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, x1, ldx,  u,    ldx, 0.0d0, tmp1, ldx, idesc )
-         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u,  ldx, tmp1, ldx,  0.0d0, tmp2, ldx, idesc )
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, x1, ldx,  u,    ldx, 0.0d0, tmp1, ldx, desc )
+         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u,  ldx, tmp1, ldx,  0.0d0, tmp2, ldx, desc )
          !
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
@@ -396,8 +406,8 @@ CONTAINS
          !                       tmp2 = g*ut
          !                       x0 = u*g*ut
          !
-         CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, tmp1, ldx,  u,    ldx, 0.0d0, tmp2, ldx, idesc )
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u,    ldx, tmp2, ldx,  0.0d0, xloc, nx0, idesc) 
+         CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, tmp1, ldx,  u,    ldx, 0.0d0, tmp2, ldx, desc )
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u,    ldx, tmp2, ldx,  0.0d0, xloc, nx0, desc) 
          !
       END DO ITERATIVE_LOOP
 
@@ -419,19 +429,19 @@ CONTAINS
 !
 
 
-   SUBROUTINE ortho_alt_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, tau, nss, idesc )
+   SUBROUTINE ortho_alt_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, tau, nss, desc )
 
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE control_flags,     ONLY: ortho_eps, ortho_max
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
+      USE descriptors,       ONLY: la_descriptor
 
       IMPLICIT NONE
-      include 'laxlib.fh'
 
       INTEGER, INTENT(IN) :: nss, ldx, nx0
-      INTEGER, INTENT(IN) :: idesc(:)
+      TYPE(la_descriptor), INTENT(IN) :: desc
       REAL(DP) :: u   ( ldx, ldx )
       REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
@@ -453,7 +463,7 @@ CONTAINS
       IF( ldx/= nx0 ) &
          CALL errore( " ortho_alt_iterate ", " inconsistent dimensions ldx, nx0 ", nx0 )
 
-      if( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) then
+      if( desc%active_node < 0 ) then
          xloc = 0.0d0
          iter = 0
          go to 100
@@ -461,12 +471,12 @@ CONTAINS
       !
       !  Compute the size of the local block
       !
-      nr = idesc(LAX_DESC_NR)
-      nc = idesc(LAX_DESC_NC)
-      ir = idesc(LAX_DESC_IR)
-      ic = idesc(LAX_DESC_IC)
+      nr = desc%nr
+      nc = desc%nc
+      ir = desc%ir
+      ic = desc%ic
 
-      IF( ldx/= idesc(LAX_DESC_NRCX) ) &
+      IF( ldx/= desc%nrcx ) &
          CALL errore( " ortho_alt_iterate ", " inconsistent dimensions ldx ", ldx )
 
       ALLOCATE( tmp1(ldx,ldx), tmp2(ldx,ldx), x1(ldx,ldx), sigd(nss) )
@@ -486,14 +496,14 @@ CONTAINS
       !
       ! ...   Transform "sig", "rhoa" and "tau" in the new basis through matrix "s"
       !
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, sig, ldx, u, ldx, 0.0d0, tmp1, ldx, idesc)
-      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, sig, ldx, idesc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, sig, ldx, u, ldx, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, sig, ldx, desc)
       !
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, rhor, ldx, u, ldx, 0.0d0, tmp1, ldx, idesc)
-      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, rhor, ldx, idesc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, rhor, ldx, u, ldx, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, rhor, ldx, desc)
       !
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, u, ldx, 0.0d0, tmp1, ldx, idesc)
-      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, tau, ldx, idesc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, u, ldx, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, tau, ldx, desc)
       !
       ! ...   Initialize x0 with preconditioning
       !
@@ -511,9 +521,9 @@ CONTAINS
 
       ITERATIVE_LOOP: DO iter = 0, ortho_max
 
-        CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp2, ldx, idesc)
+        CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp2, ldx, desc)
 
-        CALL sqr_tr_cannon( nss, tmp2, ldx, tmp1, ldx, idesc )
+        CALL sqr_tr_cannon( nss, tmp2, ldx, tmp1, ldx, desc )
 
         DO J=1,nc
           DO I=1,nr
@@ -521,20 +531,20 @@ CONTAINS
           ENDDO
         ENDDO
 !
-        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp1, ldx, idesc)
+        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp1, ldx, desc)
         !
         sigd = 0.0d0
-        IF( idesc(LAX_DESC_MYR) == idesc(LAX_DESC_MYC) ) THEN
+        IF( desc%myr == desc%myc ) THEN
            DO i = 1, nr
               SIGD( i + ir - 1 )   =  tmp1(i,i)
               tmp1(i,i) = -SIGD( i + ir - 1 )
            ENDDO
         END IF
-        CALL mp_sum( sigd, idesc(LAX_DESC_COMM) )
+        CALL mp_sum( sigd, desc%comm )
 
-        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, xloc, nx0, tmp1, ldx, 0.0d0, x1, ldx, idesc)
+        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, xloc, nx0, tmp1, ldx, 0.0d0, x1, ldx, desc)
         !
-        CALL sqr_tr_cannon( nss, x1, ldx, tmp1, ldx, idesc )
+        CALL sqr_tr_cannon( nss, x1, ldx, tmp1, ldx, desc )
 
         ! ...     X1   = SIG - tmp2 - 0.5d0 * ( X1 + X1^t )
 
@@ -553,7 +563,7 @@ CONTAINS
           END DO
         END DO
 
-        CALL mp_max( diff, idesc(LAX_DESC_COMM) )
+        CALL mp_max( diff, desc%comm )
 
         IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
 
@@ -561,8 +571,8 @@ CONTAINS
       !
       ! ...   Transform x0 back to the original basis
 
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u, ldx, xloc, nx0, 0.0d0, tmp1, ldx, idesc)
-      CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, xloc, nx0, idesc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u, ldx, xloc, nx0, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, xloc, nx0, desc)
 
       DEALLOCATE( tmp1, tmp2, x1, sigd )
 
@@ -575,7 +585,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
-   SUBROUTINE sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, ist, sig, ldx, idesc )
+   SUBROUTINE sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, ist, sig, ldx, desc )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -591,38 +601,37 @@ CONTAINS
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_diag,            ONLY: leg_ortho
+      USE descriptors,        ONLY: la_descriptor, descla_init
+      USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
-
-      include 'laxlib.fh'
 !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: cp( ngwx, n )
       REAL(DP)    :: qbecp( nkbx, ldx )
       REAL(DP)    :: becp_dist( nkbx, ldx )
       REAL(DP)    :: sig( ldx, ldx )
-      INTEGER, INTENT(IN) :: idesc(:)
+      TYPE(la_descriptor), INTENT(IN) :: desc
 !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
-      INTEGER :: idesc_ip(LAX_DESC_SIZE)
-      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
+      TYPE(la_descriptor):: desc_ip
+      INTEGER :: np( 2 ), coor_ip( 2 )
       !
       REAL(DP), ALLOCATABLE :: sigp(:,:)
 !
       IF( nss < 1 ) RETURN
 
-      CALL laxlib_getval( leg_ortho = leg_ortho )
+      np(1) = desc%npr
+      np(2) = desc%npc
 
-      np(1) = idesc(LAX_DESC_NPR)
-      np(2) = idesc(LAX_DESC_NPC)
-
-      nx = idesc(LAX_DESC_NRCX)
+      nx = desc%nrcx
 
       ALLOCATE( sigp( nx, nx ) ) 
 
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-         IF( idesc(LAX_DESC_NRCX) /= ldx ) &
+      IF( desc%active_node > 0 ) THEN
+         IF( desc%nrcx /= ldx ) &
             CALL errore( " sigset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " sigset ", " inconsistent dimension nx ", nx )
@@ -639,16 +648,15 @@ CONTAINS
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL laxlib_init_desc( idesc_ip, idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np, coor_ip, &
-                                   idesc(LAX_DESC_COMM), idesc(LAX_DESC_CNTX), 1 )
+            CALL descla_init( desc_ip, desc%n, desc%nx, np, coor_ip, desc%comm, desc%cntx, 1 )
 
-            nr = idesc_ip(LAX_DESC_NR)
-            nc = idesc_ip(LAX_DESC_NC)
-            ir = idesc_ip(LAX_DESC_IR)
-            ic = idesc_ip(LAX_DESC_IC)
+            nr = desc_ip%nr
+            nc = desc_ip%nc
+            ir = desc_ip%ir
+            ic = desc_ip%ic
             !
-            CALL GRID2D_RANK( 'R', idesc_ip(LAX_DESC_NPR), idesc_ip(LAX_DESC_NPC), &
-                                   idesc_ip(LAX_DESC_MYR), idesc_ip(LAX_DESC_MYC), root )
+            CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                   desc_ip%myr, desc_ip%myc, root )
 
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
@@ -681,16 +689,16 @@ CONTAINS
          CALL mp_sum( sig, inter_bgrp_comm )
       END IF
       !
-      CALL laxlib_dsqmsym( nss, sig, nx, idesc )
+      CALL dsqmsym( nss, sig, nx, desc )
       !
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+      IF( desc%active_node > 0 ) THEN
          !
-         nr = idesc(LAX_DESC_NR)
-         nc = idesc(LAX_DESC_NC)
-         ir = idesc(LAX_DESC_IR)
-         ic = idesc(LAX_DESC_IC)
+         nr = desc%nr
+         nc = desc%nc
+         ir = desc%ir
+         ic = desc%ic
          !
-         IF( idesc(LAX_DESC_MYR) == idesc(LAX_DESC_MYC) ) THEN
+         IF( desc%myr == desc%myc ) THEN
             DO i = 1, nr
                sig(i,i) = sig(i,i) + 1.0d0
             END DO
@@ -717,7 +725,7 @@ CONTAINS
 
 !
 !-----------------------------------------------------------------------
-   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, ldx, idesc )
+   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, ldx, desc )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), phi, bephi, qbecp
 !     computes the matrix
@@ -732,23 +740,23 @@ CONTAINS
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE mp_bands,           ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_diag,            ONLY: leg_ortho
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
+      USE descriptors,        ONLY: la_descriptor, descla_init
 !
       IMPLICIT NONE
-
-      include 'laxlib.fh'
 !
       INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbecp( nkbx, ldx )
       REAL(DP)    :: rho( ldx, ldx )
-      INTEGER, INTENT(IN) :: idesc(:)
+      TYPE(la_descriptor), INTENT(IN) :: desc
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root, nx
-      INTEGER :: idesc_ip(LAX_DESC_SIZE)
-      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
+      TYPE(la_descriptor) :: desc_ip
+      INTEGER :: np( 2 ), coor_ip( 2 )
 
       REAL(DP), ALLOCATABLE :: rhop(:,:)
       !
@@ -758,15 +766,13 @@ CONTAINS
 
       IF( nss < 1 ) RETURN
 
-      CALL laxlib_getval( leg_ortho = leg_ortho )
+      np(1) = desc%npr
+      np(2) = desc%npc
 
-      np(1) = idesc(LAX_DESC_NPR)
-      np(2) = idesc(LAX_DESC_NPC)
+      nx = desc%nrcx
 
-      nx = idesc(LAX_DESC_NRCX)
-
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-         IF( idesc(LAX_DESC_NRCX) /= ldx ) &
+      IF( desc%active_node > 0 ) THEN
+         IF( desc%nrcx /= ldx ) &
             CALL errore( " rhoset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " rhoset ", " inconsistent dimension nx ", nx )
@@ -785,16 +791,15 @@ CONTAINS
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL laxlib_init_desc( idesc_ip, idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np, coor_ip, &
-                                   idesc(LAX_DESC_COMM), idesc(LAX_DESC_CNTX), 1 )
+            CALL descla_init( desc_ip, desc%n, desc%nx, np, coor_ip, desc%comm, desc%cntx, 1 )
 
-            nr = idesc_ip(LAX_DESC_NR)
-            nc = idesc_ip(LAX_DESC_NC)
-            ir = idesc_ip(LAX_DESC_IR)
-            ic = idesc_ip(LAX_DESC_IC)
+            nr = desc_ip%nr
+            nc = desc_ip%nc
+            ir = desc_ip%ir
+            ic = desc_ip%ic
             !
-            CALL GRID2D_RANK( 'R', idesc_ip(LAX_DESC_NPR), idesc_ip(LAX_DESC_NPC), &
-                                   idesc_ip(LAX_DESC_MYR), idesc_ip(LAX_DESC_MYC), root )
+            CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                   desc_ip%myr, desc_ip%myc, root )
             !
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
@@ -826,10 +831,10 @@ CONTAINS
          CALL mp_sum( rho, inter_bgrp_comm )
       END IF
 
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+      IF( desc%active_node > 0 ) THEN
          !
-         nr = idesc(LAX_DESC_NR)
-         nc = idesc(LAX_DESC_NC)
+         nr = desc%nr
+         nc = desc%nc
          !
          !  bephi is distributed among processor rows
          !  qbephi is distributed among processor columns
@@ -859,7 +864,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
-   SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, ldx, idesc )
+   SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, ldx, desc )
 !-----------------------------------------------------------------------
 !     input: phi
 !     computes the matrix
@@ -874,38 +879,37 @@ CONTAINS
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
+      USE mp_diag,            ONLY: leg_ortho
       USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE descriptors,        ONLY: la_descriptor, descla_init
+      USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
-      !
-      include 'laxlib.fh'
       !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbephi( nkbx, ldx )
       REAL(DP)    :: tau( ldx, ldx )
-      INTEGER, INTENT(IN) :: idesc(:)
+      TYPE(la_descriptor), INTENT(IN) :: desc
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
-      INTEGER :: idesc_ip(LAX_DESC_SIZE)
-      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
+      TYPE(la_descriptor) :: desc_ip
+      INTEGER :: np( 2 ), coor_ip( 2 )
 
       REAL(DP), ALLOCATABLE :: taup( :, : )
       !
       IF( nss < 1 ) RETURN
-
-      CALL laxlib_getval( leg_ortho = leg_ortho )
       !
       !  get dimensions of the square processor grid
       !
-      np(1) = idesc(LAX_DESC_NPR)
-      np(2) = idesc(LAX_DESC_NPC)
+      np(1) = desc%npr
+      np(2) = desc%npc
       !
-      nx = idesc(LAX_DESC_NRCX)
+      nx = desc%nrcx
       !
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-         IF( idesc(LAX_DESC_NRCX) /= ldx ) &
+      IF( desc%active_node > 0 ) THEN
+         IF( desc%nrcx /= ldx ) &
             CALL errore( " tauset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " tauset ", " inconsistent dimension nx ", nx )
@@ -928,16 +932,15 @@ CONTAINS
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL laxlib_init_desc( idesc_ip, idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np, coor_ip, &
-                                   idesc(LAX_DESC_COMM), idesc(LAX_DESC_CNTX), 1 )
+            CALL descla_init( desc_ip, desc%n, desc%nx, np, coor_ip, desc%comm, desc%cntx, 1 )
 
-            nr = idesc_ip(LAX_DESC_NR)
-            nc = idesc_ip(LAX_DESC_NC)
-            ir = idesc_ip(LAX_DESC_IR)
-            ic = idesc_ip(LAX_DESC_IC)
+            nr = desc_ip%nr
+            nc = desc_ip%nc
+            ir = desc_ip%ir
+            ic = desc_ip%ic
             !
-            CALL GRID2D_RANK( 'R', idesc_ip(LAX_DESC_NPR), idesc_ip(LAX_DESC_NPC), &
-                                   idesc_ip(LAX_DESC_MYR), idesc_ip(LAX_DESC_MYC), root )
+            CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                   desc_ip%myr, desc_ip%myc, root )
             !
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
@@ -973,12 +976,12 @@ CONTAINS
          CALL mp_sum( tau, inter_bgrp_comm )
       END IF
       !
-      CALL laxlib_dsqmsym( nss, tau, nx, idesc )
+      CALL dsqmsym( nss, tau, nx, desc )
       !
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+      IF( desc%active_node > 0 ) THEN
          !
-         nr = idesc(LAX_DESC_NR)
-         nc = idesc(LAX_DESC_NC)
+         nr = desc%nr
+         nc = desc%nc
          !
          !  bephi is distributed among processor rows
          !  qbephi is distributed among processor columns
@@ -1005,7 +1008,7 @@ CONTAINS
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE updatc( ccc, x0, phi, bephi, becp_bgrp, bec_bgrp, cp_bgrp, idesc )
+   SUBROUTINE updatc( ccc, x0, phi, bephi, becp_bgrp, bec_bgrp, cp_bgrp, desc )
 !-----------------------------------------------------------------------
 !
       !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
@@ -1025,13 +1028,13 @@ CONTAINS
       USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
+      USE mp_diag,           ONLY: leg_ortho
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
+      USE descriptors,       ONLY: descla_init, la_descriptor
 !
       IMPLICIT NONE
-
-      include 'laxlib.fh'
 !
-      INTEGER, INTENT(IN) :: idesc( :, : )
+      TYPE(la_descriptor), INTENT(IN) :: desc( : )
       COMPLEX(DP) :: cp_bgrp( :, : ), phi( :, : )
       REAL(DP), INTENT(IN) :: ccc
       REAL(DP)    :: bec_bgrp( :, : ), x0( :, :, : )
@@ -1045,18 +1048,16 @@ CONTAINS
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: xd(:,:)
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
-      INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
-      INTEGER :: idesc_ip(LAX_DESC_SIZE)
+      INTEGER :: np( 2 ), coor_ip( 2 )
+      TYPE(la_descriptor) :: desc_ip
 
       CALL start_clock( 'updatc' )
-
-      CALL laxlib_getval( leg_ortho = leg_ortho )
 
       DO iss = 1, nspin
          !
          !  size of the local block
          !
-         nrcx = idesc( LAX_DESC_NRCX, iss )
+         nrcx = desc( iss )%nrcx
          !
          nss = nupdwn(iss)
          istart = iupdwn(iss)
@@ -1070,13 +1071,13 @@ CONTAINS
          !
          IF( nss < 1 ) CYCLE
          !
-         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
-            IF( nx0 /= idesc( LAX_DESC_NRCX, iss ) ) &
+         IF( desc( iss )%active_node > 0 ) THEN
+            IF( nx0 /= desc( iss )%nrcx ) &
                CALL errore( " updatc ", " inconsistent dimension nx0 ", nx0 )
          END IF
          !
-         np(1) = idesc( LAX_DESC_NPR, iss )
-         np(2) = idesc( LAX_DESC_NPC, iss )
+         np(1) = desc( iss )%npr
+         np(2) = desc( iss )%npc
          !
    
          ALLOCATE( xd( nrcx, nrcx ) )
@@ -1121,16 +1122,15 @@ CONTAINS
                coor_ip(1) = ipr - 1
                coor_ip(2) = ipc - 1
    
-               CALL laxlib_init_desc( idesc_ip, idesc( LAX_DESC_N, iss ), idesc( LAX_DESC_NX, iss ), np, coor_ip, &
-                                      idesc( LAX_DESC_COMM, iss ), idesc( LAX_DESC_CNTX, iss ), 1 )
+               CALL descla_init( desc_ip, desc( iss )%n, desc( iss )%nx, np, coor_ip, desc( iss )%comm, desc( iss )%cntx, 1 )
    
-               nr = idesc_ip(LAX_DESC_NR)
-               nc = idesc_ip(LAX_DESC_NC)
-               ir = idesc_ip(LAX_DESC_IR)
-               ic = idesc_ip(LAX_DESC_IC)
+               nr = desc_ip%nr
+               nc = desc_ip%nc
+               ir = desc_ip%ir
+               ic = desc_ip%ic
                !
-               CALL GRID2D_RANK( 'R', idesc_ip(LAX_DESC_NPR), idesc_ip(LAX_DESC_NPC), &
-                                      idesc_ip(LAX_DESC_MYR), idesc_ip(LAX_DESC_MYC), root )
+               CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                      desc_ip%myr, desc_ip%myc, root )
                !
                ! we need to update only states local to the current band group,
                ! so here we compute the overlap between ortho and band group.
@@ -1149,9 +1149,9 @@ CONTAINS
    
                root = root * leg_ortho
    
-               IF( idesc( LAX_DESC_MYR, iss ) == ipr - 1 .AND. &
-                   idesc( LAX_DESC_MYC, iss ) == ipc - 1 .AND. &
-                   idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+               IF( desc( iss )%myr == ipr - 1 .AND. &
+                   desc( iss )%myc == ipc - 1 .AND. &
+                   desc( iss )%active_node > 0 ) THEN
                   xd = x0(:,:,iss) * ccc
                END IF
    
@@ -1301,31 +1301,29 @@ CONTAINS
       END SUBROUTINE calphi_bgrp
 
 
-   SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nrcx, idesc )
+   SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nrcx, desc )
       USE kinds,             ONLY: DP
       USE uspp,              ONLY: nkb
       USE mp,                ONLY: mp_sum
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
+      USE mp_diag,           ONLY: leg_ortho
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
+      USE descriptors,       ONLY: la_descriptor
       !
       IMPLICIT NONE
       !
-      include 'laxlib.fh'
-      !
       INTEGER, INTENT(IN) :: nrcx
-      INTEGER, INTENT(IN) :: idesc( :, : )
+      TYPE(la_descriptor), INTENT(IN) :: desc( : )
       REAL(DP), INTENT(IN)  :: bec_bgrp(:,:)
       REAL(DP), INTENT(OUT) :: bec_ortho(:,:)
       !
-      INTEGER :: ir, nr, i, ibgrp_i, nup, leg_ortho
+      INTEGER :: ir, nr, i, ibgrp_i, nup
       !
-      CALL laxlib_getval( leg_ortho = leg_ortho )
-
       bec_ortho = 0.0d0
       !
-      IF( idesc( LAX_DESC_ACTIVE_NODE, 1 ) > 0 ) THEN
-         ir = idesc(LAX_DESC_IR, 1)
-         nr = idesc(LAX_DESC_NR, 1)
+      IF( desc( 1 )%active_node > 0 ) THEN
+         ir = desc( 1 )%ir
+         nr = desc( 1 )%nr
          do i = 1, nr
             ibgrp_i = ibgrp_g2l( i + ir - 1 )
             IF( ibgrp_i > 0 ) THEN
@@ -1335,10 +1333,10 @@ CONTAINS
       END IF
       !
       IF( nspin == 2 ) THEN
-         IF( idesc( LAX_DESC_ACTIVE_NODE, 2 ) > 0 ) THEN
-            nup = idesc(LAX_DESC_N, 1 )
-            ir = idesc(LAX_DESC_IR, 2 )
-            nr = idesc(LAX_DESC_NR, 2 )
+         IF( desc( 2 )%active_node > 0 ) THEN
+            nup = desc( 1 )%n
+            ir = desc( 2 )%ir
+            nr = desc( 2 )%nr
             do i = 1, nr
                ibgrp_i = ibgrp_g2l( i + ir - 1 + nup )
                IF( ibgrp_i > 0 ) THEN

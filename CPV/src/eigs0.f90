@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-   subroutine eigs0( ei, nudx, tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nlam, idesc )
+   subroutine eigs0( ei, nudx, tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nlam, desc )
 !-----------------------------------------------------------------------
 !     computes eigenvalues (wr) of the real symmetric matrix lambda
 !     Note that lambda as calculated is multiplied by occupation numbers
@@ -15,21 +15,22 @@
       use kinds,             only : DP
       use io_global,         only : stdout
       use constants,         only : autoev
+      use dspev_module,      only : dspev_drv, pdspev_drv
       USE sic_module,        only : self_interaction
+      USE descriptors,       ONLY : la_descriptor
       USE mp,                only : mp_sum, mp_bcast
       USE mp_global,         only : intra_bgrp_comm, root_bgrp, me_bgrp
 
       implicit none
-      include 'laxlib.fh'
 ! input
       logical, intent(in) :: tprint, lf
       integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin), nlam
-      integer, intent(in) :: idesc( LAX_DESC_SIZE, nspin )
+      type(la_descriptor), intent(in) :: desc( 2 )
       real(DP), intent(in) :: lambda( nlam, nlam, nspin ), f( nx )
       real(DP), intent(out) :: ei( nudx, nspin )
 ! local variables
       real(DP), allocatable :: ap(:), wr(:)
-      real(DP) zr(1,1)
+      real(DP) zr(1)
       integer :: iss, j, i, ierr, k, n, ndim, nspin_eig, npaired
       INTEGER :: ir, ic, nr, nc, nrl, nrlx, comm, np, me
       logical :: tsic
@@ -61,15 +62,15 @@
 
          allocate( wr( n ) )
 
-         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+         IF( desc( iss )%active_node > 0 ) THEN
 
-            np = idesc( LAX_DESC_NPC, iss ) * idesc( LAX_DESC_NPR, iss )
+            np = desc( iss )%npc * desc( iss )%npr
 
             IF( np > 1 ) THEN
 
                !  matrix is distributed
 
-               CALL laxlib_pdsyevd( .false., n, idesc(:,iss), lambda(:,:,iss), nlam, wr )
+               CALL qe_pdsyevd( .false., n, desc(iss), lambda(1,1,iss), nlam, wr )
 
             ELSE
 
@@ -115,10 +116,10 @@
             !
             ei( 1:n,       1 ) = ei( 1:n, 1 ) / 2.0d0
             ei( nupdwn(1), 1 ) = 0.0d0
-            if( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) then
-               IF( idesc( LAX_DESC_MYC, iss ) == idesc( LAX_DESC_MYR, iss ) ) THEN
-                  ir = idesc( LAX_DESC_IR, iss )
-                  nr = idesc( LAX_DESC_NR, iss )
+            if( desc( iss )%active_node > 0 ) then
+               IF( desc( iss )%myc == desc( iss )%myr ) THEN
+                  ir = desc( iss )%ir
+                  nr = desc( iss )%nr
                   IF( nupdwn(1) >= ir .AND. nupdwn(1) < ir + nr ) then
                      ei( nupdwn(1), 1 ) = lambda( nupdwn(1)-ir+1, nupdwn(1)-ir+1, 1 )
                   end if
@@ -315,7 +316,7 @@
 !
 
 !-----------------------------------------------------------------------
-   SUBROUTINE cp_eigs_x( nfi, lambdap, lambda, idesc )
+   SUBROUTINE cp_eigs_x( nfi, lambdap, lambda, descla )
 !-----------------------------------------------------------------------
 
       USE kinds,             ONLY: DP
@@ -324,17 +325,18 @@
       use electrons_base,    only: iupdwn, nupdwn, nudx
       use electrons_module,  only: ei
       use io_global,         only: stdout
+      USE descriptors,       ONLY: la_descriptor
 
       IMPLICIT NONE
 
       INTEGER :: nfi
       REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
-      INTEGER, INTENT(IN) :: idesc( :, : )
+      TYPE(la_descriptor), INTENT(IN) :: descla( : )
 
       if( .not. tens ) then
-         call eigs0( ei, nudx, .false. , nspin, nupdwn, iupdwn, .true. , f, nbspx, lambda, SIZE(lambda,1), idesc )
+         call eigs0( ei, nudx, .false. , nspin, nupdwn, iupdwn, .true. , f, nbspx, lambda, SIZE(lambda,1), descla )
       else
-         call eigs0( ei, nudx, .false. , nspin, nupdwn, iupdwn, .false. , f, nbspx, lambdap, SIZE(lambdap,1), idesc )
+         call eigs0( ei, nudx, .false. , nspin, nupdwn, iupdwn, .false. , f, nbspx, lambdap, SIZE(lambdap,1), descla )
       endif
 
       RETURN

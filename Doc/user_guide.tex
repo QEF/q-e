@@ -1163,12 +1163,7 @@ see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
 
 \subsubsection{Microsoft Windows}
 \label{SubSec:Windows}
-Since February 2020 \qe\ can be compiled on MS-Windows 10 using PGI 19.10 
-Community Edition (freely downloadable). \configure\ works with the bash
-script provided by PGI but the \configure\ of FoX fails: use script 
-\texttt{install/build\_fox\_with\_pgi.sh} to manually compile FoX.
-
-Another option: use MinGW/MSYS. Download the installer from
+MS-Windows users may compile \qe\ on MinGW/MSYS. Download the installer from
 \texttt{https://osdn.net/projects/mingw/}, install MinGW, MSYS, gcc and
 gfortran. Start a shell window; run "./configure"; edit \texttt{make.inc}; 
 uncommenting the second definition of TOPDIR (the first one introduces a 
@@ -1179,12 +1174,10 @@ reasons.
 Another option is Cygwin, a UNIX environment which runs under Windows: see\\
 \texttt{http://www.cygwin.com/}. 
 
-Windows-10 users may also enable the Windows Subsystem for Linux (see here:\\
+Finally, Windows-10 users may enable the Windows Subsystem for Linux
+(see here:\\
 \texttt{https://docs.microsoft.com/en-us/windows/wsl/install-win10}),
 install a Linux distribution, compile \qe\ as on Linux. It works very well.
-
-As a final option, one can use Quantum Mobile:\\
-\texttt{https://www.materialscloud.org/work/quantum-mobile}.
 
 \subsubsection{Mac OS}
 

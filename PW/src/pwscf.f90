@@ -42,13 +42,12 @@ PROGRAM pwscf
   USE mp_world,             ONLY : world_comm
   USE mp_pools,             ONLY : intra_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_diag,              ONLY : mp_start_diag
   USE mp_exx,               ONLY : negrp
   USE read_input,           ONLY : read_input_file
   USE command_line_options, ONLY : input_file_, command_line, ndiag_, nimage_
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   CHARACTER(len=256) :: srvaddress
   !! Get the address of the server 
@@ -67,14 +66,15 @@ PROGRAM pwscf
      ! used to be the default : one diag group per bgrp
      ! with strict hierarchy: POOL > BAND > DIAG
      ! if using exx groups from mp_exx still use this diag method
-     CALL laxlib_start ( ndiag_, world_comm, intra_bgrp_comm, &
+     CALL mp_start_diag( ndiag_, world_comm, intra_bgrp_comm, &
                          do_distr_diag_inside_bgrp_ = .TRUE. )
   ELSE
      ! new default: one diag group per pool ( individual k-point level )
      ! with band group and diag group both being children of POOL comm
-     CALL laxlib_start ( ndiag_, world_comm, intra_pool_comm, &
+     CALL mp_start_diag( ndiag_, world_comm, intra_pool_comm, &
                          do_distr_diag_inside_bgrp_ = .FALSE. )
-  END IF
+  ENDIF
+  !
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
                                inter_bgrp_comm )
   !
@@ -114,7 +114,7 @@ PROGRAM pwscf
      !
   ENDIF
   !
-  CALL laxlib_end()
+  CALL laxlib_free_ortho_group()
   CALL stop_run( exit_status )
   CALL do_stop( exit_status )
   !

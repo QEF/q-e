@@ -18,7 +18,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, &
                                    drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp, &
-                                   taub, lambda, lambdam, lambdap, vpot, dbec, idesc
+                                   taub, lambda, lambdam, lambdap, vpot, dbec, descla
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb, nlcc_any
   USE energies,             ONLY : ekin, enl, entropy, etot
@@ -206,7 +206,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
      ! ... nlfl and nlfh need: lambda (guessed) becdr
      !
      IF ( tfor .OR. tprnfor ) THEN
-        CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
+        CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, descla, fion )
      END IF
      !
   END IF electron_dynamic

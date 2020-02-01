@@ -7,17 +7,16 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
   !
   ! ... LAPACK version - uses both DSYGV and DSYGVX
   !
-  USE laxlib_parallel_include
+  USE la_param
   !
   IMPLICIT NONE
-  INCLUDE 'laxlib_kinds.fh'
   !
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
@@ -181,10 +180,10 @@ SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
   !
   RETURN
   !
-END SUBROUTINE laxlib_rdiaghg
+END SUBROUTINE rdiaghg
 !
 !----------------------------------------------------------------------------
-SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
+SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -193,20 +192,16 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   !
   ! ... Parallel version with full data distribution
   !
-  USE laxlib_parallel_include
-  USE laxlib_descriptor, ONLY : la_descriptor, laxlib_intarray_to_desc
-  USE laxlib_processors_grid, ONLY : ortho_parent_comm
+  USE la_param
+  USE descriptors,       ONLY : la_descriptor
+  USE mp_diag,           ONLY : ortho_parent_comm
 #if defined __SCALAPACK
-  USE laxlib_processors_grid, ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
+  USE mp_diag,           ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho, ortho_comm
   USE dspev_module,      ONLY : pdsyevd_drv
 #endif
   !
-  IMPLICIT NONE
   !
-  INCLUDE 'laxlib_kinds.fh'
-  include 'laxlib_param.fh'
-  include 'laxlib_low.fh'
-  include 'laxlib_mid.fh'
+  IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: n, ldh
     ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
@@ -219,7 +214,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
     ! eigenvalues
   REAL(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
-  INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+  TYPE(la_descriptor), INTENT(IN) :: desc
   !
   INTEGER, PARAMETER    :: root = 0
   INTEGER               :: nx, info
@@ -228,15 +223,12 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   REAL(DP), PARAMETER   :: zero = 0_DP
   REAL(DP), ALLOCATABLE :: hh(:,:)
   REAL(DP), ALLOCATABLE :: ss(:,:)
-  TYPE(la_descriptor) :: desc
 #if defined(__SCALAPACK)
   INTEGER     :: desch( 16 )
 #endif
   INTEGER               :: i
   !
   CALL start_clock( 'rdiaghg' )
-  !
-  CALL laxlib_intarray_to_desc(desc,idesc)
   !
   IF( desc%active_node > 0 ) THEN
      !
@@ -273,7 +265,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
      CALL PDPOTRF( 'L', n, ss, 1, 1, desch, info )
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing cholesky ', ABS( info ) )
 #else
-     CALL laxlib_pdpotrf( ss, nx, n, idesc )
+     CALL qe_pdpotrf( ss, nx, n, desc )
 #endif
      !
   END IF
@@ -288,13 +280,13 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
      !
 #if defined(__SCALAPACK)
      ! 
-     CALL sqr_setmat( 'U', n, zero, ss, size(ss,1), idesc )
+     CALL sqr_dsetmat( 'U', n, zero, ss, size(ss,1), desc )
 
      CALL PDTRTRI( 'L', 'N', n, ss, 1, 1, desch, info )
      !
      IF( info /= 0 ) CALL lax_error__( ' rdiaghg ', ' problems computing inverse ', ABS( info ) )
 #else
-     CALL laxlib_pdtrtri ( ss, nx, n, idesc )
+     CALL qe_pdtrtri ( ss, nx, n, desc )
 #endif
      !
   END IF
@@ -307,7 +299,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
+     CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !
   END IF
   !
@@ -315,7 +307,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   !
   IF( desc%active_node > 0 ) THEN
      !
-     CALL sqr_mm_cannon( 'N', 'T', n, ONE, v, nx, ss, nx, ZERO, hh, nx, idesc )
+     CALL sqr_mm_cannon( 'N', 'T', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
      !
   END IF
   !
@@ -328,7 +320,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
 #if defined(__SCALAPACK)
      CALL pdsyevd_drv( .true., n, desc%nrcx, hh, SIZE(hh,1), e, ortho_cntx, ortho_comm )
 #else
-     CALL laxlib_pdsyevd( .true., n, idesc, hh, SIZE(hh,1), e )
+     CALL qe_pdsyevd( .true., n, desc, hh, SIZE(hh,1), e )
 #endif
      !
   END IF
@@ -339,7 +331,7 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   !
   IF ( desc%active_node > 0 ) THEN
      !
-     CALL sqr_mm_cannon( 'T', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, idesc )
+     CALL sqr_mm_cannon( 'T', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !
      DEALLOCATE( ss )
      DEALLOCATE( hh )
@@ -358,4 +350,4 @@ SUBROUTINE laxlib_prdiaghg( n, h, s, ldh, e, v, idesc )
   !
   RETURN
   !
-END SUBROUTINE laxlib_prdiaghg
+END SUBROUTINE prdiaghg

@@ -9,6 +9,7 @@
   MODULE electrons_module
 !=----------------------------------------------------------------------------=!
         USE kinds
+        USE dspev_module,       ONLY: pdspev_drv, dspev_drv
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
                                       nupdwn, iupdwn, telectrons_base_initval, f, &
                                       nudx, nupdwn_bgrp, iupdwn_bgrp, nudx_bgrp, &

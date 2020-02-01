@@ -109,10 +109,6 @@ then
       # If not set on input, MKLROOT was set when checking blas
       try_iflags="$try_iflags -I$MKLROOT/include"
       have_fft=1
-   else 
-      if test "$have_armpl" -eq 1; then 
-      have_fft=1 
-      fi 
    fi
 
    # Check fftw v3 (both native and MKL interfaces)

@@ -18,7 +18,6 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   USE io_global,  ONLY : stdout
   USE mp_bands, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   IMPLICIT NONE
-  include 'laxlib.fh'
   INTEGER :: nmodes, nat3, nat,ityp(nat), iudyn
   real(DP):: dyn(nat3,nmodes), u(nat3,nmodes), amass(*)
   real(DP):: dynout(nat3,nmodes), w2(nat3)
@@ -78,7 +77,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !  Note that z are eigendisplacements in the base of input
   !  modes u and that they are normalized as <z|M|z>=I
   !
-  CALL diaghg (nat3, nmodes, dynout, m, nat3, w2, z, me_bgrp, root_bgrp, intra_bgrp_comm)
+  CALL rdiaghg (nat3, nmodes, dynout, m, nat3, w2, z, me_bgrp, root_bgrp, intra_bgrp_comm)
   !
   !  write frequencies
   !

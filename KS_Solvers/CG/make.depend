@@ -5,9 +5,15 @@ cg_param.o : ../../UtilXlib/parallel_include.o
 rcgdiagg.o : ../../UtilXlib/mp.o
 rcgdiagg.o : ../../UtilXlib/mp_bands_util.o
 rcgdiagg.o : cg_param.o
+rotate_wfc_gamma.o : ../../LAXlib/la_types.o
+rotate_wfc_gamma.o : ../../LAXlib/mp_diag.o
+rotate_wfc_gamma.o : ../../LAXlib/ptoolkit.o
 rotate_wfc_gamma.o : ../../UtilXlib/mp.o
 rotate_wfc_gamma.o : ../../UtilXlib/mp_bands_util.o
 rotate_wfc_gamma.o : cg_param.o
+rotate_wfc_k.o : ../../LAXlib/la_types.o
+rotate_wfc_k.o : ../../LAXlib/mp_diag.o
+rotate_wfc_k.o : ../../LAXlib/ptoolkit.o
 rotate_wfc_k.o : ../../UtilXlib/mp.o
 rotate_wfc_k.o : ../../UtilXlib/mp_bands_util.o
 rotate_wfc_k.o : cg_param.o

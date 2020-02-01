@@ -74,7 +74,6 @@
     use mp_global,          only : intra_bgrp_comm, nbgrp, inter_bgrp_comm
     use gvect, only : gstart
     use wave_base,          only : wave_speed2
-    use mp_world, only: mpime
     !
     IMPLICIT NONE
     !
@@ -176,6 +175,7 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
+      USE dspev_module,     ONLY: pdspev_drv, dspev_drv
       USE uspp_param,       ONLY: upf
 
       IMPLICIT NONE
@@ -270,10 +270,9 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
+      USE dspev_module,     ONLY: dspev_drv
 
       IMPLICIT NONE
-
-      include 'laxlib.fh'
 
       ! ... declare subroutine arguments
 

@@ -20,8 +20,6 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   !
   IMPLICIT NONE
   !
-  INCLUDE 'laxlib.fh'
-  !
   ! ... I/O variables
   !
   INTEGER, INTENT(IN) :: npw, npwx, nstart, nbnd, npol
@@ -110,7 +108,7 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('rotwfck:diag');  !write(*,*) 'start rotwfck:diag';FLUSH(6)
-  CALL diaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+  CALL cdiaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
   call stop_clock('rotwfck:diag');  !write(*,*) 'stop rotwfck:diag';FLUSH(6)
   call start_clock('rotwfck:evc'); !write(*,*) 'start rotwfck:evc';FLUSH(6)
   !
@@ -154,11 +152,13 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   USE cg_param,         ONLY : DP
   USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
           nbgrp, my_bgrp_id
+  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
+                               ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
+  USE descriptors,      ONLY : la_descriptor, descla_init
+  USE parallel_toolkit, ONLY : zsqmher
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
   IMPLICIT NONE
-  !
-  include 'laxlib.fh'
   !
   ! ... I/O variables
   !
@@ -182,18 +182,14 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
-  INTEGER :: idesc(LAX_DESC_SIZE)
+  TYPE(la_descriptor) :: desc
     ! matrix distribution descriptors
   INTEGER :: nx
     ! maximum local block dimension
   LOGICAL :: la_proc
     ! flag to distinguish procs involved in linear algebra
-  INTEGER, ALLOCATABLE :: idesc_ip( :, :, : )
+  TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
-  !
-  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
-             ortho_parent_comm, ortho_cntx
-  LOGICAL :: do_distr_diag_inside_bgrp
   !
   EXTERNAL  h_psi,    s_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -204,14 +200,10 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
 
   call start_clock('protwfck')
   !
-  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
-    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
-  !
-  ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
-  CALL desc_init( nstart, idesc, idesc_ip )
+  CALL desc_init( nstart, desc, desc_ip )
   !
   IF ( npol == 1 ) THEN
      !
@@ -259,15 +251,15 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   ! ... Diagonalize
   !
   call start_clock('protwfck:diag')
-  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg en and vc are the same across ortho_parent_comm
+  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg en and vc are the same across ortho_parent_comm
      ! only the first bgrp performs the diagonalization
-     IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nstart, hc, sc, nx, en, vc, idesc )
+     IF( my_bgrp_id == root_bgrp_id ) CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
      IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
        CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
        CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
      ENDIF
   ELSE
-     CALL pdiaghg( nstart, hc, sc, nx, en, vc, idesc )
+     CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
   END IF
   call stop_clock('protwfck:diag')
   !
@@ -287,7 +279,7 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   DEALLOCATE( hc )
   DEALLOCATE( aux )
   !
-  DEALLOCATE( idesc_ip )
+  DEALLOCATE( desc_ip )
   DEALLOCATE( rank_ip )
   call stop_clock('protwfck')
   !call print_clock('protwfck')
@@ -301,31 +293,31 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   !
 CONTAINS
   !
-  SUBROUTINE desc_init( nsiz, idesc, idesc_ip )
+  SUBROUTINE desc_init( nsiz, desc, desc_ip )
      !
      INTEGER, INTENT(IN)  :: nsiz
-     INTEGER, INTENT(OUT) :: idesc(:)
-     INTEGER, INTENT(OUT) :: idesc_ip(:,:,:)
+     TYPE(la_descriptor), INTENT(OUT) :: desc
+     TYPE(la_descriptor), INTENT(OUT) :: desc_ip(:,:)
      INTEGER :: i, j, rank
      INTEGER :: coor_ip( 2 )
      !
-     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
      !
-     nx = idesc(LAX_DESC_NRCX)
+     nx = desc%nrcx
      !
-     DO j = 0, idesc(LAX_DESC_NPC) - 1
-        DO i = 0, idesc(LAX_DESC_NPR) - 1
+     DO j = 0, desc%npc - 1
+        DO i = 0, desc%npr - 1
            coor_ip( 1 ) = i
            coor_ip( 2 ) = j
-           CALL laxlib_init_desc( idesc_ip(:,i+1,j+1), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
+           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, &
                              np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
-           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
+           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         END DO
      END DO
      !
      la_proc = .FALSE.
-     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
+     IF( desc%active_node > 0 ) la_proc = .TRUE.
      !
      RETURN
   END SUBROUTINE desc_init
@@ -346,15 +338,15 @@ CONTAINS
      !
      work = ( 0.0_DP, 0.0_DP )
      !
-     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs 
+     DO ipc = 1, desc%npc !  loop on column procs 
         !
-        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
-        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
         DO ipr = 1, ipc ! desc%npr ! ipc ! use symmetry for the loop on row procs
            !
-           nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
-           ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
+           nr = desc_ip( ipr, ipc )%nr
+           ir = desc_ip( ipr, ipc )%ir
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -372,7 +364,7 @@ CONTAINS
      END DO
      if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
-     CALL laxlib_zsqmher( nstart, dm, nx, idesc )
+     CALL zsqmher( nstart, dm, nx, desc )
      !
      DEALLOCATE( work )
      !
@@ -389,10 +381,10 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, idesc(LAX_DESC_NPC)
+     DO ipc = 1, desc%npc
         !
-        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
-        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
         IF( ic <= nbnd ) THEN
            !
@@ -400,14 +392,14 @@ CONTAINS
            !
            beta = ( 0.D0, 0.D0 )
 
-           DO ipr = 1, idesc(LAX_DESC_NPR)
+           DO ipr = 1, desc%npr
               !
-              nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
-              ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
+              nr = desc_ip( ipr, ipc )%nr
+              ir = desc_ip( ipr, ipc )%ir
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
+              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 

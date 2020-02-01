@@ -263,14 +263,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    from the electron-phonon interactions
 		    using the optimized tetrahedron method.
    	        }
-                opt -val 'epa' {
-                    Electron-phonon coupling matrix elements are written
-                    to file prefix.epa.k for further processing by program
-                    epa.x which implements electron-phonon averaged (EPA)
-                    approximation as described in G. Samsonidze & B. Kozinsky,
-                    Adv. Energy Mater. 2018, 1800246 doi:10.1002/aenm.201800246
-                    arXiv:1511.08115
-                }
 		info {
 		    For metals only, requires gaussian smearing.
 		

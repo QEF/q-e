@@ -1087,6 +1087,7 @@ phescf.o : ph_restart.o
 phescf.o : phcom.o
 phescf.o : ramanm.o
 phescf.o : write_hub.o
+phonon.o : ../../LAXlib/mp_diag.o
 phonon.o : ../../Modules/check_stop.o
 phonon.o : ../../Modules/command_line_options.o
 phonon.o : ../../Modules/environment.o

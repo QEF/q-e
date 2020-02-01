@@ -65,6 +65,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   ! number of plane waves at k and k+q
   COMPLEX(DP), ALLOCATABLE :: dpsi(:, :), proj1(:,:), proj2(:,:)
   REAL(DP) :: weight, wdelta, w1
+  COMPLEX(DP), EXTERNAL :: ZDOTC
   REAL(DP),    EXTERNAL :: w0gauss ! an approximation to the delta function
   COMPLEX(DP) :: trace_dns(2)
   COMPLEX(DP), ALLOCATABLE :: trace_dns_tot(:)
@@ -136,11 +137,11 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
               !
               !  proj1(ibnd, ihubst) = < S(k)*phi(k) | psi(k) >
               !  proj2(ibnd, ihubst) = < S(k+q)*phi(k+q) | dpsi(k+q) > 
-              ! FIXME: use ZGEMM instead of dot_product
+              ! 
               !                
               DO ibnd = 1, nbnd_occ(ikk)
-                 proj1(ibnd, ihubst) = DOT_PRODUCT( swfcatomk(1:npw,ihubst), evc(1:npw,ibnd) )
-                 proj2(ibnd, ihubst) = DOT_PRODUCT( swfcatomkpq(1:npwq,ihubst), dpsi(1:npwq,ibnd) )
+                 proj1(ibnd, ihubst) = ZDOTC (npw,  swfcatomk(:,ihubst),   1, evc(:,ibnd),  1)
+                 proj2(ibnd, ihubst) = ZDOTC (npwq, swfcatomkpq(:,ihubst), 1, dpsi(:,ibnd), 1)
               ENDDO
               !
            ENDDO 

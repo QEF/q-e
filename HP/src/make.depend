@@ -134,6 +134,7 @@ hp_load_q.o : ../../LR_Modules/lrcom.o
 hp_load_q.o : ../../Modules/io_global.o
 hp_load_q.o : ../../PW/src/pwcom.o
 hp_load_q.o : hpcom.o
+hp_main.o : ../../LAXlib/mp_diag.o
 hp_main.o : ../../Modules/check_stop.o
 hp_main.o : ../../Modules/command_line_options.o
 hp_main.o : ../../Modules/environment.o

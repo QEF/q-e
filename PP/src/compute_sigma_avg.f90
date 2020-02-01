@@ -45,7 +45,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   COMPLEX(DP), ALLOCATABLE :: be1(:,:), qq_lz(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: dfx(:), dfy(:)
 
-  COMPLEX(DP) :: c_aux
+  COMPLEX(DP) :: c_aux, zdotc
 
   IF (.not.(lsigma(1).or.lsigma(2).or.lsigma(3).or.lsigma(4))) RETURN
 
@@ -176,7 +176,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                  ENDIF
               ENDDO
            ENDDO
-           c_aux = DOT_PRODUCT (psic_nc(:,ipol), dfx(:) )
+           c_aux = zdotc(dffts%nnr, psic_nc(1,ipol), 1, dfx, 1)
            magtot1(4) = magtot1(4) + aimag(c_aux)
         ENDDO
         CALL mp_sum( magtot1(4), intra_bgrp_comm )

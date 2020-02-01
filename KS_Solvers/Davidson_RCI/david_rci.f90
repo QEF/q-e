@@ -130,9 +130,6 @@ contains
     integer, intent(out) :: task
     ! Next task to be performed by the calling program
     !
-    !
-    include 'laxlib.fh'
-    !
     ! ... LOCAL variables
     !
     INTEGER, PARAMETER :: maxter = 20
@@ -253,7 +250,7 @@ contains
         ! ... diagonalize the reduced hamiltonian
         !
         IF( my_bgrp_id == root_bgrp_id ) THEN
-          CALL diaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+          CALL cdiaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
         END IF
         IF( nbgrp > 1 ) THEN
           CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
@@ -340,7 +337,7 @@ contains
       !
       ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
       ! ... order to improve numerical stability of subspace diagonalization
-      ! ... (diaghg) ew is used as work array :
+      ! ... (cdiaghg) ew is used as work array :
       !
       ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
       !
@@ -426,7 +423,7 @@ contains
       ! ... diagonalize the reduced hamiltonian
       !
       IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL diaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
+        CALL cdiaghg( nbase, nvec, hc, sc, nvecx, work%ew, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
       END IF
       IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
