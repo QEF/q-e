@@ -141,34 +141,34 @@ pgi cuda9 v100 :
     - make clean
     - make run-tests-pw-serial
 
-pgi cuda9.2 p100 nollvm:
-  tags: [p100]
-  script:
-    - module purge
-    - module load profile/global pgi/19.10--binary cuda/10.0
-    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
-    - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.
-    - sed -i 's/cuda10.0/cuda10.0,nollvm/' make.inc # this is needed for some reason yet to be clarified.
-    - make -j pw
-    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
-    - echo "Using $OMP_NUM_THREADS threads"
-    - cd test-suite
-    - make clean
-    - make run-tests-pw-parallel
-
-pgi cuda9.2 p100:
-  tags: [p100]
-  script:
-    - module purge
-    - module load profile/global pgi/19.10--binary cuda/10.0
-    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
-    - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.
-    - make -j pw
-    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
-    - echo "Using $OMP_NUM_THREADS threads"
-    - cd test-suite
-    - make clean
-    - make run-tests-pw-parallel
+#pgi cuda9.2 p100 nollvm:
+#  tags: [p100]
+#  script:
+#    - module purge
+#    - module load profile/global pgi/19.10--binary cuda/10.0
+#    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
+#    - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.
+#    - sed -i 's/cuda10.0/cuda10.0,nollvm/' make.inc # this is needed for some reason yet to be clarified.
+#    - make -j pw
+#    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+#    - echo "Using $OMP_NUM_THREADS threads"
+#    - cd test-suite
+#    - make clean
+#    - make run-tests-pw-parallel
+#
+#pgi cuda9.2 p100:
+#  tags: [p100]
+#  script:
+#    - module purge
+#    - module load profile/global pgi/19.10--binary cuda/10.0
+#    - ./configure --enable-openmp --with-cuda-runtime=10.0 --with-cuda-cc=60 --with-cuda=$CUDA_HOME --with-scalapack=no
+#    - sed -i 's/traditional/traditional -Uvector/' make.inc # problem in PGI compiler mis-understanding comments.
+#    - make -j pw
+#    - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
+#    - echo "Using $OMP_NUM_THREADS threads"
+#    - cd test-suite
+#    - make clean
+#    - make run-tests-pw-parallel
 
 #
 ## UtilXlib UnitTesting 
