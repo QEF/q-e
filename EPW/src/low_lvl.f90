@@ -291,8 +291,8 @@
     !!  
     !! f-orbital 
     !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : pi
     !
     IMPLICIT NONE
     !
@@ -314,8 +314,8 @@
     !!  
     !! f-orbital 
     !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : pi
     !
     IMPLICIT NONE
     !
@@ -344,8 +344,8 @@
     !!  
     !! f-orbital 
     !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : pi
     !
     IMPLICIT NONE
     !
@@ -374,8 +374,8 @@
     !!  
     !! f-orbital 
     !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : pi
     !
     IMPLICIT NONE
     !
@@ -404,8 +404,8 @@
     !!  
     !! f-orbital 
     !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : pi
     !
     IMPLICIT NONE
     ! 
@@ -434,8 +434,8 @@
     !!  
     !! f-orbital 
     !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : pi
     !
     IMPLICIT NONE
     !
@@ -463,8 +463,8 @@
     !!  
     !! f-orbital 
     !!
-    USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi
+    USE kinds,     ONLY : DP
+    USE constants, ONLY : pi
     !
     IMPLICIT NONE
     !
@@ -1081,7 +1081,7 @@
     !! A simple symmetry operation in cartesian coordinates 
     !! ( s is INTEGER and in crystal coord!)
     !!
-    USE kinds, ONLY : DP
+    USE kinds,     ONLY : DP
     USE cell_base, ONLY : at, bg
     !
     IMPLICIT NONE

@@ -181,7 +181,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
                                    gamma_only, use_para_diag, use_gpu
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE wavefunctions,        ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE g_psi_mod_gpum,       ONLY : h_diag_d, s_diag_d, using_h_diag, using_s_diag, using_h_diag_d, using_s_diag_d
@@ -699,7 +699,7 @@ SUBROUTINE c_bands_efield( iter )
   !----------------------------------------------------------------------------
   !! Driver routine for Hamiltonian diagonalization under an electric field.
   !
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : nberrycyc, fact_hepsi, &
                                    evcel, evcelp, evcelm, gdir, l3dstring,&

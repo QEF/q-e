@@ -182,7 +182,7 @@ SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
   RETURN
   !
 END SUBROUTINE laxlib_rdiaghg
-
+!
 !----------------------------------------------------------------------------
 SUBROUTINE laxlib_rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm )
   !----------------------------------------------------------------------------

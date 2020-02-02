@@ -22,7 +22,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tfirst, tlast !moved here to make
                                                      !autopilot work
   USE core,                     ONLY : rhoc
-  USE uspp_param,               ONLY : nhm, nh, nvb, ish
+  USE uspp_param,               ONLY : nhm, nh, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
@@ -43,12 +43,12 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart, mill, eigts1, eigts2, eigts3
   USE ions_base,                ONLY : na, nat, amass, nax, nsp, rcmax
-  USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
+  USE ions_base,                ONLY : ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress, &
                                        if_pos, extfor
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ndfrz, ions_shiftvar, ityp, &
-                                       atm, ind_bck, cdm, cdms, ions_cofmsub
+                                       atm, cdm, cdms, ions_cofmsub
   USE cell_base,                ONLY : at, bg, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh,         &
@@ -91,11 +91,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecw,                    ONLY : ecutwfc
   USE gvect,                    ONLY : ecutrho
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
-  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda, prefor, dotcsc
+  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, prefor, dotcsc
   USE cp_main_variables,        ONLY : acc, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp_bgrp, nfi, descla, &
+                                       rhor, bephi, becp_bgrp, nfi, idesc, &
                                        drhor, drhog, bec_bgrp, dbec
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
@@ -121,6 +121,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   IMPLICIT NONE
   !
+  include 'laxlib.fh'
+  !
   ! ... input/output variables
   !
   REAL(DP), INTENT(OUT) :: tau_out(3,nat)
@@ -142,7 +144,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP) :: tempp, savee, saveh, savep, epot, epre, &
               enow, econs, econt, fccc, ccc, bigr, dt2bye
   REAL(DP) :: ekinc0, ekinp, ekinpr, ekinc
-  REAL(DP) :: temps(nat)
+  REAL(DP) :: temps(nsp)
   REAL(DP) :: ekinh, temphc, randy
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
@@ -348,14 +350,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( llondon ) THEN
         ALLOCATE( usrt_tau0( 3, nat ))
-        usrt_tau0(:,:) = tau0(:,ind_bck(:))/alat
+        usrt_tau0(:,:) = tau0(:,:)/alat
         delta_etot = 0.5_dp*energy_london (alat, nat,ityp,at,bg, usrt_tau0)
         etot = etot + delta_etot
         enthal=enthal+delta_etot
         IF ( tfor ) THEN
            ALLOCATE( usrt_fion( 3, nat ) )
            usrt_fion =  0.5_dp*force_london ( alat, nat,ityp, at,bg, usrt_tau0 )
-           fion(:,:) = fion(:,:) + usrt_fion(:,ind_srt(:))
+           fion(:,:) = fion(:,:) + usrt_fion(:,:)
            DEALLOCATE (usrt_fion)
         END IF
         IF ( tpre ) stress = stress + 0.5_dp * stres_london ( alat , nat , &
@@ -365,9 +367,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tpre ) THEN
         !
-        CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
+        CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )
         !
-        CALL ions_thermal_stress( stress, thstress, pmass, omega, h, vels, nsp, na )
+        CALL ions_thermal_stress( stress, thstress, pmass, omega, h, vels, nat, ityp )
         !
         IF (tstdout) THEN
           WRITE(stdout,'(5X,"Pressure of Nuclei (GPa)",F20.5,I7)') &
@@ -411,7 +413,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
 444  IF ( tfor ) THEN
         !
-        IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
+        IF ( lwf ) CALL ef_force( fion, ityp, nat, zv )
         !
         IF( textfor ) THEN 
            !
@@ -424,7 +426,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         END IF
         !
         IF ( remove_rigid_rot ) &
-           CALL remove_tot_torque( nat, tau0, pmass(ityp(ind_srt(:))), fion )
+           CALL remove_tot_torque( nat, tau0, pmass(ityp(:)), fion )
         !
         IF ( lconstrain ) THEN
            !
@@ -434,8 +436,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               ALLOCATE( usrt_taup( 3, nat ) )
               ALLOCATE( usrt_fion( 3, nat ) )
               !
-              usrt_tau0(:,:) = tau0(:,ind_bck(:))
-              usrt_fion(:,:) = fion(:,ind_bck(:))
+              usrt_tau0(:,:) = tau0(:,:)
+              usrt_fion(:,:) = fion(:,:)
               !
               ! ... we first remove the component of the force along the 
               ! ... constrain gradient (this constitutes the initial guess 
@@ -443,7 +445,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               !
               CALL remove_constr_force( nat, usrt_tau0, if_pos, ityp, 1.D0, usrt_fion )
               !
-              fion(:,:) = usrt_fion(:,ind_srt(:))
+              fion(:,:) = usrt_fion(:,:)
               !
            END IF
            !
@@ -458,7 +460,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
-                        delt, na, nsp, fricp, hgamma, vels, tsdp, tnosep, &
+                        delt, ityp, nat, fricp, hgamma, vels, tsdp, tnosep, &
                         fionm, vnhp, velsp, velsm, nhpcl, nhpdim, atm2nhp )
         !
         IF ( lconstrain ) THEN
@@ -467,15 +469,15 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            IF ( ionode ) THEN
               !
-              CALL s_to_r( tausp, taup, na, nsp, hnew )
+              CALL s_to_r( tausp, taup, nat, hnew )
               !
-              usrt_taup(:,:) = taup(:,ind_bck(:))
+              usrt_taup(:,:) = taup(:,:)
               !
               CALL check_constraint( nat, usrt_taup, usrt_tau0, usrt_fion, &
                                      if_pos, ityp, 1.D0, delt, amu_au )
               !
-              taup(:,:) = usrt_taup(:,ind_srt(:))
-              fion(:,:) = usrt_fion(:,ind_srt(:))
+              taup(:,:) = usrt_taup(:,:)
+              fion(:,:) = usrt_fion(:,:)
               !
               DEALLOCATE( usrt_tau0, usrt_taup, usrt_fion )
               !
@@ -484,16 +486,16 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            CALL mp_bcast( taup, ionode_id, intra_bgrp_comm )
            CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
            !
-           CALL r_to_s( taup, tausp, na, nsp, ainv )
+           CALL r_to_s( taup, tausp, nat, ainv )
            !
         END IF
         !
-        CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
+        CALL ions_cofmass( tausp, pmass, nat, ityp, cdm )
         !
         IF ( ndfrz == 0 ) &
            CALL ions_cofmsub( tausp, iforce, nat, cdm, cdms )
         !
-        CALL s_to_r( tausp, taup, na, nsp, hnew )
+        CALL s_to_r( tausp, taup, nat, hnew )
         !
      END IF
      !     
@@ -552,7 +554,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
+           CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
            !
          ELSE
            !
@@ -564,10 +566,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          !  correction to displacement of ions
          !
-         IF ( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
+         IF ( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, 9, nudx, 1.D0, ionode, stdout )
          !
          IF ( tortho ) THEN
-           CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, descla )
+           CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
          END IF
          !
          IF( force_pairing ) THEN
@@ -577,10 +579,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !
-         CALL calbec_bgrp( nvb+1, nsp, eigr, cm_bgrp, bec_bgrp )
+         CALL calbec_bgrp( 1, nsp, eigr, cm_bgrp, bec_bgrp, 1 )
          !
          IF ( tpre ) THEN
-           CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
+           CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
          END IF
          !
          IF ( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
@@ -605,11 +607,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tfor ) THEN
         !
-        CALL ions_vel( vels, tausp, tausm, na, nsp, delt )
+        CALL ions_vel( vels, tausp, tausm, delt )
         !
-        CALL ions_kinene( ekinp, vels, na, nsp, hold, pmass )
+        CALL ions_kinene( ekinp, vels, nat, ityp, hold, pmass )
         !
-        CALL ions_temp( tempp, temps, ekinpr, vels, na, nsp, &
+        CALL ions_temp( tempp, temps, ekinpr, vels, nsp, na, nat, ityp, &
                         hold, pmass, ndega, nhpdim, atm2nhp, ekin2nhp )
         !
      END IF
@@ -672,8 +674,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
              tempp < (tempw-tolp) .AND. tempp /= 0.D0 ) THEN
            !
            CALL  ions_vrescal( .false., tempw, tempp, taup, &
-                               tau0, taum, na, nsp, fion, iforce, pmass, delt )
-           CALL r_to_s( taup, tausp, na, nsp, ainv ) 
+                               tau0, taum, nat, ityp, fion, iforce, pmass, delt )
+           CALL r_to_s( taup, tausp, nat, ainv ) 
            !
         END IF
         !
@@ -690,7 +692,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbspx )  
            END IF
            !
-           CALL eigs( nfi, lambdap, lambda, descla )
+           CALL eigs( nfi, lambdap, lambda, idesc )
            !
         ELSE
            !
@@ -803,7 +805,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               CALL initbox( tau0, alat, at, ainv, taub, irb )
               CALL phbox( taub, iverbosity, eigrb ) 
            END IF
-           CALL r_to_s( tau0, taus, na, nsp, ainv )
+           CALL r_to_s( tau0, taus, nat, ainv )
            CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, dfftp%nr1,dfftp%nr2,dfftp%nr3, nat )
            CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
            !
@@ -838,14 +840,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF ( tcg ) THEN
           !
           CALL writefile( h, hold ,nfi, c0_bgrp, c0old, taus, tausm,  &
-                          vels, velsm, acc, lambda, lambdam, descla, xnhe0, xnhem,     &
+                          vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                           xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
            !
         ELSE
            !
            CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus,  &
-                           tausm, vels, velsm, acc,  lambda, lambdam, descla, xnhe0,   &
+                           tausm, vels, velsm, acc,  lambda, lambdam, idesc, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim, ekincm,&
                            xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
            !
@@ -930,7 +932,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         CALL wf_closing_options( nfi, c0_bgrp, cm_bgrp, bec_bgrp, eigr, eigrb,&
                                  taub, irb, ibrav, bg(:,1), bg(:,2), bg(:,3), &
                                  taus, tausm, vels, &
-                                 velsm, acc, lambda, lambdam, descla, xnhe0, xnhem,  &
+                                 velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutrho,  &
                                  ecutwfc,delt,celldm, fion, tps, z0t, f, rhor )
@@ -948,31 +950,19 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   etot_out = etot
   !
-  isa = 0
-  !
-  DO is = 1, nsp
-     !
-     DO ia = 1, na(is)
-        !
-        isa = isa + 1
-        ipos = ind_srt( isa )
-        tau_out(:,ipos) = tau0(:,isa)
-        fion_out(:,ipos) = fion(:,isa)
-        !
-     END DO
-     !
-  END DO
+  tau_out(:,:) = tau0(:,:)
+  fion_out(:,:) = fion(:,:)
   !
   conv_elec = .TRUE.
   !
   IF ( tcg ) cm_bgrp = c0old
   !
   CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus, tausm, &
-                  vels, velsm, acc, lambda, lambdam, descla, xnhe0, xnhem, vnhe,    &
+                  vels, velsm, acc, lambda, lambdam, idesc, xnhe0, xnhem, vnhe,    &
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )
   !
-  IF( iverbosity > 1 ) CALL print_lambda( lambda, descla, nbsp, nbsp, 1.D0 )
+  IF( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, nbsp, nudx, 1.D0, ionode, stdout )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 

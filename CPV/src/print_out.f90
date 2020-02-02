@@ -23,8 +23,8 @@
                                     save_print_counter
       USE constants,         ONLY : au_gpa, bohr_radius_cm, amu_au, &
                                     BOHR_RADIUS_ANGS, pi
-      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, amass, cdmi, &
-                                    ions_cofmass, ions_displacement, label_srt
+      USE ions_base,         ONLY : na, nsp, nat, ityp, atm, amass, cdmi, &
+                                    ions_cofmass, ions_displacement
       USE cell_base,         ONLY : s_to_r, get_volume, ainv
       USE efield_module,     ONLY : tefield, pberryel, pberryion, &
                                     tefield2, pberryel2, pberryion2
@@ -67,7 +67,7 @@
       !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: cdm0( 3 )
-      REAL(DP) :: dis( nsp )
+      REAL(DP) :: dis( SIZE(na) )
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia, kilobytes
@@ -144,12 +144,12 @@
             !
             ! Compute Center of mass displacement since the initialization of step counter
             !
-            CALL ions_cofmass( tau0, amass, na, nsp, cdm0 )
+            CALL ions_cofmass( tau0, amass, nat, ityp, cdm0 )
             !
             IF(tstdout) &
                WRITE( stdout,1000) SUM( ( cdm0(:)-cdmi(:) )**2 ) 
             !
-            CALL ions_displacement( dis, tau0 )
+            CALL ions_displacement( dis, tau0, nsp, nat, ityp )
             !
             IF( print_stress ) THEN
                !
@@ -163,46 +163,38 @@
             ! ... write out a standard XYZ file in angstroms
             !
             IF(tstdout) &
-               CALL printout_pos( stdout, tau0, nat, what = 'pos', &
-                                  label = label_srt, sort = ind_bck )
+               CALL printout_pos( stdout, tau0, nat, ityp, what = 'pos', label = atm )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
-                  CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
+                  CALL printout_pos( 35, tau0, nat, ityp, nfi = nfi, tps = tps )
                else
-                  CALL printout_pos( 35, tau0, nat, what = 'xyz', &
-                               nfi = nfi, tps = tps, label = label_srt, &
-                               fact= BOHR_RADIUS_ANGS ,sort = ind_bck )
+                  CALL printout_pos( 35, tau0, nat, ityp, what = 'xyz', &
+                               nfi = nfi, tps = tps, label = atm, &
+                               fact= BOHR_RADIUS_ANGS )
                endif
             END IF
             !
             ALLOCATE( tauw( 3, nat ) )
             !
-            isa = 0
-            !
-            DO is = 1, nsp
+            DO ia = 1, nat
                !
-               DO ia = 1, na(is)
-                  !
-                  isa = isa + 1
-                  CALL s_to_r( vels(:,isa), tauw(:,isa), h )
-                  !
-               END DO
+               CALL s_to_r( vels(:,ia), tauw(:,ia), h )
                !
             END DO
             !
             IF(tstdout) WRITE( stdout, * )
             !
             IF(tstdout) &
-               CALL printout_pos( stdout, tauw, nat, &
-                               what = 'vel', label = label_srt, sort = ind_bck )
+               CALL printout_pos( stdout, tauw, nat, ityp, &
+                               what = 'vel', label = atm )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
-                  CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps )
+                  CALL printout_pos( 34, tauw, nat, ityp, nfi = nfi, tps = tps )
                else
-                  CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps, &
-                               what = 'vel', label = label_srt, sort = ind_bck )
+                  CALL printout_pos( 34, tauw, nat, ityp, nfi = nfi, tps = tps, &
+                               what = 'vel', label = atm )
                endif
             END IF
             !
@@ -211,15 +203,15 @@
                IF(tstdout) WRITE( stdout, * )
                !
                IF(tstdout) &
-                  CALL printout_pos( stdout, fion, nat, &
-                                  what = 'for', label = label_srt, sort = ind_bck )
+                  CALL printout_pos( stdout, fion, nat, ityp, &
+                                  what = 'for', label = atm )
                !
                IF( tfile ) then
                   if (.not.nice_output_files) then
-                     CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
+                     CALL printout_pos( 37, fion, nat, ityp, nfi = nfi, tps = tps )
                   else
-                     CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps, &
-                          what = 'for', label = label_srt, sort = ind_bck )
+                     CALL printout_pos( 37, fion, nat, ityp, nfi = nfi, tps = tps, &
+                          what = 'for', label = atm )
                   endif
                END IF
                !

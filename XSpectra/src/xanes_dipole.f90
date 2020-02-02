@@ -15,7 +15,6 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE wvfct,           ONLY : npwx, nbnd, et, current_k
   USE gvecw,           ONLY : gcutw
   USE symm_base,       ONLY : d1,d2,d3
-  USE noncollin_module,ONLY : noncolin
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
   USE cell_base,       ONLY : tpiba2, bg
   USE wavefunctions, ONLY: evc
@@ -76,13 +75,12 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   REAL(dp) :: pref,prefb,v_of_0,xnorm_partial
   REAL(dp) :: norm, normps
   REAL(dp), ALLOCATABLE :: aux(:)
-  COMPLEX(KIND=DP), EXTERNAL :: zdotc
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   COMPLEX(dp), ALLOCATABLE :: psiwfc(:), spsiwfc(:)
   CHARACTER(LEN=4) :: verbosity
 
   REAL(dp) :: timenow 
-  REAL(DP), EXTERNAL ::  get_clock
+  REAL(DP), EXTERNAL :: ddot, get_clock
   EXTERNAL :: zdscal
 
   timenow=0
@@ -327,14 +325,14 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
         spsiwfc(:)=(0.d0,0.d0)
         recalc=.true.
         CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
-        xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
+        xnorm_partial=ddot(2*npw,psiwfc,1,spsiwfc,1)
         DEALLOCATE(spsiwfc)
      ELSE
 !        xnorm_partial=0.d0
 !        do ip=1,npw
 !          xnorm_partial=xnorm_partial+conjg(psiwfc(ip))*psiwfc(ip)
 !       enddo
-        xnorm_partial=real(zdotc(npw,psiwfc,1,psiwfc,1),dp)
+        xnorm_partial=ddot(2*npw,psiwfc,1,psiwfc,1)
 
      ENDIF
      !</CG>

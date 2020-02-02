@@ -34,7 +34,7 @@ SUBROUTINE iosys()
                             efield_cart_ => efield_cart, &
                             phase_control
   !
-  USE cell_base,     ONLY : at, alat, omega, bg, cell_base_init, init_dofree, &
+  USE cell_base,     ONLY : at, alat, omega, cell_base_init, init_dofree, &
                             press_       => press, &
                             wmass_       => wmass
   !
@@ -91,7 +91,7 @@ SUBROUTINE iosys()
                             pseudo_dir_cur, restart_dir, &
                             check_tempdir, clean_tempdir
   !
-  USE force_mod,     ONLY : lforce, lstres, force
+  USE force_mod,     ONLY : lforce, lstres
   !
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
@@ -142,7 +142,8 @@ SUBROUTINE iosys()
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
   USE extrapolation, ONLY : pot_order, wfc_order
-  USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, tr2, imix, gamma_only,&
+  USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, &
+                            tr2, imix, gamma_only, &
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, &
@@ -170,7 +171,7 @@ SUBROUTINE iosys()
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
   !
-  USE fixed_occ,     ONLY : tfixed_occ, f_inp, &
+  USE fixed_occ,     ONLY : tfixed_occ, f_inp_ => f_inp, &
                             one_atom_occupations_ => one_atom_occupations
   !
   USE noncollin_module, ONLY : i_cons, mcons, bfield, &
@@ -186,7 +187,7 @@ SUBROUTINE iosys()
 
   !
   USE symm_base, ONLY : no_t_rev_ => no_t_rev, nofrac, allfrac, &
-                        nosym_ => nosym, nosym_evc_=> nosym_evc, spacegroup
+                        nosym_ => nosym, nosym_evc_=> nosym_evc
   !
   USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -206,6 +207,8 @@ SUBROUTINE iosys()
   USE read_pseudo_mod,       ONLY : readpp
 
   USE qmmm,                  ONLY : qmmm_config
+
+  USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
   !
@@ -236,8 +239,8 @@ SUBROUTINE iosys()
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
-                               gau_parameter, localization_thr, scdm, ace,    &
-                               scdmden, scdmgrd, nscdm, n_proj,                & 
+                               gau_parameter, localization_thr, scdm, ace,  &
+                               scdmden, scdmgrd, nscdm, n_proj,             & 
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
@@ -251,9 +254,8 @@ SUBROUTINE iosys()
                                lfcpopt, lfcpdyn, fcp_mu, fcp_mass, fcp_tempw, & 
                                fcp_relax, fcp_relax_step, fcp_relax_crit,     &
                                fcp_mdiis_size, fcp_mdiis_step,                &
-                               space_group, uniqueb, origin_choice,           &
-                               rhombohedral, zgate, relaxz, block, block_1,   &
-                               block_2, block_height
+                               zgate, relaxz, block, block_1, block_2,        &
+                               block_height
   !
   ! ... ELECTRONS namelist
   !
@@ -274,8 +276,7 @@ SUBROUTINE iosys()
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
-                               trust_radius_ini, bfgs_ndim, rd_pos, sp_pos, &
-                               rd_for, rd_if_pos, lsg
+                               trust_radius_ini, bfgs_ndim
   !
   ! ... CELL namelist
   !
@@ -291,8 +292,10 @@ SUBROUTINE iosys()
   ! ... CARDS
   !
   USE input_parameters,      ONLY : k_points, xk, wk, nk1, nk2, nk3,  &
-                                 k1, k2, k3, nkstot
-  USE input_parameters,      ONLY : nconstr_inp, trd_ht, rd_ht, cell_units
+                                    k1, k2, k3, nkstot
+  USE input_parameters,      ONLY : nconstr_inp, trd_ht, rd_ht, cell_units, &
+                                    f_inp
+  USE input_parameters,      ONLY : deallocate_input_parameters
   !
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
@@ -305,12 +308,8 @@ SUBROUTINE iosys()
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE us,                    ONLY : spline_ps_ => spline_ps
   !
-  USE input_parameters,      ONLY : deallocate_input_parameters
-  USE wyckoff,               ONLY : nattot, sup_spacegroup
   USE qexsd_input,           ONLY : qexsd_input_obj
-  USE qes_types_module,      ONLY: input_type
-  !
-  USE vlocal,        ONLY : starting_charge_ => starting_charge
+  USE qes_types_module,      ONLY : input_type
   !
   IMPLICIT NONE
   !
@@ -325,9 +324,9 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(LEN=256):: dft_
   !
-  INTEGER  :: ia, nt, inlc, ibrav_sg
+  INTEGER  :: ia, nt, inlc
   LOGICAL  :: exst, parallelfs
-  REAL(DP) :: at_(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
+  REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
   !
@@ -581,6 +580,7 @@ SUBROUTINE iosys()
      CALL errore( 'iosys', 'wrong input value for nspin', 1 )
      !
   END SELECT
+  nspin_  = nspin
   !
   ! OCCUPATIONS
   !
@@ -596,7 +596,8 @@ SUBROUTINE iosys()
      IF( lstres ) CALL infomsg( 'iosys', &
        'BEWARE: stress calculation with tetrahedra (not recommanded)')
   END IF
-  IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd )
+  IF( nbnd < 1 ) CALL errore( 'iosys', 'nbnd less than 1', nbnd ) 
+  nbnd_    = nbnd
   !
   two_fermi_energies = ( tot_magnetization /= -1._DP)
   IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
@@ -636,6 +637,15 @@ SUBROUTINE iosys()
      startingwfc = 'atomic'
   ENDIF
   one_atom_occupations_ = one_atom_occupations
+  !
+  IF ( tfixed_occ ) THEN
+     IF ( nspin == 4 ) THEN
+        ALLOCATE( f_inp_( nbnd, 1 ) )
+     ELSE
+        ALLOCATE( f_inp_( nbnd, nspin ) )
+     ENDIF
+     f_inp_ = f_inp
+  ENDIF
   !
   ! NONCOLLINEAR MAGNETISM, MAGNETIC CONSTRAINTS
   !
@@ -786,6 +796,7 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
+  starting_magnetization_ = starting_magnetization
   starting_spin_angle_ = starting_spin_angle
   angle1_   = angle1
   angle2_   = angle2
@@ -859,6 +870,9 @@ SUBROUTINE iosys()
      startingwfc = 'atomic+random'
      !
   ENDIF
+  starting_charge_ = starting_charge
+  starting_wfc     = startingwfc
+  starting_pot     = startingpot
   !
   ! MEMORY AND DISK USAGE, VERBOSITY
   !
@@ -1166,34 +1180,20 @@ SUBROUTINE iosys()
   nosym_evc_= nosym_evc
   nofrac    = force_symmorphic
   !
-  ! MISCELLANEOUS VARIABLES
-  !
-  spline_ps_ = spline_ps
-  la2F_      = la2F
-  !
-  ! ... Copy values from input module to PW internals
-  !
-  nat_     = nat
-  ntyp_    = ntyp
+  ! MOLECULAR DYNAMICS AND VARIABLE-CELL MD
+  ! 
+  remove_rigid_rot_ = remove_rigid_rot
+  upscale_          = upscale
+  refold_pos_       = refold_pos
   ecfixed_ = ecfixed
   qcutz_   = qcutz
   q2sigma_ = q2sigma
   !
-  nspin_                  = nspin
-  starting_charge_        = starting_charge
-  starting_magnetization_ = starting_magnetization
-  nbnd_                   = nbnd
+  ! MISCELLANEOUS VARIABLES
   !
+  spline_ps_ = spline_ps
+  la2F_      = la2F
   max_seconds_ = max_seconds
-  !
-  starting_wfc    = startingwfc
-  starting_pot    = startingpot
-  !
-  remove_rigid_rot_ = remove_rigid_rot
-  upscale_          = upscale
-  refold_pos_       = refold_pos
-  press_            = press
-  cell_factor_      = cell_factor
   !
   ! ... for WANNIER_AC
   !
@@ -1212,7 +1212,7 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
-  !  ... initialize variables for vdW (dispersions) corrections
+  !  VdW CORRECTIONS (SEMI-EMPIRICAL)
   !
   CALL set_vdw_corr ( vdw_corr, llondon, ldftd3, ts_vdw_, lxdm)
   !
@@ -1250,32 +1250,12 @@ SUBROUTINE iosys()
      vdw_econv_thr= ts_vdw_econv_thr
   END IF
   !
-  !  calculate all the atomic positions if only the inequivalent ones
-  !  have been given.
-  !  NB: ibrav is an output of this routine
-  !
-  IF (space_group /= 0 .AND. .NOT. lsg ) &
-     CALL errore('input','space_group requires crystal_sg atomic &
-                                                   &coordinates',1 )
-  IF (lsg) THEN
-     IF (space_group==0) &
-        CALL errore('input','The option crystal_sg requires the space group &
-                                                   &number',1 )
-     CALL sup_spacegroup(rd_pos,sp_pos,rd_for,rd_if_pos,space_group,nat,&
-              uniqueb,rhombohedral,origin_choice,ibrav_sg)
-     spacegroup = space_group
-     IF (ibrav==-1) THEN
-        ibrav=ibrav_sg
-     ELSEIF (ibrav /= ibrav_sg) THEN
-        CALL errore ('input','Input ibrav not compatible with space group &
-                                                   &number',1 )
-     ENDIF
-     nat_=nattot
-  ENDIF
   !
   ! QM/MM specific parameters
   !
   IF (.NOT. tqmmm) CALL qmmm_config( mode=-1 )
+  !
+  ! BOUNDARY CONDITIONS, ESM
   !
   do_makov_payne  = .false.
   do_comp_mt      = .false.
@@ -1361,31 +1341,16 @@ SUBROUTINE iosys()
   fcp_mdiis_size_ = fcp_mdiis_size
   fcp_mdiis_step_ = fcp_mdiis_step
   !
-  ! ... read following cards
+  ! ATOMIC POSITIONS
   !
-
-  ALLOCATE( ityp( nat_ ) )
-  ALLOCATE( tau(    3, nat_ ) )
-  ALLOCATE( force(  3, nat_ ) )
-  ALLOCATE( if_pos( 3, nat_ ) )
-  ALLOCATE( extfor( 3, nat_ ) )
-
-  IF ( tfixed_occ ) THEN
-     IF ( nspin_ == 4 ) THEN
-        ALLOCATE( f_inp( nbnd_, 1 ) )
-     ELSE
-        ALLOCATE( f_inp( nbnd_, nspin_ ) )
-     ENDIF
-  ENDIF
+  ! init_pos replaces old "read_cards_pw
   !
+  CALL init_pos ( psfile, tau_format )
+  ! next two lines should be moved out from here
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
-  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) !TB gate forces
+  IF ( gate ) ALLOCATE( forcegate( 3, nat_ ) ) 
   !
-  ! ... note that read_cards_pw no longer reads cards!
-  !
-  CALL read_cards_pw ( psfile, tau_format )
-  !
-  ! ... set up atomic positions and crystal lattice
+  ! CRYSTAL LATTICE
   !
   call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                         trd_ht, rd_ht, cell_units )
@@ -1408,7 +1373,7 @@ SUBROUTINE iosys()
      !
      ! ... Read atomic positions from file
      !
-     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, at_ )
+     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, at_dum )
      pseudo_dir_cur = restart_dir()
      !
   ELSE
@@ -1449,7 +1414,7 @@ SUBROUTINE iosys()
   !
   ! ... unit conversion for pressure
   !
-  press_ = press_ / ry_kbar
+  press_ = press / ry_kbar
   !
   ! ... set constraints for cell dynamics/optimization
   !
@@ -1542,9 +1507,9 @@ SUBROUTINE iosys()
   IF (dft_has_finite_size_correction()) &
       CALL set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
   !
-  ! ... In the case of variable cell dynamics save old cell variables
-  ! ... and initialize a few other variables
+  ! VARIABLE-CELL DYNAMICS
   !
+  cell_factor_      = cell_factor
   IF ( lmovecell ) THEN
      !
      IF ( cell_factor_ <= 0.0_dp ) cell_factor_ = 2.0_dp
@@ -1558,7 +1523,7 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
-  ! ... allocate arrays for DFT-D2 dispersion correction
+  ! Allocate arrays for DFT-D2 dispersion correction
   !
   IF ( llondon) CALL init_london ( )
   !
@@ -1646,39 +1611,41 @@ SUBROUTINE set_cutoff( ecutwfc_in, ecutrho_in, ecutwfc_pp, ecutrho_pp )
 END SUBROUTINE set_cutoff
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_cards_pw ( psfile, tau_format )
+SUBROUTINE init_pos ( psfile, tau_format )
   !----------------------------------------------------------------------------
   !
+  USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc,   &
+                                 tapos, rd_pos, atomic_positions, rd_if_pos, &
+                                 lsg, space_group, uniqueb, origin_choice,   &
+                                 ibrav, nat, ntyp, rhombohedral, &
+                                 sp_pos, rd_for, tavel, sp_vel, rd_vel
   USE kinds,              ONLY : DP
-  USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
-                                 tapos, rd_pos, atomic_positions, rd_if_pos,  &
-                                 sp_pos, f_inp, rd_for, tavel, sp_vel, rd_vel, &
-                                 lsg
   USE dynamics_module,    ONLY : vel
-  USE cell_base,          ONLY : at, ibrav
-  USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
-  USE fixed_occ,          ONLY : tfixed_occ, f_inp_ => f_inp
-  USE ions_base,          ONLY : if_pos, amass, fixatom
+  USE force_mod,          ONLY : force
+  USE ions_base,          ONLY : nat_ => nat, ntyp_ => nsp, ityp, tau, atm, &
+                                 extfor, if_pos, amass, fixatom
   USE control_flags,      ONLY : textfor, tv0rd
   USE wyckoff,            ONLY : nattot, tautot, ityptot, extfortot, &
-                                 if_postot, clean_spacegroup
+                                 if_postot, sup_spacegroup, clean_spacegroup
+  USE symm_base,          ONLY : spacegroup
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=256) :: psfile(ntyp)
-  CHARACTER (len=80)  :: tau_format
+  CHARACTER (len=256), INTENT(OUT) :: psfile(ntyp)
+  CHARACTER (len=80), INTENT(OUT)  :: tau_format
+  INTEGER :: ibrav_sg
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   !
   INTEGER :: is, ia
   !
-  !
+  ntyp_ = ntyp
   amass = 0
   !
   IF ( .not. taspc ) &
-     CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )
+     CALL errore( 'init_pos', 'atomic species info missing', 1 )
   IF ( .not. tapos ) &
-     CALL errore( 'read_cards_pw', 'atomic position info missing', 1 )
+     CALL errore( 'init_pos', 'atomic position info missing', 1 )
   !
   DO is = 1, ntyp
      !
@@ -1689,28 +1656,63 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      IF ( amass(is) <= 0.0_DP ) amass(is)= &
               atom_weight(atomic_number(trim(atm(is))))
 
-     IF ( amass(is) <= 0.D0 ) CALL errore( 'read_cards_pw', 'invalid  mass', is )
+     IF ( amass(is) <= 0.D0 ) CALL errore( 'init_pos', 'invalid  mass', is )
      !
   ENDDO
   !
   textfor = .false.
   IF( any( rd_for /= 0.0_DP ) ) textfor = .true.
   !
+  ! Beware: when Wyckoff positions are read, nat read from input
+  !         is the number of independent atom, not of all atoms
+  !
+  nat_ = nat
+  !
+  IF (lsg) THEN
+     IF (space_group==0) &
+        CALL errore('input','The option crystal_sg requires the space group &
+                                                   &number',1 )
+     CALL sup_spacegroup( rd_pos, sp_pos, rd_for, rd_if_pos, space_group, &
+          nat, uniqueb, rhombohedral, origin_choice, ibrav_sg )
+     spacegroup = space_group
+     IF (ibrav==-1 .OR. ibrav == ibrav_sg) THEN
+        ibrav = ibrav_sg
+     ELSEIF (ibrav /= ibrav_sg) THEN
+        CALL errore ('input','Input ibrav not compatible with space group &
+                                                   &number',1 )
+     ENDIF
+     !
+     ! "nattot" is the number of atoms (all of them)
+     !
+     nat_ = nattot
+  ELSE
+     IF (space_group /= 0) &
+          CALL errore('input','space_group requires crystal_sg atomic &
+                                                   & coordinates',1 )
+  END IF
+
+  ALLOCATE( ityp( nat_ ) )
+  ALLOCATE( tau(    3, nat_ ) )
+  ALLOCATE( force(  3, nat_ ) )
+  ALLOCATE( if_pos( 3, nat_ ) )
+  ALLOCATE( extfor( 3, nat_ ) )
+
   IF (lsg) THEN
      tau(:,:)=tautot(:,:)
      ityp(:) = ityptot(:)
      extfor(:,:) = extfortot(:,:)
      if_pos(:,:) = if_postot(:,:)
      CALL clean_spacegroup()
-  ELSE 
-     DO ia = 1, nat
-        !
+     !
+  ELSE
+     !
+     DO ia = 1, nat_
         tau(:,ia) = rd_pos(:,ia)
         ityp(ia)  = sp_pos(ia)
         extfor(:,ia) = rd_for(:,ia)
         if_pos(:,ia) = rd_if_pos(:,ia)
-        !
      ENDDO
+     !
   ENDIF
   !
   ! ... check for initial velocities read from input file
@@ -1720,8 +1722,8 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                  & must be identical to those in ATOMIC_POSITIONS",1)
   tv0rd = tavel
   IF ( tv0rd ) THEN
-     ALLOCATE( vel(3, nat) )
-     DO ia = 1, nat
+     ALLOCATE( vel(3, nat_) )
+     DO ia = 1, nat_
         vel(:,ia) = rd_vel(:,ia)
      END DO
   END IF
@@ -1734,23 +1736,15 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   tau_format = trim( atomic_positions )
   !
-  IF ( tfixed_occ ) THEN
-     !
-     f_inp_ = f_inp
-     !
-     DEALLOCATE ( f_inp )
-     !
-  ENDIF
-  !
   RETURN
   !
-END SUBROUTINE read_cards_pw
+END SUBROUTINE init_pos
 !
 !-----------------------------------------------------------------------
 SUBROUTINE convert_tau( tau_format, nat_, tau )
   !-----------------------------------------------------------------------
   !! Convert input atomic positions to internally used format \(\text{tau}\)
-  !! in \(\text{a0}\) units.
+  !! in \(\text{a0}\) units - needs lattice vectors (at) to be set.
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : bohr_radius_angs

@@ -315,7 +315,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
   REAL(DP) :: zkr(n2d,nrzp)
   REAL(DP), ALLOCATABLE :: gp(:)
   complex(DP) :: psiper(n2d,n2d,nrzp),   &
-                      vppot(nrz,nrx*nry,npol,npol), aij, zdotc
+                      vppot(nrz,nrx*nry,npol,npol), aij
   COMPLEX(DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:)
   COMPLEX(DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
@@ -376,8 +376,8 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
 !
       DO il=1, n2d
         DO jl=il, n2d
-          amat1(il,jl)=zdotc(ngper*npol,newbg(1,il),1,ymat(1,jl),1)
-          amat1(jl,il)=CONJG(amat1(il,jl))
+          amat1(il,jl) = dot_product( newbg(:,il), ymat(:,jl) )
+          amat1(jl,il) = CONJG(amat1(il,jl))
         ENDDO
       ENDDO
 !

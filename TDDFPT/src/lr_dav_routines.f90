@@ -1363,7 +1363,6 @@ contains
     complex(dp) :: wfck(npwx,1)
     complex(dp), allocatable :: dvrss(:),wfcr(:),dvrs(:)
     real(dp) :: w1,temp
-    real(kind=dp), external    :: ddot
    
     ALLOCATE( psic(dfftp%nnr) )
     ALLOCATE( dvrss(dffts%nnr) )

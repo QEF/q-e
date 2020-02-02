@@ -18,7 +18,7 @@ SUBROUTINE init_run()
                                        ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
                                        force_pairing
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
-  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms
+  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, g2kin, g2kin_init
@@ -42,7 +42,7 @@ SUBROUTINE init_run()
                                        irb, eigrb, rhog, rhos, rhor,     &
                                        acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm, iprint_stdout
-  USE cp_main_variables,        ONLY : allocate_mainvar, descla
+  USE cp_main_variables,        ONLY : allocate_mainvar, idesc
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
@@ -228,7 +228,7 @@ SUBROUTINE init_run()
      IF( nbgrp > 1 ) &
         CALL errore( ' init_run ', ' ensemble_dft with band parallelization not implemented ', 1 )
      CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, &
-                                 dffts%nnr, nat, descla )
+                                 dffts%nnr, nat, idesc )
   END IF
   !
   IF ( tcg ) THEN 
@@ -267,8 +267,8 @@ SUBROUTINE init_run()
   phi_bgrp = ( 0.D0, 0.D0 )
   !
   IF ( tens ) then
-     CALL id_matrix_init( descla, nspin )
-     CALL h_matrix_init( descla, nspin )
+     CALL id_matrix_init( idesc, nspin )
+     CALL h_matrix_init( idesc, nspin )
   ENDIF
   !
   a1(:)=at(:,1)*alat; a2(:)=at(:,2)*alat; a3(:)=at(:,3)*alat 
@@ -353,7 +353,7 @@ SUBROUTINE init_run()
   !
   !  Set center of mass for scaled coordinates
   !
-  CALL ions_cofmass( taus, amass, na, nsp, cdms )
+  CALL ions_cofmass( taus, amass, nat, ityp, cdms )
   !
   IF ( nbeg <= 0 .OR. lwf ) THEN
      !

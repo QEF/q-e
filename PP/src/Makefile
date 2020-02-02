@@ -36,6 +36,7 @@ paw_postproc.o \
 projections_mod.o \
 projwfc_box.o \
 punch_plot.o \
+read_proj.o \
 smallgk.o \
 stm.o \
 stop_pp.o \

@@ -1630,6 +1630,7 @@ SUBROUTINE reset_input_checks()
     IF ( allocated( sp_vel ) ) DEALLOCATE( sp_vel )
     IF ( allocated( rd_for ) ) DEALLOCATE( rd_for )
     !
+    IF ( allocated( f_inp ) ) DEALLOCATE( f_inp )
     !
     IF ( allocated( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
     IF ( allocated( constr_inp ) )        DEALLOCATE( constr_inp )

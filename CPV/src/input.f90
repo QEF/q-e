@@ -199,8 +199,6 @@ MODULE input
                                     epol2_       => epol2,     &
                                     efield2_     => efield2
      !
-     USE uspp_param,         ONLY : nvb
-     !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&

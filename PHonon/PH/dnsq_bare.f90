@@ -58,7 +58,6 @@ SUBROUTINE dnsq_bare
              ibeta, n, ihubst, ihubst1, ihubst2, nah, m, m1, m2,  &
              ibnd, ldim, npw, npwq, ik, ikk, ikq, iundnsbare
   COMPLEX(DP), ALLOCATABLE :: dqsphi(:,:), dmqsphi(:,:), dwfcatom_(:) 
-  REAL(DP),    EXTERNAL :: DDOT
   COMPLEX(DP), EXTERNAL :: ZDOTC
   LOGICAL :: exst
   ! 

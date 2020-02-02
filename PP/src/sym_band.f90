@@ -48,7 +48,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   LOGICAL :: is_complex, is_complex_so, is_symmorphic, search_sym
   LOGICAL, ALLOCATABLE :: high_symmetry(:)
   REAL(DP), PARAMETER :: accuracy=1.d-4
-  COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), zdotc
+  COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48)
   COMPLEX(DP),ALLOCATABLE :: times(:,:,:)
   REAL(DP) :: dxk(3), dkmod, dkmod_save, modk1, modk2, k1(3), k2(3), ps
   INTEGER, ALLOCATABLE :: rap_et(:,:), code_group_k(:)
@@ -370,8 +370,6 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
        na, i, j, ig, dimen, nrxx, npw
   INTEGER ::  ftau(3)
 
-  COMPLEX(DP) :: zdotc
-
   REAL(DP), ALLOCATABLE ::  w1(:)
   COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), trace(:,:), psic(:,:)
   !
@@ -441,7 +439,7 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ft,gk,invs,rap_et,times,ngroup,&
         DO i=1,dim_rap
            ibnd=istart(igroup)+i-1
            trace(iclass,igroup)=trace(iclass,igroup) + &
-                zdotc(npw,evc(1,ibnd),1,evcr(1,ibnd),1)
+                DOT_PRODUCT (evc(1:npw,ibnd),evcr(1:npw,ibnd))
         ENDDO
         !      write(6,*) igroup, iclass, trace(iclass,igroup)
      ENDDO
@@ -736,8 +734,6 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
        iclass,    &
        na, i, j, ig, ipol, jpol, jrap, dimen, npw
 
-  COMPLEX(DP) :: zdotc          ! moltiplication factors
-
   REAL(DP), ALLOCATABLE ::  w1(:)      ! list of energy eigenvalues in eV
   COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), & ! the rotated of each wave function
        trace(:,:)   ! the trace of the symmetry matrix
@@ -795,7 +791,7 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ft,d_spin,gk, &
         DO i=1,dim_rap
            ibnd=istart(igroup)+i-1
            trace(iclass,igroup)=trace(iclass,igroup) +            &
-                zdotc(2*npwx,evc(1,ibnd),1,evcr(1,ibnd),1)
+                DOT_PRODUCT (evc(:,ibnd),evcr(:,ibnd))
         ENDDO
         !      write(6,*) igroup, iclass, dim_rap, trace(iclass,igroup)
      ENDDO

@@ -118,7 +118,6 @@ SUBROUTINE readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE io_global,            ONLY : stdout
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
   USE uspp,                 ONLY : becsum
@@ -1001,7 +1000,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE gvecs,            ONLY : ngms_g, dual
     USE fft_base,         ONLY : dffts
     USE lsda_mod,         ONLY : lsda
-    USE noncollin_module, ONLY : noncolin
     USE klist,            ONLY : nkstot, nelec
     USE wvfct,            ONLY : nbnd, npwx
     USE gvecw,            ONLY : ecutwfc
@@ -1051,7 +1049,6 @@ END SUBROUTINE vasp_init_vars_from_schema
     USE gvecs,            ONLY : ngms_g, dual
     USE fft_base,         ONLY : dffts
     USE lsda_mod,         ONLY : lsda, isk
-    USE noncollin_module, ONLY : noncolin
     USE klist,            ONLY : nkstot, nks, xk, wk
     USE wvfct,            ONLY : nbnd, npwx
     USE gvecw,            ONLY : ecutwfc

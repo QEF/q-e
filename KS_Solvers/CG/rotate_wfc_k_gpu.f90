@@ -25,6 +25,8 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   IMPLICIT NONE
   !
+  !INCLUDE 'laxlib.fh'
+  !
   ! ... I/O variables
   !
   INTEGER, INTENT(IN) :: npw, npwx, nstart, nbnd, npol

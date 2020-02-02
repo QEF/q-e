@@ -31,7 +31,6 @@ SUBROUTINE potinit()
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : lsda, nspin
   USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
   USE control_flags,        ONLY : lscf, gamma_only
@@ -87,6 +86,7 @@ SUBROUTINE potinit()
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
+        ! ... FIXME: why not calling read_scf also in this case?
         !
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )

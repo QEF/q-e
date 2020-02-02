@@ -45,7 +45,8 @@
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, nktotf, efnew, &
                               epf17, wkf, nkf, wf, wqf, xkf, nkqtotf, adapt_smearing, &
                               esigmar_all, esigmai_all, a_all, nbndfst, lower_bnd
-    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps8
+    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, ci, eps8
+    USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : me_pool, inter_pool_comm
     USE io_selfen,     ONLY : spectral_write
@@ -469,7 +470,8 @@
     USE klist_epw, ONLY : isk_dummy
     USE elph2,     ONLY : epf17, ibndmax, ibndmin, etf, nbndfst, &
                           wkf, xqf, nkqf, nkf, wf, a_all_ph, efnew
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, one, two, zero, pi, cone, ci, eps8
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, one, two, zero, cone, ci, eps8
+    USE constants,     ONLY : pi
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, ionode_id
@@ -811,7 +813,8 @@
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nbndfst, wkf, nkf, wqf, xkf, & 
                               nkqtotf, xqf, dmef, esigmar_all, esigmai_all, a_all, & 
                               nktotf, lower_bnd, efnew
-    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
+    USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, ci, eps6
+    USE constants,     ONLY : pi
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : me_pool, inter_pool_comm 
     USE cell_base,     ONLY : omega, alat, bg
@@ -1311,7 +1314,8 @@
     USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, & 
                           delta_smear, degaussw, fsthick, nc
     USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, one, two, zero, kelvin2Ry, pi
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, one, two, zero, kelvin2Ry
+    USE constants, ONLY : pi
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id

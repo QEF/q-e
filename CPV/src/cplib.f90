@@ -280,14 +280,14 @@
          USE io_global,     ONLY: ionode, stdout
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
                                   tzerop, tv0rd, taurdr, nbeg, tcp, tcap
-         USE ions_base,     ONLY: tau_srt, if_pos, ind_srt, nsp, na, &
+         USE ions_base,     ONLY: if_pos, nsp, na, tau, ityp, &
                                   amass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
          USE constants,     ONLY: amu_au
 
          IMPLICIT NONE
               
-         integer is, ia, k, ic, isa
+         integer is, ia, k, ic
          LOGICAL :: ismb( 3 ) 
                 
          WRITE( stdout, 50 ) 
@@ -318,12 +318,12 @@
          END DO
 
          WRITE(stdout,660) 
-         isa = 0
-         DO IS = 1, nsp
+         DO is = 1, nsp
            WRITE(stdout,1000) is, na(is), amass(is)*amu_au, amass(is), rcmax(is)
-           DO IA = 1, na(is)
-             isa = isa + 1
-             WRITE(stdout,1010) ( tau_srt(k,isa), K = 1,3 )
+           DO ia = 1, nat
+             IF( ityp(ia) == is ) THEN
+                WRITE(stdout,1010) ( tau(k,ia), K = 1,3 )
+             END IF
            END DO
          END DO    
 
@@ -340,13 +340,12 @@
               WRITE(stdout,1020)
               WRITE(stdout,1022)
 
-              DO isa = 1, nat
-                ia = ind_srt( isa )
+              DO ia = 1, nat
                 ismb( 1 ) = ( if_pos(1,ia) /= 0 )
                 ismb( 2 ) = ( if_pos(2,ia) /= 0 )
                 ismb( 3 ) = ( if_pos(3,ia) /= 0 )
                 IF( .NOT. ALL( ismb ) ) THEN
-                  WRITE( stdout, 1023 ) isa, ( ismb(k), K = 1, 3 )
+                  WRITE( stdout, 1023 ) ia, ( ismb(k), K = 1, 3 )
                 END IF
               END DO
 
@@ -375,8 +374,8 @@
                          //' compatible with random velocity initialization',1)
            ELSE IF(tcp) THEN
              WRITE( stdout,555) tempw,tolp
-           ELSE IF(tcap) THEN
-             WRITE( stdout,560) tempw,tolp
+           !ELSE IF(tcap) THEN  !tcap is random velocity initialization!
+           !  WRITE( stdout,560) tempw,tolp
            ELSE IF(tnosep) THEN
              WRITE( stdout,595)
            ELSE
@@ -656,7 +655,6 @@ SUBROUTINE new_atomind_constraints()
    !
    USE kinds,              ONLY: DP
    USE constraints_module, ONLY: constr
-   USE ions_base,          ONLY: ind_bck
    !
    IMPLICIT NONE
    !
@@ -672,7 +670,7 @@ SUBROUTINE new_atomind_constraints()
       DO ia = 1, SIZE( constr, 1 )
          IF( constr( ia, ic ) > 0.0d0 ) THEN
             iaa = NINT( constr( ia, ic ) )
-            aa  = DBLE( ind_bck( iaa ) )
+            aa  = DBLE( iaa )
             constr( ia, ic ) = aa
          END IF
       END DO
@@ -896,28 +894,29 @@ SUBROUTINE newnlinit()
 END SUBROUTINE newnlinit
 !
 !-----------------------------------------------------------------------
-subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
+subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, idesc )
   !-----------------------------------------------------------------------
   !
   !     contribution to the internal stress tensor due to the constraints
   !
   USE kinds,             ONLY : DP
-  use uspp,              ONLY : nkb, qq_nt
-  use uspp_param,        ONLY : nh, nhm, nvb, ish
-  use ions_base,         ONLY : na
+  use uspp,              ONLY : nkb, qq_nt, indv_ijkb0
+  use uspp_param,        ONLY : nh, nhm, upf
+  use ions_base,         ONLY : nat, ityp
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
   use cell_base,         ONLY : omega, h
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iverbosity
-  USE descriptors,       ONLY : la_descriptor
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_bgrp_comm, inter_bgrp_comm
 
 !
   implicit none
 
-  TYPE(la_descriptor), INTENT(IN) :: descla(:)
+  include 'laxlib.fh'
+
+  INTEGER, INTENT(IN) :: idesc(:,:)
   REAL(DP), INTENT(INOUT) :: stress(3,3) 
   REAL(DP), INTENT(IN)    :: bec_bgrp( :, : ), dbec( :, :, :, : )
   REAL(DP), INTENT(IN)    :: lambda( :, :, : )
@@ -928,16 +927,16 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:), bec(:,:,:)
   !
-  nrcx = MAXVAL( descla( : )%nrcx )
+  nrcx = MAXVAL( idesc( LAX_DESC_NRCX, : ) )
   !
   ALLOCATE( bec( nkb, nrcx, nspin ) )
   !
   DO iss = 1, nspin
-     IF( descla( iss )%active_node > 0 ) THEN
+     IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
         nss = nupdwn( iss )
         istart = iupdwn( iss )
-        ic = descla( iss )%ic
-        nc = descla( iss )%nc
+        ic = idesc( LAX_DESC_IC, iss )
+        nc = idesc( LAX_DESC_NC, iss )
         DO i=1,nc
            ibgrp_i = ibgrp_g2l( i+istart-1+ic-1 )
            IF( ibgrp_i > 0 ) THEN
@@ -954,11 +953,11 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
   CALL mp_sum( bec, inter_bgrp_comm )
   !
   IF (nspin == 1) THEN
-     IF( ( descla( 1 )%active_node > 0 ) ) THEN
+     IF( ( idesc( LAX_DESC_ACTIVE_NODE, 1 ) > 0 ) ) THEN
         ALLOCATE ( tmpbec(nhm,nrcx), tmpdh(nrcx,nhm), temp(nrcx,nrcx) )
      ENDIF
   ELSEIF (nspin == 2) THEN
-     IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
+     IF( ( idesc( LAX_DESC_ACTIVE_NODE, 1 ) > 0 ) .OR. ( idesc( LAX_DESC_ACTIVE_NODE, 2 ) > 0 ) ) THEN
         ALLOCATE ( tmpbec(nhm,nrcx), tmpdh(nrcx,nhm), temp(nrcx,nrcx) )
      END IF
   ENDIF
@@ -969,28 +968,29 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
 
      do jj=1,3
 
-        do is=1,nvb
+        do ia=1,nat
+           is = ityp(ia)
 
-           do ia=1,na(is)
+           IF( upf(is)%tvanp ) THEN
 
               do iss = 1, nspin
                  !
                  istart = iupdwn( iss )
                  nss    = nupdwn( iss )
                  !
-                 IF( descla( iss )%active_node > 0 ) THEN
+                 IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
 
-                    nr = descla( iss )%nr
-                    nc = descla( iss )%nc
-                    ir = descla( iss )%ir
-                    ic = descla( iss )%ic
+                    ic = idesc( LAX_DESC_IC, iss )
+                    nc = idesc( LAX_DESC_NC, iss )
+                    ir = idesc( LAX_DESC_IR, iss )
+                    nr = idesc( LAX_DESC_NR, iss )
 
                     tmpbec = 0.d0
                     tmpdh  = 0.d0
 !
                     do iv=1,nh(is)
                        do jv=1,nh(is)
-                          inl=ish(is)+(jv-1)*na(is)+ia
+                          inl=indv_ijkb0(ia) + jv
                           if(abs(qq_nt(iv,jv,is)).gt.1.e-5) then
                              do i = 1, nc
                                 tmpbec(iv,i) = tmpbec(iv,i) +  qq_nt(iv,jv,is) * bec( inl, i, iss  )
@@ -1000,7 +1000,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
                     end do
 
                     do iv=1,nh(is)
-                       inl=ish(is)+(iv-1)*na(is)+ia
+                       inl=indv_ijkb0(ia) + iv
                        do i = 1, nr
                           tmpdh(i,iv) = dbec( inl, i + (iss-1)*nrcx, ii, jj )
                        end do
@@ -1022,7 +1022,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
                  !
               end do
               !
-           end do
+           END IF
            !
         end do
         !
@@ -1091,7 +1091,7 @@ subroutine nlinit
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq_nt, dvan, nhtol, nhtolm, indv,&
                                   dbeta
-      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish, nvb
+      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb
@@ -1421,46 +1421,6 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   !
 end subroutine dylmr2_
 
-
-SUBROUTINE print_lambda_x( lambda, descla, n, nshow, ccc, iunit )
-    USE kinds, ONLY : DP
-    USE descriptors,       ONLY: la_descriptor
-    USE io_global,         ONLY: stdout, ionode
-    USE cp_interfaces,     ONLY: collect_lambda
-    USE electrons_base,    ONLY: nudx
-    IMPLICIT NONE
-    real(DP), intent(in) :: lambda(:,:,:), ccc
-    TYPE(la_descriptor), INTENT(IN) :: descla(:)
-    integer, intent(in) :: n, nshow
-    integer, intent(in), optional :: iunit
-    !
-    integer :: nnn, j, un, i, is
-    real(DP), allocatable :: lambda_repl(:,:)
-    if( present( iunit ) ) then
-      un = iunit
-    else
-      un = stdout
-    end if
-    nnn = min( nudx, nshow )
-    ALLOCATE( lambda_repl( nudx, nudx ) )
-    IF( ionode ) WRITE( un,*)
-    DO is = 1, SIZE( lambda, 3 )
-       CALL collect_lambda( lambda_repl, lambda(:,:,is), descla(is) )
-       IF( ionode ) THEN
-          WRITE( un,3370) '    lambda   nudx, spin = ', nudx, is
-          IF( nnn < n ) WRITE( un,3370) '    print only first ', nnn
-          DO i=1,nnn
-             WRITE( un,3380) (lambda_repl(i,j)*ccc,j=1,nnn)
-          END DO
-       END IF
-    END DO
-    DEALLOCATE( lambda_repl )
-3370   FORMAT(26x,a,2i4)
-3380   FORMAT(9f8.4)
-    RETURN
-END SUBROUTINE print_lambda_x
-!-----------------------------------------------------------------------
-!
 !-----------------------------------------------------------------------
    SUBROUTINE denlcc_x( nnr, nspin, vxcr, sfac, drhocg, dcc )
 !-----------------------------------------------------------------------
@@ -1547,11 +1507,11 @@ END SUBROUTINE print_lambda_x
 !-----------------------------------------------------------------------
 !
       USE kinds,              ONLY: DP
-      USE ions_base,          ONLY: na, nsp, nat
+      USE ions_base,          ONLY: na, nsp, nat, ityp
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: gstart
-      USE uspp,               ONLY: nkb, qq_nt
-      USE uspp_param,         ONLY: nh, ish, nvb
+      USE uspp,               ONLY: nkb, qq_nt, indv_ijkb0
+      USE uspp_param,         ONLY: nh, ish, upf
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm
       USE cp_interfaces,      ONLY: nlsm1
@@ -1576,7 +1536,7 @@ END SUBROUTINE print_lambda_x
 !     < beta | phi > is real. only the i lowest:
 !
 
-      CALL nlsm1( nbspx_bgrp, 1, nvb, eigr, cp, becp )
+      CALL nlsm1( nbspx_bgrp, 1, nsp, eigr, cp, becp, 2 )
 
       nnn = MIN( 12, n )
 
@@ -1620,12 +1580,14 @@ END SUBROUTINE print_lambda_x
             rsum=0.d0
             ibgrp_k = ibgrp_g2l( k )
             IF( ibgrp_k > 0 ) THEN
-               DO is=1,nvb
-                  DO iv=1,nh(is)
-                     DO jv=1,nh(is)
-                        DO ia=1,na(is)
-                           inl=ish(is)+(iv-1)*na(is)+ia
-                           jnl=ish(is)+(jv-1)*na(is)+ia
+               DO is=1,nsp
+                  IF( .NOT. upf(is)%tvanp ) CYCLE
+                  DO ia=1,nat
+                     IF( ityp(ia) /= is ) CYCLE
+                     DO iv=1,nh(is)
+                        DO jv=1,nh(is)
+                           inl = indv_ijkb0(ia) + iv
+                           jnl = indv_ijkb0(ia) + jv
                            rsum = rsum + qq_nt(iv,jv,is)*becp_tmp(inl)*becp(jnl,ibgrp_k)
                         END DO
                      END DO
@@ -1703,34 +1665,33 @@ END SUBROUTINE print_lambda_x
    END FUNCTION enkin_x
 
 !-------------------------------------------------------------------------
-      SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, descla, fion )
+      SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
 !-----------------------------------------------------------------------
 !     contribution to fion due to the orthonormality constraint
 ! 
 !
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
-      USE ions_base,         ONLY: na, nsp, nat
-      USE uspp,              ONLY: nhsa=>nkb, qq_nt
-      USE uspp_param,        ONLY: nhm, nh, ish, nvb
+      USE ions_base,         ONLY: na, nsp, nat, ityp
+      USE uspp,              ONLY: nhsa=>nkb, qq_nt, indv_ijkb0
+      USE uspp_param,        ONLY: nhm, nh, upf
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
       USE constants,         ONLY: pi, fpi
-      USE descriptors,       ONLY: la_descriptor
       USE mp,                ONLY: mp_sum
       USE mp_global,         ONLY: intra_bgrp_comm, inter_bgrp_comm
 !
       IMPLICIT NONE
+      include 'laxlib.fh'
       REAL(DP) :: bec_bgrp(:,:), becdr_bgrp(:,:,:)
       REAL(DP), INTENT(IN) :: lambda(:,:,:)
-      TYPE(la_descriptor), INTENT(IN) :: descla(:)
+      INTEGER, INTENT(IN) :: idesc(:,:)
       REAL(DP), INTENT(INOUT) :: fion(:,:)
 
 !
       INTEGER :: k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic, nr, nc, ibgrp_i
       INTEGER :: n1, n2, m1, m2, nrcx
       INTEGER :: nrr(nspin), irr, nrrx
-      REAL(DP), EXTERNAL :: ddot
       REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:), tmplam(:,:,:)
       REAL(DP), ALLOCATABLE :: fion_tmp(:,:)
       REAL(DP), ALLOCATABLE :: bec(:,:,:)
@@ -1742,7 +1703,7 @@ END SUBROUTINE print_lambda_x
       !
       fion_tmp = 0.0d0
       !
-      nrcx = MAXVAL( descla( : )%nrcx )
+      nrcx = MAXVAL( idesc( LAX_DESC_NRCX, : ) )
       !
 
       ! redistribute bec, becdr according to the ortho subgroup
@@ -1761,8 +1722,9 @@ END SUBROUTINE print_lambda_x
 
       !
 !$omp parallel default(none), &
-!$omp shared(nrrx,nhm,nrcx,nvb,na,nspin,nrr,nupdwn,iupdwn,descla,nh,ish,qq_nt,bec,becdr_bgrp,ibgrp_l2g,tmplam,fion_tmp), &
-!$omp private(tmpdr,temp,tmpbec,is,k,ia,isa,i,iss,nss,istart,ic,nc,jv,iv,inl,ir,nr)
+!$omp shared(nrrx,nhm,nrcx,nsp,na,nspin,nrr,nupdwn,iupdwn,idesc,nh,qq_nt,bec,becdr_bgrp,ibgrp_l2g,tmplam,fion_tmp), &
+!$omp shared(upf, ityp,nat,indv_ijkb0), &
+!$omp private(tmpdr,temp,tmpbec,is,k,ia,i,iss,nss,istart,ic,nc,jv,iv,inl,ir,nr)
 
       IF( nrrx > 0 ) THEN
          ALLOCATE( tmpdr( nrrx, nhm ) )
@@ -1771,16 +1733,12 @@ END SUBROUTINE print_lambda_x
       ALLOCATE( tmpbec( nhm, nrcx ) )
 
       DO k=1,3
-         DO is=1,nvb
+         DO is=1,nsp
+            IF( .NOT. upf(is)%tvanp ) CYCLE
 !$omp do
-            DO ia=1,na(is)
+            DO ia=1,nat
 
-               isa = 0
-               DO i = 1, is - 1
-                  isa = isa + na(i)
-               END DO
-               isa = isa + ia
-
+               IF( ityp(ia) /= is ) CYCLE
                !
                DO iss = 1, nspin
                   !
@@ -1791,12 +1749,12 @@ END SUBROUTINE print_lambda_x
                   !
                   tmpbec = 0.d0
                   !
-                  IF( descla( iss )%active_node > 0 ) THEN
+                  IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
                      ! tmpbec distributed by columns
-                     ic = descla( iss )%ic
-                     nc = descla( iss )%nc
+                     ic = idesc( LAX_DESC_IC, iss )
+                     nc = idesc( LAX_DESC_NC, iss )
                      DO jv=1,nh(is)
-                        inl=ish(is)+(jv-1)*na(is)+ia
+                        inl = indv_ijkb0(ia) + jv
                         DO iv=1,nh(is)
                            IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN
                               DO i=1,nc
@@ -1806,10 +1764,10 @@ END SUBROUTINE print_lambda_x
                         END DO
                      END DO
                      ! tmpdr distributed by rows
-                     ir = descla( iss )%ir
-                     nr = descla( iss )%nr
+                     ir = idesc( LAX_DESC_IR, iss )
+                     nr = idesc( LAX_DESC_NR, iss )
                      DO iv=1,nh(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
+                        inl = indv_ijkb0(ia) + iv
                         DO i=1,nrr(iss)
                            tmpdr(i,iv) = becdr_bgrp( inl, ibgrp_l2g(i,iss), k )
                         END DO
@@ -1817,12 +1775,12 @@ END SUBROUTINE print_lambda_x
                   END IF
                   !
                   IF( nh(is) > 0 )THEN
-                     IF( descla( iss )%active_node > 0 ) THEN
-                        nc = descla( iss )%nc
+                     IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+                        nc = idesc( LAX_DESC_NC, iss )
                         CALL dgemm( 'N', 'N', nrr(iss), nc, nh(is), 1.0d0, tmpdr, nrrx, tmpbec, nhm, 0.0d0, temp, nrrx )
                         DO j = 1, nc
                            DO i = 1, nrr(iss)
-                              fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * tmplam( i, j, iss )
+                              fion_tmp(k,ia) = fion_tmp(k,ia) + 2D0 * temp( i, j ) * tmplam( i, j, iss )
                            END DO
                         END DO
 
@@ -1864,9 +1822,9 @@ END SUBROUTINE print_lambda_x
         DO iss = 1, nspin
           nss = nupdwn( iss )
           istart = iupdwn( iss )
-          IF( descla( iss )%active_node > 0 ) THEN
-            ir = descla( iss )%ir
-            nr = descla( iss )%nr
+          IF( idesc(LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+            ir = idesc( LAX_DESC_IR, iss )
+            nr = idesc( LAX_DESC_NR, iss )
             DO i=1,nr
                ibgrp_i = ibgrp_g2l( i+istart-1+ir-1 )
                IF( ibgrp_i > 0 ) THEN
@@ -1882,9 +1840,9 @@ END SUBROUTINE print_lambda_x
       DO iss = 1, nspin
          nss = nupdwn( iss )
          istart = iupdwn( iss )
-         IF( descla( iss )%active_node > 0 ) THEN
-            ic = descla( iss )%ic
-            nc = descla( iss )%nc
+         IF( idesc(LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+            ic = idesc( LAX_DESC_IC, iss )
+            nc = idesc( LAX_DESC_NC, iss )
             DO i=1,nc
                ibgrp_i = ibgrp_g2l( i+istart-1+ic-1 )
                IF( ibgrp_i > 0 ) THEN
@@ -1904,9 +1862,9 @@ END SUBROUTINE print_lambda_x
       DO iss = 1, nspin
          nss = nupdwn( iss )
          istart = iupdwn( iss )
-         IF( descla( iss )%active_node > 0 ) THEN
-            ir = descla( iss )%ir
-            nr = descla( iss )%nr
+         IF( idesc(LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+            ir = idesc( LAX_DESC_IR, iss )
+            nr = idesc( LAX_DESC_NR, iss )
             irr = 0
             DO i=1,nr
                ibgrp_i = ibgrp_g2l( i+istart-1+ir-1 )
@@ -1917,7 +1875,7 @@ END SUBROUTINE print_lambda_x
                END IF
             END DO
             tmplam( irr + 1 : nrrx , :, iss ) = 0.0d0 
-            tmplam( 1 : nrrx , descla( iss )%nc + 1 : nrcx, iss ) = 0.0d0 
+            tmplam( 1 : nrrx , idesc( LAX_DESC_NC, iss ) + 1 : nrcx, iss ) = 0.0d0 
          END IF
       END DO
       END SUBROUTINE get_local_lambda
@@ -1970,10 +1928,10 @@ END SUBROUTINE print_lambda_x
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
       USE kinds,      ONLY : DP
-      USE ions_base,  ONLY : nsp, na
+      USE ions_base,  ONLY : nat, ityp
       USE gvecw,      ONLY : ngw
-      USE uspp,       ONLY : beta, nhtol
-      USE uspp_param, ONLY : nh, ish
+      USE uspp,       ONLY : beta, nhtol, indv_ijkb0
+      USE uspp_param, ONLY : nh, upf
 !
       IMPLICIT NONE
       COMPLEX(DP), INTENT(IN) :: eigr( :, : )
@@ -1983,18 +1941,15 @@ END SUBROUTINE print_lambda_x
       COMPLEX(DP) :: ci
 !
       CALL start_clock( 'prefor' )
-      isa = 0
-      DO is=1,nsp
+      DO ia=1,nat
+         is=ityp(ia)
          DO iv=1,nh(is)
             ci=(0.0d0,-1.0d0)**nhtol(iv,is)
-            DO ia=1,na(is)
-               inl=ish(is)+(iv-1)*na(is)+ia
-               DO ig=1,ngw
-                  betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia+isa)
-               END DO
+            inl = indv_ijkb0(ia) + iv
+            DO ig=1,ngw
+               betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia)
             END DO
          END DO
-         isa = isa + na(is)
       END DO
       CALL stop_clock( 'prefor' )
 !
@@ -2002,16 +1957,17 @@ END SUBROUTINE print_lambda_x
       END SUBROUTINE prefor_x
 
 !------------------------------------------------------------------------
-    SUBROUTINE collect_bec_x( bec_repl, bec_dist, desc, nspin )
+    SUBROUTINE collect_bec_x( bec_repl, bec_dist, idesc, nspin )
 !------------------------------------------------------------------------
        USE kinds,       ONLY : DP
        USE mp_global,   ONLY : intra_bgrp_comm
        USE mp,          ONLY : mp_sum
-       USE descriptors, ONLY : la_descriptor
        USE io_global,   ONLY : stdout
+       IMPLICIT NONE
+       include 'laxlib.fh'
        REAL(DP), INTENT(OUT) :: bec_repl(:,:)
        REAL(DP), INTENT(IN)  :: bec_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc(:)
+       INTEGER,  INTENT(IN)  :: idesc(:,:)
        INTEGER,  INTENT(IN)  :: nspin
        INTEGER :: i, ir, n, nrcx, iss
        !
@@ -2019,16 +1975,16 @@ END SUBROUTINE print_lambda_x
        !
        !  bec is distributed across row processor, the first column is enough
        !
-       IF( desc( 1 )%active_node > 0 .AND. ( desc( 1 )%myc == 0 ) ) THEN
-          ir = desc( 1 )%ir
-          DO i = 1, desc( 1 )%nr
+       IF( idesc( LAX_DESC_ACTIVE_NODE, 1 ) > 0 .AND. ( idesc( LAX_DESC_MYC, 1 ) == 0 ) ) THEN
+          ir = idesc( LAX_DESC_IR, 1 )
+          DO i = 1, idesc( LAX_DESC_NR, 1 )
              bec_repl( :, i + ir - 1 ) = bec_dist( :, i )
           END DO
           IF( nspin == 2 ) THEN
-             n  = desc( 1 )%n   ! number of states with spin==1 ( nupdw(1) )
-             nrcx = desc( 1 )%nrcx ! array elements reserved for each spin ( bec(:,2*nrcx) )
-             ir = desc( 2 )%ir
-             DO i = 1, desc( 2 )%nr
+             n  = idesc( LAX_DESC_N, 1 )   ! number of states with spin==1 ( nupdw(1) )
+             nrcx = idesc( LAX_DESC_NRCX, 1 ) ! array elements reserved for each spin ( bec(:,2*nrcx) )
+             ir = idesc( LAX_DESC_IR, 2 )
+             DO i = 1, idesc( LAX_DESC_NR, 2 )
                 bec_repl( :, i + ir - 1 + n ) = bec_dist( :, i + nrcx )
              END DO
           END IF
@@ -2038,53 +1994,33 @@ END SUBROUTINE print_lambda_x
        !
        RETURN
     END SUBROUTINE collect_bec_x
-
-!------------------------------------------------------------------------
-    SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE descriptors
-       REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
-       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, j, ic, ir
-       IF( desc%active_node > 0 ) THEN
-          ir = desc%ir
-          ic = desc%ic
-          DO j = 1, desc%nc
-             DO i = 1, desc%nr
-                lambda_dist( i, j ) = lambda_repl( i + ir - 1, j + ic - 1 )
-             END DO
-          END DO
-       END IF
-       RETURN
-    END SUBROUTINE distribute_lambda_x
     !
 !------------------------------------------------------------------------
-    SUBROUTINE distribute_bec_x( bec_repl, bec_dist, desc, nspin )
+    SUBROUTINE distribute_bec_x( bec_repl, bec_dist, idesc, nspin )
 !------------------------------------------------------------------------
        USE kinds,       ONLY : DP
-       USE descriptors
+       IMPLICIT NONE
+       include 'laxlib.fh'
        REAL(DP), INTENT(IN)  :: bec_repl(:,:)
        REAL(DP), INTENT(OUT) :: bec_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc(:)
+       INTEGER,  INTENT(IN)  :: idesc(:,:)
        INTEGER,  INTENT(IN)  :: nspin
        INTEGER :: i, ir, n, nrcx
        !
-       IF( desc( 1 )%active_node > 0 ) THEN
+       IF( idesc( LAX_DESC_ACTIVE_NODE, 1 ) > 0 ) THEN
           !
           bec_dist = 0.0d0
           !
-          ir = desc( 1 )%ir
-          DO i = 1, desc( 1 )%nr
+          ir = idesc( LAX_DESC_IR, 1 )
+          DO i = 1, idesc( LAX_DESC_NR, 1 )
              bec_dist( :, i ) = bec_repl( :, i + ir - 1 )
           END DO
           !
           IF( nspin == 2 ) THEN
-             n     = desc( 1 )%n  !  number of states with spin 1 ( nupdw(1) )
-             nrcx  = desc( 1 )%nrcx   !  array elements reserved for each spin ( bec(:,2*nrcx) )
-             ir = desc( 2 )%ir
-             DO i = 1, desc( 2 )%nr
+             n     = idesc( LAX_DESC_N, 1 )  !  number of states with spin 1 ( nupdw(1) )
+             nrcx  = idesc( LAX_DESC_NRCX, 1 ) !  array elements reserved for each spin ( bec(:,2*nrcx) )
+             ir = idesc( LAX_DESC_IR, 2 )
+             DO i = 1, idesc( LAX_DESC_NR, 2 )
                 bec_dist( :, i + nrcx ) = bec_repl( :, i + ir - 1 + n )
              END DO
           END IF
@@ -2092,102 +2028,3 @@ END SUBROUTINE print_lambda_x
        END IF
        RETURN
     END SUBROUTINE distribute_bec_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE descriptors
-       REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
-       REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, ii, j, me, np
-       me = desc%mype
-       np = desc%npc * desc%npr
-       IF( desc%active_node > 0 ) THEN
-          DO j = 1, desc%n
-             ii = me + 1
-             DO i = 1, desc%nrl
-                zmat_dist( i, j ) = zmat_repl( ii, j )
-                ii = ii + np
-             END DO
-          END DO
-       END IF
-       RETURN
-    END SUBROUTINE distribute_zmat_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE mp_global,   ONLY: intra_bgrp_comm
-       USE mp,          ONLY: mp_sum
-       USE descriptors
-       REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
-       REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, j, ic, ir
-       lambda_repl = 0.0d0
-       IF( desc%active_node > 0 ) THEN
-          ir = desc%ir
-          ic = desc%ic
-          DO j = 1, desc%nc
-             DO i = 1, desc%nr
-                lambda_repl( i + ir - 1, j + ic - 1 ) = lambda_dist( i, j )
-             END DO
-          END DO
-       END IF
-       CALL mp_sum( lambda_repl, intra_bgrp_comm )
-       RETURN
-    END SUBROUTINE collect_lambda_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE mp_global,   ONLY: intra_bgrp_comm
-       USE mp,          ONLY: mp_sum
-       USE descriptors
-       REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
-       REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       INTEGER :: i, ii, j, me, np, nrl
-       zmat_repl = 0.0d0
-       me = desc%mype
-       np = desc%npc * desc%npr
-       nrl = desc%nrl
-       IF( desc%active_node > 0 ) THEN
-          DO j = 1, desc%n
-             ii = me + 1
-             DO i = 1, nrl
-                zmat_repl( ii, j ) = zmat_dist( i, j )
-                ii = ii + np
-             END DO
-          END DO
-       END IF
-       CALL mp_sum( zmat_repl, intra_bgrp_comm )
-       RETURN
-    END SUBROUTINE collect_zmat_x
-    !
-!------------------------------------------------------------------------
-    SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
-!------------------------------------------------------------------------
-       USE kinds,       ONLY : DP
-       USE descriptors
-       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-       INTEGER,  INTENT(IN)  :: i, j
-       REAL(DP), INTENT(IN)  :: val
-       TYPE(la_descriptor), INTENT(IN)  :: desc
-       IF( desc%active_node > 0 ) THEN
-          IF( ( i >= desc%ir ) .AND. ( i - desc%ir + 1 <= desc%nr ) ) THEN
-             IF( ( j >= desc%ic ) .AND. ( j - desc%ic + 1 <= desc%nc ) ) THEN
-                lambda_dist( i - desc%ir + 1, j - desc%ic + 1 ) = val
-             END IF
-          END IF
-       END IF
-       RETURN
-    END SUBROUTINE setval_lambda_x
-
-
-!------------------------------------------------------------------------
-

@@ -32,7 +32,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   USE qpoint,                ONLY : ikks, ikqs, nksq 
   USE eqv,                   ONLY : evq, dpsi 
   USE wavefunctions,  ONLY : evc
-  USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
+  USE noncollin_module,      ONLY : npol
   use klist,                 only : xk, igk_k, ngk
   use gvect,                 only : ngm, g
   USE control_lr,            ONLY : nbnd_occ

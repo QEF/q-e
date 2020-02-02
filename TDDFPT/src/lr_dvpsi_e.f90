@@ -30,7 +30,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE wvfct,                ONLY : npwx, nbnd, g2kin, et
   USE wavefunctions, ONLY : evc
   USE gvect,                ONLY : g
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE becmod,               ONLY : allocate_bec_type, calbec, becp, &
                                    & deallocate_bec_type,  bec_type
   USE uspp,                 ONLY : okvan, nkb, vkb

@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-      SUBROUTINE spinsq (c,bec,rhor)
+   SUBROUTINE spinsq (c,bec,rhor)
 !-----------------------------------------------------------------------
 !
 !     estimate of <S^2>=s(s+1) in two different ways.
@@ -34,13 +34,13 @@
       USE gvecw, ONLY: ngw
       USE gvect, ONLY: gstart
       USE cell_base, ONLY: omega
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq_nt
-      USE uspp_param, ONLY: nvb, ish, nh
-      USE ions_base, ONLY: na
+      USE uspp, ONLY: nkb, nkbus, qq_nt, indv_ijkb0 
+      USE uspp_param, ONLY: nh, upf
+      USE ions_base, ONLY: na, nat, ityp
 !
       IMPLICIT NONE
 ! input
-      REAL(dp) :: bec(nhsa,n), rhor(dfftp%nnr,nspin)
+      REAL(dp) :: bec(nkb,n), rhor(dfftp%nnr,nspin)
       COMPLEX(dp):: c(ngw,nx)
 ! local variables
       INTEGER :: nup, ndw, ir, i, j, jj, ig, ia, is, iv, jv, inl, jnl
@@ -114,19 +114,19 @@
 !
 !     vanderbilt contribution to  < psi_up | psi_dw >
 !
-            DO is=1,nvb
-               DO iv=1,nh(is)
-                  DO jv=1,nh(is)
-                     IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
-                        DO ia=1,na(is)
-                           inl=ish(is)+(iv-1)*na(is)+ia
-                           jnl=ish(is)+(jv-1)*na(is)+ia
-                           overlap(i,j) = overlap(i,j) +                &
-     &                          qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,jj)
-                        END DO
-                     ENDIF
+            DO ia=1,nat
+               is=ityp(ia)
+               IF( upf(is)%tvanp ) THEN
+                  DO iv=1,nh(is)
+                     DO jv=1,nh(is)
+                        IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
+                           inl = indv_ijkb0(ia) + iv
+                           jnl = indv_ijkb0(ia) + jv
+                           overlap(i,j) = overlap(i,j) + qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,jj)
+                        ENDIF
+                     END DO
                   END DO
-               END DO
+               END IF
             END DO
          END DO
       END DO
@@ -145,6 +145,6 @@
      &     spin2,spin1, ABS(fup-fdw)/2.d0*(ABS(fup-fdw)/2.d0+1.d0)
 !
       RETURN
-      END SUBROUTINE spinsq
+   END SUBROUTINE spinsq
 
 
