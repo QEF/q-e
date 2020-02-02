@@ -303,6 +303,17 @@ SUBROUTINE sqr_dmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, 
    REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
+SUBROUTINE sqr_smm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
+   IMPLICIT NONE
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   INTEGER, INTENT(IN) :: n
+   REAL(SP), INTENT(IN) :: alpha, beta
+   INTEGER, INTENT(IN) :: lda, ldb, ldc
+   REAL(SP) :: a(lda,*), b(ldb,*), c(ldc,*)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+END SUBROUTINE
 SUBROUTINE sqr_zmm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    IMPLICIT NONE
    include 'laxlib_kinds.fh'
@@ -324,6 +335,15 @@ SUBROUTINE sqr_tr_cannon_x( n, a, lda, b, ldb, idesc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP)            :: a(lda,*), b(ldb,*)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+END SUBROUTINE
+SUBROUTINE sqr_tr_cannon_sp_x( n, a, lda, b, ldb, idesc )
+   IMPLICIT NONE
+   include 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda, ldb
+   REAL(SP)            :: a(lda,*), b(ldb,*)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
 END INTERFACE
