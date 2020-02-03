@@ -90,6 +90,12 @@ libfox:
 	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
 	cd ../FoX/fox/; export FC=$(F90); export FCFLAGS="$(FOX_FLAGS)"; \
 	./configure --prefix=$(TOPDIR)/FoX ;\
+    touch cp_test; \
+    if cp -p cp_test cp_test_1; then \
+        echo "cp -p works"; \
+    else \
+        find -type f | xargs sed -i 's/cp -p/cp/g'; \
+    fi; \
 	$(MAKE) install; cd ../; rm -fr fox;fi
 # ELPA
 libelpa : libelpa_$(ELPA_LIBS_SWITCH)
