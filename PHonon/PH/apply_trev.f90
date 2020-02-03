@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2018 Andrea Dal Corso
+! Copyright (C) 2018 Andrea Dal Corso and Andrea Urru
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
