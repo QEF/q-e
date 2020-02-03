@@ -513,7 +513,11 @@ SUBROUTINE check_initial_status(auxdyn)
    CHARACTER(LEN=8) :: phpostfix
 
 #if defined (_WIN32)
+#if defined (__PGI)
+   phpostfix='.phsave\\'
+#else
    phpostfix='.phsave\'
+#endif
 #else
    phpostfix='.phsave/'
 #endif

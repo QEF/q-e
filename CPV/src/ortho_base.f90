@@ -941,26 +941,26 @@ CONTAINS
             !
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
-            root = root * leg_ortho
-            !
-            !  All processors contribute to the tau block of processor (ipr,ipc)
-            !  with their own part of wavefunctions
-            !
-            IF( ngw > 0 ) THEN
-               CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
-                        phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nx )
-            ELSE
-               taup = 0.0d0
-            END IF
-            !
-            !           q = 0  components has weight 1.0
-            !
-            IF (gstart == 2) THEN
-               CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
-            END IF
-            !
-            CALL mp_root_sum( taup, tau, root, intra_bgrp_comm )
-            !
+               root = root * leg_ortho
+               !
+               !  All processors contribute to the tau block of processor (ipr,ipc)
+               !  with their own part of wavefunctions
+               !
+               IF( ngw > 0 ) THEN
+                  CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+                           phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nx )
+               ELSE
+                  taup = 0.0d0
+               END IF
+               !
+               !           q = 0  components has weight 1.0
+               !
+               IF (gstart == 2) THEN
+                  CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
+               END IF
+               !
+               CALL mp_root_sum( taup, tau, root, intra_bgrp_comm )
+               !
             END IF
             !
          END DO

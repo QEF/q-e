@@ -202,7 +202,7 @@ SUBROUTINE setup()
   ! ... Set the domag variable to make a spin-orbit calculation with zero
   ! ... magnetization
   !
-  IF ( lspinorb ) THEN
+  IF ( noncolin  ) THEN
      domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
   ELSE
      domag = .TRUE.

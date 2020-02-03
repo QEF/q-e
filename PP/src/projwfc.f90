@@ -56,7 +56,6 @@ PROGRAM do_projwfc
   INTEGER, PARAMETER :: N_MAX_BOXES = 999
   INTEGER :: n_proj_boxes, irmin(3,N_MAX_BOXES), irmax(3,N_MAX_BOXES)
   LOGICAL :: lgww  !if .true. use GW QP energies from file bands.dat
-  INTEGER :: nproc_ortho
   !
   NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
              Emin, Emax, DeltaE, filpdos, filproj, lgww, &
@@ -70,7 +69,6 @@ PROGRAM do_projwfc
           do_distr_diag_inside_bgrp_ = .true. )
   CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
        inter_bgrp_comm )
-  CALL laxlib_getval(nproc_ortho=nproc_ortho)
   !
   CALL environment_start ( 'PROJWFC' )
   !
@@ -1165,18 +1163,15 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   ! flag to distinguish procs involved in linear algebra
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
-  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, ortho_cntx, nproc_ortho
+  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
+       ortho_parent_comm, ortho_cntx
+  LOGICAL :: do_distr_diag_inside_bgrp
+  INTEGER :: nproc_ortho
   ! distinguishes active procs in parallel linear algebra
-  !
-  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx, nproc_ortho = nproc_ortho )
   !
   IF ( natomwfc <= 0 ) CALL errore &
         ('projwave', 'Cannot project on zero atomic wavefunctions!', 1)
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
-  la_para = ( nproc_ortho > 1 )
-  IF ( la_para ) WRITE( stdout, &
-       '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
   IF ( gamma_only ) &
        WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
   !
@@ -1203,12 +1198,11 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   auxname = TRIM( restart_dir() ) // 'AUX' // TRIM(nd_nmbr)
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
-  ALLOCATE( ic_notcnv( np_ortho(2) ) )
-  ALLOCATE( notcnv_ip( np_ortho(2) ) )
-  ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
-  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
-  !
-  CALL desc_init( natomwfc, idesc, idesc_ip )
+  CALL desc_init( natomwfc, nx, la_proc, idesc, idesc_ip )
+  CALL laxlib_getval(nproc_ortho=nproc_ortho)
+  la_para = ( nproc_ortho > 1 )
+  IF ( la_para ) WRITE( stdout, &
+       '(5x,"linear algebra parallelized on ",i3," procs")') nproc_ortho
   !
   IF( ionode ) THEN
      WRITE( stdout, * )
@@ -1269,10 +1263,10 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
            ALLOCATE(roverlap_d (1, 1) )
         ENDIF
         roverlap_d = 0.d0
-        CALL calbec_ddistmat( npw, wfcatom, swfcatom, natomwfc, nx, roverlap_d )
+        CALL compute_ddistmat( npw, natomwfc, nx, wfcatom, swfcatom, roverlap_d )
         overlap_d(:,:)=cmplx(roverlap_d(:,:),0.0_dp, kind=dp)
      ELSE 
-        CALL calbec_zdistmat( npw_, wfcatom, swfcatom, natomwfc, nx, overlap_d )
+        CALL compute_zdistmat( npw_, natomwfc, nx, wfcatom, swfcatom, overlap_d )
      ENDIF
      !
      ! save overlap matrix if required
@@ -1385,6 +1379,8 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   DEALLOCATE (e)
   DEALLOCATE (wfcatom)
   IF (freeswfcatom) DEALLOCATE (swfcatom)
+  DEALLOCATE( idesc_ip )
+  DEALLOCATE( rank_ip )
   !
   ! closing the file will cause a lot of I/O
   !!! CLOSE( unit=iunaux )
@@ -1454,36 +1450,32 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
 CONTAINS
   !
-  SUBROUTINE desc_init( nsiz, idesc, idesc_ip )
+  SUBROUTINE desc_init( nsiz, nx, la_proc, idesc, idesc_ip )
      !
-     INTEGER, INTENT(in)  :: nsiz
-     INTEGER, INTENT(out) :: idesc(:)
-     INTEGER, INTENT(out) :: idesc_ip(:,:,:)
-     INTEGER :: i, j, rank
-     INTEGER :: coor_ip( 2 )
+     INTEGER, INTENT(IN)  :: nsiz
+     INTEGER, INTENT(OUT) :: nx
+     LOGICAL, INTENT(OUT) :: la_proc
+     INTEGER, INTENT(OUT) :: idesc(:)
+     INTEGER, INTENT(OUT), ALLOCATABLE :: idesc_ip(:,:,:)
      !
-     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+     CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, &
+          ortho_comm = ortho_comm, leg_ortho = leg_ortho, &
+          ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm,&
+          ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+     !
+     ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
+     ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+     CALL laxlib_init_desc( idesc, idesc_ip, rank_ip, nsiz, nsiz )
      !
      nx = idesc(LAX_DESC_NRCX)
-     DO j = 0, idesc(LAX_DESC_NPC) - 1
-        DO i = 0, idesc(LAX_DESC_NPR) - 1
-           coor_ip( 1 ) = i
-           coor_ip( 2 ) = j
-           CALL laxlib_init_desc( idesc_ip(:,i+1,j+1), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
-                                  np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
-           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        ENDDO
-     ENDDO
      !
      la_proc = .FALSE.
      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
      !
      RETURN
-  END SUBROUTINE desc_init
-  !
-
-  SUBROUTINE calbec_zdistmat( npw, v, w, n, nx, dm )
+   END SUBROUTINE desc_init
+   !
+  SUBROUTINE compute_zdistmat( npw, n, nx, v, w, dm )
      !
      !  This subroutine compute <vi|wj> and store the
      !  result in distributed matrix dm
@@ -1541,10 +1533,9 @@ CONTAINS
      DEALLOCATE( work )
      !
      RETURN
-  END SUBROUTINE calbec_zdistmat
+   END SUBROUTINE compute_zdistmat
   !
-
-  SUBROUTINE calbec_ddistmat( npw, v, w, n, nx, dm )
+  SUBROUTINE compute_ddistmat( npw, n, nx, v, w, dm )
      !
      !  This subroutine compute <vi|wj> and store the
      !  result in distributed matrix dm
@@ -1611,9 +1602,7 @@ CONTAINS
      DEALLOCATE( work )
      !
      RETURN
-  END SUBROUTINE calbec_ddistmat
-  !
-  !
+  END SUBROUTINE compute_ddistmat
   !
   SUBROUTINE wf_times_overlap( nx, npw, swfc, ovr, wfc )
     !

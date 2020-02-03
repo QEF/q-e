@@ -210,17 +210,8 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
 
   call start_clock('protwfcg'); !write(*,*) 'start protwfcg' ; FLUSH(6)
   !
-  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
-    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
-
+  CALL desc_init( nstart, nx, la_proc,  idesc, idesc_ip )
   !
-  ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
-  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
-  !
-  CALL desc_init( nstart, idesc, idesc_ip )
-  !
-
   npw2  = 2 * npw
   npwx2 = 2 * npwx
 
@@ -306,28 +297,25 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   !
 CONTAINS
   !
-  SUBROUTINE desc_init( nsiz, idesc, idesc_ip )
+  SUBROUTINE desc_init( nsiz, nx, la_proc, idesc, idesc_ip )
      !
      INTEGER, INTENT(IN)  :: nsiz
+     INTEGER, INTENT(OUT) :: nx
+     LOGICAL, INTENT(OUT) :: la_proc
      INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
-     INTEGER, INTENT(OUT) :: idesc_ip(:,:,:)
-     INTEGER :: i, j, rank
-     INTEGER :: coor_ip( 2 )
-     ! 
-     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
+     INTEGER, INTENT(OUT), ALLOCATABLE :: idesc_ip(:,:,:)
+     !
+     CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, &
+          ortho_comm = ortho_comm, leg_ortho = leg_ortho, &
+          ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm,&
+          ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+     !
+     ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
+     ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+     !
+     CALL laxlib_init_desc( idesc, idesc_ip, rank_ip, nsiz, nsiz )
      ! 
      nx = idesc(LAX_DESC_NRCX)
-     !
-     DO j = 0, idesc(LAX_DESC_NPC) - 1
-        DO i = 0, idesc(LAX_DESC_NPR) - 1
-           coor_ip( 1 ) = i
-           coor_ip( 2 ) = j
-           CALL laxlib_init_desc( idesc_ip(:,i+1,j+1), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
-                                  np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
-           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        END DO
-     END DO
      !
      la_proc = .FALSE.
      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
