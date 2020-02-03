@@ -388,8 +388,9 @@ SUBROUTINE print_lambda_x( lambda, idesc, n, nshow, nudx, ccc, ionode, iunit )
     RETURN
 END SUBROUTINE print_lambda_x
 
-  SUBROUTINE laxlib_desc_init( nsiz, nx, la_proc, idesc, rank_ip, idesc_ip )
+  SUBROUTINE laxlib_desc_init1( nsiz, nx, la_proc, idesc, rank_ip, idesc_ip )
      !
+     IMPLICIT NONE
      include 'laxlib_low.fh'
      include 'laxlib_param.fh'
      include 'laxlib_kinds.fh'
@@ -419,7 +420,51 @@ END SUBROUTINE print_lambda_x
      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
      !
      RETURN
-   END SUBROUTINE laxlib_desc_init
+   END SUBROUTINE laxlib_desc_init1
+   !
+   SUBROUTINE laxlib_desc_init2( nsiz, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip )
+     !
+     IMPLICIT NONE
+     include 'laxlib_low.fh'
+     include 'laxlib_param.fh'
+     include 'laxlib_kinds.fh'
+     !
+     INTEGER, INTENT(IN)  :: nsiz
+     INTEGER, INTENT(OUT) :: nx
+     LOGICAL, INTENT(OUT) :: la_proc
+     INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
+     INTEGER, INTENT(OUT) :: rank_ip(:,:)
+     INTEGER, INTENT(OUT) :: irc_ip(:)
+     INTEGER, INTENT(OUT) :: nrc_ip(:)
+
+     INTEGER :: i, j, rank
+     INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, &
+          leg_ortho, ortho_cntx
+     !
+     CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, &
+          ortho_comm = ortho_comm, leg_ortho = leg_ortho, &
+          ortho_comm_id = ortho_comm_id, ortho_cntx = ortho_cntx )
+     !
+     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, &
+          ortho_comm, ortho_cntx, ortho_comm_id )
+     !
+     nx = idesc(LAX_DESC_NRCX)
+     !
+     DO j = 0, idesc(LAX_DESC_NPC) - 1
+        CALL laxlib_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), &
+             idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np_ortho(1), j )
+        DO i = 0, idesc(LAX_DESC_NPR) - 1
+           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
+           rank_ip( i+1, j+1 ) = rank * leg_ortho
+        END DO
+     END DO
+     !
+     la_proc = .FALSE.
+     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
+     !
+     RETURN
+   END SUBROUTINE laxlib_desc_init2
+  !
   !
 SUBROUTINE laxlib_init_desc_x( idesc, n, nx, np, me, comm, cntx, comm_id )
     USE laxlib_descriptor,       ONLY: la_descriptor, descla_init, laxlib_desc_to_intarray
