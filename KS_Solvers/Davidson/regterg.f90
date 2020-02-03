@@ -652,7 +652,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate rank_ip ', ABS(ierr) )
   !
-  CALL desc_init( nvec, idesc, irc_ip, nrc_ip  )
+  CALL desc_init_dav( nvec, idesc, irc_ip, nrc_ip  )
   !
   IF( la_proc ) THEN
      !
@@ -825,7 +825,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! ... RE-Initialize the matrix descriptor
      !
-     CALL desc_init( nbase+notcnv, idesc, irc_ip, nrc_ip  )
+     CALL desc_init_dav( nbase+notcnv, idesc, irc_ip, nrc_ip  )
      !
      IF( la_proc ) THEN
 
@@ -954,7 +954,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
         !
         nbase = nvec
         !
-        CALL desc_init( nvec, idesc, irc_ip, nrc_ip  )
+        CALL desc_init_dav( nvec, idesc, irc_ip, nrc_ip  )
         !
         IF( la_proc ) THEN
            !
@@ -1015,7 +1015,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
 CONTAINS
   !
   !
-  SUBROUTINE desc_init( nsiz, idesc, irc_ip, nrc_ip )
+  SUBROUTINE desc_init_dav( nsiz, idesc, irc_ip, nrc_ip )
      !
      INTEGER, INTENT(IN)  :: nsiz
      INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
@@ -1040,7 +1040,7 @@ CONTAINS
      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
      !
      RETURN
-  END SUBROUTINE desc_init
+  END SUBROUTINE desc_init_dav
   !
   !
   SUBROUTINE set_to_identity( distmat, idesc )

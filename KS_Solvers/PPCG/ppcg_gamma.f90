@@ -846,7 +846,7 @@ CONTAINS
     ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
     IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate rank_ip ', ABS(ierr) )
     !
-    CALL desc_init( nbnd, idesc, irc_ip, nrc_ip  )
+    CALL desc_init_dav( nbnd, idesc, irc_ip, nrc_ip  )
     !
     nx = idesc(LAX_DESC_NRCX)
     !
@@ -1138,7 +1138,7 @@ CONTAINS
         !
         IF ( ALLOCATED(Gl) ) DEALLOCATE(Gl)
         !
-        CALL desc_init( nact, idesc, irc_ip, nrc_ip  )
+        CALL desc_init_dav( nact, idesc, irc_ip, nrc_ip  )
         !
         nx = idesc(LAX_DESC_NRCX)
         !
@@ -1245,7 +1245,7 @@ CONTAINS
      nrc_ip_store  = nrc_ip
      rank_ip_store = rank_ip
      !
-     CALL desc_init( nbnd, idesc, irc_ip, nrc_ip  )
+     CALL desc_init_dav( nbnd, idesc, irc_ip, nrc_ip  )
      !
      nx = idesc(LAX_DESC_NRCX)
      !
@@ -1380,7 +1380,7 @@ CONTAINS
   !
   !
 ! dmat begin
-  SUBROUTINE desc_init( nsiz, idesc, irc_ip, nrc_ip )
+  SUBROUTINE desc_init_dav( nsiz, idesc, irc_ip, nrc_ip )
 !    copy-paste from pregterg
      !
      INTEGER, INTENT(IN)  :: nsiz
@@ -1404,7 +1404,7 @@ CONTAINS
      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
      !
      RETURN
-  END SUBROUTINE desc_init
+  END SUBROUTINE desc_init_dav
   !
   !
   SUBROUTINE compute_distmat( dm, idesc, v, w, k)
