@@ -94,12 +94,14 @@ MODULE cp_autopilot
         &  parse_mailbox, rule_isave, rule_iprint, rule_dt, rule_emass,       &
         &  rule_electron_dynamics, rule_electron_damping, rule_ion_dynamics, &
         &  rule_ion_damping,  rule_ion_temperature, rule_tempw, &
-        &  rule_electron_orthogonalization, rule_tprint
+        &  rule_electron_orthogonalization, rule_tprint, &
+        &  rule_nhpcl, rule_fnosep
   USE autopilot, ONLY : event_index, event_step, event_isave, event_iprint, &
         &  event_dt, event_emass, event_electron_dynamics, event_electron_damping, &
         &  event_ion_dynamics, event_ion_damping, event_ion_temperature, event_tempw, &
         & event_electron_orthogonalization, &
-        & event_tprint
+        & event_tprint, &
+        & event_nhpcl, event_fnosep
 
   IMPLICIT NONE
   SAVE
@@ -130,7 +132,7 @@ CONTAINS
                              tortho, tfirst, tlast, tprint
     use wave_base, only: frice
     use ions_base, only: fricp
-    USE ions_nose, ONLY: ions_nose_init,xnhp0, xnhpm
+    USE ions_nose, ONLY: ions_nose_init,xnhp0, xnhpm, ions_nose_deallocate
     USE ions_positions,        ONLY : taus, tausm
     USE io_global, ONLY: ionode, ionode_id
     USE time_step,                ONLY : set_time_step,tps
@@ -389,8 +391,34 @@ CONTAINS
        tempw  = rule_tempw(event_index)
        ! The follwiong is a required side effect
        ! when resetting tempw
-       CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
        IF ( ionode ) write(*,'(4X,A,15X,F10.4)') 'Rule event: tempw', tempw
+    endif
+
+    ! NHPCL
+    if (event_nhpcl(event_index)) then
+       nhpcl = rule_nhpcl(event_index)
+       call ions_nose_deallocate() ! the dimension of the nose array can change
+       if ( ionode ) write(*,'(4X,A,15X,I1)') 'Rule event: nhpcl', nhpcl
+       
+    endif
+
+    ! FNOSEP
+    ! TODO: implement reading of full FNOSEP array
+    if (event_fnosep(event_index)) then
+       fnosep = rule_fnosep(event_index)
+       if ( ionode ) then
+           write(*,'(4X,A,15X,F10.4)') 'Rule event: fnosep', fnosep(1)
+           write(*,'(4X,A)') 'WARNING: all fnosep of the chain are set to the same value'
+       endif
+       
+       !IF ( ionode ) write(*,*) 'Rule event: fnosep', fnosep
+    endif
+
+    ! nose initialization
+    if (event_tempw(event_index) .or. event_nhpcl(event_index) .or. event_fnosep(event_index) .or. &
+            (event_ion_temperature(event_index) .and. rule_ion_temperature(event_index) .eq. 'NOSE'  ) &
+        ) then
+       call ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
     endif
 
     !----------------------------------------
@@ -550,14 +578,11 @@ CONTAINS
       need_tprint_true = .FALSE.
       event_idx = event_index
       do while ( event_idx .le. size(event_step) .and. (event_step(event_idx)==current_nfi+1) ) 
-
           if ( tcg  .and. event_electron_dynamics(event_idx) .and. &
             &  (rule_electron_dynamics(event_idx)=='VERLET') ) then
-            
                need_tprint_true = .TRUE.
-
           end if 
-	  event_idx = event_idx + 1
+          event_idx = event_idx + 1
       enddo
       RETURN
   end function need_tprint_true
