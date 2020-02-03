@@ -638,18 +638,6 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate notcnv_ip ', ABS(ierr) )
   !
-  ALLOCATE( irc_ip( np_ortho(1) ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( 'pregterg ',' cannot allocate irc_ip ', ABS(ierr) )
-  !
-  ALLOCATE( nrc_ip( np_ortho(1) ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( 'pregterg ',' cannot allocate nrc_ip ', ABS(ierr) )
-  !
-  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
-  IF( ierr /= 0 ) &
-     CALL errore( 'pregterg ',' cannot allocate rank_ip ', ABS(ierr) )
-  !
   CALL desc_init( nvec, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
   !
   IF( la_proc ) THEN
@@ -986,9 +974,9 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   DEALLOCATE( vl, hl, sl )
   !
   DEALLOCATE( rank_ip )
-  DEALLOCATE( ic_notcnv )
   DEALLOCATE( irc_ip )
   DEALLOCATE( nrc_ip )
+  DEALLOCATE( ic_notcnv )
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
   DEALLOCATE( ew )

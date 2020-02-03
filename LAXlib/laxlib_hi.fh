@@ -105,9 +105,9 @@ END INTERFACE
 	 INTEGER, INTENT(OUT) :: nx
          LOGICAL, INTENT(OUT) :: la_proc
          INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
-         INTEGER, INTENT(OUT) :: rank_ip( :, : )
-	 INTEGER, INTENT(OUT) :: irc_ip(:)
-         INTEGER, INTENT(OUT) :: nrc_ip(:)
+         INTEGER, INTENT(OUT), ALLOCATABLE :: rank_ip( :, : )
+	 INTEGER, INTENT(OUT), ALLOCATABLE :: irc_ip(:)
+         INTEGER, INTENT(OUT), ALLOCATABLE :: nrc_ip(:)
       END SUBROUTINE
    END INTERFACE
 

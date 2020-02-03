@@ -433,9 +433,9 @@ END SUBROUTINE print_lambda_x
      INTEGER, INTENT(OUT) :: nx
      LOGICAL, INTENT(OUT) :: la_proc
      INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
-     INTEGER, INTENT(OUT) :: rank_ip(:,:)
-     INTEGER, INTENT(OUT) :: irc_ip(:)
-     INTEGER, INTENT(OUT) :: nrc_ip(:)
+     INTEGER, INTENT(OUT), ALLOCATABLE :: rank_ip(:,:)
+     INTEGER, INTENT(OUT), ALLOCATABLE :: irc_ip(:)
+     INTEGER, INTENT(OUT), ALLOCATABLE :: nrc_ip(:)
 
      INTEGER :: i, j, rank
      INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, &
@@ -450,6 +450,10 @@ END SUBROUTINE print_lambda_x
      !
      nx = idesc(LAX_DESC_NRCX)
      !
+     IF ( .NOT. ALLOCATED (rank_ip) ) THEN
+        ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+        ALLOCATE( irc_ip( np_ortho(1) ), nrc_ip (np_ortho(1) ) )
+     END IF
      DO j = 0, idesc(LAX_DESC_NPC) - 1
         CALL laxlib_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), &
              idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np_ortho(1), j )

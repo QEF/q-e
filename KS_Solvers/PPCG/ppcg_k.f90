@@ -800,13 +800,6 @@ CONTAINS
     ALLOCATE ( cwork( 1 + 18*sbsize + 18*sbsize**2 ), rwork( 1 + 18*sbsize + 18*sbsize**2 ), iwork(3 + 15*sbsize), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate lapack work arrays ', ABS(ierr) )
     !
-    ALLOCATE( irc_ip( np_ortho(1) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate irc_ip ', ABS(ierr) )
-    ALLOCATE( nrc_ip( np_ortho(1) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate nrc_ip ', ABS(ierr) )
-    ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate rank_ip ', ABS(ierr) )
-    !
     CALL desc_init( nbnd, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
     !
     IF ( la_proc ) THEN
