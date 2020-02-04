@@ -10,7 +10,11 @@
 subroutine symdvscf (nper, irr, dvtosym)
   !---------------------------------------------------------------------
   ! symmetrize the self-consistent potential of the perturbations
-  ! belonging to an irreducible representation
+  ! belonging to an irreducible representation. 
+  ! The routine is generalized to include, in the noncollinear 
+  ! magnetic case, also the symmetry operations that require the 
+  ! time-reversal operator (meaning that TS is a symmetry of the 
+  ! crystal).  
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi

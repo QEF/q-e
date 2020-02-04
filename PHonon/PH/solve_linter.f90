@@ -25,6 +25,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !     f) If lda_plus_u=.true. compute also the response occupation
   !        matrices dnsscf
+  !     g) (Introduced in February 2020) If noncolin=.true. and domag=.true. 
+  !        the linear system is solved twice (nsolv = 2, the case 
+  !        isolv = 2 needs the time-reversed wave functions). For the 
+  !        theoretical background, please refer to Phys. Rev. B 100, 
+  !        045115 (2019)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp

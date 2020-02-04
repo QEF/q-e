@@ -720,12 +720,19 @@ SUBROUTINE phq_readin()
   IF (okpaw.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with paw and raman or elop is not yet available',1)
 
-  IF (okpaw.and.noncolin.and.domag) CALL errore('phq_readin',&
-     'The phonon code with paw and domag is not available yet',1)
+  IF (magnetic_sym) THEN 
+     
+     WRITE(stdout,'(/5x,a)') "Phonon calculation in the non-collinear magnetic case;"
+     WRITE(stdout,'(5x,a)')  "please cite A. Urru and A. Dal Corso, Phys. Rev. B 100," 
+     WRITE(stdout,'(5x,a)')  "045115 (2019) for the theoretical background."
 
-  IF (magnetic_sym.AND.epsil) CALL errore('phq_readin',&
-     'The calculation of Born effective charges in the non collinear &
-      magnetic case does not work yet and is temporarily disabled',1)
+     IF (epsil) CALL errore('phq_readin',&
+          'The calculation of Born effective charges in the non collinear &
+           magnetic case does not work yet and is temporarily disabled',1)
+
+     IF (okpaw) CALL errore('phq_readin',&
+          'The phonon code with paw and domag is not available yet',1)
+  ENDIF
 
   IF (okvan.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with US-PP and raman or elop not yet available',1)

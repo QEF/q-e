@@ -14,6 +14,10 @@ subroutine symdynph_gq_new (xq, phi, s, invs, rtau, irt, nsymq, &
   !     matrix expressed on the crystal axes and imposes the symmetry
   !     of the small group of q. Furthermore it imposes also the symmetry
   !     q -> -q+G if present.
+  !     February 2020: Update (A. Urru) to include the symmetry operations 
+  !     that require the time reversal operator (meaning that TS is a 
+  !     symmetry of the crystal). For more information please see: 
+  !     Phys. Rev. B 100, 045115 (2019)
   !
   !
   USE kinds, only : DP

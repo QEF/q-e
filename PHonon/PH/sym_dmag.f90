@@ -10,7 +10,12 @@
 subroutine sym_dmag (nper, irr, dmagtosym)
   !---------------------------------------------------------------------
   ! symmetrize the change of the magnetization density
-  ! belonging to an irreducible representation
+  ! belonging to an irreducible representation.
+  ! The routine is generalized to include also the 
+  ! symmetry operations that require the time-reversal 
+  ! operator (meaning that TS is a symmetry of the crystal).
+  ! For a more complete explanation, please see: 
+  ! Phys. Rev. B 100, 045115 (2019).
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi

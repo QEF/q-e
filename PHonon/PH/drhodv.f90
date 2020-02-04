@@ -16,6 +16,10 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !    contribution of the local potential in drhodvloc.
   !    Note that drhoscf contain only the smooth part of the
   !    induced charge density, calculated in solve linter.
+  !    February 2020: the routine has been generalized to 
+  !    address also the case noncolin.and.domag. For the 
+  !    theoretical background please refer to: 
+  !    Phys. Rev. B 100, 045115 (2019)
   !
   !
   USE kinds,     ONLY : DP
