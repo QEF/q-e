@@ -89,20 +89,21 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
 
   INTEGER, PARAMETER   :: blocksz = 256 ! used to optimize some omp parallel do loops
   INTEGER   :: nblock
-  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
-             ortho_parent_comm, ortho_cntx
+  !
+  INTEGER :: np_ortho(2), ortho_parent_comm, ortho_cntx
   LOGICAL :: do_distr_diag_inside_bgrp
-
+  !
+  !
   res_array     = 0.0
   !
   CALL start_clock( 'ppcg_k' )
   !
   !  ... Initialization and validation
 
-  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
-    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
-!
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_cntx = ortho_cntx, &
+       ortho_parent_comm = ortho_parent_comm, &
+       do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+  !
   print_info = 0 ! 3 
   sbsize3 = sbsize*3
   kdim  = npwx*(npol-1) + npw
@@ -799,16 +800,7 @@ CONTAINS
     ALLOCATE ( cwork( 1 + 18*sbsize + 18*sbsize**2 ), rwork( 1 + 18*sbsize + 18*sbsize**2 ), iwork(3 + 15*sbsize), stat = ierr )
     IF (ierr /= 0) CALL errore( 'ppcg ',' cannot allocate lapack work arrays ', ABS(ierr) )
     !
-    ALLOCATE( irc_ip( np_ortho(1) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate irc_ip ', ABS(ierr) )
-    ALLOCATE( nrc_ip( np_ortho(1) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate nrc_ip ', ABS(ierr) )
-    ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore( 'ppcg ',' cannot allocate rank_ip ', ABS(ierr) )
-    !
-    CALL desc_init( nbnd, idesc, irc_ip, nrc_ip  )
-    !
-    nx = idesc(LAX_DESC_NRCX)
+    CALL desc_init( nbnd, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
     !
     IF ( la_proc ) THEN
        ALLOCATE( Gl( nx, nx ), STAT=ierr )
@@ -1095,9 +1087,7 @@ CONTAINS
         !
         IF ( ALLOCATED(Gl) ) DEALLOCATE(Gl)
         !
-        CALL desc_init( nact, idesc, irc_ip, nrc_ip  )
-        !
-        nx = idesc(LAX_DESC_NRCX)
+        CALL desc_init( nact, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
         !
         IF ( la_proc ) THEN
            !
@@ -1202,9 +1192,7 @@ CONTAINS
      nrc_ip_store  = nrc_ip
      rank_ip_store = rank_ip
      !
-     CALL desc_init( nbnd, idesc, irc_ip, nrc_ip  )
-     !
-     nx = idesc(LAX_DESC_NRCX)
+     CALL desc_init( nbnd, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
      !
      IF ( la_proc ) THEN
         !
@@ -1335,34 +1323,6 @@ CONTAINS
 !    IF ( ALLOCATED(Sl) )      DEALLOCATE( Sl )
     !
   END SUBROUTINE deallocate_all
-  !
-  !
-! dmat begin
-  SUBROUTINE desc_init( nsiz, idesc, irc_ip, nrc_ip )
-!    copy-paste from pregterg
-     !
-     INTEGER, INTENT(IN)  :: nsiz
-     INTEGER, INTENT(OUT) :: idesc(:)
-     INTEGER, INTENT(OUT) :: irc_ip(:)
-     INTEGER, INTENT(OUT) :: nrc_ip(:)
-
-     INTEGER :: i, j, rank
-     !
-     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id)
-     !
-     DO j = 0, idesc(LAX_DESC_NPC) - 1
-        CALL laxlib_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np_ortho(1), j )
-        DO i = 0, idesc(LAX_DESC_NPR) - 1
-           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        END DO
-     END DO
-     !
-     la_proc = .FALSE.
-     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
-     !
-     RETURN
-  END SUBROUTINE desc_init
   !
   !
   SUBROUTINE compute_distmat( dm, idesc, v, w, k)
