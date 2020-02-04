@@ -158,6 +158,7 @@ add_subdirectory(KS_Solvers)
 add_subdirectory(dft-d3)
 add_subdirectory(PW)
 add_subdirectory(CPV)
+add_subdirectory(atomic)
 
 ###########################################################
 # Exports
