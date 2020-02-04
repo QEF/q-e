@@ -36,7 +36,7 @@ SUBROUTINE elphon()
   USE mp_bands,  ONLY : intra_bgrp_comm, me_bgrp, root_bgrp
   USE mp,        ONLY : mp_bcast
   USE io_global, ONLY: stdout
-  USE lrus,   ONLY : int3, int3_nc, int3_paw, becp1
+  USE lrus,   ONLY : int3, int3_nc, int3_paw
   USE qpoint, ONLY : xq
   !
   IMPLICIT NONE
