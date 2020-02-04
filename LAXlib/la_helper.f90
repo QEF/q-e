@@ -409,8 +409,15 @@ END SUBROUTINE print_lambda_x
           ortho_comm = ortho_comm, leg_ortho = leg_ortho, &
           ortho_comm_id = ortho_comm_id )
      !
-     ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
-     ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+     IF ( .NOT. ALLOCATED (idesc_ip) ) THEN
+        ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
+     ELSE
+        IF ( SIZE (idesc_ip,2) /= np_ortho(1) .OR. &
+             SIZE (idesc_ip,3) /= np_ortho(2) ) &
+             CALL lax_error__( " desc_init ", " inconsistent dimension ", 2 )
+     END IF
+     IF ( .NOT. ALLOCATED (rank_ip) ) &
+          ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
      !
      CALL laxlib_init_desc( idesc, idesc_ip, rank_ip, nsiz, nsiz )
      ! 
@@ -453,6 +460,10 @@ END SUBROUTINE print_lambda_x
      IF ( .NOT. ALLOCATED (rank_ip) ) THEN
         ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
         ALLOCATE( irc_ip( np_ortho(1) ), nrc_ip (np_ortho(1) ) )
+     ELSE
+        IF ( SIZE (rank_ip,1) /= np_ortho(1) .OR. &
+             SIZE (rank_ip,2) /= np_ortho(2) ) &
+             CALL lax_error__( " desc_init ", " inconsistent dimension ", 1 )
      END IF
      DO j = 0, idesc(LAX_DESC_NPC) - 1
         CALL laxlib_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), &
@@ -510,17 +521,17 @@ SUBROUTINE laxlib_multi_init_desc_x( idesc, idesc_ip, rank_ip, n, nx  )
     !
     includeme = 1
     !
-	DO j = 0, idesc(LAX_DESC_NPC) - 1
-		DO i = 0, idesc(LAX_DESC_NPR) - 1
-			coor_ip( 1 ) = i
-			coor_ip( 2 ) = j
-			CALL descla_init( descla, idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
-			                  np_ortho, coor_ip, ortho_comm, ortho_cntx, includeme )
-			CALL laxlib_desc_to_intarray( idesc_ip(:,i+1,j+1), descla )
-			CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
-			rank_ip( i+1, j+1 ) = rank * leg_ortho
-		END DO
-	END DO
+    DO j = 0, idesc(LAX_DESC_NPC) - 1
+       DO i = 0, idesc(LAX_DESC_NPR) - 1
+          coor_ip( 1 ) = i
+          coor_ip( 2 ) = j
+          CALL descla_init( descla, idesc(LAX_DESC_N), idesc(LAX_DESC_NX), &
+               np_ortho, coor_ip, ortho_comm, ortho_cntx, includeme )
+          CALL laxlib_desc_to_intarray( idesc_ip(:,i+1,j+1), descla )
+          CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
+          rank_ip( i+1, j+1 ) = rank * leg_ortho
+       END DO
+    END DO
     !
     RETURN
 END SUBROUTINE laxlib_multi_init_desc_x
