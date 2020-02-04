@@ -54,7 +54,6 @@ set(sources
     src/lderivps.f90
     src/lschps.f90
     src/newd_at.f90
-    src/kli.f90
     src/new_potential.f90
     src/nodenum.f90
     src/normalize.f90
@@ -92,6 +91,8 @@ set(sources
     src/write_pseudo.f90
     src/write_results.f90
     src/write_resultsps.f90
+    # Modules
+    src/kli.f90
     src/atomic_paw.f90
     src/ld1inc.f90
     src/parameters.f90)
