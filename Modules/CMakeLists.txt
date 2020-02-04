@@ -120,7 +120,6 @@ set(sources
     xsf.f90
     wyckoff.f90
     wypos.f90
-    zdotc_wrapper.f90
     zvscal.f90
     # list of subroutines and functions (not modules) previously found in flib/
     atomic_number.f90
