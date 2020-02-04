@@ -103,10 +103,7 @@ qe_add_library(qe_atomic ${sources})
 add_library(QE::ATOMIC ALIAS qe_atomic)
 target_link_libraries(qe_atomic
     PUBLIC
-        QE::UTILX
-        QE::Modules
-        QE::FFTX
-        QE::MPI_Fortran)
+        QE::Modules)
 
 ###########################################################
 # ld1.x
