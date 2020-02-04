@@ -10,10 +10,7 @@ qe_add_library(qe_couple ${sources})
 add_library(QE::COUPLE ALIAS qe_couple)
 target_link_libraries(qe_couple
     PUBLIC
-        QE::Modules
-        QE::LAX
-        QE::CPV
-        QE::MPI_Fortran)
+        QE::CPV)
 
 ###########################################################
 
