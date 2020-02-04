@@ -159,6 +159,8 @@ add_subdirectory(dft-d3)
 add_subdirectory(PW)
 add_subdirectory(CPV)
 add_subdirectory(atomic)
+add_subdirectory(COUPLE)
+add_subdirectory(LR_Modules)
 
 ###########################################################
 # Exports
