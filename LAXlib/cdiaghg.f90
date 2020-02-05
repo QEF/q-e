@@ -195,6 +195,289 @@ SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
 END SUBROUTINE laxlib_cdiaghg
 !
 !----------------------------------------------------------------------------
+SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp, intra_bgrp_comm)
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates eigenvalues and eigenvectors of the generalized problem
+  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  !
+#if defined(__CUDA)
+  USE cudafor
+  !
+#if defined(__USE_CUSOLVER)
+  USE cusolverdn
+#else
+  USE zhegvdx_gpu
+#endif
+#endif
+  !
+  USE laxlib_parallel_include
+  !
+!define __USE_GLOBAL_BUFFER
+#if defined(__USE_GLOBAL_BUFFER)
+  USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
+#define VARTYPE POINTER
+#else
+#define VARTYPE ALLOCATABLE
+#endif
+  !
+  IMPLICIT NONE
+  INCLUDE 'laxlib_kinds.fh'
+  !
+  INTEGER, INTENT(IN) :: n, m, ldh
+    ! dimension of the matrix to be diagonalized
+    ! number of eigenstates to be calculate
+    ! leading dimension of h, as declared in the calling pgm unit
+  COMPLEX(DP), INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
+    ! actually intent(in) but compilers don't know and complain
+    ! matrix to be diagonalized, allocated on the GPU
+    ! overlap matrix, allocated on the GPU
+  REAL(DP), INTENT(OUT) :: e_d(n)
+    ! eigenvalues, , allocated on the GPU
+  COMPLEX(DP),  INTENT(OUT) :: v_d(ldh,n)
+    ! eigenvectors (column-wise), , allocated on the GPU
+    ! NB: the dimension of v_d this is different from cdiaghg !!
+#if defined(__CUDA)
+    ATTRIBUTES(DEVICE) :: h_d, s_d, e_d, v_d
+#endif
+  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+  !
+  INTEGER              :: lwork, info
+  !
+  REAL(DP)             :: abstol
+  INTEGER, ALLOCATABLE :: ifail(:)
+  INTEGER, VARTYPE     :: iwork(:)
+  REAL(DP), VARTYPE    :: rwork(:)
+  COMPLEX(DP), VARTYPE :: work(:)
+  !
+  COMPLEX(DP), VARTYPE :: v_h(:,:)
+  REAL(DP), VARTYPE    :: e_h(:)
+#if (! defined(__USE_GLOBAL_BUFFER)) && defined(__CUDA)
+  ATTRIBUTES( PINNED ) :: work, iwork, rwork, v_h, e_h
+#endif
+  !
+  INTEGER              :: lwork_d, lrwork_d, liwork, lrwork
+  REAL(DP), VARTYPE    :: rwork_d(:)
+  COMPLEX(DP), VARTYPE :: work_d(:)
+  ! various work space
+  !
+  ! Temp arrays to save H and S.
+  REAL(DP), VARTYPE    :: h_diag_d(:), s_diag_d(:)
+#if defined(__CUDA)
+  ATTRIBUTES( DEVICE ) :: work_d, rwork_d, h_diag_d, s_diag_d
+#endif
+  INTEGER :: i, j
+#if defined( __USE_CUSOLVER )
+  INTEGER                :: devInfo_d, h_meig
+  ATTRIBUTES( DEVICE )   :: devInfo_d
+  TYPE(cusolverDnHandle) :: cuSolverHandle
+  !
+  COMPLEX(DP), VARTYPE   :: h_bkp_d(:,:), s_bkp_d(:,:)
+  ATTRIBUTES( DEVICE )   :: h_bkp_d, s_bkp_d
+#endif
+#undef VARTYPE
+  !
+  !
+  !
+  !
+  CALL start_clock( 'cdiaghg_gpu' )
+  !
+  ! ... only the first processor diagonalizes the matrix
+  !
+  IF ( me_bgrp == root_bgrp ) THEN
+      !
+      ! Keeping compatibility for both CUSolver and CustomEigensolver, CUSolver below
+      !
+#if defined(__USE_CUSOLVER) && defined(__CUDA)
+!
+! vvv __USE_CUSOLVER
+
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(h_bkp_d(n,n), s_bkp_d(n,n), STAT = info)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cannot allocate h_bkp_d or s_bkp_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( h_bkp_d,  (/ n, n /), info )
+      CALL dev%lock_buffer( s_bkp_d,  (/ n, n /), info )
+#endif
+      !
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            h_bkp_d(i,j) = h_d(i,j)
+            s_bkp_d(i,j) = s_d(i,j)
+         ENDDO
+      ENDDO
+      !
+      info = cusolverDnCreate(cuSolverHandle)
+      IF ( info /= CUSOLVER_STATUS_SUCCESS ) CALL errore( ' cdiaghg_gpu ', 'cusolverDnCreate',  ABS( info ) )
+      !
+      info = cusolverDnZhegvdx_bufferSize(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                               n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, lwork_d)
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(work_d(1*lwork_d), STAT = info)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cannot allocate work_d ', ABS( info ) )
+#else
+      CALL dev%lock_buffer( work_d,  lwork_d, info )
+#endif
+      !
+      info = cusolverDnZhegvdx(cuSolverHandle, CUSOLVER_EIG_TYPE_1, CUSOLVER_EIG_MODE_VECTOR, CUSOLVER_EIG_RANGE_I, CUBLAS_FILL_MODE_UPPER, &
+                                  n, h_d, ldh, s_d, ldh, 0.D0, 0.D0, 1, m, h_meig, e_d, work_d, lwork, devInfo_d)
+!$cuf kernel do(2)
+      DO j=1,n
+         DO i=1,n
+            IF(j <= m) v_d(i,j) = h_d(i,j)
+            h_d(i,j) = h_bkp_d(i,j)
+            s_d(i,j) = s_bkp_d(i,j)
+         ENDDO
+      ENDDO
+      !
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cusolverDnZhegvdx failed ', ABS( info ) )
+      info = cusolverDnDestroy(cuSolverHandle)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' cusolverDnDestroy failed ', ABS( info ) )
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      DEALLOCATE(work_d)
+      DEALLOCATE(h_bkp_d, s_bkp_d)
+#else
+      CALL dev%release_buffer( work_d,  info )
+      CALL dev%release_buffer( h_bkp_d, info )
+      CALL dev%release_buffer( s_bkp_d, info )
+#endif
+! ^^^ __USE_CUSOLVER
+      !
+      ! Keeping compatibility for both CUSolver and CustomEigensolver, CustomEigensolver below
+      !
+#elif defined(__CUDA)
+! vvv not __USE_CUSOLVER
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ! NB: dimension is different!
+      ALLOCATE(v_h(ldh,n), e_h(n))
+      ALLOCATE(h_diag_d(n) , s_diag_d(n))
+#else
+      CALL pin%lock_buffer( v_h, (/ldh,n/), info )
+      CALL pin%lock_buffer( e_h, n, info )
+      !
+      CALL dev%lock_buffer( h_diag_d, n, info )
+      CALL dev%lock_buffer( s_diag_d, n, info )
+#endif
+      !
+      lwork  = n
+      lrwork = 1+5*n+2*n*n
+      liwork = 3+5*n
+      !
+      lwork_d  = 2*64*64 + 65 * n
+      lrwork_d = n
+      !
+#if ! defined(__USE_GLOBAL_BUFFER)
+      ALLOCATE(work(lwork), rwork(lrwork), iwork(liwork))
+      !
+      ALLOCATE(work_d(1*lwork_d), STAT = info)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
+      !
+      ALLOCATE(rwork_d(1*lrwork_d), STAT = info)
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' allocate rwork_d ', ABS( info ) )
+#else
+      CALL pin%lock_buffer(work, lwork, info)
+      CALL pin%lock_buffer(rwork, lrwork, info)
+      CALL pin%lock_buffer(iwork, liwork, info)
+      CALL dev%lock_buffer( work_d,  lwork_d, info)
+      CALL dev%lock_buffer( rwork_d, lrwork_d, info)
+#endif
+      !
+      !$cuf kernel do(1) <<<*,*>>>
+      DO i = 1, n
+         h_diag_d(i) = DBLE( h_d(i,i) )
+         s_diag_d(i) = DBLE( s_d(i,i) )
+      END DO
+      CALL zhegvdx_gpu(n, h_d, ldh, s_d, ldh, v_d, ldh, 1, m, e_d, work_d,&
+                       lwork_d, rwork_d, lrwork_d, &
+                       work, lwork, rwork, lrwork, &
+                       iwork, liwork, v_h, SIZE(v_h, 1), e_h, info, .TRUE.)
+      !
+
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' zhegvdx_gpu failed ', ABS( info ) )
+      !
+!$cuf kernel do(1) <<<*,*>>>
+      DO i = 1, n
+         h_d(i,i) = DCMPLX( h_diag_d(i), 0.0_DP)
+         s_d(i,i) = DCMPLX( s_diag_d(i), 0.0_DP)
+         DO j = i + 1, n
+            h_d(i,j) = DCONJG( h_d(j,i) )
+            s_d(i,j) = DCONJG( s_d(j,i) )
+         END DO
+         DO j = n + 1, ldh
+            h_d(j,i) = ( 0.0_DP, 0.0_DP )
+            s_d(j,i) = ( 0.0_DP, 0.0_DP )
+         END DO
+      END DO
+#if ! defined(__USE_GLOBAL_BUFFER)
+      DEALLOCATE(h_diag_d, s_diag_d)
+      !
+      DEALLOCATE(work, rwork, iwork)
+      DEALLOCATE(work_d, rwork_d)
+      DEALLOCATE(v_h, e_h)
+#else
+      CALL dev%release_buffer( h_diag_d, info )
+      CALL dev%release_buffer( s_diag_d, info)
+      !
+      CALL pin%release_buffer(work, info)
+      CALL pin%release_buffer(rwork, info)
+      CALL pin%release_buffer(iwork, info)
+      CALL dev%release_buffer( work_d,  info)
+      CALL dev%release_buffer( rwork_d, info)
+      CALL pin%release_buffer(v_h, info)
+      CALL pin%release_buffer(e_h, info)
+#endif
+! ^^^ not __USE_CUSOLVER
+#else
+     CALL lax_error__( 'cdiaghg', 'Called GPU eigensolver without GPU support', 1 )
+#endif
+     !
+  END IF
+  !
+  ! ... broadcast eigenvectors and eigenvalues to all other processors
+  !
+#if defined __MPI
+#if defined __GPU_MPI
+  info = cudaDeviceSynchronize()
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error synchronizing device (first)', ABS( info ) )
+  CALL MPI_BCAST( e_d, n, MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e_d', ABS( info ) )
+  CALL MPI_BCAST( v_d, ldh*m, MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v_d', ABS( info ) )
+  info = cudaDeviceSynchronize() ! this is probably redundant...
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error synchronizing device (second)', ABS( info ) )
+#else
+  ALLOCATE(e_h(n), v_h(ldh,m))
+  e_h(1:n) = e_d(1:n)
+  v_h(1:ldh, 1:m) = v_d(1:ldh, 1:m)
+  CALL MPI_BCAST( e_h, n, MPI_DOUBLE_PRECISION, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array e_d', ABS( info ) )
+  CALL MPI_BCAST( v_h, ldh*m, MPI_DOUBLE_COMPLEX, root_bgrp, intra_bgrp_comm, info )
+  IF ( info /= 0 ) &
+        CALL lax_error__( 'cdiaghg', 'error broadcasting array v_d', ABS( info ) )
+  e_d(1:n) = e_h(1:n)
+  v_d(1:ldh, 1:m) = v_h(1:ldh, 1:m)
+  DEALLOCATE(e_h, v_h)
+#endif
+#endif
+  !
+  CALL stop_clock( 'cdiaghg_gpu' )
+  !
+  RETURN
+  !
+END SUBROUTINE laxlib_cdiaghg_gpu
+!
+!----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE laxlib_pcdiaghg( n, h, s, ldh, e, v, idesc )
   !----------------------------------------------------------------------------
   !
