@@ -21,7 +21,6 @@ build/
 
 bin/*
 FoX
-iotk
 include/fft_defs.h
 include/configure.h
 include/c_defs.h
