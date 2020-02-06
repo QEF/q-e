@@ -14,6 +14,7 @@ subroutine print_clock_ph
   USE control_ph, ONLY : trans, zue, epsil
   USE ramanm,     ONLY : lraman, elop
   USE ldau,       ONLY : lda_plus_u
+  USE el_phon,    ONLY : elph
   !
   implicit none
   !
@@ -164,7 +165,13 @@ subroutine print_clock_ph
      WRITE( stdout, * )
   ENDIF
 
-  WRITE( stdout,  * ) '     General routines'
+  IF (elph) THEN
+     WRITE( stdout, * ) '    ELECTRON-PHONON INTERACTION:'
+     call print_clock('elphsum')
+     WRITE( stdout, * )
+  ENDIF
+
+  WRITE( stdout,  * ) '    GENERAL ROUTINES:'
   call print_clock ('calbec')
   call print_clock ('fft')
   call print_clock ('ffts')
