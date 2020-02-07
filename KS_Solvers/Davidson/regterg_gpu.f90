@@ -761,8 +761,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
-  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
-             ortho_parent_comm, ortho_cntx
+  INTEGER :: np_ortho(2), ortho_parent_comm
   LOGICAL :: do_distr_diag_inside_bgrp
   !
   REAL(DP), EXTERNAL :: ddot
@@ -782,9 +781,8 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   CALL start_clock( 'regterg' )
   ! 
-  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
-    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm, &
+    do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
   ! 
   IF ( nvec > nvecx / 2 ) CALL errore( 'pregter', 'nvecx is too small', 1 )
   !
@@ -839,7 +837,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   IF( ierr /= 0 ) &
      CALL errore( 'pregterg ',' cannot allocate rank_ip ', ABS(ierr) )
   !
-  CALL desc_init( nvec, idesc, irc_ip, nrc_ip  )
+  CALL desc_init( nvec, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
   !
   IF( la_proc ) THEN
      !
@@ -1038,7 +1036,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... RE-Initialize the matrix descriptor
      !
-     CALL desc_init( nbase+notcnv, idesc, irc_ip, nrc_ip  )
+     CALL desc_init( nbase+notcnv, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
      !
      IF( la_proc ) THEN
 
@@ -1169,7 +1167,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         nbase = nvec
         !
-        CALL desc_init( nvec, idesc, irc_ip, nrc_ip  )
+        CALL desc_init( nvec, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip  )
         !
         IF( la_proc ) THEN
            !
@@ -1235,34 +1233,6 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   !
 CONTAINS
-  !
-  !
-  SUBROUTINE desc_init( nsiz, idesc, irc_ip, nrc_ip )
-     !
-     INTEGER, INTENT(IN)  :: nsiz
-     INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
-     INTEGER, INTENT(OUT) :: irc_ip(:)
-     INTEGER, INTENT(OUT) :: nrc_ip(:)
-
-     INTEGER :: i, j, rank
-     !
-     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
-     !
-     nx = idesc(LAX_DESC_NRCX)
-     !
-     DO j = 0, idesc(LAX_DESC_NPC) - 1
-        CALL laxlib_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np_ortho(1), j )
-        DO i = 0, idesc(LAX_DESC_NPR) - 1
-           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        END DO
-     END DO
-     !
-     la_proc = .FALSE.
-     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
-     !
-     RETURN
-  END SUBROUTINE desc_init
   !
   !
   SUBROUTINE set_to_identity( distmat, idesc )

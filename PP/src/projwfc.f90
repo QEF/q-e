@@ -1163,8 +1163,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   ! flag to distinguish procs involved in linear algebra
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
-  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
-       ortho_parent_comm, ortho_cntx
   LOGICAL :: do_distr_diag_inside_bgrp
   INTEGER :: nproc_ortho
   ! distinguishes active procs in parallel linear algebra
@@ -1198,7 +1196,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   auxname = TRIM( restart_dir() ) // 'AUX' // TRIM(nd_nmbr)
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
-  CALL desc_init( natomwfc, nx, la_proc, idesc, idesc_ip )
+  CALL desc_init( natomwfc, nx, la_proc, idesc, rank_ip, idesc_ip )
   CALL laxlib_getval(nproc_ortho=nproc_ortho)
   la_para = ( nproc_ortho > 1 )
   IF ( la_para ) WRITE( stdout, &
@@ -1450,31 +1448,6 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp )
   !
 CONTAINS
   !
-  SUBROUTINE desc_init( nsiz, nx, la_proc, idesc, idesc_ip )
-     !
-     INTEGER, INTENT(IN)  :: nsiz
-     INTEGER, INTENT(OUT) :: nx
-     LOGICAL, INTENT(OUT) :: la_proc
-     INTEGER, INTENT(OUT) :: idesc(:)
-     INTEGER, INTENT(OUT), ALLOCATABLE :: idesc_ip(:,:,:)
-     !
-     CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, &
-          ortho_comm = ortho_comm, leg_ortho = leg_ortho, &
-          ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm,&
-          ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
-     !
-     ALLOCATE( idesc_ip( LAX_DESC_SIZE, np_ortho(1), np_ortho(2) ) )
-     ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
-     CALL laxlib_init_desc( idesc, idesc_ip, rank_ip, nsiz, nsiz )
-     !
-     nx = idesc(LAX_DESC_NRCX)
-     !
-     la_proc = .FALSE.
-     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
-     !
-     RETURN
-   END SUBROUTINE desc_init
-   !
   SUBROUTINE compute_zdistmat( npw, n, nx, v, w, dm )
      !
      !  This subroutine compute <vi|wj> and store the

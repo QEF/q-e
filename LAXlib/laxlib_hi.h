@@ -17,17 +17,17 @@ SUBROUTINE laxlib_rdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
   REAL(DP), INTENT(OUT) :: v(ldh,m)
   INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
 END SUBROUTINE
-!ifdef __CUDA
-!SUBROUTINE laxlib_rdiaghg_gpu( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
-!  IMPLICIT NONE
-!  include 'laxlib_kinds.fh'
-!  INTEGER, INTENT(IN) :: n, m, ldh
-!  REAL(DP), DEVICE, INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-!  REAL(DP), DEVICE, INTENT(OUT) :: e(n)
-!  REAL(DP), DEVICE, INTENT(OUT) :: v(ldh,m)
-!  INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
-!END SUBROUTINE
-!endif
+#ifdef __CUDA
+SUBROUTINE laxlib_rdiaghg_gpu( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+  IMPLICIT NONE
+  include 'laxlib_kinds.fh'
+  INTEGER, INTENT(IN) :: n, m, ldh
+  REAL(DP), DEVICE, INTENT(INOUT) :: h(ldh,n), s(ldh,n)
+  REAL(DP), DEVICE, INTENT(OUT) :: e(n)
+  REAL(DP), DEVICE, INTENT(OUT) :: v(ldh,m)
+  INTEGER,  INTENT(IN)  :: me_bgrp, root_bgrp, intra_bgrp_comm
+END SUBROUTINE
+#endif
 SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
   IMPLICIT NONE
   include 'laxlib_kinds.fh'
@@ -37,17 +37,17 @@ SUBROUTINE laxlib_cdiaghg( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp
   COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
   INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
 END SUBROUTINE
-!ifdef __CUDA
-!SUBROUTINE laxlib_cdiaghg_gpu( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
-!  IMPLICIT NONE
-!  include 'laxlib_kinds.fh'
-!  INTEGER, INTENT(IN) :: n, m, ldh
-!  COMPLEX(DP), DEVICE, INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-!  REAL(DP), DEVICE, INTENT(OUT) :: e(n)
-!  COMPLEX(DP), DEVICE, INTENT(OUT) :: v(ldh,m)
-!  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
-!END SUBROUTINE
-!endif
+#ifdef __CUDA
+SUBROUTINE laxlib_cdiaghg_gpu( n, m, h, s, ldh, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+  IMPLICIT NONE
+  include 'laxlib_kinds.fh'
+  INTEGER, INTENT(IN) :: n, m, ldh
+  COMPLEX(DP), DEVICE, INTENT(INOUT) :: h(ldh,n), s(ldh,n)
+  REAL(DP), DEVICE, INTENT(OUT) :: e(n)
+  COMPLEX(DP), DEVICE, INTENT(OUT) :: v(ldh,m)
+  INTEGER, INTENT(IN) :: me_bgrp, root_bgrp, intra_bgrp_comm
+END SUBROUTINE
+#endif
 END INTERFACE
 !----------------------------------------------------------------------------
 INTERFACE pdiaghg
@@ -104,3 +104,32 @@ END INTERFACE
          REAL(DP)              :: rhod(:)
       END SUBROUTINE
    END INTERFACE
+!----------------------------------------------------------------------------
+   INTERFACE desc_init
+      !
+      SUBROUTINE laxlib_desc_init1( nsiz, nx, la_proc, idesc, rank_ip, idesc_ip )
+         IMPLICIT NONE
+	 include 'laxlib_param.fh'
+         include 'laxlib_kinds.fh'
+	 INTEGER, INTENT(IN)  :: nsiz
+	 INTEGER, INTENT(OUT) :: nx
+         LOGICAL, INTENT(OUT) :: la_proc
+         INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
+         INTEGER, INTENT(OUT), ALLOCATABLE :: rank_ip( :, : )
+         INTEGER, INTENT(OUT), ALLOCATABLE :: idesc_ip(:,:,:)
+      END SUBROUTINE
+      !
+      SUBROUTINE laxlib_desc_init2( nsiz, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip )
+         IMPLICIT NONE
+	 include 'laxlib_param.fh'
+         include 'laxlib_kinds.fh'
+	 INTEGER, INTENT(IN)  :: nsiz
+	 INTEGER, INTENT(OUT) :: nx
+         LOGICAL, INTENT(OUT) :: la_proc
+         INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
+         INTEGER, INTENT(OUT), ALLOCATABLE :: rank_ip( :, : )
+	 INTEGER, INTENT(OUT), ALLOCATABLE :: irc_ip(:)
+         INTEGER, INTENT(OUT), ALLOCATABLE :: nrc_ip(:)
+      END SUBROUTINE
+   END INTERFACE
+

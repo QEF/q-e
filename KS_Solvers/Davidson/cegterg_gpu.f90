@@ -45,7 +45,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! umber of spin polarizations
-  COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx,npol,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc_d(npwx*npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence :
@@ -87,7 +87,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
     ! the eigenvectors of the Hamiltonian
   REAL(DP), ALLOCATABLE :: ew_d(:)
     ! eigenvalues of the reduced hamiltonian
-  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:,:), hpsi_d(:,:,:), spsi_d(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: psi_d(:,:), hpsi_d(:,:), spsi_d(:,:)
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
@@ -102,7 +102,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   REAL(DP), ALLOCATABLE :: ew_host(:)
   REAL(DP), ALLOCATABLE :: e_host(:)
     ! auxiliary variables for performing dot product
-  INTEGER :: i,j,k
+  INTEGER :: i,j,k, ipol
     !
 #if defined(__CUDA)
   attributes(DEVICE) :: hc_d, sc_d, vc_d, ew_d, psi_d, hpsi_d, spsi_d
@@ -140,15 +140,15 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
   END IF
   !
-  ALLOCATE(  psi_d( npwx, npol, nvecx ), STAT=ierr )
+  ALLOCATE(  psi_d( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate psi ', ABS(ierr) )
-  ALLOCATE( hpsi_d( npwx, npol, nvecx ), STAT=ierr )
+  ALLOCATE( hpsi_d( npwx*npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
   IF ( uspp ) THEN
-     ALLOCATE( spsi_d( npwx, npol, nvecx ), STAT=ierr )
+     ALLOCATE( spsi_d( npwx*npol, nvecx ), STAT=ierr )
      IF( ierr /= 0 ) &
         CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
   END IF
@@ -187,9 +187,9 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  CALL dev_memcpy(psi_d, evc_d, (/ 1 , npwx /), 1, &
-                                (/ 1 , npol /), 1, &
+  CALL dev_memcpy(psi_d, evc_d, (/ 1 , npwx*npol /), 1, &
                                 (/ 1 , nvec /), 1)
+
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -209,7 +209,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   !
   if (n_start .le. n_end) &
-  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, hpsi_d(1,1,n_start), &
+  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, hpsi_d(1,n_start), &
               kdmx, ZERO, hc_d(1,n_start), nvecx )
   !
   if (n_start .le. n_end) then
@@ -228,13 +228,13 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   IF ( uspp ) THEN
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, spsi_d(1,1,n_start), kdmx, &
+     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, spsi_d(1,n_start), kdmx, &
                  ZERO, sc_d(1,n_start), nvecx )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, psi_d(1,1,n_start), kdmx, &
+     CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, psi_d(1,n_start), kdmx, &
                  ZERO, sc_d(1,n_start), nvecx )
      !
   END IF
@@ -349,40 +349,41 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi_d(1,1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                    ZERO, psi_d(1,1,nb1), kdmx )
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, spsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                    ZERO, psi_d(1,nb1), kdmx )
         !     
      ELSE
         !
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi_d(1,1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                    ZERO, psi_d(1,1,nb1), kdmx )
+        CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, psi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                    ZERO, psi_d(1,nb1), kdmx )
         !
      END IF
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
      !$cuf kernel do(3) <<<*,*>>>
      DO np=1,notcnv
-        DO j=1,npol
+        DO ipol = 1, npol
            DO k=1,npwx
-             psi_d(k,j,nbase+np) = - ew_d(nbase+np)*psi_d(k,j,nbase+np)
+             psi_d(k + (ipol-1)*npwx,nbase+np) = - ew_d(nbase+np)*psi_d(k + (ipol-1)*npwx,nbase+np)
            END DO
         END DO
      END DO
      !
      if (n_start .le. n_end) &
-     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi_d(1,1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                 ONE, psi_d(1,1,nb1), kdmx )
-     CALL mp_sum( psi_d(:,:,nb1:nbase+notcnv), inter_bgrp_comm )
+     CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                 ONE, psi_d(1,nb1), kdmx )
+     CALL mp_sum( psi_d(:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
      ! clean up garbage if there is any
-     IF (npw < npwx) CALL dev_memset(psi_d, ZERO, (/npw+1,npwx/), 1, (/1, npol/), 1, (/nb1, nbase+notcnv/))
+     IF (npw < npwx) CALL dev_memset(psi_d, ZERO, [npw+1,npwx], 1, [nb1, nbase+notcnv])
+     IF (npol == 2)  CALL dev_memset(psi_d, ZERO, [npwx+npw+1,2*npwx], 1, [nb1, nbase+notcnv])
      !
      CALL stop_clock( 'cegterg:update' )
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi_gpu( npwx, npw, notcnv, npol, psi_d(1,1,nb1), ew_d(nb1) )
+     CALL g_psi_gpu( npwx, npw, notcnv, npol, psi_d(1,nb1), ew_d(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -397,12 +398,12 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         IF ( npol == 1 ) THEN
            !
-           ew_host(n) = KSDdot( 2*npw, psi_d(1,1,nbn), 1, psi_d(1,1,nbn), 1 )
+           ew_host(n) = KSDdot( 2*npw, psi_d(1,nbn), 1, psi_d(1,nbn), 1 )
            !
         ELSE
            !
-           ew_host(n) = KSDdot( 2*npw, psi_d(1,1,nbn), 1, psi_d(1,1,nbn), 1 ) + &
-                        KSDdot( 2*npw, psi_d(1,2,nbn), 1, psi_d(1,2,nbn), 1 )
+           ew_host(n) = KSDdot( 2*npw, psi_d(1,nbn), 1, psi_d(1,nbn), 1 ) + &
+                        KSDdot( 2*npw, psi_d(npwx+1,nbn), 1, psi_d(npwx+1,nbn), 1 )
            !
         END IF
         !
@@ -413,18 +414,18 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
 !$cuf kernel do(3) <<<*,*>>>
      DO i = 1,notcnv
-        DO j=1,npol
+        DO ipol = 1,npol
            DO k=1,npw
-             psi_d(k,j,nbase+i) = psi_d(k,j,nbase+i)/SQRT( ew_d(i) )
+             psi_d(k + (ipol-1)*npwx,nbase+i) = psi_d(k+(ipol-1)*npwx,nbase+i)/SQRT( ew_d(i) )
            END DO
         END DO
      END DO
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(:,:,nb1), hpsi_d(:,:,nb1) )
+     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(:,nb1), hpsi_d(:,nb1) )
      !
-     IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi_d(1,1,nb1), spsi_d(1,1,nb1) )
+     IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
@@ -434,7 +435,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL mp_type_create_column_section(sc_d(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      !
-     CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi_d(1,1,nb1), kdmx, psi_d(1,1,n_start), kdmx, &
+     CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi_d(1,nb1), kdmx, psi_d(1,n_start), kdmx, &
                  ZERO, hc_d(nb1,n_start), nvecx )
      !
      if ((n_start .le. n_end) .and. (mp_size(intra_bgrp_comm) > 1 )) then
@@ -452,12 +453,12 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi_d(1,1,nb1), kdmx, psi_d(1,1,n_start), kdmx, &
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi_d(1,nb1), kdmx, psi_d(1,n_start), kdmx, &
                     ZERO, sc_d(nb1,n_start), nvecx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi_d(1,1,nb1), kdmx, psi_d(1,1,n_start), kdmx, &
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi_d(1,nb1), kdmx, psi_d(1,n_start), kdmx, &
                     ZERO, sc_d(nb1,n_start), nvecx )
         !
      END IF
@@ -543,7 +544,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi_d(1,1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
                     ZERO, evc_d, kdmx )
         CALL mp_sum( evc_d, inter_bgrp_comm )
         !
@@ -570,29 +571,26 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        CALL dev_memcpy(psi_d, evc_d, (/ 1, npwx /), 1, &
-                                      (/ 1, npol /), 1, &
+        CALL dev_memcpy(psi_d, evc_d, (/ 1, npwx*npol /), 1, &
                                       (/ 1, nvec /), 1)
         !
         IF ( uspp ) THEN
            !
-           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi_d(1,1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                       ZERO, psi_d(1,1,nvec+1), kdmx)
-           CALL dev_memcpy(spsi_d, psi_d(:,:,nvec+1:), &
-                                        (/1, npwx/), 1, &
-                                        (/1, npol/), 1, &
+           CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                       ZERO, psi_d(1,nvec+1), kdmx)
+           CALL dev_memcpy(spsi_d, psi_d(:,nvec+1:), &
+                                        (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
-           CALL mp_sum( spsi_d(:,:,1:nvec), inter_bgrp_comm )
+           CALL mp_sum( spsi_d(:,1:nvec), inter_bgrp_comm )
            !
         END IF
         !
-        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi_d(1,1,n_start), kdmx, vc_d(n_start,1), nvecx, &
-                    ZERO, psi_d(1,1,nvec+1), kdmx )
-        CALL dev_memcpy(hpsi_d, psi_d(:,:,nvec+1:), &
-                                        (/1, npwx/), 1, &
-                                        (/1, npol/), 1, &
+        CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi_d(1,n_start), kdmx, vc_d(n_start,1), nvecx, &
+                    ZERO, psi_d(1,nvec+1), kdmx )
+        CALL dev_memcpy(hpsi_d, psi_d(:,nvec+1:), &
+                                        (/1, npwx*npol/), 1, &
                                         (/1, nvec/), 1)
-        CALL mp_sum( hpsi_d(:,:,1:nvec), inter_bgrp_comm )
+        CALL mp_sum( hpsi_d(:,1:nvec), inter_bgrp_comm )
         !
         ! ... refresh the reduced hamiltonian 
         !
@@ -817,8 +815,7 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
-  INTEGER :: ortho_comm, np_ortho(2), me_ortho(2), ortho_comm_id, leg_ortho, &
-             ortho_parent_comm, ortho_cntx
+  INTEGER :: np_ortho(2), ortho_parent_comm
   LOGICAL :: do_distr_diag_inside_bgrp
   !
   REAL(DP), EXTERNAL :: ddot
@@ -836,9 +833,8 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   CALL start_clock( 'cegterg' )
   !
-  CALL laxlib_getval( np_ortho = np_ortho, me_ortho = me_ortho, ortho_comm = ortho_comm, &
-    leg_ortho = leg_ortho, ortho_comm_id = ortho_comm_id, ortho_parent_comm = ortho_parent_comm, &
-    ortho_cntx = ortho_cntx, do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm, &
+    do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'pcegterg', 'nvecx is too small', 1 )
   !
@@ -905,7 +901,7 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   IF( ierr /= 0 ) &
      CALL errore( ' pcegterg ',' cannot allocate rank_ip ', ABS(ierr) )
   !
-  CALL desc_init( nvec, idesc, irc_ip, nrc_ip )
+  CALL desc_init( nvec, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip )
   !
   IF( la_proc ) THEN
      !
@@ -1111,7 +1107,7 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... RE-Initialize the matrix descriptor
      !
-     CALL desc_init( nbase+notcnv, idesc, irc_ip, nrc_ip )
+     CALL desc_init( nbase+notcnv, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip )
      !
      IF( la_proc ) THEN
 
@@ -1242,7 +1238,7 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         nbase = nvec
         !
-        CALL desc_init( nvec, idesc, irc_ip, nrc_ip )
+        CALL desc_init( nvec, nx, la_proc, idesc, rank_ip, irc_ip, nrc_ip )
         !
         IF( la_proc ) THEN
            !
@@ -1307,34 +1303,6 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   !
 CONTAINS
-  !
-  !
-  SUBROUTINE desc_init( nsiz, idesc, irc_ip, nrc_ip )
-     !
-     INTEGER, INTENT(IN)  :: nsiz
-     INTEGER, INTENT(OUT) :: idesc(LAX_DESC_SIZE)
-     INTEGER, INTENT(OUT) :: irc_ip(:) 
-     INTEGER, INTENT(OUT) :: nrc_ip(:) 
-     INTEGER :: i, j, rank
-     !
-     CALL laxlib_init_desc( idesc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
-     !
-     nx = idesc(LAX_DESC_NRCX) ! %nrcx
-     !
-     DO j = 0, idesc(LAX_DESC_NPC) - 1
-        CALL laxlib_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), idesc(LAX_DESC_N), idesc(LAX_DESC_NX), np_ortho(1), j )
-        DO i = 0, idesc(LAX_DESC_NPR) - 1
-           CALL GRID2D_RANK( 'R', idesc(LAX_DESC_NPR), idesc(LAX_DESC_NPC), i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        END DO
-     END DO
-     !
-     la_proc = .FALSE.
-     IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) la_proc = .TRUE.
-     !
-     RETURN
-  END SUBROUTINE desc_init
-  !
   !
   SUBROUTINE set_to_identity( distmat, idesc )
      INTEGER, INTENT(IN)  :: idesc(LAX_DESC_SIZE)

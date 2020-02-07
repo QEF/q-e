@@ -3,7 +3,7 @@
 # compilation rules
 
 .SUFFIXES :
-.SUFFIXES : .o .c .f .f90
+.SUFFIXES : .o .c .f .f90 .h .fh
 
 # most fortran compilers can directly preprocess c-like directives: use
 # 	$(MPIF90) $(F90FLAGS) -c $<
@@ -22,6 +22,9 @@
 
 .c.o:
 	$(CC) $(CFLAGS)  -c $<
+
+.h.fh:
+	$(CPP) $(CPPFLAGS) $< -o $*.fh
 
 @SET_MAKE@
 
