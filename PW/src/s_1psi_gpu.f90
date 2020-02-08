@@ -8,60 +8,78 @@
 !----------------------------------------------------------------------------
 SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   !----------------------------------------------------------------------------
+  !! spsi = S*psi for one wavefunction. Wrapper routine - calls \(texttt{calbec}
+  !! and \texttt{s_psi}.
   !
-  ! ... spsi = S*psi for one wavefunction
-  ! ... Wrapper routine - calls calbec and s_psi
+  USE kinds,              ONLY: DP
+  USE uspp,               ONLY: nkb
+  USE becmod,             ONLY: bec_type, becp, calbec
+  USE control_flags,      ONLY: gamma_only 
+  USE noncollin_module,   ONLY: noncolin, npol 
+  USE realus,             ONLY: real_space, invfft_orbital_gamma,     &
+                                fwfft_orbital_gamma, calbec_rs_gamma, &
+                                s_psir_gamma, invfft_orbital_k,       &
+                                fwfft_orbital_k, calbec_rs_k, s_psir_k
+  USE wvfct,              ONLY: nbnd
   !
-  USE kinds,  ONLY : DP
-  USE uspp,   ONLY : nkb
-  USE becmod, ONLY : bec_type, becp, calbec
-  USE control_flags,    ONLY : gamma_only 
-  USE noncollin_module, ONLY : noncolin, npol 
-  USE realus, ONLY : real_space, &
-              invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, &
-              invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
-  USE wvfct,  ONLY: nbnd
-  !
-  USE uspp_gpum,        ONLY : vkb_d, using_vkb_d
-  USE becmod_gpum,      ONLY : becp_d, using_becp_r
-  USE becmod_subs_gpum, ONLY : using_becp_d_auto, calbec_gpu
+  USE uspp_gpum,          ONLY: vkb_d, using_vkb_d
+  USE becmod_gpum,        ONLY: becp_d, using_becp_r
+  USE becmod_subs_gpum,   ONLY: using_becp_d_auto, calbec_gpu
   !
   IMPLICIT NONE
   !
-  INTEGER     :: npwx, n, ibnd
-  COMPLEX(DP) :: psi_d(npwx*npol,1), spsi_d(npwx*npol,1)
+  INTEGER :: npwx
+  !! maximum number of PW for wavefunctions
+  INTEGER :: n
+  !! the number of plane waves
+  COMPLEX(DP) :: psi_d(npwx*npol,1)
+  !! input vector
+  COMPLEX(DP) :: spsi_d(npwx*npol,1)
+  !! S*psi
+  !
 #if defined(__CUDA)
   attributes(DEVICE) :: psi_d, spsi_d
 #endif
   COMPLEX(DP), ALLOCATABLE :: psi_h(:,:), spsi_h(:,:)
+  ! ... local variables
+  !
+  INTEGER :: ibnd
+  !
   !
   CALL start_clock( 's_1psi' )
   !
-  IF ( real_space) then
+  IF ( real_space) THEN
+     !
      ALLOCATE(psi_h(npwx*npol,1), spsi_h(npwx*npol,1))
      psi_h(1:npwx*npol,1) = psi_d(1:npwx*npol,1)
      spsi_h(1:npwx*npol,1) = spsi_d(1:npwx*npol,1)
-     IF ( gamma_only ) then
-        do ibnd=1,nbnd,2
+     IF ( gamma_only ) THEN
+        !
+        DO ibnd = 1, nbnd, 2
            ! transform the orbital to real space
-           call invfft_orbital_gamma(psi_h,ibnd,nbnd) 
+           CALL invfft_orbital_gamma(psi_h,ibnd,nbnd) 
            ! global becp%r is updated
            CALL using_becp_r(2)
-           call calbec_rs_gamma(ibnd,nbnd,becp%r) 
-        enddo
-        call s_psir_gamma(1,1)
-        call fwfft_orbital_gamma(spsi_h,1,1)
+           CALL calbec_rs_gamma(ibnd,nbnd,becp%r) 
+        ENDDO
+        !
+        CALL s_psir_gamma(1,1)
+        CALL fwfft_orbital_gamma(spsi_h,1,1)
         !
      ELSE
-        do ibnd=1,nbnd
+        !
+        DO ibnd = 1, nbnd
            ! transform the orbital to real space
-           call invfft_orbital_k(psi_h,ibnd,nbnd) 
+           CALL invfft_orbital_k(psi_h,ibnd,nbnd) 
            ! global becp%r is updated
-           call calbec_rs_k(ibnd,nbnd) 
-        enddo
-        call s_psir_k(1,1)
-        call fwfft_orbital_k(spsi_h,1,1)
-     END IF
+           CALL calbec_rs_k( ibnd, nbnd )
+        ENDDO
+        !
+        CALL s_psir_k( 1, 1 )
+        CALL fwfft_orbital_k( spsi_h, 1, 1 )
+        !
+     ENDIF
+     !
      spsi_d(1:npwx*npol,1) = spsi_h(1:npwx*npol,1)
      DEALLOCATE(psi_h, spsi_h)
   ELSE
@@ -70,7 +88,7 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
      CALL calbec_gpu( n, vkb_d, psi_d, becp_d )
      CALL s_psi_gpu( npwx, n, 1, psi_d, spsi_d )
      !
-  END IF
+  ENDIF
   !
   CALL stop_clock( 's_1psi' )
   !
