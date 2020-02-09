@@ -659,3 +659,71 @@ END SUBROUTINE laxlib_multi_init_desc_x
       RETURN
    END SUBROUTINE diagonalize_serial_x
 
+#if defined(__CUDA)
+   SUBROUTINE diagonalize_serial_gpu( m, rhos, rhod, info )
+      use dsyevd_gpu
+      use cudafor
+      IMPLICIT NONE
+      include 'laxlib_kinds.fh'
+      INTEGER, INTENT(IN) :: m
+      REAL(DP), INTENT(INOUT) :: rhos(:,:)
+      REAL(DP), INTENT(OUT) :: rhod(:)
+      INTEGER, INTENT(OUT) :: info
+      !
+      REAL(DP), ALLOCATABLE :: work_d(:)
+      ATTRIBUTES( DEVICE ) :: work_d
+      REAL(DP), ALLOCATABLE :: a(:,:)
+      ATTRIBUTES( DEVICE ) :: a
+      REAL(DP), ALLOCATABLE :: b(:,:)
+      ATTRIBUTES( DEVICE ) :: b
+      REAL(DP), ALLOCATABLE :: w(:)
+      ATTRIBUTES( DEVICE ) :: w
+      REAL(DP), ALLOCATABLE :: work_h(:), w_h(:), z_h(:,:)
+      ATTRIBUTES( PINNED ) :: work_h, w_h, z_h
+      INTEGER, ALLOCATABLE :: iwork_h(:)
+      ATTRIBUTES( PINNED ) :: iwork_h
+      !
+      INTEGER :: lwork_d, lwork_h, liwork_h
+      INTEGER :: i,j
+      !
+      info = 0
+      lwork_d  = 2*64*64 + 66*m
+      lwork_h = 1 + 6*m + 2*m*m
+      liwork_h = 3 + 5*m
+      ALLOCATE(work_d(lwork_d),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate work_d ', ABS( info ) )
+      ALLOCATE(work_h(lwork_h),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate work_h ', ABS( info ) )
+      ALLOCATE(iwork_h(liwork_h),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate iwork_h ', ABS( info ) )
+      !
+      ALLOCATE(w_h(m),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate w_h ', ABS( info ) )
+      ALLOCATE(z_h(m,m),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate z_h ', ABS( info ) )
+      ALLOCATE(a(m,m),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate a ', ABS( info ) )
+      ALLOCATE(b(m,m),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate b ', ABS( info ) )
+      ALLOCATE(w(m),STAT = info)
+      IF( info /= 0 ) CALL errore( ' laxlib diagonalize_serial_gpu ', ' allocate w ', ABS( info ) )
+
+      info = cudaMemcpy2D(a, m, rhos, SIZE(rhos,1), m, m, cudaMemcpyHostToDevice)
+
+      CALL dsyevd_gpu('V', 'U', 1, m, m, a, m, b, m, w, work_d, lwork_d, &
+                      work_h, lwork_h, iwork_h, liwork_h, z_h, m, w_h, info)
+
+      info = cudaMemcpy2D(rhos, SIZE(rhos,1), b, m, m, m, cudaMemcpyDeviceToHost)
+      info = cudaMemcpy(rhod, w, m, cudaMemcpyDeviceToHost)
+
+      DEALLOCATE(w)
+      DEALLOCATE(b)
+      DEALLOCATE(a)
+      DEALLOCATE(z_h)
+      DEALLOCATE(w_h)
+      DEALLOCATE(iwork_h)
+      DEALLOCATE(work_h)
+      DEALLOCATE(work_d)
+
+   END SUBROUTINE
+#endif

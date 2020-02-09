@@ -103,6 +103,16 @@ END INTERFACE
          REAL(DP)              :: rhos(:,:)
          REAL(DP)              :: rhod(:)
       END SUBROUTINE
+#ifdef __CUDA
+      SUBROUTINE diagonalize_serial_gpu( m, rhos, rhod, info )
+         IMPLICIT NONE
+         include 'laxlib_kinds.fh'
+         INTEGER, INTENT(IN) :: m
+         REAL(DP), INTENT(INOUT) :: rhos(:,:)
+         REAL(DP), INTENT(OUT) :: rhod(:)
+         INTEGER, INTENT(OUT) :: info
+      END SUBROUTINE
+#endif
    END INTERFACE
 !----------------------------------------------------------------------------
    INTERFACE desc_init

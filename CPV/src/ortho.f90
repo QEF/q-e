@@ -148,7 +148,11 @@
             !
             CALL collect_matrix( wrk, rhos )
             !
+#if defined(__CUDA)
+            CALL laxlib_diagonalize( nss, wrk, rhod, info )
+#else
             CALL laxlib_diagonalize( nss, wrk, rhod )
+#endif
             !
             CALL distribute_matrix( wrk, s )
             !
