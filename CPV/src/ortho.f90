@@ -14,7 +14,7 @@
       !
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
-                                    ortho_alt_iterate, use_parallel_diag
+                                    ortho_alt_iterate, use_parallel_diag, ortho_iterate_gpu
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
 
@@ -187,7 +187,11 @@
          !
          IF( iopt == 0 ) THEN
             !
+#if defined(__CUDA)
+            CALL ortho_iterate_gpu( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
+#else
             CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
+#endif
             !
          ELSE
             !

@@ -32,6 +32,7 @@ MODULE orthogonalize_base
       PUBLIC :: rhoset
       PUBLIC :: ortho_iterate
       PUBLIC :: ortho_alt_iterate
+      PUBLIC :: ortho_iterate_gpu
       PUBLIC :: updatc, calphi_bgrp
       PUBLIC :: mesure_diag_perf, mesure_mmul_perf
       PUBLIC :: use_parallel_diag
@@ -410,6 +411,180 @@ CONTAINS
       RETURN
    END SUBROUTINE ortho_iterate
 
+#if defined(__CUDA)
+   SUBROUTINE ortho_iterate_gpu( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, rhos, tau, nss, idesc )
+
+      !  this iterative loop uses Cannon's parallel matrix multiplication
+      !  matrix are distributed over a square processor grid: 1x1 2x2 3x3 ...
+      !  But the subroutine work with any number of processors, when
+      !  nproc is not a square, some procs are left idle
+
+      USE cudafor
+      USE cublas
+      !
+      USE kinds,             ONLY: DP
+      USE io_global,         ONLY: stdout
+      USE control_flags,     ONLY: ortho_eps, ortho_max
+      USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
+      USE mp,                ONLY: mp_sum, mp_max
+
+      IMPLICIT NONE
+
+      include 'laxlib.fh'
+
+      INTEGER, INTENT(IN) :: nss, ldx, nx0
+      INTEGER, INTENT(IN) :: idesc(:)
+      REAL(DP) :: u   ( ldx, ldx )
+      REAL(DP) :: diag( nss )
+      REAL(DP) :: xloc( nx0, nx0 )
+      REAL(DP) :: rhor( ldx, ldx )
+      REAL(DP) :: rhos( ldx, ldx )
+      REAL(DP) :: tau ( ldx, ldx )
+      REAL(DP) :: sig ( ldx, ldx )
+      INTEGER, INTENT(OUT) :: iter
+      REAL(DP), INTENT(OUT) :: diff 
+
+      INTEGER :: i, j, info
+      INTEGER :: nr, nc, ir, ic
+      REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:), dd(:,:), tr1(:,:), tr2(:,:)
+      REAL(DP), ALLOCATABLE :: con(:,:), x1(:,:)
+      ATTRIBUTES(DEVICE) :: tmp1, tmp2, dd, tr1, tr2, con, x1
+      REAL(DP), ALLOCATABLE :: xloc_d(:,:), rhor_d(:,:), tau_d(:,:), rhos_d(:,:), sig_d(:,:), u_d(:,:), diag_d(:)
+      ATTRIBUTES(DEVICE) :: xloc_d, rhor_d, tau_d, rhos_d, sig_d, u_d, diag_d
+      !
+      IF( nss < 1 ) RETURN
+
+      !
+      !  all processors not involved in the parallel orthogonalization
+      !  jump at the end of the subroutine
+      !
+
+      IF( ldx/= nx0 ) &
+         CALL errore( " ortho_iterate_gpu ", " inconsistent dimensions ldx, nx0 ", nx0 )
+      IF( idesc(LAX_DESC_NR)/= idesc(LAX_DESC_N) ) &
+         CALL errore( " ortho_iterate_gpu ", " this gpu driver works with just one MPI task", 1 )
+      IF( idesc(LAX_DESC_NC)/= idesc(LAX_DESC_N) ) &
+         CALL errore( " ortho_iterate_gpu ", " this gpu driver works with just one MPI task", 2 )
+
+      IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) then
+         xloc = 0.0d0
+         iter = 0
+         go to 100
+      endif
+      !
+      !  Compute the size of the local block
+      !
+      nr = idesc(LAX_DESC_NR)
+      nc = idesc(LAX_DESC_NC)
+      ir = idesc(LAX_DESC_IR)
+      ic = idesc(LAX_DESC_IC)
+
+      IF( ldx/= idesc(LAX_DESC_NRCX) ) &
+         CALL errore( " ortho_iterate ", " inconsistent dimensions ldx ", ldx )
+
+      ALLOCATE( tr1(ldx,ldx), tr2(ldx,ldx) )
+      ALLOCATE( tmp1(ldx,ldx), tmp2(ldx,ldx), dd(ldx,ldx), x1(ldx,ldx), con(ldx,ldx) )
+      !
+      ALLOCATE( xloc_d(ldx,ldx), rhor_d(ldx,ldx), tau_d(ldx,ldx), rhos_d(ldx,ldx), sig_d(ldx,ldx), u_d(ldx,ldx), diag_d(ldx) )
+
+      !  Clear elements not involved in the orthogonalization
+      !
+      do j = nc + 1, ldx
+         do i = 1, ldx
+            xloc( i, j ) = 0.0d0
+         end do
+      end do
+      do j = 1, ldx
+         do i = nr + 1, ldx
+            xloc( i, j ) = 0.0d0
+         end do
+      end do
+
+      info = cudaMemcpy(xloc_d, xloc, ldx*ldx, cudaMemcpyHostToDevice)
+      info = cudaMemcpy(rhor_d, rhor, ldx*ldx, cudaMemcpyHostToDevice)
+      info = cudaMemcpy(tau_d, tau, ldx*ldx, cudaMemcpyHostToDevice)
+      info = cudaMemcpy(rhos_d, rhos, ldx*ldx, cudaMemcpyHostToDevice)
+      info = cudaMemcpy(sig_d, sig, ldx*ldx, cudaMemcpyHostToDevice)
+      info = cudaMemcpy(u_d, u, ldx*ldx, cudaMemcpyHostToDevice)
+      info = cudaMemcpy(diag_d, diag, nss, cudaMemcpyHostToDevice)
+
+      ITERATIVE_LOOP: DO iter = 1, ortho_max
+         !
+         !       the following calls do the following matrix multiplications:
+         !                       tmp1 = x0*rhor    (1st call)
+         !                       dd   = x0*tau*x0  (2nd and 3rd call)
+         !                       tmp2 = x0*rhos    (4th call)
+         !
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhor_d, ldx, 0.D0, tmp1, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , tau_d, ldx, xloc_d, ldx, 0.D0, tmp2, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, tmp2, ldx, 0.D0, dd, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhos_d, ldx, 0.D0, tmp2, ldx )
+         !
+!$cuf kernel do(2) <<<*,*>>>
+         DO i=1,nr
+            DO j=1,nc
+               x1(i,j) = sig_d(i,j)-tmp1(i,j)-tmp1(j,i)-dd(i,j)
+               con(i,j)= x1(i,j)-tmp2(i,j)-tmp2(j,i)
+            END DO
+         END DO
+         !
+         !         x1      = sig      -x0*rho    -x0*rho^t  -x0*tau*x0
+         !
+         diff = 0.d0
+!$cuf kernel do(2) <<<*,*>>>
+         DO i=1,nr
+            DO j=1,nc
+               IF(ABS(con(i,j)).GT.diff) diff=ABS(con(i,j))
+            END DO
+         END DO
+
+         !CALL mp_max( diff, idesc(LAX_DESC_COMM) )
+
+
+         IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
+
+         !
+         !     the following calls do:
+         !                       tmp1 = x1*u
+         !                       tmp2 = ut*x1*u
+         !
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , x1, ldx, u_d, ldx, 0.D0, tmp1, ldx )
+         CALL cublasDgemm( 'T','N', nss, nss, nss, 1.D0 , u_d, ldx, tmp1, ldx, 0.D0, tmp2, ldx )
+         !
+         !       g=ut*x1*u/d  (g is stored in tmp1)
+         !
+!$cuf kernel do(2) <<<*,*>>>
+         DO i=1,nr
+            DO j=1,nc
+               tmp1(i,j)=tmp2(i,j)/(diag_d(i+ir-1)+diag_d(j+ic-1))
+            END DO
+         END DO
+         !
+         !       the following calls do:
+         !                       tmp2 = g*ut
+         !                       x0 = u*g*ut
+         !
+         CALL cublasDgemm( 'N','T', nss, nss, nss, 1.D0 , tmp1, ldx, u_d, ldx, 0.D0, tmp2, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , u_d, ldx, tmp2, ldx, 0.D0, xloc_d, ldx )
+         !
+      END DO ITERATIVE_LOOP
+
+      info = cudaMemcpy(xloc, xloc_d, ldx*ldx, cudaMemcpyDeviceToHost)
+
+      DEALLOCATE( tmp1, tmp2, dd, x1, con, tr1, tr2 )
+      DEALLOCATE( xloc_d, rhor_d, rhos_d, tau_d, sig_d, u_d, diag_d )
+            
+100   CONTINUE
+            
+      CALL mp_max( iter, intra_bgrp_comm ) 
+
+      RETURN
+   END SUBROUTINE ortho_iterate_gpu
+#else
+   SUBROUTINE ortho_iterate_gpu
+      RETURN
+   END SUBROUTINE ortho_iterate_gpu
+#endif
 
 !=----------------------------------------------------------------------------=!
 !
