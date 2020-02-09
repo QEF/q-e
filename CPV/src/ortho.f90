@@ -12,6 +12,9 @@
                            x0, nx0, idesc, diff, iter, n, nss, istart )
 !=----------------------------------------------------------------------------=!
       !
+#if defined(__CUDA)
+      USE cudafor
+#endif
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     ortho_alt_iterate, use_parallel_diag, ortho_iterate_gpu
@@ -39,7 +42,10 @@
       ! ... Locals
 
       REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:), rhot(:,:)
-      REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
+      REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:), ev(:)
+#if defined(__CUDA)
+      ATTRIBUTES( DEVICE ) :: s, sig, tau, rhot, rhoa, rhos, rhod
+#endif
       INTEGER  :: i, j, info, nr, nc, ir, ic
       !
       ! ...   Subroutine body
@@ -81,10 +87,9 @@
       ALLOCATE( tau( nx0, nx0 ), STAT = info ) 
       IF( info /= 0 ) &
          CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
-      !
       ALLOCATE( rhod( nss ), STAT = info )
       IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( rhod ) )
+         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
       !
       !     rho = <s'c0|s|cp>
       !
@@ -96,7 +101,27 @@
          !
          ALLOCATE( rhot( nx0, nx0 ), STAT = info )   !   transpose of rho
          IF( info /= 0 ) &
-            CALL errore( ' ortho_gamma ', ' allocating rhot ', ABS( rhod ) )
+            CALL errore( ' ortho_gamma ', ' allocating rhot ', ABS( info ) )
+#if defined(__CUDA)
+!$cuf kernel do(2) <<<*,*>>>
+         DO j = 1, nc
+            DO i = 1, nr
+               rhot( i, j ) = rhos( j, i )
+            END DO
+         END DO
+!$cuf kernel do(2) <<<*,*>>>
+         DO j = 1, nc
+            DO i = 1, nr
+               rhos( i, j ) = 0.5d0 * ( rhos( i, j ) + rhot( i, j ) )
+            END DO
+         END DO
+!$cuf kernel do(2) <<<*,*>>>
+         DO j = 1, nc
+            DO i = 1, nr
+               rhoa( i, j ) = rhos( i, j ) - rhot( i, j )
+            END DO
+         END DO
+#else
          !
          !    distributed array rhos contains "rho", 
          !    now transpose rhos and store the result in distributed array rhot
@@ -123,6 +148,7 @@
             END DO
          END DO
          !
+#endif
          DEALLOCATE( rhot )
          !
       END IF
@@ -137,26 +163,37 @@
       !
       IF( use_parallel_diag ) THEN
          !
+#if defined(__CUDA)
+         CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
+#else
          CALL laxlib_diagonalize( nss, rhos, rhod, s, idesc )
+#endif
          !
       ELSE
          !
          IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
             !
-            ALLOCATE( wrk( nss, nss ), STAT = info )
-            IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating wrk ', 1 )
-            !
-            CALL collect_matrix( wrk, rhos )
-            !
 #if defined(__CUDA)
-            CALL laxlib_diagonalize( nss, wrk, rhod, info )
+            CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
 #else
-            CALL laxlib_diagonalize( nss, wrk, rhod )
+            IF( idesc(LAX_DESC_NR) == idesc(LAX_DESC_NC) .AND. idesc(LAX_DESC_NR) == idesc(LAX_DESC_N) ) THEN
+               !
+               !  rhos and s matrixes, are replicated, no need of collect them
+               s = rhos
+               CALL laxlib_diagonalize( nss, s, rhod )
+            ELSE
+               ALLOCATE( wrk( nss, nss ), STAT = info )
+               IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating wrk ', 1 )
+               !
+               CALL collect_matrix( wrk, rhos )
+               !
+               CALL laxlib_diagonalize( nss, wrk, rhod )
+               !
+               CALL distribute_matrix( wrk, s )
+               !
+               DEALLOCATE( wrk )
+            END IF
 #endif
-            !
-            CALL distribute_matrix( wrk, s )
-            !
-            DEALLOCATE( wrk )
             !
          END IF
          !
@@ -185,19 +222,11 @@
          !  group are enough. Moreover replicating the computation across groups could leads
          ! to small numerical differences and weird numerical effects.
          !
-         IF( iopt == 0 ) THEN
-            !
 #if defined(__CUDA)
-            CALL ortho_iterate_gpu( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
+         CALL ortho_iterate_gpu( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
 #else
-            CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
+         CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
 #endif
-            !
-         ELSE
-            !
-            CALL ortho_alt_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, tau, nss, idesc)
-            !
-         END IF
          !
       END IF
       !

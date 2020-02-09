@@ -434,13 +434,13 @@ CONTAINS
 
       INTEGER, INTENT(IN) :: nss, ldx, nx0
       INTEGER, INTENT(IN) :: idesc(:)
-      REAL(DP) :: u   ( ldx, ldx )
-      REAL(DP) :: diag( nss )
+      REAL(DP), DEVICE :: u   ( ldx, ldx )
+      REAL(DP), DEVICE :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
-      REAL(DP) :: rhor( ldx, ldx )
-      REAL(DP) :: rhos( ldx, ldx )
-      REAL(DP) :: tau ( ldx, ldx )
-      REAL(DP) :: sig ( ldx, ldx )
+      REAL(DP), DEVICE :: rhor( ldx, ldx )
+      REAL(DP), DEVICE :: rhos( ldx, ldx )
+      REAL(DP), DEVICE :: tau ( ldx, ldx )
+      REAL(DP), DEVICE :: sig ( ldx, ldx )
       INTEGER, INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff 
 
@@ -449,8 +449,8 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:), dd(:,:), tr1(:,:), tr2(:,:)
       REAL(DP), ALLOCATABLE :: con(:,:), x1(:,:)
       ATTRIBUTES(DEVICE) :: tmp1, tmp2, dd, tr1, tr2, con, x1
-      REAL(DP), ALLOCATABLE :: xloc_d(:,:), rhor_d(:,:), tau_d(:,:), rhos_d(:,:), sig_d(:,:), u_d(:,:), diag_d(:)
-      ATTRIBUTES(DEVICE) :: xloc_d, rhor_d, tau_d, rhos_d, sig_d, u_d, diag_d
+      REAL(DP), ALLOCATABLE :: xloc_d(:,:)
+      ATTRIBUTES(DEVICE) :: xloc_d
       !
       IF( nss < 1 ) RETURN
 
@@ -485,7 +485,7 @@ CONTAINS
       ALLOCATE( tr1(ldx,ldx), tr2(ldx,ldx) )
       ALLOCATE( tmp1(ldx,ldx), tmp2(ldx,ldx), dd(ldx,ldx), x1(ldx,ldx), con(ldx,ldx) )
       !
-      ALLOCATE( xloc_d(ldx,ldx), rhor_d(ldx,ldx), tau_d(ldx,ldx), rhos_d(ldx,ldx), sig_d(ldx,ldx), u_d(ldx,ldx), diag_d(ldx) )
+      ALLOCATE( xloc_d(ldx,ldx))
 
       !  Clear elements not involved in the orthogonalization
       !
@@ -501,12 +501,6 @@ CONTAINS
       end do
 
       info = cudaMemcpy(xloc_d, xloc, ldx*ldx, cudaMemcpyHostToDevice)
-      info = cudaMemcpy(rhor_d, rhor, ldx*ldx, cudaMemcpyHostToDevice)
-      info = cudaMemcpy(tau_d, tau, ldx*ldx, cudaMemcpyHostToDevice)
-      info = cudaMemcpy(rhos_d, rhos, ldx*ldx, cudaMemcpyHostToDevice)
-      info = cudaMemcpy(sig_d, sig, ldx*ldx, cudaMemcpyHostToDevice)
-      info = cudaMemcpy(u_d, u, ldx*ldx, cudaMemcpyHostToDevice)
-      info = cudaMemcpy(diag_d, diag, nss, cudaMemcpyHostToDevice)
 
       ITERATIVE_LOOP: DO iter = 1, ortho_max
          !
@@ -515,15 +509,15 @@ CONTAINS
          !                       dd   = x0*tau*x0  (2nd and 3rd call)
          !                       tmp2 = x0*rhos    (4th call)
          !
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhor_d, ldx, 0.D0, tmp1, ldx )
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , tau_d, ldx, xloc_d, ldx, 0.D0, tmp2, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhor, ldx, 0.D0, tmp1, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , tau, ldx, xloc_d, ldx, 0.D0, tmp2, ldx )
          CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, tmp2, ldx, 0.D0, dd, ldx )
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhos_d, ldx, 0.D0, tmp2, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhos, ldx, 0.D0, tmp2, ldx )
          !
 !$cuf kernel do(2) <<<*,*>>>
          DO i=1,nr
             DO j=1,nc
-               x1(i,j) = sig_d(i,j)-tmp1(i,j)-tmp1(j,i)-dd(i,j)
+               x1(i,j) = sig(i,j)-tmp1(i,j)-tmp1(j,i)-dd(i,j)
                con(i,j)= x1(i,j)-tmp2(i,j)-tmp2(j,i)
             END DO
          END DO
@@ -548,15 +542,15 @@ CONTAINS
          !                       tmp1 = x1*u
          !                       tmp2 = ut*x1*u
          !
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , x1, ldx, u_d, ldx, 0.D0, tmp1, ldx )
-         CALL cublasDgemm( 'T','N', nss, nss, nss, 1.D0 , u_d, ldx, tmp1, ldx, 0.D0, tmp2, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , x1, ldx, u, ldx, 0.D0, tmp1, ldx )
+         CALL cublasDgemm( 'T','N', nss, nss, nss, 1.D0 , u, ldx, tmp1, ldx, 0.D0, tmp2, ldx )
          !
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
 !$cuf kernel do(2) <<<*,*>>>
          DO i=1,nr
             DO j=1,nc
-               tmp1(i,j)=tmp2(i,j)/(diag_d(i+ir-1)+diag_d(j+ic-1))
+               tmp1(i,j)=tmp2(i,j)/(diag(i+ir-1)+diag(j+ic-1))
             END DO
          END DO
          !
@@ -564,15 +558,15 @@ CONTAINS
          !                       tmp2 = g*ut
          !                       x0 = u*g*ut
          !
-         CALL cublasDgemm( 'N','T', nss, nss, nss, 1.D0 , tmp1, ldx, u_d, ldx, 0.D0, tmp2, ldx )
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , u_d, ldx, tmp2, ldx, 0.D0, xloc_d, ldx )
+         CALL cublasDgemm( 'N','T', nss, nss, nss, 1.D0 , tmp1, ldx, u, ldx, 0.D0, tmp2, ldx )
+         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , u, ldx, tmp2, ldx, 0.D0, xloc_d, ldx )
          !
       END DO ITERATIVE_LOOP
 
       info = cudaMemcpy(xloc, xloc_d, ldx*ldx, cudaMemcpyDeviceToHost)
 
       DEALLOCATE( tmp1, tmp2, dd, x1, con, tr1, tr2 )
-      DEALLOCATE( xloc_d, rhor_d, rhos_d, tau_d, sig_d, u_d, diag_d )
+      DEALLOCATE( xloc_d )
             
 100   CONTINUE
             
@@ -750,7 +744,11 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
+#if defined(__CUDA)
+   SUBROUTINE sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, ist, sig_d, ldx, idesc )
+#else
    SUBROUTINE sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, ist, sig, ldx, idesc )
+#endif
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -758,6 +756,9 @@ CONTAINS
 !     where s=s(r(t+dt))
 !     routine makes use of c(-q)=c*(q)
 !
+#if defined(__CUDA)
+      USE cudafor
+#endif
       USE kinds,              ONLY: DP
       USE uspp,               ONLY: nkb, nkbus
       USE gvecw,              ONLY: ngw
@@ -775,15 +776,23 @@ CONTAINS
       COMPLEX(DP) :: cp( ngwx, n )
       REAL(DP)    :: qbecp( nkbx, ldx )
       REAL(DP)    :: becp_dist( nkbx, ldx )
+#if defined(__CUDA)
+      REAL(DP)    :: sig_d( ldx, ldx )
+      ATTRIBUTES( DEVICE ) :: sig_d
+#else
       REAL(DP)    :: sig( ldx, ldx )
+#endif
       INTEGER, INTENT(IN) :: idesc(:)
 !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
-      INTEGER :: ii, jj, root
+      INTEGER :: ii, jj, root, info
       INTEGER :: idesc_ip(LAX_DESC_SIZE)
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       !
       REAL(DP), ALLOCATABLE :: sigp(:,:)
+#if defined(__CUDA)
+      REAL(DP), ALLOCATABLE :: sig(:,:)
+#endif
 !
       IF( nss < 1 ) RETURN
 
@@ -795,6 +804,9 @@ CONTAINS
       nx = idesc(LAX_DESC_NRCX)
 
       ALLOCATE( sigp( nx, nx ) ) 
+#if defined(__CUDA)
+      ALLOCATE( sig( ldx, ldx ) )
+#endif
 
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          IF( idesc(LAX_DESC_NRCX) /= ldx ) &
@@ -885,6 +897,10 @@ CONTAINS
          ENDIF
          !
       END IF
+#if defined(__CUDA)
+      info = cudaMemcpy(sig_d, sig, ldx*ldx, cudaMemcpyHostToDevice)
+      DEALLOCATE( sig )
+#endif
       !
       RETURN
    END SUBROUTINE sigset
@@ -892,7 +908,11 @@ CONTAINS
 
 !
 !-----------------------------------------------------------------------
+#if defined(__CUDA)
+   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho_d, ldx, idesc )
+#else
    SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, ldx, idesc )
+#endif
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), phi, bephi, qbecp
 !     computes the matrix
@@ -901,6 +921,9 @@ CONTAINS
 !     where s=s(r(t+dt)) and s'=s(r(t))
 !     routine makes use of  c(-q)=c*(q)
 !
+#if defined(__CUDA)
+      USE cudafor
+#endif
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE uspp,               ONLY: nkb, nkbus
@@ -917,15 +940,23 @@ CONTAINS
       INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbecp( nkbx, ldx )
+#if defined(__CUDA)
+      REAL(DP)    :: rho_d( ldx, ldx )
+      ATTRIBUTES( DEVICE ) :: rho_d
+#else
       REAL(DP)    :: rho( ldx, ldx )
+#endif
       INTEGER, INTENT(IN) :: idesc(:)
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
-      INTEGER :: ii, jj, root, nx
+      INTEGER :: ii, jj, root, nx, info
       INTEGER :: idesc_ip(LAX_DESC_SIZE)
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
 
       REAL(DP), ALLOCATABLE :: rhop(:,:)
+#if defined(__CUDA)
+      REAL(DP), ALLOCATABLE :: rho(:,:)
+#endif
       !
       !     <phi|cp>
       !
@@ -948,6 +979,9 @@ CONTAINS
       END IF
 
       ALLOCATE( rhop( nx, nx ) )
+#if defined(__CUDA)
+      ALLOCATE( rho( ldx, ldx ) )
+#endif
      
       rhop = 0.0d0
       IF( nbgrp > 1 ) THEN
@@ -1028,13 +1062,21 @@ CONTAINS
          END IF
 
       END IF
+#if defined(__CUDA)
+      info = cudaMemcpy(rho_d, rho, ldx*ldx, cudaMemcpyHostToDevice) 
+      DEALLOCATE( rho )
+#endif
       !
       RETURN
    END SUBROUTINE rhoset
 
 
 !-------------------------------------------------------------------------
+#if defined(__CUDA)
+   SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau_d, ldx, idesc )
+#else
    SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, ldx, idesc )
+#endif
 !-----------------------------------------------------------------------
 !     input: phi
 !     computes the matrix
@@ -1042,6 +1084,9 @@ CONTAINS
 !     where s=s(r(t+dt)) and s'=s(r(t))
 !     routine makes use of c(-q)=c*(q)
 !
+#if defined(__CUDA)
+      USE cudafor
+#endif
       USE kinds,              ONLY: DP
       USE uspp,               ONLY: nkb, nkbus
       USE gvecw,              ONLY: ngw
@@ -1058,15 +1103,23 @@ CONTAINS
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbephi( nkbx, ldx )
+#if defined(__CUDA)
+      REAL(DP)    :: tau_d( ldx, ldx )
+      ATTRIBUTES( DEVICE ) :: tau_d
+#else
       REAL(DP)    :: tau( ldx, ldx )
+#endif
       INTEGER, INTENT(IN) :: idesc(:)
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
-      INTEGER :: ii, jj, root
+      INTEGER :: ii, jj, root, info
       INTEGER :: idesc_ip(LAX_DESC_SIZE)
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
 
       REAL(DP), ALLOCATABLE :: taup( :, : )
+#if defined(__CUDA)
+      REAL(DP), ALLOCATABLE :: tau(:,:)
+#endif
       !
       IF( nss < 1 ) RETURN
 
@@ -1087,6 +1140,9 @@ CONTAINS
       END IF
       !
       ALLOCATE( taup( nx, nx ) )
+#if defined(__CUDA)
+      ALLOCATE( tau( ldx, ldx ) )
+#endif
       !
       taup = 0.0d0
       !
@@ -1174,6 +1230,10 @@ CONTAINS
          ENDIF
          !
       ENDIF
+#if defined(__CUDA)
+      info = cudaMemcpy(tau_d, tau, ldx*ldx, cudaMemcpyHostToDevice)
+      DEALLOCATE( tau )
+#endif
       !
       RETURN
    END SUBROUTINE tauset
