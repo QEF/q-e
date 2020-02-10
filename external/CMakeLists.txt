@@ -239,6 +239,9 @@ qe_install_targets(qe_iotk)
 ###########################################################
 # QE::WANNIER90
 ###########################################################
+# TODO look for an externally-provided wannier90
+qe_git_submodule_update(external/wannier90)
+
 set(sources
     wannier90/src/comms.F90
     wannier90/src/constants.F90
