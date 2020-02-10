@@ -1,13 +1,16 @@
+set(sources_davidson_param
+    Davidson/david_param.f90)
+
 set(sources_davidson
-    Davidson/david_param.f90
+    ${sources_davidson_param}
+    Davidson_RCI/david_rci.f90
     Davidson/cegterg.f90
     Davidson/regterg.f90
-    Davidson_RCI/david_rci.f90
 )
 
 set(sources_davidson_rci
+    ${sources_davidson_param}
     Davidson_RCI/david_rci.f90
-    Davidson_RCI/david_param.f90
 )
 
 set(sources_cg
