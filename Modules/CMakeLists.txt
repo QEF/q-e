@@ -124,7 +124,6 @@ set(sources
     # list of subroutines and functions (not modules) previously found in flib/
     atomic_number.f90
     capital.f90
-    correlation_gga.f90
     cryst_to_car.f90
     erf.f90
     exchange_gga.f90

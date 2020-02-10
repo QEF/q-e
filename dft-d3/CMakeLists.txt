@@ -15,5 +15,21 @@ target_link_libraries(qe_dftd3
     PUBLIC
         QE::UTILX 
         QE::Modules)
-qe_install_targets(qe_dftd3)
 
+###########################################################
+# test.x
+###########################################################
+set(sources test_code.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_atomic_test_exe ${sources})
+set_target_properties(qe_atomic_test_exe PROPERTIES OUTPUT_NAME test.x)
+target_link_libraries(qe_atomic_test_exe
+    PRIVATE
+        QE::DFTD3)
+# FIXME: Does it work?
+#add_test(NAME test COMMAND test.x)
+
+qe_install_targets(
+    qe_dftd3
+)

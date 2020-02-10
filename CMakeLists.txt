@@ -161,6 +161,18 @@ add_subdirectory(CPV)
 add_subdirectory(atomic)
 add_subdirectory(COUPLE)
 add_subdirectory(LR_Modules)
+add_subdirectory(PHonon)
+add_subdirectory(PP)
+add_subdirectory(EPW)
+add_subdirectory(GWW)
+add_subdirectory(HP)
+add_subdirectory(NEB)
+add_subdirectory(PlotPhon)
+add_subdirectory(PWCOND)
+add_subdirectory(QHA)
+add_subdirectory(TDDFPT)
+add_subdirectory(upftools)
+add_subdirectory(XSpectra)
 
 ###########################################################
 # Exports

@@ -55,7 +55,7 @@ set(sources
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 
 qe_add_library(qe_lr_modules ${sources})
-add_library(QE::LR_MODULES ALIAS qe_lr_modules)
+add_library(QE::LR_Modules ALIAS qe_lr_modules)
 target_link_libraries(qe_lr_modules
     PUBLIC
         QE::Modules

@@ -242,7 +242,9 @@ target_link_libraries(qe_pw
     PUBLIC
         QE::LAX
         QE::UTILX  # TODO direct or transitive via QE::LAX?
-        QE::Solvers
+        QE::KS_Solvers::Davidson
+        QE::KS_Solvers::CG
+        QE::KS_Solvers::PPCG
         QE::Modules
         QE::FFTX
         QE::DFTD3
@@ -256,13 +258,80 @@ set(sources src/pwscf.f90)
 set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_executable(qe_pw_exe ${sources})
 set_target_properties(qe_pw_exe PROPERTIES OUTPUT_NAME pw.x)
-add_executable(QE::PW_EXE ALIAS qe_pw_exe)
 target_link_libraries(qe_pw_exe
+    PRIVATE
+        QE::PW)
+
+###########################################################
+# ibrav2cell.x
+###########################################################
+set(sources tools/ibrav2cell.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_pw_tools_ibrav2cell_exe ${sources})
+set_target_properties(qe_pw_tools_ibrav2cell_exe PROPERTIES OUTPUT_NAME ibrav2cell.x)
+target_link_libraries(qe_pw_tools_ibrav2cell_exe
+    PRIVATE
+        QE::PW)
+
+###########################################################
+# cell2ibrav.x
+###########################################################
+set(sources tools/cell2ibrav.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_pw_tools_cell2ibrav_exe ${sources})
+set_target_properties(qe_pw_tools_cell2ibrav_exe PROPERTIES OUTPUT_NAME cell2ibrav.x)
+target_link_libraries(qe_pw_tools_cell2ibrav_exe
+    PRIVATE
+        QE::PW)
+
+###########################################################
+# ev.x
+###########################################################
+set(sources tools/ev.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_pw_tools_ev_exe ${sources})
+set_target_properties(qe_pw_tools_ev_exe PROPERTIES OUTPUT_NAME ev.x)
+target_link_libraries(qe_pw_tools_ev_exe
+    PRIVATE
+        QE::PW)
+
+###########################################################
+# kpoints.x
+###########################################################
+set(sources tools/kpoints.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_pw_tools_kpoints_exe ${sources})
+set_target_properties(qe_pw_tools_kpoints_exe PROPERTIES OUTPUT_NAME kpoints.x)
+target_link_libraries(qe_pw_tools_kpoints_exe
+    PRIVATE
+        QE::PW)
+
+###########################################################
+# pwi2xsf.x
+###########################################################
+set(sources tools/pwi2xsf.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_pw_tools_pwi2xsf_exe ${sources})
+set_target_properties(qe_pw_tools_pwi2xsf_exe PROPERTIES OUTPUT_NAME pwi2xsf.x)
+target_link_libraries(qe_pw_tools_pwi2xsf_exe
     PRIVATE
         QE::PW)
 
 ###########################################################
 
 qe_install_targets(
+    # Libraries
     qe_pw
-    qe_pw_exe)
+    # Executables
+    qe_pw_exe
+    qe_pw_tools_ibrav2cell_exe
+    qe_pw_tools_cell2ibrav_exe
+    qe_pw_tools_ev_exe
+    qe_pw_tools_kpoints_exe
+    qe_pw_tools_pwi2xsf_exe
+)

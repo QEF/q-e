@@ -122,4 +122,5 @@ target_link_libraries(qe_atomic_exe
 
 qe_install_targets(
     qe_atomic
-    qe_atomic_exe)
+    qe_atomic_exe
+)

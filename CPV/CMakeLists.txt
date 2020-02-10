@@ -142,8 +142,37 @@ target_link_libraries(qe_cpv_manycp_exe
         QE::CPV)
 
 ###########################################################
+# cppp.x
+###########################################################
+set(sources src/cppp.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_cpv_cppp_exe ${sources})
+set_target_properties(qe_cpv_cppp_exe PROPERTIES OUTPUT_NAME cppp.x)
+target_link_libraries(qe_cpv_cppp_exe
+    PRIVATE
+        QE::CPV)
+
+###########################################################
+# wfdd.x
+###########################################################
+set(sources src/wfdd.f90)
+# TODO rename all sources *.f90 -> *.F90
+set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_executable(qe_cpv_wfdd_exe ${sources})
+set_target_properties(qe_cpv_wfdd_exe PROPERTIES OUTPUT_NAME wfdd.x)
+target_link_libraries(qe_cpv_wfdd_exe
+    PRIVATE
+        QE::CPV)
+
+###########################################################
 
 qe_install_targets(
+    # Libraries
     qe_cpv
+    # Exacutables
     qe_cpv_exe
-    qe_cpv_manycp_exe)
+    qe_cpv_manycp_exe
+    qe_cpv_cppp_exe
+    qe_cpv_wfdd_exe
+)
