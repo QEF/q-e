@@ -207,3 +207,188 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CMakeGraphVizOptions.cmake
 add_custom_target(depgraph
     "${CMAKE_COMMAND}" "--graphviz=depgraph" .
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+###########################################################
+# Custom make targets
+###########################################################
+add_custom_target(pw 
+    DEPENDS 
+        qe_pw_exe
+        qe_pw_tools_ibrav2cell_exe
+        qe_pw_tools_cell2ibrav_exe
+        qe_pw_tools_ev_exe
+        qe_pw_tools_kpoints_exe
+        qe_pw_tools_pwi2xsf_exe
+    COMMENT
+        "basic code for scf, structure optimization, MD"
+)
+
+add_custom_target(ph 
+    DEPENDS 
+        qe_phonon_ph_exe
+        qe_phonon_dynmat_exe
+        qe_phonon_q2r_exe
+        qe_phonon_q2trans_exe
+        qe_phonon_q2transfd_exe
+        qe_phonon_q2qstar_exe
+        qe_phonon_lambda_exe
+        qe_phonon_alpha2f_exe
+        qe_phonon_epa_exe
+        qe_phonon_fqha_exe
+        qe_plotphon_kforbands_exe
+        qe_plotphon_bandstognuplot_exe
+        qe_plotphon_eminmax_exe
+    COMMENT
+        "phonon code, Gamma-only and third-order derivatives"
+)
+
+add_custom_target(hp 
+    DEPENDS 
+        qe_hp_exe
+    COMMENT
+        "calculation of the Hubbard parameters from DFPT"
+)
+
+add_custom_target(pwcond 
+    DEPENDS 
+        qe_pwcond_exe
+    COMMENT
+        "ballistic conductance"
+)
+
+add_custom_target(neb 
+    DEPENDS 
+        qe_neb_exe
+        qe_neb_pathinterpolation_exe
+    COMMENT
+        "code for Nudged Elastic Band method"
+)
+
+add_custom_target(pp 
+    DEPENDS 
+        qe_pp_exe
+        qe_pp_opengrid_exe
+        qe_pp_average_exe
+        qe_pp_bands_exe
+        qe_pp_dos_exe
+        qe_pp_pawplot_exe
+        qe_pp_planavg_exe
+        qe_pp_plotband_exe
+        qe_pp_plotproj_exe
+        qe_pp_plotrho_exe
+        qe_pp_pmw_exe
+        qe_pp_xctest_exe
+        qe_pp_projwfc_exe
+        qe_pp_pw2wannier90_exe
+        qe_pp_pw2critic_exe
+        qe_pp_wfck2r_exe
+        qe_pp_initial_state_exe
+        qe_pp_pw2gw_exe
+        qe_pp_sumpdos_exe
+        qe_pp_epsilon_exe
+        qe_pp_wannierham_exe
+        qe_pp_wannierplot_exe
+        qe_pp_molecularpdos_exe
+        qe_pp_pw2bgw_exe
+        qe_pp_fermivelocity_exe
+        qe_pp_fermisurface_exe
+        qe_pp_fermiproj_exe
+        qe_pp_ppacf_exe
+        qe_pp_benchmarklibxc_exe
+    COMMENT
+        "postprocessing programs"
+)
+
+add_custom_target(pwall 
+    DEPENDS 
+        pw 
+        ph 
+        pp 
+        pwcond 
+        neb
+    COMMENT
+        "same as \"make pw ph pp pwcond neb\""
+)
+
+add_custom_target(cp 
+    DEPENDS
+        qe_cpv_exe
+        qe_cpv_manycp_exe
+        qe_cpv_cppp_exe
+        qe_cpv_wfdd_exe
+    COMMENT
+        "CP code: Car-Parrinello molecular dynamics"
+)
+
+add_custom_target(tddfpt 
+    DEPENDS
+        qe_tddfpt_turbolanczos_exe
+        qe_tddfpt_turbodavidson_exe
+        qe_tddfpt_turboeels_exe
+        qe_tddfpt_calculatespectrum_exe
+    COMMENT
+        "time dependent dft code"
+)
+
+add_custom_target(gwl 
+    DEPENDS
+        qe_gww_util_grap_exe
+        qe_gww_util_abcoefftoeps_exe
+        qe_gww_util_memorypw4gww_exe
+    COMMENT
+        "GW with Lanczos chains"
+)
+
+add_custom_target(ld1 
+    DEPENDS
+        qe_atomic_exe
+    COMMENT
+        "utilities for pseudopotential generation"
+)
+
+add_custom_target(upf 
+    DEPENDS
+        qe_upftools_extractcore_exe
+        qe_upftools_casino2upf_exe
+        qe_upftools_upf2upf2_exe
+        qe_upftools_cpmd2upf_exe
+        qe_upftools_fhi2upf_exe
+        qe_upftools_fpmd2upf_exe
+        qe_upftools_ncpp2upf_exe
+        qe_upftools_oldcp2upf_exe
+        qe_upftools_readupf_exe
+        qe_upftools_readupftofile_exe
+        qe_upftools_fixupf_exe
+        qe_upftools_rrkj2upf_exe
+        qe_upftools_upf2casino_exe
+        qe_upftools_uspp2upf_exe
+        qe_upftools_vdb2upf_exe
+        qe_upftools_virtualv2_exe
+        qe_upftools_interpolate_exe
+        qe_upftools_hgh2qelininterpol_gh2qe_exe
+    COMMENT
+        "utilities for pseudopotential conversion"
+)
+
+add_custom_target(xspectra 
+    DEPENDS
+        qe_xspectra_exe
+        qe_xspectra_spectracorrection_exe
+        qe_xspectra_molecularnexafs_exe
+    COMMENT
+        "X-ray core-hole spectroscopy calculations"
+)
+
+add_custom_target(couple 
+    DEPENDS
+        qe_couple
+    COMMENT
+        "library interface for coupling to external codes"
+)
+
+add_custom_target(epw 
+    DEPENDS
+        qe_epw_exe
+    COMMENT
+        "electron-Phonon Coupling with wannier functions"
+)
