@@ -33,7 +33,7 @@ set_source_files_properties(${sources_ppcg} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_kssolver_davidson ${sources_davidson})
 add_library(QE::KS_Solvers::Davidson ALIAS qe_kssolver_davidson)
 target_link_libraries(qe_kssolver_davidson
-    PUBLIC
+    PRIVATE
         QE::LAX
         QE::UTILX
         QE::MPI_Fortran)
@@ -41,7 +41,7 @@ target_link_libraries(qe_kssolver_davidson
 qe_add_library(qe_kssolver_davidsonrci ${sources_davidson_rci})
 add_library(QE::KS_Solvers::Davidson_RCI ALIAS qe_kssolver_davidsonrci)
 target_link_libraries(qe_kssolver_davidsonrci
-    PUBLIC
+    PRIVATE
         QE::LAX
         QE::UTILX
         QE::MPI_Fortran)
@@ -49,7 +49,7 @@ target_link_libraries(qe_kssolver_davidsonrci
 qe_add_library(qe_kssolver_cg ${sources_cg})
 add_library(QE::KS_Solvers::CG ALIAS qe_kssolver_cg)
 target_link_libraries(qe_kssolver_cg
-    PUBLIC
+    PRIVATE
         QE::LAX
         QE::UTILX
         QE::MPI_Fortran)
@@ -57,7 +57,7 @@ target_link_libraries(qe_kssolver_cg
 qe_add_library(qe_kssolver_ppcg ${sources_ppcg})
 add_library(QE::KS_Solvers::PPCG ALIAS qe_kssolver_ppcg)
 target_link_libraries(qe_kssolver_ppcg
-    PUBLIC
+    PRIVATE
         QE::LAX
         QE::UTILX
         QE::MPI_Fortran)

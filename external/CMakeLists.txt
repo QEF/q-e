@@ -226,7 +226,7 @@ qe_add_library(qe_iotk ${sources})
 # FIXME: lenght lines of IOTK files are too long for Fortran
 target_compile_options(qe_iotk PRIVATE "-ffree-line-length-none")
 target_include_directories(qe_iotk
-    PUBLIC
+    PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/iotk/include>
     INTERFACE
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)

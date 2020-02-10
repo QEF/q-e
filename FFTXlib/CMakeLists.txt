@@ -39,7 +39,7 @@ set_source_files_properties(${f_sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_fftx ${f_sources} ${c_sources})
 add_library(QE::FFTX ALIAS qe_fftx)
 target_link_libraries(qe_fftx
-    PUBLIC
+    PRIVATE
         QE::LAPACK)
 qe_install_targets(qe_fftx)
 

@@ -187,54 +187,64 @@ set_source_files_properties(${sources_simple_ip} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_gww ${sources_gww})
 add_library(QE::GWW ALIAS qe_gww)
 target_link_libraries(qe_gww
-    PUBLIC
+    PRIVATE
+        QE::FFTX
+        QE::UTILX
         QE::Modules)
 
 qe_add_library(qe_gww_pw4gww ${sources_pw4gww})
 add_library(QE::GWW::pw4gww ALIAS qe_gww_pw4gww)
 target_link_libraries(qe_gww_pw4gww
-    PUBLIC
+    PRIVATE
         QE::PW
+        QE::Modules
         QE::GWW
-        QE::Modules)
+)
 
 qe_add_library(qe_gww_bse ${sources_bse})
 add_library(QE::GWW::bse ALIAS qe_gww_bse)
 target_link_libraries(qe_gww_bse
-    PUBLIC
+    PRIVATE
+        QE::PW
+        QE::Modules
         QE::GWW::pw4gww
-        QE::Modules)
+)
 
 qe_add_library(qe_gww_head ${sources_head})
 add_library(QE::GWW::head ALIAS qe_gww_head)
 target_link_libraries(qe_gww_head
-    PUBLIC
+    PRIVATE
+        QE::PW
+        QE::LR_Modules
+        QE::Modules
         QE::PHonon::PH
-        QE::Modules)
+)
 
 qe_add_library(qe_gww_minpack ${sources_minpack})
 add_library(QE::GWW::minpack ALIAS qe_gww_minpack)
 target_link_libraries(qe_gww_minpack
-    PUBLIC
+    PRIVATE
         QE::Modules)
 
 qe_add_library(qe_gww_simple ${sources_simple})
 add_library(QE::GWW::simple ALIAS qe_gww_simple)
 target_link_libraries(qe_gww_simple
-    PUBLIC
+    PRIVATE
         QE::PW
         QE::Modules)
 
 qe_add_library(qe_gww_simplebse ${sources_simple_bse})
 add_library(QE::GWW::simple_bse ALIAS qe_gww_simplebse)
 target_link_libraries(qe_gww_simplebse
-    PUBLIC
+    PRIVATE
+        QE::UTILX
         QE::Modules)
 
 qe_add_library(qe_gww_simpleip ${sources_simple_ip})
 add_library(QE::GWW::simple_ip ALIAS qe_gww_simpleip)
 target_link_libraries(qe_gww_simpleip
-    PUBLIC
+    PRIVATE
+        QE::UTILX
         QE::Modules)
 
 ###########################################################

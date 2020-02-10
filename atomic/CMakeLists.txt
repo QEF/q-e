@@ -103,7 +103,8 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_atomic ${sources})
 add_library(QE::ATOMIC ALIAS qe_atomic)
 target_link_libraries(qe_atomic
-    PUBLIC
+    PRIVATE
+        QE::UTILX
         QE::Modules)
 
 ###########################################################
@@ -116,6 +117,7 @@ qe_add_executable(qe_atomic_exe ${sources})
 set_target_properties(qe_atomic_exe PROPERTIES OUTPUT_NAME ld1.x)
 target_link_libraries(qe_atomic_exe
     PRIVATE
+        QE::Modules
         QE::ATOMIC)
 
 ###########################################################

@@ -50,7 +50,7 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_hp ${sources})
 add_library(QE::HP ALIAS qe_hp)
 target_link_libraries(qe_hp
-    PUBLIC
+    PRIVATE
         QE::PW
         QE::LR_Modules
         QE::Modules)
@@ -65,6 +65,8 @@ qe_add_executable(qe_hp_exe ${sources})
 set_target_properties(qe_hp_exe PROPERTIES OUTPUT_NAME hp.x)
 target_link_libraries(qe_hp_exe
     PRIVATE
+        QE::LAX
+        QE::Modules
         QE::HP)
 
 ###########################################################

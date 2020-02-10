@@ -20,7 +20,7 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_lax ${sources})
 add_library(QE::LAX ALIAS qe_lax)
 target_link_libraries(qe_lax
-    PUBLIC
+    PRIVATE
         QE::MPI_Fortran
         QE::LAPACK
         QE::UTILX)

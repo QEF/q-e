@@ -224,26 +224,34 @@ set_source_files_properties(${sources_fd} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_phonon_ph ${sources_ph})
 add_library(QE::PHonon::PH ALIAS qe_phonon_ph)
 target_link_libraries(qe_phonon_ph
-    PUBLIC
+    PRIVATE
+        QE::PW
         QE::IOTK
+        QE::Modules
         QE::LR_Modules)
 
 qe_add_library(qe_phonon_phaux ${sources_phaux})
 add_library(QE::PHonon::PHAUX ALIAS qe_phonon_phaux)
 target_link_libraries(qe_phonon_phaux
-    PUBLIC
+    PRIVATE
+        QE::Modules
         QE::LR_Modules)
 
 qe_add_library(qe_phonon_gamma ${sources_gamma})
 add_library(QE::PHonon::Gamma ALIAS qe_phonon_gamma)
 target_link_libraries(qe_phonon_gamma
-    PUBLIC
+    PRIVATE
+        QE::PW
+        QE::Modules
         QE::LR_Modules)
 
 qe_add_library(qe_phonon_fd ${sources_fd})
 add_library(QE::PHonon::FD ALIAS qe_phonon_fd)
 target_link_libraries(qe_phonon_fd
-    PUBLIC
+    PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::LR_Modules)
 
 ###########################################################
@@ -256,6 +264,8 @@ qe_add_executable(qe_phonon_ph_exe ${sources})
 set_target_properties(qe_phonon_ph_exe PROPERTIES OUTPUT_NAME ph.x)
 target_link_libraries(qe_phonon_ph_exe
     PRIVATE
+        QE::LAX
+        QE::Modules
         QE::PHonon::PH
 )
 
@@ -269,9 +279,11 @@ qe_add_executable(qe_phonon_dynmat_exe ${sources})
 set_target_properties(qe_phonon_dynmat_exe PROPERTIES OUTPUT_NAME dynmat.x)
 target_link_libraries(qe_phonon_dynmat_exe
     PRIVATE
+        QE::LR_Modules
+        QE::Modules
+        QE::UTILX
         QE::PHonon::PH
         QE::PHonon::PHAUX
-        QE::UTILX
 )
 
 ###########################################################
@@ -284,8 +296,9 @@ qe_add_executable(qe_phonon_q2r_exe ${sources})
 set_target_properties(qe_phonon_q2r_exe PROPERTIES OUTPUT_NAME q2r.x)
 target_link_libraries(qe_phonon_q2r_exe
     PRIVATE
-        QE::PHonon::PH
+        QE::Modules
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################
@@ -298,8 +311,11 @@ qe_add_executable(qe_phonon_q2trans_exe ${sources})
 set_target_properties(qe_phonon_q2trans_exe PROPERTIES OUTPUT_NAME q2trans.x)
 target_link_libraries(qe_phonon_q2trans_exe
     PRIVATE
-        QE::PHonon::PH
+        QE::FFTX
+        QE::Modules
+        QE::IOTK
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################
@@ -312,8 +328,10 @@ qe_add_executable(qe_phonon_q2transfd_exe ${sources})
 set_target_properties(qe_phonon_q2transfd_exe PROPERTIES OUTPUT_NAME q2trans_fd.x)
 target_link_libraries(qe_phonon_q2transfd_exe
     PRIVATE
-        QE::PHonon::PH
+        QE::Modules
+        QE::IOTK
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################
@@ -326,8 +344,11 @@ qe_add_executable(qe_phonon_q2qstar_exe ${sources})
 set_target_properties(qe_phonon_q2qstar_exe PROPERTIES OUTPUT_NAME q2qstar.x)
 target_link_libraries(qe_phonon_q2qstar_exe
     PRIVATE
-        QE::PHonon::PH
+        QE::PW
+        QE::LR_Modules
+        QE::Modules
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################
@@ -340,8 +361,8 @@ qe_add_executable(qe_phonon_lambda_exe ${sources})
 set_target_properties(qe_phonon_lambda_exe PROPERTIES OUTPUT_NAME lambda.x)
 target_link_libraries(qe_phonon_lambda_exe
     PRIVATE
-        QE::PHonon::PH
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################
@@ -354,8 +375,10 @@ qe_add_executable(qe_phonon_alpha2f_exe ${sources})
 set_target_properties(qe_phonon_alpha2f_exe PROPERTIES OUTPUT_NAME alpha2f.x)
 target_link_libraries(qe_phonon_alpha2f_exe
     PRIVATE
-        QE::PHonon::PH
+        QE::PW
+        QE::Modules
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################
@@ -368,8 +391,9 @@ qe_add_executable(qe_phonon_epa_exe ${sources})
 set_target_properties(qe_phonon_epa_exe PROPERTIES OUTPUT_NAME epa.x)
 target_link_libraries(qe_phonon_epa_exe
     PRIVATE
-        QE::PHonon::PH
+        QE::Modules
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################
@@ -382,8 +406,8 @@ qe_add_executable(qe_phonon_fqha_exe ${sources})
 set_target_properties(qe_phonon_fqha_exe PROPERTIES OUTPUT_NAME fqha.x)
 target_link_libraries(qe_phonon_fqha_exe
     PRIVATE
-        QE::PHonon::PH
         QE::UTILX
+        QE::PHonon::PH
 )
 
 ###########################################################

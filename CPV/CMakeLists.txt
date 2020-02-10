@@ -110,10 +110,11 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_cpv ${sources})
 add_library(QE::CPV ALIAS qe_cpv)
 target_link_libraries(qe_cpv
-    PUBLIC
+    PRIVATE
         QE::LAX
         QE::UTILX
         QE::Modules
+        QE::FOX
         QE::FFTX
         QE::MPI_Fortran)
 
@@ -127,6 +128,8 @@ qe_add_executable(qe_cpv_exe ${sources})
 set_target_properties(qe_cpv_exe PROPERTIES OUTPUT_NAME cp.x)
 target_link_libraries(qe_cpv_exe
     PRIVATE
+        QE::Modules
+        QE::LAX
         QE::CPV)
 
 ###########################################################
@@ -139,6 +142,9 @@ qe_add_executable(qe_cpv_manycp_exe ${sources})
 set_target_properties(qe_cpv_manycp_exe PROPERTIES OUTPUT_NAME manycp.x)
 target_link_libraries(qe_cpv_manycp_exe
     PRIVATE
+        QE::LAX
+        QE::Modules
+        QE::UTILX
         QE::CPV)
 
 ###########################################################
@@ -151,6 +157,7 @@ qe_add_executable(qe_cpv_cppp_exe ${sources})
 set_target_properties(qe_cpv_cppp_exe PROPERTIES OUTPUT_NAME cppp.x)
 target_link_libraries(qe_cpv_cppp_exe
     PRIVATE
+        QE::Modules
         QE::CPV)
 
 ###########################################################
@@ -163,6 +170,7 @@ qe_add_executable(qe_cpv_wfdd_exe ${sources})
 set_target_properties(qe_cpv_wfdd_exe PROPERTIES OUTPUT_NAME wfdd.x)
 target_link_libraries(qe_cpv_wfdd_exe
     PRIVATE
+        QE::Modules
         QE::CPV)
 
 ###########################################################

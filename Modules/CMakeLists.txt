@@ -166,7 +166,7 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_modules ${sources})
 add_library(QE::Modules ALIAS qe_modules)
 target_link_libraries(qe_modules
-    PUBLIC
+    PRIVATE
         QE::UTILX
         QE::FFTX
         QE::FOX

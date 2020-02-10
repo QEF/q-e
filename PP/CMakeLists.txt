@@ -51,7 +51,8 @@ qe_add_library(qe_pp ${sources})
 add_library(QE::PP ALIAS qe_pp)
 target_compile_definitions(qe_pp PRIVATE "__WANLIB")
 target_link_libraries(qe_pp
-    PUBLIC
+    PRIVATE
+        QE::FOX
         QE::PW
         QE::Modules)
 
@@ -65,6 +66,8 @@ qe_add_executable(qe_pp_exe ${sources})
 set_target_properties(qe_pp_exe PROPERTIES OUTPUT_NAME pp.x)
 target_link_libraries(qe_pp_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -77,6 +80,9 @@ qe_add_executable(qe_pp_opengrid_exe ${sources})
 set_target_properties(qe_pp_opengrid_exe PROPERTIES OUTPUT_NAME open_grid.x)
 target_link_libraries(qe_pp_opengrid_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -89,6 +95,9 @@ qe_add_executable(qe_pp_average_exe ${sources})
 set_target_properties(qe_pp_average_exe PROPERTIES OUTPUT_NAME average.x)
 target_link_libraries(qe_pp_average_exe
     PRIVATE
+        QE::PW
+        QE::FFTX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -101,6 +110,8 @@ qe_add_executable(qe_pp_bands_exe ${sources})
 set_target_properties(qe_pp_bands_exe PROPERTIES OUTPUT_NAME bands.x)
 target_link_libraries(qe_pp_bands_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -113,6 +124,7 @@ qe_add_executable(qe_pp_dos_exe ${sources})
 set_target_properties(qe_pp_dos_exe PROPERTIES OUTPUT_NAME dos.x)
 target_link_libraries(qe_pp_dos_exe
     PRIVATE
+        QE::PW
         QE::PP)
 
 ###########################################################
@@ -125,6 +137,8 @@ qe_add_executable(qe_pp_pawplot_exe ${sources})
 set_target_properties(qe_pp_pawplot_exe PROPERTIES OUTPUT_NAME pawplot.x)
 target_link_libraries(qe_pp_pawplot_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -137,6 +151,8 @@ qe_add_executable(qe_pp_planavg_exe ${sources})
 set_target_properties(qe_pp_planavg_exe PROPERTIES OUTPUT_NAME plan_avg.x)
 target_link_libraries(qe_pp_planavg_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -149,6 +165,8 @@ qe_add_executable(qe_pp_plotband_exe ${sources})
 set_target_properties(qe_pp_plotband_exe PROPERTIES OUTPUT_NAME plotband.x)
 target_link_libraries(qe_pp_plotband_exe
     PRIVATE
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -185,6 +203,9 @@ qe_add_executable(qe_pp_pmw_exe ${sources})
 set_target_properties(qe_pp_pmw_exe PROPERTIES OUTPUT_NAME pmw.x)
 target_link_libraries(qe_pp_pmw_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -212,6 +233,8 @@ qe_add_executable(qe_pp_projwfc_exe ${sources})
 set_target_properties(qe_pp_projwfc_exe PROPERTIES OUTPUT_NAME projwfc.x)
 target_link_libraries(qe_pp_projwfc_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -224,6 +247,9 @@ qe_add_executable(qe_pp_pw2wannier90_exe ${sources})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -236,6 +262,8 @@ qe_add_executable(qe_pp_pw2critic_exe ${sources})
 set_target_properties(qe_pp_pw2critic_exe PROPERTIES OUTPUT_NAME pw2critic.x)
 target_link_libraries(qe_pp_pw2critic_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -248,6 +276,8 @@ qe_add_executable(qe_pp_wfck2r_exe ${sources})
 set_target_properties(qe_pp_wfck2r_exe PROPERTIES OUTPUT_NAME wfck2r.x)
 target_link_libraries(qe_pp_wfck2r_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -260,6 +290,8 @@ qe_add_executable(qe_pp_initial_state_exe ${sources})
 set_target_properties(qe_pp_initial_state_exe PROPERTIES OUTPUT_NAME initial_state.x)
 target_link_libraries(qe_pp_initial_state_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -272,6 +304,9 @@ qe_add_executable(qe_pp_pw2gw_exe ${sources})
 set_target_properties(qe_pp_pw2gw_exe PROPERTIES OUTPUT_NAME pw2gw.x)
 target_link_libraries(qe_pp_pw2gw_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -296,6 +331,8 @@ qe_add_executable(qe_pp_epsilon_exe ${sources})
 set_target_properties(qe_pp_epsilon_exe PROPERTIES OUTPUT_NAME epsilon.x)
 target_link_libraries(qe_pp_epsilon_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -308,6 +345,9 @@ qe_add_executable(qe_pp_wannierham_exe ${sources})
 set_target_properties(qe_pp_wannierham_exe PROPERTIES OUTPUT_NAME wannier_ham.x)
 target_link_libraries(qe_pp_wannierham_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -320,6 +360,9 @@ qe_add_executable(qe_pp_wannierplot_exe ${sources})
 set_target_properties(qe_pp_wannierplot_exe PROPERTIES OUTPUT_NAME wannier_plot.x)
 target_link_libraries(qe_pp_wannierplot_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -332,6 +375,8 @@ qe_add_executable(qe_pp_molecularpdos_exe ${sources})
 set_target_properties(qe_pp_molecularpdos_exe PROPERTIES OUTPUT_NAME molecularpdos.x)
 target_link_libraries(qe_pp_molecularpdos_exe
     PRIVATE
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -344,6 +389,8 @@ qe_add_executable(qe_pp_pw2bgw_exe ${sources})
 set_target_properties(qe_pp_pw2bgw_exe PROPERTIES OUTPUT_NAME pw2bgw.x)
 target_link_libraries(qe_pp_pw2bgw_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -356,6 +403,9 @@ qe_add_executable(qe_pp_fermisurface_exe ${sources})
 set_target_properties(qe_pp_fermisurface_exe PROPERTIES OUTPUT_NAME fs.x)
 target_link_libraries(qe_pp_fermisurface_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -368,6 +418,9 @@ qe_add_executable(qe_pp_fermivelocity_exe ${sources})
 set_target_properties(qe_pp_fermivelocity_exe PROPERTIES OUTPUT_NAME fermi_velocity.x)
 target_link_libraries(qe_pp_fermivelocity_exe
     PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -380,6 +433,8 @@ qe_add_executable(qe_pp_fermiproj_exe ${sources})
 set_target_properties(qe_pp_fermiproj_exe PROPERTIES OUTPUT_NAME fermi_proj.x)
 target_link_libraries(qe_pp_fermiproj_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -392,6 +447,7 @@ qe_add_executable(qe_pp_ppacf_exe ${sources})
 set_target_properties(qe_pp_ppacf_exe PROPERTIES OUTPUT_NAME ppacf.x)
 target_link_libraries(qe_pp_ppacf_exe
     PRIVATE
+        QE::PW
         QE::PP)
 
 ###########################################################

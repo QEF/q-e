@@ -52,7 +52,7 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_tddfpt ${sources})
 add_library(QE::TDDFPT ALIAS qe_tddfpt)
 target_link_libraries(qe_tddfpt
-    PUBLIC
+    PRIVATE
         QE::LR_Modules
         QE::PW
         QE::Modules)
@@ -67,6 +67,8 @@ qe_add_executable(qe_tddfpt_turbolanczos_exe ${sources})
 set_target_properties(qe_tddfpt_turbolanczos_exe PROPERTIES OUTPUT_NAME turbo_lanczos.x)
 target_link_libraries(qe_tddfpt_turbolanczos_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::TDDFPT)
 
 ###########################################################
@@ -79,6 +81,8 @@ qe_add_executable(qe_tddfpt_turbodavidson_exe ${sources})
 set_target_properties(qe_tddfpt_turbodavidson_exe PROPERTIES OUTPUT_NAME turbo_davidson.x)
 target_link_libraries(qe_tddfpt_turbodavidson_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::TDDFPT)
 
 ###########################################################
@@ -91,6 +95,9 @@ qe_add_executable(qe_tddfpt_turboeels_exe ${sources})
 set_target_properties(qe_tddfpt_turboeels_exe PROPERTIES OUTPUT_NAME turbo_eels.x)
 target_link_libraries(qe_tddfpt_turboeels_exe
     PRIVATE
+        QE::PW
+        QE::LAX
+        QE::Modules
         QE::TDDFPT)
 
 ###########################################################
@@ -103,6 +110,7 @@ qe_add_executable(qe_tddfpt_calculatespectrum_exe ${sources})
 set_target_properties(qe_tddfpt_calculatespectrum_exe PROPERTIES OUTPUT_NAME tddfpt_calculate_spectrum.x)
 target_link_libraries(qe_tddfpt_calculatespectrum_exe
     PRIVATE
+        QE::UTILX
         QE::Modules)
 
 ###########################################################

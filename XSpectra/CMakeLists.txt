@@ -37,7 +37,7 @@ set_source_files_properties(${sources_gipaw} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_xspectra ${sources_x})
 add_library(QE::XSpectra ALIAS qe_xspectra)
 target_link_libraries(qe_xspectra
-    PUBLIC
+    PRIVATE
         QE::PW
         QE::UTILX
         QE::Modules)
@@ -45,7 +45,7 @@ target_link_libraries(qe_xspectra
 qe_add_library(qe_xspectra_gipaw ${sources_gipaw})
 add_library(QE::XSpectra::GIPAW ALIAS qe_xspectra_gipaw)
 target_link_libraries(qe_xspectra_gipaw
-    PUBLIC
+    PRIVATE
         QE::PW
         QE::UTILX
         QE::Modules)
@@ -60,6 +60,8 @@ qe_add_executable(qe_xspectra_exe ${sources})
 set_target_properties(qe_xspectra_exe PROPERTIES OUTPUT_NAME xspectra.x)
 target_link_libraries(qe_xspectra_exe
     PRIVATE
+        QE::PW
+        QE::Modules
         QE::XSpectra
         QE::XSpectra::GIPAW
 )
@@ -77,6 +79,7 @@ qe_add_executable(qe_xspectra_spectracorrection_exe ${sources})
 set_target_properties(qe_xspectra_spectracorrection_exe PROPERTIES OUTPUT_NAME spectra_correction.x)
 target_link_libraries(qe_xspectra_spectracorrection_exe
     PRIVATE
+        QE::Modules
         QE::XSpectra
         QE::XSpectra::GIPAW
 )

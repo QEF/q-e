@@ -31,7 +31,8 @@ set_source_files_properties(${sources_util_tests} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_utilx ${sources_util})
 add_library(QE::UTILX ALIAS qe_utilx)
 target_link_libraries(qe_utilx
-    PUBLIC
+    PRIVATE
+        QE::CLIB
         QE::MPI_Fortran)
 
 qe_install_targets(qe_utilx)
@@ -39,7 +40,7 @@ qe_install_targets(qe_utilx)
 qe_add_library(qe_utilx_tests ${sources_util_tests})
 add_library(QE::UTILX::TESTS ALIAS qe_utilx_tests)
 target_link_libraries(qe_utilx_tests
-    PUBLIC
+    PRIVATE
         QE::UTILX
         QE::MPI_Fortran)
 

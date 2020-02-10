@@ -56,12 +56,15 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_epw ${sources})
 add_library(QE::EPW ALIAS qe_epw)
 target_link_libraries(qe_epw
-    PUBLIC
+    PRIVATE
+        QE::WANNIER90
+        QE::IOTK
         QE::Modules
         QE::LR_Modules
         QE::PHonon::PH
         QE::PW
-        QE::MPI_Fortran)
+        QE::MPI_Fortran
+)
 
 ###########################################################
 # epw.x
@@ -73,10 +76,11 @@ qe_add_executable(qe_epw_exe ${sources})
 set_target_properties(qe_epw_exe PROPERTIES OUTPUT_NAME epw.x)
 target_link_libraries(qe_epw_exe
     PRIVATE
-        QE::EPW
+        QE::Modules
         QE::PP
         QE::UTILX
-        QE::WANNIER90)
+        QE::EPW
+)
 
 ###########################################################
 

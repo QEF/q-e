@@ -29,7 +29,7 @@ set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
 qe_add_library(qe_neb ${sources})
 add_library(QE::NEB ALIAS qe_neb)
 target_link_libraries(qe_neb
-    PUBLIC
+    PRIVATE
         QE::PW
         QE::Modules)
 
@@ -43,6 +43,9 @@ qe_add_executable(qe_neb_exe ${sources})
 set_target_properties(qe_neb_exe PROPERTIES OUTPUT_NAME neb.x)
 target_link_libraries(qe_neb_exe
     PRIVATE
+        QE::LAX
+        QE::UTILX
+        QE::Modules
         QE::NEB)
 
 ###########################################################
@@ -55,6 +58,7 @@ qe_add_executable(qe_neb_pathinterpolation_exe ${sources})
 set_target_properties(qe_neb_pathinterpolation_exe PROPERTIES OUTPUT_NAME path_interpolation.x)
 target_link_libraries(qe_neb_pathinterpolation_exe
     PRIVATE
+        QE::Modules
         QE::NEB)
 
 ###########################################################
