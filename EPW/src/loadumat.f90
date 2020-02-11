@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  SUBROUTINE loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
+  SUBROUTINE loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
                        exband, w_centers)
   !----------------------------------------------------------------------------
   !!
@@ -31,16 +31,17 @@
   USE division,      ONLY : fkbounds
   USE elph2,         ONLY : xkq
   USE kfold,         ONLY : createkmap2
+  USE pwcom,         ONLY : nbnd
   !
   IMPLICIT NONE
   ! 
-  LOGICAL, INTENT(out) :: lwin(nbnd, nks)
+  LOGICAL, INTENT(out) :: lwin(nbndep, nks)
   !! Band windows at k
-  LOGICAL, INTENT(out) :: lwinq(nbnd, nks)
+  LOGICAL, INTENT(out) :: lwinq(nbndep, nks)
   !! Band windows at k+q
   LOGICAL, INTENT(out) :: exband(nbnd)
   !! Band excluded
-  INTEGER, INTENT(in) :: nbnd
+  INTEGER, INTENT(in) :: nbndep
   !! Number of bands
   INTEGER, INTENT(in) :: nbndsub
   !! number of bands in the optimal subspace
@@ -52,15 +53,15 @@
   !! the qpoint for folding of U
   REAL(KIND = DP), INTENT(inout) :: w_centers(3, nbndsub)
   !! Wannier centers
-  COMPLEX(KIND = DP), INTENT(out) :: cu(nbnd, nbndsub, nks)
+  COMPLEX(KIND = DP), INTENT(out) :: cu(nbndep, nbndsub, nks)
   !! U(k) matrix for k-points in the pool
-  COMPLEX(KIND = DP), INTENT(out) :: cuq(nbnd, nbndsub, nks)
+  COMPLEX(KIND = DP), INTENT(out) :: cuq(nbndep, nbndsub, nks)
   !! U(k+q) matrix for k+q-points in the pool
   ! 
   ! Local variables 
-  LOGICAL :: lwin_big(nbnd, nkstot)
+  LOGICAL :: lwin_big(nbndep, nkstot)
   !! .TRUE. if the band ibnd lies within the outer window at k-point ik
-  LOGICAL :: lwinq_big(nbnd, nkstot)
+  LOGICAL :: lwinq_big(nbndep, nkstot)
   !! .TRUE. if the band ibnd lies within the outer window at k+qpoint ikq
   INTEGER :: ik
   !! Counter of k-point index
@@ -76,9 +77,9 @@
   !! Index of first k-point in the pool  
   INTEGER :: ik_stop
   !! Index of last k-point in the pool
-  COMPLEX(KIND = DP) :: cu_big(nbnd, nbndsub, nkstot)
+  COMPLEX(KIND = DP) :: cu_big(nbndep, nbndsub, nkstot)
   !! U(k) matrix for all k-points
-  COMPLEX(KIND = DP) :: cuq_big(nbnd, nbndsub, nkstot)
+  COMPLEX(KIND = DP) :: cuq_big(nbndep, nbndsub, nkstot)
   !! U(k+q) matrix for all k+q-points
   !
   cu_big = czero
@@ -90,20 +91,20 @@
     OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
     IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
     !
+    DO ibnd = 1, nbnd
+      READ(iunukk, *) exband(ibnd)
+    ENDDO
     DO ik = 1, nkstot
-      DO ibnd = 1, nbnd
+      DO ibnd = 1, nbndep
         DO jbnd = 1, nbndsub
            READ(iunukk, *) cu_big(ibnd, jbnd, ik)
         ENDDO
       ENDDO
     ENDDO
     DO ik = 1, nkstot
-      DO ibnd = 1, nbnd
+      DO ibnd = 1, nbndep
         READ(iunukk, *) lwin_big(ibnd, ik)
       ENDDO
-    ENDDO
-    DO ibnd = 1, nbnd
-      READ(iunukk, *) exband(ibnd)
     ENDDO
     ! Read the Wannier centers
     DO iw = 1, nbndsub

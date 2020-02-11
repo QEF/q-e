@@ -67,7 +67,7 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY, eps16
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode_id, stdout
   USE io_var,        ONLY : iunkf, iunqf
   USE noncollin_module, ONLY : npol
   USE wvfct,         ONLY : npwx
@@ -166,6 +166,8 @@
   ! epbread  : read epmatq array from .epb files
   ! epbwrite : write epmatq array to .epb files
   ! nbndskip : number of bands to be skipped from the original Hamitonian (nfirstwin-1 in Marzari's notation)
+  !            nbndskip is not an input any more. It is now automatically calculated in Wannierization step.
+  !            For backward compatibility, nbndskip still can be entered as an input, but ignored with warning message.
   ! epwread  : read all quantities in Wannier representation from file epwdata.fmt
   ! epwwrite : write all quantities in Wannier representation to file epwdata.fmt
   !
@@ -416,7 +418,7 @@
   mp_mesh_k    = .FALSE.
   mp_mesh_q    = .FALSE.
   nbndsub      = 0
-  nbndskip     = 0
+  nbndskip     = -1
   nsmear       = 1
   delta_smear  = 0.01d0 ! eV
   modenum = 0 ! Was -1 previously and read from Modules/input_parameters.f90
@@ -540,7 +542,7 @@
   IF (epbread .AND. epbwrite) CALL errore('epw_readin', 'epbread cannot be used with epbwrite', 1)
   IF (epbread .AND. epwread) CALL errore('epw_readin', 'epbread cannot be used with epwread', 1)
   IF (degaussw * 4.d0 > fsthick) CALL errore('epw_readin', ' degaussw too close to fsthick', 1)
-  IF (nbndskip < 0) CALL errore('epw_readin', ' nbndskip must not be less than 0', 1)
+  IF (nbndskip /= -1) WRITE(stdout, '(A)') 'WARNING: epw_readin: nbndskip is not an input anymore. It is automatically calculated in Wanniezation step.'
   IF ((nw < 1) .OR. (nw > 1000)) CALL errore ('epw_readin', 'unreasonable nw', 1)
   IF (elecselfen .AND. plselfen) CALL errore('epw_readin', &
       'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)

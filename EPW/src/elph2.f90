@@ -40,7 +40,10 @@
     upper_bnd,               &!  Upper bound for the k-depend index among the mpi pools
     lrepmatw2_merge,         &!  File merging dimensions
     lrepmatw5_merge,         &!  File merging dimensions 
-    nbndfst                   !  Number of bands within the fsthick window.
+    nbndfst,                 &!  Number of bands within the fsthick window.
+    ibndstart,               &!  First band index after excluding bands in Wannierization step
+    ibndend,                 &!  Last band index after excluding bands in Wannierization step
+    nbndep                    !  Number of remaining bands after excluding bands in Wannierizatin step
   INTEGER, ALLOCATABLE ::    &! 
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector

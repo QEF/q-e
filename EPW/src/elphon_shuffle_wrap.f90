@@ -50,7 +50,8 @@
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, lpolar, system_2d
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat,            &
-                            exband, wscache, area
+                            exband, wscache, area,                              &
+                            ibndstart, ibndend, nbndep
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -367,21 +368,21 @@
     !
     ALLOCATE(dynq(nmodes, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating dynq', 1)
-    ALLOCATE(epmatq(nbnd, nbnd, nks, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
+    ALLOCATE(epmatq(ibndstart:ibndend, ibndstart:ibndend, nks, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating epmatq', 1)
     ALLOCATE(epsi(3, 3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating epsi', 1)
     ALLOCATE(zstar(3, 3, nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating zstar', 1)
-    ALLOCATE(bmat(nbnd, nbnd, nks, nqc1 * nqc2 * nqc3), STAT = ierr)
+    ALLOCATE(bmat(ibndstart:ibndend, ibndstart:ibndend, nks, nqc1 * nqc2 * nqc3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating bmat', 1)
-    ALLOCATE(cu(nbnd, nbndsub, nks), STAT = ierr)
+    ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating cu', 1)
-    ALLOCATE(cuq(nbnd, nbndsub, nks), STAT = ierr)
+    ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating cuq', 1)
-    ALLOCATE(lwin(nbnd, nks), STAT = ierr)
+    ALLOCATE(lwin(nbndep, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating lwin', 1)
-    ALLOCATE(lwinq(nbnd, nks), STAT = ierr)
+    ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating lwinq', 1)
     ALLOCATE(exband(nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating exband', 1)
@@ -683,10 +684,10 @@
         ENDDO
         !
         !
-        CALL loadumat(nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
+        CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
         !
         ! Calculate overlap U_k+q U_k^\dagger
-        IF (lpolar) CALL compute_umn_c(nbnd, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
+        IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(ibndstart:, ibndstart:, :, nqc))
         !
         !   calculate the sandwiches
         !
@@ -733,10 +734,10 @@
           !
           CALL createkmap(xq)
           !
-          CALL loadumat(nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
+          CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
           !
           ! Calculate overlap U_k+q U_k^\dagger
-          IF (lpolar) CALL compute_umn_c(nbnd, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
+          IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(ibndstart:, ibndstart:, :, nqc))
           !
           xq0 = -xq0
           !
@@ -874,10 +875,6 @@
   ! free up some memory
   !
   NULLIFY(igkq)
-  DEALLOCATE(umat_all, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating umat_all', 1)
-  DEALLOCATE(umat, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating umat', 1)
   DEALLOCATE(xqc_irr, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error deallocating xqc_irr', 1)
   DEALLOCATE(wqlist, STAT = ierr)

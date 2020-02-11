@@ -69,7 +69,8 @@ epw_setup.o \
 epw_summary.o \
 loadumat.o \
 stop_epw.o \
-wannierEPW.o
+wannierEPW.o \
+loadexb.o
 
 #default : epw
 

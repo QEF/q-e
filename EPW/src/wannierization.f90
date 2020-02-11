@@ -181,6 +181,9 @@
     !! This routine computes the energy projections of
     !! the computed Wannier functions
     !! 07/2010  Needs work.  Right now this sub is nearly worthless  
+    !! 02/2020  This subroutine is not called in any part of the code.
+    !!          If this would be called in the future, modification
+    !!          is needed in accordance with the changes for exclusion of semicore states.
     !
     USE kinds,       ONLY : DP
     USE io_files,    ONLY : prefix 
@@ -308,6 +311,10 @@
     !! the one in the dynamical coarse list.
     !! 
     !! The phases for all wavefunctions are now stored in umat_all
+    !!  
+    !! 02/2020  This subroutine is not called in any part of the code.
+    !!          If this would be called in the future, modification
+    !!          is needed in accordance with the changes for exclusion of semicore states.
     !!  
     !---------------------------------------------------------------------
     USE kinds,           ONLY : DP

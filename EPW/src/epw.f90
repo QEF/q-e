@@ -29,7 +29,8 @@
   USE elph2,           ONLY : elph 
   USE close_epw,       ONLY : close_final, deallocate_epw
   USE cum_mod,         ONLY : spectral_cumulant
-  USE wannierization,  ONLY : setphases_wrap, wann_run
+!  USE wannierization,  ONLY : setphases_wrap, wann_run
+  USE wannierization,  ONLY : wann_run
   USE io_epw,          ONLY : openfilepw
   !
   IMPLICIT NONE
@@ -123,7 +124,9 @@
     !
     ! Generates the perturbation matrix which fixes the gauge of 
     ! the calculated wavefunctions
-    CALL setphases_wrap()
+    ! Currently, matices from setphases_wrap are identity matrices.
+    ! Thus, for the moment, calling of setphases_wrap is removed.
+!    CALL setphases_wrap()
     !
     IF (wannierize) THEN
       !
@@ -134,6 +137,8 @@
       ! Read Wannier matrix from a previous run
       WRITE(stdout, '(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
            TRIM(filukk) , ' from disk', REPEAT('-',67) 
+      ! When wannierize=.false. loadexb should be called in order to load the information on band manifold determined in Wannierization step.
+      CALL loadexb()
     ENDIF
     !
     IF (elph) THEN

@@ -59,7 +59,8 @@
                             inv_tau_allcb, zi_allcb, exband,                    &
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
-                            nktotf,  transp_temp, xkq, lower_bnd, upper_bnd, dos
+                            nktotf,  transp_temp, xkq, lower_bnd, upper_bnd, dos,&
+                            nbndep, ibndstart, nbndep
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem  
@@ -287,15 +288,15 @@
   ! 
   CALL start_clock('ephwann')
   ! 
-  IF (nbndsub /= nbnd) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
+  IF (nbndsub /= nbndep) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
   !
-  ALLOCATE(cu(nbnd, nbndsub, nks), STAT = ierr)
+  ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating cu', 1)
-  ALLOCATE(cuq(nbnd, nbndsub, nks), STAT = ierr)
+  ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating cuq', 1)
-  ALLOCATE(lwin(nbnd, nks), STAT = ierr)
+  ALLOCATE(lwin(nbndep, nks), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lwin', 1)
-  ALLOCATE(lwinq(nbnd, nks), STAT = ierr)
+  ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating lwinq', 1)
   ALLOCATE(exband(nbnd), STAT = ierr)
   IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating exband', 1)
@@ -322,7 +323,7 @@
     xxq = 0.d0
     ALLOCATE(xkq(3, nkstot), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating xkq', 1)
-    CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+    CALL loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
     DEALLOCATE(xkq, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating xkq', 1)
   ENDIF
@@ -455,14 +456,14 @@
       ! 
       ALLOCATE(xkq(3, nkstot), STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error allocating xkq', 1)
-      CALL loadumat(nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+      CALL loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
       DEALLOCATE(xkq, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephwann_shuffle_mem', 'Error deallocating xkq', 1)
       !
       DO imode = 1, nmodes
         !
-        CALL ephbloch2wane(nbnd, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
-          epmatq (:, :, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
+        CALL ephbloch2wane(nbndep, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
+          epmatq (ibndstart:, ibndstart:, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
         !
       ENDDO
       ! Only the master node writes 
