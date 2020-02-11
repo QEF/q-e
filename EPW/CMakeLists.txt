@@ -78,6 +78,8 @@ target_link_libraries(qe_epw_exe
     PRIVATE
         QE::Modules
         QE::PP
+	QE::PW
+	QE::FFTX
         QE::UTILX
         QE::EPW
 )
