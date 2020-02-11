@@ -57,8 +57,8 @@ INTEGER FUNCTION n_plane_waves( gcutw, nks, xk, g, ngm ) RESULT( npwx )
 100  npwx = MAX(npwx,npw)
   ENDDO
   !
-  IF (npwx <= 0) CALL errore( 'n_plane_waves', &
-                'No plane waves found: running on too many processors?', 1 )
+  IF (npwx <= 0) CALL infomsg( 'n_plane_waves', &
+                'No plane waves found: running on too many processors?' )
   !
   ! when using pools, set npwx to the maximum value across pools
   ! (you may run into trouble at restart otherwise)

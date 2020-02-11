@@ -245,7 +245,6 @@ lr_dvpsi_eels.o : ../../Modules/uspp.o
 lr_dvpsi_eels.o : ../../Modules/wavefunctions.o
 lr_dvpsi_eels.o : ../../PW/src/buffers.o
 lr_dvpsi_eels.o : ../../PW/src/pwcom.o
-lr_eels_main.o : ../../LAXlib/mp_diag.o
 lr_eels_main.o : ../../Modules/check_stop.o
 lr_eels_main.o : ../../Modules/command_line_options.o
 lr_eels_main.o : ../../Modules/environment.o
@@ -468,7 +467,6 @@ lr_smallgq.o : ../../Modules/control_flags.o
 lr_smallgq.o : ../../Modules/io_global.o
 lr_smallgq.o : ../../Modules/kind.o
 lr_smallgq.o : ../../Modules/mp_global.o
-lr_smallgq.o : ../../Modules/noncol.o
 lr_smallgq.o : ../../PW/src/symm_base.o
 lr_smallgq.o : ../../UtilXlib/mp.o
 lr_solve_e.o : ../../FFTXlib/fft_types.o

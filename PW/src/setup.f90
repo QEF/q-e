@@ -38,7 +38,7 @@ SUBROUTINE setup()
   !!    electric-field, LDA+U calculations, and for parallelism.
   !
   USE kinds,              ONLY : DP
-  USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
+  USE constants,          ONLY : eps8, e2, fpi, pi, degspin
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout, ionode, ionode_id
   USE io_files,           ONLY : xmlfile
@@ -132,6 +132,8 @@ SUBROUTINE setup()
   IF ( dft_is_hybrid() ) THEN
      IF ( lberry ) CALL errore( 'setup ', &
                          'hybrid XC not allowed in Berry-phase calculations',1 )
+     IF ( lelfield ) CALL errore( 'setup ', &
+                         'hybrid XC and electric fields untested',1 )
      IF ( allfrac ) CALL errore( 'setup ', &
                          'option use_all_frac incompatible with hybrid XC', 1 )
      IF (.NOT. lscf) CALL errore( 'setup ', &
@@ -169,9 +171,9 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-  IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
+  IF ( .NOT. lscf .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
      !
-     ! ... in these cases, we need to read the Fermi energy
+     ! ... in these cases, we need (or it is useful) to read the Fermi energy
      !
      IF (ionode) CALL qexsd_readschema ( xmlfile(), ierr, output_obj )
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
@@ -179,6 +181,10 @@ SUBROUTINE setup()
           & TRIM(xmlfile()), ierr )
      IF (ionode) CALL qexsd_copy_efermi ( output_obj%band_structure, &
           nelec, ef, two_fermi_energies, ef_up, ef_dw )
+     ! convert to Ry a.u. 
+     ef = ef*e2
+     ef_up = ef_up*e2
+     ef_dw = ef_dw*e2
      CALL mp_bcast(nelec, ionode_id, intra_image_comm)
      CALL mp_bcast(ef, ionode_id, intra_image_comm)
      CALL mp_bcast(two_fermi_energies, ionode_id, intra_image_comm)
@@ -196,7 +202,7 @@ SUBROUTINE setup()
   ! ... Set the domag variable to make a spin-orbit calculation with zero
   ! ... magnetization
   !
-  IF ( lspinorb ) THEN
+  IF ( noncolin  ) THEN
      domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
   ELSE
      domag = .TRUE.
@@ -606,6 +612,7 @@ SUBROUTINE setup()
   CALL divide_et_impera ( nkstot, xk, wk, isk, nks )
   !
   IF ( dft_is_hybrid() ) THEN
+     IF ( nks == 0 ) CALL errore('setup','pools with no k-points not allowed for hybrid functionals',1)
      CALL exx_grid_init()
      CALL exx_mp_init()
      CALL exx_div_check()
@@ -638,17 +645,19 @@ LOGICAL FUNCTION check_para_diag( nbnd )
   !! Some checks for parallel diagonalization.
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_diag,          ONLY : np_ortho, ortho_parent_comm 
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp_pools,         ONLY : intra_pool_comm
 
   IMPLICIT NONE
+
+  include 'laxlib.fh'
 
   INTEGER, INTENT(IN) :: nbnd
   !! number of bands
   !
   LOGICAL, SAVE :: first = .TRUE.
   LOGICAL, SAVE :: saved_value = .FALSE.
+  INTEGER :: np_ortho(2), ortho_parent_comm 
 
 #if defined(__MPI)
   IF( .NOT. first ) THEN
@@ -656,6 +665,8 @@ LOGICAL FUNCTION check_para_diag( nbnd )
       RETURN
   END IF
   first = .FALSE.
+  !
+  CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm )
   !
   IF( np_ortho(1) > nbnd ) &
      CALL errore ('check_para_diag', 'Too few bands for required ndiag',nbnd)

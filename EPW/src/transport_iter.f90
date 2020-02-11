@@ -35,7 +35,7 @@
                                  nktotf, map_rebal, xqf, transp_temp,          &
                                  ixkqf_tr, s_bztoibz_full                      
     USE constants_epw,    ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, eps10,     & 
-                                 electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8, &
+                                 bohr2ang, ang2cm, hbarJ, eps6, eps8, &
                                  eps2, eps4, eps20, eps80, eps160, hbar, cm2m, byte2Mb
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,        ONLY : world_comm 

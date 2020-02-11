@@ -261,7 +261,7 @@
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
     USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE symm_base,     ONLY : nrot
     USE mp,            ONLY : mp_sum
@@ -465,7 +465,7 @@
     USE kinds,         ONLY : DP
     USE epwcom,        ONLY : ncarrier, nstemp, nkf1, nkf2, nkf3, assume_metal
     USE elph2,         ONLY : nbndfst, transp_temp, nktotf 
-    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+    USE constants_epw, ONLY : zero, two, kelvin2eV, ryd2ev, eps10, &
                               bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
     USE mp,            ONLY : mp_sum
@@ -622,7 +622,8 @@
     USE cell_base,     ONLY : omega
     USE elph2,         ONLY : dos
     USE constants_epw, ONLY : zero, kelvin2eV, ryd2ev, eps80, &
-                              electron_SI, bohr2ang, ang2cm, hbarJ
+                              bohr2ang, ang2cm, hbarJ
+    USE constants,     ONLY : electron_si
     !
     IMPLICIT NONE
     !
@@ -652,11 +653,11 @@
     inv_cell = 1.0d0 / omega
     ! carrier_density in cm^-1
     nden = carrier_density * inv_cell * (bohr2ang * ang2cm)**(-3)
-    mobility(:, :) = (sigma(:, :) * electron_SI**2 * inv_cell) / (hbarJ * bohr2ang * ang2cm)
+    mobility(:, :) = (sigma(:, :) * electron_si**2 * inv_cell) / (hbarJ * bohr2ang * ang2cm)
     IF (.NOT. assume_metal) THEN
       ! for insulators print mobility so just divide by carrier density
       IF (ABS(nden) < eps80) CALL errore('prtmob', 'The carrier density is 0', 1)
-      mobility(:, :) = mobility(:, :) / (electron_SI * carrier_density * inv_cell) * (bohr2ang * ang2cm)**3
+      mobility(:, :) = mobility(:, :) / (electron_si * carrier_density * inv_cell) * (bohr2ang * ang2cm)**3
       WRITE(stdout, '(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 3E16.6)') etemp * ryd2ev / kelvin2eV, ef0 * ryd2ev, &
            nden, SUM(fi_check(:)), mobility(1, 1), mobility(1, 2), mobility(1, 3)
     ELSE
@@ -716,7 +717,8 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : liso, laniso, lreal, imag_read, wscut
     USE eliashbergcom, ONLY : nsiw, nsw, estemp
-    USE constants_epw,     ONLY : kelvin2eV, pi
+    USE constants_epw, ONLY : kelvin2eV
+    USE constants,     ONLY : pi
     !
     IMPLICIT NONE
     !

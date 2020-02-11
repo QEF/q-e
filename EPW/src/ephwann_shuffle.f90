@@ -17,7 +17,7 @@
   !! 2) Real-space Wannier to fine grid Bloch space interpolation 
   !-----------------------------------------------------------------------
   !
-  USE kinds,         ONLY : DP, i4b
+  USE kinds,         ONLY : DP, i4b, i8b
   USE pwcom,         ONLY : nbnd, nks, nkstot, ef, nelec
   USE klist_epw,     ONLY : et_loc, xk_loc, isk_dummy
   USE cell_base,     ONLY : at, bg
@@ -1030,15 +1030,15 @@
       IF (exst) THEN
         IF (mpime == ionode_id) THEN
           OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old', IOSTAT = ios)
-          READ(iunrestart,*) iq_restart
-          READ(iunrestart,*) ind_tot
-          READ(iunrestart,*) ind_totcb
-          READ(iunrestart,*) npool_tmp
+          READ(iunrestart, *) iq_restart
+          READ(iunrestart, *) ind_tot
+          READ(iunrestart, *) ind_totcb
+          READ(iunrestart, *) npool_tmp
           DO ipool = 1, npool
-            READ(iunrestart,*) lrepmatw2_restart(ipool)
+            READ(iunrestart, *) lrepmatw2_restart(ipool)
           ENDDO
           DO ipool = 1, npool
-            READ(iunrestart,*) lrepmatw5_restart(ipool)
+            READ(iunrestart, *) lrepmatw5_restart(ipool)
           ENDDO
           CLOSE(iunrestart)
           ! 

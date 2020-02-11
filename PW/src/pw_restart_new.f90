@@ -150,7 +150,6 @@ MODULE pw_restart_new
       INTEGER               :: i, ig, ngg, ipol
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      LOGICAL               :: occupations_are_fixed
       INTEGER                  :: iclass, isym, ielem
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent, dft_is_vdw, empirical_vdw
@@ -491,7 +490,6 @@ MODULE pw_restart_new
          IF ( only_init ) GO TO 10
          !
          IF ( .NOT. ( lgauss .OR. ltetra )) THEN 
-            occupations_are_fixed = .TRUE.
             CALL get_homo_lumo( h_energy, lumo_tmp)
             h_energy = h_energy/e2
             h_energy_ptr => h_energy 
@@ -499,8 +497,6 @@ MODULE pw_restart_new
                 lumo_tmp = lumo_tmp/e2
                 lumo_energy => lumo_tmp
             END IF
-         ELSE 
-            occupations_are_fixed = .FALSE. 
          END IF
          IF (nks_start == 0 .AND. nk1*nk2*nk3 > 0 ) THEN 
             CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, "automatic", calculation, &
@@ -520,13 +516,16 @@ MODULE pw_restart_new
             ALLOCATE ( ef_updw (2) )
                IF (TRIM(input_parameters_occupations) == 'fixed') THEN  
                   ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
-                  ef_updw (2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
+                  ef_updw(2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
                ELSE 
                   ef_updw = [ef_up/e2, ef_dw/e2]
                END IF
-         ELSE IF (ltetra .OR. lgauss) THEN  
-                ef_targ = ef/e2
-                ef_point => ef_targ
+         ELSE
+               ! The Fermi energy is written also for insulators because it can
+               ! be useful for further postprocessing, especially of bands
+               ! (for an insulator the Fermi energy is equal to the HOMO/VBMax)
+               ef_targ = ef/e2
+               ef_point => ef_targ
          END IF
 
 
@@ -979,11 +978,17 @@ MODULE pw_restart_new
       IF (ionode) CALL qexsd_readschema ( filename, &
            ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
       CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-      IF ( ierr > 0 ) CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
+      IF ( ierr > 0 ) THEN
+         CALL errore ( 'read_xml_file', 'fatal error reading xml file', ierr ) 
+      ELSE IF ( ierr < 0 ) THEN
+         input_obj%tagname = "not_read"
+         ! ierr = -1 means that input_obj was not read: do not broadcast it
+      ELSE
+         CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
+      END IF
       CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
       CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
       CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
-      CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
       !
       ! ... Now read all needed variables from xml objects
       !

@@ -25,7 +25,7 @@
     !! This subroutine computes the transition probability and the scattering rates.
     !! Only the elements larger than threshold are saved on file. 
     !!
-    USE kinds,         ONLY : DP, i4b
+    USE kinds,         ONLY : DP, i4b, i8b
     USE cell_base,     ONLY : omega
     USE io_global,     ONLY : stdout
     USE phcom,         ONLY : nmodes
@@ -36,8 +36,9 @@
                               epf17, inv_tau_all, inv_tau_allcb, adapt_smearing,  &
                               wkf, dmef, vmef, eta, transp_temp, lower_bnd, dos,  &
                               nbndfst, nktotf
-    USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
+    USE constants_epw, ONLY : zero, one, two, ryd2mev, kelvin2eV, ryd2ev, eps4, eps8, & 
                               eps6, eps10, bohr2ang, ang2cm
+    USE constants,     ONLY : pi
     USE io_files,      ONLY : diropn 
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : world_comm, my_pool_id, npool
@@ -518,8 +519,8 @@
       lrepmatw5_restart(:) = 0
       lrepmatw2_restart(my_pool_id + 1) = lrepmatw2_merge 
       lrepmatw5_restart(my_pool_id + 1) = lrepmatw5_merge 
-      call mp_sum(lrepmatw2_restart, world_comm)
-      call mp_sum(lrepmatw5_restart, world_comm)
+      CALL mp_sum(lrepmatw2_restart, world_comm)
+      CALL mp_sum(lrepmatw5_restart, world_comm)
       !
       inv_tau_all_MPI = inv_tau_all
       inv_tau_allcb_MPI = inv_tau_allcb
@@ -599,8 +600,8 @@
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
         OPEN(iufilibtev_sup, FILE = 'inv_tau.fmt', FORM = 'formatted')
-        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
-        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [Ry]'
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
             DO ibnd = 1, nbndfst
@@ -612,8 +613,8 @@
         ! 
         ! Save the inv_tau and inv_tau_all on file (formatted)
         OPEN(iufilibtev_sup, FILE = 'inv_taucb.fmt', FORM = 'formatted')
-        WRITE(iufilibtev_sup, '(a)') '# Hole relaxation time  '
-        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [?]'
+        WRITE(iufilibtev_sup, '(a)') '# Electron relaxation time [Multiply the relaxation time by 20670.6944033 to get 1/ps]  '
+        WRITE(iufilibtev_sup, '(a)') '# itemp    kpt      ibnd    energy [Ry]   relaxation time [Ry]'
         DO itemp = 1, nstemp
           DO ik = 1, nktotf
             DO ibnd = 1, nbndfst
@@ -952,11 +953,15 @@
     !! Size of what we write
     INTEGER(KIND = MPI_OFFSET_KIND) :: lrepmatw
     !! Offset while writing scattering to files
+    INTEGER(KIND = MPI_OFFSET_KIND) :: tmp_sum
+    !! Temporary sum
 #else
     INTEGER(KIND = 8) :: lsize
     !! Size of what we write
     INTEGER(KIND = 8) :: lrepmatw
     !! Offset while writing scattering to files
+   INTEGER(KIND = 8) :: tmp_sum
+    !! Temporary sum 
 #endif
     INTEGER, ALLOCATABLE :: sparse(:, :)
     !! Vaariable for reading and writing the files
@@ -1029,11 +1034,14 @@
             ENDDO
           ENDDO
         ENDIF
-        CLOSE(iunepmat, STATUS = 'delete')
+        CLOSE(iunepmat, STATUS = 'keep')
         IF (ich == 1) THEN
 #if defined(__MPI)
-          lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-          & 8_MPI_OFFSET_KIND 
+          tmp_sum = 0
+          DO i2 = 1, my_pool_id + 1
+            tmp_sum = tmp_sum + lrepmatw2_tot(i2)
+          ENDDO
+          lrepmatw = INT(tmp_sum - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
 #else 
@@ -1043,8 +1051,11 @@
         ELSE
           DO ifil = 1, 5
 #if defined(__MPI)
-            lrepmatw = INT(SUM(lrepmatw2_tot(1:my_pool_id + 1)) - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-            & 4_MPI_OFFSET_KIND 
+            tmp_sum = 0
+            DO i2 = 1, my_pool_id + 1
+              tmp_sum = tmp_sum + lrepmatw2_tot(i2)
+            ENDDO
+            lrepmatw = INT(tmp_sum - lrepmatw2_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw2_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparse(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
 #else
@@ -1128,11 +1139,14 @@
             ENDDO
           ENDDO
         ENDIF
-        CLOSE(iunepmatcb, STATUS = 'delete')
+        CLOSE(iunepmatcb, STATUS = 'keep')
         IF (ich == 1) THEN
 #if defined(__MPI)
-          lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-          & 8_MPI_OFFSET_KIND 
+          tmp_sum = 0
+          DO i2 = 1, my_pool_id + 1
+            tmp_sum = tmp_sum + lrepmatw5_tot(i2)
+          ENDDO
+          lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 8_MPI_OFFSET_KIND 
           lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
           CALL MPI_FILE_WRITE_AT(io_u(1), lrepmatw, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
 #else 
@@ -1142,8 +1156,11 @@
         ELSE
           DO ifil = 1, 5
 #if defined(__MPI)
-            lrepmatw = INT(SUM(lrepmatw5_tot(1:my_pool_id + 1)) - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * &
-            & 4_MPI_OFFSET_KIND 
+            tmp_sum = 0 
+            DO i2 = 1, my_pool_id + 1 
+              tmp_sum = tmp_sum + lrepmatw5_tot(i2)
+            ENDDO
+            lrepmatw = INT(tmp_sum - lrepmatw5_tot(my_pool_id + 1), KIND = MPI_OFFSET_KIND) * 4_MPI_OFFSET_KIND 
             lsize = INT(lrepmatw5_merge, KIND = MPI_OFFSET_KIND) 
             CALL MPI_FILE_WRITE_AT(io_u(ifil + 1), lrepmatw, sparsecb(ifil, :), lsize, MPI_INTEGER, MPI_STATUS_IGNORE, ierr)
 #else
@@ -1179,7 +1196,7 @@
     ! 
     ! This routine opens all the files needed to save scattering rates for the IBTE.
     ! 
-    USE kinds,            ONLY : DP
+    USE kinds,            ONLY : DP, i8b
     USE io_files,         ONLY : prefix, create_directory, delete_if_present
     USE io_var,           ONLY : iunepmat, iunsparseq,              &
                                  iunsparseqcb, iunepmatcb, iunrestart
@@ -1200,9 +1217,9 @@
     INTEGER, INTENT(inout) :: lrepmatw5_restart(npool)
     !! To restart opening files
 #if defined(__MPI)
-    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_tot
     !! Total number of component for valence band
-    INTEGER (KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
+    INTEGER(KIND = MPI_OFFSET_KIND), INTENT(inout) :: ind_totcb
     !! Total number of component for the conduction band
 #else
     INTEGER(KIND = 8), INTENT(inout) :: ind_tot
@@ -1227,9 +1244,9 @@
     !! Dummy INTEGER for reading
     INTEGER :: ipool
     !! Pool index
-    INTEGER (KIND = 8) :: position_byte
+    INTEGER(KIND = 8) :: position_byte
     !! Position in the file in byte
-    REAL (KIND = DP) :: dummy_real
+    REAL(KIND = DP) :: dummy_real
     !! Dummy variable for reading
     !
     WRITE(my_pool_id_ch, "(I0)") my_pool_id
@@ -1244,15 +1261,15 @@
     IF (my_pool_id == ionode_id) THEN
       IF (exst) THEN
         OPEN(UNIT = iunrestart, FILE = 'restart_ibte.fmt', STATUS = 'old')
-        READ (iunrestart,*) 
-        READ (iunrestart,*) 
-        READ (iunrestart,*) 
-        READ (iunrestart,*) 
+        READ(iunrestart, *) 
+        READ(iunrestart, *) 
+        READ(iunrestart, *) 
+        READ(iunrestart, *) 
         DO ipool = 1, npool
-          READ (iunrestart,*) lrepmatw2_restart(ipool)
+          READ(iunrestart, *) lrepmatw2_restart(ipool)
         ENDDO
         DO ipool = 1, npool
-          READ (iunrestart,*) lrepmatw5_restart(ipool)
+          READ(iunrestart, *) lrepmatw5_restart(ipool)
         ENDDO
         CLOSE(iunrestart)
       ENDIF
@@ -1346,7 +1363,7 @@
         ! 
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunepmat, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
@@ -1359,7 +1376,7 @@
         ! 
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunsparseq, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
@@ -1379,7 +1396,7 @@
         !  
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunepmatcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE
@@ -1392,7 +1409,7 @@
         ! 
         IF (exst2) THEN
           ! The file should not exist, we remove it
-          CALL delete_if_present(filint)
+          CALL delete_if_present(filint, .TRUE.)
           OPEN(UNIT = iunsparseqcb, FILE = filint, STATUS = 'new', FORM = 'unformatted', &
                ACCESS = 'stream', POSITION = 'append', ACTION = 'write')
         ELSE

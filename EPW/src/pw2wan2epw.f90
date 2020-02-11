@@ -3607,7 +3607,8 @@
     !! only place to be modified accordingly
     !!
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, pibytwo, eps8
+    USE constants_epw, ONLY : pibytwo, eps8
+    USE constants,     ONLY : pi
     USE low_lvl,       ONLY : fy3x2my2, fxx2m3y2, fxx2m3y2, fxyz, fzx2my2, &
                               fyz2, fxz2, fz3, dxy, dx2my2, dyz, dxz, dz2, &
                               p_z, py, px, s 

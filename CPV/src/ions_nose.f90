@@ -57,7 +57,7 @@
     use ions_base,      only: ndofp, tions_base_init, nsp, nat, na, amass, ityp
     real(DP), intent(in)  :: tempw_ , fnosep_(:), fnhscl_(:) 
     integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_ , nhgrp_(:)
-    integer :: i, j, iat, is, ia
+    integer :: i, j, is, ia
     REAL(DP) :: amass_mean
 
     IF( .NOT. tions_base_init ) &
@@ -76,12 +76,8 @@
           nhptyp = 1
           if (nhptyp_.gt.0) nhpend = 1
           nhpdim = nsp
-          iat = 0
-          do is=1,nsp
-             do ia=1,na(is)
-                iat = iat+1
-                atm2nhp(iat) = is
-             enddo
+          do ia=1,nat
+             atm2nhp(ia) = ityp(ia)
           enddo
        elseif (abs(nhptyp_).eq.2) then
           nhptyp = 2
@@ -123,7 +119,6 @@
 
       ! count the number of atoms per thermostat and set the value
       anum2nhp = 0
-      iat = 0
       ! Here we shall check if the scaling factors are provided
       If (maxval(fnhscl_(1:nsp)).lt.0.0d0) then
          scal2nhp = DBLE(ndega)/DBLE(3*nat)
@@ -131,13 +126,11 @@
          scal2nhp = -1.0_DP
       endif
       !
-      do is=1,nsp
-         do ia=1,na(is)
-            iat = iat+1
-            anum2nhp(atm2nhp(iat)) = anum2nhp(atm2nhp(iat)) + 3
-            if (scal2nhp(atm2nhp(iat)).lt.0.0_DP) &
-                 scal2nhp(atm2nhp(iat)) = fnhscl_(is)
-         enddo
+      do ia=1,nat
+         is = ityp(ia)
+         anum2nhp(atm2nhp(ia)) = anum2nhp(atm2nhp(ia)) + 3
+         if (scal2nhp(atm2nhp(ia)).lt.0.0_DP) &
+              scal2nhp(atm2nhp(ia)) = fnhscl_(is)
       enddo
       if (nhpend.eq.1) anum2nhp(nhpdim) = nhpdim - 1 - nhpbeg
       ! set gkbt2nhp for each thermostat
@@ -266,12 +259,12 @@
 
   subroutine set_atmnhp(nhgrp,atm2nhp,nhpdim,nhpbeg)
     !
-    use ions_base,      only: nsp, nat, na
+    use ions_base,      only: nsp, nat, ityp
     IMPLICIT NONE
     integer, intent(in) :: nhgrp(:)
     integer, intent(out) :: nhpdim, nhpbeg, atm2nhp(:)
     !
-    integer :: i,iat,is,ia,igrpmax,ith
+    integer :: i,is,ia,igrpmax,ith
     INTEGER, ALLOCATABLE   :: indtmp(:)
     !
     ! find maximum group
@@ -295,19 +288,16 @@
        endif
     enddo
     ! assign thermostats to atoms depending on what is requested
-    iat = 0
-    do is=1,nsp
-       do ia=1,na(is)
-          iat = iat+1
-          if (nhgrp(is).gt.0) then
-             atm2nhp(iat) = indtmp(nhgrp(is))
-          elseif (nhgrp(is).eq.0) then
-             ith = ith + 1
-             atm2nhp(iat) = ith
-          else
-             atm2nhp(iat) = 1
-          endif
-       enddo
+    do ia=1,nat
+       is=ityp(ia)
+       if (nhgrp(is).gt.0) then
+          atm2nhp(ia) = indtmp(nhgrp(is))
+       elseif (nhgrp(is).eq.0) then
+          ith = ith + 1
+          atm2nhp(ia) = ith
+       else
+          atm2nhp(ia) = 1
+       endif
     enddo
     nhpdim = ith
     deallocate(indtmp)

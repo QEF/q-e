@@ -31,6 +31,8 @@ la_test.x : test.o libqela.a
 TEST : la_test.x
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x *.fh
+
+$(LAX) : laxlib.fh  laxlib_hi.fh  laxlib_kinds.fh  laxlib_low.fh  laxlib_mid.fh  laxlib_param.fh
 
 include make.depend

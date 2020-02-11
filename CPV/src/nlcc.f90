@@ -176,7 +176,7 @@
       use smallbox_gvec,     only: gxb, ngb
       use smallbox_subs,     only: fft_oned2box, boxdotgrid
       use cell_base,         only: omega
-      use ions_base,         only: nsp, na, nat
+      use ions_base,         only: nsp, na, nat, ityp
       use small_box,         only: tpibab
       use uspp_param,        only: upf
       use core,              only: rhocb
@@ -211,8 +211,8 @@
 
 !$omp parallel default(none) &      
 !$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, ci, rhocb, &
-!$omp                 gxb, nat, fac, upf, vxc, nspin, tpibab, fion1 ) &
-!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, fg1, fg2, itid, res, ix, fcc, facg, iss )
+!$omp                 gxb, nat, fac, upf, vxc, nspin, tpibab, fion1, ityp ) &
+!$omp          private(mytid, ntids, is, ia, nfft, ig, qv, fg1, fg2, itid, res, ix, fcc, facg, iss )
 
 
       allocate( fcc( 3, nat ) )
@@ -222,77 +222,65 @@
 
       fcc(:,:) = 0.d0
 
-      isa = 0
-
 #if defined(_OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
       itid  = 0
 #endif
 
-      do is = 1, nsp
+      do ia = 1, nat
+
+         is = ityp(ia)
 
          if( .not. upf(is)%nlcc ) then
-            isa = isa + na(is) 
             cycle
          end if 
 
-#if defined(__MPI)
+         nfft = 1
 
-         do ia = 1, na(is)
-            nfft = 1
-            if ( ( dfftb%np3( ia + isa ) <= 0 ) .OR. ( dfftb%np2( ia + isa) <= 0 ) ) cycle
-#else
-         !
-         ! two fft's on two atoms at the same time (when possible)
-         !
-         do ia=1,na(is),2
-            nfft=2
-            if( ia .eq. na(is) ) nfft=1
+#if defined(__MPI)
+         if ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) ) &
+            CYCLE
 #endif
 
 #if defined(_OPENMP)
-            IF ( mytid /= itid ) THEN
-               itid = MOD( itid + 1, ntids )
-               CYCLE
-            ELSE
-               itid = MOD( itid + 1, ntids )
-            END IF
+         IF ( mytid /= itid ) THEN
+            itid = MOD( itid + 1, ntids )
+            CYCLE
+         ELSE
+            itid = MOD( itid + 1, ntids )
+         END IF
 #endif
 
-            do ix=1,3
-               if (nfft.eq.2) then
-                  do ig=1,ngb
-                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
-                     fg1(ig) = eigrb(ig,ia+isa  )*facg
-                     fg2(ig) = eigrb(ig,ia+isa+1)*facg
-                  end do
-                  CALL fft_oned2box( qv, fg1, fg2 )
-               else
-                  do ig=1,ngb
-                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
-                     fg1(ig) = eigrb(ig,ia+isa)*facg
-                  end do
-                  CALL fft_oned2box( qv, fg1 )
-               end if
-!
-               call invfft( qv, dfftb, ia+isa )
-               !
-               ! note that a factor 1/2 is hidden in fac if nspin=2
-               !
-               do iss=1,nspin
-                  res = boxdotgrid(irb(:,ia  +isa),1,qv,vxc(:,iss))
-                  fcc(ix,ia+isa) = fcc(ix,ia+isa) + fac * res
-                  if (nfft.eq.2) then
-                     res = boxdotgrid(irb(:,ia+1+isa),2,qv,vxc(:,iss))
-                     fcc(ix,ia+1+isa) = fcc(ix,ia+1+isa) + fac * res 
-                  end if
+         do ix=1,3
+            if (nfft.eq.2) then
+               do ig=1,ngb
+                  facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
+                  fg1(ig) = eigrb(ig,ia  )*facg
+                  fg2(ig) = eigrb(ig,ia+1)*facg
                end do
+               CALL fft_oned2box( qv, fg1, fg2 )
+            else
+               do ig=1,ngb
+                  facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
+                  fg1(ig) = eigrb(ig,ia)*facg
+               end do
+               CALL fft_oned2box( qv, fg1 )
+            end if
+!
+            call invfft( qv, dfftb, ia )
+            !
+            ! note that a factor 1/2 is hidden in fac if nspin=2
+            !
+            do iss=1,nspin
+               res = boxdotgrid(irb(:,ia),1,qv,vxc(:,iss))
+               fcc(ix,ia) = fcc(ix,ia) + fac * res
+               if (nfft.eq.2) then
+                  res = boxdotgrid(irb(:,ia+1),2,qv,vxc(:,iss))
+                  fcc(ix,ia+1) = fcc(ix,ia+1) + fac * res 
+               end if
             end do
          end do
-
-         isa = isa + na(is)
-
       end do
 
 !
@@ -324,7 +312,7 @@
 !     Same logic as for rhov: use box grid for core charges
 ! 
       use kinds, only: dp
-      use ions_base,         only: nsp, na, nat
+      use ions_base,         only: nsp, na, nat, ityp
       use uspp_param,        only: upf
       use smallbox_gvec,     only: ngb
       use smallbox_subs,     only: fft_oned2box, box2grid
@@ -358,7 +346,7 @@
 !
 !$omp parallel default(none) &      
 !$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, ci, rhocb, &
-!$omp                 nat, upf, wrk1 ) &
+!$omp                 nat, upf, wrk1, ityp ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, fg1, fg2, itid )
 
       allocate( qv ( dfftb%nnr ) )
@@ -373,51 +361,42 @@
       itid  = 0
 #endif
 
-      do is = 1, nsp
+      do ia = 1, nat
          !
+         is = ityp(ia)
+
          if (.not.upf(is)%nlcc) then
-            isa = isa + na(is)
             cycle
          end if
          !
 #if defined(__MPI)
-         do ia=1,na(is)
-            nfft=1
-            if ( ( dfftb%np3( ia + isa ) <= 0 ) .OR. ( dfftb%np2 ( ia + isa ) <= 0 ) ) cycle
-#else
-         !
-         ! two ffts at the same time, on two atoms (if possible: nfft=2)
-         !
-         do ia=1,na(is),2
-            nfft=2
-            if( ia.eq.na(is) ) nfft=1
+         nfft=1
+         if ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2 ( ia ) <= 0 ) ) cycle
 #endif
 
 #if defined(_OPENMP)
-            IF ( mytid /= itid ) THEN
-               itid = MOD( itid + 1, ntids )
-               CYCLE
-            ELSE
-               itid = MOD( itid + 1, ntids )
-            END IF
+         IF ( mytid /= itid ) THEN
+            itid = MOD( itid + 1, ntids )
+            CYCLE
+         ELSE
+            itid = MOD( itid + 1, ntids )
+         END IF
 #endif
 
-            if(nfft.eq.2)then
-               fg1 = eigrb(1:ngb,ia  +isa)*rhocb(1:ngb,is)
-               fg2 = eigrb(1:ngb,ia+1+isa)*rhocb(1:ngb,is)
-               CALL fft_oned2box( qv, fg1, fg2 )
-            else
-               fg1 = eigrb(1:ngb,ia  +isa)*rhocb(1:ngb,is)
-               CALL fft_oned2box( qv, fg1 )
-            endif
+         if(nfft.eq.2)then
+            fg1 = eigrb(1:ngb,ia  )*rhocb(1:ngb,is)
+            fg2 = eigrb(1:ngb,ia+1)*rhocb(1:ngb,is)
+            CALL fft_oned2box( qv, fg1, fg2 )
+         else
+            fg1 = eigrb(1:ngb,ia  )*rhocb(1:ngb,is)
+            CALL fft_oned2box( qv, fg1 )
+         endif
 !
-            call invfft( qv, dfftb, isa+ia )
+         call invfft( qv, dfftb, ia )
 !
-            call box2grid(irb(:,ia+isa),1,qv,wrk1)
-            if (nfft.eq.2) call box2grid(irb(:,ia+1+isa),2,qv,wrk1)
+         call box2grid(irb(:,ia),1,qv,wrk1)
+         if (nfft.eq.2) call box2grid(irb(:,ia+1),2,qv,wrk1)
 !
-         end do
-         isa = isa + na(is)
       end do
 !
       deallocate( qv  )

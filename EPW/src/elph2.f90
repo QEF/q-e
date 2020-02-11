@@ -39,7 +39,7 @@
     lower_bnd,               &!  Lower bound for the k-depend index among the mpi pools
     upper_bnd,               &!  Upper bound for the k-depend index among the mpi pools
     lrepmatw2_merge,         &!  File merging dimensions
-    lrepmatw5_merge,         &!  File merging dimensions
+    lrepmatw5_merge,         &!  File merging dimensions 
     nbndfst                   !  Number of bands within the fsthick window.
   INTEGER, ALLOCATABLE ::    &! 
     igk(:),                  &!  Index for k+G vector

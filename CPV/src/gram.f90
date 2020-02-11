@@ -11,7 +11,7 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
-      USE uspp,           ONLY : nkb, nhsavb=> nkbus
+      USE uspp,           ONLY : nkb, nkbus
       USE uspp,           ONLY : qq_nt
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
@@ -23,7 +23,7 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
 !
       INTEGER, INTENT(IN) :: nkbx, ngwx
       REAL(DP)      :: bec_bgrp( nkbx, nbspx_bgrp )
-      COMPLEX(DP)   :: cp_bgrp( ngwx, nbspx_bgrp ), betae( ngwx, nkb )
+      COMPLEX(DP)   :: cp_bgrp( ngwx, nbspx_bgrp ), betae( ngwx, nkbx )
 !
       REAL(DP) :: anorm
       REAL(DP), ALLOCATABLE :: csc( : )
@@ -82,11 +82,11 @@ CONTAINS
 !     Compute the norm of the i-th electronic state = (<c|S|c>)^(1/2) 
 !     requires in input the updated bec(i)
 !
-      USE ions_base,          ONLY: na
+      USE ions_base,          ONLY: nat, ityp
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE uspp_param,         ONLY: nh, ish, nvb
-      USE uspp,               ONLY: qq_nt
+      USE uspp_param,         ONLY: nh, upf
+      USE uspp,               ONLY: qq_nt, indv_ijkb0
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE kinds,              ONLY: DP
@@ -103,8 +103,8 @@ CONTAINS
       REAL(DP) rsum
       REAL(DP), ALLOCATABLE:: temp(:)
 !
-!
       ALLOCATE(temp(ngw))
+!
       DO ig=1,ngw
          temp(ig)=DBLE(CONJG(cp(ig,i))*cp(ig,i))
       END DO
@@ -112,24 +112,25 @@ CONTAINS
       IF (gstart == 2) rsum=rsum-temp(1)
 
       CALL mp_sum( rsum, intra_bgrp_comm )
-
-      DEALLOCATE(temp)
 !
-      DO is=1,nvb
-         DO iv=1,nh(is)
-            inl=ish(is)+(iv-1)*na(is)
-            DO jv=1,nh(is)
-               jnl=ish(is)+(jv-1)*na(is)
-               IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
-                  DO ia=1,na(is)
-                     rsum = rsum + qq_nt(iv,jv,is)*bec(inl+ia,i)*bec(jnl+ia,i)
-                  END DO
-               ENDIF
+      DO ia=1,nat
+         is = ityp(ia)
+         IF( upf(is)%tvanp ) THEN
+            DO iv=1,nh(is)
+               inl=indv_ijkb0(ia) + iv
+               DO jv=1,nh(is)
+                  jnl=indv_ijkb0(ia) + jv
+                  IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
+                     rsum = rsum + qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,i)
+                  ENDIF
+               END DO
             END DO
-         END DO
+         END IF
       END DO
 !
       cscnorm=SQRT(rsum)
+
+      DEALLOCATE(temp)
 !
       RETURN
       END FUNCTION cscnorm
@@ -141,9 +142,9 @@ CONTAINS
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
 !
-      USE ions_base,      ONLY: na
-      USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq_nt
-      USE uspp_param,     ONLY:  nh, nvb, ish
+      USE ions_base,      ONLY: na, nat, ityp
+      USE uspp,           ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum
@@ -187,8 +188,9 @@ CONTAINS
       CALL mp_sum( cp_tmp, inter_bgrp_comm )
 
 !$omp parallel default(none), &
-!$omp          shared(iupdwn,kmax,ispin,ibgrp_g2l,ngw,cp_bgrp,cp_tmp,csc,nhsavb,betae,bec_bgrp,i,iss,gstart), &
-!$omp          private( temp, k, ig, inl, ibgrp_k, ibgrp_i )
+!$omp          shared(iupdwn,kmax,ispin,ibgrp_g2l,ngw,cp_bgrp,cp_tmp,csc,betae,bec_bgrp,i,iss,gstart), &
+!$omp          shared(upf,nat,ityp,indv_ijkb0,nh), &
+!$omp          private( temp, k, ig, inl, ibgrp_k, ibgrp_i, is, ia )
       ALLOCATE( temp( ngw ) )
 !$omp do
       DO k = iupdwn( iss ), kmax
@@ -212,12 +214,18 @@ CONTAINS
       !
       IF(  ibgrp_i > 0 ) THEN
 !$omp do
-         DO inl=1,nhsavb
-            DO ig=1,ngw
-               temp(ig) = DBLE( cp_bgrp(ig,ibgrp_i) * CONJG(betae(ig,inl)) )
-            END DO
-            bec_bgrp(inl,ibgrp_i)=2.d0*SUM(temp)
-            IF (gstart == 2) bec_bgrp(inl,ibgrp_i)= bec_bgrp(inl,ibgrp_i)-temp(1)
+         DO ia = 1, nat
+            is = ityp(ia)
+            IF( upf(is)%tvanp ) THEN
+               DO iv=1,nh(is)
+                  inl=indv_ijkb0(ia)+iv
+                  DO ig=1,ngw
+                     temp(ig) = DBLE( cp_bgrp(ig,ibgrp_i) * CONJG(betae(ig,inl)) )
+                  END DO
+                  bec_bgrp(inl,ibgrp_i)=2.d0*SUM(temp)
+                  IF (gstart == 2) bec_bgrp(inl,ibgrp_i)= bec_bgrp(inl,ibgrp_i)-temp(1)
+               END DO
+            END IF
          END DO
 !$omp end do
       END IF
@@ -228,7 +236,13 @@ CONTAINS
       CALL mp_sum( csc, inter_bgrp_comm )
 
       IF(  ibgrp_i > 0 ) THEN
-         CALL mp_sum( bec_bgrp( 1:nhsavb, ibgrp_i ), intra_bgrp_comm )
+         DO ia = 1, nat
+            is = ityp(ia)
+            IF( upf(is)%tvanp ) THEN
+               inl=indv_ijkb0(ia)
+               CALL mp_sum( bec_bgrp( inl + 1: inl + nh(is), ibgrp_i ), intra_bgrp_comm )
+            END IF
+         END DO
       END IF
 
       bec_tmp = 0.0d0
@@ -241,7 +255,8 @@ CONTAINS
       csc2    = 0.0d0
 
 !$omp parallel default(none), &
-!$omp shared(iupdwn,iss,kmax,nproc_bgrp,me_bgrp,ispin,i,ibgrp_g2l,nh,ish,qq_nt,na,bec_tmp,bec_bgrp,csc2,nvb), &
+!$omp shared(iupdwn,iss,kmax,nproc_bgrp,me_bgrp,ispin,i,ibgrp_g2l,nh), &
+!$omp shared(indv_ijkb0,qq_nt,na,bec_tmp,bec_bgrp,csc2,nat,ityp,upf), &
 !$omp private( k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k, ntids, mytid )
 #if defined(_OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
@@ -258,19 +273,20 @@ CONTAINS
             rsum=0.d0
             ibgrp_k = ibgrp_g2l( k )
             IF( ibgrp_k > 0 ) THEN
-            DO is=1,nvb
-               DO iv=1,nh(is)
-                  inl=ish(is)+(iv-1)*na(is)
-                  DO jv=1,nh(is)
-                     jnl=ish(is)+(jv-1)*na(is)
-                     IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
-                        DO ia=1,na(is)
-                           rsum = rsum + qq_nt(iv,jv,is)*bec_tmp(inl+ia)*bec_bgrp(jnl+ia,ibgrp_k)
+               DO ia = 1, nat
+                  is=ityp(ia)
+                  IF( upf(is)%tvanp ) THEN
+                     DO iv=1,nh(is)
+                        inl=indv_ijkb0(ia)+iv
+                        DO jv=1,nh(is)
+                           jnl=indv_ijkb0(ia)+jv
+                           IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
+                              rsum = rsum + qq_nt(iv,jv,is)*bec_tmp(inl)*bec_bgrp(jnl,ibgrp_k)
+                           ENDIF
                         END DO
-                     ENDIF
-                  END DO
+                     END DO
+                  END IF
                END DO
-            END DO
             END IF
             csc2(k)=csc2(k)+rsum
          ENDIF

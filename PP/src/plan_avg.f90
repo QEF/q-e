@@ -160,7 +160,6 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   USE uspp, ONLY: vkb, nkb
   USE wvfct, ONLY: npwx, nbnd, wg
   USE wavefunctions,  ONLY: evc
-  USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: restart_dir
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE pw_restart_new, ONLY: read_collected_wfc
