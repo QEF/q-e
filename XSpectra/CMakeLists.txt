@@ -34,14 +34,6 @@ set(sources_gipaw
 set_source_files_properties(${sources_x} PROPERTIES COMPILE_FLAGS -cpp)
 set_source_files_properties(${sources_gipaw} PROPERTIES COMPILE_FLAGS -cpp)
 
-qe_add_library(qe_xspectra ${sources_x})
-add_library(QE::XSpectra ALIAS qe_xspectra)
-target_link_libraries(qe_xspectra
-    PRIVATE
-        QE::PW
-        QE::UTILX
-        QE::Modules)
-
 qe_add_library(qe_xspectra_gipaw ${sources_gipaw})
 add_library(QE::XSpectra::GIPAW ALIAS qe_xspectra_gipaw)
 target_link_libraries(qe_xspectra_gipaw
@@ -49,7 +41,16 @@ target_link_libraries(qe_xspectra_gipaw
         QE::PW
         QE::UTILX
         QE::Modules)
-        
+
+qe_add_library(qe_xspectra ${sources_x})
+add_library(QE::XSpectra ALIAS qe_xspectra)
+target_link_libraries(qe_xspectra
+    PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::XSpectra::GIPAW
+        QE::Modules)
+
 ###########################################################
 # xspectra.x
 ###########################################################
@@ -102,6 +103,7 @@ target_link_libraries(qe_xspectra_molecularnexafs_exe
 
 qe_install_targets(
     # Libraries
+    qe_xspectra_gipaw
     qe_xspectra
     # Executables
     qe_xspectra_exe

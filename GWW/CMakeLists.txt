@@ -207,6 +207,7 @@ target_link_libraries(qe_gww_bse
     PRIVATE
         QE::PW
         QE::Modules
+        QE::GWW
         QE::GWW::pw4gww
 )
 
@@ -231,6 +232,7 @@ add_library(QE::GWW::simple ALIAS qe_gww_simple)
 target_link_libraries(qe_gww_simple
     PRIVATE
         QE::PW
+        QE::GWW
         QE::Modules)
 
 qe_add_library(qe_gww_simplebse ${sources_simple_bse})
