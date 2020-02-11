@@ -6,7 +6,7 @@
 
 mark_as_advanced(QE_MANDATORY_TARGETS)
 
-function(qe_fix_fortran_module_libraries LIB)
+function(qe_fix_fortran_modules LIB)
     set(targets ${LIB} ${ARGN})
     foreach(tgt IN LISTS targets)
         get_target_property(tgt_type ${tgt} TYPE)
@@ -27,17 +27,18 @@ function(qe_fix_fortran_module_libraries LIB)
                 $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${LIB}>)
         endif()
     endforeach()
-endfunction(qe_fix_fortran_module_libraries)
+endfunction(qe_fix_fortran_modules)
 
 function(qe_add_executable EXE)
     add_executable(${EXE} ${ARGN})
     target_link_libraries(${EXE} PUBLIC ${QE_MANDATORY_TARGETS})
+    qe_fix_fortran_modules(${EXE})
 endfunction(qe_add_executable)
 
 function(qe_add_library LIB)
     add_library(${LIB} ${ARGN})
     target_link_libraries(${LIB} PUBLIC ${QE_MANDATORY_TARGETS})
-    qe_fix_fortran_module_libraries(${LIB})
+    qe_fix_fortran_modules(${LIB})
 endfunction(qe_add_library)
 
 function(qe_install_targets TGT)
