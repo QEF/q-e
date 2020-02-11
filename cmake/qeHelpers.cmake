@@ -18,13 +18,13 @@ function(qe_fix_fortran_module_libraries LIB)
             get_target_property(tgt_binary_dir ${tgt} BINARY_DIR)
             set_target_properties(${tgt}
                 PROPERTIES
-                    Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod)
+                Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod/${LIB})
             # make module directory available for clients of LIB 
             target_include_directories(${tgt}
                 PUBLIC
-                    $<BUILD_INTERFACE:${tgt_binary_dir}/mod>
+                $<BUILD_INTERFACE:${tgt_binary_dir}/mod/${LIB}>
                 INTERFACE
-                    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
+                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${LIB}>)
         endif()
     endforeach()
 endfunction(qe_fix_fortran_module_libraries)
@@ -47,7 +47,7 @@ function(qe_install_targets TGT)
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # Windows needs RUNTIME also for libraries
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe/${TGT})
     # Retrieving non-whitelisted properties leads to an hard
     # error, let's skip the following section for interface
     # targets. See here for details:
@@ -60,7 +60,7 @@ function(qe_install_targets TGT)
             get_target_property(tgt_module_dir ${tgt} Fortran_MODULE_DIRECTORY)
             if(tgt_module_dir)
                 install(DIRECTORY ${tgt_module_dir}/
-                    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe)
+                    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qe/${TGT})
             endif()
         endif()        
     endforeach()
