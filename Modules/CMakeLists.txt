@@ -167,9 +167,14 @@ qe_add_library(qe_modules ${sources})
 add_library(QE::Modules ALIAS qe_modules)
 target_link_libraries(qe_modules
     PRIVATE
-        QE::UTILX
         QE::FFTX
-        QE::FOX
         QE::CLIB # this is needed only by wrappers.f90
-        QE::MPI_Fortran)
+        QE::MPI_Fortran
+    PUBLIC
+        QE::FOX
+        QE::UTILX
+)
+
+###########################################################
+
 qe_install_targets(qe_modules)
