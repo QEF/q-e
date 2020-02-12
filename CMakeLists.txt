@@ -107,11 +107,6 @@ if(QE_ENABLE_MPI)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __MPI OMPI_SKIP_MPICXX)
 endif()
-if(QE_ENABLE_OPENMP)
-    # legacy macro used throughout qe
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS _OPENMP)
-endif()
 
 # Feature checks
 check_function_exists(mallinfo HAVE_MALLINFO)

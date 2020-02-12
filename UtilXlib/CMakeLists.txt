@@ -28,6 +28,7 @@ qe_add_library(qe_utilx ${sources_util})
 add_library(QE::UTILX ALIAS qe_utilx)
 target_link_libraries(qe_utilx
     PRIVATE
+        QE::OpenMP_Fortran
         QE::CLIB
         QE::MPI_Fortran)
 
@@ -91,6 +92,7 @@ FOREACH(NAME ${source_names})
         PRIVATE
             QE::UTILX
             QE::UTILX::TESTS
+            QE::MPI_Fortran
             QE::Modules)
 
     add_test(NAME qe_utilx_tests_${TGT_NAME}_exe COMMAND ${NAME}.x)

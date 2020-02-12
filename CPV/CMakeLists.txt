@@ -113,6 +113,7 @@ target_link_libraries(qe_cpv
         QE::Modules
         QE::FOX
         QE::FFTX
+        QE::OpenMP_Fortran
         QE::MPI_Fortran)
 
 ###########################################################

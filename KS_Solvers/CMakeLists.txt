@@ -38,6 +38,7 @@ qe_add_library(qe_kssolver_davidson ${sources_davidson})
 add_library(QE::KS_Solvers::Davidson ALIAS qe_kssolver_davidson)
 target_link_libraries(qe_kssolver_davidson
     PRIVATE
+        QE::OpenMP_Fortran
         QE::KS_Solvers::DavidsonParam
         QE::LAX
         QE::UTILX
@@ -64,6 +65,7 @@ qe_add_library(qe_kssolver_ppcg ${sources_ppcg})
 add_library(QE::KS_Solvers::PPCG ALIAS qe_kssolver_ppcg)
 target_link_libraries(qe_kssolver_ppcg
     PRIVATE
+        QE::OpenMP_Fortran
         QE::LAX
         QE::UTILX
         QE::MPI_Fortran)

@@ -219,6 +219,7 @@ qe_add_library(qe_phonon_ph ${sources_ph})
 add_library(QE::PHonon::PH ALIAS qe_phonon_ph)
 target_link_libraries(qe_phonon_ph
     PRIVATE
+        QE::OpenMP_Fortran
         QE::PW
         QE::IOTK
         QE::Modules

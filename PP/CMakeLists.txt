@@ -49,6 +49,7 @@ add_library(QE::PP ALIAS qe_pp)
 target_compile_definitions(qe_pp PRIVATE "__WANLIB")
 target_link_libraries(qe_pp
     PRIVATE
+        QE::OpenMP_Fortran
         QE::FOX
         QE::PW
         QE::Modules)

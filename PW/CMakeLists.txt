@@ -245,6 +245,7 @@ target_link_libraries(qe_pw
         QE::Modules
         QE::FFTX
         QE::DFTD3
+        QE::OpenMP_Fortran
         QE::MPI_Fortran)
 
 ###########################################################

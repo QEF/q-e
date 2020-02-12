@@ -9,7 +9,7 @@ target_link_libraries(qe_couple
     PUBLIC
         QE::Modules
         QE::LAX
-	QE::FFTX
+	    QE::FFTX
         QE::UTILX
         QE::CPV)
 
