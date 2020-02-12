@@ -101,6 +101,17 @@ if(QE_ENABLE_BARRIER)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __USE_BARRIER)
 endif()
+if(QE_ENABLE_MPI)
+    # legacy macro used throughout qe
+    # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
+    set_property(TARGET qe_definitions APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS __MPI OMPI_SKIP_MPICXX)
+endif()
+if(QE_ENABLE_OPENMP)
+    # legacy macro used throughout qe
+    set_property(TARGET qe_definitions APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS _OPENMP)
+endif()
 
 # Feature checks
 check_function_exists(mallinfo HAVE_MALLINFO)
@@ -119,23 +130,11 @@ add_library(QE::MPI_C ALIAS qe_mpi_c)
 qe_install_targets(qe_mpi_fortran qe_mpi_c)
 ###########################################################
 if(QE_ENABLE_MPI)
-    set(mpi_definitions
-        # legacy macro used throughout qe
-        __MPI
-        # skip CXX APIs on openmpi, cause trouble to C APIs
-        OMPI_SKIP_MPICXX)
-    
     find_package(MPI REQUIRED Fortran C)
-
     target_link_libraries(qe_mpi_fortran 
         INTERFACE MPI::MPI_Fortran)
-    set_property(TARGET qe_mpi_fortran
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${mpi_definitions})
-
     target_link_libraries(qe_mpi_c 
         INTERFACE MPI::MPI_C)
-    set_property(TARGET qe_mpi_c
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${mpi_definitions})
 endif(QE_ENABLE_MPI)
 
 ###########################################################
@@ -148,21 +147,11 @@ add_library(QE::OpenMP_C ALIAS qe_openmp_c)
 qe_install_targets(qe_openmp_fortran qe_openmp_c)
 ###########################################################
 if(QE_ENABLE_OPENMP)
-    set(openmp_definitions
-        # legacy macro used throughout qe
-        _OPENMP)
-    
     find_package(OpenMP REQUIRED Fortran C)
-
     target_link_libraries(qe_openmp_fortran 
-        INTERFACE OpenMP:OpenMP_Fortran)
-    set_property(TARGET qe_openmp_fortran
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${openmp_definitions})
-
+        INTERFACE OpenMP::OpenMP_Fortran)
     target_link_libraries(qe_openmp_c 
-        INTERFACE OpenMP:OpenMP_C)
-    set_property(TARGET qe_openmp_c
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${openmp_definitions})
+        INTERFACE OpenMP::OpenMP_C)
 endif(QE_ENABLE_OPENMP)
 
 ###########################################################
