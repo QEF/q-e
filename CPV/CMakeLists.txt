@@ -104,8 +104,7 @@ set(sources
     src/makov_payne.f90
     src/entropy.f90)
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 
 qe_add_library(qe_cpv ${sources})
 add_library(QE::CPV ALIAS qe_cpv)
@@ -122,8 +121,7 @@ target_link_libraries(qe_cpv
 # cp.x
 ###########################################################
 set(sources src/cprstart.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_cpv_exe ${sources})
 set_target_properties(qe_cpv_exe PROPERTIES OUTPUT_NAME cp.x)
 target_link_libraries(qe_cpv_exe
@@ -136,8 +134,7 @@ target_link_libraries(qe_cpv_exe
 # manycp.x
 ###########################################################
 set(sources src/manycp.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_cpv_manycp_exe ${sources})
 set_target_properties(qe_cpv_manycp_exe PROPERTIES OUTPUT_NAME manycp.x)
 target_link_libraries(qe_cpv_manycp_exe
@@ -151,8 +148,7 @@ target_link_libraries(qe_cpv_manycp_exe
 # cppp.x
 ###########################################################
 set(sources src/cppp.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_cpv_cppp_exe ${sources})
 set_target_properties(qe_cpv_cppp_exe PROPERTIES OUTPUT_NAME cppp.x)
 target_link_libraries(qe_cpv_cppp_exe
@@ -164,8 +160,7 @@ target_link_libraries(qe_cpv_cppp_exe
 # wfdd.x
 ###########################################################
 set(sources src/wfdd.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_cpv_wfdd_exe ${sources})
 set_target_properties(qe_cpv_wfdd_exe PROPERTIES OUTPUT_NAME wfdd.x)
 target_link_libraries(qe_cpv_wfdd_exe

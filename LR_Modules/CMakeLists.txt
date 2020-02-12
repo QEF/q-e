@@ -51,8 +51,7 @@ set(sources
     lanczos_pseudohermitian.f90
     lanczos_nonhermitian.f90)
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 
 qe_add_library(qe_lr_modules ${sources})
 add_library(QE::LR_Modules ALIAS qe_lr_modules)

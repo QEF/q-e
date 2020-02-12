@@ -44,8 +44,7 @@ set(sources
     src/hp_write_dnsq.f90
 )
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 
 qe_add_library(qe_hp ${sources})
 add_library(QE::HP ALIAS qe_hp)
@@ -59,8 +58,7 @@ target_link_libraries(qe_hp
 # hp.x
 ###########################################################
 set(sources src/hp_main.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_hp_exe ${sources})
 set_target_properties(qe_hp_exe PROPERTIES OUTPUT_NAME hp.x)
 target_link_libraries(qe_hp_exe

@@ -1,3 +1,6 @@
+###########################################################
+# pwcond.x
+###########################################################
 set(sources
     src/allocate_cond.f90
     src/bessj.f90
@@ -37,12 +40,7 @@ set(sources
     src/sunitary.f90
     src/transmit.f90
 )
-
-###########################################################
-# pwcond.x
-###########################################################
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pwcond_exe ${sources})
 set_target_properties(qe_pwcond_exe PROPERTIES OUTPUT_NAME pwcond.x)
 target_link_libraries(qe_pwcond_exe
@@ -53,6 +51,4 @@ target_link_libraries(qe_pwcond_exe
 
 ###########################################################
 
-qe_install_targets(
-    qe_pwcond_exe
-)
+qe_install_targets(qe_pwcond_exe)

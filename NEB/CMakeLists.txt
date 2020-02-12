@@ -23,8 +23,7 @@ set(sources
     src/stop_run_path.f90
 )
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 
 qe_add_library(qe_neb ${sources})
 add_library(QE::NEB ALIAS qe_neb)
@@ -37,8 +36,7 @@ target_link_libraries(qe_neb
 # neb.x
 ###########################################################
 set(sources src/neb.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_neb_exe ${sources})
 set_target_properties(qe_neb_exe PROPERTIES OUTPUT_NAME neb.x)
 target_link_libraries(qe_neb_exe
@@ -52,8 +50,7 @@ target_link_libraries(qe_neb_exe
 # path_interpolation.x
 ###########################################################
 set(sources src/path_interpolation.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_neb_pathinterpolation_exe ${sources})
 set_target_properties(qe_neb_pathinterpolation_exe PROPERTIES OUTPUT_NAME path_interpolation.x)
 target_link_libraries(qe_neb_pathinterpolation_exe

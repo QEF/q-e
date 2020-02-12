@@ -14,8 +14,7 @@ set(sources
     cdiaghg.f90
 )
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 
 qe_add_library(qe_lax ${sources})
 add_library(QE::LAX ALIAS qe_lax)
@@ -31,8 +30,7 @@ qe_install_targets(qe_lax)
 # TODO move all tests to a proper location
 ###########################################################
 if(QE_ENABLE_TEST)
-    # TODO rename all sources *.f90 -> *.F90
-    set_source_files_properties(test.f90 PROPERTIES COMPILE_FLAGS -cpp)
+    qe_add_fortran_preprocessor(${sources})
     qe_add_executable(qe_lax_test test.f90)
     target_link_libraries(qe_lax_test
         PRIVATE

@@ -25,12 +25,13 @@ set(sources_ppcg
     PPCG/ppcg_k.f90
 )
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources_davidson_param} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_davidson} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_davidson_rci} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_cg} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_ppcg} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(
+    ${sources_davidson_param}
+    ${sources_davidson}
+    ${sources_davidson_rci}
+    ${sources_cg}
+    ${sources_ppcg}
+)
 
 # Both sources_davidson and sources_davidson_rci depend on this
 # module, we need to factor it out to a separate target to ensure

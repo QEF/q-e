@@ -174,15 +174,16 @@ set(sources_simple_ip
     simple_ip/dielectric.f90
 )
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources_gww} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_pw4gww} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_bse} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_head} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_minpack} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_simple} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_simple_bse} PROPERTIES COMPILE_FLAGS -cpp)
-set_source_files_properties(${sources_simple_ip} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(
+    ${sources_gww}
+    ${sources_pw4gww}
+    ${sources_bse}
+    ${sources_head}
+    ${sources_minpack}
+    ${sources_simple}
+    ${sources_simple_bse}
+    ${sources_simple_ip}
+)
 
 qe_add_library(qe_gww ${sources_gww})
 add_library(QE::GWW ALIAS qe_gww)
@@ -253,8 +254,7 @@ target_link_libraries(qe_gww_simpleip
 # graph.x
 ###########################################################
 set(sources util/graph.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_gww_util_grap_exe ${sources})
 set_target_properties(qe_gww_util_grap_exe PROPERTIES OUTPUT_NAME graph.x)
 
@@ -262,8 +262,7 @@ set_target_properties(qe_gww_util_grap_exe PROPERTIES OUTPUT_NAME graph.x)
 # abcoeff_to_eps.x
 ###########################################################
 set(sources util/abcoeff_to_eps.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_gww_util_abcoefftoeps_exe ${sources})
 set_target_properties(qe_gww_util_abcoefftoeps_exe PROPERTIES OUTPUT_NAME abcoeff_to_eps.x)
 
@@ -271,8 +270,7 @@ set_target_properties(qe_gww_util_abcoefftoeps_exe PROPERTIES OUTPUT_NAME abcoef
 # memory_pw4gww.x
 ###########################################################
 set(sources util/memory_pw4gww.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_gww_util_memorypw4gww_exe ${sources})
 set_target_properties(qe_gww_util_memorypw4gww_exe PROPERTIES OUTPUT_NAME memory_pw4gww.x)
 

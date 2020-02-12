@@ -50,8 +50,7 @@ set(sources
     src/stop_epw.f90
     src/wannierEPW.f90)
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 
 qe_add_library(qe_epw ${sources})
 add_library(QE::EPW ALIAS qe_epw)
@@ -70,8 +69,7 @@ target_link_libraries(qe_epw
 # epw.x
 ###########################################################
 set(sources src/epw.f90)
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_epw_exe ${sources})
 set_target_properties(qe_epw_exe PROPERTIES OUTPUT_NAME epw.x)
 target_link_libraries(qe_epw_exe

@@ -160,8 +160,7 @@ set(sources
     deviatoric.f90
 )
 
-# TODO rename all sources *.f90 -> *.F90
-set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS -cpp)
+qe_add_fortran_preprocessor(${sources})
 
 qe_add_library(qe_modules ${sources})
 add_library(QE::Modules ALIAS qe_modules)
