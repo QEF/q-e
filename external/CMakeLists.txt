@@ -229,6 +229,9 @@ target_include_directories(qe_iotk
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/iotk/include>
     INTERFACE
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe>)
+target_link_libraries(qe_iotk
+    PRIVATE
+        QE::MPI_Fortran)
 add_library(QE::IOTK ALIAS qe_iotk)
 
 ###########################################################
