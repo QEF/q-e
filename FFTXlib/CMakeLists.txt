@@ -37,6 +37,7 @@ qe_add_library(qe_fftx ${f_sources} ${c_sources})
 add_library(QE::FFTX ALIAS qe_fftx)
 target_link_libraries(qe_fftx
     PRIVATE
+        QE::MPI_Fortran
         QE::LAPACK)
 qe_install_targets(qe_fftx)
 
@@ -44,13 +45,14 @@ qe_install_targets(qe_fftx)
 # Tests
 # TODO move all tests to a proper location
 ###########################################################
-if(QE_ENABLE_TEST AND QE_ENABLE_MPI)
+if(QE_ENABLE_TEST)
     # TODO test.f90 seems to work only with MPI
     set(sources test.f90)
     qe_add_executable(qe_fftx_test ${sources})
     target_link_libraries(qe_fftx_test
         PRIVATE
-            QE::FFTX
-            QE::MPI_Fortran)
+            QE::OpenMP_Fortran
+            QE::MPI_Fortran
+            QE::FFTX)
     add_test(NAME test-fftx COMMAND qe_fftx_test)
-endif(QE_ENABLE_TEST AND QE_ENABLE_MPI)
+endif(QE_ENABLE_TEST)
