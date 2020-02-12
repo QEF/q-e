@@ -30,8 +30,6 @@ set(sources_gipaw
     src/init_gipaw_2.f90
 )
 
-qe_add_fortran_preprocessor(${sources_x} ${sources_gipaw})
-
 qe_add_library(qe_xspectra_gipaw ${sources_gipaw})
 add_library(QE::XSpectra::GIPAW ALIAS qe_xspectra_gipaw)
 target_link_libraries(qe_xspectra_gipaw
@@ -53,7 +51,6 @@ target_link_libraries(qe_xspectra
 # xspectra.x
 ###########################################################
 set(sources src/xspectra.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_xspectra_exe ${sources})
 set_target_properties(qe_xspectra_exe PROPERTIES OUTPUT_NAME xspectra.x)
 target_link_libraries(qe_xspectra_exe
@@ -71,7 +68,6 @@ set(sources
     src/spectra_correction.f90
     src/gaunt_mod.f90
 )
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_xspectra_spectracorrection_exe ${sources})
 set_target_properties(qe_xspectra_spectracorrection_exe PROPERTIES OUTPUT_NAME spectra_correction.x)
 target_link_libraries(qe_xspectra_spectracorrection_exe
@@ -85,7 +81,6 @@ target_link_libraries(qe_xspectra_spectracorrection_exe
 # molecularnexafs.x
 ###########################################################
 set(sources src/molecularnexafs.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_xspectra_molecularnexafs_exe ${sources})
 set_target_properties(qe_xspectra_molecularnexafs_exe PROPERTIES OUTPUT_NAME molecularnexafs.x)
 target_link_libraries(qe_xspectra_molecularnexafs_exe

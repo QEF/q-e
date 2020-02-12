@@ -33,8 +33,6 @@ set(c_sources
     fftw_sp.c
     fftw_dp.c)
 
-qe_add_fortran_preprocessor(${f_sources})
-
 qe_add_library(qe_fftx ${f_sources} ${c_sources})
 add_library(QE::FFTX ALIAS qe_fftx)
 target_link_libraries(qe_fftx
@@ -49,7 +47,6 @@ qe_install_targets(qe_fftx)
 if(QE_ENABLE_TEST AND QE_ENABLE_MPI)
     # TODO test.f90 seems to work only with MPI
     set(sources test.f90)
-    qe_add_fortran_preprocessor(${sources})
     qe_add_executable(qe_fftx_test ${sources})
     target_link_libraries(qe_fftx_test
         PRIVATE

@@ -3,8 +3,6 @@ set(sources
     src/libcpv.f90
     src/libqemod.f90)
 
-qe_add_fortran_preprocessor(${sources})
-
 qe_add_library(qe_couple ${sources})
 add_library(QE::COUPLE ALIAS qe_couple)
 target_link_libraries(qe_couple

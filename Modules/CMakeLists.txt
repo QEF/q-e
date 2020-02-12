@@ -160,8 +160,6 @@ set(sources
     deviatoric.f90
 )
 
-qe_add_fortran_preprocessor(${sources})
-
 qe_add_library(qe_modules ${sources})
 add_library(QE::Modules ALIAS qe_modules)
 target_link_libraries(qe_modules

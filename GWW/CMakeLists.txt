@@ -174,17 +174,6 @@ set(sources_simple_ip
     simple_ip/dielectric.f90
 )
 
-qe_add_fortran_preprocessor(
-    ${sources_gww}
-    ${sources_pw4gww}
-    ${sources_bse}
-    ${sources_head}
-    ${sources_minpack}
-    ${sources_simple}
-    ${sources_simple_bse}
-    ${sources_simple_ip}
-)
-
 qe_add_library(qe_gww ${sources_gww})
 add_library(QE::GWW ALIAS qe_gww)
 target_link_libraries(qe_gww
@@ -254,7 +243,6 @@ target_link_libraries(qe_gww_simpleip
 # graph.x
 ###########################################################
 set(sources util/graph.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_gww_util_grap_exe ${sources})
 set_target_properties(qe_gww_util_grap_exe PROPERTIES OUTPUT_NAME graph.x)
 
@@ -262,7 +250,6 @@ set_target_properties(qe_gww_util_grap_exe PROPERTIES OUTPUT_NAME graph.x)
 # abcoeff_to_eps.x
 ###########################################################
 set(sources util/abcoeff_to_eps.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_gww_util_abcoefftoeps_exe ${sources})
 set_target_properties(qe_gww_util_abcoefftoeps_exe PROPERTIES OUTPUT_NAME abcoeff_to_eps.x)
 
@@ -270,7 +257,6 @@ set_target_properties(qe_gww_util_abcoefftoeps_exe PROPERTIES OUTPUT_NAME abcoef
 # memory_pw4gww.x
 ###########################################################
 set(sources util/memory_pw4gww.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_gww_util_memorypw4gww_exe ${sources})
 set_target_properties(qe_gww_util_memorypw4gww_exe PROPERTIES OUTPUT_NAME memory_pw4gww.x)
 

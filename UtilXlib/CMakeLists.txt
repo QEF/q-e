@@ -24,8 +24,6 @@ set(sources_util_tests
     tests/mp_world.f90
 )
 
-qe_add_fortran_preprocessor(${sources_util} ${sources_util_tests})
-
 qe_add_library(qe_utilx ${sources_util})
 add_library(QE::UTILX ALIAS qe_utilx)
 target_link_libraries(qe_utilx
@@ -86,7 +84,6 @@ set(source_names
 FOREACH(NAME ${source_names})
     set(sources tests/${NAME}.f90)
     string(REPLACE "_" "" TGT_NAME ${NAME})
-    qe_add_fortran_preprocessor(${sources})
     qe_add_executable(qe_utilx_tests_${TGT_NAME}_exe ${sources})
 
     set_target_properties(qe_utilx_tests_${TGT_NAME}_exe PROPERTIES OUTPUT_NAME ${NAME}.x)

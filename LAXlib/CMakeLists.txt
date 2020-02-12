@@ -14,8 +14,6 @@ set(sources
     cdiaghg.f90
 )
 
-qe_add_fortran_preprocessor(${sources})
-
 qe_add_library(qe_lax ${sources})
 add_library(QE::LAX ALIAS qe_lax)
 target_link_libraries(qe_lax
@@ -30,7 +28,6 @@ qe_install_targets(qe_lax)
 # TODO move all tests to a proper location
 ###########################################################
 if(QE_ENABLE_TEST)
-    qe_add_fortran_preprocessor(${sources})
     qe_add_executable(qe_lax_test test.f90)
     target_link_libraries(qe_lax_test
         PRIVATE

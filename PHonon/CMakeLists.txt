@@ -215,13 +215,6 @@ set(sources_fd
     FD/stop_pp.f90
 )
 
-qe_add_fortran_preprocessor(
-    ${sources_ph}
-    ${sources_phaux}
-    ${sources_gamma}
-    ${sources_fd}
-)
-
 qe_add_library(qe_phonon_ph ${sources_ph})
 add_library(QE::PHonon::PH ALIAS qe_phonon_ph)
 target_link_libraries(qe_phonon_ph
@@ -259,7 +252,6 @@ target_link_libraries(qe_phonon_fd
 # ph.x
 ###########################################################
 set(sources PH/phonon.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_ph_exe ${sources})
 set_target_properties(qe_phonon_ph_exe PROPERTIES OUTPUT_NAME ph.x)
 target_link_libraries(qe_phonon_ph_exe
@@ -273,7 +265,6 @@ target_link_libraries(qe_phonon_ph_exe
 # dynmat.x
 ###########################################################
 set(sources PH/dynmat.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_dynmat_exe ${sources})
 set_target_properties(qe_phonon_dynmat_exe PROPERTIES OUTPUT_NAME dynmat.x)
 target_link_libraries(qe_phonon_dynmat_exe
@@ -289,7 +280,6 @@ target_link_libraries(qe_phonon_dynmat_exe
 # q2r.x
 ###########################################################
 set(sources PH/q2r.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_q2r_exe ${sources})
 set_target_properties(qe_phonon_q2r_exe PROPERTIES OUTPUT_NAME q2r.x)
 target_link_libraries(qe_phonon_q2r_exe
@@ -303,7 +293,6 @@ target_link_libraries(qe_phonon_q2r_exe
 # q2trans.x
 ###########################################################
 set(sources PH/q2trans.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_q2trans_exe ${sources})
 set_target_properties(qe_phonon_q2trans_exe PROPERTIES OUTPUT_NAME q2trans.x)
 target_link_libraries(qe_phonon_q2trans_exe
@@ -319,7 +308,6 @@ target_link_libraries(qe_phonon_q2trans_exe
 # q2trans_fd.x
 ###########################################################
 set(sources PH/q2trans_fd.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_q2transfd_exe ${sources})
 set_target_properties(qe_phonon_q2transfd_exe PROPERTIES OUTPUT_NAME q2trans_fd.x)
 target_link_libraries(qe_phonon_q2transfd_exe
@@ -334,7 +322,6 @@ target_link_libraries(qe_phonon_q2transfd_exe
 # q2qstar.x
 ###########################################################
 set(sources PH/q2qstar.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_q2qstar_exe ${sources})
 set_target_properties(qe_phonon_q2qstar_exe PROPERTIES OUTPUT_NAME q2qstar.x)
 target_link_libraries(qe_phonon_q2qstar_exe
@@ -350,7 +337,6 @@ target_link_libraries(qe_phonon_q2qstar_exe
 # lambda.x
 ###########################################################
 set(sources PH/lambda.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_lambda_exe ${sources})
 set_target_properties(qe_phonon_lambda_exe PROPERTIES OUTPUT_NAME lambda.x)
 target_link_libraries(qe_phonon_lambda_exe
@@ -363,7 +349,6 @@ target_link_libraries(qe_phonon_lambda_exe
 # alpha2f.x
 ###########################################################
 set(sources PH/alpha2f.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_alpha2f_exe ${sources})
 set_target_properties(qe_phonon_alpha2f_exe PROPERTIES OUTPUT_NAME alpha2f.x)
 target_link_libraries(qe_phonon_alpha2f_exe
@@ -378,7 +363,6 @@ target_link_libraries(qe_phonon_alpha2f_exe
 # epa.x
 ###########################################################
 set(sources PH/epa.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_epa_exe ${sources})
 set_target_properties(qe_phonon_epa_exe PROPERTIES OUTPUT_NAME epa.x)
 target_link_libraries(qe_phonon_epa_exe
@@ -392,7 +376,6 @@ target_link_libraries(qe_phonon_epa_exe
 # fqha.x
 ###########################################################
 set(sources PH/fqha.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_phonon_fqha_exe ${sources})
 set_target_properties(qe_phonon_fqha_exe PROPERTIES OUTPUT_NAME fqha.x)
 target_link_libraries(qe_phonon_fqha_exe

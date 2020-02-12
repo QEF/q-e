@@ -51,8 +51,6 @@ set(sources
     lanczos_pseudohermitian.f90
     lanczos_nonhermitian.f90)
 
-qe_add_fortran_preprocessor(${sources})
-
 qe_add_library(qe_lr_modules ${sources})
 add_library(QE::LR_Modules ALIAS qe_lr_modules)
 target_link_libraries(qe_lr_modules

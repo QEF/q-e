@@ -44,8 +44,6 @@ set(sources
     src/write_hamiltonians.f90
     src/xc_vdW_scale_mod.f90)
 
-qe_add_fortran_preprocessor(${sources})
-
 qe_add_library(qe_pp ${sources})
 add_library(QE::PP ALIAS qe_pp)
 target_compile_definitions(qe_pp PRIVATE "__WANLIB")
@@ -59,7 +57,6 @@ target_link_libraries(qe_pp
 # pp.x
 ###########################################################
 set(sources src/postproc.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_exe ${sources})
 set_target_properties(qe_pp_exe PROPERTIES OUTPUT_NAME pp.x)
 target_link_libraries(qe_pp_exe
@@ -72,7 +69,6 @@ target_link_libraries(qe_pp_exe
 # open_grid.x
 ###########################################################
 set(sources src/open_grid.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_opengrid_exe ${sources})
 set_target_properties(qe_pp_opengrid_exe PROPERTIES OUTPUT_NAME open_grid.x)
 target_link_libraries(qe_pp_opengrid_exe
@@ -86,7 +82,6 @@ target_link_libraries(qe_pp_opengrid_exe
 # average.x
 ###########################################################
 set(sources src/average.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_average_exe ${sources})
 set_target_properties(qe_pp_average_exe PROPERTIES OUTPUT_NAME average.x)
 target_link_libraries(qe_pp_average_exe
@@ -100,7 +95,6 @@ target_link_libraries(qe_pp_average_exe
 # bands.x
 ###########################################################
 set(sources src/bands.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_bands_exe ${sources})
 set_target_properties(qe_pp_bands_exe PROPERTIES OUTPUT_NAME bands.x)
 target_link_libraries(qe_pp_bands_exe
@@ -113,7 +107,6 @@ target_link_libraries(qe_pp_bands_exe
 # dos.x
 ###########################################################
 set(sources src/dos.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_dos_exe ${sources})
 set_target_properties(qe_pp_dos_exe PROPERTIES OUTPUT_NAME dos.x)
 target_link_libraries(qe_pp_dos_exe
@@ -125,7 +118,6 @@ target_link_libraries(qe_pp_dos_exe
 # pawplot.x
 ###########################################################
 set(sources src/pawplot.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_pawplot_exe ${sources})
 set_target_properties(qe_pp_pawplot_exe PROPERTIES OUTPUT_NAME pawplot.x)
 target_link_libraries(qe_pp_pawplot_exe
@@ -138,7 +130,6 @@ target_link_libraries(qe_pp_pawplot_exe
 # plan_avg.x
 ###########################################################
 set(sources src/plan_avg.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_planavg_exe ${sources})
 set_target_properties(qe_pp_planavg_exe PROPERTIES OUTPUT_NAME plan_avg.x)
 target_link_libraries(qe_pp_planavg_exe
@@ -151,7 +142,6 @@ target_link_libraries(qe_pp_planavg_exe
 # plotband.x
 ###########################################################
 set(sources src/plotband.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_plotband_exe ${sources})
 set_target_properties(qe_pp_plotband_exe PROPERTIES OUTPUT_NAME plotband.x)
 target_link_libraries(qe_pp_plotband_exe
@@ -164,7 +154,6 @@ target_link_libraries(qe_pp_plotband_exe
 # plotproj.x
 ###########################################################
 set(sources src/plotproj.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_plotproj_exe ${sources})
 set_target_properties(qe_pp_plotproj_exe PROPERTIES OUTPUT_NAME plotproj.x)
 target_link_libraries(qe_pp_plotproj_exe
@@ -175,7 +164,6 @@ target_link_libraries(qe_pp_plotproj_exe
 # plotrho.x
 ###########################################################
 set(sources src/plotrho.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_plotrho_exe ${sources})
 set_target_properties(qe_pp_plotrho_exe PROPERTIES OUTPUT_NAME plotrho.x)
 target_link_libraries(qe_pp_plotrho_exe
@@ -186,7 +174,6 @@ target_link_libraries(qe_pp_plotrho_exe
 # pmw.x
 ###########################################################
 set(sources src/poormanwannier.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_pmw_exe ${sources})
 set_target_properties(qe_pp_pmw_exe PROPERTIES OUTPUT_NAME pmw.x)
 target_link_libraries(qe_pp_pmw_exe
@@ -200,7 +187,6 @@ target_link_libraries(qe_pp_pmw_exe
 # xctest.x
 ###########################################################
 set(sources src/xctest.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_xctest_exe ${sources})
 set_target_properties(qe_pp_xctest_exe PROPERTIES OUTPUT_NAME xctest.x)
 target_link_libraries(qe_pp_xctest_exe
@@ -214,7 +200,6 @@ target_link_libraries(qe_pp_xctest_exe
 # projwfc.x
 ###########################################################
 set(sources src/projwfc.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_projwfc_exe ${sources})
 set_target_properties(qe_pp_projwfc_exe PROPERTIES OUTPUT_NAME projwfc.x)
 target_link_libraries(qe_pp_projwfc_exe
@@ -227,7 +212,6 @@ target_link_libraries(qe_pp_projwfc_exe
 # pw2wannier90.x
 ###########################################################
 set(sources src/pw2wannier90.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_pw2wannier90_exe ${sources})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
@@ -241,7 +225,6 @@ target_link_libraries(qe_pp_pw2wannier90_exe
 # pw2critic.x
 ###########################################################
 set(sources src/pw2critic.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_pw2critic_exe ${sources})
 set_target_properties(qe_pp_pw2critic_exe PROPERTIES OUTPUT_NAME pw2critic.x)
 target_link_libraries(qe_pp_pw2critic_exe
@@ -254,7 +237,6 @@ target_link_libraries(qe_pp_pw2critic_exe
 # wfck2r.x
 ###########################################################
 set(sources src/wfck2r.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_wfck2r_exe ${sources})
 set_target_properties(qe_pp_wfck2r_exe PROPERTIES OUTPUT_NAME wfck2r.x)
 target_link_libraries(qe_pp_wfck2r_exe
@@ -267,7 +249,6 @@ target_link_libraries(qe_pp_wfck2r_exe
 # initial_state.x
 ###########################################################
 set(sources src/initial_state.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_initial_state_exe ${sources})
 set_target_properties(qe_pp_initial_state_exe PROPERTIES OUTPUT_NAME initial_state.x)
 target_link_libraries(qe_pp_initial_state_exe
@@ -280,7 +261,6 @@ target_link_libraries(qe_pp_initial_state_exe
 # pw2gw.x
 ###########################################################
 set(sources src/pw2gw.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_pw2gw_exe ${sources})
 set_target_properties(qe_pp_pw2gw_exe PROPERTIES OUTPUT_NAME pw2gw.x)
 target_link_libraries(qe_pp_pw2gw_exe
@@ -294,7 +274,6 @@ target_link_libraries(qe_pp_pw2gw_exe
 # sumpdos.x
 ###########################################################
 set(sources src/sumpdos.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_sumpdos_exe ${sources})
 set_target_properties(qe_pp_sumpdos_exe PROPERTIES OUTPUT_NAME sumpdos.x)
 target_link_libraries(qe_pp_sumpdos_exe
@@ -305,7 +284,6 @@ target_link_libraries(qe_pp_sumpdos_exe
 # epsilon.x
 ###########################################################
 set(sources src/epsilon.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_epsilon_exe ${sources})
 set_target_properties(qe_pp_epsilon_exe PROPERTIES OUTPUT_NAME epsilon.x)
 target_link_libraries(qe_pp_epsilon_exe
@@ -318,7 +296,6 @@ target_link_libraries(qe_pp_epsilon_exe
 # wannier_ham.x
 ###########################################################
 set(sources src/wannier_ham.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_wannierham_exe ${sources})
 set_target_properties(qe_pp_wannierham_exe PROPERTIES OUTPUT_NAME wannier_ham.x)
 target_link_libraries(qe_pp_wannierham_exe
@@ -332,7 +309,6 @@ target_link_libraries(qe_pp_wannierham_exe
 # wannier_plot.x
 ###########################################################
 set(sources src/wannier_plot.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_wannierplot_exe ${sources})
 set_target_properties(qe_pp_wannierplot_exe PROPERTIES OUTPUT_NAME wannier_plot.x)
 target_link_libraries(qe_pp_wannierplot_exe
@@ -346,7 +322,6 @@ target_link_libraries(qe_pp_wannierplot_exe
 # molecularpdos.x
 ###########################################################
 set(sources src/molecularpdos.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_molecularpdos_exe ${sources})
 set_target_properties(qe_pp_molecularpdos_exe PROPERTIES OUTPUT_NAME molecularpdos.x)
 target_link_libraries(qe_pp_molecularpdos_exe
@@ -359,7 +334,6 @@ target_link_libraries(qe_pp_molecularpdos_exe
 # pw2bgw.x
 ###########################################################
 set(sources src/pw2bgw.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_pw2bgw_exe ${sources})
 set_target_properties(qe_pp_pw2bgw_exe PROPERTIES OUTPUT_NAME pw2bgw.x)
 target_link_libraries(qe_pp_pw2bgw_exe
@@ -372,7 +346,6 @@ target_link_libraries(qe_pp_pw2bgw_exe
 # fs.x
 ###########################################################
 set(sources src/fermisurface.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_fermisurface_exe ${sources})
 set_target_properties(qe_pp_fermisurface_exe PROPERTIES OUTPUT_NAME fs.x)
 target_link_libraries(qe_pp_fermisurface_exe
@@ -386,7 +359,6 @@ target_link_libraries(qe_pp_fermisurface_exe
 # fermi_velocity.x
 ###########################################################
 set(sources src/fermi_velocity.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_fermivelocity_exe ${sources})
 set_target_properties(qe_pp_fermivelocity_exe PROPERTIES OUTPUT_NAME fermi_velocity.x)
 target_link_libraries(qe_pp_fermivelocity_exe
@@ -400,7 +372,6 @@ target_link_libraries(qe_pp_fermivelocity_exe
 # fermi_proj.x
 ###########################################################
 set(sources src/fermi_proj.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_fermiproj_exe ${sources})
 set_target_properties(qe_pp_fermiproj_exe PROPERTIES OUTPUT_NAME fermi_proj.x)
 target_link_libraries(qe_pp_fermiproj_exe
@@ -413,7 +384,6 @@ target_link_libraries(qe_pp_fermiproj_exe
 # ppacf.x
 ###########################################################
 set(sources src/ppacf.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_ppacf_exe ${sources})
 set_target_properties(qe_pp_ppacf_exe PROPERTIES OUTPUT_NAME ppacf.x)
 target_link_libraries(qe_pp_ppacf_exe
@@ -425,7 +395,6 @@ target_link_libraries(qe_pp_ppacf_exe
 # benchmark_libxc.x
 ###########################################################
 set(sources src/benchmark_libxc.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pp_benchmarklibxc_exe ${sources})
 set_target_properties(qe_pp_benchmarklibxc_exe PROPERTIES OUTPUT_NAME benchmark_libxc.x)
 target_link_libraries(qe_pp_benchmarklibxc_exe

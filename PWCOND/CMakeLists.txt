@@ -40,7 +40,7 @@ set(sources
     src/sunitary.f90
     src/transmit.f90
 )
-qe_add_fortran_preprocessor(${sources})
+
 qe_add_executable(qe_pwcond_exe ${sources})
 set_target_properties(qe_pwcond_exe PROPERTIES OUTPUT_NAME pwcond.x)
 target_link_libraries(qe_pwcond_exe

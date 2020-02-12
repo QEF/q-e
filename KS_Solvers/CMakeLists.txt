@@ -25,14 +25,6 @@ set(sources_ppcg
     PPCG/ppcg_k.f90
 )
 
-qe_add_fortran_preprocessor(
-    ${sources_davidson_param}
-    ${sources_davidson}
-    ${sources_davidson_rci}
-    ${sources_cg}
-    ${sources_ppcg}
-)
-
 # Both sources_davidson and sources_davidson_rci depend on this
 # module, we need to factor it out to a separate target to ensure
 # we do not break parallel builds

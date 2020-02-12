@@ -31,15 +31,39 @@ endfunction(qe_fix_fortran_modules)
 
 function(qe_add_executable EXE)
     add_executable(${EXE} ${ARGN})
-    target_link_libraries(${EXE} PUBLIC ${QE_MANDATORY_TARGETS})
-    qe_fix_fortran_modules(${EXE})
+    _qe_add_global_target(${EXE} ${ARGN})
 endfunction(qe_add_executable)
 
 function(qe_add_library LIB)
     add_library(${LIB} ${ARGN})
-    target_link_libraries(${LIB} PUBLIC ${QE_MANDATORY_TARGETS})
-    qe_fix_fortran_modules(${LIB})
+    _qe_add_global_target(${LIB} ${ARGN})
 endfunction(qe_add_library)
+
+function(_qe_add_global_target TGT)
+    target_link_libraries(${TGT} PUBLIC ${QE_MANDATORY_TARGETS})
+    qe_fix_fortran_modules(${TGT})
+
+    # Add preprocessing flag for Fortran sources
+    foreach(src IN LISTS ARGN)
+        if(CMAKE_Fortran_COMPILER_ID STREQUAL "AppleClang" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "ARMCC" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "ARMClang" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "Clang" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "Cray" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "Flang" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "G95" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "GNU" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "MSVC" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "XL" OR
+           CMAKE_Fortran_COMPILER_ID STREQUAL "XLClang"
+        )
+            set_source_files_properties(${src} PROPERTIES COMPILE_FLAGS "-cpp")
+        elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
+            set_source_files_properties(${src} PROPERTIES COMPILE_FLAGS "-Mpreprocess")
+        endif()
+    endforeach()
+endfunction(_qe_add_global_target)
 
 function(qe_install_targets TGT)
     set(targets ${TGT} ${ARGN})
@@ -66,25 +90,3 @@ function(qe_install_targets TGT)
         endif()        
     endforeach()
 endfunction(qe_install_targets)
-
-function(qe_add_fortran_preprocessor)
-    foreach(src IN LISTS ARGN)
-        if(CMAKE_Fortran_COMPILER_ID STREQUAL "AppleClang" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "ARMCC" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "ARMClang" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "Clang" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "Cray" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "Flang" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "G95" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "GNU" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "MSVC" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "XL" OR
-           CMAKE_Fortran_COMPILER_ID STREQUAL "XLClang"
-        )
-            set_source_files_properties(${src} PROPERTIES COMPILE_FLAGS "-cpp")
-        elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
-            set_source_files_properties(${src} PROPERTIES COMPILE_FLAGS "-Mpreprocess")
-        endif()
-    endforeach()
-endfunction(qe_add_fortran_preprocessor)

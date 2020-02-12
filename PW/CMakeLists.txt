@@ -233,8 +233,6 @@ set(sources
     src/wannier_clean.f90
     src/wannier_occ.f90)
 
-qe_add_fortran_preprocessor(${sources})
-
 qe_add_library(qe_pw ${sources})
 add_library(QE::PW ALIAS qe_pw)
 target_link_libraries(qe_pw
@@ -253,7 +251,6 @@ target_link_libraries(qe_pw
 # pw.x
 ###########################################################
 set(sources src/pwscf.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pw_exe ${sources})
 set_target_properties(qe_pw_exe PROPERTIES OUTPUT_NAME pw.x)
 target_link_libraries(qe_pw_exe
@@ -264,7 +261,6 @@ target_link_libraries(qe_pw_exe
 # ibrav2cell.x
 ###########################################################
 set(sources tools/ibrav2cell.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pw_tools_ibrav2cell_exe ${sources})
 set_target_properties(qe_pw_tools_ibrav2cell_exe PROPERTIES OUTPUT_NAME ibrav2cell.x)
 target_link_libraries(qe_pw_tools_ibrav2cell_exe
@@ -275,7 +271,6 @@ target_link_libraries(qe_pw_tools_ibrav2cell_exe
 # cell2ibrav.x
 ###########################################################
 set(sources tools/cell2ibrav.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pw_tools_cell2ibrav_exe ${sources})
 set_target_properties(qe_pw_tools_cell2ibrav_exe PROPERTIES OUTPUT_NAME cell2ibrav.x)
 target_link_libraries(qe_pw_tools_cell2ibrav_exe
@@ -286,7 +281,6 @@ target_link_libraries(qe_pw_tools_cell2ibrav_exe
 # ev.x
 ###########################################################
 set(sources tools/ev.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pw_tools_ev_exe ${sources})
 set_target_properties(qe_pw_tools_ev_exe PROPERTIES OUTPUT_NAME ev.x)
 target_link_libraries(qe_pw_tools_ev_exe
@@ -297,7 +291,6 @@ target_link_libraries(qe_pw_tools_ev_exe
 # kpoints.x
 ###########################################################
 set(sources tools/kpoints.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pw_tools_kpoints_exe ${sources})
 set_target_properties(qe_pw_tools_kpoints_exe PROPERTIES OUTPUT_NAME kpoints.x)
 target_link_libraries(qe_pw_tools_kpoints_exe
@@ -308,7 +301,6 @@ target_link_libraries(qe_pw_tools_kpoints_exe
 # pwi2xsf.x
 ###########################################################
 set(sources tools/pwi2xsf.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_pw_tools_pwi2xsf_exe ${sources})
 set_target_properties(qe_pw_tools_pwi2xsf_exe PROPERTIES OUTPUT_NAME pwi2xsf.x)
 target_link_libraries(qe_pw_tools_pwi2xsf_exe

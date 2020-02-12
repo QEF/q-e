@@ -2,7 +2,6 @@
 # k_for_bands.x
 ###########################################################
 set(sources SRC/K_for_bands.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_plotphon_kforbands_exe ${sources})
 set_target_properties(qe_plotphon_kforbands_exe PROPERTIES OUTPUT_NAME k_for_bands.x)
 
@@ -10,7 +9,6 @@ set_target_properties(qe_plotphon_kforbands_exe PROPERTIES OUTPUT_NAME k_for_ban
 # k_for_bands.x
 ###########################################################
 set(sources SRC/Bands_to_gnuplot.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_plotphon_bandstognuplot_exe ${sources})
 set_target_properties(qe_plotphon_bandstognuplot_exe PROPERTIES OUTPUT_NAME bands_to_gnuplot.x)
 
@@ -18,7 +16,6 @@ set_target_properties(qe_plotphon_bandstognuplot_exe PROPERTIES OUTPUT_NAME band
 # E_min_max.x
 ###########################################################
 set(sources SRC/E_min_max.f90)
-qe_add_fortran_preprocessor(${sources})
 qe_add_executable(qe_plotphon_eminmax_exe ${sources})
 set_target_properties(qe_plotphon_eminmax_exe PROPERTIES OUTPUT_NAME E_min_max.x)
 

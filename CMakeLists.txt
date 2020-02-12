@@ -54,6 +54,8 @@ option(QE_ENABLE_TEST
     "enable unit tests" ON)
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
+option(QE_ENABLE_OPENMP
+    "enable distributed execution support via OpenMP" OFF)
 
 ###########################################################
 # Build Features
@@ -135,6 +137,33 @@ if(QE_ENABLE_MPI)
     set_property(TARGET qe_mpi_c
         PROPERTY INTERFACE_COMPILE_DEFINITIONS ${mpi_definitions})
 endif(QE_ENABLE_MPI)
+
+###########################################################
+# OpenMP
+# The following targets will be defined:
+add_library(qe_openmp_fortran INTERFACE)
+add_library(QE::OpenMP_Fortran ALIAS qe_openmp_fortran)
+add_library(qe_openmp_c INTERFACE)
+add_library(QE::OpenMP_C ALIAS qe_openmp_c)
+qe_install_targets(qe_openmp_fortran qe_openmp_c)
+###########################################################
+if(QE_ENABLE_OPENMP)
+    set(openmp_definitions
+        # legacy macro used throughout qe
+        _OPENMP)
+    
+    find_package(OpenMP REQUIRED Fortran C)
+
+    target_link_libraries(qe_openmp_fortran 
+        INTERFACE OpenMP:OpenMP_Fortran)
+    set_property(TARGET qe_openmp_fortran
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${openmp_definitions})
+
+    target_link_libraries(qe_openmp_c 
+        INTERFACE OpenMP:OpenMP_C)
+    set_property(TARGET qe_openmp_c
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${openmp_definitions})
+endif(QE_ENABLE_OPENMP)
 
 ###########################################################
 # Tests

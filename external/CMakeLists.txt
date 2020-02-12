@@ -220,7 +220,6 @@ set(sources
     iotk/src/iotk_dat+LOGICAL4_6.f90
     iotk/src/iotk_unit.f90)
 
-qe_add_fortran_preprocessor(${sources})
 qe_add_library(qe_iotk ${sources})
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
     target_compile_options(qe_iotk PRIVATE "-ffree-line-length-none")
@@ -273,7 +272,6 @@ set(sources
     wannier90/src/wannier_prog.F90
     wannier90/src/ws_distance.F90)
 
-qe_add_fortran_preprocessor(${sources})
 qe_add_library(qe_wannier90 ${sources})
 add_library(QE::WANNIER90 ALIAS qe_wannier90)
 target_link_libraries(qe_wannier90
