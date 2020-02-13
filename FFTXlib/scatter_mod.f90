@@ -18,6 +18,7 @@
 
         USE fft_types, ONLY: fft_type_descriptor
         USE fft_param
+        USE omp_lib
 
         IMPLICIT NONE
 
@@ -35,7 +36,8 @@
 
         PUBLIC :: fft_type_descriptor
         PUBLIC :: gather_grid, scatter_grid
-        PUBLIC :: fft_scatter_xy, fft_scatter_yz, fft_scatter_tg, fft_scatter_tg_opt
+        PUBLIC :: fft_scatter_xy, fft_scatter_yz, fft_scatter_many_xy, fft_scatter_many_yz
+        PUBLIC :: fft_scatter_tg, fft_scatter_tg_opt
         PUBLIC :: cgather_sym, cgather_sym_many, cscatter_sym_many
 
 !=----------------------------------------------------------------------=!
@@ -291,6 +293,315 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 #endif
 
 END SUBROUTINE fft_scatter_xy
+!
+!-----------------------------------------------------------------------
+SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
+  !-----------------------------------------------------------------------
+  !
+  ! transpose of the fft xy planes across the desc%comm2 communicator
+  !
+  ! a) From Y-oriented columns to X-oriented partial slices (isgn > 0)
+  !    Active columns along the Y direction corresponding to a subset of the
+  !    active X values and a range of Z values (in this order) are stored
+  !    consecutively for each processor and are such that the subgroup owns
+  !    all data for a range of Z values.
+  !
+  !    The Y pencil -> X-oriented partial slices transposition is performed
+  !    in the subgroup of processors (desc%comm2) owning this range of Z values.
+  !
+  !    The transpose takes place in two steps:
+  !    1) on each processor the columns are sliced into sections along Y
+  !       that are stored one after the other. On each processor, slices for
+  !       processor "iproc2" are desc%nr2p(iproc2)*desc%nr1p(me2)*desc%my_nr3p big.
+  !    2) all processors communicate to exchange slices (all sectin of columns with
+  !       Y in the slice belonging to "me" must be received, all the others
+  !       must be sent to "iproc2")
+  !
+  !    Finally one gets the "partial slice" representation: each processor has
+  !    all the X values of desc%my_nr2p Y and desc%my_nr3p Z values.
+  !    Data are organized with the X index running fastest, then Y, then Z.
+  !
+  !    f_in  contains the input Y columns, is destroyed on output
+  !    f_aux contains the output X-oriented partial slices.
+  !
+  !  b) From planes to columns (isgn < 0)
+  !
+  !    Quite the same in the opposite direction
+  !    f_aux contains the input X-oriented partial slices, is destroyed on output
+  !    f_in  contains the output Y columns.
+  !
+  IMPLICIT NONE
+
+  TYPE (fft_type_descriptor), INTENT(in), TARGET :: desc
+  INTEGER, INTENT(in)                            :: isgn
+  INTEGER, INTENT(in)                            :: howmany
+
+  COMPLEX (DP), INTENT(inout)   :: f_in (:), f_aux (:)
+
+#if defined(__MPI)
+  !
+  INTEGER :: ierr, me2, nproc2, iproc2, ncpx, nr2px, ip, icompact
+  INTEGER :: i, j, it, it0, k, kfrom, kdest, offset, m1, m2, i1, sendsize
+  INTEGER, POINTER :: iplx(:), nr1p_(:), indx(:,:)
+#if defined(_OPENMP)
+  INTEGER :: my_id
+#endif
+  !
+  me2    = desc%mype2 + 1
+  nproc2 = desc%nproc2
+  !
+  if ( abs (isgn) == 1 ) then      ! It's a potential FFT
+     iplx     => desc%iplp
+     nr1p_    => desc%nr1p
+     indx     => desc%indp
+  else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
+     iplx     => desc%iplw
+     nr1p_    => desc%nr1w
+     indx     => desc%indw
+  else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
+     print *, "ERRORE, this should never happen!"
+  end if
+  !
+#if defined(_OPENMP)
+  my_id = OMP_GET_THREAD_NUM()
+  IF (my_id==0) CALL start_clock ('fft_scatt_many_xy')
+#else
+  CALL start_clock ('fft_scatt_many_xy')
+#endif
+  !
+  ! calculate the message size
+  !
+  nr2px = MAXVAL ( desc%nr2p )                  ! maximum number of Y values to be exchanged
+  ncpx  = MAXVAL ( nr1p_ ) * MAXVAL(desc%nr3p)  ! maximum number of Y columns to be exchanged
+
+  sendsize = howmany * ncpx * nr2px             ! dimension of the scattered chunks
+  !
+  ierr = 0
+  !
+  IF (isgn.gt.0) THEN
+     !
+     ! "forward" scatter from columns to planes
+     !
+     ! step one: store contiguously the slices
+     !
+     offset = 0
+
+     IF (nproc2==1) THEN
+!$omp parallel default(none)                                   &
+!$omp          private(i, j, k, ip, it, m1, m2, i1, icompact)  &
+!$omp          shared(howmany, ncpx, nr2px, nr1p_, iplx)       &
+!$omp&         shared(desc, f_aux, f_in, indx)
+!$omp master
+        ip = nr1p_(1) * desc%my_nr3p + 1
+!$omp taskloop firstprivate(ip)
+        DO k=0, howmany-1
+           DO j = 1, ncpx
+              IF ( j >= ip ) CYCLE
+              it = (j - 1) * nr2px + k * ncpx * nr2px
+              m2 = (j - 1) / nr1p_(1) + 1
+              i1 = mod((j - 1),nr1p_(1)) + 1
+              m1 = indx(i1,1)
+              icompact = m1 + (m2 - 1) * desc%nr1x * desc%my_nr2p
+              DO i = 1, desc%my_nr2p
+                 f_aux( icompact + k * desc%nnr ) = f_in( i + it )
+                 icompact = icompact + desc%nr1x
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp taskloop
+        DO k=0, howmany-1
+           DO j = 1, desc%my_nr2p*desc%my_nr3p
+              DO i1 = 1, desc%nr1x
+                 IF(iplx(i1)==0) f_aux(desc%nr1x*(j-1)+i1+k*desc%nnr) = (0.0_DP, 0.0_DP)
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+     ELSE
+!$omp parallel default(none)                                  &
+!$omp          private(iproc2, i, j, k, kdest, kfrom)         &
+!$omp          shared(nproc2, howmany, ncpx, sendsize, nr1p_) &
+!$omp&         shared(nr2px, desc, f_aux, f_in, me2)
+!$omp master
+!$omp taskloop
+        DO k = 0, howmany-1
+           DO iproc2 = 1, nproc2
+              DO j = 0, nr1p_(me2) * desc%my_nr3p - 1
+                 kdest = ( iproc2 - 1 ) * sendsize + nr2px * (j + k*ncpx)
+                 kfrom = desc%nr2p_offset(iproc2)  + desc%nr2x * (j + k*ncpx)
+                    DO i = 1, desc%nr2p( iproc2 )
+                       f_aux ( kdest + i ) =  f_in ( kfrom + i )
+                    ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+
+        CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
+                           sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+
+        IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+
+!$omp parallel default(none)                                               &
+!$omp          private(iproc2, i, j, k, ip, it, m1, m2, icompact, it0, i1) &
+!$omp          shared(nproc2, howmany, ncpx, sendsize, nr2px, indx)        &
+!$omp&         shared(desc, f_aux, f_in, iplx, nr1p_)
+!$omp master
+!$omp taskloop
+        DO k=0, howmany-1
+           DO iproc2 = 1, nproc2
+              ip = nr1p_(iproc2) * desc%my_nr3p + 1
+              it0 = ( iproc2 - 1 ) * sendsize
+              DO j = 1, ncpx
+                 IF ( j >= ip ) CYCLE
+                 it = it0 + (j - 1) * nr2px + k * ncpx * nr2px
+                 m2 = (j - 1) / nr1p_(iproc2) + 1
+                 i1 = mod((j - 1),nr1p_(iproc2)) + 1
+                 m1 = indx(i1,iproc2)
+                 icompact = m1 + (m2 - 1) * desc%nr1x * desc%my_nr2p
+                 DO i = 1, desc%my_nr2p
+                    f_aux( icompact + k*desc%nnr ) = f_in( i + it )
+                    icompact = icompact + desc%nr1x
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp taskloop
+        DO k=0, howmany-1
+           DO j = 1, desc%my_nr2p*desc%my_nr3p
+              DO i1 = 1, desc%nr1x
+                 IF(iplx(i1)==0) f_aux(desc%nr1x*(j-1)+i1+k*desc%nnr) = (0.0_DP, 0.0_DP)
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+     ENDIF
+     !
+  ELSE
+     !
+     !  "backward" scatter from planes to columns
+     !
+     IF( nproc2 == 1 ) THEN
+!$omp parallel default(none)                                   &
+!$omp          private(i, j, k, ip, it, m1, m2, i1, icompact)  &
+!$omp          shared(howmany, ncpx, nr2px, nr1p_)             &
+!$omp&         shared(desc, f_aux, f_in, indx)
+!$omp master
+        ip = nr1p_(1) * desc%my_nr3p + 1
+!$omp taskloop firstprivate(ip)
+        DO k = 0, howmany - 1
+           DO j = 1, ncpx
+              IF ( j >= ip ) CYCLE
+              it = (j - 1) * nr2px + k * ncpx * nr2px
+              m2 = (j - 1) / nr1p_(1) + 1
+              i1 = mod((j - 1),nr1p_(1)) + 1
+              m1 = indx(i1,1)
+              icompact = m1 + (m2 - 1) * desc%nr1x * desc%my_nr2p
+              DO i = 1, desc%my_nr2p
+                 f_in( i + it ) = f_aux( icompact + k * desc%nnr )
+                 icompact = icompact + desc%nr1x
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+     ELSE
+!$omp parallel default(none)                                               &
+!$omp          private(iproc2, i, j, k, ip, it, m1, m2, icompact, it0, i1) &
+!$omp          shared(nproc2, howmany, ncpx, sendsize, nr2px, indx)        &
+!$omp&         shared(desc, f_aux, f_in, nr1p_)
+!$omp master
+!$omp taskloop
+        DO k=0, howmany-1
+           DO iproc2 = 1, nproc2
+              ip = nr1p_(iproc2) * desc%my_nr3p + 1
+              it0 = ( iproc2 - 1 ) * sendsize
+              DO j = 1, ncpx
+                 IF ( j >= ip ) CYCLE
+                 it = it0 + (j - 1) * nr2px + k * ncpx * nr2px
+                 m2 = (j - 1) / nr1p_(iproc2) + 1
+                 i1 = mod((j - 1),nr1p_(iproc2))+1
+                 m1 = indx(i1,iproc2)
+                 icompact = m1 + (m2 - 1) * desc%nr1x * desc%my_nr2p
+                 DO i = 1, desc%my_nr2p
+                    f_in( i + it ) = f_aux( icompact + k*desc%nnr )
+                    icompact = icompact + desc%nr1x
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+        !
+        !
+        !  step two: communication
+        !
+        CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), &
+                           sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+
+        IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+        !
+        !  step one: store contiguously the columns
+        !
+!$omp parallel default(none)                                  &
+!$omp          private(iproc2, i, j, k, kdest, kfrom)         &
+!$omp          shared(nproc2, howmany, ncpx, sendsize, nr2px) &
+!$omp&         shared(desc, f_aux, f_in, nr1p_, me2)
+!$omp master
+!$omp taskloop
+        DO k = 0, howmany-1
+           DO iproc2 = 1, nproc2
+              DO j = 0, nr1p_(me2) * desc%my_nr3p - 1
+                 kdest = ( iproc2 - 1 ) * sendsize + nr2px * (j + k*ncpx)
+                 kfrom = desc%nr2p_offset(iproc2)  + desc%nr2x * (j + k*ncpx)
+                    DO i = 1, desc%nr2p( iproc2 )
+                       f_in ( kfrom + i ) =  f_aux ( kdest + i )
+                    ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+           ! clean extra array elements in each stick
+        IF( desc%nr2x /= desc%nr2 ) THEN
+!$omp taskloop
+           DO k = 0, howmany-1
+              DO j = 1, nr1p_(me2)*desc%my_nr3p
+                 DO i = desc%nr2+1, desc%nr2x
+                    f_in( k*ncpx*desc%nr2x + (j-1)*desc%nr2x + i) = 0.0d0
+                 END DO
+              END DO
+           ENDDO
+!$omp end taskloop
+        ENDIF
+!$omp end master
+!$omp end parallel
+     ENDIF
+  ENDIF
+
+#if defined(_OPENMP)
+  my_id = OMP_GET_THREAD_NUM()
+  IF (my_id==0) CALL stop_clock ('fft_scatt_many_xy')
+#else
+  CALL stop_clock ('fft_scatt_many_xy')
+#endif
+
+#endif
+
+  RETURN
+98 format ( 10 ('(',2f12.9,')') )
+99 format ( 20 ('(',2f12.9,')') )
+
+END SUBROUTINE fft_scatter_many_xy
 !
 !-----------------------------------------------------------------------
 SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
@@ -554,6 +865,322 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 
 END SUBROUTINE fft_scatter_yz
 !
+!-----------------------------------------------------------------------
+SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
+  !-----------------------------------------------------------------------
+  !
+  ! transpose of the fft yz planes across the desc%comm3 communicator
+  !
+  ! a) From Z-oriented columns to Y-oriented colums (isgn > 0)
+  !    Active columns (or sticks or pencils) along the Z direction for each
+  !    processor are stored consecutively and are such that they correspond
+  !    to a subset of the active X values.
+  !
+  !    The pencil -> slices transposition is performed in the subgroup
+  !    of processors (desc%comm3) owning these X values.
+  !
+  !    The transpose takes place in two steps:
+  !    1) on each processor the columns are sliced into sections along Z
+  !       that are stored one after the other. On each processor, slices for
+  !       processor "iproc3" are desc%nr3p(iproc3)*desc%nsw/nsp(me) big.
+  !    2) all processors communicate to exchange slices (all columns with
+  !       Z in the slice belonging to "me" must be received, all the others
+  !       must be sent to "iproc3")
+  !
+  !    Finally one gets the "slice" representation: each processor has
+  !    desc%nr3p(mype3) Z values of all the active pencils along Y for the
+  !    X values of the current group. Data are organized with the Y index
+  !    running fastest, then the reordered X values, then Z.
+  !
+  !    f_in  contains the input Z columns, is destroyed on output
+  !    f_aux contains the output Y colums.
+  !
+  !  b) From planes to columns (isgn < 0)
+  !
+  !    Quite the same in the opposite direction
+  !    f_aux contains the input Y columns, is destroyed on output
+  !    f_in  contains the output Z columns.
+  !
+  IMPLICIT NONE
+
+  TYPE (fft_type_descriptor), INTENT(in), TARGET :: desc
+  INTEGER, INTENT(in)                            :: isgn
+  INTEGER, INTENT(IN)                            :: howmany
+
+  COMPLEX (DP) :: f_in(:), f_aux(:)
+
+#if defined(__MPI)
+  !
+  INTEGER :: ierr, me, me2, me3, nproc3, iproc3, ncpx, nr3px, ip
+  INTEGER :: i, j, it, it0, k, kfrom, kdest, offset, mc, m1, m2, i1, sendsize
+  INTEGER, POINTER :: ncp_(:), ir1p_(:)
+  INTEGER :: my_nr1p_, l
+#if defined(_OPENMP)
+  INTEGER :: my_id
+#endif
+  !
+  me     = desc%mype  + 1
+  me2    = desc%mype2 + 1
+  me3    = desc%mype3 + 1
+  nproc3 = desc%nproc3
+  !
+  if ( abs (isgn) == 1 ) then      ! It's a potential FFT
+     ncp_     => desc%nsp
+     ir1p_    => desc%ir1p
+     my_nr1p_ = count (desc%ir1p   > 0)
+  else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
+     ncp_     => desc%nsw
+     ir1p_    => desc%ir1w
+     my_nr1p_ = count (desc%ir1w   > 0)
+  else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
+     print *, "ERRORE, this should never happen!"
+  end if
+  !
+#if defined(_OPENMP)
+  my_id = OMP_GET_THREAD_NUM()
+  IF (my_id==0) CALL start_clock ('fft_scatt_many_yz')
+#else
+  CALL start_clock ('fft_scatt_many_yz')
+#endif
+  !
+  ! calculate the message size
+  !
+  nr3px = MAXVAL ( desc%nr3p )  ! maximum number of Z values to be exchanged
+  ncpx  = MAXVAL ( ncp_ )       ! maximum number of Z columns to be exchanged
+
+  sendsize = howmany * ncpx * nr3px       ! dimension of the scattered chunks
+  !
+  ierr = 0
+  IF (isgn.gt.0) THEN
+     !
+     ! "forward" scatter from columns to planes
+     !
+     ! step one: store contiguously the slices
+     !
+     offset = 0
+
+     IF (nproc3==1) THEN
+!$omp parallel default(none)                                   &
+!$omp          private(i, j, k, ip, it, mc, m1, m2, i1)        &
+!$omp          shared(howmany, ncpx, nr3px, desc, f_aux, f_in) &
+!$omp&         shared(ncp_, me2, ir1p_, my_nr1p_)
+!$omp master
+!$omp taskloop
+        DO k=0, howmany-1
+           DO j = 1, desc%my_nr3p*desc%nr2x*my_nr1p_
+              f_aux(j+k*desc%nnr) = (0.0_DP, 0.0_DP)
+           ENDDO
+        ENDDO
+!$omp end taskloop
+        ip = desc%iproc( me2, 1)
+!$omp taskloop firstprivate(ip)
+        DO k=0, howmany-1
+           DO j = 1, ncpx
+              IF ( j>ncp_(ip) ) CYCLE
+              it = (j-1)*nr3px + k*ncpx*nr3px
+              mc = desc%ismap( j + desc%iss(ip) )
+              m1 = mod (mc-1,desc%nr1x) + 1
+              m2 = (mc-1)/desc%nr1x + 1
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
+              DO i = 1, desc%my_nr3p
+                 f_aux( i1 + k*desc%nnr ) = f_in( i + it )
+                 i1 = i1 + desc%nr2x * my_nr1p_
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+     ELSE
+!$omp parallel default(none)                                   &
+!$omp          private(iproc3, i, j, k, kdest, kfrom)          &
+!$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px ) &
+!$omp&         shared(desc, f_aux, f_in, ncp_, me2, me3)
+!$omp master
+!$omp taskloop
+        DO k = 0, howmany-1
+           DO iproc3 = 1, nproc3
+              DO j = 0, ncpx-1
+                 IF (j>=ncp_(desc%iproc(me2,me3))) CYCLE ! control k from 0 to ncp_(desc%iproc(me2,me3))-1
+                 kdest = ( iproc3 - 1 ) * sendsize + nr3px * (j + k*ncpx)
+                 kfrom = desc%nr3p_offset(iproc3)  + desc%nr3x * (j + k*ncpx)
+                    DO i = 1, desc%nr3p( iproc3 )
+                       f_aux ( kdest + i ) =  f_in ( kfrom + i )
+                    ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+        !
+        ! ensures that no garbage is present in the output
+        ! useless; the later accessed elements are overwritten by the A2A step
+        !
+        ! step two: communication  across the    nproc3    group
+        !
+        CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
+                           sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
+
+        IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+        !
+!$omp parallel default(none)                                         &
+!$omp          private(iproc3, i, j, k, ip, it, mc, m1, m2, i1, it0) &
+!$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px)        &
+!$omp&         shared(desc, f_aux, f_in, ncp_, me2, ir1p_, my_nr1p_)
+!$omp master
+!$omp taskloop
+        DO k=0, howmany-1
+           DO j = 1, desc%my_nr3p*desc%nr2x*my_nr1p_
+              f_aux(j+k*desc%nnr) = (0.0_DP, 0.0_DP)
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp taskloop
+        DO k=0, howmany-1
+           DO iproc3 = 1, nproc3
+              ip = desc%iproc( me2, iproc3)
+              it0 = ( iproc3 - 1) * sendsize
+              DO j = 1, ncpx
+                 IF ( j>ncp_(ip) ) CYCLE
+                 it = it0 + (j-1)*nr3px + k*ncpx*nr3px
+                 mc = desc%ismap( j + desc%iss(ip) )
+                 m1 = mod (mc-1,desc%nr1x) + 1
+                 m2 = (mc-1)/desc%nr1x + 1
+                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
+                 DO i = 1, desc%my_nr3p
+                    f_aux( i1 + k*desc%nnr ) = f_in( i + it )
+                    i1 = i1 + desc%nr2x * my_nr1p_
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+     ENDIF
+     !
+  ELSE
+     !
+     !  "backward" scatter from planes to columns
+     !
+     IF( nproc3 == 1 ) THEN
+!$omp parallel default(none)                                   &
+!$omp          private(i, j, k, ip, it, mc, m1, m2, i1)        &
+!$omp          shared(howmany, ncpx, nr3px, desc, f_aux, f_in) &
+!$omp&         shared(ncp_, me2, ir1p_, my_nr1p_)
+!$omp master
+        ip = desc%iproc( me2, 1 )
+!$omp taskloop firstprivate(ip)
+        DO k = 0, howmany - 1
+           DO j = 1, ncpx
+              IF ( j>ncp_(ip) ) CYCLE
+              it = (j-1)*nr3px + k*ncpx*nr3px
+              mc = desc%ismap( j + desc%iss(ip) )
+              m1 = mod (mc-1,desc%nr1x) + 1
+              m2 = (mc-1)/desc%nr1x + 1
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
+              DO i = 1, desc%my_nr3p
+                 f_in( i + it ) = f_aux( i1  + k*desc%nnr )
+                 i1 = i1 + desc%nr2x * my_nr1p_
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+     ELSE
+     !
+!$omp parallel default(none)                                         &
+!$omp          private(iproc3, i, j, k, ip, it, mc, m1, m2, i1, it0) &
+!$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px, desc)  &
+!$omp&         shared(f_aux, f_in, ncp_, me2, ir1p_, my_nr1p_)
+!$omp master
+!$omp taskloop
+        DO k = 0, howmany - 1
+           DO iproc3 = 1, nproc3
+              ip = desc%iproc( me2, iproc3)
+              it0 = ( iproc3 - 1) * sendsize
+              DO j = 1, ncpx
+                 IF ( j>ncp_(ip) ) CYCLE
+                 it = it0 + (j-1)*nr3px + k*ncpx*nr3px
+                 mc = desc%ismap( j + desc%iss(ip) )
+                 m1 = mod (mc-1,desc%nr1x) + 1
+                 m2 = (mc-1)/desc%nr1x + 1
+                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
+                 DO i = 1, desc%my_nr3p
+                    f_in( i + it ) = f_aux( i1  + k*desc%nnr )
+                    i1 = i1 + desc%nr2x * my_nr1p_
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+!$omp end master
+!$omp end parallel
+        !
+        !
+        !  step two: communication
+        !
+        CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), &
+                           sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
+
+        IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+        !
+        !  step one: store contiguously the columns
+        !
+!$omp parallel default(none)                                                  &
+!$omp          private(iproc3, i, j, k, kdest, kfrom, ip, it, mc, m1, m2, i1) &
+!$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px)                 &
+!$omp&         shared(desc, f_aux, f_in, ncp_, me2, me3)
+!$omp master
+!$omp taskloop
+        DO k = 0, howmany-1
+           DO iproc3 = 1, nproc3
+              DO j = 0, ncpx-1   ! was ncp_(me3)
+                 IF (j>=ncp_(desc%iproc(me2,me3))) CYCLE ! control k from 0 to ncp_(desc%iproc(me2,me3))-1
+                 kdest = ( iproc3 - 1 ) * sendsize + nr3px * (j + k*ncpx)
+                 kfrom = desc%nr3p_offset(iproc3)  + desc%nr3x * (j + k*ncpx)
+                 DO i = 1, desc%nr3p( iproc3 )
+                    f_in( kfrom + i ) = f_aux( kdest + i )
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDDO
+!$omp end taskloop
+        ! clean extra array elements in each stick
+        IF( desc%nr3x /= desc%nr3 ) THEN
+!$omp taskloop
+           DO k = 0, howmany-1
+              DO j = 1, ncp_ ( desc%mype+1 )
+                 DO i = desc%nr3+1, desc%nr3x
+                    f_in( k*ncpx*desc%nr3x + (j-1)*desc%nr3x + i) = 0.0d0
+                 END DO
+              END DO
+           END DO
+!$omp end taskloop
+        ENDIF
+!$omp end master
+!$omp end parallel
+     ENDIF
+     !
+  ENDIF
+
+#if defined(_OPENMP)
+  my_id = OMP_GET_THREAD_NUM()
+  IF (my_id==0) CALL stop_clock ('fft_scatt_many_yz')
+#else
+  CALL stop_clock ('fft_scatt_many_yz')
+#endif
+
+#endif
+
+  RETURN
+98 format ( 10 ('(',2f12.9,')') )
+99 format ( 20 ('(',2f12.9,')') )
+
+END SUBROUTINE fft_scatter_many_yz
+
 !-----------------------------------------------------------------------
 SUBROUTINE fft_scatter_tg ( desc, f_in, f_aux, nxx_, isgn )
   !-----------------------------------------------------------------------
