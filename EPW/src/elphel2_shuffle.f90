@@ -184,7 +184,7 @@
   COMPLEX(KIND = DP), EXTERNAL :: zdotc
   !! Important for NAG compiler
   !
-  ALLOCATE(elphmat(ibndstart:ibndend, ibndstart:ibndend, npe), STAT = ierr)
+  ALLOCATE(elphmat(nbndep, nbndep, npe), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating elphmat', 1)
   ALLOCATE(aux1(dffts%nnr, npol), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux1', 1)
@@ -205,8 +205,6 @@
   !
   ! SP: Bound for band parallelism
   CALL fkbounds_bnd(nbndep, lower_band, upper_band)
-  lower_band = lower_band + ibndstart -1
-  upper_band = upper_band + ibndstart -1
   !
   ALLOCATE(aux3(npwx * npol, lower_band:upper_band), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux3', 1)
@@ -418,7 +416,7 @@
       ! 
       aux3 = czero
       DO ibnd = lower_band, upper_band
-        CALL invfft_wave(npw, igk, evc(:,ibnd), aux1)
+        CALL invfft_wave(npw, igk, evc(:,ibnd + ibndstart - 1), aux1)
         IF (timerev) THEN
           CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:, :, ipert)), current_spin)
         ELSE
@@ -439,11 +437,11 @@
       !
       ! 
       DO ibnd =lower_band, upper_band
-        DO jbnd = ibndstart, ibndend
-          elphmat(jbnd, ibnd, ipert) = ZDOTC(npwq, evq(1, jbnd), 1, dvpsi(1, ibnd), 1)
+        DO jbnd = 1, nbndep
+          elphmat(jbnd, ibnd, ipert) = ZDOTC(npwq, evq(1, jbnd + ibndstart - 1), 1, dvpsi(1, ibnd), 1)
           IF (noncolin) THEN
             elphmat(jbnd, ibnd, ipert) = elphmat(jbnd, ibnd, ipert) + &
-               ZDOTC(npwq, evq(npwx + 1, jbnd), 1, dvpsi(npwx + 1, ibnd), 1)
+               ZDOTC(npwq, evq(npwx + 1, jbnd + ibndstart - 1), 1, dvpsi(npwx + 1, ibnd), 1)
           ENDIF
         ENDDO
       ENDDO
@@ -482,8 +480,8 @@
     !  save eph matrix elements into el_ph_mat
     !
     DO ipert = 1, npe
-      DO jbnd = ibndstart, ibndend
-        DO ibnd = ibndstart, ibndend
+      DO jbnd = 1, nbndep
+        DO ibnd = 1, nbndep
           el_ph_mat(ibnd, jbnd, ik, ipert + imode0) = elphmat(ibnd, jbnd, ipert)
         ENDDO
       ENDDO

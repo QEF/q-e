@@ -51,7 +51,7 @@
   USE elph2,         ONLY : epmatq, dynq, et_ks, xkq, ifc, umat, umat_all,      &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat,            &
                             exband, wscache, area,                              &
-                            ibndstart, ibndend, nbndep
+                            nbndep
   USE klist_epw,     ONLY : et_loc, et_all
   USE constants_epw, ONLY : ryd2ev, zero, two, czero, eps6, eps8
   USE fft_base,      ONLY : dfftp
@@ -368,13 +368,13 @@
     !
     ALLOCATE(dynq(nmodes, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating dynq', 1)
-    ALLOCATE(epmatq(ibndstart:ibndend, ibndstart:ibndend, nks, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
+    ALLOCATE(epmatq(nbndep, nbndep, nks, nmodes, nqc1 * nqc2 * nqc3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating epmatq', 1)
     ALLOCATE(epsi(3, 3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating epsi', 1)
     ALLOCATE(zstar(3, 3, nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating zstar', 1)
-    ALLOCATE(bmat(ibndstart:ibndend, ibndstart:ibndend, nks, nqc1 * nqc2 * nqc3), STAT = ierr)
+    ALLOCATE(bmat(nbndep, nbndep, nks, nqc1 * nqc2 * nqc3), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating bmat', 1)
     ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('elphon_shuffle_wrap', 'Error allocating cu', 1)
@@ -687,7 +687,7 @@
         CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
         !
         ! Calculate overlap U_k+q U_k^\dagger
-        IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(ibndstart:, ibndstart:, :, nqc))
+        IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
         !
         !   calculate the sandwiches
         !
@@ -737,7 +737,7 @@
           CALL loadumat(nbndep, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers)
           !
           ! Calculate overlap U_k+q U_k^\dagger
-          IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(ibndstart:, ibndstart:, :, nqc))
+          IF (lpolar) CALL compute_umn_c(nbndep, nbndsub, nks, cu, cuq, bmat(:, :, :, nqc))
           !
           xq0 = -xq0
           !

@@ -28,7 +28,7 @@
   USE gvect,            ONLY : ngm
   USE gvecs,            ONLY : doublegrid
   USE modes,            ONLY : nmodes, nirr, npert, u
-  USE elph2,            ONLY : epmatq, el_ph_mat, ibndstart, ibndend
+  USE elph2,            ONLY : epmatq, el_ph_mat, ibndstart, nbndep
   USE lrus,             ONLY : int3, int3_nc
   USE uspp,             ONLY : okvan
   USE lsda_mod,         ONLY : nspin
@@ -87,7 +87,7 @@
   !
   ! read Delta Vscf and calculate electron-phonon coefficients
   !
-  ALLOCATE(el_ph_mat(ibndstart:ibndend, ibndstart:ibndend, nks, 3 * nat), STAT = ierr)
+  ALLOCATE(el_ph_mat(nbndep, nbndep, nks, 3 * nat), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating el_ph_mat', 1)
   ! 
   imode0 = 0
@@ -155,8 +155,8 @@
   ! note it is not U^\dagger but u_pattern! 
   ! Have a look to symdyn_munu.f90 for comparison
   !
-  DO ibnd = ibndstart, ibndend
-    DO jbnd = ibndstart, ibndend
+  DO ibnd = 1, nbndep
+    DO jbnd = 1, nbndep
       DO ik = 1, nks
         ! 
         ! Here is where we calculate epmatq, it appears to be

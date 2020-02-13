@@ -60,7 +60,7 @@
                             gamma_v_all, esigmar_all, esigmai_all,              &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf,  transp_temp, xkq, lower_bnd, upper_bnd, dos,&
-                            nbndep, ibndstart, nbndep
+                            nbndep
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, ephwan2blochp_mem, ephwan2bloch_mem  
@@ -463,7 +463,7 @@
       DO imode = 1, nmodes
         !
         CALL ephbloch2wane(nbndep, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
-          epmatq (ibndstart:, ibndstart:, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
+          epmatq (:, :, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
         !
       ENDDO
       ! Only the master node writes 

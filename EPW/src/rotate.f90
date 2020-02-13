@@ -311,7 +311,7 @@
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : epmatq, zstar, epsi, bmat, &
-                              ibndstart, ibndend, nbndep
+                              nbndep
     USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
     USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
@@ -345,18 +345,12 @@
     !! Counter of k-point index
     INTEGER :: ibnd
     !! Counter on band index
-    INTEGER :: ibnd1
-    !! Counter on band index
     INTEGER :: jbnd
-    !! Counter on band index
-    INTEGER :: jbnd1
     !! Counter on band index
     INTEGER :: i
     !! Counter on band index
     INTEGER :: j
     !! Counter on band index
-    INTEGER :: nexband_tmp
-    !! Number of excluded bands
     REAL(KIND = DP) :: massfac
     !! square root of mass 
     COMPLEX(KIND = DP) :: eptmp(nmodes)
@@ -390,55 +384,24 @@
     cz_tmp = CONJG(TRANSPOSE(cz2))
     cz2 = cz_tmp
     !
-    nexband_tmp = 0
-    DO i = 1, nbnd
-      IF (exband(i)) THEN
-        nexband_tmp = nexband_tmp + 1
-      ENDIF
-    ENDDO
-    ! 
     ! slim down to the first ndimwin(ikq), ndimwin(ik) states within the outer window
     !
     epmatq_opt = czero
-    IF (nexband_tmp > 0) THEN
-      DO ik = 1, nks
-        jbnd = 0
-        jbnd1 = 0
-        DO j = 1, nbnd
-          IF (exband(j)) CYCLE
-          jbnd1 = jbnd1 + 1
-          IF (lwin(jbnd1, ik)) THEN
-            jbnd = jbnd + 1
-            ibnd = 0
-            ibnd1 = 0
-            DO i = 1, nbnd
-              IF (exband(i)) CYCLE
-              ibnd1 = ibnd1 + 1
-              IF (lwinq(ibnd1, ik)) THEN
-                ibnd = ibnd + 1
-                epmatq_opt(ibnd, jbnd, ik, :) = epmatq(i, j, ik, :, iq)
-              ENDIF
-            ENDDO
-          ENDIF
-        ENDDO
+    DO ik = 1, nks
+      jbnd = 0
+      DO j = 1, nbndep
+        IF (lwin(j, ik)) THEN
+          jbnd = jbnd + 1
+          ibnd = 0
+          DO i = 1, nbndep
+            IF (lwinq(i, ik)) THEN
+              ibnd = ibnd + 1
+              epmatq_opt(ibnd, jbnd, ik, :) = epmatq(i, j, ik, :, iq)
+            ENDIF
+          ENDDO
+        ENDIF
       ENDDO
-    ELSE
-      DO ik = 1, nks
-        jbnd = 0
-        DO j = 1, nbndep
-          IF (lwin(j, ik)) THEN
-            jbnd = jbnd + 1
-            ibnd = 0
-            DO i = 1, nbndep
-              IF (lwinq(i, ik)) THEN
-                ibnd = ibnd + 1
-                epmatq_opt(ibnd, jbnd, ik, :) = epmatq(i, j, ik, :, iq)
-              ENDIF
-            ENDDO
-          ENDIF
-        ENDDO
-      ENDDO
-    ENDIF
+    ENDDO
     ! 
     ! ep_mode(j) = cfac * sum_i ep_cart(i) * u(i,j)
     !
@@ -456,14 +419,14 @@
           IF (lpolar) THEN
             IF ((ABS(xq(1)) > eps8) .OR. (ABS(xq(2)) > eps8) .OR. (ABS(xq(3)) > eps8)) THEN
               CALL rgd_blk_epw(nqc1, nqc2, nqc3, xq, cz2t, eptmp, &
-                       nmodes, epsi, zstar, bmat(ibnd+ibndstart-1, jbnd+ibndstart-1, ik, iq), -one)
+                       nmodes, epsi, zstar, bmat(ibnd, jbnd, ik, iq), -one)
             ENDIF
           ENDIF
           !
           ! rotate epmat in the cartesian representation for this q in the star
           !
           CALL ZGEMV('t', nmodes, nmodes, cone, cz2, nmodes, &
-                    eptmp, 1, czero, epmatq(ibnd+ibndstart-1, jbnd+ibndstart-1, ik, :, iq), 1)
+                    eptmp, 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
         ENDDO
       ENDDO
     ENDDO

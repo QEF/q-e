@@ -56,7 +56,7 @@
                             esigmar_all, esigmai_all, lower_bnd, upper_bnd,     &
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf, transp_temp, xkq, dos,                      &
-                            ibndstart, nbndep
+                            nbndep
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp 
@@ -471,10 +471,10 @@
         !
         IF (etf_mem == 0) THEN 
           CALL ephbloch2wane(nbndep, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
-            epmatq(ibndstart:, ibndstart:, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe(:, :, :, imode, iq))
+            epmatq(:, :, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe(:, :, :, imode, iq))
         ELSE
           CALL ephbloch2wane(nbndep, nbndsub, nks, nkstot, xk_loc, cu, cuq, &
-            epmatq(ibndstart:, ibndstart:, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
+            epmatq(:, :, :, imode, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, imode))
           !
         ENDIF
         !
