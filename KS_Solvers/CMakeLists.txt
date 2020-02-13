@@ -65,6 +65,7 @@ qe_add_library(qe_kssolver_ppcg ${sources_ppcg})
 add_library(QE::KS_Solvers::PPCG ALIAS qe_kssolver_ppcg)
 target_link_libraries(qe_kssolver_ppcg
     PRIVATE
+        QE::SCALAPACK
         QE::OpenMP_Fortran
         QE::LAX
         QE::UTILX

@@ -18,6 +18,7 @@ qe_add_library(qe_lax ${sources})
 add_library(QE::LAX ALIAS qe_lax)
 target_link_libraries(qe_lax
     PRIVATE
+        QE::SCALAPACK
         QE::OpenMP_Fortran
         QE::MPI_Fortran
         QE::LAPACK

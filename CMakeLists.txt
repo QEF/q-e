@@ -79,6 +79,8 @@ option(QE_ENABLE_MPI_MODULE
     "use MPI via Fortran module instead of mpif.h header inclusion" OFF)
 option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
+option(QE_ENABLE_SCALAPACK
+    "enable SCALAPACK execution units" OFF)
 
 # Disable all configuration headers used to be generated
 # by configure (see <qe>/include/)
@@ -106,6 +108,10 @@ if(QE_ENABLE_MPI)
     # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __MPI OMPI_SKIP_MPICXX)
+endif()
+if(QE_ENABLE_SCALAPACK)
+    set_property(TARGET qe_definitions APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS __SCALAPACK)
 endif()
 
 # Feature checks
@@ -162,6 +168,22 @@ target_link_libraries(qe_lapack
         ${LAPACK_LINKER_FLAGS}
         ${LAPACK_LIBRARIES}
 )
+
+###########################################################
+# SCALAPACK
+# The following targets will be defined:
+add_library(qe_scalapack INTERFACE)
+add_library(QE::SCALAPACK ALIAS qe_scalapack)
+qe_install_targets(qe_scalapack)
+###########################################################
+if(QE_ENABLE_SCALAPACK)
+    find_package(SCALAPACK REQUIRED)
+    target_link_libraries(qe_scalapack 
+        INTERFACE 
+            ${SCALAPACK_LIBRARIES}
+            ${SCALAPACK_LINKER_FLAGS}
+    )
+endif(QE_ENABLE_SCALAPACK)
 
 ###########################################################
 # Tests

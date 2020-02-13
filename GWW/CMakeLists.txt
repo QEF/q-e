@@ -186,6 +186,7 @@ qe_add_library(qe_gww_pw4gww ${sources_pw4gww})
 add_library(QE::GWW::pw4gww ALIAS qe_gww_pw4gww)
 target_link_libraries(qe_gww_pw4gww
     PRIVATE
+        QE::SCALAPACK
         QE::PW
         QE::Modules
         QE::GWW

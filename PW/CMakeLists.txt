@@ -237,6 +237,7 @@ qe_add_library(qe_pw ${sources})
 add_library(QE::PW ALIAS qe_pw)
 target_link_libraries(qe_pw
     PUBLIC
+        QE::SCALAPACK
         QE::LAX
         QE::UTILX  # TODO direct or transitive via QE::LAX?
         QE::KS_Solvers::Davidson
