@@ -150,6 +150,20 @@ if(QE_ENABLE_OPENMP)
 endif(QE_ENABLE_OPENMP)
 
 ###########################################################
+# Lapack
+# The following targets will be defined:
+add_library(qe_lapack INTERFACE)
+add_library(QE::LAPACK ALIAS qe_lapack)
+qe_install_targets(qe_lapack)
+###########################################################
+find_package(LAPACK REQUIRED)
+target_link_libraries(qe_lapack 
+    INTERFACE 
+        ${LAPACK_LINKER_FLAGS}
+        ${LAPACK_LIBRARIES}
+)
+
+###########################################################
 # Tests
 # Any executable target marked as test runner via
 # 'add_test()' will be run by the 'test' make target
