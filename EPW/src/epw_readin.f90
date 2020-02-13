@@ -542,7 +542,8 @@
   IF (epbread .AND. epbwrite) CALL errore('epw_readin', 'epbread cannot be used with epbwrite', 1)
   IF (epbread .AND. epwread) CALL errore('epw_readin', 'epbread cannot be used with epwread', 1)
   IF (degaussw * 4.d0 > fsthick) CALL errore('epw_readin', ' degaussw too close to fsthick', 1)
-  IF (nbndskip /= -1) WRITE(stdout, '(A)') 'WARNING: epw_readin: nbndskip is not an input anymore. It is automatically calculated in Wanniezation step.'
+  IF (nbndskip /= -1) WRITE(stdout, '(A)') &
+     'WARNING: epw_readin: nbndskip is not an input anymore. It is automatically calculated in Wannierization step.'
   IF ((nw < 1) .OR. (nw > 1000)) CALL errore ('epw_readin', 'unreasonable nw', 1)
   IF (elecselfen .AND. plselfen) CALL errore('epw_readin', &
       'Electron-plasmon self-energy cannot be computed with electron-phonon', 1)

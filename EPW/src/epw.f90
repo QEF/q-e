@@ -137,8 +137,8 @@
       ! Read Wannier matrix from a previous run
       WRITE(stdout, '(/,5x,a,/,3a,/,5x,a,/)') REPEAT('-',67), '     Using ', &
            TRIM(filukk) , ' from disk', REPEAT('-',67) 
-      ! When wannierize=.false. loadexb should be called in order to load the information on band manifold determined in Wannierization step.
-      CALL loadexb()
+      ! When wannierize=.false. loadbm should be called in order to load the information on band manifold determined in Wannierization step.
+      CALL loadbm()
     ENDIF
     !
     IF (elph) THEN

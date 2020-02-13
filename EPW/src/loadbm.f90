@@ -7,17 +7,17 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  SUBROUTINE loadexb()
+  SUBROUTINE loadbm()
   !----------------------------------------------------------------------------
   !!
-  !! Load the information on the excluded bands in Wannierization
+  !! Load the information on the band manifold determined in Wannierization step
   !! 
   !-----------------------------------------------------------------------
   USE wvfct,         ONLY : nbnd
-  USE epwcom,        ONLY : filukk
+  USE epwcom,        ONLY : filukk, nbndskip
   USE io_var,        ONLY : iunukk
   USE elph2,         ONLY : ibndstart, ibndend, nbndep
-  USE io_global,     ONLY : ionode_id, meta_ionode
+  USE io_global,     ONLY : ionode_id, meta_ionode, stdout
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_bcast
   !
@@ -32,32 +32,17 @@
   !! INTEGER variable for I/O control
   INTEGER :: ierr
   !! Error status
+  CHARACTER*100 dummy
+  LOGICAL lll
   !
   IF (meta_ionode) THEN
     !
-    OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
+    OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', POSITION='REWIND', IOSTAT = ios)
     IF (ios /=0) CALL errore('loadexb', 'error opening ukk file', iunukk)
     !
-    DO ibnd = 1, nbnd
-      READ(iunukk, *) exbands(ibnd)
-    ENDDO
-    !
-    ibndstart = 1
-    DO ibnd = 1, nbnd
-       IF (exbands(ibnd) == .FALSE.) THEN
-          ibndstart = ibnd
-          EXIT
-       ENDIF
-    ENDDO
-    !
-    ibndend= nbnd
-    DO ibnd = nbnd, 1, -1
-       IF (exbands(ibnd) == .FALSE.) THEN
-          ibndend = ibnd
-          EXIT
-       ENDIF
-    ENDDO
+    READ(iunukk, *) ibndstart, ibndend
     nbndep = ibndend - ibndstart + 1
+    nbndskip = ibndstart - 1
     !
     CLOSE(iunukk)
   ENDIF ! meta_ionode
@@ -65,8 +50,9 @@
   CALL mp_bcast(ibndstart, ionode_id, inter_pool_comm)
   CALL mp_bcast(ibndend, ionode_id, inter_pool_comm)
   CALL mp_bcast(nbndep, ionode_id, inter_pool_comm)
+  CALL mp_bcast(nbndskip, ionode_id, inter_pool_comm)
   !
   RETURN
   !-----------------------------------------------------------------------
-  END SUBROUTINE loadexb
+  END SUBROUTINE loadbm
   !-----------------------------------------------------------------------

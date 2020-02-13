@@ -70,7 +70,7 @@ epw_summary.o \
 loadumat.o \
 stop_epw.o \
 wannierEPW.o \
-loadexb.o
+loadbm.o
 
 #default : epw
 

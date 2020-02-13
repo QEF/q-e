@@ -91,9 +91,10 @@
     OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
     IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
     !
-    DO ibnd = 1, nbnd
-      READ(iunukk, *) exband(ibnd)
-    ENDDO
+    ! dummy operation for skipping unnecessary data (ibndstart and ibndend) here 
+    !
+    READ(iunukk, *) ibnd, jbnd
+    !
     DO ik = 1, nkstot
       DO ibnd = 1, nbndep
         DO jbnd = 1, nbndsub
@@ -105,6 +106,9 @@
       DO ibnd = 1, nbndep
         READ(iunukk, *) lwin_big(ibnd, ik)
       ENDDO
+    ENDDO
+    DO ibnd = 1, nbnd
+      READ(iunukk, *) exband(ibnd)
     ENDDO
     ! Read the Wannier centers
     DO iw = 1, nbndsub

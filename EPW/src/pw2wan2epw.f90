@@ -483,17 +483,17 @@
     !  
     ibndstart = 1
     DO ibnd = 1, nbnd
-       IF (excluded_band(ibnd) == .FALSE.) THEN
-          ibndstart = ibnd
-          EXIT
-       ENDIF
+      IF (excluded_band(ibnd) .eqv. .FALSE.) THEN
+        ibndstart = ibnd
+        EXIT
+      ENDIF
     ENDDO
     ibndend= nbnd
     DO ibnd = nbnd, 1, -1
-       IF (excluded_band(ibnd) == .FALSE.) THEN
-          ibndend = ibnd
-          EXIT
-       ENDIF
+      IF (excluded_band(ibnd) .eqv. .FALSE.) THEN
+        ibndend = ibnd
+        EXIT
+      ENDIF
     ENDDO
     nbndep = ibndend - ibndstart + 1
     nbndskip = ibndstart - 1
@@ -2539,7 +2539,7 @@
     USE constants_epw,ONLY : czero, bohr
     USE io_global,    ONLY : meta_ionode
     USE cell_base,    ONLY : alat
-    USE elph2,        ONLY : nbndep
+    USE elph2,        ONLY : nbndep, ibndstart, ibndend
     !
     IMPLICIT NONE
     !
@@ -2584,10 +2584,8 @@
       !
       OPEN(UNIT = iunukk, FILE = filukk, FORM = 'formatted')
       !
-      DO ibnd = 1, nbnd
-        WRITE(iunukk, *) excluded_band(ibnd)
-      ENDDO
-      ! 
+      WRITE(iunukk, *) ibndstart, ibndend
+      !
       DO ik = 1, iknum
         DO ibnd = 1, nbndep
           DO iw = 1, n_wannier
@@ -2604,6 +2602,10 @@
         ENDDO
       ENDDO
       !
+      DO ibnd = 1, nbnd
+        WRITE(iunukk, *) excluded_band(ibnd)
+      ENDDO
+      ! 
       ! Now write the Wannier centers to files
       DO iw = 1, n_wannier
         ! SP : Need more precision other WS are not determined properly. 
