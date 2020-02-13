@@ -403,6 +403,67 @@ target_link_libraries(qe_pp_benchmarklibxc_exe
         QE::PP)
 
 ###########################################################
+# ef.x
+###########################################################
+set(sources 
+    simple_transport/src/cryst_to_car.f90
+    simple_transport/src/lint.f90
+    simple_transport/src/ef.f90
+)
+qe_add_executable(qe_pp_st_ef_exe ${sources})
+set_target_properties(qe_pp_st_ef_exe PROPERTIES OUTPUT_NAME ef.x)
+target_link_libraries(qe_pp_st_ef_exe
+    PRIVATE
+        QE::OpenMP_Fortran)
+
+###########################################################
+# dos_sp.x
+###########################################################
+set(sources 
+    simple_transport/src/smearing_mod.f90 
+    simple_transport/src/cryst_to_car.f90 
+    simple_transport/src/lint.f90
+    simple_transport/src/vband_ibz.f90 
+    simple_transport/src/dos.f90
+)
+qe_add_executable(qe_pp_st_dos_exe ${sources})
+set_target_properties(qe_pp_st_dos_exe PROPERTIES OUTPUT_NAME dos_sp.x)
+target_link_libraries(qe_pp_st_ef_exe
+    PRIVATE
+        QE::OpenMP_Fortran)
+
+###########################################################
+# fermi_int_0.x
+###########################################################
+set(sources 
+    simple_transport/src/cryst_to_car.f90 
+    simple_transport/src/lint.f90 
+    simple_transport/src/vband_ibz.f90 
+    simple_transport/src/fermi_int_0.f90
+)
+qe_add_executable(qe_pp_st_fermiint0_exe ${sources})
+set_target_properties(qe_pp_st_fermiint0_exe PROPERTIES OUTPUT_NAME fermi_int_0.x)
+target_link_libraries(qe_pp_st_ef_exe
+    PRIVATE
+        QE::OpenMP_Fortran)
+
+###########################################################
+# fermi_int_1.x
+###########################################################
+set(sources 
+    simple_transport/src/cryst_to_car.f90 
+    simple_transport/src/reducegrid.f90 
+    simple_transport/src/lint.f90 
+    simple_transport/src/vband_ibz.f90 
+    simple_transport/src/fermi_int_1.f90
+)
+qe_add_executable(qe_pp_st_fermiint1_exe ${sources})
+set_target_properties(qe_pp_st_fermiint1_exe PROPERTIES OUTPUT_NAME fermi_int_1.x)
+target_link_libraries(qe_pp_st_ef_exe
+    PRIVATE
+        QE::OpenMP_Fortran)
+
+###########################################################
 
 qe_install_targets(
     # Libraries
@@ -437,4 +498,9 @@ qe_install_targets(
     qe_pp_fermiproj_exe
     qe_pp_ppacf_exe
     qe_pp_benchmarklibxc_exe
+    # Simple Transport
+    qe_pp_st_ef_exe
+    qe_pp_st_dos_exe
+    qe_pp_st_fermiint0_exe
+    qe_pp_st_fermiint1_exe
 )
