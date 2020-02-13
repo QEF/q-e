@@ -13,32 +13,25 @@
   !! Load the information on the band manifold determined in Wannierization step
   !! 
   !-----------------------------------------------------------------------
-  USE wvfct,         ONLY : nbnd
   USE epwcom,        ONLY : filukk, nbndskip
   USE io_var,        ONLY : iunukk
   USE elph2,         ONLY : ibndstart, ibndend, nbndep
-  USE io_global,     ONLY : ionode_id, meta_ionode, stdout
+  USE io_global,     ONLY : ionode_id, meta_ionode
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_bcast
   !
   IMPLICIT NONE
   ! 
   ! Local variables 
-  LOGICAL :: exbands(nbnd)
-  !! Excluded bands in Wannierization step
   INTEGER :: ibnd
   !! Counter on band index
   INTEGER :: ios
   !! INTEGER variable for I/O control
-  INTEGER :: ierr
-  !! Error status
-  CHARACTER*100 dummy
-  LOGICAL lll
   !
   IF (meta_ionode) THEN
     !
-    OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', POSITION='REWIND', IOSTAT = ios)
-    IF (ios /=0) CALL errore('loadexb', 'error opening ukk file', iunukk)
+    OPEN(iunukk, FILE = filukk, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
+    IF (ios /=0) CALL errore('loadbm', 'error opening ukk file', iunukk)
     !
     READ(iunukk, *) ibndstart, ibndend
     nbndep = ibndend - ibndstart + 1
