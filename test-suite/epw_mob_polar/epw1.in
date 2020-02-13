@@ -24,7 +24,7 @@
   lphase      = .true.
 
   nbndsub     =  14
-  nbndskip    =  12
+  bands_skipped = 'exclude_bands = 1-12'
 
   wannierize  = .true.
   num_iter    = 1500
