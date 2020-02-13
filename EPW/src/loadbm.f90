@@ -23,8 +23,6 @@
   IMPLICIT NONE
   ! 
   ! Local variables 
-  INTEGER :: ibnd
-  !! Counter on band index
   INTEGER :: ios
   !! INTEGER variable for I/O control
   !
