@@ -53,7 +53,7 @@
     USE klist_epw,             ONLY : isk_loc
     USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
     USE funct,                 ONLY : dft_is_gradient, dft_is_nonlocc
-    USE elph2,                 ONLY : lower_band, upper_band
+    USE elph2,                 ONLY : lower_band, upper_band, ibndstart
     USE constants_epw,         ONLY : czero, eps12
     !
     IMPLICIT NONE
@@ -316,7 +316,7 @@
     USE phus,       ONLY : int1, int1_nc, int2, int2_so, alphap
     USE lrus,       ONLY : becp1
     USE eqv,        ONLY : dvpsi
-    USE elph2,      ONLY : lower_band, upper_band
+    USE elph2,      ONLY : lower_band, upper_band, ibndstart
     USE noncollin_module, ONLY : noncolin, npol
     USE constants_epw,    ONLY : czero, zero, cone, eps12
     USE klist_epw,  ONLY : isk_loc
@@ -1140,7 +1140,7 @@
     USE lrus,       ONLY : int3, int3_nc, becp1
     USE qpoint,     ONLY : npwq
     USE eqv,        ONLY : dvpsi
-    USE elph2,      ONLY : lower_band, upper_band
+    USE elph2,      ONLY : lower_band, upper_band, ibndstart
     USE noncollin_module, ONLY : noncolin, npol
     USE constants_epw,    ONLY : czero
     !
