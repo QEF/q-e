@@ -449,7 +449,8 @@
                         ENDDO
                       ENDDO
                     ELSE
-                      ps1(ikb, ibnd) = ps1(ikb, ibnd) + deff(ih, jh, na) * alphap(ipol, ik)%k(jkb, ibnd + ibndstart - 1) * uact(mu + ipol)
+                      ps1(ikb, ibnd) = ps1(ikb, ibnd) + &
+                                       deff(ih, jh, na) * alphap(ipol, ik)%k(jkb, ibnd + ibndstart - 1) * uact(mu + ipol)
                       ps2(ikb, ibnd, ipol) = ps2(ikb, ibnd, ipol) + deff(ih, jh, na) * becp1(ik)%k(jkb, ibnd + ibndstart - 1) * &
                                              (0.d0, -1.d0) * uact(mu + ipol) * tpiba
                     ENDIF
