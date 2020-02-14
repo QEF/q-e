@@ -80,8 +80,9 @@
   USE lrus,             ONLY : becp1
   USE becmod,           ONLY : calbec 
   USE elph2,            ONLY : shift, gmap, el_ph_mat, igk_k_all, &
-                               umat_all, xkq, etq, &
-                               ngk_all, lower_band, upper_band
+                               xkq, etq, &
+                               ngk_all, lower_band, upper_band, &
+                               ibndstart, ibndend, nbndep
   USE fft_base,         ONLY : dffts
   USE constants_epw,    ONLY : czero, cone, ci, zero
   USE control_flags,    ONLY : iverbosity
@@ -172,33 +173,24 @@
   !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
   REAL(KIND = DP) :: zero_vect(3)
   !! Temporary zero vector 
-  COMPLEX(KIND = DP) :: umat(nbnd, nbnd, nks)
-  !! the rotation matrix for the unique setting of the wfs gauge -- on the local pool
-  COMPLEX(KIND = DP) :: umatq(nbnd, nbnd, nks)
-  !! the rotation matrix for the unique setting of the wfs gauge -- on the local pool
   COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:, :)
   !! Auxillary wavefunction 
   COMPLEX(KIND = DP), ALLOCATABLE :: aux2(:, :)
   !! Auxillary wavefunction
   COMPLEX(KIND = DP), ALLOCATABLE :: aux3(:, :)
   !! Auxillary wavefunction
-  COMPLEX(KIND = DP), ALLOCATABLE :: eptmp(:, :)
-  !! Temporary array
   COMPLEX(KIND = DP), ALLOCATABLE :: elphmat(:, :, :)
   !! arrays for e-ph matrix elements 
   COMPLEX(KIND = DP), EXTERNAL :: zdotc
   !! Important for NAG compiler
   !
-  ALLOCATE(elphmat(nbnd, nbnd, npe), STAT = ierr)
+  ALLOCATE(elphmat(nbndep, nbndep, npe), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating elphmat', 1)
-  ALLOCATE(eptmp(nbnd, nbnd), STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating eptmp', 1)
   ALLOCATE(aux1(dffts%nnr, npol), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux1', 1)
   ALLOCATE(aux2(npwx * npol, nbnd), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux2', 1)
   elphmat(:, :, :) = czero
-  eptmp(:, :) = czero
   aux1(:, :) = czero
   aux2(:, :) = czero
   zero_vect = zero
@@ -212,7 +204,7 @@
   CALL fkbounds(nkstot, lower_bnd, upper_bnd)
   !
   ! SP: Bound for band parallelism
-  CALL fkbounds_bnd(nbnd, lower_band, upper_band)
+  CALL fkbounds_bnd(nbndep, lower_band, upper_band)
   !
   ALLOCATE(aux3(npwx * npol, lower_band:upper_band), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error allocating aux3', 1)
@@ -303,11 +295,11 @@
     ! With this option, different compilers and different machines
     ! should always give the same wavefunctions.
     !
-    CALL ktokpmq(xk_loc(:, ik),  zero_vect, +1, ipool, nkk, nkk_abs)
-    CALL ktokpmq(xkq(:, ik), zero_vect, +1, ipool, nkk, nkq_abs)
+!    CALL ktokpmq(xk_loc(:, ik),  zero_vect, +1, ipool, nkk, nkk_abs)
+!    CALL ktokpmq(xkq(:, ik), zero_vect, +1, ipool, nkk, nkq_abs)
     !
-    umat(:, :, ik)  = umat_all(:, :, nkk_abs)
-    umatq(:, :, ik) = umat_all(:, :, nkq_abs)
+!    umat(:, :, ik)  = umat_all(:, :, nkk_abs)
+!    umatq(:, :, ik) = umat_all(:, :, nkq_abs)
     !
     ! the k-vector needed for the KB projectors
     xkqtmp = xkq(:, ik)
@@ -378,7 +370,7 @@
     !
     DO ipol = 1, 3
       aux2 = czero
-      DO ibnd = 1, nbnd
+      DO ibnd = ibndstart, ibndend
         DO ig = 1, npw
           aux2(ig, ibnd) = evc(ig,ibnd) * tpiba * ci * (sxk(ipol) + g(ipol,igk(ig)))
         END DO
@@ -424,7 +416,7 @@
       ! 
       aux3 = czero
       DO ibnd = lower_band, upper_band
-        CALL invfft_wave(npw, igk, evc(:,ibnd), aux1)
+        CALL invfft_wave(npw, igk, evc(:,ibnd + ibndstart - 1), aux1)
         IF (timerev) THEN
           CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:, :, ipert)), current_spin)
         ELSE
@@ -445,11 +437,11 @@
       !
       ! 
       DO ibnd =lower_band, upper_band
-        DO jbnd = 1, nbnd
-          elphmat(jbnd, ibnd, ipert) = ZDOTC(npwq, evq(1, jbnd), 1, dvpsi(1, ibnd), 1)
+        DO jbnd = 1, nbndep
+          elphmat(jbnd, ibnd, ipert) = ZDOTC(npwq, evq(1, jbnd + ibndstart - 1), 1, dvpsi(1, ibnd), 1)
           IF (noncolin) THEN
             elphmat(jbnd, ibnd, ipert) = elphmat(jbnd, ibnd, ipert) + &
-               ZDOTC(npwq, evq(npwx + 1, jbnd), 1, dvpsi(npwx + 1, ibnd), 1)
+               ZDOTC(npwq, evq(npwx + 1, jbnd + ibndstart - 1), 1, dvpsi(npwx + 1, ibnd), 1)
           ENDIF
         ENDDO
       ENDDO
@@ -466,27 +458,30 @@
 !       write(*,*)'elphmat(:, :, :)**2', SUM((REAL(REAL(elphmat(:, :, :))))**2)+SUM((REAL(AIMAG(elphmat(:, :, :))))**2)
 !     ENDIF
 !END
+    !! 02/2020
+    !! The part below is commented since umat and umatq originating from umat_all in setphases_wrap
+    !! are identity matrices.
     !
     !  Rotate elphmat with the gauge matrices (this should be equivalent 
     !  to calculate elphmat with the truely rotated eigenstates)
     ! 
-    DO ipert = 1, npe
-      !
-      ! the two zgemm call perform the following ops:
-      !  elphmat = umat(k+q)^\dagger * [ elphmat * umat(k) ]
-      !
-      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, elphmat(:, :, ipert), & 
-                 nbnd, umat(:, :, ik), nbnd, czero, eptmp, nbnd)
-      CALL ZGEMM('c', 'n', nbnd, nbnd, nbnd, cone, umatq(:, :, ik), & 
-                 nbnd, eptmp, nbnd, czero, elphmat(:, :, ipert), nbnd)
-      !
-    ENDDO
+!    DO ipert = 1, npe
+!      !
+!      ! the two zgemm call perform the following ops:
+!      !  elphmat = umat(k+q)^\dagger * [ elphmat * umat(k) ]
+!      !
+!      CALL ZGEMM('n', 'n', nbnd, nbnd, nbnd, cone, elphmat(:, :, ipert), & 
+!                 nbnd, umat(:, :, ik), nbnd, czero, eptmp, nbnd)
+!      CALL ZGEMM('c', 'n', nbnd, nbnd, nbnd, cone, umatq(:, :, ik), & 
+!                 nbnd, eptmp, nbnd, czero, elphmat(:, :, ipert), nbnd)
+!      !
+!    ENDDO
     !
     !  save eph matrix elements into el_ph_mat
     !
     DO ipert = 1, npe
-      DO jbnd = 1, nbnd
-        DO ibnd = 1, nbnd
+      DO jbnd = 1, nbndep
+        DO ibnd = 1, nbndep
           el_ph_mat(ibnd, jbnd, ik, ipert + imode0) = elphmat(ibnd, jbnd, ipert)
         ENDDO
       ENDDO
@@ -507,8 +502,6 @@
   !
   DEALLOCATE(elphmat, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating elphmat', 1)
-  DEALLOCATE(eptmp, STAT = ierr)
-  IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating eptmp', 1)
   DEALLOCATE(aux1, STAT = ierr)
   IF (ierr /= 0) CALL errore('elphel2_shuffle', 'Error deallocating aux1', 1)
   DEALLOCATE(aux2, STAT = ierr)

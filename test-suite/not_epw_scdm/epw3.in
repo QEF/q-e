@@ -24,7 +24,6 @@
   scdm_sigma        =  2.0
 
   nbndsub     =  8
-  nbndskip    =  0
 
   wannierize  = .true.
   num_iter    = 1500

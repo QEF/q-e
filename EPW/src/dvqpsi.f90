@@ -53,7 +53,7 @@
     USE klist_epw,             ONLY : isk_loc
     USE gc_lr,                 ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
     USE funct,                 ONLY : dft_is_gradient, dft_is_nonlocc
-    USE elph2,                 ONLY : lower_band, upper_band
+    USE elph2,                 ONLY : lower_band, upper_band, ibndstart
     USE constants_epw,         ONLY : czero, eps12
     !
     IMPLICIT NONE
@@ -234,11 +234,11 @@
         aux2(:) = czero
         IF (ip == 1) THEN
           DO ig = 1, npw
-            aux2(dffts%nl(igk(ig))) = evc(ig, ibnd)
+            aux2(dffts%nl(igk(ig))) = evc(ig, ibnd + ibndstart - 1)
           ENDDO
         ELSE
           DO ig = 1, npw
-            aux2(dffts%nl(igk(ig))) = evc(ig + npwx, ibnd)
+            aux2(dffts%nl(igk(ig))) = evc(ig + npwx, ibnd + ibndstart - 1)
           ENDDO
         ENDIF
         !
@@ -316,7 +316,7 @@
     USE phus,       ONLY : int1, int1_nc, int2, int2_so, alphap
     USE lrus,       ONLY : becp1
     USE eqv,        ONLY : dvpsi
-    USE elph2,      ONLY : lower_band, upper_band
+    USE elph2,      ONLY : lower_band, upper_band, ibndstart
     USE noncollin_module, ONLY : noncolin, npol
     USE constants_epw,    ONLY : czero, zero, cone, eps12
     USE klist_epw,  ONLY : isk_loc
@@ -420,9 +420,9 @@
     !
     DO ibnd = lower_band, upper_band
       IF (noncolin) THEN
-        CALL compute_deff_nc(deff_nc, et(ibnd, ik))
+        CALL compute_deff_nc(deff_nc, et(ibnd + ibndstart - 1, ik))
       ELSE
-        CALL compute_deff(deff, et(ibnd, ik))
+        CALL compute_deff(deff, et(ibnd + ibndstart - 1, ik))
       ENDIF
       !
       ijkb0 = 0
@@ -442,15 +442,16 @@
                         DO js = 1, npol
                           ijs = ijs + 1
                           ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + deff_nc(ih, jh, na, ijs) * &
-                                 alphap(ipol, ik)%nc(jkb, js, ibnd) * uact(mu + ipol)
+                                 alphap(ipol, ik)%nc(jkb, js, ibnd + ibndstart - 1) * uact(mu + ipol)
                           ps2_nc(ikb, is, ibnd, ipol) = ps2_nc(ikb, is, ibnd, ipol) + &
-                                 deff_nc(ih, jh, na, ijs) * becp1(ik)%nc(jkb, js, ibnd) * &
+                                 deff_nc(ih, jh, na, ijs) * becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1) * &
                                  (0.d0, -1.d0) * uact(mu + ipol) * tpiba
                         ENDDO
                       ENDDO
                     ELSE
-                      ps1(ikb, ibnd) = ps1(ikb, ibnd) + deff(ih, jh, na) * alphap(ipol, ik)%k(jkb, ibnd) * uact(mu + ipol)
-                      ps2(ikb, ibnd, ipol) = ps2(ikb, ibnd, ipol) + deff(ih, jh, na) * becp1(ik)%k(jkb, ibnd) * &
+                      ps1(ikb, ibnd) = ps1(ikb, ibnd) + &
+                                       deff(ih, jh, na) * alphap(ipol, ik)%k(jkb, ibnd + ibndstart - 1) * uact(mu + ipol)
+                      ps2(ikb, ibnd, ipol) = ps2(ikb, ibnd, ipol) + deff(ih, jh, na) * becp1(ik)%k(jkb, ibnd + ibndstart - 1) * &
                                              (0.d0, -1.d0) * uact(mu + ipol) * tpiba
                     ENDIF
                     IF (okvan) THEN
@@ -460,12 +461,12 @@
                           DO js = 1, npol
                             ijs = ijs + 1
                             ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int1_nc(ih, jh, ipol, na, ijs) * &
-                               becp1(ik)%nc(jkb, js, ibnd) * uact(mu + ipol)
+                               becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1) * uact(mu + ipol)
                           ENDDO
                         ENDDO
                       ELSE
                         ps1(ikb, ibnd) = ps1(ikb, ibnd) + int1(ih, jh, ipol, na, current_spin) * &
-                            becp1(ik)%k(jkb, ibnd) * uact(mu + ipol)
+                            becp1(ik)%k(jkb, ibnd + ibndstart - 1) * uact(mu + ipol)
                       ENDIF
                     ENDIF ! okvan
                   ENDIF  ! uact>0
@@ -479,18 +480,18 @@
                             DO js = 1, npol
                               ijs = ijs + 1
                               ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int2_so(ih, jh, ipol, nb, na, ijs) * &
-                                 becp1(ik)%nc(jkb, js, ibnd) * uact(nu + ipol)
+                                 becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1) * uact(nu + ipol)
                             ENDDO
                           ENDDO
                         ELSE
                           DO is = 1, npol
                             ps1_nc(ikb, is, ibnd) = ps1_nc(ikb, is, ibnd) + int2(ih, jh, ipol, nb, na) * &
-                               becp1(ik)%nc(jkb, is, ibnd) * uact(nu + ipol)
+                               becp1(ik)%nc(jkb, is, ibnd + ibndstart - 1) * uact(nu + ipol)
                           ENDDO
                         ENDIF
                       ELSE
                         ps1(ikb,ibnd) = ps1(ikb,ibnd) + int2(ih, jh, ipol, nb, na) * &
-                            becp1(ik)%k(jkb, ibnd) * uact(nu + ipol)
+                            becp1(ik)%k(jkb, ibnd + ibndstart - 1) * uact(nu + ipol)
                       ENDIF
                     ENDDO
                   ENDIF  ! okvan
@@ -1140,7 +1141,7 @@
     USE lrus,       ONLY : int3, int3_nc, becp1
     USE qpoint,     ONLY : npwq
     USE eqv,        ONLY : dvpsi
-    USE elph2,      ONLY : lower_band, upper_band
+    USE elph2,      ONLY : lower_band, upper_band, ibndstart
     USE noncollin_module, ONLY : noncolin, npol
     USE constants_epw,    ONLY : czero
     !
@@ -1210,12 +1211,12 @@
                      DO is = 1, npol
                        DO js = 1, npol
                          ijs = ijs + 1
-                         sum_nc(is) = sum_nc(is) + int3_nc(ih, jh, na, ijs, ipert) * becp1(ik)%nc(jkb, js, ibnd)
+                         sum_nc(is) = sum_nc(is) + int3_nc(ih, jh, na, ijs, ipert) * becp1(ik)%nc(jkb, js, ibnd + ibndstart - 1)
                        ENDDO
                      ENDDO
                    ELSE
                      sum_k = sum_k + int3(ih,jh,na,current_spin,ipert) * &
-                                 becp1(ik)%k(jkb,ibnd)
+                                 becp1(ik)%k(jkb,ibnd + ibndstart - 1)
                    ENDIF
                  ENDDO
                  IF (noncolin) THEN
