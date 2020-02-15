@@ -45,6 +45,10 @@
       REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:), ev(:)
 #if defined(__CUDA)
       ATTRIBUTES( DEVICE ) :: s, sig, tau, rhot, rhoa, rhos, rhod
+      REAL(DP),      ALLOCATABLE :: bephi_d(:,:), qbecp_d(:,:), qbephi_d(:,:)
+      COMPLEX(DP),   ALLOCATABLE :: cp_d(:,:), phi_d(:,:)
+      REAL(DP),      ALLOCATABLE :: becp_dist_d( :, : )
+      ATTRIBUTES( DEVICE ) :: cp_d, phi_d, bephi_d, qbecp_d, becp_dist_d, qbephi_d
 #endif
       INTEGER  :: i, j, info, nr, nc, ir, ic
       !
@@ -90,71 +94,44 @@
       ALLOCATE( rhod( nss ), STAT = info )
       IF( info /= 0 ) &
          CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
+#if defined(__CUDA)
+      ALLOCATE( cp_d( SIZE( cp, 1 ), SIZE( cp, 2 ) ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating cp_d ', ABS( info ) )
+      info = cudaMemcpy(cp_d, cp, SIZE(cp), cudaMemcpyHostToDevice)
+      ALLOCATE( phi_d( SIZE( phi, 1 ), SIZE( phi, 2 ) ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating phi_d ', ABS( info ) )
+      info = cudaMemcpy(phi_d, phi, SIZE(phi), cudaMemcpyHostToDevice)
+      ALLOCATE( bephi_d( SIZE( bephi, 1 ), SIZE( bephi, 2 ) ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating bephi_d ', ABS( info ) )
+      info = cudaMemcpy(bephi_d, bephi, SIZE(bephi), cudaMemcpyHostToDevice)
+      ALLOCATE( qbecp_d( SIZE( qbecp, 1 ), SIZE( qbecp, 2 ) ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating qbecp_d ', ABS( info ) )
+      info = cudaMemcpy(qbecp_d, qbecp, SIZE(qbecp), cudaMemcpyHostToDevice)
+      ALLOCATE( becp_dist_d( SIZE( becp_dist, 1 ), SIZE( becp_dist, 2 ) ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating becp_dist_d ', ABS( info ) )
+      info = cudaMemcpy(becp_dist_d, becp_dist, SIZE(becp_dist), cudaMemcpyHostToDevice)
+      ALLOCATE( qbephi_d( SIZE( qbephi, 1 ), SIZE( qbephi, 2 ) ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating qbephi_d ', ABS( info ) )
+      info = cudaMemcpy(qbephi_d, qbephi, SIZE(qbephi), cudaMemcpyHostToDevice)
+#endif
       !
       !     rho = <s'c0|s|cp>
       !
       CALL start_clock( 'rhoset' )
       !
-      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nx0, idesc )
+      CALL rhoset( cp_d, ngwx, phi_d, bephi_d, nkbx, qbecp_d, n, nss, istart, rhos, rhoa, nx0, idesc )
       !
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-         !
-         ALLOCATE( rhot( nx0, nx0 ), STAT = info )   !   transpose of rho
-         IF( info /= 0 ) &
-            CALL errore( ' ortho_gamma ', ' allocating rhot ', ABS( info ) )
-#if defined(__CUDA)
-!$cuf kernel do(2) <<<*,*>>>
-         DO j = 1, nc
-            DO i = 1, nr
-               rhot( i, j ) = rhos( j, i )
-            END DO
-         END DO
-!$cuf kernel do(2) <<<*,*>>>
-         DO j = 1, nc
-            DO i = 1, nr
-               rhos( i, j ) = 0.5d0 * ( rhos( i, j ) + rhot( i, j ) )
-            END DO
-         END DO
-!$cuf kernel do(2) <<<*,*>>>
-         DO j = 1, nc
-            DO i = 1, nr
-               rhoa( i, j ) = rhos( i, j ) - rhot( i, j )
-            END DO
-         END DO
-#else
-         !
-         !    distributed array rhos contains "rho", 
-         !    now transpose rhos and store the result in distributed array rhot
-         !
-         CALL sqr_tr_cannon( nss, rhos, nx0, rhot, nx0, idesc )
-         !
-         !  Compute the symmetric part of rho
-         !
-         DO j = 1, nc
-            DO i = 1, nr
-               rhos( i, j ) = 0.5d0 * ( rhos( i, j ) + rhot( i, j ) )
-            END DO
-         END DO
-         !
-         !    distributed array rhos now contains symmetric part of "rho", 
-         !
-         CALL consistency_check( rhos )
-         !
-         !  Antisymmetric part of rho, alredy distributed across ortho procs.
-         !
-         DO j = 1, nc
-            DO i = 1, nr
-               rhoa( i, j ) = rhos( i, j ) - rhot( i, j )
-            END DO
-         END DO
-         !
-#endif
-         DEALLOCATE( rhot )
-         !
-      END IF
-
       CALL stop_clock( 'rhoset' )
 
+#if ! defined(__CUDA)
+      CALL consistency_check(rhos) 
+#endif
 
       CALL start_clock( 'rsg' )
       !
@@ -204,13 +181,13 @@
       !     sig = 1-<cp|s|cp>
       !
       CALL start_clock( 'sigset' )
-      CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nx0, idesc )
+      CALL sigset( cp_d, ngwx, becp_dist_d, nkbx, qbecp_d, n, nss, istart, sig, nx0, idesc )
       CALL stop_clock( 'sigset' )
       !
       !     tau = <s'c0|s|s'c0>
       !
       CALL start_clock( 'tauset' )
-      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nx0, idesc )
+      CALL tauset( phi_d, ngwx, bephi_d, nkbx, qbephi_d, n, nss, istart, tau, nx0, idesc )
       CALL stop_clock( 'tauset' )
       !
       CALL start_clock( 'ortho_iter' )
@@ -244,6 +221,9 @@
       CALL stop_clock( 'ortho_iter' )
       !
       DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
+#if defined(__CUDA)
+      DEALLOCATE( cp_d, phi_d, bephi_d, qbecp_d, becp_dist_d, qbephi_d )
+#endif
       !
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 )  CALL consistency_check( x0 )
 
@@ -288,11 +268,13 @@
          ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
          ! that the program goes on forever doing nothing and writing nothing.
          !
-         DO j = 1, nc
-            DO i = 1, nr
-               IF (a(i,j) /= a(i,j)) CALL errore(' ortho ',' ortho went bananas ',1)
+         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+            DO j = 1, idesc(LAX_DESC_NC)
+               DO i = 1, idesc(LAX_DESC_NR)
+                  IF (a(i,j) /= a(i,j)) CALL errore(' ortho ',' ortho went bananas ',1)
+               END DO
             END DO
-         END DO
+         END IF
          RETURN
       END SUBROUTINE
 

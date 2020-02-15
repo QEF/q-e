@@ -6,6 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#if defined(__CUDA)
+#define DGEMMDRV cublasDgemm
+#else
+#define DGEMMDRV dgemm
+#endif
 
 MODULE orthogonalize_base
 
@@ -509,10 +514,10 @@ CONTAINS
          !                       dd   = x0*tau*x0  (2nd and 3rd call)
          !                       tmp2 = x0*rhos    (4th call)
          !
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhor, ldx, 0.D0, tmp1, ldx )
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , tau, ldx, xloc_d, ldx, 0.D0, tmp2, ldx )
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, tmp2, ldx, 0.D0, dd, ldx )
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhos, ldx, 0.D0, tmp2, ldx )
+         CALL DGEMMDRV( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhor, ldx, 0.D0, tmp1, ldx )
+         CALL DGEMMDRV( 'N','N', nss, nss, nss, 1.D0 , tau, ldx, xloc_d, ldx, 0.D0, tmp2, ldx )
+         CALL DGEMMDRV( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, tmp2, ldx, 0.D0, dd, ldx )
+         CALL DGEMMDRV( 'N','N', nss, nss, nss, 1.D0 , xloc_d, ldx, rhos, ldx, 0.D0, tmp2, ldx )
          !
 !$cuf kernel do(2) <<<*,*>>>
          DO i=1,nr
@@ -542,8 +547,8 @@ CONTAINS
          !                       tmp1 = x1*u
          !                       tmp2 = ut*x1*u
          !
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , x1, ldx, u, ldx, 0.D0, tmp1, ldx )
-         CALL cublasDgemm( 'T','N', nss, nss, nss, 1.D0 , u, ldx, tmp1, ldx, 0.D0, tmp2, ldx )
+         CALL DGEMMDRV( 'N','N', nss, nss, nss, 1.D0 , x1, ldx, u, ldx, 0.D0, tmp1, ldx )
+         CALL DGEMMDRV( 'T','N', nss, nss, nss, 1.D0 , u, ldx, tmp1, ldx, 0.D0, tmp2, ldx )
          !
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
@@ -558,8 +563,8 @@ CONTAINS
          !                       tmp2 = g*ut
          !                       x0 = u*g*ut
          !
-         CALL cublasDgemm( 'N','T', nss, nss, nss, 1.D0 , tmp1, ldx, u, ldx, 0.D0, tmp2, ldx )
-         CALL cublasDgemm( 'N','N', nss, nss, nss, 1.D0 , u, ldx, tmp2, ldx, 0.D0, xloc_d, ldx )
+         CALL DGEMMDRV( 'N','T', nss, nss, nss, 1.D0 , tmp1, ldx, u, ldx, 0.D0, tmp2, ldx )
+         CALL DGEMMDRV( 'N','N', nss, nss, nss, 1.D0 , u, ldx, tmp2, ldx, 0.D0, xloc_d, ldx )
          !
       END DO ITERATIVE_LOOP
 
@@ -744,11 +749,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
-#if defined(__CUDA)
-   SUBROUTINE sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, ist, sig_d, ldx, idesc )
-#else
    SUBROUTINE sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, ist, sig, ldx, idesc )
-#endif
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -758,6 +759,7 @@ CONTAINS
 !
 #if defined(__CUDA)
       USE cudafor
+      USE cublas
 #endif
       USE kinds,              ONLY: DP
       USE uspp,               ONLY: nkb, nkbus
@@ -776,11 +778,9 @@ CONTAINS
       COMPLEX(DP) :: cp( ngwx, n )
       REAL(DP)    :: qbecp( nkbx, ldx )
       REAL(DP)    :: becp_dist( nkbx, ldx )
-#if defined(__CUDA)
-      REAL(DP)    :: sig_d( ldx, ldx )
-      ATTRIBUTES( DEVICE ) :: sig_d
-#else
       REAL(DP)    :: sig( ldx, ldx )
+#if defined(__CUDA)
+      ATTRIBUTES( DEVICE ) :: cp, qbecp, becp_dist, sig
 #endif
       INTEGER, INTENT(IN) :: idesc(:)
 !
@@ -791,7 +791,7 @@ CONTAINS
       !
       REAL(DP), ALLOCATABLE :: sigp(:,:)
 #if defined(__CUDA)
-      REAL(DP), ALLOCATABLE :: sig(:,:)
+      ATTRIBUTES( DEVICE ) :: sigp
 #endif
 !
       IF( nss < 1 ) RETURN
@@ -804,9 +804,6 @@ CONTAINS
       nx = idesc(LAX_DESC_NRCX)
 
       ALLOCATE( sigp( nx, nx ) ) 
-#if defined(__CUDA)
-      ALLOCATE( sig( ldx, ldx ) )
-#endif
 
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          IF( idesc(LAX_DESC_NRCX) /= ldx ) &
@@ -842,7 +839,8 @@ CONTAINS
                root = root * leg_ortho
 
                IF( ngw > 0 ) THEN 
-                  CALL dgemm( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
+                  CALL DGEMMDRV &
+                       ( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
                            cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
                ELSE
                   sigp = 0.0d0
@@ -851,7 +849,17 @@ CONTAINS
                !     q = 0  components has weight 1.0
                !
                IF ( gstart == 2 ) THEN
+#if defined(__CUDA)
+!$cuf kernel do(2) <<<*,*>>>
+                  DO j = 1, nc
+                    DO i = 1, nr
+                      sigp(i,j) = sigp(i,j) - DBLE(cp(1,ist+ir-1+i-1))  * DBLE(cp(1,ist+ic-1+j-1)) &
+                                            - DIMAG(cp(1,ist+ir-1+i-1)) * DIMAG(cp(1,ist+ic-1+j-1))
+                    END DO
+                  END DO
+#else
                   CALL DGER( nr, nc, 1.D0, cp(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, sigp, nx )
+#endif
                END IF
                !
                CALL mp_root_sum( sigp, sig, root, intra_bgrp_comm )
@@ -868,7 +876,10 @@ CONTAINS
          CALL mp_sum( sig, inter_bgrp_comm )
       END IF
       !
+#if defined(__CUDA)
+#else
       CALL laxlib_dsqmsym( nss, sig, nx, idesc )
+#endif
       !
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          !
@@ -878,29 +889,19 @@ CONTAINS
          ic = idesc(LAX_DESC_IC)
          !
          IF( idesc(LAX_DESC_MYR) == idesc(LAX_DESC_MYC) ) THEN
+!$cuf kernel do(1) <<<*,*>>>
             DO i = 1, nr
                sig(i,i) = sig(i,i) + 1.0d0
             END DO
          END IF
          !
          IF( nkbus > 0 ) THEN
-            CALL dgemm( 'T', 'N', nr, nc, nkb, -1.0d0, becp_dist( 1, 1 ), &
+            CALL DGEMMDRV &
+                 ( 'T', 'N', nr, nc, nkb, -1.0d0, becp_dist( 1, 1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
-         IF( iverbosity > 2 ) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    sig '
-            DO i = 1, nr
-               WRITE( stdout,'(7f11.6)' ) ( sig(i,j), j=1, nc )
-            END DO
-         ENDIF
-         !
       END IF
-#if defined(__CUDA)
-      info = cudaMemcpy(sig_d, sig, ldx*ldx, cudaMemcpyHostToDevice)
-      DEALLOCATE( sig )
-#endif
       !
       RETURN
    END SUBROUTINE sigset
@@ -908,11 +909,7 @@ CONTAINS
 
 !
 !-----------------------------------------------------------------------
-#if defined(__CUDA)
-   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho_d, ldx, idesc )
-#else
-   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, ldx, idesc )
-#endif
+   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, rhoa, ldx, idesc )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), phi, bephi, qbecp
 !     computes the matrix
@@ -923,6 +920,7 @@ CONTAINS
 !
 #if defined(__CUDA)
       USE cudafor
+      USE cublas
 #endif
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
@@ -940,11 +938,10 @@ CONTAINS
       INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbecp( nkbx, ldx )
-#if defined(__CUDA)
-      REAL(DP)    :: rho_d( ldx, ldx )
-      ATTRIBUTES( DEVICE ) :: rho_d
-#else
       REAL(DP)    :: rho( ldx, ldx )
+      REAL(DP)    :: rhoa( ldx, ldx )
+#if defined(__CUDA)
+      ATTRIBUTES( DEVICE ) :: cp, phi, bephi, qbecp, rho, rhoa
 #endif
       INTEGER, INTENT(IN) :: idesc(:)
       !
@@ -955,7 +952,7 @@ CONTAINS
 
       REAL(DP), ALLOCATABLE :: rhop(:,:)
 #if defined(__CUDA)
-      REAL(DP), ALLOCATABLE :: rho(:,:)
+      ATTRIBUTES( DEVICE ) :: rhop
 #endif
       !
       !     <phi|cp>
@@ -979,9 +976,6 @@ CONTAINS
       END IF
 
       ALLOCATE( rhop( nx, nx ) )
-#if defined(__CUDA)
-      ALLOCATE( rho( ldx, ldx ) )
-#endif
      
       rhop = 0.0d0
       IF( nbgrp > 1 ) THEN
@@ -1010,7 +1004,8 @@ CONTAINS
                root = root * leg_ortho
 
                IF( ngw > 0 ) THEN
-                  CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+                  CALL DGEMMDRV &
+                       ('T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                               cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
                ELSE
                   rhop = 0.0d0
@@ -1019,7 +1014,18 @@ CONTAINS
                !     q = 0  components has weight 1.0
                !
                IF (gstart == 2) THEN
-                  CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
+#if defined(__CUDA)
+!$cuf kernel do(2) <<<*,*>>>
+                  DO j = 1, nc
+                    DO i = 1, nr
+                      rhop(i,j) = rhop(i,j) - REAL(phi(1,ist+ir-1+i-1),DP) * REAL(cp(1,ist+ic-1+j-1),DP) &
+                                            - DIMAG(phi(1,ist+ir-1+i-1)) * DIMAG(cp(1,ist+ic-1+j-1))
+                    END DO
+                  END DO
+                  !CALL cublasDger ( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
+#else
+                  CALL dger ( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
+#endif
                END IF
 
                CALL mp_root_sum( rhop, rho, root, intra_bgrp_comm )
@@ -1029,7 +1035,6 @@ CONTAINS
          END DO
       END DO
  
-      DEALLOCATE( rhop )
 
       IF( nbgrp > 1 ) THEN
          CALL mp_sum( rho, inter_bgrp_comm )
@@ -1049,34 +1054,76 @@ CONTAINS
             !
             ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
             !
-            CALL dgemm( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
+            CALL DGEMMDRV &
+                 ( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
 
-         END IF
-
-         IF ( iverbosity > 2 ) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    rho '
-            DO i=1,nr
-               WRITE( stdout,'(7f11.6)') (rho(i,j),j=1,nc)
-            END DO
          END IF
 
       END IF
+      !
+      ! NOW get the symmetric and antisymmetric part of rho
+      !
+      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+         !
+         nr = idesc(LAX_DESC_NR)
+         nc = idesc(LAX_DESC_NC)
+         !
 #if defined(__CUDA)
-      info = cudaMemcpy(rho_d, rho, ldx*ldx, cudaMemcpyHostToDevice) 
-      DEALLOCATE( rho )
+!$cuf kernel do(2) <<<*,*>>>
+         DO j = 1, nc
+            DO i = 1, nr
+               rhop( i, j ) = rho( j, i )
+            END DO
+         END DO
+!$cuf kernel do(2) <<<*,*>>>
+         DO j = 1, nc
+            DO i = 1, nr
+               rho( i, j ) = 0.5d0 * ( rho( i, j ) + rhop( i, j ) )
+            END DO
+         END DO
+!$cuf kernel do(2) <<<*,*>>>
+         DO j = 1, nc
+            DO i = 1, nr
+               rhoa( i, j ) = rho( i, j ) - rhop( i, j )
+            END DO
+         END DO
+#else
+         !
+         !    distributed array rhos contains "rho",
+         !    now transpose rhos and store the result in distributed array rhot
+         !
+         CALL sqr_tr_cannon( nss, rho, nx, rhop, nx, idesc )
+         !
+         !  Compute the symmetric part of rho
+         !
+         DO j = 1, nc
+            DO i = 1, nr
+               rho( i, j ) = 0.5d0 * ( rho( i, j ) + rhop( i, j ) )
+            END DO
+         END DO
+         !
+         !  distributed array rhos now contains symmetric part of "rho",
+         !
+         !  Antisymmetric part of rho, alredy distributed across ortho procs.
+         !
+         DO j = 1, nc
+            DO i = 1, nr
+               rhoa( i, j ) = rho( i, j ) - rhop( i, j )
+            END DO
+         END DO
+         !
 #endif
+         !
+      END IF
+      !
+      DEALLOCATE( rhop )
       !
       RETURN
    END SUBROUTINE rhoset
 
 
 !-------------------------------------------------------------------------
-#if defined(__CUDA)
-   SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau_d, ldx, idesc )
-#else
    SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, ldx, idesc )
-#endif
 !-----------------------------------------------------------------------
 !     input: phi
 !     computes the matrix
@@ -1086,6 +1133,7 @@ CONTAINS
 !
 #if defined(__CUDA)
       USE cudafor
+      USE cublas
 #endif
       USE kinds,              ONLY: DP
       USE uspp,               ONLY: nkb, nkbus
@@ -1103,11 +1151,9 @@ CONTAINS
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbephi( nkbx, ldx )
-#if defined(__CUDA)
-      REAL(DP)    :: tau_d( ldx, ldx )
-      ATTRIBUTES( DEVICE ) :: tau_d
-#else
       REAL(DP)    :: tau( ldx, ldx )
+#if defined(__CUDA)
+      ATTRIBUTES( DEVICE ) :: phi, bephi, qbephi, tau
 #endif
       INTEGER, INTENT(IN) :: idesc(:)
       !
@@ -1118,7 +1164,7 @@ CONTAINS
 
       REAL(DP), ALLOCATABLE :: taup( :, : )
 #if defined(__CUDA)
-      REAL(DP), ALLOCATABLE :: tau(:,:)
+      ATTRIBUTES( DEVICE ) :: taup
 #endif
       !
       IF( nss < 1 ) RETURN
@@ -1140,9 +1186,6 @@ CONTAINS
       END IF
       !
       ALLOCATE( taup( nx, nx ) )
-#if defined(__CUDA)
-      ALLOCATE( tau( ldx, ldx ) )
-#endif
       !
       taup = 0.0d0
       !
@@ -1178,7 +1221,8 @@ CONTAINS
                !  with their own part of wavefunctions
                !
                IF( ngw > 0 ) THEN
-                  CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+                  CALL DGEMMDRV &
+                       ( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                            phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nx )
                ELSE
                   taup = 0.0d0
@@ -1187,7 +1231,18 @@ CONTAINS
                !           q = 0  components has weight 1.0
                !
                IF (gstart == 2) THEN
+#if defined(__CUDA)
+                  !CALL CUBLASDGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
+!$cuf kernel do(2) <<<*,*>>>
+                  DO j = 1, nc
+                    DO i = 1, nr
+                      taup(i,j) = taup(i,j) - REAL(phi(1,ist+ir-1+i-1),DP) * REAL(phi(1,ist+ic-1+j-1),DP) &
+                                            - DIMAG(phi(1,ist+ir-1+i-1)) * DIMAG(phi(1,ist+ic-1+j-1))
+                    END DO
+                  END DO
+#else
                   CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
+#endif
                END IF
                !
                CALL mp_root_sum( taup, tau, root, intra_bgrp_comm )
@@ -1204,7 +1259,10 @@ CONTAINS
          CALL mp_sum( tau, inter_bgrp_comm )
       END IF
       !
+#if defined(__CUDA)
+#else
       CALL laxlib_dsqmsym( nss, tau, nx, idesc )
+#endif
       !
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          !
@@ -1217,23 +1275,12 @@ CONTAINS
          !
          IF( nkbus > 0 ) THEN
             !
-            CALL dgemm( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
+            CALL DGEMMDRV &
+                 ( 'T', 'N', nr, nc, nkb, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
             !
          END IF
 
-         IF( iverbosity > 2 ) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    tau '
-            DO i=1,nr
-               WRITE( stdout,'(7f11.6)') (tau(i,j),j=1,nc)
-            END DO
-         ENDIF
-         !
       ENDIF
-#if defined(__CUDA)
-      info = cudaMemcpy(tau_d, tau, ldx*ldx, cudaMemcpyHostToDevice)
-      DEALLOCATE( tau )
-#endif
       !
       RETURN
    END SUBROUTINE tauset
