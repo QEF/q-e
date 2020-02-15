@@ -369,7 +369,7 @@
 
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
 
-#if defined(__MPI)
+#if defined(__MPI) && ! defined(__CUDA)
             !
             CALL c2psi_gamma_tg(dffts, psis, c_bgrp, i, nbsp_bgrp )
 
