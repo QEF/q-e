@@ -63,8 +63,8 @@ PROGRAM pwscf
   !
   CALL mp_startup( start_images=.TRUE. )
   !
-  !IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
-  IF( do_diag_in_band_group ) THEN
+  IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
+  !IF( do_diag_in_band_group ) THEN
      ! used to be the default : one diag group per bgrp
      ! with strict hierarchy: POOL > BAND > DIAG
      ! if using exx groups from mp_exx still use this diag method
