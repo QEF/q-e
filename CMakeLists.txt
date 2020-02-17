@@ -195,6 +195,91 @@ target_link_libraries(qe_lapack
 )
 
 ###########################################################
+# FFT
+# The following targets will be defined:
+add_library(qe_fft INTERFACE)
+add_library(QE::FFT ALIAS qe_fft)
+qe_install_targets(qe_fft)
+###########################################################
+set(FFTW_FIND_QUIETLY ON)
+set(fft_components LONG) # TODO check precision needed
+if(QE_ENABLE_OPENMP)
+    list(APPEND fft_components OMP)
+endif()
+# 1: look for well known vendor specific implementations
+# 1.a: IBM ESSL
+if(NOT FFTW_FOUND)
+    find_package(FFTW COMPONENTS ESSL ${fft_components})
+    if(FFTW_FOUND)
+        message(STATUS "Found IBM ESSL FFT!")
+        set(fft_definitions __LINUX_ESSL)
+        target_link_libraries(qe_fft 
+            INTERFACE 
+                ${FFTW_LIBRARIES}
+                ${FFTW_LIBRARIES_DEP}
+                ${FFTW_LINKER_FLAGS})
+        target_include_directories(qe_fft
+            INTERFACE
+                ${FFTW_INCLUDE_DIRS}
+                ${FFTW_INCLUDE_DIRS_DEP})
+        target_compile_options(qe_fft
+            INTERFACE
+                ${FFTW_C_FLAGS})
+    endif()
+endif()
+# 1.b: Intel MKL
+if(NOT FFTW_FOUND)
+    find_package(FFTW COMPONENTS MKL ${fft_components})
+    if(FFTW_FOUND)
+        message(STATUS "Found Intel MKL FFT!")
+        set(fft_definitions __DFTI)
+        target_link_libraries(qe_fft 
+            INTERFACE 
+                ${FFTW_LIBRARIES}
+                ${FFTW_LIBRARIES_DEP}
+                ${FFTW_LINKER_FLAGS})
+        target_include_directories(qe_fft
+            INTERFACE
+                ${FFTW_INCLUDE_DIRS}
+                ${FFTW_INCLUDE_DIRS_DEP})
+        target_compile_options(qe_fft
+            INTERFACE
+                ${FFTW_C_FLAGS})
+    endif()
+endif(NOT FFTW_FOUND)
+# 2: no vendor-specific fft flavor has been found,
+#    just look for a generic FFTW implementation
+if(NOT FFTW_FOUND)
+    find_package(FFTW COMPONENTS ${fft_components})
+    if(FFTW_FOUND)
+        message(STATUS "Found generic FFTW implementation!")
+        set(fft_definitions __FFTW3)
+        target_link_libraries(qe_fft 
+            INTERFACE 
+                ${FFTW_LIBRARIES}
+                ${FFTW_LIBRARIES_DEP}
+                ${FFTW_LINKER_FLAGS})
+        target_include_directories(qe_fft
+            INTERFACE
+                ${FFTW_INCLUDE_DIRS}
+                ${FFTW_INCLUDE_DIRS_DEP})
+        target_compile_options(qe_fft
+            INTERFACE
+                ${FFTW_C_FLAGS})
+    endif()
+endif(NOT FFTW_FOUND)
+# 3: cannot find anything useful, just fall back
+#    to the internal FFTW
+if(NOT FFTW_FOUND)
+    message(STATUS "FFTW is falling back to QE internal implementation (FFTXLib)")
+    set(fft_definitions __FFTW)
+endif(NOT FFTW_FOUND)
+# Set the FFT configuration macro on both QE::FFT_* and global
+# QE::Definitions targets:
+set_property(TARGET qe_definitions APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${fft_definitions})
+
+###########################################################
 # SCALAPACK
 # The following targets will be defined:
 add_library(qe_scalapack INTERFACE)

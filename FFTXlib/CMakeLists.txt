@@ -19,11 +19,11 @@ set(f_sources
     # FFT backends:
     # Builtin:
     fft_scalar.FFTW.f90
-    # TODO: platform-specific stuff
-    # fft_scalar.ARM_LIB.f90
-    # fft_scalar.DFTI.f90
-    # fft_scalar.ESSL.f90
-    # fft_scalar.FFTW3.f90
+    # Vendor specific
+    fft_scalar.ARM_LIB.f90
+    fft_scalar.DFTI.f90
+    fft_scalar.ESSL.f90
+    fft_scalar.FFTW3.f90
     # fft_scalar.SX6.f90
 )
 
@@ -37,6 +37,7 @@ qe_add_library(qe_fftx ${f_sources} ${c_sources})
 add_library(QE::FFTX ALIAS qe_fftx)
 target_link_libraries(qe_fftx
     PRIVATE
+        QE::FFT
         QE::OpenMP_Fortran
         QE::MPI_Fortran
         QE::LAPACK)
