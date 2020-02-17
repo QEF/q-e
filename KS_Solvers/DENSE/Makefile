@@ -1,17 +1,20 @@
-# Makefile for DAVID_RCI
+# Makefile for DENSE diagonalization
 
 include ../../make.inc
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
-DAVID_RCI = \
-david_rci.o 
+DENSE = \
+rotate_HSpsi_gamma.o \
+rotate_HSpsi_k.o \
+rotate_wfc_gamma.o \
+rotate_wfc_k.o 
 
-all : libdavid_rci.a
+all : libdense.a
 
 
-libdavid_rci.a:  $(DAVID_RCI)
+libdense.a:  $(DENSE)
 	$(AR) $(ARFLAGS) $@ $?       
 	$(RANLIB) $@    
 

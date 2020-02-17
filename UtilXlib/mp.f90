@@ -30,7 +30,7 @@ MODULE mp
     mp_group_create, mp_comm_split, mp_set_displs, &
     mp_circular_shift_left, mp_circular_shift_left_start, &
     mp_get_comm_null, mp_get_comm_self, mp_count_nodes, &
-    mp_type_create_column_section, mp_type_free, &
+    mp_type_create_column_section, mp_type_create_row_section, mp_type_free, &
     mp_allgather, mp_waitall, mp_testall
   !
   INTERFACE mp_bcast
@@ -115,6 +115,7 @@ MODULE mp
    ! 
    INTERFACE mp_allgather
      MODULE PROCEDURE mp_allgatherv_inplace_cplx_array
+     MODULE PROCEDURE mp_allgatherv_inplace_real_array
 #if defined(__CUDA)
      MODULE PROCEDURE mp_allgatherv_inplace_cplx_array_gpu
 #endif
@@ -152,8 +153,19 @@ MODULE mp
    ! 
    INTERFACE mp_type_create_column_section
      MODULE PROCEDURE mp_type_create_cplx_column_section
+     MODULE PROCEDURE mp_type_create_real_column_section
 #if defined(__CUDA)
      MODULE PROCEDURE mp_type_create_cplx_column_section_gpu
+     MODULE PROCEDURE mp_type_create_real_column_section_gpu
+#endif
+   END INTERFACE
+
+   INTERFACE mp_type_create_row_section
+     MODULE PROCEDURE mp_type_create_cplx_row_section
+     MODULE PROCEDURE mp_type_create_real_row_section
+#if defined(__CUDA)
+     MODULE PROCEDURE mp_type_create_cplx_row_section_gpu
+     MODULE PROCEDURE mp_type_create_real_row_section_gpu
 #endif
    END INTERFACE
 !------------------------------------------------------------------------------!
@@ -2274,6 +2286,30 @@ MODULE mp
         RETURN
       END SUBROUTINE mp_allgatherv_inplace_cplx_array
 
+!.. SdG added 16/08/19
+      SUBROUTINE mp_allgatherv_inplace_real_array(alldata, my_element_type, recvcount, displs, gid)
+        IMPLICIT NONE
+        REAL(DP) :: alldata(:,:)
+        INTEGER, INTENT(IN) :: my_element_type
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        !
+        CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_element_type, gid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#endif
+        RETURN
+      END SUBROUTINE mp_allgatherv_inplace_real_array
+
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_set_displs( recvcount, displs, ntot, nproc )
@@ -2916,13 +2952,101 @@ SUBROUTINE mp_type_create_cplx_column_section(dummy, start, length, stride, myty
   RETURN
 END SUBROUTINE mp_type_create_cplx_column_section
 
+SUBROUTINE mp_type_create_real_column_section(dummy, start, length, stride, mytype)
+  IMPLICIT NONE
+  !
+  REAL (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: start, length, stride
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr
+  !
+  CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
+                                MPI_DOUBLE_PRECISION, mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8083 )
+  CALL MPI_Type_commit(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8084 )
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_real_column_section
+
+SUBROUTINE mp_type_create_cplx_row_section(dummy, column_start, column_stride, row_length, mytype)
+  IMPLICIT NONE
+  !
+  COMPLEX (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr, temporary
+  INTEGER :: strides(2), lengths(2), starts(2)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+  !
+  strides(1) = column_stride ; strides(2) = row_length
+  lengths(1) = 1             ; lengths(2) = row_length
+  starts(1)  = column_start  ; starts(2)  = 0
+  CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                MPI_DOUBLE_COMPLEX, temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8085 )
+  CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_COMPLEX, lb, extent, ierr)
+  IF (ierr/=0) CALL mp_stop( 8085 )
+  CALL MPI_TYPE_COMMIT(temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8085 )
+  CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8086 )
+  CALL MPI_Type_commit(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8086 )
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_cplx_row_section
+
+SUBROUTINE mp_type_create_real_row_section(dummy, column_start, column_stride, row_length, mytype)
+  IMPLICIT NONE
+  !
+  REAL (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr, temporary
+  INTEGER :: strides(2), lengths(2), starts(2)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+  !
+  strides(1) = column_stride ; strides(2) = row_length
+  lengths(1) = 1             ; lengths(2) = row_length
+  starts(1)  = column_start  ; starts(2)  = 0
+  CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                MPI_DOUBLE_PRECISION, temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8087 )
+  CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_PRECISION, lb, extent, ierr)
+  IF (ierr/=0) CALL mp_stop( 8087 )
+  CALL MPI_TYPE_COMMIT(temporary, ierr)
+  IF (ierr/=0) CALL mp_stop( 8087 )
+  CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8088 )
+  CALL MPI_Type_commit(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8088 )
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_real_row_section
+
 SUBROUTINE mp_type_free(mytype)
   IMPLICIT NONE
   INTEGER :: mytype, ierr
   !
 #if defined(__MPI)
   CALL MPI_TYPE_FREE(mytype, ierr)
-  IF (ierr/=0) CALL mp_stop( 8083 )
+  IF (ierr/=0) CALL mp_stop( 8089 )
 #endif
   !
   RETURN
@@ -5952,6 +6076,94 @@ END SUBROUTINE mp_type_free
          !
          RETURN
       END SUBROUTINE mp_type_create_cplx_column_section_gpu
+
+      SUBROUTINE mp_type_create_real_column_section_gpu(dummy, start, length, stride, mytype)
+         IMPLICIT NONE
+         !
+         REAL (DP), DEVICE, INTENT(IN) :: dummy
+         INTEGER, INTENT(IN) :: start, length, stride
+         INTEGER, INTENT(OUT) :: mytype
+         !
+#if defined(__MPI)
+         INTEGER :: ierr
+         !
+         CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
+                                       MPI_DOUBLE_PRECISION, mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8083 )
+         CALL MPI_Type_commit(mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8084 )
+#else
+         mytype = 0;
+#endif
+         !
+         RETURN
+      END SUBROUTINE mp_type_create_real_column_section_gpu
+
+      SUBROUTINE mp_type_create_cplx_row_section_gpu(dummy, column_start, column_stride, row_length, mytype)
+         IMPLICIT NONE
+         !
+         COMPLEX (DP), DEVICE, INTENT(IN) :: dummy
+         INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+         INTEGER, INTENT(OUT) :: mytype
+         !
+#if defined(__MPI)
+         INTEGER :: ierr, temporary
+         INTEGER :: strides(2), lengths(2), starts(2)
+         INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+         !
+         strides(1) = column_stride ; strides(2) = row_length
+         lengths(1) = 1             ; lengths(2) = row_length
+         starts(1)  = column_start  ; starts(2)  = 0
+         CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                       MPI_DOUBLE_COMPLEX, temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8085 )
+         CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_COMPLEX, lb, extent, ierr)
+         IF (ierr/=0) CALL mp_stop( 8085 )
+         CALL MPI_TYPE_COMMIT(temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8085 )
+         CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8086 )
+         CALL MPI_Type_commit(mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8086 )
+#else
+         mytype = 0;
+#endif
+         !
+         RETURN
+      END SUBROUTINE mp_type_create_cplx_row_section_gpu
+
+      SUBROUTINE mp_type_create_real_row_section_gpu(dummy, column_start, column_stride, row_length, mytype)
+         IMPLICIT NONE
+         !
+         REAL (DP), DEVICE, INTENT(IN) :: dummy
+         INTEGER, INTENT(IN) :: column_start, column_stride, row_length
+         INTEGER, INTENT(OUT) :: mytype
+         !
+#if defined(__MPI)
+         INTEGER :: ierr, temporary
+         INTEGER :: strides(2), lengths(2), starts(2)
+         INTEGER(KIND=MPI_ADDRESS_KIND) :: lb, extent
+         !
+         strides(1) = column_stride ; strides(2) = row_length
+         lengths(1) = 1             ; lengths(2) = row_length
+         starts(1)  = column_start  ; starts(2)  = 0
+         CALL MPI_TYPE_CREATE_SUBARRAY(2, strides, lengths, starts, MPI_ORDER_FORTRAN,&
+                                       MPI_DOUBLE_PRECISION, temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8087 )
+         CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_PRECISION, lb, extent, ierr)
+         IF (ierr/=0) CALL mp_stop( 8087 )
+         CALL MPI_TYPE_COMMIT(temporary, ierr)
+         IF (ierr/=0) CALL mp_stop( 8087 )
+         CALL MPI_TYPE_CREATE_RESIZED(temporary, lb, extent, mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8088 )
+         CALL MPI_Type_commit(mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8088 )
+#else
+         mytype = 0;
+#endif
+         !
+         RETURN
+      END SUBROUTINE mp_type_create_real_row_section_gpu
 
 !------------------------------------------------------------------------------!
 

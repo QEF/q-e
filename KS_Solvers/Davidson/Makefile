@@ -7,8 +7,7 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 
 DAVID = \
 cegterg.o \
-regterg.o \
-david_param.o
+regterg.o
 
 all : libdavid.a
 

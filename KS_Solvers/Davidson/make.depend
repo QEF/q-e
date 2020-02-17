@@ -1,7 +1,6 @@
 cegterg.o : ../../UtilXlib/mp.o
 cegterg.o : ../../UtilXlib/mp_bands_util.o
-cegterg.o : david_param.o
-david_param.o : ../../UtilXlib/parallel_include.o
+cegterg.o : ../../UtilXlib/util_param.o
 regterg.o : ../../UtilXlib/mp.o
 regterg.o : ../../UtilXlib/mp_bands_util.o
-regterg.o : david_param.o
+regterg.o : ../../UtilXlib/util_param.o
