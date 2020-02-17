@@ -81,6 +81,8 @@ option(QE_ENABLE_BARRIER
     "enable global synchronization between execution units" OFF)
 option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
+option(QE_ENABLE_ELPA
+    "enable ELPA execution units" OFF)
 
 # Disable all configuration headers used to be generated
 # by configure (see <qe>/include/)
@@ -103,13 +105,13 @@ if(QE_ENABLE_BARRIER)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __USE_BARRIER)
 endif()
-if(QE_ENABLE_MPI)
+if(QE_ENABLE_MPI OR QE_ENABLE_SCALAPACK OR QE_ENABLE_ELPA)
     # legacy macro used throughout qe
     # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __MPI OMPI_SKIP_MPICXX)
 endif()
-if(QE_ENABLE_SCALAPACK)
+if(QE_ENABLE_SCALAPACK OR QE_ENABLE_ELPA)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __SCALAPACK)
 endif()
@@ -119,6 +121,18 @@ check_function_exists(mallinfo HAVE_MALLINFO)
 if(HAVE_MALLINFO)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS HAVE_MALLINFO)
+endif()
+
+# Check options consistency
+if(QE_ENABLE_ELPA)
+    if(NOT QE_ENABLE_SCALAPACK)
+        message(FATAL_ERROR "ELPA requires SCALAPACK support. Enable with \"-DQE_ENABLE_SCALAPACK=ON\"")
+    endif()
+endif()
+if(QE_ENABLE_SCALAPACK)
+    if(NOT QE_ENABLE_MPI)
+        message(FATAL_ERROR "SCALAPACK requires MPI support. Remove \"-DQE_ENABLE_MPI=[OFF/FALSE/NO/0]\"")
+    endif()
 endif()
 
 ###########################################################
@@ -184,6 +198,60 @@ if(QE_ENABLE_SCALAPACK)
             ${SCALAPACK_LINKER_FLAGS}
     )
 endif(QE_ENABLE_SCALAPACK)
+
+###########################################################
+# ELPA
+# The following targets will be defined:
+add_library(qe_elpa INTERFACE)
+add_library(QE::ELPA ALIAS qe_elpa)
+qe_install_targets(qe_elpa)
+###########################################################
+if(QE_ENABLE_ELPA)
+    find_package(ELPA REQUIRED)
+    
+    # Looking for ELPA version
+    string(REGEX MATCH "elpa-[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
+    string(REGEX MATCH "[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ONLY_VER "${CMAKE_MATCH_ELPA_VER}")
+    
+    # Check if ELPA version is compatible with QE
+    if(CMAKE_MATCH_ONLY_VER EQUAL "2018" OR
+       CMAKE_MATCH_ONLY_VER EQUAL "2017" OR
+       CMAKE_MATCH_ONLY_VER EQUAL "2016")
+        set_property(TARGET qe_definitions APPEND
+            PROPERTY INTERFACE_COMPILE_DEFINITIONS __ELPA_2016)
+    elseif(CMAKE_MATCH_ONLY_VER EQUAL "2015")
+        set_property(TARGET qe_definitions APPEND
+            PROPERTY INTERFACE_COMPILE_DEFINITIONS __ELPA_2015)
+    elseif(CMAKE_MATCH_ONLY_VER LESS "2015")
+        set_property(TARGET qe_definitions APPEND
+            PROPERTY INTERFACE_COMPILE_DEFINITIONS __ELPA)
+    else()
+        message(FATAL_ERROR "ELPA ${CMAKE_MATCH_ONLY_VER} not supported!")
+    endif()
+
+    # Looking for module directory
+    file(GLOB_RECURSE ELPA_MODS "${ELPA_INCLUDE_DIRS}/*.mod")
+    list(GET ELPA_MODS 0 ELPA_MOD)
+    if(EXISTS ${ELPA_MOD})
+        get_filename_component(ELPA_MOD_DIR "${ELPA_MOD}" PATH)
+        set(ELPA_INCLUDE_DIRS "${ELPA_MOD_DIR};${ELPA_INCLUDE_DIRS}")
+    else()
+        message(FATAL_ERROR "Fortran module directory of ELPA not found!")
+    endif()
+
+    # Add link libraries and include directories
+    target_link_libraries(qe_elpa 
+        INTERFACE
+            ${ELPA_LIBRARIES}
+            ${ELPA_LIBRARIES_DEP}
+            ${ELPA_LINKER_FLAGS}
+    )
+    target_include_directories(qe_elpa
+        INTERFACE
+            ${ELPA_INCLUDE_DIRS}
+            ${ELPA_INCLUDE_DIRS_DEP}
+    )
+endif(QE_ENABLE_ELPA)
 
 ###########################################################
 # Tests
