@@ -164,6 +164,7 @@ qe_add_library(qe_modules ${sources})
 add_library(QE::Modules ALIAS qe_modules)
 target_link_libraries(qe_modules
     PRIVATE
+        QE::HDF5_Fortran
         QE::OpenMP_Fortran
         QE::FFTX
         QE::CLIB # this is needed only by wrappers.f90

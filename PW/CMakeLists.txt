@@ -237,6 +237,7 @@ qe_add_library(qe_pw ${sources})
 add_library(QE::PW ALIAS qe_pw)
 target_link_libraries(qe_pw
     PUBLIC
+        QE::HDF5_Fortran
         QE::ELPA
         QE::SCALAPACK
         QE::LAX

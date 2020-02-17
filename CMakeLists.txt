@@ -83,6 +83,8 @@ option(QE_ENABLE_SCALAPACK
     "enable SCALAPACK execution units" OFF)
 option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
+option(QE_ENABLE_HDF5
+    "enable HDF5 data collection" OFF)
 
 # Disable all configuration headers used to be generated
 # by configure (see <qe>/include/)
@@ -105,15 +107,19 @@ if(QE_ENABLE_BARRIER)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __USE_BARRIER)
 endif()
-if(QE_ENABLE_MPI OR QE_ENABLE_SCALAPACK OR QE_ENABLE_ELPA)
+if(QE_ENABLE_MPI)
     # legacy macro used throughout qe
     # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __MPI OMPI_SKIP_MPICXX)
 endif()
-if(QE_ENABLE_SCALAPACK OR QE_ENABLE_ELPA)
+if(QE_ENABLE_SCALAPACK)
     set_property(TARGET qe_definitions APPEND
         PROPERTY INTERFACE_COMPILE_DEFINITIONS __SCALAPACK)
+endif()
+if(QE_ENABLE_HDF5)
+    set_property(TARGET qe_definitions APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS __HDF5)
 endif()
 
 # Feature checks
@@ -131,7 +137,12 @@ if(QE_ENABLE_ELPA)
 endif()
 if(QE_ENABLE_SCALAPACK)
     if(NOT QE_ENABLE_MPI)
-        message(FATAL_ERROR "SCALAPACK requires MPI support. Remove \"-DQE_ENABLE_MPI=[OFF/FALSE/NO/0]\"")
+        message(FATAL_ERROR "SCALAPACK requires MPI support.")
+    endif()
+endif()
+if(QE_ENABLE_HDF5)
+    if(NOT QE_ENABLE_MPI)
+        message(FATAL_ERROR "HDF5 requires MPI support.")
     endif()
 endif()
 
@@ -252,6 +263,48 @@ if(QE_ENABLE_ELPA)
             ${ELPA_INCLUDE_DIRS_DEP}
     )
 endif(QE_ENABLE_ELPA)
+
+###########################################################
+# HDF5
+# The following targets will be defined:
+add_library(qe_hdf5_fortran INTERFACE)
+add_library(QE::HDF5_Fortran ALIAS qe_hdf5_fortran)
+add_library(qe_hdf5_c INTERFACE)
+add_library(QE::HDF5_C ALIAS qe_hdf5_c)
+qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
+###########################################################
+if(QE_ENABLE_HDF5)
+    find_package(HDF5 REQUIRED Fortran C)
+
+    if(NOT HDF5_IS_PARALLEL)
+        message(FATAL_ERROR "HDF5 library has not parallel IO support!")
+    endif()
+    if(NOT HDF5_Fortran_LIBRARIES OR NOT HDF5_Fortran_INCLUDE_DIRS)
+        message(FATAL_ERROR "HDF5 Fortran interface has not been found!")
+    endif()
+
+    target_link_libraries(qe_hdf5_fortran 
+        INTERFACE 
+            ${HDF5_Fortran_LIBRARIES}
+            ${HDF5_Fortran_HL_LIBRARIES})
+    target_include_directories(qe_hdf5_fortran
+        INTERFACE
+            ${HDF5_Fortran_INCLUDE_DIRS})
+    target_compile_definitions(qe_hdf5_fortran
+        INTERFACE
+            ${HDF5_Fortran_DEFINITIONS})
+
+    target_link_libraries(qe_hdf5_c 
+        INTERFACE 
+            ${HDF5_C_LIBRARIES}
+            ${HDF5_C_HL_LIBRARIES})
+    target_include_directories(qe_hdf5_c
+        INTERFACE
+            ${HDF5_C_INCLUDE_DIRS})
+    target_compile_definitions(qe_hdf5_c
+        INTERFACE
+            ${HDF5_C_DEFINITIONS})
+endif(QE_ENABLE_HDF5)
 
 ###########################################################
 # Tests
