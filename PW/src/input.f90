@@ -942,6 +942,10 @@ SUBROUTINE iosys()
      isolve = 2
      max_ppcg_iter = diago_ppcg_maxiter
      !
+  CASE ( 'paro' )
+     !
+     isolve = 3
+     !
   CASE DEFAULT
      !
      CALL errore( 'iosys', 'diagonalization ' // &

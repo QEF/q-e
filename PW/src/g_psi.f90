@@ -93,3 +93,30 @@ SUBROUTINE g_psi( lda, n, m, npol, psi, e )
   RETURN
   !
 END SUBROUTINE g_psi
+
+!-----------------------------------------------------------------------
+subroutine g_1psi (lda, n, psi, e)
+  !-----------------------------------------------------------------------
+  !
+  !    This routine computes an estimate of the inverse Hamiltonian
+  !    and applies it to one wavefunction
+  !
+  USE kinds
+  USE noncollin_module,     ONLY : npol
+
+  implicit none
+
+  integer :: lda, & ! input: the leading dimension of psi
+             n      ! input: the real dimension of psi
+  complex(DP) :: psi (lda, npol) ! inp/out: the psi vector
+  real(DP) :: e     ! input: the eigenvectors
+  !
+  call start_clock ('g_1psi')
+
+  CALL g_psi (lda, n, 1, npol, psi, e)
+
+  call stop_clock ('g_1psi')
+
+  return
+
+end subroutine g_1psi

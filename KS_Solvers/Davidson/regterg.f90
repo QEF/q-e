@@ -12,7 +12,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, evc, ethr, &
-                    e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -23,7 +23,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   
-  USE david_param,   ONLY : DP, stdout
+  USE util_param,    ONLY : DP, stdout
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
           nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart
@@ -55,6 +55,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
     ! number of unconverged roots
+  INTEGER, INTENT(OUT) :: nhpsi
+    ! number of individual Hpsi made
   !
   ! ... LOCAL variables
   !
@@ -95,7 +97,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
-  CALL start_clock( 'regterg' )
+  CALL start_clock( 'regterg' ); write(6,*) 'enter regterg' ; FLUSH(6)
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
   !
@@ -151,7 +153,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( npwx, npw, nvec, psi, hpsi )
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
   !
   ! ... spsi contains s times the basis vectors
   !
@@ -223,7 +225,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   !
   iterate: DO kter = 1, maxter
      !
-     dav_iter = kter
+     dav_iter = kter ; !write(*,*) kter, notcnv, conv
      !
      CALL start_clock( 'regterg:update' )
      !
@@ -314,7 +316,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
+     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
@@ -504,7 +506,7 @@ END SUBROUTINE regterg
 !----------------------------------------------------------------------------
 SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, evc, ethr, &
-                    e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -515,7 +517,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   !
-  USE david_param,       ONLY : DP, stdout
+  USE util_param,        ONLY : DP, stdout
   USE mp_bands_util,     ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_bands_util,     ONLY : gstart
   USE mp,                ONLY : mp_bcast, mp_root_sum, mp_sum
@@ -546,6 +548,8 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
     ! number of unconverged roots
+  INTEGER, INTENT(OUT) :: nhpsi
+    ! number of individual Hpsi made
   !
   ! ... LOCAL variables
   !
@@ -601,7 +605,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
     !    the first nvec columns contain the trial eigenvectors
   !
   !
-  CALL start_clock( 'regterg' )
+  CALL start_clock( 'regterg' ); write(6,*) 'enter pregterg' ; FLUSH(6)
   ! 
   CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm, &
     do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
@@ -697,7 +701,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( npwx, npw, nvec, psi, hpsi )
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )  ; nhpsi = nvec
   !
   IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
@@ -753,7 +757,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
   !
   iterate: DO kter = 1, maxter
      !
-     dav_iter = kter
+     dav_iter = kter ; !write(*,*) kter, notcnv, conv
      !
      CALL start_clock( 'regterg:update' )
      !
@@ -797,7 +801,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
+     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !

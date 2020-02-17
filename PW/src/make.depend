@@ -690,6 +690,7 @@ g2_kin.o : ../../Modules/kind.o
 g2_kin.o : ../../Modules/recvec.o
 g2_kin.o : pwcom.o
 g_psi.o : ../../Modules/kind.o
+g_psi.o : ../../Modules/noncol.o
 g_psi.o : g_psi_mod.o
 g_psi_mod.o : ../../Modules/kind.o
 gen_at_dj.o : ../../Modules/atom.o
@@ -839,6 +840,8 @@ hs_1psi.o : ../../Modules/kind.o
 hs_1psi.o : ../../Modules/noncol.o
 hs_1psi.o : bp_mod.o
 hs_1psi.o : realus.o
+hs_psi.o : ../../Modules/kind.o
+hs_psi.o : ../../Modules/noncol.o
 init_at_1.o : ../../Modules/atom.o
 init_at_1.o : ../../Modules/cell_base.o
 init_at_1.o : ../../Modules/constants.o

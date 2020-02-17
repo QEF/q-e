@@ -56,14 +56,15 @@ PROGRAM pwscf
   !! Get the address of the server 
   INTEGER :: exit_status
   !! Status at exit
-  LOGICAL :: use_images, do_diag_in_band_group = .TRUE.
+  LOGICAL :: use_images, do_diag_in_band_group = .TRUE. ! .FALSE. ! .TRUE.
   !! true if running "manypw.x"
   LOGICAL, EXTERNAL :: matches
   !! checks if first string is contained in the second
   !
   CALL mp_startup( start_images=.TRUE. )
   !
-  IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
+  !IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
+  IF( do_diag_in_band_group ) THEN
      ! used to be the default : one diag group per bgrp
      ! with strict hierarchy: POOL > BAND > DIAG
      ! if using exx groups from mp_exx still use this diag method

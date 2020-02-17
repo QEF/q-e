@@ -1,19 +1,23 @@
-# Makefile for DAVID_RCI
+# Makefile for ParO
 
 include ../../make.inc
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
-DAVID_RCI = \
-david_rci.o 
+PARO = \
+paro_gamma.o paro_gamma_new.o \
+paro_k.o paro_k_new.o \
+pcg_gamma.o \
+pcg_k.o \
+bpcg_gamma.o \
+bpcg_k.o
 
-all : libdavid_rci.a
+all : libparo.a
 
-
-libdavid_rci.a:  $(DAVID_RCI)
-	$(AR) $(ARFLAGS) $@ $?       
-	$(RANLIB) $@    
+libparo.a:  $(PARO)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
