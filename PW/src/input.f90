@@ -810,7 +810,7 @@ SUBROUTINE iosys()
   CASE( 'from_scratch' )
      !
      restart        = .false.
-     ! ... non-scf calculation: read atomic positions from file
+     ! ... non-scf calculation: read atomic positions and cell from file
      ! ... so that they are consistent.  FIXME: lforcet?
      IF ( trim( ion_positions ) == 'from_file' .OR. &
           (.NOT. lscf .AND. .NOT. lforcet) ) THEN
@@ -1377,7 +1377,7 @@ SUBROUTINE iosys()
      !
      ! ... Read atomic positions from file
      !
-     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, at_dum )
+     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, alat, at )
      pseudo_dir_cur = restart_dir()
      !
   ELSE
