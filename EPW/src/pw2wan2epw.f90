@@ -759,6 +759,7 @@
     SUBROUTINE run_wannier()
     !-----------------------------------------------------------------------
     !
+    USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, meta_ionode_id, meta_ionode
     USE ions_base, ONLY : nat
     USE mp,        ONLY : mp_bcast
@@ -770,7 +771,7 @@
     USE wannierEPW,ONLY : u_mat, lwindow, wann_centers, wann_spreads, eigval,  &
                           n_wannier, spreads, nnb, rlatt, glatt, kpt_latt,     &
                           iknum, seedname2, num_bands, u_mat_opt, atsym, a_mat,&
-                          atcart, m_mat, mp_grid
+                          atcart, m_mat, mp_grid, excluded_band
     USE epwcom,    ONLY : eig_read
     USE wvfct,     ONLY : nbnd
     USE constants_epw, ONLY : zero, czero, bohr
@@ -785,10 +786,16 @@
     !! Counter on wannier functions
     INTEGER :: ik
     !! Counter of k-point index
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: ibnd1
+    !! Band index
     INTEGER :: ios
     !! Integer variable for I/O control
     INTEGER :: ierr
     !! Error status
+    REAL(KIND = DP), ALLOCATABLE :: eigvaltmp(:, :) 
+    !! Temporary array containing the eigenvalues (KS or GW) when read from files
     !
     ALLOCATE(u_mat(n_wannier, n_wannier, iknum), STAT = ierr)
     IF (ierr /= 0) CALL errore('run_wannier', 'Error allocating u_mat', 1)
@@ -809,6 +816,10 @@
     IF (meta_ionode) THEN
       ! read in external eigenvalues, e.g.  GW
       IF (eig_read) THEN
+        ALLOCATE(eigvaltmp(nbnd, iknum), STAT = ierr)
+        IF (ierr /= 0) CALL errore('run_wannier', 'Error allocating eigvaltmp', 1)
+        eigvaltmp(:, :) = zero
+        eigval(:, :) = zero
         WRITE (stdout, '(5x, a, i5, a, i5, a)') "Reading external electronic eigenvalues (", &
              nbnd, ",", nkstot,")"
         tempfile = TRIM(prefix)//'.eig'
@@ -819,9 +830,19 @@
           ! We do not save the k-point for the moment ==> should be read and
           ! tested against the current one  
           READ(iuqpeig, '(a)') line
-          READ(iuqpeig, *) eigval(:, ik)
+          READ(iuqpeig, *) eigvaltmp(:, ik)
+        ENDDO
+        DO ik = 1, nkstot
+          ibnd1 = 0
+          DO ibnd = 1, nbnd
+            IF (excluded_band(ibnd)) CYCLE
+            ibnd1 = ibnd1 + 1
+            eigval(ibnd1, ik) = eigvaltmp(ibnd, ik)
+          ENDDO
         ENDDO
         CLOSE(iuqpeig)
+        DEALLOCATE(eigvaltmp, STAT = ierr)
+        IF (ierr /= 0) CALL errore('run_wannier', 'Error deallocating eigvaltmp', 1)
       ENDIF
   
   ! SP : This file is not used for now. Only required to build the UNK file
@@ -2976,6 +2997,7 @@
     USE constants,     ONLY : rytoev
     USE wannierEPW,    ONLY : ikstart, ikstop, iknum, num_bands, eigval, &
                               excluded_band
+    USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
     ! 
@@ -2993,6 +3015,7 @@
     !
     ALLOCATE(eigval(num_bands, iknum), STAT = ierr)
     IF (ierr /= 0) CALL errore('write_band', 'Error deallocating eigval', 1)
+    eigval(:, :) = zero
     !
     DO ik = ikstart, ikstop
       ikevc = ik - ikstart + 1
