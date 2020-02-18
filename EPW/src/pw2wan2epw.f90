@@ -3014,7 +3014,7 @@
     !! Error status
     !
     ALLOCATE(eigval(num_bands, iknum), STAT = ierr)
-    IF (ierr /= 0) CALL errore('write_band', 'Error deallocating eigval', 1)
+    IF (ierr /= 0) CALL errore('write_band', 'Error allocating eigval', 1)
     eigval(:, :) = zero
     !
     DO ik = ikstart, ikstop
