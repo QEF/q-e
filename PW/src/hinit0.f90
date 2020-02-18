@@ -26,6 +26,7 @@ SUBROUTINE hinit0()
   USE io_global,        ONLY : stdout
   !
   IMPLICIT NONE
+  REAL (dp) :: alat_old
   !
   CALL start_clock( 'hinit0' )
   !
@@ -50,14 +51,14 @@ SUBROUTINE hinit0()
         at_old    = at
         omega_old = omega
         !
-        CALL read_conf_from_file( lmovecell, nat, nsp, tau, at )
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat, at )
         CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
         CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
         CALL scale_h( )
         !
      ELSE
         !
-        CALL read_conf_from_file( lmovecell, nat, nsp, tau, at_old )
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat_old, at_old )
         !
      END IF
      !
