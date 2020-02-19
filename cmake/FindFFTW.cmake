@@ -526,18 +526,16 @@ if((NOT PKG_CONFIG_EXECUTABLE)
   endif()
 
   # Add include directory of mkl_dfti.f90 for MKL
-  if(FFTW_LOOK_FOR_MKL)
-    if(FFTW_INCLUDE_DIRS)
-      find_path(
-        FFTW_MKL_DFTI_F90_DIRS
-        NAMES "mkl_dfti.f90"
-        HINTS ${PATH_TO_LOOK_FOR}
-        PATH_SUFFIXES "fftw")
-      if(FFTW_MKL_DFTI_F90_DIRS)
-        list(APPEND FFTW_INCLUDE_DIRS "${FFTW_MKL_DFTI_F90_DIRS}")
-      else()
-        message(FATAL_ERROR "Cannot find include directory of mkl_dfti.f90!")
-      endif()
+  if(FFTW_INCLUDE_DIRS AND FFTW_LOOK_FOR_MKL)
+    find_path(
+      FFTW_MKL_DFTI_F90_DIRS
+      NAMES "mkl_dfti.f90"
+      HINTS ${PATH_TO_LOOK_FOR}
+      PATH_SUFFIXES "fftw")
+    if(FFTW_MKL_DFTI_F90_DIRS)
+      list(APPEND FFTW_INCLUDE_DIRS "${FFTW_MKL_DFTI_F90_DIRS}")
+    elseif()
+      message(FATAL_ERROR "Cannot find include directory of mkl_dfti.f90!")
     endif()
   endif()
 
