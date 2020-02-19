@@ -188,6 +188,7 @@ add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
 ###########################################################
 find_package(LAPACK REQUIRED)
+message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES};${LAPACK_LINKER_FLAGS}")
 target_link_libraries(qe_lapack 
     INTERFACE 
         ${LAPACK_LINKER_FLAGS}
@@ -201,17 +202,17 @@ add_library(qe_fft INTERFACE)
 add_library(QE::FFT ALIAS qe_fft)
 qe_install_targets(qe_fft)
 ###########################################################
-set(FFTW_FIND_QUIETLY ON)
-set(fft_components LONG) # TODO check precision needed
+set(fft_components)
 if(QE_ENABLE_OPENMP)
     list(APPEND fft_components OMP)
 endif()
 # 1: look for well known vendor specific implementations
 # 1.a: IBM ESSL
 if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS ESSL ${fft_components})
+    find_package(FFTW COMPONENTS ESSL ${fft_components} QUIET)
     if(FFTW_FOUND)
-        message(STATUS "Found IBM ESSL FFT!")
+        message(STATUS "Found IBM ESSL FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
+        message(STATUS "Found IBM ESSL FFT include: ${FFTW_INCLUDE_DIRS}")
         set(fft_definitions __LINUX_ESSL)
         target_link_libraries(qe_fft 
             INTERFACE 
@@ -229,9 +230,10 @@ if(NOT FFTW_FOUND)
 endif()
 # 1.b: Intel MKL
 if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS MKL ${fft_components})
+    find_package(FFTW COMPONENTS MKL ${fft_components} QUIET)
     if(FFTW_FOUND)
-        message(STATUS "Found Intel MKL FFT!")
+        message(STATUS "Found Intel MKL FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
+        message(STATUS "Found Intel MKL FFT include: ${FFTW_INCLUDE_DIRS}")
         set(fft_definitions __DFTI)
         target_link_libraries(qe_fft 
             INTERFACE 
@@ -250,9 +252,10 @@ endif(NOT FFTW_FOUND)
 # 2: no vendor-specific fft flavor has been found,
 #    just look for a generic FFTW implementation
 if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS ${fft_components})
+    find_package(FFTW COMPONENTS ${fft_components} QUIET)
     if(FFTW_FOUND)
-        message(STATUS "Found generic FFTW implementation!")
+        message(STATUS "Found generic FFTW: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
+        message(STATUS "Found generic FFTW include: ${FFTW_INCLUDE_DIRS}")
         set(fft_definitions __FFTW3)
         target_link_libraries(qe_fft 
             INTERFACE 
@@ -287,12 +290,12 @@ add_library(QE::SCALAPACK ALIAS qe_scalapack)
 qe_install_targets(qe_scalapack)
 ###########################################################
 if(QE_ENABLE_SCALAPACK)
-    find_package(SCALAPACK REQUIRED)
+    find_package(SCALAPACK REQUIRED QUIET)
+    message(STATUS "Found SCALAPACK: ${SCALAPACK_LIBRARIES};${SCALAPACK_LINKER_FLAGS}")
     target_link_libraries(qe_scalapack 
         INTERFACE 
             ${SCALAPACK_LIBRARIES}
-            ${SCALAPACK_LINKER_FLAGS}
-    )
+            ${SCALAPACK_LINKER_FLAGS})
 endif(QE_ENABLE_SCALAPACK)
 
 ###########################################################
