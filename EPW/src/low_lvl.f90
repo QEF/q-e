@@ -1086,16 +1086,18 @@
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(in) :: s(3, 3)
+    !! Symmetry matrix
     REAL(KIND = DP), INTENT(in) :: x(3)
     !! Input x
-    INTEGER, INTENT(in) :: s(3,3)
-    !! Symmetry matrix
     REAL(KIND = DP), INTENT(out) :: sx(3)
     !! Output rotated x
     !
+    ! Local variables
+    INTEGER :: i
+    !! Cartesian direction
     REAL(KIND = DP) :: xcrys(3)
     !! x in cartesian coords
-    INTEGER :: i
     !
     xcrys = x
     CALL cryst_to_cart(1, xcrys, at, -1)
@@ -1303,6 +1305,42 @@
     END SUBROUTINE memlt_eliashberg
     !-----------------------------------------------------------------------
     !
+    !----------------------------------------------------------------------
+    SUBROUTINE s_crystocart(s, sr, at, bg)
+    !----------------------------------------------------------------------
+    !!
+    !! This routine transform a symmetry matrix expressed in the
+    !! basis of the crystal axis in the cartesian basis.    
+    !! 
+    !! SP - Feb 2020
+    !! Routine taken from PP/src/sym_band.f90 and adapted for EPW. 
+    !!
+    USE kinds,    ONLY : DP
+    ! 
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: s(3, 3)
+    !! Matrix in crystal axis
+    REAL(KIND = DP), INTENT(in) :: at(3, 3)
+    !! Direct lattice vectors
+    REAL(KIND = DP), INTENT(in) :: bg(3, 3)
+    !! Reciprocal lattice vectors
+    REAL(KIND = DP), INTENT(out) :: sr(3, 3)
+    ! Output matrix in cartesian axis
+    !
+    ! Local variables
+    REAL(KIND = DP) :: sa(3, 3)
+    !! Temporary matrix
+    REAL(KIND = DP) :: sb(3, 3)
+    !! Temporary matrix
+    !
+    sa(:, :) = DBLE(s(:, :))
+    sb = MATMUL(bg, sa)
+    sr(:, :) = MATMUL(at, TRANSPOSE(sb))
+    ! 
+    !-----------------------------------------------------------------------
+    END SUBROUTINE s_crystocart
+    !-----------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE low_lvl
   !-------------------------------------------------------------------------

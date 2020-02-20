@@ -16,7 +16,7 @@
   CONTAINS
     ! 
     !----------------------------------------------------------------------
-    SUBROUTINE dvqpsi_us3(ik, uact, addnlcc, xxkq, xq0, igk, igkq, npw, npwq)
+    SUBROUTINE dvqpsi_us3(ik, uact, addnlcc, xxkq, xq0, igk, igkq, npw, npwq, evc)
     !----------------------------------------------------------------------
     !!
     !! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -31,9 +31,14 @@
     !! RM - Nov/Dec 2014 
     !! Imported the noncolinear case implemented by xlzhang
     !!
-    !! Roxana Margine - Jan 2019: Updated based on QE 6.3
+    !! RM - Jan 2019 
+    !! Updated based on QE 6.3
+    !! 
+    !! SP - Feb 2020
+    !! Pass the wfc at k (evc) explicitely to work with noncolin rotation.  
     !!
     USE kinds,                 ONLY : DP
+    USE pwcom,                 ONLY : nbnd
     USE ions_base,             ONLY : nat, ityp
     USE cell_base,             ONLY : tpiba
     USE fft_base,              ONLY : dfftp, dffts
@@ -45,7 +50,6 @@
     USE noncollin_module,      ONLY : nspin_lsda, nspin_gga, npol
     use uspp_param,            ONLY : upf
     USE wvfct,                 ONLY : npwx
-    USE wavefunctions,         ONLY : evc
     USE nlcc_ph,               ONLY : drc
     USE uspp,                  ONLY : nlcc_any
     USE eqv,                   ONLY : dvpsi, dmuxc, vlocq
@@ -76,6 +80,8 @@
     !! k+q point coordinate 
     COMPLEX(KIND = DP), INTENT(in) :: uact(3 * nat)
     !! the pattern of displacements
+    COMPLEX(KIND = DP), INTENT(in) :: evc(npwx * npol, nbnd)
+    !! Wavefunction at k
     !
     ! Local variables
     INTEGER :: na
