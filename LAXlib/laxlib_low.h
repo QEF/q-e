@@ -258,7 +258,7 @@ SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
    include 'laxlib_kinds.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
-   REAL(DP), DEVICE    :: a(lda,*)
+   REAL(DP), INTENT(INOUT), DEVICE    :: a(:,:)
    ATTRIBUTES(DEVICE)  :: a
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
@@ -324,7 +324,7 @@ SUBROUTINE sqr_dmm_cannon_gpu_x( transa, transb, n, alpha, a, lda, b, ldb, beta,
    INTEGER, INTENT(IN) :: n
    REAL(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
-   REAL(DP), DEVICE :: a(lda,*), b(ldb,*), c(ldc,*)
+   REAL(DP), DEVICE :: a(:,:), b(:,:), c(:,:)
    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
 END SUBROUTINE
 #endif
@@ -378,9 +378,9 @@ SUBROUTINE sqr_tr_cannon_gpu_x( n, a, lda, b, ldb, idesc )
    include 'laxlib_param.fh'
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
-   REAL(DP), INTENT(IN),  DEVICE :: a(lda,*)
-   REAL(DP), INTENT(OUT), DEVICE :: b(ldb,*)
-   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   REAL(DP), INTENT(IN),  DEVICE :: a(:,:)
+   REAL(DP), INTENT(OUT), DEVICE :: b(:,:)
+   INTEGER, INTENT(IN) :: idesc(:)
 END SUBROUTINE
 #endif
 END INTERFACE

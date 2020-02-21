@@ -38,8 +38,6 @@ MODULE orthogonalize_base
       PUBLIC :: tauset
       PUBLIC :: rhoset
       PUBLIC :: ortho_iterate
-      PUBLIC :: ortho_alt_iterate
-      PUBLIC :: ortho_iterate_gpu
       PUBLIC :: updatc, calphi_bgrp
       PUBLIC :: mesure_diag_perf, mesure_mmul_perf
       PUBLIC :: use_parallel_diag
@@ -292,20 +290,21 @@ CONTAINS
 
       INTEGER, INTENT(IN) :: nss, ldx, nx0
       INTEGER, INTENT(IN) :: idesc(:)
-      REAL(DP) DEVICEATTR :: u   ( ldx, ldx )
-      REAL(DP) DEVICEATTR :: diag( nss )
-      REAL(DP) DEVICEATTR :: xloc( nx0, nx0 )
-      REAL(DP) DEVICEATTR :: rhor( ldx, ldx )
-      REAL(DP) DEVICEATTR :: rhos( ldx, ldx )
-      REAL(DP) DEVICEATTR :: tau ( ldx, ldx )
-      REAL(DP) DEVICEATTR :: sig ( ldx, ldx )
+      REAL(DP) DEVICEATTR :: u   ( :, : )
+      REAL(DP) DEVICEATTR :: diag( : )
+      REAL(DP) DEVICEATTR :: xloc( :, : )
+      REAL(DP) DEVICEATTR :: rhor( :, : )
+      REAL(DP) DEVICEATTR :: rhos( :, : )
+      REAL(DP) DEVICEATTR :: tau ( :, : )
+      REAL(DP) DEVICEATTR :: sig ( :, : )
       INTEGER, INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff 
 
       INTEGER :: i, j
-      INTEGER :: nr, nc, ir, ic
+      INTEGER :: nr, nc, ir, ic, info
       REAL(DP), ALLOCATABLE DEVICEATTR :: tmp1(:,:), tmp2(:,:), dd(:,:), tr1(:,:), tr2(:,:)
       REAL(DP), ALLOCATABLE DEVICEATTR :: con(:,:), x1(:,:)
+      REAL(DP), ALLOCATABLE :: con_h(:,:)
       !
       IF( nss < 1 ) RETURN
 
@@ -338,18 +337,27 @@ CONTAINS
 
       !  Clear elements not involved in the orthogonalization
       !
+#if defined(__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
 !$cuf kernel do(2) <<<*,*>>>
       do j = nc + 1, nx0
          do i = 1, nx0
             xloc( i, j ) = 0.0d0
          end do
       end do
+#if defined(__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
 !$cuf kernel do(2) <<<*,*>>>
       do j = 1, nx0
          do i = nr + 1, nx0
             xloc( i, j ) = 0.0d0
          end do
       end do
+#if defined(__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
 
 
       ITERATIVE_LOOP: DO iter = 1, ortho_max
@@ -367,6 +375,9 @@ CONTAINS
          CALL sqr_tr_cannon( nss, tmp1, ldx, tr1, ldx, idesc )
          CALL sqr_tr_cannon( nss, tmp2, ldx, tr2, ldx, idesc )
          !
+#if defined(__CUDA)
+         info = cudaDeviceSynchronize()
+#endif
 #if defined (__CUDA)
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -382,12 +393,22 @@ CONTAINS
          !         x1      = sig      -x0*rho    -x0*rho^t  -x0*tau*x0
          !
          diff = 0.d0
-!$cuf kernel do(2) <<<*,*>>>
+#if defined(__CUDA)
+         info = cudaDeviceSynchronize()
+         ALLOCATE(con_h, source=con)
+         DO i=1,nr
+            DO j=1,nc
+               IF(ABS(con_h(i,j)).GT.diff) diff=ABS(con_h(i,j))
+            END DO
+         END DO
+         DEALLOCATE(con_h)
+#else
          DO i=1,nr
             DO j=1,nc
                IF(ABS(con(i,j)).GT.diff) diff=ABS(con(i,j))
             END DO
          END DO
+#endif
 
          CALL mp_max( diff, idesc(LAX_DESC_COMM) )
 
@@ -405,6 +426,7 @@ CONTAINS
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
 #if defined (__CUDA)
+         info = cudaDeviceSynchronize()
 !$cuf kernel do(2) <<<*,*>>>
 #else
 !$omp parallel do default(shared), private(j)
@@ -414,6 +436,9 @@ CONTAINS
                tmp1(i,j)=tmp2(i,j)/(diag(i+ir-1)+diag(j+ic-1))
             END DO
          END DO
+#if defined(__CUDA)
+         info = cudaDeviceSynchronize()
+#endif
          !
          !       the following calls do:
          !                       tmp2 = g*ut
@@ -424,6 +449,9 @@ CONTAINS
          !
       END DO ITERATIVE_LOOP
 
+#if defined(__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
       DEALLOCATE( tmp1, tmp2, dd, x1, con, tr1, tr2 )
             
 100   CONTINUE
@@ -462,10 +490,10 @@ CONTAINS
       include 'laxlib.fh'
 !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
-      COMPLEX(DP) DEVICEATTR :: cp( ngwx, n )
-      REAL(DP)    DEVICEATTR :: qbecp( nkbx, ldx )
-      REAL(DP)    DEVICEATTR :: becp_dist( nkbx, ldx )
-      REAL(DP)    DEVICEATTR :: sig( ldx, ldx )
+      COMPLEX(DP), INTENT(IN) DEVICEATTR :: cp(:,:) ! cp( ngwx, n )
+      REAL(DP)   , INTENT(IN) DEVICEATTR :: qbecp(:,:) ! qbecp( nkbx, ldx )
+      REAL(DP)   , INTENT(IN) DEVICEATTR :: becp_dist(:,:) ! becp_dist( nkbx, ldx )
+      REAL(DP)   , INTENT(OUT) DEVICEATTR :: sig(:,:) ! sig( ldx, ldx )
 
       INTEGER, INTENT(IN) :: idesc(:)
 !
@@ -475,6 +503,7 @@ CONTAINS
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       !
       REAL(DP), ALLOCATABLE DEVICEATTR :: sigp(:,:)
+      REAL(DP), ALLOCATABLE :: sig_h(:,:)
 !
       IF( nss < 1 ) RETURN
 
@@ -489,9 +518,11 @@ CONTAINS
 
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          IF( idesc(LAX_DESC_NRCX) /= ldx ) &
-            CALL errore( " sigset ", " inconsistent dimension ldx ", ldx )
+            CALL errore( " sigset ", " inconsistent dimension ldx ", 1 )
          IF( nx /= ldx ) &
-            CALL errore( " sigset ", " inconsistent dimension nx ", nx )
+            CALL errore( " sigset ", " inconsistent dimension nx ", 2 )
+         IF( SIZE(sig,1) /= ldx .OR.  SIZE(sig,2) /= ldx ) &
+            CALL errore( " sigset ", " inconsistent dimension SIZE of sig ", 3 )
       END IF
 
       IF( nbgrp > 1 ) THEN
@@ -531,17 +562,7 @@ CONTAINS
                !     q = 0  components has weight 1.0
                !
                IF ( gstart == 2 ) THEN
-#if defined(__CUDA)
-!$cuf kernel do(2) <<<*,*>>>
-                  DO j = 1, nc
-                    DO i = 1, nr
-                      sigp(i,j) = sigp(i,j) - DBLE(cp(1,ist+ir-1+i-1))  * DBLE(cp(1,ist+ic-1+j-1)) &
-                                            - DIMAG(cp(1,ist+ir-1+i-1)) * DIMAG(cp(1,ist+ic-1+j-1))
-                    END DO
-                  END DO
-#else
-                  CALL DGER( nr, nc, 1.D0, cp(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, sigp, nx )
-#endif
+                  CALL MYDGER( nr, nc, 1.D0, cp(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, sigp, nx )
                END IF
                !
                CALL mp_root_sum( sigp, sig, root, intra_bgrp_comm )
@@ -558,9 +579,20 @@ CONTAINS
          CALL mp_sum( sig, inter_bgrp_comm )
       END IF
       !
-      CALL laxlib_dsqmsym( nss, sig, nx, idesc )
-      !
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+
+         ALLOCATE( sig_h( SIZE(sig,1), SIZE(sig,2)))
+         sig_h = sig
+#if defined (__CUDA)
+         info = cudaDeviceSynchronize()
+#endif
+         CALL laxlib_dsqmsym( nss, sig_h, nx, idesc )
+         sig = sig_h
+#if defined (__CUDA)
+         info = cudaDeviceSynchronize()
+#endif
+         DEALLOCATE( sig_h )
+         !
          !
          nr = idesc(LAX_DESC_NR)
          nc = idesc(LAX_DESC_NC)
@@ -568,10 +600,16 @@ CONTAINS
          ic = idesc(LAX_DESC_IC)
          !
          IF( idesc(LAX_DESC_MYR) == idesc(LAX_DESC_MYC) ) THEN
+#if defined (__CUDA)
+            info = cudaDeviceSynchronize()
+#endif
 !$cuf kernel do(1) <<<*,*>>>
             DO i = 1, nr
                sig(i,i) = sig(i,i) + 1.0d0
             END DO
+#if defined (__CUDA)
+            info = cudaDeviceSynchronize()
+#endif
          END IF
          !
          IF( nkbus > 0 ) THEN
@@ -581,6 +619,9 @@ CONTAINS
          ENDIF
          !
       END IF
+#if defined (__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
       !
       RETURN
    END SUBROUTINE sigset
@@ -615,10 +656,10 @@ CONTAINS
       include 'laxlib.fh'
 !
       INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
-      COMPLEX(DP) DEVICEATTR :: cp( ngwx, n ), phi( ngwx, n )
-      REAL(DP)    DEVICEATTR :: bephi( nkbx, ldx ), qbecp( nkbx, ldx )
-      REAL(DP)    DEVICEATTR :: rho( ldx, ldx )
-      REAL(DP)    DEVICEATTR :: rhoa( ldx, ldx )
+      COMPLEX(DP) DEVICEATTR :: cp( :, : ), phi( :, : )
+      REAL(DP)    DEVICEATTR :: bephi( :, : ), qbecp( :, : )
+      REAL(DP)    DEVICEATTR :: rho( :, : )
+      REAL(DP)    DEVICEATTR :: rhoa( :, : )
       INTEGER, INTENT(IN) :: idesc(:)
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
@@ -646,6 +687,12 @@ CONTAINS
             CALL errore( " rhoset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " rhoset ", " inconsistent dimension nx ", nx )
+         IF( SIZE(rho,1) /= ldx ) &
+            CALL errore( " rhoset ", " inconsistent rho size ", ldx )
+         IF( SIZE(bephi,1) /= nkbx ) &
+            CALL errore( " rhoset ", " inconsistent bephi size ", nkbx )
+         IF( SIZE(qbecp,1) /= nkbx ) &
+            CALL errore( " rhoset ", " inconsistent qbecp size ", nkbx )
       END IF
 
       ALLOCATE( rhop( nx, nx ) )
@@ -654,6 +701,9 @@ CONTAINS
       IF( nbgrp > 1 ) THEN
          rho = 0.0d0
       END IF
+#if defined (__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
 
       DO ipc = 1, np(2)
          DO ipr = 1, np(1)
@@ -687,18 +737,7 @@ CONTAINS
                !     q = 0  components has weight 1.0
                !
                IF (gstart == 2) THEN
-#if defined(__CUDA)
-!$cuf kernel do(2) <<<*,*>>>
-                  DO j = 1, nc
-                    DO i = 1, nr
-                      rhop(i,j) = rhop(i,j) - REAL(phi(1,ist+ir-1+i-1),DP) * REAL(cp(1,ist+ic-1+j-1),DP) &
-                                            - DIMAG(phi(1,ist+ir-1+i-1)) * DIMAG(cp(1,ist+ic-1+j-1))
-                    END DO
-                  END DO
-                  !CALL cublasDger ( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
-#else
-                  CALL dger ( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
-#endif
+                  CALL mydger ( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
                END IF
 
                CALL mp_root_sum( rhop, rho, root, intra_bgrp_comm )
@@ -708,11 +747,9 @@ CONTAINS
          END DO
       END DO
  
-
       IF( nbgrp > 1 ) THEN
          CALL mp_sum( rho, inter_bgrp_comm )
       END IF
-
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          !
          nr = idesc(LAX_DESC_NR)
@@ -744,7 +781,10 @@ CONTAINS
          !    distributed array rhos contains "rho",
          !    now transpose rhos and store the result in distributed array rhot
          !
-         CALL sqr_tr_cannon( nss, rho, nx, rhop, nx, idesc )
+         CALL sqr_tr_cannon( nss, rho, SIZE(rho,1), rhop, SIZE(rhop,1), idesc )
+#if defined (__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
          !
          !  Compute the symmetric part of rho
          !
@@ -768,6 +808,9 @@ CONTAINS
          !
       END IF
       !
+#if defined (__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
       DEALLOCATE( rhop )
       !
       RETURN
@@ -791,27 +834,29 @@ CONTAINS
       USE uspp,               ONLY: nkb, nkbus
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE mp,                 ONLY: mp_root_sum, mp_sum
+      USE mp,                 ONLY: mp_root_sum, mp_sum, mp_barrier
       USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
+      USE mp_world,           ONLY: mpime
 !
       IMPLICIT NONE
       !
       include 'laxlib.fh'
       !
-      INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
-      COMPLEX(DP) DEVICEATTR :: phi( ngwx, n )
-      REAL(DP)    DEVICEATTR :: bephi( nkbx, ldx ), qbephi( nkbx, ldx )
-      REAL(DP)    DEVICEATTR :: tau( ldx, ldx )
+      INTEGER, INTENT(IN)    :: nss, ist, ngwx, nkbx, n, ldx
+      COMPLEX(DP) DEVICEATTR :: phi( :, : )
+      REAL(DP)    DEVICEATTR :: bephi( :, : ), qbephi( :, : )
+      REAL(DP)    DEVICEATTR :: tau( :, : )
       INTEGER, INTENT(IN) :: idesc(:)
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
-      INTEGER :: ii, jj, root, info
+      INTEGER :: ii, jj, root, info, nx
       INTEGER :: idesc_ip(LAX_DESC_SIZE)
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
 
       REAL(DP), ALLOCATABLE DEVICEATTR :: taup( :, : )
+      REAL(DP), ALLOCATABLE :: tau_h( :, : )
       !
       IF( nss < 1 ) RETURN
 
@@ -829,15 +874,18 @@ CONTAINS
             CALL errore( " tauset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " tauset ", " inconsistent dimension nx ", nx )
+         IF( nx /= SIZE(tau,1) ) &
+            CALL errore( " tauset ", " inconsistent dimension nx ", nx )
       END IF
       !
+      !write(1000+mpime,*) 'debug: ', nx, np(1), np(2), SIZE(tau)
+      !close(1000+mpime)
+      !CALL mp_barrier(intra_bgrp_comm)
+      !CALL errore( " tauset ", " debug ", 1 )
+
       ALLOCATE( taup( nx, nx ) )
       !
-      taup = 0.0d0
-      !
-      IF( nbgrp > 1 ) THEN
-         tau = 0.0d0
-      END IF
+      CALL azzera()
       !
       !  loop on processors coordinates
       !
@@ -877,18 +925,7 @@ CONTAINS
                !           q = 0  components has weight 1.0
                !
                IF (gstart == 2) THEN
-#if defined(__CUDA)
-                  !CALL CUBLASDGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
-!$cuf kernel do(2) <<<*,*>>>
-                  DO j = 1, nc
-                    DO i = 1, nr
-                      taup(i,j) = taup(i,j) - REAL(phi(1,ist+ir-1+i-1),DP) * REAL(phi(1,ist+ic-1+j-1),DP) &
-                                            - DIMAG(phi(1,ist+ir-1+i-1)) * DIMAG(phi(1,ist+ic-1+j-1))
-                    END DO
-                  END DO
-#else
-                  CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
-#endif
+                  CALL MYDGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
                END IF
                !
                CALL mp_root_sum( taup, tau, root, intra_bgrp_comm )
@@ -899,13 +936,28 @@ CONTAINS
          !
       END DO
       !
+#if defined (__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
       DEALLOCATE( taup )
       !
       IF( nbgrp > 1 ) THEN
          CALL mp_sum( tau, inter_bgrp_comm )
       END IF
       !
-      CALL laxlib_dsqmsym( nss, tau, nx, idesc )
+      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+        ALLOCATE( tau_h, source=tau )
+#if defined (__CUDA)
+        info = cudaDeviceSynchronize()
+#endif
+        CALL laxlib_dsqmsym( nss, tau_h, nx, idesc )
+        tau = tau_h
+#if defined (__CUDA)
+        info = cudaDeviceSynchronize()
+#endif
+        DEALLOCATE( tau_h )
+      END IF
+      !CALL laxlib_dsqmsym( nss, tau, nx, idesc )
       !
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
          !
@@ -924,8 +976,27 @@ CONTAINS
          END IF
 
       ENDIF
+#if defined (__CUDA)
+      info = cudaDeviceSynchronize()
+#endif
       !
       RETURN
+   CONTAINS
+      SUBROUTINE azzera()
+#if defined(__CUDA)
+      info = cudaDeviceSynchronize()
+      info = cudaMemset(taup, 0.0d0, SIZE(taup))
+      IF( nbgrp > 1 .AND. SIZE(tau) > 0 ) THEN
+         info = cudaMemset(tau, 0.0d0, SIZE(tau))
+      END IF
+      info = cudaDeviceSynchronize()
+#else
+      taup = 0.0d0
+      IF( nbgrp > 1 ) THEN
+         tau = 0.0d0
+      END IF
+#endif
+      END SUBROUTINE
    END SUBROUTINE tauset
 
 !
@@ -1279,3 +1350,22 @@ CONTAINS
    END SUBROUTINE bec_bgrp2ortho
 
 END MODULE orthogonalize_base
+
+
+! In principle this can go away .......
+SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#endif
+!     .. Scalar Arguments ..
+    DOUBLE PRECISION ::  ALPHA
+    INTEGER          ::   INCX, INCY, LDA, M, N
+!     .. Array Arguments ..
+    DOUBLE PRECISION :: A( LDA, * ), X( * ), Y( * )
+#if defined(__CUDA)
+    attributes(device) :: A, X, Y
+#endif
+    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+
+END SUBROUTINE MYDGER

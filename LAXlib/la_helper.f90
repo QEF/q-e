@@ -705,7 +705,7 @@ END SUBROUTINE laxlib_multi_init_desc_x
       
       info = cudaMemcpy(a, rhos, SIZE(rhos,1)*SIZE(rhos,2), cudaMemcpyDeviceToDevice)
       lda = SIZE(rhos,1)
-      !$cuf kernel do(2) <<<*,*, 0, stream1>>>
+      !$cuf kernel do(2) <<<*,*>>>
       do j = 1,m
         do i = 1,m
           if (i > j) then
