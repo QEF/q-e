@@ -97,7 +97,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
-  CALL start_clock( 'regterg' ); write(6,*) 'enter regterg' ; FLUSH(6)
+  CALL start_clock( 'regterg' ) !; write(6,*) 'enter regterg' ; FLUSH(6)
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
   !
@@ -605,7 +605,7 @@ SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
     !    the first nvec columns contain the trial eigenvectors
   !
   !
-  CALL start_clock( 'regterg' ); write(6,*) 'enter pregterg' ; FLUSH(6)
+  CALL start_clock( 'regterg' ) !; write(6,*) 'enter pregterg' ; FLUSH(6)
   ! 
   CALL laxlib_getval( np_ortho = np_ortho, ortho_parent_comm = ortho_parent_comm, &
     do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp )
