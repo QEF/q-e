@@ -1130,8 +1130,14 @@ is that I also saw some strange numbers when using libflame/aocl 2.1.
 export MKL_DEBUG_CPU_TYPE=5
 \end{verbatim}
 which gives an additional 10-20\% speedup with MKL 2020,
-while for earlier versions the speedup is greater than 200\%.''
-(Info by Tobias Kl\"offel, Feb. 2020)
+while for earlier versions the speedup is greater than 200\%.
+[...] Another note, there seem to be problems using FFTW interface
+of MKL with  AMD cpus. To get around this problem, one has to
+additionally set
+\begin{verbatim}
+export MKL_CBWR=AUTO
+\end{verbatim}
+`` (Info by Tobias Kl\"offel, Feb. 2020)
 
 \subsubsection{Linux PC clusters with MPI}
 \label{SubSec:LinuxPCMPI}
