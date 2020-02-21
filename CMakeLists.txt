@@ -181,6 +181,20 @@ if(QE_ENABLE_OPENMP)
 endif(QE_ENABLE_OPENMP)
 
 ###########################################################
+# BLAS
+# The following targets will be defined:
+add_library(qe_blas INTERFACE)
+add_library(QE::BLAS ALIAS qe_blas)
+qe_install_targets(qe_blas)
+###########################################################
+find_package(BLAS REQUIRED)
+target_link_libraries(qe_blas 
+    INTERFACE 
+        ${BLAS_LIBRARIES}
+        ${BLAS_LINKER_FLAGS}
+)
+
+###########################################################
 # Lapack
 # The following targets will be defined:
 add_library(qe_lapack INTERFACE)
@@ -188,11 +202,11 @@ add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
 ###########################################################
 find_package(LAPACK REQUIRED)
-message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES};${LAPACK_LINKER_FLAGS}")
+message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
 target_link_libraries(qe_lapack 
     INTERFACE 
-        ${LAPACK_LINKER_FLAGS}
         ${LAPACK_LIBRARIES}
+        ${LAPACK_LINKER_FLAGS}
 )
 
 ###########################################################
