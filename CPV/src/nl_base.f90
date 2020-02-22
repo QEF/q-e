@@ -52,9 +52,10 @@
          pptype = 0
       END IF
 
-      allocate( wrk2( ngw, nhm ) ) 
+      allocate( wrk2( ngw, nkb ) ) 
       allocate( becps( SIZE(becp,1), SIZE(becp,2) ) ) 
-      becps = 0.0d0
+
+      wrk2 = 0.0d0
 
       do is = nspmn, nspmx
         !
@@ -65,6 +66,8 @@
 
             IF( ityp(ia) == is ) THEN
               !
+              inl = indv_ijkb0(ia)
+
               do iv = 1, nh( is )
                 !
                 l = nhtol( iv, is )
@@ -84,26 +87,27 @@
                 !  q = 0   component (with weight 1.0)
                 !
                 if (gstart == 2) then
-                  wrk2( 1, iv ) = cfact * beta(1,iv,is) * eigr(1,ia)
+                  wrk2( 1, iv + inl ) = cfact * beta(1,iv,is) * eigr(1,ia)
                 end if
                 !
                 !   q > 0   components (with weight 2.0)
                 !
                 do ig = gstart, ngw
-                  wrk2( ig, iv ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
+                  wrk2( ig, iv + inl ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
                 end do
                 !
               end do
               !
-              inl = indv_ijkb0(ia) + 1
-              IF( ngw > 0 .AND. nh(is) > 0 ) THEN
-                 CALL dgemm( 'T', 'N', nh(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nkb )
-              END IF
             END IF
           end do
       end do
 
+      IF( ngw > 0 .AND. nkb > 0 ) THEN
+         CALL dgemm( 'T', 'N', nkb, n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps, nkb )
+      END IF
+
       DEALLOCATE( wrk2 )
+
       IF( nproc_bgrp > 1 ) THEN
         CALL mp_sum( becps, intra_bgrp_comm )
       END IF
@@ -165,15 +169,17 @@
 !
       call start_clock( 'nlsm2' )
 
-      allocate( wrk2( ngw, MAXVAL( nh( : ) ) ) )
-
-      becdr_bgrp = 0.d0
+      allocate( wrk2( ngw, nkb ) )
 !
-      do k = 1, 3
+      DO k = 1, 3
+         !
+         wrk2 = 0.0d0
          !
          DO ia = 1, nat
 
             is = ityp(ia) 
+
+            inl = indv_ijkb0(ia)
 
             do iv=1,nh(is)
                !
@@ -199,21 +205,22 @@
 
                !    q = 0   component (with weight 1.0)
                if (gstart == 2) then
-                  wrk2(1,iv) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
+                  wrk2(1,iv+inl) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
                end if
                !    q > 0   components (with weight 2.0)
                do ig=gstart,ngw
-                  wrk2(ig,iv) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
+                  wrk2(ig,iv+inl) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
                end do
                !
             end do
 
-            inl = indv_ijkb0(ia) + 1
-            IF( ngw > 0 .AND. nh(is) > 0 ) THEN
-               CALL dgemm( 'T', 'N', nh(is), nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
-                        c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( inl, 1, k ), nkb )
-            END IF
          end do
+
+         IF( ngw > 0 .AND. nkb > 0 ) THEN
+            CALL dgemm( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
+                  c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( 1, 1, k ), nkb )
+         END IF
+
       end do
 
       deallocate( wrk2 )
