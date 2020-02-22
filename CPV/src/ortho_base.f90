@@ -346,9 +346,6 @@ CONTAINS
             xloc( i, j ) = 0.0d0
          end do
       end do
-#if defined(__CUDA)
-      info = cudaDeviceSynchronize()
-#endif
 !$cuf kernel do(2) <<<*,*>>>
       do j = 1, nx0
          do i = nr + 1, nx0
@@ -375,9 +372,6 @@ CONTAINS
          CALL sqr_tr_cannon( nss, tmp1, ldx, tr1, ldx, idesc )
          CALL sqr_tr_cannon( nss, tmp2, ldx, tr2, ldx, idesc )
          !
-#if defined(__CUDA)
-         info = cudaDeviceSynchronize()
-#endif
 #if defined (__CUDA)
 !$cuf kernel do(2) <<<*,*>>>
 #else
@@ -426,7 +420,6 @@ CONTAINS
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
 #if defined (__CUDA)
-         info = cudaDeviceSynchronize()
 !$cuf kernel do(2) <<<*,*>>>
 #else
 !$omp parallel do default(shared), private(j)
@@ -503,7 +496,6 @@ CONTAINS
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       !
       REAL(DP), ALLOCATABLE DEVICEATTR :: sigp(:,:)
-      REAL(DP), ALLOCATABLE :: sig_h(:,:)
 !
       IF( nss < 1 ) RETURN
 
@@ -581,17 +573,7 @@ CONTAINS
       !
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
 
-         ALLOCATE( sig_h( SIZE(sig,1), SIZE(sig,2)))
-         sig_h = sig
-#if defined (__CUDA)
-         info = cudaDeviceSynchronize()
-#endif
-         CALL laxlib_dsqmsym( nss, sig_h, nx, idesc )
-         sig = sig_h
-#if defined (__CUDA)
-         info = cudaDeviceSynchronize()
-#endif
-         DEALLOCATE( sig_h )
+         CALL laxlib_dsqmsym( nss, sig, nx, idesc )
          !
          !
          nr = idesc(LAX_DESC_NR)
@@ -600,16 +582,10 @@ CONTAINS
          ic = idesc(LAX_DESC_IC)
          !
          IF( idesc(LAX_DESC_MYR) == idesc(LAX_DESC_MYC) ) THEN
-#if defined (__CUDA)
-            info = cudaDeviceSynchronize()
-#endif
 !$cuf kernel do(1) <<<*,*>>>
             DO i = 1, nr
                sig(i,i) = sig(i,i) + 1.0d0
             END DO
-#if defined (__CUDA)
-            info = cudaDeviceSynchronize()
-#endif
          END IF
          !
          IF( nkbus > 0 ) THEN
@@ -671,8 +647,6 @@ CONTAINS
       !
       !     <phi|cp>
       !
-      !
-
       IF( nss < 1 ) RETURN
 
       CALL laxlib_getval( leg_ortho = leg_ortho )
@@ -856,7 +830,6 @@ CONTAINS
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
 
       REAL(DP), ALLOCATABLE DEVICEATTR :: taup( :, : )
-      REAL(DP), ALLOCATABLE :: tau_h( :, : )
       !
       IF( nss < 1 ) RETURN
 
@@ -878,14 +851,12 @@ CONTAINS
             CALL errore( " tauset ", " inconsistent dimension nx ", nx )
       END IF
       !
-      !write(1000+mpime,*) 'debug: ', nx, np(1), np(2), SIZE(tau)
-      !close(1000+mpime)
-      !CALL mp_barrier(intra_bgrp_comm)
-      !CALL errore( " tauset ", " debug ", 1 )
-
       ALLOCATE( taup( nx, nx ) )
       !
-      CALL azzera()
+      taup = 0.0d0
+      IF( nbgrp > 1 ) THEN
+         tau = 0.0d0
+      END IF
       !
       !  loop on processors coordinates
       !
@@ -946,20 +917,8 @@ CONTAINS
       END IF
       !
       IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-        ALLOCATE( tau_h, source=tau )
-#if defined (__CUDA)
-        info = cudaDeviceSynchronize()
-#endif
-        CALL laxlib_dsqmsym( nss, tau_h, nx, idesc )
-        tau = tau_h
-#if defined (__CUDA)
-        info = cudaDeviceSynchronize()
-#endif
-        DEALLOCATE( tau_h )
-      END IF
-      !CALL laxlib_dsqmsym( nss, tau, nx, idesc )
-      !
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+         !
+         CALL laxlib_dsqmsym( nss, tau, nx, idesc )
          !
          nr = idesc(LAX_DESC_NR)
          nc = idesc(LAX_DESC_NC)
@@ -981,22 +940,6 @@ CONTAINS
 #endif
       !
       RETURN
-   CONTAINS
-      SUBROUTINE azzera()
-#if defined(__CUDA)
-      info = cudaDeviceSynchronize()
-      info = cudaMemset(taup, 0.0d0, SIZE(taup))
-      IF( nbgrp > 1 .AND. SIZE(tau) > 0 ) THEN
-         info = cudaMemset(tau, 0.0d0, SIZE(tau))
-      END IF
-      info = cudaDeviceSynchronize()
-#else
-      taup = 0.0d0
-      IF( nbgrp > 1 ) THEN
-         tau = 0.0d0
-      END IF
-#endif
-      END SUBROUTINE
    END SUBROUTINE tauset
 
 !

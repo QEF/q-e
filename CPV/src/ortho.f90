@@ -12,9 +12,250 @@
 #define DEVICEATTR
 #endif
 
+MODULE local_ortho_memory
+#if defined(__CUDA)
+   USE cudafor
+#endif
+   USE kinds,              ONLY: DP
+   IMPLICIT NONE
+   SAVE
+
+   REAL(DP),   ALLOCATABLE DEVICEATTR :: s(:,:), sig(:,:), tau(:,:), stmp(:,:)
+   REAL(DP),   ALLOCATABLE DEVICEATTR :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
+#if defined(__CUDA)
+   REAL(DP),      ALLOCATABLE, DEVICE :: bephi_d(:,:), qbecp_d(:,:), qbephi_d(:,:)
+   COMPLEX(DP),   ALLOCATABLE, DEVICE :: cp_d(:,:), phi_d(:,:)
+   REAL(DP),      ALLOCATABLE, DEVICE :: becp_dist_d( :, : )
+#endif
+
+   REAL(DP), ALLOCATABLE DEVICEATTR :: xloc(:,:)
+
+CONTAINS
+
+   SUBROUTINE allocate_local_ortho_memory( nss, nx0 )
+      INTEGER, INTENT(IN) :: nss, nx0
+      INTEGER :: info
+      IF( ALLOCATED( rhos ) ) THEN
+         IF( nx0 == SIZE( rhos, 1 ) ) THEN
+            RETURN
+         ELSE
+            DEALLOCATE( rhos, rhoa, s, sig, tau, rhod )
+            IF(ALLOCATED(wrk)) DEALLOCATE(wrk) 
+            IF(ALLOCATED(stmp)) DEALLOCATE(stmp) 
+         END IF 
+      END IF
+      ALLOCATE( rhos( nx0, nx0 ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating rhos ', ABS( info ) )
+      rhos = 0
+      ALLOCATE( rhoa( nx0, nx0 ), STAT = info )   !   antisymmetric part of rho
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating rhoa ', ABS( info ) )
+      rhoa = 0
+      ALLOCATE( s( nx0, nx0 ), STAT = info ) 
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating s ', ABS( info ) )
+      s = 0
+      ALLOCATE( sig( nx0, nx0 ), STAT = info ) 
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating sig ', ABS( info ) )
+      sig = 0
+      ALLOCATE( tau( nx0, nx0 ), STAT = info ) 
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
+      tau = 0
+      ALLOCATE( rhod( nss ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
+      rhod = 0
+#if defined(__CUDA)
+      ALLOCATE( wrk( nss, nss ), STAT = info )
+      IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating wrk ', 1 )
+      ALLOCATE( stmp( nss, nss ), STAT = info )
+      IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating stmp ', 1 )
+#endif
+   END SUBROUTINE
+
+   SUBROUTINE sync_device_ortho_memory( cp, phi, becp_dist, qbecp, bephi, qbephi )
+      COMPLEX(DP), INTENT(IN) :: phi( :, : ), cp( :, : )
+      REAL(DP), INTENT(IN)    :: bephi( :, : )
+      REAL(DP), INTENT(IN)    :: becp_dist( :, : )
+      REAL(DP), INTENT(IN)    :: qbephi( :, : ), qbecp( :, : )
+      INTEGER :: info
+#if defined(__CUDA)
+      IF(ALLOCATED(cp_d)) THEN
+         IF( SIZE(cp_d,1) == SIZE(cp,1) .AND. SIZE(cp_d,2) == SIZE(cp,2) ) THEN
+            cp_d = cp
+            phi_d = phi
+            bephi_d = bephi
+            qbecp_d = qbecp
+            becp_dist_d = becp_dist
+            qbephi_d = qbephi
+            RETURN
+         ELSE
+            DEALLOCATE( cp_d, phi_d, bephi_d, qbecp_d, becp_dist_d, qbephi_d )
+         END IF
+      END IF
+      ALLOCATE( cp_d, source=cp, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating cp_d ', ABS( info ) )
+      ALLOCATE( phi_d, source=phi, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating phi_d ', ABS( info ) )
+      ALLOCATE( bephi_d, source=bephi, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating bephi_d ', ABS( info ) )
+      ALLOCATE( qbecp_d, source=qbecp, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating qbecp_d ', ABS( info ) )
+      ALLOCATE( becp_dist_d, source=becp_dist, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating becp_dist_d ', ABS( info ) )
+      ALLOCATE( qbephi_d, source=qbephi, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating qbephi_d ', ABS( info ) )
+      info = cudaDeviceSynchronize()
+#endif
+
+   END SUBROUTINE
+
+   SUBROUTINE deallocate_local_ortho_memory()
+     IF(ALLOCATED(s)) DEALLOCATE(s) 
+     IF(ALLOCATED(sig)) DEALLOCATE(sig) 
+     IF(ALLOCATED(tau)) DEALLOCATE(tau) 
+     IF(ALLOCATED(stmp)) DEALLOCATE(stmp) 
+     IF(ALLOCATED(wrk)) DEALLOCATE(wrk) 
+     IF(ALLOCATED(rhoa)) DEALLOCATE(rhoa)
+     IF(ALLOCATED(rhos)) DEALLOCATE(rhos) 
+     IF(ALLOCATED(rhod)) DEALLOCATE(rhod) 
+     IF(ALLOCATED(xloc)) DEALLOCATE(xloc) 
+#if defined(__CUDA)
+     IF(ALLOCATED(cp_d)) DEALLOCATE(cp_d) 
+     IF(ALLOCATED(phi_d)) DEALLOCATE(phi_d) 
+     IF(ALLOCATED(bephi_d)) DEALLOCATE(bephi_d) 
+     IF(ALLOCATED(qbecp_d)) DEALLOCATE(qbecp_d) 
+     IF(ALLOCATED(qbephi_d)) DEALLOCATE(qbephi_d) 
+     IF(ALLOCATED(becp_dist_d)) DEALLOCATE(becp_dist_d) 
+#endif
+   END SUBROUTINE deallocate_local_ortho_memory
+
+   SUBROUTINE x0_to_xloc( x0, nx0, ccc_, idesc )
+      REAL(DP), INTENT(IN) :: x0(:,:)
+      REAL(DP), INTENT(IN) :: ccc_
+      INTEGER, INTENT(IN) :: nx0
+      INTEGER,  INTENT(IN)  :: idesc(:)
+      include 'laxlib.fh'
+      INTEGER :: i, j, info
+      REAL(DP), DEVICE :: ccc
+      IF( ALLOCATED(xloc) ) THEN
+        IF( nx0 /= SIZE(xloc,1) ) THEN
+           DEALLOCATE(xloc)
+        END IF
+      END IF
+      IF( .NOT. ALLOCATED(xloc) ) THEN
+         ALLOCATE( xloc( nx0, nx0 ), STAT = info )
+         IF( info /= 0 ) &
+            CALL errore( ' ortho ', ' allocating xloc ', ABS( info ) )
+      END IF
+      IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
+         RETURN
+      ENDIF
+      !
+      xloc = x0
+      ccc = ccc_
+!$cuf kernel do(2) <<<*,*>>>
+      DO j = 1, SIZE(xloc,2)
+         DO i = 1, SIZE(xloc,1)
+            xloc(i,j) = xloc(i,j) * ccc
+         END DO
+      END DO
+   END SUBROUTINE x0_to_xloc
+   
+   SUBROUTINE xloc_to_x0( x0, nx0, ccc_, idesc )
+      REAL(DP), INTENT(OUT) :: x0(:,:)
+      INTEGER, INTENT(IN) :: nx0
+      REAL(DP), INTENT(IN) :: ccc_
+      INTEGER,  INTENT(IN)  :: idesc(:)
+      include 'laxlib.fh'
+      INTEGER :: i, j
+      REAL(DP), DEVICE :: byccc
+      IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
+         RETURN
+      ENDIF
+      byccc = 1.0d0 / ccc_
+!$cuf kernel do(2) <<<*,*>>>
+      DO j = 1, SIZE(xloc,2)
+         DO i = 1, SIZE(xloc,1)
+            xloc(i,j) = xloc(i,j) * byccc
+         END DO
+      END DO
+      x0 = xloc
+   END SUBROUTINE xloc_to_x0
+
+   SUBROUTINE distribute_matrix( a, b, ir, nr, ic, nc, comm )
+      USE mp, ONLY: mp_bcast
+      REAL(DP) DEVICEATTR :: a(:,:), b(:,:)
+      INTEGER, INTENT(IN) :: ir, nr, ic, nc, comm
+      INTEGER :: i, j, info
+      CALL qe_sync()
+      CALL mp_bcast( a, 0, comm )
+!$cuf kernel do(2) <<<*,*>>>
+      DO j = 1, nc
+         DO i = 1, nr
+            b( i, j ) = a( i + ir - 1, j + ic - 1 )
+         END DO
+      END DO
+      CALL qe_sync()
+      RETURN
+   END SUBROUTINE
+
+   SUBROUTINE collect_matrix( a, b, ir, nr, ic, nc, comm )
+      USE mp, ONLY: mp_sum
+      REAL(DP) DEVICEATTR :: a(:,:), b(:,:)
+      INTEGER, INTENT(IN) :: ir, nr, ic, nc, comm
+      INTEGER :: i, j, info
+      CALL qe_sync()
+      a = 0.0d0
+!$cuf kernel do(2) <<<*,*>>>
+      DO j = 1, nc
+         DO i = 1, nr
+            a( ir + i - 1, ic + j - 1 ) = b( i, j )
+         END DO
+      END DO
+      CALL mp_sum( a, comm )
+      CALL qe_sync()
+      RETURN
+   END SUBROUTINE
+
+   SUBROUTINE consistency_check( a, idesc )
+      REAL(DP) DEVICEATTR, INTENT(IN) :: a(:,:)
+      INTEGER,  INTENT(IN)  :: idesc(:)
+      INTEGER :: i, j
+      include 'laxlib.fh'
+      !
+      ! on some machines (IBM RS/6000 for instance) the following test allows
+      ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
+      ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
+      ! that the program goes on forever doing nothing and writing nothing.
+      !
+#if ! defined(__CUDA)
+      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+         DO j = 1, idesc(LAX_DESC_NC)
+            DO i = 1, idesc(LAX_DESC_NR)
+               IF (a(i,j) /= a(i,j)) &
+                  CALL errore(' ortho ',' ortho went bananas ',1)
+            END DO
+         END DO
+      END IF
+#endif
+      RETURN
+   END SUBROUTINE
+
+END MODULE local_ortho_memory
+
 !=----------------------------------------------------------------------------=!
    SUBROUTINE ortho_gamma_x( iopt, cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
-                           x0, nx0, idesc, diff, iter, n, nss, istart )
+                           nx0, idesc, diff, iter, n, nss, istart )
 !=----------------------------------------------------------------------------=!
       !
 #if defined(__CUDA)
@@ -26,6 +267,8 @@
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, my_bgrp_id, inter_bgrp_comm, nbgrp
       USE mp,                 ONLY: mp_sum, mp_bcast
       USE mp_world,           ONLY: mpime
+
+      USE local_ortho_memory
 
       IMPLICIT  NONE
 
@@ -40,24 +283,12 @@
       REAL(DP)    :: bephi( :, : )
       REAL(DP)    :: becp_dist( :, : )
       REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
-      REAL(DP)    :: x0( :, : )
       INTEGER,  INTENT(IN)  :: idesc(:)
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
 
       ! ... Locals
 
-      REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:), rhot(:,:), stmp(:,:)
-      REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:), ev(:)
-#if defined(__CUDA)
-      ATTRIBUTES( DEVICE ) :: s, sig, tau, rhot, rhoa, rhos, rhod, wrk, stmp
-      REAL(DP),      ALLOCATABLE :: bephi_d(:,:), qbecp_d(:,:), qbephi_d(:,:)
-      COMPLEX(DP),   ALLOCATABLE :: cp_d(:,:), phi_d(:,:)
-      REAL(DP),      ALLOCATABLE :: becp_dist_d( :, : ), x0_d(:,:)
-      ATTRIBUTES( DEVICE ) :: cp_d, phi_d, bephi_d, qbecp_d, becp_dist_d, qbephi_d, x0_d
-#endif
-      REAL(DP) :: var
-      REAL(DP), ALLOCATABLE :: wrk_h(:,:)
       INTEGER  :: i, j, info, nr, nc, ir, ic
       INTEGER, SAVE :: icnt = 1
       !
@@ -85,132 +316,21 @@
          !
       END IF
       !
-      ALLOCATE( rhos( nx0, nx0 ), STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating rhos ', ABS( info ) )
-      rhos = 0
-      ALLOCATE( rhoa( nx0, nx0 ), STAT = info )   !   antisymmetric part of rho
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating rhoa ', ABS( info ) )
-      rhoa = 0
-      ALLOCATE( s( nx0, nx0 ), STAT = info ) 
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating s ', ABS( info ) )
-      s = 0
-      ALLOCATE( sig( nx0, nx0 ), STAT = info ) 
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating sig ', ABS( info ) )
-      sig = 0
-      ALLOCATE( tau( nx0, nx0 ), STAT = info ) 
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
-      tau = 0
-      ALLOCATE( rhod( nss ), STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
-      rhod = 0
+      CALL allocate_local_ortho_memory(nss, nx0)
+      !
+      CALL sync_device_ortho_memory( cp, phi, becp_dist, qbecp, bephi, qbephi )
       !
       !     rho = <s'c0|s|cp>
       !
       CALL start_clock( 'rhoset' )
       !
 #if defined(__CUDA)
-      ALLOCATE( cp_d, source=cp, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating cp_d ', ABS( info ) )
-      ALLOCATE( phi_d, source=phi, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating phi_d ', ABS( info ) )
-      ALLOCATE( bephi_d, source=bephi, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating bephi_d ', ABS( info ) )
-      ALLOCATE( qbecp_d, source=qbecp, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating qbecp_d ', ABS( info ) )
-      ALLOCATE( becp_dist_d, source=becp_dist, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating becp_dist_d ', ABS( info ) )
-      ALLOCATE( qbephi_d, source=qbephi, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating qbephi_d ', ABS( info ) )
-      ALLOCATE( x0_d, source=x0, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating x0_d ', ABS( info ) )
-      info = cudaDeviceSynchronize()
       CALL rhoset( cp_d, ngwx, phi_d, bephi_d, nkbx, qbecp_d, n, nss, istart, rhos, rhoa, nx0, idesc )
-      info = cudaDeviceSynchronize()
 #else
       CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, rhoa, nx0, idesc )
 #endif
       !
       CALL stop_clock( 'rhoset' )
-
-#if ! defined(__CUDA)
-      CALL consistency_check(rhos) 
-#endif
-
-      CALL start_clock( 'rsg' )
-      !
-      ! ...   Diagonalize symmetric part of rho (rhos)
-      ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
-      !
-      IF( use_parallel_diag ) THEN
-         !
-#if defined(__CUDA)
-         IF( idesc(LAX_DESC_NR) == idesc(LAX_DESC_NC) .AND. idesc(LAX_DESC_NR) == idesc(LAX_DESC_N) ) THEN
-            CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
-         ELSE IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-            ALLOCATE( wrk( nss, nss ), STAT = info )
-            IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating wrk ', 1 )
-            ALLOCATE( stmp( nss, nss ), STAT = info )
-            IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating stmp ', 1 )
-            CALL collect_matrix( wrk, rhos, ir, nr, ic, nc )
-            IF( idesc(LAX_DESC_IC) == 1 .AND. idesc(LAX_DESC_IR) == 1 ) THEN
-               CALL laxlib_diagonalize( nss, wrk, rhod, stmp, info )
-            END IF 
-            CALL distribute_matrix( stmp, s, ir, nr, ic, nc )
-            CALL mp_bcast( rhod, 0, idesc(LAX_DESC_COMM) )
-            DEALLOCATE( wrk, stmp )
-         END IF
-#else
-         CALL laxlib_diagonalize( nss, rhos, rhod, s, idesc )
-#endif
-         !
-      ELSE
-         !
-         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-            !
-            IF( idesc(LAX_DESC_NR) == idesc(LAX_DESC_NC) .AND. idesc(LAX_DESC_NR) == idesc(LAX_DESC_N) ) THEN
-               !
-               !  rhos and s matrixes, are replicated, no need of collect them
-#if defined(__CUDA)
-               CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
-#else
-               s = rhos
-               CALL laxlib_diagonalize( nss, s, rhod )
-#endif
-            ELSE
-               ALLOCATE( wrk( nss, nss ), STAT = info )
-               IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating wrk ', 1 )
-               !
-               CALL collect_matrix( wrk, rhos, ir, nr, ic, nc )
-               !
-#if defined(__CUDA)
-               CALL laxlib_diagonalize( nss, wrk, rhod, s, info )
-#else
-               CALL laxlib_diagonalize( nss, wrk, rhod )
-#endif
-               !
-               CALL distribute_matrix( wrk, s, ir, nr, ic, nc )
-               !
-               DEALLOCATE( wrk )
-            END IF
-            !
-         END IF
-         !
-      END IF
-      !
-      CALL stop_clock( 'rsg' )
       !
       !     sig = 1-<cp|s|cp>
       !
@@ -232,6 +352,62 @@
 #endif
       CALL stop_clock( 'tauset' )
       !
+      CALL consistency_check(rhos,idesc) 
+
+      CALL start_clock( 'rsg' )
+      !
+      ! ...   Diagonalize symmetric part of rho (rhos)
+      ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
+      !
+      IF( use_parallel_diag ) THEN
+         !
+#if defined(__CUDA)
+         IF( idesc(LAX_DESC_NR) == idesc(LAX_DESC_NC) .AND. idesc(LAX_DESC_NR) == idesc(LAX_DESC_N) ) THEN
+            CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
+         ELSE IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+            CALL collect_matrix( wrk, rhos, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
+            IF( idesc(LAX_DESC_IC) == 1 .AND. idesc(LAX_DESC_IR) == 1 ) THEN
+               CALL laxlib_diagonalize( nss, wrk, rhod, stmp, info )
+            END IF 
+            CALL distribute_matrix( stmp, s, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
+            CALL mp_bcast( rhod, 0, idesc(LAX_DESC_COMM) )
+         END IF
+#else
+         CALL laxlib_diagonalize( nss, rhos, rhod, s, idesc )
+#endif
+         !
+      ELSE
+         !
+         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
+            !
+            IF( idesc(LAX_DESC_NR) == idesc(LAX_DESC_NC) .AND. idesc(LAX_DESC_NR) == idesc(LAX_DESC_N) ) THEN
+               !
+               !  rhos and s matrixes, are replicated, no need of collect them
+#if defined(__CUDA)
+               CALL laxlib_diagonalize( nss, rhos, rhod, s, info )
+#else
+               s = rhos
+               CALL laxlib_diagonalize( nss, s, rhod )
+#endif
+            ELSE
+               !
+               CALL collect_matrix( wrk, rhos, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
+               !
+#if defined(__CUDA)
+               CALL laxlib_diagonalize( nss, wrk, rhod, s, info )
+#else
+               CALL laxlib_diagonalize( nss, wrk, rhod )
+#endif
+               !
+               CALL distribute_matrix( wrk, s, ir, nr, ic, nc, idesc(LAX_DESC_COMM) )
+               !
+            END IF
+            !
+         END IF
+         !
+      END IF
+      !
+      CALL stop_clock( 'rsg' )
       CALL start_clock( 'ortho_iter' )
       !
       IF( my_bgrp_id == 0 ) THEN
@@ -241,12 +417,7 @@
          !  group are enough. Moreover replicating the computation across groups could leads
          ! to small numerical differences and weird numerical effects.
          !
-#if defined(__CUDA)
-         CALL ortho_iterate( iter, diff, s, nx0, rhod, x0_d, nx0, sig, rhoa, rhos, tau, nss, idesc)
-         x0 = x0_d
-#else
-         CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, idesc)
-#endif
+         CALL ortho_iterate( iter, diff, s, nx0, rhod, xloc, nx0, sig, rhoa, rhos, tau, nss, idesc)
          !
       END IF
       !
@@ -255,91 +426,17 @@
          !  All groups must have the same lambda matrix, in order to avoid weird
          !  numerical side effects.
          !
-         CALL mp_bcast( x0, 0, inter_bgrp_comm )
+         CALL mp_bcast( xloc, 0, inter_bgrp_comm )
          CALL mp_bcast( iter, 0, inter_bgrp_comm )
          CALL mp_bcast( diff, 0, inter_bgrp_comm )
          !
       END IF
       !
-      DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
-#if defined(__CUDA)
-      info = cudaDeviceSynchronize()
-      DEALLOCATE( cp_d, phi_d, bephi_d, qbecp_d, becp_dist_d, qbephi_d, x0_d )
-#endif
-      !
-      IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 )  CALL consistency_check( x0 )
+      CALL consistency_check( xloc,idesc )
 
       CALL stop_clock( 'ortho_iter' )
 
       RETURN
-
-   CONTAINS
-
-      SUBROUTINE distribute_matrix( a, b, ir, nr, ic, nc )
-         REAL(DP) DEVICEATTR :: a(:,:), b(:,:)
-         INTEGER, INTENT(IN) :: ir, nr, ic, nc
-         INTEGER :: i, j
-         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-#if defined(__CUDA)
-            info = cudaDeviceSynchronize()
-#endif
-            CALL mp_bcast( a, 0, idesc(LAX_DESC_COMM) )
-#if defined(__CUDA)
-            info = cudaDeviceSynchronize()
-#endif
-!$cuf kernel do(2) <<<*,*>>>
-            DO j = 1, nc
-               DO i = 1, nr
-                  b( i, j ) = a( i + ir - 1, j + ic - 1 )
-               END DO
-            END DO
-#if defined(__CUDA)
-            info = cudaDeviceSynchronize()
-#endif
-         END IF
-         RETURN
-      END SUBROUTINE
-
-      SUBROUTINE collect_matrix( a, b, ir, nr, ic, nc )
-         REAL(DP) DEVICEATTR :: a(:,:), b(:,:)
-         INTEGER, INTENT(IN) :: ir, nr, ic, nc
-         INTEGER :: i, j
-         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-            CALL qe_sync()
-            a = 0.0d0
-!$cuf kernel do(2) <<<*,*>>>
-            DO j = 1, nc
-               DO i = 1, nr
-                  a( ir + i - 1, ic + j - 1 ) = b( i, j )
-               END DO
-            END DO
-#if defined(__CUDA)
-            info = cudaDeviceSynchronize()
-#endif
-            CALL mp_sum( a, idesc(LAX_DESC_COMM) )
-         END IF
-         RETURN
-      END SUBROUTINE
-
-      SUBROUTINE consistency_check( a )
-         REAL(DP) :: a(:,:)
-         INTEGER :: i, j
-         !
-         ! on some machines (IBM RS/6000 for instance) the following test allows
-         ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
-         ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
-         ! that the program goes on forever doing nothing and writing nothing.
-         !
-         IF( idesc(LAX_DESC_ACTIVE_NODE) > 0 ) THEN
-            DO j = 1, idesc(LAX_DESC_NC)
-               DO i = 1, idesc(LAX_DESC_NR)
-                  IF (a(i,j) /= a(i,j)) CALL errore(' ortho ',' ortho went bananas ',1)
-               END DO
-            END DO
-         END IF
-         RETURN
-      END SUBROUTINE
-
 
    END SUBROUTINE ortho_gamma_x
 
@@ -374,6 +471,7 @@
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
+      USE local_ortho_memory, ONLY : xloc, x0_to_xloc, xloc_to_x0
       !
       IMPLICIT NONE
       !
@@ -387,14 +485,14 @@
       REAL(DP)    :: bephi(:,:)
       REAL(DP)    :: becp_bgrp(:,:)
       !
-      REAL(DP), ALLOCATABLE :: xloc(:,:), becp_dist(:,:)
+      REAL(DP), ALLOCATABLE :: becp_dist(:,:)
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
 
       INTEGER :: nkbx
       INTEGER :: info, i, j, iss, iv, jv, ia, is, inl, jnl
       INTEGER :: n1, n2, m1, m2
       INTEGER :: nspin_sub, nx0, ngwx, nrcx
-      REAL(DP) :: qqf, dum
+      REAL(DP) :: qqf, dum, byccc
       !
       nkbx = nkb
       ngwx = SIZE( cp_bgrp, 1 )
@@ -505,20 +603,16 @@
       CALL c_bgrp_expand( cp_bgrp )
       CALL c_bgrp_expand( phi_bgrp )
       !
-      ALLOCATE( xloc( nx0, nx0 ), STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho ', ' allocating xloc ', ABS( info ) )
-      !
       nspin_sub = nspin 
       if( force_pairing ) nspin_sub = 1
       !
       DO iss = 1, nspin_sub
 
-         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) xloc = x0(:,:,iss) * ccc
+         CALL x0_to_xloc( x0(:,:,iss), nx0, ccc, idesc(:,iss) )
 
          CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
-                           qbephi(:,:,iss), xloc, nx0, idesc(:,iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )
+                           qbephi(:,:,iss), nx0, idesc(:,iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )
 
          IF( iter > ortho_max ) THEN
             WRITE( stdout, 100 ) diff, iter
@@ -529,13 +623,12 @@
             WRITE( stdout, 100 ) diff, iter
          ENDIF
          !     
-         IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) x0( :, :, iss ) = xloc / ccc
+         CALL xloc_to_x0( x0(:,:,iss), nx0, ccc, idesc(:,iss) )
          !
       END DO
 
       IF( force_pairing ) cp_bgrp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp_bgrp(:,1:nupdwn(2))
       !
-      DEALLOCATE( xloc )
       DEALLOCATE( qbecp )
       DEALLOCATE( qbephi )
       DEALLOCATE( becp_dist )
