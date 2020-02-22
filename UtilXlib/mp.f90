@@ -4658,9 +4658,11 @@ END SUBROUTINE mp_type_free
         RETURN ! Sync not needed in this case
 #else
         ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
-        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        IF( taskid == root ) ALLOCATE( res_h(lbound(res_d,1):ubound(res_d,1), lbound(res_d,2):ubound(res_d,2)));
         CALL reduce_base_real_to( msglen, msg_h, res_h, gid, root )
-        res_d = res_h; DEALLOCATE(msg_h, res_h)
+        IF( taskid == root ) res_d = res_h;
+        IF( taskid == root ) DEALLOCATE(res_h)
+        DEALLOCATE(msg_h)
 #endif
         !
 #else
