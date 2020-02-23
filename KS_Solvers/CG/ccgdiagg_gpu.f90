@@ -11,7 +11,7 @@
 
 FUNCTION KSDdot( n, A, incx, B, incy) result( res )
   !
-  USE cg_param,       ONLY : DP
+  USE util_param,     ONLY : DP
 #if defined(__CUDA)
   USE cudafor
   USE cublas
@@ -58,11 +58,11 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
   USE cudafor
   USE cublas
 #endif
-  USE cg_param,       ONLY : DP
+  USE util_param,     ONLY : DP
   USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE mp,             ONLY : mp_sum
 #if defined(__VERBOSE)
-  USE cg_param,     ONLY : stdout
+  USE util_param,     ONLY : stdout
 #endif
   USE device_util_m,  ONLY : dev_memset, dev_memcpy
   !

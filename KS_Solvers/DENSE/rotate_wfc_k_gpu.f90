@@ -18,7 +18,7 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   USE cudafor
   USE cublas
 #endif
-  USE cg_param,      ONLY : DP
+  USE util_param,    ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
           nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum

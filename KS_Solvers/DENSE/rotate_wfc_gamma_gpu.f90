@@ -22,7 +22,7 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
 #else
 #define cublasDGEMM dgemm
 #endif
-  USE cg_param,      ONLY : DP
+  USE util_param,    ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
           nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 

@@ -698,7 +698,6 @@ MODULE pw_restart_new
       USE control_flags,        ONLY : gamma_only, smallmem
       USE gvect,                ONLY : ig_l2g
       USE noncollin_module,     ONLY : noncolin, npol
-
       USE buffers,              ONLY : get_buffer
       USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k
@@ -708,15 +707,16 @@ MODULE pw_restart_new
       USE wvfct,                ONLY : npwx, et, wg, nbnd
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
-      USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
-                                       root_bgrp_id
+      USE mp_bands,             ONLY : me_bgrp, root_bgrp, intra_bgrp_comm, &
+                                       root_bgrp_id, my_bgrp_id
+      USE wrappers,             ONLY : f_mkdir_safe
       !
       USE wavefunctions_gpum,   ONLY : using_evc
       USE wvfct_gpum,           ONLY : using_et
       !
       IMPLICIT NONE
       !
-      INTEGER               :: i, ig, ngg, ipol, ispin
+      INTEGER               :: ios, ig, ngg, ipol, ispin
       INTEGER               :: ik, ik_g, ike, iks, npw_g
       INTEGER, EXTERNAL     :: global_kpoint_index
       INTEGER,  ALLOCATABLE :: ngk_g(:), mill_k(:,:)
@@ -727,6 +727,15 @@ MODULE pw_restart_new
       !
       CALL using_evc(0); CALL using_et(0) !? Is this needed? et never used!
       dirname = restart_dir ()
+      !
+      ! ... check that restart_dir exists on all processors that write
+      ! ... wavefunctions; create one if restart_dir is not found. This
+      ! ... is needed for k-point parallelization, in the case of non-parallel
+      ! ... scratch file systems, that are not visible to all processors
+      !
+      IF ( my_bgrp_id == root_bgrp_id .AND. me_bgrp == root_bgrp ) THEN
+         ios = f_mkdir_safe( TRIM(dirname) )
+      END IF
       !
       ! ... write wavefunctions and k+G vectors
       !

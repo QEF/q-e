@@ -17,7 +17,6 @@
   epwread     = .false.
 
   nbndsub     =  18
-  nbndskip    =  0
 
   wannierize  = .true.
   num_iter    = 500

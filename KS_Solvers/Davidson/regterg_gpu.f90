@@ -13,7 +13,7 @@
 !----------------------------------------------------------------------------
 SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
                     npw, npwx, nvec, nvecx, evc_d, ethr, &
-                    e_d, btype, notcnv, lrot, dav_iter )
+                    e_d, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -29,7 +29,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   use cublas
 #endif
   USE LAXlib,        ONLY : diaghg
-  USE david_param,   ONLY : DP, stdout
+  USE util_param,    ONLY : DP, stdout
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
           nbgrp, my_bgrp_id, me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart
@@ -67,6 +67,8 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
     ! number of unconverged roots
+  INTEGER, INTENT(OUT) :: nhpsi
+    ! number of individual Hpsi made
   !
   ! ... LOCAL variables
   !
@@ -183,7 +185,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi_gpu( npwx, npw, nvec, psi_d, hpsi_d )
+  CALL h_psi_gpu( npwx, npw, nvec, psi_d, hpsi_d )  ; nhpsi = nvec
   !
   ! ... spsi contains s times the basis vectors
   !
@@ -366,7 +368,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) )
+     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) ) ; nhpsi = nhpsi + notcnv
      !
      IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )
      !
@@ -598,7 +600,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
 END SUBROUTINE regterg_gpu
 
 SUBROUTINE reorder_evals_revecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
-  USE david_param,   ONLY : DP
+  USE util_param,   ONLY : DP
   USE gbuffers,  ONLY : buffer => dev_buf
   implicit none
   INTEGER, INTENT(IN) :: nbase, nvec, nvecx
@@ -662,7 +664,7 @@ END SUBROUTINE reorder_evals_revecs
 !----------------------------------------------------------------------------
 SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &  
                     npw, npwx, nvec, nvecx, evc_d, ethr, &
-                    e_d, btype, notcnv, lrot, dav_iter )
+                    e_d, btype, notcnv, lrot, dav_iter, nhpsi )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -673,7 +675,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   !
-  USE david_param,       ONLY : DP, stdout
+  USE util_param,        ONLY : DP, stdout
   USE mp_bands_util,     ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_bands_util,     ONLY : gstart
   USE mp,                ONLY : mp_bcast, mp_root_sum, mp_sum
@@ -711,6 +713,8 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer  number of iterations performed
     ! number of unconverged roots
+  INTEGER, INTENT(OUT) :: nhpsi
+    ! number of individual Hpsi made
   !
   ! ... LOCAL variables
   !
@@ -912,7 +916,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi_gpu( npwx, npw, nvec, psi_d, hpsi_d )
+  CALL h_psi_gpu( npwx, npw, nvec, psi_d, hpsi_d )  ; nhpsi = nvec
   hpsi = hpsi_d
   !
   IF ( uspp ) CALL s_psi_gpu( npwx, npw, nvec, psi_d, spsi_d )
@@ -1020,7 +1024,7 @@ SUBROUTINE pregterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ! ... here compute the hpsi and spsi of the new functions
      !
      psi_d = psi
-     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) )
+     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), hpsi_d(1,nb1) ) ; nhpsi = nhpsi + notcnv
      hpsi = hpsi_d
      !
      IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi_d(1,nb1), spsi_d(1,nb1) )

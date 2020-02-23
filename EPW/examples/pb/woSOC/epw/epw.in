@@ -13,7 +13,7 @@
   epwread     = .false.
 
   nbndsub     =  4
-  nbndskip    =  5
+  bands_skipped = 'exclude_bands = 1-5'
 
   wannierize  = .true.
   num_iter    = 300
