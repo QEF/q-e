@@ -7,6 +7,148 @@
 !
 !
 !-----------------------------------------------------------------------
+   SUBROUTINE beta_eigr_x ( beigr, nspmn, nspmx, eigr, pptype_ )
+!-----------------------------------------------------------------------
+
+      !     computes: the array becp
+      !     beigr(ig,iv)=
+      !         = [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* 
+      !
+      !     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
+      !     input : beta(ig,l,is), eigr, c
+      !     output: becp as parameter
+      !
+      USE kinds,      ONLY : DP
+      USE ions_base,  only : nat, nsp, ityp
+      USE gvecw,      only : ngw
+      USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
+      USE uspp_param, only : nh, upf, nhm
+      !
+      USE gvect, ONLY : gstart
+!
+      implicit none
+
+      integer,     intent(in)  :: nspmn, nspmx
+      complex(DP), intent(in)  :: eigr( :, : )
+      complex(DP), intent(out) :: beigr( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
+      !
+      integer   :: ig, is, iv, ia, l, inl
+      complex(DP) :: cfact
+      integer :: pptype
+      !
+      call start_clock( 'beta_eigr' )
+
+      IF( PRESENT( pptype_ ) ) THEN
+         pptype = pptype_
+      ELSE
+         pptype = 0
+      END IF
+
+      !allocate( wrk2( ngw, nkb ) ) 
+
+      beigr = 0.0d0
+
+!$omp parallel default(none), &
+!$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,pptype,nspmn,nspmx,upf,gstart,indv_ijkb0), &
+!$omp private(is,ia,iv,inl,l,cfact,ig)
+!$omp do
+      DO ia = 1, nat
+         is = ityp(ia)
+         !
+         IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
+         IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
+         IF( is >= nspmn .AND. is <= nspmx ) THEN
+              !
+              inl = indv_ijkb0(ia)
+
+              do iv = 1, nh( is )
+                !
+                l = nhtol( iv, is )
+                !
+                if (l == 0) then
+                  cfact =   cmplx( 1.0_dp , 0.0_dp )
+                else if (l == 1) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                else if (l == 2) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact
+                else if (l == 3) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact * cfact
+                endif
+                !
+                !  q = 0   component (with weight 1.0)
+                !
+                if (gstart == 2) then
+                  beigr( 1, iv + inl ) = cfact * beta(1,iv,is) * eigr(1,ia)
+                end if
+                !
+                !   q > 0   components (with weight 2.0)
+                !
+                do ig = gstart, ngw
+                  beigr( ig, iv + inl ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
+                end do
+                !
+              end do
+              !
+         END IF
+      END DO
+!$omp end do
+!$omp end parallel
+
+      call stop_clock( 'beta_eigr' )
+
+      RETURN
+   END SUBROUTINE beta_eigr_x
+!-----------------------------------------------------------------------
+!
+!
+!-----------------------------------------------------------------------
+   subroutine nlsm1us_x ( n, beigr, c, becp )
+!-----------------------------------------------------------------------
+
+      !     computes: the array becp
+      !     becp(ia,n,iv,is)=
+      !         = sum_g [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* c(g,n)
+      !         = delta_l0 beta(g=0,iv,is) c(g=0,n)
+      !          +sum_g> beta(g,iv,is) 2 re[(i)**l e^(ig.r_ia) c(g,n)]
+      !
+      !     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
+      !     input : beta(ig,l,is), eigr, c
+      !     output: becp as parameter
+      !
+      USE kinds,      ONLY : DP
+      USE mp,         ONLY : mp_sum
+      USE mp_global,  ONLY : nproc_bgrp, intra_bgrp_comm
+      USE gvecw,      only : ngw
+      USE uspp,       only : nkb
+!
+      implicit none
+
+      integer,     intent(in)  :: n
+      complex(DP), intent(in)  :: beigr( :, : ), c( :, : )
+      real(DP),    intent(out) :: becp( :, : )
+      !
+      call start_clock( 'nlsm1us' )
+
+      IF( ngw > 0 .AND. nkb > 0 ) THEN
+         CALL dgemm( 'T', 'N', nkb, n, 2*ngw, 1.0d0, beigr, 2*ngw, c, 2*ngw, 0.0d0, becp, nkb )
+      END IF
+
+      IF( nproc_bgrp > 1 ) THEN
+        CALL mp_sum( becp, intra_bgrp_comm )
+      END IF
+
+      call stop_clock( 'nlsm1us' )
+
+      return
+   end subroutine nlsm1us_x
+!-----------------------------------------------------------------------
+!
+!
+!-----------------------------------------------------------------------
    subroutine nlsm1_x ( n, nspmn, nspmx, eigr, c, becp, pptype_ )
 !-----------------------------------------------------------------------
 
@@ -27,8 +169,8 @@
       USE gvecw,      only : ngw
       USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
       USE uspp_param, only : nh, upf, nhm
-      !
-      USE gvect, ONLY : gstart
+      USE gvect,      ONLY : gstart
+      USE cp_interfaces, only : beta_eigr
 !
       implicit none
 
@@ -54,53 +196,8 @@
 
       allocate( wrk2( ngw, nkb ) ) 
       allocate( becps( SIZE(becp,1), SIZE(becp,2) ) ) 
-
-      wrk2 = 0.0d0
-
-      do is = nspmn, nspmx
-        !
-        IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
-        IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
-
-          DO ia = 1, nat
-
-            IF( ityp(ia) == is ) THEN
-              !
-              inl = indv_ijkb0(ia)
-
-              do iv = 1, nh( is )
-                !
-                l = nhtol( iv, is )
-                !
-                if (l == 0) then
-                  cfact =   cmplx( 1.0_dp , 0.0_dp )
-                else if (l == 1) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                else if (l == 2) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact
-                else if (l == 3) then
-                  cfact = - cmplx( 0.0_dp , 1.0_dp )
-                  cfact = cfact * cfact * cfact
-                endif
-                !
-                !  q = 0   component (with weight 1.0)
-                !
-                if (gstart == 2) then
-                  wrk2( 1, iv + inl ) = cfact * beta(1,iv,is) * eigr(1,ia)
-                end if
-                !
-                !   q > 0   components (with weight 2.0)
-                !
-                do ig = gstart, ngw
-                  wrk2( ig, iv + inl ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
-                end do
-                !
-              end do
-              !
-            END IF
-          end do
-      end do
+ 
+      CALL beta_eigr ( wrk2, nspmn, nspmx, eigr, pptype_ )
 
       IF( ngw > 0 .AND. nkb > 0 ) THEN
          CALL dgemm( 'T', 'N', nkb, n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps, nkb )
@@ -173,8 +270,6 @@
 !
       DO k = 1, 3
          !
-         wrk2 = 0.0d0
-         !
          DO ia = 1, nat
 
             is = ityp(ia) 
@@ -218,10 +313,11 @@
 
          IF( ngw > 0 .AND. nkb > 0 ) THEN
             CALL dgemm( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
-                  c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( 1, 1, k ), nkb )
+                 c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( 1, 1, k ), nkb )
          END IF
 
       end do
+
 
       deallocate( wrk2 )
 
