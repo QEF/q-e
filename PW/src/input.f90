@@ -325,7 +325,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, inlc
-  LOGICAL  :: exst, parallelfs
+  LOGICAL  :: exst, parallelfs, domag
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
@@ -800,8 +800,16 @@ SUBROUTINE iosys()
   starting_spin_angle_ = starting_spin_angle
   angle1_   = angle1
   angle2_   = angle2
-  report_   = report
   lambda_   = lambda
+  domag     = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
+  !
+  IF ( (i_cons == 1 .OR. nspin == 2) .AND. (report /= 0) ) THEN
+     report_ = -1
+  ELSE IF ( (i_cons /= 0 .OR. report /= 0) .AND. ( domag .AND. noncolin) ) THEN
+     report_ = report
+  ELSE
+     report_ = 0
+  END IF
   !
   ! STARTING AND RESTARTING
   !
