@@ -13,7 +13,7 @@
   !!
   !! EPW setup.  
   !!
-  !! @Note: RM - Nov 2014: Noncolinear case implemented
+  !! RM - Nov 2014: Noncolinear case implemented
   !!
   !! RM - Nov 2018: Updated based on QE 6.3
   !! 
