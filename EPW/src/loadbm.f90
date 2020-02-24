@@ -1,17 +1,17 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------------
   SUBROUTINE loadbm()
   !----------------------------------------------------------------------------
   !!
   !! Load the information on the band manifold determined in Wannierization step
-  !! 
+  !!
   !-----------------------------------------------------------------------
   USE epwcom,        ONLY : filukk, nbndskip
   USE io_var,        ONLY : iunukk
@@ -21,8 +21,8 @@
   USE mp,            ONLY : mp_bcast
   !
   IMPLICIT NONE
-  ! 
-  ! Local variables 
+  !
+  ! Local variables
   INTEGER :: ios
   !! INTEGER variable for I/O control
   !

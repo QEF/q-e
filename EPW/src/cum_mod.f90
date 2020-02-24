@@ -1,38 +1,38 @@
-  !                                                                            
+  !
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------
   MODULE cum_mod
   !----------------------------------------------------------------------
-  !! 
+  !!
   !! This module contains the various routines use for cumulant expansion
-  !! 
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE spectral_cumulant()
     !-----------------------------------------------------------------------
     !!
     !!  Compute the electron spectral function including the electron-
     !!  phonon interaction using the (retarded) cumulant expansion method.
-    !!  Use the frequency-dependent self-energy from the one-shot Migdal approximation 
+    !!  Use the frequency-dependent self-energy from the one-shot Migdal approximation
     !!  read from specfun_sup.elself.
     !!
     !!  See e.g. PRL 77, 2268 (1996) and PRB 90, 085112 (2014):
-    !!  the cumulant spectral function can be calculated using a series of convolutions 
+    !!  the cumulant spectral function can be calculated using a series of convolutions
     !!  in frequency space, or using FFT.
-    !!  To converge the FFT with a small dt, we use zero padding of ImSigma outside the 
-    !!  calculated frequency range. If the convergence is not satisfactory, one can 
-    !!  set 'fact' to a larger value (6 is used as default, see the SUBROUTINE cumulant_time). 
-    !! 
+    !!  To converge the FFT with a small dt, we use zero padding of ImSigma outside the
+    !!  calculated frequency range. If the convergence is not satisfactory, one can
+    !!  set 'fact' to a larger value (6 is used as default, see the SUBROUTINE cumulant_time).
+    !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP, i4b
     USE constants_epw, ONLY : two, zero, ryd2ev, ryd2mev, ci
@@ -50,8 +50,8 @@
     CHARACTER(LEN = 64) :: filespec
     !! Spectral function file
     INTEGER(KIND = i4b) :: maxrecs = 1.0E9
-    !! Maximum number of lines in the specfun_sup.elself 
-    INTEGER :: ios 
+    !! Maximum number of lines in the specfun_sup.elself
+    INTEGER :: ios
     !! Status of opening file
     INTEGER :: im
     !! Dummy counter when reading
@@ -64,7 +64,7 @@
     INTEGER :: ibnd
     !! Band index
     INTEGER :: nk
-    !! Total number of k-points 
+    !! Total number of k-points
     INTEGER :: i0
     !! Energy index of Fermi level (w=0)
     INTEGER :: ierr
@@ -73,7 +73,7 @@
     !! Freq. increment
     REAL(KIND = DP) :: e_thresh
     !! Do the cumulant only for states with energy below e_thresh
-    REAL(KIND = DP) :: a1, a2, a3, a4 
+    REAL(KIND = DP) :: a1, a2, a3, a4
     !! Auxiliary variables
     REAL(KIND = DP) :: ekk
     !! K-S energy
@@ -84,7 +84,7 @@
     REAL(KIND = DP), ALLOCATABLE :: ek(:)
     !! Eigenvalues for the band bnd_cum
     REAL(KIND = DP), ALLOCATABLE :: sigmar(:, :) ! kpt, omega
-    !! Real self-energy for bnd_cum 
+    !! Real self-energy for bnd_cum
     REAL(KIND = DP), ALLOCATABLE :: sigmai(:, :)
     !! Imaginary self-energy for bnd_cum
     REAL(KIND = DP), ALLOCATABLE :: a_mig(:, :)
@@ -92,7 +92,7 @@
     REAL(KIND = DP), ALLOCATABLE :: a_cw(:)
     !! Cumulant spectral function (convolutions)
     REAL(KIND = DP), ALLOCATABLE :: a_ct(:)
-    !! Cumulant spectral function (FFT) 
+    !! Cumulant spectral function (FFT)
     REAL(KIND = DP), ALLOCATABLE :: a_tmp(:)
     !! Temporary spectral function
     !
@@ -166,7 +166,7 @@
         ENDDO
       ENDDO
     ENDDO
-    ! 
+    !
     CLOSE(iospectral_sup)
     !
     ! open file for cumulant spectral function
@@ -190,7 +190,7 @@
     a_cw = zero
     a_ct = zero
     a_tmp = zero
-    ! 
+    !
     DO ik = 1, nk
       IF (ek(ik) < e_thresh) THEN
         !
@@ -215,10 +215,10 @@
           ! 3rd column: A_cum using convolutions; 4th column: A_cum using FFT
           IF (iw == 1) THEN
             WRITE(iospectral_cum, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7,3x,f8.4)') &
-                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta 
+                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta
             WRITE(stdout,'(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7,3x,f8.4)') &
-                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta 
-          ELSE 
+                  ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev, zeta
+          ELSE
             WRITE(iospectral_cum, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
                   ik, ww(iw) * ryd2ev, a_cw(iw) / ryd2mev, a_ct(iw) / ryd2mev !/ ( EXP(ww(iw)/eptemp )+1.d0 )
             WRITE(stdout, '(2x,i7,2x,f10.5,3x,e16.7,3x,e16.7)') &
@@ -234,7 +234,7 @@
       ENDIF ! only states below energy e_thresh
       !
     ENDDO ! main loop k
-    ! 
+    !
     WRITE(stdout, '(5x,a)') 'The file specfun_cum[BND].elself has been correctly written'
     !
     CLOSE(iospectral_cum)
@@ -264,7 +264,7 @@
     SUBROUTINE cumulant_conv(ek, ww, sigmar, sigmai, a_mig, a_cum, zeta)
     !-----------------------------------------------------------------------
     !!
-    !! Convolution for the cumulant expansion. 
+    !! Convolution for the cumulant expansion.
     !!
     !
     USE kinds,         ONLY : DP
@@ -278,12 +278,12 @@
     !! K-S energy
     REAL(KIND = DP), INTENT(in) :: ww(nw_specfun)
     !! Frequency variable
-    REAL(KIND = DP), INTENT(in) :: sigmar(nw_specfun) 
-    !! Real self-energy 
+    REAL(KIND = DP), INTENT(in) :: sigmar(nw_specfun)
+    !! Real self-energy
     REAL(KIND = DP), INTENT(in) :: sigmai(nw_specfun)
     !! Imaginary self-energy
     REAL(KIND = DP), INTENT(in) :: a_mig(nw_specfun)
-    !! Migdal spectral function 
+    !! Migdal spectral function
     REAL(KIND = DP), INTENT(out) :: a_cum(nw_specfun)
     !! Cumulant spectral function
     REAL(KIND = DP), INTENT(out) :: zeta
@@ -296,7 +296,7 @@
     !! Second freq. counter for the convolution
     INTEGER :: indw
     !! Auxillary indices for convolution
-    INTEGER :: ind1 
+    INTEGER :: ind1
     !! Auxillary indices for convolution
     INTEGER :: isat
     !! Index to number the satellite
@@ -319,11 +319,11 @@
     REAL(KIND = DP) :: drS
     !! Derivative of ReSigma at qp energy
     REAL(KIND = DP) :: a_qp(nw_specfun)
-    !! Quasiparticle contribution to the spectral function 
+    !! Quasiparticle contribution to the spectral function
     REAL(KIND = DP) :: a_s(nw_specfun)
-    !! Temporary quantity needed to compute the satelite 
+    !! Temporary quantity needed to compute the satelite
     REAL(KIND = DP) :: conv(nw_specfun)
-    !! Temporary quantity to compute the convolution 
+    !! Temporary quantity to compute the convolution
     REAL(KIND = DP) :: a_s1(nw_specfun), a_s2(nw_specfun), a_s3(nw_specfun)
     !! satellites
     !
@@ -339,7 +339,7 @@
     si_qp = ABS(sigmai(iqp))
     si_ks = ABS(sigmai(iks))
     ! finite difference derivatives of Im and Re Sigma
-    diS = (ABS(sigmai(iks + 1)) - ABS(sigmai(iks - 1))) / (2.d0 * dw) 
+    diS = (ABS(sigmai(iks + 1)) - ABS(sigmai(iks - 1))) / (2.d0 * dw)
     drS = (sigmar(iqp + 1) - sigmar(iqp - 1)) / (2.d0 * dw)
     zeta = EXP(drS)
     !
@@ -411,12 +411,12 @@
     !! K-S energy
     REAL(KIND = DP), INTENT(in) :: ww(nw_specfun)
     !! Frequency variable
-    REAL(KIND = DP), INTENT(in) :: sigmar(nw_specfun) 
-    !! Real self-energy 
+    REAL(KIND = DP), INTENT(in) :: sigmar(nw_specfun)
+    !! Real self-energy
     REAL(KIND = DP), INTENT(in) :: sigmai(nw_specfun)
     !! Imaginary self-energy
     REAL(KIND = DP), INTENT(in) :: a_mig(nw_specfun)
-    !! Migdal spectral function 
+    !! Migdal spectral function
     REAL(KIND = DP), INTENT(out) :: a_cum(nw_specfun)
     !! Cumulant spectral function
     !
@@ -435,7 +435,7 @@
     INTEGER :: ind1, ind2
     !! aux indices
     INTEGER :: nw_new
-    !! number of points used for FFT 
+    !! number of points used for FFT
     !! Zero padding is used for ImSigma outside the energy range computed.
     INTEGER :: ierr
     !! Error status
@@ -454,7 +454,7 @@
     !! time increment
     REAL(KIND = DP) :: tmin, tmax
     !! min and max of time interval
-    REAL(KIND = DP) :: tt 
+    REAL(KIND = DP) :: tt
     !! time variable
     COMPLEX(KIND = DP), ALLOCATABLE :: cumS(:)
     !! satellite part of the cumulant function
@@ -524,7 +524,7 @@
     DO iw = 1, nw_specfun
       IF (iw <= (nw_specfun - i0 + 1)) THEN
         a_cum(iw) = REAL(REAL(cum(iw)))
-      ELSE 
+      ELSE
         ind1 = iw + nw_new - nw_specfun
         a_cum(iw) = REAL(REAL(cum(ind1)))
       ENDIF
@@ -538,7 +538,7 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE cumulant_time
     !-----------------------------------------------------------------------
-    ! 
+    !
   !-----------------------------------------------------------------------
   END MODULE cum_mod
   !-----------------------------------------------------------------------

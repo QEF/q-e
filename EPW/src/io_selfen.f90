@@ -1,20 +1,20 @@
   !
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
-  !                                                                            
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
+  !
   !----------------------------------------------------------------------
   MODULE io_selfen
   !----------------------------------------------------------------------
-  !! 
-  !! This module contains various writing or reading routines related to self-energies. 
-  !! Most of them are for restart purposes. 
-  !! 
+  !!
+  !! This module contains various writing or reading routines related to self-energies.
+  !! Most of them are for restart purposes.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
     !
     !----------------------------------------------------------------------------
@@ -22,7 +22,7 @@
     !----------------------------------------------------------------------------
     !!
     !! Write self-energy
-    !! 
+    !!
     USE kinds,     ONLY : DP
     USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
     USE io_var,    ONLY : iufilsigma_all
@@ -46,7 +46,7 @@
     !! Imaginary part of the electron-phonon self-energy accross all pools
     REAL(KIND = DP), INTENT(inout) :: zi_all(nbndfst, nktotf)
     !! Z parameter of electron-phonon self-energy accross all pools
-    ! 
+    !
     ! Local variables
     LOGICAL :: exst
     !! Does the file exist
@@ -92,9 +92,9 @@
       CALL davcio(aux, lsigma_all, iufilsigma_all, 1, +1)
       CLOSE(iufilsigma_all)
     ENDIF
-    ! 
+    !
     ! Make everythin 0 except the range of k-points we are working on
-    IF (lower_bnd > 1) THEN 
+    IF (lower_bnd > 1) THEN
       sigmar_all(:, 1:lower_bnd - 1) = zero
       sigmai_all(:, 1:lower_bnd - 1) = zero
       zi_all(:, 1:lower_bnd - 1) = zero
@@ -104,17 +104,17 @@
       sigmai_all(:, upper_bnd + 1:nktotf) = zero
       zi_all(:, upper_bnd + 1:nktotf) = zero
     ENDIF
-    ! 
+    !
     !----------------------------------------------------------------------------
     END SUBROUTINE selfen_el_write
     !----------------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE selfen_el_read(iqq, totq, nktotf, sigmar_all, sigmai_all, zi_all)
     !----------------------------------------------------------------------------
-    !! 
+    !!
     !! Self-energy reading
-    !! 
+    !!
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
@@ -139,7 +139,7 @@
     !! Imaginary part of the electron-phonon self-energy accross all pools
     REAL(KIND = DP), INTENT(out) :: zi_all(nbndfst, nktotf)
     !! Z parameter of electron-phonon self-energy accross all pools
-    ! 
+    !
     ! Local variables
     LOGICAL :: exst
     !! Does the file exist
@@ -155,7 +155,7 @@
     !! Total number of q-point read
     REAL(KIND = DP) :: aux(3 * nbndfst * nktotf + 2)
     !! Vector to store the array
-    ! 
+    !
     CHARACTER(LEN = 256) :: name1
     !
     IF (mpime == ionode_id) THEN
@@ -165,9 +165,9 @@
       name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart1'
 #else
       name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart'
-#endif    
+#endif
       INQUIRE(FILE = name1, EXIST = exst)
-      ! 
+      !
       IF (exst) THEN ! read the file
         !
         lsigma_all = 3 * nbndfst * nktotf + 2
@@ -180,7 +180,7 @@
         nqtotf_read = INT(aux(2))
         IF (nqtotf_read /= totq) CALL errore('selfen_el_read', &
           &'Error: The current total number of q-point is not the same as the read one. ', 1)
-        ! 
+        !
         i = 2
         DO ik = 1, nktotf
           DO ibnd = 1, nbndfst
@@ -203,7 +203,7 @@
         CLOSE(iufilsigma_all)
       ENDIF
     ENDIF
-    ! 
+    !
     CALL mp_bcast(exst, ionode_id, world_comm)
     !
     IF (exst) THEN
@@ -211,7 +211,7 @@
       CALL mp_bcast(sigmar_all, ionode_id, world_comm)
       CALL mp_bcast(sigmai_all, ionode_id, world_comm)
       CALL mp_bcast(zi_all, ionode_id, world_comm)
-      ! 
+      !
       ! Make everythin 0 except the range of k-points we are working on
       IF (lower_bnd > 1) THEN
         sigmar_all(:, 1:lower_bnd - 1) = zero
@@ -223,10 +223,10 @@
         sigmai_all(:, upper_bnd + 1:nktotf) = zero
         zi_all(:, upper_bnd + 1:nktotf) = zero
       ENDIF
-      ! 
+      !
       WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iqq,'/', totq
     ENDIF
-    ! 
+    !
     !----------------------------------------------------------------------------
     END SUBROUTINE selfen_el_read
     !----------------------------------------------------------------------------
@@ -236,7 +236,7 @@
     !----------------------------------------------------------------------------
     !!
     !! Write self-energy
-    !! 
+    !!
     USE kinds,     ONLY : DP
     USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
     USE epwcom,    ONLY : wmin_specfun, wmax_specfun, nw_specfun
@@ -259,7 +259,7 @@
     !! Real part of the electron-phonon self-energy accross all pools
     REAL(KIND = DP), INTENT(inout) :: esigmai_all(nbndfst, nktotf, nw_specfun)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    ! 
+    !
     ! Local variables
     LOGICAL :: exst
     !! Does the file exist
@@ -316,9 +316,9 @@
       CALL davcio(aux, lesigma_all, iufilesigma_all, 1, +1)
       CLOSE(iufilesigma_all)
     ENDIF
-    ! 
+    !
     ! Make everythin 0 except the range of k-points we are working on
-    IF (lower_bnd > 1) THEN 
+    IF (lower_bnd > 1) THEN
       esigmar_all(:, 1:lower_bnd - 1, :) = zero
       esigmai_all(:, 1:lower_bnd - 1, :) = zero
     ENDIF
@@ -326,17 +326,17 @@
       esigmar_all(:, upper_bnd + 1:nktotf, :) = zero
       esigmai_all(:, upper_bnd + 1:nktotf, :) = zero
     ENDIF
-    ! 
+    !
     !----------------------------------------------------------------------------
     END SUBROUTINE spectral_write
     !----------------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE spectral_read(iqq, totq, nktotf, esigmar_all, esigmai_all)
     !----------------------------------------------------------------------------
-    !! 
+    !!
     !! Self-energy reading
-    !! 
+    !!
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
     USE elph2,     ONLY : lower_bnd, upper_bnd, nbndfst
@@ -360,7 +360,7 @@
     !! Real part of the electron-phonon self-energy accross all pools
     REAL(KIND = DP), INTENT(out) :: esigmai_all(nbndfst, nktotf, nw_specfun)
     !! Imaginary part of the electron-phonon self-energy accross all pools
-    ! 
+    !
     ! Local variables
     LOGICAL :: exst
     !! Does the file exist
@@ -382,7 +382,7 @@
     !! Current frequency
     REAL(KIND = DP) :: aux(2 * nbndfst * nktotf * nw_specfun + 2)
     !! Vector to store the array
-    ! 
+    !
     CHARACTER(LEN = 256) :: name1
     !
     !
@@ -393,9 +393,9 @@
       name1 = TRIM(tmp_dir) // TRIM(prefix) // '.esigma_restart1'
 #else
       name1 = TRIM(tmp_dir) // TRIM(prefix) // '.esigma_restart'
-#endif    
+#endif
       INQUIRE(FILE = name1, EXIST = exst)
-      ! 
+      !
       IF (exst) THEN ! read the file
         !
         lesigma_all = 2 * nbndfst * nktotf * nw_specfun + 2
@@ -408,7 +408,7 @@
         nqtotf_read = INT(aux(2))
         IF (nqtotf_read /= totq) CALL errore('electron_read',&
           &'Error: The current total number of q-point is not the same as the read one. ', 1)
-        ! 
+        !
         i = 2
         DO ik = 1, nktotf
           DO ibnd = 1, nbndfst
@@ -429,14 +429,14 @@
         CLOSE(iufilesigma_all)
       ENDIF
     ENDIF
-    ! 
+    !
     CALL mp_bcast(exst, ionode_id, world_comm)
     !
     IF (exst) THEN
       CALL mp_bcast(iqq, ionode_id, world_comm)
       CALL mp_bcast(esigmar_all, ionode_id, world_comm)
       CALL mp_bcast(esigmai_all, ionode_id, world_comm)
-      ! 
+      !
       ! Make everythin 0 except the range of k-points we are working on
       IF (lower_bnd > 1) THEN
         esigmar_all(:, 1:lower_bnd - 1, :) = zero
@@ -446,14 +446,14 @@
         esigmar_all(:, upper_bnd + 1:nktotf, :) = zero
         esigmai_all(:, upper_bnd + 1:nktotf, :) = zero
       ENDIF
-      ! 
+      !
       WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ', iqq,'/', totq
     ENDIF
-    ! 
+    !
     !----------------------------------------------------------------------------
     END SUBROUTINE spectral_read
     !----------------------------------------------------------------------------
-    ! 
+    !
   !------------------------------------------------------------------------------
   END MODULE io_selfen
   !------------------------------------------------------------------------------
