@@ -11,7 +11,7 @@
   !--------------------------------------------------------------------------
   !!
   !! This module contains all global variables used in EPW.
-  !! 
+  !!
   USE kinds, ONLY : DP
   !
   SAVE

@@ -1,45 +1,45 @@
-  !                                                                            
+  !
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !-----------------------------------------------------------------------
   MODULE kfold
   !-----------------------------------------------------------------------
   !!
   !! This module contains routine to fold k+q grids back on the k-grid
   !!
-  !  
-  USE kinds, ONLY : DP 
-  ! 
+  !
+  USE kinds, ONLY : DP
+  !
   IMPLICIT NONE
   !
   INTEGER :: g0vec_all(3, 125)
-  !! G-vectors needed to fold the k+q grid into the k grid 
-  INTEGER :: ng0vec           
+  !! G-vectors needed to fold the k+q grid into the k grid
+  INTEGER :: ng0vec
   !! number of inequivalent such translations (125)
   INTEGER, ALLOCATABLE :: shift(:)
-  !! for every k+q, index of the G_0-vector needed to fold k+q into k+q+G0 
-  INTEGER, ALLOCATABLE :: gmap(:, :)        
+  !! for every k+q, index of the G_0-vector needed to fold k+q into k+q+G0
+  INTEGER, ALLOCATABLE :: gmap(:, :)
   !! the map G --> G-G_0 in the large (density) set, for every G_0 (125 at most)
   REAL(KIND = DP) :: g0vec_all_r(3, 125)
-  !! G-vectors needed to fold the k+q grid into the k grid, cartesian coord. 
-  ! 
+  !! G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
+  !
   CONTAINS
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE createkmap(xq)
     !-----------------------------------------------------------------------
-    !!  
+    !!
     !! This SUBROUTINE is called from elphon_shuffle_wrap for each
-    !! nqc1*nqc2*nqc3 phonon on the coarse mesh.    
+    !! nqc1*nqc2*nqc3 phonon on the coarse mesh.
     !!
-    !! It folds the k+q mesh into the k mesh using 5^3 G_0 translations 
+    !! It folds the k+q mesh into the k mesh using 5^3 G_0 translations
     !!
-    !! SP - 2016 - iverbosity cannot be tested here. Generates Tb of data ... 
+    !! SP - 2016 - iverbosity cannot be tested here. Generates Tb of data ...
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
@@ -56,7 +56,7 @@
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: xq(3)
-    !! Coords. of q-point 
+    !! Coords. of q-point
     !
     ! Local variables
     LOGICAL :: in_the_list
@@ -96,14 +96,14 @@
       !  Since this is done before divide and impera, every pool has all the kpoints.
       !
       !  bring q in crystal coordinates and check commensuration
-      !  loosy tolerance: not important since k+q is defined through NINT() 
-      !  bring q-point from cartesian to crystal coords.  
+      !  loosy tolerance: not important since k+q is defined through NINT()
+      !  bring q-point from cartesian to crystal coords.
       !
       CALL cryst_to_cart(1, xq, at, -1)
       !
-      xx = xq(1) * nkc1 
-      yy = xq(2) * nkc2 
-      zz = xq(3) * nkc3 
+      xx = xq(1) * nkc1
+      yy = xq(2) * nkc2
+      zz = xq(3) * nkc3
       in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                     ABS(yy - NINT(yy)) <= eps5 .AND. &
                     ABS(zz - NINT(zz)) <= eps5
@@ -139,7 +139,7 @@
         !
         IF ((xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5)) THEN
           CALL errore('createkmap', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
-        ENDIF 
+        ENDIF
       ENDDO
       !
       DO ik = 1, nkstot
@@ -158,9 +158,9 @@
         !
         ! Find the index of this k+q in the k-grid
         !
-        i = MOD(NINT(xx + 2 * nkc1), nkc1) 
-        j = MOD(NINT(yy + 2 * nkc2), nkc2) 
-        k = MOD(NINT(zz + 2 * nkc3), nkc3) 
+        i = MOD(NINT(xx + 2 * nkc1), nkc1)
+        j = MOD(NINT(yy + 2 * nkc2), nkc2)
+        k = MOD(NINT(zz + 2 * nkc3), nkc3)
         !
         xx_n = xx
         yy_n = yy
@@ -214,23 +214,23 @@
         ! very important: now redefine k+q through the corresponding kpoint on the k mesh
         ! Note that this will require using the periodic gauge in the calculation of the
         ! electron-phonon matrix elements (factor e^iG_0*r if G_0 is the vector used for refolding)
-        xkq(:, ik) = xk(:, n) 
+        xkq(:, ik) = xk(:, n)
         !
       ENDDO
       !
-      ! bring k-points, q-point, and G_0-vectors back to cartesian coordinates 
+      ! bring k-points, q-point, and G_0-vectors back to cartesian coordinates
       !
-      CALL cryst_to_cart(1, xq, bg, 1) 
+      CALL cryst_to_cart(1, xq, bg, 1)
       CALL cryst_to_cart(nkstot, xk, bg, 1)
       !
       g0vec_all_r = DBLE(g0vec_all)
       CALL cryst_to_cart(ng0vec, g0vec_all_r, bg, 1)
       !
       !  the unit with kmap(ik) and shift(ik)
-      ! 
+      !
       OPEN(iukmap, FILE = TRIM(prefix) // '.kmap', FORM = 'formatted')
       DO ik = 1, nkstot
-        WRITE(iukmap,'(3i6)') ik, kmap(ik), shift(ik) 
+        WRITE(iukmap,'(3i6)') ik, kmap(ik), shift(ik)
       ENDDO
       CLOSE(iukmap)
       !
@@ -241,30 +241,30 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE createkmap
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE createkmap2(xxq)
     !-----------------------------------------------------------------------
     !!
-    !! generate the map k+q --> k for folding the rotation matrix U(k+q) 
-    !! 
-    !! in parallel case, this SUBROUTINE must be called only by first proc 
+    !! generate the map k+q --> k for folding the rotation matrix U(k+q)
+    !!
+    !! in parallel case, this SUBROUTINE must be called only by first proc
     !! (which has all the kpoints)
     !!
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
     USE klist,         ONLY : nkstot, xk
-    USE klist_epw,     ONLY : kmap  
+    USE klist_epw,     ONLY : kmap
     USE epwcom,        ONLY : nkc1, nkc2, nkc3
     USE elph2,         ONLY : xkq
     USE constants_epw, ONLY : eps5, zero
-    ! 
+    !
     IMPLICIT NONE
     !
     REAL(KIND = DP), INTENT(in) :: xxq(3)
-    !! The current q-point 
-    ! 
+    !! The current q-point
+    !
     ! Local variables
     LOGICAL :: in_the_list
     !! Is the file in the list
@@ -283,18 +283,18 @@
     !
     ! The first proc keeps a copy of all kpoints !
     ! bring q from cartesian to crystal coordinates and check commensuration
-    ! 
+    !
     CALL cryst_to_cart(1, xxq, at, -1)
     !
-    xx = xxq(1) * nkc1 
-    yy = xxq(2) * nkc2 
-    zz = xxq(3) * nkc3 
+    xx = xxq(1) * nkc1
+    yy = xxq(2) * nkc2
+    zz = xxq(3) * nkc3
     in_the_list = ABS(xx - NINT(xx)) <= eps5 .AND. &
                   ABS(yy - NINT(yy)) <= eps5 .AND. &
                   ABS(zz - NINT(zz)) <= eps5
     IF (.NOT. in_the_list) CALL errore('createkmap2', 'q-vec not commensurate', 1)
     !
-    !  bring all the k-points from cartesian to crystal coordinates 
+    !  bring all the k-points from cartesian to crystal coordinates
     !
     CALL cryst_to_cart(nkstot, xk, at, -1)
     !
@@ -312,7 +312,7 @@
       !
       IF ((xx_c(ik) < -eps5) .OR. (yy_c(ik) < -eps5) .OR. (zz_c(ik) < -eps5)) THEN
         CALL errore('createkmap2', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
-      ENDIF 
+      ENDIF
     ENDDO
     !
     DO ik = 1, nkstot
@@ -354,9 +354,9 @@
       !
     ENDDO
     !
-    ! bring everybody back to cartesian coordinates 
+    ! bring everybody back to cartesian coordinates
     !
-    CALL cryst_to_cart(1, xxq, bg, 1) 
+    CALL cryst_to_cart(1, xxq, bg, 1)
     CALL cryst_to_cart(nkstot, xk, bg, 1)
     !
     RETURN
@@ -368,7 +368,7 @@
     SUBROUTINE createkmap_pw2()
     !-------------------------------------------------------------------------
     !!
-    !! Creates the first instance of [prefix].kgmap. 
+    !! Creates the first instance of [prefix].kgmap.
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
@@ -384,7 +384,7 @@
     USE fft_ggen,      ONLY : fft_set_nl
     USE constants,     ONLY : eps8
     USE constants_epw, ONLY : eps5
-#if defined(__NAG) 
+#if defined(__NAG)
     USE f90_unix_io,   ONLY : flush
 #endif
     USE mp_global,     ONLY : inter_pool_comm, inter_image_comm
@@ -414,21 +414,21 @@
     INTEGER :: ierr
     !! Error status
     INTEGER, ALLOCATABLE :: ig_l2g(:)
-    !! Converts a local G-vector index into the global index 
+    !! Converts a local G-vector index into the global index
     INTEGER, ALLOCATABLE :: g2l(:)
-    !! Local index of G-vector 
+    !! Local index of G-vector
     INTEGER, ALLOCATABLE :: mill_unsorted(:, :)
     !! Array of unsorted Miller indices of G-vectors
     INTEGER, ALLOCATABLE :: mill(:, :)
-    !! Array of sorted Miller indices of G-vectors in increasing order of G^2 
+    !! Array of sorted Miller indices of G-vectors in increasing order of G^2
     INTEGER, ALLOCATABLE :: igsrt(:)
-    !! Array of G-vector indices in the initial (unsorted) list 
-    !! (index of i-th G-vector in the unsorted list of G-vectors) 
+    !! Array of G-vector indices in the initial (unsorted) list
+    !! (index of i-th G-vector in the unsorted list of G-vectors)
     INTEGER, ALLOCATABLE :: jtoi(:)
-    !! For the i-th G-vector in the sorted list, jtoi(i) 
+    !! For the i-th G-vector in the sorted list, jtoi(i)
     !! returns its index in the unsorted list
     INTEGER, ALLOCATABLE :: itoj(:)
-    !! itoj(i) returns the index of the G-vector in the sorted list 
+    !! itoj(i) returns the index of the G-vector in the sorted list
     !! that was at i-th position in the unsorted list
     REAL(KIND = DP) :: xx, yy, zz
     !! k-point in crystal coords. in multiple of nkc1, nkc2, nkc3
@@ -442,14 +442,14 @@
     !! G-vectors for the current processor
     REAL(KIND = DP), ALLOCATABLE :: tt(:)
     !! Temporal array
-    ! 
+    !
     IF (meta_ionode) THEN
       !
       WRITE(stdout, '(/5x,a)') 'Calculating kgmap'
       FLUSH(stdout)
       !
       OPEN(iukgmap, FILE = TRIM(prefix) // '.kgmap', FORM = 'formatted')
-      ! 
+      !
       ! the 5^3 possible G_0 translations
       ng0vec = 0
       DO ig1 = -2, 2
@@ -466,18 +466,18 @@
       !
       ALLOCATE(shift(nkstot), STAT = ierr)
       IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error allocating shift', 1)
-      ! 
-      DO ik = 1, nkstot       
+      !
+      DO ik = 1, nkstot
         !
         xx = xk_cryst(1, ik) * nkc1
         yy = xk_cryst(2, ik) * nkc2
         zz = xk_cryst(3, ik) * nkc3
         ! check that the k-mesh was defined in the positive region of 1st BZ
         !
-        IF ((xx < -eps5) .OR. (yy < -eps5) .OR. (zz < -eps5)) THEN 
+        IF ((xx < -eps5) .OR. (yy < -eps5) .OR. (zz < -eps5)) THEN
           CALL errore('createkmap_pw2','coarse k-mesh needs to be strictly positive in 1st BZ', 1)
-        ENDIF 
-        ! 
+        ENDIF
+        !
         shift(ik) = ig0
         WRITE(iukgmap,'(3i6)') ik, shift(ik)
         !
@@ -495,7 +495,7 @@
       ENDDO
       !
     ENDIF
-    !   
+    !
     CALL mp_barrier(inter_pool_comm)
     CALL mp_barrier(inter_image_comm)
     !
@@ -609,7 +609,7 @@
     IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error deallocating g2sort_g', 1)
     DEALLOCATE(tt, STAT = ierr)
     IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error deallocating tt', 1)
-    !  
+    !
     ngm = 0
     !
     DO ng = 1, ngm_max
@@ -623,7 +623,7 @@
         ngm = ngm + 1
         !
         ig_l2g(ngm) = ng
-        ! 
+        !
         g(1:3, ngm) = i * bg(:, 1) + j * bg(:, 2) + k * bg(:, 3)
         gg(ngm) = SUM(g(1:3, ngm)**2)
       ENDIF
@@ -670,23 +670,23 @@
     !-------------------------------------------------------------------------
     END SUBROUTINE createkmap_pw2
     !-------------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE refold(ngm_g, mill_g, itoj, jtoi)
     !----------------------------------------------------------------------
     !!
-    !! Map the indices of G+G_0 into those of G 
+    !! Map the indices of G+G_0 into those of G
     !! this is used to calculate electron-phonon matrix elements by
     !! refolding the k+q points into the first BZ (original k grid)
     !!
-    !! No parallelization on G-vecs at the moment  
+    !! No parallelization on G-vecs at the moment
     !! (actually this is done on the global array, but in elphel2.f90
     !! every processor has just a chunk of the array, I may need some
     !! communication)
     !!
-    !! I use the rule : if not found then gmap = 0 
-    !! Note that the map will be used only up to npwx (small sphere), 
-    !! while the G-vectors lost in the process are on the surface of 
+    !! I use the rule : if not found then gmap = 0
+    !! Note that the map will be used only up to npwx (small sphere),
+    !! while the G-vectors lost in the process are on the surface of
     !! the large sphere (density set).
     !!
     !-----------------------------------------------------------------
@@ -705,11 +705,11 @@
     INTEGER, INTENT(in) :: itoj(ngm_g)
     !! itoj(i) returns the index of the G-vector in the sorted list
     !! that was at i-th position in the unsorted list
-    ! 
+    !
     ! Local variables
     LOGICAL :: tfound
     !! Found
-    INTEGER :: ig0 
+    INTEGER :: ig0
     !! Counter on G_0 vectors
     INTEGER :: ig1, ig2
     !! Counter on G vectors
@@ -718,13 +718,13 @@
     INTEGER :: ig1_use
     !! Temporary G-vectors indices
     INTEGER :: ig2_use
-    !!  
+    !!
     INTEGER :: ig2_guess
-    !!  
+    !!
     INTEGER :: notfound
-    !!  
+    !!
     INTEGER :: guess_skip
-    !!  
+    !!
     INTEGER :: indnew
     !!
     INTEGER :: indold
@@ -801,7 +801,7 @@
         ENDIF
       ENDDO
     ENDDO ! ng0vec
-    ! 
+    !
     !  output on file for electron-phonon matrix elements
     !
     IF (.NOT. meta_ionode) iukgmap = stdout
@@ -818,24 +818,24 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE refold
     !-----------------------------------------------------------------------
-    ! 
+    !
     !---------------------------------
     SUBROUTINE backtoBZ(xx, yy, zz, n1, n2, n3)
     !---------------------------------
     !!
-    !!  Brings xx, yy, and zz  into first BZ 
+    !!  Brings xx, yy, and zz  into first BZ
     !!
     !---------------------------------
     !
     USE kinds,  ONLY : DP
     !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: n1, n2, n3
     !! cell size
     REAL(KIND = DP), INTENT(inout) :: xx, yy, zz
     !! kgrid
-    ! 
+    !
     ! Local variables
     INTEGER :: ib
     !! Size of replicas
@@ -857,12 +857,12 @@
     !-------------------------------------------
     END SUBROUTINE backtoBZ
     !-------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------
     SUBROUTINE ktokpmq(xk, xq, sign, ipool, nkq, nkq_abs)
     !--------------------------------------------------------
     !!
-    !! For a given k point in cart coord, find the index 
+    !! For a given k point in cart coord, find the index
     !! of the corresponding (k + sign*q) point
     !!
     !! In the parallel case, determine also the pool number
@@ -886,7 +886,7 @@
     INTEGER, INTENT(in) :: sign
     !! +1 for searching k+q, -1 for k-q
     INTEGER, INTENT(out) :: nkq
-    !! The pool hosting the k+-q point    
+    !! The pool hosting the k+-q point
     INTEGER, INTENT(out) :: nkq_abs
     !! the index of k+sign*q
     INTEGER, INTENT(out) :: ipool
@@ -906,15 +906,15 @@
     INTEGER :: n
     !! Mapping index of k+q on k
     INTEGER :: iks
-    !! 
+    !!
     INTEGER :: nkl
-    !! 
+    !!
     INTEGER :: nkr
     !! Nb of kpt per pool
     INTEGER :: jpool
-    !! 
+    !!
     INTEGER :: kunit
-    !! 
+    !!
     REAL(KIND = DP) :: xxk(3)
     !! Coords. of k-point
     REAL(KIND = DP) :: xxq(3)
@@ -981,7 +981,7 @@
       found = NINT(xx_c) == NINT(xx) .AND. &
               NINT(yy_c) == NINT(yy) .AND. &
               NINT(zz_c) == NINT(zz)
-      IF (found) THEN  
+      IF (found) THEN
         n = ik
         EXIT
       ENDIF
@@ -994,7 +994,7 @@
     IF (n == 0) CALL errore('ktokpmq', 'problem indexing k+q', 1)
     !
     ! Now n represents the index of k+sign*q in the original k grid.
-    ! In the parallel case we have to find the corresponding pool 
+    ! In the parallel case we have to find the corresponding pool
     ! and index in the pool
     !
 #if defined(__MPI)
@@ -1031,7 +1031,7 @@
     !---------------------------------------------------------------------
     END SUBROUTINE ktokpmq
     !---------------------------------------------------------------------
-    ! 
+    !
   !-----------------------------------------------------------------------
   END MODULE kfold
   !-----------------------------------------------------------------------
