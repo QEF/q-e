@@ -34,10 +34,12 @@ SUBROUTINE report_mag
       IF (nspin == 2) THEN
          WRITE( stdout, * )
          WRITE( stdout, '(5X,"Magnetic moment per site:")' )
-      ENDIF
-      !
-      DO iat = 1, nat
-         IF (noncolin) THEN
+         DO iat = 1, nat
+            WRITE(stdout,1020) iat, r1_loc(iat), m1_loc(1,iat), mcons(1,ityp(iat))
+         END DO
+         !
+      ELSE IF (noncolin) THEN
+         DO iat = 1, nat
             !
             ! norm is the length of the magnetic moment vector
             !
@@ -66,10 +68,7 @@ SUBROUTINE report_mag
             ! go to degrees
             theta = theta*180.d0/pi
             phi = phi*180.d0/pi
-         ENDIF
-         !
-         !
-         IF (noncolin) THEN
+            !
             WRITE( stdout,1010)
             WRITE( stdout,1011) iat,(tau(ipol,iat),ipol=1,3)
             WRITE( stdout,1014) r1_loc (iat)
@@ -82,11 +81,9 @@ SUBROUTINE report_mag
                WRITE( stdout,1017) 180.d0 * ACOS(mcons(3,ityp(iat)))/pi
             ENDIF
             WRITE( stdout,1010)
-         ELSE
-            WRITE(stdout,1020) iat, r1_loc(iat), m1_loc(1,iat), mcons(1,ityp(iat))
-         ENDIF
+         ENDDO
          !
-      ENDDO
+      END IF
       !
       !
  1010 FORMAT (/,1x,78('='))

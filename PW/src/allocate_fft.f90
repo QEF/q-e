@@ -80,7 +80,7 @@ SUBROUTINE allocate_fft
      ALLOCATE( pointlist(dfftp%nnr) )
      ALLOCATE( factlist(dfftp%nnr)  )
      ALLOCATE( r_loc(nat) )
-     CALL make_pointlists( )
+     !
   ENDIF
   !
   RETURN
