@@ -24,9 +24,7 @@ SUBROUTINE hinit0()
   USE ldaU,             ONLY : lda_plus_U, U_projection
   USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
-  USE lsda_mod,         ONLY : nspin
-  USE spin_orb,         ONLY : domag
-  USE noncollin_module, ONLY : report, i_cons, noncolin
+  USE noncollin_module, ONLY : report
   !
   IMPLICIT NONE
   REAL (dp) :: alat_old
@@ -97,10 +95,7 @@ SUBROUTINE hinit0()
      WRITE(stdout,'(5X,"Real space initialisation completed")')    
   ENDIF
   !
-  IF ( ( (report /= 0).OR.(i_cons /= 0) ) .AND. (noncolin.AND.domag) &
-                      .OR. (i_cons==1) .OR. nspin==2 ) THEN
-     CALL make_pointlists( )
-  END IF
+  IF ( report /= 0 ) CALL make_pointlists( )
   !
   CALL stop_clock( 'hinit0' )
   !

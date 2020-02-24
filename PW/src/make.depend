@@ -815,6 +815,7 @@ hinit0.o : ../../Modules/fft_base.o
 hinit0.o : ../../Modules/io_global.o
 hinit0.o : ../../Modules/ions_base.o
 hinit0.o : ../../Modules/kind.o
+hinit0.o : ../../Modules/noncol.o
 hinit0.o : ../../Modules/recvec.o
 hinit0.o : atomic_wfc_mod.o
 hinit0.o : ldaU.o
@@ -824,6 +825,7 @@ hinit1.o : ../../Modules/cell_base.o
 hinit1.o : ../../Modules/control_flags.o
 hinit1.o : ../../Modules/fft_base.o
 hinit1.o : ../../Modules/ions_base.o
+hinit1.o : ../../Modules/noncol.o
 hinit1.o : ../../Modules/paw_variables.o
 hinit1.o : ../../Modules/recvec.o
 hinit1.o : ../../Modules/wannier_new.o
@@ -1541,6 +1543,7 @@ pw_restart_new.o : ../../Modules/tsvdw.o
 pw_restart_new.o : ../../Modules/uspp.o
 pw_restart_new.o : ../../Modules/version.o
 pw_restart_new.o : ../../Modules/wavefunctions.o
+pw_restart_new.o : ../../Modules/wrappers.o
 pw_restart_new.o : ../../UtilXlib/mp.o
 pw_restart_new.o : Coul_cut_2D.o
 pw_restart_new.o : atomic_wfc_mod.o

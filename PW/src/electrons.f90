@@ -775,11 +775,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( lelfield ) en_el =  calc_pol ( )
      !
-     IF ( ( MOD(iter,report) == 0 ) .OR. ( report /= 0 .AND. conv_elec ) ) THEN
-        !
-        IF ( (noncolin .AND. domag) .OR. i_cons==1 .OR. nspin==2) CALL report_mag()
-        !
-     ENDIF
+     IF ( report > 0 ) THEN
+        IF ( conv_elec .OR.  MOD(iter,report) == 0 ) CALL report_mag()
+     ELSE IF ( report < 0 ) THEN
+        IF ( conv_elec ) CALL report_mag()
+     END IF
      !
      WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
