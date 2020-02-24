@@ -714,6 +714,8 @@
         !END
         ! SP: Now we treat separately the case imq == 0
         IF (imq == 0) THEN
+          ! JL: temporarily disable timerev for SOC case
+          IF (noncolin) CALL errore("elphon_shuffle_wrap", 'TR temporarily disabled with SOC', 1)
           !
           ! SP: First the vlocq need to be initialized propertly with the first
           !     q in the star
