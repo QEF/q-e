@@ -57,6 +57,16 @@
                             omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter,  &
                             auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
                             scdm_sigma, assume_metal
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE epwcom,        ONLY : wfcelec, restart_polaron, spherical_cutoff,                &
+                            model_vertex, conv_thr_polaron, n_dop,                     &
+                            polaron_wf, r01, r02, r03, num_cbands, start_band,         &
+                            start_mode, cb_shift, polaron_interpol, polaron_bq,        &
+                            polaron_dos, electron_dos, phonon_dos, diag_mode,          &
+                            restart_polaron_mode, polaron_type, nPlrn, wfcelec_old,    &
+                            sigma_plrn, ethr_Plrn, full_diagon_plrn, mixing_Plrn,      &
+                            init_plrn_wf, niterPlrn, nDOS_plrn, emax_plrn, emin_plrn,  &
+                            sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
   USE klist_epw,     ONLY : xk_all, xk_loc, xk_cryst, isk_all, isk_loc, et_all, et_loc
   USE elph2,         ONLY : elph
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m
@@ -133,7 +143,15 @@
        scatread, restart, restart_step, restart_filq, prtgkk, nel, meff,       &
        epsiheg, lphase, omegamin, omegamax, omegastep, n_r, lindabs,           &
        mob_maxiter, auto_projections, scdm_proj, scdm_entanglement, scdm_mu,   &
-       scdm_sigma, assume_metal
+       scdm_sigma, assume_metal,                                               &
+       ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+       wfcelec, restart_polaron, spherical_cutoff, model_vertex, start_mode,   &
+       conv_thr_polaron, polaron_wf, r01, r02, r03, num_cbands, start_band,    &
+       cb_shift, polaron_interpol, polaron_bq, polaron_dos, electron_dos ,     &
+       phonon_dos, diag_mode, restart_polaron_mode, polaron_type,              &
+       niterPlrn, wfcelec_old, sigma_plrn, ethr_Plrn, full_diagon_plrn,        &
+       mixing_Plrn, init_plrn_wf, nPlrn, nDOS_plrn, emax_plrn, emin_plrn,      &
+       sigma_edos_plrn, sigma_pdos_plrn, pmax_plrn, pmin_plrn
   ! tphases, fildvscf0
   !
   ! amass    : atomic masses
@@ -506,6 +524,48 @@
   selecqread = .FALSE.
   nc         = 4.0d0
   assume_metal = .FALSE.  ! default is we deal with an insulator
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  nPlrn = 1
+  niterPlrn = 50
+  n_dop = 0.d0
+  smear_rpa = 1.d0
+  wfcelec = .false.
+  !FIXME: remove it after test
+  wfcelec_old = .false.
+  restart_polaron = .false.
+  spherical_cutoff = 100.d0
+  model_vertex = .false.
+  conv_thr_polaron = 1E-5
+  polaron_wf       = .false.
+  polaron_interpol = .false.
+  polaron_bq       = .false.
+  polaron_dos      = .false.
+  r01        = 0.d0
+  r02        = 0.d0
+  r03        = 0.d0
+  num_cbands = 1 !2
+  start_band = 4 !11
+  start_mode = 1 !1
+  cb_shift   = 0 !0
+  electron_dos = .false.
+  phonon_dos = .false.
+  full_diagon_plrn = .false.
+  mixing_Plrn = 1.0
+  diag_mode = 1
+  init_plrn_wf = 2
+  nDOS_plrn = 1000
+  emin_plrn = zero
+  pmin_plrn = zero
+  emax_plrn = 1.d0
+  pmax_plrn = 1d-2
+
+  sigma_edos_plrn = 0.1d0
+  sigma_pdos_plrn = 1d-3
+
+  restart_polaron_mode = 1
+  polaron_type = -1
+  sigma_plrn  = 4.6
+  ethr_Plrn = 1E-3
   !
   !     reading the namelist inputepw
   !
@@ -814,6 +874,23 @@
   CALL mp_bcast(nk1, meta_ionode_id, world_comm)
   CALL mp_bcast(nk2, meta_ionode_id, world_comm)
   CALL mp_bcast(nk3, meta_ionode_id, world_comm)
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  CALL mp_bcast(nPlrn, meta_ionode_id, world_comm)
+  CALL mp_bcast(niterPlrn, meta_ionode_id, world_comm)
+  CALL mp_bcast( spherical_cutoff, meta_ionode_id, world_comm )
+  CALL mp_bcast( conv_thr_polaron, meta_ionode_id, world_comm )
+  CAll mp_bcast( restart_polaron, meta_ionode_id, world_comm )
+  CAll mp_bcast( polaron_type, meta_ionode_id, world_comm )
+  CAll mp_bcast( sigma_plrn, meta_ionode_id, world_comm )
+  CAll mp_bcast( full_diagon_plrn, meta_ionode_id, world_comm )
+  CAll mp_bcast( mixing_Plrn, meta_ionode_id, world_comm )
+  CAll mp_bcast( ethr_Plrn, meta_ionode_id, world_comm )
+  CAll mp_bcast( init_plrn_wf, meta_ionode_id, world_comm )
+
+  CAll mp_bcast( sigma_edos_plrn, meta_ionode_id, world_comm )
+  CAll mp_bcast( sigma_pdos_plrn, meta_ionode_id, world_comm )
+  CAll mp_bcast( pmax_plrn, meta_ionode_id, world_comm )
+  CAll mp_bcast( pmin_plrn, meta_ionode_id, world_comm )
   !
   amass = AMU_RY * amass
   !

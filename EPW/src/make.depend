@@ -201,6 +201,8 @@ ephwann_shuffle.o : transport_iter.o
 ephwann_shuffle.o : utilities.o
 ephwann_shuffle.o : wan2bloch.o
 ephwann_shuffle.o : wigner.o
+ephwann_shuffle.o : ephblochkq.o
+ephwann_shuffle.o : wfc_elec.o
 ephwann_shuffle_mem.o : ../../Modules/cell_base.o
 ephwann_shuffle_mem.o : ../../Modules/control_flags.o
 ephwann_shuffle_mem.o : ../../Modules/io_files.o
@@ -719,3 +721,5 @@ wigner.o : ../../Modules/cell_base.o
 wigner.o : ../../Modules/kind.o
 wigner.o : constants_epw.o
 wigner.o : low_lvl.o
+wfc_elec.o : test_tools.o
+ephblochkq.o : test_tools.o

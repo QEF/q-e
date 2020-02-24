@@ -126,6 +126,25 @@
     vmef(:, :, :, :),         &!  velocity matrix elements on the fine mesh (ipol, nbnd, nbnd, nks)
     bmat(:, :, :, :),         &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
     eps_rpa(:)                 !  rpa model screening
+! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+ INTEGER ::                  &
+    N1_dim,                  &
+    hh,                      &
+    Np
+  REAL(KIND = DP), ALLOCATABLE ::&
+    Ec(:),                   &
+    ekf(:),                  &
+    etfq(:,:),               &
+    etf_qs(:,:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: &
+    g2_4  (:, :, :, :),     &
+    g2_all(:,:,:,:,:),      &
+    Ac(:),                  &
+    Hkk(:,:),               &
+    H_copy(:,:),            &
+    gq(:),                  &
+    dtau(:,:,:)
+  ! End Polaron
   !--------------------------------------------------------------------------
   END MODULE elph2
   !--------------------------------------------------------------------------

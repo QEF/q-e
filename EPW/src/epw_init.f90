@@ -49,6 +49,9 @@
   USE poolgathering,    ONLY : poolgather_int, poolgather_int1
   USE io_epw,           ONLY : readwfc
   USE dvqpsi,           ONLY : dvanqq2
+  !Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE epwcom,           ONLY : polaron_wf
+  USE grid,             ONLY : loadqmesh_serial, loadkmesh_para
   !
   IMPLICIT NONE
   !
@@ -217,6 +220,14 @@
   IF (.NOT. first_run) THEN
     CALL dvanqq2()
   ENDIF
+  !
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+!  if ( polaron_wf ) then
+!     CALL loadqmesh_serial
+!     CALL loadkmesh_para
+!     call KSstate_extract ( )
+!     stop
+!  endif
   !
   CALL stop_clock('epw_init')
   !
