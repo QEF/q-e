@@ -1883,7 +1883,7 @@
     !
     INTEGER, INTENT(in) :: nkstot
     !! Total number of k-points
-    INTEGER, INTENT(out) :: ngxx
+    INTEGER, INTENT(in) :: ngxx
     !! Maximum number of G-vectors over all pools
     INTEGER, INTENT(out) :: ng0vec
     !! Number of G_0 vectors
@@ -1907,42 +1907,15 @@
     !! Integer variable for I/O control
     INTEGER :: ierr
     !! Error status
-    REAL(KIND = DP) :: tmp
-    !! Temporary variable
-    !
-    ! OBSOLETE: now we read directly the igkq to get the proper ngxx
-    ! read only a piece of the map to save time
-    ! the proper allocation bound would be ngxx = max(max(igkq))
-    ! where the max is taken over the ig and the ik
-    ! Here I use a simpler estimate: take the sphere npwx + two
-    ! extra shells. This may not work for strange shapes of the
-    ! reciproc latt. In this case just set ngxx = ngm_g
-    !
-    ! ngxx = NINT(4./3.*3.14*(2+(3.0/4.0/3.14*DBLE(npwx))**(1./3.))**3.)
-    !
-    ! Note that the k+q point below does not correspond to the actual (true)
-    ! k+q, but since we only need to take the max over k and k+q this
-    ! does not matter
-    !
-    ngxx = 0
-    DO ik = 1, nks
-      !
-      IF (MAXVAL(igk_k_all(1:ngk_all(ik + lower_bnd - 1), ik + lower_bnd - 1)) > ngxx) THEN
-        ngxx = MAXVAL(igk_k_all(1:ngk_all(ik + lower_bnd - 1), ik + lower_bnd - 1))
-      ENDIF
-      !
-    ENDDO
-    !
-#if defined(__MPI)
-    tmp = DBLE(ngxx)
-    CALL mp_max(tmp, inter_pool_comm)
-    ngxx = NINT(tmp)
-#endif
     !
     IF (meta_ionode) THEN
       !
       OPEN(iukgmap, FILE = TRIM(prefix)//'.kgmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
       IF (ios /=0) CALL errore('readgmap', 'error opening kgmap file', iukgmap)
+      !
+      ! dummy operation for skipping unnecessary data (ngxxf) here
+      !
+      READ(iukgmap, *) ik ! dummy
       !
       DO ik = 1, nkstot
         READ(iukgmap, *) ik1, shift(ik1)

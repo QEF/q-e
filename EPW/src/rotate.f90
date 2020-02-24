@@ -574,7 +574,7 @@
     !---------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE gmap_sym(nsym, s, ft, gmapsym, eigv, invs)
+    SUBROUTINE gmap_sym(nsym, s, ft, gmapsym, eigv)
     !-----------------------------------------------------------------------
     !!
     !! For every G vector, find S(G) for all the symmetry operations
@@ -590,7 +590,9 @@
     !----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE constants_epw, ONLY : twopi, ci, cone
-    USE gvect,         ONLY : mill, ngm
+    USE gvect,         ONLY : mill
+    USE elph2,         ONLY : mapg, ngxxf
+    USE fft_base,      ONLY : dffts
     !
     IMPLICIT NONE
     !
@@ -598,21 +600,17 @@
     !! the number of symmetries of the crystal
     INTEGER, INTENT(in) :: s(3, 3, 48)
     !! the symmetry matrices
-    INTEGER, INTENT(in) :: invs(48)
-    !! inverse symmetry matrix
-    INTEGER, INTENT(out) :: gmapsym(ngm, 48)
+    INTEGER, INTENT(out) :: gmapsym(ngxxf, 48)
     !! the map S(G) = gmapsym (G,S) 1...nsym
     REAL(KIND = DP), INTENT(in) :: ft(3, 48)
     !! the fractional traslations in crystal axis
-    COMPLEX(KIND = DP), INTENT(out) :: eigv(ngm, 48)
+    COMPLEX(KIND = DP), INTENT(out) :: eigv(ngxxf, 48)
     !! e^{ iGv} for 1...nsym
     !
     ! Local variables
     LOGICAL :: tfound
     !! Found
     INTEGER :: ig
-    !! Counter on the G-vector
-    INTEGER :: jg
     !! Counter on the G-vector
     INTEGER :: i
     !! Index of the rotated G-vector
@@ -624,41 +622,35 @@
     !! Index to check wether the mapping is complete
     INTEGER :: isym
     !! Counter on the symmetry
-    INTEGER :: ism1
-    !! Index for the inverse symmetry
+    INTEGER :: ierr
+    !! Error status
     REAL(KIND = DP) :: rdotk
     !! $$\mathbf{r}\cdot\mathbf{k}
+    !
+    i = (dffts%nr1 - 1) / 2
+    j = (dffts%nr2 - 1) / 2
+    k = (dffts%nr3 - 1) / 2
+    ALLOCATE(mapg(-i:i, -j:j, -k:k), STAT = ierr)
+    IF (ierr /= 0) CALL errore('gmap_sym', 'Error allocating mapg', 1)
+    mapg = 0
+    DO ig = 1, ngxxf
+      mapg(mill(1, ig), mill(2, ig), mill(3, ig)) = ig
+    ENDDO
     !
     ! Loop on the symmetries of the crystal
     !
     DO isym = 1, nsym
       !
-      ism1 = invs(isym)
-      !
       ! Loop on the G vectors
       !
-      notfound = 0
-      !
-      DO ig = 1, ngm
+      DO ig = 1, ngxxf
         !
         ! The rotated G-vector
         !
         i = s(1, 1, isym) * mill(1, ig) + s(1, 2, isym) * mill(2, ig) + s(1, 3, isym) * mill(3, ig)
         j = s(2, 1, isym) * mill(1, ig) + s(2, 2, isym) * mill(2, ig) + s(2, 3, isym) * mill(3, ig)
         k = s(3, 1, isym) * mill(1, ig) + s(3, 2, isym) * mill(2, ig) + s(3, 3, isym) * mill(3, ig)
-        jg = 0
-        tfound = .FALSE.
-        DO WHILE((.NOT. tfound) .AND. (jg < ngm))
-          jg = jg + 1
-          tfound = (i == mill(1, jg)) .AND. (j == mill(2, jg)) .AND. (k == mill(3, jg))
-        ENDDO
-        !
-        IF (tfound) THEN
-          gmapsym(ig, isym) = jg
-        ELSE
-          gmapsym(ig, isym) = 0
-          notfound = notfound + 1
-        ENDIF
+        gmapsym(ig, isym) = mapg(i, j, k)
         !
         ! now the phase factors e^{iGv}
         !
@@ -677,11 +669,10 @@
         ENDIF
       ENDDO ! ig
       !
-      IF (notfound > 0) THEN
-        CALL errore('gmap_sym', 'incomplete mapping of G vectors: notfound = ', notfound)
-      ENDIF
-      !
     ENDDO
+    !
+    DEALLOCATE(mapg, STAT = ierr)
+    IF (ierr /= 0) CALL errore('gmap_sym', 'Error deallocating mapg', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE gmap_sym
