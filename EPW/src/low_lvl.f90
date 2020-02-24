@@ -863,12 +863,13 @@
     !--------------------------------------------------------------------------
     ! 
     !-----------------------------------------------------------------------
-    PURE FUNCTION matinv3(A) RESULT(B)
+    FUNCTION matinv3(A) RESULT(B)
     !-----------------------------------------------------------------------
     !!
     !! Performs a direct calculation of the inverse of a 3×3 matrix. 
     !! 
-    USE kinds, ONLY : DP
+    USE kinds,         ONLY : DP
+    USE constants_epw, ONLY : eps160
     ! 
     REAL(KIND = DP), INTENT(in) :: A(3, 3)
     !! Matrix
@@ -883,6 +884,10 @@
     detinv = 1 / (A(1, 1) * A(2, 2) * A(3, 3) - A(1, 1) * A(2, 3) * A(3, 2) &
                 - A(1, 2) * A(2, 1) * A(3, 3) + A(1, 2) * A(2, 3) * A(3, 1) &
                 + A(1, 3) * A(2, 1) * A(3, 2) - A(1, 3) * A(2, 2) * A(3, 1))
+    !
+    IF (detinv < eps160) THEN
+      CALL errore('matinv3', 'Inverse does not exist ', 1)
+    ENDIF
     !  
     ! Calculate the inverse of the matrix
     B(1, 1) = +detinv * (A(2, 2) * A(3, 3) - A(2, 3) * A(3, 2))
