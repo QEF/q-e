@@ -471,7 +471,7 @@ MODULE input_parameters
         REAL(DP) :: fixed_magnetization(3) = 0.0_DP
         REAL(DP) :: angle1(nsx) = 0.0_DP
         REAL(DP) :: angle2(nsx) = 0.0_DP
-        INTEGER  :: report = 1
+        INTEGER  :: report =-1
         LOGICAL  :: no_t_rev = .FALSE.
 
         CHARACTER(len=80) :: constrained_magnetization = 'none'
