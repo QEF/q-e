@@ -1,35 +1,35 @@
   !
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
-  !                                                                            
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
+  !
   !----------------------------------------------------------------------
   MODULE io_epw
   !----------------------------------------------------------------------
-  !! 
-  !! This module contains various writing or reading routines to files. 
-  !! Most of them are for restart purposes. 
-  !! 
+  !!
+  !! This module contains various writing or reading routines to files.
+  !! Most of them are for restart purposes.
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !-----------------------------------------------------------------
     SUBROUTINE rwepmatw(epmatw, nbnd, np, nmodes, nrec, iun, iop)
     !-----------------------------------------------------------------
     !!
     !! A simple wrapper to the davcio routine to read/write arrays
-    !! instead of vectors 
+    !! instead of vectors
     !!
     !-----------------------------------------------------------------
     USE kinds, ONLY : DP
     USE mp,    ONLY : mp_barrier
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: nbnd
     !! Total number of bands
     INTEGER, INTENT(in) :: np
@@ -49,7 +49,7 @@
     INTEGER :: lrec
     !! Record length
     INTEGER :: i
-    !! Index number 
+    !! Index number
     INTEGER :: ibnd
     !! Band index
     INTEGER :: jbnd
@@ -59,7 +59,7 @@
     INTEGER :: ip
     !! REal space index (either nrr_k or nq)
     COMPLEX(KIND = DP):: aux(nbnd * nbnd * np * nmodes)
-    !! 1-D vector to store the matrix elements. 
+    !! 1-D vector to store the matrix elements.
     !
     lrec = 2 * nbnd * nbnd * np * nmodes
     !
@@ -76,13 +76,13 @@
             DO ibnd = 1, nbnd
               i = i + 1
               epmatw(ibnd, jbnd, ip, imode) = aux(i)
-              ! 
+              !
             ENDDO
           ENDDO
         ENDDO
       ENDDO
       !
-    ELSEIF (iop == 1) THEN 
+    ELSEIF (iop == 1) THEN
       !
       !  write matrix
       !
@@ -109,7 +109,7 @@
     !----------------------------------------------------------------------
     END SUBROUTINE rwepmatw
     !----------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------
     SUBROUTINE epw_write(nrr_k, nrr_q, nrr_g, w_centers)
     !----------------------------------------------------------------------
@@ -121,17 +121,17 @@
                           zstar, epsi, epmatwp
     USE ions_base, ONLY : amass, ityp, nat, tau
     USE cell_base, ONLY : at, bg, omega, alat
-    USE phcom,     ONLY : nmodes  
+    USE phcom,     ONLY : nmodes
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
                           crystal
-    USE noncollin_module, ONLY : noncolin              
+    USE noncollin_module, ONLY : noncolin
     USE io_files,  ONLY : prefix, diropn
     USE mp,        ONLY : mp_barrier
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id, stdout
     !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: nrr_k
     !! Number of WS vectors for the electrons
     INTEGER, INTENT(in) :: nrr_q
@@ -140,7 +140,7 @@
     !! Number of WS vectors for the electron-phonons
     REAL(KIND = DP), INTENT(in) :: w_centers(3, nbndsub)
     !! Wannier center
-    ! 
+    !
     ! Local variables
     CHARACTER(LEN = 256) :: filint
     !! Name of the file
@@ -149,7 +149,7 @@
     INTEGER :: ibnd, jbnd
     !! Band index
     INTEGER :: jmode, imode
-    !! Mode index        
+    !! Mode index
     INTEGER :: irk, irq, irg
     !! WS vector looping index on electron, phonons and el-ph
     INTEGER :: ipol
@@ -163,7 +163,7 @@
       !
       OPEN(UNIT = epwdata, FILE = 'epwdata.fmt')
       OPEN(UNIT = crystal, FILE = 'crystal.fmt')
-      IF (vme) THEN 
+      IF (vme) THEN
         OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt')
       ELSE
         OPEN(UNIT = iundmedata, FILE = 'dmedata.fmt')
@@ -192,7 +192,7 @@
             WRITE (epwdata,*) chw(ibnd, jbnd, irk)
             IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd, jbnd, irk)
             DO ipol = 1, 3
-              IF (vme) THEN 
+              IF (vme) THEN
                 WRITE(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
               ELSE
                 WRITE(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
@@ -205,30 +205,30 @@
       DO imode = 1, nmodes
         DO jmode = 1, nmodes
           DO irq = 1, nrr_q
-            WRITE(epwdata,*) rdw(imode, jmode, irq) 
+            WRITE(epwdata,*) rdw(imode, jmode, irq)
           ENDDO
         ENDDO
       ENDDO
       !
       IF (etf_mem == 0) THEN
         ! SP: The call to epmatwp is now inside the loop
-        !     This is important as otherwise the lrepmatw INTEGER 
+        !     This is important as otherwise the lrepmatw INTEGER
         !     could become too large for integer(kind=4).
         !     Note that in Fortran the record length has to be a integer
-        !     of kind 4. 
+        !     of kind 4.
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
         filint   = TRIM(prefix)//'.epmatwp'
         CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
         DO irg = 1, nrr_g
           CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, +1)
         ENDDO
-        ! 
+        !
         CLOSE(iunepmatwp)
-      ENDIF 
+      ENDIF
       !
       CLOSE(epwdata)
       CLOSE(crystal)
-      IF (vme) THEN 
+      IF (vme) THEN
         CLOSE(iunvmedata)
       ELSE
         CLOSE(iundmedata)
@@ -239,15 +239,15 @@
     !--------------------------------------------------------------------------------
     END SUBROUTINE epw_write
     !--------------------------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------------
     SUBROUTINE epw_read(nrr_k, nrr_q, nrr_g)
     !--------------------------------------------------------------------------------
-    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc 
+    USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
     USE pwcom,     ONLY : ef
     USE elph2,     ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, epsi
     USE ions_base, ONLY : nat
-    USE phcom,     ONLY : nmodes  
+    USE phcom,     ONLY : nmodes
     USE io_global, ONLY : stdout
     USE io_files,  ONLY : prefix, diropn
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp
@@ -263,49 +263,49 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(out) :: nrr_k
-    !! Number of WS vectors for the electrons 
+    !! Number of WS vectors for the electrons
     INTEGER, INTENT(out) :: nrr_q
     !! Number of WS vectors for the phonons
     INTEGER, INTENT(out) :: nrr_g
     !! Number of WS vectors for the electron-phonons
-    ! 
+    !
     ! Local variables
-    ! 
-    CHARACTER(LEN = 256) :: filint                                                                                   
+    !
+    CHARACTER(LEN = 256) :: filint
     !! Name of the file
-    LOGICAL :: exst                           
+    LOGICAL :: exst
     !! The file exists
     INTEGER :: ibnd, jbnd
     !! Band index
     INTEGER :: jmode, imode
-    !! Mode index        
+    !! Mode index
     INTEGER :: irk, irq, irg
     !! WS vector looping index on electron, phonons and el-ph
     INTEGER :: ipol
     !! Cartesian direction (polarison direction)
     INTEGER :: lrepmatw
     !! Record length
-    INTEGER :: ios 
+    INTEGER :: ios
     !! Status of files
     INTEGER :: ierr
     !! Error status
-    ! 
+    !
     WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
     FLUSH(stdout)
-    ! 
+    !
     ! This is important in restart mode as zstar etc has not been allocated
     ALLOCATE(zstar(3, 3, nat), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating zstar', 1)
     ALLOCATE(epsi(3, 3), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epsi', 1)
-    ! 
+    !
     IF (mpime == ionode_id) THEN
       !
       OPEN(UNIT = epwdata, FILE = 'epwdata.fmt', STATUS = 'old', IOSTAT = ios)
       IF (ios /= 0) CALL errore ('epw_read', 'error opening epwdata.fmt', epwdata)
       IF (eig_read) OPEN(UNIT = iunksdata, FILE = 'ksdata.fmt', STATUS = 'old', IOSTAT = ios)
       IF (eig_read .AND. ios /= 0) CALL errore ('epw_read', 'error opening ksdata.fmt', iunksdata)
-      IF (vme) THEN 
+      IF (vme) THEN
         OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt', STATUS = 'old', IOSTAT = ios)
         IF (ios /= 0) CALL errore ('epw_read', 'error opening vmedata.fmt', iunvmedata)
       ELSE
@@ -315,7 +315,7 @@
       READ(epwdata,*) ef
       READ(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
       READ(epwdata,*) zstar, epsi
-      ! 
+      !
     ENDIF
     CALL mp_bcast(ef,      ionode_id, world_comm)
     CALL mp_bcast(nbndsub, ionode_id, world_comm)
@@ -332,7 +332,7 @@
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating chw_ks', 1)
     ALLOCATE(rdw(nmodes, nmodes,  nrr_q), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating rdw', 1)
-    IF (vme) THEN 
+    IF (vme) THEN
       ALLOCATE(cvmew(3, nbndsub, nbndsub, nrr_k), STAT = ierr)
       IF (ierr /= 0) CALL errore('epw_read', 'Error allocating cvmew', 1)
     ELSE
@@ -348,7 +348,7 @@
            READ(epwdata,*) chw(ibnd, jbnd, irk)
            IF (eig_read) READ(iunksdata,*) chw_ks(ibnd, jbnd, irk)
            DO ipol = 1,3
-             IF (vme) THEN 
+             IF (vme) THEN
                READ(iunvmedata,*) cvmew(ipol, ibnd, jbnd, irk)
              ELSE
                READ(iundmedata,*) cdmew(ipol, ibnd, jbnd, irk)
@@ -375,7 +375,7 @@
     IF (eig_read) CALL mp_bcast(chw_ks, ionode_id, world_comm)
     IF (.NOT. lifc) CALL mp_bcast(rdw, ionode_id, world_comm)
     !
-    IF (vme) THEN 
+    IF (vme) THEN
       CALL mp_bcast(cvmew, ionode_id, world_comm)
     ELSE
       CALL mp_bcast(cdmew, ionode_id, world_comm)
@@ -391,17 +391,17 @@
       epmatwp = czero
       IF (mpime == ionode_id) THEN
         ! SP: The call to epmatwp is now inside the loop
-        !     This is important as otherwise the lrepmatw INTEGER 
+        !     This is important as otherwise the lrepmatw INTEGER
         !     could become too large for integer(kind=4).
         !     Note that in Fortran the record length has to be a integer
-        !     of kind 4.      
+        !     of kind 4.
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
         filint   = TRIM(prefix)//'.epmatwp'
         CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
         DO irg = 1, nrr_g
           CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, -1)
         ENDDO
-        !  
+        !
         CLOSE(iunepmatwp)
       ENDIF
       !
@@ -412,7 +412,7 @@
     !CALL mp_barrier(inter_pool_comm)
     IF (mpime == ionode_id) THEN
       CLOSE(epwdata)
-      IF (vme) THEN 
+      IF (vme) THEN
         CLOSE(iunvmedata)
       ELSE
         CLOSE(iundmedata)
@@ -428,9 +428,9 @@
     !----------------------------------------------------------------------------
     SUBROUTINE read_dyn_mat_param(fildyn, ntyp, nat)
     !----------------------------------------------------------------------------
-    !! 
+    !!
     !! Read paramters from the dynamical matrix
-    !! 
+    !!
     USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
                             iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
                             iotk_scan_attr, iotk_free_unit, iotk_close_read, &
@@ -451,7 +451,7 @@
     ! Local variables
     INTEGER :: ierr
     !! Error status
-    ! 
+    !
     IF (meta_ionode) THEN
       !
       CALL iotk_free_unit(iudyn, ierr)
@@ -474,18 +474,18 @@
       CALL iotk_scan_dat(iudyn, "NUMBER_OF_ATOMS", nat)
       CALL iotk_scan_end(iudyn, "GEOMETRY_INFO")
     ENDIF
-    !  
+    !
     RETURN
     !----------------------------------------------------------------------------
     END SUBROUTINE read_dyn_mat_param
     !----------------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag,     &
                celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
                nqs, lrigid, epsil, zstareu, lraman, ramtns)
     !----------------------------------------------------------------------------
-    !!   
+    !!
     !! Read the dynamical matrix
     !!
     USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
@@ -499,11 +499,11 @@
     IMPLICIT NONE
     !
     CHARACTER(LEN = 3), INTENT(out) :: atm(ntyp)
-    !! Atom 
+    !! Atom
     LOGICAL, INTENT(out), OPTIONAL :: lrigid
-    !! 
+    !!
     LOGICAL, INTENT(out), OPTIONAL :: lraman
-    !! Raman 
+    !! Raman
     INTEGER, INTENT(in) :: ntyp
     !! Number of type of atoms
     INTEGER, INTENT(in) :: nat
@@ -511,9 +511,9 @@
     INTEGER, INTENT(out) :: ibrav
     !! Bravais lattice
     INTEGER, INTENT(out) :: nspin_mag
-    !! 
-    INTEGER, INTENT(out) :: nqs 
-    !! 
+    !!
+    INTEGER, INTENT(out) :: nqs
+    !!
     INTEGER,  INTENT(out) :: ityp(nat)
     !! Atom type
     REAL(KIND = DP), INTENT(out) :: celldm(6)
@@ -529,21 +529,21 @@
     REAL(KIND = DP), INTENT(out) :: tau(3, nat)
     !! Atom position
     REAL(KIND = DP), INTENT(out) :: m_loc(3, nat)
-    !! 
+    !!
     REAL(KIND = DP), INTENT(out), OPTIONAL :: epsil(3, 3)
     !! Dielectric cst
     REAL(KIND = DP), INTENT(out), OPTIONAL :: zstareu(3, 3, nat)
-    !! 
+    !!
     REAL(KIND = DP), INTENT(out), OPTIONAL :: ramtns(3, 3, 3, nat)
-    !! 
-    ! 
+    !!
+    !
     ! Local work
     CHARACTER(iotk_attlenx) :: attr
     !! Attribute
     LOGICAL :: found_z
-    !! 
+    !!
     LOGICAL :: lrigid_
-    !!  
+    !!
     INTEGER :: nt
     !! Type of atoms
     INTEGER :: na
@@ -561,7 +561,7 @@
       CALL iotk_scan_dat(iudyn, "AT", at)
       CALL iotk_scan_dat(iudyn, "BG", bg)
       CALL iotk_scan_dat(iudyn, "UNIT_CELL_VOLUME_AU", omega)
-      ! 
+      !
       DO nt = 1, ntyp
         CALL iotk_scan_dat(iudyn, "TYPE_NAME"//TRIM(iotk_index(nt)), atm(nt))
         CALL iotk_scan_dat(iudyn, "MASS" // TRIM(iotk_index(nt)), amass(nt))
@@ -572,7 +572,7 @@
         CALL iotk_scan_attr(attr, "TAU", tau(:, na))
         IF (nspin_mag == 4) THEN
           CALL iotk_scan_dat(iudyn, "STARTING_MAG_" // TRIM(iotk_index(na)), m_loc(:, na))
-        ENDIF 
+        ENDIF
       ENDDO
       CALL iotk_scan_dat(iudyn, "NUMBER_OF_Q", nqs)
 
@@ -620,7 +620,7 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE read_dyn_mat_header
     !----------------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE read_dyn_mat(nat, iq, xq, dyn)
     !----------------------------------------------------------------------------
@@ -646,35 +646,35 @@
     !! Q-point value
     COMPLEX(KIND = DP), INTENT(out) :: dyn(3, 3, nat, nat)
     !! Dynamical matrix
-    ! 
+    !
     ! Local variables
     INTEGER :: na, nb
     !! Number of atoms
-    ! 
+    !
     IF (meta_ionode) THEN
       CALL iotk_scan_begin(iudyn, "DYNAMICAL_MAT_" // TRIM(iotk_index(iq)))
       CALL iotk_scan_dat(iudyn, "Q_POINT", xq)
-      ! 
+      !
       DO na = 1, nat
         DO nb = 1, nat
           CALL iotk_scan_dat(iudyn, "PHI"//TRIM(iotk_index(na)) // TRIM(iotk_index(nb)), dyn(:, :, na, nb))
         ENDDO
       ENDDO
-      !  
+      !
       CALL iotk_scan_end(iudyn, "DYNAMICAL_MAT_" // TRIM(iotk_index(iq)))
     ENDIF
-    !  
+    !
     RETURN
     !----------------------------------------------------------------------------
     END SUBROUTINE read_dyn_mat
     !----------------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE read_ifc_param(nr1, nr2, nr3)
     !----------------------------------------------------------------------------
-    !! 
-    !! Read IFC parameters 
-    !! 
+    !!
+    !! Read IFC parameters
+    !!
     USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
                             iotk_attlenx, iotk_scan_dat, iotk_scan_end
     USE kinds,       ONLY : DP
@@ -688,7 +688,7 @@
     ! Local varialbes
     INTEGER :: meshfft(3)
     !! Mesh
-    ! 
+    !
     IF (meta_ionode) THEN
       CALL iotk_scan_begin(iudyn, "INTERATOMIC_FORCE_CONSTANTS")
       CALL iotk_scan_dat(iudyn, "MESH_NQ1_NQ2_NQ3", meshfft)
@@ -701,39 +701,39 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE read_ifc_param
     !----------------------------------------------------------------------------
-    ! 
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE read_ifc_xml(nr1, nr2, nr3, nat, phid)
     !----------------------------------------------------------------------------
-    !! 
+    !!
     !! Read IFC in XML format
-    !!  
+    !!
     USE iotk_module, ONLY : iotk_index, iotk_scan_begin, iotk_open_read,     &
                             iotk_attlenx, iotk_scan_dat, iotk_scan_end,      &
                             iotk_scan_attr, iotk_free_unit, iotk_close_read, &
                             iotk_scan_empty
     USE kinds,       ONLY : DP
     USE io_global,   ONLY : meta_ionode
-    USE io_var,      ONLY : iudyn 
+    USE io_var,      ONLY : iudyn
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nr1, nr2, nr3
     !! Grid size
     INTEGER, INTENT(in) :: nat
-    !! Number of atoms  
+    !! Number of atoms
     REAL(KIND = DP), INTENT(out) :: phid(nr1 * nr2 * nr3, 3, 3, nat, nat)
-    !! 
+    !!
     ! Local variables
     INTEGER :: na, nb
     !! Atoms
     INTEGER :: nn
-    !! 
+    !!
     INTEGER :: m1, m2, m3
-    !! nr dimension 
+    !! nr dimension
     REAL(KIND = DP) :: aux(3, 3)
     !! Auxillary
-    ! 
+    !
     IF (meta_ionode) THEN
       CALL iotk_scan_begin(iudyn, "INTERATOMIC_FORCE_CONSTANTS")
       DO na = 1, nat
@@ -765,14 +765,14 @@
     !----------------------------------------------------------------------------
     END SUBROUTINE read_ifc_xml
     !----------------------------------------------------------------------------
-    ! 
+    !
     !---------------------------------------------------------------------------------
     SUBROUTINE read_ifc()
     !---------------------------------------------------------------------------------
     !!
-    !! Read IFC in real space from the file generated by q2r. 
+    !! Read IFC in real space from the file generated by q2r.
     !! Adapted from PH/matdyn.x by C. Verdi and S. Ponce
-    !! 
+    !!
     !
     USE kinds,     ONLY : DP
     USE elph2,     ONLY : ifc, zstar, epsi
@@ -792,7 +792,7 @@
     !
     IMPLICIT NONE
     !
-    ! Local variables 
+    ! Local variables
     LOGICAL :: lpolar_
     !! Polar flag
     LOGICAL :: has_zstar
@@ -800,60 +800,60 @@
     LOGICAL :: is_xml_file
     !! Is the file XML
     CHARACTER(LEN = 80) :: line
-    !! 
+    !!
     CHARACTER(LEN = 256) :: tempfile
-    !! 
+    !!
     CHARACTER(LEN = 3), ALLOCATABLE :: atm(:)
-    !! 
+    !!
     INTEGER :: ios
-    !! 
+    !!
     INTEGER :: i, j
-    !! 
+    !!
     INTEGER :: m1, m2, m3
-    !! 
+    !!
     INTEGER :: na, nb
-    !! 
+    !!
     INTEGER :: idum
-    !! 
+    !!
     INTEGER :: ibid, jbid
-    !! 
+    !!
     INTEGER :: nabid
-    !! 
+    !!
     INTEGER :: nbbid
-    !! 
+    !!
     INTEGER :: m1bid, m2bid, m3bid
-    !! 
+    !!
     INTEGER :: ntyp_
-    !! 
+    !!
     INTEGER :: nat_
-    !! 
+    !!
     INTEGER :: ibrav_
-    !! 
+    !!
     INTEGER :: ityp_(nat)
-    !! 
+    !!
     INTEGER :: nqs
-    !! 
+    !!
     INTEGER :: ierr
     !! Error status
     INTEGER, PARAMETER :: ntypx = 10
-    !! 
+    !!
     REAL(KIND = DP):: tau_(3, nat)
-    !! 
+    !!
     REAL(KIND = DP):: amass2(ntypx)
-    !! 
+    !!
     REAL(KIND = DP), ALLOCATABLE :: m_loc(:, :)
-    !! 
+    !!
     !
     WRITE(stdout, '(/5x,"Reading interatomic force constants"/)')
     FLUSH(stdout)
-    ! 
+    !
     ! Generic name for the ifc.q2r file. If it is xml, the file will be named ifc.q2r.xml instead
     tempfile = TRIM(dvscf_dir) // 'ifc.q2r'
     ! The following function will check if the file exists in xml format
     CALL check_is_xml_file(tempfile, is_xml_file)
-    ! 
+    !
     IF (mpime == ionode_id) THEN
-      ! 
+      !
       IF (is_xml_file) THEN
         ! pass the 'tempfile' as the '.xml' extension is added in the next routine
         CALL read_dyn_mat_param(tempfile, ntyp_, nat_)
@@ -871,7 +871,7 @@
         IF (ierr /= 0) CALL errore('read_ifc', 'Error deallocating m_loc', 1)
         DEALLOCATE(atm, STAT = ierr)
         IF (ierr /= 0) CALL errore('read_ifc', 'Error deallocating atm', 1)
-        ! 
+        !
       ELSE
         !
         OPEN(UNIT = iunifc, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
@@ -957,20 +957,20 @@
     SUBROUTINE set_asr2(asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
     !-----------------------------------------------------------------------
     !!
-    !! Set the acoustic sum rule. 
+    !! Set the acoustic sum rule.
     !! Taken directly from PHonon/PH/q2trans.f90
-    !! It would be better to take the set_asr for /Modules/. 
+    !! It would be better to take the set_asr for /Modules/.
     !! However they are different (frc) and to be consitent with q2r.x we take this one.
     !
     USE kinds,      ONLY : DP
     USE io_global,  ONLY : stdout
     !
     IMPLICIT NONE
-    ! 
+    !
     CHARACTER(LEN = 10), INTENT(in) :: asr
     !! Acoustic sum rule
     INTEGER, INTENT(in) :: nr1, nr2, nr3
-    !! 
+    !!
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
     INTEGER, INTENT(in) :: ibrav
@@ -990,21 +990,21 @@
     TYPE (vector) u(6 * 3 * nat)
     ! These are the "vectors" associated with the sum rules on force-constants
     INTEGER :: axis
-    !! 
+    !!
     INTEGER :: n
-    !! 
+    !!
     INTEGER :: i, j
-    !! 
+    !!
     INTEGER :: na, nb
-    !! 
+    !!
     INTEGER :: n1, n2, n3
-    !! 
+    !!
     INTEGER :: m, p, k, l, q, r
-    !! 
-    INTEGER :: i1, j1 
-    !! 
+    !!
+    INTEGER :: i1, j1
+    !!
     INTEGER :: na1
-    !! 
+    !!
     INTEGER :: ierr
     !! Error status
     INTEGER :: u_less(6 * 3 * nat)
@@ -1017,24 +1017,24 @@
     !! indices of the vectors zeu_u that are not independent to the preceding ones,
     INTEGER :: nzeu_less
     !! number of such vectors
-    INTEGER :: izeu_less 
+    INTEGER :: izeu_less
     !!  temporary parameter
     INTEGER, ALLOCATABLE :: ind_v(:, :, :)
-    !! 
+    !!
     REAL(KIND = DP) :: zeu_new(3, 3, nat)
-    !! 
+    !!
     REAL(KIND = DP) :: scal
-    !! 
+    !!
     REAL(KIND = DP) :: norm2
-    !! 
+    !!
     REAL(KIND = DP) :: sum
-    !! 
+    !!
     REAL(KIND = DP) :: zeu_u(6 * 3, 3, 3, nat)
     !! These are the "vectors" associated with the sum rules on effective charges
     REAL(KIND = DP) :: zeu_w(3, 3, nat)
-    !! 
+    !!
     REAL(KIND = DP) :: zeu_x(3, 3, nat)
-    !! 
+    !!
     REAL(KIND = DP), ALLOCATABLE :: w(:, :, :, :, :, :, :)
     !! temporary vectors and parameters
     REAL(KIND = DP), ALLOCATABLE :: x(:, :, :, :, :, :, :)
@@ -1096,7 +1096,7 @@
       RETURN
       !
     ENDIF ! simple
-    ! 
+    !
     IF (asr == 'crystal') n = 3
     IF (asr == 'one-dim') THEN
       ! the direction of periodicity is the rotation axis
@@ -1449,7 +1449,7 @@
     !
     frc_new(:, :, :, :, :, :, :) = frc_new(:, :, :, :, :, :, :) - w(:, :, :, :, :, :, :)
     CALL sp1(w, w, nr1, nr2, nr3, nat, norm2)
-    ! 
+    !
     WRITE(stdout, '(5x,"Norm of the difference between old and new force-constants: ", 1f12.7)') DSQRT(norm2)
     !
     DO i = 1, 3
@@ -1492,24 +1492,24 @@
     !! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
     !!
     USE kinds, ONLY: DP
-    ! 
+    !
     IMPLICIT NONE
-    !  
+    !
     INTEGER, INTENT(in) :: nat
-    !! 
+    !!
     REAL(KIND = DP), INTENT(in) :: zeu_u(3, 3, nat)
-    !! 
+    !!
     REAL(KIND = DP), INTENT(in) :: zeu_v(3, 3, nat)
-    !! 
+    !!
     REAL(KIND = DP), INTENT(inout) :: scal
-    !! 
+    !!
     ! Local variables
     INTEGER :: i
-    !! 
+    !!
     INTEGER :: j
-    !! 
+    !!
     INTEGER :: na
-    !! 
+    !!
     !
     scal = 0.0d0
     DO i = 1, 3
@@ -1534,22 +1534,22 @@
     !! vectors in the R^(3*3*nat*nat*nr1*nr2*nr3) space, and coded in the usual way)
     !!
     USE kinds, ONLY: DP
-    ! 
-    IMPLICIT NONE 
-    ! 
+    !
+    IMPLICIT NONE
+    !
     INTEGER, INTENT(in) :: nr1, nr2, nr3
     !! Supercell dims
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
     REAL(KIND = DP), INTENT(in) :: u(nr1, nr2, nr3, 3, 3, nat, nat)
-    !! First force-constent matrix 
+    !! First force-constent matrix
     REAL(KIND = DP), INTENT(in) :: v(nr1, nr2, nr3, 3, 3, nat, nat)
     !! Second force-constent matrix
     REAL(KIND = DP), INTENT(out) :: scal
     !! Scalar product
-    ! 
+    !
     ! Local variables
-    INTEGER ::  i, j 
+    INTEGER ::  i, j
     !! Cartesian direction
     INTEGER :: na, nb
     !! Atoms index
@@ -1588,9 +1588,9 @@
     !! but v is coded as explained when defining the vectors corresponding to the symmetry constraints
     !!
     USE kinds, ONLY: DP
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: nr1, nr2, nr3
     !! Supercell dims
     INTEGER, INTENT(in) :: nat
@@ -1603,7 +1603,7 @@
     !! input vector
     REAL(KIND = DP), INTENT(out) :: scal
     !! Output vector
-    ! 
+    !
     ! Local variables
     INTEGER ::  i
     !! Index
@@ -1630,15 +1630,15 @@
     ! that a lot of computer time can be saved (during Gram-Schmidt).
     !
     USE kinds, ONLY: DP
-    ! 
+    !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: nr1, nr2, nr3
     !! Supercell dims
     INTEGER, INTENT(in) :: nat
     !! Number of atoms
     REAL(KIND = DP), INTENT(in) :: u(nr1, nr2, nr3, 3, 3, nat, nat)
-    !! First force-constent matrix 
+    !! First force-constent matrix
     REAL(KIND = DP), INTENT(in) :: v(nr1, nr2, nr3, 3, 3, nat, nat)
     !! Second force-constent matrix
     REAL(KIND = DP), INTENT(out) :: scal
@@ -1693,10 +1693,10 @@
     CHARACTER(LEN = 256) :: filename_xml
     !! File name
     CHARACTER(LEN = 1024) :: errmsg
-    !! Error message 
+    !! Error message
     LOGICAL :: is_plain_text_file
-    !! Plain tex 
-    ! 
+    !! Plain tex
+    !
     filename_xml = TRIM(filename) // '.xml'
     filename_xml = TRIM(filename_xml)
     INQUIRE(FILE = filename, EXIST = is_plain_text_file)
@@ -1716,7 +1716,7 @@
     !------------------------------------------------------------------------------
     END SUBROUTINE check_is_xml_file
     !------------------------------------------------------------------------------
-    ! 
+    !
     !-------------------------------------------------------------
     SUBROUTINE readdvscf(dvscf, recn, iq, nqc)
     !-------------------------------------------------------------
@@ -1724,8 +1724,8 @@
     !! Open dvscf files as direct access, read, and close again
     !!
     !! SP - Nov 2017
-    !! Replaced fstat by Fortran instric function inquire. 
-    !! 
+    !! Replaced fstat by Fortran instric function inquire.
+    !!
     !! RM - Nov/Dec 2014
     !! Imported the noncolinear case implemented by xlzhang
     !!
@@ -1736,24 +1736,24 @@
     USE fft_base,  ONLY : dfftp
     USE epwcom,    ONLY : dvscf_dir
     USE io_var,    ONLY : iudvscf
-    USE low_lvl,   ONLY : set_ndnmbr 
+    USE low_lvl,   ONLY : set_ndnmbr
     USE noncollin_module, ONLY : nspin_mag
     !
     IMPLICIT NONE
-    ! 
+    !
     INTEGER, INTENT(in) :: recn
     !! perturbation number
     INTEGER, INTENT(in) :: iq
     !! the current q-point
     INTEGER, INTENT(in) :: nqc
     !! the total number of q-points in the list
-    COMPLEX(KIND = DP), INTENT(inout) :: dvscf(dfftp%nnr, nspin_mag) 
+    COMPLEX(KIND = DP), INTENT(inout) :: dvscf(dfftp%nnr, nspin_mag)
     !! dVscf potential is read from file
     !
     ! Local variables
     !
     CHARACTER(LEN = 256) :: tempfile
-    !! Temp file 
+    !! Temp file
     CHARACTER(LEN = 3) :: filelab
     !! File number
     INTEGER :: unf_recl
@@ -1765,16 +1765,16 @@
     INTEGER(KIND = 8) :: file_size
     !! File size
     REAL(KIND = DP) :: dummy
-    !! Dummy variable 
+    !! Dummy variable
     !
     !  the call to set_ndnmbr is just a trick to get quickly
     !  a file label by exploiting an existing subroutine
-    !  (if you look at the sub you will find that the original 
+    !  (if you look at the sub you will find that the original
     !  purpose was for pools and nodes)
-    !   
+    !
     CALL set_ndnmbr(0, iq, 1, nqc, filelab)
     tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dvscf_q' // filelab
-    INQUIRE(IOLENGTH = unf_recl) dummy 
+    INQUIRE(IOLENGTH = unf_recl) dummy
     unf_recl = unf_recl  * lrdrho
     mult_unit = unf_recl
     mult_unit = recn * mult_unit
@@ -1798,7 +1798,7 @@
     !-------------------------------------------------------------
     END SUBROUTINE readdvscf
     !-------------------------------------------------------------
-    ! 
+    !
     !------------------------------------------------------------
     SUBROUTINE readwfc(ipool, recn, evc0)
     !------------------------------------------------------------
@@ -1829,7 +1829,7 @@
     !
     ! Local variables
     CHARACTER(LEN = 256) :: tempfile
-    !! Temp file 
+    !! Temp file
     CHARACTER(LEN = 3) :: nd_nmbr0
     !! File number
     INTEGER :: unf_recl
@@ -1837,7 +1837,7 @@
     INTEGER :: ios
     !! Error number
     REAL(KIND = DP) :: dummy
-    !! Dummy variable 
+    !! Dummy variable
     !
     ! Open the wfc file, read and close
     CALL set_ndnmbr(ipool, me_pool, nproc_pool, npool, nd_nmbr0)
@@ -1861,15 +1861,15 @@
     !------------------------------------------------------------
     END SUBROUTINE readwfc
     !------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------
-    SUBROUTINE readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd) 
+    SUBROUTINE readgmap(nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd)
     !--------------------------------------------------------------
     !!
     !! read map of G vectors G -> G-G_0 for a given q point
-    !! (this is used for the folding of k+q into the first BZ) 
+    !! (this is used for the folding of k+q into the first BZ)
     !!
-    ! 
+    !
     USE kinds,    ONLY : DP
     USE mp_global,ONLY : inter_pool_comm, world_comm
     USE mp,       ONLY : mp_bcast, mp_max
@@ -1894,7 +1894,7 @@
     !
     ! Lork variables
     INTEGER :: ik
-    !! Counter on k-points 
+    !! Counter on k-points
     INTEGER :: ik1, itmp
     !! Temporary indeces when reading kmap and kgmap files
     INTEGER :: ig0
@@ -1911,7 +1911,7 @@
     !! Temporary variable
     !
     ! OBSOLETE: now we read directly the igkq to get the proper ngxx
-    ! read only a piece of the map to save time 
+    ! read only a piece of the map to save time
     ! the proper allocation bound would be ngxx = max(max(igkq))
     ! where the max is taken over the ig and the ik
     ! Here I use a simpler estimate: take the sphere npwx + two
@@ -1920,7 +1920,7 @@
     !
     ! ngxx = NINT(4./3.*3.14*(2+(3.0/4.0/3.14*DBLE(npwx))**(1./3.))**3.)
     !
-    ! Note that the k+q point below does not correspond to the actual (true) 
+    ! Note that the k+q point below does not correspond to the actual (true)
     ! k+q, but since we only need to take the max over k and k+q this
     ! does not matter
     !
@@ -1935,7 +1935,7 @@
     !
 #if defined(__MPI)
     tmp = DBLE(ngxx)
-    CALL mp_max(tmp, inter_pool_comm)  
+    CALL mp_max(tmp, inter_pool_comm)
     ngxx = NINT(tmp)
 #endif
     !
@@ -1957,7 +1957,7 @@
       !  shift for a specific q-point)
       !
       !  since createkmap.f90 has regenerated the shifts for the
-      !  present k-point I read them again in kmap.dat. The above 
+      !  present k-point I read them again in kmap.dat. The above
       !  'fake' reading is because the gmap appears *after* the
       !  wrong kmap.
       !
@@ -1966,7 +1966,7 @@
       DO ik = 1, nkstot
         READ(iukmap,*) ik1, itmp, shift(ik1)
       ENDDO
-      CLOSE(iukmap) 
+      CLOSE(iukmap)
       !
     ENDIF
     !
@@ -1983,9 +1983,9 @@
         READ(iukgmap,*) g0vec_all_r(:,ig0)
       ENDDO
       DO ig = 1, ngxx
-        ! 
+        !
         ! at variance with the nscf calculation, here gmap is read as a vector,
-        ! 
+        !
         READ(iukgmap,*) (gmap(ng0vec * ( ig - 1 ) + ishift), ishift = 1, ng0vec)
       ENDDO
       !
@@ -2002,12 +2002,12 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE readgmap
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE openfilepw()
     !-----------------------------------------------------------------------
     !!
-    !! Adapted from the code PH/openfilq - Quantum-ESPRESSO group                
+    !! Adapted from the code PH/openfilq - Quantum-ESPRESSO group
     !! This routine opens the WF files necessary for the EPW
     !! calculation.
     !!

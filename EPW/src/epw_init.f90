@@ -1,19 +1,19 @@
-  !                                                                            
+  !
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
-  ! Adapted from the code PH/phq_init - Quantum-ESPRESSO group                 
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
+  ! Adapted from the code PH/phq_init - Quantum-ESPRESSO group
   !----------------------------------------------------------------------------
   SUBROUTINE epw_init(first_run)
   !----------------------------------------------------------------------------
   !
   !! This initialization is done nqc_irr times from elphon_shuffle_wrap
   !! not all of the following code is necessary.  More adaptation from
-  !! phq_init is needed   
+  !! phq_init is needed
   !!
   !! Roxana Margine - Dec 2018: Updated based on QE 6.3
   !!
@@ -38,7 +38,7 @@
   USE units_lr,         ONLY : lrwfc, iuwfc
   USE phcom,            ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
-  USE nlcc_ph,          ONLY : drc                           
+  USE nlcc_ph,          ONLY : drc
   USE elph2,            ONLY : igk_k_all, ngk_all
   USE mp,               ONLY : mp_barrier
   USE mp_global,        ONLY : inter_pool_comm, my_pool_id
@@ -75,7 +75,7 @@
   !! used to compute alphap
   !
   CALL start_clock('epw_init')
-  ! 
+  !
   IF (first_run) THEN
     ALLOCATE(vlocq(ngm, ntyp), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_init', 'Error allocating vlocq', 1)
@@ -103,12 +103,12 @@
         ENDIF
       ENDIF ! noncolin
     ENDIF ! okvan
-    !  
+    !
     ALLOCATE(becp1(nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_init', 'Error allocating becp1', 1)
     ALLOCATE(alphap(3, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_init', 'Error allocating alphap', 1)
-    ! 
+    !
     DO ik = 1, nks
       CALL allocate_bec_type(nkb, nbnd, becp1(ik))
       DO ipol = 1, 3
@@ -117,14 +117,14 @@
     ENDDO
     CALL allocate_bec_type(nkb, nbnd, becp)
   ENDIF
-  ! 
+  !
   DO na = 1, nat
     !
     ! xq here is the first q of the star
     arg = (xq(1) * tau(1, na) + &
            xq(2) * tau(2, na) + &
            xq(3) * tau(3, na)) * tpi
-    !        
+    !
     eigqts(na) = CMPLX(COS(arg), - SIN(arg), KIND = DP)
     !
   END DO
@@ -150,7 +150,7 @@
   !
   ALLOCATE(aux1(npwx * npol, nbnd), STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_init', 'Error allocating aux1', 1)
-  ! 
+  !
   DO ik = 1, nks
     !
     !
@@ -176,17 +176,17 @@
       aux1 = czero
       DO ibnd = 1, nbnd
         DO ig = 1, ngk(ik)
-          aux1(ig, ibnd) = evc(ig, ibnd) * tpiba * cone * & 
+          aux1(ig, ibnd) = evc(ig, ibnd) * tpiba * cone * &
                           (xk_loc(ipol, ik) + g(ipol, igk_k(ig, ik)))
         ENDDO
         IF (noncolin) THEN
           DO ig = 1, ngk(ik)
-            aux1(ig + npwx, ibnd) = evc(ig + npwx, ibnd) * tpiba *cone *& 
+            aux1(ig + npwx, ibnd) = evc(ig + npwx, ibnd) * tpiba *cone *&
                       (xk_loc(ipol, ik) + g(ipol, igk_k(ig, ik)) )
           ENDDO
         ENDIF
       ENDDO
-      CALL calbec(ngk(ik), vkb, aux1, alphap(ipol, ik)) 
+      CALL calbec(ngk(ik), vkb, aux1, alphap(ipol, ik))
     ENDDO
     !
   ENDDO
@@ -203,8 +203,8 @@
   !
 #if defined(__MPI)
   !
-  CALL poolgather_int(npwx, nkstot, nks, igk_k(:, 1:nks), igk_k_all) 
-  CALL poolgather_int1(nkstot, nks, ngk(1:nks), ngk_all) 
+  CALL poolgather_int(npwx, nkstot, nks, igk_k(:, 1:nks), igk_k_all)
+  CALL poolgather_int1(nkstot, nks, ngk(1:nks), ngk_all)
   !CALL mp_barrier(inter_pool_comm)
   !
 #else

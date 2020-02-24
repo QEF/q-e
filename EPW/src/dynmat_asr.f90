@@ -1,6 +1,6 @@
   !-----------------------------------------------------------------------
   SUBROUTINE dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
-                              invs, s, irt, rtau, sumr) 
+                              invs, s, irt, rtau, sumr)
   !-----------------------------------------------------------------------
   !!
   !! read dynamical matrix for the q points, either in plain text or xml.
@@ -8,7 +8,7 @@
   !!
   !-----------------------------------------------------------------------
   USE kinds,            ONLY : DP
-  use io_files,         ONLY : prefix 
+  use io_files,         ONLY : prefix
   USE cell_base,        ONLY : ibrav, celldm, omega, at, bg
   USE ions_base,        ONLY : amass, tau, nat, ntyp => nsp, ityp
   USE elph2,            ONLY : dynq, zstar, epsi
@@ -31,7 +31,7 @@
   INTEGER, INTENT(in) :: iq_irr
   !! The index of the irreducible q point
   INTEGER, INTENT(in) :: nqc_irr
-  !! The number of irreducible qpoints 
+  !! The number of irreducible qpoints
   INTEGER, INTENT(in) :: nq
   !! The number of q points in the star of q
   INTEGER, INTENT(in) :: iq_first
@@ -41,37 +41,37 @@
   INTEGER, INTENT(in) :: isq(48)
   !! Index of q in the star for a given symmetry.
   INTEGER, INTENT(in) :: invs(48)
-  !! Matrix of inversed symmetry 
+  !! Matrix of inversed symmetry
   INTEGER, INTENT(in) :: s(3, 3, 48)
   !! Set of symmetry operations
   INTEGER, INTENT(in) :: irt(48, nat)
   !! For each atoms give the rotated atoms
   REAL(KIND = DP), INTENT(inout) :: sxq(3, 48)
-  !! Symmetry matrix 
+  !! Symmetry matrix
   REAL(KIND = DP), INTENT(inout) :: rtau(3, 48, nat)
   !! the relative position of the rotated atom to the original one
   REAL(KIND = DP), INTENT(inout) :: sumr(2, 3, nat, 3)
   !! Sum to impose the ASR
   !
-  ! Local variables 
+  ! Local variables
   LOGICAL :: found
-  !! Is it found 
+  !! Is it found
   LOGICAL :: lrigid
-  !! ifc 
+  !! ifc
   LOGICAL :: lraman
   !! is raman present
   LOGICAL :: nog
-  !! 
+  !!
   LOGICAL :: is_xml_file
   !! Is the file XML
   CHARACTER(LEN = 3) :: atm
-  !! 
+  !!
   CHARACTER(LEN = 3) :: filelab
-  !! 
+  !!
   CHARACTER(LEN = 80) :: line
-  !! 
+  !!
   CHARACTER(LEN = 256) :: tempfile
-  !! 
+  !!
   INTEGER :: neig
   !! The total number of eigenvalues found
   INTEGER :: info
@@ -86,15 +86,15 @@
   !! Supercell index
   INTEGER :: sna
   !! Rotation + translation
-  INTEGER :: jsym 
+  INTEGER :: jsym
   !! Symmetry index
   INTEGER :: nsq
   !! nsq is the degeneracy of the small group for this iq in the star
   INTEGER :: sym_sgq(48)
-  !! Degenerate sym 
+  !! Degenerate sym
   INTEGER :: current_iq
   !! the q index in the dynq matrix
-  INTEGER :: mq 
+  INTEGER :: mq
   !! Size of q
   INTEGER :: ism1
   !! Inversion symmetry
@@ -103,106 +103,106 @@
   INTEGER :: jmode
   !! j-mode
   INTEGER :: ntyp_
-  !! 
+  !!
   INTEGER :: nat_
-  !! 
+  !!
   INTEGER :: ibrav_
-  !! 
+  !!
   INTEGER :: ityp_
-  !! 
+  !!
   INTEGER :: ios
-  !! 
+  !!
   INTEGER :: iq, jq
-  !! 
+  !!
   INTEGER :: nt
   !! Number of type of atoms
   INTEGER :: na, nb
-  !! 
+  !!
   INTEGER :: naa, nbb
-  !! 
+  !!
   INTEGER :: nu, mu
-  !! 
-  INTEGER :: i, j 
-  !! 
+  !!
+  INTEGER :: i, j
+  !!
   INTEGER :: ipol, jpol
-  !! 
-  INTEGER :: nqs 
-  !! 
+  !!
+  INTEGER :: nqs
+  !!
   INTEGER :: axis
-  !! 
+  !!
   INTEGER :: nrws
-  !! 
+  !!
   INTEGER :: ierr
   !! Error status
   INTEGER, parameter :: ntypx = 10
-  !! 
+  !!
   INTEGER, PARAMETER :: nrwsx = 200
-  !! 
+  !!
   REAL(KIND = DP) :: rwork(7 * nmodes)
   !! Real work array
   REAL(KIND = DP) :: arg
-  !! 
+  !!
   REAL(KIND = DP) :: aq(3)
-  !! 
+  !!
   REAL(KIND = DP) :: saq(3)
-  !! 
+  !!
   REAL(KIND = DP) :: raq(3)
-  !! 
+  !!
   REAL(KIND = DP) :: xq(3)
   !! The rotated q-vector
   REAL(KIND = DP) :: scart(3, 3)
-  !! 
+  !!
   REAL(KIND = DP) :: massfac
-  !! 
+  !!
   REAL(KIND = DP) :: w1(nmodes)
-  !! 
+  !!
   REAL(KIND = DP) :: wtmp(nmodes)
-  !! 
+  !!
   REAL(KIND = DP) :: celldm_(6)
-  !! 
+  !!
   REAL(KIND = DP) :: amass_
-  !! 
+  !!
   REAL(KIND = DP) :: tau_(3)
-  !! 
+  !!
   REAL(KIND = DP) :: q(3, nqc1 * nqc2 * nqc3)
-  !! 
+  !!
   REAL(KIND = DP) :: dynr(2, 3, nat, 3, nat)
-  !! 
+  !!
   REAL(KIND = DP) :: sumz
-  !! 
+  !!
   REAL(KIND = DP) :: qout(3)
-  !! 
+  !!
   REAL(KIND = DP) :: amass2(ntypx)
-  !! 
+  !!
   REAL(KIND = DP) :: rws(0:3, nrwsx)
-  !! 
+  !!
   REAL(KIND = DP) :: atws(3, 3)
-  !! WS cell dist. 
-  REAL(KIND = DP) :: zstar_(3, 3, nat) 
+  !! WS cell dist.
+  REAL(KIND = DP) :: zstar_(3, 3, nat)
   !!  Temporary array to store Z*
   REAL(KIND = DP) :: epsi_(3, 3)
   !! Temporary array to store dielectric function
   REAL(KIND = DP), ALLOCATABLE :: m_loc(:, :)
-  !! 
+  !!
   REAL(KIND = DP), ALLOCATABLE :: dchi_dtau(:, :, :, :)
-  !! 
+  !!
   COMPLEX(KIND = DP) :: cfac
-  !!  
+  !!
   COMPLEX(KIND = DP) :: cwork(2 * nmodes)
   !! Complex work array
-  COMPLEX(KIND = DP) :: gamma(nmodes, nmodes) 
-  !! the Gamma matrix for the symmetry operation on the dyn mat 
+  COMPLEX(KIND = DP) :: gamma(nmodes, nmodes)
+  !! the Gamma matrix for the symmetry operation on the dyn mat
   COMPLEX(KIND = DP) :: dynq_tmp(nmodes, nmodes)
-  !!  
+  !!
   COMPLEX(KIND = DP) :: cz1(nmodes, nmodes)
-  !!  
+  !!
   COMPLEX(KIND = DP) :: dynp(nmodes * (nmodes + 1) / 2)
-  !!  
+  !!
   COMPLEX(KIND = DP), ALLOCATABLE :: dyn(:, :, :, :) ! 3,3,nat,nat
   !! Dynamical matrix
   !
-  axis = 3 
-  ! 
+  axis = 3
+  !
   ! the call to set_ndnmbr is just a trick to get quickly
   ! a file label by exploiting an existing subroutine
   ! (if you look at the sub you will find that the original
@@ -213,7 +213,7 @@
   ! The following function will check either or not the file is formatted in
   ! xml. If no file is found, an error is raised
   CALL check_is_xml_file(tempfile, is_xml_file)
-  ! 
+  !
   IF (is_xml_file) THEN
     CALL read_dyn_mat_param(tempfile, ntyp, nat)
     ALLOCATE(m_loc(3, nat), STAT = ierr)
@@ -257,9 +257,9 @@
       mq = nq
     ENDIF
     !
-    ! First read the data and then sort them. This is because the order of 
+    ! First read the data and then sort them. This is because the order of
     ! q in the star has changed (SP).
-    ! 
+    !
     DO iq = 1, mq
       q(:, iq) = 0.0d0
       CALL read_dyn_mat(nat, iq, qout, dyn(:, :, :, :))
@@ -318,7 +318,7 @@
       ENDDO
       !
     ENDDO !  iq = 1, mq
-    !  
+    !
   ELSE ! not a xml file
     OPEN(UNIT = iudyn, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
     IF (ios /= 0) CALL errore('dynmat', 'opening file' // tempfile, ABS(ios))
@@ -328,16 +328,16 @@
     READ(iudyn, '(a)') line
     READ(iudyn, '(a)') line
     READ(iudyn, *) ntyp_, nat_, ibrav_, celldm_
-    ! 
+    !
     ! We stop testing celldm as it can be different between scf and nscf
     !IF (ntyp/=ntyp_.OR.nat/=nat_.OR.ibrav_/=ibrav.OR.abs ( &
     !   celldm_ (1) - celldm (1) )  > 1.0d-5) call errore ('dynmat', &
     !   'inconsistent data', 1)
     IF (ntyp /= ntyp_ .OR. nat /= nat_ .OR. ibrav_ /= ibrav) CALL errore ('dynmat', &
        'inconsistent data', 1)
-    ! 
+    !
     !  skip reading of cell parameters here
-    ! 
+    !
     IF (ibrav_ == 0) THEN
       DO i = 1, 4
         READ(iudyn, *) line
@@ -358,7 +358,7 @@
     !
     ! Read dyn mat only for the first q in the star and then reconstruct the
     ! other using symmetry.
-    ! 
+    !
     ! If time-reversal is not included in the star of q, then double the nq to
     ! search from.
     IF (imq == 0) THEN
@@ -367,9 +367,9 @@
       mq = nq
     ENDIF
     !
-    ! Read the dyn for the first q in the star. 
+    ! Read the dyn for the first q in the star.
     ! For other q in the star, only read the value of the q for checking purposes.
-    ! 
+    !
     DO iq = 1, mq
       !
       READ(iudyn, '(///a)') line
@@ -416,7 +416,7 @@
               mu = (na - 1) * 3 + ipol
               nu = (nb - 1) * 3 + jpol
               ! Only store the dyn of the first q in the star.
-              IF (iq == 1) THEN 
+              IF (iq == 1) THEN
                 dynq(mu, nu, iq_first) = DCMPLX(dynr(1, ipol, na, jpol, nb), dynr(2, ipol, na, jpol, nb))
               ENDIF
             ENDDO
@@ -456,7 +456,7 @@
           ENDDO
         ENDDO
         !
-      ELSE 
+      ELSE
         IF (lpolar) CALL errore('dynmat', &
            'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ', 1)
       ENDIF
@@ -465,7 +465,7 @@
   ENDIF ! col
   !
   ! Now check that the dyn file is consistent with the current EPW run (SP)
-  ! SP: Be careful, here time-reversal is not actual time reversal but is due to 
+  ! SP: Be careful, here time-reversal is not actual time reversal but is due to
   !     change in order and values of the q in the star between QE 4 and 5.
   !
   CALL cryst_to_cart(nqc1 * nqc2 * nqc3, q, at, -1)
@@ -474,7 +474,7 @@
   current_iq = iq_first
   !
   DO iq = 1, nq
-    ! 
+    !
     found = .FALSE.
     DO jq = 1, mq
       DO m1 = -2, 2
@@ -498,11 +498,11 @@
       CALL errore('dynmat', 'wrong qpoint', 1)
     ENDIF
   ENDDO
-  ! Transform back the sxq in Cartesian 
+  ! Transform back the sxq in Cartesian
   CALL cryst_to_cart(48, sxq, bg, 1)
   !
   ! In case of reading of the IFC to impose the asr in real space
-  ! We still call the above just to make the checks. The content of dynq 
+  ! We still call the above just to make the checks. The content of dynq
   ! will be re-written just below and NOT read from the dyn from the /save folder
   IF (lifc) THEN
     !
@@ -519,12 +519,12 @@
     !
   ENDIF
   !
-  ! Now construct the other dyn matrix for the q in the star using sym. 
-  ! For this we use the gamma matrix. 
-  ! 
-  current_iq = iq_first 
-  ! 
-  DO iq = 1, nq 
+  ! Now construct the other dyn matrix for the q in the star using sym.
+  ! For this we use the gamma matrix.
+  !
+  current_iq = iq_first
+  !
+  DO iq = 1, nq
     !
     xq = sxq(:, iq)
     nsq = 0 ! nsq is the degeneracy of the small group for this iq in the star
@@ -536,10 +536,10 @@
       ENDIF
     ENDDO
     !
-    ! SP: We now need to select one symmetry among the small group of q (i.e. that respect 
-    !     Sq0+G=q ) that has G=0. There should always be such symmetry. 
-    !     We enforce this for later easiness. 
-    ! 
+    ! SP: We now need to select one symmetry among the small group of q (i.e. that respect
+    !     Sq0+G=q ) that has G=0. There should always be such symmetry.
+    !     We enforce this for later easiness.
+    !
     aq = sxq(:, 1) ! This is xq0
     saq = xq
     call cryst_to_cart(1, aq, at, - 1)
@@ -559,26 +559,26 @@
         isym = sym_sgq(jsym)
         EXIT
       ENDIF
-      ! If we enter into that loop it means that we have not found 
-      ! such symmetry within the small group of Q. 
+      ! If we enter into that loop it means that we have not found
+      ! such symmetry within the small group of Q.
       IF (jsym == nsq) THEN
         CALL errore('dynmat ', 'No sym. such that Sxq0=iq was found in the sgq !', 1)
       ENDIF
     ENDDO
     !
     !  -----------------------------------------------------------------------
-    !  the matrix gamma (Maradudin & Vosko, RMP, eq. 2.37)   
+    !  the matrix gamma (Maradudin & Vosko, RMP, eq. 2.37)
     !  -----------------------------------------------------------------------
-    ! 
+    !
     ism1 = invs(isym)
     !
-    !  the symmetry matrix in cartesian coordinates 
-    !  (so that we avoid going back and forth with the dynmat)  
+    !  the symmetry matrix in cartesian coordinates
+    !  (so that we avoid going back and forth with the dynmat)
     !  note the presence of both at and bg in the transform!
     !
     scart = DBLE(s(:, :, ism1))
     scart = MATMUL(MATMUL(bg, scart), TRANSPOSE(at))
-    ! 
+    !
     gamma = czero
     DO na = 1, nat
       !
@@ -592,14 +592,14 @@
       arg = twopi * DOT_PRODUCT(xq, rtau (:, isym, na))
       cfac = DCMPLX(COS(arg),-SIN(arg))
       !
-      !  the submatrix (sna,na) contains the rotation scart 
+      !  the submatrix (sna,na) contains the rotation scart
       !
       gamma(3 * (sna - 1) + 1:3 * sna, 3 * (na - 1) + 1:3 * na) = cfac * scart
       !
-    ENDDO  
+    ENDDO
     !
-    !  D_{Sq} = gamma * D_q * gamma^\dagger (Maradudin & Vosko, RMP, eq. 3.5) 
-    ! 
+    !  D_{Sq} = gamma * D_q * gamma^\dagger (Maradudin & Vosko, RMP, eq. 3.5)
+    !
     CALL ZGEMM('n', 'n', nmodes, nmodes, nmodes, cone, gamma, &
            nmodes, dynq(:, :, iq_first), nmodes, czero, dynq_tmp, nmodes)
     CALL zgemm ('n', 'c', nmodes, nmodes, nmodes, cone, dynq_tmp, &
@@ -633,7 +633,7 @@
       !
       CALL ZHPEVX('V', 'A', 'U', nmodes, dynp, 0.0, 0.0, 0, 0, -1.0, neig, w1, cz1, nmodes, cwork, &
                  rwork, iwork, ifail, info)
-      ! 
+      !
       DO nu = 1, nmodes
         IF (w1(nu) > 0.d0) THEN
           wtmp(nu) =  DSQRT(ABS(w1(nu)))
@@ -646,18 +646,18 @@
     ENDIF
     !END --------------------------------------------------
     current_iq = current_iq + 1
-    ! 
+    !
     ! SP Repeat the same but for minus_q one
     IF (imq == 0) then
-      !       
+      !
       xq = -sxq(:, iq)
       ism1 = invs(isym)
       scart = DBLE(s(:, :, ism1))
       scart = MATMUL(MATMUL(bg, scart), TRANSPOSE(at))
-      ! 
+      !
       gamma = czero
       DO na = 1, nat
-        ! 
+        !
         sna = irt(isym, na)
         arg = twopi * DOT_PRODUCT(xq, rtau(:, isym, na))
         cfac = dcmplx(COS(arg), -SIN(arg))
@@ -679,7 +679,7 @@
       current_iq = current_iq + 1
     ENDIF
   ENDDO ! iq
-  ! 
+  !
   !---------------------------------------------------------------------------------
   END SUBROUTINE dynmat_asr
   !---------------------------------------------------------------------------------

@@ -1,28 +1,28 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !----------------------------------------------------------------------
   MODULE indabs
   !----------------------------------------------------------------------
-  !! 
+  !!
   !! This module contains the routines related to phonon assisted absorption
   !! 12/03/2018 Kyle and E. Kioupakis: First implementation
   !! 08/04/2018 S. Ponce: Cleaning
-  !! 17/09/2019 S. Ponce: Modularization and cleaning   
-  !! 
+  !! 17/09/2019 S. Ponce: Modularization and cleaning
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE indabs_main(iq)
     !-----------------------------------------------------------------------
-    !! 
+    !!
     !! Main routine for phonon assisted absorption
     !!
     USE kinds,         ONLY : DP
@@ -31,7 +31,7 @@
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : fsthick, eptemp, degaussw, &
                               eps_acustic, efermi_read, fermi_energy,&
-                              vme, omegamin, omegamax, omegastep 
+                              vme, omegamin, omegamax, omegastep
     USE elph2,         ONLY : etf, ibndmin, nkf, epf17, wkf, nqtotf, wf, wqf, &
                               sigmar_all, efnew, &
                               dmef, omegap, epsilon2_abs, epsilon2_abs_lorenz, vmef, &
@@ -44,9 +44,9 @@
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: iq
-    !! Q-point index    
+    !! Q-point index
     !
-    ! Local variables 
+    ! Local variables
     CHARACTER(LEN = 256) :: nameF = 'epsilon2_indabs.dat'
     !! Name of the file
     CHARACTER(LEN = 10) :: c
@@ -55,11 +55,11 @@
     !! Format string
     ! Local variables
     INTEGER :: ik
-    !! Counter on the k-point index 
+    !! Counter on the k-point index
     INTEGER :: ikk
     !! k-point index
     INTEGER :: ikq
-    !! q-point index 
+    !! q-point index
     INTEGER :: ibnd
     !! Counter on bands
     INTEGER :: jbnd
@@ -67,7 +67,7 @@
     INTEGER :: imode
     !! Counter on mode
     INTEGER :: nksqtotf
-    !! Total number of k+q points 
+    !! Total number of k+q points
     INTEGER :: iw
     !! Index for frequency
     INTEGER :: nomega
@@ -79,7 +79,7 @@
     INTEGER :: m
     !! Counter on denominator imaginary broadening values
     INTEGER :: ierr
-    !! Error status 
+    !! Error status
     INTEGER, PARAMETER :: neta = 9
     !! Broadening parameter
     REAL(KIND = DP) :: ekk
@@ -122,23 +122,23 @@
     COMPLEX(KIND = DP) :: vkq(3, nbndfst, nbndfst)
     !!- Velocity matrix elements at k, k+q
     COMPLEX(KIND = DP) :: s1a(3), s1e(3), s2a(3), s2e(3)
-    !! Transition probability function    
+    !! Transition probability function
     COMPLEX(KIND = DP) :: epf(nbndfst, nbndfst, nmodes)
     !! Generalized matrix elements for phonon-assisted absorption
-    ! 
+    !
     ! SP: Define the inverse so that we can efficiently multiply instead of dividing
-    ! 
+    !
     inv_eptemp0 = 1.0 / eptemp
     inv_degaussw = 1.0 / degaussw
     !
     nomega = INT((omegamax - omegamin) / omegastep) + 1
-    ! 
-    ! 300 K  
+    !
+    ! 300 K
     ! Epsilon2 prefactor for velocity matrix elements, including factor of 2 for spin (weights for k-points are divided by 2 to be normalized to 1)
     ! C = 8*pi^2*e^2 = 8*pi^2*2 approx 157.9136704
-    ! 
+    !
     cfac = 16.d0 * pi**2
-    ! 
+    !
     IF (iq == 1) THEN
       WRITE(stdout, '(/5x,a)') REPEAT('=',67)
       WRITE(stdout, '(5x,"Phonon-assisted absorption")')
@@ -146,7 +146,7 @@
       !
       IF (fsthick < 1.d3) WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
       WRITE(stdout, '(/5x,a,f10.6,a)' ) 'Temperature T = ', eptemp * ryd2ev, ' eV'
-      ! 
+      !
       !IF (.NOT. ALLOCATED (omegap) )    ALLOCATE(omegap(nomega))
       !IF (.NOT. ALLOCATED (epsilon2_abs) ) ALLOCATE(epsilon2_abs(3, nomega, neta))
       !IF (.NOT. ALLOCATED (epsilon2_abs_lorenz) ) ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta))
@@ -156,7 +156,7 @@
       IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs', 1)
       ALLOCATE(epsilon2_abs_lorenz(3, nomega, neta), STAT = ierr)
       IF (ierr /= 0) CALL errore('indabs', 'Error allocating epsilon2_abs_lorenz', 1)
-      ! 
+      !
       epsilon2_abs = 0.d0
       epsilon2_abs_lorenz = 0.d0
       DO iw = 1, nomega
@@ -175,7 +175,7 @@
       !
       ef0 = efnew
     ENDIF
-    ! 
+    !
     DO ik = 1, nkf
       !
       ikk = 2 * ik - 1
@@ -183,9 +183,9 @@
       !
       DO imode = 1, nmodes
         !
-        ! the phonon frequency at this q and nu 
+        ! the phonon frequency at this q and nu
         wq(imode) = wf(imode, iq)
-        ! 
+        !
         epf(:, :, imode) = epf17(:, :, imode,ik)
         IF (wq(imode) > eps_acustic) THEN
           nqv(imode) = wgauss(-wq(imode) / eptemp, -99)
@@ -194,7 +194,7 @@
       ENDDO
       !
       ! RM - vme version should be checked
-      IF (vme) THEN 
+      IF (vme) THEN
         DO ibnd = 1, nbndfst
           DO jbnd = 1, nbndfst
             ! vmef is in units of Ryd * bohr
@@ -206,32 +206,32 @@
         DO ibnd = 1, nbndfst
           DO jbnd = 1, nbndfst
             ! Dme's already corrected for GW corrections in wan2bloch.f90
-            vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk) 
-            vkq(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq) 
+            vkk(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikk)
+            vkq(:, ibnd, jbnd) = 2.0 * dmef(:, ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, ikq)
           ENDDO
         ENDDO
       ENDIF
-      ! 
+      !
       DO ibnd = 1, nbndfst
         !  the energy of the electron at k (relative to Ef)
         ekk = etf(ibndmin - 1 + ibnd, ikk) - ef0
         !
         IF (ABS(ekk) < fsthick) THEN
           !
-          wgkk = wgauss(-ekk * inv_eptemp0, -99)  
-          ! 
+          wgkk = wgauss(-ekk * inv_eptemp0, -99)
+          !
           DO jbnd = 1, nbndfst
-            ! 
+            !
             ! The fermi occupation for k+q
             ekq = etf(ibndmin - 1 + jbnd, ikq) - ef0
-            !  
+            !
             IF (ABS(ekq) < fsthick .AND. ekq < ekk + wq(nmodes) + omegamax + 6.0 * degaussw) THEN
               !
-              wgkq = wgauss(-ekq * inv_eptemp0, -99)  
+              wgkq = wgauss(-ekq * inv_eptemp0, -99)
               !
-              IF (ekq - ekk - wq(nmodes) - omegamax > 6.0 * degaussw) CYCLE 
-              IF (ekq - ekk + wq(nmodes) - omegamin < 6.0 * degaussw) CYCLE 
-              ! 
+              IF (ekq - ekk - wq(nmodes) - omegamax > 6.0 * degaussw) CYCLE
+              IF (ekq - ekk + wq(nmodes) - omegamin < 6.0 * degaussw) CYCLE
+              !
               DO imode = 1, nmodes
                 !
                 IF (wq(imode) > eps_acustic) THEN
@@ -258,18 +258,18 @@
                       s2e(:) =  s2e(:) + epf(ibnd, mbnd,imode) * 0.5 * vkq(:, mbnd, jbnd) / &
                                (ekmq  - ekk + wq(imode)+ ci * eta(m))
                     ENDDO
-                    ! 
-                    pfac  =  nqv(imode)      * wgkk * (one - wgkq) - (nqv(imode) + one) * (one - wgkk) * wgkq 
+                    !
+                    pfac  =  nqv(imode)      * wgkk * (one - wgkq) - (nqv(imode) + one) * (one - wgkk) * wgkq
                     pface = (nqv(imode) + one) * wgkk * (one - wgkq) -  nqv(imode) * (one - wgkk) * wgkq
-                    ! 
+                    !
                     DO iw = 1, nomega
                       !
                       IF (ABS(ekq - ekk - wq(imode) - omegap(iw)) > 6.0 * degaussw .AND. &
                           ABS(ekq - ekk + wq(imode) - omegap(iw)) > 6.0 * degaussw) CYCLE
-                      ! 
+                      !
                       weighte = w0gauss((ekq - ekk - omegap(iw) + wq(imode)) / degaussw, 0) / degaussw
                       weighta = w0gauss((ekq - ekk - omegap(iw) - wq(imode)) / degaussw, 0) / degaussw
-                      ! 
+                      !
                       DO ipol = 1, 3
                         epsilon2_abs(ipol, iw, m) = epsilon2_abs(ipol, iw, m) + (wkf(ikk) / 2.0) * wqf(iq) * &
                              cfac / omegap(iw)**2 * pfac  * weighta * ABS(s1a(ipol) + s2a(ipol))**2 / (2 * wq(imode) * omega)
@@ -306,12 +306,12 @@
       CALL mp_barrier(inter_pool_comm)
       !
 #endif
-      ! 
+      !
       ! Output to stdout
       c = 'X'
       WRITE(c,"(i0)") neta
       format_string = "(5x,f15.6," // TRIM(c) // "E22.14)"
-      ! 
+      !
       WRITE(stdout, '(5x,a)')
       WRITE(stdout, '(5x,a)') 'Phonon-assisted absorption versus energy'
       WRITE(stdout, '(5x,a,4f15.6)') 'Broadenings: ', eta(1:4)
@@ -326,7 +326,7 @@
       WRITE(stdout, '(5x,a)')
       WRITE(stdout, '(5x,a)') 'Values with other broadening are reported in the files epsilon2_indabs.dat'
       WRITE(stdout, '(5x,a)')
-      ! 
+      !
       ! Output to file
       WRITE(c,"(i0)") neta + 1
       format_string = "("//TRIM(c) // "E22.14)"
@@ -337,7 +337,7 @@
         WRITE(iuindabs, format_string) omegap(iw) * ryd2ev, (SUM(epsilon2_abs(:, iw, m)) / 3.0d0, m = 1, neta)
       ENDDO
       CLOSE(iuindabs)
-      ! 
+      !
       OPEN(UNIT = iuindabs, FILE = 'epsilon2_indabs_lorenz.dat')
       WRITE(iuindabs, '(a)') '# Phonon-assisted absorption versus energy'
       WRITE(iuindabs, '(a)') '# Photon energy (eV), Directionally-averaged imaginary dielectric function along x,y,z'
@@ -350,13 +350,13 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE indabs_main
     !-----------------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE renorm_eig(ikk, ikq, nrr_k, dims, ndegen_k, irvec_k, irvec_r, cufkk, cufkq, cfac, cfacq)
     !--------------------------------------------------------------------------
     !!
-    !! This routine computes the renormalization of the eigenenergies to be applied 
-    !! in case one read external eigenvalues. 
+    !! This routine computes the renormalization of the eigenenergies to be applied
+    !! in case one read external eigenvalues.
     !! The implementation follows Eq. 30 of  Phys. Rev. B 62, 4927 (2000)
     !! Samuel Ponce, Kyle and Emmanouil Kioupakis
     !!
@@ -390,7 +390,7 @@
     !! Exponential factor
     COMPLEX(KIND = DP), INTENT(in) :: cfacq(nrr_k, dims, dims)
     !! Exponential factor
-    ! 
+    !
     ! Local variables
     INTEGER :: icounter
     !! Integer counter for displaced points
@@ -413,10 +413,10 @@
     REAL(KIND = DP) :: etfd_ks(nbndsub, nkqf, 6)
     !! interpolated eigenvalues (nbnd, nkqf) KS eigenvalues for shifted grid in the case of eig_read
     COMPLEX(KIND = DP) :: cfacd(nrr_k, dims, dims, 6)
-    !! Used to store $e^{2\pi r \cdot k}$ exponential of displaced vector 
+    !! Used to store $e^{2\pi r \cdot k}$ exponential of displaced vector
     COMPLEX(KIND = DP) :: cfacqd(nrr_k, dims, dims, 6)
     !! Used to store $e^{2\pi r \cdot k+q}$ exponential of dispaced vector
-    ! 
+    !
     cfacd(:, :, :, :) = czero
     cfacqd(:, :, :, :)= czero
     DO icounter = 1, 6
@@ -437,13 +437,13 @@
         cfacd(:, 1, 1, icounter)  = EXP(ci * rdotk(:)) / ndegen_k(:, 1, 1)
         cfacqd(:, 1, 1, icounter) = EXP(ci * rdotk2(:)) / ndegen_k(:, 1, 1)
       ENDIF
-      ! 
+      !
       CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etfd(:, ikk, icounter), chw, cfacd, dims)
       CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd(:, ikq, icounter), chw, cfacqd, dims)
       CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etfd_ks(:, ikk, icounter), chw_ks, cfacd, dims)
       CALL hamwan2bloch(nbndsub, nrr_k, cufkq, etfd_ks(:, ikq, icounter), chw_ks, cfacqd, dims)
     ENDDO ! icounter
-    ! ----------------------------------------------------------------------------------------- 
+    ! -----------------------------------------------------------------------------------------
     CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkk, vmef(:, :, :, ikk), &
                       etf(:, ikk), etf_ks(:, ikk), chw_ks, cfac, dims)
     CALL vmewan2bloch(nbndsub, nrr_k, irvec_k, cufkq, vmef(:, :, :, ikq), &
@@ -477,7 +477,7 @@
         ENDIF
       ENDDO
     ENDDO
-    ! 
+    !
     !-----------------------------------------------------------------------
     END SUBROUTINE renorm_eig
     !-----------------------------------------------------------------------

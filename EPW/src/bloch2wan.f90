@@ -1,20 +1,20 @@
   !
-  !k Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! 
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
   !
   !----------------------------------------------------------------------
   MODULE bloch2wan
   !----------------------------------------------------------------------
-  !!  
-  !! Contains all the routines that transforms quantities from Bloch space 
-  !! to Wannier space. 
-  !! 
-  !!  
+  !!
+  !! Contains all the routines that transforms quantities from Bloch space
+  !! to Wannier space.
+  !!
+  !!
   IMPLICIT NONE
-  ! 
+  !
   CONTAINS
     !
     !--------------------------------------------------------------------------
@@ -22,13 +22,13 @@
        lwin, exband, nrr, irvec, wslen, chw)
     !--------------------------------------------------------------------------
     !!
-    !!  From the Hamiltonian in Bloch representationi (coarse mesh), 
-    !!  find the corresponding Hamiltonian in Wannier representation 
+    !!  From the Hamiltonian in Bloch representationi (coarse mesh),
+    !!  find the corresponding Hamiltonian in Wannier representation
     !!
     !--------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, alat 
+    USE cell_base, ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, zero, ryd2ev
     USE io_global, ONLY : ionode_id
     USE io_var,    ONLY : iudecayH
@@ -113,11 +113,11 @@
     DO i = 1, nbnd
       IF (exband(i)) THEN
         nexband_tmp = nexband_tmp + 1
-      ENDIF  
+      ENDIF
     ENDDO
     !
     et_opt = zero
-    IF (nexband_tmp > 0) THEN 
+    IF (nexband_tmp > 0) THEN
       DO ik = 1, nks
         ibnd = 0
         ibnd1 = 0
@@ -234,7 +234,7 @@
     CALL stop_clock('Ham: step 2')
     !
     !--------------------------------------------------------------------------
-    END SUBROUTINE hambloch2wan 
+    END SUBROUTINE hambloch2wan
     !--------------------------------------------------------------------------
     !
     !--------------------------------------------------------------------------
@@ -242,8 +242,8 @@
                             nrr, irvec, wslen, lwin, exband)
     !--------------------------------------------------------------------------
     !!
-    !!  From the Dipole in Bloch representationi (coarse mesh), 
-    !!  find the corresponding Dipole in Wannier representation 
+    !!  From the Dipole in Bloch representationi (coarse mesh),
+    !!  find the corresponding Dipole in Wannier representation
     !!
     !
     USE kinds,         ONLY : DP
@@ -255,7 +255,7 @@
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier, mp_sum
-    ! 
+    !
     IMPLICIT NONE
     !
     !  input variables
@@ -335,7 +335,7 @@
     DO i = 1, nbnd
       IF (exband(i)) THEN
         nexband_tmp = nexband_tmp + 1
-      ENDIF  
+      ENDIF
     ENDDO
     !
     dmec_opt = czero
@@ -378,7 +378,7 @@
         ENDDO
       ENDDO
     ENDIF
-    ! 
+    !
     !----------------------------------------------------------
     !    STEP 1: rotation to optimally smooth Bloch states
     !----------------------------------------------------------
@@ -389,7 +389,7 @@
     !
     dmec_utmp(:, :) = czero
     cps(:, :, :, :) = czero
-    ! 
+    !
     DO ik = 1, nks
       DO ipol = 1, 3
         !
@@ -418,8 +418,8 @@
     !
     CALL cryst_to_cart(nks, xk, at, -1)
     !
-    cdmew( :, :, :, :) = czero 
-    ! 
+    cdmew( :, :, :, :) = czero
+    !
     DO ir = 1, nrr
       DO ik = 1, nks
          !
@@ -429,7 +429,7 @@
          !
       ENDDO
     ENDDO
-    CALL mp_sum(cdmew, inter_pool_comm) 
+    CALL mp_sum(cdmew, inter_pool_comm)
     !
     ! bring xk back into cart coord
     !
@@ -457,17 +457,17 @@
     !------------------------------------------------------------------------
     END SUBROUTINE dmebloch2wan
     !------------------------------------------------------------------------
-    ! 
+    !
     !------------------------------------------------------------------------
     SUBROUTINE dynbloch2wan(nmodes, nq, xk, dynq, nrr, irvec, wslen )
     !------------------------------------------------------------------------
     !!
-    !!  From the Dynamical Matrix in Bloch representation (coarse mesh), 
-    !!  find the corresponding matrix in Wannier representation 
+    !!  From the Dynamical Matrix in Bloch representation (coarse mesh),
+    !!  find the corresponding matrix in Wannier representation
     !!
     !!  NOTA BENE: it seems to be very important that the matrix is kept real
     !!  physically these are truely the interatomic force constants.
-    !!  If you use a complex matrix instead, you may get some spurious 
+    !!  If you use a complex matrix instead, you may get some spurious
     !!  oscillations when you interpolate the phonon dispersions.
     !!
     !!  Note also that the acoustic sum rule for the q=0 case has been imposed
@@ -486,7 +486,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_global,     ONLY : inter_pool_comm
     USE rigid_epw,     ONLY : rgd_blk
-    ! 
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: nmodes
@@ -538,7 +538,7 @@
     CALL cryst_to_cart(nq, xk, at, -1)
     !
     rdw( :, :, :) = 0.d0
-    ! 
+    !
     DO ir = 1, nrr
       !
       DO ik = 1, nq
@@ -546,8 +546,8 @@
         rdotk = twopi * DOT_PRODUCT(xk(:, ik), DBLE(irvec(:, ir)))
         cfac = EXP(-ci * rdotk)/ DBLE(nq)
         !DBSP - real was commented
-        rdw(:, :, ir) = rdw(:, :, ir) +  cfac * dynq(:, :, ik) 
-        !rdw( :, :, ir ) = rdw( :, :, ir ) + real ( cfac * dynq( :, :, ik ) ) 
+        rdw(:, :, ir) = rdw(:, :, ir) +  cfac * dynq(:, :, ik)
+        !rdw( :, :, ir ) = rdw( :, :, ir ) + real ( cfac * dynq( :, :, ik ) )
         !                                    ^^^^
         !                                 note this
       ENDDO
@@ -584,7 +584,7 @@
     !--------------------------------------------------------------------------
     !!
     !!  Calculate the velocity matrix elements in the Wannier basis
-    !!  at no point do we actually have the coarse mesh v-ME. 
+    !!  at no point do we actually have the coarse mesh v-ME.
     !!
     !! RM 03/2018: debugged and updated
     !
@@ -599,7 +599,7 @@
     USE mp,        ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_world,  ONLY : mpime
     USE division,  ONLY : fkbounds
-    USE kfold,     ONLY : ktokpmq  
+    USE kfold,     ONLY : ktokpmq
     !
     IMPLICIT NONE
     !
@@ -747,9 +747,9 @@
         CLOSE(iubvec)
       ENDIF
     ENDIF
-    ! 
+    !
     CALL mp_bcast(nnb, ionode_id, world_comm)
-    ! 
+    !
     ! All other cpu than master
     IF (mpime /= ionode_id) THEN
       ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
@@ -757,7 +757,7 @@
       ALLOCATE(wb(nnb), STAT = ierr)
       IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
     ENDIF
-    ! 
+    !
     CALL mp_bcast(bvec, ionode_id, world_comm)
     CALL mp_bcast(wb, ionode_id, world_comm)
     !
@@ -804,7 +804,7 @@
     DO i = 1, nbnd
       IF (exband(i)) THEN
         nexband_tmp = nexband_tmp + 1
-      ENDIF  
+      ENDIF
     ENDDO
     !
     ALLOCATE(m_mat_opt(nbndep, nbndep, nnb, nks), STAT = ierr)
@@ -948,7 +948,7 @@
     ! r_{\alpha}(R) is cvmew(3,nbndsub,nbndsub,nrr)
     !
     cvmew(:, :, :, :) = czero
-    ! 
+    !
     DO ir = 1, nrr
       DO ik = 1, nks
         !
@@ -959,7 +959,7 @@
       ENDDO
     ENDDO
     !
-    CALL mp_sum(cvmew, inter_pool_comm) 
+    CALL mp_sum(cvmew, inter_pool_comm)
     !
     ! bring xk back into cart coord
     !
@@ -992,14 +992,14 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE vmebloch2wan
     !-----------------------------------------------------------------------
-    ! 
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE ephbloch2wane(nbnd, nbndsub, nks, nkstot, xk, &
          cu, cuq, epmatk, nrr, irvec, wslen, epmatw)
     !-----------------------------------------------------------------------
     !!
-    !!  From the EP matrix elements in Bloch representation (coarse 
-    !!  mesh), find the corresponding matrix elements in electron-Wannier 
+    !!  From the EP matrix elements in Bloch representation (coarse
+    !!  mesh), find the corresponding matrix elements in electron-Wannier
     !!  representation and phonon-Bloch representation
     !!
     !-----------------------------------------------------------------------
@@ -1010,9 +1010,9 @@
     USE io_var,    ONLY : iuwane
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
-    USE mp       , ONLY : mp_sum 
+    USE mp       , ONLY : mp_sum
     USE mp_world,  ONLY : mpime
-    ! 
+    !
     IMPLICIT NONE
     !
     !  input variables
@@ -1081,7 +1081,7 @@
       !
       ! the two zgemm calls perform the following ops:
       ! epmats  = [ cu(ikq)^\dagger * epmatk ] * cu(ikk)
-      ! [here we have a size-reduction from nbnd*nbnd to nbndsub*nbndsub] 
+      ! [here we have a size-reduction from nbnd*nbnd to nbndsub*nbndsub]
       !
       CALL ZGEMM('c', 'n', nbndsub, nbnd, nbnd, cone, cuq(:, :, ik),  &
                 nbnd, epmatk(:, :, ik), nbnd, czero, eptmp, nbndsub)
@@ -1118,7 +1118,7 @@
       ENDDO
     ENDDO
     !
-    CALL mp_sum(epmatw, inter_pool_comm)  
+    CALL mp_sum(epmatw, inter_pool_comm)
     !
     ! bring xk back into cart coord
     !
@@ -1126,15 +1126,15 @@
     !
     !
     !  Check spatial decay of EP matrix elements in electron-Wannier basis
-    !  the unit in r-space is angstrom, and I am plotting 
+    !  the unit in r-space is angstrom, and I am plotting
     !  the matrix for the first mode only
     !
     IF (mpime == ionode_id) THEN
       OPEN(UNIT = iuwane, FILE = 'decay.epwane')
       WRITE(iuwane, '(a)') '# Spatial decay of e-p matrix elements in electron Wannier basis'
       DO ir = 1, nrr
-        ! 
-        tmp = MAXVAL(ABS(epmatw(:, :, ir))) 
+        !
+        tmp = MAXVAL(ABS(epmatw(:, :, ir)))
         WRITE(iuwane, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
@@ -1145,16 +1145,16 @@
     CALL stop_clock ('ep: step 2')
     !
     !--------------------------------------------------------------------------
-    END SUBROUTINE ephbloch2wane  
+    END SUBROUTINE ephbloch2wane
     !--------------------------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE ephbloch2wanp(nbnd, nmodes, xk, nq, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
     !--------------------------------------------------------------------------
     !!
-    !!  From the EP matrix in electron-Wannier representation and 
-    !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix 
-    !!  electron-Wannier representation and phonon-Wannier representation 
+    !!  From the EP matrix in electron-Wannier representation and
+    !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix
+    !!  electron-Wannier representation and phonon-Wannier representation
     !!
     !
     USE kinds,         ONLY : DP
@@ -1165,16 +1165,16 @@
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
-    ! 
+    !
     IMPLICIT NONE
     !
-    !  Input variables 
+    !  Input variables
     !
     INTEGER, INTENT(in) :: nbnd
     !! Number of electronic bands
     INTEGER, INTENT(in) :: nmodes
     !! number of branches
-    INTEGER, INTENT(in) :: nq 
+    INTEGER, INTENT(in) :: nq
     !! number of qpoints
     INTEGER, INTENT(in) :: nrr_k
     !! number of electronic WS points
@@ -1186,8 +1186,8 @@
     !! Coordinates of real space vector for electron-phonon
     !
     REAL(KIND = DP), INTENT(in) :: xk(3, nq)
-    !! Kpoint coordinates (cartesian in units of 2piba) 
-    ! 
+    !! Kpoint coordinates (cartesian in units of 2piba)
+    !
     COMPLEX(KIND = DP), INTENT(in) :: epmatwe(nbnd, nbnd, nrr_k, nmodes, nq)
     !! EP matrix in electron-Wannier representation and phonon-Bloch representation
     !!   (Cartesian coordinates)
@@ -1228,7 +1228,7 @@
     CALL cryst_to_cart(nq, xk, at, -1)
     !
     epmatwp = czero
-    ! 
+    !
     DO ir = 1, nrr_g
       !
       DO iq = 1, nq
@@ -1275,14 +1275,14 @@
     ! -----------------------------------------------------------
     END SUBROUTINE ephbloch2wanp
     ! -----------------------------------------------------------
-    ! 
+    !
     !--------------------------------------------------------------------------
     SUBROUTINE ephbloch2wanp_mem(nbnd, nmodes, xk, nq, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
     !--------------------------------------------------------------------------
     !
-    !!  From the EP matrix in electron-Wannier representation and 
-    !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix 
-    !!  electron-Wannier representation and phonon-Wannier representation 
+    !!  From the EP matrix in electron-Wannier representation and
+    !!  phonon-Bloch representation (coarse mesh), find the corresponding matrix
+    !!  electron-Wannier representation and phonon-Wannier representation
     !
     !
     USE kinds,         ONLY : DP
@@ -1308,11 +1308,11 @@
     INTEGER, INTENT(in) :: nq
     !! number of qpoints
     INTEGER, INTENT(in) :: irvec_k(3, nrr_k)
-    !! Coordinates of real space vector 
+    !! Coordinates of real space vector
     INTEGER, INTENT(in) :: irvec_g(3, nrr_g)
-    !! Coordinates of real space vector 
+    !! Coordinates of real space vector
     REAL(KIND = DP), INTENT(in) :: xk(3, nq)
-    !! K-point coordinates (cartesian in units of 2piba) 
+    !! K-point coordinates (cartesian in units of 2piba)
     COMPLEX(KIND = DP), INTENT(inout) :: epmatwe(nbnd, nbnd, nrr_k, nmodes)
     !! EP matrix in electron-Wannier representation and phonon-Bloch representation
     !!   (Cartesian coordinates)
@@ -1346,7 +1346,7 @@
     !
     ALLOCATE(epmatwp_mem(nbnd, nbnd, nrr_k, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'Error allocating epmatwp_mem', 1)
-    ! 
+    !
     !----------------------------------------------------------
     !  Fourier transform to go into Wannier basis
     !----------------------------------------------------------
@@ -1361,10 +1361,10 @@
     DO ir = 1, nrr_g
       !
       epmatwp_mem = czero
-      ! 
+      !
       DO iq = 1, nq
         !
-        ! direct read of epmatwe for this iq 
+        ! direct read of epmatwe for this iq
         CALL rwepmatw(epmatwe, nbnd, nrr_k, nmodes, iq, iunepmatwe, -1)
         !
         rdotk = twopi * DOT_PRODUCT(xk(:, iq), DBLE(irvec_g(:, ir)))
@@ -1373,7 +1373,7 @@
         !
       ENDDO
       !
-      ! direct write of epmatwp_mem for this ir 
+      ! direct write of epmatwp_mem for this ir
       CALL rwepmatw(epmatwp_mem, nbnd, nrr_k, nmodes, ir, iunepmatwp, +1)
       !  check spatial decay of EP matrix elements in wannier basis - electrons + phonons
       !
@@ -1414,7 +1414,7 @@
     !--------------------------------------------------------------------------
     END SUBROUTINE ephbloch2wanp_mem
     !--------------------------------------------------------------------------
-    ! 
+    !
   !----------------------------------------------------------------------------
   END MODULE bloch2wan
   !----------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                        
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE elphon_shuffle(iq_irr, nqc_irr, iq, gmapsym, eigv, isym, xq0, timerev)
   !-----------------------------------------------------------------------
@@ -38,7 +38,7 @@
   USE constants_epw,    ONLY : czero, cone
   USE fft_interfaces,   ONLY : fft_interpolate
   USE noncollin_module, ONLY : nspin_mag, noncolin
-  USE dvqpsi,           ONLY : newdq2 
+  USE dvqpsi,           ONLY : newdq2
   !
   IMPLICIT NONE
   !
@@ -60,7 +60,7 @@
   !!  true if we are using time reversal
   !
   ! Local variables
-  INTEGER :: irr 
+  INTEGER :: irr
   !! Counter on representations
   INTEGER :: imode0
   !! Counter on modes
@@ -79,7 +79,7 @@
   INTEGER :: ierr
   !! Error status
   COMPLEX(KIND = DP), POINTER :: dvscfin(:, :, :)
-  !! Change of the scf potential 
+  !! Change of the scf potential
   COMPLEX(KIND = DP), POINTER :: dvscfins(:, :, :)
   !! Change of the scf potential (smooth)
   !
@@ -89,7 +89,7 @@
   !
   ALLOCATE(el_ph_mat(nbndep, nbndep, nks, 3 * nat), STAT = ierr)
   IF (ierr /= 0) CALL errore('elphon_shuffle', 'Error allocating el_ph_mat', 1)
-  ! 
+  !
   imode0 = 0
   DO irr = 1, nirr
     npe = npert(irr)
@@ -120,7 +120,7 @@
       DO is = 1, nspin_mag
         DO ipert = 1, npe
           CALL fft_interpolate(dfftp, dvscfin(:, is, ipert), dffts, dvscfins(:, is, ipert))
-        ENDDO 
+        ENDDO
       ENDDO
     ELSE
       dvscfins => dvscfin
@@ -152,22 +152,22 @@
   ! must be transformed in the cartesian basis
   ! epmat_{CART} = conjg ( U ) * epmat_{PATTERN}
   !
-  ! note it is not U^\dagger but u_pattern! 
+  ! note it is not U^\dagger but u_pattern!
   ! Have a look to symdyn_munu.f90 for comparison
   !
   DO ibnd = 1, nbndep
     DO jbnd = 1, nbndep
       DO ik = 1, nks
-        ! 
+        !
         ! Here is where we calculate epmatq, it appears to be
-        ! epmatq = cone * conjug(u) * el_ph_mat + czero  
+        ! epmatq = cone * conjug(u) * el_ph_mat + czero
         IF (timerev) THEN
           CALL ZGEMV('n', nmodes, nmodes, cone, u, nmodes, &
             el_ph_mat(ibnd, jbnd, ik, :), 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
         ELSE
           CALL ZGEMV('n', nmodes, nmodes, cone, CONJG(u), nmodes, &
             el_ph_mat(ibnd, jbnd, ik, :), 1, czero, epmatq(ibnd, jbnd, ik, :, iq), 1)
-        ENDIF 
+        ENDIF
         !
       ENDDO
     ENDDO
