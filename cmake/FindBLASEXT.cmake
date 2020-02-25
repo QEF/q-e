@@ -64,6 +64,8 @@ set(BLA_VENDOR
     Intel10_64lp (intel mkl v10 64 bit, lp thread model, lp64 model),
     Intel10_64lp_seq (intel mkl v10 64 bit, sequential code, lp64 model),
     Intel( older versions of mkl 32 and 64 bit),
+    Armpl_64lp (armpl, sequential code, lp64 model),
+    Armpl_64lp_mp (armpl, omp code, lp64 model),
     ACML, ACML_MP, ACML_GPU, Apple, NAS, Generic")
 
 if(NOT BLASEXT_FIND_QUIETLY)
@@ -80,6 +82,8 @@ if(NOT BLASEXT_FIND_QUIETLY)
       "\n   Intel10_64lp (intel mkl v10 64 bit, lp thread model, lp64 model),"
       "\n   Intel10_64lp_seq (intel mkl v10 64 bit, sequential code, lp64 model),"
       "\n   Intel( older versions of mkl 32 and 64 bit),"
+      "\n   Armpl_64lp (armpl, sequential code, lp64 model),"
+      "\n   Armpl_64lp_mp (armpl, omp code, lp64 model),"
       "\n   ACML, ACML_MP, ACML_GPU, Apple, NAS, Generic")
 endif()
 
@@ -91,7 +95,7 @@ endif()
 
 # detect the cases where SEQ and PAR libs are handled
 if(BLA_VENDOR STREQUAL "All" AND (BLAS_mkl_core_LIBRARY
-                                  OR BLAS_mkl_core_dll_LIBRARY))
+    OR BLAS_mkl_core_dll_LIBRARY))
   set(BLA_VENDOR "Intel")
   if(BLAS_mkl_intel_LIBRARY)
     set(BLA_VENDOR "Intel10_32")
@@ -104,6 +108,16 @@ if(BLA_VENDOR STREQUAL "All" AND (BLAS_mkl_core_LIBRARY
       STATUS
         "A BLAS library has been found (${BLAS_LIBRARIES}) but we"
         "\n   have also potentially detected some multithreaded BLAS libraries from the MKL."
+        "\n   We try to find both libraries lists (Sequential/Multithreaded).")
+  endif()
+  set(BLAS_FOUND "")
+elseif(BLA_VENDOR STREQUAL "All" AND (BLAS_armpl_lp64_LIBRARY OR BLAS_armpl_lp64_mp_LIBRARY))
+  set(BLA_VENDOR "ARMPL")
+  if(NOT BLASEXT_FIND_QUIETLY)
+    message(
+      STATUS
+        "A BLAS library has been found (${BLAS_LIBRARIES}) but we"
+        "\n   have also potentially detected some multithreaded BLAS libraries from the ARMPL."
         "\n   We try to find both libraries lists (Sequential/Multithreaded).")
   endif()
   set(BLAS_FOUND "")
@@ -232,7 +246,7 @@ if(BLA_VENDOR MATCHES "Intel*")
 
   endif()
 
-  # ACML case
+# ACML case
 elseif(BLA_VENDOR MATCHES "ACML*")
 
   # look for the sequential version

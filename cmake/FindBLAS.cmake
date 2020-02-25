@@ -43,10 +43,10 @@ The following variables may be set to influence this module's behavior:
   * ``Intel10_64ilp_seq`` (intel mkl v10+ 64 bit, sequential code, ilp64 model)
   * ``Intel10_64_dyn`` (intel mkl v10+ 64 bit, single dynamic library)
   * ``Intel`` (obsolete versions of mkl 32 and 64 bit)
-  * ``Armpl_64lp`` (armpl, sequential code, lp64 model)
   * ``Armpl_64lp_mp`` (armpl, omp code, lp64 model)
-  * ``Armpl_64ilp`` (armpl, sequential code, ilp64 model)
+  * ``Armpl_64lp`` (armpl, sequential code, lp64 model)
   * ``Armpl_64ilp_mp`` (armpl, omp code, ilp64 model)
+  * ``Armpl_64ilp`` (armpl, sequential code, ilp64 model)
   * ``ACML``
   * ``ACML_MP``
   * ``ACML_GPU``
@@ -520,12 +520,15 @@ if(BLA_VENDOR MATCHES "Armpl" OR BLA_VENDOR STREQUAL "All")
       endif()
 
       if(BLA_VENDOR MATCHES "_mp")
-        if(BLAS_FIND_QUIETLY OR NOT BLAS_FIND_REQUIRED)
-          find_package(OpenMP)
-        else()
-          find_package(OpenMP REQUIRED)
+        if(NOT OpenMP_FOUND)
+          if(BLAS_FIND_QUIETLY OR NOT BLAS_FIND_REQUIRED)
+            find_package(OpenMP)
+          else()
+            find_package(OpenMP REQUIRED)
+          endif()
         endif()
         string(CONCAT BLAS_armpl_SEARCH ${BLAS_armpl_SEARCH} "_mp")
+        string(CONCAT BLAS_armpl_SEARCH ${BLAS_armpl_SEARCH} ";omp")
       endif()
 
       if(NOT BLAS_LIBRARIES)
@@ -534,7 +537,7 @@ if(BLA_VENDOR MATCHES "Armpl" OR BLA_VENDOR STREQUAL "All")
           BLAS
           sgemm
           ""
-          ${BLAS_armpl_SEARCH}
+          "${BLAS_armpl_SEARCH}"
           "${BLAS_armpl_LAMATH};${BLAS_armpl_LM}"
           ""
           ""

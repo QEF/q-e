@@ -178,6 +178,30 @@ if(QE_ENABLE_OPENMP)
         INTERFACE OpenMP::OpenMP_Fortran)
     target_link_libraries(qe_openmp_c 
         INTERFACE OpenMP::OpenMP_C)
+    if(NOT BLA_VENDOR)
+        message(FATAL_ERROR "Please specify a BLAS vendor(-DBLA_VENDOR=$VENDOR) with the support to OpenMP.
+        The following BLAS vendors are supported:
+        - OpenBLAS
+        - FLAME
+        - Intel10_32        (Intel MKL v10 32 bit)
+        - Intel10_64lp      (Intel MKL v10+ 64 bit, threaded/OpenMP library, lp64 mode)
+        - Intel10_64lp_seq  (Intel MKL v10+ 64 bit, sequential library, lp64 mode)
+        - Intel10_64ilp     (Intel MKL v10+ 64 bit, threaded/OpenMP library, ilp64 mode)
+        - Intel10_64ilp_seq (Intel MKL v10+ 64 bit, sequential library, ilp64 mode)
+        - Intel10_64_dyn    (Intel MKL v10+ 64 bit, single dynamic library)
+        - Intel             (Obsolete versions of MKL 32 and 64 bit)
+        - Armpl_64lp_mp     (ArmPL, OpenMP library, lp64 mode)
+        - Armpl_64lp        (ArmPL, sequential library, lp64 mode)
+        - Armpl_64ilp_mp    (ArmPL, OpenMP library, ilp64 mode)
+        - Armpl_64ilp       (ArmPL, sequential library, ilp64 mode)
+        - ACML
+        - ACML_MP
+        - ACML_GPU
+        - Apple
+        - NAS
+        - Generic
+        ")
+    endif()
 endif(QE_ENABLE_OPENMP)
 
 ###########################################################
@@ -226,7 +250,6 @@ if(NOT FFTW_FOUND)
     find_package(FFTW COMPONENTS ESSL ${fft_components} QUIET)
     if(FFTW_FOUND)
         message(STATUS "Found IBM ESSL FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
-        message(STATUS "Found IBM ESSL FFT include: ${FFTW_INCLUDE_DIRS}")
         set(fft_definitions __LINUX_ESSL)
         target_link_libraries(qe_fft 
             INTERFACE 
@@ -244,10 +267,9 @@ if(NOT FFTW_FOUND)
 endif()
 # 1.b: Intel MKL
 if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS MKL ${fft_components} QUIET)
+    find_package(FFTW COMPONENTS MKL ${fft_components})
     if(FFTW_FOUND)
         message(STATUS "Found Intel MKL FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
-        message(STATUS "Found Intel MKL FFT include: ${FFTW_INCLUDE_DIRS}")
         set(fft_definitions __DFTI)
         target_link_libraries(qe_fft 
             INTERFACE 
@@ -263,13 +285,27 @@ if(NOT FFTW_FOUND)
                 ${FFTW_C_FLAGS})
     endif()
 endif(NOT FFTW_FOUND)
+# 1.c: ARM Performance Library
+if(NOT FFTW_FOUND)
+    find_package(FFTW COMPONENTS ARM ${fft_components})
+    if(FFTW_FOUND)
+        message(STATUS "Found ARM Performance Library FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
+        set(fft_definitions __ARM_LIB)
+        target_link_libraries(qe_fft 
+            INTERFACE 
+                ${FFTW_LIBRARIES}
+                ${FFTW_LINKER_FLAGS})
+        target_include_directories(qe_fft
+            INTERFACE
+                ${FFTW_INCLUDE_DIRS})
+    endif()
+endif(NOT FFTW_FOUND)
 # 2: no vendor-specific fft flavor has been found,
 #    just look for a generic FFTW implementation
 if(NOT FFTW_FOUND)
     find_package(FFTW COMPONENTS ${fft_components} QUIET)
     if(FFTW_FOUND)
         message(STATUS "Found generic FFTW: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
-        message(STATUS "Found generic FFTW include: ${FFTW_INCLUDE_DIRS}")
         set(fft_definitions __FFTW3)
         target_link_libraries(qe_fft 
             INTERFACE 
