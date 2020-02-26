@@ -71,7 +71,7 @@ arm:armflang )
         try_ldflags="-mcpu=native"
         try_fflags_openmp="-fopenmp"
         try_ldfflags_openmp="-fopenmp" 
-        try_f90flags="\$(FFLAGS) -x f95-cpp-input" 
+        try_f90flags="\$(FFLAGS) -cpp"
         try_ldflags="-g -mcpu=native"
         try_ldflags_openmp="-fopenmp"
         try_ldflags_static="-static -static-flang-libs"
@@ -229,7 +229,7 @@ ppc64-bgq:*xlf* )
             try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
         fi
         try_fflags_openmp="-fopenmp"
-        try_f90flags="\$(FFLAGS) -x f95-cpp-input"
+        try_f90flags="\$(FFLAGS) -cpp"
         try_fflags_noopt="-O0 -g"
         try_ldflags="-g"
         try_ldflags_openmp="-pthread -fopenmp"
