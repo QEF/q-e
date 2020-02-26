@@ -35,9 +35,9 @@ The following variables may be set to influence this module's behavior:
   * ``Intel10_64ilp_seq`` (intel mkl v10+ 64 bit, sequential code, ilp64 model)
   * ``Intel10_64_dyn`` (intel mkl v10+ 64 bit, single dynamic library)
   * ``Intel`` (obsolete versions of mkl 32 and 64 bit)
-  * ``Armpl_64lp_mp`` (armpl, omp code, lp64 model)
+  * ``Armpl_64lp_mp`` (armpl, threaded code, lp64 model)
   * ``Armpl_64lp`` (armpl, sequential code, lp64 model)
-  * ``Armpl_64ilp_mp`` (armpl, omp code, ilp64 model)
+  * ``Armpl_64ilp_mp`` (armpl, threaded code, ilp64 model)
   * ``Armpl_64ilp`` (armpl, sequential code, ilp64 model)
   * ``ACML``
   * ``Apple``
@@ -213,7 +213,7 @@ if(BLAS_FOUND)
   endif()
 
   # LAPACK in the Intel MKL 10+ library?
-  if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR MATCHES "Intel")
     if(NOT LAPACK_LIBRARIES)
       if(CMAKE_C_COMPILER_LOADED OR CMAKE_CXX_COMPILER_LOADED)
         # System-specific settings
@@ -332,7 +332,7 @@ if(BLAS_FOUND)
   endif()
 
   # LAPACK in the ARMPL library?
-  if(BLA_VENDOR MATCHES "Armpl" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR MATCHES "Armpl")
     if(NOT LAPACK_LIBRARIES)
       set(LAPACK_armpl_SEARCH)
       if(BLA_VENDOR MATCHES "_64ilp")
@@ -371,7 +371,7 @@ if(BLAS_FOUND)
   endif()
 
   # gotoblas? (http://www.tacc.utexas.edu/tacc-projects/gotoblas2)
-  if(BLA_VENDOR STREQUAL "Goto" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR STREQUAL "Goto")
     if(NOT LAPACK_LIBRARIES)
       check_lapack_libraries(
         LAPACK_LIBRARIES
@@ -388,7 +388,7 @@ if(BLAS_FOUND)
   endif()
 
   # OpenBLAS? (http://www.openblas.net)
-  if(BLA_VENDOR STREQUAL "OpenBLAS" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR STREQUAL "OpenBLAS")
     if(NOT LAPACK_LIBRARIES)
       check_lapack_libraries(
         LAPACK_LIBRARIES
@@ -405,7 +405,7 @@ if(BLAS_FOUND)
   endif()
 
   # FLAME's blis library? (https://github.com/flame/blis)
-  if(BLA_VENDOR STREQUAL "FLAME" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR STREQUAL "FLAME")
     if(NOT LAPACK_LIBRARIES)
       check_lapack_libraries(
         LAPACK_LIBRARIES
@@ -422,14 +422,14 @@ if(BLAS_FOUND)
   endif()
 
   # BLAS in acml library?
-  if(BLA_VENDOR MATCHES "ACML" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR MATCHES "ACML")
     if(BLAS_LIBRARIES MATCHES ".+acml.+")
       set(LAPACK_LIBRARIES ${BLAS_LIBRARIES})
     endif()
   endif()
 
   # Apple LAPACK library?
-  if(BLA_VENDOR STREQUAL "Apple" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR STREQUAL "Apple")
     if(NOT LAPACK_LIBRARIES)
       check_lapack_libraries(
         LAPACK_LIBRARIES
@@ -446,7 +446,7 @@ if(BLAS_FOUND)
   endif()
 
   # Apple NAS (vecLib) library?
-  if(BLA_VENDOR STREQUAL "NAS" OR BLA_VENDOR STREQUAL "All")
+  if(BLA_VENDOR STREQUAL "NAS")
     if(NOT LAPACK_LIBRARIES)
       check_lapack_libraries(
         LAPACK_LIBRARIES
@@ -463,22 +463,18 @@ if(BLAS_FOUND)
   endif()
 
   # Generic LAPACK library?
-  if(BLA_VENDOR STREQUAL "Generic" OR
-      BLA_VENDOR STREQUAL "ATLAS" OR
-      BLA_VENDOR STREQUAL "All")
-    if(NOT LAPACK_LIBRARIES)
-      check_lapack_libraries(
-        LAPACK_LIBRARIES
-        LAPACK
-        cheev
-        ""
-        "lapack"
-        ""
-        ""
-        ""
-        "${BLAS_LIBRARIES}"
-      )
-    endif()
+  if(NOT LAPACK_LIBRARIES)
+    check_lapack_libraries(
+      LAPACK_LIBRARIES
+      LAPACK
+      cheev
+      ""
+      "lapack"
+      ""
+      ""
+      ""
+      "${BLAS_LIBRARIES}"
+    )
   endif()
 else()
   message(STATUS "LAPACK requires BLAS")

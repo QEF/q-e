@@ -29,7 +29,7 @@ The following variables may be set to influence this module's behavior:
   * ``Goto``
   * ``OpenBLAS``
   * ``FLAME``
-  * ``ATLAS PhiPACK``
+  * ``PhiPACK``
   * ``CXML``
   * ``DXML``
   * ``SunPerf``
@@ -43,9 +43,9 @@ The following variables may be set to influence this module's behavior:
   * ``Intel10_64ilp_seq`` (intel mkl v10+ 64 bit, sequential code, ilp64 model)
   * ``Intel10_64_dyn`` (intel mkl v10+ 64 bit, single dynamic library)
   * ``Intel`` (obsolete versions of mkl 32 and 64 bit)
-  * ``Armpl_64lp_mp`` (armpl, omp code, lp64 model)
+  * ``Armpl_64lp_mp`` (armpl, threaded code, lp64 model)
   * ``Armpl_64lp`` (armpl, sequential code, lp64 model)
-  * ``Armpl_64ilp_mp`` (armpl, omp code, ilp64 model)
+  * ``Armpl_64ilp_mp`` (armpl, threaded code, ilp64 model)
   * ``Armpl_64ilp`` (armpl, sequential code, ilp64 model)
   * ``ACML``
   * ``ACML_MP``
@@ -145,6 +145,15 @@ else()
   endif()
 endif()
 
+set(BLAS_LOOK_FOR_OMP OFF)
+if(BLAS_FIND_COMPONENTS)
+  foreach(component ${BLAS_FIND_COMPONENTS})
+    if (${component} STREQUAL "OMP")
+      # means we look for the OpenMP version of BLAS
+      set(BLAS_LOOK_FOR_OMP ON)
+    endif()
+  endforeach()
+endif()
 # TODO: move this stuff to a separate module
 
 macro(CHECK_BLAS_LIBRARIES LIBRARIES _prefix _name _flags _list _threadlibs _addlibdir _subdirs)
@@ -233,26 +242,32 @@ else()
   endif()
 endif()
 
-# Implicitly linked BLAS libraries?
-if(BLA_VENDOR STREQUAL "All")
-  if(NOT BLAS_LIBRARIES)
-    check_blas_libraries(
-      BLAS_LIBRARIES
-      BLAS
-      sgemm
-      ""
-      ""
-      ""
-      ""
-      ""
-      )
-  endif()
-endif()
+## Implicitly linked BLAS libraries?
+#if(BLA_VENDOR STREQUAL "All")
+#  if(NOT BLAS_LIBRARIES)
+#    check_blas_libraries(
+#      BLAS_LIBRARIES
+#      BLAS
+#      sgemm
+#      ""
+#      ""
+#      ""
+#      ""
+#      ""
+#      )
+#  endif()
+#endif()
 
 # BLAS in the Intel MKL 10+ library?
 if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
   if(NOT BLAS_LIBRARIES)
     if(CMAKE_C_COMPILER_LOADED OR CMAKE_CXX_COMPILER_LOADED)
+      # Force BLAS_LOOK_FOR_OMP to be OFF if Intel BLA_VENDOR requires sequential code
+      if(BLA_VENDOR MATCHES "_seq")
+        set(BLAS_LOOK_FOR_OMP OFF)
+      elseif(BLA_VENDOR MATCHES "Intel")
+        set(BLAS_LOOK_FOR_OMP ON)
+      endif()
       # System-specific settings
       if(WIN32)
         if(BLA_STATIC)
@@ -314,17 +329,20 @@ if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
 
           # Add threading/sequential libs
           set(BLAS_SEARCH_LIBS_WIN_THREAD "")
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
-            # old version
-            list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
-              "libguide40 mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
-            # mkl >= 10.3
-            list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
-              "libiomp5md mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
-          endif()
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
-            list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
-              "mkl_sequential${BLAS_mkl_DLL_SUFFIX}")
+          if(BLAS_LOOK_FOR_OMP)
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
+              # old version
+              list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
+                "libguide40 mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
+              # mkl >= 10.3
+              list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
+                "libiomp5md mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
+            endif()
+          else()
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
+              list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
+                "mkl_sequential${BLAS_mkl_DLL_SUFFIX}")
+            endif()
           endif()
 
           # Cartesian product of the above
@@ -337,25 +355,39 @@ if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
         else()
           if(BLA_VENDOR STREQUAL "Intel10_32" OR BLA_VENDOR STREQUAL "All")
             # old version
-            list(APPEND BLAS_SEARCH_LIBS
-              "mkl_blas95 mkl_${BLAS_mkl_INTFACE} mkl_${BLAS_mkl_THREADING}_thread mkl_core guide")
+            set(SEARCH_LIBS "mkl_blas95 mkl_${BLAS_mkl_INTFACE}")
+            if(BLAS_LOOK_FOR_OMP)
+              string(CONCAT SEARCH_LIBS " mkl_${BLAS_mkl_THREADING}_thread")
+            endif()
+            string(CONCAT SEARCH_LIBS " mkl_core guide")
+            list(APPEND BLAS_SEARCH_LIBS ${SEARCH_LIBS})
 
             # mkl >= 10.3
-            list(APPEND BLAS_SEARCH_LIBS
-              "${BLAS_mkl_START_GROUP} mkl_blas95 mkl_${BLAS_mkl_INTFACE} mkl_${BLAS_mkl_THREADING}_thread mkl_core ${BLAS_mkl_END_GROUP} ${BLAS_mkl_OMP}")
+            set(SEARCH_LIBS "${BLAS_mkl_START_GROUP} mkl_blas95 mkl_${BLAS_mkl_INTFACE}")
+            if(BLAS_LOOK_FOR_OMP)
+              string(CONCAT SEARCH_LIBS " mkl_${BLAS_mkl_THREADING}_thread")
+            endif()
+            string(CONCAT SEARCH_LIBS " mkl_core ${BLAS_mkl_END_GROUP}")
+            if(BLAS_LOOK_FOR_OMP)
+              string(CONCAT SEARCH_LIBS " ${BLAS_mkl_OMP}")
+            endif()
+            list(APPEND BLAS_SEARCH_LIBS ${SEARCH_LIBS})
           endif()
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
-            # old version
-            list(APPEND BLAS_SEARCH_LIBS
-              "mkl_blas95 mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core guide")
+          if(BLAS_LOOK_FOR_OMP)
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
+              # old version
+              list(APPEND BLAS_SEARCH_LIBS
+                "mkl_blas95 mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core guide")
 
-            # mkl >= 10.3
-            list(APPEND BLAS_SEARCH_LIBS
-              "${BLAS_mkl_START_GROUP} mkl_blas95_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core ${BLAS_mkl_END_GROUP} ${BLAS_mkl_OMP}")
-          endif()
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
-            list(APPEND BLAS_SEARCH_LIBS
-              "${BLAS_mkl_START_GROUP} mkl_blas95_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_sequential mkl_core ${BLAS_mkl_END_GROUP}")
+              # mkl >= 10.3
+              list(APPEND BLAS_SEARCH_LIBS
+                "${BLAS_mkl_START_GROUP} mkl_blas95_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core ${BLAS_mkl_END_GROUP} ${BLAS_mkl_OMP}")
+            endif()
+          else()
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
+              list(APPEND BLAS_SEARCH_LIBS
+                "${BLAS_mkl_START_GROUP} mkl_blas95_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_sequential mkl_core ${BLAS_mkl_END_GROUP}")
+            endif()
           endif()
         endif()
       else()
@@ -375,17 +407,20 @@ if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
 
           # Add threading/sequential libs
           set(BLAS_SEARCH_LIBS_WIN_THREAD "")
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
-            # old version
-            list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
-              "libguide40 mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
-            # mkl >= 10.3
-            list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
-              "libiomp5md mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
-          endif()
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
-            list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
-              "mkl_sequential${BLAS_mkl_DLL_SUFFIX}")
+          if(BLAS_LOOK_FOR_OMP)
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
+              # old version
+              list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
+                "libguide40 mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
+              # mkl >= 10.3
+              list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
+                "libiomp5md mkl_intel_thread${BLAS_mkl_DLL_SUFFIX}")
+            endif()
+          else()
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
+              list(APPEND BLAS_SEARCH_LIBS_WIN_THREAD
+                "mkl_sequential${BLAS_mkl_DLL_SUFFIX}")
+            endif()
           endif()
 
           # Cartesian product of the above
@@ -397,26 +432,39 @@ if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
           endforeach()
         else()
           if(BLA_VENDOR STREQUAL "Intel10_32" OR BLA_VENDOR STREQUAL "All")
-            # old version
-            list(APPEND BLAS_SEARCH_LIBS
-              "mkl_${BLAS_mkl_INTFACE} mkl_${BLAS_mkl_THREADING}_thread mkl_core guide")
+            set(SEARCH_LIBS "mkl_${BLAS_mkl_INTFACE}")
+            if(BLAS_LOOK_FOR_OMP)
+              string(CONCAT SEARCH_LIBS " mkl_${BLAS_mkl_THREADING}_thread")
+            endif()
+            string(CONCAT SEARCH_LIBS " mkl_core guide")
+            list(APPEND BLAS_SEARCH_LIBS ${SEARCH_LIBS})
 
             # mkl >= 10.3
-            list(APPEND BLAS_SEARCH_LIBS
-              "${BLAS_mkl_START_GROUP} mkl_${BLAS_mkl_INTFACE} mkl_${BLAS_mkl_THREADING}_thread mkl_core ${BLAS_mkl_END_GROUP} ${BLAS_mkl_OMP}")
+            set(SEARCH_LIBS "${BLAS_mkl_START_GROUP} mkl_${BLAS_mkl_INTFACE}")
+            if(BLAS_LOOK_FOR_OMP)
+              string(CONCAT SEARCH_LIBS " mkl_${BLAS_mkl_THREADING}_thread")
+            endif()
+            string(CONCAT SEARCH_LIBS " mkl_core ${BLAS_mkl_END_GROUP}")
+            if(BLAS_LOOK_FOR_OMP)
+              string(CONCAT SEARCH_LIBS " ${BLAS_mkl_OMP}")
+            endif()
+            list(APPEND BLAS_SEARCH_LIBS ${SEARCH_LIBS})
           endif()
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
-            # old version
-            list(APPEND BLAS_SEARCH_LIBS
-              "mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core guide")
+          if(BLAS_LOOK_FOR_OMP)
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp$" OR BLA_VENDOR STREQUAL "All")
+              # old version
+              list(APPEND BLAS_SEARCH_LIBS
+                "mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core guide")
 
-            # mkl >= 10.3
-            list(APPEND BLAS_SEARCH_LIBS
-              "${BLAS_mkl_START_GROUP} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core ${BLAS_mkl_END_GROUP} ${BLAS_mkl_OMP}")
-          endif()
-          if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
-            list(APPEND BLAS_SEARCH_LIBS
-              "${BLAS_mkl_START_GROUP} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_sequential mkl_core ${BLAS_mkl_END_GROUP}")
+              # mkl >= 10.3
+              list(APPEND BLAS_SEARCH_LIBS
+                "${BLAS_mkl_START_GROUP} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_${BLAS_mkl_THREADING}_thread mkl_core ${BLAS_mkl_END_GROUP} ${BLAS_mkl_OMP}")
+            endif()
+          else()
+            if(BLA_VENDOR MATCHES "^Intel10_64i?lp_seq$" OR BLA_VENDOR STREQUAL "All")
+              list(APPEND BLAS_SEARCH_LIBS
+                "${BLAS_mkl_START_GROUP} mkl_${BLAS_mkl_INTFACE}_${BLAS_mkl_ILP_MODE} mkl_sequential mkl_core ${BLAS_mkl_END_GROUP}")
+            endif()
           endif()
 
           #older vesions of intel mkl libs
@@ -480,6 +528,22 @@ if(BLA_VENDOR MATCHES "Intel" OR BLA_VENDOR STREQUAL "All")
         endif()
       endforeach()
 
+      if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+        if("ilp64" IN_LIST BLAS_LIBRARIES)
+          if("sequential")
+            set(BLA_VENDOR "Intel10_64ilp_seq")
+          else()
+            set(BLA_VENDOR "Intel10_64ilp")
+          endif()
+        else()
+          if("sequential")
+            set(BLA_VENDOR "Intel10_64lp_seq")
+          else()
+            set(BLA_VENDOR "Intel10_64lp")
+          endif()
+        endif()
+      endif()
+
       unset(BLAS_mkl_ILP_MODE)
       unset(BLAS_mkl_INTFACE)
       unset(BLAS_mkl_THREADING)
@@ -519,7 +583,14 @@ if(BLA_VENDOR MATCHES "Armpl" OR BLA_VENDOR STREQUAL "All")
         set(BLAS_armpl_SEARCH "armpl_lp64")
       endif()
 
+      # Force BLAS_LOOK_FOR_OMP to be ON if ARMPL BLA_VENDOR requires OpenMP
       if(BLA_VENDOR MATCHES "_mp")
+        set(BLAS_LOOK_FOR_OMP ON)
+      elseif(BLA_VENDOR MATCHES "Armpl")
+        set(BLAS_LOOK_FOR_OMP OFF)
+      endif()
+
+      if(BLAS_LOOK_FOR_OMP)
         if(NOT OpenMP_FOUND)
           if(BLAS_FIND_QUIETLY OR NOT BLAS_FIND_REQUIRED)
             find_package(OpenMP)
@@ -544,6 +615,22 @@ if(BLA_VENDOR MATCHES "Armpl" OR BLA_VENDOR STREQUAL "All")
           )
       endif()
 
+      if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+        if("ilp64" IN_LIST BLAS_LIBRARIES)
+          if(BLAS_LIBRARIES MATCHES "_mp")
+            set(BLA_VENDOR "Armpl_64ilp_mp")
+          else()
+            set(BLA_VENDOR "Armpl_64ilp")
+          endif()
+        else()
+          if(BLAS_LIBRARIES MATCHES "_mp")
+            set(BLA_VENDOR "Armpl_64lp_mp")
+          else()
+            set(BLA_VENDOR "Armpl_64lp")
+          endif()
+        endif()
+      endif()
+
       unset(BLAS_armpl_SEARCH)
       unset(BLAS_armpl_LAMATH)
       unset(BLAS_armpl_LM)
@@ -565,6 +652,9 @@ if(BLA_VENDOR STREQUAL "Goto" OR BLA_VENDOR STREQUAL "All")
       ""
       )
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "Goto")
+  endif()
 endif()
 
 # OpenBLAS? (http://www.openblas.net)
@@ -582,10 +672,12 @@ if(BLA_VENDOR STREQUAL "OpenBLAS" OR BLA_VENDOR STREQUAL "All")
       )
   endif()
   if(NOT BLAS_LIBRARIES AND (CMAKE_C_COMPILER_LOADED OR CMAKE_CXX_COMPILER_LOADED))
-    if(BLAS_FIND_QUIETLY OR NOT BLAS_FIND_REQUIRED)
-      find_package(Threads)
-    else()
-      find_package(Threads REQUIRED)
+    if(NOT Threads_FOUND)
+      if(BLAS_FIND_QUIETLY OR NOT BLAS_FIND_REQUIRED)
+        find_package(Threads)
+      else()
+        find_package(Threads REQUIRED)
+      endif()
     endif()
     check_blas_libraries(
       BLAS_LIBRARIES
@@ -597,6 +689,9 @@ if(BLA_VENDOR STREQUAL "OpenBLAS" OR BLA_VENDOR STREQUAL "All")
       ""
       ""
       )
+  endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "OpenBLAS")
   endif()
 endif()
 
@@ -614,6 +709,9 @@ if(BLA_VENDOR STREQUAL "FLAME" OR BLA_VENDOR STREQUAL "All")
       ""
       )
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "FLAME")
+  endif()
 endif()
 
 # BLAS in the ATLAS library? (http://math-atlas.sourceforge.net/)
@@ -629,6 +727,9 @@ if(BLA_VENDOR STREQUAL "ATLAS" OR BLA_VENDOR STREQUAL "All")
       ""
       ""
       )
+  endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "ATLAS")
   endif()
 endif()
 
@@ -646,6 +747,9 @@ if(BLA_VENDOR STREQUAL "PhiPACK" OR BLA_VENDOR STREQUAL "All")
       ""
       )
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "PhiPACK")
+  endif()
 endif()
 
 # BLAS in Alpha CXML library?
@@ -662,6 +766,9 @@ if(BLA_VENDOR STREQUAL "CXML" OR BLA_VENDOR STREQUAL "All")
       ""
       )
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "CXML")
+  endif()
 endif()
 
 # BLAS in Alpha DXML library? (now called CXML, see above)
@@ -677,6 +784,9 @@ if(BLA_VENDOR STREQUAL "DXML" OR BLA_VENDOR STREQUAL "All")
       ""
       ""
       )
+  endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "DXML")
   endif()
 endif()
 
@@ -697,6 +807,9 @@ if(BLA_VENDOR STREQUAL "SunPerf" OR BLA_VENDOR STREQUAL "All")
       set(BLAS_LINKER_FLAGS "-xlic_lib=sunperf")
     endif()
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "SunPerf")
+  endif()
 endif()
 
 # BLAS in SCSL library?  (SGI/Cray Scientific Library)
@@ -712,6 +825,9 @@ if(BLA_VENDOR STREQUAL "SCSL" OR BLA_VENDOR STREQUAL "All")
       ""
       ""
       )
+  endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "SCSL")
   endif()
 endif()
 
@@ -729,6 +845,9 @@ if(BLA_VENDOR STREQUAL "SGIMATH" OR BLA_VENDOR STREQUAL "All")
       ""
       )
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "SGIMATH")
+  endif()
 endif()
 
 # BLAS in IBM ESSL library? (requires generic BLAS lib, too)
@@ -744,6 +863,9 @@ if(BLA_VENDOR STREQUAL "IBMESSL" OR BLA_VENDOR STREQUAL "All")
       ""
       ""
       )
+  endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "IBMESSL")
   endif()
 endif()
 
@@ -813,7 +935,7 @@ elseif(BLAS_${BLA_VENDOR}_LIB_DIRS)
   set(_${BLA_VENDOR}_LIB_DIRS ${BLAS_${BLA_VENDOR}_LIB_DIRS})
 endif()
 
-if(BLA_VENDOR STREQUAL "ACML_MP")
+if(BLA_VENDOR STREQUAL "ACML_MP" OR BLAS_LOOK_FOR_OMP)
   foreach(BLAS_ACML_MP_LIB_DIRS ${_ACML_MP_LIB_DIRS})
     check_blas_libraries(
       BLAS_LIBRARIES
@@ -825,6 +947,9 @@ if(BLA_VENDOR STREQUAL "ACML_MP")
       break()
     endif()
   endforeach()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "ACML_MP")
+  endif()
 elseif(BLA_VENDOR STREQUAL "ACML_GPU")
   foreach(BLAS_ACML_GPU_LIB_DIRS ${_ACML_GPU_LIB_DIRS})
     check_blas_libraries(
@@ -837,6 +962,9 @@ elseif(BLA_VENDOR STREQUAL "ACML_GPU")
       break()
     endif()
   endforeach()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "ACML_GPU")
+  endif()
 else()
   foreach(BLAS_ACML_LIB_DIRS ${_ACML_LIB_DIRS})
     check_blas_libraries(
@@ -849,6 +977,9 @@ else()
       break()
     endif()
   endforeach()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "ACML")
+  endif()
 endif()
 
 # Either acml or acml_mp should be in LD_LIBRARY_PATH but not both
@@ -863,6 +994,9 @@ if(NOT BLAS_LIBRARIES)
     ""
     ""
     )
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "ACML")
+  endif()
 endif()
 if(NOT BLAS_LIBRARIES)
   check_blas_libraries(
@@ -875,6 +1009,9 @@ if(NOT BLAS_LIBRARIES)
     ""
     ""
     )
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "ACML_MP")
+  endif()
 endif()
 if(NOT BLAS_LIBRARIES)
   check_blas_libraries(
@@ -887,6 +1024,9 @@ if(NOT BLAS_LIBRARIES)
     ""
     ""
     )
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "ACML_GPU")
+  endif()
 endif()
 endif() # ACML
 
@@ -904,6 +1044,9 @@ if(BLA_VENDOR STREQUAL "Apple" OR BLA_VENDOR STREQUAL "All")
       ""
       )
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "Apple")
+  endif()
 endif()
 
 # Apple NAS (vecLib) library?
@@ -919,6 +1062,9 @@ if(BLA_VENDOR STREQUAL "NAS" OR BLA_VENDOR STREQUAL "All")
       ""
       ""
       )
+  endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "NAS")
   endif()
 endif()
 
@@ -936,6 +1082,9 @@ if(BLA_VENDOR STREQUAL "Generic" OR BLA_VENDOR STREQUAL "All")
       ""
       )
   endif()
+  if(BLA_VENDOR MATCHES "All" AND BLAS_LIBRARIES)
+    set(BLA_VENDOR "Generic")
+  endif()
 endif()
 
 if(NOT BLA_F95)
@@ -950,3 +1099,5 @@ endif()
 
 cmake_pop_check_state()
 set(CMAKE_FIND_LIBRARY_SUFFIXES ${_blas_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+
+message(STATUS "Found BLAS Vendor: ${BLA_VENDOR}")
