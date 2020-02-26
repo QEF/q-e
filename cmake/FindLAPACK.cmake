@@ -287,19 +287,19 @@ if(BLAS_FOUND)
             "lib/${LAPACK_mkl_ARCH_NAME}_${LAPACK_mkl_OS_NAME}")
 
         ## First try empty lapack libs
-        #if(NOT ${_LIBRARIES})
-        #  check_lapack_libraries(
-        #    ${_LIBRARIES}
-        #    LAPACK
-        #    ${LAPACK_mkl_SEARCH_SYMBOL}
-        #    ""
-        #    ""
-        #    "${CMAKE_THREAD_LIBS_INIT};${LAPACK_mkl_LM};${LAPACK_mkl_LDL}"
-        #    "${LAPACK_mkl_MKLROOT}"
-        #    "${LAPACK_mkl_LIB_PATH_SUFFIXES}"
-        #    "${_BLAS_LIBRARIES}"
-        #  )
-        #endif()
+        if(NOT ${_LIBRARIES})
+          check_lapack_libraries(
+            ${_LIBRARIES}
+            LAPACK
+            ${LAPACK_mkl_SEARCH_SYMBOL}
+            ""
+            ""
+            "${CMAKE_THREAD_LIBS_INIT};${LAPACK_mkl_LM};${LAPACK_mkl_LDL}"
+            "${LAPACK_mkl_MKLROOT}"
+            "${LAPACK_mkl_LIB_PATH_SUFFIXES}"
+            "${_BLAS_LIBRARIES}"
+          )
+        endif()
 
         # Then try the search libs
         foreach(IT ${LAPACK_SEARCH_LIBS})
