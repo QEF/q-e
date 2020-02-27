@@ -4944,7 +4944,7 @@ else
 
 
     crayxt*:* )
-            # check for acml - note that it contains lapack as well
+            # check for acml - OBSOLETE?
             try_libdirs="$ld_library_path $libdirs $try_libdirs"
             for dir in none $try_libdirs
             do
@@ -5059,9 +5059,9 @@ fi
             ;;
 
     # ia64:   -lmkl_gf_ipf, -lmkl_intel_ipf
-	# ia32:   -lmkl_gf    , -lmkl_intel
-	# openmp: -lmkl_pgi_thread, -lmkl_gnu_thread, -lmkl_intel_thread
-	#
+    # ia32:   -lmkl_gf    , -lmkl_intel
+    # openmp: -lmkl_pgi_thread, -lmkl_gnu_thread, -lmkl_intel_thread
+
     x86_64:pgf* )
             try_libdirs="$ld_library_path $libdirs $try_libdirs"
 
@@ -6087,12 +6087,18 @@ blas_line="BLAS_LIBS=$blas_libs"
 # Checking LAPACK...
 
 
-have_lapack=0
-
-# check for lapack - almost all cases implemented here are OBSOLETE
+if test "$have_mkl" -ne 0 || test "$have_armpl" -ne 0 || test "$have_acml" -ne 0 || test "$have_essl" -ne 0
+then
+   # MKL or ARM libraries or ACML (obsolete) or ESSL (obsolete?) found:
+   # no need to check for lapack
+   have_lapack=1
+else
+   # check for lapack
+   have_lapack=0
+fi
 #
-# same supported vendor replacements as for blas
-# internal version is used if none is found
+if test "$have_lapack" -eq 0
+then
    if test "$lapack_libs" = ""
    then
         # check directories in LD_LIBRARY_PATH too
@@ -6101,178 +6107,8 @@ have_lapack=0
 
         case "$arch:$f90" in
 
-        ia32:* | ia64:*| x86_64:* )
-                # check for mkl_lapack (if mkl found and acml not found)
-                # OBSOLETE - recent versions of mkl contain lapack
-                if test "$have_mkl" -ne 0 && test "$have_acml" -eq 0
-                then
-                        unset ac_cv_search_dspev ac_lib # clear cached value
-                        FFLAGS="$test_fflags"
-                        LIBS=" $blas_libs"
-                        LDFLAGS="$MKL_FLAGS $test_ldflags"
-                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dspev" >&5
-$as_echo_n "checking for library containing dspev... " >&6; }
-if ${ac_cv_search_dspev+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dspev
-      end
-_ACEOF
-for ac_lib in '' mkl_lapack; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dspev=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dspev+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dspev+:} false; then :
-
-else
-  ac_cv_search_dspev=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dspev" >&5
-$as_echo "$ac_cv_search_dspev" >&6; }
-ac_res=$ac_cv_search_dspev
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_lapack=1
-fi
-
-                        if test "$ac_lib" != "" ; then lapack_libs="-l$ac_lib"; fi
-                fi
-                ;;
-        arm:armflang )
-                if test "$have_armpl" -ne 0
-                then
-                       unset ac_cv_search_dspev ac_lib
-                       if test "$use_openmp" -eq 0; then
-                          FFLAGS="-fopenmp -armpl=parallel"
-                        else
-                          FFLAGS="-armpl"
-                       fi
-                       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dspev" >&5
-$as_echo_n "checking for library containing dspev... " >&6; }
-if ${ac_cv_search_dspev+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dspev
-      end
-_ACEOF
-for ac_lib in '' armpl_arm; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dspev=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dspev+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dspev+:} false; then :
-
-else
-  ac_cv_search_dspev=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dspev" >&5
-$as_echo "$ac_cv_search_dspev" >&6; }
-ac_res=$ac_cv_search_dspev
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_lapack=1
-fi
-
-                fi
-                ;;
-        arm:gfortran )
-                if test "$have_armpl" -ne 0
-                then
-                   have_lapack=1
-                fi
-                ;;
-        ppc64:* )
-                # check for essl
-                unset ac_cv_search_dspev # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$blas_libs"
-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dspev" >&5
-$as_echo_n "checking for library containing dspev... " >&6; }
-if ${ac_cv_search_dspev+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dspev
-      end
-_ACEOF
-for ac_lib in '' essl; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dspev=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dspev+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dspev+:} false; then :
-
-else
-  ac_cv_search_dspev=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dspev" >&5
-$as_echo "$ac_cv_search_dspev" >&6; }
-ac_res=$ac_cv_search_dspev
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_lapack=1
-                                lapack_libs="$try_loption $LIBS"
-                                try_dflags="$try_dflags -D__LINUX_ESSL"
-fi
-
-                # essl may not have been found in previous test on blas
-                if test "$have_lapack" -eq 1; then have_essl=1; fi
-                ;;
-
         necsx:* )
-                # OBSOLETE
+                # NECSX: OBSOLETE?
                 try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0"
                 for dir in none $try_libdirs
                 do
@@ -6339,7 +6175,7 @@ fi
 
         if test "$have_lapack" -eq 0
         then
-                # check for lapack (in several directories)
+                # generic check for lapack (in several directories)
                 try_libdirs="/usr/local/lib"
                 try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -6400,40 +6236,33 @@ if test "$ac_res" != no; then :
                                        lapack_libs="$try_loption $LIBS"
 fi
 
-                        if test "$ac_cv_search_dspev" != "no"; then
-                           # essl must precede lapack (if present)
-                           if test "$have_essl" -ne 0 ; then
-                                lapack_libs="$blas_libs $lapack_libs"
-                           fi
-                           break
-                        fi
                 done
         fi
 
    else
-        # lapack provided in LAPACK_LIBS - not checked!
+        # lapack provided in LAPACK_LIBS: not checked
+	echo setting LAPACK from \$LAPACK_LIBS with no check ...  $lapack_libs
         have_lapack=1
    fi
 
+fi
 
-# No lapack library found or internal lapack esplicitly required
+# No lapack library found: use internal lapack
 
 if test "$have_lapack" -eq 0  ; then
     lapack_libs="\$(TOPDIR)/LAPACK/liblapack.a"
+    echo setting LAPACK to internal library ...  $lapack_libs
     lapack_libs_switch="internal"
 else
     lapack_libs_switch="external"
 fi
-
-  lapack_line="LAPACK_LIBS=$lapack_libs"
-
+lapack_line="LAPACK_LIBS=$lapack_libs"
 
 
 
 
 
-
-  ac_config_files="$ac_config_files install/make_lapack.inc"
+ac_config_files="$ac_config_files install/make_lapack.inc"
 
 
 

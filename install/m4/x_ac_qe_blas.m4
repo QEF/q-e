@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
+# Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_BLAS], [
 
@@ -24,7 +24,7 @@ else
 
 
     crayxt*:* )
-            # check for acml - note that it contains lapack as well
+            # check for acml - OBSOLETE?
             try_libdirs="$ld_library_path $libdirs $try_libdirs"
             for dir in none $try_libdirs
             do
@@ -55,9 +55,9 @@ else
             ;;
 
     # ia64:   -lmkl_gf_ipf, -lmkl_intel_ipf
-	# ia32:   -lmkl_gf    , -lmkl_intel
-	# openmp: -lmkl_pgi_thread, -lmkl_gnu_thread, -lmkl_intel_thread
-	#
+    # ia32:   -lmkl_gf    , -lmkl_intel
+    # openmp: -lmkl_pgi_thread, -lmkl_gnu_thread, -lmkl_intel_thread
+
     x86_64:pgf* )
             try_libdirs="$ld_library_path $libdirs $try_libdirs"
 
