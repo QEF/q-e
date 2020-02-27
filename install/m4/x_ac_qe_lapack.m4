@@ -8,8 +8,6 @@ have_lapack=0
 #
 # same supported vendor replacements as for blas
 # internal version is used if none is found
-if test "$use_netlib" -eq 0
-   then
    if test "$lapack_libs" = ""
    then
         # check directories in LD_LIBRARY_PATH too
@@ -121,18 +119,15 @@ if test "$use_netlib" -eq 0
         # lapack provided in LAPACK_LIBS - not checked!
         have_lapack=1
    fi
-fi
 
 
 # No lapack library found or internal lapack esplicitly required
 
-if test "$have_lapack" -eq 0 -o "$have_blas" -eq 0 -o "$use_netlib" -eq 1 ; then
-    lapack_libs="\$(TOPDIR)/LAPACK/liblapack.a \$(TOPDIR)/LAPACK/libblas.a"
+if test "$have_lapack" -eq 0  ; then
+    lapack_libs="\$(TOPDIR)/LAPACK/liblapack.a"
     lapack_libs_switch="internal"
-    blas_libs_switch="external"
 else
     lapack_libs_switch="external"
-    blas_libs_switch="external"
 fi
 
   lapack_line="LAPACK_LIBS=$lapack_libs"
@@ -141,7 +136,6 @@ fi
   AC_SUBST(lapack_libs_switch)  
   AC_SUBST(lapack_line)
 
-  AC_SUBST(blas_libs_switch)
   AC_SUBST(lapack_libs_switch)
   
   AC_CONFIG_FILES(install/make_lapack.inc)
