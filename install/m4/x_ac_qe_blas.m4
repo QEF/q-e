@@ -22,7 +22,6 @@ else
 
     case "$arch:$f90" in
 
-
     crayxt*:* )
             # check for acml - OBSOLETE?
             try_libdirs="$ld_library_path $libdirs $try_libdirs"
@@ -53,59 +52,40 @@ else
                     then break ; fi
             done
             ;;
-
-    # ia64:   -lmkl_gf_ipf, -lmkl_intel_ipf
-    # ia32:   -lmkl_gf    , -lmkl_intel
-    # openmp: -lmkl_pgi_thread, -lmkl_gnu_thread, -lmkl_intel_thread
-
-    x86_64:pgf* )
-            try_libdirs="$ld_library_path $libdirs $try_libdirs"
-
-            # Check MKL
-            for dir in none $try_libdirs
-            do
-                    unset ac_cv_search_dgemm # clear cached value
-                    if test "$dir" = "none"
-                    then
-                           try_loption=
-                    else
-                            echo $ECHO_N "in $dir: " $ECHO_C
-                            try_loption="-L$dir"
-                    fi
-
-                    # Check first MKL...
-                    FFLAGS="$test_fflags"
-                    LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-                    LIBS=""
-
-                    if test "$use_openmp" -eq 0; then
-                          AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
-                             have_blas=1 have_mkl=1
-                             blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
-                             ldflags="$MKL_FLAGS $ldflags",
-                             echo "MKL not found",
-                             -lmkl_sequential -lmkl_core -ldl)
-                    else
-                          AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
-                             have_blas=1 have_mkl=1
-                             blas_libs="$try_loption $LIBS -lmkl_core -lmkl_pgi_thread"
-                             ldflags="$MKL_FLAGS $ldflags",
-                             echo "MKL not found",
-                             -lmkl_pgi_thread -lmkl_core -ldl -lpthread -lm)
-                    fi
-
-                    if test "$ac_cv_search_dgemm" != "no"
-                    then break ; fi
-            done
-            ;;
-
-    x86_64:* )
-            if test "$MKLROOT" == ""
-            then
-               MKLROOT=/opt/intel/mkl#
+	    
+    x86_64:* | mac686:* )
+            #
+            # test MKL assuming they are in $MKL_ROOT.
+	    # Obsolete architectures:
+	    #   ia64  $MKLROOT/lib/64   -lmkl_gf_ipf, -lmkl_intel_ipf
+	    #   ia32  $MKLROOT/lib/ia32 -lmkl_gf    , -lmkl_intel
+            #
+            if test "$MKLROOT" == ""; then
+               MKLROOT=/opt/intel/mkl
             fi
             try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
-
+	    case "$f90" in
+	       ifort* )
+      		    mkl_lib="mkl_intel_lp64"
+      		    mkl_omp="mkl_ifort_thread"
+		    if test "$arch" == "mac686"; then
+		       add_mkl_flag="-openmp"
+		       add_mkl_lib ="-lpthread"
+      		       add_mkl_omp ="-lpthread"
+		    fi
+		    ;;
+	       gfortran* )
+      		    mkl_lib="mkl_gf_lp64"
+      		    mkl_omp="mkl_gnu_thread"
+		    ;;
+	       pgf* )
+      		    mkl_lib="mkl_pgi_lp64"
+      		    mkl_omp="mkl_pgi_thread"
+      		    add_mkl_flag="-pgf90libs"
+      		    add_mkl_lib ="-ldl"
+      		    add_mkl_omp ="-ldl -lpthread -lm"
+	       ;;
+	    esac
             for dir in none $try_libdirs
             do
                     unset ac_cv_search_dgemm # clear cached value
@@ -117,43 +97,25 @@ else
                             try_loption="-L$dir"
                     fi
                     FFLAGS="$test_fflags"
-                    LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+                    LDFLAGS="$add_mkl_flag $test_ldflags $try_loption"
                     LIBS=""
                     #
-                    # should work for recent MKL versions only
-                    #
                     if test "$use_openmp" -eq 0; then
-                       if test "$f90" = "gfortran" ; then
- 			      AC_SEARCH_LIBS(dgemm, mkl_gf_lp64, 
+		       # test MKL (no OMP)
+ 			      AC_SEARCH_LIBS(dgemm, $mkl_lib,
                              have_blas=1 have_mkl=1 
                              blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
-                             ldflags="$MKL_FLAGS $ldflags",
+                             ldflags="$add_mkl_flag $ldflags",
                              echo "MKL not found",
-                             -lmkl_sequential -lmkl_core)
-			   else
- 			      AC_SEARCH_LIBS(dgemm, mkl_intel_lp64, 
-                             have_blas=1 have_mkl=1 
-                             blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
-                             ldflags="$MKL_FLAGS $ldflags",
-                             echo "MKL not found",
-                             -lmkl_sequential -lmkl_core)
-			   fi
+                             -lmkl_sequential -lmkl_core $add_mkl_lib)
                     else
-                       if test "$f90" = "gfortran" ; then
- 			      AC_SEARCH_LIBS(dgemm, mkl_gf_lp64, 
+		       # test MKL (OMP)
+ 			      AC_SEARCH_LIBS(dgemm, $mkl_lib,
                              have_blas=1 have_mkl=1 
-                             blas_libs="$try_loption $LIBS -lmkl_gnu_thread -lmkl_core"
-                             ldflags="$MKL_FLAGS $ldflags",
+                             blas_libs="$try_loption $LIBS -l$mkl_omp -lmkl_core"
+                             ldflags="$add_mkl_flag $ldflags",
                              echo "MKL not found",
-                             -lmkl_sequential -lmkl_core)
-			   else
- 			      AC_SEARCH_LIBS(dgemm, mkl_intel_lp64, 
-                             have_blas=1 have_mkl=1 
-                             blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
-                             ldflags="$MKL_FLAGS $ldflags",
-                             echo "MKL not found",
-                             -lmkl_sequential -lmkl_core)
-			   fi
+                             -lmkl_sequential -lmkl_core $add_mkl_omp)
                     fi
                     if test "$ac_cv_search_dgemm" != "no"
                     then break ; fi
@@ -213,7 +175,7 @@ else
 		fi
             ;;
 
-    ppc64-*:* )
+    ppc64-*:*  )
             # assume essl
             unset ac_cv_search_dgemm # clear cached value
             FFLAGS="$test_fflags"
@@ -234,52 +196,13 @@ else
 		   fi
             else
                try_dflags="$try_dflags -D__LINUX_ESSL"
-		fi
+   	    fi
             ;;
-    mac686:* )
-    	     try_libdirs="$libdirs /opt/intel/mkl/lib $ld_library_path"
-
-	     for dir in none $try_libdirs
-	     do
-		unset ac_cv_search_dgemm # clear cached value
-		if test "$dir" = "none"
-		then
-			try_loption=""
-		else
-			echo $ECHO_N "in $dir: " $ECHO_C
-			try_loption="-L$dir"
-		fi
-		FFLAGS="$test_fflags"
-		LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-		LIBS=""
-                #
-                if test "$use_openmp" -eq 0; then
-                    AC_SEARCH_LIBS(dgemm, mkl_intel,
-                                   have_blas=1 have_mkl=1
-                                   blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core -lpthread"
-                                   ldflags="$MKL_FLAGS $ldflags",
-                                   echo "MKL not found",
-                                   -lmkl_sequential -lmkl_core -lpthread)
-		else 
-                    AC_SEARCH_LIBS(dgemm, mkl_intel,
-                                   have_blas=1 have_mkl=1
-                                   blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core -openmp -lpthread"
-                                   ldflags="$MKL_FLAGS $ldflags",
-                                   echo "MKL not found",
-                                   -lmkl_intel_thread -lmkl_core -openmp -lpthread)
-		fi
-                #
-                if test "$ac_cv_search_dgemm" != "no"
-                    then break ; fi
-  		done
-		;;
     arm:armflang )
             if test "$use_openmp" -eq 0; then 
                FFLAGS="-armpl"
-               add_ld_flags="-armpl"
             else 
                FFLAGS="-fopenmp -armpl=parallel" 
-               add_ld_flags="-armpl=parallel"
             fi 
             AC_SEARCH_LIBS(dgemm, armpl_arm,
                                    have_blas=1 have_armpl=1
