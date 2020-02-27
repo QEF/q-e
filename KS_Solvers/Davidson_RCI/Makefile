@@ -5,8 +5,8 @@ include ../../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
-DAVID_RCI = david_rci.o \
-david_param.o
+DAVID_RCI = \
+david_rci.o 
 
 all : libdavid_rci.a
 

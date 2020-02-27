@@ -18,11 +18,11 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
   ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-  USE cg_param,       ONLY : DP
+  USE util_param,     ONLY : DP
   USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm, gstart
   USE mp,             ONLY : mp_sum
 #if defined(__VERBOSE)
-  USE cg_param,     ONLY : stdout
+  USE util_param,     ONLY : stdout
 #endif
   !
   IMPLICIT NONE
@@ -105,6 +105,7 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
+     CALL start_clock( 'cg:ortho' )
      call divide(inter_bgrp_comm,m,m_start,m_end); !write(*,*) m,m_start,m_end
      lagrange = 0.d0
      if(m_start.le.m_end) &
@@ -129,6 +130,7 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
      psi(:,m) = psi(:,m) / psi_norm
      ! ... set Im[ psi(G=0) ] -  needed for numerical stability
      IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
+     CALL stop_clock( 'cg:ortho' )
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
@@ -180,6 +182,7 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
         !
         CALL s_1psi( npwx, npw, g(1), scg(1) )
         !
+        CALL start_clock( 'cg:ortho' )
         lagrange(1:m-1) = 0.d0
         call divide(inter_bgrp_comm,m-1,m_start,m_end); !write(*,*) m-1,m_start,m_end
         if(m_start.le.m_end) &
@@ -195,6 +198,7 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
            scg(:) = scg(:) - lagrange(j) * psi(:,j)
            !
         END DO
+        CALL stop_clock( 'cg:ortho' )
         !
         IF ( iter /= 1 ) THEN
            !

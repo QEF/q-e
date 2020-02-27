@@ -12,7 +12,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 
 module david_rci_m
-  use david_param
+  use util_param
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
                             me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum, mp_bcast

@@ -21,7 +21,6 @@
   epwread     = .true.
 
   nbndsub     =  4
-  nbndskip    =  0
 
   wannierize  = .false.
   num_iter    = 300

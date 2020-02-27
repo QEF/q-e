@@ -310,7 +310,8 @@
     !! SP - Sep. 2019: Cleaning. 
     !--------------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : epmatq, zstar, epsi, bmat
+    USE elph2,         ONLY : epmatq, zstar, epsi, bmat, &
+                              nbndep
     USE epwcom,        ONLY : lpolar, nqc1, nqc2, nqc3
     USE modes,         ONLY : nmodes
     USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
@@ -320,9 +321,9 @@
     ! 
     IMPLICIT NONE
     !
-    LOGICAL, INTENT(in) :: lwin(nbnd, nks)
+    LOGICAL, INTENT(in) :: lwin(nbndep, nks)
     !! Bands at k within outer energy window
-    LOGICAL, INTENT(in) :: lwinq(nbnd, nks)
+    LOGICAL, INTENT(in) :: lwinq(nbndep, nks)
     !! Bands at k+q within outer energy window
     LOGICAL, INTENT(in) :: exband(nbnd)
     !! Bands excluded from the calculation of overlap and projection matrices
@@ -350,16 +351,12 @@
     !! Counter on band index
     INTEGER :: j
     !! Counter on band index
-    INTEGER :: nexband_tmp
-    !! Number of excluded bands
     REAL(KIND = DP) :: massfac
     !! square root of mass 
     COMPLEX(KIND = DP) :: eptmp(nmodes)
     !! temporary e-p matrix elements
-    COMPLEX(KIND = DP) :: epmatq_opt(nbnd, nbnd, nks, nmodes)
+    COMPLEX(KIND = DP) :: epmatq_opt(nbndep, nbndep, nks, nmodes)
     !! e-p matrix elements in the outer window
-    COMPLEX(KIND = DP) :: epmatq_tmp(nbnd, nbnd, nks, nmodes)
-    !! temporary e-p matrix 
     COMPLEX(KIND = DP) :: cz_tmp(nmodes, nmodes)
     !! temporary variables
     COMPLEX(KIND = DP) :: cz2t(nmodes, nmodes)
@@ -387,72 +384,31 @@
     cz_tmp = CONJG(TRANSPOSE(cz2))
     cz2 = cz_tmp
     !
-    nexband_tmp = 0
-    DO i = 1, nbnd
-      IF (exband(i)) THEN
-        nexband_tmp = nexband_tmp + 1
-      ENDIF
-    ENDDO
-    ! 
     ! slim down to the first ndimwin(ikq), ndimwin(ik) states within the outer window
     !
     epmatq_opt = czero
-    epmatq_tmp = czero
-    IF (nexband_tmp > 0) THEN
-      DO ik = 1, nks
-        jbnd = 0
-        DO j = 1, nbnd
-          IF (exband(j)) CYCLE
-          IF (lwin(j, ik)) THEN
-            jbnd = jbnd + 1
-            ibnd = 0
-            DO i = 1, nbnd
-              IF (exband(i)) CYCLE
-              IF (lwinq(i, ik)) THEN
-                ibnd = ibnd + 1
-                epmatq_tmp(ibnd, jbnd, ik, :) = epmatq(i, j, ik, :, iq)
-              ENDIF
-            ENDDO
-          ENDIF
-        ENDDO
+    DO ik = 1, nks
+      jbnd = 0
+      DO j = 1, nbndep
+        IF (lwin(j, ik)) THEN
+          jbnd = jbnd + 1
+          ibnd = 0
+          DO i = 1, nbndep
+            IF (lwinq(i, ik)) THEN
+              ibnd = ibnd + 1
+              epmatq_opt(ibnd, jbnd, ik, :) = epmatq(i, j, ik, :, iq)
+            ENDIF
+          ENDDO
+        ENDIF
       ENDDO
-      DO ik = 1,nks
-        jbnd = 0
-        DO j = 1, nbnd
-          IF (exband(j)) CYCLE
-            jbnd = jbnd + 1
-            ibnd = 0
-            DO i = 1, nbnd
-              IF (exband(i)) CYCLE
-                ibnd = ibnd + 1
-                epmatq_opt(i, j, ik, :) = epmatq_tmp(ibnd, jbnd, ik, :)
-            ENDDO
-        ENDDO
-      ENDDO
-    ELSE
-      DO ik = 1, nks
-        jbnd = 0
-        DO j = 1, nbnd
-          IF (lwin(j, ik)) THEN
-            jbnd = jbnd + 1
-            ibnd = 0
-            DO i = 1, nbnd
-              IF (lwinq(i, ik)) THEN
-                ibnd = ibnd + 1
-                epmatq_opt(ibnd, jbnd, ik, :) = epmatq(i, j, ik, :, iq)
-              ENDIF
-            ENDDO
-          ENDIF
-        ENDDO
-      ENDDO
-    ENDIF
+    ENDDO
     ! 
     ! ep_mode(j) = cfac * sum_i ep_cart(i) * u(i,j)
     !
     epmatq(:, :, :, :, iq) = czero
     DO ik = 1, nks
-      DO jbnd = 1, nbnd
-        DO ibnd = 1, nbnd
+      DO jbnd = 1, nbndep
+        DO ibnd = 1, nbndep
           !
           ! bring e-p matrix from the cartesian representation of the
           ! first q in the star to the corresponding eigenmode representation

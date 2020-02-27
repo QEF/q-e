@@ -74,6 +74,8 @@ SUBROUTINE c_bands( iter )
      WRITE( stdout, '(5X,"CG style diagonalization")')
   ELSEIF ( isolve == 2 ) THEN
      WRITE( stdout, '(5X,"PPCG style diagonalization")')
+  ELSEIF ( isolve == 3 ) THEN
+     WRITE( stdout, '(5X,"ParO style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   ENDIF
@@ -162,7 +164,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   !! * Davidson algorithm (all-band);
   !! * Conjugate Gradient (band-by-band);
-  !! * Projected Preconditioned Conjugate Gradient (block).
+  !! * Projected Preconditioned Conjugate Gradient (block);
+  !! * Parallel Orbital update (all-band).
   !
   !! Internal procedures:
   !
@@ -214,7 +217,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   REAL(KIND=DP) :: cg_iter, ppcg_iter
   ! (weighted) number of iterations in Conjugate-Gradient
-  INTEGER :: npw, ig, dav_iter, ntry, notconv
+  INTEGER :: npw, ig, dav_iter, ntry, notconv, nhpsi
   ! number of iterations in Davidson
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
@@ -234,18 +237,23 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
   !------------------------------------------------------------------------
   ! CG diagonalization uses these external routines on a single band
-  EXTERNAL hs_1psi, s_1psi
+  EXTERNAL hs_1psi, s_1psi, hs_psi
   EXTERNAL hs_1psi_gpu, s_1psi_gpu
   ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
   ! subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
-  ! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
+  ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
   !------------------------------------------------------------------------
   ! PPCG diagonalization uses these external routines on groups of bands
   ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
   ! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
-  !
-  ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
+  !------------------------------------------------------------------------
+  ! ParO diagonalization uses these external routines on a single band
+  ! subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
+  ! subroutine g_1psi(npwx,npw,psi,eig)         computes G*psi -> psi
+  ! In addition to the above the initial wfc rotation uses h_psi, and s_psi
+  external g_1psi
 
+  ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
   !
@@ -285,13 +293,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
      !
-     CALL errore( 'c_bands', &
-          & 'too many bands are not converged', 1 )
+     CALL errore( 'c_bands', 'too many bands are not converged', 1 )
      !
   ELSEIF ( notconv > 0 ) THEN
      !
-     WRITE( stdout, '(5X,"c_bands: ",I2, &
-               &   " eigenvalues not converged")' ) notconv
+     WRITE( stdout, '(5X,"c_bands: ",I2, " eigenvalues not converged")' ) notconv
      !
   ENDIF
   !
@@ -311,7 +317,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     INTEGER :: j
     !
-    IF ( isolve == 1 .OR. isolve == 2 ) THEN
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3) THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
@@ -319,30 +325,37 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
        !
        CALL using_g2kin(0)
        CALL using_h_diag(2)
-       FORALL( ig = 1 : npw )
-          !
-          h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
-          !
-       END FORALL
+       IF ( isolve == 1 .OR. isolve == 2 ) THEN
+          FORALL( ig = 1 : npw )
+             h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+          END FORALL
+       ELSE
+          FORALL( ig = 1 : npw )
+             h_diag(ig, 1) = g2kin(ig) + v_of_0
+          END FORALL
+          CALL usnldiag( npw, h_diag, s_diag )
+       END IF
        !
        ntry = 0
        !
        CG_loop : DO
           !
-          lrot = ( iter == 1 .AND. ntry == 0 )
-          !
-          IF ( .NOT. lrot ) THEN
+          IF ( isolve == 1 .OR. isolve == 2 ) THEN
+             lrot = ( iter == 1 .AND. ntry == 0 )
              !
-             IF (.not. use_gpu) THEN
-                CALL using_evc(1);  CALL using_et(1); ! et is used as intent(out), set intento=2?
-                CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-             ELSE
-                CALL using_evc_d(1);  CALL using_et_d(1); ! et is used as intent(out), set intento=2?
-                CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc, et_d(1,ik) )
-             END IF
-             !
-             avg_iter = avg_iter + 1.D0
-             !
+             IF ( .NOT. lrot ) THEN
+                !
+                IF (.not. use_gpu) THEN
+                   CALL using_evc(1);  CALL using_et(1); ! et is used as intent(out), set intento=2?
+                   CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+                ELSE
+                   CALL using_evc_d(1);  CALL using_et_d(1); ! et is used as intent(out), set intento=2?
+                   CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc, et_d(1,ik) )
+                END IF
+                !
+                avg_iter = avg_iter + 1.D0
+                !
+             ENDIF
           ENDIF
           !
           IF ( isolve == 1 ) THEN
@@ -361,13 +374,22 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              avg_iter = avg_iter + cg_iter
              !
-          ELSE
+          ELSE IF ( isolve == 2 ) THEN
              CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
              CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter )
              !
              avg_iter = avg_iter + ppcg_iter
+             !
+          ELSE
+             !
+             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
+             CALL paro_gamma_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                        npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+             !
+             avg_iter = avg_iter + nhpsi/float(nbnd) 
+             write (6,*) ntry, avg_iter, nhpsi
              !
           ENDIF
           !
@@ -421,11 +443,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !                ! make sure that all processors have the same wfc
                 CALL pregterg( h_psi, s_psi, okvan, g_psi, &
                             npw, npwx, nbnd, nbndx, evc, ethr, &
-                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
+                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
              ELSE
                 CALL regterg (  h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
-                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
+                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
              END IF
              ! CALL using_evc(1) done above
           ELSE
@@ -433,13 +455,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              IF ( use_para_diag ) THEN
                 CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                             npw, npwx, nbnd, nbndx, evc_d, ethr, &
-                            et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
+                            et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call 
                 !
              ELSE
                 !
                 CALL regterg_gpu (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                          npw, npwx, nbnd, nbndx, evc_d, ethr, &
-                         et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
+                         et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi ) !    BEWARE gstart has been removed from call
              END IF
              ! CALL using_evc_d(1) ! done above
           END IF
@@ -509,41 +531,47 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     ENDIF
     !
     !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG)', isolve; FLUSH(6)
-    IF ( isolve == 1 .OR. isolve == 2) THEN
+    IF ( isolve == 1 .OR. isolve == 2 .OR. isolve == 3 ) THEN
        !
        ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
        ! ... h_diag is the precondition matrix
        !
        !write (*,*) ' inside CG solver branch '
-       h_diag = 1.D0
        !
        CALL using_g2kin(0)
        CALL using_h_diag(2);
-       FORALL( ig = 1 : npwx )
-          !
-          h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
-          !
-       END FORALL
+       h_diag = 1.D0
+       IF ( isolve == 1 .OR. isolve == 2) THEN
+          FORALL( ig = 1 : npwx )
+             h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+          END FORALL
+       ELSE
+          FORALL( ig = 1 : npwx )
+             h_diag(ig, :) = g2kin(ig) + v_of_0
+          END FORALL
+          CALL usnldiag( npw, h_diag, s_diag )
+       ENDIF
        !
        ntry = 0
        !
        CG_loop : DO
           !
-          lrot = ( iter == 1 .AND. ntry == 0 )
-          !
-          IF ( .NOT. lrot ) THEN
+          IF ( isolve == 1 .OR. isolve == 2 ) THEN
+             lrot = ( iter == 1 .AND. ntry == 0 )
              !
-             IF ( .not. use_gpu ) THEN
-                CALL using_evc(1); CALL using_et(1);
-                CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-             ELSE
-                CALL using_evc_d(1); CALL using_et_d(1);
-                CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc_d, et_d(1,ik) )
-             END IF
-             !
-             avg_iter = avg_iter + 1.D0
-             !
+             IF ( .NOT. lrot ) THEN
+                !
+                IF ( .not. use_gpu ) THEN
+                   CALL using_evc(1); CALL using_et(1);
+                   CALL rotate_wfc( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+                ELSE
+                   CALL using_evc_d(1); CALL using_et_d(1);
+                   CALL rotate_wfc_gpu( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc_d, et_d(1,ik) )
+                END IF
+                !
+                avg_iter = avg_iter + 1.D0
+             ENDIF
           ENDIF
           !
           IF ( isolve == 1) then
@@ -561,7 +589,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              avg_iter = avg_iter + cg_iter
              !
-          ELSE
+          ELSE IF ( isolve == 2) then
              CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
              ! BEWARE npol should be added to the arguments
              CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
@@ -570,6 +598,15 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
              !
              avg_iter = avg_iter + ppcg_iter
              !
+          ELSE 
+             !
+             CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+             CALL paro_k_new( h_psi, s_psi, hs_psi, g_1psi, okvan, &
+                        npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), ethr, notconv, nhpsi )
+             !
+             avg_iter = avg_iter + nhpsi/float(nbnd) 
+             write (6,*) ntry, avg_iter, nhpsi
+
           ENDIF
           ntry = ntry + 1
           !
@@ -628,13 +665,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
                 CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
                                npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                               et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+                               et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
                 !
              ELSE
                 !
                 CALL cegterg ( h_psi, s_psi, okvan, g_psi, &
                                npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                               et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+                               et(1,ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              END IF
           ELSE
              CALL using_evc_d(1) ; CALL using_et_d(1) 
@@ -642,14 +679,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                 !
                 CALL pcegterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
-                               et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter )
+                               et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
 
                 !
              ELSE
                 !
                 CALL cegterg_gpu ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
-                               et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter )
+                               et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter, nhpsi )
              END IF
           END IF
           !
@@ -819,6 +856,8 @@ SUBROUTINE c_bands_nscf( )
      WRITE( stdout, '(5X,"CG style diagonalization")' )
   ELSEIF ( isolve == 2 ) THEN
      WRITE( stdout, '(5X,"PPCG style diagonalization")' )
+  ELSEIF ( isolve == 3 ) THEN
+     WRITE( stdout, '(5X,"ParO style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve )
   ENDIF

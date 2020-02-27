@@ -42,7 +42,7 @@
   asr_typ     = 'simple'
 
   nbndsub     =  14
-  nbndskip    =  12
+  bands_skipped = 'exclude_bands = 1-12'
 
   wannierize  = .false.
   num_iter    = 1500

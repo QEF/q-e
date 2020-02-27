@@ -11,5 +11,5 @@ ifdef PGI_POWER_WORKAROUND
 F90FLAGS:= -O1 $(filter-out -fast,$(F90FLAGS))
 endif
 
-cegterg_gpu.o : david_param.o
-regterg_gpu.o : david_param.o
+cegterg_gpu.o : ../../UtilXlib/util_param.o
+regterg_gpu.o : ../../UtilXlib/util_param.o

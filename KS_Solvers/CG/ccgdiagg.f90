@@ -22,11 +22,11 @@ SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
   ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-  USE cg_param,       ONLY : DP
+  USE util_param,     ONLY : DP
   USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm
   USE mp,             ONLY : mp_sum
 #if defined(__VERBOSE)
-  USE cg_param,     ONLY : stdout
+  USE util_param,     ONLY : stdout
 #endif
   !
   IMPLICIT NONE

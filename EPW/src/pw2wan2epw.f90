@@ -106,7 +106,8 @@
       CALL compute_amn_para()
     ENDIF
     CALL compute_mmn_para()
-    CALL phases_a_m()
+    ! calling of phases_a_m removed because now we don't call setphases_wrap.
+!    CALL phases_a_m()
     CALL write_band()
     !
     IF (write_wfn) CALL write_plot()
@@ -228,6 +229,7 @@
     USE epwcom,           ONLY : nbndskip, scdm_proj
     USE w90_io,           ONLY : post_proc_flag
     USE io_var,           ONLY : iunnkp
+    USE elph2,            ONLY : ibndstart, ibndend, nbndep
     ! 
     IMPLICIT NONE
     !
@@ -479,14 +481,27 @@
       ENDIF
     ENDDO band_loop
     !  
+    ibndstart = 1
+    DO ibnd = 1, nbnd
+      IF (excluded_band(ibnd) .eqv. .FALSE.) THEN
+        ibndstart = ibnd
+        EXIT
+      ENDIF
+    ENDDO
+    ibndend= nbnd
+    DO ibnd = nbnd, 1, -1
+      IF (excluded_band(ibnd) .eqv. .FALSE.) THEN
+        ibndend = ibnd
+        EXIT
+      ENDIF
+    ENDDO
+    nbndep = ibndend - ibndstart + 1
+    nbndskip = ibndstart - 1
+    !
     WRITE(stdout, '(/, "      - Number of bands is (", i3, ")")') num_bands
     WRITE(stdout, '("      - Number of total bands is (", i3, ")")') nbnd
     WRITE(stdout, '("      - Number of excluded bands is (", i3, ")")') nexband
     WRITE(stdout, '("      - Number of wannier functions is (", i3, ")")') n_wannier
-    IF ((nexband > 0) .AND. (nbndskip /= nexband)) THEN
-      WRITE(stdout, '(/5x, "Warning: check if nbndskip = ", i3 " makes sense since ", i3, &
-                    " bands are excluded from wannier projection")') nbndskip, nexband
-    ENDIF
     !
     IF ((nbnd - nexband) /= num_bands ) &
       CALL errore('setup_nnkp', ' something wrong with num_bands', 1)
@@ -744,6 +759,7 @@
     SUBROUTINE run_wannier()
     !-----------------------------------------------------------------------
     !
+    USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout, meta_ionode_id, meta_ionode
     USE ions_base, ONLY : nat
     USE mp,        ONLY : mp_bcast
@@ -755,7 +771,7 @@
     USE wannierEPW,ONLY : u_mat, lwindow, wann_centers, wann_spreads, eigval,  &
                           n_wannier, spreads, nnb, rlatt, glatt, kpt_latt,     &
                           iknum, seedname2, num_bands, u_mat_opt, atsym, a_mat,&
-                          atcart, m_mat, mp_grid
+                          atcart, m_mat, mp_grid, excluded_band
     USE epwcom,    ONLY : eig_read
     USE wvfct,     ONLY : nbnd
     USE constants_epw, ONLY : zero, czero, bohr
@@ -770,10 +786,16 @@
     !! Counter on wannier functions
     INTEGER :: ik
     !! Counter of k-point index
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: ibnd1
+    !! Band index
     INTEGER :: ios
     !! Integer variable for I/O control
     INTEGER :: ierr
     !! Error status
+    REAL(KIND = DP), ALLOCATABLE :: eigvaltmp(:, :) 
+    !! Temporary array containing the eigenvalues (KS or GW) when read from files
     !
     ALLOCATE(u_mat(n_wannier, n_wannier, iknum), STAT = ierr)
     IF (ierr /= 0) CALL errore('run_wannier', 'Error allocating u_mat', 1)
@@ -794,6 +816,10 @@
     IF (meta_ionode) THEN
       ! read in external eigenvalues, e.g.  GW
       IF (eig_read) THEN
+        ALLOCATE(eigvaltmp(nbnd, iknum), STAT = ierr)
+        IF (ierr /= 0) CALL errore('run_wannier', 'Error allocating eigvaltmp', 1)
+        eigvaltmp(:, :) = zero
+        eigval(:, :) = zero
         WRITE (stdout, '(5x, a, i5, a, i5, a)') "Reading external electronic eigenvalues (", &
              nbnd, ",", nkstot,")"
         tempfile = TRIM(prefix)//'.eig'
@@ -804,9 +830,19 @@
           ! We do not save the k-point for the moment ==> should be read and
           ! tested against the current one  
           READ(iuqpeig, '(a)') line
-          READ(iuqpeig, *) eigval(:, ik)
+          READ(iuqpeig, *) eigvaltmp(:, ik)
+        ENDDO
+        DO ik = 1, nkstot
+          ibnd1 = 0
+          DO ibnd = 1, nbnd
+            IF (excluded_band(ibnd)) CYCLE
+            ibnd1 = ibnd1 + 1
+            eigval(ibnd1, ik) = eigvaltmp(ibnd, ik)
+          ENDDO
         ENDDO
         CLOSE(iuqpeig)
+        DEALLOCATE(eigvaltmp, STAT = ierr)
+        IF (ierr /= 0) CALL errore('run_wannier', 'Error deallocating eigvaltmp', 1)
       ENDIF
   
   ! SP : This file is not used for now. Only required to build the UNK file
@@ -1893,6 +1929,7 @@
     USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
     USE kfold,           ONLY : ktokpmq
     USE io_epw,          ONLY : readwfc
+    USE elph2,           ONLY : nbndep
     ! 
     IMPLICIT NONE
     !
@@ -1987,8 +2024,6 @@
     !! Local variables for uspp
     COMPLEX(KIND = DP), ALLOCATABLE :: qq_so(:, :, :, :)
     !! Local variables for uspp
-    COMPLEX(KIND = DP), ALLOCATABLE :: m_mat_tmp(:, :, :, :)
-    !! M_mn matrix
     !
     any_uspp = ANY(upf(:)%tvanp)
     !
@@ -2292,32 +2327,15 @@
     IF (meta_ionode) THEN
       write_mmn = .TRUE.
       IF (write_mmn) THEN
-        ALLOCATE(m_mat_tmp(nbnd, nbnd, nnb, nkstot), STAT = ierr)
-        IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error allocating m_mat_tmp', 1)
-        m_mat_tmp(:, :, :, :) = czero
         !
         filmmn = TRIM(prefix)//'.mmn'
         OPEN(UNIT = iummn, FILE = filmmn, FORM = 'formatted')
         DO ik = 1, nkstot
           DO ib = 1, nnb
             !
-            ibnd_n = 0
-            DO n = 1, nbnd
-              IF (excluded_band(n)) CYCLE
-              ibnd_n = ibnd_n + 1
-              !
-              ibnd_m = 0
-              DO m = 1, nbnd
-                IF (excluded_band(m)) CYCLE
-                ibnd_m = ibnd_m + 1
-                !   
-                m_mat_tmp(m, n, ib, ik) =  m_mat(ibnd_m, ibnd_n, ib, ik)
-              ENDDO ! m
-            ENDDO ! n
-            !
-            DO n = 1, nbnd
-              DO m = 1, nbnd
-                WRITE(iummn,*) m_mat_tmp(m, n, ib, ik)
+            DO n = 1, nbndep
+              DO m = 1, nbndep
+                WRITE(iummn,*) m_mat(m, n, ib, ik)
               ENDDO ! m
             ENDDO ! n
             !
@@ -2325,8 +2343,6 @@
         ENDDO ! ik
         !
         CLOSE(iummn)
-        DEALLOCATE(m_mat_tmp, STAT = ierr)
-        IF (ierr /= 0) CALL errore('compute_mmn_para', 'Error deallocating m_mat_tmp', 1)
       ENDIF !write_mmn
     ENDIF
     !
@@ -2400,7 +2416,7 @@
     USE gvect,           ONLY : g, ngm
     USE cell_base,       ONLY : tpiba
     USE noncollin_module,ONLY : noncolin
-    USE elph2,           ONLY : dmec
+    USE elph2,           ONLY : dmec, ibndstart, ibndend, nbndep
     USE constants_epw,   ONLY : czero
     USE uspp_param,      ONLY : upf
     USE becmod,          ONLY : becp, deallocate_bec_type, allocate_bec_type
@@ -2433,7 +2449,7 @@
     IF (any_uspp) CALL errore('pw2wan90epw', &
       'dipole matrix calculation not implimented with USPP - set vme=.TRUE.',1)
     !
-    ALLOCATE(dmec(3, nbnd, nbnd, nks), STAT = ierr)
+    ALLOCATE(dmec(3, nbndep, nbndep, nks), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating dmec', 1)
     !
     ! initialize
@@ -2458,8 +2474,8 @@
       CALL gk_sort(xk_loc(:, ik), ngm, g, gcutw, npw, igk_k(:, ik), g2kin)
       !
       dipole_aux = czero
-      DO jbnd = 1, nbnd
-        DO ibnd = 1, nbnd
+      DO jbnd = ibndstart, ibndend
+        DO ibnd = ibndstart, ibndend
           !
           IF (ibnd == jbnd) CYCLE
           !
@@ -2484,7 +2500,7 @@
       ENDDO ! bands j
       !
       ! metal diagonal part
-      DO ibnd = 1, nbnd
+      DO ibnd = ibndstart, ibndend
         DO ig = 1, npw
           IF (igk_k(ig, ik) > SIZE(g, 2) .OR. igk_k(ig, ik) < 1) CYCLE
           !
@@ -2502,7 +2518,11 @@
         ENDDO
       ENDDO
       ! need to divide by 2pi/a to fix the units
-      dmec(:, :, :, ik) = dipole_aux(:, :, :) * tpiba
+      DO jbnd = ibndstart, ibndend
+        DO ibnd = ibndstart, ibndend
+          dmec(:, ibnd-ibndstart+1, jbnd-ibndstart+1, ik) = dipole_aux(:, ibnd, jbnd) * tpiba
+        ENDDO
+      ENDDO
       !
     ENDDO  ! k-points
     !
@@ -2540,11 +2560,10 @@
     USE constants_epw,ONLY : czero, bohr
     USE io_global,    ONLY : meta_ionode
     USE cell_base,    ONLY : alat
+    USE elph2,        ONLY : nbndep, ibndstart, ibndend
     !
     IMPLICIT NONE
     !
-    LOGICAL, ALLOCATABLE :: lwindow_tmp(:, :)
-    !! .TRUE. if the band ibnd lies within the outer window at k-point ik
     INTEGER :: ik
     !! Counter of k-point index
     INTEGER :: ibnd
@@ -2558,21 +2577,8 @@
     INTEGER :: ndimwin(iknum)
     !! Number of bands within outer window at each k-point
     !
-    COMPLEX(KIND = DP), ALLOCATABLE :: u_kc_tmp(:, :, :)
-    !! Temporaty rotation matrix
     COMPLEX(KIND = DP), ALLOCATABLE :: u_kc(:, :, :)
     !! Rotation matrix
-    !
-    ! RM: Band-dimension of u_mat_opt and lwindow is num_bands while
-    !     that of u_kc is nbnd to be compatible when reading umat in loadumat. 
-    !     Care needs to be taken if exclude_bands is used because
-    !     num_bands = nbnd - nexband
-    !
-    !     u_mat_opt(num_bands, n_wannier, nkstot) in wannier_run
-    !     u_mat(n_wannier, n_wannier, nkstot) in wannier_run
-    !     lwindow(num_bands, nkstot) in wannier_run
-    !     u_kc_tmp(num_bands, n_wannier, nkstot) in write_filukk
-    !     u_kc(nbnd, n_wannier, nkstot) in write_filukk
     !
     IF (meta_ionode) THEN
       !
@@ -2586,35 +2592,23 @@
       ! get the final rotation matrix, which is the product of the optimal
       ! subspace and the rotation among the n_wannier wavefunctions
       !
-      ALLOCATE(u_kc_tmp(num_bands, n_wannier, iknum), STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_filukk', 'Error allocating u_kc_tmp', 1)
-      u_kc_tmp(:, :, :) = czero
+      ALLOCATE(u_kc(nbndep, n_wannier, iknum), STAT = ierr)
+      IF (ierr /= 0) CALL errore('write_filukk', 'Error allocating u_kc', 1)
+      u_kc(:, :, :) = czero
       !
       DO ik = 1, iknum
         !
-        u_kc_tmp(1:ndimwin(ik), 1:n_wannier, ik) = &
+        u_kc(1:ndimwin(ik), 1:n_wannier, ik) = &
              MATMUL(u_mat_opt(1:ndimwin(ik), :, ik), u_mat(:, 1:n_wannier, ik))
         !
       ENDDO
       !
-      ALLOCATE(u_kc(nbnd, n_wannier, iknum), STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_filukk', 'Error allocating u_kc', 1)
-      u_kc(:, :, :) = czero
-      !
       OPEN(UNIT = iunukk, FILE = filukk, FORM = 'formatted')
-      ! u_kc(1:num_bands, :, :) = u_kc_tmp(1:num_bands, :, :)
-      ! u_kc(num_bands+1:nbnd, :, :) = czero
+      !
+      WRITE(iunukk, *) ibndstart, ibndend
+      !
       DO ik = 1, iknum
-        DO iw = 1, n_wannier
-          ibnd1 = 0
-          DO ibnd = 1, nbnd
-            IF (excluded_band(ibnd)) CYCLE
-            ibnd1 = ibnd1 + 1
-            u_kc(ibnd, iw, ik) = u_kc_tmp(ibnd1, iw, ik)
-          ENDDO
-        ENDDO
-        !
-        DO ibnd = 1, nbnd
+        DO ibnd = 1, nbndep
           DO iw = 1, n_wannier
             WRITE(iunukk, *) u_kc(ibnd, iw, ik)
           ENDDO
@@ -2622,20 +2616,10 @@
       ENDDO
       !
       ! needs also lwindow when disentanglement is used
-      ALLOCATE(lwindow_tmp(nbnd, iknum), STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_filukk', 'Error allocating lwindow_tmp', 1)
-      lwindow_tmp(:, :) = .FALSE.
       !
       DO ik = 1, iknum
-        ibnd1 = 0
-        DO ibnd = 1, nbnd
-          IF (excluded_band(ibnd)) CYCLE
-          ibnd1 = ibnd1 + 1
-          lwindow_tmp(ibnd, ik) = lwindow(ibnd1, ik) 
-        ENDDO
-        !
-        DO ibnd = 1, nbnd
-          WRITE(iunukk, *) lwindow_tmp(ibnd, ik)
+        DO ibnd = 1, nbndep
+          WRITE(iunukk, *) lwindow(ibnd, ik)
         ENDDO
       ENDDO
       !
@@ -2652,12 +2636,8 @@
       !
       CLOSE(iunukk)
       !
-      DEALLOCATE(u_kc_tmp, STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_filukk', 'Error deallocating u_kc_tmp', 1)
       DEALLOCATE(u_kc, STAT = ierr)
       IF (ierr /= 0) CALL errore('write_filukk', 'Error deallocating u_kc', 1)
-      DEALLOCATE(lwindow_tmp, STAT = ierr)
-      IF (ierr /= 0) CALL errore('write_filukk', 'Error deallocating lwindow_tmp', 1) 
       !
     ENDIF
     !
@@ -3017,6 +2997,7 @@
     USE constants,     ONLY : rytoev
     USE wannierEPW,    ONLY : ikstart, ikstop, iknum, num_bands, eigval, &
                               excluded_band
+    USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
     ! 
@@ -3033,7 +3014,8 @@
     !! Error status
     !
     ALLOCATE(eigval(num_bands, iknum), STAT = ierr)
-    IF (ierr /= 0) CALL errore('write_band', 'Error deallocating eigval', 1)
+    IF (ierr /= 0) CALL errore('write_band', 'Error allocating eigval', 1)
+    eigval(:, :) = zero
     !
     DO ik = ikstart, ikstop
       ikevc = ik - ikstart + 1

@@ -1,4 +1,4 @@
-# Makefile for DAVID
+# Makefile for CG
 
 include ../../make.inc
 
@@ -7,10 +7,7 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 
 CG = \
 ccgdiagg.o \
-rcgdiagg.o \
-cg_param.o \
-rotate_wfc_gamma.o \
-rotate_wfc_k.o 
+rcgdiagg.o 
 
 -include make.gpu
 

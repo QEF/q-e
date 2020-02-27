@@ -12,6 +12,7 @@
 *.dvi
 *.toc
 *.aux
+*.x.dSYM
 
 bin/*
 FoX
