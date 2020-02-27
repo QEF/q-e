@@ -467,7 +467,7 @@ END MODULE local_ortho_memory
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
-      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec
+      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec, beta_eigr, nlsm1us
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
@@ -487,6 +487,7 @@ END MODULE local_ortho_memory
       !
       REAL(DP), ALLOCATABLE :: becp_dist(:,:)
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
+      COMPLEX(DP), ALLOCATABLE :: beigr(:,:)
 
       INTEGER :: nkbx
       INTEGER :: info, i, j, iss, iv, jv, ia, is, inl, jnl
@@ -511,15 +512,20 @@ END MODULE local_ortho_memory
 
       IF( nkbus > 0 ) THEN
          !
+         ALLOCATE( beigr(ngw,nkb))
          becp_bgrp = 0.0d0
          !
-         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, phi_bgrp, becp_bgrp, 2 )
+         CALL beta_eigr ( beigr, 1, nsp, eigr, 2 )
+         CALL nlsm1us ( nbsp_bgrp, beigr, phi_bgrp, becp_bgrp )
+         !CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, phi_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, idesc )
          !
          becp_bgrp = 0.0d0
          !
-         CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, cp_bgrp, becp_bgrp, 2 )
+         CALL nlsm1us ( nbsp_bgrp, beigr, cp_bgrp, becp_bgrp )
+         !CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, cp_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, idesc )
+         DEALLOCATE( beigr )
          !
       END IF
       !
