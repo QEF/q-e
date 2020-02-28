@@ -59,10 +59,3 @@ test0.o : fft_support.o
 test0.o : fft_types.o
 tg_gather.o : fft_param.o
 tg_gather.o : fft_types.o
-fft_stick.o : 
-fft_stick.o : 
-fftw.o : 
-fftw_dp.o : 
-fftw_dp.o : 
-fftw_sp.o : 
-fftw_sp.o : 

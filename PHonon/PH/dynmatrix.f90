@@ -145,7 +145,7 @@ subroutine dynmatrix_new(iq_)
   !
   !   Generates the star of q
   !
-  call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., t_rev )
+  call star_q1(xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE., t_rev )
   !
   ! write on file information on the system
   !
