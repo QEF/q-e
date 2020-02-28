@@ -44,7 +44,7 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90_flavor" in
-ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort* | crayxt*:ifort* )
+*:ifort* )
         try_fflags="-O2 -assume byterecl -g -traceback"
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
@@ -92,14 +92,6 @@ x86_64:nagfor* )
         try_dflags="$try_dflags -D__NAG"
         have_cpp=0
         ;;
-ia32:path* | ia64:path* | x86_64:path* )
-        try_fflags="-march=auto -O2"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
-        have_cpp=0
-        ;;
 crayxt*:cray* )
         try_fflags_nomain=""
         #NOTE: by default OpenMP is always ON (see crayftn man page)
@@ -126,14 +118,6 @@ crayxt*:pgf* )
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
         try_dflags="$try_dflags -D__PGI -D__IOTK_WORKAROUND1"
-        have_cpp=1
-        ;;
-crayxt*:pathf* )
-        try_fflags="-march=auto -O2 -cpp"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        try_ldflags_static="-static"
         have_cpp=1
         ;;
 necsx:* )

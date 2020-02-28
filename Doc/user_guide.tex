@@ -550,26 +550,27 @@ tested, but we had at least one successful report (compilation
 for NEC SX6 on a PC). Currently supported architectures are:
 
 \begin{tabular}{ll}
-\texttt{ia32}&    Intel 32-bit machines (x86) running Linux\\
-\texttt{ia64}&    Intel 64-bit (Itanium) running Linux\\
-\texttt{x86\_64}&  Intel and AMD 64-bit running Linux - see note below\\
-\texttt{crayxt4}& Cray XT4/XT5/XE machines\\
-\texttt{mac686}&  Apple Intel machines running Mac OS X\\
-\texttt{cygwin}&  MS-Windows PCs with Cygwin\\
-\texttt{mingw32}& Cross-compilation for MS-Windows, using mingw, 32 bits\\
-\texttt{mingw64}& As above, 64 bits\\
-\texttt{necsx}&   NEC SX-6 and SX-8 machines\\
-\texttt{ppc64}&   Linux PowerPC machines, 64 bits\\
-\texttt{ppc64-mn}&as above, with IBM xlf compiler\\
-\texttt{ppc64-bg}&IBM BlueGene\\
-\texttt{arm}     &ARM machines (with gfortran or armflang)
+\texttt{x86\_64}   & Intel and AMD 64-bit running Linux\\
+\texttt{arm}       & ARM machines (with gfortran or armflang)
+\texttt{crayxt4}   & Cray XT4/XT5/XE machines\\
+\texttt{mac686}    & Apple Intel machines running Mac OS X\\
+\texttt{mingw32}   & Cross-compilation for MS-Windows, using mingw, 32 bits\\
+\texttt{mingw64}   & As above, 64 bits\\
+\texttt{cygwin}    &  MS-Windows PCs with Cygwin\\
+\texttt{ppc64}     & Linux PowerPC machines, 64 bits\\
+\texttt{ppc64-mn}  & as above, with IBM xlf compiler\\
+\texttt{ppc64-bg*} & IBM BlueGene\\
+\texttt{necsx*}    & NEC SX-6 and SX-8 machines\\
+\texttt{ia32*}     & Intel 32-bit machines (x86) running Linux\\
+\texttt{ia64*}     & Intel 64-bit (Itanium) running Linux
 \end{tabular}\\
 {\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1.
-Cray Unicos machines, SGI
-machines with MIPS architecture, HP-Compaq Alphas are no longer supported
-since v.4.2; PowerPC Macs are no longer
-supported since v.5.0. IBM machines with AIX are no longer supported
-since v.6.0.
+Cray Unicos machines, SGI machines with MIPS architecture, HP-Compaq Alphas
+are no longer supported since v.4.2; PowerPC Macs are no longer
+supported since v.5.0; IBM machines with AIX are no longer supported
+since v.6.0. Architectures marked with a * are to be considered obsolescent
+or obsolete.
+
 Finally, \configure\ recognizes the following command-line options:\\
 \begin{tabular}{ll}
 \texttt{--enable-parallel}&     compile for parallel (MPI) execution if possible (default: yes)\\
@@ -577,13 +578,12 @@ Finally, \configure\ recognizes the following command-line options:\\
 \texttt{--enable-shared}&       use shared libraries if available (default: yes;\\
                         &       "no" is implemented, untested, in only a few cases)\\
 \texttt{--enable-debug}&        compile with debug flags (only for selected cases; default: no)\\
+\texttt{--enable-pedantic}&     compile with pedantic flags (only for gfortran; default: no)\\
 \texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
 \end{tabular}\\
 \\
 and the following optional packages:\\
 \begin{tabular}{ll}
-\texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
-\texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
 \texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\
       &Set to \texttt{intel} to use Intel MPI and blacs (default: use OpenMPI)\\
 \texttt{--with-elpa-include}&   Specify full path of ELPA include and modules
@@ -592,7 +592,7 @@ and the following optional packages:\\
 	                          (default: no)\\
 \texttt{--with-elpa-version}& Specify ELPA version, only year (2015 or 2016,
 	                          default: 2016)\\
-	\texttt{--with-hdf5}&  (no $|$ $|$ yes $|$ \texttt{<path>}) \\
+\texttt{--with-hdf5}&  (no $|$ $|$ yes $|$ \texttt{<path>}) \\
 	                    & Use HDF5, if yes configure assumes    \\
                             & that a valid installation with version >= 1.8.16 is \\
                             & available, and h5cc and h5fc are in the default   \\ 

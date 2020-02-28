@@ -45,7 +45,11 @@ then
         test -d /bgsys && arch=ppc64-bg
         test -f /bgsys/drivers/ppcfloor/bin/runjob && arch=ppc64-bgq
 fi
-
+	case $arch in
+	ia32 | ia64 | necsx | crayxt | ppc64-bg )
+            AC_MSG_WARN(Obsolete architecture? $arch)
+	    ;;
+	esac
   AC_MSG_RESULT(${arch})
   AC_SUBST(arch)
 
