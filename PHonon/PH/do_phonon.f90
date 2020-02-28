@@ -42,6 +42,9 @@ SUBROUTINE do_phonon(auxdyn)
   USE elph_tetra_mod, ONLY : elph_tetra, elph_tetra_lambda, elph_tetra_gamma
   USE elph_scdft_mod, ONLY : elph_scdft
   USE io_global,      ONLY : stdout
+  ! FIXME: see below setup_pw
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,         ONLY : domag
 
   IMPLICIT NONE
   !
@@ -64,8 +67,7 @@ SUBROUTINE do_phonon(auxdyn)
      ! to be .true. in order for the code to work properly in 
      ! the case SO-MAG).
      !
-     setup_pw=.true.
-     WRITE(stdout,*) 'setup_pw', setup_pw
+     setup_pw=setup_pw .OR. (noncolin .AND. domag)
      IF (setup_pw) CALL run_nscf(do_band, iq)
      !
      !  If only_wfc=.TRUE. the code computes only the wavefunctions 
