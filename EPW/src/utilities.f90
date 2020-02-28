@@ -955,6 +955,7 @@
     USE pwcom,         ONLY : ef
     USE mp,            ONLY : mp_max, mp_min
     USE mp_global,     ONLY : inter_pool_comm
+    USE epwcom,        only : wfcelec
     !
     IMPLICIT NONE
     !
@@ -989,6 +990,22 @@
         !
       ENDDO
     ENDDO
+    if (wfcelec) then
+        DO ik = 1, nkqf
+          DO ibnd = 1, nbndsub
+            ebnd = etf(ibnd, ik)
+            !
+            IF (ebnd < fsthick + ef .and. ebnd > ef) THEN
+            !IF (ABS(ebnd - ef) < fsthick) THEN
+              ibndmin = MIN(ibnd, ibndmin)
+              ibndmax = MAX(ibnd, ibndmax)
+              ebndmin = MIN(ebnd, ebndmin)
+              ebndmax = MAX(ebnd, ebndmax)
+            ENDIF
+            !
+          ENDDO
+        ENDDO
+    end if
     !
     tmp = DBLE(ibndmin)
     CALL mp_min(tmp, inter_pool_comm)
