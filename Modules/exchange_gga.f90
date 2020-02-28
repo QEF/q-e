@@ -104,7 +104,8 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   !! iflag=4  PBEQ2D: L. Chiodo et al., PRL 108, 126402 (2012);
   !! iflag=5  optB88: Klimes et al., J. Phys. Cond. Matter, 22, 022201 (2010);
   !! iflag=6  optB86b: Klimes et al., Phys. Rev. B 83, 195131 (2011);
-  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991).
+  !! iflag=7  ev: Engel and Vosko, PRB 47, 13164 (1991);
+  !! iflag=8  RPBE: B. Hammer, et al., Phys. Rev. B 59, 7413 (1999).
   !
   USE kinds,      ONLY : DP
   !
@@ -137,11 +138,14 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
                          c6=c2*2.51984210_DP, c7=5._DP/6._DP, c8=0.8_DP
                          ! (3pi^2)^(1/3)*2^(4/3)
   ! parameters of the functional
-  REAL(DP) :: k(6), mu(6), ev(6)
-  !           pbe        rpbe        pbesol   pbeq2d      optB88  optB86b
+  REAL(DP) :: k(8), mu(8), ev(6)
+  !           pbe      revpbe        pbesol   pbeq2d      optB88  optB86b
+  !                      rpbe
   DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_DP,  0.0_DP/,      &
+            0.000_DP,   0.8040_DP /,                                              &
        mu / 0.2195149727645171_DP, 0.2195149727645171_DP, 0.12345679012345679_DP, &
             0.12345679012345679_DP,  0.22_DP, 0.1234_DP/,                         &
+            0.000_DP, 0.2195149727645171_DP/                                      &
        ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP,      &
                                    0.011282_DP /  ! a and b parameters of Engel and Vosko
   !
@@ -250,6 +254,30 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      dfx  =  ev(1) + 2*ev(2)*s2 + 3*ev(3)*s
      dfx1 =  ev(4) + 2*ev(5)*s2 + 3*ev(6)*s
      dfx  = 2 * s1 * ( dfx - f1*dfx1/f2 ) / f2
+     !
+     v1x = sx_s + dxunif * fx + exunif * dfx * ds
+     v2x = exunif * dfx * dsg / agrho
+     sx  = sx_s * rho
+     !
+  CASE(8)
+     !
+     agrho = SQRT(grho)
+     kf = c2 * rho**third
+     dsg = 0.5_DP / kf
+     s1 = agrho * dsg / rho
+     s2 = s1 * s1
+     f1 = exp( -mu(iflag) * s2 / k(iflag) )
+     f2 = 1._DP + f1
+     fx = k(iflag) - f2
+     !
+     exunif = - c1 * kf
+     sx_s = exunif * fx
+     !
+     dxunif = exunif * third
+     ds = - c5 * s1
+     !
+     dfx1 = f2 * f2
+     dfx = 2._DP * mu(iflag) * s1 / dfx1
      !
      v1x = sx_s + dxunif * fx + exunif * dfx * ds
      v2x = exunif * dfx * dsg / agrho

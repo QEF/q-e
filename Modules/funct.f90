@@ -207,6 +207,7 @@ MODULE funct
   !              "c090"   vdW-DF-c09+HF/4 (c09-0)        igcx =40 
   !              "b86x"   B86b exchange * 0.75           igcx =41
   !              "b88x"   B88 exchange * 0.50            igcx =42
+  !              "rpbe"   Hammer-Hansen-Norskov          igcx =43
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -354,7 +355,7 @@ MODULE funct
   REAL(DP):: finite_size_cell_volume = notset
   LOGICAL :: discard_input_dft = .FALSE.
   !
-  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=42, ngcc=12, nmeta=6, ncnl=6
+  INTEGER, PARAMETER :: nxc=8, ncc=10, ngcx=43, ngcc=12, nmeta=6, ncnl=6
   CHARACTER(LEN=4) :: exc, corr, gradx, gradc, meta, nonlocc
   DIMENSION :: exc(0:nxc), corr(0:ncc), gradx(0:ngcx), gradc(0:ngcc), &
                meta(0:nmeta), nonlocc(0:ncnl)
@@ -369,7 +370,7 @@ MODULE funct
                'OBK8', 'OB86', 'EVX', 'B86R', 'CX13', 'X3LP', &
                'CX0', 'R860', 'CX0P', 'AHCX', 'AHF2', &
                'AHPB', 'AHPS', 'CX14', 'CX15', 'BR0', 'CX16', 'C090', &
-               'B86X', 'B88X'/
+               'B86X', 'B88X', 'RPBX'/
   !
   DATA gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC' /
@@ -517,8 +518,7 @@ CONTAINS
        dft_defined = set_dft_values(1,4,25,0,0,0)
     ! special case : RPBE
     CASE( 'RPBE' )
-       CALL errore( 'set_dft_from_name', &
-                    'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)', 1 )
+       dft_defined = set_dft_values(1,4,43,0,0,0)
     ! special case : PBE0
     CASE( 'PBE0' )
        dft_defined = set_dft_values(6,4,8,4,0,0)
@@ -1485,6 +1485,8 @@ CONTAINS
        shortname = 'EV93'
     ELSEIF (iexch==5 .AND. icorr==0  .AND. igcx==0 .AND. igcc== 0) THEN
        shortname = 'HF'
+    ELSEIF (iexch==1 .AND. icorr==4  .AND. igcx==43.AND. igcc== 4) THEN
+       shortname = 'RPBE'
     ENDIF
     !
     IF (imeta==1) THEN

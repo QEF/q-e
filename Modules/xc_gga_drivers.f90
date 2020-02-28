@@ -646,6 +646,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
+     CASE( 43 ) ! 'ev93'
+        !
+        CALL pbex( rho, grho, 8, sx, v1x, v2x )
+        !
      CASE DEFAULT
         !
         sx  = 0.0_DP
@@ -833,9 +837,10 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         sx_tot(ir) = 0.5_DP * ( sx(1)*rnull(1) + sx(2)*rnull(2) )
         v2x = 2.0_DP * v2x
         !
-     CASE( 3, 4, 8, 10, 12, 20, 23, 24, 25 )
+     CASE( 3, 4, 8, 10, 12, 20, 23, 24, 25, 43 )
         ! igcx=3: PBE, igcx=4: revised PBE, igcx=8: PBE0, igcx=10: PBEsol
         ! igcx=12: HSE,  igcx=20: gau-pbe, igcx=23: obk8, igcx=24: ob86, igcx=25: ev93
+        ! igcx=43: RPBE
         !
         iflag = 1
         IF ( igcx== 4 ) iflag = 2
@@ -843,6 +848,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out )
         IF ( igcx==23 ) iflag = 5
         IF ( igcx==24 ) iflag = 6
         IF ( igcx==25 ) iflag = 7
+        IF ( igcx==43 ) iflag = 8
         !
         rho = 2.0_DP * rho
         grho2 = 4.0_DP * grho2
