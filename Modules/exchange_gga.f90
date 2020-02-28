@@ -141,11 +141,11 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
   REAL(DP) :: k(8), mu(8), ev(6)
   !           pbe      revpbe        pbesol   pbeq2d      optB88  optB86b
   !                      rpbe
-  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_DP,  0.0_DP/,      &
+  DATA k  / 0.804_DP,   1.2450_DP,   0.804_DP , 0.804_DP,  0.0_DP,  0.0_DP,       &
             0.000_DP,   0.8040_DP /,                                              &
        mu / 0.2195149727645171_DP, 0.2195149727645171_DP, 0.12345679012345679_DP, &
-            0.12345679012345679_DP,  0.22_DP, 0.1234_DP/,                         &
-            0.000_DP, 0.2195149727645171_DP/                                      &
+            0.12345679012345679_DP, 0.22_DP, 0.1234_DP,                           &
+            0.000_DP, 0.2195149727645171_DP/,                                     &
        ev / 1.647127_DP, 0.980118_DP, 0.017399_DP, 1.523671_DP, 0.367229_DP,      &
                                    0.011282_DP /  ! a and b parameters of Engel and Vosko
   !
