@@ -22,7 +22,8 @@ subroutine allocate_phq
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE fft_base,      ONLY : dfftp
   USE wavefunctions, ONLY : evc
-  USE spin_orb,      ONLY : lspinorb
+  USE spin_orb,      ONLY : lspinorb, domag
+  USE nc_mag_aux,    ONLY : int1_nc_save, deeq_nc_save
   USE becmod,        ONLY : bec_type, becp, allocate_bec_type
   USE uspp,          ONLY : okvan, nkb, vkb
   USE paw_variables, ONLY : okpaw
@@ -47,6 +48,7 @@ subroutine allocate_phq
                             dwfcatomk, sdwfcatomk, wfcatomkpq, dwfcatomkpq,  &
                             swfcatomk, swfcatomkpq, sdwfcatomkpq, dvkb, vkbkpq, &
                             dvkbkpq
+  USE qpoint_aux,    ONLY : becpt, alphapt
 
   IMPLICIT NONE
   INTEGER :: ik, ipol, ldim
@@ -93,6 +95,25 @@ subroutine allocate_phq
   zstareu0=(0.0_DP,0.0_DP)
   zstarue0=(0.0_DP,0.0_DP)
   zstarue0_rec=(0.0_DP,0.0_DP)
+  IF (noncolin.AND.domag) THEN
+     ALLOCATE (becpt(nksq))
+     ALLOCATE (alphapt(3,nksq))
+     DO ik=1,nksq
+        CALL allocate_bec_type ( nkb, nbnd, becpt(ik) )
+        DO ipol=1,3
+           CALL allocate_bec_type ( nkb, nbnd, alphapt(ipol,ik) )
+        ENDDO
+     ENDDO
+     IF (okvan) THEN
+        ALLOCATE(int1_nc_save( nhm, nhm, 3, nat, nspin, 2))
+        ALLOCATE (deeq_nc_save( nhm, nhm, nat, nspin, 2))
+     ENDIF
+     ! AAA Nota: da definire this_pcxpsi_is_on_file_tpw
+     !ALLOCATE (this_pcxpsi_is_on_file_tpw(nksq,3,2))
+     ! ELSE
+     !ALLOCATE (this_pcxpsi_is_on_file_tpw(nksq,3,1))
+  ENDIF
+
   if (okvan) then
      allocate (int1 ( nhm, nhm, 3, nat, nspin_mag))
      allocate (int2 ( nhm , nhm , 3 , nat , nat))
@@ -113,6 +134,8 @@ subroutine allocate_phq
            allocate(dpqq_so( nhm, nhm, nspin, 3, ntyp))
         END IF
      END IF
+
+
      allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin_mag))
      allocate (this_dvkb3_is_on_file(nksq))
      this_dvkb3_is_on_file(:)=.false.

@@ -57,6 +57,13 @@ adddvhubscf.o : ../../PW/src/ldaU.o
 adddvhubscf.o : ../../PW/src/pwcom.o
 adddvhubscf.o : ../../UtilXlib/mp.o
 adddvhubscf.o : phcom.o
+adddvscf_ph_mag.o : ../../LR_Modules/lrcom.o
+adddvscf_ph_mag.o : ../../Modules/becmod.o
+adddvscf_ph_mag.o : ../../Modules/ions_base.o
+adddvscf_ph_mag.o : ../../Modules/kind.o
+adddvscf_ph_mag.o : ../../Modules/noncol.o
+adddvscf_ph_mag.o : ../../Modules/uspp.o
+adddvscf_ph_mag.o : ../../PW/src/pwcom.o
 addnlcc.o : ../../LR_Modules/lrcom.o
 addnlcc.o : ../../Modules/cell_base.o
 addnlcc.o : ../../Modules/fft_base.o
@@ -141,6 +148,11 @@ alpha2f.o : ../../PW/src/tetra.o
 alpha2f.o : elph_tetra_mod.o
 alpha2f.o : io_dyn_mat.o
 alpha2f.o : phcom.o
+apply_trev.o : ../../FFTXlib/fft_interfaces.o
+apply_trev.o : ../../Modules/fft_base.o
+apply_trev.o : ../../Modules/kind.o
+apply_trev.o : ../../Modules/noncol.o
+apply_trev.o : ../../PW/src/pwcom.o
 bcast_ph_input.o : ../../LR_Modules/lrcom.o
 bcast_ph_input.o : ../../Modules/check_stop.o
 bcast_ph_input.o : ../../Modules/control_flags.o
@@ -156,6 +168,23 @@ bcast_ph_input.o : elph_tetra_mod.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
 bcast_ph_input.o : yambo.o
+c_bands_ph.o : ../../LR_Modules/lrcom.o
+c_bands_ph.o : ../../Modules/check_stop.o
+c_bands_ph.o : ../../Modules/control_flags.o
+c_bands_ph.o : ../../Modules/io_files.o
+c_bands_ph.o : ../../Modules/io_global.o
+c_bands_ph.o : ../../Modules/kind.o
+c_bands_ph.o : ../../Modules/mp_pools.o
+c_bands_ph.o : ../../Modules/noncol.o
+c_bands_ph.o : ../../Modules/recvec.o
+c_bands_ph.o : ../../Modules/uspp.o
+c_bands_ph.o : ../../Modules/wavefunctions.o
+c_bands_ph.o : ../../PW/src/atomic_wfc_mod.o
+c_bands_ph.o : ../../PW/src/buffers.o
+c_bands_ph.o : ../../PW/src/ldaU.o
+c_bands_ph.o : ../../PW/src/pwcom.o
+c_bands_ph.o : ../../UtilXlib/mp.o
+c_bands_ph.o : save_ph_input.o
 ccg_psi.o : ../../Modules/kind.o
 ccg_psi.o : ../../Modules/noncol.o
 cch_psi_all.o : ../../LR_Modules/lrcom.o
@@ -453,6 +482,7 @@ dnsq_scf.o : ../../PW/src/pwcom.o
 dnsq_scf.o : ../../UtilXlib/mp.o
 dnsq_scf.o : ef_shift.o
 dnsq_scf.o : phcom.o
+do_phonon.o : ../../Modules/io_global.o
 do_phonon.o : elph.o
 do_phonon.o : elph_scdft_mod.o
 do_phonon.o : elph_tetra_mod.o
@@ -630,6 +660,7 @@ dvqhub_barepsi_us2.o : phcom.o
 dvqpsi_us.o : ../../FFTXlib/fft_interfaces.o
 dvqpsi_us.o : ../../LR_Modules/Coul_cut_2D_ph.o
 dvqpsi_us.o : ../../LR_Modules/lrcom.o
+dvqpsi_us.o : ../../Modules/becmod.o
 dvqpsi_us.o : ../../Modules/cell_base.o
 dvqpsi_us.o : ../../Modules/fft_base.o
 dvqpsi_us.o : ../../Modules/funct.o
@@ -644,6 +675,7 @@ dvqpsi_us.o : ../../PW/src/pwcom.o
 dvqpsi_us.o : ../../PW/src/scf_mod.o
 dvqpsi_us.o : phcom.o
 dvqpsi_us_only.o : ../../LR_Modules/lrcom.o
+dvqpsi_us_only.o : ../../Modules/becmod.o
 dvqpsi_us_only.o : ../../Modules/cell_base.o
 dvqpsi_us_only.o : ../../Modules/ions_base.o
 dvqpsi_us_only.o : ../../Modules/kind.o
@@ -968,6 +1000,7 @@ init_representations.o : elph.o
 init_representations.o : ph_restart.o
 init_representations.o : phcom.o
 initialize_ph.o : ../../LR_Modules/lrcom.o
+initialize_ph.o : ../../Modules/noncol.o
 initialize_ph.o : ../../PW/src/pwcom.o
 io_dyn_mat.o : ../../Modules/constants.o
 io_dyn_mat.o : ../../Modules/io_global.o
@@ -1006,6 +1039,15 @@ matdyn.o : ../../UtilXlib/mp.o
 matdyn.o : elph.o
 matdyn.o : io_dyn_mat.o
 matdyn.o : rigid.o
+non_scf_ph.o : ../../Modules/check_stop.o
+non_scf_ph.o : ../../Modules/control_flags.o
+non_scf_ph.o : ../../Modules/io_files.o
+non_scf_ph.o : ../../Modules/io_global.o
+non_scf_ph.o : ../../Modules/kind.o
+non_scf_ph.o : ../../Modules/wavefunctions.o
+non_scf_ph.o : ../../PW/src/bp_mod.o
+non_scf_ph.o : ../../PW/src/buffers.o
+non_scf_ph.o : ../../PW/src/pwcom.o
 obsolete.o : ../../LR_Modules/lrcom.o
 obsolete.o : ../../Modules/cell_base.o
 obsolete.o : ../../Modules/constants.o
@@ -1174,6 +1216,7 @@ phq_setup.o : ../../Modules/noncol.o
 phq_setup.o : ../../Modules/recvec.o
 phq_setup.o : ../../Modules/uspp.o
 phq_setup.o : ../../PW/src/ldaU.o
+phq_setup.o : ../../PW/src/newd.o
 phq_setup.o : ../../PW/src/pwcom.o
 phq_setup.o : ../../PW/src/scf_mod.o
 phq_setup.o : ../../PW/src/symm_base.o
@@ -1424,6 +1467,7 @@ run_nscf.o : ../../Modules/io_files.o
 run_nscf.o : ../../Modules/io_global.o
 run_nscf.o : ../../Modules/mp_bands.o
 run_nscf.o : ../../Modules/mp_pools.o
+run_nscf.o : ../../Modules/noncol.o
 run_nscf.o : ../../Modules/recvec.o
 run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 run_nscf.o : ../../PW/src/pwcom.o
@@ -1431,7 +1475,6 @@ run_nscf.o : ../../PW/src/scf_mod.o
 run_nscf.o : acfdtest.o
 run_nscf.o : elph.o
 run_nscf.o : phcom.o
-run_nscf.o : save_ph_input.o
 save_ph_input.o : ../../Modules/io_files.o
 save_ph_input.o : ../../Modules/ions_base.o
 save_ph_input.o : ../../Modules/kind.o
@@ -1452,6 +1495,7 @@ set_dvscf.o : ../../Modules/recvec.o
 set_dvscf.o : ../../PW/src/pwcom.o
 set_dvscf.o : phcom.o
 set_int12_nc.o : ../../Modules/ions_base.o
+set_int12_nc.o : ../../Modules/noncol.o
 set_int12_nc.o : ../../Modules/uspp.o
 set_int12_nc.o : ../../PW/src/pwcom.o
 set_int12_nc.o : phcom.o
@@ -1569,7 +1613,6 @@ solve_linter.o : ../../LR_Modules/dv_of_drho.o
 solve_linter.o : ../../LR_Modules/lrcom.o
 solve_linter.o : ../../Modules/cell_base.o
 solve_linter.o : ../../Modules/check_stop.o
-solve_linter.o : ../../Modules/constants.o
 solve_linter.o : ../../Modules/fft_base.o
 solve_linter.o : ../../Modules/io_files.o
 solve_linter.o : ../../Modules/io_global.o
@@ -1661,6 +1704,7 @@ symdvscf.o : phcom.o
 symdyn_munu.o : ../../Modules/kind.o
 symdynph_gq.o : ../../Modules/constants.o
 symdynph_gq.o : ../../Modules/kind.o
+symdynph_gq.o : ../../PW/src/symm_base.o
 syme.o : ../../Modules/fft_base.o
 syme.o : ../../Modules/kind.o
 syme.o : ../../Modules/noncol.o

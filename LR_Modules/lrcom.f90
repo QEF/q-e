@@ -35,6 +35,22 @@ MODULE qpoint
   !
 END MODULE qpoint
 !
+!
+!
+MODULE qpoint_aux
+  USE kinds,      ONLY : DP
+  USE becmod,     ONLY : bec_type
+  SAVE
+  
+  INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
+
+  INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
+
+  TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
+
+END MODULE qpoint_aux
+!
+!
 MODULE control_lr
   !
   USE kinds,      ONLY : DP

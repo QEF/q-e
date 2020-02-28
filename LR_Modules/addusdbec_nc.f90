@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-subroutine addusdbec_nc (ik, wgt, dpsi, dbecsum_nc)
+subroutine addusdbec_nc (ik, wgt, dpsi, dbecsum_nc, becp1)
   !----------------------------------------------------------------------
   !
   !  This routine adds to the dbecsum the term which correspond to this
@@ -16,15 +16,14 @@ subroutine addusdbec_nc (ik, wgt, dpsi, dbecsum_nc)
   USE kinds,            ONLY : DP
   USE lsda_mod,         ONLY : nspin
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp
-  USE becmod,           ONLY : calbec
+  USE becmod,           ONLY : calbec, bec_type
   USE wvfct,            ONLY : npwx, nbnd
   USE uspp,             ONLY : nkb, vkb, okvan
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param,       ONLY : upf, nh, nhm
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE klist,            ONLY : ngk
-  USE lrus,             ONLY : becp1
-  USE qpoint,           ONLY : ikks, ikqs
+  USE qpoint,           ONLY : nksq, ikks, ikqs
   USE control_lr,       ONLY : nbnd_occ
   !
   IMPLICIT NONE
@@ -34,6 +33,8 @@ subroutine addusdbec_nc (ik, wgt, dpsi, dbecsum_nc)
   COMPLEX(DP) :: dbecsum_nc (nhm,nhm,nat,nspin), dpsi(npwx*npol,nbnd)
   ! inp/out: the sum kv of bec *
   ! input  : contains delta psi
+  TYPE(bec_type) :: becp1(nksq)
+  !
   INTEGER :: ik
   ! input: the k point
   REAL(DP) :: wgt

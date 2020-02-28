@@ -230,8 +230,9 @@ MODULE control_ph
              only_init=.FALSE.,  &! if .TRUE. computes only initial stuff
              with_ext_images=.FALSE., & ! if .TRUE. use an external driver
                                         ! to decide what each image does.
-             always_run=.FALSE., & ! if .TRUE. the code do not stop after
+             !always_run=.FALSE., & ! if .TRUE. the code do not stop after
                                    ! doing partial representations
+             always_run=.TRUE., & ! only for testing purposes
              recover,     &! if .TRUE. the run restarts
              low_directory_check=.FALSE., & ! if .TRUE. search on the phsave 
                            ! directory only the representations requested 
@@ -426,6 +427,29 @@ MODULE ldaU_ph
   !
 END MODULE ldaU_ph
 
+MODULE nc_mag_aux
+  USE kinds,      ONLY : DP
+  SAVE
+  
+  COMPLEX (DP), ALLOCATABLE ::  &
+                               deeq_nc_save(:,:,:,:,:), &
+                               int1_nc_save(:,:,:,:,:,:), &
+                               int3_save(:, :, :, :, :, :)
+END MODULE nc_mag_aux
+
+!MODULE qpoint_aux
+!  USE kinds,      ONLY : DP
+!  USE becmod,     ONLY : bec_type
+!  SAVE
+  
+!  INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
+
+!  INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
+
+!  TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
+
+!END MODULE qpoint_aux
+
 MODULE phcom
   USE modes
   USE dynmat
@@ -442,4 +466,6 @@ MODULE phcom
   USE disp
   USE grid_irr_iq
   USE ldaU_ph
+  USE nc_mag_aux
+!  USE qpoint_aux
 END MODULE phcom

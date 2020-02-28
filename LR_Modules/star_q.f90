@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
+subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity, t_rev_in )
   !-----------------------------------------------------------------------
   ! generate the star of q vectors that are equivalent to the input one
   ! NB: input s(:,:,1:nsym) must contain all crystal symmetries,
@@ -19,6 +19,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
   real(DP), parameter :: accep=1.e-5_dp
 
   integer, intent(in) :: nsym, s (3, 3, 48), invs(48)
+  integer, intent(in), optional:: t_rev_in(48)
   ! nsym matrices of symmetry operations
   ! invs: list of inverse operation indices
   real(DP), intent(in) :: xq (3), at (3, 3), bg (3, 3)
@@ -36,11 +37,13 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
   logical, intent(in) :: verbosity
   ! if true prints several messages.
   !
-  integer :: nsq (48), isym, ism1, iq, i
+  integer :: nsq (48), isym, ism1, iq, i, t_rev(48)
   ! number of symmetry ops. of bravais lattice
   ! counters on symmetry ops.
   ! index of inverse of isym
   ! counters
+  ! t_rev variable, says if a given simmetry operation
+  ! needs the time reversal to be a symmetry of the crystal.
   real(DP) :: saq (3, 48), aq (3), raq (3), zero (3)
   ! auxiliary list of q (crystal coordinates)
   ! input q in crystal coordinates
@@ -50,6 +53,14 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
 
   logical, external :: eqvect
   ! function used to compare two vectors
+  !
+  !
+  if (present(t_rev_in)) then 
+     t_rev = t_rev_in
+  else
+     t_rev = 0
+  end if
+  !
   !
   zero(:) = 0.d0
   !
@@ -73,6 +84,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
                 + s (i, 2, ism1) * aq (2) &
                 + s (i, 3, ism1) * aq (3)
      enddo
+     IF (t_rev(isym)==1) raq = -raq
      do i = 1, 3
         sxq (i, 48) = bg (i, 1) * raq (1) &
                     + bg (i, 2) * raq (2) &
