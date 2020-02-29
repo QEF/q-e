@@ -1391,7 +1391,7 @@ Optional Packages:
                           (default: no)
   --with-elpa-lib         Specify full path ELPA static or dynamic library
                           (default: no)
-  --with-elpa-version     Specify ELPA version, only year (2015 or 2016,
+  --with-elpa-version     Specify ELPA version, only year (2015 - 2019,
                           default: 2016)
   --with-hdf5             (no|yes|<path>) Use HDF5, if yes configure assumes
                           that a valid installation with version >= 1.8.16 is
@@ -4948,8 +4948,8 @@ else
       		    mkl_omp="mkl_ifort_thread"
 		    if test "$arch" == "mac686"; then
 		       add_mkl_flag="-openmp"
-		       add_mkl_lib ="-lpthread"
-      		       add_mkl_omp ="-lpthread"
+		       add_mkl_lib="-lpthread"
+      		       add_mkl_omp="-lpthread"
 		    fi
 		    ;;
 	       gfortran* )
@@ -4957,11 +4957,11 @@ else
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
 	       pgf* )
-      		    mkl_lib="mkl_pgi_lp64"
+      		    mkl_lib="mkl_intel_lp64"
       		    mkl_omp="mkl_pgi_thread"
       		    add_mkl_flag="-pgf90libs"
-      		    add_mkl_lib ="-ldl"
-      		    add_mkl_omp ="-ldl -lpthread -lm"
+      		    add_mkl_lib="-ldl"
+      		    add_mkl_omp="-ldl -lpthread -lm"
 	       ;;
 	    esac
             try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
@@ -6306,10 +6306,14 @@ fi
                   then
                         try_dflags="$try_dflags -D__FFTW3"
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
+                        orig_fflags="$FFLAGS"
                         for inc in $try_incdir
                         do
+                           FFLAGS="$orig_fflags -I$inc -ffree-form"
                            cat > conftest.$ac_ext <<_ACEOF
+use iso_c_binding
 include "fftw3.f03"
+end
 _ACEOF
 if ac_fn_f77_try_compile "$LINENO"; then :
   have_fft_include=1
@@ -6321,6 +6325,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
                              break
                            fi
                         done
+                        FFLAGS="$orig_fflags"
                         break
                   fi
 
@@ -6337,6 +6342,12 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 else
 
    echo "using FFT_LIBS with no testing ... "
+   if test -n "$FFT_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFT_INCLUDE"
+   fi
+   if test -n "$FFTW_INCLUDE" ; then :
+      try_iflags="$try_iflags -I$FFTW_INCLUDE"
+   fi
 
 fi
 
@@ -7249,6 +7260,12 @@ if test "$with_elpa_libs" -eq 1; then
         try_dflags="$try_dflags -D__ELPA_2015"
       elif test "$with_elpa_version" = "2016"; then
         try_dflags="$try_dflags -D__ELPA_2016"
+      elif test "$with_elpa_version" = "2017"; then
+        try_dflags="$try_dflags -D__ELPA_2017"
+      elif test "$with_elpa_version" = "2018"; then
+        try_dflags="$try_dflags -D__ELPA_2018"
+      elif test "$with_elpa_version" = "2019"; then
+        try_dflags="$try_dflags -D__ELPA_2019"
       else
         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2016" >&5
 $as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2016" >&2;}

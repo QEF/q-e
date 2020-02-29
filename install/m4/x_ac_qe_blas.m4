@@ -41,8 +41,8 @@ else
       		    mkl_omp="mkl_ifort_thread"
 		    if test "$arch" == "mac686"; then
 		       add_mkl_flag="-openmp"
-		       add_mkl_lib ="-lpthread"
-      		       add_mkl_omp ="-lpthread"
+		       add_mkl_lib="-lpthread"
+      		       add_mkl_omp="-lpthread"
 		    fi
 		    ;;
 	       gfortran* )
@@ -50,11 +50,11 @@ else
       		    mkl_omp="mkl_gnu_thread"
 		    ;;
 	       pgf* )
-      		    mkl_lib="mkl_pgi_lp64"
+      		    mkl_lib="mkl_intel_lp64"
       		    mkl_omp="mkl_pgi_thread"
       		    add_mkl_flag="-pgf90libs"
-      		    add_mkl_lib ="-ldl"
-      		    add_mkl_omp ="-ldl -lpthread -lm"
+      		    add_mkl_lib="-ldl"
+      		    add_mkl_omp="-ldl -lpthread -lm"
 	       ;;
 	    esac
             try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
