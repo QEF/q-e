@@ -600,8 +600,12 @@ CONTAINS
 
   SUBROUTINE pdsyevd_drv( tv, n, nb, s, lds, w, ortho_cntx, ortho_comm )
      !
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if  defined(__ELPA_2015)|| defined(__ELPA_2016)|| defined(__ELPA_2017)
      use elpa1
+
+#elif defined(__ELPA)|| defined(__ELPA_2018) || defined(__ELPA_2019)
+     use elpa
+
 #endif
      IMPLICIT NONE
      !
@@ -627,9 +631,12 @@ CONTAINS
      INTEGER     :: LWORK, LIWORK, info
      CHARACTER   :: jobv
      INTEGER     :: i, ierr
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)     
-     INTEGER     :: nprow,npcol,my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols
+#if defined(__ELPA)   || defined(__ELPA_2015) || defined(__ELPA_2016)|| defined(__ELPA_2017)  || defined(__ELPA_2018) || defined(__ELPA_2019)   
+     INTEGER     :: nprow,npcol,my_prow,my_pcol,mpi_comm_rows,mpi_comm_cols
      LOGICAL     :: success
+#endif
+#if defined(__ELPA) || defined(__ELPA_2018) || defined(__ELPA_2019)
+     class(elpa_t), pointer :: elpa_s
 #endif 
 
      IF( SIZE( s, 1 ) /= lds ) &
@@ -651,11 +658,47 @@ CONTAINS
      itmp = 0
      rtmp = 0.0_DP
 
-#if defined(__ELPA) || defined(__ELPA_2016) || defined(__ELPA_2015)
+#if defined(__ELPA)   || defined(__ELPA_2015) || defined(__ELPA_2016)|| defined(__ELPA_2017)  || defined(__ELPA_2018) || defined(__ELPA_2019)
      CALL BLACS_Gridinfo(ortho_cntx,nprow, npcol, my_prow,my_pcol)
 
-#if defined(__ELPA_2016)
-     ! -> ELPA 2016.11.001_pre
+#if defined(__ELPA)  || defined(__ELPA_2018) || defined(__ELPA_2019)
+  ! => from elpa-2018.11.001 to 2019.xx.xx
+  if (elpa_init(20181101) /= ELPA_OK) then        
+    print *, "ELPA API version in use not supported"
+    stop
+    endif
+  elpa_s => elpa_allocate(ierr)
+  if (ierr /= ELPA_OK) then
+    print *, "ELPA API version in use is not supported"
+    stop
+  endif 
+
+  call elpa_s%set("debug",1,ierr)
+
+! set parameters describing the matrix and it's MPI distribution
+  call elpa_s%set("na", n, ierr)
+  call elpa_s%set("nev", n, ierr)
+  call elpa_s%set("nblk", SIZE(s,2), ierr)                  
+  call elpa_s%set("local_nrows", lds,ierr)     
+  call elpa_s%set("local_ncols", nb,ierr) 
+  call elpa_s%set("mpi_comm_parent", ortho_comm, ierr) 
+  call elpa_s%set("process_row", my_prow, ierr)         
+  call elpa_s%set("process_col", my_pcol, ierr)
+
+  ierr = elpa_s%setup()
+  if (ierr .ne. ELPA_OK) then
+     print *,"Problem setting up options. Aborting ..."
+     stop
+  endif
+
+  call elpa_s%set("solver", ELPA_SOLVER_1STAGE, ierr)
+  call elpa_s%eigenvectors(s, w, vv, ierr)
+  
+  call elpa_deallocate(elpa_s)
+  call elpa_uninit()
+
+#elif defined(__ELPA_2016) || defined(__ELPA_2017)
+     ! -> from ELPA 2016.11.001_pre thru 2017.XX.XX to elpa-2018.05.001
      ierr = elpa_get_communicators(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      success = solve_evp_real_1stage(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols, ortho_comm)
      ! -> ELPA 2016.05.003
@@ -664,18 +707,17 @@ CONTAINS
 #elif defined(__ELPA_2015)
      ierr = get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
      ierr = solve_evp_real(n,  n,   s, lds,    w,  vv, lds,SIZE(s,2),nb  ,mpi_comm_rows, mpi_comm_cols)
-#elif defined(__ELPA)
-     CALL get_elpa_row_col_comms(ortho_comm, my_prow, my_pcol,mpi_comm_rows, mpi_comm_cols)
-     CALL solve_evp_real(n,  n,   s, lds,    w,  vv, lds     ,nb  ,mpi_comm_rows, mpi_comm_cols)
 #endif
 
      IF( tv )  s = vv
      IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
 
-#if defined __MPI
+
+#if defined(__MPI) && (defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017)) 
      CALL mpi_comm_free( mpi_comm_rows, ierr )
      CALL mpi_comm_free( mpi_comm_cols, ierr )
 #endif
+
 
 #else
      CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
