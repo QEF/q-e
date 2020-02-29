@@ -232,6 +232,87 @@
 
 
 !-------------------------------------------------------------------------
+   subroutine g_beta_eigr_x( gbeigr, eigr )
+!-----------------------------------------------------------------------
+
+      !     computes: 
+      !      g_k beta(g,iv,is) (i)**(l+1) e^(ig.r_ia)
+      !
+ 
+      USE kinds,      ONLY : DP
+      use ions_base,  only : nsp, ityp, nat
+      use uspp,       only : nhtol, beta, indv_ijkb0
+      use uspp_param, only : nh, upf
+      use cell_base,  only : tpiba
+      use gvect,      only : g, gstart
+      USE gvecw,      only : ngw
+!
+      implicit none
+    
+      complex(DP), intent(in)  :: eigr(:,:)
+      complex(DP), intent(out) :: gbeigr(:,:,:)
+      !
+      integer  :: ig, is, iv, ia, k, l, inl
+      complex(DP) :: cfact
+!
+      call start_clock( 'g_beta_eigr' )
+!
+!$omp parallel default(none), &
+!$omp shared(nat,ngw,nh,nhtol,gbeigr,beta,eigr,ityp,g,gstart,indv_ijkb0,tpiba), &
+!$omp private(is,ia,iv,inl,l,cfact,ig,k)
+!$omp do
+      DO ia = 1, nat
+      DO k = 1, 3
+
+         is = ityp(ia) 
+
+         inl = indv_ijkb0(ia)
+
+         do iv=1,nh(is)
+            !
+            !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
+            !
+            l=nhtol(iv,is)
+
+            ! compute (-i)^(l+1)
+            !
+            if (l == 0) then
+              cfact = - cmplx( 0.0_dp , 1.0_dp )
+            else if (l == 1) then
+              cfact = - cmplx( 0.0_dp , 1.0_dp )
+              cfact = cfact * cfact
+            else if (l == 2) then
+              cfact = - cmplx( 0.0_dp , 1.0_dp )
+              cfact = cfact * cfact * cfact
+            else if (l == 3) then
+              cfact =   cmplx( 1.0_dp , 0.0_dp )
+            endif
+
+            cfact = cfact * tpiba
+
+            !    q = 0   component (with weight 1.0)
+            if (gstart == 2) then
+               gbeigr(1,iv+inl,k) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
+            end if
+            !    q > 0   components (with weight 2.0)
+            do ig=gstart,ngw
+               gbeigr(ig,iv+inl,k) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
+            end do
+            !
+         end do
+
+      end do
+      end do
+!$omp end do
+!$omp end parallel
+
+      call stop_clock( 'g_beta_eigr' )
+!
+      return
+   end subroutine g_beta_eigr_x
+!-----------------------------------------------------------------------
+
+!-------------------------------------------------------------------------
    subroutine nlsm2_bgrp_x( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
 !-----------------------------------------------------------------------
 
@@ -252,6 +333,7 @@
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
       use gvect,      only : g, gstart
+      USE cp_interfaces, only : g_beta_eigr
 !
       implicit none
     
@@ -259,65 +341,25 @@
       complex(DP), intent(in)  :: eigr(:,:), c_bgrp(:,:)
       real(DP),    intent(out) :: becdr_bgrp(:,:,:)
       !
-      complex(DP), allocatable :: wrk2(:,:)
+      complex(DP), allocatable :: wrk2(:,:,:)
       !
       integer  :: ig, is, iv, ia, k, l, inl
       complex(DP) :: cfact
 !
       call start_clock( 'nlsm2' )
 
-      allocate( wrk2( ngw, nkb ) )
+      allocate( wrk2( ngw, nkb, 3 ) )
+   
+      CALL g_beta_eigr( wrk2, eigr )
 !
       DO k = 1, 3
          !
-         DO ia = 1, nat
-
-            is = ityp(ia) 
-
-            inl = indv_ijkb0(ia)
-
-            do iv=1,nh(is)
-               !
-               !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
-               !
-               l=nhtol(iv,is)
-
-               ! compute (-i)^(l+1)
-               !
-               if (l == 0) then
-                 cfact = - cmplx( 0.0_dp , 1.0_dp )
-               else if (l == 1) then
-                 cfact = - cmplx( 0.0_dp , 1.0_dp )
-                 cfact = cfact * cfact
-               else if (l == 2) then
-                 cfact = - cmplx( 0.0_dp , 1.0_dp )
-                 cfact = cfact * cfact * cfact
-               else if (l == 3) then
-                 cfact =   cmplx( 1.0_dp , 0.0_dp )
-               endif
-
-               cfact = cfact * tpiba
-
-               !    q = 0   component (with weight 1.0)
-               if (gstart == 2) then
-                  wrk2(1,iv+inl) = cfact * g(k,1) * beta(1,iv,is) * eigr(1,ia)
-               end if
-               !    q > 0   components (with weight 2.0)
-               do ig=gstart,ngw
-                  wrk2(ig,iv+inl) = cfact * 2.0d0 * g(k,ig) * beta(ig,iv,is) * eigr(ig,ia)
-               end do
-               !
-            end do
-
-         end do
-
          IF( ngw > 0 .AND. nkb > 0 ) THEN
-            CALL dgemm( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2, 2*ngw, &
+            CALL dgemm( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2(1,1,k), 2*ngw, &
                  c_bgrp, 2*ngw, 0.0d0, becdr_bgrp( 1, 1, k ), nkb )
          END IF
 
       end do
-
 
       deallocate( wrk2 )
 
@@ -330,7 +372,6 @@
       return
    end subroutine nlsm2_bgrp_x
 !-----------------------------------------------------------------------
-
 
 
 !-----------------------------------------------------------------------

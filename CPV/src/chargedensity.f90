@@ -236,7 +236,11 @@
             !
          ELSE 
             !
+#if defined (__CUDA)
+            CALL loop_over_states_gpu()
+#else
             CALL loop_over_states()
+#endif
             !
          END IF
          !
@@ -445,6 +449,108 @@
 
          RETURN
       END SUBROUTINE loop_over_states
+
+#if defined (__CUDA)
+
+      SUBROUTINE loop_over_states_gpu
+         !
+         USE parallel_include
+         USE fft_helper_subroutines
+         USE control_flags, ONLY : many_fft
+         USE cudafor
+         !
+         !        MAIN LOOP OVER THE EIGENSTATES
+         !           - This loop is also parallelized within the task-groups framework
+         !           - Each group works on a number of eigenstates in parallel
+         !
+         IMPLICIT NONE
+         !
+         INTEGER :: from, i, ig, eig_index, eig_offset, ii, tg_nr3, ioff
+         !
+         REAL(DP), DEVICE, ALLOCATABLE    :: rhos_d(:,:)
+         COMPLEX(DP), DEVICE, ALLOCATABLE :: psis(:)
+         COMPLEX(DP), DEVICE, ALLOCATABLE :: ptmp(:,:)
+         INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
+
+
+         ALLOCATE( psis( dffts%nnr * many_fft ) )  ! dffts%nnr * many_fft
+         ALLOCATE( ptmp( SIZE(c_bgrp,1), 2 ) ) 
+         ALLOCATE( rhos_d ( SIZE(rhos,1), SIZE(rhos,2) ) )
+         !
+         rhos_d = 0_DP
+         nl_d => dffts%nl_d
+         nlm_d => dffts%nlm_d
+
+         do i = 1, nbsp_bgrp, 2 * many_fft
+
+            psis = 0.0d0
+
+            ioff = 0
+            DO ii = i, i + 2 * many_fft - 1, 2
+              IF( ii < nbsp_bgrp ) THEN
+                 ptmp(:,1) = c_bgrp( :, ii )
+                 ptmp(:,2) = c_bgrp( :, ii + 1 )
+!$cuf kernel do(1)
+                 do ig = 1, dffts%ngw
+                    psis( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) ) + ci * conjg( ptmp( ig, 2 ))
+                    psis( nl_d( ig )  + ioff) = ptmp( ig, 1 ) + ci * ptmp( ig, 2 )
+                 end do
+              ELSE IF( ii == nbsp_bgrp ) THEN
+                 ptmp(:,1) = c_bgrp( :, ii )
+!$cuf kernel do(1)
+                 do ig = 1, dffts%ngw
+                    psis( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) )
+                    psis( nl_d( ig )  + ioff) = ptmp( ig, 1 )
+                 end do
+              END IF
+              ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii), c_bgrp(:,ii+1) )
+              ioff = ioff + dffts%nnr
+              
+            END DO
+
+            CALL invfft('Wave', psis, dffts, many_fft )
+
+            ioff = 0
+            DO ii = i, i + 2 * many_fft - 1, 2
+              IF( ii < nbsp_bgrp ) THEN
+                iss1=ispin_bgrp( ii )
+                sa1 =f_bgrp( ii )/omega
+                iss2=ispin_bgrp( ii + 1 )
+                sa2 =f_bgrp( ii + 1 )/omega
+!$cuf kernel do(1)
+                do ir = 1, dffts%nnr
+                   rhos_d(ir,iss1) = rhos_d(ir,iss1) + sa1*( real(psis(ir + ioff)))**2
+                   rhos_d(ir,iss2) = rhos_d(ir,iss2) + sa2*(aimag(psis(ir + ioff)))**2
+                end do
+              ELSE IF( ii == nbsp_bgrp ) THEN
+                iss1=ispin_bgrp( ii )
+                sa1 =f_bgrp( ii )/omega
+                iss2=iss1
+                sa2=0.0d0
+!$cuf kernel do(1)
+                do ir = 1, dffts%nnr
+                   rhos_d(ir,iss1) = rhos_d(ir,iss1) + sa1*( real(psis(ir + ioff)))**2
+                END DO
+              END IF
+              ioff = ioff + dffts%nnr
+            END DO
+            !
+         END DO
+
+         rhos = rhos_d
+
+         IF( nbgrp > 1 ) THEN
+            CALL mp_sum( rhos, inter_bgrp_comm )
+         END IF
+
+         DEALLOCATE( rhos_d )
+         DEALLOCATE( psis ) 
+         DEALLOCATE( ptmp ) 
+
+         RETURN
+      END SUBROUTINE loop_over_states_gpu
+#endif
+
 
 !-----------------------------------------------------------------------
    END SUBROUTINE rhoofr_cp

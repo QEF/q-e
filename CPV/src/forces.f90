@@ -343,3 +343,219 @@
 !
       RETURN
    END SUBROUTINE dforce_x
+
+#if defined (__CUDA)
+!-------------------------------------------------------------------------
+      SUBROUTINE dforce_gpu_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin )
+!-----------------------------------------------------------------------
+!computes: the generalized force df=cmplx(dfr,dfi,kind=DP) acting on the i-th
+!          electron state at the gamma point of the brillouin zone
+!          represented by the vector c=cmplx(cr,ci,kind=DP)
+!
+!     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
+!              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
+!                                 e^-ig.r_i < beta_i,j | c_n >}
+!
+      USE parallel_include
+      USE kinds,                  ONLY: dp
+      USE control_flags,          ONLY: iprint
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq, indv_ijkb0
+      USE uspp_param,             ONLY: nhm, nh
+      USE constants,              ONLY: pi, fpi
+      USE ions_base,              ONLY: nsp, na, nat, ityp
+      USE gvecw,                  ONLY: ngw, g2kin
+      USE cell_base,              ONLY: tpiba2
+      USE ensemble_dft,           ONLY: tens
+      USE funct,                  ONLY: dft_is_meta, dft_is_hybrid, exx_is_active
+      USE fft_base,               ONLY: dffts
+      USE fft_interfaces,         ONLY: fwfft, invfft
+      USE mp_global,              ONLY: me_bgrp
+      USE control_flags,          ONLY: many_fft
+      USE fft_helper_subroutines
+      USE cudafor
+!
+      IMPLICIT NONE
+!
+      INTEGER,     INTENT(IN)    :: i
+      REAL(DP)                   :: bec(:,:)
+      COMPLEX(DP)                :: vkb(:,:)
+      COMPLEX(DP)                :: c(:,:)
+      COMPLEX(DP)                :: df(:), da(:)
+      INTEGER,     INTENT(IN)    :: ldv
+      REAL(DP), DEVICE           :: v( :, : )
+      INTEGER                    :: ispin( : )
+      REAL(DP)                   :: f( : )
+      INTEGER,     INTENT(IN)    :: n, nspin
+      !
+      ! local variables
+      !
+      INTEGER     :: iv, jv, ia, is, iss1, iss2, ir, ig, inl, jnl
+      INTEGER     :: igno, igrp, ierr, ii
+      INTEGER     :: idx, ioff
+      REAL(DP)    :: fi, fip, dd, dv
+      COMPLEX(DP) :: fp, fm
+      complex(DP), parameter :: ci=(0.0d0,1.0d0)
+
+      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
+      COMPLEX(DP), ALLOCATABLE :: psi_h(:)
+      COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
+      COMPLEX(DP), ALLOCATABLE, DEVICE :: ptmp(:,:)
+      INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
+      !
+      CALL start_clock( 'dforce' ) 
+      !
+      IF(dft_is_hybrid().AND.exx_is_active()) THEN
+         CALL errore(' dforce ', ' dft_is_hybrid and exx_is_active NOT implemented ', 1 )
+      END IF
+
+      ALLOCATE( psi( dffts%nnr * many_fft ) )
+      ALLOCATE( psi_h( dffts%nnr ) )
+      ALLOCATE( ptmp( SIZE(c,1), 2 ) )
+      !
+      psi = 0.0d0
+      nl_d => dffts%nl_d
+      nlm_d => dffts%nlm_d
+
+      ioff = 0
+      DO ii = i, i + 2 * many_fft - 1, 2
+         IF( ii < n ) THEN
+            ptmp(:,1) = c( :, ii )
+            ptmp(:,2) = c( :, ii + 1 )
+!$cuf kernel do(1)
+            do ig = 1, dffts%ngw
+               psi( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) ) + ci * conjg( ptmp( ig, 2 ))
+               psi( nl_d( ig )  + ioff) = ptmp( ig, 1 ) + ci * ptmp( ig, 2)
+            end do
+         ELSE IF( ii == n ) THEN
+            ptmp(:,1) = c( :, ii )
+!$cuf kernel do(1)
+            do ig = 1, dffts%ngw
+               psi( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) )
+               psi( nl_d( ig )  + ioff) = ptmp( ig, 1 )
+            end do
+         END IF
+         ioff = ioff + dffts%nnr
+      END DO
+      !
+      CALL invfft( 'Wave', psi, dffts, many_fft )
+      !
+      ioff = 0
+      DO ii = i, i + 2 * many_fft - 1, 2
+         IF( ii < n ) THEN
+            iss1=ispin( ii )
+            iss2=ispin( ii + 1 )
+!$cuf kernel do(1)
+            DO ir=1,dffts%nnr
+               psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
+                                   v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
+            END DO
+         ELSE IF( ii == n ) THEN
+            iss1=ispin( ii )
+            iss2=iss1
+!$cuf kernel do(1)
+            DO ir=1,dffts%nnr
+               psi(ir+ioff)=CMPLX( v(ir,iss1)* DBLE(psi(ir+ioff)), &
+                                   v(ir,iss2)*AIMAG(psi(ir+ioff)) ,kind=DP)
+            END DO
+         END IF
+         ioff = ioff + dffts%nnr
+      END DO
+
+      CALL fwfft( 'Wave', psi, dffts, many_fft )
+
+      igno = 0
+      ioff = 0
+      DO idx = 1, 2 * many_fft, 2
+
+         IF( idx + i - 1 <= n ) THEN
+            if (tens) then
+               fi = -0.5d0
+               fip = -0.5d0
+            else
+               fi = -0.5d0*f(i+idx-1)
+               fip = -0.5d0*f(i+idx)
+            endif
+            psi_h = psi( 1+ioff : ioff+dffts%nnr )
+            CALL fftx_psi2c_gamma( dffts, psi_h, df(1+igno:igno+ngw), da(1+igno:igno+ngw))
+            DO ig=1,ngw
+               df(ig+igno)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df(ig+igno))
+               da(ig+igno)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+da(ig+igno))
+            END DO
+         END IF
+
+         igno = igno + ngw
+         ioff = ioff + dffts%nnr
+
+      ENDDO
+
+      !
+
+      IF( nhsa > 0 ) THEN
+         !
+         !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
+         ! 
+         ALLOCATE( af( nhsa, many_fft ), aa( nhsa, many_fft ) )
+
+         af = 0.0d0
+         aa = 0.0d0
+         !
+         igrp = 1
+
+         DO idx = 1, 2*many_fft , 2
+
+            IF( idx + i - 1 <= n ) THEN
+
+               IF (tens) THEN
+                  fi = 1.0d0
+                  fip= 1.0d0
+               ELSE
+                  fi = f(i+idx-1)
+                  fip= f(i+idx)
+               END IF
+               !
+               DO ia = 1, nat
+                  is = ityp(ia)
+                  DO iv = 1, nh(is)
+                     DO jv = 1, nh(is)
+                        dv = dvan(iv,jv,is)
+                        inl = indv_ijkb0(ia) + iv
+                        jnl = indv_ijkb0(ia) + jv
+                        IF( i + idx - 1 /= n ) THEN
+                           dd = deeq(iv,jv,ia,iss1) + dv
+                           af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
+                           dd = deeq(iv,jv,ia,iss2) + dv
+                           aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
+                        ELSE
+                           dd = deeq(iv,jv,ia,iss1) + dv
+                           af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
+                        END IF
+                     END DO
+                  END DO
+               END DO
+
+            END IF
+
+            igrp = igrp + 1
+
+         END DO
+
+         IF( ngw > 0 ) THEN
+           CALL dgemm ( 'N', 'N', 2*ngw, many_fft , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
+           CALL dgemm ( 'N', 'N', 2*ngw, many_fft , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
+         END IF
+         !
+         DEALLOCATE( aa, af )
+         !
+      ENDIF
+!
+      DEALLOCATE( psi )
+      DEALLOCATE( psi_h )
+      DEALLOCATE( ptmp )
+      NULLIFY(nl_d) 
+      NULLIFY(nlm_d)
+!
+      CALL stop_clock( 'dforce' ) 
+!
+      RETURN
+   END SUBROUTINE dforce_gpu_x
+#endif

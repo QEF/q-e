@@ -106,6 +106,7 @@
    PUBLIC :: collect_bec
    PUBLIC :: beta_eigr
    PUBLIC :: nlsm1us
+   PUBLIC :: g_beta_eigr
 
    ! ------------------------------------ !
 
@@ -126,6 +127,23 @@
          INTEGER,     INTENT(IN)    :: n, nspin
          REAL(DP),    OPTIONAL      :: v1( ldv, * )
       END SUBROUTINE dforce_x
+#if defined (__CUDA)
+      SUBROUTINE dforce_gpu_x( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin )
+         USE kinds,              ONLY: DP
+         USE cudafor
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)    :: i
+         REAL(DP)                   :: bec(:,:)
+         COMPLEX(DP)                :: vkb(:,:)
+         COMPLEX(DP)                :: c(:,:)
+         COMPLEX(DP)                :: df(:), da(:)
+         INTEGER,     INTENT(IN)    :: ldv
+         REAL(DP), DEVICE           :: v( :, : )
+         INTEGER                    :: ispin( : )
+         REAL(DP)                   :: f( : )
+         INTEGER,     INTENT(IN)    :: n, nspin
+      END SUBROUTINE dforce_gpu_x
+#endif
    END INTERFACE
 
 
@@ -1024,6 +1042,14 @@
       END SUBROUTINE nlsm1us_x
    END INTERFACE
 
+   INTERFACE g_beta_eigr
+      SUBROUTINE g_beta_eigr_x ( gbeigr, eigr )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(OUT) :: gbeigr( :, :, : )
+      END SUBROUTINE g_beta_eigr_x
+   END INTERFACE
 
 !=----------------------------------------------------------------------------=!
 
