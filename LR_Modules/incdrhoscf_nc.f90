@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign_in)
+subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -39,8 +39,9 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign_in)
   INTEGER, INTENT(IN) :: ik
   ! input: the k point
   REAL(DP), INTENT(IN) :: weight
-  REAL(DP), INTENT(IN), OPTIONAL:: rsign_in
+  REAL(DP), INTENT(IN) :: rsign
   ! input: the weight of the k point
+  ! the sign in front of the response of the magnetization density
   COMPLEX(DP), INTENT(IN) :: dpsi(npwx*npol,nbnd)
   ! input: the perturbed wfcs at the given k point
   COMPLEX(DP), INTENT(INOUT) :: drhoscf (dfftp%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
@@ -48,8 +49,6 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign_in)
   !
   !   here the local variable
   !
-  REAL(DP) :: rsign 
-  ! the sign in front of the response of the magnetization density
   REAL(DP) :: wgt
   ! the effective weight of the k point
   !
@@ -63,13 +62,6 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi, rsign_in)
   INTEGER :: ibnd, jbnd, ir, ir3, ig, incr, v_siz, idx, ioff, ioff_tg, nxyp
   INTEGER :: ntgrp, right_inc
   ! counters
-  !
-  !
-  IF (PRESENT(rsign_in)) THEN 
-     rsign = rsign_in
-  ELSE
-     rsign = 1.
-  END IF
   !
   !
   CALL start_clock ('incdrhoscf')

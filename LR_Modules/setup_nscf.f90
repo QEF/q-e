@@ -110,7 +110,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
      !
      skip_equivalence = elph_mat
      t_rev_eff=0 
-     ! Ancora da capire se t_rev_eff sia veramente necessario
+     ! yet unclear whether t_rev_eff is really needed
      CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev_eff, &
                       bg, nk1*nk2*nk3, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
   endif
