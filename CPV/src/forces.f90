@@ -495,23 +495,31 @@
          !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
          ! 
          ALLOCATE( af( nhsa, many_fft ), aa( nhsa, many_fft ) )
-
-         af = 0.0d0
-         aa = 0.0d0
          !
-         igrp = 1
-
+!$omp parallel do default(none), &
+!$omp shared(many_fft,i,n,tens,f,nat,ityp,nh,dvan,indv_ijkb0,deeq,af,aa,bec,ispin), &
+!$omp private(idx,igrp,fi,fip,ia,is,iv,jv,inl,jnl,dv,dd,iss1,iss2)
          DO idx = 1, 2*many_fft , 2
+
+            igrp = idx/2+1
+            af(:,igrp) = 0.0d0
+            aa(:,igrp) = 0.0d0
 
             IF( idx + i - 1 <= n ) THEN
 
+               IF( i + idx - 1 /= n ) THEN
+                  fi = f(i+idx-1)
+                  fip= f(i+idx)
+                  iss1=ispin( i+idx-1 )
+                  iss2=ispin( i+idx   )
+               ELSE
+                  fi = f(i+idx-1)
+                  iss1=ispin( i+idx-1 )
+               END IF
                IF (tens) THEN
                   fi = 1.0d0
                   fip= 1.0d0
-               ELSE
-                  fi = f(i+idx-1)
-                  fip= f(i+idx)
-               END IF
+               ENDIF
                !
                DO ia = 1, nat
                   is = ityp(ia)
@@ -532,12 +540,9 @@
                      END DO
                   END DO
                END DO
-
             END IF
-
-            igrp = igrp + 1
-
          END DO
+!$omp end parallel do
 
          IF( ngw > 0 ) THEN
            CALL dgemm ( 'N', 'N', 2*ngw, many_fft , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
