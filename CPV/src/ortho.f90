@@ -146,7 +146,7 @@ CONTAINS
       INTEGER,  INTENT(IN)  :: idesc(:)
       include 'laxlib.fh'
       INTEGER :: i, j, info
-      REAL(DP), DEVICE :: ccc
+      REAL(DP) DEVICEATTR :: ccc
       IF( ALLOCATED(xloc) ) THEN
         IF( nx0 /= SIZE(xloc,1) ) THEN
            DEALLOCATE(xloc)
@@ -178,7 +178,7 @@ CONTAINS
       INTEGER,  INTENT(IN)  :: idesc(:)
       include 'laxlib.fh'
       INTEGER :: i, j
-      REAL(DP), DEVICE :: byccc
+      REAL(DP) DEVICEATTR :: byccc
       IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
          RETURN
       ENDIF
@@ -484,6 +484,9 @@ END MODULE local_ortho_memory
       INTEGER     :: iter
       REAL(DP)    :: bephi(:,:)
       REAL(DP)    :: becp_bgrp(:,:)
+#if defined (__CUDA)
+      ATTRIBUTES( DEVICE ) :: becp_bgrp
+#endif
       !
       REAL(DP), ALLOCATABLE :: becp_dist(:,:)
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
@@ -513,17 +516,12 @@ END MODULE local_ortho_memory
       IF( nkbus > 0 ) THEN
          !
          ALLOCATE( beigr(ngw,nkb))
-         becp_bgrp = 0.0d0
          !
          CALL beta_eigr ( beigr, 1, nsp, eigr, 2 )
          CALL nlsm1us ( nbsp_bgrp, beigr, phi_bgrp, becp_bgrp )
-         !CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, phi_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, idesc )
          !
-         becp_bgrp = 0.0d0
-         !
          CALL nlsm1us ( nbsp_bgrp, beigr, cp_bgrp, becp_bgrp )
-         !CALL nlsm1 ( nbsp_bgrp, 1, nsp, eigr, cp_bgrp, becp_bgrp, 2 )
          CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, idesc )
          DEALLOCATE( beigr )
          !
@@ -549,6 +547,9 @@ END MODULE local_ortho_memory
       !
       DO iss = 1, nspin
          IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+!$omp parallel do default(none) &
+!$omp shared(nat,ityp,upf,nh,indv_ijkb0,qq_nt,idesc,qbephi,bec_col,iss,nrcx) &
+!$omp private(ia,is,iv,inl,jv,jnl,qqf,i)
             DO ia = 1, nat
                is = ityp(ia)
                IF( upf(is)%tvanp ) THEN
@@ -566,6 +567,7 @@ END MODULE local_ortho_memory
                   END DO
                END IF
             END DO
+!$omp end parallel do 
          ENDIF
       END DO
       !
@@ -582,6 +584,9 @@ END MODULE local_ortho_memory
          END IF
          DO iss = 1, nspin
             IF( idesc( LAX_DESC_ACTIVE_NODE, iss ) > 0 ) THEN
+!$omp parallel do default(none) &
+!$omp shared(nat,ityp,upf,nh,indv_ijkb0,qq_nt,idesc,qbecp,bec_col,iss,nrcx) &
+!$omp private(ia,is,iv,inl,jv,jnl,qqf,i)
                DO ia = 1, nat
                   is = ityp(ia) 
                   IF( upf(is)%tvanp ) THEN
@@ -599,6 +604,7 @@ END MODULE local_ortho_memory
                      END DO
                   END IF
                END DO
+!$omp end parallel do 
             END IF
          END DO
          DEALLOCATE( bec_col )

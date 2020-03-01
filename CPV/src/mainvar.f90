@@ -55,6 +55,9 @@ MODULE cp_main_variables
   REAL(DP), ALLOCATABLE :: bec_bgrp(:,:)  ! distributed bec (band group)
   REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
   REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
+#if defined (__CUDA)
+  ATTRIBUTES( DEVICE ) :: becp_bgrp
+#endif
   !
   ! ... mass preconditioning
   !

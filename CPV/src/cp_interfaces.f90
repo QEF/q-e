@@ -405,6 +405,9 @@
          INTEGER     :: iter
          REAL(DP)    :: bephi(:,:)
          REAL(DP)    :: becp_bgrp(:,:)
+#if defined (__CUDA)
+         ATTRIBUTES( DEVICE ) :: becp_bgrp
+#endif
       END SUBROUTINE
    END INTERFACE
 
@@ -1040,6 +1043,17 @@
          COMPLEX(DP), INTENT(IN)  :: c( :, : )
          REAL(DP),    INTENT(OUT) :: becp( :, : )
       END SUBROUTINE nlsm1us_x
+#if defined (__CUDA)
+      SUBROUTINE nlsm1us_gpu_x ( n, beigr, c, becp )
+         USE kinds,      ONLY : DP
+         USE cudafor
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n
+         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
+         COMPLEX(DP), INTENT(IN)  :: c( :, : )
+         REAL(DP),    DEVICE, INTENT(OUT) :: becp( :, : )
+      END SUBROUTINE nlsm1us_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE g_beta_eigr

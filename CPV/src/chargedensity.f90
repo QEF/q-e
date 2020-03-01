@@ -902,9 +902,10 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       REAL(DP),     INTENT(inout):: rhor(dfftp%nnr,nspin)
       COMPLEX(DP),  INTENT(inout):: rhog(dfftp%ngm,nspin)
 !
-      INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
+      INTEGER     :: isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, i, j
       REAL(DP)    :: sumrho
-      COMPLEX(DP) :: ci, fp, fm, ca
+      COMPLEX(DP) :: fp, fm, ca
+      COMPLEX(DP), PARAMETER :: ci=(0.d0,1.d0)
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
 !dir$ attributes align: 4096 :: qgbt, v, qv
@@ -928,7 +929,6 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       END IF
 
       CALL start_clock( 'rhov' )
-      ci=(0.d0,1.d0)
 !
 !
       ALLOCATE( v( dfftp%nnr ) )
@@ -941,8 +941,6 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       ntids = 1
       itid  = 0
 #endif
-      iss   = 1
-      isa   = 1
 !
       IF(nspin.EQ.1) THEN
          ! 
@@ -951,12 +949,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
 !$omp parallel default(none) &
 !$omp          shared(na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
-!$omp                 stdout, ci, rhor, dfftp, upf, nsp, ityp, nat ) &
-!$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
-!$omp                  qv, fg1, fg2, itid, ir )
-
-         iss=1
-         isa=1
+!$omp                 stdout, ci, rhor, dfftp, upf, nsp, ityp, nat, nspin ) &
+!$omp          private(mytid, ntids, is, ia, iv, jv, ijv, sumrho, qgbt, ig, ca, &
+!$omp                  qv, itid, ir )
 
 !$omp workshare
          v (:) = (0.d0, 0.d0)
@@ -968,25 +963,15 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          itid  = 0
 #endif
 
-         ALLOCATE( qgbt( ngb, 2 ) )
+         ALLOCATE( qgbt( ngb, nspin ) )
          ALLOCATE( qv( dfftb%nnr ) )
-         ALLOCATE( fg1( ngb ) )
-         ALLOCATE( fg2( ngb ) )
-
 
          DO ia = 1, nat
 
             is = ityp(ia)
 
-            IF( upf(is)%tvanp ) THEN
+            IF( upf(is)%tvanp .AND. ( dfftb%np3( ia ) > 0 ) .AND. ( dfftb%np2( ia ) > 0 ) ) THEN
 
-               nfft = 1
-
-#if defined(__MPI)
-               IF ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) ) THEN
-                  CYCLE
-               END IF
-#endif
 #if defined(_OPENMP)
                IF ( mytid /= itid ) THEN
                   itid = MOD( itid + 1, ntids )
@@ -996,58 +981,35 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                END IF
 #endif
 
-               DO ifft=1,nfft
-                  qgbt(:,ifft) = (0.d0, 0.d0)
-                  DO iv= 1,nh(is)
-                     DO jv=iv,nh(is)
-                        ijv = (jv-1)*jv/2 + iv
-                        sumrho=rhovan(ijv,ia+ifft-1,iss)
-                        IF(iv.NE.jv) sumrho=2.d0*sumrho
-                        DO ig=1,ngb
-                           qgbt(ig,ifft)=qgbt(ig,ifft) + sumrho*qgb(ig,ijv,is)
-                        END DO
+               qgbt(:,1) = (0.d0, 0.d0)
+               DO iv= 1,nh(is)
+                  DO jv=iv,nh(is)
+                     ijv = (jv-1)*jv/2 + iv
+                     sumrho=rhovan(ijv,ia,1)
+                     IF(iv.NE.jv) sumrho=2.d0*sumrho
+                     DO ig=1,ngb
+                        qgbt(ig,1)=qgbt(ig,1) + sumrho*qgb(ig,ijv,is)
                      END DO
                   END DO
                END DO
                !
                ! add structure factor
                !
-               IF(nfft.EQ.2)THEN
-                  fg1 = eigrb(1:ngb,ia   )*qgbt(1:ngb,1)
-                  fg2 = eigrb(1:ngb,ia+1 )*qgbt(1:ngb,2)
-                  CALL fft_oned2box( qv, fg1, fg2 )
-               ELSE
-                  fg1 = eigrb(1:ngb,ia   )*qgbt(1:ngb,1)
-                  CALL fft_oned2box( qv, fg1 )
-               ENDIF
+               qgbt(1:ngb,1) = eigrb(1:ngb,ia)*qgbt(1:ngb,1)
+               CALL fft_oned2box( qv, qgbt(:,1) )
 
                CALL invfft( qv, dfftb, ia )
                !
                !  qv = US augmentation charge in real space on box grid
                !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
- 
-               IF( iverbosity > 1 ) THEN
-                  ca = SUM(qv)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
-     &                 omegab*DBLE(qgbt(1,1))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
-     &                 omegab*DBLE(qgbt(1,2))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-               ENDIF
                !
                !  add qv(r) to v(r), in real space on the dense grid
                !
                CALL  box2grid(irb(:,ia),1,qv,v)
-               IF (nfft.EQ.2) CALL  box2grid(irb(:,ia+1),2,qv,v)
 !
             END IF
          END DO
 
-         DEALLOCATE( fg1 )
-         DEALLOCATE( fg2 )
          DEALLOCATE(qv)
          DEALLOCATE(qgbt)
          !
@@ -1058,34 +1020,15 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          iss = 1
 
          DO ir=1,dfftp%nnr
-            rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
+            rhor(ir,1)=rhor(ir,1)+DBLE(v(ir))        
          END DO
 
-!
-         IF( iverbosity > 1 ) THEN
-            ca = SUM(v)
-
-            CALL mp_sum( ca, intra_bgrp_comm )
-
-            WRITE( stdout,'(a,2f12.8)')                                  &
-     &           ' rhov: int  n_v(r)  dr = ',omega*ca/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-         ENDIF
-!
          CALL fwfft('Rho',v, dfftp )
-!
-         IF( iverbosity > 1 ) THEN
-            WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
-            WRITE( stdout,*) ' rhov: vander ',omega*v(1)
-            WRITE( stdout,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
-         ENDIF
          !
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
-         CALL fftx_add_threed2oned_gamma( dfftp, v, rhog(:,iss) )
+         CALL fftx_add_threed2oned_gamma( dfftp, v, rhog(:,1) )
 
-         IF( iverbosity > 1 ) WRITE( stdout,'(a,2f12.8)')                          &
-     &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
-!
       ELSE
          !
          !     nspin=2: two fft at a time, one for spin up and one for spin down
@@ -1100,13 +1043,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          ALLOCATE( fg1( ngb ) )
          ALLOCATE( fg2( ngb ) )
 
-         isa=1
          DO ia=1,nat
             is = ityp(ia)
-#if defined(__MPI)
-               IF ( ( dfftb%np3( ia ) <= 0 ) .OR. ( dfftb%np2( ia ) <= 0 ) ) CYCLE
-#endif
-               IF( upf(is)%tvanp ) THEN
+            IF( upf(is)%tvanp .AND. ( dfftb%np3( ia ) > 0 ) .AND. ( dfftb%np2( ia ) > 0 ) ) THEN
 
                DO iss=1,2
                   qgbt(:,iss) = (0.d0, 0.d0)
@@ -1121,35 +1060,23 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                      END DO
                   END DO
                END DO
-!     
-! add structure factor
-!
+               !     
+               ! add structure factor
+               !
                fg1 = eigrb(1:ngb,ia)*qgbt(1:ngb,1)
                fg2 = eigrb(1:ngb,ia)*qgbt(1:ngb,2)
                CALL fft_oned2box( qv, fg1, fg2 )
-!
+               !
                CALL invfft( qv,dfftb,ia)
-!
-!  qv is the now the US augmentation charge for atomic species is
-!  and atom ia: real(qv)=spin up, imag(qv)=spin down
-!
-               IF( iverbosity > 1 ) THEN
-                  ca = SUM(qv)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
-     &                 omegab*DBLE(qgbt(1,1))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
-     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-                  WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
-     &                 omegab*DBLE(qgbt(1,2))
-                  WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
-     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
-               ENDIF
-!
-!  add qv(r) to v(r), in real space on the dense grid
-!
+               !
+               !  qv is the now the US augmentation charge for atomic species is
+               !  and atom ia: real(qv)=spin up, imag(qv)=spin down
+               !
+               !  add qv(r) to v(r), in real space on the dense grid
+               !
                CALL box2grid(irb(:,ia),qv,v)
 
-               END IF
+            END IF
 
          END DO
 !
@@ -1198,4 +1125,30 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 1000  CONTINUE
 !
       RETURN
+
+CONTAINS
+
+      SUBROUTINE print_rhov()
+           IF( nspin == 1 ) THEN
+               IF( iverbosity > 1 ) THEN
+                  ca = SUM(qv)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
+     &                 omegab*DBLE(qgbt(1,1))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
+     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
+               ENDIF
+           ELSE
+               IF( iverbosity > 1 ) THEN
+                  ca = SUM(qv)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
+     &                 omegab*DBLE(qgbt(1,1))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
+     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
+     &                 omegab*DBLE(qgbt(1,2))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
+     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
+               ENDIF
+           ENDIF
+      END SUBROUTINE
 END SUBROUTINE rhov

@@ -37,6 +37,7 @@
       integer   :: ig, is, iv, ia, l, inl
       complex(DP) :: cfact
       integer :: pptype
+      LOGICAL :: ok1, ok2
       !
       call start_clock( 'beta_eigr' )
 
@@ -46,23 +47,18 @@
          pptype = 0
       END IF
 
-      !allocate( wrk2( ngw, nkb ) ) 
-
-      beigr = 0.0d0
-
 !$omp parallel default(none), &
 !$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,pptype,nspmn,nspmx,upf,gstart,indv_ijkb0), &
-!$omp private(is,ia,iv,inl,l,cfact,ig)
+!$omp private(is,ia,iv,inl,l,cfact,ig,ok1,ok2)
 !$omp do
       DO ia = 1, nat
-         is = ityp(ia)
+         is  = ityp(ia)
+         inl = indv_ijkb0(ia)
          !
-         IF( pptype == 2 .AND. .NOT. upf(is)%tvanp ) CYCLE
-         IF( pptype == 1 .AND. upf(is)%tvanp ) CYCLE
-         IF( is >= nspmn .AND. is <= nspmx ) THEN
+         ok1 = .NOT. ( pptype == 1 .AND. upf(is)%tvanp )
+         ok2 = .NOT. ( pptype == 2 .AND. .NOT. upf(is)%tvanp )
+         IF( ok1 .AND. ok2 .AND. ( is >= nspmn .AND. is <= nspmx ) ) THEN
               !
-              inl = indv_ijkb0(ia)
-
               do iv = 1, nh( is )
                 !
                 l = nhtol( iv, is )
@@ -93,6 +89,10 @@
                 !
               end do
               !
+         ELSE
+            DO iv = 1, nh( is )
+               beigr(:,iv+inl) = 0.0d0
+            END DO
          END IF
       END DO
 !$omp end do
@@ -147,6 +147,56 @@
    end subroutine nlsm1us_x
 !-----------------------------------------------------------------------
 !
+#if defined(__CUDA)
+!
+!-----------------------------------------------------------------------
+   subroutine nlsm1us_gpu_x ( n, beigr, c, becp )
+!-----------------------------------------------------------------------
+
+      !     computes: the array becp
+      !     becp(ia,n,iv,is)=
+      !         = sum_g [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* c(g,n)
+      !         = delta_l0 beta(g=0,iv,is) c(g=0,n)
+      !          +sum_g> beta(g,iv,is) 2 re[(i)**l e^(ig.r_ia) c(g,n)]
+      !
+      !     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
+      !     input : beta(ig,l,is), eigr, c
+      !     output: becp as parameter
+      !
+      USE kinds,      ONLY : DP
+      USE mp,         ONLY : mp_sum
+      USE mp_global,  ONLY : nproc_bgrp, intra_bgrp_comm
+      USE gvecw,      only : ngw
+      USE uspp,       only : nkb
+      USE cudafor
+      USE cublas
+!
+      implicit none
+
+      integer,     intent(in)  :: n
+      complex(DP), intent(in)  :: beigr( :, : ), c( :, : )
+      real(DP),    device, intent(out) :: becp( :, : )
+      complex(DP), device, allocatable  :: beigr_d( :, : ), c_d( :, : )
+      !
+      call start_clock( 'nlsm1us' )
+
+      IF( ngw > 0 .AND. nkb > 0 ) THEN
+         ALLOCATE( beigr_d, source=beigr )
+         ALLOCATE( c_d, source=c )
+         CALL MYDGEMM( 'T', 'N', nkb, n, 2*ngw, 1.0d0, beigr_d, 2*ngw, c_d, 2*ngw, 0.0d0, becp, nkb )
+      END IF
+
+      IF( nproc_bgrp > 1 ) THEN
+        CALL mp_sum( becp, intra_bgrp_comm )
+      END IF
+
+      call stop_clock( 'nlsm1us' )
+
+      return
+   end subroutine nlsm1us_gpu_x
+!-----------------------------------------------------------------------
+!
+#endif
 !
 !-----------------------------------------------------------------------
    subroutine nlsm1_x ( n, nspmn, nspmx, eigr, c, becp, pptype_ )
@@ -401,28 +451,25 @@
       !
       ennl_t = 0.d0  
       !
-      do is = 1, nsp
+      do ia = 1, nat
+         is = ityp(ia)
          do iv = 1, nh(is)
             do jv = iv, nh(is)
                ijv = (jv-1)*jv/2 + iv
-               do ia = 1, nat
-                  IF( ityp(ia) == is ) THEN
-                    inl = indv_ijkb0(ia) + iv
-                    jnl = indv_ijkb0(ia) + jv
-                    sums = 0.d0
-                    do i = 1, nbsp_bgrp
-                       iss = ispin_bgrp(i)
-                       sums(iss) = sums(iss) + f_bgrp(i) * bec_bgrp(inl,i) * bec_bgrp(jnl,i)
-                    end do
-                    sumt = 0.d0
-                    do iss = 1, nspin
-                       rhovan( ijv, ia, iss ) = sums( iss )
-                       sumt = sumt + sums( iss )
-                    end do
-                    if( iv .ne. jv ) sumt = 2.d0 * sumt
-                    ennl_t = ennl_t + sumt * dvan( jv, iv, is)
-                  END IF
+               inl = indv_ijkb0(ia) + iv
+               jnl = indv_ijkb0(ia) + jv
+               sums = 0.d0
+               do i = 1, nbsp_bgrp
+                  iss = ispin_bgrp(i)
+                  sums(iss) = sums(iss) + f_bgrp(i) * bec_bgrp(inl,i) * bec_bgrp(jnl,i)
                end do
+               sumt = 0.d0
+               do iss = 1, nspin
+                  rhovan( ijv, ia, iss ) = sums( iss )
+                  sumt = sumt + sums( iss )
+               end do
+               if( iv .ne. jv ) sumt = 2.d0 * sumt
+               ennl_t = ennl_t + sumt * dvan( jv, iv, is)
             end do
          end do
       end do
@@ -881,3 +928,22 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !
   return
 end subroutine nlfq_bgrp_x
+
+! In principle this can go away .......
+SUBROUTINE MYDGEMM( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
+#if defined(__CUDA)
+    use cudafor
+    use cublas
+#endif
+    CHARACTER*1, INTENT(IN) ::        TRANSA, TRANSB
+    INTEGER, INTENT(IN) ::            M, N, K, LDA, LDB, LDC
+    DOUBLE PRECISION, INTENT(IN) ::   ALPHA, BETA
+    DOUBLE PRECISION  :: A( LDA, * ), B( LDB, * ), C( LDC, * ) 
+#if defined(__CUDA)
+    attributes(device) :: A, B, C
+    CALL cublasdgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#else
+    CALL dgemm(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)
+#endif
+
+END SUBROUTINE MYDGEMM
