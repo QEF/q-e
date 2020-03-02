@@ -27,6 +27,9 @@ The following variables may be set to influence this module's behavior:
   * ``Armpl_64lp``        (armpl, sequential code, lp64 model)
   * ``Armpl_64ilp_mp``    (armpl, threaded code, ilp64 model)
   * ``Armpl_64ilp``       (armpl, sequential code, ilp64 model)
+  * ``ACML``              (TODO)
+  * ``ACML_MP``           (TODO)
+  * ``ACML_GPU`           (TODO)
 
 ``THREADS``
   If set, checks only the thread version of libraries.
@@ -203,7 +206,7 @@ macro(CHECK_VENDOR_LIBRARIES LIBRARIES _prefix _name _flags _list _threadlibs _a
   #message("DEBUG: ${LIBRARIES} = ${${LIBRARIES}}")
 endmacro()
 
-macro(CHECK_FFTW_INCLUDE_DIRS INCLUDE_DIRS _prefix _list _addincdir _subdirs)
+macro(CHECK_INCLUDE_DIRS INCLUDE_DIRS _prefix _list _addincdir _subdirs)
   # This macro checks for the existence of the combination of include libraries
   # that containthe _list files, INCLUDE_DIRS is set to the list of complete include paths 
   # that have been found. Otherwise, INCLUDE_DIRS is set to FALSE.
@@ -215,25 +218,11 @@ macro(CHECK_FFTW_INCLUDE_DIRS INCLUDE_DIRS _prefix _list _addincdir _subdirs)
   
   set(${INCLUDE_DIRS})
 
-  list(APPEND _extaincdir $ENV{FFTW_ROOT}/include)
-  list(APPEND _extaincdir $ENV{FFTW_HOME}/include)
-  list(APPEND _extaincdir $ENV{FFTW_DIR}/include)
-  list(APPEND _extaincdir $ENV{FFTW_PATH}/include)
-
-  list(APPEND _extaincdir $ENV{FFTW_INC})
-  list(APPEND _extaincdir $ENV{FFTW_INC_DIR})
-  list(APPEND _extaincdir $ENV{FFTW_INC_DIRS})
-
-  list(APPEND _extaincdir $ENV{FFTW_INCLUDE})
-  list(APPEND _extaincdir $ENV{FFTW_INCLUDE_DIR})
-  list(APPEND _extaincdir $ENV{FFTW_INCLUDE_DIRS})
-
   list(APPEND _extaincdir $ENV{CPATH})
   list(APPEND _extaincdir $ENV{C_INCLUDE_PATH})
   list(APPEND _extaincdir $ENV{CPLUS_INCLUDE_PATH})
 
   string(REPLACE ":" ";" _extaincdir ${_extaincdir})
-  
 
   find_path(${_prefix}_INCDIR
     NAMES ${_list}
@@ -448,11 +437,11 @@ if(VENDOR MATCHES "Intel" OR VENDOR STREQUAL "All")
         "${VENDOR_mkl_MKLROOT}"
         "${VENDOR_mkl_LIB_PATH_SUFFIXES}"
         )
-        set(BLAS_LIBRARIES ${_LIBRARIES})
-        set(LAPACK_LIBRARIES ${_LIBRARIES})
-        set(FFTW_LIBRARIES ${_LIBRARIES})
     endif()
   endforeach()
+  set(BLAS_LIBRARIES ${VENDOR_LIBRARIES})
+  set(LAPACK_LIBRARIES ${VENDOR_LIBRARIES})
+  set(FFTW_LIBRARIES ${VENDOR_LIBRARIES})
 
   if(VENDOR MATCHES "All" AND VENDOR_LIBRARIES)
     if(VENDOR_LIBRARIES MATCHES "ilp64")
@@ -735,20 +724,58 @@ endif()
 
 if(NOT FFTW_INCLUDE_DIRS)
   set(_libdirs)
+
   foreach(_elem ${VENDOR_LIBRARIES})
     if(_elem MATCHES "^\/")
       get_filename_component(_libdir ${_elem} PATH)
       get_filename_component(_libdir ${_libdir} PATH)
       list(APPEND _libdirs "${_libdir}/include")
+      get_filename_component(_libdir ${_libdir} PATH)
+      list(APPEND _libdirs "${_libdir}/include")
     endif()
   endforeach()
 
-  check_FFTW_include_dirs(
+  if(VENDOR MATCHES "Intel")
+    list(APPEND _libdirs 
+      "$ENV{MKL_INC}"
+      "$ENV{MKL_INCLUDE}"
+      "$ENV{MKL_INCLUDES}"
+      "$ENV{MKLROOT}/include"
+      "$ENV{MKL_HOME}/include"
+      "$ENV{MKL_ROOT}/include"
+      "$ENV{MKL_PATH}/include"
+      "$ENV{MKL_DIR}/include")
+  elseif(VENDOR MATCHES "Armpl")
+    list(APPEND _libdirs 
+      "$ENV{ARMPL_INC}"
+      "$ENV{ARMPL_INCLUDE}"
+      "$ENV{ARMPL_INCLUDES}"
+      "$ENV{ARMPL_HOME}/include"
+      "$ENV{ARMPL_ROOT}/include"
+      "$ENV{ARMPL_PATH}/include"
+      "$ENV{ARMPL_DIR}/include")
+  elseif(VENDOR MATCHES "ACML")
+    # TODO
+  endif()
+
+  list(REMOVE_DUPLICATES _libdirs)
+
+  check_include_dirs(
     FFTW_INCLUDE_DIRS
     FFTW
     "fftw3.h;fftw3.f"
     "${_libdirs}"
     "fftw")
+
+  if(VENDOR MATCHES "Intel")
+    check_include_dirs(
+      FFTW_MKL_DFTI_F90_DIR
+      MKL_DFTI
+      "mkl_dfti.f90"
+      "${_libdirs}"
+      "")
+    list(APPEND FFTW_INCLUDE_DIRS ${FFTW_MKL_DFTI_F90_DIR})
+  endif()
 endif()
 
 # On compilers that implicitly link VENDOR (such as ftn, cc, and CC on Cray HPC machines)
