@@ -181,23 +181,24 @@ if(QE_ENABLE_OPENMP)
     
 endif(QE_ENABLE_OPENMP)
 
-###########################################################
-# BLAS
-# The following targets will be defined:
-add_library(qe_blas INTERFACE)
-add_library(QE::BLAS ALIAS qe_blas)
-qe_install_targets(qe_blas)
-###########################################################
+############################################################
+## Vendor
+## It tries to found vendor specific libraries for: 
+## BLAS, LAPACK and FFTW
+############################################################
 if(QE_ENABLE_OPENMP)
-    find_package(BLAS REQUIRED OMP)
+    find_package(VENDOR COMPONENTS THREADS)
 else()
-    find_package(BLAS REQUIRED)
+    find_package(VENDOR)
 endif()
-target_link_libraries(qe_blas 
-    INTERFACE 
-        ${BLAS_LIBRARIES}
-        ${BLAS_LINKER_FLAGS}
-)
+
+if(VENDOR_FOUND)
+    message(STATUS "Found Vendor: ${VENDOR}")
+    message(STATUS "Found vendor BLAS libraries: ${BLAS_LIBRARIES}")
+    message(STATUS "Found vendor LAPACK libraries: ${LAPACK_LIBRARIES}")
+    message(STATUS "Found vendor FFTW libraries: ${FFTW_LIBRARIES}")
+    message(STATUS "Found vendor FFTW include: ${FFTW_INCLUDE_DIRS}")
+endif()
 
 ###########################################################
 # Lapack
@@ -206,8 +207,11 @@ add_library(qe_lapack INTERFACE)
 add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
 ###########################################################
-find_package(LAPACK REQUIRED)
-message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
+if(NOT LAPACK_FOUND)
+    find_package(LAPACK REQUIRED)
+    message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
+endif()
+
 target_link_libraries(qe_lapack 
     INTERFACE 
         ${LAPACK_LIBRARIES}
@@ -221,89 +225,52 @@ add_library(qe_fft INTERFACE)
 add_library(QE::FFT ALIAS qe_fft)
 qe_install_targets(qe_fft)
 ###########################################################
-set(fft_components)
-if(QE_ENABLE_OPENMP)
-    list(APPEND fft_components OMP)
-endif()
-# 1: look for well known vendor specific implementations
-# 1.a: IBM ESSL
-if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS ESSL ${fft_components} QUIET)
-    if(FFTW_FOUND)
-        message(STATUS "Found IBM ESSL FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
-        set(fft_definitions __LINUX_ESSL)
-        target_link_libraries(qe_fft 
-            INTERFACE 
-                ${FFTW_LIBRARIES}
-                ${FFTW_LIBRARIES_DEP}
-                ${FFTW_LINKER_FLAGS})
-        target_include_directories(qe_fft
-            INTERFACE
-                ${FFTW_INCLUDE_DIRS}
-                ${FFTW_INCLUDE_DIRS_DEP})
-        target_compile_options(qe_fft
-            INTERFACE
-                ${FFTW_C_FLAGS})
-    endif()
-endif()
-# 1.b: Intel MKL
-if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS MKL ${fft_components} QUIET)
-    if(FFTW_FOUND)
-        message(STATUS "Found Intel MKL FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
+if(VENDOR_FOUND)
+    if(VENDOR MATCHES "Intel")
         set(fft_definitions __DFTI)
-        target_link_libraries(qe_fft 
-            INTERFACE 
-                ${FFTW_LIBRARIES}
-                ${FFTW_LIBRARIES_DEP}
-                ${FFTW_LINKER_FLAGS})
-        target_include_directories(qe_fft
-            INTERFACE
-                ${FFTW_INCLUDE_DIRS}
-                ${FFTW_INCLUDE_DIRS_DEP})
-        target_compile_options(qe_fft
-            INTERFACE
-                ${FFTW_C_FLAGS})
-    endif()
-endif(NOT FFTW_FOUND)
-# 1.c: ARM Performance Library
-if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS ARM ${fft_components} QUIET)
-    if(FFTW_FOUND)
-        message(STATUS "Found ARM Performance Library FFT: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
+    elseif(VENDOR MATCHES "Armpl")
         set(fft_definitions __ARM_LIB)
-        target_link_libraries(qe_fft 
-            INTERFACE 
-                ${FFTW_LIBRARIES}
-                ${FFTW_LINKER_FLAGS})
-        target_include_directories(qe_fft
-            INTERFACE
-                ${FFTW_INCLUDE_DIRS})
+    #elseif(VENDOR MATCHES "IBMESSL")
+    #    set(fft_definitions __LINUX_ESSL)
+    #elseif(VENDOR MATCHES "ACML")
+    #    # Todo: add support to FFTW ACML
+    #    # set(fft_definitions __ACML)
+    else()
+        message(FATAL_ERROR "[ERROR] Vendor FFT found but not implemented in QE!")
     endif()
-endif(NOT FFTW_FOUND)
-# 2: no vendor-specific fft flavor has been found,
-#    just look for a generic FFTW implementation
-if(NOT FFTW_FOUND)
-    find_package(FFTW COMPONENTS ${fft_components} QUIET)
-    if(FFTW_FOUND)
-        message(STATUS "Found generic FFTW: ${FFTW_LIBRARIES};${FFTW_LINKER_FLAGS}")
-        set(fft_definitions __FFTW3)
-        target_link_libraries(qe_fft 
-            INTERFACE 
-                ${FFTW_LIBRARIES}
-                ${FFTW_LIBRARIES_DEP}
-                ${FFTW_LINKER_FLAGS})
-        target_include_directories(qe_fft
-            INTERFACE
-                ${FFTW_INCLUDE_DIRS}
-                ${FFTW_INCLUDE_DIRS_DEP})
-        target_compile_options(qe_fft
-            INTERFACE
-                ${FFTW_C_FLAGS})
+
+    target_link_libraries(qe_fft 
+        INTERFACE 
+            ${FFTW_LIBRARIES}
+            ${FFTW_LINKER_FLAGS})
+    target_include_directories(qe_fft
+        INTERFACE
+            ${FFTW_INCLUDE_DIRS})
+else()
+    ## No vendor-specific fft flavor has been found,
+    ##    just look for a generic FFTW3 implementation
+    if(QE_ENABLE_OPENMP)
+        find_package(FFTW QUIET COMPONENTS DOUBLE_OPENMP_LIB)
+        if(FFTW_FOUND)
+            set(fft_definitions __FFTW3)
+            target_link_libraries(qe_fft INTERFACE FFTW::DoubleOpenMP)
+            message(STATUS "Found Double+OpenMP FFTW3 library")
+            message(STATUS "FFTW3 libraries: ${FFTW_DOUBLE_OPENMP_LIB}")
+            message(STATUS "FFTW3 include: ${FFTW_INCLUDE_DIRS}")
+        endif()
+    else()
+        find_package(FFTW QUIET COMPONENTS DOUBLE_LIB)
+        if(FFTW_FOUND)
+            set(fft_definitions __FFTW3)
+            target_link_libraries(qe_fft INTERFACE FFTW::Double)
+            message(STATUS "Found Double FFTW3 library")
+            message(STATUS "FFTW3 libraries: ${FFTW_DOUBLE_LIB}")
+            message(STATUS "FFTW3 include: ${FFTW_INCLUDE_DIRS}")
+        endif()
     endif()
-endif(NOT FFTW_FOUND)
-# 3: cannot find anything useful, just fall back
-#    to the internal FFTW
+endif()
+
+# Cannot find anything useful, just fall back to the internal FFTW
 if(NOT FFTW_FOUND)
     message(STATUS "FFTW is falling back to QE internal implementation (FFTXLib)")
     set(fft_definitions __FFTW)
@@ -395,9 +362,6 @@ qe_install_targets(qe_hdf5_fortran qe_hdf5_c)
 if(QE_ENABLE_HDF5)
     find_package(HDF5 REQUIRED Fortran C)
 
-    if(NOT HDF5_IS_PARALLEL)
-        message(FATAL_ERROR "HDF5 library has not parallel IO support!")
-    endif()
     if(NOT HDF5_Fortran_LIBRARIES OR NOT HDF5_Fortran_INCLUDE_DIRS)
         message(FATAL_ERROR "HDF5 Fortran interface has not been found!")
     endif()
