@@ -13,15 +13,15 @@ intel mpi:
     - module purge
     - module load intel/pe-xe-2018--binary intelmpi/2018--binary mkl/2018--binary
     - ./configure --enable-openmp
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
     - cd test-suite
     - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
     - make clean
-    - make run-tests-pw-parallel
+    - make run-tests-pw-parallel && make run-tests-cp-parallel
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
-    - make clean && make run-tests-pw-parallel
+    - make clean && make run-tests-pw-parallel && make run-tests-cp-parallel
 
 pgi cuda mpi:
   tags: [k80]
@@ -29,7 +29,7 @@ pgi cuda mpi:
     - module purge
     - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
     - ./configure --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
     - cd test-suite
@@ -37,7 +37,7 @@ pgi cuda mpi:
     - make clean
     - make run-tests-pw-parallel
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
-    - make clean && make run-tests-pw-parallel
+    - make clean && make run-tests-pw-parallel && make run-tests-cp-parallel
     - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
   artifacts:
     paths:
@@ -52,16 +52,16 @@ pgi cuda mpi 185:
     - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
     - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
     - cd test-suite
     - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
     - sed -i 's/mpirun -np/srun -n/' run-pw.sh
     - make clean
-    - make run-tests-pw-parallel
+    - make run-tests-pw-parallel && make run-tests-cp-parallel
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
-    - make clean && make run-tests-pw-parallel
+    - make clean && make run-tests-pw-parallel && make run-tests-cp-parallel
     - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
   artifacts:
     paths:
@@ -77,16 +77,16 @@ pgi cuda mpi v100:
     - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME --with-scalapack=no
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
     - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $SLURM_NTASKS procs and $OMP_NUM_THREADS threads"
     - cd test-suite
     - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
     - sed -i 's/mpirun -np/srun -n/' run-pw.sh
     - make clean
-    - make run-tests-pw-parallel
+    - make run-tests-pw-parallel && make run-tests-cp-parallel
     - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
-    - make clean && make run-tests-pw-parallel
+    - make clean && make run-tests-pw-parallel && make run-tests-cp-parallel
 
 pgi cuda serial:
   tags: [k80]
@@ -94,12 +94,12 @@ pgi cuda serial:
     - module purge
     - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
     - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $OMP_NUM_THREADS threads"
     - cd test-suite
     - make clean
-    - make run-tests-pw-serial
+    - make run-tests-pw-serial && make run-tests-cp-serial
     - cd .. && cp PW/src/pw.x ./pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
   artifacts:
     paths:
@@ -114,12 +114,12 @@ pgi cuda serial 185:
     - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
     - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $OMP_NUM_THREADS threads"
     - cd test-suite
     - make clean
-    - make run-tests-pw-serial
+    - make run-tests-pw-serial && make run-tests-cp-serial
     - cd .. && cp PW/src/pw.x ./pwgpu-serial-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
   artifacts:
     paths:
@@ -134,12 +134,12 @@ pgi cuda9 v100 :
     - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME
     - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
     - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
-    - make -j pw
+    - make -j pw cp
     - if [ -z ${SLURM_CPUS_PER_TASK} ]; then export OMP_NUM_THREADS=1; else export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK; fi
     - echo "Using $OMP_NUM_THREADS threads"
     - cd test-suite
     - make clean
-    - make run-tests-pw-serial
+    - make run-tests-pw-serial && make run-tests-cp-serial
 
 #pgi cuda9.2 p100 nollvm:
 #  tags: [p100]
