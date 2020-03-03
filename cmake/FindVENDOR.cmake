@@ -157,7 +157,9 @@ macro(CHECK_VENDOR_LIBRARIES LIBRARIES _prefix _name _flags _list _threadlibs _a
   else()
     list(APPEND _extaddlibdir $ENV{LD_LIBRARY_PATH})
   endif()
-  string(REPLACE ":" ";" _extaddlibdir ${_extaddlibdir})
+  if(_extaddlibdir)
+    string(REPLACE ":" ";" _extaddlibdir ${_extaddlibdir})
+  endif(_extaddlibdir)
   list(APPEND _extaddlibdir "${_addlibdir}")
   list(APPEND _extaddlibdir "${CMAKE_C_IMPLICIT_LINK_DIRECTORIES}")
 
@@ -224,7 +226,9 @@ macro(CHECK_INCLUDE_DIRS INCLUDE_DIRS _prefix _list _addincdir _subdirs)
   list(APPEND _extaincdir $ENV{C_INCLUDE_PATH})
   list(APPEND _extaincdir $ENV{CPLUS_INCLUDE_PATH})
 
-  string(REPLACE ":" ";" _extaincdir ${_extaincdir})
+  if(_extaincdir)
+    string(REPLACE ":" ";" _extaincdir ${_extaincdir})
+  endif(_extaincdir)
 
   find_path(${_prefix}_INCDIR
     NAMES ${_list}
