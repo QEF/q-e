@@ -4945,7 +4945,7 @@ else
 	    case "$f90" in
 	       ifort* )
       		    mkl_lib="mkl_intel_lp64"
-      		    mkl_omp="mkl_ifort_thread"
+      		    mkl_omp="mkl_intel_thread"
 		    if test "$arch" == "mac686"; then
 		       add_mkl_flag="-openmp"
 		       add_mkl_lib="-lpthread"
@@ -4958,10 +4958,8 @@ else
 		    ;;
 	       pgf* )
       		    mkl_lib="mkl_intel_lp64"
-      		    mkl_omp="mkl_pgi_thread"
+      		    mkl_omp="mkl_intel_thread"
       		    add_mkl_flag="-pgf90libs"
-      		    add_mkl_lib="-ldl"
-      		    add_mkl_omp="-ldl -lpthread -lm"
 	       ;;
 	    esac
             try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
@@ -5046,7 +5044,7 @@ for ac_lib in '' $mkl_lib; do
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib -lmkl_sequential -lmkl_core $add_mkl_omp $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -l$mkl_omp -lmkl_core $add_mkl_omp $ac_func_search_save_LIBS"
   fi
   if ac_fn_f77_try_link "$LINENO"; then :
   ac_cv_search_dgemm=$ac_res
