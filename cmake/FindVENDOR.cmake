@@ -45,6 +45,8 @@ This module defines the following variables:
   library implementing the vendor interface is found
 ``VENDOR_LIBRARIES``
   uncached list of vendor libraries (using full path name)
+``BLA_VENDOR``
+  Set the blas vendor
 ``BLAS_FOUND``
   library implementing the blas interface is found
 ``BLAS_LIBRARIES``
@@ -792,6 +794,7 @@ if(VENDOR_LIBRARIES AND FFTW_INCLUDE_DIRS)
   set(BLAS_FOUND TRUE)
   set(LAPACK_FOUND TRUE)
   set(FFTW_FOUND TRUE)
+  set(BLA_VENDOR ${VENDOR})
 else()
   set(VENDOR_FOUND FALSE)
   set(BLAS_FOUND FALSE)
