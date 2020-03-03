@@ -104,6 +104,8 @@
    PUBLIC :: dennl
    PUBLIC :: nlfq_bgrp
    PUBLIC :: collect_bec
+   PUBLIC :: beta_eigr
+   PUBLIC :: nlsm1us
 
    ! ------------------------------------ !
 
@@ -1000,6 +1002,29 @@
          INTEGER,  INTENT(IN)  :: nspin
       END SUBROUTINE collect_bec_x
    END INTERFACE
+
+   INTERFACE beta_eigr
+      SUBROUTINE beta_eigr_x ( beigr, nspmn, nspmx, eigr, pptype_ )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: nspmn, nspmx
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(OUT) :: beigr( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      END SUBROUTINE beta_eigr_x
+   END INTERFACE
+
+   INTERFACE nlsm1us
+      SUBROUTINE nlsm1us_x ( n, beigr, c, becp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n
+         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
+         COMPLEX(DP), INTENT(IN)  :: c( :, : )
+         REAL(DP),    INTENT(OUT) :: becp( :, : )
+      END SUBROUTINE nlsm1us_x
+   END INTERFACE
+
 
 !=----------------------------------------------------------------------------=!
 

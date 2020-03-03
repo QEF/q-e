@@ -1,25 +1,25 @@
-  !                                                                            
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino 
-  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino  
-  !                                                                            
-  ! This file is distributed under the terms of the GNU General Public         
-  ! License. See the file `LICENSE' in the root directory of the               
-  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
-  !                                                                            
-  ! Adapted from the code PH/phq_setup - Quantum-ESPRESSO group                
+  !
+  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
+  ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
+  !
+  ! This file is distributed under the terms of the GNU General Public
+  ! License. See the file `LICENSE' in the root directory of the
+  ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .
+  !
+  ! Adapted from the code PH/phq_setup - Quantum-ESPRESSO group
   !-----------------------------------------------------------------------
   SUBROUTINE epw_setup()
   !-----------------------------------------------------------------------
   !!
-  !! EPW setup.  
+  !! EPW setup.
   !!
-  !! @Note: RM - Nov 2014: Noncolinear case implemented
+  !! RM - Nov 2014: Noncolinear case implemented
   !!
   !! RM - Nov 2018: Updated based on QE 6.3
-  !! 
+  !!
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
-  USE cell_base,     ONLY : at, bg  
+  USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : ionode_id
   USE klist,         ONLY : nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
@@ -48,9 +48,11 @@
   USE gvecs,         ONLY : doublegrid
   USE elph2,         ONLY : transp_temp
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE epwcom, ONLY: polaron_wf 
   !
   IMPLICIT NONE
-  ! 
+  !
   LOGICAL :: magnetic_sym
   !! the symmetry operations
   LOGICAL :: symmorphic_or_nzb
@@ -62,7 +64,7 @@
   INTEGER :: na
   !! counter on atoms
   INTEGER :: itemp
-  !! counter on temperatures 
+  !! counter on temperatures
   INTEGER :: ierr
   !! Error status
   REAL(KIND = DP) :: xx_c, yy_c, zz_c
@@ -71,6 +73,8 @@
   CALL start_clock('epw_setup')
   !
   !  loosy tolerance: not important 
+  IF ( .not. polaron_wf)  THEN
+  ! Modified for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   DO jk = 1, nkstot
     xx_c = xk_cryst(1, jk) * nkc1
     yy_c = xk_cryst(2, jk) * nkc2
@@ -82,6 +86,7 @@
       CALL errore('epw_setup', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
     !
   ENDDO
+  END IF
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
@@ -90,10 +95,10 @@
   ! Set non linear core correction stuff
   !
   nlcc_any = ANY( upf(1:ntyp)%nlcc )
-  IF (nlcc_any) ALLOCATE(drc(ngm, ntyp))    
+  IF (nlcc_any) ALLOCATE(drc(ngm, ntyp))
   !
   !  2) If necessary calculate the local magnetization. This information is
-  !      needed in sgama 
+  !      needed in sgama
   !
   IF (noncolin .AND. domag) THEN
     ALLOCATE(m_loc(3, nat), STAT = ierr)
@@ -120,7 +125,7 @@
   ! 3.1) Setup all gradient correction stuff
   !
   CALL setup_dgc
-  !  
+  !
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
   !
   CALL inverse_s()
@@ -140,8 +145,8 @@
   !
   nmodes = 3 * nat
   !
-  !   If the code arrives here and nsymq is still 0 the small group of q has 
-  !   not been calculated by set_nscf because this is a recover run. 
+  !   If the code arrives here and nsymq is still 0 the small group of q has
+  !   not been calculated by set_nscf because this is a recover run.
   !   We recalculate here the small group of q.
   !
   IF (nsymq == 0) THEN
@@ -188,14 +193,14 @@
      CALL find_irrep()
   ENDIF
   CALL find_irrep_sym()
-  ! 
+  !
   DEALLOCATE(num_rap_mode, STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_setup', 'Error deallocating num_rap_mode', 1)
   DEALLOCATE(name_rap_mode, STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_setup', 'Error deallocating name_rap_mode', 1)
   !
   !  8) set max perturbation
-  !   
+  !
   npertx = 0
   DO irr = 1, nirr
     npertx = MAX(npertx, npert(irr))
@@ -203,11 +208,11 @@
   !
   ALLOCATE(transp_temp(nstemp), STAT = ierr)
   IF (ierr /= 0) CALL errore('epw_setup', 'Error allocating transp_temp', 1)
-  ! 
+  !
   transp_temp(:) = zero
   ! In case of scattering calculation
   IF (scattering) THEN
-    ! 
+    !
     IF (MAXVAL(temps(:)) > zero) THEN
       transp_temp(:) = temps(:)
     ELSE
@@ -221,8 +226,8 @@
     ENDIF
   ENDIF
   ! We have to bcast here because before it has not been allocated
-  CALL mp_bcast(transp_temp, ionode_id, world_comm)  
-  ! 
+  CALL mp_bcast(transp_temp, ionode_id, world_comm)
+  !
   CALL stop_clock('epw_setup')
   RETURN
   !
@@ -235,7 +240,7 @@
   !-----------------------------------------------------------------------
   !!
   !! Setup in the case of a restart
-  !! 
+  !!
   ! ----------------------------------------------------------------------
   USE constants_epw, ONLY : zero
   USE io_global,     ONLY : ionode_id
@@ -250,7 +255,7 @@
   !! Counter on temperature
   INTEGER :: ierr
   !! Error status
-  ! 
+  !
   CALL start_clock('epw_setup')
   !
   ALLOCATE(transp_temp(nstemp), STAT = ierr)
@@ -271,10 +276,10 @@
       ENDIF
     ENDIF
   ENDIF
-  ! 
+  !
   ! We have to bcast here because before it has not been allocated
   CALL mp_bcast(transp_temp, ionode_id, world_comm)
-  ! 
+  !
   CALL stop_clock('epw_setup')
   !
   RETURN

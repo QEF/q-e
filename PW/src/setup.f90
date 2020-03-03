@@ -80,7 +80,7 @@ SUBROUTINE setup()
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE spin_orb,           ONLY : lspinorb, domag
-  USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
+  USE noncollin_module,   ONLY : noncolin, npol, i_cons, m_loc, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE qexsd_module,       ONLY : qexsd_readschema
@@ -686,7 +686,7 @@ LOGICAL FUNCTION check_para_diag( nbnd )
         ELSE
            CALL errore( 'setup','Unexpected sub-group communicator ', 1 )
         END IF
-#if defined(__ELPA) || defined(__ELPA_2015) || defined(__ELPA_2016)
+#if defined(__ELPA)  || defined(__ELPA_2015) || defined(__ELPA_2016) || defined(__ELPA_2017) || defined(__ELPA_2018) || defined(__ELPA_2019)
         WRITE( stdout, '(5X,"ELPA distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)

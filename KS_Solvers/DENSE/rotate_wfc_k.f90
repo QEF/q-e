@@ -13,9 +13,9 @@ SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
   !
-  USE cg_param,      ONLY : DP
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
-          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
+  USE util_param,    ONLY : DP
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                            me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -151,9 +151,8 @@ SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
   ! ... Parallel version of rotate_wfc for colinear, k-point calculations
   ! ... Subroutine with distributed matrices, written by Carlo Cavazzoni
   !
-  USE cg_param,         ONLY : DP
-  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
-          nbgrp, my_bgrp_id
+  USE util_param,       ONLY : DP
+  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
   IMPLICIT NONE

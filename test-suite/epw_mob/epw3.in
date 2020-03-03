@@ -35,7 +35,6 @@
   vme         = .false. 
 
   nbndsub     =  16
-  nbndskip    =  0
 
   wannierize  = .false.
   num_iter    = 1500

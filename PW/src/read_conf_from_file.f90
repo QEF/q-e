@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, at )
+SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, alat, at )
   !-----------------------------------------------------------------------
   !
   USE kinds,           ONLY : DP
@@ -27,6 +27,7 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, at )
   LOGICAL, INTENT(in)    :: stop_on_error
   INTEGER, INTENT(in)    :: nat
   INTEGER, INTENT(in)    :: nsp
+  REAL(DP),INTENT(out)   :: alat
   REAL(DP),INTENT(out)   :: at(3,3)
   REAL(DP),INTENT(inout) :: tau(3,nat)
   !
@@ -36,7 +37,6 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, at )
   !
   INTEGER :: ierr, nat_, ibrav_
   INTEGER, ALLOCATABLE :: ityp_(:)
-  REAL(dp) :: alat_
   REAL(dp), ALLOCATABLE :: tau_(:,:)
   CHARACTER (LEN=3) :: atm_(nsp)
   !
@@ -59,11 +59,11 @@ SUBROUTINE read_conf_from_file( stop_on_error, nat, nsp, tau, at )
      !
      CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
      CALL qexsd_copy_atomic_structure (output_obj%atomic_structure, nsp, &
-          atm_, nat_, tau_, ityp_, alat_, at(:,1), at(:,2), at(:,3), ibrav_ )
+          atm_, nat_, tau_, ityp_, alat, at(:,1), at(:,2), at(:,3), ibrav_ )
      CALL qes_reset (output_obj)
      IF ( nat_ /= nat ) CALL errore('read_conf_from_file','bad number of atoms',1)
-     at(:,:) = at(:,:) / alat_
-     tau_(:,1:nat) = tau_(:,1:nat)/alat_
+     at(:,:) = at(:,:) / alat
+     tau_(:,1:nat) = tau_(:,1:nat)/alat
      IF ( SUM ( (tau_(:,1:nat)-tau(:,1:nat))**2 ) > eps8 ) THEN
         WRITE( stdout, '(5X,"Atomic positions from file used, from input discarded")' )
         tau(:,1:nat) = tau_(:,1:nat)

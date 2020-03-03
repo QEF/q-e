@@ -36,6 +36,7 @@ setup_offset_beta.o \
 setup_nscf.o \
 set_dbecsum_nc.o \
 set_int3_nc.o \
+set_kplusq_nc.o \
 smallgq.o \
 lr_sm1_psi.o \
 lr_addusddens.o \

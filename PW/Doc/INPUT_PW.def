@@ -1436,10 +1436,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         }
         
         var report -type INTEGER {
-            default { 100 }
+            default { -1 }
             info {
-                Number of iterations after which the program
-                writes all the atomic magnetic moments.
+	        determines when atomic magnetic moments are printed on output:
+                report = 0  never
+                report =-1  at the beginning of the scf and at convergence
+		report = N: as -1, plus every N scf iterations
             }
         }
         

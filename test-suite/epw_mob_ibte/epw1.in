@@ -20,7 +20,6 @@
   asr_typ     = 'crystal'
 
   nbndsub     =  8
-  nbndskip    =  0
 
   wannierize  = .true.
   num_iter    = 1500

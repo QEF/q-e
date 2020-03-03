@@ -12,16 +12,16 @@ SUBROUTINE openfilq()
   ! ... This subroutine opens all the files necessary for the phononq
   ! ... calculation.
   !
-  USE kinds,           ONLY : DP
-  USE control_flags,   ONLY : io_level, modenum
-  USE units_ph,        ONLY : iudwf, iubar, iucom, iudvkb3, &
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : io_level, modenum
+  USE units_ph,         ONLY : iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrdwf, lrbar, lrcom, lrdvkb3, &
                               lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
                               iundnsscf
-  USE units_lr,        ONLY : iuwfc, lrwfc
-  USE io_files,        ONLY : tmp_dir, diropn, seqopn, nwordwfcU
-  USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
+  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE io_files,         ONLY : tmp_dir, diropn, seqopn, nwordwfcU
+  USE control_ph,       ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
                               all_done, newgrid
   USE save_ph,         ONLY : tmp_dir_save
@@ -30,13 +30,14 @@ SUBROUTINE openfilq()
   USE output,          ONLY : fildyn, fildvscf
   USE wvfct,           ONLY : nbnd, npwx
   USE fft_base,        ONLY : dfftp, dffts
-  USE lsda_mod,        ONLY : nspin
+  USE lsda_mod,        ONLY : nspin, lsda
   USE uspp,            ONLY : nkb, okvan
   USE uspp_param,      ONLY : nhm
   USE io_files,        ONLY : prefix
-  USE noncollin_module,ONLY : npol, nspin_mag
+  USE noncollin_module,ONLY : npol, nspin_mag, noncolin
   USE paw_variables,   ONLY : okpaw
   USE mp_bands,        ONLY : me_bgrp
+  USE spin_orb,        ONLY : domag
   USE io_global,       ONLY : ionode,stdout
   USE buffers,         ONLY : open_buffer, close_buffer
   USE ramanm,          ONLY : lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
@@ -82,6 +83,7 @@ SUBROUTINE openfilq()
   ELSE  
      ! this is the standard treatment
      IF (lgamma.AND.modenum==0.AND..NOT.newgrid ) tmp_dir=tmp_dir_save
+     IF ((noncolin.AND.domag).OR.lsda) tmp_dir=tmp_dir_phq
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20

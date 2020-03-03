@@ -1,4 +1,4 @@
-# Makefile for DAVID
+# Makefile for PPCG
 
 include ../../make.inc
 
@@ -7,8 +7,7 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 
 PPCG = \
 ppcg_gamma.o \
-ppcg_k.o \
-ppcg_param.o
+ppcg_k.o
 
 all : libppcg.a
 

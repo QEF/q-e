@@ -2604,14 +2604,14 @@ SUBROUTINE compute_orb
    !
    complex(DP), parameter :: cmplx_i=(0.0_DP,1.0_DP)
    !
-   INTEGER :: mmn_tot, ik, ikp, ipol, ib, npw, i, m, n
+   INTEGER :: mmn_tot, ik, ikp, ipol, npw, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq, s, counter
    COMPLEX(DP), ALLOCATABLE :: phase(:), aux(:), aux2(:), evcq(:,:), &
                                becp2(:,:), Mkb(:,:), aux_nc(:,:) 
    real(DP), ALLOCATABLE    :: rbecp2(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), workg(:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
@@ -2623,15 +2623,18 @@ SUBROUTINE compute_orb
    ! begin change Lopez, Thonhauser, Souza
    COMPLEX(DP)              :: sigma_x,sigma_y,sigma_z,cdum1,cdum2
    integer                  :: npw_b1, npw_b2, i_b1, i_b2, ikp_b1, ikp_b2
-   integer, allocatable     :: igk_b1(:), igk_b2(:)
+!   integer, allocatable     :: igk_b1(:), igk_b2(:)
    complex(DP), allocatable :: evc_b1(:,:),evc_b2(:,:),evc_aux(:,:),H_evc(:,:)
-   complex(DP), allocatable :: uHu(:,:),uIu(:,:),spn(:,:)
+   complex(DP), allocatable :: uHu(:,:),uIu(:,:)
    ! end change Lopez, Thonhauser, Souza
+   INTEGER                  :: ibnd_n, ibnd_m
 
    any_uspp = any(upf(1:ntyp)%tvanp)
 
-   IF(any_uspp .and. noncolin) CALL errore('pw2wannier90',&
-       'NCLS calculation not implimented with USP',1)
+   IF(gamma_only) CALL errore('pw2wannier90',&
+        'write_uHu and write_uIu not yet implemented for gamma_only case',1) !ivo
+   IF(any_uspp) CALL errore('pw2wannier90',&
+        'write_uHu and write_uIu not yet implemented with USP',1) !ivo
 
    ALLOCATE( phase(dffts%nnr) )
    ALLOCATE( evcq(npol*npwx,nbnd) )
@@ -2642,7 +2645,7 @@ SUBROUTINE compute_orb
       ALLOCATE( aux(npwx) )
    ENDIF
 
-   IF (gamma_only) ALLOCATE(aux2(npwx))
+!   IF (gamma_only) ALLOCATE(aux2(npwx))
 
    IF (wan_mode=='library') ALLOCATE(m_mat(num_bands,num_bands,nnb,iknum))
 
@@ -2675,13 +2678,10 @@ SUBROUTINE compute_orb
    !
    if(write_uHu.or.write_uIu) then !ivo
      !
-     if(gamma_only) call errore('pw2wannier90',&
-      'write_uHu and write_uIu not yet implemented for gamma_only case',1) !ivo
-     if(any_uspp) call errore('pw2wannier90',&
-      'write_uHu and write_uIu not yet implemented with USP',1) !ivo
      !
      !
-     allocate(igk_b1(npwx),igk_b2(npwx),evc_b1(npol*npwx,nbnd),&
+!     allocate(igk_b1(npwx),igk_b2(npwx),evc_b1(npol*npwx,nbnd),&
+     allocate(evc_b1(npol*npwx,nbnd),&
           evc_b2(npol*npwx,nbnd),&
           evc_aux(npol*npwx,nbnd)) 
      !
@@ -2699,11 +2699,11 @@ SUBROUTINE compute_orb
            if(uHu_formatted) then
               open  (unit=iun_uhu, file=TRIM(seedname)//".uHu",form='FORMATTED')
               write (iun_uhu,*) header 
-              write (iun_uhu,*) nbnd, iknum, nnb
+              write (iun_uhu,*) nbnd-nexband, iknum, nnb
            else
               open  (unit=iun_uhu, file=TRIM(seedname)//".uHu",form='UNFORMATTED')
               write (iun_uhu) header 
-              write (iun_uhu) nbnd, iknum, nnb
+              write (iun_uhu) nbnd-nexband, iknum, nnb
            endif
         endif
      endif
@@ -2720,18 +2720,18 @@ SUBROUTINE compute_orb
            if(uIu_formatted) then
               open  (unit=iun_uIu, file=TRIM(seedname)//".uIu",form='FORMATTED')
               write (iun_uIu,*) header
-              write (iun_uIu,*) nbnd, iknum, nnb
+              write (iun_uIu,*) nbnd-nexband, iknum, nnb
            else
               open  (unit=iun_uIu, file=TRIM(seedname)//".uIu",form='UNFORMATTED')
               write (iun_uIu) header
-              write (iun_uIu) nbnd, iknum, nnb
+              write (iun_uIu) nbnd-nexband, iknum, nnb
            endif
         endif
      endif
 
      CALL set_vrs(vrs,vltot,v%of_r,kedtau,v%kin_r,dfftp%nnr,nspin,doublegrid)
      call allocate_bec_type ( nkb, nbnd, becp )
-     ALLOCATE( workg(npwx) )
+!     ALLOCATE( workg(npwx) )
 
      write(stdout,'(a,i8)') ' iknum = ',iknum
      do ik = 1, iknum ! loop over k points
@@ -2757,9 +2757,11 @@ SUBROUTINE compute_orb
            npw_b2=ngk(ikp_b2)
            !
            ! compute the phase
-           phase(:) = ( 0.0D0, 0.0D0 )
-           if (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
-           call invfft('Wave', phase, dffts)
+           IF (.not.zerophase(ik,i_b2)) THEN
+              phase(:) = ( 0.0D0, 0.0D0 )
+              if (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
+              call invfft('Wave', phase, dffts)
+           ENDIF
            !
            ! loop on bands
            evc_aux = ( 0.0D0, 0.0D0 )
@@ -2775,11 +2777,13 @@ SUBROUTINE compute_orb
                     iend=istart+npw_b2-1 !ivo npw_b1 --> npw_b2
                     psic_nc(dffts%nl (igk_k(1:npw_b2,ikp_b2) ),ipol ) = &
                          evc_b2(istart:iend, n)
+                    IF (.not.zerophase(ik,i_b2)) THEN
                     ! ivo igk_b1, npw_b1 --> igk_b2, npw_b2
                     ! multiply by phase in real space - '1' unless neighbor is in a bordering BZ
-                    call invfft ('Wave', psic_nc(:,ipol), dffts)
-                    psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr)) 
-                    call fwfft ('Wave', psic_nc(:,ipol), dffts)
+                       call invfft ('Wave', psic_nc(:,ipol), dffts)
+                       psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr)) 
+                       call fwfft ('Wave', psic_nc(:,ipol), dffts)
+                    ENDIF
                     ! save the result
                     iend=istart+npw-1
                     evc_aux(istart:iend,n) = psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) 
@@ -2788,9 +2792,11 @@ SUBROUTINE compute_orb
                  psic = ( 0.0D0, 0.0D0 )
                  ! Graham, changed npw --> npw_b2 on RHS. Do you agree?!
                  psic(dffts%nl (igk_k(1:npw_b2,ikp_b2) ) ) = evc_b2(1:npw_b2, n) 
-                 call invfft ('Wave', psic, dffts)
-                 psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
-                 call fwfft ('Wave', psic, dffts)
+                 IF (.not.zerophase(ik,i_b2)) THEN
+                    call invfft ('Wave', psic, dffts)
+                    psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
+                    call fwfft ('Wave', psic, dffts)
+                 ENDIF
                  evc_aux(1:npw,n) = psic(dffts%nl (igk_k(1:npw,ik) ) ) 
               end if
            end do !n
@@ -2815,17 +2821,22 @@ SUBROUTINE compute_orb
               call davcio  (evc_b1, 2*nwordwfc, iunwfc, ikp_b1+ikstart-1, -1 ) !ivo
 
 !              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b2, igk_b2, workg) !ivo
-              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b1, igk_b1, workg) !ivo
+!              call gk_sort (xk(1,ikp_b1), ngm, g, gcutw, npw_b1, igk_b1, workg) !ivo
+              npw_b1=ngk(ikp_b1)
               !
               ! compute the phase
-              phase(:) = ( 0.0D0, 0.0D0 )
-              if (ig_(ik,i_b1)>0) phase( dffts%nl(ig_(ik,i_b1)) ) = ( 1.0D0, 0.0D0 )
-              !call cft3s (phase, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
-              call invfft('Wave', phase, dffts)
+              IF (.not.zerophase(ik,i_b1)) THEN
+                 phase(:) = ( 0.0D0, 0.0D0 )
+                 if (ig_(ik,i_b1)>0) phase( dffts%nl(ig_(ik,i_b1)) ) = ( 1.0D0, 0.0D0 )
+                 !call cft3s (phase, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+                 call invfft('Wave', phase, dffts)
+              ENDIF
               !
               ! loop on bands
+              ibnd_m = 0
               do m = 1, nbnd
                  if (excluded_band(m)) cycle
+                 ibnd_m = ibnd_m + 1
                  if(noncolin) then
                     aux_nc  = ( 0.0D0, 0.0D0 )
                     psic_nc = ( 0.0D0, 0.0D0 ) !ivo
@@ -2833,12 +2844,14 @@ SUBROUTINE compute_orb
 !                      psic_nc = ( 0.0D0, 0.0D0 ) !ivo
                        istart=(ipol-1)*npwx+1
                        iend=istart+npw_b1-1  !ivo npw_b2 --> npw_b1
-                       psic_nc(dffts%nl (igk_b1(1:npw_b1) ),ipol ) = evc_b1(istart:iend, m) !ivo igk_b2,npw_b2 --> igk_b1,npw_b1 
-                       ! multiply by phase in real space - '1' unless neighbor is in a different BZ
-                       call invfft ('Wave', psic_nc(:,ipol), dffts)
-                       !psic_nc(1:nrxxs,ipol) = psic_nc(1:nrxxs,ipol) * conjg(phase(1:nrxxs))
-                       psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr))
-                       call fwfft ('Wave', psic_nc(:,ipol), dffts)
+                       psic_nc(dffts%nl (igk_k(1:npw_b1,ikp_b1) ),ipol ) = evc_b1(istart:iend, m) !ivo igk_b2,npw_b2 --> igk_b1,npw_b1 
+                       IF (.not.zerophase(ik,i_b1)) THEN
+                          ! multiply by phase in real space - '1' unless neighbor is in a different BZ
+                          call invfft ('Wave', psic_nc(:,ipol), dffts)
+                          !psic_nc(1:nrxxs,ipol) = psic_nc(1:nrxxs,ipol) * conjg(phase(1:nrxxs))
+                          psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr))
+                          call fwfft ('Wave', psic_nc(:,ipol), dffts)
+                       ENDIF
                        ! save the result
                        aux_nc(1:npw,ipol) = psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) 
                     end do
@@ -2846,19 +2859,24 @@ SUBROUTINE compute_orb
                     aux  = ( 0.0D0 )
                     psic = ( 0.0D0, 0.0D0 )
                     ! Graham, changed npw --> npw_b1 on RHS. Do you agree?!
-                    psic(dffts%nl (igk_b1(1:npw_b1) ) ) = evc_b1(1:npw_b1, m) !ivo igk_b2 --> igk_b1 
-                    call invfft ('Wave', psic, dffts)
-                    !psic(1:nrxxs) = psic(1:nrxxs) * conjg(phase(1:nrxxs)) 
-                    psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
-                    call fwfft ('Wave', psic, dffts)
+!                    psic(dffts%nl (igk_b1(1:npw_b1) ) ) = evc_b1(1:npw_b1, m) !ivo igk_b2 --> igk_b1 
+                    psic(dffts%nl (igk_k(1:npw_b1,ikp_b1) ) ) = evc_b1(1:npw_b1, m) !ivo igk_b2 --> igk_b1 
+                    IF (.not.zerophase(ik,i_b1)) THEN
+                       call invfft ('Wave', psic, dffts)
+                       !psic(1:nrxxs) = psic(1:nrxxs) * conjg(phase(1:nrxxs)) 
+                       psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
+                       call fwfft ('Wave', psic, dffts)
+                    ENDIF
                     aux(1:npw) = psic(dffts%nl (igk_k(1:npw,ik) ) ) 
                  end if
 
                 !
                 !
                 if(write_uHu) then !ivo
+                   ibnd_n = 0
                    do n = 1, nbnd  ! loop over bands of already computed ket
                       if (excluded_band(n)) cycle
+                      ibnd_n = ibnd_n + 1
                       if(noncolin) then
                          mmn = zdotc (npw, aux_nc(1,1),1,H_evc(1,n),1) + &
                               zdotc (npw, aux_nc(1,2),1,H_evc(1+npwx,n),1)
@@ -2868,13 +2886,15 @@ SUBROUTINE compute_orb
                       mmn = mmn * rytoev ! because wannier90 works in eV
                       call mp_sum(mmn, intra_pool_comm)
 !                      if (ionode) write (iun_uhu) mmn
-                      uHu(n,m)=mmn
+                      uHu(ibnd_n,ibnd_m)=mmn
                       !
                    end do !n
                 endif
                 if(write_uIu) then !ivo
+                   ibnd_n = 0
                    do n = 1, nbnd  ! loop over bands of already computed ket
                       if (excluded_band(n)) cycle
+                      ibnd_n = ibnd_n + 1
                       if(noncolin) then
                          mmn = zdotc (npw, aux_nc(1,1),1,evc_aux(1,n),1) + &
                               zdotc (npw, aux_nc(1,2),1,evc_aux(1+npwx,n),1)
@@ -2883,7 +2903,7 @@ SUBROUTINE compute_orb
                       end if
                       call mp_sum(mmn, intra_pool_comm)
 !                      if (ionode) write (iun_uIu) mmn
-                      uIu(n,m)=mmn
+                      uIu(ibnd_n,ibnd_m)=mmn
                       !
                    end do !n
                 endif
@@ -2916,9 +2936,8 @@ SUBROUTINE compute_orb
           end do ! i_b1
        end do ! i_b2
     end do ! ik
-    DEALLOCATE (workg)
     !
-    deallocate(igk_b1,igk_b2,evc_b1,evc_b2,evc_aux)
+    deallocate(evc_b1,evc_b2,evc_aux)
     if(write_uHu) then
        deallocate(H_evc)
        deallocate(uHu)
@@ -2960,7 +2979,7 @@ SUBROUTINE compute_orb
    !
    !
    
-   IF (gamma_only) DEALLOCATE(aux2)
+!   IF (gamma_only) DEALLOCATE(aux2)
    DEALLOCATE (phase)
    IF(noncolin) THEN
       DEALLOCATE(aux_nc)
@@ -2968,20 +2987,21 @@ SUBROUTINE compute_orb
       DEALLOCATE(aux)
    ENDIF
    DEALLOCATE(evcq)
-   if(write_spn.and.noncolin) deallocate(spn)
 
-   IF(any_uspp) THEN
-      DEALLOCATE (  qb)
-      CALL deallocate_bec_type (becp)
-      IF (gamma_only) THEN
-          DEALLOCATE (rbecp2)
-       ELSE
-          DEALLOCATE (becp2)
-       ENDIF
-    ENDIF
+!   IF(any_uspp) THEN
+!      DEALLOCATE (  qb)
+!      CALL deallocate_bec_type (becp)
+!      IF (gamma_only) THEN
+!          DEALLOCATE (rbecp2)
+!       ELSE
+!          DEALLOCATE (becp2)
+!       ENDIF
+!    ENDIF
+   CALL deallocate_bec_type (becp)
 !
    WRITE(stdout,*)
-   WRITE(stdout,*) ' uHu calculated'
+   if(write_uHu) WRITE(stdout,*) ' uHu calculated'
+   if(write_uIu) WRITE(stdout,*) ' uIu calculated'
 
    RETURN
 END SUBROUTINE compute_orb

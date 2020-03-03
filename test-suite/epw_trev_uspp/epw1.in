@@ -14,7 +14,6 @@
 
   wannierize  = .true.
   nbndsub     =  4
-  nbndskip    =  0
   dis_win_max = 12
   dis_froz_max= 9.2
   proj(1)     = 'f= 0.000, 0.000, 0.000, : sp3'

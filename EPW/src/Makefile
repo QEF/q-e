@@ -69,7 +69,9 @@ epw_setup.o \
 epw_summary.o \
 loadumat.o \
 stop_epw.o \
-wannierEPW.o
+wannierEPW.o \
+loadbm.o
+EPWOBJS += ephblochkq.o wfc_elec.o test_tools.o
 
 #default : epw
 

@@ -325,7 +325,7 @@ SUBROUTINE iosys()
   CHARACTER(LEN=256):: dft_
   !
   INTEGER  :: ia, nt, inlc
-  LOGICAL  :: exst, parallelfs
+  LOGICAL  :: exst, parallelfs, domag
   REAL(DP) :: at_dum(3,3), theta, phi, ecutwfc_pp, ecutrho_pp
   !
   ! MAIN CONTROL VARIABLES, MD AND RELAX
@@ -800,8 +800,16 @@ SUBROUTINE iosys()
   starting_spin_angle_ = starting_spin_angle
   angle1_   = angle1
   angle2_   = angle2
-  report_   = report
   lambda_   = lambda
+  domag     = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
+  !
+  IF ( (i_cons == 1 .OR. nspin == 2) .AND. (report /= 0) ) THEN
+     report_ = -1
+  ELSE IF ( (i_cons /= 0 .OR. report /= 0) .AND. ( domag .AND. noncolin) ) THEN
+     report_ = report
+  ELSE
+     report_ = 0
+  END IF
   !
   ! STARTING AND RESTARTING
   !
@@ -810,7 +818,7 @@ SUBROUTINE iosys()
   CASE( 'from_scratch' )
      !
      restart        = .false.
-     ! ... non-scf calculation: read atomic positions from file
+     ! ... non-scf calculation: read atomic positions and cell from file
      ! ... so that they are consistent.  FIXME: lforcet?
      IF ( trim( ion_positions ) == 'from_file' .OR. &
           (.NOT. lscf .AND. .NOT. lforcet) ) THEN
@@ -941,6 +949,10 @@ SUBROUTINE iosys()
      !
      isolve = 2
      max_ppcg_iter = diago_ppcg_maxiter
+     !
+  CASE ( 'paro' )
+     !
+     isolve = 3
      !
   CASE DEFAULT
      !
@@ -1373,7 +1385,7 @@ SUBROUTINE iosys()
      !
      ! ... Read atomic positions from file
      !
-     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, at_dum )
+     CALL read_conf_from_file( .TRUE., nat_, ntyp, tau, alat, at )
      pseudo_dir_cur = restart_dir()
      !
   ELSE

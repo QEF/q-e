@@ -24,8 +24,10 @@ SUBROUTINE hinit0()
   USE ldaU,             ONLY : lda_plus_U, U_projection
   USE control_flags,    ONLY : tqr, tq_smoothing, tbeta_smoothing, restart
   USE io_global,        ONLY : stdout
+  USE noncollin_module, ONLY : report
   !
   IMPLICIT NONE
+  REAL (dp) :: alat_old
   !
   CALL start_clock( 'hinit0' )
   !
@@ -50,14 +52,14 @@ SUBROUTINE hinit0()
         at_old    = at
         omega_old = omega
         !
-        CALL read_conf_from_file( lmovecell, nat, nsp, tau, at )
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat, at )
         CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
         CALL volume (alat, at(:,1), at(:,2), at(:,3), omega)
         CALL scale_h( )
         !
      ELSE
         !
-        CALL read_conf_from_file( lmovecell, nat, nsp, tau, at_old )
+        CALL read_conf_from_file( lmovecell, nat, nsp, tau, alat_old, at_old )
         !
      END IF
      !
@@ -83,6 +85,8 @@ SUBROUTINE hinit0()
   !
   CALL set_rhoc()
   !
+  ! ... more position-dependent initializations
+  !
   IF ( tqr ) CALL generate_qpointlist()
   !
   IF (real_space ) THEN
@@ -90,6 +94,8 @@ SUBROUTINE hinit0()
      CALL init_realspace_vars()
      WRITE(stdout,'(5X,"Real space initialisation completed")')    
   ENDIF
+  !
+  IF ( report /= 0 ) CALL make_pointlists( )
   !
   CALL stop_clock( 'hinit0' )
   !

@@ -40,7 +40,6 @@
   etf_mem     = 1
 
   nbndsub     =  8
-  nbndskip    =  0
 
   wannierize  = .false.
   num_iter    = 1500

@@ -1218,6 +1218,167 @@ SUBROUTINE laxlib_dsqmsym_x( n, a, lda, idesc )
    RETURN
 END SUBROUTINE laxlib_dsqmsym_x
 
+! ---------------------------------------------------------------------------------
+#if defined (__CUDA)
+SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
+   !
+   ! Double precision SQuare Matrix SYMmetrization
+   !
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
+   USE cudafor
+   !
+   IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
+   include 'laxlib_param.fh'
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP), INTENT(INOUT), DEVICE :: a(:,:) 
+   ATTRIBUTES(DEVICE) :: a
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   TYPE(la_descriptor) :: desc
+#if defined __MPI
+   INTEGER :: istatus( MPI_STATUS_SIZE )
+#if ! defined(__GPU_MPI)
+   REAL(DP), ALLOCATABLE :: a_h(:,:) 
+#endif
+#endif
+   INTEGER :: i, j
+   INTEGER :: comm 
+   INTEGER :: nr, nc, dest, sreq, ierr, sour
+   REAL(DP) :: atmp
+
+#if defined __MPI
+
+   CALL laxlib_intarray_to_desc(desc,idesc)
+
+   IF( desc%active_node <= 0 ) THEN
+      RETURN
+   END IF
+
+   IF( n /= desc%n ) &
+      CALL lax_error__( " dsqmsym ", " wrong global dim n ", n )
+   IF( lda /= desc%nrcx ) &
+      CALL lax_error__( " dsqmsym ", " wrong leading dim lda ", lda )
+
+   comm = desc%comm
+
+   nr = desc%nr 
+   nc = desc%nc 
+   IF( desc%myc == desc%myr ) THEN
+      !
+      !  diagonal block, procs work locally
+      !
+      ierr = cudaDeviceSynchronize()
+!$cuf kernel do(1) <<<*,*>>>
+      DO j = 1, nc
+         DO i = j + 1, nr
+            a(i,j) = a(j,i)
+         END DO
+      END DO
+      ierr = cudaDeviceSynchronize()
+      !
+   ELSE IF( desc%myc > desc%myr ) THEN
+      !
+      !  super diagonal block, procs send the block to sub diag.
+      !
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, dest )
+#if defined(__CUDA)
+#if defined(__GPU_MPI)
+      CALL lax_error__( " dsqmsym ", " GPU MPI not implemented yet ", 1 )
+#else
+      ierr = cudaDeviceSynchronize()
+      ALLOCATE(a_h(SIZE(a,1),SIZE(a,2)) )
+      a_h = a
+      CALL mpi_isend( a_h, SIZE(a_h), MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
+#endif
+#else
+      CALL mpi_isend( a, lda*lda, MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
+#endif
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " dsqmsym ", " in isend ", ABS( ierr ) )
+      !
+   ELSE IF( desc%myc < desc%myr ) THEN
+      !
+      !  sub diagonal block, procs receive the block from super diag,
+      !  then transpose locally
+      !
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, sour )
+
+#if defined(__CUDA)
+#if defined(__GPU_MPI)
+      CALL lax_error__( " dsqmsym ", " GPU MPI not implemented yet ", 1 )
+!$cuf kernel do(1) <<<*,*>>>
+      DO j = 1, lda
+         DO i = j + 1, lda
+            atmp = a(i,j)
+            a(i,j) = a(j,i)
+            a(j,i) = atmp
+         END DO
+      END DO
+#else
+      ALLOCATE(a_h(SIZE(a,1),SIZE(a,2))) 
+      CALL mpi_recv( a_h, SIZE(a_h), MPI_DOUBLE_PRECISION, sour, 1, comm, istatus, ierr )
+      DO j = 1, lda
+         DO i = j + 1, lda
+            atmp = a_h(i,j)
+            a_h(i,j) = a_h(j,i)
+            a_h(j,i) = atmp
+         END DO
+      END DO
+      ierr = cudaDeviceSynchronize()
+      a = a_h
+      ierr = cudaDeviceSynchronize()
+      DEALLOCATE(a_h) 
+#endif
+      ierr = cudaDeviceSynchronize()
+#else
+      CALL mpi_recv( a, lda*lda, MPI_DOUBLE_PRECISION, sour, 1, comm, istatus, ierr )
+#endif
+      !
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " dsqmsym ", " in recv ", ABS( ierr ) )
+      !
+   END IF
+
+   IF( desc%myc > desc%myr ) THEN
+      !
+      CALL MPI_Wait( sreq, istatus, ierr )
+      !
+#if defined(__CUDA)
+      ierr = cudaDeviceSynchronize()
+#if defined(__GPU_MPI)
+      ! 
+#else
+      DEALLOCATE(a_h) 
+#endif
+#endif
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " dsqmsym ", " in wait ", ABS( ierr ) )
+      !
+   END IF
+
+#else
+
+   ierr = cudaDeviceSynchronize()
+!$cuf kernel do(1) <<<*,*>>>
+   DO j = 1, n
+      DO i = j + 1, n
+         a(i,j) = a(j,i)
+      END DO
+   END DO
+
+#endif
+
+   ierr = cudaDeviceSynchronize()
+
+   RETURN
+END SUBROUTINE laxlib_dsqmsym_gpu_x
+#endif
+! ---------------------------------------------------------------------------------
 
 SUBROUTINE laxlib_zsqmher_x( n, a, lda, idesc )
    !
@@ -2074,6 +2235,348 @@ CONTAINS
 END SUBROUTINE sqr_dmm_cannon_x
 
 !=----------------------------------------------------------------------------=!
+#if defined (__CUDA)
+SUBROUTINE sqr_dmm_cannon_gpu_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
+   !
+   !  Parallel square matrix multiplication with Cannon's algorithm
+   !
+   USE laxlib_descriptor
+   USE laxlib_parallel_include
+   USE cudafor
+   USE cublas
+   !
+   IMPLICIT NONE
+   INCLUDE 'laxlib_kinds.fh'
+   INCLUDE 'laxlib_param.fh'
+   !
+   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   INTEGER, INTENT(IN) :: n
+   REAL(DP), INTENT(IN) :: alpha, beta
+   INTEGER, INTENT(IN) :: lda, ldb, ldc
+   REAL(DP), DEVICE :: a(:,:), b(:,:), c(:,:)
+   INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+   !
+   TYPE(la_descriptor) :: desc
+   !
+   !  performs one of the matrix-matrix operations
+   !
+   !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+   !
+   !  where  op( x ) is one of
+   !
+   !     OP( X ) = X   OR   OP( X ) = X',
+   !
+   !  alpha and beta are scalars, and a, b and c are square matrices
+   !
+   integer :: ierr
+   integer :: np
+   integer :: i, j, nr, nc, nb, iter, rowid, colid
+   logical :: ta, tb
+   INTEGER :: comm
+   !
+   !
+   real(DP), DEVICE, allocatable :: bblk(:,:), ablk(:,:)
+   !
+#if defined (__MPI)
+   !
+   integer :: istatus( MPI_STATUS_SIZE )
+   !
+#endif
+   !
+   ierr = cudaDeviceSynchronize()
+   !
+   CALL laxlib_intarray_to_desc(desc,idesc)
+   !
+   IF( desc%active_node < 0 ) THEN
+      !
+      !  processors not interested in this computation return quickly
+      !
+      RETURN
+      !
+   END IF
+
+   IF( n < 1 ) THEN
+      RETURN
+   END IF
+
+   IF( desc%npr == 1 ) THEN 
+      !
+      !  quick return if only one processor is used 
+      !
+      CALL cublasdgemm( TRANSA, TRANSB, n, n, n, alpha, a, lda, b, ldb, beta, c, ldc)
+      !
+      RETURN
+      !
+   END IF
+
+   IF( desc%npr /= desc%npc ) &
+      CALL lax_error__( ' sqr_mm_cannon ', ' works only with square processor mesh ', 1 )
+   !
+   !  Retrieve communicator and mesh geometry
+   !
+   np    = desc%npr
+   comm  = desc%comm
+   rowid = desc%myr
+   colid = desc%myc
+   !
+   !  Retrieve the size of the local block
+   !
+   nr    = desc%nr 
+   nc    = desc%nc 
+   nb    = desc%nrcx
+   !
+#if defined (__MPI)
+   CALL MPI_BARRIER( comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " sqr_mm_cannon ", " in MPI_BARRIER ", ABS( ierr ) )
+#endif
+   !
+   allocate( ablk( nb, nb ) )
+   
+!$cuf kernel do(2) <<<*,*>>>
+   DO j = 1, nc
+      DO i = 1, nr
+         ablk( i, j ) = a( i, j )
+      END DO
+   END DO
+   !
+   !  Clear memory outside the matrix block
+   !
+!$cuf kernel do(2) <<<*,*>>>
+   DO j = nc+1, nb
+      DO i = 1, nb
+         ablk( i, j ) = 0.0_DP
+      END DO
+   END DO
+!$cuf kernel do(2) <<<*,*>>>
+   DO j = 1, nb
+      DO i = nr+1, nb
+         ablk( i, j ) = 0.0_DP
+      END DO
+   END DO
+   !
+   !
+   allocate( bblk( nb, nb ) )
+!$cuf kernel do(2) <<<*,*>>>
+   DO j = 1, nc
+      DO i = 1, nr
+         bblk( i, j ) = b( i, j )
+      END DO
+   END DO
+   !
+   !  Clear memory outside the matrix block
+   !
+!$cuf kernel do(2) <<<*,*>>>
+   DO j = nc+1, nb
+      DO i = 1, nb
+         bblk( i, j ) = 0.0_DP
+      END DO
+   END DO
+!$cuf kernel do(2) <<<*,*>>>
+   DO j = 1, nb
+      DO i = nr+1, nb
+         bblk( i, j ) = 0.0_DP
+      END DO
+   END DO
+   !
+   ierr = cudaDeviceSynchronize()
+   !
+   ta = ( TRANSA == 'T' .OR. TRANSA == 't' )
+   tb = ( TRANSB == 'T' .OR. TRANSB == 't' )
+   !
+   !  Shift A rowid+1 places to the west
+   ! 
+   IF( ta ) THEN
+      CALL shift_exch_block( ablk, 'W', 1 )
+   ELSE
+      CALL shift_block( ablk, 'W', rowid+1, 1 )
+   END IF
+   !
+   !  Shift B colid+1 places to the north
+   ! 
+   IF( tb ) THEN
+      CALL shift_exch_block( bblk, 'N', np+1 )
+   ELSE
+      CALL shift_block( bblk, 'N', colid+1, np+1 )
+   END IF
+   !
+   !  Accumulate on C
+   !
+   CALL cublasdgemm( TRANSA, TRANSB, nr, nc, nb, alpha, ablk, nb, bblk, nb, beta, c, ldc)
+   !
+   DO iter = 2, np
+      !
+      ierr = cudaDeviceSynchronize()
+      !
+      !  Shift A 1 places to the east
+      ! 
+      CALL shift_block( ablk, 'E', 1, iter )
+      !
+      !  Shift B 1 places to the south
+      ! 
+      CALL shift_block( bblk, 'S', 1, np+iter )
+      !
+      !  Accumulate on C
+      !
+      CALL cublasdgemm( TRANSA, TRANSB, nr, nc, nb, alpha, ablk, nb, bblk, nb, 1.0_DP, c, ldc)
+      !
+   END DO
+
+   ierr = cudaDeviceSynchronize()
+   deallocate( ablk, bblk )
+   
+   RETURN
+
+CONTAINS
+
+   SUBROUTINE shift_block( blk, dir, ln, tag )
+      !
+      !   Block shift 
+      !
+      IMPLICIT NONE
+      REAL(DP), DEVICE :: blk( :, : )
+      CHARACTER(LEN=1), INTENT(IN) :: dir      ! shift direction
+      INTEGER,          INTENT(IN) :: ln       ! shift length
+      INTEGER,          INTENT(IN) :: tag      ! communication tag
+      !
+      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+#if ! defined(__GPU_MPI)
+      REAL(DP), ALLOCATABLE :: blk_h( :, : )
+      ALLOCATE( blk_h, SOURCE =  blk )
+      ierr = cudaDeviceSynchronize()
+#endif
+      !
+      IF( dir == 'W' ) THEN
+         !
+         irdst = rowid
+         irsrc = rowid
+         icdst = MOD( colid - ln + np, np )
+         icsrc = MOD( colid + ln + np, np )
+         !
+      ELSE IF( dir == 'E' ) THEN
+         !
+         irdst = rowid
+         irsrc = rowid
+         icdst = MOD( colid + ln + np, np )
+         icsrc = MOD( colid - ln + np, np )
+         !
+      ELSE IF( dir == 'N' ) THEN
+
+         irdst = MOD( rowid - ln + np, np )
+         irsrc = MOD( rowid + ln + np, np )
+         icdst = colid
+         icsrc = colid
+
+      ELSE IF( dir == 'S' ) THEN
+
+         irdst = MOD( rowid + ln + np, np )
+         irsrc = MOD( rowid - ln + np, np )
+         icdst = colid
+         icsrc = colid
+
+      ELSE
+
+         CALL lax_error__( ' sqr_mm_cannon ', ' unknown shift direction ', 1 )
+
+      END IF
+      !
+      CALL GRID2D_RANK( 'R', np, np, irdst, icdst, idest )
+      CALL GRID2D_RANK( 'R', np, np, irsrc, icsrc, isour )
+      !
+#if defined (__MPI)
+      !
+#if defined(__GPU_MPI)
+      CALL lax_error__( " sqr_mm_cannon ", " __GPU_MPI not implemented yet ", ABS( ierr ) )
+#else
+      CALL MPI_SENDRECV_REPLACE(blk_h, SIZE(blk_h), MPI_DOUBLE_PRECISION, &
+           idest, tag, isour, tag, comm, istatus, ierr)
+      blk = blk_h
+      ierr = cudaDeviceSynchronize()
+      DEALLOCATE( blk_h )
+#endif
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " sqr_mm_cannon ", " in MPI_SENDRECV_REPLACE ", ABS( ierr ) )
+      !
+#endif
+      RETURN
+   END SUBROUTINE shift_block
+
+   SUBROUTINE shift_exch_block( blk, dir, tag )
+      !
+      !   Combined block shift and exchange
+      !   only used for the first step
+      !
+      IMPLICIT NONE
+      REAL(DP), DEVICE :: blk( :, : )
+      CHARACTER(LEN=1), INTENT(IN) :: dir
+      INTEGER,          INTENT(IN) :: tag
+      !
+      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+      INTEGER :: icol, irow
+#if ! defined(__GPU_MPI)
+      REAL(DP), ALLOCATABLE :: blk_h( :, : )
+      ALLOCATE( blk_h, SOURCE =  blk )
+      ierr = cudaDeviceSynchronize()
+#endif
+      !
+      IF( dir == 'W' ) THEN
+         !
+         icol = rowid
+         irow = colid
+         !
+         irdst = irow
+         icdst = MOD( icol - irow-1 + np, np )
+         !
+         irow = rowid
+         icol = MOD( colid + rowid+1 + np, np )
+         !
+         irsrc = icol
+         icsrc = irow
+         !
+      ELSE IF( dir == 'N' ) THEN
+         !
+         icol = rowid
+         irow = colid
+         !
+         icdst = icol
+         irdst = MOD( irow - icol-1 + np, np )
+         !
+         irow = MOD( rowid + colid+1 + np, np )
+         icol = colid
+         !
+         irsrc = icol
+         icsrc = irow
+
+      ELSE
+
+         CALL lax_error__( ' sqr_mm_cannon ', ' unknown shift_exch direction ', 1 )
+
+      END IF
+      !
+      CALL GRID2D_RANK( 'R', np, np, irdst, icdst, idest )
+      CALL GRID2D_RANK( 'R', np, np, irsrc, icsrc, isour )
+      !
+#if defined (__MPI)
+      !
+#if defined(__GPU_MPI)
+      CALL lax_error__( " sqr_mm_cannon ", " __GPU_MPI not implemented yet ", ABS( ierr ) )
+#else
+      CALL MPI_SENDRECV_REPLACE(blk_h, SIZE(blk_h), MPI_DOUBLE_PRECISION, &
+           idest, tag, isour, tag, comm, istatus, ierr)
+      blk = blk_h
+      ierr = cudaDeviceSynchronize()
+      DEALLOCATE( blk_h )
+#endif
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " sqr_mm_cannon ", " in MPI_SENDRECV_REPLACE 2 ", ABS( ierr ) )
+      !
+#endif
+      RETURN
+   END SUBROUTINE shift_exch_block
+
+END SUBROUTINE sqr_dmm_cannon_gpu_x
+#endif
+!=----------------------------------------------------------------------------=!
 
 SUBROUTINE sqr_smm_cannon_x( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, idesc )
    !
@@ -2818,6 +3321,158 @@ CONTAINS
 
 
 END SUBROUTINE
+
+!
+#if defined (__CUDA)
+SUBROUTINE sqr_tr_cannon_gpu_x( n, a, lda, b, ldb, idesc )
+   !
+   !  Parallel square matrix transposition with Cannon's algorithm
+   !
+   !
+   USE laxlib_parallel_include
+   USE cudafor
+   USE cublas
+   !
+   IMPLICIT NONE
+   !
+   include 'laxlib_param.fh'
+   INCLUDE 'laxlib_kinds.fh'
+   !
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda, ldb
+   REAL(DP), INTENT(IN),  DEVICE :: a(:,:)
+   REAL(DP), INTENT(OUT), DEVICE :: b(:,:)
+   INTEGER, INTENT(IN) :: idesc(:)
+   !
+   INTEGER :: ierr
+   INTEGER :: np, rowid, colid
+   INTEGER :: i, j, nr, nc, nb, ldx
+   INTEGER :: comm
+   !
+   REAL(DP) :: tmp
+#if defined (__GPU_MPI)
+   REAL(DP), ALLOCATABLE, DEVICE :: ablk(:,:)
+#else
+   REAL(DP), ALLOCATABLE :: ablk(:,:)
+#endif
+   !
+#if defined (__MPI)
+   !
+   INTEGER :: istatus( MPI_STATUS_SIZE )
+   !
+#endif
+   !
+   IF( n < 2 ) THEN
+     GOTO 1000
+   END IF
+   !
+   IF( idesc(LAX_DESC_ACTIVE_NODE) < 0 ) THEN
+      GOTO 1000
+   END IF
+   !
+   IF( idesc(LAX_DESC_NPR) == 1 .AND. idesc(LAX_DESC_NPC) == 1 ) THEN
+!$cuf kernel do(2) <<<*,*>>>
+      DO j = 1, n
+         DO i = 1, n
+            b( j, i ) = a( i, j )
+         END DO
+      END DO
+      GOTO 1000
+   END IF
+
+
+   IF( idesc(LAX_DESC_NPR) /= idesc(LAX_DESC_NPC) ) &
+      CALL lax_error__( ' sqr_tr_cannon_gpu ', ' works only with square processor mesh ', 1 )
+   IF( n /= idesc(LAX_DESC_N) ) &
+      CALL lax_error__( ' sqr_tr_cannon_gpu ', ' inconsistent size n  ', 1 )
+   IF( lda /= idesc(LAX_DESC_NRCX) .OR. lda /= SIZE(a,1) ) &
+      CALL lax_error__( ' sqr_tr_cannon_gpu ', ' inconsistent size lda  ', 1 )
+   IF( ldb /= idesc(LAX_DESC_NRCX) .OR. ldb /= SIZE(b,1) ) &
+      CALL lax_error__( ' sqr_tr_cannon_gpu ', ' inconsistent size ldb  ', 1 )
+
+   comm = idesc(LAX_DESC_COMM)
+
+   rowid = idesc(LAX_DESC_MYR)
+   colid = idesc(LAX_DESC_MYC)
+   np    = idesc(LAX_DESC_NPR)
+   !
+   !  Compute the size of the local block
+   !
+   nr = idesc(LAX_DESC_NR) 
+   nc = idesc(LAX_DESC_NC) 
+   nb = idesc(LAX_DESC_NRCX)
+   ldx = MAX(lda,ldb)
+   !
+   ALLOCATE( ablk, source = a )
+   !
+   CALL exchange_block( ablk )
+   !
+#if defined (__MPI)
+   CALL MPI_BARRIER( comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL lax_error__( " sqr_tr_cannon ", " in MPI_BARRIER ", ABS( ierr ) )
+#endif
+   !
+   DO j = 1, ldx
+      DO i = j + 1, ldx
+            tmp = ablk(i,j)
+            ablk(i,j) = ablk(j,i)
+            ablk(j,i) = tmp
+      END DO
+   END DO
+   ierr = cudaMemcpy2D(b, SIZE(b,1), ablk, ldx, nc, nr, cudaMemcpyHostToDevice )
+   !
+   ierr = cudaDeviceSynchronize()
+   !
+   deallocate( ablk )
+
+1000 CONTINUE
+
+   ierr = cudaDeviceSynchronize()
+   
+   RETURN
+
+CONTAINS
+
+   SUBROUTINE exchange_block( blk )
+      !
+      !   Block exchange ( transpose )
+      !
+      IMPLICIT NONE
+#if defined (__GPU_MPI)
+      REAL(DP), DEVICE :: blk( :, : )
+#else
+      REAL(DP) :: blk( :, : )
+#endif
+      !
+      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+      !
+      irdst = colid
+      icdst = rowid
+      irsrc = colid
+      icsrc = rowid
+      !
+      CALL GRID2D_RANK( 'R', np, np, irdst, icdst, idest )
+      CALL GRID2D_RANK( 'R', np, np, irsrc, icsrc, isour )
+      !
+#if defined (__MPI)
+      !
+#if defined (__GPU_MPI)
+      CALL lax_error__( " sqr_tr_cannon ", " __GPU_MPI not implemented yet ", ABS( ierr ) )
+#else
+      CALL MPI_SENDRECV_REPLACE(blk, SIZE(blk), MPI_DOUBLE_PRECISION, &
+           idest, np+np+1, isour, np+np+1, comm, istatus, ierr)
+#endif
+      IF( ierr /= 0 ) &
+         CALL lax_error__( " sqr_tr_cannon ", " in MPI_SENDRECV_REPLACE ", ABS( ierr ) )
+      !
+#endif
+
+      RETURN
+   END SUBROUTINE
+
+END SUBROUTINE sqr_tr_cannon_gpu_x
+#endif
 
 !
 

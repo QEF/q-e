@@ -57,13 +57,14 @@ FUNCTION set_hubbard_n( psd ) RESULT( hubbard_n )
         !
         hubbard_n =  2
         !
-     CASE( 'As', 'Ga' ) 
+     CASE( 'Ga' ) 
         !
         hubbard_n =  3
         !
-     CASE ( 'In' )
+     CASE ( 'In', 'As' )
         ! 
-        hubbard_n = 4   
+        hubbard_n = 4  
+        ! 
      CASE DEFAULT
         !
         hubbard_n = -1

@@ -8,7 +8,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   ! E.V. Ignore btype, use ethr as threshold on subspace residual subspace
   ! SdG  restore btype use in the eigenvalue locking procedure
   !
-  USE ppcg_param,         ONLY : DP, stdout
+  USE util_param,         ONLY : DP, stdout
   USE mp,                 ONLY : mp_bcast, mp_root_sum, mp_sum
   USE mp_bands_util,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
                                  gstart

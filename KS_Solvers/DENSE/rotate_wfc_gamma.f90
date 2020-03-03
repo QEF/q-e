@@ -15,9 +15,9 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE cg_param,      ONLY : DP
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
-          nbgrp, my_bgrp_id, me_bgrp, root_bgrp
+  USE util_param,    ONLY : DP
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
+                            me_bgrp, root_bgrp
   USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
   USE mp,            ONLY : mp_sum 
   !
@@ -158,9 +158,8 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... This version assumes real wavefunctions (k=0) with only
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
-  USE cg_param,         ONLY : DP, gamma_only
-  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
-          nbgrp, my_bgrp_id
+  USE util_param,       ONLY : DP
+  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE mp_bands_util,    ONLY : gstart ! index of the first nonzero G 
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !

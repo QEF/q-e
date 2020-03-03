@@ -260,7 +260,7 @@ MODULE read_namelists_module
        B_field = 0.0_DP
        angle1 = 0.0_DP
        angle2 = 0.0_DP
-       report = 100
+       report =-1
        !
        no_t_rev = .FALSE.
        !
