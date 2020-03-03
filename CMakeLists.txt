@@ -87,6 +87,8 @@ option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
 option(QE_ENABLE_VENDOR_DEPS 
     "enable fallback on vendored deps when none is found via find_package()" ON)
+option(QE_ENABLE_DOC 
+    "enable documentation building" ON)
 
 # Disable all configuration headers used to be generated
 # by configure (see <qe>/include/)
@@ -449,6 +451,9 @@ add_subdirectory(QHA)
 add_subdirectory(TDDFPT)
 add_subdirectory(upftools)
 add_subdirectory(XSpectra)
+if(QE_ENABLE_DOC)
+    add_subdirectory(Doc)
+endif()
 
 ###########################################################
 # Exports
