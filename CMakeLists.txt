@@ -85,6 +85,8 @@ option(QE_ENABLE_ELPA
     "enable ELPA execution units" OFF)
 option(QE_ENABLE_HDF5
     "enable HDF5 data collection" OFF)
+option(QE_ENABLE_VENDOR_DEPS 
+    "enable fallback on vendored deps when none is found via find_package()" ON)
 
 # Disable all configuration headers used to be generated
 # by configure (see <qe>/include/)
@@ -213,16 +215,31 @@ add_library(qe_lapack INTERFACE)
 add_library(QE::LAPACK ALIAS qe_lapack)
 qe_install_targets(qe_lapack)
 ###########################################################
-if(NOT LAPACK_FOUND)
-    find_package(LAPACK REQUIRED)
-    message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
+if(NOT VENDOR_FOUND)
+    find_package(LAPACK)
+    if(LAPACK_FOUND)
+        message(STATUS "Found LAPACK: ${LAPACK_LIBRARIES}")
+        target_link_libraries(qe_lapack 
+            INTERFACE 
+                ${LAPACK_LIBRARIES}
+                ${LAPACK_LINKER_FLAGS}
+        )
+    elseif(QE_ENABLE_VENDOR_DEPS)
+        message(STATUS "Installing QE::LAPACK via submodule")
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- lapack
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        qe_git_submodule_update(external/lapack)
+        add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
+        target_link_libraries(qe_lapack INTERFACE lapack)
+        qe_fix_fortran_modules(lapack)
+        qe_install_targets(lapack)
+    else()
+        # No dep has been found via find_package,
+        # call it again with REQUIRED to make it fail
+        # explicitly (hoping in some helpful message)
+        find_package(LAPACK REQUIRED)
+    endif()
 endif()
-
-target_link_libraries(qe_lapack 
-    INTERFACE 
-        ${LAPACK_LIBRARIES}
-        ${LAPACK_LINKER_FLAGS}
-)
 
 ###########################################################
 # FFT

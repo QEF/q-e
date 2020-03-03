@@ -29,6 +29,17 @@ function(qe_fix_fortran_modules LIB)
     endforeach()
 endfunction(qe_fix_fortran_modules)
 
+function(qe_git_submodule_update PATH)
+    find_package(Git)
+    # Old versions of git aren't able to run init+update
+    # in one go (via 'git submodule update --init'), we need
+    # to call one command for each operation:
+    execute_process(COMMAND ${GIT_EXECUTABLE} submodule init -- ${PATH}
+                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update -- ${PATH}
+                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+endfunction(qe_git_submodule_update)
+
 function(qe_add_executable EXE)
     add_executable(${EXE} ${ARGN})
     _qe_add_global_target(${EXE} ${ARGN})
