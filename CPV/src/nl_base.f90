@@ -832,7 +832,7 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   REAL(DP),    INTENT(OUT)  ::  becdr_bgrp( :, :, : )
   REAL(DP),    INTENT(OUT) ::  fion( :, : )
   !
-  integer  :: k, is, ia, inl, iv, jv, i
+  integer  :: k, is, ia, inl, jnl, iv, jv, i
   real(DP) :: temp
   real(DP) :: sum_tmpdr
   !
@@ -855,17 +855,17 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
 !$omp parallel default(none), &
 !$omp shared(becdr_bgrp,bec_bgrp,fion_loc,f_bgrp,deeq,dvan,nbsp_bgrp,indv_ijkb0,nh, &
 !$omp        nat,nhm,nbspx_bgrp,ispin_bgrp,nproc_bgrp,me_bgrp,ityp), &
-!$omp private(tmpbec,tmpdr,is,ia,iv,jv,k,inl,temp,i,mytid,ntids,sum_tmpdr)
+!$omp private(tmpbec,tmpdr,is,ia,iv,jv,k,inl,jnl,temp,i,mytid,ntids,sum_tmpdr)
 
 #if defined(_OPENMP)
   mytid = omp_get_thread_num()  ! take the thread ID
   ntids = omp_get_num_threads() ! take the number of threads
 #endif
 
-  allocate ( tmpbec( nhm, nbspx_bgrp ), tmpdr( nhm, nbspx_bgrp ) )
+  allocate ( tmpbec( nbspx_bgrp, nhm ), tmpdr( nbspx_bgrp, nhm ) )
 
   DO k = 1, 3
-     DO ia=1,nat
+     DO ia = 1, nat
         is = ityp(ia)
 
         ! better if we distribute to MPI tasks too!
@@ -878,29 +878,27 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
         IF( MOD( ( ia + (k-1)*nat ) / nproc_bgrp, ntids ) /= mytid ) CYCLE
 #endif  
         tmpbec = 0.d0
-        tmpdr  = 0.d0
-
-        do iv=1,nh(is)
-           do jv=1,nh(is)
-              inl = indv_ijkb0(ia) + jv
+        do jv=1,nh(is)
+           jnl = indv_ijkb0(ia) + jv
+           do iv=1,nh(is)
               do i = 1, nbsp_bgrp
                  temp = dvan(iv,jv,is) + deeq(jv,iv,ia,ispin_bgrp( i ) )
-                 tmpbec(iv,i) = tmpbec(iv,i) + temp * bec_bgrp(inl,i)
+                 tmpbec(i,iv) = tmpbec(i,iv) + temp * bec_bgrp(jnl,i)
               end do
            end do
         end do
 
-        do iv=1,nh(is)
+        do iv = 1, nh(is)
            inl = indv_ijkb0(ia) + iv
            do i = 1, nbsp_bgrp
-              tmpdr(iv,i) = f_bgrp( i ) * becdr_bgrp( inl, i, k )
+              tmpdr(i,iv) = f_bgrp( i ) * becdr_bgrp( inl, i, k )
            end do
         end do
 
         sum_tmpdr = 0.0d0
-        do i = 1, nbsp_bgrp
-           do iv = 1, nh(is)
-              sum_tmpdr = sum_tmpdr + tmpdr(iv,i)*tmpbec(iv,i)
+        do iv = 1, nh(is)
+           do i = 1, nbsp_bgrp
+              sum_tmpdr = sum_tmpdr + tmpdr(i,iv)*tmpbec(i,iv)
            end do
         end do
 
@@ -911,7 +909,6 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   deallocate ( tmpbec, tmpdr )
 
 !$omp end parallel
-
   !
   CALL mp_sum( fion_loc, intra_bgrp_comm )
   IF( nbgrp > 1 ) THEN

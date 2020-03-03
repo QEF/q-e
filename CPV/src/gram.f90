@@ -99,7 +99,7 @@ CONTAINS
       !
       REAL(DP) :: cscnorm
       !
-      INTEGER ig, is, iv, jv, ia, inl, jnl
+      INTEGER ig, is, iv, jv, ia, inl, jnl, indv
       REAL(DP) rsum
       REAL(DP), ALLOCATABLE:: temp(:)
 !
@@ -116,12 +116,11 @@ CONTAINS
       DO ia=1,nat
          is = ityp(ia)
          IF( upf(is)%tvanp ) THEN
+            indv = indv_ijkb0(ia)
             DO iv=1,nh(is)
-               inl=indv_ijkb0(ia) + iv
                DO jv=1,nh(is)
-                  jnl=indv_ijkb0(ia) + jv
                   IF(ABS(qq_nt(iv,jv,is)).GT.1.e-5) THEN 
-                     rsum = rsum + qq_nt(iv,jv,is)*bec(inl,i)*bec(jnl,i)
+                     rsum = rsum + qq_nt(iv,jv,is)*bec(indv+iv,i)*bec(indv+jv,i)
                   ENDIF
                END DO
             END DO
@@ -178,12 +177,14 @@ CONTAINS
       ALLOCATE( bec_tmp( nkbx ) )
       ALLOCATE( csc2( SIZE( csc ) ) )
 
-
-      cp_tmp = 0.0d0
       csc    = 0.0d0
 
       ibgrp_i = ibgrp_g2l( i )
-      IF( ibgrp_i > 0 ) cp_tmp = cp_bgrp( :, ibgrp_i )
+      IF( ibgrp_i > 0 ) THEN
+         cp_tmp = cp_bgrp( :, ibgrp_i )
+      ELSE
+         cp_tmp = 0.0d0
+      END IF
 
       CALL mp_sum( cp_tmp, inter_bgrp_comm )
 
@@ -232,21 +233,27 @@ CONTAINS
       DEALLOCATE( temp )
 !$omp end parallel
 
-      CALL mp_sum( csc, intra_bgrp_comm )
-      CALL mp_sum( csc, inter_bgrp_comm )
-
       IF(  ibgrp_i > 0 ) THEN
+         DO ia = 1, nat
+            is = ityp(ia)
+            inl= indv_ijkb0(ia)
+            IF( upf(is)%tvanp ) THEN
+               bec_tmp( inl + 1: inl + nh(is) ) = bec_bgrp( inl + 1: inl + nh(is), ibgrp_i )
+            ELSE
+               bec_tmp( inl + 1: inl + nh(is) ) = 0.0d0
+            END IF
+         END DO
+         CALL mp_sum( bec_tmp, intra_bgrp_comm )
          DO ia = 1, nat
             is = ityp(ia)
             IF( upf(is)%tvanp ) THEN
                inl=indv_ijkb0(ia)
-               CALL mp_sum( bec_bgrp( inl + 1: inl + nh(is), ibgrp_i ), intra_bgrp_comm )
+               bec_bgrp( inl + 1: inl + nh(is), ibgrp_i ) = bec_tmp( inl + 1: inl + nh(is) )
             END IF
          END DO
+      ELSE
+         bec_tmp = 0.0d0
       END IF
-
-      bec_tmp = 0.0d0
-      IF( ibgrp_i > 0 ) bec_tmp = bec_bgrp(:,ibgrp_i )
 
       CALL mp_sum( bec_tmp, inter_bgrp_comm )
 !
@@ -297,7 +304,9 @@ CONTAINS
 !
 !     corresponing bec:  bec(i)=<cp(i)|beta>-csc(k)<cp(k)|beta>
 !
+      CALL mp_sum( csc, intra_bgrp_comm )
       CALL mp_sum( csc2, intra_bgrp_comm )
+      CALL mp_sum( csc, inter_bgrp_comm )
       CALL mp_sum( csc2, inter_bgrp_comm )
       csc = csc + csc2
 
