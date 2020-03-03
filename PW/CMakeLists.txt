@@ -231,7 +231,8 @@ set(sources
     src/wannier_init.f90
     src/wannier_check.f90
     src/wannier_clean.f90
-    src/wannier_occ.f90)
+    src/wannier_occ.f90
+    src/hs_psi.f90)
 
 qe_add_library(qe_pw ${sources})
 add_library(QE::PW ALIAS qe_pw)
@@ -245,6 +246,7 @@ target_link_libraries(qe_pw
         QE::KS_Solvers::Davidson
         QE::KS_Solvers::CG
         QE::KS_Solvers::PPCG
+        QE::KS_Solvers::ParO
         QE::Modules
         QE::FFTX
         QE::DFTD3

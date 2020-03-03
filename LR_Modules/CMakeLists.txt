@@ -49,7 +49,8 @@ set(sources
     lrcom.f90
     lr_dot.f90
     lanczos_pseudohermitian.f90
-    lanczos_nonhermitian.f90)
+    lanczos_nonhermitian.f90
+    set_kplusq_nc.f90)
 
 qe_add_library(qe_lr_modules ${sources})
 add_library(QE::LR_Modules ALIAS qe_lr_modules)

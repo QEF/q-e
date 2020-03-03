@@ -6,6 +6,25 @@
 
 mark_as_advanced(QE_MANDATORY_TARGETS)
 
+function(qe_get_fortran_cpp_flag OUTVAR)
+    if(CMAKE_Fortran_COMPILER_ID STREQUAL "AppleClang" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "ARMCC" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "ARMClang" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "Clang" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "Cray" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "Flang" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "G95" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "GNU" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "MSVC" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "XL" OR
+        CMAKE_Fortran_COMPILER_ID STREQUAL "XLClang")
+        set(${OUTVAR} "-cpp" PARENT_SCOPE)
+    elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
+        set(${OUTVAR} "-Mpreprocess" PARENT_SCOPE) # :'(
+    endif()
+endfunction(qe_get_fortran_cpp_flag)
+
 function(qe_fix_fortran_modules LIB)
     set(targets ${LIB} ${ARGN})
     foreach(tgt IN LISTS targets)
@@ -53,26 +72,7 @@ endfunction(qe_add_library)
 function(_qe_add_global_target TGT)
     target_link_libraries(${TGT} PUBLIC ${QE_MANDATORY_TARGETS})
     qe_fix_fortran_modules(${TGT})
-
-    # Add preprocessing flag for Fortran sources
-    if(CMAKE_Fortran_COMPILER_ID STREQUAL "AppleClang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "ARMCC" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "ARMClang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Clang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Cray" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Flang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "G95" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "GNU" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "MSVC" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "XL" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "XLClang"
-    )
-        set(fortran_preprocess "-cpp")
-    elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
-        set(fortran_preprocess "-Mpreprocess")
-    endif()
-
+    qe_get_fortran_cpp_flag(fortran_preprocess)
     target_compile_options(${TGT} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${fortran_preprocess}>)
 endfunction(_qe_add_global_target)
 

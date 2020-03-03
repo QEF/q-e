@@ -48,7 +48,11 @@ set(sources
     src/epw_summary.f90
     src/loadumat.f90
     src/stop_epw.f90
-    src/wannierEPW.f90)
+    src/wannierEPW.f90
+    src/loadbm.f90
+    src/ephblochkq.f90
+    src/wfc_elec.f90
+    src/test_tools.f90)
 
 qe_add_library(qe_epw ${sources})
 add_library(QE::EPW ALIAS qe_epw)

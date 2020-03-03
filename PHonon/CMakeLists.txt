@@ -177,7 +177,11 @@ set(sources_ph
     PH/raman_mat.f90
     PH/raman.f90
     PH/dhdrhopsi.f90
-    PH/set_dvscf.f90)
+    PH/set_dvscf.f90
+    PH/non_scf_ph.f90
+    PH/adddvscf_ph_mag.f90
+    PH/apply_trev.f90
+    PH/c_bands_ph.f90)
 
 set(sources_phaux
     PH/write_eigenvectors.f90)
@@ -208,10 +212,6 @@ set(sources_gamma
     Gamma/solve_ph.f90
     Gamma/writedyn.f90)
 
-set(sources_fd
-    FD/stop_pp.f90
-)
-
 qe_add_library(qe_phonon_ph ${sources_ph})
 add_library(QE::PHonon::PH ALIAS qe_phonon_ph)
 target_link_libraries(qe_phonon_ph
@@ -235,15 +235,6 @@ add_library(QE::PHonon::Gamma ALIAS qe_phonon_gamma)
 target_link_libraries(qe_phonon_gamma
     PRIVATE
         QE::PW
-        QE::Modules
-        QE::LR_Modules)
-
-qe_add_library(qe_phonon_fd ${sources_fd})
-add_library(QE::PHonon::FD ALIAS qe_phonon_fd)
-target_link_libraries(qe_phonon_fd
-    PRIVATE
-        QE::PW
-        QE::UTILX
         QE::Modules
         QE::LR_Modules)
 
@@ -437,7 +428,7 @@ qe_install_targets(
     qe_phonon_ph
     qe_phonon_phaux
     qe_phonon_gamma
-    qe_phonon_fd
+    # qe_phonon_fd
     # Executables
     qe_phonon_ph_exe
     qe_phonon_dynmat_exe
