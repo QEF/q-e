@@ -1,41 +1,32 @@
 ###########################################################
 # QE::FOX
 ###########################################################
-find_package(FoX QUIET)
-if(FoX_FOUND)
+if(FOX_ROOT)
     add_library(qe_fox INTERFACE)
     add_library(QE::FOX ALIAS qe_fox)
-    target_link_libraries(qe_fox INTERFACE ${FoX_LIBRARIES})
-    qe_install_targets(qe_fox)
-else(FoX_FOUND)
-    if(TARGET QE::FOX)
-        message(STATUS "Using inherited QE::FOX target")
-    else(TARGET QE::FOX)
-        if(QE_ENABLE_VENDOR_DEPS)
-            message(STATUS "Installing QE::FOX via submodule")
-            set(fox_targets
-                FoX_fsys
-                FoX_utils
-                FoX_common
-                FoX_dom
-                FoX_sax
-                FoX_wxml)
-            set(FoX_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
-            qe_git_submodule_update(external/fox)
-            add_subdirectory(fox EXCLUDE_FROM_ALL)
-            add_library(qe_fox INTERFACE)
-            add_library(QE::FOX ALIAS qe_fox)
-            target_link_libraries(qe_fox INTERFACE ${fox_targets})
-            qe_fix_fortran_modules(${fox_targets})
-            qe_install_targets(qe_fox ${fox_targets})
-        else(QE_ENABLE_VENDOR_DEPS)
-            # No dep has been found via find_package,
-            # call it again with REQUIRED to make it fail
-            # explicitly (hoping in some helpful message)
-            find_package(FoX REQUIRED)
-        endif(QE_ENABLE_VENDOR_DEPS)
-    endif(TARGET QE::FOX)
-endif(FoX_FOUND)
+    target_link_libraries(qe_fox INTERFACE "${FOX_ROOT}/lib;-lFoX_fsys;-lFoX_utils;-lFoX_common;-lFoX_wxml;-lFoX_sax;-lFoX_dom")
+    target_include_directories(qe_fox INTERFACE ${FOX_ROOT}/include)
+elseif(QE_ENABLE_VENDOR_DEPS)
+    message(STATUS "Installing QE::FOX via submodule")
+    set(fox_targets
+        FoX_fsys
+        FoX_utils
+        FoX_common
+        FoX_dom
+        FoX_sax
+        FoX_wxml)
+    set(FoX_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
+    qe_git_submodule_update(external/fox)
+
+    add_subdirectory(fox EXCLUDE_FROM_ALL)
+    add_library(qe_fox INTERFACE)
+    add_library(QE::FOX ALIAS qe_fox)
+    target_link_libraries(qe_fox INTERFACE ${fox_targets})
+    qe_fix_fortran_modules(${fox_targets})
+    qe_install_targets(qe_fox ${fox_targets})
+else()
+    message(FATAL_ERROR "Fox not found! Please specify a FoX root (-DFOX_ROOT=/path/to/fox) or enable the FoX vendoring (-DQE_ENABLE_VENDOR_DEPS=ON)!")
+endif()
 
 ###########################################################
 # QE::IOTK
