@@ -646,7 +646,7 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
            v2x = (1.0_DP - exx_fraction) * v2x
         ENDIF
         !
-     CASE( 43 ) ! 'ev93'
+     CASE( 43 ) ! 'RPBE'
         !
         CALL pbex( rho, grho, 8, sx, v1x, v2x )
         !

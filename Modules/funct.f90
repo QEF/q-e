@@ -518,7 +518,7 @@ CONTAINS
        dft_defined = set_dft_values(1,4,25,0,0,0)
     ! special case : RPBE
     CASE( 'RPBE' )
-       dft_defined = set_dft_values(1,4,43,0,0,0)
+       dft_defined = set_dft_values(1,4,43,4,0,0)
     ! special case : PBE0
     CASE( 'PBE0' )
        dft_defined = set_dft_values(6,4,8,4,0,0)
