@@ -4,7 +4,23 @@
 # corresponding CMake builtin
 ###########################################################
 
-mark_as_advanced(QE_MANDATORY_TARGETS)
+if(NOT TARGET QEGlobalCompileDefinitions)
+    add_library(QEGlobalCompileDefinitions INTERFACE)
+endif()
+
+function(qe_add_global_compile_definitions DEF)
+    if(TARGET QEGlobalCompileDefinitions)
+        set_property(TARGET QEGlobalCompileDefinitions APPEND
+                     PROPERTY INTERFACE_COMPILE_DEFINITIONS ${DEF} ${ARGN})
+    endif()
+endfunction(qe_add_global_compile_definitions)
+
+function(qe_get_global_compile_definitions OUTVAR)
+    if(TARGET QEGlobalCompileDefinitions)
+        get_target_property(${OUTVAR} QEGlobalCompileDefinitions
+            INTERFACE_COMPILE_DEFINITIONS)
+    endif()
+endfunction(qe_get_global_compile_definitions)
 
 function(qe_get_fortran_cpp_flag OUTVAR)
     if(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
@@ -51,20 +67,22 @@ endfunction(qe_git_submodule_update)
 
 function(qe_add_executable EXE)
     add_executable(${EXE} ${ARGN})
-    _qe_add_global_target(${EXE} ${ARGN})
+    _qe_add_target(${EXE} ${ARGN})
 endfunction(qe_add_executable)
 
 function(qe_add_library LIB)
     add_library(${LIB} ${ARGN})
-    _qe_add_global_target(${LIB} ${ARGN})
+    _qe_add_target(${LIB} ${ARGN})
 endfunction(qe_add_library)
 
-function(_qe_add_global_target TGT)
-    target_link_libraries(${TGT} PUBLIC ${QE_MANDATORY_TARGETS})
+function(_qe_add_target TGT)
+    if(TARGET QEGlobalCompileDefinitions)
+        target_link_libraries(${TGT} PUBLIC QEGlobalCompileDefinitions)
+    endif()
     qe_fix_fortran_modules(${TGT})
     qe_get_fortran_cpp_flag(fortran_preprocess)
     target_compile_options(${TGT} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${fortran_preprocess}>)
-endfunction(_qe_add_global_target)
+endfunction(_qe_add_target)
 
 function(qe_install_targets TGT)
     set(targets ${TGT} ${ARGN})
@@ -91,3 +109,7 @@ function(qe_install_targets TGT)
         endif()        
     endforeach()
 endfunction(qe_install_targets)
+
+if(TARGET QEGlobalCompileDefinitions)
+    qe_install_targets(QEGlobalCompileDefinitions)
+endif()

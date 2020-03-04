@@ -18,8 +18,6 @@ project(qe
 # Build helpers
 ###########################################################
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
-set(QE_MANDATORY_TARGETS QE::Definitions CACHE STRING "" FORCE)
 include(cmake/qeHelpers.cmake)
 
 ###########################################################
@@ -56,21 +54,6 @@ option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
 option(QE_ENABLE_OPENMP
     "enable distributed execution support via OpenMP" OFF)
-
-###########################################################
-# Build Features
-# Each one of the following options boils down to a simple
-# compile definition, no additional dependencies are needed
-add_library(qe_definitions INTERFACE)
-add_library(QE::Definitions ALIAS qe_definitions)
-qe_install_targets(qe_definitions)
-###########################################################
-# TODO change all ifdefs throughout code base to match
-# cmake options
-# TODO symbols beginning with '__' followed by a capital
-# character are reserved for standard library use (at
-# least in C, not sure about Fortran), change all feature
-# macros to avoid weird behaviors
 option(QE_ENABLE_TRACE
     "enable execution tracing output" OFF)
 option(QE_ENABLE_MPI_INPLACE
@@ -90,64 +73,55 @@ option(QE_ENABLE_VENDOR_DEPS
 option(QE_ENABLE_DOC 
     "enable documentation building" ON)
 
+# TODO change all ifdefs throughout code base to match
+# cmake options
+# TODO symbols beginning with '__' followed by a capital
+# character are reserved for standard library use (at
+# least in C, not sure about Fortran), change all feature
+# macros to avoid weird behaviors
+
 # Disable all configuration headers used to be generated
 # by configure (see <qe>/include/)
-set_property(TARGET qe_definitions APPEND
-    PROPERTY INTERFACE_COMPILE_DEFINITIONS QE_NO_CONFIGURE_HEADERS)
+qe_add_global_compile_definitions(QE_NO_CONFIG_H)
 
 if(QE_ENABLE_TRACE)
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS __TRACE)
+    qe_add_global_compile_definitions(__TRACE)
 endif()
 if(QE_ENABLE_MPI_INPLACE)
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS __USE_INPLACE_MPI)
+    qe_add_global_compile_definitions(__USE_INPLACE_MPI)
 endif()
 if(QE_ENABLE_MPI_MODULE)
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS __MPI_MODULE)
+    qe_add_global_compile_definitions(__MPI_MODULE)
 endif()
 if(QE_ENABLE_BARRIER)
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS __USE_BARRIER)
+    qe_add_global_compile_definitions(__USE_BARRIER)
 endif()
 if(QE_ENABLE_MPI)
-    # legacy macro used throughout qe
     # OMPI_SKIP_MPICXX: skip CXX APIs on openmpi, cause trouble to C APIs
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS __MPI OMPI_SKIP_MPICXX)
+    qe_add_global_compile_definitions(__MPI OMPI_SKIP_MPICXX)
 endif()
 if(QE_ENABLE_SCALAPACK)
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS __SCALAPACK)
+    qe_add_global_compile_definitions(__SCALAPACK)
 endif()
 if(QE_ENABLE_HDF5)
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS __HDF5)
+    qe_add_global_compile_definitions(__HDF5)
 endif()
 
 # Feature checks
 check_function_exists(mallinfo HAVE_MALLINFO)
 if(HAVE_MALLINFO)
-    set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS HAVE_MALLINFO)
+    qe_add_global_compile_definitions(HAVE_MALLINFO)
 endif()
 
 # Check options consistency
-if(QE_ENABLE_ELPA)
-    if(NOT QE_ENABLE_SCALAPACK)
-        message(FATAL_ERROR "ELPA requires SCALAPACK support. Enable with \"-DQE_ENABLE_SCALAPACK=ON\"")
-    endif()
+if(QE_ENABLE_ELPA AND NOT QE_ENABLE_SCALAPACK)
+    message(FATAL_ERROR "ELPA requires SCALAPACK support, enable it with '-DQE_ENABLE_SCALAPACK=ON' or disable ELPA with '-DQE_ENABLE_ELPA=OFF'")
 endif()
-if(QE_ENABLE_SCALAPACK)
-    if(NOT QE_ENABLE_MPI)
-        message(FATAL_ERROR "SCALAPACK requires MPI support.")
-    endif()
+if(QE_ENABLE_SCALAPACK AND NOT QE_ENABLE_MPI)
+    message(FATAL_ERROR "SCALAPACK requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable SCALAPACK with '-DQE_ENABLE_SCALAPACK=OFF'")
 endif()
-if(QE_ENABLE_HDF5)
-    if(NOT QE_ENABLE_MPI)
-        message(FATAL_ERROR "HDF5 requires MPI support.")
-    endif()
+if(QE_ENABLE_HDF5 AND NOT QE_ENABLE_MPI)
+    message(FATAL_ERROR "HDF5 requires MPI support, enable it with '-DQE_ENABLE_MPI=ON' or disable HDF5 with '-DQE_ENABLE_HDF5=OFF'")
 endif()
 
 ###########################################################
@@ -300,10 +274,7 @@ if(NOT FFTW_FOUND)
     message(STATUS "FFTW is falling back to QE internal implementation (FFTXLib)")
     set(fft_definitions __FFTW)
 endif(NOT FFTW_FOUND)
-# Set the FFT configuration macro on both QE::FFT_* and global
-# QE::Definitions targets:
-set_property(TARGET qe_definitions APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS ${fft_definitions})
+qe_add_global_compile_definitions(${fft_definitions})
 
 ###########################################################
 # SCALAPACK
@@ -339,16 +310,13 @@ if(QE_ENABLE_ELPA)
     if(CMAKE_MATCH_ONLY_VER EQUAL "2018" OR
        CMAKE_MATCH_ONLY_VER EQUAL "2017" OR
        CMAKE_MATCH_ONLY_VER EQUAL "2016")
-        set_property(TARGET qe_definitions APPEND
-            PROPERTY INTERFACE_COMPILE_DEFINITIONS __ELPA_2016)
+        qe_add_global_compile_definitions(__ELPA_2016)
     elseif(CMAKE_MATCH_ONLY_VER EQUAL "2015")
-        set_property(TARGET qe_definitions APPEND
-            PROPERTY INTERFACE_COMPILE_DEFINITIONS __ELPA_2015)
+        qe_add_global_compile_definitions(__ELPA_2015)
     elseif(CMAKE_MATCH_ONLY_VER LESS "2015")
-        set_property(TARGET qe_definitions APPEND
-            PROPERTY INTERFACE_COMPILE_DEFINITIONS __ELPA)
+        qe_add_global_compile_definitions(__ELPA)
     else()
-        message(FATAL_ERROR "ELPA ${CMAKE_MATCH_ONLY_VER} not supported!")
+        message(FATAL_ERROR "ELPA ver. ${CMAKE_MATCH_ONLY_VER} is not supported.")
     endif()
 
     # Looking for module directory
