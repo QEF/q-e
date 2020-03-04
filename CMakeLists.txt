@@ -71,7 +71,7 @@ option(QE_ENABLE_HDF5
 option(QE_ENABLE_VENDOR_DEPS 
     "enable fallback on vendored deps when none is found via find_package()" ON)
 option(QE_ENABLE_DOC 
-    "enable documentation building" ON)
+    "enable documentation building" OFF)
 
 # TODO change all ifdefs throughout code base to match
 # cmake options
