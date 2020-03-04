@@ -187,7 +187,7 @@ endif(QE_ENABLE_OPENMP)
 
 ############################################################
 ## Vendor
-## try to found a vendor specific libraries for: 
+## Try to found vendor specific libraries for: 
 ## BLAS, LAPACK and FFTW
 ############################################################
 if(QE_ENABLE_OPENMP)
