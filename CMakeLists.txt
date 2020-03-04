@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 project(qe
-    VERSION 6.4.1
+    VERSION 6.5.0
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -424,6 +424,15 @@ if(QE_ENABLE_DOC)
 endif()
 
 ###########################################################
+# Pkg-config
+###########################################################
+configure_file(
+    ${PROJECT_SOURCE_DIR}/quantum_espresso.pc.in
+    ${PROJECT_BINARY_DIR}/quantum_espresso.pc
+    @ONLY
+)
+
+###########################################################
 # Exports
 ###########################################################
 install(EXPORT qeTargets
@@ -446,6 +455,9 @@ install(FILES
             ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
         DESTINATION
             ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/quantum_espresso.pc
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 ###########################################################
 # Dependency graph generation
