@@ -10,11 +10,12 @@ set(LATEX_DEFAULT_BUILD "pdf")
 
 add_latex_document(
     user_guide.tex
-    INPUTS quote.tex
+    INPUTS quote.tex html.sty
     IMAGES quantum_espresso.pdf)
 
 add_latex_document(
-    developer_man.tex
+    developer_man.tex 
+    INPUTS html.sty
     IMAGES quantum_espresso.pdf)
 
 add_latex_document(
