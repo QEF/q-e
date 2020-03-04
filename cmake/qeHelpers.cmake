@@ -17,8 +17,9 @@ endfunction(qe_add_global_compile_definitions)
 
 function(qe_get_global_compile_definitions OUTVAR)
     if(TARGET QEGlobalCompileDefinitions)
-        get_target_property(${OUTVAR} QEGlobalCompileDefinitions
+        get_target_property(defs QEGlobalCompileDefinitions
             INTERFACE_COMPILE_DEFINITIONS)
+        set(${OUTVAR} ${defs} PARENT_SCOPE)
     endif()
 endfunction(qe_get_global_compile_definitions)
 

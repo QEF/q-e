@@ -28,7 +28,6 @@ target_link_libraries(qe_lax
 # headers use preprocessor directives but they are included 
 # via fortran 'include' statements that are managed by the
 # compiler frontend long after the actual C preprocessor has run.
-set(lax_include_dir ${CMAKE_CURRENT_BINARY_DIR}/include)
 set(in_headers
     laxlib.h
     laxlib_hi.h
@@ -36,33 +35,35 @@ set(in_headers
     laxlib_low.h
     laxlib_mid.h
     laxlib_param.h)
-set(headers)
 qe_get_fortran_cpp_flag(f_cpp_flag)
+qe_get_global_compile_definitions(global_defs)
+set(global_flags)
+foreach(DEF ${global_defs})
+    list(APPEND global_flags "-D${DEF}")
+endforeach(DEF in global_defs)
+set(lax_include_dir ${CMAKE_CURRENT_BINARY_DIR}/include)
 file(MAKE_DIRECTORY ${lax_include_dir})
+set(headers)
 foreach(in_h ${in_headers})
     get_filename_component(in_h_basename ${in_h} NAME_WE)
     set(out_h "${lax_include_dir}/${in_h_basename}.fh")
     add_custom_command(
         OUTPUT ${out_h}
-        COMMAND "${CMAKE_Fortran_COMPILER}" ${f_cpp_flag} -E ${CMAKE_CURRENT_SOURCE_DIR}/${in_h} -o ${out_h}
+        COMMAND "${CMAKE_Fortran_COMPILER}" ${f_cpp_flag} ${global_flags} -E ${CMAKE_CURRENT_SOURCE_DIR}/${in_h} -o ${out_h}
         MAIN_DEPENDENCY ${in_h}
-        COMMENT "Preprocessing ${in_h}"
+        COMMENT "Preprocessing Fortran header ${in_h}"
         VERBATIM)
     list(APPEND headers ${out_h})
 endforeach()
 add_custom_target(qe_lax_headers
     DEPENDS ${headers}
-    COMMENT "Preprocessing LAX headers"
     VERBATIM)
-
 target_include_directories(qe_lax
     PUBLIC
         $<BUILD_INTERFACE:${lax_include_dir}>
-        $<INSTALL_INTERFACE:include/qe>
-)
+        $<INSTALL_INTERFACE:include/qe>)
 set_target_properties(qe_lax
     PROPERTIES PUBLIC_HEADER "${headers}")
-
 add_dependencies(qe_lax qe_lax_headers)
 
 qe_install_targets(qe_lax)
