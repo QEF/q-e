@@ -7,21 +7,11 @@
 mark_as_advanced(QE_MANDATORY_TARGETS)
 
 function(qe_get_fortran_cpp_flag OUTVAR)
-    if(CMAKE_Fortran_COMPILER_ID STREQUAL "AppleClang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "ARMCC" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "ARMClang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Clang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Cray" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Flang" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "G95" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "GNU" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "Intel" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "MSVC" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "XL" OR
-        CMAKE_Fortran_COMPILER_ID STREQUAL "XLClang")
-        set(${OUTVAR} "-cpp" PARENT_SCOPE)
-    elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
+    if(CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
         set(${OUTVAR} "-Mpreprocess" PARENT_SCOPE) # :'(
+    else()
+        # TODO actual flag check
+        set(${OUTVAR} "-cpp" PARENT_SCOPE)
     endif()
 endfunction(qe_get_fortran_cpp_flag)
 
