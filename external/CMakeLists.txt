@@ -70,7 +70,6 @@ set(sources
     iotk/src/iotk_dat+LOGICAL3_3.f90
     iotk/src/iotk_dat+LOGICAL3_6.f90
     iotk/src/iotk_attr+COMPLEX2_3.f90
-    iotk/src/iotk.f90
     iotk/src/iotk_attr+INTEGER3_6.f90
     iotk/src/iotk_attr+LOGICAL1_3.f90
     iotk/src/iotk_str.f90
@@ -78,11 +77,9 @@ set(sources
     iotk/src/iotk_dat+REAL1_0.f90
     iotk/src/iotk_attr+INTEGER1_3.f90
     iotk/src/iotk_dat+INTEGER4_0.f90
-    iotk/src/iotk_copy.f90
     iotk/src/iotk_attr+COMPLEX1_3.f90
     iotk/src/iotk_dat+COMPLEX2_3.f90
     iotk/src/iotk_attr_interf.f90
-    iotk/src/iotk_print_kinds.f90
     iotk/src/iotk_files_interf.f90
     iotk/src/iotk_attr.f90
     iotk/src/iotk_dat_interf.f90
@@ -189,8 +186,47 @@ target_link_libraries(qe_iotk
 add_library(QE::IOTK ALIAS qe_iotk)
 
 ###########################################################
+# iotk.x
+###########################################################
+set(sources iotk/src/iotk.f90)
+qe_add_executable(qe_iotk_exe ${sources})
+set_target_properties(qe_iotk_exe PROPERTIES OUTPUT_NAME iotk.x)
+target_link_libraries(qe_iotk_exe
+    PRIVATE
+        QE::MPI_Fortran
+        QE::IOTK)
 
-qe_install_targets(qe_iotk)
+###########################################################
+# iotk_copy.x
+###########################################################
+set(sources iotk/src/iotk_copy.f90)
+qe_add_executable(qe_iotkcopy_exe ${sources})
+set_target_properties(qe_iotkcopy_exe PROPERTIES OUTPUT_NAME iotk_copy.x)
+target_link_libraries(qe_iotkcopy_exe
+    PRIVATE
+        QE::MPI_Fortran
+        QE::IOTK)
+
+###########################################################
+# iotk_print_kinds.x
+###########################################################
+set(sources iotk/src/iotk_print_kinds.f90)
+qe_add_executable(qe_iotkprintkinds_exe ${sources})
+set_target_properties(qe_iotkprintkinds_exe PROPERTIES OUTPUT_NAME iotk_print_kinds.x)
+target_link_libraries(qe_iotkprintkinds_exe
+    PRIVATE
+        QE::IOTK)
+
+###########################################################
+
+qe_install_targets(
+    # Libraries
+    qe_iotk
+    # Executables
+    qe_iotk_exe
+    qe_iotkcopy_exe
+    qe_iotkprintkinds_exe
+)
 
 ###########################################################
 # QE::WANNIER90
@@ -217,16 +253,13 @@ set(sources
     wannier90/src/postw90/kpath.F90
     wannier90/src/postw90/kslice.F90
     wannier90/src/postw90/postw90_common.F90
-    wannier90/src/postw90/postw90.F90
     wannier90/src/postw90/spin.F90
     wannier90/src/postw90/wan_ham.F90
     wannier90/src/sitesym.F90
     wannier90/src/transport.F90
     wannier90/src/utility.F90
-    wannier90/src/w90chk2chk.F90
     wannier90/src/wannierise.F90
     wannier90/src/wannier_lib.F90
-    wannier90/src/wannier_prog.F90
     wannier90/src/ws_distance.F90)
 
 qe_add_library(qe_wannier90 ${sources})
@@ -234,6 +267,44 @@ add_library(QE::WANNIER90 ALIAS qe_wannier90)
 target_link_libraries(qe_wannier90
     PRIVATE
         QE::LAPACK)
+
+###########################################################
+# wannier_prog.x
+###########################################################
+set(sources wannier90/src/wannier_prog.F90)
+qe_add_executable(qe_wannierprog_exe ${sources})
+set_target_properties(qe_wannierprog_exe PROPERTIES OUTPUT_NAME wannier_prog.x)
+target_link_libraries(qe_wannierprog_exe
+    PRIVATE
+        QE::WANNIER90)
+
+###########################################################
+# w90chk2chk.x
+###########################################################
+set(sources wannier90/src/w90chk2chk.F90)
+qe_add_executable(qe_w90chk2chk_exe ${sources})
+set_target_properties(qe_w90chk2chk_exe PROPERTIES OUTPUT_NAME w90chk2chk.x)
+target_link_libraries(qe_w90chk2chk_exe
+    PRIVATE
+        QE::WANNIER90)
+
+###########################################################
+# postw90.x
+###########################################################
+set(sources wannier90/src/postw90/postw90.F90)
+qe_add_executable(qe_wannier90_postw90_exe ${sources})
+set_target_properties(qe_wannier90_postw90_exe PROPERTIES OUTPUT_NAME postw90.x)
+target_link_libraries(qe_wannier90_postw90_exe
+    PRIVATE
+        QE::WANNIER90)
+
 ###########################################################
 
-qe_install_targets(qe_wannier90)
+qe_install_targets(
+    # Libraries
+    qe_wannier90
+    # Executables
+    qe_wannierprog_exe
+    qe_w90chk2chk_exe
+    qe_wannier90_postw90_exe
+)
