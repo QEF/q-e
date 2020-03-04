@@ -32,6 +32,24 @@ function(qe_get_fortran_cpp_flag OUTVAR)
     endif()
 endfunction(qe_get_fortran_cpp_flag)
 
+function(qe_preprocess_source IN OUT)
+    qe_get_fortran_cpp_flag(f_cpp_flag)
+    qe_get_global_compile_definitions(global_defs)
+    foreach(DEF ${global_defs})
+        list(APPEND global_flags "-D${DEF}")
+    endforeach()
+    get_filename_component(out_dir ${OUT} DIRECTORY)
+    if(NOT EXISTS ${out_dir})
+        file(MAKE_DIRECTORY ${out_dir})
+    endif()
+    add_custom_command(
+        OUTPUT ${OUT}
+        COMMAND "${CMAKE_Fortran_COMPILER}" ${f_cpp_flag} ${global_flags} -E ${IN} -o ${OUT}
+        MAIN_DEPENDENCY ${IN}
+        COMMENT "Preprocessing ${IN}"
+        VERBATIM)    
+endfunction(qe_preprocess_source)
+
 function(qe_fix_fortran_modules LIB)
     set(targets ${LIB} ${ARGN})
     foreach(tgt IN LISTS targets)
