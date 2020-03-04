@@ -35,6 +35,7 @@ if(QE_ENABLE_TEST)
     target_link_libraries(qe_lax_test
         PRIVATE
             QE::MPI_Fortran
+            QE::LAPACK
             QE::LAX)
     add_test(NAME test-lax COMMAND qe_lax_test)
 endif(QE_ENABLE_TEST)

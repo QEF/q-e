@@ -160,6 +160,7 @@ qe_add_executable(qe_cpv_wfdd_exe ${sources})
 set_target_properties(qe_cpv_wfdd_exe PROPERTIES OUTPUT_NAME wfdd.x)
 target_link_libraries(qe_cpv_wfdd_exe
     PRIVATE
+        QE::LAPACK
         QE::Modules
         QE::CPV)
 

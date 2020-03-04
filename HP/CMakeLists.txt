@@ -60,6 +60,7 @@ qe_add_executable(qe_hp_exe ${sources})
 set_target_properties(qe_hp_exe PROPERTIES OUTPUT_NAME hp.x)
 target_link_libraries(qe_hp_exe
     PRIVATE
+        QE::PW
         QE::LAX
         QE::Modules
         QE::HP)

@@ -4,7 +4,6 @@ set(sources
     src/add_shift_lc.f90
     src/add_shift_us.f90
     src/atomic_wfc_nc_proj.f90
-    src/benchmark_libxc.f90
     src/chdens_module.f90
     src/chdens_bspline.f90
     src/compute_ppsi.f90
@@ -42,7 +41,8 @@ set(sources
     src/write_proj.f90
     src/write_io_header.f90
     src/write_hamiltonians.f90
-    src/xc_vdW_scale_mod.f90)
+    src/xc_vdW_scale_mod.f90
+    src/projwfc.f90)
 
 qe_add_library(qe_pp ${sources})
 add_library(QE::PP ALIAS qe_pp)
@@ -159,6 +159,7 @@ qe_add_executable(qe_pp_plotproj_exe ${sources})
 set_target_properties(qe_pp_plotproj_exe PROPERTIES OUTPUT_NAME plotproj.x)
 target_link_libraries(qe_pp_plotproj_exe
     PRIVATE
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -169,6 +170,7 @@ qe_add_executable(qe_pp_plotrho_exe ${sources})
 set_target_properties(qe_pp_plotrho_exe PROPERTIES OUTPUT_NAME plotrho.x)
 target_link_libraries(qe_pp_plotrho_exe
     PRIVATE
+        QE::Modules
         QE::PP)
 
 ###########################################################
@@ -179,6 +181,7 @@ qe_add_executable(qe_pp_pmw_exe ${sources})
 set_target_properties(qe_pp_pmw_exe PROPERTIES OUTPUT_NAME pmw.x)
 target_link_libraries(qe_pp_pmw_exe
     PRIVATE
+        QE::LAPACK
         QE::PW
         QE::UTILX
         QE::Modules
@@ -205,6 +208,7 @@ qe_add_executable(qe_pp_projwfc_exe ${sources})
 set_target_properties(qe_pp_projwfc_exe PROPERTIES OUTPUT_NAME projwfc.x)
 target_link_libraries(qe_pp_projwfc_exe
     PRIVATE
+        QE::LAPACK
         QE::PW
         QE::Modules
         QE::PP)
@@ -217,6 +221,7 @@ qe_add_executable(qe_pp_pw2wannier90_exe ${sources})
 set_target_properties(qe_pp_pw2wannier90_exe PROPERTIES OUTPUT_NAME pw2wannier90.x)
 target_link_libraries(qe_pp_pw2wannier90_exe
     PRIVATE
+        QE::LAPACK
         QE::PW
         QE::UTILX
         QE::Modules
@@ -301,6 +306,7 @@ qe_add_executable(qe_pp_wannierham_exe ${sources})
 set_target_properties(qe_pp_wannierham_exe PROPERTIES OUTPUT_NAME wannier_ham.x)
 target_link_libraries(qe_pp_wannierham_exe
     PRIVATE
+        QE::CLIB
         QE::PW
         QE::UTILX
         QE::Modules
@@ -389,6 +395,7 @@ qe_add_executable(qe_pp_ppacf_exe ${sources})
 set_target_properties(qe_pp_ppacf_exe PROPERTIES OUTPUT_NAME ppacf.x)
 target_link_libraries(qe_pp_ppacf_exe
     PRIVATE
+        QE::LAPACK
         QE::PW
         QE::PP)
 

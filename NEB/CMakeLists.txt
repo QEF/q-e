@@ -38,6 +38,7 @@ qe_add_executable(qe_neb_exe ${sources})
 set_target_properties(qe_neb_exe PROPERTIES OUTPUT_NAME neb.x)
 target_link_libraries(qe_neb_exe
     PRIVATE
+        QE::PW
         QE::LAX
         QE::UTILX
         QE::Modules

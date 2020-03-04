@@ -99,6 +99,7 @@ qe_add_executable(qe_tddfpt_calculatespectrum_exe ${sources})
 set_target_properties(qe_tddfpt_calculatespectrum_exe PROPERTIES OUTPUT_NAME tddfpt_calculate_spectrum.x)
 target_link_libraries(qe_tddfpt_calculatespectrum_exe
     PRIVATE
+        QE::LAPACK
         QE::UTILX
         QE::Modules)
 

@@ -55,6 +55,7 @@ if(QE_ENABLE_TEST AND QE_ENABLE_MPI) # TODO fix test without MPI
         PRIVATE
             QE::OpenMP_Fortran
             QE::MPI_Fortran
+            QE::LAPACK
             QE::FFTX)
     add_test(NAME test-fftx COMMAND qe_fftx_test)
 endif()

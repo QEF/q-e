@@ -209,9 +209,6 @@ set(sources_gamma
     Gamma/writedyn.f90)
 
 set(sources_fd
-    FD/fd.f90
-    FD/fd_ef.f90
-    FD/fd_ifc.f90
     FD/stop_pp.f90
 )
 
@@ -258,6 +255,7 @@ qe_add_executable(qe_phonon_ph_exe ${sources})
 set_target_properties(qe_phonon_ph_exe PROPERTIES OUTPUT_NAME ph.x)
 target_link_libraries(qe_phonon_ph_exe
     PRIVATE
+        QE::PW
         QE::LAX
         QE::Modules
         QE::PHonon::PH
@@ -343,6 +341,7 @@ qe_add_executable(qe_phonon_lambda_exe ${sources})
 set_target_properties(qe_phonon_lambda_exe PROPERTIES OUTPUT_NAME lambda.x)
 target_link_libraries(qe_phonon_lambda_exe
     PRIVATE
+        QE::Modules
         QE::UTILX
         QE::PHonon::PH
 )
@@ -387,6 +386,51 @@ target_link_libraries(qe_phonon_fqha_exe
 )
 
 ###########################################################
+# fd.x
+###########################################################
+set(sources FD/fd.f90)
+qe_add_executable(qe_phonon_fd_exe ${sources})
+set_target_properties(qe_phonon_fd_exe PROPERTIES OUTPUT_NAME fd.x)
+target_link_libraries(qe_phonon_fd_exe
+    PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
+        QE::PHonon::FD
+        QE::PHonon::PH
+)
+
+###########################################################
+# fd_ef.x
+###########################################################
+set(sources FD/fd_ef.f90)
+qe_add_executable(qe_phonon_fdef_exe ${sources})
+set_target_properties(qe_phonon_fdef_exe PROPERTIES OUTPUT_NAME fd_ef.x)
+target_link_libraries(qe_phonon_fdef_exe
+    PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
+        QE::PHonon::FD
+        QE::PHonon::PH
+)
+
+###########################################################
+# fd_ifc.x
+###########################################################
+set(sources FD/fd_ifc.f90)
+qe_add_executable(qe_phonon_fdifc_exe ${sources})
+set_target_properties(qe_phonon_fdifc_exe PROPERTIES OUTPUT_NAME fd_ifc.x)
+target_link_libraries(qe_phonon_fdifc_exe
+    PRIVATE
+        QE::PW
+        QE::UTILX
+        QE::Modules
+        QE::PHonon::FD
+        QE::PHonon::PH
+)
+
+###########################################################
 
 qe_install_targets(
     # Libraries
@@ -405,4 +449,7 @@ qe_install_targets(
     qe_phonon_alpha2f_exe
     qe_phonon_epa_exe
     qe_phonon_fqha_exe
+    qe_phonon_fd_exe
+    qe_phonon_fdef_exe
+    qe_phonon_fdifc_exe
 )
