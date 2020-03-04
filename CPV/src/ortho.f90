@@ -515,7 +515,9 @@ END MODULE local_ortho_memory
 
       IF( nkbus > 0 ) THEN
          !
-         ALLOCATE( beigr(ngw,nkb))
+         ALLOCATE( beigr(ngw,nkb), STAT=info )
+         IF( info /= 0 ) &
+            CALL errore( ' ortho ', ' allocating beigr ', ABS( info ) )
          !
          CALL beta_eigr ( beigr, 1, nsp, eigr, 2 )
          CALL nlsm1us ( nbsp_bgrp, beigr, phi_bgrp, becp_bgrp )

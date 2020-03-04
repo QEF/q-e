@@ -1269,14 +1269,12 @@ SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
       !
       !  diagonal block, procs work locally
       !
-      ierr = cudaDeviceSynchronize()
 !$cuf kernel do(1) <<<*,*>>>
       DO j = 1, nc
          DO i = j + 1, nr
             a(i,j) = a(j,i)
          END DO
       END DO
-      ierr = cudaDeviceSynchronize()
       !
    ELSE IF( desc%myc > desc%myr ) THEN
       !
@@ -1288,9 +1286,8 @@ SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
 #if defined(__GPU_MPI)
       CALL lax_error__( " dsqmsym ", " GPU MPI not implemented yet ", 1 )
 #else
+      ALLOCATE(a_h, SOURCE = a )
       ierr = cudaDeviceSynchronize()
-      ALLOCATE(a_h(SIZE(a,1),SIZE(a,2)) )
-      a_h = a
       CALL mpi_isend( a_h, SIZE(a_h), MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
 #endif
 #else
@@ -1329,9 +1326,7 @@ SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
             a_h(j,i) = atmp
          END DO
       END DO
-      ierr = cudaDeviceSynchronize()
       a = a_h
-      ierr = cudaDeviceSynchronize()
       DEALLOCATE(a_h) 
 #endif
       ierr = cudaDeviceSynchronize()
@@ -1349,7 +1344,6 @@ SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
       CALL MPI_Wait( sreq, istatus, ierr )
       !
 #if defined(__CUDA)
-      ierr = cudaDeviceSynchronize()
 #if defined(__GPU_MPI)
       ! 
 #else
@@ -1363,7 +1357,6 @@ SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
 
 #else
 
-   ierr = cudaDeviceSynchronize()
 !$cuf kernel do(1) <<<*,*>>>
    DO j = 1, n
       DO i = j + 1, n
@@ -1372,8 +1365,6 @@ SUBROUTINE laxlib_dsqmsym_gpu_x( n, a, lda, idesc )
    END DO
 
 #endif
-
-   ierr = cudaDeviceSynchronize()
 
    RETURN
 END SUBROUTINE laxlib_dsqmsym_gpu_x

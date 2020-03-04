@@ -600,9 +600,6 @@ CONTAINS
          ENDIF
          !
       END IF
-#if defined (__CUDA)
-      info = cudaDeviceSynchronize()
-#endif
       !
       RETURN
    END SUBROUTINE sigset
@@ -676,9 +673,6 @@ CONTAINS
       IF( nbgrp > 1 ) THEN
          rho = 0.0d0
       END IF
-#if defined (__CUDA)
-      info = cudaDeviceSynchronize()
-#endif
 
       DO ipc = 1, np(2)
          DO ipr = 1, np(1)
@@ -757,9 +751,6 @@ CONTAINS
          !    now transpose rhos and store the result in distributed array rhot
          !
          CALL sqr_tr_cannon( nss, rho, SIZE(rho,1), rhop, SIZE(rhop,1), idesc )
-#if defined (__CUDA)
-      info = cudaDeviceSynchronize()
-#endif
          !
          !  Compute the symmetric part of rho
          !
@@ -783,9 +774,6 @@ CONTAINS
          !
       END IF
       !
-#if defined (__CUDA)
-      info = cudaDeviceSynchronize()
-#endif
       DEALLOCATE( rhop )
       !
       RETURN
@@ -904,9 +892,6 @@ CONTAINS
          !
       END DO
       !
-#if defined (__CUDA)
-      info = cudaDeviceSynchronize()
-#endif
       DEALLOCATE( taup )
       !
       IF( nbgrp > 1 ) THEN
@@ -932,9 +917,6 @@ CONTAINS
          END IF
 
       ENDIF
-#if defined (__CUDA)
-      info = cudaDeviceSynchronize()
-#endif
       !
       RETURN
    END SUBROUTINE tauset
@@ -1244,7 +1226,7 @@ CONTAINS
       USE kinds,             ONLY: DP
       USE uspp,              ONLY: nkb
       USE mp,                ONLY: mp_sum
-      USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
+      USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, nbgrp
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
       !
       IMPLICIT NONE
@@ -1268,12 +1250,16 @@ CONTAINS
       IF( idesc( LAX_DESC_ACTIVE_NODE, 1 ) > 0 ) THEN
          ir = idesc(LAX_DESC_IR, 1)
          nr = idesc(LAX_DESC_NR, 1)
-         do i = 1, nr
-            ibgrp_i = ibgrp_g2l( i + ir - 1 )
-            IF( ibgrp_i > 0 ) THEN
-               bec_ortho( :, i ) = bec_bgrp( :, ibgrp_i )
-            END IF
-         end do
+         IF( nbgrp == 1 ) THEN
+            bec_ortho(:,1:nr) = bec_bgrp(:,ir:ir+nr-1)
+         ELSE
+            DO i = 1, nr
+               ibgrp_i = ibgrp_g2l( i + ir - 1 )
+               IF( ibgrp_i > 0 ) THEN
+                  bec_ortho( :, i ) = bec_bgrp( :, ibgrp_i )
+               END IF
+            END DO
+         END IF
       END IF
       !
       IF( nspin == 2 ) THEN
@@ -1281,12 +1267,16 @@ CONTAINS
             nup = idesc(LAX_DESC_N, 1 )
             ir = idesc(LAX_DESC_IR, 2 )
             nr = idesc(LAX_DESC_NR, 2 )
-            do i = 1, nr
-               ibgrp_i = ibgrp_g2l( i + ir - 1 + nup )
-               IF( ibgrp_i > 0 ) THEN
-                  bec_ortho( :, i + nrcx ) = bec_bgrp( :, ibgrp_i )
-               END IF
-            end do
+            IF( nbgrp == 1 ) THEN
+               bec_ortho( :, nrcx+1 : nrcx+nr ) = bec_bgrp( :, nup+ir:nup+ir+nr-1 )
+            ELSE
+               do i = 1, nr
+                  ibgrp_i = ibgrp_g2l( i + ir - 1 + nup )
+                  IF( ibgrp_i > 0 ) THEN
+                     bec_ortho( :, i + nrcx ) = bec_bgrp( :, ibgrp_i )
+                  END IF
+               end do
+            END IF
          END IF
       END IF
       !

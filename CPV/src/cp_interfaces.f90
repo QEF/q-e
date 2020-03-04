@@ -107,6 +107,7 @@
    PUBLIC :: beta_eigr
    PUBLIC :: nlsm1us
    PUBLIC :: g_beta_eigr
+   PUBLIC :: dbeta_eigr
 
    ! ------------------------------------ !
 
@@ -1063,6 +1064,15 @@
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
          COMPLEX(DP), INTENT(OUT) :: gbeigr( :, :, : )
       END SUBROUTINE g_beta_eigr_x
+   END INTERFACE
+
+   INTERFACE dbeta_eigr
+      SUBROUTINE dbeta_eigr_x( dbeigr, eigr )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(OUT) :: dbeigr( :, :, :, :)
+      END SUBROUTINE dbeta_eigr_x
    END INTERFACE
 
 !=----------------------------------------------------------------------------=!
