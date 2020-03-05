@@ -129,6 +129,18 @@ function(qe_install_targets TGT)
     endforeach()
 endfunction(qe_install_targets)
 
+function(qe_ensure_build_type DEFAULT)
+    if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${DEFAULT}' as none was specified")
+    set(CMAKE_BUILD_TYPE "${DEFAULT}"
+        CACHE STRING "Choose the type of build." FORCE)
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE
+        PROPERTY
+            STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+    endif()
+endfunction(qe_ensure_build_type)
+
 if(TARGET QEGlobalCompileDefinitions)
     qe_install_targets(QEGlobalCompileDefinitions)
 endif()

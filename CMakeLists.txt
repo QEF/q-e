@@ -25,17 +25,7 @@ include(cmake/qeHelpers.cmake)
 # Ensure that a specific, default build type is set when 
 # none has been explicitly set by the user
 ###########################################################
-set(default_build_type "Release")
-
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
-    set(CMAKE_BUILD_TYPE "${default_build_type}"
-        CACHE STRING "Choose the type of build." FORCE)
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE
-        PROPERTY
-            STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+qe_ensure_build_type("Release")
 
 ###########################################################
 # Modules
