@@ -1,7 +1,5 @@
 ###########################################################
-# QE build framework
-# Please use the following functions in place of the
-# corresponding CMake builtin
+# QE build helper functions
 ###########################################################
 
 if(NOT TARGET QEGlobalCompileDefinitions)
@@ -62,13 +60,13 @@ function(qe_fix_fortran_modules LIB)
             get_target_property(tgt_binary_dir ${tgt} BINARY_DIR)
             set_target_properties(${tgt}
                 PROPERTIES
-                Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod/${LIB})
+                    Fortran_MODULE_DIRECTORY ${tgt_binary_dir}/mod/${LIB})
             # make module directory available for clients of LIB 
             target_include_directories(${tgt}
                 PUBLIC
-                $<BUILD_INTERFACE:${tgt_binary_dir}/mod/${LIB}>
+                    $<BUILD_INTERFACE:${tgt_binary_dir}/mod/${LIB}>
                 INTERFACE
-                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${LIB}>)
+                    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qe/${LIB}>)
         endif()
     endforeach()
 endfunction(qe_fix_fortran_modules)
@@ -99,8 +97,8 @@ function(_qe_add_target TGT)
         target_link_libraries(${TGT} PUBLIC QEGlobalCompileDefinitions)
     endif()
     qe_fix_fortran_modules(${TGT})
-    qe_get_fortran_cpp_flag(fortran_preprocess)
-    target_compile_options(${TGT} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${fortran_preprocess}>)
+    qe_get_fortran_cpp_flag(f_cpp_flag)
+    target_compile_options(${TGT} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${f_cpp_flag}>)
 endfunction(_qe_add_target)
 
 function(qe_install_targets TGT)
@@ -131,13 +129,13 @@ endfunction(qe_install_targets)
 
 function(qe_ensure_build_type DEFAULT)
     if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    message(STATUS "Setting build type to '${DEFAULT}' as none was specified")
-    set(CMAKE_BUILD_TYPE "${DEFAULT}"
-        CACHE STRING "Choose the type of build." FORCE)
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE
-        PROPERTY
-            STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+        message(STATUS "Setting build type to '${DEFAULT}' as none was specified")
+        set(CMAKE_BUILD_TYPE "${DEFAULT}"
+            CACHE STRING "Choose the type of build." FORCE)
+        # Set the possible values of build type for cmake-gui
+        set_property(CACHE CMAKE_BUILD_TYPE
+            PROPERTY
+                STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
     endif()
 endfunction(qe_ensure_build_type)
 

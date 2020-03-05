@@ -17,7 +17,6 @@ elseif(QE_ENABLE_VENDOR_DEPS)
         FoX_wxml)
     set(FoX_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
     qe_git_submodule_update(external/fox)
-
     add_subdirectory(fox EXCLUDE_FROM_ALL)
     add_library(qe_fox INTERFACE)
     add_library(QE::FOX ALIAS qe_fox)
@@ -25,7 +24,7 @@ elseif(QE_ENABLE_VENDOR_DEPS)
     qe_fix_fortran_modules(${fox_targets})
     qe_install_targets(qe_fox ${fox_targets})
 else()
-    message(FATAL_ERROR "Fox not found! Please specify a FoX root (-DFOX_ROOT=/path/to/fox) or enable the FoX vendoring (-DQE_ENABLE_VENDOR_DEPS=ON)!")
+    message(FATAL_ERROR "FoX not found! Please specify a FoX root (-DFOX_ROOT=/path/to/fox) or enable the FoX vendoring (-DQE_ENABLE_VENDOR_DEPS=ON)!")
 endif()
 
 ###########################################################

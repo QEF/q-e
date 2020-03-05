@@ -161,7 +161,7 @@ else()
 endif()
 
 if(VENDOR_FOUND)
-    message(STATUS "Found Vendor: ${VENDOR}")
+    message(STATUS "Found vendor: ${VENDOR}")
     message(STATUS "Found vendor BLAS libraries: ${BLAS_LIBRARIES}")
     message(STATUS "Found vendor LAPACK libraries: ${LAPACK_LIBRARIES}")
     if(NOT FFTW_ROOT)
@@ -188,12 +188,9 @@ if(NOT VENDOR_FOUND)
         target_link_libraries(qe_lapack 
             INTERFACE 
                 ${LAPACK_LIBRARIES}
-                ${LAPACK_LINKER_FLAGS}
-        )
+                ${LAPACK_LINKER_FLAGS})
     elseif(QE_ENABLE_VENDOR_DEPS)
         message(STATUS "Installing QE::LAPACK via submodule")
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init -- lapack
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         qe_git_submodule_update(external/lapack)
         add_subdirectory(external/lapack EXCLUDE_FROM_ALL)
         target_link_libraries(qe_lapack INTERFACE lapack)
@@ -216,16 +213,16 @@ qe_install_targets(qe_fft)
 ###########################################################
 if(VENDOR_FOUND AND NOT FFTW_ROOT)
     if(VENDOR MATCHES "Intel")
-        set(fft_definitions __DFTI)
+        qe_add_global_compile_definitions(__DFTI)
     elseif(VENDOR MATCHES "Armpl")
-        set(fft_definitions __ARM_LIB)
-    #elseif(VENDOR MATCHES "IBMESSL")
-    #    set(fft_definitions __LINUX_ESSL)
-    #elseif(VENDOR MATCHES "ACML")
-    #    # Todo: add support to FFTW ACML
-    #    # set(fft_definitions __ACML)
+        qe_add_global_compile_definitions(__ARM_LIB)
+    # TODO add support for additional vendor libs
+    # elseif(VENDOR MATCHES "IBMESSL")
+    #     qe_add_global_compile_definitions(__LINUX_ESSL)
+    # elseif(VENDOR MATCHES "ACML")
+    #     qe_add_global_compile_definitions(__ACML)
     else()
-        message(FATAL_ERROR "[ERROR] Vendor FFT found but not implemented in QE!")
+        message(FATAL_ERROR "The vendor specific FFT found isn't yet supported in QE, please open an issue: https://gitlab.com/QEF/q-e/issues")
     endif()
 
     target_link_libraries(qe_fft 
@@ -236,12 +233,12 @@ if(VENDOR_FOUND AND NOT FFTW_ROOT)
         INTERFACE
             ${FFTW_INCLUDE_DIRS})
 else()
-    ## No vendor-specific fft flavor has been found,
-    ##    just look for a generic FFTW3 implementation
+    # No vendor-specific fft flavor has been found,
+    # just look for a generic FFTW3 implementation
     if(QE_ENABLE_OPENMP)
         find_package(FFTW QUIET COMPONENTS DOUBLE_OPENMP_LIB)
         if(FFTW_FOUND)
-            set(fft_definitions __FFTW3)
+            qe_add_global_compile_definitions(__FFTW3)
             target_link_libraries(qe_fft INTERFACE FFTW::DoubleOpenMP)
             message(STATUS "Found Double+OpenMP FFTW3 library")
             message(STATUS "Found FFTW3 libraries: ${FFTW_DOUBLE_OPENMP_LIB}")
@@ -250,7 +247,7 @@ else()
     else()
         find_package(FFTW QUIET COMPONENTS DOUBLE_LIB)
         if(FFTW_FOUND)
-            set(fft_definitions __FFTW3)
+            qe_add_global_compile_definitions(__FFTW3)
             target_link_libraries(qe_fft INTERFACE FFTW::Double)
             message(STATUS "Found Double FFTW3 library")
             message(STATUS "Found FFTW3 libraries: ${FFTW_DOUBLE_LIB}")
@@ -262,9 +259,8 @@ endif()
 # Cannot find anything useful, just fall back to the internal FFTW
 if(NOT FFTW_FOUND)
     message(STATUS "FFTW is falling back to QE internal implementation (FFTXLib)")
-    set(fft_definitions __FFTW)
+    qe_add_global_compile_definitions(__FFTW)
 endif(NOT FFTW_FOUND)
-qe_add_global_compile_definitions(${fft_definitions})
 
 ###########################################################
 # SCALAPACK
@@ -292,7 +288,6 @@ qe_install_targets(qe_elpa)
 if(QE_ENABLE_ELPA)
     find_package(ELPA REQUIRED)
     
-    # Looking for ELPA version
     string(REGEX MATCH "elpa-[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ELPA_VER "${ELPA_INCLUDE_DIRS}")
     string(REGEX MATCH "[0-9][0-9][0-9][0-9]" CMAKE_MATCH_ONLY_VER "${CMAKE_MATCH_ELPA_VER}")
     
@@ -324,13 +319,11 @@ if(QE_ENABLE_ELPA)
         INTERFACE
             ${ELPA_LIBRARIES}
             ${ELPA_LIBRARIES_DEP}
-            ${ELPA_LINKER_FLAGS}
-    )
+            ${ELPA_LINKER_FLAGS})
     target_include_directories(qe_elpa
         INTERFACE
             ${ELPA_INCLUDE_DIRS}
-            ${ELPA_INCLUDE_DIRS_DEP}
-    )
+            ${ELPA_INCLUDE_DIRS_DEP})
 endif(QE_ENABLE_ELPA)
 
 ###########################################################
@@ -437,8 +430,7 @@ write_basic_package_version_file(
     VERSION ${PACKAGE_VERSION}
     COMPATIBILITY AnyNewerVersion)
 
-configure_file(
-    cmake/qeConfig.cmake.in 
+configure_file(cmake/qeConfig.cmake.in 
     ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake @ONLY)
 
 install(FILES 
@@ -469,8 +461,7 @@ add_custom_target(pw
         qe_pw_tools_kpoints_exe
         qe_pw_tools_pwi2xsf_exe
     COMMENT
-        "basic code for scf, structure optimization, MD"
-)
+        "basic code for scf, structure optimization, MD")
 
 add_custom_target(ph 
     DEPENDS 
@@ -488,30 +479,26 @@ add_custom_target(ph
         qe_plotphon_bandstognuplot_exe
         qe_plotphon_eminmax_exe
     COMMENT
-        "phonon code, Gamma-only and third-order derivatives"
-)
+        "phonon code, Gamma-only and third-order derivatives")
 
 add_custom_target(hp 
     DEPENDS 
         qe_hp_exe
     COMMENT
-        "calculation of the Hubbard parameters from DFPT"
-)
+        "calculation of the Hubbard parameters from DFPT")
 
 add_custom_target(pwcond 
     DEPENDS 
         qe_pwcond_exe
     COMMENT
-        "ballistic conductance"
-)
+        "ballistic conductance")
 
 add_custom_target(neb 
     DEPENDS 
         qe_neb_exe
         qe_neb_pathinterpolation_exe
     COMMENT
-        "code for Nudged Elastic Band method"
-)
+        "code for Nudged Elastic Band method")
 
 add_custom_target(pp 
     DEPENDS 
@@ -545,8 +532,7 @@ add_custom_target(pp
         qe_pp_ppacf_exe
         qe_pp_benchmarklibxc_exe
     COMMENT
-        "postprocessing programs"
-)
+        "postprocessing programs")
 
 add_custom_target(pwall 
     DEPENDS 
@@ -556,8 +542,7 @@ add_custom_target(pwall
         pwcond 
         neb
     COMMENT
-        "same as \"make pw ph pp pwcond neb\""
-)
+        "same as \"make pw ph pp pwcond neb\"")
 
 add_custom_target(cp 
     DEPENDS
@@ -566,8 +551,7 @@ add_custom_target(cp
         qe_cpv_cppp_exe
         qe_cpv_wfdd_exe
     COMMENT
-        "CP code: Car-Parrinello molecular dynamics"
-)
+        "CP code: Car-Parrinello molecular dynamics")
 
 add_custom_target(tddfpt 
     DEPENDS
@@ -576,8 +560,7 @@ add_custom_target(tddfpt
         qe_tddfpt_turboeels_exe
         qe_tddfpt_calculatespectrum_exe
     COMMENT
-        "time dependent dft code"
-)
+        "time dependent dft code")
 
 add_custom_target(gwl 
     DEPENDS
@@ -585,15 +568,13 @@ add_custom_target(gwl
         qe_gww_util_abcoefftoeps_exe
         qe_gww_util_memorypw4gww_exe
     COMMENT
-        "GW with Lanczos chains"
-)
+        "GW with Lanczos chains")
 
 add_custom_target(ld1 
     DEPENDS
         qe_atomic_exe
     COMMENT
-        "utilities for pseudopotential generation"
-)
+        "utilities for pseudopotential generation")
 
 add_custom_target(upf 
     DEPENDS
@@ -616,8 +597,7 @@ add_custom_target(upf
         qe_upftools_interpolate_exe
         qe_upftools_hgh2qelininterpol_gh2qe_exe
     COMMENT
-        "utilities for pseudopotential conversion"
-)
+        "utilities for pseudopotential conversion")
 
 add_custom_target(xspectra 
     DEPENDS
@@ -625,19 +605,16 @@ add_custom_target(xspectra
         qe_xspectra_spectracorrection_exe
         qe_xspectra_molecularnexafs_exe
     COMMENT
-        "X-ray core-hole spectroscopy calculations"
-)
+        "X-ray core-hole spectroscopy calculations")
 
 add_custom_target(couple 
     DEPENDS
         qe_couple
     COMMENT
-        "library interface for coupling to external codes"
-)
+        "library interface for coupling to external codes")
 
 add_custom_target(epw 
     DEPENDS
         qe_epw_exe
     COMMENT
-        "electron-Phonon Coupling with wannier functions"
-)
+        "electron-Phonon Coupling with wannier functions")
