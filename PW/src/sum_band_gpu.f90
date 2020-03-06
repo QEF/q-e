@@ -68,7 +68,7 @@ SUBROUTINE sum_band_gpu()
   REAL (DP), ALLOCATABLE :: kplusg (:)
   !
   !
-  CALL start_clock( 'sum_band' )
+  CALL start_clock_gpu( 'sum_band' )
   !
   CALL using_becsum_d(2)
   !
@@ -236,7 +236,7 @@ SUBROUTINE sum_band_gpu()
   !
   IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
   !
-  CALL stop_clock( 'sum_band' )
+  CALL stop_clock_gpu( 'sum_band' )
   !
   RETURN
   !
@@ -1095,7 +1095,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      CALL store_becxx0(ik, becp)
   ENDIF
   !
-  CALL start_clock( 'sum_band:becsum' )
+  CALL start_clock_gpu( 'sum_band:becsum' )
   CALL using_becp_d_auto(0)
   !
   DO np = 1, ntyp
@@ -1270,7 +1270,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      !
   END DO
   !
-  CALL stop_clock( 'sum_band:becsum' )
+  CALL stop_clock_gpu( 'sum_band:becsum' )
   !
 END SUBROUTINE sum_bec_gpu
 !

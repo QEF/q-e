@@ -42,7 +42,7 @@ subroutine g_psi_gpu (lda, n, m, npol, psi_d, e_d)
   call using_h_diag_d(0)
   call using_s_diag_d(0)
   !
-  call start_clock ('g_psi')
+  call start_clock_gpu ('g_psi')
   !
 #ifdef TEST_NEW_PRECONDITIONING
   scala = 1.d0
@@ -76,6 +76,6 @@ subroutine g_psi_gpu (lda, n, m, npol, psi_d, e_d)
   enddo
 #endif
 
-  call stop_clock ('g_psi')
+  call stop_clock_gpu ('g_psi')
   return
 end subroutine g_psi_gpu

@@ -340,7 +340,7 @@ SUBROUTINE newd_gpu( )
      !
   END IF
   !
-  CALL start_clock( 'newd' )
+  CALL start_clock_gpu( 'newd' )
   allocate(deeq_h( nhm, nhm, nat, nspin ))
   !
   ! move atom type info to GPU
@@ -402,7 +402,7 @@ SUBROUTINE newd_gpu( )
   IF (lda_plus_U .AND. (U_projection == 'pseudo')) CALL add_vhub_to_deeq_gpu(deeq_d)
   !
   CALL buffer%release_buffer(ityp_d, ierr)
-  CALL stop_clock( 'newd' )
+  CALL stop_clock_gpu( 'newd' )
   !
   RETURN
   !

@@ -46,7 +46,7 @@ SUBROUTINE wfcinit_gpu()
   CHARACTER (LEN=256)  :: dirname
   TYPE ( output_type ) :: output_obj
   !
-  CALL start_clock( 'wfcinit' )
+  CALL start_clock_gpu( 'wfcinit' )
   CALL using_evc(0) ! this may be removed
   !
   ! ... Orthogonalized atomic functions needed for LDA+U and other cases
@@ -152,7 +152,7 @@ SUBROUTINE wfcinit_gpu()
   !
   IF (  ( .NOT. lscf .AND. .NOT. lelfield ) .OR. TRIM(starting_wfc) == 'file' ) THEN
      !
-     CALL stop_clock( 'wfcinit' )
+     CALL stop_clock_gpu( 'wfcinit' )
      RETURN
      !
   END IF
@@ -189,7 +189,7 @@ SUBROUTINE wfcinit_gpu()
      !
   END DO
   !
-  CALL stop_clock( 'wfcinit' )
+  CALL stop_clock_gpu( 'wfcinit' )
   RETURN
   !
 END SUBROUTINE wfcinit_gpu
@@ -273,9 +273,9 @@ SUBROUTINE init_wfc_gpu ( ik )
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
      ALLOCATE( wfcatom_h( npwx, npol, n_starting_wfc ) )
-     CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
+     CALL start_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      CALL atomic_wfc( ik, wfcatom_h )
-     CALL stop_clock( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
+     CALL stop_clock_gpu( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
      !
      ! Sync to GPU
      wfcatom_d = wfcatom_h
@@ -379,10 +379,10 @@ SUBROUTINE init_wfc_gpu ( ik )
   ! ... subspace diagonalization (calls Hpsi)
   !
   IF ( dft_is_hybrid()  ) CALL stop_exx() 
-  CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
+  CALL start_clock_gpu( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL using_evc_d(2)  ! rotate_wfc_gpu (..., evc_d, etatom_d) -> evc : out (not specified)
   CALL rotate_wfc_gpu ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom_d, npol, okvan, evc_d, etatom_d )
-  CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
+  CALL stop_clock_gpu( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
   lelfield = lelfield_save
   !

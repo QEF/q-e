@@ -45,7 +45,7 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
   !
   !
-  CALL start_clock( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
+  CALL start_clock_gpu( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
   !
   ! band parallelization with non-distributed bands is performed if
   ! 1. enabled (variable use_bgrp_in_hpsi must be set to .T.)
@@ -75,7 +75,7 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
      !
   END IF
 
-  CALL stop_clock( 'h_psi_bgrp' )
+  CALL stop_clock_gpu( 'h_psi_bgrp' )
   RETURN
   !
 END SUBROUTINE h_psi_gpu
@@ -138,7 +138,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   LOGICAL     :: need_host_copy
   !
-  CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
+  CALL start_clock_gpu( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
   !
@@ -173,7 +173,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
       CALL dev_memcpy(hpsi_host, hpsi_d)  ! hpsi_host = hpsi_d
   end if
 
-  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
+  CALL start_clock_gpu( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
   ! ... Here the product with the local potential V_loc psi
   !
@@ -192,9 +192,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi_host,ibnd,m) 
            ! ... compute becp%r = < beta|psi> from psic in real space
-     CALL start_clock( 'h_psi:calbec' ) 
+     CALL start_clock_gpu( 'h_psi:calbec' ) 
            CALL calbec_rs_gamma(ibnd,m,becp%r) 
-     CALL stop_clock( 'h_psi:calbec' )
+     CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace(ibnd,m) 
            ! ... psic (hpsi) -> psic + vusp
@@ -228,9 +228,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_k(psi_host,ibnd,m) 
            ! ... compute becp%r = < beta|psi> from psic in real space
-     CALL start_clock( 'h_psi:calbec' )
+     CALL start_clock_gpu( 'h_psi:calbec' )
            CALL calbec_rs_k(ibnd,m) 
-     CALL stop_clock( 'h_psi:calbec' )
+     CALL stop_clock_gpu( 'h_psi:calbec' )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace(ibnd,m) 
            ! ... psic (hpsi) -> psic + vusp
@@ -253,16 +253,16 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
-     CALL start_clock( 'h_psi:calbec' )
+     CALL start_clock_gpu( 'h_psi:calbec' )
      CALL using_vkb_d(0); CALL using_becp_d_auto(2)
 !ATTENTION HERE: calling without (:,:) causes segfaults
      CALL calbec_gpu ( n, vkb_d(:,:), psi_d, becp_d, m )
-     CALL stop_clock( 'h_psi:calbec' )
+     CALL stop_clock_gpu( 'h_psi:calbec' )
      CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
      !
   END IF
   !  
-  CALL stop_clock( 'h_psi:pot' )
+  CALL stop_clock_gpu( 'h_psi:pot' )
   !
   if (dft_is_meta()) then
      CALL dev_memcpy(hpsi_host, hpsi_d) ! hpsi_host = hpsi_d
@@ -330,7 +330,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   if (need_host_copy) then
       DEALLOCATE(psi_host , hpsi_host )
   end if
-  CALL stop_clock( 'h_psi' )
+  CALL stop_clock_gpu( 'h_psi' )
   !
   RETURN
   !

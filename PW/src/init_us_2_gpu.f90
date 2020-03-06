@@ -64,7 +64,7 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
   !
   !
   if (lmaxkb.lt.0) return
-  call start_clock ('init_us_2')
+  call start_clock_gpu ('init_us_2')
   
   call using_tab_d(0)
   if (spline_ps) call using_tab_d2y_d(0)
@@ -225,6 +225,6 @@ SUBROUTINE init_us_2_gpu ( npw_, igk__d, q_, vkb__d )
      deallocate ( qg_h, vq_h )
   END IF
 
-  call stop_clock ('init_us_2')
+  call stop_clock_gpu ('init_us_2')
   return
 end subroutine init_us_2_gpu

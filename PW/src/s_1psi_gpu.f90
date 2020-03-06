@@ -46,7 +46,7 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
   INTEGER :: ibnd
   !
   !
-  CALL start_clock( 's_1psi' )
+  CALL start_clock_gpu( 's_1psi' )
   !
   IF ( real_space) THEN
      !
@@ -90,7 +90,7 @@ SUBROUTINE s_1psi_gpu( npwx, n, psi_d, spsi_d )
      !
   ENDIF
   !
-  CALL stop_clock( 's_1psi' )
+  CALL stop_clock_gpu( 's_1psi' )
   !
   RETURN
   !
