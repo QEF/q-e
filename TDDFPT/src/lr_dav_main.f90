@@ -21,7 +21,6 @@ PROGRAM lr_dav_main
        evc1,n_ipol, d0psi, &
        no_hxc, nbnd_total, &
        revc0, lr_io_level, code1,davidson
-  USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start

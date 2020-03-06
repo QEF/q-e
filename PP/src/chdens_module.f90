@@ -26,7 +26,6 @@ SUBROUTINE chdens (plot_files,plot_num)
   !
   USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE io_files,   ONLY : nd_nmbr
   USE mp_pools,   ONLY : nproc_pool
   USE mp_world,   ONLY : world_comm
   USE mp_bands,   ONLY : intra_bgrp_comm, nyfft

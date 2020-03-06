@@ -18,7 +18,7 @@ PROGRAM lr_calculate_spectrum
   !
   USE kinds,               ONLY : dp
   USE constants,           ONLY : pi,rytoev,evtonm,rytonm
-  USE io_files,            ONLY : tmp_dir, prefix,nd_nmbr
+  USE io_files,            ONLY : tmp_dir, prefix
   USE global_version,      ONLY : version_number
   USE io_global,           ONLY : stdout,ionode, ionode_id
   USE environment,         ONLY : environment_start,environment_end
