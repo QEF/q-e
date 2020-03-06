@@ -427,10 +427,11 @@ endif()
 # Pkg-config
 ###########################################################
 configure_file(
-    ${PROJECT_SOURCE_DIR}/quantum_espresso.pc.in
-    ${PROJECT_BINARY_DIR}/quantum_espresso.pc
-    @ONLY
-)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/quantum_espresso.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/quantum_espresso.pc
+    @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/quantum_espresso.pc
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 ###########################################################
 # Exports
@@ -455,9 +456,6 @@ install(FILES
             ${CMAKE_CURRENT_BINARY_DIR}/qeConfig.cmake
         DESTINATION
             ${CMAKE_INSTALL_LIBDIR}/cmake/qe)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/quantum_espresso.pc
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 ###########################################################
 # Dependency graph generation
