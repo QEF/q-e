@@ -956,7 +956,7 @@ CONTAINS
       REAL(DP)    :: bephi( :, : )
       REAL(DP)    :: becp_bgrp( :, : )
 #if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: becp_bgrp
+      ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi
 #endif
 
       ! local variables
@@ -1238,7 +1238,7 @@ CONTAINS
       REAL(DP), INTENT(IN)  :: bec_bgrp(:,:)
       REAL(DP), INTENT(OUT) :: bec_ortho(:,:)
 #if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: bec_bgrp
+      ATTRIBUTES( DEVICE ) :: bec_bgrp, bec_ortho
 #endif
       !
       INTEGER :: ir, nr, i, ibgrp_i, nup, leg_ortho

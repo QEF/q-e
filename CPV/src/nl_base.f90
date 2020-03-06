@@ -455,7 +455,7 @@
       ennl_t = 0.d0  
       !
 !$omp parallel num_threads(min(4,omp_get_num_threads())) default(none) &
-!$omp shared(nat,ityp,indv_ijkb0,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,bec_bgrp,rhovan,dvan,nspin,ennl_t) &
+!$omp shared(nat,ityp,indv_ijkb0,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,rhovan,dvan,nspin,ennl_t) &
 !$omp private(ia,is,indv,iv,inl,jv,ijv,jnl,sums,iss,i,sumt)
 !$omp do reduction(+:ennl_t)
       do ia = 1, nat
@@ -793,7 +793,7 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, idesc )
   drhovan=0.0d0
 
 !$omp parallel default(none) &
-!$omp shared(nat,ityp,indv_ijkb0,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,bec_bgrp,drhovan,dvan,nspin,denl) &
+!$omp shared(nat,ityp,indv_ijkb0,nh,nbsp_bgrp,ispin_bgrp,f_bgrp,bec_bgrp,drhovan,dvan,nspin,denl) &
 !$omp shared(idesc,iupdwn,nupdwn,ibgrp_g2l,nrcx,dbec) &
 !$omp private(ia,is,iv,inl,jv,ijv,jnl,dsums,iss,i,dsum,ii,ir,k,j,nr,istart,nss,ibgrp)
 !$omp do reduction(+:denl)

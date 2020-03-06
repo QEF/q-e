@@ -407,7 +407,7 @@
          REAL(DP)    :: bephi(:,:)
          REAL(DP)    :: becp_bgrp(:,:)
 #if defined (__CUDA)
-         ATTRIBUTES( DEVICE ) :: becp_bgrp
+         ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi
 #endif
       END SUBROUTINE
    END INTERFACE
@@ -428,6 +428,9 @@
          INTEGER,  INTENT(IN) :: idesc( : )
          INTEGER,  INTENT(OUT) :: iter
          REAL(DP), INTENT(OUT) :: diff
+#if defined (__CUDA)
+         ATTRIBUTES( DEVICE ) :: becp_dist, bephi
+#endif
       END SUBROUTINE
    END INTERFACE
 

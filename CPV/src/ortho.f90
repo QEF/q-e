@@ -23,9 +23,8 @@ MODULE local_ortho_memory
    REAL(DP),   ALLOCATABLE DEVICEATTR :: s(:,:), sig(:,:), tau(:,:), stmp(:,:)
    REAL(DP),   ALLOCATABLE DEVICEATTR :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
 #if defined(__CUDA)
-   REAL(DP),      ALLOCATABLE, DEVICE :: bephi_d(:,:), qbecp_d(:,:), qbephi_d(:,:)
+   REAL(DP),      ALLOCATABLE, DEVICE :: qbecp_d(:,:), qbephi_d(:,:)
    COMPLEX(DP),   ALLOCATABLE, DEVICE :: cp_d(:,:), phi_d(:,:)
-   REAL(DP),      ALLOCATABLE, DEVICE :: becp_dist_d( :, : )
 #endif
 
    REAL(DP), ALLOCATABLE DEVICEATTR :: xloc(:,:)
@@ -76,10 +75,8 @@ CONTAINS
 #endif
    END SUBROUTINE
 
-   SUBROUTINE sync_device_ortho_memory( cp, phi, becp_dist, qbecp, bephi, qbephi )
+   SUBROUTINE sync_device_ortho_memory( cp, phi, qbecp, qbephi )
       COMPLEX(DP), INTENT(IN) :: phi( :, : ), cp( :, : )
-      REAL(DP), INTENT(IN)    :: bephi( :, : )
-      REAL(DP), INTENT(IN)    :: becp_dist( :, : )
       REAL(DP), INTENT(IN)    :: qbephi( :, : ), qbecp( :, : )
       INTEGER :: info
 #if defined(__CUDA)
@@ -87,13 +84,11 @@ CONTAINS
          IF( SIZE(cp_d,1) == SIZE(cp,1) .AND. SIZE(cp_d,2) == SIZE(cp,2) ) THEN
             cp_d = cp
             phi_d = phi
-            bephi_d = bephi
             qbecp_d = qbecp
-            becp_dist_d = becp_dist
             qbephi_d = qbephi
             RETURN
          ELSE
-            DEALLOCATE( cp_d, phi_d, bephi_d, qbecp_d, becp_dist_d, qbephi_d )
+            DEALLOCATE( cp_d, phi_d, qbecp_d, qbephi_d )
          END IF
       END IF
       ALLOCATE( cp_d, source=cp, STAT = info )
@@ -102,15 +97,9 @@ CONTAINS
       ALLOCATE( phi_d, source=phi, STAT = info )
       IF( info /= 0 ) &
          CALL errore( ' ortho_gamma ', ' allocating phi_d ', ABS( info ) )
-      ALLOCATE( bephi_d, source=bephi, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating bephi_d ', ABS( info ) )
       ALLOCATE( qbecp_d, source=qbecp, STAT = info )
       IF( info /= 0 ) &
          CALL errore( ' ortho_gamma ', ' allocating qbecp_d ', ABS( info ) )
-      ALLOCATE( becp_dist_d, source=becp_dist, STAT = info )
-      IF( info /= 0 ) &
-         CALL errore( ' ortho_gamma ', ' allocating becp_dist_d ', ABS( info ) )
       ALLOCATE( qbephi_d, source=qbephi, STAT = info )
       IF( info /= 0 ) &
          CALL errore( ' ortho_gamma ', ' allocating qbephi_d ', ABS( info ) )
@@ -132,10 +121,8 @@ CONTAINS
 #if defined(__CUDA)
      IF(ALLOCATED(cp_d)) DEALLOCATE(cp_d) 
      IF(ALLOCATED(phi_d)) DEALLOCATE(phi_d) 
-     IF(ALLOCATED(bephi_d)) DEALLOCATE(bephi_d) 
      IF(ALLOCATED(qbecp_d)) DEALLOCATE(qbecp_d) 
      IF(ALLOCATED(qbephi_d)) DEALLOCATE(qbephi_d) 
-     IF(ALLOCATED(becp_dist_d)) DEALLOCATE(becp_dist_d) 
 #endif
    END SUBROUTINE deallocate_local_ortho_memory
 
@@ -286,6 +273,9 @@ END MODULE local_ortho_memory
       INTEGER,  INTENT(IN)  :: idesc(:)
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
+#if defined (__CUDA)
+      ATTRIBUTES( DEVICE ) :: bephi, becp_dist
+#endif
 
       ! ... Locals
 
@@ -318,14 +308,14 @@ END MODULE local_ortho_memory
       !
       CALL allocate_local_ortho_memory(nss, nx0)
       !
-      CALL sync_device_ortho_memory( cp, phi, becp_dist, qbecp, bephi, qbephi )
+      CALL sync_device_ortho_memory( cp, phi, qbecp, qbephi )
       !
       !     rho = <s'c0|s|cp>
       !
       CALL start_clock( 'rhoset' )
       !
 #if defined(__CUDA)
-      CALL rhoset( cp_d, ngwx, phi_d, bephi_d, nkbx, qbecp_d, n, nss, istart, rhos, rhoa, nx0, idesc )
+      CALL rhoset( cp_d, ngwx, phi_d, bephi, nkbx, qbecp_d, n, nss, istart, rhos, rhoa, nx0, idesc )
 #else
       CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, rhoa, nx0, idesc )
 #endif
@@ -336,7 +326,7 @@ END MODULE local_ortho_memory
       !
       CALL start_clock( 'sigset' )
 #if defined(__CUDA)
-      CALL sigset( cp_d, ngwx, becp_dist_d, nkbx, qbecp_d, n, nss, istart, sig, nx0, idesc )
+      CALL sigset( cp_d, ngwx, becp_dist, nkbx, qbecp_d, n, nss, istart, sig, nx0, idesc )
 #else
       CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nx0, idesc )
 #endif
@@ -346,7 +336,7 @@ END MODULE local_ortho_memory
       !
       CALL start_clock( 'tauset' )
 #if defined(__CUDA)
-      CALL tauset( phi_d, ngwx, bephi_d, nkbx, qbephi_d, n, nss, istart, tau, nx0, idesc )
+      CALL tauset( phi_d, ngwx, bephi, nkbx, qbephi_d, n, nss, istart, tau, nx0, idesc )
 #else
       CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nx0, idesc )
 #endif
@@ -468,7 +458,8 @@ END MODULE local_ortho_memory
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec, beta_eigr, nlsm1us
-      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm ! DEBUG
+      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm! DEBUG
+      USE mp_world,           ONLY: mpime
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
       USE local_ortho_memory, ONLY : xloc, x0_to_xloc, xloc_to_x0
@@ -484,13 +475,13 @@ END MODULE local_ortho_memory
       INTEGER     :: iter
       REAL(DP)    :: bephi(:,:)
       REAL(DP)    :: becp_bgrp(:,:)
-#if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: becp_bgrp
-#endif
       !
       REAL(DP), ALLOCATABLE :: becp_dist(:,:)
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
       COMPLEX(DP), ALLOCATABLE :: beigr(:,:)
+#if defined (__CUDA)
+      ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, becp_dist
+#endif
 
       INTEGER :: nkbx
       INTEGER :: info, i, j, iss, iv, jv, ia, is, inl, jnl
