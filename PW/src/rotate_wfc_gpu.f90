@@ -51,7 +51,7 @@ SUBROUTINE rotate_wfc_gpu &
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
   !
-  CALL start_clock( 'wfcrot' ); !write (*,*) 'start wfcrot' ; FLUSH(6)
+  CALL start_clock_gpu( 'wfcrot' ); !write (*,*) 'start wfcrot' ; FLUSH(6)
   !write (*,*) 'gamma_only' , gamma_only; FLUSH(6)
 
   IF( use_para_diag ) THEN
@@ -102,6 +102,6 @@ SUBROUTINE rotate_wfc_gpu &
      !
   END IF
   !
-  CALL stop_clock( 'wfcrot' )!; write (*,*) 'stop wfcrot' ; FLUSH(6)
+  CALL stop_clock_gpu( 'wfcrot' )!; write (*,*) 'stop wfcrot' ; FLUSH(6)
   !
 END SUBROUTINE rotate_wfc_gpu

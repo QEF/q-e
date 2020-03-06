@@ -52,21 +52,21 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: group_size, pack_size, remainder, howmany
   REAL(DP):: v_tmp
   !
-  CALL start_clock ('vloc_psi')
+  CALL start_clock_gpu ('vloc_psi')
   incr = 2 * many_fft
   !
   use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      !
-     CALL start_clock ('vloc_psi:tg_gather')
+     CALL start_clock_gpu ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
      !
      CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
      CALL dev_buf%lock_buffer( tg_psic_d, v_siz, ierr )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
-     CALL stop_clock ('vloc_psi:tg_gather')
+     CALL stop_clock_gpu ('vloc_psi:tg_gather')
      !
      incr = 2 * fftx_ntgrp(dffts)
      !
@@ -299,7 +299,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   ELSE
      CALL dev_buf%release_buffer( psic_d, ierr )
   END IF
-  CALL stop_clock ('vloc_psi')
+  CALL stop_clock_gpu ('vloc_psi')
   !
   RETURN
 END SUBROUTINE vloc_psi_gamma_gpu
@@ -357,19 +357,19 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: ierr
   INTEGER :: group_size
   
-  CALL start_clock ('vloc_psi')
+  CALL start_clock_gpu ('vloc_psi')
   use_tg = dffts%has_task_groups
   !
   IF( use_tg ) THEN
      !
-     CALL start_clock ('vloc_psi:tg_gather')
+     CALL start_clock_gpu ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
      !
      CALL dev_buf%lock_buffer( tg_v_d,    v_siz, ierr )
      CALL dev_buf%lock_buffer( tg_psic_d, v_siz, ierr )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
-     CALL stop_clock ('vloc_psi:tg_gather')
+     CALL stop_clock_gpu ('vloc_psi:tg_gather')
      !
   ELSE
      CALL dev_buf%lock_buffer( psic_d, dffts%nnr*many_fft, ierr )
@@ -529,7 +529,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL dev_buf%release_buffer( psic_d, ierr )
   ENDIF
   !
-  CALL stop_clock ('vloc_psi')
+  CALL stop_clock_gpu ('vloc_psi')
   !
 99 format ( 20 ('(',2f12.9,')') )
 
@@ -581,14 +581,14 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: right_nnr, right_nr3, right_inc
   INTEGER :: ierr
   !
-  CALL start_clock ('vloc_psi')
+  CALL start_clock_gpu ('vloc_psi')
   !
   incr = 1
   !
   use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
-     CALL start_clock ('vloc_psi:tg_gather')
+     CALL start_clock_gpu ('vloc_psi:tg_gather')
      v_siz = dffts%nnr_tg
      IF (domag) THEN
         ALLOCATE( tg_v_d( v_siz, 4 ) )
@@ -600,7 +600,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
         CALL tg_gather_gpu( dffts, v_d(:,1), tg_v_d(:,1) )
      ENDIF
      ALLOCATE( tg_psic_d( v_siz, npol ) )
-     CALL stop_clock ('vloc_psi:tg_gather')
+     CALL stop_clock_gpu ('vloc_psi:tg_gather')
 
      incr = fftx_ntgrp(dffts)
   ENDIF
@@ -744,7 +744,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   !
-  CALL stop_clock ('vloc_psi')
+  CALL stop_clock_gpu ('vloc_psi')
   !
   RETURN
 END SUBROUTINE vloc_psi_nc_gpu

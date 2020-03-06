@@ -91,7 +91,7 @@ SUBROUTINE addusdens_g_gpu(rho)
 #endif
   IF (.not.okvan) RETURN
 
-  CALL start_clock ('addusdens')
+  CALL start_clock_gpu ('addusdens')
   !
   CALL dev_buf%lock_buffer(aux_d, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_d (ngm, nspin_mag) )
   CALL pin_buf%lock_buffer(aux_h, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_h (ngm, nspin_mag) )
@@ -212,7 +212,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   CALL pin_buf%release_buffer(aux_h, ierr)
   CALL dev_buf%release_buffer(aux_d, ierr)
   !
-  CALL stop_clock( 'addusdens' )
+  CALL stop_clock_gpu( 'addusdens' )
   !
   RETURN
 END SUBROUTINE addusdens_g_gpu

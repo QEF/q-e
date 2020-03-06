@@ -32,7 +32,7 @@ SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
   COMPLEX (DP), ALLOCATABLE :: psi_h(:,:), spsi_h(:,:)
   !
   !
-  CALL start_clock( 'hs_1psi' )
+  CALL start_clock_gpu( 'hs_1psi' )
   ! 
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
@@ -56,7 +56,7 @@ SUBROUTINE hs_1psi_gpu( lda, n, psi_d, hpsi_d, spsi_d )
   CALL s_psi_gpu( lda, n, 1, psi_d, spsi_d ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
   !
-  CALL stop_clock( 'hs_1psi' )
+  CALL stop_clock_gpu( 'hs_1psi' )
   !
   RETURN
   !

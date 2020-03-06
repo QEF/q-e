@@ -66,7 +66,7 @@ SUBROUTINE force_us_gpu( forcenl )
   !
   forcenl(:,:) = 0.D0
   !
-  call start_clock('fus_allbec') 
+  call start_clock_gpu('fus_allbec') 
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
   CALL using_becp_auto(2)
   CALL allocate_bec_type ( nkb, nbnd, dbecp, intra_bgrp_comm )
@@ -82,7 +82,7 @@ SUBROUTINE force_us_gpu( forcenl )
   ! ... the forces are a sum over the K points and over the bands
   !
   CALL using_evc_d(0)
-  call stop_clock('fus_allbec') 
+  call stop_clock_gpu('fus_allbec') 
   !
   DO ik = 1, nks
      !
