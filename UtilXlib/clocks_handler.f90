@@ -236,7 +236,8 @@ SUBROUTINE start_clock_gpu( label )
   USE mytime,    ONLY : trace_depth, mpime, max_print_depth
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
-                         gputime, gpu_starts, gpu_stops
+                        t0cpu, t0wall, f_wall, f_tcpu, &
+                        gputime, gpu_starts, gpu_stops
 #if defined(__CUDA)
   USE cudafor
 #endif
@@ -275,6 +276,8 @@ SUBROUTINE start_clock_gpu( label )
 #if defined(__CUDA)
            ierr = cudaEventRecord(gpu_starts(n),0)
 #endif
+           t0cpu(n) = f_tcpu()
+           t0wall(n)= f_wall()
         ENDIF
         !
         RETURN
@@ -296,6 +299,8 @@ SUBROUTINE start_clock_gpu( label )
 #if defined(__CUDA)
      ierr = cudaEventRecord(gpu_starts(nclock),0)
 #endif
+     t0cpu(nclock)       = f_tcpu()
+     t0wall(nclock)      = f_wall()
      !
   ENDIF
   !
@@ -376,8 +381,9 @@ SUBROUTINE stop_clock_gpu( label )
 #if defined (__TRACE)
   USE mytime,    ONLY : trace_depth, mpime, max_print_depth
 #endif
-  USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
-                         gpu_called, gputime, gpu_starts, gpu_stops
+  USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
+                        notrunning, called, t0cpu, t0wall, f_wall, f_tcpu, &
+                        gpu_called, gputime, gpu_starts, gpu_stops
 #if defined(__CUDA)
   USE cudafor
 #endif
@@ -416,13 +422,19 @@ SUBROUTINE stop_clock_gpu( label )
            !
         ELSE
            !
+           cputime(n)   = cputime(n) + f_tcpu() - t0cpu(n)
 #if defined(__CUDA)
-           ierr = cudaEventRecord(gpu_stops(n),0)
-           ierr = cudaEventSynchronize(gpu_stops(n))
-           ierr = cudaEventElapsedTime(time, gpu_starts(n), gpu_stops(n))
+           ierr         = cudaEventRecord(gpu_stops(n),0)
+           ierr         = cudaEventSynchronize(gpu_stops(n))
+           ierr         = cudaEventElapsedTime(time, gpu_starts(n), gpu_stops(n))
 #endif           
            gputime(n)   = gputime(n) + time
-           gpu_called(n)    = gpu_called(n) + 1
+           gpu_called(n)= gpu_called(n) + 1
+           !
+           walltime(n)  = walltime(n)+ f_wall() - t0wall(n)
+           t0cpu(n)     = notrunning
+           t0wall(n)    = notrunning
+           called(n)    = called(n) + 1
            !
         ENDIF
         !
@@ -520,8 +532,7 @@ SUBROUTINE print_this_clock( n )
   !
   USE util_param, ONLY : DP, stdout
   USE mytime,     ONLY : clock_label, cputime, walltime, mpi_per_thread, &
-                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu, &
-                         gpu_called
+                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
   !
   IMPLICIT NONE
   !
@@ -553,7 +564,7 @@ SUBROUTINE print_this_clock( n )
   elapsed_cpu_time   = elapsed_cpu_time * mpi_per_thread
 #endif
   !
-  nmax = called(n) + gpu_called(n)
+  nmax = called(n)
   !
   ! ... In the parallel case there are several possible approaches
   ! ... The safest one is to leave each clock independent from the others
