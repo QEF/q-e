@@ -267,7 +267,7 @@ SUBROUTINE pbex( rho, grho, iflag, sx, v1x, v2x )                    !<GPU:DEVIC
      s1 = agrho * dsg / rho
      s2 = s1 * s1
      f1 = exp( - mu(iflag) * s2 / k(iflag) )
-     f2 = 1._DP + f1
+     f2 = 1._DP - f1
      fx = k(iflag) * f2
      !
      exunif = - c1 * kf
