@@ -82,7 +82,7 @@
       nogrp_ = fftx_ntgrp(dffts)
       ALLOCATE( psi( dffts%nnr_tg ) )
       !
-#if defined(__MPI) && ! defined(__CUDA)
+#if defined(__MPI) 
 
       CALL c2psi_gamma_tg( dffts, psi, c, i, n )
 

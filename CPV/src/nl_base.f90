@@ -104,6 +104,113 @@
    END SUBROUTINE beta_eigr_x
 !-----------------------------------------------------------------------
 !
+#if defined(__CUDA)
+!
+!-----------------------------------------------------------------------
+   SUBROUTINE beta_eigr_gpu_x ( beigr_d, nspmn, nspmx, eigr, pptype_ )
+!-----------------------------------------------------------------------
+
+      !     computes: the array becp
+      !     beigr(ig,iv)=
+      !         = [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* 
+      !
+      !     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
+      !     input : beta(ig,l,is), eigr, c
+      !     output: becp as parameter
+      !
+      USE kinds,      ONLY : DP
+      USE ions_base,  only : nat, nsp, ityp
+      USE gvecw,      only : ngw
+      USE uspp,       only : nkb, nhtol, beta, indv_ijkb0
+      USE uspp_param, only : nh, upf, nhm
+      USE gvect, ONLY : gstart
+      USE cudafor
+!
+      implicit none
+
+      integer,     intent(in)  :: nspmn, nspmx
+      complex(DP), intent(in)  :: eigr( :, : )
+      complex(DP), DEVICE, intent(out) :: beigr_d( :, : )
+      INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      ! pptype_: pseudo type to process: 0 = all, 1 = norm-cons, 2 = ultra-soft
+      !
+      integer   :: ig, is, iv, ia, l, inl
+      complex(DP) :: cfact
+      COMPLEX(DP), ALLOCATABLE :: beigr(:,:)
+      integer :: pptype
+      LOGICAL :: ok1, ok2
+      !
+      call start_clock( 'beta_eigr' )
+
+      IF( PRESENT( pptype_ ) ) THEN
+         pptype = pptype_
+      ELSE
+         pptype = 0
+      END IF
+
+      ALLOCATE( beigr, MOLD=beigr_d )
+
+!$omp parallel default(none), &
+!$omp shared(nat,ngw,nh,nhtol,beigr,beta,eigr,ityp,pptype,nspmn,nspmx,upf,gstart,indv_ijkb0), &
+!$omp private(is,ia,iv,inl,l,cfact,ig,ok1,ok2)
+!$omp do
+      DO ia = 1, nat
+         is  = ityp(ia)
+         inl = indv_ijkb0(ia)
+         !
+         ok1 = .NOT. ( pptype == 1 .AND. upf(is)%tvanp )
+         ok2 = .NOT. ( pptype == 2 .AND. .NOT. upf(is)%tvanp )
+         IF( ok1 .AND. ok2 .AND. ( is >= nspmn .AND. is <= nspmx ) ) THEN
+              !
+              do iv = 1, nh( is )
+                !
+                l = nhtol( iv, is )
+                !
+                if (l == 0) then
+                  cfact =   cmplx( 1.0_dp , 0.0_dp )
+                else if (l == 1) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                else if (l == 2) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact
+                else if (l == 3) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact * cfact
+                endif
+                !
+                !  q = 0   component (with weight 1.0)
+                !
+                if (gstart == 2) then
+                  beigr( 1, iv + inl ) = cfact * beta(1,iv,is) * eigr(1,ia)
+                end if
+                !
+                !   q > 0   components (with weight 2.0)
+                !
+                do ig = gstart, ngw
+                  beigr( ig, iv + inl ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia)
+                end do
+                !
+              end do
+              !
+         ELSE
+            DO iv = 1, nh( is )
+               beigr(:,iv+inl) = 0.0d0
+            END DO
+         END IF
+      END DO
+!$omp end do
+!$omp end parallel
+
+      beigr_d = beigr
+      DEALLOCATE( beigr )
+
+      call stop_clock( 'beta_eigr' )
+
+      RETURN
+   END SUBROUTINE beta_eigr_gpu_x
+!-----------------------------------------------------------------------
+!
+#endif
 !
 !-----------------------------------------------------------------------
    subroutine nlsm1us_x ( n, beigr, c, becp )
@@ -174,16 +281,14 @@
       implicit none
 
       integer,     intent(in)  :: n
-      complex(DP), intent(in)  :: beigr( :, : ), c( :, : )
+      complex(DP), device, intent(in)  :: c( :, : )
+      complex(DP), device, intent(in)  :: beigr( :, : )
       real(DP),    device, intent(out) :: becp( :, : )
-      complex(DP), device, allocatable  :: beigr_d( :, : ), c_d( :, : )
       !
       call start_clock( 'nlsm1us' )
 
       IF( ngw > 0 .AND. nkb > 0 ) THEN
-         ALLOCATE( beigr_d, source=beigr )
-         ALLOCATE( c_d, source=c )
-         CALL MYDGEMM( 'T', 'N', nkb, n, 2*ngw, 1.0d0, beigr_d, 2*ngw, c_d, 2*ngw, 0.0d0, becp, nkb )
+         CALL MYDGEMM( 'T', 'N', nkb, n, 2*ngw, 1.0d0, beigr, 2*ngw, c, 2*ngw, 0.0d0, becp, nkb )
       END IF
 
       IF( nproc_bgrp > 1 ) THEN

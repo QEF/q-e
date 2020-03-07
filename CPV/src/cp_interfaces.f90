@@ -407,18 +407,17 @@
          REAL(DP)    :: bephi(:,:)
          REAL(DP)    :: becp_bgrp(:,:)
 #if defined (__CUDA)
-         ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi
+         ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, cp_bgrp, phi_bgrp
 #endif
       END SUBROUTINE
    END INTERFACE
 
    INTERFACE ortho_gamma
       SUBROUTINE ortho_gamma_x &
-         ( iopt, cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
+         ( cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
            nx0, idesc, diff, iter, n, nss, istart )
          USE kinds,          ONLY: DP
          IMPLICIT NONE
-         INTEGER,  INTENT(IN)  :: iopt
          INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
          INTEGER,  INTENT(IN)  :: n, nss, istart
          COMPLEX(DP) :: phi( :, : ), cp( :, : )
@@ -429,7 +428,7 @@
          INTEGER,  INTENT(OUT) :: iter
          REAL(DP), INTENT(OUT) :: diff
 #if defined (__CUDA)
-         ATTRIBUTES( DEVICE ) :: becp_dist, bephi
+         ATTRIBUTES( DEVICE ) :: becp_dist, bephi, phi, cp
 #endif
       END SUBROUTINE
    END INTERFACE
@@ -844,6 +843,14 @@
       IMPLICIT NONE
       COMPLEX(DP) :: c_bgrp(:,:)
     END SUBROUTINE c_bgrp_expand_x
+#if defined (__CUDA)
+    SUBROUTINE c_bgrp_expand_gpu_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      USE cudafor
+      IMPLICIT NONE
+      COMPLEX(DP), DEVICE :: c_bgrp(:,:)
+    END SUBROUTINE c_bgrp_expand_gpu_x
+#endif
    END INTERFACE
    INTERFACE c_bgrp_pack
     SUBROUTINE c_bgrp_pack_x( c_bgrp )
@@ -851,6 +858,14 @@
       IMPLICIT NONE
       COMPLEX(DP) :: c_bgrp(:,:)
     END SUBROUTINE c_bgrp_pack_x
+#if defined (__CUDA)
+    SUBROUTINE c_bgrp_pack_gpu_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      USE cudafor
+      IMPLICIT NONE
+      COMPLEX(DP), DEVICE :: c_bgrp(:,:)
+    END SUBROUTINE c_bgrp_pack_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE vofrho
@@ -1036,6 +1051,16 @@
          COMPLEX(DP), INTENT(OUT) :: beigr( :, : )
          INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE beta_eigr_x
+#if defined (__CUDA)
+      SUBROUTINE beta_eigr_gpu_x ( beigr, nspmn, nspmx, eigr, pptype_ )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: nspmn, nspmx
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), DEVICE, INTENT(OUT) :: beigr( :, : )
+         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
+      END SUBROUTINE beta_eigr_gpu_x
+#endif
    END INTERFACE
 
    INTERFACE nlsm1us
@@ -1053,8 +1078,8 @@
          USE cudafor
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: n
-         COMPLEX(DP), INTENT(IN)  :: beigr( :, : )
-         COMPLEX(DP), INTENT(IN)  :: c( :, : )
+         COMPLEX(DP), DEVICE, INTENT(IN)  :: beigr( :, : )
+         COMPLEX(DP), DEVICE, INTENT(IN)  :: c( :, : )
          REAL(DP),    DEVICE, INTENT(OUT) :: becp( :, : )
       END SUBROUTINE nlsm1us_gpu_x
 #endif

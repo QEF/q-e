@@ -10,6 +10,9 @@
    MODULE wavefunctions
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
+#if defined (__CUDA)
+     USE cudafor
+#endif
 
      IMPLICIT NONE
      SAVE
@@ -35,6 +38,12 @@
      COMPLEX(DP), ALLOCATABLE :: c0_bgrp(:,:)  ! wave functions at time t
      COMPLEX(DP), ALLOCATABLE :: cm_bgrp(:,:)  ! wave functions at time t-delta t
      COMPLEX(DP), ALLOCATABLE :: phi_bgrp(:,:) ! |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
+     COMPLEX(DP), ALLOCATABLE :: c0_d(:,:)  ! wave functions at time t
+     COMPLEX(DP), ALLOCATABLE :: cm_d(:,:)  ! wave functions at time t-delta t
+     COMPLEX(DP), ALLOCATABLE :: phi_d(:,:) ! |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
+#if defined (__CUDA)
+     ATTRIBUTES(DEVICE) :: c0_d, cm_d, phi_d
+#endif
      ! for hybrid functionals in CP with Wannier functions
      COMPLEX(DP), ALLOCATABLE :: cv0(:,:) ! Lingzhu Kong
 
@@ -48,7 +57,47 @@
        IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
+#if defined (__CUDA)
+       IF( ALLOCATED( c0_d ) ) DEALLOCATE( c0_d )
+       IF( ALLOCATED( cm_d ) ) DEALLOCATE( cm_d )
+       IF( ALLOCATED( phi_d ) ) DEALLOCATE( phi_d )
+#endif
      END SUBROUTINE deallocate_wavefunctions
+
+     SUBROUTINE allocate_cp_wavefunctions( ngw, nbspx, vnbsp, lwfpbe0nscf )
+       INTEGER, INTENT(IN) :: ngw, nbspx, vnbsp
+       LOGICAL, INTENT(IN) :: lwfpbe0nscf
+       INTEGER :: ierr
+       ALLOCATE( c0_bgrp( ngw, nbspx ), STAT=ierr )
+       IF( ierr /= 0 ) &
+         CALL errore( ' allocate_cp_wavefunctions ', ' allocating on CPU ', ABS( ierr ) )
+       c0_bgrp = (0_DP,0_DP)
+       ALLOCATE( cm_bgrp( ngw, nbspx ), STAT=ierr )
+       IF( ierr /= 0 ) &
+         CALL errore( ' allocate_cp_wavefunctions ', ' allocating on CPU ', ABS( ierr ) )
+       cm_bgrp = (0_DP,0_DP)
+       ALLOCATE( phi_bgrp( ngw, nbspx ), STAT=ierr )
+       IF( ierr /= 0 ) &
+         CALL errore( ' allocate_cp_wavefunctions ', ' allocating on CPU ', ABS( ierr ) )
+       phi_bgrp = (0_DP,0_DP)
+       IF(lwfpbe0nscf) THEN
+         ALLOCATE(cv0( ngw, vnbsp ), STAT=ierr )   ! Lingzhu Kong
+         IF( ierr /= 0 ) &
+           CALL errore( ' allocate_cp_wavefunctions ', ' allocating on CPU ', ABS( ierr ) )
+         cv0 = (0_DP,0_DP)
+       END IF
+#if defined (__CUDA)
+       ALLOCATE( c0_d( ngw, nbspx ), STAT=ierr )
+       IF( ierr /= 0 ) &
+         CALL errore( ' allocate_cp_wavefunctions ', ' allocating on GPU ', ABS( ierr ) )
+       ALLOCATE( cm_d( ngw, nbspx ), STAT=ierr )
+       IF( ierr /= 0 ) &
+         CALL errore( ' allocate_cp_wavefunctions ', ' allocating on GPU ', ABS( ierr ) )
+       ALLOCATE( phi_d( ngw, nbspx ), STAT=ierr )
+       IF( ierr /= 0 ) &
+         CALL errore( ' allocate_cp_wavefunctions ', ' allocating on GPU ', ABS( ierr ) )
+#endif
+     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
    END MODULE wavefunctions

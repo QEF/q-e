@@ -28,7 +28,7 @@ SUBROUTINE init_run()
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE wavefunctions,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE wavefunctions,            ONLY : c0_bgrp, cm_bgrp, phi_bgrp, allocate_cp_wavefunctions
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
@@ -168,10 +168,7 @@ SUBROUTINE init_run()
   !
   !  initialize wave functions descriptors and allocate wf
   !
-  IF(lwfpbe0nscf) ALLOCATE(cv0( ngw, vnbsp ) )   ! Lingzhu Kong
-  ALLOCATE( c0_bgrp( ngw, nbspx ) )
-  ALLOCATE( cm_bgrp( ngw, nbspx ) )
-  ALLOCATE( phi_bgrp( ngw, nbspx ) )
+  CALL allocate_cp_wavefunctions( ngw, nbspx, vnbsp, lwfpbe0nscf )
   !
   IF ( iverbosity > 1 ) THEN
      !
@@ -260,11 +257,6 @@ SUBROUTINE init_run()
   velsp = 0.D0
   !
   hnew = h
-  !
-  IF(lwfpbe0nscf) cv0=( 0.D0, 0.D0 )    ! Lingzhu Kong
-  cm_bgrp  = ( 0.D0, 0.D0 )
-  c0_bgrp  = ( 0.D0, 0.D0 )
-  phi_bgrp = ( 0.D0, 0.D0 )
   !
   IF ( tens ) then
      CALL id_matrix_init( idesc, nspin )

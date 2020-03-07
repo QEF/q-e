@@ -48,7 +48,7 @@ SUBROUTINE from_scratch( )
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+    USE wavefunctions, ONLY : c0_bgrp, cm_bgrp, phi_bgrp, c0_d, phi_d
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
@@ -259,7 +259,13 @@ SUBROUTINE from_scratch( )
          &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
 
       if( tortho ) then
+#if defined (__CUDA)
+           c0_d = c0_bgrp
+           phi_d = phi_bgrp
+           CALL ortho( eigr, c0_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#else
          CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#endif
       else
          CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
       endif
@@ -275,7 +281,12 @@ SUBROUTINE from_scratch( )
       if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )
       !
       IF ( tortho ) THEN
+#if defined (__CUDA)
+         CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_bgrp, c0_d, idesc )
+         c0_bgrp = c0_d
+#else
          CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
+#endif
       END IF
       !
       IF( force_pairing ) THEN

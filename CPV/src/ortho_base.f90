@@ -955,9 +955,6 @@ CONTAINS
       REAL(DP)    :: bec_bgrp( :, : ), x0( :, :, : )
       REAL(DP)    :: bephi( :, : )
       REAL(DP)    :: becp_bgrp( :, : )
-#if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi
-#endif
 
       ! local variables
 
@@ -966,12 +963,20 @@ CONTAINS
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: xd(:,:)
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
+      REAL(DP),    ALLOCATABLE :: bec_tmp(:,:) 
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       INTEGER :: idesc_ip(LAX_DESC_SIZE)
+#if defined (__CUDA)
+      ATTRIBUTES( DEVICE ) :: xd, becp_bgrp, bephi, cp_bgrp, phi, bephi_tmp, bec_tmp
+#endif
 
       CALL start_clock( 'updatc' )
 
       CALL laxlib_getval( leg_ortho = leg_ortho )
+
+      IF( nkbus > 0 )THEN
+         ALLOCATE( bec_tmp, SOURCE=bec_bgrp )
+      END IF
 
       DO iss = 1, nspin
          !
@@ -1006,7 +1011,7 @@ CONTAINS
             DO i = 1, nss
                ibgrp_i = ibgrp_g2l( i + istart - 1 )
                IF( ibgrp_i > 0 ) THEN
-                  bec_bgrp( :, ibgrp_i ) = becp_bgrp( :, ibgrp_i )
+                  bec_tmp( :, ibgrp_i ) = becp_bgrp( :, ibgrp_i )
                END IF
             END DO
             ALLOCATE( bephi_tmp( nkbx, nrcx ) )
@@ -1079,8 +1084,9 @@ CONTAINS
                CALL mp_bcast( xd, root, intra_bgrp_comm )
    
                IF( ngw > 0 ) THEN
-                  CALL dgemm( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
-                           xd(1,i_first), nrcx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
+                  CALL DGEMMDRV &
+                      ( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
+                        xd(1,i_first), nrcx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
                END IF
    
                IF( nkbus > 0 )THEN
@@ -1096,8 +1102,10 @@ CONTAINS
                      END IF
                   END DO
                   IF( nbgrp_i > 0 ) THEN
-                     CALL dgemm( 'N', 'T', nkb, nbgrp_i, nc, 1.0d0, &
-                            bephi_tmp, nkbx, xd(i_first,1), nrcx, 1.0d0, bec_bgrp( 1, ibgrp_i_first ), SIZE(bec_bgrp,1) )
+                     CALL DGEMMDRV &
+                          ( 'N', 'T', nkb, nbgrp_i, nc, 1.0d0, bephi_tmp(1,1), nkbx, &
+                            xd(i_first,1), nrcx, 1.0d0, bec_tmp( 1, ibgrp_i_first ), SIZE(bec_tmp,1) )
+                            !xd(i_first,1), nrcx, 1.0d0, bec_bgrp( 1, ibgrp_i_first ), SIZE(bec_bgrp,1) )
                   END IF
                   !
                END IF
@@ -1113,6 +1121,11 @@ CONTAINS
          DEALLOCATE(xd)
          !
       END DO
+      !
+      IF( nkbus > 0 )THEN
+         bec_bgrp = bec_tmp
+         DEALLOCATE( bec_tmp )
+      END IF
       !
       CALL stop_clock( 'updatc' )
       !
