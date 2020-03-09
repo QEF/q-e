@@ -1312,22 +1312,3 @@ CONTAINS
    END SUBROUTINE bec_bgrp2ortho
 
 END MODULE orthogonalize_base
-
-
-! In principle this can go away .......
-SUBROUTINE MYDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-#if defined(__CUDA)
-    use cudafor
-    use cublas
-#endif
-!     .. Scalar Arguments ..
-    DOUBLE PRECISION ::  ALPHA
-    INTEGER          ::   INCX, INCY, LDA, M, N
-!     .. Array Arguments ..
-    DOUBLE PRECISION :: A( LDA, * ), X( * ), Y( * )
-#if defined(__CUDA)
-    attributes(device) :: A, X, Y
-#endif
-    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-
-END SUBROUTINE MYDGER

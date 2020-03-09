@@ -144,6 +144,7 @@ SUBROUTINE from_scratch( )
     !
     if( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp )
     !
+    !
     ! ... initialize bands
     !
     CALL occn_info( f )

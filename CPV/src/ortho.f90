@@ -632,18 +632,3 @@ END MODULE local_ortho_memory
 100   FORMAT(3X,'diff = ',D18.10,' iter = ', I5 )
       !
    END SUBROUTINE ortho_x
-
-
-
-
-SUBROUTINE qe_sync()
-#if defined(__CUDA)
-      USE cudafor
-#endif
-   INTEGER :: info
-#if defined (__CUDA)
-   info = cudaDeviceSynchronize()
-   IF( info /= 0 ) CALL errore('qe_sync',' error ',ABS(info))
-#endif
-   RETURN
-END SUBROUTINE
