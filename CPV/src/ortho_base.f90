@@ -338,6 +338,7 @@ CONTAINS
       USE io_global,         ONLY: stdout
       USE control_flags,     ONLY: ortho_eps, ortho_max
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
+      USE mp_world,          ONLY: mpime
       USE mp,                ONLY: mp_sum, mp_max
 
       IMPLICIT NONE
@@ -963,20 +964,22 @@ CONTAINS
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: xd(:,:)
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
-      REAL(DP),    ALLOCATABLE :: bec_tmp(:,:) 
+      INTEGER,     ALLOCATABLE :: indi(:)
       INTEGER :: np( 2 ), coor_ip( 2 ), leg_ortho
       INTEGER :: idesc_ip(LAX_DESC_SIZE)
 #if defined (__CUDA)
-      ATTRIBUTES( DEVICE ) :: xd, becp_bgrp, bephi, cp_bgrp, phi, bephi_tmp, bec_tmp
+      ATTRIBUTES( DEVICE ) :: xd, becp_bgrp, bephi, cp_bgrp, phi, bephi_tmp, bec_bgrp, indi
 #endif
 
       CALL start_clock( 'updatc' )
 
-      CALL laxlib_getval( leg_ortho = leg_ortho )
-
+#if defined (__CUDA)
       IF( nkbus > 0 )THEN
-         ALLOCATE( bec_tmp, SOURCE=bec_bgrp )
+         ALLOCATE(indi, SOURCE=ibgrp_g2l)
       END IF
+#endif
+
+      CALL laxlib_getval( leg_ortho = leg_ortho )
 
       DO iss = 1, nspin
          !
@@ -1008,12 +1011,21 @@ CONTAINS
          ALLOCATE( xd( nrcx, nrcx ) )
    
          IF( nkbus > 0 )THEN
+#if defined (__CUDA)
+!$cuf kernel do(1) <<<*,*>>>
+            DO i = 1, nss
+               IF( indi( i + istart - 1 ) > 0 ) THEN
+                  bec_bgrp( :, indi( i + istart - 1 ) ) = becp_bgrp( :, indi( i + istart - 1 ) )
+               END IF
+            END DO
+#else
             DO i = 1, nss
                ibgrp_i = ibgrp_g2l( i + istart - 1 )
                IF( ibgrp_i > 0 ) THEN
-                  bec_tmp( :, ibgrp_i ) = becp_bgrp( :, ibgrp_i )
+                  bec_bgrp( :, ibgrp_i ) = becp_bgrp( :, ibgrp_i )
                END IF
             END DO
+#endif
             ALLOCATE( bephi_tmp( nkbx, nrcx ) )
          END IF
    
@@ -1104,8 +1116,7 @@ CONTAINS
                   IF( nbgrp_i > 0 ) THEN
                      CALL DGEMMDRV &
                           ( 'N', 'T', nkb, nbgrp_i, nc, 1.0d0, bephi_tmp(1,1), nkbx, &
-                            xd(i_first,1), nrcx, 1.0d0, bec_tmp( 1, ibgrp_i_first ), SIZE(bec_tmp,1) )
-                            !xd(i_first,1), nrcx, 1.0d0, bec_bgrp( 1, ibgrp_i_first ), SIZE(bec_bgrp,1) )
+                            xd(i_first,1), nrcx, 1.0d0, bec_bgrp( 1, ibgrp_i_first ), SIZE(bec_bgrp,1) )
                   END IF
                   !
                END IF
@@ -1122,10 +1133,7 @@ CONTAINS
          !
       END DO
       !
-      IF( nkbus > 0 )THEN
-         bec_bgrp = bec_tmp
-         DEALLOCATE( bec_tmp )
-      END IF
+      IF(ALLOCATED(indi)) DEALLOCATE(indi)
       !
       CALL stop_clock( 'updatc' )
       !
@@ -1163,7 +1171,7 @@ CONTAINS
 
       ! local variables
       !
-      INTEGER  :: is, iv, jv, ia, inl, jnl, i, j
+      INTEGER  :: is, iv, jv, ia, inl, jnl, i, j, indv
       REAL(DP), ALLOCATABLE :: qtemp( : , : )
       REAL(DP) :: qqf
 !
@@ -1178,13 +1186,17 @@ CONTAINS
          ALLOCATE( qtemp( nkb, nbspx_bgrp ) )
 
          qtemp (:,:) = 0.d0
+!$omp parallel do default(none) &
+!$omp shared(nat,ityp,upf,nh,indv_ijkb0,qq_nt,qtemp,bec_bgrp,nbsp_bgrp) &
+!$omp private(ia,is,iv,inl,jv,jnl,qqf,i,indv)
          DO ia = 1, nat
             is = ityp(ia)
+            indv = indv_ijkb0(ia)
             IF( upf(is)%tvanp ) THEN
                DO iv=1,nh(is)
-                  inl = indv_ijkb0(ia) + iv 
+                  inl = indv + iv 
                   DO jv=1,nh(is)
-                     jnl = indv_ijkb0(ia) + jv
+                     jnl = indv + jv
                      IF(ABS(qq_nt(iv,jv,is)) > 1.d-5) THEN
                         qqf = qq_nt(iv,jv,is)
                         DO i=1,nbsp_bgrp
@@ -1195,6 +1207,7 @@ CONTAINS
                END DO
             END IF
          END DO
+!$omp end parallel do
 !
          IF( ngw > 0 ) THEN
             CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkb, 1.0d0, betae, &

@@ -97,6 +97,7 @@
    PUBLIC :: nlsm1
    PUBLIC :: nlsm2_bgrp
    PUBLIC :: calbec_bgrp
+   PUBLIC :: calbec_nc
    PUBLIC :: ennl
    PUBLIC :: calrhovan
    PUBLIC :: calbec
@@ -106,6 +107,8 @@
    PUBLIC :: collect_bec
    PUBLIC :: beta_eigr
    PUBLIC :: nlsm1us
+   PUBLIC :: nlsm1nc
+   PUBLIC :: nlsm1all
    PUBLIC :: g_beta_eigr
    PUBLIC :: dbeta_eigr
 
@@ -958,14 +961,21 @@
    END INTERFACE
 
    INTERFACE calbec_bgrp
-      SUBROUTINE calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp, pptype_ )
+      SUBROUTINE calbec_bgrp_x ( eigr, c_bgrp, bec_bgrp )
          USE kinds,      ONLY : DP
          IMPLICIT NONE
-         INTEGER,     INTENT(IN)  :: nspmn, nspmx
          COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c_bgrp( :, : )
          REAL(DP),    INTENT(OUT) :: bec_bgrp( :, : )
-         INTEGER,     INTENT(IN), OPTIONAL  :: pptype_
       END SUBROUTINE calbec_bgrp_x 
+   END INTERFACE
+
+   INTERFACE calbec_nc
+      SUBROUTINE calbec_nc_x ( eigr, c_bgrp, bec_bgrp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) :: bec_bgrp( :, : )
+      END SUBROUTINE calbec_nc_x
    END INTERFACE
 
    INTERFACE ennl
@@ -1083,6 +1093,28 @@
          REAL(DP),    DEVICE, INTENT(OUT) :: becp( :, : )
       END SUBROUTINE nlsm1us_gpu_x
 #endif
+   END INTERFACE
+
+   INTERFACE nlsm1nc
+      SUBROUTINE nlsm1nc_x ( n, eigr, c, becp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(IN)  :: c( :, : )
+         REAL(DP),    INTENT(OUT) :: becp( :, : )
+      END SUBROUTINE nlsm1nc_x
+   END INTERFACE
+
+   INTERFACE nlsm1all
+      SUBROUTINE nlsm1all_x ( n, eigr, c, becp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : )
+         COMPLEX(DP), INTENT(IN)  :: c( :, : )
+         REAL(DP),    INTENT(OUT) :: becp( :, : )
+      END SUBROUTINE nlsm1all_x
    END INTERFACE
 
    INTERFACE g_beta_eigr

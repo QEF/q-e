@@ -13,15 +13,12 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
 !
       USE uspp,           ONLY : nkb, nkbus
       USE uspp,           ONLY : qq_nt
-      USE uspp,           ONLY: nkb, nkbus, qq_nt, indv_ijkb0
-      USE uspp_param,     ONLY: nh, upf, nhm
       USE gvecw,          ONLY : ngw
       USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
-      USE mp_global,      ONLY : inter_bgrp_comm
       USE mp,             ONLY : mp_sum
-      USE ions_base,      ONLY : nat, ityp, nsp
-      USE gvect,          ONLY: gstart
+      USE gvect,          ONLY : gstart
+      USE mp_global,      ONLY : intra_bgrp_comm, inter_bgrp_comm, me_bgrp, nproc_bgrp
 !
       IMPLICIT NONE
 !
@@ -31,34 +28,33 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
 !
       REAL(DP) :: anorm
       REAL(DP), ALLOCATABLE :: csc( : )
-      REAL(DP), ALLOCATABLE :: rtmp( : )
       COMPLEX(DP), ALLOCATABLE :: ctmp( : )
+      REAL(DP), ALLOCATABLE :: temp(:) 
       COMPLEX(DP), ALLOCATABLE :: cp_tmp(:) 
       REAL(DP), ALLOCATABLE :: bec_tmp(:) 
-      INTEGER :: is, jv,iv,i,k,j, ig, ibgrp_k, ibgrp_i, nbgrp_im1, iss
+      REAL(DP), ALLOCATABLE :: csc2( : )
+      INTEGER :: i,k,j, ig, ibgrp_k, ibgrp_i, nbgrp_im1, iss
       REAL(DP), PARAMETER :: one  =  1.d0
       REAL(DP), PARAMETER :: mone = -1.d0
-      REAL(DP)    :: g0
+      REAL(DP) :: g0
 !
       CALL start_clock( 'gram' )
-
-      ALLOCATE( csc( 2 * nbspx ) )
-      ALLOCATE( rtmp( nbspx ) )
-      ALLOCATE( ctmp( ngwx ) )
-      ALLOCATE( cp_tmp( ngwx ) )
-      ALLOCATE( bec_tmp( nkbx ) )
 
       g0 = 0.0d0
       IF (gstart == 2) g0 = 1.0d0
 
+      ALLOCATE( csc( nbspx ) )
+      ALLOCATE( ctmp( ngwx ) )
+      ALLOCATE( cp_tmp( ngwx ) )
+      ALLOCATE( bec_tmp( nkbx ) )
+      ALLOCATE( csc2( SIZE( csc ) ) )
 !
       DO iss = 1, nspin
-
       DO i = iupdwn(iss), iupdwn(iss) + nupdwn(iss) - 1 
          !
          ibgrp_i = ibgrp_g2l( i )
          !
-         CALL gracsc_bgrp( i, iss, nbgrp_im1 )
+         CALL gracsc_bgrp( bec_bgrp, betae, cp_bgrp, i, csc, iss, nbgrp_im1 )
          !
          ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
          !
@@ -82,11 +78,11 @@ SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
       END DO
       END DO
 !
+      DEALLOCATE( ctmp )
+      DEALLOCATE( csc )
+      DEALLOCATE( csc2 )
       DEALLOCATE( bec_tmp )
       DEALLOCATE( cp_tmp )
-      DEALLOCATE( ctmp )
-      DEALLOCATE( rtmp )
-      DEALLOCATE( csc )
 
       CALL stop_clock( 'gram' )
 !
@@ -101,9 +97,13 @@ CONTAINS
 !     Compute the norm of the i-th electronic state = (<c|S|c>)^(1/2) 
 !     requires in input the updated bec(i)
 !
+      USE ions_base,          ONLY: nat, ityp
       USE gvecw,              ONLY: ngw
+      USE uspp_param,         ONLY: nh, upf
+      USE uspp,               ONLY: qq_nt, indv_ijkb0
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
+      USE mp_global,          ONLY: intra_bgrp_comm
+      USE kinds,              ONLY: DP
 !
       IMPLICIT NONE
       !
@@ -114,7 +114,7 @@ CONTAINS
       REAL(DP) :: cscnorm, ddot
       !
       INTEGER  :: is, iv, jv, ia, indv
-      REAL(DP) :: rsum
+      REAL(DP) rsum
 !
       rsum = 2.d0 * ddot(2*ngw,cp(1,i),1,cp(1,i),1) - g0 * REAL(CONJG(cp(1,i))*cp(1,i), DP)
 !
@@ -136,38 +136,38 @@ CONTAINS
 
       CALL mp_sum( rsum, intra_bgrp_comm )
 !
-      cscnorm = SQRT(rsum)
-
+      cscnorm=SQRT(rsum)
+!
       RETURN
       END FUNCTION cscnorm
 !
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE gracsc_bgrp(  i, iss, nk )
+      SUBROUTINE gracsc_bgrp( bec_bgrp, betae, cp_bgrp, i, csc, iss, nk )
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
 !
       USE ions_base,      ONLY: na, nat, ityp
-      USE electrons_base, ONLY: nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
+      USE uspp,           ONLY: nkb, nkbus, qq_nt, indv_ijkb0
+      USE uspp_param,     ONLY: nh, upf
+      USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum
-      USE mp_global,      ONLY: intra_bgrp_comm, inter_bgrp_comm, me_bgrp, nproc_bgrp
       USE kinds,          ONLY: DP
+      USE gvect, ONLY: gstart
 !
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: i, iss
       INTEGER, INTENT(OUT) :: nk
-      INTEGER     :: k, kmax_bgrp, kmax, ig, is, iv, jv, ia, inl, jnl, ibgrp_k, ibgrp_i
-      REAL(DP)    :: rsum
-      REAL(DP)    :: ddot
-      INTEGER :: mytid, ntids
-#if defined(_OPENMP)
-      INTEGER :: omp_get_thread_num, omp_get_num_threads
-#endif
-      mytid = 0
-      ntids = 1
+      COMPLEX(DP) :: betae( :, : )
+      REAL(DP)    :: bec_bgrp( :, : )
+      COMPLEX(DP) :: cp_bgrp( :, : )
+      REAL(DP)    :: csc( : )
+      INTEGER     :: k, kmax_bgrp, kmax,ig, is, iv, jv, ia, inl, jnl, ibgrp_k, ibgrp_i
+      REAL(DP)    :: rsum, ddot
+      INTEGER     :: omp_get_thread_num, omp_get_num_threads
       !
       !     calculate csc(k)=<cp(i)|cp(k)>,  k<i
       !
@@ -176,7 +176,6 @@ CONTAINS
       csc    = 0.0d0
 
       ibgrp_i = ibgrp_g2l( i )
-
       IF( ibgrp_i > 0 ) THEN
          cp_tmp = cp_bgrp( :, ibgrp_i )
       ELSE
@@ -186,25 +185,27 @@ CONTAINS
       CALL mp_sum( cp_tmp, inter_bgrp_comm )
 
       kmax_bgrp = 0
+      nk = 0
       DO k = iupdwn( iss ), kmax
          IF( ibgrp_g2l( k ) > 0 ) THEN
             kmax_bgrp = ibgrp_g2l( k )
+            nk = nk + 1
          END IF
       END DO
       kmax_bgrp = kmax_bgrp - iupdwn_bgrp(iss) + 1
 
       IF( kmax_bgrp > 0 .AND. ngw > 0 ) &
-        CALL dgemv( 'T', 2*ngw, kmax_bgrp, 1.0d0, cp_bgrp(1,iupdwn_bgrp(iss)), 2*ngwx, cp_tmp, 1, 0.0d0, rtmp, 1 )
+        CALL dgemv( 'T', 2*ngw, kmax_bgrp, 1.0d0, cp_bgrp(1,iupdwn_bgrp(iss)), 2*ngwx, cp_tmp, 1, 0.0d0, csc2, 1 )
 
+      nk = 0
       DO k = iupdwn( iss ), kmax
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
-            csc(k) = 2.0d0 * rtmp(ibgrp_k) - g0 * DBLE( cp_bgrp(1,ibgrp_k) * CONJG(cp_tmp(1)) )
+            nk = nk + 1
+            csc(k) = 2.0d0 * csc2(nk) - g0 * DBLE( cp_bgrp(1,ibgrp_k) * CONJG(cp_tmp(1)) )
          END IF
       END DO
-      !
-      !     calculate bec(i)=<cp(i)|beta>
-      !
+
       IF(  ibgrp_i > 0 ) THEN
          DO ia = 1, nat
             is = ityp(ia)
@@ -225,17 +226,23 @@ CONTAINS
          bec_tmp = 0.0d0
       END IF
 
-      CALL mp_sum( bec_tmp, inter_bgrp_comm ) ! parallel sum over bands group
+      CALL mp_sum( bec_tmp, inter_bgrp_comm )
 !
 !     calculate csc(k)=<cp(i)|S|cp(k)>,  k<i
 !
-      nk = 0
+      csc2    = 0.0d0
+
+!$omp parallel if( (kmax - iupdwn( iss )) > omp_get_num_threads() ) default(none), &
+!$omp shared(iupdwn,iss,kmax,nproc_bgrp,me_bgrp,nbspx,i,ibgrp_g2l,nh), &
+!$omp shared(indv_ijkb0,qq_nt,na,bec_tmp,bec_bgrp,csc2,nat,ityp,upf), &
+!$omp private( k, is, iv, jv, ia, inl, jnl, rsum, ibgrp_k )
+!$omp do
       DO k = iupdwn( iss ), kmax
          rsum=0.d0
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
-            IF ( MOD( nk, nproc_bgrp ) == me_bgrp ) THEN
-               DO ia = 1, nat
+            DO ia = 1, nat
+               IF ( MOD( ia-1, nproc_bgrp ) == me_bgrp ) THEN
                   is=ityp(ia)
                   IF( upf(is)%tvanp ) THEN
                      inl = indv_ijkb0(ia)
@@ -247,22 +254,23 @@ CONTAINS
                         END DO
                      END DO
                   END IF
-               END DO
-            END IF
-            nk = nk + 1
+               END IF
+            END DO
          ENDIF
-         csc(k+nbspx)=csc(k+nbspx)+rsum
+         csc2(k)=csc2(k)+rsum
       END DO
+!$omp end do
+!$omp end parallel
 !
 !     orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
 !
 !     corresponing bec:  bec(i)=<cp(i)|beta>-csc(k)<cp(k)|beta>
 !
       CALL mp_sum( csc, intra_bgrp_comm )
+      CALL mp_sum( csc2, intra_bgrp_comm )
       CALL mp_sum( csc, inter_bgrp_comm )
-      DO k = iupdwn( iss ), kmax
-         csc(k) = csc(k) + csc(k+nbspx)
-      END DO
+      CALL mp_sum( csc2, inter_bgrp_comm )
+      csc = csc + csc2
 
       nk = 0
       DO k = iupdwn(iss), kmax
@@ -273,8 +281,8 @@ CONTAINS
          END IF
       END DO
 
-      IF( kmax_bgrp > 0 .AND. ngw > 0 ) THEN
-        CALL dgemv( 'N', nkbx, kmax_bgrp, -1.0d0, bec_bgrp(1,iupdwn_bgrp(iss)), nkbx, csc, 1, 0.0d0, bec_tmp, 1 )
+      IF( nk > 0 .AND. ngw > 0 ) THEN
+        CALL dgemv( 'N', nkbx, nk, -1.0d0, bec_bgrp(1,iupdwn_bgrp(iss)), nkbx, csc, 1, 0.0d0, bec_tmp, 1 )
       ELSE
         bec_tmp = 0.0d0
       END IF

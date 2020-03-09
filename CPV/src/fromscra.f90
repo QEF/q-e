@@ -43,7 +43,7 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                      strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
-    USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp
+    USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp, calbec_nc
     USE cp_interfaces,        ONLY : nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
@@ -52,10 +52,11 @@ SUBROUTINE from_scratch( )
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
-                                     sfac, eigr, taub, irb, eigrb, bec_bgrp, &
+                                     sfac, eigr, taub, irb, eigrb, bec_bgrp, bec_d, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
     USE mp_global,            ONLY : inter_bgrp_comm, nbgrp, me_bgrp
+    USE mp_world,             ONLY : mpime
     USE mp,                   ONLY : mp_sum
     USE matrix_inversion
     !
@@ -188,7 +189,7 @@ SUBROUTINE from_scratch( )
     !
     IF( .NOT. tcg ) THEN
        !
-       CALL calbec_bgrp ( 1, nsp, eigr, cm_bgrp, bec_bgrp )
+       CALL calbec_bgrp ( eigr, cm_bgrp, bec_bgrp )
        !
        if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
@@ -260,9 +261,9 @@ SUBROUTINE from_scratch( )
 
       if( tortho ) then
 #if defined (__CUDA)
-           c0_d = c0_bgrp
-           phi_d = phi_bgrp
-           CALL ortho( eigr, c0_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         c0_d = c0_bgrp
+         phi_d = phi_bgrp
+         CALL ortho( eigr, c0_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
          CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #endif
@@ -282,7 +283,8 @@ SUBROUTINE from_scratch( )
       !
       IF ( tortho ) THEN
 #if defined (__CUDA)
-         CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_bgrp, c0_d, idesc )
+         CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_d, c0_d, idesc )
+         bec_bgrp = bec_d
          c0_bgrp = c0_d
 #else
          CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
@@ -297,8 +299,8 @@ SUBROUTINE from_scratch( )
          !
       ENDIF
       !
-      !
-      CALL calbec_bgrp ( 1, nsp, eigr, c0_bgrp, bec_bgrp, 1 )
+      ! the following compute only on NC pseudo components
+      CALL calbec_nc ( eigr, c0_bgrp, bec_bgrp )
       !
       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
 

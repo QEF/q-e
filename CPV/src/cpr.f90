@@ -96,14 +96,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp_bgrp, nfi, idesc, &
-                                       drhor, drhog, bec_bgrp, dbec
+                                       drhor, drhog, bec_bgrp, dbec, bec_d
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : writefile, eigs, strucf, phfacs
-  USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec_bgrp, calbec, caldbec_bgrp
+  USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec_bgrp, calbec_nc, calbec, caldbec_bgrp
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
@@ -576,7 +576,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          IF ( tortho ) THEN
 #if defined (__CUDA)
-           CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_bgrp, cm_d, idesc )
+           CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_d, cm_d, idesc )
+           bec_bgrp = bec_d
            cm_bgrp = cm_d
 #else
            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
@@ -590,7 +591,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            lambda(:,:, 2) = lambda(:,:, 1)
          ENDIF
          !
-         CALL calbec_bgrp( 1, nsp, eigr, cm_bgrp, bec_bgrp, 1 )
+         ! the following compute only on NC pseudo components
+         CALL calbec_nc( eigr, cm_bgrp, bec_bgrp ) 
          !
          IF ( tpre ) THEN
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )

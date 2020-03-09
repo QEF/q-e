@@ -123,12 +123,12 @@ CONTAINS
       INTEGER :: i, j, info
       REAL(DP) DEVICEATTR :: ccc
       IF( ALLOCATED(xloc) ) THEN
-        IF( nx0 /= SIZE(xloc,1) ) THEN
+        IF( SIZE(x0,1) /= SIZE(xloc,1) .OR. SIZE(x0,2) /= SIZE(xloc,2) ) THEN
            DEALLOCATE(xloc)
         END IF
       END IF
       IF( .NOT. ALLOCATED(xloc) ) THEN
-         ALLOCATE( xloc( nx0, nx0 ), STAT = info )
+         ALLOCATE( xloc, MOLD=x0, STAT = info )
          IF( info /= 0 ) &
             CALL errore( ' ortho ', ' allocating xloc ', ABS( info ) )
       END IF
@@ -172,7 +172,6 @@ CONTAINS
       REAL(DP) DEVICEATTR :: a(:,:), b(:,:)
       INTEGER, INTENT(IN) :: ir, nr, ic, nc, comm
       INTEGER :: i, j, info
-      CALL qe_sync()
       CALL mp_bcast( a, 0, comm )
 !$cuf kernel do(2) <<<*,*>>>
       DO j = 1, nc
@@ -180,7 +179,6 @@ CONTAINS
             b( i, j ) = a( i + ir - 1, j + ic - 1 )
          END DO
       END DO
-      CALL qe_sync()
       RETURN
    END SUBROUTINE
 
@@ -189,7 +187,6 @@ CONTAINS
       REAL(DP) DEVICEATTR :: a(:,:), b(:,:)
       INTEGER, INTENT(IN) :: ir, nr, ic, nc, comm
       INTEGER :: i, j, info
-      CALL qe_sync()
       a = 0.0d0
 !$cuf kernel do(2) <<<*,*>>>
       DO j = 1, nc
@@ -198,7 +195,6 @@ CONTAINS
          END DO
       END DO
       CALL mp_sum( a, comm )
-      CALL qe_sync()
       RETURN
    END SUBROUTINE
 

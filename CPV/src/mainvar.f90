@@ -53,10 +53,11 @@ MODULE cp_main_variables
   REAL(DP), ALLOCATABLE :: bephi(:,:)      ! distributed (orhto group)
   REAL(DP), ALLOCATABLE :: becp_bgrp(:,:)  ! distributed becp (band group)
   REAL(DP), ALLOCATABLE :: bec_bgrp(:,:)  ! distributed bec (band group)
+  REAL(DP), ALLOCATABLE :: bec_d(:,:)  ! distributed bec (band group)
   REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
   REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
 #if defined (__CUDA)
-  ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi
+  ATTRIBUTES( DEVICE ) :: becp_bgrp, bephi, bec_d
 #endif
   !
   ! ... mass preconditioning
@@ -252,6 +253,11 @@ MODULE cp_main_variables
       ALLOCATE( bec_bgrp( nhsa, nbspx_bgrp ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate bec_bgrp ', ierr )
+#if defined (__CUDA)
+      ALLOCATE( bec_d( nhsa, nbspx_bgrp ), STAT=ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( ' allocate_mainvar ', ' unable to allocate bec_d ', ierr )
+#endif
       ALLOCATE( bephi( nhsa, nspin*nrcx ), STAT=ierr )
       IF( ierr /= 0 ) &
          CALL errore( ' allocate_mainvar ', ' unable to allocate becphi ', ierr )
@@ -290,6 +296,7 @@ MODULE cp_main_variables
       IF( ALLOCATED( drhog ) )   DEALLOCATE( drhog )
       IF( ALLOCATED( drhor ) )   DEALLOCATE( drhor )
       IF( ALLOCATED( bec_bgrp ) )     DEALLOCATE( bec_bgrp )
+      IF( ALLOCATED( bec_d ) )     DEALLOCATE( bec_d )
       IF( ALLOCATED( becdr_bgrp ) )   DEALLOCATE( becdr_bgrp )
       IF( ALLOCATED( bephi ) )   DEALLOCATE( bephi )
       IF( ALLOCATED( becp_bgrp ) )    DEALLOCATE( becp_bgrp )

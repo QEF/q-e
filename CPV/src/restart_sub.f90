@@ -187,7 +187,7 @@ SUBROUTINE from_restart( )
       !
    END IF
    !
-   CALL calbec_bgrp( 1, nsp, eigr, c0_bgrp, bec_bgrp )
+   CALL calbec_bgrp( eigr, c0_bgrp, bec_bgrp )
    !
    IF ( tpre     ) CALL caldbec_bgrp( eigr, c0_bgrp, dbec, idesc )
    !
