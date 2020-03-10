@@ -269,7 +269,7 @@ SUBROUTINE start_clock_gpu( label )
         ! ... found previously defined clock: check if not already started,
         ! ... store in t0cpu the starting time
         !
-        IF (.false. ) THEN ! PUT EVENT QUERY HERE
+        IF ( t0cpu(n) /= notrunning ) THEN
 !            WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
 !                           & " already started")' ) n, label_
         ELSE
@@ -416,7 +416,7 @@ SUBROUTINE stop_clock_gpu( label )
         ! ... found previously defined clock : check if properly initialised,
         ! ... add elapsed time, increase the counter of calls
         !
-        IF ( .false. ) THEN ! cudaEventQuery(gpu_starts(n)) == 0 
+        IF ( t0cpu(n) == notrunning ) THEN
            !
            WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, " not running")' ) n, label
            !
