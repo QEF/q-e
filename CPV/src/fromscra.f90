@@ -244,7 +244,7 @@ SUBROUTINE from_scratch( )
          !
       ELSE
          !
-         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
+         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, cm_d, c0_bgrp, c0_d, fromscra = .TRUE. )
          !
       ENDIF
       !

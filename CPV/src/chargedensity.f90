@@ -636,50 +636,32 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       REAL(DP),    INTENT(OUT) :: drhor(dfftp%nnr,nspin,3,3)
       COMPLEX(DP), INTENT(OUT) :: drhog(dfftp%ngm,nspin,3,3)
 ! local
-      INTEGER i, j, isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, ijs
+      INTEGER i, j, isup, isdw, iv, jv, ig, ijv, is, iss, ia, ir, ijs, itid
       REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci
-#if defined(__INTEL_COMPILER)
-#if __INTEL_COMPILER  >= 1300
-!dir$ attributes align: 4096 :: v, dqgbt,qv
-#endif
-#endif
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
       COMPLEX(DP), ALLOCATABLE :: fg1(:), fg2(:)
-!
-      INTEGER  :: itid, mytid, ntids
 #if defined(_OPENMP)
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 !
-!$omp parallel default(none), private(i,j,iss,ir,ig,mytid,ntids,itid), shared(nspin,dfftp,drhor,drhog,rhor,rhog,ainv) 
-#if defined(_OPENMP)
-      mytid = omp_get_thread_num()  ! take the thread ID
-      ntids = omp_get_num_threads() ! take the number of threads
-#else
-      mytid = 0
-      ntids = 1
-#endif
-      itid  = 0
+!$omp parallel do collapse(3) default(none), private(i,j,iss,ir,ig), shared(nspin,dfftp,drhor,drhog,rhor,rhog,ainv) 
       DO j=1,3
          DO i=1,3
             DO iss=1,nspin
-               IF( MOD( itid,  ntids ) == mytid ) THEN
-                  DO ir=1,dfftp%nnr
-                     drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
-                  END DO
-                  DO ig=1,dfftp%ngm
-                     drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
-                  END DO
-               END IF
-               itid = itid + 1 
+               DO ir=1,dfftp%nnr
+                  drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
+               END DO
+               DO ig=1,dfftp%ngm
+                  drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
+              END DO
             END DO
          END DO
       END DO
-!$omp end parallel
+!$omp end parallel do
 
       IF ( nkbus <= 0 ) THEN
          GO TO 1000
@@ -701,7 +683,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !$omp parallel default(none) &
 !$omp          shared(nat, ityp, ngb, nh, eigrb, dfftb, irb, v, &
 !$omp                 i, j, dqgb, qgb, nhm, rhovan, drhovan, upf ) &
-!$omp          private(mytid, ntids, is, ia, iv, jv, ijv, ig, iss, &
+!$omp          private( is, ia, iv, jv, ijv, ig, iss, &
 !$omp                  qv, fg1, fg2, itid, dqgbt, dsumt, asumt )
 
                ALLOCATE( qv( dfftb%nnr ) )
@@ -709,12 +691,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                ALLOCATE( fg1( ngb ) )
                ALLOCATE( fg2( ngb ) )
 
-#if defined(_OPENMP)
-               mytid = omp_get_thread_num()  ! take the thread ID
-               ntids = omp_get_num_threads() ! take the number of threads
                itid  = 0
-#endif
-
                iss=1
 
                DO ia=1,nat
@@ -728,11 +705,11 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 #endif
 
 #if defined(_OPENMP)
-                     IF ( mytid /= itid ) THEN
-                        itid = MOD( itid + 1, ntids )
+                     IF ( omp_get_thread_num() /= itid ) THEN
+                        itid = MOD( itid + 1, omp_get_num_threads() )
                         CYCLE
                      ELSE
-                        itid = MOD( itid + 1, ntids )
+                        itid = MOD( itid + 1, omp_get_num_threads() )
                      END IF
 #endif
 
@@ -1021,12 +998,13 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !  rhor(r) = total (smooth + US) charge density in real space
          !
 !$omp end parallel
-
-         iss = 1
-
+         !
+!$omp parallel do num_threads( MIN( 2, omp_get_num_threads() ) ) default(shared) private(ir)
          DO ir=1,dfftp%nnr
             rhor(ir,1)=rhor(ir,1)+DBLE(v(ir))        
          END DO
+!$omp end parallel do
+
 
          CALL fwfft('Rho',v, dfftp )
          !

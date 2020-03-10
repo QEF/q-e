@@ -145,7 +145,7 @@
          INTEGER,     INTENT(IN)    :: i
          REAL(DP)                   :: bec(:,:)
          COMPLEX(DP)                :: vkb(:,:)
-         COMPLEX(DP)                :: c(:,:)
+         COMPLEX(DP), DEVICE        :: c(:,:)
          COMPLEX(DP)                :: df(:), da(:)
          INTEGER,     INTENT(IN)    :: ldv
          REAL(DP), DEVICE           :: v( :, : )
@@ -360,7 +360,7 @@
 
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
+         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
          integer, intent(in) :: nfi
@@ -369,6 +369,7 @@
          real(DP) :: rhos(:,:)
          real(DP) :: bec_bgrp(:,:)
          complex(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
+         complex(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
          logical, optional, intent(in) :: fromscra
          logical, optional, intent(in) :: restart
       END SUBROUTINE

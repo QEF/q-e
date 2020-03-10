@@ -10,9 +10,15 @@
 
 !=----------------------------------------------------------------------------------=!
 
+#if defined(__CUDA)
+#define DEVICEATTR ,DEVICE
+#else
+#define DEVICEATTR
+#endif
+
 
    SUBROUTINE runcp_uspp_x &
-      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, c0_d, cm_bgrp, cm_d, fromscra, restart )
       !
       !  This subroutine performs a Car-Parrinello or Steepest-Descent step
       !  on the electronic variables, computing forces on electrons
@@ -53,6 +59,7 @@
       REAL(DP) :: rhos(:,:)
       REAL(DP) :: bec_bgrp(:,:)
       COMPLEX(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
+      COMPLEX(DP) DEVICEATTR :: c0_d(:,:), cm_d(:,:)
       LOGICAL, OPTIONAL, INTENT(IN) :: fromscra
       LOGICAL, OPTIONAL, INTENT(IN) :: restart
       !
@@ -252,7 +259,7 @@
            ELSE
 
 #if defined (__CUDA)
-              CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos_d, &
+              CALL dforce( i, bec_bgrp, vkb, c0_d, c2, c3, rhos_d, &
                            SIZE(rhos_d,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
 #else
               CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, &

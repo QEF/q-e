@@ -213,7 +213,7 @@
          !
       END IF
       !
-#if defined(__MPI) && ! defined(__CUDA)
+#if defined(__MPI) 
       CALL fwfft( 'tgWave', psi, dffts )
 #else
       CALL fwfft( 'Wave', psi, dffts )
@@ -379,7 +379,7 @@
       INTEGER,     INTENT(IN)    :: i
       REAL(DP)                   :: bec(:,:)
       COMPLEX(DP)                :: vkb(:,:)
-      COMPLEX(DP)                :: c(:,:)
+      COMPLEX(DP), DEVICE        :: c(:,:)
       COMPLEX(DP)                :: df(:), da(:)
       INTEGER,     INTENT(IN)    :: ldv
       REAL(DP), DEVICE           :: v( :, : )
@@ -397,9 +397,10 @@
       complex(DP), parameter :: ci=(0.0d0,1.0d0)
 
       REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
-      COMPLEX(DP), ALLOCATABLE :: psi_h(:)
       COMPLEX(DP), ALLOCATABLE, DEVICE :: psi(:)
-      COMPLEX(DP), ALLOCATABLE, DEVICE :: ptmp(:,:)
+      COMPLEX(DP), ALLOCATABLE, DEVICE :: df_d(:)
+      COMPLEX(DP), ALLOCATABLE, DEVICE :: da_d(:)
+      REAL(DP),    ALLOCATABLE, DEVICE :: g2_d(:)
       INTEGER,     DEVICE, POINTER     :: nl_d(:), nlm_d(:)
       !
       CALL start_clock( 'dforce' ) 
@@ -409,8 +410,9 @@
       END IF
 
       ALLOCATE( psi( dffts%nnr * many_fft ) )
-      ALLOCATE( psi_h( dffts%nnr ) )
-      ALLOCATE( ptmp( SIZE(c,1), 2 ) )
+      ALLOCATE( df_d( SIZE( df ) ) )
+      ALLOCATE( da_d( SIZE( da ) ) )
+      ALLOCATE( g2_d, SOURCE=g2kin )
       !
       psi = 0.0d0
       nl_d => dffts%nl_d
@@ -419,19 +421,16 @@
       ioff = 0
       DO ii = i, i + 2 * many_fft - 1, 2
          IF( ii < n ) THEN
-            ptmp(:,1) = c( :, ii )
-            ptmp(:,2) = c( :, ii + 1 )
 !$cuf kernel do(1)
             do ig = 1, dffts%ngw
-               psi( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) ) + ci * conjg( ptmp( ig, 2 ))
-               psi( nl_d( ig )  + ioff) = ptmp( ig, 1 ) + ci * ptmp( ig, 2)
+               psi( nlm_d( ig ) + ioff) = CONJG( c( ig, ii ) ) + ci * conjg( c( ig, ii+1))
+               psi( nl_d( ig )  + ioff) = c( ig, ii ) + ci * c( ig, ii+1)
             end do
          ELSE IF( ii == n ) THEN
-            ptmp(:,1) = c( :, ii )
 !$cuf kernel do(1)
             do ig = 1, dffts%ngw
-               psi( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) )
-               psi( nl_d( ig )  + ioff) = ptmp( ig, 1 )
+               psi( nlm_d( ig ) + ioff) = CONJG( c( ig, ii ) )
+               psi( nl_d( ig )  + ioff) = c( ig, ii )
             end do
          END IF
          ioff = ioff + dffts%nnr
@@ -475,11 +474,11 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
-            psi_h = psi( 1+ioff : ioff+dffts%nnr )
-            CALL fftx_psi2c_gamma( dffts, psi_h, df(1+igno:igno+ngw), da(1+igno:igno+ngw))
+            CALL fftx_psi2c_gamma_gpu( dffts, psi( 1+ioff : ioff+dffts%nnr ), df_d(1+igno:igno+ngw), da_d(1+igno:igno+ngw))
+!$cuf kernel do(1)
             DO ig=1,ngw
-               df(ig+igno)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df(ig+igno))
-               da(ig+igno)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+da(ig+igno))
+               df_d(ig+igno)= fi*(tpiba2*g2_d(ig)* c(ig,idx+i-1)+df_d(ig+igno))
+               da_d(ig+igno)=fip*(tpiba2*g2_d(ig)* c(ig,idx+i  )+da_d(ig+igno))
             END DO
          END IF
 
@@ -489,6 +488,8 @@
       ENDDO
 
       !
+      df = df_d
+      da = da_d
 
       IF( nhsa > 0 ) THEN
          !
@@ -553,9 +554,9 @@
          !
       ENDIF
 !
+      DEALLOCATE( df_d )
+      DEALLOCATE( da_d )
       DEALLOCATE( psi )
-      DEALLOCATE( psi_h )
-      DEALLOCATE( ptmp )
       NULLIFY(nl_d) 
       NULLIFY(nlm_d)
 !
