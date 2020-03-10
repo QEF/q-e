@@ -48,7 +48,7 @@ SUBROUTINE from_scratch( )
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions, ONLY : c0_bgrp, cm_bgrp, phi_bgrp, c0_d, phi_d
+    USE wavefunctions,        ONLY : c0_bgrp, cm_bgrp, phi_bgrp, c0_d, phi_d, cm_d
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : idesc, bephi, becp_bgrp, nfi, &
@@ -59,6 +59,7 @@ SUBROUTINE from_scratch( )
     USE mp_world,             ONLY : mpime
     USE mp,                   ONLY : mp_sum
     USE matrix_inversion
+    USE device_helper
     !
     IMPLICIT NONE
     !
@@ -144,6 +145,7 @@ SUBROUTINE from_scratch( )
     !
     if( iverbosity > 1 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp )
     !
+    CALL sync_to_host( cm_bgrp, cm_d )
     !
     ! ... initialize bands
     !
@@ -194,7 +196,7 @@ SUBROUTINE from_scratch( )
        !
        if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, idesc )
        !
-       CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
+       CALL rhoofr( nfi, cm_bgrp, cm_d, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
        edft%enl  = enl
        edft%ekin = ekin
@@ -262,8 +264,8 @@ SUBROUTINE from_scratch( )
 
       if( tortho ) then
 #if defined (__CUDA)
-         c0_d = c0_bgrp
-         phi_d = phi_bgrp
+         CALL sync_to_host( c0_bgrp, c0_d )
+         CALL sync_to_host( phi_bgrp, phi_d )
          CALL ortho( eigr, c0_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
          CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
@@ -285,8 +287,8 @@ SUBROUTINE from_scratch( )
       IF ( tortho ) THEN
 #if defined (__CUDA)
          CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_d, c0_d, idesc )
-         bec_bgrp = bec_d
-         c0_bgrp = c0_d
+         CALL sync_to_device( c0_bgrp, c0_d )
+         CALL sync_to_device( bec_bgrp, bec_d )
 #else
          CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
 #endif

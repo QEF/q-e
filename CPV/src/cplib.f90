@@ -1640,29 +1640,81 @@ end subroutine dylmr2_
       ! local
 
       INTEGER  :: ig, i
-      REAL(DP) :: sk(n)  ! automatic array
+      REAL(DP) :: sk, rsum
       !
+      sk = 0.0d0
+!$omp parallel do reduction(+:sk) default(none) &
+!$omp shared(sk,c,g2kin,gstart,ngw,n,f) private(i,ig,rsum)
       DO i=1,n
-         sk(i)=0.0d0
+         rsum = 0.0d0
          DO ig=gstart,ngw
-            sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*g2kin(ig)
+            rsum = rsum + DBLE(CONJG(c(ig,i))*c(ig,i)) * g2kin(ig)
          END DO
+         sk = sk + f(i) * rsum
       END DO
+!$omp end parallel do
 
-      CALL mp_sum( sk(1:n), intra_bgrp_comm )
-
-      enkin_x=0.0d0
-      DO i=1,n
-         enkin_x=enkin_x+f(i)*sk(i)
-      END DO
+      CALL mp_sum( sk, intra_bgrp_comm )
 
       ! ... reciprocal-space vectors are in units of alat/(2 pi) so a
       ! ... multiplicative factor (2 pi/alat)**2 is required
-
-      enkin_x = enkin_x * tpiba2
+      enkin_x = tpiba2 * sk
 !
       RETURN
    END FUNCTION enkin_x
+
+#if defined (__CUDA)
+!-----------------------------------------------------------------------
+   FUNCTION enkin_gpu_x( c, f, n )
+!-----------------------------------------------------------------------
+      !
+      USE kinds,              ONLY: DP
+      USE constants,          ONLY: pi, fpi
+      USE gvecw,              ONLY: ngw
+      USE gvect,              ONLY: gstart
+      USE gvecw,              ONLY: g2kin
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_bgrp_comm
+      USE cell_base,          ONLY: tpiba2
+      USE cudafor
+
+      IMPLICIT NONE
+
+      REAL(DP)                :: enkin_gpu_x
+
+      INTEGER,     INTENT(IN) :: n
+      COMPLEX(DP), DEVICE, INTENT(IN) :: c( :, : )
+      REAL(DP),    INTENT(IN) :: f( : )
+      !
+      ! local
+
+      INTEGER  :: ig, i
+      REAL(DP) :: sk
+      REAL(DP), ALLOCATABLE, DEVICE :: f_d(:)  
+      REAL(DP), ALLOCATABLE, DEVICE :: g2(:)  
+      REAL(DP) :: ddot
+      !
+      ALLOCATE( g2, SOURCE=g2kin )
+      ALLOCATE( f_d, SOURCE=f ) 
+
+      sk=0.0d0
+!$cuf kernel do(2) <<<*,*>>>
+      DO i=1,n
+         DO ig=gstart,ngw
+            sk = sk + f_d(i) * DBLE(CONJG(c(ig,i))*c(ig,i)) * g2(ig)
+         END DO
+      END DO
+
+      DEALLOCATE( f_d )
+      DEALLOCATE( g2 )
+
+      CALL mp_sum( sk, intra_bgrp_comm )
+
+      enkin_gpu_x = tpiba2 * sk
+!
+      RETURN
+   END FUNCTION enkin_gpu_x
+#endif
 
 !-------------------------------------------------------------------------
       SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, idesc, fion )

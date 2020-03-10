@@ -13,9 +13,67 @@
 
 !=----------------------------------------------------------------------------=!
 
+MODULE device_helper
+   USE util_param, ONLY : DP
+#if defined(__CUDA)
+   USE cudafor
+#endif
+   IMPLICIT NONE
+   SAVE
+   PRIVATE
+
+   INTERFACE sync_to_device
+      MODULE PROCEDURE sync_to_device_c2d, sync_to_device_r2d
+   END INTERFACE
+   INTERFACE sync_to_host
+      MODULE PROCEDURE sync_to_host_c2d, sync_to_host_r2d
+   END INTERFACE
+
+   PUBLIC :: sync_to_device
+   PUBLIC :: sync_to_host
+
+CONTAINS
+
+   SUBROUTINE sync_to_device_c2d( h, d )
+      COMPLEX(DP), INTENT(IN) :: d(:,:)
+      COMPLEX(DP), INTENT(OUT) :: h(:,:)
+#if defined(__CUDA)
+      ATTRIBUTES(DEVICE) :: d
+      h = d
+#endif
+   END SUBROUTINE
+   SUBROUTINE sync_to_host_c2d( h, d )
+      COMPLEX(DP), INTENT(OUT) :: d(:,:)
+      COMPLEX(DP), INTENT(IN) :: h(:,:)
+#if defined(__CUDA)
+      ATTRIBUTES(DEVICE) :: d
+      d = h
+#endif
+   END SUBROUTINE
+   SUBROUTINE sync_to_device_r2d( h, d )
+      REAL(DP), INTENT(IN) :: d(:,:)
+      REAL(DP), INTENT(OUT) :: h(:,:)
+#if defined(__CUDA)
+      ATTRIBUTES(DEVICE) :: d
+      h = d
+#endif
+   END SUBROUTINE
+   SUBROUTINE sync_to_host_r2d( h, d )
+      REAL(DP), INTENT(OUT) :: d(:,:)
+      REAL(DP), INTENT(IN) :: h(:,:)
+#if defined(__CUDA)
+      ATTRIBUTES(DEVICE) :: d
+      d = h
+#endif
+   END SUBROUTINE
+
+END MODULE
+
+!=----------------------------------------------------------------------------=!
+
 SUBROUTINE qe_device_sync()
 #if defined(__CUDA)
-      USE cudafor
+   USE cudafor
 #endif
    INTEGER :: info
 #if defined (__CUDA)

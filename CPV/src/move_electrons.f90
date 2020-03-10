@@ -7,8 +7,8 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
-            cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
+SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
+            enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
   !----------------------------------------------------------------------------
   !
   ! ... this routine updates the electronic degrees of freedom
@@ -43,7 +43,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
-  USE wavefunctions, ONLY : cv0 ! Lingzhu Kong
+  USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi_bgrp, c0_d, cm_d, phi_d
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   !
   IMPLICIT NONE
@@ -52,7 +52,6 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   LOGICAL,  INTENT(IN)    :: tfirst, tlast
   REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
   REAL(DP)                :: fion(:,:)
-  COMPLEX(DP)             :: c0_bgrp(:,:), cm_bgrp(:,:), phi_bgrp(:,:)
   REAL(DP), INTENT(IN)    :: dt2bye
   REAL(DP)                :: fccc, ccc
   REAL(DP)                :: enb, enbi
@@ -80,7 +79,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
           CALL get_wannier_center( tfirst, cm_bgrp, bec_bgrp, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, &
+     CALL rhoofr( nfi, c0_bgrp, c0_d, bec_bgrp, dbec, becsum, rhor, &
                   drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
      !
 !=================================================================

@@ -7,6 +7,12 @@
 !
 ! written by Carlo Cavazzoni
 
+#if defined(__CUDA)
+#define DEVICEATTR ,DEVICE
+#else
+#define DEVICEATTR
+#endif
+
 !=----------------------------------------------------------------------------=!
    MODULE cp_interfaces
 !=----------------------------------------------------------------------------=!
@@ -247,8 +253,30 @@
 
    INTERFACE rhoofr
       SUBROUTINE rhoofr_cp &
-         ( nfi, c_bgrp, irb, eigrb, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+         ( nfi, c_bgrp, c_d, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
          USE kinds,      ONLY: DP         
+         USE cudafor
+         IMPLICIT NONE
+         INTEGER nfi
+         COMPLEX(DP) :: c_bgrp( :, : )
+         COMPLEX(DP) DEVICEATTR :: c_d( :, : )
+         REAL(DP) bec(:,:)
+         REAL(DP) dbec(:,:,:,:)
+         REAL(DP) rhovan(:, :, : )
+         REAL(DP) rhor(:,:)
+         REAL(DP) drhor(:,:,:,:)
+         COMPLEX(DP) rhog( :, : )
+         COMPLEX(DP) drhog( :, :, :, : )
+         REAL(DP) rhos(:,:)
+         REAL(DP) enl, ekin
+         REAL(DP) denl(3,3), dekin(6)
+         LOGICAL, OPTIONAL, INTENT(IN) :: tstress
+         INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
+      END SUBROUTINE rhoofr_cp
+#if defined (__CUDA)
+      SUBROUTINE rhoofr_host &
+         ( nfi, c_bgrp, irb, eigrb, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+         USE kinds,      ONLY: DP
          IMPLICIT NONE
          INTEGER nfi
          COMPLEX(DP) c_bgrp( :, : )
@@ -266,7 +294,8 @@
          REAL(DP) denl(3,3), dekin(6)
          LOGICAL, OPTIONAL, INTENT(IN) :: tstress
          INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
-      END SUBROUTINE rhoofr_cp
+      END SUBROUTINE rhoofr_host
+#endif
    END INTERFACE
 
    INTERFACE checkrho
@@ -774,7 +803,7 @@
 
    INTERFACE move_electrons
       SUBROUTINE move_electrons_x( &
-         nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb, &
+         nfi, tfirst, tlast, b1, b2, b3, fion, enthal, enb, &
             &  enbi, fccc, ccc, dt2bye, stress,l_cprestart )
          USE kinds,         ONLY: DP
          IMPLICIT NONE
@@ -782,7 +811,6 @@
          LOGICAL,  INTENT(IN)    :: tfirst, tlast
          REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
          REAL(DP)                :: fion(:,:)
-         COMPLEX(DP)             :: c0_bgrp(:,:), cm_bgrp(:,:), phi_bgrp(:,:)
          REAL(DP), INTENT(IN)    :: dt2bye
          REAL(DP)                :: fccc, ccc
          REAL(DP)                :: enb, enbi
@@ -898,6 +926,16 @@
          REAL(DP),    INTENT(IN) :: f( : )
          REAL(DP) :: enkin_x
       END FUNCTION enkin_x
+#if defined (__CUDA)
+      FUNCTION enkin_gpu_x( c, f, n )
+         USE kinds, ONLY: dp
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN) :: n
+         COMPLEX(DP), DEVICE, INTENT(IN) :: c( :, : )
+         REAL(DP),    INTENT(IN) :: f( : )
+         REAL(DP) :: enkin_gpu_x
+      END FUNCTION enkin_gpu_x
+#endif
    END INTERFACE 
 
    INTERFACE newinit

@@ -6,9 +6,16 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#if defined(__CUDA)
+#define DEVICEATTR ,DEVICE
+#else
+#define DEVICEATTR
+#endif
+
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+      ( nfi, c_bgrp, c_d, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
+        enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
 !
 !  this routine computes:
@@ -53,14 +60,14 @@
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm, &
-           me_bgrp, nproc_bgrp, root_bgrp
+                                    me_bgrp, nproc_bgrp, root_bgrp
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
-      USE cp_main_variables,  ONLY: iprint_stdout, idesc
+      USE cp_main_variables,  ONLY: iprint_stdout, idesc, irb, eigrb
       USE wannier_base,       ONLY: iwf
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
@@ -79,11 +86,10 @@
       REAL(DP) rhos(:,:)
       REAL(DP) enl, ekin
       REAL(DP) denl(3,3), dekin(6)
-      COMPLEX(DP) eigrb( :, : )
       COMPLEX(DP) rhog( :, : )
       COMPLEX(DP) drhog( :, :, :, : )
       COMPLEX(DP) c_bgrp( :, : )
-      INTEGER irb( :, : )
+      COMPLEX(DP) DEVICEATTR :: c_d( :, : )
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
       INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
 
@@ -217,6 +223,9 @@
                CALL errore( ' rhoofr ', ' c second dimension too small ', SIZE( c_bgrp, 2 ) )
             !
             c_bgrp( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
+#if defined (__CUDA)
+            c_d( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
+#endif
             !
          ENDIF
          !
@@ -474,7 +483,6 @@
 
 
          ALLOCATE( psis( dffts%nnr * many_fft ) )  ! dffts%nnr * many_fft
-         ALLOCATE( ptmp( SIZE(c_bgrp,1), 2 ) ) 
          ALLOCATE( rhos_d ( SIZE(rhos,1), SIZE(rhos,2) ) )
          !
          rhos_d = 0_DP
@@ -488,19 +496,16 @@
             ioff = 0
             DO ii = i, i + 2 * many_fft - 1, 2
               IF( ii < nbsp_bgrp ) THEN
-                 ptmp(:,1) = c_bgrp( :, ii )
-                 ptmp(:,2) = c_bgrp( :, ii + 1 )
 !$cuf kernel do(1)
                  do ig = 1, dffts%ngw
-                    psis( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) ) + ci * conjg( ptmp( ig, 2 ))
-                    psis( nl_d( ig )  + ioff) = ptmp( ig, 1 ) + ci * ptmp( ig, 2 )
+                    psis( nlm_d( ig ) + ioff) = CONJG( c_d( ig, ii ) ) + ci * conjg( c_d( ig, ii+1 ))
+                    psis( nl_d( ig )  + ioff) = c_d( ig, ii ) + ci * c_d( ig, ii+1 )
                  end do
               ELSE IF( ii == nbsp_bgrp ) THEN
-                 ptmp(:,1) = c_bgrp( :, ii )
 !$cuf kernel do(1)
                  do ig = 1, dffts%ngw
-                    psis( nlm_d( ig ) + ioff) = CONJG( ptmp( ig, 1 ) )
-                    psis( nl_d( ig )  + ioff) = ptmp( ig, 1 )
+                    psis( nlm_d( ig ) + ioff) = CONJG( c_d( ig, ii ) )
+                    psis( nl_d( ig )  + ioff) = c_d( ig, ii+1 )
                  end do
               END IF
               ! CALL c2psi_gamma( dffts, psis, c_bgrp(:,ii), c_bgrp(:,ii+1) )
@@ -695,7 +700,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nat, ityp, ngb, nh, eigrb, dfftb, irb, v, &
-!$omp                 ci, i, j, dqgb, qgb, nhm, rhovan, drhovan, upf ) &
+!$omp                 i, j, dqgb, qgb, nhm, rhovan, drhovan, upf ) &
 !$omp          private(mytid, ntids, is, ia, iv, jv, ijv, ig, iss, &
 !$omp                  qv, fg1, fg2, itid, dqgbt, dsumt, asumt )
 
@@ -949,7 +954,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
 !$omp parallel default(none) &
 !$omp          shared(na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
-!$omp                 stdout, ci, rhor, dfftp, upf, nsp, ityp, nat, nspin ) &
+!$omp                 stdout, rhor, dfftp, upf, nsp, ityp, nat, nspin ) &
 !$omp          private(mytid, ntids, is, ia, iv, jv, ijv, sumrho, qgbt, ig, ca, &
 !$omp                  qv, itid, ir )
 
@@ -1152,3 +1157,35 @@ CONTAINS
            ENDIF
       END SUBROUTINE
 END SUBROUTINE rhov
+
+#if defined (__CUDA)
+SUBROUTINE rhoofr_host &
+      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
+        enl, denl, ekin, dekin, tstress, ndwwf )
+         USE kinds,         ONLY: DP
+         USE cudafor
+         USE cp_interfaces
+         IMPLICIT NONE
+         INTEGER nfi
+         COMPLEX(DP) c_bgrp( :, : )
+         INTEGER irb( :, : )
+         COMPLEX(DP) eigrb( :, : )
+         REAL(DP) bec_bgrp(:,:)
+         REAL(DP) dbec(:,:,:,:)
+         REAL(DP) rhovan(:, :, : )
+         REAL(DP) rhor(:,:)
+         REAL(DP) drhor(:,:,:,:)
+         COMPLEX(DP) rhog( :, : )
+         COMPLEX(DP) drhog( :, :, :, : )
+         REAL(DP) rhos(:,:)
+         REAL(DP) enl, ekin
+         REAL(DP) denl(3,3), dekin(6)
+         LOGICAL, OPTIONAL, INTENT(IN) :: tstress
+         INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
+         COMPLEX(DP), ALLOCATABLE, DEVICE :: c(:,:) 
+         ALLOCATE( c, SOURCE=c_bgrp )
+         CALL rhoofr(nfi, c_bgrp, c, bec_bgrp, dbec, rhovan, rhor, &
+              drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+         DEALLOCATE( c ) 
+END SUBROUTINE rhoofr_host
+#endif

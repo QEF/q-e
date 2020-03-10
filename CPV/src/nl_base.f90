@@ -686,9 +686,7 @@
       !
       real(DP) :: sumt, sums(2), ennl_t
       integer  :: is, iv, jv, ijv, inl, jnl, ia, iss, i, indv
-#if defined(_OPENMP)
-      INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads
-#endif
+      INTEGER  :: omp_get_num_threads
       !
       ennl_t = 0.d0  
       !
