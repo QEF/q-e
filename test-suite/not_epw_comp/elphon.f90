@@ -310,6 +310,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
   USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
   USE io_global,  ONLY : ionode, ionode_id
+  USE lrus,       ONLY : becp1
+  USE phus,       ONLY : alphap
 
   IMPLICIT NONE
   !
@@ -410,7 +412,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         ELSE
            mode = imode0 + ipert
            ! FIXME: .false. or .true. ???
-           CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
+           CALL dvqpsi_us (ik, u (1, mode), .FALSE., becp1, alphap)
            !
            ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
            !

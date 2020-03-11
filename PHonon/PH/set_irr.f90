@@ -139,7 +139,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
         end do
      end if
 
-     IF (search_sym) THEN
+     IF (search_sym.AND.nspin_mag/=4) THEN
         CALL find_mode_sym_new (u, eigen, tau, nat, nsymq, s, sr, irt, xq,    &
              rtau, amass, ntyp, ityp, 0, .FALSE., .TRUE., num_rap_mode, ierr)
 
@@ -246,7 +246,7 @@ subroutine set_irr_new (xq, u, npert, nirr, eigen)
         endif
      enddo
 
-     IF (search_sym) THEN
+     IF (search_sym.AND.nspin_mag/=4) THEN
 !
 !  Here we set the name of the representation for each mode
 !

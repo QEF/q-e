@@ -2005,23 +2005,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     (a little bit) more robust.
                 }
 
-                opt -val {'cg-serial', 'david-serial'} {
-                    OBSOLETE, use @b {-ndiag 1} instead.
-                    The subspace diagonalization in Davidson is performed
-                    by a fully distributed-memory parallel algorithm on
-                    4 or more processors, by default. The allocated memory
-                    scales down with the number of procs. Procs involved 
-                    in diagonalization can be changed with command-line
-                    option @b -ndiag @i N. On multicore CPUs it is often
-                    convenient to let just one core per CPU to work 
-                    on linear algebra.
+                opt -val {'ppcg'} {
+                    PPCG iterative diagonalization
+                }
+
+                opt -val {'paro', 'ParO'} {
+                    ParO iterative diagonalization
                 }
             }
-        }
-
-        var ortho_para -type INTEGER { 
-            default { 0 }
-            status { OBSOLETE: use command-line option @tt {"-ndiag XX"} instead  }
         }
 
         var diago_thr_init -type REAL {

@@ -35,6 +35,10 @@
                             specfun_pl, lindabs, use_ws, epbread,               &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE epwcom,        ONLY : wfcelec, start_band, polaron_wf, restart_polaron,   &
+                            polaron_interpol, polaron_bq, polaron_dos, nPlrn,   &
+                            wfcelec_old
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -57,6 +61,8 @@
                             a_all, a_all_ph, wscache, lambda_v_all, threshold,  &
                             nktotf, transp_temp, xkq, dos,                      &
                             nbndep
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE elph2,         ONLY : g2_4,  ngk_all, igk_k_all
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
                             ephwan2blochp, ephwan2bloch, vmewan2bloch,          &
                             dynifc2blochf, vmewan2blochp
@@ -92,6 +98,13 @@
   USE parallel_include, ONLY : MPI_MODE_RDONLY, MPI_INFO_NULL, MPI_OFFSET_KIND, &
                                MPI_OFFSET
 #endif
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE phcom,          ONLY : evq
+  USE wavefunctions,  ONLY : evc
+  USE ephblochkq,     only : interpol_bq, interpol_a_k, compute_a_re
+  use polaron,        only : wfc_elec, epfall, ufall, Hamil, eigVec
+  use polaron,        only : interp_plrn_wf, interp_plrn_bq, plot_plrn_wf
+  use polaron_old,    only : wfc_elec_old
   !
   IMPLICIT NONE
   !
@@ -881,7 +894,7 @@
     !
     ! Check if we are doing Superconductivity
     ! If Eliashberg, then do not use fewer q-points within the fsthick window.
-    IF (ephwrite) THEN
+    IF (ephwrite .or. wfcelec) THEN
       !
       totq = nqf
       ALLOCATE(selecq(nqf), STAT = ierr)
@@ -992,6 +1005,35 @@
         sigmai_mode(:, :, :) = zero
       ENDIF
     ENDIF ! elecselfen
+    IF (wfcelec) then
+        IF(polaron_interpol) THEN
+            ALLOCATE(eigVec(nktotf*nbndfst, nplrn), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eigVec', 1)
+            eigVec = czero
+            CALL interp_plrn_wf(nrr_k, ndegen_k, irvec_r, dims)
+            iq_restart = totq ! Skip the calculation of e-ph element, save the time.
+            DEALLOCATE(eigVec)
+        ELSE IF(polaron_bq) THEN
+            CALL interp_plrn_bq(nrr_q, ndegen_q, irvec_q)
+            iq_restart = totq ! Skip the calculation of e-ph element, save the time.
+        ELSE IF(polaron_wf) THEN
+            CALL plot_plrn_wf()
+            iq_restart = totq
+        ELSE
+            ALLOCATE(eigVec(nktotf*nbndfst, nplrn), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating eigVec', 1)
+            eigVec = czero
+            ALLOCATE(epfall(nbndfst, nbndfst, nmodes, nkf, nqtotf), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating epfall', 1)
+            epfall = czero
+            ALLOCATE(ufall(nmodes, nmodes, nqtotf), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating ufall', 1)
+            ufall = czero
+            ALLOCATE(Hamil(nkf*nbndfst, nktotf*nbndfst), STAT = ierr)
+            IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating Hamil', 1)
+            Hamil = czero
+        END IF
+    END IF
     !
     ! Restart in SERTA case or self-energy (electron or plasmon) case
     IF (restart) THEN
@@ -1245,8 +1287,8 @@
           ! interpolate only when (k,k+q) both have at least one band
           ! within a Fermi shell of size fsthick
           !
-          IF ((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
-              (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) THEN
+          IF (((MINVAL(ABS(etf(:, ikk) - ef)) < fsthick) .AND. &
+              (MINVAL(ABS(etf(:, ikq) - ef)) < fsthick)) .or. wfcelec) THEN
             !
             ! Compute velocities
             !
@@ -1346,7 +1388,12 @@
        WRITE(stdout, '(7x, a, f12.6, a)' ) 'Adaptative smearing = Min: ', DSQRT(2.d0) * MINVAL(valmin) * ryd2mev,' meV'
        WRITE(stdout, '(7x, a, f12.6, a)' ) '                      Max: ', DSQRT(2.d0) * MAXVAL(valmax) * ryd2mev,' meV'
       ENDIF
-      !
+      ! Added by Chao Lian for polaron calculations
+      IF (wfcelec .and. (.not. polaron_bq) .and. (.not. polaron_interpol)) then
+        ufall(1:nmodes, 1:nmodes, iq) = uf(1:nmodes, 1:nmodes)
+        epfall(1:nbndfst, 1:nbndfst, 1:nmodes, 1:nkf, iq) = epf17(1:nbndfst, 1:nbndfst, 1:nmodes, 1:nkf)
+      END IF
+
       IF (prtgkk    ) CALL print_gkk(iq)
       IF (phonselfen) CALL selfen_phon_q(iqq, iq, totq)
       IF (elecselfen) CALL selfen_elec_q(iqq, iq, totq, first_cycle)
@@ -1425,6 +1472,77 @@
         !
       ENDIF ! scatread
     ENDDO  ! end loop over q points
+    !
+    ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+    IF (wfcelec .and. (.not. polaron_bq) .and. (.not. polaron_interpol)) THEN
+      !print *, 'nqf1, nkf1', nqf1, nkf1
+      if (wfcelec_old) then
+          ALLOCATE ( g2_4 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkqtotf/2) )
+          g2_4(:,:,:,:) = czero
+          CALL wfc_elec_old (nrr_k, nrr_q, nrr_g, irvec_q, irvec_g, &
+             ndegen_k, ndegen_q, ndegen_g, w2, uf, epmatwef, irvec_r, &
+             dims, dims2)
+      else
+          CALL wfc_elec(nrr_k, ndegen_k, irvec_r, dims)
+          !CALL plrnbloch2wan(eigVec, cufall)
+      end if
+
+      IF ( polaron_wf ) THEN       ! calculating A(Re) from Ac.txt
+          CALL compute_a_re (iq, nrr_k, ndegen_k, irvec_r, dims)
+          return
+      ENDIF
+
+      IF ( polaron_interpol ) THEN   ! interpolate Ak from ar.txt ( A(Re))
+          CALL interpol_a_k (iq, nrr_k, ndegen_k, irvec_r, dims)
+          return
+      ENDIF
+
+      DO iq = iq_restart, nqf
+           xxq = xqf (:, iq)
+           !
+           ! ------------------------------------------------------
+           ! dynamical matrix : Wannier -> Bloch
+           ! ------------------------------------------------------
+           !
+           IF (.NOT. lifc) THEN
+              CALL dynwan2bloch &
+                  ( nmodes, nrr_q, irvec_q, ndegen_q, xxq, uf, w2 )
+           ELSE
+              CALL dynifc2blochf ( nmodes, rws, nrws, xxq, uf, w2 )
+           ENDIF
+           !
+           ! ...then take into account the mass factors and square-root the
+           ! frequencies...
+           !
+           DO nu = 1, nmodes
+              !
+              ! wf are the interpolated eigenfrequencies
+              ! (omega on fine grid)
+              !
+              IF ( w2 (nu) .gt. 0.d0 ) THEN
+                 wf(nu,iq) =  SQRT(ABS( w2 (nu) ))
+              ELSE
+                 wf(nu,iq) = -SQRT(ABS( w2 (nu) ))
+              ENDIF
+           ENDDO
+      ENDDO
+      !DEALLOCATE( epf17 )
+
+
+      IF ( polaron_bq ) THEN   ! interpolate bq from both A(Re) and Ac(k)
+          DO iq = 1, nqf
+             CALL interpol_bq &!(iq, w2, uf, epmatwef, irvec_r, rdotk)
+             ( iq, nrr_k, nrr_q, nrr_g, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g, &
+                w2, uf, epmatwef, irvec_r, dims, dims2)
+          ENDDO
+          return
+      ENDIF
+      if (allocated(g2_4)) deallocate(g2_4)
+      if (allocated(epfall)) deallocate(epfall)
+      if (allocated(Hamil)) deallocate(Hamil)
+      if (allocated(eigVec)) deallocate(eigVec)
+    ENDIF
+    ! End Polaron Code
     !
     ! Check Memory usage
     CALL system_mem_usage(valueRSS)

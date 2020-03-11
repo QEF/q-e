@@ -37,6 +37,8 @@ subroutine zstar_eu
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE ldaU,             ONLY : lda_plus_u
+  USE lrus,             ONLY : becp1
+  USE phus,             ONLY : alphap
 
   implicit none
 
@@ -66,7 +68,7 @@ subroutine zstar_eu
            !
            ! recalculate  DeltaV*psi(ion) for mode nu
            !
-           call dvqpsi_us (ik, u (1, mode), .not.okvan)
+           call dvqpsi_us (ik, u (1, mode), .not.okvan, becp1, alphap)
            !
            ! DFPT+U: add the bare variation of the Hubbard potential 
            !

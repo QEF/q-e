@@ -89,7 +89,7 @@ SUBROUTINE iosys()
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             pseudo_dir_cur, restart_dir, &
-                            check_tempdir, clean_tempdir
+                            check_tempdir, clean_tempdir, nd_nmbr
   !
   USE force_mod,     ONLY : lforce, lstres
   !
@@ -1374,6 +1374,11 @@ SUBROUTINE iosys()
   ! ... Files (for compatibility) and directories
   !     Must be set before calling read_conf_from_file
   !
+  !   if next line is uncommented, each process sees a different directory
+  !   (the process number is added at the end of tmp_dir)
+  !!! outdir = TRIM(outdir) // TRIM(nd_nmbr)
+  !   For testing purposes only; works only if outdir does not end with '/' 
+  ! 
   tmp_dir = trimcheck ( outdir )
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      wfc_dir = trimcheck ( wfcdir )

@@ -16,6 +16,7 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   !
   USE kinds
   USE constants, ONLY : tpi
+  USE gvect,     ONLY : mill
   implicit none
   !
   !   Here the dummy variables
@@ -59,19 +60,11 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   ! the argument of the exponent
   ! scalar product of bg and tau
 
-  strf(:,:) = (0.d0,0.d0)
-  do nt = 1, ntyp
-     do na = 1, nat
-        if (ityp (na) .eq.nt) then
-           do ng = 1, ngm
-              arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
-                   + g (3, ng) * tau (3, na) ) * tpi
-              strf (ng, nt) = strf (ng, nt) + CMPLX(cos (arg), -sin (arg),kind=DP)
-           enddo
-        endif
-     enddo
-  enddo
+  complex(DP) :: z
 
+!$omp parallel do schedule(static) default(none) &
+!$omp private(ipol, arg, bgtau, n1, n2, n3) &
+!$omp shared(nr1, nr2, nr3, nat, eigts1, eigts2, eigts3, bg, tau)
   do na = 1, nat
      do ipol = 1, 3
         bgtau (ipol) = bg (1, ipol) * tau (1, na) + &
@@ -91,7 +84,25 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
         eigts3 (n3, na) = CMPLX(cos (arg), - sin (arg) ,kind=DP)
      enddo
   enddo
+!$omp end parallel do
+
+  strf(:,:) = (0.d0,0.d0)
+  do nt = 1, ntyp
+!$omp parallel do schedule(static) default(none) &
+!$omp private(na, z) &
+!$omp shared(ngm, nat, nt, ityp, strf, eigts1, eigts2, eigts3, mill)
+    do ng = 1, ngm
+      z = (0.d0, 0.d0)
+      do na = 1, nat
+        if (ityp(na).eq.nt) then
+          ! compute exp(-i G tau) using product of three exponents
+          z = z + eigts1(mill(1, ng), na) * eigts2(mill(2, ng), na) * eigts3(mill(3, ng), na)
+        endif
+      enddo
+      strf (ng, nt) = z
+    enddo
+!$omp end parallel do
+  enddo !nt
 
   return
 end subroutine struc_fact
-

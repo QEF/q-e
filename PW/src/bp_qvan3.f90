@@ -18,7 +18,6 @@ SUBROUTINE qvan3( iv, jv, is, qg, ylm_k, qr )
       !
       USE kinds,       ONLY: DP
       USE ions_base,   ONLY: ntyp => nsp
-      USE us,          ONLY: dq, qrad
       USE uspp_param,  ONLY: lmaxq, nbetam
       USE uspp,        ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
       !

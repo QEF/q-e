@@ -48,6 +48,8 @@
   USE gvecs,         ONLY : doublegrid
   USE elph2,         ONLY : transp_temp
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
+  ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+  USE epwcom, ONLY: polaron_wf 
   !
   IMPLICIT NONE
   !
@@ -70,7 +72,9 @@
   !
   CALL start_clock('epw_setup')
   !
-  !  loosy tolerance: not important
+  !  loosy tolerance: not important 
+  IF ( .not. polaron_wf)  THEN
+  ! Modified for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   DO jk = 1, nkstot
     xx_c = xk_cryst(1, jk) * nkc1
     yy_c = xk_cryst(2, jk) * nkc2
@@ -82,6 +86,7 @@
       CALL errore('epw_setup', 'coarse k-mesh needs to be strictly positive in 1st BZ', 1)
     !
   ENDDO
+  END IF
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !

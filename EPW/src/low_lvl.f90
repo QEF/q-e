@@ -1045,8 +1045,8 @@
     !!
     USE kinds, ONLY : DP
     USE wvfct, ONLY : nbnd, npwx
-    USE gvect, ONLY : ngm
     USE noncollin_module, ONLY : noncolin, npol
+    USE elph2, ONLY : ngxxf
     !
     IMPLICIT NONE
     !
@@ -1056,7 +1056,7 @@
     !! G mapping
     COMPLEX(KIND = DP), INTENT(inout) :: evc(npwx * npol, nbnd)
     !!
-    COMPLEX(KIND = DP), INTENT(in) :: eigv1(ngm)
+    COMPLEX(KIND = DP), INTENT(in) :: eigv1(ngxxf)
     !! Eigenvalues
     COMPLEX(KIND = DP), INTENT(in) :: eig0v
     !! Eigenvalues
@@ -1345,6 +1345,88 @@
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE s_crystocart
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    INTEGER FUNCTION copy_sym_epw(nrot_, sym, indsym)
+    !-----------------------------------------------------------------------
+    !!
+    !! Imported and adapted from copy_sym in symm_base.f90 in QE
+    !!
+    USE kinds,     ONLY : DP
+    USE symm_base, ONLY : irt, s, ft, sname, t_rev
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nrot_
+    !! number of rotations
+    INTEGER, INTENT(inout) :: indsym(48)
+    !! mapping between the original sym. indices and the new indices
+    LOGICAL, INTENT(inout) :: sym(48)
+    !! .TRUE. if rotation isym is a sym.op. of the crystal
+    !! (i.e. not of the bravais lattice only)
+    !
+    ! Local variables
+    CHARACTER(LEN = 45) :: nametemp
+    !! Temporary name of the rotation
+    INTEGER :: stemp(3, 3)
+    !! Temporary s matrix for that rotation
+    INTEGER :: ttemp
+    !! Temporary time-reversal for that rotation
+    INTEGER :: ierr
+    !! Error index
+    INTEGER :: irot
+    !! Rotation index
+    INTEGER :: jrot
+    !! Rotation index
+    INTEGER, ALLOCATABLE :: irtemp(:)
+    !! Temporary irt.  
+    REAL(KIND = DP) :: ft_(3)
+    !! Fractional translation
+    !
+    ALLOCATE(irtemp(SIZE(irt, 2)), STAT = ierr)
+    IF (ierr /= 0) CALL errore('copy_sym_epw', 'Error allocating irtemp', 1)
+    !
+    jrot = 0
+    !
+    DO irot = 1, nrot_
+      IF (sym(irot)) THEN
+        jrot = jrot + 1
+        IF (irot > jrot) THEN
+          stemp = s(:, :, jrot)
+          s(:, :, jrot) = s(:, :, irot)
+          s(:, :, irot) = stemp
+          ft_(:) = ft(:, jrot)
+          ft(:, jrot) = ft(:, irot)
+          ft(:, irot) = ft_(:)
+          irtemp(:) = irt(jrot, :)
+          irt(jrot, :) = irt(irot, :)
+          irt(irot, :) = irtemp(:)
+          nametemp = sname(jrot)
+          sname(jrot) = sname(irot)
+          sname(irot) = nametemp
+          ttemp = t_rev(jrot)
+          t_rev(jrot) = t_rev(irot)
+          t_rev(irot) = ttemp
+          ttemp = indsym(jrot)
+          indsym(jrot) = indsym(irot)
+          indsym(irot) = ttemp
+        ENDIF
+      ENDIF
+    ENDDO
+    !
+    sym(1:jrot) = .TRUE.
+    sym(jrot + 1:nrot_) = .FALSE.
+    !
+    DEALLOCATE(irtemp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('copy_sym_epw', 'Error deallocating irtemp', 1)
+    !
+    copy_sym_epw = jrot
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
+    END FUNCTION copy_sym_epw
     !-----------------------------------------------------------------------
   !-------------------------------------------------------------------------
   END MODULE low_lvl

@@ -111,7 +111,7 @@ CONTAINS
   !         /
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_readin()
-    USE io_files,      ONLY : nd_nmbr, prefix, tmp_dir
+    USE io_files,      ONLY : prefix, tmp_dir
     USE io_global,     ONLY : ionode
     USE us,            ONLY : spline_ps
     IMPLICIT NONE

@@ -43,7 +43,9 @@
     nbndfst,                 &!  Number of bands within the fsthick window.
     ibndstart,               &!  First band index after excluding bands in Wannierization step
     ibndend,                 &!  Last band index after excluding bands in Wannierization step
-    nbndep                    !  Number of remaining bands after excluding bands in Wannierizatin step
+    nbndep,                  &!  Number of remaining bands after excluding bands in Wannierizatin step
+    ngxx,                    &!  Maximum number of G-vectors over all pools
+    ngxxf                     !  Maximum number of G-vectors over all pools for k+q folding
   INTEGER, ALLOCATABLE ::    &!
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
@@ -54,7 +56,8 @@
     shift(:),                &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
     gmap(:),                 &!  the map G -> G-G_0 in the large (density) G vectors set, for every G_0
     ixkqf_tr(:),             &!  Mapping matrix from k+q (where q is full BZ) to IBZ
-    s_bztoibz_full(:)         !  Rotation that brink that k-point from BZ to IBZ
+    s_bztoibz_full(:),       &!  Rotation that brink that k-point from BZ to IBZ
+    mapg(:,:,:)               !  Map between FFT grid and G-vector index
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
@@ -126,6 +129,25 @@
     vmef(:, :, :, :),         &!  velocity matrix elements on the fine mesh (ipol, nbnd, nbnd, nks)
     bmat(:, :, :, :),         &!  overlap U_k+q U_k^\dagger on the coarse mesh (nbnd, nbnd, nks, nqtot)
     eps_rpa(:)                 !  rpa model screening
+! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
+ INTEGER ::                  &
+    N1_dim,                  &
+    hh,                      &
+    Np
+  REAL(KIND = DP), ALLOCATABLE ::&
+    Ec(:),                   &
+    ekf(:),                  &
+    etfq(:,:),               &
+    etf_qs(:,:)
+  COMPLEX(KIND = DP), ALLOCATABLE :: &
+    g2_4  (:, :, :, :),     &
+    g2_all(:,:,:,:,:),      &
+    Ac(:),                  &
+    Hkk(:,:),               &
+    H_copy(:,:),            &
+    gq(:),                  &
+    dtau(:,:,:)
+  ! End Polaron
   !--------------------------------------------------------------------------
   END MODULE elph2
   !--------------------------------------------------------------------------
