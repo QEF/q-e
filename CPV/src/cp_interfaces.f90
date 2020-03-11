@@ -140,7 +140,6 @@
 #if defined (__CUDA)
       SUBROUTINE dforce_gpu_x( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin )
          USE kinds,              ONLY: DP
-         USE cudafor
          IMPLICIT NONE
          INTEGER,     INTENT(IN)    :: i
          REAL(DP)                   :: bec(:,:)
@@ -255,7 +254,6 @@
       SUBROUTINE rhoofr_cp &
          ( nfi, c_bgrp, c_d, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
          USE kinds,      ONLY: DP         
-         USE cudafor
          IMPLICIT NONE
          INTEGER nfi
          COMPLEX(DP) :: c_bgrp( :, : )
@@ -878,7 +876,6 @@
 #if defined (__CUDA)
     SUBROUTINE c_bgrp_expand_gpu_x( c_bgrp )
       USE kinds,              ONLY: DP
-      USE cudafor
       IMPLICIT NONE
       COMPLEX(DP), DEVICE :: c_bgrp(:,:)
     END SUBROUTINE c_bgrp_expand_gpu_x
@@ -893,7 +890,6 @@
 #if defined (__CUDA)
     SUBROUTINE c_bgrp_pack_gpu_x( c_bgrp )
       USE kinds,              ONLY: DP
-      USE cudafor
       IMPLICIT NONE
       COMPLEX(DP), DEVICE :: c_bgrp(:,:)
     END SUBROUTINE c_bgrp_pack_gpu_x
@@ -1124,7 +1120,6 @@
 #if defined (__CUDA)
       SUBROUTINE nlsm1us_gpu_x ( n, beigr, c, becp )
          USE kinds,      ONLY : DP
-         USE cudafor
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: n
          COMPLEX(DP), DEVICE, INTENT(IN)  :: beigr( :, : )
