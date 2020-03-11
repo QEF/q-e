@@ -35,35 +35,49 @@ MODULE device_helper
 CONTAINS
 
    SUBROUTINE sync_to_device_c2d( h, d )
+#if defined(__CUDA)
       COMPLEX(DP), INTENT(IN) :: d(:,:)
       COMPLEX(DP), INTENT(OUT) :: h(:,:)
-#if defined(__CUDA)
       ATTRIBUTES(DEVICE) :: d
       h = d
+#else
+      COMPLEX(DP) :: d(:,:)
+      COMPLEX(DP) :: h(:,:)
+      ! do nothing
 #endif
    END SUBROUTINE
    SUBROUTINE sync_to_host_c2d( h, d )
+#if defined(__CUDA)
       COMPLEX(DP), INTENT(OUT) :: d(:,:)
       COMPLEX(DP), INTENT(IN) :: h(:,:)
-#if defined(__CUDA)
       ATTRIBUTES(DEVICE) :: d
       d = h
+#else
+      COMPLEX(DP) :: d(:,:)
+      COMPLEX(DP) :: h(:,:)
+      ! do nothing
 #endif
    END SUBROUTINE
    SUBROUTINE sync_to_device_r2d( h, d )
+#if defined(__CUDA)
       REAL(DP), INTENT(IN) :: d(:,:)
       REAL(DP), INTENT(OUT) :: h(:,:)
-#if defined(__CUDA)
       ATTRIBUTES(DEVICE) :: d
       h = d
+#else
+      REAL(DP) :: d(:,:)
+      REAL(DP) :: h(:,:)
 #endif
    END SUBROUTINE
    SUBROUTINE sync_to_host_r2d( h, d )
+#if defined(__CUDA)
       REAL(DP), INTENT(OUT) :: d(:,:)
       REAL(DP), INTENT(IN) :: h(:,:)
-#if defined(__CUDA)
       ATTRIBUTES(DEVICE) :: d
       d = h
+#else
+      REAL(DP) :: d(:,:)
+      REAL(DP) :: h(:,:)
 #endif
    END SUBROUTINE
 

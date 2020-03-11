@@ -1136,12 +1136,13 @@ CONTAINS
       END SUBROUTINE
 END SUBROUTINE rhov
 
-#if defined (__CUDA)
 SUBROUTINE rhoofr_host &
       ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, &
         enl, denl, ekin, dekin, tstress, ndwwf )
          USE kinds,         ONLY: DP
+#if defined (__CUDA)
          USE cudafor
+#endif
          USE cp_interfaces
          IMPLICIT NONE
          INTEGER nfi
@@ -1160,10 +1161,9 @@ SUBROUTINE rhoofr_host &
          REAL(DP) denl(3,3), dekin(6)
          LOGICAL, OPTIONAL, INTENT(IN) :: tstress
          INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
-         COMPLEX(DP), ALLOCATABLE, DEVICE :: c(:,:) 
+         COMPLEX(DP), ALLOCATABLE DEVICEATTR :: c(:,:) 
          ALLOCATE( c, SOURCE=c_bgrp )
          CALL rhoofr(nfi, c_bgrp, c, bec_bgrp, dbec, rhovan, rhor, &
               drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
          DEALLOCATE( c ) 
 END SUBROUTINE rhoofr_host
-#endif

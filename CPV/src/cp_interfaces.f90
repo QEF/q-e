@@ -271,7 +271,6 @@
          LOGICAL, OPTIONAL, INTENT(IN) :: tstress
          INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
       END SUBROUTINE rhoofr_cp
-#if defined (__CUDA)
       SUBROUTINE rhoofr_host &
          ( nfi, c_bgrp, irb, eigrb, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
          USE kinds,      ONLY: DP
@@ -293,7 +292,6 @@
          LOGICAL, OPTIONAL, INTENT(IN) :: tstress
          INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
       END SUBROUTINE rhoofr_host
-#endif
    END INTERFACE
 
    INTERFACE checkrho

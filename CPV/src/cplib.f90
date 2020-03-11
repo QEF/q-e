@@ -1644,7 +1644,7 @@ end subroutine dylmr2_
       !
       sk = 0.0d0
 !$omp parallel do reduction(+:sk) default(none) &
-!$omp shared(sk,c,g2kin,gstart,ngw,n,f) private(i,ig,rsum)
+!$omp shared(c,g2kin,gstart,ngw,n,f) private(i,ig,rsum)
       DO i=1,n
          rsum = 0.0d0
          DO ig=gstart,ngw
