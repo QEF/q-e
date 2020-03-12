@@ -89,6 +89,7 @@ MODULE us_exx
     !-----------------------------------------------------------------------
     !! Allocate and store augmentation charges in G space Q(G) for USPP.
     !
+    USE cell_base,           ONLY : tpiba
     USE ions_base,           ONLY : ntyp => nsp
     USE uspp_param,          ONLY : upf, nh, lmaxq
     USE gvect,               ONLY : g
@@ -124,7 +125,7 @@ MODULE us_exx
     DO ig = 1, ngms
        q(:,ig) = xk(:) - xkq(:) + g(:,ig)
        qq(ig)  = SUM(q(:,ig)**2)
-       qmod(ig)= SQRT(qq(ig))
+       qmod(ig)= SQRT(qq(ig))*tpiba
     ENDDO
     CALL ylmr2( lmaxq*lmaxq, ngms, q, qq, ylmk0 )
     DEALLOCATE( qq, q )
@@ -178,7 +179,6 @@ MODULE us_exx
     USE uspp,                ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
     USE uspp_param,          ONLY : upf, nh, nhm, lmaxq
     USE gvect,               ONLY : g, eigts1, eigts2, eigts3, mill, gstart
-    USE cell_base,           ONLY : tpiba
     USE control_flags,       ONLY : gamma_only
     USE fft_types,           ONLY : fft_type_descriptor
     !
@@ -363,7 +363,7 @@ MODULE us_exx
     USE uspp,           ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
     USE uspp_param,     ONLY : upf, nh, nhm, lmaxq
     USE gvect,          ONLY : gg, g, gstart, eigts1, eigts2, eigts3, mill
-    USE cell_base,      ONLY : tpiba, omega
+    USE cell_base,      ONLY : omega
     USE control_flags,  ONLY : gamma_only
     USE fft_types,      ONLY : fft_type_descriptor
     !

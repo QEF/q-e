@@ -15,7 +15,7 @@ SUBROUTINE allocate_nlpot
   !! Requires in input:  
   !! * dimensions: nhm, nsp, nat, lmaxkb, nbetam, nspin
   !! * pseudopot info: upf%nwfc
-  !! * parameters: gcutm, qnorm, dq, ecutwfc, cell_factor
+  !! * parameters: ecutrho, qnorm, dq, ecutwfc, cell_factor
   !! * options: tqr, noncolin, lspinorb, spline_ps
   !
   !! Computes the following global quantities:  
@@ -28,7 +28,7 @@ SUBROUTINE allocate_nlpot
   USE klist,            ONLY : qnorm
   USE lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : noncolin
-  USE gvect,            ONLY : gcutm
+  USE gvect,            ONLY : ecutrho
   USE gvecw,            ONLY : ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
@@ -73,7 +73,7 @@ SUBROUTINE allocate_nlpot
   ! This routine is called also by the phonon code, in which case it should
   ! allocate an array that includes q+G vectors up to |q+G|_max <= |Gmax|+|q|
   !
-  nqxq = INT( ( (SQRT(gcutm) + qnorm) / dq + 4) * cell_factor )
+  nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
   !
   IF (lmaxq > 0) ALLOCATE (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))

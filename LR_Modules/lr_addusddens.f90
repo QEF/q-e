@@ -19,6 +19,7 @@ SUBROUTINE lr_addusddens (drhoscf, dbecsum)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, tau, ntyp => nsp
+  USE cell_base,            ONLY : tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : gg, ngm, g, eigts1, eigts2, eigts3, mill
@@ -77,7 +78,7 @@ SUBROUTINE lr_addusddens (drhoscf, dbecsum)
   CALL ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmk0)
   !
   DO ig = 1, ngm
-     qmod(ig) = sqrt(qmod(ig))
+     qmod(ig) = sqrt(qmod(ig)) * tpiba
   ENDDO
   !
   DO nt = 1, ntyp
