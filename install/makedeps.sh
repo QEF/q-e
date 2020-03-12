@@ -120,10 +120,10 @@ for dir in $dirs; do
 
         if test "$DIR" = "LAXlib"
         then
-            sed '/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d;' make.depend.tmp > make.depend
+            sed '/@elpa1@/d;/@elpa@/d' make.depend > make.depend.tmp
+            sed '/@cudafor@/d;/@cusolverdn@/d;/@gbuffers@/d' make.depend.tmp > make.depend
             sed '/@zhegvdx_gpu@/d;/@dsyevd_gpu@/d;/@dsygvdx_gpu@/d' make.depend > make.depend.tmp
-            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d;' make.depend.tmp > make.depend
+            sed '/@cublas@/d;/@eigsolve_vars@/d;/@nvtx_inters@/d' make.depend.tmp > make.depend
             /bin/rm make.depend.tmp
         fi
 
