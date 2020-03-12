@@ -483,6 +483,8 @@ dnsq_scf.o : ../../UtilXlib/mp.o
 dnsq_scf.o : ef_shift.o
 dnsq_scf.o : phcom.o
 do_phonon.o : ../../Modules/io_global.o
+do_phonon.o : ../../Modules/noncol.o
+do_phonon.o : ../../PW/src/pwcom.o
 do_phonon.o : elph.o
 do_phonon.o : elph_scdft_mod.o
 do_phonon.o : elph_tetra_mod.o

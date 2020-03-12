@@ -160,7 +160,6 @@ lr_dav_main.o : ../../Modules/check_stop.o
 lr_dav_main.o : ../../Modules/control_flags.o
 lr_dav_main.o : ../../Modules/environment.o
 lr_dav_main.o : ../../Modules/funct.o
-lr_dav_main.o : ../../Modules/io_files.o
 lr_dav_main.o : ../../Modules/io_global.o
 lr_dav_main.o : ../../Modules/ions_base.o
 lr_dav_main.o : ../../Modules/kind.o
@@ -249,7 +248,6 @@ lr_eels_main.o : ../../Modules/check_stop.o
 lr_eels_main.o : ../../Modules/command_line_options.o
 lr_eels_main.o : ../../Modules/environment.o
 lr_eels_main.o : ../../Modules/fft_base.o
-lr_eels_main.o : ../../Modules/io_files.o
 lr_eels_main.o : ../../Modules/io_global.o
 lr_eels_main.o : ../../Modules/ions_base.o
 lr_eels_main.o : ../../Modules/kind.o
@@ -317,7 +315,6 @@ lr_main.o : ../../Modules/control_flags.o
 lr_main.o : ../../Modules/environment.o
 lr_main.o : ../../Modules/fft_base.o
 lr_main.o : ../../Modules/funct.o
-lr_main.o : ../../Modules/io_files.o
 lr_main.o : ../../Modules/io_global.o
 lr_main.o : ../../Modules/ions_base.o
 lr_main.o : ../../Modules/kind.o
