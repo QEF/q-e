@@ -88,7 +88,7 @@
   !! Name of the directory
   CHARACTER(LEN = 256) :: filename
   !! Name of the file
-  CHARACTER(LEN = 3) :: filelab
+  CHARACTER(LEN = 4) :: filelab
   !! Append the number of the core that works on that file
   CHARACTER(LEN = 80)   :: line
   !! Use to read external eigenvalues

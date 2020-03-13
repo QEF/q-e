@@ -654,7 +654,7 @@
     !!
     IMPLICIT NONE
     !
-    CHARACTER(LEN = 3), INTENT(out) :: ndlab
+    CHARACTER(LEN = 4), INTENT(out) :: ndlab
     !! Label
     INTEGER, INTENT(in) :: pool
     !! Pool = 1,..., npool
@@ -674,7 +674,7 @@
     !
     node = (pool - 1) * procp + proc + 1
     !
-    ndlab = '   '
+    ndlab = '    '
     IF (nprocs < 10) THEN
       WRITE(ndlab(1:1), '(i1)') node
     ELSEIF (nprocs < 100 ) then
@@ -699,7 +699,7 @@
       ELSEIF (node < 1000) THEN
         WRITE(ndlab(1:3), '(i3)') node
       ELSE
-        WRITE(ndlab, '(i4)') node
+        WRITE(ndlab(1:4), '(i4)') node
       ENDIF
     ENDIF
     !
@@ -1380,7 +1380,7 @@
     INTEGER :: jrot
     !! Rotation index
     INTEGER, ALLOCATABLE :: irtemp(:)
-    !! Temporary irt.  
+    !! Temporary irt.
     REAL(KIND = DP) :: ft_(3)
     !! Fractional translation
     !

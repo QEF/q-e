@@ -1754,7 +1754,7 @@
     !
     CHARACTER(LEN = 256) :: tempfile
     !! Temp file
-    CHARACTER(LEN = 3) :: filelab
+    CHARACTER(LEN = 4) :: filelab
     !! File number
     INTEGER :: unf_recl
     !! Rcl unit
@@ -1830,7 +1830,7 @@
     ! Local variables
     CHARACTER(LEN = 256) :: tempfile
     !! Temp file
-    CHARACTER(LEN = 3) :: nd_nmbr0
+    CHARACTER(LEN = 4) :: nd_nmbr0
     !! File number
     INTEGER :: unf_recl
     !! Rcl unit
