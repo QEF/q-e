@@ -22,8 +22,9 @@ Incompatible changes in dev branch:
     type of atom is in array ityp(:). The logic is now the same as for all
     other codes and there is no need to re-order atoms or to put ultrasoft
     pseudopotentials first, non-conserving second.
-  * Calls to LAXlib routines changed:module to be includede replaced by file
+  * Calls to LAXlib routines changed: module to be included replaced by file
     'laxlib.fh', descriptors replaced by integer values
+  * Interpolation table for Q(G) is in a.u. and no longer in 2pi/a units
 
 New in 6.5 branch:
   * For non-local functionals of the vdW-DF and rVV10 families the kernel is

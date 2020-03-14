@@ -249,7 +249,7 @@ subroutine init_us_1
   !
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
-  !   
+  !
   call divide (intra_bgrp_comm, nqxq, startq, lastq)
   !
   do nt = 1, ntyp
@@ -276,7 +276,7 @@ subroutine init_us_1
            !     here we compute the spherical bessel function for each |g|
            !
            do iq = startq, lastq
-              q = (iq - 1) * dq * tpiba
+              q = (iq - 1) * dq
               call sph_bes ( upf(nt)%kkbeta, rgrid(nt)%r, q, l, aux)
               !
               !   and then we integrate with all the Q functions
@@ -307,11 +307,12 @@ subroutine init_us_1
      endif
      ! ntyp
   enddo
+  deallocate (aux)
   deallocate (aux1)
   deallocate (qtot)
   !
   !   and finally we compute the qq coefficients by integrating the Q.
-  !   q are the g=0 components of Q.
+  !   q are the g=0 components of Q 
   !
 #if defined(__MPI)
   if (gg (1) > 1.0d-8) goto 100
@@ -373,7 +374,6 @@ subroutine init_us_1
   end do
 
   deallocate (ylmk0)
-  deallocate (aux)
   !
   !     fill the interpolation table tab
   !

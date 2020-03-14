@@ -25,7 +25,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE kinds,              ONLY : DP
   USE parameters,         ONLY : npk
   USE constants,          ONLY : pi, degspin
-  USE cell_base,          ONLY : at, bg
+  USE cell_base,          ONLY : at, bg, tpiba
   USE ions_base,          ONLY : nat, tau, ityp, zv
   USE force_mod,          ONLY : force
   USE basis,              ONLY : natomwfc
@@ -186,7 +186,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   ! ...notice: qnorm is used by allocate_nlpot to determine
   ! the correct size of the interpolation table "qrad"
   !
-  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2)
+  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2) * tpiba
   !
   ! ... distribute k-points (and their weights and spin indices)
   !

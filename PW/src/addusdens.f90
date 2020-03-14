@@ -40,6 +40,7 @@ SUBROUTINE addusdens_g( rho )
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE cell_base,            ONLY : tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : ngm, gg, g, &
@@ -92,7 +93,7 @@ SUBROUTINE addusdens_g( rho )
   !
   CALL ylmr2( lmaxq*lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   DO ig = 1, ngm_l
-     qmod(ig) = SQRT(gg(ngm_s+ig-1))
+     qmod(ig) = SQRT(gg(ngm_s+ig-1))*tpiba
   ENDDO
   !
   DO nt = 1, ntyp

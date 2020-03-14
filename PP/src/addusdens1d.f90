@@ -16,7 +16,7 @@ SUBROUTINE addusdens1d (plan, prho)
   !  of the charge density.
   !
   USE kinds,     ONLY: DP
-  USE cell_base, ONLY: alat, omega, celldm
+  USE cell_base, ONLY: alat, omega, celldm, tpiba
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
   USE fft_base,  ONLY: dfftp
   USE fft_scalar,ONLY: cft_1z
@@ -62,7 +62,7 @@ SUBROUTINE addusdens1d (plan, prho)
   CALL ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   ALLOCATE (qgm(ngm1d), aux(ngm1d))
   DO ig = 1, ngm1d
-     qmod (ig) = sqrt (gg1d (ig) )
+     qmod (ig) = sqrt (gg1d (ig) ) * tpiba
   ENDDO
   aux(:) = (0.d0, 0.d0)
 

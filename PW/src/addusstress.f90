@@ -124,7 +124,7 @@ SUBROUTINE addusstress_g( sigmanlc )
   CALL ylmr2( lmaxq * lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0 )
   !
   DO ig = 1, ngm_l
-     qmod(ig) = SQRT( gg(ngm_s+ig-1) )
+     qmod(ig) = SQRT( gg(ngm_s+ig-1) ) * tpiba
   ENDDO
   !
   ! here we compute the integral Q*V for each atom,
@@ -141,8 +141,8 @@ SUBROUTINE addusstress_g( sigmanlc )
            DO ih = 1, nh(nt)
               DO jh = ih, nh(nt)
                  ijh = ijh + 1
-                 CALL dqvan2( ih, jh, nt, ipol, ngm_l, g(1,ngm_s), qmod, &
-                      ylmk0, dylmk0, qgm(1,ijh) )
+                 CALL dqvan2( ih, jh, nt, ipol, ngm_l, g(1,ngm_s), tpiba, &
+                      qmod, ylmk0, dylmk0, qgm(1,ijh) )
               ENDDO
            ENDDO
            !
@@ -165,7 +165,7 @@ SUBROUTINE addusstress_g( sigmanlc )
                  DO ig = 1, ngm_l
                     cfac = CONJG( eigts1(mill (1,ngm_s+ig-1), na) * &
                                   eigts2(mill (2,ngm_s+ig-1), na) * &
-                                  eigts3(mill (3,ngm_s+ig-1), na) )
+                                  eigts3(mill (3,ngm_s+ig-1), na) ) * tpiba
                      aux1(ig,1) = cfac * g(1,ngm_s+ig-1)
                      aux1(ig,2) = cfac * g(2,ngm_s+ig-1)
                      aux1(ig,3) = cfac * g(3,ngm_s+ig-1)

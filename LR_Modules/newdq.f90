@@ -17,6 +17,7 @@ subroutine newdq (dvscf, npe)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
+  USE cell_base,            ONLY : tpiba
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp
@@ -77,12 +78,12 @@ subroutine newdq (dvscf, npe)
      call setqmod (ngm, xq, g, qmod, qg)
      call ylmr2 (lmaxq * lmaxq, ngm, qg, qmod, ylmk0)
      do ig = 1, ngm
-        qmod (ig) = sqrt (qmod (ig) )
+        qmod (ig) = sqrt (qmod (ig) ) * tpiba
      enddo
   else
      call ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
      do ig = 1, ngm
-        qmod (ig) = sqrt (gg (ig) )
+        qmod (ig) = sqrt (gg (ig) ) * tpiba
      enddo
   endif
   !
