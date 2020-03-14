@@ -288,8 +288,8 @@ SUBROUTINE from_scratch( )
       IF ( tortho ) THEN
 #if defined (__CUDA)
          CALL updatc( ccc, lambda, phi_d, bephi, becp_bgrp, bec_d, c0_d, idesc )
-         CALL dev_memcpy( c0_d, c0_bgrp )
-         CALL dev_memcpy( bec_d, bec_bgrp )
+         CALL dev_memcpy( c0_bgrp, c0_d )
+         CALL dev_memcpy( bec_bgrp, bec_d )
 #else
          CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
 #endif
