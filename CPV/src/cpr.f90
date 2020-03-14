@@ -335,7 +335,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3), &
+     CALL move_electrons( nfi, tprint, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3), &
                           fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress, .false. )
      !
      IF (lda_plus_u) fion = fion + forceh
@@ -549,8 +549,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( tortho ) THEN
            !
 #if defined (__CUDA)
-           CALL dev_memcpy( cm_d, cm_bgrp )
-           CALL dev_memcpy( phi_d, phi_bgrp )
            CALL ortho( eigr, cm_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
            CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
@@ -824,7 +822,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            lambdam = lambda
            !
-           CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3),&
+           CALL move_electrons( nfi, tprint, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3),&
                                 fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress,.true. )
            !
         END IF

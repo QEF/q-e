@@ -249,10 +249,12 @@ SUBROUTINE from_scratch( )
          !
       ENDIF
       !
+      CALL dev_memcpy( c0_d, c0_bgrp )  ! c0 contains the updated wave functions
+      !
       !     nlfq needs deeq bec
       !
       IF( ttforce ) THEN
-         CALL nlfq_bgrp( cm_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+         CALL nlfq_bgrp( cm_d, eigr, bec_bgrp, becdr_bgrp, fion )
       END IF
       !
       !     calphi calculates phi
@@ -263,10 +265,10 @@ SUBROUTINE from_scratch( )
       IF( force_pairing ) &
          &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
 
+      CALL dev_memcpy( phi_d, phi_bgrp )
+      !
       if( tortho ) then
 #if defined (__CUDA)
-         CALL dev_memcpy( c0_d, c0_bgrp )
-         CALL dev_memcpy( phi_d, phi_bgrp )
          CALL ortho( eigr, c0_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
          CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )

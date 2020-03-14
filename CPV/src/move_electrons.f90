@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
+SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
             enthal, enb, enbi, fccc, ccc, dt2bye, stress, l_cprestart )
   !----------------------------------------------------------------------------
   !
@@ -45,11 +45,12 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
   USE wavefunctions,        ONLY : cv0, c0_bgrp, cm_bgrp, phi_bgrp, c0_d, cm_d, phi_d
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE device_util_m,        ONLY : dev_memcpy
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: nfi
-  LOGICAL,  INTENT(IN)    :: tfirst, tlast
+  LOGICAL,  INTENT(IN)    :: tprint, tfirst, tlast
   REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
   REAL(DP)                :: fion(:,:)
   REAL(DP), INTENT(IN)    :: dt2bye
@@ -168,19 +169,21 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
      ENDIF
      !
+     CALL dev_memcpy( cm_d, cm_bgrp )  ! cm contains the updated wavefunctions
+     !
      !----------------------------------------------------------------------
      !                 contribution to fion due to lambda
      !----------------------------------------------------------------------
      !
      ! ... nlfq needs deeq bec
      !
-     IF ( tfor .OR. tprnfor ) THEN
-        CALL nlfq_bgrp( c0_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+     IF ( tfor .OR. ( tprnfor .AND. tprint ) ) THEN
+        CALL nlfq_bgrp( c0_d, eigr, bec_bgrp, becdr_bgrp, fion )
      END IF
      !
-     IF ( (tfor.or.tprnfor) .AND. tefield ) &
+     IF ( (tfor.or.(tprnfor.AND.tprint)) .AND. tefield ) &
         CALL bforceion( fion, .TRUE. , ipolp, qmat, bec_bgrp, becdr_bgrp, gqq, evalue )
-     IF ( (tfor.or.tprnfor) .AND. tefield2 ) &
+     IF ( (tfor.or.(tprnfor.AND.tprint)) .AND. tefield2 ) &
         CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec_bgrp, becdr_bgrp, gqq2, evalue2 )
      !
      IF( force_pairing ) THEN
@@ -200,11 +203,13 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
      !
+     CALL dev_memcpy( phi_d, phi_bgrp )
+     !
      ! ... begin try and error loop (only one step!)
      !
      ! ... nlfl and nlfh need: lambda (guessed) becdr
      !
-     IF ( tfor .OR. tprnfor ) THEN
+     IF ( tfor .OR. (tprnfor .AND. tprint) ) THEN
         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
      END IF
      !

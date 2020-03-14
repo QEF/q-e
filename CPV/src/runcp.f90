@@ -82,6 +82,7 @@
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
      integer :: iflag
      logical :: ttsde
+     INTEGER :: omp_get_num_threads
 
 #if defined (__CUDA)
      IF( dffts%has_task_groups ) THEN
@@ -290,8 +291,10 @@
               ENDDO
            END IF
 
-           idx_in = 1
+!$omp parallel num_threads(min(incr,omp_get_num_threads())) default(shared) private(idx_in, idx)
+!$omp do
            DO idx = 1, incr, 2
+              idx_in = idx/2+1
               IF( i + idx - 1 <= nbsp_bgrp ) THEN
                  IF (tsde) THEN
                     CALL wave_steepest( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), emaver, c2(:), ngw, idx_in )
@@ -305,10 +308,9 @@
                     cm_bgrp(1,i+idx  ) = CMPLX(real(cm_bgrp(1,i+idx  )),0.0d0,kind=dp)
                  END IF
               END IF
-              !
-              idx_in = idx_in + 1
-              !
            END DO
+!$omp end do
+!$omp end parallel
 
         END DO
 

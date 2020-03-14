@@ -661,6 +661,86 @@
    end subroutine nlsm2_bgrp_x
 !-----------------------------------------------------------------------
 
+#if defined (__CUDA)
+!-------------------------------------------------------------------------
+   subroutine nlsm2_bgrp_gpu_x( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+!-----------------------------------------------------------------------
+
+      !     computes: the array becdr
+      !     becdr(ia,n,iv,is,k)
+      !      =2.0 sum_g> g_k beta(g,iv,is) re[ (i)**(l+1) e^(ig.r_ia) c(g,n)]
+      !
+      !     routine makes use of  c*(g)=c(-g)  (g> see routine ggen)
+      !     input : eigr, c
+      !     output: becdr
+      !
+ 
+      USE kinds,      ONLY : DP
+      use ions_base,  only : nsp, ityp, nat
+      use uspp,       only : nhtol, beta, indv_ijkb0
+      use uspp_param, only : nh, upf
+      use cell_base,  only : tpiba
+      use mp,         only : mp_sum
+      use mp_global,  only : nproc_bgrp, intra_bgrp_comm
+      use gvect,      only : g, gstart
+      USE cp_interfaces, only : g_beta_eigr
+      USE device_util_m, ONLY : dev_memcpy
+      USE cudafor
+      USE cublas
+!
+      implicit none
+    
+      integer,     intent(in)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
+      complex(DP), intent(in), DEVICE :: c_bgrp(:,:)
+      complex(DP), intent(in)  :: eigr(:,:)
+      real(DP),    intent(out) :: becdr_bgrp(:,:,:)
+      !
+      complex(DP), allocatable :: wrk2(:,:,:)
+      complex(DP), allocatable, DEVICE :: wrk2_d(:,:,:)
+      real(DP), allocatable, DEVICE :: becdr_d(:,:)
+      !
+      integer  :: ig, is, iv, ia, k, l, inl, info
+      complex(DP) :: cfact
+!
+      call start_clock( 'nlsm2' )
+
+      allocate( wrk2( ngw, nkb, 3 ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' nlsm2 ', ' allocating wrk2 ', ABS( info ) )
+   
+      CALL g_beta_eigr( wrk2, eigr )
+!
+      ALLOCATE( wrk2_d, SOURCE=wrk2, STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' nlsm2 ', ' allocating wrk2_d ', ABS( info ) )
+      ALLOCATE( becdr_d( SIZE( becdr_bgrp, 1 ), SIZE( becdr_bgrp, 2 ) ), STAT=info ) 
+      IF( info /= 0 ) &
+         CALL errore( ' nlsm2 ', ' allocating becdr_d ', ABS( info ) )
+
+      DO k = 1, 3
+         !
+         IF( ngw > 0 .AND. nkb > 0 ) THEN
+            CALL MYDGEMM( 'T', 'N', nkb, nbsp_bgrp, 2*ngw, 1.0d0, wrk2_d(1,1,k), 2*ngw, &
+                 c_bgrp, 2*ngw, 0.0d0, becdr_d, nkb )
+            CALL dev_memcpy( becdr_bgrp(:,:,k), becdr_d )
+         END IF
+
+      end do
+
+      DEALLOCATE( becdr_d )
+      DEALLOCATE( wrk2_d )
+      deallocate( wrk2 )
+
+      IF( nproc_bgrp > 1 ) THEN
+         CALL mp_sum( becdr_bgrp, intra_bgrp_comm )
+      END IF
+
+      call stop_clock( 'nlsm2' )
+!
+      return
+   end subroutine nlsm2_bgrp_gpu_x
+!-----------------------------------------------------------------------
+#endif
 
 !-----------------------------------------------------------------------
    SUBROUTINE ennl_x( ennl_val, rhovan, bec_bgrp )
@@ -1138,7 +1218,11 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !
   implicit none
   !
-  COMPLEX(DP), INTENT(IN)  ::  c_bgrp( :, : ), eigr( :, : )
+  COMPLEX(DP), INTENT(IN) :: c_bgrp( :, : )
+#if defined (__CUDA)
+  ATTRIBUTES( DEVICE ) :: c_bgrp
+#endif
+  COMPLEX(DP), INTENT(IN)  ::  eigr( :, : )
   REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
   REAL(DP),    INTENT(OUT)  ::  becdr_bgrp( :, :, : )
   REAL(DP),    INTENT(OUT) ::  fion( :, : )

@@ -845,11 +845,15 @@
      call calcmt( nrlx, f, z0t, fmat0 )
 
       call newd(vpot,irb,eigrb,rhovan,fion)
+#if defined (__CUDA)
+      CALL errore('  runcg_uspp ', ' GPU version not yet implemented', 1 )
+#else
       if (.not.tens) then
-        if (tfor .or. tprnfor) call nlfq_bgrp( c0, eigr, bec, becdr, fion ) ! call nlfq(c0,eigr,bec,becdr,fion)
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0, eigr, bec, becdr, fion ) 
       else
-        if (tfor .or. tprnfor) call nlfq_bgrp( c0diag, eigr, becdiag, becdrdiag, fion ) ! call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0diag, eigr, becdiag, becdrdiag, fion ) 
       endif
+#endif
   
         call prefor(eigr,betae)
         do i=1,nbsp,2
