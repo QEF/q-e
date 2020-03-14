@@ -297,7 +297,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
       lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
      !
-     CALL dev_memcpy( c0_bgrp, c0_d )
+     CALL dev_memcpy( c0_d, c0_bgrp )
      !
      ! Autopilot (Dynamic Rules) Implimentation    
      !
@@ -549,8 +549,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( tortho ) THEN
            !
 #if defined (__CUDA)
-           CALL dev_memcpy( cm_bgrp, cm_d )
-           CALL dev_memcpy( phi_bgrp, phi_d )
+           CALL dev_memcpy( cm_d, cm_bgrp )
+           CALL dev_memcpy( phi_d, phi_bgrp )
            CALL ortho( eigr, cm_d, phi_d, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
 #else
            CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
