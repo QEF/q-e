@@ -80,21 +80,14 @@
 !=======================================================================
 
       nogrp_ = fftx_ntgrp(dffts)
+      IF( nogrp_ > 1 ) THEN
+         CALL errore('dforce','Task group not supported',1)
+      END IF
       ALLOCATE( psi( dffts%nnr_tg ) )
       !
-#if defined(__MPI) 
-
-      CALL c2psi_gamma_tg( dffts, psi, c, i, n )
-
-      CALL invfft('tgWave', psi, dffts)
-
-#else
-
       CALL c2psi_gamma( dffts, psi, c(:,i), c(:,i+1) )
       !
       CALL invfft( 'Wave', psi, dffts )
-
-#endif
       !
       ! the following avoids a potential out-of-bounds error
       !
@@ -213,11 +206,7 @@
          !
       END IF
       !
-#if defined(__MPI) 
-      CALL fwfft( 'tgWave', psi, dffts )
-#else
       CALL fwfft( 'Wave', psi, dffts )
-#endif
       !
       !   note : the factor 0.5 appears 
       !       in the kinetic energy because it is defined as 0.5*g**2

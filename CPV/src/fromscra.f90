@@ -254,23 +254,31 @@ SUBROUTINE from_scratch( )
       !     nlfq needs deeq bec
       !
       IF( ttforce ) THEN
-         CALL nlfq_bgrp( cm_d, eigr, bec_bgrp, becdr_bgrp, fion )
+         IF( ALLOCATED( cm_d ) ) THEN
+            CALL nlfq_bgrp( cm_d, eigr, bec_bgrp, becdr_bgrp, fion )
+         ELSE
+            CALL nlfq_bgrp( cm_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+         END IF
       END IF
       !
       !     calphi calculates phi
       !     the electron mass rises with g**2
       !
-      CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+      IF( ALLOCATED( cm_d ) ) THEN
+         CALL calphi_bgrp( cm_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+      ELSE
+         CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+      END IF
       !
       IF( force_pairing ) &
          &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi( :, 1:nupdwn(2))
       !
       if( tortho ) then
-#if defined (__CUDA)
-         CALL ortho( eigr, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
-#else
-         CALL ortho( eigr, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
-#endif
+         IF( ALLOCATED( c0_d ) ) THEN
+            CALL ortho( eigr, c0_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         ELSE
+            CALL ortho( eigr, c0_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+         END IF
       else
          CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
       endif
@@ -286,13 +294,13 @@ SUBROUTINE from_scratch( )
       if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, idesc )
       !
       IF ( tortho ) THEN
-#if defined (__CUDA)
-         CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, c0_d, idesc )
-         CALL dev_memcpy( c0_bgrp, c0_d )
-         CALL dev_memcpy( bec_bgrp, bec_d )
-#else
-         CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
-#endif
+         IF( ALLOCATED( c0_d ) ) THEN
+            CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, c0_d, idesc )
+            CALL dev_memcpy( c0_bgrp, c0_d )
+            CALL dev_memcpy( bec_bgrp, bec_d )
+         ELSE
+            CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, c0_bgrp, idesc )
+         END IF
       END IF
       !
       IF( force_pairing ) THEN

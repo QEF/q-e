@@ -182,7 +182,11 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      ! ... nlfq needs deeq bec
      !
      IF ( tfor .OR. ( tprnfor .AND. tprint ) ) THEN
-        CALL nlfq_bgrp( c0_d, eigr, bec_bgrp, becdr_bgrp, fion )
+        IF( ALLOCATED( c0_d ) ) THEN
+           CALL nlfq_bgrp( c0_d, eigr, bec_bgrp, becdr_bgrp, fion )
+        ELSE
+           CALL nlfq_bgrp( c0_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+        END IF
      END IF
      !
      IF ( (tfor.or.(tprnfor.AND.tprint)) .AND. tefield ) &
@@ -205,7 +209,11 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
      !
-     CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+     IF( ALLOCATED( c0_d ) ) THEN
+        CALL calphi_bgrp( c0_d, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+     ELSE
+        CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi, nbspx_bgrp, ema0bg )
+     END IF
      !
      ! ... begin try and error loop (only one step!)
      !

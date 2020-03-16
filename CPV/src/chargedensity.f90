@@ -376,6 +376,10 @@
 #endif
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
+         IF( fftx_ntgrp(dffts) > 1 ) THEN
+            CALL errore('rhoofr','Task group not supported',1)
+         END IF
+
          ALLOCATE( psis( dffts%nnr_tg ) ) 
          !
          CALL tg_get_group_nr3( dffts, tg_nr3 )
@@ -386,17 +390,9 @@
 
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
 
-#if defined(__MPI) 
-            !
-            CALL c2psi_gamma_tg(dffts, psis, c_bgrp, i, nbsp_bgrp )
-
-            CALL invfft ('tgWave', psis, dffts )
-#else
             CALL c2psi_gamma( dffts, psis, c_bgrp(:,i), c_bgrp(:,i+1) )
 
             CALL invfft('Wave', psis, dffts )
-
-#endif
             !
             ! Now the first proc of the group holds the first two bands
             ! of the 2*nogrp bands that we are processing at the same time,
