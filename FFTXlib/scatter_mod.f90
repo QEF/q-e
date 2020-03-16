@@ -384,9 +384,8 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
 !$omp          private(i, j, k, ip, it, m1, m2, i1, icompact)  &
 !$omp          shared(howmany, ncpx, nr2px, nr1p_, iplx)       &
 !$omp&         shared(desc, f_aux, f_in, indx)
-!$omp master
         ip = nr1p_(1) * desc%my_nr3p + 1
-!$omp taskloop firstprivate(ip)
+!$omp do firstprivate(ip)
         DO k=0, howmany-1
            DO j = 1, ncpx
               IF ( j >= ip ) CYCLE
@@ -401,8 +400,8 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp taskloop
+!$omp end do
+!$omp do
         DO k=0, howmany-1
            DO j = 1, desc%my_nr2p*desc%my_nr3p
               DO i1 = 1, desc%nr1x
@@ -410,16 +409,14 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
      ELSE
 !$omp parallel default(none)                                  &
 !$omp          private(iproc2, i, j, k, kdest, kfrom)         &
 !$omp          shared(nproc2, howmany, ncpx, sendsize, nr1p_) &
 !$omp&         shared(nr2px, desc, f_aux, f_in, me2)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k = 0, howmany-1
            DO iproc2 = 1, nproc2
               DO j = 0, nr1p_(me2) * desc%my_nr3p - 1
@@ -431,8 +428,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
 
         CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
@@ -444,8 +440,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
 !$omp          private(iproc2, i, j, k, ip, it, m1, m2, icompact, it0, i1) &
 !$omp          shared(nproc2, howmany, ncpx, sendsize, nr2px, indx)        &
 !$omp&         shared(desc, f_aux, f_in, iplx, nr1p_)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k=0, howmany-1
            DO iproc2 = 1, nproc2
               ip = nr1p_(iproc2) * desc%my_nr3p + 1
@@ -464,8 +459,8 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp taskloop
+!$omp end do
+!$omp do
         DO k=0, howmany-1
            DO j = 1, desc%my_nr2p*desc%my_nr3p
               DO i1 = 1, desc%nr1x
@@ -473,8 +468,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
      ENDIF
      !
@@ -487,9 +481,8 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
 !$omp          private(i, j, k, ip, it, m1, m2, i1, icompact)  &
 !$omp          shared(howmany, ncpx, nr2px, nr1p_)             &
 !$omp&         shared(desc, f_aux, f_in, indx)
-!$omp master
         ip = nr1p_(1) * desc%my_nr3p + 1
-!$omp taskloop firstprivate(ip)
+!$omp do firstprivate(ip)
         DO k = 0, howmany - 1
            DO j = 1, ncpx
               IF ( j >= ip ) CYCLE
@@ -504,16 +497,14 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
      ELSE
 !$omp parallel default(none)                                               &
 !$omp          private(iproc2, i, j, k, ip, it, m1, m2, icompact, it0, i1) &
 !$omp          shared(nproc2, howmany, ncpx, sendsize, nr2px, indx)        &
 !$omp&         shared(desc, f_aux, f_in, nr1p_)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k=0, howmany-1
            DO iproc2 = 1, nproc2
               ip = nr1p_(iproc2) * desc%my_nr3p + 1
@@ -532,8 +523,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
         !
         !
@@ -550,8 +540,7 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
 !$omp          private(iproc2, i, j, k, kdest, kfrom)         &
 !$omp          shared(nproc2, howmany, ncpx, sendsize, nr2px) &
 !$omp&         shared(desc, f_aux, f_in, nr1p_, me2)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k = 0, howmany-1
            DO iproc2 = 1, nproc2
               DO j = 0, nr1p_(me2) * desc%my_nr3p - 1
@@ -563,10 +552,10 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
+!$omp end do
            ! clean extra array elements in each stick
         IF( desc%nr2x /= desc%nr2 ) THEN
-!$omp taskloop
+!$omp do
            DO k = 0, howmany-1
               DO j = 1, nr1p_(me2)*desc%my_nr3p
                  DO i = desc%nr2+1, desc%nr2x
@@ -574,9 +563,8 @@ SUBROUTINE fft_scatter_many_xy ( desc, f_in, f_aux, isgn, howmany)
                  END DO
               END DO
            ENDDO
-!$omp end taskloop
+!$omp end do
         ENDIF
-!$omp end master
 !$omp end parallel
      ENDIF
   ENDIF
@@ -948,16 +936,15 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp          private(i, j, k, ip, it, mc, m1, m2, i1)        &
 !$omp          shared(howmany, ncpx, nr3px, desc, f_aux, f_in) &
 !$omp&         shared(ncp_, me2, ir1p_, my_nr1p_)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k=0, howmany-1
            DO j = 1, desc%my_nr3p*desc%nr2x*my_nr1p_
               f_aux(j+k*desc%nnr) = (0.0_DP, 0.0_DP)
            ENDDO
         ENDDO
-!$omp end taskloop
+!$omp end do
         ip = desc%iproc( me2, 1)
-!$omp taskloop firstprivate(ip)
+!$omp do firstprivate(ip)
         DO k=0, howmany-1
            DO j = 1, ncpx
               IF ( j>ncp_(ip) ) CYCLE
@@ -972,16 +959,14 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
      ELSE
 !$omp parallel default(none)                                   &
 !$omp          private(iproc3, i, j, k, kdest, kfrom)          &
 !$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px ) &
 !$omp&         shared(desc, f_aux, f_in, ncp_, me2, me3)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k = 0, howmany-1
            DO iproc3 = 1, nproc3
               DO j = 0, ncpx-1
@@ -994,8 +979,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
         !
         ! ensures that no garbage is present in the output
@@ -1012,15 +996,14 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp          private(iproc3, i, j, k, ip, it, mc, m1, m2, i1, it0) &
 !$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px)        &
 !$omp&         shared(desc, f_aux, f_in, ncp_, me2, ir1p_, my_nr1p_)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k=0, howmany-1
            DO j = 1, desc%my_nr3p*desc%nr2x*my_nr1p_
               f_aux(j+k*desc%nnr) = (0.0_DP, 0.0_DP)
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp taskloop
+!$omp end do
+!$omp do
         DO k=0, howmany-1
            DO iproc3 = 1, nproc3
               ip = desc%iproc( me2, iproc3)
@@ -1039,8 +1022,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
      ENDIF
      !
@@ -1053,9 +1035,8 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp          private(i, j, k, ip, it, mc, m1, m2, i1)        &
 !$omp          shared(howmany, ncpx, nr3px, desc, f_aux, f_in) &
 !$omp&         shared(ncp_, me2, ir1p_, my_nr1p_)
-!$omp master
         ip = desc%iproc( me2, 1 )
-!$omp taskloop firstprivate(ip)
+!$omp do firstprivate(ip)
         DO k = 0, howmany - 1
            DO j = 1, ncpx
               IF ( j>ncp_(ip) ) CYCLE
@@ -1070,8 +1051,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
      ELSE
      !
@@ -1079,8 +1059,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp          private(iproc3, i, j, k, ip, it, mc, m1, m2, i1, it0) &
 !$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px, desc)  &
 !$omp&         shared(f_aux, f_in, ncp_, me2, ir1p_, my_nr1p_)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k = 0, howmany - 1
            DO iproc3 = 1, nproc3
               ip = desc%iproc( me2, iproc3)
@@ -1099,8 +1078,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
-!$omp end master
+!$omp end do
 !$omp end parallel
         !
         !
@@ -1117,8 +1095,7 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
 !$omp          private(iproc3, i, j, k, kdest, kfrom, ip, it, mc, m1, m2, i1) &
 !$omp          shared(nproc3, howmany, ncpx, sendsize, nr3px)                 &
 !$omp&         shared(desc, f_aux, f_in, ncp_, me2, me3)
-!$omp master
-!$omp taskloop
+!$omp do
         DO k = 0, howmany-1
            DO iproc3 = 1, nproc3
               DO j = 0, ncpx-1   ! was ncp_(me3)
@@ -1131,10 +1108,10 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
               ENDDO
            ENDDO
         ENDDO
-!$omp end taskloop
+!$omp end do
         ! clean extra array elements in each stick
         IF( desc%nr3x /= desc%nr3 ) THEN
-!$omp taskloop
+!$omp do
            DO k = 0, howmany-1
               DO j = 1, ncp_ ( desc%mype+1 )
                  DO i = desc%nr3+1, desc%nr3x
@@ -1142,9 +1119,8 @@ SUBROUTINE fft_scatter_many_yz ( desc, f_in, f_aux, isgn, howmany )
                  END DO
               END DO
            END DO
-!$omp end taskloop
+!$omp end do
         ENDIF
-!$omp end master
 !$omp end parallel
      ENDIF
      !
