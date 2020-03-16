@@ -548,11 +548,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          !
          IF ( tortho ) THEN
            !
-           IF( ALLOCATED( cm_d ) ) THEN
-              CALL ortho( eigr, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
-           ELSE
-              CALL ortho( eigr, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
-           END IF
+#if defined (__CUDA)
+           CALL ortho( eigr, cm_d, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#else
+           CALL ortho( eigr, cm_bgrp, phi, lambda, idesc, bigr, iter, ccc, bephi, becp_bgrp )
+#endif
            !
          ELSE
            !
@@ -567,13 +567,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          IF ( iverbosity > 1 ) CALL laxlib_print_matrix( lambda, idesc, nbsp, 9, nudx, 1.D0, ionode, stdout )
          !
          IF ( tortho ) THEN
-            IF( ALLOCATED( cm_d ) ) THEN
-               CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, cm_d, idesc )
-               CALL dev_memcpy( bec_bgrp, bec_d )
-               CALL dev_memcpy( cm_bgrp, cm_d )
-            ELSE
-               CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
-            END IF
+#if defined (__CUDA)
+            CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_d, cm_d, idesc )
+            CALL dev_memcpy( bec_bgrp, bec_d )
+            CALL dev_memcpy( cm_bgrp, cm_d )
+#else
+            CALL updatc( ccc, lambda, phi, bephi, becp_bgrp, bec_bgrp, cm_bgrp, idesc )
+#endif
          END IF
          !
          IF( force_pairing ) THEN
