@@ -19,7 +19,6 @@ cond_restart.o : ../../Modules/io_files.o
 cond_restart.o : ../../Modules/io_global.o
 cond_restart.o : ../../Modules/kind.o
 cond_restart.o : ../../Modules/mp_images.o
-cond_restart.o : ../../Modules/parser.o
 cond_restart.o : ../../Modules/version.o
 cond_restart.o : ../../UtilXlib/mp.o
 cond_restart.o : condcom.o

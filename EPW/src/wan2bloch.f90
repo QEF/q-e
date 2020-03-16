@@ -153,7 +153,7 @@
     ! Hermitization
     chf = 0.5d0 * (chf + TRANSPOSE(CONJG(chf)))
     !
-    ALLOCATE(rwork(nbnd**2 + 2 * nbnd), STAT = ierr)
+    ALLOCATE(rwork(1 + 5 * nbnd + 2 * (nbnd**2)), STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating rwork', 1)
     ALLOCATE(iwork(3 + 5 * nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('hamwan2bloch', 'Error allocating iwork', 1)

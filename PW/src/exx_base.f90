@@ -162,7 +162,7 @@ MODULE exx_base
     !!
     !
     USE symm_base,         ONLY : nsym, s
-    USE cell_base,         ONLY : bg, at
+    USE cell_base,         ONLY : bg, at, tpiba
     USE spin_orb,          ONLY : domag
     USE noncollin_module,  ONLY : nspin_lsda
     USE klist,             ONLY : xk, wk, nkstot, nks, qnorm
@@ -405,6 +405,7 @@ MODULE exx_base
           qnorm = MAX(qnorm, SQRT( SUM((xk(:,ik)-xkq_collect(:,iq))**2) ))
        ENDDO
     ENDDO
+    qnorm = qnorm * tpiba
     !
     CALL stop_clock( 'exx_grid' )
     !

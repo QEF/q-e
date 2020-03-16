@@ -354,9 +354,6 @@ CONTAINS
 
 !*apsi*    CALL test_symmetries ( s, nsym )
 
-    ! initialize pseudopotentials - FIXME: called by read_file, is this needed?
-    call init_us_1
-
     ! initialise data, also for the case that no GIPAW is present
     IF ( .NOT. ALLOCATED ( paw_recon ) ) ALLOCATE ( paw_recon(ntyp) )
     paw_recon(:)%gipaw_data_in_upf_file = .FALSE.

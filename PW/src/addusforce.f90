@@ -112,7 +112,7 @@ SUBROUTINE addusforce_g( forcenl )
   !
   ALLOCATE( qmod(ngm_l) )
   DO ig = 1, ngm_l
-     qmod(ig) = SQRT( gg(ngm_s+ig-1) )
+     qmod(ig) = SQRT( gg(ngm_s+ig-1) )*tpiba
   ENDDO
   !
   DO nt = 1, ntyp

@@ -12,7 +12,7 @@
 module timers
   save
   LOGICAL :: ignore_time = .true.  ! This is used to avoid collection of initialization times
-  REAL*8  :: times(20) = 0.d0      ! Array hosting various timers
+  REAL*8  :: times(21) = 0.d0      ! Array hosting various timers
 end module
 
 program test
@@ -116,7 +116,7 @@ program test
   LOGICAL :: use_tg
   !! if calculations require only gamma point
   REAL*8  :: at(3, 3), bg(3, 3)
-  REAL(DP), PARAMETER :: pi = 3.14159265358979323846_DP
+  REAL(DP), PARAMETER :: pi = 4.0_DP * atan(1.0_DP)
   !
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   COMPLEX(DP), ALLOCATABLE :: psic(:)
@@ -130,6 +130,8 @@ program test
   INTEGER, ALLOCATABLE :: mill(:, :), ig_l2g(:)
   REAL(DP), ALLOCATABLE :: g(:, :), gg(:)
   INTEGER :: ngm, ngmx, ngm_g, gstart
+  INTEGER :: k, group_size
+  INTEGER :: many_fft
   !
   !
   integer :: nargs
@@ -149,6 +151,7 @@ program test
   alat_in = 18.65
   ntgs    = 1
   nbnd    = 1
+  many_fft= 1
   !
   at(1, :) = (/0.5d0, 1.0d0, 0.0d0/)
   at(2, :) = (/0.5d0, 0.0d0, 0.5d0/)
@@ -227,13 +230,21 @@ program test
       CALL get_command_argument(i + 1, arg)
       READ (arg, *) gamma_only
     END IF
+    IF ((TRIM(arg) == '-howmany').or.(TRIM(arg) == '-nh')) THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) many_fft
+    END IF
   end do
   if (ecutrho == 0.d0) ecutrho = 4.0d0*ecutwfc
 
 #if defined(__MPI)
 
 #if defined(_OPENMP)
+  IF (many_fft > 1) THEN
+    CALL MPI_Init_thread(MPI_THREAD_MULTIPLE, PROVIDED, ierr)
+  ELSE
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
+  ENDIF
 #else
   CALL MPI_Init(ierr)
 #endif
@@ -327,6 +338,7 @@ program test
     write (*, *) 'Num bands      = ', nbnd
     write (*, *) 'Num procs      = ', npes
     write (*, *) 'Num Task Group = ', ntgs
+    write (*, *) 'Num Many FFTs  = ', many_fft
     write (*, *) 'Gamma trick    = ', gamma_only
   end if
   !
@@ -344,9 +356,10 @@ program test
   use_tg = dffts%has_task_groups
   !
   dffts%rho_clock_label='ffts' ; dffts%wave_clock_label='fftw'
-  CALL fft_type_init(dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut, gcutms/gkcut, nyfft=ntgs)
+
+  CALL fft_type_init(dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut, gcutms/gkcut, nyfft=ntgs, nmany=many_fft)
   dfftp%rho_clock_label='fft' 
-  CALL fft_type_init(dfftp, smap, "rho", gamma_only, .true., comm, at, bg, gcutm, 4.d0, nyfft=ntgs)
+  CALL fft_type_init(dfftp, smap, "rho", gamma_only, .true., comm, at, bg, gcutm, 4.d0, nyfft=ntgs, nmany=many_fft)
   !
   CALL fft_base_info(mype == 0, dffts, dfftp)
   if (mype == 0) then
@@ -373,7 +386,11 @@ program test
   !
   ! --------  ALLOCATE
   !
+  IF (many_fft > 1) THEN
+    ALLOCATE (psic(dffts%nnr*many_fft))
+  ELSE
   ALLOCATE (psic(dffts%nnr))
+  ENDIF
   ALLOCATE (psi(ngms, nbnd))
   ALLOCATE (hpsi(ngms, nbnd))
   ALLOCATE (v(dffts%nnr))
@@ -454,6 +471,7 @@ program test
   !
   !
   !
+  IF (use_tg) THEN
   DO ib = 1, nbnd, incr
     !
     time(1) = MPI_WTIME()
@@ -479,7 +497,51 @@ program test
       !
       CALL accumulate_hpsi_tg(ib, nbnd, ngms, hpsi, tg_psic, dffts, gamma_only)
       time(6) = MPI_WTIME()
-    ELSE
+      !
+      DO i = 2, 6
+        my_time(i) = my_time(i) + (time(i) - time(i - 1))
+      END DO
+      !
+      ncount = ncount + 1
+      !
+    ENDDO
+  ELSEIF (many_fft > 1) THEN
+    DO ib = 1, nbnd, many_fft
+      !
+      group_size = MIN(many_fft, nbnd - (ib -1))
+      !
+      DO k=0, group_size - 1
+        !call prepare_psi(ib, nbnd, ngms, psi, psic(1+(k-1)*dffts%nnr:), dffts, gamma_only)
+        call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
+      ENDDO
+      time(2) = MPI_WTIME()
+      !
+      CALL invfft('Wave', psic, dffts, howmany=group_size)
+      time(3) = MPI_WTIME()
+      !
+      DO j = 1, dffts%nnr
+        psic(j) = psic(j)*v(j)
+      ENDDO
+      time(4) = MPI_WTIME()
+      !
+      CALL fwfft('Wave', psic, dffts, howmany=group_size)
+      time(5) = MPI_WTIME()
+      !
+      DO k=0, group_size - 1
+        !CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic(1+(k-1)*dffts%nnr:), dffts, gamma_only)
+        CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, dffts, gamma_only)
+      ENDDO
+      time(6) = MPI_WTIME()
+      !
+      DO i = 2, 6
+        my_time(i) = my_time(i) + (time(i) - time(i - 1))
+      END DO
+      !
+      ncount = ncount + 1
+      !
+    ENDDO
+  ELSE
+    DO ib = 1, nbnd, incr
       !
       call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
       time(2) = MPI_WTIME()
@@ -497,15 +559,14 @@ program test
       CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, dffts, gamma_only)
       time(6) = MPI_WTIME()
       !
-    ENDIF
-    !
-    do i = 2, 6
+      DO i = 2, 6
       my_time(i) = my_time(i) + (time(i) - time(i - 1))
-    end do
+      END DO
     !
     ncount = ncount + 1
     !
-  enddo
+    ENDDO
+  ENDIF
   !
   wall = MPI_WTIME() - wall
 
@@ -548,6 +609,7 @@ program test
     write(*,*) 'num proc  = ', npes
     write(*,*) 'num band  = ', nbnd
     write(*,*) 'num task group  = ', ntgs
+    write(*,*) 'num many ffts   = ', many_fft
     write(*,*) 'num fft cycles  = ', ncount
 
     write(*,100) 
@@ -576,7 +638,6 @@ program test
 
   CALL fft_type_deallocate(dffts)
   CALL fft_type_deallocate(dfftp)
-  CALL fft_type_deallocate(dfft3d)
   CALL sticks_map_deallocate( smap )
 
 #if defined(__MPI)
@@ -1045,6 +1106,10 @@ subroutine start_clock(label)
     times(18) = times(18) - MPI_WTIME()
   case ("ALLTOALL") !alt version compatibility
     times(19) = times(19) - MPI_WTIME()
+  case ("fft_scatt_many_yz") !alt version compatibility
+    times(20) = times(20) - MPI_WTIME()
+  case ("fft_scatt_many_xy") !alt version compatibility
+    times(21) = times(21) - MPI_WTIME()
   case default
     write (*, *) "Error, label not found", label
   end select
@@ -1095,6 +1160,10 @@ subroutine stop_clock(label)
     times(18) = times(18) + MPI_WTIME()
   case ("ALLTOALL") !alt version compatibility
     times(19) = times(19) + MPI_WTIME()
+  case ("fft_scatt_many_yz") !alt version compatibility
+    times(20) = times(20) + MPI_WTIME()
+  case ("fft_scatt_many_xy") !alt version compatibility
+    times(21) = times(21) + MPI_WTIME()
   case default
     write (*, *) "Error, label not found", label
   end select
@@ -1105,15 +1174,15 @@ subroutine print_clock(mype, npes, ncount)
   use mpi
   implicit none
   integer, intent(in) :: mype, npes, ncount
-  REAL*8  :: time_min(20)
-  REAL*8  :: time_max(20)
-  REAL*8  :: time_avg(20)
+  REAL*8  :: time_min(21)
+  REAL*8  :: time_max(21)
+  REAL*8  :: time_avg(21)
   integer :: ierr
 
 #if defined(__MPI)
-  CALL MPI_ALLREDUCE(times, time_min, 20, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr)
-  CALL MPI_ALLREDUCE(times, time_max, 20, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr)
-  CALL MPI_ALLREDUCE(times, time_avg, 20, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(times, time_min, 21, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(times, time_max, 21, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(times, time_avg, 21, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
   time_avg = time_avg/npes
 #else
   time_min(:) = times(:)
@@ -1139,6 +1208,8 @@ subroutine print_clock(mype, npes, ncount)
     if (times(12) > 0.d0) write (*, 1013) time_min(12), time_max(12), time_avg(12)
     if (times(13) > 0.d0) write (*, 1014) time_min(13), time_max(13), time_avg(13)
     if (times(14) > 0.d0) write (*, 1015) time_min(14), time_max(14), time_avg(14)
+    if (times(20) > 0.d0) write (*, 1021) time_min(20), time_max(20), time_avg(20)
+    if (times(21) > 0.d0) write (*, 1022) time_min(21), time_max(21), time_avg(21)
     if (times(15) > 0.d0) write (*, 1016) time_min(15), time_max(15), time_avg(15)
     if (times(16) > 0.d0) write (*, 1017) time_min(16), time_max(16), time_avg(16)
     if (times(17) > 0.d0) write (*, 1018) time_min(17), time_max(17), time_avg(17)
@@ -1167,6 +1238,8 @@ subroutine print_clock(mype, npes, ncount)
 1018  FORMAT(' |rscatter_grid       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
 1019  FORMAT(' |fft_scatter         | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
 1020  FORMAT(' |ALLTOALL            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1021  FORMAT(' |fft_scatt_many_yz   | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1022  FORMAT(' |fft_scatt_many_xy   | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
  
 end subroutine
 
