@@ -1161,7 +1161,9 @@ CONTAINS
       USE constants,      ONLY: pi, fpi
       USE control_flags,  ONLY: iverbosity
       USE mp,             ONLY: mp_sum
+#if defined (__CUDA)
       USE cudafor
+#endif
 !
       IMPLICIT NONE
       

@@ -34,7 +34,7 @@
      ! electronic wave functions, CPV code
      ! distributed over gvector and bands
      !
-!dir$ attributes align: 4096 :: c0_bgrp, cm_bgrp, phi_bgrp
+!dir$ attributes align: 4096 :: c0_bgrp, cm_bgrp, phi
      COMPLEX(DP), ALLOCATABLE :: c0_bgrp(:,:)  ! wave functions at time t
      COMPLEX(DP), ALLOCATABLE :: cm_bgrp(:,:)  ! wave functions at time t-delta t
      COMPLEX(DP), ALLOCATABLE :: phi(:,:) ! |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>

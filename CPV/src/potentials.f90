@@ -479,7 +479,7 @@
 !$omp parallel do reduction(+:esr,desr) num_threads(min(max(1,na_loc),omp_get_num_threads())) default(none) &
 !$omp private(ia,ib,k,j,zv2_kj,rckj_m1,fact_pre,xlm,ylm,zlm,tzero,xlm0,ylm0,zlm0,ix,iy,iz,sxlm,tshift, &
 !$omp         rxlm,erre2,rlm,arg,esrtzero,addesr,addpre,repand,i,fxx ) &
-!$omp shared(ia_s,ia_e,nat,ityp,zv2,rc,sqrtpm1,taus,iesr,hmat,fionloc,tstress,na_loc)
+!$omp shared(ia_s,ia_e,nat,ityp,zv2,rc,taus,iesr,hmat,fionloc,tstress,na_loc)
       DO ia = ia_s, ia_e
         DO ib = ia, nat
           k = ityp(ia)

@@ -367,7 +367,9 @@ CONTAINS
       USE uspp_param,     ONLY: nh, upf
       USE electrons_base, ONLY: nspin, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, nbsp, nupdwn, iupdwn
       USE ions_base,      ONLY: na, nat, nsp, ityp
+#if defined (__CUDA)
       USE cublas
+#endif
       !
       IMPLICIT NONE
       !
